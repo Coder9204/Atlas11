@@ -108,13 +108,37 @@ const GeneratedDiagram: React.FC<DiagramProps> = ({ type, data, title }) => {
             return data;
          }
 
+         // Clean up common JSON issues before parsing
+         let cleanedData = data
+            // Remove trailing commas before } or ]
+            .replace(/,\s*([}\]])/g, '$1')
+            // Fix unescaped newlines in strings
+            .replace(/\n/g, '\\n')
+            // Remove any BOM or invisible characters
+            .replace(/^\uFEFF/, '')
+            .trim();
+
          // Try to parse JSON string
-         const parsed = JSON.parse(data);
+         const parsed = JSON.parse(cleanedData);
          console.log("[GeneratedDiagram] Parsed data:", parsed);
          return parsed;
       } catch (e) {
          console.error("[GeneratedDiagram] JSON parse error:", e, "Raw data:", data);
-         return null;
+
+         // Try one more time with aggressive cleanup
+         try {
+            let aggressiveClean = data
+               .replace(/,\s*}/g, '}')
+               .replace(/,\s*]/g, ']')
+               .replace(/[\x00-\x1F\x7F]/g, '') // Remove control characters
+               .trim();
+            const parsed = JSON.parse(aggressiveClean);
+            console.log("[GeneratedDiagram] Parsed with aggressive cleanup:", parsed);
+            return parsed;
+         } catch (e2) {
+            console.error("[GeneratedDiagram] Aggressive parse also failed:", e2);
+            return null;
+         }
       }
    }, [data]);
 
