@@ -19173,6 +19173,25 @@ const GeneratedDiagram: React.FC<DiagramProps> = ({ type, data, title }) => {
             return <ConditionalProbabilityRenderer />;
          case 'margin_of_error':
             return <MarginOfErrorRenderer />;
+         // Plural/variant type mappings to existing renderers
+         case 'metal_conductors':
+            return <ConductivityTesterRenderer />;
+         case 'insulators':
+            return <ConductivityTesterRenderer />;
+         case 'simple_switches':
+            return <SimpleSwitchRenderer />;
+         case 'magnetic_poles':
+            return <MagneticPoleRenderer />;
+         case 'compass_use':
+            return <CompassRenderer />;
+         case 'electromagnets':
+            return <ElectromagnetRenderer />;
+         case 'basic_motors':
+            return <BasicMotorRenderer />;
+         case 'basic_generators':
+            return <BasicGeneratorRenderer />;
+         case 'earth_magnetic_field':
+            return <EarthFieldRenderer />;
          default:
             return <GenericRenderer />;
       }
