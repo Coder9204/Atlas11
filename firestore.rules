@@ -1,0 +1,55 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Helper functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return request.auth != null && request.auth.uid == userId;
+    }
+
+    function isValidUserData() {
+      return request.resource.data.keys().hasOnly(['displayName', 'email', 'photoURL', 'createdAt', 'updatedAt', 'settings'])
+        && request.resource.data.displayName is string
+        && request.resource.data.displayName.size() <= 100;
+    }
+
+    // User profiles - users can only read/write their own data
+    match /users/{userId} {
+      allow read: if isOwner(userId);
+      allow create: if isOwner(userId) && isValidUserData();
+      allow update: if isOwner(userId) && isValidUserData();
+      allow delete: if isOwner(userId);
+
+      // Learning progress subcollection
+      match /progress/{topicId} {
+        allow read, write: if isOwner(userId);
+      }
+
+      // Session history subcollection
+      match /sessions/{sessionId} {
+        allow read, write: if isOwner(userId);
+      }
+    }
+
+    // Public content (read-only for authenticated users)
+    match /content/{document=**} {
+      allow read: if isAuthenticated();
+      allow write: if false; // Only admin via backend
+    }
+
+    // Analytics (write-only, no read from client)
+    match /analytics/{document=**} {
+      allow read: if false;
+      allow create: if isAuthenticated();
+      allow update, delete: if false;
+    }
+
+    // Deny all other access by default
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

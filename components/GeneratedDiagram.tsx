@@ -1,5 +1,58 @@
 
 import React, { useMemo, useState, useEffect, useRef } from 'react';
+import { evaluate, parse } from 'mathjs';
+
+// Safe formula evaluator that prevents code injection
+const createSafeEvaluator = () => {
+   // Whitelist of allowed identifiers
+   const ALLOWED_FUNCTIONS = new Set([
+      'sin', 'cos', 'tan', 'asin', 'acos', 'atan', 'atan2',
+      'sqrt', 'pow', 'abs', 'log', 'log10', 'exp',
+      'floor', 'ceil', 'round', 'min', 'max',
+      'PI', 'E', 'pi', 'e'
+   ]);
+
+   // Dangerous patterns to block
+   const DANGEROUS_PATTERNS = [
+      /\beval\b/i, /\bfunction\b/i, /=>/,
+      /\bconstructor\b/i, /\bprototype\b/i, /\b__proto__\b/,
+      /\bwindow\b/i, /\bdocument\b/i, /\bfetch\b/i,
+      /\bimport\b/i, /\brequire\b/i, /\bprocess\b/i,
+      /\bglobal\b/i, /\bthis\b/i, /\bnew\b/i
+   ];
+
+   return (formula: string, variables: Record<string, number>, calculations: Record<string, number> = {}): number => {
+      if (typeof formula !== 'string') return Number(formula) || 0;
+
+      // Check for dangerous patterns
+      for (const pattern of DANGEROUS_PATTERNS) {
+         if (pattern.test(formula)) {
+            console.warn('Blocked dangerous formula pattern:', formula);
+            return 0;
+         }
+      }
+
+      try {
+         // Transform formula to mathjs format
+         let safeFormula = formula
+            // Replace Math.X with just X (mathjs uses lowercase)
+            .replace(/Math\.(sin|cos|tan|asin|acos|atan|atan2|sqrt|pow|abs|log|log10|exp|floor|ceil|round|min|max|PI|E)/gi,
+               (_, fn) => fn.toLowerCase())
+            // Replace variables.X and calculations.X with actual values
+            .replace(/variables\.(\w+)/g, (_, name) => String(variables[name] ?? 0))
+            .replace(/calculations\.(\w+)/g, (_, name) => String(calculations[name] ?? 0));
+
+         // Evaluate using mathjs (sandboxed)
+         const result = evaluate(safeFormula);
+         return typeof result === 'number' ? result : (result === true ? 1 : (result === false ? 0 : Number(result) || 0));
+      } catch (error) {
+         // Silent fail - return 0 for invalid formulas
+         return 0;
+      }
+   };
+};
+
+const safeEvaluate = createSafeEvaluator();
 
 interface DiagramProps {
    type: string;
@@ -100,27 +153,21 @@ const GeneratedDiagram: React.FC<DiagramProps> = ({ type, data, title }) => {
       const [challengeState, setChallengeState] = useState<'idle' | 'success' | 'failure'>('idle');
       const [feedbackMsg, setFeedbackMsg] = useState<string>("");
 
-      // Helper: Safe evaluation of formulas
+      // Helper: Safe evaluation of formulas (uses mathjs instead of new Function to prevent code injection)
       const evaluateFormula = (formula: string | number): any => {
          if (typeof formula === 'number') return formula;
          if (!formula || (!formula.includes('variables') && !formula.includes('Math') && !formula.includes('calculations'))) return formula;
 
-         try {
-            const calculatedValues: Record<string, number> = {};
-            if (blueprint.calculations) {
-               Object.entries(blueprint.calculations).forEach(([key, calcFormula]) => {
-                  try {
-                     const func = new Function('variables', 'Math', `return ${calcFormula}`);
-                     calculatedValues[key] = func(variables, Math);
-                  } catch (e) { calculatedValues[key] = 0; }
-               });
-            }
-
-            const func = new Function('variables', 'calculations', 'Math', `return ${formula}`);
-            return func(variables, calculatedValues, Math);
-         } catch (e) {
-            return 0;
+         // Calculate derived values first
+         const calculatedValues: Record<string, number> = {};
+         if (blueprint.calculations) {
+            Object.entries(blueprint.calculations).forEach(([key, calcFormula]) => {
+               calculatedValues[key] = safeEvaluate(calcFormula as string, variables, {});
+            });
          }
+
+         // Evaluate the main formula using the safe evaluator
+         return safeEvaluate(formula, variables, calculatedValues);
       };
 
       // Check Challenge Status
