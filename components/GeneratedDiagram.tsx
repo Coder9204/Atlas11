@@ -1,6 +1,6 @@
 
 import React, { useMemo, useState, useEffect, useRef } from 'react';
-import { evaluate, parse } from 'mathjs';
+import { evaluate } from 'mathjs';
 
 // Safe formula evaluator that prevents code injection
 const createSafeEvaluator = () => {
