@@ -1,5 +1,58 @@
 
 import React, { useMemo, useState, useEffect, useRef } from 'react';
+import { evaluate, parse } from 'mathjs';
+
+// Safe formula evaluator that prevents code injection
+const createSafeEvaluator = () => {
+   // Whitelist of allowed identifiers
+   const ALLOWED_FUNCTIONS = new Set([
+      'sin', 'cos', 'tan', 'asin', 'acos', 'atan', 'atan2',
+      'sqrt', 'pow', 'abs', 'log', 'log10', 'exp',
+      'floor', 'ceil', 'round', 'min', 'max',
+      'PI', 'E', 'pi', 'e'
+   ]);
+
+   // Dangerous patterns to block
+   const DANGEROUS_PATTERNS = [
+      /\beval\b/i, /\bfunction\b/i, /=>/,
+      /\bconstructor\b/i, /\bprototype\b/i, /\b__proto__\b/,
+      /\bwindow\b/i, /\bdocument\b/i, /\bfetch\b/i,
+      /\bimport\b/i, /\brequire\b/i, /\bprocess\b/i,
+      /\bglobal\b/i, /\bthis\b/i, /\bnew\b/i
+   ];
+
+   return (formula: string, variables: Record<string, number>, calculations: Record<string, number> = {}): number => {
+      if (typeof formula !== 'string') return Number(formula) || 0;
+
+      // Check for dangerous patterns
+      for (const pattern of DANGEROUS_PATTERNS) {
+         if (pattern.test(formula)) {
+            console.warn('Blocked dangerous formula pattern:', formula);
+            return 0;
+         }
+      }
+
+      try {
+         // Transform formula to mathjs format
+         let safeFormula = formula
+            // Replace Math.X with just X (mathjs uses lowercase)
+            .replace(/Math\.(sin|cos|tan|asin|acos|atan|atan2|sqrt|pow|abs|log|log10|exp|floor|ceil|round|min|max|PI|E)/gi,
+               (_, fn) => fn.toLowerCase())
+            // Replace variables.X and calculations.X with actual values
+            .replace(/variables\.(\w+)/g, (_, name) => String(variables[name] ?? 0))
+            .replace(/calculations\.(\w+)/g, (_, name) => String(calculations[name] ?? 0));
+
+         // Evaluate using mathjs (sandboxed)
+         const result = evaluate(safeFormula);
+         return typeof result === 'number' ? result : (result === true ? 1 : (result === false ? 0 : Number(result) || 0));
+      } catch (error) {
+         // Silent fail - return 0 for invalid formulas
+         return 0;
+      }
+   };
+};
+
+const safeEvaluate = createSafeEvaluator();
 
 interface DiagramProps {
    type: string;
@@ -98,34 +151,23 @@ const GeneratedDiagram: React.FC<DiagramProps> = ({ type, data, title }) => {
       });
 
       const [challengeState, setChallengeState] = useState<'idle' | 'success' | 'failure'>('idle');
-
-
-
-
-      const [challengeState, setChallengeState] = useState<'idle' | 'success' | 'failure'>('idle');
       const [feedbackMsg, setFeedbackMsg] = useState<string>("");
 
-      // Helper: Safe evaluation of formulas
+      // Helper: Safe evaluation of formulas (uses mathjs instead of new Function to prevent code injection)
       const evaluateFormula = (formula: string | number): any => {
          if (typeof formula === 'number') return formula;
          if (!formula || (!formula.includes('variables') && !formula.includes('Math') && !formula.includes('calculations'))) return formula;
 
-         try {
-            const calculatedValues: Record<string, number> = {};
-            if (blueprint.calculations) {
-               Object.entries(blueprint.calculations).forEach(([key, calcFormula]) => {
-                  try {
-                     const func = new Function('variables', 'Math', `return ${calcFormula}`);
-                     calculatedValues[key] = func(variables, Math);
-                  } catch (e) { calculatedValues[key] = 0; }
-               });
-            }
-
-            const func = new Function('variables', 'calculations', 'Math', `return ${formula}`);
-            return func(variables, calculatedValues, Math);
-         } catch (e) {
-            return 0;
+         // Calculate derived values first
+         const calculatedValues: Record<string, number> = {};
+         if (blueprint.calculations) {
+            Object.entries(blueprint.calculations).forEach(([key, calcFormula]) => {
+               calculatedValues[key] = safeEvaluate(calcFormula as string, variables, {});
+            });
          }
+
+         // Evaluate the main formula using the safe evaluator
+         return safeEvaluate(formula, variables, calculatedValues);
       };
 
       // Check Challenge Status
@@ -13193,6 +13235,473 @@ const GeneratedDiagram: React.FC<DiagramProps> = ({ type, data, title }) => {
    };
 
 
+   // --- MAGNETIC FLUX RENDERER ---
+   const MagneticFluxRenderer = () => {
+      const [angle, setAngle] = useState(0);
+      const [fieldStrength, setFieldStrength] = useState(0.5);
+      const [loopArea, setLoopArea] = useState(0.1);
+      const [isAnimating, setIsAnimating] = useState(false);
+
+      const flux = fieldStrength * loopArea * Math.cos(angle * Math.PI / 180);
+
+      useEffect(() => {
+         if (!isAnimating) return;
+         const interval = setInterval(() => {
+            setAngle(prev => (prev + 2) % 360);
+         }, 50);
+         return () => clearInterval(interval);
+      }, [isAnimating]);
+
+      return (
+         <div className="flex flex-col h-full bg-slate-950 text-white font-sans overflow-hidden">
+            <div className="p-6 border-b border-slate-800 bg-slate-900/50">
+               <h3 className="text-xl font-black tracking-tight text-cyan-400">MAGNETIC FLUX</h3>
+               <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Φ = BA cos θ</p>
+            </div>
+
+            <div className="flex-1 flex flex-col md:flex-row overflow-hidden">
+               <div className="flex-1 relative flex items-center justify-center p-8">
+                  <svg width="400" height="350" viewBox="0 0 400 350">
+                     {/* Magnetic field lines */}
+                     {Array.from({ length: 8 }).map((_, i) => (
+                        <line key={i} x1="50" y1={70 + i * 30} x2="350" y2={70 + i * 30}
+                           stroke="#3b82f6" strokeWidth="2" strokeOpacity={0.3 + fieldStrength * 0.5}
+                           markerEnd="url(#arrowB)" />
+                     ))}
+                     <defs>
+                        <marker id="arrowB" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
+                           <path d="M0,0 L6,3 L0,6 Z" fill="#3b82f6" fillOpacity={0.5 + fieldStrength * 0.5} />
+                        </marker>
+                     </defs>
+
+                     {/* Loop */}
+                     <g transform={`translate(200, 180) rotate(${angle})`}>
+                        <ellipse cx="0" cy="0" rx={80 * loopArea * 10} ry="60" fill="none"
+                           stroke="#fbbf24" strokeWidth="4" />
+                        <line x1="0" y1="-60" x2="0" y2="-100" stroke="#fbbf24" strokeWidth="2" />
+                        <polygon points="0,-100 -6,-88 6,-88" fill="#fbbf24" />
+                        <text x="15" y="-85" className="text-[10px] font-bold fill-fbbf24">n̂</text>
+                     </g>
+
+                     {/* Angle arc */}
+                     <path d={`M 200,120 A 60,60 0 0 1 ${200 + 60 * Math.sin(angle * Math.PI / 180)},${120 - 60 * Math.cos(angle * Math.PI / 180)}`}
+                        fill="none" stroke="#22c55e" strokeWidth="2" strokeDasharray="4" />
+                     <text x="220" y="105" className="text-xs font-bold fill-emerald-400">θ = {angle}°</text>
+                  </svg>
+               </div>
+
+               <div className="w-full md:w-80 bg-slate-900/50 border-l border-slate-800 p-6 flex flex-col gap-6">
+                  <div className="p-4 bg-gradient-to-br from-cyan-900/30 to-cyan-800/20 rounded-2xl border border-cyan-500/20">
+                     <p className="text-[10px] font-black text-cyan-400 uppercase tracking-widest mb-2">Magnetic Flux</p>
+                     <p className="text-3xl font-black text-white">{(flux * 1000).toFixed(2)} <span className="text-sm text-slate-400">mWb</span></p>
+                  </div>
+
+                  <div className="space-y-4">
+                     <div>
+                        <div className="flex justify-between mb-2">
+                           <label className="text-xs font-bold text-slate-400">Angle (θ)</label>
+                           <span className="text-xs font-mono text-cyan-400">{angle}°</span>
+                        </div>
+                        <input type="range" min="0" max="360" value={angle} onChange={(e) => setAngle(Number(e.target.value))}
+                           className="w-full h-2 bg-slate-700 rounded-full appearance-none cursor-pointer accent-cyan-500" />
+                     </div>
+
+                     <div>
+                        <div className="flex justify-between mb-2">
+                           <label className="text-xs font-bold text-slate-400">Field Strength (B)</label>
+                           <span className="text-xs font-mono text-cyan-400">{fieldStrength.toFixed(2)} T</span>
+                        </div>
+                        <input type="range" min="0.1" max="1" step="0.05" value={fieldStrength}
+                           onChange={(e) => setFieldStrength(Number(e.target.value))}
+                           className="w-full h-2 bg-slate-700 rounded-full appearance-none cursor-pointer accent-cyan-500" />
+                     </div>
+
+                     <div>
+                        <div className="flex justify-between mb-2">
+                           <label className="text-xs font-bold text-slate-400">Loop Area (A)</label>
+                           <span className="text-xs font-mono text-cyan-400">{loopArea.toFixed(2)} m²</span>
+                        </div>
+                        <input type="range" min="0.05" max="0.2" step="0.01" value={loopArea}
+                           onChange={(e) => setLoopArea(Number(e.target.value))}
+                           className="w-full h-2 bg-slate-700 rounded-full appearance-none cursor-pointer accent-cyan-500" />
+                     </div>
+                  </div>
+
+                  <button onClick={() => setIsAnimating(!isAnimating)}
+                     className={`w-full py-3 rounded-xl font-black text-xs transition-all ${isAnimating
+                        ? 'bg-red-500/20 text-red-400 border border-red-500/30'
+                        : 'bg-cyan-500 text-white shadow-lg shadow-cyan-500/30'}`}>
+                     {isAnimating ? '⏸ STOP ROTATION' : '▶ ROTATE LOOP'}
+                  </button>
+
+                  <div className="mt-auto p-4 bg-slate-800/50 rounded-xl border border-slate-700">
+                     <p className="text-xs text-slate-400 leading-relaxed">
+                        <strong className="text-cyan-400">KEY INSIGHT:</strong> Flux is maximum when the loop is perpendicular to the field (θ=0°) and zero when parallel (θ=90°).
+                     </p>
+                  </div>
+               </div>
+            </div>
+         </div>
+      );
+   };
+
+
+   // --- LENZ'S LAW RENDERER ---
+   const LenzsLawRenderer = () => {
+      const [magnetPosition, setMagnetPosition] = useState(0);
+      const [magnetDirection, setMagnetDirection] = useState<'approaching' | 'receding' | 'stationary'>('stationary');
+      const [inducedCurrent, setInducedCurrent] = useState(0);
+      const [coilPolarity, setCoilPolarity] = useState<'N' | 'S' | null>(null);
+
+      useEffect(() => {
+         if (magnetDirection === 'stationary') {
+            setInducedCurrent(0);
+            setCoilPolarity(null);
+            return;
+         }
+
+         const interval = setInterval(() => {
+            setMagnetPosition(prev => {
+               const delta = magnetDirection === 'approaching' ? 3 : -3;
+               const next = prev + delta;
+
+               if (next > 150 || next < -150) {
+                  setMagnetDirection('stationary');
+                  return 0;
+               }
+
+               const currentMagnitude = Math.abs(delta) * 2;
+               setInducedCurrent(magnetDirection === 'approaching' ? -currentMagnitude : currentMagnitude);
+               setCoilPolarity(magnetDirection === 'approaching' ? 'N' : 'S');
+               return next;
+            });
+         }, 30);
+
+         return () => clearInterval(interval);
+      }, [magnetDirection]);
+
+      return (
+         <div className="flex flex-col h-full bg-slate-950 text-white font-sans overflow-hidden">
+            <div className="p-6 border-b border-slate-800 bg-slate-900/50 flex justify-between items-center">
+               <div>
+                  <h3 className="text-xl font-black tracking-tight text-purple-400">LENZ'S LAW</h3>
+                  <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Induced Current Opposes Change</p>
+               </div>
+               <div className={`px-4 py-2 rounded-xl border ${inducedCurrent !== 0
+                  ? 'bg-yellow-500/10 border-yellow-500/30'
+                  : 'bg-slate-800 border-slate-700'}`}>
+                  <p className="text-[8px] font-black text-slate-400 uppercase">Induced Current</p>
+                  <p className={`text-lg font-black ${inducedCurrent > 0 ? 'text-green-400' : inducedCurrent < 0 ? 'text-red-400' : 'text-slate-500'}`}>
+                     {inducedCurrent > 0 ? '↻ ' : inducedCurrent < 0 ? '↺ ' : ''}{Math.abs(inducedCurrent).toFixed(1)} A
+                  </p>
+               </div>
+            </div>
+
+            <div className="flex-1 flex flex-col items-center justify-center p-8 relative">
+               <svg width="500" height="280" viewBox="0 0 500 280">
+                  {/* Coil */}
+                  <g transform="translate(250, 140)">
+                     {Array.from({ length: 8 }).map((_, i) => (
+                        <ellipse key={i} cx={-35 + i * 10} cy="0" rx="25" ry="70"
+                           fill="none" stroke={inducedCurrent !== 0 ? '#fbbf24' : '#64748b'}
+                           strokeWidth="3" strokeOpacity={0.8} />
+                     ))}
+                     {coilPolarity && (
+                        <text x="-70" y="10" className="text-2xl font-black"
+                           fill={coilPolarity === 'N' ? '#ef4444' : '#3b82f6'}>{coilPolarity}</text>
+                     )}
+                  </g>
+
+                  {/* Magnet */}
+                  <g transform={`translate(${80 + magnetPosition}, 140)`}>
+                     <rect x="-50" y="-25" width="50" height="50" fill="#ef4444" rx="4" />
+                     <rect x="0" y="-25" width="50" height="50" fill="#3b82f6" rx="4" />
+                     <text x="-25" y="8" textAnchor="middle" className="text-lg font-black fill-white">N</text>
+                     <text x="25" y="8" textAnchor="middle" className="text-lg font-black fill-white">S</text>
+                     {magnetDirection !== 'stationary' && (
+                        <text x={magnetDirection === 'approaching' ? 70 : -70} y="8"
+                           className="text-2xl" fill="#22c55e">{magnetDirection === 'approaching' ? '→' : '←'}</text>
+                     )}
+                  </g>
+
+                  {/* Field lines from coil (when current flows) */}
+                  {inducedCurrent !== 0 && (
+                     <g transform="translate(250, 140)" opacity={0.4}>
+                        {Array.from({ length: 5 }).map((_, i) => (
+                           <path key={i} d={`M -80,${-30 + i * 15} Q -120,${-50 + i * 25} -80,${-30 + i * 15 + 30}`}
+                              fill="none" stroke={coilPolarity === 'N' ? '#ef4444' : '#3b82f6'} strokeWidth="2" />
+                        ))}
+                     </g>
+                  )}
+               </svg>
+
+               <div className="flex gap-4 mt-8">
+                  <button onClick={() => { setMagnetPosition(-150); setMagnetDirection('approaching'); }}
+                     disabled={magnetDirection !== 'stationary'}
+                     className={`px-6 py-3 rounded-xl font-black text-xs transition-all ${magnetDirection !== 'stationary'
+                        ? 'bg-slate-800 text-slate-600'
+                        : 'bg-green-500 text-white shadow-lg shadow-green-500/30 hover:bg-green-400'}`}>
+                     PUSH MAGNET IN →
+                  </button>
+                  <button onClick={() => { setMagnetPosition(150); setMagnetDirection('receding'); }}
+                     disabled={magnetDirection !== 'stationary'}
+                     className={`px-6 py-3 rounded-xl font-black text-xs transition-all ${magnetDirection !== 'stationary'
+                        ? 'bg-slate-800 text-slate-600'
+                        : 'bg-red-500 text-white shadow-lg shadow-red-500/30 hover:bg-red-400'}`}>
+                     ← PULL MAGNET OUT
+                  </button>
+               </div>
+
+               <div className="mt-6 p-4 bg-slate-900/50 rounded-xl border border-slate-700 max-w-lg text-center">
+                  {magnetDirection === 'approaching' && (
+                     <p className="text-sm text-slate-300">
+                        <span className="text-purple-400 font-bold">APPROACHING:</span> Flux ↑ → Coil creates <span className="text-red-400 font-bold">N pole</span> to REPEL incoming magnet
+                     </p>
+                  )}
+                  {magnetDirection === 'receding' && (
+                     <p className="text-sm text-slate-300">
+                        <span className="text-purple-400 font-bold">RECEDING:</span> Flux ↓ → Coil creates <span className="text-blue-400 font-bold">S pole</span> to ATTRACT departing magnet
+                     </p>
+                  )}
+                  {magnetDirection === 'stationary' && (
+                     <p className="text-sm text-slate-500">Move the magnet to see Lenz's Law in action!</p>
+                  )}
+               </div>
+            </div>
+
+            <div className="p-6 bg-slate-900/50 border-t border-slate-800">
+               <p className="text-xs text-slate-400 text-center">
+                  <strong className="text-purple-400">KEY INSIGHT:</strong> The induced current always creates a magnetic field that <strong>opposes</strong> the change in flux. This is nature's way of conserving energy!
+               </p>
+            </div>
+         </div>
+      );
+   };
+
+
+   // --- BATTERY CONNECTIONS RENDERER ---
+   const BatteryConnectionsRenderer = () => {
+      const [mode, setMode] = useState<'series' | 'parallel'>('series');
+      const [numBatteries, setNumBatteries] = useState(2);
+      const [singleVoltage] = useState(1.5);
+      const [singleCapacity] = useState(2000);
+
+      const totalVoltage = mode === 'series' ? singleVoltage * numBatteries : singleVoltage;
+      const totalCapacity = mode === 'parallel' ? singleCapacity * numBatteries : singleCapacity;
+
+      return (
+         <div className="flex flex-col h-full bg-slate-100 text-slate-900 font-sans overflow-hidden">
+            <div className="p-6 border-b border-slate-200 bg-white flex justify-between items-center">
+               <div>
+                  <h3 className="text-xl font-black tracking-tight text-amber-600">BATTERY CONNECTIONS</h3>
+                  <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Series vs Parallel</p>
+               </div>
+               <div className="flex gap-2">
+                  <button onClick={() => setMode('series')}
+                     className={`px-4 py-2 rounded-lg font-bold text-xs transition-all ${mode === 'series'
+                        ? 'bg-amber-500 text-white shadow-lg'
+                        : 'bg-slate-200 text-slate-600 hover:bg-slate-300'}`}>
+                     SERIES
+                  </button>
+                  <button onClick={() => setMode('parallel')}
+                     className={`px-4 py-2 rounded-lg font-bold text-xs transition-all ${mode === 'parallel'
+                        ? 'bg-blue-500 text-white shadow-lg'
+                        : 'bg-slate-200 text-slate-600 hover:bg-slate-300'}`}>
+                     PARALLEL
+                  </button>
+               </div>
+            </div>
+
+            <div className="flex-1 flex flex-col md:flex-row overflow-hidden">
+               <div className="flex-1 flex items-center justify-center p-8 bg-slate-50">
+                  <svg width="400" height="300" viewBox="0 0 400 300">
+                     {mode === 'series' ? (
+                        <g transform="translate(50, 150)">
+                           {Array.from({ length: numBatteries }).map((_, i) => (
+                              <g key={i} transform={`translate(${i * 80}, 0)`}>
+                                 <rect x="0" y="-30" width="60" height="60" fill="#fef3c7" stroke="#f59e0b" strokeWidth="2" rx="4" />
+                                 <line x1="10" y1="-15" x2="10" y2="15" stroke="#ef4444" strokeWidth="4" />
+                                 <line x1="50" y1="-8" x2="50" y2="8" stroke="#1f2937" strokeWidth="4" />
+                                 <text x="30" y="50" textAnchor="middle" className="text-[10px] font-bold fill-slate-600">{singleVoltage}V</text>
+                                 {i < numBatteries - 1 && <line x1="60" y1="0" x2="80" y2="0" stroke="#1f2937" strokeWidth="3" />}
+                              </g>
+                           ))}
+                           <line x1="-20" y1="0" x2="0" y2="0" stroke="#ef4444" strokeWidth="3" />
+                           <line x1={numBatteries * 80 - 20} y1="0" x2={numBatteries * 80} y2="0" stroke="#1f2937" strokeWidth="3" />
+                           <text x={numBatteries * 40 - 10} y="-60" textAnchor="middle" className="text-lg font-black fill-amber-600">
+                              Total: {totalVoltage.toFixed(1)}V
+                           </text>
+                        </g>
+                     ) : (
+                        <g transform="translate(100, 50)">
+                           {Array.from({ length: numBatteries }).map((_, i) => (
+                              <g key={i} transform={`translate(0, ${i * 70})`}>
+                                 <rect x="50" y="0" width="60" height="50" fill="#dbeafe" stroke="#3b82f6" strokeWidth="2" rx="4" />
+                                 <line x1="60" y1="10" x2="60" y2="40" stroke="#ef4444" strokeWidth="4" />
+                                 <line x1="100" y1="15" x2="100" y2="35" stroke="#1f2937" strokeWidth="4" />
+                                 <line x1="0" y1="25" x2="50" y2="25" stroke="#ef4444" strokeWidth="2" />
+                                 <line x1="110" y1="25" x2="160" y2="25" stroke="#1f2937" strokeWidth="2" />
+                              </g>
+                           ))}
+                           <line x1="0" y1="25" x2="0" y2={numBatteries * 70 - 45} stroke="#ef4444" strokeWidth="3" />
+                           <line x1="160" y1="25" x2="160" y2={numBatteries * 70 - 45} stroke="#1f2937" strokeWidth="3" />
+                           <text x="80" y={numBatteries * 70 + 20} textAnchor="middle" className="text-lg font-black fill-blue-600">
+                              Total: {totalVoltage.toFixed(1)}V, {totalCapacity}mAh
+                           </text>
+                        </g>
+                     )}
+                  </svg>
+               </div>
+
+               <div className="w-full md:w-72 bg-white border-l border-slate-200 p-6 flex flex-col gap-4">
+                  <div>
+                     <label className="text-xs font-bold text-slate-500 uppercase mb-2 block">Number of Batteries</label>
+                     <div className="flex gap-2">
+                        {[2, 3, 4].map(n => (
+                           <button key={n} onClick={() => setNumBatteries(n)}
+                              className={`flex-1 py-2 rounded-lg font-bold text-sm ${numBatteries === n
+                                 ? 'bg-slate-800 text-white'
+                                 : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}>
+                              {n}
+                           </button>
+                        ))}
+                     </div>
+                  </div>
+
+                  <div className="p-4 bg-amber-50 rounded-xl border border-amber-200">
+                     <p className="text-[10px] font-black text-amber-700 uppercase mb-1">Series Connection</p>
+                     <p className="text-sm text-amber-900">Voltages ADD: {numBatteries} × {singleVoltage}V = <strong>{(numBatteries * singleVoltage).toFixed(1)}V</strong></p>
+                     <p className="text-xs text-amber-700 mt-1">Capacity stays the same</p>
+                  </div>
+
+                  <div className="p-4 bg-blue-50 rounded-xl border border-blue-200">
+                     <p className="text-[10px] font-black text-blue-700 uppercase mb-1">Parallel Connection</p>
+                     <p className="text-sm text-blue-900">Voltage stays: <strong>{singleVoltage}V</strong></p>
+                     <p className="text-sm text-blue-900">Capacity ADDS: {numBatteries} × {singleCapacity}mAh = <strong>{numBatteries * singleCapacity}mAh</strong></p>
+                  </div>
+
+                  <div className="mt-auto p-4 bg-slate-100 rounded-xl">
+                     <p className="text-xs text-slate-600">
+                        <strong className="text-slate-800">KEY INSIGHT:</strong> Series for more voltage (flashlights), parallel for longer life (power banks).
+                     </p>
+                  </div>
+               </div>
+            </div>
+         </div>
+      );
+   };
+
+
+   // --- BULB POWER RENDERER ---
+   const BulbPowerRenderer = () => {
+      const [voltage, setVoltage] = useState(6);
+      const [resistance] = useState(10);
+
+      const current = voltage / resistance;
+      const power = voltage * current;
+      const brightness = Math.min(power / 10, 1);
+
+      return (
+         <div className="flex flex-col h-full bg-slate-900 text-white font-sans overflow-hidden">
+            <div className="p-6 border-b border-slate-700 bg-slate-800/50 flex justify-between items-center">
+               <div>
+                  <h3 className="text-xl font-black tracking-tight text-yellow-400">BULB POWER</h3>
+                  <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">P = V × I = V²/R</p>
+               </div>
+               <div className="text-right">
+                  <p className="text-[10px] font-bold text-slate-500">Power Output</p>
+                  <p className="text-2xl font-black text-yellow-400">{power.toFixed(1)} W</p>
+               </div>
+            </div>
+
+            <div className="flex-1 flex flex-col md:flex-row overflow-hidden">
+               <div className="flex-1 flex items-center justify-center p-8 relative">
+                  <div className="relative">
+                     {/* Bulb glow effect */}
+                     <div className="absolute inset-0 flex items-center justify-center">
+                        <div className="w-40 h-40 rounded-full blur-3xl transition-all duration-300"
+                           style={{
+                              backgroundColor: `rgba(253, 224, 71, ${brightness})`,
+                              transform: `scale(${0.5 + brightness * 1.5})`
+                           }} />
+                     </div>
+
+                     {/* Bulb SVG */}
+                     <svg width="200" height="280" viewBox="0 0 200 280" className="relative z-10">
+                        {/* Glass bulb */}
+                        <ellipse cx="100" cy="100" rx="70" ry="80" fill={`rgba(253, 224, 71, ${brightness * 0.8})`}
+                           stroke="#fbbf24" strokeWidth="3" />
+                        {/* Filament */}
+                        <path d="M 70,100 Q 80,80 90,100 Q 100,120 110,100 Q 120,80 130,100"
+                           fill="none" stroke={brightness > 0.3 ? '#ffffff' : '#666666'}
+                           strokeWidth="3" strokeLinecap="round"
+                           style={{ filter: brightness > 0.5 ? 'drop-shadow(0 0 8px #fff)' : 'none' }} />
+                        {/* Base */}
+                        <rect x="70" y="170" width="60" height="30" fill="#64748b" rx="4" />
+                        <rect x="75" y="200" width="50" height="10" fill="#475569" />
+                        <rect x="80" y="210" width="40" height="10" fill="#334155" />
+                        {/* Contact */}
+                        <circle cx="100" cy="230" r="10" fill="#1e293b" stroke="#475569" strokeWidth="2" />
+                     </svg>
+                  </div>
+
+                  {/* Circuit visualization */}
+                  <div className="absolute bottom-8 left-8 right-8">
+                     <svg width="100%" height="60" viewBox="0 0 400 60" preserveAspectRatio="xMidYMid meet">
+                        <line x1="20" y1="30" x2="120" y2="30" stroke="#ef4444" strokeWidth="3" />
+                        <rect x="120" y="15" width="60" height="30" fill="none" stroke="#fbbf24" strokeWidth="2" rx="4" />
+                        <text x="150" y="35" textAnchor="middle" className="text-[10px] font-bold fill-yellow-400">BULB</text>
+                        <line x1="180" y1="30" x2="280" y2="30" stroke="#3b82f6" strokeWidth="3" />
+                        <rect x="280" y="20" width="40" height="20" fill="#1e293b" stroke="#64748b" strokeWidth="2" />
+                        <text x="300" y="35" textAnchor="middle" className="text-[8px] font-bold fill-slate-400">{resistance}Ω</text>
+                        <line x1="320" y1="30" x2="380" y2="30" stroke="#3b82f6" strokeWidth="3" />
+                     </svg>
+                  </div>
+               </div>
+
+               <div className="w-full md:w-80 bg-slate-800/50 border-l border-slate-700 p-6 flex flex-col gap-6">
+                  <div>
+                     <div className="flex justify-between mb-2">
+                        <label className="text-xs font-bold text-slate-400">Voltage (V)</label>
+                        <span className="text-sm font-mono font-bold text-yellow-400">{voltage} V</span>
+                     </div>
+                     <input type="range" min="0" max="12" step="0.5" value={voltage}
+                        onChange={(e) => setVoltage(Number(e.target.value))}
+                        className="w-full h-3 bg-slate-700 rounded-full appearance-none cursor-pointer accent-yellow-500" />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3">
+                     <div className="p-3 bg-slate-900/50 rounded-xl border border-slate-700">
+                        <p className="text-[10px] font-bold text-slate-500 uppercase">Current (I)</p>
+                        <p className="text-lg font-black text-blue-400">{current.toFixed(2)} A</p>
+                     </div>
+                     <div className="p-3 bg-slate-900/50 rounded-xl border border-slate-700">
+                        <p className="text-[10px] font-bold text-slate-500 uppercase">Resistance (R)</p>
+                        <p className="text-lg font-black text-slate-400">{resistance} Ω</p>
+                     </div>
+                  </div>
+
+                  <div className="p-4 bg-yellow-500/10 rounded-xl border border-yellow-500/20">
+                     <p className="text-[10px] font-black text-yellow-500 uppercase mb-2">Power Calculation</p>
+                     <div className="space-y-1 font-mono text-sm text-slate-300">
+                        <p>P = V × I = {voltage} × {current.toFixed(2)}</p>
+                        <p>P = V²/R = {voltage}²/{resistance}</p>
+                        <p className="text-yellow-400 font-bold">P = {power.toFixed(2)} W</p>
+                     </div>
+                  </div>
+
+                  <div className="mt-auto p-4 bg-slate-900 rounded-xl border border-slate-700">
+                     <p className="text-xs text-slate-400">
+                        <strong className="text-yellow-400">KEY INSIGHT:</strong> Power increases with the SQUARE of voltage. Doubling voltage quadruples brightness!
+                     </p>
+                  </div>
+               </div>
+            </div>
+         </div>
+      );
+   };
+
+
    // --- COUNTING TO 100 RENDERER ---
    const Counting100Renderer = () => {
       const [count, setCount] = useState(1);
@@ -18458,6 +18967,707 @@ const GeneratedDiagram: React.FC<DiagramProps> = ({ type, data, title }) => {
       );
    };
 
+   // --- LORENTZ FORCE RENDERER ---
+   const LorentzForceRenderer = () => {
+      const [velocity, setVelocity] = useState(50);
+      const [fieldStrength, setFieldStrength] = useState(0.5);
+      const [charge, setCharge] = useState<'positive' | 'negative'>('positive');
+      const [particlePos, setParticlePos] = useState({ x: 200, y: 200 });
+      const [particleVel, setParticleVel] = useState({ vx: 2, vy: 0 });
+      const [isAnimating, setIsAnimating] = useState(false);
+      const [trail, setTrail] = useState<{x: number, y: number}[]>([]);
+
+      const q = charge === 'positive' ? 1 : -1;
+      const force = q * velocity * fieldStrength;
+
+      useEffect(() => {
+         if (!isAnimating) return;
+         const interval = setInterval(() => {
+            setParticlePos(prev => {
+               const newX = prev.x + particleVel.vx;
+               const newY = prev.y + particleVel.vy;
+               const forceMag = q * fieldStrength * 0.1;
+               setParticleVel(v => ({
+                  vx: v.vx - forceMag * v.vy,
+                  vy: v.vy + forceMag * v.vx
+               }));
+               if (newX < 50 || newX > 350 || newY < 50 || newY > 350) {
+                  setParticleVel({ vx: velocity / 25, vy: 0 });
+                  setTrail([]);
+                  return { x: 200, y: 200 };
+               }
+               setTrail(t => [...t.slice(-50), { x: newX, y: newY }]);
+               return { x: newX, y: newY };
+            });
+         }, 30);
+         return () => clearInterval(interval);
+      }, [isAnimating, fieldStrength, q, velocity, particleVel]);
+
+      const resetSimulation = () => {
+         setParticlePos({ x: 200, y: 200 });
+         setParticleVel({ vx: velocity / 25, vy: 0 });
+         setTrail([]);
+      };
+
+      return (
+         <div className="flex flex-col h-full bg-slate-950 text-white font-sans overflow-hidden">
+            <div className="p-6 border-b border-slate-800 bg-slate-900/50">
+               <h3 className="text-xl font-black tracking-tight text-purple-400">LORENTZ FORCE</h3>
+               <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">F = qv × B</p>
+            </div>
+            <div className="flex-1 flex flex-col lg:flex-row overflow-hidden">
+               <div className="flex-1 relative flex items-center justify-center p-8">
+                  <svg width="400" height="400" viewBox="0 0 400 400" className="bg-slate-900/50 rounded-2xl">
+                     {Array.from({ length: 7 }).map((_, i) =>
+                        Array.from({ length: 7 }).map((_, j) => (
+                           <g key={`${i}-${j}`} transform={`translate(${70 + i * 40}, ${70 + j * 40})`}>
+                              <circle r="12" fill="none" stroke="#3b82f6" strokeWidth="1" opacity={0.3 + fieldStrength * 0.5} />
+                              <line x1="-6" y1="-6" x2="6" y2="6" stroke="#3b82f6" strokeWidth="2" opacity={0.5 + fieldStrength * 0.5} />
+                              <line x1="6" y1="-6" x2="-6" y2="6" stroke="#3b82f6" strokeWidth="2" opacity={0.5 + fieldStrength * 0.5} />
+                           </g>
+                        ))
+                     )}
+                     {trail.length > 1 && (
+                        <path d={`M ${trail.map(p => `${p.x},${p.y}`).join(' L ')}`} fill="none"
+                           stroke={charge === 'positive' ? '#ef4444' : '#3b82f6'} strokeWidth="3" opacity="0.6" />
+                     )}
+                     <g transform={`translate(${particlePos.x}, ${particlePos.y})`}>
+                        <circle r="15" fill={charge === 'positive' ? '#ef4444' : '#3b82f6'} className="drop-shadow-lg" />
+                        <text textAnchor="middle" dy="5" className="text-sm font-black fill-white">{charge === 'positive' ? '+' : '−'}</text>
+                        <line x1="0" y1="0" x2={particleVel.vx * 10} y2={particleVel.vy * 10} stroke="#22c55e" strokeWidth="3" markerEnd="url(#arrowV)" />
+                     </g>
+                     <defs>
+                        <marker id="arrowV" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
+                           <path d="M0,0 L6,3 L0,6 Z" fill="#22c55e" />
+                        </marker>
+                     </defs>
+                  </svg>
+               </div>
+               <div className="w-full lg:w-80 bg-slate-900/50 border-t lg:border-t-0 lg:border-l border-slate-800 p-6 flex flex-col gap-4">
+                  <div className="p-4 bg-gradient-to-br from-purple-900/30 to-purple-800/20 rounded-2xl border border-purple-500/20">
+                     <p className="text-[10px] font-black text-purple-400 uppercase tracking-widest mb-2">Force Magnitude</p>
+                     <p className="text-3xl font-black text-white">{Math.abs(force).toFixed(2)} <span className="text-sm text-slate-400">N</span></p>
+                  </div>
+                  <div className="space-y-4">
+                     <div>
+                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Velocity (m/s)</label>
+                        <input type="range" min="10" max="100" value={velocity}
+                           onChange={(e) => { setVelocity(Number(e.target.value)); resetSimulation(); }}
+                           className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-green-500" />
+                     </div>
+                     <div>
+                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Field Strength (T)</label>
+                        <input type="range" min="0.1" max="1" step="0.1" value={fieldStrength}
+                           onChange={(e) => { setFieldStrength(Number(e.target.value)); resetSimulation(); }}
+                           className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-blue-500" />
+                     </div>
+                     <div>
+                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Charge</label>
+                        <div className="flex gap-2 mt-2">
+                           {(['positive', 'negative'] as const).map(c => (
+                              <button key={c} onClick={() => { setCharge(c); resetSimulation(); }}
+                                 className={`flex-1 py-2 rounded-xl font-bold text-xs transition-all ${charge === c ? c === 'positive' ? 'bg-red-500 text-white' : 'bg-blue-500 text-white' : 'bg-slate-800 text-slate-400'}`}>
+                                 {c === 'positive' ? '+' : '−'}
+                              </button>
+                           ))}
+                        </div>
+                     </div>
+                  </div>
+                  <div className="flex gap-2 mt-4">
+                     <button onClick={() => setIsAnimating(!isAnimating)}
+                        className={`flex-1 py-3 rounded-xl font-black text-xs transition-all ${isAnimating ? 'bg-orange-500 text-white' : 'bg-purple-500 text-white'}`}>
+                        {isAnimating ? 'PAUSE' : 'START'}
+                     </button>
+                     <button onClick={resetSimulation} className="px-4 py-3 rounded-xl font-black text-xs bg-slate-800 text-slate-400 hover:bg-slate-700">RESET</button>
+                  </div>
+               </div>
+            </div>
+            <div className="p-6 bg-slate-900/50 border-t border-slate-800">
+               <p className="text-xs text-slate-400 text-center"><strong>Right-Hand Rule</strong>: Point fingers in velocity direction, curl toward B field. Thumb shows force on positive charge.</p>
+            </div>
+         </div>
+      );
+   };
+
+   // --- INDUCTANCE RENDERER ---
+   const InductanceRenderer = () => {
+      const [inductance, setInductance] = useState(0.5);
+      const [resistance, setResistance] = useState(10);
+      const [voltage, setVoltage] = useState(12);
+      const [isConnected, setIsConnected] = useState(false);
+      const [time, setTime] = useState(0);
+      const [current, setCurrent] = useState(0);
+
+      const tau = inductance / resistance;
+      const maxCurrent = voltage / resistance;
+
+      useEffect(() => {
+         if (!isConnected) { setCurrent(0); setTime(0); return; }
+         const interval = setInterval(() => {
+            setTime(t => {
+               const newT = t + 0.02;
+               setCurrent(maxCurrent * (1 - Math.exp(-newT / tau)));
+               return newT;
+            });
+         }, 50);
+         return () => clearInterval(interval);
+      }, [isConnected, tau, maxCurrent]);
+
+      return (
+         <div className="flex flex-col h-full bg-slate-950 text-white font-sans overflow-hidden">
+            <div className="p-6 border-b border-slate-800 bg-slate-900/50">
+               <h3 className="text-xl font-black tracking-tight text-amber-400">RL CIRCUIT - INDUCTANCE</h3>
+               <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">τ = L/R = {tau.toFixed(3)}s</p>
+            </div>
+            <div className="flex-1 flex flex-col lg:flex-row overflow-hidden">
+               <div className="flex-1 relative flex items-center justify-center p-8">
+                  <svg width="400" height="350" viewBox="0 0 400 350">
+                     <g transform="translate(50, 175)">
+                        <line x1="0" y1="-20" x2="0" y2="20" stroke="#fbbf24" strokeWidth="4" />
+                        <line x1="10" y1="-35" x2="10" y2="35" stroke="#fbbf24" strokeWidth="4" />
+                        <text x="-5" y="55" className="text-xs font-bold fill-slate-400">{voltage}V</text>
+                     </g>
+                     <line x1="50" y1="140" x2="50" y2="50" stroke={isConnected ? '#22c55e' : '#475569'} strokeWidth="3" />
+                     <line x1="50" y1="50" x2="350" y2="50" stroke={isConnected ? '#22c55e' : '#475569'} strokeWidth="3" />
+                     <line x1="350" y1="50" x2="350" y2="140" stroke={isConnected ? '#22c55e' : '#475569'} strokeWidth="3" />
+                     <g transform="translate(350, 175)">
+                        <path d="M 0,-35 Q 15,-25 0,-15 Q -15,-5 0,5 Q 15,15 0,25 Q -15,35 0,35" fill="none" stroke="#a855f7" strokeWidth="4" />
+                        <text x="20" y="5" className="text-xs font-bold fill-purple-400">{inductance}H</text>
+                     </g>
+                     <line x1="350" y1="210" x2="350" y2="300" stroke={isConnected ? '#22c55e' : '#475569'} strokeWidth="3" />
+                     <line x1="350" y1="300" x2="200" y2="300" stroke={isConnected ? '#22c55e' : '#475569'} strokeWidth="3" />
+                     <g transform="translate(200, 300)">
+                        <path d="M -50,0 L -40,0 L -35,-10 L -25,10 L -15,-10 L -5,10 L 5,-10 L 15,10 L 25,-10 L 35,10 L 40,0 L 50,0" fill="none" stroke="#f97316" strokeWidth="3" />
+                        <text x="-10" y="25" className="text-xs font-bold fill-orange-400">{resistance}Ω</text>
+                     </g>
+                     <line x1="150" y1="300" x2="50" y2="300" stroke={isConnected ? '#22c55e' : '#475569'} strokeWidth="3" />
+                     <line x1="50" y1="300" x2="50" y2="210" stroke={isConnected ? '#22c55e' : '#475569'} strokeWidth="3" />
+                  </svg>
+               </div>
+               <div className="w-full lg:w-80 bg-slate-900/50 border-t lg:border-t-0 lg:border-l border-slate-800 p-6 flex flex-col gap-4">
+                  <div className="p-4 bg-gradient-to-br from-green-900/30 to-green-800/20 rounded-2xl border border-green-500/20">
+                     <p className="text-[10px] font-black text-green-400 uppercase tracking-widest mb-2">Current</p>
+                     <p className="text-3xl font-black text-white">{current.toFixed(3)} <span className="text-sm text-slate-400">A</span></p>
+                     <div className="w-full h-2 bg-slate-800 rounded-full mt-2 overflow-hidden">
+                        <div className="h-full bg-green-500 transition-all duration-100" style={{ width: `${(current / maxCurrent) * 100}%` }} />
+                     </div>
+                  </div>
+                  <div className="space-y-3">
+                     <div>
+                        <label className="text-[10px] font-black text-slate-400 uppercase">Inductance (H)</label>
+                        <input type="range" min="0.1" max="2" step="0.1" value={inductance} onChange={(e) => setInductance(Number(e.target.value))}
+                           className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-purple-500" />
+                     </div>
+                     <div>
+                        <label className="text-[10px] font-black text-slate-400 uppercase">Resistance (Ω)</label>
+                        <input type="range" min="5" max="50" value={resistance} onChange={(e) => setResistance(Number(e.target.value))}
+                           className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-orange-500" />
+                     </div>
+                  </div>
+                  <button onClick={() => setIsConnected(!isConnected)}
+                     className={`w-full py-4 rounded-xl font-black text-sm transition-all ${isConnected ? 'bg-red-500 text-white' : 'bg-green-500 text-white'}`}>
+                     {isConnected ? 'DISCONNECT' : 'CONNECT CIRCUIT'}
+                  </button>
+               </div>
+            </div>
+            <div className="p-6 bg-slate-900/50 border-t border-slate-800">
+               <p className="text-xs text-slate-400 text-center"><strong>Key Insight:</strong> Inductors resist changes in current. After ~5τ, current reaches 99% of maximum.</p>
+            </div>
+         </div>
+      );
+   };
+
+   // --- TRANSFORMERS RENDERER ---
+   const TransformersRenderer = () => {
+      const [primaryTurns, setPrimaryTurns] = useState(100);
+      const [secondaryTurns, setSecondaryTurns] = useState(200);
+      const [primaryVoltage, setPrimaryVoltage] = useState(120);
+      const [isAnimating, setIsAnimating] = useState(false);
+      const [phase, setPhase] = useState(0);
+
+      const turnsRatio = secondaryTurns / primaryTurns;
+      const secondaryVoltage = primaryVoltage * turnsRatio;
+      const transformerType = turnsRatio > 1 ? 'Step-Up' : turnsRatio < 1 ? 'Step-Down' : 'Isolation';
+
+      useEffect(() => {
+         if (!isAnimating) return;
+         const interval = setInterval(() => setPhase(p => (p + 0.1) % (2 * Math.PI)), 50);
+         return () => clearInterval(interval);
+      }, [isAnimating]);
+
+      return (
+         <div className="flex flex-col h-full bg-slate-950 text-white font-sans overflow-hidden">
+            <div className="p-6 border-b border-slate-800 bg-slate-900/50">
+               <h3 className="text-xl font-black tracking-tight text-yellow-400">TRANSFORMER</h3>
+               <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">{transformerType} • Turns Ratio: {turnsRatio.toFixed(2)}</p>
+            </div>
+            <div className="flex-1 flex flex-col lg:flex-row overflow-hidden">
+               <div className="flex-1 relative flex items-center justify-center p-8">
+                  <svg width="450" height="350" viewBox="0 0 450 350">
+                     <rect x="170" y="60" width="110" height="230" fill="none" stroke="#64748b" strokeWidth="20" rx="10" />
+                     <g transform="translate(140, 175)">
+                        {Array.from({ length: 8 }).map((_, i) => (
+                           <ellipse key={i} cx="0" cy={-70 + i * 20} rx="30" ry="8" fill="none" stroke="#ef4444" strokeWidth="4" opacity={0.5 + 0.5 * Math.sin(phase + i * 0.5)} />
+                        ))}
+                        <text x="-60" y="0" className="text-xs font-bold fill-red-400">Primary</text>
+                     </g>
+                     <g transform="translate(310, 175)">
+                        {Array.from({ length: Math.min(12, Math.ceil(secondaryTurns / 20)) }).map((_, i) => (
+                           <ellipse key={i} cx="0" cy={-70 + i * (140 / Math.min(12, Math.ceil(secondaryTurns / 20)))} rx="30" ry="8" fill="none" stroke="#3b82f6" strokeWidth="4" opacity={0.5 + 0.5 * Math.sin(phase + i * 0.3 + Math.PI)} />
+                        ))}
+                        <text x="40" y="0" className="text-xs font-bold fill-blue-400">Secondary</text>
+                     </g>
+                     <g transform="translate(50, 175)">
+                        <text className="text-lg font-black fill-red-400">{primaryVoltage}V</text>
+                     </g>
+                     <g transform="translate(380, 175)">
+                        <text className="text-lg font-black fill-blue-400">{secondaryVoltage.toFixed(0)}V</text>
+                     </g>
+                  </svg>
+               </div>
+               <div className="w-full lg:w-80 bg-slate-900/50 border-t lg:border-t-0 lg:border-l border-slate-800 p-6 flex flex-col gap-4">
+                  <div className={`p-4 rounded-2xl border ${turnsRatio > 1 ? 'bg-gradient-to-br from-green-900/30 to-green-800/20 border-green-500/20' : 'bg-gradient-to-br from-orange-900/30 to-orange-800/20 border-orange-500/20'}`}>
+                     <p className="text-3xl font-black text-white">{turnsRatio.toFixed(2)}:1</p>
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                     <div className="p-3 bg-red-900/20 rounded-xl border border-red-500/20">
+                        <p className="text-[10px] font-bold text-red-400">Primary V</p>
+                        <p className="text-lg font-black">{primaryVoltage}V</p>
+                     </div>
+                     <div className="p-3 bg-blue-900/20 rounded-xl border border-blue-500/20">
+                        <p className="text-[10px] font-bold text-blue-400">Secondary V</p>
+                        <p className="text-lg font-black">{secondaryVoltage.toFixed(0)}V</p>
+                     </div>
+                  </div>
+                  <div className="space-y-3">
+                     <div>
+                        <label className="text-[10px] font-black text-slate-400 uppercase">Primary Turns</label>
+                        <input type="range" min="50" max="200" value={primaryTurns} onChange={(e) => setPrimaryTurns(Number(e.target.value))} className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-red-500" />
+                     </div>
+                     <div>
+                        <label className="text-[10px] font-black text-slate-400 uppercase">Secondary Turns</label>
+                        <input type="range" min="50" max="400" value={secondaryTurns} onChange={(e) => setSecondaryTurns(Number(e.target.value))} className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-blue-500" />
+                     </div>
+                  </div>
+                  <button onClick={() => setIsAnimating(!isAnimating)}
+                     className={`w-full py-4 rounded-xl font-black text-sm transition-all ${isAnimating ? 'bg-orange-500 text-white' : 'bg-yellow-500 text-slate-900'}`}>
+                     {isAnimating ? 'STOP' : 'ENERGIZE'}
+                  </button>
+               </div>
+            </div>
+            <div className="p-6 bg-slate-900/50 border-t border-slate-800">
+               <p className="text-xs text-slate-400 text-center"><strong>V₁/V₂ = N₁/N₂</strong> • Higher voltage means lower current.</p>
+            </div>
+         </div>
+      );
+   };
+
+   // --- DAY NIGHT CYCLE RENDERER ---
+   const DayNightCycleRenderer = () => {
+      const [rotation, setRotation] = useState(0);
+      const [isSpinning, setIsSpinning] = useState(false);
+      const [speed, setSpeed] = useState(1);
+
+      useEffect(() => {
+         if (!isSpinning) return;
+         const interval = setInterval(() => setRotation(r => (r + speed) % 360), 50);
+         return () => clearInterval(interval);
+      }, [isSpinning, speed]);
+
+      return (
+         <div className="flex flex-col h-full bg-gradient-to-b from-slate-900 via-indigo-950 to-slate-900 text-white font-sans overflow-hidden">
+            <div className="p-6 border-b border-white/10 bg-white/5">
+               <h3 className="text-xl font-black tracking-tight text-yellow-300">DAY AND NIGHT</h3>
+               <p className="text-[10px] font-bold text-white/50 uppercase tracking-widest">Earth's Rotation</p>
+            </div>
+            <div className="flex-1 flex flex-col lg:flex-row overflow-hidden">
+               <div className="flex-1 relative flex items-center justify-center p-8">
+                  <div className="absolute inset-0 overflow-hidden">
+                     {Array.from({ length: 50 }).map((_, i) => (
+                        <div key={i} className="absolute w-1 h-1 bg-white rounded-full animate-pulse" style={{ left: `${Math.random() * 100}%`, top: `${Math.random() * 100}%`, animationDelay: `${Math.random() * 2}s` }} />
+                     ))}
+                  </div>
+                  <svg width="400" height="400" viewBox="0 0 400 400" className="relative z-10">
+                     <g transform="translate(50, 200)">
+                        <circle r="40" fill="#fbbf24" className="drop-shadow-[0_0_30px_rgba(251,191,36,0.8)]" />
+                        {Array.from({ length: 12 }).map((_, i) => (
+                           <line key={i} x1="50" y1="0" x2="65" y2="0" stroke="#fbbf24" strokeWidth="3" transform={`rotate(${i * 30})`} />
+                        ))}
+                        <text y="70" textAnchor="middle" className="text-xs font-bold fill-yellow-300">SUN</text>
+                     </g>
+                     <g opacity="0.3">
+                        {Array.from({ length: 5 }).map((_, i) => (
+                           <line key={i} x1="90" y1={180 + i * 10} x2="180" y2={180 + i * 10} stroke="#fbbf24" strokeWidth="2" strokeDasharray="10,5">
+                              <animate attributeName="stroke-dashoffset" from="15" to="0" dur="1s" repeatCount="indefinite" />
+                           </line>
+                        ))}
+                     </g>
+                     <g transform={`translate(250, 200) rotate(${rotation})`}>
+                        <circle r="70" fill="#1e3a5f" />
+                        <ellipse cx="0" cy="0" rx="10" ry="70" fill="#1e293b" opacity="0.5" />
+                        <ellipse cx="-30" cy="-20" rx="25" ry="20" fill="#22c55e" opacity="0.8" />
+                        <ellipse cx="20" cy="10" rx="20" ry="25" fill="#22c55e" opacity="0.8" />
+                     </g>
+                     <text x="250" y="290" textAnchor="middle" className="text-xs font-bold fill-blue-300">EARTH</text>
+                  </svg>
+               </div>
+               <div className="w-full lg:w-80 bg-black/30 border-t lg:border-t-0 lg:border-l border-white/10 p-6 flex flex-col gap-4">
+                  <div className="p-4 bg-gradient-to-br from-yellow-900/30 to-orange-900/20 rounded-2xl border border-yellow-500/20">
+                     <p className="text-[10px] font-black text-yellow-400 uppercase tracking-widest mb-2">Earth Rotation</p>
+                     <p className="text-3xl font-black text-white">{rotation.toFixed(0)}°</p>
+                  </div>
+                  <div>
+                     <label className="text-[10px] font-black text-slate-400 uppercase">Rotation Speed</label>
+                     <input type="range" min="0.5" max="5" step="0.5" value={speed} onChange={(e) => setSpeed(Number(e.target.value))} className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-yellow-500" />
+                  </div>
+                  <button onClick={() => setIsSpinning(!isSpinning)}
+                     className={`w-full py-4 rounded-xl font-black text-sm transition-all ${isSpinning ? 'bg-orange-500 text-white' : 'bg-yellow-400 text-slate-900'}`}>
+                     {isSpinning ? 'STOP ROTATION' : 'SPIN EARTH'}
+                  </button>
+               </div>
+            </div>
+            <div className="p-6 bg-black/30 border-t border-white/10">
+               <p className="text-xs text-white/60 text-center"><strong>Why Day & Night?</strong> Earth spins like a top! The side facing the Sun has day. One full spin = 24 hours.</p>
+            </div>
+         </div>
+      );
+   };
+
+   // --- MOON PHASES RENDERER ---
+   const MoonPhasesRenderer = () => {
+      const [dayOfMonth, setDayOfMonth] = useState(0);
+      const [isAnimating, setIsAnimating] = useState(false);
+
+      const phases = [
+         { name: 'New Moon', day: 0, emoji: '🌑' },
+         { name: 'Waxing Crescent', day: 4, emoji: '🌒' },
+         { name: 'First Quarter', day: 7, emoji: '🌓' },
+         { name: 'Waxing Gibbous', day: 11, emoji: '🌔' },
+         { name: 'Full Moon', day: 15, emoji: '🌕' },
+         { name: 'Waning Gibbous', day: 18, emoji: '🌖' },
+         { name: 'Last Quarter', day: 22, emoji: '🌗' },
+         { name: 'Waning Crescent', day: 26, emoji: '🌘' },
+      ];
+
+      const currentPhase = phases.reduce((closest, phase) => Math.abs(phase.day - dayOfMonth) < Math.abs(closest.day - dayOfMonth) ? phase : closest);
+      const moonAngle = (dayOfMonth / 29.5) * 360;
+      const illumination = Math.abs(Math.cos((moonAngle * Math.PI) / 180));
+
+      useEffect(() => {
+         if (!isAnimating) return;
+         const interval = setInterval(() => setDayOfMonth(d => (d + 0.5) % 30), 200);
+         return () => clearInterval(interval);
+      }, [isAnimating]);
+
+      return (
+         <div className="flex flex-col h-full bg-gradient-to-b from-indigo-950 via-slate-900 to-indigo-950 text-white font-sans overflow-hidden">
+            <div className="p-6 border-b border-white/10 bg-white/5">
+               <h3 className="text-xl font-black tracking-tight text-blue-200">MOON PHASES</h3>
+               <p className="text-[10px] font-bold text-white/50 uppercase tracking-widest">The Lunar Cycle</p>
+            </div>
+            <div className="flex-1 flex flex-col lg:flex-row overflow-hidden">
+               <div className="flex-1 relative flex items-center justify-center p-8">
+                  <div className="absolute inset-0">
+                     {Array.from({ length: 80 }).map((_, i) => (
+                        <div key={i} className="absolute w-0.5 h-0.5 bg-white/60 rounded-full" style={{ left: `${Math.random() * 100}%`, top: `${Math.random() * 100}%` }} />
+                     ))}
+                  </div>
+                  <svg width="400" height="400" viewBox="0 0 400 400" className="relative z-10">
+                     <g transform="translate(200, 200)">
+                        <circle r="40" fill="#3b82f6" />
+                        <ellipse cx="-10" cy="-10" rx="15" ry="12" fill="#22c55e" opacity="0.8" />
+                        <text y="60" textAnchor="middle" className="text-[10px] font-bold fill-blue-300">EARTH</text>
+                     </g>
+                     <circle cx="200" cy="200" r="120" fill="none" stroke="white" strokeWidth="1" strokeDasharray="5,5" opacity="0.3" />
+                     <g opacity="0.2">
+                        {Array.from({ length: 8 }).map((_, i) => (
+                           <line key={i} x1="0" y1={120 + i * 20} x2="100" y2={120 + i * 20} stroke="#fbbf24" strokeWidth="3" />
+                        ))}
+                     </g>
+                     <g transform={`translate(${200 + 120 * Math.cos((moonAngle - 90) * Math.PI / 180)}, ${200 + 120 * Math.sin((moonAngle - 90) * Math.PI / 180)})`}>
+                        <circle r="25" fill="#1e293b" />
+                        <clipPath id="moonLit">
+                           <rect x={-25 + (1 - illumination) * 25} y="-25" width={50 * illumination} height="50" />
+                        </clipPath>
+                        <circle r="25" fill="#e2e8f0" clipPath="url(#moonLit)" />
+                     </g>
+                     {phases.map((phase, i) => {
+                        const angle = (phase.day / 29.5) * 360 - 90;
+                        const x = 200 + 160 * Math.cos(angle * Math.PI / 180);
+                        const y = 200 + 160 * Math.sin(angle * Math.PI / 180);
+                        return (
+                           <g key={i} transform={`translate(${x}, ${y})`} opacity={currentPhase.day === phase.day ? 1 : 0.4}>
+                              <text textAnchor="middle" dy="5" className="text-lg">{phase.emoji}</text>
+                           </g>
+                        );
+                     })}
+                  </svg>
+               </div>
+               <div className="w-full lg:w-80 bg-black/30 border-t lg:border-t-0 lg:border-l border-white/10 p-6 flex flex-col gap-4">
+                  <div className="p-6 bg-gradient-to-br from-indigo-900/50 to-purple-900/30 rounded-2xl border border-indigo-500/20 text-center">
+                     <p className="text-6xl mb-2">{currentPhase.emoji}</p>
+                     <p className="text-xl font-black text-white">{currentPhase.name}</p>
+                     <p className="text-sm text-indigo-300">Day {Math.round(dayOfMonth)} of 30</p>
+                  </div>
+                  <div>
+                     <label className="text-[10px] font-black text-slate-400 uppercase">Day of Lunar Cycle</label>
+                     <input type="range" min="0" max="29" step="1" value={dayOfMonth} onChange={(e) => setDayOfMonth(Number(e.target.value))} className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-indigo-500" />
+                  </div>
+                  <div className="grid grid-cols-4 gap-2">
+                     {phases.map((phase) => (
+                        <button key={phase.day} onClick={() => setDayOfMonth(phase.day)} className={`p-2 rounded-lg text-center transition-all ${Math.abs(dayOfMonth - phase.day) < 2 ? 'bg-indigo-500' : 'bg-white/10 hover:bg-white/20'}`}>
+                           <span className="text-xl">{phase.emoji}</span>
+                        </button>
+                     ))}
+                  </div>
+                  <button onClick={() => setIsAnimating(!isAnimating)}
+                     className={`w-full py-4 rounded-xl font-black text-sm transition-all ${isAnimating ? 'bg-orange-500 text-white' : 'bg-indigo-500 text-white'}`}>
+                     {isAnimating ? 'PAUSE CYCLE' : 'WATCH FULL CYCLE'}
+                  </button>
+               </div>
+            </div>
+            <div className="p-6 bg-black/30 border-t border-white/10">
+               <p className="text-xs text-white/60 text-center"><strong>Why Phases?</strong> We see the part of the Moon lit by the Sun. As it orbits Earth, we see different amounts!</p>
+            </div>
+         </div>
+      );
+   };
+
+   // --- TIME DILATION RENDERER ---
+   const TimeDilationRenderer = () => {
+      const [velocity, setVelocity] = useState(0);
+      const [isAnimating, setIsAnimating] = useState(false);
+      const [earthTime, setEarthTime] = useState(0);
+      const [spaceshipTime, setSpaceshipTime] = useState(0);
+
+      const vFraction = velocity / 100;
+      const gamma = 1 / Math.sqrt(1 - vFraction * vFraction);
+      const timeDilation = gamma > 1 ? gamma : 1;
+
+      useEffect(() => {
+         if (!isAnimating) return;
+         const interval = setInterval(() => {
+            setEarthTime(t => t + 0.1);
+            setSpaceshipTime(t => t + 0.1 / timeDilation);
+         }, 100);
+         return () => clearInterval(interval);
+      }, [isAnimating, timeDilation]);
+
+      const resetClocks = () => { setEarthTime(0); setSpaceshipTime(0); };
+
+      return (
+         <div className="flex flex-col h-full bg-gradient-to-b from-slate-950 via-purple-950/50 to-slate-950 text-white font-sans overflow-hidden">
+            <div className="p-6 border-b border-purple-500/20 bg-purple-900/20">
+               <h3 className="text-xl font-black tracking-tight text-purple-300">TIME DILATION</h3>
+               <p className="text-[10px] font-bold text-purple-400/60 uppercase tracking-widest">Special Relativity</p>
+            </div>
+            <div className="flex-1 flex flex-col lg:flex-row overflow-hidden">
+               <div className="flex-1 relative flex items-center justify-center p-8">
+                  <svg width="500" height="350" viewBox="0 0 500 350">
+                     {Array.from({ length: 30 }).map((_, i) => (
+                        <circle key={i} cx={Math.random() * 500} cy={Math.random() * 350} r="1" fill="white" opacity="0.5" />
+                     ))}
+                     <g transform="translate(100, 175)">
+                        <circle r="50" fill="#3b82f6" />
+                        <ellipse cx="-15" cy="-15" rx="20" ry="15" fill="#22c55e" opacity="0.8" />
+                        <text y="75" textAnchor="middle" className="text-xs font-bold fill-blue-300">EARTH</text>
+                        <g transform="translate(0, -80)">
+                           <circle r="25" fill="#1e293b" stroke="#3b82f6" strokeWidth="2" />
+                           <line x1="0" y1="0" x2={15 * Math.sin(earthTime * 0.5)} y2={-15 * Math.cos(earthTime * 0.5)} stroke="#22c55e" strokeWidth="2" />
+                           <text y="40" textAnchor="middle" className="text-[10px] font-bold fill-green-400">{earthTime.toFixed(1)}s</text>
+                        </g>
+                     </g>
+                     <g transform="translate(350, 175)">
+                        {velocity > 50 && (
+                           <g opacity={velocity / 200}>
+                              {Array.from({ length: 5 }).map((_, i) => (
+                                 <ellipse key={i} cx={-30 - i * 15} cy="0" rx="20" ry="10" fill="#a855f7" opacity={0.3 - i * 0.05} />
+                              ))}
+                           </g>
+                        )}
+                        <ellipse cx="0" cy="0" rx="40" ry="15" fill="#6366f1" />
+                        <ellipse cx="20" cy="0" rx="15" ry="10" fill="#818cf8" />
+                        <ellipse cx="-45" cy="0" rx={5 + velocity / 20} ry={3 + velocity / 40} fill="#f97316" opacity={0.5 + velocity / 200} />
+                        <text y="45" textAnchor="middle" className="text-xs font-bold fill-purple-300">SPACESHIP</text>
+                        <g transform="translate(0, -55)">
+                           <circle r="25" fill="#1e293b" stroke="#a855f7" strokeWidth="2" />
+                           <line x1="0" y1="0" x2={15 * Math.sin(spaceshipTime * 0.5)} y2={-15 * Math.cos(spaceshipTime * 0.5)} stroke="#f97316" strokeWidth="2" />
+                           <text y="40" textAnchor="middle" className="text-[10px] font-bold fill-orange-400">{spaceshipTime.toFixed(1)}s</text>
+                        </g>
+                     </g>
+                     <g transform="translate(250, 300)">
+                        <text textAnchor="middle" className="text-sm font-bold fill-slate-400">v = {(vFraction * 100).toFixed(0)}% speed of light</text>
+                     </g>
+                  </svg>
+               </div>
+               <div className="w-full lg:w-80 bg-purple-950/30 border-t lg:border-t-0 lg:border-l border-purple-500/20 p-6 flex flex-col gap-4">
+                  <div className="p-4 bg-gradient-to-br from-purple-900/50 to-pink-900/30 rounded-2xl border border-purple-500/30">
+                     <p className="text-[10px] font-black text-purple-300 uppercase tracking-widest mb-2">Lorentz Factor (γ)</p>
+                     <p className="text-4xl font-black text-white">{timeDilation.toFixed(3)}</p>
+                     <p className="text-xs text-purple-400 mt-1">Time slows by {((1 - 1/timeDilation) * 100).toFixed(1)}%</p>
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                     <div className="p-3 bg-green-900/20 rounded-xl border border-green-500/20">
+                        <p className="text-[10px] font-bold text-green-400">Earth Time</p>
+                        <p className="text-xl font-black">{earthTime.toFixed(1)}s</p>
+                     </div>
+                     <div className="p-3 bg-orange-900/20 rounded-xl border border-orange-500/20">
+                        <p className="text-[10px] font-bold text-orange-400">Ship Time</p>
+                        <p className="text-xl font-black">{spaceshipTime.toFixed(1)}s</p>
+                     </div>
+                  </div>
+                  <div>
+                     <label className="text-[10px] font-black text-slate-400 uppercase">Velocity (% of c)</label>
+                     <input type="range" min="0" max="99" value={velocity} onChange={(e) => { setVelocity(Number(e.target.value)); resetClocks(); }}
+                        className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-purple-500" />
+                  </div>
+                  <div className="flex gap-2">
+                     <button onClick={() => setIsAnimating(!isAnimating)}
+                        className={`flex-1 py-3 rounded-xl font-black text-sm transition-all ${isAnimating ? 'bg-orange-500 text-white' : 'bg-purple-500 text-white'}`}>
+                        {isAnimating ? 'PAUSE' : 'START CLOCKS'}
+                     </button>
+                     <button onClick={resetClocks} className="px-4 py-3 rounded-xl font-black text-xs bg-slate-800 text-slate-400">RESET</button>
+                  </div>
+               </div>
+            </div>
+            <div className="p-6 bg-purple-950/30 border-t border-purple-500/20">
+               <p className="text-xs text-purple-300/80 text-center"><strong>Einstein's Discovery:</strong> Moving clocks run slower! At 99% light speed, 1 year on ship = 7 years on Earth.</p>
+            </div>
+         </div>
+      );
+   };
+
+   // --- ATOM STRUCTURE RENDERER ---
+   const AtomStructureRenderer = () => {
+      const [protons, setProtons] = useState(6);
+      const [neutrons, setNeutrons] = useState(6);
+      const [electrons, setElectrons] = useState(6);
+      const [isAnimating, setIsAnimating] = useState(true);
+      const [orbitAngle, setOrbitAngle] = useState(0);
+
+      const elements: Record<number, { symbol: string; name: string }> = {
+         1: { symbol: 'H', name: 'Hydrogen' }, 2: { symbol: 'He', name: 'Helium' },
+         3: { symbol: 'Li', name: 'Lithium' }, 4: { symbol: 'Be', name: 'Beryllium' },
+         5: { symbol: 'B', name: 'Boron' }, 6: { symbol: 'C', name: 'Carbon' },
+         7: { symbol: 'N', name: 'Nitrogen' }, 8: { symbol: 'O', name: 'Oxygen' },
+         9: { symbol: 'F', name: 'Fluorine' }, 10: { symbol: 'Ne', name: 'Neon' },
+      };
+
+      const element = elements[protons] || { symbol: '?', name: 'Unknown' };
+      const charge = protons - electrons;
+      const isIon = charge !== 0;
+
+      const shells = [2, 8, 8];
+      const electronConfig: number[] = [];
+      let remaining = electrons;
+      for (const max of shells) {
+         const inShell = Math.min(remaining, max);
+         electronConfig.push(inShell);
+         remaining -= inShell;
+         if (remaining <= 0) break;
+      }
+
+      useEffect(() => {
+         if (!isAnimating) return;
+         const interval = setInterval(() => setOrbitAngle(a => (a + 2) % 360), 50);
+         return () => clearInterval(interval);
+      }, [isAnimating]);
+
+      return (
+         <div className="flex flex-col h-full bg-gradient-to-b from-slate-950 via-cyan-950/30 to-slate-950 text-white font-sans overflow-hidden">
+            <div className="p-6 border-b border-cyan-500/20 bg-cyan-900/20">
+               <h3 className="text-xl font-black tracking-tight text-cyan-300">ATOM STRUCTURE</h3>
+               <p className="text-[10px] font-bold text-cyan-400/60 uppercase tracking-widest">Build Your Own Atom</p>
+            </div>
+            <div className="flex-1 flex flex-col lg:flex-row overflow-hidden">
+               <div className="flex-1 relative flex items-center justify-center p-8">
+                  <svg width="400" height="400" viewBox="0 0 400 400">
+                     {electronConfig.map((count, shellIndex) => count > 0 && (
+                        <circle key={shellIndex} cx="200" cy="200" r={80 + shellIndex * 50} fill="none" stroke="#22d3ee" strokeWidth="1" opacity="0.3" strokeDasharray="5,5" />
+                     ))}
+                     <g transform="translate(200, 200)">
+                        {Array.from({ length: Math.min(protons + neutrons, 20) }).map((_, i) => {
+                           const angle = (i / Math.min(protons + neutrons, 20)) * Math.PI * 2 + (i % 2) * 0.3;
+                           const r = 8 + (i % 3) * 6;
+                           const x = r * Math.cos(angle);
+                           const y = r * Math.sin(angle);
+                           return <circle key={i} cx={x} cy={y} r="10" fill={i < protons ? '#ef4444' : '#64748b'} stroke={i < protons ? '#fca5a5' : '#94a3b8'} strokeWidth="2" />;
+                        })}
+                        <text textAnchor="middle" dy="5" className="text-lg font-black fill-white">{element.symbol}</text>
+                     </g>
+                     {electronConfig.map((count, shellIndex) =>
+                        Array.from({ length: count }).map((_, eIndex) => {
+                           const baseAngle = (eIndex / count) * 360;
+                           const angle = ((baseAngle + orbitAngle * (shellIndex + 1) * 0.5) % 360) * Math.PI / 180;
+                           const radius = 80 + shellIndex * 50;
+                           return (
+                              <g key={`${shellIndex}-${eIndex}`} transform={`translate(${200 + radius * Math.cos(angle)}, ${200 + radius * Math.sin(angle)})`}>
+                                 <circle r="8" fill="#3b82f6" className="drop-shadow-[0_0_8px_rgba(59,130,246,0.8)]" />
+                                 <text textAnchor="middle" dy="3" className="text-[8px] font-bold fill-white">e⁻</text>
+                              </g>
+                           );
+                        })
+                     )}
+                     <g transform="translate(20, 350)">
+                        <circle cx="10" cy="0" r="8" fill="#ef4444" />
+                        <text x="25" y="4" className="text-[10px] fill-slate-400">Proton (+)</text>
+                        <circle cx="100" cy="0" r="8" fill="#64748b" />
+                        <text x="115" y="4" className="text-[10px] fill-slate-400">Neutron (0)</text>
+                        <circle cx="200" cy="0" r="8" fill="#3b82f6" />
+                        <text x="215" y="4" className="text-[10px] fill-slate-400">Electron (−)</text>
+                     </g>
+                  </svg>
+               </div>
+               <div className="w-full lg:w-80 bg-cyan-950/30 border-t lg:border-t-0 lg:border-l border-cyan-500/20 p-6 flex flex-col gap-4">
+                  <div className={`p-4 rounded-2xl border ${isIon ? 'bg-gradient-to-br from-yellow-900/50 to-orange-900/30 border-yellow-500/30' : 'bg-gradient-to-br from-cyan-900/50 to-blue-900/30 border-cyan-500/30'}`}>
+                     <div className="flex items-baseline gap-2">
+                        <p className="text-4xl font-black text-white">{element.symbol}</p>
+                        <div className="text-xs"><p className="text-slate-400">{protons + neutrons}</p><p className="text-slate-400">{protons}</p></div>
+                     </div>
+                     <p className="text-lg font-bold text-cyan-300">{element.name}</p>
+                     {isIon && <p className="text-sm text-yellow-400 mt-1">Ion: {charge > 0 ? `+${charge}` : charge} charge</p>}
+                  </div>
+                  <div className="grid grid-cols-3 gap-2">
+                     <div className="p-2 bg-red-900/30 rounded-xl text-center border border-red-500/20">
+                        <p className="text-2xl font-black text-red-400">{protons}</p>
+                        <p className="text-[10px] text-slate-400">Protons</p>
+                     </div>
+                     <div className="p-2 bg-slate-700/50 rounded-xl text-center border border-slate-500/20">
+                        <p className="text-2xl font-black text-slate-300">{neutrons}</p>
+                        <p className="text-[10px] text-slate-400">Neutrons</p>
+                     </div>
+                     <div className="p-2 bg-blue-900/30 rounded-xl text-center border border-blue-500/20">
+                        <p className="text-2xl font-black text-blue-400">{electrons}</p>
+                        <p className="text-[10px] text-slate-400">Electrons</p>
+                     </div>
+                  </div>
+                  <div className="space-y-3">
+                     <div>
+                        <label className="text-[10px] font-black text-red-400 uppercase">Protons (defines element)</label>
+                        <input type="range" min="1" max="10" value={protons} onChange={(e) => setProtons(Number(e.target.value))} className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-red-500" />
+                     </div>
+                     <div>
+                        <label className="text-[10px] font-black text-slate-400 uppercase">Neutrons (isotope)</label>
+                        <input type="range" min="0" max="15" value={neutrons} onChange={(e) => setNeutrons(Number(e.target.value))} className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-slate-500" />
+                     </div>
+                     <div>
+                        <label className="text-[10px] font-black text-blue-400 uppercase">Electrons (charge)</label>
+                        <input type="range" min="0" max="12" value={electrons} onChange={(e) => setElectrons(Number(e.target.value))} className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-blue-500" />
+                     </div>
+                  </div>
+                  <button onClick={() => setIsAnimating(!isAnimating)}
+                     className={`w-full py-3 rounded-xl font-black text-sm transition-all ${isAnimating ? 'bg-orange-500 text-white' : 'bg-cyan-500 text-white'}`}>
+                     {isAnimating ? 'PAUSE ELECTRONS' : 'ANIMATE'}
+                  </button>
+               </div>
+            </div>
+            <div className="p-6 bg-cyan-950/30 border-t border-cyan-500/20">
+               <p className="text-xs text-cyan-300/80 text-center"><strong>Key Insight:</strong> Protons define the element. Neutrons create isotopes. Electrons determine charge!</p>
+            </div>
+         </div>
+      );
+   };
+
    // --- GENERIC RENDERER ---
    const GenericRenderer = () => {
       if (type === 'poster' || type === 'infographic') {
@@ -18653,6 +19863,14 @@ const GeneratedDiagram: React.FC<DiagramProps> = ({ type, data, title }) => {
             return <RLCCircuitRenderer />;
          case 'faradays_law':
             return <FaradaysLawRenderer />;
+         case 'magnetic_flux':
+            return <MagneticFluxRenderer />;
+         case 'lenzs_law':
+            return <LenzsLawRenderer />;
+         case 'battery_connections':
+            return <BatteryConnectionsRenderer />;
+         case 'bulb_power':
+            return <BulbPowerRenderer />;
          case 'multi_step_equations':
             return <MultiStepEquationsRenderer />;
          case 'variables_both_sides':
@@ -18703,6 +19921,51 @@ const GeneratedDiagram: React.FC<DiagramProps> = ({ type, data, title }) => {
             return <ConditionalProbabilityRenderer />;
          case 'margin_of_error':
             return <MarginOfErrorRenderer />;
+         // Plural/variant type mappings to existing renderers
+         case 'metal_conductors':
+            return <ConductivityTesterRenderer />;
+         case 'insulators':
+            return <ConductivityTesterRenderer />;
+         case 'simple_switches':
+            return <SimpleSwitchRenderer />;
+         case 'magnetic_poles':
+            return <MagneticPoleRenderer />;
+         case 'compass_use':
+            return <CompassRenderer />;
+         case 'electromagnets':
+            return <ElectromagnetRenderer />;
+         case 'basic_motors':
+            return <BasicMotorRenderer />;
+         case 'basic_generators':
+            return <BasicGeneratorRenderer />;
+         case 'earth_magnetic_field':
+            return <EarthFieldRenderer />;
+         case 'lorentz_force':
+            return <LorentzForceRenderer />;
+         case 'inductance':
+            return <InductanceRenderer />;
+         case 'transformers':
+            return <TransformersRenderer />;
+         case 'day_night_cycle':
+            return <DayNightCycleRenderer />;
+         case 'moon_phases':
+            return <MoonPhasesRenderer />;
+         case 'time_dilation':
+            return <TimeDilationRenderer />;
+         case 'atom_structure':
+            return <AtomStructureRenderer />;
+         case 'solenoid':
+            return <InductanceRenderer />;
+         case 'seasons':
+            return <DayNightCycleRenderer />;
+         case 'solar_system':
+            return <MoonPhasesRenderer />;
+         case 'isotopes':
+            return <AtomStructureRenderer />;
+         case 'length_contraction':
+            return <TimeDilationRenderer />;
+         case 'mass_energy':
+            return <TimeDilationRenderer />;
          default:
             return <GenericRenderer />;
       }

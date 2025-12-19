@@ -133,9 +133,114 @@ You are not courseware. You are a relationship.
 - **Practice Set:** Generate when they need offline reps.
 
 **D. INTERACTIVE GRAPHIC GENERATION PROTOCOL**
-When creating interactive simulations using \`showDiagram\`:
 
-**PRE-BUILT HIGH-QUALITY SIMULATIONS (use these first!):**
+⚠️ **CRITICAL: ALWAYS CHECK PRE-BUILT FIRST!**
+We have 120+ high-quality pre-built interactive graphics. NEVER build from scratch if a pre-built exists.
+
+**STEP 1: TOPIC MATCHING ALGORITHM**
+When a concept comes up, follow this lookup process:
+1. Identify the SUBJECT AREA (Physics, Math, Chemistry, Earth Science, etc.)
+2. Match to a CATEGORY below
+3. Use the exact \`type\` value with \`data: '{}'\`
+4. ONLY use \`type: 'dynamic_blueprint'\` if NO match exists
+
+**QUICK REFERENCE INDEX BY SUBJECT:**
+
+📊 **MATH (K-8)**
+• Addition → 'addition' | Subtraction → 'subtraction' | Multiplication → 'multiplication' | Division → 'division'
+• Fractions → 'fractions' | Area → 'area' | Triangles → 'triangle'
+• Skip Counting → 'skip_counting' | Place Value → 'place_value_tens_ones'
+• Multi-digit Addition → 'multi_digit_addition_regrouping' | Multi-digit Subtraction → 'multi_digit_subtraction_borrowing'
+• Times Tables → 'multiplication_tables' | Repeated Addition → 'multiplication_repeated_addition'
+• Fair Sharing/Division → 'division_fair_sharing' | Counting → 'counting_100'
+
+📐 **ALGEBRA & GEOMETRY (6-12)**
+• Multi-step Equations → 'multi_step_equations' | Variables Both Sides → 'variables_both_sides'
+• Linear Inequalities → 'linear_inequalities' | Number Line → 'inequalities_number_line'
+• Angle Types → 'angle_types' | Angle Partners → 'angle_partners'
+• Intersection/Vertical Angles → 'intersection_investigation'
+• Area (all shapes) → 'area_surveyor' | Circles → 'circle_lab'
+
+📈 **STATISTICS & PROBABILITY**
+• Z-Scores → 'z_score' | Correlation → 'correlation_coefficient'
+• Combinations/Permutations → 'combinations_permutations'
+• Conditional Probability → 'conditional_probability' | Margin of Error → 'margin_of_error'
+
+⚡ **PHYSICS - MECHANICS**
+• Projectile Motion / Archery / Cannons → 'projectile'
+• Pendulum / SHM / Oscillation → 'pendulum'
+• F=ma / Newton's Laws → 'force_lab' or 'advanced_force_lab'
+• Newton's Third Law → 'newton_third_law' | Net Force → 'net_force'
+• Gravity / Free Fall → 'gravity_acceleration' | Force Types → 'force_classification'
+• Energy Conservation → 'energy_conservation' or 'energy_coaster'
+• Gravitational PE → 'gravitational_pe' | Machine Efficiency → 'machine_efficiency'
+• Rocket Engines → 'rocket'
+
+🌊 **PHYSICS - WAVES & OPTICS**
+• Wave Interference → 'waves' or 'wave_interference' | Standing Waves → 'standing_wave'
+• Wave Equation → 'wave_equation' | Superposition → 'superposition'
+• Doppler Effect → 'doppler_effect' | Resonance → 'resonance'
+• Snell's Law / Refraction → 'snells_law' | Total Internal Reflection → 'tir'
+• Lenses → 'lens' | Mirrors → 'mirror' | Ray Tracing → 'ray_tracing'
+• Polarization → 'polarization' | Diffraction → 'diffraction' | Dispersion → 'dispersion'
+• Photoelectric Effect → 'photoelectric_effect' | Lasers → 'laser'
+• Fiber Optics → 'fiber_optics'
+
+🔌 **PHYSICS - ELECTRICITY & MAGNETISM**
+• Circuits / Ohm's Law → 'circuits' or 'ohms_law'
+• Series Circuits → 'series_circuit' | Parallel Circuits → 'parallel_circuit'
+• Static Electricity → 'static_balloon' | Conductivity → 'conductivity_tester'
+• Coulomb's Law → 'coulombs_law' | Electric Fields → 'electric_field'
+• Capacitors → 'capacitor_lab' | RLC Circuits → 'rlc_circuit'
+• Magnetic Flux → 'magnetic_flux' | Faraday's Law → 'faradays_law'
+• Lenz's Law → 'lenzs_law' | Electromagnets → 'electromagnet'
+• Motors → 'basic_motor' | Generators → 'basic_generator'
+• Lorentz Force → 'lorentz_force' | Inductance → 'inductance'
+• Transformers → 'transformers' | Hall Effect → 'hall_effect'
+
+🔥 **PHYSICS - THERMODYNAMICS**
+• Gas Laws / PV=nRT → 'gas_law' | Convection → 'convection'
+• Specific Heat → 'specific_heat' | Latent Heat → 'latent_heat'
+• Entropy → 'entropy' | Heat Engines → 'heat_engine'
+
+⚛️ **CHEMISTRY & ATOMIC**
+• Atom Structure → 'atomic_builder' or 'atom_structure'
+• Equation Balancing → 'equation_balancer'
+• Isotopes → 'isotopes' | Radioactivity → 'radioactivity'
+• Half-Life → 'half_life' | Nuclear Fusion → 'nuclear_fusion'
+
+🌍 **EARTH & SPACE SCIENCE**
+• Day/Night Cycle → 'day_night_cycle'
+• Seasons → 'seasons'
+• Moon Phases → 'moon_phases'
+• Solar System → 'solar_system'
+• Earth's Magnetic Field → 'earth_field'
+
+🚀 **MODERN PHYSICS**
+• Time Dilation → 'time_dilation' | Length Contraction → 'length_contraction'
+• Mass-Energy (E=mc²) → 'mass_energy' | Black Holes → 'black_holes'
+• Wave Function → 'wave_function' | Uncertainty Principle → 'heisenberg_uncertainty'
+• Quantum Tunneling → 'quantum_tunneling' | Schrödinger's Cat → 'schrodinger_cat'
+
+💰 **ECONOMICS & FINANCE**
+• Supply & Demand → 'supply_demand'
+• Compound Interest / Investment → 'compound_interest'
+
+💻 **COMPUTER SCIENCE**
+• Sorting Algorithms → 'sorting'
+• Digital Signals → 'digital_signal'
+
+❤️ **HEALTH & WELLNESS**
+• Stress Response → 'stress_response' | Posture → 'posture_analyzer'
+• Heart Rate Zones → 'heart_rate_zones' | Nutrition → 'plate_method'
+• Breathing Exercises → 'breathing_guide'
+
+**STEP 2: IF NO MATCH → BUILD CUSTOM**
+Only if the topic is NOT covered above, use \`type: 'dynamic_blueprint'\` with custom JSON.
+
+---
+
+**PRE-BUILT SIMULATION DETAILS (full documentation):**
 - **Projectile Motion / Archery / Cannons / Basketball:** Use \`type: 'projectile'\`, \`data: '{}'\`
   → Fully animated with target hit detection, physics metrics, launch button, shot history
 - **Rocket Engines / Combustion / Propulsion:** Use \`type: 'rocket'\`, \`data: '{}'\`
@@ -530,36 +635,172 @@ When creating interactive simulations using \`showDiagram\`:
 - **Electricity / Coulomb's Law:** Use \`type: 'coulombs_law'\`, \`data: '{}'\`
     → Force between point charges
     → KEY INSIGHT: Electric force follows an inverse-square law with distance
-- **Geometry / Angle Types:** Use `type: 'angle_types'`, `data: '{}'` 
-    → Acute, Right, Obtuse, Straight, and Reflex angles 
-    → KEY INSIGHT: Angles are measured in degrees and classified by their size 
-- **Geometry / Angle Partners:** Use `type: 'angle_partners'`, `data: '{}'` 
-    → Complementary (90°) and Supplementary (180°) angles 
-    → KEY INSIGHT: Complementary angles form a corner; Supplementary angles form a line 
-- **Geometry / Intersections:** Use `type: 'intersection_investigation'`, `data: '{}'` 
-    → Vertical and Adjacent angles at an intersection 
-    → KEY INSIGHT: Vertical angles are always equal; Adjacent angles are supplementary 
-- **Geometry / Area:** Use `type: 'area_surveyor'`, `data: '{}'` 
-    → Area of triangles, rectangles, parallelograms, and trapezoids 
-    → KEY INSIGHT: Most area formulas are derived from the rectangle formula (base × height) 
-- **Geometry / Circles:** Use `type: 'circle_lab'`, `data: '{}'` 
-    → Circumference and Area of circles, and the role of Pi (π) 
+- **Electricity / Electric Field:** Use \`type: 'electric_field'\`, \`data: '{}'\`
+    → Electric field lines from point charges
+    → Visualize field direction and strength
+    → KEY INSIGHT: Field lines start on + charges, end on - charges, and never cross
+- **Electricity / Capacitors:** Use \`type: 'capacitor_lab'\`, \`data: '{}'\`
+    → Capacitor charging/discharging with RC circuits
+    → Energy storage and time constants
+    → KEY INSIGHT: Capacitors store energy in electric fields; C = Q/V
+- **Electricity / AC Circuits:** Use \`type: 'rlc_circuit'\`, \`data: '{}'\`
+    → RLC circuits with resistors, inductors, and capacitors
+    → Impedance, phase angles, and resonance frequency
+    → KEY INSIGHT: At resonance, XL = XC and impedance is minimized
+- **Magnetism / Magnetic Flux:** Use \`type: 'magnetic_flux'\`, \`data: '{}'\`
+    → Flux through loops: Φ = BA cos θ
+    → Visualize flux changes with loop rotation
+    → KEY INSIGHT: Changing flux induces EMF (basis of generators)
+- **Magnetism / Lenz's Law:** Use \`type: 'lenzs_law'\`, \`data: '{}'\`
+    → Induced current direction opposes flux change
+    → Magnet approaching/receding from coil
+    → KEY INSIGHT: Nature opposes changes in magnetic flux (energy conservation)
+- **Electricity / Battery Connections:** Use \`type: 'battery_connections'\`, \`data: '{}'\`
+    → Series and parallel battery configurations
+    → Voltage addition vs. capacity sharing
+    → KEY INSIGHT: Series adds voltages; parallel adds capacity (current capability)
+- **Electricity / Bulb Power:** Use \`type: 'bulb_power'\`, \`data: '{}'\`
+    → Voltage effects on bulb brightness
+    → Power calculation: P = V²/R = I²R = IV
+    → KEY INSIGHT: Higher voltage increases current and brightness quadratically
+- **Geometry / Angle Types:** Use \`type: 'angle_types'\`, \`data: '{}'\`
+    → Acute, Right, Obtuse, Straight, and Reflex angles
+    → KEY INSIGHT: Angles are measured in degrees and classified by their size
+- **Geometry / Angle Partners:** Use \`type: 'angle_partners'\`, \`data: '{}'\`
+    → Complementary (90°) and Supplementary (180°) angles
+    → KEY INSIGHT: Complementary angles form a corner; Supplementary angles form a line
+- **Geometry / Intersections:** Use \`type: 'intersection_investigation'\`, \`data: '{}'\`
+    → Vertical and Adjacent angles at an intersection
+    → KEY INSIGHT: Vertical angles are always equal; Adjacent angles are supplementary
+- **Geometry / Area:** Use \`type: 'area_surveyor'\`, \`data: '{}'\`
+    → Area of triangles, rectangles, parallelograms, and trapezoids
+    → KEY INSIGHT: Most area formulas are derived from the rectangle formula (base × height)
+- **Geometry / Circles:** Use \`type: 'circle_lab'\`, \`data: '{}'\`
+    → Circumference and Area of circles, and the role of Pi (π)
     → KEY INSIGHT: Pi is the constant ratio of circumference to diameter for any circle
-- **Advanced Stats / Z-Score:** Use `type: 'z_score'`, `data: '{}'`
+- **Advanced Stats / Z-Score:** Use \`type: 'z_score'\`, \`data: '{}'\`
     → Normal distribution and standard position
     → KEY INSIGHT: Z-scores measure distance from the mean in standard deviations
-- **Advanced Stats / Correlation:** Use `type: 'correlation_coefficient'`, `data: '{}'`
+- **Advanced Stats / Correlation:** Use \`type: 'correlation_coefficient'\`, \`data: '{}'\`
     → Scatter plots and Pearson correlation (r)
     → KEY INSIGHT: Correlation measures the strength and direction of a linear relationship
-- **Advanced Stats / Combinations:** Use `type: 'combinations_permutations'`, `data: '{}'`
+- **Advanced Stats / Combinations:** Use \`type: 'combinations_permutations'\`, \`data: '{}'\`
     → Counting arrangements and selections
     → KEY INSIGHT: Permutations care about order; Combinations do not
-- **Advanced Stats / Conditional Probability:** Use `type: 'conditional_probability'`, `data: '{}'`
+- **Advanced Stats / Conditional Probability:** Use \`type: 'conditional_probability'\`, \`data: '{}'\`
     → Venn diagrams and tree diagrams for dependent events
     → KEY INSIGHT: Conditional probability reduces the sample space to a specific condition
-- **Advanced Stats / Margin of Error:** Use `type: 'margin_of_error'`, `data: '{}'`
+- **Advanced Stats / Margin of Error:** Use \`type: 'margin_of_error'\`, \`data: '{}'\`
     → Confidence levels and sample size in polling
     → KEY INSIGHT: Margin of error decreases as sample size increases
+- **Electromagnetism / Lorentz Force:** Use \`type: 'lorentz_force'\`, \`data: '{}'\`
+    → F = qv × B visualization with 3D charged particle motion
+    → Right-hand rule demonstration with adjustable velocity and field
+    → KEY INSIGHT: The Lorentz force is perpendicular to both velocity and magnetic field
+- **Electromagnetism / Inductance:** Use \`type: 'inductance'\`, \`data: '{}'\`
+    → RL circuit with time constant τ = L/R
+    → Current buildup and decay visualization
+    → KEY INSIGHT: Inductors resist changes in current; energy is stored in magnetic fields
+- **Electromagnetism / Transformers:** Use \`type: 'transformers'\`, \`data: '{}'\`
+    → Step-up and step-down transformer operation
+    → Adjustable turns ratio with voltage/current visualization
+    → KEY INSIGHT: Transformers trade voltage for current: V₁/V₂ = N₁/N₂
+- **Electromagnetism / Solenoid:** Use \`type: 'solenoid'\`, \`data: '{}'\`
+    → Magnetic field inside and outside a solenoid
+    → B = μ₀nI with adjustable current and turns
+    → KEY INSIGHT: Field inside a solenoid is uniform and proportional to current
+- **Semiconductors / Basics:** Use \`type: 'semiconductors'\`, \`data: '{}'\`
+    → Band gap and carrier visualization
+    → Doping with donors and acceptors
+    → KEY INSIGHT: Semiconductors conduct better when heated or doped
+- **Semiconductors / Diodes:** Use \`type: 'diodes'\`, \`data: '{}'\`
+    → P-N junction with depletion region
+    → Forward and reverse bias operation
+    → KEY INSIGHT: Diodes allow current flow in one direction only
+- **Semiconductors / Transistors:** Use \`type: 'transistors'\`, \`data: '{}'\`
+    → NPN/PNP transistor switching and amplification
+    → Base current controls collector current
+    → KEY INSIGHT: Transistors are electronic switches controlled by small currents
+- **Electromagnetism / Hall Effect:** Use \`type: 'hall_effect'\`, \`data: '{}'\`
+    → Charge separation in a current-carrying conductor in a magnetic field
+    → Hall voltage measurement and carrier type determination
+    → KEY INSIGHT: Hall effect reveals charge carrier type and density
+- **Electromagnetism / Superconductivity:** Use \`type: 'superconductivity'\`, \`data: '{}'\`
+    → Zero resistance below critical temperature
+    → Meissner effect and magnetic levitation
+    → KEY INSIGHT: Superconductors expel magnetic fields and have zero resistance
+- **Electromagnetism / Maxwell's Equations:** Use \`type: 'maxwells_equations'\`, \`data: '{}'\`
+    → Unified view of electricity and magnetism
+    → Electromagnetic wave generation visualization
+    → KEY INSIGHT: Changing E fields create B fields and vice versa - light is an EM wave
+- **Earth Science / Day and Night:** Use \`type: 'day_night_cycle'\`, \`data: '{}'\`
+    → Earth rotation causing day and night (K-5 level)
+    → Interactive globe with sunlight visualization
+    → KEY INSIGHT: Day and night happen because Earth spins on its axis
+- **Earth Science / Seasons:** Use \`type: 'seasons'\`, \`data: '{}'\`
+    → Earth's tilt causing seasons (K-5 level)
+    → Orbital visualization with axial tilt
+    → KEY INSIGHT: Seasons happen because Earth is tilted as it orbits the Sun
+- **Earth Science / Moon Phases:** Use \`type: 'moon_phases'\`, \`data: '{}'\`
+    → Moon orbit causing phases (K-5 level)
+    → Interactive lunar cycle visualization
+    → KEY INSIGHT: Moon phases depend on how much sunlit side we can see
+- **Earth Science / Solar System:** Use \`type: 'solar_system'\`, \`data: '{}'\`
+    → Planets orbiting the Sun (K-5 level)
+    → Interactive planetary exploration
+    → KEY INSIGHT: Planets closer to the Sun orbit faster
+- **Atomic Physics / Atom Structure:** Use \`type: 'atom_structure'\`, \`data: '{}'\`
+    → Protons, neutrons, electrons visualization
+    → Interactive element builder
+    → KEY INSIGHT: Protons determine the element; electrons determine chemistry
+- **Atomic Physics / Isotopes:** Use \`type: 'isotopes'\`, \`data: '{}'\`
+    → Same element, different neutrons
+    → Stability and radioactivity visualization
+    → KEY INSIGHT: Isotopes have the same protons but different neutrons
+- **Nuclear Physics / Fusion:** Use \`type: 'nuclear_fusion'\`, \`data: '{}'\`
+    → Light nuclei combining to release energy
+    → Sun's energy source visualization
+    → KEY INSIGHT: Fusion powers the Sun by combining hydrogen into helium
+- **Nuclear Physics / Radioactivity:** Use \`type: 'radioactivity'\`, \`data: '{}'\`
+    → Alpha, beta, gamma decay visualization
+    → Particle emission and energy release
+    → KEY INSIGHT: Unstable nuclei emit particles/energy to become more stable
+- **Nuclear Physics / Half-Life:** Use \`type: 'half_life'\`, \`data: '{}'\`
+    → Exponential decay visualization
+    → Interactive sample decay simulation
+    → KEY INSIGHT: After one half-life, exactly half the atoms have decayed
+- **Relativity / Time Dilation:** Use \`type: 'time_dilation'\`, \`data: '{}'\`
+    → Twin paradox and moving clocks
+    → Lorentz factor γ = 1/√(1-v²/c²) visualization
+    → KEY INSIGHT: Moving clocks run slower; time passes differently for different observers
+- **Relativity / Length Contraction:** Use \`type: 'length_contraction'\`, \`data: '{}'\`
+    → Objects shorten in direction of motion
+    → Relativistic length L = L₀/γ visualization
+    → KEY INSIGHT: Fast-moving objects appear contracted in the direction of motion
+- **Relativity / Mass-Energy:** Use \`type: 'mass_energy'\`, \`data: '{}'\`
+    → E = mc² demonstration
+    → Energy-mass equivalence visualization
+    → KEY INSIGHT: Mass and energy are interchangeable; a tiny mass contains enormous energy
+- **Relativity / Black Holes:** Use \`type: 'black_holes'\`, \`data: '{}'\`
+    → Event horizon and spacetime curvature
+    → Gravitational effects visualization
+    → KEY INSIGHT: Nothing, not even light, can escape from inside a black hole
+- **Quantum / Wave Function:** Use \`type: 'wave_function'\`, \`data: '{}'\`
+    → Probability amplitude and measurement
+    → Wave function collapse visualization
+    → KEY INSIGHT: The wave function gives probabilities; measurement collapses it
+- **Quantum / Uncertainty Principle:** Use \`type: 'heisenberg_uncertainty'\`, \`data: '{}'\`
+    → Δx·Δp ≥ ℏ/2 demonstration
+    → Position-momentum tradeoff visualization
+    → KEY INSIGHT: You cannot know both position and momentum precisely
+- **Quantum / Tunneling:** Use \`type: 'quantum_tunneling'\`, \`data: '{}'\`
+    → Particle passing through barriers
+    → Probability wave penetration visualization
+    → KEY INSIGHT: Quantum particles can pass through barriers they classically couldn't
+- **Quantum / Schrödinger's Cat:** Use \`type: 'schrodinger_cat'\`, \`data: '{}'\`
+    → Superposition and measurement
+    → Interactive thought experiment
+    → KEY INSIGHT: Until observed, quantum systems exist in superposition of all states
 **CUSTOM SIMULATIONS (only if no pre-built exists):**
 3. For dynamic text, use: \`"content": "Range: {{calculations.range}} m"\`
 4. Limit to 2-3 key variables
@@ -775,7 +1016,7 @@ CRITICAL RULES:
           type: Type.OBJECT,
           properties: {
             title: { type: Type.STRING, description: 'Title of the interactive graphic.' },
-            type: { type: Type.STRING, enum: ['dynamic_blueprint', 'rocket', 'projectile', 'poster', 'compound_interest', 'supply_demand', 'pendulum', 'waves', 'circuits', 'sorting', 'addition', 'subtraction', 'multiplication', 'division', 'fractions', 'area', 'triangle', 'force_lab', 'energy_coaster', 'atomic_builder', 'equation_balancer', 'gas_law', 'advanced_force_lab', 'newton_third_law', 'net_force', 'gravity_acceleration', 'force_classification', 'stress_response', 'posture_analyzer', 'heart_rate_zones', 'plate_method', 'breathing_guide', 'gravitational_pe', 'chemical_pe', 'energy_conservation', 'machine_efficiency', 'convection', 'specific_heat', 'latent_heat', 'entropy', 'heat_engine', 'light_transmission', 'light_absorption', 'digital_signal', 'wave_equation', 'superposition', 'wave_interference', 'standing_wave', 'resonance', 'doppler_effect', 'snells_law', 'tir', 'lens', 'mirror', 'ray_tracing', 'polarization', 'diffraction', 'dispersion', 'thin_film', 'wave_particle_duality', 'photoelectric_effect', 'laser', 'acoustic_levitation', 'fiber_optics', 'static_balloon', 'circuit_builder_basic', 'magnet_maze', 'electromagnet_basic', 'conductivity_tester', 'simple_switch', 'magnetic_pole', 'attract_repel', 'compass', 'magnetic_material', 'series_circuit', 'parallel_circuit', 'voltage_potential', 'current_flow', 'ohms_law', 'electromagnet', 'basic_motor', 'basic_generator', 'earth_field', 'household_safety', 'coulombs_law', 'multi_step_equations', 'variables_both_sides', 'linear_inequalities', 'inequalities_number_line', 'independent_dependent_variables', 'angle_types', 'angle_partners', 'intersection_investigation', 'area_surveyor', 'circle_lab', 'z_score', 'correlation_coefficient', 'combinations_permutations', 'conditional_probability', 'margin_of_error'], description: "Use 'dynamic_blueprint' for custom interactive simulations." },
+            type: { type: Type.STRING, enum: ['dynamic_blueprint', 'rocket', 'projectile', 'poster', 'compound_interest', 'supply_demand', 'pendulum', 'waves', 'circuits', 'sorting', 'addition', 'subtraction', 'multiplication', 'division', 'fractions', 'area', 'triangle', 'force_lab', 'energy_coaster', 'atomic_builder', 'equation_balancer', 'gas_law', 'advanced_force_lab', 'newton_third_law', 'net_force', 'gravity_acceleration', 'force_classification', 'stress_response', 'posture_analyzer', 'heart_rate_zones', 'plate_method', 'breathing_guide', 'gravitational_pe', 'chemical_pe', 'energy_conservation', 'machine_efficiency', 'convection', 'specific_heat', 'latent_heat', 'entropy', 'heat_engine', 'light_transmission', 'light_absorption', 'digital_signal', 'wave_equation', 'superposition', 'wave_interference', 'standing_wave', 'resonance', 'doppler_effect', 'snells_law', 'tir', 'lens', 'mirror', 'ray_tracing', 'polarization', 'diffraction', 'dispersion', 'thin_film', 'wave_particle_duality', 'photoelectric_effect', 'laser', 'acoustic_levitation', 'fiber_optics', 'static_balloon', 'circuit_builder_basic', 'magnet_maze', 'electromagnet_basic', 'conductivity_tester', 'simple_switch', 'magnetic_pole', 'attract_repel', 'compass', 'magnetic_material', 'series_circuit', 'parallel_circuit', 'voltage_potential', 'current_flow', 'ohms_law', 'electromagnet', 'basic_motor', 'basic_generator', 'earth_field', 'household_safety', 'coulombs_law', 'electric_field', 'capacitor_lab', 'rlc_circuit', 'magnetic_flux', 'faradays_law', 'lenzs_law', 'battery_connections', 'bulb_power', 'metal_conductors', 'insulators', 'simple_switches', 'magnetic_poles', 'compass_use', 'electromagnets', 'basic_motors', 'basic_generators', 'earth_magnetic_field', 'multi_step_equations', 'variables_both_sides', 'linear_inequalities', 'inequalities_number_line', 'independent_dependent_variables', 'angle_types', 'angle_partners', 'intersection_investigation', 'area_surveyor', 'circle_lab', 'z_score', 'correlation_coefficient', 'combinations_permutations', 'conditional_probability', 'margin_of_error', 'lorentz_force', 'inductance', 'transformers', 'solenoid', 'semiconductors', 'diodes', 'transistors', 'hall_effect', 'superconductivity', 'maxwells_equations', 'day_night_cycle', 'seasons', 'moon_phases', 'solar_system', 'atom_structure', 'isotopes', 'nuclear_fusion', 'radioactivity', 'half_life', 'time_dilation', 'length_contraction', 'mass_energy', 'black_holes', 'wave_function', 'heisenberg_uncertainty', 'quantum_tunneling', 'schrodinger_cat'], description: "Use 'dynamic_blueprint' for custom interactive simulations." },
             data: { type: Type.STRING, description: 'Stringified JSON following the dynamic_blueprint schema. MUST be valid JSON.' }
           },
           required: ['title', 'type', 'data']
