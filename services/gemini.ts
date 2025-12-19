@@ -530,34 +530,34 @@ When creating interactive simulations using \`showDiagram\`:
 - **Electricity / Coulomb's Law:** Use \`type: 'coulombs_law'\`, \`data: '{}'\`
     → Force between point charges
     → KEY INSIGHT: Electric force follows an inverse-square law with distance
-- **Geometry / Angle Types:** Use `type: 'angle_types'`, `data: '{}'` 
-    → Acute, Right, Obtuse, Straight, and Reflex angles 
-    → KEY INSIGHT: Angles are measured in degrees and classified by their size 
-- **Geometry / Angle Partners:** Use `type: 'angle_partners'`, `data: '{}'` 
-    → Complementary (90°) and Supplementary (180°) angles 
-    → KEY INSIGHT: Complementary angles form a corner; Supplementary angles form a line 
-- **Geometry / Intersections:** Use `type: 'intersection_investigation'`, `data: '{}'` 
-    → Vertical and Adjacent angles at an intersection 
-    → KEY INSIGHT: Vertical angles are always equal; Adjacent angles are supplementary 
-- **Geometry / Area:** Use `type: 'area_surveyor'`, `data: '{}'` 
-    → Area of triangles, rectangles, parallelograms, and trapezoids 
-    → KEY INSIGHT: Most area formulas are derived from the rectangle formula (base × height) 
-- **Geometry / Circles:** Use `type: 'circle_lab'`, `data: '{}'` 
-    → Circumference and Area of circles, and the role of Pi (π) 
+- **Geometry / Angle Types:** Use \`type: 'angle_types'\`, \`data: '{}'\`
+    → Acute, Right, Obtuse, Straight, and Reflex angles
+    → KEY INSIGHT: Angles are measured in degrees and classified by their size
+- **Geometry / Angle Partners:** Use \`type: 'angle_partners'\`, \`data: '{}'\`
+    → Complementary (90°) and Supplementary (180°) angles
+    → KEY INSIGHT: Complementary angles form a corner; Supplementary angles form a line
+- **Geometry / Intersections:** Use \`type: 'intersection_investigation'\`, \`data: '{}'\`
+    → Vertical and Adjacent angles at an intersection
+    → KEY INSIGHT: Vertical angles are always equal; Adjacent angles are supplementary
+- **Geometry / Area:** Use \`type: 'area_surveyor'\`, \`data: '{}'\`
+    → Area of triangles, rectangles, parallelograms, and trapezoids
+    → KEY INSIGHT: Most area formulas are derived from the rectangle formula (base × height)
+- **Geometry / Circles:** Use \`type: 'circle_lab'\`, \`data: '{}'\`
+    → Circumference and Area of circles, and the role of Pi (π)
     → KEY INSIGHT: Pi is the constant ratio of circumference to diameter for any circle
-- **Advanced Stats / Z-Score:** Use `type: 'z_score'`, `data: '{}'`
+- **Advanced Stats / Z-Score:** Use \`type: 'z_score'\`, \`data: '{}'\`
     → Normal distribution and standard position
     → KEY INSIGHT: Z-scores measure distance from the mean in standard deviations
-- **Advanced Stats / Correlation:** Use `type: 'correlation_coefficient'`, `data: '{}'`
+- **Advanced Stats / Correlation:** Use \`type: 'correlation_coefficient'\`, \`data: '{}'\`
     → Scatter plots and Pearson correlation (r)
     → KEY INSIGHT: Correlation measures the strength and direction of a linear relationship
-- **Advanced Stats / Combinations:** Use `type: 'combinations_permutations'`, `data: '{}'`
+- **Advanced Stats / Combinations:** Use \`type: 'combinations_permutations'\`, \`data: '{}'\`
     → Counting arrangements and selections
     → KEY INSIGHT: Permutations care about order; Combinations do not
-- **Advanced Stats / Conditional Probability:** Use `type: 'conditional_probability'`, `data: '{}'`
+- **Advanced Stats / Conditional Probability:** Use \`type: 'conditional_probability'\`, \`data: '{}'\`
     → Venn diagrams and tree diagrams for dependent events
     → KEY INSIGHT: Conditional probability reduces the sample space to a specific condition
-- **Advanced Stats / Margin of Error:** Use `type: 'margin_of_error'`, `data: '{}'`
+- **Advanced Stats / Margin of Error:** Use \`type: 'margin_of_error'\`, \`data: '{}'\`
     → Confidence levels and sample size in polling
     → KEY INSIGHT: Margin of error decreases as sample size increases
 **CUSTOM SIMULATIONS (only if no pre-built exists):**

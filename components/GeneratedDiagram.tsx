@@ -98,11 +98,6 @@ const GeneratedDiagram: React.FC<DiagramProps> = ({ type, data, title }) => {
       });
 
       const [challengeState, setChallengeState] = useState<'idle' | 'success' | 'failure'>('idle');
-
-
-
-
-      const [challengeState, setChallengeState] = useState<'idle' | 'success' | 'failure'>('idle');
       const [feedbackMsg, setFeedbackMsg] = useState<string>("");
 
       // Helper: Safe evaluation of formulas
