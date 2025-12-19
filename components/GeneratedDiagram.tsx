@@ -13188,6 +13188,473 @@ const GeneratedDiagram: React.FC<DiagramProps> = ({ type, data, title }) => {
    };
 
 
+   // --- MAGNETIC FLUX RENDERER ---
+   const MagneticFluxRenderer = () => {
+      const [angle, setAngle] = useState(0);
+      const [fieldStrength, setFieldStrength] = useState(0.5);
+      const [loopArea, setLoopArea] = useState(0.1);
+      const [isAnimating, setIsAnimating] = useState(false);
+
+      const flux = fieldStrength * loopArea * Math.cos(angle * Math.PI / 180);
+
+      useEffect(() => {
+         if (!isAnimating) return;
+         const interval = setInterval(() => {
+            setAngle(prev => (prev + 2) % 360);
+         }, 50);
+         return () => clearInterval(interval);
+      }, [isAnimating]);
+
+      return (
+         <div className="flex flex-col h-full bg-slate-950 text-white font-sans overflow-hidden">
+            <div className="p-6 border-b border-slate-800 bg-slate-900/50">
+               <h3 className="text-xl font-black tracking-tight text-cyan-400">MAGNETIC FLUX</h3>
+               <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Φ = BA cos θ</p>
+            </div>
+
+            <div className="flex-1 flex flex-col md:flex-row overflow-hidden">
+               <div className="flex-1 relative flex items-center justify-center p-8">
+                  <svg width="400" height="350" viewBox="0 0 400 350">
+                     {/* Magnetic field lines */}
+                     {Array.from({ length: 8 }).map((_, i) => (
+                        <line key={i} x1="50" y1={70 + i * 30} x2="350" y2={70 + i * 30}
+                           stroke="#3b82f6" strokeWidth="2" strokeOpacity={0.3 + fieldStrength * 0.5}
+                           markerEnd="url(#arrowB)" />
+                     ))}
+                     <defs>
+                        <marker id="arrowB" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
+                           <path d="M0,0 L6,3 L0,6 Z" fill="#3b82f6" fillOpacity={0.5 + fieldStrength * 0.5} />
+                        </marker>
+                     </defs>
+
+                     {/* Loop */}
+                     <g transform={`translate(200, 180) rotate(${angle})`}>
+                        <ellipse cx="0" cy="0" rx={80 * loopArea * 10} ry="60" fill="none"
+                           stroke="#fbbf24" strokeWidth="4" />
+                        <line x1="0" y1="-60" x2="0" y2="-100" stroke="#fbbf24" strokeWidth="2" />
+                        <polygon points="0,-100 -6,-88 6,-88" fill="#fbbf24" />
+                        <text x="15" y="-85" className="text-[10px] font-bold fill-fbbf24">n̂</text>
+                     </g>
+
+                     {/* Angle arc */}
+                     <path d={`M 200,120 A 60,60 0 0 1 ${200 + 60 * Math.sin(angle * Math.PI / 180)},${120 - 60 * Math.cos(angle * Math.PI / 180)}`}
+                        fill="none" stroke="#22c55e" strokeWidth="2" strokeDasharray="4" />
+                     <text x="220" y="105" className="text-xs font-bold fill-emerald-400">θ = {angle}°</text>
+                  </svg>
+               </div>
+
+               <div className="w-full md:w-80 bg-slate-900/50 border-l border-slate-800 p-6 flex flex-col gap-6">
+                  <div className="p-4 bg-gradient-to-br from-cyan-900/30 to-cyan-800/20 rounded-2xl border border-cyan-500/20">
+                     <p className="text-[10px] font-black text-cyan-400 uppercase tracking-widest mb-2">Magnetic Flux</p>
+                     <p className="text-3xl font-black text-white">{(flux * 1000).toFixed(2)} <span className="text-sm text-slate-400">mWb</span></p>
+                  </div>
+
+                  <div className="space-y-4">
+                     <div>
+                        <div className="flex justify-between mb-2">
+                           <label className="text-xs font-bold text-slate-400">Angle (θ)</label>
+                           <span className="text-xs font-mono text-cyan-400">{angle}°</span>
+                        </div>
+                        <input type="range" min="0" max="360" value={angle} onChange={(e) => setAngle(Number(e.target.value))}
+                           className="w-full h-2 bg-slate-700 rounded-full appearance-none cursor-pointer accent-cyan-500" />
+                     </div>
+
+                     <div>
+                        <div className="flex justify-between mb-2">
+                           <label className="text-xs font-bold text-slate-400">Field Strength (B)</label>
+                           <span className="text-xs font-mono text-cyan-400">{fieldStrength.toFixed(2)} T</span>
+                        </div>
+                        <input type="range" min="0.1" max="1" step="0.05" value={fieldStrength}
+                           onChange={(e) => setFieldStrength(Number(e.target.value))}
+                           className="w-full h-2 bg-slate-700 rounded-full appearance-none cursor-pointer accent-cyan-500" />
+                     </div>
+
+                     <div>
+                        <div className="flex justify-between mb-2">
+                           <label className="text-xs font-bold text-slate-400">Loop Area (A)</label>
+                           <span className="text-xs font-mono text-cyan-400">{loopArea.toFixed(2)} m²</span>
+                        </div>
+                        <input type="range" min="0.05" max="0.2" step="0.01" value={loopArea}
+                           onChange={(e) => setLoopArea(Number(e.target.value))}
+                           className="w-full h-2 bg-slate-700 rounded-full appearance-none cursor-pointer accent-cyan-500" />
+                     </div>
+                  </div>
+
+                  <button onClick={() => setIsAnimating(!isAnimating)}
+                     className={`w-full py-3 rounded-xl font-black text-xs transition-all ${isAnimating
+                        ? 'bg-red-500/20 text-red-400 border border-red-500/30'
+                        : 'bg-cyan-500 text-white shadow-lg shadow-cyan-500/30'}`}>
+                     {isAnimating ? '⏸ STOP ROTATION' : '▶ ROTATE LOOP'}
+                  </button>
+
+                  <div className="mt-auto p-4 bg-slate-800/50 rounded-xl border border-slate-700">
+                     <p className="text-xs text-slate-400 leading-relaxed">
+                        <strong className="text-cyan-400">KEY INSIGHT:</strong> Flux is maximum when the loop is perpendicular to the field (θ=0°) and zero when parallel (θ=90°).
+                     </p>
+                  </div>
+               </div>
+            </div>
+         </div>
+      );
+   };
+
+
+   // --- LENZ'S LAW RENDERER ---
+   const LenzsLawRenderer = () => {
+      const [magnetPosition, setMagnetPosition] = useState(0);
+      const [magnetDirection, setMagnetDirection] = useState<'approaching' | 'receding' | 'stationary'>('stationary');
+      const [inducedCurrent, setInducedCurrent] = useState(0);
+      const [coilPolarity, setCoilPolarity] = useState<'N' | 'S' | null>(null);
+
+      useEffect(() => {
+         if (magnetDirection === 'stationary') {
+            setInducedCurrent(0);
+            setCoilPolarity(null);
+            return;
+         }
+
+         const interval = setInterval(() => {
+            setMagnetPosition(prev => {
+               const delta = magnetDirection === 'approaching' ? 3 : -3;
+               const next = prev + delta;
+
+               if (next > 150 || next < -150) {
+                  setMagnetDirection('stationary');
+                  return 0;
+               }
+
+               const currentMagnitude = Math.abs(delta) * 2;
+               setInducedCurrent(magnetDirection === 'approaching' ? -currentMagnitude : currentMagnitude);
+               setCoilPolarity(magnetDirection === 'approaching' ? 'N' : 'S');
+               return next;
+            });
+         }, 30);
+
+         return () => clearInterval(interval);
+      }, [magnetDirection]);
+
+      return (
+         <div className="flex flex-col h-full bg-slate-950 text-white font-sans overflow-hidden">
+            <div className="p-6 border-b border-slate-800 bg-slate-900/50 flex justify-between items-center">
+               <div>
+                  <h3 className="text-xl font-black tracking-tight text-purple-400">LENZ'S LAW</h3>
+                  <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Induced Current Opposes Change</p>
+               </div>
+               <div className={`px-4 py-2 rounded-xl border ${inducedCurrent !== 0
+                  ? 'bg-yellow-500/10 border-yellow-500/30'
+                  : 'bg-slate-800 border-slate-700'}`}>
+                  <p className="text-[8px] font-black text-slate-400 uppercase">Induced Current</p>
+                  <p className={`text-lg font-black ${inducedCurrent > 0 ? 'text-green-400' : inducedCurrent < 0 ? 'text-red-400' : 'text-slate-500'}`}>
+                     {inducedCurrent > 0 ? '↻ ' : inducedCurrent < 0 ? '↺ ' : ''}{Math.abs(inducedCurrent).toFixed(1)} A
+                  </p>
+               </div>
+            </div>
+
+            <div className="flex-1 flex flex-col items-center justify-center p-8 relative">
+               <svg width="500" height="280" viewBox="0 0 500 280">
+                  {/* Coil */}
+                  <g transform="translate(250, 140)">
+                     {Array.from({ length: 8 }).map((_, i) => (
+                        <ellipse key={i} cx={-35 + i * 10} cy="0" rx="25" ry="70"
+                           fill="none" stroke={inducedCurrent !== 0 ? '#fbbf24' : '#64748b'}
+                           strokeWidth="3" strokeOpacity={0.8} />
+                     ))}
+                     {coilPolarity && (
+                        <text x="-70" y="10" className="text-2xl font-black"
+                           fill={coilPolarity === 'N' ? '#ef4444' : '#3b82f6'}>{coilPolarity}</text>
+                     )}
+                  </g>
+
+                  {/* Magnet */}
+                  <g transform={`translate(${80 + magnetPosition}, 140)`}>
+                     <rect x="-50" y="-25" width="50" height="50" fill="#ef4444" rx="4" />
+                     <rect x="0" y="-25" width="50" height="50" fill="#3b82f6" rx="4" />
+                     <text x="-25" y="8" textAnchor="middle" className="text-lg font-black fill-white">N</text>
+                     <text x="25" y="8" textAnchor="middle" className="text-lg font-black fill-white">S</text>
+                     {magnetDirection !== 'stationary' && (
+                        <text x={magnetDirection === 'approaching' ? 70 : -70} y="8"
+                           className="text-2xl" fill="#22c55e">{magnetDirection === 'approaching' ? '→' : '←'}</text>
+                     )}
+                  </g>
+
+                  {/* Field lines from coil (when current flows) */}
+                  {inducedCurrent !== 0 && (
+                     <g transform="translate(250, 140)" opacity={0.4}>
+                        {Array.from({ length: 5 }).map((_, i) => (
+                           <path key={i} d={`M -80,${-30 + i * 15} Q -120,${-50 + i * 25} -80,${-30 + i * 15 + 30}`}
+                              fill="none" stroke={coilPolarity === 'N' ? '#ef4444' : '#3b82f6'} strokeWidth="2" />
+                        ))}
+                     </g>
+                  )}
+               </svg>
+
+               <div className="flex gap-4 mt-8">
+                  <button onClick={() => { setMagnetPosition(-150); setMagnetDirection('approaching'); }}
+                     disabled={magnetDirection !== 'stationary'}
+                     className={`px-6 py-3 rounded-xl font-black text-xs transition-all ${magnetDirection !== 'stationary'
+                        ? 'bg-slate-800 text-slate-600'
+                        : 'bg-green-500 text-white shadow-lg shadow-green-500/30 hover:bg-green-400'}`}>
+                     PUSH MAGNET IN →
+                  </button>
+                  <button onClick={() => { setMagnetPosition(150); setMagnetDirection('receding'); }}
+                     disabled={magnetDirection !== 'stationary'}
+                     className={`px-6 py-3 rounded-xl font-black text-xs transition-all ${magnetDirection !== 'stationary'
+                        ? 'bg-slate-800 text-slate-600'
+                        : 'bg-red-500 text-white shadow-lg shadow-red-500/30 hover:bg-red-400'}`}>
+                     ← PULL MAGNET OUT
+                  </button>
+               </div>
+
+               <div className="mt-6 p-4 bg-slate-900/50 rounded-xl border border-slate-700 max-w-lg text-center">
+                  {magnetDirection === 'approaching' && (
+                     <p className="text-sm text-slate-300">
+                        <span className="text-purple-400 font-bold">APPROACHING:</span> Flux ↑ → Coil creates <span className="text-red-400 font-bold">N pole</span> to REPEL incoming magnet
+                     </p>
+                  )}
+                  {magnetDirection === 'receding' && (
+                     <p className="text-sm text-slate-300">
+                        <span className="text-purple-400 font-bold">RECEDING:</span> Flux ↓ → Coil creates <span className="text-blue-400 font-bold">S pole</span> to ATTRACT departing magnet
+                     </p>
+                  )}
+                  {magnetDirection === 'stationary' && (
+                     <p className="text-sm text-slate-500">Move the magnet to see Lenz's Law in action!</p>
+                  )}
+               </div>
+            </div>
+
+            <div className="p-6 bg-slate-900/50 border-t border-slate-800">
+               <p className="text-xs text-slate-400 text-center">
+                  <strong className="text-purple-400">KEY INSIGHT:</strong> The induced current always creates a magnetic field that <strong>opposes</strong> the change in flux. This is nature's way of conserving energy!
+               </p>
+            </div>
+         </div>
+      );
+   };
+
+
+   // --- BATTERY CONNECTIONS RENDERER ---
+   const BatteryConnectionsRenderer = () => {
+      const [mode, setMode] = useState<'series' | 'parallel'>('series');
+      const [numBatteries, setNumBatteries] = useState(2);
+      const [singleVoltage] = useState(1.5);
+      const [singleCapacity] = useState(2000);
+
+      const totalVoltage = mode === 'series' ? singleVoltage * numBatteries : singleVoltage;
+      const totalCapacity = mode === 'parallel' ? singleCapacity * numBatteries : singleCapacity;
+
+      return (
+         <div className="flex flex-col h-full bg-slate-100 text-slate-900 font-sans overflow-hidden">
+            <div className="p-6 border-b border-slate-200 bg-white flex justify-between items-center">
+               <div>
+                  <h3 className="text-xl font-black tracking-tight text-amber-600">BATTERY CONNECTIONS</h3>
+                  <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Series vs Parallel</p>
+               </div>
+               <div className="flex gap-2">
+                  <button onClick={() => setMode('series')}
+                     className={`px-4 py-2 rounded-lg font-bold text-xs transition-all ${mode === 'series'
+                        ? 'bg-amber-500 text-white shadow-lg'
+                        : 'bg-slate-200 text-slate-600 hover:bg-slate-300'}`}>
+                     SERIES
+                  </button>
+                  <button onClick={() => setMode('parallel')}
+                     className={`px-4 py-2 rounded-lg font-bold text-xs transition-all ${mode === 'parallel'
+                        ? 'bg-blue-500 text-white shadow-lg'
+                        : 'bg-slate-200 text-slate-600 hover:bg-slate-300'}`}>
+                     PARALLEL
+                  </button>
+               </div>
+            </div>
+
+            <div className="flex-1 flex flex-col md:flex-row overflow-hidden">
+               <div className="flex-1 flex items-center justify-center p-8 bg-slate-50">
+                  <svg width="400" height="300" viewBox="0 0 400 300">
+                     {mode === 'series' ? (
+                        <g transform="translate(50, 150)">
+                           {Array.from({ length: numBatteries }).map((_, i) => (
+                              <g key={i} transform={`translate(${i * 80}, 0)`}>
+                                 <rect x="0" y="-30" width="60" height="60" fill="#fef3c7" stroke="#f59e0b" strokeWidth="2" rx="4" />
+                                 <line x1="10" y1="-15" x2="10" y2="15" stroke="#ef4444" strokeWidth="4" />
+                                 <line x1="50" y1="-8" x2="50" y2="8" stroke="#1f2937" strokeWidth="4" />
+                                 <text x="30" y="50" textAnchor="middle" className="text-[10px] font-bold fill-slate-600">{singleVoltage}V</text>
+                                 {i < numBatteries - 1 && <line x1="60" y1="0" x2="80" y2="0" stroke="#1f2937" strokeWidth="3" />}
+                              </g>
+                           ))}
+                           <line x1="-20" y1="0" x2="0" y2="0" stroke="#ef4444" strokeWidth="3" />
+                           <line x1={numBatteries * 80 - 20} y1="0" x2={numBatteries * 80} y2="0" stroke="#1f2937" strokeWidth="3" />
+                           <text x={numBatteries * 40 - 10} y="-60" textAnchor="middle" className="text-lg font-black fill-amber-600">
+                              Total: {totalVoltage.toFixed(1)}V
+                           </text>
+                        </g>
+                     ) : (
+                        <g transform="translate(100, 50)">
+                           {Array.from({ length: numBatteries }).map((_, i) => (
+                              <g key={i} transform={`translate(0, ${i * 70})`}>
+                                 <rect x="50" y="0" width="60" height="50" fill="#dbeafe" stroke="#3b82f6" strokeWidth="2" rx="4" />
+                                 <line x1="60" y1="10" x2="60" y2="40" stroke="#ef4444" strokeWidth="4" />
+                                 <line x1="100" y1="15" x2="100" y2="35" stroke="#1f2937" strokeWidth="4" />
+                                 <line x1="0" y1="25" x2="50" y2="25" stroke="#ef4444" strokeWidth="2" />
+                                 <line x1="110" y1="25" x2="160" y2="25" stroke="#1f2937" strokeWidth="2" />
+                              </g>
+                           ))}
+                           <line x1="0" y1="25" x2="0" y2={numBatteries * 70 - 45} stroke="#ef4444" strokeWidth="3" />
+                           <line x1="160" y1="25" x2="160" y2={numBatteries * 70 - 45} stroke="#1f2937" strokeWidth="3" />
+                           <text x="80" y={numBatteries * 70 + 20} textAnchor="middle" className="text-lg font-black fill-blue-600">
+                              Total: {totalVoltage.toFixed(1)}V, {totalCapacity}mAh
+                           </text>
+                        </g>
+                     )}
+                  </svg>
+               </div>
+
+               <div className="w-full md:w-72 bg-white border-l border-slate-200 p-6 flex flex-col gap-4">
+                  <div>
+                     <label className="text-xs font-bold text-slate-500 uppercase mb-2 block">Number of Batteries</label>
+                     <div className="flex gap-2">
+                        {[2, 3, 4].map(n => (
+                           <button key={n} onClick={() => setNumBatteries(n)}
+                              className={`flex-1 py-2 rounded-lg font-bold text-sm ${numBatteries === n
+                                 ? 'bg-slate-800 text-white'
+                                 : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}>
+                              {n}
+                           </button>
+                        ))}
+                     </div>
+                  </div>
+
+                  <div className="p-4 bg-amber-50 rounded-xl border border-amber-200">
+                     <p className="text-[10px] font-black text-amber-700 uppercase mb-1">Series Connection</p>
+                     <p className="text-sm text-amber-900">Voltages ADD: {numBatteries} × {singleVoltage}V = <strong>{(numBatteries * singleVoltage).toFixed(1)}V</strong></p>
+                     <p className="text-xs text-amber-700 mt-1">Capacity stays the same</p>
+                  </div>
+
+                  <div className="p-4 bg-blue-50 rounded-xl border border-blue-200">
+                     <p className="text-[10px] font-black text-blue-700 uppercase mb-1">Parallel Connection</p>
+                     <p className="text-sm text-blue-900">Voltage stays: <strong>{singleVoltage}V</strong></p>
+                     <p className="text-sm text-blue-900">Capacity ADDS: {numBatteries} × {singleCapacity}mAh = <strong>{numBatteries * singleCapacity}mAh</strong></p>
+                  </div>
+
+                  <div className="mt-auto p-4 bg-slate-100 rounded-xl">
+                     <p className="text-xs text-slate-600">
+                        <strong className="text-slate-800">KEY INSIGHT:</strong> Series for more voltage (flashlights), parallel for longer life (power banks).
+                     </p>
+                  </div>
+               </div>
+            </div>
+         </div>
+      );
+   };
+
+
+   // --- BULB POWER RENDERER ---
+   const BulbPowerRenderer = () => {
+      const [voltage, setVoltage] = useState(6);
+      const [resistance] = useState(10);
+
+      const current = voltage / resistance;
+      const power = voltage * current;
+      const brightness = Math.min(power / 10, 1);
+
+      return (
+         <div className="flex flex-col h-full bg-slate-900 text-white font-sans overflow-hidden">
+            <div className="p-6 border-b border-slate-700 bg-slate-800/50 flex justify-between items-center">
+               <div>
+                  <h3 className="text-xl font-black tracking-tight text-yellow-400">BULB POWER</h3>
+                  <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">P = V × I = V²/R</p>
+               </div>
+               <div className="text-right">
+                  <p className="text-[10px] font-bold text-slate-500">Power Output</p>
+                  <p className="text-2xl font-black text-yellow-400">{power.toFixed(1)} W</p>
+               </div>
+            </div>
+
+            <div className="flex-1 flex flex-col md:flex-row overflow-hidden">
+               <div className="flex-1 flex items-center justify-center p-8 relative">
+                  <div className="relative">
+                     {/* Bulb glow effect */}
+                     <div className="absolute inset-0 flex items-center justify-center">
+                        <div className="w-40 h-40 rounded-full blur-3xl transition-all duration-300"
+                           style={{
+                              backgroundColor: `rgba(253, 224, 71, ${brightness})`,
+                              transform: `scale(${0.5 + brightness * 1.5})`
+                           }} />
+                     </div>
+
+                     {/* Bulb SVG */}
+                     <svg width="200" height="280" viewBox="0 0 200 280" className="relative z-10">
+                        {/* Glass bulb */}
+                        <ellipse cx="100" cy="100" rx="70" ry="80" fill={`rgba(253, 224, 71, ${brightness * 0.8})`}
+                           stroke="#fbbf24" strokeWidth="3" />
+                        {/* Filament */}
+                        <path d="M 70,100 Q 80,80 90,100 Q 100,120 110,100 Q 120,80 130,100"
+                           fill="none" stroke={brightness > 0.3 ? '#ffffff' : '#666666'}
+                           strokeWidth="3" strokeLinecap="round"
+                           style={{ filter: brightness > 0.5 ? 'drop-shadow(0 0 8px #fff)' : 'none' }} />
+                        {/* Base */}
+                        <rect x="70" y="170" width="60" height="30" fill="#64748b" rx="4" />
+                        <rect x="75" y="200" width="50" height="10" fill="#475569" />
+                        <rect x="80" y="210" width="40" height="10" fill="#334155" />
+                        {/* Contact */}
+                        <circle cx="100" cy="230" r="10" fill="#1e293b" stroke="#475569" strokeWidth="2" />
+                     </svg>
+                  </div>
+
+                  {/* Circuit visualization */}
+                  <div className="absolute bottom-8 left-8 right-8">
+                     <svg width="100%" height="60" viewBox="0 0 400 60" preserveAspectRatio="xMidYMid meet">
+                        <line x1="20" y1="30" x2="120" y2="30" stroke="#ef4444" strokeWidth="3" />
+                        <rect x="120" y="15" width="60" height="30" fill="none" stroke="#fbbf24" strokeWidth="2" rx="4" />
+                        <text x="150" y="35" textAnchor="middle" className="text-[10px] font-bold fill-yellow-400">BULB</text>
+                        <line x1="180" y1="30" x2="280" y2="30" stroke="#3b82f6" strokeWidth="3" />
+                        <rect x="280" y="20" width="40" height="20" fill="#1e293b" stroke="#64748b" strokeWidth="2" />
+                        <text x="300" y="35" textAnchor="middle" className="text-[8px] font-bold fill-slate-400">{resistance}Ω</text>
+                        <line x1="320" y1="30" x2="380" y2="30" stroke="#3b82f6" strokeWidth="3" />
+                     </svg>
+                  </div>
+               </div>
+
+               <div className="w-full md:w-80 bg-slate-800/50 border-l border-slate-700 p-6 flex flex-col gap-6">
+                  <div>
+                     <div className="flex justify-between mb-2">
+                        <label className="text-xs font-bold text-slate-400">Voltage (V)</label>
+                        <span className="text-sm font-mono font-bold text-yellow-400">{voltage} V</span>
+                     </div>
+                     <input type="range" min="0" max="12" step="0.5" value={voltage}
+                        onChange={(e) => setVoltage(Number(e.target.value))}
+                        className="w-full h-3 bg-slate-700 rounded-full appearance-none cursor-pointer accent-yellow-500" />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3">
+                     <div className="p-3 bg-slate-900/50 rounded-xl border border-slate-700">
+                        <p className="text-[10px] font-bold text-slate-500 uppercase">Current (I)</p>
+                        <p className="text-lg font-black text-blue-400">{current.toFixed(2)} A</p>
+                     </div>
+                     <div className="p-3 bg-slate-900/50 rounded-xl border border-slate-700">
+                        <p className="text-[10px] font-bold text-slate-500 uppercase">Resistance (R)</p>
+                        <p className="text-lg font-black text-slate-400">{resistance} Ω</p>
+                     </div>
+                  </div>
+
+                  <div className="p-4 bg-yellow-500/10 rounded-xl border border-yellow-500/20">
+                     <p className="text-[10px] font-black text-yellow-500 uppercase mb-2">Power Calculation</p>
+                     <div className="space-y-1 font-mono text-sm text-slate-300">
+                        <p>P = V × I = {voltage} × {current.toFixed(2)}</p>
+                        <p>P = V²/R = {voltage}²/{resistance}</p>
+                        <p className="text-yellow-400 font-bold">P = {power.toFixed(2)} W</p>
+                     </div>
+                  </div>
+
+                  <div className="mt-auto p-4 bg-slate-900 rounded-xl border border-slate-700">
+                     <p className="text-xs text-slate-400">
+                        <strong className="text-yellow-400">KEY INSIGHT:</strong> Power increases with the SQUARE of voltage. Doubling voltage quadruples brightness!
+                     </p>
+                  </div>
+               </div>
+            </div>
+         </div>
+      );
+   };
+
+
    // --- COUNTING TO 100 RENDERER ---
    const Counting100Renderer = () => {
       const [count, setCount] = useState(1);
@@ -18648,6 +19115,14 @@ const GeneratedDiagram: React.FC<DiagramProps> = ({ type, data, title }) => {
             return <RLCCircuitRenderer />;
          case 'faradays_law':
             return <FaradaysLawRenderer />;
+         case 'magnetic_flux':
+            return <MagneticFluxRenderer />;
+         case 'lenzs_law':
+            return <LenzsLawRenderer />;
+         case 'battery_connections':
+            return <BatteryConnectionsRenderer />;
+         case 'bulb_power':
+            return <BulbPowerRenderer />;
          case 'multi_step_equations':
             return <MultiStepEquationsRenderer />;
          case 'variables_both_sides':

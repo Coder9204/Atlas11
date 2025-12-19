@@ -530,6 +530,34 @@ When creating interactive simulations using \`showDiagram\`:
 - **Electricity / Coulomb's Law:** Use \`type: 'coulombs_law'\`, \`data: '{}'\`
     → Force between point charges
     → KEY INSIGHT: Electric force follows an inverse-square law with distance
+- **Electricity / Electric Field:** Use \`type: 'electric_field'\`, \`data: '{}'\`
+    → Electric field lines from point charges
+    → Visualize field direction and strength
+    → KEY INSIGHT: Field lines start on + charges, end on - charges, and never cross
+- **Electricity / Capacitors:** Use \`type: 'capacitor_lab'\`, \`data: '{}'\`
+    → Capacitor charging/discharging with RC circuits
+    → Energy storage and time constants
+    → KEY INSIGHT: Capacitors store energy in electric fields; C = Q/V
+- **Electricity / AC Circuits:** Use \`type: 'rlc_circuit'\`, \`data: '{}'\`
+    → RLC circuits with resistors, inductors, and capacitors
+    → Impedance, phase angles, and resonance frequency
+    → KEY INSIGHT: At resonance, XL = XC and impedance is minimized
+- **Magnetism / Magnetic Flux:** Use \`type: 'magnetic_flux'\`, \`data: '{}'\`
+    → Flux through loops: Φ = BA cos θ
+    → Visualize flux changes with loop rotation
+    → KEY INSIGHT: Changing flux induces EMF (basis of generators)
+- **Magnetism / Lenz's Law:** Use \`type: 'lenzs_law'\`, \`data: '{}'\`
+    → Induced current direction opposes flux change
+    → Magnet approaching/receding from coil
+    → KEY INSIGHT: Nature opposes changes in magnetic flux (energy conservation)
+- **Electricity / Battery Connections:** Use \`type: 'battery_connections'\`, \`data: '{}'\`
+    → Series and parallel battery configurations
+    → Voltage addition vs. capacity sharing
+    → KEY INSIGHT: Series adds voltages; parallel adds capacity (current capability)
+- **Electricity / Bulb Power:** Use \`type: 'bulb_power'\`, \`data: '{}'\`
+    → Voltage effects on bulb brightness
+    → Power calculation: P = V²/R = I²R = IV
+    → KEY INSIGHT: Higher voltage increases current and brightness quadratically
 - **Geometry / Angle Types:** Use \`type: 'angle_types'\`, \`data: '{}'\`
     → Acute, Right, Obtuse, Straight, and Reflex angles
     → KEY INSIGHT: Angles are measured in degrees and classified by their size
@@ -775,7 +803,7 @@ CRITICAL RULES:
           type: Type.OBJECT,
           properties: {
             title: { type: Type.STRING, description: 'Title of the interactive graphic.' },
-            type: { type: Type.STRING, enum: ['dynamic_blueprint', 'rocket', 'projectile', 'poster', 'compound_interest', 'supply_demand', 'pendulum', 'waves', 'circuits', 'sorting', 'addition', 'subtraction', 'multiplication', 'division', 'fractions', 'area', 'triangle', 'force_lab', 'energy_coaster', 'atomic_builder', 'equation_balancer', 'gas_law', 'advanced_force_lab', 'newton_third_law', 'net_force', 'gravity_acceleration', 'force_classification', 'stress_response', 'posture_analyzer', 'heart_rate_zones', 'plate_method', 'breathing_guide', 'gravitational_pe', 'chemical_pe', 'energy_conservation', 'machine_efficiency', 'convection', 'specific_heat', 'latent_heat', 'entropy', 'heat_engine', 'light_transmission', 'light_absorption', 'digital_signal', 'wave_equation', 'superposition', 'wave_interference', 'standing_wave', 'resonance', 'doppler_effect', 'snells_law', 'tir', 'lens', 'mirror', 'ray_tracing', 'polarization', 'diffraction', 'dispersion', 'thin_film', 'wave_particle_duality', 'photoelectric_effect', 'laser', 'acoustic_levitation', 'fiber_optics', 'static_balloon', 'circuit_builder_basic', 'magnet_maze', 'electromagnet_basic', 'conductivity_tester', 'simple_switch', 'magnetic_pole', 'attract_repel', 'compass', 'magnetic_material', 'series_circuit', 'parallel_circuit', 'voltage_potential', 'current_flow', 'ohms_law', 'electromagnet', 'basic_motor', 'basic_generator', 'earth_field', 'household_safety', 'coulombs_law', 'multi_step_equations', 'variables_both_sides', 'linear_inequalities', 'inequalities_number_line', 'independent_dependent_variables', 'angle_types', 'angle_partners', 'intersection_investigation', 'area_surveyor', 'circle_lab', 'z_score', 'correlation_coefficient', 'combinations_permutations', 'conditional_probability', 'margin_of_error'], description: "Use 'dynamic_blueprint' for custom interactive simulations." },
+            type: { type: Type.STRING, enum: ['dynamic_blueprint', 'rocket', 'projectile', 'poster', 'compound_interest', 'supply_demand', 'pendulum', 'waves', 'circuits', 'sorting', 'addition', 'subtraction', 'multiplication', 'division', 'fractions', 'area', 'triangle', 'force_lab', 'energy_coaster', 'atomic_builder', 'equation_balancer', 'gas_law', 'advanced_force_lab', 'newton_third_law', 'net_force', 'gravity_acceleration', 'force_classification', 'stress_response', 'posture_analyzer', 'heart_rate_zones', 'plate_method', 'breathing_guide', 'gravitational_pe', 'chemical_pe', 'energy_conservation', 'machine_efficiency', 'convection', 'specific_heat', 'latent_heat', 'entropy', 'heat_engine', 'light_transmission', 'light_absorption', 'digital_signal', 'wave_equation', 'superposition', 'wave_interference', 'standing_wave', 'resonance', 'doppler_effect', 'snells_law', 'tir', 'lens', 'mirror', 'ray_tracing', 'polarization', 'diffraction', 'dispersion', 'thin_film', 'wave_particle_duality', 'photoelectric_effect', 'laser', 'acoustic_levitation', 'fiber_optics', 'static_balloon', 'circuit_builder_basic', 'magnet_maze', 'electromagnet_basic', 'conductivity_tester', 'simple_switch', 'magnetic_pole', 'attract_repel', 'compass', 'magnetic_material', 'series_circuit', 'parallel_circuit', 'voltage_potential', 'current_flow', 'ohms_law', 'electromagnet', 'basic_motor', 'basic_generator', 'earth_field', 'household_safety', 'coulombs_law', 'electric_field', 'capacitor_lab', 'rlc_circuit', 'magnetic_flux', 'faradays_law', 'lenzs_law', 'battery_connections', 'bulb_power', 'metal_conductors', 'insulators', 'simple_switches', 'magnetic_poles', 'compass_use', 'electromagnets', 'basic_motors', 'basic_generators', 'earth_magnetic_field', 'multi_step_equations', 'variables_both_sides', 'linear_inequalities', 'inequalities_number_line', 'independent_dependent_variables', 'angle_types', 'angle_partners', 'intersection_investigation', 'area_surveyor', 'circle_lab', 'z_score', 'correlation_coefficient', 'combinations_permutations', 'conditional_probability', 'margin_of_error'], description: "Use 'dynamic_blueprint' for custom interactive simulations." },
             data: { type: Type.STRING, description: 'Stringified JSON following the dynamic_blueprint schema. MUST be valid JSON.' }
           },
           required: ['title', 'type', 'data']
