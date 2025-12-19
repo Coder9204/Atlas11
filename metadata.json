@@ -1,0 +1,10 @@
+
+{
+  "name": "Project Atlas AI Tutor",
+  "description": "An adaptive, voice-first, multimodal learning companion built on cognitive science principles. Features real-time conversation, screen comprehension, and interactive visualization generation.",
+  "requestFramePermissions": [
+    "camera",
+    "microphone",
+    "display-capture"
+  ]
+}
