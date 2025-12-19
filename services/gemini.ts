@@ -588,6 +588,114 @@ When creating interactive simulations using \`showDiagram\`:
 - **Advanced Stats / Margin of Error:** Use \`type: 'margin_of_error'\`, \`data: '{}'\`
     → Confidence levels and sample size in polling
     → KEY INSIGHT: Margin of error decreases as sample size increases
+- **Electromagnetism / Lorentz Force:** Use \`type: 'lorentz_force'\`, \`data: '{}'\`
+    → F = qv × B visualization with 3D charged particle motion
+    → Right-hand rule demonstration with adjustable velocity and field
+    → KEY INSIGHT: The Lorentz force is perpendicular to both velocity and magnetic field
+- **Electromagnetism / Inductance:** Use \`type: 'inductance'\`, \`data: '{}'\`
+    → RL circuit with time constant τ = L/R
+    → Current buildup and decay visualization
+    → KEY INSIGHT: Inductors resist changes in current; energy is stored in magnetic fields
+- **Electromagnetism / Transformers:** Use \`type: 'transformers'\`, \`data: '{}'\`
+    → Step-up and step-down transformer operation
+    → Adjustable turns ratio with voltage/current visualization
+    → KEY INSIGHT: Transformers trade voltage for current: V₁/V₂ = N₁/N₂
+- **Electromagnetism / Solenoid:** Use \`type: 'solenoid'\`, \`data: '{}'\`
+    → Magnetic field inside and outside a solenoid
+    → B = μ₀nI with adjustable current and turns
+    → KEY INSIGHT: Field inside a solenoid is uniform and proportional to current
+- **Semiconductors / Basics:** Use \`type: 'semiconductors'\`, \`data: '{}'\`
+    → Band gap and carrier visualization
+    → Doping with donors and acceptors
+    → KEY INSIGHT: Semiconductors conduct better when heated or doped
+- **Semiconductors / Diodes:** Use \`type: 'diodes'\`, \`data: '{}'\`
+    → P-N junction with depletion region
+    → Forward and reverse bias operation
+    → KEY INSIGHT: Diodes allow current flow in one direction only
+- **Semiconductors / Transistors:** Use \`type: 'transistors'\`, \`data: '{}'\`
+    → NPN/PNP transistor switching and amplification
+    → Base current controls collector current
+    → KEY INSIGHT: Transistors are electronic switches controlled by small currents
+- **Electromagnetism / Hall Effect:** Use \`type: 'hall_effect'\`, \`data: '{}'\`
+    → Charge separation in a current-carrying conductor in a magnetic field
+    → Hall voltage measurement and carrier type determination
+    → KEY INSIGHT: Hall effect reveals charge carrier type and density
+- **Electromagnetism / Superconductivity:** Use \`type: 'superconductivity'\`, \`data: '{}'\`
+    → Zero resistance below critical temperature
+    → Meissner effect and magnetic levitation
+    → KEY INSIGHT: Superconductors expel magnetic fields and have zero resistance
+- **Electromagnetism / Maxwell's Equations:** Use \`type: 'maxwells_equations'\`, \`data: '{}'\`
+    → Unified view of electricity and magnetism
+    → Electromagnetic wave generation visualization
+    → KEY INSIGHT: Changing E fields create B fields and vice versa - light is an EM wave
+- **Earth Science / Day and Night:** Use \`type: 'day_night_cycle'\`, \`data: '{}'\`
+    → Earth rotation causing day and night (K-5 level)
+    → Interactive globe with sunlight visualization
+    → KEY INSIGHT: Day and night happen because Earth spins on its axis
+- **Earth Science / Seasons:** Use \`type: 'seasons'\`, \`data: '{}'\`
+    → Earth's tilt causing seasons (K-5 level)
+    → Orbital visualization with axial tilt
+    → KEY INSIGHT: Seasons happen because Earth is tilted as it orbits the Sun
+- **Earth Science / Moon Phases:** Use \`type: 'moon_phases'\`, \`data: '{}'\`
+    → Moon orbit causing phases (K-5 level)
+    → Interactive lunar cycle visualization
+    → KEY INSIGHT: Moon phases depend on how much sunlit side we can see
+- **Earth Science / Solar System:** Use \`type: 'solar_system'\`, \`data: '{}'\`
+    → Planets orbiting the Sun (K-5 level)
+    → Interactive planetary exploration
+    → KEY INSIGHT: Planets closer to the Sun orbit faster
+- **Atomic Physics / Atom Structure:** Use \`type: 'atom_structure'\`, \`data: '{}'\`
+    → Protons, neutrons, electrons visualization
+    → Interactive element builder
+    → KEY INSIGHT: Protons determine the element; electrons determine chemistry
+- **Atomic Physics / Isotopes:** Use \`type: 'isotopes'\`, \`data: '{}'\`
+    → Same element, different neutrons
+    → Stability and radioactivity visualization
+    → KEY INSIGHT: Isotopes have the same protons but different neutrons
+- **Nuclear Physics / Fusion:** Use \`type: 'nuclear_fusion'\`, \`data: '{}'\`
+    → Light nuclei combining to release energy
+    → Sun's energy source visualization
+    → KEY INSIGHT: Fusion powers the Sun by combining hydrogen into helium
+- **Nuclear Physics / Radioactivity:** Use \`type: 'radioactivity'\`, \`data: '{}'\`
+    → Alpha, beta, gamma decay visualization
+    → Particle emission and energy release
+    → KEY INSIGHT: Unstable nuclei emit particles/energy to become more stable
+- **Nuclear Physics / Half-Life:** Use \`type: 'half_life'\`, \`data: '{}'\`
+    → Exponential decay visualization
+    → Interactive sample decay simulation
+    → KEY INSIGHT: After one half-life, exactly half the atoms have decayed
+- **Relativity / Time Dilation:** Use \`type: 'time_dilation'\`, \`data: '{}'\`
+    → Twin paradox and moving clocks
+    → Lorentz factor γ = 1/√(1-v²/c²) visualization
+    → KEY INSIGHT: Moving clocks run slower; time passes differently for different observers
+- **Relativity / Length Contraction:** Use \`type: 'length_contraction'\`, \`data: '{}'\`
+    → Objects shorten in direction of motion
+    → Relativistic length L = L₀/γ visualization
+    → KEY INSIGHT: Fast-moving objects appear contracted in the direction of motion
+- **Relativity / Mass-Energy:** Use \`type: 'mass_energy'\`, \`data: '{}'\`
+    → E = mc² demonstration
+    → Energy-mass equivalence visualization
+    → KEY INSIGHT: Mass and energy are interchangeable; a tiny mass contains enormous energy
+- **Relativity / Black Holes:** Use \`type: 'black_holes'\`, \`data: '{}'\`
+    → Event horizon and spacetime curvature
+    → Gravitational effects visualization
+    → KEY INSIGHT: Nothing, not even light, can escape from inside a black hole
+- **Quantum / Wave Function:** Use \`type: 'wave_function'\`, \`data: '{}'\`
+    → Probability amplitude and measurement
+    → Wave function collapse visualization
+    → KEY INSIGHT: The wave function gives probabilities; measurement collapses it
+- **Quantum / Uncertainty Principle:** Use \`type: 'heisenberg_uncertainty'\`, \`data: '{}'\`
+    → Δx·Δp ≥ ℏ/2 demonstration
+    → Position-momentum tradeoff visualization
+    → KEY INSIGHT: You cannot know both position and momentum precisely
+- **Quantum / Tunneling:** Use \`type: 'quantum_tunneling'\`, \`data: '{}'\`
+    → Particle passing through barriers
+    → Probability wave penetration visualization
+    → KEY INSIGHT: Quantum particles can pass through barriers they classically couldn't
+- **Quantum / Schrödinger's Cat:** Use \`type: 'schrodinger_cat'\`, \`data: '{}'\`
+    → Superposition and measurement
+    → Interactive thought experiment
+    → KEY INSIGHT: Until observed, quantum systems exist in superposition of all states
 **CUSTOM SIMULATIONS (only if no pre-built exists):**
 3. For dynamic text, use: \`"content": "Range: {{calculations.range}} m"\`
 4. Limit to 2-3 key variables
@@ -803,7 +911,7 @@ CRITICAL RULES:
           type: Type.OBJECT,
           properties: {
             title: { type: Type.STRING, description: 'Title of the interactive graphic.' },
-            type: { type: Type.STRING, enum: ['dynamic_blueprint', 'rocket', 'projectile', 'poster', 'compound_interest', 'supply_demand', 'pendulum', 'waves', 'circuits', 'sorting', 'addition', 'subtraction', 'multiplication', 'division', 'fractions', 'area', 'triangle', 'force_lab', 'energy_coaster', 'atomic_builder', 'equation_balancer', 'gas_law', 'advanced_force_lab', 'newton_third_law', 'net_force', 'gravity_acceleration', 'force_classification', 'stress_response', 'posture_analyzer', 'heart_rate_zones', 'plate_method', 'breathing_guide', 'gravitational_pe', 'chemical_pe', 'energy_conservation', 'machine_efficiency', 'convection', 'specific_heat', 'latent_heat', 'entropy', 'heat_engine', 'light_transmission', 'light_absorption', 'digital_signal', 'wave_equation', 'superposition', 'wave_interference', 'standing_wave', 'resonance', 'doppler_effect', 'snells_law', 'tir', 'lens', 'mirror', 'ray_tracing', 'polarization', 'diffraction', 'dispersion', 'thin_film', 'wave_particle_duality', 'photoelectric_effect', 'laser', 'acoustic_levitation', 'fiber_optics', 'static_balloon', 'circuit_builder_basic', 'magnet_maze', 'electromagnet_basic', 'conductivity_tester', 'simple_switch', 'magnetic_pole', 'attract_repel', 'compass', 'magnetic_material', 'series_circuit', 'parallel_circuit', 'voltage_potential', 'current_flow', 'ohms_law', 'electromagnet', 'basic_motor', 'basic_generator', 'earth_field', 'household_safety', 'coulombs_law', 'electric_field', 'capacitor_lab', 'rlc_circuit', 'magnetic_flux', 'faradays_law', 'lenzs_law', 'battery_connections', 'bulb_power', 'metal_conductors', 'insulators', 'simple_switches', 'magnetic_poles', 'compass_use', 'electromagnets', 'basic_motors', 'basic_generators', 'earth_magnetic_field', 'multi_step_equations', 'variables_both_sides', 'linear_inequalities', 'inequalities_number_line', 'independent_dependent_variables', 'angle_types', 'angle_partners', 'intersection_investigation', 'area_surveyor', 'circle_lab', 'z_score', 'correlation_coefficient', 'combinations_permutations', 'conditional_probability', 'margin_of_error'], description: "Use 'dynamic_blueprint' for custom interactive simulations." },
+            type: { type: Type.STRING, enum: ['dynamic_blueprint', 'rocket', 'projectile', 'poster', 'compound_interest', 'supply_demand', 'pendulum', 'waves', 'circuits', 'sorting', 'addition', 'subtraction', 'multiplication', 'division', 'fractions', 'area', 'triangle', 'force_lab', 'energy_coaster', 'atomic_builder', 'equation_balancer', 'gas_law', 'advanced_force_lab', 'newton_third_law', 'net_force', 'gravity_acceleration', 'force_classification', 'stress_response', 'posture_analyzer', 'heart_rate_zones', 'plate_method', 'breathing_guide', 'gravitational_pe', 'chemical_pe', 'energy_conservation', 'machine_efficiency', 'convection', 'specific_heat', 'latent_heat', 'entropy', 'heat_engine', 'light_transmission', 'light_absorption', 'digital_signal', 'wave_equation', 'superposition', 'wave_interference', 'standing_wave', 'resonance', 'doppler_effect', 'snells_law', 'tir', 'lens', 'mirror', 'ray_tracing', 'polarization', 'diffraction', 'dispersion', 'thin_film', 'wave_particle_duality', 'photoelectric_effect', 'laser', 'acoustic_levitation', 'fiber_optics', 'static_balloon', 'circuit_builder_basic', 'magnet_maze', 'electromagnet_basic', 'conductivity_tester', 'simple_switch', 'magnetic_pole', 'attract_repel', 'compass', 'magnetic_material', 'series_circuit', 'parallel_circuit', 'voltage_potential', 'current_flow', 'ohms_law', 'electromagnet', 'basic_motor', 'basic_generator', 'earth_field', 'household_safety', 'coulombs_law', 'electric_field', 'capacitor_lab', 'rlc_circuit', 'magnetic_flux', 'faradays_law', 'lenzs_law', 'battery_connections', 'bulb_power', 'metal_conductors', 'insulators', 'simple_switches', 'magnetic_poles', 'compass_use', 'electromagnets', 'basic_motors', 'basic_generators', 'earth_magnetic_field', 'multi_step_equations', 'variables_both_sides', 'linear_inequalities', 'inequalities_number_line', 'independent_dependent_variables', 'angle_types', 'angle_partners', 'intersection_investigation', 'area_surveyor', 'circle_lab', 'z_score', 'correlation_coefficient', 'combinations_permutations', 'conditional_probability', 'margin_of_error', 'lorentz_force', 'inductance', 'transformers', 'solenoid', 'semiconductors', 'diodes', 'transistors', 'hall_effect', 'superconductivity', 'maxwells_equations', 'day_night_cycle', 'seasons', 'moon_phases', 'solar_system', 'atom_structure', 'isotopes', 'nuclear_fusion', 'radioactivity', 'half_life', 'time_dilation', 'length_contraction', 'mass_energy', 'black_holes', 'wave_function', 'heisenberg_uncertainty', 'quantum_tunneling', 'schrodinger_cat'], description: "Use 'dynamic_blueprint' for custom interactive simulations." },
             data: { type: Type.STRING, description: 'Stringified JSON following the dynamic_blueprint schema. MUST be valid JSON.' }
           },
           required: ['title', 'type', 'data']
