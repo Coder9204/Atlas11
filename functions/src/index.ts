@@ -237,11 +237,7 @@ export const validateDiagramData = functions.https.onCall(async (data, context) 
     for (const [key, formula] of Object.entries(diagramData.calculations)) {
       if (typeof formula !== 'string') continue;
 
-      // Only allow safe math operations
-      const safePattern = /^[\d\w\s\.\+\-\*\/\(\)\,\^\%]+$/;
-      const allowedFunctions = ['Math.sin', 'Math.cos', 'Math.tan', 'Math.sqrt', 'Math.pow', 'Math.abs', 'Math.log', 'Math.exp', 'Math.floor', 'Math.ceil', 'Math.round', 'Math.PI', 'Math.E', 'variables.'];
-
-      // Check for dangerous patterns
+      // Check for dangerous patterns (block code injection attempts)
       const dangerousPatterns = [
         /eval\s*\(/i,
         /function\s*\(/i,
