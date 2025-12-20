@@ -235,6 +235,66 @@ When a concept comes up, follow this lookup process:
 • Heart Rate Zones → 'heart_rate_zones' | Nutrition → 'plate_method'
 • Breathing Exercises → 'breathing_guide'
 
+🚀 **ENTREPRENEURSHIP - MINDSET & FOUNDATIONAL SKILLS**
+• Growth Mindset / Fixed vs Growth → 'growth_mindset'
+• Opportunity Recognition / Problem Spotting → 'opportunity_recognition'
+• Calculated Risk-Taking / Risk Assessment → 'calculated_risk'
+• Resilience and Grit / Startup Journey → 'resilience_grit'
+• SCAMPER / Creativity / Brainstorming → 'scamper_creativity'
+• Critical Thinking / Assumption Challenging → 'critical_thinking'
+• Self-Reliance / Initiative → 'self_reliance'
+• Adaptability / Pivot vs Persevere → 'adaptability_pivot'
+• Empathy / User Empathy Mapping → 'empathy_mapping'
+• Ethical Leadership / Business Ethics → 'ethical_leadership'
+
+💡 **ENTREPRENEURSHIP - IDEATION & DESIGN THINKING**
+• Design Thinking Process / 5 Stages → 'design_thinking'
+• Problem-Solution Fit / Validation → 'problem_solution_fit'
+• Customer Discovery / Interviews → 'customer_discovery'
+• User Personas / Customer Profiles → 'user_personas'
+• Value Proposition Canvas → 'value_proposition'
+• Prototyping / MVP → 'prototyping'
+• Iterative Design / Feedback Loops → 'iterative_design'
+• Blue Ocean Strategy / ERRC → 'blue_ocean'
+• Trend Analysis / Market Trends → 'trend_analysis'
+• First-Principles Thinking → 'first_principles'
+
+📊 **ENTREPRENEURSHIP - BUSINESS MODELS & STRATEGY**
+• Lean Canvas / 9-Block → 'lean_canvas'
+• Business Model Canvas → 'business_model_canvas'
+• B2B vs B2C / Business Types → 'b2b_vs_b2c'
+• Revenue Models / Monetization → 'revenue_models'
+• Unit Economics / Per-Unit Analysis → 'unit_economics'
+• Customer Acquisition Cost (CAC) → 'cac_calculator'
+• Lifetime Value (LTV) → 'ltv_calculator'
+• Scalability / Growth → 'scalability'
+• Franchising / Franchise Model → 'franchising'
+• Social Enterprise / Impact Business → 'social_enterprise'
+
+📣 **ENTREPRENEURSHIP - MARKETING & SALES**
+• 4 Ps of Marketing / Marketing Mix → 'four_ps_marketing'
+• Branding & Identity → 'branding_identity'
+• Digital Marketing / Online Channels → 'digital_marketing'
+• Content Strategy / Content Marketing → 'content_strategy'
+• Email Marketing / Campaigns → 'email_marketing'
+• Influencer Marketing → 'influencer_marketing'
+• Sales Funnel / AIDA → 'sales_funnel'
+• Public Relations / PR → 'public_relations'
+• Guerrilla Marketing / Creative Tactics → 'guerrilla_marketing'
+• Copywriting / Persuasion Formulas → 'copywriting'
+
+💰 **ENTREPRENEURSHIP - FINANCIAL LITERACY**
+• Bootstrapping / Self-Funding → 'bootstrapping'
+• Cash Flow / Cash Management → 'cash_flow'
+• Profit & Loss / P&L Statement → 'profit_loss'
+• Break-Even Analysis → 'break_even'
+• Pricing Strategies → 'pricing_strategies'
+• Equity & Ownership / Cap Table → 'equity_ownership'
+• Angel Investors / Angel Funding → 'angel_investors'
+• Venture Capital / VC Stages → 'venture_capital'
+• Crowdfunding / Crowd Financing → 'crowdfunding'
+• Pitch Decks / Investor Presentations → 'pitch_deck'
+
 **STEP 2: IF NO MATCH → BUILD CUSTOM**
 Only if the topic is NOT covered above, use \`type: 'dynamic_blueprint'\` with custom JSON.
 
@@ -801,6 +861,209 @@ Only if the topic is NOT covered above, use \`type: 'dynamic_blueprint'\` with c
     → Superposition and measurement
     → Interactive thought experiment
     → KEY INSIGHT: Until observed, quantum systems exist in superposition of all states
+
+**ENTREPRENEURSHIP SIMULATIONS:**
+- **Mindset / Growth Mindset:** Use \`type: 'growth_mindset'\`, \`data: '{}'\`
+    → Reframe challenges as opportunities for growth
+    → Fixed vs Growth mindset response trainer
+    → KEY INSIGHT: Growth mindset opens doors to learning; setbacks are teachers
+- **Mindset / Opportunity Recognition:** Use \`type: 'opportunity_recognition'\`, \`data: '{}'\`
+    → Identify problems as potential business opportunities
+    → Scenario-based problem spotting with business ideas
+    → KEY INSIGHT: Every problem is a potential business opportunity
+- **Mindset / Calculated Risk:** Use \`type: 'calculated_risk'\`, \`data: '{}'\`
+    → Evaluate risks systematically with probability, upside, downside analysis
+    → Risk assessment calculator with weighted factors
+    → KEY INSIGHT: Smart entrepreneurs assess, not avoid, risk
+- **Mindset / Resilience:** Use \`type: 'resilience_grit'\`, \`data: '{}'\`
+    → Navigate the startup "Trough of Sorrow"
+    → Animated startup journey through highs and lows
+    → KEY INSIGHT: Most startups face a valley before finding success
+- **Mindset / SCAMPER Creativity:** Use \`type: 'scamper_creativity'\`, \`data: '{}'\`
+    → Systematic creative brainstorming using SCAMPER method
+    → Interactive idea generation with 7 creative prompts
+    → KEY INSIGHT: Creativity can be systematic, not just random inspiration
+- **Mindset / Critical Thinking:** Use \`type: 'critical_thinking'\`, \`data: '{}'\`
+    → Question assumptions before building
+    → Assumption challenger with evidence analysis
+    → KEY INSIGHT: Test assumptions cheaply before betting big
+- **Mindset / Self-Reliance:** Use \`type: 'self_reliance'\`, \`data: '{}'\`
+    → Take initiative without being told
+    → DIY vs Wait decision trainer
+    → KEY INSIGHT: Entrepreneurs act; they don't wait for permission
+- **Mindset / Adaptability:** Use \`type: 'adaptability_pivot'\`, \`data: '{}'\`
+    → When to pivot vs persevere
+    → Data-driven pivot decision simulator
+    → KEY INSIGHT: Pivoting is a structured course correction, not failure
+- **Mindset / Empathy:** Use \`type: 'empathy_mapping'\`, \`data: '{}'\`
+    → Step into your user's shoes
+    → User persona empathy mapping with emotions
+    → KEY INSIGHT: Understanding user pain points leads to better products
+- **Mindset / Ethical Leadership:** Use \`type: 'ethical_leadership'\`, \`data: '{}'\`
+    → Navigate ethical dilemmas in business
+    → Scenario-based integrity scorer
+    → KEY INSIGHT: Short-term ethics shortcuts create long-term problems
+- **Ideation / Design Thinking:** Use \`type: 'design_thinking'\`, \`data: '{}'\`
+    → 5-stage human-centered design process
+    → Interactive Empathize→Define→Ideate→Prototype→Test walkthrough
+    → KEY INSIGHT: Start with human needs, not technology
+- **Ideation / Problem-Solution Fit:** Use \`type: 'problem_solution_fit'\`, \`data: '{}'\`
+    → Validate before building
+    → 5-question fit checker with score
+    → KEY INSIGHT: The problem must exist, be urgent, and worth paying for
+- **Ideation / Customer Discovery:** Use \`type: 'customer_discovery'\`, \`data: '{}'\`
+    → Validate through customer interviews
+    → Interview simulator with insight extraction
+    → KEY INSIGHT: Talk to customers before writing code
+- **Ideation / User Personas:** Use \`type: 'user_personas'\`, \`data: '{}'\`
+    → Create detailed customer profiles
+    → Interactive persona builder with demographics
+    → KEY INSIGHT: Build for a specific person, not everyone
+- **Ideation / Value Proposition:** Use \`type: 'value_proposition'\`, \`data: '{}'\`
+    → Map features to customer needs using Value Proposition Canvas
+    → Jobs, Pains, Gains mapping tool
+    → KEY INSIGHT: Great products relieve pains and create gains
+- **Ideation / Prototyping:** Use \`type: 'prototyping'\`, \`data: '{}'\`
+    → Build low-fidelity models fast
+    → Paper→Clickable→MVP progression with time/fidelity tradeoffs
+    → KEY INSIGHT: Start with the lowest-fidelity prototype that answers your question
+- **Ideation / Iterative Design:** Use \`type: 'iterative_design'\`, \`data: '{}'\`
+    → Refine based on feedback loops
+    → Version progression with feedback queue
+    → KEY INSIGHT: Ship fast, learn faster; perfect is the enemy of good
+- **Ideation / Blue Ocean:** Use \`type: 'blue_ocean'\`, \`data: '{}'\`
+    → Find uncontested market space with ERRC framework
+    → Industry vs You comparison with Eliminate-Reduce-Raise-Create
+    → KEY INSIGHT: Don't compete; create new market space
+- **Ideation / Trend Analysis:** Use \`type: 'trend_analysis'\`, \`data: '{}'\`
+    → Identify shifts that matter
+    → Trend momentum vs relevance matrix
+    → KEY INSIGHT: Ride waves, don't fight currents
+- **Ideation / First Principles:** Use \`type: 'first_principles'\`, \`data: '{}'\`
+    → Break problems to basic truths
+    → Assumption→Breakdown→Rebuild process
+    → KEY INSIGHT: Question everything; rebuild from fundamentals
+- **Business / Lean Canvas:** Use \`type: 'lean_canvas'\`, \`data: '{}'\`
+    → 9-block one-page business model
+    → Interactive canvas with all sections
+    → KEY INSIGHT: Fit your entire business on one page
+- **Business / Business Model Canvas:** Use \`type: 'business_model_canvas'\`, \`data: '{}'\`
+    → 9 building blocks of your business
+    → Comprehensive business model visualization
+    → KEY INSIGHT: All 9 blocks must work together
+- **Business / B2B vs B2C:** Use \`type: 'b2b_vs_b2c'\`, \`data: '{}'\`
+    → Compare business-to-business vs consumer models
+    → Side-by-side comparison with key differences
+    → KEY INSIGHT: B2B has longer cycles but higher values; B2C has shorter cycles but lower values
+- **Business / Revenue Models:** Use \`type: 'revenue_models'\`, \`data: '{}'\`
+    → Choose your monetization strategy
+    → Subscription, Freemium, Transaction Fee, Licensing comparison
+    → KEY INSIGHT: Revenue model affects everything from pricing to customer relationships
+- **Business / Unit Economics:** Use \`type: 'unit_economics'\`, \`data: '{}'\`
+    → Per-unit profit analysis
+    → Price, cost, and margin calculator
+    → KEY INSIGHT: If unit economics don't work at small scale, they won't at large scale
+- **Business / CAC:** Use \`type: 'cac_calculator'\`, \`data: '{}'\`
+    → Customer Acquisition Cost calculator
+    → Marketing spend ÷ customers acquired
+    → KEY INSIGHT: CAC must be less than LTV for a sustainable business
+- **Business / LTV:** Use \`type: 'ltv_calculator'\`, \`data: '{}'\`
+    → Customer Lifetime Value calculator
+    → ARPU × Customer lifespan
+    → KEY INSIGHT: LTV:CAC ratio should be at least 3:1
+- **Business / Scalability:** Use \`type: 'scalability'\`, \`data: '{}'\`
+    → Can you grow without proportional cost increase?
+    → Scalable vs less-scalable business comparison
+    → KEY INSIGHT: Software scales; services don't (without automation)
+- **Business / Franchising:** Use \`type: 'franchising'\`, \`data: '{}'\`
+    → Replicate a proven business model
+    → Franchisor→Agreement→Franchisee flow
+    → KEY INSIGHT: Franchising trades control for rapid expansion
+- **Business / Social Enterprise:** Use \`type: 'social_enterprise'\`, \`data: '{}'\`
+    → Blend profit with purpose
+    → Non-Profit↔Social Enterprise↔For-Profit spectrum
+    → KEY INSIGHT: Social enterprises create sustainable impact through business models
+- **Marketing / 4 Ps:** Use \`type: 'four_ps_marketing'\`, \`data: '{}'\`
+    → Product, Price, Place, Promotion
+    → Interactive marketing mix explorer
+    → KEY INSIGHT: All 4 Ps must align for marketing success
+- **Marketing / Branding:** Use \`type: 'branding_identity'\`, \`data: '{}'\`
+    → Visual identity, voice, and feeling
+    → Brand element builder
+    → KEY INSIGHT: Brand is what people say about you when you're not in the room
+- **Marketing / Digital Marketing:** Use \`type: 'digital_marketing'\`, \`data: '{}'\`
+    → Online marketing channels
+    → SEO, SEM, Social, Email, Content, Affiliate overview
+    → KEY INSIGHT: Different channels work for different stages of the funnel
+- **Marketing / Content Strategy:** Use \`type: 'content_strategy'\`, \`data: '{}'\`
+    → Build authority through valuable content
+    → Content type selector and planning
+    → KEY INSIGHT: Give value first; sales follow
+- **Marketing / Email Marketing:** Use \`type: 'email_marketing'\`, \`data: '{}'\`
+    → Email campaign metrics
+    → Open rate and click rate benchmarking
+    → KEY INSIGHT: Email has the highest ROI of any marketing channel
+- **Marketing / Influencer Marketing:** Use \`type: 'influencer_marketing'\`, \`data: '{}'\`
+    → Nano, Micro, Macro influencer comparison
+    → Follower count vs engagement tradeoffs
+    → KEY INSIGHT: Smaller influencers often have higher engagement rates
+- **Marketing / Sales Funnel:** Use \`type: 'sales_funnel'\`, \`data: '{}'\`
+    → AIDA: Awareness→Interest→Decision→Action
+    → Interactive funnel visualization
+    → KEY INSIGHT: Each stage filters; optimize every step
+- **Marketing / Public Relations:** Use \`type: 'public_relations'\`, \`data: '{}'\`
+    → Earn free media coverage
+    → PR tactics: Press releases, interviews, awards, partnerships
+    → KEY INSIGHT: Earned media is more credible than paid ads
+- **Marketing / Guerrilla Marketing:** Use \`type: 'guerrilla_marketing'\`, \`data: '{}'\`
+    → Creative, low-cost tactics for maximum impact
+    → Surprise, creativity, shareability principles
+    → KEY INSIGHT: Creativity beats budget
+- **Marketing / Copywriting:** Use \`type: 'copywriting'\`, \`data: '{}'\`
+    → Persuasion formulas: AIDA, PAS, 4 Us
+    → Interactive formula selector
+    → KEY INSIGHT: Words that sell follow proven psychological patterns
+- **Finance / Bootstrapping:** Use \`type: 'bootstrapping'\`, \`data: '{}'\`
+    → Start with personal savings and revenue
+    → Pros and cons of self-funding
+    → KEY INSIGHT: Bootstrapping means full ownership but limited capital
+- **Finance / Cash Flow:** Use \`type: 'cash_flow'\`, \`data: '{}'\`
+    → Monthly income vs expenses
+    → Interactive cash flow calculator
+    → KEY INSIGHT: Cash is king; profitable companies can still run out of cash
+- **Finance / Profit & Loss:** Use \`type: 'profit_loss'\`, \`data: '{}'\`
+    → Revenue - Costs = Profit
+    → P&L statement walkthrough
+    → KEY INSIGHT: Revenue is vanity; profit is sanity; cash is reality
+- **Finance / Break-Even:** Use \`type: 'break_even'\`, \`data: '{}'\`
+    → Fixed costs ÷ (Price - Variable cost)
+    → Interactive break-even calculator
+    → KEY INSIGHT: Know how many units you need to sell before making profit
+- **Finance / Pricing Strategies:** Use \`type: 'pricing_strategies'\`, \`data: '{}'\`
+    → Cost-plus, Value-based, Competitive, Penetration
+    → Strategy selector with tradeoffs
+    → KEY INSIGHT: Price is a signal; it communicates value
+- **Finance / Equity:** Use \`type: 'equity_ownership'\`, \`data: '{}'\`
+    → Cap table and ownership distribution
+    → Founders, Investors, Employees pie chart
+    → KEY INSIGHT: Dilution happens with each funding round
+- **Finance / Angel Investors:** Use \`type: 'angel_investors'\`, \`data: '{}'\`
+    → High-net-worth individual investors
+    → Typical terms and what angels offer
+    → KEY INSIGHT: Angels invest in people first, ideas second
+- **Finance / Venture Capital:** Use \`type: 'venture_capital'\`, \`data: '{}'\`
+    → Pre-Seed→Seed→Series A→B→C progression
+    → Stage selector with typical amounts
+    → KEY INSIGHT: VCs invest in potential for massive returns (10x+)
+- **Finance / Crowdfunding:** Use \`type: 'crowdfunding'\`, \`data: '{}'\`
+    → Raise from the crowd
+    → Kickstarter, Indiegogo, Republic, GoFundMe comparison
+    → KEY INSIGHT: Crowdfunding validates demand before production
+- **Finance / Pitch Deck:** Use \`type: 'pitch_deck'\`, \`data: '{}'\`
+    → Investor presentation builder
+    → 8-slide structure: Problem→Solution→Market→Model→Traction→Team→Financials→Ask
+    → KEY INSIGHT: Tell a story investors want to be part of
+
 **CUSTOM SIMULATIONS (only if no pre-built exists):**
 3. For dynamic text, use: \`"content": "Range: {{calculations.range}} m"\`
 4. Limit to 2-3 key variables

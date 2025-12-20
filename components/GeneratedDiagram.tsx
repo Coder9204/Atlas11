@@ -19692,6 +19692,4151 @@ const GeneratedDiagram: React.FC<DiagramProps> = ({ type, data, title }) => {
       );
    };
 
+   // --- ENTREPRENEURSHIP: MINDSET & FOUNDATIONAL SKILLS RENDERERS ---
+
+   const GrowthMindsetRenderer = () => {
+      const [phase, setPhase] = useState<'intro' | 'play' | 'result'>('intro');
+      const [showInfo, setShowInfo] = useState(false);
+      const [score, setScore] = useState(0);
+      const [currentScenario, setCurrentScenario] = useState(0);
+      const [feedback, setFeedback] = useState('');
+
+      const scenarios = [
+         { situation: "You failed your first business pitch.", fixed: "I'm just not good at this.", growth: "What can I learn to improve my next pitch?", correct: 'growth' },
+         { situation: "A competitor launched a similar product.", fixed: "They'll always be better than me.", growth: "How can I differentiate and innovate?", correct: 'growth' },
+         { situation: "Your mentor criticizes your business plan.", fixed: "They don't understand my vision.", growth: "Their feedback could help me strengthen weak points.", correct: 'growth' },
+         { situation: "You made a costly mistake.", fixed: "I'm not cut out for entrepreneurship.", growth: "This mistake taught me a valuable lesson.", correct: 'growth' },
+         { situation: "Sales are declining.", fixed: "The market just doesn't want my product.", growth: "Time to research and adapt to customer needs.", correct: 'growth' },
+      ];
+
+      const handleChoice = (choice: string) => {
+         if (choice === scenarios[currentScenario].correct) {
+            setScore(s => s + 20);
+            setFeedback('✓ Growth mindset! Entrepreneurs embrace challenges as learning opportunities.');
+         } else {
+            setFeedback('✗ That\'s a fixed mindset response. Try reframing challenges as growth opportunities.');
+         }
+         setTimeout(() => {
+            if (currentScenario < scenarios.length - 1) {
+               setCurrentScenario(c => c + 1);
+               setFeedback('');
+            } else {
+               setPhase('result');
+            }
+         }, 2000);
+      };
+
+      if (phase === 'intro') return (
+         <div className="flex flex-col h-full bg-gradient-to-br from-emerald-900 via-teal-900 to-cyan-900 text-white p-8">
+            <div className="flex justify-between items-start mb-6">
+               <div>
+                  <h2 className="text-3xl font-black">🌱 GROWTH MINDSET</h2>
+                  <p className="text-emerald-300 text-sm mt-1">Fixed vs Growth Thinking</p>
+               </div>
+               <button onClick={() => setShowInfo(!showInfo)} className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center text-xl">ℹ️</button>
+            </div>
+            {showInfo && (
+               <div className="bg-black/30 rounded-xl p-4 mb-4 text-sm">
+                  <p><strong>Growth Mindset:</strong> Believing abilities can be developed through dedication and hard work.</p>
+                  <p className="mt-2"><strong>Fixed Mindset:</strong> Believing talents are innate and unchangeable.</p>
+               </div>
+            )}
+            <div className="flex-1 flex flex-col justify-center items-center text-center">
+               <div className="text-6xl mb-6">🧠</div>
+               <h3 className="text-2xl font-bold mb-4">How Entrepreneurs Think</h3>
+               <p className="text-lg text-emerald-200 max-w-md mb-8">Learn to recognize and choose growth mindset responses to entrepreneurial challenges.</p>
+               <button onClick={() => setPhase('play')} className="px-8 py-4 bg-emerald-500 hover:bg-emerald-400 rounded-xl font-bold text-lg transition-all transform hover:scale-105">
+                  START CHALLENGE →
+               </button>
+            </div>
+            <p className="text-xs text-emerald-300/60 text-center">Key Insight: 90% of successful entrepreneurs attribute their success to a growth mindset.</p>
+         </div>
+      );
+
+      if (phase === 'result') return (
+         <div className="flex flex-col h-full bg-gradient-to-br from-emerald-900 via-teal-900 to-cyan-900 text-white p-8 items-center justify-center">
+            <div className="text-6xl mb-4">{score >= 80 ? '🏆' : score >= 60 ? '🌟' : '💪'}</div>
+            <h2 className="text-3xl font-black mb-2">Score: {score}%</h2>
+            <p className="text-emerald-300 text-lg mb-6">{score >= 80 ? 'Outstanding growth mindset!' : score >= 60 ? 'Good progress!' : 'Keep developing your growth mindset!'}</p>
+            <button onClick={() => { setPhase('intro'); setScore(0); setCurrentScenario(0); }} className="px-6 py-3 bg-emerald-500 rounded-xl font-bold">TRY AGAIN</button>
+         </div>
+      );
+
+      return (
+         <div className="flex flex-col h-full bg-gradient-to-br from-emerald-900 via-teal-900 to-cyan-900 text-white p-8">
+            <div className="flex justify-between items-center mb-6">
+               <span className="text-sm text-emerald-300">Scenario {currentScenario + 1}/{scenarios.length}</span>
+               <span className="px-4 py-2 bg-emerald-500/30 rounded-full font-bold">Score: {score}%</span>
+            </div>
+            <div className="flex-1 flex flex-col justify-center">
+               <div className="bg-black/30 rounded-2xl p-6 mb-6">
+                  <p className="text-xl font-bold text-center">{scenarios[currentScenario].situation}</p>
+               </div>
+               {feedback ? (
+                  <div className={`text-center p-4 rounded-xl ${feedback.startsWith('✓') ? 'bg-green-500/30' : 'bg-red-500/30'}`}>
+                     <p className="text-lg">{feedback}</p>
+                  </div>
+               ) : (
+                  <div className="grid gap-4">
+                     <button onClick={() => handleChoice('fixed')} className="p-4 bg-red-900/50 hover:bg-red-800/50 rounded-xl text-left transition-all">
+                        <span className="text-red-400 font-bold">Fixed Mindset:</span>
+                        <p className="mt-1">{scenarios[currentScenario].fixed}</p>
+                     </button>
+                     <button onClick={() => handleChoice('growth')} className="p-4 bg-green-900/50 hover:bg-green-800/50 rounded-xl text-left transition-all">
+                        <span className="text-green-400 font-bold">Growth Mindset:</span>
+                        <p className="mt-1">{scenarios[currentScenario].growth}</p>
+                     </button>
+                  </div>
+               )}
+            </div>
+         </div>
+      );
+   };
+
+   const OpportunityRecognitionRenderer = () => {
+      const [phase, setPhase] = useState<'intro' | 'play' | 'result'>('intro');
+      const [showInfo, setShowInfo] = useState(false);
+      const [score, setScore] = useState(0);
+      const [timeLeft, setTimeLeft] = useState(30);
+      const [opportunities, setOpportunities] = useState<{id: number; text: string; isReal: boolean; found: boolean}[]>([]);
+
+      const allOpportunities = [
+         { text: "Long lines at coffee shops during morning rush", isReal: true },
+         { text: "People complaining about parking in downtown", isReal: true },
+         { text: "Students struggling with math homework", isReal: true },
+         { text: "Elderly neighbors need help with technology", isReal: true },
+         { text: "Local restaurants throwing away unsold food", isReal: true },
+         { text: "Everyone already has everything they need", isReal: false },
+         { text: "There are no more problems left to solve", isReal: false },
+         { text: "Pet owners traveling need pet care", isReal: true },
+      ];
+
+      useEffect(() => {
+         if (phase === 'play' && timeLeft > 0) {
+            const timer = setTimeout(() => setTimeLeft(t => t - 1), 1000);
+            return () => clearTimeout(timer);
+         } else if (timeLeft === 0) setPhase('result');
+      }, [phase, timeLeft]);
+
+      const startGame = () => {
+         setOpportunities(allOpportunities.map((o, i) => ({ ...o, id: i, found: false })));
+         setPhase('play');
+         setTimeLeft(30);
+         setScore(0);
+      };
+
+      const handleClick = (id: number) => {
+         const opp = opportunities.find(o => o.id === id);
+         if (opp && !opp.found) {
+            if (opp.isReal) setScore(s => s + 15);
+            else setScore(s => Math.max(0, s - 10));
+            setOpportunities(ops => ops.map(o => o.id === id ? { ...o, found: true } : o));
+         }
+      };
+
+      if (phase === 'intro') return (
+         <div className="flex flex-col h-full bg-gradient-to-br from-amber-900 via-orange-900 to-red-900 text-white p-8">
+            <div className="flex justify-between items-start mb-6">
+               <div>
+                  <h2 className="text-3xl font-black">🔍 OPPORTUNITY RECOGNITION</h2>
+                  <p className="text-amber-300 text-sm mt-1">Spotting Problems Worth Solving</p>
+               </div>
+               <button onClick={() => setShowInfo(!showInfo)} className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center text-xl">ℹ️</button>
+            </div>
+            {showInfo && (
+               <div className="bg-black/30 rounded-xl p-4 mb-4 text-sm">
+                  <p><strong>Opportunity Recognition:</strong> The ability to identify unmet needs, inefficiencies, or problems that could be solved with a business solution.</p>
+                  <p className="mt-2">Look for: Pain points, frustrations, gaps in the market, and underserved customers.</p>
+               </div>
+            )}
+            <div className="flex-1 flex flex-col justify-center items-center text-center">
+               <div className="text-6xl mb-6">💡</div>
+               <h3 className="text-2xl font-bold mb-4">Find Real Opportunities</h3>
+               <p className="text-lg text-amber-200 max-w-md mb-8">Spot genuine business opportunities while avoiding false signals. You have 30 seconds!</p>
+               <button onClick={startGame} className="px-8 py-4 bg-amber-500 hover:bg-amber-400 rounded-xl font-bold text-lg transition-all">
+                  START SPOTTING →
+               </button>
+            </div>
+         </div>
+      );
+
+      if (phase === 'result') return (
+         <div className="flex flex-col h-full bg-gradient-to-br from-amber-900 via-orange-900 to-red-900 text-white p-8 items-center justify-center">
+            <div className="text-6xl mb-4">🎯</div>
+            <h2 className="text-3xl font-black mb-2">Score: {score}</h2>
+            <p className="text-amber-300 mb-6">You found {opportunities.filter(o => o.found && o.isReal).length} real opportunities!</p>
+            <button onClick={startGame} className="px-6 py-3 bg-amber-500 rounded-xl font-bold">TRY AGAIN</button>
+         </div>
+      );
+
+      return (
+         <div className="flex flex-col h-full bg-gradient-to-br from-amber-900 via-orange-900 to-red-900 text-white p-8">
+            <div className="flex justify-between mb-6">
+               <span className="text-2xl font-black">⏱️ {timeLeft}s</span>
+               <span className="px-4 py-2 bg-amber-500/30 rounded-full font-bold">Score: {score}</span>
+            </div>
+            <p className="text-center mb-4 text-amber-200">Click on REAL business opportunities (avoid false ones!)</p>
+            <div className="grid grid-cols-2 gap-3 flex-1">
+               {opportunities.map(opp => (
+                  <button key={opp.id} onClick={() => handleClick(opp.id)} disabled={opp.found}
+                     className={`p-4 rounded-xl text-left text-sm transition-all ${opp.found ? (opp.isReal ? 'bg-green-500/50' : 'bg-red-500/50') : 'bg-black/30 hover:bg-black/50'}`}>
+                     {opp.text}
+                  </button>
+               ))}
+            </div>
+         </div>
+      );
+   };
+
+   const CalculatedRiskRenderer = () => {
+      const [phase, setPhase] = useState<'intro' | 'play' | 'result'>('intro');
+      const [showInfo, setShowInfo] = useState(false);
+      const [balance, setBalance] = useState(10000);
+      const [round, setRound] = useState(0);
+      const [lastResult, setLastResult] = useState('');
+
+      const decisions = [
+         { scenario: "Invest $2,000 in market research before launching?", risk: 2000, successChance: 0.7, reward: 5000 },
+         { scenario: "Spend $5,000 on a trade show booth?", risk: 5000, successChance: 0.5, reward: 15000 },
+         { scenario: "Hire a part-time assistant for $1,500/month?", risk: 1500, successChance: 0.8, reward: 4000 },
+         { scenario: "Invest $3,000 in online advertising?", risk: 3000, successChance: 0.6, reward: 8000 },
+      ];
+
+      const makeDecision = (takeRisk: boolean) => {
+         const decision = decisions[round];
+         if (takeRisk) {
+            const success = Math.random() < decision.successChance;
+            if (success) {
+               setBalance(b => b + decision.reward);
+               setLastResult(`✓ Success! You gained $${decision.reward.toLocaleString()}`);
+            } else {
+               setBalance(b => b - decision.risk);
+               setLastResult(`✗ It didn't work out. You lost $${decision.risk.toLocaleString()}`);
+            }
+         } else {
+            setLastResult("You played it safe. No risk, no reward.");
+         }
+         setTimeout(() => {
+            if (round < decisions.length - 1) { setRound(r => r + 1); setLastResult(''); }
+            else setPhase('result');
+         }, 2000);
+      };
+
+      if (phase === 'intro') return (
+         <div className="flex flex-col h-full bg-gradient-to-br from-violet-900 via-purple-900 to-fuchsia-900 text-white p-8">
+            <div className="flex justify-between items-start mb-6">
+               <div>
+                  <h2 className="text-3xl font-black">⚖️ CALCULATED RISK</h2>
+                  <p className="text-violet-300 text-sm mt-1">Smart Risk Assessment</p>
+               </div>
+               <button onClick={() => setShowInfo(!showInfo)} className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center text-xl">ℹ️</button>
+            </div>
+            {showInfo && (
+               <div className="bg-black/30 rounded-xl p-4 mb-4 text-sm">
+                  <p><strong>Calculated Risk:</strong> Making informed decisions by weighing potential rewards against possible losses.</p>
+                  <p className="mt-2">Formula: Expected Value = (Probability × Reward) - (Risk × Failure Rate)</p>
+               </div>
+            )}
+            <div className="flex-1 flex flex-col justify-center items-center text-center">
+               <div className="text-6xl mb-6">🎲</div>
+               <h3 className="text-2xl font-bold mb-4">Manage Your Startup Budget</h3>
+               <p className="text-lg text-violet-200 max-w-md mb-8">Start with $10,000. Make smart investment decisions. Calculate the expected value before deciding!</p>
+               <button onClick={() => setPhase('play')} className="px-8 py-4 bg-violet-500 hover:bg-violet-400 rounded-xl font-bold text-lg">
+                  START INVESTING →
+               </button>
+            </div>
+         </div>
+      );
+
+      if (phase === 'result') return (
+         <div className="flex flex-col h-full bg-gradient-to-br from-violet-900 via-purple-900 to-fuchsia-900 text-white p-8 items-center justify-center">
+            <div className="text-6xl mb-4">{balance >= 15000 ? '🏆' : balance >= 10000 ? '📈' : '📉'}</div>
+            <h2 className="text-3xl font-black mb-2">Final Balance: ${balance.toLocaleString()}</h2>
+            <p className="text-violet-300 mb-6">{balance >= 15000 ? 'Excellent risk management!' : balance >= 10000 ? 'You grew your capital!' : 'Learning experience!'}</p>
+            <button onClick={() => { setPhase('intro'); setBalance(10000); setRound(0); }} className="px-6 py-3 bg-violet-500 rounded-xl font-bold">PLAY AGAIN</button>
+         </div>
+      );
+
+      const currentDecision = decisions[round];
+      const expectedValue = (currentDecision.successChance * currentDecision.reward) - ((1 - currentDecision.successChance) * currentDecision.risk);
+
+      return (
+         <div className="flex flex-col h-full bg-gradient-to-br from-violet-900 via-purple-900 to-fuchsia-900 text-white p-8">
+            <div className="flex justify-between mb-6">
+               <span className="text-sm">Decision {round + 1}/{decisions.length}</span>
+               <span className="px-4 py-2 bg-violet-500/30 rounded-full font-bold">💰 ${balance.toLocaleString()}</span>
+            </div>
+            {lastResult ? (
+               <div className={`flex-1 flex items-center justify-center text-xl ${lastResult.startsWith('✓') ? 'text-green-400' : lastResult.startsWith('✗') ? 'text-red-400' : 'text-gray-400'}`}>
+                  {lastResult}
+               </div>
+            ) : (
+               <div className="flex-1 flex flex-col justify-center">
+                  <div className="bg-black/30 rounded-2xl p-6 mb-6">
+                     <p className="text-xl font-bold text-center mb-4">{currentDecision.scenario}</p>
+                     <div className="grid grid-cols-3 gap-4 text-center text-sm">
+                        <div className="bg-red-900/30 p-3 rounded-xl">
+                           <p className="text-red-400 font-bold">Risk</p>
+                           <p>${currentDecision.risk.toLocaleString()}</p>
+                        </div>
+                        <div className="bg-green-900/30 p-3 rounded-xl">
+                           <p className="text-green-400 font-bold">Potential Reward</p>
+                           <p>${currentDecision.reward.toLocaleString()}</p>
+                        </div>
+                        <div className="bg-blue-900/30 p-3 rounded-xl">
+                           <p className="text-blue-400 font-bold">Success Rate</p>
+                           <p>{(currentDecision.successChance * 100).toFixed(0)}%</p>
+                        </div>
+                     </div>
+                     <p className="text-center mt-4 text-violet-300">Expected Value: <span className={expectedValue > 0 ? 'text-green-400' : 'text-red-400'}>${expectedValue.toFixed(0)}</span></p>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                     <button onClick={() => makeDecision(true)} className="p-4 bg-green-600 hover:bg-green-500 rounded-xl font-bold">TAKE THE RISK</button>
+                     <button onClick={() => makeDecision(false)} className="p-4 bg-gray-600 hover:bg-gray-500 rounded-xl font-bold">PLAY IT SAFE</button>
+                  </div>
+               </div>
+            )}
+         </div>
+      );
+   };
+
+   const ResilienceGritRenderer = () => {
+      const [phase, setPhase] = useState<'intro' | 'play' | 'result'>('intro');
+      const [showInfo, setShowInfo] = useState(false);
+      const [motivation, setMotivation] = useState(100);
+      const [day, setDay] = useState(1);
+      const [successes, setSuccesses] = useState(0);
+
+      const challenges = [
+         { event: "First customer complained publicly", drain: 20, response: "Learn and improve", boost: 15 },
+         { event: "Investor said no", drain: 25, response: "Find 10 more investors", boost: 20 },
+         { event: "Key employee quit", drain: 30, response: "Hire someone better", boost: 25 },
+         { event: "Product launch delayed", drain: 15, response: "Use time to improve", boost: 10 },
+         { event: "Competitor copied your idea", drain: 20, response: "Innovate further", boost: 15 },
+      ];
+
+      const handleChallenge = (bounce: boolean) => {
+         const challenge = challenges[day - 1];
+         if (bounce) {
+            setMotivation(m => Math.min(100, m - challenge.drain + challenge.boost));
+            setSuccesses(s => s + 1);
+         } else {
+            setMotivation(m => m - challenge.drain);
+         }
+         if (day >= challenges.length || motivation <= 0) setPhase('result');
+         else setDay(d => d + 1);
+      };
+
+      if (phase === 'intro') return (
+         <div className="flex flex-col h-full bg-gradient-to-br from-rose-900 via-pink-900 to-red-900 text-white p-8">
+            <div className="flex justify-between items-start mb-6">
+               <div>
+                  <h2 className="text-3xl font-black">💪 RESILIENCE & GRIT</h2>
+                  <p className="text-rose-300 text-sm mt-1">Bouncing Back from Setbacks</p>
+               </div>
+               <button onClick={() => setShowInfo(!showInfo)} className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center text-xl">ℹ️</button>
+            </div>
+            {showInfo && (
+               <div className="bg-black/30 rounded-xl p-4 mb-4 text-sm">
+                  <p><strong>Resilience:</strong> The ability to recover quickly from difficulties.</p>
+                  <p className="mt-2"><strong>Grit:</strong> Passion and perseverance for long-term goals despite setbacks.</p>
+               </div>
+            )}
+            <div className="flex-1 flex flex-col justify-center items-center text-center">
+               <div className="text-6xl mb-6">🔥</div>
+               <h3 className="text-2xl font-bold mb-4">Survive the Startup Journey</h3>
+               <p className="text-lg text-rose-200 max-w-md mb-8">Face challenges and choose how to respond. Maintain your motivation to succeed!</p>
+               <button onClick={() => setPhase('play')} className="px-8 py-4 bg-rose-500 hover:bg-rose-400 rounded-xl font-bold text-lg">
+                  BEGIN JOURNEY →
+               </button>
+            </div>
+         </div>
+      );
+
+      if (phase === 'result') return (
+         <div className="flex flex-col h-full bg-gradient-to-br from-rose-900 via-pink-900 to-red-900 text-white p-8 items-center justify-center">
+            <div className="text-6xl mb-4">{motivation > 0 ? '🏆' : '💔'}</div>
+            <h2 className="text-3xl font-black mb-2">{motivation > 0 ? 'You Made It!' : 'Burned Out'}</h2>
+            <p className="text-rose-300 mb-2">Bounced back {successes} times</p>
+            <p className="text-rose-300 mb-6">Final motivation: {motivation}%</p>
+            <button onClick={() => { setPhase('intro'); setMotivation(100); setDay(1); setSuccesses(0); }} className="px-6 py-3 bg-rose-500 rounded-xl font-bold">TRY AGAIN</button>
+         </div>
+      );
+
+      return (
+         <div className="flex flex-col h-full bg-gradient-to-br from-rose-900 via-pink-900 to-red-900 text-white p-8">
+            <div className="flex justify-between mb-4">
+               <span className="text-sm">Day {day}</span>
+               <span className="px-4 py-2 bg-rose-500/30 rounded-full font-bold">🔥 {motivation}%</span>
+            </div>
+            <div className="w-full bg-black/30 rounded-full h-4 mb-6">
+               <div className="bg-gradient-to-r from-rose-500 to-orange-500 h-4 rounded-full transition-all" style={{ width: `${motivation}%` }}></div>
+            </div>
+            <div className="flex-1 flex flex-col justify-center">
+               <div className="bg-black/30 rounded-2xl p-6 mb-6 text-center">
+                  <p className="text-red-400 text-sm mb-2">⚠️ SETBACK</p>
+                  <p className="text-xl font-bold">{challenges[day - 1].event}</p>
+                  <p className="text-rose-300 mt-2">Motivation drain: -{challenges[day - 1].drain}%</p>
+               </div>
+               <div className="grid grid-cols-2 gap-4">
+                  <button onClick={() => handleChallenge(true)} className="p-4 bg-green-600 hover:bg-green-500 rounded-xl font-bold text-sm">
+                     🔄 BOUNCE BACK<br/><span className="text-xs opacity-75">{challenges[day - 1].response}</span>
+                  </button>
+                  <button onClick={() => handleChallenge(false)} className="p-4 bg-gray-600 hover:bg-gray-500 rounded-xl font-bold text-sm">
+                     😔 GIVE UP<br/><span className="text-xs opacity-75">Accept the loss</span>
+                  </button>
+               </div>
+            </div>
+         </div>
+      );
+   };
+
+   const ScamperCreativityRenderer = () => {
+      const [phase, setPhase] = useState<'intro' | 'play' | 'result'>('intro');
+      const [showInfo, setShowInfo] = useState(false);
+      const [currentTechnique, setCurrentTechnique] = useState(0);
+      const [ideas, setIdeas] = useState<string[]>([]);
+      const [inputValue, setInputValue] = useState('');
+
+      const scamper = [
+         { letter: 'S', name: 'Substitute', prompt: 'What can you substitute in a coffee shop?', example: 'Substitute baristas with self-serve machines' },
+         { letter: 'C', name: 'Combine', prompt: 'What can you combine with a gym?', example: 'Combine gym with coworking space' },
+         { letter: 'A', name: 'Adapt', prompt: 'How can you adapt a bookstore?', example: 'Adapt to include book-themed escape rooms' },
+         { letter: 'M', name: 'Modify', prompt: 'What can you modify about restaurants?', example: 'Modify to complete darkness dining experience' },
+         { letter: 'P', name: 'Put to other uses', prompt: 'How else can you use a parking lot?', example: 'Use for weekend farmers markets' },
+         { letter: 'E', name: 'Eliminate', prompt: 'What can you eliminate from hotels?', example: 'Eliminate check-in desks with app-based entry' },
+         { letter: 'R', name: 'Reverse/Rearrange', prompt: 'What can you reverse about retail?', example: 'Reverse: customers set prices' },
+      ];
+
+      const submitIdea = () => {
+         if (inputValue.trim()) {
+            setIdeas([...ideas, inputValue.trim()]);
+            setInputValue('');
+            if (currentTechnique < scamper.length - 1) setCurrentTechnique(c => c + 1);
+            else setPhase('result');
+         }
+      };
+
+      if (phase === 'intro') return (
+         <div className="flex flex-col h-full bg-gradient-to-br from-yellow-900 via-amber-800 to-orange-900 text-white p-8">
+            <div className="flex justify-between items-start mb-6">
+               <div>
+                  <h2 className="text-3xl font-black">💡 SCAMPER CREATIVITY</h2>
+                  <p className="text-yellow-300 text-sm mt-1">Innovation Technique</p>
+               </div>
+               <button onClick={() => setShowInfo(!showInfo)} className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center text-xl">ℹ️</button>
+            </div>
+            {showInfo && (
+               <div className="bg-black/30 rounded-xl p-4 mb-4 text-sm">
+                  <p><strong>SCAMPER:</strong> A creative thinking technique using 7 strategies:</p>
+                  <p className="mt-1">Substitute, Combine, Adapt, Modify, Put to other uses, Eliminate, Reverse</p>
+               </div>
+            )}
+            <div className="flex-1 flex flex-col justify-center items-center text-center">
+               <div className="text-6xl mb-6">🎨</div>
+               <h3 className="text-2xl font-bold mb-4">Generate Business Ideas</h3>
+               <p className="text-lg text-yellow-200 max-w-md mb-8">Use SCAMPER techniques to innovate on existing businesses and create new opportunities.</p>
+               <button onClick={() => setPhase('play')} className="px-8 py-4 bg-yellow-500 hover:bg-yellow-400 rounded-xl font-bold text-lg text-black">
+                  START CREATING →
+               </button>
+            </div>
+         </div>
+      );
+
+      if (phase === 'result') return (
+         <div className="flex flex-col h-full bg-gradient-to-br from-yellow-900 via-amber-800 to-orange-900 text-white p-8">
+            <h2 className="text-2xl font-black mb-4 text-center">🎉 Your SCAMPER Ideas!</h2>
+            <div className="flex-1 overflow-auto">
+               {ideas.map((idea, i) => (
+                  <div key={i} className="bg-black/30 rounded-xl p-4 mb-3">
+                     <span className="text-yellow-400 font-bold">{scamper[i].letter}:</span> {idea}
+                  </div>
+               ))}
+            </div>
+            <button onClick={() => { setPhase('intro'); setIdeas([]); setCurrentTechnique(0); }} className="px-6 py-3 bg-yellow-500 rounded-xl font-bold text-black mt-4">CREATE MORE</button>
+         </div>
+      );
+
+      const current = scamper[currentTechnique];
+      return (
+         <div className="flex flex-col h-full bg-gradient-to-br from-yellow-900 via-amber-800 to-orange-900 text-white p-8">
+            <div className="flex gap-2 mb-6">
+               {scamper.map((s, i) => (
+                  <div key={i} className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm ${i === currentTechnique ? 'bg-yellow-500 text-black' : i < currentTechnique ? 'bg-green-500' : 'bg-black/30'}`}>
+                     {s.letter}
+                  </div>
+               ))}
+            </div>
+            <div className="bg-black/30 rounded-2xl p-6 mb-4">
+               <p className="text-yellow-400 font-bold text-2xl mb-2">{current.letter} = {current.name}</p>
+               <p className="text-lg mb-4">{current.prompt}</p>
+               <p className="text-sm text-yellow-300/60">Example: {current.example}</p>
+            </div>
+            <input
+               type="text" value={inputValue} onChange={(e) => setInputValue(e.target.value)}
+               placeholder="Type your idea..." onKeyDown={(e) => e.key === 'Enter' && submitIdea()}
+               className="w-full p-4 rounded-xl bg-black/30 border border-yellow-500/30 text-white mb-4"
+            />
+            <button onClick={submitIdea} className="px-6 py-3 bg-yellow-500 rounded-xl font-bold text-black">SUBMIT & NEXT →</button>
+         </div>
+      );
+   };
+
+   const CriticalThinkingRenderer = () => {
+      const [phase, setPhase] = useState<'intro' | 'play' | 'result'>('intro');
+      const [showInfo, setShowInfo] = useState(false);
+      const [score, setScore] = useState(0);
+      const [currentQ, setCurrentQ] = useState(0);
+
+      const questions = [
+         { statement: "Our product failed because the market wasn't ready.", fallacy: "External Attribution Bias", answer: "B", options: ["A: Valid reasoning", "B: Logical fallacy - may ignore internal issues", "C: Insufficient data"] },
+         { statement: "This famous entrepreneur uses this method, so it must work.", fallacy: "Appeal to Authority", answer: "B", options: ["A: Sound logic", "B: Logical fallacy - success isn't always replicable", "C: Needs more research"] },
+         { statement: "We've always done it this way, so we should continue.", fallacy: "Appeal to Tradition", answer: "B", options: ["A: Good reasoning", "B: Logical fallacy - past ≠ optimal", "C: Depends on context"] },
+         { statement: "If we don't launch now, competitors will destroy us.", fallacy: "False Dilemma", answer: "B", options: ["A: Valid urgency", "B: Logical fallacy - false binary choice", "C: True statement"] },
+      ];
+
+      const handleAnswer = (answer: string) => {
+         if (answer === questions[currentQ].answer) setScore(s => s + 25);
+         if (currentQ < questions.length - 1) setCurrentQ(c => c + 1);
+         else setPhase('result');
+      };
+
+      if (phase === 'intro') return (
+         <div className="flex flex-col h-full bg-gradient-to-br from-cyan-900 via-blue-900 to-indigo-900 text-white p-8">
+            <div className="flex justify-between items-start mb-6">
+               <div>
+                  <h2 className="text-3xl font-black">🧐 CRITICAL THINKING</h2>
+                  <p className="text-cyan-300 text-sm mt-1">Spot Logical Fallacies</p>
+               </div>
+               <button onClick={() => setShowInfo(!showInfo)} className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center text-xl">ℹ️</button>
+            </div>
+            {showInfo && (
+               <div className="bg-black/30 rounded-xl p-4 mb-4 text-sm">
+                  <p><strong>Critical Thinking:</strong> Analyzing information objectively to form reasoned judgments.</p>
+                  <p className="mt-2">Key skill: Identifying logical fallacies that can lead to poor business decisions.</p>
+               </div>
+            )}
+            <div className="flex-1 flex flex-col justify-center items-center text-center">
+               <div className="text-6xl mb-6">🔬</div>
+               <h3 className="text-2xl font-bold mb-4">Analyze Business Statements</h3>
+               <p className="text-lg text-cyan-200 max-w-md mb-8">Identify logical fallacies in common business reasoning to make better decisions.</p>
+               <button onClick={() => setPhase('play')} className="px-8 py-4 bg-cyan-500 hover:bg-cyan-400 rounded-xl font-bold text-lg">
+                  START ANALYSIS →
+               </button>
+            </div>
+         </div>
+      );
+
+      if (phase === 'result') return (
+         <div className="flex flex-col h-full bg-gradient-to-br from-cyan-900 via-blue-900 to-indigo-900 text-white p-8 items-center justify-center">
+            <div className="text-6xl mb-4">{score >= 75 ? '🏆' : '📚'}</div>
+            <h2 className="text-3xl font-black mb-2">Score: {score}%</h2>
+            <p className="text-cyan-300 mb-6">{score >= 75 ? 'Sharp critical thinker!' : 'Keep practicing logic!'}</p>
+            <button onClick={() => { setPhase('intro'); setScore(0); setCurrentQ(0); }} className="px-6 py-3 bg-cyan-500 rounded-xl font-bold">TRY AGAIN</button>
+         </div>
+      );
+
+      return (
+         <div className="flex flex-col h-full bg-gradient-to-br from-cyan-900 via-blue-900 to-indigo-900 text-white p-8">
+            <div className="flex justify-between mb-6">
+               <span className="text-sm">Question {currentQ + 1}/{questions.length}</span>
+               <span className="px-4 py-2 bg-cyan-500/30 rounded-full font-bold">Score: {score}%</span>
+            </div>
+            <div className="bg-black/30 rounded-2xl p-6 mb-6">
+               <p className="text-xl font-bold italic">"{questions[currentQ].statement}"</p>
+            </div>
+            <div className="flex-1 flex flex-col gap-3">
+               {questions[currentQ].options.map((opt, i) => (
+                  <button key={i} onClick={() => handleAnswer(opt[0])} className="p-4 bg-cyan-900/50 hover:bg-cyan-800/50 rounded-xl text-left transition-all">
+                     {opt}
+                  </button>
+               ))}
+            </div>
+         </div>
+      );
+   };
+
+   const SelfRelianceRenderer = () => {
+      const [phase, setPhase] = useState<'intro' | 'play' | 'result'>('intro');
+      const [showInfo, setShowInfo] = useState(false);
+      const [resources, setResources] = useState({ money: 500, time: 40, skills: 3 });
+      const [tasksCompleted, setTasksCompleted] = useState(0);
+
+      const tasks = [
+         { name: "Build a landing page", diy: { time: 8, skills: 1 }, outsource: { money: 200 } },
+         { name: "Create a logo", diy: { time: 4, skills: 1 }, outsource: { money: 100 } },
+         { name: "Write marketing copy", diy: { time: 6, skills: 1 }, outsource: { money: 150 } },
+         { name: "Set up accounting", diy: { time: 10, skills: 1 }, outsource: { money: 300 } },
+      ];
+
+      const handleTask = (diy: boolean) => {
+         const task = tasks[tasksCompleted];
+         if (diy) {
+            if (resources.time >= task.diy.time && resources.skills >= task.diy.skills) {
+               setResources(r => ({ ...r, time: r.time - task.diy.time, skills: r.skills + 1 }));
+               setTasksCompleted(t => t + 1);
+            }
+         } else {
+            if (resources.money >= task.outsource.money) {
+               setResources(r => ({ ...r, money: r.money - task.outsource.money }));
+               setTasksCompleted(t => t + 1);
+            }
+         }
+         if (tasksCompleted >= tasks.length - 1) setPhase('result');
+      };
+
+      if (phase === 'intro') return (
+         <div className="flex flex-col h-full bg-gradient-to-br from-slate-900 via-zinc-800 to-neutral-900 text-white p-8">
+            <div className="flex justify-between items-start mb-6">
+               <div>
+                  <h2 className="text-3xl font-black">🔧 SELF-RELIANCE</h2>
+                  <p className="text-slate-300 text-sm mt-1">Bootstrap Your Startup</p>
+               </div>
+               <button onClick={() => setShowInfo(!showInfo)} className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center text-xl">ℹ️</button>
+            </div>
+            {showInfo && (
+               <div className="bg-black/30 rounded-xl p-4 mb-4 text-sm">
+                  <p><strong>Self-Reliance:</strong> The ability to do things yourself when resources are limited.</p>
+                  <p className="mt-2">DIY builds skills but costs time. Outsourcing saves time but costs money.</p>
+               </div>
+            )}
+            <div className="flex-1 flex flex-col justify-center items-center text-center">
+               <div className="text-6xl mb-6">🛠️</div>
+               <h3 className="text-2xl font-bold mb-4">Build vs Buy Decisions</h3>
+               <p className="text-lg text-slate-200 max-w-md mb-8">Manage limited resources. Choose when to DIY and when to outsource.</p>
+               <button onClick={() => setPhase('play')} className="px-8 py-4 bg-slate-500 hover:bg-slate-400 rounded-xl font-bold text-lg">
+                  START BUILDING →
+               </button>
+            </div>
+         </div>
+      );
+
+      if (phase === 'result') return (
+         <div className="flex flex-col h-full bg-gradient-to-br from-slate-900 via-zinc-800 to-neutral-900 text-white p-8 items-center justify-center">
+            <div className="text-6xl mb-4">🎉</div>
+            <h2 className="text-3xl font-black mb-4">Startup Launched!</h2>
+            <div className="grid grid-cols-3 gap-4 mb-6">
+               <div className="text-center"><p className="text-2xl">💰</p><p>${resources.money}</p><p className="text-xs text-slate-400">Remaining</p></div>
+               <div className="text-center"><p className="text-2xl">⏰</p><p>{resources.time}h</p><p className="text-xs text-slate-400">Time Left</p></div>
+               <div className="text-center"><p className="text-2xl">📚</p><p>{resources.skills}</p><p className="text-xs text-slate-400">Skills Gained</p></div>
+            </div>
+            <button onClick={() => { setPhase('intro'); setResources({ money: 500, time: 40, skills: 3 }); setTasksCompleted(0); }} className="px-6 py-3 bg-slate-500 rounded-xl font-bold">PLAY AGAIN</button>
+         </div>
+      );
+
+      return (
+         <div className="flex flex-col h-full bg-gradient-to-br from-slate-900 via-zinc-800 to-neutral-900 text-white p-8">
+            <div className="grid grid-cols-3 gap-4 mb-6">
+               <div className="bg-green-900/30 p-3 rounded-xl text-center"><p className="text-green-400">💰 ${resources.money}</p></div>
+               <div className="bg-blue-900/30 p-3 rounded-xl text-center"><p className="text-blue-400">⏰ {resources.time}h</p></div>
+               <div className="bg-purple-900/30 p-3 rounded-xl text-center"><p className="text-purple-400">📚 {resources.skills} skills</p></div>
+            </div>
+            <div className="bg-black/30 rounded-2xl p-6 mb-6">
+               <p className="text-xl font-bold text-center">{tasks[tasksCompleted]?.name || 'Complete!'}</p>
+            </div>
+            {tasks[tasksCompleted] && (
+               <div className="grid grid-cols-2 gap-4">
+                  <button onClick={() => handleTask(true)} className="p-4 bg-purple-600 hover:bg-purple-500 rounded-xl text-sm"
+                     disabled={resources.time < tasks[tasksCompleted].diy.time}>
+                     🔧 DIY<br/>
+                     <span className="text-xs">-{tasks[tasksCompleted].diy.time}h, +1 skill</span>
+                  </button>
+                  <button onClick={() => handleTask(false)} className="p-4 bg-green-600 hover:bg-green-500 rounded-xl text-sm"
+                     disabled={resources.money < tasks[tasksCompleted].outsource.money}>
+                     💸 OUTSOURCE<br/>
+                     <span className="text-xs">-${tasks[tasksCompleted].outsource.money}</span>
+                  </button>
+               </div>
+            )}
+         </div>
+      );
+   };
+
+   const AdaptabilityPivotRenderer = () => {
+      const [phase, setPhase] = useState<'intro' | 'play' | 'result'>('intro');
+      const [showInfo, setShowInfo] = useState(false);
+      const [scenario, setScenario] = useState(0);
+      const [pivotScore, setPivotScore] = useState(0);
+
+      const scenarios = [
+         { situation: "Your B2B software isn't selling to enterprises.", pivot: "Pivot to SMB market with simpler pricing", persist: "Keep trying to land big clients", correct: 'pivot' },
+         { situation: "Users love your app but won't pay for it.", pivot: "Switch to freemium with premium features", persist: "Keep the current pricing model", correct: 'pivot' },
+         { situation: "Initial market research was slightly off on timing.", pivot: "Completely rebuild the product", persist: "Adjust marketing and wait for market", correct: 'persist' },
+         { situation: "You have strong product-market fit in a niche.", pivot: "Expand to broader market immediately", persist: "Dominate the niche first", correct: 'persist' },
+      ];
+
+      const handleChoice = (choice: string) => {
+         if (choice === scenarios[scenario].correct) setPivotScore(s => s + 25);
+         if (scenario < scenarios.length - 1) setScenario(s => s + 1);
+         else setPhase('result');
+      };
+
+      if (phase === 'intro') return (
+         <div className="flex flex-col h-full bg-gradient-to-br from-teal-900 via-emerald-900 to-green-900 text-white p-8">
+            <div className="flex justify-between items-start mb-6">
+               <div>
+                  <h2 className="text-3xl font-black">🔄 ADAPTABILITY & PIVOT</h2>
+                  <p className="text-teal-300 text-sm mt-1">When to Pivot vs Persist</p>
+               </div>
+               <button onClick={() => setShowInfo(!showInfo)} className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center text-xl">ℹ️</button>
+            </div>
+            {showInfo && (
+               <div className="bg-black/30 rounded-xl p-4 mb-4 text-sm">
+                  <p><strong>Pivot:</strong> A structured course correction to test a new hypothesis.</p>
+                  <p className="mt-2"><strong>Key:</strong> Pivot when data shows a fundamental flaw. Persist when adjustments can work.</p>
+               </div>
+            )}
+            <div className="flex-1 flex flex-col justify-center items-center text-center">
+               <div className="text-6xl mb-6">🔀</div>
+               <h3 className="text-2xl font-bold mb-4">Pivot or Persist?</h3>
+               <p className="text-lg text-teal-200 max-w-md mb-8">Learn when to change direction and when to stay the course.</p>
+               <button onClick={() => setPhase('play')} className="px-8 py-4 bg-teal-500 hover:bg-teal-400 rounded-xl font-bold text-lg">
+                  START SCENARIOS →
+               </button>
+            </div>
+         </div>
+      );
+
+      if (phase === 'result') return (
+         <div className="flex flex-col h-full bg-gradient-to-br from-teal-900 via-emerald-900 to-green-900 text-white p-8 items-center justify-center">
+            <div className="text-6xl mb-4">{pivotScore >= 75 ? '🏆' : '📈'}</div>
+            <h2 className="text-3xl font-black mb-2">Score: {pivotScore}%</h2>
+            <p className="text-teal-300 mb-6">{pivotScore >= 75 ? 'Expert decision maker!' : 'Learning when to pivot takes practice!'}</p>
+            <button onClick={() => { setPhase('intro'); setPivotScore(0); setScenario(0); }} className="px-6 py-3 bg-teal-500 rounded-xl font-bold">TRY AGAIN</button>
+         </div>
+      );
+
+      return (
+         <div className="flex flex-col h-full bg-gradient-to-br from-teal-900 via-emerald-900 to-green-900 text-white p-8">
+            <div className="flex justify-between mb-6">
+               <span className="text-sm">Scenario {scenario + 1}/{scenarios.length}</span>
+               <span className="px-4 py-2 bg-teal-500/30 rounded-full font-bold">Score: {pivotScore}%</span>
+            </div>
+            <div className="bg-black/30 rounded-2xl p-6 mb-6">
+               <p className="text-xl font-bold text-center">{scenarios[scenario].situation}</p>
+            </div>
+            <div className="grid grid-cols-1 gap-4">
+               <button onClick={() => handleChoice('pivot')} className="p-4 bg-orange-600 hover:bg-orange-500 rounded-xl text-left">
+                  🔄 <strong>PIVOT:</strong> {scenarios[scenario].pivot}
+               </button>
+               <button onClick={() => handleChoice('persist')} className="p-4 bg-blue-600 hover:bg-blue-500 rounded-xl text-left">
+                  💪 <strong>PERSIST:</strong> {scenarios[scenario].persist}
+               </button>
+            </div>
+         </div>
+      );
+   };
+
+   const EmpathyMappingRenderer = () => {
+      const [phase, setPhase] = useState<'intro' | 'play' | 'result'>('intro');
+      const [showInfo, setShowInfo] = useState(false);
+      const [quadrant, setQuadrant] = useState(0);
+      const [responses, setResponses] = useState<Record<string, string>>({});
+      const [inputValue, setInputValue] = useState('');
+
+      const quadrants = [
+         { name: 'THINKS', icon: '💭', prompt: 'What does your customer think about their problem?', color: 'from-blue-600 to-blue-800' },
+         { name: 'FEELS', icon: '❤️', prompt: 'What emotions does your customer experience?', color: 'from-red-600 to-red-800' },
+         { name: 'SAYS', icon: '💬', prompt: 'What does your customer say to others about this?', color: 'from-green-600 to-green-800' },
+         { name: 'DOES', icon: '🏃', prompt: 'What actions does your customer take?', color: 'from-purple-600 to-purple-800' },
+      ];
+
+      const submitResponse = () => {
+         if (inputValue.trim()) {
+            setResponses({ ...responses, [quadrants[quadrant].name]: inputValue });
+            setInputValue('');
+            if (quadrant < quadrants.length - 1) setQuadrant(q => q + 1);
+            else setPhase('result');
+         }
+      };
+
+      if (phase === 'intro') return (
+         <div className="flex flex-col h-full bg-gradient-to-br from-pink-900 via-rose-900 to-red-900 text-white p-8">
+            <div className="flex justify-between items-start mb-6">
+               <div>
+                  <h2 className="text-3xl font-black">🎯 EMPATHY MAPPING</h2>
+                  <p className="text-pink-300 text-sm mt-1">Understand Your Customer</p>
+               </div>
+               <button onClick={() => setShowInfo(!showInfo)} className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center text-xl">ℹ️</button>
+            </div>
+            {showInfo && (
+               <div className="bg-black/30 rounded-xl p-4 mb-4 text-sm">
+                  <p><strong>Empathy Map:</strong> A tool to understand customers by exploring what they Think, Feel, Say, and Do.</p>
+                  <p className="mt-2">Used in design thinking to build customer-centric products.</p>
+               </div>
+            )}
+            <div className="flex-1 flex flex-col justify-center items-center text-center">
+               <div className="text-6xl mb-6">🎭</div>
+               <h3 className="text-2xl font-bold mb-4">Build an Empathy Map</h3>
+               <p className="text-lg text-pink-200 max-w-md mb-8">Create a complete picture of your target customer's experience.</p>
+               <button onClick={() => setPhase('play')} className="px-8 py-4 bg-pink-500 hover:bg-pink-400 rounded-xl font-bold text-lg">
+                  START MAPPING →
+               </button>
+            </div>
+         </div>
+      );
+
+      if (phase === 'result') return (
+         <div className="flex flex-col h-full bg-gradient-to-br from-pink-900 via-rose-900 to-red-900 text-white p-8">
+            <h2 className="text-2xl font-black mb-4 text-center">Your Empathy Map</h2>
+            <div className="grid grid-cols-2 gap-4 flex-1">
+               {quadrants.map((q) => (
+                  <div key={q.name} className={`bg-gradient-to-br ${q.color} rounded-xl p-4`}>
+                     <p className="font-bold text-lg">{q.icon} {q.name}</p>
+                     <p className="text-sm mt-2 opacity-90">{responses[q.name]}</p>
+                  </div>
+               ))}
+            </div>
+            <button onClick={() => { setPhase('intro'); setQuadrant(0); setResponses({}); }} className="px-6 py-3 bg-pink-500 rounded-xl font-bold mt-4">CREATE NEW MAP</button>
+         </div>
+      );
+
+      const current = quadrants[quadrant];
+      return (
+         <div className="flex flex-col h-full bg-gradient-to-br from-pink-900 via-rose-900 to-red-900 text-white p-8">
+            <div className="flex gap-2 mb-6">
+               {quadrants.map((q, i) => (
+                  <div key={i} className={`flex-1 h-2 rounded-full ${i <= quadrant ? 'bg-pink-400' : 'bg-black/30'}`}></div>
+               ))}
+            </div>
+            <div className={`bg-gradient-to-br ${current.color} rounded-2xl p-6 mb-6 text-center`}>
+               <p className="text-4xl mb-2">{current.icon}</p>
+               <p className="text-2xl font-black mb-2">{current.name}</p>
+               <p className="text-lg opacity-90">{current.prompt}</p>
+            </div>
+            <input
+               type="text" value={inputValue} onChange={(e) => setInputValue(e.target.value)}
+               placeholder="Enter your observation..." onKeyDown={(e) => e.key === 'Enter' && submitResponse()}
+               className="w-full p-4 rounded-xl bg-black/30 border border-pink-500/30 text-white mb-4"
+            />
+            <button onClick={submitResponse} className="px-6 py-3 bg-pink-500 rounded-xl font-bold">NEXT QUADRANT →</button>
+         </div>
+      );
+   };
+
+   const EthicalLeadershipRenderer = () => {
+      const [phase, setPhase] = useState<'intro' | 'play' | 'result'>('intro');
+      const [showInfo, setShowInfo] = useState(false);
+      const [score, setScore] = useState(0);
+      const [dilemma, setDilemma] = useState(0);
+
+      const dilemmas = [
+         { situation: "You discover your product has a minor defect. No one has complained yet.", ethical: "Issue a recall and fix it proactively", unethical: "Wait and see if anyone notices", correct: 'ethical' },
+         { situation: "A competitor's employee wants to share their trade secrets with you.", ethical: "Decline and compete fairly", unethical: "Accept the inside information", correct: 'ethical' },
+         { situation: "You can cut costs by using cheaper materials that are just below safety standards.", ethical: "Maintain higher quality standards", unethical: "Use cheaper materials to boost margins", correct: 'ethical' },
+         { situation: "Your marketing team suggests exaggerating product benefits in ads.", ethical: "Insist on accurate, honest advertising", unethical: "Approve the exaggerated claims", correct: 'ethical' },
+      ];
+
+      const handleChoice = (choice: string) => {
+         if (choice === dilemmas[dilemma].correct) setScore(s => s + 25);
+         if (dilemma < dilemmas.length - 1) setDilemma(d => d + 1);
+         else setPhase('result');
+      };
+
+      if (phase === 'intro') return (
+         <div className="flex flex-col h-full bg-gradient-to-br from-indigo-900 via-violet-900 to-purple-900 text-white p-8">
+            <div className="flex justify-between items-start mb-6">
+               <div>
+                  <h2 className="text-3xl font-black">⚖️ ETHICAL LEADERSHIP</h2>
+                  <p className="text-indigo-300 text-sm mt-1">Values-Based Decision Making</p>
+               </div>
+               <button onClick={() => setShowInfo(!showInfo)} className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center text-xl">ℹ️</button>
+            </div>
+            {showInfo && (
+               <div className="bg-black/30 rounded-xl p-4 mb-4 text-sm">
+                  <p><strong>Ethical Leadership:</strong> Making decisions that prioritize integrity, transparency, and social responsibility.</p>
+                  <p className="mt-2">Long-term success is built on trust and ethical practices.</p>
+               </div>
+            )}
+            <div className="flex-1 flex flex-col justify-center items-center text-center">
+               <div className="text-6xl mb-6">👑</div>
+               <h3 className="text-2xl font-bold mb-4">Navigate Ethical Dilemmas</h3>
+               <p className="text-lg text-indigo-200 max-w-md mb-8">Face real business ethics scenarios and make principled choices.</p>
+               <button onClick={() => setPhase('play')} className="px-8 py-4 bg-indigo-500 hover:bg-indigo-400 rounded-xl font-bold text-lg">
+                  FACE DILEMMAS →
+               </button>
+            </div>
+         </div>
+      );
+
+      if (phase === 'result') return (
+         <div className="flex flex-col h-full bg-gradient-to-br from-indigo-900 via-violet-900 to-purple-900 text-white p-8 items-center justify-center">
+            <div className="text-6xl mb-4">{score === 100 ? '👑' : score >= 50 ? '📈' : '🤔'}</div>
+            <h2 className="text-3xl font-black mb-2">Ethics Score: {score}%</h2>
+            <p className="text-indigo-300 mb-6">{score === 100 ? 'Exemplary ethical leader!' : 'Ethics require constant practice.'}</p>
+            <button onClick={() => { setPhase('intro'); setScore(0); setDilemma(0); }} className="px-6 py-3 bg-indigo-500 rounded-xl font-bold">TRY AGAIN</button>
+         </div>
+      );
+
+      return (
+         <div className="flex flex-col h-full bg-gradient-to-br from-indigo-900 via-violet-900 to-purple-900 text-white p-8">
+            <div className="flex justify-between mb-6">
+               <span className="text-sm">Dilemma {dilemma + 1}/{dilemmas.length}</span>
+               <span className="px-4 py-2 bg-indigo-500/30 rounded-full font-bold">Score: {score}%</span>
+            </div>
+            <div className="bg-black/30 rounded-2xl p-6 mb-6">
+               <p className="text-xl font-bold text-center">{dilemmas[dilemma].situation}</p>
+            </div>
+            <div className="grid grid-cols-1 gap-4">
+               <button onClick={() => handleChoice('ethical')} className="p-4 bg-green-600 hover:bg-green-500 rounded-xl text-left">
+                  ✓ <strong>Ethical:</strong> {dilemmas[dilemma].ethical}
+               </button>
+               <button onClick={() => handleChoice('unethical')} className="p-4 bg-red-600 hover:bg-red-500 rounded-xl text-left">
+                  ✗ <strong>Unethical:</strong> {dilemmas[dilemma].unethical}
+               </button>
+            </div>
+         </div>
+      );
+   };
+
+   // --- ENTREPRENEURSHIP: IDEATION & DESIGN THINKING RENDERERS ---
+
+   const DesignThinkingRenderer = () => {
+      const [phase, setPhase] = useState<'intro' | 'play' | 'result'>('intro');
+      const [showInfo, setShowInfo] = useState(false);
+      const [currentStep, setCurrentStep] = useState(0);
+      const [responses, setResponses] = useState<string[]>([]);
+      const [inputValue, setInputValue] = useState('');
+
+      const steps = [
+         { name: 'EMPATHIZE', icon: '❤️', prompt: 'Describe a problem someone faces daily', color: 'from-pink-600 to-rose-700' },
+         { name: 'DEFINE', icon: '🎯', prompt: 'Reframe as a "How Might We" statement', color: 'from-purple-600 to-indigo-700' },
+         { name: 'IDEATE', icon: '💡', prompt: 'List 3 wild solution ideas', color: 'from-yellow-500 to-orange-600' },
+         { name: 'PROTOTYPE', icon: '🔧', prompt: 'Describe a quick test version', color: 'from-green-500 to-teal-600' },
+         { name: 'TEST', icon: '🧪', prompt: 'How would you get user feedback?', color: 'from-blue-500 to-cyan-600' },
+      ];
+
+      const submitResponse = () => {
+         if (inputValue.trim()) {
+            setResponses([...responses, inputValue.trim()]);
+            setInputValue('');
+            if (currentStep < steps.length - 1) setCurrentStep(s => s + 1);
+            else setPhase('result');
+         }
+      };
+
+      if (phase === 'intro') return (
+         <div className="flex flex-col h-full bg-gradient-to-br from-purple-900 via-indigo-900 to-blue-900 text-white p-8">
+            <div className="flex justify-between items-start mb-6">
+               <div>
+                  <h2 className="text-3xl font-black">🎨 DESIGN THINKING</h2>
+                  <p className="text-purple-300 text-sm mt-1">Human-Centered Innovation</p>
+               </div>
+               <button onClick={() => setShowInfo(!showInfo)} className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center text-xl">ℹ️</button>
+            </div>
+            {showInfo && (
+               <div className="bg-black/30 rounded-xl p-4 mb-4 text-sm">
+                  <p><strong>Design Thinking:</strong> A 5-stage process for creative problem-solving:</p>
+                  <p className="mt-1">Empathize → Define → Ideate → Prototype → Test</p>
+               </div>
+            )}
+            <div className="flex-1 flex flex-col justify-center items-center text-center">
+               <div className="flex gap-2 mb-6">{steps.map((s, i) => <span key={i} className="text-3xl">{s.icon}</span>)}</div>
+               <h3 className="text-2xl font-bold mb-4">Walk Through the Process</h3>
+               <p className="text-lg text-purple-200 max-w-md mb-8">Experience all 5 stages of design thinking to solve a real problem.</p>
+               <button onClick={() => setPhase('play')} className="px-8 py-4 bg-purple-500 hover:bg-purple-400 rounded-xl font-bold text-lg">
+                  START DESIGNING →
+               </button>
+            </div>
+         </div>
+      );
+
+      if (phase === 'result') return (
+         <div className="flex flex-col h-full bg-gradient-to-br from-purple-900 via-indigo-900 to-blue-900 text-white p-8">
+            <h2 className="text-2xl font-black mb-4 text-center">🎉 Your Design Sprint!</h2>
+            <div className="flex-1 overflow-auto space-y-3">
+               {steps.map((step, i) => (
+                  <div key={i} className={`bg-gradient-to-r ${step.color} rounded-xl p-4`}>
+                     <p className="font-bold">{step.icon} {step.name}</p>
+                     <p className="text-sm mt-1 opacity-90">{responses[i]}</p>
+                  </div>
+               ))}
+            </div>
+            <button onClick={() => { setPhase('intro'); setResponses([]); setCurrentStep(0); }} className="px-6 py-3 bg-purple-500 rounded-xl font-bold mt-4">START NEW</button>
+         </div>
+      );
+
+      const current = steps[currentStep];
+      return (
+         <div className="flex flex-col h-full bg-gradient-to-br from-purple-900 via-indigo-900 to-blue-900 text-white p-8">
+            <div className="flex gap-1 mb-6">
+               {steps.map((s, i) => (
+                  <div key={i} className={`flex-1 h-3 rounded-full transition-all ${i <= currentStep ? `bg-gradient-to-r ${s.color}` : 'bg-black/30'}`}></div>
+               ))}
+            </div>
+            <div className={`bg-gradient-to-r ${current.color} rounded-2xl p-6 mb-6 text-center`}>
+               <p className="text-4xl mb-2">{current.icon}</p>
+               <p className="text-2xl font-black">{current.name}</p>
+               <p className="mt-2 opacity-90">{current.prompt}</p>
+            </div>
+            <textarea value={inputValue} onChange={(e) => setInputValue(e.target.value)}
+               placeholder="Your response..." className="flex-1 p-4 rounded-xl bg-black/30 border border-purple-500/30 text-white mb-4 resize-none" />
+            <button onClick={submitResponse} className="px-6 py-3 bg-purple-500 rounded-xl font-bold">NEXT STEP →</button>
+         </div>
+      );
+   };
+
+   const ProblemSolutionFitRenderer = () => {
+      const [phase, setPhase] = useState<'intro' | 'play' | 'result'>('intro');
+      const [showInfo, setShowInfo] = useState(false);
+      const [matches, setMatches] = useState<{problem: string; solution: string; correct: boolean}[]>([]);
+      const [selectedProblem, setSelectedProblem] = useState<string | null>(null);
+
+      const problems = ["Long commute", "Expensive gym", "Lonely elderly", "Food waste"];
+      const solutions = ["Carpooling app", "Home workout videos", "Companion calling service", "Leftover marketplace"];
+      const correctPairs: Record<string, string> = {
+         "Long commute": "Carpooling app",
+         "Expensive gym": "Home workout videos",
+         "Lonely elderly": "Companion calling service",
+         "Food waste": "Leftover marketplace"
+      };
+
+      const handleSolutionClick = (solution: string) => {
+         if (selectedProblem) {
+            const correct = correctPairs[selectedProblem] === solution;
+            setMatches([...matches, { problem: selectedProblem, solution, correct }]);
+            setSelectedProblem(null);
+            if (matches.length >= 3) setTimeout(() => setPhase('result'), 500);
+         }
+      };
+
+      const score = matches.filter(m => m.correct).length * 25;
+
+      if (phase === 'intro') return (
+         <div className="flex flex-col h-full bg-gradient-to-br from-orange-900 via-red-900 to-pink-900 text-white p-8">
+            <div className="flex justify-between items-start mb-6">
+               <div>
+                  <h2 className="text-3xl font-black">🔗 PROBLEM-SOLUTION FIT</h2>
+                  <p className="text-orange-300 text-sm mt-1">Match Problems to Solutions</p>
+               </div>
+               <button onClick={() => setShowInfo(!showInfo)} className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center text-xl">ℹ️</button>
+            </div>
+            {showInfo && (
+               <div className="bg-black/30 rounded-xl p-4 mb-4 text-sm">
+                  <p><strong>Problem-Solution Fit:</strong> Ensuring your solution directly addresses a real customer problem.</p>
+                  <p className="mt-2">Key: The solution must solve the problem better than alternatives.</p>
+               </div>
+            )}
+            <div className="flex-1 flex flex-col justify-center items-center text-center">
+               <div className="text-6xl mb-6">🧩</div>
+               <h3 className="text-2xl font-bold mb-4">Find the Right Match</h3>
+               <p className="text-lg text-orange-200 max-w-md mb-8">Connect each problem to its best solution. Good fit = successful startup!</p>
+               <button onClick={() => setPhase('play')} className="px-8 py-4 bg-orange-500 hover:bg-orange-400 rounded-xl font-bold text-lg">
+                  START MATCHING →
+               </button>
+            </div>
+         </div>
+      );
+
+      if (phase === 'result') return (
+         <div className="flex flex-col h-full bg-gradient-to-br from-orange-900 via-red-900 to-pink-900 text-white p-8 items-center justify-center">
+            <div className="text-6xl mb-4">{score === 100 ? '🏆' : '📊'}</div>
+            <h2 className="text-3xl font-black mb-2">Score: {score}%</h2>
+            <p className="text-orange-300 mb-6">{score === 100 ? 'Perfect problem-solution fit!' : 'Some matches need work!'}</p>
+            <button onClick={() => { setPhase('intro'); setMatches([]); }} className="px-6 py-3 bg-orange-500 rounded-xl font-bold">TRY AGAIN</button>
+         </div>
+      );
+
+      const usedProblems = matches.map(m => m.problem);
+      const usedSolutions = matches.map(m => m.solution);
+
+      return (
+         <div className="flex flex-col h-full bg-gradient-to-br from-orange-900 via-red-900 to-pink-900 text-white p-8">
+            <p className="text-center mb-4">Click a problem, then click its solution</p>
+            <div className="grid grid-cols-2 gap-4 flex-1">
+               <div className="space-y-2">
+                  <p className="font-bold text-center text-orange-300">PROBLEMS</p>
+                  {problems.map(p => (
+                     <button key={p} onClick={() => !usedProblems.includes(p) && setSelectedProblem(p)}
+                        disabled={usedProblems.includes(p)}
+                        className={`w-full p-3 rounded-xl text-sm transition-all ${usedProblems.includes(p) ? 'bg-green-500/50' : selectedProblem === p ? 'bg-orange-500 ring-2 ring-white' : 'bg-black/30 hover:bg-black/50'}`}>
+                        {p}
+                     </button>
+                  ))}
+               </div>
+               <div className="space-y-2">
+                  <p className="font-bold text-center text-pink-300">SOLUTIONS</p>
+                  {solutions.map(s => (
+                     <button key={s} onClick={() => selectedProblem && !usedSolutions.includes(s) && handleSolutionClick(s)}
+                        disabled={usedSolutions.includes(s) || !selectedProblem}
+                        className={`w-full p-3 rounded-xl text-sm transition-all ${usedSolutions.includes(s) ? 'bg-green-500/50' : 'bg-black/30 hover:bg-black/50'}`}>
+                        {s}
+                     </button>
+                  ))}
+               </div>
+            </div>
+         </div>
+      );
+   };
+
+   const CustomerDiscoveryRenderer = () => {
+      const [phase, setPhase] = useState<'intro' | 'play' | 'result'>('intro');
+      const [showInfo, setShowInfo] = useState(false);
+      const [currentQ, setCurrentQ] = useState(0);
+      const [score, setScore] = useState(0);
+
+      const questions = [
+         { q: "Which question is best to ask potential customers?", good: "What's the hardest part of your day?", bad: "Would you buy my product?", correct: 'good' },
+         { q: "How should you conduct customer interviews?", good: "Listen more than you talk (80/20 rule)", bad: "Pitch your idea and ask for feedback", correct: 'good' },
+         { q: "When should you mention your solution?", good: "After understanding their problems deeply", bad: "At the start to gauge interest", correct: 'good' },
+         { q: "What's a red flag in customer discovery?", good: "Everyone says they'd 'definitely' buy", bad: "People describe specific pain points", correct: 'good' },
+      ];
+
+      const handleAnswer = (answer: string) => {
+         if (answer === questions[currentQ].correct) setScore(s => s + 25);
+         if (currentQ < questions.length - 1) setCurrentQ(q => q + 1);
+         else setPhase('result');
+      };
+
+      if (phase === 'intro') return (
+         <div className="flex flex-col h-full bg-gradient-to-br from-blue-900 via-indigo-900 to-violet-900 text-white p-8">
+            <div className="flex justify-between items-start mb-6">
+               <div>
+                  <h2 className="text-3xl font-black">🔬 CUSTOMER DISCOVERY</h2>
+                  <p className="text-blue-300 text-sm mt-1">Talk to Real Customers</p>
+               </div>
+               <button onClick={() => setShowInfo(!showInfo)} className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center text-xl">ℹ️</button>
+            </div>
+            {showInfo && (
+               <div className="bg-black/30 rounded-xl p-4 mb-4 text-sm">
+                  <p><strong>Customer Discovery:</strong> The process of validating your assumptions by talking to potential customers.</p>
+                  <p className="mt-2">Goal: Learn what customers actually need, not what you think they need.</p>
+               </div>
+            )}
+            <div className="flex-1 flex flex-col justify-center items-center text-center">
+               <div className="text-6xl mb-6">🎙️</div>
+               <h3 className="text-2xl font-bold mb-4">Master the Interview</h3>
+               <p className="text-lg text-blue-200 max-w-md mb-8">Learn the right way to talk to customers and validate your ideas.</p>
+               <button onClick={() => setPhase('play')} className="px-8 py-4 bg-blue-500 hover:bg-blue-400 rounded-xl font-bold text-lg">
+                  START LEARNING →
+               </button>
+            </div>
+         </div>
+      );
+
+      if (phase === 'result') return (
+         <div className="flex flex-col h-full bg-gradient-to-br from-blue-900 via-indigo-900 to-violet-900 text-white p-8 items-center justify-center">
+            <div className="text-6xl mb-4">{score >= 75 ? '🏆' : '📚'}</div>
+            <h2 className="text-3xl font-black mb-2">Score: {score}%</h2>
+            <p className="text-blue-300 mb-6">{score >= 75 ? 'Interview master!' : 'Keep practicing your interview skills!'}</p>
+            <button onClick={() => { setPhase('intro'); setScore(0); setCurrentQ(0); }} className="px-6 py-3 bg-blue-500 rounded-xl font-bold">TRY AGAIN</button>
+         </div>
+      );
+
+      return (
+         <div className="flex flex-col h-full bg-gradient-to-br from-blue-900 via-indigo-900 to-violet-900 text-white p-8">
+            <div className="flex justify-between mb-6">
+               <span className="text-sm">Question {currentQ + 1}/{questions.length}</span>
+               <span className="px-4 py-2 bg-blue-500/30 rounded-full font-bold">Score: {score}%</span>
+            </div>
+            <div className="bg-black/30 rounded-2xl p-6 mb-6">
+               <p className="text-xl font-bold text-center">{questions[currentQ].q}</p>
+            </div>
+            <div className="space-y-4">
+               <button onClick={() => handleAnswer('good')} className="w-full p-4 bg-green-900/50 hover:bg-green-800/50 rounded-xl text-left">
+                  ✓ {questions[currentQ].good}
+               </button>
+               <button onClick={() => handleAnswer('bad')} className="w-full p-4 bg-red-900/50 hover:bg-red-800/50 rounded-xl text-left">
+                  ✗ {questions[currentQ].bad}
+               </button>
+            </div>
+         </div>
+      );
+   };
+
+   const UserPersonasRenderer = () => {
+      const [phase, setPhase] = useState<'intro' | 'play' | 'result'>('intro');
+      const [showInfo, setShowInfo] = useState(false);
+      const [step, setStep] = useState(0);
+      const [persona, setPersona] = useState({ name: '', age: '', job: '', goal: '', pain: '' });
+
+      const fields = [
+         { key: 'name', label: 'Name', placeholder: 'e.g., Busy Betty', icon: '👤' },
+         { key: 'age', label: 'Age & Location', placeholder: 'e.g., 35, San Francisco', icon: '📍' },
+         { key: 'job', label: 'Job Title', placeholder: 'e.g., Marketing Manager', icon: '💼' },
+         { key: 'goal', label: 'Main Goal', placeholder: 'e.g., Save time on daily tasks', icon: '🎯' },
+         { key: 'pain', label: 'Biggest Pain Point', placeholder: 'e.g., Too many meetings', icon: '😤' },
+      ];
+
+      const handleNext = () => {
+         if (step < fields.length - 1) setStep(s => s + 1);
+         else setPhase('result');
+      };
+
+      if (phase === 'intro') return (
+         <div className="flex flex-col h-full bg-gradient-to-br from-fuchsia-900 via-purple-900 to-violet-900 text-white p-8">
+            <div className="flex justify-between items-start mb-6">
+               <div>
+                  <h2 className="text-3xl font-black">👥 USER PERSONAS</h2>
+                  <p className="text-fuchsia-300 text-sm mt-1">Know Your Customer</p>
+               </div>
+               <button onClick={() => setShowInfo(!showInfo)} className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center text-xl">ℹ️</button>
+            </div>
+            {showInfo && (
+               <div className="bg-black/30 rounded-xl p-4 mb-4 text-sm">
+                  <p><strong>User Persona:</strong> A semi-fictional representation of your ideal customer based on research.</p>
+                  <p className="mt-2">Helps teams align on who they're building for.</p>
+               </div>
+            )}
+            <div className="flex-1 flex flex-col justify-center items-center text-center">
+               <div className="text-6xl mb-6">🎭</div>
+               <h3 className="text-2xl font-bold mb-4">Create a User Persona</h3>
+               <p className="text-lg text-fuchsia-200 max-w-md mb-8">Build a detailed profile of your ideal customer step by step.</p>
+               <button onClick={() => setPhase('play')} className="px-8 py-4 bg-fuchsia-500 hover:bg-fuchsia-400 rounded-xl font-bold text-lg">
+                  START BUILDING →
+               </button>
+            </div>
+         </div>
+      );
+
+      if (phase === 'result') return (
+         <div className="flex flex-col h-full bg-gradient-to-br from-fuchsia-900 via-purple-900 to-violet-900 text-white p-8">
+            <h2 className="text-2xl font-black mb-4 text-center">🎉 Your Persona</h2>
+            <div className="bg-black/30 rounded-2xl p-6 flex-1">
+               <div className="text-center mb-4">
+                  <div className="text-6xl mb-2">👤</div>
+                  <p className="text-2xl font-black">{persona.name || 'New Persona'}</p>
+                  <p className="text-fuchsia-300">{persona.age}</p>
+               </div>
+               <div className="space-y-3">
+                  <div className="bg-white/10 p-3 rounded-xl"><span className="font-bold">💼 Job:</span> {persona.job}</div>
+                  <div className="bg-white/10 p-3 rounded-xl"><span className="font-bold">🎯 Goal:</span> {persona.goal}</div>
+                  <div className="bg-white/10 p-3 rounded-xl"><span className="font-bold">😤 Pain:</span> {persona.pain}</div>
+               </div>
+            </div>
+            <button onClick={() => { setPhase('intro'); setStep(0); setPersona({ name: '', age: '', job: '', goal: '', pain: '' }); }} className="px-6 py-3 bg-fuchsia-500 rounded-xl font-bold mt-4">CREATE ANOTHER</button>
+         </div>
+      );
+
+      const current = fields[step];
+      return (
+         <div className="flex flex-col h-full bg-gradient-to-br from-fuchsia-900 via-purple-900 to-violet-900 text-white p-8">
+            <div className="flex gap-1 mb-6">
+               {fields.map((_, i) => (
+                  <div key={i} className={`flex-1 h-2 rounded-full ${i <= step ? 'bg-fuchsia-400' : 'bg-black/30'}`}></div>
+               ))}
+            </div>
+            <div className="bg-black/30 rounded-2xl p-6 mb-4 text-center">
+               <p className="text-4xl mb-2">{current.icon}</p>
+               <p className="text-xl font-bold">{current.label}</p>
+            </div>
+            <input
+               type="text" value={persona[current.key as keyof typeof persona]}
+               onChange={(e) => setPersona({ ...persona, [current.key]: e.target.value })}
+               placeholder={current.placeholder}
+               className="w-full p-4 rounded-xl bg-black/30 border border-fuchsia-500/30 text-white mb-4"
+            />
+            <button onClick={handleNext} className="px-6 py-3 bg-fuchsia-500 rounded-xl font-bold">
+               {step < fields.length - 1 ? 'NEXT →' : 'FINISH'}
+            </button>
+         </div>
+      );
+   };
+
+   const ValuePropositionRenderer = () => {
+      const [phase, setPhase] = useState<'intro' | 'play' | 'result'>('intro');
+      const [showInfo, setShowInfo] = useState(false);
+      const [step, setStep] = useState(0);
+      const [vp, setVp] = useState({ customer: '', problem: '', solution: '', benefit: '' });
+
+      const steps = [
+         { key: 'customer', label: 'Target Customer', prompt: 'Who is your ideal customer?', example: 'Busy professionals aged 25-40' },
+         { key: 'problem', label: 'Problem', prompt: 'What problem do they face?', example: 'No time to cook healthy meals' },
+         { key: 'solution', label: 'Solution', prompt: 'What do you offer?', example: 'Pre-portioned meal kits with 15-min recipes' },
+         { key: 'benefit', label: 'Key Benefit', prompt: 'What makes you different?', example: 'Save 5 hours/week while eating healthy' },
+      ];
+
+      const handleNext = () => {
+         if (step < steps.length - 1) setStep(s => s + 1);
+         else setPhase('result');
+      };
+
+      if (phase === 'intro') return (
+         <div className="flex flex-col h-full bg-gradient-to-br from-green-900 via-emerald-900 to-teal-900 text-white p-8">
+            <div className="flex justify-between items-start mb-6">
+               <div>
+                  <h2 className="text-3xl font-black">💎 VALUE PROPOSITION</h2>
+                  <p className="text-green-300 text-sm mt-1">Your Unique Promise</p>
+               </div>
+               <button onClick={() => setShowInfo(!showInfo)} className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center text-xl">ℹ️</button>
+            </div>
+            {showInfo && (
+               <div className="bg-black/30 rounded-xl p-4 mb-4 text-sm">
+                  <p><strong>Value Proposition:</strong> A clear statement of how your product solves problems and delivers benefits.</p>
+                  <p className="mt-2">Formula: For [customer] who [problem], our [product] provides [benefit].</p>
+               </div>
+            )}
+            <div className="flex-1 flex flex-col justify-center items-center text-center">
+               <div className="text-6xl mb-6">💰</div>
+               <h3 className="text-2xl font-bold mb-4">Craft Your Value Prop</h3>
+               <p className="text-lg text-green-200 max-w-md mb-8">Build a compelling value proposition that tells customers why they should choose you.</p>
+               <button onClick={() => setPhase('play')} className="px-8 py-4 bg-green-500 hover:bg-green-400 rounded-xl font-bold text-lg">
+                  START CRAFTING →
+               </button>
+            </div>
+         </div>
+      );
+
+      if (phase === 'result') return (
+         <div className="flex flex-col h-full bg-gradient-to-br from-green-900 via-emerald-900 to-teal-900 text-white p-8">
+            <h2 className="text-2xl font-black mb-4 text-center">🎉 Your Value Proposition</h2>
+            <div className="bg-black/30 rounded-2xl p-6 flex-1">
+               <p className="text-xl leading-relaxed">
+                  For <span className="text-green-400 font-bold">{vp.customer}</span> who{' '}
+                  <span className="text-yellow-400 font-bold">{vp.problem}</span>, our solution provides{' '}
+                  <span className="text-blue-400 font-bold">{vp.solution}</span> so they can{' '}
+                  <span className="text-pink-400 font-bold">{vp.benefit}</span>.
+               </p>
+            </div>
+            <button onClick={() => { setPhase('intro'); setStep(0); setVp({ customer: '', problem: '', solution: '', benefit: '' }); }} className="px-6 py-3 bg-green-500 rounded-xl font-bold mt-4">CREATE NEW</button>
+         </div>
+      );
+
+      const current = steps[step];
+      return (
+         <div className="flex flex-col h-full bg-gradient-to-br from-green-900 via-emerald-900 to-teal-900 text-white p-8">
+            <div className="flex gap-1 mb-6">
+               {steps.map((_, i) => (
+                  <div key={i} className={`flex-1 h-2 rounded-full ${i <= step ? 'bg-green-400' : 'bg-black/30'}`}></div>
+               ))}
+            </div>
+            <div className="bg-black/30 rounded-2xl p-6 mb-4">
+               <p className="text-xl font-bold mb-2">{current.label}</p>
+               <p className="text-green-300">{current.prompt}</p>
+               <p className="text-sm text-green-400/60 mt-2">Example: {current.example}</p>
+            </div>
+            <input
+               type="text" value={vp[current.key as keyof typeof vp]}
+               onChange={(e) => setVp({ ...vp, [current.key]: e.target.value })}
+               placeholder="Enter your answer..."
+               className="w-full p-4 rounded-xl bg-black/30 border border-green-500/30 text-white mb-4"
+            />
+            <button onClick={handleNext} className="px-6 py-3 bg-green-500 rounded-xl font-bold">
+               {step < steps.length - 1 ? 'NEXT →' : 'FINISH'}
+            </button>
+         </div>
+      );
+   };
+
+   const PrototypingRenderer = () => {
+      const [phase, setPhase] = useState<'intro' | 'play' | 'result'>('intro');
+      const [showInfo, setShowInfo] = useState(false);
+      const [fidelity, setFidelity] = useState<'low' | 'medium' | 'high' | null>(null);
+      const [score, setScore] = useState(0);
+      const [currentQ, setCurrentQ] = useState(0);
+
+      const scenarios = [
+         { situation: "Testing if users understand your app's navigation", best: 'low', reason: 'Paper sketches are fastest for testing basic UX' },
+         { situation: "Pitching to investors next week", best: 'high', reason: 'High-fidelity creates professional impression' },
+         { situation: "Validating a new feature concept", best: 'medium', reason: 'Clickable wireframes balance speed and clarity' },
+         { situation: "First day exploring an idea", best: 'low', reason: 'Quick sketches help you iterate faster' },
+      ];
+
+      const handleAnswer = (answer: 'low' | 'medium' | 'high') => {
+         if (answer === scenarios[currentQ].best) setScore(s => s + 25);
+         setFidelity(answer);
+         setTimeout(() => {
+            setFidelity(null);
+            if (currentQ < scenarios.length - 1) setCurrentQ(q => q + 1);
+            else setPhase('result');
+         }, 2000);
+      };
+
+      if (phase === 'intro') return (
+         <div className="flex flex-col h-full bg-gradient-to-br from-sky-900 via-blue-900 to-indigo-900 text-white p-8">
+            <div className="flex justify-between items-start mb-6">
+               <div>
+                  <h2 className="text-3xl font-black">🔧 PROTOTYPING</h2>
+                  <p className="text-sky-300 text-sm mt-1">Build to Learn</p>
+               </div>
+               <button onClick={() => setShowInfo(!showInfo)} className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center text-xl">ℹ️</button>
+            </div>
+            {showInfo && (
+               <div className="bg-black/30 rounded-xl p-4 mb-4 text-sm">
+                  <p><strong>Prototyping:</strong> Creating quick, testable versions of your product.</p>
+                  <p className="mt-2">Types: Low-fidelity (sketches), Medium (wireframes), High (polished mockups)</p>
+               </div>
+            )}
+            <div className="flex-1 flex flex-col justify-center items-center text-center">
+               <div className="text-6xl mb-6">🛠️</div>
+               <h3 className="text-2xl font-bold mb-4">Choose the Right Prototype</h3>
+               <p className="text-lg text-sky-200 max-w-md mb-8">Learn when to use different fidelity levels for maximum learning.</p>
+               <button onClick={() => setPhase('play')} className="px-8 py-4 bg-sky-500 hover:bg-sky-400 rounded-xl font-bold text-lg">
+                  START LEARNING →
+               </button>
+            </div>
+         </div>
+      );
+
+      if (phase === 'result') return (
+         <div className="flex flex-col h-full bg-gradient-to-br from-sky-900 via-blue-900 to-indigo-900 text-white p-8 items-center justify-center">
+            <div className="text-6xl mb-4">{score >= 75 ? '🏆' : '📚'}</div>
+            <h2 className="text-3xl font-black mb-2">Score: {score}%</h2>
+            <p className="text-sky-300 mb-6">{score >= 75 ? 'Prototyping pro!' : 'Keep practicing!'}</p>
+            <button onClick={() => { setPhase('intro'); setScore(0); setCurrentQ(0); }} className="px-6 py-3 bg-sky-500 rounded-xl font-bold">TRY AGAIN</button>
+         </div>
+      );
+
+      return (
+         <div className="flex flex-col h-full bg-gradient-to-br from-sky-900 via-blue-900 to-indigo-900 text-white p-8">
+            <div className="flex justify-between mb-6">
+               <span className="text-sm">Scenario {currentQ + 1}/{scenarios.length}</span>
+               <span className="px-4 py-2 bg-sky-500/30 rounded-full font-bold">Score: {score}%</span>
+            </div>
+            <div className="bg-black/30 rounded-2xl p-6 mb-6">
+               <p className="text-xl font-bold text-center">{scenarios[currentQ].situation}</p>
+            </div>
+            {fidelity ? (
+               <div className={`flex-1 flex flex-col items-center justify-center ${fidelity === scenarios[currentQ].best ? 'text-green-400' : 'text-red-400'}`}>
+                  <p className="text-2xl mb-2">{fidelity === scenarios[currentQ].best ? '✓ Correct!' : '✗ Not ideal'}</p>
+                  <p className="text-center opacity-75">{scenarios[currentQ].reason}</p>
+               </div>
+            ) : (
+               <div className="grid grid-cols-3 gap-4 flex-1">
+                  <button onClick={() => handleAnswer('low')} className="bg-yellow-900/50 hover:bg-yellow-800/50 rounded-xl p-4 flex flex-col items-center justify-center">
+                     <span className="text-3xl mb-2">📝</span>
+                     <span className="font-bold">LOW</span>
+                     <span className="text-xs opacity-75">Paper sketches</span>
+                  </button>
+                  <button onClick={() => handleAnswer('medium')} className="bg-blue-900/50 hover:bg-blue-800/50 rounded-xl p-4 flex flex-col items-center justify-center">
+                     <span className="text-3xl mb-2">🖼️</span>
+                     <span className="font-bold">MEDIUM</span>
+                     <span className="text-xs opacity-75">Wireframes</span>
+                  </button>
+                  <button onClick={() => handleAnswer('high')} className="bg-purple-900/50 hover:bg-purple-800/50 rounded-xl p-4 flex flex-col items-center justify-center">
+                     <span className="text-3xl mb-2">✨</span>
+                     <span className="font-bold">HIGH</span>
+                     <span className="text-xs opacity-75">Polished</span>
+                  </button>
+               </div>
+            )}
+         </div>
+      );
+   };
+
+   const IterativeDesignRenderer = () => {
+      const [phase, setPhase] = useState<'intro' | 'play' | 'result'>('intro');
+      const [showInfo, setShowInfo] = useState(false);
+      const [iteration, setIteration] = useState(1);
+      const [productScore, setProductScore] = useState(30);
+      const [actions, setActions] = useState<string[]>([]);
+
+      const improvements = [
+         { action: 'User Testing', boost: 15, description: 'Observe real users' },
+         { action: 'A/B Test', boost: 10, description: 'Compare two versions' },
+         { action: 'Feedback Survey', boost: 8, description: 'Collect opinions' },
+         { action: 'Analytics Review', boost: 12, description: 'Study user data' },
+      ];
+
+      const handleImprovement = (improvement: typeof improvements[0]) => {
+         setProductScore(s => Math.min(100, s + improvement.boost));
+         setActions([...actions, improvement.action]);
+         if (iteration >= 4) setPhase('result');
+         else setIteration(i => i + 1);
+      };
+
+      if (phase === 'intro') return (
+         <div className="flex flex-col h-full bg-gradient-to-br from-lime-900 via-green-900 to-emerald-900 text-white p-8">
+            <div className="flex justify-between items-start mb-6">
+               <div>
+                  <h2 className="text-3xl font-black">🔄 ITERATIVE DESIGN</h2>
+                  <p className="text-lime-300 text-sm mt-1">Build → Measure → Learn</p>
+               </div>
+               <button onClick={() => setShowInfo(!showInfo)} className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center text-xl">ℹ️</button>
+            </div>
+            {showInfo && (
+               <div className="bg-black/30 rounded-xl p-4 mb-4 text-sm">
+                  <p><strong>Iterative Design:</strong> Continuously improving your product through cycles of building, testing, and learning.</p>
+                  <p className="mt-2">Each iteration should make your product better based on real feedback.</p>
+               </div>
+            )}
+            <div className="flex-1 flex flex-col justify-center items-center text-center">
+               <div className="text-6xl mb-6">🔁</div>
+               <h3 className="text-2xl font-bold mb-4">Improve Your Product</h3>
+               <p className="text-lg text-lime-200 max-w-md mb-8">Start with an MVP and iterate your way to product-market fit!</p>
+               <button onClick={() => setPhase('play')} className="px-8 py-4 bg-lime-500 hover:bg-lime-400 rounded-xl font-bold text-lg text-black">
+                  START ITERATING →
+               </button>
+            </div>
+         </div>
+      );
+
+      if (phase === 'result') return (
+         <div className="flex flex-col h-full bg-gradient-to-br from-lime-900 via-green-900 to-emerald-900 text-white p-8 items-center justify-center">
+            <div className="text-6xl mb-4">{productScore >= 80 ? '🚀' : '📈'}</div>
+            <h2 className="text-3xl font-black mb-2">Product Score: {productScore}%</h2>
+            <p className="text-lime-300 mb-4">{productScore >= 80 ? 'Ready for launch!' : 'Keep iterating!'}</p>
+            <div className="text-sm opacity-75 mb-6">Iterations: {actions.join(' → ')}</div>
+            <button onClick={() => { setPhase('intro'); setIteration(1); setProductScore(30); setActions([]); }} className="px-6 py-3 bg-lime-500 rounded-xl font-bold text-black">TRY AGAIN</button>
+         </div>
+      );
+
+      return (
+         <div className="flex flex-col h-full bg-gradient-to-br from-lime-900 via-green-900 to-emerald-900 text-white p-8">
+            <div className="flex justify-between mb-4">
+               <span className="text-sm">Iteration {iteration}/4</span>
+               <span className="px-4 py-2 bg-lime-500/30 rounded-full font-bold">Score: {productScore}%</span>
+            </div>
+            <div className="w-full bg-black/30 rounded-full h-6 mb-6">
+               <div className="bg-gradient-to-r from-lime-500 to-green-400 h-6 rounded-full transition-all flex items-center justify-end pr-2" style={{ width: `${productScore}%` }}>
+                  <span className="text-xs font-bold text-black">{productScore}%</span>
+               </div>
+            </div>
+            <p className="text-center mb-4 text-lime-200">Choose an improvement method:</p>
+            <div className="grid grid-cols-2 gap-3 flex-1">
+               {improvements.map((imp, i) => (
+                  <button key={i} onClick={() => handleImprovement(imp)} className="bg-black/30 hover:bg-black/50 rounded-xl p-4 text-center transition-all">
+                     <p className="font-bold text-lg">{imp.action}</p>
+                     <p className="text-xs opacity-75">{imp.description}</p>
+                     <p className="text-lime-400 mt-2">+{imp.boost}%</p>
+                  </button>
+               ))}
+            </div>
+         </div>
+      );
+   };
+
+   const BlueOceanRenderer = () => {
+      const [phase, setPhase] = useState<'intro' | 'play' | 'result'>('intro');
+      const [showInfo, setShowInfo] = useState(false);
+      const [currentQ, setCurrentQ] = useState(0);
+      const [strategy, setStrategy] = useState<string[]>([]);
+
+      const questions = [
+         { q: "What can you ELIMINATE that the industry takes for granted?", example: "Cirque du Soleil eliminated animal acts" },
+         { q: "What can you REDUCE below industry standards?", example: "Southwest reduced seat classes" },
+         { q: "What can you RAISE above industry standards?", example: "Apple raised design quality" },
+         { q: "What can you CREATE that the industry never offered?", example: "Netflix created binge-watching" },
+      ];
+
+      const [inputValue, setInputValue] = useState('');
+
+      const submitAnswer = () => {
+         if (inputValue.trim()) {
+            setStrategy([...strategy, inputValue.trim()]);
+            setInputValue('');
+            if (currentQ < questions.length - 1) setCurrentQ(q => q + 1);
+            else setPhase('result');
+         }
+      };
+
+      if (phase === 'intro') return (
+         <div className="flex flex-col h-full bg-gradient-to-br from-blue-900 via-cyan-900 to-teal-900 text-white p-8">
+            <div className="flex justify-between items-start mb-6">
+               <div>
+                  <h2 className="text-3xl font-black">🌊 BLUE OCEAN STRATEGY</h2>
+                  <p className="text-cyan-300 text-sm mt-1">Create Uncontested Markets</p>
+               </div>
+               <button onClick={() => setShowInfo(!showInfo)} className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center text-xl">ℹ️</button>
+            </div>
+            {showInfo && (
+               <div className="bg-black/30 rounded-xl p-4 mb-4 text-sm">
+                  <p><strong>Blue Ocean:</strong> Creating new market space instead of competing in existing ones.</p>
+                  <p className="mt-2">Use the ERRC framework: Eliminate, Reduce, Raise, Create</p>
+               </div>
+            )}
+            <div className="flex-1 flex flex-col justify-center items-center text-center">
+               <div className="text-6xl mb-6">🌊</div>
+               <h3 className="text-2xl font-bold mb-4">Find Your Blue Ocean</h3>
+               <p className="text-lg text-cyan-200 max-w-md mb-8">Use the ERRC framework to differentiate from competitors.</p>
+               <button onClick={() => setPhase('play')} className="px-8 py-4 bg-cyan-500 hover:bg-cyan-400 rounded-xl font-bold text-lg">
+                  START STRATEGY →
+               </button>
+            </div>
+         </div>
+      );
+
+      if (phase === 'result') return (
+         <div className="flex flex-col h-full bg-gradient-to-br from-blue-900 via-cyan-900 to-teal-900 text-white p-8">
+            <h2 className="text-2xl font-black mb-4 text-center">🎉 Your Blue Ocean Strategy</h2>
+            <div className="flex-1 space-y-3 overflow-auto">
+               {['ELIMINATE', 'REDUCE', 'RAISE', 'CREATE'].map((action, i) => (
+                  <div key={i} className="bg-black/30 rounded-xl p-4">
+                     <p className="font-bold text-cyan-400">{action}</p>
+                     <p className="mt-1">{strategy[i]}</p>
+                  </div>
+               ))}
+            </div>
+            <button onClick={() => { setPhase('intro'); setStrategy([]); setCurrentQ(0); }} className="px-6 py-3 bg-cyan-500 rounded-xl font-bold mt-4">CREATE NEW</button>
+         </div>
+      );
+
+      const actions = ['ELIMINATE', 'REDUCE', 'RAISE', 'CREATE'];
+      return (
+         <div className="flex flex-col h-full bg-gradient-to-br from-blue-900 via-cyan-900 to-teal-900 text-white p-8">
+            <div className="flex gap-1 mb-6">
+               {actions.map((a, i) => (
+                  <div key={i} className={`flex-1 text-center py-2 rounded-full text-xs font-bold ${i === currentQ ? 'bg-cyan-500' : i < currentQ ? 'bg-green-500' : 'bg-black/30'}`}>
+                     {a}
+                  </div>
+               ))}
+            </div>
+            <div className="bg-black/30 rounded-2xl p-6 mb-4">
+               <p className="text-xl font-bold mb-2">{questions[currentQ].q}</p>
+               <p className="text-sm text-cyan-300/60">Example: {questions[currentQ].example}</p>
+            </div>
+            <input
+               type="text" value={inputValue} onChange={(e) => setInputValue(e.target.value)}
+               placeholder="Your answer..." onKeyDown={(e) => e.key === 'Enter' && submitAnswer()}
+               className="w-full p-4 rounded-xl bg-black/30 border border-cyan-500/30 text-white mb-4"
+            />
+            <button onClick={submitAnswer} className="px-6 py-3 bg-cyan-500 rounded-xl font-bold">NEXT →</button>
+         </div>
+      );
+   };
+
+   const TrendAnalysisRenderer = () => {
+      const [phase, setPhase] = useState<'intro' | 'play' | 'result'>('intro');
+      const [showInfo, setShowInfo] = useState(false);
+      const [score, setScore] = useState(0);
+      const [currentQ, setCurrentQ] = useState(0);
+
+      const trends = [
+         { trend: "Remote work tools", direction: '📈', timing: 'NOW', correct: 'ride' },
+         { trend: "DVD rentals", direction: '📉', timing: 'PAST', correct: 'avoid' },
+         { trend: "AI assistants", direction: '📈', timing: 'NOW', correct: 'ride' },
+         { trend: "Print newspapers", direction: '📉', timing: 'PAST', correct: 'avoid' },
+         { trend: "Sustainable products", direction: '📈', timing: 'EARLY', correct: 'ride' },
+      ];
+
+      const handleAnswer = (answer: string) => {
+         if (answer === trends[currentQ].correct) setScore(s => s + 20);
+         if (currentQ < trends.length - 1) setCurrentQ(q => q + 1);
+         else setPhase('result');
+      };
+
+      if (phase === 'intro') return (
+         <div className="flex flex-col h-full bg-gradient-to-br from-amber-900 via-yellow-900 to-orange-900 text-white p-8">
+            <div className="flex justify-between items-start mb-6">
+               <div>
+                  <h2 className="text-3xl font-black">📊 TREND ANALYSIS</h2>
+                  <p className="text-amber-300 text-sm mt-1">Ride the Right Waves</p>
+               </div>
+               <button onClick={() => setShowInfo(!showInfo)} className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center text-xl">ℹ️</button>
+            </div>
+            {showInfo && (
+               <div className="bg-black/30 rounded-xl p-4 mb-4 text-sm">
+                  <p><strong>Trend Analysis:</strong> Identifying market trends to time your startup for success.</p>
+                  <p className="mt-2">Key: Enter rising markets, avoid declining ones.</p>
+               </div>
+            )}
+            <div className="flex-1 flex flex-col justify-center items-center text-center">
+               <div className="text-6xl mb-6">📈</div>
+               <h3 className="text-2xl font-bold mb-4">Spot Market Trends</h3>
+               <p className="text-lg text-amber-200 max-w-md mb-8">Learn to identify which trends to ride and which to avoid.</p>
+               <button onClick={() => setPhase('play')} className="px-8 py-4 bg-amber-500 hover:bg-amber-400 rounded-xl font-bold text-lg text-black">
+                  START ANALYZING →
+               </button>
+            </div>
+         </div>
+      );
+
+      if (phase === 'result') return (
+         <div className="flex flex-col h-full bg-gradient-to-br from-amber-900 via-yellow-900 to-orange-900 text-white p-8 items-center justify-center">
+            <div className="text-6xl mb-4">{score >= 80 ? '🏆' : '📊'}</div>
+            <h2 className="text-3xl font-black mb-2">Score: {score}%</h2>
+            <p className="text-amber-300 mb-6">{score >= 80 ? 'Trend master!' : 'Keep studying the markets!'}</p>
+            <button onClick={() => { setPhase('intro'); setScore(0); setCurrentQ(0); }} className="px-6 py-3 bg-amber-500 rounded-xl font-bold text-black">TRY AGAIN</button>
+         </div>
+      );
+
+      return (
+         <div className="flex flex-col h-full bg-gradient-to-br from-amber-900 via-yellow-900 to-orange-900 text-white p-8">
+            <div className="flex justify-between mb-6">
+               <span className="text-sm">Trend {currentQ + 1}/{trends.length}</span>
+               <span className="px-4 py-2 bg-amber-500/30 rounded-full font-bold">Score: {score}%</span>
+            </div>
+            <div className="bg-black/30 rounded-2xl p-6 mb-6 text-center">
+               <p className="text-4xl mb-2">{trends[currentQ].direction}</p>
+               <p className="text-2xl font-bold">{trends[currentQ].trend}</p>
+               <p className="text-amber-300 mt-2">Timing: {trends[currentQ].timing}</p>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+               <button onClick={() => handleAnswer('ride')} className="p-6 bg-green-600 hover:bg-green-500 rounded-xl font-bold text-center">
+                  🏄 RIDE IT<br/><span className="text-xs opacity-75">Build here</span>
+               </button>
+               <button onClick={() => handleAnswer('avoid')} className="p-6 bg-red-600 hover:bg-red-500 rounded-xl font-bold text-center">
+                  🚫 AVOID<br/><span className="text-xs opacity-75">Skip it</span>
+               </button>
+            </div>
+         </div>
+      );
+   };
+
+   const FirstPrinciplesRenderer = () => {
+      const [phase, setPhase] = useState<'intro' | 'play' | 'result'>('intro');
+      const [showInfo, setShowInfo] = useState(false);
+      const [step, setStep] = useState(0);
+      const [answers, setAnswers] = useState<string[]>([]);
+      const [inputValue, setInputValue] = useState('');
+
+      const steps = [
+         { q: "Pick a common assumption (e.g., 'Batteries are expensive')", icon: '🤔' },
+         { q: "Break it down: What are the raw components?", icon: '🔬' },
+         { q: "What are the actual costs of each component?", icon: '💰' },
+         { q: "How could you rebuild it cheaper or better?", icon: '🚀' },
+      ];
+
+      const submitAnswer = () => {
+         if (inputValue.trim()) {
+            setAnswers([...answers, inputValue.trim()]);
+            setInputValue('');
+            if (step < steps.length - 1) setStep(s => s + 1);
+            else setPhase('result');
+         }
+      };
+
+      if (phase === 'intro') return (
+         <div className="flex flex-col h-full bg-gradient-to-br from-slate-900 via-gray-800 to-zinc-900 text-white p-8">
+            <div className="flex justify-between items-start mb-6">
+               <div>
+                  <h2 className="text-3xl font-black">🔬 FIRST PRINCIPLES</h2>
+                  <p className="text-slate-300 text-sm mt-1">Think Like Elon Musk</p>
+               </div>
+               <button onClick={() => setShowInfo(!showInfo)} className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center text-xl">ℹ️</button>
+            </div>
+            {showInfo && (
+               <div className="bg-black/30 rounded-xl p-4 mb-4 text-sm">
+                  <p><strong>First Principles:</strong> Breaking down problems to fundamental truths, then building up from there.</p>
+                  <p className="mt-2">Example: SpaceX questioned why rockets cost so much by examining material costs.</p>
+               </div>
+            )}
+            <div className="flex-1 flex flex-col justify-center items-center text-center">
+               <div className="text-6xl mb-6">🧪</div>
+               <h3 className="text-2xl font-bold mb-4">Challenge Assumptions</h3>
+               <p className="text-lg text-slate-200 max-w-md mb-8">Break down a problem to its fundamentals and rebuild innovative solutions.</p>
+               <button onClick={() => setPhase('play')} className="px-8 py-4 bg-slate-500 hover:bg-slate-400 rounded-xl font-bold text-lg">
+                  START THINKING →
+               </button>
+            </div>
+         </div>
+      );
+
+      if (phase === 'result') return (
+         <div className="flex flex-col h-full bg-gradient-to-br from-slate-900 via-gray-800 to-zinc-900 text-white p-8">
+            <h2 className="text-2xl font-black mb-4 text-center">🎉 Your First Principles Analysis</h2>
+            <div className="flex-1 space-y-3 overflow-auto">
+               {steps.map((s, i) => (
+                  <div key={i} className="bg-black/30 rounded-xl p-4">
+                     <p className="font-bold text-slate-400">{s.icon} Step {i + 1}</p>
+                     <p className="mt-1">{answers[i]}</p>
+                  </div>
+               ))}
+            </div>
+            <button onClick={() => { setPhase('intro'); setAnswers([]); setStep(0); }} className="px-6 py-3 bg-slate-500 rounded-xl font-bold mt-4">ANALYZE NEW</button>
+         </div>
+      );
+
+      return (
+         <div className="flex flex-col h-full bg-gradient-to-br from-slate-900 via-gray-800 to-zinc-900 text-white p-8">
+            <div className="flex gap-1 mb-6">
+               {steps.map((_, i) => (
+                  <div key={i} className={`flex-1 h-2 rounded-full ${i <= step ? 'bg-slate-400' : 'bg-black/30'}`}></div>
+               ))}
+            </div>
+            <div className="bg-black/30 rounded-2xl p-6 mb-4 text-center">
+               <p className="text-4xl mb-2">{steps[step].icon}</p>
+               <p className="text-xl font-bold">{steps[step].q}</p>
+            </div>
+            <textarea value={inputValue} onChange={(e) => setInputValue(e.target.value)}
+               placeholder="Your analysis..."
+               className="flex-1 p-4 rounded-xl bg-black/30 border border-slate-500/30 text-white mb-4 resize-none" />
+            <button onClick={submitAnswer} className="px-6 py-3 bg-slate-500 rounded-xl font-bold">
+               {step < steps.length - 1 ? 'NEXT STEP →' : 'FINISH'}
+            </button>
+         </div>
+      );
+   };
+
+   // --- ENTREPRENEURSHIP: BUSINESS MODELS & STRATEGY RENDERERS ---
+
+   const LeanCanvasRenderer = () => {
+      const [phase, setPhase] = useState<'intro' | 'play' | 'result'>('intro');
+      const [showInfo, setShowInfo] = useState(false);
+      const [currentBlock, setCurrentBlock] = useState(0);
+      const [canvas, setCanvas] = useState<Record<string, string>>({});
+      const [inputValue, setInputValue] = useState('');
+
+      const blocks = [
+         { key: 'problem', label: 'Problem', prompt: 'Top 3 problems you solve', icon: '❗' },
+         { key: 'solution', label: 'Solution', prompt: 'Top 3 features', icon: '✅' },
+         { key: 'uvp', label: 'Unique Value Prop', prompt: 'Single clear message', icon: '💎' },
+         { key: 'advantage', label: 'Unfair Advantage', prompt: "What can't be copied", icon: '🛡️' },
+         { key: 'customers', label: 'Customer Segments', prompt: 'Target customers', icon: '👥' },
+         { key: 'channels', label: 'Channels', prompt: 'Path to customers', icon: '📢' },
+         { key: 'revenue', label: 'Revenue Streams', prompt: 'How you make money', icon: '💰' },
+         { key: 'costs', label: 'Cost Structure', prompt: 'Main costs', icon: '📊' },
+         { key: 'metrics', label: 'Key Metrics', prompt: 'Numbers to track', icon: '📈' },
+      ];
+
+      const submitBlock = () => {
+         if (inputValue.trim()) {
+            setCanvas({ ...canvas, [blocks[currentBlock].key]: inputValue.trim() });
+            setInputValue('');
+            if (currentBlock < blocks.length - 1) setCurrentBlock(b => b + 1);
+            else setPhase('result');
+         }
+      };
+
+      if (phase === 'intro') return (
+         <div className="flex flex-col h-full bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-900 text-white p-8">
+            <div className="flex justify-between items-start mb-6">
+               <div>
+                  <h2 className="text-3xl font-black">📋 LEAN CANVAS</h2>
+                  <p className="text-indigo-300 text-sm mt-1">One-Page Business Plan</p>
+               </div>
+               <button onClick={() => setShowInfo(!showInfo)} className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center text-xl">ℹ️</button>
+            </div>
+            {showInfo && (
+               <div className="bg-black/30 rounded-xl p-4 mb-4 text-sm">
+                  <p><strong>Lean Canvas:</strong> A 1-page business model template for startups.</p>
+                  <p className="mt-2">Created by Ash Maurya, adapted from Business Model Canvas.</p>
+               </div>
+            )}
+            <div className="flex-1 flex flex-col justify-center items-center text-center">
+               <div className="text-6xl mb-6">📝</div>
+               <h3 className="text-2xl font-bold mb-4">Build Your Lean Canvas</h3>
+               <p className="text-lg text-indigo-200 max-w-md mb-8">Fill in all 9 blocks to create a complete business model.</p>
+               <button onClick={() => setPhase('play')} className="px-8 py-4 bg-indigo-500 hover:bg-indigo-400 rounded-xl font-bold text-lg">
+                  START BUILDING →
+               </button>
+            </div>
+         </div>
+      );
+
+      if (phase === 'result') return (
+         <div className="flex flex-col h-full bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-900 text-white p-6 overflow-auto">
+            <h2 className="text-xl font-black mb-4 text-center">🎉 Your Lean Canvas</h2>
+            <div className="grid grid-cols-3 gap-2 flex-1">
+               {blocks.map((b) => (
+                  <div key={b.key} className="bg-black/30 rounded-lg p-2 text-xs">
+                     <p className="font-bold text-indigo-300">{b.icon} {b.label}</p>
+                     <p className="mt-1 opacity-90">{canvas[b.key]}</p>
+                  </div>
+               ))}
+            </div>
+            <button onClick={() => { setPhase('intro'); setCanvas({}); setCurrentBlock(0); }} className="px-6 py-3 bg-indigo-500 rounded-xl font-bold mt-4">CREATE NEW</button>
+         </div>
+      );
+
+      const current = blocks[currentBlock];
+      return (
+         <div className="flex flex-col h-full bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-900 text-white p-8">
+            <div className="flex gap-1 mb-6">
+               {blocks.map((_, i) => (
+                  <div key={i} className={`flex-1 h-2 rounded-full ${i <= currentBlock ? 'bg-indigo-400' : 'bg-black/30'}`}></div>
+               ))}
+            </div>
+            <div className="bg-black/30 rounded-2xl p-6 mb-4 text-center">
+               <p className="text-4xl mb-2">{current.icon}</p>
+               <p className="text-xl font-bold">{current.label}</p>
+               <p className="text-sm opacity-75 mt-1">{current.prompt}</p>
+            </div>
+            <textarea value={inputValue} onChange={(e) => setInputValue(e.target.value)}
+               placeholder="Enter your answer..." className="flex-1 p-4 rounded-xl bg-black/30 border border-indigo-500/30 text-white mb-4 resize-none" />
+            <button onClick={submitBlock} className="px-6 py-3 bg-indigo-500 rounded-xl font-bold">
+               {currentBlock < blocks.length - 1 ? 'NEXT BLOCK →' : 'FINISH'}
+            </button>
+         </div>
+      );
+   };
+
+   const BusinessModelCanvasRenderer = () => {
+      const [phase, setPhase] = useState<'intro' | 'play' | 'result'>('intro');
+      const [showInfo, setShowInfo] = useState(false);
+      const [currentBlock, setCurrentBlock] = useState(0);
+      const [canvas, setCanvas] = useState<Record<string, string>>({});
+      const [inputValue, setInputValue] = useState('');
+
+      const blocks = [
+         { key: 'partners', label: 'Key Partners', prompt: 'Who are your key partners?', icon: '🤝' },
+         { key: 'activities', label: 'Key Activities', prompt: 'What do you do?', icon: '⚙️' },
+         { key: 'resources', label: 'Key Resources', prompt: 'What do you need?', icon: '🧰' },
+         { key: 'value', label: 'Value Propositions', prompt: 'What value do you deliver?', icon: '💎' },
+         { key: 'relations', label: 'Customer Relations', prompt: 'How do you interact?', icon: '💬' },
+         { key: 'channels', label: 'Channels', prompt: 'How do you reach them?', icon: '📢' },
+         { key: 'segments', label: 'Customer Segments', prompt: 'Who do you serve?', icon: '👥' },
+         { key: 'costs', label: 'Cost Structure', prompt: 'What are your costs?', icon: '💸' },
+         { key: 'revenue', label: 'Revenue Streams', prompt: 'How do you earn?', icon: '💰' },
+      ];
+
+      const submitBlock = () => {
+         if (inputValue.trim()) {
+            setCanvas({ ...canvas, [blocks[currentBlock].key]: inputValue.trim() });
+            setInputValue('');
+            if (currentBlock < blocks.length - 1) setCurrentBlock(b => b + 1);
+            else setPhase('result');
+         }
+      };
+
+      if (phase === 'intro') return (
+         <div className="flex flex-col h-full bg-gradient-to-br from-blue-900 via-indigo-900 to-violet-900 text-white p-8">
+            <div className="flex justify-between items-start mb-6">
+               <div>
+                  <h2 className="text-3xl font-black">🏢 BUSINESS MODEL CANVAS</h2>
+                  <p className="text-blue-300 text-sm mt-1">Strategic Planning Tool</p>
+               </div>
+               <button onClick={() => setShowInfo(!showInfo)} className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center text-xl">ℹ️</button>
+            </div>
+            {showInfo && (
+               <div className="bg-black/30 rounded-xl p-4 mb-4 text-sm">
+                  <p><strong>Business Model Canvas:</strong> A strategic template for developing new or documenting existing business models.</p>
+                  <p className="mt-2">Created by Alexander Osterwalder.</p>
+               </div>
+            )}
+            <div className="flex-1 flex flex-col justify-center items-center text-center">
+               <div className="text-6xl mb-6">🗂️</div>
+               <h3 className="text-2xl font-bold mb-4">Design Your Business Model</h3>
+               <p className="text-lg text-blue-200 max-w-md mb-8">Complete all 9 building blocks of your business.</p>
+               <button onClick={() => setPhase('play')} className="px-8 py-4 bg-blue-500 hover:bg-blue-400 rounded-xl font-bold text-lg">
+                  START DESIGNING →
+               </button>
+            </div>
+         </div>
+      );
+
+      if (phase === 'result') return (
+         <div className="flex flex-col h-full bg-gradient-to-br from-blue-900 via-indigo-900 to-violet-900 text-white p-6 overflow-auto">
+            <h2 className="text-xl font-black mb-4 text-center">🎉 Your Business Model Canvas</h2>
+            <div className="grid grid-cols-3 gap-2 flex-1">
+               {blocks.map((b) => (
+                  <div key={b.key} className="bg-black/30 rounded-lg p-2 text-xs">
+                     <p className="font-bold text-blue-300">{b.icon} {b.label}</p>
+                     <p className="mt-1 opacity-90">{canvas[b.key]}</p>
+                  </div>
+               ))}
+            </div>
+            <button onClick={() => { setPhase('intro'); setCanvas({}); setCurrentBlock(0); }} className="px-6 py-3 bg-blue-500 rounded-xl font-bold mt-4">CREATE NEW</button>
+         </div>
+      );
+
+      const current = blocks[currentBlock];
+      return (
+         <div className="flex flex-col h-full bg-gradient-to-br from-blue-900 via-indigo-900 to-violet-900 text-white p-8">
+            <p className="text-center text-sm mb-4">Block {currentBlock + 1}/{blocks.length}</p>
+            <div className="bg-black/30 rounded-2xl p-6 mb-4 text-center">
+               <p className="text-4xl mb-2">{current.icon}</p>
+               <p className="text-xl font-bold">{current.label}</p>
+               <p className="text-sm opacity-75 mt-1">{current.prompt}</p>
+            </div>
+            <textarea value={inputValue} onChange={(e) => setInputValue(e.target.value)}
+               placeholder="Enter your answer..." className="flex-1 p-4 rounded-xl bg-black/30 border border-blue-500/30 text-white mb-4 resize-none" />
+            <button onClick={submitBlock} className="px-6 py-3 bg-blue-500 rounded-xl font-bold">NEXT →</button>
+         </div>
+      );
+   };
+
+   const B2bVsB2cRenderer = () => {
+      const [phase, setPhase] = useState<'intro' | 'play' | 'result'>('intro');
+      const [showInfo, setShowInfo] = useState(false);
+      const [score, setScore] = useState(0);
+      const [currentQ, setCurrentQ] = useState(0);
+
+      const scenarios = [
+         { scenario: "Selling accounting software to small businesses", answer: 'B2B', reason: 'Business customers' },
+         { scenario: "E-commerce store selling shoes to individuals", answer: 'B2C', reason: 'Consumer customers' },
+         { scenario: "Cloud hosting services for startups", answer: 'B2B', reason: 'Business customers' },
+         { scenario: "Food delivery app for hungry consumers", answer: 'B2C', reason: 'Individual consumers' },
+         { scenario: "Wholesale supplier to retail stores", answer: 'B2B', reason: 'Business-to-business' },
+      ];
+
+      const handleAnswer = (answer: string) => {
+         if (answer === scenarios[currentQ].answer) setScore(s => s + 20);
+         if (currentQ < scenarios.length - 1) setCurrentQ(q => q + 1);
+         else setPhase('result');
+      };
+
+      if (phase === 'intro') return (
+         <div className="flex flex-col h-full bg-gradient-to-br from-orange-900 via-amber-900 to-yellow-900 text-white p-8">
+            <div className="flex justify-between items-start mb-6">
+               <div>
+                  <h2 className="text-3xl font-black">🔄 B2B vs B2C</h2>
+                  <p className="text-orange-300 text-sm mt-1">Know Your Market</p>
+               </div>
+               <button onClick={() => setShowInfo(!showInfo)} className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center text-xl">ℹ️</button>
+            </div>
+            {showInfo && (
+               <div className="bg-black/30 rounded-xl p-4 mb-4 text-sm">
+                  <p><strong>B2B:</strong> Business-to-Business - selling to other companies.</p>
+                  <p className="mt-2"><strong>B2C:</strong> Business-to-Consumer - selling to individual customers.</p>
+               </div>
+            )}
+            <div className="flex-1 flex flex-col justify-center items-center text-center">
+               <div className="flex gap-4 text-5xl mb-6"><span>🏢</span><span>↔️</span><span>🏠</span></div>
+               <h3 className="text-2xl font-bold mb-4">Classify Business Models</h3>
+               <p className="text-lg text-orange-200 max-w-md mb-8">Learn to identify B2B vs B2C businesses.</p>
+               <button onClick={() => setPhase('play')} className="px-8 py-4 bg-orange-500 hover:bg-orange-400 rounded-xl font-bold text-lg">
+                  START LEARNING →
+               </button>
+            </div>
+         </div>
+      );
+
+      if (phase === 'result') return (
+         <div className="flex flex-col h-full bg-gradient-to-br from-orange-900 via-amber-900 to-yellow-900 text-white p-8 items-center justify-center">
+            <div className="text-6xl mb-4">{score >= 80 ? '🏆' : '📚'}</div>
+            <h2 className="text-3xl font-black mb-2">Score: {score}%</h2>
+            <p className="text-orange-300 mb-6">{score >= 80 ? 'Business model expert!' : 'Keep practicing!'}</p>
+            <button onClick={() => { setPhase('intro'); setScore(0); setCurrentQ(0); }} className="px-6 py-3 bg-orange-500 rounded-xl font-bold">TRY AGAIN</button>
+         </div>
+      );
+
+      return (
+         <div className="flex flex-col h-full bg-gradient-to-br from-orange-900 via-amber-900 to-yellow-900 text-white p-8">
+            <div className="flex justify-between mb-6">
+               <span className="text-sm">Question {currentQ + 1}/{scenarios.length}</span>
+               <span className="px-4 py-2 bg-orange-500/30 rounded-full font-bold">Score: {score}%</span>
+            </div>
+            <div className="bg-black/30 rounded-2xl p-6 mb-6 text-center">
+               <p className="text-xl font-bold">{scenarios[currentQ].scenario}</p>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+               <button onClick={() => handleAnswer('B2B')} className="p-6 bg-blue-600 hover:bg-blue-500 rounded-xl font-bold">
+                  🏢 B2B<br/><span className="text-xs opacity-75">Business customers</span>
+               </button>
+               <button onClick={() => handleAnswer('B2C')} className="p-6 bg-green-600 hover:bg-green-500 rounded-xl font-bold">
+                  🏠 B2C<br/><span className="text-xs opacity-75">Consumer customers</span>
+               </button>
+            </div>
+         </div>
+      );
+   };
+
+   const RevenueModelsRenderer = () => {
+      const [phase, setPhase] = useState<'intro' | 'play' | 'result'>('intro');
+      const [showInfo, setShowInfo] = useState(false);
+      const [currentModel, setCurrentModel] = useState(0);
+      const [selectedModels, setSelectedModels] = useState<string[]>([]);
+
+      const models = [
+         { name: 'Subscription', icon: '🔄', example: 'Netflix, Spotify', desc: 'Recurring payments' },
+         { name: 'Freemium', icon: '🆓', example: 'Dropbox, Slack', desc: 'Free + paid tiers' },
+         { name: 'Marketplace', icon: '🛒', example: 'Airbnb, Uber', desc: 'Take a cut' },
+         { name: 'Advertising', icon: '📺', example: 'Google, Facebook', desc: 'Sell attention' },
+         { name: 'Licensing', icon: '📜', example: 'Microsoft, Adobe', desc: 'Sell usage rights' },
+         { name: 'Transaction Fee', icon: '💳', example: 'Stripe, PayPal', desc: 'Fee per transaction' },
+      ];
+
+      const toggleModel = (name: string) => {
+         if (selectedModels.includes(name)) {
+            setSelectedModels(selectedModels.filter(m => m !== name));
+         } else {
+            setSelectedModels([...selectedModels, name]);
+         }
+      };
+
+      if (phase === 'intro') return (
+         <div className="flex flex-col h-full bg-gradient-to-br from-green-900 via-emerald-900 to-teal-900 text-white p-8">
+            <div className="flex justify-between items-start mb-6">
+               <div>
+                  <h2 className="text-3xl font-black">💰 REVENUE MODELS</h2>
+                  <p className="text-green-300 text-sm mt-1">How Businesses Make Money</p>
+               </div>
+               <button onClick={() => setShowInfo(!showInfo)} className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center text-xl">ℹ️</button>
+            </div>
+            {showInfo && (
+               <div className="bg-black/30 rounded-xl p-4 mb-4 text-sm">
+                  <p><strong>Revenue Model:</strong> The strategy for generating income from your product or service.</p>
+                  <p className="mt-2">Different models suit different businesses.</p>
+               </div>
+            )}
+            <div className="flex-1 flex flex-col justify-center items-center text-center">
+               <div className="text-6xl mb-6">💵</div>
+               <h3 className="text-2xl font-bold mb-4">Explore Revenue Models</h3>
+               <p className="text-lg text-green-200 max-w-md mb-8">Learn about different ways businesses generate revenue.</p>
+               <button onClick={() => setPhase('play')} className="px-8 py-4 bg-green-500 hover:bg-green-400 rounded-xl font-bold text-lg">
+                  START EXPLORING →
+               </button>
+            </div>
+         </div>
+      );
+
+      if (phase === 'result') return (
+         <div className="flex flex-col h-full bg-gradient-to-br from-green-900 via-emerald-900 to-teal-900 text-white p-8">
+            <h2 className="text-2xl font-black mb-4 text-center">Your Selected Models</h2>
+            <div className="flex-1 space-y-3 overflow-auto">
+               {selectedModels.map((name) => {
+                  const model = models.find(m => m.name === name)!;
+                  return (
+                     <div key={name} className="bg-black/30 rounded-xl p-4 flex items-center gap-4">
+                        <span className="text-3xl">{model.icon}</span>
+                        <div>
+                           <p className="font-bold">{model.name}</p>
+                           <p className="text-sm opacity-75">{model.example}</p>
+                        </div>
+                     </div>
+                  );
+               })}
+            </div>
+            <button onClick={() => { setPhase('intro'); setSelectedModels([]); }} className="px-6 py-3 bg-green-500 rounded-xl font-bold mt-4">EXPLORE AGAIN</button>
+         </div>
+      );
+
+      return (
+         <div className="flex flex-col h-full bg-gradient-to-br from-green-900 via-emerald-900 to-teal-900 text-white p-8">
+            <p className="text-center mb-4">Select models that fit your business:</p>
+            <div className="grid grid-cols-2 gap-3 flex-1">
+               {models.map((model) => (
+                  <button key={model.name} onClick={() => toggleModel(model.name)}
+                     className={`p-4 rounded-xl text-center transition-all ${selectedModels.includes(model.name) ? 'bg-green-500 ring-2 ring-white' : 'bg-black/30 hover:bg-black/50'}`}>
+                     <span className="text-3xl">{model.icon}</span>
+                     <p className="font-bold mt-2">{model.name}</p>
+                     <p className="text-xs opacity-75">{model.desc}</p>
+                  </button>
+               ))}
+            </div>
+            <button onClick={() => selectedModels.length > 0 && setPhase('result')} disabled={selectedModels.length === 0}
+               className="px-6 py-3 bg-green-500 rounded-xl font-bold mt-4 disabled:opacity-50">
+               VIEW SELECTION ({selectedModels.length})
+            </button>
+         </div>
+      );
+   };
+
+   const UnitEconomicsRenderer = () => {
+      const [phase, setPhase] = useState<'intro' | 'play' | 'result'>('intro');
+      const [showInfo, setShowInfo] = useState(false);
+      const [price, setPrice] = useState(50);
+      const [cogs, setCogs] = useState(20);
+      const [cac, setCac] = useState(30);
+      const [ltv, setLtv] = useState(150);
+
+      const margin = ((price - cogs) / price * 100).toFixed(1);
+      const ltvCacRatio = (ltv / cac).toFixed(2);
+      const paybackMonths = (cac / (price - cogs)).toFixed(1);
+      const isHealthy = parseFloat(ltvCacRatio) >= 3;
+
+      if (phase === 'intro') return (
+         <div className="flex flex-col h-full bg-gradient-to-br from-cyan-900 via-blue-900 to-indigo-900 text-white p-8">
+            <div className="flex justify-between items-start mb-6">
+               <div>
+                  <h2 className="text-3xl font-black">📊 UNIT ECONOMICS</h2>
+                  <p className="text-cyan-300 text-sm mt-1">Per-Customer Profitability</p>
+               </div>
+               <button onClick={() => setShowInfo(!showInfo)} className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center text-xl">ℹ️</button>
+            </div>
+            {showInfo && (
+               <div className="bg-black/30 rounded-xl p-4 mb-4 text-sm">
+                  <p><strong>Unit Economics:</strong> Revenue and costs on a per-unit (customer) basis.</p>
+                  <p className="mt-2">Key metrics: LTV (Lifetime Value), CAC (Customer Acquisition Cost), LTV:CAC ratio</p>
+               </div>
+            )}
+            <div className="flex-1 flex flex-col justify-center items-center text-center">
+               <div className="text-6xl mb-6">🧮</div>
+               <h3 className="text-2xl font-bold mb-4">Calculate Your Unit Economics</h3>
+               <p className="text-lg text-cyan-200 max-w-md mb-8">Adjust your business metrics and see if you're profitable per customer.</p>
+               <button onClick={() => setPhase('play')} className="px-8 py-4 bg-cyan-500 hover:bg-cyan-400 rounded-xl font-bold text-lg">
+                  START CALCULATING →
+               </button>
+            </div>
+         </div>
+      );
+
+      return (
+         <div className="flex flex-col h-full bg-gradient-to-br from-cyan-900 via-blue-900 to-indigo-900 text-white p-6">
+            <div className="flex justify-between items-start mb-4">
+               <h2 className="text-xl font-black">📊 UNIT ECONOMICS</h2>
+               <button onClick={() => setShowInfo(!showInfo)} className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center">ℹ️</button>
+            </div>
+            {showInfo && <div className="bg-black/30 rounded-xl p-3 mb-4 text-xs"><p>Adjust sliders to see how metrics affect profitability.</p></div>}
+            <div className="space-y-4 mb-4">
+               <div><label className="text-xs text-cyan-300">Price per Unit: ${price}</label><input type="range" min="10" max="200" value={price} onChange={(e) => setPrice(Number(e.target.value))} className="w-full accent-cyan-500" /></div>
+               <div><label className="text-xs text-cyan-300">Cost of Goods Sold: ${cogs}</label><input type="range" min="5" max="100" value={cogs} onChange={(e) => setCogs(Number(e.target.value))} className="w-full accent-cyan-500" /></div>
+               <div><label className="text-xs text-cyan-300">CAC (Acquisition Cost): ${cac}</label><input type="range" min="10" max="200" value={cac} onChange={(e) => setCac(Number(e.target.value))} className="w-full accent-cyan-500" /></div>
+               <div><label className="text-xs text-cyan-300">LTV (Lifetime Value): ${ltv}</label><input type="range" min="50" max="500" value={ltv} onChange={(e) => setLtv(Number(e.target.value))} className="w-full accent-cyan-500" /></div>
+            </div>
+            <div className={`p-4 rounded-xl ${isHealthy ? 'bg-green-900/50' : 'bg-red-900/50'}`}>
+               <div className="grid grid-cols-3 gap-4 text-center">
+                  <div><p className="text-xs opacity-75">Margin</p><p className="text-xl font-bold">{margin}%</p></div>
+                  <div><p className="text-xs opacity-75">LTV:CAC</p><p className="text-xl font-bold">{ltvCacRatio}x</p></div>
+                  <div><p className="text-xs opacity-75">Payback</p><p className="text-xl font-bold">{paybackMonths}mo</p></div>
+               </div>
+               <p className="text-center mt-3 font-bold">{isHealthy ? '✅ Healthy Unit Economics!' : '⚠️ Improve your metrics'}</p>
+            </div>
+         </div>
+      );
+   };
+
+   const CacCalculatorRenderer = () => {
+      const [phase, setPhase] = useState<'intro' | 'play' | 'result'>('intro');
+      const [showInfo, setShowInfo] = useState(false);
+      const [marketing, setMarketing] = useState(10000);
+      const [sales, setSales] = useState(5000);
+      const [customers, setCustomers] = useState(50);
+
+      const cac = customers > 0 ? ((marketing + sales) / customers).toFixed(2) : '0';
+      const isGood = parseFloat(cac) < 100;
+
+      if (phase === 'intro') return (
+         <div className="flex flex-col h-full bg-gradient-to-br from-red-900 via-orange-900 to-yellow-900 text-white p-8">
+            <div className="flex justify-between items-start mb-6">
+               <div>
+                  <h2 className="text-3xl font-black">💳 CAC CALCULATOR</h2>
+                  <p className="text-red-300 text-sm mt-1">Customer Acquisition Cost</p>
+               </div>
+               <button onClick={() => setShowInfo(!showInfo)} className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center text-xl">ℹ️</button>
+            </div>
+            {showInfo && (
+               <div className="bg-black/30 rounded-xl p-4 mb-4 text-sm">
+                  <p><strong>CAC:</strong> Total cost to acquire one new customer.</p>
+                  <p className="mt-2">Formula: (Marketing + Sales Costs) ÷ New Customers</p>
+               </div>
+            )}
+            <div className="flex-1 flex flex-col justify-center items-center text-center">
+               <div className="text-6xl mb-6">🎯</div>
+               <h3 className="text-2xl font-bold mb-4">Calculate Your CAC</h3>
+               <p className="text-lg text-red-200 max-w-md mb-8">Find out how much you spend to acquire each customer.</p>
+               <button onClick={() => setPhase('play')} className="px-8 py-4 bg-red-500 hover:bg-red-400 rounded-xl font-bold text-lg">
+                  START CALCULATING →
+               </button>
+            </div>
+         </div>
+      );
+
+      return (
+         <div className="flex flex-col h-full bg-gradient-to-br from-red-900 via-orange-900 to-yellow-900 text-white p-6">
+            <h2 className="text-xl font-black mb-4">💳 CAC CALCULATOR</h2>
+            <div className="space-y-4 flex-1">
+               <div className="bg-black/30 p-4 rounded-xl">
+                  <label className="text-sm">Marketing Spend: ${marketing.toLocaleString()}</label>
+                  <input type="range" min="0" max="50000" step="1000" value={marketing} onChange={(e) => setMarketing(Number(e.target.value))} className="w-full accent-red-500" />
+               </div>
+               <div className="bg-black/30 p-4 rounded-xl">
+                  <label className="text-sm">Sales Costs: ${sales.toLocaleString()}</label>
+                  <input type="range" min="0" max="30000" step="500" value={sales} onChange={(e) => setSales(Number(e.target.value))} className="w-full accent-red-500" />
+               </div>
+               <div className="bg-black/30 p-4 rounded-xl">
+                  <label className="text-sm">New Customers Acquired: {customers}</label>
+                  <input type="range" min="1" max="200" value={customers} onChange={(e) => setCustomers(Number(e.target.value))} className="w-full accent-red-500" />
+               </div>
+            </div>
+            <div className={`p-6 rounded-xl mt-4 text-center ${isGood ? 'bg-green-900/50' : 'bg-red-900/50'}`}>
+               <p className="text-sm opacity-75">Your CAC</p>
+               <p className="text-4xl font-black">${cac}</p>
+               <p className="text-sm mt-2">{isGood ? '✅ Great CAC!' : '⚠️ Consider reducing costs or improving conversion'}</p>
+            </div>
+         </div>
+      );
+   };
+
+   const LtvCalculatorRenderer = () => {
+      const [phase, setPhase] = useState<'intro' | 'play' | 'result'>('intro');
+      const [showInfo, setShowInfo] = useState(false);
+      const [arpu, setArpu] = useState(50);
+      const [margin, setMargin] = useState(70);
+      const [churnRate, setChurnRate] = useState(5);
+
+      const ltv = churnRate > 0 ? ((arpu * (margin / 100)) / (churnRate / 100)).toFixed(0) : '∞';
+      const lifespan = churnRate > 0 ? (100 / churnRate).toFixed(1) : '∞';
+
+      if (phase === 'intro') return (
+         <div className="flex flex-col h-full bg-gradient-to-br from-purple-900 via-violet-900 to-indigo-900 text-white p-8">
+            <div className="flex justify-between items-start mb-6">
+               <div>
+                  <h2 className="text-3xl font-black">💎 LTV CALCULATOR</h2>
+                  <p className="text-purple-300 text-sm mt-1">Customer Lifetime Value</p>
+               </div>
+               <button onClick={() => setShowInfo(!showInfo)} className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center text-xl">ℹ️</button>
+            </div>
+            {showInfo && (
+               <div className="bg-black/30 rounded-xl p-4 mb-4 text-sm">
+                  <p><strong>LTV:</strong> Total revenue expected from a customer over their lifetime.</p>
+                  <p className="mt-2">Formula: (ARPU × Margin) ÷ Churn Rate</p>
+               </div>
+            )}
+            <div className="flex-1 flex flex-col justify-center items-center text-center">
+               <div className="text-6xl mb-6">👑</div>
+               <h3 className="text-2xl font-bold mb-4">Calculate Customer LTV</h3>
+               <p className="text-lg text-purple-200 max-w-md mb-8">Understand how much each customer is worth over time.</p>
+               <button onClick={() => setPhase('play')} className="px-8 py-4 bg-purple-500 hover:bg-purple-400 rounded-xl font-bold text-lg">
+                  START CALCULATING →
+               </button>
+            </div>
+         </div>
+      );
+
+      return (
+         <div className="flex flex-col h-full bg-gradient-to-br from-purple-900 via-violet-900 to-indigo-900 text-white p-6">
+            <h2 className="text-xl font-black mb-4">💎 LTV CALCULATOR</h2>
+            <div className="space-y-4 flex-1">
+               <div className="bg-black/30 p-4 rounded-xl">
+                  <label className="text-sm">Monthly ARPU: ${arpu}</label>
+                  <input type="range" min="10" max="200" value={arpu} onChange={(e) => setArpu(Number(e.target.value))} className="w-full accent-purple-500" />
+               </div>
+               <div className="bg-black/30 p-4 rounded-xl">
+                  <label className="text-sm">Gross Margin: {margin}%</label>
+                  <input type="range" min="10" max="95" value={margin} onChange={(e) => setMargin(Number(e.target.value))} className="w-full accent-purple-500" />
+               </div>
+               <div className="bg-black/30 p-4 rounded-xl">
+                  <label className="text-sm">Monthly Churn Rate: {churnRate}%</label>
+                  <input type="range" min="1" max="20" value={churnRate} onChange={(e) => setChurnRate(Number(e.target.value))} className="w-full accent-purple-500" />
+               </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4 mt-4">
+               <div className="bg-purple-800/50 p-4 rounded-xl text-center">
+                  <p className="text-sm opacity-75">Customer LTV</p>
+                  <p className="text-3xl font-black">${ltv}</p>
+               </div>
+               <div className="bg-purple-800/50 p-4 rounded-xl text-center">
+                  <p className="text-sm opacity-75">Avg Lifespan</p>
+                  <p className="text-3xl font-black">{lifespan} mo</p>
+               </div>
+            </div>
+         </div>
+      );
+   };
+
+   const ScalabilityRenderer = () => {
+      const [phase, setPhase] = useState<'intro' | 'play' | 'result'>('intro');
+      const [showInfo, setShowInfo] = useState(false);
+      const [score, setScore] = useState(0);
+      const [currentQ, setCurrentQ] = useState(0);
+
+      const questions = [
+         { q: "Your costs increase linearly with each new customer.", scalable: false, reason: "True scalability means costs grow slower than revenue" },
+         { q: "You use cloud infrastructure that auto-scales.", scalable: true, reason: "Cloud allows handling more load without proportional cost" },
+         { q: "Each sale requires a 1-hour personalized demo.", scalable: false, reason: "High-touch sales limit growth rate" },
+         { q: "Your product is digital with near-zero marginal cost.", scalable: true, reason: "Digital products scale infinitely" },
+      ];
+
+      const handleAnswer = (isScalable: boolean) => {
+         if (isScalable === questions[currentQ].scalable) setScore(s => s + 25);
+         if (currentQ < questions.length - 1) setCurrentQ(q => q + 1);
+         else setPhase('result');
+      };
+
+      if (phase === 'intro') return (
+         <div className="flex flex-col h-full bg-gradient-to-br from-sky-900 via-blue-900 to-indigo-900 text-white p-8">
+            <div className="flex justify-between items-start mb-6">
+               <div>
+                  <h2 className="text-3xl font-black">📈 SCALABILITY</h2>
+                  <p className="text-sky-300 text-sm mt-1">Can Your Business Grow?</p>
+               </div>
+               <button onClick={() => setShowInfo(!showInfo)} className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center text-xl">ℹ️</button>
+            </div>
+            {showInfo && (
+               <div className="bg-black/30 rounded-xl p-4 mb-4 text-sm">
+                  <p><strong>Scalability:</strong> The ability to grow revenue faster than costs.</p>
+                  <p className="mt-2">Key: Can you 10x customers without 10x costs?</p>
+               </div>
+            )}
+            <div className="flex-1 flex flex-col justify-center items-center text-center">
+               <div className="text-6xl mb-6">🚀</div>
+               <h3 className="text-2xl font-bold mb-4">Test Scalability</h3>
+               <p className="text-lg text-sky-200 max-w-md mb-8">Learn to identify scalable vs non-scalable business characteristics.</p>
+               <button onClick={() => setPhase('play')} className="px-8 py-4 bg-sky-500 hover:bg-sky-400 rounded-xl font-bold text-lg">
+                  START TESTING →
+               </button>
+            </div>
+         </div>
+      );
+
+      if (phase === 'result') return (
+         <div className="flex flex-col h-full bg-gradient-to-br from-sky-900 via-blue-900 to-indigo-900 text-white p-8 items-center justify-center">
+            <div className="text-6xl mb-4">{score >= 75 ? '🚀' : '📚'}</div>
+            <h2 className="text-3xl font-black mb-2">Score: {score}%</h2>
+            <p className="text-sky-300 mb-6">{score >= 75 ? 'Scalability expert!' : 'Keep learning!'}</p>
+            <button onClick={() => { setPhase('intro'); setScore(0); setCurrentQ(0); }} className="px-6 py-3 bg-sky-500 rounded-xl font-bold">TRY AGAIN</button>
+         </div>
+      );
+
+      return (
+         <div className="flex flex-col h-full bg-gradient-to-br from-sky-900 via-blue-900 to-indigo-900 text-white p-8">
+            <div className="flex justify-between mb-6">
+               <span className="text-sm">Question {currentQ + 1}/{questions.length}</span>
+               <span className="px-4 py-2 bg-sky-500/30 rounded-full font-bold">Score: {score}%</span>
+            </div>
+            <div className="bg-black/30 rounded-2xl p-6 mb-6 text-center">
+               <p className="text-xl font-bold">{questions[currentQ].q}</p>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+               <button onClick={() => handleAnswer(true)} className="p-6 bg-green-600 hover:bg-green-500 rounded-xl font-bold">
+                  ✅ SCALABLE
+               </button>
+               <button onClick={() => handleAnswer(false)} className="p-6 bg-red-600 hover:bg-red-500 rounded-xl font-bold">
+                  ❌ NOT SCALABLE
+               </button>
+            </div>
+         </div>
+      );
+   };
+
+   const FranchisingRenderer = () => {
+      const [phase, setPhase] = useState<'intro' | 'play' | 'result'>('intro');
+      const [showInfo, setShowInfo] = useState(false);
+      const [franchiseFee, setFranchiseFee] = useState(25000);
+      const [royaltyRate, setRoyaltyRate] = useState(5);
+      const [franchisees, setFranchisees] = useState(10);
+      const [avgRevenue, setAvgRevenue] = useState(500000);
+
+      const initialFees = franchiseFee * franchisees;
+      const annualRoyalties = (royaltyRate / 100) * avgRevenue * franchisees;
+      const totalAnnual = initialFees + annualRoyalties;
+
+      if (phase === 'intro') return (
+         <div className="flex flex-col h-full bg-gradient-to-br from-amber-900 via-orange-900 to-red-900 text-white p-8">
+            <div className="flex justify-between items-start mb-6">
+               <div>
+                  <h2 className="text-3xl font-black">🏪 FRANCHISING</h2>
+                  <p className="text-amber-300 text-sm mt-1">Scale Through Partners</p>
+               </div>
+               <button onClick={() => setShowInfo(!showInfo)} className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center text-xl">ℹ️</button>
+            </div>
+            {showInfo && (
+               <div className="bg-black/30 rounded-xl p-4 mb-4 text-sm">
+                  <p><strong>Franchising:</strong> Licensing your business model to independent operators.</p>
+                  <p className="mt-2">Revenue: Initial franchise fees + ongoing royalties.</p>
+               </div>
+            )}
+            <div className="flex-1 flex flex-col justify-center items-center text-center">
+               <div className="text-6xl mb-6">🍔</div>
+               <h3 className="text-2xl font-bold mb-4">Franchise Revenue Calculator</h3>
+               <p className="text-lg text-amber-200 max-w-md mb-8">Model potential revenue from franchising your business.</p>
+               <button onClick={() => setPhase('play')} className="px-8 py-4 bg-amber-500 hover:bg-amber-400 rounded-xl font-bold text-lg text-black">
+                  START MODELING →
+               </button>
+            </div>
+         </div>
+      );
+
+      return (
+         <div className="flex flex-col h-full bg-gradient-to-br from-amber-900 via-orange-900 to-red-900 text-white p-6">
+            <h2 className="text-xl font-black mb-4">🏪 FRANCHISE MODEL</h2>
+            <div className="space-y-3 flex-1">
+               <div className="bg-black/30 p-3 rounded-xl">
+                  <label className="text-xs">Franchise Fee: ${franchiseFee.toLocaleString()}</label>
+                  <input type="range" min="5000" max="100000" step="5000" value={franchiseFee} onChange={(e) => setFranchiseFee(Number(e.target.value))} className="w-full accent-amber-500" />
+               </div>
+               <div className="bg-black/30 p-3 rounded-xl">
+                  <label className="text-xs">Royalty Rate: {royaltyRate}%</label>
+                  <input type="range" min="1" max="12" value={royaltyRate} onChange={(e) => setRoyaltyRate(Number(e.target.value))} className="w-full accent-amber-500" />
+               </div>
+               <div className="bg-black/30 p-3 rounded-xl">
+                  <label className="text-xs">Number of Franchisees: {franchisees}</label>
+                  <input type="range" min="1" max="100" value={franchisees} onChange={(e) => setFranchisees(Number(e.target.value))} className="w-full accent-amber-500" />
+               </div>
+               <div className="bg-black/30 p-3 rounded-xl">
+                  <label className="text-xs">Avg Franchisee Revenue: ${avgRevenue.toLocaleString()}</label>
+                  <input type="range" min="100000" max="2000000" step="50000" value={avgRevenue} onChange={(e) => setAvgRevenue(Number(e.target.value))} className="w-full accent-amber-500" />
+               </div>
+            </div>
+            <div className="grid grid-cols-3 gap-2 mt-4">
+               <div className="bg-amber-800/50 p-3 rounded-xl text-center">
+                  <p className="text-xs opacity-75">Initial Fees</p>
+                  <p className="text-lg font-bold">${(initialFees / 1000).toFixed(0)}K</p>
+               </div>
+               <div className="bg-amber-800/50 p-3 rounded-xl text-center">
+                  <p className="text-xs opacity-75">Annual Royalties</p>
+                  <p className="text-lg font-bold">${(annualRoyalties / 1000).toFixed(0)}K</p>
+               </div>
+               <div className="bg-green-800/50 p-3 rounded-xl text-center">
+                  <p className="text-xs opacity-75">Year 1 Total</p>
+                  <p className="text-lg font-bold">${(totalAnnual / 1000).toFixed(0)}K</p>
+               </div>
+            </div>
+         </div>
+      );
+   };
+
+   const SocialEnterpriseRenderer = () => {
+      const [phase, setPhase] = useState<'intro' | 'play' | 'result'>('intro');
+      const [showInfo, setShowInfo] = useState(false);
+      const [step, setStep] = useState(0);
+      const [enterprise, setEnterprise] = useState({ mission: '', impact: '', revenue: '', sustainability: '' });
+      const [inputValue, setInputValue] = useState('');
+
+      const steps = [
+         { key: 'mission', label: 'Social Mission', prompt: 'What social problem do you solve?', icon: '❤️' },
+         { key: 'impact', label: 'Impact Metrics', prompt: 'How do you measure impact?', icon: '📊' },
+         { key: 'revenue', label: 'Revenue Model', prompt: 'How do you make money?', icon: '💰' },
+         { key: 'sustainability', label: 'Sustainability', prompt: 'How do you ensure long-term impact?', icon: '♻️' },
+      ];
+
+      const submitStep = () => {
+         if (inputValue.trim()) {
+            setEnterprise({ ...enterprise, [steps[step].key]: inputValue.trim() });
+            setInputValue('');
+            if (step < steps.length - 1) setStep(s => s + 1);
+            else setPhase('result');
+         }
+      };
+
+      if (phase === 'intro') return (
+         <div className="flex flex-col h-full bg-gradient-to-br from-emerald-900 via-teal-900 to-cyan-900 text-white p-8">
+            <div className="flex justify-between items-start mb-6">
+               <div>
+                  <h2 className="text-3xl font-black">🌍 SOCIAL ENTERPRISE</h2>
+                  <p className="text-emerald-300 text-sm mt-1">Profit With Purpose</p>
+               </div>
+               <button onClick={() => setShowInfo(!showInfo)} className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center text-xl">ℹ️</button>
+            </div>
+            {showInfo && (
+               <div className="bg-black/30 rounded-xl p-4 mb-4 text-sm">
+                  <p><strong>Social Enterprise:</strong> A business that prioritizes social/environmental impact alongside profit.</p>
+                  <p className="mt-2">Examples: TOMS, Patagonia, Warby Parker</p>
+               </div>
+            )}
+            <div className="flex-1 flex flex-col justify-center items-center text-center">
+               <div className="text-6xl mb-6">🌱</div>
+               <h3 className="text-2xl font-bold mb-4">Design Your Social Enterprise</h3>
+               <p className="text-lg text-emerald-200 max-w-md mb-8">Create a business model that combines profit with positive impact.</p>
+               <button onClick={() => setPhase('play')} className="px-8 py-4 bg-emerald-500 hover:bg-emerald-400 rounded-xl font-bold text-lg">
+                  START DESIGNING →
+               </button>
+            </div>
+         </div>
+      );
+
+      if (phase === 'result') return (
+         <div className="flex flex-col h-full bg-gradient-to-br from-emerald-900 via-teal-900 to-cyan-900 text-white p-8">
+            <h2 className="text-2xl font-black mb-4 text-center">🌍 Your Social Enterprise</h2>
+            <div className="flex-1 space-y-3 overflow-auto">
+               {steps.map((s) => (
+                  <div key={s.key} className="bg-black/30 rounded-xl p-4">
+                     <p className="font-bold text-emerald-300">{s.icon} {s.label}</p>
+                     <p className="mt-1">{enterprise[s.key as keyof typeof enterprise]}</p>
+                  </div>
+               ))}
+            </div>
+            <button onClick={() => { setPhase('intro'); setStep(0); setEnterprise({ mission: '', impact: '', revenue: '', sustainability: '' }); }} className="px-6 py-3 bg-emerald-500 rounded-xl font-bold mt-4">CREATE NEW</button>
+         </div>
+      );
+
+      const current = steps[step];
+      return (
+         <div className="flex flex-col h-full bg-gradient-to-br from-emerald-900 via-teal-900 to-cyan-900 text-white p-8">
+            <div className="flex gap-1 mb-6">
+               {steps.map((_, i) => (
+                  <div key={i} className={`flex-1 h-2 rounded-full ${i <= step ? 'bg-emerald-400' : 'bg-black/30'}`}></div>
+               ))}
+            </div>
+            <div className="bg-black/30 rounded-2xl p-6 mb-4 text-center">
+               <p className="text-4xl mb-2">{current.icon}</p>
+               <p className="text-xl font-bold">{current.label}</p>
+               <p className="text-sm opacity-75 mt-1">{current.prompt}</p>
+            </div>
+            <textarea value={inputValue} onChange={(e) => setInputValue(e.target.value)}
+               placeholder="Your answer..." className="flex-1 p-4 rounded-xl bg-black/30 border border-emerald-500/30 text-white mb-4 resize-none" />
+            <button onClick={submitStep} className="px-6 py-3 bg-emerald-500 rounded-xl font-bold">
+               {step < steps.length - 1 ? 'NEXT →' : 'FINISH'}
+            </button>
+         </div>
+      );
+   };
+
+   // ============================================
+   // ENTREPRENEURSHIP: MARKETING & SALES (10)
+   // ============================================
+
+   // 31. FOUR PS MARKETING - Interactive Marketing Mix Builder
+   const FourPsMarketingRenderer = () => {
+      const [phase, setPhase] = useState<'intro' | 'play' | 'result'>('intro');
+      const [showInfo, setShowInfo] = useState(false);
+      const [ps, setPs] = useState({ product: '', price: '', place: '', promotion: '' });
+      const [currentP, setCurrentP] = useState(0);
+      const [inputValue, setInputValue] = useState('');
+
+      const pItems = [
+         { key: 'product', icon: '📦', label: 'Product', desc: 'What are you selling? Define features, benefits, and USP.' },
+         { key: 'price', icon: '💰', label: 'Price', desc: 'How much will it cost? Consider value, competition, and margins.' },
+         { key: 'place', icon: '📍', label: 'Place', desc: 'Where will you sell? Define distribution channels.' },
+         { key: 'promotion', icon: '📢', label: 'Promotion', desc: 'How will people know? Plan your marketing communications.' }
+      ];
+
+      if (phase === 'intro') return (
+         <div className="flex flex-col items-center justify-center h-full bg-gradient-to-br from-pink-900 via-rose-900 to-red-900 text-white p-8 text-center">
+            <button onClick={() => setShowInfo(!showInfo)} className="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/20 flex items-center justify-center text-xl">ℹ️</button>
+            {showInfo && (
+               <div className="absolute top-16 right-4 bg-black/90 p-4 rounded-xl max-w-xs text-left text-sm">
+                  <p className="font-bold mb-2">The Marketing Mix (4Ps)</p>
+                  <p>Framework for creating a comprehensive marketing strategy by addressing Product, Price, Place, and Promotion.</p>
+               </div>
+            )}
+            <p className="text-6xl mb-4">🎯</p>
+            <h2 className="text-3xl font-bold mb-4">The 4Ps of Marketing</h2>
+            <p className="text-lg opacity-80 max-w-md mb-8">Build a complete marketing mix strategy by defining all four Ps for your product or service.</p>
+            <button onClick={() => setPhase('play')} className="px-8 py-4 bg-pink-500 rounded-2xl font-bold text-xl hover:bg-pink-400 transition-all">START BUILDING →</button>
+         </div>
+      );
+
+      if (phase === 'result') return (
+         <div className="flex flex-col h-full bg-gradient-to-br from-pink-900 via-rose-900 to-red-900 text-white p-8">
+            <h2 className="text-2xl font-bold text-center mb-6">🎯 Your Marketing Mix</h2>
+            <div className="grid grid-cols-2 gap-4 flex-1">
+               {pItems.map((p) => (
+                  <div key={p.key} className="bg-black/30 rounded-xl p-4">
+                     <div className="flex items-center gap-2 mb-2">
+                        <span className="text-2xl">{p.icon}</span>
+                        <span className="font-bold text-lg">{p.label}</span>
+                     </div>
+                     <p className="text-sm opacity-90">{ps[p.key as keyof typeof ps] || 'Not defined'}</p>
+                  </div>
+               ))}
+            </div>
+            <button onClick={() => { setPhase('intro'); setPs({ product: '', price: '', place: '', promotion: '' }); setCurrentP(0); }} className="px-6 py-3 bg-pink-500 rounded-xl font-bold mt-4">CREATE NEW MIX</button>
+         </div>
+      );
+
+      const submitP = () => {
+         const key = pItems[currentP].key as keyof typeof ps;
+         setPs({ ...ps, [key]: inputValue });
+         setInputValue('');
+         if (currentP < 3) setCurrentP(currentP + 1);
+         else setPhase('result');
+      };
+
+      return (
+         <div className="flex flex-col h-full bg-gradient-to-br from-pink-900 via-rose-900 to-red-900 text-white p-8">
+            <div className="flex gap-2 mb-6">
+               {pItems.map((p, i) => (
+                  <div key={i} className={`flex-1 h-2 rounded-full ${i <= currentP ? 'bg-pink-400' : 'bg-black/30'}`}></div>
+               ))}
+            </div>
+            <div className="bg-black/30 rounded-2xl p-6 mb-4 text-center">
+               <p className="text-5xl mb-2">{pItems[currentP].icon}</p>
+               <p className="text-2xl font-bold">{pItems[currentP].label}</p>
+               <p className="text-sm opacity-75 mt-2">{pItems[currentP].desc}</p>
+            </div>
+            <textarea value={inputValue} onChange={(e) => setInputValue(e.target.value)}
+               placeholder={`Define your ${pItems[currentP].label.toLowerCase()}...`}
+               className="flex-1 p-4 rounded-xl bg-black/30 border border-pink-500/30 text-white mb-4 resize-none" />
+            <button onClick={submitP} className="px-6 py-3 bg-pink-500 rounded-xl font-bold">
+               {currentP < 3 ? 'NEXT P →' : 'COMPLETE MIX'}
+            </button>
+         </div>
+      );
+   };
+
+   // 32. BRANDING IDENTITY - Brand Building Exercise
+   const BrandingIdentityRenderer = () => {
+      const [phase, setPhase] = useState<'intro' | 'play' | 'result'>('intro');
+      const [showInfo, setShowInfo] = useState(false);
+      const [brand, setBrand] = useState({ name: '', personality: '', values: '', voice: '' });
+      const [step, setStep] = useState(0);
+      const [inputValue, setInputValue] = useState('');
+
+      const steps = [
+         { key: 'name', icon: '✨', label: 'Brand Name', prompt: 'What is your brand name and tagline?' },
+         { key: 'personality', icon: '🎭', label: 'Personality', prompt: 'Describe your brand as if it were a person' },
+         { key: 'values', icon: '💎', label: 'Core Values', prompt: 'What principles guide your brand?' },
+         { key: 'voice', icon: '🗣️', label: 'Brand Voice', prompt: 'How does your brand communicate?' }
+      ];
+
+      if (phase === 'intro') return (
+         <div className="flex flex-col items-center justify-center h-full bg-gradient-to-br from-purple-900 via-violet-900 to-indigo-900 text-white p-8 text-center">
+            <button onClick={() => setShowInfo(!showInfo)} className="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/20 flex items-center justify-center text-xl">ℹ️</button>
+            {showInfo && (
+               <div className="absolute top-16 right-4 bg-black/90 p-4 rounded-xl max-w-xs text-left text-sm">
+                  <p className="font-bold mb-2">Brand Identity</p>
+                  <p>The visual and emotional elements that define how your brand is perceived. Strong brands create emotional connections.</p>
+               </div>
+            )}
+            <p className="text-6xl mb-4">🎨</p>
+            <h2 className="text-3xl font-bold mb-4">Build Your Brand Identity</h2>
+            <p className="text-lg opacity-80 max-w-md mb-8">Create a consistent brand persona that resonates with your target audience.</p>
+            <button onClick={() => setPhase('play')} className="px-8 py-4 bg-purple-500 rounded-2xl font-bold text-xl hover:bg-purple-400 transition-all">START BRANDING →</button>
+         </div>
+      );
+
+      if (phase === 'result') return (
+         <div className="flex flex-col h-full bg-gradient-to-br from-purple-900 via-violet-900 to-indigo-900 text-white p-8">
+            <h2 className="text-2xl font-bold text-center mb-6">🎨 Brand Identity Card</h2>
+            <div className="bg-black/30 rounded-2xl p-6 flex-1">
+               {steps.map((s) => (
+                  <div key={s.key} className="mb-4 border-b border-white/10 pb-4 last:border-0">
+                     <div className="flex items-center gap-2 mb-1">
+                        <span className="text-xl">{s.icon}</span>
+                        <span className="font-bold">{s.label}</span>
+                     </div>
+                     <p className="text-sm opacity-80 ml-8">{brand[s.key as keyof typeof brand]}</p>
+                  </div>
+               ))}
+            </div>
+            <button onClick={() => { setPhase('intro'); setBrand({ name: '', personality: '', values: '', voice: '' }); setStep(0); }} className="px-6 py-3 bg-purple-500 rounded-xl font-bold mt-4">CREATE NEW BRAND</button>
+         </div>
+      );
+
+      const submitStep = () => {
+         setBrand({ ...brand, [steps[step].key]: inputValue });
+         setInputValue('');
+         if (step < 3) setStep(step + 1);
+         else setPhase('result');
+      };
+
+      return (
+         <div className="flex flex-col h-full bg-gradient-to-br from-purple-900 via-violet-900 to-indigo-900 text-white p-8">
+            <div className="flex gap-2 mb-6">
+               {steps.map((_, i) => (
+                  <div key={i} className={`flex-1 h-2 rounded-full ${i <= step ? 'bg-purple-400' : 'bg-black/30'}`}></div>
+               ))}
+            </div>
+            <div className="bg-black/30 rounded-2xl p-6 mb-4 text-center">
+               <p className="text-4xl mb-2">{steps[step].icon}</p>
+               <p className="text-xl font-bold">{steps[step].label}</p>
+               <p className="text-sm opacity-75 mt-2">{steps[step].prompt}</p>
+            </div>
+            <textarea value={inputValue} onChange={(e) => setInputValue(e.target.value)}
+               placeholder="Your answer..." className="flex-1 p-4 rounded-xl bg-black/30 border border-purple-500/30 text-white mb-4 resize-none" />
+            <button onClick={submitStep} className="px-6 py-3 bg-purple-500 rounded-xl font-bold">
+               {step < 3 ? 'NEXT →' : 'COMPLETE BRAND'}
+            </button>
+         </div>
+      );
+   };
+
+   // 33. DIGITAL MARKETING - Channel Selection Game
+   const DigitalMarketingRenderer = () => {
+      const [phase, setPhase] = useState<'intro' | 'play' | 'result'>('intro');
+      const [showInfo, setShowInfo] = useState(false);
+      const [score, setScore] = useState(0);
+      const [current, setCurrent] = useState(0);
+      const [selections, setSelections] = useState<string[]>([]);
+
+      const scenarios = [
+         { goal: 'Build brand awareness for a new product', best: 'social_media', options: [
+            { id: 'email', label: '📧 Email Marketing', score: 5 },
+            { id: 'social_media', label: '📱 Social Media Ads', score: 10 },
+            { id: 'seo', label: '🔍 SEO', score: 6 }
+         ]},
+         { goal: 'Drive immediate sales during a holiday', best: 'ppc', options: [
+            { id: 'ppc', label: '💰 PPC Advertising', score: 10 },
+            { id: 'content', label: '📝 Content Marketing', score: 4 },
+            { id: 'influencer', label: '🌟 Influencer Marketing', score: 7 }
+         ]},
+         { goal: 'Nurture leads who downloaded your ebook', best: 'email_automation', options: [
+            { id: 'email_automation', label: '🤖 Email Automation', score: 10 },
+            { id: 'retargeting', label: '🎯 Retargeting Ads', score: 6 },
+            { id: 'webinar', label: '🎥 Webinars', score: 7 }
+         ]},
+         { goal: 'Establish thought leadership in B2B', best: 'linkedin', options: [
+            { id: 'linkedin', label: '💼 LinkedIn Content', score: 10 },
+            { id: 'tiktok', label: '📹 TikTok', score: 2 },
+            { id: 'podcast', label: '🎙️ Podcast', score: 8 }
+         ]}
+      ];
+
+      if (phase === 'intro') return (
+         <div className="flex flex-col items-center justify-center h-full bg-gradient-to-br from-blue-900 via-cyan-900 to-teal-900 text-white p-8 text-center">
+            <button onClick={() => setShowInfo(!showInfo)} className="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/20 flex items-center justify-center text-xl">ℹ️</button>
+            {showInfo && (
+               <div className="absolute top-16 right-4 bg-black/90 p-4 rounded-xl max-w-xs text-left text-sm">
+                  <p className="font-bold mb-2">Digital Marketing Channels</p>
+                  <p>Different channels serve different goals. Matching the right channel to your objective maximizes ROI.</p>
+               </div>
+            )}
+            <p className="text-6xl mb-4">📱</p>
+            <h2 className="text-3xl font-bold mb-4">Digital Marketing Channels</h2>
+            <p className="text-lg opacity-80 max-w-md mb-8">Match the best digital marketing channel to each business goal.</p>
+            <button onClick={() => setPhase('play')} className="px-8 py-4 bg-blue-500 rounded-2xl font-bold text-xl hover:bg-blue-400 transition-all">START MATCHING →</button>
+         </div>
+      );
+
+      if (phase === 'result') return (
+         <div className="flex flex-col items-center justify-center h-full bg-gradient-to-br from-blue-900 via-cyan-900 to-teal-900 text-white p-8 text-center">
+            <p className="text-6xl mb-4">{score >= 30 ? '🏆' : score >= 20 ? '⭐' : '📚'}</p>
+            <h2 className="text-3xl font-bold mb-4">Channel Mastery Score</h2>
+            <p className="text-5xl font-bold text-blue-400 mb-4">{score}/{scenarios.length * 10}</p>
+            <p className="text-lg opacity-80 mb-8">{score >= 30 ? 'Digital marketing expert!' : score >= 20 ? 'Good understanding!' : 'Keep learning channels!'}</p>
+            <button onClick={() => { setPhase('intro'); setScore(0); setCurrent(0); setSelections([]); }} className="px-6 py-3 bg-blue-500 rounded-xl font-bold">TRY AGAIN</button>
+         </div>
+      );
+
+      const handleSelect = (optScore: number, optId: string) => {
+         setScore(score + optScore);
+         setSelections([...selections, optId]);
+         if (current < scenarios.length - 1) setCurrent(current + 1);
+         else setPhase('result');
+      };
+
+      const s = scenarios[current];
+      return (
+         <div className="flex flex-col h-full bg-gradient-to-br from-blue-900 via-cyan-900 to-teal-900 text-white p-8">
+            <div className="flex gap-2 mb-6">
+               {scenarios.map((_, i) => (
+                  <div key={i} className={`flex-1 h-2 rounded-full ${i < current ? 'bg-blue-400' : i === current ? 'bg-blue-300' : 'bg-black/30'}`}></div>
+               ))}
+            </div>
+            <div className="bg-black/30 rounded-2xl p-6 mb-6 text-center">
+               <p className="text-sm opacity-60 mb-2">GOAL {current + 1} of {scenarios.length}</p>
+               <p className="text-xl font-bold">{s.goal}</p>
+            </div>
+            <p className="text-center mb-4 opacity-80">Select the best channel:</p>
+            <div className="flex flex-col gap-3">
+               {s.options.map((opt) => (
+                  <button key={opt.id} onClick={() => handleSelect(opt.score, opt.id)}
+                     className="p-4 bg-black/30 rounded-xl hover:bg-blue-500/30 transition-all text-left font-medium">
+                     {opt.label}
+                  </button>
+               ))}
+            </div>
+         </div>
+      );
+   };
+
+   // 34. CONTENT STRATEGY - Content Calendar Builder
+   const ContentStrategyRenderer = () => {
+      const [phase, setPhase] = useState<'intro' | 'play' | 'result'>('intro');
+      const [showInfo, setShowInfo] = useState(false);
+      const [content, setContent] = useState<{type: string; topic: string; platform: string}[]>([]);
+      const [currentType, setCurrentType] = useState('');
+      const [topic, setTopic] = useState('');
+      const [platform, setPlatform] = useState('');
+
+      const contentTypes = ['📝 Blog Post', '📹 Video', '🎙️ Podcast', '📊 Infographic', '📱 Social Post'];
+      const platforms = ['Website', 'YouTube', 'LinkedIn', 'Instagram', 'Twitter', 'TikTok'];
+
+      if (phase === 'intro') return (
+         <div className="flex flex-col items-center justify-center h-full bg-gradient-to-br from-orange-900 via-amber-900 to-yellow-900 text-white p-8 text-center">
+            <button onClick={() => setShowInfo(!showInfo)} className="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/20 flex items-center justify-center text-xl">ℹ️</button>
+            {showInfo && (
+               <div className="absolute top-16 right-4 bg-black/90 p-4 rounded-xl max-w-xs text-left text-sm">
+                  <p className="font-bold mb-2">Content Strategy</p>
+                  <p>A documented plan for creating, publishing, and managing content. Consistent content builds authority and attracts customers.</p>
+               </div>
+            )}
+            <p className="text-6xl mb-4">📅</p>
+            <h2 className="text-3xl font-bold mb-4">Content Strategy Builder</h2>
+            <p className="text-lg opacity-80 max-w-md mb-8">Plan your content calendar by selecting content types, topics, and platforms.</p>
+            <button onClick={() => setPhase('play')} className="px-8 py-4 bg-orange-500 rounded-2xl font-bold text-xl hover:bg-orange-400 transition-all">START PLANNING →</button>
+         </div>
+      );
+
+      if (phase === 'result') return (
+         <div className="flex flex-col h-full bg-gradient-to-br from-orange-900 via-amber-900 to-yellow-900 text-white p-8">
+            <h2 className="text-2xl font-bold text-center mb-4">📅 Your Content Calendar</h2>
+            <div className="flex-1 overflow-auto">
+               {content.map((c, i) => (
+                  <div key={i} className="bg-black/30 rounded-xl p-4 mb-3 flex items-center gap-4">
+                     <span className="text-2xl">{c.type.split(' ')[0]}</span>
+                     <div className="flex-1">
+                        <p className="font-bold">{c.topic}</p>
+                        <p className="text-sm opacity-70">{c.type.split(' ').slice(1).join(' ')} • {c.platform}</p>
+                     </div>
+                  </div>
+               ))}
+            </div>
+            <button onClick={() => { setPhase('intro'); setContent([]); }} className="px-6 py-3 bg-orange-500 rounded-xl font-bold mt-4">CREATE NEW PLAN</button>
+         </div>
+      );
+
+      const addContent = () => {
+         if (currentType && topic && platform) {
+            setContent([...content, { type: currentType, topic, platform }]);
+            setCurrentType('');
+            setTopic('');
+            setPlatform('');
+         }
+      };
+
+      return (
+         <div className="flex flex-col h-full bg-gradient-to-br from-orange-900 via-amber-900 to-yellow-900 text-white p-8">
+            <p className="text-sm text-center mb-4 opacity-70">Added: {content.length} content pieces</p>
+            <div className="bg-black/30 rounded-xl p-4 mb-4">
+               <p className="text-sm mb-2 opacity-80">Content Type:</p>
+               <div className="flex flex-wrap gap-2">
+                  {contentTypes.map((t) => (
+                     <button key={t} onClick={() => setCurrentType(t)}
+                        className={`px-3 py-1 rounded-full text-sm ${currentType === t ? 'bg-orange-500' : 'bg-black/30'}`}>{t}</button>
+                  ))}
+               </div>
+            </div>
+            <input value={topic} onChange={(e) => setTopic(e.target.value)} placeholder="Topic/Title..."
+               className="p-3 rounded-xl bg-black/30 border border-orange-500/30 text-white mb-4" />
+            <div className="bg-black/30 rounded-xl p-4 mb-4">
+               <p className="text-sm mb-2 opacity-80">Platform:</p>
+               <div className="flex flex-wrap gap-2">
+                  {platforms.map((p) => (
+                     <button key={p} onClick={() => setPlatform(p)}
+                        className={`px-3 py-1 rounded-full text-sm ${platform === p ? 'bg-orange-500' : 'bg-black/30'}`}>{p}</button>
+                  ))}
+               </div>
+            </div>
+            <div className="flex gap-3">
+               <button onClick={addContent} className="flex-1 px-6 py-3 bg-orange-500 rounded-xl font-bold">ADD CONTENT</button>
+               <button onClick={() => content.length > 0 && setPhase('result')} className="px-6 py-3 bg-orange-700 rounded-xl font-bold">VIEW PLAN</button>
+            </div>
+         </div>
+      );
+   };
+
+   // 35. EMAIL MARKETING - Email Campaign Builder
+   const EmailMarketingRenderer = () => {
+      const [phase, setPhase] = useState<'intro' | 'play' | 'result'>('intro');
+      const [showInfo, setShowInfo] = useState(false);
+      const [email, setEmail] = useState({ subject: '', preview: '', cta: '', segment: '' });
+      const [step, setStep] = useState(0);
+      const [inputValue, setInputValue] = useState('');
+
+      const steps = [
+         { key: 'segment', icon: '👥', label: 'Audience Segment', prompt: 'Who is this email for? (New subscribers, VIPs, etc.)' },
+         { key: 'subject', icon: '📧', label: 'Subject Line', prompt: 'Write a compelling subject line (50 chars max)' },
+         { key: 'preview', icon: '👀', label: 'Preview Text', prompt: 'What preview text appears after the subject?' },
+         { key: 'cta', icon: '🔘', label: 'Call to Action', prompt: 'What action should readers take?' }
+      ];
+
+      if (phase === 'intro') return (
+         <div className="flex flex-col items-center justify-center h-full bg-gradient-to-br from-indigo-900 via-blue-900 to-violet-900 text-white p-8 text-center">
+            <button onClick={() => setShowInfo(!showInfo)} className="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/20 flex items-center justify-center text-xl">ℹ️</button>
+            {showInfo && (
+               <div className="absolute top-16 right-4 bg-black/90 p-4 rounded-xl max-w-xs text-left text-sm">
+                  <p className="font-bold mb-2">Email Marketing</p>
+                  <p>One of the highest ROI marketing channels. Key metrics: open rate, click-through rate, conversion rate.</p>
+               </div>
+            )}
+            <p className="text-6xl mb-4">📧</p>
+            <h2 className="text-3xl font-bold mb-4">Email Campaign Builder</h2>
+            <p className="text-lg opacity-80 max-w-md mb-8">Design an effective email campaign with compelling subject lines and clear CTAs.</p>
+            <button onClick={() => setPhase('play')} className="px-8 py-4 bg-indigo-500 rounded-2xl font-bold text-xl hover:bg-indigo-400 transition-all">BUILD CAMPAIGN →</button>
+         </div>
+      );
+
+      if (phase === 'result') return (
+         <div className="flex flex-col h-full bg-gradient-to-br from-indigo-900 via-blue-900 to-violet-900 text-white p-8">
+            <h2 className="text-2xl font-bold text-center mb-6">📧 Email Preview</h2>
+            <div className="bg-white text-black rounded-xl p-6 flex-1">
+               <p className="text-xs text-gray-500 mb-2">To: {email.segment}</p>
+               <p className="font-bold text-lg mb-1">{email.subject}</p>
+               <p className="text-gray-600 text-sm mb-4">{email.preview}</p>
+               <div className="border-t pt-4">
+                  <button className="px-6 py-2 bg-indigo-600 text-white rounded-lg font-bold">{email.cta}</button>
+               </div>
+            </div>
+            <button onClick={() => { setPhase('intro'); setEmail({ subject: '', preview: '', cta: '', segment: '' }); setStep(0); }} className="px-6 py-3 bg-indigo-500 rounded-xl font-bold mt-4">CREATE NEW EMAIL</button>
+         </div>
+      );
+
+      const submitStep = () => {
+         setEmail({ ...email, [steps[step].key]: inputValue });
+         setInputValue('');
+         if (step < 3) setStep(step + 1);
+         else setPhase('result');
+      };
+
+      return (
+         <div className="flex flex-col h-full bg-gradient-to-br from-indigo-900 via-blue-900 to-violet-900 text-white p-8">
+            <div className="flex gap-2 mb-6">
+               {steps.map((_, i) => (
+                  <div key={i} className={`flex-1 h-2 rounded-full ${i <= step ? 'bg-indigo-400' : 'bg-black/30'}`}></div>
+               ))}
+            </div>
+            <div className="bg-black/30 rounded-2xl p-6 mb-4 text-center">
+               <p className="text-4xl mb-2">{steps[step].icon}</p>
+               <p className="text-xl font-bold">{steps[step].label}</p>
+               <p className="text-sm opacity-75 mt-2">{steps[step].prompt}</p>
+            </div>
+            <input value={inputValue} onChange={(e) => setInputValue(e.target.value)}
+               placeholder="Your answer..." className="p-4 rounded-xl bg-black/30 border border-indigo-500/30 text-white mb-4" />
+            <button onClick={submitStep} className="px-6 py-3 bg-indigo-500 rounded-xl font-bold">
+               {step < 3 ? 'NEXT →' : 'PREVIEW EMAIL'}
+            </button>
+         </div>
+      );
+   };
+
+   // 36. INFLUENCER MARKETING - Influencer Selection Game
+   const InfluencerMarketingRenderer = () => {
+      const [phase, setPhase] = useState<'intro' | 'play' | 'result'>('intro');
+      const [showInfo, setShowInfo] = useState(false);
+      const [score, setScore] = useState(0);
+      const [current, setCurrent] = useState(0);
+
+      const scenarios = [
+         { brand: 'Sustainable Fashion Startup', budget: '$5K', best: 'micro', options: [
+            { id: 'mega', label: '👑 Mega (1M+ followers)', followers: '2M', rate: '$10K', fit: 'Low', score: 2 },
+            { id: 'micro', label: '🌟 Micro (10K-100K)', followers: '50K', rate: '$500', fit: 'High', score: 10 },
+            { id: 'macro', label: '⭐ Macro (100K-1M)', followers: '500K', rate: '$5K', fit: 'Medium', score: 5 }
+         ]},
+         { brand: 'National Beverage Launch', budget: '$100K', best: 'macro', options: [
+            { id: 'nano', label: '💫 Nano (1K-10K)', followers: '5K', rate: '$100', fit: 'High', score: 4 },
+            { id: 'macro', label: '⭐ Macro (100K-1M)', followers: '800K', rate: '$15K', fit: 'High', score: 10 },
+            { id: 'micro', label: '🌟 Micro (10K-100K)', followers: '30K', rate: '$300', fit: 'Medium', score: 6 }
+         ]},
+         { brand: 'Local Restaurant', budget: '$1K', best: 'nano', options: [
+            { id: 'nano', label: '💫 Nano (1K-10K)', followers: '3K', rate: '$50', fit: 'Very High', score: 10 },
+            { id: 'micro', label: '🌟 Micro (10K-100K)', followers: '25K', rate: '$400', fit: 'Medium', score: 5 },
+            { id: 'macro', label: '⭐ Macro (100K-1M)', followers: '200K', rate: '$3K', fit: 'Low', score: 2 }
+         ]}
+      ];
+
+      if (phase === 'intro') return (
+         <div className="flex flex-col items-center justify-center h-full bg-gradient-to-br from-rose-900 via-pink-900 to-fuchsia-900 text-white p-8 text-center">
+            <button onClick={() => setShowInfo(!showInfo)} className="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/20 flex items-center justify-center text-xl">ℹ️</button>
+            {showInfo && (
+               <div className="absolute top-16 right-4 bg-black/90 p-4 rounded-xl max-w-xs text-left text-sm">
+                  <p className="font-bold mb-2">Influencer Tiers</p>
+                  <p>Nano (1K-10K), Micro (10K-100K), Macro (100K-1M), Mega (1M+). Smaller influencers often have higher engagement rates.</p>
+               </div>
+            )}
+            <p className="text-6xl mb-4">🌟</p>
+            <h2 className="text-3xl font-bold mb-4">Influencer Selection</h2>
+            <p className="text-lg opacity-80 max-w-md mb-8">Choose the right influencer tier for each brand scenario.</p>
+            <button onClick={() => setPhase('play')} className="px-8 py-4 bg-rose-500 rounded-2xl font-bold text-xl hover:bg-rose-400 transition-all">START SELECTING →</button>
+         </div>
+      );
+
+      if (phase === 'result') return (
+         <div className="flex flex-col items-center justify-center h-full bg-gradient-to-br from-rose-900 via-pink-900 to-fuchsia-900 text-white p-8 text-center">
+            <p className="text-6xl mb-4">{score >= 25 ? '🏆' : score >= 15 ? '⭐' : '📚'}</p>
+            <h2 className="text-3xl font-bold mb-4">Selection Score</h2>
+            <p className="text-5xl font-bold text-rose-400 mb-4">{score}/{scenarios.length * 10}</p>
+            <p className="text-lg opacity-80 mb-8">{score >= 25 ? 'Influencer marketing pro!' : score >= 15 ? 'Good instincts!' : 'Study influencer tiers!'}</p>
+            <button onClick={() => { setPhase('intro'); setScore(0); setCurrent(0); }} className="px-6 py-3 bg-rose-500 rounded-xl font-bold">TRY AGAIN</button>
+         </div>
+      );
+
+      const handleSelect = (optScore: number) => {
+         setScore(score + optScore);
+         if (current < scenarios.length - 1) setCurrent(current + 1);
+         else setPhase('result');
+      };
+
+      const s = scenarios[current];
+      return (
+         <div className="flex flex-col h-full bg-gradient-to-br from-rose-900 via-pink-900 to-fuchsia-900 text-white p-8">
+            <div className="bg-black/30 rounded-2xl p-4 mb-4 text-center">
+               <p className="text-lg font-bold">{s.brand}</p>
+               <p className="text-sm opacity-70">Budget: {s.budget}</p>
+            </div>
+            <p className="text-center mb-4 opacity-80">Select the best influencer:</p>
+            <div className="flex flex-col gap-3 flex-1">
+               {s.options.map((opt) => (
+                  <button key={opt.id} onClick={() => handleSelect(opt.score)}
+                     className="p-4 bg-black/30 rounded-xl hover:bg-rose-500/30 transition-all text-left">
+                     <p className="font-bold">{opt.label}</p>
+                     <p className="text-sm opacity-70">Followers: {opt.followers} • Rate: {opt.rate} • Fit: {opt.fit}</p>
+                  </button>
+               ))}
+            </div>
+         </div>
+      );
+   };
+
+   // 37. SALES FUNNEL - Funnel Builder
+   const SalesFunnelRenderer = () => {
+      const [phase, setPhase] = useState<'intro' | 'play' | 'result'>('intro');
+      const [showInfo, setShowInfo] = useState(false);
+      const [funnel, setFunnel] = useState({ awareness: '', interest: '', decision: '', action: '' });
+      const [step, setStep] = useState(0);
+      const [inputValue, setInputValue] = useState('');
+
+      const stages = [
+         { key: 'awareness', icon: '👁️', label: 'Awareness', color: 'from-blue-500 to-blue-600', prompt: 'How will people discover you? (Ads, content, SEO, etc.)' },
+         { key: 'interest', icon: '🤔', label: 'Interest', color: 'from-green-500 to-green-600', prompt: 'How will you capture interest? (Lead magnets, free trials, etc.)' },
+         { key: 'decision', icon: '⚖️', label: 'Decision', color: 'from-yellow-500 to-yellow-600', prompt: 'How will you help them decide? (Demos, testimonials, etc.)' },
+         { key: 'action', icon: '💰', label: 'Action', color: 'from-red-500 to-red-600', prompt: 'How will they buy? (Checkout, call, signup, etc.)' }
+      ];
+
+      if (phase === 'intro') return (
+         <div className="flex flex-col items-center justify-center h-full bg-gradient-to-br from-slate-900 via-gray-900 to-zinc-900 text-white p-8 text-center">
+            <button onClick={() => setShowInfo(!showInfo)} className="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/20 flex items-center justify-center text-xl">ℹ️</button>
+            {showInfo && (
+               <div className="absolute top-16 right-4 bg-black/90 p-4 rounded-xl max-w-xs text-left text-sm">
+                  <p className="font-bold mb-2">Sales Funnel (AIDA)</p>
+                  <p>Awareness → Interest → Decision → Action. Each stage narrows as prospects move toward purchase.</p>
+               </div>
+            )}
+            <p className="text-6xl mb-4">🔻</p>
+            <h2 className="text-3xl font-bold mb-4">Build Your Sales Funnel</h2>
+            <p className="text-lg opacity-80 max-w-md mb-8">Design each stage of your customer journey from awareness to action.</p>
+            <button onClick={() => setPhase('play')} className="px-8 py-4 bg-blue-500 rounded-2xl font-bold text-xl hover:bg-blue-400 transition-all">BUILD FUNNEL →</button>
+         </div>
+      );
+
+      if (phase === 'result') return (
+         <div className="flex flex-col h-full bg-gradient-to-br from-slate-900 via-gray-900 to-zinc-900 text-white p-8">
+            <h2 className="text-2xl font-bold text-center mb-6">🔻 Your Sales Funnel</h2>
+            <div className="flex-1 flex flex-col items-center justify-center gap-2">
+               {stages.map((s, i) => (
+                  <div key={s.key} className={`bg-gradient-to-r ${s.color} rounded-xl p-4 text-center transition-all`}
+                     style={{ width: `${100 - i * 15}%` }}>
+                     <p className="font-bold">{s.icon} {s.label}</p>
+                     <p className="text-sm opacity-90">{funnel[s.key as keyof typeof funnel]}</p>
+                  </div>
+               ))}
+            </div>
+            <button onClick={() => { setPhase('intro'); setFunnel({ awareness: '', interest: '', decision: '', action: '' }); setStep(0); }} className="px-6 py-3 bg-blue-500 rounded-xl font-bold mt-4">CREATE NEW FUNNEL</button>
+         </div>
+      );
+
+      const submitStep = () => {
+         setFunnel({ ...funnel, [stages[step].key]: inputValue });
+         setInputValue('');
+         if (step < 3) setStep(step + 1);
+         else setPhase('result');
+      };
+
+      const s = stages[step];
+      return (
+         <div className="flex flex-col h-full bg-gradient-to-br from-slate-900 via-gray-900 to-zinc-900 text-white p-8">
+            <div className="flex justify-center gap-2 mb-6">
+               {stages.map((_, i) => (
+                  <div key={i} className={`w-12 h-2 rounded-full ${i <= step ? 'bg-blue-400' : 'bg-black/30'}`}></div>
+               ))}
+            </div>
+            <div className={`bg-gradient-to-r ${s.color} rounded-2xl p-6 mb-4 text-center`}>
+               <p className="text-4xl mb-2">{s.icon}</p>
+               <p className="text-xl font-bold">{s.label} Stage</p>
+               <p className="text-sm opacity-90 mt-2">{s.prompt}</p>
+            </div>
+            <textarea value={inputValue} onChange={(e) => setInputValue(e.target.value)}
+               placeholder="Describe your strategy..." className="flex-1 p-4 rounded-xl bg-black/30 border border-white/20 text-white mb-4 resize-none" />
+            <button onClick={submitStep} className="px-6 py-3 bg-blue-500 rounded-xl font-bold">
+               {step < 3 ? 'NEXT STAGE →' : 'VIEW FUNNEL'}
+            </button>
+         </div>
+      );
+   };
+
+   // 38. PUBLIC RELATIONS - PR Crisis Simulator
+   const PublicRelationsRenderer = () => {
+      const [phase, setPhase] = useState<'intro' | 'play' | 'result'>('intro');
+      const [showInfo, setShowInfo] = useState(false);
+      const [score, setScore] = useState(0);
+      const [current, setCurrent] = useState(0);
+
+      const crises = [
+         { scenario: 'A customer posts a viral video complaining about your product defect', best: 'acknowledge', options: [
+            { id: 'ignore', label: '🙈 Ignore and hope it blows over', score: 0 },
+            { id: 'acknowledge', label: '✅ Publicly acknowledge, apologize, offer solution', score: 10 },
+            { id: 'blame', label: '👆 Blame the customer for misuse', score: -5 }
+         ]},
+         { scenario: 'A journalist wants to interview you about industry concerns', best: 'prepare', options: [
+            { id: 'decline', label: '❌ Decline all interviews', score: 3 },
+            { id: 'prepare', label: '📋 Prepare key messages and do the interview', score: 10 },
+            { id: 'wing', label: '🎤 Do it spontaneously without prep', score: 2 }
+         ]},
+         { scenario: 'Your competitor spreads false information about you', best: 'factual', options: [
+            { id: 'attack', label: '⚔️ Attack them back publicly', score: 1 },
+            { id: 'factual', label: '📊 Release factual corrections professionally', score: 10 },
+            { id: 'legal', label: '⚖️ Immediately threaten lawsuits', score: 4 }
+         ]}
+      ];
+
+      if (phase === 'intro') return (
+         <div className="flex flex-col items-center justify-center h-full bg-gradient-to-br from-emerald-900 via-teal-900 to-cyan-900 text-white p-8 text-center">
+            <button onClick={() => setShowInfo(!showInfo)} className="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/20 flex items-center justify-center text-xl">ℹ️</button>
+            {showInfo && (
+               <div className="absolute top-16 right-4 bg-black/90 p-4 rounded-xl max-w-xs text-left text-sm">
+                  <p className="font-bold mb-2">Public Relations</p>
+                  <p>Managing your public image and reputation. Crisis communication requires speed, transparency, and empathy.</p>
+               </div>
+            )}
+            <p className="text-6xl mb-4">📰</p>
+            <h2 className="text-3xl font-bold mb-4">PR Crisis Simulator</h2>
+            <p className="text-lg opacity-80 max-w-md mb-8">Navigate PR scenarios and protect your brand's reputation.</p>
+            <button onClick={() => setPhase('play')} className="px-8 py-4 bg-emerald-500 rounded-2xl font-bold text-xl hover:bg-emerald-400 transition-all">START SIMULATION →</button>
+         </div>
+      );
+
+      if (phase === 'result') return (
+         <div className="flex flex-col items-center justify-center h-full bg-gradient-to-br from-emerald-900 via-teal-900 to-cyan-900 text-white p-8 text-center">
+            <p className="text-6xl mb-4">{score >= 25 ? '🏆' : score >= 15 ? '⭐' : '📚'}</p>
+            <h2 className="text-3xl font-bold mb-4">PR Score</h2>
+            <p className="text-5xl font-bold text-emerald-400 mb-4">{score}/{crises.length * 10}</p>
+            <p className="text-lg opacity-80 mb-8">{score >= 25 ? 'PR expert!' : score >= 15 ? 'Good instincts!' : 'Study crisis management!'}</p>
+            <button onClick={() => { setPhase('intro'); setScore(0); setCurrent(0); }} className="px-6 py-3 bg-emerald-500 rounded-xl font-bold">TRY AGAIN</button>
+         </div>
+      );
+
+      const handleSelect = (optScore: number) => {
+         setScore(score + optScore);
+         if (current < crises.length - 1) setCurrent(current + 1);
+         else setPhase('result');
+      };
+
+      const c = crises[current];
+      return (
+         <div className="flex flex-col h-full bg-gradient-to-br from-emerald-900 via-teal-900 to-cyan-900 text-white p-8">
+            <div className="bg-red-500/20 border border-red-500/50 rounded-2xl p-6 mb-6 text-center">
+               <p className="text-sm opacity-70 mb-2">⚠️ CRISIS {current + 1} of {crises.length}</p>
+               <p className="text-lg font-bold">{c.scenario}</p>
+            </div>
+            <p className="text-center mb-4 opacity-80">How do you respond?</p>
+            <div className="flex flex-col gap-3 flex-1">
+               {c.options.map((opt) => (
+                  <button key={opt.id} onClick={() => handleSelect(opt.score)}
+                     className="p-4 bg-black/30 rounded-xl hover:bg-emerald-500/30 transition-all text-left font-medium">
+                     {opt.label}
+                  </button>
+               ))}
+            </div>
+         </div>
+      );
+   };
+
+   // 39. GUERRILLA MARKETING - Creative Campaign Ideas
+   const GuerrillaMarketingRenderer = () => {
+      const [phase, setPhase] = useState<'intro' | 'play' | 'result'>('intro');
+      const [showInfo, setShowInfo] = useState(false);
+      const [score, setScore] = useState(0);
+      const [current, setCurrent] = useState(0);
+
+      const tactics = [
+         { name: 'Flash Mob', icon: '💃', desc: 'Coordinated public performance', viral: 9, cost: 2, risk: 4 },
+         { name: 'Street Art', icon: '🎨', desc: 'Creative murals or chalk art', viral: 7, cost: 1, risk: 5 },
+         { name: 'Pop-Up Experience', icon: '🎪', desc: 'Temporary immersive installation', viral: 8, cost: 5, risk: 2 },
+         { name: 'Sticker Campaign', icon: '🏷️', desc: 'Strategic sticker placement', viral: 5, cost: 1, risk: 6 },
+         { name: 'Viral Stunt', icon: '🎬', desc: 'Attention-grabbing public act', viral: 10, cost: 4, risk: 8 }
+      ];
+
+      const scenarios = [
+         { goal: 'Launch a coffee shop on a tiny budget', best: 'Sticker Campaign' },
+         { goal: 'Create massive buzz for a movie premiere', best: 'Viral Stunt' },
+         { goal: 'Promote a dance studio opening', best: 'Flash Mob' }
+      ];
+
+      if (phase === 'intro') return (
+         <div className="flex flex-col items-center justify-center h-full bg-gradient-to-br from-lime-900 via-green-900 to-emerald-900 text-white p-8 text-center">
+            <button onClick={() => setShowInfo(!showInfo)} className="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/20 flex items-center justify-center text-xl">ℹ️</button>
+            {showInfo && (
+               <div className="absolute top-16 right-4 bg-black/90 p-4 rounded-xl max-w-xs text-left text-sm">
+                  <p className="font-bold mb-2">Guerrilla Marketing</p>
+                  <p>Unconventional, low-cost tactics designed to generate buzz and word-of-mouth. High creativity, high impact.</p>
+               </div>
+            )}
+            <p className="text-6xl mb-4">🎭</p>
+            <h2 className="text-3xl font-bold mb-4">Guerrilla Marketing</h2>
+            <p className="text-lg opacity-80 max-w-md mb-8">Match unconventional marketing tactics to business scenarios.</p>
+            <button onClick={() => setPhase('play')} className="px-8 py-4 bg-lime-500 rounded-2xl font-bold text-xl hover:bg-lime-400 transition-all text-black">START →</button>
+         </div>
+      );
+
+      if (phase === 'result') return (
+         <div className="flex flex-col items-center justify-center h-full bg-gradient-to-br from-lime-900 via-green-900 to-emerald-900 text-white p-8 text-center">
+            <p className="text-6xl mb-4">{score >= scenarios.length * 8 ? '🏆' : '⭐'}</p>
+            <h2 className="text-3xl font-bold mb-4">Creativity Score</h2>
+            <p className="text-5xl font-bold text-lime-400 mb-4">{score}/{scenarios.length * 10}</p>
+            <button onClick={() => { setPhase('intro'); setScore(0); setCurrent(0); }} className="px-6 py-3 bg-lime-500 rounded-xl font-bold text-black">TRY AGAIN</button>
+         </div>
+      );
+
+      const handleSelect = (tactic: string) => {
+         const isCorrect = tactic === scenarios[current].best;
+         setScore(score + (isCorrect ? 10 : 4));
+         if (current < scenarios.length - 1) setCurrent(current + 1);
+         else setPhase('result');
+      };
+
+      return (
+         <div className="flex flex-col h-full bg-gradient-to-br from-lime-900 via-green-900 to-emerald-900 text-white p-8">
+            <div className="bg-black/30 rounded-2xl p-4 mb-4 text-center">
+               <p className="text-sm opacity-70">Scenario {current + 1}/{scenarios.length}</p>
+               <p className="text-lg font-bold mt-2">{scenarios[current].goal}</p>
+            </div>
+            <p className="text-center mb-4 opacity-80">Select the best tactic:</p>
+            <div className="grid grid-cols-1 gap-2 flex-1 overflow-auto">
+               {tactics.map((t) => (
+                  <button key={t.name} onClick={() => handleSelect(t.name)}
+                     className="p-3 bg-black/30 rounded-xl hover:bg-lime-500/30 transition-all text-left flex items-center gap-3">
+                     <span className="text-2xl">{t.icon}</span>
+                     <div>
+                        <p className="font-bold">{t.name}</p>
+                        <p className="text-xs opacity-70">{t.desc}</p>
+                     </div>
+                  </button>
+               ))}
+            </div>
+         </div>
+      );
+   };
+
+   // 40. COPYWRITING - Headline Writing Practice
+   const CopywritingRenderer = () => {
+      const [phase, setPhase] = useState<'intro' | 'play' | 'result'>('intro');
+      const [showInfo, setShowInfo] = useState(false);
+      const [score, setScore] = useState(0);
+      const [current, setCurrent] = useState(0);
+
+      const headlines = [
+         { product: 'Time Management App', best: 'b', options: [
+            { id: 'a', text: 'Our App is Great for Time', score: 3 },
+            { id: 'b', text: 'Get 3 Extra Hours in Your Day', score: 10 },
+            { id: 'c', text: 'Download Our Time App Now', score: 4 }
+         ]},
+         { product: 'Organic Dog Food', best: 'c', options: [
+            { id: 'a', text: 'Buy Organic Dog Food', score: 3 },
+            { id: 'b', text: 'Food for Dogs That is Organic', score: 2 },
+            { id: 'c', text: 'Give Your Best Friend 5 More Healthy Years', score: 10 }
+         ]},
+         { product: 'Online Coding Course', best: 'a', options: [
+            { id: 'a', text: 'From Zero to Your First Job in 12 Weeks', score: 10 },
+            { id: 'b', text: 'Learn Coding Online', score: 3 },
+            { id: 'c', text: 'Programming Classes Available', score: 2 }
+         ]}
+      ];
+
+      if (phase === 'intro') return (
+         <div className="flex flex-col items-center justify-center h-full bg-gradient-to-br from-amber-900 via-orange-900 to-red-900 text-white p-8 text-center">
+            <button onClick={() => setShowInfo(!showInfo)} className="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/20 flex items-center justify-center text-xl">ℹ️</button>
+            {showInfo && (
+               <div className="absolute top-16 right-4 bg-black/90 p-4 rounded-xl max-w-xs text-left text-sm">
+                  <p className="font-bold mb-2">Copywriting Principles</p>
+                  <p>Focus on benefits, not features. Use specific numbers. Create urgency. Address the reader directly.</p>
+               </div>
+            )}
+            <p className="text-6xl mb-4">✍️</p>
+            <h2 className="text-3xl font-bold mb-4">Headline Writing</h2>
+            <p className="text-lg opacity-80 max-w-md mb-8">Choose the most effective headline for each product.</p>
+            <button onClick={() => setPhase('play')} className="px-8 py-4 bg-amber-500 rounded-2xl font-bold text-xl hover:bg-amber-400 transition-all text-black">START WRITING →</button>
+         </div>
+      );
+
+      if (phase === 'result') return (
+         <div className="flex flex-col items-center justify-center h-full bg-gradient-to-br from-amber-900 via-orange-900 to-red-900 text-white p-8 text-center">
+            <p className="text-6xl mb-4">{score >= 25 ? '🏆' : score >= 15 ? '⭐' : '📚'}</p>
+            <h2 className="text-3xl font-bold mb-4">Copywriting Score</h2>
+            <p className="text-5xl font-bold text-amber-400 mb-4">{score}/{headlines.length * 10}</p>
+            <p className="text-lg opacity-80 mb-8">{score >= 25 ? 'Master copywriter!' : score >= 15 ? 'Good eye for copy!' : 'Study the greats!'}</p>
+            <button onClick={() => { setPhase('intro'); setScore(0); setCurrent(0); }} className="px-6 py-3 bg-amber-500 rounded-xl font-bold text-black">TRY AGAIN</button>
+         </div>
+      );
+
+      const handleSelect = (optScore: number) => {
+         setScore(score + optScore);
+         if (current < headlines.length - 1) setCurrent(current + 1);
+         else setPhase('result');
+      };
+
+      const h = headlines[current];
+      return (
+         <div className="flex flex-col h-full bg-gradient-to-br from-amber-900 via-orange-900 to-red-900 text-white p-8">
+            <div className="bg-black/30 rounded-2xl p-6 mb-6 text-center">
+               <p className="text-sm opacity-70 mb-2">Product {current + 1}/{headlines.length}</p>
+               <p className="text-xl font-bold">📦 {h.product}</p>
+            </div>
+            <p className="text-center mb-4 opacity-80">Pick the best headline:</p>
+            <div className="flex flex-col gap-3 flex-1">
+               {h.options.map((opt) => (
+                  <button key={opt.id} onClick={() => handleSelect(opt.score)}
+                     className="p-4 bg-black/30 rounded-xl hover:bg-amber-500/30 transition-all text-left">
+                     <p className="font-bold text-lg">"{opt.text}"</p>
+                  </button>
+               ))}
+            </div>
+         </div>
+      );
+   };
+
+   // ============================================
+   // ENTREPRENEURSHIP: FINANCIAL LITERACY (10)
+   // ============================================
+
+   // 41. BOOTSTRAPPING - Resource Management Simulator
+   const BootstrappingRenderer = () => {
+      const [phase, setPhase] = useState<'intro' | 'play' | 'result'>('intro');
+      const [showInfo, setShowInfo] = useState(false);
+      const [budget, setBudget] = useState(10000);
+      const [month, setMonth] = useState(1);
+      const [decisions, setDecisions] = useState<string[]>([]);
+
+      const scenarios = [
+         { situation: 'You need office space', options: [
+            { label: '🏢 Rent office ($2000/mo)', cost: 2000, benefit: 'Professional image' },
+            { label: '🏠 Work from home ($0)', cost: 0, benefit: 'Save money' },
+            { label: '☕ Coworking ($500/mo)', cost: 500, benefit: 'Networking' }
+         ]},
+         { situation: 'Marketing your product', options: [
+            { label: '📺 Paid ads ($3000)', cost: 3000, benefit: 'Fast reach' },
+            { label: '📱 Social media ($0)', cost: 0, benefit: 'Organic growth' },
+            { label: '🤝 Partnerships ($500)', cost: 500, benefit: 'Credibility' }
+         ]},
+         { situation: 'Hiring help', options: [
+            { label: '👔 Full-time ($4000/mo)', cost: 4000, benefit: 'Dedicated team' },
+            { label: '🎯 Freelancer ($1000)', cost: 1000, benefit: 'Flexible' },
+            { label: '🤖 Automation ($500)', cost: 500, benefit: 'Scalable' }
+         ]}
+      ];
+
+      if (phase === 'intro') return (
+         <div className="flex flex-col items-center justify-center h-full bg-gradient-to-br from-green-900 via-emerald-900 to-teal-900 text-white p-8 text-center">
+            <button onClick={() => setShowInfo(!showInfo)} className="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/20 flex items-center justify-center text-xl">ℹ️</button>
+            {showInfo && (
+               <div className="absolute top-16 right-4 bg-black/90 p-4 rounded-xl max-w-xs text-left text-sm">
+                  <p className="font-bold mb-2">Bootstrapping</p>
+                  <p>Building a business with minimal external funding. Focus on revenue, frugality, and creative resource management.</p>
+               </div>
+            )}
+            <p className="text-6xl mb-4">🥾</p>
+            <h2 className="text-3xl font-bold mb-4">Bootstrapping Simulator</h2>
+            <p className="text-lg opacity-80 max-w-md mb-8">Start with $10,000 and make smart decisions to grow your business.</p>
+            <button onClick={() => setPhase('play')} className="px-8 py-4 bg-green-500 rounded-2xl font-bold text-xl hover:bg-green-400 transition-all">START BOOTSTRAP →</button>
+         </div>
+      );
+
+      if (phase === 'result') return (
+         <div className="flex flex-col items-center justify-center h-full bg-gradient-to-br from-green-900 via-emerald-900 to-teal-900 text-white p-8 text-center">
+            <p className="text-6xl mb-4">{budget > 5000 ? '🏆' : budget > 0 ? '⭐' : '💸'}</p>
+            <h2 className="text-3xl font-bold mb-4">Final Balance</h2>
+            <p className="text-5xl font-bold text-green-400 mb-4">${budget.toLocaleString()}</p>
+            <div className="text-sm opacity-80 mb-6">
+               {decisions.map((d, i) => <p key={i}>Month {i+1}: {d}</p>)}
+            </div>
+            <button onClick={() => { setPhase('intro'); setBudget(10000); setMonth(1); setDecisions([]); }} className="px-6 py-3 bg-green-500 rounded-xl font-bold">TRY AGAIN</button>
+         </div>
+      );
+
+      const handleChoice = (cost: number, label: string) => {
+         setBudget(budget - cost);
+         setDecisions([...decisions, label]);
+         if (month < scenarios.length) setMonth(month + 1);
+         else setPhase('result');
+      };
+
+      const s = scenarios[month - 1];
+      return (
+         <div className="flex flex-col h-full bg-gradient-to-br from-green-900 via-emerald-900 to-teal-900 text-white p-8">
+            <div className="flex justify-between mb-6">
+               <span className="bg-black/30 px-4 py-2 rounded-xl">Month {month}/3</span>
+               <span className="bg-green-500/30 px-4 py-2 rounded-xl font-bold">${budget.toLocaleString()}</span>
+            </div>
+            <div className="bg-black/30 rounded-2xl p-6 mb-6 text-center">
+               <p className="text-xl font-bold">{s.situation}</p>
+            </div>
+            <div className="flex flex-col gap-3 flex-1">
+               {s.options.map((opt) => (
+                  <button key={opt.label} onClick={() => handleChoice(opt.cost, opt.label)}
+                     className="p-4 bg-black/30 rounded-xl hover:bg-green-500/30 transition-all text-left">
+                     <p className="font-bold">{opt.label}</p>
+                     <p className="text-sm opacity-70">Cost: ${opt.cost} • {opt.benefit}</p>
+                  </button>
+               ))}
+            </div>
+         </div>
+      );
+   };
+
+   // 42. CASH FLOW - Cash Flow Tracker
+   const CashFlowRenderer = () => {
+      const [phase, setPhase] = useState<'intro' | 'play' | 'result'>('intro');
+      const [showInfo, setShowInfo] = useState(false);
+      const [inflows, setInflows] = useState<{name: string; amount: number}[]>([]);
+      const [outflows, setOutflows] = useState<{name: string; amount: number}[]>([]);
+      const [name, setName] = useState('');
+      const [amount, setAmount] = useState('');
+      const [isInflow, setIsInflow] = useState(true);
+
+      const totalIn = inflows.reduce((sum, i) => sum + i.amount, 0);
+      const totalOut = outflows.reduce((sum, o) => sum + o.amount, 0);
+      const netCashFlow = totalIn - totalOut;
+
+      if (phase === 'intro') return (
+         <div className="flex flex-col items-center justify-center h-full bg-gradient-to-br from-blue-900 via-indigo-900 to-violet-900 text-white p-8 text-center">
+            <button onClick={() => setShowInfo(!showInfo)} className="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/20 flex items-center justify-center text-xl">ℹ️</button>
+            {showInfo && (
+               <div className="absolute top-16 right-4 bg-black/90 p-4 rounded-xl max-w-xs text-left text-sm">
+                  <p className="font-bold mb-2">Cash Flow</p>
+                  <p>Cash In - Cash Out = Net Cash Flow. Positive cash flow keeps your business alive. Track it religiously!</p>
+               </div>
+            )}
+            <p className="text-6xl mb-4">💵</p>
+            <h2 className="text-3xl font-bold mb-4">Cash Flow Tracker</h2>
+            <p className="text-lg opacity-80 max-w-md mb-8">Track your money coming in and going out to understand your cash position.</p>
+            <button onClick={() => setPhase('play')} className="px-8 py-4 bg-blue-500 rounded-2xl font-bold text-xl hover:bg-blue-400 transition-all">START TRACKING →</button>
+         </div>
+      );
+
+      if (phase === 'result') return (
+         <div className="flex flex-col h-full bg-gradient-to-br from-blue-900 via-indigo-900 to-violet-900 text-white p-8">
+            <h2 className="text-2xl font-bold text-center mb-6">💵 Cash Flow Summary</h2>
+            <div className="grid grid-cols-2 gap-4 mb-6">
+               <div className="bg-green-500/20 rounded-xl p-4 text-center">
+                  <p className="text-sm opacity-70">Total Inflows</p>
+                  <p className="text-2xl font-bold text-green-400">+${totalIn.toLocaleString()}</p>
+               </div>
+               <div className="bg-red-500/20 rounded-xl p-4 text-center">
+                  <p className="text-sm opacity-70">Total Outflows</p>
+                  <p className="text-2xl font-bold text-red-400">-${totalOut.toLocaleString()}</p>
+               </div>
+            </div>
+            <div className={`rounded-xl p-6 text-center mb-6 ${netCashFlow >= 0 ? 'bg-green-500/30' : 'bg-red-500/30'}`}>
+               <p className="text-sm opacity-70">Net Cash Flow</p>
+               <p className={`text-4xl font-bold ${netCashFlow >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                  {netCashFlow >= 0 ? '+' : ''}{netCashFlow.toLocaleString()}
+               </p>
+            </div>
+            <button onClick={() => { setPhase('intro'); setInflows([]); setOutflows([]); }} className="px-6 py-3 bg-blue-500 rounded-xl font-bold">START OVER</button>
+         </div>
+      );
+
+      const addEntry = () => {
+         if (name && amount) {
+            const entry = { name, amount: parseFloat(amount) };
+            if (isInflow) setInflows([...inflows, entry]);
+            else setOutflows([...outflows, entry]);
+            setName('');
+            setAmount('');
+         }
+      };
+
+      return (
+         <div className="flex flex-col h-full bg-gradient-to-br from-blue-900 via-indigo-900 to-violet-900 text-white p-8">
+            <div className="flex gap-2 mb-4">
+               <button onClick={() => setIsInflow(true)} className={`flex-1 py-2 rounded-xl font-bold ${isInflow ? 'bg-green-500' : 'bg-black/30'}`}>+ Inflow</button>
+               <button onClick={() => setIsInflow(false)} className={`flex-1 py-2 rounded-xl font-bold ${!isInflow ? 'bg-red-500' : 'bg-black/30'}`}>- Outflow</button>
+            </div>
+            <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Description..."
+               className="p-3 rounded-xl bg-black/30 border border-blue-500/30 text-white mb-2" />
+            <input value={amount} onChange={(e) => setAmount(e.target.value)} placeholder="Amount..." type="number"
+               className="p-3 rounded-xl bg-black/30 border border-blue-500/30 text-white mb-4" />
+            <button onClick={addEntry} className="px-6 py-3 bg-blue-500 rounded-xl font-bold mb-4">ADD ENTRY</button>
+            <div className="flex-1 overflow-auto">
+               {[...inflows.map(i => ({...i, type: 'in'})), ...outflows.map(o => ({...o, type: 'out'}))].map((e, i) => (
+                  <div key={i} className={`p-3 rounded-xl mb-2 ${e.type === 'in' ? 'bg-green-500/20' : 'bg-red-500/20'}`}>
+                     <span className="font-bold">{e.name}</span>
+                     <span className={`float-right ${e.type === 'in' ? 'text-green-400' : 'text-red-400'}`}>
+                        {e.type === 'in' ? '+' : '-'}${e.amount}
+                     </span>
+                  </div>
+               ))}
+            </div>
+            <button onClick={() => (inflows.length > 0 || outflows.length > 0) && setPhase('result')} className="px-6 py-3 bg-blue-700 rounded-xl font-bold mt-4">VIEW SUMMARY</button>
+         </div>
+      );
+   };
+
+   // 43. PROFIT & LOSS - P&L Statement Builder
+   const ProfitLossRenderer = () => {
+      const [phase, setPhase] = useState<'intro' | 'play' | 'result'>('intro');
+      const [showInfo, setShowInfo] = useState(false);
+      const [revenue, setRevenue] = useState(0);
+      const [cogs, setCogs] = useState(0);
+      const [expenses, setExpenses] = useState(0);
+      const [step, setStep] = useState(0);
+      const [inputValue, setInputValue] = useState('');
+
+      const steps = [
+         { key: 'revenue', icon: '💰', label: 'Revenue', prompt: 'Enter your total sales/revenue' },
+         { key: 'cogs', icon: '📦', label: 'Cost of Goods Sold', prompt: 'Enter direct costs (materials, labor, etc.)' },
+         { key: 'expenses', icon: '🏢', label: 'Operating Expenses', prompt: 'Enter overhead (rent, utilities, salaries, etc.)' }
+      ];
+
+      const grossProfit = revenue - cogs;
+      const netProfit = grossProfit - expenses;
+      const grossMargin = revenue > 0 ? ((grossProfit / revenue) * 100).toFixed(1) : '0';
+      const netMargin = revenue > 0 ? ((netProfit / revenue) * 100).toFixed(1) : '0';
+
+      if (phase === 'intro') return (
+         <div className="flex flex-col items-center justify-center h-full bg-gradient-to-br from-amber-900 via-yellow-900 to-orange-900 text-white p-8 text-center">
+            <button onClick={() => setShowInfo(!showInfo)} className="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/20 flex items-center justify-center text-xl">ℹ️</button>
+            {showInfo && (
+               <div className="absolute top-16 right-4 bg-black/90 p-4 rounded-xl max-w-xs text-left text-sm">
+                  <p className="font-bold mb-2">Profit & Loss Statement</p>
+                  <p>Revenue - COGS = Gross Profit. Gross Profit - Expenses = Net Profit. Shows if you're making or losing money.</p>
+               </div>
+            )}
+            <p className="text-6xl mb-4">📊</p>
+            <h2 className="text-3xl font-bold mb-4">Profit & Loss Statement</h2>
+            <p className="text-lg opacity-80 max-w-md mb-8">Build your P&L to understand your profitability.</p>
+            <button onClick={() => setPhase('play')} className="px-8 py-4 bg-amber-500 rounded-2xl font-bold text-xl hover:bg-amber-400 transition-all text-black">BUILD P&L →</button>
+         </div>
+      );
+
+      if (phase === 'result') return (
+         <div className="flex flex-col h-full bg-gradient-to-br from-amber-900 via-yellow-900 to-orange-900 text-white p-8">
+            <h2 className="text-2xl font-bold text-center mb-6">📊 P&L Statement</h2>
+            <div className="bg-black/30 rounded-xl p-4 mb-4">
+               <div className="flex justify-between mb-2"><span>Revenue</span><span className="font-bold">${revenue.toLocaleString()}</span></div>
+               <div className="flex justify-between mb-2 text-red-300"><span>- COGS</span><span>-${cogs.toLocaleString()}</span></div>
+               <div className="border-t border-white/20 pt-2 flex justify-between"><span className="font-bold">Gross Profit</span><span className="font-bold text-green-400">${grossProfit.toLocaleString()}</span></div>
+               <p className="text-xs text-right opacity-70">Margin: {grossMargin}%</p>
+            </div>
+            <div className="bg-black/30 rounded-xl p-4 mb-4">
+               <div className="flex justify-between mb-2 text-red-300"><span>- Operating Expenses</span><span>-${expenses.toLocaleString()}</span></div>
+               <div className="border-t border-white/20 pt-2 flex justify-between">
+                  <span className="font-bold">Net Profit</span>
+                  <span className={`font-bold ${netProfit >= 0 ? 'text-green-400' : 'text-red-400'}`}>${netProfit.toLocaleString()}</span>
+               </div>
+               <p className="text-xs text-right opacity-70">Net Margin: {netMargin}%</p>
+            </div>
+            <button onClick={() => { setPhase('intro'); setRevenue(0); setCogs(0); setExpenses(0); setStep(0); }} className="px-6 py-3 bg-amber-500 rounded-xl font-bold text-black mt-auto">CREATE NEW P&L</button>
+         </div>
+      );
+
+      const submitStep = () => {
+         const value = parseFloat(inputValue) || 0;
+         if (step === 0) setRevenue(value);
+         else if (step === 1) setCogs(value);
+         else setExpenses(value);
+         setInputValue('');
+         if (step < 2) setStep(step + 1);
+         else setPhase('result');
+      };
+
+      return (
+         <div className="flex flex-col h-full bg-gradient-to-br from-amber-900 via-yellow-900 to-orange-900 text-white p-8">
+            <div className="flex gap-2 mb-6">
+               {steps.map((_, i) => <div key={i} className={`flex-1 h-2 rounded-full ${i <= step ? 'bg-amber-400' : 'bg-black/30'}`}></div>)}
+            </div>
+            <div className="bg-black/30 rounded-2xl p-6 mb-4 text-center">
+               <p className="text-4xl mb-2">{steps[step].icon}</p>
+               <p className="text-xl font-bold">{steps[step].label}</p>
+               <p className="text-sm opacity-75 mt-2">{steps[step].prompt}</p>
+            </div>
+            <input value={inputValue} onChange={(e) => setInputValue(e.target.value)} type="number"
+               placeholder="$0" className="p-4 rounded-xl bg-black/30 border border-amber-500/30 text-white mb-4 text-center text-2xl" />
+            <button onClick={submitStep} className="px-6 py-3 bg-amber-500 rounded-xl font-bold text-black">
+               {step < 2 ? 'NEXT →' : 'VIEW P&L'}
+            </button>
+         </div>
+      );
+   };
+
+   // 44. BREAK EVEN - Break-Even Calculator
+   const BreakEvenRenderer = () => {
+      const [phase, setPhase] = useState<'intro' | 'play' | 'result'>('intro');
+      const [showInfo, setShowInfo] = useState(false);
+      const [fixedCosts, setFixedCosts] = useState(0);
+      const [pricePerUnit, setPricePerUnit] = useState(0);
+      const [costPerUnit, setCostPerUnit] = useState(0);
+      const [step, setStep] = useState(0);
+      const [inputValue, setInputValue] = useState('');
+
+      const contributionMargin = pricePerUnit - costPerUnit;
+      const breakEvenUnits = contributionMargin > 0 ? Math.ceil(fixedCosts / contributionMargin) : 0;
+      const breakEvenRevenue = breakEvenUnits * pricePerUnit;
+
+      const steps = [
+         { key: 'fixed', icon: '🏢', label: 'Fixed Costs', prompt: 'Total monthly fixed costs (rent, salaries, etc.)' },
+         { key: 'price', icon: '🏷️', label: 'Price Per Unit', prompt: 'How much do you sell each unit for?' },
+         { key: 'cost', icon: '📦', label: 'Cost Per Unit', prompt: 'How much does each unit cost to make?' }
+      ];
+
+      if (phase === 'intro') return (
+         <div className="flex flex-col items-center justify-center h-full bg-gradient-to-br from-cyan-900 via-teal-900 to-emerald-900 text-white p-8 text-center">
+            <button onClick={() => setShowInfo(!showInfo)} className="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/20 flex items-center justify-center text-xl">ℹ️</button>
+            {showInfo && (
+               <div className="absolute top-16 right-4 bg-black/90 p-4 rounded-xl max-w-xs text-left text-sm">
+                  <p className="font-bold mb-2">Break-Even Analysis</p>
+                  <p>Break-Even Point = Fixed Costs / (Price - Variable Cost). The point where revenue equals total costs.</p>
+               </div>
+            )}
+            <p className="text-6xl mb-4">⚖️</p>
+            <h2 className="text-3xl font-bold mb-4">Break-Even Calculator</h2>
+            <p className="text-lg opacity-80 max-w-md mb-8">Find out how many units you need to sell to cover all your costs.</p>
+            <button onClick={() => setPhase('play')} className="px-8 py-4 bg-cyan-500 rounded-2xl font-bold text-xl hover:bg-cyan-400 transition-all text-black">CALCULATE →</button>
+         </div>
+      );
+
+      if (phase === 'result') return (
+         <div className="flex flex-col h-full bg-gradient-to-br from-cyan-900 via-teal-900 to-emerald-900 text-white p-8">
+            <h2 className="text-2xl font-bold text-center mb-6">⚖️ Break-Even Analysis</h2>
+            <div className="bg-black/30 rounded-xl p-6 mb-4 text-center">
+               <p className="text-sm opacity-70">Units to Break Even</p>
+               <p className="text-5xl font-bold text-cyan-400">{breakEvenUnits.toLocaleString()}</p>
+            </div>
+            <div className="bg-black/30 rounded-xl p-6 mb-4 text-center">
+               <p className="text-sm opacity-70">Revenue at Break-Even</p>
+               <p className="text-3xl font-bold">${breakEvenRevenue.toLocaleString()}</p>
+            </div>
+            <div className="bg-black/30 rounded-xl p-4 mb-4">
+               <p className="text-sm opacity-70 mb-2">Contribution Margin per Unit</p>
+               <p className="font-bold">${contributionMargin} (${pricePerUnit} - ${costPerUnit})</p>
+            </div>
+            <button onClick={() => { setPhase('intro'); setFixedCosts(0); setPricePerUnit(0); setCostPerUnit(0); setStep(0); }} className="px-6 py-3 bg-cyan-500 rounded-xl font-bold text-black mt-auto">RECALCULATE</button>
+         </div>
+      );
+
+      const submitStep = () => {
+         const value = parseFloat(inputValue) || 0;
+         if (step === 0) setFixedCosts(value);
+         else if (step === 1) setPricePerUnit(value);
+         else setCostPerUnit(value);
+         setInputValue('');
+         if (step < 2) setStep(step + 1);
+         else setPhase('result');
+      };
+
+      return (
+         <div className="flex flex-col h-full bg-gradient-to-br from-cyan-900 via-teal-900 to-emerald-900 text-white p-8">
+            <div className="flex gap-2 mb-6">
+               {steps.map((_, i) => <div key={i} className={`flex-1 h-2 rounded-full ${i <= step ? 'bg-cyan-400' : 'bg-black/30'}`}></div>)}
+            </div>
+            <div className="bg-black/30 rounded-2xl p-6 mb-4 text-center">
+               <p className="text-4xl mb-2">{steps[step].icon}</p>
+               <p className="text-xl font-bold">{steps[step].label}</p>
+               <p className="text-sm opacity-75 mt-2">{steps[step].prompt}</p>
+            </div>
+            <input value={inputValue} onChange={(e) => setInputValue(e.target.value)} type="number"
+               placeholder="$0" className="p-4 rounded-xl bg-black/30 border border-cyan-500/30 text-white mb-4 text-center text-2xl" />
+            <button onClick={submitStep} className="px-6 py-3 bg-cyan-500 rounded-xl font-bold text-black">
+               {step < 2 ? 'NEXT →' : 'CALCULATE'}
+            </button>
+         </div>
+      );
+   };
+
+   // 45. PRICING STRATEGIES - Pricing Game
+   const PricingStrategiesRenderer = () => {
+      const [phase, setPhase] = useState<'intro' | 'play' | 'result'>('intro');
+      const [showInfo, setShowInfo] = useState(false);
+      const [score, setScore] = useState(0);
+      const [current, setCurrent] = useState(0);
+
+      const scenarios = [
+         { scenario: 'New tech product entering crowded market', best: 'penetration', options: [
+            { id: 'penetration', label: '📉 Penetration Pricing', desc: 'Low price to gain market share', score: 10 },
+            { id: 'skimming', label: '📈 Price Skimming', desc: 'High price for early adopters', score: 4 },
+            { id: 'cost_plus', label: '➕ Cost-Plus Pricing', desc: 'Cost + fixed markup', score: 5 }
+         ]},
+         { scenario: 'Revolutionary medical device with no competition', best: 'skimming', options: [
+            { id: 'penetration', label: '📉 Penetration Pricing', desc: 'Low price to gain market share', score: 3 },
+            { id: 'skimming', label: '📈 Price Skimming', desc: 'High price for early adopters', score: 10 },
+            { id: 'competitive', label: '🎯 Competitive Pricing', desc: 'Match competitor prices', score: 2 }
+         ]},
+         { scenario: 'Commodity product in price-sensitive market', best: 'competitive', options: [
+            { id: 'value', label: '💎 Value-Based Pricing', desc: 'Price based on perceived value', score: 5 },
+            { id: 'competitive', label: '🎯 Competitive Pricing', desc: 'Match or beat competitors', score: 10 },
+            { id: 'premium', label: '👑 Premium Pricing', desc: 'High price = high quality', score: 2 }
+         ]}
+      ];
+
+      if (phase === 'intro') return (
+         <div className="flex flex-col items-center justify-center h-full bg-gradient-to-br from-violet-900 via-purple-900 to-fuchsia-900 text-white p-8 text-center">
+            <button onClick={() => setShowInfo(!showInfo)} className="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/20 flex items-center justify-center text-xl">ℹ️</button>
+            {showInfo && (
+               <div className="absolute top-16 right-4 bg-black/90 p-4 rounded-xl max-w-xs text-left text-sm">
+                  <p className="font-bold mb-2">Pricing Strategies</p>
+                  <p>Penetration (low entry), Skimming (high entry), Value-based, Competitive, Cost-plus, Premium. Match strategy to situation.</p>
+               </div>
+            )}
+            <p className="text-6xl mb-4">💲</p>
+            <h2 className="text-3xl font-bold mb-4">Pricing Strategies</h2>
+            <p className="text-lg opacity-80 max-w-md mb-8">Match the right pricing strategy to each business scenario.</p>
+            <button onClick={() => setPhase('play')} className="px-8 py-4 bg-violet-500 rounded-2xl font-bold text-xl hover:bg-violet-400 transition-all">START →</button>
+         </div>
+      );
+
+      if (phase === 'result') return (
+         <div className="flex flex-col items-center justify-center h-full bg-gradient-to-br from-violet-900 via-purple-900 to-fuchsia-900 text-white p-8 text-center">
+            <p className="text-6xl mb-4">{score >= 25 ? '🏆' : score >= 15 ? '⭐' : '📚'}</p>
+            <h2 className="text-3xl font-bold mb-4">Pricing Score</h2>
+            <p className="text-5xl font-bold text-violet-400 mb-4">{score}/{scenarios.length * 10}</p>
+            <button onClick={() => { setPhase('intro'); setScore(0); setCurrent(0); }} className="px-6 py-3 bg-violet-500 rounded-xl font-bold">TRY AGAIN</button>
+         </div>
+      );
+
+      const handleSelect = (optScore: number) => {
+         setScore(score + optScore);
+         if (current < scenarios.length - 1) setCurrent(current + 1);
+         else setPhase('result');
+      };
+
+      const s = scenarios[current];
+      return (
+         <div className="flex flex-col h-full bg-gradient-to-br from-violet-900 via-purple-900 to-fuchsia-900 text-white p-8">
+            <div className="bg-black/30 rounded-2xl p-6 mb-6 text-center">
+               <p className="text-sm opacity-70 mb-2">Scenario {current + 1}/{scenarios.length}</p>
+               <p className="text-lg font-bold">{s.scenario}</p>
+            </div>
+            <div className="flex flex-col gap-3 flex-1">
+               {s.options.map((opt) => (
+                  <button key={opt.id} onClick={() => handleSelect(opt.score)}
+                     className="p-4 bg-black/30 rounded-xl hover:bg-violet-500/30 transition-all text-left">
+                     <p className="font-bold">{opt.label}</p>
+                     <p className="text-sm opacity-70">{opt.desc}</p>
+                  </button>
+               ))}
+            </div>
+         </div>
+      );
+   };
+
+   // 46. EQUITY OWNERSHIP - Equity Split Calculator
+   const EquityOwnershipRenderer = () => {
+      const [phase, setPhase] = useState<'intro' | 'play' | 'result'>('intro');
+      const [showInfo, setShowInfo] = useState(false);
+      const [founders, setFounders] = useState<{name: string; equity: number}[]>([]);
+      const [name, setName] = useState('');
+      const [equity, setEquity] = useState('');
+
+      const totalEquity = founders.reduce((sum, f) => sum + f.equity, 0);
+      const remaining = 100 - totalEquity;
+
+      if (phase === 'intro') return (
+         <div className="flex flex-col items-center justify-center h-full bg-gradient-to-br from-indigo-900 via-blue-900 to-cyan-900 text-white p-8 text-center">
+            <button onClick={() => setShowInfo(!showInfo)} className="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/20 flex items-center justify-center text-xl">ℹ️</button>
+            {showInfo && (
+               <div className="absolute top-16 right-4 bg-black/90 p-4 rounded-xl max-w-xs text-left text-sm">
+                  <p className="font-bold mb-2">Equity Ownership</p>
+                  <p>Divide company ownership fairly. Consider: time, money, skills, risk, and future contribution. Vesting protects everyone.</p>
+               </div>
+            )}
+            <p className="text-6xl mb-4">🥧</p>
+            <h2 className="text-3xl font-bold mb-4">Equity Split Calculator</h2>
+            <p className="text-lg opacity-80 max-w-md mb-8">Divide ownership among founders and early team members.</p>
+            <button onClick={() => setPhase('play')} className="px-8 py-4 bg-indigo-500 rounded-2xl font-bold text-xl hover:bg-indigo-400 transition-all">START SPLITTING →</button>
+         </div>
+      );
+
+      if (phase === 'result') return (
+         <div className="flex flex-col h-full bg-gradient-to-br from-indigo-900 via-blue-900 to-cyan-900 text-white p-8">
+            <h2 className="text-2xl font-bold text-center mb-6">🥧 Equity Distribution</h2>
+            <div className="flex justify-center mb-6">
+               <div className="relative w-48 h-48">
+                  <svg viewBox="0 0 100 100" className="w-full h-full">
+                     {founders.map((f, i) => {
+                        const startAngle = founders.slice(0, i).reduce((sum, prev) => sum + prev.equity, 0) * 3.6;
+                        const endAngle = startAngle + f.equity * 3.6;
+                        const colors = ['#6366f1', '#8b5cf6', '#a855f7', '#d946ef', '#ec4899'];
+                        const x1 = 50 + 45 * Math.cos((startAngle - 90) * Math.PI / 180);
+                        const y1 = 50 + 45 * Math.sin((startAngle - 90) * Math.PI / 180);
+                        const x2 = 50 + 45 * Math.cos((endAngle - 90) * Math.PI / 180);
+                        const y2 = 50 + 45 * Math.sin((endAngle - 90) * Math.PI / 180);
+                        const largeArc = f.equity > 50 ? 1 : 0;
+                        return <path key={i} d={`M 50 50 L ${x1} ${y1} A 45 45 0 ${largeArc} 1 ${x2} ${y2} Z`} fill={colors[i % colors.length]} />;
+                     })}
+                  </svg>
+               </div>
+            </div>
+            <div className="flex-1 overflow-auto">
+               {founders.map((f, i) => (
+                  <div key={i} className="flex justify-between p-3 bg-black/30 rounded-xl mb-2">
+                     <span className="font-bold">{f.name}</span>
+                     <span className="text-indigo-400">{f.equity}%</span>
+                  </div>
+               ))}
+            </div>
+            <button onClick={() => { setPhase('intro'); setFounders([]); }} className="px-6 py-3 bg-indigo-500 rounded-xl font-bold mt-4">START OVER</button>
+         </div>
+      );
+
+      const addFounder = () => {
+         if (name && equity && parseFloat(equity) <= remaining) {
+            setFounders([...founders, { name, equity: parseFloat(equity) }]);
+            setName('');
+            setEquity('');
+         }
+      };
+
+      return (
+         <div className="flex flex-col h-full bg-gradient-to-br from-indigo-900 via-blue-900 to-cyan-900 text-white p-8">
+            <div className="bg-black/30 rounded-xl p-4 mb-4 text-center">
+               <p className="text-sm opacity-70">Remaining Equity</p>
+               <p className="text-3xl font-bold text-indigo-400">{remaining}%</p>
+            </div>
+            <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Name..."
+               className="p-3 rounded-xl bg-black/30 border border-indigo-500/30 text-white mb-2" />
+            <input value={equity} onChange={(e) => setEquity(e.target.value)} placeholder="Equity %..." type="number"
+               className="p-3 rounded-xl bg-black/30 border border-indigo-500/30 text-white mb-4" />
+            <button onClick={addFounder} className="px-6 py-3 bg-indigo-500 rounded-xl font-bold mb-4">ADD STAKEHOLDER</button>
+            <div className="flex-1 overflow-auto">
+               {founders.map((f, i) => (
+                  <div key={i} className="flex justify-between p-3 bg-black/30 rounded-xl mb-2">
+                     <span>{f.name}</span><span className="text-indigo-400">{f.equity}%</span>
+                  </div>
+               ))}
+            </div>
+            <button onClick={() => founders.length > 0 && setPhase('result')} className="px-6 py-3 bg-indigo-700 rounded-xl font-bold mt-4">VIEW CHART</button>
+         </div>
+      );
+   };
+
+   // 47. ANGEL INVESTORS - Investor Pitch Match
+   const AngelInvestorsRenderer = () => {
+      const [phase, setPhase] = useState<'intro' | 'play' | 'result'>('intro');
+      const [showInfo, setShowInfo] = useState(false);
+      const [score, setScore] = useState(0);
+      const [current, setCurrent] = useState(0);
+
+      const questions = [
+         { q: 'What do angel investors typically invest?', options: [
+            { text: '$5K - $10K', score: 3 },
+            { text: '$25K - $500K', score: 10 },
+            { text: '$1M - $10M', score: 2 }
+         ]},
+         { q: 'What do angels primarily look for?', options: [
+            { text: 'Proven profitability', score: 3 },
+            { text: 'Team + market opportunity', score: 10 },
+            { text: 'Lowest valuation', score: 2 }
+         ]},
+         { q: 'Typical angel equity stake?', options: [
+            { text: '1-5%', score: 3 },
+            { text: '10-25%', score: 10 },
+            { text: '51%+ majority', score: 1 }
+         ]}
+      ];
+
+      if (phase === 'intro') return (
+         <div className="flex flex-col items-center justify-center h-full bg-gradient-to-br from-yellow-900 via-amber-900 to-orange-900 text-white p-8 text-center">
+            <button onClick={() => setShowInfo(!showInfo)} className="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/20 flex items-center justify-center text-xl">ℹ️</button>
+            {showInfo && (
+               <div className="absolute top-16 right-4 bg-black/90 p-4 rounded-xl max-w-xs text-left text-sm">
+                  <p className="font-bold mb-2">Angel Investors</p>
+                  <p>High-net-worth individuals who invest personal funds in early-stage startups, often providing mentorship alongside capital.</p>
+               </div>
+            )}
+            <p className="text-6xl mb-4">👼</p>
+            <h2 className="text-3xl font-bold mb-4">Angel Investors</h2>
+            <p className="text-lg opacity-80 max-w-md mb-8">Test your knowledge of angel investing fundamentals.</p>
+            <button onClick={() => setPhase('play')} className="px-8 py-4 bg-yellow-500 rounded-2xl font-bold text-xl hover:bg-yellow-400 transition-all text-black">START QUIZ →</button>
+         </div>
+      );
+
+      if (phase === 'result') return (
+         <div className="flex flex-col items-center justify-center h-full bg-gradient-to-br from-yellow-900 via-amber-900 to-orange-900 text-white p-8 text-center">
+            <p className="text-6xl mb-4">{score >= 25 ? '🏆' : score >= 15 ? '⭐' : '📚'}</p>
+            <h2 className="text-3xl font-bold mb-4">Angel Knowledge</h2>
+            <p className="text-5xl font-bold text-yellow-400 mb-4">{score}/{questions.length * 10}</p>
+            <button onClick={() => { setPhase('intro'); setScore(0); setCurrent(0); }} className="px-6 py-3 bg-yellow-500 rounded-xl font-bold text-black">TRY AGAIN</button>
+         </div>
+      );
+
+      const handleSelect = (optScore: number) => {
+         setScore(score + optScore);
+         if (current < questions.length - 1) setCurrent(current + 1);
+         else setPhase('result');
+      };
+
+      const q = questions[current];
+      return (
+         <div className="flex flex-col h-full bg-gradient-to-br from-yellow-900 via-amber-900 to-orange-900 text-white p-8">
+            <div className="bg-black/30 rounded-2xl p-6 mb-6 text-center">
+               <p className="text-sm opacity-70 mb-2">Question {current + 1}/{questions.length}</p>
+               <p className="text-xl font-bold">{q.q}</p>
+            </div>
+            <div className="flex flex-col gap-3 flex-1">
+               {q.options.map((opt, i) => (
+                  <button key={i} onClick={() => handleSelect(opt.score)}
+                     className="p-4 bg-black/30 rounded-xl hover:bg-yellow-500/30 transition-all text-left font-medium">
+                     {opt.text}
+                  </button>
+               ))}
+            </div>
+         </div>
+      );
+   };
+
+   // 48. VENTURE CAPITAL - VC Term Sheet Game
+   const VentureCapitalRenderer = () => {
+      const [phase, setPhase] = useState<'intro' | 'play' | 'result'>('intro');
+      const [showInfo, setShowInfo] = useState(false);
+      const [score, setScore] = useState(0);
+      const [current, setCurrent] = useState(0);
+
+      const terms = [
+         { term: 'Pre-Money Valuation', correct: 'Company value BEFORE investment', options: [
+            'Company value BEFORE investment',
+            'Company value AFTER investment',
+            'Total investment amount'
+         ]},
+         { term: 'Liquidation Preference', correct: 'VCs get paid first in exit', options: [
+            'How profits are shared annually',
+            'VCs get paid first in exit',
+            'Order of founder payouts'
+         ]},
+         { term: 'Anti-Dilution', correct: 'Protection against down rounds', options: [
+            'Prevents hiring more employees',
+            'Protection against down rounds',
+            'Limits company growth'
+         ]}
+      ];
+
+      if (phase === 'intro') return (
+         <div className="flex flex-col items-center justify-center h-full bg-gradient-to-br from-slate-900 via-gray-900 to-zinc-900 text-white p-8 text-center">
+            <button onClick={() => setShowInfo(!showInfo)} className="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/20 flex items-center justify-center text-xl">ℹ️</button>
+            {showInfo && (
+               <div className="absolute top-16 right-4 bg-black/90 p-4 rounded-xl max-w-xs text-left text-sm">
+                  <p className="font-bold mb-2">Venture Capital</p>
+                  <p>Professional investors managing pooled funds. Invest $1M-$100M+ for high-growth potential. Expect 10x+ returns.</p>
+               </div>
+            )}
+            <p className="text-6xl mb-4">🏛️</p>
+            <h2 className="text-3xl font-bold mb-4">VC Term Sheet Game</h2>
+            <p className="text-lg opacity-80 max-w-md mb-8">Learn key venture capital terms every founder should know.</p>
+            <button onClick={() => setPhase('play')} className="px-8 py-4 bg-slate-600 rounded-2xl font-bold text-xl hover:bg-slate-500 transition-all">START LEARNING →</button>
+         </div>
+      );
+
+      if (phase === 'result') return (
+         <div className="flex flex-col items-center justify-center h-full bg-gradient-to-br from-slate-900 via-gray-900 to-zinc-900 text-white p-8 text-center">
+            <p className="text-6xl mb-4">{score >= 25 ? '🏆' : score >= 15 ? '⭐' : '📚'}</p>
+            <h2 className="text-3xl font-bold mb-4">VC Knowledge</h2>
+            <p className="text-5xl font-bold text-slate-400 mb-4">{score}/{terms.length * 10}</p>
+            <button onClick={() => { setPhase('intro'); setScore(0); setCurrent(0); }} className="px-6 py-3 bg-slate-600 rounded-xl font-bold">TRY AGAIN</button>
+         </div>
+      );
+
+      const handleSelect = (answer: string) => {
+         const isCorrect = answer === terms[current].correct;
+         setScore(score + (isCorrect ? 10 : 3));
+         if (current < terms.length - 1) setCurrent(current + 1);
+         else setPhase('result');
+      };
+
+      const t = terms[current];
+      return (
+         <div className="flex flex-col h-full bg-gradient-to-br from-slate-900 via-gray-900 to-zinc-900 text-white p-8">
+            <div className="bg-black/30 rounded-2xl p-6 mb-6 text-center">
+               <p className="text-sm opacity-70 mb-2">Term {current + 1}/{terms.length}</p>
+               <p className="text-2xl font-bold">"{t.term}"</p>
+               <p className="text-sm opacity-70 mt-2">What does this mean?</p>
+            </div>
+            <div className="flex flex-col gap-3 flex-1">
+               {t.options.map((opt, i) => (
+                  <button key={i} onClick={() => handleSelect(opt)}
+                     className="p-4 bg-black/30 rounded-xl hover:bg-slate-500/30 transition-all text-left font-medium">
+                     {opt}
+                  </button>
+               ))}
+            </div>
+         </div>
+      );
+   };
+
+   // 49. CROWDFUNDING - Campaign Builder
+   const CrowdfundingRenderer = () => {
+      const [phase, setPhase] = useState<'intro' | 'play' | 'result'>('intro');
+      const [showInfo, setShowInfo] = useState(false);
+      const [campaign, setCampaign] = useState({ title: '', goal: '', reward1: '', reward2: '' });
+      const [step, setStep] = useState(0);
+      const [inputValue, setInputValue] = useState('');
+
+      const steps = [
+         { key: 'title', icon: '🎯', label: 'Campaign Title', prompt: 'Create a compelling campaign name' },
+         { key: 'goal', icon: '💰', label: 'Funding Goal', prompt: 'How much do you need to raise?' },
+         { key: 'reward1', icon: '🎁', label: 'Early Bird Reward', prompt: 'What do early backers get?' },
+         { key: 'reward2', icon: '⭐', label: 'Premium Reward', prompt: 'What\'s the top-tier reward?' }
+      ];
+
+      if (phase === 'intro') return (
+         <div className="flex flex-col items-center justify-center h-full bg-gradient-to-br from-pink-900 via-rose-900 to-red-900 text-white p-8 text-center">
+            <button onClick={() => setShowInfo(!showInfo)} className="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/20 flex items-center justify-center text-xl">ℹ️</button>
+            {showInfo && (
+               <div className="absolute top-16 right-4 bg-black/90 p-4 rounded-xl max-w-xs text-left text-sm">
+                  <p className="font-bold mb-2">Crowdfunding</p>
+                  <p>Raise money from many small backers. Platforms: Kickstarter, Indiegogo. Keys: compelling story, clear rewards, marketing.</p>
+               </div>
+            )}
+            <p className="text-6xl mb-4">🚀</p>
+            <h2 className="text-3xl font-bold mb-4">Crowdfunding Campaign</h2>
+            <p className="text-lg opacity-80 max-w-md mb-8">Design a crowdfunding campaign with compelling rewards.</p>
+            <button onClick={() => setPhase('play')} className="px-8 py-4 bg-pink-500 rounded-2xl font-bold text-xl hover:bg-pink-400 transition-all">CREATE CAMPAIGN →</button>
+         </div>
+      );
+
+      if (phase === 'result') return (
+         <div className="flex flex-col h-full bg-gradient-to-br from-pink-900 via-rose-900 to-red-900 text-white p-8">
+            <h2 className="text-2xl font-bold text-center mb-6">🚀 Campaign Preview</h2>
+            <div className="bg-black/30 rounded-xl p-6 flex-1">
+               <h3 className="text-2xl font-bold mb-2">{campaign.title}</h3>
+               <p className="text-pink-400 text-lg mb-4">Goal: {campaign.goal}</p>
+               <div className="border-t border-white/20 pt-4">
+                  <p className="font-bold mb-2">Reward Tiers:</p>
+                  <div className="bg-black/20 rounded-lg p-3 mb-2">
+                     <p className="text-sm opacity-70">🎁 Early Bird</p>
+                     <p className="font-medium">{campaign.reward1}</p>
+                  </div>
+                  <div className="bg-black/20 rounded-lg p-3">
+                     <p className="text-sm opacity-70">⭐ Premium</p>
+                     <p className="font-medium">{campaign.reward2}</p>
+                  </div>
+               </div>
+            </div>
+            <button onClick={() => { setPhase('intro'); setCampaign({ title: '', goal: '', reward1: '', reward2: '' }); setStep(0); }} className="px-6 py-3 bg-pink-500 rounded-xl font-bold mt-4">CREATE NEW</button>
+         </div>
+      );
+
+      const submitStep = () => {
+         setCampaign({ ...campaign, [steps[step].key]: inputValue });
+         setInputValue('');
+         if (step < 3) setStep(step + 1);
+         else setPhase('result');
+      };
+
+      return (
+         <div className="flex flex-col h-full bg-gradient-to-br from-pink-900 via-rose-900 to-red-900 text-white p-8">
+            <div className="flex gap-2 mb-6">
+               {steps.map((_, i) => <div key={i} className={`flex-1 h-2 rounded-full ${i <= step ? 'bg-pink-400' : 'bg-black/30'}`}></div>)}
+            </div>
+            <div className="bg-black/30 rounded-2xl p-6 mb-4 text-center">
+               <p className="text-4xl mb-2">{steps[step].icon}</p>
+               <p className="text-xl font-bold">{steps[step].label}</p>
+               <p className="text-sm opacity-75 mt-2">{steps[step].prompt}</p>
+            </div>
+            <input value={inputValue} onChange={(e) => setInputValue(e.target.value)}
+               placeholder="Your answer..." className="p-4 rounded-xl bg-black/30 border border-pink-500/30 text-white mb-4" />
+            <button onClick={submitStep} className="px-6 py-3 bg-pink-500 rounded-xl font-bold">
+               {step < 3 ? 'NEXT →' : 'PREVIEW CAMPAIGN'}
+            </button>
+         </div>
+      );
+   };
+
+   // 50. PITCH DECK - Pitch Deck Builder
+   const PitchDeckRenderer = () => {
+      const [phase, setPhase] = useState<'intro' | 'play' | 'result'>('intro');
+      const [showInfo, setShowInfo] = useState(false);
+      const [slides, setSlides] = useState({ problem: '', solution: '', market: '', ask: '' });
+      const [step, setStep] = useState(0);
+      const [inputValue, setInputValue] = useState('');
+
+      const slideSteps = [
+         { key: 'problem', icon: '😰', label: 'The Problem', prompt: 'What pain point are you solving?' },
+         { key: 'solution', icon: '💡', label: 'Your Solution', prompt: 'How do you solve it?' },
+         { key: 'market', icon: '🌍', label: 'Market Size', prompt: 'How big is the opportunity?' },
+         { key: 'ask', icon: '🤝', label: 'The Ask', prompt: 'How much are you raising and for what?' }
+      ];
+
+      if (phase === 'intro') return (
+         <div className="flex flex-col items-center justify-center h-full bg-gradient-to-br from-blue-900 via-purple-900 to-pink-900 text-white p-8 text-center">
+            <button onClick={() => setShowInfo(!showInfo)} className="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/20 flex items-center justify-center text-xl">ℹ️</button>
+            {showInfo && (
+               <div className="absolute top-16 right-4 bg-black/90 p-4 rounded-xl max-w-xs text-left text-sm">
+                  <p className="font-bold mb-2">Pitch Deck Essentials</p>
+                  <p>10-15 slides: Problem, Solution, Market, Product, Traction, Team, Financials, Competition, Ask. Tell a compelling story!</p>
+               </div>
+            )}
+            <p className="text-6xl mb-4">📑</p>
+            <h2 className="text-3xl font-bold mb-4">Pitch Deck Builder</h2>
+            <p className="text-lg opacity-80 max-w-md mb-8">Create the core slides every investor pitch needs.</p>
+            <button onClick={() => setPhase('play')} className="px-8 py-4 bg-gradient-to-r from-blue-500 to-purple-500 rounded-2xl font-bold text-xl hover:opacity-90 transition-all">BUILD DECK →</button>
+         </div>
+      );
+
+      if (phase === 'result') return (
+         <div className="flex flex-col h-full bg-gradient-to-br from-blue-900 via-purple-900 to-pink-900 text-white p-8">
+            <h2 className="text-2xl font-bold text-center mb-6">📑 Your Pitch Deck</h2>
+            <div className="flex-1 overflow-auto">
+               {slideSteps.map((s) => (
+                  <div key={s.key} className="bg-black/30 rounded-xl p-4 mb-3">
+                     <div className="flex items-center gap-2 mb-2">
+                        <span className="text-xl">{s.icon}</span>
+                        <span className="font-bold">{s.label}</span>
+                     </div>
+                     <p className="text-sm opacity-80 ml-8">{slides[s.key as keyof typeof slides]}</p>
+                  </div>
+               ))}
+            </div>
+            <button onClick={() => { setPhase('intro'); setSlides({ problem: '', solution: '', market: '', ask: '' }); setStep(0); }} className="px-6 py-3 bg-gradient-to-r from-blue-500 to-purple-500 rounded-xl font-bold mt-4">CREATE NEW DECK</button>
+         </div>
+      );
+
+      const submitStep = () => {
+         setSlides({ ...slides, [slideSteps[step].key]: inputValue });
+         setInputValue('');
+         if (step < 3) setStep(step + 1);
+         else setPhase('result');
+      };
+
+      return (
+         <div className="flex flex-col h-full bg-gradient-to-br from-blue-900 via-purple-900 to-pink-900 text-white p-8">
+            <div className="flex gap-2 mb-6">
+               {slideSteps.map((_, i) => <div key={i} className={`flex-1 h-2 rounded-full ${i <= step ? 'bg-purple-400' : 'bg-black/30'}`}></div>)}
+            </div>
+            <div className="bg-black/30 rounded-2xl p-6 mb-4 text-center">
+               <p className="text-4xl mb-2">{slideSteps[step].icon}</p>
+               <p className="text-xl font-bold">{slideSteps[step].label}</p>
+               <p className="text-sm opacity-75 mt-2">{slideSteps[step].prompt}</p>
+            </div>
+            <textarea value={inputValue} onChange={(e) => setInputValue(e.target.value)}
+               placeholder="Your answer..." className="flex-1 p-4 rounded-xl bg-black/30 border border-purple-500/30 text-white mb-4 resize-none" />
+            <button onClick={submitStep} className="px-6 py-3 bg-gradient-to-r from-blue-500 to-purple-500 rounded-xl font-bold">
+               {step < 3 ? 'NEXT SLIDE →' : 'VIEW DECK'}
+            </button>
+         </div>
+      );
+   };
+
    // --- GENERIC RENDERER ---
    const GenericRenderer = () => {
       if (type === 'poster' || type === 'infographic') {
@@ -19990,6 +24135,114 @@ const GeneratedDiagram: React.FC<DiagramProps> = ({ type, data, title }) => {
             return <TimeDilationRenderer />;
          case 'mass_energy':
             return <TimeDilationRenderer />;
+         // ============================================
+         // ENTREPRENEURSHIP GRAPHICS (50)
+         // ============================================
+         // Mindset & Foundational Skills (10)
+         case 'growth_mindset':
+            return <GrowthMindsetRenderer />;
+         case 'opportunity_recognition':
+            return <OpportunityRecognitionRenderer />;
+         case 'calculated_risk':
+            return <CalculatedRiskRenderer />;
+         case 'resilience_grit':
+            return <ResilienceGritRenderer />;
+         case 'scamper_creativity':
+            return <ScamperCreativityRenderer />;
+         case 'critical_thinking':
+            return <CriticalThinkingRenderer />;
+         case 'self_reliance':
+            return <SelfRelianceRenderer />;
+         case 'adaptability_pivot':
+            return <AdaptabilityPivotRenderer />;
+         case 'empathy_mapping':
+            return <EmpathyMappingRenderer />;
+         case 'ethical_leadership':
+            return <EthicalLeadershipRenderer />;
+         // Ideation & Design Thinking (10)
+         case 'design_thinking':
+            return <DesignThinkingRenderer />;
+         case 'problem_solution_fit':
+            return <ProblemSolutionFitRenderer />;
+         case 'customer_discovery':
+            return <CustomerDiscoveryRenderer />;
+         case 'user_personas':
+            return <UserPersonasRenderer />;
+         case 'value_proposition':
+            return <ValuePropositionRenderer />;
+         case 'prototyping':
+            return <PrototypingRenderer />;
+         case 'iterative_design':
+            return <IterativeDesignRenderer />;
+         case 'blue_ocean':
+            return <BlueOceanRenderer />;
+         case 'trend_analysis':
+            return <TrendAnalysisRenderer />;
+         case 'first_principles':
+            return <FirstPrinciplesRenderer />;
+         // Business Models & Strategy (10)
+         case 'lean_canvas':
+            return <LeanCanvasRenderer />;
+         case 'business_model_canvas':
+            return <BusinessModelCanvasRenderer />;
+         case 'b2b_vs_b2c':
+            return <B2bVsB2cRenderer />;
+         case 'revenue_models':
+            return <RevenueModelsRenderer />;
+         case 'unit_economics':
+            return <UnitEconomicsRenderer />;
+         case 'cac_calculator':
+            return <CacCalculatorRenderer />;
+         case 'ltv_calculator':
+            return <LtvCalculatorRenderer />;
+         case 'scalability':
+            return <ScalabilityRenderer />;
+         case 'franchising':
+            return <FranchisingRenderer />;
+         case 'social_enterprise':
+            return <SocialEnterpriseRenderer />;
+         // Marketing & Sales (10)
+         case 'four_ps_marketing':
+            return <FourPsMarketingRenderer />;
+         case 'branding_identity':
+            return <BrandingIdentityRenderer />;
+         case 'digital_marketing':
+            return <DigitalMarketingRenderer />;
+         case 'content_strategy':
+            return <ContentStrategyRenderer />;
+         case 'email_marketing':
+            return <EmailMarketingRenderer />;
+         case 'influencer_marketing':
+            return <InfluencerMarketingRenderer />;
+         case 'sales_funnel':
+            return <SalesFunnelRenderer />;
+         case 'public_relations':
+            return <PublicRelationsRenderer />;
+         case 'guerrilla_marketing':
+            return <GuerrillaMarketingRenderer />;
+         case 'copywriting':
+            return <CopywritingRenderer />;
+         // Financial Literacy (10)
+         case 'bootstrapping':
+            return <BootstrappingRenderer />;
+         case 'cash_flow':
+            return <CashFlowRenderer />;
+         case 'profit_loss':
+            return <ProfitLossRenderer />;
+         case 'break_even':
+            return <BreakEvenRenderer />;
+         case 'pricing_strategies':
+            return <PricingStrategiesRenderer />;
+         case 'equity_ownership':
+            return <EquityOwnershipRenderer />;
+         case 'angel_investors':
+            return <AngelInvestorsRenderer />;
+         case 'venture_capital':
+            return <VentureCapitalRenderer />;
+         case 'crowdfunding':
+            return <CrowdfundingRenderer />;
+         case 'pitch_deck':
+            return <PitchDeckRenderer />;
          default:
             return <GenericRenderer />;
       }
