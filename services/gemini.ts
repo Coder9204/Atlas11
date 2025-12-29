@@ -295,6 +295,7 @@ When a concept comes up, follow this lookup process:
 • Crowdfunding / Crowd Financing → 'crowdfunding'
 • Pitch Decks / Investor Presentations → 'pitch_deck'
 • Supply Chain Management / Logistics → 'supply_chain'
+• Inventory Management / Stock Control / EOQ → 'inventory_management'
 
 **STEP 2: IF NO MATCH → BUILD CUSTOM**
 Only if the topic is NOT covered above, use \`type: 'dynamic_blueprint'\` with custom JSON.
@@ -1070,6 +1071,12 @@ Only if the topic is NOT covered above, use \`type: 'dynamic_blueprint'\` with c
     → Choose suppliers (cheap/reliable/fast), set order quantities, handle disruptions
     → Track money, customer satisfaction, delivery rate
     → KEY INSIGHT: Buffer stock, lead times, and supplier reliability create tradeoffs
+- **Operations / Inventory Management:** Use \`type: 'inventory_management'\`, \`data: '{}'\`
+    → 12-week inventory simulation with variable demand
+    → Set reorder point (ROP) and order quantity (EOQ concept)
+    → Balance holding costs, ordering costs, and stockout costs
+    → Choose demand variability level (low/medium/high)
+    → KEY INSIGHT: Safety stock protects against variability; stockouts are costlier than holding
 
 **CUSTOM SIMULATIONS (only if no pre-built exists):**
 3. For dynamic text, use: \`"content": "Range: {{calculations.range}} m"\`

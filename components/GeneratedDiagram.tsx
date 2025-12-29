@@ -24338,6 +24338,448 @@ const GeneratedDiagram: React.FC<DiagramProps> = ({ type, data, title }) => {
       );
    };
 
+   // ============================================================================
+   // INVENTORY MANAGEMENT INTERACTIVE
+   // ============================================================================
+   const InventoryManagementRenderer = () => {
+      const [phase, setPhase] = useState<'intro' | 'play' | 'result'>('intro');
+      const [showInfo, setShowInfo] = useState(false);
+      const [infoTopic, setInfoTopic] = useState<string | null>(null);
+      const [week, setWeek] = useState(1);
+      const [gameLog, setGameLog] = useState<string[]>([]);
+
+      // Inventory state
+      const [inventory, setInventory] = useState(100);
+      const [reorderPoint, setReorderPoint] = useState(30);
+      const [orderQuantity, setOrderQuantity] = useState(50);
+      const [pendingOrder, setPendingOrder] = useState<{ qty: number; arrivesWeek: number } | null>(null);
+
+      // Costs and metrics
+      const [totalHoldingCost, setTotalHoldingCost] = useState(0);
+      const [totalOrderingCost, setTotalOrderingCost] = useState(0);
+      const [totalStockoutCost, setTotalStockoutCost] = useState(0);
+      const [totalRevenue, setTotalRevenue] = useState(0);
+      const [salesMade, setSalesMade] = useState(0);
+      const [salesLost, setSalesLost] = useState(0);
+
+      // Settings
+      const [demandVariability, setDemandVariability] = useState<'low' | 'medium' | 'high'>('medium');
+      const holdingCostPerUnit = 2; // $ per unit per week
+      const orderingCostFixed = 50; // $ per order
+      const stockoutCostPerUnit = 15; // $ per lost sale
+      const sellingPrice = 25; // $ per unit sold
+      const leadTime = 2; // weeks
+
+      const infoTopics: Record<string, { title: string; content: string }> = {
+         inventory: {
+            title: 'Inventory Management',
+            content: 'Inventory management is balancing having enough stock to meet demand without holding too much (which costs money). Too little = lost sales. Too much = wasted storage costs.'
+         },
+         reorderPoint: {
+            title: 'Reorder Point (ROP)',
+            content: 'The inventory level at which you place a new order. ROP = (Average Daily Demand × Lead Time) + Safety Stock. Set it too low and you risk stockouts; too high and you order too often.'
+         },
+         eoq: {
+            title: 'Economic Order Quantity',
+            content: 'EOQ is the optimal order size that minimizes total inventory costs. EOQ = √(2×D×S/H) where D=annual demand, S=ordering cost, H=holding cost. Larger orders mean fewer orders but higher holding costs.'
+         },
+         holding: {
+            title: 'Holding Costs',
+            content: 'The cost of storing inventory: warehouse space, insurance, obsolescence, capital tied up. Typically 20-30% of item value per year. Holding too much inventory drains cash!'
+         },
+         stockout: {
+            title: 'Stockout Costs',
+            content: 'When you cannot fulfill demand: lost sales revenue, customer dissatisfaction, damaged reputation. Often the highest hidden cost in inventory management!'
+         },
+         safetyStock: {
+            title: 'Safety Stock',
+            content: 'Extra inventory held as a buffer against demand variability and supply delays. Higher variability = more safety stock needed. It\'s insurance against stockouts.'
+         }
+      };
+
+      const getDemand = () => {
+         const base = 40;
+         const variance = demandVariability === 'low' ? 10 : demandVariability === 'medium' ? 25 : 40;
+         return Math.max(5, Math.floor(base + (Math.random() * variance * 2) - variance));
+      };
+
+      const processWeek = () => {
+         const demand = getDemand();
+         let newLog: string[] = [`📅 Week ${week}: Demand = ${demand} units`];
+         let weekHolding = 0;
+         let weekStockout = 0;
+         let weekRevenue = 0;
+
+         // Check if order arrives
+         if (pendingOrder && pendingOrder.arrivesWeek <= week) {
+            setInventory(prev => prev + pendingOrder.qty);
+            newLog.push(`📦 Order of ${pendingOrder.qty} units arrived!`);
+            setPendingOrder(null);
+         }
+
+         // Fulfill demand
+         const fulfilled = Math.min(inventory, demand);
+         const unfulfilled = demand - fulfilled;
+
+         if (fulfilled > 0) {
+            setInventory(prev => prev - fulfilled);
+            weekRevenue = fulfilled * sellingPrice;
+            setTotalRevenue(prev => prev + weekRevenue);
+            setSalesMade(prev => prev + fulfilled);
+            newLog.push(`✅ Sold ${fulfilled} units (+$${weekRevenue})`);
+         }
+
+         if (unfulfilled > 0) {
+            weekStockout = unfulfilled * stockoutCostPerUnit;
+            setTotalStockoutCost(prev => prev + weekStockout);
+            setSalesLost(prev => prev + unfulfilled);
+            newLog.push(`❌ STOCKOUT! Lost ${unfulfilled} sales (-$${weekStockout} opportunity cost)`);
+         }
+
+         // Calculate holding cost on remaining inventory
+         const remainingInventory = inventory - fulfilled + (pendingOrder?.arrivesWeek === week ? pendingOrder.qty : 0);
+         weekHolding = Math.max(0, remainingInventory) * holdingCostPerUnit;
+         setTotalHoldingCost(prev => prev + weekHolding);
+         if (weekHolding > 0) {
+            newLog.push(`🏭 Holding cost: -$${weekHolding} (${remainingInventory} units × $${holdingCostPerUnit})`);
+         }
+
+         // Auto-order if at or below reorder point and no pending order
+         const currentInv = inventory - fulfilled;
+         if (currentInv <= reorderPoint && !pendingOrder) {
+            setPendingOrder({ qty: orderQuantity, arrivesWeek: week + leadTime });
+            setTotalOrderingCost(prev => prev + orderingCostFixed);
+            newLog.push(`📋 Auto-ordered ${orderQuantity} units (arrives Week ${week + leadTime}) - Order cost: $${orderingCostFixed}`);
+         }
+
+         setGameLog(prev => [...prev, ...newLog, '---']);
+
+         if (week >= 12) {
+            setPhase('result');
+         } else {
+            setWeek(w => w + 1);
+         }
+      };
+
+      const startGame = () => {
+         setPhase('play');
+         setWeek(1);
+         setInventory(100);
+         setPendingOrder(null);
+         setTotalHoldingCost(0);
+         setTotalOrderingCost(0);
+         setTotalStockoutCost(0);
+         setTotalRevenue(0);
+         setSalesMade(0);
+         setSalesLost(0);
+         setGameLog([]);
+      };
+
+      const getScore = () => {
+         const totalCosts = totalHoldingCost + totalOrderingCost + totalStockoutCost;
+         const profit = totalRevenue - totalCosts;
+         const serviceLevel = salesMade > 0 ? Math.round((salesMade / (salesMade + salesLost)) * 100) : 0;
+         const score = Math.min(100, Math.max(0, Math.round(serviceLevel * 0.5 + (profit > 0 ? 30 : 0) + (profit > 500 ? 20 : profit > 0 ? 10 : 0))));
+         return { totalCosts, profit, serviceLevel, score };
+      };
+
+      // INTRO PHASE
+      if (phase === 'intro') return (
+         <div className="flex flex-col h-full bg-gradient-to-br from-blue-900 via-indigo-900 to-purple-900 text-white p-6 overflow-auto">
+            <div className="flex justify-between items-start mb-4">
+               <div>
+                  <h2 className="text-2xl font-black flex items-center gap-2">📦 INVENTORY MANAGEMENT</h2>
+                  <p className="text-blue-300 text-sm mt-1">Balance stock levels to maximize profit</p>
+               </div>
+               <button onClick={() => setShowInfo(!showInfo)} className="w-10 h-10 rounded-full bg-white/20 hover:bg-white/30 flex items-center justify-center text-xl transition-all">ℹ️</button>
+            </div>
+
+            {showInfo && (
+               <div className="bg-black/40 rounded-xl p-4 mb-4 text-sm border border-blue-500/30">
+                  <p className="font-bold text-blue-200 mb-2">📚 What You'll Learn:</p>
+                  <ul className="space-y-1 text-blue-300">
+                     <li>• How to set optimal reorder points</li>
+                     <li>• Balancing holding costs vs stockout costs</li>
+                     <li>• The impact of demand variability</li>
+                     <li>• Why order quantity matters (EOQ concept)</li>
+                  </ul>
+               </div>
+            )}
+
+            <div className="flex-1 flex flex-col justify-center">
+               {/* Cost triangle visualization */}
+               <div className="bg-black/30 rounded-2xl p-4 mb-6">
+                  <p className="text-center text-blue-400 text-xs mb-4 font-bold uppercase tracking-wider">The Inventory Cost Triangle</p>
+                  <div className="flex justify-around items-center">
+                     <div className="text-center">
+                        <div className="w-16 h-16 rounded-full bg-amber-500/30 flex items-center justify-center text-3xl mb-2 mx-auto border-2 border-amber-500">🏭</div>
+                        <p className="text-xs font-bold">Holding Costs</p>
+                        <p className="text-[10px] text-blue-400">${holdingCostPerUnit}/unit/week</p>
+                     </div>
+                     <div className="text-center">
+                        <div className="w-16 h-16 rounded-full bg-blue-500/30 flex items-center justify-center text-3xl mb-2 mx-auto border-2 border-blue-500">📋</div>
+                        <p className="text-xs font-bold">Ordering Costs</p>
+                        <p className="text-[10px] text-blue-400">${orderingCostFixed}/order</p>
+                     </div>
+                     <div className="text-center">
+                        <div className="w-16 h-16 rounded-full bg-red-500/30 flex items-center justify-center text-3xl mb-2 mx-auto border-2 border-red-500">❌</div>
+                        <p className="text-xs font-bold">Stockout Costs</p>
+                        <p className="text-[10px] text-blue-400">${stockoutCostPerUnit}/lost sale</p>
+                     </div>
+                  </div>
+               </div>
+
+               <div className="text-center mb-6">
+                  <h3 className="text-xl font-bold mb-2">🎮 Your Mission</h3>
+                  <p className="text-blue-300 max-w-lg mx-auto">
+                     Run a 12-week inventory simulation. Set your reorder point and order quantity wisely
+                     to minimize costs and maximize service level!
+                  </p>
+               </div>
+
+               <div className="bg-black/20 rounded-xl p-4 mb-6 max-w-md mx-auto">
+                  <p className="text-sm font-bold mb-3 text-center">Choose Demand Variability:</p>
+                  <div className="grid grid-cols-3 gap-2">
+                     {(['low', 'medium', 'high'] as const).map(level => (
+                        <button
+                           key={level}
+                           onClick={() => setDemandVariability(level)}
+                           className={`p-3 rounded-lg text-sm font-bold capitalize transition-all ${
+                              demandVariability === level
+                                 ? 'bg-blue-500 text-white'
+                                 : 'bg-white/10 hover:bg-white/20'
+                           }`}
+                        >
+                           {level === 'low' ? '📊 Low' : level === 'medium' ? '📈 Medium' : '🎢 High'}
+                        </button>
+                     ))}
+                  </div>
+                  <p className="text-xs text-blue-400 text-center mt-2">
+                     {demandVariability === 'low' ? 'Demand: 30-50 units/week' :
+                      demandVariability === 'medium' ? 'Demand: 15-65 units/week' :
+                      'Demand: 0-80 units/week (risky!)'}
+                  </p>
+               </div>
+
+               <button onClick={startGame} className="mx-auto px-8 py-4 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 rounded-xl font-bold text-lg transition-all transform hover:scale-105 shadow-lg">
+                  START SIMULATION →
+               </button>
+            </div>
+
+            <p className="text-xs text-blue-400/60 text-center mt-4">💡 Tip: Higher variability needs higher safety stock (higher reorder point).</p>
+         </div>
+      );
+
+      // RESULT PHASE
+      if (phase === 'result') {
+         const { totalCosts, profit, serviceLevel, score } = getScore();
+         const grade = score >= 80 ? 'A' : score >= 60 ? 'B' : score >= 40 ? 'C' : 'D';
+         const gradeColor = score >= 80 ? 'text-green-400' : score >= 60 ? 'text-blue-400' : score >= 40 ? 'text-yellow-400' : 'text-red-400';
+
+         return (
+            <div className="flex flex-col h-full bg-gradient-to-br from-blue-900 via-indigo-900 to-purple-900 text-white p-6 overflow-auto">
+               <div className="text-center mb-6">
+                  <div className="text-6xl mb-2">{score >= 80 ? '🏆' : score >= 60 ? '📦' : score >= 40 ? '📊' : '📉'}</div>
+                  <h2 className="text-3xl font-black">Simulation Complete!</h2>
+                  <p className={`text-5xl font-black mt-2 ${gradeColor}`}>Grade: {grade}</p>
+               </div>
+
+               <div className="grid grid-cols-2 gap-3 mb-4 max-w-md mx-auto">
+                  <div className="bg-black/30 rounded-xl p-3 text-center">
+                     <p className="text-xl font-black text-green-400">${totalRevenue}</p>
+                     <p className="text-xs text-blue-300">Revenue</p>
+                  </div>
+                  <div className="bg-black/30 rounded-xl p-3 text-center">
+                     <p className={`text-xl font-black ${profit >= 0 ? 'text-green-400' : 'text-red-400'}`}>${profit >= 0 ? '+' : ''}{profit}</p>
+                     <p className="text-xs text-blue-300">Net Profit</p>
+                  </div>
+                  <div className="bg-black/30 rounded-xl p-3 text-center">
+                     <p className="text-xl font-black text-purple-400">{serviceLevel}%</p>
+                     <p className="text-xs text-blue-300">Service Level</p>
+                  </div>
+                  <div className="bg-black/30 rounded-xl p-3 text-center">
+                     <p className="text-xl font-black text-amber-400">${totalCosts}</p>
+                     <p className="text-xs text-blue-300">Total Costs</p>
+                  </div>
+               </div>
+
+               <div className="bg-black/20 rounded-xl p-3 mb-4 max-w-md mx-auto">
+                  <p className="text-xs font-bold text-blue-400 mb-2">Cost Breakdown:</p>
+                  <div className="grid grid-cols-3 gap-2 text-center text-xs">
+                     <div><span className="text-amber-400">${totalHoldingCost}</span><br/>Holding</div>
+                     <div><span className="text-blue-400">${totalOrderingCost}</span><br/>Ordering</div>
+                     <div><span className="text-red-400">${totalStockoutCost}</span><br/>Stockouts</div>
+                  </div>
+               </div>
+
+               <div className="bg-indigo-900/40 rounded-xl p-4 mb-4 border border-indigo-500/30">
+                  <p className="font-bold text-indigo-300 mb-2 flex items-center gap-2">
+                     <span className="w-6 h-6 rounded-full bg-indigo-500 flex items-center justify-center text-sm">💡</span>
+                     Key Takeaways
+                  </p>
+                  <ul className="text-sm text-indigo-200 space-y-1">
+                     <li>• <strong>Reorder Point</strong> should cover demand during lead time + safety buffer</li>
+                     <li>• <strong>Order Quantity</strong> balances ordering cost vs holding cost</li>
+                     <li>• <strong>Safety Stock</strong> protects against demand variability</li>
+                     <li>• <strong>Stockouts</strong> are often more costly than holding extra inventory</li>
+                  </ul>
+               </div>
+
+               <div className="bg-black/20 rounded-xl p-3 mb-4 max-h-24 overflow-auto">
+                  <p className="text-xs font-bold text-blue-400 mb-1">📋 Session Log</p>
+                  <div className="text-xs text-blue-300/70 space-y-0.5">
+                     {gameLog.slice(-8).map((log, i) => <p key={i}>{log}</p>)}
+                  </div>
+               </div>
+
+               <button onClick={startGame} className="mx-auto px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 rounded-xl font-bold transition-all">
+                  🔄 PLAY AGAIN
+               </button>
+            </div>
+         );
+      }
+
+      // PLAY PHASE
+      const currentInventory = inventory + (pendingOrder?.arrivesWeek === week ? pendingOrder.qty : 0);
+      const inventoryStatus = currentInventory < 20 ? 'critical' : currentInventory < 50 ? 'warning' : 'healthy';
+
+      return (
+         <div className="flex flex-col h-full bg-gradient-to-br from-blue-900 via-indigo-900 to-purple-900 text-white overflow-hidden">
+            {/* Header */}
+            <div className="p-3 bg-black/30 border-b border-blue-500/30">
+               <div className="flex justify-between items-center mb-2">
+                  <span className="text-lg font-black">📅 Week {week} / 12</span>
+                  <div className="flex gap-2">
+                     <span className="px-3 py-1 bg-green-900/50 rounded-full text-sm font-bold text-green-300">💰 ${totalRevenue - totalHoldingCost - totalOrderingCost - totalStockoutCost}</span>
+                  </div>
+               </div>
+               <div className="flex gap-3 text-xs">
+                  <span className="text-blue-300">Sales: {salesMade}</span>
+                  <span className="text-blue-500">|</span>
+                  <span className="text-red-300">Lost: {salesLost}</span>
+                  <span className="text-blue-500">|</span>
+                  <span className="text-amber-300">Holding: ${totalHoldingCost}</span>
+               </div>
+            </div>
+
+            {/* Info modal */}
+            {infoTopic && infoTopics[infoTopic] && (
+               <div className="absolute inset-0 bg-black/70 flex items-center justify-center z-50 p-4" onClick={() => setInfoTopic(null)}>
+                  <div className="bg-indigo-900 rounded-2xl p-6 max-w-md border border-indigo-500" onClick={e => e.stopPropagation()}>
+                     <h3 className="text-xl font-black mb-2 flex items-center gap-2">ℹ️ {infoTopics[infoTopic].title}</h3>
+                     <p className="text-blue-200 text-sm leading-relaxed">{infoTopics[infoTopic].content}</p>
+                     <button onClick={() => setInfoTopic(null)} className="mt-4 px-4 py-2 bg-indigo-700 hover:bg-indigo-600 rounded-lg text-sm font-bold w-full">Got it!</button>
+                  </div>
+               </div>
+            )}
+
+            <div className="flex-1 p-4 overflow-auto">
+               {/* Inventory visualization */}
+               <div className="bg-black/30 rounded-xl p-4 mb-4">
+                  <div className="flex justify-between items-center mb-3">
+                     <p className="font-bold text-sm">📦 Current Inventory</p>
+                     <button onClick={() => setInfoTopic('inventory')} className="text-blue-400 hover:text-white text-sm">ℹ️</button>
+                  </div>
+
+                  <div className="relative h-20 bg-black/40 rounded-lg overflow-hidden mb-2">
+                     {/* Reorder point line */}
+                     <div
+                        className="absolute top-0 bottom-0 w-0.5 bg-yellow-500 z-10"
+                        style={{ left: `${Math.min(100, (reorderPoint / 150) * 100)}%` }}
+                     >
+                        <span className="absolute -top-5 left-1 text-[10px] text-yellow-400 whitespace-nowrap">ROP: {reorderPoint}</span>
+                     </div>
+
+                     {/* Inventory bar */}
+                     <div
+                        className={`absolute bottom-0 left-0 h-full transition-all duration-500 ${
+                           inventoryStatus === 'critical' ? 'bg-gradient-to-t from-red-600 to-red-400' :
+                           inventoryStatus === 'warning' ? 'bg-gradient-to-t from-amber-600 to-amber-400' :
+                           'bg-gradient-to-t from-green-600 to-green-400'
+                        }`}
+                        style={{ width: `${Math.min(100, (inventory / 150) * 100)}%` }}
+                     />
+
+                     {/* Inventory number */}
+                     <div className="absolute inset-0 flex items-center justify-center text-3xl font-black text-white drop-shadow-lg">
+                        {inventory}
+                     </div>
+                  </div>
+
+                  <div className="flex justify-between text-xs text-blue-400">
+                     <span>0</span>
+                     <span>Max: 150</span>
+                  </div>
+
+                  {pendingOrder && (
+                     <div className="mt-3 p-2 bg-blue-500/20 rounded-lg text-sm text-center border border-blue-500/30">
+                        🚚 Order of {pendingOrder.qty} units arriving Week {pendingOrder.arrivesWeek}
+                     </div>
+                  )}
+               </div>
+
+               {/* Controls */}
+               <div className="bg-black/30 rounded-xl p-4 mb-4">
+                  <div className="flex justify-between items-center mb-3">
+                     <p className="font-bold text-sm">⚙️ Inventory Settings</p>
+                     <button onClick={() => setInfoTopic('reorderPoint')} className="text-blue-400 hover:text-white text-sm">ℹ️</button>
+                  </div>
+
+                  <div className="space-y-4">
+                     <div>
+                        <div className="flex justify-between text-sm mb-1">
+                           <span>Reorder Point (ROP)</span>
+                           <span className="font-bold text-yellow-400">{reorderPoint} units</span>
+                        </div>
+                        <input
+                           type="range"
+                           min="10"
+                           max="80"
+                           value={reorderPoint}
+                           onChange={(e) => setReorderPoint(Number(e.target.value))}
+                           className="w-full h-2 bg-blue-900 rounded-full accent-yellow-500"
+                        />
+                        <p className="text-xs text-blue-400 mt-1">Auto-order triggers when inventory ≤ {reorderPoint}</p>
+                     </div>
+
+                     <div>
+                        <div className="flex justify-between text-sm mb-1">
+                           <span>Order Quantity (EOQ)</span>
+                           <span className="font-bold text-blue-400">{orderQuantity} units</span>
+                        </div>
+                        <input
+                           type="range"
+                           min="20"
+                           max="100"
+                           value={orderQuantity}
+                           onChange={(e) => setOrderQuantity(Number(e.target.value))}
+                           className="w-full h-2 bg-blue-900 rounded-full accent-blue-500"
+                        />
+                        <p className="text-xs text-blue-400 mt-1">Order cost: ${orderingCostFixed} + holding at ${holdingCostPerUnit}/unit/week</p>
+                     </div>
+                  </div>
+               </div>
+
+               {/* Action button */}
+               <button
+                  onClick={processWeek}
+                  className="w-full py-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 rounded-xl font-bold text-lg transition-all shadow-lg"
+               >
+                  ▶️ SIMULATE WEEK {week}
+               </button>
+            </div>
+
+            {/* Log panel */}
+            <div className="h-24 bg-black/40 border-t border-blue-500/30 p-2 overflow-auto">
+               <p className="text-[10px] font-bold text-blue-500 mb-1">Activity Log</p>
+               <div className="text-xs text-blue-300 space-y-0.5">
+                  {gameLog.slice(-5).map((log, i) => <p key={i}>{log}</p>)}
+               </div>
+            </div>
+         </div>
+      );
+   };
+
    // --- GENERIC RENDERER ---
    const GenericRenderer = () => {
       if (type === 'poster' || type === 'infographic') {
@@ -24750,6 +25192,8 @@ const GeneratedDiagram: React.FC<DiagramProps> = ({ type, data, title }) => {
          // ============================================
          case 'supply_chain':
             return <SupplyChainRenderer />;
+         case 'inventory_management':
+            return <InventoryManagementRenderer />;
          default:
             return <GenericRenderer />;
       }
