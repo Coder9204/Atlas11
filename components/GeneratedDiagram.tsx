@@ -25231,6 +25231,515 @@ const GeneratedDiagram: React.FC<DiagramProps> = ({ type, data, title }) => {
       );
    };
 
+   // ============================================================================
+   // HIRING & TEAM CULTURE INTERACTIVE
+   // ============================================================================
+   const HiringRenderer = () => {
+      const [phase, setPhase] = useState<'intro' | 'values' | 'play' | 'result'>('intro');
+      const [showInfo, setShowInfo] = useState(false);
+      const [infoTopic, setInfoTopic] = useState<string | null>(null);
+      const [currentCandidate, setCurrentCandidate] = useState(0);
+      const [gameLog, setGameLog] = useState<string[]>([]);
+
+      // Company values (player selects 3)
+      const [selectedValues, setSelectedValues] = useState<string[]>([]);
+      const allValues = [
+         { id: 'innovation', name: 'Innovation', icon: '💡', desc: 'Push boundaries, embrace new ideas' },
+         { id: 'speed', name: 'Speed', icon: '⚡', desc: 'Move fast, iterate quickly' },
+         { id: 'quality', name: 'Quality', icon: '✨', desc: 'Excellence in everything we do' },
+         { id: 'teamwork', name: 'Teamwork', icon: '🤝', desc: 'Collaborate and support each other' },
+         { id: 'transparency', name: 'Transparency', icon: '🔍', desc: 'Open communication, no secrets' },
+         { id: 'customer', name: 'Customer Focus', icon: '❤️', desc: 'Customer success is our success' },
+      ];
+
+      // Team and budget
+      const [team, setTeam] = useState<{ name: string; role: string; skills: number; culture: number }[]>([]);
+      const [budget, setBudget] = useState(300000);
+      const [cultureScore, setCultureScore] = useState(100);
+      const [productivityScore, setProductivityScore] = useState(50);
+
+      // Candidates
+      const candidates = [
+         {
+            name: 'Alex Chen',
+            role: 'Lead Developer',
+            avatar: '👨‍💻',
+            salary: 120000,
+            skills: 95,
+            experience: 8,
+            cultureFit: { innovation: 90, speed: 85, quality: 70, teamwork: 60, transparency: 75, customer: 65 },
+            personality: 'Brilliant coder but prefers working alone. Strong opinions.',
+            redFlag: 'May clash with collaborative culture',
+            greenFlag: 'Technical excellence, can build anything'
+         },
+         {
+            name: 'Sarah Miller',
+            role: 'Product Manager',
+            avatar: '👩‍💼',
+            salary: 100000,
+            skills: 80,
+            experience: 5,
+            cultureFit: { innovation: 85, speed: 90, quality: 80, teamwork: 95, transparency: 90, customer: 95 },
+            personality: 'Great communicator, customer-obsessed. Still growing technically.',
+            redFlag: 'Less experienced than other candidates',
+            greenFlag: 'Culture carrier, team player'
+         },
+         {
+            name: 'Marcus Johnson',
+            role: 'Sales Lead',
+            avatar: '👨‍💼',
+            salary: 90000,
+            skills: 85,
+            experience: 10,
+            cultureFit: { innovation: 50, speed: 95, quality: 60, teamwork: 70, transparency: 40, customer: 90 },
+            personality: 'Hits targets consistently. Very competitive, sometimes cuts corners.',
+            redFlag: 'May prioritize results over process',
+            greenFlag: 'Revenue driver, closes deals'
+         },
+         {
+            name: 'Emily Park',
+            role: 'Designer',
+            avatar: '👩‍🎨',
+            salary: 85000,
+            skills: 90,
+            experience: 4,
+            cultureFit: { innovation: 95, speed: 70, quality: 95, teamwork: 85, transparency: 80, customer: 85 },
+            personality: 'Creative visionary. Takes time to perfect designs.',
+            redFlag: 'May slow down fast-paced sprints',
+            greenFlag: 'Exceptional design quality'
+         },
+         {
+            name: 'David Kim',
+            role: 'Operations',
+            avatar: '👨‍🔧',
+            salary: 75000,
+            skills: 75,
+            experience: 6,
+            cultureFit: { innovation: 60, speed: 80, quality: 90, teamwork: 90, transparency: 95, customer: 80 },
+            personality: 'Reliable, process-oriented. Keeps everything running smoothly.',
+            redFlag: 'Less innovative, prefers proven methods',
+            greenFlag: 'Stability, operational excellence'
+         },
+      ];
+
+      const infoTopics: Record<string, { title: string; content: string }> = {
+         culture: {
+            title: 'Company Culture',
+            content: 'Culture is the shared values, beliefs, and behaviors that define how your team works together. Your first 10 hires define your culture forever. Culture fit doesn\'t mean hiring clones - it means shared values with diverse perspectives.'
+         },
+         skills: {
+            title: 'Skills vs Culture Fit',
+            content: 'A common debate: hire for skills or culture? Best practice: Set a skills threshold (must be competent), then optimize for culture fit. You can train skills, but changing someone\'s values is nearly impossible.'
+         },
+         early: {
+            title: 'Early Hires Matter',
+            content: 'Your first employees set the tone. They\'ll help hire the next batch, so their standards become your company\'s standards. One toxic early hire can poison the entire culture.'
+         },
+         slow: {
+            title: 'Hire Slow, Fire Fast',
+            content: 'Take time to evaluate candidates thoroughly - a bad hire costs 2-3x their salary in lost productivity and rehiring. But once you\'ve identified a poor fit, act quickly to protect the team.'
+         },
+         diverse: {
+            title: 'Diverse Teams',
+            content: 'Diversity of thought, background, and experience leads to better decisions and innovation. Culture fit ≠ same background. Look for shared values with different perspectives.'
+         },
+         values: {
+            title: 'Core Values',
+            content: 'Values are your decision-making framework. When facing tough choices, values guide you. They should be specific enough to matter (not just "be good") and used in actual decisions.'
+         }
+      };
+
+      const calculateCultureFit = (candidate: typeof candidates[0]) => {
+         if (selectedValues.length === 0) return 50;
+         const sum = selectedValues.reduce((acc, val) => acc + (candidate.cultureFit[val as keyof typeof candidate.cultureFit] || 50), 0);
+         return Math.round(sum / selectedValues.length);
+      };
+
+      const hireCandidate = (hire: boolean) => {
+         const candidate = candidates[currentCandidate];
+         const cultureFit = calculateCultureFit(candidate);
+
+         if (hire) {
+            if (budget < candidate.salary) {
+               setGameLog(prev => [...prev, `❌ Cannot afford ${candidate.name} ($${candidate.salary.toLocaleString()})`]);
+               return;
+            }
+
+            setBudget(prev => prev - candidate.salary);
+            setTeam(prev => [...prev, { name: candidate.name, role: candidate.role, skills: candidate.skills, culture: cultureFit }]);
+
+            // Update scores
+            const newCulture = Math.round((cultureScore + cultureFit) / 2);
+            const newProductivity = Math.round((productivityScore + candidate.skills) / 2);
+            setCultureScore(newCulture);
+            setProductivityScore(newProductivity);
+
+            setGameLog(prev => [...prev,
+               `✅ Hired ${candidate.name} as ${candidate.role}`,
+               `   Skills: ${candidate.skills}% | Culture Fit: ${cultureFit}%`,
+               `   💰 Salary: $${candidate.salary.toLocaleString()}`
+            ]);
+         } else {
+            setGameLog(prev => [...prev, `⏭️ Passed on ${candidate.name}`]);
+         }
+
+         if (currentCandidate < candidates.length - 1) {
+            setCurrentCandidate(prev => prev + 1);
+         } else {
+            setPhase('result');
+         }
+      };
+
+      const startGame = () => {
+         setPhase('values');
+         setSelectedValues([]);
+         setTeam([]);
+         setBudget(300000);
+         setCultureScore(100);
+         setProductivityScore(50);
+         setCurrentCandidate(0);
+         setGameLog([]);
+      };
+
+      const toggleValue = (valueId: string) => {
+         if (selectedValues.includes(valueId)) {
+            setSelectedValues(prev => prev.filter(v => v !== valueId));
+         } else if (selectedValues.length < 3) {
+            setSelectedValues(prev => [...prev, valueId]);
+         }
+      };
+
+      const getScore = () => {
+         const teamSize = team.length;
+         const avgSkills = team.length > 0 ? Math.round(team.reduce((sum, t) => sum + t.skills, 0) / team.length) : 0;
+         const avgCulture = team.length > 0 ? Math.round(team.reduce((sum, t) => sum + t.culture, 0) / team.length) : 0;
+         const budgetEfficiency = Math.round((budget / 300000) * 100);
+
+         let score = 0;
+         if (teamSize >= 3) score += 25;
+         if (avgCulture >= 80) score += 30;
+         if (avgSkills >= 80) score += 25;
+         if (budgetEfficiency >= 20) score += 20;
+
+         return { score: Math.min(100, score), teamSize, avgSkills, avgCulture, budgetEfficiency };
+      };
+
+      // INTRO PHASE
+      if (phase === 'intro') return (
+         <div className="flex flex-col h-full bg-gradient-to-br from-violet-900 via-purple-900 to-fuchsia-900 text-white p-6 overflow-auto">
+            <div className="flex justify-between items-start mb-4">
+               <div>
+                  <h2 className="text-2xl font-black flex items-center gap-2">👥 HIRING & TEAM CULTURE</h2>
+                  <p className="text-violet-300 text-sm mt-1">Build your dream team wisely</p>
+               </div>
+               <button onClick={() => setShowInfo(!showInfo)} className="w-10 h-10 rounded-full bg-white/20 hover:bg-white/30 flex items-center justify-center text-xl transition-all">ℹ️</button>
+            </div>
+
+            {showInfo && (
+               <div className="bg-black/40 rounded-xl p-4 mb-4 text-sm border border-violet-500/30">
+                  <p className="font-bold text-violet-200 mb-2">📚 What You'll Learn:</p>
+                  <ul className="space-y-1 text-violet-300">
+                     <li>• How company values guide hiring</li>
+                     <li>• Skills vs culture fit tradeoffs</li>
+                     <li>• Why early hires define culture</li>
+                     <li>• Building effective teams</li>
+                  </ul>
+               </div>
+            )}
+
+            <div className="flex-1 flex flex-col justify-center">
+               <div className="bg-black/30 rounded-2xl p-4 mb-6">
+                  <p className="text-center text-violet-400 text-xs mb-4 font-bold uppercase tracking-wider">The Hiring Triangle</p>
+                  <div className="flex justify-around items-center">
+                     <div className="text-center">
+                        <div className="w-14 h-14 rounded-full bg-blue-500/30 flex items-center justify-center text-2xl mb-2 mx-auto border-2 border-blue-500">🎯</div>
+                        <p className="text-xs font-bold">Skills</p>
+                        <p className="text-[10px] text-violet-400">Can they do the job?</p>
+                     </div>
+                     <div className="text-center">
+                        <div className="w-14 h-14 rounded-full bg-purple-500/30 flex items-center justify-center text-2xl mb-2 mx-auto border-2 border-purple-500">💜</div>
+                        <p className="text-xs font-bold">Culture Fit</p>
+                        <p className="text-[10px] text-violet-400">Shared values?</p>
+                     </div>
+                     <div className="text-center">
+                        <div className="w-14 h-14 rounded-full bg-pink-500/30 flex items-center justify-center text-2xl mb-2 mx-auto border-2 border-pink-500">📈</div>
+                        <p className="text-xs font-bold">Growth</p>
+                        <p className="text-[10px] text-violet-400">Can they grow?</p>
+                     </div>
+                  </div>
+               </div>
+
+               <div className="text-center mb-6">
+                  <h3 className="text-xl font-bold mb-2">🎮 Your Mission</h3>
+                  <p className="text-violet-300 max-w-lg mx-auto">
+                     You're a startup founder with $300K for salaries. First, define your company values.
+                     Then evaluate candidates and build your founding team!
+                  </p>
+               </div>
+
+               <div className="bg-black/20 rounded-xl p-4 mb-6 max-w-sm mx-auto">
+                  <p className="text-sm text-center text-violet-300 italic">
+                     "Your first 10 hires define your culture forever. Hire slow, fire fast."
+                  </p>
+               </div>
+
+               <button onClick={startGame} className="mx-auto px-8 py-4 bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-500 hover:to-purple-500 rounded-xl font-bold text-lg transition-all transform hover:scale-105 shadow-lg">
+                  START HIRING →
+               </button>
+            </div>
+         </div>
+      );
+
+      // VALUES PHASE
+      if (phase === 'values') return (
+         <div className="flex flex-col h-full bg-gradient-to-br from-violet-900 via-purple-900 to-fuchsia-900 text-white p-6 overflow-auto">
+            <div className="flex justify-between items-start mb-4">
+               <div>
+                  <h2 className="text-xl font-black">Step 1: Define Your Values</h2>
+                  <p className="text-violet-300 text-sm">Choose 3 core values for your company</p>
+               </div>
+               <button onClick={() => setInfoTopic('values')} className="text-violet-400 hover:text-white">ℹ️</button>
+            </div>
+
+            {infoTopic && infoTopics[infoTopic] && (
+               <div className="absolute inset-0 bg-black/70 flex items-center justify-center z-50 p-4" onClick={() => setInfoTopic(null)}>
+                  <div className="bg-violet-900 rounded-2xl p-6 max-w-md border border-violet-500" onClick={e => e.stopPropagation()}>
+                     <h3 className="text-xl font-black mb-2 flex items-center gap-2">ℹ️ {infoTopics[infoTopic].title}</h3>
+                     <p className="text-violet-200 text-sm leading-relaxed">{infoTopics[infoTopic].content}</p>
+                     <button onClick={() => setInfoTopic(null)} className="mt-4 px-4 py-2 bg-violet-700 hover:bg-violet-600 rounded-lg text-sm font-bold w-full">Got it!</button>
+                  </div>
+               </div>
+            )}
+
+            <div className="flex-1">
+               <div className="grid grid-cols-2 gap-3 mb-6">
+                  {allValues.map(value => (
+                     <button
+                        key={value.id}
+                        onClick={() => toggleValue(value.id)}
+                        className={`p-4 rounded-xl text-left transition-all ${
+                           selectedValues.includes(value.id)
+                              ? 'bg-violet-600 border-2 border-violet-400'
+                              : 'bg-black/30 border-2 border-transparent hover:border-violet-500/50'
+                        }`}
+                     >
+                        <div className="flex items-center gap-2 mb-1">
+                           <span className="text-xl">{value.icon}</span>
+                           <span className="font-bold">{value.name}</span>
+                           {selectedValues.includes(value.id) && <span className="ml-auto text-green-400">✓</span>}
+                        </div>
+                        <p className="text-xs text-violet-300">{value.desc}</p>
+                     </button>
+                  ))}
+               </div>
+
+               <div className="text-center mb-4">
+                  <p className="text-violet-400 text-sm">
+                     Selected: <span className="font-bold text-white">{selectedValues.length}/3</span>
+                  </p>
+               </div>
+
+               <button
+                  onClick={() => setPhase('play')}
+                  disabled={selectedValues.length !== 3}
+                  className="w-full py-3 bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-500 hover:to-purple-500 disabled:opacity-50 disabled:cursor-not-allowed rounded-xl font-bold text-lg transition-all"
+               >
+                  {selectedValues.length === 3 ? 'START INTERVIEWING →' : `Select ${3 - selectedValues.length} more value(s)`}
+               </button>
+            </div>
+         </div>
+      );
+
+      // RESULT PHASE
+      if (phase === 'result') {
+         const { score, teamSize, avgSkills, avgCulture, budgetEfficiency } = getScore();
+         const grade = score >= 80 ? 'A' : score >= 60 ? 'B' : score >= 40 ? 'C' : 'D';
+         const gradeColor = score >= 80 ? 'text-green-400' : score >= 60 ? 'text-blue-400' : score >= 40 ? 'text-yellow-400' : 'text-red-400';
+
+         return (
+            <div className="flex flex-col h-full bg-gradient-to-br from-violet-900 via-purple-900 to-fuchsia-900 text-white p-6 overflow-auto">
+               <div className="text-center mb-6">
+                  <div className="text-6xl mb-2">{score >= 80 ? '🏆' : score >= 60 ? '👥' : score >= 40 ? '🏗️' : '⚠️'}</div>
+                  <h2 className="text-3xl font-black">Team Built!</h2>
+                  <p className={`text-5xl font-black mt-2 ${gradeColor}`}>Grade: {grade}</p>
+               </div>
+
+               <div className="grid grid-cols-2 gap-3 mb-4 max-w-md mx-auto">
+                  <div className="bg-black/30 rounded-xl p-3 text-center">
+                     <p className="text-xl font-black text-violet-400">{teamSize}</p>
+                     <p className="text-xs text-violet-300">Team Size</p>
+                  </div>
+                  <div className="bg-black/30 rounded-xl p-3 text-center">
+                     <p className="text-xl font-black text-green-400">${budget.toLocaleString()}</p>
+                     <p className="text-xs text-violet-300">Budget Left</p>
+                  </div>
+                  <div className="bg-black/30 rounded-xl p-3 text-center">
+                     <p className="text-xl font-black text-blue-400">{avgSkills}%</p>
+                     <p className="text-xs text-violet-300">Avg Skills</p>
+                  </div>
+                  <div className="bg-black/30 rounded-xl p-3 text-center">
+                     <p className="text-xl font-black text-purple-400">{avgCulture}%</p>
+                     <p className="text-xs text-violet-300">Avg Culture Fit</p>
+                  </div>
+               </div>
+
+               {team.length > 0 && (
+                  <div className="bg-black/20 rounded-xl p-3 mb-4">
+                     <p className="text-xs font-bold text-violet-400 mb-2">Your Team:</p>
+                     <div className="flex gap-2 flex-wrap">
+                        {team.map((member, i) => (
+                           <span key={i} className="text-xs px-2 py-1 bg-violet-900/50 rounded-lg">
+                              {member.name} ({member.role})
+                           </span>
+                        ))}
+                     </div>
+                  </div>
+               )}
+
+               <div className="bg-violet-900/40 rounded-xl p-4 mb-4 border border-violet-500/30">
+                  <p className="font-bold text-violet-300 mb-2 flex items-center gap-2">
+                     <span className="w-6 h-6 rounded-full bg-violet-500 flex items-center justify-center text-sm">💡</span>
+                     Key Takeaways
+                  </p>
+                  <ul className="text-sm text-violet-200 space-y-1">
+                     <li>• <strong>Values first</strong> - define culture before hiring</li>
+                     <li>• <strong>Skills + Culture</strong> - both matter, but culture is harder to change</li>
+                     <li>• <strong>Early hires</strong> set the standard for everyone after</li>
+                     <li>• <strong>Red flags</strong> rarely get better after hiring</li>
+                  </ul>
+               </div>
+
+               <button onClick={startGame} className="mx-auto px-6 py-3 bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-500 hover:to-purple-500 rounded-xl font-bold transition-all">
+                  🔄 HIRE AGAIN
+               </button>
+            </div>
+         );
+      }
+
+      // PLAY PHASE
+      const candidate = candidates[currentCandidate];
+      const cultureFit = calculateCultureFit(candidate);
+
+      return (
+         <div className="flex flex-col h-full bg-gradient-to-br from-violet-900 via-purple-900 to-fuchsia-900 text-white overflow-hidden">
+            {/* Header */}
+            <div className="p-3 bg-black/30 border-b border-violet-500/30">
+               <div className="flex justify-between items-center mb-2">
+                  <span className="text-lg font-black">Candidate {currentCandidate + 1} / {candidates.length}</span>
+                  <span className="px-3 py-1 bg-green-900/50 rounded-full text-sm font-bold text-green-300">
+                     💰 ${budget.toLocaleString()}
+                  </span>
+               </div>
+               <div className="flex gap-3 text-xs">
+                  <span className="text-violet-300">Team: {team.length}</span>
+                  <span className="text-violet-500">|</span>
+                  <span className="text-purple-300">Culture: {cultureScore}%</span>
+                  <span className="text-violet-500">|</span>
+                  <span className="text-blue-300">Productivity: {productivityScore}%</span>
+               </div>
+            </div>
+
+            {/* Info modal */}
+            {infoTopic && infoTopics[infoTopic] && (
+               <div className="absolute inset-0 bg-black/70 flex items-center justify-center z-50 p-4" onClick={() => setInfoTopic(null)}>
+                  <div className="bg-violet-900 rounded-2xl p-6 max-w-md border border-violet-500" onClick={e => e.stopPropagation()}>
+                     <h3 className="text-xl font-black mb-2 flex items-center gap-2">ℹ️ {infoTopics[infoTopic].title}</h3>
+                     <p className="text-violet-200 text-sm leading-relaxed">{infoTopics[infoTopic].content}</p>
+                     <button onClick={() => setInfoTopic(null)} className="mt-4 px-4 py-2 bg-violet-700 hover:bg-violet-600 rounded-lg text-sm font-bold w-full">Got it!</button>
+                  </div>
+               </div>
+            )}
+
+            <div className="flex-1 p-4 overflow-auto">
+               {/* Candidate Card */}
+               <div className="bg-black/30 rounded-xl p-4 mb-4">
+                  <div className="flex items-start gap-4 mb-4">
+                     <div className="text-5xl">{candidate.avatar}</div>
+                     <div className="flex-1">
+                        <h3 className="text-xl font-black">{candidate.name}</h3>
+                        <p className="text-violet-400 text-sm">{candidate.role}</p>
+                        <p className="text-violet-300 text-xs mt-1">{candidate.experience} years experience</p>
+                     </div>
+                     <div className="text-right">
+                        <p className="text-lg font-black text-green-400">${candidate.salary.toLocaleString()}</p>
+                        <p className="text-xs text-violet-400">annual salary</p>
+                     </div>
+                  </div>
+
+                  <p className="text-sm text-violet-200 mb-4 italic">"{candidate.personality}"</p>
+
+                  <div className="grid grid-cols-2 gap-3 mb-4">
+                     <div className="bg-black/20 rounded-lg p-3">
+                        <div className="flex justify-between items-center mb-1">
+                           <span className="text-xs text-violet-400">Skills</span>
+                           <button onClick={() => setInfoTopic('skills')} className="text-violet-500 hover:text-white text-xs">ℹ️</button>
+                        </div>
+                        <div className="flex items-center gap-2">
+                           <div className="flex-1 h-2 bg-black/40 rounded-full overflow-hidden">
+                              <div className="h-full bg-blue-500" style={{ width: `${candidate.skills}%` }} />
+                           </div>
+                           <span className="text-sm font-bold text-blue-400">{candidate.skills}%</span>
+                        </div>
+                     </div>
+                     <div className="bg-black/20 rounded-lg p-3">
+                        <div className="flex justify-between items-center mb-1">
+                           <span className="text-xs text-violet-400">Culture Fit</span>
+                           <button onClick={() => setInfoTopic('culture')} className="text-violet-500 hover:text-white text-xs">ℹ️</button>
+                        </div>
+                        <div className="flex items-center gap-2">
+                           <div className="flex-1 h-2 bg-black/40 rounded-full overflow-hidden">
+                              <div className={`h-full ${cultureFit >= 80 ? 'bg-green-500' : cultureFit >= 60 ? 'bg-yellow-500' : 'bg-red-500'}`} style={{ width: `${cultureFit}%` }} />
+                           </div>
+                           <span className={`text-sm font-bold ${cultureFit >= 80 ? 'text-green-400' : cultureFit >= 60 ? 'text-yellow-400' : 'text-red-400'}`}>{cultureFit}%</span>
+                        </div>
+                     </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3">
+                     <div className="bg-red-900/30 rounded-lg p-2 border border-red-500/30">
+                        <p className="text-xs font-bold text-red-400 mb-1">🚩 Red Flag</p>
+                        <p className="text-xs text-red-300">{candidate.redFlag}</p>
+                     </div>
+                     <div className="bg-green-900/30 rounded-lg p-2 border border-green-500/30">
+                        <p className="text-xs font-bold text-green-400 mb-1">✅ Green Flag</p>
+                        <p className="text-xs text-green-300">{candidate.greenFlag}</p>
+                     </div>
+                  </div>
+               </div>
+
+               {/* Decision buttons */}
+               <div className="grid grid-cols-2 gap-3">
+                  <button
+                     onClick={() => hireCandidate(false)}
+                     className="py-4 bg-red-900/50 hover:bg-red-800/50 border-2 border-red-500/30 hover:border-red-500 rounded-xl font-bold transition-all"
+                  >
+                     ⏭️ PASS
+                  </button>
+                  <button
+                     onClick={() => hireCandidate(true)}
+                     disabled={budget < candidate.salary}
+                     className="py-4 bg-green-900/50 hover:bg-green-800/50 border-2 border-green-500/30 hover:border-green-500 rounded-xl font-bold transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                     ✅ HIRE (${candidate.salary.toLocaleString()})
+                  </button>
+               </div>
+            </div>
+
+            {/* Team panel */}
+            {team.length > 0 && (
+               <div className="h-16 bg-black/40 border-t border-violet-500/30 p-2 flex items-center gap-2 overflow-x-auto">
+                  <span className="text-[10px] font-bold text-violet-500 mr-2">TEAM:</span>
+                  {team.map((member, i) => (
+                     <span key={i} className="text-xs px-2 py-1 bg-violet-900/50 rounded-lg whitespace-nowrap">
+                        {member.name.split(' ')[0]}
+                     </span>
+                  ))}
+               </div>
+            )}
+         </div>
+      );
+   };
+
    // --- GENERIC RENDERER ---
    const GenericRenderer = () => {
       if (type === 'poster' || type === 'infographic') {
@@ -25647,6 +26156,8 @@ const GeneratedDiagram: React.FC<DiagramProps> = ({ type, data, title }) => {
             return <InventoryManagementRenderer />;
          case 'outsourcing':
             return <OutsourcingRenderer />;
+         case 'hiring':
+            return <HiringRenderer />;
          default:
             return <GenericRenderer />;
       }

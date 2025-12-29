@@ -297,6 +297,7 @@ When a concept comes up, follow this lookup process:
 • Supply Chain Management / Logistics → 'supply_chain'
 • Inventory Management / Stock Control / EOQ → 'inventory_management'
 • Outsourcing / Make vs Buy / Build vs Buy → 'outsourcing'
+• Hiring & Team Culture / Recruiting / Building Teams → 'hiring'
 
 **STEP 2: IF NO MATCH → BUILD CUSTOM**
 Only if the topic is NOT covered above, use \`type: 'dynamic_blueprint'\` with custom JSON.
@@ -1084,6 +1085,12 @@ Only if the topic is NOT covered above, use \`type: 'dynamic_blueprint'\` with c
     → Compare in-house vs outsource: cost, quality, control, speed
     → Track budget, quality score, and control level
     → KEY INSIGHT: Keep core competencies in-house; outsource non-core activities
+- **Operations / Hiring & Team Culture:** Use \`type: 'hiring'\`, \`data: '{}'\`
+    → Define company values first (choose 3 from 6 options)
+    → Evaluate 5 candidates with skills, culture fit, salary, red/green flags
+    → Culture fit calculated dynamically based on your selected values
+    → Track budget ($300K), team size, culture score, productivity
+    → KEY INSIGHT: Define values first; hire for culture fit, train for skills
 
 **CUSTOM SIMULATIONS (only if no pre-built exists):**
 3. For dynamic text, use: \`"content": "Range: {{calculations.range}} m"\`
