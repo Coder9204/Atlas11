@@ -25740,6 +25740,445 @@ const GeneratedDiagram: React.FC<DiagramProps> = ({ type, data, title }) => {
       );
    };
 
+   // ============================================================================
+   // PROJECT MANAGEMENT INTERACTIVE
+   // ============================================================================
+   const ProjectManagementRenderer = () => {
+      const [phase, setPhase] = useState<'intro' | 'play' | 'result'>('intro');
+      const [showInfo, setShowInfo] = useState(false);
+      const [infoTopic, setInfoTopic] = useState<string | null>(null);
+      const [day, setDay] = useState(1);
+      const [gameLog, setGameLog] = useState<string[]>([]);
+
+      // Project settings
+      const deadline = 14; // days
+      const teamCapacity = 3; // tasks per day
+
+      // Tasks with Kanban states
+      const [tasks, setTasks] = useState<{
+         id: string;
+         name: string;
+         icon: string;
+         status: 'backlog' | 'todo' | 'doing' | 'done';
+         effort: number; // days to complete
+         priority: 'high' | 'medium' | 'low';
+         blockedBy?: string;
+         daysWorked: number;
+      }[]>([]);
+
+      const initialTasks = [
+         { id: 'design', name: 'UI Design', icon: '🎨', effort: 2, priority: 'high' as const, blockedBy: undefined },
+         { id: 'backend', name: 'Backend API', icon: '⚙️', effort: 3, priority: 'high' as const, blockedBy: undefined },
+         { id: 'frontend', name: 'Frontend Dev', icon: '💻', effort: 3, priority: 'high' as const, blockedBy: 'design' },
+         { id: 'database', name: 'Database Setup', icon: '🗄️', effort: 1, priority: 'medium' as const, blockedBy: undefined },
+         { id: 'testing', name: 'Testing', icon: '🧪', effort: 2, priority: 'medium' as const, blockedBy: 'frontend' },
+         { id: 'docs', name: 'Documentation', icon: '📝', effort: 1, priority: 'low' as const, blockedBy: undefined },
+         { id: 'deploy', name: 'Deployment', icon: '🚀', effort: 1, priority: 'high' as const, blockedBy: 'testing' },
+      ];
+
+      // Scope creep events
+      const scopeCreepTasks = [
+         { id: 'auth', name: 'Add Auth System', icon: '🔐', effort: 2, priority: 'high' as const },
+         { id: 'analytics', name: 'Analytics Dashboard', icon: '📊', effort: 2, priority: 'medium' as const },
+         { id: 'mobile', name: 'Mobile Responsive', icon: '📱', effort: 1, priority: 'medium' as const },
+      ];
+
+      const [scopeCreepAdded, setScopeCreepAdded] = useState(0);
+      const [completedOnTime, setCompletedOnTime] = useState(false);
+
+      const infoTopics: Record<string, { title: string; content: string }> = {
+         kanban: {
+            title: 'Kanban Board',
+            content: 'Kanban visualizes work as cards moving through columns (To Do → Doing → Done). It limits work-in-progress, reveals bottlenecks, and helps teams focus on finishing work rather than starting new tasks.'
+         },
+         priority: {
+            title: 'Task Prioritization',
+            content: 'Not all tasks are equal. High priority tasks are critical path items that block other work. Focus on high-priority items first, but don\'t neglect medium/low priority tasks that pile up.'
+         },
+         dependencies: {
+            title: 'Task Dependencies',
+            content: 'Some tasks can\'t start until others finish (e.g., can\'t test before building). Identifying dependencies helps plan the critical path - the longest chain that determines minimum project duration.'
+         },
+         scope: {
+            title: 'Scope Creep',
+            content: 'Scope creep is when new requirements keep getting added during a project. It\'s a major cause of delays and budget overruns. Learn to say "that\'s a great idea for v2" and protect your timeline.'
+         },
+         capacity: {
+            title: 'Team Capacity',
+            content: 'Your team can only work on a limited number of tasks simultaneously. Overloading leads to context switching and slower progress. Respect capacity limits and focus on throughput, not busyness.'
+         },
+         wip: {
+            title: 'Work In Progress (WIP)',
+            content: 'WIP limits are constraints on how many tasks can be "in progress" at once. Lower WIP = faster completion of individual tasks = better flow. Stop starting, start finishing!'
+         }
+      };
+
+      const getBlockedTasks = () => {
+         return tasks.filter(t => {
+            if (!t.blockedBy) return false;
+            const blocker = tasks.find(b => b.id === t.blockedBy);
+            return blocker && blocker.status !== 'done';
+         }).map(t => t.id);
+      };
+
+      const moveTask = (taskId: string, newStatus: 'todo' | 'doing' | 'done') => {
+         const blockedTasks = getBlockedTasks();
+
+         setTasks(prev => prev.map(t => {
+            if (t.id === taskId) {
+               // Can't move blocked tasks to doing
+               if (newStatus === 'doing' && blockedTasks.includes(taskId)) {
+                  setGameLog(prev => [...prev, `⚠️ ${t.name} is blocked by ${tasks.find(b => b.id === t.blockedBy)?.name}`]);
+                  return t;
+               }
+
+               // Check capacity for doing
+               if (newStatus === 'doing') {
+                  const doingCount = prev.filter(p => p.status === 'doing').length;
+                  if (doingCount >= teamCapacity) {
+                     setGameLog(prev => [...prev, `⚠️ Team at capacity! Finish tasks before starting new ones.`]);
+                     return t;
+                  }
+               }
+
+               return { ...t, status: newStatus };
+            }
+            return t;
+         }));
+      };
+
+      const processDay = () => {
+         let newLog: string[] = [`📅 Day ${day}`];
+
+         // Progress tasks in "doing"
+         setTasks(prev => {
+            const updated = prev.map(t => {
+               if (t.status === 'doing') {
+                  const newDaysWorked = t.daysWorked + 1;
+                  if (newDaysWorked >= t.effort) {
+                     newLog.push(`✅ Completed: ${t.name}`);
+                     return { ...t, status: 'done' as const, daysWorked: newDaysWorked };
+                  }
+                  return { ...t, daysWorked: newDaysWorked };
+               }
+               return t;
+            });
+            return updated;
+         });
+
+         // Scope creep chance (20% after day 3)
+         if (day > 3 && scopeCreepAdded < scopeCreepTasks.length && Math.random() < 0.25) {
+            const newTask = scopeCreepTasks[scopeCreepAdded];
+            setTasks(prev => [...prev, { ...newTask, status: 'backlog', daysWorked: 0 }]);
+            setScopeCreepAdded(prev => prev + 1);
+            newLog.push(`🆕 SCOPE CREEP: "${newTask.name}" added to backlog!`);
+         }
+
+         setGameLog(prev => [...prev, ...newLog]);
+
+         // Check win/lose
+         const allDone = tasks.filter(t => t.status !== 'done').length === 0 && tasks.length > 0;
+         if (allDone) {
+            setCompletedOnTime(day <= deadline);
+            setPhase('result');
+            return;
+         }
+
+         if (day >= deadline) {
+            setCompletedOnTime(false);
+            setPhase('result');
+            return;
+         }
+
+         setDay(d => d + 1);
+      };
+
+      const startGame = () => {
+         setPhase('play');
+         setDay(1);
+         setTasks(initialTasks.map(t => ({ ...t, status: 'backlog' as const, daysWorked: 0 })));
+         setScopeCreepAdded(0);
+         setGameLog([]);
+         setCompletedOnTime(false);
+      };
+
+      const getScore = () => {
+         const completedTasks = tasks.filter(t => t.status === 'done').length;
+         const totalTasks = tasks.length;
+         const completionRate = Math.round((completedTasks / totalTasks) * 100);
+         const daysUsed = day;
+         const efficiency = deadline > 0 ? Math.round(((deadline - daysUsed + 1) / deadline) * 100) : 0;
+
+         let score = 0;
+         if (completedOnTime) score += 40;
+         score += Math.round(completionRate * 0.4);
+         if (efficiency > 0) score += Math.round(efficiency * 0.2);
+
+         return { score: Math.min(100, Math.max(0, score)), completedTasks, totalTasks, completionRate, daysUsed };
+      };
+
+      // INTRO PHASE
+      if (phase === 'intro') return (
+         <div className="flex flex-col h-full bg-gradient-to-br from-orange-900 via-amber-900 to-yellow-900 text-white p-6 overflow-auto">
+            <div className="flex justify-between items-start mb-4">
+               <div>
+                  <h2 className="text-2xl font-black flex items-center gap-2">📋 PROJECT MANAGEMENT</h2>
+                  <p className="text-orange-300 text-sm mt-1">Lead your team to ship on time</p>
+               </div>
+               <button onClick={() => setShowInfo(!showInfo)} className="w-10 h-10 rounded-full bg-white/20 hover:bg-white/30 flex items-center justify-center text-xl transition-all">ℹ️</button>
+            </div>
+
+            {showInfo && (
+               <div className="bg-black/40 rounded-xl p-4 mb-4 text-sm border border-orange-500/30">
+                  <p className="font-bold text-orange-200 mb-2">📚 What You'll Learn:</p>
+                  <ul className="space-y-1 text-orange-300">
+                     <li>• How Kanban boards organize work</li>
+                     <li>• Task prioritization and dependencies</li>
+                     <li>• Managing team capacity</li>
+                     <li>• Dealing with scope creep</li>
+                  </ul>
+               </div>
+            )}
+
+            <div className="flex-1 flex flex-col justify-center">
+               <div className="bg-black/30 rounded-2xl p-4 mb-6">
+                  <p className="text-center text-orange-400 text-xs mb-4 font-bold uppercase tracking-wider">The Kanban Flow</p>
+                  <div className="flex justify-around items-center">
+                     {['📥 Backlog', '📋 To Do', '🔄 Doing', '✅ Done'].map((stage, i) => (
+                        <div key={i} className="text-center">
+                           <div className="w-14 h-14 rounded-xl bg-orange-500/20 flex items-center justify-center text-xl mb-1 border border-orange-500/30">
+                              {stage.split(' ')[0]}
+                           </div>
+                           <p className="text-[10px] text-orange-400">{stage.split(' ')[1]}</p>
+                        </div>
+                     ))}
+                  </div>
+                  <div className="flex justify-around mt-2">
+                     {['→', '→', '→'].map((arrow, i) => (
+                        <span key={i} className="text-orange-500 text-lg">→</span>
+                     ))}
+                  </div>
+               </div>
+
+               <div className="text-center mb-6">
+                  <h3 className="text-xl font-bold mb-2">🎮 Your Mission</h3>
+                  <p className="text-orange-300 max-w-lg mx-auto">
+                     You have <span className="font-bold text-white">{deadline} days</span> to ship a product.
+                     Move tasks through the Kanban board, respect dependencies, and watch out for scope creep!
+                  </p>
+               </div>
+
+               <div className="grid grid-cols-3 gap-3 mb-6 max-w-md mx-auto text-center">
+                  <div className="bg-black/30 rounded-lg p-2">
+                     <span className="text-xl">⏱️</span>
+                     <p className="text-[10px] text-orange-400">{deadline} Day Deadline</p>
+                  </div>
+                  <div className="bg-black/30 rounded-lg p-2">
+                     <span className="text-xl">👥</span>
+                     <p className="text-[10px] text-orange-400">{teamCapacity} Tasks/Day Max</p>
+                  </div>
+                  <div className="bg-black/30 rounded-lg p-2">
+                     <span className="text-xl">🔗</span>
+                     <p className="text-[10px] text-orange-400">Dependencies</p>
+                  </div>
+               </div>
+
+               <button onClick={startGame} className="mx-auto px-8 py-4 bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-500 hover:to-amber-500 rounded-xl font-bold text-lg transition-all transform hover:scale-105 shadow-lg">
+                  START PROJECT →
+               </button>
+            </div>
+         </div>
+      );
+
+      // RESULT PHASE
+      if (phase === 'result') {
+         const { score, completedTasks, totalTasks, completionRate, daysUsed } = getScore();
+         const grade = score >= 80 ? 'A' : score >= 60 ? 'B' : score >= 40 ? 'C' : 'D';
+         const gradeColor = score >= 80 ? 'text-green-400' : score >= 60 ? 'text-blue-400' : score >= 40 ? 'text-yellow-400' : 'text-red-400';
+
+         return (
+            <div className="flex flex-col h-full bg-gradient-to-br from-orange-900 via-amber-900 to-yellow-900 text-white p-6 overflow-auto">
+               <div className="text-center mb-6">
+                  <div className="text-6xl mb-2">{completedOnTime ? '🚀' : '⏰'}</div>
+                  <h2 className="text-3xl font-black">{completedOnTime ? 'Shipped On Time!' : 'Deadline Missed'}</h2>
+                  <p className={`text-5xl font-black mt-2 ${gradeColor}`}>Grade: {grade}</p>
+               </div>
+
+               <div className="grid grid-cols-2 gap-3 mb-4 max-w-md mx-auto">
+                  <div className="bg-black/30 rounded-xl p-3 text-center">
+                     <p className="text-xl font-black text-green-400">{completedTasks}/{totalTasks}</p>
+                     <p className="text-xs text-orange-300">Tasks Done</p>
+                  </div>
+                  <div className="bg-black/30 rounded-xl p-3 text-center">
+                     <p className="text-xl font-black text-blue-400">{completionRate}%</p>
+                     <p className="text-xs text-orange-300">Completion</p>
+                  </div>
+                  <div className="bg-black/30 rounded-xl p-3 text-center">
+                     <p className="text-xl font-black text-purple-400">{daysUsed}</p>
+                     <p className="text-xs text-orange-300">Days Used</p>
+                  </div>
+                  <div className="bg-black/30 rounded-xl p-3 text-center">
+                     <p className="text-xl font-black text-amber-400">{scopeCreepAdded}</p>
+                     <p className="text-xs text-orange-300">Scope Creep Items</p>
+                  </div>
+               </div>
+
+               <div className="bg-orange-900/40 rounded-xl p-4 mb-4 border border-orange-500/30">
+                  <p className="font-bold text-orange-300 mb-2 flex items-center gap-2">
+                     <span className="w-6 h-6 rounded-full bg-orange-500 flex items-center justify-center text-sm">💡</span>
+                     Key Takeaways
+                  </p>
+                  <ul className="text-sm text-orange-200 space-y-1">
+                     <li>• <strong>Dependencies</strong> define your critical path</li>
+                     <li>• <strong>WIP limits</strong> prevent overload and improve focus</li>
+                     <li>• <strong>Scope creep</strong> is the #1 project killer - learn to say no</li>
+                     <li>• <strong>Prioritize ruthlessly</strong> - not everything is urgent</li>
+                  </ul>
+               </div>
+
+               <button onClick={startGame} className="mx-auto px-6 py-3 bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-500 hover:to-amber-500 rounded-xl font-bold transition-all">
+                  🔄 TRY AGAIN
+               </button>
+            </div>
+         );
+      }
+
+      // PLAY PHASE
+      const blockedTasks = getBlockedTasks();
+      const doingCount = tasks.filter(t => t.status === 'doing').length;
+      const doneCount = tasks.filter(t => t.status === 'done').length;
+      const columns: ('backlog' | 'todo' | 'doing' | 'done')[] = ['backlog', 'todo', 'doing', 'done'];
+      const columnLabels = { backlog: '📥 Backlog', todo: '📋 To Do', doing: '🔄 Doing', done: '✅ Done' };
+
+      return (
+         <div className="flex flex-col h-full bg-gradient-to-br from-orange-900 via-amber-900 to-yellow-900 text-white overflow-hidden">
+            {/* Header */}
+            <div className="p-3 bg-black/30 border-b border-orange-500/30">
+               <div className="flex justify-between items-center mb-2">
+                  <span className="text-lg font-black">📅 Day {day} / {deadline}</span>
+                  <div className="flex gap-2">
+                     <span className={`px-3 py-1 rounded-full text-sm font-bold ${day <= deadline - 3 ? 'bg-green-900/50 text-green-300' : 'bg-red-900/50 text-red-300'}`}>
+                        {deadline - day} days left
+                     </span>
+                  </div>
+               </div>
+               <div className="w-full h-2 bg-black/40 rounded-full overflow-hidden">
+                  <div className="h-full bg-gradient-to-r from-orange-500 to-amber-500 transition-all" style={{ width: `${(day / deadline) * 100}%` }} />
+               </div>
+            </div>
+
+            {/* Info modal */}
+            {infoTopic && infoTopics[infoTopic] && (
+               <div className="absolute inset-0 bg-black/70 flex items-center justify-center z-50 p-4" onClick={() => setInfoTopic(null)}>
+                  <div className="bg-orange-900 rounded-2xl p-6 max-w-md border border-orange-500" onClick={e => e.stopPropagation()}>
+                     <h3 className="text-xl font-black mb-2 flex items-center gap-2">ℹ️ {infoTopics[infoTopic].title}</h3>
+                     <p className="text-orange-200 text-sm leading-relaxed">{infoTopics[infoTopic].content}</p>
+                     <button onClick={() => setInfoTopic(null)} className="mt-4 px-4 py-2 bg-orange-700 hover:bg-orange-600 rounded-lg text-sm font-bold w-full">Got it!</button>
+                  </div>
+               </div>
+            )}
+
+            {/* Kanban Board */}
+            <div className="flex-1 p-2 overflow-x-auto">
+               <div className="flex gap-2 h-full min-w-[600px]">
+                  {columns.map(col => (
+                     <div key={col} className="flex-1 bg-black/20 rounded-xl p-2 flex flex-col min-w-[140px]">
+                        <div className="flex justify-between items-center mb-2">
+                           <span className="text-xs font-bold text-orange-400">{columnLabels[col]}</span>
+                           {col === 'doing' && (
+                              <span className={`text-[10px] px-1.5 py-0.5 rounded ${doingCount >= teamCapacity ? 'bg-red-500' : 'bg-green-500/50'}`}>
+                                 {doingCount}/{teamCapacity}
+                              </span>
+                           )}
+                           {col === 'kanban' && <button onClick={() => setInfoTopic('kanban')} className="text-orange-500 text-xs">ℹ️</button>}
+                        </div>
+                        <div className="flex-1 space-y-2 overflow-y-auto">
+                           {tasks.filter(t => t.status === col).map(task => {
+                              const isBlocked = blockedTasks.includes(task.id);
+                              const blocker = task.blockedBy ? tasks.find(b => b.id === task.blockedBy) : null;
+                              const progress = task.status === 'doing' ? (task.daysWorked / task.effort) * 100 : 0;
+
+                              return (
+                                 <div
+                                    key={task.id}
+                                    className={`p-2 rounded-lg text-xs transition-all ${
+                                       isBlocked ? 'bg-red-900/30 border border-red-500/30' :
+                                       task.status === 'done' ? 'bg-green-900/30 border border-green-500/30' :
+                                       'bg-black/30 border border-orange-500/20'
+                                    }`}
+                                 >
+                                    <div className="flex items-center gap-1 mb-1">
+                                       <span>{task.icon}</span>
+                                       <span className="font-bold truncate flex-1">{task.name}</span>
+                                       <span className={`w-2 h-2 rounded-full ${
+                                          task.priority === 'high' ? 'bg-red-500' :
+                                          task.priority === 'medium' ? 'bg-yellow-500' : 'bg-green-500'
+                                       }`} />
+                                    </div>
+
+                                    {task.status === 'doing' && (
+                                       <div className="h-1 bg-black/40 rounded-full overflow-hidden mb-1">
+                                          <div className="h-full bg-blue-500 transition-all" style={{ width: `${progress}%` }} />
+                                       </div>
+                                    )}
+
+                                    {isBlocked && blocker && (
+                                       <p className="text-red-400 text-[10px]">🔒 Blocked by {blocker.name}</p>
+                                    )}
+
+                                    <div className="text-[10px] text-orange-400 mb-1">
+                                       ⏱️ {task.effort}d effort
+                                    </div>
+
+                                    {/* Move buttons */}
+                                    {task.status !== 'done' && (
+                                       <div className="flex gap-1 mt-1">
+                                          {task.status === 'backlog' && (
+                                             <button onClick={() => moveTask(task.id, 'todo')} className="flex-1 py-1 bg-orange-700/50 hover:bg-orange-600/50 rounded text-[10px]">
+                                                → To Do
+                                             </button>
+                                          )}
+                                          {task.status === 'todo' && (
+                                             <button
+                                                onClick={() => moveTask(task.id, 'doing')}
+                                                disabled={isBlocked || doingCount >= teamCapacity}
+                                                className="flex-1 py-1 bg-blue-700/50 hover:bg-blue-600/50 disabled:opacity-50 rounded text-[10px]"
+                                             >
+                                                → Start
+                                             </button>
+                                          )}
+                                       </div>
+                                    )}
+                                 </div>
+                              );
+                           })}
+                        </div>
+                     </div>
+                  ))}
+               </div>
+            </div>
+
+            {/* Action Bar */}
+            <div className="p-3 bg-black/30 border-t border-orange-500/30">
+               <div className="flex gap-2 items-center justify-between mb-2">
+                  <div className="flex gap-2">
+                     <button onClick={() => setInfoTopic('dependencies')} className="text-xs text-orange-400 hover:text-white">🔗 Dependencies</button>
+                     <button onClick={() => setInfoTopic('scope')} className="text-xs text-orange-400 hover:text-white">🆕 Scope Creep</button>
+                     <button onClick={() => setInfoTopic('wip')} className="text-xs text-orange-400 hover:text-white">📊 WIP Limits</button>
+                  </div>
+                  <span className="text-xs text-orange-400">{doneCount}/{tasks.length} complete</span>
+               </div>
+               <button
+                  onClick={processDay}
+                  className="w-full py-3 bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-500 hover:to-amber-500 rounded-xl font-bold transition-all"
+               >
+                  ▶️ END DAY {day}
+               </button>
+            </div>
+         </div>
+      );
+   };
+
    // --- GENERIC RENDERER ---
    const GenericRenderer = () => {
       if (type === 'poster' || type === 'infographic') {
@@ -26158,6 +26597,8 @@ const GeneratedDiagram: React.FC<DiagramProps> = ({ type, data, title }) => {
             return <OutsourcingRenderer />;
          case 'hiring':
             return <HiringRenderer />;
+         case 'project_management':
+            return <ProjectManagementRenderer />;
          default:
             return <GenericRenderer />;
       }

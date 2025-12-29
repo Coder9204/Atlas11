@@ -298,6 +298,7 @@ When a concept comes up, follow this lookup process:
 • Inventory Management / Stock Control / EOQ → 'inventory_management'
 • Outsourcing / Make vs Buy / Build vs Buy → 'outsourcing'
 • Hiring & Team Culture / Recruiting / Building Teams → 'hiring'
+• Project Management / Kanban / Sprints / Agile Boards → 'project_management'
 
 **STEP 2: IF NO MATCH → BUILD CUSTOM**
 Only if the topic is NOT covered above, use \`type: 'dynamic_blueprint'\` with custom JSON.
@@ -1091,6 +1092,14 @@ Only if the topic is NOT covered above, use \`type: 'dynamic_blueprint'\` with c
     → Culture fit calculated dynamically based on your selected values
     → Track budget ($300K), team size, culture score, productivity
     → KEY INSIGHT: Define values first; hire for culture fit, train for skills
+- **Operations / Project Management / Kanban:** Use \`type: 'project_management'\`, \`data: '{}'\`
+    → Kanban board simulation with Backlog, To Do, In Progress, Done columns
+    → 14-day deadline to complete 8 initial tasks plus scope creep additions
+    → Tasks have effort points, priorities (high/medium/low), and dependencies
+    → Team capacity of 3 tasks in progress at a time (WIP limit)
+    → Random scope creep events add urgent tasks mid-project
+    → Track day, progress, blocked tasks, and deadline pressure
+    → KEY INSIGHT: WIP limits prevent bottlenecks; dependencies need planning
 
 **CUSTOM SIMULATIONS (only if no pre-built exists):**
 3. For dynamic text, use: \`"content": "Range: {{calculations.range}} m"\`
