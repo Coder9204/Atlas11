@@ -24780,6 +24780,457 @@ const GeneratedDiagram: React.FC<DiagramProps> = ({ type, data, title }) => {
       );
    };
 
+   // ============================================================================
+   // OUTSOURCING DECISIONS INTERACTIVE
+   // ============================================================================
+   const OutsourcingRenderer = () => {
+      const [phase, setPhase] = useState<'intro' | 'play' | 'result'>('intro');
+      const [showInfo, setShowInfo] = useState(false);
+      const [infoTopic, setInfoTopic] = useState<string | null>(null);
+      const [currentTask, setCurrentTask] = useState(0);
+      const [gameLog, setGameLog] = useState<string[]>([]);
+
+      // Business metrics
+      const [budget, setBudget] = useState(100000);
+      const [qualityScore, setQualityScore] = useState(80);
+      const [controlScore, setControlScore] = useState(100);
+      const [velocity, setVelocity] = useState(50);
+
+      // Decisions made
+      const [decisions, setDecisions] = useState<{ task: string; choice: 'inhouse' | 'outsource'; cost: number; impact: string }[]>([]);
+
+      const tasks = [
+         {
+            name: 'Software Development',
+            icon: '💻',
+            isCore: true,
+            inhouse: { cost: 80000, quality: 90, control: 100, velocity: 40, time: '6 months' },
+            outsource: { cost: 40000, quality: 75, control: 50, velocity: 80, time: '3 months' },
+            insight: 'Core competency - outsourcing risks losing competitive advantage'
+         },
+         {
+            name: 'Accounting & Bookkeeping',
+            icon: '📊',
+            isCore: false,
+            inhouse: { cost: 50000, quality: 85, control: 100, velocity: 50, time: 'Ongoing' },
+            outsource: { cost: 15000, quality: 90, control: 70, velocity: 90, time: 'Ongoing' },
+            insight: 'Non-core - specialists often do it better and cheaper'
+         },
+         {
+            name: 'Customer Support',
+            icon: '🎧',
+            isCore: true,
+            inhouse: { cost: 60000, quality: 95, control: 100, velocity: 60, time: 'Ongoing' },
+            outsource: { cost: 25000, quality: 70, control: 40, velocity: 85, time: 'Ongoing' },
+            insight: 'Customer-facing - quality matters more than cost'
+         },
+         {
+            name: 'Logo & Brand Design',
+            icon: '🎨',
+            isCore: false,
+            inhouse: { cost: 30000, quality: 75, control: 100, velocity: 30, time: '2 months' },
+            outsource: { cost: 5000, quality: 90, control: 60, velocity: 95, time: '2 weeks' },
+            insight: 'One-time project - perfect for freelancers/agencies'
+         },
+         {
+            name: 'Legal Services',
+            icon: '⚖️',
+            isCore: false,
+            inhouse: { cost: 120000, quality: 85, control: 100, velocity: 50, time: 'Ongoing' },
+            outsource: { cost: 20000, quality: 95, control: 80, velocity: 90, time: 'As needed' },
+            insight: 'Specialized expertise - outsource unless you\'re a law firm'
+         },
+         {
+            name: 'Marketing Campaigns',
+            icon: '📢',
+            isCore: true,
+            inhouse: { cost: 70000, quality: 80, control: 100, velocity: 50, time: 'Ongoing' },
+            outsource: { cost: 35000, quality: 85, control: 60, velocity: 80, time: 'Ongoing' },
+            insight: 'Mix works best - keep strategy in-house, outsource execution'
+         },
+      ];
+
+      const infoTopics: Record<string, { title: string; content: string }> = {
+         outsourcing: {
+            title: 'What is Outsourcing?',
+            content: 'Outsourcing means hiring external companies or freelancers to handle business functions instead of doing them in-house. It can reduce costs and provide access to specialized skills.'
+         },
+         core: {
+            title: 'Core vs Non-Core',
+            content: 'Core activities are central to your competitive advantage (what makes you unique). Non-core activities are necessary but don\'t differentiate you. Generally, keep core in-house and consider outsourcing non-core.'
+         },
+         tradeoffs: {
+            title: 'Outsourcing Tradeoffs',
+            content: 'Outsourcing saves money and time but reduces control and may affect quality. You also become dependent on vendors. Consider: cost savings, expertise access, focus on core business, but also communication overhead and quality risks.'
+         },
+         control: {
+            title: 'Control & Quality',
+            content: 'In-house teams give you full control over quality, priorities, and processes. Outsourced work requires clear contracts, communication, and quality checks. The further from your core, the less control matters.'
+         },
+         velocity: {
+            title: 'Speed to Market',
+            content: 'Outsourcing can dramatically speed up delivery - agencies have ready teams and processes. But coordination takes time. For one-time projects, outsourcing is often faster. For ongoing work, in-house builds momentum.'
+         },
+         dependency: {
+            title: 'Vendor Dependency',
+            content: 'Over-relying on vendors creates risk: they might raise prices, reduce quality, or go out of business. Diversify vendors for critical functions and keep core competencies in-house.'
+         }
+      };
+
+      const makeDecision = (choice: 'inhouse' | 'outsource') => {
+         const task = tasks[currentTask];
+         const option = choice === 'inhouse' ? task.inhouse : task.outsource;
+
+         // Apply effects
+         setBudget(prev => prev - option.cost);
+         setQualityScore(prev => Math.round((prev + option.quality) / 2));
+         setControlScore(prev => Math.round((prev + option.control) / 2));
+         setVelocity(prev => Math.round((prev + option.velocity) / 2));
+
+         // Log decision
+         const impact = choice === 'inhouse'
+            ? `Kept in-house: Full control, higher cost`
+            : `Outsourced: Cost savings of $${task.inhouse.cost - task.outsource.cost}`;
+
+         setDecisions(prev => [...prev, {
+            task: task.name,
+            choice,
+            cost: option.cost,
+            impact
+         }]);
+
+         setGameLog(prev => [...prev,
+            `${task.icon} ${task.name}: ${choice === 'inhouse' ? 'IN-HOUSE' : 'OUTSOURCED'}`,
+            `   Cost: $${option.cost.toLocaleString()} | Quality: ${option.quality}% | Control: ${option.control}%`,
+            `   💡 ${task.insight}`
+         ]);
+
+         if (currentTask < tasks.length - 1) {
+            setCurrentTask(prev => prev + 1);
+         } else {
+            setPhase('result');
+         }
+      };
+
+      const startGame = () => {
+         setPhase('play');
+         setCurrentTask(0);
+         setBudget(100000);
+         setQualityScore(80);
+         setControlScore(100);
+         setVelocity(50);
+         setDecisions([]);
+         setGameLog([]);
+      };
+
+      const getScore = () => {
+         const budgetRemaining = budget;
+         const outsourcedCount = decisions.filter(d => d.choice === 'outsource').length;
+         const coreOutsourced = decisions.filter(d => d.choice === 'outsource' && tasks.find(t => t.name === d.task)?.isCore).length;
+
+         // Score based on balanced approach
+         let score = 50;
+         if (budgetRemaining > 0) score += 20;
+         if (qualityScore >= 80) score += 15;
+         if (controlScore >= 60) score += 10;
+         if (coreOutsourced === 0) score += 15; // Bonus for keeping core in-house
+         if (outsourcedCount >= 2 && outsourcedCount <= 4) score += 10; // Balanced approach
+
+         return { score: Math.min(100, score), budgetRemaining, outsourcedCount, coreOutsourced };
+      };
+
+      // INTRO PHASE
+      if (phase === 'intro') return (
+         <div className="flex flex-col h-full bg-gradient-to-br from-teal-900 via-cyan-900 to-blue-900 text-white p-6 overflow-auto">
+            <div className="flex justify-between items-start mb-4">
+               <div>
+                  <h2 className="text-2xl font-black flex items-center gap-2">🤝 OUTSOURCING DECISIONS</h2>
+                  <p className="text-teal-300 text-sm mt-1">Build vs Buy: Strategic resource allocation</p>
+               </div>
+               <button onClick={() => setShowInfo(!showInfo)} className="w-10 h-10 rounded-full bg-white/20 hover:bg-white/30 flex items-center justify-center text-xl transition-all">ℹ️</button>
+            </div>
+
+            {showInfo && (
+               <div className="bg-black/40 rounded-xl p-4 mb-4 text-sm border border-teal-500/30">
+                  <p className="font-bold text-teal-200 mb-2">📚 What You'll Learn:</p>
+                  <ul className="space-y-1 text-teal-300">
+                     <li>• When to outsource vs keep in-house</li>
+                     <li>• Core vs non-core business activities</li>
+                     <li>• Cost, quality, and control tradeoffs</li>
+                     <li>• Strategic resource allocation</li>
+                  </ul>
+               </div>
+            )}
+
+            <div className="flex-1 flex flex-col justify-center">
+               {/* Decision framework visualization */}
+               <div className="bg-black/30 rounded-2xl p-4 mb-6">
+                  <p className="text-center text-teal-400 text-xs mb-4 font-bold uppercase tracking-wider">The Outsourcing Decision Matrix</p>
+                  <div className="grid grid-cols-2 gap-3">
+                     <div className="bg-green-900/40 rounded-xl p-3 border border-green-500/30">
+                        <p className="font-bold text-green-400 text-sm mb-1">🏠 Keep In-House</p>
+                        <ul className="text-xs text-green-300 space-y-1">
+                           <li>✓ Core competencies</li>
+                           <li>✓ Competitive advantage</li>
+                           <li>✓ Need full control</li>
+                        </ul>
+                     </div>
+                     <div className="bg-blue-900/40 rounded-xl p-3 border border-blue-500/30">
+                        <p className="font-bold text-blue-400 text-sm mb-1">🌐 Outsource</p>
+                        <ul className="text-xs text-blue-300 space-y-1">
+                           <li>✓ Non-core activities</li>
+                           <li>✓ Need specialized skills</li>
+                           <li>✓ One-time projects</li>
+                        </ul>
+                     </div>
+                  </div>
+               </div>
+
+               <div className="text-center mb-6">
+                  <h3 className="text-xl font-bold mb-2">🎮 Your Mission</h3>
+                  <p className="text-teal-300 max-w-lg mx-auto">
+                     You're a startup founder with $100,000. Decide which business functions
+                     to outsource and which to keep in-house. Balance cost, quality, and control!
+                  </p>
+               </div>
+
+               <div className="grid grid-cols-4 gap-2 mb-6 max-w-md mx-auto text-center">
+                  <div className="bg-black/30 rounded-lg p-2">
+                     <span className="text-xl">💰</span>
+                     <p className="text-[10px] text-teal-400">$100K Budget</p>
+                  </div>
+                  <div className="bg-black/30 rounded-lg p-2">
+                     <span className="text-xl">⭐</span>
+                     <p className="text-[10px] text-teal-400">Quality</p>
+                  </div>
+                  <div className="bg-black/30 rounded-lg p-2">
+                     <span className="text-xl">🎮</span>
+                     <p className="text-[10px] text-teal-400">Control</p>
+                  </div>
+                  <div className="bg-black/30 rounded-lg p-2">
+                     <span className="text-xl">⚡</span>
+                     <p className="text-[10px] text-teal-400">Speed</p>
+                  </div>
+               </div>
+
+               <button onClick={startGame} className="mx-auto px-8 py-4 bg-gradient-to-r from-teal-600 to-cyan-600 hover:from-teal-500 hover:to-cyan-500 rounded-xl font-bold text-lg transition-all transform hover:scale-105 shadow-lg">
+                  START DECISIONS →
+               </button>
+            </div>
+
+            <p className="text-xs text-teal-400/60 text-center mt-4">💡 Tip: Focus on keeping core competencies in-house while outsourcing non-core activities.</p>
+         </div>
+      );
+
+      // RESULT PHASE
+      if (phase === 'result') {
+         const { score, budgetRemaining, outsourcedCount, coreOutsourced } = getScore();
+         const grade = score >= 80 ? 'A' : score >= 60 ? 'B' : score >= 40 ? 'C' : 'D';
+         const gradeColor = score >= 80 ? 'text-green-400' : score >= 60 ? 'text-blue-400' : score >= 40 ? 'text-yellow-400' : 'text-red-400';
+
+         return (
+            <div className="flex flex-col h-full bg-gradient-to-br from-teal-900 via-cyan-900 to-blue-900 text-white p-6 overflow-auto">
+               <div className="text-center mb-6">
+                  <div className="text-6xl mb-2">{score >= 80 ? '🏆' : score >= 60 ? '🤝' : score >= 40 ? '📊' : '⚠️'}</div>
+                  <h2 className="text-3xl font-black">Decisions Complete!</h2>
+                  <p className={`text-5xl font-black mt-2 ${gradeColor}`}>Grade: {grade}</p>
+               </div>
+
+               <div className="grid grid-cols-2 gap-3 mb-4 max-w-md mx-auto">
+                  <div className="bg-black/30 rounded-xl p-3 text-center">
+                     <p className={`text-xl font-black ${budgetRemaining >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                        ${budgetRemaining.toLocaleString()}
+                     </p>
+                     <p className="text-xs text-teal-300">Budget Remaining</p>
+                  </div>
+                  <div className="bg-black/30 rounded-xl p-3 text-center">
+                     <p className="text-xl font-black text-purple-400">{qualityScore}%</p>
+                     <p className="text-xs text-teal-300">Avg Quality</p>
+                  </div>
+                  <div className="bg-black/30 rounded-xl p-3 text-center">
+                     <p className="text-xl font-black text-blue-400">{controlScore}%</p>
+                     <p className="text-xs text-teal-300">Control Level</p>
+                  </div>
+                  <div className="bg-black/30 rounded-xl p-3 text-center">
+                     <p className="text-xl font-black text-amber-400">{outsourcedCount}/{tasks.length}</p>
+                     <p className="text-xs text-teal-300">Outsourced</p>
+                  </div>
+               </div>
+
+               {coreOutsourced > 0 && (
+                  <div className="bg-red-900/40 rounded-xl p-3 mb-4 border border-red-500/30 text-center">
+                     <p className="text-red-300 text-sm">⚠️ You outsourced {coreOutsourced} core function(s) - this may hurt competitive advantage!</p>
+                  </div>
+               )}
+
+               <div className="bg-teal-900/40 rounded-xl p-4 mb-4 border border-teal-500/30">
+                  <p className="font-bold text-teal-300 mb-2 flex items-center gap-2">
+                     <span className="w-6 h-6 rounded-full bg-teal-500 flex items-center justify-center text-sm">💡</span>
+                     Key Takeaways
+                  </p>
+                  <ul className="text-sm text-teal-200 space-y-1">
+                     <li>• <strong>Core activities</strong> should usually stay in-house</li>
+                     <li>• <strong>Non-core activities</strong> are great outsourcing candidates</li>
+                     <li>• <strong>One-time projects</strong> often benefit from outsourcing</li>
+                     <li>• Balance <strong>cost savings</strong> with <strong>quality and control</strong></li>
+                  </ul>
+               </div>
+
+               <div className="bg-black/20 rounded-xl p-3 mb-4 max-h-28 overflow-auto">
+                  <p className="text-xs font-bold text-teal-400 mb-1">📋 Decision Summary</p>
+                  <div className="text-xs text-teal-300/70 space-y-0.5">
+                     {decisions.map((d, i) => (
+                        <p key={i}>{d.choice === 'inhouse' ? '🏠' : '🌐'} {d.task}: ${d.cost.toLocaleString()}</p>
+                     ))}
+                  </div>
+               </div>
+
+               <button onClick={startGame} className="mx-auto px-6 py-3 bg-gradient-to-r from-teal-600 to-cyan-600 hover:from-teal-500 hover:to-cyan-500 rounded-xl font-bold transition-all">
+                  🔄 PLAY AGAIN
+               </button>
+            </div>
+         );
+      }
+
+      // PLAY PHASE
+      const task = tasks[currentTask];
+
+      return (
+         <div className="flex flex-col h-full bg-gradient-to-br from-teal-900 via-cyan-900 to-blue-900 text-white overflow-hidden">
+            {/* Header */}
+            <div className="p-3 bg-black/30 border-b border-teal-500/30">
+               <div className="flex justify-between items-center mb-2">
+                  <span className="text-lg font-black">Decision {currentTask + 1} / {tasks.length}</span>
+                  <span className={`px-3 py-1 rounded-full text-sm font-bold ${budget >= 0 ? 'bg-green-900/50 text-green-300' : 'bg-red-900/50 text-red-300'}`}>
+                     💰 ${budget.toLocaleString()}
+                  </span>
+               </div>
+               <div className="flex gap-3 text-xs">
+                  <span className="text-purple-300">Quality: {qualityScore}%</span>
+                  <span className="text-teal-500">|</span>
+                  <span className="text-blue-300">Control: {controlScore}%</span>
+                  <span className="text-teal-500">|</span>
+                  <span className="text-amber-300">Speed: {velocity}%</span>
+               </div>
+            </div>
+
+            {/* Info modal */}
+            {infoTopic && infoTopics[infoTopic] && (
+               <div className="absolute inset-0 bg-black/70 flex items-center justify-center z-50 p-4" onClick={() => setInfoTopic(null)}>
+                  <div className="bg-teal-900 rounded-2xl p-6 max-w-md border border-teal-500" onClick={e => e.stopPropagation()}>
+                     <h3 className="text-xl font-black mb-2 flex items-center gap-2">ℹ️ {infoTopics[infoTopic].title}</h3>
+                     <p className="text-teal-200 text-sm leading-relaxed">{infoTopics[infoTopic].content}</p>
+                     <button onClick={() => setInfoTopic(null)} className="mt-4 px-4 py-2 bg-teal-700 hover:bg-teal-600 rounded-lg text-sm font-bold w-full">Got it!</button>
+                  </div>
+               </div>
+            )}
+
+            <div className="flex-1 p-4 overflow-auto">
+               {/* Current task */}
+               <div className="bg-black/30 rounded-xl p-4 mb-4">
+                  <div className="flex justify-between items-start mb-3">
+                     <div className="flex items-center gap-3">
+                        <span className="text-4xl">{task.icon}</span>
+                        <div>
+                           <h3 className="text-xl font-black">{task.name}</h3>
+                           <span className={`text-xs px-2 py-0.5 rounded-full ${task.isCore ? 'bg-amber-500/30 text-amber-300' : 'bg-teal-500/30 text-teal-300'}`}>
+                              {task.isCore ? '⭐ Core Activity' : '📦 Non-Core'}
+                           </span>
+                        </div>
+                     </div>
+                     <button onClick={() => setInfoTopic('core')} className="text-teal-400 hover:text-white">ℹ️</button>
+                  </div>
+               </div>
+
+               {/* Options comparison */}
+               <div className="grid grid-cols-2 gap-3 mb-4">
+                  {/* In-House Option */}
+                  <button
+                     onClick={() => makeDecision('inhouse')}
+                     className="bg-green-900/30 hover:bg-green-900/50 border-2 border-green-500/30 hover:border-green-500 rounded-xl p-4 text-left transition-all"
+                  >
+                     <div className="flex items-center gap-2 mb-3">
+                        <span className="text-2xl">🏠</span>
+                        <span className="font-bold text-green-400">IN-HOUSE</span>
+                     </div>
+                     <div className="space-y-2 text-sm">
+                        <div className="flex justify-between">
+                           <span className="text-teal-400">Cost:</span>
+                           <span className="font-bold text-red-400">${task.inhouse.cost.toLocaleString()}</span>
+                        </div>
+                        <div className="flex justify-between">
+                           <span className="text-teal-400">Quality:</span>
+                           <span className="font-bold text-green-400">{task.inhouse.quality}%</span>
+                        </div>
+                        <div className="flex justify-between">
+                           <span className="text-teal-400">Control:</span>
+                           <span className="font-bold text-blue-400">{task.inhouse.control}%</span>
+                        </div>
+                        <div className="flex justify-between">
+                           <span className="text-teal-400">Speed:</span>
+                           <span className="font-bold text-amber-400">{task.inhouse.velocity}%</span>
+                        </div>
+                        <div className="text-xs text-teal-500 mt-2">⏱️ {task.inhouse.time}</div>
+                     </div>
+                  </button>
+
+                  {/* Outsource Option */}
+                  <button
+                     onClick={() => makeDecision('outsource')}
+                     className="bg-blue-900/30 hover:bg-blue-900/50 border-2 border-blue-500/30 hover:border-blue-500 rounded-xl p-4 text-left transition-all"
+                  >
+                     <div className="flex items-center gap-2 mb-3">
+                        <span className="text-2xl">🌐</span>
+                        <span className="font-bold text-blue-400">OUTSOURCE</span>
+                     </div>
+                     <div className="space-y-2 text-sm">
+                        <div className="flex justify-between">
+                           <span className="text-teal-400">Cost:</span>
+                           <span className="font-bold text-green-400">${task.outsource.cost.toLocaleString()}</span>
+                        </div>
+                        <div className="flex justify-between">
+                           <span className="text-teal-400">Quality:</span>
+                           <span className="font-bold">{task.outsource.quality}%</span>
+                        </div>
+                        <div className="flex justify-between">
+                           <span className="text-teal-400">Control:</span>
+                           <span className="font-bold text-amber-400">{task.outsource.control}%</span>
+                        </div>
+                        <div className="flex justify-between">
+                           <span className="text-teal-400">Speed:</span>
+                           <span className="font-bold text-green-400">{task.outsource.velocity}%</span>
+                        </div>
+                        <div className="text-xs text-teal-500 mt-2">⏱️ {task.outsource.time}</div>
+                     </div>
+                  </button>
+               </div>
+
+               {/* Savings indicator */}
+               <div className="bg-black/20 rounded-lg p-3 text-center">
+                  <p className="text-sm text-teal-400">
+                     💡 Outsourcing saves <span className="font-bold text-green-400">${(task.inhouse.cost - task.outsource.cost).toLocaleString()}</span>
+                     {task.isCore && <span className="text-amber-400"> (but this is a core activity!)</span>}
+                  </p>
+               </div>
+            </div>
+
+            {/* Previous decisions */}
+            {decisions.length > 0 && (
+               <div className="h-20 bg-black/40 border-t border-teal-500/30 p-2 overflow-auto">
+                  <p className="text-[10px] font-bold text-teal-500 mb-1">Previous Decisions</p>
+                  <div className="flex gap-2 flex-wrap">
+                     {decisions.map((d, i) => (
+                        <span key={i} className={`text-xs px-2 py-1 rounded ${d.choice === 'inhouse' ? 'bg-green-900/50 text-green-300' : 'bg-blue-900/50 text-blue-300'}`}>
+                           {d.choice === 'inhouse' ? '🏠' : '🌐'} {d.task.split(' ')[0]}
+                        </span>
+                     ))}
+                  </div>
+               </div>
+            )}
+         </div>
+      );
+   };
+
    // --- GENERIC RENDERER ---
    const GenericRenderer = () => {
       if (type === 'poster' || type === 'infographic') {
@@ -25194,6 +25645,8 @@ const GeneratedDiagram: React.FC<DiagramProps> = ({ type, data, title }) => {
             return <SupplyChainRenderer />;
          case 'inventory_management':
             return <InventoryManagementRenderer />;
+         case 'outsourcing':
+            return <OutsourcingRenderer />;
          default:
             return <GenericRenderer />;
       }

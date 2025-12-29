@@ -296,6 +296,7 @@ When a concept comes up, follow this lookup process:
 • Pitch Decks / Investor Presentations → 'pitch_deck'
 • Supply Chain Management / Logistics → 'supply_chain'
 • Inventory Management / Stock Control / EOQ → 'inventory_management'
+• Outsourcing / Make vs Buy / Build vs Buy → 'outsourcing'
 
 **STEP 2: IF NO MATCH → BUILD CUSTOM**
 Only if the topic is NOT covered above, use \`type: 'dynamic_blueprint'\` with custom JSON.
@@ -1077,6 +1078,12 @@ Only if the topic is NOT covered above, use \`type: 'dynamic_blueprint'\` with c
     → Balance holding costs, ordering costs, and stockout costs
     → Choose demand variability level (low/medium/high)
     → KEY INSIGHT: Safety stock protects against variability; stockouts are costlier than holding
+- **Operations / Outsourcing Decisions:** Use \`type: 'outsourcing'\`, \`data: '{}'\`
+    → Make vs Buy decision simulator for 6 business functions
+    → Evaluate: Software Dev, Accounting, Customer Support, Design, Legal, Marketing
+    → Compare in-house vs outsource: cost, quality, control, speed
+    → Track budget, quality score, and control level
+    → KEY INSIGHT: Keep core competencies in-house; outsource non-core activities
 
 **CUSTOM SIMULATIONS (only if no pre-built exists):**
 3. For dynamic text, use: \`"content": "Range: {{calculations.range}} m"\`
