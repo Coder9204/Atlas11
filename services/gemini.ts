@@ -294,6 +294,7 @@ When a concept comes up, follow this lookup process:
 • Venture Capital / VC Stages → 'venture_capital'
 • Crowdfunding / Crowd Financing → 'crowdfunding'
 • Pitch Decks / Investor Presentations → 'pitch_deck'
+• Supply Chain Management / Logistics → 'supply_chain'
 
 **STEP 2: IF NO MATCH → BUILD CUSTOM**
 Only if the topic is NOT covered above, use \`type: 'dynamic_blueprint'\` with custom JSON.
@@ -1063,6 +1064,12 @@ Only if the topic is NOT covered above, use \`type: 'dynamic_blueprint'\` with c
     → Investor presentation builder
     → 8-slide structure: Problem→Solution→Market→Model→Traction→Team→Financials→Ask
     → KEY INSIGHT: Tell a story investors want to be part of
+- **Operations / Supply Chain Management:** Use \`type: 'supply_chain'\`, \`data: '{}'\`
+    → 10-day supply chain simulation from supplier to customer
+    → Manage 5 stages: Supplier→Manufacturer→Warehouse→Distributor→Retailer
+    → Choose suppliers (cheap/reliable/fast), set order quantities, handle disruptions
+    → Track money, customer satisfaction, delivery rate
+    → KEY INSIGHT: Buffer stock, lead times, and supplier reliability create tradeoffs
 
 **CUSTOM SIMULATIONS (only if no pre-built exists):**
 3. For dynamic text, use: \`"content": "Range: {{calculations.range}} m"\`

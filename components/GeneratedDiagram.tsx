@@ -23837,6 +23837,507 @@ const GeneratedDiagram: React.FC<DiagramProps> = ({ type, data, title }) => {
       );
    };
 
+   // ============================================================================
+   // SECTION VI: OPERATIONS & MANAGEMENT - SUPPLY CHAIN MANAGEMENT
+   // ============================================================================
+   const SupplyChainRenderer = () => {
+      const [phase, setPhase] = useState<'intro' | 'play' | 'result'>('intro');
+      const [showInfo, setShowInfo] = useState(false);
+      const [infoTopic, setInfoTopic] = useState<string | null>(null);
+      const [day, setDay] = useState(1);
+      const [gameLog, setGameLog] = useState<string[]>([]);
+
+      // Supply chain stages with inventory
+      const [stages, setStages] = useState([
+         { id: 'supplier', name: 'Supplier', icon: '🌿', inventory: 100, capacity: 200, leadTime: 2 },
+         { id: 'manufacturer', name: 'Manufacturer', icon: '🏭', inventory: 50, capacity: 100, leadTime: 1 },
+         { id: 'warehouse', name: 'Warehouse', icon: '📦', inventory: 30, capacity: 80, leadTime: 1 },
+         { id: 'distributor', name: 'Distributor', icon: '🚚', inventory: 20, capacity: 50, leadTime: 1 },
+         { id: 'retailer', name: 'Retailer', icon: '🏪', inventory: 15, capacity: 30, leadTime: 0 },
+      ]);
+
+      // Game metrics
+      const [money, setMoney] = useState(10000);
+      const [customerSatisfaction, setCustomerSatisfaction] = useState(100);
+      const [ordersDelivered, setOrdersDelivered] = useState(0);
+      const [ordersMissed, setOrdersMissed] = useState(0);
+      const [totalCost, setTotalCost] = useState(0);
+
+      // Current order settings
+      const [orderQty, setOrderQty] = useState(20);
+      const [selectedSupplier, setSelectedSupplier] = useState<'cheap' | 'reliable' | 'fast'>('reliable');
+
+      // Events and disruptions
+      const [currentEvent, setCurrentEvent] = useState<{ type: string; message: string; effect: string } | null>(null);
+      const [pendingOrders, setPendingOrders] = useState<{ qty: number; arriveDay: number; stage: string }[]>([]);
+
+      // Daily customer demand (varies)
+      const [dailyDemand, setDailyDemand] = useState(10);
+
+      const suppliers = {
+         cheap: { name: 'Budget Supply Co', cost: 5, reliability: 60, leadTime: 4, icon: '💰' },
+         reliable: { name: 'Steady Partners', cost: 10, reliability: 95, leadTime: 2, icon: '🤝' },
+         fast: { name: 'Express Logistics', cost: 15, reliability: 80, leadTime: 1, icon: '⚡' },
+      };
+
+      const events = [
+         { type: 'demand_spike', message: '📈 Viral social media post! Demand doubled!', effect: 'Customer demand increased to 20 units' },
+         { type: 'supplier_delay', message: '⚠️ Shipping container stuck at port!', effect: 'All incoming orders delayed by 2 days' },
+         { type: 'quality_issue', message: '🔍 Quality inspection failed!', effect: 'Lost 10 units from manufacturer inventory' },
+         { type: 'competitor_sale', message: '🏷️ Competitor launched big sale!', effect: 'Customer demand reduced to 5 units' },
+         { type: 'fuel_costs', message: '⛽ Fuel prices surged!', effect: 'Shipping costs +$200 this round' },
+         { type: 'good_news', message: '🌟 Supplier gave bulk discount!', effect: 'Next order costs 50% less' },
+      ];
+
+      const infoTopics: Record<string, { title: string; content: string }> = {
+         supplychain: {
+            title: 'What is Supply Chain?',
+            content: 'A supply chain is the network of all individuals, organizations, resources, activities, and technology involved in creating and selling a product. It spans from raw materials to delivering the final product to customers.'
+         },
+         leadtime: {
+            title: 'Lead Time',
+            content: 'Lead time is the delay between placing an order and receiving it. Longer lead times require more safety stock but often cost less. Shorter lead times are more expensive but reduce risk.'
+         },
+         bullwhip: {
+            title: 'Bullwhip Effect',
+            content: 'Small changes in customer demand can cause larger and larger fluctuations up the supply chain. A 10% increase at retail might become a 40% swing at the manufacturer level!'
+         },
+         inventory: {
+            title: 'Inventory Management',
+            content: 'Holding inventory costs money (storage, insurance, obsolescence) but protects against stockouts. The goal is finding the right balance - not too much, not too little.'
+         },
+         supplier: {
+            title: 'Supplier Selection',
+            content: 'Choosing suppliers involves tradeoffs: cheap suppliers may be unreliable, fast suppliers cost more. Diversifying suppliers reduces risk but increases complexity.'
+         },
+         satisfaction: {
+            title: 'Customer Satisfaction',
+            content: 'When you cannot fulfill customer demand (stockout), satisfaction drops. Unhappy customers may leave permanently. Maintaining adequate inventory prevents this.'
+         }
+      };
+
+      const processDay = () => {
+         let newLog: string[] = [];
+         let costThisRound = 0;
+
+         // Check for random event (30% chance)
+         if (Math.random() < 0.3) {
+            const event = events[Math.floor(Math.random() * events.length)];
+            setCurrentEvent(event);
+            newLog.push(`EVENT: ${event.message}`);
+
+            // Apply event effects
+            if (event.type === 'demand_spike') setDailyDemand(20);
+            if (event.type === 'competitor_sale') setDailyDemand(5);
+            if (event.type === 'quality_issue') {
+               setStages(prev => prev.map(s => s.id === 'manufacturer' ? { ...s, inventory: Math.max(0, s.inventory - 10) } : s));
+            }
+            if (event.type === 'fuel_costs') costThisRound += 200;
+            if (event.type === 'supplier_delay') {
+               setPendingOrders(prev => prev.map(o => ({ ...o, arriveDay: o.arriveDay + 2 })));
+            }
+         } else {
+            setCurrentEvent(null);
+            setDailyDemand(10 + Math.floor(Math.random() * 6) - 3); // 7-13 base demand
+         }
+
+         // Process arriving orders
+         const arrivingOrders = pendingOrders.filter(o => o.arriveDay <= day);
+         arrivingOrders.forEach(order => {
+            setStages(prev => prev.map(s =>
+               s.id === order.stage ? { ...s, inventory: Math.min(s.capacity, s.inventory + order.qty) } : s
+            ));
+            newLog.push(`📦 ${order.qty} units arrived at ${order.stage}`);
+         });
+         setPendingOrders(prev => prev.filter(o => o.arriveDay > day));
+
+         // Move inventory through the chain (simplified flow)
+         setStages(prev => {
+            const updated = [...prev];
+            for (let i = updated.length - 2; i >= 0; i--) {
+               const current = updated[i];
+               const next = updated[i + 1];
+               const transfer = Math.min(current.inventory, next.capacity - next.inventory, 15);
+               if (transfer > 0) {
+                  updated[i] = { ...current, inventory: current.inventory - transfer };
+                  updated[i + 1] = { ...next, inventory: next.inventory + transfer };
+               }
+            }
+            return updated;
+         });
+
+         // Fulfill customer demand from retailer
+         const retailer = stages.find(s => s.id === 'retailer')!;
+         const fulfilled = Math.min(retailer.inventory, dailyDemand);
+         const missed = dailyDemand - fulfilled;
+
+         if (fulfilled > 0) {
+            setStages(prev => prev.map(s => s.id === 'retailer' ? { ...s, inventory: s.inventory - fulfilled } : s));
+            setOrdersDelivered(prev => prev + fulfilled);
+            newLog.push(`✅ Delivered ${fulfilled} units to customers`);
+         }
+
+         if (missed > 0) {
+            setOrdersMissed(prev => prev + missed);
+            setCustomerSatisfaction(prev => Math.max(0, prev - missed * 5));
+            newLog.push(`❌ Stockout! Missed ${missed} orders. Satisfaction -${missed * 5}%`);
+         }
+
+         // Calculate holding costs ($1 per unit per day)
+         const holdingCost = stages.reduce((sum, s) => sum + s.inventory, 0);
+         costThisRound += holdingCost;
+
+         setTotalCost(prev => prev + costThisRound);
+         setMoney(prev => prev - costThisRound + fulfilled * 25); // Revenue per unit
+         newLog.push(`💵 Revenue: +$${fulfilled * 25} | Costs: -$${costThisRound}`);
+
+         setGameLog(prev => [...prev, `--- Day ${day} ---`, ...newLog]);
+
+         if (day >= 10) {
+            setPhase('result');
+         } else {
+            setDay(d => d + 1);
+         }
+      };
+
+      const placeOrder = () => {
+         const supplier = suppliers[selectedSupplier];
+         const cost = orderQty * supplier.cost;
+
+         // Check reliability (order might fail)
+         const orderSucceeds = Math.random() * 100 < supplier.reliability;
+
+         if (orderSucceeds) {
+            setPendingOrders(prev => [...prev, {
+               qty: orderQty,
+               arriveDay: day + supplier.leadTime,
+               stage: 'supplier'
+            }]);
+            setMoney(prev => prev - cost);
+            setTotalCost(prev => prev + cost);
+            setGameLog(prev => [...prev, `📋 Ordered ${orderQty} units from ${supplier.name} ($${cost}) - arrives Day ${day + supplier.leadTime}`]);
+         } else {
+            setGameLog(prev => [...prev, `⚠️ Order from ${supplier.name} FAILED! (Reliability: ${supplier.reliability}%)`]);
+         }
+      };
+
+      const startGame = () => {
+         setPhase('play');
+         setDay(1);
+         setMoney(10000);
+         setCustomerSatisfaction(100);
+         setOrdersDelivered(0);
+         setOrdersMissed(0);
+         setTotalCost(0);
+         setGameLog([]);
+         setPendingOrders([]);
+         setStages([
+            { id: 'supplier', name: 'Supplier', icon: '🌿', inventory: 100, capacity: 200, leadTime: 2 },
+            { id: 'manufacturer', name: 'Manufacturer', icon: '🏭', inventory: 50, capacity: 100, leadTime: 1 },
+            { id: 'warehouse', name: 'Warehouse', icon: '📦', inventory: 30, capacity: 80, leadTime: 1 },
+            { id: 'distributor', name: 'Distributor', icon: '🚚', inventory: 20, capacity: 50, leadTime: 1 },
+            { id: 'retailer', name: 'Retailer', icon: '🏪', inventory: 15, capacity: 30, leadTime: 0 },
+         ]);
+      };
+
+      const getGameSummary = () => {
+         const deliveryRate = ordersDelivered > 0 ? Math.round((ordersDelivered / (ordersDelivered + ordersMissed)) * 100) : 0;
+         const profit = money - 10000;
+         const score = Math.round((customerSatisfaction * 0.4) + (deliveryRate * 0.4) + (profit > 0 ? 20 : profit > -2000 ? 10 : 0));
+         return { deliveryRate, profit, score };
+      };
+
+      // INTRO PHASE
+      if (phase === 'intro') return (
+         <div className="flex flex-col h-full bg-gradient-to-br from-slate-800 via-slate-700 to-zinc-800 text-white p-6 overflow-auto">
+            <div className="flex justify-between items-start mb-4">
+               <div>
+                  <h2 className="text-2xl font-black flex items-center gap-2">⛓️ SUPPLY CHAIN MANAGEMENT</h2>
+                  <p className="text-slate-300 text-sm mt-1">Master the flow from supplier to customer</p>
+               </div>
+               <button onClick={() => setShowInfo(!showInfo)} className="w-10 h-10 rounded-full bg-white/20 hover:bg-white/30 flex items-center justify-center text-xl transition-all">ℹ️</button>
+            </div>
+
+            {showInfo && (
+               <div className="bg-black/40 rounded-xl p-4 mb-4 text-sm border border-slate-500/30">
+                  <p className="font-bold text-slate-200 mb-2">📚 What You'll Learn:</p>
+                  <ul className="space-y-1 text-slate-300">
+                     <li>• How products flow from raw materials to customers</li>
+                     <li>• The tradeoffs between cost, speed, and reliability</li>
+                     <li>• Why inventory management matters</li>
+                     <li>• How disruptions ripple through a supply chain</li>
+                  </ul>
+               </div>
+            )}
+
+            <div className="flex-1 flex flex-col justify-center">
+               {/* Visual supply chain diagram */}
+               <div className="bg-black/30 rounded-2xl p-4 mb-6">
+                  <p className="text-center text-slate-400 text-xs mb-4 font-bold uppercase tracking-wider">The 5 Stages of Supply Chain</p>
+                  <div className="flex justify-between items-center overflow-x-auto pb-2">
+                     {[
+                        { icon: '🌿', name: 'Supplier', desc: 'Raw materials' },
+                        { icon: '🏭', name: 'Manufacturer', desc: 'Production' },
+                        { icon: '📦', name: 'Warehouse', desc: 'Storage' },
+                        { icon: '🚚', name: 'Distributor', desc: 'Transport' },
+                        { icon: '🏪', name: 'Retailer', desc: 'Sales' },
+                     ].map((stage, i) => (
+                        <React.Fragment key={stage.name}>
+                           <div className="flex flex-col items-center min-w-[70px]">
+                              <div className="w-14 h-14 rounded-xl bg-slate-600/50 flex items-center justify-center text-2xl mb-1">{stage.icon}</div>
+                              <span className="text-xs font-bold">{stage.name}</span>
+                              <span className="text-[10px] text-slate-400">{stage.desc}</span>
+                           </div>
+                           {i < 4 && <span className="text-slate-500 mx-1">→</span>}
+                        </React.Fragment>
+                     ))}
+                  </div>
+               </div>
+
+               <div className="text-center mb-6">
+                  <h3 className="text-xl font-bold mb-2">🎮 Your Mission</h3>
+                  <p className="text-slate-300 max-w-lg mx-auto">
+                     Run a 10-day supply chain simulation. Order inventory, choose suppliers wisely,
+                     and handle disruptions to maximize profits and customer satisfaction!
+                  </p>
+               </div>
+
+               <div className="grid grid-cols-3 gap-3 mb-6 max-w-md mx-auto">
+                  <div className="bg-green-900/40 rounded-xl p-3 text-center border border-green-500/30">
+                     <span className="text-2xl">💰</span>
+                     <p className="text-xs font-bold mt-1">Balance Budget</p>
+                  </div>
+                  <div className="bg-blue-900/40 rounded-xl p-3 text-center border border-blue-500/30">
+                     <span className="text-2xl">😊</span>
+                     <p className="text-xs font-bold mt-1">Keep Customers Happy</p>
+                  </div>
+                  <div className="bg-purple-900/40 rounded-xl p-3 text-center border border-purple-500/30">
+                     <span className="text-2xl">📦</span>
+                     <p className="text-xs font-bold mt-1">Avoid Stockouts</p>
+                  </div>
+               </div>
+
+               <button onClick={startGame} className="mx-auto px-8 py-4 bg-gradient-to-r from-slate-600 to-zinc-600 hover:from-slate-500 hover:to-zinc-500 rounded-xl font-bold text-lg transition-all transform hover:scale-105 shadow-lg">
+                  START SIMULATION →
+               </button>
+            </div>
+
+            <p className="text-xs text-slate-400/60 text-center mt-4">💡 Tip: Click the ℹ️ buttons during gameplay for more information on supply chain concepts.</p>
+         </div>
+      );
+
+      // RESULT PHASE
+      if (phase === 'result') {
+         const { deliveryRate, profit, score } = getGameSummary();
+         const grade = score >= 80 ? 'A' : score >= 60 ? 'B' : score >= 40 ? 'C' : 'D';
+         const gradeColor = score >= 80 ? 'text-green-400' : score >= 60 ? 'text-blue-400' : score >= 40 ? 'text-yellow-400' : 'text-red-400';
+
+         return (
+            <div className="flex flex-col h-full bg-gradient-to-br from-slate-800 via-slate-700 to-zinc-800 text-white p-6 overflow-auto">
+               <div className="text-center mb-6">
+                  <div className="text-6xl mb-2">{score >= 80 ? '🏆' : score >= 60 ? '🌟' : score >= 40 ? '📊' : '📉'}</div>
+                  <h2 className="text-3xl font-black">Simulation Complete!</h2>
+                  <p className={`text-5xl font-black mt-2 ${gradeColor}`}>Grade: {grade}</p>
+               </div>
+
+               <div className="grid grid-cols-2 gap-4 mb-6 max-w-md mx-auto">
+                  <div className="bg-black/30 rounded-xl p-4 text-center">
+                     <p className="text-2xl font-black text-green-400">${profit >= 0 ? '+' : ''}{profit}</p>
+                     <p className="text-xs text-slate-400">Profit/Loss</p>
+                  </div>
+                  <div className="bg-black/30 rounded-xl p-4 text-center">
+                     <p className="text-2xl font-black text-blue-400">{customerSatisfaction}%</p>
+                     <p className="text-xs text-slate-400">Satisfaction</p>
+                  </div>
+                  <div className="bg-black/30 rounded-xl p-4 text-center">
+                     <p className="text-2xl font-black text-purple-400">{deliveryRate}%</p>
+                     <p className="text-xs text-slate-400">Delivery Rate</p>
+                  </div>
+                  <div className="bg-black/30 rounded-xl p-4 text-center">
+                     <p className="text-2xl font-black text-amber-400">{ordersDelivered}</p>
+                     <p className="text-xs text-slate-400">Orders Delivered</p>
+                  </div>
+               </div>
+
+               <div className="bg-indigo-900/40 rounded-xl p-4 mb-6 border border-indigo-500/30">
+                  <p className="font-bold text-indigo-300 mb-2 flex items-center gap-2">
+                     <span className="w-6 h-6 rounded-full bg-indigo-500 flex items-center justify-center text-sm">💡</span>
+                     Key Takeaways
+                  </p>
+                  <ul className="text-sm text-indigo-200 space-y-1">
+                     <li>• <strong>Buffer stock</strong> protects against demand variability</li>
+                     <li>• <strong>Supplier choice</strong> involves cost-reliability-speed tradeoffs</li>
+                     <li>• <strong>Lead times</strong> mean you must plan orders ahead</li>
+                     <li>• <strong>Disruptions</strong> can cascade through the entire chain</li>
+                  </ul>
+               </div>
+
+               <div className="bg-black/20 rounded-xl p-3 mb-6 max-h-32 overflow-auto">
+                  <p className="text-xs font-bold text-slate-400 mb-2">📋 Session Log (for AI Coach review)</p>
+                  <div className="text-xs text-slate-500 space-y-0.5">
+                     {gameLog.slice(-10).map((log, i) => <p key={i}>{log}</p>)}
+                  </div>
+               </div>
+
+               <button onClick={startGame} className="mx-auto px-6 py-3 bg-gradient-to-r from-slate-600 to-zinc-600 hover:from-slate-500 hover:to-zinc-500 rounded-xl font-bold transition-all">
+                  🔄 PLAY AGAIN
+               </button>
+            </div>
+         );
+      }
+
+      // PLAY PHASE
+      return (
+         <div className="flex flex-col h-full bg-gradient-to-br from-slate-800 via-slate-700 to-zinc-800 text-white overflow-hidden">
+            {/* Header with metrics */}
+            <div className="p-3 bg-black/30 border-b border-slate-600/50">
+               <div className="flex justify-between items-center mb-2">
+                  <span className="text-lg font-black">📅 Day {day} / 10</span>
+                  <div className="flex gap-2">
+                     <span className="px-3 py-1 bg-green-900/50 rounded-full text-sm font-bold text-green-300">💰 ${money}</span>
+                     <span className="px-3 py-1 bg-blue-900/50 rounded-full text-sm font-bold text-blue-300">😊 {customerSatisfaction}%</span>
+                  </div>
+               </div>
+               <div className="flex gap-2 text-xs">
+                  <span className="text-slate-400">Delivered: {ordersDelivered}</span>
+                  <span className="text-slate-500">|</span>
+                  <span className="text-slate-400">Missed: {ordersMissed}</span>
+                  <span className="text-slate-500">|</span>
+                  <span className="text-slate-400">Today's Demand: {dailyDemand}</span>
+               </div>
+            </div>
+
+            {/* Info modal */}
+            {infoTopic && infoTopics[infoTopic] && (
+               <div className="absolute inset-0 bg-black/70 flex items-center justify-center z-50 p-4" onClick={() => setInfoTopic(null)}>
+                  <div className="bg-slate-800 rounded-2xl p-6 max-w-md border border-slate-600" onClick={e => e.stopPropagation()}>
+                     <h3 className="text-xl font-black mb-2 flex items-center gap-2">
+                        ℹ️ {infoTopics[infoTopic].title}
+                     </h3>
+                     <p className="text-slate-300 text-sm leading-relaxed">{infoTopics[infoTopic].content}</p>
+                     <button onClick={() => setInfoTopic(null)} className="mt-4 px-4 py-2 bg-slate-700 hover:bg-slate-600 rounded-lg text-sm font-bold w-full">Got it!</button>
+                  </div>
+               </div>
+            )}
+
+            {/* Event notification */}
+            {currentEvent && (
+               <div className="mx-3 mt-3 p-3 bg-amber-900/50 border border-amber-500/50 rounded-xl animate-pulse">
+                  <p className="font-bold text-amber-300">{currentEvent.message}</p>
+                  <p className="text-xs text-amber-400/80 mt-1">{currentEvent.effect}</p>
+               </div>
+            )}
+
+            {/* Supply chain visualization */}
+            <div className="flex-1 p-3 overflow-auto">
+               <div className="flex items-center gap-1 justify-between mb-4">
+                  <p className="text-xs text-slate-400 font-bold uppercase tracking-wider">Supply Chain Inventory</p>
+                  <button onClick={() => setInfoTopic('supplychain')} className="text-slate-400 hover:text-white text-sm">ℹ️</button>
+               </div>
+
+               <div className="flex justify-between items-end gap-2 mb-4">
+                  {stages.map((stage, i) => (
+                     <div key={stage.id} className="flex-1 flex flex-col items-center">
+                        <div className="w-full bg-slate-700/50 rounded-lg p-2 mb-1 relative">
+                           <div className="text-center text-2xl mb-1">{stage.icon}</div>
+                           <div className="h-16 bg-slate-800 rounded relative overflow-hidden">
+                              <div
+                                 className={`absolute bottom-0 left-0 right-0 transition-all duration-500 ${
+                                    stage.inventory < stage.capacity * 0.2 ? 'bg-red-500' :
+                                    stage.inventory < stage.capacity * 0.5 ? 'bg-amber-500' : 'bg-green-500'
+                                 }`}
+                                 style={{ height: `${(stage.inventory / stage.capacity) * 100}%` }}
+                              />
+                              <div className="absolute inset-0 flex items-center justify-center text-white font-bold text-sm">
+                                 {stage.inventory}
+                              </div>
+                           </div>
+                           <p className="text-[10px] text-slate-400 text-center mt-1">{stage.name}</p>
+                        </div>
+                        {i < stages.length - 1 && <span className="text-slate-600 text-xs">→</span>}
+                     </div>
+                  ))}
+                  <div className="flex flex-col items-center">
+                     <div className="w-12 h-12 rounded-full bg-blue-900/50 flex items-center justify-center text-xl border-2 border-blue-500">👤</div>
+                     <p className="text-[10px] text-slate-400 mt-1">Customer</p>
+                  </div>
+               </div>
+
+               {/* Order controls */}
+               <div className="bg-black/30 rounded-xl p-4 mb-4">
+                  <div className="flex justify-between items-center mb-3">
+                     <p className="font-bold text-sm">📋 Place Order</p>
+                     <button onClick={() => setInfoTopic('supplier')} className="text-slate-400 hover:text-white text-sm">ℹ️</button>
+                  </div>
+
+                  <div className="grid grid-cols-3 gap-2 mb-3">
+                     {(Object.entries(suppliers) as [string, typeof suppliers.cheap][]).map(([key, sup]) => (
+                        <button
+                           key={key}
+                           onClick={() => setSelectedSupplier(key as 'cheap' | 'reliable' | 'fast')}
+                           className={`p-2 rounded-lg text-xs transition-all ${
+                              selectedSupplier === key
+                                 ? 'bg-slate-600 border-2 border-slate-400'
+                                 : 'bg-slate-700/50 border-2 border-transparent hover:border-slate-500'
+                           }`}
+                        >
+                           <div className="text-lg mb-1">{sup.icon}</div>
+                           <div className="font-bold truncate">{sup.name}</div>
+                           <div className="text-slate-400">
+                              ${sup.cost}/u • {sup.reliability}% • {sup.leadTime}d
+                           </div>
+                        </button>
+                     ))}
+                  </div>
+
+                  <div className="flex gap-2 items-center">
+                     <div className="flex-1">
+                        <label className="text-xs text-slate-400">Quantity: {orderQty}</label>
+                        <input
+                           type="range"
+                           min="5"
+                           max="50"
+                           value={orderQty}
+                           onChange={(e) => setOrderQty(Number(e.target.value))}
+                           className="w-full h-2 bg-slate-600 rounded-full accent-slate-400"
+                        />
+                     </div>
+                     <button
+                        onClick={placeOrder}
+                        disabled={money < orderQty * suppliers[selectedSupplier].cost}
+                        className="px-4 py-2 bg-blue-600 hover:bg-blue-500 disabled:bg-slate-600 disabled:opacity-50 rounded-lg font-bold text-sm transition-all"
+                     >
+                        Order (${orderQty * suppliers[selectedSupplier].cost})
+                     </button>
+                  </div>
+
+                  {pendingOrders.length > 0 && (
+                     <div className="mt-2 text-xs text-slate-400">
+                        📦 Pending: {pendingOrders.map(o => `${o.qty}u (Day ${o.arriveDay})`).join(', ')}
+                     </div>
+                  )}
+               </div>
+
+               {/* Action button */}
+               <button
+                  onClick={processDay}
+                  className="w-full py-3 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-500 hover:to-emerald-500 rounded-xl font-bold text-lg transition-all shadow-lg"
+               >
+                  ▶️ ADVANCE TO {day < 10 ? `DAY ${day + 1}` : 'RESULTS'}
+               </button>
+            </div>
+
+            {/* Log panel */}
+            <div className="h-24 bg-black/40 border-t border-slate-600/50 p-2 overflow-auto">
+               <p className="text-[10px] font-bold text-slate-500 mb-1">Activity Log</p>
+               <div className="text-xs text-slate-400 space-y-0.5">
+                  {gameLog.slice(-5).map((log, i) => <p key={i}>{log}</p>)}
+               </div>
+            </div>
+         </div>
+      );
+   };
+
    // --- GENERIC RENDERER ---
    const GenericRenderer = () => {
       if (type === 'poster' || type === 'infographic') {
@@ -24243,6 +24744,12 @@ const GeneratedDiagram: React.FC<DiagramProps> = ({ type, data, title }) => {
             return <CrowdfundingRenderer />;
          case 'pitch_deck':
             return <PitchDeckRenderer />;
+         // ============================================
+         // ENTREPRENEURSHIP GRAPHICS PART 2 (50)
+         // Section VI: Operations & Management
+         // ============================================
+         case 'supply_chain':
+            return <SupplyChainRenderer />;
          default:
             return <GenericRenderer />;
       }
