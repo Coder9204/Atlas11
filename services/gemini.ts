@@ -303,6 +303,11 @@ When a concept comes up, follow this lookup process:
 • Customer Success / Retention / Churn / NPS / LTV → 'customer_success'
 • Agile / Scrum / Sprints / Velocity / User Stories → 'agile'
 • Time Management / Eisenhower Matrix / Productivity / Deep Work → 'time_management'
+• Business Structures / LLC / S-Corp / C-Corp / Sole Proprietorship → 'business_structures'
+• Intellectual Property / Patents / Trademarks / Copyrights / Trade Secrets → 'intellectual_property'
+• Contracts / Agreements / Clauses / Red Flags / Terms → 'contracts'
+• Permits & Licenses / Business Compliance / Zoning / Regulations → 'permits'
+• Employment Law / Hiring Laws / Workplace Rights / Labor Law → 'employment_law'
 
 **STEP 2: IF NO MATCH → BUILD CUSTOM**
 Only if the topic is NOT covered above, use \`type: 'dynamic_blueprint'\` with custom JSON.
@@ -1134,6 +1139,36 @@ Only if the topic is NOT covered above, use \`type: 'dynamic_blueprint'\` with c
     → Take breaks to recover energy; manage burnout
     → Educational tooltips covering Eisenhower Matrix, Deep Work, Pomodoro, Energy, Time Blocking
     → KEY INSIGHT: Focus on important over urgent; protect deep work time
+- **Legal / Business Structures / Entity Types:** Use \`type: 'business_structures'\`, \`data: '{}'\`
+    → Business entity advisor based on your business profile
+    → Answer questions about liability needs, investor plans, profit distribution
+    → Get personalized recommendation for LLC, S-Corp, C-Corp, Sole Prop, or Partnership
+    → Educational tooltips covering liability protection, tax implications, ownership structure
+    → KEY INSIGHT: Choose structure based on liability needs, tax goals, and growth plans
+- **Legal / Intellectual Property / IP Protection:** Use \`type: 'intellectual_property'\`, \`data: '{}'\`
+    → Match business assets with correct IP protection type
+    → Learn when to use Patents, Trademarks, Copyrights, or Trade Secrets
+    → Score points for correct matches across 8 rounds
+    → Educational tooltips covering each IP type, duration, costs, and process
+    → KEY INSIGHT: Different creations need different protections; choose wisely
+- **Legal / Contracts / Agreement Red Flags:** Use \`type: 'contracts'\`, \`data: '{}'\`
+    → Identify red flags in contract clauses before signing
+    → Analyze clauses for unlimited liability, auto-renewal traps, IP assignment issues
+    → Learn to spot problematic terms that could hurt your business
+    → Educational tooltips covering contract basics, negotiation tips, legal terms
+    → KEY INSIGHT: Read every clause; hidden terms can cost you everything
+- **Legal / Permits & Licenses / Business Compliance:** Use \`type: 'permits'\`, \`data: '{}'\`
+    → Select correct permits and licenses for different business types
+    → Match business activities with required permits (health, zoning, professional, etc.)
+    → Learn about federal, state, and local compliance requirements
+    → Educational tooltips covering permit types, application process, penalties
+    → KEY INSIGHT: Operating without permits can shut down your business
+- **Legal / Employment Law / Workplace Compliance:** Use \`type: 'employment_law'\`, \`data: '{}'\`
+    → Identify legal vs illegal workplace scenarios
+    → Learn about discrimination, overtime, termination, and harassment rules
+    → Quiz format testing knowledge of employment regulations
+    → Educational tooltips covering FLSA, EEOC, at-will employment, worker classification
+    → KEY INSIGHT: Employment law violations can result in costly lawsuits
 
 **CUSTOM SIMULATIONS (only if no pre-built exists):**
 3. For dynamic text, use: \`"content": "Range: {{calculations.range}} m"\`
