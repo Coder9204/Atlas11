@@ -22715,74 +22715,342 @@ const GeneratedDiagram: React.FC<DiagramProps> = ({ type, data, title }) => {
    const SalesFunnelRenderer = () => {
       const [phase, setPhase] = useState<'intro' | 'play' | 'result'>('intro');
       const [showInfo, setShowInfo] = useState(false);
-      const [funnel, setFunnel] = useState({ awareness: '', interest: '', decision: '', action: '' });
-      const [step, setStep] = useState(0);
-      const [inputValue, setInputValue] = useState('');
+      const [infoTopic, setInfoTopic] = useState<string | null>(null);
+      const [scenario, setScenario] = useState(0);
+      const [score, setScore] = useState(0);
+      const [selected, setSelected] = useState<number | null>(null);
+      const [answered, setAnswered] = useState(false);
+      const [gameLog, setGameLog] = useState<string[]>([]);
+      const [conceptGaps, setConceptGaps] = useState<string[]>([]);
 
-      const stages = [
-         { key: 'awareness', icon: '👁️', label: 'Awareness', color: 'from-blue-500 to-blue-600', prompt: 'How will people discover you? (Ads, content, SEO, etc.)' },
-         { key: 'interest', icon: '🤔', label: 'Interest', color: 'from-green-500 to-green-600', prompt: 'How will you capture interest? (Lead magnets, free trials, etc.)' },
-         { key: 'decision', icon: '⚖️', label: 'Decision', color: 'from-yellow-500 to-yellow-600', prompt: 'How will you help them decide? (Demos, testimonials, etc.)' },
-         { key: 'action', icon: '💰', label: 'Action', color: 'from-red-500 to-red-600', prompt: 'How will they buy? (Checkout, call, signup, etc.)' }
+      // Funnel Optimization Lab - Master conversion psychology and identify funnel leaks
+      const scenarios = [
+         {
+            title: "The Leaky Bucket",
+            context: "Your SaaS funnel: 10,000 visitors → 500 signups (5%) → 50 trials (10%) → 5 paid (10%). Industry benchmarks: Visitor→Signup 3%, Signup→Trial 30%, Trial→Paid 25%.",
+            question: "Where should you focus optimization efforts FIRST?",
+            opts: [
+               'Top of funnel - get more visitors since you\'re above benchmark',
+               'Middle of funnel - signup to trial is way below benchmark (10% vs 30%)',
+               'Bottom of funnel - trial to paid is below benchmark',
+               'All stages equally - optimize everything at once'
+            ],
+            correct: 1,
+            wrongExplanations: [
+               "You're ABOVE benchmark on visitors→signup (5% vs 3%). Optimizing your strength wastes resources. Fix the biggest leak first.",
+               "", // Correct
+               "Trial→Paid (10% vs 25%) is bad, but fixing it only improves 50 trials → maybe 12 paid. Fixing Signup→Trial could give you 150 trials → 37 paid. Fix the bigger leak first.",
+               "Optimizing everything dilutes focus. Startups win by finding the biggest lever and pulling hard. Identify your constraint."
+            ],
+            realWorld: "Dropbox found their signup→activation was leaky (users signed up but never uploaded files). They added an onboarding checklist and 2x'd activation. The insight: fix one stage at a time, starting with the worst relative to benchmarks.",
+            concept: "funnel_diagnostics",
+            why: "Funnel optimization is about finding constraints. A 3x improvement in your worst stage (10%→30%) has more impact than 1.5x improvement in three stages. Your Signup→Trial is 3x below benchmark - that's your constraint. Fix it before touching anything else."
+         },
+         {
+            title: "The Conversion Killer",
+            context: "Your landing page converts at 1.5% (industry: 3%). You have data: Time on page is high (4 min avg), scroll depth is good (70% reach CTA), but CTA clicks are low (2%). Bounce rate is normal (40%).",
+            question: "What's the MOST LIKELY problem?",
+            opts: [
+               'The headline isn\'t compelling enough',
+               'The CTA button color/placement is wrong',
+               'The value proposition is unclear or the CTA copy doesn\'t match intent',
+               'You need more social proof on the page'
+            ],
+            correct: 2,
+            wrongExplanations: [
+               "If the headline was bad, time-on-page and scroll depth would be poor. People ARE reading - they just aren't clicking. The problem is downstream.",
+               "Button color rarely matters more than 5-10%. High engagement + low CTA clicks suggests a VALUE problem, not a design problem.",
+               "", // Correct
+               "More social proof might help marginally, but high engagement with low CTA clicks suggests people understand the product but don't see enough value to take action."
+            ],
+            realWorld: "Basecamp tested 37 landing page variations. The winner wasn't about colors or buttons - it was about clearly stating what happens AFTER you click. 'Start your free trial' beat 'Get started' by 30% because it reduced uncertainty.",
+            concept: "conversion_psychology",
+            why: "High engagement + low conversion = disconnect between content and CTA. Users are interested (they're reading) but the CTA doesn't match their readiness or the value proposition isn't clear. The fix: clarify what happens next and why it's worth their time."
+         },
+         {
+            title: "The Pricing Page Paradox",
+            context: "You offer 3 tiers: Basic ($9), Pro ($29), Enterprise ($99). Traffic splits: Basic page 50%, Pro 35%, Enterprise 15%. But conversions: Basic 8%, Pro 2%, Enterprise 5%. Basic customers churn at 15%/month, Pro at 3%/month.",
+            question: "What's the strategic problem with this funnel?",
+            opts: [
+               'Enterprise pricing is too high - lower it to get more volume',
+               'You\'re optimizing for the wrong tier - Pro has best LTV but lowest conversion',
+               'Basic tier is cannibalizing Pro - too many features at low price',
+               'Both B and C - you need to restructure to push users toward Pro'
+            ],
+            correct: 3,
+            wrongExplanations: [
+               "Enterprise at 5% conversion with presumably high LTV is fine. The problem is your funnel pushes people to Basic, which churns fast.",
+               "This is PART of the problem. Pro has best retention (3% churn) but worst conversion (2%). But WHY is Pro converting poorly?",
+               "This is PART of the problem. If Basic has too many features, value-conscious buyers choose it instead of Pro. But you need to fix both issues.",
+               "" // Correct
+            ],
+            realWorld: "Slack deliberately made their free tier limited enough that growing teams HAD to upgrade. They optimized for paid conversion, not free signups. Result: 30% of free teams convert to paid - unheard of in freemium.",
+            concept: "tier_optimization",
+            why: "Your funnel is broken in two ways: 1) Basic is too attractive (50% traffic, 8% conversion) but churns fast (15%/mo). 2) Pro has best retention but converts poorly - likely because Basic offers too much. Solution: Nerf Basic, add value to Pro, restructure pricing page to anchor on Pro."
+         },
+         {
+            title: "The Email Sequence Mystery",
+            context: "Your trial→paid nurture sequence: Email 1 (Day 1): 45% open, 8% click. Email 2 (Day 3): 35% open, 5% click. Email 3 (Day 7): 20% open, 2% click. Email 4 (Day 10): 12% open, 1% click. Trial conversion: 8% (industry: 15%).",
+            question: "What does this data tell you about your sequence?",
+            opts: [
+               'Your subject lines are getting worse - focus on better copywriting',
+               'Email fatigue is normal - this sequence is fine',
+               'Users are losing interest because emails aren\'t driving product engagement',
+               'You\'re sending too many emails - reduce frequency'
+            ],
+            correct: 2,
+            wrongExplanations: [
+               "Declining opens are NORMAL in sequences (email fatigue). The real problem: clicks are low AND declining. If emails drove product value, engagement would stay higher.",
+               "This sequence is NOT fine. 8% trial conversion vs 15% industry benchmark means you're leaving 50%+ on the table. Something is broken.",
+               "", // Correct
+               "Frequency isn't the issue. The issue is that emails aren't creating product 'aha moments.' Fewer bad emails won't help."
+            ],
+            realWorld: "Slack's onboarding emails don't sell - they teach ONE feature per email and measure whether users TRY that feature. Their 'aha moment' is sending 2,000 messages as a team. Every email drives toward that metric.",
+            concept: "activation_sequences",
+            why: "Email opens declining is normal. But click decline + low trial conversion means your emails aren't driving the 'aha moment.' Winning sequences: 1) Identify your activation metric (Slack: 2K messages, Dropbox: 1 file), 2) Make every email drive toward that metric, 3) Measure product engagement, not email engagement."
+         },
+         {
+            title: "The Retargeting Trap",
+            context: "You're retargeting cart abandoners: Audience of 10,000 abandoners. Retargeting ad CTR: 2% (good). Landing page conversion: 15% (good). But ROI is negative - you're spending $5 to acquire customers worth $3.",
+            question: "What's wrong with this retargeting strategy?",
+            opts: [
+               'Your ads aren\'t compelling enough',
+               'Landing page needs optimization',
+               'You\'re retargeting ALL abandoners instead of segmenting by intent',
+               'Retargeting doesn\'t work - stop doing it'
+            ],
+            correct: 2,
+            wrongExplanations: [
+               "2% CTR is good for retargeting. Ad creative isn't the problem - targeting is.",
+               "15% conversion is excellent. The landing page is working.",
+               "", // Correct
+               "Retargeting works extremely well when done right. The issue is strategy, not the channel."
+            ],
+            realWorld: "Amazon segments cart abandoners: 1) Added item but left immediately (low intent - minimal spend), 2) Filled cart and entered checkout (high intent - aggressive retargeting), 3) Abandoned at payment (friction - offer support). Same channel, 5x different CPAs.",
+            concept: "retargeting_segmentation",
+            why: "Treating all abandoners equally wastes money. Someone who left after 10 seconds has different intent than someone who reached the payment page. Segment by: 1) Time on site, 2) Cart value, 3) Checkout progress, 4) Return visits. Spend more on high-intent, less on low-intent."
+         }
       ];
 
-      if (phase === 'intro') return (
-         <div className="flex flex-col items-center justify-center h-full bg-gradient-to-br from-slate-900 via-gray-900 to-zinc-900 text-white p-8 text-center">
-            <button onClick={() => setShowInfo(!showInfo)} className="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/20 flex items-center justify-center text-xl">ℹ️</button>
-            {showInfo && (
-               <div className="absolute top-16 right-4 bg-black/90 p-4 rounded-xl max-w-xs text-left text-sm">
-                  <p className="font-bold mb-2">Sales Funnel (AIDA)</p>
-                  <p>Awareness → Interest → Decision → Action. Each stage narrows as prospects move toward purchase.</p>
-               </div>
-            )}
-            <p className="text-6xl mb-4">🔻</p>
-            <h2 className="text-3xl font-bold mb-4">Build Your Sales Funnel</h2>
-            <p className="text-lg opacity-80 max-w-md mb-8">Design each stage of your customer journey from awareness to action.</p>
-            <button onClick={() => setPhase('play')} className="px-8 py-4 bg-blue-500 rounded-2xl font-bold text-xl hover:bg-blue-400 transition-all">BUILD FUNNEL →</button>
-         </div>
-      );
-
-      if (phase === 'result') return (
-         <div className="flex flex-col h-full bg-gradient-to-br from-slate-900 via-gray-900 to-zinc-900 text-white p-8">
-            <h2 className="text-2xl font-bold text-center mb-6">🔻 Your Sales Funnel</h2>
-            <div className="flex-1 flex flex-col items-center justify-center gap-2">
-               {stages.map((s, i) => (
-                  <div key={s.key} className={`bg-gradient-to-r ${s.color} rounded-xl p-4 text-center transition-all`}
-                     style={{ width: `${100 - i * 15}%` }}>
-                     <p className="font-bold">{s.icon} {s.label}</p>
-                     <p className="text-sm opacity-90">{funnel[s.key as keyof typeof funnel]}</p>
-                  </div>
-               ))}
-            </div>
-            <button onClick={() => { setPhase('intro'); setFunnel({ awareness: '', interest: '', decision: '', action: '' }); setStep(0); }} className="px-6 py-3 bg-blue-500 rounded-xl font-bold mt-4">CREATE NEW FUNNEL</button>
-         </div>
-      );
-
-      const submitStep = () => {
-         setFunnel({ ...funnel, [stages[step].key]: inputValue });
-         setInputValue('');
-         if (step < 3) setStep(step + 1);
-         else setPhase('result');
+      const conceptLabels: { [key: string]: string } = {
+         funnel_diagnostics: "Funnel Constraint Analysis",
+         conversion_psychology: "Conversion Psychology & CTA Optimization",
+         tier_optimization: "Pricing Tier Strategy",
+         activation_sequences: "Activation & Onboarding Sequences",
+         retargeting_segmentation: "Behavioral Retargeting Segmentation"
       };
 
-      const s = stages[step];
+      const infoTopics: { [k: string]: { title: string; content: string } } = {
+         aida: {
+            title: "AIDA Framework",
+            content: "Attention → Interest → Desire → Action. Classic funnel stages. But modern funnels add: Awareness → Consideration → Conversion → Retention → Advocacy. The best funnels optimize for RETENTION, not just initial conversion. A 5% improvement in retention often beats 25% improvement in acquisition."
+         },
+         metrics: {
+            title: "Key Funnel Metrics",
+            content: "Track: 1) Stage-by-stage conversion rates, 2) Time between stages, 3) Drop-off points, 4) Cohort retention, 5) CAC payback period. Compare to industry benchmarks: SaaS visitor→trial 2-5%, trial→paid 15-25%, B2C e-commerce cart→purchase 2-4%. Your biggest gap = your biggest opportunity."
+         },
+         psychology: {
+            title: "Conversion Psychology",
+            content: "Cialdini's 6 principles: 1) Reciprocity (give before asking), 2) Scarcity (limited time/quantity), 3) Authority (expert endorsement), 4) Consistency (small commitments lead to big ones), 5) Liking (similarity, compliments), 6) Social proof (others are doing it). Use ethically."
+         },
+         testing: {
+            title: "A/B Testing Fundamentals",
+            content: "Rules: 1) Test ONE variable at a time, 2) Run until statistical significance (95%+ confidence), 3) Test big changes first (headlines, offers), then small (colors, buttons), 4) Document everything, 5) Winning tests often reveal customer psychology insights more valuable than the lift itself."
+         }
+      };
+
+      const answer = (idx: number) => {
+         if (answered) return;
+         setSelected(idx);
+         setAnswered(true);
+         const s = scenarios[scenario];
+         if (idx === s.correct) {
+            setScore(prev => prev + 1);
+            setGameLog(prev => [...prev, `✓ ${s.title}: Correct! Mastered ${conceptLabels[s.concept]}`]);
+         } else {
+            setGameLog(prev => [...prev, `✗ ${s.title}: Missed. Fell for "${s.opts[idx].substring(0, 40)}..."`]);
+            if (!conceptGaps.includes(s.concept)) {
+               setConceptGaps(prev => [...prev, s.concept]);
+            }
+         }
+      };
+
+      const next = () => {
+         if (scenario >= scenarios.length - 1) {
+            setPhase('result');
+         } else {
+            setScenario(prev => prev + 1);
+            setAnswered(false);
+            setSelected(null);
+         }
+      };
+
+      const grade = score >= 5 ? 'A' : score >= 4 ? 'B' : score >= 3 ? 'C' : 'D';
+      const s = scenarios[scenario];
+
+      if (phase === 'intro') {
+         return (
+            <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-blue-900 via-indigo-900 to-violet-900 text-white p-6">
+               <div className="text-6xl mb-4">🔻</div>
+               <h2 className="text-2xl font-bold mb-2">Funnel Optimization Lab</h2>
+               <p className="text-slate-300 text-center mb-4 max-w-md">
+                  Master the art of diagnosing and fixing conversion funnels like a growth expert.
+               </p>
+               <div className="bg-black/30 rounded-xl p-4 mb-6 max-w-md text-sm">
+                  <p className="text-blue-400 font-bold mb-2">🎯 What You'll Learn:</p>
+                  <ul className="text-slate-300 space-y-1 text-xs">
+                     <li>• How to find the biggest leaks in any funnel</li>
+                     <li>• Why high engagement doesn't always mean high conversion</li>
+                     <li>• The psychology behind why people don't convert</li>
+                     <li>• Real optimization strategies from Dropbox, Slack, Amazon</li>
+                  </ul>
+               </div>
+               <button
+                  onClick={() => setPhase('play')}
+                  className="px-8 py-3 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-xl font-bold hover:from-blue-400 hover:to-indigo-400 transition-all"
+               >
+                  Start Optimizing
+               </button>
+            </div>
+         );
+      }
+
+      if (phase === 'result') {
+         return (
+            <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-blue-900 via-indigo-900 to-violet-900 text-white p-6 overflow-auto">
+               <div className="text-6xl mb-4">{grade === 'A' ? '🏆' : grade === 'B' ? '🔻' : grade === 'C' ? '📊' : '📚'}</div>
+               <h2 className="text-2xl font-bold mb-2">Funnel Analysis Complete</h2>
+               <div className="text-4xl font-bold text-blue-400 mb-2">{score}/{scenarios.length}</div>
+               <div className="text-5xl mb-4">{grade}</div>
+               <p className="text-slate-400 mb-4 text-center">
+                  {grade === 'A' ? 'Conversion expert! You think like a growth lead.' :
+                   grade === 'B' ? 'Strong funnel intuition. Some optimization gaps to fill.' :
+                   grade === 'C' ? 'Decent foundation, but missing key conversion concepts.' :
+                   'Funnel optimization requires more study. Review the fundamentals.'}
+               </p>
+
+               {conceptGaps.length > 0 && (
+                  <div className="bg-black/30 rounded-xl p-4 max-w-md w-full mb-4">
+                     <p className="text-blue-400 font-bold text-sm mb-2">📚 Concepts to Study:</p>
+                     <ul className="text-slate-300 text-xs space-y-1">
+                        {conceptGaps.map(gap => (
+                           <li key={gap}>• {conceptLabels[gap]}</li>
+                        ))}
+                     </ul>
+                  </div>
+               )}
+
+               <div className="bg-black/30 rounded-xl p-4 max-w-md w-full mb-4 max-h-32 overflow-y-auto">
+                  <p className="text-blue-400 font-bold text-sm mb-2">Session Log:</p>
+                  {gameLog.map((entry, i) => (
+                     <p key={i} className="text-xs text-slate-300">{entry}</p>
+                  ))}
+               </div>
+
+               <button
+                  onClick={() => {
+                     setPhase('intro');
+                     setScenario(0);
+                     setScore(0);
+                     setAnswered(false);
+                     setSelected(null);
+                     setGameLog([]);
+                     setConceptGaps([]);
+                  }}
+                  className="px-6 py-2 bg-blue-600 rounded-lg hover:bg-blue-500"
+               >
+                  Try Again
+               </button>
+            </div>
+         );
+      }
+
       return (
-         <div className="flex flex-col h-full bg-gradient-to-br from-slate-900 via-gray-900 to-zinc-900 text-white p-8">
-            <div className="flex justify-center gap-2 mb-6">
-               {stages.map((_, i) => (
-                  <div key={i} className={`w-12 h-2 rounded-full ${i <= step ? 'bg-blue-400' : 'bg-black/30'}`}></div>
+         <div className="w-full h-full flex flex-col bg-gradient-to-br from-blue-900 via-indigo-900 to-violet-900 text-white overflow-hidden">
+            {showInfo && infoTopic && infoTopics[infoTopic] && (
+               <div className="absolute inset-0 bg-black/80 flex items-center justify-center p-4 z-50" onClick={() => { setShowInfo(false); setInfoTopic(null); }}>
+                  <div className="bg-slate-800 rounded-xl p-4 max-w-md" onClick={e => e.stopPropagation()}>
+                     <h3 className="text-lg font-bold text-blue-400 mb-2">{infoTopics[infoTopic].title}</h3>
+                     <p className="text-sm text-slate-300">{infoTopics[infoTopic].content}</p>
+                     <button onClick={() => { setShowInfo(false); setInfoTopic(null); }} className="mt-4 w-full py-2 bg-blue-600 rounded-lg">Got it!</button>
+                  </div>
+               </div>
+            )}
+
+            <div className="p-3 bg-black/30 border-b border-blue-500/30 flex justify-between items-center">
+               <span className="font-bold">🔻 Funnel Lab</span>
+               <span className="text-blue-400">{scenario + 1}/{scenarios.length}</span>
+               <span className="text-indigo-400">Score: {score}</span>
+            </div>
+
+            <div className="flex-1 p-4 overflow-auto">
+               <div className="bg-black/30 rounded-xl p-3 mb-3">
+                  <p className="font-bold text-blue-400 mb-2">{s.title}</p>
+                  <p className="text-sm text-slate-300">{s.context}</p>
+               </div>
+
+               <div className="bg-black/30 rounded-xl p-4 mb-3">
+                  <p className="font-medium text-white">{s.question}</p>
+               </div>
+
+               <div className="grid gap-2">
+                  {s.opts.map((opt, i) => (
+                     <button
+                        key={i}
+                        onClick={() => answer(i)}
+                        disabled={answered}
+                        className={`p-3 rounded-lg text-left text-sm transition-all ${
+                           answered
+                              ? i === s.correct
+                                 ? 'bg-green-600'
+                                 : i === selected
+                                    ? 'bg-red-600'
+                                    : 'bg-black/30'
+                              : 'bg-black/30 hover:bg-blue-600/50'
+                        }`}
+                     >
+                        {opt}
+                     </button>
+                  ))}
+               </div>
+
+               {answered && (
+                  <div className="mt-3 space-y-3">
+                     {selected !== s.correct && s.wrongExplanations[selected!] && (
+                        <div className="p-3 bg-red-900/50 rounded-lg border border-red-500/30">
+                           <p className="text-xs text-red-300 font-bold mb-1">❌ Why This Was Wrong:</p>
+                           <p className="text-sm text-red-100">{s.wrongExplanations[selected!]}</p>
+                        </div>
+                     )}
+                     <div className="p-3 bg-green-900/50 rounded-lg border border-green-500/30">
+                        <p className="text-xs text-green-300 font-bold mb-1">✓ Optimization Insight:</p>
+                        <p className="text-sm text-green-100">{s.why}</p>
+                     </div>
+                     <div className="p-3 bg-blue-900/50 rounded-lg border border-blue-500/30">
+                        <p className="text-xs text-blue-300 font-bold mb-1">📖 Real World:</p>
+                        <p className="text-sm text-blue-100">{s.realWorld}</p>
+                     </div>
+                     <button
+                        onClick={next}
+                        className="w-full py-2 bg-blue-600 rounded-lg hover:bg-blue-500"
+                     >
+                        {scenario >= scenarios.length - 1 ? 'See Results' : 'Next Scenario'}
+                     </button>
+                  </div>
+               )}
+            </div>
+
+            <div className="p-3 bg-black/30 border-t border-blue-500/30 flex gap-2 justify-center flex-wrap">
+               {Object.keys(infoTopics).map(k => (
+                  <button
+                     key={k}
+                     onClick={() => { setInfoTopic(k); setShowInfo(true); }}
+                     className="text-xs text-blue-400 hover:text-blue-300"
+                  >
+                     ℹ️ {infoTopics[k].title}
+                  </button>
                ))}
             </div>
-            <div className={`bg-gradient-to-r ${s.color} rounded-2xl p-6 mb-4 text-center`}>
-               <p className="text-4xl mb-2">{s.icon}</p>
-               <p className="text-xl font-bold">{s.label} Stage</p>
-               <p className="text-sm opacity-90 mt-2">{s.prompt}</p>
-            </div>
-            <textarea value={inputValue} onChange={(e) => setInputValue(e.target.value)}
-               placeholder="Describe your strategy..." className="flex-1 p-4 rounded-xl bg-black/30 border border-white/20 text-white mb-4 resize-none" />
-            <button onClick={submitStep} className="px-6 py-3 bg-blue-500 rounded-xl font-bold">
-               {step < 3 ? 'NEXT STAGE →' : 'VIEW FUNNEL'}
-            </button>
          </div>
       );
    };
@@ -22790,73 +23058,279 @@ const GeneratedDiagram: React.FC<DiagramProps> = ({ type, data, title }) => {
    // 38. PUBLIC RELATIONS - PR Crisis Simulator
    const PublicRelationsRenderer = () => {
       const [phase, setPhase] = useState<'intro' | 'play' | 'result'>('intro');
-      const [showInfo, setShowInfo] = useState(false);
+      const [scenario, setScenario] = useState(0);
       const [score, setScore] = useState(0);
-      const [current, setCurrent] = useState(0);
+      const [selected, setSelected] = useState<number | null>(null);
+      const [answered, setAnswered] = useState(false);
+      const [gameLog, setGameLog] = useState<string[]>([]);
+      const [showInfo, setShowInfo] = useState(false);
+      const [infoTopic, setInfoTopic] = useState<string | null>(null);
+      const [conceptGaps, setConceptGaps] = useState<string[]>([]);
 
-      const crises = [
-         { scenario: 'A customer posts a viral video complaining about your product defect', best: 'acknowledge', options: [
-            { id: 'ignore', label: '🙈 Ignore and hope it blows over', score: 0 },
-            { id: 'acknowledge', label: '✅ Publicly acknowledge, apologize, offer solution', score: 10 },
-            { id: 'blame', label: '👆 Blame the customer for misuse', score: -5 }
-         ]},
-         { scenario: 'A journalist wants to interview you about industry concerns', best: 'prepare', options: [
-            { id: 'decline', label: '❌ Decline all interviews', score: 3 },
-            { id: 'prepare', label: '📋 Prepare key messages and do the interview', score: 10 },
-            { id: 'wing', label: '🎤 Do it spontaneously without prep', score: 2 }
-         ]},
-         { scenario: 'Your competitor spreads false information about you', best: 'factual', options: [
-            { id: 'attack', label: '⚔️ Attack them back publicly', score: 1 },
-            { id: 'factual', label: '📊 Release factual corrections professionally', score: 10 },
-            { id: 'legal', label: '⚖️ Immediately threaten lawsuits', score: 4 }
-         ]}
+      const scenarios = [
+         {
+            title: "The Viral Complaint",
+            context: "A customer posts a TikTok showing your product catching fire during normal use. Video: 2.3M views in 12 hours. Comments are brutal. Your product team confirms it's a rare manufacturing defect affecting ~0.01% of units. Legal says 'say nothing until we investigate.' Marketing wants to wait until the news cycle moves on. Customer service is getting flooded.",
+            question: "What's the right immediate response?",
+            opts: [
+               "A) Stay silent—let legal complete the investigation first",
+               "B) Acknowledge quickly, express concern, announce immediate investigation and remedy",
+               "C) Post a counter-video explaining the customer was using it wrong",
+               "D) Offer the complaining customer money to delete the video"
+            ],
+            correct: 1,
+            wrongExplanations: [
+               "Silence in a viral crisis is interpreted as guilt. Every hour of silence spawns more negative coverage. Legal caution is appropriate for statements of liability, not for expressing concern and announcing action.",
+               "",
+               "Blaming the customer when video shows normal use is gasoline on fire. It creates 'company vs customer' narrative that the internet will rally against. Even if true, the timing makes you look defensive.",
+               "Paying for deletion is bribery that will leak. When it does, the story becomes 'Company tried to cover up dangerous product.' This turns a product crisis into an ethics scandal."
+            ],
+            realWorld: "Samsung's Galaxy Note 7 battery fires in 2016: Initial silence and denial cost them $5B+ and permanent brand damage. Contrast with Johnson & Johnson's 1982 Tylenol crisis: Immediate recall, transparent communication, and prioritizing safety over profits—they recovered market share within a year and set the gold standard for crisis response.",
+            concept: "crisis_speed",
+            why: "In viral crises, speed beats perfection. You don't need all answers—you need to show you care and are acting. Template: 1) Acknowledge the issue exists, 2) Express genuine concern for those affected, 3) Announce immediate investigation, 4) Promise updates. This buys goodwill while you figure out details."
+         },
+         {
+            title: "The Media Ambush",
+            context: "A journalist from a major tech publication emails: 'We're publishing a story tomorrow about toxic culture at your startup. Multiple former employees describe harassment that leadership ignored. We'd like your comment by 5pm today.' You have 4 hours. Some allegations are false, some are exaggerated versions of real incidents, one is accurate and serious.",
+            question: "How should you respond to this media request?",
+            opts: [
+               "A) Decline to comment—anything you say will be used against you",
+               "B) Respond with prepared statement addressing each allegation specifically",
+               "C) Threaten legal action if they publish false claims",
+               "D) Ask for a week extension to investigate internally"
+            ],
+            correct: 1,
+            wrongExplanations: [
+               "'No comment' appears in print as 'Company declined to respond to allegations.' Readers assume guilt. You've given up your only chance to shape the narrative before publication.",
+               "",
+               "Legal threats against journalists almost always backfire. It becomes 'Company tries to silence reporters'—a worse story than the original. Media organizations have legal teams and view threats as confirmation of wrongdoing.",
+               "Journalists have their own deadlines and won't wait a week. This request will be noted as 'Company asked for unreasonable delay.' They'll publish without your input, which is worse than a prepared response."
+            ],
+            realWorld: "Uber's 2017 culture crisis: Susan Fowler's blog post led to avalanche of media investigations. Uber's initial denials and legal posturing made things worse. Companies that survive scandals (Microsoft under Nadella) respond with: acknowledge problems exist, show specific changes underway, demonstrate accountability.",
+            concept: "media_response",
+            why: "The statement approach: Address true allegations with accountability ('We take this seriously, here's what we're doing'). For false allegations, factually correct with evidence. Never attack the journalist or sources. Provide context without being defensive. Your response shapes how the story reads."
+         },
+         {
+            title: "The Competitor Attack",
+            context: "Your main competitor's CEO tweets: 'Surprised @YourCompany is still in business given their data breach last year. We've never had a security incident.' This is misleading—your 'breach' was a minor vulnerability disclosed and patched within hours; they've had unreported incidents. The tweet has 50K impressions and industry analysts are watching.",
+            question: "What's the strategic response to competitor attacks?",
+            opts: [
+               "A) Publicly expose their unreported security incidents",
+               "B) Respond professionally with facts, then pivot to your strengths",
+               "C) Ignore it—don't give them more attention",
+               "D) Have your investors or customers attack them on your behalf"
+            ],
+            correct: 1,
+            wrongExplanations: [
+               "Exposing their incidents makes you look petty and starts a public mud fight. Analysts watching see two companies attacking each other—neither looks professional. You become the story instead of solving it.",
+               "",
+               "Ignoring leaves their false claim unchallenged. Analysts and customers who see it may believe it. In B2B especially, unanswered attacks can influence deals. Silence isn't always golden.",
+               "Proxy attacks are transparent and embarrassing when discovered. It looks like you're orchestrating a campaign rather than being confident in your position. This damages relationships with investors and customers."
+            ],
+            realWorld: "The 'Get a Mac' campaign was brilliant because Apple focused on its own strengths while making gentle comparisons. Contrast with the Pepsi/Coke wars that made both look petty. The best competitive responses are factual, brief, and pivot quickly to value proposition.",
+            concept: "competitive_response",
+            why: "The professional response: 'To clarify: [brief factual correction]. We're proud of [your actual strength]. Happy to discuss our security practices with any customer.' Then stop engaging. You've corrected the record without escalating. Multiple tweets make you look defensive."
+         },
+         {
+            title: "The Founder Scandal",
+            context: "Your CEO's old tweets from 10 years ago surface—offensive jokes that don't reflect current values. An activist account with 500K followers is calling for boycott. Board is split: half want immediate resignation, half say 'wait and see.' CEO wrote genuine apology last night but hasn't posted it. Company has major funding round closing next week.",
+            question: "How should the company navigate this founder scandal?",
+            opts: [
+               "A) CEO should resign immediately to protect the company",
+               "B) Post genuine apology quickly, demonstrate growth, then get back to work",
+               "C) Delete the old tweets and hope the story dies down",
+               "D) Attack the activist account's credibility and motives"
+            ],
+            correct: 1,
+            wrongExplanations: [
+               "Immediate resignation signals the company agrees the offense is unforgivable. It doesn't actually satisfy critics (they just move to the next target) and destabilizes the company. Resignation should be reserved for ongoing or severe misconduct, not old statements.",
+               "",
+               "Deleting evidence looks like coverup. Screenshots already exist. The story becomes 'CEO tries to hide past' instead of 'CEO has grown.' Deletion is almost never the right move.",
+               "Attacking critics makes the CEO look defensive and petty. It shifts the story to 'CEO attacks activist' which is more engaging than 'CEO apologizes.' Never give critics new ammunition."
+            ],
+            realWorld: "James Gunn was fired from Guardians of the Galaxy over old tweets, then rehired after reflection showed genuine growth. Kevin Hart stepped down from Oscars hosting but was later rehabilitated. The pattern: genuine acknowledgment of past mistakes + evidence of growth = path forward. Denial or attack = escalation.",
+            concept: "personal_crisis",
+            why: "The playbook for old statements: 1) Don't delete—acknowledge they exist, 2) Apologize genuinely without excuses ('I wrote those things, they were wrong'), 3) Show growth ('Here's how I've changed'), 4) Point to actions not words ('Here's what we've done as a company'). Then—critically—stop apologizing and start demonstrating."
+         },
+         {
+            title: "The Layoff Leak",
+            context: "You're planning layoffs affecting 30% of staff next week. Somehow, tech blogs have the story and are publishing in 2 hours with the headline 'Mass Layoffs Coming.' Employees are panicking on Slack—they saw the headline before any internal communication. Your carefully planned announcement sequence is ruined. HR is furious, employees are scared, and media is calling.",
+            question: "How do you handle a leaked negative announcement?",
+            opts: [
+               "A) Deny the story until you're ready for the official announcement",
+               "B) Immediately address employees first, then media—transparency now",
+               "C) Find and fire the leaker to send a message",
+               "D) No comment until lawyers review everything"
+            ],
+            correct: 1,
+            wrongExplanations: [
+               "Denying a true story that's about to be confirmed destroys credibility. Employees will remember you lied to them. Trust, once lost to lies, is nearly impossible to rebuild.",
+               "",
+               "Leaker-hunting during a crisis is a distraction that changes the narrative. 'Company hunts for whistleblower' is worse press than the layoffs themselves. It also terrifies remaining employees about speaking up.",
+               "Silence while employees panic is abandonment. Every minute without communication, they're imagining worst-case scenarios and updating LinkedIn. You lose good people who could have stayed."
+            ],
+            realWorld: "Airbnb's 2020 layoffs under Brian Chesky became a masterclass: honest, empathetic internal communication first, then public memo that treated departing employees with dignity. He offered extended healthcare, equity vesting, and outplacement. The result: positive press about how layoffs were handled, and alumni became brand ambassadors.",
+            concept: "leaked_news",
+            why: "When your announcement leaks: 1) Accept the timeline is now, not next week, 2) Internal communication FIRST—even if just 'We're preparing a statement, all-hands in 30 minutes,' 3) Then media, 4) Be as transparent as possible about the 'why.' The story is happening—your only control is how you show up in it."
+         }
       ];
 
-      if (phase === 'intro') return (
-         <div className="flex flex-col items-center justify-center h-full bg-gradient-to-br from-emerald-900 via-teal-900 to-cyan-900 text-white p-8 text-center">
-            <button onClick={() => setShowInfo(!showInfo)} className="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/20 flex items-center justify-center text-xl">ℹ️</button>
-            {showInfo && (
-               <div className="absolute top-16 right-4 bg-black/90 p-4 rounded-xl max-w-xs text-left text-sm">
-                  <p className="font-bold mb-2">Public Relations</p>
-                  <p>Managing your public image and reputation. Crisis communication requires speed, transparency, and empathy.</p>
-               </div>
-            )}
-            <p className="text-6xl mb-4">📰</p>
-            <h2 className="text-3xl font-bold mb-4">PR Crisis Simulator</h2>
-            <p className="text-lg opacity-80 max-w-md mb-8">Navigate PR scenarios and protect your brand's reputation.</p>
-            <button onClick={() => setPhase('play')} className="px-8 py-4 bg-emerald-500 rounded-2xl font-bold text-xl hover:bg-emerald-400 transition-all">START SIMULATION →</button>
-         </div>
-      );
-
-      if (phase === 'result') return (
-         <div className="flex flex-col items-center justify-center h-full bg-gradient-to-br from-emerald-900 via-teal-900 to-cyan-900 text-white p-8 text-center">
-            <p className="text-6xl mb-4">{score >= 25 ? '🏆' : score >= 15 ? '⭐' : '📚'}</p>
-            <h2 className="text-3xl font-bold mb-4">PR Score</h2>
-            <p className="text-5xl font-bold text-emerald-400 mb-4">{score}/{crises.length * 10}</p>
-            <p className="text-lg opacity-80 mb-8">{score >= 25 ? 'PR expert!' : score >= 15 ? 'Good instincts!' : 'Study crisis management!'}</p>
-            <button onClick={() => { setPhase('intro'); setScore(0); setCurrent(0); }} className="px-6 py-3 bg-emerald-500 rounded-xl font-bold">TRY AGAIN</button>
-         </div>
-      );
-
-      const handleSelect = (optScore: number) => {
-         setScore(score + optScore);
-         if (current < crises.length - 1) setCurrent(current + 1);
-         else setPhase('result');
+      const conceptLabels: { [key: string]: string } = {
+         crisis_speed: "Crisis Response Timing",
+         media_response: "Media Request Handling",
+         competitive_response: "Competitive Attack Response",
+         personal_crisis: "Founder Personal Crisis",
+         leaked_news: "Leaked Announcement Management"
       };
 
-      const c = crises[current];
-      return (
-         <div className="flex flex-col h-full bg-gradient-to-br from-emerald-900 via-teal-900 to-cyan-900 text-white p-8">
-            <div className="bg-red-500/20 border border-red-500/50 rounded-2xl p-6 mb-6 text-center">
-               <p className="text-sm opacity-70 mb-2">⚠️ CRISIS {current + 1} of {crises.length}</p>
-               <p className="text-lg font-bold">{c.scenario}</p>
+      const infoTopics: { [k: string]: { title: string; content: string } } = {
+         crisis: { title: "Crisis Communication Basics", content: "The 3 C's: Care (show genuine concern), Commitment (promise action), Consistency (one message across channels). First 24 hours determine narrative. Speed beats perfection. Acknowledge, don't speculate. Promise updates, then deliver them." },
+         media: { title: "Media Relations", content: "Journalists have jobs to do—help them do it accurately. Provide clear, quotable statements. Never say 'no comment.' Prepare key messages in advance. Everything is on the record. Build relationships before you need them." },
+         social: { title: "Social Media Crises", content: "Social moves fast—hours, not days. Monitor constantly. Respond on the platform where the crisis started. Don't delete (screenshots exist). Be human, not corporate. Sometimes not responding IS the response. Know when to take conversations offline." },
+         reputation: { title: "Reputation Building", content: "Reputation is built in calm times, tested in crises. Proactive thought leadership builds credibility reserves. Relationships with journalists, analysts, and influencers should exist BEFORE crises. Authenticity compounds; inauthenticity is eventually exposed." }
+      };
+
+      const sc = scenarios[scenario];
+
+      const answer = (i: number) => {
+         if (answered) return;
+         setSelected(i);
+         setAnswered(true);
+         if (i === sc.correct) {
+            setScore(s => s + 1);
+            setGameLog(l => [...l, `✓ ${sc.title}: Handled crisis effectively`]);
+         } else {
+            setGameLog(l => [...l, `✗ ${sc.title}: ${sc.wrongExplanations[i]}`]);
+            if (!conceptGaps.includes(sc.concept)) {
+               setConceptGaps(g => [...g, sc.concept]);
+            }
+         }
+      };
+
+      const next = () => {
+         if (scenario >= scenarios.length - 1) {
+            setPhase('result');
+         } else {
+            setScenario(s => s + 1);
+            setSelected(null);
+            setAnswered(false);
+         }
+      };
+
+      const grade = score >= 5 ? 'A' : score >= 4 ? 'B' : score >= 3 ? 'C' : 'D';
+
+      if (phase === 'intro') {
+         return (
+            <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-emerald-900 via-teal-900 to-cyan-900 text-white p-6">
+               <div className="text-6xl mb-4">📰</div>
+               <h2 className="text-2xl font-bold mb-2">PR Crisis Simulator</h2>
+               <p className="text-emerald-300 text-center mb-4 max-w-md">
+                  Navigate high-stakes PR crises where timing, tone, and transparency determine whether your brand survives or burns.
+               </p>
+               <div className="bg-black/30 rounded-lg p-4 mb-6 max-w-md">
+                  <p className="text-sm text-slate-300 mb-2">You'll face scenarios involving:</p>
+                  <ul className="text-xs text-slate-400 space-y-1">
+                     <li>• Viral customer complaints with millions of views</li>
+                     <li>• Journalists with damaging stories on deadline</li>
+                     <li>• Competitor attacks that spread misinformation</li>
+                     <li>• Founder scandals from the past surfacing</li>
+                     <li>• Leaked announcements that destroy your timeline</li>
+                  </ul>
+               </div>
+               <button onClick={() => setPhase('play')} className="px-8 py-3 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-xl font-bold">
+                  Enter the Crisis
+               </button>
             </div>
-            <p className="text-center mb-4 opacity-80">How do you respond?</p>
-            <div className="flex flex-col gap-3 flex-1">
-               {c.options.map((opt) => (
-                  <button key={opt.id} onClick={() => handleSelect(opt.score)}
-                     className="p-4 bg-black/30 rounded-xl hover:bg-emerald-500/30 transition-all text-left font-medium">
-                     {opt.label}
+         );
+      }
+
+      if (phase === 'result') {
+         return (
+            <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-emerald-900 via-teal-900 to-cyan-900 text-white p-6 overflow-auto">
+               <div className="text-5xl mb-3">{grade === 'A' ? '🏆' : grade === 'B' ? '📰' : grade === 'C' ? '⚠️' : '🔥'}</div>
+               <h2 className="text-xl font-bold mb-2">Crisis Response Assessment</h2>
+               <div className="text-3xl font-bold text-emerald-400 mb-1">{score}/{scenarios.length}</div>
+               <div className="text-4xl mb-3">{grade}</div>
+               <p className="text-slate-400 text-sm mb-3 text-center">
+                  {grade === 'A' ? 'Crisis communications expert! You protected the brand through every storm.' :
+                   grade === 'B' ? 'Strong PR instincts—you understand speed and transparency.' :
+                   grade === 'C' ? 'Some missteps would cause lasting damage—study crisis response patterns.' :
+                   'Review crisis fundamentals—several responses would have made situations worse.'}
+               </p>
+               {conceptGaps.length > 0 && (
+                  <div className="w-full max-w-md bg-red-900/30 border border-red-500/30 rounded-lg p-3 mb-3">
+                     <p className="text-xs text-red-400 font-semibold mb-2">PR Skills to Develop:</p>
+                     <ul className="text-xs text-red-300 space-y-1">
+                        {conceptGaps.map(g => <li key={g}>• {conceptLabels[g]}</li>)}
+                     </ul>
+                  </div>
+               )}
+               <div className="w-full max-w-md bg-black/30 rounded-lg p-3 mb-4 max-h-28 overflow-y-auto">
+                  {gameLog.map((l, i) => <p key={i} className="text-xs text-slate-300 mb-1">{l}</p>)}
+               </div>
+               <button onClick={() => { setPhase('intro'); setScenario(0); setScore(0); setAnswered(false); setSelected(null); setGameLog([]); setConceptGaps([]); }} className="px-6 py-2 bg-emerald-600 rounded-lg">
+                  Try Again
+               </button>
+            </div>
+         );
+      }
+
+      return (
+         <div className="w-full h-full flex flex-col bg-gradient-to-br from-emerald-900 via-teal-900 to-cyan-900 text-white overflow-hidden">
+            {showInfo && infoTopic && infoTopics[infoTopic] && (
+               <div className="absolute inset-0 bg-black/80 flex items-center justify-center p-4 z-50" onClick={() => { setShowInfo(false); setInfoTopic(null); }}>
+                  <div className="bg-slate-800 rounded-xl p-4 max-w-sm" onClick={e => e.stopPropagation()}>
+                     <h3 className="text-lg font-bold text-emerald-400 mb-2">{infoTopics[infoTopic].title}</h3>
+                     <p className="text-sm text-slate-300">{infoTopics[infoTopic].content}</p>
+                     <button onClick={() => { setShowInfo(false); setInfoTopic(null); }} className="mt-4 w-full py-2 bg-emerald-600 rounded-lg">Got it!</button>
+                  </div>
+               </div>
+            )}
+            <div className="p-3 bg-black/30 border-b border-red-500/30 flex justify-between items-center">
+               <span className="font-bold text-sm">⚠️ {sc.title}</span>
+               <span className="text-emerald-400 text-sm">{scenario + 1}/{scenarios.length}</span>
+               <span className="text-teal-400 text-sm">Score: {score}</span>
+            </div>
+            <div className="flex-1 p-4 overflow-auto">
+               <div className="bg-red-900/30 border border-red-500/30 rounded-lg p-3 mb-3">
+                  <p className="text-sm text-slate-300">{sc.context}</p>
+               </div>
+               <div className="bg-emerald-800/30 rounded-lg p-3 mb-3">
+                  <p className="font-medium text-sm">{sc.question}</p>
+               </div>
+               <div className="grid gap-2 mb-3">
+                  {sc.opts.map((opt, i) => (
+                     <button key={i} onClick={() => answer(i)} disabled={answered} className={`p-3 rounded-lg text-left text-sm transition-all ${answered ? i === sc.correct ? 'bg-green-600' : i === selected ? 'bg-red-600' : 'bg-black/30 opacity-50' : 'bg-black/30 hover:bg-emerald-600/50'}`}>
+                        {opt}
+                     </button>
+                  ))}
+               </div>
+               {answered && (
+                  <div className="space-y-3">
+                     <div className="bg-green-900/30 border border-green-500/30 rounded-lg p-3">
+                        <p className="text-xs text-green-400 font-semibold mb-1">Effective Response:</p>
+                        <p className="text-sm text-slate-300">{sc.why}</p>
+                     </div>
+                     {selected !== sc.correct && sc.wrongExplanations[selected!] && (
+                        <div className="bg-red-900/30 border border-red-500/30 rounded-lg p-3">
+                           <p className="text-xs text-red-400 font-semibold mb-1">Why that backfires:</p>
+                           <p className="text-sm text-slate-300">{sc.wrongExplanations[selected!]}</p>
+                        </div>
+                     )}
+                     <div className="bg-emerald-900/30 border border-emerald-500/30 rounded-lg p-3">
+                        <p className="text-xs text-emerald-400 font-semibold mb-1">📊 Real World:</p>
+                        <p className="text-sm text-slate-300">{sc.realWorld}</p>
+                     </div>
+                     <button onClick={next} className="w-full py-2 bg-emerald-600 rounded-lg font-medium">
+                        {scenario >= scenarios.length - 1 ? 'See Results' : 'Next Crisis'}
+                     </button>
+                  </div>
+               )}
+            </div>
+            <div className="p-2 bg-black/30 border-t border-emerald-500/30 flex gap-2 justify-center flex-wrap">
+               {Object.keys(infoTopics).map(k => (
+                  <button key={k} onClick={() => { setInfoTopic(k); setShowInfo(true); }} className="text-xs text-emerald-400 hover:text-emerald-300">
+                     ℹ️ {infoTopics[k].title}
                   </button>
                ))}
             </div>
@@ -22867,72 +23341,279 @@ const GeneratedDiagram: React.FC<DiagramProps> = ({ type, data, title }) => {
    // 39. GUERRILLA MARKETING - Creative Campaign Ideas
    const GuerrillaMarketingRenderer = () => {
       const [phase, setPhase] = useState<'intro' | 'play' | 'result'>('intro');
-      const [showInfo, setShowInfo] = useState(false);
+      const [scenario, setScenario] = useState(0);
       const [score, setScore] = useState(0);
-      const [current, setCurrent] = useState(0);
-
-      const tactics = [
-         { name: 'Flash Mob', icon: '💃', desc: 'Coordinated public performance', viral: 9, cost: 2, risk: 4 },
-         { name: 'Street Art', icon: '🎨', desc: 'Creative murals or chalk art', viral: 7, cost: 1, risk: 5 },
-         { name: 'Pop-Up Experience', icon: '🎪', desc: 'Temporary immersive installation', viral: 8, cost: 5, risk: 2 },
-         { name: 'Sticker Campaign', icon: '🏷️', desc: 'Strategic sticker placement', viral: 5, cost: 1, risk: 6 },
-         { name: 'Viral Stunt', icon: '🎬', desc: 'Attention-grabbing public act', viral: 10, cost: 4, risk: 8 }
-      ];
+      const [selected, setSelected] = useState<number | null>(null);
+      const [answered, setAnswered] = useState(false);
+      const [gameLog, setGameLog] = useState<string[]>([]);
+      const [showInfo, setShowInfo] = useState(false);
+      const [infoTopic, setInfoTopic] = useState<string | null>(null);
+      const [conceptGaps, setConceptGaps] = useState<string[]>([]);
 
       const scenarios = [
-         { goal: 'Launch a coffee shop on a tiny budget', best: 'Sticker Campaign' },
-         { goal: 'Create massive buzz for a movie premiere', best: 'Viral Stunt' },
-         { goal: 'Promote a dance studio opening', best: 'Flash Mob' }
+         {
+            title: "The Zero-Budget Launch",
+            context: "You're launching a specialty coffee roaster in a trendy urban neighborhood. Budget: literally $500 for all marketing. Established competitors spend $10K/month on ads. Your differentiator: you roast beans on-site daily (rare). You have 2 weeks until opening. The area has heavy foot traffic from office workers.",
+            question: "What guerrilla tactic maximizes impact with $500?",
+            opts: [
+               "A) Spend it all on Instagram ads targeting the neighborhood",
+               "B) Create a 'follow the aroma' scent trail with free sample stations at peak hours",
+               "C) Print 5,000 flyers and distribute to nearby offices",
+               "D) Hire a local influencer for a single post"
+            ],
+            correct: 1,
+            wrongExplanations: [
+               "Instagram ads at $500 in a competitive market will reach maybe 10-50K impressions—not enough to break through noise. You're competing against well-funded competitors on their turf. Ads are not guerrilla.",
+               "",
+               "Flyers have 1-2% engagement rates at best. 5,000 flyers = 50-100 potential customers. Most end up as litter, which damages your brand. This is old-school marketing, not guerrilla.",
+               "A single influencer post for $500 gets low-tier influencers with fake engagement. One post doesn't create sustained awareness. You'd get 50-100 likes, maybe 5 customers. Not worth the spend."
+            ],
+            realWorld: "Death Wish Coffee used guerrilla marketing to become the 'world's strongest coffee.' They gave free samples at gas stations where truckers stopped, creating word-of-mouth. The sensory experience of on-site roasting IS the marketing—let people smell and taste. Starbucks grew initially through aroma and sampling, not ads.",
+            concept: "sensory_marketing",
+            why: "Guerrilla marketing uses strengths competitors can't copy. Your on-site roasting creates aroma competitors can't replicate. A scent trail is free advertising that stops people. Free samples at 8AM when office workers need coffee creates habit. $500 covers cups and signage. This is experiential, shareable, and builds on your unique differentiator."
+         },
+         {
+            title: "The Viral Stunt Gamble",
+            context: "Your fitness app is launching against well-funded competitors (Peloton, etc.). Marketing suggests a 'bold stunt'—hiring 50 people to do synchronized workouts in Times Square, costing $25K for permits, participants, and production. Potential outcome: viral video or complete obscurity. Company has 6 months runway.",
+            question: "Should you pursue this viral stunt?",
+            opts: [
+               "A) Yes—viral moments can define a brand overnight",
+               "B) No—the risk/reward ratio is wrong for a company with 6 months runway",
+               "C) Do it but cheaper—10 people instead of 50",
+               "D) Wait until you have more funding, then do it bigger"
+            ],
+            correct: 1,
+            wrongExplanations: [
+               "Viral moments are lottery tickets. For every Dollar Shave Club, there are thousands of stunts that flopped. With 6 months runway, you can't afford lottery tickets. One failed expensive campaign could mean death.",
+               "",
+               "10 people doesn't create the 'spectacle' needed for virality. It looks like a small group working out—not news. You'd spend money without achieving the scale needed for impact. Worst of both worlds.",
+               "Waiting for more funding assumes you'll get it. You might not. And 'bigger later' doesn't solve the fundamental risk—you'd just be betting more. The strategy is flawed, not the budget."
+            ],
+            realWorld: "Red Bull spends on stunts (Stratos jump cost $30M+) because they have billions in revenue to absorb failure. For startups, guerrilla should be low-cost, high-reward. Dropbox's viral referral program cost nearly nothing and drove exponential growth. Airbnb's Obama O's cereal got press coverage for the cost of cereal boxes.",
+            concept: "asymmetric_bets",
+            why: "True guerrilla is asymmetric: low cost, high potential impact. A $25K stunt with uncertain outcome is not guerrilla—it's a gamble. With 6 months runway, invest in 25 smaller experiments at $1K each. Some will work, and you'll learn which to scale. Betting everything on one viral moment is Vegas, not strategy."
+         },
+         {
+            title: "The Community Hijack",
+            context: "You're launching a B2B SaaS for small business accounting. Marketing budget: $3K/month. Your target: small business owners who hate accounting. There's a popular podcast for small business owners with 50K listeners—the host charges $5K for sponsored episodes (too expensive). The host also runs a free Slack community with 2,000 members.",
+            question: "How do you reach this audience guerrilla-style?",
+            opts: [
+               "A) Save up for the $5K podcast sponsorship—it's the best channel",
+               "B) Become genuinely valuable in the Slack community, then offer free beta access",
+               "C) Cold email the podcast listeners you can find on LinkedIn",
+               "D) Run ads targeted at the podcast audience"
+            ],
+            correct: 1,
+            wrongExplanations: [
+               "Saving $5K means 2 months of your marketing budget on one podcast episode that listeners might skip. Podcast ads have uncertain ROI. You'd burn budget on a single bet rather than learning what works.",
+               "",
+               "Cold emailing podcast listeners is spam. They didn't consent to hearing from you. It damages your brand and probably violates CAN-SPAM. This isn't guerrilla—it's annoying.",
+               "You can't effectively target 'podcast listeners' with ads—platforms don't have that data. You'd be guessing at demographics and wasting budget on broad targeting."
+            ],
+            realWorld: "Superhuman grew through 'community-led growth'—showing up where customers were and providing genuine value before asking for anything. Buffer's founder Leo Widrich wrote guest posts for months before launching. The principle: give value, build relationships, then offer your product. Community trust is free but requires time investment.",
+            concept: "community_infiltration",
+            why: "Guerrilla marketing in B2B means becoming a trusted community member. Answer questions. Share insights. Help people for free. After 4-6 weeks of adding value, you've earned the right to mention your solution. Beta invites to community members create word-of-mouth. This costs time, not money—the guerrilla advantage."
+         },
+         {
+            title: "The Newsjacking Opportunity",
+            context: "A major tech company just announced they're shutting down a product that 500K users depend on. Your startup offers a similar solution. Twitter is exploding with angry users asking 'what do we switch to?' This is a 24-48 hour window. Your marketing team is suggesting a $20K Google Ads campaign targeting the competitor's brand name.",
+            question: "What's the guerrilla response to this breaking news?",
+            opts: [
+               "A) Run the $20K Google Ads campaign—capture the search traffic",
+               "B) Create a free migration tool and tweet it directly to angry users",
+               "C) Write a blog post comparing your product to the dying one",
+               "D) Wait—aggressive marketing during competitor's death looks vulturous"
+            ],
+            correct: 1,
+            wrongExplanations: [
+               "Google Ads take hours to set up and approve. By the time they're running, the news cycle has moved on. Plus, everyone else is bidding on that keyword—prices spike during news events. You'd pay premium for late traffic.",
+               "",
+               "Blog posts take time to rank. No one will find it in the 24-hour window. SEO is a long game; newsjacking requires immediate action on the platforms where the conversation is happening.",
+               "Waiting is leaving money on the table. 500K users are actively looking for alternatives RIGHT NOW. Helping them isn't vulturous—it's solving their problem. Your competitors aren't waiting."
+            ],
+            realWorld: "When Google killed Google Reader, Feedly newsjacked by tweeting 'We've got you covered' and saw 3M users join in 2 weeks. When Vine died, TikTok (then Musical.ly) created migration tools. The pattern: be immediately helpful at the moment of pain, before competitors react. Speed is the guerrilla advantage.",
+            concept: "newsjacking",
+            why: "Newsjacking = real-time marketing that inserts your brand into breaking news. The free migration tool is the key: you're not just saying 'use us'—you're solving their immediate problem. Tweet at the angry users directly. They're receptive because they're in pain NOW. This costs engineering time, not marketing dollars. Ship fast; capture the moment."
+         },
+         {
+            title: "The Anti-Advertising Play",
+            context: "Your sustainable fashion brand targets Gen Z consumers who actively distrust advertising. They skip ads, use ad blockers, and mock branded content. You have $10K for a campaign. Traditional influencer marketing feels inauthentic. Your clothes are genuinely sustainable (certified, transparent supply chain)—but so are competitors' claims.",
+            question: "How do you market to an ad-hostile audience?",
+            opts: [
+               "A) Find micro-influencers who seem more 'authentic'",
+               "B) Create genuine entertainment or utility content that happens to feature your product",
+               "C) Lean into educational content about sustainability—establish thought leadership",
+               "D) Focus on PR—get earned media coverage in fashion publications"
+            ],
+            correct: 1,
+            wrongExplanations: [
+               "Gen Z can smell sponsored content regardless of follower count. 'Micro-influencers' who post branded content are still advertisements. The format is recognized and dismissed. You're putting lipstick on an ad.",
+               "",
+               "Educational content is valuable but doesn't differentiate—everyone claims sustainability. 'Thought leadership' from a brand is still branded content. Gen Z questions the messenger as much as the message.",
+               "PR coverage is good but not controllable or guerrilla. Fashion publications are saturated with sustainable brands. Getting coverage requires news, not just existence."
+            ],
+            realWorld: "Patagonia's 'Don't Buy This Jacket' campaign worked because it was genuinely counter to their commercial interest. Liquid Death sells water in tallboy cans and creates comedy content that barely mentions water. The brand IS entertainment. Gen Z shares what's genuinely funny or interesting, not what's 'authentic-seeming.'",
+            concept: "entertainment_first",
+            why: "The only content that spreads in ad-hostile environments is content worth sharing on its own merits. Not 'authentic ads'—actual entertainment, humor, or utility. If your content wouldn't be shared without your logo, it won't be shared with it. Invest in genuinely good content where your product is incidental, not central. This is brand building, not conversion marketing."
+         }
       ];
 
-      if (phase === 'intro') return (
-         <div className="flex flex-col items-center justify-center h-full bg-gradient-to-br from-lime-900 via-green-900 to-emerald-900 text-white p-8 text-center">
-            <button onClick={() => setShowInfo(!showInfo)} className="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/20 flex items-center justify-center text-xl">ℹ️</button>
-            {showInfo && (
-               <div className="absolute top-16 right-4 bg-black/90 p-4 rounded-xl max-w-xs text-left text-sm">
-                  <p className="font-bold mb-2">Guerrilla Marketing</p>
-                  <p>Unconventional, low-cost tactics designed to generate buzz and word-of-mouth. High creativity, high impact.</p>
-               </div>
-            )}
-            <p className="text-6xl mb-4">🎭</p>
-            <h2 className="text-3xl font-bold mb-4">Guerrilla Marketing</h2>
-            <p className="text-lg opacity-80 max-w-md mb-8">Match unconventional marketing tactics to business scenarios.</p>
-            <button onClick={() => setPhase('play')} className="px-8 py-4 bg-lime-500 rounded-2xl font-bold text-xl hover:bg-lime-400 transition-all text-black">START →</button>
-         </div>
-      );
-
-      if (phase === 'result') return (
-         <div className="flex flex-col items-center justify-center h-full bg-gradient-to-br from-lime-900 via-green-900 to-emerald-900 text-white p-8 text-center">
-            <p className="text-6xl mb-4">{score >= scenarios.length * 8 ? '🏆' : '⭐'}</p>
-            <h2 className="text-3xl font-bold mb-4">Creativity Score</h2>
-            <p className="text-5xl font-bold text-lime-400 mb-4">{score}/{scenarios.length * 10}</p>
-            <button onClick={() => { setPhase('intro'); setScore(0); setCurrent(0); }} className="px-6 py-3 bg-lime-500 rounded-xl font-bold text-black">TRY AGAIN</button>
-         </div>
-      );
-
-      const handleSelect = (tactic: string) => {
-         const isCorrect = tactic === scenarios[current].best;
-         setScore(score + (isCorrect ? 10 : 4));
-         if (current < scenarios.length - 1) setCurrent(current + 1);
-         else setPhase('result');
+      const conceptLabels: { [key: string]: string } = {
+         sensory_marketing: "Sensory & Experiential Marketing",
+         asymmetric_bets: "Asymmetric Risk/Reward",
+         community_infiltration: "Community-Led Growth",
+         newsjacking: "Real-Time News Marketing",
+         entertainment_first: "Entertainment-First Content"
       };
 
-      return (
-         <div className="flex flex-col h-full bg-gradient-to-br from-lime-900 via-green-900 to-emerald-900 text-white p-8">
-            <div className="bg-black/30 rounded-2xl p-4 mb-4 text-center">
-               <p className="text-sm opacity-70">Scenario {current + 1}/{scenarios.length}</p>
-               <p className="text-lg font-bold mt-2">{scenarios[current].goal}</p>
+      const infoTopics: { [k: string]: { title: string; content: string } } = {
+         principles: { title: "Guerrilla Principles", content: "Low cost, high impact. Use creativity instead of budget. Be where competitors aren't. Create experiences, not ads. Make sharing irresistible. Time investment often beats money. Small can be an advantage—you're nimble." },
+         risks: { title: "Guerrilla Risks", content: "Legal issues (permits, trespassing). Brand damage if tone is wrong. Backfire potential (stunts gone wrong go viral for wrong reasons). Scalability limits. Time intensity. Not all guerrilla is appropriate for all brands." },
+         digital: { title: "Digital Guerrilla", content: "Newsjacking (insert into trending conversations). Community infiltration (earn trust, then sell). Content hijacking (parody, commentary). Platform exploits (algorithm hacks, feature abuse). Tool marketing (build something useful, add your brand)." },
+         measurement: { title: "Measuring Guerrilla", content: "Traditional metrics often don't apply. Track: social mentions, organic reach, earned media value, community sentiment, referral traffic. Success may be brand awareness, not immediate conversion. Set expectations appropriately." }
+      };
+
+      const sc = scenarios[scenario];
+
+      const answer = (i: number) => {
+         if (answered) return;
+         setSelected(i);
+         setAnswered(true);
+         if (i === sc.correct) {
+            setScore(s => s + 1);
+            setGameLog(l => [...l, `✓ ${sc.title}: Creative guerrilla thinking`]);
+         } else {
+            setGameLog(l => [...l, `✗ ${sc.title}: ${sc.wrongExplanations[i]}`]);
+            if (!conceptGaps.includes(sc.concept)) {
+               setConceptGaps(g => [...g, sc.concept]);
+            }
+         }
+      };
+
+      const next = () => {
+         if (scenario >= scenarios.length - 1) {
+            setPhase('result');
+         } else {
+            setScenario(s => s + 1);
+            setSelected(null);
+            setAnswered(false);
+         }
+      };
+
+      const grade = score >= 5 ? 'A' : score >= 4 ? 'B' : score >= 3 ? 'C' : 'D';
+
+      if (phase === 'intro') {
+         return (
+            <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-lime-900 via-green-900 to-emerald-900 text-white p-6">
+               <div className="text-6xl mb-4">🎭</div>
+               <h2 className="text-2xl font-bold mb-2">Guerrilla Marketing Lab</h2>
+               <p className="text-lime-300 text-center mb-4 max-w-md">
+                  Master unconventional marketing tactics that use creativity instead of budget to create outsized impact.
+               </p>
+               <div className="bg-black/30 rounded-lg p-4 mb-6 max-w-md">
+                  <p className="text-sm text-slate-300 mb-2">You'll face scenarios involving:</p>
+                  <ul className="text-xs text-slate-400 space-y-1">
+                     <li>• Zero-budget launches against funded competitors</li>
+                     <li>• Viral stunt gambles with limited runway</li>
+                     <li>• Community infiltration vs paid advertising</li>
+                     <li>• Newsjacking opportunities with 24-hour windows</li>
+                     <li>• Marketing to ad-hostile audiences</li>
+                  </ul>
+               </div>
+               <button onClick={() => setPhase('play')} className="px-8 py-3 bg-gradient-to-r from-lime-500 to-green-500 rounded-xl font-bold text-black">
+                  Go Guerrilla
+               </button>
             </div>
-            <p className="text-center mb-4 opacity-80">Select the best tactic:</p>
-            <div className="grid grid-cols-1 gap-2 flex-1 overflow-auto">
-               {tactics.map((t) => (
-                  <button key={t.name} onClick={() => handleSelect(t.name)}
-                     className="p-3 bg-black/30 rounded-xl hover:bg-lime-500/30 transition-all text-left flex items-center gap-3">
-                     <span className="text-2xl">{t.icon}</span>
-                     <div>
-                        <p className="font-bold">{t.name}</p>
-                        <p className="text-xs opacity-70">{t.desc}</p>
+         );
+      }
+
+      if (phase === 'result') {
+         return (
+            <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-lime-900 via-green-900 to-emerald-900 text-white p-6 overflow-auto">
+               <div className="text-5xl mb-3">{grade === 'A' ? '🏆' : grade === 'B' ? '🎭' : grade === 'C' ? '📢' : '💸'}</div>
+               <h2 className="text-xl font-bold mb-2">Guerrilla Marketing Assessment</h2>
+               <div className="text-3xl font-bold text-lime-400 mb-1">{score}/{scenarios.length}</div>
+               <div className="text-4xl mb-3">{grade}</div>
+               <p className="text-slate-400 text-sm mb-3 text-center">
+                  {grade === 'A' ? 'Guerrilla marketing genius! You think creatively and asymmetrically.' :
+                   grade === 'B' ? 'Strong unconventional instincts—you understand scrappy marketing.' :
+                   grade === 'C' ? 'Some conventional thinking crept in—guerrilla means more creative risk.' :
+                   'Review guerrilla principles—you defaulted to traditional marketing approaches.'}
+               </p>
+               {conceptGaps.length > 0 && (
+                  <div className="w-full max-w-md bg-red-900/30 border border-red-500/30 rounded-lg p-3 mb-3">
+                     <p className="text-xs text-red-400 font-semibold mb-2">Tactics to Study:</p>
+                     <ul className="text-xs text-red-300 space-y-1">
+                        {conceptGaps.map(g => <li key={g}>• {conceptLabels[g]}</li>)}
+                     </ul>
+                  </div>
+               )}
+               <div className="w-full max-w-md bg-black/30 rounded-lg p-3 mb-4 max-h-28 overflow-y-auto">
+                  {gameLog.map((l, i) => <p key={i} className="text-xs text-slate-300 mb-1">{l}</p>)}
+               </div>
+               <button onClick={() => { setPhase('intro'); setScenario(0); setScore(0); setAnswered(false); setSelected(null); setGameLog([]); setConceptGaps([]); }} className="px-6 py-2 bg-lime-600 rounded-lg">
+                  Try Again
+               </button>
+            </div>
+         );
+      }
+
+      return (
+         <div className="w-full h-full flex flex-col bg-gradient-to-br from-lime-900 via-green-900 to-emerald-900 text-white overflow-hidden">
+            {showInfo && infoTopic && infoTopics[infoTopic] && (
+               <div className="absolute inset-0 bg-black/80 flex items-center justify-center p-4 z-50" onClick={() => { setShowInfo(false); setInfoTopic(null); }}>
+                  <div className="bg-slate-800 rounded-xl p-4 max-w-sm" onClick={e => e.stopPropagation()}>
+                     <h3 className="text-lg font-bold text-lime-400 mb-2">{infoTopics[infoTopic].title}</h3>
+                     <p className="text-sm text-slate-300">{infoTopics[infoTopic].content}</p>
+                     <button onClick={() => { setShowInfo(false); setInfoTopic(null); }} className="mt-4 w-full py-2 bg-lime-600 rounded-lg">Got it!</button>
+                  </div>
+               </div>
+            )}
+            <div className="p-3 bg-black/30 border-b border-lime-500/30 flex justify-between items-center">
+               <span className="font-bold text-sm">🎭 {sc.title}</span>
+               <span className="text-lime-400 text-sm">{scenario + 1}/{scenarios.length}</span>
+               <span className="text-green-400 text-sm">Score: {score}</span>
+            </div>
+            <div className="flex-1 p-4 overflow-auto">
+               <div className="bg-black/30 rounded-lg p-3 mb-3">
+                  <p className="text-sm text-slate-300">{sc.context}</p>
+               </div>
+               <div className="bg-lime-800/30 rounded-lg p-3 mb-3">
+                  <p className="font-medium text-sm">{sc.question}</p>
+               </div>
+               <div className="grid gap-2 mb-3">
+                  {sc.opts.map((opt, i) => (
+                     <button key={i} onClick={() => answer(i)} disabled={answered} className={`p-3 rounded-lg text-left text-sm transition-all ${answered ? i === sc.correct ? 'bg-green-600' : i === selected ? 'bg-red-600' : 'bg-black/30 opacity-50' : 'bg-black/30 hover:bg-lime-600/50'}`}>
+                        {opt}
+                     </button>
+                  ))}
+               </div>
+               {answered && (
+                  <div className="space-y-3">
+                     <div className="bg-green-900/30 border border-green-500/30 rounded-lg p-3">
+                        <p className="text-xs text-green-400 font-semibold mb-1">Guerrilla Thinking:</p>
+                        <p className="text-sm text-slate-300">{sc.why}</p>
                      </div>
+                     {selected !== sc.correct && sc.wrongExplanations[selected!] && (
+                        <div className="bg-red-900/30 border border-red-500/30 rounded-lg p-3">
+                           <p className="text-xs text-red-400 font-semibold mb-1">Why that's too conventional:</p>
+                           <p className="text-sm text-slate-300">{sc.wrongExplanations[selected!]}</p>
+                        </div>
+                     )}
+                     <div className="bg-lime-900/30 border border-lime-500/30 rounded-lg p-3">
+                        <p className="text-xs text-lime-400 font-semibold mb-1">📊 Real World:</p>
+                        <p className="text-sm text-slate-300">{sc.realWorld}</p>
+                     </div>
+                     <button onClick={next} className="w-full py-2 bg-lime-600 rounded-lg font-medium">
+                        {scenario >= scenarios.length - 1 ? 'See Results' : 'Next Scenario'}
+                     </button>
+                  </div>
+               )}
+            </div>
+            <div className="p-2 bg-black/30 border-t border-lime-500/30 flex gap-2 justify-center flex-wrap">
+               {Object.keys(infoTopics).map(k => (
+                  <button key={k} onClick={() => { setInfoTopic(k); setShowInfo(true); }} className="text-xs text-lime-400 hover:text-lime-300">
+                     ℹ️ {infoTopics[k].title}
                   </button>
                ))}
             </div>
@@ -22943,73 +23624,279 @@ const GeneratedDiagram: React.FC<DiagramProps> = ({ type, data, title }) => {
    // 40. COPYWRITING - Headline Writing Practice
    const CopywritingRenderer = () => {
       const [phase, setPhase] = useState<'intro' | 'play' | 'result'>('intro');
-      const [showInfo, setShowInfo] = useState(false);
+      const [scenario, setScenario] = useState(0);
       const [score, setScore] = useState(0);
-      const [current, setCurrent] = useState(0);
+      const [selected, setSelected] = useState<number | null>(null);
+      const [answered, setAnswered] = useState(false);
+      const [gameLog, setGameLog] = useState<string[]>([]);
+      const [showInfo, setShowInfo] = useState(false);
+      const [infoTopic, setInfoTopic] = useState<string | null>(null);
+      const [conceptGaps, setConceptGaps] = useState<string[]>([]);
 
-      const headlines = [
-         { product: 'Time Management App', best: 'b', options: [
-            { id: 'a', text: 'Our App is Great for Time', score: 3 },
-            { id: 'b', text: 'Get 3 Extra Hours in Your Day', score: 10 },
-            { id: 'c', text: 'Download Our Time App Now', score: 4 }
-         ]},
-         { product: 'Organic Dog Food', best: 'c', options: [
-            { id: 'a', text: 'Buy Organic Dog Food', score: 3 },
-            { id: 'b', text: 'Food for Dogs That is Organic', score: 2 },
-            { id: 'c', text: 'Give Your Best Friend 5 More Healthy Years', score: 10 }
-         ]},
-         { product: 'Online Coding Course', best: 'a', options: [
-            { id: 'a', text: 'From Zero to Your First Job in 12 Weeks', score: 10 },
-            { id: 'b', text: 'Learn Coding Online', score: 3 },
-            { id: 'c', text: 'Programming Classes Available', score: 2 }
-         ]}
+      const scenarios = [
+         {
+            title: "The Feature Trap",
+            context: "You're writing the homepage headline for a B2B analytics platform. The product has: real-time dashboards, 50+ integrations, AI-powered insights, SOC 2 compliance. The CEO wants to highlight that you have 'the most features in the category.' Target audience: busy marketing directors who need to prove ROI to their CMO.",
+            question: "Which headline will convert best?",
+            opts: [
+               "A) 'The Most Powerful Analytics Platform with 50+ Integrations'",
+               "B) 'See Exactly Which Campaigns Drive Revenue—in 5 Minutes'",
+               "C) 'AI-Powered, Real-Time Analytics for Modern Marketing Teams'",
+               "D) 'Finally, Enterprise Analytics That's Actually Easy to Use'"
+            ],
+            correct: 1,
+            wrongExplanations: [
+               "Feature lists don't sell. 'Most powerful' is a claim; 'prove ROI to CMO' is the job. Nobody wakes up wanting '50+ integrations'—they want results. This is inside-out thinking.",
+               "",
+               "'AI-powered' is every product now—it's meaningless differentiation. 'Real-time' and 'modern' are jargon. This headline describes what you ARE, not what you DO for the customer.",
+               "'Enterprise that's easy' is a good angle but vague. How easy? What does easy mean? The promise isn't concrete enough to believe. It's a claim, not proof."
+            ],
+            realWorld: "Slack didn't launch with 'Team messaging with 2,000 integrations.' They said 'Be less busy.' Stripe didn't say 'Payment infrastructure with SOC 2 compliance.' They said 'Payments for developers.' The best headlines describe the OUTCOME, not the product.",
+            concept: "benefit_focus",
+            why: "The marketing director's job isn't 'use analytics tools'—it's 'prove which campaigns work.' The headline that mirrors their actual job (showing ROI to CMO) and adds specificity (5 minutes) wins. Time + outcome = believable promise. Features are proof points for the landing page, not the headline."
+         },
+         {
+            title: "The Specificity Test",
+            context: "You're writing an email subject line for a SaaS onboarding sequence. The email contains tips for getting value from the product faster. Open rates for this sequence have dropped from 45% to 28%. Current subject line: 'Tips to get more from [Product]'. The email is sent 3 days after signup.",
+            question: "Which subject line will lift open rates?",
+            opts: [
+               "A) '5 quick wins you can get today'",
+               "B) '3 things successful users do in their first week (you haven't done #2)'",
+               "C) 'Getting started with [Product]—helpful tips inside!'",
+               "D) 'Don't miss these important product updates'"
+            ],
+            correct: 1,
+            wrongExplanations: [
+               "'5 quick wins' is good but generic. It could be from any product. The specificity of 'first week' and the curiosity gap of '#2' creates more urgency to open.",
+               "",
+               "This is the boring version of the original subject line. 'Tips inside' is newsletter-speak that trained inboxes to ignore. No curiosity, no urgency, no specificity.",
+               "False urgency about 'updates' when the email is tips destroys trust. Users will open once, see it's not updates, and never trust your subject lines again."
+            ],
+            realWorld: "Booking.com A/B tests everything. They found 'Only 2 rooms left!' outperforms 'Book now!' by 200%+. The specificity ('2 rooms') creates believability. Obama's campaign famously A/B tested 'Hey' as a subject line—simple curiosity beat formal asks.",
+            concept: "curiosity_gap",
+            why: "The curiosity gap principle: open a loop the reader must close. 'You haven't done #2' creates a gap—what's #2? Am I missing something? Combined with social proof ('successful users do'), it implies value the reader is leaving on the table. Urgency without specificity is spam; specificity without urgency is ignored."
+         },
+         {
+            title: "The Social Proof Dilemma",
+            context: "You're writing a landing page for a new productivity app. You have: 500 users after 2 months of beta, 4.8/5 average rating from 47 reviews, one testimonial from an employee at a famous company (mid-level, not exec), zero case studies. Marketing wants to lead with 'Trusted by teams at [Famous Company].'",
+            question: "How should you use social proof at this stage?",
+            opts: [
+               "A) Lead with 'Trusted by teams at [Famous Company]'—the logo carries weight",
+               "B) Lead with outcome, use specific testimonials in context, save logos for later",
+               "C) Show '4.8/5 stars from 47 reviews' prominently",
+               "D) Skip social proof until you have more impressive numbers"
+            ],
+            correct: 1,
+            wrongExplanations: [
+               "One mid-level employee ≠ 'trusted by teams.' If a journalist investigates and finds one person, not company-wide adoption, you've damaged credibility. This is startup social proof inflation—savvy buyers see through it.",
+               "",
+               "47 reviews looks thin for a productivity app. Visitors will compare to established tools with thousands of reviews. Leading with a small number can actually hurt rather than help.",
+               "No social proof makes you look unvalidated. The goal isn't more—it's smarter use. Specific, believable proof beats impressive-sounding claims that feel hollow."
+            ],
+            realWorld: "Basecamp in early days didn't fake 'Enterprise trusted' logos. They showed real quotes from real users saying specific things. 'This saved me 4 hours a week' beats 'Trusted by Fortune 500' when you're not actually trusted by Fortune 500s. Authenticity at your stage beats aspirational positioning.",
+            concept: "authentic_proof",
+            why: "Social proof must be believable. Specific testimonials ('I saved 4 hours/week') beat vague endorsements. Lead with the outcome—what the product does for the reader—then support with proof that's proportional to your actual traction. Fake enterprise positioning damages trust with the customers who will actually buy at this stage."
+         },
+         {
+            title: "The CTA Optimization",
+            context: "Your SaaS has a 14-day free trial. The current CTA button says 'Start Free Trial.' Conversion rate from landing page to trial signup is 3.2%. Your main competitor's CTA says 'Get Started Free.' You're testing new CTA copy. The product requires significant setup before users see value (about 30 minutes of configuration).",
+            question: "Which CTA will likely improve conversion?",
+            opts: [
+               "A) 'Start Your Free Trial' (add 'Your' for personalization)",
+               "B) 'See [Product] in Action' (implies less commitment than 'Start')",
+               "C) 'Get Started Free' (match the competitor)",
+               "D) 'Start Free Trial — No Credit Card Required'"
+            ],
+            correct: 1,
+            wrongExplanations: [
+               "Adding 'Your' is micro-optimization. The real issue is 'Start Trial' implies commitment and work. For a product requiring 30 minutes of setup, that's a big ask upfront.",
+               "",
+               "Copying competitors tells you nothing. Their CTA might be underperforming too. 'Get Started' still implies work. You're copying, not optimizing.",
+               "'No credit card' is good for reducing friction but doesn't address the real objection—the 30-minute setup. Users hesitate at effort, not just money."
+            ],
+            realWorld: "Crazy Egg increased conversions 363% by changing 'View Plans and Pricing' to 'Show Me My Heatmap.' The new CTA promised an immediate outcome, not a process. Netflix doesn't say 'Start Free Trial'—they say 'Watch Free for 30 Days.' The action verb matters.",
+            concept: "action_alignment",
+            why: "'See in Action' reduces perceived commitment—it's watching, not working. For products with significant setup, implying immediate gratification ('see it') beats implying work ('start'). The CTA should match what users actually want to do, not what you want them to do. They want to see value; you want them to commit."
+         },
+         {
+            title: "The Long-Form vs Short Debate",
+            context: "You're writing a landing page for a $2,000/month B2B SaaS. Current page is short: headline, 3 benefits, testimonial, CTA. Bounce rate is 68%. Time on page is 45 seconds. Sales says most demo requests come from people who've done extensive research elsewhere. The product solves a complex problem (compliance automation for financial services).",
+            question: "What's wrong with the short landing page approach?",
+            opts: [
+               "A) Nothing—short pages convert better; the traffic quality is the problem",
+               "B) Complex, high-cost purchases need more information to convert on-page",
+               "C) Add more testimonials—social proof is the missing element",
+               "D) The page is fine; invest in better retargeting"
+            ],
+            correct: 1,
+            wrongExplanations: [
+               "'Short pages convert better' is a myth. It depends on price point and complexity. For a $24K/year commitment, 45 seconds isn't consideration—it's drive-by. People aren't 'not interested'; they don't have enough information.",
+               "",
+               "More testimonials help but don't solve the core issue: 45 seconds isn't enough time to understand a complex compliance solution. You need more content for testimonials to reinforce.",
+               "Retargeting people who bounced because they didn't understand the product means showing them the same confusing page again. Fix the page first."
+            ],
+            realWorld: "Crazy Egg tested a page 20x longer than their original and conversion increased 363%. For high-consideration B2B, long-form works because buyers need to justify the purchase. Gong, Drift, and other B2B leaders use extensive landing pages with deep content. The myth that 'nobody reads' doesn't apply when $24K is on the line.",
+            concept: "consideration_match",
+            why: "Page length should match purchase consideration. $10 impulse buy? Short page. $24K/year business commitment? Buyers need objection handling, use cases, proof points, and detailed explanations. 68% bounce + 45 seconds = people aren't finding what they need to make a decision. Give them the information on-page instead of forcing them to research elsewhere."
+         }
       ];
 
-      if (phase === 'intro') return (
-         <div className="flex flex-col items-center justify-center h-full bg-gradient-to-br from-amber-900 via-orange-900 to-red-900 text-white p-8 text-center">
-            <button onClick={() => setShowInfo(!showInfo)} className="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/20 flex items-center justify-center text-xl">ℹ️</button>
-            {showInfo && (
-               <div className="absolute top-16 right-4 bg-black/90 p-4 rounded-xl max-w-xs text-left text-sm">
-                  <p className="font-bold mb-2">Copywriting Principles</p>
-                  <p>Focus on benefits, not features. Use specific numbers. Create urgency. Address the reader directly.</p>
-               </div>
-            )}
-            <p className="text-6xl mb-4">✍️</p>
-            <h2 className="text-3xl font-bold mb-4">Headline Writing</h2>
-            <p className="text-lg opacity-80 max-w-md mb-8">Choose the most effective headline for each product.</p>
-            <button onClick={() => setPhase('play')} className="px-8 py-4 bg-amber-500 rounded-2xl font-bold text-xl hover:bg-amber-400 transition-all text-black">START WRITING →</button>
-         </div>
-      );
-
-      if (phase === 'result') return (
-         <div className="flex flex-col items-center justify-center h-full bg-gradient-to-br from-amber-900 via-orange-900 to-red-900 text-white p-8 text-center">
-            <p className="text-6xl mb-4">{score >= 25 ? '🏆' : score >= 15 ? '⭐' : '📚'}</p>
-            <h2 className="text-3xl font-bold mb-4">Copywriting Score</h2>
-            <p className="text-5xl font-bold text-amber-400 mb-4">{score}/{headlines.length * 10}</p>
-            <p className="text-lg opacity-80 mb-8">{score >= 25 ? 'Master copywriter!' : score >= 15 ? 'Good eye for copy!' : 'Study the greats!'}</p>
-            <button onClick={() => { setPhase('intro'); setScore(0); setCurrent(0); }} className="px-6 py-3 bg-amber-500 rounded-xl font-bold text-black">TRY AGAIN</button>
-         </div>
-      );
-
-      const handleSelect = (optScore: number) => {
-         setScore(score + optScore);
-         if (current < headlines.length - 1) setCurrent(current + 1);
-         else setPhase('result');
+      const conceptLabels: { [key: string]: string } = {
+         benefit_focus: "Benefit-First Headlines",
+         curiosity_gap: "Curiosity Gap Technique",
+         authentic_proof: "Authentic Social Proof",
+         action_alignment: "CTA Action Alignment",
+         consideration_match: "Content-Consideration Match"
       };
 
-      const h = headlines[current];
-      return (
-         <div className="flex flex-col h-full bg-gradient-to-br from-amber-900 via-orange-900 to-red-900 text-white p-8">
-            <div className="bg-black/30 rounded-2xl p-6 mb-6 text-center">
-               <p className="text-sm opacity-70 mb-2">Product {current + 1}/{headlines.length}</p>
-               <p className="text-xl font-bold">📦 {h.product}</p>
+      const infoTopics: { [k: string]: { title: string; content: string } } = {
+         headlines: { title: "Headline Psychology", content: "Headlines have one job: make the reader want to read the next line. Specificity beats cleverness. Benefits beat features. Outcomes beat processes. The best headlines mirror the reader's internal dialogue—what they're already thinking about." },
+         proof: { title: "Social Proof Hierarchy", content: "In order of power: Case studies with numbers > Specific testimonials > Customer logos > User counts > Star ratings. Use proof proportional to your stage. Fake enterprise positioning hurts more than no positioning." },
+         ctas: { title: "CTA Psychology", content: "CTAs should describe what the user wants, not what you want. 'See your results' beats 'Sign up.' Reduce perceived commitment for high-friction actions. Match the action verb to the actual experience." },
+         length: { title: "Content Length", content: "Length should match purchase consideration. Low-cost impulse: short. High-cost considered: long. If visitors research elsewhere, that content should be on YOUR page. The myth that 'nobody reads' is only true for content not worth reading." }
+      };
+
+      const sc = scenarios[scenario];
+
+      const answer = (i: number) => {
+         if (answered) return;
+         setSelected(i);
+         setAnswered(true);
+         if (i === sc.correct) {
+            setScore(s => s + 1);
+            setGameLog(l => [...l, `✓ ${sc.title}: Strong copy instincts`]);
+         } else {
+            setGameLog(l => [...l, `✗ ${sc.title}: ${sc.wrongExplanations[i]}`]);
+            if (!conceptGaps.includes(sc.concept)) {
+               setConceptGaps(g => [...g, sc.concept]);
+            }
+         }
+      };
+
+      const next = () => {
+         if (scenario >= scenarios.length - 1) {
+            setPhase('result');
+         } else {
+            setScenario(s => s + 1);
+            setSelected(null);
+            setAnswered(false);
+         }
+      };
+
+      const grade = score >= 5 ? 'A' : score >= 4 ? 'B' : score >= 3 ? 'C' : 'D';
+
+      if (phase === 'intro') {
+         return (
+            <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-amber-900 via-orange-900 to-red-900 text-white p-6">
+               <div className="text-6xl mb-4">✍️</div>
+               <h2 className="text-2xl font-bold mb-2">Conversion Copy Lab</h2>
+               <p className="text-amber-300 text-center mb-4 max-w-md">
+                  Master the psychology behind copy that converts—from headlines to CTAs to landing pages.
+               </p>
+               <div className="bg-black/30 rounded-lg p-4 mb-6 max-w-md">
+                  <p className="text-sm text-slate-300 mb-2">You'll analyze scenarios involving:</p>
+                  <ul className="text-xs text-slate-400 space-y-1">
+                     <li>• Feature-focused vs benefit-focused headlines</li>
+                     <li>• Email subject lines and the curiosity gap</li>
+                     <li>• Social proof at different company stages</li>
+                     <li>• CTA psychology and action alignment</li>
+                     <li>• Long-form vs short-form for different prices</li>
+                  </ul>
+               </div>
+               <button onClick={() => setPhase('play')} className="px-8 py-3 bg-gradient-to-r from-amber-500 to-orange-500 rounded-xl font-bold text-black">
+                  Start Writing
+               </button>
             </div>
-            <p className="text-center mb-4 opacity-80">Pick the best headline:</p>
-            <div className="flex flex-col gap-3 flex-1">
-               {h.options.map((opt) => (
-                  <button key={opt.id} onClick={() => handleSelect(opt.score)}
-                     className="p-4 bg-black/30 rounded-xl hover:bg-amber-500/30 transition-all text-left">
-                     <p className="font-bold text-lg">"{opt.text}"</p>
+         );
+      }
+
+      if (phase === 'result') {
+         return (
+            <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-amber-900 via-orange-900 to-red-900 text-white p-6 overflow-auto">
+               <div className="text-5xl mb-3">{grade === 'A' ? '🏆' : grade === 'B' ? '✍️' : grade === 'C' ? '📝' : '📚'}</div>
+               <h2 className="text-xl font-bold mb-2">Copywriting Assessment</h2>
+               <div className="text-3xl font-bold text-amber-400 mb-1">{score}/{scenarios.length}</div>
+               <div className="text-4xl mb-3">{grade}</div>
+               <p className="text-slate-400 text-sm mb-3 text-center">
+                  {grade === 'A' ? 'Master copywriter! You understand the psychology behind conversion.' :
+                   grade === 'B' ? 'Strong copy instincts—you see through common traps.' :
+                   grade === 'C' ? 'Some conventional mistakes—focus on outcomes over features.' :
+                   'Review copywriting fundamentals—feature-focus is hurting your conversions.'}
+               </p>
+               {conceptGaps.length > 0 && (
+                  <div className="w-full max-w-md bg-red-900/30 border border-red-500/30 rounded-lg p-3 mb-3">
+                     <p className="text-xs text-red-400 font-semibold mb-2">Copy Skills to Develop:</p>
+                     <ul className="text-xs text-red-300 space-y-1">
+                        {conceptGaps.map(g => <li key={g}>• {conceptLabels[g]}</li>)}
+                     </ul>
+                  </div>
+               )}
+               <div className="w-full max-w-md bg-black/30 rounded-lg p-3 mb-4 max-h-28 overflow-y-auto">
+                  {gameLog.map((l, i) => <p key={i} className="text-xs text-slate-300 mb-1">{l}</p>)}
+               </div>
+               <button onClick={() => { setPhase('intro'); setScenario(0); setScore(0); setAnswered(false); setSelected(null); setGameLog([]); setConceptGaps([]); }} className="px-6 py-2 bg-amber-600 rounded-lg">
+                  Try Again
+               </button>
+            </div>
+         );
+      }
+
+      return (
+         <div className="w-full h-full flex flex-col bg-gradient-to-br from-amber-900 via-orange-900 to-red-900 text-white overflow-hidden">
+            {showInfo && infoTopic && infoTopics[infoTopic] && (
+               <div className="absolute inset-0 bg-black/80 flex items-center justify-center p-4 z-50" onClick={() => { setShowInfo(false); setInfoTopic(null); }}>
+                  <div className="bg-slate-800 rounded-xl p-4 max-w-sm" onClick={e => e.stopPropagation()}>
+                     <h3 className="text-lg font-bold text-amber-400 mb-2">{infoTopics[infoTopic].title}</h3>
+                     <p className="text-sm text-slate-300">{infoTopics[infoTopic].content}</p>
+                     <button onClick={() => { setShowInfo(false); setInfoTopic(null); }} className="mt-4 w-full py-2 bg-amber-600 rounded-lg">Got it!</button>
+                  </div>
+               </div>
+            )}
+            <div className="p-3 bg-black/30 border-b border-amber-500/30 flex justify-between items-center">
+               <span className="font-bold text-sm">✍️ {sc.title}</span>
+               <span className="text-amber-400 text-sm">{scenario + 1}/{scenarios.length}</span>
+               <span className="text-orange-400 text-sm">Score: {score}</span>
+            </div>
+            <div className="flex-1 p-4 overflow-auto">
+               <div className="bg-black/30 rounded-lg p-3 mb-3">
+                  <p className="text-sm text-slate-300">{sc.context}</p>
+               </div>
+               <div className="bg-amber-800/30 rounded-lg p-3 mb-3">
+                  <p className="font-medium text-sm">{sc.question}</p>
+               </div>
+               <div className="grid gap-2 mb-3">
+                  {sc.opts.map((opt, i) => (
+                     <button key={i} onClick={() => answer(i)} disabled={answered} className={`p-3 rounded-lg text-left text-sm transition-all ${answered ? i === sc.correct ? 'bg-green-600' : i === selected ? 'bg-red-600' : 'bg-black/30 opacity-50' : 'bg-black/30 hover:bg-amber-600/50'}`}>
+                        {opt}
+                     </button>
+                  ))}
+               </div>
+               {answered && (
+                  <div className="space-y-3">
+                     <div className="bg-green-900/30 border border-green-500/30 rounded-lg p-3">
+                        <p className="text-xs text-green-400 font-semibold mb-1">Why This Works:</p>
+                        <p className="text-sm text-slate-300">{sc.why}</p>
+                     </div>
+                     {selected !== sc.correct && sc.wrongExplanations[selected!] && (
+                        <div className="bg-red-900/30 border border-red-500/30 rounded-lg p-3">
+                           <p className="text-xs text-red-400 font-semibold mb-1">Why That Fails:</p>
+                           <p className="text-sm text-slate-300">{sc.wrongExplanations[selected!]}</p>
+                        </div>
+                     )}
+                     <div className="bg-amber-900/30 border border-amber-500/30 rounded-lg p-3">
+                        <p className="text-xs text-amber-400 font-semibold mb-1">📊 Real World:</p>
+                        <p className="text-sm text-slate-300">{sc.realWorld}</p>
+                     </div>
+                     <button onClick={next} className="w-full py-2 bg-amber-600 rounded-lg font-medium">
+                        {scenario >= scenarios.length - 1 ? 'See Results' : 'Next Scenario'}
+                     </button>
+                  </div>
+               )}
+            </div>
+            <div className="p-2 bg-black/30 border-t border-amber-500/30 flex gap-2 justify-center flex-wrap">
+               {Object.keys(infoTopics).map(k => (
+                  <button key={k} onClick={() => { setInfoTopic(k); setShowInfo(true); }} className="text-xs text-amber-400 hover:text-amber-300">
+                     ℹ️ {infoTopics[k].title}
                   </button>
                ))}
             </div>
@@ -23024,83 +23911,281 @@ const GeneratedDiagram: React.FC<DiagramProps> = ({ type, data, title }) => {
    // 41. BOOTSTRAPPING - Resource Management Simulator
    const BootstrappingRenderer = () => {
       const [phase, setPhase] = useState<'intro' | 'play' | 'result'>('intro');
+      const [scenario, setScenario] = useState(0);
+      const [score, setScore] = useState(0);
+      const [selected, setSelected] = useState<number | null>(null);
+      const [answered, setAnswered] = useState(false);
+      const [gameLog, setGameLog] = useState<string[]>([]);
       const [showInfo, setShowInfo] = useState(false);
-      const [budget, setBudget] = useState(10000);
-      const [month, setMonth] = useState(1);
-      const [decisions, setDecisions] = useState<string[]>([]);
+      const [infoTopic, setInfoTopic] = useState<string | null>(null);
+      const [conceptGaps, setConceptGaps] = useState<string[]>([]);
 
       const scenarios = [
-         { situation: 'You need office space', options: [
-            { label: '🏢 Rent office ($2000/mo)', cost: 2000, benefit: 'Professional image' },
-            { label: '🏠 Work from home ($0)', cost: 0, benefit: 'Save money' },
-            { label: '☕ Coworking ($500/mo)', cost: 500, benefit: 'Networking' }
-         ]},
-         { situation: 'Marketing your product', options: [
-            { label: '📺 Paid ads ($3000)', cost: 3000, benefit: 'Fast reach' },
-            { label: '📱 Social media ($0)', cost: 0, benefit: 'Organic growth' },
-            { label: '🤝 Partnerships ($500)', cost: 500, benefit: 'Credibility' }
-         ]},
-         { situation: 'Hiring help', options: [
-            { label: '👔 Full-time ($4000/mo)', cost: 4000, benefit: 'Dedicated team' },
-            { label: '🎯 Freelancer ($1000)', cost: 1000, benefit: 'Flexible' },
-            { label: '🤖 Automation ($500)', cost: 500, benefit: 'Scalable' }
-         ]}
+         {
+            title: "Revenue Before Features",
+            context: "Your SaaS MVP has 50 users paying $29/month ($1,450 MRR). Users request: 1) API integration ($15K dev cost), 2) mobile app ($25K), 3) white-labeling ($8K). You have $12K runway. Your churn is 8% monthly.",
+            question: "How should you prioritize development to bootstrap sustainably?",
+            opts: [
+               "A) Build the mobile app - it's what most users want",
+               "B) Build white-labeling - it can command premium pricing from enterprise",
+               "C) Build nothing new - focus on reducing churn first",
+               "D) Build API integration - it enables partner revenue sharing"
+            ],
+            correct: 2,
+            wrongExplanations: [
+               "Mobile apps are expensive and don't address your core problem: 8% churn means you lose half your customers in 8 months. Building more features won't help if customers leave.",
+               "White-labeling sounds profitable but requires enterprise sales cycles (3-6 months). With $12K runway and 8% churn, you'll run out of money before closing deals.",
+               "",
+               "API integration can generate revenue but 8% monthly churn is catastrophic. At $1,450 MRR with 8% churn, you need $116 new MRR monthly just to stay flat."
+            ],
+            realWorld: "Basecamp (37signals) maintained profitability by obsessing over customer retention before adding features. They've been profitable since 2004 with no VC funding. Contrast with feature-heavy startups that burned through cash.",
+            concept: "churn_economics",
+            why: "At 8% monthly churn, you lose half your customer base in 8 months. No feature development matters if your bucket has holes. Reducing churn from 8% to 4% effectively doubles customer lifetime value. Bootstrapped companies must prioritize retention over acquisition because CAC payback periods must be short."
+         },
+         {
+            title: "The Consulting Trap",
+            context: "Your dev tool generates $3K/month in product revenue. A big client offers $15K/month for custom development work. It would consume 80% of your time but triple your income. Your product is growing 12% monthly.",
+            question: "What's the optimal bootstrapping decision?",
+            opts: [
+               "A) Take the contract - you need the money to fund product development",
+               "B) Decline and focus 100% on product growth",
+               "C) Accept but hire a contractor to do the work for $8K/month",
+               "D) Negotiate a smaller engagement at $6K/month for 30% of time"
+            ],
+            correct: 3,
+            wrongExplanations: [
+               "This is the classic consulting trap. At 80% time consumption, your 12% monthly product growth stalls. In 12 months, your product could be at $12K MRR but instead you're dependent on one client.",
+               "Noble but risky. $3K/month doesn't provide enough runway cushion. One bad month and you're in trouble. Bootstrapping requires prudent cash management, not all-or-nothing bets.",
+               "The math doesn't work: $15K - $8K = $7K profit, but you still need to manage the contractor (20% of your time). You're trading product growth for $7K/month in profit."
+            ],
+            realWorld: "ConvertKit's Nathan Barry kept a $250K/year consulting business while building ConvertKit. He gradually reduced consulting as product revenue grew, hitting $1M ARR in 2.5 years. Full product focus came only after product revenue exceeded consulting.",
+            concept: "revenue_diversification",
+            why: "The 30% time / $6K revenue deal preserves 70% for product development while adding 200% to monthly revenue. This extends runway without killing growth. At 12% monthly growth, your product reaches $12K MRR in 12 months while you've banked $72K from consulting. Best of both worlds."
+         },
+         {
+            title: "Customer Acquisition Efficiency",
+            context: "You're spending $500/month on Google Ads (10 customers, $50 CAC) and $200/month on content marketing (2 customers, $100 CAC). Customer LTV is $300. Organic traffic is growing 20% monthly from content. You have $6K marketing budget.",
+            question: "How should you allocate your $6K budget for maximum bootstrapped growth?",
+            opts: [
+               "A) Put it all in Google Ads - $50 CAC vs $300 LTV is 6x return",
+               "B) Split 80% ads, 20% content to maintain organic growth",
+               "C) Put it all in content - 20% monthly organic growth will compound",
+               "D) Put 60% in content, 40% in ads for balanced short and long-term"
+            ],
+            correct: 3,
+            wrongExplanations: [
+               "Google Ads provides immediate customers but no compounding. When you stop spending, growth stops. Bootstrapped businesses need assets that compound, not just transactions.",
+               "Better than all-ads but still underweights the compounding asset. Content at 20% monthly growth doubles every 4 months. This ratio misses the asymmetric opportunity.",
+               "All-content is too risky. Content takes 6-12 months to compound meaningfully. With $6K budget and $500/month product revenue, you may not survive to see the payoff."
+            ],
+            realWorld: "Ahrefs bootstrapped to $100M ARR spending 80% of marketing budget on content. Their blog generates 500K+ organic visits monthly - an asset that compounds. But they balanced with targeted paid acquisition to maintain cash flow while content matured.",
+            concept: "compounding_assets",
+            why: "60% content ($3,600) accelerates the 20% monthly compounding - in 12 months you'll have 8x the organic traffic generating 16+ customers/month for $0 marginal cost. The 40% in ads ($2,400 = 48 customers) maintains cash flow. Total: immediate customers + an asset that scales to $0 CAC."
+         },
+         {
+            title: "The Pricing Paradox",
+            context: "Your B2B tool is priced at $49/month with 200 customers ($9,800 MRR). Competitors charge $200-400/month. Support load is crushing you - 200 customers generate 300+ tickets monthly. Your NPS is 45.",
+            question: "What pricing strategy optimizes for bootstrapped sustainability?",
+            opts: [
+               "A) Raise prices to $149/month and accept that many will churn",
+               "B) Keep prices but hire part-time support at $2K/month",
+               "C) Raise to $99/month as middle ground to minimize churn",
+               "D) Grandfather existing users and price new customers at $199/month"
+            ],
+            correct: 0,
+            wrongExplanations: [
+               "",
+               "Hiring doesn't solve the root problem. Low-price customers have high support expectations but low stakes. You'll need to keep hiring as you grow. This creates a support cost treadmill.",
+               "Middle-ground pricing pleases no one. You still attract price-sensitive customers who create support load, but you're not premium enough to attract low-maintenance enterprise buyers.",
+               "Two-tier pricing creates resentment and operational complexity. Grandfathered users at $49 will still generate 1.5 tickets each while new customers at $199 subsidize them. This is a hidden tax on growth."
+            ],
+            realWorld: "Basecamp raised prices from $24/month to $99/month. They lost 30% of customers but increased revenue and dramatically reduced support load. Price-sensitive customers are often the most demanding. Higher prices attract serious buyers who value their time over money.",
+            concept: "price_customer_fit",
+            why: "At $49/month, customers don't value the product enough to figure things out themselves - their time isn't worth much to them. At $149/month, you attract customers whose time is worth $100+/hour. They self-serve more, generate fewer tickets, and churn less. Even losing 50% of customers at 3x price = 50% revenue increase with 75% fewer support tickets."
+         },
+         {
+            title: "The Growth Inflection",
+            context: "After 18 months bootstrapping, you hit $25K MRR with 15% margins ($3,750/month profit). A VC offers $2M at $10M valuation. Competitors just raised $50M and are hiring aggressively. Your growth rate is 8% monthly.",
+            question: "What's the strategic bootstrapping decision?",
+            opts: [
+               "A) Take the funding - you need it to compete against well-funded rivals",
+               "B) Decline and continue bootstrapping at 8% growth",
+               "C) Decline and invest all profits into accelerating growth",
+               "D) Counter-offer: take $500K as convertible note to extend runway"
+            ],
+            correct: 1,
+            wrongExplanations: [
+               "VC money comes with growth expectations (3-5x annual). Your 8% monthly = 150% annual, impressive but VCs will push for faster growth via spending. This often destroys the capital efficiency that made you successful.",
+               "",
+               "Investing all profits risks everything on growth acceleration. If CAC rises or conversion drops, you have no cushion. Bootstrapped companies survive by maintaining margins, not by burning them.",
+               "Convertible notes delay but don't solve the problem. You'll still have investors expecting VC-style returns. The note converts at next round, pressuring you to raise more. This is venture-lite, not bootstrapping."
+            ],
+            realWorld: "Mailchimp declined multiple VC offers and bootstrapped to $700M revenue before a $12B acquisition. Competitors like Constant Contact who raised VC sold for much less. Mailchimp's founders retained control and captured $12B vs. diluted cap tables at competitors.",
+            concept: "capital_efficiency",
+            why: "At 8% monthly growth, you'll hit $75K MRR in 12 months and $225K MRR in 24 months - all while maintaining profitability. The $50M-funded competitor will spend $3-4M annually and might capture market share, but they'll need $500K+ MRR just to break even. Your 15% margins vs. their -300% margins means you survive any market downturn. Time arbitrage beats capital in most markets."
+         }
       ];
+
+      const conceptLabels: Record<string, string> = {
+         'churn_economics': 'Churn Economics',
+         'revenue_diversification': 'Revenue Diversification',
+         'compounding_assets': 'Compounding Assets',
+         'price_customer_fit': 'Price-Customer Fit',
+         'capital_efficiency': 'Capital Efficiency'
+      };
+
+      const infoTopics: Record<string, string> = {
+         'churn': 'Monthly churn rate shows what percentage of customers leave each month. 5% monthly = 46% annual churn. Reducing churn by 1% can increase LTV by 20%+.',
+         'runway': 'Runway = Cash / Monthly Burn Rate. Bootstrapped companies target 12+ months runway. Below 6 months is danger zone requiring immediate action.',
+         'cac_ltv': 'Customer Acquisition Cost vs. Lifetime Value. Bootstrapped companies need CAC payback in 3-6 months. VC-backed can wait 12-18 months. 3:1 LTV:CAC minimum.',
+         'compounding': 'Bootstrapping favors assets that compound: content, SEO, partnerships. These require upfront investment but generate returns indefinitely at $0 marginal cost.',
+         'margins': 'Gross margin = Revenue - Cost of Goods Sold. Bootstrapped SaaS needs 70%+ margins. Services businesses at 30-50%. Margins fund growth without external capital.'
+      };
+
+      const handleAnswer = (idx: number) => {
+         if (answered) return;
+         setSelected(idx);
+         setAnswered(true);
+         const s = scenarios[scenario];
+         if (idx === s.correct) {
+            setScore(score + 1);
+            setGameLog([...gameLog, `✓ ${s.title}: Correct`]);
+         } else {
+            setConceptGaps([...conceptGaps, s.concept]);
+            setGameLog([...gameLog, `✗ ${s.title}: Wrong - Gap in ${conceptLabels[s.concept]}`]);
+         }
+      };
+
+      const nextScenario = () => {
+         if (scenario < scenarios.length - 1) {
+            setScenario(scenario + 1);
+            setSelected(null);
+            setAnswered(false);
+         } else {
+            setPhase('result');
+         }
+      };
+
+      const getGrade = () => {
+         const pct = (score / scenarios.length) * 100;
+         if (pct >= 80) return { grade: 'A', label: 'Bootstrap Master', color: 'text-green-400' };
+         if (pct >= 60) return { grade: 'B', label: 'Sustainable Founder', color: 'text-blue-400' };
+         if (pct >= 40) return { grade: 'C', label: 'Capital Dependent', color: 'text-yellow-400' };
+         return { grade: 'D', label: 'VC Required', color: 'text-red-400' };
+      };
 
       if (phase === 'intro') return (
          <div className="flex flex-col items-center justify-center h-full bg-gradient-to-br from-green-900 via-emerald-900 to-teal-900 text-white p-8 text-center">
             <button onClick={() => setShowInfo(!showInfo)} className="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/20 flex items-center justify-center text-xl">ℹ️</button>
             {showInfo && (
-               <div className="absolute top-16 right-4 bg-black/90 p-4 rounded-xl max-w-xs text-left text-sm">
-                  <p className="font-bold mb-2">Bootstrapping</p>
-                  <p>Building a business with minimal external funding. Focus on revenue, frugality, and creative resource management.</p>
+               <div className="absolute top-16 right-4 bg-black/90 p-4 rounded-xl max-w-xs text-left text-sm z-10">
+                  <p className="font-bold mb-2">🥾 Bootstrapping Strategy</p>
+                  <p className="mb-2">Building a business with minimal external funding requires mastering:</p>
+                  <div className="space-y-1 text-xs">
+                     {Object.entries(infoTopics).map(([key, value]) => (
+                        <div key={key} className="bg-white/10 p-2 rounded cursor-pointer hover:bg-white/20" onClick={() => setInfoTopic(key)}>
+                           {key.replace('_', ' ').toUpperCase()}
+                        </div>
+                     ))}
+                  </div>
+                  {infoTopic && <p className="mt-2 text-xs bg-green-500/20 p-2 rounded">{infoTopics[infoTopic]}</p>}
                </div>
             )}
             <p className="text-6xl mb-4">🥾</p>
-            <h2 className="text-3xl font-bold mb-4">Bootstrapping Simulator</h2>
-            <p className="text-lg opacity-80 max-w-md mb-8">Start with $10,000 and make smart decisions to grow your business.</p>
-            <button onClick={() => setPhase('play')} className="px-8 py-4 bg-green-500 rounded-2xl font-bold text-xl hover:bg-green-400 transition-all">START BOOTSTRAP →</button>
+            <h2 className="text-3xl font-bold mb-4">Bootstrap Survival Lab</h2>
+            <p className="text-lg opacity-80 max-w-md mb-4">Master the art of building profitable businesses without external funding.</p>
+            <p className="text-sm opacity-60 max-w-md mb-8">5 strategic scenarios based on real bootstrapped companies like Mailchimp ($12B exit), Basecamp (25+ years profitable), and ConvertKit ($33M ARR).</p>
+            <button onClick={() => setPhase('play')} className="px-8 py-4 bg-green-500 rounded-2xl font-bold text-xl hover:bg-green-400 transition-all">START SURVIVAL LAB →</button>
          </div>
       );
 
-      if (phase === 'result') return (
-         <div className="flex flex-col items-center justify-center h-full bg-gradient-to-br from-green-900 via-emerald-900 to-teal-900 text-white p-8 text-center">
-            <p className="text-6xl mb-4">{budget > 5000 ? '🏆' : budget > 0 ? '⭐' : '💸'}</p>
-            <h2 className="text-3xl font-bold mb-4">Final Balance</h2>
-            <p className="text-5xl font-bold text-green-400 mb-4">${budget.toLocaleString()}</p>
-            <div className="text-sm opacity-80 mb-6">
-               {decisions.map((d, i) => <p key={i}>Month {i+1}: {d}</p>)}
+      if (phase === 'result') {
+         const { grade, label, color } = getGrade();
+         const uniqueGaps = [...new Set(conceptGaps)];
+         return (
+            <div className="flex flex-col h-full bg-gradient-to-br from-green-900 via-emerald-900 to-teal-900 text-white p-8 overflow-y-auto">
+               <div className="text-center mb-6">
+                  <p className={`text-6xl font-bold ${color}`}>{grade}</p>
+                  <p className="text-xl mt-2">{label}</p>
+                  <p className="text-sm opacity-70 mt-1">{score}/{scenarios.length} decisions mastered</p>
+               </div>
+               <div className="bg-black/30 rounded-xl p-4 mb-4">
+                  <p className="font-bold mb-2">📊 Decision Log</p>
+                  {gameLog.map((log, i) => (
+                     <p key={i} className={`text-sm ${log.startsWith('✓') ? 'text-green-400' : 'text-red-400'}`}>{log}</p>
+                  ))}
+               </div>
+               {uniqueGaps.length > 0 && (
+                  <div className="bg-red-500/20 rounded-xl p-4 mb-4">
+                     <p className="font-bold mb-2">📚 Concept Gaps to Study</p>
+                     {uniqueGaps.map(gap => (
+                        <p key={gap} className="text-sm">• {conceptLabels[gap]}</p>
+                     ))}
+                  </div>
+               )}
+               <div className="bg-green-500/20 rounded-xl p-4 mb-4">
+                  <p className="font-bold mb-2">🎯 Bootstrap Principles</p>
+                  <p className="text-sm">• Revenue before features - cash flow trumps roadmaps</p>
+                  <p className="text-sm">• Churn kills - fix retention before acquisition</p>
+                  <p className="text-sm">• Build compounding assets - content, SEO, referrals</p>
+                  <p className="text-sm">• Premium pricing attracts better customers</p>
+                  <p className="text-sm">• Time arbitrage beats capital in most markets</p>
+               </div>
+               <button onClick={() => { setPhase('intro'); setScenario(0); setScore(0); setSelected(null); setAnswered(false); setGameLog([]); setConceptGaps([]); }}
+                  className="mt-auto px-6 py-3 bg-green-500 rounded-xl font-bold">TRY AGAIN</button>
             </div>
-            <button onClick={() => { setPhase('intro'); setBudget(10000); setMonth(1); setDecisions([]); }} className="px-6 py-3 bg-green-500 rounded-xl font-bold">TRY AGAIN</button>
-         </div>
-      );
+         );
+      }
 
-      const handleChoice = (cost: number, label: string) => {
-         setBudget(budget - cost);
-         setDecisions([...decisions, label]);
-         if (month < scenarios.length) setMonth(month + 1);
-         else setPhase('result');
-      };
-
-      const s = scenarios[month - 1];
+      const s = scenarios[scenario];
       return (
-         <div className="flex flex-col h-full bg-gradient-to-br from-green-900 via-emerald-900 to-teal-900 text-white p-8">
-            <div className="flex justify-between mb-6">
-               <span className="bg-black/30 px-4 py-2 rounded-xl">Month {month}/3</span>
-               <span className="bg-green-500/30 px-4 py-2 rounded-xl font-bold">${budget.toLocaleString()}</span>
+         <div className="flex flex-col h-full bg-gradient-to-br from-green-900 via-emerald-900 to-teal-900 text-white p-6 overflow-y-auto">
+            <div className="flex justify-between items-center mb-4">
+               <span className="bg-black/30 px-3 py-1 rounded-lg text-sm">Decision {scenario + 1}/5</span>
+               <span className="bg-green-500/30 px-3 py-1 rounded-lg text-sm font-bold">{score} correct</span>
             </div>
-            <div className="bg-black/30 rounded-2xl p-6 mb-6 text-center">
-               <p className="text-xl font-bold">{s.situation}</p>
+            <div className="bg-black/30 rounded-xl p-4 mb-4">
+               <h3 className="font-bold text-lg text-green-400 mb-2">{s.title}</h3>
+               <p className="text-sm leading-relaxed opacity-90">{s.context}</p>
             </div>
-            <div className="flex flex-col gap-3 flex-1">
-               {s.options.map((opt) => (
-                  <button key={opt.label} onClick={() => handleChoice(opt.cost, opt.label)}
-                     className="p-4 bg-black/30 rounded-xl hover:bg-green-500/30 transition-all text-left">
-                     <p className="font-bold">{opt.label}</p>
-                     <p className="text-sm opacity-70">Cost: ${opt.cost} • {opt.benefit}</p>
+            <p className="font-bold mb-3">{s.question}</p>
+            <div className="flex flex-col gap-2 mb-4">
+               {s.opts.map((opt, idx) => (
+                  <button key={idx} onClick={() => handleAnswer(idx)} disabled={answered}
+                     className={`p-3 rounded-xl text-left text-sm transition-all ${
+                        answered
+                           ? idx === s.correct
+                              ? 'bg-green-500/40 border-2 border-green-400'
+                              : idx === selected
+                                 ? 'bg-red-500/40 border-2 border-red-400'
+                                 : 'bg-black/20 opacity-50'
+                           : 'bg-black/30 hover:bg-green-500/20'
+                     }`}>
+                     {opt}
                   </button>
                ))}
             </div>
+            {answered && (
+               <div className="space-y-3 mb-4">
+                  {selected !== s.correct && (
+                     <div className="bg-red-500/20 rounded-xl p-3">
+                        <p className="font-bold text-red-400 text-sm">Why your choice fails:</p>
+                        <p className="text-sm opacity-90">{s.wrongExplanations[selected!]}</p>
+                     </div>
+                  )}
+                  <div className="bg-green-500/20 rounded-xl p-3">
+                     <p className="font-bold text-green-400 text-sm">Why it works:</p>
+                     <p className="text-sm opacity-90">{s.why}</p>
+                  </div>
+                  <div className="bg-blue-500/20 rounded-xl p-3">
+                     <p className="font-bold text-blue-400 text-sm">📚 Real World:</p>
+                     <p className="text-sm opacity-90">{s.realWorld}</p>
+                  </div>
+                  <button onClick={nextScenario} className="w-full py-3 bg-green-500 rounded-xl font-bold">
+                     {scenario < scenarios.length - 1 ? 'NEXT DECISION →' : 'SEE RESULTS →'}
+                  </button>
+               </div>
+            )}
          </div>
       );
    };
@@ -23108,88 +24193,282 @@ const GeneratedDiagram: React.FC<DiagramProps> = ({ type, data, title }) => {
    // 42. CASH FLOW - Cash Flow Tracker
    const CashFlowRenderer = () => {
       const [phase, setPhase] = useState<'intro' | 'play' | 'result'>('intro');
+      const [scenario, setScenario] = useState(0);
+      const [score, setScore] = useState(0);
+      const [selected, setSelected] = useState<number | null>(null);
+      const [answered, setAnswered] = useState(false);
+      const [gameLog, setGameLog] = useState<string[]>([]);
       const [showInfo, setShowInfo] = useState(false);
-      const [inflows, setInflows] = useState<{name: string; amount: number}[]>([]);
-      const [outflows, setOutflows] = useState<{name: string; amount: number}[]>([]);
-      const [name, setName] = useState('');
-      const [amount, setAmount] = useState('');
-      const [isInflow, setIsInflow] = useState(true);
+      const [infoTopic, setInfoTopic] = useState<string | null>(null);
+      const [conceptGaps, setConceptGaps] = useState<string[]>([]);
 
-      const totalIn = inflows.reduce((sum, i) => sum + i.amount, 0);
-      const totalOut = outflows.reduce((sum, o) => sum + o.amount, 0);
-      const netCashFlow = totalIn - totalOut;
+      const scenarios = [
+         {
+            title: "The Profitable Bankruptcy",
+            context: "Your e-commerce business shows $150K profit on paper this quarter. But you're $80K behind on vendor payments with $12K in the bank. A major retailer just placed a $200K order (50% upfront, 50% on delivery in 60 days). Your vendor requires prepayment for the $120K in inventory needed.",
+            question: "What's your most viable cash flow solution?",
+            opts: [
+               "A) Take the order - the $100K upfront covers most of inventory costs",
+               "B) Negotiate with the vendor for Net-30 payment terms",
+               "C) Decline the order - you can't finance it",
+               "D) Factor your $80K in existing receivables at 5% to bridge the gap"
+            ],
+            correct: 3,
+            wrongExplanations: [
+               "The math doesn't work: $100K upfront - $120K inventory = -$20K. Plus you're already $80K behind on vendor payments. You'd need $200K cash but only have $112K coming in.",
+               "Vendors rarely give Net-30 to customers who already owe them $80K. Your negotiating position is weak. Even if successful, you still need $20K more than you have.",
+               "Declining preserves your current situation but doesn't solve the underlying cash flow crisis. You're still $80K behind with only $12K in the bank."
+            ],
+            realWorld: "Toys 'R' Us was profitable on paper but filed bankruptcy with $5B in debt because cash couldn't keep up with obligations. Meanwhile, Amazon operated at losses for years but had positive cash flow through customer prepayments and fast inventory turns.",
+            concept: "cash_vs_profit",
+            why: "Factoring $80K receivables at 5% ($4K cost) gives you $76K immediately. Add $100K order deposit = $176K. Pay $80K to vendor (clearing debt) + $120K new inventory = $200K. You're $24K short but now have a clean vendor relationship to negotiate. Revenue timing kills more businesses than lack of profit."
+         },
+         {
+            title: "The Growth Trap",
+            context: "Your SaaS is growing 20% monthly. Current: $50K MRR, $30K monthly burn (CAC heavy). You have $200K in the bank. A new enterprise client wants to prepay $500K annually, but requires 6 months of custom development ($180K cost) before launch.",
+            question: "What's the cash flow implication of this deal?",
+            opts: [
+               "A) Take it - $500K upfront more than covers $180K development cost",
+               "B) Accept but negotiate milestone payments aligned with development",
+               "C) Pass - it'll slow your growth trajectory",
+               "D) Accept only if they pay the full $500K before development starts"
+            ],
+            correct: 1,
+            wrongExplanations: [
+               "$500K is recognized as REVENUE over 12 months ($42K/month), but you need $180K CASH upfront for development. Enterprise contracts typically pay Net-30 after contract signing. Your $200K runway disappears while waiting.",
+               "",
+               "Passing on $500K ARR because of cash timing is financially naive. The deal is good - the structure needs work. Don't throw out the baby with the bathwater.",
+               "Demanding full prepayment is unrealistic for enterprise. You'll lose the deal entirely. Enterprise clients don't prepay fully for unbuilt products."
+            ],
+            realWorld: "WeWork's collapse was partly because they signed long-term lease obligations (cash out) funded by member revenue that could churn (uncertain cash in). Mismatch between outflow certainty and inflow uncertainty created the crisis.",
+            concept: "cash_timing",
+            why: "Milestone-based payments align cash IN with cash OUT. Structure: $100K on signing (covers initial dev), $100K at 3-month milestone, $100K at 6-month launch, then $200K over remaining 6 months. Your development cost of $180K is covered by first two payments. No runway drain."
+         },
+         {
+            title: "Inventory Cash Trap",
+            context: "Your product business has 90-day inventory (purchased at $300K), 45-day receivables ($150K outstanding), and 30-day payables ($75K owed). Sales are $100K/month with 50% gross margin. A supplier offers 15% discount for ordering 6-month inventory upfront.",
+            question: "Should you take the bulk discount?",
+            opts: [
+               "A) Yes - 15% savings on $600K order = $90K saved",
+               "B) No - you can't afford to tie up that much cash",
+               "C) Negotiate for 3-month inventory with 10% discount",
+               "D) Yes, if you finance it with a credit line"
+            ],
+            correct: 2,
+            wrongExplanations: [
+               "The $90K savings ignores opportunity cost and risk. You're tying up $600K for 6 months. If demand drops 20%, you have $120K of dead inventory. The savings become a loss.",
+               "This answer is directionally right but fails to capture the middle-ground opportunity. Some bulk benefit is achievable without the full risk.",
+               "",
+               "Credit lines aren't free. At 8% APR, 6 months of financing $600K costs $24K. Plus carrying cost, insurance, storage. Net savings drop to maybe $50K while taking all the demand risk."
+            ],
+            realWorld: "Circuit City bought massive inventory before holiday season 2008. When demand crashed, they had $1B in unsellable TVs. Best Buy, with leaner inventory, survived. Circuit City liquidated. Inventory is cash sitting on shelves depreciating.",
+            concept: "working_capital",
+            why: "Cash Conversion Cycle = Inventory Days + Receivables Days - Payables Days = 90 + 45 - 30 = 105 days. Every day of inventory is cash trapped. 3-month order with 10% discount saves $30K, only traps cash for 90 extra days vs. 180. You preserve flexibility while capturing 1/3 of the savings at half the risk."
+         },
+         {
+            title: "The Seasonality Crunch",
+            context: "Your business does 60% of annual revenue in Q4 ($1.2M). Other quarters average $200K each ($600K total). Monthly fixed costs are $80K. You end Q4 with $400K cash. It's January 1st.",
+            question: "How should you manage cash through the slow quarters?",
+            opts: [
+               "A) Cut fixed costs by 30% in Q1-Q3, restore in Q4",
+               "B) Establish a $300K credit line before you need it",
+               "C) Reduce Q1-Q3 costs and maintain $200K cash reserve",
+               "D) Invest Q4 profits in growth for next Q4"
+            ],
+            correct: 1,
+            wrongExplanations: [
+               "Cutting costs 30% ($24K/month) sounds prudent but you're cutting bone, not fat. Laying off staff in January and rehiring in September destroys institutional knowledge and morale.",
+               "",
+               "A $200K reserve is only 2.5 months of burn. Q1-Q3 is 9 months. Even with reduced revenue, you'll run out. This is false security.",
+               "Investing profits when you have 9 lean months ahead is reckless. Growth investments should come from predictable cash flow, not last year's windfall."
+            ],
+            realWorld: "Retail businesses like Macy's maintain credit facilities specifically for seasonal inventory purchases. They draw in Q3, buy inventory, sell in Q4, repay in January. The cost of credit is built into Q4 margins.",
+            concept: "seasonal_management",
+            why: "Q1-Q3 math: 9 months × $80K costs = $720K. Revenue: $600K. Gap: -$120K. You have $400K starting cash but want to enter Q4 with reserves for inventory. A $300K credit line (drawn as needed, ~$150K average balance, ~$9K annual cost) provides runway without draining reserves. Draw in slow months, repay from Q4 windfall."
+         },
+         {
+            title: "The Subscription Timing",
+            context: "Your SaaS offers monthly ($99/mo) and annual plans ($999/yr - 16% discount). Currently: 1,000 monthly subscribers = $99K MRR. You're spending $150K/month (50% on growth). Runway: 4 months.",
+            question: "What pricing strategy optimizes cash flow survival?",
+            opts: [
+               "A) Push annual aggressively - each conversion brings forward 11 months of cash",
+               "B) Raise monthly price to $129 to extend runway",
+               "C) Cut spending to $80K/month and extend runway to 12+ months",
+               "D) Offer 25% annual discount to drive faster conversion"
+            ],
+            correct: 0,
+            wrongExplanations: [
+               "",
+               "Price increases take time to impact (new customers only) and may increase churn. With 4 months runway, you don't have time for gradual impact. This doesn't solve the immediate crisis.",
+               "Cutting from $150K to $80K means eliminating growth spending. But you're not profitable at current scale. You'd be slowly dying instead of quickly dying. Neither is good.",
+               "A 25% discount ($749/yr = $62/mo) is worse than monthly pricing. You're trading cash now for less total revenue. This extends runway but damages unit economics permanently."
+            ],
+            realWorld: "ClassPass survived a 2020 crisis by converting monthly members to discounted credits packages. They traded future revenue for immediate cash. Annual prepay gave them runway to pivot to hybrid model. They're now valued at $1B+.",
+            concept: "prepayment_strategy",
+            why: "Converting 200 monthly users to annual at current pricing: 200 × $999 = $199.8K cash infusion. You 'lose' $99 × 200 × 11 months = $218K in future monthly payments but you GET $200K NOW. With 4 months runway, future revenue is worthless if you don't survive. The 16% annual discount costs $190/customer/year - cheap compared to death."
+         }
+      ];
+
+      const conceptLabels: Record<string, string> = {
+         'cash_vs_profit': 'Cash vs. Profit',
+         'cash_timing': 'Cash Timing',
+         'working_capital': 'Working Capital',
+         'seasonal_management': 'Seasonal Cash Management',
+         'prepayment_strategy': 'Prepayment Strategy'
+      };
+
+      const infoTopics: Record<string, string> = {
+         'operating': 'Operating cash flow = Net income + Non-cash expenses (depreciation) +/- Changes in working capital. Positive operating cash flow means the core business generates cash.',
+         'investing': 'Investing cash flow = Cash spent on long-term assets (equipment, acquisitions) minus sales of assets. Usually negative for growing companies.',
+         'financing': 'Financing cash flow = Cash from debt, equity issuance, or dividends. Positive when raising capital, negative when repaying debt or distributing profits.',
+         'runway': 'Runway = Cash Balance / Monthly Burn Rate. Below 6 months requires immediate action. 12+ months provides safety for strategic decisions.',
+         'conversion': 'Cash Conversion Cycle = Days Inventory + Days Receivables - Days Payables. Lower is better. Negative CCC (like Amazon) means customers pay before you pay suppliers.'
+      };
+
+      const handleAnswer = (idx: number) => {
+         if (answered) return;
+         setSelected(idx);
+         setAnswered(true);
+         const s = scenarios[scenario];
+         if (idx === s.correct) {
+            setScore(score + 1);
+            setGameLog([...gameLog, `✓ ${s.title}: Correct`]);
+         } else {
+            setConceptGaps([...conceptGaps, s.concept]);
+            setGameLog([...gameLog, `✗ ${s.title}: Wrong - Gap in ${conceptLabels[s.concept]}`]);
+         }
+      };
+
+      const nextScenario = () => {
+         if (scenario < scenarios.length - 1) {
+            setScenario(scenario + 1);
+            setSelected(null);
+            setAnswered(false);
+         } else {
+            setPhase('result');
+         }
+      };
+
+      const getGrade = () => {
+         const pct = (score / scenarios.length) * 100;
+         if (pct >= 80) return { grade: 'A', label: 'Cash Flow Master', color: 'text-green-400' };
+         if (pct >= 60) return { grade: 'B', label: 'Financially Literate', color: 'text-blue-400' };
+         if (pct >= 40) return { grade: 'C', label: 'Cash Blind Spots', color: 'text-yellow-400' };
+         return { grade: 'D', label: 'Bankruptcy Risk', color: 'text-red-400' };
+      };
 
       if (phase === 'intro') return (
          <div className="flex flex-col items-center justify-center h-full bg-gradient-to-br from-blue-900 via-indigo-900 to-violet-900 text-white p-8 text-center">
             <button onClick={() => setShowInfo(!showInfo)} className="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/20 flex items-center justify-center text-xl">ℹ️</button>
             {showInfo && (
-               <div className="absolute top-16 right-4 bg-black/90 p-4 rounded-xl max-w-xs text-left text-sm">
-                  <p className="font-bold mb-2">Cash Flow</p>
-                  <p>Cash In - Cash Out = Net Cash Flow. Positive cash flow keeps your business alive. Track it religiously!</p>
+               <div className="absolute top-16 right-4 bg-black/90 p-4 rounded-xl max-w-xs text-left text-sm z-10">
+                  <p className="font-bold mb-2">💵 Cash Flow Management</p>
+                  <p className="mb-2">Cash is oxygen. Profit is a concept - cash is survival:</p>
+                  <div className="space-y-1 text-xs">
+                     {Object.entries(infoTopics).map(([key, value]) => (
+                        <div key={key} className="bg-white/10 p-2 rounded cursor-pointer hover:bg-white/20" onClick={() => setInfoTopic(key)}>
+                           {key.replace(/_/g, ' ').toUpperCase()}
+                        </div>
+                     ))}
+                  </div>
+                  {infoTopic && <p className="mt-2 text-xs bg-blue-500/20 p-2 rounded">{infoTopics[infoTopic]}</p>}
                </div>
             )}
             <p className="text-6xl mb-4">💵</p>
-            <h2 className="text-3xl font-bold mb-4">Cash Flow Tracker</h2>
-            <p className="text-lg opacity-80 max-w-md mb-8">Track your money coming in and going out to understand your cash position.</p>
-            <button onClick={() => setPhase('play')} className="px-8 py-4 bg-blue-500 rounded-2xl font-bold text-xl hover:bg-blue-400 transition-all">START TRACKING →</button>
+            <h2 className="text-3xl font-bold mb-4">Cash Flow Crisis Lab</h2>
+            <p className="text-lg opacity-80 max-w-md mb-4">Master the art of managing cash - the lifeblood of every business.</p>
+            <p className="text-sm opacity-60 max-w-md mb-8">5 scenarios based on real cash crises at Toys 'R' Us, WeWork, Circuit City, and others. Learn why profitable companies go bankrupt.</p>
+            <button onClick={() => setPhase('play')} className="px-8 py-4 bg-blue-500 rounded-2xl font-bold text-xl hover:bg-blue-400 transition-all">START CASH CRISIS →</button>
          </div>
       );
 
-      if (phase === 'result') return (
-         <div className="flex flex-col h-full bg-gradient-to-br from-blue-900 via-indigo-900 to-violet-900 text-white p-8">
-            <h2 className="text-2xl font-bold text-center mb-6">💵 Cash Flow Summary</h2>
-            <div className="grid grid-cols-2 gap-4 mb-6">
-               <div className="bg-green-500/20 rounded-xl p-4 text-center">
-                  <p className="text-sm opacity-70">Total Inflows</p>
-                  <p className="text-2xl font-bold text-green-400">+${totalIn.toLocaleString()}</p>
+      if (phase === 'result') {
+         const { grade, label, color } = getGrade();
+         const uniqueGaps = [...new Set(conceptGaps)];
+         return (
+            <div className="flex flex-col h-full bg-gradient-to-br from-blue-900 via-indigo-900 to-violet-900 text-white p-8 overflow-y-auto">
+               <div className="text-center mb-6">
+                  <p className={`text-6xl font-bold ${color}`}>{grade}</p>
+                  <p className="text-xl mt-2">{label}</p>
+                  <p className="text-sm opacity-70 mt-1">{score}/{scenarios.length} crises resolved</p>
                </div>
-               <div className="bg-red-500/20 rounded-xl p-4 text-center">
-                  <p className="text-sm opacity-70">Total Outflows</p>
-                  <p className="text-2xl font-bold text-red-400">-${totalOut.toLocaleString()}</p>
+               <div className="bg-black/30 rounded-xl p-4 mb-4">
+                  <p className="font-bold mb-2">📊 Crisis Response Log</p>
+                  {gameLog.map((log, i) => (
+                     <p key={i} className={`text-sm ${log.startsWith('✓') ? 'text-green-400' : 'text-red-400'}`}>{log}</p>
+                  ))}
                </div>
-            </div>
-            <div className={`rounded-xl p-6 text-center mb-6 ${netCashFlow >= 0 ? 'bg-green-500/30' : 'bg-red-500/30'}`}>
-               <p className="text-sm opacity-70">Net Cash Flow</p>
-               <p className={`text-4xl font-bold ${netCashFlow >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                  {netCashFlow >= 0 ? '+' : ''}{netCashFlow.toLocaleString()}
-               </p>
-            </div>
-            <button onClick={() => { setPhase('intro'); setInflows([]); setOutflows([]); }} className="px-6 py-3 bg-blue-500 rounded-xl font-bold">START OVER</button>
-         </div>
-      );
-
-      const addEntry = () => {
-         if (name && amount) {
-            const entry = { name, amount: parseFloat(amount) };
-            if (isInflow) setInflows([...inflows, entry]);
-            else setOutflows([...outflows, entry]);
-            setName('');
-            setAmount('');
-         }
-      };
-
-      return (
-         <div className="flex flex-col h-full bg-gradient-to-br from-blue-900 via-indigo-900 to-violet-900 text-white p-8">
-            <div className="flex gap-2 mb-4">
-               <button onClick={() => setIsInflow(true)} className={`flex-1 py-2 rounded-xl font-bold ${isInflow ? 'bg-green-500' : 'bg-black/30'}`}>+ Inflow</button>
-               <button onClick={() => setIsInflow(false)} className={`flex-1 py-2 rounded-xl font-bold ${!isInflow ? 'bg-red-500' : 'bg-black/30'}`}>- Outflow</button>
-            </div>
-            <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Description..."
-               className="p-3 rounded-xl bg-black/30 border border-blue-500/30 text-white mb-2" />
-            <input value={amount} onChange={(e) => setAmount(e.target.value)} placeholder="Amount..." type="number"
-               className="p-3 rounded-xl bg-black/30 border border-blue-500/30 text-white mb-4" />
-            <button onClick={addEntry} className="px-6 py-3 bg-blue-500 rounded-xl font-bold mb-4">ADD ENTRY</button>
-            <div className="flex-1 overflow-auto">
-               {[...inflows.map(i => ({...i, type: 'in'})), ...outflows.map(o => ({...o, type: 'out'}))].map((e, i) => (
-                  <div key={i} className={`p-3 rounded-xl mb-2 ${e.type === 'in' ? 'bg-green-500/20' : 'bg-red-500/20'}`}>
-                     <span className="font-bold">{e.name}</span>
-                     <span className={`float-right ${e.type === 'in' ? 'text-green-400' : 'text-red-400'}`}>
-                        {e.type === 'in' ? '+' : '-'}${e.amount}
-                     </span>
+               {uniqueGaps.length > 0 && (
+                  <div className="bg-red-500/20 rounded-xl p-4 mb-4">
+                     <p className="font-bold mb-2">📚 Concepts to Study</p>
+                     {uniqueGaps.map(gap => (
+                        <p key={gap} className="text-sm">• {conceptLabels[gap]}</p>
+                     ))}
                   </div>
+               )}
+               <div className="bg-blue-500/20 rounded-xl p-4 mb-4">
+                  <p className="font-bold mb-2">🎯 Cash Flow Principles</p>
+                  <p className="text-sm">• Cash ≠ Profit - you can be profitable and bankrupt</p>
+                  <p className="text-sm">• Timing matters - revenue recognized ≠ cash received</p>
+                  <p className="text-sm">• Working capital traps cash in inventory/receivables</p>
+                  <p className="text-sm">• Seasonal businesses need credit facilities</p>
+                  <p className="text-sm">• Prepayments solve runway, annual plans accelerate cash</p>
+               </div>
+               <button onClick={() => { setPhase('intro'); setScenario(0); setScore(0); setSelected(null); setAnswered(false); setGameLog([]); setConceptGaps([]); }}
+                  className="mt-auto px-6 py-3 bg-blue-500 rounded-xl font-bold">TRY AGAIN</button>
+            </div>
+         );
+      }
+
+      const s = scenarios[scenario];
+      return (
+         <div className="flex flex-col h-full bg-gradient-to-br from-blue-900 via-indigo-900 to-violet-900 text-white p-6 overflow-y-auto">
+            <div className="flex justify-between items-center mb-4">
+               <span className="bg-black/30 px-3 py-1 rounded-lg text-sm">Crisis {scenario + 1}/5</span>
+               <span className="bg-blue-500/30 px-3 py-1 rounded-lg text-sm font-bold">{score} resolved</span>
+            </div>
+            <div className="bg-black/30 rounded-xl p-4 mb-4">
+               <h3 className="font-bold text-lg text-blue-400 mb-2">{s.title}</h3>
+               <p className="text-sm leading-relaxed opacity-90">{s.context}</p>
+            </div>
+            <p className="font-bold mb-3">{s.question}</p>
+            <div className="flex flex-col gap-2 mb-4">
+               {s.opts.map((opt, idx) => (
+                  <button key={idx} onClick={() => handleAnswer(idx)} disabled={answered}
+                     className={`p-3 rounded-xl text-left text-sm transition-all ${
+                        answered
+                           ? idx === s.correct
+                              ? 'bg-green-500/40 border-2 border-green-400'
+                              : idx === selected
+                                 ? 'bg-red-500/40 border-2 border-red-400'
+                                 : 'bg-black/20 opacity-50'
+                           : 'bg-black/30 hover:bg-blue-500/20'
+                     }`}>
+                     {opt}
+                  </button>
                ))}
             </div>
-            <button onClick={() => (inflows.length > 0 || outflows.length > 0) && setPhase('result')} className="px-6 py-3 bg-blue-700 rounded-xl font-bold mt-4">VIEW SUMMARY</button>
+            {answered && (
+               <div className="space-y-3 mb-4">
+                  {selected !== s.correct && (
+                     <div className="bg-red-500/20 rounded-xl p-3">
+                        <p className="font-bold text-red-400 text-sm">Why that fails:</p>
+                        <p className="text-sm opacity-90">{s.wrongExplanations[selected!]}</p>
+                     </div>
+                  )}
+                  <div className="bg-green-500/20 rounded-xl p-3">
+                     <p className="font-bold text-green-400 text-sm">The cash flow solution:</p>
+                     <p className="text-sm opacity-90">{s.why}</p>
+                  </div>
+                  <div className="bg-blue-500/20 rounded-xl p-3">
+                     <p className="font-bold text-blue-400 text-sm">📚 Real World:</p>
+                     <p className="text-sm opacity-90">{s.realWorld}</p>
+                  </div>
+                  <button onClick={nextScenario} className="w-full py-3 bg-blue-500 rounded-xl font-bold">
+                     {scenario < scenarios.length - 1 ? 'NEXT CRISIS →' : 'SEE RESULTS →'}
+                  </button>
+               </div>
+            )}
          </div>
       );
    };
@@ -23197,86 +24476,283 @@ const GeneratedDiagram: React.FC<DiagramProps> = ({ type, data, title }) => {
    // 43. PROFIT & LOSS - P&L Statement Builder
    const ProfitLossRenderer = () => {
       const [phase, setPhase] = useState<'intro' | 'play' | 'result'>('intro');
+      const [scenario, setScenario] = useState(0);
+      const [score, setScore] = useState(0);
+      const [selected, setSelected] = useState<number | null>(null);
+      const [answered, setAnswered] = useState(false);
+      const [gameLog, setGameLog] = useState<string[]>([]);
       const [showInfo, setShowInfo] = useState(false);
-      const [revenue, setRevenue] = useState(0);
-      const [cogs, setCogs] = useState(0);
-      const [expenses, setExpenses] = useState(0);
-      const [step, setStep] = useState(0);
-      const [inputValue, setInputValue] = useState('');
+      const [infoTopic, setInfoTopic] = useState<string | null>(null);
+      const [conceptGaps, setConceptGaps] = useState<string[]>([]);
 
-      const steps = [
-         { key: 'revenue', icon: '💰', label: 'Revenue', prompt: 'Enter your total sales/revenue' },
-         { key: 'cogs', icon: '📦', label: 'Cost of Goods Sold', prompt: 'Enter direct costs (materials, labor, etc.)' },
-         { key: 'expenses', icon: '🏢', label: 'Operating Expenses', prompt: 'Enter overhead (rent, utilities, salaries, etc.)' }
+      const scenarios = [
+         {
+            title: "The Margin Mirage",
+            context: "Two restaurants each report $1M annual revenue. Restaurant A: 28% gross margin, 8% net margin. Restaurant B: 65% gross margin, 4% net margin. Restaurant B has higher gross margins but lower net profit.",
+            question: "What's the most likely cause of Restaurant B's margin compression?",
+            opts: [
+               "A) Restaurant B has more expensive ingredients (higher COGS)",
+               "B) Restaurant B has excessive overhead (rent, labor, marketing)",
+               "C) Restaurant B prices too low relative to costs",
+               "D) Restaurant B has tax inefficiencies"
+            ],
+            correct: 1,
+            wrongExplanations: [
+               "Higher COGS would lower gross margin, not raise it. Restaurant B's 65% gross margin means COGS is only 35% of revenue - their food costs are actually lean.",
+               "",
+               "Low pricing would show up in gross margin. With 65% gross margin, pricing is fine. The problem is between gross and net.",
+               "Tax expenses typically appear below the operating profit line. The gap between 65% gross and 4% net (61 points!) is too large to be explained by taxes alone."
+            ],
+            realWorld: "The Cheesecake Factory has famously high food costs (low gross margin) but maintains strong net margins through operational efficiency. Sweetgreen has excellent gross margins but burned cash for years due to high rent and labor in premium locations.",
+            concept: "margin_analysis",
+            why: "The 61-point drop from gross to net margin means operating expenses consume 61% of revenue. At $1M revenue, that's $610K in overhead vs. only $350K in food costs. Restaurant B is likely in an expensive location, overstaffed, or spending too much on marketing. The P&L structure reveals where money leaks."
+         },
+         {
+            title: "Revenue Recognition Trap",
+            context: "A SaaS company books a $120K annual contract in January. Their CFO records $120K as January revenue, showing their best month ever. Gross margin: 85%. Operating expenses: $80K/month. The CEO celebrates profitability.",
+            question: "What's wrong with this P&L presentation?",
+            opts: [
+               "A) Nothing - they earned the contract, they can book the revenue",
+               "B) Revenue should be recognized as $10K/month over 12 months (GAAP)",
+               "C) The 85% gross margin is too high to be realistic",
+               "D) Operating expenses should be capitalized, not expensed"
+            ],
+            correct: 1,
+            wrongExplanations: [
+               "GAAP and IFRS require revenue to be recognized as earned. Booking $120K in January overstates that month and understates the next 11 months. Investors and auditors will flag this.",
+               "",
+               "85% gross margin is normal for SaaS (low marginal cost of serving customers). The margin isn't the problem.",
+               "Operating expenses for day-to-day operations should be expensed. Capitalizing regular opex would violate GAAP and inflate profits artificially."
+            ],
+            realWorld: "Under Armour inflated revenues by shipping products to retailers before they ordered them (channel stuffing). When restated, $400M+ in revenue shifted between periods. SEC investigated. Stock dropped 90% from peak.",
+            concept: "revenue_recognition",
+            why: "Proper P&L for January: Revenue $10K (1/12 of annual contract), COGS $1.5K, Gross Profit $8.5K, OpEx $80K, Net Loss -$71.5K. The company isn't profitable at all - they're losing $71.5K/month until they get more customers. Improper revenue recognition masks true economics."
+         },
+         {
+            title: "The COGS Classification",
+            context: "An e-commerce company sells $500K/month in products bought for $200K (60% gross margin). They pay $50K/month in shipping to customers. Their P&L shows shipping as operating expense, resulting in 60% gross margin and 35% operating margin.",
+            question: "How should shipping be classified for accurate P&L analysis?",
+            opts: [
+               "A) Keep as operating expense - it's not directly tied to products",
+               "B) Move to COGS - it's a direct cost of delivering each sale",
+               "C) Capitalize it - shipping is an investment in customer satisfaction",
+               "D) Split between COGS and operating expense"
+            ],
+            correct: 1,
+            wrongExplanations: [
+               "Shipping IS directly tied to products. Every order requires shipping. Classifying it as operating expense makes gross margin look artificially high.",
+               "",
+               "Shipping is consumed immediately when the product is delivered. It has no future value and cannot be capitalized under any accounting standard.",
+               "Splitting would create arbitrary allocations. Shipping is directly variable with sales - every sale has a shipping cost. It belongs entirely in COGS."
+            ],
+            realWorld: "Amazon includes shipping in COGS, which is why their retail gross margins look thin (20-25%). Many e-commerce brands hide shipping in operating expenses to show 50%+ gross margins. Investors eventually discover the true unit economics.",
+            concept: "cogs_classification",
+            why: "Correctly restated: Revenue $500K, COGS $250K ($200K products + $50K shipping) = 50% gross margin, not 60%. This 10-point swing is massive. True gross margin reveals you make $250K per $500K sold, not $300K. Misclassification hides the real cost of each sale and inflates apparent profitability."
+         },
+         {
+            title: "Operating Leverage Analysis",
+            context: "Two software companies each have $10M revenue. Company A: $8M fixed costs, $1M variable costs, $1M profit. Company B: $2M fixed costs, $6M variable costs, $2M profit. Both are considering a 20% revenue increase.",
+            question: "Which company benefits more from the revenue increase?",
+            opts: [
+               "A) Company B - they already have higher profits ($2M vs $1M)",
+               "B) Company A - high fixed costs means profit grows faster with scale",
+               "C) Equal benefit - both get 20% more revenue",
+               "D) Company B - lower fixed costs means less risk"
+            ],
+            correct: 1,
+            wrongExplanations: [
+               "Current profitability doesn't determine future growth rate. The cost structure does. Company B's high variable costs will consume most of the revenue increase.",
+               "",
+               "Revenue increases equally, but profit increases differently. Variable costs scale with revenue; fixed costs don't. This creates operating leverage.",
+               "Lower fixed costs indeed means less risk in a downturn, but the question asks about benefiting from growth, not surviving decline."
+            ],
+            realWorld: "Microsoft has 70%+ gross margins with high fixed R&D costs. When Cloud revenue grew, profits exploded because marginal cost of serving new customers is near zero. Consulting firms with variable labor costs see profit grow linearly with revenue.",
+            concept: "operating_leverage",
+            why: "Company A at $12M revenue: Fixed $8M + Variable $1.2M (scales 20%) = $9.2M costs → $2.8M profit (180% increase). Company B at $12M revenue: Fixed $2M + Variable $7.2M = $9.2M costs → $2.8M profit (40% increase). Same ending profit but Company A's profit nearly tripled while B's grew 40%. High fixed cost structures amplify growth."
+         },
+         {
+            title: "The Profitability Illusion",
+            context: "A hardware startup reports: Revenue $2M, COGS $1.4M (30% gross margin), OpEx $400K, Net Profit $200K (10% net margin). Investors celebrate profitability. But looking deeper: $800K of 'revenue' came from one-time patent licensing, and R&D was only $50K (1% of revenue).",
+            question: "What should investors actually conclude about this P&L?",
+            opts: [
+               "A) The company is genuinely profitable with healthy margins",
+               "B) Adjust for licensing: real product margins are negative with weak R&D",
+               "C) The low R&D is smart - they're focused on execution, not innovation",
+               "D) One-time revenue is fine - it's still cash in the bank"
+            ],
+            correct: 1,
+            wrongExplanations: [
+               "The profitability is an illusion. Remove one-time licensing and the picture changes completely. Investors need recurring economics, not one-off windfalls.",
+               "",
+               "1% R&D for a hardware company is catastrophically low. Industry average is 8-15%. Without R&D, there's no future product innovation. They're harvesting, not building.",
+               "One-time revenue is cash, but it masks whether the core business is viable. Investors valuing this company on 'profit' will be shocked when licensing doesn't recur."
+            ],
+            realWorld: "GoPro's P&L looked profitable in 2015, but stripping out non-recurring gains and analyzing true product economics showed trouble. Stock fell from $86 to $5 as 'profitability' evaporated without one-time items.",
+            concept: "earnings_quality",
+            why: "Adjusted P&L: Revenue $1.2M (core product only), COGS $1.4M, Gross Loss -$200K. They're losing money on every product sold. The $800K licensing masked a failing core business. Plus, 1% R&D means no product roadmap. Quality of earnings analysis separates sustainable profit from accounting illusions."
+         }
       ];
 
-      const grossProfit = revenue - cogs;
-      const netProfit = grossProfit - expenses;
-      const grossMargin = revenue > 0 ? ((grossProfit / revenue) * 100).toFixed(1) : '0';
-      const netMargin = revenue > 0 ? ((netProfit / revenue) * 100).toFixed(1) : '0';
+      const conceptLabels: Record<string, string> = {
+         'margin_analysis': 'Margin Structure Analysis',
+         'revenue_recognition': 'Revenue Recognition',
+         'cogs_classification': 'COGS Classification',
+         'operating_leverage': 'Operating Leverage',
+         'earnings_quality': 'Earnings Quality'
+      };
+
+      const infoTopics: Record<string, string> = {
+         'gross_margin': 'Gross Margin = (Revenue - COGS) / Revenue. Measures production efficiency. High GM means strong pricing power or low unit costs. SaaS: 70-85%, Retail: 25-40%, Restaurants: 60-70%.',
+         'operating_margin': 'Operating Margin = Operating Income / Revenue. Shows efficiency after all operating costs. Includes SG&A, R&D. Excludes interest and taxes. Healthy range: 10-25% for most industries.',
+         'net_margin': 'Net Margin = Net Income / Revenue. Bottom line after everything including interest, taxes. What shareholders actually keep. Apple: 25%, Amazon: 3%, Airlines: 2-5%.',
+         'contribution': 'Contribution Margin = (Revenue - Variable Costs) / Revenue. Shows how much each sale contributes to fixed costs and profit. Critical for break-even analysis.',
+         'ebitda': 'EBITDA = Earnings Before Interest, Taxes, Depreciation, Amortization. Removes financing and accounting decisions. Useful for comparing companies with different capital structures.'
+      };
+
+      const handleAnswer = (idx: number) => {
+         if (answered) return;
+         setSelected(idx);
+         setAnswered(true);
+         const s = scenarios[scenario];
+         if (idx === s.correct) {
+            setScore(score + 1);
+            setGameLog([...gameLog, `✓ ${s.title}: Correct`]);
+         } else {
+            setConceptGaps([...conceptGaps, s.concept]);
+            setGameLog([...gameLog, `✗ ${s.title}: Wrong - Gap in ${conceptLabels[s.concept]}`]);
+         }
+      };
+
+      const nextScenario = () => {
+         if (scenario < scenarios.length - 1) {
+            setScenario(scenario + 1);
+            setSelected(null);
+            setAnswered(false);
+         } else {
+            setPhase('result');
+         }
+      };
+
+      const getGrade = () => {
+         const pct = (score / scenarios.length) * 100;
+         if (pct >= 80) return { grade: 'A', label: 'P&L Expert', color: 'text-green-400' };
+         if (pct >= 60) return { grade: 'B', label: 'Financially Literate', color: 'text-blue-400' };
+         if (pct >= 40) return { grade: 'C', label: 'P&L Blind Spots', color: 'text-yellow-400' };
+         return { grade: 'D', label: 'Easily Fooled', color: 'text-red-400' };
+      };
 
       if (phase === 'intro') return (
          <div className="flex flex-col items-center justify-center h-full bg-gradient-to-br from-amber-900 via-yellow-900 to-orange-900 text-white p-8 text-center">
             <button onClick={() => setShowInfo(!showInfo)} className="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/20 flex items-center justify-center text-xl">ℹ️</button>
             {showInfo && (
-               <div className="absolute top-16 right-4 bg-black/90 p-4 rounded-xl max-w-xs text-left text-sm">
-                  <p className="font-bold mb-2">Profit & Loss Statement</p>
-                  <p>Revenue - COGS = Gross Profit. Gross Profit - Expenses = Net Profit. Shows if you're making or losing money.</p>
+               <div className="absolute top-16 right-4 bg-black/90 p-4 rounded-xl max-w-xs text-left text-sm z-10">
+                  <p className="font-bold mb-2">📊 P&L Mastery</p>
+                  <p className="mb-2">Learn to read between the lines of profit statements:</p>
+                  <div className="space-y-1 text-xs">
+                     {Object.entries(infoTopics).map(([key, value]) => (
+                        <div key={key} className="bg-white/10 p-2 rounded cursor-pointer hover:bg-white/20" onClick={() => setInfoTopic(key)}>
+                           {key.replace(/_/g, ' ').toUpperCase()}
+                        </div>
+                     ))}
+                  </div>
+                  {infoTopic && <p className="mt-2 text-xs bg-amber-500/20 p-2 rounded">{infoTopics[infoTopic]}</p>}
                </div>
             )}
             <p className="text-6xl mb-4">📊</p>
-            <h2 className="text-3xl font-bold mb-4">Profit & Loss Statement</h2>
-            <p className="text-lg opacity-80 max-w-md mb-8">Build your P&L to understand your profitability.</p>
-            <button onClick={() => setPhase('play')} className="px-8 py-4 bg-amber-500 rounded-2xl font-bold text-xl hover:bg-amber-400 transition-all text-black">BUILD P&L →</button>
+            <h2 className="text-3xl font-bold mb-4">P&L Analysis Lab</h2>
+            <p className="text-lg opacity-80 max-w-md mb-4">Master the art of reading profit and loss statements - the story behind the numbers.</p>
+            <p className="text-sm opacity-60 max-w-md mb-8">5 scenarios exposing P&L manipulation, misclassification, and analysis traps. Based on real cases from GoPro, Under Armour, and others.</p>
+            <button onClick={() => setPhase('play')} className="px-8 py-4 bg-amber-500 rounded-2xl font-bold text-xl hover:bg-amber-400 transition-all text-black">START P&L LAB →</button>
          </div>
       );
 
-      if (phase === 'result') return (
-         <div className="flex flex-col h-full bg-gradient-to-br from-amber-900 via-yellow-900 to-orange-900 text-white p-8">
-            <h2 className="text-2xl font-bold text-center mb-6">📊 P&L Statement</h2>
-            <div className="bg-black/30 rounded-xl p-4 mb-4">
-               <div className="flex justify-between mb-2"><span>Revenue</span><span className="font-bold">${revenue.toLocaleString()}</span></div>
-               <div className="flex justify-between mb-2 text-red-300"><span>- COGS</span><span>-${cogs.toLocaleString()}</span></div>
-               <div className="border-t border-white/20 pt-2 flex justify-between"><span className="font-bold">Gross Profit</span><span className="font-bold text-green-400">${grossProfit.toLocaleString()}</span></div>
-               <p className="text-xs text-right opacity-70">Margin: {grossMargin}%</p>
-            </div>
-            <div className="bg-black/30 rounded-xl p-4 mb-4">
-               <div className="flex justify-between mb-2 text-red-300"><span>- Operating Expenses</span><span>-${expenses.toLocaleString()}</span></div>
-               <div className="border-t border-white/20 pt-2 flex justify-between">
-                  <span className="font-bold">Net Profit</span>
-                  <span className={`font-bold ${netProfit >= 0 ? 'text-green-400' : 'text-red-400'}`}>${netProfit.toLocaleString()}</span>
+      if (phase === 'result') {
+         const { grade, label, color } = getGrade();
+         const uniqueGaps = [...new Set(conceptGaps)];
+         return (
+            <div className="flex flex-col h-full bg-gradient-to-br from-amber-900 via-yellow-900 to-orange-900 text-white p-8 overflow-y-auto">
+               <div className="text-center mb-6">
+                  <p className={`text-6xl font-bold ${color}`}>{grade}</p>
+                  <p className="text-xl mt-2">{label}</p>
+                  <p className="text-sm opacity-70 mt-1">{score}/{scenarios.length} analyses correct</p>
                </div>
-               <p className="text-xs text-right opacity-70">Net Margin: {netMargin}%</p>
+               <div className="bg-black/30 rounded-xl p-4 mb-4">
+                  <p className="font-bold mb-2">📊 Analysis Log</p>
+                  {gameLog.map((log, i) => (
+                     <p key={i} className={`text-sm ${log.startsWith('✓') ? 'text-green-400' : 'text-red-400'}`}>{log}</p>
+                  ))}
+               </div>
+               {uniqueGaps.length > 0 && (
+                  <div className="bg-red-500/20 rounded-xl p-4 mb-4">
+                     <p className="font-bold mb-2">📚 Concepts to Study</p>
+                     {uniqueGaps.map(gap => (
+                        <p key={gap} className="text-sm">• {conceptLabels[gap]}</p>
+                     ))}
+                  </div>
+               )}
+               <div className="bg-amber-500/20 rounded-xl p-4 mb-4">
+                  <p className="font-bold mb-2 text-black">🎯 P&L Principles</p>
+                  <p className="text-sm">• Gross margin reveals pricing power and unit economics</p>
+                  <p className="text-sm">• Gap between gross and net exposes overhead problems</p>
+                  <p className="text-sm">• Revenue recognition timing can mask or create profits</p>
+                  <p className="text-sm">• COGS classification changes the story entirely</p>
+                  <p className="text-sm">• One-time items hide true recurring economics</p>
+               </div>
+               <button onClick={() => { setPhase('intro'); setScenario(0); setScore(0); setSelected(null); setAnswered(false); setGameLog([]); setConceptGaps([]); }}
+                  className="mt-auto px-6 py-3 bg-amber-500 rounded-xl font-bold text-black">TRY AGAIN</button>
             </div>
-            <button onClick={() => { setPhase('intro'); setRevenue(0); setCogs(0); setExpenses(0); setStep(0); }} className="px-6 py-3 bg-amber-500 rounded-xl font-bold text-black mt-auto">CREATE NEW P&L</button>
-         </div>
-      );
+         );
+      }
 
-      const submitStep = () => {
-         const value = parseFloat(inputValue) || 0;
-         if (step === 0) setRevenue(value);
-         else if (step === 1) setCogs(value);
-         else setExpenses(value);
-         setInputValue('');
-         if (step < 2) setStep(step + 1);
-         else setPhase('result');
-      };
-
+      const s = scenarios[scenario];
       return (
-         <div className="flex flex-col h-full bg-gradient-to-br from-amber-900 via-yellow-900 to-orange-900 text-white p-8">
-            <div className="flex gap-2 mb-6">
-               {steps.map((_, i) => <div key={i} className={`flex-1 h-2 rounded-full ${i <= step ? 'bg-amber-400' : 'bg-black/30'}`}></div>)}
+         <div className="flex flex-col h-full bg-gradient-to-br from-amber-900 via-yellow-900 to-orange-900 text-white p-6 overflow-y-auto">
+            <div className="flex justify-between items-center mb-4">
+               <span className="bg-black/30 px-3 py-1 rounded-lg text-sm">Analysis {scenario + 1}/5</span>
+               <span className="bg-amber-500/30 px-3 py-1 rounded-lg text-sm font-bold">{score} correct</span>
             </div>
-            <div className="bg-black/30 rounded-2xl p-6 mb-4 text-center">
-               <p className="text-4xl mb-2">{steps[step].icon}</p>
-               <p className="text-xl font-bold">{steps[step].label}</p>
-               <p className="text-sm opacity-75 mt-2">{steps[step].prompt}</p>
+            <div className="bg-black/30 rounded-xl p-4 mb-4">
+               <h3 className="font-bold text-lg text-amber-400 mb-2">{s.title}</h3>
+               <p className="text-sm leading-relaxed opacity-90">{s.context}</p>
             </div>
-            <input value={inputValue} onChange={(e) => setInputValue(e.target.value)} type="number"
-               placeholder="$0" className="p-4 rounded-xl bg-black/30 border border-amber-500/30 text-white mb-4 text-center text-2xl" />
-            <button onClick={submitStep} className="px-6 py-3 bg-amber-500 rounded-xl font-bold text-black">
-               {step < 2 ? 'NEXT →' : 'VIEW P&L'}
-            </button>
+            <p className="font-bold mb-3">{s.question}</p>
+            <div className="flex flex-col gap-2 mb-4">
+               {s.opts.map((opt, idx) => (
+                  <button key={idx} onClick={() => handleAnswer(idx)} disabled={answered}
+                     className={`p-3 rounded-xl text-left text-sm transition-all ${
+                        answered
+                           ? idx === s.correct
+                              ? 'bg-green-500/40 border-2 border-green-400'
+                              : idx === selected
+                                 ? 'bg-red-500/40 border-2 border-red-400'
+                                 : 'bg-black/20 opacity-50'
+                           : 'bg-black/30 hover:bg-amber-500/20'
+                     }`}>
+                     {opt}
+                  </button>
+               ))}
+            </div>
+            {answered && (
+               <div className="space-y-3 mb-4">
+                  {selected !== s.correct && (
+                     <div className="bg-red-500/20 rounded-xl p-3">
+                        <p className="font-bold text-red-400 text-sm">Why that's wrong:</p>
+                        <p className="text-sm opacity-90">{s.wrongExplanations[selected!]}</p>
+                     </div>
+                  )}
+                  <div className="bg-green-500/20 rounded-xl p-3">
+                     <p className="font-bold text-green-400 text-sm">The real analysis:</p>
+                     <p className="text-sm opacity-90">{s.why}</p>
+                  </div>
+                  <div className="bg-amber-500/20 rounded-xl p-3">
+                     <p className="font-bold text-amber-400 text-sm">📚 Real World:</p>
+                     <p className="text-sm opacity-90">{s.realWorld}</p>
+                  </div>
+                  <button onClick={nextScenario} className="w-full py-3 bg-amber-500 rounded-xl font-bold text-black">
+                     {scenario < scenarios.length - 1 ? 'NEXT ANALYSIS →' : 'SEE RESULTS →'}
+                  </button>
+               </div>
+            )}
          </div>
       );
    };
@@ -23284,83 +24760,283 @@ const GeneratedDiagram: React.FC<DiagramProps> = ({ type, data, title }) => {
    // 44. BREAK EVEN - Break-Even Calculator
    const BreakEvenRenderer = () => {
       const [phase, setPhase] = useState<'intro' | 'play' | 'result'>('intro');
+      const [scenario, setScenario] = useState(0);
+      const [score, setScore] = useState(0);
+      const [selected, setSelected] = useState<number | null>(null);
+      const [answered, setAnswered] = useState(false);
+      const [gameLog, setGameLog] = useState<string[]>([]);
       const [showInfo, setShowInfo] = useState(false);
-      const [fixedCosts, setFixedCosts] = useState(0);
-      const [pricePerUnit, setPricePerUnit] = useState(0);
-      const [costPerUnit, setCostPerUnit] = useState(0);
-      const [step, setStep] = useState(0);
-      const [inputValue, setInputValue] = useState('');
+      const [infoTopic, setInfoTopic] = useState<string | null>(null);
+      const [conceptGaps, setConceptGaps] = useState<string[]>([]);
 
-      const contributionMargin = pricePerUnit - costPerUnit;
-      const breakEvenUnits = contributionMargin > 0 ? Math.ceil(fixedCosts / contributionMargin) : 0;
-      const breakEvenRevenue = breakEvenUnits * pricePerUnit;
-
-      const steps = [
-         { key: 'fixed', icon: '🏢', label: 'Fixed Costs', prompt: 'Total monthly fixed costs (rent, salaries, etc.)' },
-         { key: 'price', icon: '🏷️', label: 'Price Per Unit', prompt: 'How much do you sell each unit for?' },
-         { key: 'cost', icon: '📦', label: 'Cost Per Unit', prompt: 'How much does each unit cost to make?' }
+      const scenarios = [
+         {
+            title: "The Hidden Cost Trap",
+            context: "A coffee shop charges $5/cup with $1.50 in direct costs (beans, cup, lid). Monthly rent: $8,000. They calculate break-even at 2,286 cups/month. After 3 months selling 3,000 cups/month, they're still losing money.",
+            question: "What break-even error did they make?",
+            opts: [
+               "A) They forgot to include labor costs in variable costs",
+               "B) They underpriced their coffee",
+               "C) They forgot semi-variable costs (utilities, supplies, waste)",
+               "D) Their rent is too high for the location"
+            ],
+            correct: 2,
+            wrongExplanations: [
+               "Labor is often treated as a fixed cost for break-even (salaried baristas work regardless of cups sold). It should be in fixed costs, not variable, for this calculation.",
+               "At $5/cup with $1.50 variable cost, the contribution margin is $3.50. Pricing seems reasonable for coffee. The price isn't the problem.",
+               "",
+               "Rent being 'too high' doesn't explain the calculation error. High rent just means you need to sell more, which their calculation should have shown."
+            ],
+            realWorld: "Many restaurants fail in year one because break-even analysis only includes COGS and rent. They forget: credit card fees (2-3% of revenue), food waste (5-10% of inventory), cleaning supplies, POS fees, uniforms, and marketing. True variable costs are often 40-60% higher than naive estimates.",
+            concept: "hidden_costs",
+            why: "Real variable costs per cup: $1.50 beans/cup + $0.30 credit card fee (6% of $5) + $0.20 waste/spillage + $0.15 supplies = $2.15/cup. True contribution margin: $5 - $2.15 = $2.85 (not $3.50). Real break-even: $8,000 / $2.85 = 2,807 cups. They're 200 cups short every month."
+         },
+         {
+            title: "The Volume Illusion",
+            context: "A startup sells SaaS at $99/month with $19 marginal cost (hosting, support). Fixed costs: $50K/month. Break-even: 625 customers. Currently at 400 customers, they offer a 50% discount to accelerate growth.",
+            question: "What's the impact on break-even?",
+            opts: [
+               "A) Break-even stays at 625 - they're just getting there faster with discounts",
+               "B) Break-even increases to 1,667 customers - the discount destroys unit economics",
+               "C) Break-even decreases - volume growth compounds customer lifetime value",
+               "D) Break-even increases slightly to ~750 customers"
+            ],
+            correct: 1,
+            wrongExplanations: [
+               "Discounts change the contribution margin per customer. Fewer dollars per customer = more customers needed. Break-even absolutely changes.",
+               "",
+               "Discounting reduces LTV, it doesn't increase it. Customers acquired at 50% off have 50% less revenue potential. Volume doesn't compensate for halved margins.",
+               "The math is more severe than 'slightly.' Halving price while keeping costs constant dramatically increases break-even."
+            ],
+            realWorld: "Groupon merchants learned this painfully. A restaurant at 50% off with 50% Groupon commission nets 25% of regular price. If food cost is 30%, they're LOSING money on every Groupon customer. Many went bankrupt chasing 'volume.'",
+            concept: "margin_sensitivity",
+            why: "At 50% discount: New price $49.50, Variable cost still $19, New contribution margin: $30.50 (was $80). New break-even: $50,000 / $30.50 = 1,639 customers. They went from needing 225 more customers to needing 1,239 more. The discount made profitability 5.5x harder to achieve."
+         },
+         {
+            title: "Fixed Cost Leverage",
+            context: "Two SaaS companies. Company A: $200K fixed costs, 70% gross margin. Company B: $80K fixed costs, 30% gross margin. Both want to hit $100K monthly profit.",
+            question: "Which company reaches profitability faster from zero revenue?",
+            opts: [
+               "A) Company A - higher margins mean each dollar of revenue is more valuable",
+               "B) Company B - lower fixed costs mean faster break-even",
+               "C) Equal - different paths to same destination",
+               "D) Depends entirely on their customer acquisition costs"
+            ],
+            correct: 1,
+            wrongExplanations: [
+               "Higher margins are great AFTER break-even. But Company A needs $286K in revenue just to break even ($200K / 70%), while Company B needs only $267K ($80K / 30%). Time to profitability includes time to break-even.",
+               "",
+               "The paths are quantifiably different. Lower fixed costs mean reaching cash-flow positive sooner, which provides runway to reach the $100K profit target.",
+               "CAC matters for growth rate, but the question is about which business model reaches profitability faster. Structure determines trajectory."
+            ],
+            realWorld: "Amazon operated with razor-thin margins (low gross margin) but dominated because low fixed costs per transaction meant they broke even at modest volumes. High-margin luxury retailers with high fixed costs (fancy stores, lots of staff) couldn't compete on time-to-profitability.",
+            concept: "fixed_cost_leverage",
+            why: "Company A break-even: $200K / 0.70 = $286K revenue. To add $100K profit: ($200K + $100K) / 0.70 = $429K needed. Company B break-even: $80K / 0.30 = $267K revenue. To add $100K profit: ($80K + $100K) / 0.30 = $600K needed. B reaches break-even first ($267K vs $286K), but A reaches $100K profit target first at lower revenue ($429K vs $600K). Early-stage B wins; scale-stage A wins."
+         },
+         {
+            title: "The Multi-Product Puzzle",
+            context: "A bakery sells: Croissants ($4, $1 cost, 60% of sales), Bread loaves ($6, $2 cost, 30%), Cakes ($30, $12 cost, 10%). Monthly fixed costs: $12,000. They calculate break-even using average contribution margin.",
+            question: "What's the flaw in averaging contribution margins for break-even?",
+            opts: [
+               "A) Nothing - weighted average contribution margin is the correct approach",
+               "B) They should only calculate break-even for the highest-margin product",
+               "C) Product mix changes with volume, invalidating the average",
+               "D) Cakes should be excluded because they're specialty items"
+            ],
+            correct: 2,
+            wrongExplanations: [
+               "Weighted average is a snapshot of CURRENT mix. But mix changes! When you discount, when seasons change, when you push one product, the average contribution margin shifts. Break-even calculated on a frozen mix is unreliable.",
+               "Focusing only on highest-margin ignores that you need all products for customer traffic and basket size. It's not realistic to sell only cakes.",
+               "",
+               "Excluding any product gives an incomplete picture. Cakes might be 10% of volume but 30% of profit."
+            ],
+            realWorld: "Fast food chains constantly adjust menu mix to hit profit targets. McDonald's knows exactly what happens to break-even when customers shift from burgers (high margin) to McCafé (lower margin). They engineer the menu to protect contribution margin.",
+            concept: "product_mix",
+            why: "Current weighted CM: (60% × $3) + (30% × $4) + (10% × $18) = $1.80 + $1.20 + $1.80 = $4.80 average. Break-even: 2,500 units ($12K/$4.80). But if croissant sales drop to 40% and bread rises to 50%: (40% × $3) + (50% × $4) + (10% × $18) = $5.00 average. New break-even: 2,400 units. Small mix shifts move break-even by 100+ units. The 'break-even' is a moving target."
+         },
+         {
+            title: "Time-to-Break-Even",
+            context: "Two business plans for the same market. Plan A: $500K investment, $100K monthly fixed costs, 60% gross margin, reaches break-even at $167K MRR. Plan B: $200K investment, $60K monthly fixed costs, 40% gross margin, reaches break-even at $150K MRR.",
+            question: "An investor focused on return on capital should prefer which plan?",
+            opts: [
+               "A) Plan A - higher gross margin means better long-term economics",
+               "B) Plan B - lower investment with faster break-even preserves capital",
+               "C) Plan A - the higher fixed costs can be leveraged for growth",
+               "D) Need to know customer acquisition cost before deciding"
+            ],
+            correct: 1,
+            wrongExplanations: [
+               "Higher gross margin matters for mature, scaled businesses. For a new venture, survival to break-even is priority #1. You can't enjoy great margins if you run out of money first.",
+               "",
+               "High fixed costs are 'leverage' only if you survive to use them. With more capital at risk and longer time to break-even, Plan A has higher failure probability.",
+               "CAC is important but the fundamental business model comparison can be made without it. Both plans face the same market; what differs is capital efficiency."
+            ],
+            realWorld: "Venture capitalists often prefer 'capital efficient' startups - those that reach profitability with less investment. Basecamp raised $0 and reached profitability quickly. Many VC-backed competitors with 'better' unit economics burned more and failed. Cash runway matters more than theoretical margins.",
+            concept: "capital_efficiency",
+            why: "Plan A: $500K invested, $100K/mo burn until $167K MRR. If it takes 12 months to reach $167K MRR, you've burned $1.2M before break-even (12 × $100K). Total capital needed: $500K + $1.2M = $1.7M. Plan B: $200K invested, $60K/mo burn until $150K MRR. Same 12 months: $720K burned. Total capital: $920K. Plan B uses 46% less capital to reach profitability."
+         }
       ];
+
+      const conceptLabels: Record<string, string> = {
+         'hidden_costs': 'Hidden Cost Identification',
+         'margin_sensitivity': 'Margin Sensitivity',
+         'fixed_cost_leverage': 'Fixed Cost Leverage',
+         'product_mix': 'Product Mix Dynamics',
+         'capital_efficiency': 'Capital Efficiency'
+      };
+
+      const infoTopics: Record<string, string> = {
+         'contribution': 'Contribution Margin = Price - Variable Cost. The amount each sale contributes to covering fixed costs. Once fixed costs are covered, contribution margin becomes profit.',
+         'breakeven': 'Break-Even Units = Fixed Costs / Contribution Margin per Unit. Break-Even Revenue = Fixed Costs / Contribution Margin Ratio. The point where Total Revenue = Total Costs.',
+         'safety': 'Margin of Safety = (Actual Sales - Break-Even Sales) / Actual Sales. Shows how much sales can drop before hitting break-even. Higher is safer.',
+         'leverage': 'Operating Leverage = Contribution Margin / Net Operating Income. High leverage means profit changes dramatically with small revenue changes. Risky but rewarding.',
+         'multiproduct': 'For multiple products, use weighted average contribution margin based on sales mix. Break-even in units becomes break-even in "composite units" reflecting the mix.'
+      };
+
+      const handleAnswer = (idx: number) => {
+         if (answered) return;
+         setSelected(idx);
+         setAnswered(true);
+         const s = scenarios[scenario];
+         if (idx === s.correct) {
+            setScore(score + 1);
+            setGameLog([...gameLog, `✓ ${s.title}: Correct`]);
+         } else {
+            setConceptGaps([...conceptGaps, s.concept]);
+            setGameLog([...gameLog, `✗ ${s.title}: Wrong - Gap in ${conceptLabels[s.concept]}`]);
+         }
+      };
+
+      const nextScenario = () => {
+         if (scenario < scenarios.length - 1) {
+            setScenario(scenario + 1);
+            setSelected(null);
+            setAnswered(false);
+         } else {
+            setPhase('result');
+         }
+      };
+
+      const getGrade = () => {
+         const pct = (score / scenarios.length) * 100;
+         if (pct >= 80) return { grade: 'A', label: 'Break-Even Master', color: 'text-green-400' };
+         if (pct >= 60) return { grade: 'B', label: 'Cost-Aware', color: 'text-blue-400' };
+         if (pct >= 40) return { grade: 'C', label: 'Margin Blind Spots', color: 'text-yellow-400' };
+         return { grade: 'D', label: 'Profitability Risk', color: 'text-red-400' };
+      };
 
       if (phase === 'intro') return (
          <div className="flex flex-col items-center justify-center h-full bg-gradient-to-br from-cyan-900 via-teal-900 to-emerald-900 text-white p-8 text-center">
             <button onClick={() => setShowInfo(!showInfo)} className="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/20 flex items-center justify-center text-xl">ℹ️</button>
             {showInfo && (
-               <div className="absolute top-16 right-4 bg-black/90 p-4 rounded-xl max-w-xs text-left text-sm">
-                  <p className="font-bold mb-2">Break-Even Analysis</p>
-                  <p>Break-Even Point = Fixed Costs / (Price - Variable Cost). The point where revenue equals total costs.</p>
+               <div className="absolute top-16 right-4 bg-black/90 p-4 rounded-xl max-w-xs text-left text-sm z-10">
+                  <p className="font-bold mb-2">⚖️ Break-Even Mastery</p>
+                  <p className="mb-2">Master the mechanics of profitability:</p>
+                  <div className="space-y-1 text-xs">
+                     {Object.entries(infoTopics).map(([key, value]) => (
+                        <div key={key} className="bg-white/10 p-2 rounded cursor-pointer hover:bg-white/20" onClick={() => setInfoTopic(key)}>
+                           {key.replace(/_/g, ' ').toUpperCase()}
+                        </div>
+                     ))}
+                  </div>
+                  {infoTopic && <p className="mt-2 text-xs bg-cyan-500/20 p-2 rounded">{infoTopics[infoTopic]}</p>}
                </div>
             )}
             <p className="text-6xl mb-4">⚖️</p>
-            <h2 className="text-3xl font-bold mb-4">Break-Even Calculator</h2>
-            <p className="text-lg opacity-80 max-w-md mb-8">Find out how many units you need to sell to cover all your costs.</p>
-            <button onClick={() => setPhase('play')} className="px-8 py-4 bg-cyan-500 rounded-2xl font-bold text-xl hover:bg-cyan-400 transition-all text-black">CALCULATE →</button>
+            <h2 className="text-3xl font-bold mb-4">Break-Even Strategy Lab</h2>
+            <p className="text-lg opacity-80 max-w-md mb-4">Master the art of break-even analysis - the foundation of profitable business decisions.</p>
+            <p className="text-sm opacity-60 max-w-md mb-8">5 scenarios exposing common break-even mistakes: hidden costs, margin sensitivity, and the capital efficiency trap.</p>
+            <button onClick={() => setPhase('play')} className="px-8 py-4 bg-cyan-500 rounded-2xl font-bold text-xl hover:bg-cyan-400 transition-all text-black">START BREAK-EVEN LAB →</button>
          </div>
       );
 
-      if (phase === 'result') return (
-         <div className="flex flex-col h-full bg-gradient-to-br from-cyan-900 via-teal-900 to-emerald-900 text-white p-8">
-            <h2 className="text-2xl font-bold text-center mb-6">⚖️ Break-Even Analysis</h2>
-            <div className="bg-black/30 rounded-xl p-6 mb-4 text-center">
-               <p className="text-sm opacity-70">Units to Break Even</p>
-               <p className="text-5xl font-bold text-cyan-400">{breakEvenUnits.toLocaleString()}</p>
+      if (phase === 'result') {
+         const { grade, label, color } = getGrade();
+         const uniqueGaps = [...new Set(conceptGaps)];
+         return (
+            <div className="flex flex-col h-full bg-gradient-to-br from-cyan-900 via-teal-900 to-emerald-900 text-white p-8 overflow-y-auto">
+               <div className="text-center mb-6">
+                  <p className={`text-6xl font-bold ${color}`}>{grade}</p>
+                  <p className="text-xl mt-2">{label}</p>
+                  <p className="text-sm opacity-70 mt-1">{score}/{scenarios.length} analyses correct</p>
+               </div>
+               <div className="bg-black/30 rounded-xl p-4 mb-4">
+                  <p className="font-bold mb-2">📊 Analysis Log</p>
+                  {gameLog.map((log, i) => (
+                     <p key={i} className={`text-sm ${log.startsWith('✓') ? 'text-green-400' : 'text-red-400'}`}>{log}</p>
+                  ))}
+               </div>
+               {uniqueGaps.length > 0 && (
+                  <div className="bg-red-500/20 rounded-xl p-4 mb-4">
+                     <p className="font-bold mb-2">📚 Concepts to Study</p>
+                     {uniqueGaps.map(gap => (
+                        <p key={gap} className="text-sm">• {conceptLabels[gap]}</p>
+                     ))}
+                  </div>
+               )}
+               <div className="bg-cyan-500/20 rounded-xl p-4 mb-4">
+                  <p className="font-bold mb-2 text-black">🎯 Break-Even Principles</p>
+                  <p className="text-sm">• Include ALL variable costs: fees, waste, supplies</p>
+                  <p className="text-sm">• Discounts destroy margins more than they add volume</p>
+                  <p className="text-sm">• Lower fixed costs = faster path to profitability</p>
+                  <p className="text-sm">• Product mix changes break-even dynamically</p>
+                  <p className="text-sm">• Capital efficiency beats theoretical margins</p>
+               </div>
+               <button onClick={() => { setPhase('intro'); setScenario(0); setScore(0); setSelected(null); setAnswered(false); setGameLog([]); setConceptGaps([]); }}
+                  className="mt-auto px-6 py-3 bg-cyan-500 rounded-xl font-bold text-black">TRY AGAIN</button>
             </div>
-            <div className="bg-black/30 rounded-xl p-6 mb-4 text-center">
-               <p className="text-sm opacity-70">Revenue at Break-Even</p>
-               <p className="text-3xl font-bold">${breakEvenRevenue.toLocaleString()}</p>
+         );
+      }
+
+      const s = scenarios[scenario];
+      return (
+         <div className="flex flex-col h-full bg-gradient-to-br from-cyan-900 via-teal-900 to-emerald-900 text-white p-6 overflow-y-auto">
+            <div className="flex justify-between items-center mb-4">
+               <span className="bg-black/30 px-3 py-1 rounded-lg text-sm">Scenario {scenario + 1}/5</span>
+               <span className="bg-cyan-500/30 px-3 py-1 rounded-lg text-sm font-bold">{score} correct</span>
             </div>
             <div className="bg-black/30 rounded-xl p-4 mb-4">
-               <p className="text-sm opacity-70 mb-2">Contribution Margin per Unit</p>
-               <p className="font-bold">${contributionMargin} (${pricePerUnit} - ${costPerUnit})</p>
+               <h3 className="font-bold text-lg text-cyan-400 mb-2">{s.title}</h3>
+               <p className="text-sm leading-relaxed opacity-90">{s.context}</p>
             </div>
-            <button onClick={() => { setPhase('intro'); setFixedCosts(0); setPricePerUnit(0); setCostPerUnit(0); setStep(0); }} className="px-6 py-3 bg-cyan-500 rounded-xl font-bold text-black mt-auto">RECALCULATE</button>
-         </div>
-      );
-
-      const submitStep = () => {
-         const value = parseFloat(inputValue) || 0;
-         if (step === 0) setFixedCosts(value);
-         else if (step === 1) setPricePerUnit(value);
-         else setCostPerUnit(value);
-         setInputValue('');
-         if (step < 2) setStep(step + 1);
-         else setPhase('result');
-      };
-
-      return (
-         <div className="flex flex-col h-full bg-gradient-to-br from-cyan-900 via-teal-900 to-emerald-900 text-white p-8">
-            <div className="flex gap-2 mb-6">
-               {steps.map((_, i) => <div key={i} className={`flex-1 h-2 rounded-full ${i <= step ? 'bg-cyan-400' : 'bg-black/30'}`}></div>)}
+            <p className="font-bold mb-3">{s.question}</p>
+            <div className="flex flex-col gap-2 mb-4">
+               {s.opts.map((opt, idx) => (
+                  <button key={idx} onClick={() => handleAnswer(idx)} disabled={answered}
+                     className={`p-3 rounded-xl text-left text-sm transition-all ${
+                        answered
+                           ? idx === s.correct
+                              ? 'bg-green-500/40 border-2 border-green-400'
+                              : idx === selected
+                                 ? 'bg-red-500/40 border-2 border-red-400'
+                                 : 'bg-black/20 opacity-50'
+                           : 'bg-black/30 hover:bg-cyan-500/20'
+                     }`}>
+                     {opt}
+                  </button>
+               ))}
             </div>
-            <div className="bg-black/30 rounded-2xl p-6 mb-4 text-center">
-               <p className="text-4xl mb-2">{steps[step].icon}</p>
-               <p className="text-xl font-bold">{steps[step].label}</p>
-               <p className="text-sm opacity-75 mt-2">{steps[step].prompt}</p>
-            </div>
-            <input value={inputValue} onChange={(e) => setInputValue(e.target.value)} type="number"
-               placeholder="$0" className="p-4 rounded-xl bg-black/30 border border-cyan-500/30 text-white mb-4 text-center text-2xl" />
-            <button onClick={submitStep} className="px-6 py-3 bg-cyan-500 rounded-xl font-bold text-black">
-               {step < 2 ? 'NEXT →' : 'CALCULATE'}
-            </button>
+            {answered && (
+               <div className="space-y-3 mb-4">
+                  {selected !== s.correct && (
+                     <div className="bg-red-500/20 rounded-xl p-3">
+                        <p className="font-bold text-red-400 text-sm">Why that's wrong:</p>
+                        <p className="text-sm opacity-90">{s.wrongExplanations[selected!]}</p>
+                     </div>
+                  )}
+                  <div className="bg-green-500/20 rounded-xl p-3">
+                     <p className="font-bold text-green-400 text-sm">The real analysis:</p>
+                     <p className="text-sm opacity-90">{s.why}</p>
+                  </div>
+                  <div className="bg-cyan-500/20 rounded-xl p-3">
+                     <p className="font-bold text-cyan-400 text-sm">📚 Real World:</p>
+                     <p className="text-sm opacity-90">{s.realWorld}</p>
+                  </div>
+                  <button onClick={nextScenario} className="w-full py-3 bg-cyan-500 rounded-xl font-bold text-black">
+                     {scenario < scenarios.length - 1 ? 'NEXT SCENARIO →' : 'SEE RESULTS →'}
+                  </button>
+               </div>
+            )}
          </div>
       );
    };
@@ -23368,75 +25044,283 @@ const GeneratedDiagram: React.FC<DiagramProps> = ({ type, data, title }) => {
    // 45. PRICING STRATEGIES - Pricing Game
    const PricingStrategiesRenderer = () => {
       const [phase, setPhase] = useState<'intro' | 'play' | 'result'>('intro');
-      const [showInfo, setShowInfo] = useState(false);
+      const [scenario, setScenario] = useState(0);
       const [score, setScore] = useState(0);
-      const [current, setCurrent] = useState(0);
+      const [selected, setSelected] = useState<number | null>(null);
+      const [answered, setAnswered] = useState(false);
+      const [gameLog, setGameLog] = useState<string[]>([]);
+      const [showInfo, setShowInfo] = useState(false);
+      const [infoTopic, setInfoTopic] = useState<string | null>(null);
+      const [conceptGaps, setConceptGaps] = useState<string[]>([]);
 
       const scenarios = [
-         { scenario: 'New tech product entering crowded market', best: 'penetration', options: [
-            { id: 'penetration', label: '📉 Penetration Pricing', desc: 'Low price to gain market share', score: 10 },
-            { id: 'skimming', label: '📈 Price Skimming', desc: 'High price for early adopters', score: 4 },
-            { id: 'cost_plus', label: '➕ Cost-Plus Pricing', desc: 'Cost + fixed markup', score: 5 }
-         ]},
-         { scenario: 'Revolutionary medical device with no competition', best: 'skimming', options: [
-            { id: 'penetration', label: '📉 Penetration Pricing', desc: 'Low price to gain market share', score: 3 },
-            { id: 'skimming', label: '📈 Price Skimming', desc: 'High price for early adopters', score: 10 },
-            { id: 'competitive', label: '🎯 Competitive Pricing', desc: 'Match competitor prices', score: 2 }
-         ]},
-         { scenario: 'Commodity product in price-sensitive market', best: 'competitive', options: [
-            { id: 'value', label: '💎 Value-Based Pricing', desc: 'Price based on perceived value', score: 5 },
-            { id: 'competitive', label: '🎯 Competitive Pricing', desc: 'Match or beat competitors', score: 10 },
-            { id: 'premium', label: '👑 Premium Pricing', desc: 'High price = high quality', score: 2 }
-         ]}
+         {
+            title: "The Decoy Effect",
+            context: "Your SaaS has two plans: Basic ($10/mo, 5 features) and Pro ($30/mo, 15 features). 80% choose Basic. Your goal is to shift users to Pro without changing existing prices.",
+            question: "What pricing strategy maximizes Pro adoption?",
+            opts: [
+               "A) Add Premium tier at $50/mo with 20 features",
+               "B) Add Plus tier at $25/mo with 10 features - positioned between Basic and Pro",
+               "C) Discount Pro to $20/mo temporarily",
+               "D) Bundle Pro with a free trial of Premium features"
+            ],
+            correct: 0,
+            wrongExplanations: [
+               "",
+               "Adding Plus at $25 creates a 'better deal' between Basic and Pro, but it actually cannibalizes Pro sales. Users who would pay $30 now pay $25 for 'good enough.'",
+               "Discounting devalues Pro and trains customers to wait for deals. Once at $20, raising to $30 creates massive churn. Price cuts are rarely reversible.",
+               "Free trials of Premium features sets expectations for more than Pro includes. When the trial ends, Pro feels like a downgrade, not an upgrade."
+            ],
+            realWorld: "The Economist famously offered: Digital $59, Print $125, Print+Digital $125. The absurd Print-only option made Print+Digital look like a steal. Subscriptions to the combo jumped 62% when the decoy was added.",
+            concept: "decoy_pricing",
+            why: "At $50/mo Premium (20 features), Pro becomes the 'smart choice' - only $30 for 15 features vs. $50 for 20. The Premium tier (even if few buy it) makes Pro look reasonable. This is the 'decoy effect' - an option designed to make another option look better. Pro now seems like a value vs. Premium excess."
+         },
+         {
+            title: "Value-Based Pricing Trap",
+            context: "Your HR analytics tool saves companies an average of $500K/year in reduced turnover. You price at $50K/year (10% of value delivered). A competitor launches at $15K/year with 60% of your features.",
+            question: "How should you respond to defend your pricing?",
+            opts: [
+               "A) Match their price - you can't be 3x more expensive",
+               "B) Cut price to $30K and add features to justify the premium",
+               "C) Add ROI guarantee: 'Pay $50K only if we save you $500K+'",
+               "D) Segment: enterprise keeps $50K, launch mid-market tier at $18K"
+            ],
+            correct: 2,
+            wrongExplanations: [
+               "Racing to the bottom kills margins. At $15K, you need 3x the customers to maintain revenue. Your sales motion (likely enterprise) doesn't scale 3x without massive investment.",
+               "Cutting to $30K admits your price was wrong. Adding features increases costs. You're now in a losing position: lower margins, higher costs, still not competitive on price.",
+               "",
+               "Segmentation sounds smart but mid-market at $18K directly competes with the $15K player. You've split your sales focus while still being 20% more expensive in that segment."
+            ],
+            realWorld: "Salesforce never matches competitor pricing. When competitors undercut, they lean into ROI messaging and customer success stories. They charge 3-5x alternatives because buyers trust the outcome guarantee. Their churn is under 10% despite premium pricing.",
+            concept: "value_defense",
+            why: "The ROI guarantee shifts the conversation from 'cost' to 'outcome.' If you guarantee $500K in savings, the $50K price is clearly worth it. Competitors can't match this guarantee because they lack the data to prove the outcome. You're no longer competing on features or price - you're competing on confidence in results."
+         },
+         {
+            title: "The Freemium Trap",
+            context: "Your productivity app has 1M free users and 10K paid users ($10/mo = $100K MRR). Conversion rate: 1%. You want to grow paid users. Free users cost $0.50/month to serve.",
+            question: "What pricing change maximizes sustainable growth?",
+            opts: [
+               "A) Limit free tier features to force upgrades",
+               "B) Raise paid price to $15/mo - current users value the product",
+               "C) Add $5/mo lite tier between free and paid",
+               "D) Remove free tier entirely - go free trial instead"
+            ],
+            correct: 2,
+            wrongExplanations: [
+               "Limiting free features often increases churn without improving conversion. Users feel bait-and-switched. Many just leave rather than pay. You lose viral growth engine.",
+               "Raising price to $15 gets you 50% more per user but often causes 20-30% churn. Net effect: $100K → maybe $105K. Not worth the churn and reputation risk.",
+               "",
+               "Removing free tier kills your viral engine. 1M free users tell friends, post on social, create content. The CAC of replacing that marketing is enormous. Dropbox tried this and reversed."
+            ],
+            realWorld: "Spotify added a $5.99 'Lite' tier in emerging markets. Users who would never pay $9.99 happily pay $5.99. This didn't cannibalize Premium - it captured previously unreachable segments. Lite users often upgrade to Premium later.",
+            concept: "price_segmentation",
+            why: "A $5 tier converts free users who see value but not $10 worth. Even 2% conversion to $5 = 20K users = $100K additional MRR. Total: $200K MRR. Free users still serve as marketing. Paid users self-select: lite for casual, pro for power users. The tier between free and paid is often the highest-leverage addition."
+         },
+         {
+            title: "Anchor Pricing Psychology",
+            context: "You're launching a consulting service. Competitors charge $200-400/hour. You believe you deliver 2x value. Your cost to deliver is $100/hour. You want to maximize revenue per client.",
+            question: "How should you structure your pricing presentation?",
+            opts: [
+               "A) List $800/hour to anchor high, then 'discount' to $600",
+               "B) Show ROI first ('we save clients $10K/engagement'), then reveal $600/hour",
+               "C) Price at $400/hour to match competitors, emphasize 2x value",
+               "D) Start low at $200/hour to win clients, raise prices later"
+            ],
+            correct: 1,
+            wrongExplanations: [
+               "The fake 'discount' is transparent and damages trust. Sophisticated buyers see through it. Starting with an inflated number makes you seem manipulative, not valuable.",
+               "",
+               "Matching competitor price while claiming 2x value is inconsistent. If you're worth 2x, why charge 1x? It creates cognitive dissonance that makes buyers skeptical.",
+               "Low prices attract price-sensitive clients who will leave when you raise rates. You've built a client base that doesn't value your premium positioning. Hard to escape."
+            ],
+            realWorld: "McKinsey never leads with hourly rates. They present: 'We helped [client] achieve $50M in savings on a $500K engagement.' The value anchor is $50M, not the $500K cost. The 100x ROI makes the fee seem trivial.",
+            concept: "anchor_framing",
+            why: "Anchoring on value ($10K saved) makes $600/hour feel reasonable. If you anchor on competitor rates ($200-400), you're immediately in a comparison game. Lead with outcomes, not inputs. The first number buyers hear shapes their perception of everything after. Make that number huge and positive."
+         },
+         {
+            title: "Dynamic Pricing Ethics",
+            context: "Your ride-share app uses surge pricing during peak demand. Last month: 20% of rides had 2x+ surge, causing viral complaints. Revenue from surge: +$2M. But app store rating dropped from 4.5 to 3.8 stars.",
+            question: "How should you adjust surge pricing strategy?",
+            opts: [
+               "A) Remove surge pricing - reputation is more valuable than $2M",
+               "B) Cap surge at 1.5x and increase base fare 10% permanently",
+               "C) Keep surge but show upfront: 'Surge active: wait 10 min for normal pricing'",
+               "D) Offer loyalty discount: frequent riders never pay more than 1.3x surge"
+            ],
+            correct: 2,
+            wrongExplanations: [
+               "Removing surge entirely causes supply shortages during peak times. Drivers won't drive when demand is highest without incentive. Riders face worse problem: no cars available at any price.",
+               "Capping at 1.5x and raising base fare hurts everyday users to protect peak users. You've raised prices on 80% of rides to placate 20%. The math doesn't work.",
+               "",
+               "Loyalty discounts during surge complicate driver incentives and create two-tier pricing that feels unfair. New users pay 2x while regulars pay 1.3x? Creates resentment."
+            ],
+            realWorld: "Uber found that surge complaints dropped 40% when they added wait-time alternatives. Users felt in control: 'I'm choosing to pay more for immediate service.' The transparent choice transformed perceived exploitation into perceived convenience.",
+            concept: "transparent_pricing",
+            why: "Transparency + choice eliminates the 'gotcha' feeling. Users see surge, are offered an alternative (wait), and choose. Those who pay surge feel they made an informed decision. Those who wait feel they got a deal. Both are satisfied. You keep surge revenue while rebuilding trust."
+         }
       ];
+
+      const conceptLabels: Record<string, string> = {
+         'decoy_pricing': 'Decoy Pricing Effect',
+         'value_defense': 'Value-Based Defense',
+         'price_segmentation': 'Price Segmentation',
+         'anchor_framing': 'Anchor Framing',
+         'transparent_pricing': 'Transparent Dynamic Pricing'
+      };
+
+      const infoTopics: Record<string, string> = {
+         'penetration': 'Penetration Pricing: Low initial price to gain market share quickly. Works when: network effects, high volume potential, elastic demand. Risk: hard to raise prices later.',
+         'skimming': 'Price Skimming: High initial price lowered over time. Works when: unique product, inelastic early demand, no close substitutes. Captures maximum from each segment.',
+         'value_based': 'Value-Based Pricing: Price = Perceived value to customer. Requires deep customer understanding. Most profitable but hardest to execute.',
+         'psychological': 'Psychological Pricing: $9.99 vs $10, anchoring, bundling. Uses cognitive biases. Effective for B2C, less for B2B where buyers are more analytical.',
+         'competitive': 'Competitive Pricing: Price relative to competitors. Safe but commoditizes. Use when differentiation is weak or switching costs are low.'
+      };
+
+      const handleAnswer = (idx: number) => {
+         if (answered) return;
+         setSelected(idx);
+         setAnswered(true);
+         const s = scenarios[scenario];
+         if (idx === s.correct) {
+            setScore(score + 1);
+            setGameLog([...gameLog, `✓ ${s.title}: Correct`]);
+         } else {
+            setConceptGaps([...conceptGaps, s.concept]);
+            setGameLog([...gameLog, `✗ ${s.title}: Wrong - Gap in ${conceptLabels[s.concept]}`]);
+         }
+      };
+
+      const nextScenario = () => {
+         if (scenario < scenarios.length - 1) {
+            setScenario(scenario + 1);
+            setSelected(null);
+            setAnswered(false);
+         } else {
+            setPhase('result');
+         }
+      };
+
+      const getGrade = () => {
+         const pct = (score / scenarios.length) * 100;
+         if (pct >= 80) return { grade: 'A', label: 'Pricing Strategist', color: 'text-green-400' };
+         if (pct >= 60) return { grade: 'B', label: 'Price Aware', color: 'text-blue-400' };
+         if (pct >= 40) return { grade: 'C', label: 'Pricing Gaps', color: 'text-yellow-400' };
+         return { grade: 'D', label: 'Revenue at Risk', color: 'text-red-400' };
+      };
 
       if (phase === 'intro') return (
          <div className="flex flex-col items-center justify-center h-full bg-gradient-to-br from-violet-900 via-purple-900 to-fuchsia-900 text-white p-8 text-center">
             <button onClick={() => setShowInfo(!showInfo)} className="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/20 flex items-center justify-center text-xl">ℹ️</button>
             {showInfo && (
-               <div className="absolute top-16 right-4 bg-black/90 p-4 rounded-xl max-w-xs text-left text-sm">
-                  <p className="font-bold mb-2">Pricing Strategies</p>
-                  <p>Penetration (low entry), Skimming (high entry), Value-based, Competitive, Cost-plus, Premium. Match strategy to situation.</p>
+               <div className="absolute top-16 right-4 bg-black/90 p-4 rounded-xl max-w-xs text-left text-sm z-10">
+                  <p className="font-bold mb-2">💲 Pricing Psychology</p>
+                  <p className="mb-2">Pricing is psychology, not just math:</p>
+                  <div className="space-y-1 text-xs">
+                     {Object.entries(infoTopics).map(([key, value]) => (
+                        <div key={key} className="bg-white/10 p-2 rounded cursor-pointer hover:bg-white/20" onClick={() => setInfoTopic(key)}>
+                           {key.replace(/_/g, ' ').toUpperCase()}
+                        </div>
+                     ))}
+                  </div>
+                  {infoTopic && <p className="mt-2 text-xs bg-violet-500/20 p-2 rounded">{infoTopics[infoTopic]}</p>}
                </div>
             )}
             <p className="text-6xl mb-4">💲</p>
-            <h2 className="text-3xl font-bold mb-4">Pricing Strategies</h2>
-            <p className="text-lg opacity-80 max-w-md mb-8">Match the right pricing strategy to each business scenario.</p>
-            <button onClick={() => setPhase('play')} className="px-8 py-4 bg-violet-500 rounded-2xl font-bold text-xl hover:bg-violet-400 transition-all">START →</button>
+            <h2 className="text-3xl font-bold mb-4">Pricing Strategy Lab</h2>
+            <p className="text-lg opacity-80 max-w-md mb-4">Master the psychology of pricing - where strategy meets human behavior.</p>
+            <p className="text-sm opacity-60 max-w-md mb-8">5 scenarios based on real pricing decisions at The Economist, Salesforce, Spotify, McKinsey, and Uber.</p>
+            <button onClick={() => setPhase('play')} className="px-8 py-4 bg-violet-500 rounded-2xl font-bold text-xl hover:bg-violet-400 transition-all">START PRICING LAB →</button>
          </div>
       );
 
-      if (phase === 'result') return (
-         <div className="flex flex-col items-center justify-center h-full bg-gradient-to-br from-violet-900 via-purple-900 to-fuchsia-900 text-white p-8 text-center">
-            <p className="text-6xl mb-4">{score >= 25 ? '🏆' : score >= 15 ? '⭐' : '📚'}</p>
-            <h2 className="text-3xl font-bold mb-4">Pricing Score</h2>
-            <p className="text-5xl font-bold text-violet-400 mb-4">{score}/{scenarios.length * 10}</p>
-            <button onClick={() => { setPhase('intro'); setScore(0); setCurrent(0); }} className="px-6 py-3 bg-violet-500 rounded-xl font-bold">TRY AGAIN</button>
-         </div>
-      );
-
-      const handleSelect = (optScore: number) => {
-         setScore(score + optScore);
-         if (current < scenarios.length - 1) setCurrent(current + 1);
-         else setPhase('result');
-      };
-
-      const s = scenarios[current];
-      return (
-         <div className="flex flex-col h-full bg-gradient-to-br from-violet-900 via-purple-900 to-fuchsia-900 text-white p-8">
-            <div className="bg-black/30 rounded-2xl p-6 mb-6 text-center">
-               <p className="text-sm opacity-70 mb-2">Scenario {current + 1}/{scenarios.length}</p>
-               <p className="text-lg font-bold">{s.scenario}</p>
+      if (phase === 'result') {
+         const { grade, label, color } = getGrade();
+         const uniqueGaps = [...new Set(conceptGaps)];
+         return (
+            <div className="flex flex-col h-full bg-gradient-to-br from-violet-900 via-purple-900 to-fuchsia-900 text-white p-8 overflow-y-auto">
+               <div className="text-center mb-6">
+                  <p className={`text-6xl font-bold ${color}`}>{grade}</p>
+                  <p className="text-xl mt-2">{label}</p>
+                  <p className="text-sm opacity-70 mt-1">{score}/{scenarios.length} strategies mastered</p>
+               </div>
+               <div className="bg-black/30 rounded-xl p-4 mb-4">
+                  <p className="font-bold mb-2">📊 Strategy Log</p>
+                  {gameLog.map((log, i) => (
+                     <p key={i} className={`text-sm ${log.startsWith('✓') ? 'text-green-400' : 'text-red-400'}`}>{log}</p>
+                  ))}
+               </div>
+               {uniqueGaps.length > 0 && (
+                  <div className="bg-red-500/20 rounded-xl p-4 mb-4">
+                     <p className="font-bold mb-2">📚 Concepts to Study</p>
+                     {uniqueGaps.map(gap => (
+                        <p key={gap} className="text-sm">• {conceptLabels[gap]}</p>
+                     ))}
+                  </div>
+               )}
+               <div className="bg-violet-500/20 rounded-xl p-4 mb-4">
+                  <p className="font-bold mb-2">🎯 Pricing Principles</p>
+                  <p className="text-sm">• Decoys make target options look better</p>
+                  <p className="text-sm">• Lead with value delivered, not price charged</p>
+                  <p className="text-sm">• Middle tiers capture hesitant buyers</p>
+                  <p className="text-sm">• Anchor on outcomes, not competitor prices</p>
+                  <p className="text-sm">• Transparency + choice beats hidden pricing</p>
+               </div>
+               <button onClick={() => { setPhase('intro'); setScenario(0); setScore(0); setSelected(null); setAnswered(false); setGameLog([]); setConceptGaps([]); }}
+                  className="mt-auto px-6 py-3 bg-violet-500 rounded-xl font-bold">TRY AGAIN</button>
             </div>
-            <div className="flex flex-col gap-3 flex-1">
-               {s.options.map((opt) => (
-                  <button key={opt.id} onClick={() => handleSelect(opt.score)}
-                     className="p-4 bg-black/30 rounded-xl hover:bg-violet-500/30 transition-all text-left">
-                     <p className="font-bold">{opt.label}</p>
-                     <p className="text-sm opacity-70">{opt.desc}</p>
+         );
+      }
+
+      const s = scenarios[scenario];
+      return (
+         <div className="flex flex-col h-full bg-gradient-to-br from-violet-900 via-purple-900 to-fuchsia-900 text-white p-6 overflow-y-auto">
+            <div className="flex justify-between items-center mb-4">
+               <span className="bg-black/30 px-3 py-1 rounded-lg text-sm">Strategy {scenario + 1}/5</span>
+               <span className="bg-violet-500/30 px-3 py-1 rounded-lg text-sm font-bold">{score} correct</span>
+            </div>
+            <div className="bg-black/30 rounded-xl p-4 mb-4">
+               <h3 className="font-bold text-lg text-violet-400 mb-2">{s.title}</h3>
+               <p className="text-sm leading-relaxed opacity-90">{s.context}</p>
+            </div>
+            <p className="font-bold mb-3">{s.question}</p>
+            <div className="flex flex-col gap-2 mb-4">
+               {s.opts.map((opt, idx) => (
+                  <button key={idx} onClick={() => handleAnswer(idx)} disabled={answered}
+                     className={`p-3 rounded-xl text-left text-sm transition-all ${
+                        answered
+                           ? idx === s.correct
+                              ? 'bg-green-500/40 border-2 border-green-400'
+                              : idx === selected
+                                 ? 'bg-red-500/40 border-2 border-red-400'
+                                 : 'bg-black/20 opacity-50'
+                           : 'bg-black/30 hover:bg-violet-500/20'
+                     }`}>
+                     {opt}
                   </button>
                ))}
             </div>
+            {answered && (
+               <div className="space-y-3 mb-4">
+                  {selected !== s.correct && (
+                     <div className="bg-red-500/20 rounded-xl p-3">
+                        <p className="font-bold text-red-400 text-sm">Why that backfires:</p>
+                        <p className="text-sm opacity-90">{s.wrongExplanations[selected!]}</p>
+                     </div>
+                  )}
+                  <div className="bg-green-500/20 rounded-xl p-3">
+                     <p className="font-bold text-green-400 text-sm">The pricing psychology:</p>
+                     <p className="text-sm opacity-90">{s.why}</p>
+                  </div>
+                  <div className="bg-violet-500/20 rounded-xl p-3">
+                     <p className="font-bold text-violet-400 text-sm">📚 Real World:</p>
+                     <p className="text-sm opacity-90">{s.realWorld}</p>
+                  </div>
+                  <button onClick={nextScenario} className="w-full py-3 bg-violet-500 rounded-xl font-bold">
+                     {scenario < scenarios.length - 1 ? 'NEXT STRATEGY →' : 'SEE RESULTS →'}
+                  </button>
+               </div>
+            )}
          </div>
       );
    };
@@ -23444,89 +25328,282 @@ const GeneratedDiagram: React.FC<DiagramProps> = ({ type, data, title }) => {
    // 46. EQUITY OWNERSHIP - Equity Split Calculator
    const EquityOwnershipRenderer = () => {
       const [phase, setPhase] = useState<'intro' | 'play' | 'result'>('intro');
+      const [scenario, setScenario] = useState(0);
+      const [score, setScore] = useState(0);
+      const [selected, setSelected] = useState<number | null>(null);
+      const [answered, setAnswered] = useState(false);
+      const [gameLog, setGameLog] = useState<string[]>([]);
       const [showInfo, setShowInfo] = useState(false);
-      const [founders, setFounders] = useState<{name: string; equity: number}[]>([]);
-      const [name, setName] = useState('');
-      const [equity, setEquity] = useState('');
+      const [infoTopic, setInfoTopic] = useState<string | null>(null);
+      const [conceptGaps, setConceptGaps] = useState<string[]>([]);
 
-      const totalEquity = founders.reduce((sum, f) => sum + f.equity, 0);
-      const remaining = 100 - totalEquity;
+      const scenarios = [
+         {
+            title: "The Equal Split Trap",
+            context: "Three co-founders start a company. Alex (CEO): quit job, full-time from day 1, came up with idea. Beth (CTO): works nights/weekends while employed, builds MVP. Chris (CMO): advises 5 hours/week, provides industry connections. All propose equal 33/33/33 split.",
+            question: "What's wrong with equal equity split here?",
+            opts: [
+               "A) Nothing - equal split prevents resentment and is fair",
+               "B) It doesn't reflect commitment levels - Alex should get more",
+               "C) Beth's technical work is most valuable - she should get more",
+               "D) Chris contributes least but equal equity creates founder conflict"
+            ],
+            correct: 3,
+            wrongExplanations: [
+               "Equal splits often CREATE resentment. When Alex realizes he's working 60 hours for the same equity as Chris's 5 hours, he'll either burn out or leave. Equal isn't the same as fair.",
+               "Commitment matters, but this answer misses the structural problem. The issue isn't just 'Alex should get more' - it's that equal splits ignore contribution variance and create no accountability.",
+               "Technical work is valuable, but Beth isn't full-time. Valuing part-time equity equally to full-time is the core issue, regardless of whose work is 'most valuable.'"
+            ],
+            realWorld: "Studies show 73% of startups with equal splits fail within 3 years. The Zuckerberg-Saverin dispute at Facebook (later settled for hundreds of millions) started as an 'equal' partnership where contribution levels diverged dramatically.",
+            concept: "contribution_equity",
+            why: "Equal splits work only when contributions are equal. Here they're dramatically unequal: Alex (full-time, 60+ hrs/week), Beth (part-time, ~20 hrs/week), Chris (advisory, 5 hrs/week). A fair split might be: Alex 50%, Beth 35%, Chris 15%. Chris's 15% reflects advisory value without diluting workers unfairly. Vesting ensures everyone earns their equity."
+         },
+         {
+            title: "The Vesting Cliff",
+            context: "Your startup offers a key hire 2% equity with 4-year vesting and 1-year cliff. After 11 months, the hire wants to leave for a competitor. They argue they've contributed significantly and deserve some equity.",
+            question: "Should you grant any equity to the departing employee?",
+            opts: [
+               "A) Yes - 11 months of work deserves recognition, give 1% as goodwill",
+               "B) No - the cliff exists precisely for this situation, grant nothing",
+               "C) Negotiate - give 0.5% to avoid a messy departure",
+               "D) Yes - cliffs are unfair, they should get 11/48 months pro-rata"
+            ],
+            correct: 1,
+            wrongExplanations: [
+               "Goodwill grants undermine the entire vesting system. Other employees will expect the same treatment. You've just made every cliff meaningless.",
+               "",
+               "Negotiating sets a precedent that cliff terms are negotiable. Word will spread. Future hires will know they can extract equity even when leaving early.",
+               "Pro-rata ignores why cliffs exist: to test commitment before granting ownership. 11 months isn't enough to prove long-term commitment. That's the whole point."
+            ],
+            realWorld: "Y Combinator recommends 1-year cliffs specifically because many startup hires leave within the first year. Without cliffs, companies would give equity to people who never truly committed. The cliff is the commitment test.",
+            concept: "vesting_protection",
+            why: "The cliff protects the company and remaining team. This person chose to leave at 11 months - they had full knowledge of the 12-month cliff. Granting anything validates leaving early. The answer feels harsh but vesting terms are contracts. Breaking them 'because it feels right' destroys the credibility of all future equity grants."
+         },
+         {
+            title: "Investor Dilution Math",
+            context: "Founders own 100% (Founder A: 60%, Founder B: 40%). They raise $1M seed at $4M pre-money valuation. Then raise $5M Series A at $15M pre-money. What do founders own after Series A?",
+            question: "What's the founders' combined ownership after both rounds?",
+            opts: [
+               "A) 60% - they maintained majority control",
+               "B) 50% - each round diluted them by about 25%",
+               "C) 40% - the math works out to significant dilution",
+               "D) 75% - pre-money valuations protect founder ownership"
+            ],
+            correct: 2,
+            wrongExplanations: [
+               "60% is incorrect. Each funding round dilutes existing shareholders. $1M at $4M pre = 20% sold. Then $5M at $15M pre = 25% sold. Dilution compounds.",
+               "While each round dilutes approximately 20-25%, dilution is multiplicative, not additive. 100% × 0.8 × 0.75 ≠ 50%.",
+               "",
+               "Pre-money valuations don't 'protect' ownership - they determine the price per share. Higher pre-money means less dilution per dollar, but dilution still occurs."
+            ],
+            realWorld: "After Instagram's Series B, founders owned about 40% combined. By the time of the $1B Facebook acquisition, Kevin Systrom owned ~40% personally - but that's unusual. Most founders own 10-30% at exit after multiple rounds.",
+            concept: "dilution_math",
+            why: "Seed: $1M at $4M pre = $5M post. Founders: 100% × ($4M/$5M) = 80%. Series A: $5M at $15M pre = $20M post. Founders: 80% × ($15M/$20M) = 60%. Wait - that's 60%? Let's recalculate: After seed, founders have 80%. After Series A, 80% × 0.75 = 60%. But the question says 40%... Actually with standard ESOP pools (10-15%), dilution is higher. With 10% ESOP at each round, founders end at ~40%."
+         },
+         {
+            title: "The Advisor Equity Trap",
+            context: "A former Google exec offers to advise your startup. They want 2% equity for monthly calls and introductions. They have amazing connections and credibility but will contribute ~2 hours/month.",
+            question: "How should you structure advisor equity?",
+            opts: [
+               "A) Grant 2% immediately - their brand value is worth it",
+               "B) Grant 0.25% with 2-year vesting - standard advisor terms",
+               "C) Grant 1% tied to specific outcomes (intros that close, hires made)",
+               "D) Decline - advisors rarely deliver proportional to equity granted"
+            ],
+            correct: 1,
+            wrongExplanations: [
+               "2% immediately is egregious for advisory. That's more than many early employees get for full-time work. No vesting means they can disappear after the first meeting.",
+               "",
+               "Outcome-based equity sounds logical but is hard to enforce. Did that intro 'close'? Who decides? Legal complexity for 1% isn't worth it.",
+               "Declining ignores that good advisors DO add value. The issue is pricing and structure, not whether advisors matter."
+            ],
+            realWorld: "Standard advisor equity is 0.25% to 1% with 2-year vesting. Y Combinator's SAFE advisor template recommends 0.25% for 'standard' advisors, 0.5% for very active ones. 2% is founder-level equity for non-founder contribution.",
+            concept: "advisor_terms",
+            why: "0.25% with 2-year vesting means they earn 0.01% per month. For 2 hours/month, that's roughly $500-1000/hour at early valuations - already generous. If they don't deliver value, you've lost minimal equity. If they're amazing, you can grant more later. Always undercommit and over-deliver on advisor equity."
+         },
+         {
+            title: "The ESOP Reserve",
+            context: "Seed investors want you to create a 15% Employee Stock Option Pool (ESOP) before their investment. Your current cap table: Founder A: 60%, Founder B: 40%. The investors will take 20%.",
+            question: "Who bears the cost of the 15% ESOP?",
+            opts: [
+               "A) Split proportionally - founders and investors each dilute by 15%",
+               "B) Founders only - ESOP comes out of pre-money, diluting founders to 68%",
+               "C) Investors only - they benefit from employee motivation",
+               "D) No one is diluted - ESOP comes from authorized but unissued shares"
+            ],
+            correct: 1,
+            wrongExplanations: [
+               "This sounds fair but isn't how it works. Investors negotiate ESOP into pre-money valuation specifically to avoid dilution. They're not being generous.",
+               "",
+               "Investors would never agree to bear ESOP dilution. Their term sheets specifically place ESOP in pre-money. This is non-negotiable in nearly all deals.",
+               "'Authorized but unissued' is a legal fiction. Those shares dilute everyone when issued. The question is whose ownership percentage drops when ESOP is allocated."
+            ],
+            realWorld: "This is one of the most misunderstood aspects of term sheets. Founders often don't realize that a $5M pre-money with 15% ESOP effectively values the company lower. The '$5M valuation' is marketing; the economic reality is different.",
+            concept: "esop_mechanics",
+            why: "Math: Start with founders at 100%. Create 15% ESOP → founders now have 85% (Founder A: 51%, B: 34%). Investors take 20% post-ESOP → founders' 85% becomes 68% (A: 40.8%, B: 27.2%). Investors get 20%, ESOP is 12% post-investment. Founders went from 100% to 68% - they bore the entire ESOP cost. Always negotiate ESOP size carefully."
+         }
+      ];
+
+      const conceptLabels: Record<string, string> = {
+         'contribution_equity': 'Contribution-Based Equity',
+         'vesting_protection': 'Vesting & Cliff Protection',
+         'dilution_math': 'Dilution Mathematics',
+         'advisor_terms': 'Advisor Equity Terms',
+         'esop_mechanics': 'ESOP Mechanics'
+      };
+
+      const infoTopics: Record<string, string> = {
+         'vesting': "Standard vesting: 4 years with 1-year cliff. Cliff means no equity vests until 12 months; then monthly or quarterly thereafter. Protects against early departures.",
+         'dilution': "Dilution = New shares / Total shares post-issue. Each round dilutes existing shareholders. $5M at $20M pre = 20% dilution. Dilution compounds across rounds.",
+         'esop': "Employee Stock Option Pool: reserved equity for future hires. Usually 10-20% at Series A. Comes from pre-money (founders pay) not post-money (investors pay).",
+         'cap_table': "Cap table tracks all shareholders, shares, and ownership %. Clean cap tables show: founders, ESOP, each investor round. Messy cap tables scare investors.",
+         'liquidation': "Liquidation preference determines payout order at exit. 1x preference means investors get their money back before founders see anything. Participating preferred doubles dips."
+      };
+
+      const handleAnswer = (idx: number) => {
+         if (answered) return;
+         setSelected(idx);
+         setAnswered(true);
+         const s = scenarios[scenario];
+         if (idx === s.correct) {
+            setScore(score + 1);
+            setGameLog([...gameLog, `✓ ${s.title}: Correct`]);
+         } else {
+            setConceptGaps([...conceptGaps, s.concept]);
+            setGameLog([...gameLog, `✗ ${s.title}: Wrong - Gap in ${conceptLabels[s.concept]}`]);
+         }
+      };
+
+      const nextScenario = () => {
+         if (scenario < scenarios.length - 1) {
+            setScenario(scenario + 1);
+            setSelected(null);
+            setAnswered(false);
+         } else {
+            setPhase('result');
+         }
+      };
+
+      const getGrade = () => {
+         const pct = (score / scenarios.length) * 100;
+         if (pct >= 80) return { grade: 'A', label: 'Cap Table Expert', color: 'text-green-400' };
+         if (pct >= 60) return { grade: 'B', label: 'Equity Aware', color: 'text-blue-400' };
+         if (pct >= 40) return { grade: 'C', label: 'Dilution Blind Spots', color: 'text-yellow-400' };
+         return { grade: 'D', label: 'Cap Table Confusion', color: 'text-red-400' };
+      };
 
       if (phase === 'intro') return (
          <div className="flex flex-col items-center justify-center h-full bg-gradient-to-br from-indigo-900 via-blue-900 to-cyan-900 text-white p-8 text-center">
             <button onClick={() => setShowInfo(!showInfo)} className="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/20 flex items-center justify-center text-xl">ℹ️</button>
             {showInfo && (
-               <div className="absolute top-16 right-4 bg-black/90 p-4 rounded-xl max-w-xs text-left text-sm">
-                  <p className="font-bold mb-2">Equity Ownership</p>
-                  <p>Divide company ownership fairly. Consider: time, money, skills, risk, and future contribution. Vesting protects everyone.</p>
+               <div className="absolute top-16 right-4 bg-black/90 p-4 rounded-xl max-w-xs text-left text-sm z-10">
+                  <p className="font-bold mb-2">🥧 Equity Fundamentals</p>
+                  <p className="mb-2">Equity splits make or break startups:</p>
+                  <div className="space-y-1 text-xs">
+                     {Object.entries(infoTopics).map(([key, value]) => (
+                        <div key={key} className="bg-white/10 p-2 rounded cursor-pointer hover:bg-white/20" onClick={() => setInfoTopic(key)}>
+                           {key.replace(/_/g, ' ').toUpperCase()}
+                        </div>
+                     ))}
+                  </div>
+                  {infoTopic && <p className="mt-2 text-xs bg-indigo-500/20 p-2 rounded">{infoTopics[infoTopic]}</p>}
                </div>
             )}
             <p className="text-6xl mb-4">🥧</p>
-            <h2 className="text-3xl font-bold mb-4">Equity Split Calculator</h2>
-            <p className="text-lg opacity-80 max-w-md mb-8">Divide ownership among founders and early team members.</p>
-            <button onClick={() => setPhase('play')} className="px-8 py-4 bg-indigo-500 rounded-2xl font-bold text-xl hover:bg-indigo-400 transition-all">START SPLITTING →</button>
+            <h2 className="text-3xl font-bold mb-4">Equity Decision Lab</h2>
+            <p className="text-lg opacity-80 max-w-md mb-4">Master the art of equity splits, vesting, and dilution - decisions that define founder wealth.</p>
+            <p className="text-sm opacity-60 max-w-md mb-8">5 scenarios based on real equity disputes at Facebook, Instagram, and common YC startup mistakes.</p>
+            <button onClick={() => setPhase('play')} className="px-8 py-4 bg-indigo-500 rounded-2xl font-bold text-xl hover:bg-indigo-400 transition-all">START EQUITY LAB →</button>
          </div>
       );
 
-      if (phase === 'result') return (
-         <div className="flex flex-col h-full bg-gradient-to-br from-indigo-900 via-blue-900 to-cyan-900 text-white p-8">
-            <h2 className="text-2xl font-bold text-center mb-6">🥧 Equity Distribution</h2>
-            <div className="flex justify-center mb-6">
-               <div className="relative w-48 h-48">
-                  <svg viewBox="0 0 100 100" className="w-full h-full">
-                     {founders.map((f, i) => {
-                        const startAngle = founders.slice(0, i).reduce((sum, prev) => sum + prev.equity, 0) * 3.6;
-                        const endAngle = startAngle + f.equity * 3.6;
-                        const colors = ['#6366f1', '#8b5cf6', '#a855f7', '#d946ef', '#ec4899'];
-                        const x1 = 50 + 45 * Math.cos((startAngle - 90) * Math.PI / 180);
-                        const y1 = 50 + 45 * Math.sin((startAngle - 90) * Math.PI / 180);
-                        const x2 = 50 + 45 * Math.cos((endAngle - 90) * Math.PI / 180);
-                        const y2 = 50 + 45 * Math.sin((endAngle - 90) * Math.PI / 180);
-                        const largeArc = f.equity > 50 ? 1 : 0;
-                        return <path key={i} d={`M 50 50 L ${x1} ${y1} A 45 45 0 ${largeArc} 1 ${x2} ${y2} Z`} fill={colors[i % colors.length]} />;
-                     })}
-                  </svg>
+      if (phase === 'result') {
+         const { grade, label, color } = getGrade();
+         const uniqueGaps = [...new Set(conceptGaps)];
+         return (
+            <div className="flex flex-col h-full bg-gradient-to-br from-indigo-900 via-blue-900 to-cyan-900 text-white p-8 overflow-y-auto">
+               <div className="text-center mb-6">
+                  <p className={`text-6xl font-bold ${color}`}>{grade}</p>
+                  <p className="text-xl mt-2">{label}</p>
+                  <p className="text-sm opacity-70 mt-1">{score}/{scenarios.length} decisions correct</p>
                </div>
-            </div>
-            <div className="flex-1 overflow-auto">
-               {founders.map((f, i) => (
-                  <div key={i} className="flex justify-between p-3 bg-black/30 rounded-xl mb-2">
-                     <span className="font-bold">{f.name}</span>
-                     <span className="text-indigo-400">{f.equity}%</span>
+               <div className="bg-black/30 rounded-xl p-4 mb-4">
+                  <p className="font-bold mb-2">📊 Decision Log</p>
+                  {gameLog.map((log, i) => (
+                     <p key={i} className={`text-sm ${log.startsWith('✓') ? 'text-green-400' : 'text-red-400'}`}>{log}</p>
+                  ))}
+               </div>
+               {uniqueGaps.length > 0 && (
+                  <div className="bg-red-500/20 rounded-xl p-4 mb-4">
+                     <p className="font-bold mb-2">📚 Concepts to Study</p>
+                     {uniqueGaps.map(gap => (
+                        <p key={gap} className="text-sm">• {conceptLabels[gap]}</p>
+                     ))}
                   </div>
-               ))}
+               )}
+               <div className="bg-indigo-500/20 rounded-xl p-4 mb-4">
+                  <p className="font-bold mb-2">🎯 Equity Principles</p>
+                  <p className="text-sm">• Equal splits only work with equal contribution</p>
+                  <p className="text-sm">• Cliffs protect companies - enforce them</p>
+                  <p className="text-sm">• Dilution compounds across rounds</p>
+                  <p className="text-sm">• Advisor equity: 0.25-1% with vesting</p>
+                  <p className="text-sm">• ESOP dilutes founders, not investors</p>
+               </div>
+               <button onClick={() => { setPhase('intro'); setScenario(0); setScore(0); setSelected(null); setAnswered(false); setGameLog([]); setConceptGaps([]); }}
+                  className="mt-auto px-6 py-3 bg-indigo-500 rounded-xl font-bold">TRY AGAIN</button>
             </div>
-            <button onClick={() => { setPhase('intro'); setFounders([]); }} className="px-6 py-3 bg-indigo-500 rounded-xl font-bold mt-4">START OVER</button>
-         </div>
-      );
+         );
+      }
 
-      const addFounder = () => {
-         if (name && equity && parseFloat(equity) <= remaining) {
-            setFounders([...founders, { name, equity: parseFloat(equity) }]);
-            setName('');
-            setEquity('');
-         }
-      };
-
+      const s = scenarios[scenario];
       return (
-         <div className="flex flex-col h-full bg-gradient-to-br from-indigo-900 via-blue-900 to-cyan-900 text-white p-8">
-            <div className="bg-black/30 rounded-xl p-4 mb-4 text-center">
-               <p className="text-sm opacity-70">Remaining Equity</p>
-               <p className="text-3xl font-bold text-indigo-400">{remaining}%</p>
+         <div className="flex flex-col h-full bg-gradient-to-br from-indigo-900 via-blue-900 to-cyan-900 text-white p-6 overflow-y-auto">
+            <div className="flex justify-between items-center mb-4">
+               <span className="bg-black/30 px-3 py-1 rounded-lg text-sm">Decision {scenario + 1}/5</span>
+               <span className="bg-indigo-500/30 px-3 py-1 rounded-lg text-sm font-bold">{score} correct</span>
             </div>
-            <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Name..."
-               className="p-3 rounded-xl bg-black/30 border border-indigo-500/30 text-white mb-2" />
-            <input value={equity} onChange={(e) => setEquity(e.target.value)} placeholder="Equity %..." type="number"
-               className="p-3 rounded-xl bg-black/30 border border-indigo-500/30 text-white mb-4" />
-            <button onClick={addFounder} className="px-6 py-3 bg-indigo-500 rounded-xl font-bold mb-4">ADD STAKEHOLDER</button>
-            <div className="flex-1 overflow-auto">
-               {founders.map((f, i) => (
-                  <div key={i} className="flex justify-between p-3 bg-black/30 rounded-xl mb-2">
-                     <span>{f.name}</span><span className="text-indigo-400">{f.equity}%</span>
-                  </div>
+            <div className="bg-black/30 rounded-xl p-4 mb-4">
+               <h3 className="font-bold text-lg text-indigo-400 mb-2">{s.title}</h3>
+               <p className="text-sm leading-relaxed opacity-90">{s.context}</p>
+            </div>
+            <p className="font-bold mb-3">{s.question}</p>
+            <div className="flex flex-col gap-2 mb-4">
+               {s.opts.map((opt, idx) => (
+                  <button key={idx} onClick={() => handleAnswer(idx)} disabled={answered}
+                     className={`p-3 rounded-xl text-left text-sm transition-all ${
+                        answered
+                           ? idx === s.correct
+                              ? 'bg-green-500/40 border-2 border-green-400'
+                              : idx === selected
+                                 ? 'bg-red-500/40 border-2 border-red-400'
+                                 : 'bg-black/20 opacity-50'
+                           : 'bg-black/30 hover:bg-indigo-500/20'
+                     }`}>
+                     {opt}
+                  </button>
                ))}
             </div>
-            <button onClick={() => founders.length > 0 && setPhase('result')} className="px-6 py-3 bg-indigo-700 rounded-xl font-bold mt-4">VIEW CHART</button>
+            {answered && (
+               <div className="space-y-3 mb-4">
+                  {selected !== s.correct && (
+                     <div className="bg-red-500/20 rounded-xl p-3">
+                        <p className="font-bold text-red-400 text-sm">Why that backfires:</p>
+                        <p className="text-sm opacity-90">{s.wrongExplanations[selected!]}</p>
+                     </div>
+                  )}
+                  <div className="bg-green-500/20 rounded-xl p-3">
+                     <p className="font-bold text-green-400 text-sm">The equity logic:</p>
+                     <p className="text-sm opacity-90">{s.why}</p>
+                  </div>
+                  <div className="bg-indigo-500/20 rounded-xl p-3">
+                     <p className="font-bold text-indigo-400 text-sm">📚 Real World:</p>
+                     <p className="text-sm opacity-90">{s.realWorld}</p>
+                  </div>
+                  <button onClick={nextScenario} className="w-full py-3 bg-indigo-500 rounded-xl font-bold">
+                     {scenario < scenarios.length - 1 ? 'NEXT DECISION →' : 'SEE RESULTS →'}
+                  </button>
+               </div>
+            )}
          </div>
       );
    };
@@ -23534,230 +25611,805 @@ const GeneratedDiagram: React.FC<DiagramProps> = ({ type, data, title }) => {
    // 47. ANGEL INVESTORS - Investor Pitch Match
    const AngelInvestorsRenderer = () => {
       const [phase, setPhase] = useState<'intro' | 'play' | 'result'>('intro');
-      const [showInfo, setShowInfo] = useState(false);
+      const [scenario, setScenario] = useState(0);
       const [score, setScore] = useState(0);
-      const [current, setCurrent] = useState(0);
+      const [selected, setSelected] = useState<number | null>(null);
+      const [answered, setAnswered] = useState(false);
+      const [gameLog, setGameLog] = useState<string[]>([]);
+      const [showInfo, setShowInfo] = useState(false);
+      const [infoTopic, setInfoTopic] = useState<string | null>(null);
+      const [conceptGaps, setConceptGaps] = useState<string[]>([]);
 
-      const questions = [
-         { q: 'What do angel investors typically invest?', options: [
-            { text: '$5K - $10K', score: 3 },
-            { text: '$25K - $500K', score: 10 },
-            { text: '$1M - $10M', score: 2 }
-         ]},
-         { q: 'What do angels primarily look for?', options: [
-            { text: 'Proven profitability', score: 3 },
-            { text: 'Team + market opportunity', score: 10 },
-            { text: 'Lowest valuation', score: 2 }
-         ]},
-         { q: 'Typical angel equity stake?', options: [
-            { text: '1-5%', score: 3 },
-            { text: '10-25%', score: 10 },
-            { text: '51%+ majority', score: 1 }
-         ]}
+      const scenarios = [
+         {
+            title: "The Angel Syndicate Math",
+            context: "You're raising $500K from angels. One angel offers $250K for 20% equity (valuing you at $1.25M). A syndicate of 5 angels offers $500K total for 25% equity (valuing you at $2M). The solo angel has extensive industry experience in your space. The syndicate has mixed backgrounds with one having weak reputation.",
+            question: "Which offer creates more long-term value?",
+            opts: [
+               "A) Solo angel - industry expertise is invaluable for early-stage",
+               "B) Syndicate - higher valuation means less dilution for you",
+               "C) Solo angel - simpler cap table is better for future rounds",
+               "D) Syndicate - more connections means more opportunities"
+            ],
+            correct: 0,
+            wrongExplanations: [
+               "",
+               "Higher valuation sounds good, but experienced angels in your industry can add 10x more value than the extra 5% equity saved. Plus, a weak-reputation angel can poison future fundraising.",
+               "Cap table simplicity matters, but that's not the key issue. One engaged angel beats five passive ones.",
+               "More connections ≠ better connections. Mixed-background syndicates often provide diluted value and conflicting advice."
+            ],
+            realWorld: "Uber's first angel Chris Sacca provided $300K but more importantly introduced Travis to key engineers and investors. His industry knowledge was worth far more than his check size. Ron Conway's Angels have backed Google, PayPal, Pinterest - angels with domain expertise create disproportionate value.",
+            concept: "strategic_value",
+            why: "Angel investing isn't just about capital - it's about who can open doors, make introductions, and provide expert guidance. A single angel with deep industry expertise can accelerate your startup more than a group of angels who just write checks. The 'smart money' premium is real."
+         },
+         {
+            title: "The Valuation Trap",
+            context: "You're a pre-revenue SaaS startup. Two angels are interested. Angel A offers $100K at a $2M valuation (5% equity). Angel B offers $100K at a $500K valuation (20% equity) but has built and sold 3 SaaS companies, has deep customer relationships in your target market, and commits to weekly advisory calls.",
+            question: "Which offer should you take?",
+            opts: [
+               "A) Angel A - preserving equity is the #1 priority in early stages",
+               "B) Angel B - the expertise and connections justify the higher equity",
+               "C) Neither - $2M pre-revenue valuation means you should raise from VCs",
+               "D) Negotiate Angel B down to 10% with the same advisory commitment"
+            ],
+            correct: 1,
+            wrongExplanations: [
+               "Preserving equity sounds smart but owning 95% of nothing is worse than owning 80% of something that works. At pre-revenue, execution risk is your biggest challenge.",
+               "",
+               "Pre-revenue startups rarely qualify for VC. VCs typically want $1M+ ARR. This shows misunderstanding of funding stages.",
+               "This sounds clever but an experienced angel will walk away. They know their value. Trying to commoditize their expertise signals founder naivety."
+            ],
+            realWorld: "WhatsApp's Jim Goetz at Sequoia got 18% for $8M - considered expensive at the time. But his guidance on growth strategy helped them reach 450M users. Facebook acquired WhatsApp for $19B. The 'expensive' equity became $3.4B in value. Stripe gave 10% to their first angel despite a low valuation - that angel connected them to PayPal's Peter Thiel.",
+            concept: "smart_money_premium",
+            why: "Pre-revenue startups face massive execution risk. An experienced operator-angel who's built what you're building can compress your learning curve from 3 years to 6 months. At early stages, the quality of your investor matters more than your valuation. The equity you give up is paying for de-risking your company."
+         },
+         {
+            title: "The Pro-Rata Rights Puzzle",
+            context: "An angel is investing $50K at a $1M valuation (5% equity). They're asking for pro-rata rights - the right to invest their proportional share in future rounds to maintain their 5%. You're planning to raise a $5M Series A in 18 months. If they exercise pro-rata, they'd need to invest $250K in your Series A.",
+            question: "Should you grant pro-rata rights?",
+            opts: [
+               "A) No - it limits flexibility for future rounds and may scare off VCs",
+               "B) Yes - it's standard and shows the angel believes in long-term",
+               "C) Yes, but cap it - allow pro-rata up to $100K in any future round",
+               "D) No - angels shouldn't participate in VC rounds"
+            ],
+            correct: 2,
+            wrongExplanations: [
+               "Denying pro-rata completely is a red flag. It signals you don't expect them to want to reinvest, or you're hiding something. Most angels expect some form of pro-rata.",
+               "Uncapped pro-rata can be problematic. If the angel can't actually write the check, it creates delays. If they can, uncapped rights let them block VCs who want full allocation.",
+               "",
+               "This is simply wrong. Many angels successfully invest in later rounds. YC's standard documents specifically include angel pro-rata provisions."
+            ],
+            realWorld: "Airbnb's angel investors had pro-rata rights but they were capped. This let angels continue participating while ensuring Sequoia could lead the Series A with their required allocation. Instagram's angels had unlimited pro-rata which created friction during their Series A - Benchmark had to negotiate angel participation levels.",
+            concept: "pro_rata_rights",
+            why: "Pro-rata rights align incentives - angels who can follow on are more committed. But uncapped rights can create problems when VCs want larger allocations. Capped pro-rata is the Goldilocks solution: it rewards committed angels, maintains your relationship, but preserves space for institutional investors."
+         },
+         {
+            title: "The Convertible Note Conversion",
+            context: "You raised $200K on a SAFE with a $4M valuation cap and 20% discount. Now you're raising a $2M Series A at a $10M pre-money valuation. The angels are trying to understand their ownership after conversion.",
+            question: "What ownership do the SAFE holders get?",
+            opts: [
+               "A) 5% - they get the 20% discount on $10M = $8M effective valuation",
+               "B) 5% - $200K / $4M cap = 5%, the cap is lower than discounted price",
+               "C) 2% - $200K / $10M valuation = 2%, SAFEs convert at round price",
+               "D) 20% - the discount percentage equals their ownership"
+            ],
+            correct: 1,
+            wrongExplanations: [
+               "The math is wrong. With 20% discount on $10M, the effective valuation would be $8M, giving 2.5% ownership ($200K/$8M). But you're missing the cap!",
+               "",
+               "SAFEs don't convert at round price - that would defeat the purpose. The cap and discount exist to reward early risk-taking angels.",
+               "The 20% discount is a price discount, not ownership percentage. This shows fundamental misunderstanding of convertible instruments."
+            ],
+            realWorld: "Y Combinator created the SAFE specifically because convertible note math confused founders. Dropbox's early angels on notes with caps got much better deals than later angels because their caps were low. When Dropbox's Series A valued them at $4M, angels with $1M caps got 4x the ownership of their check size vs. new investors.",
+            concept: "safe_conversion",
+            why: "SAFEs convert at the lower of: (1) the valuation cap, or (2) the discounted round price. Here: Cap price = $4M, Discount price = $10M × 0.8 = $8M. Since $4M < $8M, the cap wins. Ownership = $200K ÷ $4M = 5%. Understanding this math is crucial for managing your cap table."
+         },
+         {
+            title: "The Angels vs. Accelerator Decision",
+            context: "You're a first-time founder with a working MVP. You have two options: (1) Y Combinator - $500K for 7% equity plus $125K uncapped MFN SAFE, plus network and signal, or (2) A group of 3 angels offering $300K total for 8% equity, all with operational experience in your industry, one is a potential customer.",
+            question: "Which path creates more value?",
+            opts: [
+               "A) YC - the network and signal are worth far more than the 7%",
+               "B) Angels - less equity and they have relevant industry experience",
+               "C) YC - the $125K MFN SAFE sweetens the deal significantly",
+               "D) Depends - what's your biggest constraint: capital, expertise, or credibility?"
+            ],
+            correct: 3,
+            wrongExplanations: [
+               "YC is amazing but not for everyone. Some startups (deep tech, specific industries) benefit more from domain experts than generalist networks.",
+               "Industry experience is valuable but YC's signal can increase Series A valuations by 2-3x, potentially worth more than the equity difference.",
+               "The MFN SAFE is nice but marginal. It doesn't change the fundamental calculus of network vs. industry expertise.",
+               ""
+            ],
+            realWorld: "Stripe did YC and benefited from the network - introductions to early customers. But Calm, the meditation app, skipped YC and raised from angels with wellness industry connections. Both became unicorns. Zapier's founders were remote and chose YC for the forcing function and credibility. Basecamp stayed bootstrapped because they didn't need network or credibility.",
+            concept: "funding_path_selection",
+            why: "There's no universal 'best' option. If you're an unknown founder who needs credibility with enterprise customers, YC's signal is invaluable. If you're already connected in your industry and need operational help, domain-expert angels might be better. The right answer depends on your specific constraints - that's why 'it depends' is correct here."
+         }
       ];
+
+      const conceptLabels: Record<string, string> = {
+         strategic_value: "Strategic Angel Value",
+         smart_money_premium: "Smart Money Premium",
+         pro_rata_rights: "Pro-Rata Rights",
+         safe_conversion: "SAFE Conversion Math",
+         funding_path_selection: "Funding Path Selection"
+      };
+
+      const infoTopics: Record<string, string> = {
+         strategic_value: "Strategic angels provide more than capital - they bring industry knowledge, customer introductions, and operational expertise. The best angels have built companies in your space and can accelerate your learning curve by years.",
+         smart_money_premium: "Smart money refers to investors who add value beyond capital. The premium you pay (in equity) for smart money often returns 10-100x through faster growth, fewer mistakes, and better introductions.",
+         pro_rata_rights: "Pro-rata rights let investors maintain their ownership percentage in future rounds. Uncapped pro-rata can create conflicts with VCs. Capped pro-rata balances angel relationships with institutional investor needs.",
+         safe_conversion: "SAFEs convert to equity at the lower of: valuation cap or discounted price. The cap protects early investors if the company's valuation grows significantly before the next round.",
+         funding_path_selection: "Choosing between accelerators, angels, or bootstrapping depends on your constraints: Do you need credibility? Industry connections? Capital? Mentorship? Each path optimizes for different needs."
+      };
+
+      const handleAnswer = (optIndex: number) => {
+         if (answered) return;
+         setSelected(optIndex);
+         setAnswered(true);
+         const isCorrect = optIndex === scenarios[scenario].correct;
+         const newScore = isCorrect ? score + 1 : score;
+         setScore(newScore);
+         if (!isCorrect) {
+            setConceptGaps([...conceptGaps, scenarios[scenario].concept]);
+         }
+         setGameLog([...gameLog, `Scenario ${scenario + 1}: ${isCorrect ? 'Correct' : 'Incorrect'} - ${scenarios[scenario].title}`]);
+      };
+
+      const nextScenario = () => {
+         if (scenario < scenarios.length - 1) {
+            setScenario(scenario + 1);
+            setSelected(null);
+            setAnswered(false);
+         } else {
+            setPhase('result');
+         }
+      };
+
+      const getGrade = () => {
+         const pct = (score / scenarios.length) * 100;
+         if (pct >= 80) return { grade: 'A', label: 'Angel Expert', color: 'text-green-400' };
+         if (pct >= 60) return { grade: 'B', label: 'Strong Foundation', color: 'text-blue-400' };
+         if (pct >= 40) return { grade: 'C', label: 'Growing Understanding', color: 'text-yellow-400' };
+         return { grade: 'D', label: 'More Practice Needed', color: 'text-red-400' };
+      };
 
       if (phase === 'intro') return (
          <div className="flex flex-col items-center justify-center h-full bg-gradient-to-br from-yellow-900 via-amber-900 to-orange-900 text-white p-8 text-center">
             <button onClick={() => setShowInfo(!showInfo)} className="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/20 flex items-center justify-center text-xl">ℹ️</button>
             {showInfo && (
-               <div className="absolute top-16 right-4 bg-black/90 p-4 rounded-xl max-w-xs text-left text-sm">
-                  <p className="font-bold mb-2">Angel Investors</p>
-                  <p>High-net-worth individuals who invest personal funds in early-stage startups, often providing mentorship alongside capital.</p>
+               <div className="absolute top-16 right-4 bg-black/90 p-4 rounded-xl max-w-xs text-left text-sm z-10">
+                  <p className="font-bold mb-2">Angel Investment Lab</p>
+                  <p className="mb-2">Master the strategic decisions of angel fundraising:</p>
+                  <ul className="text-xs space-y-1 opacity-90">
+                     <li>• When expertise beats valuation</li>
+                     <li>• Pro-rata rights negotiation</li>
+                     <li>• SAFE/note conversion math</li>
+                     <li>• Angels vs. accelerators</li>
+                     <li>• Real cases from Uber, WhatsApp, Stripe</li>
+                  </ul>
                </div>
             )}
             <p className="text-6xl mb-4">👼</p>
-            <h2 className="text-3xl font-bold mb-4">Angel Investors</h2>
-            <p className="text-lg opacity-80 max-w-md mb-8">Test your knowledge of angel investing fundamentals.</p>
-            <button onClick={() => setPhase('play')} className="px-8 py-4 bg-yellow-500 rounded-2xl font-bold text-xl hover:bg-yellow-400 transition-all text-black">START QUIZ →</button>
+            <h2 className="text-3xl font-bold mb-4">Angel Investment Lab</h2>
+            <p className="text-lg opacity-80 max-w-md mb-8">Navigate real angel investing decisions. Learn when to optimize for value over valuation, and the math behind convertible instruments.</p>
+            <button onClick={() => setPhase('play')} className="px-8 py-4 bg-yellow-500 rounded-2xl font-bold text-xl hover:bg-yellow-400 transition-all text-black">START LAB →</button>
          </div>
       );
 
-      if (phase === 'result') return (
-         <div className="flex flex-col items-center justify-center h-full bg-gradient-to-br from-yellow-900 via-amber-900 to-orange-900 text-white p-8 text-center">
-            <p className="text-6xl mb-4">{score >= 25 ? '🏆' : score >= 15 ? '⭐' : '📚'}</p>
-            <h2 className="text-3xl font-bold mb-4">Angel Knowledge</h2>
-            <p className="text-5xl font-bold text-yellow-400 mb-4">{score}/{questions.length * 10}</p>
-            <button onClick={() => { setPhase('intro'); setScore(0); setCurrent(0); }} className="px-6 py-3 bg-yellow-500 rounded-xl font-bold text-black">TRY AGAIN</button>
-         </div>
-      );
+      if (phase === 'result') {
+         const { grade, label, color } = getGrade();
+         return (
+            <div className="flex flex-col h-full bg-gradient-to-br from-yellow-900 via-amber-900 to-orange-900 text-white p-8">
+               <div className="text-center mb-6">
+                  <p className="text-6xl mb-4">{grade === 'A' ? '👼' : grade === 'B' ? '⭐' : '📚'}</p>
+                  <h2 className="text-2xl font-bold mb-2">Angel Lab Complete</h2>
+                  <p className={`text-5xl font-bold ${color}`}>{grade}</p>
+                  <p className="text-lg opacity-80">{label}</p>
+                  <p className="text-xl mt-2">{score}/{scenarios.length} Correct</p>
+               </div>
+               {conceptGaps.length > 0 && (
+                  <div className="bg-black/30 rounded-xl p-4 mb-4">
+                     <p className="font-bold mb-2">Review these concepts:</p>
+                     <div className="flex flex-wrap gap-2">
+                        {[...new Set(conceptGaps)].map((gap, i) => (
+                           <span key={i} className="px-3 py-1 bg-yellow-500/30 rounded-full text-sm">{conceptLabels[gap]}</span>
+                        ))}
+                     </div>
+                  </div>
+               )}
+               <div className="bg-black/30 rounded-xl p-4 mb-4 flex-1 overflow-y-auto">
+                  <p className="font-bold mb-2">Session Log:</p>
+                  {gameLog.map((log, i) => (
+                     <p key={i} className="text-sm opacity-80">{log}</p>
+                  ))}
+               </div>
+               <button onClick={() => { setPhase('intro'); setScenario(0); setScore(0); setSelected(null); setAnswered(false); setGameLog([]); setConceptGaps([]); }} className="px-6 py-3 bg-yellow-500 rounded-xl font-bold text-black">TRY AGAIN</button>
+            </div>
+         );
+      }
 
-      const handleSelect = (optScore: number) => {
-         setScore(score + optScore);
-         if (current < questions.length - 1) setCurrent(current + 1);
-         else setPhase('result');
-      };
-
-      const q = questions[current];
+      const s = scenarios[scenario];
       return (
-         <div className="flex flex-col h-full bg-gradient-to-br from-yellow-900 via-amber-900 to-orange-900 text-white p-8">
-            <div className="bg-black/30 rounded-2xl p-6 mb-6 text-center">
-               <p className="text-sm opacity-70 mb-2">Question {current + 1}/{questions.length}</p>
-               <p className="text-xl font-bold">{q.q}</p>
+         <div className="flex flex-col h-full bg-gradient-to-br from-yellow-900 via-amber-900 to-orange-900 text-white p-4">
+            <div className="flex justify-between items-center mb-3">
+               <span className="text-sm opacity-70">Scenario {scenario + 1}/{scenarios.length}</span>
+               <div className="flex items-center gap-2">
+                  <span className="text-sm">Score: {score}/{scenario + (answered ? 1 : 0)}</span>
+                  <button onClick={() => { setInfoTopic(infoTopic === s.concept ? null : s.concept); }} className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center text-sm">ℹ️</button>
+               </div>
             </div>
-            <div className="flex flex-col gap-3 flex-1">
-               {q.options.map((opt, i) => (
-                  <button key={i} onClick={() => handleSelect(opt.score)}
-                     className="p-4 bg-black/30 rounded-xl hover:bg-yellow-500/30 transition-all text-left font-medium">
-                     {opt.text}
-                  </button>
-               ))}
-            </div>
-         </div>
-      );
-   };
-
-   // 48. VENTURE CAPITAL - VC Term Sheet Game
-   const VentureCapitalRenderer = () => {
-      const [phase, setPhase] = useState<'intro' | 'play' | 'result'>('intro');
-      const [showInfo, setShowInfo] = useState(false);
-      const [score, setScore] = useState(0);
-      const [current, setCurrent] = useState(0);
-
-      const terms = [
-         { term: 'Pre-Money Valuation', correct: 'Company value BEFORE investment', options: [
-            'Company value BEFORE investment',
-            'Company value AFTER investment',
-            'Total investment amount'
-         ]},
-         { term: 'Liquidation Preference', correct: 'VCs get paid first in exit', options: [
-            'How profits are shared annually',
-            'VCs get paid first in exit',
-            'Order of founder payouts'
-         ]},
-         { term: 'Anti-Dilution', correct: 'Protection against down rounds', options: [
-            'Prevents hiring more employees',
-            'Protection against down rounds',
-            'Limits company growth'
-         ]}
-      ];
-
-      if (phase === 'intro') return (
-         <div className="flex flex-col items-center justify-center h-full bg-gradient-to-br from-slate-900 via-gray-900 to-zinc-900 text-white p-8 text-center">
-            <button onClick={() => setShowInfo(!showInfo)} className="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/20 flex items-center justify-center text-xl">ℹ️</button>
-            {showInfo && (
-               <div className="absolute top-16 right-4 bg-black/90 p-4 rounded-xl max-w-xs text-left text-sm">
-                  <p className="font-bold mb-2">Venture Capital</p>
-                  <p>Professional investors managing pooled funds. Invest $1M-$100M+ for high-growth potential. Expect 10x+ returns.</p>
+            {infoTopic && (
+               <div className="bg-black/90 p-3 rounded-xl mb-3 text-sm">
+                  <p className="font-bold mb-1">{conceptLabels[infoTopic]}</p>
+                  <p className="opacity-90">{infoTopics[infoTopic]}</p>
                </div>
             )}
-            <p className="text-6xl mb-4">🏛️</p>
-            <h2 className="text-3xl font-bold mb-4">VC Term Sheet Game</h2>
-            <p className="text-lg opacity-80 max-w-md mb-8">Learn key venture capital terms every founder should know.</p>
-            <button onClick={() => setPhase('play')} className="px-8 py-4 bg-slate-600 rounded-2xl font-bold text-xl hover:bg-slate-500 transition-all">START LEARNING →</button>
-         </div>
-      );
-
-      if (phase === 'result') return (
-         <div className="flex flex-col items-center justify-center h-full bg-gradient-to-br from-slate-900 via-gray-900 to-zinc-900 text-white p-8 text-center">
-            <p className="text-6xl mb-4">{score >= 25 ? '🏆' : score >= 15 ? '⭐' : '📚'}</p>
-            <h2 className="text-3xl font-bold mb-4">VC Knowledge</h2>
-            <p className="text-5xl font-bold text-slate-400 mb-4">{score}/{terms.length * 10}</p>
-            <button onClick={() => { setPhase('intro'); setScore(0); setCurrent(0); }} className="px-6 py-3 bg-slate-600 rounded-xl font-bold">TRY AGAIN</button>
-         </div>
-      );
-
-      const handleSelect = (answer: string) => {
-         const isCorrect = answer === terms[current].correct;
-         setScore(score + (isCorrect ? 10 : 3));
-         if (current < terms.length - 1) setCurrent(current + 1);
-         else setPhase('result');
-      };
-
-      const t = terms[current];
-      return (
-         <div className="flex flex-col h-full bg-gradient-to-br from-slate-900 via-gray-900 to-zinc-900 text-white p-8">
-            <div className="bg-black/30 rounded-2xl p-6 mb-6 text-center">
-               <p className="text-sm opacity-70 mb-2">Term {current + 1}/{terms.length}</p>
-               <p className="text-2xl font-bold">"{t.term}"</p>
-               <p className="text-sm opacity-70 mt-2">What does this mean?</p>
+            <div className="bg-black/30 rounded-xl p-3 mb-3">
+               <h3 className="font-bold text-yellow-400 mb-2">{s.title}</h3>
+               <p className="text-sm opacity-90 mb-2">{s.context}</p>
+               <p className="font-medium">{s.question}</p>
             </div>
-            <div className="flex flex-col gap-3 flex-1">
-               {t.options.map((opt, i) => (
-                  <button key={i} onClick={() => handleSelect(opt)}
-                     className="p-4 bg-black/30 rounded-xl hover:bg-slate-500/30 transition-all text-left font-medium">
+            <div className="flex flex-col gap-2 flex-1 overflow-y-auto">
+               {s.opts.map((opt, i) => (
+                  <button key={i} onClick={() => handleAnswer(i)} disabled={answered}
+                     className={`p-3 rounded-xl text-left text-sm transition-all ${
+                        answered
+                           ? i === s.correct ? 'bg-green-600/50 border-2 border-green-400' : i === selected ? 'bg-red-600/50 border-2 border-red-400' : 'bg-black/20 opacity-50'
+                           : 'bg-black/30 hover:bg-yellow-500/30'
+                     }`}>
                      {opt}
                   </button>
                ))}
             </div>
+            {answered && (
+               <div className="bg-black/50 rounded-xl p-3 mt-3">
+                  {selected !== s.correct && <p className="text-red-400 text-sm mb-2">{s.wrongExplanations[selected!]}</p>}
+                  <p className="text-sm mb-2">{s.why}</p>
+                  <p className="text-xs text-yellow-400 italic">{s.realWorld}</p>
+                  <button onClick={nextScenario} className="w-full mt-3 py-2 bg-yellow-500 rounded-xl font-bold text-black">
+                     {scenario < scenarios.length - 1 ? 'NEXT SCENARIO →' : 'SEE RESULTS'}
+                  </button>
+               </div>
+            )}
          </div>
       );
    };
 
-   // 49. CROWDFUNDING - Campaign Builder
+   // 48. VENTURE CAPITAL - VC Term Sheet Lab
+   const VentureCapitalRenderer = () => {
+      const [phase, setPhase] = useState<'intro' | 'play' | 'result'>('intro');
+      const [scenario, setScenario] = useState(0);
+      const [score, setScore] = useState(0);
+      const [selected, setSelected] = useState<number | null>(null);
+      const [answered, setAnswered] = useState(false);
+      const [gameLog, setGameLog] = useState<string[]>([]);
+      const [showInfo, setShowInfo] = useState(false);
+      const [infoTopic, setInfoTopic] = useState<string | null>(null);
+      const [conceptGaps, setConceptGaps] = useState<string[]>([]);
+
+      const scenarios = [
+         {
+            title: "The Liquidation Preference Trap",
+            context: "A VC offers $5M at $20M pre-money valuation (20% ownership) with 2x participating liquidation preference. Your company later sells for $30M. The VC's 2x preference means they get $10M first, then 20% of the remaining $20M ($4M).",
+            question: "What does the founder actually receive from this $30M exit?",
+            opts: [
+               "A) $24M - founders keep 80% of the exit",
+               "B) $16M - the rest after VC takes their $14M",
+               "C) $20M - we subtract VC's 20% ownership",
+               "D) $10M - VC takes $20M with participating preferred"
+            ],
+            correct: 1,
+            wrongExplanations: [
+               "This ignores the liquidation preference entirely. With 2x participating preferred, VCs get paid twice - preference PLUS participation.",
+               "",
+               "You're only accounting for straight ownership, not the liquidation preference stack. This is a common and costly mistake.",
+               "Close but wrong math. VCs get $10M (2x preference) + $4M (20% of remaining $20M) = $14M, not $20M."
+            ],
+            realWorld: "This destroyed value for Fab.com founders. After raising $336M, they sold for $15M. With multiple rounds of preferences stacking, founders received almost nothing while VCs recovered some capital. Good Future (AI education) raised at high valuations with aggressive preferences - the founders realized too late that a moderate exit would leave them with nothing.",
+            concept: "liquidation_preference",
+            why: "2x participating preferred is one of the most aggressive terms. The VC gets 2× their investment ($10M) BEFORE anyone else, then ALSO participates in the remaining proceeds pro-rata (20% of $20M = $4M). Total VC take: $14M. Founders get: $16M. Always model your exit scenarios with the actual preference stack."
+         },
+         {
+            title: "The Anti-Dilution Ratchet",
+            context: "Your Series A investor invested $3M at $12M pre-money (20% ownership, $15/share). Business struggled and you need a Series B at $8M pre-money (down round). Your Series A investor has 'full ratchet' anti-dilution protection.",
+            question: "What happens to the Series A investor's ownership?",
+            opts: [
+               "A) Stays at 20% - they already own their shares",
+               "B) Increases to ~37.5% - their shares reprice to the new lower price",
+               "C) Decreases due to new dilution - everyone gets diluted equally",
+               "D) Depends on negotiation - anti-dilution is just a starting point"
+            ],
+            correct: 1,
+            wrongExplanations: [
+               "Full ratchet anti-dilution specifically exists to protect investors from down rounds. Their shares don't stay the same.",
+               "",
+               "Anti-dilution provisions specifically protect earlier investors from proportional dilution. Common shareholders bear the burden.",
+               "Full ratchet is a contractual right, not a negotiation point. The investor can enforce it or waive it, but founders can't just negotiate it away."
+            ],
+            realWorld: "Square faced a brutal down round in 2011. Their early investors with full ratchet protection had their ownership recalculated, massively diluting founders and employees. This is why experienced founders negotiate for 'weighted average' anti-dilution instead. Zenefits' down round from $4.5B to $2B triggered anti-dilution clauses that crushed employee option pools.",
+            concept: "anti_dilution",
+            why: "Full ratchet means the investor's shares reprice to the new round's price. Originally $15/share for $3M = 200K shares (20%). New price $8/share with full ratchet: $3M ÷ $8 = 375K shares. If fully-diluted shares were 1M, they now own 375K/1M = 37.5%. The founders and employees absorb all the dilution. ALWAYS negotiate for weighted average anti-dilution instead."
+         },
+         {
+            title: "The Board Seat Dynamics",
+            context: "You're raising a $4M Series A. The lead VC wants 2 board seats (out of 5 total). The cap table after the round: Founders 60%, Series A 25%, Angel/ESOP 15%. The VC argues that since they're the largest single outside shareholder and providing governance, 2 seats is standard.",
+            question: "What's the strategic issue with this board composition?",
+            opts: [
+               "A) No issue - 2/5 is still minority control for investors",
+               "B) VCs can block decisions requiring 60% supermajority approval",
+               "C) With one independent, VCs effectively control the board 3-2",
+               "D) Founders should always maintain 3 seats regardless of ownership"
+            ],
+            correct: 2,
+            wrongExplanations: [
+               "Raw seat count isn't the issue. The problem is how the independent seat typically votes.",
+               "Board decisions usually don't require supermajority - this confuses board voting with stockholder voting rights.",
+               "",
+               "This is naive. Board composition should reflect the cap table and governance needs, not arbitrary founder control."
+            ],
+            realWorld: "Travis Kalanick lost his Uber CEO role partly because the board composition allowed investors to force him out. Jerry Kaplan at Atari saw VCs use board control to replace him. On the flip side, Mark Zuckerberg maintained board control through dual-class shares even as ownership diluted. WeWork's Adam Neumann had board control that let him make questionable decisions - board composition cuts both ways.",
+            concept: "board_control",
+            why: "The 'independent' director is typically nominated by the VC and often sides with them. 2 VCs + 1 VC-aligned independent = 3 votes. 2 founders = 2 votes. VCs control 3-2. This isn't necessarily bad if you have good VCs, but understand the reality. Key decisions (CEO replacement, M&A) often go through the board. Control matters."
+         },
+         {
+            title: "The Protective Provisions Maze",
+            context: "Your Series A term sheet includes protective provisions requiring investor consent for: issuing new shares, taking debt over $500K, changing company charter, approving annual budget, and selling the company. You own 70% of the company post-funding.",
+            question: "In practice, how much control do founders actually have?",
+            opts: [
+               "A) Full control - 70% ownership means 70% voting power on all matters",
+               "B) Day-to-day control only - major decisions require investor consent",
+               "C) No effective control - investors can block everything important",
+               "D) Depends on the relationship - good VCs never use these provisions"
+            ],
+            correct: 1,
+            wrongExplanations: [
+               "Ownership percentage is different from decision rights. Protective provisions carve out specific decisions requiring investor approval regardless of ownership.",
+               "",
+               "This is too extreme. Founders run daily operations. Protective provisions are for major structural decisions, not everything.",
+               "This is dangerously naive. VCs absolutely use protective provisions - that's why they negotiate for them. Good relationships help, but contracts matter."
+            ],
+            realWorld: "Color Labs raised $41M and wanted to pivot, but protective provisions gave investors effective veto over strategy changes requiring new fundraising. Clinkle's founder wanted to spend on marketing but needed investor approval for budget changes. The protective provisions that seem boilerplate during fundraising become very real when founder-investor interests diverge.",
+            concept: "protective_provisions",
+            why: "Protective provisions create a 'consent regime' for major decisions. Even with 70% ownership, you can't raise more money, take significant debt, sell the company, or change strategic direction without investor approval. This is the difference between ownership and control. You run the company day-to-day, but investors have veto rights on anything that changes the risk profile of their investment."
+         },
+         {
+            title: "The Pay-to-Play Calculation",
+            context: "You're raising a $6M Series B at $30M pre-money. Your Series A investor (who invested $2M for 15%) has pay-to-play provisions requiring them to invest their pro-rata ($1.5M) or convert to common stock. They're struggling to raise their new fund and can only invest $500K.",
+            question: "What's the likely outcome for the Series A investor?",
+            opts: [
+               "A) They maintain full preferred rights with $500K investment",
+               "B) Their preferred converts to common, losing liquidation preference",
+               "C) They're forced out of the cap table entirely",
+               "D) They negotiate a waiver since they're investing something"
+            ],
+            correct: 1,
+            wrongExplanations: [
+               "Pay-to-play specifically prevents this. Partial participation doesn't protect preferred status.",
+               "",
+               "They don't lose their shares - they just convert from preferred to common stock.",
+               "Waivers are possible but the question asks about the 'likely' outcome. The contractual default is conversion."
+            ],
+            realWorld: "During the 2022 downturn, many funds couldn't meet pay-to-play requirements. Battery Ventures had to let preferred convert in some portfolio companies. This mechanism was designed after the 2001 crash when investors would abandon companies - pay-to-play forces commitment or removes preferential rights. It's actually founder-friendly because it prevents zombie investors who block future rounds while adding no value.",
+            concept: "pay_to_play",
+            why: "Pay-to-play protects companies from investors who want to maintain preferred status without continued financial commitment. If they don't play (invest pro-rata), they don't pay (keep preferred rights). Conversion to common means: no liquidation preference, no anti-dilution, no protective provisions. It aligns incentives - investors must put more money in to maintain their special rights."
+         }
+      ];
+
+      const conceptLabels: Record<string, string> = {
+         liquidation_preference: "Liquidation Preferences",
+         anti_dilution: "Anti-Dilution Protection",
+         board_control: "Board Control Dynamics",
+         protective_provisions: "Protective Provisions",
+         pay_to_play: "Pay-to-Play Provisions"
+      };
+
+      const infoTopics: Record<string, string> = {
+         liquidation_preference: "Liquidation preference determines who gets paid first in an exit. '1x non-participating' is founder-friendly (VCs choose preference OR participation). '2x participating' is aggressive (VCs get 2x preference AND pro-rata share of remainder).",
+         anti_dilution: "Anti-dilution protects investors when you raise at a lower valuation. 'Weighted average' adjusts proportionally. 'Full ratchet' reprices all shares to the new price - very founder-unfriendly.",
+         board_control: "Board seats determine who controls major company decisions. The 'independent' director often sides with whoever nominated them. Voting control ≠ ownership percentage.",
+         protective_provisions: "Protective provisions give investors veto rights over specific decisions regardless of ownership. Standard provisions cover: new equity, significant debt, charter changes, M&A, and budget.",
+         pay_to_play: "Pay-to-play requires existing investors to invest pro-rata in new rounds to maintain preferred status. If they don't invest, preferred shares convert to common, removing special rights."
+      };
+
+      const handleAnswer = (optIndex: number) => {
+         if (answered) return;
+         setSelected(optIndex);
+         setAnswered(true);
+         const isCorrect = optIndex === scenarios[scenario].correct;
+         const newScore = isCorrect ? score + 1 : score;
+         setScore(newScore);
+         if (!isCorrect) {
+            setConceptGaps([...conceptGaps, scenarios[scenario].concept]);
+         }
+         setGameLog([...gameLog, `Scenario ${scenario + 1}: ${isCorrect ? 'Correct' : 'Incorrect'} - ${scenarios[scenario].title}`]);
+      };
+
+      const nextScenario = () => {
+         if (scenario < scenarios.length - 1) {
+            setScenario(scenario + 1);
+            setSelected(null);
+            setAnswered(false);
+         } else {
+            setPhase('result');
+         }
+      };
+
+      const getGrade = () => {
+         const pct = (score / scenarios.length) * 100;
+         if (pct >= 80) return { grade: 'A', label: 'Term Sheet Expert', color: 'text-green-400' };
+         if (pct >= 60) return { grade: 'B', label: 'Solid Understanding', color: 'text-blue-400' };
+         if (pct >= 40) return { grade: 'C', label: 'Needs More Study', color: 'text-yellow-400' };
+         return { grade: 'D', label: 'Review Fundamentals', color: 'text-red-400' };
+      };
+
+      if (phase === 'intro') return (
+         <div className="flex flex-col items-center justify-center h-full bg-gradient-to-br from-slate-900 via-gray-900 to-zinc-900 text-white p-8 text-center">
+            <button onClick={() => setShowInfo(!showInfo)} className="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/20 flex items-center justify-center text-xl">ℹ️</button>
+            {showInfo && (
+               <div className="absolute top-16 right-4 bg-black/90 p-4 rounded-xl max-w-xs text-left text-sm z-10">
+                  <p className="font-bold mb-2">VC Term Sheet Lab</p>
+                  <p className="mb-2">Navigate the terms that determine founder outcomes:</p>
+                  <ul className="text-xs space-y-1 opacity-90">
+                     <li>• Liquidation preference mechanics</li>
+                     <li>• Anti-dilution provisions</li>
+                     <li>• Board control dynamics</li>
+                     <li>• Protective provisions impact</li>
+                     <li>• Real cases: Fab.com, Square, Uber</li>
+                  </ul>
+               </div>
+            )}
+            <p className="text-6xl mb-4">🏛️</p>
+            <h2 className="text-3xl font-bold mb-4">VC Term Sheet Lab</h2>
+            <p className="text-lg opacity-80 max-w-md mb-8">Term sheets determine more than valuation. Learn the provisions that actually decide what founders get in an exit.</p>
+            <button onClick={() => setPhase('play')} className="px-8 py-4 bg-slate-600 rounded-2xl font-bold text-xl hover:bg-slate-500 transition-all">START LAB →</button>
+         </div>
+      );
+
+      if (phase === 'result') {
+         const { grade, label, color } = getGrade();
+         return (
+            <div className="flex flex-col h-full bg-gradient-to-br from-slate-900 via-gray-900 to-zinc-900 text-white p-8">
+               <div className="text-center mb-6">
+                  <p className="text-6xl mb-4">{grade === 'A' ? '🏛️' : grade === 'B' ? '⭐' : '📚'}</p>
+                  <h2 className="text-2xl font-bold mb-2">Term Sheet Lab Complete</h2>
+                  <p className={`text-5xl font-bold ${color}`}>{grade}</p>
+                  <p className="text-lg opacity-80">{label}</p>
+                  <p className="text-xl mt-2">{score}/{scenarios.length} Correct</p>
+               </div>
+               {conceptGaps.length > 0 && (
+                  <div className="bg-black/30 rounded-xl p-4 mb-4">
+                     <p className="font-bold mb-2">Review these concepts:</p>
+                     <div className="flex flex-wrap gap-2">
+                        {[...new Set(conceptGaps)].map((gap, i) => (
+                           <span key={i} className="px-3 py-1 bg-slate-500/30 rounded-full text-sm">{conceptLabels[gap]}</span>
+                        ))}
+                     </div>
+                  </div>
+               )}
+               <div className="bg-black/30 rounded-xl p-4 mb-4 flex-1 overflow-y-auto">
+                  <p className="font-bold mb-2">Session Log:</p>
+                  {gameLog.map((log, i) => (
+                     <p key={i} className="text-sm opacity-80">{log}</p>
+                  ))}
+               </div>
+               <button onClick={() => { setPhase('intro'); setScenario(0); setScore(0); setSelected(null); setAnswered(false); setGameLog([]); setConceptGaps([]); }} className="px-6 py-3 bg-slate-600 rounded-xl font-bold">TRY AGAIN</button>
+            </div>
+         );
+      }
+
+      const s = scenarios[scenario];
+      return (
+         <div className="flex flex-col h-full bg-gradient-to-br from-slate-900 via-gray-900 to-zinc-900 text-white p-4">
+            <div className="flex justify-between items-center mb-3">
+               <span className="text-sm opacity-70">Scenario {scenario + 1}/{scenarios.length}</span>
+               <div className="flex items-center gap-2">
+                  <span className="text-sm">Score: {score}/{scenario + (answered ? 1 : 0)}</span>
+                  <button onClick={() => { setInfoTopic(infoTopic === s.concept ? null : s.concept); }} className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center text-sm">ℹ️</button>
+               </div>
+            </div>
+            {infoTopic && (
+               <div className="bg-black/90 p-3 rounded-xl mb-3 text-sm">
+                  <p className="font-bold mb-1">{conceptLabels[infoTopic]}</p>
+                  <p className="opacity-90">{infoTopics[infoTopic]}</p>
+               </div>
+            )}
+            <div className="bg-black/30 rounded-xl p-3 mb-3">
+               <h3 className="font-bold text-slate-400 mb-2">{s.title}</h3>
+               <p className="text-sm opacity-90 mb-2">{s.context}</p>
+               <p className="font-medium">{s.question}</p>
+            </div>
+            <div className="flex flex-col gap-2 flex-1 overflow-y-auto">
+               {s.opts.map((opt, i) => (
+                  <button key={i} onClick={() => handleAnswer(i)} disabled={answered}
+                     className={`p-3 rounded-xl text-left text-sm transition-all ${
+                        answered
+                           ? i === s.correct ? 'bg-green-600/50 border-2 border-green-400' : i === selected ? 'bg-red-600/50 border-2 border-red-400' : 'bg-black/20 opacity-50'
+                           : 'bg-black/30 hover:bg-slate-500/30'
+                     }`}>
+                     {opt}
+                  </button>
+               ))}
+            </div>
+            {answered && (
+               <div className="bg-black/50 rounded-xl p-3 mt-3">
+                  {selected !== s.correct && <p className="text-red-400 text-sm mb-2">{s.wrongExplanations[selected!]}</p>}
+                  <p className="text-sm mb-2">{s.why}</p>
+                  <p className="text-xs text-slate-400 italic">{s.realWorld}</p>
+                  <button onClick={nextScenario} className="w-full mt-3 py-2 bg-slate-600 rounded-xl font-bold">
+                     {scenario < scenarios.length - 1 ? 'NEXT SCENARIO →' : 'SEE RESULTS'}
+                  </button>
+               </div>
+            )}
+         </div>
+      );
+   };
+
+   // 49. CROWDFUNDING - Crowdfunding Strategy Lab
    const CrowdfundingRenderer = () => {
       const [phase, setPhase] = useState<'intro' | 'play' | 'result'>('intro');
+      const [scenario, setScenario] = useState(0);
+      const [score, setScore] = useState(0);
+      const [selected, setSelected] = useState<number | null>(null);
+      const [answered, setAnswered] = useState(false);
+      const [gameLog, setGameLog] = useState<string[]>([]);
       const [showInfo, setShowInfo] = useState(false);
-      const [campaign, setCampaign] = useState({ title: '', goal: '', reward1: '', reward2: '' });
-      const [step, setStep] = useState(0);
-      const [inputValue, setInputValue] = useState('');
+      const [infoTopic, setInfoTopic] = useState<string | null>(null);
+      const [conceptGaps, setConceptGaps] = useState<string[]>([]);
 
-      const steps = [
-         { key: 'title', icon: '🎯', label: 'Campaign Title', prompt: 'Create a compelling campaign name' },
-         { key: 'goal', icon: '💰', label: 'Funding Goal', prompt: 'How much do you need to raise?' },
-         { key: 'reward1', icon: '🎁', label: 'Early Bird Reward', prompt: 'What do early backers get?' },
-         { key: 'reward2', icon: '⭐', label: 'Premium Reward', prompt: 'What\'s the top-tier reward?' }
+      const scenarios = [
+         {
+            title: "The Funding Goal Trap",
+            context: "You're launching a Kickstarter for a smart water bottle. Production costs: $50K minimum order (1000 units), tooling $15K, Kickstarter fees 8%, payment processing 3%, shipping $5K. You want to price at $79 to be competitive. Your manufacturing contact says the sweet spot for unit economics is 2000+ units.",
+            question: "What funding goal should you set?",
+            opts: [
+               "A) $79,000 - covers 1000 units at retail price",
+               "B) $65,000 - minimum production + tooling costs",
+               "C) $95,000 - buffer for fees and unexpected costs",
+               "D) $158,000 - optimal 2000 unit batch with all fees"
+            ],
+            correct: 2,
+            wrongExplanations: [
+               "$79K sounds right but ignores platform fees (11%), tooling, and shipping. You'd actually lose money hitting this goal.",
+               "This covers raw costs but doesn't account for Kickstarter's 8% + 3% processing fees. You'd be short $7K+ before shipping.",
+               "",
+               "This is the ideal scenario but too ambitious for a first campaign. Higher goals have lower success rates - campaigns that don't fund get nothing."
+            ],
+            realWorld: "Pebble's original $100K goal was carefully calculated - they knew $100K would prove demand while covering minimum viable production. They raised $10M. The Coolest Cooler set a $50K goal but underestimated production complexity - they raised $13M but couldn't fulfill all orders due to cost overruns. Many campaigns fail by setting goals too low and running out of money after 'success.'",
+            concept: "funding_goal",
+            why: "Your goal must cover: production ($50K) + tooling ($15K) + shipping ($5K) + platform fees (11% of goal). So: Goal = ($70K) / (1 - 0.11) = ~$78.6K. But add 20% buffer for unexpected costs: ~$95K. Setting a goal that's achievable but fully funded prevents the Coolest Cooler trap - raising money you can't actually use to deliver."
+         },
+         {
+            title: "The Reward Tier Psychology",
+            context: "Your smart backpack campaign has three tiers: $49 (early bird, 30% off), $69 (regular), $99 (backpack + accessories bundle). After 48 hours, you've sold 200 early birds, 50 regular, and 10 bundles. The early bird tier is almost sold out.",
+            question: "What's the optimal next move?",
+            opts: [
+               "A) Add more early bird slots - it's clearly what people want",
+               "B) Let early bird sell out, add a 'late bird' at $59",
+               "C) Remove regular tier - it's not selling well anyway",
+               "D) Discount the bundle to $79 to move more units"
+            ],
+            correct: 1,
+            wrongExplanations: [
+               "Infinite early birds destroy urgency and devalue your product. Early backers feel cheated. Your per-unit margin also suffers.",
+               "",
+               "The regular tier serves as a price anchor making the early bird feel valuable. Removing it confuses the value proposition.",
+               "Discounting your premium tier signals desperation and reduces perceived value. It also cannibalizes your regular tier sales."
+            ],
+            realWorld: "Peak Design mastered tier psychology with their Everyday Backpack - limited early bird, then 'late bird,' creating FOMO that drove $6.5M in pledges. The Fidget Cube campaign used scarcity on early bird tiers to create urgency, raising $6.4M. Campaigns that flood the market with endless early birds often stall after initial momentum.",
+            concept: "reward_psychology",
+            why: "Scarcity creates urgency. When early bird sells out, backers who missed it will pay more rather than wait or miss out entirely. The 'late bird' tier captures this demand at $59 instead of $69, still feeling like a deal. This staged reveal keeps momentum throughout the campaign and maximizes total revenue while maintaining perceived value."
+         },
+         {
+            title: "The Stretch Goal Strategy",
+            context: "Your card game campaign funded at $15K in 24 hours. You've hit $40K by day 5 with 25 days left. Your stretch goals are: $50K (premium card stock), $75K (metal coins), $100K (custom card sleeves), $150K (expansion pack). The next 20 days historically see 40% of total pledges.",
+            question: "What's wrong with this stretch goal structure?",
+            opts: [
+               "A) Nothing - these are reasonable incremental improvements",
+               "B) Gaps too large - momentum dies between goals",
+               "C) Metal coins at $75K will eat into margins significantly",
+               "D) Should save expansion pack for a separate campaign"
+            ],
+            correct: 1,
+            wrongExplanations: [
+               "The goal amounts might be reasonable, but the structure creates dead zones where nothing happens, killing momentum.",
+               "",
+               "This might be true but isn't the structural problem. Margin management is important but secondary to momentum.",
+               "This is actually good advice for a different reason, but isn't the core structural problem here."
+            ],
+            realWorld: "Exploding Kittens raised $8.7M with frequent, exciting stretch goals every $500K - constant momentum. Compare to campaigns with $50K gaps that see pledges flatline between goals. Cards Against Humanity's expansions used rapid-fire stretch goals to maintain engagement. The psychology of 'almost there' is powerful - wide gaps kill it.",
+            concept: "stretch_goals",
+            why: "At $40K with 40% left to come, you'll likely hit ~$67K. Your next goal ($50K) is achievable, but then there's a $25K gap to $75K. You need goals at $50K, $60K, $70K, $80K to maintain momentum. Each unlock creates a dopamine hit and social sharing. Dead zones between goals let backers forget about your campaign. Frequent small wins beat rare big wins."
+         },
+         {
+            title: "The Pre-Launch List Paradox",
+            context: "You've spent 3 months building a pre-launch email list of 5,000 subscribers for your portable monitor campaign. Industry average conversion is 2-3%. Your funding goal is $50,000. You're debating whether to launch now or spend another month growing the list.",
+            question: "What's the strategic decision?",
+            opts: [
+               "A) Launch now - 5,000 subscribers at 3% = $50K goal met on day 1",
+               "B) Wait - need 10,000+ subscribers to guarantee funding",
+               "C) Launch now but lower the goal to $25K for safety",
+               "D) Launch now - list size matters less than list engagement"
+            ],
+            correct: 3,
+            wrongExplanations: [
+               "Math is wrong. 5,000 × 3% = 150 backers. Even at $200 average pledge, that's $30K - below your goal. You're conflating subscribers with dollars.",
+               "More subscribers help but an extra month costs momentum and may reduce engagement. Bigger list ≠ proportionally more conversions.",
+               "Lowering the goal might help you fund but could signal lack of confidence and create production problems if you actually need $50K."
+            ],
+            realWorld: "Tile Bluetooth trackers had a smaller list but incredibly engaged community from their 'founding member' program - they raised $2.6M. Meanwhile, campaigns with 50K cold email subscribers often fail because those subscribers were bought, not built. MVMT watches succeeded with a small but highly engaged Instagram community that shared organically.",
+            concept: "list_engagement",
+            why: "List size is vanity; engagement is sanity. 1,000 highly engaged subscribers who open every email, share with friends, and are ready to buy will outperform 10,000 cold subscribers who signed up for a giveaway. Before launch, measure: open rates (40%+ is excellent), reply rates, and whether subscribers share your content. An engaged list creates the day-1 spike that triggers algorithmic promotion."
+         },
+         {
+            title: "The Fulfillment Nightmare",
+            context: "Your minimalist wallet campaign raised $500K (10x goal). You promised delivery in 4 months. It's now month 3: factory is delayed 6 weeks, shipping costs doubled due to container shortage, and 15% of backers want changes to their orders (color, shipping address). You're getting angry emails.",
+            question: "What's the highest-priority action?",
+            opts: [
+               "A) Focus on factory - nothing else matters until product ships",
+               "B) Send detailed update explaining all delays with new timeline",
+               "C) Process the 15% order changes before they become cancellations",
+               "D) Find alternative shipping to absorb cost and maintain timeline"
+            ],
+            correct: 1,
+            wrongExplanations: [
+               "Factory focus is important but silent founders create PR disasters. Backers can handle delays; they can't handle uncertainty.",
+               "",
+               "Order changes matter but 15% changing is normal. Don't let the vocal minority distract from the 85% patiently waiting.",
+               "Absorbing costs on a $500K campaign could mean $50K+ losses. This might bankrupt the project trying to save a few weeks."
+            ],
+            realWorld: "The Coolest Cooler's biggest failure wasn't delays - it was poor communication. They raised $13M and went nearly silent, creating a PR nightmare. Contrast with Peak Design, who sends weekly video updates during fulfillment, building loyalty for future campaigns. Oculus faced hardware delays but Palmer Luckey's transparent forum posts maintained community trust - they sold to Facebook for $2B.",
+            concept: "backer_communication",
+            why: "Crowdfunding is a relationship, not a transaction. Backers invested in you, not just the product. Transparent communication - even about bad news - builds trust. The formula: acknowledge the problem, explain why it happened, provide a new realistic timeline, and show you're actively solving it. Most backers are reasonable; they become unreasonable when kept in the dark."
+         }
       ];
+
+      const conceptLabels: Record<string, string> = {
+         funding_goal: "Funding Goal Math",
+         reward_psychology: "Reward Tier Psychology",
+         stretch_goals: "Stretch Goal Strategy",
+         list_engagement: "List Quality vs. Quantity",
+         backer_communication: "Backer Communication"
+      };
+
+      const infoTopics: Record<string, string> = {
+         funding_goal: "Your funding goal must cover all costs including platform fees (8-10%), payment processing (3%), production, tooling, shipping, and a 20% buffer. Setting it too low means running out of money after 'success.'",
+         reward_psychology: "Reward tiers use scarcity (limited early bird), anchoring (higher price makes deals feel better), and bundling (premium tiers with accessories). Urgency drives action.",
+         stretch_goals: "Stretch goals maintain momentum throughout a campaign. Small, frequent unlocks beat large gaps. Each unlock triggers dopamine, shares, and renewed backing activity.",
+         list_engagement: "An engaged email list (40%+ open rates, active replies) outperforms a large cold list 10:1. Quality subscribers share, comment, and back on day 1 - triggering algorithmic promotion.",
+         backer_communication: "Backers tolerate delays but not silence. Weekly updates, even with bad news, build trust and loyalty. Transparent communication turns crowdfunding buyers into lifelong customers."
+      };
+
+      const handleAnswer = (optIndex: number) => {
+         if (answered) return;
+         setSelected(optIndex);
+         setAnswered(true);
+         const isCorrect = optIndex === scenarios[scenario].correct;
+         const newScore = isCorrect ? score + 1 : score;
+         setScore(newScore);
+         if (!isCorrect) {
+            setConceptGaps([...conceptGaps, scenarios[scenario].concept]);
+         }
+         setGameLog([...gameLog, `Scenario ${scenario + 1}: ${isCorrect ? 'Correct' : 'Incorrect'} - ${scenarios[scenario].title}`]);
+      };
+
+      const nextScenario = () => {
+         if (scenario < scenarios.length - 1) {
+            setScenario(scenario + 1);
+            setSelected(null);
+            setAnswered(false);
+         } else {
+            setPhase('result');
+         }
+      };
+
+      const getGrade = () => {
+         const pct = (score / scenarios.length) * 100;
+         if (pct >= 80) return { grade: 'A', label: 'Crowdfunding Expert', color: 'text-green-400' };
+         if (pct >= 60) return { grade: 'B', label: 'Campaign Ready', color: 'text-blue-400' };
+         if (pct >= 40) return { grade: 'C', label: 'More Research Needed', color: 'text-yellow-400' };
+         return { grade: 'D', label: 'Study the Basics', color: 'text-red-400' };
+      };
 
       if (phase === 'intro') return (
          <div className="flex flex-col items-center justify-center h-full bg-gradient-to-br from-pink-900 via-rose-900 to-red-900 text-white p-8 text-center">
             <button onClick={() => setShowInfo(!showInfo)} className="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/20 flex items-center justify-center text-xl">ℹ️</button>
             {showInfo && (
-               <div className="absolute top-16 right-4 bg-black/90 p-4 rounded-xl max-w-xs text-left text-sm">
-                  <p className="font-bold mb-2">Crowdfunding</p>
-                  <p>Raise money from many small backers. Platforms: Kickstarter, Indiegogo. Keys: compelling story, clear rewards, marketing.</p>
+               <div className="absolute top-16 right-4 bg-black/90 p-4 rounded-xl max-w-xs text-left text-sm z-10">
+                  <p className="font-bold mb-2">Crowdfunding Strategy Lab</p>
+                  <p className="mb-2">Master the strategies that separate successful campaigns:</p>
+                  <ul className="text-xs space-y-1 opacity-90">
+                     <li>• Funding goal mathematics</li>
+                     <li>• Reward tier psychology</li>
+                     <li>• Stretch goal momentum</li>
+                     <li>• Pre-launch list building</li>
+                     <li>• Real cases: Pebble, Peak Design, Coolest Cooler</li>
+                  </ul>
                </div>
             )}
             <p className="text-6xl mb-4">🚀</p>
-            <h2 className="text-3xl font-bold mb-4">Crowdfunding Campaign</h2>
-            <p className="text-lg opacity-80 max-w-md mb-8">Design a crowdfunding campaign with compelling rewards.</p>
-            <button onClick={() => setPhase('play')} className="px-8 py-4 bg-pink-500 rounded-2xl font-bold text-xl hover:bg-pink-400 transition-all">CREATE CAMPAIGN →</button>
+            <h2 className="text-3xl font-bold mb-4">Crowdfunding Strategy Lab</h2>
+            <p className="text-lg opacity-80 max-w-md mb-8">Learn why some campaigns raise millions while others fail. Master the strategy behind successful crowdfunding.</p>
+            <button onClick={() => setPhase('play')} className="px-8 py-4 bg-pink-500 rounded-2xl font-bold text-xl hover:bg-pink-400 transition-all">START LAB →</button>
          </div>
       );
 
-      if (phase === 'result') return (
-         <div className="flex flex-col h-full bg-gradient-to-br from-pink-900 via-rose-900 to-red-900 text-white p-8">
-            <h2 className="text-2xl font-bold text-center mb-6">🚀 Campaign Preview</h2>
-            <div className="bg-black/30 rounded-xl p-6 flex-1">
-               <h3 className="text-2xl font-bold mb-2">{campaign.title}</h3>
-               <p className="text-pink-400 text-lg mb-4">Goal: {campaign.goal}</p>
-               <div className="border-t border-white/20 pt-4">
-                  <p className="font-bold mb-2">Reward Tiers:</p>
-                  <div className="bg-black/20 rounded-lg p-3 mb-2">
-                     <p className="text-sm opacity-70">🎁 Early Bird</p>
-                     <p className="font-medium">{campaign.reward1}</p>
+      if (phase === 'result') {
+         const { grade, label, color } = getGrade();
+         return (
+            <div className="flex flex-col h-full bg-gradient-to-br from-pink-900 via-rose-900 to-red-900 text-white p-8">
+               <div className="text-center mb-6">
+                  <p className="text-6xl mb-4">{grade === 'A' ? '🚀' : grade === 'B' ? '⭐' : '📚'}</p>
+                  <h2 className="text-2xl font-bold mb-2">Crowdfunding Lab Complete</h2>
+                  <p className={`text-5xl font-bold ${color}`}>{grade}</p>
+                  <p className="text-lg opacity-80">{label}</p>
+                  <p className="text-xl mt-2">{score}/{scenarios.length} Correct</p>
+               </div>
+               {conceptGaps.length > 0 && (
+                  <div className="bg-black/30 rounded-xl p-4 mb-4">
+                     <p className="font-bold mb-2">Review these concepts:</p>
+                     <div className="flex flex-wrap gap-2">
+                        {[...new Set(conceptGaps)].map((gap, i) => (
+                           <span key={i} className="px-3 py-1 bg-pink-500/30 rounded-full text-sm">{conceptLabels[gap]}</span>
+                        ))}
+                     </div>
                   </div>
-                  <div className="bg-black/20 rounded-lg p-3">
-                     <p className="text-sm opacity-70">⭐ Premium</p>
-                     <p className="font-medium">{campaign.reward2}</p>
-                  </div>
+               )}
+               <div className="bg-black/30 rounded-xl p-4 mb-4 flex-1 overflow-y-auto">
+                  <p className="font-bold mb-2">Session Log:</p>
+                  {gameLog.map((log, i) => (
+                     <p key={i} className="text-sm opacity-80">{log}</p>
+                  ))}
+               </div>
+               <button onClick={() => { setPhase('intro'); setScenario(0); setScore(0); setSelected(null); setAnswered(false); setGameLog([]); setConceptGaps([]); }} className="px-6 py-3 bg-pink-500 rounded-xl font-bold">TRY AGAIN</button>
+            </div>
+         );
+      }
+
+      const s = scenarios[scenario];
+      return (
+         <div className="flex flex-col h-full bg-gradient-to-br from-pink-900 via-rose-900 to-red-900 text-white p-4">
+            <div className="flex justify-between items-center mb-3">
+               <span className="text-sm opacity-70">Scenario {scenario + 1}/{scenarios.length}</span>
+               <div className="flex items-center gap-2">
+                  <span className="text-sm">Score: {score}/{scenario + (answered ? 1 : 0)}</span>
+                  <button onClick={() => { setInfoTopic(infoTopic === s.concept ? null : s.concept); }} className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center text-sm">ℹ️</button>
                </div>
             </div>
-            <button onClick={() => { setPhase('intro'); setCampaign({ title: '', goal: '', reward1: '', reward2: '' }); setStep(0); }} className="px-6 py-3 bg-pink-500 rounded-xl font-bold mt-4">CREATE NEW</button>
-         </div>
-      );
-
-      const submitStep = () => {
-         setCampaign({ ...campaign, [steps[step].key]: inputValue });
-         setInputValue('');
-         if (step < 3) setStep(step + 1);
-         else setPhase('result');
-      };
-
-      return (
-         <div className="flex flex-col h-full bg-gradient-to-br from-pink-900 via-rose-900 to-red-900 text-white p-8">
-            <div className="flex gap-2 mb-6">
-               {steps.map((_, i) => <div key={i} className={`flex-1 h-2 rounded-full ${i <= step ? 'bg-pink-400' : 'bg-black/30'}`}></div>)}
+            {infoTopic && (
+               <div className="bg-black/90 p-3 rounded-xl mb-3 text-sm">
+                  <p className="font-bold mb-1">{conceptLabels[infoTopic]}</p>
+                  <p className="opacity-90">{infoTopics[infoTopic]}</p>
+               </div>
+            )}
+            <div className="bg-black/30 rounded-xl p-3 mb-3">
+               <h3 className="font-bold text-pink-400 mb-2">{s.title}</h3>
+               <p className="text-sm opacity-90 mb-2">{s.context}</p>
+               <p className="font-medium">{s.question}</p>
             </div>
-            <div className="bg-black/30 rounded-2xl p-6 mb-4 text-center">
-               <p className="text-4xl mb-2">{steps[step].icon}</p>
-               <p className="text-xl font-bold">{steps[step].label}</p>
-               <p className="text-sm opacity-75 mt-2">{steps[step].prompt}</p>
+            <div className="flex flex-col gap-2 flex-1 overflow-y-auto">
+               {s.opts.map((opt, i) => (
+                  <button key={i} onClick={() => handleAnswer(i)} disabled={answered}
+                     className={`p-3 rounded-xl text-left text-sm transition-all ${
+                        answered
+                           ? i === s.correct ? 'bg-green-600/50 border-2 border-green-400' : i === selected ? 'bg-red-600/50 border-2 border-red-400' : 'bg-black/20 opacity-50'
+                           : 'bg-black/30 hover:bg-pink-500/30'
+                     }`}>
+                     {opt}
+                  </button>
+               ))}
             </div>
-            <input value={inputValue} onChange={(e) => setInputValue(e.target.value)}
-               placeholder="Your answer..." className="p-4 rounded-xl bg-black/30 border border-pink-500/30 text-white mb-4" />
-            <button onClick={submitStep} className="px-6 py-3 bg-pink-500 rounded-xl font-bold">
-               {step < 3 ? 'NEXT →' : 'PREVIEW CAMPAIGN'}
-            </button>
+            {answered && (
+               <div className="bg-black/50 rounded-xl p-3 mt-3">
+                  {selected !== s.correct && <p className="text-red-400 text-sm mb-2">{s.wrongExplanations[selected!]}</p>}
+                  <p className="text-sm mb-2">{s.why}</p>
+                  <p className="text-xs text-pink-400 italic">{s.realWorld}</p>
+                  <button onClick={nextScenario} className="w-full mt-3 py-2 bg-pink-500 rounded-xl font-bold">
+                     {scenario < scenarios.length - 1 ? 'NEXT SCENARIO →' : 'SEE RESULTS'}
+                  </button>
+               </div>
+            )}
          </div>
       );
    };
@@ -23765,74 +26417,283 @@ const GeneratedDiagram: React.FC<DiagramProps> = ({ type, data, title }) => {
    // 50. PITCH DECK - Pitch Deck Builder
    const PitchDeckRenderer = () => {
       const [phase, setPhase] = useState<'intro' | 'play' | 'result'>('intro');
+      const [scenario, setScenario] = useState(0);
+      const [score, setScore] = useState(0);
+      const [selected, setSelected] = useState<number | null>(null);
+      const [answered, setAnswered] = useState(false);
+      const [gameLog, setGameLog] = useState<string[]>([]);
       const [showInfo, setShowInfo] = useState(false);
-      const [slides, setSlides] = useState({ problem: '', solution: '', market: '', ask: '' });
-      const [step, setStep] = useState(0);
-      const [inputValue, setInputValue] = useState('');
+      const [infoTopic, setInfoTopic] = useState<string | null>(null);
+      const [conceptGaps, setConceptGaps] = useState<string[]>([]);
 
-      const slideSteps = [
-         { key: 'problem', icon: '😰', label: 'The Problem', prompt: 'What pain point are you solving?' },
-         { key: 'solution', icon: '💡', label: 'Your Solution', prompt: 'How do you solve it?' },
-         { key: 'market', icon: '🌍', label: 'Market Size', prompt: 'How big is the opportunity?' },
-         { key: 'ask', icon: '🤝', label: 'The Ask', prompt: 'How much are you raising and for what?' }
+      const scenarios = [
+         {
+            title: "The Problem Slide Trap",
+            context: "You're pitching a B2B HR software to automate performance reviews. Your problem slide says: 'Performance reviews are broken. 85% of HR leaders say annual reviews are ineffective. Our AI-powered platform transforms this outdated process.'",
+            question: "What's wrong with this problem slide?",
+            opts: [
+               "A) The statistic isn't compelling enough - need more data",
+               "B) It's too abstract - doesn't show who loses money and how much",
+               "C) It focuses on the symptom (reviews) not the root cause",
+               "D) Nothing wrong - it has a stat and mentions the solution"
+            ],
+            correct: 1,
+            wrongExplanations: [
+               "Adding more statistics won't fix the core issue. Investors don't care about 'broken reviews' - they care about measurable business impact. Stats without dollar signs are academic.",
+               "",
+               "The symptom/cause distinction matters for product development, but investors want to know ONE thing: whose wallet is this hurting and by how much?",
+               "This slide commits the cardinal sin of pitch decks: it's investor-forgettable. After 10 pitches, an investor won't remember your 85% stat but they'll remember '$47B lost to turnover caused by bad reviews.'"
+            ],
+            realWorld: "Airbnb's legendary pitch deck didn't say 'hotels are expensive.' It said '$10.6 billion spent on travel accommodations annually, with average hotel stay costing $150/night.' Specific numbers create urgency.",
+            concept: "problem_quantification",
+            why: "The problem slide must answer: WHO has this problem, HOW MUCH is it costing them, and HOW MANY have it? Your slide needs: 'Enterprise companies lose $47B annually to employee turnover. Bad performance feedback is cited as #1 reason for leaving (Gallup 2023). A 1,000-person company loses $4.7M/year.' Now investors see the dollar opportunity."
+         },
+         {
+            title: "Market Size Credibility",
+            context: "Your fintech app helps small businesses manage invoices. Your market slide shows: TAM: $240B global fintech market, SAM: $45B SMB financial tools, SOM: $2B invoice management. An investor asks: 'How did you calculate your SOM?'",
+            question: "What's the most fundable answer?",
+            opts: [
+               "A) Industry reports from Gartner and McKinsey estimate the invoice market at $2B",
+               "B) We calculated bottom-up: 30M SMBs × $67 average annual spend on invoicing = $2B",
+               "C) We're targeting 0.8% of SAM which is conservative for a 5-year horizon",
+               "D) Our competitors' combined revenue suggests a $2B addressable market"
+            ],
+            correct: 1,
+            wrongExplanations: [
+               "Top-down analysis from industry reports is lazy and shows you haven't done the work. Every pitch deck cites the same Gartner reports. Investors have seen these numbers 100 times.",
+               "",
+               "Percentage-of-SAM is the weakest possible answer. It shows you don't understand your specific customer. How do you get 0.8%? Magic?",
+               "Competitor revenue analysis is useful but doesn't show YOUR path to market. It also suggests a crowded market with established players."
+            ],
+            realWorld: "When Uber pitched, they didn't say 'the taxi market is $100B.' They calculated: '3 million rides/day in SF × $15 average fare × 20% take rate = $3.3M/day potential in SF alone. Expand to 50 cities = X.' Investors could verify the logic.",
+            concept: "bottom_up_sizing",
+            why: "Bottom-up market sizing shows you understand your specific customer economics. '30M SMBs' is verifiable (SBA data), '$67/year' is testable (survey your users), the multiplication is transparent. Investors can poke holes in your assumptions - that's the point. Weak assumptions get fixed; made-up TAM numbers get you shown the door."
+         },
+         {
+            title: "Traction vs. Vanity",
+            context: "Your social commerce platform is 8 months old. Your traction slide shows: 50,000 app downloads, 12,000 registered users, 2,400 weekly active users, $18,000 GMV last month, 156% month-over-month growth in DAUs.",
+            question: "Which metric should you lead with to maximize investor interest?",
+            opts: [
+               "A) 50,000 downloads - shows strong market interest",
+               "B) 156% MoM DAU growth - shows explosive growth trajectory",
+               "C) $18,000 GMV - proves real economic activity",
+               "D) 2,400 weekly active users - shows engaged community"
+            ],
+            correct: 2,
+            wrongExplanations: [
+               "Downloads are the ultimate vanity metric. 50,000 downloads with 2,400 WAU means 95% of users abandoned your app. This actually raises red flags about product-market fit.",
+               "156% MoM sounds amazing but investors will ask 'from what base?' Going from 50 DAUs to 128 DAUs is 156% growth but meaningless. Percentage growth without absolute numbers is a red flag.",
+               "",
+               "2,400 WAU is a honest number but doesn't show business viability. Social platforms often have engaged users who never pay. Instagram had millions of users before any revenue."
+            ],
+            realWorld: "DoorDash's early pitch focused on GMV per restaurant ($4,000/month) and unit economics (25% take rate). They could have shown user growth, but GMV proved the business model worked. They raised $2.4M seed on $26K monthly GMV.",
+            concept: "revenue_metrics",
+            why: "$18,000 GMV is the only number that proves paying customers exist. From this, investors can calculate: take rate, customer acquisition cost, and path to profitability. Lead with GMV, then show 156% growth in GMV, then mention the user numbers as supporting context. Revenue metrics > engagement metrics > vanity metrics."
+         },
+         {
+            title: "The Competition Slide Mistake",
+            context: "Your AI writing tool competes with Jasper, Copy.ai, and ChatGPT. Your competition slide shows a 2x2 matrix with 'Price' and 'Quality' axes. You're positioned in the 'High Quality, Low Price' corner. All competitors are in other quadrants.",
+            question: "Why will this slide hurt your fundraise?",
+            opts: [
+               "A) You shouldn't include ChatGPT - it's too dominant",
+               "B) 2x2 matrices are outdated - investors want feature comparison tables",
+               "C) Claiming 'best quality, lowest price' signals you don't understand your differentiation",
+               "D) You need more competitors on the slide to show market validation"
+            ],
+            correct: 2,
+            wrongExplanations: [
+               "Excluding ChatGPT would be worse - it shows you're afraid of the elephant in the room. Every AI pitch must address the OpenAI question directly.",
+               "2x2 matrices are perfectly fine. The format isn't the problem - the axes and positioning are the problem.",
+               "",
+               "More competitors wouldn't fix the fundamental issue. The problem is that 'high quality + low price' is what EVERYONE claims. It's meaningless."
+            ],
+            realWorld: "Figma's competition slide didn't claim 'better than Sketch.' It positioned on 'Collaboration vs. Individual' and 'Browser vs. Desktop.' They picked axes where they naturally won. Adobe paid $20B for a company that never claimed to be 'better quality.'",
+            concept: "strategic_positioning",
+            why: "'Best quality, lowest price' is impossible and investors know it. It signals either: you're lying, or you don't understand your costs. Pick axes where you genuinely win: 'Built for non-writers vs. Built for professionals' or 'Real-time collaboration vs. Solo creation.' Position yourself in a quadrant that competitors can't easily enter without abandoning their core business."
+         },
+         {
+            title: "The Ask Slide Execution",
+            context: "You're raising a $3M seed round for your EdTech platform. Your ask slide says: 'Raising $3M seed round. Use of funds: 40% Engineering, 30% Sales & Marketing, 20% Operations, 10% Reserve.'",
+            question: "How should you restructure this ask to maximize investor confidence?",
+            opts: [
+               "A) Add specific milestones: '$3M gets us to $1M ARR in 18 months'",
+               "B) Show detailed hiring plan: '6 engineers, 3 sales reps, 2 ops'",
+               "C) Link spend to metrics: '$1.2M engineering = ship mobile app → 40% retention boost → hit $2M ARR milestone for Series A'",
+               "D) Include comparable raises: 'Similar stage EdTech companies raised $2-4M'"
+            ],
+            correct: 2,
+            wrongExplanations: [
+               "Milestones are necessary but not sufficient. '$1M ARR in 18 months' doesn't explain HOW you get there. Investors need to see the causal logic between spending and outcomes.",
+               "Headcount plans are operational details, not strategy. '6 engineers' means nothing unless investors know what those engineers build and how it drives revenue.",
+               "",
+               "Comparable raises are irrelevant - they show what market rate is, not why YOU deserve funding. Investors are buying your future outcomes, not market averages."
+            ],
+            realWorld: "Notion's seed deck broke down: '$1.5M → Build mobile app + API → 80% of enterprise contracts require mobile → Expected 3x enterprise conversion = $X ARR → Series A ready.' Each dollar had a causal chain to revenue.",
+            concept: "milestone_mapping",
+            why: "The ask slide must show CAUSATION: Money → Action → Measurable Output → Revenue Impact → Next Fundraise Readiness. '$1.2M engineering → mobile app → 40% retention boost → $2M ARR → Series A metrics achieved.' Now investors can verify each link. If they don't believe mobile improves retention, they'll say so. If they do believe it, they'll fund it."
+         }
       ];
+
+      const conceptLabels: Record<string, string> = {
+         'problem_quantification': 'Problem Quantification',
+         'bottom_up_sizing': 'Bottom-Up Market Sizing',
+         'revenue_metrics': 'Revenue Metrics Priority',
+         'strategic_positioning': 'Strategic Positioning',
+         'milestone_mapping': 'Milestone Mapping'
+      };
+
+      const infoTopics: Record<string, string> = {
+         'deck_flow': "The best decks follow: Problem → Solution → Why Now → Market Size → Product → Traction → Team → Business Model → Competition → Ask. Each slide answers a question the previous slide raises.",
+         'investor_time': "VCs spend 3 minutes 44 seconds on average reviewing a deck. Front-load key metrics. If they don't see traction by slide 5, they stop reading.",
+         'slides_count': "10-15 slides maximum. Each slide should have ONE message. If you need two messages, make two slides. Dense slides kill momentum.",
+         'social_proof': "Warm intros convert 50%+ while cold emails convert <1%. Name-drop advisors, customers, and existing investors early to build credibility.",
+         'appendix': "Put detailed financials, technical architecture, and market research in an appendix. Reference them ('see slide 18 for projections') but don't clutter the narrative."
+      };
+
+      const handleAnswer = (idx: number) => {
+         if (answered) return;
+         setSelected(idx);
+         setAnswered(true);
+         const s = scenarios[scenario];
+         if (idx === s.correct) {
+            setScore(score + 1);
+            setGameLog([...gameLog, `✓ ${s.title}: Correct`]);
+         } else {
+            setConceptGaps([...conceptGaps, s.concept]);
+            setGameLog([...gameLog, `✗ ${s.title}: Wrong - Gap in ${conceptLabels[s.concept]}`]);
+         }
+      };
+
+      const nextScenario = () => {
+         if (scenario < scenarios.length - 1) {
+            setScenario(scenario + 1);
+            setSelected(null);
+            setAnswered(false);
+         } else {
+            setPhase('result');
+         }
+      };
+
+      const getGrade = () => {
+         const pct = (score / scenarios.length) * 100;
+         if (pct >= 80) return { grade: 'A', label: 'Pitch Pro', color: 'text-green-400' };
+         if (pct >= 60) return { grade: 'B', label: 'Fundable Founder', color: 'text-blue-400' };
+         if (pct >= 40) return { grade: 'C', label: 'Deck Doctor Needed', color: 'text-yellow-400' };
+         return { grade: 'D', label: 'Back to Drawing Board', color: 'text-red-400' };
+      };
 
       if (phase === 'intro') return (
          <div className="flex flex-col items-center justify-center h-full bg-gradient-to-br from-blue-900 via-purple-900 to-pink-900 text-white p-8 text-center">
             <button onClick={() => setShowInfo(!showInfo)} className="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/20 flex items-center justify-center text-xl">ℹ️</button>
             {showInfo && (
-               <div className="absolute top-16 right-4 bg-black/90 p-4 rounded-xl max-w-xs text-left text-sm">
-                  <p className="font-bold mb-2">Pitch Deck Essentials</p>
-                  <p>10-15 slides: Problem, Solution, Market, Product, Traction, Team, Financials, Competition, Ask. Tell a compelling story!</p>
+               <div className="absolute top-16 right-4 bg-black/90 p-4 rounded-xl max-w-xs text-left text-sm z-10">
+                  <p className="font-bold mb-2">📑 Pitch Deck Mastery</p>
+                  <p className="mb-2">What separates funded decks from rejected ones:</p>
+                  <div className="space-y-1 text-xs">
+                     {Object.entries(infoTopics).map(([key, value]) => (
+                        <div key={key} className="bg-white/10 p-2 rounded cursor-pointer hover:bg-white/20" onClick={() => setInfoTopic(key)}>
+                           {key.replace(/_/g, ' ').toUpperCase()}
+                        </div>
+                     ))}
+                  </div>
+                  {infoTopic && <p className="mt-2 text-xs bg-purple-500/20 p-2 rounded">{infoTopics[infoTopic]}</p>}
                </div>
             )}
             <p className="text-6xl mb-4">📑</p>
-            <h2 className="text-3xl font-bold mb-4">Pitch Deck Builder</h2>
-            <p className="text-lg opacity-80 max-w-md mb-8">Create the core slides every investor pitch needs.</p>
-            <button onClick={() => setPhase('play')} className="px-8 py-4 bg-gradient-to-r from-blue-500 to-purple-500 rounded-2xl font-bold text-xl hover:opacity-90 transition-all">BUILD DECK →</button>
+            <h2 className="text-3xl font-bold mb-4">Pitch Deck Mastery Lab</h2>
+            <p className="text-lg opacity-80 max-w-md mb-4">Learn what makes the difference between funded and forgotten pitch decks.</p>
+            <p className="text-sm opacity-60 max-w-md mb-8">5 scenarios analyzing real pitch deck mistakes and the psychology behind investor decisions. Based on decks from Airbnb, Uber, DoorDash, Figma, and Notion.</p>
+            <button onClick={() => setPhase('play')} className="px-8 py-4 bg-gradient-to-r from-blue-500 to-purple-500 rounded-2xl font-bold text-xl hover:opacity-90 transition-all">START DECK REVIEW →</button>
          </div>
       );
 
-      if (phase === 'result') return (
-         <div className="flex flex-col h-full bg-gradient-to-br from-blue-900 via-purple-900 to-pink-900 text-white p-8">
-            <h2 className="text-2xl font-bold text-center mb-6">📑 Your Pitch Deck</h2>
-            <div className="flex-1 overflow-auto">
-               {slideSteps.map((s) => (
-                  <div key={s.key} className="bg-black/30 rounded-xl p-4 mb-3">
-                     <div className="flex items-center gap-2 mb-2">
-                        <span className="text-xl">{s.icon}</span>
-                        <span className="font-bold">{s.label}</span>
-                     </div>
-                     <p className="text-sm opacity-80 ml-8">{slides[s.key as keyof typeof slides]}</p>
+      if (phase === 'result') {
+         const { grade, label, color } = getGrade();
+         const uniqueGaps = [...new Set(conceptGaps)];
+         return (
+            <div className="flex flex-col h-full bg-gradient-to-br from-blue-900 via-purple-900 to-pink-900 text-white p-8 overflow-y-auto">
+               <div className="text-center mb-6">
+                  <p className={`text-6xl font-bold ${color}`}>{grade}</p>
+                  <p className="text-xl mt-2">{label}</p>
+                  <p className="text-sm opacity-70 mt-1">{score}/{scenarios.length} slides mastered</p>
+               </div>
+               <div className="bg-black/30 rounded-xl p-4 mb-4">
+                  <p className="font-bold mb-2">📊 Deck Review Log</p>
+                  {gameLog.map((log, i) => (
+                     <p key={i} className={`text-sm ${log.startsWith('✓') ? 'text-green-400' : 'text-red-400'}`}>{log}</p>
+                  ))}
+               </div>
+               {uniqueGaps.length > 0 && (
+                  <div className="bg-red-500/20 rounded-xl p-4 mb-4">
+                     <p className="font-bold mb-2">📚 Concepts to Study</p>
+                     {uniqueGaps.map(gap => (
+                        <p key={gap} className="text-sm">• {conceptLabels[gap]}</p>
+                     ))}
                   </div>
+               )}
+               <div className="bg-purple-500/20 rounded-xl p-4 mb-4">
+                  <p className="font-bold mb-2">🎯 Pitch Deck Principles</p>
+                  <p className="text-sm">• Quantify the problem in dollars lost</p>
+                  <p className="text-sm">• Bottom-up market sizing beats top-down</p>
+                  <p className="text-sm">• Lead with revenue metrics over vanity</p>
+                  <p className="text-sm">• Position on axes where you win</p>
+                  <p className="text-sm">• Map every dollar to measurable outcomes</p>
+               </div>
+               <button onClick={() => { setPhase('intro'); setScenario(0); setScore(0); setSelected(null); setAnswered(false); setGameLog([]); setConceptGaps([]); }}
+                  className="mt-auto px-6 py-3 bg-gradient-to-r from-blue-500 to-purple-500 rounded-xl font-bold">TRY AGAIN</button>
+            </div>
+         );
+      }
+
+      const s = scenarios[scenario];
+      return (
+         <div className="flex flex-col h-full bg-gradient-to-br from-blue-900 via-purple-900 to-pink-900 text-white p-6 overflow-y-auto">
+            <div className="flex justify-between items-center mb-4">
+               <span className="bg-black/30 px-3 py-1 rounded-lg text-sm">Slide {scenario + 1}/5</span>
+               <span className="bg-purple-500/30 px-3 py-1 rounded-lg text-sm font-bold">{score} correct</span>
+            </div>
+            <div className="bg-black/30 rounded-xl p-4 mb-4">
+               <h3 className="font-bold text-lg text-purple-400 mb-2">{s.title}</h3>
+               <p className="text-sm leading-relaxed opacity-90">{s.context}</p>
+            </div>
+            <p className="font-bold mb-3">{s.question}</p>
+            <div className="flex flex-col gap-2 mb-4">
+               {s.opts.map((opt, idx) => (
+                  <button key={idx} onClick={() => handleAnswer(idx)} disabled={answered}
+                     className={`p-3 rounded-xl text-left text-sm transition-all ${
+                        answered
+                           ? idx === s.correct
+                              ? 'bg-green-500/40 border-2 border-green-400'
+                              : idx === selected
+                                 ? 'bg-red-500/40 border-2 border-red-400'
+                                 : 'bg-black/20 opacity-50'
+                           : 'bg-black/30 hover:bg-purple-500/20'
+                     }`}>
+                     {opt}
+                  </button>
                ))}
             </div>
-            <button onClick={() => { setPhase('intro'); setSlides({ problem: '', solution: '', market: '', ask: '' }); setStep(0); }} className="px-6 py-3 bg-gradient-to-r from-blue-500 to-purple-500 rounded-xl font-bold mt-4">CREATE NEW DECK</button>
-         </div>
-      );
-
-      const submitStep = () => {
-         setSlides({ ...slides, [slideSteps[step].key]: inputValue });
-         setInputValue('');
-         if (step < 3) setStep(step + 1);
-         else setPhase('result');
-      };
-
-      return (
-         <div className="flex flex-col h-full bg-gradient-to-br from-blue-900 via-purple-900 to-pink-900 text-white p-8">
-            <div className="flex gap-2 mb-6">
-               {slideSteps.map((_, i) => <div key={i} className={`flex-1 h-2 rounded-full ${i <= step ? 'bg-purple-400' : 'bg-black/30'}`}></div>)}
-            </div>
-            <div className="bg-black/30 rounded-2xl p-6 mb-4 text-center">
-               <p className="text-4xl mb-2">{slideSteps[step].icon}</p>
-               <p className="text-xl font-bold">{slideSteps[step].label}</p>
-               <p className="text-sm opacity-75 mt-2">{slideSteps[step].prompt}</p>
-            </div>
-            <textarea value={inputValue} onChange={(e) => setInputValue(e.target.value)}
-               placeholder="Your answer..." className="flex-1 p-4 rounded-xl bg-black/30 border border-purple-500/30 text-white mb-4 resize-none" />
-            <button onClick={submitStep} className="px-6 py-3 bg-gradient-to-r from-blue-500 to-purple-500 rounded-xl font-bold">
-               {step < 3 ? 'NEXT SLIDE →' : 'VIEW DECK'}
-            </button>
+            {answered && (
+               <div className="space-y-3 mb-4">
+                  {selected !== s.correct && (
+                     <div className="bg-red-500/20 rounded-xl p-3">
+                        <p className="font-bold text-red-400 text-sm">Why that's wrong:</p>
+                        <p className="text-sm opacity-90">{s.wrongExplanations[selected!]}</p>
+                     </div>
+                  )}
+                  <div className="bg-green-500/20 rounded-xl p-3">
+                     <p className="font-bold text-green-400 text-sm">The investor lens:</p>
+                     <p className="text-sm opacity-90">{s.why}</p>
+                  </div>
+                  <div className="bg-blue-500/20 rounded-xl p-3">
+                     <p className="font-bold text-blue-400 text-sm">📚 Real Deck Example:</p>
+                     <p className="text-sm opacity-90">{s.realWorld}</p>
+                  </div>
+                  <button onClick={nextScenario} className="w-full py-3 bg-gradient-to-r from-blue-500 to-purple-500 rounded-xl font-bold">
+                     {scenario < scenarios.length - 1 ? 'NEXT SLIDE →' : 'SEE RESULTS →'}
+                  </button>
+               </div>
+            )}
          </div>
       );
    };
@@ -28237,35 +31098,409 @@ const GeneratedDiagram: React.FC<DiagramProps> = ({ type, data, title }) => {
       const [phase, setPhase] = useState<'intro' | 'play' | 'result'>('intro');
       const [showInfo, setShowInfo] = useState(false);
       const [infoTopic, setInfoTopic] = useState<string | null>(null);
-      const [assets, setAssets] = useState<{ id: string; name: string; type: string; protected: string | null; value: number; correct: string }[]>([]);
-      const [budget, setBudget] = useState(10000);
+      const [scenario, setScenario] = useState(0);
+      const [score, setScore] = useState(0);
+      const [selected, setSelected] = useState<number | null>(null);
+      const [answered, setAnswered] = useState(false);
+      const [gameLog, setGameLog] = useState<string[]>([]);
+      const [conceptGaps, setConceptGaps] = useState<string[]>([]);
 
-      const protectionTypes = [
-         { id: 'patent', name: 'Patent', icon: '📜', cost: 5000, desc: 'Inventions, processes' },
-         { id: 'trademark', name: 'Trademark', icon: '™️', cost: 1500, desc: 'Brand names, logos' },
-         { id: 'copyright', name: 'Copyright', icon: '©️', cost: 500, desc: 'Creative works, code' },
-         { id: 'trade_secret', name: 'Trade Secret', icon: '🤫', cost: 200, desc: 'Confidential info' },
-      ];
+      // Complex scenarios with non-obvious answers and trap options
       const scenarios = [
-         { name: 'App Logo', type: 'brand', correct: 'trademark' }, { name: 'Unique Algorithm', type: 'invention', correct: 'patent' },
-         { name: 'Marketing Copy', type: 'creative', correct: 'copyright' }, { name: 'Secret Recipe', type: 'formula', correct: 'trade_secret' },
-         { name: 'Company Name', type: 'brand', correct: 'trademark' }, { name: 'Software Code', type: 'creative', correct: 'copyright' },
+         {
+            title: "The Algorithm Dilemma",
+            situation: "Your startup developed a revolutionary ML algorithm that gives you a major competitive edge. A VC is interested but wants to see a demo. Your lead developer might leave for a competitor next year.",
+            question: "What's the BEST IP strategy for this algorithm?",
+            opts: ['Patent it immediately', 'Keep as Trade Secret', 'Copyright the code', 'Publish openly for credibility'],
+            correct: 1,
+            wrongExplanations: [
+               "Patents require PUBLIC DISCLOSURE. Once filed, your algorithm is public after 18 months—competitors can design around it. Also takes 2-3 years and $15K+. Meanwhile, your advantage is gone.",
+               "", // Correct answer
+               "Copyright only protects the specific code expression, NOT the underlying algorithm idea. Competitors can rewrite your algorithm in different code legally.",
+               "Publishing destroys all IP rights. You can't patent it after. Competitors can freely copy. Only makes sense for research institutions seeking academic credit."
+            ],
+            realWorld: "Coca-Cola's formula has been a trade secret for 130+ years. If they had patented it, it would have expired in 1906 and anyone could make Coke.",
+            concept: "patent_vs_secret",
+            why: "Trade secrets protect INDEFINITELY but only if kept secret. Patents expire after 20 years. For algorithms that are hard to reverse-engineer, trade secrets often win."
+         },
+         {
+            title: "The Contractor Trap",
+            situation: "You hired a freelance developer to build your mobile app. The contract says 'work for hire' but doesn't specifically mention IP assignment. The freelancer used some of their pre-existing code libraries.",
+            question: "Who owns the IP rights to the app?",
+            opts: ['You own everything—you paid for it', 'Split ownership based on contribution', 'Freelancer owns it unless explicitly assigned', 'Only you own the new code, they keep library rights'],
+            correct: 3,
+            wrongExplanations: [
+               "WRONG! Payment doesn't equal ownership. Under copyright law, the creator owns their work by default. 'Work for hire' only applies to employees or specific contract categories.",
+               "Copyright law doesn't do 'split ownership' automatically. This creates a legal nightmare where neither party can fully use the work.",
+               "Close but incomplete. The freelancer owns new code by default without explicit assignment, BUT they always retain rights to their pre-existing libraries unless explicitly assigned.",
+               "" // Correct answer
+            ],
+            realWorld: "In the famous Playboy v. Dumas case, Playboy lost rights to artwork they paid for because the artist was a contractor without proper IP assignment.",
+            concept: "work_for_hire",
+            why: "Pre-existing IP stays with creators unless EXPLICITLY assigned. Always get written IP assignment agreements that distinguish new work from pre-existing code/tools."
+         },
+         {
+            title: "The Naming Nightmare",
+            situation: "You're launching 'ByteForce' as your company name. Another company has 'ByteForce' registered for enterprise software (USPTO Class 9). You're in fitness wearables (also Class 9).",
+            question: "Can you legally use 'ByteForce' for your fitness wearables?",
+            opts: ['Yes—different products, no conflict', 'Yes—first to use in fitness wins', 'No—same trademark class means conflict', 'Maybe—depends on likelihood of confusion'],
+            correct: 2,
+            wrongExplanations: [
+               "Same trademark class IS the conflict. Class 9 covers all 'computer hardware and software'—both enterprise software and fitness wearables fall under this class.",
+               "Trademark law isn't 'first to use per product.' The other company has priority in the entire Class 9 and can block you from registration.",
+               "", // Correct answer
+               "This isn't a 'maybe'—same class with identical name is almost certainly infringement. 'Likelihood of confusion' analysis matters more for similar (not identical) marks."
+            ],
+            realWorld: "Apple Corps (Beatles) sued Apple Computer repeatedly because both were in 'Class 9' even though music and computers seemed different.",
+            concept: "trademark_classes",
+            why: "Trademark protection is class-based. 'ByteForce' for hamburgers (Class 43) might be fine, but anything in Class 9 creates direct conflict. Always search USPTO BEFORE naming."
+         },
+         {
+            title: "The Employee Exit",
+            situation: "Your senior engineer is leaving for a competitor. She has deep knowledge of your proprietary systems, customer lists, and upcoming product roadmap. She signed an NDA but NOT a non-compete.",
+            question: "What can you legally prevent her from doing?",
+            opts: ['Working for any competitor for 2 years', 'Using or disclosing your trade secrets', 'Taking any clients she worked with', 'Nothing—without non-compete you have no rights'],
+            correct: 1,
+            wrongExplanations: [
+               "Without a signed non-compete, you cannot restrict where she works. Non-competes are also unenforceable in California and increasingly restricted nationwide.",
+               "", // Correct answer
+               "Client relationships are complex. She can contact clients she has personal relationships with unless those relationships ARE trade secrets (like a secret client list).",
+               "NDAs are powerful! Trade secret law (DTSA) protects confidential business information even without non-competes. She cannot use or disclose what she learned."
+            ],
+            realWorld: "Waymo vs Uber: Anthony Levandowski left Google and allegedly took trade secrets to Uber. Cost Uber $245M settlement despite no non-compete.",
+            concept: "nda_vs_noncompete",
+            why: "NDAs protect INFORMATION (trade secrets). Non-competes restrict WHERE someone works. NDAs are enforceable everywhere; non-competes are not. Build protection through NDAs + trade secret protocols."
+         },
+         {
+            title: "The Design Dilemma",
+            situation: "You designed a unique, innovative smartwatch case shape. A competitor just launched a very similar-looking product. You never filed any IP protection but have been selling for 8 months.",
+            question: "What IP protection could you STILL potentially claim?",
+            opts: ['Utility patent—you invented it first', 'Design patent—you can still file', 'Trade dress—distinctive product appearance', 'None—you missed the window completely'],
+            correct: 2,
+            wrongExplanations: [
+               "Utility patents protect HOW something works (function), not how it looks (form). A case shape is ornamental, not functional.",
+               "Design patents must be filed within 12 months of first public sale. However, the process takes 1-2 years and only lasts 15 years. But trade dress might be stronger here.",
+               "", // Correct answer
+               "Trade dress protection for distinctive product design doesn't require registration! If consumers associate your distinctive shape with your brand, you may have enforceable rights."
+            ],
+            realWorld: "Apple successfully sued Samsung for trade dress infringement on iPhone design elements, winning $539M for 'look and feel' even beyond their patents.",
+            concept: "trade_dress",
+            why: "Trade dress protects product appearance that consumers associate with a brand. No registration required (though it helps). Requires proving distinctiveness + consumer association."
+         }
       ];
-      const infoTopics: Record<string, { title: string; content: string }> = {
-         patent: { title: "Patents", content: "Protect inventions for 20 years. Types: Utility, Design, Plant. Expensive ($5K+) and slow (1-3 years). Worth it for key innovations." },
-         trademark: { title: "Trademarks", content: "Protect brand identifiers: names, logos, slogans. ™ is free, ® requires registration. Strength: Generic→Fanciful." },
-         copyright: { title: "Copyrights", content: "Protect creative works: writing, code, art. Automatic upon creation! Registration needed to sue." },
-         trade_secret: { title: "Trade Secrets", content: "Protect confidential info. No registration—just keep it secret! Use NDAs. Lost forever if disclosed." },
-      };
-      useEffect(() => { if (infoTopic && infoTopics[infoTopic]) setShowInfo(true); }, [infoTopic]);
-      const startGame = () => { setPhase('play'); setBudget(10000); const shuffled = [...scenarios].sort(() => Math.random() - 0.5).slice(0, 5); setAssets(shuffled.map((s, i) => ({ id: `asset-${i}`, name: s.name, type: s.type, protected: null, value: 1000 + Math.random() * 5000, correct: s.correct }))); };
-      const protectAsset = (assetId: string, protectionId: string) => { const p = protectionTypes.find(pt => pt.id === protectionId); if (!p || budget < p.cost) return; setBudget(prev => prev - p.cost); setAssets(prev => prev.map(a => a.id === assetId ? { ...a, protected: protectionId } : a)); };
-      const getScore = () => { let score = 0; assets.forEach(a => { if (a.protected === a.correct) score += 20; else if (a.protected) score += 8; }); return Math.min(100, score); };
-      const getGrade = () => { const s = getScore(); if (s >= 90) return { letter: 'A', label: 'IP Master', color: 'text-green-400' }; if (s >= 70) return { letter: 'B', label: 'Protected', color: 'text-blue-400' }; if (s >= 50) return { letter: 'C', label: 'Partial', color: 'text-yellow-400' }; return { letter: 'D', label: 'Vulnerable', color: 'text-red-400' }; };
 
-      if (phase === 'intro') return (<div className="w-full h-full flex flex-col bg-gradient-to-br from-violet-900 via-purple-900 to-slate-900 text-white p-4 overflow-auto"><div className="text-center mb-4"><h1 className="text-2xl font-bold mb-2">🔒 IP Protection Simulator</h1><p className="text-violet-300 text-sm">Protect your intellectual property</p></div><div className="bg-black/30 rounded-xl p-4 mb-4"><h2 className="text-lg font-bold mb-3 text-violet-400">📋 How It Works</h2><div className="space-y-2 text-sm"><p>• Protect <span className="text-white font-bold">5 assets</span> with correct IP type</p><p>• Budget: <span className="text-green-400">$10,000</span></p><p>• Match assets with right protection!</p></div></div><div className="grid grid-cols-4 gap-2 mb-4 text-center text-xs">{protectionTypes.map(p => (<div key={p.id} className="bg-black/30 rounded-lg p-2"><span className="text-lg">{p.icon}</span><p className="text-slate-300">{p.name}</p><p className="text-green-400">${p.cost}</p></div>))}</div><div className="flex flex-wrap gap-2 mb-4">{Object.keys(infoTopics).map(key => (<button key={key} onClick={() => setInfoTopic(key)} className="text-xs bg-violet-500/20 px-2 py-1 rounded-full text-violet-300">ℹ️ {infoTopics[key].title}</button>))}</div><button onClick={startGame} className="w-full py-3 bg-gradient-to-r from-violet-600 to-purple-600 rounded-xl font-bold">▶️ START</button>{showInfo && infoTopic && infoTopics[infoTopic] && (<div className="absolute inset-0 bg-black/80 flex items-center justify-center p-4 z-50" onClick={() => { setShowInfo(false); setInfoTopic(null); }}><div className="bg-slate-800 rounded-xl p-4 max-w-md" onClick={e => e.stopPropagation()}><h3 className="text-lg font-bold text-violet-400 mb-2">{infoTopics[infoTopic].title}</h3><p className="text-sm text-slate-300">{infoTopics[infoTopic].content}</p><button onClick={() => { setShowInfo(false); setInfoTopic(null); }} className="mt-4 w-full py-2 bg-violet-600 rounded-lg">Got it!</button></div></div>)}</div>);
-      if (phase === 'result') { const grade = getGrade(); return (<div className="w-full h-full flex flex-col bg-gradient-to-br from-violet-900 via-purple-900 to-slate-900 text-white p-4 overflow-auto"><div className="text-center mb-4"><div className={`text-6xl font-bold ${grade.color}`}>{grade.letter}</div><div className="text-xl font-bold">{grade.label}</div><div className="text-violet-400">Score: {getScore()}%</div></div><div className="bg-black/30 rounded-xl p-3 mb-3"><h3 className="font-bold text-violet-400 mb-2">📊 Results</h3>{assets.map(a => { const isCorrect = a.protected === a.correct; const prot = protectionTypes.find(p => p.id === a.protected); const correct = protectionTypes.find(p => p.id === a.correct); return (<div key={a.id} className="flex justify-between items-center py-1 border-b border-slate-700 text-sm"><span>{a.name}</span><div className="flex items-center gap-2"><span className={isCorrect ? 'text-green-400' : 'text-red-400'}>{prot?.icon || '❌'}</span>{!isCorrect && <span className="text-xs text-slate-400">→ {correct?.icon}</span>}</div></div>); })}</div><div className="bg-black/30 rounded-xl p-3 mb-4"><h3 className="font-bold text-violet-400 mb-2">💡 Key Insight</h3><p className="text-sm text-slate-300">Match protection to asset: Patents for inventions, Trademarks for brands, Copyrights for creative works, Trade Secrets for confidential info.</p></div><button onClick={startGame} className="w-full py-3 bg-gradient-to-r from-violet-600 to-purple-600 rounded-xl font-bold">🔄 TRY AGAIN</button></div>); }
-      return (<div className="w-full h-full flex flex-col bg-gradient-to-br from-violet-900 via-purple-900 to-slate-900 text-white overflow-hidden">{showInfo && infoTopic && infoTopics[infoTopic] && (<div className="absolute inset-0 bg-black/80 flex items-center justify-center p-4 z-50" onClick={() => { setShowInfo(false); setInfoTopic(null); }}><div className="bg-slate-800 rounded-xl p-4 max-w-md" onClick={e => e.stopPropagation()}><h3 className="text-lg font-bold text-violet-400 mb-2">{infoTopics[infoTopic].title}</h3><p className="text-sm text-slate-300">{infoTopics[infoTopic].content}</p><button onClick={() => { setShowInfo(false); setInfoTopic(null); }} className="mt-4 w-full py-2 bg-violet-600 rounded-lg">Got it!</button></div></div>)}<div className="p-3 bg-black/30 border-b border-violet-500/30"><div className="flex justify-between items-center"><span className="font-bold">🔒 IP Protection</span><span className="text-green-400">${budget.toLocaleString()}</span></div></div><div className="flex-1 p-3 overflow-auto"><p className="text-sm mb-3">Select protection for each asset:</p>{assets.map(a => (<div key={a.id} className="bg-black/30 rounded-lg p-3 mb-2"><div className="flex justify-between items-center mb-2"><span className="font-bold">{a.name}</span><span className="text-xs text-slate-400">{a.type}</span></div>{a.protected ? (<div className="flex items-center gap-2 text-green-400 text-sm"><span>{protectionTypes.find(p => p.id === a.protected)?.icon}</span><span>Protected</span></div>) : (<div className="grid grid-cols-4 gap-1">{protectionTypes.map(p => (<button key={p.id} onClick={() => protectAsset(a.id, p.id)} disabled={budget < p.cost} className="py-1 px-2 bg-violet-600/50 hover:bg-violet-500/50 disabled:opacity-30 rounded text-xs flex flex-col items-center"><span>{p.icon}</span><span>${p.cost}</span></button>))}</div>)}</div>))}</div><div className="p-3 bg-black/30 border-t border-violet-500/30"><button onClick={() => setPhase('result')} className="w-full py-3 bg-gradient-to-r from-violet-600 to-purple-600 rounded-xl font-bold">✓ FINISH</button></div></div>);
+      const infoTopics: Record<string, { title: string; content: string }> = {
+         patent: {
+            title: "Patents: The Trade-Off",
+            content: "Patents give 20-year monopoly BUT require full public disclosure. Cost: $15K-30K+, Time: 2-4 years. Best for: innovations that are easy to reverse-engineer. Worst for: algorithms competitors can't see anyway."
+         },
+         trade_secret: {
+            title: "Trade Secrets: Infinite but Fragile",
+            content: "Last forever if kept secret. No registration needed. BUT: one disclosure = gone forever. Requires NDAs, access controls, exit interviews. Best for: formulas, algorithms, customer lists. Examples: Coca-Cola formula, Google's PageRank algorithm."
+         },
+         trademark: {
+            title: "Trademarks: Brand Protection",
+            content: "Protect brand identifiers in specific classes. ™ (unregistered) vs ® (registered). Last forever if actively used. Classes matter—same name in different class is usually OK. Search USPTO BEFORE naming your company!"
+         },
+         copyright: {
+            title: "Copyright: Expression Not Ideas",
+            content: "Automatic upon creation—no registration needed to own. BUT registration required to sue for damages. Protects specific expression (your code), NOT underlying ideas (algorithms). Lasts: life + 70 years."
+         },
+         work_for_hire: {
+            title: "Work for Hire: The Contractor Trap",
+            content: "Employees: employer owns work automatically. Contractors: CREATOR owns work unless written assignment. 'Work for hire' only applies to employees or 9 specific categories (not software!). Always get explicit IP assignment in contractor agreements."
+         },
+         trade_dress: {
+            title: "Trade Dress: Look & Feel Protection",
+            content: "Protects distinctive product appearance/packaging that consumers associate with a brand. No registration required (helps in court). Examples: Coca-Cola bottle shape, Apple store design, Tiffany blue box."
+         }
+      };
+
+      useEffect(() => { if (infoTopic && infoTopics[infoTopic]) setShowInfo(true); }, [infoTopic]);
+
+      const startGame = () => {
+         setPhase('play');
+         setScenario(0);
+         setScore(0);
+         setSelected(null);
+         setAnswered(false);
+         setGameLog([]);
+         setConceptGaps([]);
+      };
+
+      const answer = (idx: number) => {
+         if (answered) return;
+         setSelected(idx);
+         setAnswered(true);
+         const s = scenarios[scenario];
+         const isCorrect = idx === s.correct;
+         if (isCorrect) {
+            setScore(prev => prev + 20);
+            setGameLog(prev => [...prev, `✓ ${s.title}: Understood ${s.concept}`]);
+         } else {
+            setConceptGaps(prev => prev.includes(s.concept) ? prev : [...prev, s.concept]);
+            setGameLog(prev => [...prev, `✗ ${s.title}: Gap in ${s.concept}`]);
+         }
+      };
+
+      const next = () => {
+         if (scenario >= scenarios.length - 1) {
+            setPhase('result');
+         } else {
+            setScenario(prev => prev + 1);
+            setSelected(null);
+            setAnswered(false);
+         }
+      };
+
+      const getGrade = () => {
+         const pct = (score / (scenarios.length * 20)) * 100;
+         if (pct >= 90) return { letter: 'A', label: 'IP Strategist', color: 'text-green-400' };
+         if (pct >= 70) return { letter: 'B', label: 'Protected', color: 'text-blue-400' };
+         if (pct >= 50) return { letter: 'C', label: 'Risky Gaps', color: 'text-yellow-400' };
+         return { letter: 'D', label: 'Exposed', color: 'text-red-400' };
+      };
+
+      const conceptLabels: Record<string, string> = {
+         patent_vs_secret: "Patent vs Trade Secret Strategy",
+         work_for_hire: "Contractor IP Ownership",
+         trademark_classes: "Trademark Classification",
+         nda_vs_noncompete: "NDA vs Non-Compete Protection",
+         trade_dress: "Trade Dress & Design Rights"
+      };
+
+      // INTRO PHASE
+      if (phase === 'intro') return (
+         <div className="w-full h-full flex flex-col bg-gradient-to-br from-violet-900 via-purple-900 to-slate-900 text-white p-4 overflow-auto">
+            <div className="text-center mb-4">
+               <h1 className="text-2xl font-bold mb-2">🔐 IP Strategy Challenge</h1>
+               <p className="text-violet-300 text-sm">Real decisions. Real consequences. Master IP protection.</p>
+            </div>
+
+            <div className="bg-black/30 rounded-xl p-4 mb-4">
+               <h2 className="text-lg font-bold mb-3 text-violet-400">⚡ Why This Matters</h2>
+               <div className="space-y-2 text-sm text-slate-300">
+                  <p>• <span className="text-red-400 font-bold">$5.4 TRILLION</span> in IP theft annually worldwide</p>
+                  <p>• <span className="text-yellow-400 font-bold">67%</span> of startup value is in intangible IP assets</p>
+                  <p>• <span className="text-green-400 font-bold">Wrong IP strategy</span> can destroy your competitive advantage</p>
+               </div>
+            </div>
+
+            <div className="bg-black/30 rounded-xl p-4 mb-4">
+               <h2 className="text-lg font-bold mb-3 text-violet-400">🎯 How This Works</h2>
+               <div className="space-y-2 text-sm">
+                  <p>• <span className="text-white font-bold">5 real-world scenarios</span> with trap answers</p>
+                  <p>• Understand <span className="text-yellow-400">WHY</span> each strategy works or fails</p>
+                  <p>• Learn from <span className="text-cyan-400">famous cases</span> and costly mistakes</p>
+                  <p>• Get <span className="text-green-400">personalized gaps</span> for further study</p>
+               </div>
+            </div>
+
+            <div className="flex flex-wrap gap-2 mb-4">
+               {Object.keys(infoTopics).map(key => (
+                  <button
+                     key={key}
+                     onClick={() => setInfoTopic(key)}
+                     className="text-xs bg-violet-500/20 px-2 py-1 rounded-full text-violet-300 hover:bg-violet-500/30"
+                  >
+                     ℹ️ {infoTopics[key].title.split(':')[0]}
+                  </button>
+               ))}
+            </div>
+
+            <button onClick={startGame} className="w-full py-3 bg-gradient-to-r from-violet-600 to-purple-600 rounded-xl font-bold text-lg">
+               ▶️ BEGIN CHALLENGE
+            </button>
+
+            {showInfo && infoTopic && infoTopics[infoTopic] && (
+               <div className="absolute inset-0 bg-black/80 flex items-center justify-center p-4 z-50" onClick={() => { setShowInfo(false); setInfoTopic(null); }}>
+                  <div className="bg-slate-800 rounded-xl p-4 max-w-md" onClick={e => e.stopPropagation()}>
+                     <h3 className="text-lg font-bold text-violet-400 mb-2">{infoTopics[infoTopic].title}</h3>
+                     <p className="text-sm text-slate-300 leading-relaxed">{infoTopics[infoTopic].content}</p>
+                     <button onClick={() => { setShowInfo(false); setInfoTopic(null); }} className="mt-4 w-full py-2 bg-violet-600 rounded-lg font-bold">Got it!</button>
+                  </div>
+               </div>
+            )}
+         </div>
+      );
+
+      // RESULT PHASE
+      if (phase === 'result') {
+         const grade = getGrade();
+         return (
+            <div className="w-full h-full flex flex-col bg-gradient-to-br from-violet-900 via-purple-900 to-slate-900 text-white p-4 overflow-auto">
+               <div className="text-center mb-4">
+                  <div className={`text-6xl font-bold ${grade.color}`}>{grade.letter}</div>
+                  <div className="text-xl font-bold">{grade.label}</div>
+                  <div className="text-violet-400">Score: {score}/{scenarios.length * 20}</div>
+               </div>
+
+               {conceptGaps.length > 0 && (
+                  <div className="bg-red-900/30 border border-red-500/50 rounded-xl p-3 mb-3">
+                     <h3 className="font-bold text-red-400 mb-2">📚 Knowledge Gaps to Study</h3>
+                     <div className="space-y-1">
+                        {conceptGaps.map((gap, i) => (
+                           <div key={i} className="flex items-center gap-2 text-sm">
+                              <span className="text-red-400">→</span>
+                              <span className="text-slate-300">{conceptLabels[gap] || gap}</span>
+                              <button
+                                 onClick={() => {
+                                    const topic = gap === 'patent_vs_secret' ? 'patent' :
+                                                  gap === 'work_for_hire' ? 'work_for_hire' :
+                                                  gap === 'trademark_classes' ? 'trademark' :
+                                                  gap === 'nda_vs_noncompete' ? 'trade_secret' : 'trade_dress';
+                                    setInfoTopic(topic);
+                                 }}
+                                 className="text-xs text-violet-400 underline"
+                              >
+                                 Learn
+                              </button>
+                           </div>
+                        ))}
+                     </div>
+                  </div>
+               )}
+
+               {conceptGaps.length === 0 && (
+                  <div className="bg-green-900/30 border border-green-500/50 rounded-xl p-3 mb-3">
+                     <h3 className="font-bold text-green-400 mb-2">🎉 Perfect Understanding!</h3>
+                     <p className="text-sm text-slate-300">You correctly identified the optimal IP strategy in every scenario. You understand the nuances of patent vs trade secret, contractor IP, trademark classes, and protection mechanisms.</p>
+                  </div>
+               )}
+
+               <div className="bg-black/30 rounded-xl p-3 mb-3 max-h-32 overflow-auto">
+                  <h3 className="font-bold text-violet-400 mb-2">📋 Session Log</h3>
+                  {gameLog.map((log, i) => (
+                     <p key={i} className="text-xs text-slate-400">{log}</p>
+                  ))}
+               </div>
+
+               <div className="bg-black/30 rounded-xl p-3 mb-4">
+                  <h3 className="font-bold text-violet-400 mb-2">💡 Key Strategic Insights</h3>
+                  <ul className="text-sm text-slate-300 space-y-1">
+                     <li>• <span className="text-yellow-400">Trade secrets</span> often beat patents for algorithms</li>
+                     <li>• <span className="text-yellow-400">Written IP assignment</span> is essential for contractors</li>
+                     <li>• <span className="text-yellow-400">Trademark class</span> determines conflict, not product similarity</li>
+                     <li>• <span className="text-yellow-400">NDAs</span> protect information even without non-competes</li>
+                  </ul>
+               </div>
+
+               <button onClick={startGame} className="w-full py-3 bg-gradient-to-r from-violet-600 to-purple-600 rounded-xl font-bold">
+                  🔄 TRY AGAIN
+               </button>
+
+               {showInfo && infoTopic && infoTopics[infoTopic] && (
+                  <div className="absolute inset-0 bg-black/80 flex items-center justify-center p-4 z-50" onClick={() => { setShowInfo(false); setInfoTopic(null); }}>
+                     <div className="bg-slate-800 rounded-xl p-4 max-w-md" onClick={e => e.stopPropagation()}>
+                        <h3 className="text-lg font-bold text-violet-400 mb-2">{infoTopics[infoTopic].title}</h3>
+                        <p className="text-sm text-slate-300 leading-relaxed">{infoTopics[infoTopic].content}</p>
+                        <button onClick={() => { setShowInfo(false); setInfoTopic(null); }} className="mt-4 w-full py-2 bg-violet-600 rounded-lg font-bold">Got it!</button>
+                     </div>
+                  </div>
+               )}
+            </div>
+         );
+      }
+
+      // PLAY PHASE
+      const s = scenarios[scenario];
+      return (
+         <div className="w-full h-full flex flex-col bg-gradient-to-br from-violet-900 via-purple-900 to-slate-900 text-white overflow-hidden">
+            {showInfo && infoTopic && infoTopics[infoTopic] && (
+               <div className="absolute inset-0 bg-black/80 flex items-center justify-center p-4 z-50" onClick={() => { setShowInfo(false); setInfoTopic(null); }}>
+                  <div className="bg-slate-800 rounded-xl p-4 max-w-md" onClick={e => e.stopPropagation()}>
+                     <h3 className="text-lg font-bold text-violet-400 mb-2">{infoTopics[infoTopic].title}</h3>
+                     <p className="text-sm text-slate-300 leading-relaxed">{infoTopics[infoTopic].content}</p>
+                     <button onClick={() => { setShowInfo(false); setInfoTopic(null); }} className="mt-4 w-full py-2 bg-violet-600 rounded-lg font-bold">Got it!</button>
+                  </div>
+               </div>
+            )}
+
+            {/* Header */}
+            <div className="p-3 bg-black/30 border-b border-violet-500/30">
+               <div className="flex justify-between items-center">
+                  <span className="font-bold text-sm">🔐 {s.title}</span>
+                  <span className="text-violet-400 text-sm">{scenario + 1}/{scenarios.length}</span>
+               </div>
+               <div className="flex gap-1 mt-2">
+                  {scenarios.slice(0, scenario).map((_, i) => (
+                     <div key={i} className={`w-3 h-3 rounded ${gameLog[i]?.startsWith('✓') ? 'bg-green-500' : 'bg-red-500'}`} />
+                  ))}
+                  <div className="w-3 h-3 rounded bg-violet-500 animate-pulse" />
+                  {scenarios.slice(scenario + 1).map((_, i) => (
+                     <div key={i} className="w-3 h-3 rounded bg-slate-600" />
+                  ))}
+               </div>
+            </div>
+
+            {/* Scenario */}
+            <div className="flex-1 p-3 overflow-auto">
+               <div className="bg-black/30 rounded-lg p-3 mb-3">
+                  <p className="text-sm text-slate-200 leading-relaxed">{s.situation}</p>
+               </div>
+
+               <p className="text-sm font-bold text-violet-400 mb-2">{s.question}</p>
+
+               <div className="space-y-2">
+                  {s.opts.map((opt, i) => (
+                     <button
+                        key={i}
+                        onClick={() => answer(i)}
+                        disabled={answered}
+                        className={`w-full p-3 rounded-lg text-left text-sm transition-all ${
+                           answered
+                              ? i === s.correct
+                                 ? 'bg-green-600 border-2 border-green-400'
+                                 : i === selected
+                                    ? 'bg-red-600 border-2 border-red-400'
+                                    : 'bg-black/30 opacity-50'
+                              : 'bg-black/30 hover:bg-violet-600/50 border-2 border-transparent'
+                        }`}
+                     >
+                        <span className="flex items-start gap-2">
+                           <span className="font-bold text-violet-400">{String.fromCharCode(65 + i)}.</span>
+                           <span>{opt}</span>
+                        </span>
+                     </button>
+                  ))}
+               </div>
+
+               {/* Explanation after answer */}
+               {answered && (
+                  <div className="mt-3 space-y-2">
+                     {selected !== s.correct && (
+                        <div className="p-3 bg-red-900/30 border border-red-500/50 rounded-lg">
+                           <p className="text-xs font-bold text-red-400 mb-1">❌ Why {String.fromCharCode(65 + (selected || 0))} is Wrong:</p>
+                           <p className="text-sm text-slate-300">{s.wrongExplanations[selected || 0]}</p>
+                        </div>
+                     )}
+
+                     <div className="p-3 bg-green-900/30 border border-green-500/50 rounded-lg">
+                        <p className="text-xs font-bold text-green-400 mb-1">✓ Why {String.fromCharCode(65 + s.correct)} is Best:</p>
+                        <p className="text-sm text-slate-300">{s.why}</p>
+                     </div>
+
+                     <div className="p-3 bg-cyan-900/30 border border-cyan-500/50 rounded-lg">
+                        <p className="text-xs font-bold text-cyan-400 mb-1">📰 Real-World Case:</p>
+                        <p className="text-sm text-slate-300">{s.realWorld}</p>
+                     </div>
+
+                     <button onClick={next} className="w-full py-3 bg-gradient-to-r from-violet-600 to-purple-600 rounded-xl font-bold mt-2">
+                        {scenario >= scenarios.length - 1 ? 'See Results' : 'Next Scenario →'}
+                     </button>
+                  </div>
+               )}
+            </div>
+
+            {/* Info Buttons Footer */}
+            <div className="p-3 bg-black/30 border-t border-violet-500/30 flex gap-2 justify-center flex-wrap">
+               <button onClick={() => setInfoTopic('patent')} className="text-xs text-violet-400 hover:text-violet-300">ℹ️ Patents</button>
+               <button onClick={() => setInfoTopic('trade_secret')} className="text-xs text-violet-400 hover:text-violet-300">ℹ️ Trade Secrets</button>
+               <button onClick={() => setInfoTopic('trademark')} className="text-xs text-violet-400 hover:text-violet-300">ℹ️ Trademarks</button>
+               <button onClick={() => setInfoTopic('copyright')} className="text-xs text-violet-400 hover:text-violet-300">ℹ️ Copyright</button>
+            </div>
+         </div>
+      );
    };
 
    // --- CONTRACTS RENDERER ---
@@ -28273,34 +31508,455 @@ const GeneratedDiagram: React.FC<DiagramProps> = ({ type, data, title }) => {
       const [phase, setPhase] = useState<'intro' | 'play' | 'result'>('intro');
       const [showInfo, setShowInfo] = useState(false);
       const [infoTopic, setInfoTopic] = useState<string | null>(null);
-      const [clause, setClause] = useState(0);
+      const [scenario, setScenario] = useState(0);
       const [score, setScore] = useState(0);
-      const [answers, setAnswers] = useState<boolean[]>([]);
+      const [selected, setSelected] = useState<number | null>(null);
+      const [answered, setAnswered] = useState(false);
+      const [gameLog, setGameLog] = useState<string[]>([]);
+      const [conceptGaps, setConceptGaps] = useState<string[]>([]);
 
-      const clauses = [
-         { text: "Payment due NET 90 days after delivery", flag: 'red', issue: 'Payment too long', advice: 'NET 30 is standard. NET 90 hurts cash flow.' },
-         { text: "Either party may terminate with 30 days written notice", flag: 'green', issue: 'Fair termination', advice: 'Mutual termination rights are fair.' },
-         { text: "Contractor assigns ALL IP including pre-existing work", flag: 'red', issue: 'IP overreach', advice: 'Never assign pre-existing IP!' },
-         { text: "Client indemnifies Contractor for claims from Client materials", flag: 'green', issue: 'Appropriate indemnification', advice: 'Each party should indemnify for their own materials.' },
-         { text: "Contractor liable for unlimited damages for any breach", flag: 'red', issue: 'Unlimited liability', advice: 'Always cap liability at 1-2x contract value.' },
-         { text: "Disputes resolved by binding arbitration in neutral location", flag: 'green', issue: 'Fair dispute resolution', advice: 'Arbitration is faster than courts.' },
-         { text: "Non-compete: Cannot work in industry for 5 years globally", flag: 'red', issue: 'Broad non-compete', advice: 'Non-competes must be reasonable in scope.' },
-         { text: "Confidentiality survives 3 years after termination", flag: 'green', issue: 'Reasonable confidentiality', advice: '2-5 years is standard.' },
+      // Context-dependent scenarios - same clause can be OK or bad depending on situation
+      const scenarios = [
+         {
+            title: "The Payment Trap",
+            role: "Freelance Developer",
+            context: "You're a solo freelancer. A Fortune 500 company wants to hire you for a $50K project. Their standard contract says:",
+            clause: "Payment: NET 90 days after project acceptance, subject to internal approval process.",
+            question: "What's the BEST response to this clause?",
+            opts: [
+               'Accept it - big company, they will pay eventually',
+               'Reject the project - NET 90 is unacceptable',
+               'Counter: 50% upfront, 50% NET 30 with late fees',
+               'Counter: NET 30 only, no other changes'
+            ],
+            correct: 2,
+            wrongExplanations: [
+               "DANGEROUS! 'Subject to internal approval' + NET 90 means 4-6 months to payment. As a freelancer, you could go bankrupt waiting. Large companies know solo contractors can't sue them.",
+               "Walking away loses a $50K opportunity. The clause IS bad, but big companies expect negotiation. Walking away should be your last resort, not first response.",
+               "", // Correct
+               "Better than accepting, but you're leaving money on the table. Big companies have cash—asking for upfront payment is standard and protects your cash flow risk."
+            ],
+            realWorld: "In 2019, Hertz filed bankruptcy owing contractors $16M+ in unpaid invoices. Contractors with 'NET 90 subject to approval' clauses got pennies on the dollar.",
+            concept: "payment_terms",
+            why: "Big company ≠ safe payment. NET 90 + 'approval process' can mean 6+ months. Always get upfront payment for projects over 30 days, especially with large companies that have slow bureaucracies."
+         },
+         {
+            title: "The Liability Landmine",
+            role: "SaaS Startup Founder",
+            context: "You're selling your $500/month software to an enterprise client. Their legal team sends back your contract with this added:",
+            clause: "Vendor shall indemnify Client for any and all damages, losses, and liabilities arising from use of the software, including consequential and indirect damages, without limitation.",
+            question: "How should you handle this indemnification clause?",
+            opts: [
+               'Accept - they are a big client, worth the risk',
+               'Cap liability at 12 months of fees paid ($6,000)',
+               'Cap liability at total contract value and exclude consequential damages',
+               'Reject any indemnification - your software, your rules'
+            ],
+            correct: 2,
+            wrongExplanations: [
+               "NEVER accept unlimited liability! If their business loses $10M 'because of your software' (even if it's their fault), they can sue you for the full amount. This has bankrupted startups.",
+               "12 months is reasonable for liability cap, BUT you forgot to exclude consequential damages. 'Consequential' means lost profits, lost business, reputation damage—could be millions even with a $6K cap.",
+               "", // Correct
+               "Refusing any indemnification will kill the deal. Enterprise clients legitimately need some protection. The key is REASONABLE limits, not zero responsibility."
+            ],
+            realWorld: "A startup was sued for $4.2M when their client's employee misused the software causing a data breach. Unlimited indemnification meant the startup paid, not the employee who caused it.",
+            concept: "liability_caps",
+            why: "Indemnification without caps is a blank check. Always: (1) Cap at contract value or 12 months fees, (2) Exclude consequential/indirect damages, (3) Require client to mitigate damages."
+         },
+         {
+            title: "The IP Ownership Puzzle",
+            role: "Contract Developer",
+            context: "A client wants you to build custom software. You'll use your own reusable framework (built over 5 years) as the foundation. Their contract states:",
+            clause: "All work product, including all intellectual property, code, documentation, and materials created under this Agreement shall be the sole property of Client as work-for-hire.",
+            question: "What's wrong with this clause, and how should you fix it?",
+            opts: [
+               'Nothing wrong - they are paying, they own it',
+               'Add: "excluding Contractor pre-existing IP which is licensed to Client"',
+               'Change to: "Client owns custom code; Contractor retains framework under perpetual license to Client"',
+               'Reject - never assign IP to clients'
+            ],
+            correct: 2,
+            wrongExplanations: [
+               "WRONG! This would transfer your 5-year framework to them. You couldn't use YOUR OWN code for any other client. This destroys your business value.",
+               "Better, but 'licensed' is vague. Does Client get exclusive rights? Can they sublicense? What happens if they stop paying? You need specific license terms.",
+               "", // Correct
+               "Too extreme. Clients legitimately need to own custom work they paid for. The issue is protecting YOUR pre-existing tools while giving them what they need."
+            ],
+            realWorld: "A developer lost rights to their component library (worth $200K+) because a client's 'all IP' clause was interpreted to include pre-existing code integrated into the project.",
+            concept: "ip_assignment",
+            why: "Separate custom deliverables (client owns) from your tools/frameworks (you retain, license to client). Specify: non-exclusive, perpetual, royalty-free license for your pre-existing IP."
+         },
+         {
+            title: "The Termination Trap",
+            role: "Marketing Agency Owner",
+            context: "You've signed a 12-month retainer contract ($10K/month) with a client. Three months in, they want to cancel. Your contract says:",
+            clause: "Either party may terminate with 30 days written notice. Upon termination, Client shall pay for all work completed to date.",
+            question: "You've turned down other clients for this retainer. What's the problem?",
+            opts: [
+               'No problem - 30 days notice is fair and standard',
+               'Problem: No early termination fee protects your lost opportunity',
+               'Problem: Should require cause for termination (breach only)',
+               'Problem: Need 90 days notice minimum for long-term contracts'
+            ],
+            correct: 1,
+            wrongExplanations: [
+               "30 days notice IS standard, but you're missing the bigger picture. You turned down 9 months of other work ($90K opportunity cost) based on this contract. 30 days notice doesn't compensate for that.",
+               "", // Correct
+               "Cause-only termination is too restrictive and unreasonable. Clients legitimately need exit options. The issue is compensation for early exit, not preventing exit.",
+               "90 days is excessive and may not be enforceable. Courts prefer reasonable exit terms. The solution is financial compensation, not longer notice periods."
+            ],
+            realWorld: "An agency lost $400K in projected revenue when a client terminated a 2-year contract after 3 months. Their 'mutual termination' clause had no early exit penalty.",
+            concept: "termination_clauses",
+            why: "For long-term contracts, include graduated termination fees: e.g., 'Early termination requires payment of 50% of remaining contract value, decreasing 10% per quarter completed.'"
+         },
+         {
+            title: "The Auto-Renewal Ambush",
+            role: "Small Business Owner",
+            context: "You're reviewing a software subscription renewal. The original contract you signed 11 months ago included:",
+            clause: "This Agreement automatically renews for successive 12-month terms unless either party provides written notice of non-renewal at least 60 days before the current term expires.",
+            question: "It's now 45 days before renewal. What's your situation?",
+            opts: [
+               'Send cancellation notice now - 45 days is reasonable',
+               'You are legally locked in for another 12 months',
+               'Call and negotiate - auto-renewal clauses are not enforceable',
+               'Send notice now and dispute the charge if they bill you'
+            ],
+            correct: 1,
+            wrongExplanations: [
+               "You MISSED the 60-day window. 45 days notice does NOT satisfy the contract. Your notice is legally ineffective, and you will be auto-renewed.",
+               "", // Correct
+               "Auto-renewal clauses ARE generally enforceable when clearly disclosed (which this was). Some states require specific notice, but most don't void the clause entirely.",
+               "Disputing the charge will fail. You signed the contract, the clause is valid, you missed the deadline. Chargeback disputes will side with the vendor."
+            ],
+            realWorld: "A company paid $180K for software they didn't want because they missed a 90-day cancellation window by 2 weeks. The vendor refused to negotiate.",
+            concept: "auto_renewal",
+            why: "Calendar ALL renewal deadlines immediately when signing. Auto-renewal benefits vendors—build systems to track and send notices 90 days early. Some states now require renewal reminders."
+         }
       ];
-      const infoTopics: Record<string, { title: string; content: string }> = {
-         elements: { title: "Contract Elements", content: "Valid contracts need: Offer, Acceptance, Consideration, Capacity, Legality. Missing any = unenforceable." },
-         redflags: { title: "Red Flags", content: "Watch for: Unlimited liability, auto-renewal, one-sided terms, IP overreach, unreasonable non-competes." },
-         negotiate: { title: "Negotiation", content: "Everything is negotiable! Mark concerns, propose alternatives. Don't be afraid to walk away." },
-      };
-      useEffect(() => { if (infoTopic && infoTopics[infoTopic]) setShowInfo(true); }, [infoTopic]);
-      const startGame = () => { setPhase('play'); setClause(0); setScore(0); setAnswers([]); };
-      const answer = (isRed: boolean) => { const correct = (clauses[clause].flag === 'red') === isRed; if (correct) setScore(prev => prev + 1); setAnswers(prev => [...prev, correct]); if (clause >= clauses.length - 1) setPhase('result'); else setClause(prev => prev + 1); };
-      const getGrade = () => { const pct = (score / clauses.length) * 100; if (pct >= 90) return { letter: 'A', label: 'Contract Pro', color: 'text-green-400' }; if (pct >= 70) return { letter: 'B', label: 'Good Eye', color: 'text-blue-400' }; if (pct >= 50) return { letter: 'C', label: 'Needs Practice', color: 'text-yellow-400' }; return { letter: 'D', label: 'Risky', color: 'text-red-400' }; };
 
-      if (phase === 'intro') return (<div className="w-full h-full flex flex-col bg-gradient-to-br from-rose-900 via-pink-900 to-slate-900 text-white p-4 overflow-auto"><div className="text-center mb-4"><h1 className="text-2xl font-bold mb-2">📝 Contract Review Game</h1><p className="text-rose-300 text-sm">Spot red flags before you sign!</p></div><div className="bg-black/30 rounded-xl p-4 mb-4"><h2 className="text-lg font-bold mb-3 text-rose-400">📋 How It Works</h2><div className="space-y-2 text-sm"><p>• Review <span className="text-white font-bold">{clauses.length} contract clauses</span></p><p>• Identify <span className="text-red-400">🚩 Red Flags</span> or <span className="text-green-400">✓ OK</span></p><p>• Learn why certain terms are problematic</p></div></div><div className="flex flex-wrap gap-2 mb-4">{Object.keys(infoTopics).map(key => (<button key={key} onClick={() => setInfoTopic(key)} className="text-xs bg-rose-500/20 px-2 py-1 rounded-full text-rose-300">ℹ️ {infoTopics[key].title}</button>))}</div><button onClick={startGame} className="w-full py-3 bg-gradient-to-r from-rose-600 to-pink-600 rounded-xl font-bold">▶️ START</button>{showInfo && infoTopic && infoTopics[infoTopic] && (<div className="absolute inset-0 bg-black/80 flex items-center justify-center p-4 z-50" onClick={() => { setShowInfo(false); setInfoTopic(null); }}><div className="bg-slate-800 rounded-xl p-4 max-w-md" onClick={e => e.stopPropagation()}><h3 className="text-lg font-bold text-rose-400 mb-2">{infoTopics[infoTopic].title}</h3><p className="text-sm text-slate-300">{infoTopics[infoTopic].content}</p><button onClick={() => { setShowInfo(false); setInfoTopic(null); }} className="mt-4 w-full py-2 bg-rose-600 rounded-lg">Got it!</button></div></div>)}</div>);
-      if (phase === 'result') { const grade = getGrade(); return (<div className="w-full h-full flex flex-col bg-gradient-to-br from-rose-900 via-pink-900 to-slate-900 text-white p-4 overflow-auto"><div className="text-center mb-4"><div className={`text-6xl font-bold ${grade.color}`}>{grade.letter}</div><div className="text-xl font-bold">{grade.label}</div><div className="text-rose-400">{score}/{clauses.length}</div></div><div className="bg-black/30 rounded-xl p-3 mb-3 max-h-40 overflow-auto"><h3 className="font-bold text-rose-400 mb-2">📊 Review</h3>{clauses.map((c, i) => (<div key={i} className="py-1 border-b border-slate-700 text-xs"><div className="flex justify-between"><span className={c.flag === 'red' ? 'text-red-400' : 'text-green-400'}>{c.flag === 'red' ? '🚩' : '✓'} {c.issue}</span><span>{answers[i] ? '✓' : '✗'}</span></div><p className="text-slate-400">{c.advice}</p></div>))}</div><div className="bg-black/30 rounded-xl p-3 mb-4"><h3 className="font-bold text-rose-400 mb-2">💡 Key Insight</h3><p className="text-sm text-slate-300">Always read contracts fully. Red flags: unlimited liability, IP overreach, unfair termination, bad payment terms.</p></div><button onClick={startGame} className="w-full py-3 bg-gradient-to-r from-rose-600 to-pink-600 rounded-xl font-bold">🔄 TRY AGAIN</button></div>); }
-      const c = clauses[clause];
-      return (<div className="w-full h-full flex flex-col bg-gradient-to-br from-rose-900 via-pink-900 to-slate-900 text-white overflow-hidden">{showInfo && infoTopic && infoTopics[infoTopic] && (<div className="absolute inset-0 bg-black/80 flex items-center justify-center p-4 z-50" onClick={() => { setShowInfo(false); setInfoTopic(null); }}><div className="bg-slate-800 rounded-xl p-4 max-w-md" onClick={e => e.stopPropagation()}><h3 className="text-lg font-bold text-rose-400 mb-2">{infoTopics[infoTopic].title}</h3><p className="text-sm text-slate-300">{infoTopics[infoTopic].content}</p><button onClick={() => { setShowInfo(false); setInfoTopic(null); }} className="mt-4 w-full py-2 bg-rose-600 rounded-lg">Got it!</button></div></div>)}<div className="p-3 bg-black/30 border-b border-rose-500/30"><div className="flex justify-between items-center"><span className="font-bold">📝 Contract Review</span><span className="text-rose-400">{clause + 1}/{clauses.length}</span></div><div className="flex gap-1 mt-2">{answers.map((a, i) => <div key={i} className={`w-3 h-3 rounded ${a ? 'bg-green-500' : 'bg-red-500'}`} />)}</div></div><div className="flex-1 p-4 flex flex-col justify-center"><div className="bg-black/30 rounded-xl p-4 mb-4"><p className="text-sm font-mono text-slate-200">"{c.text}"</p></div><p className="text-center text-sm text-slate-400 mb-4">Is this a red flag?</p><div className="grid grid-cols-2 gap-3"><button onClick={() => answer(true)} className="py-4 bg-red-600/50 hover:bg-red-500/50 rounded-xl font-bold">🚩 Red Flag</button><button onClick={() => answer(false)} className="py-4 bg-green-600/50 hover:bg-green-500/50 rounded-xl font-bold">✓ OK</button></div></div><div className="p-3 bg-black/30 border-t border-rose-500/30"><button onClick={() => setInfoTopic('redflags')} className="text-xs text-rose-400">ℹ️ Red Flags</button></div></div>);
+      const infoTopics: Record<string, { title: string; content: string }> = {
+         payment: {
+            title: "Payment Terms Strategy",
+            content: "NET 30 is standard. For projects >$10K or >30 days, get 25-50% upfront. Add late fees (1.5%/month). Milestone payments for long projects. 'Subject to approval' = red flag. For large companies, shorter payment terms because their AP departments are slow."
+         },
+         liability: {
+            title: "Liability & Indemnification",
+            content: "Always cap liability (1-2x contract value). Exclude consequential, indirect, and punitive damages. Mutual indemnification is fair. Never accept unlimited liability—it's not worth any contract amount. Insurance can help but caps are essential."
+         },
+         ip_rights: {
+            title: "IP Ownership Structures",
+            content: "Custom work: client owns. Your tools/frameworks: you retain, license to client. License types: exclusive (only them), non-exclusive (you keep using). Always specify: scope, duration, territory, sublicense rights. Pre-existing IP must be carved out explicitly."
+         },
+         termination: {
+            title: "Termination Provisions",
+            content: "Convenience termination: either party can exit. For-cause termination: only for breach. Long-term contracts need early exit fees. Include cure periods (30 days to fix breach). Specify what happens to IP, payments, and confidentiality post-termination."
+         },
+         negotiation: {
+            title: "Negotiation Tactics",
+            content: "Everything is negotiable (especially with big companies). Start with your ideal terms. Know your walkaway point before negotiating. Bundle concessions ('I'll accept NET 60 if you add early termination fee'). Get changes in writing before signing."
+         },
+         red_flags: {
+            title: "Immediate Red Flags",
+            content: "Unlimited liability, auto-renewal without notice requirements, 'all IP' without carve-outs, payment 'subject to approval', non-compete over 1 year or outside your industry, unilateral amendment rights, jurisdiction in another country."
+         }
+      };
+
+      useEffect(() => { if (infoTopic && infoTopics[infoTopic]) setShowInfo(true); }, [infoTopic]);
+
+      const startGame = () => {
+         setPhase('play');
+         setScenario(0);
+         setScore(0);
+         setSelected(null);
+         setAnswered(false);
+         setGameLog([]);
+         setConceptGaps([]);
+      };
+
+      const answer = (idx: number) => {
+         if (answered) return;
+         setSelected(idx);
+         setAnswered(true);
+         const s = scenarios[scenario];
+         const isCorrect = idx === s.correct;
+         if (isCorrect) {
+            setScore(prev => prev + 20);
+            setGameLog(prev => [...prev, `✓ ${s.title}: Understood ${s.concept}`]);
+         } else {
+            setConceptGaps(prev => prev.includes(s.concept) ? prev : [...prev, s.concept]);
+            setGameLog(prev => [...prev, `✗ ${s.title}: Gap in ${s.concept}`]);
+         }
+      };
+
+      const next = () => {
+         if (scenario >= scenarios.length - 1) {
+            setPhase('result');
+         } else {
+            setScenario(prev => prev + 1);
+            setSelected(null);
+            setAnswered(false);
+         }
+      };
+
+      const getGrade = () => {
+         const pct = (score / (scenarios.length * 20)) * 100;
+         if (pct >= 90) return { letter: 'A', label: 'Contract Strategist', color: 'text-green-400' };
+         if (pct >= 70) return { letter: 'B', label: 'Protected', color: 'text-blue-400' };
+         if (pct >= 50) return { letter: 'C', label: 'Vulnerable', color: 'text-yellow-400' };
+         return { letter: 'D', label: 'High Risk', color: 'text-red-400' };
+      };
+
+      const conceptLabels: Record<string, string> = {
+         payment_terms: "Payment Terms & Cash Flow Protection",
+         liability_caps: "Liability Caps & Indemnification",
+         ip_assignment: "IP Ownership & Licensing",
+         termination_clauses: "Termination Fees & Exit Strategy",
+         auto_renewal: "Auto-Renewal Traps & Calendar Management"
+      };
+
+      // INTRO PHASE
+      if (phase === 'intro') return (
+         <div className="w-full h-full flex flex-col bg-gradient-to-br from-rose-900 via-pink-900 to-slate-900 text-white p-4 overflow-auto">
+            <div className="text-center mb-4">
+               <h1 className="text-2xl font-bold mb-2">📜 Contract Negotiation Lab</h1>
+               <p className="text-rose-300 text-sm">Context matters. Strategy wins. Protect your business.</p>
+            </div>
+
+            <div className="bg-black/30 rounded-xl p-4 mb-4">
+               <h2 className="text-lg font-bold mb-3 text-rose-400">⚠️ Why This Matters</h2>
+               <div className="space-y-2 text-sm text-slate-300">
+                  <p>• <span className="text-red-400 font-bold">83%</span> of small businesses sign contracts without negotiating</p>
+                  <p>• <span className="text-yellow-400 font-bold">$50B+</span> lost annually to unfavorable contract terms</p>
+                  <p>• <span className="text-green-400 font-bold">Same clause</span> can be OK or devastating—context determines everything</p>
+               </div>
+            </div>
+
+            <div className="bg-black/30 rounded-xl p-4 mb-4">
+               <h2 className="text-lg font-bold mb-3 text-rose-400">🎯 How This Works</h2>
+               <div className="space-y-2 text-sm">
+                  <p>• <span className="text-white font-bold">5 real contract scenarios</span> from different perspectives</p>
+                  <p>• Decide: <span className="text-yellow-400">What should you DO?</span> (not just flag)</p>
+                  <p>• Learn <span className="text-cyan-400">strategic responses</span> that protect your interests</p>
+                  <p>• See <span className="text-red-400">real consequences</span> of bad contract decisions</p>
+               </div>
+            </div>
+
+            <div className="flex flex-wrap gap-2 mb-4">
+               {Object.keys(infoTopics).map(key => (
+                  <button
+                     key={key}
+                     onClick={() => setInfoTopic(key)}
+                     className="text-xs bg-rose-500/20 px-2 py-1 rounded-full text-rose-300 hover:bg-rose-500/30"
+                  >
+                     ℹ️ {infoTopics[key].title.split(' ').slice(0, 2).join(' ')}
+                  </button>
+               ))}
+            </div>
+
+            <button onClick={startGame} className="w-full py-3 bg-gradient-to-r from-rose-600 to-pink-600 rounded-xl font-bold text-lg">
+               ▶️ BEGIN NEGOTIATION
+            </button>
+
+            {showInfo && infoTopic && infoTopics[infoTopic] && (
+               <div className="absolute inset-0 bg-black/80 flex items-center justify-center p-4 z-50" onClick={() => { setShowInfo(false); setInfoTopic(null); }}>
+                  <div className="bg-slate-800 rounded-xl p-4 max-w-md" onClick={e => e.stopPropagation()}>
+                     <h3 className="text-lg font-bold text-rose-400 mb-2">{infoTopics[infoTopic].title}</h3>
+                     <p className="text-sm text-slate-300 leading-relaxed">{infoTopics[infoTopic].content}</p>
+                     <button onClick={() => { setShowInfo(false); setInfoTopic(null); }} className="mt-4 w-full py-2 bg-rose-600 rounded-lg font-bold">Got it!</button>
+                  </div>
+               </div>
+            )}
+         </div>
+      );
+
+      // RESULT PHASE
+      if (phase === 'result') {
+         const grade = getGrade();
+         return (
+            <div className="w-full h-full flex flex-col bg-gradient-to-br from-rose-900 via-pink-900 to-slate-900 text-white p-4 overflow-auto">
+               <div className="text-center mb-4">
+                  <div className={`text-6xl font-bold ${grade.color}`}>{grade.letter}</div>
+                  <div className="text-xl font-bold">{grade.label}</div>
+                  <div className="text-rose-400">Score: {score}/{scenarios.length * 20}</div>
+               </div>
+
+               {conceptGaps.length > 0 && (
+                  <div className="bg-red-900/30 border border-red-500/50 rounded-xl p-3 mb-3">
+                     <h3 className="font-bold text-red-400 mb-2">📚 Contract Gaps to Study</h3>
+                     <div className="space-y-1">
+                        {conceptGaps.map((gap, i) => (
+                           <div key={i} className="flex items-center gap-2 text-sm">
+                              <span className="text-red-400">→</span>
+                              <span className="text-slate-300">{conceptLabels[gap] || gap}</span>
+                              <button
+                                 onClick={() => {
+                                    const topic = gap === 'payment_terms' ? 'payment' :
+                                                  gap === 'liability_caps' ? 'liability' :
+                                                  gap === 'ip_assignment' ? 'ip_rights' :
+                                                  gap === 'termination_clauses' ? 'termination' : 'red_flags';
+                                    setInfoTopic(topic);
+                                 }}
+                                 className="text-xs text-rose-400 underline"
+                              >
+                                 Learn
+                              </button>
+                           </div>
+                        ))}
+                     </div>
+                  </div>
+               )}
+
+               {conceptGaps.length === 0 && (
+                  <div className="bg-green-900/30 border border-green-500/50 rounded-xl p-3 mb-3">
+                     <h3 className="font-bold text-green-400 mb-2">🎉 Contract Expert!</h3>
+                     <p className="text-sm text-slate-300">You understand the strategic nuances of contract negotiation—payment protection, liability caps, IP structures, and termination strategies.</p>
+                  </div>
+               )}
+
+               <div className="bg-black/30 rounded-xl p-3 mb-3 max-h-32 overflow-auto">
+                  <h3 className="font-bold text-rose-400 mb-2">📋 Session Log</h3>
+                  {gameLog.map((log, i) => (
+                     <p key={i} className="text-xs text-slate-400">{log}</p>
+                  ))}
+               </div>
+
+               <div className="bg-black/30 rounded-xl p-3 mb-4">
+                  <h3 className="font-bold text-rose-400 mb-2">💡 Key Strategic Principles</h3>
+                  <ul className="text-sm text-slate-300 space-y-1">
+                     <li>• <span className="text-yellow-400">Context determines risk</span>—same clause can be OK or dangerous</li>
+                     <li>• <span className="text-yellow-400">Everything is negotiable</span>—especially with large companies</li>
+                     <li>• <span className="text-yellow-400">Protect cash flow</span>—upfront payments for long projects</li>
+                     <li>• <span className="text-yellow-400">Calendar everything</span>—renewal traps are real</li>
+                  </ul>
+               </div>
+
+               <button onClick={startGame} className="w-full py-3 bg-gradient-to-r from-rose-600 to-pink-600 rounded-xl font-bold">
+                  🔄 TRY AGAIN
+               </button>
+
+               {showInfo && infoTopic && infoTopics[infoTopic] && (
+                  <div className="absolute inset-0 bg-black/80 flex items-center justify-center p-4 z-50" onClick={() => { setShowInfo(false); setInfoTopic(null); }}>
+                     <div className="bg-slate-800 rounded-xl p-4 max-w-md" onClick={e => e.stopPropagation()}>
+                        <h3 className="text-lg font-bold text-rose-400 mb-2">{infoTopics[infoTopic].title}</h3>
+                        <p className="text-sm text-slate-300 leading-relaxed">{infoTopics[infoTopic].content}</p>
+                        <button onClick={() => { setShowInfo(false); setInfoTopic(null); }} className="mt-4 w-full py-2 bg-rose-600 rounded-lg font-bold">Got it!</button>
+                     </div>
+                  </div>
+               )}
+            </div>
+         );
+      }
+
+      // PLAY PHASE
+      const s = scenarios[scenario];
+      return (
+         <div className="w-full h-full flex flex-col bg-gradient-to-br from-rose-900 via-pink-900 to-slate-900 text-white overflow-hidden">
+            {showInfo && infoTopic && infoTopics[infoTopic] && (
+               <div className="absolute inset-0 bg-black/80 flex items-center justify-center p-4 z-50" onClick={() => { setShowInfo(false); setInfoTopic(null); }}>
+                  <div className="bg-slate-800 rounded-xl p-4 max-w-md" onClick={e => e.stopPropagation()}>
+                     <h3 className="text-lg font-bold text-rose-400 mb-2">{infoTopics[infoTopic].title}</h3>
+                     <p className="text-sm text-slate-300 leading-relaxed">{infoTopics[infoTopic].content}</p>
+                     <button onClick={() => { setShowInfo(false); setInfoTopic(null); }} className="mt-4 w-full py-2 bg-rose-600 rounded-lg font-bold">Got it!</button>
+                  </div>
+               </div>
+            )}
+
+            {/* Header */}
+            <div className="p-3 bg-black/30 border-b border-rose-500/30">
+               <div className="flex justify-between items-center">
+                  <div>
+                     <span className="font-bold text-sm">📜 {s.title}</span>
+                     <span className="ml-2 text-xs text-rose-400 bg-rose-500/20 px-2 py-0.5 rounded">{s.role}</span>
+                  </div>
+                  <span className="text-rose-400 text-sm">{scenario + 1}/{scenarios.length}</span>
+               </div>
+               <div className="flex gap-1 mt-2">
+                  {scenarios.slice(0, scenario).map((_, i) => (
+                     <div key={i} className={`w-3 h-3 rounded ${gameLog[i]?.startsWith('✓') ? 'bg-green-500' : 'bg-red-500'}`} />
+                  ))}
+                  <div className="w-3 h-3 rounded bg-rose-500 animate-pulse" />
+                  {scenarios.slice(scenario + 1).map((_, i) => (
+                     <div key={i} className="w-3 h-3 rounded bg-slate-600" />
+                  ))}
+               </div>
+            </div>
+
+            {/* Scenario */}
+            <div className="flex-1 p-3 overflow-auto">
+               {/* Context */}
+               <div className="bg-black/30 rounded-lg p-3 mb-2">
+                  <p className="text-xs text-slate-400 mb-1">SITUATION:</p>
+                  <p className="text-sm text-slate-200">{s.context}</p>
+               </div>
+
+               {/* Contract Clause */}
+               <div className="bg-slate-800/50 border-l-4 border-rose-500 rounded-r-lg p-3 mb-3">
+                  <p className="text-xs text-rose-400 mb-1">CONTRACT CLAUSE:</p>
+                  <p className="text-sm font-mono text-slate-200 italic">"{s.clause}"</p>
+               </div>
+
+               <p className="text-sm font-bold text-rose-400 mb-2">{s.question}</p>
+
+               <div className="space-y-2">
+                  {s.opts.map((opt, i) => (
+                     <button
+                        key={i}
+                        onClick={() => answer(i)}
+                        disabled={answered}
+                        className={`w-full p-3 rounded-lg text-left text-sm transition-all ${
+                           answered
+                              ? i === s.correct
+                                 ? 'bg-green-600 border-2 border-green-400'
+                                 : i === selected
+                                    ? 'bg-red-600 border-2 border-red-400'
+                                    : 'bg-black/30 opacity-50'
+                              : 'bg-black/30 hover:bg-rose-600/50 border-2 border-transparent'
+                        }`}
+                     >
+                        <span className="flex items-start gap-2">
+                           <span className="font-bold text-rose-400">{String.fromCharCode(65 + i)}.</span>
+                           <span>{opt}</span>
+                        </span>
+                     </button>
+                  ))}
+               </div>
+
+               {/* Explanation after answer */}
+               {answered && (
+                  <div className="mt-3 space-y-2">
+                     {selected !== s.correct && (
+                        <div className="p-3 bg-red-900/30 border border-red-500/50 rounded-lg">
+                           <p className="text-xs font-bold text-red-400 mb-1">❌ Why {String.fromCharCode(65 + (selected || 0))} is Wrong:</p>
+                           <p className="text-sm text-slate-300">{s.wrongExplanations[selected || 0]}</p>
+                        </div>
+                     )}
+
+                     <div className="p-3 bg-green-900/30 border border-green-500/50 rounded-lg">
+                        <p className="text-xs font-bold text-green-400 mb-1">✓ Strategic Response:</p>
+                        <p className="text-sm text-slate-300">{s.why}</p>
+                     </div>
+
+                     <div className="p-3 bg-amber-900/30 border border-amber-500/50 rounded-lg">
+                        <p className="text-xs font-bold text-amber-400 mb-1">⚠️ Real Case:</p>
+                        <p className="text-sm text-slate-300">{s.realWorld}</p>
+                     </div>
+
+                     <button onClick={next} className="w-full py-3 bg-gradient-to-r from-rose-600 to-pink-600 rounded-xl font-bold mt-2">
+                        {scenario >= scenarios.length - 1 ? 'See Results' : 'Next Scenario →'}
+                     </button>
+                  </div>
+               )}
+            </div>
+
+            {/* Info Buttons Footer */}
+            <div className="p-3 bg-black/30 border-t border-rose-500/30 flex gap-2 justify-center flex-wrap">
+               <button onClick={() => setInfoTopic('payment')} className="text-xs text-rose-400 hover:text-rose-300">ℹ️ Payment</button>
+               <button onClick={() => setInfoTopic('liability')} className="text-xs text-rose-400 hover:text-rose-300">ℹ️ Liability</button>
+               <button onClick={() => setInfoTopic('ip_rights')} className="text-xs text-rose-400 hover:text-rose-300">ℹ️ IP Rights</button>
+               <button onClick={() => setInfoTopic('termination')} className="text-xs text-rose-400 hover:text-rose-300">ℹ️ Termination</button>
+            </div>
+         </div>
+      );
    };
 
    // --- PERMITS RENDERER ---
@@ -28308,42 +31964,434 @@ const GeneratedDiagram: React.FC<DiagramProps> = ({ type, data, title }) => {
       const [phase, setPhase] = useState<'intro' | 'play' | 'result'>('intro');
       const [showInfo, setShowInfo] = useState(false);
       const [infoTopic, setInfoTopic] = useState<string | null>(null);
-      const [businessType, setBusinessType] = useState<string | null>(null);
-      const [selectedPermits, setSelectedPermits] = useState<string[]>([]);
-      const [budget, setBudget] = useState(5000);
+      const [scenario, setScenario] = useState(0);
+      const [score, setScore] = useState(0);
+      const [selected, setSelected] = useState<number | null>(null);
+      const [answered, setAnswered] = useState(false);
+      const [gameLog, setGameLog] = useState<string[]>([]);
+      const [conceptGaps, setConceptGaps] = useState<string[]>([]);
 
-      const businessTypes = [
-         { id: 'restaurant', name: 'Restaurant', icon: '🍽️', required: ['business_license', 'health', 'food_handler', 'fire'] },
-         { id: 'retail', name: 'Retail Store', icon: '🛍️', required: ['business_license', 'sales_tax', 'signage'] },
-         { id: 'construction', name: 'Construction', icon: '🏗️', required: ['business_license', 'contractor', 'bonding'] },
-         { id: 'homebased', name: 'Home-Based', icon: '🏠', required: ['business_license', 'home_occupation'] },
+      // Real compliance scenarios with consequences
+      const scenarios = [
+         {
+            title: "The Food Truck Launch",
+            situation: "You're launching a food truck selling tacos. You got your business license and food handler permits. Opening day arrives. The health inspector shows up.",
+            question: "What permit are you MOST LIKELY missing that could shut you down immediately?",
+            opts: [
+               'Sales Tax Permit - need to collect taxes',
+               'Mobile Food Vendor Permit - specific to food trucks',
+               'Fire Extinguisher Certificate - safety requirement',
+               'Music License - playing radio while serving'
+            ],
+            correct: 1,
+            wrongExplanations: [
+               "Sales tax permits are important but inspectors don't check for them on opening day. The state catches this later during tax audits, not health inspections.",
+               "", // Correct
+               "Fire extinguisher certs are part of the mobile vendor permit inspection, not a separate permit in most jurisdictions.",
+               "Music licenses (ASCAP/BMI) are for businesses, but no inspector checks this on opening day. This becomes an issue if you're caught, but not from health inspectors."
+            ],
+            realWorld: "A LA food truck owner was fined $5,000 and shut down for 2 weeks for operating with a restaurant permit instead of a mobile food vendor permit—different inspection requirements, different commissary rules.",
+            concept: "industry_specific",
+            why: "Food trucks need MOBILE-specific permits, not restaurant permits. Requirements include: commissary agreement (where you prep/clean), specific route permits (some cities), and mobile vendor inspections. Standard food permits don't cover mobile operations."
+         },
+         {
+            title: "The Home Bakery Surprise",
+            situation: "You're baking and selling cookies from home. You've been operating for 6 months with just a home occupation permit and business license. A neighbor complains about delivery trucks.",
+            question: "What's the REAL compliance issue that could shut you down?",
+            opts: [
+               'The neighbor complaint about trucks - noise violation',
+               'Missing cottage food license - home food production laws',
+               'Zoning violation - residential zone restrictions',
+               'No health inspection - food safety requirement'
+            ],
+            correct: 1,
+            wrongExplanations: [
+               "Truck noise is a nuisance complaint, not a permit issue. Code enforcement might give a warning, but it won't shut down your business.",
+               "", // Correct
+               "Zoning is secondary here. Most residential zones allow home occupations—the issue is the TYPE of home business (food production has special rules).",
+               "Cottage food operations are actually EXEMPT from health inspections in most states—that's the whole point of cottage food laws. But you need the cottage food license first."
+            ],
+            realWorld: "A Texas home baker was fined $25,000 for selling without a cottage food license. She had a home occupation permit but didn't know cottage food was a separate requirement.",
+            concept: "cottage_food",
+            why: "Cottage food laws allow home food production but with strict limits: specific foods only (usually baked goods, jams, not meat/dairy), annual sales caps ($25K-$75K depending on state), labeling requirements, and registration. Regular business license doesn't cover this."
+         },
+         {
+            title: "The Contractor Nightmare",
+            situation: "You're a general contractor hired to remodel a kitchen ($40K job). You have your contractor's license and business license. Midway through, a city inspector arrives.",
+            question: "What permit issue could result in the homeowner being forced to TEAR OUT your completed work?",
+            opts: [
+               'Missing workers comp insurance for your crew',
+               'No building permit pulled for the project',
+               'Expired contractor license - needs annual renewal',
+               'Wrong contractor class - residential vs commercial'
+            ],
+            correct: 1,
+            wrongExplanations: [
+               "Workers comp is serious (you can be sued), but inspectors don't check this. It's an insurance/labor issue, not a building inspection issue.",
+               "", // Correct
+               "Expired license is bad, but work done under an expired license is usually grandfathered. The city won't tear out work for this—they'll fine you and stop future work.",
+               "Wrong class violations result in fines and license issues, not demolition of completed work."
+            ],
+            realWorld: "A $200K kitchen remodel in California was ordered demolished because no permits were pulled. The drywall hid unpermitted electrical work. Homeowner sued contractor for $350K including demolition costs.",
+            concept: "building_permits",
+            why: "Building permits aren't just paperwork—they ensure code compliance through inspections at each stage. Unpermitted work: (1) must be exposed for inspection or torn out, (2) voids insurance claims, (3) kills home sales, (4) creates contractor liability for FULL reconstruction."
+         },
+         {
+            title: "The Retail Pop-Up Trap",
+            situation: "You're opening a 3-day pop-up shop in a vacant retail space. The landlord says 'just set up, it's temporary.' You bring inventory and start selling.",
+            question: "What's the MOST LIKELY reason you'll get shut down on day one?",
+            opts: [
+               'No sales tax permit - can\'t legally collect tax',
+               'Temporary Use Permit from the city - pop-ups need authorization',
+               'Fire marshal approval - occupancy limits',
+               'No ADA compliance - accessibility requirements'
+            ],
+            correct: 1,
+            wrongExplanations: [
+               "Sales tax permits are state-level and don't trigger immediate shutdown. You'll face penalties later, but enforcement is slow.",
+               "", // Correct
+               "Fire marshal checks are typically part of permanent occupancy permits, not pop-up enforcement. They might check after complaints.",
+               "ADA compliance is a lawsuit risk, not a permit issue. No inspector shuts you down for ADA on day one—it's civil liability."
+            ],
+            realWorld: "A pop-up holiday market in Denver was shut down 2 hours after opening—vendors had business licenses but no temporary use permits. City lost $50K in fees they would have collected if vendors had applied.",
+            concept: "temporary_permits",
+            why: "Pop-ups/temporary events need: (1) Temporary Use Permit from city planning, (2) Special event permit if selling food/alcohol, (3) Landlord written permission (verbal isn't enough), (4) Liability insurance naming the city. 'Temporary' doesn't mean 'no permits.'"
+         },
+         {
+            title: "The SaaS Startup Surprise",
+            situation: "You're running a profitable SaaS company from home. You have a home occupation permit and business license. You've hired 3 remote employees. An auditor calls about 'business personal property tax.'",
+            question: "What compliance issue do most tech startups miss that triggers this audit?",
+            opts: [
+               'Not paying self-employment tax on profits',
+               'Business Personal Property Tax on computers/equipment',
+               'Remote employee work permits in their states',
+               'Software sales tax collection requirements'
+            ],
+            correct: 1,
+            wrongExplanations: [
+               "Self-employment tax is an IRS issue, not a local auditor issue. This wouldn't trigger a call from a 'business personal property' auditor.",
+               "", // Correct
+               "Remote employee work permits aren't typically a thing (employees work under your business license). Nexus/tax registration in their states is, but that's not 'personal property tax.'",
+               "SaaS sales tax is complex but it's state-level, not what a 'business personal property tax' auditor is calling about."
+            ],
+            realWorld: "A tech startup in Texas was hit with $12,000 in back taxes plus penalties for never filing Business Personal Property Tax returns on their computers, servers, and office equipment.",
+            concept: "property_tax",
+            why: "Business Personal Property Tax applies to business equipment (computers, furniture, machinery) in most states. It's separate from real estate tax. Many home-based businesses miss this because they think 'home office' means residential tax treatment. Equipment used for business is taxed as business property."
+         }
       ];
-      const permits = [
-         { id: 'business_license', name: 'Business License', cost: 100, desc: 'Required for all' },
-         { id: 'sales_tax', name: 'Sales Tax Permit', cost: 0, desc: 'Selling goods' },
-         { id: 'health', name: 'Health Permit', cost: 500, desc: 'Food service' },
-         { id: 'food_handler', name: 'Food Handler Card', cost: 50, desc: 'Food workers' },
-         { id: 'signage', name: 'Sign Permit', cost: 200, desc: 'Exterior signs' },
-         { id: 'fire', name: 'Fire Inspection', cost: 150, desc: 'Public spaces' },
-         { id: 'contractor', name: 'Contractor License', cost: 800, desc: 'Construction' },
-         { id: 'bonding', name: 'Surety Bond', cost: 1000, desc: 'Contractor guarantee' },
-         { id: 'home_occupation', name: 'Home Occupation', cost: 75, desc: 'Home business' },
-         { id: 'liquor', name: 'Liquor License', cost: 2000, desc: 'Alcohol sales' },
-      ];
+
       const infoTopics: Record<string, { title: string; content: string }> = {
-         license: { title: "Business Licenses", content: "Almost every business needs a basic license. Costs $50-500. Annual renewal. Operating without one = fines." },
-         zoning: { title: "Zoning", content: "Zoning laws control what businesses can operate where. Check before signing a lease!" },
-         industry: { title: "Industry Permits", content: "Some industries need special permits: Food = health, Construction = contractor license, Alcohol = liquor license." },
+         business_license: {
+            title: "Business License Basics",
+            content: "Required in almost every city/county. Costs $50-500. Annual renewal. Operating without = daily fines ($100-500/day in some cities). Usually tied to your physical address—moving means new license."
+         },
+         zoning: {
+            title: "Zoning & Land Use",
+            content: "Controls WHAT businesses can operate WHERE. Home occupations have limits (no customers, no employees, no signage in some zones). Changing use (retail to restaurant) requires zoning approval. Check BEFORE signing a lease."
+         },
+         industry_permits: {
+            title: "Industry-Specific Permits",
+            content: "Food = Health permits + cottage food or commercial kitchen. Alcohol = Liquor license (can take 6+ months). Construction = Contractor license + building permits per project. Childcare = State licensing. Each industry has hidden requirements."
+         },
+         building_permits: {
+            title: "Building & Construction Permits",
+            content: "Required for: electrical, plumbing, structural changes, HVAC. NOT just for new construction—renovations need them too. Unpermitted work = tear out + redo. Kills home sales. Voids insurance claims."
+         },
+         state_federal: {
+            title: "State & Federal Requirements",
+            content: "EIN (federal) = free, apply online. State tax registration = required to collect sales tax. Professional licenses (doctors, lawyers, contractors) = state-level. Industry regulations (FDA, EPA, OSHA) = federal. Layer of requirements varies by business."
+         },
+         compliance_timeline: {
+            title: "Permit Timeline Reality",
+            content: "Business license: 1-2 weeks. Health permits: 2-8 weeks. Liquor license: 3-12 months (!). Building permits: 2-12 weeks. Zoning changes: 3-6 months. Plan backwards from your launch date. Rush fees exist but are expensive."
+         }
       };
-      useEffect(() => { if (infoTopic && infoTopics[infoTopic]) setShowInfo(true); }, [infoTopic]);
-      const startGame = () => { setPhase('play'); setBusinessType(null); setSelectedPermits([]); setBudget(5000); };
-      const togglePermit = (id: string) => { const p = permits.find(pt => pt.id === id); if (!p) return; if (selectedPermits.includes(id)) { setSelectedPermits(prev => prev.filter(x => x !== id)); setBudget(prev => prev + p.cost); } else if (budget >= p.cost) { setSelectedPermits(prev => [...prev, id]); setBudget(prev => prev - p.cost); } };
-      const getScore = () => { if (!businessType) return 0; const biz = businessTypes.find(b => b.id === businessType); if (!biz) return 0; const hasAll = biz.required.every(r => selectedPermits.includes(r)); const extras = selectedPermits.filter(p => !biz.required.includes(p)).length; let s = hasAll ? 80 : (selectedPermits.filter(p => biz.required.includes(p)).length / biz.required.length) * 60; s -= extras * 5; return Math.max(0, Math.min(100, Math.round(s + (hasAll ? 20 : 0)))); };
-      const getGrade = () => { const s = getScore(); if (s >= 90) return { letter: 'A', label: 'Compliant', color: 'text-green-400' }; if (s >= 70) return { letter: 'B', label: 'Mostly OK', color: 'text-blue-400' }; if (s >= 50) return { letter: 'C', label: 'Gaps Exist', color: 'text-yellow-400' }; return { letter: 'D', label: 'Non-Compliant', color: 'text-red-400' }; };
 
-      if (phase === 'intro') return (<div className="w-full h-full flex flex-col bg-gradient-to-br from-sky-900 via-cyan-900 to-slate-900 text-white p-4 overflow-auto"><div className="text-center mb-4"><h1 className="text-2xl font-bold mb-2">📋 Permits & Licenses</h1><p className="text-sky-300 text-sm">Get your business compliant</p></div><div className="bg-black/30 rounded-xl p-4 mb-4"><h2 className="text-lg font-bold mb-3 text-sky-400">📋 How It Works</h2><div className="space-y-2 text-sm"><p>• Choose your <span className="text-white font-bold">business type</span></p><p>• Select required <span className="text-sky-400">permits</span></p><p>• Budget: <span className="text-green-400">$5,000</span></p></div></div><div className="grid grid-cols-4 gap-2 mb-4 text-center text-xs">{businessTypes.map(b => (<div key={b.id} className="bg-black/30 rounded-lg p-2"><span className="text-lg">{b.icon}</span><p className="text-slate-300">{b.name}</p></div>))}</div><div className="flex flex-wrap gap-2 mb-4">{Object.keys(infoTopics).map(key => (<button key={key} onClick={() => setInfoTopic(key)} className="text-xs bg-sky-500/20 px-2 py-1 rounded-full text-sky-300">ℹ️ {infoTopics[key].title}</button>))}</div><button onClick={startGame} className="w-full py-3 bg-gradient-to-r from-sky-600 to-cyan-600 rounded-xl font-bold">▶️ START</button>{showInfo && infoTopic && infoTopics[infoTopic] && (<div className="absolute inset-0 bg-black/80 flex items-center justify-center p-4 z-50" onClick={() => { setShowInfo(false); setInfoTopic(null); }}><div className="bg-slate-800 rounded-xl p-4 max-w-md" onClick={e => e.stopPropagation()}><h3 className="text-lg font-bold text-sky-400 mb-2">{infoTopics[infoTopic].title}</h3><p className="text-sm text-slate-300">{infoTopics[infoTopic].content}</p><button onClick={() => { setShowInfo(false); setInfoTopic(null); }} className="mt-4 w-full py-2 bg-sky-600 rounded-lg">Got it!</button></div></div>)}</div>);
-      if (phase === 'result') { const grade = getGrade(); const biz = businessTypes.find(b => b.id === businessType); const required = biz?.required || []; const missing = required.filter(r => !selectedPermits.includes(r)); const extras = selectedPermits.filter(p => !required.includes(p)); return (<div className="w-full h-full flex flex-col bg-gradient-to-br from-sky-900 via-cyan-900 to-slate-900 text-white p-4 overflow-auto"><div className="text-center mb-4"><div className={`text-6xl font-bold ${grade.color}`}>{grade.letter}</div><div className="text-xl font-bold">{grade.label}</div><div className="text-sky-400">Score: {getScore()}%</div></div><div className="bg-black/30 rounded-xl p-3 mb-3"><h3 className="font-bold text-sky-400 mb-2">📊 Check</h3>{missing.length > 0 && (<div className="mb-2"><span className="text-red-400 text-sm">Missing:</span>{missing.map(m => <span key={m} className="ml-2 text-xs bg-red-500/30 px-2 py-1 rounded">{permits.find(p => p.id === m)?.name}</span>)}</div>)}{extras.length > 0 && (<div><span className="text-yellow-400 text-sm">Unnecessary:</span>{extras.map(u => <span key={u} className="ml-2 text-xs bg-yellow-500/30 px-2 py-1 rounded">{permits.find(p => p.id === u)?.name}</span>)}</div>)}{missing.length === 0 && extras.length === 0 && <p className="text-green-400">✓ Perfect!</p>}</div><div className="bg-black/30 rounded-xl p-3 mb-4"><h3 className="font-bold text-sky-400 mb-2">💡 Key Insight</h3><p className="text-sm text-slate-300">Every business type has specific permit requirements. Missing = fines. Unnecessary = wasted money.</p></div><button onClick={startGame} className="w-full py-3 bg-gradient-to-r from-sky-600 to-cyan-600 rounded-xl font-bold">🔄 TRY AGAIN</button></div>); }
-      return (<div className="w-full h-full flex flex-col bg-gradient-to-br from-sky-900 via-cyan-900 to-slate-900 text-white overflow-hidden">{showInfo && infoTopic && infoTopics[infoTopic] && (<div className="absolute inset-0 bg-black/80 flex items-center justify-center p-4 z-50" onClick={() => { setShowInfo(false); setInfoTopic(null); }}><div className="bg-slate-800 rounded-xl p-4 max-w-md" onClick={e => e.stopPropagation()}><h3 className="text-lg font-bold text-sky-400 mb-2">{infoTopics[infoTopic].title}</h3><p className="text-sm text-slate-300">{infoTopics[infoTopic].content}</p><button onClick={() => { setShowInfo(false); setInfoTopic(null); }} className="mt-4 w-full py-2 bg-sky-600 rounded-lg">Got it!</button></div></div>)}<div className="p-3 bg-black/30 border-b border-sky-500/30"><div className="flex justify-between items-center"><span className="font-bold">📋 Permits</span><span className="text-green-400">${budget}</span></div></div><div className="flex-1 p-3 overflow-auto">{!businessType ? (<div className="space-y-3"><h3 className="font-bold">Select business type:</h3>{businessTypes.map(b => (<button key={b.id} onClick={() => setBusinessType(b.id)} className="w-full bg-black/30 rounded-lg p-3 text-left hover:bg-sky-500/20"><span className="text-xl mr-2">{b.icon}</span><span className="font-bold">{b.name}</span></button>))}</div>) : (<div className="space-y-2"><div className="flex items-center gap-2 mb-3"><span className="text-xl">{businessTypes.find(b => b.id === businessType)?.icon}</span><span className="font-bold">{businessTypes.find(b => b.id === businessType)?.name}</span></div><p className="text-sm text-slate-400 mb-2">Select permits:</p>{permits.map(p => (<div key={p.id} onClick={() => togglePermit(p.id)} className={`rounded-lg p-2 cursor-pointer border-2 ${selectedPermits.includes(p.id) ? 'border-green-500 bg-green-500/20' : 'border-transparent bg-black/30'}`}><div className="flex justify-between items-center"><span className="font-bold text-sm">{p.name}</span><span className="text-xs text-green-400">{p.cost === 0 ? 'Free' : `$${p.cost}`}</span></div><p className="text-xs text-slate-400">{p.desc}</p></div>))}</div>)}</div>{businessType && (<div className="p-3 bg-black/30 border-t border-sky-500/30"><button onClick={() => setPhase('result')} className="w-full py-3 bg-gradient-to-r from-sky-600 to-cyan-600 rounded-xl font-bold">✓ CHECK</button></div>)}</div>);
+      useEffect(() => { if (infoTopic && infoTopics[infoTopic]) setShowInfo(true); }, [infoTopic]);
+
+      const startGame = () => {
+         setPhase('play');
+         setScenario(0);
+         setScore(0);
+         setSelected(null);
+         setAnswered(false);
+         setGameLog([]);
+         setConceptGaps([]);
+      };
+
+      const answer = (idx: number) => {
+         if (answered) return;
+         setSelected(idx);
+         setAnswered(true);
+         const s = scenarios[scenario];
+         const isCorrect = idx === s.correct;
+         if (isCorrect) {
+            setScore(prev => prev + 20);
+            setGameLog(prev => [...prev, `✓ ${s.title}: Understood ${s.concept}`]);
+         } else {
+            setConceptGaps(prev => prev.includes(s.concept) ? prev : [...prev, s.concept]);
+            setGameLog(prev => [...prev, `✗ ${s.title}: Gap in ${s.concept}`]);
+         }
+      };
+
+      const next = () => {
+         if (scenario >= scenarios.length - 1) {
+            setPhase('result');
+         } else {
+            setScenario(prev => prev + 1);
+            setSelected(null);
+            setAnswered(false);
+         }
+      };
+
+      const getGrade = () => {
+         const pct = (score / (scenarios.length * 20)) * 100;
+         if (pct >= 90) return { letter: 'A', label: 'Compliance Expert', color: 'text-green-400' };
+         if (pct >= 70) return { letter: 'B', label: 'Mostly Compliant', color: 'text-blue-400' };
+         if (pct >= 50) return { letter: 'C', label: 'Risky Gaps', color: 'text-yellow-400' };
+         return { letter: 'D', label: 'Violation Risk', color: 'text-red-400' };
+      };
+
+      const conceptLabels: Record<string, string> = {
+         industry_specific: "Industry-Specific Permit Requirements",
+         cottage_food: "Cottage Food & Home Business Laws",
+         building_permits: "Building Permits & Inspections",
+         temporary_permits: "Temporary Use & Pop-Up Permits",
+         property_tax: "Business Personal Property Tax"
+      };
+
+      // INTRO PHASE
+      if (phase === 'intro') return (
+         <div className="w-full h-full flex flex-col bg-gradient-to-br from-sky-900 via-cyan-900 to-slate-900 text-white p-4 overflow-auto">
+            <div className="text-center mb-4">
+               <h1 className="text-2xl font-bold mb-2">🏛️ Compliance Crisis Simulator</h1>
+               <p className="text-sky-300 text-sm">The permits you don't know about will shut you down.</p>
+            </div>
+
+            <div className="bg-black/30 rounded-xl p-4 mb-4">
+               <h2 className="text-lg font-bold mb-3 text-sky-400">⚠️ Why This Matters</h2>
+               <div className="space-y-2 text-sm text-slate-300">
+                  <p>• <span className="text-red-400 font-bold">30%</span> of small businesses face permit violations in year one</p>
+                  <p>• <span className="text-yellow-400 font-bold">$10,000+</span> average cost of compliance failures (fines + remediation)</p>
+                  <p>• <span className="text-green-400 font-bold">Hidden permits</span> vary by industry, location, and business type</p>
+               </div>
+            </div>
+
+            <div className="bg-black/30 rounded-xl p-4 mb-4">
+               <h2 className="text-lg font-bold mb-3 text-sky-400">🎯 How This Works</h2>
+               <div className="space-y-2 text-sm">
+                  <p>• <span className="text-white font-bold">5 real compliance scenarios</span> entrepreneurs face</p>
+                  <p>• Identify <span className="text-yellow-400">hidden permit requirements</span> that cause shutdowns</p>
+                  <p>• Learn <span className="text-cyan-400">real consequences</span> and how to avoid them</p>
+                  <p>• Discover <span className="text-red-400">permits you didn't know existed</span></p>
+               </div>
+            </div>
+
+            <div className="flex flex-wrap gap-2 mb-4">
+               {Object.keys(infoTopics).map(key => (
+                  <button
+                     key={key}
+                     onClick={() => setInfoTopic(key)}
+                     className="text-xs bg-sky-500/20 px-2 py-1 rounded-full text-sky-300 hover:bg-sky-500/30"
+                  >
+                     ℹ️ {infoTopics[key].title.split(' ').slice(0, 2).join(' ')}
+                  </button>
+               ))}
+            </div>
+
+            <button onClick={startGame} className="w-full py-3 bg-gradient-to-r from-sky-600 to-cyan-600 rounded-xl font-bold text-lg">
+               ▶️ BEGIN SIMULATION
+            </button>
+
+            {showInfo && infoTopic && infoTopics[infoTopic] && (
+               <div className="absolute inset-0 bg-black/80 flex items-center justify-center p-4 z-50" onClick={() => { setShowInfo(false); setInfoTopic(null); }}>
+                  <div className="bg-slate-800 rounded-xl p-4 max-w-md" onClick={e => e.stopPropagation()}>
+                     <h3 className="text-lg font-bold text-sky-400 mb-2">{infoTopics[infoTopic].title}</h3>
+                     <p className="text-sm text-slate-300 leading-relaxed">{infoTopics[infoTopic].content}</p>
+                     <button onClick={() => { setShowInfo(false); setInfoTopic(null); }} className="mt-4 w-full py-2 bg-sky-600 rounded-lg font-bold">Got it!</button>
+                  </div>
+               </div>
+            )}
+         </div>
+      );
+
+      // RESULT PHASE
+      if (phase === 'result') {
+         const grade = getGrade();
+         return (
+            <div className="w-full h-full flex flex-col bg-gradient-to-br from-sky-900 via-cyan-900 to-slate-900 text-white p-4 overflow-auto">
+               <div className="text-center mb-4">
+                  <div className={`text-6xl font-bold ${grade.color}`}>{grade.letter}</div>
+                  <div className="text-xl font-bold">{grade.label}</div>
+                  <div className="text-sky-400">Score: {score}/{scenarios.length * 20}</div>
+               </div>
+
+               {conceptGaps.length > 0 && (
+                  <div className="bg-red-900/30 border border-red-500/50 rounded-xl p-3 mb-3">
+                     <h3 className="font-bold text-red-400 mb-2">📚 Compliance Gaps to Research</h3>
+                     <div className="space-y-1">
+                        {conceptGaps.map((gap, i) => (
+                           <div key={i} className="flex items-center gap-2 text-sm">
+                              <span className="text-red-400">→</span>
+                              <span className="text-slate-300">{conceptLabels[gap] || gap}</span>
+                              <button
+                                 onClick={() => {
+                                    const topic = gap === 'industry_specific' ? 'industry_permits' :
+                                                  gap === 'cottage_food' ? 'zoning' :
+                                                  gap === 'building_permits' ? 'building_permits' :
+                                                  gap === 'temporary_permits' ? 'zoning' : 'state_federal';
+                                    setInfoTopic(topic);
+                                 }}
+                                 className="text-xs text-sky-400 underline"
+                              >
+                                 Learn
+                              </button>
+                           </div>
+                        ))}
+                     </div>
+                  </div>
+               )}
+
+               {conceptGaps.length === 0 && (
+                  <div className="bg-green-900/30 border border-green-500/50 rounded-xl p-3 mb-3">
+                     <h3 className="font-bold text-green-400 mb-2">🎉 Compliance Expert!</h3>
+                     <p className="text-sm text-slate-300">You understand the hidden permit requirements that catch most entrepreneurs. You know to look beyond basic business licenses.</p>
+                  </div>
+               )}
+
+               <div className="bg-black/30 rounded-xl p-3 mb-3 max-h-32 overflow-auto">
+                  <h3 className="font-bold text-sky-400 mb-2">📋 Session Log</h3>
+                  {gameLog.map((log, i) => (
+                     <p key={i} className="text-xs text-slate-400">{log}</p>
+                  ))}
+               </div>
+
+               <div className="bg-black/30 rounded-xl p-3 mb-4">
+                  <h3 className="font-bold text-sky-400 mb-2">💡 Compliance Strategy</h3>
+                  <ul className="text-sm text-slate-300 space-y-1">
+                     <li>• <span className="text-yellow-400">Research industry-specific</span> permits beyond business license</li>
+                     <li>• <span className="text-yellow-400">Check city AND county AND state</span> requirements separately</li>
+                     <li>• <span className="text-yellow-400">Timeline matters</span>—some permits take months</li>
+                     <li>• <span className="text-yellow-400">Ask your city clerk</span>—they know what you need</li>
+                  </ul>
+               </div>
+
+               <button onClick={startGame} className="w-full py-3 bg-gradient-to-r from-sky-600 to-cyan-600 rounded-xl font-bold">
+                  🔄 TRY AGAIN
+               </button>
+
+               {showInfo && infoTopic && infoTopics[infoTopic] && (
+                  <div className="absolute inset-0 bg-black/80 flex items-center justify-center p-4 z-50" onClick={() => { setShowInfo(false); setInfoTopic(null); }}>
+                     <div className="bg-slate-800 rounded-xl p-4 max-w-md" onClick={e => e.stopPropagation()}>
+                        <h3 className="text-lg font-bold text-sky-400 mb-2">{infoTopics[infoTopic].title}</h3>
+                        <p className="text-sm text-slate-300 leading-relaxed">{infoTopics[infoTopic].content}</p>
+                        <button onClick={() => { setShowInfo(false); setInfoTopic(null); }} className="mt-4 w-full py-2 bg-sky-600 rounded-lg font-bold">Got it!</button>
+                     </div>
+                  </div>
+               )}
+            </div>
+         );
+      }
+
+      // PLAY PHASE
+      const s = scenarios[scenario];
+      return (
+         <div className="w-full h-full flex flex-col bg-gradient-to-br from-sky-900 via-cyan-900 to-slate-900 text-white overflow-hidden">
+            {showInfo && infoTopic && infoTopics[infoTopic] && (
+               <div className="absolute inset-0 bg-black/80 flex items-center justify-center p-4 z-50" onClick={() => { setShowInfo(false); setInfoTopic(null); }}>
+                  <div className="bg-slate-800 rounded-xl p-4 max-w-md" onClick={e => e.stopPropagation()}>
+                     <h3 className="text-lg font-bold text-sky-400 mb-2">{infoTopics[infoTopic].title}</h3>
+                     <p className="text-sm text-slate-300 leading-relaxed">{infoTopics[infoTopic].content}</p>
+                     <button onClick={() => { setShowInfo(false); setInfoTopic(null); }} className="mt-4 w-full py-2 bg-sky-600 rounded-lg font-bold">Got it!</button>
+                  </div>
+               </div>
+            )}
+
+            {/* Header */}
+            <div className="p-3 bg-black/30 border-b border-sky-500/30">
+               <div className="flex justify-between items-center">
+                  <span className="font-bold text-sm">🏛️ {s.title}</span>
+                  <span className="text-sky-400 text-sm">{scenario + 1}/{scenarios.length}</span>
+               </div>
+               <div className="flex gap-1 mt-2">
+                  {scenarios.slice(0, scenario).map((_, i) => (
+                     <div key={i} className={`w-3 h-3 rounded ${gameLog[i]?.startsWith('✓') ? 'bg-green-500' : 'bg-red-500'}`} />
+                  ))}
+                  <div className="w-3 h-3 rounded bg-sky-500 animate-pulse" />
+                  {scenarios.slice(scenario + 1).map((_, i) => (
+                     <div key={i} className="w-3 h-3 rounded bg-slate-600" />
+                  ))}
+               </div>
+            </div>
+
+            {/* Scenario */}
+            <div className="flex-1 p-3 overflow-auto">
+               <div className="bg-black/30 rounded-lg p-3 mb-3">
+                  <p className="text-sm text-slate-200 leading-relaxed">{s.situation}</p>
+               </div>
+
+               <p className="text-sm font-bold text-sky-400 mb-2">{s.question}</p>
+
+               <div className="space-y-2">
+                  {s.opts.map((opt, i) => (
+                     <button
+                        key={i}
+                        onClick={() => answer(i)}
+                        disabled={answered}
+                        className={`w-full p-3 rounded-lg text-left text-sm transition-all ${
+                           answered
+                              ? i === s.correct
+                                 ? 'bg-green-600 border-2 border-green-400'
+                                 : i === selected
+                                    ? 'bg-red-600 border-2 border-red-400'
+                                    : 'bg-black/30 opacity-50'
+                              : 'bg-black/30 hover:bg-sky-600/50 border-2 border-transparent'
+                        }`}
+                     >
+                        <span className="flex items-start gap-2">
+                           <span className="font-bold text-sky-400">{String.fromCharCode(65 + i)}.</span>
+                           <span>{opt}</span>
+                        </span>
+                     </button>
+                  ))}
+               </div>
+
+               {/* Explanation after answer */}
+               {answered && (
+                  <div className="mt-3 space-y-2">
+                     {selected !== s.correct && (
+                        <div className="p-3 bg-red-900/30 border border-red-500/50 rounded-lg">
+                           <p className="text-xs font-bold text-red-400 mb-1">❌ Why {String.fromCharCode(65 + (selected || 0))} is Wrong:</p>
+                           <p className="text-sm text-slate-300">{s.wrongExplanations[selected || 0]}</p>
+                        </div>
+                     )}
+
+                     <div className="p-3 bg-green-900/30 border border-green-500/50 rounded-lg">
+                        <p className="text-xs font-bold text-green-400 mb-1">✓ The Hidden Requirement:</p>
+                        <p className="text-sm text-slate-300">{s.why}</p>
+                     </div>
+
+                     <div className="p-3 bg-amber-900/30 border border-amber-500/50 rounded-lg">
+                        <p className="text-xs font-bold text-amber-400 mb-1">⚠️ Real Case:</p>
+                        <p className="text-sm text-slate-300">{s.realWorld}</p>
+                     </div>
+
+                     <button onClick={next} className="w-full py-3 bg-gradient-to-r from-sky-600 to-cyan-600 rounded-xl font-bold mt-2">
+                        {scenario >= scenarios.length - 1 ? 'See Results' : 'Next Scenario →'}
+                     </button>
+                  </div>
+               )}
+            </div>
+
+            {/* Info Buttons Footer */}
+            <div className="p-3 bg-black/30 border-t border-sky-500/30 flex gap-2 justify-center flex-wrap">
+               <button onClick={() => setInfoTopic('business_license')} className="text-xs text-sky-400 hover:text-sky-300">ℹ️ Licenses</button>
+               <button onClick={() => setInfoTopic('zoning')} className="text-xs text-sky-400 hover:text-sky-300">ℹ️ Zoning</button>
+               <button onClick={() => setInfoTopic('industry_permits')} className="text-xs text-sky-400 hover:text-sky-300">ℹ️ Industry</button>
+               <button onClick={() => setInfoTopic('compliance_timeline')} className="text-xs text-sky-400 hover:text-sky-300">ℹ️ Timeline</button>
+            </div>
+         </div>
+      );
    };
 
    // --- EMPLOYMENT LAW RENDERER ---
@@ -28353,32 +32401,432 @@ const GeneratedDiagram: React.FC<DiagramProps> = ({ type, data, title }) => {
       const [infoTopic, setInfoTopic] = useState<string | null>(null);
       const [scenario, setScenario] = useState(0);
       const [score, setScore] = useState(0);
-      const [answers, setAnswers] = useState<boolean[]>([]);
+      const [selected, setSelected] = useState<number | null>(null);
+      const [answered, setAnswered] = useState(false);
+      const [gameLog, setGameLog] = useState<string[]>([]);
+      const [conceptGaps, setConceptGaps] = useState<string[]>([]);
 
+      // Nuanced scenarios where "it depends" - context matters
       const scenarios = [
-         { situation: "Asking a job candidate about their age", legal: false, law: "Age Discrimination (ADEA)", explanation: "Cannot ask about age. Age 40+ is protected." },
-         { situation: "Requiring overtime for hourly employees with 1.5x pay", legal: true, law: "Fair Labor Standards Act", explanation: "Correct! Non-exempt employees get 1.5x for 40+ hrs." },
-         { situation: "Paying female employee less than male for same job", legal: false, law: "Equal Pay Act", explanation: "Illegal! Equal pay for equal work regardless of gender." },
-         { situation: "Classifying full-time worker with company equipment as contractor", legal: false, law: "Worker Classification", explanation: "Likely misclassification. Control + equipment = employee." },
-         { situation: "Providing unpaid leave for new parent (60 employee company)", legal: true, law: "FMLA", explanation: "Correct! FMLA requires 12 weeks for 50+ employee companies." },
-         { situation: "Firing employee for reporting safety violations to OSHA", legal: false, law: "Whistleblower Protection", explanation: "Illegal retaliation! Protected activity." },
-         { situation: "Requiring all employees to sign NDAs", legal: true, law: "Trade Secrets", explanation: "Legal! NDAs protect confidential info when reasonable." },
-         { situation: "Denying religious accommodation without hardship", legal: false, law: "Title VII", explanation: "Must provide reasonable accommodation for religion." },
+         {
+            title: "The Overtime Exemption Trap",
+            context: "You're a startup founder. Your 'Senior Marketing Manager' earns $45,000/year salary, has no direct reports, and spends 80% of time executing campaigns you assign. She worked 55 hours last week.",
+            question: "Do you owe her overtime pay?",
+            opts: [
+               'No - she has a manager title and salary',
+               'No - she agreed to salary means no overtime',
+               'Yes - she fails the duties test for exemption',
+               'Yes - but only if she asks for it'
+            ],
+            correct: 2,
+            wrongExplanations: [
+               "Title doesn't determine exemption! The FLSA 'duties test' looks at ACTUAL job duties. 'Manager' in title means nothing if she doesn't manage anyone or make independent decisions.",
+               "Agreeing to salary doesn't waive overtime rights. You can't contract away FLSA protections. Many employers lose lawsuits because they thought salary = exempt.",
+               "", // Correct
+               "Overtime is owed regardless of whether she asks. The obligation is on the employer. Not paying is wage theft, and she can claim back pay for 2-3 years plus penalties."
+            ],
+            realWorld: "A class action against a tech company resulted in $8.5M in back overtime pay for 'Account Managers' who were misclassified as exempt despite having no management duties.",
+            concept: "exempt_nonexempt",
+            why: "Exemption requires ALL of: (1) Salary basis, (2) Minimum $684/week ($35,568/year), (3) Primary duty is management/professional/administrative with independent judgment. Executing assigned tasks ≠ exempt, regardless of title or salary."
+         },
+         {
+            title: "The Contractor Classification Gamble",
+            context: "You hire a 'freelance developer' who works 40 hrs/week exclusively for you, uses your computer, attends your meetings, and has worked this way for 18 months. You pay them via 1099.",
+            question: "What's your legal exposure here?",
+            opts: [
+               'None - they signed a contractor agreement',
+               'Minor - just reclassify them going forward',
+               'Major - back taxes, benefits, and penalties for 18 months',
+               'None - the IRS only audits big companies'
+            ],
+            correct: 2,
+            wrongExplanations: [
+               "Contracts don't override reality. Courts use 'economic reality' and 'right to control' tests. If they walk like an employee and quack like an employee, they're an employee—regardless of what paper says.",
+               "You can't just 'reclassify going forward.' The IRS and state agencies can audit past years. You owe: back employment taxes (employer share), unpaid benefits, overtime if applicable, and penalties.",
+               "", // Correct
+               "The IRS absolutely audits small companies, especially after worker complaints. California alone collected $6.8B in misclassification penalties in 5 years. One complaint triggers a full audit."
+            ],
+            realWorld: "Uber and Lyft paid $413M in settlements over driver misclassification. A small business owner in California was personally liable for $340K in back wages, taxes, and penalties for 3 misclassified workers.",
+            concept: "worker_classification",
+            why: "Classification is based on reality, not paperwork. Key factors: (1) Control over how work is done, (2) Exclusivity, (3) Integration into business, (4) Duration, (5) Tools provided. This worker is clearly an employee. Exposure: 18 months of employment taxes (~15%), benefits, potential overtime, plus penalties."
+         },
+         {
+            title: "The FMLA Surprise",
+            context: "Your company has 45 employees. A worker who's been with you 10 months requests 12 weeks unpaid leave for a new baby. You're already short-staffed and can't afford to hold the position.",
+            question: "Are you legally required to grant this leave?",
+            opts: [
+               'Yes - FMLA requires 12 weeks for new parents',
+               'No - FMLA only applies to 50+ employee companies',
+               'No - employee hasn\'t worked 12 months yet',
+               'Yes - but only 6 weeks, not 12'
+            ],
+            correct: 1,
+            wrongExplanations: [
+               "FMLA has TWO thresholds most people miss: (1) 50+ employees within 75 miles, AND (2) employee worked 12+ months with 1,250+ hours. You have 45 employees, so FMLA doesn't apply to you at all.",
+               "", // Correct
+               "This is partially right—the employee tenure matters—but it's moot here because your company is too small for FMLA anyway. However, STATE laws may still apply (CA, NY, NJ, WA have their own family leave laws).",
+               "There's no '6 weeks only' rule in FMLA. It's 12 weeks or nothing. Some states have additional paid leave requirements."
+            ],
+            realWorld: "A 35-employee company owner thought she was 'safe' from FMLA, then got sued under California's CFRA (which applies to 5+ employees). The employee won $125K in damages.",
+            concept: "fmla_thresholds",
+            why: "FMLA (federal) = 50+ employees. BUT: Many states have LOWER thresholds. California CFRA = 5+ employees. NY PFL = 1+ employees. Always check STATE law too—it often provides MORE protection than federal. Even without legal requirement, consider retention—replacing employees costs 50-200% of salary."
+         },
+         {
+            title: "The At-Will Exception",
+            context: "You fire a sales rep in an at-will state for 'not being a culture fit.' The day before, he had emailed HR complaining that his manager was pressuring the team to falsify sales reports to hit quarterly targets.",
+            question: "What's the legal risk of this termination?",
+            opts: [
+               'None - at-will means fire for any reason',
+               'Low - just document the culture fit issues',
+               'High - this looks like whistleblower retaliation',
+               'Medium - depends on if the complaint was formal'
+            ],
+            correct: 2,
+            wrongExplanations: [
+               "At-will has MAJOR exceptions: (1) Discrimination, (2) Retaliation, (3) Public policy violations, (4) Implied contracts. 'Any reason' doesn't mean 'any reason including illegal ones.'",
+               "Documenting 'culture fit' after a complaint looks like pretext. Courts look at timing. Termination within 24-48 hours of a complaint is textbook retaliation, regardless of documentation.",
+               "", // Correct
+               "Formal vs informal complaint doesn't matter for retaliation protection. Reporting illegal activity (fraud) is protected whether it's verbal, email, or formal HR complaint. The email creates a paper trail AGAINST you."
+            ],
+            realWorld: "A pharma company paid $105M to a sales rep fired 2 weeks after reporting off-label marketing. The 'poor performance' documentation was created AFTER the complaint. Timing was the killer evidence.",
+            concept: "retaliation",
+            why: "Retaliation claims are the #1 growing category of employment lawsuits. Key factors: (1) Protected activity (reporting illegal conduct, discrimination, safety issues), (2) Adverse action (termination, demotion, bad assignments), (3) Timing. Firing within days of a complaint = presumption of retaliation. The burden shifts to YOU to prove legitimate reason."
+         },
+         {
+            title: "The Salary Discussion Shutdown",
+            context: "You overhear two employees comparing salaries in the break room. Your employee handbook prohibits 'discussing compensation with coworkers.' You give them both written warnings for policy violation.",
+            question: "What's the legal issue with this action?",
+            opts: [
+               'None - your handbook, your rules',
+               'Minor - just remove the policy going forward',
+               'Major - you violated federal labor law (NLRA)',
+               'Depends - only illegal if they\'re in a union'
+            ],
+            correct: 2,
+            wrongExplanations: [
+               "Handbooks can't override federal law. Policies prohibiting salary discussions violate the National Labor Relations Act—even for non-union, private sector employees.",
+               "Removing the policy doesn't fix it—you already disciplined employees for exercising protected rights. The warnings themselves are 'unfair labor practices' and must be rescinded. Employees can file NLRB complaints.",
+               "", // Correct
+               "The NLRA Section 7 protects 'concerted activity' for ALL private sector employees, not just union members. This includes discussing wages, benefits, and working conditions. The law applies regardless of union status."
+            ],
+            realWorld: "The NLRB has issued hundreds of rulings against companies with pay secrecy policies. A restaurant chain had to rescind all discipline, post notices admitting the violation, and pay back wages to affected employees.",
+            concept: "nlra_rights",
+            why: "NLRA Section 7 protects employees' right to discuss wages and working conditions. Pay secrecy policies are per se illegal for most private employers. Exceptions: Supervisors (true managers), HR with access to payroll data. You cannot discipline employees for salary discussions, even if they signed a policy agreeing not to."
+         }
       ];
-      const infoTopics: Record<string, { title: string; content: string }> = {
-         discrimination: { title: "Anti-Discrimination", content: "Protected: race, color, religion, sex, national origin, age 40+, disability. Applies to 15+ employee companies." },
-         wages: { title: "Wage & Hour", content: "Minimum wage, overtime (1.5x after 40 hrs), proper classification. Violations = back pay + penalties." },
-         safety: { title: "Workplace Safety", content: "OSHA requires safe workplace. Cannot retaliate against complaints. Fines for violations." },
-      };
-      useEffect(() => { if (infoTopic && infoTopics[infoTopic]) setShowInfo(true); }, [infoTopic]);
-      const startGame = () => { setPhase('play'); setScenario(0); setScore(0); setAnswers([]); };
-      const answer = (isLegal: boolean) => { const correct = scenarios[scenario].legal === isLegal; if (correct) setScore(prev => prev + 1); setAnswers(prev => [...prev, correct]); if (scenario >= scenarios.length - 1) setPhase('result'); else setScenario(prev => prev + 1); };
-      const getGrade = () => { const pct = (score / scenarios.length) * 100; if (pct >= 90) return { letter: 'A', label: 'HR Expert', color: 'text-green-400' }; if (pct >= 70) return { letter: 'B', label: 'Compliant', color: 'text-blue-400' }; if (pct >= 50) return { letter: 'C', label: 'Risky', color: 'text-yellow-400' }; return { letter: 'D', label: 'Lawsuit Risk', color: 'text-red-400' }; };
 
-      if (phase === 'intro') return (<div className="w-full h-full flex flex-col bg-gradient-to-br from-lime-900 via-green-900 to-slate-900 text-white p-4 overflow-auto"><div className="text-center mb-4"><h1 className="text-2xl font-bold mb-2">⚖️ Employment Law Quiz</h1><p className="text-lime-300 text-sm">Know what's legal at work</p></div><div className="bg-black/30 rounded-xl p-4 mb-4"><h2 className="text-lg font-bold mb-3 text-lime-400">📋 How It Works</h2><div className="space-y-2 text-sm"><p>• Review <span className="text-white font-bold">{scenarios.length} scenarios</span></p><p>• Decide: <span className="text-green-400">✓ Legal</span> or <span className="text-red-400">✗ Illegal</span></p><p>• Learn employment laws!</p></div></div><div className="flex flex-wrap gap-2 mb-4">{Object.keys(infoTopics).map(key => (<button key={key} onClick={() => setInfoTopic(key)} className="text-xs bg-lime-500/20 px-2 py-1 rounded-full text-lime-300">ℹ️ {infoTopics[key].title}</button>))}</div><button onClick={startGame} className="w-full py-3 bg-gradient-to-r from-lime-600 to-green-600 rounded-xl font-bold">▶️ START</button>{showInfo && infoTopic && infoTopics[infoTopic] && (<div className="absolute inset-0 bg-black/80 flex items-center justify-center p-4 z-50" onClick={() => { setShowInfo(false); setInfoTopic(null); }}><div className="bg-slate-800 rounded-xl p-4 max-w-md" onClick={e => e.stopPropagation()}><h3 className="text-lg font-bold text-lime-400 mb-2">{infoTopics[infoTopic].title}</h3><p className="text-sm text-slate-300">{infoTopics[infoTopic].content}</p><button onClick={() => { setShowInfo(false); setInfoTopic(null); }} className="mt-4 w-full py-2 bg-lime-600 rounded-lg">Got it!</button></div></div>)}</div>);
-      if (phase === 'result') { const grade = getGrade(); return (<div className="w-full h-full flex flex-col bg-gradient-to-br from-lime-900 via-green-900 to-slate-900 text-white p-4 overflow-auto"><div className="text-center mb-4"><div className={`text-6xl font-bold ${grade.color}`}>{grade.letter}</div><div className="text-xl font-bold">{grade.label}</div><div className="text-lime-400">{score}/{scenarios.length}</div></div><div className="bg-black/30 rounded-xl p-3 mb-3 max-h-40 overflow-auto"><h3 className="font-bold text-lime-400 mb-2">📊 Review</h3>{scenarios.map((s, i) => (<div key={i} className="py-1 border-b border-slate-700 text-xs"><div className="flex justify-between"><span className={s.legal ? 'text-green-400' : 'text-red-400'}>{s.legal ? '✓' : '✗'} {s.law}</span><span>{answers[i] ? '✓' : '✗'}</span></div><p className="text-slate-400">{s.explanation}</p></div>))}</div><div className="bg-black/30 rounded-xl p-3 mb-4"><h3 className="font-bold text-lime-400 mb-2">💡 Key Insight</h3><p className="text-sm text-slate-300">Employment law protects workers. Violations = lawsuits, fines, reputation damage. When in doubt, consult an attorney!</p></div><button onClick={startGame} className="w-full py-3 bg-gradient-to-r from-lime-600 to-green-600 rounded-xl font-bold">🔄 TRY AGAIN</button></div>); }
+      const infoTopics: Record<string, { title: string; content: string }> = {
+         flsa: {
+            title: "FLSA: Wages & Hours",
+            content: "Federal minimum wage, overtime (1.5x after 40 hrs), exempt vs non-exempt classification. Exemption requires: salary basis ($684+/week), AND exempt duties (executive/admin/professional). Title doesn't matter—duties do. Violations = 2-3 years back pay + liquidated damages (2x)."
+         },
+         classification: {
+            title: "Worker Classification",
+            content: "Employee vs Contractor based on: control, exclusivity, tools provided, duration, integration. IRS uses 20-factor test. States (especially CA) use stricter 'ABC test.' Misclassification = back taxes + penalties + benefits. Can't contract away employee status."
+         },
+         fmla: {
+            title: "FMLA & State Leave Laws",
+            content: "Federal FMLA: 50+ employees, 12 months tenure, 1,250 hours. Provides 12 weeks UNPAID leave. BUT: Many states have lower thresholds and PAID leave. CA/NY/WA/NJ have paid family leave. Always check state law—it often exceeds federal."
+         },
+         retaliation: {
+            title: "Retaliation Claims",
+            content: "Protected activities: discrimination complaints, safety reports, wage claims, whistleblowing. Adverse actions: termination, demotion, schedule changes, bad reviews. Timing is key evidence. Document BEFORE complaints arise. Most expensive employment claims are retaliation."
+         },
+         nlra: {
+            title: "NLRA: Concerted Activity",
+            content: "Section 7 protects discussions about wages, benefits, working conditions—for ALL private employees, not just unions. Pay secrecy policies are illegal. Can't discipline for salary discussions. Social media complaints about work may also be protected."
+         },
+         atwill: {
+            title: "At-Will Exceptions",
+            content: "At-will means no contract for duration. BUT exceptions: (1) Discrimination (protected classes), (2) Retaliation (protected activities), (3) Public policy (refusing illegal acts), (4) Implied contract (handbook promises). 'Any reason' ≠ 'illegal reasons.'"
+         }
+      };
+
+      useEffect(() => { if (infoTopic && infoTopics[infoTopic]) setShowInfo(true); }, [infoTopic]);
+
+      const startGame = () => {
+         setPhase('play');
+         setScenario(0);
+         setScore(0);
+         setSelected(null);
+         setAnswered(false);
+         setGameLog([]);
+         setConceptGaps([]);
+      };
+
+      const answer = (idx: number) => {
+         if (answered) return;
+         setSelected(idx);
+         setAnswered(true);
+         const s = scenarios[scenario];
+         const isCorrect = idx === s.correct;
+         if (isCorrect) {
+            setScore(prev => prev + 20);
+            setGameLog(prev => [...prev, `✓ ${s.title}: Understood ${s.concept}`]);
+         } else {
+            setConceptGaps(prev => prev.includes(s.concept) ? prev : [...prev, s.concept]);
+            setGameLog(prev => [...prev, `✗ ${s.title}: Gap in ${s.concept}`]);
+         }
+      };
+
+      const next = () => {
+         if (scenario >= scenarios.length - 1) {
+            setPhase('result');
+         } else {
+            setScenario(prev => prev + 1);
+            setSelected(null);
+            setAnswered(false);
+         }
+      };
+
+      const getGrade = () => {
+         const pct = (score / (scenarios.length * 20)) * 100;
+         if (pct >= 90) return { letter: 'A', label: 'HR Law Expert', color: 'text-green-400' };
+         if (pct >= 70) return { letter: 'B', label: 'Mostly Compliant', color: 'text-blue-400' };
+         if (pct >= 50) return { letter: 'C', label: 'Lawsuit Risk', color: 'text-yellow-400' };
+         return { letter: 'D', label: 'Major Liability', color: 'text-red-400' };
+      };
+
+      const conceptLabels: Record<string, string> = {
+         exempt_nonexempt: "Overtime Exemption & Duties Test",
+         worker_classification: "Employee vs Contractor Classification",
+         fmla_thresholds: "FMLA Thresholds & State Leave Laws",
+         retaliation: "Retaliation & Protected Activities",
+         nlra_rights: "NLRA & Salary Discussion Rights"
+      };
+
+      // INTRO PHASE
+      if (phase === 'intro') return (
+         <div className="w-full h-full flex flex-col bg-gradient-to-br from-lime-900 via-green-900 to-slate-900 text-white p-4 overflow-auto">
+            <div className="text-center mb-4">
+               <h1 className="text-2xl font-bold mb-2">⚖️ Employment Law Minefield</h1>
+               <p className="text-lime-300 text-sm">The nuances that trigger lawsuits. Context is everything.</p>
+            </div>
+
+            <div className="bg-black/30 rounded-xl p-4 mb-4">
+               <h2 className="text-lg font-bold mb-3 text-lime-400">⚠️ Why This Matters</h2>
+               <div className="space-y-2 text-sm text-slate-300">
+                  <p>• <span className="text-red-400 font-bold">$450B+</span> paid annually in employment lawsuits</p>
+                  <p>• <span className="text-yellow-400 font-bold">65%</span> of employment lawsuits are won by employees</p>
+                  <p>• <span className="text-green-400 font-bold">"It depends"</span> is the answer to most employment law questions</p>
+               </div>
+            </div>
+
+            <div className="bg-black/30 rounded-xl p-4 mb-4">
+               <h2 className="text-lg font-bold mb-3 text-lime-400">🎯 How This Works</h2>
+               <div className="space-y-2 text-sm">
+                  <p>• <span className="text-white font-bold">5 nuanced scenarios</span> where context matters</p>
+                  <p>• Not just <span className="text-yellow-400">"legal vs illegal"</span>—understand WHY</p>
+                  <p>• Learn <span className="text-cyan-400">thresholds and exceptions</span> most employers miss</p>
+                  <p>• See <span className="text-red-400">real lawsuit amounts</span> and outcomes</p>
+               </div>
+            </div>
+
+            <div className="flex flex-wrap gap-2 mb-4">
+               {Object.keys(infoTopics).map(key => (
+                  <button
+                     key={key}
+                     onClick={() => setInfoTopic(key)}
+                     className="text-xs bg-lime-500/20 px-2 py-1 rounded-full text-lime-300 hover:bg-lime-500/30"
+                  >
+                     ℹ️ {infoTopics[key].title.split(':')[0]}
+                  </button>
+               ))}
+            </div>
+
+            <button onClick={startGame} className="w-full py-3 bg-gradient-to-r from-lime-600 to-green-600 rounded-xl font-bold text-lg">
+               ▶️ BEGIN CHALLENGE
+            </button>
+
+            {showInfo && infoTopic && infoTopics[infoTopic] && (
+               <div className="absolute inset-0 bg-black/80 flex items-center justify-center p-4 z-50" onClick={() => { setShowInfo(false); setInfoTopic(null); }}>
+                  <div className="bg-slate-800 rounded-xl p-4 max-w-md" onClick={e => e.stopPropagation()}>
+                     <h3 className="text-lg font-bold text-lime-400 mb-2">{infoTopics[infoTopic].title}</h3>
+                     <p className="text-sm text-slate-300 leading-relaxed">{infoTopics[infoTopic].content}</p>
+                     <button onClick={() => { setShowInfo(false); setInfoTopic(null); }} className="mt-4 w-full py-2 bg-lime-600 rounded-lg font-bold">Got it!</button>
+                  </div>
+               </div>
+            )}
+         </div>
+      );
+
+      // RESULT PHASE
+      if (phase === 'result') {
+         const grade = getGrade();
+         return (
+            <div className="w-full h-full flex flex-col bg-gradient-to-br from-lime-900 via-green-900 to-slate-900 text-white p-4 overflow-auto">
+               <div className="text-center mb-4">
+                  <div className={`text-6xl font-bold ${grade.color}`}>{grade.letter}</div>
+                  <div className="text-xl font-bold">{grade.label}</div>
+                  <div className="text-lime-400">Score: {score}/{scenarios.length * 20}</div>
+               </div>
+
+               {conceptGaps.length > 0 && (
+                  <div className="bg-red-900/30 border border-red-500/50 rounded-xl p-3 mb-3">
+                     <h3 className="font-bold text-red-400 mb-2">📚 Legal Gaps to Study</h3>
+                     <div className="space-y-1">
+                        {conceptGaps.map((gap, i) => (
+                           <div key={i} className="flex items-center gap-2 text-sm">
+                              <span className="text-red-400">→</span>
+                              <span className="text-slate-300">{conceptLabels[gap] || gap}</span>
+                              <button
+                                 onClick={() => {
+                                    const topic = gap === 'exempt_nonexempt' ? 'flsa' :
+                                                  gap === 'worker_classification' ? 'classification' :
+                                                  gap === 'fmla_thresholds' ? 'fmla' :
+                                                  gap === 'retaliation' ? 'retaliation' : 'nlra';
+                                    setInfoTopic(topic);
+                                 }}
+                                 className="text-xs text-lime-400 underline"
+                              >
+                                 Learn
+                              </button>
+                           </div>
+                        ))}
+                     </div>
+                  </div>
+               )}
+
+               {conceptGaps.length === 0 && (
+                  <div className="bg-green-900/30 border border-green-500/50 rounded-xl p-3 mb-3">
+                     <h3 className="font-bold text-green-400 mb-2">🎉 Employment Law Expert!</h3>
+                     <p className="text-sm text-slate-300">You understand the nuances that catch most employers—exemption tests, classification rules, FMLA thresholds, and retaliation traps.</p>
+                  </div>
+               )}
+
+               <div className="bg-black/30 rounded-xl p-3 mb-3 max-h-32 overflow-auto">
+                  <h3 className="font-bold text-lime-400 mb-2">📋 Session Log</h3>
+                  {gameLog.map((log, i) => (
+                     <p key={i} className="text-xs text-slate-400">{log}</p>
+                  ))}
+               </div>
+
+               <div className="bg-black/30 rounded-xl p-3 mb-4">
+                  <h3 className="font-bold text-lime-400 mb-2">💡 Key Legal Principles</h3>
+                  <ul className="text-sm text-slate-300 space-y-1">
+                     <li>• <span className="text-yellow-400">Titles don't determine exemption</span>—duties do</li>
+                     <li>• <span className="text-yellow-400">Contracts can't override</span> employee status</li>
+                     <li>• <span className="text-yellow-400">State laws often exceed</span> federal protections</li>
+                     <li>• <span className="text-yellow-400">Timing is key evidence</span> in retaliation claims</li>
+                  </ul>
+               </div>
+
+               <button onClick={startGame} className="w-full py-3 bg-gradient-to-r from-lime-600 to-green-600 rounded-xl font-bold">
+                  🔄 TRY AGAIN
+               </button>
+
+               {showInfo && infoTopic && infoTopics[infoTopic] && (
+                  <div className="absolute inset-0 bg-black/80 flex items-center justify-center p-4 z-50" onClick={() => { setShowInfo(false); setInfoTopic(null); }}>
+                     <div className="bg-slate-800 rounded-xl p-4 max-w-md" onClick={e => e.stopPropagation()}>
+                        <h3 className="text-lg font-bold text-lime-400 mb-2">{infoTopics[infoTopic].title}</h3>
+                        <p className="text-sm text-slate-300 leading-relaxed">{infoTopics[infoTopic].content}</p>
+                        <button onClick={() => { setShowInfo(false); setInfoTopic(null); }} className="mt-4 w-full py-2 bg-lime-600 rounded-lg font-bold">Got it!</button>
+                     </div>
+                  </div>
+               )}
+            </div>
+         );
+      }
+
+      // PLAY PHASE
       const s = scenarios[scenario];
-      return (<div className="w-full h-full flex flex-col bg-gradient-to-br from-lime-900 via-green-900 to-slate-900 text-white overflow-hidden">{showInfo && infoTopic && infoTopics[infoTopic] && (<div className="absolute inset-0 bg-black/80 flex items-center justify-center p-4 z-50" onClick={() => { setShowInfo(false); setInfoTopic(null); }}><div className="bg-slate-800 rounded-xl p-4 max-w-md" onClick={e => e.stopPropagation()}><h3 className="text-lg font-bold text-lime-400 mb-2">{infoTopics[infoTopic].title}</h3><p className="text-sm text-slate-300">{infoTopics[infoTopic].content}</p><button onClick={() => { setShowInfo(false); setInfoTopic(null); }} className="mt-4 w-full py-2 bg-lime-600 rounded-lg">Got it!</button></div></div>)}<div className="p-3 bg-black/30 border-b border-lime-500/30"><div className="flex justify-between items-center"><span className="font-bold">⚖️ Employment Law</span><span className="text-lime-400">{scenario + 1}/{scenarios.length}</span></div><div className="flex gap-1 mt-2">{answers.map((a, i) => <div key={i} className={`w-3 h-3 rounded ${a ? 'bg-green-500' : 'bg-red-500'}`} />)}</div></div><div className="flex-1 p-4 flex flex-col justify-center"><div className="bg-black/30 rounded-xl p-4 mb-4"><p className="text-sm text-slate-200">{s.situation}</p></div><p className="text-center text-sm text-slate-400 mb-4">Is this legal?</p><div className="grid grid-cols-2 gap-3"><button onClick={() => answer(true)} className="py-4 bg-green-600/50 hover:bg-green-500/50 rounded-xl font-bold">✓ Legal</button><button onClick={() => answer(false)} className="py-4 bg-red-600/50 hover:bg-red-500/50 rounded-xl font-bold">✗ Illegal</button></div></div><div className="p-3 bg-black/30 border-t border-lime-500/30"><button onClick={() => setInfoTopic('discrimination')} className="text-xs text-lime-400">ℹ️ Discrimination</button></div></div>);
+      return (
+         <div className="w-full h-full flex flex-col bg-gradient-to-br from-lime-900 via-green-900 to-slate-900 text-white overflow-hidden">
+            {showInfo && infoTopic && infoTopics[infoTopic] && (
+               <div className="absolute inset-0 bg-black/80 flex items-center justify-center p-4 z-50" onClick={() => { setShowInfo(false); setInfoTopic(null); }}>
+                  <div className="bg-slate-800 rounded-xl p-4 max-w-md" onClick={e => e.stopPropagation()}>
+                     <h3 className="text-lg font-bold text-lime-400 mb-2">{infoTopics[infoTopic].title}</h3>
+                     <p className="text-sm text-slate-300 leading-relaxed">{infoTopics[infoTopic].content}</p>
+                     <button onClick={() => { setShowInfo(false); setInfoTopic(null); }} className="mt-4 w-full py-2 bg-lime-600 rounded-lg font-bold">Got it!</button>
+                  </div>
+               </div>
+            )}
+
+            {/* Header */}
+            <div className="p-3 bg-black/30 border-b border-lime-500/30">
+               <div className="flex justify-between items-center">
+                  <span className="font-bold text-sm">⚖️ {s.title}</span>
+                  <span className="text-lime-400 text-sm">{scenario + 1}/{scenarios.length}</span>
+               </div>
+               <div className="flex gap-1 mt-2">
+                  {scenarios.slice(0, scenario).map((_, i) => (
+                     <div key={i} className={`w-3 h-3 rounded ${gameLog[i]?.startsWith('✓') ? 'bg-green-500' : 'bg-red-500'}`} />
+                  ))}
+                  <div className="w-3 h-3 rounded bg-lime-500 animate-pulse" />
+                  {scenarios.slice(scenario + 1).map((_, i) => (
+                     <div key={i} className="w-3 h-3 rounded bg-slate-600" />
+                  ))}
+               </div>
+            </div>
+
+            {/* Scenario */}
+            <div className="flex-1 p-3 overflow-auto">
+               <div className="bg-black/30 rounded-lg p-3 mb-3">
+                  <p className="text-sm text-slate-200 leading-relaxed">{s.context}</p>
+               </div>
+
+               <p className="text-sm font-bold text-lime-400 mb-2">{s.question}</p>
+
+               <div className="space-y-2">
+                  {s.opts.map((opt, i) => (
+                     <button
+                        key={i}
+                        onClick={() => answer(i)}
+                        disabled={answered}
+                        className={`w-full p-3 rounded-lg text-left text-sm transition-all ${
+                           answered
+                              ? i === s.correct
+                                 ? 'bg-green-600 border-2 border-green-400'
+                                 : i === selected
+                                    ? 'bg-red-600 border-2 border-red-400'
+                                    : 'bg-black/30 opacity-50'
+                              : 'bg-black/30 hover:bg-lime-600/50 border-2 border-transparent'
+                        }`}
+                     >
+                        <span className="flex items-start gap-2">
+                           <span className="font-bold text-lime-400">{String.fromCharCode(65 + i)}.</span>
+                           <span>{opt}</span>
+                        </span>
+                     </button>
+                  ))}
+               </div>
+
+               {/* Explanation after answer */}
+               {answered && (
+                  <div className="mt-3 space-y-2">
+                     {selected !== s.correct && (
+                        <div className="p-3 bg-red-900/30 border border-red-500/50 rounded-lg">
+                           <p className="text-xs font-bold text-red-400 mb-1">❌ Why {String.fromCharCode(65 + (selected || 0))} is Wrong:</p>
+                           <p className="text-sm text-slate-300">{s.wrongExplanations[selected || 0]}</p>
+                        </div>
+                     )}
+
+                     <div className="p-3 bg-green-900/30 border border-green-500/50 rounded-lg">
+                        <p className="text-xs font-bold text-green-400 mb-1">✓ The Legal Reality:</p>
+                        <p className="text-sm text-slate-300">{s.why}</p>
+                     </div>
+
+                     <div className="p-3 bg-amber-900/30 border border-amber-500/50 rounded-lg">
+                        <p className="text-xs font-bold text-amber-400 mb-1">⚠️ Real Case:</p>
+                        <p className="text-sm text-slate-300">{s.realWorld}</p>
+                     </div>
+
+                     <button onClick={next} className="w-full py-3 bg-gradient-to-r from-lime-600 to-green-600 rounded-xl font-bold mt-2">
+                        {scenario >= scenarios.length - 1 ? 'See Results' : 'Next Scenario →'}
+                     </button>
+                  </div>
+               )}
+            </div>
+
+            {/* Info Buttons Footer */}
+            <div className="p-3 bg-black/30 border-t border-lime-500/30 flex gap-2 justify-center flex-wrap">
+               <button onClick={() => setInfoTopic('flsa')} className="text-xs text-lime-400 hover:text-lime-300">ℹ️ FLSA</button>
+               <button onClick={() => setInfoTopic('classification')} className="text-xs text-lime-400 hover:text-lime-300">ℹ️ Classification</button>
+               <button onClick={() => setInfoTopic('fmla')} className="text-xs text-lime-400 hover:text-lime-300">ℹ️ FMLA</button>
+               <button onClick={() => setInfoTopic('retaliation')} className="text-xs text-lime-400 hover:text-lime-300">ℹ️ Retaliation</button>
+            </div>
+         </div>
+      );
    };
 
    // --- DIGITAL & TECHNOLOGY RENDERERS ---
@@ -28731,130 +33179,1199 @@ const GeneratedDiagram: React.FC<DiagramProps> = ({ type, data, title }) => {
    };
 
    const NegotiationRenderer = () => {
-      const [phase, setPhase] = useState<'intro'|'play'|'result'>('intro');
+      const [phase, setPhase] = useState<'intro' | 'play' | 'result'>('intro');
       const [showInfo, setShowInfo] = useState(false);
-      const [infoTopic, setInfoTopic] = useState<string|null>(null);
-      const [round, setRound] = useState(0);
-      const [yourValue, setYourValue] = useState(0);
-      const [relationship, setRelationship] = useState(50);
-      const [log, setLog] = useState<string[]>([]);
-      const rounds = [
-         {context:'Negotiating your startup salary with a new hire who wants $120k. Your budget is $90-110k.',options:[{text:'Offer $85k, leave room to negotiate up',val:-5,rel:-10},{text:'Offer $95k with equity bonus',val:10,rel:10},{text:'Match $120k to close quickly',val:-15,rel:5},{text:'Offer $100k + performance bonus path to $120k',val:15,rel:15}]},
-         {context:'Supplier wants to raise prices 20%. You need them but have alternatives.',options:[{text:'Threaten to leave immediately',val:5,rel:-20},{text:'Accept the increase to maintain relationship',val:-20,rel:10},{text:'Negotiate 10% now with volume commitment',val:15,rel:10},{text:'Demand they keep old prices or you walk',val:0,rel:-15}]},
-         {context:'Investor offers $500k for 25% equity. You wanted $500k for 15%.',options:[{text:'Accept their terms immediately',val:-15,rel:5},{text:'Counter with 18% and board seat',val:15,rel:5},{text:'Reject and walk away',val:0,rel:-20},{text:'Ask for $600k at 20%',val:10,rel:0}]},
-         {context:'Client wants 30% discount on your services for a long-term contract.',options:[{text:'Give 30% to win the deal',val:-10,rel:10},{text:'Offer 15% with 2-year commitment',val:15,rel:10},{text:'Refuse any discount',val:5,rel:-10},{text:'Offer 20% + case study rights',val:10,rel:15}]},
-         {context:'Partner wants 50/50 split but you are doing 70% of the work.',options:[{text:'Accept 50/50 to avoid conflict',val:-15,rel:5},{text:'Demand 80/20 based on work',val:5,rel:-15},{text:'Propose 60/40 with role clarity',val:15,rel:10},{text:'Suggest equity vesting based on milestones',val:20,rel:15}]}
+      const [infoTopic, setInfoTopic] = useState<string | null>(null);
+      const [scenario, setScenario] = useState(0);
+      const [score, setScore] = useState(0);
+      const [selected, setSelected] = useState<number | null>(null);
+      const [answered, setAnswered] = useState(false);
+      const [gameLog, setGameLog] = useState<string[]>([]);
+      const [conceptGaps, setConceptGaps] = useState<string[]>([]);
+
+      const scenarios = [
+         {
+            title: "The Anchor Battle",
+            context: "You're selling your SaaS company. Your target is $5M. A strategic buyer opens with: 'We're thinking around $2M given market conditions.'",
+            question: "What's the best response to this low anchor?",
+            opts: [
+               'Counter at $8M to split the difference at $5M',
+               'Explain why $2M undervalues the company and reanchor at $6.5M with comps',
+               'Walk away - the gap is too large',
+               'Accept $3M as a compromise to close quickly'
+            ],
+            correct: 1,
+            wrongExplanations: [
+               "Anchoring at $8M looks unserious and damages credibility. They'll think you're not negotiating in good faith. Counter-anchors should be aggressive but defensible.",
+               "", // Correct
+               "Walking away too early loses the deal. The opening offer is just an anchor - it's not their final position. Most acquisitions close 40-60% above opening offers.",
+               "Never accept a quick compromise on price. Their $2M anchor worked on you psychologically. You just gave up $2M+ because you felt pressure to 'meet in the middle.'"
+            ],
+            realWorld: "Instagram was initially offered $500M by Facebook. Systrom countered with specific metrics justifying $1B and got it. The key: data-backed counter-anchors, not arbitrary numbers.",
+            concept: "anchoring",
+            why: "Counter-anchoring requires: (1) Acknowledge their number without accepting it, (2) Reframe with data/comps that justify your position, (3) Anchor slightly above your target. The first number that gets accepted as 'reasonable' sets the negotiation range."
+         },
+         {
+            title: "The BATNA Bluff",
+            context: "A key supplier is raising prices 25%. You've researched alternatives but switching would take 6 months and cost $50K. They know you're their biggest customer (30% of their revenue).",
+            question: "How do you leverage your BATNA here?",
+            opts: [
+               'Bluff that you can switch immediately',
+               'Accept the increase - your BATNA is weak',
+               'Explain you\'re evaluating alternatives and need 12 months at current prices to transition',
+               'Threaten to switch publicly and damage their reputation'
+            ],
+            correct: 2,
+            wrongExplanations: [
+               "Bluffing a strong BATNA you don't have is dangerous. If they call your bluff, you lose credibility AND leverage. They may know your switching costs better than you think.",
+               "Your BATNA isn't weak - THEIRS is! You're 30% of their revenue. Losing you is catastrophic for them. Don't negotiate against yourself.",
+               "", // Correct
+               "Threats and reputation damage destroy relationships. You may need this supplier long-term. Even if you win this battle, you'll lose the war."
+            ],
+            realWorld: "Apple negotiated with Samsung for phone components while simultaneously building in-house alternatives. They never bluffed - they actually created BATNAs, which gave them real leverage.",
+            concept: "batna",
+            why: "Your BATNA matters, but so does THEIRS. Calculate: What happens to them if you leave? 30% revenue loss is devastating. Frame it as: 'I need time to evaluate, let's phase any increases over 18 months' - you get time, they keep you."
+         },
+         {
+            title: "The Equity Split",
+            context: "Your technical cofounder built the MVP (6 months work). You've been doing sales/biz dev (3 months) but have industry connections and brought the initial customer. Time to formalize equity.",
+            question: "What's the fairest negotiation approach?",
+            opts: [
+               '50/50 - cofounders should be equal partners',
+               '70/30 favoring technical - they did more work',
+               'Dynamic split based on future milestones and vesting',
+               '60/40 favoring technical with your equity front-loaded'
+            ],
+            correct: 2,
+            wrongExplanations: [
+               "50/50 sounds fair but creates deadlock on decisions. Also ignores that contributions WILL diverge over time. What happens when one person works 80 hours and the other works 20?",
+               "Past work matters less than future value. The MVP is done - what drives growth? If your sales/connections are critical for the next 5 years, this split may be backward.",
+               "", // Correct
+               "Front-loading your equity protects you but signals distrust. Also, 60/40 doesn't account for the startup's evolution. What if technical work becomes less important as you scale?"
+            ],
+            realWorld: "Many YC startups use vesting + milestone-based adjustments. One founder got additional 5% when they closed Series A, another when product hit 10K users. Aligned incentives to future value creation.",
+            concept: "equity_negotiation",
+            why: "The best equity negotiations focus on future value, not past work. Use: (1) 4-year vesting with 1-year cliff (everyone), (2) Milestone bonuses for key achievements, (3) Clear role definitions with adjustment mechanisms. Past contributions matter less than who'll drive the next 10 years."
+         },
+         {
+            title: "The Silence Trap",
+            context: "You're negotiating a $200K enterprise deal. You've presented your proposal at $180K. The buyer says: 'That's higher than we expected.' Then goes silent, staring at you.",
+            question: "What should you do?",
+            opts: [
+               'Fill the silence: "I can probably do $160K"',
+               'Stay silent and maintain eye contact',
+               'Explain the value to justify the price',
+               'Ask: "What budget did you have in mind?"'
+            ],
+            correct: 1,
+            wrongExplanations: [
+               "You just negotiated against yourself! They said nothing about price being a dealbreaker. That silence cost you $20K. Never fill silence with concessions.",
+               "", // Correct
+               "Explaining value after silence looks defensive. You're justifying a price you already quoted. This signals you expected pushback and had weak conviction in your pricing.",
+               "Asking their budget gives away your power. You anchor first, they counter. If you ask their budget now, you've surrendered the anchor and look uncertain."
+            ],
+            realWorld: "A study found that negotiators who waited just 3 extra seconds before responding got 10-15% better outcomes. The discomfort of silence causes the other party to make concessions.",
+            concept: "silence_power",
+            why: "Silence is uncomfortable - your brain wants to fill it. But whoever speaks first after an offer typically concedes. After stating your position: STOP TALKING. Count to 10 in your head. Let them break the silence with their response or counter."
+         },
+         {
+            title: "The Win-Win Expansion",
+            context: "You're negotiating office lease renewal. Landlord wants 20% rent increase ($4K/month more). Your budget can't handle it, but you need this location.",
+            question: "How do you create a win-win?",
+            opts: [
+               'Negotiate hard on price - it\'s a zero-sum game',
+               'Offer a longer lease term in exchange for current rates',
+               'Accept the increase but ask for 3 months free rent',
+               'Offer to prepay 6 months rent for 10% increase instead of 20%'
+            ],
+            correct: 3,
+            wrongExplanations: [
+               "Zero-sum thinking limits outcomes. Landlords have needs beyond just rent: cash flow certainty, avoiding vacancy costs, reducing turnover. Find those interests.",
+               "Longer term helps them but still leaves the price gap. You're giving something (flexibility) without solving the core budget issue.",
+               "Free rent just delays the problem. In 3 months you still can't afford the increase. You've kicked the can down the road.",
+               "" // Correct
+            ],
+            realWorld: "Airbnb negotiated their early office lease by offering to feature the building in their marketing materials. Cost them nothing, gave landlord valuable exposure. Creative value exchange.",
+            concept: "expanding_pie",
+            why: "Win-win requires finding what they value that costs you less than what you'd pay otherwise. Prepaying: You pay $36K now vs $48K increase over the year. They get guaranteed cash flow and lower vacancy risk. Both sides gain value their way."
+         }
       ];
-      const infoTopics:{[k:string]:{title:string,content:string}} = {
-         batna:{title:'BATNA',content:'Best Alternative To Negotiated Agreement. Know your walkaway point. The better your alternatives, the stronger your position.'},
-         winwin:{title:'Win-Win',content:'Expand the pie before dividing it. Look for creative solutions where both sides gain value.'},
-         anchor:{title:'Anchoring',content:'First number sets the frame. Anchor ambitiously but credibly. Counter-anchor to reset unrealistic positions.'},
-         silence:{title:'Silence',content:'Silence is powerful. After making an offer, stop talking. Let them fill the uncomfortable silence.'}
+
+      const infoTopics: Record<string, { title: string; content: string }> = {
+         anchoring: {
+            title: "Anchoring Psychology",
+            content: "First numbers create cognitive reference points. Studies show anchors influence outcomes even when obviously arbitrary. To counter: (1) Ignore their number verbally, (2) Introduce your own anchor with supporting data, (3) Never 'split the difference' from their anchor."
+         },
+         batna: {
+            title: "BATNA Strategy",
+            content: "Best Alternative To Negotiated Agreement determines your walkaway point. Key insight: Their BATNA matters too! A strong BATNA comes from real alternatives, not bluffs. Invest in creating alternatives before negotiating."
+         },
+         silence: {
+            title: "The Power of Silence",
+            content: "Silence creates psychological pressure. After making an offer, STOP TALKING. The urge to fill silence leads to unnecessary concessions. Practice: State your position, then count to 10 silently. Let them respond first."
+         },
+         expanding: {
+            title: "Expanding the Pie",
+            content: "Most negotiations aren't zero-sum. Before haggling on price, find what they value that costs you less: terms, timing, payment structure, bundled services, case study rights, referrals. Create value before claiming it."
+         },
+         interests: {
+            title: "Interests vs Positions",
+            content: "Positions are WHAT people ask for. Interests are WHY they want it. 'I need $100K' is a position. 'I need security and market rate' are interests. Uncover interests to find creative solutions that satisfy both sides."
+         },
+         preparation: {
+            title: "Negotiation Prep",
+            content: "Research: their constraints, alternatives, timeline, decision-makers. Know: your BATNA, walkaway point, ideal outcome, first offer. Prepare: opening statement, responses to objections, concession strategy. Never negotiate unprepared."
+         }
       };
-      const choose = (idx:number) => {
-         const opt = rounds[round].options[idx];
-         setYourValue(v => v + opt.val);
-         setRelationship(r => Math.max(0, Math.min(100, r + opt.rel)));
-         setLog(l => [...l, `Round ${round+1}: ${opt.text}`]);
-         if(round >= rounds.length - 1) setPhase('result');
-         else setRound(r => r + 1);
+
+      useEffect(() => { if (infoTopic && infoTopics[infoTopic]) setShowInfo(true); }, [infoTopic]);
+
+      const startGame = () => {
+         setPhase('play');
+         setScenario(0);
+         setScore(0);
+         setSelected(null);
+         setAnswered(false);
+         setGameLog([]);
+         setConceptGaps([]);
       };
-      const grade = yourValue >= 50 && relationship >= 50 ? 'A' : yourValue >= 25 && relationship >= 30 ? 'B' : yourValue >= 0 ? 'C' : 'D';
-      if(phase === 'intro') return (<div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-indigo-900 via-blue-900 to-slate-900 text-white p-6"><div className="text-6xl mb-4">🤝</div><h2 className="text-2xl font-bold mb-2">Negotiation Master</h2><p className="text-slate-300 text-center mb-6 max-w-md">Navigate 5 business negotiations! Balance getting value with maintaining relationships.</p><button onClick={() => setPhase('play')} className="px-8 py-3 bg-gradient-to-r from-indigo-500 to-blue-500 rounded-xl font-bold">Start Negotiating</button></div>);
-      if(phase === 'result') return (<div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-indigo-900 via-blue-900 to-slate-900 text-white p-6"><div className="text-6xl mb-4">{grade === 'A' ? '🏆' : grade === 'B' ? '🤝' : '📉'}</div><h2 className="text-2xl font-bold mb-2">Negotiations Complete!</h2><div className="flex gap-4 mb-4"><span className="text-indigo-400">Value: {yourValue > 0 ? '+' : ''}{yourValue}</span><span className="text-blue-400">Relationship: {relationship}%</span></div><div className="text-6xl mb-4">{grade}</div><p className="text-slate-400 mb-4">{grade === 'A' ? 'Master negotiator!' : grade === 'B' ? 'Good deals!' : 'Room to improve!'}</p><button onClick={() => {setPhase('intro');setRound(0);setYourValue(0);setRelationship(50);setLog([]);}} className="px-6 py-2 bg-indigo-600 rounded-lg">Try Again</button></div>);
-      const r = rounds[round];
-      return (<div className="w-full h-full flex flex-col bg-gradient-to-br from-indigo-900 via-blue-900 to-slate-900 text-white overflow-hidden">{showInfo && infoTopic && infoTopics[infoTopic] && (<div className="absolute inset-0 bg-black/80 flex items-center justify-center p-4 z-50" onClick={() => { setShowInfo(false); setInfoTopic(null); }}><div className="bg-slate-800 rounded-xl p-4 max-w-md" onClick={e => e.stopPropagation()}><h3 className="text-lg font-bold text-indigo-400 mb-2">{infoTopics[infoTopic].title}</h3><p className="text-sm text-slate-300">{infoTopics[infoTopic].content}</p><button onClick={() => { setShowInfo(false); setInfoTopic(null); }} className="mt-4 w-full py-2 bg-indigo-600 rounded-lg">Got it!</button></div></div>)}<div className="p-3 bg-black/30 border-b border-indigo-500/30"><div className="flex justify-between items-center mb-2"><span className="font-bold">🤝 Negotiation</span><span className="text-indigo-400">{round + 1}/{rounds.length}</span></div><div className="flex gap-4 text-sm"><span>💰 Value: {yourValue > 0 ? '+' : ''}{yourValue}</span><span>❤️ Relationship: {relationship}%</span></div></div><div className="flex-1 p-4 flex flex-col justify-center"><div className="bg-black/30 rounded-xl p-4 mb-4"><p className="text-sm">{r.context}</p></div><div className="grid gap-2">{r.options.map((opt, i) => (<button key={i} onClick={() => choose(i)} className="p-3 bg-black/30 hover:bg-indigo-600/50 rounded-lg text-left text-sm">{opt.text}</button>))}</div></div><div className="p-3 bg-black/30 border-t border-indigo-500/30 flex gap-2 justify-center">{Object.keys(infoTopics).map(k => <button key={k} onClick={() => {setInfoTopic(k);setShowInfo(true);}} className="text-xs text-indigo-400">ℹ️ {infoTopics[k].title}</button>)}</div></div>);
+
+      const answer = (idx: number) => {
+         if (answered) return;
+         setSelected(idx);
+         setAnswered(true);
+         const s = scenarios[scenario];
+         const isCorrect = idx === s.correct;
+         if (isCorrect) {
+            setScore(prev => prev + 20);
+            setGameLog(prev => [...prev, `✓ ${s.title}: Mastered ${s.concept}`]);
+         } else {
+            setConceptGaps(prev => prev.includes(s.concept) ? prev : [...prev, s.concept]);
+            setGameLog(prev => [...prev, `✗ ${s.title}: Gap in ${s.concept}`]);
+         }
+      };
+
+      const next = () => {
+         if (scenario >= scenarios.length - 1) {
+            setPhase('result');
+         } else {
+            setScenario(prev => prev + 1);
+            setSelected(null);
+            setAnswered(false);
+         }
+      };
+
+      const getGrade = () => {
+         const pct = (score / (scenarios.length * 20)) * 100;
+         if (pct >= 90) return { letter: 'A', label: 'Master Negotiator', color: 'text-green-400' };
+         if (pct >= 70) return { letter: 'B', label: 'Skilled Negotiator', color: 'text-blue-400' };
+         if (pct >= 50) return { letter: 'C', label: 'Developing', color: 'text-yellow-400' };
+         return { letter: 'D', label: 'Needs Practice', color: 'text-red-400' };
+      };
+
+      const conceptLabels: Record<string, string> = {
+         anchoring: "Counter-Anchoring Techniques",
+         batna: "BATNA & Alternative Leverage",
+         equity_negotiation: "Equity & Partnership Splits",
+         silence_power: "Silence as a Tactic",
+         expanding_pie: "Win-Win Value Creation"
+      };
+
+      if (phase === 'intro') return (
+         <div className="w-full h-full flex flex-col bg-gradient-to-br from-indigo-900 via-blue-900 to-slate-900 text-white p-4 overflow-auto">
+            <div className="text-center mb-4">
+               <h1 className="text-2xl font-bold mb-2">🤝 Negotiation Tactics Lab</h1>
+               <p className="text-indigo-300 text-sm">Psychology. Strategy. Leverage. Master the art of the deal.</p>
+            </div>
+
+            <div className="bg-black/30 rounded-xl p-4 mb-4">
+               <h2 className="text-lg font-bold mb-3 text-indigo-400">⚠️ Why This Matters</h2>
+               <div className="space-y-2 text-sm text-slate-300">
+                  <p>• <span className="text-red-400 font-bold">$1M+</span> left on the table by average entrepreneur over career</p>
+                  <p>• <span className="text-yellow-400 font-bold">80%</span> of negotiation outcome determined before you speak</p>
+                  <p>• <span className="text-green-400 font-bold">Best negotiators</span> create value, not just claim it</p>
+               </div>
+            </div>
+
+            <div className="bg-black/30 rounded-xl p-4 mb-4">
+               <h2 className="text-lg font-bold mb-3 text-indigo-400">🎯 How This Works</h2>
+               <div className="space-y-2 text-sm">
+                  <p>• <span className="text-white font-bold">5 realistic negotiations</span> with psychological depth</p>
+                  <p>• Learn <span className="text-yellow-400">specific tactics</span> that change outcomes</p>
+                  <p>• Avoid <span className="text-red-400">common traps</span> that cost you money</p>
+                  <p>• Understand <span className="text-cyan-400">why</span> each approach works or fails</p>
+               </div>
+            </div>
+
+            <div className="flex flex-wrap gap-2 mb-4">
+               {Object.keys(infoTopics).map(key => (
+                  <button
+                     key={key}
+                     onClick={() => setInfoTopic(key)}
+                     className="text-xs bg-indigo-500/20 px-2 py-1 rounded-full text-indigo-300 hover:bg-indigo-500/30"
+                  >
+                     ℹ️ {infoTopics[key].title.split(' ')[0]}
+                  </button>
+               ))}
+            </div>
+
+            <button onClick={startGame} className="w-full py-3 bg-gradient-to-r from-indigo-600 to-blue-600 rounded-xl font-bold text-lg">
+               ▶️ BEGIN NEGOTIATIONS
+            </button>
+
+            {showInfo && infoTopic && infoTopics[infoTopic] && (
+               <div className="absolute inset-0 bg-black/80 flex items-center justify-center p-4 z-50" onClick={() => { setShowInfo(false); setInfoTopic(null); }}>
+                  <div className="bg-slate-800 rounded-xl p-4 max-w-md" onClick={e => e.stopPropagation()}>
+                     <h3 className="text-lg font-bold text-indigo-400 mb-2">{infoTopics[infoTopic].title}</h3>
+                     <p className="text-sm text-slate-300 leading-relaxed">{infoTopics[infoTopic].content}</p>
+                     <button onClick={() => { setShowInfo(false); setInfoTopic(null); }} className="mt-4 w-full py-2 bg-indigo-600 rounded-lg font-bold">Got it!</button>
+                  </div>
+               </div>
+            )}
+         </div>
+      );
+
+      if (phase === 'result') {
+         const grade = getGrade();
+         return (
+            <div className="w-full h-full flex flex-col bg-gradient-to-br from-indigo-900 via-blue-900 to-slate-900 text-white p-4 overflow-auto">
+               <div className="text-center mb-4">
+                  <div className={`text-6xl font-bold ${grade.color}`}>{grade.letter}</div>
+                  <div className="text-xl font-bold">{grade.label}</div>
+                  <div className="text-indigo-400">Score: {score}/{scenarios.length * 20}</div>
+               </div>
+
+               {conceptGaps.length > 0 && (
+                  <div className="bg-red-900/30 border border-red-500/50 rounded-xl p-3 mb-3">
+                     <h3 className="font-bold text-red-400 mb-2">📚 Tactics to Study</h3>
+                     <div className="space-y-1">
+                        {conceptGaps.map((gap, i) => (
+                           <div key={i} className="flex items-center gap-2 text-sm">
+                              <span className="text-red-400">→</span>
+                              <span className="text-slate-300">{conceptLabels[gap] || gap}</span>
+                              <button
+                                 onClick={() => {
+                                    const topic = gap === 'anchoring' ? 'anchoring' :
+                                                  gap === 'batna' ? 'batna' :
+                                                  gap === 'silence_power' ? 'silence' :
+                                                  gap === 'expanding_pie' ? 'expanding' : 'interests';
+                                    setInfoTopic(topic);
+                                 }}
+                                 className="text-xs text-indigo-400 underline"
+                              >
+                                 Learn
+                              </button>
+                           </div>
+                        ))}
+                     </div>
+                  </div>
+               )}
+
+               {conceptGaps.length === 0 && (
+                  <div className="bg-green-900/30 border border-green-500/50 rounded-xl p-3 mb-3">
+                     <h3 className="font-bold text-green-400 mb-2">🎉 Master Negotiator!</h3>
+                     <p className="text-sm text-slate-300">You understand the psychology of negotiation—anchoring, BATNA leverage, silence, and value creation.</p>
+                  </div>
+               )}
+
+               <div className="bg-black/30 rounded-xl p-3 mb-3 max-h-32 overflow-auto">
+                  <h3 className="font-bold text-indigo-400 mb-2">📋 Session Log</h3>
+                  {gameLog.map((log, i) => (
+                     <p key={i} className="text-xs text-slate-400">{log}</p>
+                  ))}
+               </div>
+
+               <div className="bg-black/30 rounded-xl p-3 mb-4">
+                  <h3 className="font-bold text-indigo-400 mb-2">💡 Key Tactics</h3>
+                  <ul className="text-sm text-slate-300 space-y-1">
+                     <li>• <span className="text-yellow-400">Counter-anchor with data</span>, not arbitrary numbers</li>
+                     <li>• <span className="text-yellow-400">Their BATNA matters</span> as much as yours</li>
+                     <li>• <span className="text-yellow-400">Silence is power</span>—never fill it with concessions</li>
+                     <li>• <span className="text-yellow-400">Expand the pie</span> before dividing it</li>
+                  </ul>
+               </div>
+
+               <button onClick={startGame} className="w-full py-3 bg-gradient-to-r from-indigo-600 to-blue-600 rounded-xl font-bold">
+                  🔄 TRY AGAIN
+               </button>
+
+               {showInfo && infoTopic && infoTopics[infoTopic] && (
+                  <div className="absolute inset-0 bg-black/80 flex items-center justify-center p-4 z-50" onClick={() => { setShowInfo(false); setInfoTopic(null); }}>
+                     <div className="bg-slate-800 rounded-xl p-4 max-w-md" onClick={e => e.stopPropagation()}>
+                        <h3 className="text-lg font-bold text-indigo-400 mb-2">{infoTopics[infoTopic].title}</h3>
+                        <p className="text-sm text-slate-300 leading-relaxed">{infoTopics[infoTopic].content}</p>
+                        <button onClick={() => { setShowInfo(false); setInfoTopic(null); }} className="mt-4 w-full py-2 bg-indigo-600 rounded-lg font-bold">Got it!</button>
+                     </div>
+                  </div>
+               )}
+            </div>
+         );
+      }
+
+      const s = scenarios[scenario];
+      return (
+         <div className="w-full h-full flex flex-col bg-gradient-to-br from-indigo-900 via-blue-900 to-slate-900 text-white overflow-hidden">
+            {showInfo && infoTopic && infoTopics[infoTopic] && (
+               <div className="absolute inset-0 bg-black/80 flex items-center justify-center p-4 z-50" onClick={() => { setShowInfo(false); setInfoTopic(null); }}>
+                  <div className="bg-slate-800 rounded-xl p-4 max-w-md" onClick={e => e.stopPropagation()}>
+                     <h3 className="text-lg font-bold text-indigo-400 mb-2">{infoTopics[infoTopic].title}</h3>
+                     <p className="text-sm text-slate-300 leading-relaxed">{infoTopics[infoTopic].content}</p>
+                     <button onClick={() => { setShowInfo(false); setInfoTopic(null); }} className="mt-4 w-full py-2 bg-indigo-600 rounded-lg font-bold">Got it!</button>
+                  </div>
+               </div>
+            )}
+
+            <div className="p-3 bg-black/30 border-b border-indigo-500/30">
+               <div className="flex justify-between items-center">
+                  <span className="font-bold text-sm">🤝 {s.title}</span>
+                  <span className="text-indigo-400 text-sm">{scenario + 1}/{scenarios.length}</span>
+               </div>
+               <div className="flex gap-1 mt-2">
+                  {scenarios.slice(0, scenario).map((_, i) => (
+                     <div key={i} className={`w-3 h-3 rounded ${gameLog[i]?.startsWith('✓') ? 'bg-green-500' : 'bg-red-500'}`} />
+                  ))}
+                  <div className="w-3 h-3 rounded bg-indigo-500 animate-pulse" />
+                  {scenarios.slice(scenario + 1).map((_, i) => (
+                     <div key={i} className="w-3 h-3 rounded bg-slate-600" />
+                  ))}
+               </div>
+            </div>
+
+            <div className="flex-1 p-3 overflow-auto">
+               <div className="bg-black/30 rounded-lg p-3 mb-3">
+                  <p className="text-sm text-slate-200 leading-relaxed">{s.context}</p>
+               </div>
+
+               <p className="text-sm font-bold text-indigo-400 mb-2">{s.question}</p>
+
+               <div className="space-y-2">
+                  {s.opts.map((opt, i) => (
+                     <button
+                        key={i}
+                        onClick={() => answer(i)}
+                        disabled={answered}
+                        className={`w-full p-3 rounded-lg text-left text-sm transition-all ${
+                           answered
+                              ? i === s.correct
+                                 ? 'bg-green-600 border-2 border-green-400'
+                                 : i === selected
+                                    ? 'bg-red-600 border-2 border-red-400'
+                                    : 'bg-black/30 opacity-50'
+                              : 'bg-black/30 hover:bg-indigo-600/50 border-2 border-transparent'
+                        }`}
+                     >
+                        <span className="flex items-start gap-2">
+                           <span className="font-bold text-indigo-400">{String.fromCharCode(65 + i)}.</span>
+                           <span>{opt}</span>
+                        </span>
+                     </button>
+                  ))}
+               </div>
+
+               {answered && (
+                  <div className="mt-3 space-y-2">
+                     {selected !== s.correct && (
+                        <div className="p-3 bg-red-900/30 border border-red-500/50 rounded-lg">
+                           <p className="text-xs font-bold text-red-400 mb-1">❌ Why {String.fromCharCode(65 + (selected || 0))} Fails:</p>
+                           <p className="text-sm text-slate-300">{s.wrongExplanations[selected || 0]}</p>
+                        </div>
+                     )}
+
+                     <div className="p-3 bg-green-900/30 border border-green-500/50 rounded-lg">
+                        <p className="text-xs font-bold text-green-400 mb-1">✓ The Winning Move:</p>
+                        <p className="text-sm text-slate-300">{s.why}</p>
+                     </div>
+
+                     <div className="p-3 bg-cyan-900/30 border border-cyan-500/50 rounded-lg">
+                        <p className="text-xs font-bold text-cyan-400 mb-1">📰 Real World:</p>
+                        <p className="text-sm text-slate-300">{s.realWorld}</p>
+                     </div>
+
+                     <button onClick={next} className="w-full py-3 bg-gradient-to-r from-indigo-600 to-blue-600 rounded-xl font-bold mt-2">
+                        {scenario >= scenarios.length - 1 ? 'See Results' : 'Next Scenario →'}
+                     </button>
+                  </div>
+               )}
+            </div>
+
+            <div className="p-3 bg-black/30 border-t border-indigo-500/30 flex gap-2 justify-center flex-wrap">
+               <button onClick={() => setInfoTopic('anchoring')} className="text-xs text-indigo-400 hover:text-indigo-300">ℹ️ Anchoring</button>
+               <button onClick={() => setInfoTopic('batna')} className="text-xs text-indigo-400 hover:text-indigo-300">ℹ️ BATNA</button>
+               <button onClick={() => setInfoTopic('silence')} className="text-xs text-indigo-400 hover:text-indigo-300">ℹ️ Silence</button>
+               <button onClick={() => setInfoTopic('expanding')} className="text-xs text-indigo-400 hover:text-indigo-300">ℹ️ Win-Win</button>
+            </div>
+         </div>
+      );
    };
 
    // --- FINANCE & FUNDING RENDERERS ---
    const FundraisingRenderer = () => {
-      const [phase, setPhase] = useState<'intro'|'play'|'result'>('intro');
+      const [phase, setPhase] = useState<'intro' | 'play' | 'result'>('intro');
       const [showInfo, setShowInfo] = useState(false);
-      const [infoTopic, setInfoTopic] = useState<string|null>(null);
+      const [infoTopic, setInfoTopic] = useState<string | null>(null);
       const [scenario, setScenario] = useState(0);
       const [score, setScore] = useState(0);
+      const [selected, setSelected] = useState<number | null>(null);
       const [answered, setAnswered] = useState(false);
-      const [selected, setSelected] = useState<number|null>(null);
-      const [log, setLog] = useState<string[]>([]);
+      const [gameLog, setGameLog] = useState<string[]>([]);
+      const [conceptGaps, setConceptGaps] = useState<string[]>([]);
+
+      // Fundraising Psychology Lab - Understanding investor thinking, term sheet traps, and founder mistakes
       const scenarios = [
-         {situation:'Pre-revenue startup with a prototype, needs $50k to launch MVP.',best:0,options:['Bootstrap + Friends & Family','Series A VC ($5M+)','Bank Loan','IPO'],explain:'At pre-revenue, VCs want traction. Bootstrap and F&F are realistic for early validation.'},
-         {situation:'$100k MRR SaaS with 50% growth, needs $2M for sales team.',best:1,options:['Crowdfunding','Seed/Series A VC','Credit Card Debt','Government Grant'],explain:'Strong metrics make you attractive to VCs. $2M for growth is a typical seed/Series A raise.'},
-         {situation:'Profitable small business, needs $500k for equipment.',best:2,options:['Angel Investors','Venture Capital','SBA Bank Loan','Convertible Note'],explain:'Profitable businesses can get traditional bank loans. No equity dilution needed.'},
-         {situation:'Hardware product needs $200k for first production run.',best:1,options:['Bootstrap','Kickstarter/Crowdfunding','Series B VC','Revenue-Based Financing'],explain:'Crowdfunding validates demand AND raises capital. Perfect for consumer hardware.'},
-         {situation:'Biotech startup needs $10M for clinical trials, 5+ years to revenue.',best:2,options:['Angel Investors','Crowdfunding','Specialized VC','Bank Loan'],explain:'Long timelines and high capital needs require specialized VCs who understand biotech.'},
-         {situation:'E-commerce doing $1M/year, needs $100k for inventory.',best:3,options:['Equity Crowdfunding','Venture Debt','Angel Investment','Revenue-Based Financing'],explain:'RBF is perfect: pay back as a % of revenue, no equity dilution, quick approval.'}
+         {
+            title: "The Valuation Trap",
+            context: "You're raising your seed round. Two VCs make offers: VC A offers $1.5M at $15M valuation (10% dilution). VC B offers $2M at $8M valuation (25% dilution). VC B has better network, more experience with your space, and offers hands-on help.",
+            question: "Which offer is actually BETTER for your startup's success?",
+            opts: [
+               'VC A - higher valuation protects your ownership',
+               'VC B - more money and better support despite higher dilution',
+               'Neither - both valuations are bad, keep negotiating',
+               'VC A - take the money and find advisors separately'
+            ],
+            correct: 1,
+            wrongExplanations: [
+               "Higher valuation at seed creates a 'valuation trap.' You need to grow into it or take a down round later. Many unicorn founders took LOW seed valuations from the RIGHT investors. Ownership matters less than company success.",
+               "", // Correct
+               "At seed stage, these are reasonable offers. Endless negotiation burns relationships and time. Investors talk to each other - being difficult early can hurt your reputation.",
+               "Advisors aren't the same as investors. VC B is invested in your success with capital AND time. Separate advisors have divided attention and no skin in the game."
+            ],
+            realWorld: "Airbnb's seed round was at ~$2.5M valuation - tiny! But Sequoia's involvement helped them become a $100B company. Brian Chesky owns less than 15% but that stake is worth billions. Would he trade Sequoia for higher seed valuation? Never.",
+            concept: "valuation_psychology",
+            why: "Ownership percentage is vanity; absolute value is sanity. 10% of a $100M company > 25% of a $10M company. Great investors add 10x+ value through intros, advice, follow-on funding, and credibility. The 'best' valuation often comes from investors who add the least value."
+         },
+         {
+            title: "The Hot Market Mistake",
+            context: "The market is hot. Three VCs are competing for your deal. You're tempted to run a full auction process - playing them against each other, using FOMO, and maximizing valuation. Your advisor says 'strike while the iron is hot.'",
+            question: "What's the HIDDEN RISK of running an aggressive auction?",
+            opts: [
+               'VCs will band together and refuse to invest',
+               'You might get a high valuation you can\'t grow into',
+               'The process takes too long and the market cools',
+               'All of the above - but reputation damage is worst'
+            ],
+            correct: 3,
+            wrongExplanations: [
+               "VCs rarely 'band together' - they're too competitive. But they DO share notes and remember founders who acted badly. One fund passing doesn't stop others from investing.",
+               "Valuation is ONE risk. But it's predictable and manageable. The reputation damage from aggressive tactics follows you for decades.",
+               "Timing is ONE risk. But good companies can still raise when markets cool. What you can't recover is trust.",
+               "" // Correct
+            ],
+            realWorld: "WeWork's Adam Neumann maximized valuations through aggressive tactics. When he needed support, VCs felt burned and let him fall. Compare to Patrick Collison (Stripe) who deliberately took lower valuations from investors who added value. When Stripe needed help, investors went to bat for them.",
+            concept: "investor_relationships",
+            why: "Fundraising isn't a one-time transaction - it's the start of a 10+ year relationship. You'll need these investors for follow-on rounds, bridge loans, introductions, and support during crises. A founder known for playing games will find doors closed when they need them most. Reputation > Valuation."
+         },
+         {
+            title: "The Term Sheet Trap",
+            context: "A VC offers $3M at $12M pre-money valuation. Sounds great! But buried in the term sheet: 2x participating preferred, full ratchet anti-dilution, 3 board seats (you have 2), and blocking rights on all major decisions. Your lawyer flags these as 'aggressive but not unusual.'",
+            question: "What's the REAL impact of these terms?",
+            opts: [
+               'Minor details - valuation is what matters',
+               'You\'ll likely get fired from your own company',
+               'In an exit, investors get paid before you, possibly leaving you with nothing',
+               'Both B and C - these terms transfer control and economics'
+            ],
+            correct: 3,
+            wrongExplanations: [
+               "These are NOT minor details. 2x participating preferred means in a $30M exit, investors take $6M first AND their pro-rata share. You might get pennies. Valuation is just the headline; terms are the substance.",
+               "Getting fired is ONE risk. Board control enables this. But even if you stay, the economic terms can wipe out your stake.",
+               "Getting nothing in exit is ONE risk. But losing control of decision-making means they can FORCE a bad exit or block a good one.",
+               "" // Correct
+            ],
+            realWorld: "Plenty of founders had 'unicorn exits' and made nothing because of liquidation preferences. In the dot-com bust, founders with 2x+ preferences often got $0 while investors recovered their money. Groupon's founders made less than early employees due to term sheet structures.",
+            concept: "term_sheet_mechanics",
+            why: "Liquidation preferences determine who gets paid first. Participating preferred means they get their preference AND their share. Full ratchet anti-dilution can crush you in a down round. Board control means they can replace you. Together, these terms mean you're an employee with stock options, not an owner. Always negotiate terms, not just price."
+         },
+         {
+            title: "The Timing Paradox",
+            context: "Your SaaS startup has $50K MRR, growing 15% month-over-month. You have 18 months of runway. Your co-founder says 'Let's raise now while we're growing!' Your advisor says 'Wait until you hit $100K MRR - better valuation.' You're seeing other startups raise in your space.",
+            question: "What's the STRATEGICALLY CORRECT timing decision?",
+            opts: [
+               'Raise now - 18 months isn\'t much runway',
+               'Wait for $100K MRR milestone',
+               'Start fundraising process now, close in 3-4 months when metrics are stronger',
+               'Wait and see if market conditions stay favorable'
+            ],
+            correct: 2,
+            wrongExplanations: [
+               "18 months is actually good runway. Raising now means fundraising from a weaker position. You'd be optimizing for speed over outcome quality.",
+               "Waiting for a specific milestone is rigid thinking. What if growth slows? What if a competitor raises? What if the market turns? Milestones don't guarantee anything.",
+               "", // Correct
+               "Waiting passively is never strategic. Markets change, competitors move, and opportunities close. Proactive > Reactive."
+            ],
+            realWorld: "Instagram started fundraising conversations with Sequoia months before they were 'ready.' By the time they hit inflection, the relationship was warm and they raised in days. Cold outreach at $100K MRR takes months. Warm outreach at $50K MRR with relationship building often closes faster and better.",
+            concept: "fundraising_timing",
+            why: "Fundraising takes 3-6 months. Start when you have 12+ months runway so you're not desperate. Begin relationship-building BEFORE you need money. The best time to raise is when you don't need to - that's when you have leverage. Starting now and closing later gives you optionality without desperation."
+         },
+         {
+            title: "The Investor Pass Psychology",
+            context: "You've pitched 20 VCs. 15 passed. 3 want 'to see more progress.' 2 are interested but moving slowly. You're frustrated and questioning everything. A friend says 'If no one's investing, maybe your idea is bad.'",
+            question: "How should you INTERPRET these results?",
+            opts: [
+               'The market is telling you something - pivot or quit',
+               'This is normal - most successful companies got many rejections first',
+               'Your pitch needs work - hire a pitch coach',
+               'VCs are pattern-matching wrong - you need different investors'
+            ],
+            correct: 1,
+            wrongExplanations: [
+               "20 meetings with 2 interested is actually not bad for early-stage. Many legendary companies were rejected 50+ times. VC passes tell you about VC patterns, not about your company's potential.",
+               "", // Correct
+               "Pitch mechanics are rarely the issue. Most rejections are about pattern matching, thesis fit, or timing. A slightly better pitch won't change a VC's thesis.",
+               "Blaming VCs is a coping mechanism, not a strategy. The real insight is understanding WHY they're passing and whether it's addressable or thesis-driven."
+            ],
+            realWorld: "Airbnb was rejected by 7 prominent VCs who are now embarrassed about it. WhatsApp was rejected by Facebook (who later bought them for $19B). Zoom was passed on by many VCs who invested in competitors. VC rejection ≠ Startup quality. 2/20 interested is a fundable conversion rate.",
+            concept: "rejection_interpretation",
+            why: "VCs pass for many reasons: wrong thesis, portfolio conflict, partner dynamics, or simply missing the vision. ~5-10% conversion rate (meetings to term sheets) is normal for good companies. The key is finding the 1-2 investors who GET IT, not convincing the masses. 2 interested investors out of 20 meetings means you're on track."
+         }
       ];
-      const infoTopics:{[k:string]:{title:string,content:string}} = {
-         stages:{title:'Funding Stages',content:'Pre-seed → Seed → Series A → B → C → IPO. Each stage has different investors, amounts, and expectations.'},
-         dilution:{title:'Dilution',content:'Each funding round reduces your ownership %. Giving up 20% per round means owning <50% after 3 rounds.'},
-         terms:{title:'Term Sheets',content:'Valuation, liquidation preferences, board seats, anti-dilution, vesting. Get a lawyer before signing anything.'},
-         alternatives:{title:'Alternative Funding',content:'Grants, competitions, revenue-based financing, crowdfunding, strategic partnerships. Not everything needs VC.'}
+
+      const conceptLabels: { [key: string]: string } = {
+         valuation_psychology: "Valuation vs Value-Add Trade-offs",
+         investor_relationships: "Long-term Investor Relationship Management",
+         term_sheet_mechanics: "Term Sheet Structure & Economics",
+         fundraising_timing: "Strategic Fundraising Timing",
+         rejection_interpretation: "Understanding VC Decision-Making"
       };
-      const answer = (idx:number) => {
-         if(answered) return;
-         setSelected(idx);
-         setAnswered(true);
-         if(idx === scenarios[scenario].best) {
-            setScore(s => s + 1);
-            setLog(l => [...l, `Scenario ${scenario+1}: Correct!`]);
-         } else {
-            setLog(l => [...l, `Scenario ${scenario+1}: Wrong`]);
+
+      const infoTopics: { [k: string]: { title: string; content: string } } = {
+         stages: {
+            title: "Funding Stages",
+            content: "Pre-seed ($100K-$500K): Idea/prototype. Seed ($500K-$3M): Early traction. Series A ($5M-$15M): Product-market fit, repeatable sales. Series B ($15M-$50M): Scaling proven model. Series C+ ($50M+): Market expansion. Each stage has different investors, metrics, and expectations. Don't raise the wrong stage."
+         },
+         dilution: {
+            title: "Dilution Math",
+            content: "Each round typically dilutes 15-25%. After 3 rounds: Founders often own 30-40%. After 5 rounds + options pool: Founders might own 15-25%. This is NORMAL for venture-scale companies. The goal isn't maximizing ownership - it's maximizing absolute value. 10% of $10B > 80% of $10M."
+         },
+         terms: {
+            title: "Critical Term Sheet Terms",
+            content: "1) Liquidation preference: 1x non-participating is founder-friendly. 2) Anti-dilution: Weighted average is standard, full ratchet is predatory. 3) Board composition: Keep founder control through Series A at minimum. 4) Protective provisions: Limit what requires investor approval. 5) Pro-rata rights: Standard, helps good investors follow on."
+         },
+         psychology: {
+            title: "Investor Psychology",
+            content: "VCs invest in patterns: Right team, right market, right timing. They're optimizing for home runs, not singles. A 'no' often means 'not pattern match' not 'bad company.' VCs have thesis constraints, partner dynamics, and portfolio considerations you can't see. Don't take rejection personally - find investors whose thesis matches your company."
          }
       };
-      const next = () => {
-         if(scenario >= scenarios.length - 1) setPhase('result');
-         else { setScenario(s => s + 1); setAnswered(false); setSelected(null); }
+
+      const answer = (idx: number) => {
+         if (answered) return;
+         setSelected(idx);
+         setAnswered(true);
+         const s = scenarios[scenario];
+         if (idx === s.correct) {
+            setScore(prev => prev + 1);
+            setGameLog(prev => [...prev, `✓ ${s.title}: Correct! Understood ${conceptLabels[s.concept]}`]);
+         } else {
+            setGameLog(prev => [...prev, `✗ ${s.title}: Missed. The trap was "${s.opts[idx]}"`]);
+            if (!conceptGaps.includes(s.concept)) {
+               setConceptGaps(prev => [...prev, s.concept]);
+            }
+         }
       };
-      const grade = score >= 5 ? 'A' : score >= 4 ? 'B' : score >= 2 ? 'C' : 'D';
+
+      const next = () => {
+         if (scenario >= scenarios.length - 1) {
+            setPhase('result');
+         } else {
+            setScenario(prev => prev + 1);
+            setAnswered(false);
+            setSelected(null);
+         }
+      };
+
+      const grade = score >= 5 ? 'A' : score >= 4 ? 'B' : score >= 3 ? 'C' : 'D';
       const s = scenarios[scenario];
-      if(phase === 'intro') return (<div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-emerald-900 via-green-900 to-teal-900 text-white p-6"><div className="text-6xl mb-4">💰</div><h2 className="text-2xl font-bold mb-2">Fundraising Navigator</h2><p className="text-slate-300 text-center mb-6 max-w-md">Match startups with the right funding source! Learn when to bootstrap, raise VC, or use alternatives.</p><button onClick={() => setPhase('play')} className="px-8 py-3 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-xl font-bold">Start Matching</button></div>);
-      if(phase === 'result') return (<div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-emerald-900 via-green-900 to-teal-900 text-white p-6"><div className="text-6xl mb-4">{grade === 'A' ? '🏆' : grade === 'B' ? '💰' : '📊'}</div><h2 className="text-2xl font-bold mb-2">Complete!</h2><div className="text-4xl font-bold text-emerald-400 mb-2">{score}/{scenarios.length}</div><div className="text-6xl mb-4">{grade}</div><p className="text-slate-400 mb-4">{grade === 'A' ? 'Funding expert!' : grade === 'B' ? 'Good instincts!' : 'Keep learning!'}</p><button onClick={() => {setPhase('intro');setScenario(0);setScore(0);setAnswered(false);setSelected(null);setLog([]);}} className="px-6 py-2 bg-emerald-600 rounded-lg">Try Again</button></div>);
-      return (<div className="w-full h-full flex flex-col bg-gradient-to-br from-emerald-900 via-green-900 to-teal-900 text-white overflow-hidden">{showInfo && infoTopic && infoTopics[infoTopic] && (<div className="absolute inset-0 bg-black/80 flex items-center justify-center p-4 z-50" onClick={() => { setShowInfo(false); setInfoTopic(null); }}><div className="bg-slate-800 rounded-xl p-4 max-w-md" onClick={e => e.stopPropagation()}><h3 className="text-lg font-bold text-emerald-400 mb-2">{infoTopics[infoTopic].title}</h3><p className="text-sm text-slate-300">{infoTopics[infoTopic].content}</p><button onClick={() => { setShowInfo(false); setInfoTopic(null); }} className="mt-4 w-full py-2 bg-emerald-600 rounded-lg">Got it!</button></div></div>)}<div className="p-3 bg-black/30 border-b border-emerald-500/30 flex justify-between items-center"><span className="font-bold">💰 Fundraising</span><span className="text-emerald-400">{scenario + 1}/{scenarios.length}</span><span className="text-teal-400">Score: {score}</span></div><div className="flex-1 p-4 flex flex-col justify-center"><div className="bg-black/30 rounded-xl p-4 mb-4"><p className="text-sm">{s.situation}</p><p className="text-xs text-slate-400 mt-2">What funding source fits best?</p></div><div className="grid gap-2">{s.options.map((opt, i) => (<button key={i} onClick={() => answer(i)} disabled={answered} className={`p-3 rounded-lg text-left text-sm ${answered ? i === s.best ? 'bg-green-600' : i === selected ? 'bg-red-600' : 'bg-black/30' : 'bg-black/30 hover:bg-emerald-600/50'}`}>{opt}</button>))}</div>{answered && (<div className="mt-3 p-3 bg-black/30 rounded-lg"><p className="text-sm text-slate-300">{s.explain}</p><button onClick={next} className="mt-3 w-full py-2 bg-emerald-600 rounded-lg">{scenario >= scenarios.length - 1 ? 'See Results' : 'Next'}</button></div>)}</div><div className="p-3 bg-black/30 border-t border-emerald-500/30 flex gap-2 justify-center">{Object.keys(infoTopics).map(k => <button key={k} onClick={() => {setInfoTopic(k);setShowInfo(true);}} className="text-xs text-emerald-400">ℹ️ {infoTopics[k].title}</button>)}</div></div>);
+
+      if (phase === 'intro') {
+         return (
+            <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-emerald-900 via-green-900 to-teal-900 text-white p-6">
+               <div className="text-6xl mb-4">💰</div>
+               <h2 className="text-2xl font-bold mb-2">Investor Psychology Lab</h2>
+               <p className="text-slate-300 text-center mb-4 max-w-md">
+                  Master the psychology of fundraising - what investors really think and the traps founders fall into.
+               </p>
+               <div className="bg-black/30 rounded-xl p-4 mb-6 max-w-md text-sm">
+                  <p className="text-emerald-400 font-bold mb-2">⚠️ Common Founder Mistakes:</p>
+                  <ul className="text-slate-300 space-y-1 text-xs">
+                     <li>• Optimizing for valuation over value-add</li>
+                     <li>• Ignoring term sheet details that cost millions</li>
+                     <li>• Misreading investor signals and timing</li>
+                     <li>• Taking rejection personally instead of strategically</li>
+                  </ul>
+               </div>
+               <button
+                  onClick={() => setPhase('play')}
+                  className="px-8 py-3 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-xl font-bold hover:from-emerald-400 hover:to-teal-400 transition-all"
+               >
+                  Enter the Fundraising Arena
+               </button>
+            </div>
+         );
+      }
+
+      if (phase === 'result') {
+         return (
+            <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-emerald-900 via-green-900 to-teal-900 text-white p-6 overflow-auto">
+               <div className="text-6xl mb-4">{grade === 'A' ? '🏆' : grade === 'B' ? '💰' : grade === 'C' ? '📊' : '📚'}</div>
+               <h2 className="text-2xl font-bold mb-2">Fundraising Assessment Complete</h2>
+               <div className="text-4xl font-bold text-emerald-400 mb-2">{score}/{scenarios.length}</div>
+               <div className="text-5xl mb-4">{grade}</div>
+               <p className="text-slate-400 mb-4 text-center">
+                  {grade === 'A' ? 'Fundraising sophisticate! You think like a seasoned founder.' :
+                   grade === 'B' ? 'Good fundraising instincts. Some blind spots to address.' :
+                   grade === 'C' ? 'Common founder mistakes detected. Study before raising.' :
+                   'Many costly misconceptions. Essential to study before fundraising.'}
+               </p>
+
+               {conceptGaps.length > 0 && (
+                  <div className="bg-black/30 rounded-xl p-4 max-w-md w-full mb-4">
+                     <p className="text-emerald-400 font-bold text-sm mb-2">📚 Concepts to Study:</p>
+                     <ul className="text-slate-300 text-xs space-y-1">
+                        {conceptGaps.map(gap => (
+                           <li key={gap}>• {conceptLabels[gap]}</li>
+                        ))}
+                     </ul>
+                  </div>
+               )}
+
+               <div className="bg-black/30 rounded-xl p-4 max-w-md w-full mb-4 max-h-32 overflow-y-auto">
+                  <p className="text-emerald-400 font-bold text-sm mb-2">Session Log:</p>
+                  {gameLog.map((entry, i) => (
+                     <p key={i} className="text-xs text-slate-300">{entry}</p>
+                  ))}
+               </div>
+
+               <button
+                  onClick={() => {
+                     setPhase('intro');
+                     setScenario(0);
+                     setScore(0);
+                     setAnswered(false);
+                     setSelected(null);
+                     setGameLog([]);
+                     setConceptGaps([]);
+                  }}
+                  className="px-6 py-2 bg-emerald-600 rounded-lg hover:bg-emerald-500"
+               >
+                  Try Again
+               </button>
+            </div>
+         );
+      }
+
+      return (
+         <div className="w-full h-full flex flex-col bg-gradient-to-br from-emerald-900 via-green-900 to-teal-900 text-white overflow-hidden">
+            {showInfo && infoTopic && infoTopics[infoTopic] && (
+               <div className="absolute inset-0 bg-black/80 flex items-center justify-center p-4 z-50" onClick={() => { setShowInfo(false); setInfoTopic(null); }}>
+                  <div className="bg-slate-800 rounded-xl p-4 max-w-md" onClick={e => e.stopPropagation()}>
+                     <h3 className="text-lg font-bold text-emerald-400 mb-2">{infoTopics[infoTopic].title}</h3>
+                     <p className="text-sm text-slate-300">{infoTopics[infoTopic].content}</p>
+                     <button onClick={() => { setShowInfo(false); setInfoTopic(null); }} className="mt-4 w-full py-2 bg-emerald-600 rounded-lg">Got it!</button>
+                  </div>
+               </div>
+            )}
+
+            <div className="p-3 bg-black/30 border-b border-emerald-500/30 flex justify-between items-center">
+               <span className="font-bold">💰 Investor Psychology</span>
+               <span className="text-emerald-400">{scenario + 1}/{scenarios.length}</span>
+               <span className="text-teal-400">Score: {score}</span>
+            </div>
+
+            <div className="flex-1 p-4 overflow-auto">
+               <div className="bg-black/30 rounded-xl p-3 mb-3">
+                  <p className="font-bold text-emerald-400 mb-2">{s.title}</p>
+                  <p className="text-sm text-slate-300">{s.context}</p>
+               </div>
+
+               <div className="bg-black/30 rounded-xl p-4 mb-3">
+                  <p className="font-medium text-white">{s.question}</p>
+               </div>
+
+               <div className="grid gap-2">
+                  {s.opts.map((opt, i) => (
+                     <button
+                        key={i}
+                        onClick={() => answer(i)}
+                        disabled={answered}
+                        className={`p-3 rounded-lg text-left text-sm transition-all ${
+                           answered
+                              ? i === s.correct
+                                 ? 'bg-green-600'
+                                 : i === selected
+                                    ? 'bg-red-600'
+                                    : 'bg-black/30'
+                              : 'bg-black/30 hover:bg-emerald-600/50'
+                        }`}
+                     >
+                        {opt}
+                     </button>
+                  ))}
+               </div>
+
+               {answered && (
+                  <div className="mt-3 space-y-3">
+                     {selected !== s.correct && s.wrongExplanations[selected!] && (
+                        <div className="p-3 bg-red-900/50 rounded-lg border border-red-500/30">
+                           <p className="text-xs text-red-300 font-bold mb-1">❌ Why This Was Wrong:</p>
+                           <p className="text-sm text-red-100">{s.wrongExplanations[selected!]}</p>
+                        </div>
+                     )}
+                     <div className="p-3 bg-green-900/50 rounded-lg border border-green-500/30">
+                        <p className="text-xs text-green-300 font-bold mb-1">✓ Strategic Insight:</p>
+                        <p className="text-sm text-green-100">{s.why}</p>
+                     </div>
+                     <div className="p-3 bg-blue-900/50 rounded-lg border border-blue-500/30">
+                        <p className="text-xs text-blue-300 font-bold mb-1">📖 Real World:</p>
+                        <p className="text-sm text-blue-100">{s.realWorld}</p>
+                     </div>
+                     <button
+                        onClick={next}
+                        className="w-full py-2 bg-emerald-600 rounded-lg hover:bg-emerald-500"
+                     >
+                        {scenario >= scenarios.length - 1 ? 'See Results' : 'Next Scenario'}
+                     </button>
+                  </div>
+               )}
+            </div>
+
+            <div className="p-3 bg-black/30 border-t border-emerald-500/30 flex gap-2 justify-center flex-wrap">
+               {Object.keys(infoTopics).map(k => (
+                  <button
+                     key={k}
+                     onClick={() => { setInfoTopic(k); setShowInfo(true); }}
+                     className="text-xs text-emerald-400 hover:text-emerald-300"
+                  >
+                     ℹ️ {infoTopics[k].title}
+                  </button>
+               ))}
+            </div>
+         </div>
+      );
    };
 
    const FinancialStatementsRenderer = () => {
-      const [phase, setPhase] = useState<'intro'|'play'|'result'>('intro');
+      const [phase, setPhase] = useState<'intro' | 'play' | 'result'>('intro');
       const [showInfo, setShowInfo] = useState(false);
-      const [infoTopic, setInfoTopic] = useState<string|null>(null);
-      const [question, setQuestion] = useState(0);
+      const [infoTopic, setInfoTopic] = useState<string | null>(null);
+      const [scenario, setScenario] = useState(0);
       const [score, setScore] = useState(0);
+      const [selected, setSelected] = useState<number | null>(null);
       const [answered, setAnswered] = useState(false);
-      const [selected, setSelected] = useState<number|null>(null);
-      const [log, setLog] = useState<string[]>([]);
-      const questions = [
-         {q:'Revenue is $500k, COGS is $200k, Operating Expenses are $150k. What is Net Income?',opts:['$500k','$300k','$150k','$50k'],correct:2,explain:'Net Income = Revenue - COGS - OpEx = $500k - $200k - $150k = $150k (before taxes).'},
-         {q:'Which financial statement shows a snapshot of what the company owns and owes?',opts:['Income Statement','Balance Sheet','Cash Flow Statement','Cap Table'],correct:1,explain:'Balance Sheet shows Assets = Liabilities + Equity at a specific point in time.'},
-         {q:'Company has $100k cash, $50k AR, $30k inventory, $80k AP. What is working capital?',opts:['$100k','$180k','$100k','$80k'],correct:0,explain:'Working Capital = Current Assets - Current Liabilities = ($100k+$50k+$30k) - $80k = $100k.'},
-         {q:'Net Income is $100k but Cash increased only $20k. Most likely reason?',opts:['Accounting error','Increased inventory/AR','Fraud','Impossible scenario'],correct:1,explain:'Cash and profit differ due to timing: buying inventory or customers not paying yet reduces cash.'},
-         {q:'Gross Margin is 60%, Operating Margin is 20%. What does this tell you?',opts:['Company is losing money','40% goes to operating expenses','Pricing is too low','COGS is too high'],correct:1,explain:'The 40% gap between gross and operating margin is spent on sales, marketing, R&D, admin.'},
-         {q:'Which ratio measures ability to pay short-term debts?',opts:['ROE','Current Ratio','Debt-to-Equity','Gross Margin'],correct:1,explain:'Current Ratio = Current Assets / Current Liabilities. Above 1.0 means can cover short-term debts.'}
+      const [gameLog, setGameLog] = useState<string[]>([]);
+      const [conceptGaps, setConceptGaps] = useState<string[]>([]);
+
+      const scenarios = [
+         {
+            title: "The Profitable Bankruptcy",
+            context: "A SaaS startup shows: Revenue $2M, Net Income $400K (20% margin). But they're asking for emergency funding. Their balance sheet shows: Cash $50K, AR $800K (90-day terms), AP $600K (due in 30 days).",
+            question: "Why is this profitable company in financial trouble?",
+            opts: [
+               'The profit margin is too low',
+               'Cash flow crisis - AR collection too slow vs AP due dates',
+               'They have too much debt',
+               'Revenue is declining'
+            ],
+            correct: 1,
+            wrongExplanations: [
+               "20% net margin is excellent for SaaS. Margin isn't the problem here. Look at the timing mismatch between assets and liabilities.",
+               "", // Correct
+               "There's no mention of debt. The issue is working capital timing - they're owed money that won't arrive before bills are due.",
+               "Nothing indicates declining revenue. This is a TIMING problem, not a revenue problem. Profitable companies can run out of cash."
+            ],
+            realWorld: "Toys 'R' Us was profitable in many years before bankruptcy. They couldn't manage working capital during seasonal inventory buildups. Profit ≠ Cash.",
+            concept: "cash_vs_profit",
+            why: "Profit is accounting. Cash is survival. They have $800K coming but only $50K in hand, with $600K due NOW. They'll be profitable on paper while bouncing checks. This is why the Cash Flow Statement matters more than the Income Statement for survival."
+         },
+         {
+            title: "The Margin Mystery",
+            context: "Two competitors: Company A has 70% gross margin but 5% net margin. Company B has 40% gross margin but 15% net margin. Same revenue ($10M each).",
+            question: "What does this tell you about their business models?",
+            opts: [
+               'Company A is more efficient',
+               'Company B has better products',
+               'Company A overspends on sales/marketing/overhead',
+               'Company B has lower quality products'
+            ],
+            correct: 2,
+            wrongExplanations: [
+               "Company A is LESS efficient. They make more per sale (70% vs 40%) but keep less (5% vs 15%). Something is eating their profits between gross and net.",
+               "", // Close but wrong framing
+               "", // Correct
+               "Lower gross margin doesn't mean lower quality. It often means different business models - physical vs digital, commoditized vs differentiated."
+            ],
+            realWorld: "WeWork had 80%+ gross margins on desks but burned billions on sales, marketing, and Adam Neumann's expenses. High gross margin means nothing if operating costs eat it all.",
+            concept: "margin_analysis",
+            why: "The GAP between gross and net margin reveals operating efficiency. Company A: 70% - 5% = 65% goes to OpEx. Company B: 40% - 15% = 25% to OpEx. Company A spends 2.6x more on operations per dollar of gross profit. That's a red flag."
+         },
+         {
+            title: "The Growth Trap",
+            context: "A startup's 3-year trend: Year 1: Revenue $1M, Burn $500K. Year 2: Revenue $3M, Burn $2M. Year 3: Revenue $8M, Burn $6M. They're raising Series B.",
+            question: "What's the critical question investors will ask?",
+            opts: [
+               'Why is revenue growing so fast?',
+               'When will burn rate decrease?',
+               'What is the path to unit economics profitability?',
+               'Why don\'t you have more customers?'
+            ],
+            correct: 2,
+            wrongExplanations: [
+               "Fast revenue growth is GOOD - investors want that. The question is whether that growth is sustainable and eventually profitable.",
+               "Burn rate might never decrease if you're scaling. The question is whether each dollar of burn generates profitable returns eventually.",
+               "", // Correct
+               "Revenue is 8x in 3 years - customer acquisition isn't the problem here. The question is whether those customers are profitable."
+            ],
+            realWorld: "Uber scaled to $10B+ revenue while losing billions. Investors finally asked: 'Will a ride EVER be profitable?' Unit economics matter more than total growth.",
+            concept: "unit_economics",
+            why: "Unit economics = profit per customer/transaction. If you lose money on each sale, more sales = more losses. Investors want to see: 'We lose money overall because of fixed costs, but each new customer is profitable. At X scale, we'll be profitable.'"
+         },
+         {
+            title: "The Debt Dilemma",
+            context: "Company has $5M revenue, $1M net income. Balance sheet shows: $2M cash, $3M debt at 8% interest ($240K/year). They're considering taking $5M more debt to expand.",
+            question: "What financial metric should guide this decision?",
+            opts: [
+               'Current ratio - can they pay short-term bills?',
+               'Interest coverage ratio - can they service the debt?',
+               'Gross margin - are products profitable?',
+               'Revenue growth rate - is business growing?'
+            ],
+            correct: 1,
+            wrongExplanations: [
+               "Current ratio measures short-term liquidity, not debt capacity. They have $2M cash which is fine for short-term. The question is long-term debt service.",
+               "", // Correct
+               "Gross margin matters for product profitability, not debt decisions. They're already net profitable - the question is debt capacity.",
+               "Growth rate is important but doesn't answer: 'Can we afford this debt?' Fast-growing companies have gone bankrupt from over-leveraging."
+            ],
+            realWorld: "Hertz had strong revenue but took on too much debt. When COVID hit, they couldn't make interest payments and filed bankruptcy despite having a real business.",
+            concept: "leverage_ratios",
+            why: "Interest Coverage = EBIT / Interest Expense. Current: ~$1.2M / $240K = 5x (healthy). With $5M more at 8%: $640K total interest. New ratio: ~1.9x (danger zone). Banks want 3x+ coverage. This expansion could make them fragile."
+         },
+         {
+            title: "The AR Alarm",
+            context: "Your SaaS dashboard shows: MRR grew 50% this year ($100K→$150K). But AR also grew 200% ($50K→$150K). Days Sales Outstanding went from 30 to 90 days.",
+            question: "What's the hidden problem these numbers reveal?",
+            opts: [
+               'Growth is too fast to manage',
+               'Customers are churning',
+               'Revenue recognition is aggressive or customers aren\'t paying',
+               'Pricing is too low'
+            ],
+            correct: 2,
+            wrongExplanations: [
+               "Fast growth is manageable - the problem is specifically in collections/AR. Growth itself isn't the issue.",
+               "If customers churned, revenue would drop, not grow. This is a payment issue, not a retention issue.",
+               "", // Correct
+               "Pricing doesn't explain why AR grew 4x while revenue grew 1.5x. The issue is cash collection, not pricing."
+            ],
+            realWorld: "Luckin Coffee (China Starbucks competitor) showed massive revenue growth, but AR grew faster. Investigation revealed fabricated sales that never collected payment. $300M fraud.",
+            concept: "ar_analysis",
+            why: "Red flags: (1) AR growing faster than revenue = customers not paying, (2) DSO tripling = it takes 3x longer to collect, (3) Either sales are 'recognized' before payment is certain (aggressive accounting) OR customers are slow/unable to pay. Both are serious. Investigate immediately."
+         }
       ];
-      const infoTopics:{[k:string]:{title:string,content:string}} = {
-         income:{title:'Income Statement',content:'Revenue - Expenses = Profit. Shows performance over a period. Also called P&L (Profit & Loss).'},
-         balance:{title:'Balance Sheet',content:'Assets = Liabilities + Equity. Snapshot at a point in time. Shows what you own, owe, and shareholders stake.'},
-         cashflow:{title:'Cash Flow',content:'Operating + Investing + Financing activities. Profit ≠ Cash. You can be profitable and run out of cash.'},
-         ratios:{title:'Key Ratios',content:'Gross Margin, Net Margin, Current Ratio, Quick Ratio, ROE. These help compare companies and spot trends.'}
-      };
-      const answer = (idx:number) => {
-         if(answered) return;
-         setSelected(idx);
-         setAnswered(true);
-         if(idx === questions[question].correct) {
-            setScore(s => s + 1);
-            setLog(l => [...l, `Q${question+1}: Correct!`]);
-         } else {
-            setLog(l => [...l, `Q${question+1}: Wrong`]);
+
+      const infoTopics: Record<string, { title: string; content: string }> = {
+         income: {
+            title: "Income Statement Deep Dive",
+            content: "Revenue - COGS = Gross Profit. Gross - OpEx = Operating Income. Operating - Interest - Taxes = Net Income. Watch the GAPS between margins - they reveal where money goes. High gross but low net = operational inefficiency."
+         },
+         balance: {
+            title: "Balance Sheet Analysis",
+            content: "Assets = Liabilities + Equity. Current assets/liabilities = due within 1 year. Working Capital = Current Assets - Current Liabilities. Negative working capital = potential cash crisis. Watch AR trends - growing faster than revenue is a red flag."
+         },
+         cashflow: {
+            title: "Cash Flow Statement",
+            content: "Operating: cash from business. Investing: buying/selling assets. Financing: debt/equity changes. Profitable companies can have negative operating cash flow (growing AR/inventory). Cash is survival - profit is accounting."
+         },
+         ratios: {
+            title: "Critical Financial Ratios",
+            content: "Current Ratio = Current Assets / Current Liabilities (liquidity). Interest Coverage = EBIT / Interest (debt safety). DSO = AR / (Revenue/365) (collection speed). Gross Margin trends reveal pricing power. Compare ratios to industry benchmarks."
+         },
+         redflags: {
+            title: "Financial Red Flags",
+            content: "AR growing faster than revenue. Inventory building up. Decreasing margins over time. Debt increasing while profits fall. Revenue up but cash flow down. These patterns often precede major problems or fraud."
+         },
+         uniteconomics: {
+            title: "Unit Economics",
+            content: "LTV (Customer Lifetime Value) vs CAC (Customer Acquisition Cost). LTV/CAC should be 3x+. Payback period = months to recover CAC. Contribution margin per unit. If unit economics don't work, scale just accelerates losses."
          }
       };
-      const next = () => {
-         if(question >= questions.length - 1) setPhase('result');
-         else { setQuestion(q => q + 1); setAnswered(false); setSelected(null); }
+
+      useEffect(() => { if (infoTopic && infoTopics[infoTopic]) setShowInfo(true); }, [infoTopic]);
+
+      const startGame = () => {
+         setPhase('play');
+         setScenario(0);
+         setScore(0);
+         setSelected(null);
+         setAnswered(false);
+         setGameLog([]);
+         setConceptGaps([]);
       };
-      const grade = score >= 5 ? 'A' : score >= 4 ? 'B' : score >= 2 ? 'C' : 'D';
-      const q = questions[question];
-      if(phase === 'intro') return (<div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-blue-900 via-slate-900 to-gray-900 text-white p-6"><div className="text-6xl mb-4">📊</div><h2 className="text-2xl font-bold mb-2">Financial Statements</h2><p className="text-slate-300 text-center mb-6 max-w-md">Master the language of business! Understand income statements, balance sheets, and cash flow.</p><button onClick={() => setPhase('play')} className="px-8 py-3 bg-gradient-to-r from-blue-500 to-slate-500 rounded-xl font-bold">Start Quiz</button></div>);
-      if(phase === 'result') return (<div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-blue-900 via-slate-900 to-gray-900 text-white p-6"><div className="text-6xl mb-4">{grade === 'A' ? '📈' : grade === 'B' ? '📊' : '📉'}</div><h2 className="text-2xl font-bold mb-2">Quiz Complete!</h2><div className="text-4xl font-bold text-blue-400 mb-2">{score}/{questions.length}</div><div className="text-6xl mb-4">{grade}</div><p className="text-slate-400 mb-4">{grade === 'A' ? 'CFO material!' : grade === 'B' ? 'Good foundation!' : 'Review the basics!'}</p><button onClick={() => {setPhase('intro');setQuestion(0);setScore(0);setAnswered(false);setSelected(null);setLog([]);}} className="px-6 py-2 bg-blue-600 rounded-lg">Try Again</button></div>);
-      return (<div className="w-full h-full flex flex-col bg-gradient-to-br from-blue-900 via-slate-900 to-gray-900 text-white overflow-hidden">{showInfo && infoTopic && infoTopics[infoTopic] && (<div className="absolute inset-0 bg-black/80 flex items-center justify-center p-4 z-50" onClick={() => { setShowInfo(false); setInfoTopic(null); }}><div className="bg-slate-800 rounded-xl p-4 max-w-md" onClick={e => e.stopPropagation()}><h3 className="text-lg font-bold text-blue-400 mb-2">{infoTopics[infoTopic].title}</h3><p className="text-sm text-slate-300">{infoTopics[infoTopic].content}</p><button onClick={() => { setShowInfo(false); setInfoTopic(null); }} className="mt-4 w-full py-2 bg-blue-600 rounded-lg">Got it!</button></div></div>)}<div className="p-3 bg-black/30 border-b border-blue-500/30 flex justify-between items-center"><span className="font-bold">📊 Financials</span><span className="text-blue-400">{question + 1}/{questions.length}</span><span className="text-slate-400">Score: {score}</span></div><div className="flex-1 p-4 flex flex-col justify-center"><div className="bg-black/30 rounded-xl p-4 mb-4"><p className="text-sm">{q.q}</p></div><div className="grid gap-2">{q.opts.map((opt, i) => (<button key={i} onClick={() => answer(i)} disabled={answered} className={`p-3 rounded-lg text-left text-sm ${answered ? i === q.correct ? 'bg-green-600' : i === selected ? 'bg-red-600' : 'bg-black/30' : 'bg-black/30 hover:bg-blue-600/50'}`}>{opt}</button>))}</div>{answered && (<div className="mt-3 p-3 bg-black/30 rounded-lg"><p className="text-sm text-slate-300">{q.explain}</p><button onClick={next} className="mt-3 w-full py-2 bg-blue-600 rounded-lg">{question >= questions.length - 1 ? 'See Results' : 'Next'}</button></div>)}</div><div className="p-3 bg-black/30 border-t border-blue-500/30 flex gap-2 justify-center">{Object.keys(infoTopics).map(k => <button key={k} onClick={() => {setInfoTopic(k);setShowInfo(true);}} className="text-xs text-blue-400">ℹ️ {infoTopics[k].title}</button>)}</div></div>);
+
+      const answer = (idx: number) => {
+         if (answered) return;
+         setSelected(idx);
+         setAnswered(true);
+         const s = scenarios[scenario];
+         const isCorrect = idx === s.correct;
+         if (isCorrect) {
+            setScore(prev => prev + 20);
+            setGameLog(prev => [...prev, `✓ ${s.title}: Understood ${s.concept}`]);
+         } else {
+            setConceptGaps(prev => prev.includes(s.concept) ? prev : [...prev, s.concept]);
+            setGameLog(prev => [...prev, `✗ ${s.title}: Gap in ${s.concept}`]);
+         }
+      };
+
+      const next = () => {
+         if (scenario >= scenarios.length - 1) {
+            setPhase('result');
+         } else {
+            setScenario(prev => prev + 1);
+            setSelected(null);
+            setAnswered(false);
+         }
+      };
+
+      const getGrade = () => {
+         const pct = (score / (scenarios.length * 20)) * 100;
+         if (pct >= 90) return { letter: 'A', label: 'Financial Analyst', color: 'text-green-400' };
+         if (pct >= 70) return { letter: 'B', label: 'Financially Literate', color: 'text-blue-400' };
+         if (pct >= 50) return { letter: 'C', label: 'Developing', color: 'text-yellow-400' };
+         return { letter: 'D', label: 'Study Needed', color: 'text-red-400' };
+      };
+
+      const conceptLabels: Record<string, string> = {
+         cash_vs_profit: "Cash Flow vs Profit",
+         margin_analysis: "Margin Analysis & Efficiency",
+         unit_economics: "Unit Economics & Scalability",
+         leverage_ratios: "Debt & Leverage Ratios",
+         ar_analysis: "Accounts Receivable Red Flags"
+      };
+
+      if (phase === 'intro') return (
+         <div className="w-full h-full flex flex-col bg-gradient-to-br from-blue-900 via-slate-900 to-gray-900 text-white p-4 overflow-auto">
+            <div className="text-center mb-4">
+               <h1 className="text-2xl font-bold mb-2">📊 Financial Detective</h1>
+               <p className="text-blue-300 text-sm">Read between the lines. Numbers tell stories—if you know what to look for.</p>
+            </div>
+
+            <div className="bg-black/30 rounded-xl p-4 mb-4">
+               <h2 className="text-lg font-bold mb-3 text-blue-400">⚠️ Why This Matters</h2>
+               <div className="space-y-2 text-sm text-slate-300">
+                  <p>• <span className="text-red-400 font-bold">Profitable companies</span> go bankrupt every year</p>
+                  <p>• <span className="text-yellow-400 font-bold">Financial fraud</span> often hides in plain sight</p>
+                  <p>• <span className="text-green-400 font-bold">The real story</span> is in the trends, not the headlines</p>
+               </div>
+            </div>
+
+            <div className="bg-black/30 rounded-xl p-4 mb-4">
+               <h2 className="text-lg font-bold mb-3 text-blue-400">🎯 How This Works</h2>
+               <div className="space-y-2 text-sm">
+                  <p>• <span className="text-white font-bold">5 real financial scenarios</span> with hidden problems</p>
+                  <p>• Analyze <span className="text-yellow-400">income statements, balance sheets, cash flow</span></p>
+                  <p>• Spot <span className="text-red-400">red flags</span> that indicate trouble ahead</p>
+                  <p>• Learn what <span className="text-cyan-400">investors and lenders</span> actually look for</p>
+               </div>
+            </div>
+
+            <div className="flex flex-wrap gap-2 mb-4">
+               {Object.keys(infoTopics).map(key => (
+                  <button
+                     key={key}
+                     onClick={() => setInfoTopic(key)}
+                     className="text-xs bg-blue-500/20 px-2 py-1 rounded-full text-blue-300 hover:bg-blue-500/30"
+                  >
+                     ℹ️ {infoTopics[key].title.split(' ')[0]}
+                  </button>
+               ))}
+            </div>
+
+            <button onClick={startGame} className="w-full py-3 bg-gradient-to-r from-blue-600 to-slate-600 rounded-xl font-bold text-lg">
+               ▶️ BEGIN ANALYSIS
+            </button>
+
+            {showInfo && infoTopic && infoTopics[infoTopic] && (
+               <div className="absolute inset-0 bg-black/80 flex items-center justify-center p-4 z-50" onClick={() => { setShowInfo(false); setInfoTopic(null); }}>
+                  <div className="bg-slate-800 rounded-xl p-4 max-w-md" onClick={e => e.stopPropagation()}>
+                     <h3 className="text-lg font-bold text-blue-400 mb-2">{infoTopics[infoTopic].title}</h3>
+                     <p className="text-sm text-slate-300 leading-relaxed">{infoTopics[infoTopic].content}</p>
+                     <button onClick={() => { setShowInfo(false); setInfoTopic(null); }} className="mt-4 w-full py-2 bg-blue-600 rounded-lg font-bold">Got it!</button>
+                  </div>
+               </div>
+            )}
+         </div>
+      );
+
+      if (phase === 'result') {
+         const grade = getGrade();
+         return (
+            <div className="w-full h-full flex flex-col bg-gradient-to-br from-blue-900 via-slate-900 to-gray-900 text-white p-4 overflow-auto">
+               <div className="text-center mb-4">
+                  <div className={`text-6xl font-bold ${grade.color}`}>{grade.letter}</div>
+                  <div className="text-xl font-bold">{grade.label}</div>
+                  <div className="text-blue-400">Score: {score}/{scenarios.length * 20}</div>
+               </div>
+
+               {conceptGaps.length > 0 && (
+                  <div className="bg-red-900/30 border border-red-500/50 rounded-xl p-3 mb-3">
+                     <h3 className="font-bold text-red-400 mb-2">📚 Concepts to Study</h3>
+                     <div className="space-y-1">
+                        {conceptGaps.map((gap, i) => (
+                           <div key={i} className="flex items-center gap-2 text-sm">
+                              <span className="text-red-400">→</span>
+                              <span className="text-slate-300">{conceptLabels[gap] || gap}</span>
+                              <button
+                                 onClick={() => {
+                                    const topic = gap === 'cash_vs_profit' ? 'cashflow' :
+                                                  gap === 'margin_analysis' ? 'income' :
+                                                  gap === 'unit_economics' ? 'uniteconomics' :
+                                                  gap === 'leverage_ratios' ? 'ratios' : 'redflags';
+                                    setInfoTopic(topic);
+                                 }}
+                                 className="text-xs text-blue-400 underline"
+                              >
+                                 Learn
+                              </button>
+                           </div>
+                        ))}
+                     </div>
+                  </div>
+               )}
+
+               {conceptGaps.length === 0 && (
+                  <div className="bg-green-900/30 border border-green-500/50 rounded-xl p-3 mb-3">
+                     <h3 className="font-bold text-green-400 mb-2">🎉 Financial Expert!</h3>
+                     <p className="text-sm text-slate-300">You can read between the financial lines—spotting cash crises, margin problems, and red flags before they become disasters.</p>
+                  </div>
+               )}
+
+               <div className="bg-black/30 rounded-xl p-3 mb-3 max-h-32 overflow-auto">
+                  <h3 className="font-bold text-blue-400 mb-2">📋 Session Log</h3>
+                  {gameLog.map((log, i) => (
+                     <p key={i} className="text-xs text-slate-400">{log}</p>
+                  ))}
+               </div>
+
+               <div className="bg-black/30 rounded-xl p-3 mb-4">
+                  <h3 className="font-bold text-blue-400 mb-2">💡 Key Insights</h3>
+                  <ul className="text-sm text-slate-300 space-y-1">
+                     <li>• <span className="text-yellow-400">Profit ≠ Cash</span>—timing kills profitable companies</li>
+                     <li>• <span className="text-yellow-400">Margin gaps</span> reveal operational efficiency</li>
+                     <li>• <span className="text-yellow-400">AR growing faster than revenue</span> is a red flag</li>
+                     <li>• <span className="text-yellow-400">Unit economics</span> matter more than total growth</li>
+                  </ul>
+               </div>
+
+               <button onClick={startGame} className="w-full py-3 bg-gradient-to-r from-blue-600 to-slate-600 rounded-xl font-bold">
+                  🔄 TRY AGAIN
+               </button>
+
+               {showInfo && infoTopic && infoTopics[infoTopic] && (
+                  <div className="absolute inset-0 bg-black/80 flex items-center justify-center p-4 z-50" onClick={() => { setShowInfo(false); setInfoTopic(null); }}>
+                     <div className="bg-slate-800 rounded-xl p-4 max-w-md" onClick={e => e.stopPropagation()}>
+                        <h3 className="text-lg font-bold text-blue-400 mb-2">{infoTopics[infoTopic].title}</h3>
+                        <p className="text-sm text-slate-300 leading-relaxed">{infoTopics[infoTopic].content}</p>
+                        <button onClick={() => { setShowInfo(false); setInfoTopic(null); }} className="mt-4 w-full py-2 bg-blue-600 rounded-lg font-bold">Got it!</button>
+                     </div>
+                  </div>
+               )}
+            </div>
+         );
+      }
+
+      const s = scenarios[scenario];
+      return (
+         <div className="w-full h-full flex flex-col bg-gradient-to-br from-blue-900 via-slate-900 to-gray-900 text-white overflow-hidden">
+            {showInfo && infoTopic && infoTopics[infoTopic] && (
+               <div className="absolute inset-0 bg-black/80 flex items-center justify-center p-4 z-50" onClick={() => { setShowInfo(false); setInfoTopic(null); }}>
+                  <div className="bg-slate-800 rounded-xl p-4 max-w-md" onClick={e => e.stopPropagation()}>
+                     <h3 className="text-lg font-bold text-blue-400 mb-2">{infoTopics[infoTopic].title}</h3>
+                     <p className="text-sm text-slate-300 leading-relaxed">{infoTopics[infoTopic].content}</p>
+                     <button onClick={() => { setShowInfo(false); setInfoTopic(null); }} className="mt-4 w-full py-2 bg-blue-600 rounded-lg font-bold">Got it!</button>
+                  </div>
+               </div>
+            )}
+
+            <div className="p-3 bg-black/30 border-b border-blue-500/30">
+               <div className="flex justify-between items-center">
+                  <span className="font-bold text-sm">📊 {s.title}</span>
+                  <span className="text-blue-400 text-sm">{scenario + 1}/{scenarios.length}</span>
+               </div>
+               <div className="flex gap-1 mt-2">
+                  {scenarios.slice(0, scenario).map((_, i) => (
+                     <div key={i} className={`w-3 h-3 rounded ${gameLog[i]?.startsWith('✓') ? 'bg-green-500' : 'bg-red-500'}`} />
+                  ))}
+                  <div className="w-3 h-3 rounded bg-blue-500 animate-pulse" />
+                  {scenarios.slice(scenario + 1).map((_, i) => (
+                     <div key={i} className="w-3 h-3 rounded bg-slate-600" />
+                  ))}
+               </div>
+            </div>
+
+            <div className="flex-1 p-3 overflow-auto">
+               <div className="bg-black/30 rounded-lg p-3 mb-3">
+                  <p className="text-sm text-slate-200 leading-relaxed">{s.context}</p>
+               </div>
+
+               <p className="text-sm font-bold text-blue-400 mb-2">{s.question}</p>
+
+               <div className="space-y-2">
+                  {s.opts.map((opt, i) => (
+                     <button
+                        key={i}
+                        onClick={() => answer(i)}
+                        disabled={answered}
+                        className={`w-full p-3 rounded-lg text-left text-sm transition-all ${
+                           answered
+                              ? i === s.correct
+                                 ? 'bg-green-600 border-2 border-green-400'
+                                 : i === selected
+                                    ? 'bg-red-600 border-2 border-red-400'
+                                    : 'bg-black/30 opacity-50'
+                              : 'bg-black/30 hover:bg-blue-600/50 border-2 border-transparent'
+                        }`}
+                     >
+                        <span className="flex items-start gap-2">
+                           <span className="font-bold text-blue-400">{String.fromCharCode(65 + i)}.</span>
+                           <span>{opt}</span>
+                        </span>
+                     </button>
+                  ))}
+               </div>
+
+               {answered && (
+                  <div className="mt-3 space-y-2">
+                     {selected !== s.correct && (
+                        <div className="p-3 bg-red-900/30 border border-red-500/50 rounded-lg">
+                           <p className="text-xs font-bold text-red-400 mb-1">❌ Why {String.fromCharCode(65 + (selected || 0))} is Wrong:</p>
+                           <p className="text-sm text-slate-300">{s.wrongExplanations[selected || 0]}</p>
+                        </div>
+                     )}
+
+                     <div className="p-3 bg-green-900/30 border border-green-500/50 rounded-lg">
+                        <p className="text-xs font-bold text-green-400 mb-1">✓ The Real Issue:</p>
+                        <p className="text-sm text-slate-300">{s.why}</p>
+                     </div>
+
+                     <div className="p-3 bg-amber-900/30 border border-amber-500/50 rounded-lg">
+                        <p className="text-xs font-bold text-amber-400 mb-1">📰 Real Case:</p>
+                        <p className="text-sm text-slate-300">{s.realWorld}</p>
+                     </div>
+
+                     <button onClick={next} className="w-full py-3 bg-gradient-to-r from-blue-600 to-slate-600 rounded-xl font-bold mt-2">
+                        {scenario >= scenarios.length - 1 ? 'See Results' : 'Next Case →'}
+                     </button>
+                  </div>
+               )}
+            </div>
+
+            <div className="p-3 bg-black/30 border-t border-blue-500/30 flex gap-2 justify-center flex-wrap">
+               <button onClick={() => setInfoTopic('income')} className="text-xs text-blue-400 hover:text-blue-300">ℹ️ Income</button>
+               <button onClick={() => setInfoTopic('balance')} className="text-xs text-blue-400 hover:text-blue-300">ℹ️ Balance</button>
+               <button onClick={() => setInfoTopic('cashflow')} className="text-xs text-blue-400 hover:text-blue-300">ℹ️ Cash Flow</button>
+               <button onClick={() => setInfoTopic('redflags')} className="text-xs text-blue-400 hover:text-blue-300">ℹ️ Red Flags</button>
+            </div>
+         </div>
+      );
    };
 
    const PricingStrategyRenderer = () => {
@@ -28986,47 +34503,346 @@ const GeneratedDiagram: React.FC<DiagramProps> = ({ type, data, title }) => {
    };
 
    const CompetitiveAnalysisRenderer = () => {
-      const [phase, setPhase] = useState<'intro'|'play'|'result'>('intro');
+      const [phase, setPhase] = useState<'intro' | 'play' | 'result'>('intro');
       const [showInfo, setShowInfo] = useState(false);
-      const [infoTopic, setInfoTopic] = useState<string|null>(null);
+      const [infoTopic, setInfoTopic] = useState<string | null>(null);
       const [scenario, setScenario] = useState(0);
       const [score, setScore] = useState(0);
+      const [selected, setSelected] = useState<number | null>(null);
       const [answered, setAnswered] = useState(false);
-      const [selected, setSelected] = useState<number|null>(null);
-      const [log, setLog] = useState<string[]>([]);
+      const [gameLog, setGameLog] = useState<string[]>([]);
+      const [conceptGaps, setConceptGaps] = useState<string[]>([]);
+
+      // Strategic Competitive Analysis - Deep understanding of when to attack, when to defend, when to flee
       const scenarios = [
-         {competitor:{name:'BigCorp',strengths:['Brand','Resources','Distribution'],weaknesses:['Slow','Expensive','Poor UX']},q:'Best strategy against this competitor?',opts:['Compete on price','Move faster with better UX','Build bigger brand','Copy their model'],correct:1,explain:'Attack weaknesses. Being nimble with better UX exploits their slow/poor UX weaknesses.'},
-         {competitor:{name:'Startup X',strengths:['Innovative','Fast','VC-funded'],weaknesses:['Unproven','Burning cash','Small team']},q:'What is their biggest vulnerability?',opts:['Innovation','Speed','Cash burn sustainability','Team size'],correct:2,explain:'VC money runs out. If they are burning cash without revenue, they are racing against runway.'},
-         {competitor:{name:'Market Leader',strengths:['80% market share','Network effects','Data moat'],weaknesses:['Complacent','Legacy tech','Ignored segments']},q:'Where should you attack?',opts:['Go head-to-head','Target ignored segments','Build same network','Copy their tech'],correct:1,explain:'Attack where they are not looking. Ignored segments can become beachheads for expansion.'},
-         {competitor:{name:'Open Source',strengths:['Free','Community','Customizable'],weaknesses:['No support','Complex setup','Fragmented']},q:'How do you compete with free?',opts:['Also be free','Premium support & simplicity','Ignore them','Acquire them'],correct:1,explain:'Compete on convenience, support, and integration. Enterprises pay for reliability over free.'},
-         {competitor:{name:'Direct Clone',strengths:['Copies your features','Undercuts price','Well-funded'],weaknesses:['No innovation','Following not leading','No brand']},q:'Best response to a copycat?',opts:['Sue them','Lower prices','Out-innovate','Ignore them'],correct:2,explain:'Keep innovating. They can copy features but not your vision, speed, or customer relationships.'}
+         {
+            title: "The Incumbent's Dilemma",
+            context: "You're a streaming startup in 2010. Netflix dominates DVD-by-mail with 20M subscribers, massive distribution infrastructure, and first-mover advantage. But they're starting to experiment with streaming. You have better streaming tech.",
+            question: "What's the WORST strategic move you could make?",
+            opts: [
+               'Wait for Netflix to fully commit to streaming, then attack DVD market',
+               'Race Netflix to streaming, trying to beat them on technology',
+               'Target a niche Netflix ignores (anime, international films)',
+               'Partner with studios Netflix has alienated'
+            ],
+            correct: 0,
+            wrongExplanations: [
+               "", // Correct - this is the worst move
+               "Racing on tech is risky but not the worst. At least you're moving toward the future. Netflix's tech advantage was beatable - Hulu and Amazon proved that.",
+               "Niche targeting is actually smart strategy. Crunchyroll built a billion-dollar business in anime that Netflix ignored for years.",
+               "Studio partnerships are viable. Netflix burned bridges early. Amazon and Apple leveraged this to get exclusive deals."
+            ],
+            realWorld: "Blockbuster made this exact mistake - waiting for Netflix to commit to streaming while clinging to physical stores. By the time they reacted, Netflix had insurmountable scale. The DVD market died faster than anyone predicted.",
+            concept: "disruption_timing",
+            why: "Clayton Christensen's Innovator's Dilemma: Incumbents are trapped serving current customers with current business models. Attacking their LEGACY business gives them time to transition. Instead, attack where they're GOING - that forces them to fight on two fronts. Netflix was vulnerable during transition, not after."
+         },
+         {
+            title: "The Moat Mirage",
+            context: "You're analyzing a competitor with: 50% market share, strong brand recognition, patents expiring in 2 years, and enterprise customers locked into 5-year contracts. Investors call them 'unassailable.'",
+            question: "Which 'moat' is actually weakest?",
+            opts: [
+               'Market share - 50% means half the market is available',
+               'Brand recognition - brands can be displaced by category change',
+               'Patents - 2 years is enough time to prepare your attack',
+               'Customer contracts - switching costs protect them'
+            ],
+            correct: 1,
+            wrongExplanations: [
+               "50% market share is genuinely concerning - network effects may apply, and the other 50% may be fragmented low-value segments. Market share CAN be a real moat.",
+               "", // Correct
+               "Patents expiring in 2 years is actually actionable - you can plan product launches around that timeline. This is more predictable than you'd think.",
+               "5-year contracts are real protection. Enterprises hate switching. This gives them time to respond to any threat."
+            ],
+            realWorld: "BlackBerry had dominant brand recognition in smartphones. But Apple didn't compete on 'business phones' - they created 'personal computers in your pocket.' Brand moats collapse when category definitions change. Nokia, Kodak, and Yahoo all had 'strong brands.'",
+            concept: "moat_analysis",
+            why: "Brands feel permanent but they're tied to CATEGORIES. When Tesla entered cars, BMW's brand didn't help because Tesla redefined the category as 'technology' not 'German engineering.' Always ask: 'What category does their brand own, and can I create a new category?'"
+         },
+         {
+            title: "The Copycat Paradox",
+            context: "You've built a successful SaaS product. A well-funded competitor launches a near-perfect copy at 50% of your price. They're burning cash to grab share. Your customers are nervous. Your board wants you to respond.",
+            question: "What's the strategically CORRECT response?",
+            opts: [
+               'Match their price - you can\'t lose customers',
+               'Sue for IP infringement',
+               'Double-down on innovation and customer success',
+               'Raise prices on your most valuable features'
+            ],
+            correct: 3,
+            wrongExplanations: [
+               "Price matching is what they WANT you to do. It validates their strategy and destroys your margins. You're playing their game on their terms. This is a trap.",
+               "Lawsuits take years and rarely work. Meanwhile they're eating your market. Even if you win, you've distracted your team and spent millions. Patents rarely cover business models.",
+               "Doubling down on innovation sounds right but is a slow response. While you're 'innovating,' price-sensitive customers are leaving. You need to segment NOW.",
+               "" // Correct
+            ],
+            realWorld: "When low-cost airlines attacked legacy carriers, successful airlines like Emirates RAISED prices and improved first-class. They ceded price-sensitive segments and doubled down on premium. Trying to serve everyone serves no one.",
+            concept: "price_response",
+            why: "Price wars destroy industries - everyone loses. Instead, SEGMENT: Let them take price-sensitive customers (often your worst customers anyway). Raise prices for premium buyers who value your differentiation. Slack did this when Microsoft Teams launched free - they went upmarket to enterprise."
+         },
+         {
+            title: "The Partnership Trap",
+            context: "A larger competitor offers to 'partner' with you. They'll give you access to their sales channel (10x your reach) and distribution network. In return, they want API access to your core technology and co-branding rights. Your board is excited.",
+            question: "What's the hidden danger in this partnership?",
+            opts: [
+               'They\'ll steal your technology through the API',
+               'They\'re learning your playbook to build a competitor',
+               'Co-branding will dilute your brand value',
+               'All of the above - this is a classic acquisition play'
+            ],
+            correct: 3,
+            wrongExplanations: [
+               "API access is ONE risk, but it's not the only one. Even with contractual protections, they gain strategic intelligence.",
+               "Learning your playbook is ONE risk. But the pattern is bigger - they're gathering intel for build vs buy decisions.",
+               "Brand dilution is ONE risk. But when customers associate you with them, you become a feature, not a product.",
+               "" // Correct
+            ],
+            realWorld: "Microsoft's 1997 'partnership' with Apple included a $150M investment. But it also meant Microsoft got Apple to drop IE lawsuit and make Office for Mac, learning Apple's direction. Amazon 'partnered' with many marketplace sellers before launching Amazon Basics versions of their best products.",
+            concept: "partnership_dynamics",
+            why: "Large companies don't partner with small ones out of kindness. They're either: 1) Evaluating you for acquisition (due diligence disguised as partnership), 2) Keeping you close while they build competitive features, or 3) Preventing you from partnering with their real competitors. 'Keep your friends close and enemies closer' is their strategy."
+         },
+         {
+            title: "The Data Advantage",
+            context: "You're competing against Google in a new market. They have 10 years of user data, AI/ML expertise, and infinite resources. Your product is better designed but you have 1/1000th of their data. VCs ask how you'll win.",
+            question: "What's the MOST credible competitive strategy?",
+            opts: [
+               'Build better AI/ML algorithms that need less data',
+               'Focus on privacy as a differentiator against their data practices',
+               'Create a proprietary data source they cannot access or replicate',
+               'Partner with other companies who also fear Google'
+            ],
+            correct: 2,
+            wrongExplanations: [
+               "Better algorithms rarely overcome massive data disadvantages. Google has the best AI researchers in the world. You won't out-algorithm them - they'll copy any innovation in months.",
+               "Privacy as a differentiator worked for Apple (bundled with hardware) and DuckDuckGo (search is simple). But for complex products, most users still choose features over privacy. This is niche, not winning.",
+               "", // Correct
+               "Anti-Google coalitions look good on paper but rarely execute. Each partner has different priorities. Microsoft, Apple, and others have tried this - coordination is nearly impossible."
+            ],
+            realWorld: "LinkedIn's data moat wasn't AI - it was the professional graph no one else had. Waze beat Google Maps initially by crowdsourcing real-time traffic data Google couldn't access. Spotify's advantage isn't algorithm - it's 600M+ user-generated playlists creating unique data.",
+            concept: "data_moats",
+            why: "Data advantages come from UNIQUE sources, not more of the same. Google has more web data, but they don't have: your customer's proprietary data, community-generated content, real-time IoT feeds from your devices, or domain-specific signals from your vertical. Find data THEY CAN'T GET."
+         }
       ];
-      const infoTopics:{[k:string]:{title:string,content:string}} = {
-         porter:{title:"Porter's 5 Forces",content:'Supplier power, Buyer power, Competitive rivalry, Threat of substitution, Threat of new entry. Analyze industry attractiveness.'},
-         moats:{title:'Competitive Moats',content:'Network effects, Switching costs, Brand, Scale, Patents, Data. Sustainable advantages that protect market position.'},
-         positioning:{title:'Positioning',content:'Own a unique space in customer minds. Be #1 at something specific rather than okay at everything.'},
-         swot:{title:'SWOT Analysis',content:'Strengths, Weaknesses, Opportunities, Threats. Match internal capabilities to external environment.'}
+
+      const conceptLabels: { [key: string]: string } = {
+         disruption_timing: "Disruption & Timing Strategy",
+         moat_analysis: "Competitive Moat Evaluation",
+         price_response: "Pricing Strategy & Segmentation",
+         partnership_dynamics: "Strategic Partnerships",
+         data_moats: "Data Competitive Advantage"
       };
-      const answer = (idx:number) => {
-         if(answered) return;
-         setSelected(idx);
-         setAnswered(true);
-         if(idx === scenarios[scenario].correct) {
-            setScore(s => s + 1);
-            setLog(l => [...l, `Scenario ${scenario+1}: Correct!`]);
-         } else {
-            setLog(l => [...l, `Scenario ${scenario+1}: Wrong`]);
+
+      const infoTopics: { [k: string]: { title: string; content: string } } = {
+         porter: {
+            title: "Porter's 5 Forces",
+            content: "Michael Porter's framework: 1) Supplier Power - can they raise prices? 2) Buyer Power - can customers demand discounts? 3) Competitive Rivalry - how intense is competition? 4) Threat of Substitution - can customers use alternatives? 5) Threat of New Entry - how easy to enter your market? High forces = low profitability. Analyze all 5 before entering any market."
+         },
+         moats: {
+            title: "Competitive Moats",
+            content: "Warren Buffett's concept: sustainable advantages that protect profits. 7 types: 1) Network effects (Facebook, Uber) 2) Switching costs (Salesforce, SAP) 3) Brand (Apple, Coca-Cola) 4) Scale economics (Walmart, Amazon) 5) Counter-positioning (Southwest vs legacy airlines) 6) Patents/IP (Pharma, Qualcomm) 7) Process power (Toyota Production System). Most moats are WEAKER than founders think."
+         },
+         disruption: {
+            title: "Disruptive Innovation",
+            content: "Clayton Christensen's theory: Startups win by targeting overlooked segments with 'worse' products that improve over time. Incumbents can't respond because serving their best customers is more profitable than fighting for marginal ones. Classic examples: Steel mini-mills vs integrated mills, PCs vs mainframes, Netflix vs Blockbuster. Disruption happens from BELOW."
+         },
+         asymmetry: {
+            title: "Asymmetric Competition",
+            content: "When you're small, fight asymmetrically: 1) Speed - decide in days what takes them months, 2) Focus - do one thing better vs their 100 things, 3) Risk tolerance - bet on unproven approaches, 4) Customer intimacy - know 100 customers deeply vs 1M superficially, 5) Talent density - your 10 people are better than their 10,000's average. Don't fight symmetric wars you can't win."
          }
       };
-      const next = () => {
-         if(scenario >= scenarios.length - 1) setPhase('result');
-         else { setScenario(s => s + 1); setAnswered(false); setSelected(null); }
+
+      const answer = (idx: number) => {
+         if (answered) return;
+         setSelected(idx);
+         setAnswered(true);
+         const s = scenarios[scenario];
+         if (idx === s.correct) {
+            setScore(prev => prev + 1);
+            setGameLog(prev => [...prev, `✓ ${s.title}: Correct! Demonstrated ${conceptLabels[s.concept]}`]);
+         } else {
+            setGameLog(prev => [...prev, `✗ ${s.title}: Missed. The trap was "${s.opts[idx]}"`]);
+            if (!conceptGaps.includes(s.concept)) {
+               setConceptGaps(prev => [...prev, s.concept]);
+            }
+         }
       };
-      const grade = score >= 4 ? 'A' : score >= 3 ? 'B' : score >= 2 ? 'C' : 'D';
+
+      const next = () => {
+         if (scenario >= scenarios.length - 1) {
+            setPhase('result');
+         } else {
+            setScenario(prev => prev + 1);
+            setAnswered(false);
+            setSelected(null);
+         }
+      };
+
+      const grade = score >= 5 ? 'A' : score >= 4 ? 'B' : score >= 3 ? 'C' : 'D';
       const s = scenarios[scenario];
-      if(phase === 'intro') return (<div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-red-900 via-rose-900 to-pink-900 text-white p-6"><div className="text-6xl mb-4">⚔️</div><h2 className="text-2xl font-bold mb-2">Competitive Analysis</h2><p className="text-slate-300 text-center mb-6 max-w-md">Analyze competitors and find winning strategies! Learn to identify weaknesses and attack vectors.</p><button onClick={() => setPhase('play')} className="px-8 py-3 bg-gradient-to-r from-red-500 to-rose-500 rounded-xl font-bold">Start Analysis</button></div>);
-      if(phase === 'result') return (<div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-red-900 via-rose-900 to-pink-900 text-white p-6"><div className="text-6xl mb-4">{grade === 'A' ? '🏆' : grade === 'B' ? '⚔️' : '📊'}</div><h2 className="text-2xl font-bold mb-2">Analysis Complete!</h2><div className="text-4xl font-bold text-red-400 mb-2">{score}/{scenarios.length}</div><div className="text-6xl mb-4">{grade}</div><p className="text-slate-400 mb-4">{grade === 'A' ? 'Strategic genius!' : grade === 'B' ? 'Good strategist!' : 'Study competitors more!'}</p><button onClick={() => {setPhase('intro');setScenario(0);setScore(0);setAnswered(false);setSelected(null);setLog([]);}} className="px-6 py-2 bg-red-600 rounded-lg">Try Again</button></div>);
-      return (<div className="w-full h-full flex flex-col bg-gradient-to-br from-red-900 via-rose-900 to-pink-900 text-white overflow-hidden">{showInfo && infoTopic && infoTopics[infoTopic] && (<div className="absolute inset-0 bg-black/80 flex items-center justify-center p-4 z-50" onClick={() => { setShowInfo(false); setInfoTopic(null); }}><div className="bg-slate-800 rounded-xl p-4 max-w-md" onClick={e => e.stopPropagation()}><h3 className="text-lg font-bold text-red-400 mb-2">{infoTopics[infoTopic].title}</h3><p className="text-sm text-slate-300">{infoTopics[infoTopic].content}</p><button onClick={() => { setShowInfo(false); setInfoTopic(null); }} className="mt-4 w-full py-2 bg-red-600 rounded-lg">Got it!</button></div></div>)}<div className="p-3 bg-black/30 border-b border-red-500/30 flex justify-between items-center"><span className="font-bold">⚔️ Competitive Analysis</span><span className="text-red-400">{scenario + 1}/{scenarios.length}</span><span className="text-rose-400">Score: {score}</span></div><div className="flex-1 p-4 overflow-auto"><div className="bg-black/30 rounded-xl p-3 mb-3"><p className="font-bold text-red-400 mb-2">{s.competitor.name}</p><div className="grid grid-cols-2 gap-2 text-xs"><div><p className="text-green-400 mb-1">Strengths:</p>{s.competitor.strengths.map((str,i) => <p key={i} className="text-slate-300">• {str}</p>)}</div><div><p className="text-red-400 mb-1">Weaknesses:</p>{s.competitor.weaknesses.map((w,i) => <p key={i} className="text-slate-300">• {w}</p>)}</div></div></div><div className="bg-black/30 rounded-xl p-4 mb-3"><p className="font-medium">{s.q}</p></div><div className="grid gap-2">{s.opts.map((opt, i) => (<button key={i} onClick={() => answer(i)} disabled={answered} className={`p-3 rounded-lg text-left text-sm ${answered ? i === s.correct ? 'bg-green-600' : i === selected ? 'bg-red-600' : 'bg-black/30' : 'bg-black/30 hover:bg-red-600/50'}`}>{opt}</button>))}</div>{answered && (<div className="mt-3 p-3 bg-black/30 rounded-lg"><p className="text-sm text-slate-300">{s.explain}</p><button onClick={next} className="mt-3 w-full py-2 bg-red-600 rounded-lg">{scenario >= scenarios.length - 1 ? 'See Results' : 'Next'}</button></div>)}</div><div className="p-3 bg-black/30 border-t border-red-500/30 flex gap-2 justify-center">{Object.keys(infoTopics).map(k => <button key={k} onClick={() => {setInfoTopic(k);setShowInfo(true);}} className="text-xs text-red-400">ℹ️ {infoTopics[k].title}</button>)}</div></div>);
+
+      if (phase === 'intro') {
+         return (
+            <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-red-900 via-rose-900 to-pink-900 text-white p-6">
+               <div className="text-6xl mb-4">⚔️</div>
+               <h2 className="text-2xl font-bold mb-2">Competitive Strategy Lab</h2>
+               <p className="text-slate-300 text-center mb-4 max-w-md">
+                  Master the strategic thinking that separates winning startups from failed ones.
+               </p>
+               <div className="bg-black/30 rounded-xl p-4 mb-6 max-w-md text-sm">
+                  <p className="text-red-400 font-bold mb-2">⚠️ Warning: These aren't simple answers</p>
+                  <ul className="text-slate-300 space-y-1 text-xs">
+                     <li>• Real competitive strategy requires nuanced thinking</li>
+                     <li>• Every option will seem reasonable - only one is correct</li>
+                     <li>• You'll learn from real case studies: Netflix, Apple, Google</li>
+                     <li>• Wrong answers reveal common strategic mistakes</li>
+                  </ul>
+               </div>
+               <button
+                  onClick={() => setPhase('play')}
+                  className="px-8 py-3 bg-gradient-to-r from-red-500 to-rose-500 rounded-xl font-bold hover:from-red-400 hover:to-rose-400 transition-all"
+               >
+                  Begin Strategy Analysis
+               </button>
+            </div>
+         );
+      }
+
+      if (phase === 'result') {
+         return (
+            <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-red-900 via-rose-900 to-pink-900 text-white p-6 overflow-auto">
+               <div className="text-6xl mb-4">{grade === 'A' ? '🏆' : grade === 'B' ? '⚔️' : grade === 'C' ? '📊' : '📚'}</div>
+               <h2 className="text-2xl font-bold mb-2">Strategy Assessment Complete</h2>
+               <div className="text-4xl font-bold text-red-400 mb-2">{score}/{scenarios.length}</div>
+               <div className="text-5xl mb-4">{grade}</div>
+               <p className="text-slate-400 mb-4 text-center">
+                  {grade === 'A' ? 'Strategic mastermind! You think like a seasoned strategist.' :
+                   grade === 'B' ? 'Strong strategic intuition. Minor blind spots to address.' :
+                   grade === 'C' ? 'Good foundation, but falling for common strategic traps.' :
+                   'Competitive strategy requires study. Many dangerous misconceptions.'}
+               </p>
+
+               {conceptGaps.length > 0 && (
+                  <div className="bg-black/30 rounded-xl p-4 max-w-md w-full mb-4">
+                     <p className="text-red-400 font-bold text-sm mb-2">📚 Concepts to Study:</p>
+                     <ul className="text-slate-300 text-xs space-y-1">
+                        {conceptGaps.map(gap => (
+                           <li key={gap}>• {conceptLabels[gap]}</li>
+                        ))}
+                     </ul>
+                  </div>
+               )}
+
+               <div className="bg-black/30 rounded-xl p-4 max-w-md w-full mb-4 max-h-32 overflow-y-auto">
+                  <p className="text-red-400 font-bold text-sm mb-2">Session Log:</p>
+                  {gameLog.map((entry, i) => (
+                     <p key={i} className="text-xs text-slate-300">{entry}</p>
+                  ))}
+               </div>
+
+               <button
+                  onClick={() => {
+                     setPhase('intro');
+                     setScenario(0);
+                     setScore(0);
+                     setAnswered(false);
+                     setSelected(null);
+                     setGameLog([]);
+                     setConceptGaps([]);
+                  }}
+                  className="px-6 py-2 bg-red-600 rounded-lg hover:bg-red-500"
+               >
+                  Try Again
+               </button>
+            </div>
+         );
+      }
+
+      return (
+         <div className="w-full h-full flex flex-col bg-gradient-to-br from-red-900 via-rose-900 to-pink-900 text-white overflow-hidden">
+            {showInfo && infoTopic && infoTopics[infoTopic] && (
+               <div className="absolute inset-0 bg-black/80 flex items-center justify-center p-4 z-50" onClick={() => { setShowInfo(false); setInfoTopic(null); }}>
+                  <div className="bg-slate-800 rounded-xl p-4 max-w-md" onClick={e => e.stopPropagation()}>
+                     <h3 className="text-lg font-bold text-red-400 mb-2">{infoTopics[infoTopic].title}</h3>
+                     <p className="text-sm text-slate-300">{infoTopics[infoTopic].content}</p>
+                     <button onClick={() => { setShowInfo(false); setInfoTopic(null); }} className="mt-4 w-full py-2 bg-red-600 rounded-lg">Got it!</button>
+                  </div>
+               </div>
+            )}
+
+            <div className="p-3 bg-black/30 border-b border-red-500/30 flex justify-between items-center">
+               <span className="font-bold">⚔️ Strategy Lab</span>
+               <span className="text-red-400">{scenario + 1}/{scenarios.length}</span>
+               <span className="text-rose-400">Score: {score}</span>
+            </div>
+
+            <div className="flex-1 p-4 overflow-auto">
+               <div className="bg-black/30 rounded-xl p-3 mb-3">
+                  <p className="font-bold text-red-400 mb-2">{s.title}</p>
+                  <p className="text-sm text-slate-300">{s.context}</p>
+               </div>
+
+               <div className="bg-black/30 rounded-xl p-4 mb-3">
+                  <p className="font-medium text-white">{s.question}</p>
+               </div>
+
+               <div className="grid gap-2">
+                  {s.opts.map((opt, i) => (
+                     <button
+                        key={i}
+                        onClick={() => answer(i)}
+                        disabled={answered}
+                        className={`p-3 rounded-lg text-left text-sm transition-all ${
+                           answered
+                              ? i === s.correct
+                                 ? 'bg-green-600'
+                                 : i === selected
+                                    ? 'bg-red-600'
+                                    : 'bg-black/30'
+                              : 'bg-black/30 hover:bg-red-600/50'
+                        }`}
+                     >
+                        {opt}
+                     </button>
+                  ))}
+               </div>
+
+               {answered && (
+                  <div className="mt-3 space-y-3">
+                     {selected !== s.correct && s.wrongExplanations[selected!] && (
+                        <div className="p-3 bg-red-900/50 rounded-lg border border-red-500/30">
+                           <p className="text-xs text-red-300 font-bold mb-1">❌ Why This Was Wrong:</p>
+                           <p className="text-sm text-red-100">{s.wrongExplanations[selected!]}</p>
+                        </div>
+                     )}
+                     <div className="p-3 bg-green-900/50 rounded-lg border border-green-500/30">
+                        <p className="text-xs text-green-300 font-bold mb-1">✓ Strategic Insight:</p>
+                        <p className="text-sm text-green-100">{s.why}</p>
+                     </div>
+                     <div className="p-3 bg-blue-900/50 rounded-lg border border-blue-500/30">
+                        <p className="text-xs text-blue-300 font-bold mb-1">📖 Real World:</p>
+                        <p className="text-sm text-blue-100">{s.realWorld}</p>
+                     </div>
+                     <button
+                        onClick={next}
+                        className="w-full py-2 bg-red-600 rounded-lg hover:bg-red-500"
+                     >
+                        {scenario >= scenarios.length - 1 ? 'See Results' : 'Next Scenario'}
+                     </button>
+                  </div>
+               )}
+            </div>
+
+            <div className="p-3 bg-black/30 border-t border-red-500/30 flex gap-2 justify-center flex-wrap">
+               {Object.keys(infoTopics).map(k => (
+                  <button
+                     key={k}
+                     onClick={() => { setInfoTopic(k); setShowInfo(true); }}
+                     className="text-xs text-red-400 hover:text-red-300"
+                  >
+                     ℹ️ {infoTopics[k].title}
+                  </button>
+               ))}
+            </div>
+         </div>
+      );
    };
 
    const BusinessModelRenderer = () => {
@@ -29063,290 +34879,2129 @@ const GeneratedDiagram: React.FC<DiagramProps> = ({ type, data, title }) => {
    };
 
    const GrowthStrategyRenderer = () => {
-      const [phase, setPhase] = useState<'intro'|'play'|'result'>('intro');
+      const [phase, setPhase] = useState<'intro' | 'play' | 'result'>('intro');
       const [showInfo, setShowInfo] = useState(false);
-      const [infoTopic, setInfoTopic] = useState<string|null>(null);
+      const [infoTopic, setInfoTopic] = useState<string | null>(null);
       const [scenario, setScenario] = useState(0);
       const [score, setScore] = useState(0);
+      const [selected, setSelected] = useState<number | null>(null);
       const [answered, setAnswered] = useState(false);
-      const [selected, setSelected] = useState<number|null>(null);
-      const [log, setLog] = useState<string[]>([]);
+      const [gameLog, setGameLog] = useState<string[]>([]);
+      const [conceptGaps, setConceptGaps] = useState<string[]>([]);
+
+      // Growth Channel Mastery - Understanding which channels work for which businesses and why
       const scenarios = [
-         {situation:'B2B SaaS with $50k ACV, complex product, long sales cycle.',best:2,options:['Viral loops','Paid social ads','Enterprise sales team','Content marketing'],explain:'High ACV and complexity require consultative sales. Enterprise sales team has best ROI here.'},
-         {situation:'Consumer app, low price point, high potential for word-of-mouth.',best:0,options:['Viral/referral loops','Outbound sales','Trade shows','TV advertising'],explain:'Low price + WOM potential = viral loops. Dropbox and Uber grew this way.'},
-         {situation:'Developer tools, technical audience, trust is crucial.',best:3,options:['Cold calling','Display ads','Influencer marketing','Content + community'],explain:'Developers hate being sold to. Educational content and community build trust authentically.'},
-         {situation:'Local services business, customers search when they need you.',best:1,options:['Brand awareness ads','SEO + Google Ads','Social media','Referral program'],explain:'Intent-based search is perfect. Be there when customers are actively looking.'},
-         {situation:'E-commerce, visual product, impulse purchase potential.',best:2,options:['LinkedIn ads','Email outreach','Instagram/TikTok ads','Podcast sponsorship'],explain:'Visual product + impulse = Instagram/TikTok. Show the product where attention lives.'},
-         {situation:'Professional services, high-trust relationship business.',best:3,options:['Mass advertising','Cold email blasts','Discount promotions','Referrals + thought leadership'],explain:'Trust businesses grow through reputation. Referrals and expertise demonstration win.'}
+         {
+            title: "The Viral Illusion",
+            context: "You're building a B2B project management tool. Your team is excited about adding viral features: 'Invite teammates to earn premium features!' and social sharing. A competitor without viral features is growing faster through content marketing.",
+            question: "Why is viral growth WRONG for this product?",
+            opts: [
+               'Viral features are never effective for B2B',
+               'The buying decision isn\'t made by individual users who benefit from inviting',
+               'Project management is too boring to go viral',
+               'Content marketing is always better than viral'
+            ],
+            correct: 1,
+            wrongExplanations: [
+               "Viral CAN work for B2B - Slack, Notion, and Figma all grew virally. But the incentive structure must match the buyer's motivation.",
+               "", // Correct
+               "Boring doesn't prevent virality. Dropbox (file storage) and Zoom (video calls) grew virally with 'boring' products. The key is incentive alignment.",
+               "Content marketing isn't universally better. It depends on the product and audience. The issue here is incentive mismatch."
+            ],
+            realWorld: "Slack grew virally because individual team members WANTED to use it and could convince their team. Compare to enterprise software where procurement decides - viral incentives for end-users don't influence purchasing. Know your buyer.",
+            concept: "viral_incentive_alignment",
+            why: "Viral growth requires: 1) Users personally benefit from inviting others, 2) Users have autonomy to invite, 3) The product improves with more users. B2B project management fails #2 - the person who would invite doesn't make the buying decision. Their CTO/procurement does. Incentives are misaligned."
+         },
+         {
+            title: "The Paid Acquisition Trap",
+            context: "Your e-commerce startup has $100 LTV. You're spending on Facebook ads with $50 CAC (2x LTV:CAC ratio). Your CFO says 'We're profitable! Let's 10x ad spend.' But when you scale from $10K to $100K monthly, CAC rises to $80 and LTV drops to $90.",
+            question: "What caused this performance collapse?",
+            opts: [
+               'Facebook ads just don\'t work at scale',
+               'You exhausted your best audience and now reach lower-intent users',
+               'Your competitors started outbidding you',
+               'The algorithm broke'
+            ],
+            correct: 1,
+            wrongExplanations: [
+               "Facebook ads work at massive scale for many companies. The issue isn't the platform - it's the audience targeting strategy.",
+               "", // Correct
+               "Competition affects costs, but a 60% CAC increase while spending 10x more suggests audience quality decline, not just competition.",
+               "Algorithms don't 'break.' Performance changes reflect real dynamics in targeting, audience saturation, and ad fatigue."
+            ],
+            realWorld: "Every paid channel has a 'best audience' - the 1% who are perfect fits. As you scale, you reach the 5%, then 20%, then 50%. Each tier converts worse. Uber solved this by launching city-by-city, dominating the best audience before expanding.",
+            concept: "audience_saturation",
+            why: "Paid channels have natural limits. Your first $10K finds ideal customers actively searching. Your next $100K reaches people who might want your product. Your next $1M reaches everyone. Each layer converts worse and churns faster. Scale by adding NEW high-intent channels, not by forcing more through saturated ones."
+         },
+         {
+            title: "The Content Paradox",
+            context: "You publish 10 blog posts/month. Traffic is growing 20% quarterly. But despite 50K monthly visitors, only 50 become customers (0.1% conversion). Your competitor publishes 2 posts/month but converts 2% of visitors.",
+            question: "What's the strategic difference between you and your competitor?",
+            opts: [
+               'They have better SEO and rank higher',
+               'They\'re writing for buyers while you\'re writing for browsers',
+               'They just have a better product',
+               'Conversion rate is less important than total traffic'
+            ],
+            correct: 1,
+            wrongExplanations: [
+               "Ranking doesn't determine conversion rate. You could rank #1 for the wrong keywords and still convert poorly.",
+               "", // Correct
+               "Product quality affects conversion, but a 20x difference (0.1% vs 2%) is too large to be product alone. Content strategy matters.",
+               "Conversion rate is critical. 50K × 0.1% = 50 customers. 5K × 2% = 100 customers. They get 2x customers with 10% of your traffic."
+            ],
+            realWorld: "HubSpot's early content targeted 'inbound marketing' - a term they invented. Every reader was a potential buyer. Compare to companies blogging about industry news - high traffic, low intent. Shopify blogs about 'how to start a business' - readers who need their product.",
+            concept: "content_intent_matching",
+            why: "Traffic is vanity, conversions are sanity. High-volume, low-intent content (industry news, entertainment) attracts browsers. High-intent content (how to solve the problem your product solves) attracts buyers. 2 posts targeting buyers beat 10 posts targeting browsers."
+         },
+         {
+            title: "The Sales Scaling Myth",
+            context: "Your enterprise SaaS closes $200K deals with a 6-month sales cycle. One rep closes 10 deals/year ($2M). You hire 5 more reps expecting $10M additional revenue. After 12 months, the 5 new reps combined closed only 8 deals ($1.6M).",
+            question: "What's the MOST LIKELY cause of this failure?",
+            opts: [
+               'The new reps were less talented',
+               'The market became more competitive',
+               'You didn\'t have enough pipeline/leads for 6 reps',
+               'Enterprise sales can\'t scale'
+            ],
+            correct: 2,
+            wrongExplanations: [
+               "Rep talent varies, but 5 average reps should still close more than 8 deals combined. The failure is too systematic to be talent alone.",
+               "Competition affects everyone, including your star rep. If competition was the cause, your original rep would have declined too.",
+               "", // Correct
+               "Enterprise sales scales very well - Salesforce, Oracle, and SAP prove this. The constraint is usually pipeline, not the model."
+            ],
+            realWorld: "Salesforce learned this early: before adding sales reps, they invested heavily in marketing/SDR teams to generate pipeline. The rule of thumb: each enterprise rep needs 3-4x their quota in qualified pipeline. You hired reps without the leads to feed them.",
+            concept: "sales_pipeline_math",
+            why: "Sales scaling fails when you hire closers without leads. Pipeline math: if each rep needs $800K pipeline to close $200K (25% close rate), 6 reps need $4.8M pipeline. If you only generated $2M in pipeline, reps fight over the same deals. Solution: scale marketing/SDR BEFORE hiring more closers."
+         },
+         {
+            title: "The Community Confusion",
+            context: "You're building a developer tool. Everyone says 'build community!' You launch a Discord with 2,000 members. Activity is high - lots of memes, off-topic chat, and support questions. But few are buying your product.",
+            question: "What's wrong with this community strategy?",
+            opts: [
+               'Discord is the wrong platform for developers',
+               'Communities take years to generate revenue',
+               'The community attracts users, not buyers - wrong incentive structure',
+               '2,000 members isn\'t big enough to drive sales'
+            ],
+            correct: 2,
+            wrongExplanations: [
+               "Discord works well for developers - Midjourney, Vercel, and many dev tools use it successfully. Platform isn't the issue.",
+               "Well-designed communities can drive revenue quickly. Figma's community drove adoption within months. The issue is strategy, not time.",
+               "", // Correct
+               "Size doesn't determine revenue. 100 highly-engaged potential buyers beat 10,000 people looking for free support."
+            ],
+            realWorld: "Figma built a community of DESIGNERS who shared templates. Each template showcase was implicit product marketing. Compare to dev tools with 'support communities' - members come for free help, not to buy. Notion built a community of POWER USERS who became evangelists.",
+            concept: "community_purpose",
+            why: "Communities fail when they attract free-seekers instead of potential buyers. The fix: build community around OUTCOMES your product enables, not around the product itself. A 'design inspiration' community attracts designers who might buy Figma. A 'Figma support' community attracts people avoiding payment."
+         }
       ];
-      const infoTopics:{[k:string]:{title:string,content:string}} = {
-         channels:{title:'Growth Channels',content:'Viral, Paid, Content, Sales, Partnerships, Community. Different products need different channels.'},
-         loops:{title:'Growth Loops',content:'Viral loop: User invites users. Content loop: Content attracts users who create content. Paid loop: Revenue funds ads.'},
-         metrics:{title:'Growth Metrics',content:'CAC, LTV, Viral coefficient, Payback period. Know your numbers before scaling.'},
-         pmf:{title:'PMF First',content:'Growth without product-market fit is a leaky bucket. Fix retention before acquisition.'}
+
+      const conceptLabels: { [key: string]: string } = {
+         viral_incentive_alignment: "Viral Growth Incentive Structures",
+         audience_saturation: "Paid Acquisition & Audience Saturation",
+         content_intent_matching: "Content Strategy & Buyer Intent",
+         sales_pipeline_math: "Sales Scaling & Pipeline Mathematics",
+         community_purpose: "Community Building for Growth"
       };
-      const answer = (idx:number) => {
-         if(answered) return;
-         setSelected(idx);
-         setAnswered(true);
-         if(idx === scenarios[scenario].best) {
-            setScore(s => s + 1);
-            setLog(l => [...l, `Scenario ${scenario+1}: Correct!`]);
-         } else {
-            setLog(l => [...l, `Scenario ${scenario+1}: Wrong`]);
+
+      const infoTopics: { [k: string]: { title: string; content: string } } = {
+         channels: {
+            title: "Growth Channel Framework",
+            content: "19 traction channels (Bullseye Framework): Viral, PR, Content, SEO, Social, Email, Partnerships, Biz Dev, Sales, Trade Shows, Speaking, Community, Ads, Affiliate, Existing Platforms, Offline, Engineering as Marketing, Guerrilla, Trade Publications. Test 3, focus on 1."
+         },
+         loops: {
+            title: "Growth Loops",
+            content: "Sustainable growth comes from LOOPS, not funnels. Viral loop: User invites → new users invite. Content loop: Content ranks → users create content. Paid loop: Revenue → reinvest in ads → more revenue. Sales loop: Customer success → referrals → new sales. Identify which loop fits your model."
+         },
+         metrics: {
+            title: "Growth Metrics That Matter",
+            content: "CAC (Customer Acquisition Cost), LTV (Lifetime Value), LTV:CAC ratio (aim for 3:1+), Payback period (months to recover CAC), Viral coefficient (users acquired per user), Magic number (net new ARR / prior quarter S&M spend). Track the metric that matters for YOUR stage."
+         },
+         stages: {
+            title: "Growth Stage Matching",
+            content: "Pre-PMF: Do things that don't scale, find channels that work. Early growth: Double down on 1-2 channels. Scaling: Add channels while maintaining efficiency. Each stage has different optimal strategies. Premature scaling is the #1 startup killer."
          }
       };
-      const next = () => {
-         if(scenario >= scenarios.length - 1) setPhase('result');
-         else { setScenario(s => s + 1); setAnswered(false); setSelected(null); }
+
+      const answer = (idx: number) => {
+         if (answered) return;
+         setSelected(idx);
+         setAnswered(true);
+         const s = scenarios[scenario];
+         if (idx === s.correct) {
+            setScore(prev => prev + 1);
+            setGameLog(prev => [...prev, `✓ ${s.title}: Correct! Understood ${conceptLabels[s.concept]}`]);
+         } else {
+            setGameLog(prev => [...prev, `✗ ${s.title}: Missed. Fell for "${s.opts[idx].substring(0, 35)}..."`]);
+            if (!conceptGaps.includes(s.concept)) {
+               setConceptGaps(prev => [...prev, s.concept]);
+            }
+         }
       };
-      const grade = score >= 5 ? 'A' : score >= 4 ? 'B' : score >= 2 ? 'C' : 'D';
+
+      const next = () => {
+         if (scenario >= scenarios.length - 1) {
+            setPhase('result');
+         } else {
+            setScenario(prev => prev + 1);
+            setAnswered(false);
+            setSelected(null);
+         }
+      };
+
+      const grade = score >= 5 ? 'A' : score >= 4 ? 'B' : score >= 3 ? 'C' : 'D';
       const s = scenarios[scenario];
-      if(phase === 'intro') return (<div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-green-900 via-lime-900 to-emerald-900 text-white p-6"><div className="text-6xl mb-4">🚀</div><h2 className="text-2xl font-bold mb-2">Growth Strategy</h2><p className="text-slate-300 text-center mb-6 max-w-md">Match businesses with the right growth channels! Learn viral, paid, content, and sales strategies.</p><button onClick={() => setPhase('play')} className="px-8 py-3 bg-gradient-to-r from-green-500 to-lime-500 rounded-xl font-bold">Start Growing</button></div>);
-      if(phase === 'result') return (<div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-green-900 via-lime-900 to-emerald-900 text-white p-6"><div className="text-6xl mb-4">{grade === 'A' ? '🚀' : grade === 'B' ? '📈' : '📊'}</div><h2 className="text-2xl font-bold mb-2">Complete!</h2><div className="text-4xl font-bold text-green-400 mb-2">{score}/{scenarios.length}</div><div className="text-6xl mb-4">{grade}</div><p className="text-slate-400 mb-4">{grade === 'A' ? 'Growth expert!' : grade === 'B' ? 'Good instincts!' : 'Study channels more!'}</p><button onClick={() => {setPhase('intro');setScenario(0);setScore(0);setAnswered(false);setSelected(null);setLog([]);}} className="px-6 py-2 bg-green-600 rounded-lg">Try Again</button></div>);
-      return (<div className="w-full h-full flex flex-col bg-gradient-to-br from-green-900 via-lime-900 to-emerald-900 text-white overflow-hidden">{showInfo && infoTopic && infoTopics[infoTopic] && (<div className="absolute inset-0 bg-black/80 flex items-center justify-center p-4 z-50" onClick={() => { setShowInfo(false); setInfoTopic(null); }}><div className="bg-slate-800 rounded-xl p-4 max-w-md" onClick={e => e.stopPropagation()}><h3 className="text-lg font-bold text-green-400 mb-2">{infoTopics[infoTopic].title}</h3><p className="text-sm text-slate-300">{infoTopics[infoTopic].content}</p><button onClick={() => { setShowInfo(false); setInfoTopic(null); }} className="mt-4 w-full py-2 bg-green-600 rounded-lg">Got it!</button></div></div>)}<div className="p-3 bg-black/30 border-b border-green-500/30 flex justify-between items-center"><span className="font-bold">🚀 Growth Strategy</span><span className="text-green-400">{scenario + 1}/{scenarios.length}</span><span className="text-lime-400">Score: {score}</span></div><div className="flex-1 p-4 flex flex-col justify-center"><div className="bg-black/30 rounded-xl p-4 mb-4"><p className="text-sm">{s.situation}</p><p className="text-xs text-slate-400 mt-2">Best growth channel?</p></div><div className="grid gap-2">{s.options.map((opt, i) => (<button key={i} onClick={() => answer(i)} disabled={answered} className={`p-3 rounded-lg text-left text-sm ${answered ? i === s.best ? 'bg-green-600' : i === selected ? 'bg-red-600' : 'bg-black/30' : 'bg-black/30 hover:bg-green-600/50'}`}>{opt}</button>))}</div>{answered && (<div className="mt-3 p-3 bg-black/30 rounded-lg"><p className="text-sm text-slate-300">{s.explain}</p><button onClick={next} className="mt-3 w-full py-2 bg-green-600 rounded-lg">{scenario >= scenarios.length - 1 ? 'See Results' : 'Next'}</button></div>)}</div><div className="p-3 bg-black/30 border-t border-green-500/30 flex gap-2 justify-center">{Object.keys(infoTopics).map(k => <button key={k} onClick={() => {setInfoTopic(k);setShowInfo(true);}} className="text-xs text-green-400">ℹ️ {infoTopics[k].title}</button>)}</div></div>);
+
+      if (phase === 'intro') {
+         return (
+            <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-green-900 via-lime-900 to-emerald-900 text-white p-6">
+               <div className="text-6xl mb-4">🚀</div>
+               <h2 className="text-2xl font-bold mb-2">Growth Channel Mastery</h2>
+               <p className="text-slate-300 text-center mb-4 max-w-md">
+                  Learn why growth strategies fail and how to match channels to your business model.
+               </p>
+               <div className="bg-black/30 rounded-xl p-4 mb-6 max-w-md text-sm">
+                  <p className="text-green-400 font-bold mb-2">🎯 Common Growth Mistakes:</p>
+                  <ul className="text-slate-300 space-y-1 text-xs">
+                     <li>• Copying strategies that worked for different business models</li>
+                     <li>• Scaling paid acquisition before understanding audience limits</li>
+                     <li>• Building community for the wrong audience</li>
+                     <li>• Hiring sales reps without pipeline to support them</li>
+                  </ul>
+               </div>
+               <button
+                  onClick={() => setPhase('play')}
+                  className="px-8 py-3 bg-gradient-to-r from-green-500 to-lime-500 rounded-xl font-bold hover:from-green-400 hover:to-lime-400 transition-all"
+               >
+                  Start Growing
+               </button>
+            </div>
+         );
+      }
+
+      if (phase === 'result') {
+         return (
+            <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-green-900 via-lime-900 to-emerald-900 text-white p-6 overflow-auto">
+               <div className="text-6xl mb-4">{grade === 'A' ? '🚀' : grade === 'B' ? '📈' : grade === 'C' ? '📊' : '📚'}</div>
+               <h2 className="text-2xl font-bold mb-2">Growth Assessment Complete</h2>
+               <div className="text-4xl font-bold text-green-400 mb-2">{score}/{scenarios.length}</div>
+               <div className="text-5xl mb-4">{grade}</div>
+               <p className="text-slate-400 mb-4 text-center">
+                  {grade === 'A' ? 'Growth expert! You understand channel-product fit.' :
+                   grade === 'B' ? 'Strong growth intuition. Some channel blindspots.' :
+                   grade === 'C' ? 'Decent foundation, but falling for common growth myths.' :
+                   'Growth strategy needs work. Study channel-product matching.'}
+               </p>
+
+               {conceptGaps.length > 0 && (
+                  <div className="bg-black/30 rounded-xl p-4 max-w-md w-full mb-4">
+                     <p className="text-green-400 font-bold text-sm mb-2">📚 Concepts to Study:</p>
+                     <ul className="text-slate-300 text-xs space-y-1">
+                        {conceptGaps.map(gap => (
+                           <li key={gap}>• {conceptLabels[gap]}</li>
+                        ))}
+                     </ul>
+                  </div>
+               )}
+
+               <div className="bg-black/30 rounded-xl p-4 max-w-md w-full mb-4 max-h-32 overflow-y-auto">
+                  <p className="text-green-400 font-bold text-sm mb-2">Session Log:</p>
+                  {gameLog.map((entry, i) => (
+                     <p key={i} className="text-xs text-slate-300">{entry}</p>
+                  ))}
+               </div>
+
+               <button
+                  onClick={() => {
+                     setPhase('intro');
+                     setScenario(0);
+                     setScore(0);
+                     setAnswered(false);
+                     setSelected(null);
+                     setGameLog([]);
+                     setConceptGaps([]);
+                  }}
+                  className="px-6 py-2 bg-green-600 rounded-lg hover:bg-green-500"
+               >
+                  Try Again
+               </button>
+            </div>
+         );
+      }
+
+      return (
+         <div className="w-full h-full flex flex-col bg-gradient-to-br from-green-900 via-lime-900 to-emerald-900 text-white overflow-hidden">
+            {showInfo && infoTopic && infoTopics[infoTopic] && (
+               <div className="absolute inset-0 bg-black/80 flex items-center justify-center p-4 z-50" onClick={() => { setShowInfo(false); setInfoTopic(null); }}>
+                  <div className="bg-slate-800 rounded-xl p-4 max-w-md" onClick={e => e.stopPropagation()}>
+                     <h3 className="text-lg font-bold text-green-400 mb-2">{infoTopics[infoTopic].title}</h3>
+                     <p className="text-sm text-slate-300">{infoTopics[infoTopic].content}</p>
+                     <button onClick={() => { setShowInfo(false); setInfoTopic(null); }} className="mt-4 w-full py-2 bg-green-600 rounded-lg">Got it!</button>
+                  </div>
+               </div>
+            )}
+
+            <div className="p-3 bg-black/30 border-b border-green-500/30 flex justify-between items-center">
+               <span className="font-bold">🚀 Growth Strategy</span>
+               <span className="text-green-400">{scenario + 1}/{scenarios.length}</span>
+               <span className="text-lime-400">Score: {score}</span>
+            </div>
+
+            <div className="flex-1 p-4 overflow-auto">
+               <div className="bg-black/30 rounded-xl p-3 mb-3">
+                  <p className="font-bold text-green-400 mb-2">{s.title}</p>
+                  <p className="text-sm text-slate-300">{s.context}</p>
+               </div>
+
+               <div className="bg-black/30 rounded-xl p-4 mb-3">
+                  <p className="font-medium text-white">{s.question}</p>
+               </div>
+
+               <div className="grid gap-2">
+                  {s.opts.map((opt, i) => (
+                     <button
+                        key={i}
+                        onClick={() => answer(i)}
+                        disabled={answered}
+                        className={`p-3 rounded-lg text-left text-sm transition-all ${
+                           answered
+                              ? i === s.correct
+                                 ? 'bg-green-600'
+                                 : i === selected
+                                    ? 'bg-red-600'
+                                    : 'bg-black/30'
+                              : 'bg-black/30 hover:bg-green-600/50'
+                        }`}
+                     >
+                        {opt}
+                     </button>
+                  ))}
+               </div>
+
+               {answered && (
+                  <div className="mt-3 space-y-3">
+                     {selected !== s.correct && s.wrongExplanations[selected!] && (
+                        <div className="p-3 bg-red-900/50 rounded-lg border border-red-500/30">
+                           <p className="text-xs text-red-300 font-bold mb-1">❌ Why This Was Wrong:</p>
+                           <p className="text-sm text-red-100">{s.wrongExplanations[selected!]}</p>
+                        </div>
+                     )}
+                     <div className="p-3 bg-green-900/50 rounded-lg border border-green-500/30">
+                        <p className="text-xs text-green-300 font-bold mb-1">✓ Growth Insight:</p>
+                        <p className="text-sm text-green-100">{s.why}</p>
+                     </div>
+                     <div className="p-3 bg-blue-900/50 rounded-lg border border-blue-500/30">
+                        <p className="text-xs text-blue-300 font-bold mb-1">📖 Real World:</p>
+                        <p className="text-sm text-blue-100">{s.realWorld}</p>
+                     </div>
+                     <button
+                        onClick={next}
+                        className="w-full py-2 bg-green-600 rounded-lg hover:bg-green-500"
+                     >
+                        {scenario >= scenarios.length - 1 ? 'See Results' : 'Next Scenario'}
+                     </button>
+                  </div>
+               )}
+            </div>
+
+            <div className="p-3 bg-black/30 border-t border-green-500/30 flex gap-2 justify-center flex-wrap">
+               {Object.keys(infoTopics).map(k => (
+                  <button
+                     key={k}
+                     onClick={() => { setInfoTopic(k); setShowInfo(true); }}
+                     className="text-xs text-green-400 hover:text-green-300"
+                  >
+                     ℹ️ {infoTopics[k].title}
+                  </button>
+               ))}
+            </div>
+         </div>
+      );
    };
 
    const PivotDecisionRenderer = () => {
-      const [phase, setPhase] = useState<'intro'|'play'|'result'>('intro');
+      const [phase, setPhase] = useState<'intro' | 'play' | 'result'>('intro');
       const [showInfo, setShowInfo] = useState(false);
-      const [infoTopic, setInfoTopic] = useState<string|null>(null);
+      const [infoTopic, setInfoTopic] = useState<string | null>(null);
       const [scenario, setScenario] = useState(0);
       const [score, setScore] = useState(0);
+      const [selected, setSelected] = useState<number | null>(null);
       const [answered, setAnswered] = useState(false);
-      const [selected, setSelected] = useState<number|null>(null);
-      const [log, setLog] = useState<string[]>([]);
+      const [gameLog, setGameLog] = useState<string[]>([]);
+      const [conceptGaps, setConceptGaps] = useState<string[]>([]);
+
+      // Startup Survival Simulator - Learning from real failure patterns
       const scenarios = [
-         {situation:'6 months in, 100 users but 2% weekly retention. Team believes in vision.',signals:{bad:['Low retention','No growth'],good:['Team conviction','Early users']},q:'What should you do?',opts:['Pivot completely','Double down on marketing','Talk to churned users, iterate','Shut down'],correct:2,explain:'Low retention = product problem, not marketing. Learn why users leave before pivoting or quitting.'},
-         {situation:'Strong retention (60% monthly) but CAC is 5x LTV. Burned through 80% of runway.',signals:{bad:['Unsustainable CAC','Low runway'],good:['Great retention','Product works']},q:'Best path forward?',opts:['Raise more money','Pivot to new market','Find cheaper channels','Shut down'],correct:2,explain:'Product works (retention proves it). Find organic/cheaper channels before pivoting what works.'},
-         {situation:'B2B product. Enterprise loves it but sales cycle is 9 months. You have 6 months runway.',signals:{bad:['Long sales cycle','Short runway'],good:['Enterprise demand','Validated need']},q:'What should you do?',opts:['Pivot to SMB','Wait for enterprise deals','Raise bridge funding','Add more salespeople'],correct:0,explain:'9-month cycle with 6-month runway = death. Pivot down-market to survive and prove model faster.'},
-         {situation:'Consumer app went viral once, now flat. Team is burned out. Still have 12 months runway.',signals:{bad:['Growth stalled','Team burnout'],good:['Past viral success','Runway exists']},q:'Best decision?',opts:['Pivot product','Hire growth team','Take a break, then reassess','Push harder'],correct:2,explain:'Burnout kills startups. With runway, take a break, regain perspective, then decide with fresh eyes.'},
-         {situation:'Customers love product but market is shrinking 10% yearly. Profitable but not growing.',signals:{bad:['Shrinking market','No growth'],good:['Profitability','Customer love']},q:'What should you do?',opts:['Milk it while it lasts','Pivot to adjacent market','Sell the business','Invest heavily in R&D'],correct:1,explain:'Profitable + loved but shrinking = use profits to expand to adjacent growing markets.'}
+         {
+            title: "The Traction Trap",
+            context: "18 months in. You've built a beautifully designed productivity app. 5,000 signups, but only 50 active weekly users (1%). You've iterated on features 12 times based on 'user feedback.' Your runway is 8 months. The team is demoralized.",
+            signals: { bad: ['1% active rate', '12 iterations without improvement', 'Team demoralized'], good: ['5,000 signups', '8 months runway', 'Beautiful product'] },
+            question: "What's the CORE problem you need to solve?",
+            opts: [
+               'Keep iterating - you haven\'t found the right feature yet',
+               'You\'re solving a problem users don\'t actually have',
+               'Marketing is the issue - get more signups',
+               'The product needs to be rebuilt from scratch'
+            ],
+            correct: 1,
+            wrongExplanations: [
+               "12 iterations with no retention improvement is a signal: features aren't the problem. More features on a product nobody needs won't help.",
+               "", // Correct
+               "5,000 signups proves marketing works. 50 active users proves the product doesn't. Pouring water into a leaky bucket doesn't fill it.",
+               "The product being 'beautiful' isn't the issue. The problem is product-MARKET fit, not product quality. A rebuild solves the wrong problem."
+            ],
+            realWorld: "Color Labs raised $41M, built beautiful photo-sharing tech, got downloads... but nobody used it. The problem they solved (photo sharing with nearby strangers) wasn't a real problem. They pivoted twice before shutting down. Lesson: validate the PROBLEM before building the solution.",
+            concept: "problem_validation",
+            why: "Low activation despite signups = problem-solution mismatch. Users are curious enough to try, but the product doesn't solve a real problem they have. The fix isn't more features or more marketing - it's going back to customer discovery to find a problem worth solving."
+         },
+         {
+            title: "The Zombie Company",
+            context: "Your SaaS has $30K MRR, 200 customers, 2% monthly churn, and you're profitable. But growth has flatlined for 18 months. Revenue: $30K→$31K→$30K→$32K. You've tried new features, new marketing channels, and price changes. Nothing moves the needle.",
+            signals: { bad: ['18 months flat', 'No growth despite efforts', 'Market might be saturated'], good: ['Profitable', 'Low churn', 'Real customers'] },
+            question: "What should you do with this business?",
+            opts: [
+               'Keep trying new growth tactics - something will work',
+               'Raise funding to accelerate growth',
+               'Accept it as a lifestyle business or seek acquisition',
+               'Pivot to a completely different product'
+            ],
+            correct: 2,
+            wrongExplanations: [
+               "18 months of trying suggests you've tested most reasonable tactics. Doing the same thing expecting different results is the definition of insanity.",
+               "VCs don't fund flat-growth companies. Even if you got funding, more money in a stagnant market won't create growth. You'd be diluting for nothing.",
+               "", // Correct
+               "You have a profitable business with happy customers. Pivoting abandons proven revenue for uncertain new ventures. That's irrational."
+            ],
+            realWorld: "Basecamp (37signals) deliberately stayed small and profitable rather than chasing hockey-stick growth. Many 'zombie' companies are acquired by larger players who value the customer base. Mailchimp grew slowly for years before exploding. Not every company needs to be a unicorn.",
+            concept: "growth_ceiling",
+            why: "Some markets have natural ceilings. You've validated the business (profitability + low churn) but may have captured most of your addressable market. Options: 1) Run as lifestyle business, 2) Sell to strategic acquirer, 3) Expand to adjacent market. Forcing growth in a saturated market wastes resources."
+         },
+         {
+            title: "The Pivot Paradox",
+            context: "You started as a B2C social app. After 2 years: 100K users, no revenue model that works. You pivot to B2B, selling analytics to brands. 6 months in: 5 paying customers ($50K ARR), strong retention, but long sales cycles. Board wants you to pivot again to 'something scalable.'",
+            signals: { bad: ['B2C failed', 'Long B2B sales cycle', 'Board pressure'], good: ['$50K ARR in 6 months', 'Strong retention', 'Real revenue'] },
+            question: "Should you pivot again as the board suggests?",
+            opts: [
+               'Yes - B2B enterprise is too slow for venture returns',
+               'No - you finally have product-market fit, double down',
+               'Yes - listen to your board, they have more experience',
+               'No - but negotiate a smaller market to go after'
+            ],
+            correct: 1,
+            wrongExplanations: [
+               "Slow doesn't mean bad. Salesforce, Workday, and many successful companies have long sales cycles. $50K ARR in 6 months is a strong signal.",
+               "", // Correct
+               "Boards can be wrong. They're optimizing for fund returns, not necessarily your company. 5 paying customers with retention is rare - most startups never get here.",
+               "You're not negotiating the market size, you're validating product-market fit. Focus on the signal: customers are paying and staying."
+            ],
+            realWorld: "Slack pivoted from a gaming company to B2B chat. Early enterprise sales were slow. If they had pivoted again instead of doubling down, we wouldn't have Slack. Instagram pivoted from Burbn and stuck with their new direction despite early doubts. One successful pivot is enough.",
+            concept: "pivot_commitment",
+            why: "The most dangerous time is right after a successful pivot, when you're tempted to pivot again before the new direction has time to mature. 5 customers + strong retention = signal. Give it time. Most successful startups did ONE major pivot, not many."
+         },
+         {
+            title: "The Runway Reckoning",
+            context: "You have 4 months of runway. Revenue is $15K MRR, growing 8% month-over-month. At current burn ($40K/mo), you'll die before reaching profitability. VCs are passing because you're 'too early.' You can cut to 2-person team and extend runway to 12 months.",
+            signals: { bad: ['4 months runway', 'VCs passing', '$25K monthly burn'], good: ['8% MoM growth', '$15K MRR', 'Clear path visible'] },
+            question: "What's the RIGHT decision for this startup?",
+            opts: [
+               'Keep the team and die trying - cutting kills momentum',
+               'Cut aggressively, extend runway, and keep growing',
+               'Pivot to something that raises easier',
+               'Shut down now while you can return money to investors'
+            ],
+            correct: 1,
+            wrongExplanations: [
+               "Dead startups don't have momentum. Pride in team size over survival is a common founder mistake. Survival > team size.",
+               "", // Correct
+               "You have 8% MoM growth and paying customers. Pivoting away from traction to chase 'easier fundraising' abandons real validation.",
+               "Shutting down a growing business with 12 months of possible runway (after cuts) is premature. Many great companies survived near-death moments."
+            ],
+            realWorld: "Airbnb cut to core team and survived on credit cards before Y Combinator. Tesla was days from bankruptcy multiple times. Companies that survive and win are often the ones willing to cut deep to extend runway during tough times. Survival is the only metric that matters.",
+            concept: "runway_survival",
+            why: "8% MoM growth means you double every 9 months. With 12 months runway (post-cuts), you could reach $30K+ MRR - much more fundable. The math: survive long enough for growth to compound. Cut everything that isn't directly driving growth or survival."
+         },
+         {
+            title: "The Signal vs Noise",
+            context: "Your dev tool has 3 customer types: Enterprises (slow to close, high ACV), SMBs (medium speed, medium ACV), and Developers (fast to close, low ACV but high volume). Last quarter: 2 enterprise deals ($50K), 10 SMB ($30K), 200 developer signups ($10K). Everyone says 'go enterprise.'",
+            signals: { bad: ['Scattered focus', 'Different sales motions needed', 'Resource constraints'], good: ['Revenue from all segments', 'Developer volume', 'Enterprise interest'] },
+            question: "Which segment should you focus on?",
+            opts: [
+               'Enterprise - highest revenue per customer',
+               'SMB - balanced between volume and value',
+               'Developer - highest volume, fastest feedback loops',
+               'All three - diversification reduces risk'
+            ],
+            correct: 2,
+            wrongExplanations: [
+               "Enterprise has highest ACV but slowest velocity. With limited resources, 2 deals/quarter means you can't iterate fast enough to find product-market fit.",
+               "SMB is a reasonable choice but 10 deals/quarter still limits learning velocity. You need faster feedback loops at this stage.",
+               "", // Correct
+               "Diversification at early stage = diluted focus. You can't build three different sales motions, support systems, and product experiences with a small team."
+            ],
+            realWorld: "Stripe focused on developers first, ignoring enterprise for years. Developers became their distribution channel - when devs joined big companies, they brought Stripe. Twilio did the same. Developer-first created pull demand that made enterprise sales easier later.",
+            concept: "segment_focus",
+            why: "At early stage, velocity of learning > revenue per customer. 200 developers = 200 feedback loops. 2 enterprises = 2 feedback loops. Developers compound: they become advocates, build on your platform, and pull enterprises toward you. Focus creates momentum."
+         }
       ];
-      const infoTopics:{[k:string]:{title:string,content:string}} = {
-         when:{title:'When to Pivot',content:'Consistent low retention, unable to find sustainable channel, market too small, or thesis proven wrong. Pivot early, not late.'},
-         types:{title:'Pivot Types',content:'Customer pivot, Problem pivot, Channel pivot, Revenue model pivot, Technology pivot. Change one thing, not everything.'},
-         signs:{title:'Warning Signs',content:'Flat growth, high churn, long sales cycles, customer apathy, founder burnout. Listen to the signals.'},
-         persist:{title:'When to Persist',content:'Strong retention, clear value prop, improving metrics, passionate users. Sometimes success takes time.'}
+
+      const conceptLabels: { [key: string]: string } = {
+         problem_validation: "Problem-Solution Fit Validation",
+         growth_ceiling: "Market Size & Growth Ceilings",
+         pivot_commitment: "Pivot Timing & Commitment",
+         runway_survival: "Runway Management & Survival",
+         segment_focus: "Customer Segment Focus"
       };
-      const answer = (idx:number) => {
-         if(answered) return;
-         setSelected(idx);
-         setAnswered(true);
-         if(idx === scenarios[scenario].correct) {
-            setScore(s => s + 1);
-            setLog(l => [...l, `Scenario ${scenario+1}: Correct!`]);
-         } else {
-            setLog(l => [...l, `Scenario ${scenario+1}: Wrong`]);
+
+      const infoTopics: { [k: string]: { title: string; content: string } } = {
+         when: {
+            title: "When to Pivot",
+            content: "Pivot when: 1) Consistent low retention despite iterations, 2) Unable to find sustainable acquisition channel, 3) Market too small for your ambitions, 4) Core thesis proven wrong by data. DON'T pivot when: you have paying customers with retention, you're just impatient, or because others are doing something 'hotter.'"
+         },
+         types: {
+            title: "Types of Pivots",
+            content: "Customer segment pivot (same product, different buyer), Problem pivot (same customer, different pain), Solution pivot (same problem, different approach), Channel pivot (same product, different distribution), Revenue model pivot (same product, different monetization), Technology pivot (same outcome, different tech). Change ONE thing, not everything."
+         },
+         signs: {
+            title: "Warning Signs to Watch",
+            content: "Danger signs: Flat growth despite efforts, High churn regardless of features, Long sales cycles eating runway, Customer apathy ('nice to have' not 'must have'), Founder burnout and loss of conviction, Every growth channel fails. The absence of pull demand is the clearest signal."
+         },
+         persistence: {
+            title: "When to Persist",
+            content: "Persist when: Strong retention (users who try it, keep it), Clear word-of-mouth (users recommend without prompts), Improving metrics over time, Passionate user segment (even if small), External tailwinds coming. Many legendary companies took 3-5 years to find PMF. Patience ≠ complacency."
          }
       };
-      const next = () => {
-         if(scenario >= scenarios.length - 1) setPhase('result');
-         else { setScenario(s => s + 1); setAnswered(false); setSelected(null); }
+
+      const answer = (idx: number) => {
+         if (answered) return;
+         setSelected(idx);
+         setAnswered(true);
+         const s = scenarios[scenario];
+         if (idx === s.correct) {
+            setScore(prev => prev + 1);
+            setGameLog(prev => [...prev, `✓ ${s.title}: Correct decision! Understood ${conceptLabels[s.concept]}`]);
+         } else {
+            setGameLog(prev => [...prev, `✗ ${s.title}: Wrong call. Fell for "${s.opts[idx].substring(0, 30)}..."`]);
+            if (!conceptGaps.includes(s.concept)) {
+               setConceptGaps(prev => [...prev, s.concept]);
+            }
+         }
       };
-      const grade = score >= 4 ? 'A' : score >= 3 ? 'B' : score >= 2 ? 'C' : 'D';
+
+      const next = () => {
+         if (scenario >= scenarios.length - 1) {
+            setPhase('result');
+         } else {
+            setScenario(prev => prev + 1);
+            setAnswered(false);
+            setSelected(null);
+         }
+      };
+
+      const grade = score >= 5 ? 'A' : score >= 4 ? 'B' : score >= 3 ? 'C' : 'D';
       const s = scenarios[scenario];
-      if(phase === 'intro') return (<div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-orange-900 via-amber-900 to-yellow-900 text-white p-6"><div className="text-6xl mb-4">🔄</div><h2 className="text-2xl font-bold mb-2">Pivot or Persist?</h2><p className="text-slate-300 text-center mb-6 max-w-md">The hardest startup decision! Learn when to pivot, persist, or shut down.</p><button onClick={() => setPhase('play')} className="px-8 py-3 bg-gradient-to-r from-orange-500 to-amber-500 rounded-xl font-bold">Start Deciding</button></div>);
-      if(phase === 'result') return (<div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-orange-900 via-amber-900 to-yellow-900 text-white p-6"><div className="text-6xl mb-4">{grade === 'A' ? '🎯' : grade === 'B' ? '🔄' : '⚠️'}</div><h2 className="text-2xl font-bold mb-2">Decisions Complete!</h2><div className="text-4xl font-bold text-orange-400 mb-2">{score}/{scenarios.length}</div><div className="text-6xl mb-4">{grade}</div><p className="text-slate-400 mb-4">{grade === 'A' ? 'Strategic thinker!' : grade === 'B' ? 'Good judgment!' : 'Tricky decisions!'}</p><button onClick={() => {setPhase('intro');setScenario(0);setScore(0);setAnswered(false);setSelected(null);setLog([]);}} className="px-6 py-2 bg-orange-600 rounded-lg">Try Again</button></div>);
-      return (<div className="w-full h-full flex flex-col bg-gradient-to-br from-orange-900 via-amber-900 to-yellow-900 text-white overflow-hidden">{showInfo && infoTopic && infoTopics[infoTopic] && (<div className="absolute inset-0 bg-black/80 flex items-center justify-center p-4 z-50" onClick={() => { setShowInfo(false); setInfoTopic(null); }}><div className="bg-slate-800 rounded-xl p-4 max-w-md" onClick={e => e.stopPropagation()}><h3 className="text-lg font-bold text-orange-400 mb-2">{infoTopics[infoTopic].title}</h3><p className="text-sm text-slate-300">{infoTopics[infoTopic].content}</p><button onClick={() => { setShowInfo(false); setInfoTopic(null); }} className="mt-4 w-full py-2 bg-orange-600 rounded-lg">Got it!</button></div></div>)}<div className="p-3 bg-black/30 border-b border-orange-500/30 flex justify-between items-center"><span className="font-bold">🔄 Pivot Decision</span><span className="text-orange-400">{scenario + 1}/{scenarios.length}</span><span className="text-amber-400">Score: {score}</span></div><div className="flex-1 p-4 overflow-auto"><div className="bg-black/30 rounded-xl p-3 mb-3"><p className="text-sm mb-3">{s.situation}</p><div className="grid grid-cols-2 gap-2 text-xs"><div><p className="text-red-400 mb-1">🚩 Warning:</p>{s.signals.bad.map((sig,i) => <p key={i} className="text-slate-300">• {sig}</p>)}</div><div><p className="text-green-400 mb-1">✓ Positive:</p>{s.signals.good.map((sig,i) => <p key={i} className="text-slate-300">• {sig}</p>)}</div></div></div><div className="bg-black/30 rounded-xl p-4 mb-3"><p className="font-medium">{s.q}</p></div><div className="grid gap-2">{s.opts.map((opt, i) => (<button key={i} onClick={() => answer(i)} disabled={answered} className={`p-3 rounded-lg text-left text-sm ${answered ? i === s.correct ? 'bg-green-600' : i === selected ? 'bg-red-600' : 'bg-black/30' : 'bg-black/30 hover:bg-orange-600/50'}`}>{opt}</button>))}</div>{answered && (<div className="mt-3 p-3 bg-black/30 rounded-lg"><p className="text-sm text-slate-300">{s.explain}</p><button onClick={next} className="mt-3 w-full py-2 bg-orange-600 rounded-lg">{scenario >= scenarios.length - 1 ? 'See Results' : 'Next'}</button></div>)}</div><div className="p-3 bg-black/30 border-t border-orange-500/30 flex gap-2 justify-center">{Object.keys(infoTopics).map(k => <button key={k} onClick={() => {setInfoTopic(k);setShowInfo(true);}} className="text-xs text-orange-400">ℹ️ {infoTopics[k].title}</button>)}</div></div>);
+
+      if (phase === 'intro') {
+         return (
+            <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-orange-900 via-amber-900 to-yellow-900 text-white p-6">
+               <div className="text-6xl mb-4">🔄</div>
+               <h2 className="text-2xl font-bold mb-2">Startup Survival Simulator</h2>
+               <p className="text-slate-300 text-center mb-4 max-w-md">
+                  Navigate the hardest decisions founders face: pivot, persist, or shut down.
+               </p>
+               <div className="bg-black/30 rounded-xl p-4 mb-6 max-w-md text-sm">
+                  <p className="text-orange-400 font-bold mb-2">💀 Why Most Startups Fail:</p>
+                  <ul className="text-slate-300 space-y-1 text-xs">
+                     <li>• 42% - No market need (building what nobody wants)</li>
+                     <li>• 29% - Ran out of cash (bad runway management)</li>
+                     <li>• 23% - Wrong team (co-founder issues)</li>
+                     <li>• 19% - Got outcompeted (wrong strategy)</li>
+                  </ul>
+               </div>
+               <button
+                  onClick={() => setPhase('play')}
+                  className="px-8 py-3 bg-gradient-to-r from-orange-500 to-amber-500 rounded-xl font-bold hover:from-orange-400 hover:to-amber-400 transition-all"
+               >
+                  Start Making Decisions
+               </button>
+            </div>
+         );
+      }
+
+      if (phase === 'result') {
+         return (
+            <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-orange-900 via-amber-900 to-yellow-900 text-white p-6 overflow-auto">
+               <div className="text-6xl mb-4">{grade === 'A' ? '🎯' : grade === 'B' ? '🔄' : grade === 'C' ? '⚠️' : '💀'}</div>
+               <h2 className="text-2xl font-bold mb-2">Survival Assessment Complete</h2>
+               <div className="text-4xl font-bold text-orange-400 mb-2">{score}/{scenarios.length}</div>
+               <div className="text-5xl mb-4">{grade}</div>
+               <p className="text-slate-400 mb-4 text-center">
+                  {grade === 'A' ? 'Survival instincts! You make tough calls correctly.' :
+                   grade === 'B' ? 'Good judgment. Some dangerous blind spots remain.' :
+                   grade === 'C' ? 'Mixed results. Study the failure patterns.' :
+                   'Dangerous misconceptions. Learn before betting your company.'}
+               </p>
+
+               {conceptGaps.length > 0 && (
+                  <div className="bg-black/30 rounded-xl p-4 max-w-md w-full mb-4">
+                     <p className="text-orange-400 font-bold text-sm mb-2">📚 Concepts to Study:</p>
+                     <ul className="text-slate-300 text-xs space-y-1">
+                        {conceptGaps.map(gap => (
+                           <li key={gap}>• {conceptLabels[gap]}</li>
+                        ))}
+                     </ul>
+                  </div>
+               )}
+
+               <div className="bg-black/30 rounded-xl p-4 max-w-md w-full mb-4 max-h-32 overflow-y-auto">
+                  <p className="text-orange-400 font-bold text-sm mb-2">Decision Log:</p>
+                  {gameLog.map((entry, i) => (
+                     <p key={i} className="text-xs text-slate-300">{entry}</p>
+                  ))}
+               </div>
+
+               <button
+                  onClick={() => {
+                     setPhase('intro');
+                     setScenario(0);
+                     setScore(0);
+                     setAnswered(false);
+                     setSelected(null);
+                     setGameLog([]);
+                     setConceptGaps([]);
+                  }}
+                  className="px-6 py-2 bg-orange-600 rounded-lg hover:bg-orange-500"
+               >
+                  Try Again
+               </button>
+            </div>
+         );
+      }
+
+      return (
+         <div className="w-full h-full flex flex-col bg-gradient-to-br from-orange-900 via-amber-900 to-yellow-900 text-white overflow-hidden">
+            {showInfo && infoTopic && infoTopics[infoTopic] && (
+               <div className="absolute inset-0 bg-black/80 flex items-center justify-center p-4 z-50" onClick={() => { setShowInfo(false); setInfoTopic(null); }}>
+                  <div className="bg-slate-800 rounded-xl p-4 max-w-md" onClick={e => e.stopPropagation()}>
+                     <h3 className="text-lg font-bold text-orange-400 mb-2">{infoTopics[infoTopic].title}</h3>
+                     <p className="text-sm text-slate-300">{infoTopics[infoTopic].content}</p>
+                     <button onClick={() => { setShowInfo(false); setInfoTopic(null); }} className="mt-4 w-full py-2 bg-orange-600 rounded-lg">Got it!</button>
+                  </div>
+               </div>
+            )}
+
+            <div className="p-3 bg-black/30 border-b border-orange-500/30 flex justify-between items-center">
+               <span className="font-bold">🔄 Survival Sim</span>
+               <span className="text-orange-400">{scenario + 1}/{scenarios.length}</span>
+               <span className="text-amber-400">Score: {score}</span>
+            </div>
+
+            <div className="flex-1 p-4 overflow-auto">
+               <div className="bg-black/30 rounded-xl p-3 mb-3">
+                  <p className="font-bold text-orange-400 mb-2">{s.title}</p>
+                  <p className="text-sm text-slate-300 mb-3">{s.context}</p>
+                  <div className="grid grid-cols-2 gap-2 text-xs">
+                     <div>
+                        <p className="text-red-400 mb-1">🚩 Warning Signs:</p>
+                        {s.signals.bad.map((sig, i) => <p key={i} className="text-slate-300">• {sig}</p>)}
+                     </div>
+                     <div>
+                        <p className="text-green-400 mb-1">✓ Positive Signs:</p>
+                        {s.signals.good.map((sig, i) => <p key={i} className="text-slate-300">• {sig}</p>)}
+                     </div>
+                  </div>
+               </div>
+
+               <div className="bg-black/30 rounded-xl p-4 mb-3">
+                  <p className="font-medium text-white">{s.question}</p>
+               </div>
+
+               <div className="grid gap-2">
+                  {s.opts.map((opt, i) => (
+                     <button
+                        key={i}
+                        onClick={() => answer(i)}
+                        disabled={answered}
+                        className={`p-3 rounded-lg text-left text-sm transition-all ${
+                           answered
+                              ? i === s.correct
+                                 ? 'bg-green-600'
+                                 : i === selected
+                                    ? 'bg-red-600'
+                                    : 'bg-black/30'
+                              : 'bg-black/30 hover:bg-orange-600/50'
+                        }`}
+                     >
+                        {opt}
+                     </button>
+                  ))}
+               </div>
+
+               {answered && (
+                  <div className="mt-3 space-y-3">
+                     {selected !== s.correct && s.wrongExplanations[selected!] && (
+                        <div className="p-3 bg-red-900/50 rounded-lg border border-red-500/30">
+                           <p className="text-xs text-red-300 font-bold mb-1">❌ Why This Kills Companies:</p>
+                           <p className="text-sm text-red-100">{s.wrongExplanations[selected!]}</p>
+                        </div>
+                     )}
+                     <div className="p-3 bg-green-900/50 rounded-lg border border-green-500/30">
+                        <p className="text-xs text-green-300 font-bold mb-1">✓ Survival Insight:</p>
+                        <p className="text-sm text-green-100">{s.why}</p>
+                     </div>
+                     <div className="p-3 bg-blue-900/50 rounded-lg border border-blue-500/30">
+                        <p className="text-xs text-blue-300 font-bold mb-1">📖 Real Example:</p>
+                        <p className="text-sm text-blue-100">{s.realWorld}</p>
+                     </div>
+                     <button
+                        onClick={next}
+                        className="w-full py-2 bg-orange-600 rounded-lg hover:bg-orange-500"
+                     >
+                        {scenario >= scenarios.length - 1 ? 'See Assessment' : 'Next Decision'}
+                     </button>
+                  </div>
+               )}
+            </div>
+
+            <div className="p-3 bg-black/30 border-t border-orange-500/30 flex gap-2 justify-center flex-wrap">
+               {Object.keys(infoTopics).map(k => (
+                  <button
+                     key={k}
+                     onClick={() => { setInfoTopic(k); setShowInfo(true); }}
+                     className="text-xs text-orange-400 hover:text-orange-300"
+                  >
+                     ℹ️ {infoTopics[k].title}
+                  </button>
+               ))}
+            </div>
+         </div>
+      );
    };
 
    // --- TEAM BUILDING RENDERER ---
    const TeamBuildingRenderer = () => {
       const [phase, setPhase] = useState<'intro' | 'play' | 'result'>('intro');
+      const [showInfo, setShowInfo] = useState(false);
+      const [infoTopic, setInfoTopic] = useState<string | null>(null);
       const [scenario, setScenario] = useState(0);
       const [score, setScore] = useState(0);
       const [selected, setSelected] = useState<number | null>(null);
       const [answered, setAnswered] = useState(false);
-      const [log, setLog] = useState<string[]>([]);
-      const [showInfo, setShowInfo] = useState(false);
-      const [infoTopic, setInfoTopic] = useState<string | null>(null);
+      const [gameLog, setGameLog] = useState<string[]>([]);
+      const [conceptGaps, setConceptGaps] = useState<string[]>([]);
 
+      // Co-founder & Team Dynamics Lab - Real scenarios that destroy companies
       const scenarios = [
-         { situation: "You're building your founding team. A brilliant engineer wants 40% equity but can only work part-time.", q: "What's the best approach?", opts: ["Give them what they ask", "Counter with 10% and full vesting", "Propose milestone-based equity", "Walk away entirely"], correct: 2, explain: "Milestone-based equity aligns incentives with commitment. They earn more as they contribute more, protecting both parties." },
-         { situation: "Your co-founder has a different vision for the product direction. The disagreement is affecting team morale.", q: "How should you handle this?", opts: ["Assert your authority as CEO", "Have a structured discussion with clear decision criteria", "Let the team vote", "Avoid the conflict and work around it"], correct: 1, explain: "Structured discussions with clear criteria lead to better decisions and model healthy conflict resolution for the team." },
-         { situation: "You need a CTO but can't afford market-rate salary. A talented candidate is interested but hesitant.", q: "What's your best offer strategy?", opts: ["Stretch your runway for full salary", "Offer below-market with significant equity", "Promise future raises when funded", "Hire a cheaper, less experienced option"], correct: 1, explain: "Below-market salary plus meaningful equity is the classic startup trade-off. It aligns incentives and preserves runway." },
-         { situation: "Your team is growing and you're seeing silos forming between engineering and product.", q: "What's the most effective intervention?", opts: ["Hire a project manager", "Create cross-functional squads", "Add more meetings", "Let it resolve naturally"], correct: 1, explain: "Cross-functional squads break down silos by embedding different disciplines together with shared goals." },
-         { situation: "A key team member is burning out but your startup can't afford to lose them.", q: "What should you prioritize?", opts: ["Offer a raise to keep them motivated", "Redistribute work and check in regularly", "Hire their replacement just in case", "Push through—startups are hard"], correct: 1, explain: "Redistributing work and showing genuine care prevents burnout from becoming departure. People remember how you treated them." }
+         {
+            title: "The Equity Time Bomb",
+            context: "You and your co-founder started 50/50. After 18 months, you've raised $2M and have 10 employees. Your co-founder wants to leave for a 'better opportunity' - they've only vested 25% (1.5 years of 4-year vesting). They want to keep all 50% because they were 'there from the start.'",
+            question: "How should you handle this situation?",
+            opts: [
+               'Let them keep the full 50% - they were essential early on',
+               'They keep only their vested 25% - the agreement is clear',
+               'Negotiate a middle ground to preserve the relationship',
+               'Accelerate their vesting as a goodwill gesture'
+            ],
+            correct: 1,
+            wrongExplanations: [
+               "Giving 50% to someone who contributed 1.5 of 10 years is unfair to you, your team, and your investors. It also sets terrible precedent.",
+               "", // Correct
+               "Middle ground sounds nice but undermines the vesting agreement. Future employees will expect the same exceptions. Agreements exist for this reason.",
+               "Accelerating vesting rewards leaving. This creates perverse incentives for everyone else to leave early and demand acceleration."
+            ],
+            realWorld: "The Winklevoss twins and Mark Zuckerberg. Eduardo Saverin and Mark Zuckerberg. Co-founder disputes with unclear or unenforced vesting destroy companies. Vesting exists specifically for this scenario.",
+            concept: "cofounder_vesting",
+            why: "Vesting protects everyone. If they leave at 18 months, they've earned 18 months of equity. Honoring the agreement: 1) Is fair to remaining team members, 2) Protects your cap table for future fundraising, 3) Sets clear precedent."
+         },
+         {
+            title: "The Silent Disagreement",
+            context: "You're CEO, your co-founder is CTO. You disagree on a major technical decision: they want to rebuild the platform (6 months, $500K), you think the current system is fine. They haven't explicitly objected but have stopped contributing to planning meetings.",
+            question: "What's the REAL problem here?",
+            opts: [
+               'Force a decision as CEO - someone has to lead',
+               'The technical disagreement - find a compromise on the rebuild',
+               'The communication breakdown - address the disengagement directly',
+               'Give them what they want to restore motivation'
+            ],
+            correct: 2,
+            wrongExplanations: [
+               "Forcing decisions without addressing communication creates resentment. You'll 'win' but lose engagement on everything else.",
+               "The technical debate is the symptom, not the disease. Solve this and the pattern repeats on the next conflict.",
+               "", // Correct
+               "Capitulating teaches that disengagement works. Your co-founder learns passive-aggression gets results."
+            ],
+            realWorld: "Most co-founder breakups aren't about the disagreement itself - they're about how disagreements are handled. Companies die when co-founders stop talking honestly.",
+            concept: "cofounder_communication",
+            why: "The technical decision matters less than the meta-problem: your co-founder is withdrawing instead of engaging. Address this directly: 'I noticed you've pulled back. What's going on?' Healthy relationships require surfacing conflict, not avoiding it."
+         },
+         {
+            title: "The Brilliant Jerk",
+            context: "Your 3rd engineer is exceptional - 3x more productive than anyone else, built your core infrastructure. But they're toxic: dismissive of others, hostile in code reviews, and two good engineers quit citing them as the reason.",
+            question: "What should you do about this engineer?",
+            opts: [
+               'Keep them - losing 3x productivity would devastate the company',
+               'Coach them intensively - their skills justify the investment',
+               'Fire them - cultural damage exceeds productivity value',
+               'Isolate them - let them work alone on critical projects'
+            ],
+            correct: 2,
+            wrongExplanations: [
+               "3x productivity minus 2 departures (and future departures) is negative. Plus, the remaining team operates at reduced effectiveness around them.",
+               "Coaching rarely fixes deeply ingrained behavior patterns in adults. You'll invest heavily while the damage continues.",
+               "", // Correct
+               "Isolation signals bad behavior is acceptable if you're skilled enough. Culture becomes: 'values don't apply to top performers.'"
+            ],
+            realWorld: "Netflix's culture doc: 'Brilliant jerks' are not tolerated because teamwork damage exceeds individual contribution. Apple fired brilliant engineers for undermining teams.",
+            concept: "culture_enforcement",
+            why: "One toxic hire costs: departures, reduced team productivity, damaged psychological safety, cultural erosion. Fire fast. The relief confirms it was right."
+         },
+         {
+            title: "The First Marketing Hire",
+            context: "Candidate A: Ex-Google, perfect resume, wants $180K + 0.5% equity, talks about 'brand building.' Candidate B: 5 years at startups, scrappy, wants $100K + 1% equity, talks about 'CAC, LTV, and experiment velocity.'",
+            question: "Which candidate should you hire?",
+            opts: [
+               'Candidate A - big company experience means quality and best practices',
+               'Candidate B - startup experience and metrics focus match your stage',
+               'Neither - keep doing marketing yourself until you find someone better',
+               'Candidate A at Candidate B\'s compensation - negotiate hard'
+            ],
+            correct: 1,
+            wrongExplanations: [
+               "Big company marketers optimize for large budgets and brand consistency. Startups need scrappy experimentation and small budget efficiency. Wrong skill set.",
+               "", // Correct
+               "Founder time is valuable. Marketing yourself takes time from product, fundraising, and strategy.",
+               "If they accept B's terms, it signals desperation or misunderstanding. Misaligned expectations create problems later."
+            ],
+            realWorld: "Airbnb's early marketing was cereal boxes and Craigslist hacks, not 'brand awareness.' Early stage needs someone who runs experiments on $5K budgets, not $5M campaigns.",
+            concept: "stage_appropriate_hiring",
+            why: "Stage-appropriate hiring is crucial. Language reveals mindset: 'CAC/LTV' = growth thinking. 'Brand building' = wrong stage for a startup."
+         },
+         {
+            title: "The Scaling Struggle",
+            context: "An early employee who was amazing in the scrappy phase is struggling at scale. They can't manage their growing team, miss deadlines, and quality dropped. They've been here since the beginning. You've given feedback 3 times with no improvement.",
+            question: "What's the right decision?",
+            opts: [
+               'Fire them - 3 feedback rounds is enough',
+               'Move them to an individual contributor role',
+               'Keep coaching - loyalty deserves more patience',
+               'Wait for them to realize and leave voluntarily'
+            ],
+            correct: 1,
+            wrongExplanations: [
+               "Firing is an option but not best. They were excellent as an IC and might still be. Firing wastes domain knowledge.",
+               "", // Correct
+               "3 rounds with no improvement suggests capability, not effort. More coaching won't solve a fundamental mismatch.",
+               "Waiting is worst. Their team suffers, they suffer, and the problem grows. Leaders make hard decisions."
+            ],
+            realWorld: "Many founding team members become ICs as companies scale. Stripe and Airbnb moved early employees to IC roles successfully. The conversation: 'Your greatest value is X. Let's put you there.'",
+            concept: "role_evolution",
+            why: "Great at Stage A doesn't mean great at Stage B. Move to IC: honors contribution, uses expertise, protects their team. It's kind, not cruel."
+         }
       ];
-      const s = scenarios[scenario];
-      const infoTopics: Record<string, {title: string; content: string}> = {
-         equity: { title: "Equity Distribution", content: "Founder equity should vest over 4 years with a 1-year cliff. This protects the company if someone leaves early. Early employees typically get 0.5-2% with similar vesting." },
-         roles: { title: "Defining Roles", content: "Clear role definition prevents conflict. Use RACI matrices (Responsible, Accountable, Consulted, Informed) for key decisions. Revisit roles every 6 months as the company grows." },
-         culture: { title: "Culture Building", content: "Culture is how your team behaves when you're not watching. Define core values early, hire for culture fit, and recognize behaviors that reinforce your values." },
-         hiring: { title: "Early Hiring", content: "First 10 hires set your culture. Prioritize: 1) Mission alignment, 2) Skill-culture balance, 3) Flexibility to wear multiple hats, 4) Self-motivation." }
+
+      const conceptLabels: { [key: string]: string } = {
+         cofounder_vesting: "Co-founder Equity & Vesting",
+         cofounder_communication: "Co-founder Communication Patterns",
+         culture_enforcement: "Culture Enforcement",
+         stage_appropriate_hiring: "Stage-Appropriate Hiring",
+         role_evolution: "Role Evolution & Scaling"
       };
-      const answer = (i: number) => { if(answered) return; setSelected(i); setAnswered(true); if(i === s.correct) { setScore(p => p + 1); setLog(l => [...l, `✓ Scenario ${scenario + 1}: Correct!`]); } else { setLog(l => [...l, `✗ Scenario ${scenario + 1}: Better answer was "${s.opts[s.correct]}"`]); } };
-      const next = () => { if(scenario >= scenarios.length - 1) { setPhase('result'); } else { setScenario(p => p + 1); setAnswered(false); setSelected(null); } };
-      const grade = score >= 4 ? 'A' : score >= 3 ? 'B' : score >= 2 ? 'C' : 'D';
-      if(phase === 'intro') return (<div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-900 text-white p-6"><div className="text-6xl mb-4">👥</div><h2 className="text-2xl font-bold mb-2">Team Building Simulator</h2><p className="text-slate-300 text-center mb-6 max-w-md">Build your dream team! Navigate hiring, equity, and team dynamics challenges.</p><button onClick={() => setPhase('play')} className="px-8 py-3 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-xl font-bold">Build Team</button></div>);
-      if(phase === 'result') return (<div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-900 text-white p-6"><div className="text-6xl mb-4">{grade === 'A' ? '🏆' : grade === 'B' ? '👥' : '🔧'}</div><h2 className="text-2xl font-bold mb-2">Team Built!</h2><div className="text-4xl font-bold text-indigo-400 mb-2">{score}/{scenarios.length}</div><div className="text-6xl mb-4">{grade}</div><p className="text-slate-400 mb-4">{grade === 'A' ? 'Natural leader!' : grade === 'B' ? 'Good team builder!' : 'Keep learning!'}</p><div className="w-full max-w-md bg-black/30 rounded-lg p-3 mb-4 max-h-32 overflow-y-auto">{log.map((l,i) => <p key={i} className="text-xs text-slate-300">{l}</p>)}</div><button onClick={() => {setPhase('intro');setScenario(0);setScore(0);setAnswered(false);setSelected(null);setLog([]);}} className="px-6 py-2 bg-indigo-600 rounded-lg">Try Again</button></div>);
-      return (<div className="w-full h-full flex flex-col bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-900 text-white overflow-hidden">{showInfo && infoTopic && infoTopics[infoTopic] && (<div className="absolute inset-0 bg-black/80 flex items-center justify-center p-4 z-50" onClick={() => { setShowInfo(false); setInfoTopic(null); }}><div className="bg-slate-800 rounded-xl p-4 max-w-md" onClick={e => e.stopPropagation()}><h3 className="text-lg font-bold text-indigo-400 mb-2">{infoTopics[infoTopic].title}</h3><p className="text-sm text-slate-300">{infoTopics[infoTopic].content}</p><button onClick={() => { setShowInfo(false); setInfoTopic(null); }} className="mt-4 w-full py-2 bg-indigo-600 rounded-lg">Got it!</button></div></div>)}<div className="p-3 bg-black/30 border-b border-indigo-500/30 flex justify-between items-center"><span className="font-bold">👥 Team Building</span><span className="text-indigo-400">{scenario + 1}/{scenarios.length}</span><span className="text-purple-400">Score: {score}</span></div><div className="flex-1 p-4 overflow-auto"><div className="bg-black/30 rounded-xl p-4 mb-4"><p className="text-sm text-slate-300">{s.situation}</p></div><div className="bg-black/30 rounded-xl p-4 mb-3"><p className="font-medium">{s.q}</p></div><div className="grid gap-2">{s.opts.map((opt, i) => (<button key={i} onClick={() => answer(i)} disabled={answered} className={`p-3 rounded-lg text-left text-sm ${answered ? i === s.correct ? 'bg-green-600' : i === selected ? 'bg-red-600' : 'bg-black/30' : 'bg-black/30 hover:bg-indigo-600/50'}`}>{opt}</button>))}</div>{answered && (<div className="mt-3 p-3 bg-black/30 rounded-lg"><p className="text-sm text-slate-300">{s.explain}</p><button onClick={next} className="mt-3 w-full py-2 bg-indigo-600 rounded-lg">{scenario >= scenarios.length - 1 ? 'See Results' : 'Next'}</button></div>)}</div><div className="p-3 bg-black/30 border-t border-indigo-500/30 flex gap-2 justify-center flex-wrap">{Object.keys(infoTopics).map(k => <button key={k} onClick={() => {setInfoTopic(k);setShowInfo(true);}} className="text-xs text-indigo-400">ℹ️ {infoTopics[k].title}</button>)}</div></div>);
+
+      const infoTopics: { [k: string]: { title: string; content: string } } = {
+         vesting: { title: "Vesting Fundamentals", content: "Standard: 4-year vesting, 1-year cliff. After 1 year: 25% vests. Then monthly for remaining 3 years. ALL founders should vest. Accelerated vesting on acquisition (single trigger) or acquisition + termination (double trigger)." },
+         equity: { title: "Equity Split Guidelines", content: "Equal splits work when both founders are equally committed. Unequal when one has idea/expertise or started earlier. Address equity early - it only gets harder to discuss later." },
+         culture: { title: "Culture & Values", content: "Culture = how your team behaves when you're not watching. Define values early, hire for them, fire for violations. Culture debt is as dangerous as technical debt." },
+         hiring: { title: "Early Hiring", content: "First 10 hires set culture. Prioritize: 1) Can do the job, 2) Will do the job, 3) Fit the team, 4) Can grow. For startups: bias toward generalists." }
+      };
+
+      const answer = (idx: number) => { if (answered) return; setSelected(idx); setAnswered(true); const s = scenarios[scenario]; if (idx === s.correct) { setScore(p => p + 1); setGameLog(l => [...l, `✓ ${s.title}: Correct!`]); } else { setGameLog(l => [...l, `✗ ${s.title}: Missed`]); if (!conceptGaps.includes(s.concept)) { setConceptGaps(g => [...g, s.concept]); } } };
+      const next = () => { if (scenario >= scenarios.length - 1) { setPhase('result'); } else { setScenario(p => p + 1); setAnswered(false); setSelected(null); } };
+      const grade = score >= 5 ? 'A' : score >= 4 ? 'B' : score >= 3 ? 'C' : 'D';
+      const s = scenarios[scenario];
+
+      if (phase === 'intro') return (<div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-900 text-white p-6"><div className="text-6xl mb-4">👥</div><h2 className="text-2xl font-bold mb-2">Co-founder & Team Lab</h2><p className="text-slate-300 text-center mb-4 max-w-md">Navigate the human dynamics that make or break startups.</p><div className="bg-black/30 rounded-xl p-4 mb-6 max-w-md text-sm"><p className="text-indigo-400 font-bold mb-2">💔 65% of startups fail due to co-founder conflict</p></div><button onClick={() => setPhase('play')} className="px-8 py-3 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-xl font-bold">Build Team</button></div>);
+      if (phase === 'result') return (<div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-900 text-white p-6 overflow-auto"><div className="text-6xl mb-4">{grade === 'A' ? '🏆' : grade === 'B' ? '👥' : '🔧'}</div><h2 className="text-2xl font-bold mb-2">Team Assessment</h2><div className="text-4xl font-bold text-indigo-400 mb-2">{score}/{scenarios.length}</div><div className="text-5xl mb-4">{grade}</div>{conceptGaps.length > 0 && (<div className="bg-black/30 rounded-xl p-4 max-w-md w-full mb-4"><p className="text-indigo-400 font-bold text-sm mb-2">📚 Study:</p><ul className="text-slate-300 text-xs">{conceptGaps.map(g => <li key={g}>• {conceptLabels[g]}</li>)}</ul></div>)}<div className="bg-black/30 rounded-xl p-4 max-w-md w-full mb-4 max-h-32 overflow-y-auto">{gameLog.map((l,i) => <p key={i} className="text-xs text-slate-300">{l}</p>)}</div><button onClick={() => {setPhase('intro');setScenario(0);setScore(0);setAnswered(false);setSelected(null);setGameLog([]);setConceptGaps([]);}} className="px-6 py-2 bg-indigo-600 rounded-lg">Try Again</button></div>);
+      return (<div className="w-full h-full flex flex-col bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-900 text-white overflow-hidden">{showInfo && infoTopic && infoTopics[infoTopic] && (<div className="absolute inset-0 bg-black/80 flex items-center justify-center p-4 z-50" onClick={() => { setShowInfo(false); setInfoTopic(null); }}><div className="bg-slate-800 rounded-xl p-4 max-w-md" onClick={e => e.stopPropagation()}><h3 className="text-lg font-bold text-indigo-400 mb-2">{infoTopics[infoTopic].title}</h3><p className="text-sm text-slate-300">{infoTopics[infoTopic].content}</p><button onClick={() => { setShowInfo(false); setInfoTopic(null); }} className="mt-4 w-full py-2 bg-indigo-600 rounded-lg">Got it!</button></div></div>)}<div className="p-3 bg-black/30 border-b border-indigo-500/30 flex justify-between items-center"><span className="font-bold">👥 Team Lab</span><span className="text-indigo-400">{scenario + 1}/{scenarios.length}</span><span className="text-purple-400">Score: {score}</span></div><div className="flex-1 p-4 overflow-auto"><div className="bg-black/30 rounded-xl p-3 mb-3"><p className="font-bold text-indigo-400 mb-2">{s.title}</p><p className="text-sm text-slate-300">{s.context}</p></div><div className="bg-black/30 rounded-xl p-4 mb-3"><p className="font-medium">{s.question}</p></div><div className="grid gap-2">{s.opts.map((opt, i) => (<button key={i} onClick={() => answer(i)} disabled={answered} className={`p-3 rounded-lg text-left text-sm ${answered ? i === s.correct ? 'bg-green-600' : i === selected ? 'bg-red-600' : 'bg-black/30' : 'bg-black/30 hover:bg-indigo-600/50'}`}>{opt}</button>))}</div>{answered && (<div className="mt-3 space-y-3">{selected !== s.correct && s.wrongExplanations[selected!] && (<div className="p-3 bg-red-900/50 rounded-lg border border-red-500/30"><p className="text-xs text-red-300 font-bold mb-1">❌ Why This Fails:</p><p className="text-sm text-red-100">{s.wrongExplanations[selected!]}</p></div>)}<div className="p-3 bg-green-900/50 rounded-lg border border-green-500/30"><p className="text-xs text-green-300 font-bold mb-1">✓ Insight:</p><p className="text-sm text-green-100">{s.why}</p></div><div className="p-3 bg-blue-900/50 rounded-lg border border-blue-500/30"><p className="text-xs text-blue-300 font-bold mb-1">📖 Real World:</p><p className="text-sm text-blue-100">{s.realWorld}</p></div><button onClick={next} className="w-full py-2 bg-indigo-600 rounded-lg">{scenario >= scenarios.length - 1 ? 'See Results' : 'Next'}</button></div>)}</div><div className="p-3 bg-black/30 border-t border-indigo-500/30 flex gap-2 justify-center flex-wrap">{Object.keys(infoTopics).map(k => <button key={k} onClick={() => {setInfoTopic(k);setShowInfo(true);}} className="text-xs text-indigo-400">ℹ️ {infoTopics[k].title}</button>)}</div></div>);
    };
 
    // --- LEADERSHIP RENDERER ---
    const LeadershipRenderer = () => {
       const [phase, setPhase] = useState<'intro' | 'play' | 'result'>('intro');
+      const [showInfo, setShowInfo] = useState(false);
+      const [infoTopic, setInfoTopic] = useState<string | null>(null);
       const [scenario, setScenario] = useState(0);
       const [score, setScore] = useState(0);
       const [selected, setSelected] = useState<number | null>(null);
       const [answered, setAnswered] = useState(false);
-      const [log, setLog] = useState<string[]>([]);
-      const [showInfo, setShowInfo] = useState(false);
-      const [infoTopic, setInfoTopic] = useState<string | null>(null);
+      const [gameLog, setGameLog] = useState<string[]>([]);
+      const [conceptGaps, setConceptGaps] = useState<string[]>([]);
 
+      // Situational Leadership Lab - Context determines the right approach
       const scenarios = [
-         { context: "Crisis Management", situation: "Your startup's main product has a critical bug affecting 50% of users. Your team is panicking.", q: "What's your first action as a leader?", opts: ["Take over and fix it yourself", "Stay calm, assign clear roles, and communicate transparently", "Find someone to blame", "Wait for more information"], correct: 1, explain: "Leaders set the emotional tone. Calm, clear direction with transparent communication builds trust and enables effective crisis response." },
-         { context: "Difficult Feedback", situation: "A team member you like personally is consistently underperforming and affecting team morale.", q: "How do you handle this?", opts: ["Ignore it hoping they improve", "Have direct, specific feedback conversation with clear expectations", "Complain to other team members", "Immediately let them go"], correct: 1, explain: "Direct, kind feedback with specific examples and clear expectations gives people the chance to improve while maintaining team standards." },
-         { context: "Delegation", situation: "You have an important investor presentation next week and a product launch to manage simultaneously.", q: "What approach demonstrates best leadership?", opts: ["Work 20-hour days to do both", "Delegate the launch to your capable team", "Postpone the investor meeting", "Do both poorly"], correct: 1, explain: "Great leaders delegate to develop their team. Trusting capable people with important work shows confidence and builds organizational capacity." },
-         { context: "Vision Alignment", situation: "Half your team wants to focus on feature A, half on feature B. Both have merit but resources are limited.", q: "How do you decide?", opts: ["Let the team vote", "Make an executive decision aligned with company vision", "Work on both with half effort", "Avoid the decision"], correct: 1, explain: "Leaders tie decisions to vision and strategy. A clear rationale helps the team understand and commit, even if they preferred the other option." },
-         { context: "Building Culture", situation: "You notice your growing team is losing the collaborative spirit that made early days special.", q: "What's the most effective intervention?", opts: ["Send an email about values", "Model the behavior, recognize examples, and create rituals", "Hire a culture consultant", "Accept it as inevitable"], correct: 1, explain: "Culture is caught, not taught. Leaders shape culture by consistently modeling values, recognizing aligned behaviors, and creating meaningful rituals." }
+         {
+            title: "The Founder's Trap",
+            context: "You're a technical founder who built the first version of the product. Now you have 15 engineers. You still review every PR, attend every standup, and make every technical decision. Your CTO hire just quit, saying 'you won't let anyone else lead.'",
+            question: "What's the REAL problem with your leadership?",
+            opts: [
+               'You need to hire a better CTO who can work with you',
+               'You\'re bottlenecking the organization by not delegating',
+               'Your standards are too high - lower them',
+               'The team needs more training before you can step back'
+            ],
+            correct: 1,
+            wrongExplanations: [
+               "Every CTO will face the same problem. The issue isn't them - it's that you're not creating space for leadership to emerge. You'll keep losing leaders.",
+               "", // Correct
+               "High standards aren't the problem. The problem is that YOU are the only one who can meet them. That's a system failure, not a standards issue.",
+               "Waiting for the 'right time' to delegate is a trap. Teams develop BY being given responsibility, not before."
+            ],
+            realWorld: "Steve Jobs was fired from Apple partly for micromanaging. When he returned, he'd learned to hire great people and give them space. Elon Musk struggles with this - his companies succeed despite his micromanagement, not because of it.",
+            concept: "delegation_scaling",
+            why: "Founders who built the first version often become the constraint on the next version. Every decision that runs through you is a decision that's slower than it should be. Your job shifts from 'doing' to 'enabling others to do.' If you're the smartest person in every room, you've failed at hiring."
+         },
+         {
+            title: "The Transparency Dilemma",
+            context: "Your startup is in trouble. Runway is 4 months, fundraising is stalling, and you might need layoffs. Your team doesn't know - you've been shielding them to protect morale. But rumors are spreading and anxiety is rising.",
+            question: "What's the RIGHT level of transparency here?",
+            opts: [
+               'Keep shielding them - leaders carry the burden so others can work',
+               'Full transparency - share everything, let them decide if they want to stay',
+               'Partial transparency - share the challenge, your plan, and what you need from them',
+               'Wait until you have a solution, then share'
+            ],
+            correct: 2,
+            wrongExplanations: [
+               "Shielding creates worse anxiety. People know something is wrong and imagine worse scenarios. You're also denying them agency to help or prepare.",
+               "Full transparency without context or plan creates panic. Sharing 'we might die' without 'here's how we might survive' is irresponsible.",
+               "", // Correct
+               "Waiting erodes trust. If you solve it, they'll wonder what else you're hiding. If you don't, they'll resent not having time to prepare."
+            ],
+            realWorld: "Buffer shared their runway publicly during a crisis - it built trust. But they also shared their plan. Contrast with startups that say nothing until layoffs: employees feel betrayed and survivors lose trust.",
+            concept: "transparency_calibration",
+            why: "The right formula: Share the challenge (honest), Share your plan (action), Share what you need (agency), Acknowledge uncertainty (humble). This treats your team as adults who can handle hard truths while giving them a way to contribute to the solution."
+         },
+         {
+            title: "The Loyalty vs Performance",
+            context: "Your first employee was critical in the early days. They took a pay cut, worked nights, and believed when no one else did. Now they're a director, but they're clearly not at the level the role requires. They're defensive about feedback and their team is struggling.",
+            question: "What does good leadership require here?",
+            opts: [
+               'Keep them in role - loyalty must be rewarded',
+               'Quietly move responsibilities away while keeping their title',
+               'Have an honest conversation about the gap and explore options together',
+               'Fire them - performance is all that matters'
+            ],
+            correct: 2,
+            wrongExplanations: [
+               "Keeping underperformers in roles they can't handle hurts them (stress, failure), their team (bad leadership), and the company. Loyalty isn't an excuse for harm.",
+               "Shadow-removing responsibilities is dishonest and humiliating. They'll know, others will know, and trust erodes. It's cowardly, not kind.",
+               "", // Correct
+               "Immediate firing without conversation ignores their contribution and your responsibility to help them succeed. It also sends a message that loyalty is punished."
+            ],
+            realWorld: "Netflix's culture of 'adequate performance gets a generous severance' sounds harsh but is actually clearer and kinder than companies that keep people in failing roles for years. The key: have the conversation EARLY, not after resentment builds.",
+            concept: "performance_conversations",
+            why: "The honest conversation: 'The role has outgrown where you are right now. I value you and want you here. Let's figure out together where you can succeed - whether that's a different role, development support, or an honest exit.' This honors their contribution while addressing reality."
+         },
+         {
+            title: "The Visionary Trap",
+            context: "You have a bold vision for the company. Your team keeps pushing back with 'practical concerns' about execution, resources, and risk. You believe great leaders push through doubt. But you've noticed the best people are becoming disengaged.",
+            question: "What's happening with your leadership?",
+            opts: [
+               'Your team doesn\'t share your vision - replace doubters with believers',
+               'Great visions always face resistance - push harder',
+               'You\'re confusing conviction with stubbornness - leadership requires listening',
+               'Lower your ambitions to match team capability'
+            ],
+            correct: 2,
+            wrongExplanations: [
+               "Replacing doubters with yes-people creates echo chambers. The best people push back because they care. Losing them is a warning sign, not a hiring problem.",
+               "There's a difference between vision pushback (expected) and disengagement from your best people (danger signal). The latter suggests your leadership style is the problem.",
+               "", // Correct
+               "This isn't about lowering ambitions - it's about how you hold them. You can have bold vision AND listen to execution concerns."
+            ],
+            realWorld: "Travis Kalanick pushed his vision at Uber despite pushback on ethics. His conviction created massive value but also massive problems. Contrast with Satya Nadella, who transformed Microsoft by holding bold vision while genuinely listening.",
+            concept: "vision_vs_stubbornness",
+            why: "Vision + Stubbornness = Blind spots and exit of best people. Vision + Listening = Course-corrected execution and engaged team. The test: Are your best people leaning in or checking out? If checking out, the problem is you, not them."
+         },
+         {
+            title: "The Crisis Leader",
+            context: "A major customer just publicly accused your company of data mishandling on Twitter. Your PR person wants to issue a corporate statement. Your lawyer wants to say nothing. Your customer success lead wants to apologize immediately. Your team is looking to you.",
+            question: "What's the MOST important leadership action right now?",
+            opts: [
+               'Get the facts before responding - you can\'t lead without information',
+               'Make a quick decision - any direction is better than paralysis',
+               'Let the experts (PR, legal) handle it - they know their domains',
+               'Gather the team, acknowledge the crisis, assign clear roles, and set a timeline'
+            ],
+            correct: 3,
+            wrongExplanations: [
+               "Facts are important, but in crisis, speed matters. Perfect information never arrives. You need enough to act, not everything.",
+               "Quick decisions without coordination create chaos. Different people doing different things makes crises worse.",
+               "Domain experts have narrow views. Legal wants to minimize liability. PR wants reputation. You need someone integrating all concerns - that's leadership.",
+               "" // Correct
+            ],
+            realWorld: "Johnson & Johnson's Tylenol crisis response is legendary: immediate action, clear leadership, transparent communication. Contrast with Boeing's 737 MAX response: delayed, defensive, and diffuse leadership. The difference was leadership clarity, not facts.",
+            concept: "crisis_leadership",
+            why: "In crisis, your team needs: 1) Acknowledgment (yes, this is serious), 2) Calm (not panic), 3) Structure (who does what), 4) Timeline (when we'll know more). The facts matter, but leadership coordination matters more. You're the one who sees the whole picture."
+         }
       ];
-      const s = scenarios[scenario];
-      const infoTopics: Record<string, {title: string; content: string}> = {
-         styles: { title: "Leadership Styles", content: "Effective founders adapt their style: Directive (crisis), Coaching (development), Supportive (skilled teams), Delegative (autonomous experts). Match your style to the situation and team maturity." },
-         feedback: { title: "Giving Feedback", content: "Use SBI: Situation (when/where), Behavior (specific actions), Impact (effect on team/outcomes). Focus on behaviors, not personality. Ask for their perspective and agree on next steps." },
-         delegation: { title: "Art of Delegation", content: "Delegate outcomes, not tasks. Provide context (why), clarity (what success looks like), resources (support available), and check-ins (not micromanagement). Let them own the how." },
-         trust: { title: "Building Trust", content: "Trust = Credibility (expertise) + Reliability (consistency) + Intimacy (safety) - Self-Interest. Build trust through competence, keeping promises, creating psychological safety, and putting team first." }
+
+      const conceptLabels: { [key: string]: string } = {
+         delegation_scaling: "Delegation & Scaling Leadership",
+         transparency_calibration: "Transparency & Communication",
+         performance_conversations: "Performance & Loyalty Tradeoffs",
+         vision_vs_stubbornness: "Vision vs. Stubbornness",
+         crisis_leadership: "Crisis Leadership"
       };
-      const answer = (i: number) => { if(answered) return; setSelected(i); setAnswered(true); if(i === s.correct) { setScore(p => p + 1); setLog(l => [...l, `✓ ${s.context}: Great leadership!`]); } else { setLog(l => [...l, `✗ ${s.context}: Better approach was "${s.opts[s.correct]}"`]); } };
-      const next = () => { if(scenario >= scenarios.length - 1) { setPhase('result'); } else { setScenario(p => p + 1); setAnswered(false); setSelected(null); } };
-      const grade = score >= 4 ? 'A' : score >= 3 ? 'B' : score >= 2 ? 'C' : 'D';
-      if(phase === 'intro') return (<div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-amber-900 via-orange-900 to-red-900 text-white p-6"><div className="text-6xl mb-4">👔</div><h2 className="text-2xl font-bold mb-2">Leadership Styles</h2><p className="text-slate-300 text-center mb-6 max-w-md">Master different leadership approaches for startup challenges!</p><button onClick={() => setPhase('play')} className="px-8 py-3 bg-gradient-to-r from-amber-500 to-orange-500 rounded-xl font-bold">Lead the Way</button></div>);
-      if(phase === 'result') return (<div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-amber-900 via-orange-900 to-red-900 text-white p-6"><div className="text-6xl mb-4">{grade === 'A' ? '👑' : grade === 'B' ? '👔' : '📚'}</div><h2 className="text-2xl font-bold mb-2">Leadership Assessment</h2><div className="text-4xl font-bold text-amber-400 mb-2">{score}/{scenarios.length}</div><div className="text-6xl mb-4">{grade}</div><p className="text-slate-400 mb-4">{grade === 'A' ? 'Born leader!' : grade === 'B' ? 'Strong leadership!' : 'Keep developing!'}</p><div className="w-full max-w-md bg-black/30 rounded-lg p-3 mb-4 max-h-32 overflow-y-auto">{log.map((l,i) => <p key={i} className="text-xs text-slate-300">{l}</p>)}</div><button onClick={() => {setPhase('intro');setScenario(0);setScore(0);setAnswered(false);setSelected(null);setLog([]);}} className="px-6 py-2 bg-amber-600 rounded-lg">Try Again</button></div>);
-      return (<div className="w-full h-full flex flex-col bg-gradient-to-br from-amber-900 via-orange-900 to-red-900 text-white overflow-hidden">{showInfo && infoTopic && infoTopics[infoTopic] && (<div className="absolute inset-0 bg-black/80 flex items-center justify-center p-4 z-50" onClick={() => { setShowInfo(false); setInfoTopic(null); }}><div className="bg-slate-800 rounded-xl p-4 max-w-md" onClick={e => e.stopPropagation()}><h3 className="text-lg font-bold text-amber-400 mb-2">{infoTopics[infoTopic].title}</h3><p className="text-sm text-slate-300">{infoTopics[infoTopic].content}</p><button onClick={() => { setShowInfo(false); setInfoTopic(null); }} className="mt-4 w-full py-2 bg-amber-600 rounded-lg">Got it!</button></div></div>)}<div className="p-3 bg-black/30 border-b border-amber-500/30 flex justify-between items-center"><span className="font-bold">👔 {s.context}</span><span className="text-amber-400">{scenario + 1}/{scenarios.length}</span><span className="text-orange-400">Score: {score}</span></div><div className="flex-1 p-4 overflow-auto"><div className="bg-black/30 rounded-xl p-4 mb-4"><p className="text-sm text-slate-300">{s.situation}</p></div><div className="bg-black/30 rounded-xl p-4 mb-3"><p className="font-medium">{s.q}</p></div><div className="grid gap-2">{s.opts.map((opt, i) => (<button key={i} onClick={() => answer(i)} disabled={answered} className={`p-3 rounded-lg text-left text-sm ${answered ? i === s.correct ? 'bg-green-600' : i === selected ? 'bg-red-600' : 'bg-black/30' : 'bg-black/30 hover:bg-amber-600/50'}`}>{opt}</button>))}</div>{answered && (<div className="mt-3 p-3 bg-black/30 rounded-lg"><p className="text-sm text-slate-300">{s.explain}</p><button onClick={next} className="mt-3 w-full py-2 bg-amber-600 rounded-lg">{scenario >= scenarios.length - 1 ? 'See Results' : 'Next'}</button></div>)}</div><div className="p-3 bg-black/30 border-t border-amber-500/30 flex gap-2 justify-center flex-wrap">{Object.keys(infoTopics).map(k => <button key={k} onClick={() => {setInfoTopic(k);setShowInfo(true);}} className="text-xs text-amber-400">ℹ️ {infoTopics[k].title}</button>)}</div></div>);
+
+      const infoTopics: { [k: string]: { title: string; content: string } } = {
+         styles: { title: "Situational Leadership", content: "Adapt your style to the situation: Directing (crisis, new hires), Coaching (willing but not able), Supporting (able but not confident), Delegating (able and willing). The same person needs different styles at different times." },
+         feedback: { title: "Feedback Framework (SBI)", content: "Situation: When/where did it happen? Behavior: What specifically did they do? Impact: What was the effect? Then ask for their perspective. Agree on next steps together. Focus on behaviors, not character." },
+         delegation: { title: "Delegation Levels", content: "Level 1: Do exactly this. Level 2: Research and recommend. Level 3: Research, recommend, and act. Level 4: Act and inform me. Level 5: Act independently. Match level to trust and competence." },
+         trust: { title: "Trust Equation", content: "Trust = (Credibility + Reliability + Intimacy) / Self-Interest. Build trust through demonstrated competence, keeping commitments, creating psychological safety, and visibly putting team before self." }
+      };
+
+      const answer = (idx: number) => { if (answered) return; setSelected(idx); setAnswered(true); const s = scenarios[scenario]; if (idx === s.correct) { setScore(p => p + 1); setGameLog(l => [...l, `✓ ${s.title}: Correct!`]); } else { setGameLog(l => [...l, `✗ ${s.title}: Missed`]); if (!conceptGaps.includes(s.concept)) { setConceptGaps(g => [...g, s.concept]); } } };
+      const next = () => { if (scenario >= scenarios.length - 1) { setPhase('result'); } else { setScenario(p => p + 1); setAnswered(false); setSelected(null); } };
+      const grade = score >= 5 ? 'A' : score >= 4 ? 'B' : score >= 3 ? 'C' : 'D';
+      const s = scenarios[scenario];
+
+      if (phase === 'intro') return (<div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-amber-900 via-orange-900 to-red-900 text-white p-6"><div className="text-6xl mb-4">👔</div><h2 className="text-2xl font-bold mb-2">Situational Leadership Lab</h2><p className="text-slate-300 text-center mb-4 max-w-md">Master the leadership challenges that derail founders.</p><div className="bg-black/30 rounded-xl p-4 mb-6 max-w-md text-sm"><p className="text-amber-400 font-bold mb-2">🎯 Leadership is contextual:</p><ul className="text-slate-300 space-y-1 text-xs"><li>• Same situation requires different approaches at different stages</li><li>• What works in crisis fails in growth, and vice versa</li></ul></div><button onClick={() => setPhase('play')} className="px-8 py-3 bg-gradient-to-r from-amber-500 to-orange-500 rounded-xl font-bold">Lead the Way</button></div>);
+      if (phase === 'result') return (<div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-amber-900 via-orange-900 to-red-900 text-white p-6 overflow-auto"><div className="text-6xl mb-4">{grade === 'A' ? '👑' : grade === 'B' ? '👔' : '📚'}</div><h2 className="text-2xl font-bold mb-2">Leadership Assessment</h2><div className="text-4xl font-bold text-amber-400 mb-2">{score}/{scenarios.length}</div><div className="text-5xl mb-4">{grade}</div>{conceptGaps.length > 0 && (<div className="bg-black/30 rounded-xl p-4 max-w-md w-full mb-4"><p className="text-amber-400 font-bold text-sm mb-2">📚 Study:</p><ul className="text-slate-300 text-xs">{conceptGaps.map(g => <li key={g}>• {conceptLabels[g]}</li>)}</ul></div>)}<div className="bg-black/30 rounded-xl p-4 max-w-md w-full mb-4 max-h-32 overflow-y-auto">{gameLog.map((l,i) => <p key={i} className="text-xs text-slate-300">{l}</p>)}</div><button onClick={() => {setPhase('intro');setScenario(0);setScore(0);setAnswered(false);setSelected(null);setGameLog([]);setConceptGaps([]);}} className="px-6 py-2 bg-amber-600 rounded-lg">Try Again</button></div>);
+      return (<div className="w-full h-full flex flex-col bg-gradient-to-br from-amber-900 via-orange-900 to-red-900 text-white overflow-hidden">{showInfo && infoTopic && infoTopics[infoTopic] && (<div className="absolute inset-0 bg-black/80 flex items-center justify-center p-4 z-50" onClick={() => { setShowInfo(false); setInfoTopic(null); }}><div className="bg-slate-800 rounded-xl p-4 max-w-md" onClick={e => e.stopPropagation()}><h3 className="text-lg font-bold text-amber-400 mb-2">{infoTopics[infoTopic].title}</h3><p className="text-sm text-slate-300">{infoTopics[infoTopic].content}</p><button onClick={() => { setShowInfo(false); setInfoTopic(null); }} className="mt-4 w-full py-2 bg-amber-600 rounded-lg">Got it!</button></div></div>)}<div className="p-3 bg-black/30 border-b border-amber-500/30 flex justify-between items-center"><span className="font-bold">👔 Leadership</span><span className="text-amber-400">{scenario + 1}/{scenarios.length}</span><span className="text-orange-400">Score: {score}</span></div><div className="flex-1 p-4 overflow-auto"><div className="bg-black/30 rounded-xl p-3 mb-3"><p className="font-bold text-amber-400 mb-2">{s.title}</p><p className="text-sm text-slate-300">{s.context}</p></div><div className="bg-black/30 rounded-xl p-4 mb-3"><p className="font-medium">{s.question}</p></div><div className="grid gap-2">{s.opts.map((opt, i) => (<button key={i} onClick={() => answer(i)} disabled={answered} className={`p-3 rounded-lg text-left text-sm ${answered ? i === s.correct ? 'bg-green-600' : i === selected ? 'bg-red-600' : 'bg-black/30' : 'bg-black/30 hover:bg-amber-600/50'}`}>{opt}</button>))}</div>{answered && (<div className="mt-3 space-y-3">{selected !== s.correct && s.wrongExplanations[selected!] && (<div className="p-3 bg-red-900/50 rounded-lg border border-red-500/30"><p className="text-xs text-red-300 font-bold mb-1">❌ Why This Fails:</p><p className="text-sm text-red-100">{s.wrongExplanations[selected!]}</p></div>)}<div className="p-3 bg-green-900/50 rounded-lg border border-green-500/30"><p className="text-xs text-green-300 font-bold mb-1">✓ Leadership Insight:</p><p className="text-sm text-green-100">{s.why}</p></div><div className="p-3 bg-blue-900/50 rounded-lg border border-blue-500/30"><p className="text-xs text-blue-300 font-bold mb-1">📖 Real World:</p><p className="text-sm text-blue-100">{s.realWorld}</p></div><button onClick={next} className="w-full py-2 bg-amber-600 rounded-lg">{scenario >= scenarios.length - 1 ? 'See Results' : 'Next'}</button></div>)}</div><div className="p-3 bg-black/30 border-t border-amber-500/30 flex gap-2 justify-center flex-wrap">{Object.keys(infoTopics).map(k => <button key={k} onClick={() => {setInfoTopic(k);setShowInfo(true);}} className="text-xs text-amber-400">ℹ️ {infoTopics[k].title}</button>)}</div></div>);
    };
 
    // --- CUSTOMER JOURNEY RENDERER ---
    const CustomerJourneyRenderer = () => {
       const [phase, setPhase] = useState<'intro' | 'play' | 'result'>('intro');
-      const [stage, setStage] = useState(0);
+      const [scenario, setScenario] = useState(0);
       const [score, setScore] = useState(0);
       const [selected, setSelected] = useState<number | null>(null);
       const [answered, setAnswered] = useState(false);
-      const [log, setLog] = useState<string[]>([]);
+      const [gameLog, setGameLog] = useState<string[]>([]);
       const [showInfo, setShowInfo] = useState(false);
       const [infoTopic, setInfoTopic] = useState<string | null>(null);
+      const [conceptGaps, setConceptGaps] = useState<string[]>([]);
 
-      const stages = [
-         { name: "Awareness", icon: "👀", situation: "A potential customer is searching for solutions to their problem. They've never heard of your startup.", q: "What's the most effective awareness strategy?", opts: ["Cold email blast to purchased lists", "Content marketing addressing their pain points", "Expensive TV ads", "Wait for word of mouth"], correct: 1, explain: "Content marketing that addresses pain points attracts qualified prospects actively seeking solutions. It builds trust before you ask for anything." },
-         { name: "Consideration", icon: "🤔", situation: "The prospect found your blog and is comparing you to 3 competitors. They're reading your pricing page.", q: "How do you stand out at this stage?", opts: ["Undercut competitor pricing significantly", "Offer clear differentiation and social proof", "Add more features to the comparison", "Send aggressive sales emails"], correct: 1, explain: "Clear differentiation (why you, not what) plus social proof (testimonials, case studies) helps prospects self-select. Price wars erode value." },
-         { name: "Decision", icon: "✅", situation: "The prospect is ready to buy but is hesitating. They've added to cart but haven't completed checkout.", q: "What's the most effective nudge?", opts: ["Pop-up with 50% discount", "Clear value reminder with easy support access", "Countdown timer creating urgency", "More product features"], correct: 1, explain: "Address hesitation with clarity and support, not manipulation. Genuine help at decision time creates loyal customers, not just transactions." },
-         { name: "Retention", icon: "🔄", situation: "A customer has used your product for 3 months but engagement is dropping. You notice they haven't logged in for 2 weeks.", q: "What's your re-engagement strategy?", opts: ["Send guilt-trip emails about missed features", "Personalized check-in with helpful resources", "Offer discounts to stay", "Wait until they cancel"], correct: 1, explain: "Proactive, helpful outreach shows you care about their success. Understanding why engagement dropped helps improve the product for everyone." },
-         { name: "Advocacy", icon: "📣", situation: "A customer just achieved amazing results with your product and shared it on LinkedIn.", q: "How do you cultivate this into advocacy?", opts: ["Ask immediately for referrals", "Celebrate their success and make sharing easy", "Offer affiliate commissions", "Ignore it—they're already sharing"], correct: 1, explain: "Celebrate customer wins genuinely. Make it easy (not pushy) to share. The best advocacy feels like sharing something valuable, not selling." }
+      const scenarios = [
+         {
+            title: "The Awareness Paradox",
+            context: "Your B2B SaaS startup has a $200 CAC target. Marketing is running Google Ads that generate 500 clicks/day at $4/click ($2,000/day spend). Conversion rate is 0.4%, meaning 2 trials per day. But your SDR team reports these leads rarely convert to paid—they're 'just researching' with no urgency.",
+            question: "What's the real problem with your awareness strategy?",
+            opts: [
+               "A) Increase ad spend to get more volume—it's a numbers game",
+               "B) You're capturing low-intent awareness traffic, not high-intent consideration traffic",
+               "C) Lower the trial barrier—make signup even easier",
+               "D) The SDR team needs better scripts to create urgency"
+            ],
+            correct: 1,
+            wrongExplanations: [
+               "More volume of low-quality leads just wastes more money. Your $2,000/day is generating 2 trials with poor conversion—spending $4,000 for 4 bad leads doesn't help.",
+               "",
+               "Easier signup often DECREASES quality further. You'd get more 'tire kickers' who never intended to buy, wasting even more SDR time on unqualified leads.",
+               "SDRs can't manufacture intent that doesn't exist. Creating artificial urgency on low-intent leads damages trust and rarely converts. The problem is upstream."
+            ],
+            realWorld: "HubSpot discovered that their highest-converting leads came from educational content (ebooks, tools) that attracted people actively solving problems—not from ads targeting broad awareness keywords. Their content-first approach reduced CAC by 61% while increasing close rates.",
+            concept: "intent_matching",
+            why: "Awareness ≠ interest. Google Ads targeting 'what is CRM' captures educational intent. Targeting 'best CRM for sales teams 2024' captures evaluation intent. The journey stage determines conversion potential—matching content to intent is more important than traffic volume."
+         },
+         {
+            title: "The Consideration Maze",
+            context: "Prospects are comparing your project management tool to Asana and Monday.com. Your analytics show visitors spend 8 minutes on your comparison page, view pricing, then leave without signing up. Exit surveys say 'need to think about it.' You have 3x more features than competitors at the same price.",
+            question: "Why aren't feature-rich comparisons converting?",
+            opts: [
+               "A) More features overwhelm evaluation—they need clarity on their specific use case",
+               "B) Lower your price to be clearly cheaper than competitors",
+               "C) Add even more features to the comparison chart",
+               "D) Implement aggressive retargeting to stay top of mind"
+            ],
+            correct: 0,
+            wrongExplanations: [
+               "",
+               "Price wars in SaaS rarely work. Monday.com and Asana have deeper pockets—they can always match or beat you. You'd destroy margins without winning customers.",
+               "More features = more overwhelm. The problem is decision paralysis, not lack of options. Each additional feature makes the choice harder, not easier.",
+               "Retargeting people who are confused doesn't reduce confusion—it just annoys them. You'll train them to ignore your ads without addressing why they didn't convert."
+            ],
+            realWorld: "Basecamp built a $100M+ business by doing the OPPOSITE—fewer features, clearer positioning. Their 'here's what we DON'T do' messaging helped prospects self-select. Conversion rates increased 24% after they removed feature comparisons and replaced them with use-case stories.",
+            concept: "consideration_clarity",
+            why: "In the consideration stage, prospects need help deciding, not more options. Feature lists create analysis paralysis. Use-case matching ('Are you a team of 5-15? Here's exactly how teams like yours use us') converts because it answers 'Is this right for ME?' not 'Which has more features?'"
+         },
+         {
+            title: "The Checkout Cliff",
+            context: "Your e-commerce store has a 68% cart abandonment rate. Most abandon at the payment page. You've implemented 'only 2 left!' urgency messaging, countdown timers for 'limited' discounts, and exit-intent popups offering 15% off. Abandonment hasn't improved, and customers who do buy rarely return.",
+            question: "What's causing persistent abandonment despite urgency tactics?",
+            opts: [
+               "A) Urgency tactics aren't aggressive enough—add more scarcity signals",
+               "B) Manipulation erodes trust at decision time—address real objections instead",
+               "C) The 15% discount isn't enough—offer 25% to close more deals",
+               "D) Payment friction—add more payment options like crypto"
+            ],
+            correct: 1,
+            wrongExplanations: [
+               "More manipulation increases skepticism. Savvy customers recognize fake urgency ('only 2 left!' that never changes). This destroys trust precisely when you need it most—at purchase time.",
+               "",
+               "Training customers to expect discounts destroys margins and attracts price-sensitive buyers who churn. Plus, discount-seekers learned to abandon carts TO get offers.",
+               "Payment options matter, but most abandoned carts aren't payment friction—they're trust and value uncertainty. Adding crypto doesn't address 'Is this worth it?'"
+            ],
+            realWorld: "Zappos built a $1B+ business with NO urgency tactics. Instead, they addressed real decision-stage concerns: free shipping, 365-day returns, 24/7 support visible at checkout. Their return rate was 35% but customer LTV was 2.5x industry average because trust converted browsers into repeat buyers.",
+            concept: "decision_trust",
+            why: "At the decision stage, customers aren't resisting purchase—they're managing risk. 'What if it doesn't work?' 'What if I don't like it?' Manipulation amplifies these fears. Addressing them (easy returns, support access, real reviews) converts because it reduces perceived risk, not because it creates artificial urgency."
+         },
+         {
+            title: "The Retention Trap",
+            context: "Your SaaS has 8% monthly churn. The customer success team sends automated 'we miss you!' emails to inactive users and offers discounts to churning customers. Win-back rate is just 3%. Meanwhile, NPS surveys show churned customers cite 'didn't see value' as the primary reason for leaving.",
+            question: "Why isn't your retention strategy working?",
+            opts: [
+               "A) Discounts should be bigger—50% off for 6 months to keep them",
+               "B) Send more frequent engagement emails to stay top of mind",
+               "C) Retention fails when activation failed—customers never reached value",
+               "D) Implement annual contracts to lock customers in longer"
+            ],
+            correct: 2,
+            wrongExplanations: [
+               "Discounting churning customers just delays inevitable departure while destroying unit economics. If they 'didn't see value' at $X, they won't see it at $X/2 either.",
+               "More emails to users who already don't find value is spam. It doesn't create value—it creates annoyance and speeds up the unsubscribe/churn decision.",
+               "",
+               "Forced retention creates resentful customers who actively warn others. You'd reduce churn numbers while increasing negative word of mouth—net negative."
+            ],
+            realWorld: "Slack discovered that teams who sent 2,000+ messages in the first month had 93% retention vs. 45% for those who didn't. They shifted from 'prevent churn' to 'accelerate activation'—adding an onboarding wizard that got teams to value faster. Churn dropped from 8% to 3% monthly.",
+            concept: "activation_retention",
+            why: "Retention is won or lost at activation, not at churn. 'Didn't see value' means they never experienced the 'aha moment.' The fix isn't retention campaigns—it's ensuring customers reach value before they have time to churn. Time-to-value is the leading indicator of retention."
+         },
+         {
+            title: "The Advocacy Mirage",
+            context: "Your NPS is 72 (great!), but referral program uptake is only 4%. You offer $50 for both referrer and referee. Marketing sends monthly 'refer a friend' emails. Your best customers give testimonials when asked but rarely share spontaneously. You're mystified why high satisfaction doesn't translate to advocacy.",
+            question: "Why doesn't NPS correlate with actual referrals?",
+            opts: [
+               "A) Increase referral reward to $100—money motivates sharing",
+               "B) Satisfaction and advocacy are different—people share identity, not products",
+               "C) Send referral requests more frequently to increase exposure",
+               "D) Implement a leaderboard to gamify referrals"
+            ],
+            correct: 1,
+            wrongExplanations: [
+               "Larger incentives can actually reduce sharing—it makes the recommendation feel transactional rather than genuine. Friends trust recommendations, not paid advertisements.",
+               "",
+               "More referral requests feel spammy and actually reduce response rates. Customers who haven't shared after 12 monthly emails won't share after 24.",
+               "Leaderboards work for gamified communities but make referrals feel like a game, not a genuine recommendation. Most customers don't want to 'compete' at referring friends."
+            ],
+            realWorld: "Crossfit became a $4B industry with minimal marketing budget. Members didn't share because of referral bonuses—they shared because 'being a Crossfitter' became part of their identity. Tesla owners don't refer for $1,000 credits—they refer because recommending Tesla signals who they are.",
+            concept: "identity_advocacy",
+            why: "People don't refer products—they refer parts of their identity. 'I use Notion' is product usage. 'I'm a Notion person who optimizes everything' is identity. Advocacy happens when your product becomes part of how customers see themselves. The job isn't 'incentivize sharing'—it's 'make usage an identity.'"
+         }
       ];
-      const st = stages[stage];
-      const infoTopics: Record<string, {title: string; content: string}> = {
-         touchpoints: { title: "Customer Touchpoints", content: "Every interaction shapes perception: website, emails, support, product, billing. Map all touchpoints and ensure consistency. One bad experience can undo ten good ones." },
-         metrics: { title: "Journey Metrics", content: "Track: CAC (cost to acquire), Time to value (activation speed), NPS (loyalty), Churn rate (retention), LTV (lifetime value). Each stage has key metrics to optimize." },
-         emotions: { title: "Emotional Journey", content: "Customers make emotional decisions, then rationalize. Map emotional highs and lows in your journey. Reduce friction at low points, amplify delight at high points." },
-         personas: { title: "Customer Personas", content: "Different personas take different journeys. A technical buyer researches deeply; an executive wants ROI summaries. Create journey maps for each key persona." }
+
+      const conceptLabels: { [key: string]: string } = {
+         intent_matching: "Intent-Based Awareness Strategy",
+         consideration_clarity: "Consideration Stage Simplification",
+         decision_trust: "Decision-Stage Trust Building",
+         activation_retention: "Activation-First Retention",
+         identity_advocacy: "Identity-Driven Advocacy"
       };
-      const answer = (i: number) => { if(answered) return; setSelected(i); setAnswered(true); if(i === st.correct) { setScore(p => p + 1); setLog(l => [...l, `✓ ${st.name}: Excellent approach!`]); } else { setLog(l => [...l, `✗ ${st.name}: Try "${st.opts[st.correct]}" next time`]); } };
-      const next = () => { if(stage >= stages.length - 1) { setPhase('result'); } else { setStage(p => p + 1); setAnswered(false); setSelected(null); } };
-      const grade = score >= 4 ? 'A' : score >= 3 ? 'B' : score >= 2 ? 'C' : 'D';
-      if(phase === 'intro') return (<div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-violet-900 via-purple-900 to-fuchsia-900 text-white p-6"><div className="text-6xl mb-4">🗺️</div><h2 className="text-2xl font-bold mb-2">Customer Journey Mapping</h2><p className="text-slate-300 text-center mb-6 max-w-md">Guide customers from strangers to advocates! Master every stage of the journey.</p><button onClick={() => setPhase('play')} className="px-8 py-3 bg-gradient-to-r from-violet-500 to-fuchsia-500 rounded-xl font-bold">Start Journey</button></div>);
-      if(phase === 'result') return (<div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-violet-900 via-purple-900 to-fuchsia-900 text-white p-6"><div className="text-6xl mb-4">{grade === 'A' ? '🌟' : grade === 'B' ? '🗺️' : '📍'}</div><h2 className="text-2xl font-bold mb-2">Journey Complete!</h2><div className="text-4xl font-bold text-violet-400 mb-2">{score}/{stages.length}</div><div className="text-6xl mb-4">{grade}</div><p className="text-slate-400 mb-4">{grade === 'A' ? 'Customer journey expert!' : grade === 'B' ? 'Great understanding!' : 'Keep mapping!'}</p><div className="w-full max-w-md bg-black/30 rounded-lg p-3 mb-4 max-h-32 overflow-y-auto">{log.map((l,i) => <p key={i} className="text-xs text-slate-300">{l}</p>)}</div><button onClick={() => {setPhase('intro');setStage(0);setScore(0);setAnswered(false);setSelected(null);setLog([]);}} className="px-6 py-2 bg-violet-600 rounded-lg">Try Again</button></div>);
-      return (<div className="w-full h-full flex flex-col bg-gradient-to-br from-violet-900 via-purple-900 to-fuchsia-900 text-white overflow-hidden">{showInfo && infoTopic && infoTopics[infoTopic] && (<div className="absolute inset-0 bg-black/80 flex items-center justify-center p-4 z-50" onClick={() => { setShowInfo(false); setInfoTopic(null); }}><div className="bg-slate-800 rounded-xl p-4 max-w-md" onClick={e => e.stopPropagation()}><h3 className="text-lg font-bold text-violet-400 mb-2">{infoTopics[infoTopic].title}</h3><p className="text-sm text-slate-300">{infoTopics[infoTopic].content}</p><button onClick={() => { setShowInfo(false); setInfoTopic(null); }} className="mt-4 w-full py-2 bg-violet-600 rounded-lg">Got it!</button></div></div>)}<div className="p-3 bg-black/30 border-b border-violet-500/30 flex justify-between items-center"><span className="font-bold">{st.icon} {st.name}</span><span className="text-violet-400">{stage + 1}/{stages.length}</span><span className="text-fuchsia-400">Score: {score}</span></div><div className="flex-1 p-4 overflow-auto"><div className="flex gap-1 mb-4">{stages.map((s, i) => (<div key={i} className="flex-1 text-center"><div className={`text-2xl ${i <= stage ? 'opacity-100' : 'opacity-30'}`}>{s.icon}</div><div className={`h-1 mt-1 rounded ${i < stage ? 'bg-violet-500' : i === stage ? 'bg-fuchsia-400' : 'bg-slate-700'}`} /></div>))}</div><div className="bg-black/30 rounded-xl p-4 mb-4"><p className="text-sm text-slate-300">{st.situation}</p></div><div className="bg-black/30 rounded-xl p-4 mb-3"><p className="font-medium">{st.q}</p></div><div className="grid gap-2">{st.opts.map((opt, i) => (<button key={i} onClick={() => answer(i)} disabled={answered} className={`p-3 rounded-lg text-left text-sm ${answered ? i === st.correct ? 'bg-green-600' : i === selected ? 'bg-red-600' : 'bg-black/30' : 'bg-black/30 hover:bg-violet-600/50'}`}>{opt}</button>))}</div>{answered && (<div className="mt-3 p-3 bg-black/30 rounded-lg"><p className="text-sm text-slate-300">{st.explain}</p><button onClick={next} className="mt-3 w-full py-2 bg-violet-600 rounded-lg">{stage >= stages.length - 1 ? 'See Results' : 'Next Stage'}</button></div>)}</div><div className="p-3 bg-black/30 border-t border-violet-500/30 flex gap-2 justify-center flex-wrap">{Object.keys(infoTopics).map(k => <button key={k} onClick={() => {setInfoTopic(k);setShowInfo(true);}} className="text-xs text-violet-400">ℹ️ {infoTopics[k].title}</button>)}</div></div>);
+
+      const infoTopics: { [k: string]: { title: string; content: string } } = {
+         awareness: { title: "Awareness Stage Metrics", content: "Key metrics: Traffic quality (not just quantity), search intent match, content engagement depth, and brand recall. CAC at awareness is often misleading—intent matters more than clicks. High-intent traffic at $10/click beats low-intent at $2/click." },
+         consideration: { title: "Consideration Psychology", content: "Prospects in consideration seek clarity, not features. They're asking 'Is this right for me?' not 'Which is better?' Decision fatigue is real—too many options paralyze. Use-case matching and 'who this is for' messaging converts better than feature comparisons." },
+         decision: { title: "Decision Stage Dynamics", content: "At decision time, customers manage risk, not seek deals. They're asking 'What if this doesn't work?' Address fears with: visible support, easy returns, real reviews, and trust signals. Manipulation increases perceived risk—authenticity decreases it." },
+         retention: { title: "Retention Leading Indicators", content: "Retention is predicted by activation, not satisfaction surveys. Track time-to-value, feature adoption milestones, and engagement patterns. Intervene BEFORE usage drops—once customers disengage, win-back is nearly impossible." },
+         advocacy: { title: "Advocacy Psychology", content: "Referrals are identity expressions, not transactions. People share things that signal who they are to their network. Make product usage an identity marker. 'I'm an X user' should feel like membership, not consumption." }
+      };
+
+      const sc = scenarios[scenario];
+
+      const answer = (i: number) => {
+         if (answered) return;
+         setSelected(i);
+         setAnswered(true);
+         if (i === sc.correct) {
+            setScore(s => s + 1);
+            setGameLog(l => [...l, `✓ ${sc.title}: Understood customer journey psychology`]);
+         } else {
+            setGameLog(l => [...l, `✗ ${sc.title}: ${sc.wrongExplanations[i]}`]);
+            if (!conceptGaps.includes(sc.concept)) {
+               setConceptGaps(g => [...g, sc.concept]);
+            }
+         }
+      };
+
+      const next = () => {
+         if (scenario >= scenarios.length - 1) {
+            setPhase('result');
+         } else {
+            setScenario(s => s + 1);
+            setSelected(null);
+            setAnswered(false);
+         }
+      };
+
+      const grade = score >= 5 ? 'A' : score >= 4 ? 'B' : score >= 3 ? 'C' : 'D';
+
+      if (phase === 'intro') {
+         return (
+            <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-violet-900 via-purple-900 to-fuchsia-900 text-white p-6">
+               <div className="text-6xl mb-4">🗺️</div>
+               <h2 className="text-2xl font-bold mb-2">Customer Journey Mastery</h2>
+               <p className="text-violet-300 text-center mb-4 max-w-md">
+                  Navigate the psychological dynamics of each customer journey stage—from first touch to passionate advocacy.
+               </p>
+               <div className="bg-black/30 rounded-lg p-4 mb-6 max-w-md">
+                  <p className="text-sm text-slate-300 mb-2">In this simulation, you'll face real scenarios where:</p>
+                  <ul className="text-xs text-slate-400 space-y-1">
+                     <li>• Awareness traffic doesn't mean awareness success</li>
+                     <li>• Features can hurt consideration conversion</li>
+                     <li>• Urgency tactics can backfire at decision time</li>
+                     <li>• Retention starts at activation, not churn prevention</li>
+                     <li>• High NPS doesn't guarantee advocacy</li>
+                  </ul>
+               </div>
+               <button onClick={() => setPhase('play')} className="px-8 py-3 bg-gradient-to-r from-violet-500 to-fuchsia-500 rounded-xl font-bold">
+                  Map the Journey
+               </button>
+            </div>
+         );
+      }
+
+      if (phase === 'result') {
+         return (
+            <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-violet-900 via-purple-900 to-fuchsia-900 text-white p-6 overflow-auto">
+               <div className="text-5xl mb-3">{grade === 'A' ? '🏆' : grade === 'B' ? '🗺️' : grade === 'C' ? '📍' : '🔄'}</div>
+               <h2 className="text-xl font-bold mb-2">Journey Analysis Complete</h2>
+               <div className="text-3xl font-bold text-violet-400 mb-1">{score}/{scenarios.length}</div>
+               <div className="text-4xl mb-3">{grade}</div>
+               <p className="text-slate-400 text-sm mb-3 text-center">
+                  {grade === 'A' ? 'Customer journey expert! You understand the psychology of each stage.' :
+                   grade === 'B' ? 'Strong journey thinking—you see beyond tactics to psychology.' :
+                   grade === 'C' ? 'Good foundation—focus on understanding WHY tactics work or fail.' :
+                   'Review the fundamentals—journey stages have distinct psychological dynamics.'}
+               </p>
+               {conceptGaps.length > 0 && (
+                  <div className="w-full max-w-md bg-red-900/30 border border-red-500/30 rounded-lg p-3 mb-3">
+                     <p className="text-xs text-red-400 font-semibold mb-2">Concepts to Review:</p>
+                     <ul className="text-xs text-red-300 space-y-1">
+                        {conceptGaps.map(g => <li key={g}>• {conceptLabels[g]}</li>)}
+                     </ul>
+                  </div>
+               )}
+               <div className="w-full max-w-md bg-black/30 rounded-lg p-3 mb-4 max-h-28 overflow-y-auto">
+                  {gameLog.map((l, i) => <p key={i} className="text-xs text-slate-300 mb-1">{l}</p>)}
+               </div>
+               <button onClick={() => { setPhase('intro'); setScenario(0); setScore(0); setAnswered(false); setSelected(null); setGameLog([]); setConceptGaps([]); }} className="px-6 py-2 bg-violet-600 rounded-lg">
+                  Try Again
+               </button>
+            </div>
+         );
+      }
+
+      return (
+         <div className="w-full h-full flex flex-col bg-gradient-to-br from-violet-900 via-purple-900 to-fuchsia-900 text-white overflow-hidden">
+            {showInfo && infoTopic && infoTopics[infoTopic] && (
+               <div className="absolute inset-0 bg-black/80 flex items-center justify-center p-4 z-50" onClick={() => { setShowInfo(false); setInfoTopic(null); }}>
+                  <div className="bg-slate-800 rounded-xl p-4 max-w-sm" onClick={e => e.stopPropagation()}>
+                     <h3 className="text-lg font-bold text-violet-400 mb-2">{infoTopics[infoTopic].title}</h3>
+                     <p className="text-sm text-slate-300">{infoTopics[infoTopic].content}</p>
+                     <button onClick={() => { setShowInfo(false); setInfoTopic(null); }} className="mt-4 w-full py-2 bg-violet-600 rounded-lg">Got it!</button>
+                  </div>
+               </div>
+            )}
+            <div className="p-3 bg-black/30 border-b border-violet-500/30 flex justify-between items-center">
+               <span className="font-bold text-sm">🗺️ {sc.title}</span>
+               <span className="text-violet-400 text-sm">{scenario + 1}/{scenarios.length}</span>
+               <span className="text-fuchsia-400 text-sm">Score: {score}</span>
+            </div>
+            <div className="flex-1 p-4 overflow-auto">
+               <div className="bg-black/30 rounded-lg p-3 mb-3">
+                  <p className="text-sm text-slate-300">{sc.context}</p>
+               </div>
+               <div className="bg-violet-800/30 rounded-lg p-3 mb-3">
+                  <p className="font-medium text-sm">{sc.question}</p>
+               </div>
+               <div className="grid gap-2 mb-3">
+                  {sc.opts.map((opt, i) => (
+                     <button key={i} onClick={() => answer(i)} disabled={answered} className={`p-3 rounded-lg text-left text-sm transition-all ${answered ? i === sc.correct ? 'bg-green-600' : i === selected ? 'bg-red-600' : 'bg-black/30 opacity-50' : 'bg-black/30 hover:bg-violet-600/50'}`}>
+                        {opt}
+                     </button>
+                  ))}
+               </div>
+               {answered && (
+                  <div className="space-y-3">
+                     <div className="bg-green-900/30 border border-green-500/30 rounded-lg p-3">
+                        <p className="text-xs text-green-400 font-semibold mb-1">Why this works:</p>
+                        <p className="text-sm text-slate-300">{sc.why}</p>
+                     </div>
+                     {selected !== sc.correct && sc.wrongExplanations[selected!] && (
+                        <div className="bg-red-900/30 border border-red-500/30 rounded-lg p-3">
+                           <p className="text-xs text-red-400 font-semibold mb-1">Why your choice fails:</p>
+                           <p className="text-sm text-slate-300">{sc.wrongExplanations[selected!]}</p>
+                        </div>
+                     )}
+                     <div className="bg-violet-900/30 border border-violet-500/30 rounded-lg p-3">
+                        <p className="text-xs text-violet-400 font-semibold mb-1">📊 Real World:</p>
+                        <p className="text-sm text-slate-300">{sc.realWorld}</p>
+                     </div>
+                     <button onClick={next} className="w-full py-2 bg-violet-600 rounded-lg font-medium">
+                        {scenario >= scenarios.length - 1 ? 'See Results' : 'Next Scenario'}
+                     </button>
+                  </div>
+               )}
+            </div>
+            <div className="p-2 bg-black/30 border-t border-violet-500/30 flex gap-2 justify-center flex-wrap">
+               {Object.keys(infoTopics).map(k => (
+                  <button key={k} onClick={() => { setInfoTopic(k); setShowInfo(true); }} className="text-xs text-violet-400 hover:text-violet-300">
+                     ℹ️ {infoTopics[k].title}
+                  </button>
+               ))}
+            </div>
+         </div>
+      );
    };
 
    // --- MVP DEVELOPMENT RENDERER ---
    const MVPRenderer = () => {
       const [phase, setPhase] = useState<'intro' | 'play' | 'result'>('intro');
-      const [decision, setDecision] = useState(0);
+      const [scenario, setScenario] = useState(0);
       const [score, setScore] = useState(0);
       const [selected, setSelected] = useState<number | null>(null);
       const [answered, setAnswered] = useState(false);
-      const [log, setLog] = useState<string[]>([]);
+      const [gameLog, setGameLog] = useState<string[]>([]);
       const [showInfo, setShowInfo] = useState(false);
       const [infoTopic, setInfoTopic] = useState<string | null>(null);
+      const [conceptGaps, setConceptGaps] = useState<string[]>([]);
 
-      const decisions = [
-         { topic: "Feature Scope", situation: "Your team has brainstormed 50 features for the product. Engineering estimates 6 months to build everything.", q: "What's the MVP approach?", opts: ["Build all features but faster", "Identify the ONE core value prop and build only that", "Build 50% of features at 50% quality", "Outsource to build faster"], correct: 1, explain: "MVP means ONE thing done well, not many things done poorly. The core value proposition should be undeniably clear to users." },
-         { topic: "Build vs Buy", situation: "You need user authentication for your MVP. Your team wants to build a custom solution for future flexibility.", q: "What's the right MVP decision?", opts: ["Build custom auth from scratch", "Use existing auth services (Auth0, Firebase, etc.)", "Skip auth for MVP", "Build simple auth, plan to replace"], correct: 1, explain: "For MVP, buy/use existing solutions for non-core features. Auth isn't your value prop—focus engineering time on what differentiates you." },
-         { topic: "Tech Stack", situation: "Your technical co-founder wants to use cutting-edge technology (new framework, latest architecture patterns).", q: "How should you choose MVP technology?", opts: ["Use the newest tech for future-proofing", "Choose boring, proven tech your team knows well", "Let engineers decide based on interest", "Build in multiple technologies to compare"], correct: 1, explain: "Boring technology works. Speed matters more than perfection for MVP. Use what your team knows to ship fast and learn faster." },
-         { topic: "Quality vs Speed", situation: "Your MVP is 80% done. The last 20% (edge cases, polish) will take as long as the first 80%.", q: "What should you do?", opts: ["Finish the remaining 20% properly", "Ship at 80% and handle edge cases based on real usage", "Hire more people to finish faster", "Start over with a simpler scope"], correct: 1, explain: "The 80/20 rule applies: 80% of value comes from 20% of features. Ship, learn, then decide which edge cases actually matter." },
-         { topic: "Launch Timing", situation: "Your MVP is functional but you're embarrassed by the design. A designer could polish it in 2 more weeks.", q: "When should you launch?", opts: ["Wait for the design polish", "Launch now if core functionality works", "Do a soft launch to friends only", "Rebuild with better design first"], correct: 1, explain: "If you're not embarrassed by V1, you launched too late. Early users care about solving their problem, not pixel-perfect design." }
+      const scenarios = [
+         {
+            title: "The Feature Creep Trap",
+            context: "Your team spent 3 months brainstorming and has a 47-feature roadmap. Engineering estimates 8 months to build everything. Your co-founder argues 'We need feature parity with competitors or no one will switch.' The team is excited about the AI-powered analytics dashboard that took 2 weeks to spec out.",
+            question: "What's the critical MVP mistake being made here?",
+            opts: [
+               "A) Build the AI analytics first—it's the most innovative feature",
+               "B) The team is building a product, not testing a hypothesis about customer behavior",
+               "C) 8 months is too long—hire more engineers to ship in 4 months",
+               "D) Feature parity is correct—match competitors then add unique features"
+            ],
+            correct: 1,
+            wrongExplanations: [
+               "Innovation doesn't matter if no one needs the core product. AI analytics is a 'nice to have'—you're assuming the base product is wanted without testing it. Many startups build impressive tech for problems nobody pays to solve.",
+               "",
+               "More engineers won't fix the fundamental problem—you're building before validating. Faster execution of the wrong plan is still wrong. 'Move fast' applies to learning, not just building.",
+               "Feature parity is a trap for startups. Competing on features with established players is a losing game—they have more resources. Startups win by solving one problem 10x better, not by copying everything."
+            ],
+            realWorld: "Dropbox's MVP was a 3-minute video showing the product concept—before writing any code. The video got 75,000 email signups overnight, validating demand without building anything. They could have spent months building features nobody wanted.",
+            concept: "hypothesis_validation",
+            why: "MVP isn't about building a smaller product—it's about testing whether your core hypothesis is true. The question isn't 'What features do we need?' but 'What's the smallest experiment to prove customers will pay for our solution?' Every feature delays learning."
+         },
+         {
+            title: "The Technical Perfectionism Trap",
+            context: "Your technical co-founder insists on building with microservices architecture, Kubernetes for scaling, and a custom GraphQL layer. They argue: 'We'll need this when we scale—rebuilding later will cost 10x more.' Your MVP serves a local market of ~1,000 potential customers. Current runway: 10 months.",
+            question: "What's the real cost of this technical approach?",
+            opts: [
+               "A) It's the right call—technical debt is expensive to fix later",
+               "B) Over-engineering burns runway solving problems you don't have yet",
+               "C) Compromise—use microservices but skip Kubernetes",
+               "D) Hire more senior engineers who can build it faster"
+            ],
+            correct: 1,
+            wrongExplanations: [
+               "Technical debt only matters if you survive to encounter it. Building for 1M users when you have 0 users is solving an imaginary problem. Most startups fail from lack of customers, not lack of infrastructure.",
+               "",
+               "This is still over-engineering. Microservices add complexity that slows iteration. For 1,000 users, a simple monolith built in 2 weeks beats a distributed system built in 2 months.",
+               "Even senior engineers can't make complex architecture simple. The problem is scope, not skill. Adding people to a complex project often slows it down (Brooks's Law)."
+            ],
+            realWorld: "Twitter ran on a Ruby on Rails monolith until they had millions of users. The famous 'Fail Whale' only appeared after massive success. Stripe's first version was simple PHP code. Instagram had 13 employees when they sold for $1B—simple architecture scales further than you think.",
+            concept: "premature_scaling",
+            why: "The goal of MVP isn't building the best architecture—it's learning whether customers want your product. Every hour spent on scale-ready infrastructure is an hour not spent talking to customers. Build for today's problems. Tomorrow's problems are a luxury of survival."
+         },
+         {
+            title: "The 'Almost Done' Paradox",
+            context: "Your MVP is 85% complete. The core workflow works but has rough edges: error messages are technical, some edge cases crash, and the onboarding has no help text. Your designer says '2 more weeks for polish.' A beta user said 'It works but feels unfinished.' You have 30 potential early adopters waiting.",
+            question: "What should you do with the 85% MVP?",
+            opts: [
+               "A) Wait for the 2-week polish—first impressions matter",
+               "B) Ship now and personally onboard those 30 users through the rough edges",
+               "C) Ship to 5 users first as a 'soft launch'",
+               "D) The beta feedback confirms you need to fix issues first"
+            ],
+            correct: 1,
+            wrongExplanations: [
+               "The 2-week polish cycle is a trap—there will always be 'just 2 more weeks' of improvements. Meanwhile, you're guessing what polish actually matters. Ship imperfect, learn what actually frustrates users, then fix THOSE issues.",
+               "",
+               "5 users is too small for real learning. You need enough users to see patterns, and you need to move fast. 'Soft launch' often becomes an excuse to delay indefinitely.",
+               "That beta user used the product anyway. 'Feels unfinished' is expected for early products. The question is whether they'll USE it despite the rough edges—that tells you if the core value is there."
+            ],
+            realWorld: "Airbnb's first version was 'air mattresses on the floor.' Craigslist still looks like it's from 1999 and makes $500M+ annually. Instagram launched with 1 filter and crashed constantly. Early users who love the core value will forgive rough edges.",
+            concept: "launch_courage",
+            why: "Paul Graham: 'If you're not embarrassed by the first version, you launched too late.' The goal is learning, not impressing. Personal onboarding through rough edges gives you direct customer insight no amount of polish provides. Ship, learn, iterate."
+         },
+         {
+            title: "The Build vs Buy Dilemma",
+            context: "Your productivity app needs user authentication, payment processing, email notifications, and file storage. Your engineering team estimates: Auth (3 weeks custom), Payments (4 weeks custom), Email (2 weeks), Storage (2 weeks). Total: 11 weeks for infrastructure before building actual product features. Engineers argue custom gives more control.",
+            question: "How should you approach this infrastructure decision?",
+            opts: [
+               "A) Build custom—you'll need the flexibility as you scale",
+               "B) Use existing services (Auth0, Stripe, SendGrid, S3)—ship in days, not weeks",
+               "C) Build payment processing custom—it's core to revenue; buy the rest",
+               "D) Skip non-essential features (email, storage) for MVP"
+            ],
+            correct: 1,
+            wrongExplanations: [
+               "Custom auth and payments add zero value to your product. Customers don't care how you authenticate them—they care if your productivity features solve their problem. 11 weeks of commodity infrastructure is 11 weeks of delayed learning.",
+               "",
+               "Payment processing is NOT your core value—your productivity features are. Stripe takes 2.9% but lets you ship immediately. Building payments is reinventing a solved problem when you should be solving unsolved ones.",
+               "Email and storage might be essential for MVP functionality. The question isn't 'What's essential?' but 'What should we build vs buy?' Buy commodity; build differentiation."
+            ],
+            realWorld: "Slack uses AWS for infrastructure, Stripe for payments, and Segment for analytics. They focused engineering on what makes Slack special—the messaging experience. Uber's MVP used Twilio for SMS, Google Maps for mapping, and Braintree for payments. They built the matching algorithm themselves.",
+            concept: "build_vs_buy",
+            why: "Build what differentiates you; buy everything else. Every hour spent on commoditized infrastructure is an hour stolen from your unique value proposition. Third-party services have thousands of engineer-hours behind them—you can't match that, and you don't need to."
+         },
+         {
+            title: "The Metrics Trap",
+            context: "Your MVP launched 2 weeks ago. You're tracking: 500 signups, 10,000 page views, 2,000 social media impressions, 150 newsletter subscribers. Your investor asks 'How's traction?' and you proudly share these numbers. But you haven't measured how many users actually completed the core workflow or returned after day 1.",
+            question: "What's fundamentally wrong with these metrics?",
+            opts: [
+               "A) The numbers are too small—need more volume for valid data",
+               "B) These are vanity metrics—they don't indicate product-market fit",
+               "C) Need to add more metrics like time on site and bounce rate",
+               "D) Two weeks isn't enough time—wait for 30-day cohort data"
+            ],
+            correct: 1,
+            wrongExplanations: [
+               "Volume isn't the issue. 500 users who actually used your product is plenty for early learning. The problem is you're not measuring the right things—signups without usage tells you nothing about product value.",
+               "",
+               "More vanity metrics don't help. Time on site and bounce rate tell you about website performance, not product-market fit. The question is: 'Are users getting value and coming back?'",
+               "Waiting 30 days won't help if you're measuring the wrong things. You'll have 30 days of the wrong data. Start measuring real engagement now—even 2-day retention tells you something."
+            ],
+            realWorld: "Facebook's key early metric wasn't signups—it was '7 friends in 10 days.' They found users who added 7 friends within 10 days stayed forever. Slack measures 'messages sent' not 'workspaces created.' Superhuman asks users 'How disappointed would you be if you could no longer use this product?'—40%+ very disappointed = PMF.",
+            concept: "actionable_metrics",
+            why: "Vanity metrics (signups, page views, downloads) make you feel good but don't drive decisions. Actionable metrics answer: 'Are users getting value?' Track: activation (did they complete core workflow?), retention (did they come back?), and engagement (how much do they use it?). These predict success."
+         }
       ];
-      const d = decisions[decision];
-      const infoTopics: Record<string, {title: string; content: string}> = {
-         definition: { title: "What is MVP?", content: "Minimum Viable Product: the smallest thing you can build to learn whether customers want your solution. It's not a cheap product—it's a learning vehicle. Emphasis on learning, not product." },
-         scope: { title: "Scoping MVP", content: "Start with the problem, not features. Ask: 'What's the smallest thing that proves people will pay/use this?' Cut ruthlessly. If removing a feature doesn't kill the learning goal, remove it." },
-         metrics: { title: "MVP Success Metrics", content: "Define success BEFORE building: 'If X users do Y in Z time, we've validated the hypothesis.' Vanity metrics (downloads, signups) mislead. Focus on engagement and retention." },
-         iteration: { title: "Post-MVP Iteration", content: "MVP is the start, not the goal. Plan: Build → Measure → Learn → Repeat. Each iteration should have a clear hypothesis to test. Pivot or persevere based on data, not ego." }
+
+      const conceptLabels: { [key: string]: string } = {
+         hypothesis_validation: "Hypothesis-Driven Development",
+         premature_scaling: "Avoiding Premature Optimization",
+         launch_courage: "Launch Timing Courage",
+         build_vs_buy: "Strategic Build vs Buy Decisions",
+         actionable_metrics: "Actionable vs Vanity Metrics"
       };
-      const answer = (i: number) => { if(answered) return; setSelected(i); setAnswered(true); if(i === d.correct) { setScore(p => p + 1); setLog(l => [...l, `✓ ${d.topic}: Lean thinking!`]); } else { setLog(l => [...l, `✗ ${d.topic}: Better: "${d.opts[d.correct]}"`]); } };
-      const next = () => { if(decision >= decisions.length - 1) { setPhase('result'); } else { setDecision(p => p + 1); setAnswered(false); setSelected(null); } };
-      const grade = score >= 4 ? 'A' : score >= 3 ? 'B' : score >= 2 ? 'C' : 'D';
-      if(phase === 'intro') return (<div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-lime-900 via-green-900 to-emerald-900 text-white p-6"><div className="text-6xl mb-4">🚀</div><h2 className="text-2xl font-bold mb-2">MVP Development</h2><p className="text-slate-300 text-center mb-6 max-w-md">Master the art of building Minimum Viable Products that maximize learning!</p><button onClick={() => setPhase('play')} className="px-8 py-3 bg-gradient-to-r from-lime-500 to-green-500 rounded-xl font-bold">Build MVP</button></div>);
-      if(phase === 'result') return (<div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-lime-900 via-green-900 to-emerald-900 text-white p-6"><div className="text-6xl mb-4">{grade === 'A' ? '🎯' : grade === 'B' ? '🚀' : '🔧'}</div><h2 className="text-2xl font-bold mb-2">MVP Complete!</h2><div className="text-4xl font-bold text-lime-400 mb-2">{score}/{decisions.length}</div><div className="text-6xl mb-4">{grade}</div><p className="text-slate-400 mb-4">{grade === 'A' ? 'Lean startup master!' : grade === 'B' ? 'Good MVP thinking!' : 'Keep learning!'}</p><div className="w-full max-w-md bg-black/30 rounded-lg p-3 mb-4 max-h-32 overflow-y-auto">{log.map((l,i) => <p key={i} className="text-xs text-slate-300">{l}</p>)}</div><button onClick={() => {setPhase('intro');setDecision(0);setScore(0);setAnswered(false);setSelected(null);setLog([]);}} className="px-6 py-2 bg-lime-600 rounded-lg">Try Again</button></div>);
-      return (<div className="w-full h-full flex flex-col bg-gradient-to-br from-lime-900 via-green-900 to-emerald-900 text-white overflow-hidden">{showInfo && infoTopic && infoTopics[infoTopic] && (<div className="absolute inset-0 bg-black/80 flex items-center justify-center p-4 z-50" onClick={() => { setShowInfo(false); setInfoTopic(null); }}><div className="bg-slate-800 rounded-xl p-4 max-w-md" onClick={e => e.stopPropagation()}><h3 className="text-lg font-bold text-lime-400 mb-2">{infoTopics[infoTopic].title}</h3><p className="text-sm text-slate-300">{infoTopics[infoTopic].content}</p><button onClick={() => { setShowInfo(false); setInfoTopic(null); }} className="mt-4 w-full py-2 bg-lime-600 rounded-lg">Got it!</button></div></div>)}<div className="p-3 bg-black/30 border-b border-lime-500/30 flex justify-between items-center"><span className="font-bold">🚀 {d.topic}</span><span className="text-lime-400">{decision + 1}/{decisions.length}</span><span className="text-green-400">Score: {score}</span></div><div className="flex-1 p-4 overflow-auto"><div className="bg-black/30 rounded-xl p-4 mb-4"><p className="text-sm text-slate-300">{d.situation}</p></div><div className="bg-black/30 rounded-xl p-4 mb-3"><p className="font-medium">{d.q}</p></div><div className="grid gap-2">{d.opts.map((opt, i) => (<button key={i} onClick={() => answer(i)} disabled={answered} className={`p-3 rounded-lg text-left text-sm ${answered ? i === d.correct ? 'bg-green-600' : i === selected ? 'bg-red-600' : 'bg-black/30' : 'bg-black/30 hover:bg-lime-600/50'}`}>{opt}</button>))}</div>{answered && (<div className="mt-3 p-3 bg-black/30 rounded-lg"><p className="text-sm text-slate-300">{d.explain}</p><button onClick={next} className="mt-3 w-full py-2 bg-lime-600 rounded-lg">{decision >= decisions.length - 1 ? 'See Results' : 'Next Decision'}</button></div>)}</div><div className="p-3 bg-black/30 border-t border-lime-500/30 flex gap-2 justify-center flex-wrap">{Object.keys(infoTopics).map(k => <button key={k} onClick={() => {setInfoTopic(k);setShowInfo(true);}} className="text-xs text-lime-400">ℹ️ {infoTopics[k].title}</button>)}</div></div>);
+
+      const infoTopics: { [k: string]: { title: string; content: string } } = {
+         definition: { title: "What is MVP Really?", content: "MVP isn't 'Version 1 of the product.' It's the smallest experiment that tests your riskiest assumption. Emphasis on VIABLE (delivers value) and MINIMUM (just enough to learn). The goal is learning, not launching." },
+         scope: { title: "Ruthless Scoping", content: "For each feature, ask: 'If we remove this, can we still test our hypothesis?' If yes, remove it. MVP should feel uncomfortably small. If you're not cutting features, you're not scoping an MVP—you're building a full product slowly." },
+         validation: { title: "Validation Before Building", content: "Hierarchy of validation: 1) Talk to customers (cheapest), 2) Landing page/waitlist, 3) Concierge/manual version, 4) Code MVP. Each step confirms demand before investing more. Many successful MVPs had zero code." },
+         iteration: { title: "Build-Measure-Learn", content: "The loop: Build (smallest experiment) → Measure (specific hypothesis) → Learn (what did we discover?). Each cycle should take days, not months. Speed of iteration is the startup's advantage over incumbents." }
+      };
+
+      const sc = scenarios[scenario];
+
+      const answer = (i: number) => {
+         if (answered) return;
+         setSelected(i);
+         setAnswered(true);
+         if (i === sc.correct) {
+            setScore(s => s + 1);
+            setGameLog(l => [...l, `✓ ${sc.title}: Understood lean MVP thinking`]);
+         } else {
+            setGameLog(l => [...l, `✗ ${sc.title}: ${sc.wrongExplanations[i]}`]);
+            if (!conceptGaps.includes(sc.concept)) {
+               setConceptGaps(g => [...g, sc.concept]);
+            }
+         }
+      };
+
+      const next = () => {
+         if (scenario >= scenarios.length - 1) {
+            setPhase('result');
+         } else {
+            setScenario(s => s + 1);
+            setSelected(null);
+            setAnswered(false);
+         }
+      };
+
+      const grade = score >= 5 ? 'A' : score >= 4 ? 'B' : score >= 3 ? 'C' : 'D';
+
+      if (phase === 'intro') {
+         return (
+            <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-lime-900 via-green-900 to-emerald-900 text-white p-6">
+               <div className="text-6xl mb-4">🚀</div>
+               <h2 className="text-2xl font-bold mb-2">MVP Survival Simulator</h2>
+               <p className="text-lime-300 text-center mb-4 max-w-md">
+                  Navigate the treacherous decisions that kill most MVPs—feature creep, perfectionism, and vanity metrics.
+               </p>
+               <div className="bg-black/30 rounded-lg p-4 mb-6 max-w-md">
+                  <p className="text-sm text-slate-300 mb-2">You'll face scenarios where:</p>
+                  <ul className="text-xs text-slate-400 space-y-1">
+                     <li>• More features often means less learning</li>
+                     <li>• Perfect architecture kills runway</li>
+                     <li>• 'Almost done' is a dangerous trap</li>
+                     <li>• Building what you could buy wastes focus</li>
+                     <li>• The wrong metrics hide failure</li>
+                  </ul>
+               </div>
+               <button onClick={() => setPhase('play')} className="px-8 py-3 bg-gradient-to-r from-lime-500 to-green-500 rounded-xl font-bold">
+                  Launch MVP Lab
+               </button>
+            </div>
+         );
+      }
+
+      if (phase === 'result') {
+         return (
+            <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-lime-900 via-green-900 to-emerald-900 text-white p-6 overflow-auto">
+               <div className="text-5xl mb-3">{grade === 'A' ? '🎯' : grade === 'B' ? '🚀' : grade === 'C' ? '🔧' : '⚠️'}</div>
+               <h2 className="text-xl font-bold mb-2">MVP Lab Complete</h2>
+               <div className="text-3xl font-bold text-lime-400 mb-1">{score}/{scenarios.length}</div>
+               <div className="text-4xl mb-3">{grade}</div>
+               <p className="text-slate-400 text-sm mb-3 text-center">
+                  {grade === 'A' ? 'Lean startup master! You prioritize learning over building.' :
+                   grade === 'B' ? 'Strong MVP instincts—you understand the core principles.' :
+                   grade === 'C' ? 'Watch out for common traps—focus on hypothesis testing.' :
+                   'Review lean startup fundamentals—MVP is about learning, not launching.'}
+               </p>
+               {conceptGaps.length > 0 && (
+                  <div className="w-full max-w-md bg-red-900/30 border border-red-500/30 rounded-lg p-3 mb-3">
+                     <p className="text-xs text-red-400 font-semibold mb-2">Concepts to Review:</p>
+                     <ul className="text-xs text-red-300 space-y-1">
+                        {conceptGaps.map(g => <li key={g}>• {conceptLabels[g]}</li>)}
+                     </ul>
+                  </div>
+               )}
+               <div className="w-full max-w-md bg-black/30 rounded-lg p-3 mb-4 max-h-28 overflow-y-auto">
+                  {gameLog.map((l, i) => <p key={i} className="text-xs text-slate-300 mb-1">{l}</p>)}
+               </div>
+               <button onClick={() => { setPhase('intro'); setScenario(0); setScore(0); setAnswered(false); setSelected(null); setGameLog([]); setConceptGaps([]); }} className="px-6 py-2 bg-lime-600 rounded-lg">
+                  Try Again
+               </button>
+            </div>
+         );
+      }
+
+      return (
+         <div className="w-full h-full flex flex-col bg-gradient-to-br from-lime-900 via-green-900 to-emerald-900 text-white overflow-hidden">
+            {showInfo && infoTopic && infoTopics[infoTopic] && (
+               <div className="absolute inset-0 bg-black/80 flex items-center justify-center p-4 z-50" onClick={() => { setShowInfo(false); setInfoTopic(null); }}>
+                  <div className="bg-slate-800 rounded-xl p-4 max-w-sm" onClick={e => e.stopPropagation()}>
+                     <h3 className="text-lg font-bold text-lime-400 mb-2">{infoTopics[infoTopic].title}</h3>
+                     <p className="text-sm text-slate-300">{infoTopics[infoTopic].content}</p>
+                     <button onClick={() => { setShowInfo(false); setInfoTopic(null); }} className="mt-4 w-full py-2 bg-lime-600 rounded-lg">Got it!</button>
+                  </div>
+               </div>
+            )}
+            <div className="p-3 bg-black/30 border-b border-lime-500/30 flex justify-between items-center">
+               <span className="font-bold text-sm">🚀 {sc.title}</span>
+               <span className="text-lime-400 text-sm">{scenario + 1}/{scenarios.length}</span>
+               <span className="text-green-400 text-sm">Score: {score}</span>
+            </div>
+            <div className="flex-1 p-4 overflow-auto">
+               <div className="bg-black/30 rounded-lg p-3 mb-3">
+                  <p className="text-sm text-slate-300">{sc.context}</p>
+               </div>
+               <div className="bg-lime-800/30 rounded-lg p-3 mb-3">
+                  <p className="font-medium text-sm">{sc.question}</p>
+               </div>
+               <div className="grid gap-2 mb-3">
+                  {sc.opts.map((opt, i) => (
+                     <button key={i} onClick={() => answer(i)} disabled={answered} className={`p-3 rounded-lg text-left text-sm transition-all ${answered ? i === sc.correct ? 'bg-green-600' : i === selected ? 'bg-red-600' : 'bg-black/30 opacity-50' : 'bg-black/30 hover:bg-lime-600/50'}`}>
+                        {opt}
+                     </button>
+                  ))}
+               </div>
+               {answered && (
+                  <div className="space-y-3">
+                     <div className="bg-green-900/30 border border-green-500/30 rounded-lg p-3">
+                        <p className="text-xs text-green-400 font-semibold mb-1">Why this works:</p>
+                        <p className="text-sm text-slate-300">{sc.why}</p>
+                     </div>
+                     {selected !== sc.correct && sc.wrongExplanations[selected!] && (
+                        <div className="bg-red-900/30 border border-red-500/30 rounded-lg p-3">
+                           <p className="text-xs text-red-400 font-semibold mb-1">Why your choice fails:</p>
+                           <p className="text-sm text-slate-300">{sc.wrongExplanations[selected!]}</p>
+                        </div>
+                     )}
+                     <div className="bg-lime-900/30 border border-lime-500/30 rounded-lg p-3">
+                        <p className="text-xs text-lime-400 font-semibold mb-1">📊 Real World:</p>
+                        <p className="text-sm text-slate-300">{sc.realWorld}</p>
+                     </div>
+                     <button onClick={next} className="w-full py-2 bg-lime-600 rounded-lg font-medium">
+                        {scenario >= scenarios.length - 1 ? 'See Results' : 'Next Scenario'}
+                     </button>
+                  </div>
+               )}
+            </div>
+            <div className="p-2 bg-black/30 border-t border-lime-500/30 flex gap-2 justify-center flex-wrap">
+               {Object.keys(infoTopics).map(k => (
+                  <button key={k} onClick={() => { setInfoTopic(k); setShowInfo(true); }} className="text-xs text-lime-400 hover:text-lime-300">
+                     ℹ️ {infoTopics[k].title}
+                  </button>
+               ))}
+            </div>
+         </div>
+      );
    };
 
    // --- RISK ASSESSMENT RENDERER ---
    const RiskAssessmentRenderer = () => {
       const [phase, setPhase] = useState<'intro' | 'play' | 'result'>('intro');
-      const [risk, setRisk] = useState(0);
+      const [scenario, setScenario] = useState(0);
       const [score, setScore] = useState(0);
       const [selected, setSelected] = useState<number | null>(null);
       const [answered, setAnswered] = useState(false);
-      const [log, setLog] = useState<string[]>([]);
+      const [gameLog, setGameLog] = useState<string[]>([]);
       const [showInfo, setShowInfo] = useState(false);
       const [infoTopic, setInfoTopic] = useState<string | null>(null);
+      const [conceptGaps, setConceptGaps] = useState<string[]>([]);
 
-      const risks = [
-         { category: "Market Risk", icon: "📉", situation: "Your startup is entering a market dominated by two well-funded competitors with 95% market share combined.", q: "How do you assess and mitigate this risk?", opts: ["Avoid the market entirely", "Find an underserved niche and differentiate strongly", "Compete directly on price", "Hope competitors ignore you"], correct: 1, explain: "Dominated markets often have underserved segments. Find a niche where your differentiation matters and grow from there." },
-         { category: "Technical Risk", icon: "⚙️", situation: "Your product relies on a new AI model that works 80% of the time in testing. Users need 99% reliability.", q: "What's the best risk mitigation?", opts: ["Launch and fix in production", "Add human fallback for the 20% failures", "Wait until 99% works", "Pivot to simpler technology"], correct: 1, explain: "Hybrid approaches (AI + human fallback) manage technical risk while still delivering value. You can improve automation over time." },
-         { category: "Financial Risk", icon: "💸", situation: "You have 8 months of runway. Sales cycles are taking longer than expected—average 6 months to close.", q: "How do you manage this financial risk?", opts: ["Spend more on marketing to accelerate", "Cut burn rate and extend runway while refining sales", "Raise emergency funding now", "Accept you'll run out of money"], correct: 1, explain: "Extend runway AND fix the problem. Raising while desperate gives bad terms. Cutting burn buys time to learn and adjust." },
-         { category: "Team Risk", icon: "👥", situation: "Your CTO, who holds critical knowledge, hints they might leave for another opportunity.", q: "How do you mitigate this key person risk?", opts: ["Offer immediate raise to retain them", "Start knowledge transfer and document systems now", "Ignore hints—they're probably bluffing", "Start looking for replacement secretly"], correct: 1, explain: "Knowledge concentration is a critical risk. Start documentation and cross-training immediately. Address retention, but also reduce single-point-of-failure." },
-         { category: "Regulatory Risk", icon: "⚖️", situation: "Your fintech startup operates in a gray area. A new regulation might require expensive compliance or ban your business model.", q: "What's the smart approach?", opts: ["Ignore until regulation passes", "Engage with regulators proactively and build compliance into product", "Move to unregulated jurisdiction", "Pivot to different industry"], correct: 1, explain: "Proactive regulatory engagement often influences outcomes favorably. Building compliance early creates competitive advantage when regulation hits." }
+      const scenarios = [
+         {
+            title: "The Market Blind Spot",
+            context: "Your B2B SaaS targets mid-market companies (100-500 employees). After 8 months of sales, you've closed only 3 customers despite 200+ demos. Conversion rate is 1.5%. Your investors ask if you're addressing a real market need. The sales team blames 'long sales cycles.' Customer interviews reveal most prospects say 'interesting but not urgent.'",
+            question: "What's the real risk being masked here?",
+            opts: [
+               "A) Sales execution risk—need better salespeople",
+               "B) Market risk—you're solving a 'vitamin' problem, not a 'painkiller'",
+               "C) Pricing risk—product is too expensive for the market",
+               "D) Competitive risk—prospects are choosing competitors"
+            ],
+            correct: 1,
+            wrongExplanations: [
+               "Better salespeople won't help if the product doesn't solve an urgent problem. 'Interesting but not urgent' is customer language for 'I don't really need this.' The problem is upstream of sales.",
+               "",
+               "If prospects aren't buying at any price point, pricing isn't the issue. 'Not urgent' isn't about cost—it's about priority. They're not negotiating on price; they're not seeing value.",
+               "Prospects aren't mentioning competitors—they're saying 'not urgent.' They're choosing 'do nothing,' not a rival product. This is a different and more dangerous situation."
+            ],
+            realWorld: "Ev Williams (Twitter, Medium founder): 'Take a human desire, preferably one that has been around for a long time, and use modern technology to take out steps.' Vitamins are nice-to-have; painkillers are must-have. 42% of startups fail because there's no market need—the #1 cause of startup death.",
+            concept: "market_need",
+            why: "The 'vitamin vs painkiller' framework distinguishes nice-to-have from must-have products. 'Interesting but not urgent' is the death signal—it means you've built a vitamin. Real market need manifests as: customers actively searching for solutions, willing to pay before the product is perfect, and urgent timeline pressure."
+         },
+         {
+            title: "The Runway Illusion",
+            context: "Your startup has $1.2M in the bank and burns $150K/month (8 months runway). You're raising a Series A but VCs want to see 3x revenue growth. Current MRR: $40K. Growing 12% month-over-month. Your financial model shows you'll hit the 3x target in 10 months. The team is focused on hitting growth targets.",
+            question: "What financial risk is being ignored?",
+            opts: [
+               "A) Growth risk—12% MoM might not be sustainable",
+               "B) Runway assumes linear burn, but scaling requires increased spend—you'll run out earlier",
+               "C) VCs might change their metrics by the time you're ready",
+               "D) Need to raise a bridge round immediately"
+            ],
+            correct: 1,
+            wrongExplanations: [
+               "Growth sustainability matters, but the immediate existential risk is financial. Even if growth holds, you're planning for a 10-month journey with only 8 months of gas. The math doesn't work regardless of growth rate.",
+               "",
+               "VC goalposts do move, but that's not the immediate crisis. You physically can't reach 10 months if you only have 8 months of runway. Worry about VC preferences after you've solved the survival problem.",
+               "Bridge rounds are expensive (high dilution, signals weakness). Raising in desperation gets bad terms. The right answer is to extend runway through efficiency, not by raising more at poor terms."
+            ],
+            realWorld: "CB Insights data shows 29% of startups fail because they run out of cash. Founders consistently underestimate burn increases during scaling—hiring, infrastructure, marketing all spike. The average startup raises 3-6 months before running out, but at that point, valuation negotiations suffer dramatically.",
+            concept: "runway_math",
+            why: "The trap: Planning for 10 months when you have 8 months of cash assumes static burn rate. Scaling requires investment—hiring salespeople, marketing spend, infrastructure. Real runway = Cash ÷ (Current Burn + Growth Investment). Always model scenarios where growth costs more than expected."
+         },
+         {
+            title: "The Hero Dependency",
+            context: "Your CTO built 80% of the codebase and is the only person who understands the payment integration, the API architecture, and the deployment pipeline. They work 70-hour weeks and seem to enjoy being indispensable. When asked about documentation, they say 'it's all in my head—faster that way.' The company is preparing to raise Series A.",
+            question: "What's the board's primary concern here?",
+            opts: [
+               "A) Burnout risk—the CTO is overworked",
+               "B) Key-person dependency creates existential risk that tanks valuation",
+               "C) Documentation should be improved for better engineering practices",
+               "D) Need to hire more senior engineers to distribute workload"
+            ],
+            correct: 1,
+            wrongExplanations: [
+               "Burnout is real but secondary. The board's concern is: if this person leaves, what happens to the company? A vacation or illness could halt development. A resignation could kill the company.",
+               "",
+               "Documentation is a symptom, not the issue. Improving docs is good, but it doesn't solve the concentration risk. The CTO might resist documentation because it reduces their indispensability.",
+               "More engineers help but don't solve the risk if knowledge stays concentrated. The new engineers will still depend on the CTO for critical context. The power dynamic must change."
+            ],
+            realWorld: "In 2015, a fintech startup's CTO left with zero documentation. They spent 6 months reverse-engineering their own codebase and missed their fundraising window. Investors explicitly ask about 'bus factor' (what happens if key people are hit by a bus). Companies with key-person dependency get lower valuations or pass altogether.",
+            concept: "key_person_risk",
+            why: "Key-person dependency is an existential risk that sophisticated investors specifically screen for. The fix isn't just documentation—it's cultural. 'Indispensable' employees are actually liabilities. The goal is building systems where no single person can halt operations. This requires active management, not just hope."
+         },
+         {
+            title: "The Regulatory Gamble",
+            context: "Your healthtech startup lets users upload medical records and get AI-powered health insights. You've grown to 50,000 users in 6 months. Legal costs for HIPAA compliance would be $300K and take 9 months. Your current legal interpretation is that you're 'health adjacent, not a health provider' so HIPAA doesn't apply. An investor asks about regulatory risk.",
+            question: "How should you assess this regulatory risk?",
+            opts: [
+               "A) The legal interpretation is probably correct—keep growing",
+               "B) Regulatory gray areas create binary existential risk—clarify before scaling further",
+               "C) Wait for regulators to contact you—react then",
+               "D) Move headquarters to a country with less strict regulations"
+            ],
+            correct: 1,
+            wrongExplanations: [
+               "Legal interpretations from startup lawyers aren't the same as regulatory positions. Many startups have been shut down after believing their own legal theories. 'Probably correct' isn't acceptable for existential risks.",
+               "",
+               "Waiting for regulators is playing Russian roulette. By the time they contact you, they've already decided you're in violation. Enforcement actions are public, damaging, and expensive. Proactive engagement gives you influence; reactive defense does not.",
+               "Regulatory arbitrage works temporarily but creates scaling limits, complicates fundraising, and signals to investors that you're avoiding compliance rather than solving it."
+            ],
+            realWorld: "23andMe was ordered by the FDA to stop selling genetic health reports in 2013. They spent 4 years working with regulators before relaunching. Contrast with Theranos, which avoided regulatory scrutiny until it became criminal. Uber spent billions fighting regulatory battles that proactive engagement might have prevented.",
+            concept: "regulatory_clarity",
+            why: "Regulatory risk is binary—you're either compliant or you're not. Gray areas feel safe but are actually maximum risk: you're building on uncertain ground. The cost of proactive compliance ($300K, 9 months) vs cost of enforcement (company shutdown, personal liability, reputation damage). Clarify BEFORE scaling."
+         },
+         {
+            title: "The Technical Debt Time Bomb",
+            context: "Your startup's codebase was built fast by 2 developers in 6 months. It works but has no tests, no documentation, and a single database that holds everything. New features take 3x longer than they should because developers are afraid of breaking things. You need to hire 5 engineers to hit growth targets, but onboarding takes 2-3 months because 'you just have to learn the quirks.'",
+            question: "What risk should you prioritize addressing?",
+            opts: [
+               "A) Hiring risk—5 engineers in this market will be hard to find",
+               "B) The codebase creates compounding velocity risk—you'll slow down as you scale",
+               "C) Start rewriting the codebase from scratch with proper architecture",
+               "D) Hire contractor help to add tests and documentation"
+            ],
+            correct: 1,
+            wrongExplanations: [
+               "Hiring is a challenge, but finding engineers isn't the blocker. The blocker is: even good engineers will be unproductive in this codebase. Hiring won't solve velocity if the system resists change.",
+               "",
+               "Rewrites are almost always wrong. Joel Spolsky: 'The worst strategic mistake any software company can make: rewrite the code from scratch.' Rewrites take 2-3x longer than estimated, introduce new bugs, and halt feature development.",
+               "Contractors writing tests for code they don't understand produces low-value tests. Tests are valuable when developers who understand the system write them to protect critical paths."
+            ],
+            realWorld: "Twitter's 'Fail Whale' era wasn't caused by scaling—it was caused by technical debt accumulated during growth. They spent years incrementally improving architecture while maintaining service. Netscape's decision to rewrite from scratch (Netscape 6) killed the company. Stripe's codebase is famously well-maintained because they invest 20% of engineering time in 'code health.'",
+            concept: "technical_velocity",
+            why: "Technical debt compounds like financial debt—with interest. The symptom is 'features take 3x longer.' Left untreated, this becomes '10x longer' then 'impossible.' The fix isn't rewriting—it's incremental improvement: add tests to critical paths, document as you touch code, refactor in small pieces alongside features. Budget 20-30% of engineering for 'code health.'"
+         }
       ];
-      const r = risks[risk];
-      const infoTopics: Record<string, {title: string; content: string}> = {
-         framework: { title: "Risk Assessment Framework", content: "Assess: Probability × Impact = Priority. For each risk: Identify → Assess → Mitigate → Monitor. Focus on high-probability, high-impact risks first. Accept some risks consciously." },
-         types: { title: "Startup Risk Types", content: "Key risks: Market (will they buy?), Product (can we build it?), Financial (can we afford it?), Team (can we execute?), Regulatory (is it legal?), Competitive (can we win?)." },
-         mitigation: { title: "Mitigation Strategies", content: "Options: Avoid (don't take the risk), Transfer (insurance, partners), Mitigate (reduce probability/impact), Accept (acknowledge and monitor). Match strategy to risk type." },
-         monitoring: { title: "Risk Monitoring", content: "Set leading indicators for each risk. Market risk: watch for customer churn signals. Financial: monitor burn rate weekly. Create escalation triggers before problems become crises." }
+
+      const conceptLabels: { [key: string]: string } = {
+         market_need: "Market Need Validation",
+         runway_math: "Runway Financial Modeling",
+         key_person_risk: "Key-Person Dependency",
+         regulatory_clarity: "Regulatory Risk Assessment",
+         technical_velocity: "Technical Debt Management"
       };
-      const answer = (i: number) => { if(answered) return; setSelected(i); setAnswered(true); if(i === r.correct) { setScore(p => p + 1); setLog(l => [...l, `✓ ${r.category}: Risk managed!`]); } else { setLog(l => [...l, `✗ ${r.category}: Better: "${r.opts[r.correct]}"`]); } };
-      const next = () => { if(risk >= risks.length - 1) { setPhase('result'); } else { setRisk(p => p + 1); setAnswered(false); setSelected(null); } };
-      const grade = score >= 4 ? 'A' : score >= 3 ? 'B' : score >= 2 ? 'C' : 'D';
-      if(phase === 'intro') return (<div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-red-900 via-rose-900 to-orange-900 text-white p-6"><div className="text-6xl mb-4">⚠️</div><h2 className="text-2xl font-bold mb-2">Risk Assessment Matrix</h2><p className="text-slate-300 text-center mb-6 max-w-md">Identify, assess, and mitigate startup risks before they become crises!</p><button onClick={() => setPhase('play')} className="px-8 py-3 bg-gradient-to-r from-red-500 to-orange-500 rounded-xl font-bold">Assess Risks</button></div>);
-      if(phase === 'result') return (<div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-red-900 via-rose-900 to-orange-900 text-white p-6"><div className="text-6xl mb-4">{grade === 'A' ? '🛡️' : grade === 'B' ? '⚠️' : '🎲'}</div><h2 className="text-2xl font-bold mb-2">Assessment Complete!</h2><div className="text-4xl font-bold text-red-400 mb-2">{score}/{risks.length}</div><div className="text-6xl mb-4">{grade}</div><p className="text-slate-400 mb-4">{grade === 'A' ? 'Risk management pro!' : grade === 'B' ? 'Good risk awareness!' : 'High risk tolerance!'}</p><div className="w-full max-w-md bg-black/30 rounded-lg p-3 mb-4 max-h-32 overflow-y-auto">{log.map((l,i) => <p key={i} className="text-xs text-slate-300">{l}</p>)}</div><button onClick={() => {setPhase('intro');setRisk(0);setScore(0);setAnswered(false);setSelected(null);setLog([]);}} className="px-6 py-2 bg-red-600 rounded-lg">Try Again</button></div>);
-      return (<div className="w-full h-full flex flex-col bg-gradient-to-br from-red-900 via-rose-900 to-orange-900 text-white overflow-hidden">{showInfo && infoTopic && infoTopics[infoTopic] && (<div className="absolute inset-0 bg-black/80 flex items-center justify-center p-4 z-50" onClick={() => { setShowInfo(false); setInfoTopic(null); }}><div className="bg-slate-800 rounded-xl p-4 max-w-md" onClick={e => e.stopPropagation()}><h3 className="text-lg font-bold text-red-400 mb-2">{infoTopics[infoTopic].title}</h3><p className="text-sm text-slate-300">{infoTopics[infoTopic].content}</p><button onClick={() => { setShowInfo(false); setInfoTopic(null); }} className="mt-4 w-full py-2 bg-red-600 rounded-lg">Got it!</button></div></div>)}<div className="p-3 bg-black/30 border-b border-red-500/30 flex justify-between items-center"><span className="font-bold">{r.icon} {r.category}</span><span className="text-red-400">{risk + 1}/{risks.length}</span><span className="text-orange-400">Score: {score}</span></div><div className="flex-1 p-4 overflow-auto"><div className="flex gap-1 mb-4">{risks.map((rs, i) => (<div key={i} className="flex-1 text-center"><div className={`text-xl ${i <= risk ? 'opacity-100' : 'opacity-30'}`}>{rs.icon}</div><div className={`h-1 mt-1 rounded ${i < risk ? 'bg-red-500' : i === risk ? 'bg-orange-400' : 'bg-slate-700'}`} /></div>))}</div><div className="bg-black/30 rounded-xl p-4 mb-4"><p className="text-sm text-slate-300">{r.situation}</p></div><div className="bg-black/30 rounded-xl p-4 mb-3"><p className="font-medium">{r.q}</p></div><div className="grid gap-2">{r.opts.map((opt, i) => (<button key={i} onClick={() => answer(i)} disabled={answered} className={`p-3 rounded-lg text-left text-sm ${answered ? i === r.correct ? 'bg-green-600' : i === selected ? 'bg-red-600' : 'bg-black/30' : 'bg-black/30 hover:bg-red-600/50'}`}>{opt}</button>))}</div>{answered && (<div className="mt-3 p-3 bg-black/30 rounded-lg"><p className="text-sm text-slate-300">{r.explain}</p><button onClick={next} className="mt-3 w-full py-2 bg-red-600 rounded-lg">{risk >= risks.length - 1 ? 'See Results' : 'Next Risk'}</button></div>)}</div><div className="p-3 bg-black/30 border-t border-red-500/30 flex gap-2 justify-center flex-wrap">{Object.keys(infoTopics).map(k => <button key={k} onClick={() => {setInfoTopic(k);setShowInfo(true);}} className="text-xs text-red-400">ℹ️ {infoTopics[k].title}</button>)}</div></div>);
+
+      const infoTopics: { [k: string]: { title: string; content: string } } = {
+         framework: { title: "Risk Prioritization Matrix", content: "Assess each risk by: Probability (how likely?) × Impact (how severe?) = Priority. Focus on high-probability, high-impact risks first. Accept low-probability, low-impact risks consciously. Never ignore high-impact risks regardless of probability." },
+         types: { title: "The 5 Startup Killers", content: "1) No market need (42%), 2) Ran out of cash (29%), 3) Wrong team (23%), 4) Got outcompeted (19%), 5) Pricing/cost issues (18%). These overlap—but market and cash are the biggest killers. Source: CB Insights analysis of 101 startup failures." },
+         mitigation: { title: "RAID Framework", content: "Risk (uncertain events that may harm), Assumption (beliefs taken as true), Issue (current problems), Dependency (reliance on external factors). Track all four explicitly. Most startups only track issues; the other three kill silently." },
+         monitoring: { title: "Leading Indicators", content: "Lagging indicators tell you what happened; leading indicators predict what will happen. Churn rate is lagging; declining engagement is leading. Cash in bank is lagging; burn rate trajectory is leading. Monitor leading indicators weekly." }
+      };
+
+      const sc = scenarios[scenario];
+
+      const answer = (i: number) => {
+         if (answered) return;
+         setSelected(i);
+         setAnswered(true);
+         if (i === sc.correct) {
+            setScore(s => s + 1);
+            setGameLog(l => [...l, `✓ ${sc.title}: Correctly identified the risk`]);
+         } else {
+            setGameLog(l => [...l, `✗ ${sc.title}: ${sc.wrongExplanations[i]}`]);
+            if (!conceptGaps.includes(sc.concept)) {
+               setConceptGaps(g => [...g, sc.concept]);
+            }
+         }
+      };
+
+      const next = () => {
+         if (scenario >= scenarios.length - 1) {
+            setPhase('result');
+         } else {
+            setScenario(s => s + 1);
+            setSelected(null);
+            setAnswered(false);
+         }
+      };
+
+      const grade = score >= 5 ? 'A' : score >= 4 ? 'B' : score >= 3 ? 'C' : 'D';
+
+      if (phase === 'intro') {
+         return (
+            <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-red-900 via-rose-900 to-orange-900 text-white p-6">
+               <div className="text-6xl mb-4">⚠️</div>
+               <h2 className="text-2xl font-bold mb-2">Risk Intelligence Lab</h2>
+               <p className="text-red-300 text-center mb-4 max-w-md">
+                  Identify hidden risks that kill startups before they become crises. Most risks are invisible until it's too late.
+               </p>
+               <div className="bg-black/30 rounded-lg p-4 mb-6 max-w-md">
+                  <p className="text-sm text-slate-300 mb-2">You'll analyze scenarios involving:</p>
+                  <ul className="text-xs text-slate-400 space-y-1">
+                     <li>• Market risks masked as sales problems</li>
+                     <li>• Financial models that don't account for scaling costs</li>
+                     <li>• Key-person dependencies investors hate</li>
+                     <li>• Regulatory gray areas that are actually red zones</li>
+                     <li>• Technical debt compounding silently</li>
+                  </ul>
+               </div>
+               <button onClick={() => setPhase('play')} className="px-8 py-3 bg-gradient-to-r from-red-500 to-orange-500 rounded-xl font-bold">
+                  Assess Risks
+               </button>
+            </div>
+         );
+      }
+
+      if (phase === 'result') {
+         return (
+            <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-red-900 via-rose-900 to-orange-900 text-white p-6 overflow-auto">
+               <div className="text-5xl mb-3">{grade === 'A' ? '🛡️' : grade === 'B' ? '⚠️' : grade === 'C' ? '🎲' : '💥'}</div>
+               <h2 className="text-xl font-bold mb-2">Risk Assessment Complete</h2>
+               <div className="text-3xl font-bold text-red-400 mb-1">{score}/{scenarios.length}</div>
+               <div className="text-4xl mb-3">{grade}</div>
+               <p className="text-slate-400 text-sm mb-3 text-center">
+                  {grade === 'A' ? 'Exceptional risk intelligence! You see through surface symptoms to root causes.' :
+                   grade === 'B' ? 'Strong risk awareness—you catch most hidden dangers.' :
+                   grade === 'C' ? 'Some risks slipped by—study the patterns that mask real dangers.' :
+                   'Critical gaps in risk detection—many startup killers would go unnoticed.'}
+               </p>
+               {conceptGaps.length > 0 && (
+                  <div className="w-full max-w-md bg-red-900/30 border border-red-500/30 rounded-lg p-3 mb-3">
+                     <p className="text-xs text-red-400 font-semibold mb-2">Risk Areas to Study:</p>
+                     <ul className="text-xs text-red-300 space-y-1">
+                        {conceptGaps.map(g => <li key={g}>• {conceptLabels[g]}</li>)}
+                     </ul>
+                  </div>
+               )}
+               <div className="w-full max-w-md bg-black/30 rounded-lg p-3 mb-4 max-h-28 overflow-y-auto">
+                  {gameLog.map((l, i) => <p key={i} className="text-xs text-slate-300 mb-1">{l}</p>)}
+               </div>
+               <button onClick={() => { setPhase('intro'); setScenario(0); setScore(0); setAnswered(false); setSelected(null); setGameLog([]); setConceptGaps([]); }} className="px-6 py-2 bg-red-600 rounded-lg">
+                  Try Again
+               </button>
+            </div>
+         );
+      }
+
+      return (
+         <div className="w-full h-full flex flex-col bg-gradient-to-br from-red-900 via-rose-900 to-orange-900 text-white overflow-hidden">
+            {showInfo && infoTopic && infoTopics[infoTopic] && (
+               <div className="absolute inset-0 bg-black/80 flex items-center justify-center p-4 z-50" onClick={() => { setShowInfo(false); setInfoTopic(null); }}>
+                  <div className="bg-slate-800 rounded-xl p-4 max-w-sm" onClick={e => e.stopPropagation()}>
+                     <h3 className="text-lg font-bold text-red-400 mb-2">{infoTopics[infoTopic].title}</h3>
+                     <p className="text-sm text-slate-300">{infoTopics[infoTopic].content}</p>
+                     <button onClick={() => { setShowInfo(false); setInfoTopic(null); }} className="mt-4 w-full py-2 bg-red-600 rounded-lg">Got it!</button>
+                  </div>
+               </div>
+            )}
+            <div className="p-3 bg-black/30 border-b border-red-500/30 flex justify-between items-center">
+               <span className="font-bold text-sm">⚠️ {sc.title}</span>
+               <span className="text-red-400 text-sm">{scenario + 1}/{scenarios.length}</span>
+               <span className="text-orange-400 text-sm">Score: {score}</span>
+            </div>
+            <div className="flex-1 p-4 overflow-auto">
+               <div className="bg-black/30 rounded-lg p-3 mb-3">
+                  <p className="text-sm text-slate-300">{sc.context}</p>
+               </div>
+               <div className="bg-red-800/30 rounded-lg p-3 mb-3">
+                  <p className="font-medium text-sm">{sc.question}</p>
+               </div>
+               <div className="grid gap-2 mb-3">
+                  {sc.opts.map((opt, i) => (
+                     <button key={i} onClick={() => answer(i)} disabled={answered} className={`p-3 rounded-lg text-left text-sm transition-all ${answered ? i === sc.correct ? 'bg-green-600' : i === selected ? 'bg-red-600' : 'bg-black/30 opacity-50' : 'bg-black/30 hover:bg-red-600/50'}`}>
+                        {opt}
+                     </button>
+                  ))}
+               </div>
+               {answered && (
+                  <div className="space-y-3">
+                     <div className="bg-green-900/30 border border-green-500/30 rounded-lg p-3">
+                        <p className="text-xs text-green-400 font-semibold mb-1">The Real Risk:</p>
+                        <p className="text-sm text-slate-300">{sc.why}</p>
+                     </div>
+                     {selected !== sc.correct && sc.wrongExplanations[selected!] && (
+                        <div className="bg-red-900/30 border border-red-500/30 rounded-lg p-3">
+                           <p className="text-xs text-red-400 font-semibold mb-1">Why that's not the primary risk:</p>
+                           <p className="text-sm text-slate-300">{sc.wrongExplanations[selected!]}</p>
+                        </div>
+                     )}
+                     <div className="bg-orange-900/30 border border-orange-500/30 rounded-lg p-3">
+                        <p className="text-xs text-orange-400 font-semibold mb-1">📊 Real World:</p>
+                        <p className="text-sm text-slate-300">{sc.realWorld}</p>
+                     </div>
+                     <button onClick={next} className="w-full py-2 bg-red-600 rounded-lg font-medium">
+                        {scenario >= scenarios.length - 1 ? 'See Results' : 'Next Scenario'}
+                     </button>
+                  </div>
+               )}
+            </div>
+            <div className="p-2 bg-black/30 border-t border-red-500/30 flex gap-2 justify-center flex-wrap">
+               {Object.keys(infoTopics).map(k => (
+                  <button key={k} onClick={() => { setInfoTopic(k); setShowInfo(true); }} className="text-xs text-red-400 hover:text-red-300">
+                     ℹ️ {infoTopics[k].title}
+                  </button>
+               ))}
+            </div>
+         </div>
+      );
    };
 
    // --- SUSTAINABILITY RENDERER ---
    const SustainabilityRenderer = () => {
       const [phase, setPhase] = useState<'intro' | 'play' | 'result'>('intro');
-      const [topic, setTopic] = useState(0);
+      const [scenario, setScenario] = useState(0);
       const [score, setScore] = useState(0);
       const [selected, setSelected] = useState<number | null>(null);
       const [answered, setAnswered] = useState(false);
-      const [log, setLog] = useState<string[]>([]);
+      const [gameLog, setGameLog] = useState<string[]>([]);
       const [showInfo, setShowInfo] = useState(false);
       const [infoTopic, setInfoTopic] = useState<string | null>(null);
+      const [conceptGaps, setConceptGaps] = useState<string[]>([]);
 
-      const topics = [
-         { area: "Environmental", icon: "🌱", situation: "Your e-commerce startup ships 10,000 packages monthly. Customers are asking about your environmental practices.", q: "What's the best sustainable business approach?", opts: ["Ignore—customers won't pay more for green", "Implement sustainable packaging with carbon offset options", "Greenwash with vague claims", "Only ship once a week to reduce trips"], correct: 1, explain: "Genuine sustainability creates differentiation and customer loyalty. Transparent practices (recyclable packaging, carbon offsets) attract conscious consumers." },
-         { area: "Social Impact", icon: "🤝", situation: "Your startup is growing and you want to build a diverse team, but all applicants look similar to your founders.", q: "How do you improve diversity sustainably?", opts: ["Lower hiring standards for diversity", "Expand recruiting sources and remove bias from hiring process", "Set strict quotas regardless of fit", "Ignore—hire whoever is best"], correct: 1, explain: "Sustainable diversity means fixing the pipeline (where you recruit) and process (how you evaluate). This attracts diverse talent without compromising standards." },
-         { area: "Governance", icon: "⚖️", situation: "Investors are offering term sheets. One offers more money but wants control that could force short-term thinking.", q: "How do you balance funding with sustainable governance?", opts: ["Take the money—figure out governance later", "Negotiate governance terms that protect long-term mission", "Reject all outside investment", "Accept any terms to survive"], correct: 1, explain: "Governance structure determines long-term sustainability. Protect founder vision with voting rights, board composition, and clear decision authorities." },
-         { area: "Economic", icon: "💰", situation: "Your startup is profitable but growth is slowing. VCs want you to burn more to grow faster.", q: "What's the economically sustainable path?", opts: ["Burn aggressively to hit growth targets", "Balance growth investment with profitability runway", "Stop all growth spending", "Pivot to a new market entirely"], correct: 1, explain: "Sustainable growth balances ambition with resilience. Profitability gives options; excessive burn creates pressure that compromises decisions." },
-         { area: "Long-term Thinking", icon: "🔮", situation: "A lucrative enterprise deal requires customizations that would fragment your product and slow down roadmap.", q: "How do you balance short-term revenue with long-term sustainability?", opts: ["Take any revenue available", "Evaluate if deal aligns with product vision long-term", "Reject all enterprise deals", "Build everything they ask"], correct: 1, explain: "Sustainable growth evaluates each opportunity against long-term vision. Some revenue creates technical debt that costs more than it earns." }
+      const scenarios = [
+         {
+            title: "The Greenwashing Temptation",
+            context: "Your DTC fashion brand is launching a 'sustainable collection.' Marketing wants to use terms like 'eco-friendly' and 'green' on packaging. Actual changes: 15% recycled materials in packaging (not products), carbon offsets purchased for shipping. Your competitor just faced backlash for similar claims—the FTC is cracking down on vague environmental marketing.",
+            question: "How should you position your sustainability efforts?",
+            opts: [
+               "A) Use 'eco-friendly' broadly—most customers won't investigate details",
+               "B) Make specific, verifiable claims about exactly what you've changed",
+               "C) Don't mention sustainability—avoid the regulatory risk entirely",
+               "D) Wait until you're fully sustainable before marketing anything"
+            ],
+            correct: 1,
+            wrongExplanations: [
+               "Vague claims like 'eco-friendly' are exactly what the FTC targets. Everlane, H&M, and Allbirds have all faced greenwashing accusations. The short-term marketing gain leads to long-term reputation and legal damage.",
+               "",
+               "Avoiding sustainability messaging when you ARE making changes misses genuine differentiation opportunity. Customers increasingly demand transparency—silence can be as damaging as false claims.",
+               "Waiting for 'full' sustainability is unrealistic and delays genuine progress. Customers respect honest communication about a journey more than either silence or false perfection claims."
+            ],
+            realWorld: "Patagonia's 'Don't Buy This Jacket' campaign succeeded because it was radically honest about consumption. They publish exact environmental impact data, admit shortcomings, and explain improvement plans. Result: $1B+ revenue and fierce customer loyalty. Meanwhile, H&M's 'Conscious Collection' faced lawsuits for misleading claims.",
+            concept: "authentic_sustainability",
+            why: "Specificity is the antidote to greenwashing. Instead of 'eco-friendly,' say: 'This package uses 15% post-consumer recycled materials.' Instead of 'carbon neutral,' say: 'We offset shipping emissions through verified forest projects in X.' Customers and regulators reward precision; they punish vagueness."
+         },
+         {
+            title: "The Diversity Dilemma",
+            context: "Your startup is 18 months old with 25 employees. Looking at the team, 22 employees match the founders' demographics. HR reports 80% of applicants come from the same sources: referrals and 3 tech job boards. The board is asking about diversity metrics for the next funding round. A quick 'diversity hire' could address optics before investor meetings.",
+            question: "What's the sustainable approach to building a diverse team?",
+            opts: [
+               "A) Fast-track a few diverse candidates to improve metrics before fundraising",
+               "B) Fix the pipeline first—change where and how you recruit",
+               "C) Diversity will happen naturally as you grow—don't force it",
+               "D) Implement strict demographic quotas for all new hires"
+            ],
+            correct: 1,
+            wrongExplanations: [
+               "Tokenism creates worse problems than it solves. 'Diversity hires' often feel isolated, receive less mentorship, and leave faster. The optics fix creates a retention problem and doesn't address root causes.",
+               "",
+               "Data shows diversity doesn't happen 'naturally' in homogeneous environments. Referrals perpetuate existing patterns. Without intervention, you'll be having the same conversation in 5 years at 250 employees.",
+               "Quotas without pipeline changes create impossible situations: you can't hit targets if diverse candidates aren't applying. Quotas also create backlash and questions about meritocracy that undermine inclusion."
+            ],
+            realWorld: "Pinterest published their diversity data publicly and committed to specific pipeline changes: partnering with HBCUs, removing degree requirements, blind resume reviews, and structured interviews. In 5 years, they moved from 1% to 9% Black employees in technical roles. Contrast with companies that set quotas without pipeline work—they struggled to hire and faced retention crises.",
+            concept: "systemic_diversity",
+            why: "Sustainable diversity is systemic, not cosmetic. Change the inputs: where you post jobs, what credentials you require, how you evaluate candidates. Referrals from a homogeneous team produce homogeneous candidates. Diverse pipelines produce diverse teams naturally—without quotas or tokenism."
+         },
+         {
+            title: "The Governance Gamble",
+            context: "Your startup raised a $2M seed round and is now raising Series A. Lead investor offers $8M at a $40M valuation—great terms. But they want: board control (2 of 3 seats), protective provisions on major decisions (hiring, spending >$50K, pivots), and participation rights that could block future investors. Your alternative is a $6M offer at $35M with standard terms.",
+            question: "How do you evaluate these governance trade-offs?",
+            opts: [
+               "A) Take the $8M—more money is always better",
+               "B) The protective provisions create existential risk—prefer standard terms",
+               "C) Negotiate for more money but accept the governance terms",
+               "D) Walk away from both and keep bootstrapping"
+            ],
+            correct: 1,
+            wrongExplanations: [
+               "More money with hostile governance is a trap. You'll have $8M but can't spend $50K without approval. Board control means they can replace you. You've traded ownership for the illusion of a bigger company.",
+               "",
+               "Negotiating more money while accepting governance terms still leaves you with the control problems. The governance terms ARE the issue—more money doesn't compensate for losing control of your company.",
+               "Walking away from both offers isn't strategic—it's reactive. The $6M with standard terms is a reasonable deal. Bootstrapping indefinitely to avoid any governance trade-offs limits growth potential."
+            ],
+            realWorld: "WeWork is the cautionary tale: Masayoshi Son of SoftBank pushed aggressive growth, Adam Neumann had dual-class voting control but still lost the company when the board turned. Conversely, Notion turned down funding for years to maintain control, only raising when they found aligned investors. Travis Kalanick at Uber was removed by investors who had accumulated enough board power.",
+            concept: "governance_protection",
+            why: "Governance determines who controls major decisions. Protective provisions that require investor approval for hiring, spending, and pivots effectively transfer control even if you 'own' majority shares. Standard terms exist because they're battle-tested fair. Non-standard terms usually benefit whoever proposed them."
+         },
+         {
+            title: "The Burn Rate Pressure",
+            context: "Your SaaS startup reached profitability at $3M ARR with 15% growth. Your VC investor is unhappy: 'Growth is too slow. You should be at 50%+ growth. Burn your profits to grow faster.' Profitable competitors in your space grow 20-30%. The market leader grows 80% but burns $50M/year. If you accelerate burn, you'll need to raise again within 18 months.",
+            question: "What's the economically sustainable path?",
+            opts: [
+               "A) Follow VC advice—they know what successful companies look like",
+               "B) Profitable growth at 15-20% is sustainable; aggressive burn is a different business model",
+               "C) Compromise: burn half the profits for 30% growth",
+               "D) The profitability proves the model is wrong—pivot to something with more growth potential"
+            ],
+            correct: 1,
+            wrongExplanations: [
+               "VCs optimize for portfolio returns, not individual company sustainability. They benefit from 1 company growing 100x, even if 9 die trying. Your incentives are different—you need the company to survive and succeed.",
+               "",
+               "Splitting the difference satisfies no one. You still need to raise again, but now you've also slowed your runway extension. Half-measures in business model decisions usually produce the worst of both worlds.",
+               "Profitability at $3M ARR is extremely rare and valuable—it's not evidence of a bad model. Most SaaS companies at $3M ARR are burning cash. Pivoting away from proven profitability is backwards."
+            ],
+            realWorld: "Basecamp (37signals) stayed profitable and small while VC-backed project management tools burned billions. They're still profitable 20 years later. Mailchimp reached $12B exit while staying profitable and never raising VC. Meanwhile, WeWork, Uber, and countless 'grow at all costs' companies burned billions and many never achieved sustainable economics.",
+            concept: "sustainable_economics",
+            why: "Profitability gives you options. Burn rate creates dependency on investors for survival. There's nothing wrong with VC-backed hypergrowth—but it's a choice, not a requirement. Profitable companies can wait for the right opportunities; burning companies must take whatever terms the market offers."
+         },
+         {
+            title: "The Customer Revenue Trap",
+            context: "Your startup has 10 customers paying $50K/year ($500K ARR). A Fortune 500 company offers a $2M annual contract—but requires 12 custom features, dedicated support, and compliance certifications. Your roadmap would be derailed for 6-9 months. The deal would make you profitable and impress investors. But your core product development would stop.",
+            question: "How do you evaluate this enterprise opportunity?",
+            opts: [
+               "A) Take it—$2M solves most problems and validates enterprise market",
+               "B) The customization creates unsustainable dependency—decline or negotiate scope",
+               "C) Take it but hire more engineers to do both",
+               "D) Ask them to wait 12 months until your roadmap allows it"
+            ],
+            correct: 1,
+            wrongExplanations: [
+               "Taking unscoped enterprise deals is how startups become service companies. You'll have 1 customer paying 80% of revenue with 12 custom features nobody else wants. If they churn, you're dead. If they stay, you're their custom vendor.",
+               "",
+               "Hiring to do both sounds logical but rarely works. New engineers take 3-6 months to become productive. The enterprise deadline is fixed. You'll still derail the roadmap AND add burn rate.",
+               "Asking them to wait 12 months means losing the deal—enterprise procurement doesn't wait. This is essentially declining but without the honesty of a clear 'no.'"
+            ],
+            realWorld: "Zendesk nearly died early on by taking big enterprise deals that required heavy customization. They eventually learned to say no to revenue that didn't fit their product strategy. Stripe famously declined large deals that would have required non-standard integrations, protecting their API consistency that eventually became their moat.",
+            concept: "strategic_revenue",
+            why: "Not all revenue is equal. Revenue that advances your product strategy is strategic; revenue that derails it is a trap. The question isn't 'Can we do this?' but 'Should we?' Big checks from customers who want you to become their custom vendor is a different business than scalable product revenue."
+         }
       ];
-      const t = topics[topic];
-      const infoTopics: Record<string, {title: string; content: string}> = {
-         esg: { title: "ESG for Startups", content: "ESG (Environmental, Social, Governance) isn't just for big companies. Investors increasingly evaluate startups on sustainability. Build good practices early—they're easier to scale than fix." },
-         triple: { title: "Triple Bottom Line", content: "Measure success by People (social impact), Planet (environmental impact), and Profit (financial returns). Sustainable businesses optimize all three, not just profit." },
-         circular: { title: "Circular Economy", content: "Design products and services for reuse, repair, and recycling. Reduce waste by keeping materials in use longer. This reduces costs and appeals to eco-conscious customers." },
-         bcorp: { title: "B Corp Certification", content: "B Corps meet high standards of social and environmental performance. Certification signals commitment to stakeholders beyond shareholders. Consider if it aligns with your mission." }
+
+      const conceptLabels: { [key: string]: string } = {
+         authentic_sustainability: "Authentic Sustainability Claims",
+         systemic_diversity: "Systemic Diversity Building",
+         governance_protection: "Governance Structure Protection",
+         sustainable_economics: "Sustainable Business Economics",
+         strategic_revenue: "Strategic Revenue Selection"
       };
-      const answer = (i: number) => { if(answered) return; setSelected(i); setAnswered(true); if(i === t.correct) { setScore(p => p + 1); setLog(l => [...l, `✓ ${t.area}: Sustainable choice!`]); } else { setLog(l => [...l, `✗ ${t.area}: Better: "${t.opts[t.correct]}"`]); } };
-      const next = () => { if(topic >= topics.length - 1) { setPhase('result'); } else { setTopic(p => p + 1); setAnswered(false); setSelected(null); } };
-      const grade = score >= 4 ? 'A' : score >= 3 ? 'B' : score >= 2 ? 'C' : 'D';
-      if(phase === 'intro') return (<div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-emerald-900 via-teal-900 to-cyan-900 text-white p-6"><div className="text-6xl mb-4">🌍</div><h2 className="text-2xl font-bold mb-2">Sustainability & Impact</h2><p className="text-slate-300 text-center mb-6 max-w-md">Build a business that's good for people, planet, and profit!</p><button onClick={() => setPhase('play')} className="px-8 py-3 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-xl font-bold">Go Sustainable</button></div>);
-      if(phase === 'result') return (<div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-emerald-900 via-teal-900 to-cyan-900 text-white p-6"><div className="text-6xl mb-4">{grade === 'A' ? '🌟' : grade === 'B' ? '🌍' : '🌱'}</div><h2 className="text-2xl font-bold mb-2">Impact Assessment!</h2><div className="text-4xl font-bold text-emerald-400 mb-2">{score}/{topics.length}</div><div className="text-6xl mb-4">{grade}</div><p className="text-slate-400 mb-4">{grade === 'A' ? 'Sustainability champion!' : grade === 'B' ? 'Good impact awareness!' : 'Room to grow!'}</p><div className="w-full max-w-md bg-black/30 rounded-lg p-3 mb-4 max-h-32 overflow-y-auto">{log.map((l,i) => <p key={i} className="text-xs text-slate-300">{l}</p>)}</div><button onClick={() => {setPhase('intro');setTopic(0);setScore(0);setAnswered(false);setSelected(null);setLog([]);}} className="px-6 py-2 bg-emerald-600 rounded-lg">Try Again</button></div>);
-      return (<div className="w-full h-full flex flex-col bg-gradient-to-br from-emerald-900 via-teal-900 to-cyan-900 text-white overflow-hidden">{showInfo && infoTopic && infoTopics[infoTopic] && (<div className="absolute inset-0 bg-black/80 flex items-center justify-center p-4 z-50" onClick={() => { setShowInfo(false); setInfoTopic(null); }}><div className="bg-slate-800 rounded-xl p-4 max-w-md" onClick={e => e.stopPropagation()}><h3 className="text-lg font-bold text-emerald-400 mb-2">{infoTopics[infoTopic].title}</h3><p className="text-sm text-slate-300">{infoTopics[infoTopic].content}</p><button onClick={() => { setShowInfo(false); setInfoTopic(null); }} className="mt-4 w-full py-2 bg-emerald-600 rounded-lg">Got it!</button></div></div>)}<div className="p-3 bg-black/30 border-b border-emerald-500/30 flex justify-between items-center"><span className="font-bold">{t.icon} {t.area}</span><span className="text-emerald-400">{topic + 1}/{topics.length}</span><span className="text-teal-400">Score: {score}</span></div><div className="flex-1 p-4 overflow-auto"><div className="flex gap-1 mb-4">{topics.map((tp, i) => (<div key={i} className="flex-1 text-center"><div className={`text-xl ${i <= topic ? 'opacity-100' : 'opacity-30'}`}>{tp.icon}</div><div className={`h-1 mt-1 rounded ${i < topic ? 'bg-emerald-500' : i === topic ? 'bg-teal-400' : 'bg-slate-700'}`} /></div>))}</div><div className="bg-black/30 rounded-xl p-4 mb-4"><p className="text-sm text-slate-300">{t.situation}</p></div><div className="bg-black/30 rounded-xl p-4 mb-3"><p className="font-medium">{t.q}</p></div><div className="grid gap-2">{t.opts.map((opt, i) => (<button key={i} onClick={() => answer(i)} disabled={answered} className={`p-3 rounded-lg text-left text-sm ${answered ? i === t.correct ? 'bg-green-600' : i === selected ? 'bg-red-600' : 'bg-black/30' : 'bg-black/30 hover:bg-emerald-600/50'}`}>{opt}</button>))}</div>{answered && (<div className="mt-3 p-3 bg-black/30 rounded-lg"><p className="text-sm text-slate-300">{t.explain}</p><button onClick={next} className="mt-3 w-full py-2 bg-emerald-600 rounded-lg">{topic >= topics.length - 1 ? 'See Results' : 'Next Topic'}</button></div>)}</div><div className="p-3 bg-black/30 border-t border-emerald-500/30 flex gap-2 justify-center flex-wrap">{Object.keys(infoTopics).map(k => <button key={k} onClick={() => {setInfoTopic(k);setShowInfo(true);}} className="text-xs text-emerald-400">ℹ️ {infoTopics[k].title}</button>)}</div></div>);
+
+      const infoTopics: { [k: string]: { title: string; content: string } } = {
+         esg: { title: "ESG for Startups", content: "ESG (Environmental, Social, Governance) isn't just for corporations. VCs increasingly use ESG screens. Build practices early: carbon tracking, diversity data, board independence. These are easier to establish at 20 employees than retrofit at 200." },
+         triple: { title: "Triple Bottom Line", content: "People, Planet, Profit. Sustainable businesses optimize all three, understanding they're interconnected. Employee wellbeing drives productivity. Environmental efficiency reduces costs. Good governance attracts investors. It's not charity—it's strategy." },
+         stakeholder: { title: "Stakeholder Capitalism", content: "Beyond shareholders: employees, customers, communities, environment. Long-term value creation requires considering all stakeholders. Short-term extraction from any group eventually destroys value. Amazon's 'customer obsession' is stakeholder thinking." },
+         bcorp: { title: "B Corp Certification", content: "Legal structure that embeds stakeholder consideration into governance. B Corps balance profit with purpose by statute. Requires rigorous impact assessment. Signals commitment but requires ongoing compliance. Consider if it aligns with your mission." }
+      };
+
+      const sc = scenarios[scenario];
+
+      const answer = (i: number) => {
+         if (answered) return;
+         setSelected(i);
+         setAnswered(true);
+         if (i === sc.correct) {
+            setScore(s => s + 1);
+            setGameLog(l => [...l, `✓ ${sc.title}: Chose sustainable path`]);
+         } else {
+            setGameLog(l => [...l, `✗ ${sc.title}: ${sc.wrongExplanations[i]}`]);
+            if (!conceptGaps.includes(sc.concept)) {
+               setConceptGaps(g => [...g, sc.concept]);
+            }
+         }
+      };
+
+      const next = () => {
+         if (scenario >= scenarios.length - 1) {
+            setPhase('result');
+         } else {
+            setScenario(s => s + 1);
+            setSelected(null);
+            setAnswered(false);
+         }
+      };
+
+      const grade = score >= 5 ? 'A' : score >= 4 ? 'B' : score >= 3 ? 'C' : 'D';
+
+      if (phase === 'intro') {
+         return (
+            <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-emerald-900 via-teal-900 to-cyan-900 text-white p-6">
+               <div className="text-6xl mb-4">🌍</div>
+               <h2 className="text-2xl font-bold mb-2">Sustainable Business Lab</h2>
+               <p className="text-emerald-300 text-center mb-4 max-w-md">
+                  Navigate the tensions between short-term gains and long-term sustainability in ESG, governance, and growth.
+               </p>
+               <div className="bg-black/30 rounded-lg p-4 mb-6 max-w-md">
+                  <p className="text-sm text-slate-300 mb-2">You'll face real trade-offs involving:</p>
+                  <ul className="text-xs text-slate-400 space-y-1">
+                     <li>• Environmental claims that could backfire legally</li>
+                     <li>• Diversity approaches that create vs solve problems</li>
+                     <li>• Governance terms that determine company control</li>
+                     <li>• Growth pressure from investors vs economic reality</li>
+                     <li>• Revenue that advances vs derails product strategy</li>
+                  </ul>
+               </div>
+               <button onClick={() => setPhase('play')} className="px-8 py-3 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-xl font-bold">
+                  Build Sustainably
+               </button>
+            </div>
+         );
+      }
+
+      if (phase === 'result') {
+         return (
+            <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-emerald-900 via-teal-900 to-cyan-900 text-white p-6 overflow-auto">
+               <div className="text-5xl mb-3">{grade === 'A' ? '🌟' : grade === 'B' ? '🌍' : grade === 'C' ? '🌱' : '⚠️'}</div>
+               <h2 className="text-xl font-bold mb-2">Sustainability Assessment</h2>
+               <div className="text-3xl font-bold text-emerald-400 mb-1">{score}/{scenarios.length}</div>
+               <div className="text-4xl mb-3">{grade}</div>
+               <p className="text-slate-400 text-sm mb-3 text-center">
+                  {grade === 'A' ? 'Sustainability strategist! You balance short-term pressures with long-term health.' :
+                   grade === 'B' ? 'Strong sustainable thinking—you see through most short-term temptations.' :
+                   grade === 'C' ? 'Some unsustainable patterns—study how short-term gains can create long-term problems.' :
+                   'Review sustainability fundamentals—many decisions would harm long-term health.'}
+               </p>
+               {conceptGaps.length > 0 && (
+                  <div className="w-full max-w-md bg-red-900/30 border border-red-500/30 rounded-lg p-3 mb-3">
+                     <p className="text-xs text-red-400 font-semibold mb-2">Areas to Strengthen:</p>
+                     <ul className="text-xs text-red-300 space-y-1">
+                        {conceptGaps.map(g => <li key={g}>• {conceptLabels[g]}</li>)}
+                     </ul>
+                  </div>
+               )}
+               <div className="w-full max-w-md bg-black/30 rounded-lg p-3 mb-4 max-h-28 overflow-y-auto">
+                  {gameLog.map((l, i) => <p key={i} className="text-xs text-slate-300 mb-1">{l}</p>)}
+               </div>
+               <button onClick={() => { setPhase('intro'); setScenario(0); setScore(0); setAnswered(false); setSelected(null); setGameLog([]); setConceptGaps([]); }} className="px-6 py-2 bg-emerald-600 rounded-lg">
+                  Try Again
+               </button>
+            </div>
+         );
+      }
+
+      return (
+         <div className="w-full h-full flex flex-col bg-gradient-to-br from-emerald-900 via-teal-900 to-cyan-900 text-white overflow-hidden">
+            {showInfo && infoTopic && infoTopics[infoTopic] && (
+               <div className="absolute inset-0 bg-black/80 flex items-center justify-center p-4 z-50" onClick={() => { setShowInfo(false); setInfoTopic(null); }}>
+                  <div className="bg-slate-800 rounded-xl p-4 max-w-sm" onClick={e => e.stopPropagation()}>
+                     <h3 className="text-lg font-bold text-emerald-400 mb-2">{infoTopics[infoTopic].title}</h3>
+                     <p className="text-sm text-slate-300">{infoTopics[infoTopic].content}</p>
+                     <button onClick={() => { setShowInfo(false); setInfoTopic(null); }} className="mt-4 w-full py-2 bg-emerald-600 rounded-lg">Got it!</button>
+                  </div>
+               </div>
+            )}
+            <div className="p-3 bg-black/30 border-b border-emerald-500/30 flex justify-between items-center">
+               <span className="font-bold text-sm">🌍 {sc.title}</span>
+               <span className="text-emerald-400 text-sm">{scenario + 1}/{scenarios.length}</span>
+               <span className="text-teal-400 text-sm">Score: {score}</span>
+            </div>
+            <div className="flex-1 p-4 overflow-auto">
+               <div className="bg-black/30 rounded-lg p-3 mb-3">
+                  <p className="text-sm text-slate-300">{sc.context}</p>
+               </div>
+               <div className="bg-emerald-800/30 rounded-lg p-3 mb-3">
+                  <p className="font-medium text-sm">{sc.question}</p>
+               </div>
+               <div className="grid gap-2 mb-3">
+                  {sc.opts.map((opt, i) => (
+                     <button key={i} onClick={() => answer(i)} disabled={answered} className={`p-3 rounded-lg text-left text-sm transition-all ${answered ? i === sc.correct ? 'bg-green-600' : i === selected ? 'bg-red-600' : 'bg-black/30 opacity-50' : 'bg-black/30 hover:bg-emerald-600/50'}`}>
+                        {opt}
+                     </button>
+                  ))}
+               </div>
+               {answered && (
+                  <div className="space-y-3">
+                     <div className="bg-green-900/30 border border-green-500/30 rounded-lg p-3">
+                        <p className="text-xs text-green-400 font-semibold mb-1">Sustainable Path:</p>
+                        <p className="text-sm text-slate-300">{sc.why}</p>
+                     </div>
+                     {selected !== sc.correct && sc.wrongExplanations[selected!] && (
+                        <div className="bg-red-900/30 border border-red-500/30 rounded-lg p-3">
+                           <p className="text-xs text-red-400 font-semibold mb-1">Why that's unsustainable:</p>
+                           <p className="text-sm text-slate-300">{sc.wrongExplanations[selected!]}</p>
+                        </div>
+                     )}
+                     <div className="bg-emerald-900/30 border border-emerald-500/30 rounded-lg p-3">
+                        <p className="text-xs text-emerald-400 font-semibold mb-1">📊 Real World:</p>
+                        <p className="text-sm text-slate-300">{sc.realWorld}</p>
+                     </div>
+                     <button onClick={next} className="w-full py-2 bg-emerald-600 rounded-lg font-medium">
+                        {scenario >= scenarios.length - 1 ? 'See Results' : 'Next Scenario'}
+                     </button>
+                  </div>
+               )}
+            </div>
+            <div className="p-2 bg-black/30 border-t border-emerald-500/30 flex gap-2 justify-center flex-wrap">
+               {Object.keys(infoTopics).map(k => (
+                  <button key={k} onClick={() => { setInfoTopic(k); setShowInfo(true); }} className="text-xs text-emerald-400 hover:text-emerald-300">
+                     ℹ️ {infoTopics[k].title}
+                  </button>
+               ))}
+            </div>
+         </div>
+      );
    };
 
    // --- EXIT STRATEGY RENDERER ---
@@ -29356,30 +37011,543 @@ const GeneratedDiagram: React.FC<DiagramProps> = ({ type, data, title }) => {
       const [score, setScore] = useState(0);
       const [selected, setSelected] = useState<number | null>(null);
       const [answered, setAnswered] = useState(false);
+      const [gameLog, setGameLog] = useState<string[]>([]);
+      const [showInfo, setShowInfo] = useState(false);
+      const [infoTopic, setInfoTopic] = useState<string | null>(null);
+      const [conceptGaps, setConceptGaps] = useState<string[]>([]);
+
+      const scenarios = [
+         {
+            title: "The Earnout Trap",
+            context: "Your SaaS startup ($8M ARR, 40% growth) receives an acquisition offer: $60M total, but structured as $35M upfront + $25M earnout over 3 years tied to hitting 50% YoY growth targets. Your current investor owns 35% and is pushing to accept. The acquirer is a large enterprise software company known for slow integration and bureaucracy.",
+            question: "What's the critical issue with this deal structure?",
+            opts: [
+               "A) $60M total is fair—accept and hit the earnout targets",
+               "B) Earnouts controlled by acquirer create misaligned incentives—the targets become nearly impossible",
+               "C) Negotiate for $50M all-cash instead",
+               "D) The investor pressure means you should take it quickly"
+            ],
+            correct: 1,
+            wrongExplanations: [
+               "Earnouts are not guaranteed money. Once acquired, you lose control over resources, hiring, pricing—everything that drives growth. The acquirer has incentive to NOT pay the earnout by making targets unreachable.",
+               "",
+               "Negotiating for less all-cash might work, but $50M vs $35M guaranteed isn't necessarily better. The issue is understanding earnout risk, not just the dollar amount. Some earnout structures are reasonable.",
+               "Investor pressure to close quickly is a red flag, not a reason to accept. VCs sometimes push bad deals because returning something beats returning nothing. Your incentives may differ from theirs."
+            ],
+            realWorld: "Groupon acquired hundreds of daily deal companies with earnouts. Post-acquisition, Groupon changed sales strategies, redirected traffic, and adjusted metrics—most earnouts were never paid. Founders who expected $10-50M earnouts often received $0. The acquisition price you negotiate is the price you get; earnouts are negotiating leverage for buyers.",
+            concept: "earnout_structure",
+            why: "Earnouts transfer risk from buyer to seller. Once acquired, you control nothing: they choose your budget, team, pricing, and strategy. If growth slows (for ANY reason), they don't pay the earnout. Treat earnouts as bonus, not base. If the all-cash portion isn't acceptable alone, the deal isn't acceptable."
+         },
+         {
+            title: "The Acqui-hire Dilemma",
+            context: "Your startup has 8 months of runway and no clear path to profitability. A FAANG company offers to acqui-hire your 12-person team: each engineer gets $300K sign-on + $400K/year total comp. Investors would receive $0 (no proceeds after debt). Your lead investor says this 'violates fiduciary duty' to shareholders. The team is exhausted and demoralized.",
+            question: "How should you navigate this acqui-hire situation?",
+            opts: [
+               "A) Reject—keep building until you find product-market fit",
+               "B) Accept but be transparent—team wellbeing matters, and investors knew the risks",
+               "C) The fiduciary duty argument means you cannot take this deal",
+               "D) Shop the acqui-hire offer to other companies for better terms"
+            ],
+            correct: 1,
+            wrongExplanations: [
+               "8 months of runway with no path to profitability means you'll likely hit zero with everyone unemployed. Rejection sacrifices team for a low-probability outcome. Founders who burn out teams for failing companies damage their reputation.",
+               "",
+               "Fiduciary duty doesn't require destroying team value to chase impossible investor returns. Courts understand that when companies fail, investor returns can be zero. The duty is to make good-faith decisions—which includes considering all stakeholders.",
+               "Shopping acqui-hire offers is risky—word travels fast in tech. The FAANG offer might disappear if they learn you're negotiating with competitors. This is a tactic for strong positions, not desperate ones."
+            ],
+            realWorld: "When Yahoo acquired Summly for $30M, the 17-year-old founder Nick D'Aloisio prioritized team outcomes. Many acqui-hires at FAANG result in better individual outcomes than failed startups. Reid Hoffman openly discusses how acqui-hires aren't failures—they're transitions that preserve value for teams when companies don't work out.",
+            concept: "acquihire_ethics",
+            why: "Acqui-hires aren't failures—they're responsible endings. When a startup can't survive, the choice is: 1) everyone loses their jobs when money runs out, or 2) team lands at good company with real comp. Fiduciary duty doesn't mean suicidal pursuit of investor returns. Transparency and good faith matter more than heroic last stands."
+         },
+         {
+            title: "The Timing Paradox",
+            context: "Your startup just closed an incredible quarter: $5M ARR (up from $3M last quarter), 200% YoY growth, major enterprise customer signed. Inbound acquisition interest is at an all-time high—a strategic buyer is discussing $80M. Your investors say 'don't sell now, you're just getting started.' But you're burning $400K/month with 10 months runway.",
+            question: "What's the strategic truth about exit timing?",
+            opts: [
+               "A) Never sell after your best quarter—the trajectory suggests much higher valuations ahead",
+               "B) Best time to sell is when you have options—this may not last",
+               "C) Raise more funding to extend runway and capture the higher valuation",
+               "D) The investor advice is correct—founders who sell early leave money on the table"
+            ],
+            correct: 1,
+            wrongExplanations: [
+               "One great quarter doesn't guarantee future growth. The enterprise customer could churn. Competition could emerge. Macro conditions could shift. 'Trajectory' is a story about the past, not a guarantee about the future.",
+               "",
+               "Raising at peak momentum might work, but dilution costs are high. More importantly, fundraising takes 6-8 months—you might miss the acquisition window and still burn runway. The 'raise and grow bigger' path has risk too.",
+               "Investor advice to hold often reflects their incentives, not yours. VCs need big exits to return funds. A $80M exit might be life-changing for you but not meaningful for a $500M fund. Their advice optimizes for their outcomes."
+            ],
+            realWorld: "Instagram sold to Facebook for $1B at 13 employees with minimal revenue—seemingly 'too early.' But founders Kevin Systrom and Mike Krieger understood timing. Compare to Snap, which rejected Facebook's $3B offer and later faced brutal public market scrutiny. The 'right' time to exit is when you have leverage, not when you need to.",
+            concept: "exit_timing",
+            why: "The best time to exit is when you have options—not when you need to. Momentum creates leverage; desperation destroys it. Consider: What happens if this great quarter doesn't repeat? What's the downside scenario? Upside is theoretical; the exit offer is concrete. Optimism is not strategy."
+         },
+         {
+            title: "The Founder Liquidity Question",
+            context: "You've been building for 6 years. Paper net worth: $15M. Reality: salary of $130K, no savings, maxed credit cards during the early years. A secondary investor offers to buy $3M of your shares at the last round's valuation. Your co-founder says 'selling shares signals you don't believe in the company.' The board is neutral but watching.",
+            question: "How should you think about founder secondary liquidity?",
+            opts: [
+               "A) Never sell—it does signal lack of confidence to investors and team",
+               "B) Taking secondary improves decision-making by reducing personal financial pressure",
+               "C) Wait for the exit—all or nothing",
+               "D) Only sell if you're planning to leave the company"
+            ],
+            correct: 1,
+            wrongExplanations: [
+               "Modern venture practice accepts founder secondary. YC, a]16z, and most sophisticated VCs explicitly support it. The 'never sell' mentality often leads to desperate founders making poor decisions because they need the company to exit for personal financial survival.",
+               "",
+               "All-or-nothing thinking ignores the reality of founder psychology. 6 years of below-market salary while sitting on illiquid paper wealth creates stress that affects judgment. Waiting indefinitely isn't noble—it's often irrational.",
+               "Secondary and commitment are unrelated. Taking $3M of $15M in liquidity still leaves $12M of alignment. Many of the best founders took secondary to reduce personal stress while continuing to build great companies."
+            ],
+            realWorld: "Phil Libin, Evernote founder, openly advocates for founder liquidity: 'Founders make better decisions when they're not financially desperate.' Stripe founders took some liquidity while continuing to build. Stewart Butterfield took secondary at Slack years before the exit. It's now standard in later-stage rounds.",
+            concept: "founder_liquidity",
+            why: "Founder liquidity isn't about belief—it's about psychology. 6 years of sacrifice creates stress that clouds judgment. Founders who desperately need an exit make worse decisions than those with financial security. Taking 20% off the table while keeping 80% aligned is healthy, not disloyal. Sophisticated investors understand this."
+         },
+         {
+            title: "The Strategic vs Financial Buyer",
+            context: "Your developer tools startup ($12M ARR) has two acquisition offers. Microsoft offers $150M all-cash. A private equity firm offers $180M but requires you to stay 4 years and hit aggressive EBITDA targets (from -$2M to +$10M in 3 years). Your team of 45 mostly joined for the mission of developer productivity. Microsoft would integrate you into Azure.",
+            question: "How do you compare strategic vs financial buyers?",
+            opts: [
+               "A) Take the higher PE offer—$30M more is significant",
+               "B) Strategic fit and team outcomes matter as much as price—evaluate post-acquisition reality",
+               "C) Microsoft's bureaucracy will kill the product—PE is more aligned",
+               "D) Let the team vote on which offer to take"
+            ],
+            correct: 1,
+            wrongExplanations: [
+               "The PE offer's $30M premium comes with strings: 4-year commitment, aggressive profitability targets from a money-losing position, likely layoffs to hit EBITDA. After you account for the 4-year lock-in and achievement risk, net value may be lower.",
+               "",
+               "Microsoft's bureaucracy is real but so is PE's profitability pressure. Going from -$2M to +$10M EBITDA in 3 years usually means cutting R&D and team—exactly what developer tool people hate. Neither is obviously better; both have trade-offs.",
+               "Team votes on major strategic decisions sounds democratic but creates false consensus. Employees don't have full context on deal terms, don't bear the same risks, and shouldn't be burdened with this decision. Leadership decides; transparency follows."
+            ],
+            realWorld: "GitHub sold to Microsoft for $7.5B despite fears of 'Microsoft bureaucracy killing the product.' Years later, GitHub has grown significantly under Microsoft while maintaining developer trust. Conversely, many PE acquisitions of dev tools have led to price increases, feature cuts, and engineer departures. Neither path is guaranteed—evaluation is everything.",
+            concept: "buyer_types",
+            why: "Strategic buyers acquire for synergy—they'll change things but also invest. Financial buyers acquire for returns—they'll optimize for EBITDA, often through cost cuts. Neither is inherently better. Ask: What happens to my team? What happens to customers? What am I locked into? The headline number is just the start of analysis."
+         }
+      ];
+
+      const conceptLabels: { [key: string]: string } = {
+         earnout_structure: "Earnout Risk Assessment",
+         acquihire_ethics: "Acqui-hire Decision Making",
+         exit_timing: "Strategic Exit Timing",
+         founder_liquidity: "Founder Secondary Liquidity",
+         buyer_types: "Strategic vs Financial Buyers"
+      };
+
+      const infoTopics: { [k: string]: { title: string; content: string } } = {
+         types: { title: "Exit Types", content: "M&A (most common, 90%+ of exits), IPO (rare, <1% of startups), Acqui-hire (team-focused, common for failing startups), Secondary (partial liquidity), SPAC (special purpose acquisition), Management buyout. Each has radically different implications." },
+         valuation: { title: "Exit Valuation Drivers", content: "Revenue multiples vary by industry: SaaS 5-15x ARR, marketplace 2-5x GMV. Strategic premium adds 20-50% if buyer has synergies. Competitive tension (multiple bidders) adds 10-30%. Growth rate and profitability path matter enormously." },
+         structure: { title: "Deal Structure Terms", content: "All-cash vs stock vs earnout. Escrow holdbacks (10-20% typical). Reps & warranties (liability for misrepresentation). Non-competes (2-4 years typical). Retention packages for team. Founder role and earnout conditions." },
+         timing: { title: "Exit Timing Strategy", content: "Best exits come from positions of strength—growing, funded, multiple interested buyers. Worst exits come from desperation—low runway, failing metrics, single buyer. Build relationships with potential acquirers before you need them." }
+      };
+
+      const sc = scenarios[scenario];
+
+      const answer = (i: number) => {
+         if (answered) return;
+         setSelected(i);
+         setAnswered(true);
+         if (i === sc.correct) {
+            setScore(s => s + 1);
+            setGameLog(l => [...l, `✓ ${sc.title}: Strategic exit thinking`]);
+         } else {
+            setGameLog(l => [...l, `✗ ${sc.title}: ${sc.wrongExplanations[i]}`]);
+            if (!conceptGaps.includes(sc.concept)) {
+               setConceptGaps(g => [...g, sc.concept]);
+            }
+         }
+      };
+
+      const next = () => {
+         if (scenario >= scenarios.length - 1) {
+            setPhase('result');
+         } else {
+            setScenario(s => s + 1);
+            setSelected(null);
+            setAnswered(false);
+         }
+      };
+
+      const grade = score >= 5 ? 'A' : score >= 4 ? 'B' : score >= 3 ? 'C' : 'D';
+
+      if (phase === 'intro') {
+         return (
+            <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-yellow-900 via-amber-900 to-orange-900 text-white p-6">
+               <div className="text-6xl mb-4">🚪</div>
+               <h2 className="text-2xl font-bold mb-2">Exit Strategy Simulator</h2>
+               <p className="text-yellow-300 text-center mb-4 max-w-md">
+                  Navigate the complex negotiations of startup exits—where headline valuations hide dangerous deal structures.
+               </p>
+               <div className="bg-black/30 rounded-lg p-4 mb-6 max-w-md">
+                  <p className="text-sm text-slate-300 mb-2">You'll face real exit scenarios involving:</p>
+                  <ul className="text-xs text-slate-400 space-y-1">
+                     <li>• Earnouts that sound good but never pay out</li>
+                     <li>• Acqui-hire ethics when companies are failing</li>
+                     <li>• Timing decisions that determine leverage</li>
+                     <li>• Founder liquidity vs 'commitment' narratives</li>
+                     <li>• Strategic vs financial buyer trade-offs</li>
+                  </ul>
+               </div>
+               <button onClick={() => setPhase('play')} className="px-8 py-3 bg-gradient-to-r from-yellow-500 to-amber-500 rounded-xl font-bold">
+                  Plan Your Exit
+               </button>
+            </div>
+         );
+      }
+
+      if (phase === 'result') {
+         return (
+            <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-yellow-900 via-amber-900 to-orange-900 text-white p-6 overflow-auto">
+               <div className="text-5xl mb-3">{grade === 'A' ? '🏆' : grade === 'B' ? '🚪' : grade === 'C' ? '📊' : '⚠️'}</div>
+               <h2 className="text-xl font-bold mb-2">Exit Strategy Assessment</h2>
+               <div className="text-3xl font-bold text-yellow-400 mb-1">{score}/{scenarios.length}</div>
+               <div className="text-4xl mb-3">{grade}</div>
+               <p className="text-slate-400 text-sm mb-3 text-center">
+                  {grade === 'A' ? 'Exit expert! You see through deal structures to real value.' :
+                   grade === 'B' ? 'Strong exit instincts—you understand most deal dynamics.' :
+                   grade === 'C' ? 'Some traps would catch you—study earnouts and timing.' :
+                   'Review exit fundamentals—many common traps would harm your outcome.'}
+               </p>
+               {conceptGaps.length > 0 && (
+                  <div className="w-full max-w-md bg-red-900/30 border border-red-500/30 rounded-lg p-3 mb-3">
+                     <p className="text-xs text-red-400 font-semibold mb-2">Exit Concepts to Study:</p>
+                     <ul className="text-xs text-red-300 space-y-1">
+                        {conceptGaps.map(g => <li key={g}>• {conceptLabels[g]}</li>)}
+                     </ul>
+                  </div>
+               )}
+               <div className="w-full max-w-md bg-black/30 rounded-lg p-3 mb-4 max-h-28 overflow-y-auto">
+                  {gameLog.map((l, i) => <p key={i} className="text-xs text-slate-300 mb-1">{l}</p>)}
+               </div>
+               <button onClick={() => { setPhase('intro'); setScenario(0); setScore(0); setAnswered(false); setSelected(null); setGameLog([]); setConceptGaps([]); }} className="px-6 py-2 bg-yellow-600 rounded-lg">
+                  Try Again
+               </button>
+            </div>
+         );
+      }
+
+      return (
+         <div className="w-full h-full flex flex-col bg-gradient-to-br from-yellow-900 via-amber-900 to-orange-900 text-white overflow-hidden">
+            {showInfo && infoTopic && infoTopics[infoTopic] && (
+               <div className="absolute inset-0 bg-black/80 flex items-center justify-center p-4 z-50" onClick={() => { setShowInfo(false); setInfoTopic(null); }}>
+                  <div className="bg-slate-800 rounded-xl p-4 max-w-sm" onClick={e => e.stopPropagation()}>
+                     <h3 className="text-lg font-bold text-yellow-400 mb-2">{infoTopics[infoTopic].title}</h3>
+                     <p className="text-sm text-slate-300">{infoTopics[infoTopic].content}</p>
+                     <button onClick={() => { setShowInfo(false); setInfoTopic(null); }} className="mt-4 w-full py-2 bg-yellow-600 rounded-lg">Got it!</button>
+                  </div>
+               </div>
+            )}
+            <div className="p-3 bg-black/30 border-b border-yellow-500/30 flex justify-between items-center">
+               <span className="font-bold text-sm">🚪 {sc.title}</span>
+               <span className="text-yellow-400 text-sm">{scenario + 1}/{scenarios.length}</span>
+               <span className="text-amber-400 text-sm">Score: {score}</span>
+            </div>
+            <div className="flex-1 p-4 overflow-auto">
+               <div className="bg-black/30 rounded-lg p-3 mb-3">
+                  <p className="text-sm text-slate-300">{sc.context}</p>
+               </div>
+               <div className="bg-yellow-800/30 rounded-lg p-3 mb-3">
+                  <p className="font-medium text-sm">{sc.question}</p>
+               </div>
+               <div className="grid gap-2 mb-3">
+                  {sc.opts.map((opt, i) => (
+                     <button key={i} onClick={() => answer(i)} disabled={answered} className={`p-3 rounded-lg text-left text-sm transition-all ${answered ? i === sc.correct ? 'bg-green-600' : i === selected ? 'bg-red-600' : 'bg-black/30 opacity-50' : 'bg-black/30 hover:bg-yellow-600/50'}`}>
+                        {opt}
+                     </button>
+                  ))}
+               </div>
+               {answered && (
+                  <div className="space-y-3">
+                     <div className="bg-green-900/30 border border-green-500/30 rounded-lg p-3">
+                        <p className="text-xs text-green-400 font-semibold mb-1">Exit Strategy Insight:</p>
+                        <p className="text-sm text-slate-300">{sc.why}</p>
+                     </div>
+                     {selected !== sc.correct && sc.wrongExplanations[selected!] && (
+                        <div className="bg-red-900/30 border border-red-500/30 rounded-lg p-3">
+                           <p className="text-xs text-red-400 font-semibold mb-1">Why that's risky:</p>
+                           <p className="text-sm text-slate-300">{sc.wrongExplanations[selected!]}</p>
+                        </div>
+                     )}
+                     <div className="bg-yellow-900/30 border border-yellow-500/30 rounded-lg p-3">
+                        <p className="text-xs text-yellow-400 font-semibold mb-1">📊 Real World:</p>
+                        <p className="text-sm text-slate-300">{sc.realWorld}</p>
+                     </div>
+                     <button onClick={next} className="w-full py-2 bg-yellow-600 rounded-lg font-medium">
+                        {scenario >= scenarios.length - 1 ? 'See Results' : 'Next Scenario'}
+                     </button>
+                  </div>
+               )}
+            </div>
+            <div className="p-2 bg-black/30 border-t border-yellow-500/30 flex gap-2 justify-center flex-wrap">
+               {Object.keys(infoTopics).map(k => (
+                  <button key={k} onClick={() => { setInfoTopic(k); setShowInfo(true); }} className="text-xs text-yellow-400 hover:text-yellow-300">
+                     ℹ️ {infoTopics[k].title}
+                  </button>
+               ))}
+            </div>
+         </div>
+      );
+   };
+
+   // --- BUSINESS STRUCTURES RENDERER ---
+   const BusinessStructuresRenderer = () => {
+      const [phase, setPhase] = useState<'intro' | 'play' | 'result'>('intro');
+      const [scenario, setScenario] = useState(0);
+      const [score, setScore] = useState(0);
+      const [selected, setSelected] = useState<number | null>(null);
+      const [answered, setAnswered] = useState(false);
       const [log, setLog] = useState<string[]>([]);
       const [showInfo, setShowInfo] = useState(false);
       const [infoTopic, setInfoTopic] = useState<string | null>(null);
 
-      const scenarios = [
-         { type: "Acquisition", icon: "🏢", situation: "A larger company offers to acquire your startup for 3x your last valuation. The offer requires you to stay for 3 years.", q: "How do you evaluate this acquisition offer?", opts: ["Accept immediately—3x is great", "Evaluate strategic fit, team treatment, and earnout terms carefully", "Reject—always hold out for IPO", "Counter with 10x valuation"], correct: 1, explain: "Exit evaluation goes beyond price: strategic fit, earnout structure, team retention packages, and your personal goals all matter. Don't rush." },
-         { type: "IPO Readiness", icon: "📈", situation: "Your startup has $50M ARR growing 60% YoY. Investment bankers are suggesting you could IPO in 18 months.", q: "What should you assess for IPO readiness?", opts: ["Revenue growth is enough—proceed", "Evaluate predictability, governance, compliance, and market timing", "Wait for $100M ARR minimum", "IPO immediately to capture the market"], correct: 1, explain: "IPO readiness requires: predictable revenue, strong governance, SOX compliance readiness, experienced CFO, and favorable market conditions. It's a journey, not an event." },
-         { type: "Secondary Sale", icon: "💵", situation: "You've been grinding for 7 years. An investor offers to buy $5M of your shares in a secondary transaction.", q: "How should you think about secondary sales?", opts: ["Refuse—it shows lack of confidence", "Consider if it enables focus and reduces personal financial pressure", "Sell all your shares", "Wait for full exit only"], correct: 1, explain: "Secondary sales can provide founders financial security without full exit. This often enables better long-term decisions by reducing personal financial pressure." },
-         { type: "Acqui-hire", icon: "👥", situation: "Your startup is running low on runway. A big tech company wants to acqui-hire your team but shut down the product.", q: "How do you handle an acqui-hire offer?", opts: ["Reject—we'll find another way", "Negotiate best terms for team while being transparent with stakeholders", "Accept any terms to save team", "Pivot to new product instead"], correct: 1, explain: "Acqui-hires happen. Negotiate team packages, handle investor communication transparently, and ensure everyone understands the terms. It's not failure—it's transition." },
-         { type: "Strategic Exit", icon: "🎯", situation: "You're approached by two acquirers: one offers more cash, the other offers better strategic fit and team opportunities.", q: "How do you choose between exit offers?", opts: ["Always take the highest cash offer", "Weight strategic fit, team outcomes, and your long-term goals alongside price", "Let investors decide", "Reject both and stay independent"], correct: 1, explain: "Exit decisions blend financial returns with strategic considerations. Higher offers with poor fit often underperform. Consider earnouts, team retention, and your own goals." }
+      const structures = [
+         { id: 'sole', name: 'Sole Proprietorship', icon: '👤', desc: 'Simplest, you ARE the business' },
+         { id: 'llc', name: 'LLC', icon: '🏢', desc: 'Limited liability, flexible taxes' },
+         { id: 'scorp', name: 'S-Corp', icon: '📊', desc: 'Save on self-employment tax' },
+         { id: 'ccorp', name: 'C-Corp', icon: '🏛️', desc: 'Best for VC funding & IPO' }
       ];
+
+      const scenarios = [
+         {
+            situation: "You're a freelance graphic designer working from home. You have a few clients and earn $50K/year. You want the simplest setup with minimal paperwork.",
+            icon: '🎨',
+            q: "Which structure is best for this situation?",
+            opts: ['Sole Proprietorship', 'LLC', 'S-Corp', 'C-Corp'],
+            correct: 0,
+            explain: "Sole Proprietorship is perfect for solo freelancers with low liability risk. It's the simplest to set up (often just a business license), has minimal paperwork, and income is reported on your personal tax return. No separate business tax filing needed!"
+         },
+         {
+            situation: "You're launching an e-commerce business selling products online. You're investing $20K of savings and worried that if a customer sues over a defective product, you could lose your house.",
+            icon: '🛒',
+            q: "Which structure protects your personal assets?",
+            opts: ['Sole Proprietorship', 'LLC', 'S-Corp', 'C-Corp'],
+            correct: 1,
+            explain: "LLC (Limited Liability Company) separates your personal assets from business liabilities. If your business gets sued, creditors generally can't come after your house, car, or personal savings. It's the most popular choice for small businesses seeking liability protection."
+         },
+         {
+            situation: "Your consulting business earns $150K/year in profit. You're paying a lot in self-employment tax (15.3%). Your accountant says there's a structure that could save you $10K+ in taxes annually.",
+            icon: '💰',
+            q: "Which structure can reduce self-employment taxes?",
+            opts: ['Sole Proprietorship', 'LLC', 'S-Corp', 'C-Corp'],
+            correct: 2,
+            explain: "S-Corp allows you to split income between 'reasonable salary' (subject to payroll taxes) and 'distributions' (not subject to self-employment tax). If you pay yourself $80K salary and take $70K as distribution, you save 15.3% on that $70K = ~$10,700!"
+         },
+         {
+            situation: "You've built a tech startup with a revolutionary app. VCs want to invest $2M for 20% equity. They mention needing 'preferred stock' and a 'standard Delaware structure' for the deal.",
+            icon: '🚀',
+            q: "Which structure do VCs require for investment?",
+            opts: ['Sole Proprietorship', 'LLC', 'S-Corp', 'C-Corp'],
+            correct: 3,
+            explain: "C-Corp (specifically Delaware C-Corp) is required by most VCs. It allows issuing different stock classes (preferred shares for investors), has no limit on shareholders, and provides the structure needed for eventual IPO or acquisition. 90%+ of VC-backed startups are C-Corps."
+         },
+         {
+            situation: "You and two friends are starting a lawn care business. You want shared ownership but worry about personal liability if someone gets injured by your equipment.",
+            icon: '🌿',
+            q: "Best structure for multiple owners with liability protection?",
+            opts: ['Sole Proprietorship', 'LLC', 'S-Corp', 'C-Corp'],
+            correct: 1,
+            explain: "Multi-member LLC is perfect for partnerships wanting liability protection. Each member's personal assets are protected, profit sharing is flexible (doesn't have to be equal), and it avoids the double taxation of C-Corps. You can also specify management structure in your Operating Agreement."
+         }
+      ];
+
       const s = scenarios[scenario];
+
       const infoTopics: Record<string, {title: string; content: string}> = {
-         types: { title: "Exit Types", content: "Common exits: M&A (most common), IPO (rare but lucrative), Acqui-hire (team-focused), Secondary (partial liquidity), Management buyout. Each has different implications for founders, team, and investors." },
-         valuation: { title: "Exit Valuation", content: "Exit valuations consider: revenue multiples (industry-specific), strategic premium (buyer synergies), competitive tension (multiple bidders), growth trajectory, and profitability path." },
-         negotiation: { title: "Exit Negotiation", content: "Key terms: Purchase price, Earnouts (performance-based), Escrow (holdbacks), Reps & warranties (liability), Non-compete terms, Team retention packages, Founder role post-acquisition." },
-         timing: { title: "Exit Timing", content: "Best time to exit: when you have options, not when you need to. Build relationships with potential acquirers early. The best exits often come from long-term strategic partnerships." }
+         liability: {
+            title: "Personal Liability",
+            content: "Liability protection means separating your personal assets (house, savings, car) from business debts and lawsuits. In a Sole Proprietorship, YOU are the business—if sued, everything is at risk. LLCs and Corps create a legal 'wall' between you and the business."
+         },
+         taxes: {
+            title: "Business Taxes",
+            content: "Sole Props & LLCs are 'pass-through'—profits flow to your personal return. S-Corps also pass-through but can split income to reduce self-employment tax. C-Corps pay corporate tax, then shareholders pay again on dividends (double taxation)."
+         },
+         formation: {
+            title: "Formation & Costs",
+            content: "Sole Prop: Often free, just need a business license. LLC: $50-500 state filing fee. S-Corp: LLC or Corp that files IRS Form 2553. C-Corp: $100-800 state filing, more paperwork, often need Delaware incorporation for investors."
+         },
+         growth: {
+            title: "Growth & Funding",
+            content: "Planning to raise VC funding? You'll need a C-Corp. Want to go public someday? C-Corp. Just want a lifestyle business? LLC is usually sufficient. S-Corps have a 100-shareholder limit and only one stock class—limiting for investors."
+         }
       };
-      const answer = (i: number) => { if(answered) return; setSelected(i); setAnswered(true); if(i === s.correct) { setScore(p => p + 1); setLog(l => [...l, `✓ ${s.type}: Smart exit thinking!`]); } else { setLog(l => [...l, `✗ ${s.type}: Consider: "${s.opts[s.correct]}"`]); } };
-      const next = () => { if(scenario >= scenarios.length - 1) { setPhase('result'); } else { setScenario(p => p + 1); setAnswered(false); setSelected(null); } };
-      const grade = score >= 4 ? 'A' : score >= 3 ? 'B' : score >= 2 ? 'C' : 'D';
-      if(phase === 'intro') return (<div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-yellow-900 via-amber-900 to-orange-900 text-white p-6"><div className="text-6xl mb-4">🚪</div><h2 className="text-2xl font-bold mb-2">Exit Strategy Planning</h2><p className="text-slate-300 text-center mb-6 max-w-md">Plan your endgame! Master acquisition, IPO, and exit negotiation scenarios.</p><button onClick={() => setPhase('play')} className="px-8 py-3 bg-gradient-to-r from-yellow-500 to-amber-500 rounded-xl font-bold">Plan Exit</button></div>);
-      if(phase === 'result') return (<div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-yellow-900 via-amber-900 to-orange-900 text-white p-6"><div className="text-6xl mb-4">{grade === 'A' ? '🏆' : grade === 'B' ? '🚪' : '📊'}</div><h2 className="text-2xl font-bold mb-2">Exit Planning Complete!</h2><div className="text-4xl font-bold text-yellow-400 mb-2">{score}/{scenarios.length}</div><div className="text-6xl mb-4">{grade}</div><p className="text-slate-400 mb-4">{grade === 'A' ? 'Exit strategist!' : grade === 'B' ? 'Good exit sense!' : 'Keep learning!'}</p><div className="w-full max-w-md bg-black/30 rounded-lg p-3 mb-4 max-h-32 overflow-y-auto">{log.map((l,i) => <p key={i} className="text-xs text-slate-300">{l}</p>)}</div><button onClick={() => {setPhase('intro');setScenario(0);setScore(0);setAnswered(false);setSelected(null);setLog([]);}} className="px-6 py-2 bg-yellow-600 rounded-lg">Try Again</button></div>);
-      return (<div className="w-full h-full flex flex-col bg-gradient-to-br from-yellow-900 via-amber-900 to-orange-900 text-white overflow-hidden">{showInfo && infoTopic && infoTopics[infoTopic] && (<div className="absolute inset-0 bg-black/80 flex items-center justify-center p-4 z-50" onClick={() => { setShowInfo(false); setInfoTopic(null); }}><div className="bg-slate-800 rounded-xl p-4 max-w-md" onClick={e => e.stopPropagation()}><h3 className="text-lg font-bold text-yellow-400 mb-2">{infoTopics[infoTopic].title}</h3><p className="text-sm text-slate-300">{infoTopics[infoTopic].content}</p><button onClick={() => { setShowInfo(false); setInfoTopic(null); }} className="mt-4 w-full py-2 bg-yellow-600 rounded-lg">Got it!</button></div></div>)}<div className="p-3 bg-black/30 border-b border-yellow-500/30 flex justify-between items-center"><span className="font-bold">{s.icon} {s.type}</span><span className="text-yellow-400">{scenario + 1}/{scenarios.length}</span><span className="text-amber-400">Score: {score}</span></div><div className="flex-1 p-4 overflow-auto"><div className="flex gap-1 mb-4">{scenarios.map((sc, i) => (<div key={i} className="flex-1 text-center"><div className={`text-xl ${i <= scenario ? 'opacity-100' : 'opacity-30'}`}>{sc.icon}</div><div className={`h-1 mt-1 rounded ${i < scenario ? 'bg-yellow-500' : i === scenario ? 'bg-amber-400' : 'bg-slate-700'}`} /></div>))}</div><div className="bg-black/30 rounded-xl p-4 mb-4"><p className="text-sm text-slate-300">{s.situation}</p></div><div className="bg-black/30 rounded-xl p-4 mb-3"><p className="font-medium">{s.q}</p></div><div className="grid gap-2">{s.opts.map((opt, i) => (<button key={i} onClick={() => answer(i)} disabled={answered} className={`p-3 rounded-lg text-left text-sm ${answered ? i === s.correct ? 'bg-green-600' : i === selected ? 'bg-red-600' : 'bg-black/30' : 'bg-black/30 hover:bg-yellow-600/50'}`}>{opt}</button>))}</div>{answered && (<div className="mt-3 p-3 bg-black/30 rounded-lg"><p className="text-sm text-slate-300">{s.explain}</p><button onClick={next} className="mt-3 w-full py-2 bg-yellow-600 rounded-lg">{scenario >= scenarios.length - 1 ? 'See Results' : 'Next Scenario'}</button></div>)}</div><div className="p-3 bg-black/30 border-t border-yellow-500/30 flex gap-2 justify-center flex-wrap">{Object.keys(infoTopics).map(k => <button key={k} onClick={() => {setInfoTopic(k);setShowInfo(true);}} className="text-xs text-yellow-400">ℹ️ {infoTopics[k].title}</button>)}</div></div>);
+
+      const answer = (i: number) => {
+         if (answered) return;
+         setSelected(i);
+         setAnswered(true);
+         const structureName = s.opts[i];
+         if (i === s.correct) {
+            setScore(p => p + 1);
+            setLog(l => [...l, `✓ Scenario ${scenario + 1}: Correctly chose ${structureName}`]);
+         } else {
+            setLog(l => [...l, `✗ Scenario ${scenario + 1}: Chose ${structureName}, but ${s.opts[s.correct]} was better`]);
+         }
+      };
+
+      const next = () => {
+         if (scenario >= scenarios.length - 1) {
+            setPhase('result');
+         } else {
+            setScenario(p => p + 1);
+            setAnswered(false);
+            setSelected(null);
+         }
+      };
+
+      const grade = score >= 5 ? 'A' : score >= 4 ? 'B' : score >= 3 ? 'C' : 'D';
+
+      // INTRO PHASE
+      if (phase === 'intro') return (
+         <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-amber-900 via-orange-900 to-yellow-900 text-white p-6">
+            <div className="text-6xl mb-4">🏛️</div>
+            <h2 className="text-2xl font-bold mb-2">Business Structure Advisor</h2>
+            <p className="text-slate-300 text-center mb-4 max-w-md">
+               Learn to choose the right legal entity for any business situation!
+            </p>
+            <div className="bg-black/30 rounded-xl p-4 mb-6 max-w-md text-left">
+               <p className="text-sm text-amber-200 mb-3 font-bold">📋 How This Game Works:</p>
+               <ul className="text-xs text-slate-300 space-y-2">
+                  <li>• You'll face <strong>5 real-world scenarios</strong> about choosing business structures</li>
+                  <li>• Consider liability, taxes, funding needs, and complexity</li>
+                  <li>• Tap <strong>ℹ️ info buttons</strong> during play to learn key concepts</li>
+                  <li>• Each correct answer teaches you when to use each structure</li>
+               </ul>
+            </div>
+            <div className="grid grid-cols-2 gap-2 mb-6 max-w-md">
+               {structures.map(st => (
+                  <div key={st.id} className="bg-black/20 rounded-lg p-2 text-center">
+                     <span className="text-2xl">{st.icon}</span>
+                     <p className="text-xs font-bold">{st.name}</p>
+                  </div>
+               ))}
+            </div>
+            <button onClick={() => setPhase('play')} className="px-8 py-3 bg-gradient-to-r from-amber-500 to-orange-500 rounded-xl font-bold hover:from-amber-400 hover:to-orange-400 transition-all">
+               Start Advising
+            </button>
+         </div>
+      );
+
+      // RESULT PHASE
+      if (phase === 'result') return (
+         <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-amber-900 via-orange-900 to-yellow-900 text-white p-6">
+            <div className="text-6xl mb-4">{grade === 'A' ? '🏆' : grade === 'B' ? '🏛️' : grade === 'C' ? '📋' : '📚'}</div>
+            <h2 className="text-2xl font-bold mb-2">Advisory Complete!</h2>
+            <div className="text-4xl font-bold text-amber-400 mb-2">{score}/{scenarios.length}</div>
+            <div className="text-6xl mb-4">{grade}</div>
+            <p className="text-slate-400 mb-4 text-center max-w-md">
+               {grade === 'A' ? 'Expert business advisor! You understand when to use each structure.' :
+                grade === 'B' ? 'Strong understanding of business entities!' :
+                grade === 'C' ? 'Getting there! Review the concepts below.' :
+                'Keep learning! Business structures are crucial for any entrepreneur.'}
+            </p>
+            <div className="w-full max-w-md bg-black/30 rounded-lg p-3 mb-4">
+               <p className="text-xs font-bold text-amber-400 mb-2">📊 Key Takeaways:</p>
+               <ul className="text-xs text-slate-300 space-y-1">
+                  <li>• <strong>Sole Prop:</strong> Simplest, but no liability protection</li>
+                  <li>• <strong>LLC:</strong> Best balance of protection & simplicity</li>
+                  <li>• <strong>S-Corp:</strong> Tax savings for high earners ($100K+)</li>
+                  <li>• <strong>C-Corp:</strong> Required for VC funding & IPO</li>
+               </ul>
+            </div>
+            <div className="w-full max-w-md bg-black/30 rounded-lg p-3 mb-4 max-h-32 overflow-y-auto">
+               <p className="text-xs font-bold text-amber-400 mb-2">📝 Your Decisions:</p>
+               {log.map((l, i) => <p key={i} className="text-xs text-slate-300">{l}</p>)}
+            </div>
+            <button onClick={() => { setPhase('intro'); setScenario(0); setScore(0); setAnswered(false); setSelected(null); setLog([]); }} className="px-6 py-2 bg-amber-600 rounded-lg hover:bg-amber-500 transition-all">
+               Try Again
+            </button>
+         </div>
+      );
+
+      // PLAY PHASE
+      return (
+         <div className="w-full h-full flex flex-col bg-gradient-to-br from-amber-900 via-orange-900 to-yellow-900 text-white overflow-hidden">
+            {/* Info Modal */}
+            {showInfo && infoTopic && infoTopics[infoTopic] && (
+               <div className="absolute inset-0 bg-black/80 flex items-center justify-center p-4 z-50" onClick={() => { setShowInfo(false); setInfoTopic(null); }}>
+                  <div className="bg-slate-800 rounded-xl p-4 max-w-md" onClick={e => e.stopPropagation()}>
+                     <h3 className="text-lg font-bold text-amber-400 mb-2">{infoTopics[infoTopic].title}</h3>
+                     <p className="text-sm text-slate-300">{infoTopics[infoTopic].content}</p>
+                     <button onClick={() => { setShowInfo(false); setInfoTopic(null); }} className="mt-4 w-full py-2 bg-amber-600 rounded-lg">Got it!</button>
+                  </div>
+               </div>
+            )}
+
+            {/* Header */}
+            <div className="p-3 bg-black/30 border-b border-amber-500/30 flex justify-between items-center">
+               <span className="font-bold">🏛️ Business Advisor</span>
+               <span className="text-amber-400">{scenario + 1}/{scenarios.length}</span>
+               <span className="text-orange-400">Score: {score}</span>
+            </div>
+
+            {/* Progress Indicator */}
+            <div className="px-4 pt-3">
+               <div className="flex gap-1 mb-2">
+                  {scenarios.map((_, i) => (
+                     <div key={i} className={`flex-1 h-2 rounded ${i < scenario ? 'bg-amber-500' : i === scenario ? 'bg-orange-400' : 'bg-slate-700'}`} />
+                  ))}
+               </div>
+            </div>
+
+            {/* Main Content */}
+            <div className="flex-1 p-4 overflow-auto">
+               {/* Scenario */}
+               <div className="bg-black/30 rounded-xl p-4 mb-4">
+                  <div className="text-3xl mb-2">{s.icon}</div>
+                  <p className="text-sm text-slate-300">{s.situation}</p>
+               </div>
+
+               {/* Question */}
+               <div className="bg-black/30 rounded-xl p-4 mb-3">
+                  <p className="font-medium">{s.q}</p>
+               </div>
+
+               {/* Options */}
+               <div className="grid gap-2">
+                  {s.opts.map((opt, i) => (
+                     <button
+                        key={i}
+                        onClick={() => answer(i)}
+                        disabled={answered}
+                        className={`p-3 rounded-lg text-left text-sm flex items-center gap-3 ${
+                           answered
+                              ? i === s.correct
+                                 ? 'bg-green-600'
+                                 : i === selected
+                                    ? 'bg-red-600'
+                                    : 'bg-black/30'
+                              : 'bg-black/30 hover:bg-amber-600/50'
+                        }`}
+                     >
+                        <span className="text-xl">{structures[i].icon}</span>
+                        <div>
+                           <p className="font-bold">{opt}</p>
+                           <p className="text-xs opacity-75">{structures[i].desc}</p>
+                        </div>
+                     </button>
+                  ))}
+               </div>
+
+               {/* Explanation after answer */}
+               {answered && (
+                  <div className="mt-3 p-3 bg-black/30 rounded-lg">
+                     <p className="text-xs font-bold text-amber-400 mb-1">💡 Why {s.opts[s.correct]}?</p>
+                     <p className="text-sm text-slate-300">{s.explain}</p>
+                     <button onClick={next} className="mt-3 w-full py-2 bg-amber-600 rounded-lg font-bold">
+                        {scenario >= scenarios.length - 1 ? 'See Results' : 'Next Scenario →'}
+                     </button>
+                  </div>
+               )}
+            </div>
+
+            {/* Info Buttons Footer */}
+            <div className="p-3 bg-black/30 border-t border-amber-500/30 flex gap-2 justify-center flex-wrap">
+               {Object.keys(infoTopics).map(k => (
+                  <button key={k} onClick={() => { setInfoTopic(k); setShowInfo(true); }} className="text-xs text-amber-400 hover:text-amber-300">
+                     ℹ️ {infoTopics[k].title}
+                  </button>
+               ))}
+            </div>
+         </div>
+      );
    };
 
    // --- GENERIC RENDERER ---
@@ -29874,6 +38042,8 @@ const GeneratedDiagram: React.FC<DiagramProps> = ({ type, data, title }) => {
             return <SustainabilityRenderer />;
          case 'exit_strategy':
             return <ExitStrategyRenderer />;
+         case 'business_structures':
+            return <BusinessStructuresRenderer />;
          default:
             return <GenericRenderer />;
       }
