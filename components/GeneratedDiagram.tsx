@@ -29540,32 +29540,432 @@ const GeneratedDiagram: React.FC<DiagramProps> = ({ type, data, title }) => {
       const [infoTopic, setInfoTopic] = useState<string | null>(null);
       const [scenario, setScenario] = useState(0);
       const [score, setScore] = useState(0);
-      const [answers, setAnswers] = useState<boolean[]>([]);
+      const [selected, setSelected] = useState<number | null>(null);
+      const [answered, setAnswered] = useState(false);
+      const [gameLog, setGameLog] = useState<string[]>([]);
+      const [conceptGaps, setConceptGaps] = useState<string[]>([]);
 
+      // Nuanced scenarios where "it depends" - context matters
       const scenarios = [
-         { situation: "Asking a job candidate about their age", legal: false, law: "Age Discrimination (ADEA)", explanation: "Cannot ask about age. Age 40+ is protected." },
-         { situation: "Requiring overtime for hourly employees with 1.5x pay", legal: true, law: "Fair Labor Standards Act", explanation: "Correct! Non-exempt employees get 1.5x for 40+ hrs." },
-         { situation: "Paying female employee less than male for same job", legal: false, law: "Equal Pay Act", explanation: "Illegal! Equal pay for equal work regardless of gender." },
-         { situation: "Classifying full-time worker with company equipment as contractor", legal: false, law: "Worker Classification", explanation: "Likely misclassification. Control + equipment = employee." },
-         { situation: "Providing unpaid leave for new parent (60 employee company)", legal: true, law: "FMLA", explanation: "Correct! FMLA requires 12 weeks for 50+ employee companies." },
-         { situation: "Firing employee for reporting safety violations to OSHA", legal: false, law: "Whistleblower Protection", explanation: "Illegal retaliation! Protected activity." },
-         { situation: "Requiring all employees to sign NDAs", legal: true, law: "Trade Secrets", explanation: "Legal! NDAs protect confidential info when reasonable." },
-         { situation: "Denying religious accommodation without hardship", legal: false, law: "Title VII", explanation: "Must provide reasonable accommodation for religion." },
+         {
+            title: "The Overtime Exemption Trap",
+            context: "You're a startup founder. Your 'Senior Marketing Manager' earns $45,000/year salary, has no direct reports, and spends 80% of time executing campaigns you assign. She worked 55 hours last week.",
+            question: "Do you owe her overtime pay?",
+            opts: [
+               'No - she has a manager title and salary',
+               'No - she agreed to salary means no overtime',
+               'Yes - she fails the duties test for exemption',
+               'Yes - but only if she asks for it'
+            ],
+            correct: 2,
+            wrongExplanations: [
+               "Title doesn't determine exemption! The FLSA 'duties test' looks at ACTUAL job duties. 'Manager' in title means nothing if she doesn't manage anyone or make independent decisions.",
+               "Agreeing to salary doesn't waive overtime rights. You can't contract away FLSA protections. Many employers lose lawsuits because they thought salary = exempt.",
+               "", // Correct
+               "Overtime is owed regardless of whether she asks. The obligation is on the employer. Not paying is wage theft, and she can claim back pay for 2-3 years plus penalties."
+            ],
+            realWorld: "A class action against a tech company resulted in $8.5M in back overtime pay for 'Account Managers' who were misclassified as exempt despite having no management duties.",
+            concept: "exempt_nonexempt",
+            why: "Exemption requires ALL of: (1) Salary basis, (2) Minimum $684/week ($35,568/year), (3) Primary duty is management/professional/administrative with independent judgment. Executing assigned tasks ≠ exempt, regardless of title or salary."
+         },
+         {
+            title: "The Contractor Classification Gamble",
+            context: "You hire a 'freelance developer' who works 40 hrs/week exclusively for you, uses your computer, attends your meetings, and has worked this way for 18 months. You pay them via 1099.",
+            question: "What's your legal exposure here?",
+            opts: [
+               'None - they signed a contractor agreement',
+               'Minor - just reclassify them going forward',
+               'Major - back taxes, benefits, and penalties for 18 months',
+               'None - the IRS only audits big companies'
+            ],
+            correct: 2,
+            wrongExplanations: [
+               "Contracts don't override reality. Courts use 'economic reality' and 'right to control' tests. If they walk like an employee and quack like an employee, they're an employee—regardless of what paper says.",
+               "You can't just 'reclassify going forward.' The IRS and state agencies can audit past years. You owe: back employment taxes (employer share), unpaid benefits, overtime if applicable, and penalties.",
+               "", // Correct
+               "The IRS absolutely audits small companies, especially after worker complaints. California alone collected $6.8B in misclassification penalties in 5 years. One complaint triggers a full audit."
+            ],
+            realWorld: "Uber and Lyft paid $413M in settlements over driver misclassification. A small business owner in California was personally liable for $340K in back wages, taxes, and penalties for 3 misclassified workers.",
+            concept: "worker_classification",
+            why: "Classification is based on reality, not paperwork. Key factors: (1) Control over how work is done, (2) Exclusivity, (3) Integration into business, (4) Duration, (5) Tools provided. This worker is clearly an employee. Exposure: 18 months of employment taxes (~15%), benefits, potential overtime, plus penalties."
+         },
+         {
+            title: "The FMLA Surprise",
+            context: "Your company has 45 employees. A worker who's been with you 10 months requests 12 weeks unpaid leave for a new baby. You're already short-staffed and can't afford to hold the position.",
+            question: "Are you legally required to grant this leave?",
+            opts: [
+               'Yes - FMLA requires 12 weeks for new parents',
+               'No - FMLA only applies to 50+ employee companies',
+               'No - employee hasn\'t worked 12 months yet',
+               'Yes - but only 6 weeks, not 12'
+            ],
+            correct: 1,
+            wrongExplanations: [
+               "FMLA has TWO thresholds most people miss: (1) 50+ employees within 75 miles, AND (2) employee worked 12+ months with 1,250+ hours. You have 45 employees, so FMLA doesn't apply to you at all.",
+               "", // Correct
+               "This is partially right—the employee tenure matters—but it's moot here because your company is too small for FMLA anyway. However, STATE laws may still apply (CA, NY, NJ, WA have their own family leave laws).",
+               "There's no '6 weeks only' rule in FMLA. It's 12 weeks or nothing. Some states have additional paid leave requirements."
+            ],
+            realWorld: "A 35-employee company owner thought she was 'safe' from FMLA, then got sued under California's CFRA (which applies to 5+ employees). The employee won $125K in damages.",
+            concept: "fmla_thresholds",
+            why: "FMLA (federal) = 50+ employees. BUT: Many states have LOWER thresholds. California CFRA = 5+ employees. NY PFL = 1+ employees. Always check STATE law too—it often provides MORE protection than federal. Even without legal requirement, consider retention—replacing employees costs 50-200% of salary."
+         },
+         {
+            title: "The At-Will Exception",
+            context: "You fire a sales rep in an at-will state for 'not being a culture fit.' The day before, he had emailed HR complaining that his manager was pressuring the team to falsify sales reports to hit quarterly targets.",
+            question: "What's the legal risk of this termination?",
+            opts: [
+               'None - at-will means fire for any reason',
+               'Low - just document the culture fit issues',
+               'High - this looks like whistleblower retaliation',
+               'Medium - depends on if the complaint was formal'
+            ],
+            correct: 2,
+            wrongExplanations: [
+               "At-will has MAJOR exceptions: (1) Discrimination, (2) Retaliation, (3) Public policy violations, (4) Implied contracts. 'Any reason' doesn't mean 'any reason including illegal ones.'",
+               "Documenting 'culture fit' after a complaint looks like pretext. Courts look at timing. Termination within 24-48 hours of a complaint is textbook retaliation, regardless of documentation.",
+               "", // Correct
+               "Formal vs informal complaint doesn't matter for retaliation protection. Reporting illegal activity (fraud) is protected whether it's verbal, email, or formal HR complaint. The email creates a paper trail AGAINST you."
+            ],
+            realWorld: "A pharma company paid $105M to a sales rep fired 2 weeks after reporting off-label marketing. The 'poor performance' documentation was created AFTER the complaint. Timing was the killer evidence.",
+            concept: "retaliation",
+            why: "Retaliation claims are the #1 growing category of employment lawsuits. Key factors: (1) Protected activity (reporting illegal conduct, discrimination, safety issues), (2) Adverse action (termination, demotion, bad assignments), (3) Timing. Firing within days of a complaint = presumption of retaliation. The burden shifts to YOU to prove legitimate reason."
+         },
+         {
+            title: "The Salary Discussion Shutdown",
+            context: "You overhear two employees comparing salaries in the break room. Your employee handbook prohibits 'discussing compensation with coworkers.' You give them both written warnings for policy violation.",
+            question: "What's the legal issue with this action?",
+            opts: [
+               'None - your handbook, your rules',
+               'Minor - just remove the policy going forward',
+               'Major - you violated federal labor law (NLRA)',
+               'Depends - only illegal if they\'re in a union'
+            ],
+            correct: 2,
+            wrongExplanations: [
+               "Handbooks can't override federal law. Policies prohibiting salary discussions violate the National Labor Relations Act—even for non-union, private sector employees.",
+               "Removing the policy doesn't fix it—you already disciplined employees for exercising protected rights. The warnings themselves are 'unfair labor practices' and must be rescinded. Employees can file NLRB complaints.",
+               "", // Correct
+               "The NLRA Section 7 protects 'concerted activity' for ALL private sector employees, not just union members. This includes discussing wages, benefits, and working conditions. The law applies regardless of union status."
+            ],
+            realWorld: "The NLRB has issued hundreds of rulings against companies with pay secrecy policies. A restaurant chain had to rescind all discipline, post notices admitting the violation, and pay back wages to affected employees.",
+            concept: "nlra_rights",
+            why: "NLRA Section 7 protects employees' right to discuss wages and working conditions. Pay secrecy policies are per se illegal for most private employers. Exceptions: Supervisors (true managers), HR with access to payroll data. You cannot discipline employees for salary discussions, even if they signed a policy agreeing not to."
+         }
       ];
-      const infoTopics: Record<string, { title: string; content: string }> = {
-         discrimination: { title: "Anti-Discrimination", content: "Protected: race, color, religion, sex, national origin, age 40+, disability. Applies to 15+ employee companies." },
-         wages: { title: "Wage & Hour", content: "Minimum wage, overtime (1.5x after 40 hrs), proper classification. Violations = back pay + penalties." },
-         safety: { title: "Workplace Safety", content: "OSHA requires safe workplace. Cannot retaliate against complaints. Fines for violations." },
-      };
-      useEffect(() => { if (infoTopic && infoTopics[infoTopic]) setShowInfo(true); }, [infoTopic]);
-      const startGame = () => { setPhase('play'); setScenario(0); setScore(0); setAnswers([]); };
-      const answer = (isLegal: boolean) => { const correct = scenarios[scenario].legal === isLegal; if (correct) setScore(prev => prev + 1); setAnswers(prev => [...prev, correct]); if (scenario >= scenarios.length - 1) setPhase('result'); else setScenario(prev => prev + 1); };
-      const getGrade = () => { const pct = (score / scenarios.length) * 100; if (pct >= 90) return { letter: 'A', label: 'HR Expert', color: 'text-green-400' }; if (pct >= 70) return { letter: 'B', label: 'Compliant', color: 'text-blue-400' }; if (pct >= 50) return { letter: 'C', label: 'Risky', color: 'text-yellow-400' }; return { letter: 'D', label: 'Lawsuit Risk', color: 'text-red-400' }; };
 
-      if (phase === 'intro') return (<div className="w-full h-full flex flex-col bg-gradient-to-br from-lime-900 via-green-900 to-slate-900 text-white p-4 overflow-auto"><div className="text-center mb-4"><h1 className="text-2xl font-bold mb-2">⚖️ Employment Law Quiz</h1><p className="text-lime-300 text-sm">Know what's legal at work</p></div><div className="bg-black/30 rounded-xl p-4 mb-4"><h2 className="text-lg font-bold mb-3 text-lime-400">📋 How It Works</h2><div className="space-y-2 text-sm"><p>• Review <span className="text-white font-bold">{scenarios.length} scenarios</span></p><p>• Decide: <span className="text-green-400">✓ Legal</span> or <span className="text-red-400">✗ Illegal</span></p><p>• Learn employment laws!</p></div></div><div className="flex flex-wrap gap-2 mb-4">{Object.keys(infoTopics).map(key => (<button key={key} onClick={() => setInfoTopic(key)} className="text-xs bg-lime-500/20 px-2 py-1 rounded-full text-lime-300">ℹ️ {infoTopics[key].title}</button>))}</div><button onClick={startGame} className="w-full py-3 bg-gradient-to-r from-lime-600 to-green-600 rounded-xl font-bold">▶️ START</button>{showInfo && infoTopic && infoTopics[infoTopic] && (<div className="absolute inset-0 bg-black/80 flex items-center justify-center p-4 z-50" onClick={() => { setShowInfo(false); setInfoTopic(null); }}><div className="bg-slate-800 rounded-xl p-4 max-w-md" onClick={e => e.stopPropagation()}><h3 className="text-lg font-bold text-lime-400 mb-2">{infoTopics[infoTopic].title}</h3><p className="text-sm text-slate-300">{infoTopics[infoTopic].content}</p><button onClick={() => { setShowInfo(false); setInfoTopic(null); }} className="mt-4 w-full py-2 bg-lime-600 rounded-lg">Got it!</button></div></div>)}</div>);
-      if (phase === 'result') { const grade = getGrade(); return (<div className="w-full h-full flex flex-col bg-gradient-to-br from-lime-900 via-green-900 to-slate-900 text-white p-4 overflow-auto"><div className="text-center mb-4"><div className={`text-6xl font-bold ${grade.color}`}>{grade.letter}</div><div className="text-xl font-bold">{grade.label}</div><div className="text-lime-400">{score}/{scenarios.length}</div></div><div className="bg-black/30 rounded-xl p-3 mb-3 max-h-40 overflow-auto"><h3 className="font-bold text-lime-400 mb-2">📊 Review</h3>{scenarios.map((s, i) => (<div key={i} className="py-1 border-b border-slate-700 text-xs"><div className="flex justify-between"><span className={s.legal ? 'text-green-400' : 'text-red-400'}>{s.legal ? '✓' : '✗'} {s.law}</span><span>{answers[i] ? '✓' : '✗'}</span></div><p className="text-slate-400">{s.explanation}</p></div>))}</div><div className="bg-black/30 rounded-xl p-3 mb-4"><h3 className="font-bold text-lime-400 mb-2">💡 Key Insight</h3><p className="text-sm text-slate-300">Employment law protects workers. Violations = lawsuits, fines, reputation damage. When in doubt, consult an attorney!</p></div><button onClick={startGame} className="w-full py-3 bg-gradient-to-r from-lime-600 to-green-600 rounded-xl font-bold">🔄 TRY AGAIN</button></div>); }
+      const infoTopics: Record<string, { title: string; content: string }> = {
+         flsa: {
+            title: "FLSA: Wages & Hours",
+            content: "Federal minimum wage, overtime (1.5x after 40 hrs), exempt vs non-exempt classification. Exemption requires: salary basis ($684+/week), AND exempt duties (executive/admin/professional). Title doesn't matter—duties do. Violations = 2-3 years back pay + liquidated damages (2x)."
+         },
+         classification: {
+            title: "Worker Classification",
+            content: "Employee vs Contractor based on: control, exclusivity, tools provided, duration, integration. IRS uses 20-factor test. States (especially CA) use stricter 'ABC test.' Misclassification = back taxes + penalties + benefits. Can't contract away employee status."
+         },
+         fmla: {
+            title: "FMLA & State Leave Laws",
+            content: "Federal FMLA: 50+ employees, 12 months tenure, 1,250 hours. Provides 12 weeks UNPAID leave. BUT: Many states have lower thresholds and PAID leave. CA/NY/WA/NJ have paid family leave. Always check state law—it often exceeds federal."
+         },
+         retaliation: {
+            title: "Retaliation Claims",
+            content: "Protected activities: discrimination complaints, safety reports, wage claims, whistleblowing. Adverse actions: termination, demotion, schedule changes, bad reviews. Timing is key evidence. Document BEFORE complaints arise. Most expensive employment claims are retaliation."
+         },
+         nlra: {
+            title: "NLRA: Concerted Activity",
+            content: "Section 7 protects discussions about wages, benefits, working conditions—for ALL private employees, not just unions. Pay secrecy policies are illegal. Can't discipline for salary discussions. Social media complaints about work may also be protected."
+         },
+         atwill: {
+            title: "At-Will Exceptions",
+            content: "At-will means no contract for duration. BUT exceptions: (1) Discrimination (protected classes), (2) Retaliation (protected activities), (3) Public policy (refusing illegal acts), (4) Implied contract (handbook promises). 'Any reason' ≠ 'illegal reasons.'"
+         }
+      };
+
+      useEffect(() => { if (infoTopic && infoTopics[infoTopic]) setShowInfo(true); }, [infoTopic]);
+
+      const startGame = () => {
+         setPhase('play');
+         setScenario(0);
+         setScore(0);
+         setSelected(null);
+         setAnswered(false);
+         setGameLog([]);
+         setConceptGaps([]);
+      };
+
+      const answer = (idx: number) => {
+         if (answered) return;
+         setSelected(idx);
+         setAnswered(true);
+         const s = scenarios[scenario];
+         const isCorrect = idx === s.correct;
+         if (isCorrect) {
+            setScore(prev => prev + 20);
+            setGameLog(prev => [...prev, `✓ ${s.title}: Understood ${s.concept}`]);
+         } else {
+            setConceptGaps(prev => prev.includes(s.concept) ? prev : [...prev, s.concept]);
+            setGameLog(prev => [...prev, `✗ ${s.title}: Gap in ${s.concept}`]);
+         }
+      };
+
+      const next = () => {
+         if (scenario >= scenarios.length - 1) {
+            setPhase('result');
+         } else {
+            setScenario(prev => prev + 1);
+            setSelected(null);
+            setAnswered(false);
+         }
+      };
+
+      const getGrade = () => {
+         const pct = (score / (scenarios.length * 20)) * 100;
+         if (pct >= 90) return { letter: 'A', label: 'HR Law Expert', color: 'text-green-400' };
+         if (pct >= 70) return { letter: 'B', label: 'Mostly Compliant', color: 'text-blue-400' };
+         if (pct >= 50) return { letter: 'C', label: 'Lawsuit Risk', color: 'text-yellow-400' };
+         return { letter: 'D', label: 'Major Liability', color: 'text-red-400' };
+      };
+
+      const conceptLabels: Record<string, string> = {
+         exempt_nonexempt: "Overtime Exemption & Duties Test",
+         worker_classification: "Employee vs Contractor Classification",
+         fmla_thresholds: "FMLA Thresholds & State Leave Laws",
+         retaliation: "Retaliation & Protected Activities",
+         nlra_rights: "NLRA & Salary Discussion Rights"
+      };
+
+      // INTRO PHASE
+      if (phase === 'intro') return (
+         <div className="w-full h-full flex flex-col bg-gradient-to-br from-lime-900 via-green-900 to-slate-900 text-white p-4 overflow-auto">
+            <div className="text-center mb-4">
+               <h1 className="text-2xl font-bold mb-2">⚖️ Employment Law Minefield</h1>
+               <p className="text-lime-300 text-sm">The nuances that trigger lawsuits. Context is everything.</p>
+            </div>
+
+            <div className="bg-black/30 rounded-xl p-4 mb-4">
+               <h2 className="text-lg font-bold mb-3 text-lime-400">⚠️ Why This Matters</h2>
+               <div className="space-y-2 text-sm text-slate-300">
+                  <p>• <span className="text-red-400 font-bold">$450B+</span> paid annually in employment lawsuits</p>
+                  <p>• <span className="text-yellow-400 font-bold">65%</span> of employment lawsuits are won by employees</p>
+                  <p>• <span className="text-green-400 font-bold">"It depends"</span> is the answer to most employment law questions</p>
+               </div>
+            </div>
+
+            <div className="bg-black/30 rounded-xl p-4 mb-4">
+               <h2 className="text-lg font-bold mb-3 text-lime-400">🎯 How This Works</h2>
+               <div className="space-y-2 text-sm">
+                  <p>• <span className="text-white font-bold">5 nuanced scenarios</span> where context matters</p>
+                  <p>• Not just <span className="text-yellow-400">"legal vs illegal"</span>—understand WHY</p>
+                  <p>• Learn <span className="text-cyan-400">thresholds and exceptions</span> most employers miss</p>
+                  <p>• See <span className="text-red-400">real lawsuit amounts</span> and outcomes</p>
+               </div>
+            </div>
+
+            <div className="flex flex-wrap gap-2 mb-4">
+               {Object.keys(infoTopics).map(key => (
+                  <button
+                     key={key}
+                     onClick={() => setInfoTopic(key)}
+                     className="text-xs bg-lime-500/20 px-2 py-1 rounded-full text-lime-300 hover:bg-lime-500/30"
+                  >
+                     ℹ️ {infoTopics[key].title.split(':')[0]}
+                  </button>
+               ))}
+            </div>
+
+            <button onClick={startGame} className="w-full py-3 bg-gradient-to-r from-lime-600 to-green-600 rounded-xl font-bold text-lg">
+               ▶️ BEGIN CHALLENGE
+            </button>
+
+            {showInfo && infoTopic && infoTopics[infoTopic] && (
+               <div className="absolute inset-0 bg-black/80 flex items-center justify-center p-4 z-50" onClick={() => { setShowInfo(false); setInfoTopic(null); }}>
+                  <div className="bg-slate-800 rounded-xl p-4 max-w-md" onClick={e => e.stopPropagation()}>
+                     <h3 className="text-lg font-bold text-lime-400 mb-2">{infoTopics[infoTopic].title}</h3>
+                     <p className="text-sm text-slate-300 leading-relaxed">{infoTopics[infoTopic].content}</p>
+                     <button onClick={() => { setShowInfo(false); setInfoTopic(null); }} className="mt-4 w-full py-2 bg-lime-600 rounded-lg font-bold">Got it!</button>
+                  </div>
+               </div>
+            )}
+         </div>
+      );
+
+      // RESULT PHASE
+      if (phase === 'result') {
+         const grade = getGrade();
+         return (
+            <div className="w-full h-full flex flex-col bg-gradient-to-br from-lime-900 via-green-900 to-slate-900 text-white p-4 overflow-auto">
+               <div className="text-center mb-4">
+                  <div className={`text-6xl font-bold ${grade.color}`}>{grade.letter}</div>
+                  <div className="text-xl font-bold">{grade.label}</div>
+                  <div className="text-lime-400">Score: {score}/{scenarios.length * 20}</div>
+               </div>
+
+               {conceptGaps.length > 0 && (
+                  <div className="bg-red-900/30 border border-red-500/50 rounded-xl p-3 mb-3">
+                     <h3 className="font-bold text-red-400 mb-2">📚 Legal Gaps to Study</h3>
+                     <div className="space-y-1">
+                        {conceptGaps.map((gap, i) => (
+                           <div key={i} className="flex items-center gap-2 text-sm">
+                              <span className="text-red-400">→</span>
+                              <span className="text-slate-300">{conceptLabels[gap] || gap}</span>
+                              <button
+                                 onClick={() => {
+                                    const topic = gap === 'exempt_nonexempt' ? 'flsa' :
+                                                  gap === 'worker_classification' ? 'classification' :
+                                                  gap === 'fmla_thresholds' ? 'fmla' :
+                                                  gap === 'retaliation' ? 'retaliation' : 'nlra';
+                                    setInfoTopic(topic);
+                                 }}
+                                 className="text-xs text-lime-400 underline"
+                              >
+                                 Learn
+                              </button>
+                           </div>
+                        ))}
+                     </div>
+                  </div>
+               )}
+
+               {conceptGaps.length === 0 && (
+                  <div className="bg-green-900/30 border border-green-500/50 rounded-xl p-3 mb-3">
+                     <h3 className="font-bold text-green-400 mb-2">🎉 Employment Law Expert!</h3>
+                     <p className="text-sm text-slate-300">You understand the nuances that catch most employers—exemption tests, classification rules, FMLA thresholds, and retaliation traps.</p>
+                  </div>
+               )}
+
+               <div className="bg-black/30 rounded-xl p-3 mb-3 max-h-32 overflow-auto">
+                  <h3 className="font-bold text-lime-400 mb-2">📋 Session Log</h3>
+                  {gameLog.map((log, i) => (
+                     <p key={i} className="text-xs text-slate-400">{log}</p>
+                  ))}
+               </div>
+
+               <div className="bg-black/30 rounded-xl p-3 mb-4">
+                  <h3 className="font-bold text-lime-400 mb-2">💡 Key Legal Principles</h3>
+                  <ul className="text-sm text-slate-300 space-y-1">
+                     <li>• <span className="text-yellow-400">Titles don't determine exemption</span>—duties do</li>
+                     <li>• <span className="text-yellow-400">Contracts can't override</span> employee status</li>
+                     <li>• <span className="text-yellow-400">State laws often exceed</span> federal protections</li>
+                     <li>• <span className="text-yellow-400">Timing is key evidence</span> in retaliation claims</li>
+                  </ul>
+               </div>
+
+               <button onClick={startGame} className="w-full py-3 bg-gradient-to-r from-lime-600 to-green-600 rounded-xl font-bold">
+                  🔄 TRY AGAIN
+               </button>
+
+               {showInfo && infoTopic && infoTopics[infoTopic] && (
+                  <div className="absolute inset-0 bg-black/80 flex items-center justify-center p-4 z-50" onClick={() => { setShowInfo(false); setInfoTopic(null); }}>
+                     <div className="bg-slate-800 rounded-xl p-4 max-w-md" onClick={e => e.stopPropagation()}>
+                        <h3 className="text-lg font-bold text-lime-400 mb-2">{infoTopics[infoTopic].title}</h3>
+                        <p className="text-sm text-slate-300 leading-relaxed">{infoTopics[infoTopic].content}</p>
+                        <button onClick={() => { setShowInfo(false); setInfoTopic(null); }} className="mt-4 w-full py-2 bg-lime-600 rounded-lg font-bold">Got it!</button>
+                     </div>
+                  </div>
+               )}
+            </div>
+         );
+      }
+
+      // PLAY PHASE
       const s = scenarios[scenario];
-      return (<div className="w-full h-full flex flex-col bg-gradient-to-br from-lime-900 via-green-900 to-slate-900 text-white overflow-hidden">{showInfo && infoTopic && infoTopics[infoTopic] && (<div className="absolute inset-0 bg-black/80 flex items-center justify-center p-4 z-50" onClick={() => { setShowInfo(false); setInfoTopic(null); }}><div className="bg-slate-800 rounded-xl p-4 max-w-md" onClick={e => e.stopPropagation()}><h3 className="text-lg font-bold text-lime-400 mb-2">{infoTopics[infoTopic].title}</h3><p className="text-sm text-slate-300">{infoTopics[infoTopic].content}</p><button onClick={() => { setShowInfo(false); setInfoTopic(null); }} className="mt-4 w-full py-2 bg-lime-600 rounded-lg">Got it!</button></div></div>)}<div className="p-3 bg-black/30 border-b border-lime-500/30"><div className="flex justify-between items-center"><span className="font-bold">⚖️ Employment Law</span><span className="text-lime-400">{scenario + 1}/{scenarios.length}</span></div><div className="flex gap-1 mt-2">{answers.map((a, i) => <div key={i} className={`w-3 h-3 rounded ${a ? 'bg-green-500' : 'bg-red-500'}`} />)}</div></div><div className="flex-1 p-4 flex flex-col justify-center"><div className="bg-black/30 rounded-xl p-4 mb-4"><p className="text-sm text-slate-200">{s.situation}</p></div><p className="text-center text-sm text-slate-400 mb-4">Is this legal?</p><div className="grid grid-cols-2 gap-3"><button onClick={() => answer(true)} className="py-4 bg-green-600/50 hover:bg-green-500/50 rounded-xl font-bold">✓ Legal</button><button onClick={() => answer(false)} className="py-4 bg-red-600/50 hover:bg-red-500/50 rounded-xl font-bold">✗ Illegal</button></div></div><div className="p-3 bg-black/30 border-t border-lime-500/30"><button onClick={() => setInfoTopic('discrimination')} className="text-xs text-lime-400">ℹ️ Discrimination</button></div></div>);
+      return (
+         <div className="w-full h-full flex flex-col bg-gradient-to-br from-lime-900 via-green-900 to-slate-900 text-white overflow-hidden">
+            {showInfo && infoTopic && infoTopics[infoTopic] && (
+               <div className="absolute inset-0 bg-black/80 flex items-center justify-center p-4 z-50" onClick={() => { setShowInfo(false); setInfoTopic(null); }}>
+                  <div className="bg-slate-800 rounded-xl p-4 max-w-md" onClick={e => e.stopPropagation()}>
+                     <h3 className="text-lg font-bold text-lime-400 mb-2">{infoTopics[infoTopic].title}</h3>
+                     <p className="text-sm text-slate-300 leading-relaxed">{infoTopics[infoTopic].content}</p>
+                     <button onClick={() => { setShowInfo(false); setInfoTopic(null); }} className="mt-4 w-full py-2 bg-lime-600 rounded-lg font-bold">Got it!</button>
+                  </div>
+               </div>
+            )}
+
+            {/* Header */}
+            <div className="p-3 bg-black/30 border-b border-lime-500/30">
+               <div className="flex justify-between items-center">
+                  <span className="font-bold text-sm">⚖️ {s.title}</span>
+                  <span className="text-lime-400 text-sm">{scenario + 1}/{scenarios.length}</span>
+               </div>
+               <div className="flex gap-1 mt-2">
+                  {scenarios.slice(0, scenario).map((_, i) => (
+                     <div key={i} className={`w-3 h-3 rounded ${gameLog[i]?.startsWith('✓') ? 'bg-green-500' : 'bg-red-500'}`} />
+                  ))}
+                  <div className="w-3 h-3 rounded bg-lime-500 animate-pulse" />
+                  {scenarios.slice(scenario + 1).map((_, i) => (
+                     <div key={i} className="w-3 h-3 rounded bg-slate-600" />
+                  ))}
+               </div>
+            </div>
+
+            {/* Scenario */}
+            <div className="flex-1 p-3 overflow-auto">
+               <div className="bg-black/30 rounded-lg p-3 mb-3">
+                  <p className="text-sm text-slate-200 leading-relaxed">{s.context}</p>
+               </div>
+
+               <p className="text-sm font-bold text-lime-400 mb-2">{s.question}</p>
+
+               <div className="space-y-2">
+                  {s.opts.map((opt, i) => (
+                     <button
+                        key={i}
+                        onClick={() => answer(i)}
+                        disabled={answered}
+                        className={`w-full p-3 rounded-lg text-left text-sm transition-all ${
+                           answered
+                              ? i === s.correct
+                                 ? 'bg-green-600 border-2 border-green-400'
+                                 : i === selected
+                                    ? 'bg-red-600 border-2 border-red-400'
+                                    : 'bg-black/30 opacity-50'
+                              : 'bg-black/30 hover:bg-lime-600/50 border-2 border-transparent'
+                        }`}
+                     >
+                        <span className="flex items-start gap-2">
+                           <span className="font-bold text-lime-400">{String.fromCharCode(65 + i)}.</span>
+                           <span>{opt}</span>
+                        </span>
+                     </button>
+                  ))}
+               </div>
+
+               {/* Explanation after answer */}
+               {answered && (
+                  <div className="mt-3 space-y-2">
+                     {selected !== s.correct && (
+                        <div className="p-3 bg-red-900/30 border border-red-500/50 rounded-lg">
+                           <p className="text-xs font-bold text-red-400 mb-1">❌ Why {String.fromCharCode(65 + (selected || 0))} is Wrong:</p>
+                           <p className="text-sm text-slate-300">{s.wrongExplanations[selected || 0]}</p>
+                        </div>
+                     )}
+
+                     <div className="p-3 bg-green-900/30 border border-green-500/50 rounded-lg">
+                        <p className="text-xs font-bold text-green-400 mb-1">✓ The Legal Reality:</p>
+                        <p className="text-sm text-slate-300">{s.why}</p>
+                     </div>
+
+                     <div className="p-3 bg-amber-900/30 border border-amber-500/50 rounded-lg">
+                        <p className="text-xs font-bold text-amber-400 mb-1">⚠️ Real Case:</p>
+                        <p className="text-sm text-slate-300">{s.realWorld}</p>
+                     </div>
+
+                     <button onClick={next} className="w-full py-3 bg-gradient-to-r from-lime-600 to-green-600 rounded-xl font-bold mt-2">
+                        {scenario >= scenarios.length - 1 ? 'See Results' : 'Next Scenario →'}
+                     </button>
+                  </div>
+               )}
+            </div>
+
+            {/* Info Buttons Footer */}
+            <div className="p-3 bg-black/30 border-t border-lime-500/30 flex gap-2 justify-center flex-wrap">
+               <button onClick={() => setInfoTopic('flsa')} className="text-xs text-lime-400 hover:text-lime-300">ℹ️ FLSA</button>
+               <button onClick={() => setInfoTopic('classification')} className="text-xs text-lime-400 hover:text-lime-300">ℹ️ Classification</button>
+               <button onClick={() => setInfoTopic('fmla')} className="text-xs text-lime-400 hover:text-lime-300">ℹ️ FMLA</button>
+               <button onClick={() => setInfoTopic('retaliation')} className="text-xs text-lime-400 hover:text-lime-300">ℹ️ Retaliation</button>
+            </div>
+         </div>
+      );
    };
 
    // --- DIGITAL & TECHNOLOGY RENDERERS ---
