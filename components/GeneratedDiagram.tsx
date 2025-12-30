@@ -23837,6 +23837,5764 @@ const GeneratedDiagram: React.FC<DiagramProps> = ({ type, data, title }) => {
       );
    };
 
+   // ============================================================================
+   // SECTION VI: OPERATIONS & MANAGEMENT - SUPPLY CHAIN MANAGEMENT
+   // ============================================================================
+   const SupplyChainRenderer = () => {
+      const [phase, setPhase] = useState<'intro' | 'play' | 'result'>('intro');
+      const [showInfo, setShowInfo] = useState(false);
+      const [infoTopic, setInfoTopic] = useState<string | null>(null);
+      const [day, setDay] = useState(1);
+      const [gameLog, setGameLog] = useState<string[]>([]);
+
+      // Supply chain stages with inventory
+      const [stages, setStages] = useState([
+         { id: 'supplier', name: 'Supplier', icon: '🌿', inventory: 100, capacity: 200, leadTime: 2 },
+         { id: 'manufacturer', name: 'Manufacturer', icon: '🏭', inventory: 50, capacity: 100, leadTime: 1 },
+         { id: 'warehouse', name: 'Warehouse', icon: '📦', inventory: 30, capacity: 80, leadTime: 1 },
+         { id: 'distributor', name: 'Distributor', icon: '🚚', inventory: 20, capacity: 50, leadTime: 1 },
+         { id: 'retailer', name: 'Retailer', icon: '🏪', inventory: 15, capacity: 30, leadTime: 0 },
+      ]);
+
+      // Game metrics
+      const [money, setMoney] = useState(10000);
+      const [customerSatisfaction, setCustomerSatisfaction] = useState(100);
+      const [ordersDelivered, setOrdersDelivered] = useState(0);
+      const [ordersMissed, setOrdersMissed] = useState(0);
+      const [totalCost, setTotalCost] = useState(0);
+
+      // Current order settings
+      const [orderQty, setOrderQty] = useState(20);
+      const [selectedSupplier, setSelectedSupplier] = useState<'cheap' | 'reliable' | 'fast'>('reliable');
+
+      // Events and disruptions
+      const [currentEvent, setCurrentEvent] = useState<{ type: string; message: string; effect: string } | null>(null);
+      const [pendingOrders, setPendingOrders] = useState<{ qty: number; arriveDay: number; stage: string }[]>([]);
+
+      // Daily customer demand (varies)
+      const [dailyDemand, setDailyDemand] = useState(10);
+
+      const suppliers = {
+         cheap: { name: 'Budget Supply Co', cost: 5, reliability: 60, leadTime: 4, icon: '💰' },
+         reliable: { name: 'Steady Partners', cost: 10, reliability: 95, leadTime: 2, icon: '🤝' },
+         fast: { name: 'Express Logistics', cost: 15, reliability: 80, leadTime: 1, icon: '⚡' },
+      };
+
+      const events = [
+         { type: 'demand_spike', message: '📈 Viral social media post! Demand doubled!', effect: 'Customer demand increased to 20 units' },
+         { type: 'supplier_delay', message: '⚠️ Shipping container stuck at port!', effect: 'All incoming orders delayed by 2 days' },
+         { type: 'quality_issue', message: '🔍 Quality inspection failed!', effect: 'Lost 10 units from manufacturer inventory' },
+         { type: 'competitor_sale', message: '🏷️ Competitor launched big sale!', effect: 'Customer demand reduced to 5 units' },
+         { type: 'fuel_costs', message: '⛽ Fuel prices surged!', effect: 'Shipping costs +$200 this round' },
+         { type: 'good_news', message: '🌟 Supplier gave bulk discount!', effect: 'Next order costs 50% less' },
+      ];
+
+      const infoTopics: Record<string, { title: string; content: string }> = {
+         supplychain: {
+            title: 'What is Supply Chain?',
+            content: 'A supply chain is the network of all individuals, organizations, resources, activities, and technology involved in creating and selling a product. It spans from raw materials to delivering the final product to customers.'
+         },
+         leadtime: {
+            title: 'Lead Time',
+            content: 'Lead time is the delay between placing an order and receiving it. Longer lead times require more safety stock but often cost less. Shorter lead times are more expensive but reduce risk.'
+         },
+         bullwhip: {
+            title: 'Bullwhip Effect',
+            content: 'Small changes in customer demand can cause larger and larger fluctuations up the supply chain. A 10% increase at retail might become a 40% swing at the manufacturer level!'
+         },
+         inventory: {
+            title: 'Inventory Management',
+            content: 'Holding inventory costs money (storage, insurance, obsolescence) but protects against stockouts. The goal is finding the right balance - not too much, not too little.'
+         },
+         supplier: {
+            title: 'Supplier Selection',
+            content: 'Choosing suppliers involves tradeoffs: cheap suppliers may be unreliable, fast suppliers cost more. Diversifying suppliers reduces risk but increases complexity.'
+         },
+         satisfaction: {
+            title: 'Customer Satisfaction',
+            content: 'When you cannot fulfill customer demand (stockout), satisfaction drops. Unhappy customers may leave permanently. Maintaining adequate inventory prevents this.'
+         }
+      };
+
+      const processDay = () => {
+         let newLog: string[] = [];
+         let costThisRound = 0;
+
+         // Check for random event (30% chance)
+         if (Math.random() < 0.3) {
+            const event = events[Math.floor(Math.random() * events.length)];
+            setCurrentEvent(event);
+            newLog.push(`EVENT: ${event.message}`);
+
+            // Apply event effects
+            if (event.type === 'demand_spike') setDailyDemand(20);
+            if (event.type === 'competitor_sale') setDailyDemand(5);
+            if (event.type === 'quality_issue') {
+               setStages(prev => prev.map(s => s.id === 'manufacturer' ? { ...s, inventory: Math.max(0, s.inventory - 10) } : s));
+            }
+            if (event.type === 'fuel_costs') costThisRound += 200;
+            if (event.type === 'supplier_delay') {
+               setPendingOrders(prev => prev.map(o => ({ ...o, arriveDay: o.arriveDay + 2 })));
+            }
+         } else {
+            setCurrentEvent(null);
+            setDailyDemand(10 + Math.floor(Math.random() * 6) - 3); // 7-13 base demand
+         }
+
+         // Process arriving orders
+         const arrivingOrders = pendingOrders.filter(o => o.arriveDay <= day);
+         arrivingOrders.forEach(order => {
+            setStages(prev => prev.map(s =>
+               s.id === order.stage ? { ...s, inventory: Math.min(s.capacity, s.inventory + order.qty) } : s
+            ));
+            newLog.push(`📦 ${order.qty} units arrived at ${order.stage}`);
+         });
+         setPendingOrders(prev => prev.filter(o => o.arriveDay > day));
+
+         // Move inventory through the chain (simplified flow)
+         setStages(prev => {
+            const updated = [...prev];
+            for (let i = updated.length - 2; i >= 0; i--) {
+               const current = updated[i];
+               const next = updated[i + 1];
+               const transfer = Math.min(current.inventory, next.capacity - next.inventory, 15);
+               if (transfer > 0) {
+                  updated[i] = { ...current, inventory: current.inventory - transfer };
+                  updated[i + 1] = { ...next, inventory: next.inventory + transfer };
+               }
+            }
+            return updated;
+         });
+
+         // Fulfill customer demand from retailer
+         const retailer = stages.find(s => s.id === 'retailer')!;
+         const fulfilled = Math.min(retailer.inventory, dailyDemand);
+         const missed = dailyDemand - fulfilled;
+
+         if (fulfilled > 0) {
+            setStages(prev => prev.map(s => s.id === 'retailer' ? { ...s, inventory: s.inventory - fulfilled } : s));
+            setOrdersDelivered(prev => prev + fulfilled);
+            newLog.push(`✅ Delivered ${fulfilled} units to customers`);
+         }
+
+         if (missed > 0) {
+            setOrdersMissed(prev => prev + missed);
+            setCustomerSatisfaction(prev => Math.max(0, prev - missed * 5));
+            newLog.push(`❌ Stockout! Missed ${missed} orders. Satisfaction -${missed * 5}%`);
+         }
+
+         // Calculate holding costs ($1 per unit per day)
+         const holdingCost = stages.reduce((sum, s) => sum + s.inventory, 0);
+         costThisRound += holdingCost;
+
+         setTotalCost(prev => prev + costThisRound);
+         setMoney(prev => prev - costThisRound + fulfilled * 25); // Revenue per unit
+         newLog.push(`💵 Revenue: +$${fulfilled * 25} | Costs: -$${costThisRound}`);
+
+         setGameLog(prev => [...prev, `--- Day ${day} ---`, ...newLog]);
+
+         if (day >= 10) {
+            setPhase('result');
+         } else {
+            setDay(d => d + 1);
+         }
+      };
+
+      const placeOrder = () => {
+         const supplier = suppliers[selectedSupplier];
+         const cost = orderQty * supplier.cost;
+
+         // Check reliability (order might fail)
+         const orderSucceeds = Math.random() * 100 < supplier.reliability;
+
+         if (orderSucceeds) {
+            setPendingOrders(prev => [...prev, {
+               qty: orderQty,
+               arriveDay: day + supplier.leadTime,
+               stage: 'supplier'
+            }]);
+            setMoney(prev => prev - cost);
+            setTotalCost(prev => prev + cost);
+            setGameLog(prev => [...prev, `📋 Ordered ${orderQty} units from ${supplier.name} ($${cost}) - arrives Day ${day + supplier.leadTime}`]);
+         } else {
+            setGameLog(prev => [...prev, `⚠️ Order from ${supplier.name} FAILED! (Reliability: ${supplier.reliability}%)`]);
+         }
+      };
+
+      const startGame = () => {
+         setPhase('play');
+         setDay(1);
+         setMoney(10000);
+         setCustomerSatisfaction(100);
+         setOrdersDelivered(0);
+         setOrdersMissed(0);
+         setTotalCost(0);
+         setGameLog([]);
+         setPendingOrders([]);
+         setStages([
+            { id: 'supplier', name: 'Supplier', icon: '🌿', inventory: 100, capacity: 200, leadTime: 2 },
+            { id: 'manufacturer', name: 'Manufacturer', icon: '🏭', inventory: 50, capacity: 100, leadTime: 1 },
+            { id: 'warehouse', name: 'Warehouse', icon: '📦', inventory: 30, capacity: 80, leadTime: 1 },
+            { id: 'distributor', name: 'Distributor', icon: '🚚', inventory: 20, capacity: 50, leadTime: 1 },
+            { id: 'retailer', name: 'Retailer', icon: '🏪', inventory: 15, capacity: 30, leadTime: 0 },
+         ]);
+      };
+
+      const getGameSummary = () => {
+         const deliveryRate = ordersDelivered > 0 ? Math.round((ordersDelivered / (ordersDelivered + ordersMissed)) * 100) : 0;
+         const profit = money - 10000;
+         const score = Math.round((customerSatisfaction * 0.4) + (deliveryRate * 0.4) + (profit > 0 ? 20 : profit > -2000 ? 10 : 0));
+         return { deliveryRate, profit, score };
+      };
+
+      // INTRO PHASE
+      if (phase === 'intro') return (
+         <div className="flex flex-col h-full bg-gradient-to-br from-slate-800 via-slate-700 to-zinc-800 text-white p-6 overflow-auto">
+            <div className="flex justify-between items-start mb-4">
+               <div>
+                  <h2 className="text-2xl font-black flex items-center gap-2">⛓️ SUPPLY CHAIN MANAGEMENT</h2>
+                  <p className="text-slate-300 text-sm mt-1">Master the flow from supplier to customer</p>
+               </div>
+               <button onClick={() => setShowInfo(!showInfo)} className="w-10 h-10 rounded-full bg-white/20 hover:bg-white/30 flex items-center justify-center text-xl transition-all">ℹ️</button>
+            </div>
+
+            {showInfo && (
+               <div className="bg-black/40 rounded-xl p-4 mb-4 text-sm border border-slate-500/30">
+                  <p className="font-bold text-slate-200 mb-2">📚 What You'll Learn:</p>
+                  <ul className="space-y-1 text-slate-300">
+                     <li>• How products flow from raw materials to customers</li>
+                     <li>• The tradeoffs between cost, speed, and reliability</li>
+                     <li>• Why inventory management matters</li>
+                     <li>• How disruptions ripple through a supply chain</li>
+                  </ul>
+               </div>
+            )}
+
+            <div className="flex-1 flex flex-col justify-center">
+               {/* Visual supply chain diagram */}
+               <div className="bg-black/30 rounded-2xl p-4 mb-6">
+                  <p className="text-center text-slate-400 text-xs mb-4 font-bold uppercase tracking-wider">The 5 Stages of Supply Chain</p>
+                  <div className="flex justify-between items-center overflow-x-auto pb-2">
+                     {[
+                        { icon: '🌿', name: 'Supplier', desc: 'Raw materials' },
+                        { icon: '🏭', name: 'Manufacturer', desc: 'Production' },
+                        { icon: '📦', name: 'Warehouse', desc: 'Storage' },
+                        { icon: '🚚', name: 'Distributor', desc: 'Transport' },
+                        { icon: '🏪', name: 'Retailer', desc: 'Sales' },
+                     ].map((stage, i) => (
+                        <React.Fragment key={stage.name}>
+                           <div className="flex flex-col items-center min-w-[70px]">
+                              <div className="w-14 h-14 rounded-xl bg-slate-600/50 flex items-center justify-center text-2xl mb-1">{stage.icon}</div>
+                              <span className="text-xs font-bold">{stage.name}</span>
+                              <span className="text-[10px] text-slate-400">{stage.desc}</span>
+                           </div>
+                           {i < 4 && <span className="text-slate-500 mx-1">→</span>}
+                        </React.Fragment>
+                     ))}
+                  </div>
+               </div>
+
+               <div className="text-center mb-6">
+                  <h3 className="text-xl font-bold mb-2">🎮 Your Mission</h3>
+                  <p className="text-slate-300 max-w-lg mx-auto">
+                     Run a 10-day supply chain simulation. Order inventory, choose suppliers wisely,
+                     and handle disruptions to maximize profits and customer satisfaction!
+                  </p>
+               </div>
+
+               <div className="grid grid-cols-3 gap-3 mb-6 max-w-md mx-auto">
+                  <div className="bg-green-900/40 rounded-xl p-3 text-center border border-green-500/30">
+                     <span className="text-2xl">💰</span>
+                     <p className="text-xs font-bold mt-1">Balance Budget</p>
+                  </div>
+                  <div className="bg-blue-900/40 rounded-xl p-3 text-center border border-blue-500/30">
+                     <span className="text-2xl">😊</span>
+                     <p className="text-xs font-bold mt-1">Keep Customers Happy</p>
+                  </div>
+                  <div className="bg-purple-900/40 rounded-xl p-3 text-center border border-purple-500/30">
+                     <span className="text-2xl">📦</span>
+                     <p className="text-xs font-bold mt-1">Avoid Stockouts</p>
+                  </div>
+               </div>
+
+               <button onClick={startGame} className="mx-auto px-8 py-4 bg-gradient-to-r from-slate-600 to-zinc-600 hover:from-slate-500 hover:to-zinc-500 rounded-xl font-bold text-lg transition-all transform hover:scale-105 shadow-lg">
+                  START SIMULATION →
+               </button>
+            </div>
+
+            <p className="text-xs text-slate-400/60 text-center mt-4">💡 Tip: Click the ℹ️ buttons during gameplay for more information on supply chain concepts.</p>
+         </div>
+      );
+
+      // RESULT PHASE
+      if (phase === 'result') {
+         const { deliveryRate, profit, score } = getGameSummary();
+         const grade = score >= 80 ? 'A' : score >= 60 ? 'B' : score >= 40 ? 'C' : 'D';
+         const gradeColor = score >= 80 ? 'text-green-400' : score >= 60 ? 'text-blue-400' : score >= 40 ? 'text-yellow-400' : 'text-red-400';
+
+         return (
+            <div className="flex flex-col h-full bg-gradient-to-br from-slate-800 via-slate-700 to-zinc-800 text-white p-6 overflow-auto">
+               <div className="text-center mb-6">
+                  <div className="text-6xl mb-2">{score >= 80 ? '🏆' : score >= 60 ? '🌟' : score >= 40 ? '📊' : '📉'}</div>
+                  <h2 className="text-3xl font-black">Simulation Complete!</h2>
+                  <p className={`text-5xl font-black mt-2 ${gradeColor}`}>Grade: {grade}</p>
+               </div>
+
+               <div className="grid grid-cols-2 gap-4 mb-6 max-w-md mx-auto">
+                  <div className="bg-black/30 rounded-xl p-4 text-center">
+                     <p className="text-2xl font-black text-green-400">${profit >= 0 ? '+' : ''}{profit}</p>
+                     <p className="text-xs text-slate-400">Profit/Loss</p>
+                  </div>
+                  <div className="bg-black/30 rounded-xl p-4 text-center">
+                     <p className="text-2xl font-black text-blue-400">{customerSatisfaction}%</p>
+                     <p className="text-xs text-slate-400">Satisfaction</p>
+                  </div>
+                  <div className="bg-black/30 rounded-xl p-4 text-center">
+                     <p className="text-2xl font-black text-purple-400">{deliveryRate}%</p>
+                     <p className="text-xs text-slate-400">Delivery Rate</p>
+                  </div>
+                  <div className="bg-black/30 rounded-xl p-4 text-center">
+                     <p className="text-2xl font-black text-amber-400">{ordersDelivered}</p>
+                     <p className="text-xs text-slate-400">Orders Delivered</p>
+                  </div>
+               </div>
+
+               <div className="bg-indigo-900/40 rounded-xl p-4 mb-6 border border-indigo-500/30">
+                  <p className="font-bold text-indigo-300 mb-2 flex items-center gap-2">
+                     <span className="w-6 h-6 rounded-full bg-indigo-500 flex items-center justify-center text-sm">💡</span>
+                     Key Takeaways
+                  </p>
+                  <ul className="text-sm text-indigo-200 space-y-1">
+                     <li>• <strong>Buffer stock</strong> protects against demand variability</li>
+                     <li>• <strong>Supplier choice</strong> involves cost-reliability-speed tradeoffs</li>
+                     <li>• <strong>Lead times</strong> mean you must plan orders ahead</li>
+                     <li>• <strong>Disruptions</strong> can cascade through the entire chain</li>
+                  </ul>
+               </div>
+
+               <div className="bg-black/20 rounded-xl p-3 mb-6 max-h-32 overflow-auto">
+                  <p className="text-xs font-bold text-slate-400 mb-2">📋 Session Log (for AI Coach review)</p>
+                  <div className="text-xs text-slate-500 space-y-0.5">
+                     {gameLog.slice(-10).map((log, i) => <p key={i}>{log}</p>)}
+                  </div>
+               </div>
+
+               <button onClick={startGame} className="mx-auto px-6 py-3 bg-gradient-to-r from-slate-600 to-zinc-600 hover:from-slate-500 hover:to-zinc-500 rounded-xl font-bold transition-all">
+                  🔄 PLAY AGAIN
+               </button>
+            </div>
+         );
+      }
+
+      // PLAY PHASE
+      return (
+         <div className="flex flex-col h-full bg-gradient-to-br from-slate-800 via-slate-700 to-zinc-800 text-white overflow-hidden">
+            {/* Header with metrics */}
+            <div className="p-3 bg-black/30 border-b border-slate-600/50">
+               <div className="flex justify-between items-center mb-2">
+                  <span className="text-lg font-black">📅 Day {day} / 10</span>
+                  <div className="flex gap-2">
+                     <span className="px-3 py-1 bg-green-900/50 rounded-full text-sm font-bold text-green-300">💰 ${money}</span>
+                     <span className="px-3 py-1 bg-blue-900/50 rounded-full text-sm font-bold text-blue-300">😊 {customerSatisfaction}%</span>
+                  </div>
+               </div>
+               <div className="flex gap-2 text-xs">
+                  <span className="text-slate-400">Delivered: {ordersDelivered}</span>
+                  <span className="text-slate-500">|</span>
+                  <span className="text-slate-400">Missed: {ordersMissed}</span>
+                  <span className="text-slate-500">|</span>
+                  <span className="text-slate-400">Today's Demand: {dailyDemand}</span>
+               </div>
+            </div>
+
+            {/* Info modal */}
+            {infoTopic && infoTopics[infoTopic] && (
+               <div className="absolute inset-0 bg-black/70 flex items-center justify-center z-50 p-4" onClick={() => setInfoTopic(null)}>
+                  <div className="bg-slate-800 rounded-2xl p-6 max-w-md border border-slate-600" onClick={e => e.stopPropagation()}>
+                     <h3 className="text-xl font-black mb-2 flex items-center gap-2">
+                        ℹ️ {infoTopics[infoTopic].title}
+                     </h3>
+                     <p className="text-slate-300 text-sm leading-relaxed">{infoTopics[infoTopic].content}</p>
+                     <button onClick={() => setInfoTopic(null)} className="mt-4 px-4 py-2 bg-slate-700 hover:bg-slate-600 rounded-lg text-sm font-bold w-full">Got it!</button>
+                  </div>
+               </div>
+            )}
+
+            {/* Event notification */}
+            {currentEvent && (
+               <div className="mx-3 mt-3 p-3 bg-amber-900/50 border border-amber-500/50 rounded-xl animate-pulse">
+                  <p className="font-bold text-amber-300">{currentEvent.message}</p>
+                  <p className="text-xs text-amber-400/80 mt-1">{currentEvent.effect}</p>
+               </div>
+            )}
+
+            {/* Supply chain visualization */}
+            <div className="flex-1 p-3 overflow-auto">
+               <div className="flex items-center gap-1 justify-between mb-4">
+                  <p className="text-xs text-slate-400 font-bold uppercase tracking-wider">Supply Chain Inventory</p>
+                  <button onClick={() => setInfoTopic('supplychain')} className="text-slate-400 hover:text-white text-sm">ℹ️</button>
+               </div>
+
+               <div className="flex justify-between items-end gap-2 mb-4">
+                  {stages.map((stage, i) => (
+                     <div key={stage.id} className="flex-1 flex flex-col items-center">
+                        <div className="w-full bg-slate-700/50 rounded-lg p-2 mb-1 relative">
+                           <div className="text-center text-2xl mb-1">{stage.icon}</div>
+                           <div className="h-16 bg-slate-800 rounded relative overflow-hidden">
+                              <div
+                                 className={`absolute bottom-0 left-0 right-0 transition-all duration-500 ${
+                                    stage.inventory < stage.capacity * 0.2 ? 'bg-red-500' :
+                                    stage.inventory < stage.capacity * 0.5 ? 'bg-amber-500' : 'bg-green-500'
+                                 }`}
+                                 style={{ height: `${(stage.inventory / stage.capacity) * 100}%` }}
+                              />
+                              <div className="absolute inset-0 flex items-center justify-center text-white font-bold text-sm">
+                                 {stage.inventory}
+                              </div>
+                           </div>
+                           <p className="text-[10px] text-slate-400 text-center mt-1">{stage.name}</p>
+                        </div>
+                        {i < stages.length - 1 && <span className="text-slate-600 text-xs">→</span>}
+                     </div>
+                  ))}
+                  <div className="flex flex-col items-center">
+                     <div className="w-12 h-12 rounded-full bg-blue-900/50 flex items-center justify-center text-xl border-2 border-blue-500">👤</div>
+                     <p className="text-[10px] text-slate-400 mt-1">Customer</p>
+                  </div>
+               </div>
+
+               {/* Order controls */}
+               <div className="bg-black/30 rounded-xl p-4 mb-4">
+                  <div className="flex justify-between items-center mb-3">
+                     <p className="font-bold text-sm">📋 Place Order</p>
+                     <button onClick={() => setInfoTopic('supplier')} className="text-slate-400 hover:text-white text-sm">ℹ️</button>
+                  </div>
+
+                  <div className="grid grid-cols-3 gap-2 mb-3">
+                     {(Object.entries(suppliers) as [string, typeof suppliers.cheap][]).map(([key, sup]) => (
+                        <button
+                           key={key}
+                           onClick={() => setSelectedSupplier(key as 'cheap' | 'reliable' | 'fast')}
+                           className={`p-2 rounded-lg text-xs transition-all ${
+                              selectedSupplier === key
+                                 ? 'bg-slate-600 border-2 border-slate-400'
+                                 : 'bg-slate-700/50 border-2 border-transparent hover:border-slate-500'
+                           }`}
+                        >
+                           <div className="text-lg mb-1">{sup.icon}</div>
+                           <div className="font-bold truncate">{sup.name}</div>
+                           <div className="text-slate-400">
+                              ${sup.cost}/u • {sup.reliability}% • {sup.leadTime}d
+                           </div>
+                        </button>
+                     ))}
+                  </div>
+
+                  <div className="flex gap-2 items-center">
+                     <div className="flex-1">
+                        <label className="text-xs text-slate-400">Quantity: {orderQty}</label>
+                        <input
+                           type="range"
+                           min="5"
+                           max="50"
+                           value={orderQty}
+                           onChange={(e) => setOrderQty(Number(e.target.value))}
+                           className="w-full h-2 bg-slate-600 rounded-full accent-slate-400"
+                        />
+                     </div>
+                     <button
+                        onClick={placeOrder}
+                        disabled={money < orderQty * suppliers[selectedSupplier].cost}
+                        className="px-4 py-2 bg-blue-600 hover:bg-blue-500 disabled:bg-slate-600 disabled:opacity-50 rounded-lg font-bold text-sm transition-all"
+                     >
+                        Order (${orderQty * suppliers[selectedSupplier].cost})
+                     </button>
+                  </div>
+
+                  {pendingOrders.length > 0 && (
+                     <div className="mt-2 text-xs text-slate-400">
+                        📦 Pending: {pendingOrders.map(o => `${o.qty}u (Day ${o.arriveDay})`).join(', ')}
+                     </div>
+                  )}
+               </div>
+
+               {/* Action button */}
+               <button
+                  onClick={processDay}
+                  className="w-full py-3 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-500 hover:to-emerald-500 rounded-xl font-bold text-lg transition-all shadow-lg"
+               >
+                  ▶️ ADVANCE TO {day < 10 ? `DAY ${day + 1}` : 'RESULTS'}
+               </button>
+            </div>
+
+            {/* Log panel */}
+            <div className="h-24 bg-black/40 border-t border-slate-600/50 p-2 overflow-auto">
+               <p className="text-[10px] font-bold text-slate-500 mb-1">Activity Log</p>
+               <div className="text-xs text-slate-400 space-y-0.5">
+                  {gameLog.slice(-5).map((log, i) => <p key={i}>{log}</p>)}
+               </div>
+            </div>
+         </div>
+      );
+   };
+
+   // ============================================================================
+   // INVENTORY MANAGEMENT INTERACTIVE
+   // ============================================================================
+   const InventoryManagementRenderer = () => {
+      const [phase, setPhase] = useState<'intro' | 'play' | 'result'>('intro');
+      const [showInfo, setShowInfo] = useState(false);
+      const [infoTopic, setInfoTopic] = useState<string | null>(null);
+      const [week, setWeek] = useState(1);
+      const [gameLog, setGameLog] = useState<string[]>([]);
+
+      // Inventory state
+      const [inventory, setInventory] = useState(100);
+      const [reorderPoint, setReorderPoint] = useState(30);
+      const [orderQuantity, setOrderQuantity] = useState(50);
+      const [pendingOrder, setPendingOrder] = useState<{ qty: number; arrivesWeek: number } | null>(null);
+
+      // Costs and metrics
+      const [totalHoldingCost, setTotalHoldingCost] = useState(0);
+      const [totalOrderingCost, setTotalOrderingCost] = useState(0);
+      const [totalStockoutCost, setTotalStockoutCost] = useState(0);
+      const [totalRevenue, setTotalRevenue] = useState(0);
+      const [salesMade, setSalesMade] = useState(0);
+      const [salesLost, setSalesLost] = useState(0);
+
+      // Settings
+      const [demandVariability, setDemandVariability] = useState<'low' | 'medium' | 'high'>('medium');
+      const holdingCostPerUnit = 2; // $ per unit per week
+      const orderingCostFixed = 50; // $ per order
+      const stockoutCostPerUnit = 15; // $ per lost sale
+      const sellingPrice = 25; // $ per unit sold
+      const leadTime = 2; // weeks
+
+      const infoTopics: Record<string, { title: string; content: string }> = {
+         inventory: {
+            title: 'Inventory Management',
+            content: 'Inventory management is balancing having enough stock to meet demand without holding too much (which costs money). Too little = lost sales. Too much = wasted storage costs.'
+         },
+         reorderPoint: {
+            title: 'Reorder Point (ROP)',
+            content: 'The inventory level at which you place a new order. ROP = (Average Daily Demand × Lead Time) + Safety Stock. Set it too low and you risk stockouts; too high and you order too often.'
+         },
+         eoq: {
+            title: 'Economic Order Quantity',
+            content: 'EOQ is the optimal order size that minimizes total inventory costs. EOQ = √(2×D×S/H) where D=annual demand, S=ordering cost, H=holding cost. Larger orders mean fewer orders but higher holding costs.'
+         },
+         holding: {
+            title: 'Holding Costs',
+            content: 'The cost of storing inventory: warehouse space, insurance, obsolescence, capital tied up. Typically 20-30% of item value per year. Holding too much inventory drains cash!'
+         },
+         stockout: {
+            title: 'Stockout Costs',
+            content: 'When you cannot fulfill demand: lost sales revenue, customer dissatisfaction, damaged reputation. Often the highest hidden cost in inventory management!'
+         },
+         safetyStock: {
+            title: 'Safety Stock',
+            content: 'Extra inventory held as a buffer against demand variability and supply delays. Higher variability = more safety stock needed. It\'s insurance against stockouts.'
+         }
+      };
+
+      const getDemand = () => {
+         const base = 40;
+         const variance = demandVariability === 'low' ? 10 : demandVariability === 'medium' ? 25 : 40;
+         return Math.max(5, Math.floor(base + (Math.random() * variance * 2) - variance));
+      };
+
+      const processWeek = () => {
+         const demand = getDemand();
+         let newLog: string[] = [`📅 Week ${week}: Demand = ${demand} units`];
+         let weekHolding = 0;
+         let weekStockout = 0;
+         let weekRevenue = 0;
+
+         // Check if order arrives
+         if (pendingOrder && pendingOrder.arrivesWeek <= week) {
+            setInventory(prev => prev + pendingOrder.qty);
+            newLog.push(`📦 Order of ${pendingOrder.qty} units arrived!`);
+            setPendingOrder(null);
+         }
+
+         // Fulfill demand
+         const fulfilled = Math.min(inventory, demand);
+         const unfulfilled = demand - fulfilled;
+
+         if (fulfilled > 0) {
+            setInventory(prev => prev - fulfilled);
+            weekRevenue = fulfilled * sellingPrice;
+            setTotalRevenue(prev => prev + weekRevenue);
+            setSalesMade(prev => prev + fulfilled);
+            newLog.push(`✅ Sold ${fulfilled} units (+$${weekRevenue})`);
+         }
+
+         if (unfulfilled > 0) {
+            weekStockout = unfulfilled * stockoutCostPerUnit;
+            setTotalStockoutCost(prev => prev + weekStockout);
+            setSalesLost(prev => prev + unfulfilled);
+            newLog.push(`❌ STOCKOUT! Lost ${unfulfilled} sales (-$${weekStockout} opportunity cost)`);
+         }
+
+         // Calculate holding cost on remaining inventory
+         const remainingInventory = inventory - fulfilled + (pendingOrder?.arrivesWeek === week ? pendingOrder.qty : 0);
+         weekHolding = Math.max(0, remainingInventory) * holdingCostPerUnit;
+         setTotalHoldingCost(prev => prev + weekHolding);
+         if (weekHolding > 0) {
+            newLog.push(`🏭 Holding cost: -$${weekHolding} (${remainingInventory} units × $${holdingCostPerUnit})`);
+         }
+
+         // Auto-order if at or below reorder point and no pending order
+         const currentInv = inventory - fulfilled;
+         if (currentInv <= reorderPoint && !pendingOrder) {
+            setPendingOrder({ qty: orderQuantity, arrivesWeek: week + leadTime });
+            setTotalOrderingCost(prev => prev + orderingCostFixed);
+            newLog.push(`📋 Auto-ordered ${orderQuantity} units (arrives Week ${week + leadTime}) - Order cost: $${orderingCostFixed}`);
+         }
+
+         setGameLog(prev => [...prev, ...newLog, '---']);
+
+         if (week >= 12) {
+            setPhase('result');
+         } else {
+            setWeek(w => w + 1);
+         }
+      };
+
+      const startGame = () => {
+         setPhase('play');
+         setWeek(1);
+         setInventory(100);
+         setPendingOrder(null);
+         setTotalHoldingCost(0);
+         setTotalOrderingCost(0);
+         setTotalStockoutCost(0);
+         setTotalRevenue(0);
+         setSalesMade(0);
+         setSalesLost(0);
+         setGameLog([]);
+      };
+
+      const getScore = () => {
+         const totalCosts = totalHoldingCost + totalOrderingCost + totalStockoutCost;
+         const profit = totalRevenue - totalCosts;
+         const serviceLevel = salesMade > 0 ? Math.round((salesMade / (salesMade + salesLost)) * 100) : 0;
+         const score = Math.min(100, Math.max(0, Math.round(serviceLevel * 0.5 + (profit > 0 ? 30 : 0) + (profit > 500 ? 20 : profit > 0 ? 10 : 0))));
+         return { totalCosts, profit, serviceLevel, score };
+      };
+
+      // INTRO PHASE
+      if (phase === 'intro') return (
+         <div className="flex flex-col h-full bg-gradient-to-br from-blue-900 via-indigo-900 to-purple-900 text-white p-6 overflow-auto">
+            <div className="flex justify-between items-start mb-4">
+               <div>
+                  <h2 className="text-2xl font-black flex items-center gap-2">📦 INVENTORY MANAGEMENT</h2>
+                  <p className="text-blue-300 text-sm mt-1">Balance stock levels to maximize profit</p>
+               </div>
+               <button onClick={() => setShowInfo(!showInfo)} className="w-10 h-10 rounded-full bg-white/20 hover:bg-white/30 flex items-center justify-center text-xl transition-all">ℹ️</button>
+            </div>
+
+            {showInfo && (
+               <div className="bg-black/40 rounded-xl p-4 mb-4 text-sm border border-blue-500/30">
+                  <p className="font-bold text-blue-200 mb-2">📚 What You'll Learn:</p>
+                  <ul className="space-y-1 text-blue-300">
+                     <li>• How to set optimal reorder points</li>
+                     <li>• Balancing holding costs vs stockout costs</li>
+                     <li>• The impact of demand variability</li>
+                     <li>• Why order quantity matters (EOQ concept)</li>
+                  </ul>
+               </div>
+            )}
+
+            <div className="flex-1 flex flex-col justify-center">
+               {/* Cost triangle visualization */}
+               <div className="bg-black/30 rounded-2xl p-4 mb-6">
+                  <p className="text-center text-blue-400 text-xs mb-4 font-bold uppercase tracking-wider">The Inventory Cost Triangle</p>
+                  <div className="flex justify-around items-center">
+                     <div className="text-center">
+                        <div className="w-16 h-16 rounded-full bg-amber-500/30 flex items-center justify-center text-3xl mb-2 mx-auto border-2 border-amber-500">🏭</div>
+                        <p className="text-xs font-bold">Holding Costs</p>
+                        <p className="text-[10px] text-blue-400">${holdingCostPerUnit}/unit/week</p>
+                     </div>
+                     <div className="text-center">
+                        <div className="w-16 h-16 rounded-full bg-blue-500/30 flex items-center justify-center text-3xl mb-2 mx-auto border-2 border-blue-500">📋</div>
+                        <p className="text-xs font-bold">Ordering Costs</p>
+                        <p className="text-[10px] text-blue-400">${orderingCostFixed}/order</p>
+                     </div>
+                     <div className="text-center">
+                        <div className="w-16 h-16 rounded-full bg-red-500/30 flex items-center justify-center text-3xl mb-2 mx-auto border-2 border-red-500">❌</div>
+                        <p className="text-xs font-bold">Stockout Costs</p>
+                        <p className="text-[10px] text-blue-400">${stockoutCostPerUnit}/lost sale</p>
+                     </div>
+                  </div>
+               </div>
+
+               <div className="text-center mb-6">
+                  <h3 className="text-xl font-bold mb-2">🎮 Your Mission</h3>
+                  <p className="text-blue-300 max-w-lg mx-auto">
+                     Run a 12-week inventory simulation. Set your reorder point and order quantity wisely
+                     to minimize costs and maximize service level!
+                  </p>
+               </div>
+
+               <div className="bg-black/20 rounded-xl p-4 mb-6 max-w-md mx-auto">
+                  <p className="text-sm font-bold mb-3 text-center">Choose Demand Variability:</p>
+                  <div className="grid grid-cols-3 gap-2">
+                     {(['low', 'medium', 'high'] as const).map(level => (
+                        <button
+                           key={level}
+                           onClick={() => setDemandVariability(level)}
+                           className={`p-3 rounded-lg text-sm font-bold capitalize transition-all ${
+                              demandVariability === level
+                                 ? 'bg-blue-500 text-white'
+                                 : 'bg-white/10 hover:bg-white/20'
+                           }`}
+                        >
+                           {level === 'low' ? '📊 Low' : level === 'medium' ? '📈 Medium' : '🎢 High'}
+                        </button>
+                     ))}
+                  </div>
+                  <p className="text-xs text-blue-400 text-center mt-2">
+                     {demandVariability === 'low' ? 'Demand: 30-50 units/week' :
+                      demandVariability === 'medium' ? 'Demand: 15-65 units/week' :
+                      'Demand: 0-80 units/week (risky!)'}
+                  </p>
+               </div>
+
+               <button onClick={startGame} className="mx-auto px-8 py-4 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 rounded-xl font-bold text-lg transition-all transform hover:scale-105 shadow-lg">
+                  START SIMULATION →
+               </button>
+            </div>
+
+            <p className="text-xs text-blue-400/60 text-center mt-4">💡 Tip: Higher variability needs higher safety stock (higher reorder point).</p>
+         </div>
+      );
+
+      // RESULT PHASE
+      if (phase === 'result') {
+         const { totalCosts, profit, serviceLevel, score } = getScore();
+         const grade = score >= 80 ? 'A' : score >= 60 ? 'B' : score >= 40 ? 'C' : 'D';
+         const gradeColor = score >= 80 ? 'text-green-400' : score >= 60 ? 'text-blue-400' : score >= 40 ? 'text-yellow-400' : 'text-red-400';
+
+         return (
+            <div className="flex flex-col h-full bg-gradient-to-br from-blue-900 via-indigo-900 to-purple-900 text-white p-6 overflow-auto">
+               <div className="text-center mb-6">
+                  <div className="text-6xl mb-2">{score >= 80 ? '🏆' : score >= 60 ? '📦' : score >= 40 ? '📊' : '📉'}</div>
+                  <h2 className="text-3xl font-black">Simulation Complete!</h2>
+                  <p className={`text-5xl font-black mt-2 ${gradeColor}`}>Grade: {grade}</p>
+               </div>
+
+               <div className="grid grid-cols-2 gap-3 mb-4 max-w-md mx-auto">
+                  <div className="bg-black/30 rounded-xl p-3 text-center">
+                     <p className="text-xl font-black text-green-400">${totalRevenue}</p>
+                     <p className="text-xs text-blue-300">Revenue</p>
+                  </div>
+                  <div className="bg-black/30 rounded-xl p-3 text-center">
+                     <p className={`text-xl font-black ${profit >= 0 ? 'text-green-400' : 'text-red-400'}`}>${profit >= 0 ? '+' : ''}{profit}</p>
+                     <p className="text-xs text-blue-300">Net Profit</p>
+                  </div>
+                  <div className="bg-black/30 rounded-xl p-3 text-center">
+                     <p className="text-xl font-black text-purple-400">{serviceLevel}%</p>
+                     <p className="text-xs text-blue-300">Service Level</p>
+                  </div>
+                  <div className="bg-black/30 rounded-xl p-3 text-center">
+                     <p className="text-xl font-black text-amber-400">${totalCosts}</p>
+                     <p className="text-xs text-blue-300">Total Costs</p>
+                  </div>
+               </div>
+
+               <div className="bg-black/20 rounded-xl p-3 mb-4 max-w-md mx-auto">
+                  <p className="text-xs font-bold text-blue-400 mb-2">Cost Breakdown:</p>
+                  <div className="grid grid-cols-3 gap-2 text-center text-xs">
+                     <div><span className="text-amber-400">${totalHoldingCost}</span><br/>Holding</div>
+                     <div><span className="text-blue-400">${totalOrderingCost}</span><br/>Ordering</div>
+                     <div><span className="text-red-400">${totalStockoutCost}</span><br/>Stockouts</div>
+                  </div>
+               </div>
+
+               <div className="bg-indigo-900/40 rounded-xl p-4 mb-4 border border-indigo-500/30">
+                  <p className="font-bold text-indigo-300 mb-2 flex items-center gap-2">
+                     <span className="w-6 h-6 rounded-full bg-indigo-500 flex items-center justify-center text-sm">💡</span>
+                     Key Takeaways
+                  </p>
+                  <ul className="text-sm text-indigo-200 space-y-1">
+                     <li>• <strong>Reorder Point</strong> should cover demand during lead time + safety buffer</li>
+                     <li>• <strong>Order Quantity</strong> balances ordering cost vs holding cost</li>
+                     <li>• <strong>Safety Stock</strong> protects against demand variability</li>
+                     <li>• <strong>Stockouts</strong> are often more costly than holding extra inventory</li>
+                  </ul>
+               </div>
+
+               <div className="bg-black/20 rounded-xl p-3 mb-4 max-h-24 overflow-auto">
+                  <p className="text-xs font-bold text-blue-400 mb-1">📋 Session Log</p>
+                  <div className="text-xs text-blue-300/70 space-y-0.5">
+                     {gameLog.slice(-8).map((log, i) => <p key={i}>{log}</p>)}
+                  </div>
+               </div>
+
+               <button onClick={startGame} className="mx-auto px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 rounded-xl font-bold transition-all">
+                  🔄 PLAY AGAIN
+               </button>
+            </div>
+         );
+      }
+
+      // PLAY PHASE
+      const currentInventory = inventory + (pendingOrder?.arrivesWeek === week ? pendingOrder.qty : 0);
+      const inventoryStatus = currentInventory < 20 ? 'critical' : currentInventory < 50 ? 'warning' : 'healthy';
+
+      return (
+         <div className="flex flex-col h-full bg-gradient-to-br from-blue-900 via-indigo-900 to-purple-900 text-white overflow-hidden">
+            {/* Header */}
+            <div className="p-3 bg-black/30 border-b border-blue-500/30">
+               <div className="flex justify-between items-center mb-2">
+                  <span className="text-lg font-black">📅 Week {week} / 12</span>
+                  <div className="flex gap-2">
+                     <span className="px-3 py-1 bg-green-900/50 rounded-full text-sm font-bold text-green-300">💰 ${totalRevenue - totalHoldingCost - totalOrderingCost - totalStockoutCost}</span>
+                  </div>
+               </div>
+               <div className="flex gap-3 text-xs">
+                  <span className="text-blue-300">Sales: {salesMade}</span>
+                  <span className="text-blue-500">|</span>
+                  <span className="text-red-300">Lost: {salesLost}</span>
+                  <span className="text-blue-500">|</span>
+                  <span className="text-amber-300">Holding: ${totalHoldingCost}</span>
+               </div>
+            </div>
+
+            {/* Info modal */}
+            {infoTopic && infoTopics[infoTopic] && (
+               <div className="absolute inset-0 bg-black/70 flex items-center justify-center z-50 p-4" onClick={() => setInfoTopic(null)}>
+                  <div className="bg-indigo-900 rounded-2xl p-6 max-w-md border border-indigo-500" onClick={e => e.stopPropagation()}>
+                     <h3 className="text-xl font-black mb-2 flex items-center gap-2">ℹ️ {infoTopics[infoTopic].title}</h3>
+                     <p className="text-blue-200 text-sm leading-relaxed">{infoTopics[infoTopic].content}</p>
+                     <button onClick={() => setInfoTopic(null)} className="mt-4 px-4 py-2 bg-indigo-700 hover:bg-indigo-600 rounded-lg text-sm font-bold w-full">Got it!</button>
+                  </div>
+               </div>
+            )}
+
+            <div className="flex-1 p-4 overflow-auto">
+               {/* Inventory visualization */}
+               <div className="bg-black/30 rounded-xl p-4 mb-4">
+                  <div className="flex justify-between items-center mb-3">
+                     <p className="font-bold text-sm">📦 Current Inventory</p>
+                     <button onClick={() => setInfoTopic('inventory')} className="text-blue-400 hover:text-white text-sm">ℹ️</button>
+                  </div>
+
+                  <div className="relative h-20 bg-black/40 rounded-lg overflow-hidden mb-2">
+                     {/* Reorder point line */}
+                     <div
+                        className="absolute top-0 bottom-0 w-0.5 bg-yellow-500 z-10"
+                        style={{ left: `${Math.min(100, (reorderPoint / 150) * 100)}%` }}
+                     >
+                        <span className="absolute -top-5 left-1 text-[10px] text-yellow-400 whitespace-nowrap">ROP: {reorderPoint}</span>
+                     </div>
+
+                     {/* Inventory bar */}
+                     <div
+                        className={`absolute bottom-0 left-0 h-full transition-all duration-500 ${
+                           inventoryStatus === 'critical' ? 'bg-gradient-to-t from-red-600 to-red-400' :
+                           inventoryStatus === 'warning' ? 'bg-gradient-to-t from-amber-600 to-amber-400' :
+                           'bg-gradient-to-t from-green-600 to-green-400'
+                        }`}
+                        style={{ width: `${Math.min(100, (inventory / 150) * 100)}%` }}
+                     />
+
+                     {/* Inventory number */}
+                     <div className="absolute inset-0 flex items-center justify-center text-3xl font-black text-white drop-shadow-lg">
+                        {inventory}
+                     </div>
+                  </div>
+
+                  <div className="flex justify-between text-xs text-blue-400">
+                     <span>0</span>
+                     <span>Max: 150</span>
+                  </div>
+
+                  {pendingOrder && (
+                     <div className="mt-3 p-2 bg-blue-500/20 rounded-lg text-sm text-center border border-blue-500/30">
+                        🚚 Order of {pendingOrder.qty} units arriving Week {pendingOrder.arrivesWeek}
+                     </div>
+                  )}
+               </div>
+
+               {/* Controls */}
+               <div className="bg-black/30 rounded-xl p-4 mb-4">
+                  <div className="flex justify-between items-center mb-3">
+                     <p className="font-bold text-sm">⚙️ Inventory Settings</p>
+                     <button onClick={() => setInfoTopic('reorderPoint')} className="text-blue-400 hover:text-white text-sm">ℹ️</button>
+                  </div>
+
+                  <div className="space-y-4">
+                     <div>
+                        <div className="flex justify-between text-sm mb-1">
+                           <span>Reorder Point (ROP)</span>
+                           <span className="font-bold text-yellow-400">{reorderPoint} units</span>
+                        </div>
+                        <input
+                           type="range"
+                           min="10"
+                           max="80"
+                           value={reorderPoint}
+                           onChange={(e) => setReorderPoint(Number(e.target.value))}
+                           className="w-full h-2 bg-blue-900 rounded-full accent-yellow-500"
+                        />
+                        <p className="text-xs text-blue-400 mt-1">Auto-order triggers when inventory ≤ {reorderPoint}</p>
+                     </div>
+
+                     <div>
+                        <div className="flex justify-between text-sm mb-1">
+                           <span>Order Quantity (EOQ)</span>
+                           <span className="font-bold text-blue-400">{orderQuantity} units</span>
+                        </div>
+                        <input
+                           type="range"
+                           min="20"
+                           max="100"
+                           value={orderQuantity}
+                           onChange={(e) => setOrderQuantity(Number(e.target.value))}
+                           className="w-full h-2 bg-blue-900 rounded-full accent-blue-500"
+                        />
+                        <p className="text-xs text-blue-400 mt-1">Order cost: ${orderingCostFixed} + holding at ${holdingCostPerUnit}/unit/week</p>
+                     </div>
+                  </div>
+               </div>
+
+               {/* Action button */}
+               <button
+                  onClick={processWeek}
+                  className="w-full py-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 rounded-xl font-bold text-lg transition-all shadow-lg"
+               >
+                  ▶️ SIMULATE WEEK {week}
+               </button>
+            </div>
+
+            {/* Log panel */}
+            <div className="h-24 bg-black/40 border-t border-blue-500/30 p-2 overflow-auto">
+               <p className="text-[10px] font-bold text-blue-500 mb-1">Activity Log</p>
+               <div className="text-xs text-blue-300 space-y-0.5">
+                  {gameLog.slice(-5).map((log, i) => <p key={i}>{log}</p>)}
+               </div>
+            </div>
+         </div>
+      );
+   };
+
+   // ============================================================================
+   // OUTSOURCING DECISIONS INTERACTIVE
+   // ============================================================================
+   const OutsourcingRenderer = () => {
+      const [phase, setPhase] = useState<'intro' | 'play' | 'result'>('intro');
+      const [showInfo, setShowInfo] = useState(false);
+      const [infoTopic, setInfoTopic] = useState<string | null>(null);
+      const [currentTask, setCurrentTask] = useState(0);
+      const [gameLog, setGameLog] = useState<string[]>([]);
+
+      // Business metrics
+      const [budget, setBudget] = useState(100000);
+      const [qualityScore, setQualityScore] = useState(80);
+      const [controlScore, setControlScore] = useState(100);
+      const [velocity, setVelocity] = useState(50);
+
+      // Decisions made
+      const [decisions, setDecisions] = useState<{ task: string; choice: 'inhouse' | 'outsource'; cost: number; impact: string }[]>([]);
+
+      const tasks = [
+         {
+            name: 'Software Development',
+            icon: '💻',
+            isCore: true,
+            inhouse: { cost: 80000, quality: 90, control: 100, velocity: 40, time: '6 months' },
+            outsource: { cost: 40000, quality: 75, control: 50, velocity: 80, time: '3 months' },
+            insight: 'Core competency - outsourcing risks losing competitive advantage'
+         },
+         {
+            name: 'Accounting & Bookkeeping',
+            icon: '📊',
+            isCore: false,
+            inhouse: { cost: 50000, quality: 85, control: 100, velocity: 50, time: 'Ongoing' },
+            outsource: { cost: 15000, quality: 90, control: 70, velocity: 90, time: 'Ongoing' },
+            insight: 'Non-core - specialists often do it better and cheaper'
+         },
+         {
+            name: 'Customer Support',
+            icon: '🎧',
+            isCore: true,
+            inhouse: { cost: 60000, quality: 95, control: 100, velocity: 60, time: 'Ongoing' },
+            outsource: { cost: 25000, quality: 70, control: 40, velocity: 85, time: 'Ongoing' },
+            insight: 'Customer-facing - quality matters more than cost'
+         },
+         {
+            name: 'Logo & Brand Design',
+            icon: '🎨',
+            isCore: false,
+            inhouse: { cost: 30000, quality: 75, control: 100, velocity: 30, time: '2 months' },
+            outsource: { cost: 5000, quality: 90, control: 60, velocity: 95, time: '2 weeks' },
+            insight: 'One-time project - perfect for freelancers/agencies'
+         },
+         {
+            name: 'Legal Services',
+            icon: '⚖️',
+            isCore: false,
+            inhouse: { cost: 120000, quality: 85, control: 100, velocity: 50, time: 'Ongoing' },
+            outsource: { cost: 20000, quality: 95, control: 80, velocity: 90, time: 'As needed' },
+            insight: 'Specialized expertise - outsource unless you\'re a law firm'
+         },
+         {
+            name: 'Marketing Campaigns',
+            icon: '📢',
+            isCore: true,
+            inhouse: { cost: 70000, quality: 80, control: 100, velocity: 50, time: 'Ongoing' },
+            outsource: { cost: 35000, quality: 85, control: 60, velocity: 80, time: 'Ongoing' },
+            insight: 'Mix works best - keep strategy in-house, outsource execution'
+         },
+      ];
+
+      const infoTopics: Record<string, { title: string; content: string }> = {
+         outsourcing: {
+            title: 'What is Outsourcing?',
+            content: 'Outsourcing means hiring external companies or freelancers to handle business functions instead of doing them in-house. It can reduce costs and provide access to specialized skills.'
+         },
+         core: {
+            title: 'Core vs Non-Core',
+            content: 'Core activities are central to your competitive advantage (what makes you unique). Non-core activities are necessary but don\'t differentiate you. Generally, keep core in-house and consider outsourcing non-core.'
+         },
+         tradeoffs: {
+            title: 'Outsourcing Tradeoffs',
+            content: 'Outsourcing saves money and time but reduces control and may affect quality. You also become dependent on vendors. Consider: cost savings, expertise access, focus on core business, but also communication overhead and quality risks.'
+         },
+         control: {
+            title: 'Control & Quality',
+            content: 'In-house teams give you full control over quality, priorities, and processes. Outsourced work requires clear contracts, communication, and quality checks. The further from your core, the less control matters.'
+         },
+         velocity: {
+            title: 'Speed to Market',
+            content: 'Outsourcing can dramatically speed up delivery - agencies have ready teams and processes. But coordination takes time. For one-time projects, outsourcing is often faster. For ongoing work, in-house builds momentum.'
+         },
+         dependency: {
+            title: 'Vendor Dependency',
+            content: 'Over-relying on vendors creates risk: they might raise prices, reduce quality, or go out of business. Diversify vendors for critical functions and keep core competencies in-house.'
+         }
+      };
+
+      const makeDecision = (choice: 'inhouse' | 'outsource') => {
+         const task = tasks[currentTask];
+         const option = choice === 'inhouse' ? task.inhouse : task.outsource;
+
+         // Apply effects
+         setBudget(prev => prev - option.cost);
+         setQualityScore(prev => Math.round((prev + option.quality) / 2));
+         setControlScore(prev => Math.round((prev + option.control) / 2));
+         setVelocity(prev => Math.round((prev + option.velocity) / 2));
+
+         // Log decision
+         const impact = choice === 'inhouse'
+            ? `Kept in-house: Full control, higher cost`
+            : `Outsourced: Cost savings of $${task.inhouse.cost - task.outsource.cost}`;
+
+         setDecisions(prev => [...prev, {
+            task: task.name,
+            choice,
+            cost: option.cost,
+            impact
+         }]);
+
+         setGameLog(prev => [...prev,
+            `${task.icon} ${task.name}: ${choice === 'inhouse' ? 'IN-HOUSE' : 'OUTSOURCED'}`,
+            `   Cost: $${option.cost.toLocaleString()} | Quality: ${option.quality}% | Control: ${option.control}%`,
+            `   💡 ${task.insight}`
+         ]);
+
+         if (currentTask < tasks.length - 1) {
+            setCurrentTask(prev => prev + 1);
+         } else {
+            setPhase('result');
+         }
+      };
+
+      const startGame = () => {
+         setPhase('play');
+         setCurrentTask(0);
+         setBudget(100000);
+         setQualityScore(80);
+         setControlScore(100);
+         setVelocity(50);
+         setDecisions([]);
+         setGameLog([]);
+      };
+
+      const getScore = () => {
+         const budgetRemaining = budget;
+         const outsourcedCount = decisions.filter(d => d.choice === 'outsource').length;
+         const coreOutsourced = decisions.filter(d => d.choice === 'outsource' && tasks.find(t => t.name === d.task)?.isCore).length;
+
+         // Score based on balanced approach
+         let score = 50;
+         if (budgetRemaining > 0) score += 20;
+         if (qualityScore >= 80) score += 15;
+         if (controlScore >= 60) score += 10;
+         if (coreOutsourced === 0) score += 15; // Bonus for keeping core in-house
+         if (outsourcedCount >= 2 && outsourcedCount <= 4) score += 10; // Balanced approach
+
+         return { score: Math.min(100, score), budgetRemaining, outsourcedCount, coreOutsourced };
+      };
+
+      // INTRO PHASE
+      if (phase === 'intro') return (
+         <div className="flex flex-col h-full bg-gradient-to-br from-teal-900 via-cyan-900 to-blue-900 text-white p-6 overflow-auto">
+            <div className="flex justify-between items-start mb-4">
+               <div>
+                  <h2 className="text-2xl font-black flex items-center gap-2">🤝 OUTSOURCING DECISIONS</h2>
+                  <p className="text-teal-300 text-sm mt-1">Build vs Buy: Strategic resource allocation</p>
+               </div>
+               <button onClick={() => setShowInfo(!showInfo)} className="w-10 h-10 rounded-full bg-white/20 hover:bg-white/30 flex items-center justify-center text-xl transition-all">ℹ️</button>
+            </div>
+
+            {showInfo && (
+               <div className="bg-black/40 rounded-xl p-4 mb-4 text-sm border border-teal-500/30">
+                  <p className="font-bold text-teal-200 mb-2">📚 What You'll Learn:</p>
+                  <ul className="space-y-1 text-teal-300">
+                     <li>• When to outsource vs keep in-house</li>
+                     <li>• Core vs non-core business activities</li>
+                     <li>• Cost, quality, and control tradeoffs</li>
+                     <li>• Strategic resource allocation</li>
+                  </ul>
+               </div>
+            )}
+
+            <div className="flex-1 flex flex-col justify-center">
+               {/* Decision framework visualization */}
+               <div className="bg-black/30 rounded-2xl p-4 mb-6">
+                  <p className="text-center text-teal-400 text-xs mb-4 font-bold uppercase tracking-wider">The Outsourcing Decision Matrix</p>
+                  <div className="grid grid-cols-2 gap-3">
+                     <div className="bg-green-900/40 rounded-xl p-3 border border-green-500/30">
+                        <p className="font-bold text-green-400 text-sm mb-1">🏠 Keep In-House</p>
+                        <ul className="text-xs text-green-300 space-y-1">
+                           <li>✓ Core competencies</li>
+                           <li>✓ Competitive advantage</li>
+                           <li>✓ Need full control</li>
+                        </ul>
+                     </div>
+                     <div className="bg-blue-900/40 rounded-xl p-3 border border-blue-500/30">
+                        <p className="font-bold text-blue-400 text-sm mb-1">🌐 Outsource</p>
+                        <ul className="text-xs text-blue-300 space-y-1">
+                           <li>✓ Non-core activities</li>
+                           <li>✓ Need specialized skills</li>
+                           <li>✓ One-time projects</li>
+                        </ul>
+                     </div>
+                  </div>
+               </div>
+
+               <div className="text-center mb-6">
+                  <h3 className="text-xl font-bold mb-2">🎮 Your Mission</h3>
+                  <p className="text-teal-300 max-w-lg mx-auto">
+                     You're a startup founder with $100,000. Decide which business functions
+                     to outsource and which to keep in-house. Balance cost, quality, and control!
+                  </p>
+               </div>
+
+               <div className="grid grid-cols-4 gap-2 mb-6 max-w-md mx-auto text-center">
+                  <div className="bg-black/30 rounded-lg p-2">
+                     <span className="text-xl">💰</span>
+                     <p className="text-[10px] text-teal-400">$100K Budget</p>
+                  </div>
+                  <div className="bg-black/30 rounded-lg p-2">
+                     <span className="text-xl">⭐</span>
+                     <p className="text-[10px] text-teal-400">Quality</p>
+                  </div>
+                  <div className="bg-black/30 rounded-lg p-2">
+                     <span className="text-xl">🎮</span>
+                     <p className="text-[10px] text-teal-400">Control</p>
+                  </div>
+                  <div className="bg-black/30 rounded-lg p-2">
+                     <span className="text-xl">⚡</span>
+                     <p className="text-[10px] text-teal-400">Speed</p>
+                  </div>
+               </div>
+
+               <button onClick={startGame} className="mx-auto px-8 py-4 bg-gradient-to-r from-teal-600 to-cyan-600 hover:from-teal-500 hover:to-cyan-500 rounded-xl font-bold text-lg transition-all transform hover:scale-105 shadow-lg">
+                  START DECISIONS →
+               </button>
+            </div>
+
+            <p className="text-xs text-teal-400/60 text-center mt-4">💡 Tip: Focus on keeping core competencies in-house while outsourcing non-core activities.</p>
+         </div>
+      );
+
+      // RESULT PHASE
+      if (phase === 'result') {
+         const { score, budgetRemaining, outsourcedCount, coreOutsourced } = getScore();
+         const grade = score >= 80 ? 'A' : score >= 60 ? 'B' : score >= 40 ? 'C' : 'D';
+         const gradeColor = score >= 80 ? 'text-green-400' : score >= 60 ? 'text-blue-400' : score >= 40 ? 'text-yellow-400' : 'text-red-400';
+
+         return (
+            <div className="flex flex-col h-full bg-gradient-to-br from-teal-900 via-cyan-900 to-blue-900 text-white p-6 overflow-auto">
+               <div className="text-center mb-6">
+                  <div className="text-6xl mb-2">{score >= 80 ? '🏆' : score >= 60 ? '🤝' : score >= 40 ? '📊' : '⚠️'}</div>
+                  <h2 className="text-3xl font-black">Decisions Complete!</h2>
+                  <p className={`text-5xl font-black mt-2 ${gradeColor}`}>Grade: {grade}</p>
+               </div>
+
+               <div className="grid grid-cols-2 gap-3 mb-4 max-w-md mx-auto">
+                  <div className="bg-black/30 rounded-xl p-3 text-center">
+                     <p className={`text-xl font-black ${budgetRemaining >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                        ${budgetRemaining.toLocaleString()}
+                     </p>
+                     <p className="text-xs text-teal-300">Budget Remaining</p>
+                  </div>
+                  <div className="bg-black/30 rounded-xl p-3 text-center">
+                     <p className="text-xl font-black text-purple-400">{qualityScore}%</p>
+                     <p className="text-xs text-teal-300">Avg Quality</p>
+                  </div>
+                  <div className="bg-black/30 rounded-xl p-3 text-center">
+                     <p className="text-xl font-black text-blue-400">{controlScore}%</p>
+                     <p className="text-xs text-teal-300">Control Level</p>
+                  </div>
+                  <div className="bg-black/30 rounded-xl p-3 text-center">
+                     <p className="text-xl font-black text-amber-400">{outsourcedCount}/{tasks.length}</p>
+                     <p className="text-xs text-teal-300">Outsourced</p>
+                  </div>
+               </div>
+
+               {coreOutsourced > 0 && (
+                  <div className="bg-red-900/40 rounded-xl p-3 mb-4 border border-red-500/30 text-center">
+                     <p className="text-red-300 text-sm">⚠️ You outsourced {coreOutsourced} core function(s) - this may hurt competitive advantage!</p>
+                  </div>
+               )}
+
+               <div className="bg-teal-900/40 rounded-xl p-4 mb-4 border border-teal-500/30">
+                  <p className="font-bold text-teal-300 mb-2 flex items-center gap-2">
+                     <span className="w-6 h-6 rounded-full bg-teal-500 flex items-center justify-center text-sm">💡</span>
+                     Key Takeaways
+                  </p>
+                  <ul className="text-sm text-teal-200 space-y-1">
+                     <li>• <strong>Core activities</strong> should usually stay in-house</li>
+                     <li>• <strong>Non-core activities</strong> are great outsourcing candidates</li>
+                     <li>• <strong>One-time projects</strong> often benefit from outsourcing</li>
+                     <li>• Balance <strong>cost savings</strong> with <strong>quality and control</strong></li>
+                  </ul>
+               </div>
+
+               <div className="bg-black/20 rounded-xl p-3 mb-4 max-h-28 overflow-auto">
+                  <p className="text-xs font-bold text-teal-400 mb-1">📋 Decision Summary</p>
+                  <div className="text-xs text-teal-300/70 space-y-0.5">
+                     {decisions.map((d, i) => (
+                        <p key={i}>{d.choice === 'inhouse' ? '🏠' : '🌐'} {d.task}: ${d.cost.toLocaleString()}</p>
+                     ))}
+                  </div>
+               </div>
+
+               <button onClick={startGame} className="mx-auto px-6 py-3 bg-gradient-to-r from-teal-600 to-cyan-600 hover:from-teal-500 hover:to-cyan-500 rounded-xl font-bold transition-all">
+                  🔄 PLAY AGAIN
+               </button>
+            </div>
+         );
+      }
+
+      // PLAY PHASE
+      const task = tasks[currentTask];
+
+      return (
+         <div className="flex flex-col h-full bg-gradient-to-br from-teal-900 via-cyan-900 to-blue-900 text-white overflow-hidden">
+            {/* Header */}
+            <div className="p-3 bg-black/30 border-b border-teal-500/30">
+               <div className="flex justify-between items-center mb-2">
+                  <span className="text-lg font-black">Decision {currentTask + 1} / {tasks.length}</span>
+                  <span className={`px-3 py-1 rounded-full text-sm font-bold ${budget >= 0 ? 'bg-green-900/50 text-green-300' : 'bg-red-900/50 text-red-300'}`}>
+                     💰 ${budget.toLocaleString()}
+                  </span>
+               </div>
+               <div className="flex gap-3 text-xs">
+                  <span className="text-purple-300">Quality: {qualityScore}%</span>
+                  <span className="text-teal-500">|</span>
+                  <span className="text-blue-300">Control: {controlScore}%</span>
+                  <span className="text-teal-500">|</span>
+                  <span className="text-amber-300">Speed: {velocity}%</span>
+               </div>
+            </div>
+
+            {/* Info modal */}
+            {infoTopic && infoTopics[infoTopic] && (
+               <div className="absolute inset-0 bg-black/70 flex items-center justify-center z-50 p-4" onClick={() => setInfoTopic(null)}>
+                  <div className="bg-teal-900 rounded-2xl p-6 max-w-md border border-teal-500" onClick={e => e.stopPropagation()}>
+                     <h3 className="text-xl font-black mb-2 flex items-center gap-2">ℹ️ {infoTopics[infoTopic].title}</h3>
+                     <p className="text-teal-200 text-sm leading-relaxed">{infoTopics[infoTopic].content}</p>
+                     <button onClick={() => setInfoTopic(null)} className="mt-4 px-4 py-2 bg-teal-700 hover:bg-teal-600 rounded-lg text-sm font-bold w-full">Got it!</button>
+                  </div>
+               </div>
+            )}
+
+            <div className="flex-1 p-4 overflow-auto">
+               {/* Current task */}
+               <div className="bg-black/30 rounded-xl p-4 mb-4">
+                  <div className="flex justify-between items-start mb-3">
+                     <div className="flex items-center gap-3">
+                        <span className="text-4xl">{task.icon}</span>
+                        <div>
+                           <h3 className="text-xl font-black">{task.name}</h3>
+                           <span className={`text-xs px-2 py-0.5 rounded-full ${task.isCore ? 'bg-amber-500/30 text-amber-300' : 'bg-teal-500/30 text-teal-300'}`}>
+                              {task.isCore ? '⭐ Core Activity' : '📦 Non-Core'}
+                           </span>
+                        </div>
+                     </div>
+                     <button onClick={() => setInfoTopic('core')} className="text-teal-400 hover:text-white">ℹ️</button>
+                  </div>
+               </div>
+
+               {/* Options comparison */}
+               <div className="grid grid-cols-2 gap-3 mb-4">
+                  {/* In-House Option */}
+                  <button
+                     onClick={() => makeDecision('inhouse')}
+                     className="bg-green-900/30 hover:bg-green-900/50 border-2 border-green-500/30 hover:border-green-500 rounded-xl p-4 text-left transition-all"
+                  >
+                     <div className="flex items-center gap-2 mb-3">
+                        <span className="text-2xl">🏠</span>
+                        <span className="font-bold text-green-400">IN-HOUSE</span>
+                     </div>
+                     <div className="space-y-2 text-sm">
+                        <div className="flex justify-between">
+                           <span className="text-teal-400">Cost:</span>
+                           <span className="font-bold text-red-400">${task.inhouse.cost.toLocaleString()}</span>
+                        </div>
+                        <div className="flex justify-between">
+                           <span className="text-teal-400">Quality:</span>
+                           <span className="font-bold text-green-400">{task.inhouse.quality}%</span>
+                        </div>
+                        <div className="flex justify-between">
+                           <span className="text-teal-400">Control:</span>
+                           <span className="font-bold text-blue-400">{task.inhouse.control}%</span>
+                        </div>
+                        <div className="flex justify-between">
+                           <span className="text-teal-400">Speed:</span>
+                           <span className="font-bold text-amber-400">{task.inhouse.velocity}%</span>
+                        </div>
+                        <div className="text-xs text-teal-500 mt-2">⏱️ {task.inhouse.time}</div>
+                     </div>
+                  </button>
+
+                  {/* Outsource Option */}
+                  <button
+                     onClick={() => makeDecision('outsource')}
+                     className="bg-blue-900/30 hover:bg-blue-900/50 border-2 border-blue-500/30 hover:border-blue-500 rounded-xl p-4 text-left transition-all"
+                  >
+                     <div className="flex items-center gap-2 mb-3">
+                        <span className="text-2xl">🌐</span>
+                        <span className="font-bold text-blue-400">OUTSOURCE</span>
+                     </div>
+                     <div className="space-y-2 text-sm">
+                        <div className="flex justify-between">
+                           <span className="text-teal-400">Cost:</span>
+                           <span className="font-bold text-green-400">${task.outsource.cost.toLocaleString()}</span>
+                        </div>
+                        <div className="flex justify-between">
+                           <span className="text-teal-400">Quality:</span>
+                           <span className="font-bold">{task.outsource.quality}%</span>
+                        </div>
+                        <div className="flex justify-between">
+                           <span className="text-teal-400">Control:</span>
+                           <span className="font-bold text-amber-400">{task.outsource.control}%</span>
+                        </div>
+                        <div className="flex justify-between">
+                           <span className="text-teal-400">Speed:</span>
+                           <span className="font-bold text-green-400">{task.outsource.velocity}%</span>
+                        </div>
+                        <div className="text-xs text-teal-500 mt-2">⏱️ {task.outsource.time}</div>
+                     </div>
+                  </button>
+               </div>
+
+               {/* Savings indicator */}
+               <div className="bg-black/20 rounded-lg p-3 text-center">
+                  <p className="text-sm text-teal-400">
+                     💡 Outsourcing saves <span className="font-bold text-green-400">${(task.inhouse.cost - task.outsource.cost).toLocaleString()}</span>
+                     {task.isCore && <span className="text-amber-400"> (but this is a core activity!)</span>}
+                  </p>
+               </div>
+            </div>
+
+            {/* Previous decisions */}
+            {decisions.length > 0 && (
+               <div className="h-20 bg-black/40 border-t border-teal-500/30 p-2 overflow-auto">
+                  <p className="text-[10px] font-bold text-teal-500 mb-1">Previous Decisions</p>
+                  <div className="flex gap-2 flex-wrap">
+                     {decisions.map((d, i) => (
+                        <span key={i} className={`text-xs px-2 py-1 rounded ${d.choice === 'inhouse' ? 'bg-green-900/50 text-green-300' : 'bg-blue-900/50 text-blue-300'}`}>
+                           {d.choice === 'inhouse' ? '🏠' : '🌐'} {d.task.split(' ')[0]}
+                        </span>
+                     ))}
+                  </div>
+               </div>
+            )}
+         </div>
+      );
+   };
+
+   // ============================================================================
+   // HIRING & TEAM CULTURE INTERACTIVE
+   // ============================================================================
+   const HiringRenderer = () => {
+      const [phase, setPhase] = useState<'intro' | 'values' | 'play' | 'result'>('intro');
+      const [showInfo, setShowInfo] = useState(false);
+      const [infoTopic, setInfoTopic] = useState<string | null>(null);
+      const [currentCandidate, setCurrentCandidate] = useState(0);
+      const [gameLog, setGameLog] = useState<string[]>([]);
+
+      // Company values (player selects 3)
+      const [selectedValues, setSelectedValues] = useState<string[]>([]);
+      const allValues = [
+         { id: 'innovation', name: 'Innovation', icon: '💡', desc: 'Push boundaries, embrace new ideas' },
+         { id: 'speed', name: 'Speed', icon: '⚡', desc: 'Move fast, iterate quickly' },
+         { id: 'quality', name: 'Quality', icon: '✨', desc: 'Excellence in everything we do' },
+         { id: 'teamwork', name: 'Teamwork', icon: '🤝', desc: 'Collaborate and support each other' },
+         { id: 'transparency', name: 'Transparency', icon: '🔍', desc: 'Open communication, no secrets' },
+         { id: 'customer', name: 'Customer Focus', icon: '❤️', desc: 'Customer success is our success' },
+      ];
+
+      // Team and budget
+      const [team, setTeam] = useState<{ name: string; role: string; skills: number; culture: number }[]>([]);
+      const [budget, setBudget] = useState(300000);
+      const [cultureScore, setCultureScore] = useState(100);
+      const [productivityScore, setProductivityScore] = useState(50);
+
+      // Candidates
+      const candidates = [
+         {
+            name: 'Alex Chen',
+            role: 'Lead Developer',
+            avatar: '👨‍💻',
+            salary: 120000,
+            skills: 95,
+            experience: 8,
+            cultureFit: { innovation: 90, speed: 85, quality: 70, teamwork: 60, transparency: 75, customer: 65 },
+            personality: 'Brilliant coder but prefers working alone. Strong opinions.',
+            redFlag: 'May clash with collaborative culture',
+            greenFlag: 'Technical excellence, can build anything'
+         },
+         {
+            name: 'Sarah Miller',
+            role: 'Product Manager',
+            avatar: '👩‍💼',
+            salary: 100000,
+            skills: 80,
+            experience: 5,
+            cultureFit: { innovation: 85, speed: 90, quality: 80, teamwork: 95, transparency: 90, customer: 95 },
+            personality: 'Great communicator, customer-obsessed. Still growing technically.',
+            redFlag: 'Less experienced than other candidates',
+            greenFlag: 'Culture carrier, team player'
+         },
+         {
+            name: 'Marcus Johnson',
+            role: 'Sales Lead',
+            avatar: '👨‍💼',
+            salary: 90000,
+            skills: 85,
+            experience: 10,
+            cultureFit: { innovation: 50, speed: 95, quality: 60, teamwork: 70, transparency: 40, customer: 90 },
+            personality: 'Hits targets consistently. Very competitive, sometimes cuts corners.',
+            redFlag: 'May prioritize results over process',
+            greenFlag: 'Revenue driver, closes deals'
+         },
+         {
+            name: 'Emily Park',
+            role: 'Designer',
+            avatar: '👩‍🎨',
+            salary: 85000,
+            skills: 90,
+            experience: 4,
+            cultureFit: { innovation: 95, speed: 70, quality: 95, teamwork: 85, transparency: 80, customer: 85 },
+            personality: 'Creative visionary. Takes time to perfect designs.',
+            redFlag: 'May slow down fast-paced sprints',
+            greenFlag: 'Exceptional design quality'
+         },
+         {
+            name: 'David Kim',
+            role: 'Operations',
+            avatar: '👨‍🔧',
+            salary: 75000,
+            skills: 75,
+            experience: 6,
+            cultureFit: { innovation: 60, speed: 80, quality: 90, teamwork: 90, transparency: 95, customer: 80 },
+            personality: 'Reliable, process-oriented. Keeps everything running smoothly.',
+            redFlag: 'Less innovative, prefers proven methods',
+            greenFlag: 'Stability, operational excellence'
+         },
+      ];
+
+      const infoTopics: Record<string, { title: string; content: string }> = {
+         culture: {
+            title: 'Company Culture',
+            content: 'Culture is the shared values, beliefs, and behaviors that define how your team works together. Your first 10 hires define your culture forever. Culture fit doesn\'t mean hiring clones - it means shared values with diverse perspectives.'
+         },
+         skills: {
+            title: 'Skills vs Culture Fit',
+            content: 'A common debate: hire for skills or culture? Best practice: Set a skills threshold (must be competent), then optimize for culture fit. You can train skills, but changing someone\'s values is nearly impossible.'
+         },
+         early: {
+            title: 'Early Hires Matter',
+            content: 'Your first employees set the tone. They\'ll help hire the next batch, so their standards become your company\'s standards. One toxic early hire can poison the entire culture.'
+         },
+         slow: {
+            title: 'Hire Slow, Fire Fast',
+            content: 'Take time to evaluate candidates thoroughly - a bad hire costs 2-3x their salary in lost productivity and rehiring. But once you\'ve identified a poor fit, act quickly to protect the team.'
+         },
+         diverse: {
+            title: 'Diverse Teams',
+            content: 'Diversity of thought, background, and experience leads to better decisions and innovation. Culture fit ≠ same background. Look for shared values with different perspectives.'
+         },
+         values: {
+            title: 'Core Values',
+            content: 'Values are your decision-making framework. When facing tough choices, values guide you. They should be specific enough to matter (not just "be good") and used in actual decisions.'
+         }
+      };
+
+      const calculateCultureFit = (candidate: typeof candidates[0]) => {
+         if (selectedValues.length === 0) return 50;
+         const sum = selectedValues.reduce((acc, val) => acc + (candidate.cultureFit[val as keyof typeof candidate.cultureFit] || 50), 0);
+         return Math.round(sum / selectedValues.length);
+      };
+
+      const hireCandidate = (hire: boolean) => {
+         const candidate = candidates[currentCandidate];
+         const cultureFit = calculateCultureFit(candidate);
+
+         if (hire) {
+            if (budget < candidate.salary) {
+               setGameLog(prev => [...prev, `❌ Cannot afford ${candidate.name} ($${candidate.salary.toLocaleString()})`]);
+               return;
+            }
+
+            setBudget(prev => prev - candidate.salary);
+            setTeam(prev => [...prev, { name: candidate.name, role: candidate.role, skills: candidate.skills, culture: cultureFit }]);
+
+            // Update scores
+            const newCulture = Math.round((cultureScore + cultureFit) / 2);
+            const newProductivity = Math.round((productivityScore + candidate.skills) / 2);
+            setCultureScore(newCulture);
+            setProductivityScore(newProductivity);
+
+            setGameLog(prev => [...prev,
+               `✅ Hired ${candidate.name} as ${candidate.role}`,
+               `   Skills: ${candidate.skills}% | Culture Fit: ${cultureFit}%`,
+               `   💰 Salary: $${candidate.salary.toLocaleString()}`
+            ]);
+         } else {
+            setGameLog(prev => [...prev, `⏭️ Passed on ${candidate.name}`]);
+         }
+
+         if (currentCandidate < candidates.length - 1) {
+            setCurrentCandidate(prev => prev + 1);
+         } else {
+            setPhase('result');
+         }
+      };
+
+      const startGame = () => {
+         setPhase('values');
+         setSelectedValues([]);
+         setTeam([]);
+         setBudget(300000);
+         setCultureScore(100);
+         setProductivityScore(50);
+         setCurrentCandidate(0);
+         setGameLog([]);
+      };
+
+      const toggleValue = (valueId: string) => {
+         if (selectedValues.includes(valueId)) {
+            setSelectedValues(prev => prev.filter(v => v !== valueId));
+         } else if (selectedValues.length < 3) {
+            setSelectedValues(prev => [...prev, valueId]);
+         }
+      };
+
+      const getScore = () => {
+         const teamSize = team.length;
+         const avgSkills = team.length > 0 ? Math.round(team.reduce((sum, t) => sum + t.skills, 0) / team.length) : 0;
+         const avgCulture = team.length > 0 ? Math.round(team.reduce((sum, t) => sum + t.culture, 0) / team.length) : 0;
+         const budgetEfficiency = Math.round((budget / 300000) * 100);
+
+         let score = 0;
+         if (teamSize >= 3) score += 25;
+         if (avgCulture >= 80) score += 30;
+         if (avgSkills >= 80) score += 25;
+         if (budgetEfficiency >= 20) score += 20;
+
+         return { score: Math.min(100, score), teamSize, avgSkills, avgCulture, budgetEfficiency };
+      };
+
+      // INTRO PHASE
+      if (phase === 'intro') return (
+         <div className="flex flex-col h-full bg-gradient-to-br from-violet-900 via-purple-900 to-fuchsia-900 text-white p-6 overflow-auto">
+            <div className="flex justify-between items-start mb-4">
+               <div>
+                  <h2 className="text-2xl font-black flex items-center gap-2">👥 HIRING & TEAM CULTURE</h2>
+                  <p className="text-violet-300 text-sm mt-1">Build your dream team wisely</p>
+               </div>
+               <button onClick={() => setShowInfo(!showInfo)} className="w-10 h-10 rounded-full bg-white/20 hover:bg-white/30 flex items-center justify-center text-xl transition-all">ℹ️</button>
+            </div>
+
+            {showInfo && (
+               <div className="bg-black/40 rounded-xl p-4 mb-4 text-sm border border-violet-500/30">
+                  <p className="font-bold text-violet-200 mb-2">📚 What You'll Learn:</p>
+                  <ul className="space-y-1 text-violet-300">
+                     <li>• How company values guide hiring</li>
+                     <li>• Skills vs culture fit tradeoffs</li>
+                     <li>• Why early hires define culture</li>
+                     <li>• Building effective teams</li>
+                  </ul>
+               </div>
+            )}
+
+            <div className="flex-1 flex flex-col justify-center">
+               <div className="bg-black/30 rounded-2xl p-4 mb-6">
+                  <p className="text-center text-violet-400 text-xs mb-4 font-bold uppercase tracking-wider">The Hiring Triangle</p>
+                  <div className="flex justify-around items-center">
+                     <div className="text-center">
+                        <div className="w-14 h-14 rounded-full bg-blue-500/30 flex items-center justify-center text-2xl mb-2 mx-auto border-2 border-blue-500">🎯</div>
+                        <p className="text-xs font-bold">Skills</p>
+                        <p className="text-[10px] text-violet-400">Can they do the job?</p>
+                     </div>
+                     <div className="text-center">
+                        <div className="w-14 h-14 rounded-full bg-purple-500/30 flex items-center justify-center text-2xl mb-2 mx-auto border-2 border-purple-500">💜</div>
+                        <p className="text-xs font-bold">Culture Fit</p>
+                        <p className="text-[10px] text-violet-400">Shared values?</p>
+                     </div>
+                     <div className="text-center">
+                        <div className="w-14 h-14 rounded-full bg-pink-500/30 flex items-center justify-center text-2xl mb-2 mx-auto border-2 border-pink-500">📈</div>
+                        <p className="text-xs font-bold">Growth</p>
+                        <p className="text-[10px] text-violet-400">Can they grow?</p>
+                     </div>
+                  </div>
+               </div>
+
+               <div className="text-center mb-6">
+                  <h3 className="text-xl font-bold mb-2">🎮 Your Mission</h3>
+                  <p className="text-violet-300 max-w-lg mx-auto">
+                     You're a startup founder with $300K for salaries. First, define your company values.
+                     Then evaluate candidates and build your founding team!
+                  </p>
+               </div>
+
+               <div className="bg-black/20 rounded-xl p-4 mb-6 max-w-sm mx-auto">
+                  <p className="text-sm text-center text-violet-300 italic">
+                     "Your first 10 hires define your culture forever. Hire slow, fire fast."
+                  </p>
+               </div>
+
+               <button onClick={startGame} className="mx-auto px-8 py-4 bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-500 hover:to-purple-500 rounded-xl font-bold text-lg transition-all transform hover:scale-105 shadow-lg">
+                  START HIRING →
+               </button>
+            </div>
+         </div>
+      );
+
+      // VALUES PHASE
+      if (phase === 'values') return (
+         <div className="flex flex-col h-full bg-gradient-to-br from-violet-900 via-purple-900 to-fuchsia-900 text-white p-6 overflow-auto">
+            <div className="flex justify-between items-start mb-4">
+               <div>
+                  <h2 className="text-xl font-black">Step 1: Define Your Values</h2>
+                  <p className="text-violet-300 text-sm">Choose 3 core values for your company</p>
+               </div>
+               <button onClick={() => setInfoTopic('values')} className="text-violet-400 hover:text-white">ℹ️</button>
+            </div>
+
+            {infoTopic && infoTopics[infoTopic] && (
+               <div className="absolute inset-0 bg-black/70 flex items-center justify-center z-50 p-4" onClick={() => setInfoTopic(null)}>
+                  <div className="bg-violet-900 rounded-2xl p-6 max-w-md border border-violet-500" onClick={e => e.stopPropagation()}>
+                     <h3 className="text-xl font-black mb-2 flex items-center gap-2">ℹ️ {infoTopics[infoTopic].title}</h3>
+                     <p className="text-violet-200 text-sm leading-relaxed">{infoTopics[infoTopic].content}</p>
+                     <button onClick={() => setInfoTopic(null)} className="mt-4 px-4 py-2 bg-violet-700 hover:bg-violet-600 rounded-lg text-sm font-bold w-full">Got it!</button>
+                  </div>
+               </div>
+            )}
+
+            <div className="flex-1">
+               <div className="grid grid-cols-2 gap-3 mb-6">
+                  {allValues.map(value => (
+                     <button
+                        key={value.id}
+                        onClick={() => toggleValue(value.id)}
+                        className={`p-4 rounded-xl text-left transition-all ${
+                           selectedValues.includes(value.id)
+                              ? 'bg-violet-600 border-2 border-violet-400'
+                              : 'bg-black/30 border-2 border-transparent hover:border-violet-500/50'
+                        }`}
+                     >
+                        <div className="flex items-center gap-2 mb-1">
+                           <span className="text-xl">{value.icon}</span>
+                           <span className="font-bold">{value.name}</span>
+                           {selectedValues.includes(value.id) && <span className="ml-auto text-green-400">✓</span>}
+                        </div>
+                        <p className="text-xs text-violet-300">{value.desc}</p>
+                     </button>
+                  ))}
+               </div>
+
+               <div className="text-center mb-4">
+                  <p className="text-violet-400 text-sm">
+                     Selected: <span className="font-bold text-white">{selectedValues.length}/3</span>
+                  </p>
+               </div>
+
+               <button
+                  onClick={() => setPhase('play')}
+                  disabled={selectedValues.length !== 3}
+                  className="w-full py-3 bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-500 hover:to-purple-500 disabled:opacity-50 disabled:cursor-not-allowed rounded-xl font-bold text-lg transition-all"
+               >
+                  {selectedValues.length === 3 ? 'START INTERVIEWING →' : `Select ${3 - selectedValues.length} more value(s)`}
+               </button>
+            </div>
+         </div>
+      );
+
+      // RESULT PHASE
+      if (phase === 'result') {
+         const { score, teamSize, avgSkills, avgCulture, budgetEfficiency } = getScore();
+         const grade = score >= 80 ? 'A' : score >= 60 ? 'B' : score >= 40 ? 'C' : 'D';
+         const gradeColor = score >= 80 ? 'text-green-400' : score >= 60 ? 'text-blue-400' : score >= 40 ? 'text-yellow-400' : 'text-red-400';
+
+         return (
+            <div className="flex flex-col h-full bg-gradient-to-br from-violet-900 via-purple-900 to-fuchsia-900 text-white p-6 overflow-auto">
+               <div className="text-center mb-6">
+                  <div className="text-6xl mb-2">{score >= 80 ? '🏆' : score >= 60 ? '👥' : score >= 40 ? '🏗️' : '⚠️'}</div>
+                  <h2 className="text-3xl font-black">Team Built!</h2>
+                  <p className={`text-5xl font-black mt-2 ${gradeColor}`}>Grade: {grade}</p>
+               </div>
+
+               <div className="grid grid-cols-2 gap-3 mb-4 max-w-md mx-auto">
+                  <div className="bg-black/30 rounded-xl p-3 text-center">
+                     <p className="text-xl font-black text-violet-400">{teamSize}</p>
+                     <p className="text-xs text-violet-300">Team Size</p>
+                  </div>
+                  <div className="bg-black/30 rounded-xl p-3 text-center">
+                     <p className="text-xl font-black text-green-400">${budget.toLocaleString()}</p>
+                     <p className="text-xs text-violet-300">Budget Left</p>
+                  </div>
+                  <div className="bg-black/30 rounded-xl p-3 text-center">
+                     <p className="text-xl font-black text-blue-400">{avgSkills}%</p>
+                     <p className="text-xs text-violet-300">Avg Skills</p>
+                  </div>
+                  <div className="bg-black/30 rounded-xl p-3 text-center">
+                     <p className="text-xl font-black text-purple-400">{avgCulture}%</p>
+                     <p className="text-xs text-violet-300">Avg Culture Fit</p>
+                  </div>
+               </div>
+
+               {team.length > 0 && (
+                  <div className="bg-black/20 rounded-xl p-3 mb-4">
+                     <p className="text-xs font-bold text-violet-400 mb-2">Your Team:</p>
+                     <div className="flex gap-2 flex-wrap">
+                        {team.map((member, i) => (
+                           <span key={i} className="text-xs px-2 py-1 bg-violet-900/50 rounded-lg">
+                              {member.name} ({member.role})
+                           </span>
+                        ))}
+                     </div>
+                  </div>
+               )}
+
+               <div className="bg-violet-900/40 rounded-xl p-4 mb-4 border border-violet-500/30">
+                  <p className="font-bold text-violet-300 mb-2 flex items-center gap-2">
+                     <span className="w-6 h-6 rounded-full bg-violet-500 flex items-center justify-center text-sm">💡</span>
+                     Key Takeaways
+                  </p>
+                  <ul className="text-sm text-violet-200 space-y-1">
+                     <li>• <strong>Values first</strong> - define culture before hiring</li>
+                     <li>• <strong>Skills + Culture</strong> - both matter, but culture is harder to change</li>
+                     <li>• <strong>Early hires</strong> set the standard for everyone after</li>
+                     <li>• <strong>Red flags</strong> rarely get better after hiring</li>
+                  </ul>
+               </div>
+
+               <button onClick={startGame} className="mx-auto px-6 py-3 bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-500 hover:to-purple-500 rounded-xl font-bold transition-all">
+                  🔄 HIRE AGAIN
+               </button>
+            </div>
+         );
+      }
+
+      // PLAY PHASE
+      const candidate = candidates[currentCandidate];
+      const cultureFit = calculateCultureFit(candidate);
+
+      return (
+         <div className="flex flex-col h-full bg-gradient-to-br from-violet-900 via-purple-900 to-fuchsia-900 text-white overflow-hidden">
+            {/* Header */}
+            <div className="p-3 bg-black/30 border-b border-violet-500/30">
+               <div className="flex justify-between items-center mb-2">
+                  <span className="text-lg font-black">Candidate {currentCandidate + 1} / {candidates.length}</span>
+                  <span className="px-3 py-1 bg-green-900/50 rounded-full text-sm font-bold text-green-300">
+                     💰 ${budget.toLocaleString()}
+                  </span>
+               </div>
+               <div className="flex gap-3 text-xs">
+                  <span className="text-violet-300">Team: {team.length}</span>
+                  <span className="text-violet-500">|</span>
+                  <span className="text-purple-300">Culture: {cultureScore}%</span>
+                  <span className="text-violet-500">|</span>
+                  <span className="text-blue-300">Productivity: {productivityScore}%</span>
+               </div>
+            </div>
+
+            {/* Info modal */}
+            {infoTopic && infoTopics[infoTopic] && (
+               <div className="absolute inset-0 bg-black/70 flex items-center justify-center z-50 p-4" onClick={() => setInfoTopic(null)}>
+                  <div className="bg-violet-900 rounded-2xl p-6 max-w-md border border-violet-500" onClick={e => e.stopPropagation()}>
+                     <h3 className="text-xl font-black mb-2 flex items-center gap-2">ℹ️ {infoTopics[infoTopic].title}</h3>
+                     <p className="text-violet-200 text-sm leading-relaxed">{infoTopics[infoTopic].content}</p>
+                     <button onClick={() => setInfoTopic(null)} className="mt-4 px-4 py-2 bg-violet-700 hover:bg-violet-600 rounded-lg text-sm font-bold w-full">Got it!</button>
+                  </div>
+               </div>
+            )}
+
+            <div className="flex-1 p-4 overflow-auto">
+               {/* Candidate Card */}
+               <div className="bg-black/30 rounded-xl p-4 mb-4">
+                  <div className="flex items-start gap-4 mb-4">
+                     <div className="text-5xl">{candidate.avatar}</div>
+                     <div className="flex-1">
+                        <h3 className="text-xl font-black">{candidate.name}</h3>
+                        <p className="text-violet-400 text-sm">{candidate.role}</p>
+                        <p className="text-violet-300 text-xs mt-1">{candidate.experience} years experience</p>
+                     </div>
+                     <div className="text-right">
+                        <p className="text-lg font-black text-green-400">${candidate.salary.toLocaleString()}</p>
+                        <p className="text-xs text-violet-400">annual salary</p>
+                     </div>
+                  </div>
+
+                  <p className="text-sm text-violet-200 mb-4 italic">"{candidate.personality}"</p>
+
+                  <div className="grid grid-cols-2 gap-3 mb-4">
+                     <div className="bg-black/20 rounded-lg p-3">
+                        <div className="flex justify-between items-center mb-1">
+                           <span className="text-xs text-violet-400">Skills</span>
+                           <button onClick={() => setInfoTopic('skills')} className="text-violet-500 hover:text-white text-xs">ℹ️</button>
+                        </div>
+                        <div className="flex items-center gap-2">
+                           <div className="flex-1 h-2 bg-black/40 rounded-full overflow-hidden">
+                              <div className="h-full bg-blue-500" style={{ width: `${candidate.skills}%` }} />
+                           </div>
+                           <span className="text-sm font-bold text-blue-400">{candidate.skills}%</span>
+                        </div>
+                     </div>
+                     <div className="bg-black/20 rounded-lg p-3">
+                        <div className="flex justify-between items-center mb-1">
+                           <span className="text-xs text-violet-400">Culture Fit</span>
+                           <button onClick={() => setInfoTopic('culture')} className="text-violet-500 hover:text-white text-xs">ℹ️</button>
+                        </div>
+                        <div className="flex items-center gap-2">
+                           <div className="flex-1 h-2 bg-black/40 rounded-full overflow-hidden">
+                              <div className={`h-full ${cultureFit >= 80 ? 'bg-green-500' : cultureFit >= 60 ? 'bg-yellow-500' : 'bg-red-500'}`} style={{ width: `${cultureFit}%` }} />
+                           </div>
+                           <span className={`text-sm font-bold ${cultureFit >= 80 ? 'text-green-400' : cultureFit >= 60 ? 'text-yellow-400' : 'text-red-400'}`}>{cultureFit}%</span>
+                        </div>
+                     </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3">
+                     <div className="bg-red-900/30 rounded-lg p-2 border border-red-500/30">
+                        <p className="text-xs font-bold text-red-400 mb-1">🚩 Red Flag</p>
+                        <p className="text-xs text-red-300">{candidate.redFlag}</p>
+                     </div>
+                     <div className="bg-green-900/30 rounded-lg p-2 border border-green-500/30">
+                        <p className="text-xs font-bold text-green-400 mb-1">✅ Green Flag</p>
+                        <p className="text-xs text-green-300">{candidate.greenFlag}</p>
+                     </div>
+                  </div>
+               </div>
+
+               {/* Decision buttons */}
+               <div className="grid grid-cols-2 gap-3">
+                  <button
+                     onClick={() => hireCandidate(false)}
+                     className="py-4 bg-red-900/50 hover:bg-red-800/50 border-2 border-red-500/30 hover:border-red-500 rounded-xl font-bold transition-all"
+                  >
+                     ⏭️ PASS
+                  </button>
+                  <button
+                     onClick={() => hireCandidate(true)}
+                     disabled={budget < candidate.salary}
+                     className="py-4 bg-green-900/50 hover:bg-green-800/50 border-2 border-green-500/30 hover:border-green-500 rounded-xl font-bold transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                     ✅ HIRE (${candidate.salary.toLocaleString()})
+                  </button>
+               </div>
+            </div>
+
+            {/* Team panel */}
+            {team.length > 0 && (
+               <div className="h-16 bg-black/40 border-t border-violet-500/30 p-2 flex items-center gap-2 overflow-x-auto">
+                  <span className="text-[10px] font-bold text-violet-500 mr-2">TEAM:</span>
+                  {team.map((member, i) => (
+                     <span key={i} className="text-xs px-2 py-1 bg-violet-900/50 rounded-lg whitespace-nowrap">
+                        {member.name.split(' ')[0]}
+                     </span>
+                  ))}
+               </div>
+            )}
+         </div>
+      );
+   };
+
+   // ============================================================================
+   // PROJECT MANAGEMENT INTERACTIVE
+   // ============================================================================
+   const ProjectManagementRenderer = () => {
+      const [phase, setPhase] = useState<'intro' | 'play' | 'result'>('intro');
+      const [showInfo, setShowInfo] = useState(false);
+      const [infoTopic, setInfoTopic] = useState<string | null>(null);
+      const [day, setDay] = useState(1);
+      const [gameLog, setGameLog] = useState<string[]>([]);
+
+      // Project settings
+      const deadline = 14; // days
+      const teamCapacity = 3; // tasks per day
+
+      // Tasks with Kanban states
+      const [tasks, setTasks] = useState<{
+         id: string;
+         name: string;
+         icon: string;
+         status: 'backlog' | 'todo' | 'doing' | 'done';
+         effort: number; // days to complete
+         priority: 'high' | 'medium' | 'low';
+         blockedBy?: string;
+         daysWorked: number;
+      }[]>([]);
+
+      const initialTasks = [
+         { id: 'design', name: 'UI Design', icon: '🎨', effort: 2, priority: 'high' as const, blockedBy: undefined },
+         { id: 'backend', name: 'Backend API', icon: '⚙️', effort: 3, priority: 'high' as const, blockedBy: undefined },
+         { id: 'frontend', name: 'Frontend Dev', icon: '💻', effort: 3, priority: 'high' as const, blockedBy: 'design' },
+         { id: 'database', name: 'Database Setup', icon: '🗄️', effort: 1, priority: 'medium' as const, blockedBy: undefined },
+         { id: 'testing', name: 'Testing', icon: '🧪', effort: 2, priority: 'medium' as const, blockedBy: 'frontend' },
+         { id: 'docs', name: 'Documentation', icon: '📝', effort: 1, priority: 'low' as const, blockedBy: undefined },
+         { id: 'deploy', name: 'Deployment', icon: '🚀', effort: 1, priority: 'high' as const, blockedBy: 'testing' },
+      ];
+
+      // Scope creep events
+      const scopeCreepTasks = [
+         { id: 'auth', name: 'Add Auth System', icon: '🔐', effort: 2, priority: 'high' as const },
+         { id: 'analytics', name: 'Analytics Dashboard', icon: '📊', effort: 2, priority: 'medium' as const },
+         { id: 'mobile', name: 'Mobile Responsive', icon: '📱', effort: 1, priority: 'medium' as const },
+      ];
+
+      const [scopeCreepAdded, setScopeCreepAdded] = useState(0);
+      const [completedOnTime, setCompletedOnTime] = useState(false);
+
+      const infoTopics: Record<string, { title: string; content: string }> = {
+         kanban: {
+            title: 'Kanban Board',
+            content: 'Kanban visualizes work as cards moving through columns (To Do → Doing → Done). It limits work-in-progress, reveals bottlenecks, and helps teams focus on finishing work rather than starting new tasks.'
+         },
+         priority: {
+            title: 'Task Prioritization',
+            content: 'Not all tasks are equal. High priority tasks are critical path items that block other work. Focus on high-priority items first, but don\'t neglect medium/low priority tasks that pile up.'
+         },
+         dependencies: {
+            title: 'Task Dependencies',
+            content: 'Some tasks can\'t start until others finish (e.g., can\'t test before building). Identifying dependencies helps plan the critical path - the longest chain that determines minimum project duration.'
+         },
+         scope: {
+            title: 'Scope Creep',
+            content: 'Scope creep is when new requirements keep getting added during a project. It\'s a major cause of delays and budget overruns. Learn to say "that\'s a great idea for v2" and protect your timeline.'
+         },
+         capacity: {
+            title: 'Team Capacity',
+            content: 'Your team can only work on a limited number of tasks simultaneously. Overloading leads to context switching and slower progress. Respect capacity limits and focus on throughput, not busyness.'
+         },
+         wip: {
+            title: 'Work In Progress (WIP)',
+            content: 'WIP limits are constraints on how many tasks can be "in progress" at once. Lower WIP = faster completion of individual tasks = better flow. Stop starting, start finishing!'
+         }
+      };
+
+      const getBlockedTasks = () => {
+         return tasks.filter(t => {
+            if (!t.blockedBy) return false;
+            const blocker = tasks.find(b => b.id === t.blockedBy);
+            return blocker && blocker.status !== 'done';
+         }).map(t => t.id);
+      };
+
+      const moveTask = (taskId: string, newStatus: 'todo' | 'doing' | 'done') => {
+         const blockedTasks = getBlockedTasks();
+
+         setTasks(prev => prev.map(t => {
+            if (t.id === taskId) {
+               // Can't move blocked tasks to doing
+               if (newStatus === 'doing' && blockedTasks.includes(taskId)) {
+                  setGameLog(prev => [...prev, `⚠️ ${t.name} is blocked by ${tasks.find(b => b.id === t.blockedBy)?.name}`]);
+                  return t;
+               }
+
+               // Check capacity for doing
+               if (newStatus === 'doing') {
+                  const doingCount = prev.filter(p => p.status === 'doing').length;
+                  if (doingCount >= teamCapacity) {
+                     setGameLog(prev => [...prev, `⚠️ Team at capacity! Finish tasks before starting new ones.`]);
+                     return t;
+                  }
+               }
+
+               return { ...t, status: newStatus };
+            }
+            return t;
+         }));
+      };
+
+      const processDay = () => {
+         let newLog: string[] = [`📅 Day ${day}`];
+
+         // Progress tasks in "doing"
+         setTasks(prev => {
+            const updated = prev.map(t => {
+               if (t.status === 'doing') {
+                  const newDaysWorked = t.daysWorked + 1;
+                  if (newDaysWorked >= t.effort) {
+                     newLog.push(`✅ Completed: ${t.name}`);
+                     return { ...t, status: 'done' as const, daysWorked: newDaysWorked };
+                  }
+                  return { ...t, daysWorked: newDaysWorked };
+               }
+               return t;
+            });
+            return updated;
+         });
+
+         // Scope creep chance (20% after day 3)
+         if (day > 3 && scopeCreepAdded < scopeCreepTasks.length && Math.random() < 0.25) {
+            const newTask = scopeCreepTasks[scopeCreepAdded];
+            setTasks(prev => [...prev, { ...newTask, status: 'backlog', daysWorked: 0 }]);
+            setScopeCreepAdded(prev => prev + 1);
+            newLog.push(`🆕 SCOPE CREEP: "${newTask.name}" added to backlog!`);
+         }
+
+         setGameLog(prev => [...prev, ...newLog]);
+
+         // Check win/lose
+         const allDone = tasks.filter(t => t.status !== 'done').length === 0 && tasks.length > 0;
+         if (allDone) {
+            setCompletedOnTime(day <= deadline);
+            setPhase('result');
+            return;
+         }
+
+         if (day >= deadline) {
+            setCompletedOnTime(false);
+            setPhase('result');
+            return;
+         }
+
+         setDay(d => d + 1);
+      };
+
+      const startGame = () => {
+         setPhase('play');
+         setDay(1);
+         setTasks(initialTasks.map(t => ({ ...t, status: 'backlog' as const, daysWorked: 0 })));
+         setScopeCreepAdded(0);
+         setGameLog([]);
+         setCompletedOnTime(false);
+      };
+
+      const getScore = () => {
+         const completedTasks = tasks.filter(t => t.status === 'done').length;
+         const totalTasks = tasks.length;
+         const completionRate = Math.round((completedTasks / totalTasks) * 100);
+         const daysUsed = day;
+         const efficiency = deadline > 0 ? Math.round(((deadline - daysUsed + 1) / deadline) * 100) : 0;
+
+         let score = 0;
+         if (completedOnTime) score += 40;
+         score += Math.round(completionRate * 0.4);
+         if (efficiency > 0) score += Math.round(efficiency * 0.2);
+
+         return { score: Math.min(100, Math.max(0, score)), completedTasks, totalTasks, completionRate, daysUsed };
+      };
+
+      // INTRO PHASE
+      if (phase === 'intro') return (
+         <div className="flex flex-col h-full bg-gradient-to-br from-orange-900 via-amber-900 to-yellow-900 text-white p-6 overflow-auto">
+            <div className="flex justify-between items-start mb-4">
+               <div>
+                  <h2 className="text-2xl font-black flex items-center gap-2">📋 PROJECT MANAGEMENT</h2>
+                  <p className="text-orange-300 text-sm mt-1">Lead your team to ship on time</p>
+               </div>
+               <button onClick={() => setShowInfo(!showInfo)} className="w-10 h-10 rounded-full bg-white/20 hover:bg-white/30 flex items-center justify-center text-xl transition-all">ℹ️</button>
+            </div>
+
+            {showInfo && (
+               <div className="bg-black/40 rounded-xl p-4 mb-4 text-sm border border-orange-500/30">
+                  <p className="font-bold text-orange-200 mb-2">📚 What You'll Learn:</p>
+                  <ul className="space-y-1 text-orange-300">
+                     <li>• How Kanban boards organize work</li>
+                     <li>• Task prioritization and dependencies</li>
+                     <li>• Managing team capacity</li>
+                     <li>• Dealing with scope creep</li>
+                  </ul>
+               </div>
+            )}
+
+            <div className="flex-1 flex flex-col justify-center">
+               <div className="bg-black/30 rounded-2xl p-4 mb-6">
+                  <p className="text-center text-orange-400 text-xs mb-4 font-bold uppercase tracking-wider">The Kanban Flow</p>
+                  <div className="flex justify-around items-center">
+                     {['📥 Backlog', '📋 To Do', '🔄 Doing', '✅ Done'].map((stage, i) => (
+                        <div key={i} className="text-center">
+                           <div className="w-14 h-14 rounded-xl bg-orange-500/20 flex items-center justify-center text-xl mb-1 border border-orange-500/30">
+                              {stage.split(' ')[0]}
+                           </div>
+                           <p className="text-[10px] text-orange-400">{stage.split(' ')[1]}</p>
+                        </div>
+                     ))}
+                  </div>
+                  <div className="flex justify-around mt-2">
+                     {['→', '→', '→'].map((arrow, i) => (
+                        <span key={i} className="text-orange-500 text-lg">→</span>
+                     ))}
+                  </div>
+               </div>
+
+               <div className="text-center mb-6">
+                  <h3 className="text-xl font-bold mb-2">🎮 Your Mission</h3>
+                  <p className="text-orange-300 max-w-lg mx-auto">
+                     You have <span className="font-bold text-white">{deadline} days</span> to ship a product.
+                     Move tasks through the Kanban board, respect dependencies, and watch out for scope creep!
+                  </p>
+               </div>
+
+               <div className="grid grid-cols-3 gap-3 mb-6 max-w-md mx-auto text-center">
+                  <div className="bg-black/30 rounded-lg p-2">
+                     <span className="text-xl">⏱️</span>
+                     <p className="text-[10px] text-orange-400">{deadline} Day Deadline</p>
+                  </div>
+                  <div className="bg-black/30 rounded-lg p-2">
+                     <span className="text-xl">👥</span>
+                     <p className="text-[10px] text-orange-400">{teamCapacity} Tasks/Day Max</p>
+                  </div>
+                  <div className="bg-black/30 rounded-lg p-2">
+                     <span className="text-xl">🔗</span>
+                     <p className="text-[10px] text-orange-400">Dependencies</p>
+                  </div>
+               </div>
+
+               <button onClick={startGame} className="mx-auto px-8 py-4 bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-500 hover:to-amber-500 rounded-xl font-bold text-lg transition-all transform hover:scale-105 shadow-lg">
+                  START PROJECT →
+               </button>
+            </div>
+         </div>
+      );
+
+      // RESULT PHASE
+      if (phase === 'result') {
+         const { score, completedTasks, totalTasks, completionRate, daysUsed } = getScore();
+         const grade = score >= 80 ? 'A' : score >= 60 ? 'B' : score >= 40 ? 'C' : 'D';
+         const gradeColor = score >= 80 ? 'text-green-400' : score >= 60 ? 'text-blue-400' : score >= 40 ? 'text-yellow-400' : 'text-red-400';
+
+         return (
+            <div className="flex flex-col h-full bg-gradient-to-br from-orange-900 via-amber-900 to-yellow-900 text-white p-6 overflow-auto">
+               <div className="text-center mb-6">
+                  <div className="text-6xl mb-2">{completedOnTime ? '🚀' : '⏰'}</div>
+                  <h2 className="text-3xl font-black">{completedOnTime ? 'Shipped On Time!' : 'Deadline Missed'}</h2>
+                  <p className={`text-5xl font-black mt-2 ${gradeColor}`}>Grade: {grade}</p>
+               </div>
+
+               <div className="grid grid-cols-2 gap-3 mb-4 max-w-md mx-auto">
+                  <div className="bg-black/30 rounded-xl p-3 text-center">
+                     <p className="text-xl font-black text-green-400">{completedTasks}/{totalTasks}</p>
+                     <p className="text-xs text-orange-300">Tasks Done</p>
+                  </div>
+                  <div className="bg-black/30 rounded-xl p-3 text-center">
+                     <p className="text-xl font-black text-blue-400">{completionRate}%</p>
+                     <p className="text-xs text-orange-300">Completion</p>
+                  </div>
+                  <div className="bg-black/30 rounded-xl p-3 text-center">
+                     <p className="text-xl font-black text-purple-400">{daysUsed}</p>
+                     <p className="text-xs text-orange-300">Days Used</p>
+                  </div>
+                  <div className="bg-black/30 rounded-xl p-3 text-center">
+                     <p className="text-xl font-black text-amber-400">{scopeCreepAdded}</p>
+                     <p className="text-xs text-orange-300">Scope Creep Items</p>
+                  </div>
+               </div>
+
+               <div className="bg-orange-900/40 rounded-xl p-4 mb-4 border border-orange-500/30">
+                  <p className="font-bold text-orange-300 mb-2 flex items-center gap-2">
+                     <span className="w-6 h-6 rounded-full bg-orange-500 flex items-center justify-center text-sm">💡</span>
+                     Key Takeaways
+                  </p>
+                  <ul className="text-sm text-orange-200 space-y-1">
+                     <li>• <strong>Dependencies</strong> define your critical path</li>
+                     <li>• <strong>WIP limits</strong> prevent overload and improve focus</li>
+                     <li>• <strong>Scope creep</strong> is the #1 project killer - learn to say no</li>
+                     <li>• <strong>Prioritize ruthlessly</strong> - not everything is urgent</li>
+                  </ul>
+               </div>
+
+               <button onClick={startGame} className="mx-auto px-6 py-3 bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-500 hover:to-amber-500 rounded-xl font-bold transition-all">
+                  🔄 TRY AGAIN
+               </button>
+            </div>
+         );
+      }
+
+      // PLAY PHASE
+      const blockedTasks = getBlockedTasks();
+      const doingCount = tasks.filter(t => t.status === 'doing').length;
+      const doneCount = tasks.filter(t => t.status === 'done').length;
+      const columns: ('backlog' | 'todo' | 'doing' | 'done')[] = ['backlog', 'todo', 'doing', 'done'];
+      const columnLabels = { backlog: '📥 Backlog', todo: '📋 To Do', doing: '🔄 Doing', done: '✅ Done' };
+
+      return (
+         <div className="flex flex-col h-full bg-gradient-to-br from-orange-900 via-amber-900 to-yellow-900 text-white overflow-hidden">
+            {/* Header */}
+            <div className="p-3 bg-black/30 border-b border-orange-500/30">
+               <div className="flex justify-between items-center mb-2">
+                  <span className="text-lg font-black">📅 Day {day} / {deadline}</span>
+                  <div className="flex gap-2">
+                     <span className={`px-3 py-1 rounded-full text-sm font-bold ${day <= deadline - 3 ? 'bg-green-900/50 text-green-300' : 'bg-red-900/50 text-red-300'}`}>
+                        {deadline - day} days left
+                     </span>
+                  </div>
+               </div>
+               <div className="w-full h-2 bg-black/40 rounded-full overflow-hidden">
+                  <div className="h-full bg-gradient-to-r from-orange-500 to-amber-500 transition-all" style={{ width: `${(day / deadline) * 100}%` }} />
+               </div>
+            </div>
+
+            {/* Info modal */}
+            {infoTopic && infoTopics[infoTopic] && (
+               <div className="absolute inset-0 bg-black/70 flex items-center justify-center z-50 p-4" onClick={() => setInfoTopic(null)}>
+                  <div className="bg-orange-900 rounded-2xl p-6 max-w-md border border-orange-500" onClick={e => e.stopPropagation()}>
+                     <h3 className="text-xl font-black mb-2 flex items-center gap-2">ℹ️ {infoTopics[infoTopic].title}</h3>
+                     <p className="text-orange-200 text-sm leading-relaxed">{infoTopics[infoTopic].content}</p>
+                     <button onClick={() => setInfoTopic(null)} className="mt-4 px-4 py-2 bg-orange-700 hover:bg-orange-600 rounded-lg text-sm font-bold w-full">Got it!</button>
+                  </div>
+               </div>
+            )}
+
+            {/* Kanban Board */}
+            <div className="flex-1 p-2 overflow-x-auto">
+               <div className="flex gap-2 h-full min-w-[600px]">
+                  {columns.map(col => (
+                     <div key={col} className="flex-1 bg-black/20 rounded-xl p-2 flex flex-col min-w-[140px]">
+                        <div className="flex justify-between items-center mb-2">
+                           <span className="text-xs font-bold text-orange-400">{columnLabels[col]}</span>
+                           {col === 'doing' && (
+                              <span className={`text-[10px] px-1.5 py-0.5 rounded ${doingCount >= teamCapacity ? 'bg-red-500' : 'bg-green-500/50'}`}>
+                                 {doingCount}/{teamCapacity}
+                              </span>
+                           )}
+                           {col === 'kanban' && <button onClick={() => setInfoTopic('kanban')} className="text-orange-500 text-xs">ℹ️</button>}
+                        </div>
+                        <div className="flex-1 space-y-2 overflow-y-auto">
+                           {tasks.filter(t => t.status === col).map(task => {
+                              const isBlocked = blockedTasks.includes(task.id);
+                              const blocker = task.blockedBy ? tasks.find(b => b.id === task.blockedBy) : null;
+                              const progress = task.status === 'doing' ? (task.daysWorked / task.effort) * 100 : 0;
+
+                              return (
+                                 <div
+                                    key={task.id}
+                                    className={`p-2 rounded-lg text-xs transition-all ${
+                                       isBlocked ? 'bg-red-900/30 border border-red-500/30' :
+                                       task.status === 'done' ? 'bg-green-900/30 border border-green-500/30' :
+                                       'bg-black/30 border border-orange-500/20'
+                                    }`}
+                                 >
+                                    <div className="flex items-center gap-1 mb-1">
+                                       <span>{task.icon}</span>
+                                       <span className="font-bold truncate flex-1">{task.name}</span>
+                                       <span className={`w-2 h-2 rounded-full ${
+                                          task.priority === 'high' ? 'bg-red-500' :
+                                          task.priority === 'medium' ? 'bg-yellow-500' : 'bg-green-500'
+                                       }`} />
+                                    </div>
+
+                                    {task.status === 'doing' && (
+                                       <div className="h-1 bg-black/40 rounded-full overflow-hidden mb-1">
+                                          <div className="h-full bg-blue-500 transition-all" style={{ width: `${progress}%` }} />
+                                       </div>
+                                    )}
+
+                                    {isBlocked && blocker && (
+                                       <p className="text-red-400 text-[10px]">🔒 Blocked by {blocker.name}</p>
+                                    )}
+
+                                    <div className="text-[10px] text-orange-400 mb-1">
+                                       ⏱️ {task.effort}d effort
+                                    </div>
+
+                                    {/* Move buttons */}
+                                    {task.status !== 'done' && (
+                                       <div className="flex gap-1 mt-1">
+                                          {task.status === 'backlog' && (
+                                             <button onClick={() => moveTask(task.id, 'todo')} className="flex-1 py-1 bg-orange-700/50 hover:bg-orange-600/50 rounded text-[10px]">
+                                                → To Do
+                                             </button>
+                                          )}
+                                          {task.status === 'todo' && (
+                                             <button
+                                                onClick={() => moveTask(task.id, 'doing')}
+                                                disabled={isBlocked || doingCount >= teamCapacity}
+                                                className="flex-1 py-1 bg-blue-700/50 hover:bg-blue-600/50 disabled:opacity-50 rounded text-[10px]"
+                                             >
+                                                → Start
+                                             </button>
+                                          )}
+                                       </div>
+                                    )}
+                                 </div>
+                              );
+                           })}
+                        </div>
+                     </div>
+                  ))}
+               </div>
+            </div>
+
+            {/* Action Bar */}
+            <div className="p-3 bg-black/30 border-t border-orange-500/30">
+               <div className="flex gap-2 items-center justify-between mb-2">
+                  <div className="flex gap-2">
+                     <button onClick={() => setInfoTopic('dependencies')} className="text-xs text-orange-400 hover:text-white">🔗 Dependencies</button>
+                     <button onClick={() => setInfoTopic('scope')} className="text-xs text-orange-400 hover:text-white">🆕 Scope Creep</button>
+                     <button onClick={() => setInfoTopic('wip')} className="text-xs text-orange-400 hover:text-white">📊 WIP Limits</button>
+                  </div>
+                  <span className="text-xs text-orange-400">{doneCount}/{tasks.length} complete</span>
+               </div>
+               <button
+                  onClick={processDay}
+                  className="w-full py-3 bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-500 hover:to-amber-500 rounded-xl font-bold transition-all"
+               >
+                  ▶️ END DAY {day}
+               </button>
+            </div>
+         </div>
+      );
+   };
+
+   // --- QUALITY CONTROL RENDERER ---
+   const QualityControlRenderer = () => {
+      const [phase, setPhase] = useState<'intro' | 'play' | 'result'>('intro');
+      const [showInfo, setShowInfo] = useState(false);
+      const [infoTopic, setInfoTopic] = useState<string | null>(null);
+      const [batch, setBatch] = useState(1);
+      const [gameLog, setGameLog] = useState<string[]>([]);
+
+      const totalBatches = 10;
+      const batchSize = 100; // units per batch
+
+      const [inspectionRate, setInspectionRate] = useState(20); // % of units inspected
+      const [qualityStandard, setQualityStandard] = useState<'loose' | 'standard' | 'strict'>('standard');
+
+      const [stats, setStats] = useState({
+         totalProduced: 0,
+         totalInspected: 0,
+         defectsFound: 0,
+         defectsShipped: 0,
+         customerReturns: 0,
+         inspectionCost: 0,
+         returnCost: 0,
+         reputationScore: 100,
+      });
+
+      const [currentBatch, setCurrentBatch] = useState<{
+         units: { id: number; hasDefect: boolean; inspected: boolean; shipped: boolean }[];
+         baseDefectRate: number;
+      } | null>(null);
+
+      const [batchHistory, setBatchHistory] = useState<{
+         batch: number;
+         defectRate: number;
+         defectsFound: number;
+         defectsShipped: number;
+         returns: number;
+      }[]>([]);
+
+      const infoTopics: Record<string, { title: string; content: string }> = {
+         inspection: {
+            title: "Inspection Rate",
+            content: "The percentage of products you physically check for defects. 100% inspection catches all defects but is expensive. Sampling (checking 10-30%) reduces costs but lets some defects through. Statistical quality control helps find the optimal balance."
+         },
+         standards: {
+            title: "Quality Standards",
+            content: "How strict your acceptance criteria are. LOOSE: Accept minor flaws, fewer rejections but more customer complaints. STANDARD: Industry-normal tolerances. STRICT: Reject anything imperfect—higher costs but better reputation. Six Sigma aims for 3.4 defects per million!"
+         },
+         cost_of_quality: {
+            title: "Cost of Quality",
+            content: "Quality costs include: PREVENTION (training, better equipment), APPRAISAL (inspection, testing), INTERNAL FAILURE (rework, scrap), EXTERNAL FAILURE (returns, warranty, reputation damage). It's often cheaper to prevent defects than find them later!"
+         },
+         six_sigma: {
+            title: "Six Sigma",
+            content: "A methodology targeting near-perfect quality: only 3.4 defects per million opportunities. Uses DMAIC: Define, Measure, Analyze, Improve, Control. Developed at Motorola, popularized by GE. A 'sigma level' measures process capability—6σ means 99.99966% defect-free."
+         },
+         continuous: {
+            title: "Continuous Improvement",
+            content: "Kaizen (Japanese for 'change for better') means constantly making small improvements. Track defects, find root causes, implement fixes, verify results. Quality isn't a destination—it's an ongoing journey. Every defect is a learning opportunity!"
+         }
+      };
+
+      useEffect(() => {
+         if (infoTopic && infoTopics[infoTopic]) {
+            setShowInfo(true);
+         }
+      }, [infoTopic]);
+
+      const startGame = () => {
+         setPhase('play');
+         setBatch(1);
+         setStats({
+            totalProduced: 0,
+            totalInspected: 0,
+            defectsFound: 0,
+            defectsShipped: 0,
+            customerReturns: 0,
+            inspectionCost: 0,
+            returnCost: 0,
+            reputationScore: 100,
+         });
+         setBatchHistory([]);
+         setGameLog(["Quality Control simulation started"]);
+         generateBatch(1);
+      };
+
+      const generateBatch = (batchNum: number) => {
+         // Base defect rate varies by batch (simulating process variation)
+         const baseRate = 0.05 + Math.random() * 0.15; // 5-20% defect rate
+
+         const units = Array.from({ length: batchSize }, (_, i) => ({
+            id: i,
+            hasDefect: Math.random() < baseRate,
+            inspected: false,
+            shipped: false,
+         }));
+
+         setCurrentBatch({ units, baseDefectRate: baseRate });
+         setGameLog(prev => [...prev, `Batch ${batchNum} produced with ${batchSize} units`]);
+      };
+
+      const processBatch = () => {
+         if (!currentBatch) return;
+
+         const unitsToInspect = Math.floor(batchSize * (inspectionRate / 100));
+         const inspectionCostPerUnit = 2;
+         const returnCostPerUnit = 50;
+
+         // Randomly select units to inspect
+         const shuffled = [...currentBatch.units].sort(() => Math.random() - 0.5);
+         const inspected = shuffled.slice(0, unitsToInspect);
+         const notInspected = shuffled.slice(unitsToInspect);
+
+         // Find defects based on quality standard
+         const defectThreshold = qualityStandard === 'loose' ? 0.7 : qualityStandard === 'strict' ? 0.3 : 0.5;
+
+         let defectsFound = 0;
+         inspected.forEach(unit => {
+            if (unit.hasDefect && Math.random() > defectThreshold) {
+               defectsFound++;
+            }
+         });
+
+         // Defects that slip through (not inspected or missed during inspection)
+         const actualDefects = currentBatch.units.filter(u => u.hasDefect).length;
+         const defectsShipped = actualDefects - defectsFound;
+
+         // Customer returns (some % of shipped defects get returned)
+         const returnRate = qualityStandard === 'loose' ? 0.6 : qualityStandard === 'strict' ? 0.3 : 0.4;
+         const returns = Math.floor(defectsShipped * returnRate);
+
+         // Calculate costs
+         const batchInspectionCost = unitsToInspect * inspectionCostPerUnit;
+         const batchReturnCost = returns * returnCostPerUnit;
+
+         // Reputation impact
+         const reputationHit = returns * 2;
+
+         const newStats = {
+            totalProduced: stats.totalProduced + batchSize,
+            totalInspected: stats.totalInspected + unitsToInspect,
+            defectsFound: stats.defectsFound + defectsFound,
+            defectsShipped: stats.defectsShipped + defectsShipped,
+            customerReturns: stats.customerReturns + returns,
+            inspectionCost: stats.inspectionCost + batchInspectionCost,
+            returnCost: stats.returnCost + batchReturnCost,
+            reputationScore: Math.max(0, stats.reputationScore - reputationHit),
+         };
+         setStats(newStats);
+
+         setBatchHistory(prev => [...prev, {
+            batch,
+            defectRate: currentBatch.baseDefectRate * 100,
+            defectsFound,
+            defectsShipped,
+            returns
+         }]);
+
+         setGameLog(prev => [...prev,
+            `Batch ${batch}: Inspected ${unitsToInspect} units, found ${defectsFound} defects, ${defectsShipped} shipped with defects, ${returns} returns`
+         ]);
+
+         if (batch >= totalBatches) {
+            setGameLog(prev => [...prev,
+               `Simulation complete! Total cost: $${newStats.inspectionCost + newStats.returnCost}, Reputation: ${newStats.reputationScore}%`
+            ]);
+            setPhase('result');
+         } else {
+            setBatch(batch + 1);
+            generateBatch(batch + 1);
+         }
+      };
+
+      const getScore = () => {
+         const totalCost = stats.inspectionCost + stats.returnCost;
+         const costScore = Math.max(0, 100 - (totalCost / 50)); // Lower cost = higher score
+         const reputationScore = stats.reputationScore;
+         const defectRateScore = Math.max(0, 100 - (stats.defectsShipped / stats.totalProduced) * 500);
+
+         return Math.round((costScore + reputationScore + defectRateScore) / 3);
+      };
+
+      const getGrade = () => {
+         const score = getScore();
+         if (score >= 85) return { letter: 'A', label: 'Quality Master', color: 'text-green-400' };
+         if (score >= 70) return { letter: 'B', label: 'Quality Manager', color: 'text-blue-400' };
+         if (score >= 55) return { letter: 'C', label: 'Quality Novice', color: 'text-yellow-400' };
+         return { letter: 'D', label: 'Needs Improvement', color: 'text-red-400' };
+      };
+
+      // Intro Phase
+      if (phase === 'intro') {
+         return (
+            <div className="w-full h-full flex flex-col bg-gradient-to-br from-teal-900 via-cyan-900 to-slate-900 text-white p-4 overflow-auto">
+               <div className="text-center mb-4">
+                  <h1 className="text-2xl font-bold mb-2">🔍 Quality Control Simulator</h1>
+                  <p className="text-cyan-300 text-sm">Master the art of balancing cost and quality</p>
+               </div>
+
+               <div className="bg-black/30 rounded-xl p-4 mb-4">
+                  <h2 className="text-lg font-bold mb-3 text-cyan-400">📋 How It Works</h2>
+                  <div className="space-y-2 text-sm">
+                     <p>• You manage quality control for <span className="text-white font-bold">{totalBatches} production batches</span></p>
+                     <p>• Each batch contains <span className="text-white font-bold">{batchSize} units</span> with varying defect rates</p>
+                     <p>• Set your <span className="text-cyan-400">inspection rate</span> (% of units to check)</p>
+                     <p>• Choose your <span className="text-cyan-400">quality standard</span> (how strict)</p>
+                     <p>• Balance inspection costs vs customer returns!</p>
+                  </div>
+               </div>
+
+               <div className="grid grid-cols-2 gap-3 mb-4">
+                  <div className="bg-black/30 rounded-lg p-3">
+                     <h3 className="font-bold text-red-400 mb-2">💸 Costs</h3>
+                     <p className="text-xs text-slate-300">Inspection: $2/unit</p>
+                     <p className="text-xs text-slate-300">Return: $50/unit</p>
+                  </div>
+                  <div className="bg-black/30 rounded-lg p-3">
+                     <h3 className="font-bold text-green-400 mb-2">🎯 Goal</h3>
+                     <p className="text-xs text-slate-300">Minimize total costs</p>
+                     <p className="text-xs text-slate-300">Keep reputation high!</p>
+                  </div>
+               </div>
+
+               <div className="flex flex-wrap gap-2 mb-4">
+                  {Object.keys(infoTopics).map(key => (
+                     <button
+                        key={key}
+                        onClick={() => setInfoTopic(key)}
+                        className="text-xs bg-cyan-500/20 hover:bg-cyan-500/40 px-2 py-1 rounded-full text-cyan-300"
+                     >
+                        ℹ️ {infoTopics[key].title}
+                     </button>
+                  ))}
+               </div>
+
+               <button
+                  onClick={startGame}
+                  className="w-full py-3 bg-gradient-to-r from-cyan-600 to-teal-600 hover:from-cyan-500 hover:to-teal-500 rounded-xl font-bold text-lg transition-all"
+               >
+                  ▶️ START PRODUCTION
+               </button>
+
+               {showInfo && infoTopic && infoTopics[infoTopic] && (
+                  <div className="absolute inset-0 bg-black/80 flex items-center justify-center p-4 z-50" onClick={() => { setShowInfo(false); setInfoTopic(null); }}>
+                     <div className="bg-slate-800 rounded-xl p-4 max-w-md" onClick={e => e.stopPropagation()}>
+                        <h3 className="text-lg font-bold text-cyan-400 mb-2">{infoTopics[infoTopic].title}</h3>
+                        <p className="text-sm text-slate-300">{infoTopics[infoTopic].content}</p>
+                        <button onClick={() => { setShowInfo(false); setInfoTopic(null); }} className="mt-4 w-full py-2 bg-cyan-600 rounded-lg">Got it!</button>
+                     </div>
+                  </div>
+               )}
+            </div>
+         );
+      }
+
+      // Result Phase
+      if (phase === 'result') {
+         const grade = getGrade();
+         const totalCost = stats.inspectionCost + stats.returnCost;
+         const defectRate = ((stats.defectsShipped / stats.totalProduced) * 100).toFixed(1);
+
+         return (
+            <div className="w-full h-full flex flex-col bg-gradient-to-br from-teal-900 via-cyan-900 to-slate-900 text-white p-4 overflow-auto">
+               <div className="text-center mb-4">
+                  <div className={`text-6xl font-bold ${grade.color}`}>{grade.letter}</div>
+                  <div className="text-xl font-bold">{grade.label}</div>
+                  <div className="text-cyan-400">Score: {getScore()}/100</div>
+               </div>
+
+               <div className="grid grid-cols-2 gap-3 mb-4">
+                  <div className="bg-black/30 rounded-lg p-3 text-center">
+                     <div className="text-2xl font-bold text-green-400">{stats.reputationScore}%</div>
+                     <div className="text-xs text-slate-400">Reputation</div>
+                  </div>
+                  <div className="bg-black/30 rounded-lg p-3 text-center">
+                     <div className="text-2xl font-bold text-red-400">${totalCost}</div>
+                     <div className="text-xs text-slate-400">Total Cost</div>
+                  </div>
+                  <div className="bg-black/30 rounded-lg p-3 text-center">
+                     <div className="text-2xl font-bold text-yellow-400">{defectRate}%</div>
+                     <div className="text-xs text-slate-400">Shipped Defect Rate</div>
+                  </div>
+                  <div className="bg-black/30 rounded-lg p-3 text-center">
+                     <div className="text-2xl font-bold text-orange-400">{stats.customerReturns}</div>
+                     <div className="text-xs text-slate-400">Customer Returns</div>
+                  </div>
+               </div>
+
+               <div className="bg-black/30 rounded-xl p-3 mb-4">
+                  <h3 className="font-bold text-cyan-400 mb-2">📊 Cost Breakdown</h3>
+                  <div className="flex justify-between text-sm">
+                     <span>Inspection Costs:</span>
+                     <span className="text-cyan-300">${stats.inspectionCost}</span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                     <span>Return Costs:</span>
+                     <span className="text-red-300">${stats.returnCost}</span>
+                  </div>
+                  <div className="flex justify-between text-sm font-bold border-t border-slate-600 mt-2 pt-2">
+                     <span>Total:</span>
+                     <span>${totalCost}</span>
+                  </div>
+               </div>
+
+               <div className="bg-black/30 rounded-xl p-3 mb-4">
+                  <h3 className="font-bold text-cyan-400 mb-2">💡 Key Insight</h3>
+                  <p className="text-sm text-slate-300">
+                     {stats.returnCost > stats.inspectionCost
+                        ? "Your return costs exceeded inspection costs! It's often cheaper to catch defects before shipping than to handle returns. Consider increasing your inspection rate."
+                        : stats.reputationScore < 60
+                        ? "Your reputation took a hit from too many defective products reaching customers. Quality builds trust—invest in prevention!"
+                        : "Good balance! You found the sweet spot between inspection costs and quality. Remember: prevention is cheaper than correction."
+                     }
+                  </p>
+               </div>
+
+               <button
+                  onClick={startGame}
+                  className="w-full py-3 bg-gradient-to-r from-cyan-600 to-teal-600 hover:from-cyan-500 hover:to-teal-500 rounded-xl font-bold transition-all"
+               >
+                  🔄 TRY AGAIN
+               </button>
+            </div>
+         );
+      }
+
+      // Play Phase
+      return (
+         <div className="w-full h-full flex flex-col bg-gradient-to-br from-teal-900 via-cyan-900 to-slate-900 text-white overflow-hidden">
+            {/* Info Modal */}
+            {showInfo && infoTopic && infoTopics[infoTopic] && (
+               <div className="absolute inset-0 bg-black/80 flex items-center justify-center p-4 z-50" onClick={() => { setShowInfo(false); setInfoTopic(null); }}>
+                  <div className="bg-slate-800 rounded-xl p-4 max-w-md" onClick={e => e.stopPropagation()}>
+                     <h3 className="text-lg font-bold text-cyan-400 mb-2">{infoTopics[infoTopic].title}</h3>
+                     <p className="text-sm text-slate-300">{infoTopics[infoTopic].content}</p>
+                     <button onClick={() => { setShowInfo(false); setInfoTopic(null); }} className="mt-4 w-full py-2 bg-cyan-600 rounded-lg">Got it!</button>
+                  </div>
+               </div>
+            )}
+
+            {/* Header */}
+            <div className="p-3 bg-black/30 border-b border-cyan-500/30">
+               <div className="flex justify-between items-center mb-2">
+                  <span className="font-bold">🔍 Quality Control</span>
+                  <span className="text-cyan-400">Batch {batch}/{totalBatches}</span>
+               </div>
+               <div className="grid grid-cols-4 gap-2 text-center text-xs">
+                  <div className="bg-black/30 rounded p-1">
+                     <div className="text-green-400 font-bold">{stats.reputationScore}%</div>
+                     <div className="text-slate-500">Reputation</div>
+                  </div>
+                  <div className="bg-black/30 rounded p-1">
+                     <div className="text-cyan-400 font-bold">${stats.inspectionCost}</div>
+                     <div className="text-slate-500">Inspect $</div>
+                  </div>
+                  <div className="bg-black/30 rounded p-1">
+                     <div className="text-red-400 font-bold">${stats.returnCost}</div>
+                     <div className="text-slate-500">Return $</div>
+                  </div>
+                  <div className="bg-black/30 rounded p-1">
+                     <div className="text-yellow-400 font-bold">{stats.customerReturns}</div>
+                     <div className="text-slate-500">Returns</div>
+                  </div>
+               </div>
+            </div>
+
+            {/* Control Panel */}
+            <div className="p-3 space-y-3">
+               {/* Inspection Rate Slider */}
+               <div className="bg-black/30 rounded-lg p-3">
+                  <div className="flex justify-between items-center mb-2">
+                     <span className="text-sm font-bold">Inspection Rate</span>
+                     <button onClick={() => setInfoTopic('inspection')} className="text-cyan-400 text-xs">ℹ️</button>
+                  </div>
+                  <input
+                     type="range"
+                     min="0"
+                     max="100"
+                     step="10"
+                     value={inspectionRate}
+                     onChange={(e) => setInspectionRate(Number(e.target.value))}
+                     className="w-full accent-cyan-500"
+                  />
+                  <div className="flex justify-between text-xs text-slate-400 mt-1">
+                     <span>0%</span>
+                     <span className="text-cyan-400 font-bold">{inspectionRate}% ({Math.floor(batchSize * inspectionRate / 100)} units)</span>
+                     <span>100%</span>
+                  </div>
+               </div>
+
+               {/* Quality Standard Selector */}
+               <div className="bg-black/30 rounded-lg p-3">
+                  <div className="flex justify-between items-center mb-2">
+                     <span className="text-sm font-bold">Quality Standard</span>
+                     <button onClick={() => setInfoTopic('standards')} className="text-cyan-400 text-xs">ℹ️</button>
+                  </div>
+                  <div className="grid grid-cols-3 gap-2">
+                     {(['loose', 'standard', 'strict'] as const).map(std => (
+                        <button
+                           key={std}
+                           onClick={() => setQualityStandard(std)}
+                           className={`py-2 rounded-lg text-xs font-bold transition-all ${
+                              qualityStandard === std
+                                 ? 'bg-cyan-600 text-white'
+                                 : 'bg-slate-700/50 text-slate-400 hover:bg-slate-600/50'
+                           }`}
+                        >
+                           {std === 'loose' && '😌 Loose'}
+                           {std === 'standard' && '⚖️ Standard'}
+                           {std === 'strict' && '🔬 Strict'}
+                        </button>
+                     ))}
+                  </div>
+                  <div className="text-xs text-slate-400 mt-2 text-center">
+                     {qualityStandard === 'loose' && 'Accept minor flaws • Lower cost • More returns'}
+                     {qualityStandard === 'standard' && 'Industry normal • Balanced approach'}
+                     {qualityStandard === 'strict' && 'Zero tolerance • Higher cost • Fewer returns'}
+                  </div>
+               </div>
+            </div>
+
+            {/* Batch Visualization */}
+            {currentBatch && (
+               <div className="flex-1 p-3 overflow-auto">
+                  <div className="bg-black/30 rounded-lg p-3">
+                     <div className="flex justify-between items-center mb-2">
+                        <span className="text-sm font-bold">📦 Current Batch</span>
+                        <span className="text-xs text-slate-400">{batchSize} units</span>
+                     </div>
+                     <div className="grid grid-cols-20 gap-[2px]">
+                        {currentBatch.units.slice(0, 100).map((unit, i) => (
+                           <div
+                              key={i}
+                              className={`w-2 h-2 rounded-sm ${
+                                 unit.hasDefect
+                                    ? 'bg-red-500/30'
+                                    : 'bg-green-500/30'
+                              }`}
+                              title={unit.hasDefect ? 'May have defect' : 'Good unit'}
+                           />
+                        ))}
+                     </div>
+                     <p className="text-xs text-slate-500 mt-2 text-center">
+                        (Defects hidden until shipped - just like real production!)
+                     </p>
+                  </div>
+
+                  {/* History */}
+                  {batchHistory.length > 0 && (
+                     <div className="mt-3 bg-black/30 rounded-lg p-3">
+                        <span className="text-xs font-bold text-slate-400">History</span>
+                        <div className="mt-2 space-y-1 max-h-24 overflow-auto">
+                           {batchHistory.slice(-5).map((h, i) => (
+                              <div key={i} className="flex justify-between text-xs">
+                                 <span>Batch {h.batch}</span>
+                                 <span className="text-green-400">✓{h.defectsFound}</span>
+                                 <span className="text-red-400">✗{h.defectsShipped}</span>
+                                 <span className="text-yellow-400">↩{h.returns}</span>
+                              </div>
+                           ))}
+                        </div>
+                     </div>
+                  )}
+               </div>
+            )}
+
+            {/* Action Bar */}
+            <div className="p-3 bg-black/30 border-t border-cyan-500/30">
+               <div className="flex gap-2 items-center justify-between mb-2">
+                  <div className="flex gap-2">
+                     <button onClick={() => setInfoTopic('cost_of_quality')} className="text-xs text-cyan-400 hover:text-white">💰 Cost of Quality</button>
+                     <button onClick={() => setInfoTopic('six_sigma')} className="text-xs text-cyan-400 hover:text-white">📊 Six Sigma</button>
+                     <button onClick={() => setInfoTopic('continuous')} className="text-xs text-cyan-400 hover:text-white">🔄 Kaizen</button>
+                  </div>
+               </div>
+               <button
+                  onClick={processBatch}
+                  className="w-full py-3 bg-gradient-to-r from-cyan-600 to-teal-600 hover:from-cyan-500 hover:to-teal-500 rounded-xl font-bold transition-all"
+               >
+                  📦 SHIP BATCH {batch}
+               </button>
+            </div>
+         </div>
+      );
+   };
+
+   // --- CUSTOMER SUCCESS RENDERER ---
+   const CustomerSuccessRenderer = () => {
+      const [phase, setPhase] = useState<'intro' | 'play' | 'result'>('intro');
+      const [showInfo, setShowInfo] = useState(false);
+      const [infoTopic, setInfoTopic] = useState<string | null>(null);
+      const [month, setMonth] = useState(1);
+      const [gameLog, setGameLog] = useState<string[]>([]);
+
+      const totalMonths = 12;
+
+      const [budget, setBudget] = useState(10000); // Monthly CS budget
+      const [customers, setCustomers] = useState(100);
+      const [satisfaction, setSatisfaction] = useState(70); // 0-100
+      const [churnRate, setChurnRate] = useState(5); // % per month
+
+      const [investments, setInvestments] = useState({
+         support: 0,      // Customer support quality
+         onboarding: 0,   // Onboarding experience
+         engagement: 0,   // Proactive engagement
+         loyalty: 0,      // Loyalty rewards
+         feedback: 0,     // Feedback & improvements
+      });
+
+      const [stats, setStats] = useState({
+         totalRevenue: 0,
+         totalChurned: 0,
+         totalAcquired: 0,
+         totalSpent: 0,
+         averageLTV: 0,
+         nps: 0,
+      });
+
+      const [monthHistory, setMonthHistory] = useState<{
+         month: number;
+         customers: number;
+         churned: number;
+         acquired: number;
+         satisfaction: number;
+         revenue: number;
+      }[]>([]);
+
+      const infoTopics: Record<string, { title: string; content: string }> = {
+         churn: {
+            title: "Customer Churn",
+            content: "The percentage of customers who stop using your product each period. A 5% monthly churn means losing half your customers in a year! Reducing churn by even 1% can dramatically increase lifetime value. It costs 5-25x more to acquire a new customer than retain an existing one."
+         },
+         ltv: {
+            title: "Customer Lifetime Value (LTV)",
+            content: "The total revenue expected from a customer over their entire relationship. LTV = Average Revenue × Customer Lifespan. If monthly revenue is $100 and average lifespan is 20 months, LTV = $2,000. Higher LTV justifies higher acquisition costs."
+         },
+         nps: {
+            title: "Net Promoter Score (NPS)",
+            content: "Measures customer loyalty: 'How likely are you to recommend us?' (0-10). Promoters (9-10) minus Detractors (0-6) = NPS. Score ranges from -100 to +100. Above 0 is good, above 50 is excellent. Promoters drive organic growth through referrals!"
+         },
+         onboarding: {
+            title: "Customer Onboarding",
+            content: "The process of helping new customers succeed with your product. Good onboarding reduces early churn dramatically—most churn happens in the first 90 days! Include welcome sequences, tutorials, milestone celebrations, and check-ins."
+         },
+         retention: {
+            title: "Retention Strategies",
+            content: "Key tactics: 1) Proactive support (don't wait for complaints), 2) Regular engagement (newsletters, updates), 3) Loyalty rewards (discounts, perks), 4) Feedback loops (act on input), 5) Community building. The goal is to become indispensable!"
+         }
+      };
+
+      useEffect(() => {
+         if (infoTopic && infoTopics[infoTopic]) {
+            setShowInfo(true);
+         }
+      }, [infoTopic]);
+
+      const startGame = () => {
+         setPhase('play');
+         setMonth(1);
+         setBudget(10000);
+         setCustomers(100);
+         setSatisfaction(70);
+         setChurnRate(5);
+         setInvestments({ support: 0, onboarding: 0, engagement: 0, loyalty: 0, feedback: 0 });
+         setStats({ totalRevenue: 0, totalChurned: 0, totalAcquired: 0, totalSpent: 0, averageLTV: 0, nps: 0 });
+         setMonthHistory([]);
+         setGameLog(["Customer Success simulation started with 100 customers"]);
+      };
+
+      const getTotalInvestment = () => {
+         return Object.values(investments).reduce((a, b) => a + b, 0);
+      };
+
+      const processMonth = () => {
+         const totalInvested = getTotalInvestment();
+
+         // Calculate satisfaction change based on investments
+         const supportImpact = investments.support * 0.02;
+         const onboardingImpact = investments.onboarding * 0.015;
+         const engagementImpact = investments.engagement * 0.018;
+         const loyaltyImpact = investments.loyalty * 0.012;
+         const feedbackImpact = investments.feedback * 0.015;
+
+         const satisfactionChange = supportImpact + onboardingImpact + engagementImpact + loyaltyImpact + feedbackImpact - 3; // Natural decay of 3
+         const newSatisfaction = Math.max(0, Math.min(100, satisfaction + satisfactionChange));
+
+         // Churn rate based on satisfaction
+         const baseChurn = 15 - (newSatisfaction / 10); // High satisfaction = low churn
+         const newChurnRate = Math.max(1, Math.min(20, baseChurn));
+
+         // Calculate churned customers
+         const churned = Math.floor(customers * (newChurnRate / 100));
+
+         // New customers (word of mouth based on satisfaction + small organic)
+         const referralRate = newSatisfaction > 80 ? 0.08 : newSatisfaction > 60 ? 0.04 : 0.02;
+         const acquired = Math.floor(customers * referralRate) + Math.floor(Math.random() * 5);
+
+         // Revenue ($50 per customer per month)
+         const revenuePerCustomer = 50;
+         const monthlyRevenue = customers * revenuePerCustomer;
+
+         // Update customers
+         const newCustomers = customers - churned + acquired;
+
+         // Calculate NPS based on satisfaction
+         const nps = Math.round((newSatisfaction - 50) * 2);
+
+         // Update state
+         setSatisfaction(newSatisfaction);
+         setChurnRate(newChurnRate);
+         setCustomers(newCustomers);
+         setBudget(prev => prev - totalInvested + 10000); // Replenish budget each month
+
+         const newStats = {
+            totalRevenue: stats.totalRevenue + monthlyRevenue,
+            totalChurned: stats.totalChurned + churned,
+            totalAcquired: stats.totalAcquired + acquired,
+            totalSpent: stats.totalSpent + totalInvested,
+            averageLTV: Math.round((stats.totalRevenue + monthlyRevenue) / (stats.totalChurned + churned + 1) * 12),
+            nps: nps,
+         };
+         setStats(newStats);
+
+         setMonthHistory(prev => [...prev, {
+            month,
+            customers,
+            churned,
+            acquired,
+            satisfaction: Math.round(newSatisfaction),
+            revenue: monthlyRevenue
+         }]);
+
+         setGameLog(prev => [...prev,
+            `Month ${month}: ${churned} churned, ${acquired} acquired, satisfaction ${Math.round(newSatisfaction)}%, revenue $${monthlyRevenue}`
+         ]);
+
+         if (month >= totalMonths) {
+            setGameLog(prev => [...prev,
+               `Year complete! Final customers: ${newCustomers}, Total revenue: $${newStats.totalRevenue}`
+            ]);
+            setPhase('result');
+         } else {
+            setMonth(month + 1);
+         }
+      };
+
+      const adjustInvestment = (category: keyof typeof investments, delta: number) => {
+         const newValue = Math.max(0, Math.min(5000, investments[category] + delta));
+         const newTotal = getTotalInvestment() - investments[category] + newValue;
+         if (newTotal <= budget) {
+            setInvestments(prev => ({ ...prev, [category]: newValue }));
+         }
+      };
+
+      const getScore = () => {
+         const revenueScore = Math.min(40, stats.totalRevenue / 2000);
+         const retentionScore = Math.min(30, (1 - stats.totalChurned / 200) * 30);
+         const satisfactionScore = satisfaction * 0.3;
+         return Math.round(revenueScore + retentionScore + satisfactionScore);
+      };
+
+      const getGrade = () => {
+         const score = getScore();
+         if (score >= 85) return { letter: 'A', label: 'Customer Champion', color: 'text-green-400' };
+         if (score >= 70) return { letter: 'B', label: 'Success Manager', color: 'text-blue-400' };
+         if (score >= 55) return { letter: 'C', label: 'Learning the Ropes', color: 'text-yellow-400' };
+         return { letter: 'D', label: 'Needs Work', color: 'text-red-400' };
+      };
+
+      // Intro Phase
+      if (phase === 'intro') {
+         return (
+            <div className="w-full h-full flex flex-col bg-gradient-to-br from-emerald-900 via-green-900 to-slate-900 text-white p-4 overflow-auto">
+               <div className="text-center mb-4">
+                  <h1 className="text-2xl font-bold mb-2">💚 Customer Success Simulator</h1>
+                  <p className="text-emerald-300 text-sm">Master retention and grow your customer base</p>
+               </div>
+
+               <div className="bg-black/30 rounded-xl p-4 mb-4">
+                  <h2 className="text-lg font-bold mb-3 text-emerald-400">📋 How It Works</h2>
+                  <div className="space-y-2 text-sm">
+                     <p>• You start with <span className="text-white font-bold">100 customers</span> and a <span className="text-white font-bold">$10K monthly budget</span></p>
+                     <p>• Each customer generates <span className="text-emerald-400">$50/month</span> in revenue</p>
+                     <p>• Invest in retention strategies to reduce churn</p>
+                     <p>• Happy customers refer new ones—satisfaction drives growth!</p>
+                     <p>• Run your business for <span className="text-white font-bold">12 months</span></p>
+                  </div>
+               </div>
+
+               <div className="grid grid-cols-2 gap-3 mb-4">
+                  <div className="bg-black/30 rounded-lg p-3">
+                     <h3 className="font-bold text-red-400 mb-2">⚠️ The Challenge</h3>
+                     <p className="text-xs text-slate-300">5% monthly churn = 46% annual loss!</p>
+                     <p className="text-xs text-slate-300">Acquire costs 5x more than retain</p>
+                  </div>
+                  <div className="bg-black/30 rounded-lg p-3">
+                     <h3 className="font-bold text-green-400 mb-2">🎯 Goal</h3>
+                     <p className="text-xs text-slate-300">Maximize customer base</p>
+                     <p className="text-xs text-slate-300">Keep satisfaction high!</p>
+                  </div>
+               </div>
+
+               <div className="flex flex-wrap gap-2 mb-4">
+                  {Object.keys(infoTopics).map(key => (
+                     <button
+                        key={key}
+                        onClick={() => setInfoTopic(key)}
+                        className="text-xs bg-emerald-500/20 hover:bg-emerald-500/40 px-2 py-1 rounded-full text-emerald-300"
+                     >
+                        ℹ️ {infoTopics[key].title}
+                     </button>
+                  ))}
+               </div>
+
+               <button
+                  onClick={startGame}
+                  className="w-full py-3 bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-500 hover:to-green-500 rounded-xl font-bold text-lg transition-all"
+               >
+                  ▶️ START YEAR 1
+               </button>
+
+               {showInfo && infoTopic && infoTopics[infoTopic] && (
+                  <div className="absolute inset-0 bg-black/80 flex items-center justify-center p-4 z-50" onClick={() => { setShowInfo(false); setInfoTopic(null); }}>
+                     <div className="bg-slate-800 rounded-xl p-4 max-w-md" onClick={e => e.stopPropagation()}>
+                        <h3 className="text-lg font-bold text-emerald-400 mb-2">{infoTopics[infoTopic].title}</h3>
+                        <p className="text-sm text-slate-300">{infoTopics[infoTopic].content}</p>
+                        <button onClick={() => { setShowInfo(false); setInfoTopic(null); }} className="mt-4 w-full py-2 bg-emerald-600 rounded-lg">Got it!</button>
+                     </div>
+                  </div>
+               )}
+            </div>
+         );
+      }
+
+      // Result Phase
+      if (phase === 'result') {
+         const grade = getGrade();
+         const customerGrowth = customers - 100;
+         const growthPercent = ((customers / 100 - 1) * 100).toFixed(0);
+
+         return (
+            <div className="w-full h-full flex flex-col bg-gradient-to-br from-emerald-900 via-green-900 to-slate-900 text-white p-4 overflow-auto">
+               <div className="text-center mb-4">
+                  <div className={`text-6xl font-bold ${grade.color}`}>{grade.letter}</div>
+                  <div className="text-xl font-bold">{grade.label}</div>
+                  <div className="text-emerald-400">Score: {getScore()}/100</div>
+               </div>
+
+               <div className="grid grid-cols-2 gap-3 mb-4">
+                  <div className="bg-black/30 rounded-lg p-3 text-center">
+                     <div className="text-2xl font-bold text-green-400">{customers}</div>
+                     <div className="text-xs text-slate-400">Final Customers</div>
+                     <div className={`text-xs ${customerGrowth >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                        {customerGrowth >= 0 ? '+' : ''}{growthPercent}%
+                     </div>
+                  </div>
+                  <div className="bg-black/30 rounded-lg p-3 text-center">
+                     <div className="text-2xl font-bold text-emerald-400">${stats.totalRevenue.toLocaleString()}</div>
+                     <div className="text-xs text-slate-400">Total Revenue</div>
+                  </div>
+                  <div className="bg-black/30 rounded-lg p-3 text-center">
+                     <div className="text-2xl font-bold text-red-400">{stats.totalChurned}</div>
+                     <div className="text-xs text-slate-400">Total Churned</div>
+                  </div>
+                  <div className="bg-black/30 rounded-lg p-3 text-center">
+                     <div className="text-2xl font-bold text-blue-400">{stats.totalAcquired}</div>
+                     <div className="text-xs text-slate-400">Total Acquired</div>
+                  </div>
+               </div>
+
+               <div className="bg-black/30 rounded-xl p-3 mb-4">
+                  <h3 className="font-bold text-emerald-400 mb-2">📊 Key Metrics</h3>
+                  <div className="grid grid-cols-3 gap-2 text-center text-xs">
+                     <div>
+                        <div className="font-bold text-lg">{Math.round(satisfaction)}%</div>
+                        <div className="text-slate-400">Satisfaction</div>
+                     </div>
+                     <div>
+                        <div className="font-bold text-lg">{churnRate.toFixed(1)}%</div>
+                        <div className="text-slate-400">Churn Rate</div>
+                     </div>
+                     <div>
+                        <div className={`font-bold text-lg ${stats.nps >= 0 ? 'text-green-400' : 'text-red-400'}`}>{stats.nps > 0 ? '+' : ''}{stats.nps}</div>
+                        <div className="text-slate-400">NPS</div>
+                     </div>
+                  </div>
+               </div>
+
+               <div className="bg-black/30 rounded-xl p-3 mb-4">
+                  <h3 className="font-bold text-emerald-400 mb-2">💡 Key Insight</h3>
+                  <p className="text-sm text-slate-300">
+                     {customers > 100
+                        ? "Great job growing your customer base! High satisfaction leads to referrals, creating a virtuous cycle. Remember: happy customers are your best marketing."
+                        : stats.totalChurned > 50
+                        ? "High churn ate into your customer base. Investing more in retention (support, onboarding, engagement) reduces churn and increases lifetime value."
+                        : "Retention is the key to sustainable growth. It costs 5x more to acquire a customer than retain one. Focus on making existing customers successful!"
+                     }
+                  </p>
+               </div>
+
+               <button
+                  onClick={startGame}
+                  className="w-full py-3 bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-500 hover:to-green-500 rounded-xl font-bold transition-all"
+               >
+                  🔄 TRY AGAIN
+               </button>
+            </div>
+         );
+      }
+
+      // Play Phase
+      const totalInvested = getTotalInvestment();
+      const remaining = budget - totalInvested;
+
+      return (
+         <div className="w-full h-full flex flex-col bg-gradient-to-br from-emerald-900 via-green-900 to-slate-900 text-white overflow-hidden">
+            {/* Info Modal */}
+            {showInfo && infoTopic && infoTopics[infoTopic] && (
+               <div className="absolute inset-0 bg-black/80 flex items-center justify-center p-4 z-50" onClick={() => { setShowInfo(false); setInfoTopic(null); }}>
+                  <div className="bg-slate-800 rounded-xl p-4 max-w-md" onClick={e => e.stopPropagation()}>
+                     <h3 className="text-lg font-bold text-emerald-400 mb-2">{infoTopics[infoTopic].title}</h3>
+                     <p className="text-sm text-slate-300">{infoTopics[infoTopic].content}</p>
+                     <button onClick={() => { setShowInfo(false); setInfoTopic(null); }} className="mt-4 w-full py-2 bg-emerald-600 rounded-lg">Got it!</button>
+                  </div>
+               </div>
+            )}
+
+            {/* Header */}
+            <div className="p-3 bg-black/30 border-b border-emerald-500/30">
+               <div className="flex justify-between items-center mb-2">
+                  <span className="font-bold">💚 Customer Success</span>
+                  <span className="text-emerald-400">Month {month}/{totalMonths}</span>
+               </div>
+               <div className="grid grid-cols-4 gap-2 text-center text-xs">
+                  <div className="bg-black/30 rounded p-1">
+                     <div className="text-green-400 font-bold">{customers}</div>
+                     <div className="text-slate-500">Customers</div>
+                  </div>
+                  <div className="bg-black/30 rounded p-1">
+                     <div className="text-emerald-400 font-bold">{Math.round(satisfaction)}%</div>
+                     <div className="text-slate-500">Satisfaction</div>
+                  </div>
+                  <div className="bg-black/30 rounded p-1">
+                     <div className="text-red-400 font-bold">{churnRate.toFixed(1)}%</div>
+                     <div className="text-slate-500">Churn</div>
+                  </div>
+                  <div className="bg-black/30 rounded p-1">
+                     <div className="text-yellow-400 font-bold">${remaining.toLocaleString()}</div>
+                     <div className="text-slate-500">Budget Left</div>
+                  </div>
+               </div>
+            </div>
+
+            {/* Investment Sliders */}
+            <div className="flex-1 p-3 overflow-auto space-y-2">
+               <div className="flex justify-between items-center mb-2">
+                  <span className="text-sm font-bold">Monthly Investments</span>
+                  <button onClick={() => setInfoTopic('retention')} className="text-emerald-400 text-xs">ℹ️ Strategies</button>
+               </div>
+
+               {[
+                  { key: 'support', label: '🎧 Support Quality', desc: 'Fast, helpful customer service' },
+                  { key: 'onboarding', label: '🚀 Onboarding', desc: 'Help new customers succeed' },
+                  { key: 'engagement', label: '📧 Engagement', desc: 'Proactive outreach & updates' },
+                  { key: 'loyalty', label: '🎁 Loyalty Rewards', desc: 'Perks for long-term customers' },
+                  { key: 'feedback', label: '📝 Feedback Loop', desc: 'Listen and improve' },
+               ].map(({ key, label, desc }) => (
+                  <div key={key} className="bg-black/30 rounded-lg p-2">
+                     <div className="flex justify-between items-center mb-1">
+                        <span className="text-xs font-bold">{label}</span>
+                        <span className="text-xs text-emerald-400">${investments[key as keyof typeof investments].toLocaleString()}</span>
+                     </div>
+                     <div className="flex items-center gap-2">
+                        <button
+                           onClick={() => adjustInvestment(key as keyof typeof investments, -500)}
+                           className="px-2 py-1 bg-red-600/50 hover:bg-red-500/50 rounded text-xs"
+                        >
+                           -$500
+                        </button>
+                        <div className="flex-1 h-2 bg-slate-700 rounded-full overflow-hidden">
+                           <div
+                              className="h-full bg-emerald-500 transition-all"
+                              style={{ width: `${(investments[key as keyof typeof investments] / 5000) * 100}%` }}
+                           />
+                        </div>
+                        <button
+                           onClick={() => adjustInvestment(key as keyof typeof investments, 500)}
+                           disabled={remaining < 500}
+                           className="px-2 py-1 bg-green-600/50 hover:bg-green-500/50 disabled:opacity-50 rounded text-xs"
+                        >
+                           +$500
+                        </button>
+                     </div>
+                     <p className="text-[10px] text-slate-500 mt-1">{desc}</p>
+                  </div>
+               ))}
+
+               {/* History */}
+               {monthHistory.length > 0 && (
+                  <div className="bg-black/30 rounded-lg p-2 mt-3">
+                     <span className="text-xs font-bold text-slate-400">Recent History</span>
+                     <div className="mt-1 space-y-1 max-h-20 overflow-auto">
+                        {monthHistory.slice(-4).map((h, i) => (
+                           <div key={i} className="flex justify-between text-xs">
+                              <span>Month {h.month}</span>
+                              <span className="text-red-400">-{h.churned}</span>
+                              <span className="text-green-400">+{h.acquired}</span>
+                              <span className="text-emerald-400">{h.satisfaction}%</span>
+                           </div>
+                        ))}
+                     </div>
+                  </div>
+               )}
+            </div>
+
+            {/* Action Bar */}
+            <div className="p-3 bg-black/30 border-t border-emerald-500/30">
+               <div className="flex gap-2 items-center justify-between mb-2">
+                  <div className="flex gap-2">
+                     <button onClick={() => setInfoTopic('churn')} className="text-xs text-emerald-400 hover:text-white">📉 Churn</button>
+                     <button onClick={() => setInfoTopic('ltv')} className="text-xs text-emerald-400 hover:text-white">💰 LTV</button>
+                     <button onClick={() => setInfoTopic('nps')} className="text-xs text-emerald-400 hover:text-white">📊 NPS</button>
+                  </div>
+                  <span className="text-xs text-emerald-400">Revenue: ${(customers * 50).toLocaleString()}/mo</span>
+               </div>
+               <button
+                  onClick={processMonth}
+                  className="w-full py-3 bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-500 hover:to-green-500 rounded-xl font-bold transition-all"
+               >
+                  ▶️ END MONTH {month}
+               </button>
+            </div>
+         </div>
+      );
+   };
+
+   // --- AGILE METHODOLOGY RENDERER ---
+   const AgileRenderer = () => {
+      const [phase, setPhase] = useState<'intro' | 'play' | 'result'>('intro');
+      const [showInfo, setShowInfo] = useState(false);
+      const [infoTopic, setInfoTopic] = useState<string | null>(null);
+      const [sprint, setSprint] = useState(1);
+      const [gameLog, setGameLog] = useState<string[]>([]);
+
+      const totalSprints = 6;
+      const sprintLength = 2; // weeks
+
+      const [teamVelocity, setTeamVelocity] = useState(20); // story points per sprint
+      const [teamMorale, setTeamMorale] = useState(80);
+
+      const [backlog, setBacklog] = useState<{
+         id: string;
+         title: string;
+         points: number;
+         priority: 'critical' | 'high' | 'medium' | 'low';
+         status: 'backlog' | 'sprint' | 'done';
+         type: 'feature' | 'bug' | 'tech_debt';
+      }[]>([]);
+
+      const [sprintBacklog, setSprintBacklog] = useState<string[]>([]);
+
+      const [stats, setStats] = useState({
+         totalPointsDelivered: 0,
+         totalSprints: 0,
+         averageVelocity: 0,
+         bugsFixed: 0,
+         featuresShipped: 0,
+         techDebtPaid: 0,
+         scopeChanges: 0,
+      });
+
+      const [sprintHistory, setSprintHistory] = useState<{
+         sprint: number;
+         planned: number;
+         delivered: number;
+         velocity: number;
+         morale: number;
+      }[]>([]);
+
+      const [sprintEvent, setSprintEvent] = useState<string | null>(null);
+
+      const infoTopics: Record<string, { title: string; content: string }> = {
+         scrum: {
+            title: "Scrum Framework",
+            content: "Scrum is an Agile framework with fixed-length sprints (usually 2 weeks). Key roles: Product Owner (what to build), Scrum Master (process), Dev Team (how to build). Key events: Sprint Planning, Daily Standup, Sprint Review, Retrospective."
+         },
+         velocity: {
+            title: "Team Velocity",
+            content: "Velocity is story points completed per sprint. It's a planning tool, not a performance metric! Use past velocity to forecast future sprints. Velocity stabilizes over time as the team finds its rhythm. Never compare velocities between teams."
+         },
+         stories: {
+            title: "User Stories",
+            content: "User stories describe features from the user's perspective: 'As a [user], I want [feature] so that [benefit].' Stories are estimated in story points (relative complexity), not hours. Common scale: 1, 2, 3, 5, 8, 13 (Fibonacci). If it's bigger than 13, break it down!"
+         },
+         retrospective: {
+            title: "Retrospectives",
+            content: "The 'retro' happens after each sprint to improve the process. Ask: What went well? What didn't? What will we change? This is where real improvement happens. Teams that skip retros stop improving. Psychological safety is crucial for honest feedback."
+         },
+         debt: {
+            title: "Technical Debt",
+            content: "Tech debt is the cost of shortcuts taken for speed. Like financial debt, it accumulates interest—making future work harder. Balance: Some debt is acceptable for speed-to-market, but pay it down regularly or velocity will slow. Budget 20% of each sprint for debt."
+         }
+      };
+
+      useEffect(() => {
+         if (infoTopic && infoTopics[infoTopic]) {
+            setShowInfo(true);
+         }
+      }, [infoTopic]);
+
+      const startGame = () => {
+         setPhase('play');
+         setSprint(1);
+         setTeamVelocity(20);
+         setTeamMorale(80);
+         setSprintBacklog([]);
+         setSprintEvent(null);
+         setStats({
+            totalPointsDelivered: 0,
+            totalSprints: 0,
+            averageVelocity: 0,
+            bugsFixed: 0,
+            featuresShipped: 0,
+            techDebtPaid: 0,
+            scopeChanges: 0,
+         });
+         setSprintHistory([]);
+
+         // Generate initial backlog
+         const initialBacklog = [
+            { id: 'f1', title: 'User Authentication', points: 8, priority: 'critical' as const, status: 'backlog' as const, type: 'feature' as const },
+            { id: 'f2', title: 'Dashboard UI', points: 5, priority: 'high' as const, status: 'backlog' as const, type: 'feature' as const },
+            { id: 'f3', title: 'Payment Integration', points: 13, priority: 'critical' as const, status: 'backlog' as const, type: 'feature' as const },
+            { id: 'f4', title: 'Email Notifications', points: 5, priority: 'medium' as const, status: 'backlog' as const, type: 'feature' as const },
+            { id: 'f5', title: 'Search Feature', points: 8, priority: 'high' as const, status: 'backlog' as const, type: 'feature' as const },
+            { id: 'b1', title: 'Login Bug Fix', points: 3, priority: 'critical' as const, status: 'backlog' as const, type: 'bug' as const },
+            { id: 'b2', title: 'Mobile Layout Issues', points: 5, priority: 'high' as const, status: 'backlog' as const, type: 'bug' as const },
+            { id: 't1', title: 'Refactor Database', points: 8, priority: 'medium' as const, status: 'backlog' as const, type: 'tech_debt' as const },
+            { id: 't2', title: 'Update Dependencies', points: 3, priority: 'low' as const, status: 'backlog' as const, type: 'tech_debt' as const },
+            { id: 'f6', title: 'User Profiles', points: 5, priority: 'medium' as const, status: 'backlog' as const, type: 'feature' as const },
+            { id: 'f7', title: 'Admin Panel', points: 8, priority: 'low' as const, status: 'backlog' as const, type: 'feature' as const },
+            { id: 'f8', title: 'Analytics Dashboard', points: 13, priority: 'medium' as const, status: 'backlog' as const, type: 'feature' as const },
+         ];
+         setBacklog(initialBacklog);
+         setGameLog(["Agile simulation started - Plan your first sprint!"]);
+      };
+
+      const addToSprint = (itemId: string) => {
+         const item = backlog.find(b => b.id === itemId);
+         if (!item) return;
+
+         const currentPoints = sprintBacklog.reduce((sum, id) => {
+            const i = backlog.find(b => b.id === id);
+            return sum + (i?.points || 0);
+         }, 0);
+
+         if (currentPoints + item.points <= teamVelocity + 5) { // Allow slight over-commitment
+            setSprintBacklog(prev => [...prev, itemId]);
+            setBacklog(prev => prev.map(b => b.id === itemId ? { ...b, status: 'sprint' as const } : b));
+         }
+      };
+
+      const removeFromSprint = (itemId: string) => {
+         setSprintBacklog(prev => prev.filter(id => id !== itemId));
+         setBacklog(prev => prev.map(b => b.id === itemId ? { ...b, status: 'backlog' as const } : b));
+      };
+
+      const runSprint = () => {
+         const plannedPoints = sprintBacklog.reduce((sum, id) => {
+            const item = backlog.find(b => b.id === id);
+            return sum + (item?.points || 0);
+         }, 0);
+
+         // Random events that affect the sprint
+         const events = [
+            { text: "🎉 Team collaboration was excellent!", velocityMod: 1.1, moraleMod: 5 },
+            { text: "🐛 Critical production bug diverted resources", velocityMod: 0.7, moraleMod: -10 },
+            { text: "📋 Stakeholder added urgent requirements", velocityMod: 0.8, moraleMod: -5, scopeChange: true },
+            { text: "🚀 New team member ramped up quickly", velocityMod: 1.05, moraleMod: 5 },
+            { text: "😷 Team member was sick for a week", velocityMod: 0.85, moraleMod: -5 },
+            { text: "💡 Found a simpler solution!", velocityMod: 1.15, moraleMod: 10 },
+            { text: "📚 Sprint went smoothly as planned", velocityMod: 1.0, moraleMod: 0 },
+         ];
+
+         const event = events[Math.floor(Math.random() * events.length)];
+         setSprintEvent(event.text);
+
+         // Calculate actual delivery
+         const effectiveVelocity = Math.round(teamVelocity * event.velocityMod);
+         let remainingCapacity = effectiveVelocity;
+         let delivered = 0;
+         let bugsFixed = 0;
+         let featuresShipped = 0;
+         let techDebtPaid = 0;
+
+         const updatedBacklog = backlog.map(item => {
+            if (item.status === 'sprint' && remainingCapacity >= item.points) {
+               remainingCapacity -= item.points;
+               delivered += item.points;
+               if (item.type === 'bug') bugsFixed++;
+               if (item.type === 'feature') featuresShipped++;
+               if (item.type === 'tech_debt') techDebtPaid++;
+               return { ...item, status: 'done' as const };
+            } else if (item.status === 'sprint') {
+               // Incomplete - back to backlog
+               return { ...item, status: 'backlog' as const };
+            }
+            return item;
+         });
+
+         setBacklog(updatedBacklog);
+         setSprintBacklog([]);
+
+         // Update morale
+         const newMorale = Math.max(20, Math.min(100, teamMorale + event.moraleMod + (delivered >= plannedPoints ? 5 : -5)));
+         setTeamMorale(newMorale);
+
+         // Update velocity based on morale
+         const moraleEffect = (newMorale - 50) / 100; // -0.3 to +0.5
+         const newVelocity = Math.round(20 * (1 + moraleEffect));
+         setTeamVelocity(newVelocity);
+
+         const newStats = {
+            totalPointsDelivered: stats.totalPointsDelivered + delivered,
+            totalSprints: stats.totalSprints + 1,
+            averageVelocity: Math.round((stats.totalPointsDelivered + delivered) / (stats.totalSprints + 1)),
+            bugsFixed: stats.bugsFixed + bugsFixed,
+            featuresShipped: stats.featuresShipped + featuresShipped,
+            techDebtPaid: stats.techDebtPaid + techDebtPaid,
+            scopeChanges: stats.scopeChanges + (event.scopeChange ? 1 : 0),
+         };
+         setStats(newStats);
+
+         setSprintHistory(prev => [...prev, {
+            sprint,
+            planned: plannedPoints,
+            delivered,
+            velocity: effectiveVelocity,
+            morale: newMorale
+         }]);
+
+         setGameLog(prev => [...prev,
+            `Sprint ${sprint}: Planned ${plannedPoints}pts, delivered ${delivered}pts. ${event.text}`
+         ]);
+
+         if (sprint >= totalSprints) {
+            setGameLog(prev => [...prev,
+               `Project complete! Total delivered: ${newStats.totalPointsDelivered} points`
+            ]);
+            setPhase('result');
+         } else {
+            setSprint(sprint + 1);
+         }
+      };
+
+      const getSprintPoints = () => {
+         return sprintBacklog.reduce((sum, id) => {
+            const item = backlog.find(b => b.id === id);
+            return sum + (item?.points || 0);
+         }, 0);
+      };
+
+      const getScore = () => {
+         const deliveryScore = Math.min(40, stats.totalPointsDelivered / 2);
+         const moraleScore = teamMorale * 0.3;
+         const balanceScore = Math.min(30, (stats.bugsFixed * 3 + stats.techDebtPaid * 5));
+         return Math.round(deliveryScore + moraleScore + balanceScore);
+      };
+
+      const getGrade = () => {
+         const score = getScore();
+         if (score >= 85) return { letter: 'A', label: 'Agile Master', color: 'text-green-400' };
+         if (score >= 70) return { letter: 'B', label: 'Sprint Champion', color: 'text-blue-400' };
+         if (score >= 55) return { letter: 'C', label: 'Learning Scrum', color: 'text-yellow-400' };
+         return { letter: 'D', label: 'Waterfall Refugee', color: 'text-red-400' };
+      };
+
+      const getPriorityColor = (priority: string) => {
+         switch (priority) {
+            case 'critical': return 'text-red-400 bg-red-500/20';
+            case 'high': return 'text-orange-400 bg-orange-500/20';
+            case 'medium': return 'text-yellow-400 bg-yellow-500/20';
+            case 'low': return 'text-slate-400 bg-slate-500/20';
+            default: return 'text-slate-400';
+         }
+      };
+
+      const getTypeIcon = (type: string) => {
+         switch (type) {
+            case 'feature': return '✨';
+            case 'bug': return '🐛';
+            case 'tech_debt': return '🔧';
+            default: return '📋';
+         }
+      };
+
+      // Intro Phase
+      if (phase === 'intro') {
+         return (
+            <div className="w-full h-full flex flex-col bg-gradient-to-br from-indigo-900 via-purple-900 to-slate-900 text-white p-4 overflow-auto">
+               <div className="text-center mb-4">
+                  <h1 className="text-2xl font-bold mb-2">🏃 Agile Sprint Simulator</h1>
+                  <p className="text-purple-300 text-sm">Master Scrum and deliver value iteratively</p>
+               </div>
+
+               <div className="bg-black/30 rounded-xl p-4 mb-4">
+                  <h2 className="text-lg font-bold mb-3 text-purple-400">📋 How It Works</h2>
+                  <div className="space-y-2 text-sm">
+                     <p>• Run <span className="text-white font-bold">{totalSprints} sprints</span> ({sprintLength} weeks each)</p>
+                     <p>• Select items from the <span className="text-purple-400">Product Backlog</span> for each sprint</p>
+                     <p>• Balance features, bugs, and tech debt</p>
+                     <p>• Team velocity is ~<span className="text-white font-bold">20 points/sprint</span></p>
+                     <p>• Random events affect delivery—adapt and overcome!</p>
+                  </div>
+               </div>
+
+               <div className="grid grid-cols-3 gap-2 mb-4 text-center">
+                  <div className="bg-black/30 rounded-lg p-2">
+                     <span className="text-lg">✨</span>
+                     <p className="text-xs text-slate-300">Features</p>
+                  </div>
+                  <div className="bg-black/30 rounded-lg p-2">
+                     <span className="text-lg">🐛</span>
+                     <p className="text-xs text-slate-300">Bugs</p>
+                  </div>
+                  <div className="bg-black/30 rounded-lg p-2">
+                     <span className="text-lg">🔧</span>
+                     <p className="text-xs text-slate-300">Tech Debt</p>
+                  </div>
+               </div>
+
+               <div className="flex flex-wrap gap-2 mb-4">
+                  {Object.keys(infoTopics).map(key => (
+                     <button
+                        key={key}
+                        onClick={() => setInfoTopic(key)}
+                        className="text-xs bg-purple-500/20 hover:bg-purple-500/40 px-2 py-1 rounded-full text-purple-300"
+                     >
+                        ℹ️ {infoTopics[key].title}
+                     </button>
+                  ))}
+               </div>
+
+               <button
+                  onClick={startGame}
+                  className="w-full py-3 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 rounded-xl font-bold text-lg transition-all"
+               >
+                  ▶️ START SPRINT 1
+               </button>
+
+               {showInfo && infoTopic && infoTopics[infoTopic] && (
+                  <div className="absolute inset-0 bg-black/80 flex items-center justify-center p-4 z-50" onClick={() => { setShowInfo(false); setInfoTopic(null); }}>
+                     <div className="bg-slate-800 rounded-xl p-4 max-w-md" onClick={e => e.stopPropagation()}>
+                        <h3 className="text-lg font-bold text-purple-400 mb-2">{infoTopics[infoTopic].title}</h3>
+                        <p className="text-sm text-slate-300">{infoTopics[infoTopic].content}</p>
+                        <button onClick={() => { setShowInfo(false); setInfoTopic(null); }} className="mt-4 w-full py-2 bg-purple-600 rounded-lg">Got it!</button>
+                     </div>
+                  </div>
+               )}
+            </div>
+         );
+      }
+
+      // Result Phase
+      if (phase === 'result') {
+         const grade = getGrade();
+
+         return (
+            <div className="w-full h-full flex flex-col bg-gradient-to-br from-indigo-900 via-purple-900 to-slate-900 text-white p-4 overflow-auto">
+               <div className="text-center mb-4">
+                  <div className={`text-6xl font-bold ${grade.color}`}>{grade.letter}</div>
+                  <div className="text-xl font-bold">{grade.label}</div>
+                  <div className="text-purple-400">Score: {getScore()}/100</div>
+               </div>
+
+               <div className="grid grid-cols-2 gap-3 mb-4">
+                  <div className="bg-black/30 rounded-lg p-3 text-center">
+                     <div className="text-2xl font-bold text-purple-400">{stats.totalPointsDelivered}</div>
+                     <div className="text-xs text-slate-400">Points Delivered</div>
+                  </div>
+                  <div className="bg-black/30 rounded-lg p-3 text-center">
+                     <div className="text-2xl font-bold text-blue-400">{stats.averageVelocity}</div>
+                     <div className="text-xs text-slate-400">Avg Velocity</div>
+                  </div>
+                  <div className="bg-black/30 rounded-lg p-3 text-center">
+                     <div className="text-2xl font-bold text-green-400">{stats.featuresShipped}</div>
+                     <div className="text-xs text-slate-400">Features Shipped</div>
+                  </div>
+                  <div className="bg-black/30 rounded-lg p-3 text-center">
+                     <div className="text-2xl font-bold text-yellow-400">{teamMorale}%</div>
+                     <div className="text-xs text-slate-400">Team Morale</div>
+                  </div>
+               </div>
+
+               <div className="bg-black/30 rounded-xl p-3 mb-4">
+                  <h3 className="font-bold text-purple-400 mb-2">📊 Sprint Breakdown</h3>
+                  <div className="grid grid-cols-3 gap-2 text-center text-xs">
+                     <div>
+                        <div className="font-bold text-lg text-green-400">{stats.featuresShipped}</div>
+                        <div className="text-slate-400">✨ Features</div>
+                     </div>
+                     <div>
+                        <div className="font-bold text-lg text-red-400">{stats.bugsFixed}</div>
+                        <div className="text-slate-400">🐛 Bugs Fixed</div>
+                     </div>
+                     <div>
+                        <div className="font-bold text-lg text-orange-400">{stats.techDebtPaid}</div>
+                        <div className="text-slate-400">🔧 Debt Paid</div>
+                     </div>
+                  </div>
+               </div>
+
+               <div className="bg-black/30 rounded-xl p-3 mb-4">
+                  <h3 className="font-bold text-purple-400 mb-2">💡 Key Insight</h3>
+                  <p className="text-sm text-slate-300">
+                     {stats.techDebtPaid === 0
+                        ? "You shipped features but ignored tech debt! In real projects, this slows velocity over time. Budget ~20% of each sprint for maintenance."
+                        : stats.bugsFixed < 2
+                        ? "Bugs pile up when ignored. Fixing bugs early prevents bigger problems. Critical bugs should jump to the top of the backlog."
+                        : teamMorale < 50
+                        ? "Team morale affects velocity! Overcommitting and missing targets hurts morale. Sustainable pace > heroic sprints."
+                        : "Great balance of features, bugs, and tech debt! Sustainable teams deliver more value over time than teams that burn out."
+                     }
+                  </p>
+               </div>
+
+               <button
+                  onClick={startGame}
+                  className="w-full py-3 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 rounded-xl font-bold transition-all"
+               >
+                  🔄 TRY AGAIN
+               </button>
+            </div>
+         );
+      }
+
+      // Play Phase
+      const sprintPoints = getSprintPoints();
+      const availableBacklog = backlog.filter(b => b.status === 'backlog');
+      const sprintItems = backlog.filter(b => b.status === 'sprint');
+
+      return (
+         <div className="w-full h-full flex flex-col bg-gradient-to-br from-indigo-900 via-purple-900 to-slate-900 text-white overflow-hidden">
+            {/* Info Modal */}
+            {showInfo && infoTopic && infoTopics[infoTopic] && (
+               <div className="absolute inset-0 bg-black/80 flex items-center justify-center p-4 z-50" onClick={() => { setShowInfo(false); setInfoTopic(null); }}>
+                  <div className="bg-slate-800 rounded-xl p-4 max-w-md" onClick={e => e.stopPropagation()}>
+                     <h3 className="text-lg font-bold text-purple-400 mb-2">{infoTopics[infoTopic].title}</h3>
+                     <p className="text-sm text-slate-300">{infoTopics[infoTopic].content}</p>
+                     <button onClick={() => { setShowInfo(false); setInfoTopic(null); }} className="mt-4 w-full py-2 bg-purple-600 rounded-lg">Got it!</button>
+                  </div>
+               </div>
+            )}
+
+            {/* Header */}
+            <div className="p-3 bg-black/30 border-b border-purple-500/30">
+               <div className="flex justify-between items-center mb-2">
+                  <span className="font-bold">🏃 Sprint {sprint}/{totalSprints}</span>
+                  <span className="text-purple-400">{sprintLength} weeks</span>
+               </div>
+               <div className="grid grid-cols-4 gap-2 text-center text-xs">
+                  <div className="bg-black/30 rounded p-1">
+                     <div className="text-purple-400 font-bold">{sprintPoints}/{teamVelocity}</div>
+                     <div className="text-slate-500">Points</div>
+                  </div>
+                  <div className="bg-black/30 rounded p-1">
+                     <div className="text-blue-400 font-bold">{teamVelocity}</div>
+                     <div className="text-slate-500">Velocity</div>
+                  </div>
+                  <div className="bg-black/30 rounded p-1">
+                     <div className={`font-bold ${teamMorale >= 60 ? 'text-green-400' : teamMorale >= 40 ? 'text-yellow-400' : 'text-red-400'}`}>{teamMorale}%</div>
+                     <div className="text-slate-500">Morale</div>
+                  </div>
+                  <div className="bg-black/30 rounded p-1">
+                     <div className="text-green-400 font-bold">{stats.totalPointsDelivered}</div>
+                     <div className="text-slate-500">Delivered</div>
+                  </div>
+               </div>
+               {sprintEvent && (
+                  <div className="mt-2 text-xs text-center text-purple-300 bg-purple-500/20 rounded p-1">
+                     {sprintEvent}
+                  </div>
+               )}
+            </div>
+
+            {/* Main Content */}
+            <div className="flex-1 p-3 overflow-auto">
+               {/* Sprint Backlog */}
+               <div className="mb-3">
+                  <div className="flex justify-between items-center mb-2">
+                     <span className="text-sm font-bold">📋 Sprint Backlog</span>
+                     <span className={`text-xs ${sprintPoints > teamVelocity ? 'text-red-400' : 'text-purple-400'}`}>
+                        {sprintPoints} / {teamVelocity} pts
+                     </span>
+                  </div>
+                  {sprintItems.length === 0 ? (
+                     <div className="bg-black/20 rounded-lg p-3 text-center text-slate-500 text-sm">
+                        Add items from the backlog below
+                     </div>
+                  ) : (
+                     <div className="space-y-1">
+                        {sprintItems.map(item => (
+                           <div key={item.id} className="bg-purple-500/20 rounded-lg p-2 flex justify-between items-center">
+                              <div className="flex items-center gap-2">
+                                 <span>{getTypeIcon(item.type)}</span>
+                                 <span className="text-xs">{item.title}</span>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                 <span className={`text-xs px-1 rounded ${getPriorityColor(item.priority)}`}>{item.points}pts</span>
+                                 <button onClick={() => removeFromSprint(item.id)} className="text-red-400 text-xs">✕</button>
+                              </div>
+                           </div>
+                        ))}
+                     </div>
+                  )}
+               </div>
+
+               {/* Product Backlog */}
+               <div>
+                  <div className="flex justify-between items-center mb-2">
+                     <span className="text-sm font-bold">📦 Product Backlog</span>
+                     <span className="text-xs text-slate-400">{availableBacklog.length} items</span>
+                  </div>
+                  <div className="space-y-1 max-h-40 overflow-auto">
+                     {availableBacklog.map(item => (
+                        <div key={item.id} className="bg-black/30 rounded-lg p-2 flex justify-between items-center">
+                           <div className="flex items-center gap-2">
+                              <span>{getTypeIcon(item.type)}</span>
+                              <span className="text-xs">{item.title}</span>
+                           </div>
+                           <div className="flex items-center gap-2">
+                              <span className={`text-xs px-1 rounded ${getPriorityColor(item.priority)}`}>{item.priority}</span>
+                              <span className="text-xs text-slate-400">{item.points}pts</span>
+                              <button
+                                 onClick={() => addToSprint(item.id)}
+                                 disabled={sprintPoints + item.points > teamVelocity + 5}
+                                 className="text-green-400 text-xs disabled:opacity-50"
+                              >
+                                 +
+                              </button>
+                           </div>
+                        </div>
+                     ))}
+                  </div>
+               </div>
+
+               {/* Sprint History */}
+               {sprintHistory.length > 0 && (
+                  <div className="mt-3 bg-black/30 rounded-lg p-2">
+                     <span className="text-xs font-bold text-slate-400">Sprint History</span>
+                     <div className="mt-1 space-y-1 max-h-16 overflow-auto">
+                        {sprintHistory.slice(-3).map((h, i) => (
+                           <div key={i} className="flex justify-between text-xs">
+                              <span>Sprint {h.sprint}</span>
+                              <span className="text-slate-400">{h.planned}→{h.delivered}pts</span>
+                              <span className={h.delivered >= h.planned ? 'text-green-400' : 'text-red-400'}>
+                                 {h.delivered >= h.planned ? '✓' : '✗'}
+                              </span>
+                           </div>
+                        ))}
+                     </div>
+                  </div>
+               )}
+            </div>
+
+            {/* Action Bar */}
+            <div className="p-3 bg-black/30 border-t border-purple-500/30">
+               <div className="flex gap-2 items-center justify-between mb-2">
+                  <div className="flex gap-2">
+                     <button onClick={() => setInfoTopic('velocity')} className="text-xs text-purple-400 hover:text-white">📈 Velocity</button>
+                     <button onClick={() => setInfoTopic('stories')} className="text-xs text-purple-400 hover:text-white">📝 Stories</button>
+                     <button onClick={() => setInfoTopic('debt')} className="text-xs text-purple-400 hover:text-white">🔧 Tech Debt</button>
+                  </div>
+               </div>
+               <button
+                  onClick={runSprint}
+                  disabled={sprintItems.length === 0}
+                  className="w-full py-3 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 disabled:opacity-50 rounded-xl font-bold transition-all"
+               >
+                  🏃 RUN SPRINT {sprint}
+               </button>
+            </div>
+         </div>
+      );
+   };
+
+   // --- TIME MANAGEMENT RENDERER ---
+   const TimeManagementRenderer = () => {
+      const [phase, setPhase] = useState<'intro' | 'play' | 'result'>('intro');
+      const [showInfo, setShowInfo] = useState(false);
+      const [infoTopic, setInfoTopic] = useState<string | null>(null);
+      const [day, setDay] = useState(1);
+      const [gameLog, setGameLog] = useState<string[]>([]);
+
+      const totalDays = 5; // Work week
+      const hoursPerDay = 8;
+
+      const [hoursRemaining, setHoursRemaining] = useState(hoursPerDay);
+      const [energy, setEnergy] = useState(100);
+
+      const [tasks, setTasks] = useState<{
+         id: string;
+         title: string;
+         hours: number;
+         urgent: boolean;
+         important: boolean;
+         completed: boolean;
+         type: 'deep' | 'meeting' | 'admin' | 'interruption';
+      }[]>([]);
+
+      const [stats, setStats] = useState({
+         tasksCompleted: 0,
+         importantCompleted: 0,
+         urgentCompleted: 0,
+         deepWorkHours: 0,
+         meetingHours: 0,
+         adminHours: 0,
+         interruptionHours: 0,
+         energyWasted: 0,
+      });
+
+      const [dayHistory, setDayHistory] = useState<{
+         day: number;
+         completed: number;
+         important: number;
+         hoursWorked: number;
+         endEnergy: number;
+      }[]>([]);
+
+      const [interruption, setInterruption] = useState<{ title: string; hours: number } | null>(null);
+
+      const infoTopics: Record<string, { title: string; content: string }> = {
+         eisenhower: {
+            title: "Eisenhower Matrix",
+            content: "Prioritize by URGENT vs IMPORTANT: Q1 (Urgent+Important): Do first—crises, deadlines. Q2 (Important, Not Urgent): Schedule—planning, growth, prevention. Q3 (Urgent, Not Important): Delegate—interruptions, some meetings. Q4 (Neither): Eliminate—time wasters. Spend most time in Q2!"
+         },
+         deep_work: {
+            title: "Deep Work",
+            content: "Cal Newport's concept: focused, uninterrupted work on cognitively demanding tasks. Deep work creates value and improves skills. Requires 90+ minute blocks without distractions. Most people can only do 4 hours of deep work per day. Protect this time ruthlessly!"
+         },
+         pomodoro: {
+            title: "Pomodoro Technique",
+            content: "Work in 25-minute focused bursts (pomodoros) with 5-minute breaks. After 4 pomodoros, take a 15-30 minute break. Helps maintain focus and prevents burnout. Track pomodoros to understand your capacity. One task per pomodoro—no multitasking!"
+         },
+         energy: {
+            title: "Energy Management",
+            content: "Energy matters more than time! Schedule hard tasks during peak energy (usually morning). Batch similar tasks together. Take breaks before you're exhausted. Meetings and context-switching drain energy fast. Protect your golden hours for important work."
+         },
+         timeblock: {
+            title: "Time Blocking",
+            content: "Schedule specific blocks for specific work types. Example: Deep work 9-12, meetings 2-4, email 4-5. Defend your calendar! Every minute should be assigned. Review and adjust weekly. Leave buffer time for unexpected tasks. Say no to protect your blocks."
+         }
+      };
+
+      useEffect(() => {
+         if (infoTopic && infoTopics[infoTopic]) {
+            setShowInfo(true);
+         }
+      }, [infoTopic]);
+
+      const generateDayTasks = () => {
+         const taskPool = [
+            { title: 'Strategic Planning', hours: 2, urgent: false, important: true, type: 'deep' as const },
+            { title: 'Client Presentation', hours: 1.5, urgent: true, important: true, type: 'meeting' as const },
+            { title: 'Team Meeting', hours: 1, urgent: true, important: false, type: 'meeting' as const },
+            { title: 'Email Inbox', hours: 1, urgent: false, important: false, type: 'admin' as const },
+            { title: 'Code Review', hours: 1.5, urgent: false, important: true, type: 'deep' as const },
+            { title: 'Bug Fix (Critical)', hours: 2, urgent: true, important: true, type: 'deep' as const },
+            { title: 'Status Report', hours: 0.5, urgent: true, important: false, type: 'admin' as const },
+            { title: 'Learning/Training', hours: 1, urgent: false, important: true, type: 'deep' as const },
+            { title: 'Social Media Check', hours: 0.5, urgent: false, important: false, type: 'admin' as const },
+            { title: 'Process Documentation', hours: 1, urgent: false, important: true, type: 'deep' as const },
+            { title: '1:1 with Manager', hours: 0.5, urgent: true, important: true, type: 'meeting' as const },
+            { title: 'Expense Reports', hours: 0.5, urgent: true, important: false, type: 'admin' as const },
+         ];
+
+         // Select 6-8 random tasks for the day
+         const shuffled = [...taskPool].sort(() => Math.random() - 0.5);
+         const selected = shuffled.slice(0, 6 + Math.floor(Math.random() * 3));
+
+         return selected.map((t, i) => ({
+            ...t,
+            id: `task-${day}-${i}`,
+            completed: false,
+         }));
+      };
+
+      const startGame = () => {
+         setPhase('play');
+         setDay(1);
+         setHoursRemaining(hoursPerDay);
+         setEnergy(100);
+         setInterruption(null);
+         setStats({
+            tasksCompleted: 0,
+            importantCompleted: 0,
+            urgentCompleted: 0,
+            deepWorkHours: 0,
+            meetingHours: 0,
+            adminHours: 0,
+            interruptionHours: 0,
+            energyWasted: 0,
+         });
+         setDayHistory([]);
+         setTasks(generateDayTasks());
+         setGameLog(["Time Management simulation started - Day 1"]);
+      };
+
+      const completeTask = (taskId: string) => {
+         const task = tasks.find(t => t.id === taskId);
+         if (!task || task.completed || hoursRemaining < task.hours) return;
+
+         // Energy cost
+         let energyCost = task.hours * 10;
+         if (task.type === 'meeting') energyCost += 5; // Meetings drain more
+         if (task.type === 'deep' && energy < 50) energyCost += 10; // Deep work when tired is harder
+
+         // Check if we have energy
+         if (energy - energyCost < 0) {
+            setGameLog(prev => [...prev, `Too exhausted to complete ${task.title}!`]);
+            return;
+         }
+
+         setTasks(prev => prev.map(t => t.id === taskId ? { ...t, completed: true } : t));
+         setHoursRemaining(prev => prev - task.hours);
+         setEnergy(prev => Math.max(0, prev - energyCost));
+
+         // Update stats
+         setStats(prev => ({
+            ...prev,
+            tasksCompleted: prev.tasksCompleted + 1,
+            importantCompleted: prev.importantCompleted + (task.important ? 1 : 0),
+            urgentCompleted: prev.urgentCompleted + (task.urgent ? 1 : 0),
+            deepWorkHours: prev.deepWorkHours + (task.type === 'deep' ? task.hours : 0),
+            meetingHours: prev.meetingHours + (task.type === 'meeting' ? task.hours : 0),
+            adminHours: prev.adminHours + (task.type === 'admin' ? task.hours : 0),
+         }));
+
+         setGameLog(prev => [...prev, `Completed: ${task.title} (${task.hours}h)`]);
+
+         // Random interruption chance
+         if (Math.random() < 0.2) {
+            triggerInterruption();
+         }
+      };
+
+      const triggerInterruption = () => {
+         const interruptions = [
+            { title: '📱 Urgent Slack message', hours: 0.5 },
+            { title: '🚨 Production issue!', hours: 1 },
+            { title: '📞 Surprise call', hours: 0.5 },
+            { title: '👋 Coworker needs help', hours: 0.5 },
+            { title: '📧 Executive email needs reply', hours: 0.5 },
+         ];
+         setInterruption(interruptions[Math.floor(Math.random() * interruptions.length)]);
+      };
+
+      const handleInterruption = (accept: boolean) => {
+         if (!interruption) return;
+
+         if (accept) {
+            if (hoursRemaining >= interruption.hours) {
+               setHoursRemaining(prev => prev - interruption.hours);
+               setEnergy(prev => Math.max(0, prev - 15)); // Interruptions are costly
+               setStats(prev => ({
+                  ...prev,
+                  interruptionHours: prev.interruptionHours + interruption.hours,
+               }));
+               setGameLog(prev => [...prev, `Handled interruption: ${interruption.title}`]);
+            }
+         } else {
+            setEnergy(prev => Math.max(0, prev - 5)); // Saying no has a small cost too
+            setGameLog(prev => [...prev, `Declined: ${interruption.title}`]);
+         }
+         setInterruption(null);
+      };
+
+      const takeBreak = () => {
+         if (hoursRemaining < 0.5) return;
+         setHoursRemaining(prev => prev - 0.5);
+         setEnergy(prev => Math.min(100, prev + 20));
+         setGameLog(prev => [...prev, "Took a 30-minute break, recovered energy"]);
+      };
+
+      const endDay = () => {
+         const dayCompleted = tasks.filter(t => t.completed).length;
+         const dayImportant = tasks.filter(t => t.completed && t.important).length;
+
+         setDayHistory(prev => [...prev, {
+            day,
+            completed: dayCompleted,
+            important: dayImportant,
+            hoursWorked: hoursPerDay - hoursRemaining,
+            endEnergy: energy
+         }]);
+
+         if (day >= totalDays) {
+            setGameLog(prev => [...prev, `Week complete! Tasks done: ${stats.tasksCompleted + dayCompleted}`]);
+            setPhase('result');
+         } else {
+            setDay(day + 1);
+            setHoursRemaining(hoursPerDay);
+            setEnergy(Math.min(100, 70 + energy * 0.3)); // Partial recovery overnight
+            setTasks(generateDayTasks());
+            setGameLog(prev => [...prev, `Day ${day + 1} started`]);
+         }
+      };
+
+      const getQuadrant = (task: typeof tasks[0]) => {
+         if (task.urgent && task.important) return { label: 'Q1: DO', color: 'bg-red-500/30 border-red-500' };
+         if (!task.urgent && task.important) return { label: 'Q2: SCHEDULE', color: 'bg-green-500/30 border-green-500' };
+         if (task.urgent && !task.important) return { label: 'Q3: DELEGATE', color: 'bg-yellow-500/30 border-yellow-500' };
+         return { label: 'Q4: ELIMINATE', color: 'bg-slate-500/30 border-slate-500' };
+      };
+
+      const getScore = () => {
+         const importantScore = stats.importantCompleted * 10;
+         const deepWorkScore = Math.min(30, stats.deepWorkHours * 5);
+         const efficiencyScore = Math.min(30, (stats.tasksCompleted / (stats.tasksCompleted + 5)) * 30);
+         const balanceScore = energy > 30 ? 10 : 0; // Ended with energy
+         return Math.round(importantScore + deepWorkScore + efficiencyScore + balanceScore);
+      };
+
+      const getGrade = () => {
+         const score = getScore();
+         if (score >= 85) return { letter: 'A', label: 'Time Master', color: 'text-green-400' };
+         if (score >= 70) return { letter: 'B', label: 'Productive Pro', color: 'text-blue-400' };
+         if (score >= 55) return { letter: 'C', label: 'Getting There', color: 'text-yellow-400' };
+         return { letter: 'D', label: 'Time Challenged', color: 'text-red-400' };
+      };
+
+      // Intro Phase
+      if (phase === 'intro') {
+         return (
+            <div className="w-full h-full flex flex-col bg-gradient-to-br from-amber-900 via-orange-900 to-slate-900 text-white p-4 overflow-auto">
+               <div className="text-center mb-4">
+                  <h1 className="text-2xl font-bold mb-2">⏰ Time Management Simulator</h1>
+                  <p className="text-amber-300 text-sm">Master your day with the Eisenhower Matrix</p>
+               </div>
+
+               <div className="bg-black/30 rounded-xl p-4 mb-4">
+                  <h2 className="text-lg font-bold mb-3 text-amber-400">📋 How It Works</h2>
+                  <div className="space-y-2 text-sm">
+                     <p>• Manage a <span className="text-white font-bold">5-day work week</span></p>
+                     <p>• Each day has <span className="text-white font-bold">8 hours</span> and limited energy</p>
+                     <p>• Prioritize tasks using the <span className="text-amber-400">Eisenhower Matrix</span></p>
+                     <p>• Handle interruptions and manage energy</p>
+                     <p>• Focus on <span className="text-green-400">Important</span> over Urgent!</p>
+                  </div>
+               </div>
+
+               <div className="grid grid-cols-2 gap-2 mb-4 text-xs">
+                  <div className="bg-red-500/20 border border-red-500/50 rounded-lg p-2 text-center">
+                     <div className="font-bold">Q1: URGENT + IMPORTANT</div>
+                     <div className="text-slate-300">Do First</div>
+                  </div>
+                  <div className="bg-green-500/20 border border-green-500/50 rounded-lg p-2 text-center">
+                     <div className="font-bold">Q2: IMPORTANT</div>
+                     <div className="text-slate-300">Schedule (Best ROI!)</div>
+                  </div>
+                  <div className="bg-yellow-500/20 border border-yellow-500/50 rounded-lg p-2 text-center">
+                     <div className="font-bold">Q3: URGENT</div>
+                     <div className="text-slate-300">Delegate</div>
+                  </div>
+                  <div className="bg-slate-500/20 border border-slate-500/50 rounded-lg p-2 text-center">
+                     <div className="font-bold">Q4: NEITHER</div>
+                     <div className="text-slate-300">Eliminate</div>
+                  </div>
+               </div>
+
+               <div className="flex flex-wrap gap-2 mb-4">
+                  {Object.keys(infoTopics).map(key => (
+                     <button
+                        key={key}
+                        onClick={() => setInfoTopic(key)}
+                        className="text-xs bg-amber-500/20 hover:bg-amber-500/40 px-2 py-1 rounded-full text-amber-300"
+                     >
+                        ℹ️ {infoTopics[key].title}
+                     </button>
+                  ))}
+               </div>
+
+               <button
+                  onClick={startGame}
+                  className="w-full py-3 bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500 rounded-xl font-bold text-lg transition-all"
+               >
+                  ▶️ START WORK WEEK
+               </button>
+
+               {showInfo && infoTopic && infoTopics[infoTopic] && (
+                  <div className="absolute inset-0 bg-black/80 flex items-center justify-center p-4 z-50" onClick={() => { setShowInfo(false); setInfoTopic(null); }}>
+                     <div className="bg-slate-800 rounded-xl p-4 max-w-md" onClick={e => e.stopPropagation()}>
+                        <h3 className="text-lg font-bold text-amber-400 mb-2">{infoTopics[infoTopic].title}</h3>
+                        <p className="text-sm text-slate-300">{infoTopics[infoTopic].content}</p>
+                        <button onClick={() => { setShowInfo(false); setInfoTopic(null); }} className="mt-4 w-full py-2 bg-amber-600 rounded-lg">Got it!</button>
+                     </div>
+                  </div>
+               )}
+            </div>
+         );
+      }
+
+      // Result Phase
+      if (phase === 'result') {
+         const grade = getGrade();
+
+         return (
+            <div className="w-full h-full flex flex-col bg-gradient-to-br from-amber-900 via-orange-900 to-slate-900 text-white p-4 overflow-auto">
+               <div className="text-center mb-4">
+                  <div className={`text-6xl font-bold ${grade.color}`}>{grade.letter}</div>
+                  <div className="text-xl font-bold">{grade.label}</div>
+                  <div className="text-amber-400">Score: {getScore()}/100</div>
+               </div>
+
+               <div className="grid grid-cols-2 gap-3 mb-4">
+                  <div className="bg-black/30 rounded-lg p-3 text-center">
+                     <div className="text-2xl font-bold text-amber-400">{stats.tasksCompleted}</div>
+                     <div className="text-xs text-slate-400">Tasks Done</div>
+                  </div>
+                  <div className="bg-black/30 rounded-lg p-3 text-center">
+                     <div className="text-2xl font-bold text-green-400">{stats.importantCompleted}</div>
+                     <div className="text-xs text-slate-400">Important Done</div>
+                  </div>
+                  <div className="bg-black/30 rounded-lg p-3 text-center">
+                     <div className="text-2xl font-bold text-blue-400">{stats.deepWorkHours.toFixed(1)}h</div>
+                     <div className="text-xs text-slate-400">Deep Work</div>
+                  </div>
+                  <div className="bg-black/30 rounded-lg p-3 text-center">
+                     <div className="text-2xl font-bold text-red-400">{stats.interruptionHours.toFixed(1)}h</div>
+                     <div className="text-xs text-slate-400">Interruptions</div>
+                  </div>
+               </div>
+
+               <div className="bg-black/30 rounded-xl p-3 mb-4">
+                  <h3 className="font-bold text-amber-400 mb-2">📊 Time Breakdown</h3>
+                  <div className="space-y-1 text-sm">
+                     <div className="flex justify-between">
+                        <span>🧠 Deep Work:</span>
+                        <span className="text-blue-400">{stats.deepWorkHours.toFixed(1)}h</span>
+                     </div>
+                     <div className="flex justify-between">
+                        <span>👥 Meetings:</span>
+                        <span className="text-yellow-400">{stats.meetingHours.toFixed(1)}h</span>
+                     </div>
+                     <div className="flex justify-between">
+                        <span>📝 Admin:</span>
+                        <span className="text-slate-400">{stats.adminHours.toFixed(1)}h</span>
+                     </div>
+                     <div className="flex justify-between">
+                        <span>🚨 Interruptions:</span>
+                        <span className="text-red-400">{stats.interruptionHours.toFixed(1)}h</span>
+                     </div>
+                  </div>
+               </div>
+
+               <div className="bg-black/30 rounded-xl p-3 mb-4">
+                  <h3 className="font-bold text-amber-400 mb-2">💡 Key Insight</h3>
+                  <p className="text-sm text-slate-300">
+                     {stats.deepWorkHours < 10
+                        ? "Not enough deep work! Protect 2-4 hours daily for focused, important work. This is where real value is created."
+                        : stats.interruptionHours > 5
+                        ? "Interruptions consumed too much time. Learn to say no or batch interruption handling into specific time slots."
+                        : stats.importantCompleted < stats.urgentCompleted
+                        ? "You prioritized urgent over important. Q2 tasks (important but not urgent) build long-term success. Don't let urgency hijack your priorities!"
+                        : "Great balance! You focused on important work while managing energy. This is the path to sustainable productivity."
+                     }
+                  </p>
+               </div>
+
+               <button
+                  onClick={startGame}
+                  className="w-full py-3 bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500 rounded-xl font-bold transition-all"
+               >
+                  🔄 TRY AGAIN
+               </button>
+            </div>
+         );
+      }
+
+      // Play Phase
+      const incompleteTasks = tasks.filter(t => !t.completed);
+
+      return (
+         <div className="w-full h-full flex flex-col bg-gradient-to-br from-amber-900 via-orange-900 to-slate-900 text-white overflow-hidden">
+            {/* Interruption Modal */}
+            {interruption && (
+               <div className="absolute inset-0 bg-black/80 flex items-center justify-center p-4 z-50">
+                  <div className="bg-slate-800 rounded-xl p-4 max-w-sm">
+                     <h3 className="text-lg font-bold text-red-400 mb-2">🚨 Interruption!</h3>
+                     <p className="text-white mb-2">{interruption.title}</p>
+                     <p className="text-sm text-slate-400 mb-4">This will take {interruption.hours}h. Handle it?</p>
+                     <div className="flex gap-2">
+                        <button onClick={() => handleInterruption(true)} className="flex-1 py-2 bg-red-600 rounded-lg">Handle It</button>
+                        <button onClick={() => handleInterruption(false)} className="flex-1 py-2 bg-slate-600 rounded-lg">Say No</button>
+                     </div>
+                  </div>
+               </div>
+            )}
+
+            {/* Info Modal */}
+            {showInfo && infoTopic && infoTopics[infoTopic] && (
+               <div className="absolute inset-0 bg-black/80 flex items-center justify-center p-4 z-50" onClick={() => { setShowInfo(false); setInfoTopic(null); }}>
+                  <div className="bg-slate-800 rounded-xl p-4 max-w-md" onClick={e => e.stopPropagation()}>
+                     <h3 className="text-lg font-bold text-amber-400 mb-2">{infoTopics[infoTopic].title}</h3>
+                     <p className="text-sm text-slate-300">{infoTopics[infoTopic].content}</p>
+                     <button onClick={() => { setShowInfo(false); setInfoTopic(null); }} className="mt-4 w-full py-2 bg-amber-600 rounded-lg">Got it!</button>
+                  </div>
+               </div>
+            )}
+
+            {/* Header */}
+            <div className="p-3 bg-black/30 border-b border-amber-500/30">
+               <div className="flex justify-between items-center mb-2">
+                  <span className="font-bold">⏰ Day {day}/{totalDays}</span>
+                  <span className="text-amber-400">{hoursRemaining.toFixed(1)}h left</span>
+               </div>
+               <div className="grid grid-cols-3 gap-2 text-center text-xs">
+                  <div className="bg-black/30 rounded p-1">
+                     <div className="text-amber-400 font-bold">{hoursRemaining.toFixed(1)}h</div>
+                     <div className="text-slate-500">Time Left</div>
+                  </div>
+                  <div className="bg-black/30 rounded p-1">
+                     <div className={`font-bold ${energy >= 50 ? 'text-green-400' : energy >= 25 ? 'text-yellow-400' : 'text-red-400'}`}>{energy}%</div>
+                     <div className="text-slate-500">Energy</div>
+                  </div>
+                  <div className="bg-black/30 rounded p-1">
+                     <div className="text-green-400 font-bold">{stats.tasksCompleted}</div>
+                     <div className="text-slate-500">Done</div>
+                  </div>
+               </div>
+               {/* Energy bar */}
+               <div className="mt-2 h-2 bg-slate-700 rounded-full overflow-hidden">
+                  <div
+                     className={`h-full transition-all ${energy >= 50 ? 'bg-green-500' : energy >= 25 ? 'bg-yellow-500' : 'bg-red-500'}`}
+                     style={{ width: `${energy}%` }}
+                  />
+               </div>
+            </div>
+
+            {/* Tasks */}
+            <div className="flex-1 p-3 overflow-auto">
+               <div className="flex justify-between items-center mb-2">
+                  <span className="text-sm font-bold">Today's Tasks</span>
+                  <button onClick={() => setInfoTopic('eisenhower')} className="text-amber-400 text-xs">ℹ️ Matrix</button>
+               </div>
+
+               <div className="space-y-2">
+                  {incompleteTasks.map(task => {
+                     const quadrant = getQuadrant(task);
+                     const canComplete = hoursRemaining >= task.hours && energy >= task.hours * 10;
+
+                     return (
+                        <div key={task.id} className={`rounded-lg p-2 border ${quadrant.color}`}>
+                           <div className="flex justify-between items-start mb-1">
+                              <span className="text-sm font-medium">{task.title}</span>
+                              <span className="text-xs bg-black/30 px-1 rounded">{task.hours}h</span>
+                           </div>
+                           <div className="flex justify-between items-center">
+                              <span className="text-[10px] text-slate-400">{quadrant.label}</span>
+                              <button
+                                 onClick={() => completeTask(task.id)}
+                                 disabled={!canComplete}
+                                 className="text-xs px-2 py-1 bg-amber-600/50 hover:bg-amber-500/50 disabled:opacity-50 rounded"
+                              >
+                                 Do It
+                              </button>
+                           </div>
+                        </div>
+                     );
+                  })}
+
+                  {incompleteTasks.length === 0 && (
+                     <div className="text-center text-slate-400 py-4">
+                        All tasks completed! 🎉
+                     </div>
+                  )}
+               </div>
+
+               {/* Day History */}
+               {dayHistory.length > 0 && (
+                  <div className="mt-3 bg-black/30 rounded-lg p-2">
+                     <span className="text-xs font-bold text-slate-400">This Week</span>
+                     <div className="mt-1 space-y-1 max-h-16 overflow-auto">
+                        {dayHistory.map((h, i) => (
+                           <div key={i} className="flex justify-between text-xs">
+                              <span>Day {h.day}</span>
+                              <span className="text-green-400">{h.completed} done</span>
+                              <span className="text-amber-400">{h.important} important</span>
+                           </div>
+                        ))}
+                     </div>
+                  </div>
+               )}
+            </div>
+
+            {/* Action Bar */}
+            <div className="p-3 bg-black/30 border-t border-amber-500/30">
+               <div className="flex gap-2 items-center justify-between mb-2">
+                  <div className="flex gap-2">
+                     <button onClick={() => setInfoTopic('deep_work')} className="text-xs text-amber-400 hover:text-white">🧠 Deep Work</button>
+                     <button onClick={() => setInfoTopic('energy')} className="text-xs text-amber-400 hover:text-white">⚡ Energy</button>
+                     <button
+                        onClick={takeBreak}
+                        disabled={hoursRemaining < 0.5}
+                        className="text-xs text-green-400 hover:text-white disabled:opacity-50"
+                     >
+                        ☕ Break
+                     </button>
+                  </div>
+               </div>
+               <button
+                  onClick={endDay}
+                  className="w-full py-3 bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500 rounded-xl font-bold transition-all"
+               >
+                  🌙 END DAY {day}
+               </button>
+            </div>
+         </div>
+      );
+   };
+
+   // --- BUSINESS STRUCTURES RENDERER ---
+   const BusinessStructuresRenderer = () => {
+      const [phase, setPhase] = useState<'intro' | 'play' | 'result'>('intro');
+      const [showInfo, setShowInfo] = useState(false);
+      const [infoTopic, setInfoTopic] = useState<string | null>(null);
+      const [step, setStep] = useState(1);
+      const [businessProfile, setBusinessProfile] = useState({ owners: 1, revenue: 'low', risk: 'low', investors: false, goingPublic: false });
+      const [selectedStructure, setSelectedStructure] = useState<string | null>(null);
+
+      const structures = [
+         { id: 'sole_prop', name: 'Sole Proprietorship', icon: '👤', pros: ['Simple to start', 'Full control', 'Pass-through taxes'], cons: ['Unlimited liability', 'Hard to raise capital'], bestFor: 'Single owner, low risk', liability: 'unlimited' },
+         { id: 'llc', name: 'LLC', icon: '🛡️', pros: ['Limited liability', 'Flexible taxes', 'Less formality'], cons: ['Self-employment tax', 'Varying state rules'], bestFor: 'Small biz, protection needed', liability: 'limited' },
+         { id: 's_corp', name: 'S Corporation', icon: '📋', pros: ['Limited liability', 'Avoid SE tax', 'Pass-through'], cons: ['Strict rules', 'Max 100 shareholders'], bestFor: 'Tax savings, employees', liability: 'limited' },
+         { id: 'c_corp', name: 'C Corporation', icon: '🏢', pros: ['Limited liability', 'Unlimited investors', 'Stock options'], cons: ['Double taxation', 'Complex'], bestFor: 'Investors, going public', liability: 'limited' },
+         { id: 'partnership', name: 'Partnership', icon: '🤝', pros: ['Easy to form', 'Shared resources'], cons: ['Unlimited liability', 'Disputes'], bestFor: 'Multiple owners', liability: 'varies' },
+      ];
+      const infoTopics: Record<string, { title: string; content: string }> = {
+         liability: { title: "Limited Liability", content: "Protects personal assets from business debts/lawsuits. Sole props have NO protection—creditors can take everything! LLCs and corps create a legal shield." },
+         taxes: { title: "Tax Structures", content: "Pass-through: income taxed once on personal return. C-Corps: double taxation (corp + dividends). S-Corps/LLCs avoid this!" },
+         piercing: { title: "Piercing the Veil", content: "Courts can hold owners liable if you mix funds, skip formalities, or undercapitalize. Keep clean books!" },
+      };
+      useEffect(() => { if (infoTopic && infoTopics[infoTopic]) setShowInfo(true); }, [infoTopic]);
+      const startGame = () => { setPhase('play'); setStep(1); setBusinessProfile({ owners: 1, revenue: 'low', risk: 'low', investors: false, goingPublic: false }); setSelectedStructure(null); };
+      const getRecommendation = () => { if (businessProfile.goingPublic || businessProfile.investors) return 'c_corp'; if (businessProfile.owners > 1 && businessProfile.revenue === 'high') return 's_corp'; if (businessProfile.risk === 'high' || businessProfile.revenue !== 'low') return 'llc'; if (businessProfile.owners > 1) return 'partnership'; return 'sole_prop'; };
+      const getMatchScore = (id: string) => { let score = 50; const s = structures.find(st => st.id === id); if (!s) return score; if (businessProfile.goingPublic && id === 'c_corp') score += 30; if (businessProfile.investors && id === 'c_corp') score += 20; if (businessProfile.risk === 'high' && s.liability === 'limited') score += 20; if (businessProfile.revenue === 'high' && id === 's_corp') score += 15; return Math.min(100, score); };
+      const getScore = () => selectedStructure === getRecommendation() ? 100 : getMatchScore(selectedStructure || '');
+      const getGrade = () => { const s = getScore(); if (s >= 90) return { letter: 'A', label: 'Legal Eagle', color: 'text-green-400' }; if (s >= 70) return { letter: 'B', label: 'Good Choice', color: 'text-blue-400' }; if (s >= 55) return { letter: 'C', label: 'Workable', color: 'text-yellow-400' }; return { letter: 'D', label: 'Reconsider', color: 'text-red-400' }; };
+
+      if (phase === 'intro') return (<div className="w-full h-full flex flex-col bg-gradient-to-br from-slate-800 via-slate-900 to-zinc-900 text-white p-4 overflow-auto"><div className="text-center mb-4"><h1 className="text-2xl font-bold mb-2">🏛️ Business Structure Advisor</h1><p className="text-slate-400 text-sm">Choose the right legal entity</p></div><div className="bg-black/30 rounded-xl p-4 mb-4"><h2 className="text-lg font-bold mb-3 text-blue-400">📋 How It Works</h2><div className="space-y-2 text-sm"><p>• Answer questions about your business</p><p>• Compare <span className="text-blue-400">5 legal structures</span></p><p>• Get a personalized recommendation</p></div></div><div className="grid grid-cols-5 gap-1 mb-4 text-center text-xs">{structures.map(s => (<div key={s.id} className="bg-black/30 rounded-lg p-2"><span className="text-lg">{s.icon}</span></div>))}</div><div className="flex flex-wrap gap-2 mb-4">{Object.keys(infoTopics).map(key => (<button key={key} onClick={() => setInfoTopic(key)} className="text-xs bg-blue-500/20 px-2 py-1 rounded-full text-blue-300">ℹ️ {infoTopics[key].title}</button>))}</div><button onClick={startGame} className="w-full py-3 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-xl font-bold">▶️ START</button>{showInfo && infoTopic && infoTopics[infoTopic] && (<div className="absolute inset-0 bg-black/80 flex items-center justify-center p-4 z-50" onClick={() => { setShowInfo(false); setInfoTopic(null); }}><div className="bg-slate-800 rounded-xl p-4 max-w-md" onClick={e => e.stopPropagation()}><h3 className="text-lg font-bold text-blue-400 mb-2">{infoTopics[infoTopic].title}</h3><p className="text-sm text-slate-300">{infoTopics[infoTopic].content}</p><button onClick={() => { setShowInfo(false); setInfoTopic(null); }} className="mt-4 w-full py-2 bg-blue-600 rounded-lg">Got it!</button></div></div>)}</div>);
+      if (phase === 'result') { const grade = getGrade(); const selected = structures.find(s => s.id === selectedStructure); const recommended = structures.find(s => s.id === getRecommendation()); return (<div className="w-full h-full flex flex-col bg-gradient-to-br from-slate-800 via-slate-900 to-zinc-900 text-white p-4 overflow-auto"><div className="text-center mb-4"><div className={`text-6xl font-bold ${grade.color}`}>{grade.letter}</div><div className="text-xl font-bold">{grade.label}</div><div className="text-blue-400">Match: {getScore()}%</div></div>{selected && (<div className="bg-black/30 rounded-xl p-3 mb-3"><div className="flex items-center gap-2 mb-2"><span className="text-2xl">{selected.icon}</span><span className="font-bold">{selected.name}</span></div><div className="grid grid-cols-2 gap-2 text-xs"><div><span className="text-green-400">Pros:</span><ul className="text-slate-300">{selected.pros.map((p, i) => <li key={i}>• {p}</li>)}</ul></div><div><span className="text-red-400">Cons:</span><ul className="text-slate-300">{selected.cons.map((c, i) => <li key={i}>• {c}</li>)}</ul></div></div></div>)}{recommended && selectedStructure !== recommended.id && (<div className="bg-green-500/20 border border-green-500/50 rounded-xl p-3 mb-3"><p className="text-sm text-green-400 font-bold">💡 Better: {recommended.name}</p><p className="text-xs text-slate-300">{recommended.bestFor}</p></div>)}<div className="bg-black/30 rounded-xl p-3 mb-4"><h3 className="font-bold text-blue-400 mb-2">💡 Key Insight</h3><p className="text-sm text-slate-300">Your structure affects taxes, liability, and growth. Review as your business evolves!</p></div><button onClick={startGame} className="w-full py-3 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-xl font-bold">🔄 TRY AGAIN</button></div>); }
+      return (<div className="w-full h-full flex flex-col bg-gradient-to-br from-slate-800 via-slate-900 to-zinc-900 text-white overflow-hidden">{showInfo && infoTopic && infoTopics[infoTopic] && (<div className="absolute inset-0 bg-black/80 flex items-center justify-center p-4 z-50" onClick={() => { setShowInfo(false); setInfoTopic(null); }}><div className="bg-slate-800 rounded-xl p-4 max-w-md" onClick={e => e.stopPropagation()}><h3 className="text-lg font-bold text-blue-400 mb-2">{infoTopics[infoTopic].title}</h3><p className="text-sm text-slate-300">{infoTopics[infoTopic].content}</p><button onClick={() => { setShowInfo(false); setInfoTopic(null); }} className="mt-4 w-full py-2 bg-blue-600 rounded-lg">Got it!</button></div></div>)}<div className="p-3 bg-black/30 border-b border-blue-500/30"><div className="flex justify-between items-center"><span className="font-bold">🏛️ Business Structure</span><span className="text-blue-400">Step {step}/2</span></div></div><div className="flex-1 p-4 overflow-auto">{step === 1 && (<div className="space-y-3"><h3 className="font-bold">About your business:</h3><div className="bg-black/30 rounded-lg p-3"><label className="text-sm font-bold mb-2 block">Owners</label><div className="flex gap-2">{[1, 2, 5].map(n => (<button key={n} onClick={() => setBusinessProfile(p => ({ ...p, owners: n }))} className={`flex-1 py-2 rounded text-sm ${businessProfile.owners === n ? 'bg-blue-600' : 'bg-slate-700'}`}>{n === 1 ? 'Just Me' : n === 2 ? '2-4' : '5+'}</button>))}</div></div><div className="bg-black/30 rounded-lg p-3"><label className="text-sm font-bold mb-2 block">Revenue</label><div className="flex gap-2">{['low', 'medium', 'high'].map(r => (<button key={r} onClick={() => setBusinessProfile(p => ({ ...p, revenue: r }))} className={`flex-1 py-2 rounded text-xs ${businessProfile.revenue === r ? 'bg-blue-600' : 'bg-slate-700'}`}>{r === 'low' ? '<$50K' : r === 'medium' ? '$50-500K' : '$500K+'}</button>))}</div></div><div className="bg-black/30 rounded-lg p-3"><label className="text-sm font-bold mb-2 block">Risk Level</label><div className="flex gap-2">{['low', 'medium', 'high'].map(r => (<button key={r} onClick={() => setBusinessProfile(p => ({ ...p, risk: r }))} className={`flex-1 py-2 rounded text-xs ${businessProfile.risk === r ? 'bg-blue-600' : 'bg-slate-700'}`}>{r.charAt(0).toUpperCase() + r.slice(1)}</button>))}</div></div><div className="bg-black/30 rounded-lg p-3 space-y-2"><label className="flex items-center gap-2"><input type="checkbox" checked={businessProfile.investors} onChange={e => setBusinessProfile(p => ({ ...p, investors: e.target.checked }))} className="w-4 h-4" /><span className="text-sm">Seeking investors</span></label><label className="flex items-center gap-2"><input type="checkbox" checked={businessProfile.goingPublic} onChange={e => setBusinessProfile(p => ({ ...p, goingPublic: e.target.checked }))} className="w-4 h-4" /><span className="text-sm">May go public</span></label></div><button onClick={() => setStep(2)} className="w-full py-3 bg-blue-600 rounded-xl font-bold">Next →</button></div>)}{step === 2 && (<div className="space-y-2"><h3 className="font-bold">Choose Structure:</h3>{structures.map(s => { const match = getMatchScore(s.id); const isRec = s.id === getRecommendation(); return (<div key={s.id} onClick={() => { setSelectedStructure(s.id); setPhase('result'); }} className={`bg-black/30 rounded-lg p-3 cursor-pointer border-2 ${isRec ? 'border-green-500/50' : 'border-transparent hover:border-blue-500/50'}`}><div className="flex justify-between items-center"><div className="flex items-center gap-2"><span className="text-xl">{s.icon}</span><span className="font-bold text-sm">{s.name}</span>{isRec && <span className="text-xs text-green-400">★</span>}</div><span className={`text-xs px-2 py-1 rounded ${match >= 70 ? 'bg-green-500/30 text-green-400' : 'bg-slate-500/30'}`}>{match}%</span></div><p className="text-xs text-slate-400 mt-1">{s.bestFor}</p></div>); })}</div>)}</div><div className="p-3 bg-black/30 border-t border-blue-500/30"><div className="flex gap-2"><button onClick={() => setInfoTopic('liability')} className="text-xs text-blue-400">ℹ️ Liability</button><button onClick={() => setInfoTopic('taxes')} className="text-xs text-blue-400">ℹ️ Taxes</button></div></div></div>);
+   };
+
+   // --- INTELLECTUAL PROPERTY RENDERER ---
+   const IntellectualPropertyRenderer = () => {
+      const [phase, setPhase] = useState<'intro' | 'play' | 'result'>('intro');
+      const [showInfo, setShowInfo] = useState(false);
+      const [infoTopic, setInfoTopic] = useState<string | null>(null);
+      const [assets, setAssets] = useState<{ id: string; name: string; type: string; protected: string | null; value: number; correct: string }[]>([]);
+      const [budget, setBudget] = useState(10000);
+
+      const protectionTypes = [
+         { id: 'patent', name: 'Patent', icon: '📜', cost: 5000, desc: 'Inventions, processes' },
+         { id: 'trademark', name: 'Trademark', icon: '™️', cost: 1500, desc: 'Brand names, logos' },
+         { id: 'copyright', name: 'Copyright', icon: '©️', cost: 500, desc: 'Creative works, code' },
+         { id: 'trade_secret', name: 'Trade Secret', icon: '🤫', cost: 200, desc: 'Confidential info' },
+      ];
+      const scenarios = [
+         { name: 'App Logo', type: 'brand', correct: 'trademark' }, { name: 'Unique Algorithm', type: 'invention', correct: 'patent' },
+         { name: 'Marketing Copy', type: 'creative', correct: 'copyright' }, { name: 'Secret Recipe', type: 'formula', correct: 'trade_secret' },
+         { name: 'Company Name', type: 'brand', correct: 'trademark' }, { name: 'Software Code', type: 'creative', correct: 'copyright' },
+      ];
+      const infoTopics: Record<string, { title: string; content: string }> = {
+         patent: { title: "Patents", content: "Protect inventions for 20 years. Types: Utility, Design, Plant. Expensive ($5K+) and slow (1-3 years). Worth it for key innovations." },
+         trademark: { title: "Trademarks", content: "Protect brand identifiers: names, logos, slogans. ™ is free, ® requires registration. Strength: Generic→Fanciful." },
+         copyright: { title: "Copyrights", content: "Protect creative works: writing, code, art. Automatic upon creation! Registration needed to sue." },
+         trade_secret: { title: "Trade Secrets", content: "Protect confidential info. No registration—just keep it secret! Use NDAs. Lost forever if disclosed." },
+      };
+      useEffect(() => { if (infoTopic && infoTopics[infoTopic]) setShowInfo(true); }, [infoTopic]);
+      const startGame = () => { setPhase('play'); setBudget(10000); const shuffled = [...scenarios].sort(() => Math.random() - 0.5).slice(0, 5); setAssets(shuffled.map((s, i) => ({ id: `asset-${i}`, name: s.name, type: s.type, protected: null, value: 1000 + Math.random() * 5000, correct: s.correct }))); };
+      const protectAsset = (assetId: string, protectionId: string) => { const p = protectionTypes.find(pt => pt.id === protectionId); if (!p || budget < p.cost) return; setBudget(prev => prev - p.cost); setAssets(prev => prev.map(a => a.id === assetId ? { ...a, protected: protectionId } : a)); };
+      const getScore = () => { let score = 0; assets.forEach(a => { if (a.protected === a.correct) score += 20; else if (a.protected) score += 8; }); return Math.min(100, score); };
+      const getGrade = () => { const s = getScore(); if (s >= 90) return { letter: 'A', label: 'IP Master', color: 'text-green-400' }; if (s >= 70) return { letter: 'B', label: 'Protected', color: 'text-blue-400' }; if (s >= 50) return { letter: 'C', label: 'Partial', color: 'text-yellow-400' }; return { letter: 'D', label: 'Vulnerable', color: 'text-red-400' }; };
+
+      if (phase === 'intro') return (<div className="w-full h-full flex flex-col bg-gradient-to-br from-violet-900 via-purple-900 to-slate-900 text-white p-4 overflow-auto"><div className="text-center mb-4"><h1 className="text-2xl font-bold mb-2">🔒 IP Protection Simulator</h1><p className="text-violet-300 text-sm">Protect your intellectual property</p></div><div className="bg-black/30 rounded-xl p-4 mb-4"><h2 className="text-lg font-bold mb-3 text-violet-400">📋 How It Works</h2><div className="space-y-2 text-sm"><p>• Protect <span className="text-white font-bold">5 assets</span> with correct IP type</p><p>• Budget: <span className="text-green-400">$10,000</span></p><p>• Match assets with right protection!</p></div></div><div className="grid grid-cols-4 gap-2 mb-4 text-center text-xs">{protectionTypes.map(p => (<div key={p.id} className="bg-black/30 rounded-lg p-2"><span className="text-lg">{p.icon}</span><p className="text-slate-300">{p.name}</p><p className="text-green-400">${p.cost}</p></div>))}</div><div className="flex flex-wrap gap-2 mb-4">{Object.keys(infoTopics).map(key => (<button key={key} onClick={() => setInfoTopic(key)} className="text-xs bg-violet-500/20 px-2 py-1 rounded-full text-violet-300">ℹ️ {infoTopics[key].title}</button>))}</div><button onClick={startGame} className="w-full py-3 bg-gradient-to-r from-violet-600 to-purple-600 rounded-xl font-bold">▶️ START</button>{showInfo && infoTopic && infoTopics[infoTopic] && (<div className="absolute inset-0 bg-black/80 flex items-center justify-center p-4 z-50" onClick={() => { setShowInfo(false); setInfoTopic(null); }}><div className="bg-slate-800 rounded-xl p-4 max-w-md" onClick={e => e.stopPropagation()}><h3 className="text-lg font-bold text-violet-400 mb-2">{infoTopics[infoTopic].title}</h3><p className="text-sm text-slate-300">{infoTopics[infoTopic].content}</p><button onClick={() => { setShowInfo(false); setInfoTopic(null); }} className="mt-4 w-full py-2 bg-violet-600 rounded-lg">Got it!</button></div></div>)}</div>);
+      if (phase === 'result') { const grade = getGrade(); return (<div className="w-full h-full flex flex-col bg-gradient-to-br from-violet-900 via-purple-900 to-slate-900 text-white p-4 overflow-auto"><div className="text-center mb-4"><div className={`text-6xl font-bold ${grade.color}`}>{grade.letter}</div><div className="text-xl font-bold">{grade.label}</div><div className="text-violet-400">Score: {getScore()}%</div></div><div className="bg-black/30 rounded-xl p-3 mb-3"><h3 className="font-bold text-violet-400 mb-2">📊 Results</h3>{assets.map(a => { const isCorrect = a.protected === a.correct; const prot = protectionTypes.find(p => p.id === a.protected); const correct = protectionTypes.find(p => p.id === a.correct); return (<div key={a.id} className="flex justify-between items-center py-1 border-b border-slate-700 text-sm"><span>{a.name}</span><div className="flex items-center gap-2"><span className={isCorrect ? 'text-green-400' : 'text-red-400'}>{prot?.icon || '❌'}</span>{!isCorrect && <span className="text-xs text-slate-400">→ {correct?.icon}</span>}</div></div>); })}</div><div className="bg-black/30 rounded-xl p-3 mb-4"><h3 className="font-bold text-violet-400 mb-2">💡 Key Insight</h3><p className="text-sm text-slate-300">Match protection to asset: Patents for inventions, Trademarks for brands, Copyrights for creative works, Trade Secrets for confidential info.</p></div><button onClick={startGame} className="w-full py-3 bg-gradient-to-r from-violet-600 to-purple-600 rounded-xl font-bold">🔄 TRY AGAIN</button></div>); }
+      return (<div className="w-full h-full flex flex-col bg-gradient-to-br from-violet-900 via-purple-900 to-slate-900 text-white overflow-hidden">{showInfo && infoTopic && infoTopics[infoTopic] && (<div className="absolute inset-0 bg-black/80 flex items-center justify-center p-4 z-50" onClick={() => { setShowInfo(false); setInfoTopic(null); }}><div className="bg-slate-800 rounded-xl p-4 max-w-md" onClick={e => e.stopPropagation()}><h3 className="text-lg font-bold text-violet-400 mb-2">{infoTopics[infoTopic].title}</h3><p className="text-sm text-slate-300">{infoTopics[infoTopic].content}</p><button onClick={() => { setShowInfo(false); setInfoTopic(null); }} className="mt-4 w-full py-2 bg-violet-600 rounded-lg">Got it!</button></div></div>)}<div className="p-3 bg-black/30 border-b border-violet-500/30"><div className="flex justify-between items-center"><span className="font-bold">🔒 IP Protection</span><span className="text-green-400">${budget.toLocaleString()}</span></div></div><div className="flex-1 p-3 overflow-auto"><p className="text-sm mb-3">Select protection for each asset:</p>{assets.map(a => (<div key={a.id} className="bg-black/30 rounded-lg p-3 mb-2"><div className="flex justify-between items-center mb-2"><span className="font-bold">{a.name}</span><span className="text-xs text-slate-400">{a.type}</span></div>{a.protected ? (<div className="flex items-center gap-2 text-green-400 text-sm"><span>{protectionTypes.find(p => p.id === a.protected)?.icon}</span><span>Protected</span></div>) : (<div className="grid grid-cols-4 gap-1">{protectionTypes.map(p => (<button key={p.id} onClick={() => protectAsset(a.id, p.id)} disabled={budget < p.cost} className="py-1 px-2 bg-violet-600/50 hover:bg-violet-500/50 disabled:opacity-30 rounded text-xs flex flex-col items-center"><span>{p.icon}</span><span>${p.cost}</span></button>))}</div>)}</div>))}</div><div className="p-3 bg-black/30 border-t border-violet-500/30"><button onClick={() => setPhase('result')} className="w-full py-3 bg-gradient-to-r from-violet-600 to-purple-600 rounded-xl font-bold">✓ FINISH</button></div></div>);
+   };
+
+   // --- CONTRACTS RENDERER ---
+   const ContractsRenderer = () => {
+      const [phase, setPhase] = useState<'intro' | 'play' | 'result'>('intro');
+      const [showInfo, setShowInfo] = useState(false);
+      const [infoTopic, setInfoTopic] = useState<string | null>(null);
+      const [clause, setClause] = useState(0);
+      const [score, setScore] = useState(0);
+      const [answers, setAnswers] = useState<boolean[]>([]);
+
+      const clauses = [
+         { text: "Payment due NET 90 days after delivery", flag: 'red', issue: 'Payment too long', advice: 'NET 30 is standard. NET 90 hurts cash flow.' },
+         { text: "Either party may terminate with 30 days written notice", flag: 'green', issue: 'Fair termination', advice: 'Mutual termination rights are fair.' },
+         { text: "Contractor assigns ALL IP including pre-existing work", flag: 'red', issue: 'IP overreach', advice: 'Never assign pre-existing IP!' },
+         { text: "Client indemnifies Contractor for claims from Client materials", flag: 'green', issue: 'Appropriate indemnification', advice: 'Each party should indemnify for their own materials.' },
+         { text: "Contractor liable for unlimited damages for any breach", flag: 'red', issue: 'Unlimited liability', advice: 'Always cap liability at 1-2x contract value.' },
+         { text: "Disputes resolved by binding arbitration in neutral location", flag: 'green', issue: 'Fair dispute resolution', advice: 'Arbitration is faster than courts.' },
+         { text: "Non-compete: Cannot work in industry for 5 years globally", flag: 'red', issue: 'Broad non-compete', advice: 'Non-competes must be reasonable in scope.' },
+         { text: "Confidentiality survives 3 years after termination", flag: 'green', issue: 'Reasonable confidentiality', advice: '2-5 years is standard.' },
+      ];
+      const infoTopics: Record<string, { title: string; content: string }> = {
+         elements: { title: "Contract Elements", content: "Valid contracts need: Offer, Acceptance, Consideration, Capacity, Legality. Missing any = unenforceable." },
+         redflags: { title: "Red Flags", content: "Watch for: Unlimited liability, auto-renewal, one-sided terms, IP overreach, unreasonable non-competes." },
+         negotiate: { title: "Negotiation", content: "Everything is negotiable! Mark concerns, propose alternatives. Don't be afraid to walk away." },
+      };
+      useEffect(() => { if (infoTopic && infoTopics[infoTopic]) setShowInfo(true); }, [infoTopic]);
+      const startGame = () => { setPhase('play'); setClause(0); setScore(0); setAnswers([]); };
+      const answer = (isRed: boolean) => { const correct = (clauses[clause].flag === 'red') === isRed; if (correct) setScore(prev => prev + 1); setAnswers(prev => [...prev, correct]); if (clause >= clauses.length - 1) setPhase('result'); else setClause(prev => prev + 1); };
+      const getGrade = () => { const pct = (score / clauses.length) * 100; if (pct >= 90) return { letter: 'A', label: 'Contract Pro', color: 'text-green-400' }; if (pct >= 70) return { letter: 'B', label: 'Good Eye', color: 'text-blue-400' }; if (pct >= 50) return { letter: 'C', label: 'Needs Practice', color: 'text-yellow-400' }; return { letter: 'D', label: 'Risky', color: 'text-red-400' }; };
+
+      if (phase === 'intro') return (<div className="w-full h-full flex flex-col bg-gradient-to-br from-rose-900 via-pink-900 to-slate-900 text-white p-4 overflow-auto"><div className="text-center mb-4"><h1 className="text-2xl font-bold mb-2">📝 Contract Review Game</h1><p className="text-rose-300 text-sm">Spot red flags before you sign!</p></div><div className="bg-black/30 rounded-xl p-4 mb-4"><h2 className="text-lg font-bold mb-3 text-rose-400">📋 How It Works</h2><div className="space-y-2 text-sm"><p>• Review <span className="text-white font-bold">{clauses.length} contract clauses</span></p><p>• Identify <span className="text-red-400">🚩 Red Flags</span> or <span className="text-green-400">✓ OK</span></p><p>• Learn why certain terms are problematic</p></div></div><div className="flex flex-wrap gap-2 mb-4">{Object.keys(infoTopics).map(key => (<button key={key} onClick={() => setInfoTopic(key)} className="text-xs bg-rose-500/20 px-2 py-1 rounded-full text-rose-300">ℹ️ {infoTopics[key].title}</button>))}</div><button onClick={startGame} className="w-full py-3 bg-gradient-to-r from-rose-600 to-pink-600 rounded-xl font-bold">▶️ START</button>{showInfo && infoTopic && infoTopics[infoTopic] && (<div className="absolute inset-0 bg-black/80 flex items-center justify-center p-4 z-50" onClick={() => { setShowInfo(false); setInfoTopic(null); }}><div className="bg-slate-800 rounded-xl p-4 max-w-md" onClick={e => e.stopPropagation()}><h3 className="text-lg font-bold text-rose-400 mb-2">{infoTopics[infoTopic].title}</h3><p className="text-sm text-slate-300">{infoTopics[infoTopic].content}</p><button onClick={() => { setShowInfo(false); setInfoTopic(null); }} className="mt-4 w-full py-2 bg-rose-600 rounded-lg">Got it!</button></div></div>)}</div>);
+      if (phase === 'result') { const grade = getGrade(); return (<div className="w-full h-full flex flex-col bg-gradient-to-br from-rose-900 via-pink-900 to-slate-900 text-white p-4 overflow-auto"><div className="text-center mb-4"><div className={`text-6xl font-bold ${grade.color}`}>{grade.letter}</div><div className="text-xl font-bold">{grade.label}</div><div className="text-rose-400">{score}/{clauses.length}</div></div><div className="bg-black/30 rounded-xl p-3 mb-3 max-h-40 overflow-auto"><h3 className="font-bold text-rose-400 mb-2">📊 Review</h3>{clauses.map((c, i) => (<div key={i} className="py-1 border-b border-slate-700 text-xs"><div className="flex justify-between"><span className={c.flag === 'red' ? 'text-red-400' : 'text-green-400'}>{c.flag === 'red' ? '🚩' : '✓'} {c.issue}</span><span>{answers[i] ? '✓' : '✗'}</span></div><p className="text-slate-400">{c.advice}</p></div>))}</div><div className="bg-black/30 rounded-xl p-3 mb-4"><h3 className="font-bold text-rose-400 mb-2">💡 Key Insight</h3><p className="text-sm text-slate-300">Always read contracts fully. Red flags: unlimited liability, IP overreach, unfair termination, bad payment terms.</p></div><button onClick={startGame} className="w-full py-3 bg-gradient-to-r from-rose-600 to-pink-600 rounded-xl font-bold">🔄 TRY AGAIN</button></div>); }
+      const c = clauses[clause];
+      return (<div className="w-full h-full flex flex-col bg-gradient-to-br from-rose-900 via-pink-900 to-slate-900 text-white overflow-hidden">{showInfo && infoTopic && infoTopics[infoTopic] && (<div className="absolute inset-0 bg-black/80 flex items-center justify-center p-4 z-50" onClick={() => { setShowInfo(false); setInfoTopic(null); }}><div className="bg-slate-800 rounded-xl p-4 max-w-md" onClick={e => e.stopPropagation()}><h3 className="text-lg font-bold text-rose-400 mb-2">{infoTopics[infoTopic].title}</h3><p className="text-sm text-slate-300">{infoTopics[infoTopic].content}</p><button onClick={() => { setShowInfo(false); setInfoTopic(null); }} className="mt-4 w-full py-2 bg-rose-600 rounded-lg">Got it!</button></div></div>)}<div className="p-3 bg-black/30 border-b border-rose-500/30"><div className="flex justify-between items-center"><span className="font-bold">📝 Contract Review</span><span className="text-rose-400">{clause + 1}/{clauses.length}</span></div><div className="flex gap-1 mt-2">{answers.map((a, i) => <div key={i} className={`w-3 h-3 rounded ${a ? 'bg-green-500' : 'bg-red-500'}`} />)}</div></div><div className="flex-1 p-4 flex flex-col justify-center"><div className="bg-black/30 rounded-xl p-4 mb-4"><p className="text-sm font-mono text-slate-200">"{c.text}"</p></div><p className="text-center text-sm text-slate-400 mb-4">Is this a red flag?</p><div className="grid grid-cols-2 gap-3"><button onClick={() => answer(true)} className="py-4 bg-red-600/50 hover:bg-red-500/50 rounded-xl font-bold">🚩 Red Flag</button><button onClick={() => answer(false)} className="py-4 bg-green-600/50 hover:bg-green-500/50 rounded-xl font-bold">✓ OK</button></div></div><div className="p-3 bg-black/30 border-t border-rose-500/30"><button onClick={() => setInfoTopic('redflags')} className="text-xs text-rose-400">ℹ️ Red Flags</button></div></div>);
+   };
+
+   // --- PERMITS RENDERER ---
+   const PermitsRenderer = () => {
+      const [phase, setPhase] = useState<'intro' | 'play' | 'result'>('intro');
+      const [showInfo, setShowInfo] = useState(false);
+      const [infoTopic, setInfoTopic] = useState<string | null>(null);
+      const [businessType, setBusinessType] = useState<string | null>(null);
+      const [selectedPermits, setSelectedPermits] = useState<string[]>([]);
+      const [budget, setBudget] = useState(5000);
+
+      const businessTypes = [
+         { id: 'restaurant', name: 'Restaurant', icon: '🍽️', required: ['business_license', 'health', 'food_handler', 'fire'] },
+         { id: 'retail', name: 'Retail Store', icon: '🛍️', required: ['business_license', 'sales_tax', 'signage'] },
+         { id: 'construction', name: 'Construction', icon: '🏗️', required: ['business_license', 'contractor', 'bonding'] },
+         { id: 'homebased', name: 'Home-Based', icon: '🏠', required: ['business_license', 'home_occupation'] },
+      ];
+      const permits = [
+         { id: 'business_license', name: 'Business License', cost: 100, desc: 'Required for all' },
+         { id: 'sales_tax', name: 'Sales Tax Permit', cost: 0, desc: 'Selling goods' },
+         { id: 'health', name: 'Health Permit', cost: 500, desc: 'Food service' },
+         { id: 'food_handler', name: 'Food Handler Card', cost: 50, desc: 'Food workers' },
+         { id: 'signage', name: 'Sign Permit', cost: 200, desc: 'Exterior signs' },
+         { id: 'fire', name: 'Fire Inspection', cost: 150, desc: 'Public spaces' },
+         { id: 'contractor', name: 'Contractor License', cost: 800, desc: 'Construction' },
+         { id: 'bonding', name: 'Surety Bond', cost: 1000, desc: 'Contractor guarantee' },
+         { id: 'home_occupation', name: 'Home Occupation', cost: 75, desc: 'Home business' },
+         { id: 'liquor', name: 'Liquor License', cost: 2000, desc: 'Alcohol sales' },
+      ];
+      const infoTopics: Record<string, { title: string; content: string }> = {
+         license: { title: "Business Licenses", content: "Almost every business needs a basic license. Costs $50-500. Annual renewal. Operating without one = fines." },
+         zoning: { title: "Zoning", content: "Zoning laws control what businesses can operate where. Check before signing a lease!" },
+         industry: { title: "Industry Permits", content: "Some industries need special permits: Food = health, Construction = contractor license, Alcohol = liquor license." },
+      };
+      useEffect(() => { if (infoTopic && infoTopics[infoTopic]) setShowInfo(true); }, [infoTopic]);
+      const startGame = () => { setPhase('play'); setBusinessType(null); setSelectedPermits([]); setBudget(5000); };
+      const togglePermit = (id: string) => { const p = permits.find(pt => pt.id === id); if (!p) return; if (selectedPermits.includes(id)) { setSelectedPermits(prev => prev.filter(x => x !== id)); setBudget(prev => prev + p.cost); } else if (budget >= p.cost) { setSelectedPermits(prev => [...prev, id]); setBudget(prev => prev - p.cost); } };
+      const getScore = () => { if (!businessType) return 0; const biz = businessTypes.find(b => b.id === businessType); if (!biz) return 0; const hasAll = biz.required.every(r => selectedPermits.includes(r)); const extras = selectedPermits.filter(p => !biz.required.includes(p)).length; let s = hasAll ? 80 : (selectedPermits.filter(p => biz.required.includes(p)).length / biz.required.length) * 60; s -= extras * 5; return Math.max(0, Math.min(100, Math.round(s + (hasAll ? 20 : 0)))); };
+      const getGrade = () => { const s = getScore(); if (s >= 90) return { letter: 'A', label: 'Compliant', color: 'text-green-400' }; if (s >= 70) return { letter: 'B', label: 'Mostly OK', color: 'text-blue-400' }; if (s >= 50) return { letter: 'C', label: 'Gaps Exist', color: 'text-yellow-400' }; return { letter: 'D', label: 'Non-Compliant', color: 'text-red-400' }; };
+
+      if (phase === 'intro') return (<div className="w-full h-full flex flex-col bg-gradient-to-br from-sky-900 via-cyan-900 to-slate-900 text-white p-4 overflow-auto"><div className="text-center mb-4"><h1 className="text-2xl font-bold mb-2">📋 Permits & Licenses</h1><p className="text-sky-300 text-sm">Get your business compliant</p></div><div className="bg-black/30 rounded-xl p-4 mb-4"><h2 className="text-lg font-bold mb-3 text-sky-400">📋 How It Works</h2><div className="space-y-2 text-sm"><p>• Choose your <span className="text-white font-bold">business type</span></p><p>• Select required <span className="text-sky-400">permits</span></p><p>• Budget: <span className="text-green-400">$5,000</span></p></div></div><div className="grid grid-cols-4 gap-2 mb-4 text-center text-xs">{businessTypes.map(b => (<div key={b.id} className="bg-black/30 rounded-lg p-2"><span className="text-lg">{b.icon}</span><p className="text-slate-300">{b.name}</p></div>))}</div><div className="flex flex-wrap gap-2 mb-4">{Object.keys(infoTopics).map(key => (<button key={key} onClick={() => setInfoTopic(key)} className="text-xs bg-sky-500/20 px-2 py-1 rounded-full text-sky-300">ℹ️ {infoTopics[key].title}</button>))}</div><button onClick={startGame} className="w-full py-3 bg-gradient-to-r from-sky-600 to-cyan-600 rounded-xl font-bold">▶️ START</button>{showInfo && infoTopic && infoTopics[infoTopic] && (<div className="absolute inset-0 bg-black/80 flex items-center justify-center p-4 z-50" onClick={() => { setShowInfo(false); setInfoTopic(null); }}><div className="bg-slate-800 rounded-xl p-4 max-w-md" onClick={e => e.stopPropagation()}><h3 className="text-lg font-bold text-sky-400 mb-2">{infoTopics[infoTopic].title}</h3><p className="text-sm text-slate-300">{infoTopics[infoTopic].content}</p><button onClick={() => { setShowInfo(false); setInfoTopic(null); }} className="mt-4 w-full py-2 bg-sky-600 rounded-lg">Got it!</button></div></div>)}</div>);
+      if (phase === 'result') { const grade = getGrade(); const biz = businessTypes.find(b => b.id === businessType); const required = biz?.required || []; const missing = required.filter(r => !selectedPermits.includes(r)); const extras = selectedPermits.filter(p => !required.includes(p)); return (<div className="w-full h-full flex flex-col bg-gradient-to-br from-sky-900 via-cyan-900 to-slate-900 text-white p-4 overflow-auto"><div className="text-center mb-4"><div className={`text-6xl font-bold ${grade.color}`}>{grade.letter}</div><div className="text-xl font-bold">{grade.label}</div><div className="text-sky-400">Score: {getScore()}%</div></div><div className="bg-black/30 rounded-xl p-3 mb-3"><h3 className="font-bold text-sky-400 mb-2">📊 Check</h3>{missing.length > 0 && (<div className="mb-2"><span className="text-red-400 text-sm">Missing:</span>{missing.map(m => <span key={m} className="ml-2 text-xs bg-red-500/30 px-2 py-1 rounded">{permits.find(p => p.id === m)?.name}</span>)}</div>)}{extras.length > 0 && (<div><span className="text-yellow-400 text-sm">Unnecessary:</span>{extras.map(u => <span key={u} className="ml-2 text-xs bg-yellow-500/30 px-2 py-1 rounded">{permits.find(p => p.id === u)?.name}</span>)}</div>)}{missing.length === 0 && extras.length === 0 && <p className="text-green-400">✓ Perfect!</p>}</div><div className="bg-black/30 rounded-xl p-3 mb-4"><h3 className="font-bold text-sky-400 mb-2">💡 Key Insight</h3><p className="text-sm text-slate-300">Every business type has specific permit requirements. Missing = fines. Unnecessary = wasted money.</p></div><button onClick={startGame} className="w-full py-3 bg-gradient-to-r from-sky-600 to-cyan-600 rounded-xl font-bold">🔄 TRY AGAIN</button></div>); }
+      return (<div className="w-full h-full flex flex-col bg-gradient-to-br from-sky-900 via-cyan-900 to-slate-900 text-white overflow-hidden">{showInfo && infoTopic && infoTopics[infoTopic] && (<div className="absolute inset-0 bg-black/80 flex items-center justify-center p-4 z-50" onClick={() => { setShowInfo(false); setInfoTopic(null); }}><div className="bg-slate-800 rounded-xl p-4 max-w-md" onClick={e => e.stopPropagation()}><h3 className="text-lg font-bold text-sky-400 mb-2">{infoTopics[infoTopic].title}</h3><p className="text-sm text-slate-300">{infoTopics[infoTopic].content}</p><button onClick={() => { setShowInfo(false); setInfoTopic(null); }} className="mt-4 w-full py-2 bg-sky-600 rounded-lg">Got it!</button></div></div>)}<div className="p-3 bg-black/30 border-b border-sky-500/30"><div className="flex justify-between items-center"><span className="font-bold">📋 Permits</span><span className="text-green-400">${budget}</span></div></div><div className="flex-1 p-3 overflow-auto">{!businessType ? (<div className="space-y-3"><h3 className="font-bold">Select business type:</h3>{businessTypes.map(b => (<button key={b.id} onClick={() => setBusinessType(b.id)} className="w-full bg-black/30 rounded-lg p-3 text-left hover:bg-sky-500/20"><span className="text-xl mr-2">{b.icon}</span><span className="font-bold">{b.name}</span></button>))}</div>) : (<div className="space-y-2"><div className="flex items-center gap-2 mb-3"><span className="text-xl">{businessTypes.find(b => b.id === businessType)?.icon}</span><span className="font-bold">{businessTypes.find(b => b.id === businessType)?.name}</span></div><p className="text-sm text-slate-400 mb-2">Select permits:</p>{permits.map(p => (<div key={p.id} onClick={() => togglePermit(p.id)} className={`rounded-lg p-2 cursor-pointer border-2 ${selectedPermits.includes(p.id) ? 'border-green-500 bg-green-500/20' : 'border-transparent bg-black/30'}`}><div className="flex justify-between items-center"><span className="font-bold text-sm">{p.name}</span><span className="text-xs text-green-400">{p.cost === 0 ? 'Free' : `$${p.cost}`}</span></div><p className="text-xs text-slate-400">{p.desc}</p></div>))}</div>)}</div>{businessType && (<div className="p-3 bg-black/30 border-t border-sky-500/30"><button onClick={() => setPhase('result')} className="w-full py-3 bg-gradient-to-r from-sky-600 to-cyan-600 rounded-xl font-bold">✓ CHECK</button></div>)}</div>);
+   };
+
+   // --- EMPLOYMENT LAW RENDERER ---
+   const EmploymentLawRenderer = () => {
+      const [phase, setPhase] = useState<'intro' | 'play' | 'result'>('intro');
+      const [showInfo, setShowInfo] = useState(false);
+      const [infoTopic, setInfoTopic] = useState<string | null>(null);
+      const [scenario, setScenario] = useState(0);
+      const [score, setScore] = useState(0);
+      const [answers, setAnswers] = useState<boolean[]>([]);
+
+      const scenarios = [
+         { situation: "Asking a job candidate about their age", legal: false, law: "Age Discrimination (ADEA)", explanation: "Cannot ask about age. Age 40+ is protected." },
+         { situation: "Requiring overtime for hourly employees with 1.5x pay", legal: true, law: "Fair Labor Standards Act", explanation: "Correct! Non-exempt employees get 1.5x for 40+ hrs." },
+         { situation: "Paying female employee less than male for same job", legal: false, law: "Equal Pay Act", explanation: "Illegal! Equal pay for equal work regardless of gender." },
+         { situation: "Classifying full-time worker with company equipment as contractor", legal: false, law: "Worker Classification", explanation: "Likely misclassification. Control + equipment = employee." },
+         { situation: "Providing unpaid leave for new parent (60 employee company)", legal: true, law: "FMLA", explanation: "Correct! FMLA requires 12 weeks for 50+ employee companies." },
+         { situation: "Firing employee for reporting safety violations to OSHA", legal: false, law: "Whistleblower Protection", explanation: "Illegal retaliation! Protected activity." },
+         { situation: "Requiring all employees to sign NDAs", legal: true, law: "Trade Secrets", explanation: "Legal! NDAs protect confidential info when reasonable." },
+         { situation: "Denying religious accommodation without hardship", legal: false, law: "Title VII", explanation: "Must provide reasonable accommodation for religion." },
+      ];
+      const infoTopics: Record<string, { title: string; content: string }> = {
+         discrimination: { title: "Anti-Discrimination", content: "Protected: race, color, religion, sex, national origin, age 40+, disability. Applies to 15+ employee companies." },
+         wages: { title: "Wage & Hour", content: "Minimum wage, overtime (1.5x after 40 hrs), proper classification. Violations = back pay + penalties." },
+         safety: { title: "Workplace Safety", content: "OSHA requires safe workplace. Cannot retaliate against complaints. Fines for violations." },
+      };
+      useEffect(() => { if (infoTopic && infoTopics[infoTopic]) setShowInfo(true); }, [infoTopic]);
+      const startGame = () => { setPhase('play'); setScenario(0); setScore(0); setAnswers([]); };
+      const answer = (isLegal: boolean) => { const correct = scenarios[scenario].legal === isLegal; if (correct) setScore(prev => prev + 1); setAnswers(prev => [...prev, correct]); if (scenario >= scenarios.length - 1) setPhase('result'); else setScenario(prev => prev + 1); };
+      const getGrade = () => { const pct = (score / scenarios.length) * 100; if (pct >= 90) return { letter: 'A', label: 'HR Expert', color: 'text-green-400' }; if (pct >= 70) return { letter: 'B', label: 'Compliant', color: 'text-blue-400' }; if (pct >= 50) return { letter: 'C', label: 'Risky', color: 'text-yellow-400' }; return { letter: 'D', label: 'Lawsuit Risk', color: 'text-red-400' }; };
+
+      if (phase === 'intro') return (<div className="w-full h-full flex flex-col bg-gradient-to-br from-lime-900 via-green-900 to-slate-900 text-white p-4 overflow-auto"><div className="text-center mb-4"><h1 className="text-2xl font-bold mb-2">⚖️ Employment Law Quiz</h1><p className="text-lime-300 text-sm">Know what's legal at work</p></div><div className="bg-black/30 rounded-xl p-4 mb-4"><h2 className="text-lg font-bold mb-3 text-lime-400">📋 How It Works</h2><div className="space-y-2 text-sm"><p>• Review <span className="text-white font-bold">{scenarios.length} scenarios</span></p><p>• Decide: <span className="text-green-400">✓ Legal</span> or <span className="text-red-400">✗ Illegal</span></p><p>• Learn employment laws!</p></div></div><div className="flex flex-wrap gap-2 mb-4">{Object.keys(infoTopics).map(key => (<button key={key} onClick={() => setInfoTopic(key)} className="text-xs bg-lime-500/20 px-2 py-1 rounded-full text-lime-300">ℹ️ {infoTopics[key].title}</button>))}</div><button onClick={startGame} className="w-full py-3 bg-gradient-to-r from-lime-600 to-green-600 rounded-xl font-bold">▶️ START</button>{showInfo && infoTopic && infoTopics[infoTopic] && (<div className="absolute inset-0 bg-black/80 flex items-center justify-center p-4 z-50" onClick={() => { setShowInfo(false); setInfoTopic(null); }}><div className="bg-slate-800 rounded-xl p-4 max-w-md" onClick={e => e.stopPropagation()}><h3 className="text-lg font-bold text-lime-400 mb-2">{infoTopics[infoTopic].title}</h3><p className="text-sm text-slate-300">{infoTopics[infoTopic].content}</p><button onClick={() => { setShowInfo(false); setInfoTopic(null); }} className="mt-4 w-full py-2 bg-lime-600 rounded-lg">Got it!</button></div></div>)}</div>);
+      if (phase === 'result') { const grade = getGrade(); return (<div className="w-full h-full flex flex-col bg-gradient-to-br from-lime-900 via-green-900 to-slate-900 text-white p-4 overflow-auto"><div className="text-center mb-4"><div className={`text-6xl font-bold ${grade.color}`}>{grade.letter}</div><div className="text-xl font-bold">{grade.label}</div><div className="text-lime-400">{score}/{scenarios.length}</div></div><div className="bg-black/30 rounded-xl p-3 mb-3 max-h-40 overflow-auto"><h3 className="font-bold text-lime-400 mb-2">📊 Review</h3>{scenarios.map((s, i) => (<div key={i} className="py-1 border-b border-slate-700 text-xs"><div className="flex justify-between"><span className={s.legal ? 'text-green-400' : 'text-red-400'}>{s.legal ? '✓' : '✗'} {s.law}</span><span>{answers[i] ? '✓' : '✗'}</span></div><p className="text-slate-400">{s.explanation}</p></div>))}</div><div className="bg-black/30 rounded-xl p-3 mb-4"><h3 className="font-bold text-lime-400 mb-2">💡 Key Insight</h3><p className="text-sm text-slate-300">Employment law protects workers. Violations = lawsuits, fines, reputation damage. When in doubt, consult an attorney!</p></div><button onClick={startGame} className="w-full py-3 bg-gradient-to-r from-lime-600 to-green-600 rounded-xl font-bold">🔄 TRY AGAIN</button></div>); }
+      const s = scenarios[scenario];
+      return (<div className="w-full h-full flex flex-col bg-gradient-to-br from-lime-900 via-green-900 to-slate-900 text-white overflow-hidden">{showInfo && infoTopic && infoTopics[infoTopic] && (<div className="absolute inset-0 bg-black/80 flex items-center justify-center p-4 z-50" onClick={() => { setShowInfo(false); setInfoTopic(null); }}><div className="bg-slate-800 rounded-xl p-4 max-w-md" onClick={e => e.stopPropagation()}><h3 className="text-lg font-bold text-lime-400 mb-2">{infoTopics[infoTopic].title}</h3><p className="text-sm text-slate-300">{infoTopics[infoTopic].content}</p><button onClick={() => { setShowInfo(false); setInfoTopic(null); }} className="mt-4 w-full py-2 bg-lime-600 rounded-lg">Got it!</button></div></div>)}<div className="p-3 bg-black/30 border-b border-lime-500/30"><div className="flex justify-between items-center"><span className="font-bold">⚖️ Employment Law</span><span className="text-lime-400">{scenario + 1}/{scenarios.length}</span></div><div className="flex gap-1 mt-2">{answers.map((a, i) => <div key={i} className={`w-3 h-3 rounded ${a ? 'bg-green-500' : 'bg-red-500'}`} />)}</div></div><div className="flex-1 p-4 flex flex-col justify-center"><div className="bg-black/30 rounded-xl p-4 mb-4"><p className="text-sm text-slate-200">{s.situation}</p></div><p className="text-center text-sm text-slate-400 mb-4">Is this legal?</p><div className="grid grid-cols-2 gap-3"><button onClick={() => answer(true)} className="py-4 bg-green-600/50 hover:bg-green-500/50 rounded-xl font-bold">✓ Legal</button><button onClick={() => answer(false)} className="py-4 bg-red-600/50 hover:bg-red-500/50 rounded-xl font-bold">✗ Illegal</button></div></div><div className="p-3 bg-black/30 border-t border-lime-500/30"><button onClick={() => setInfoTopic('discrimination')} className="text-xs text-lime-400">ℹ️ Discrimination</button></div></div>);
+   };
+
+   // --- DIGITAL & TECHNOLOGY RENDERERS ---
+   const EcommerceRenderer = () => {
+      const [phase, setPhase] = useState<'intro'|'play'|'result'>('intro');
+      const [showInfo, setShowInfo] = useState(false);
+      const [infoTopic, setInfoTopic] = useState<string|null>(null);
+      const [day, setDay] = useState(1);
+      const [cash, setCash] = useState(500);
+      const [inventory, setInventory] = useState<{[k:string]:number}>({tshirt:10,mug:15,sticker:30});
+      const [prices, setPrices] = useState<{[k:string]:number}>({tshirt:25,mug:15,sticker:5});
+      const [sales, setSales] = useState<{item:string,qty:number,price:number}[]>([]);
+      const [log, setLog] = useState<string[]>([]);
+      const products = [{id:'tshirt',name:'T-Shirt',cost:12,icon:'👕'},{id:'mug',name:'Mug',cost:6,icon:'☕'},{id:'sticker',name:'Sticker',cost:1,icon:'🏷️'}];
+      const infoTopics:{[k:string]:{title:string,content:string}} = {
+         pricing:{title:'Pricing Strategy',content:'Set prices based on costs, competition, and perceived value. Too high loses customers, too low loses profit.'},
+         inventory:{title:'Inventory Management',content:'Balance stock levels - too much ties up cash, too little means lost sales and unhappy customers.'},
+         margins:{title:'Profit Margins',content:'Margin = (Price - Cost) / Price. Higher margins mean more profit per sale but may reduce volume.'},
+         conversion:{title:'Conversion Rate',content:'The percentage of visitors who make a purchase. Improve with better UX, pricing, and product presentation.'}
+      };
+      const simulateDay = () => {
+         let daySales:{item:string,qty:number,price:number}[] = [];
+         let newInv = {...inventory};
+         let revenue = 0;
+         products.forEach(p => {
+            const demand = Math.max(0, Math.floor((30 - prices[p.id]) / 3) + Math.floor(Math.random() * 3));
+            const sold = Math.min(demand, newInv[p.id]);
+            if(sold > 0) {
+               daySales.push({item:p.id,qty:sold,price:prices[p.id]});
+               revenue += sold * prices[p.id];
+               newInv[p.id] -= sold;
+            }
+         });
+         setInventory(newInv);
+         setCash(c => c + revenue);
+         setSales(s => [...s, ...daySales]);
+         setLog(l => [...l, `Day ${day}: Earned $${revenue}`]);
+         if(day >= 7) setPhase('result');
+         else setDay(d => d + 1);
+      };
+      const restock = (id:string) => {
+         const p = products.find(x=>x.id===id)!;
+         const qty = 10;
+         const cost = qty * p.cost;
+         if(cash >= cost) {
+            setCash(c => c - cost);
+            setInventory(inv => ({...inv, [id]: inv[id] + qty}));
+            setLog(l => [...l, `Restocked ${qty} ${p.name}s for $${cost}`]);
+         }
+      };
+      const totalRevenue = sales.reduce((a,s) => a + s.qty * s.price, 0);
+      const grade = cash >= 1000 ? 'A' : cash >= 750 ? 'B' : cash >= 500 ? 'C' : 'D';
+      if(phase === 'intro') return (<div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-blue-900 via-indigo-900 to-purple-900 text-white p-6"><div className="text-6xl mb-4">🛒</div><h2 className="text-2xl font-bold mb-2">E-Commerce Simulator</h2><p className="text-slate-300 text-center mb-6 max-w-md">Run your online store for 7 days! Set prices, manage inventory, and maximize profits.</p><button onClick={() => setPhase('play')} className="px-8 py-3 bg-gradient-to-r from-blue-500 to-purple-500 rounded-xl font-bold">Open Store</button></div>);
+      if(phase === 'result') return (<div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-blue-900 via-indigo-900 to-purple-900 text-white p-6"><div className="text-6xl mb-4">{grade === 'A' ? '🏆' : grade === 'B' ? '⭐' : '📊'}</div><h2 className="text-2xl font-bold mb-2">Week Complete!</h2><div className="text-4xl font-bold text-green-400 mb-2">${cash}</div><p className="text-slate-300 mb-2">Final Cash (Started: $500)</p><div className="text-6xl mb-4">{grade}</div><p className="text-slate-400 mb-4">Revenue: ${totalRevenue} | {sales.reduce((a,s)=>a+s.qty,0)} items sold</p><button onClick={() => {setPhase('intro');setDay(1);setCash(500);setInventory({tshirt:10,mug:15,sticker:30});setSales([]);setLog([]);}} className="px-6 py-2 bg-blue-600 rounded-lg">Try Again</button></div>);
+      return (<div className="w-full h-full flex flex-col bg-gradient-to-br from-blue-900 via-indigo-900 to-purple-900 text-white overflow-hidden">{showInfo && infoTopic && infoTopics[infoTopic] && (<div className="absolute inset-0 bg-black/80 flex items-center justify-center p-4 z-50" onClick={() => { setShowInfo(false); setInfoTopic(null); }}><div className="bg-slate-800 rounded-xl p-4 max-w-md" onClick={e => e.stopPropagation()}><h3 className="text-lg font-bold text-blue-400 mb-2">{infoTopics[infoTopic].title}</h3><p className="text-sm text-slate-300">{infoTopics[infoTopic].content}</p><button onClick={() => { setShowInfo(false); setInfoTopic(null); }} className="mt-4 w-full py-2 bg-blue-600 rounded-lg">Got it!</button></div></div>)}<div className="p-3 bg-black/30 border-b border-blue-500/30 flex justify-between items-center"><span className="font-bold">🛒 E-Commerce</span><span className="text-blue-400">Day {day}/7</span><span className="text-green-400 font-bold">${cash}</span></div><div className="flex-1 p-3 overflow-auto"><div className="grid gap-2">{products.map(p => (<div key={p.id} className="bg-black/30 rounded-lg p-3"><div className="flex justify-between items-center mb-2"><span className="text-xl">{p.icon} {p.name}</span><span className="text-sm text-slate-400">Stock: {inventory[p.id]}</span></div><div className="flex items-center gap-2"><span className="text-xs text-slate-400">Price: $</span><input type="number" value={prices[p.id]} onChange={e => setPrices(pr => ({...pr, [p.id]: Number(e.target.value)}))} className="w-16 bg-slate-700 rounded px-2 py-1 text-sm" min={1} /><button onClick={() => restock(p.id)} className="ml-auto text-xs bg-blue-600/50 px-2 py-1 rounded">+10 (${p.cost * 10})</button></div></div>))}</div></div><div className="p-3 bg-black/30 border-t border-blue-500/30"><button onClick={simulateDay} className="w-full py-3 bg-gradient-to-r from-blue-500 to-purple-500 rounded-xl font-bold">End Day {day}</button><div className="flex gap-2 mt-2 justify-center">{Object.keys(infoTopics).map(k => <button key={k} onClick={() => {setInfoTopic(k);setShowInfo(true);}} className="text-xs text-blue-400">ℹ️ {infoTopics[k].title.split(' ')[0]}</button>)}</div></div></div>);
+   };
+
+   const SocialMediaRenderer = () => {
+      const [phase, setPhase] = useState<'intro'|'play'|'result'>('intro');
+      const [showInfo, setShowInfo] = useState(false);
+      const [infoTopic, setInfoTopic] = useState<string|null>(null);
+      const [followers, setFollowers] = useState(100);
+      const [engagement, setEngagement] = useState(5);
+      const [week, setWeek] = useState(1);
+      const [budget, setBudget] = useState(200);
+      const [log, setLog] = useState<string[]>([]);
+      const platforms = [{id:'instagram',name:'Instagram',icon:'📸',reach:1.2},{id:'twitter',name:'Twitter/X',icon:'🐦',reach:0.8},{id:'tiktok',name:'TikTok',icon:'🎵',reach:1.5},{id:'linkedin',name:'LinkedIn',icon:'💼',reach:0.6}];
+      const contentTypes = [{id:'educational',name:'Educational',cost:20,engBoost:2,followBoost:15},{id:'entertaining',name:'Entertaining',cost:15,engBoost:3,followBoost:25},{id:'promotional',name:'Promotional',cost:10,engBoost:-1,followBoost:5},{id:'behindscenes',name:'Behind Scenes',cost:5,engBoost:1,followBoost:10}];
+      const infoTopics:{[k:string]:{title:string,content:string}} = {
+         algorithm:{title:'Algorithm',content:'Social platforms prioritize content with high engagement. More likes, comments, and shares = more visibility.'},
+         consistency:{title:'Consistency',content:'Regular posting builds audience expectations and algorithmic favor. Quality over quantity, but maintain presence.'},
+         engagement:{title:'Engagement Rate',content:'(Likes + Comments + Shares) / Followers × 100. A rate above 3% is considered good.'},
+         reach:{title:'Organic Reach',content:'The number of people who see your content without paid promotion. Varies by platform and content type.'}
+      };
+      const [selectedPlatform, setSelectedPlatform] = useState<string|null>(null);
+      const [selectedContent, setSelectedContent] = useState<string|null>(null);
+      const postContent = () => {
+         if(!selectedPlatform || !selectedContent) return;
+         const plat = platforms.find(p => p.id === selectedPlatform)!;
+         const cont = contentTypes.find(c => c.id === selectedContent)!;
+         if(budget < cont.cost) return;
+         setBudget(b => b - cont.cost);
+         const newFollowers = Math.floor(cont.followBoost * plat.reach * (1 + Math.random() * 0.5));
+         const newEng = Math.max(1, engagement + cont.engBoost + Math.floor(Math.random() * 2 - 1));
+         setFollowers(f => f + newFollowers);
+         setEngagement(newEng);
+         setLog(l => [...l, `Week ${week}: +${newFollowers} followers on ${plat.name}`]);
+         setSelectedPlatform(null);
+         setSelectedContent(null);
+         if(week >= 8) setPhase('result');
+         else setWeek(w => w + 1);
+      };
+      const grade = followers >= 500 ? 'A' : followers >= 300 ? 'B' : followers >= 200 ? 'C' : 'D';
+      if(phase === 'intro') return (<div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-pink-900 via-purple-900 to-indigo-900 text-white p-6"><div className="text-6xl mb-4">📱</div><h2 className="text-2xl font-bold mb-2">Social Media Strategy</h2><p className="text-slate-300 text-center mb-6 max-w-md">Grow your brand's social presence over 8 weeks! Choose platforms and content types wisely.</p><button onClick={() => setPhase('play')} className="px-8 py-3 bg-gradient-to-r from-pink-500 to-purple-500 rounded-xl font-bold">Start Campaign</button></div>);
+      if(phase === 'result') return (<div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-pink-900 via-purple-900 to-indigo-900 text-white p-6"><div className="text-6xl mb-4">{grade === 'A' ? '🌟' : grade === 'B' ? '📈' : '📊'}</div><h2 className="text-2xl font-bold mb-2">Campaign Complete!</h2><div className="text-4xl font-bold text-pink-400 mb-2">{followers} Followers</div><p className="text-slate-300 mb-2">Started: 100 | Engagement: {engagement}%</p><div className="text-6xl mb-4">{grade}</div><button onClick={() => {setPhase('intro');setFollowers(100);setEngagement(5);setWeek(1);setBudget(200);setLog([]);}} className="px-6 py-2 bg-pink-600 rounded-lg">Try Again</button></div>);
+      return (<div className="w-full h-full flex flex-col bg-gradient-to-br from-pink-900 via-purple-900 to-indigo-900 text-white overflow-hidden">{showInfo && infoTopic && infoTopics[infoTopic] && (<div className="absolute inset-0 bg-black/80 flex items-center justify-center p-4 z-50" onClick={() => { setShowInfo(false); setInfoTopic(null); }}><div className="bg-slate-800 rounded-xl p-4 max-w-md" onClick={e => e.stopPropagation()}><h3 className="text-lg font-bold text-pink-400 mb-2">{infoTopics[infoTopic].title}</h3><p className="text-sm text-slate-300">{infoTopics[infoTopic].content}</p><button onClick={() => { setShowInfo(false); setInfoTopic(null); }} className="mt-4 w-full py-2 bg-pink-600 rounded-lg">Got it!</button></div></div>)}<div className="p-3 bg-black/30 border-b border-pink-500/30 flex justify-between items-center"><span className="font-bold">📱 Social Media</span><span className="text-pink-400">Week {week}/8</span><span className="text-green-400">${budget}</span></div><div className="flex-1 p-3 overflow-auto"><div className="bg-black/30 rounded-lg p-3 mb-3 flex justify-around"><div className="text-center"><div className="text-2xl font-bold text-pink-400">{followers}</div><div className="text-xs text-slate-400">Followers</div></div><div className="text-center"><div className="text-2xl font-bold text-purple-400">{engagement}%</div><div className="text-xs text-slate-400">Engagement</div></div></div><p className="text-xs text-slate-400 mb-2">Choose Platform:</p><div className="grid grid-cols-2 gap-2 mb-3">{platforms.map(p => (<button key={p.id} onClick={() => setSelectedPlatform(p.id)} className={`p-2 rounded-lg text-sm ${selectedPlatform === p.id ? 'bg-pink-600' : 'bg-black/30'}`}>{p.icon} {p.name}</button>))}</div><p className="text-xs text-slate-400 mb-2">Choose Content:</p><div className="grid grid-cols-2 gap-2">{contentTypes.map(c => (<button key={c.id} onClick={() => setSelectedContent(c.id)} className={`p-2 rounded-lg text-sm ${selectedContent === c.id ? 'bg-purple-600' : 'bg-black/30'}`}>{c.name} (${c.cost})</button>))}</div></div><div className="p-3 bg-black/30 border-t border-pink-500/30"><button onClick={postContent} disabled={!selectedPlatform || !selectedContent} className="w-full py-3 bg-gradient-to-r from-pink-500 to-purple-500 rounded-xl font-bold disabled:opacity-50">Post Content</button><div className="flex gap-2 mt-2 justify-center">{Object.keys(infoTopics).slice(0,3).map(k => <button key={k} onClick={() => {setInfoTopic(k);setShowInfo(true);}} className="text-xs text-pink-400">ℹ️ {infoTopics[k].title}</button>)}</div></div></div>);
+   };
+
+   const SEORenderer = () => {
+      const [phase, setPhase] = useState<'intro'|'play'|'result'>('intro');
+      const [showInfo, setShowInfo] = useState(false);
+      const [infoTopic, setInfoTopic] = useState<string|null>(null);
+      const [question, setQuestion] = useState(0);
+      const [score, setScore] = useState(0);
+      const [answered, setAnswered] = useState(false);
+      const [selected, setSelected] = useState<number|null>(null);
+      const [log, setLog] = useState<string[]>([]);
+      const questions = [
+         {q:'Which is the most important on-page SEO element?',opts:['Meta keywords','Title tag','Footer links','Sidebar widgets'],correct:1,explain:'Title tags are the most important on-page element, appearing in search results and browser tabs.'},
+         {q:'What is "keyword stuffing"?',opts:['Using one keyword','Overusing keywords unnaturally','Researching keywords','Hiding keywords'],correct:1,explain:'Keyword stuffing is overusing keywords, which search engines penalize as spam.'},
+         {q:'Which improves page load speed?',opts:['More images','Larger fonts','Image compression','More scripts'],correct:2,explain:'Compressing images reduces file size and improves load speed, a ranking factor.'},
+         {q:'What does a 301 redirect do?',opts:['Blocks page','Permanent redirect','Temporary redirect','Deletes page'],correct:1,explain:'A 301 is a permanent redirect, passing link equity to the new URL.'},
+         {q:'Which backlink is most valuable?',opts:['From unrelated site','From new blog','From authority site in your niche','From social media'],correct:2,explain:'Backlinks from authoritative, relevant sites carry the most SEO weight.'},
+         {q:'What is "alt text" used for?',opts:['Styling images','Describing images for SEO/accessibility','Link building','Keywords only'],correct:1,explain:'Alt text describes images for screen readers and helps search engines understand image content.'},
+         {q:'Which URL structure is best for SEO?',opts:['example.com/p=123','example.com/blog/seo-tips','example.com/page1','example.com/🔥'],correct:1,explain:'Descriptive, readable URLs with keywords are best for SEO and user experience.'},
+         {q:'What is "bounce rate"?',opts:['Email returns','Single-page visits','Crawl errors','Loading time'],correct:1,explain:'Bounce rate is the percentage of visitors who leave after viewing only one page.'}
+      ];
+      const infoTopics:{[k:string]:{title:string,content:string}} = {
+         keywords:{title:'Keywords',content:'Words and phrases people search for. Use them naturally in titles, headings, content, and URLs.'},
+         backlinks:{title:'Backlinks',content:'Links from other sites to yours. Quality matters more than quantity - one link from NYTimes beats 100 from spam sites.'},
+         technical:{title:'Technical SEO',content:'Site speed, mobile-friendliness, crawlability, and structured data all affect rankings.'},
+         content:{title:'Content Quality',content:'Create valuable, original content that answers user questions. Length matters less than depth and usefulness.'}
+      };
+      const answer = (idx:number) => {
+         if(answered) return;
+         setSelected(idx);
+         setAnswered(true);
+         if(idx === questions[question].correct) {
+            setScore(s => s + 1);
+            setLog(l => [...l, `Q${question+1}: Correct!`]);
+         } else {
+            setLog(l => [...l, `Q${question+1}: Wrong`]);
+         }
+      };
+      const next = () => {
+         if(question >= questions.length - 1) setPhase('result');
+         else { setQuestion(q => q + 1); setAnswered(false); setSelected(null); }
+      };
+      const grade = score >= 7 ? 'A' : score >= 5 ? 'B' : score >= 3 ? 'C' : 'D';
+      const q = questions[question];
+      if(phase === 'intro') return (<div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-green-900 via-teal-900 to-cyan-900 text-white p-6"><div className="text-6xl mb-4">🔍</div><h2 className="text-2xl font-bold mb-2">SEO Mastery Quiz</h2><p className="text-slate-300 text-center mb-6 max-w-md">Test your Search Engine Optimization knowledge! Learn what makes websites rank higher.</p><button onClick={() => setPhase('play')} className="px-8 py-3 bg-gradient-to-r from-green-500 to-teal-500 rounded-xl font-bold">Start Quiz</button></div>);
+      if(phase === 'result') return (<div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-green-900 via-teal-900 to-cyan-900 text-white p-6"><div className="text-6xl mb-4">{grade === 'A' ? '🏆' : grade === 'B' ? '⭐' : '📊'}</div><h2 className="text-2xl font-bold mb-2">Quiz Complete!</h2><div className="text-4xl font-bold text-green-400 mb-2">{score}/{questions.length}</div><div className="text-6xl mb-4">{grade}</div><p className="text-slate-400 mb-4">{grade === 'A' ? 'SEO Expert!' : grade === 'B' ? 'Good understanding!' : 'Keep learning!'}</p><button onClick={() => {setPhase('intro');setQuestion(0);setScore(0);setAnswered(false);setSelected(null);setLog([]);}} className="px-6 py-2 bg-green-600 rounded-lg">Try Again</button></div>);
+      return (<div className="w-full h-full flex flex-col bg-gradient-to-br from-green-900 via-teal-900 to-cyan-900 text-white overflow-hidden">{showInfo && infoTopic && infoTopics[infoTopic] && (<div className="absolute inset-0 bg-black/80 flex items-center justify-center p-4 z-50" onClick={() => { setShowInfo(false); setInfoTopic(null); }}><div className="bg-slate-800 rounded-xl p-4 max-w-md" onClick={e => e.stopPropagation()}><h3 className="text-lg font-bold text-green-400 mb-2">{infoTopics[infoTopic].title}</h3><p className="text-sm text-slate-300">{infoTopics[infoTopic].content}</p><button onClick={() => { setShowInfo(false); setInfoTopic(null); }} className="mt-4 w-full py-2 bg-green-600 rounded-lg">Got it!</button></div></div>)}<div className="p-3 bg-black/30 border-b border-green-500/30 flex justify-between items-center"><span className="font-bold">🔍 SEO Quiz</span><span className="text-green-400">{question + 1}/{questions.length}</span><span className="text-cyan-400">Score: {score}</span></div><div className="flex-1 p-4 flex flex-col justify-center"><div className="bg-black/30 rounded-xl p-4 mb-4"><p className="text-lg font-medium">{q.q}</p></div><div className="grid gap-2">{q.opts.map((opt, i) => (<button key={i} onClick={() => answer(i)} disabled={answered} className={`p-3 rounded-lg text-left ${answered ? i === q.correct ? 'bg-green-600' : i === selected ? 'bg-red-600' : 'bg-black/30' : 'bg-black/30 hover:bg-black/50'}`}>{opt}</button>))}</div>{answered && (<div className="mt-4 p-3 bg-black/30 rounded-lg"><p className="text-sm text-slate-300">{q.explain}</p><button onClick={next} className="mt-3 w-full py-2 bg-green-600 rounded-lg">{question >= questions.length - 1 ? 'See Results' : 'Next Question'}</button></div>)}</div><div className="p-3 bg-black/30 border-t border-green-500/30 flex gap-2 justify-center">{Object.keys(infoTopics).map(k => <button key={k} onClick={() => {setInfoTopic(k);setShowInfo(true);}} className="text-xs text-green-400">ℹ️ {infoTopics[k].title}</button>)}</div></div>);
+   };
+
+   const AnalyticsRenderer = () => {
+      const [phase, setPhase] = useState<'intro'|'play'|'result'>('intro');
+      const [showInfo, setShowInfo] = useState(false);
+      const [infoTopic, setInfoTopic] = useState<string|null>(null);
+      const [scenario, setScenario] = useState(0);
+      const [score, setScore] = useState(0);
+      const [answered, setAnswered] = useState(false);
+      const [selected, setSelected] = useState<number|null>(null);
+      const [log, setLog] = useState<string[]>([]);
+      const scenarios = [
+         {data:{visitors:5000,conversions:50,bounceRate:65,avgTime:'1:30'},q:'What is the conversion rate?',opts:['0.1%','1%','5%','10%'],correct:1,explain:'Conversion rate = 50/5000 = 1%. This measures how many visitors take desired action.'},
+         {data:{visitors:10000,pageViews:35000,sessions:12000,newUsers:8000},q:'What is the pages per session?',opts:['2.9','3.5','1.2','0.8'],correct:0,explain:'Pages/session = 35000/12000 ≈ 2.9. Shows how engaged users are with your content.'},
+         {data:{revenue:50000,adSpend:10000,customers:500,returns:25},q:'What is the ROAS (Return on Ad Spend)?',opts:['2x','5x','10x','50x'],correct:1,explain:'ROAS = $50,000/$10,000 = 5x. For every $1 spent on ads, you got $5 in revenue.'},
+         {data:{emailsSent:10000,opened:2500,clicked:500,unsubscribed:100},q:'What is the click-through rate (CTR)?',opts:['2%','5%','20%','25%'],correct:1,explain:'CTR = 500/10000 = 5%. Measures how many recipients clicked a link in the email.'},
+         {data:{monthlyUsers:100000,dailyUsers:15000,weeklyUsers:45000,churned:5000},q:'What is the DAU/MAU ratio (stickiness)?',opts:['5%','10%','15%','45%'],correct:2,explain:'DAU/MAU = 15000/100000 = 15%. Higher ratio means users return more frequently.'},
+         {data:{cac:50,ltv:200,paybackMonths:6,margin:'40%'},q:'What is the LTV:CAC ratio?',opts:['1:1','2:1','4:1','6:1'],correct:2,explain:'LTV:CAC = $200:$50 = 4:1. Generally, 3:1 or higher indicates healthy unit economics.'}
+      ];
+      const infoTopics:{[k:string]:{title:string,content:string}} = {
+         metrics:{title:'Key Metrics',content:'Focus on metrics that drive decisions: conversion rate, CAC, LTV, churn, engagement. Vanity metrics look good but do not inform action.'},
+         funnels:{title:'Funnels',content:'Track user journey stages: Awareness → Interest → Decision → Action. Find where users drop off and optimize.'},
+         cohorts:{title:'Cohort Analysis',content:'Group users by sign-up date to compare behavior over time. Shows if product improvements actually help retention.'},
+         ab:{title:'A/B Testing',content:'Compare two versions to see which performs better. Need statistical significance before drawing conclusions.'}
+      };
+      const answer = (idx:number) => {
+         if(answered) return;
+         setSelected(idx);
+         setAnswered(true);
+         if(idx === scenarios[scenario].correct) {
+            setScore(s => s + 1);
+            setLog(l => [...l, `Q${scenario+1}: Correct!`]);
+         } else {
+            setLog(l => [...l, `Q${scenario+1}: Wrong`]);
+         }
+      };
+      const next = () => {
+         if(scenario >= scenarios.length - 1) setPhase('result');
+         else { setScenario(s => s + 1); setAnswered(false); setSelected(null); }
+      };
+      const grade = score >= 5 ? 'A' : score >= 4 ? 'B' : score >= 2 ? 'C' : 'D';
+      const s = scenarios[scenario];
+      if(phase === 'intro') return (<div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-orange-900 via-amber-900 to-yellow-900 text-white p-6"><div className="text-6xl mb-4">📊</div><h2 className="text-2xl font-bold mb-2">Analytics Dashboard</h2><p className="text-slate-300 text-center mb-6 max-w-md">Interpret real business data! Calculate key metrics and make data-driven decisions.</p><button onClick={() => setPhase('play')} className="px-8 py-3 bg-gradient-to-r from-orange-500 to-amber-500 rounded-xl font-bold">Start Analysis</button></div>);
+      if(phase === 'result') return (<div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-orange-900 via-amber-900 to-yellow-900 text-white p-6"><div className="text-6xl mb-4">{grade === 'A' ? '📈' : grade === 'B' ? '⭐' : '📊'}</div><h2 className="text-2xl font-bold mb-2">Analysis Complete!</h2><div className="text-4xl font-bold text-orange-400 mb-2">{score}/{scenarios.length}</div><div className="text-6xl mb-4">{grade}</div><p className="text-slate-400 mb-4">{grade === 'A' ? 'Data Analyst!' : grade === 'B' ? 'Good insights!' : 'Keep practicing!'}</p><button onClick={() => {setPhase('intro');setScenario(0);setScore(0);setAnswered(false);setSelected(null);setLog([]);}} className="px-6 py-2 bg-orange-600 rounded-lg">Try Again</button></div>);
+      return (<div className="w-full h-full flex flex-col bg-gradient-to-br from-orange-900 via-amber-900 to-yellow-900 text-white overflow-hidden">{showInfo && infoTopic && infoTopics[infoTopic] && (<div className="absolute inset-0 bg-black/80 flex items-center justify-center p-4 z-50" onClick={() => { setShowInfo(false); setInfoTopic(null); }}><div className="bg-slate-800 rounded-xl p-4 max-w-md" onClick={e => e.stopPropagation()}><h3 className="text-lg font-bold text-orange-400 mb-2">{infoTopics[infoTopic].title}</h3><p className="text-sm text-slate-300">{infoTopics[infoTopic].content}</p><button onClick={() => { setShowInfo(false); setInfoTopic(null); }} className="mt-4 w-full py-2 bg-orange-600 rounded-lg">Got it!</button></div></div>)}<div className="p-3 bg-black/30 border-b border-orange-500/30 flex justify-between items-center"><span className="font-bold">📊 Analytics</span><span className="text-orange-400">{scenario + 1}/{scenarios.length}</span><span className="text-amber-400">Score: {score}</span></div><div className="flex-1 p-4 overflow-auto"><div className="bg-black/30 rounded-xl p-3 mb-3"><p className="text-xs text-slate-400 mb-2">Dashboard Data:</p><div className="grid grid-cols-2 gap-2">{Object.entries(s.data).map(([k,v]) => (<div key={k} className="bg-black/30 rounded p-2 text-center"><div className="text-lg font-bold text-orange-400">{v}</div><div className="text-xs text-slate-400 capitalize">{k.replace(/([A-Z])/g, ' $1')}</div></div>))}</div></div><div className="bg-black/30 rounded-xl p-4 mb-3"><p className="font-medium">{s.q}</p></div><div className="grid grid-cols-2 gap-2">{s.opts.map((opt, i) => (<button key={i} onClick={() => answer(i)} disabled={answered} className={`p-3 rounded-lg ${answered ? i === s.correct ? 'bg-green-600' : i === selected ? 'bg-red-600' : 'bg-black/30' : 'bg-black/30 hover:bg-black/50'}`}>{opt}</button>))}</div>{answered && (<div className="mt-3 p-3 bg-black/30 rounded-lg"><p className="text-sm text-slate-300">{s.explain}</p><button onClick={next} className="mt-3 w-full py-2 bg-orange-600 rounded-lg">{scenario >= scenarios.length - 1 ? 'See Results' : 'Next'}</button></div>)}</div><div className="p-3 bg-black/30 border-t border-orange-500/30 flex gap-2 justify-center">{Object.keys(infoTopics).map(k => <button key={k} onClick={() => {setInfoTopic(k);setShowInfo(true);}} className="text-xs text-orange-400">ℹ️ {infoTopics[k].title}</button>)}</div></div>);
+   };
+
+   const CybersecurityRenderer = () => {
+      const [phase, setPhase] = useState<'intro'|'play'|'result'>('intro');
+      const [showInfo, setShowInfo] = useState(false);
+      const [infoTopic, setInfoTopic] = useState<string|null>(null);
+      const [scenario, setScenario] = useState(0);
+      const [score, setScore] = useState(0);
+      const [answered, setAnswered] = useState(false);
+      const [selected, setSelected] = useState<string|null>(null);
+      const [log, setLog] = useState<string[]>([]);
+      const scenarios = [
+         {situation:'Email from "IT Support" asking you to click a link to verify your password immediately or your account will be deleted.',threat:'phishing',safe:false,explain:'Classic phishing - urgency, impersonation, and suspicious links. Real IT never asks for passwords via email.'},
+         {situation:'A pop-up saying "Your computer is infected! Call this number immediately for Microsoft Support."',threat:'scam',safe:false,explain:'Tech support scam. Microsoft never shows pop-ups with phone numbers. Close the browser and run your own antivirus.'},
+         {situation:'Your password manager suggests using "j8#kL9$mN2@pQ" as a password.',threat:'none',safe:true,explain:'Strong password! Long, random, with mixed characters. Password managers generate and store secure passwords.'},
+         {situation:'A USB drive labeled "Employee Salaries 2024" is found in the parking lot.',threat:'baiting',safe:false,explain:'Baiting attack. Never plug unknown USB drives into your computer - they may contain malware.'},
+         {situation:'Website URL shows "https://yourbank.com" with a green padlock.',threat:'none',safe:true,explain:'HTTPS with correct domain is good. But still verify you navigated there yourself, not from a suspicious link.'},
+         {situation:'Coworker asks for your login to "quickly check something" while you are on vacation.',threat:'social_engineering',safe:false,explain:'Social engineering. Never share credentials, even with coworkers. They should request their own access.'},
+         {situation:'Email attachment named "Invoice.pdf.exe" from unknown sender.',threat:'malware',safe:false,explain:'Malware! The .exe extension is hidden. Never open executable files from unknown sources.'},
+         {situation:'Your company requires 2FA (two-factor authentication) for all accounts.',threat:'none',safe:true,explain:'2FA adds crucial security. Even if password is stolen, attacker cannot access without second factor.'}
+      ];
+      const infoTopics:{[k:string]:{title:string,content:string}} = {
+         phishing:{title:'Phishing',content:'Fraudulent emails/sites impersonating trusted entities. Check sender, hover over links, never give passwords.'},
+         malware:{title:'Malware',content:'Malicious software including viruses, ransomware, spyware. Keep software updated, use antivirus, avoid suspicious downloads.'},
+         social:{title:'Social Engineering',content:'Manipulating people into giving up confidential info. Attackers exploit trust, authority, and urgency.'},
+         passwords:{title:'Password Security',content:'Use unique, long passwords for each account. Enable 2FA. Use a password manager. Never share credentials.'}
+      };
+      const answer = (safe:boolean) => {
+         if(answered) return;
+         setSelected(safe ? 'safe' : 'threat');
+         setAnswered(true);
+         if(safe === scenarios[scenario].safe) {
+            setScore(s => s + 1);
+            setLog(l => [...l, `Scenario ${scenario+1}: Correct!`]);
+         } else {
+            setLog(l => [...l, `Scenario ${scenario+1}: Wrong`]);
+         }
+      };
+      const next = () => {
+         if(scenario >= scenarios.length - 1) setPhase('result');
+         else { setScenario(s => s + 1); setAnswered(false); setSelected(null); }
+      };
+      const grade = score >= 7 ? 'A' : score >= 5 ? 'B' : score >= 3 ? 'C' : 'D';
+      const s = scenarios[scenario];
+      if(phase === 'intro') return (<div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-slate-900 via-red-900 to-slate-900 text-white p-6"><div className="text-6xl mb-4">🔒</div><h2 className="text-2xl font-bold mb-2">Cybersecurity Training</h2><p className="text-slate-300 text-center mb-6 max-w-md">Identify security threats! Learn to spot phishing, malware, and social engineering attacks.</p><button onClick={() => setPhase('play')} className="px-8 py-3 bg-gradient-to-r from-red-500 to-orange-500 rounded-xl font-bold">Start Training</button></div>);
+      if(phase === 'result') return (<div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-slate-900 via-red-900 to-slate-900 text-white p-6"><div className="text-6xl mb-4">{grade === 'A' ? '🛡️' : grade === 'B' ? '🔐' : '⚠️'}</div><h2 className="text-2xl font-bold mb-2">Training Complete!</h2><div className="text-4xl font-bold text-red-400 mb-2">{score}/{scenarios.length}</div><div className="text-6xl mb-4">{grade}</div><p className="text-slate-400 mb-4">{grade === 'A' ? 'Security Expert!' : grade === 'B' ? 'Good awareness!' : 'Stay vigilant!'}</p><button onClick={() => {setPhase('intro');setScenario(0);setScore(0);setAnswered(false);setSelected(null);setLog([]);}} className="px-6 py-2 bg-red-600 rounded-lg">Try Again</button></div>);
+      return (<div className="w-full h-full flex flex-col bg-gradient-to-br from-slate-900 via-red-900 to-slate-900 text-white overflow-hidden">{showInfo && infoTopic && infoTopics[infoTopic] && (<div className="absolute inset-0 bg-black/80 flex items-center justify-center p-4 z-50" onClick={() => { setShowInfo(false); setInfoTopic(null); }}><div className="bg-slate-800 rounded-xl p-4 max-w-md" onClick={e => e.stopPropagation()}><h3 className="text-lg font-bold text-red-400 mb-2">{infoTopics[infoTopic].title}</h3><p className="text-sm text-slate-300">{infoTopics[infoTopic].content}</p><button onClick={() => { setShowInfo(false); setInfoTopic(null); }} className="mt-4 w-full py-2 bg-red-600 rounded-lg">Got it!</button></div></div>)}<div className="p-3 bg-black/30 border-b border-red-500/30 flex justify-between items-center"><span className="font-bold">🔒 Cybersecurity</span><span className="text-red-400">{scenario + 1}/{scenarios.length}</span><span className="text-orange-400">Score: {score}</span></div><div className="flex-1 p-4 flex flex-col justify-center"><div className="bg-black/30 rounded-xl p-4 mb-4"><p className="text-sm text-slate-200">{s.situation}</p></div><p className="text-center text-sm text-slate-400 mb-4">Is this safe or a threat?</p><div className="grid grid-cols-2 gap-3"><button onClick={() => answer(true)} disabled={answered} className={`py-4 rounded-xl font-bold ${answered ? (s.safe ? 'bg-green-600' : selected === 'safe' ? 'bg-red-600' : 'bg-black/30') : 'bg-green-600/50 hover:bg-green-500/50'}`}>✓ Safe</button><button onClick={() => answer(false)} disabled={answered} className={`py-4 rounded-xl font-bold ${answered ? (!s.safe ? 'bg-green-600' : selected === 'threat' ? 'bg-red-600' : 'bg-black/30') : 'bg-red-600/50 hover:bg-red-500/50'}`}>⚠️ Threat</button></div>{answered && (<div className="mt-4 p-3 bg-black/30 rounded-lg"><p className="text-sm text-slate-300">{s.explain}</p><button onClick={next} className="mt-3 w-full py-2 bg-red-600 rounded-lg">{scenario >= scenarios.length - 1 ? 'See Results' : 'Next'}</button></div>)}</div><div className="p-3 bg-black/30 border-t border-red-500/30 flex gap-2 justify-center">{Object.keys(infoTopics).map(k => <button key={k} onClick={() => {setInfoTopic(k);setShowInfo(true);}} className="text-xs text-red-400">ℹ️ {infoTopics[k].title}</button>)}</div></div>);
+   };
+
+   // --- COMMUNICATION & MARKETING RENDERERS ---
+   const ElevatorPitchRenderer = () => {
+      const [phase, setPhase] = useState<'intro'|'play'|'result'>('intro');
+      const [showInfo, setShowInfo] = useState(false);
+      const [infoTopic, setInfoTopic] = useState<string|null>(null);
+      const [step, setStep] = useState(0);
+      const [choices, setChoices] = useState<number[]>([]);
+      const [log, setLog] = useState<string[]>([]);
+      const steps = [
+         {prompt:'How do you open your pitch?',opts:[{text:'Hi, I sell software...',score:1},{text:'What if you could save 10 hours a week?',score:3},{text:'Our company was founded in 2020...',score:1},{text:'Have you ever struggled with X?',score:2}],tip:'Hook'},
+         {prompt:'How do you describe your solution?',opts:[{text:'We use AI and blockchain...',score:1},{text:'We help [target] achieve [result] by [method]',score:3},{text:'Our platform has many features...',score:1},{text:'We are the Uber of X',score:2}],tip:'Value'},
+         {prompt:'What makes you different?',opts:[{text:'We are the best in the market',score:1},{text:'Unlike X, we do Y which means Z for you',score:3},{text:'We have great customer service',score:1},{text:'Our team is very experienced',score:2}],tip:'Differentiator'},
+         {prompt:'How do you prove credibility?',opts:[{text:'Trust me, it works',score:1},{text:'We have 500 customers saving $1M total',score:3},{text:'We have been in business for years',score:1},{text:'Top investors back us',score:2}],tip:'Proof'},
+         {prompt:'What is your call to action?',opts:[{text:'Let me know if interested',score:1},{text:'Can we schedule 15 min this week?',score:3},{text:'Check out our website',score:1},{text:'Here is my card',score:2}],tip:'CTA'}
+      ];
+      const infoTopics:{[k:string]:{title:string,content:string}} = {
+         hook:{title:'The Hook',content:'Start with a question or surprising fact that grabs attention. You have 5 seconds to capture interest.'},
+         value:{title:'Value Proposition',content:'Clearly state who you help, what result you deliver, and how. Avoid jargon and buzzwords.'},
+         structure:{title:'Pitch Structure',content:'Hook → Problem → Solution → Differentiator → Proof → Call to Action. Keep it under 60 seconds.'},
+         practice:{title:'Practice Tips',content:'Record yourself, time it, get feedback. Great pitches sound natural but are carefully crafted.'}
+      };
+      const choose = (idx:number) => {
+         const newChoices = [...choices, idx];
+         setChoices(newChoices);
+         setLog(l => [...l, `Step ${step+1}: Option ${idx+1}`]);
+         if(step >= steps.length - 1) setPhase('result');
+         else setStep(s => s + 1);
+      };
+      const totalScore = choices.reduce((a, c, i) => a + steps[i].opts[c].score, 0);
+      const maxScore = steps.length * 3;
+      const grade = totalScore >= 13 ? 'A' : totalScore >= 10 ? 'B' : totalScore >= 7 ? 'C' : 'D';
+      if(phase === 'intro') return (<div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-violet-900 via-purple-900 to-fuchsia-900 text-white p-6"><div className="text-6xl mb-4">🎤</div><h2 className="text-2xl font-bold mb-2">Elevator Pitch Builder</h2><p className="text-slate-300 text-center mb-6 max-w-md">Craft a compelling 60-second pitch! Choose the best option for each part of your pitch.</p><button onClick={() => setPhase('play')} className="px-8 py-3 bg-gradient-to-r from-violet-500 to-fuchsia-500 rounded-xl font-bold">Build Pitch</button></div>);
+      if(phase === 'result') return (<div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-violet-900 via-purple-900 to-fuchsia-900 text-white p-6"><div className="text-6xl mb-4">{grade === 'A' ? '🌟' : grade === 'B' ? '👏' : '📝'}</div><h2 className="text-2xl font-bold mb-2">Pitch Complete!</h2><div className="text-4xl font-bold text-violet-400 mb-2">{totalScore}/{maxScore}</div><div className="text-6xl mb-4">{grade}</div><p className="text-slate-400 mb-4">{grade === 'A' ? 'Investor-ready pitch!' : grade === 'B' ? 'Strong pitch!' : 'Keep refining!'}</p><button onClick={() => {setPhase('intro');setStep(0);setChoices([]);setLog([]);}} className="px-6 py-2 bg-violet-600 rounded-lg">Try Again</button></div>);
+      const s = steps[step];
+      return (<div className="w-full h-full flex flex-col bg-gradient-to-br from-violet-900 via-purple-900 to-fuchsia-900 text-white overflow-hidden">{showInfo && infoTopic && infoTopics[infoTopic] && (<div className="absolute inset-0 bg-black/80 flex items-center justify-center p-4 z-50" onClick={() => { setShowInfo(false); setInfoTopic(null); }}><div className="bg-slate-800 rounded-xl p-4 max-w-md" onClick={e => e.stopPropagation()}><h3 className="text-lg font-bold text-violet-400 mb-2">{infoTopics[infoTopic].title}</h3><p className="text-sm text-slate-300">{infoTopics[infoTopic].content}</p><button onClick={() => { setShowInfo(false); setInfoTopic(null); }} className="mt-4 w-full py-2 bg-violet-600 rounded-lg">Got it!</button></div></div>)}<div className="p-3 bg-black/30 border-b border-violet-500/30 flex justify-between items-center"><span className="font-bold">🎤 Elevator Pitch</span><span className="text-violet-400">{step + 1}/{steps.length}</span><span className="text-fuchsia-400">{s.tip}</span></div><div className="flex-1 p-4 flex flex-col justify-center"><div className="bg-black/30 rounded-xl p-4 mb-4"><p className="text-lg font-medium">{s.prompt}</p></div><div className="grid gap-2">{s.opts.map((opt, i) => (<button key={i} onClick={() => choose(i)} className="p-3 bg-black/30 hover:bg-violet-600/50 rounded-lg text-left text-sm">{opt.text}</button>))}</div></div><div className="p-3 bg-black/30 border-t border-violet-500/30 flex gap-2 justify-center">{Object.keys(infoTopics).map(k => <button key={k} onClick={() => {setInfoTopic(k);setShowInfo(true);}} className="text-xs text-violet-400">ℹ️ {infoTopics[k].title}</button>)}</div></div>);
+   };
+
+   const NetworkingRenderer = () => {
+      const [phase, setPhase] = useState<'intro'|'play'|'result'>('intro');
+      const [showInfo, setShowInfo] = useState(false);
+      const [infoTopic, setInfoTopic] = useState<string|null>(null);
+      const [event, setEvent] = useState(0);
+      const [connections, setConnections] = useState(0);
+      const [quality, setQuality] = useState(0);
+      const [energy, setEnergy] = useState(100);
+      const [log, setLog] = useState<string[]>([]);
+      const events = [
+         {person:'Startup Founder',options:[{action:'Ask about their business',conn:1,qual:2,nrg:-10},{action:'Pitch your idea immediately',conn:0,qual:-1,nrg:-15},{action:'Exchange cards silently',conn:1,qual:0,nrg:-5},{action:'Find common interests first',conn:1,qual:3,nrg:-10}]},
+         {person:'Potential Investor',options:[{action:'Ask for money right away',conn:0,qual:-2,nrg:-20},{action:'Share your vision briefly',conn:1,qual:2,nrg:-15},{action:'Ask about their portfolio',conn:1,qual:3,nrg:-10},{action:'Ignore, too intimidating',conn:0,qual:0,nrg:-5}]},
+         {person:'Industry Expert',options:[{action:'Ask for free advice',conn:1,qual:0,nrg:-10},{action:'Compliment their work genuinely',conn:1,qual:2,nrg:-10},{action:'Offer to help with something',conn:1,qual:3,nrg:-15},{action:'Monologue about yourself',conn:0,qual:-1,nrg:-20}]},
+         {person:'Potential Partner',options:[{action:'Propose partnership immediately',conn:0,qual:0,nrg:-15},{action:'Explore synergies casually',conn:1,qual:3,nrg:-10},{action:'Get their contact for later',conn:1,qual:1,nrg:-5},{action:'Compare businesses competitively',conn:0,qual:-1,nrg:-10}]},
+         {person:'Fellow Entrepreneur',options:[{action:'Share war stories',conn:1,qual:2,nrg:-10},{action:'One-up their achievements',conn:0,qual:-2,nrg:-15},{action:'Offer genuine support',conn:1,qual:3,nrg:-10},{action:'Keep it surface level',conn:1,qual:0,nrg:-5}]}
+      ];
+      const infoTopics:{[k:string]:{title:string,content:string}} = {
+         quality:{title:'Quality vs Quantity',content:'10 meaningful connections beat 100 business cards. Focus on building real relationships, not collecting contacts.'},
+         followup:{title:'Follow Up',content:'80% of networking value is in the follow-up. Send a personalized message within 24-48 hours.'},
+         give:{title:'Give First',content:'Lead with value. Ask "How can I help?" before "What can you do for me?" Build reciprocity.'},
+         listen:{title:'Active Listening',content:'Ask open questions, listen more than you talk. People remember how you made them feel.'}
+      };
+      const choose = (idx:number) => {
+         const opt = events[event].options[idx];
+         setConnections(c => c + opt.conn);
+         setQuality(q => q + opt.qual);
+         setEnergy(e => Math.max(0, e + opt.nrg));
+         setLog(l => [...l, `${events[event].person}: ${opt.action}`]);
+         if(event >= events.length - 1 || energy + opt.nrg <= 0) setPhase('result');
+         else setEvent(e => e + 1);
+      };
+      const score = connections * 10 + quality * 5;
+      const grade = score >= 35 ? 'A' : score >= 25 ? 'B' : score >= 15 ? 'C' : 'D';
+      if(phase === 'intro') return (<div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-cyan-900 via-teal-900 to-emerald-900 text-white p-6"><div className="text-6xl mb-4">🤝</div><h2 className="text-2xl font-bold mb-2">Networking Event</h2><p className="text-slate-300 text-center mb-6 max-w-md">Work the room at a startup mixer! Build quality connections before your energy runs out.</p><button onClick={() => setPhase('play')} className="px-8 py-3 bg-gradient-to-r from-cyan-500 to-emerald-500 rounded-xl font-bold">Enter Event</button></div>);
+      if(phase === 'result') return (<div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-cyan-900 via-teal-900 to-emerald-900 text-white p-6"><div className="text-6xl mb-4">{grade === 'A' ? '🌟' : grade === 'B' ? '🤝' : '📇'}</div><h2 className="text-2xl font-bold mb-2">Event Over!</h2><div className="text-2xl font-bold text-cyan-400 mb-2">{connections} Connections | {quality > 0 ? '+' : ''}{quality} Quality</div><div className="text-6xl mb-4">{grade}</div><p className="text-slate-400 mb-4">{grade === 'A' ? 'Master networker!' : grade === 'B' ? 'Good connections!' : 'Keep practicing!'}</p><button onClick={() => {setPhase('intro');setEvent(0);setConnections(0);setQuality(0);setEnergy(100);setLog([]);}} className="px-6 py-2 bg-cyan-600 rounded-lg">Try Again</button></div>);
+      const e = events[event];
+      return (<div className="w-full h-full flex flex-col bg-gradient-to-br from-cyan-900 via-teal-900 to-emerald-900 text-white overflow-hidden">{showInfo && infoTopic && infoTopics[infoTopic] && (<div className="absolute inset-0 bg-black/80 flex items-center justify-center p-4 z-50" onClick={() => { setShowInfo(false); setInfoTopic(null); }}><div className="bg-slate-800 rounded-xl p-4 max-w-md" onClick={e => e.stopPropagation()}><h3 className="text-lg font-bold text-cyan-400 mb-2">{infoTopics[infoTopic].title}</h3><p className="text-sm text-slate-300">{infoTopics[infoTopic].content}</p><button onClick={() => { setShowInfo(false); setInfoTopic(null); }} className="mt-4 w-full py-2 bg-cyan-600 rounded-lg">Got it!</button></div></div>)}<div className="p-3 bg-black/30 border-b border-cyan-500/30"><div className="flex justify-between items-center mb-2"><span className="font-bold">🤝 Networking</span><span className="text-cyan-400">{event + 1}/{events.length}</span></div><div className="flex gap-4 text-sm"><span>👥 {connections}</span><span>⭐ {quality > 0 ? '+' : ''}{quality}</span><span>⚡ {energy}%</span></div></div><div className="flex-1 p-4 flex flex-col justify-center"><div className="bg-black/30 rounded-xl p-4 mb-4 text-center"><p className="text-2xl mb-2">👤</p><p className="text-lg font-medium">{e.person}</p></div><div className="grid gap-2">{e.options.map((opt, i) => (<button key={i} onClick={() => choose(i)} className="p-3 bg-black/30 hover:bg-cyan-600/50 rounded-lg text-left text-sm">{opt.action}</button>))}</div></div><div className="p-3 bg-black/30 border-t border-cyan-500/30 flex gap-2 justify-center">{Object.keys(infoTopics).map(k => <button key={k} onClick={() => {setInfoTopic(k);setShowInfo(true);}} className="text-xs text-cyan-400">ℹ️ {infoTopics[k].title}</button>)}</div></div>);
+   };
+
+   const BrandingRenderer = () => {
+      const [phase, setPhase] = useState<'intro'|'play'|'result'>('intro');
+      const [showInfo, setShowInfo] = useState(false);
+      const [infoTopic, setInfoTopic] = useState<string|null>(null);
+      const [step, setStep] = useState(0);
+      const [brand, setBrand] = useState<{[k:string]:number}>({});
+      const [log, setLog] = useState<string[]>([]);
+      const steps = [
+         {element:'Brand Personality',options:[{text:'Professional & Trustworthy',traits:{trust:3,energy:1}},{text:'Fun & Playful',traits:{trust:1,energy:3}},{text:'Innovative & Bold',traits:{trust:2,energy:2}},{text:'Warm & Caring',traits:{trust:2,energy:2}}]},
+         {element:'Color Palette',options:[{text:'Blue & White (Trust)',traits:{trust:3,energy:1}},{text:'Orange & Yellow (Energy)',traits:{trust:1,energy:3}},{text:'Green & Earth (Growth)',traits:{trust:2,energy:2}},{text:'Purple & Gold (Premium)',traits:{trust:2,energy:2}}]},
+         {element:'Typography',options:[{text:'Serif (Traditional)',traits:{trust:3,energy:1}},{text:'Sans-serif (Modern)',traits:{trust:2,energy:2}},{text:'Display (Bold)',traits:{trust:1,energy:3}},{text:'Handwritten (Personal)',traits:{trust:1,energy:2}}]},
+         {element:'Voice & Tone',options:[{text:'Formal & Authoritative',traits:{trust:3,energy:1}},{text:'Casual & Friendly',traits:{trust:1,energy:3}},{text:'Inspirational & Motivating',traits:{trust:2,energy:3}},{text:'Simple & Clear',traits:{trust:2,energy:2}}]},
+         {element:'Visual Style',options:[{text:'Minimalist & Clean',traits:{trust:2,energy:2}},{text:'Vibrant & Colorful',traits:{trust:1,energy:3}},{text:'Classic & Elegant',traits:{trust:3,energy:1}},{text:'Tech & Futuristic',traits:{trust:2,energy:2}}]}
+      ];
+      const infoTopics:{[k:string]:{title:string,content:string}} = {
+         consistency:{title:'Brand Consistency',content:'Use the same colors, fonts, voice across all touchpoints. Consistency builds recognition and trust.'},
+         personality:{title:'Brand Personality',content:'Your brand should feel like a person. Define 3-5 traits that guide all communications.'},
+         positioning:{title:'Positioning',content:'Own a unique space in customers minds. What one word should they associate with you?'},
+         story:{title:'Brand Story',content:'People connect with stories, not features. Share your why, origin, and mission.'}
+      };
+      const choose = (idx:number) => {
+         const opt = steps[step].options[idx];
+         setBrand(b => ({...b, [steps[step].element]: idx, trust: (b.trust || 0) + opt.traits.trust, energy: (b.energy || 0) + opt.traits.energy}));
+         setLog(l => [...l, `${steps[step].element}: ${opt.text}`]);
+         if(step >= steps.length - 1) setPhase('result');
+         else setStep(s => s + 1);
+      };
+      const trust = brand.trust || 0;
+      const energy = brand.energy || 0;
+      const archetype = trust > energy ? 'Sage/Caregiver' : energy > trust ? 'Creator/Explorer' : 'Hero/Magician';
+      const score = trust + energy;
+      const grade = score >= 12 ? 'A' : score >= 9 ? 'B' : score >= 6 ? 'C' : 'D';
+      if(phase === 'intro') return (<div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-rose-900 via-pink-900 to-fuchsia-900 text-white p-6"><div className="text-6xl mb-4">🎨</div><h2 className="text-2xl font-bold mb-2">Brand Builder</h2><p className="text-slate-300 text-center mb-6 max-w-md">Create your brand identity! Make choices that define your brand personality and visual style.</p><button onClick={() => setPhase('play')} className="px-8 py-3 bg-gradient-to-r from-rose-500 to-fuchsia-500 rounded-xl font-bold">Start Building</button></div>);
+      if(phase === 'result') return (<div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-rose-900 via-pink-900 to-fuchsia-900 text-white p-6"><div className="text-6xl mb-4">🎨</div><h2 className="text-2xl font-bold mb-2">Brand Complete!</h2><div className="text-xl font-bold text-rose-400 mb-2">{archetype} Brand</div><div className="flex gap-4 mb-4"><span className="text-cyan-400">Trust: {trust}</span><span className="text-orange-400">Energy: {energy}</span></div><div className="text-6xl mb-4">{grade}</div><p className="text-slate-400 mb-4">{grade === 'A' ? 'Cohesive brand!' : grade === 'B' ? 'Strong identity!' : 'Refine your choices!'}</p><button onClick={() => {setPhase('intro');setStep(0);setBrand({});setLog([]);}} className="px-6 py-2 bg-rose-600 rounded-lg">Try Again</button></div>);
+      const s = steps[step];
+      return (<div className="w-full h-full flex flex-col bg-gradient-to-br from-rose-900 via-pink-900 to-fuchsia-900 text-white overflow-hidden">{showInfo && infoTopic && infoTopics[infoTopic] && (<div className="absolute inset-0 bg-black/80 flex items-center justify-center p-4 z-50" onClick={() => { setShowInfo(false); setInfoTopic(null); }}><div className="bg-slate-800 rounded-xl p-4 max-w-md" onClick={e => e.stopPropagation()}><h3 className="text-lg font-bold text-rose-400 mb-2">{infoTopics[infoTopic].title}</h3><p className="text-sm text-slate-300">{infoTopics[infoTopic].content}</p><button onClick={() => { setShowInfo(false); setInfoTopic(null); }} className="mt-4 w-full py-2 bg-rose-600 rounded-lg">Got it!</button></div></div>)}<div className="p-3 bg-black/30 border-b border-rose-500/30 flex justify-between items-center"><span className="font-bold">🎨 Brand Builder</span><span className="text-rose-400">{step + 1}/{steps.length}</span></div><div className="flex-1 p-4 flex flex-col justify-center"><div className="bg-black/30 rounded-xl p-4 mb-4"><p className="text-lg font-medium text-center">{s.element}</p></div><div className="grid gap-2">{s.options.map((opt, i) => (<button key={i} onClick={() => choose(i)} className="p-3 bg-black/30 hover:bg-rose-600/50 rounded-lg text-left text-sm">{opt.text}</button>))}</div></div><div className="p-3 bg-black/30 border-t border-rose-500/30 flex gap-2 justify-center">{Object.keys(infoTopics).map(k => <button key={k} onClick={() => {setInfoTopic(k);setShowInfo(true);}} className="text-xs text-rose-400">ℹ️ {infoTopics[k].title}</button>)}</div></div>);
+   };
+
+   const PublicRelationsRenderer = () => {
+      const [phase, setPhase] = useState<'intro'|'play'|'result'>('intro');
+      const [showInfo, setShowInfo] = useState(false);
+      const [infoTopic, setInfoTopic] = useState<string|null>(null);
+      const [scenario, setScenario] = useState(0);
+      const [reputation, setReputation] = useState(50);
+      const [coverage, setCoverage] = useState(0);
+      const [log, setLog] = useState<string[]>([]);
+      const scenarios = [
+         {situation:'A reporter asks about a product delay.',options:[{text:'No comment',rep:-10,cov:0},{text:'Blame the supplier publicly',rep:-20,cov:5},{text:'Acknowledge delay, share new timeline',rep:5,cov:10},{text:'Offer exclusive interview with CEO',rep:10,cov:15}]},
+         {situation:'Competitor spreads false claims about you.',options:[{text:'Attack them back publicly',rep:-15,cov:10},{text:'Ignore it completely',rep:-5,cov:0},{text:'Issue factual correction with evidence',rep:10,cov:10},{text:'Sue them immediately',rep:0,cov:5}]},
+         {situation:'Customer complaint goes viral on social media.',options:[{text:'Delete negative comments',rep:-20,cov:5},{text:'Respond publicly with empathy + solution',rep:15,cov:15},{text:'Ignore until it blows over',rep:-10,cov:0},{text:'Offer refund via private message only',rep:5,cov:5}]},
+         {situation:'You want to announce a new product launch.',options:[{text:'Mass email blast to everyone',rep:0,cov:5},{text:'Exclusive preview for key journalists',rep:10,cov:15},{text:'Post on social media only',rep:0,cov:5},{text:'Host launch event with demos',rep:15,cov:20}]},
+         {situation:'Employee posts something controversial online.',options:[{text:'Fire them publicly',rep:-10,cov:10},{text:'Internal review, public values statement',rep:10,cov:10},{text:'Ignore and hope no one notices',rep:-5,cov:0},{text:'Delete their post without comment',rep:-15,cov:5}]}
+      ];
+      const infoTopics:{[k:string]:{title:string,content:string}} = {
+         crisis:{title:'Crisis Management',content:'Respond quickly, take responsibility, show empathy, fix the problem. Silence or deflection makes it worse.'},
+         media:{title:'Media Relations',content:'Build relationships before you need them. Provide value, be a reliable source, respect deadlines.'},
+         messaging:{title:'Key Messages',content:'Develop 3 core messages. Stay on message. Bridge back from difficult questions.'},
+         timing:{title:'Timing',content:'Bad news on Friday, good news early week. Never announce during major events. Consider news cycles.'}
+      };
+      const choose = (idx:number) => {
+         const opt = scenarios[scenario].options[idx];
+         setReputation(r => Math.max(0, Math.min(100, r + opt.rep)));
+         setCoverage(c => c + opt.cov);
+         setLog(l => [...l, `Scenario ${scenario+1}: ${opt.text}`]);
+         if(scenario >= scenarios.length - 1) setPhase('result');
+         else setScenario(s => s + 1);
+      };
+      const grade = reputation >= 70 && coverage >= 40 ? 'A' : reputation >= 50 && coverage >= 25 ? 'B' : reputation >= 30 ? 'C' : 'D';
+      if(phase === 'intro') return (<div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-amber-900 via-yellow-900 to-orange-900 text-white p-6"><div className="text-6xl mb-4">📰</div><h2 className="text-2xl font-bold mb-2">PR Crisis Simulator</h2><p className="text-slate-300 text-center mb-6 max-w-md">Handle media situations! Balance reputation protection with getting positive coverage.</p><button onClick={() => setPhase('play')} className="px-8 py-3 bg-gradient-to-r from-amber-500 to-orange-500 rounded-xl font-bold">Start PR</button></div>);
+      if(phase === 'result') return (<div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-amber-900 via-yellow-900 to-orange-900 text-white p-6"><div className="text-6xl mb-4">{grade === 'A' ? '📰' : grade === 'B' ? '📋' : '⚠️'}</div><h2 className="text-2xl font-bold mb-2">Campaign Over!</h2><div className="flex gap-4 mb-4"><span className="text-amber-400">Rep: {reputation}%</span><span className="text-orange-400">Coverage: {coverage}</span></div><div className="text-6xl mb-4">{grade}</div><p className="text-slate-400 mb-4">{grade === 'A' ? 'PR Pro!' : grade === 'B' ? 'Good handling!' : 'Reputation damaged!'}</p><button onClick={() => {setPhase('intro');setScenario(0);setReputation(50);setCoverage(0);setLog([]);}} className="px-6 py-2 bg-amber-600 rounded-lg">Try Again</button></div>);
+      const s = scenarios[scenario];
+      return (<div className="w-full h-full flex flex-col bg-gradient-to-br from-amber-900 via-yellow-900 to-orange-900 text-white overflow-hidden">{showInfo && infoTopic && infoTopics[infoTopic] && (<div className="absolute inset-0 bg-black/80 flex items-center justify-center p-4 z-50" onClick={() => { setShowInfo(false); setInfoTopic(null); }}><div className="bg-slate-800 rounded-xl p-4 max-w-md" onClick={e => e.stopPropagation()}><h3 className="text-lg font-bold text-amber-400 mb-2">{infoTopics[infoTopic].title}</h3><p className="text-sm text-slate-300">{infoTopics[infoTopic].content}</p><button onClick={() => { setShowInfo(false); setInfoTopic(null); }} className="mt-4 w-full py-2 bg-amber-600 rounded-lg">Got it!</button></div></div>)}<div className="p-3 bg-black/30 border-b border-amber-500/30"><div className="flex justify-between items-center mb-2"><span className="font-bold">📰 Public Relations</span><span className="text-amber-400">{scenario + 1}/{scenarios.length}</span></div><div className="flex gap-4 text-sm"><span>🏆 Rep: {reputation}%</span><span>📺 Coverage: {coverage}</span></div></div><div className="flex-1 p-4 flex flex-col justify-center"><div className="bg-black/30 rounded-xl p-4 mb-4"><p className="text-sm">{s.situation}</p></div><div className="grid gap-2">{s.options.map((opt, i) => (<button key={i} onClick={() => choose(i)} className="p-3 bg-black/30 hover:bg-amber-600/50 rounded-lg text-left text-sm">{opt.text}</button>))}</div></div><div className="p-3 bg-black/30 border-t border-amber-500/30 flex gap-2 justify-center">{Object.keys(infoTopics).map(k => <button key={k} onClick={() => {setInfoTopic(k);setShowInfo(true);}} className="text-xs text-amber-400">ℹ️ {infoTopics[k].title}</button>)}</div></div>);
+   };
+
+   const NegotiationRenderer = () => {
+      const [phase, setPhase] = useState<'intro'|'play'|'result'>('intro');
+      const [showInfo, setShowInfo] = useState(false);
+      const [infoTopic, setInfoTopic] = useState<string|null>(null);
+      const [round, setRound] = useState(0);
+      const [yourValue, setYourValue] = useState(0);
+      const [relationship, setRelationship] = useState(50);
+      const [log, setLog] = useState<string[]>([]);
+      const rounds = [
+         {context:'Negotiating your startup salary with a new hire who wants $120k. Your budget is $90-110k.',options:[{text:'Offer $85k, leave room to negotiate up',val:-5,rel:-10},{text:'Offer $95k with equity bonus',val:10,rel:10},{text:'Match $120k to close quickly',val:-15,rel:5},{text:'Offer $100k + performance bonus path to $120k',val:15,rel:15}]},
+         {context:'Supplier wants to raise prices 20%. You need them but have alternatives.',options:[{text:'Threaten to leave immediately',val:5,rel:-20},{text:'Accept the increase to maintain relationship',val:-20,rel:10},{text:'Negotiate 10% now with volume commitment',val:15,rel:10},{text:'Demand they keep old prices or you walk',val:0,rel:-15}]},
+         {context:'Investor offers $500k for 25% equity. You wanted $500k for 15%.',options:[{text:'Accept their terms immediately',val:-15,rel:5},{text:'Counter with 18% and board seat',val:15,rel:5},{text:'Reject and walk away',val:0,rel:-20},{text:'Ask for $600k at 20%',val:10,rel:0}]},
+         {context:'Client wants 30% discount on your services for a long-term contract.',options:[{text:'Give 30% to win the deal',val:-10,rel:10},{text:'Offer 15% with 2-year commitment',val:15,rel:10},{text:'Refuse any discount',val:5,rel:-10},{text:'Offer 20% + case study rights',val:10,rel:15}]},
+         {context:'Partner wants 50/50 split but you are doing 70% of the work.',options:[{text:'Accept 50/50 to avoid conflict',val:-15,rel:5},{text:'Demand 80/20 based on work',val:5,rel:-15},{text:'Propose 60/40 with role clarity',val:15,rel:10},{text:'Suggest equity vesting based on milestones',val:20,rel:15}]}
+      ];
+      const infoTopics:{[k:string]:{title:string,content:string}} = {
+         batna:{title:'BATNA',content:'Best Alternative To Negotiated Agreement. Know your walkaway point. The better your alternatives, the stronger your position.'},
+         winwin:{title:'Win-Win',content:'Expand the pie before dividing it. Look for creative solutions where both sides gain value.'},
+         anchor:{title:'Anchoring',content:'First number sets the frame. Anchor ambitiously but credibly. Counter-anchor to reset unrealistic positions.'},
+         silence:{title:'Silence',content:'Silence is powerful. After making an offer, stop talking. Let them fill the uncomfortable silence.'}
+      };
+      const choose = (idx:number) => {
+         const opt = rounds[round].options[idx];
+         setYourValue(v => v + opt.val);
+         setRelationship(r => Math.max(0, Math.min(100, r + opt.rel)));
+         setLog(l => [...l, `Round ${round+1}: ${opt.text}`]);
+         if(round >= rounds.length - 1) setPhase('result');
+         else setRound(r => r + 1);
+      };
+      const grade = yourValue >= 50 && relationship >= 50 ? 'A' : yourValue >= 25 && relationship >= 30 ? 'B' : yourValue >= 0 ? 'C' : 'D';
+      if(phase === 'intro') return (<div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-indigo-900 via-blue-900 to-slate-900 text-white p-6"><div className="text-6xl mb-4">🤝</div><h2 className="text-2xl font-bold mb-2">Negotiation Master</h2><p className="text-slate-300 text-center mb-6 max-w-md">Navigate 5 business negotiations! Balance getting value with maintaining relationships.</p><button onClick={() => setPhase('play')} className="px-8 py-3 bg-gradient-to-r from-indigo-500 to-blue-500 rounded-xl font-bold">Start Negotiating</button></div>);
+      if(phase === 'result') return (<div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-indigo-900 via-blue-900 to-slate-900 text-white p-6"><div className="text-6xl mb-4">{grade === 'A' ? '🏆' : grade === 'B' ? '🤝' : '📉'}</div><h2 className="text-2xl font-bold mb-2">Negotiations Complete!</h2><div className="flex gap-4 mb-4"><span className="text-indigo-400">Value: {yourValue > 0 ? '+' : ''}{yourValue}</span><span className="text-blue-400">Relationship: {relationship}%</span></div><div className="text-6xl mb-4">{grade}</div><p className="text-slate-400 mb-4">{grade === 'A' ? 'Master negotiator!' : grade === 'B' ? 'Good deals!' : 'Room to improve!'}</p><button onClick={() => {setPhase('intro');setRound(0);setYourValue(0);setRelationship(50);setLog([]);}} className="px-6 py-2 bg-indigo-600 rounded-lg">Try Again</button></div>);
+      const r = rounds[round];
+      return (<div className="w-full h-full flex flex-col bg-gradient-to-br from-indigo-900 via-blue-900 to-slate-900 text-white overflow-hidden">{showInfo && infoTopic && infoTopics[infoTopic] && (<div className="absolute inset-0 bg-black/80 flex items-center justify-center p-4 z-50" onClick={() => { setShowInfo(false); setInfoTopic(null); }}><div className="bg-slate-800 rounded-xl p-4 max-w-md" onClick={e => e.stopPropagation()}><h3 className="text-lg font-bold text-indigo-400 mb-2">{infoTopics[infoTopic].title}</h3><p className="text-sm text-slate-300">{infoTopics[infoTopic].content}</p><button onClick={() => { setShowInfo(false); setInfoTopic(null); }} className="mt-4 w-full py-2 bg-indigo-600 rounded-lg">Got it!</button></div></div>)}<div className="p-3 bg-black/30 border-b border-indigo-500/30"><div className="flex justify-between items-center mb-2"><span className="font-bold">🤝 Negotiation</span><span className="text-indigo-400">{round + 1}/{rounds.length}</span></div><div className="flex gap-4 text-sm"><span>💰 Value: {yourValue > 0 ? '+' : ''}{yourValue}</span><span>❤️ Relationship: {relationship}%</span></div></div><div className="flex-1 p-4 flex flex-col justify-center"><div className="bg-black/30 rounded-xl p-4 mb-4"><p className="text-sm">{r.context}</p></div><div className="grid gap-2">{r.options.map((opt, i) => (<button key={i} onClick={() => choose(i)} className="p-3 bg-black/30 hover:bg-indigo-600/50 rounded-lg text-left text-sm">{opt.text}</button>))}</div></div><div className="p-3 bg-black/30 border-t border-indigo-500/30 flex gap-2 justify-center">{Object.keys(infoTopics).map(k => <button key={k} onClick={() => {setInfoTopic(k);setShowInfo(true);}} className="text-xs text-indigo-400">ℹ️ {infoTopics[k].title}</button>)}</div></div>);
+   };
+
+   // --- FINANCE & FUNDING RENDERERS ---
+   const FundraisingRenderer = () => {
+      const [phase, setPhase] = useState<'intro'|'play'|'result'>('intro');
+      const [showInfo, setShowInfo] = useState(false);
+      const [infoTopic, setInfoTopic] = useState<string|null>(null);
+      const [scenario, setScenario] = useState(0);
+      const [score, setScore] = useState(0);
+      const [answered, setAnswered] = useState(false);
+      const [selected, setSelected] = useState<number|null>(null);
+      const [log, setLog] = useState<string[]>([]);
+      const scenarios = [
+         {situation:'Pre-revenue startup with a prototype, needs $50k to launch MVP.',best:0,options:['Bootstrap + Friends & Family','Series A VC ($5M+)','Bank Loan','IPO'],explain:'At pre-revenue, VCs want traction. Bootstrap and F&F are realistic for early validation.'},
+         {situation:'$100k MRR SaaS with 50% growth, needs $2M for sales team.',best:1,options:['Crowdfunding','Seed/Series A VC','Credit Card Debt','Government Grant'],explain:'Strong metrics make you attractive to VCs. $2M for growth is a typical seed/Series A raise.'},
+         {situation:'Profitable small business, needs $500k for equipment.',best:2,options:['Angel Investors','Venture Capital','SBA Bank Loan','Convertible Note'],explain:'Profitable businesses can get traditional bank loans. No equity dilution needed.'},
+         {situation:'Hardware product needs $200k for first production run.',best:1,options:['Bootstrap','Kickstarter/Crowdfunding','Series B VC','Revenue-Based Financing'],explain:'Crowdfunding validates demand AND raises capital. Perfect for consumer hardware.'},
+         {situation:'Biotech startup needs $10M for clinical trials, 5+ years to revenue.',best:2,options:['Angel Investors','Crowdfunding','Specialized VC','Bank Loan'],explain:'Long timelines and high capital needs require specialized VCs who understand biotech.'},
+         {situation:'E-commerce doing $1M/year, needs $100k for inventory.',best:3,options:['Equity Crowdfunding','Venture Debt','Angel Investment','Revenue-Based Financing'],explain:'RBF is perfect: pay back as a % of revenue, no equity dilution, quick approval.'}
+      ];
+      const infoTopics:{[k:string]:{title:string,content:string}} = {
+         stages:{title:'Funding Stages',content:'Pre-seed → Seed → Series A → B → C → IPO. Each stage has different investors, amounts, and expectations.'},
+         dilution:{title:'Dilution',content:'Each funding round reduces your ownership %. Giving up 20% per round means owning <50% after 3 rounds.'},
+         terms:{title:'Term Sheets',content:'Valuation, liquidation preferences, board seats, anti-dilution, vesting. Get a lawyer before signing anything.'},
+         alternatives:{title:'Alternative Funding',content:'Grants, competitions, revenue-based financing, crowdfunding, strategic partnerships. Not everything needs VC.'}
+      };
+      const answer = (idx:number) => {
+         if(answered) return;
+         setSelected(idx);
+         setAnswered(true);
+         if(idx === scenarios[scenario].best) {
+            setScore(s => s + 1);
+            setLog(l => [...l, `Scenario ${scenario+1}: Correct!`]);
+         } else {
+            setLog(l => [...l, `Scenario ${scenario+1}: Wrong`]);
+         }
+      };
+      const next = () => {
+         if(scenario >= scenarios.length - 1) setPhase('result');
+         else { setScenario(s => s + 1); setAnswered(false); setSelected(null); }
+      };
+      const grade = score >= 5 ? 'A' : score >= 4 ? 'B' : score >= 2 ? 'C' : 'D';
+      const s = scenarios[scenario];
+      if(phase === 'intro') return (<div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-emerald-900 via-green-900 to-teal-900 text-white p-6"><div className="text-6xl mb-4">💰</div><h2 className="text-2xl font-bold mb-2">Fundraising Navigator</h2><p className="text-slate-300 text-center mb-6 max-w-md">Match startups with the right funding source! Learn when to bootstrap, raise VC, or use alternatives.</p><button onClick={() => setPhase('play')} className="px-8 py-3 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-xl font-bold">Start Matching</button></div>);
+      if(phase === 'result') return (<div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-emerald-900 via-green-900 to-teal-900 text-white p-6"><div className="text-6xl mb-4">{grade === 'A' ? '🏆' : grade === 'B' ? '💰' : '📊'}</div><h2 className="text-2xl font-bold mb-2">Complete!</h2><div className="text-4xl font-bold text-emerald-400 mb-2">{score}/{scenarios.length}</div><div className="text-6xl mb-4">{grade}</div><p className="text-slate-400 mb-4">{grade === 'A' ? 'Funding expert!' : grade === 'B' ? 'Good instincts!' : 'Keep learning!'}</p><button onClick={() => {setPhase('intro');setScenario(0);setScore(0);setAnswered(false);setSelected(null);setLog([]);}} className="px-6 py-2 bg-emerald-600 rounded-lg">Try Again</button></div>);
+      return (<div className="w-full h-full flex flex-col bg-gradient-to-br from-emerald-900 via-green-900 to-teal-900 text-white overflow-hidden">{showInfo && infoTopic && infoTopics[infoTopic] && (<div className="absolute inset-0 bg-black/80 flex items-center justify-center p-4 z-50" onClick={() => { setShowInfo(false); setInfoTopic(null); }}><div className="bg-slate-800 rounded-xl p-4 max-w-md" onClick={e => e.stopPropagation()}><h3 className="text-lg font-bold text-emerald-400 mb-2">{infoTopics[infoTopic].title}</h3><p className="text-sm text-slate-300">{infoTopics[infoTopic].content}</p><button onClick={() => { setShowInfo(false); setInfoTopic(null); }} className="mt-4 w-full py-2 bg-emerald-600 rounded-lg">Got it!</button></div></div>)}<div className="p-3 bg-black/30 border-b border-emerald-500/30 flex justify-between items-center"><span className="font-bold">💰 Fundraising</span><span className="text-emerald-400">{scenario + 1}/{scenarios.length}</span><span className="text-teal-400">Score: {score}</span></div><div className="flex-1 p-4 flex flex-col justify-center"><div className="bg-black/30 rounded-xl p-4 mb-4"><p className="text-sm">{s.situation}</p><p className="text-xs text-slate-400 mt-2">What funding source fits best?</p></div><div className="grid gap-2">{s.options.map((opt, i) => (<button key={i} onClick={() => answer(i)} disabled={answered} className={`p-3 rounded-lg text-left text-sm ${answered ? i === s.best ? 'bg-green-600' : i === selected ? 'bg-red-600' : 'bg-black/30' : 'bg-black/30 hover:bg-emerald-600/50'}`}>{opt}</button>))}</div>{answered && (<div className="mt-3 p-3 bg-black/30 rounded-lg"><p className="text-sm text-slate-300">{s.explain}</p><button onClick={next} className="mt-3 w-full py-2 bg-emerald-600 rounded-lg">{scenario >= scenarios.length - 1 ? 'See Results' : 'Next'}</button></div>)}</div><div className="p-3 bg-black/30 border-t border-emerald-500/30 flex gap-2 justify-center">{Object.keys(infoTopics).map(k => <button key={k} onClick={() => {setInfoTopic(k);setShowInfo(true);}} className="text-xs text-emerald-400">ℹ️ {infoTopics[k].title}</button>)}</div></div>);
+   };
+
+   const FinancialStatementsRenderer = () => {
+      const [phase, setPhase] = useState<'intro'|'play'|'result'>('intro');
+      const [showInfo, setShowInfo] = useState(false);
+      const [infoTopic, setInfoTopic] = useState<string|null>(null);
+      const [question, setQuestion] = useState(0);
+      const [score, setScore] = useState(0);
+      const [answered, setAnswered] = useState(false);
+      const [selected, setSelected] = useState<number|null>(null);
+      const [log, setLog] = useState<string[]>([]);
+      const questions = [
+         {q:'Revenue is $500k, COGS is $200k, Operating Expenses are $150k. What is Net Income?',opts:['$500k','$300k','$150k','$50k'],correct:2,explain:'Net Income = Revenue - COGS - OpEx = $500k - $200k - $150k = $150k (before taxes).'},
+         {q:'Which financial statement shows a snapshot of what the company owns and owes?',opts:['Income Statement','Balance Sheet','Cash Flow Statement','Cap Table'],correct:1,explain:'Balance Sheet shows Assets = Liabilities + Equity at a specific point in time.'},
+         {q:'Company has $100k cash, $50k AR, $30k inventory, $80k AP. What is working capital?',opts:['$100k','$180k','$100k','$80k'],correct:0,explain:'Working Capital = Current Assets - Current Liabilities = ($100k+$50k+$30k) - $80k = $100k.'},
+         {q:'Net Income is $100k but Cash increased only $20k. Most likely reason?',opts:['Accounting error','Increased inventory/AR','Fraud','Impossible scenario'],correct:1,explain:'Cash and profit differ due to timing: buying inventory or customers not paying yet reduces cash.'},
+         {q:'Gross Margin is 60%, Operating Margin is 20%. What does this tell you?',opts:['Company is losing money','40% goes to operating expenses','Pricing is too low','COGS is too high'],correct:1,explain:'The 40% gap between gross and operating margin is spent on sales, marketing, R&D, admin.'},
+         {q:'Which ratio measures ability to pay short-term debts?',opts:['ROE','Current Ratio','Debt-to-Equity','Gross Margin'],correct:1,explain:'Current Ratio = Current Assets / Current Liabilities. Above 1.0 means can cover short-term debts.'}
+      ];
+      const infoTopics:{[k:string]:{title:string,content:string}} = {
+         income:{title:'Income Statement',content:'Revenue - Expenses = Profit. Shows performance over a period. Also called P&L (Profit & Loss).'},
+         balance:{title:'Balance Sheet',content:'Assets = Liabilities + Equity. Snapshot at a point in time. Shows what you own, owe, and shareholders stake.'},
+         cashflow:{title:'Cash Flow',content:'Operating + Investing + Financing activities. Profit ≠ Cash. You can be profitable and run out of cash.'},
+         ratios:{title:'Key Ratios',content:'Gross Margin, Net Margin, Current Ratio, Quick Ratio, ROE. These help compare companies and spot trends.'}
+      };
+      const answer = (idx:number) => {
+         if(answered) return;
+         setSelected(idx);
+         setAnswered(true);
+         if(idx === questions[question].correct) {
+            setScore(s => s + 1);
+            setLog(l => [...l, `Q${question+1}: Correct!`]);
+         } else {
+            setLog(l => [...l, `Q${question+1}: Wrong`]);
+         }
+      };
+      const next = () => {
+         if(question >= questions.length - 1) setPhase('result');
+         else { setQuestion(q => q + 1); setAnswered(false); setSelected(null); }
+      };
+      const grade = score >= 5 ? 'A' : score >= 4 ? 'B' : score >= 2 ? 'C' : 'D';
+      const q = questions[question];
+      if(phase === 'intro') return (<div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-blue-900 via-slate-900 to-gray-900 text-white p-6"><div className="text-6xl mb-4">📊</div><h2 className="text-2xl font-bold mb-2">Financial Statements</h2><p className="text-slate-300 text-center mb-6 max-w-md">Master the language of business! Understand income statements, balance sheets, and cash flow.</p><button onClick={() => setPhase('play')} className="px-8 py-3 bg-gradient-to-r from-blue-500 to-slate-500 rounded-xl font-bold">Start Quiz</button></div>);
+      if(phase === 'result') return (<div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-blue-900 via-slate-900 to-gray-900 text-white p-6"><div className="text-6xl mb-4">{grade === 'A' ? '📈' : grade === 'B' ? '📊' : '📉'}</div><h2 className="text-2xl font-bold mb-2">Quiz Complete!</h2><div className="text-4xl font-bold text-blue-400 mb-2">{score}/{questions.length}</div><div className="text-6xl mb-4">{grade}</div><p className="text-slate-400 mb-4">{grade === 'A' ? 'CFO material!' : grade === 'B' ? 'Good foundation!' : 'Review the basics!'}</p><button onClick={() => {setPhase('intro');setQuestion(0);setScore(0);setAnswered(false);setSelected(null);setLog([]);}} className="px-6 py-2 bg-blue-600 rounded-lg">Try Again</button></div>);
+      return (<div className="w-full h-full flex flex-col bg-gradient-to-br from-blue-900 via-slate-900 to-gray-900 text-white overflow-hidden">{showInfo && infoTopic && infoTopics[infoTopic] && (<div className="absolute inset-0 bg-black/80 flex items-center justify-center p-4 z-50" onClick={() => { setShowInfo(false); setInfoTopic(null); }}><div className="bg-slate-800 rounded-xl p-4 max-w-md" onClick={e => e.stopPropagation()}><h3 className="text-lg font-bold text-blue-400 mb-2">{infoTopics[infoTopic].title}</h3><p className="text-sm text-slate-300">{infoTopics[infoTopic].content}</p><button onClick={() => { setShowInfo(false); setInfoTopic(null); }} className="mt-4 w-full py-2 bg-blue-600 rounded-lg">Got it!</button></div></div>)}<div className="p-3 bg-black/30 border-b border-blue-500/30 flex justify-between items-center"><span className="font-bold">📊 Financials</span><span className="text-blue-400">{question + 1}/{questions.length}</span><span className="text-slate-400">Score: {score}</span></div><div className="flex-1 p-4 flex flex-col justify-center"><div className="bg-black/30 rounded-xl p-4 mb-4"><p className="text-sm">{q.q}</p></div><div className="grid gap-2">{q.opts.map((opt, i) => (<button key={i} onClick={() => answer(i)} disabled={answered} className={`p-3 rounded-lg text-left text-sm ${answered ? i === q.correct ? 'bg-green-600' : i === selected ? 'bg-red-600' : 'bg-black/30' : 'bg-black/30 hover:bg-blue-600/50'}`}>{opt}</button>))}</div>{answered && (<div className="mt-3 p-3 bg-black/30 rounded-lg"><p className="text-sm text-slate-300">{q.explain}</p><button onClick={next} className="mt-3 w-full py-2 bg-blue-600 rounded-lg">{question >= questions.length - 1 ? 'See Results' : 'Next'}</button></div>)}</div><div className="p-3 bg-black/30 border-t border-blue-500/30 flex gap-2 justify-center">{Object.keys(infoTopics).map(k => <button key={k} onClick={() => {setInfoTopic(k);setShowInfo(true);}} className="text-xs text-blue-400">ℹ️ {infoTopics[k].title}</button>)}</div></div>);
+   };
+
+   const PricingStrategyRenderer = () => {
+      const [phase, setPhase] = useState<'intro'|'play'|'result'>('intro');
+      const [showInfo, setShowInfo] = useState(false);
+      const [infoTopic, setInfoTopic] = useState<string|null>(null);
+      const [round, setRound] = useState(0);
+      const [revenue, setRevenue] = useState(0);
+      const [customers, setCustomers] = useState(0);
+      const [log, setLog] = useState<string[]>([]);
+      const rounds = [
+         {product:'SaaS Tool',cost:20,competitors:[49,79,99],options:[{price:29,demand:100},{price:49,demand:70},{price:79,demand:40},{price:99,demand:20}]},
+         {product:'Online Course',cost:50,competitors:[197,297,497],options:[{price:97,demand:80},{price:197,demand:50},{price:297,demand:30},{price:497,demand:15}]},
+         {product:'Consulting Hour',cost:0,competitors:[150,250,400],options:[{price:100,demand:90},{price:200,demand:50},{price:350,demand:25},{price:500,demand:10}]},
+         {product:'Physical Product',cost:15,competitors:[29,39,49],options:[{price:24,demand:100},{price:34,demand:70},{price:44,demand:45},{price:54,demand:25}]},
+         {product:'Mobile App',cost:5,competitors:[0,4.99,9.99],options:[{price:0,demand:1000},{price:2.99,demand:200},{price:6.99,demand:80},{price:12.99,demand:30}]}
+      ];
+      const infoTopics:{[k:string]:{title:string,content:string}} = {
+         costplus:{title:'Cost-Plus Pricing',content:'Price = Cost + Markup. Simple but ignores what customers will pay and competitor prices.'},
+         value:{title:'Value-Based Pricing',content:'Price based on value delivered to customer. Can charge premium if you solve expensive problems.'},
+         competition:{title:'Competitive Pricing',content:'Price relative to competitors. Can undercut, match, or premium price based on differentiation.'},
+         psychology:{title:'Price Psychology',content:'$99 vs $100 matters. Anchoring, decoy pricing, bundling all influence perceived value.'}
+      };
+      const choose = (idx:number) => {
+         const r = rounds[round];
+         const opt = r.options[idx];
+         const profit = (opt.price - r.cost) * opt.demand;
+         setRevenue(rev => rev + profit);
+         setCustomers(c => c + opt.demand);
+         setLog(l => [...l, `${r.product}: $${opt.price} x ${opt.demand} = $${profit} profit`]);
+         if(round >= rounds.length - 1) setPhase('result');
+         else setRound(rnd => rnd + 1);
+      };
+      const grade = revenue >= 50000 ? 'A' : revenue >= 35000 ? 'B' : revenue >= 20000 ? 'C' : 'D';
+      if(phase === 'intro') return (<div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-yellow-900 via-amber-900 to-orange-900 text-white p-6"><div className="text-6xl mb-4">🏷️</div><h2 className="text-2xl font-bold mb-2">Pricing Strategy</h2><p className="text-slate-300 text-center mb-6 max-w-md">Set prices for 5 products! Balance profit margins with customer demand.</p><button onClick={() => setPhase('play')} className="px-8 py-3 bg-gradient-to-r from-yellow-500 to-orange-500 rounded-xl font-bold">Start Pricing</button></div>);
+      if(phase === 'result') return (<div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-yellow-900 via-amber-900 to-orange-900 text-white p-6"><div className="text-6xl mb-4">{grade === 'A' ? '💰' : grade === 'B' ? '📈' : '📊'}</div><h2 className="text-2xl font-bold mb-2">Pricing Complete!</h2><div className="text-2xl font-bold text-yellow-400 mb-2">${revenue.toLocaleString()} Profit</div><div className="text-sm text-slate-400 mb-4">{customers} total customers</div><div className="text-6xl mb-4">{grade}</div><p className="text-slate-400 mb-4">{grade === 'A' ? 'Pricing genius!' : grade === 'B' ? 'Good margins!' : 'Left money on table!'}</p><button onClick={() => {setPhase('intro');setRound(0);setRevenue(0);setCustomers(0);setLog([]);}} className="px-6 py-2 bg-yellow-600 rounded-lg">Try Again</button></div>);
+      const r = rounds[round];
+      return (<div className="w-full h-full flex flex-col bg-gradient-to-br from-yellow-900 via-amber-900 to-orange-900 text-white overflow-hidden">{showInfo && infoTopic && infoTopics[infoTopic] && (<div className="absolute inset-0 bg-black/80 flex items-center justify-center p-4 z-50" onClick={() => { setShowInfo(false); setInfoTopic(null); }}><div className="bg-slate-800 rounded-xl p-4 max-w-md" onClick={e => e.stopPropagation()}><h3 className="text-lg font-bold text-yellow-400 mb-2">{infoTopics[infoTopic].title}</h3><p className="text-sm text-slate-300">{infoTopics[infoTopic].content}</p><button onClick={() => { setShowInfo(false); setInfoTopic(null); }} className="mt-4 w-full py-2 bg-yellow-600 rounded-lg">Got it!</button></div></div>)}<div className="p-3 bg-black/30 border-b border-yellow-500/30"><div className="flex justify-between items-center mb-2"><span className="font-bold">🏷️ Pricing</span><span className="text-yellow-400">{round + 1}/{rounds.length}</span></div><div className="flex gap-4 text-sm"><span>💰 ${revenue.toLocaleString()}</span><span>👥 {customers}</span></div></div><div className="flex-1 p-4 flex flex-col justify-center"><div className="bg-black/30 rounded-xl p-4 mb-3"><p className="font-bold text-lg">{r.product}</p><p className="text-sm text-slate-400">Your cost: ${r.cost} | Competitors: ${r.competitors.join(', $')}</p></div><div className="grid gap-2">{r.options.map((opt, i) => (<button key={i} onClick={() => choose(i)} className="p-3 bg-black/30 hover:bg-yellow-600/50 rounded-lg text-left"><div className="flex justify-between"><span className="font-bold">${opt.price}</span><span className="text-sm text-slate-400">~{opt.demand} customers</span></div><div className="text-xs text-slate-500">Profit: ${(opt.price - r.cost) * opt.demand}</div></button>))}</div></div><div className="p-3 bg-black/30 border-t border-yellow-500/30 flex gap-2 justify-center">{Object.keys(infoTopics).map(k => <button key={k} onClick={() => {setInfoTopic(k);setShowInfo(true);}} className="text-xs text-yellow-400">ℹ️ {infoTopics[k].title}</button>)}</div></div>);
+   };
+
+   const BudgetingRenderer = () => {
+      const [phase, setPhase] = useState<'intro'|'play'|'result'>('intro');
+      const [showInfo, setShowInfo] = useState(false);
+      const [infoTopic, setInfoTopic] = useState<string|null>(null);
+      const [month, setMonth] = useState(1);
+      const [cash, setCash] = useState(50000);
+      const [revenue] = useState(20000);
+      const [allocations, setAllocations] = useState<{[k:string]:number}>({});
+      const [log, setLog] = useState<string[]>([]);
+      const categories = [
+         {id:'payroll',name:'Payroll',icon:'👥',min:8000,max:15000,impact:'team'},
+         {id:'marketing',name:'Marketing',icon:'📢',min:0,max:8000,impact:'growth'},
+         {id:'operations',name:'Operations',icon:'⚙️',min:2000,max:5000,impact:'stability'},
+         {id:'rnd',name:'R&D',icon:'🔬',min:0,max:6000,impact:'product'},
+         {id:'emergency',name:'Emergency Fund',icon:'🛡️',min:0,max:5000,impact:'safety'}
+      ];
+      const infoTopics:{[k:string]:{title:string,content:string}} = {
+         runway:{title:'Cash Runway',content:'Months of operation before running out of cash. Runway = Cash / Monthly Burn. Always know your runway.'},
+         burn:{title:'Burn Rate',content:'How much cash you spend per month. Gross burn = total spending. Net burn = spending - revenue.'},
+         zero:{title:'Zero-Based Budgeting',content:'Start from zero each period, justify every expense. Prevents bloat but takes more time.'},
+         forecast:{title:'Forecasting',content:'Project future revenue and expenses. Be conservative on revenue, generous on expenses.'}
+      };
+      const [budgetSet, setBudgetSet] = useState(false);
+      const setBudget = (id:string, val:number) => {
+         setAllocations(a => ({...a, [id]: val}));
+      };
+      const totalAllocated = Object.values(allocations).reduce((a,b) => a + b, 0);
+      const confirmBudget = () => {
+         if(totalAllocated > revenue) return;
+         setBudgetSet(true);
+         const saved = revenue - totalAllocated;
+         setCash(c => c + saved);
+         setLog(l => [...l, `Month ${month}: Allocated $${totalAllocated}, Saved $${saved}`]);
+      };
+      const nextMonth = () => {
+         if(month >= 6) setPhase('result');
+         else { setMonth(m => m + 1); setAllocations({}); setBudgetSet(false); }
+      };
+      const grade = cash >= 80000 ? 'A' : cash >= 60000 ? 'B' : cash >= 40000 ? 'C' : 'D';
+      if(phase === 'intro') return (<div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-violet-900 via-purple-900 to-indigo-900 text-white p-6"><div className="text-6xl mb-4">📋</div><h2 className="text-2xl font-bold mb-2">Startup Budgeting</h2><p className="text-slate-300 text-center mb-6 max-w-md">Manage your startup budget for 6 months! Allocate $20k monthly revenue across categories.</p><button onClick={() => setPhase('play')} className="px-8 py-3 bg-gradient-to-r from-violet-500 to-indigo-500 rounded-xl font-bold">Start Budgeting</button></div>);
+      if(phase === 'result') return (<div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-violet-900 via-purple-900 to-indigo-900 text-white p-6"><div className="text-6xl mb-4">{grade === 'A' ? '🏆' : grade === 'B' ? '📈' : '📊'}</div><h2 className="text-2xl font-bold mb-2">6 Months Complete!</h2><div className="text-2xl font-bold text-violet-400 mb-2">${cash.toLocaleString()} Cash</div><div className="text-sm text-slate-400 mb-4">Started: $50,000</div><div className="text-6xl mb-4">{grade}</div><p className="text-slate-400 mb-4">{grade === 'A' ? 'Financial wizard!' : grade === 'B' ? 'Good management!' : 'Watch the burn!'}</p><button onClick={() => {setPhase('intro');setMonth(1);setCash(50000);setAllocations({});setBudgetSet(false);setLog([]);}} className="px-6 py-2 bg-violet-600 rounded-lg">Try Again</button></div>);
+      return (<div className="w-full h-full flex flex-col bg-gradient-to-br from-violet-900 via-purple-900 to-indigo-900 text-white overflow-hidden">{showInfo && infoTopic && infoTopics[infoTopic] && (<div className="absolute inset-0 bg-black/80 flex items-center justify-center p-4 z-50" onClick={() => { setShowInfo(false); setInfoTopic(null); }}><div className="bg-slate-800 rounded-xl p-4 max-w-md" onClick={e => e.stopPropagation()}><h3 className="text-lg font-bold text-violet-400 mb-2">{infoTopics[infoTopic].title}</h3><p className="text-sm text-slate-300">{infoTopics[infoTopic].content}</p><button onClick={() => { setShowInfo(false); setInfoTopic(null); }} className="mt-4 w-full py-2 bg-violet-600 rounded-lg">Got it!</button></div></div>)}<div className="p-3 bg-black/30 border-b border-violet-500/30"><div className="flex justify-between items-center mb-2"><span className="font-bold">📋 Budget</span><span className="text-violet-400">Month {month}/6</span></div><div className="flex gap-4 text-sm"><span>💵 Cash: ${cash.toLocaleString()}</span><span>📈 Revenue: ${revenue.toLocaleString()}</span></div></div><div className="flex-1 p-3 overflow-auto">{!budgetSet ? (<div className="space-y-3">{categories.map(cat => (<div key={cat.id} className="bg-black/30 rounded-lg p-3"><div className="flex justify-between mb-2"><span>{cat.icon} {cat.name}</span><span className="text-violet-400">${allocations[cat.id] || 0}</span></div><input type="range" min={cat.min} max={cat.max} step={500} value={allocations[cat.id] || cat.min} onChange={e => setBudget(cat.id, Number(e.target.value))} className="w-full" /></div>))}<div className={`text-center p-2 rounded ${totalAllocated > revenue ? 'bg-red-600/50' : 'bg-green-600/50'}`}>{totalAllocated > revenue ? `Over budget by $${totalAllocated - revenue}` : `$${revenue - totalAllocated} unallocated (savings)`}</div></div>) : (<div className="text-center p-4"><p className="text-xl mb-4">Budget set for Month {month}</p><p className="text-slate-400">Allocated: ${totalAllocated}</p><p className="text-green-400">Saved: ${revenue - totalAllocated}</p></div>)}</div><div className="p-3 bg-black/30 border-t border-violet-500/30">{!budgetSet ? (<button onClick={confirmBudget} disabled={totalAllocated > revenue} className="w-full py-3 bg-violet-600 rounded-xl font-bold disabled:opacity-50">Confirm Budget</button>) : (<button onClick={nextMonth} className="w-full py-3 bg-violet-600 rounded-xl font-bold">{month >= 6 ? 'See Results' : 'Next Month'}</button>)}<div className="flex gap-2 mt-2 justify-center">{Object.keys(infoTopics).map(k => <button key={k} onClick={() => {setInfoTopic(k);setShowInfo(true);}} className="text-xs text-violet-400">ℹ️ {infoTopics[k].title}</button>)}</div></div></div>);
+   };
+
+   const UnitEconomicsRenderer = () => {
+      const [phase, setPhase] = useState<'intro'|'play'|'result'>('intro');
+      const [showInfo, setShowInfo] = useState(false);
+      const [infoTopic, setInfoTopic] = useState<string|null>(null);
+      const [scenario, setScenario] = useState(0);
+      const [score, setScore] = useState(0);
+      const [answered, setAnswered] = useState(false);
+      const [selected, setSelected] = useState<number|null>(null);
+      const [log, setLog] = useState<string[]>([]);
+      const scenarios = [
+         {data:{cac:100,monthlyRevenue:50,churn:'5%'},q:'What is the LTV if avg customer stays 20 months?',opts:['$100','$500','$1000','$2000'],correct:2,explain:'LTV = Monthly Revenue × Months = $50 × 20 = $1000. LTV:CAC = 10:1 (excellent).'},
+         {data:{price:99,cogs:30,marketing:20,overhead:15},q:'What is the contribution margin per unit?',opts:['$99','$69','$49','$34'],correct:2,explain:'Contribution Margin = Price - COGS - Variable Costs = $99 - $30 - $20 = $49.'},
+         {data:{fixedCosts:10000,contributionMargin:50,price:100},q:'What is the breakeven point in units?',opts:['100 units','200 units','500 units','1000 units'],correct:1,explain:'Breakeven = Fixed Costs / Contribution Margin = $10,000 / $50 = 200 units.'},
+         {data:{cac:200,ltv:600,payback:'8 months'},q:'Is this a healthy LTV:CAC ratio?',opts:['No, too low','Borderline acceptable','Yes, healthy','Exceptional'],correct:2,explain:'LTV:CAC = 3:1 is the benchmark for healthy unit economics. 600:200 = 3:1 exactly.'},
+         {data:{revenue:100000,customers:500,cac:150,churn:'3%'},q:'What is the ARPU (Average Revenue Per User)?',opts:['$50','$100','$150','$200'],correct:3,explain:'ARPU = Revenue / Customers = $100,000 / 500 = $200 per customer.'},
+         {data:{grossMargin:'70%',netMargin:'10%',revenue:1000000},q:'What are the operating expenses?',opts:['$100k','$300k','$600k','$700k'],correct:2,explain:'Gross Profit = $700k. Net Profit = $100k. OpEx = $700k - $100k = $600k.'}
+      ];
+      const infoTopics:{[k:string]:{title:string,content:string}} = {
+         ltv:{title:'LTV (Lifetime Value)',content:'Total revenue from a customer over their lifetime. LTV = ARPU × Average Lifespan. Higher is better.'},
+         cac:{title:'CAC (Customer Acquisition Cost)',content:'Cost to acquire one customer. Include all sales and marketing divided by new customers.'},
+         ratio:{title:'LTV:CAC Ratio',content:'3:1 is healthy benchmark. Below 1:1 means you lose money on each customer. Above 5:1 may mean underinvesting.'},
+         payback:{title:'CAC Payback',content:'Months to recover acquisition cost. Under 12 months is good for SaaS. Shorter = faster reinvestment.'}
+      };
+      const answer = (idx:number) => {
+         if(answered) return;
+         setSelected(idx);
+         setAnswered(true);
+         if(idx === scenarios[scenario].correct) {
+            setScore(s => s + 1);
+            setLog(l => [...l, `Scenario ${scenario+1}: Correct!`]);
+         } else {
+            setLog(l => [...l, `Scenario ${scenario+1}: Wrong`]);
+         }
+      };
+      const next = () => {
+         if(scenario >= scenarios.length - 1) setPhase('result');
+         else { setScenario(s => s + 1); setAnswered(false); setSelected(null); }
+      };
+      const grade = score >= 5 ? 'A' : score >= 4 ? 'B' : score >= 2 ? 'C' : 'D';
+      const s = scenarios[scenario];
+      if(phase === 'intro') return (<div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-cyan-900 via-sky-900 to-blue-900 text-white p-6"><div className="text-6xl mb-4">📐</div><h2 className="text-2xl font-bold mb-2">Unit Economics</h2><p className="text-slate-300 text-center mb-6 max-w-md">Master the numbers that matter! Calculate LTV, CAC, margins, and breakeven.</p><button onClick={() => setPhase('play')} className="px-8 py-3 bg-gradient-to-r from-cyan-500 to-blue-500 rounded-xl font-bold">Start Calculating</button></div>);
+      if(phase === 'result') return (<div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-cyan-900 via-sky-900 to-blue-900 text-white p-6"><div className="text-6xl mb-4">{grade === 'A' ? '🧮' : grade === 'B' ? '📊' : '📉'}</div><h2 className="text-2xl font-bold mb-2">Complete!</h2><div className="text-4xl font-bold text-cyan-400 mb-2">{score}/{scenarios.length}</div><div className="text-6xl mb-4">{grade}</div><p className="text-slate-400 mb-4">{grade === 'A' ? 'Unit economics master!' : grade === 'B' ? 'Good grasp!' : 'Review the formulas!'}</p><button onClick={() => {setPhase('intro');setScenario(0);setScore(0);setAnswered(false);setSelected(null);setLog([]);}} className="px-6 py-2 bg-cyan-600 rounded-lg">Try Again</button></div>);
+      return (<div className="w-full h-full flex flex-col bg-gradient-to-br from-cyan-900 via-sky-900 to-blue-900 text-white overflow-hidden">{showInfo && infoTopic && infoTopics[infoTopic] && (<div className="absolute inset-0 bg-black/80 flex items-center justify-center p-4 z-50" onClick={() => { setShowInfo(false); setInfoTopic(null); }}><div className="bg-slate-800 rounded-xl p-4 max-w-md" onClick={e => e.stopPropagation()}><h3 className="text-lg font-bold text-cyan-400 mb-2">{infoTopics[infoTopic].title}</h3><p className="text-sm text-slate-300">{infoTopics[infoTopic].content}</p><button onClick={() => { setShowInfo(false); setInfoTopic(null); }} className="mt-4 w-full py-2 bg-cyan-600 rounded-lg">Got it!</button></div></div>)}<div className="p-3 bg-black/30 border-b border-cyan-500/30 flex justify-between items-center"><span className="font-bold">📐 Unit Economics</span><span className="text-cyan-400">{scenario + 1}/{scenarios.length}</span><span className="text-sky-400">Score: {score}</span></div><div className="flex-1 p-4 overflow-auto"><div className="bg-black/30 rounded-xl p-3 mb-3"><p className="text-xs text-slate-400 mb-2">Given Data:</p><div className="grid grid-cols-2 gap-2">{Object.entries(s.data).map(([k,v]) => (<div key={k} className="bg-black/30 rounded p-2 text-center"><div className="text-lg font-bold text-cyan-400">{v}</div><div className="text-xs text-slate-400 uppercase">{k}</div></div>))}</div></div><div className="bg-black/30 rounded-xl p-4 mb-3"><p className="font-medium">{s.q}</p></div><div className="grid gap-2">{s.opts.map((opt, i) => (<button key={i} onClick={() => answer(i)} disabled={answered} className={`p-3 rounded-lg text-left ${answered ? i === s.correct ? 'bg-green-600' : i === selected ? 'bg-red-600' : 'bg-black/30' : 'bg-black/30 hover:bg-cyan-600/50'}`}>{opt}</button>))}</div>{answered && (<div className="mt-3 p-3 bg-black/30 rounded-lg"><p className="text-sm text-slate-300">{s.explain}</p><button onClick={next} className="mt-3 w-full py-2 bg-cyan-600 rounded-lg">{scenario >= scenarios.length - 1 ? 'See Results' : 'Next'}</button></div>)}</div><div className="p-3 bg-black/30 border-t border-cyan-500/30 flex gap-2 justify-center">{Object.keys(infoTopics).map(k => <button key={k} onClick={() => {setInfoTopic(k);setShowInfo(true);}} className="text-xs text-cyan-400">ℹ️ {infoTopics[k].title}</button>)}</div></div>);
+   };
+
+   // --- STRATEGY & GROWTH RENDERERS ---
+   const MarketResearchRenderer = () => {
+      const [phase, setPhase] = useState<'intro'|'play'|'result'>('intro');
+      const [showInfo, setShowInfo] = useState(false);
+      const [infoTopic, setInfoTopic] = useState<string|null>(null);
+      const [question, setQuestion] = useState(0);
+      const [score, setScore] = useState(0);
+      const [answered, setAnswered] = useState(false);
+      const [selected, setSelected] = useState<number|null>(null);
+      const [log, setLog] = useState<string[]>([]);
+      const questions = [
+         {q:'TAM is $10B, SAM is $1B, SOM is $100M. What does SOM represent?',opts:['Total market globally','Market you can serve','Market you can realistically capture','Your current revenue'],correct:2,explain:'SOM (Serviceable Obtainable Market) is the realistic portion you can capture given resources and competition.'},
+         {q:'Which research method gives qualitative insights but is hard to scale?',opts:['Surveys','Customer interviews','A/B testing','Analytics'],correct:1,explain:'Interviews provide deep insights into motivations and pain points but are time-intensive to conduct.'},
+         {q:'Your survey has 1000 responses with 60% saying they would buy. How many will actually buy?',opts:['600','300','60','Unknown without more data'],correct:2,explain:'Rule of thumb: divide stated intent by 10. People overstate purchase intent. 60% stated = ~6% actual.'},
+         {q:'What is a "Jobs to be Done" framework used for?',opts:['HR hiring','Understanding why customers buy','Task management','Market sizing'],correct:1,explain:'JTBD focuses on the underlying job/goal customers are trying to accomplish, not product features.'},
+         {q:'Which metric best validates product-market fit?',opts:['Website traffic','Social media followers','40%+ would be very disappointed without product','Investor interest'],correct:2,explain:'Sean Ellis test: if 40%+ of users would be "very disappointed" without your product, you have PMF.'},
+         {q:'Primary research is data you collect yourself. What is secondary research?',opts:['Less important research','Research using existing data/reports','Research done second','Backup research'],correct:1,explain:'Secondary research uses existing sources: industry reports, census data, competitor filings, etc.'}
+      ];
+      const infoTopics:{[k:string]:{title:string,content:string}} = {
+         tam:{title:'TAM/SAM/SOM',content:'TAM = Total market. SAM = Serviceable (you could reach). SOM = Obtainable (you can realistically get). Investors want big TAM, realistic SOM.'},
+         methods:{title:'Research Methods',content:'Surveys (quantitative), Interviews (qualitative), Focus groups, Observation, Analytics. Mix methods for best insights.'},
+         validation:{title:'Validation',content:'Talk to 50+ potential customers before building. Ask about problems, not solutions. "Would you buy?" means little.'},
+         pmf:{title:'Product-Market Fit',content:'When customers desperately want your product. Signs: organic growth, low churn, word of mouth, pull not push.'}
+      };
+      const answer = (idx:number) => {
+         if(answered) return;
+         setSelected(idx);
+         setAnswered(true);
+         if(idx === questions[question].correct) {
+            setScore(s => s + 1);
+            setLog(l => [...l, `Q${question+1}: Correct!`]);
+         } else {
+            setLog(l => [...l, `Q${question+1}: Wrong`]);
+         }
+      };
+      const next = () => {
+         if(question >= questions.length - 1) setPhase('result');
+         else { setQuestion(q => q + 1); setAnswered(false); setSelected(null); }
+      };
+      const grade = score >= 5 ? 'A' : score >= 4 ? 'B' : score >= 2 ? 'C' : 'D';
+      const q = questions[question];
+      if(phase === 'intro') return (<div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-teal-900 via-emerald-900 to-green-900 text-white p-6"><div className="text-6xl mb-4">🔬</div><h2 className="text-2xl font-bold mb-2">Market Research</h2><p className="text-slate-300 text-center mb-6 max-w-md">Master market research! Learn TAM/SAM/SOM, validation methods, and product-market fit.</p><button onClick={() => setPhase('play')} className="px-8 py-3 bg-gradient-to-r from-teal-500 to-emerald-500 rounded-xl font-bold">Start Learning</button></div>);
+      if(phase === 'result') return (<div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-teal-900 via-emerald-900 to-green-900 text-white p-6"><div className="text-6xl mb-4">{grade === 'A' ? '🔬' : grade === 'B' ? '📊' : '📋'}</div><h2 className="text-2xl font-bold mb-2">Research Complete!</h2><div className="text-4xl font-bold text-teal-400 mb-2">{score}/{questions.length}</div><div className="text-6xl mb-4">{grade}</div><p className="text-slate-400 mb-4">{grade === 'A' ? 'Research expert!' : grade === 'B' ? 'Good foundation!' : 'Keep learning!'}</p><button onClick={() => {setPhase('intro');setQuestion(0);setScore(0);setAnswered(false);setSelected(null);setLog([]);}} className="px-6 py-2 bg-teal-600 rounded-lg">Try Again</button></div>);
+      return (<div className="w-full h-full flex flex-col bg-gradient-to-br from-teal-900 via-emerald-900 to-green-900 text-white overflow-hidden">{showInfo && infoTopic && infoTopics[infoTopic] && (<div className="absolute inset-0 bg-black/80 flex items-center justify-center p-4 z-50" onClick={() => { setShowInfo(false); setInfoTopic(null); }}><div className="bg-slate-800 rounded-xl p-4 max-w-md" onClick={e => e.stopPropagation()}><h3 className="text-lg font-bold text-teal-400 mb-2">{infoTopics[infoTopic].title}</h3><p className="text-sm text-slate-300">{infoTopics[infoTopic].content}</p><button onClick={() => { setShowInfo(false); setInfoTopic(null); }} className="mt-4 w-full py-2 bg-teal-600 rounded-lg">Got it!</button></div></div>)}<div className="p-3 bg-black/30 border-b border-teal-500/30 flex justify-between items-center"><span className="font-bold">🔬 Market Research</span><span className="text-teal-400">{question + 1}/{questions.length}</span><span className="text-emerald-400">Score: {score}</span></div><div className="flex-1 p-4 flex flex-col justify-center"><div className="bg-black/30 rounded-xl p-4 mb-4"><p className="text-sm">{q.q}</p></div><div className="grid gap-2">{q.opts.map((opt, i) => (<button key={i} onClick={() => answer(i)} disabled={answered} className={`p-3 rounded-lg text-left text-sm ${answered ? i === q.correct ? 'bg-green-600' : i === selected ? 'bg-red-600' : 'bg-black/30' : 'bg-black/30 hover:bg-teal-600/50'}`}>{opt}</button>))}</div>{answered && (<div className="mt-3 p-3 bg-black/30 rounded-lg"><p className="text-sm text-slate-300">{q.explain}</p><button onClick={next} className="mt-3 w-full py-2 bg-teal-600 rounded-lg">{question >= questions.length - 1 ? 'See Results' : 'Next'}</button></div>)}</div><div className="p-3 bg-black/30 border-t border-teal-500/30 flex gap-2 justify-center">{Object.keys(infoTopics).map(k => <button key={k} onClick={() => {setInfoTopic(k);setShowInfo(true);}} className="text-xs text-teal-400">ℹ️ {infoTopics[k].title}</button>)}</div></div>);
+   };
+
+   const CompetitiveAnalysisRenderer = () => {
+      const [phase, setPhase] = useState<'intro'|'play'|'result'>('intro');
+      const [showInfo, setShowInfo] = useState(false);
+      const [infoTopic, setInfoTopic] = useState<string|null>(null);
+      const [scenario, setScenario] = useState(0);
+      const [score, setScore] = useState(0);
+      const [answered, setAnswered] = useState(false);
+      const [selected, setSelected] = useState<number|null>(null);
+      const [log, setLog] = useState<string[]>([]);
+      const scenarios = [
+         {competitor:{name:'BigCorp',strengths:['Brand','Resources','Distribution'],weaknesses:['Slow','Expensive','Poor UX']},q:'Best strategy against this competitor?',opts:['Compete on price','Move faster with better UX','Build bigger brand','Copy their model'],correct:1,explain:'Attack weaknesses. Being nimble with better UX exploits their slow/poor UX weaknesses.'},
+         {competitor:{name:'Startup X',strengths:['Innovative','Fast','VC-funded'],weaknesses:['Unproven','Burning cash','Small team']},q:'What is their biggest vulnerability?',opts:['Innovation','Speed','Cash burn sustainability','Team size'],correct:2,explain:'VC money runs out. If they are burning cash without revenue, they are racing against runway.'},
+         {competitor:{name:'Market Leader',strengths:['80% market share','Network effects','Data moat'],weaknesses:['Complacent','Legacy tech','Ignored segments']},q:'Where should you attack?',opts:['Go head-to-head','Target ignored segments','Build same network','Copy their tech'],correct:1,explain:'Attack where they are not looking. Ignored segments can become beachheads for expansion.'},
+         {competitor:{name:'Open Source',strengths:['Free','Community','Customizable'],weaknesses:['No support','Complex setup','Fragmented']},q:'How do you compete with free?',opts:['Also be free','Premium support & simplicity','Ignore them','Acquire them'],correct:1,explain:'Compete on convenience, support, and integration. Enterprises pay for reliability over free.'},
+         {competitor:{name:'Direct Clone',strengths:['Copies your features','Undercuts price','Well-funded'],weaknesses:['No innovation','Following not leading','No brand'],correct:2,q:'Best response to a copycat?',opts:['Sue them','Lower prices','Out-innovate','Ignore them'],explain:'Keep innovating. They can copy features but not your vision, speed, or customer relationships.'}
+      ];
+      const infoTopics:{[k:string]:{title:string,content:string}} = {
+         porter:{title:"Porter's 5 Forces",content:'Supplier power, Buyer power, Competitive rivalry, Threat of substitution, Threat of new entry. Analyze industry attractiveness.'},
+         moats:{title:'Competitive Moats',content:'Network effects, Switching costs, Brand, Scale, Patents, Data. Sustainable advantages that protect market position.'},
+         positioning:{title:'Positioning',content:'Own a unique space in customer minds. Be #1 at something specific rather than okay at everything.'},
+         swot:{title:'SWOT Analysis',content:'Strengths, Weaknesses, Opportunities, Threats. Match internal capabilities to external environment.'}
+      };
+      const answer = (idx:number) => {
+         if(answered) return;
+         setSelected(idx);
+         setAnswered(true);
+         if(idx === scenarios[scenario].correct) {
+            setScore(s => s + 1);
+            setLog(l => [...l, `Scenario ${scenario+1}: Correct!`]);
+         } else {
+            setLog(l => [...l, `Scenario ${scenario+1}: Wrong`]);
+         }
+      };
+      const next = () => {
+         if(scenario >= scenarios.length - 1) setPhase('result');
+         else { setScenario(s => s + 1); setAnswered(false); setSelected(null); }
+      };
+      const grade = score >= 4 ? 'A' : score >= 3 ? 'B' : score >= 2 ? 'C' : 'D';
+      const s = scenarios[scenario];
+      if(phase === 'intro') return (<div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-red-900 via-rose-900 to-pink-900 text-white p-6"><div className="text-6xl mb-4">⚔️</div><h2 className="text-2xl font-bold mb-2">Competitive Analysis</h2><p className="text-slate-300 text-center mb-6 max-w-md">Analyze competitors and find winning strategies! Learn to identify weaknesses and attack vectors.</p><button onClick={() => setPhase('play')} className="px-8 py-3 bg-gradient-to-r from-red-500 to-rose-500 rounded-xl font-bold">Start Analysis</button></div>);
+      if(phase === 'result') return (<div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-red-900 via-rose-900 to-pink-900 text-white p-6"><div className="text-6xl mb-4">{grade === 'A' ? '🏆' : grade === 'B' ? '⚔️' : '📊'}</div><h2 className="text-2xl font-bold mb-2">Analysis Complete!</h2><div className="text-4xl font-bold text-red-400 mb-2">{score}/{scenarios.length}</div><div className="text-6xl mb-4">{grade}</div><p className="text-slate-400 mb-4">{grade === 'A' ? 'Strategic genius!' : grade === 'B' ? 'Good strategist!' : 'Study competitors more!'}</p><button onClick={() => {setPhase('intro');setScenario(0);setScore(0);setAnswered(false);setSelected(null);setLog([]);}} className="px-6 py-2 bg-red-600 rounded-lg">Try Again</button></div>);
+      return (<div className="w-full h-full flex flex-col bg-gradient-to-br from-red-900 via-rose-900 to-pink-900 text-white overflow-hidden">{showInfo && infoTopic && infoTopics[infoTopic] && (<div className="absolute inset-0 bg-black/80 flex items-center justify-center p-4 z-50" onClick={() => { setShowInfo(false); setInfoTopic(null); }}><div className="bg-slate-800 rounded-xl p-4 max-w-md" onClick={e => e.stopPropagation()}><h3 className="text-lg font-bold text-red-400 mb-2">{infoTopics[infoTopic].title}</h3><p className="text-sm text-slate-300">{infoTopics[infoTopic].content}</p><button onClick={() => { setShowInfo(false); setInfoTopic(null); }} className="mt-4 w-full py-2 bg-red-600 rounded-lg">Got it!</button></div></div>)}<div className="p-3 bg-black/30 border-b border-red-500/30 flex justify-between items-center"><span className="font-bold">⚔️ Competitive Analysis</span><span className="text-red-400">{scenario + 1}/{scenarios.length}</span><span className="text-rose-400">Score: {score}</span></div><div className="flex-1 p-4 overflow-auto"><div className="bg-black/30 rounded-xl p-3 mb-3"><p className="font-bold text-red-400 mb-2">{s.competitor.name}</p><div className="grid grid-cols-2 gap-2 text-xs"><div><p className="text-green-400 mb-1">Strengths:</p>{s.competitor.strengths.map((str,i) => <p key={i} className="text-slate-300">• {str}</p>)}</div><div><p className="text-red-400 mb-1">Weaknesses:</p>{s.competitor.weaknesses.map((w,i) => <p key={i} className="text-slate-300">• {w}</p>)}</div></div></div><div className="bg-black/30 rounded-xl p-4 mb-3"><p className="font-medium">{s.q}</p></div><div className="grid gap-2">{s.opts.map((opt, i) => (<button key={i} onClick={() => answer(i)} disabled={answered} className={`p-3 rounded-lg text-left text-sm ${answered ? i === s.correct ? 'bg-green-600' : i === selected ? 'bg-red-600' : 'bg-black/30' : 'bg-black/30 hover:bg-red-600/50'}`}>{opt}</button>))}</div>{answered && (<div className="mt-3 p-3 bg-black/30 rounded-lg"><p className="text-sm text-slate-300">{s.explain}</p><button onClick={next} className="mt-3 w-full py-2 bg-red-600 rounded-lg">{scenario >= scenarios.length - 1 ? 'See Results' : 'Next'}</button></div>)}</div><div className="p-3 bg-black/30 border-t border-red-500/30 flex gap-2 justify-center">{Object.keys(infoTopics).map(k => <button key={k} onClick={() => {setInfoTopic(k);setShowInfo(true);}} className="text-xs text-red-400">ℹ️ {infoTopics[k].title}</button>)}</div></div>);
+   };
+
+   const BusinessModelRenderer = () => {
+      const [phase, setPhase] = useState<'intro'|'play'|'result'>('intro');
+      const [showInfo, setShowInfo] = useState(false);
+      const [infoTopic, setInfoTopic] = useState<string|null>(null);
+      const [step, setStep] = useState(0);
+      const [model, setModel] = useState<{[k:string]:string}>({});
+      const [log, setLog] = useState<string[]>([]);
+      const steps = [
+         {element:'Customer Segments',question:'Who are your customers?',options:['Mass market (everyone)','Niche market (specific segment)','Multi-sided platform (2+ groups)','Diversified (unrelated segments)']},
+         {element:'Value Proposition',question:'What value do you deliver?',options:['Newness (innovation)','Performance (better/faster)','Convenience (easier access)','Price (cheaper alternative)']},
+         {element:'Revenue Streams',question:'How do you make money?',options:['One-time sales','Subscription recurring','Freemium + premium','Transaction fees/commission']},
+         {element:'Channels',question:'How do you reach customers?',options:['Direct sales team','Online/digital only','Partner distribution','Retail/physical stores']},
+         {element:'Key Resources',question:'What is your key asset?',options:['Technology/IP','Human expertise','Brand/community','Physical assets']}
+      ];
+      const infoTopics:{[k:string]:{title:string,content:string}} = {
+         canvas:{title:'Business Model Canvas',content:'9 blocks: Customer Segments, Value Prop, Channels, Customer Relationships, Revenue, Key Resources, Activities, Partners, Costs.'},
+         revenue:{title:'Revenue Models',content:'Subscription, Freemium, Marketplace, Advertising, Licensing, Transaction fees. Match model to value delivery.'},
+         lean:{title:'Lean Canvas',content:'Startup-focused version: Problem, Solution, Key Metrics, Unique Value Prop, Unfair Advantage, Channels, Segments, Costs, Revenue.'},
+         fit:{title:'Model-Market Fit',content:'Your business model must match how customers want to buy. B2B enterprise ≠ B2C consumer.'}
+      };
+      const choose = (idx:number) => {
+         setModel(m => ({...m, [steps[step].element]: steps[step].options[idx]}));
+         setLog(l => [...l, `${steps[step].element}: ${steps[step].options[idx]}`]);
+         if(step >= steps.length - 1) setPhase('result');
+         else setStep(s => s + 1);
+      };
+      const modelType = model['Revenue Streams']?.includes('Subscription') ? 'SaaS' : model['Revenue Streams']?.includes('commission') ? 'Marketplace' : model['Revenue Streams']?.includes('Freemium') ? 'Freemium' : 'Traditional';
+      if(phase === 'intro') return (<div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-purple-900 via-violet-900 to-indigo-900 text-white p-6"><div className="text-6xl mb-4">🏗️</div><h2 className="text-2xl font-bold mb-2">Business Model Builder</h2><p className="text-slate-300 text-center mb-6 max-w-md">Design your business model! Choose elements that define how you create and capture value.</p><button onClick={() => setPhase('play')} className="px-8 py-3 bg-gradient-to-r from-purple-500 to-indigo-500 rounded-xl font-bold">Start Building</button></div>);
+      if(phase === 'result') return (<div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-purple-900 via-violet-900 to-indigo-900 text-white p-6"><div className="text-6xl mb-4">🏗️</div><h2 className="text-2xl font-bold mb-2">Model Complete!</h2><div className="text-xl font-bold text-purple-400 mb-4">{modelType} Business Model</div><div className="bg-black/30 rounded-xl p-4 mb-4 text-left max-w-sm w-full">{Object.entries(model).map(([k,v]) => (<div key={k} className="mb-2"><span className="text-purple-400 text-xs">{k}:</span><p className="text-sm">{v}</p></div>))}</div><button onClick={() => {setPhase('intro');setStep(0);setModel({});setLog([]);}} className="px-6 py-2 bg-purple-600 rounded-lg">Build Another</button></div>);
+      const s = steps[step];
+      return (<div className="w-full h-full flex flex-col bg-gradient-to-br from-purple-900 via-violet-900 to-indigo-900 text-white overflow-hidden">{showInfo && infoTopic && infoTopics[infoTopic] && (<div className="absolute inset-0 bg-black/80 flex items-center justify-center p-4 z-50" onClick={() => { setShowInfo(false); setInfoTopic(null); }}><div className="bg-slate-800 rounded-xl p-4 max-w-md" onClick={e => e.stopPropagation()}><h3 className="text-lg font-bold text-purple-400 mb-2">{infoTopics[infoTopic].title}</h3><p className="text-sm text-slate-300">{infoTopics[infoTopic].content}</p><button onClick={() => { setShowInfo(false); setInfoTopic(null); }} className="mt-4 w-full py-2 bg-purple-600 rounded-lg">Got it!</button></div></div>)}<div className="p-3 bg-black/30 border-b border-purple-500/30 flex justify-between items-center"><span className="font-bold">🏗️ Business Model</span><span className="text-purple-400">{step + 1}/{steps.length}</span></div><div className="flex-1 p-4 flex flex-col justify-center"><div className="bg-black/30 rounded-xl p-4 mb-4"><p className="text-purple-400 text-sm mb-1">{s.element}</p><p className="text-lg font-medium">{s.question}</p></div><div className="grid gap-2">{s.options.map((opt, i) => (<button key={i} onClick={() => choose(i)} className="p-3 bg-black/30 hover:bg-purple-600/50 rounded-lg text-left text-sm">{opt}</button>))}</div></div><div className="p-3 bg-black/30 border-t border-purple-500/30 flex gap-2 justify-center">{Object.keys(infoTopics).map(k => <button key={k} onClick={() => {setInfoTopic(k);setShowInfo(true);}} className="text-xs text-purple-400">ℹ️ {infoTopics[k].title}</button>)}</div></div>);
+   };
+
+   const GrowthStrategyRenderer = () => {
+      const [phase, setPhase] = useState<'intro'|'play'|'result'>('intro');
+      const [showInfo, setShowInfo] = useState(false);
+      const [infoTopic, setInfoTopic] = useState<string|null>(null);
+      const [scenario, setScenario] = useState(0);
+      const [score, setScore] = useState(0);
+      const [answered, setAnswered] = useState(false);
+      const [selected, setSelected] = useState<number|null>(null);
+      const [log, setLog] = useState<string[]>([]);
+      const scenarios = [
+         {situation:'B2B SaaS with $50k ACV, complex product, long sales cycle.',best:2,options:['Viral loops','Paid social ads','Enterprise sales team','Content marketing'],explain:'High ACV and complexity require consultative sales. Enterprise sales team has best ROI here.'},
+         {situation:'Consumer app, low price point, high potential for word-of-mouth.',best:0,options:['Viral/referral loops','Outbound sales','Trade shows','TV advertising'],explain:'Low price + WOM potential = viral loops. Dropbox and Uber grew this way.'},
+         {situation:'Developer tools, technical audience, trust is crucial.',best:3,options:['Cold calling','Display ads','Influencer marketing','Content + community'],explain:'Developers hate being sold to. Educational content and community build trust authentically.'},
+         {situation:'Local services business, customers search when they need you.',best:1,options:['Brand awareness ads','SEO + Google Ads','Social media','Referral program'],explain:'Intent-based search is perfect. Be there when customers are actively looking.'},
+         {situation:'E-commerce, visual product, impulse purchase potential.',best:2,options:['LinkedIn ads','Email outreach','Instagram/TikTok ads','Podcast sponsorship'],explain:'Visual product + impulse = Instagram/TikTok. Show the product where attention lives.'},
+         {situation:'Professional services, high-trust relationship business.',best:3,options:['Mass advertising','Cold email blasts','Discount promotions','Referrals + thought leadership'],explain:'Trust businesses grow through reputation. Referrals and expertise demonstration win.'}
+      ];
+      const infoTopics:{[k:string]:{title:string,content:string}} = {
+         channels:{title:'Growth Channels',content:'Viral, Paid, Content, Sales, Partnerships, Community. Different products need different channels.'},
+         loops:{title:'Growth Loops',content:'Viral loop: User invites users. Content loop: Content attracts users who create content. Paid loop: Revenue funds ads.'},
+         metrics:{title:'Growth Metrics',content:'CAC, LTV, Viral coefficient, Payback period. Know your numbers before scaling.'},
+         pmf:{title:'PMF First',content:'Growth without product-market fit is a leaky bucket. Fix retention before acquisition.'}
+      };
+      const answer = (idx:number) => {
+         if(answered) return;
+         setSelected(idx);
+         setAnswered(true);
+         if(idx === scenarios[scenario].best) {
+            setScore(s => s + 1);
+            setLog(l => [...l, `Scenario ${scenario+1}: Correct!`]);
+         } else {
+            setLog(l => [...l, `Scenario ${scenario+1}: Wrong`]);
+         }
+      };
+      const next = () => {
+         if(scenario >= scenarios.length - 1) setPhase('result');
+         else { setScenario(s => s + 1); setAnswered(false); setSelected(null); }
+      };
+      const grade = score >= 5 ? 'A' : score >= 4 ? 'B' : score >= 2 ? 'C' : 'D';
+      const s = scenarios[scenario];
+      if(phase === 'intro') return (<div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-green-900 via-lime-900 to-emerald-900 text-white p-6"><div className="text-6xl mb-4">🚀</div><h2 className="text-2xl font-bold mb-2">Growth Strategy</h2><p className="text-slate-300 text-center mb-6 max-w-md">Match businesses with the right growth channels! Learn viral, paid, content, and sales strategies.</p><button onClick={() => setPhase('play')} className="px-8 py-3 bg-gradient-to-r from-green-500 to-lime-500 rounded-xl font-bold">Start Growing</button></div>);
+      if(phase === 'result') return (<div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-green-900 via-lime-900 to-emerald-900 text-white p-6"><div className="text-6xl mb-4">{grade === 'A' ? '🚀' : grade === 'B' ? '📈' : '📊'}</div><h2 className="text-2xl font-bold mb-2">Complete!</h2><div className="text-4xl font-bold text-green-400 mb-2">{score}/{scenarios.length}</div><div className="text-6xl mb-4">{grade}</div><p className="text-slate-400 mb-4">{grade === 'A' ? 'Growth expert!' : grade === 'B' ? 'Good instincts!' : 'Study channels more!'}</p><button onClick={() => {setPhase('intro');setScenario(0);setScore(0);setAnswered(false);setSelected(null);setLog([]);}} className="px-6 py-2 bg-green-600 rounded-lg">Try Again</button></div>);
+      return (<div className="w-full h-full flex flex-col bg-gradient-to-br from-green-900 via-lime-900 to-emerald-900 text-white overflow-hidden">{showInfo && infoTopic && infoTopics[infoTopic] && (<div className="absolute inset-0 bg-black/80 flex items-center justify-center p-4 z-50" onClick={() => { setShowInfo(false); setInfoTopic(null); }}><div className="bg-slate-800 rounded-xl p-4 max-w-md" onClick={e => e.stopPropagation()}><h3 className="text-lg font-bold text-green-400 mb-2">{infoTopics[infoTopic].title}</h3><p className="text-sm text-slate-300">{infoTopics[infoTopic].content}</p><button onClick={() => { setShowInfo(false); setInfoTopic(null); }} className="mt-4 w-full py-2 bg-green-600 rounded-lg">Got it!</button></div></div>)}<div className="p-3 bg-black/30 border-b border-green-500/30 flex justify-between items-center"><span className="font-bold">🚀 Growth Strategy</span><span className="text-green-400">{scenario + 1}/{scenarios.length}</span><span className="text-lime-400">Score: {score}</span></div><div className="flex-1 p-4 flex flex-col justify-center"><div className="bg-black/30 rounded-xl p-4 mb-4"><p className="text-sm">{s.situation}</p><p className="text-xs text-slate-400 mt-2">Best growth channel?</p></div><div className="grid gap-2">{s.options.map((opt, i) => (<button key={i} onClick={() => answer(i)} disabled={answered} className={`p-3 rounded-lg text-left text-sm ${answered ? i === s.best ? 'bg-green-600' : i === selected ? 'bg-red-600' : 'bg-black/30' : 'bg-black/30 hover:bg-green-600/50'}`}>{opt}</button>))}</div>{answered && (<div className="mt-3 p-3 bg-black/30 rounded-lg"><p className="text-sm text-slate-300">{s.explain}</p><button onClick={next} className="mt-3 w-full py-2 bg-green-600 rounded-lg">{scenario >= scenarios.length - 1 ? 'See Results' : 'Next'}</button></div>)}</div><div className="p-3 bg-black/30 border-t border-green-500/30 flex gap-2 justify-center">{Object.keys(infoTopics).map(k => <button key={k} onClick={() => {setInfoTopic(k);setShowInfo(true);}} className="text-xs text-green-400">ℹ️ {infoTopics[k].title}</button>)}</div></div>);
+   };
+
+   const PivotDecisionRenderer = () => {
+      const [phase, setPhase] = useState<'intro'|'play'|'result'>('intro');
+      const [showInfo, setShowInfo] = useState(false);
+      const [infoTopic, setInfoTopic] = useState<string|null>(null);
+      const [scenario, setScenario] = useState(0);
+      const [score, setScore] = useState(0);
+      const [answered, setAnswered] = useState(false);
+      const [selected, setSelected] = useState<number|null>(null);
+      const [log, setLog] = useState<string[]>([]);
+      const scenarios = [
+         {situation:'6 months in, 100 users but 2% weekly retention. Team believes in vision.',signals:{bad:['Low retention','No growth'],good:['Team conviction','Early users']},q:'What should you do?',opts:['Pivot completely','Double down on marketing','Talk to churned users, iterate','Shut down'],correct:2,explain:'Low retention = product problem, not marketing. Learn why users leave before pivoting or quitting.'},
+         {situation:'Strong retention (60% monthly) but CAC is 5x LTV. Burned through 80% of runway.',signals:{bad:['Unsustainable CAC','Low runway'],good:['Great retention','Product works']},q:'Best path forward?',opts:['Raise more money','Pivot to new market','Find cheaper channels','Shut down'],correct:2,explain:'Product works (retention proves it). Find organic/cheaper channels before pivoting what works.'},
+         {situation:'B2B product. Enterprise loves it but sales cycle is 9 months. You have 6 months runway.',signals:{bad:['Long sales cycle','Short runway'],good:['Enterprise demand','Validated need']},q:'What should you do?',opts:['Pivot to SMB','Wait for enterprise deals','Raise bridge funding','Add more salespeople'],correct:0,explain:'9-month cycle with 6-month runway = death. Pivot down-market to survive and prove model faster.'},
+         {situation:'Consumer app went viral once, now flat. Team is burned out. Still have 12 months runway.',signals:{bad:['Growth stalled','Team burnout'],good:['Past viral success','Runway exists']},q:'Best decision?',opts:['Pivot product','Hire growth team','Take a break, then reassess','Push harder'],correct:2,explain:'Burnout kills startups. With runway, take a break, regain perspective, then decide with fresh eyes.'},
+         {situation:'Customers love product but market is shrinking 10% yearly. Profitable but not growing.',signals:{bad:['Shrinking market','No growth'],good:['Profitability','Customer love']},q:'What should you do?',opts:['Milk it while it lasts','Pivot to adjacent market','Sell the business','Invest heavily in R&D'],correct:1,explain:'Profitable + loved but shrinking = use profits to expand to adjacent growing markets.'}
+      ];
+      const infoTopics:{[k:string]:{title:string,content:string}} = {
+         when:{title:'When to Pivot',content:'Consistent low retention, unable to find sustainable channel, market too small, or thesis proven wrong. Pivot early, not late.'},
+         types:{title:'Pivot Types',content:'Customer pivot, Problem pivot, Channel pivot, Revenue model pivot, Technology pivot. Change one thing, not everything.'},
+         signs:{title:'Warning Signs',content:'Flat growth, high churn, long sales cycles, customer apathy, founder burnout. Listen to the signals.'},
+         persist:{title:'When to Persist',content:'Strong retention, clear value prop, improving metrics, passionate users. Sometimes success takes time.'}
+      };
+      const answer = (idx:number) => {
+         if(answered) return;
+         setSelected(idx);
+         setAnswered(true);
+         if(idx === scenarios[scenario].correct) {
+            setScore(s => s + 1);
+            setLog(l => [...l, `Scenario ${scenario+1}: Correct!`]);
+         } else {
+            setLog(l => [...l, `Scenario ${scenario+1}: Wrong`]);
+         }
+      };
+      const next = () => {
+         if(scenario >= scenarios.length - 1) setPhase('result');
+         else { setScenario(s => s + 1); setAnswered(false); setSelected(null); }
+      };
+      const grade = score >= 4 ? 'A' : score >= 3 ? 'B' : score >= 2 ? 'C' : 'D';
+      const s = scenarios[scenario];
+      if(phase === 'intro') return (<div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-orange-900 via-amber-900 to-yellow-900 text-white p-6"><div className="text-6xl mb-4">🔄</div><h2 className="text-2xl font-bold mb-2">Pivot or Persist?</h2><p className="text-slate-300 text-center mb-6 max-w-md">The hardest startup decision! Learn when to pivot, persist, or shut down.</p><button onClick={() => setPhase('play')} className="px-8 py-3 bg-gradient-to-r from-orange-500 to-amber-500 rounded-xl font-bold">Start Deciding</button></div>);
+      if(phase === 'result') return (<div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-orange-900 via-amber-900 to-yellow-900 text-white p-6"><div className="text-6xl mb-4">{grade === 'A' ? '🎯' : grade === 'B' ? '🔄' : '⚠️'}</div><h2 className="text-2xl font-bold mb-2">Decisions Complete!</h2><div className="text-4xl font-bold text-orange-400 mb-2">{score}/{scenarios.length}</div><div className="text-6xl mb-4">{grade}</div><p className="text-slate-400 mb-4">{grade === 'A' ? 'Strategic thinker!' : grade === 'B' ? 'Good judgment!' : 'Tricky decisions!'}</p><button onClick={() => {setPhase('intro');setScenario(0);setScore(0);setAnswered(false);setSelected(null);setLog([]);}} className="px-6 py-2 bg-orange-600 rounded-lg">Try Again</button></div>);
+      return (<div className="w-full h-full flex flex-col bg-gradient-to-br from-orange-900 via-amber-900 to-yellow-900 text-white overflow-hidden">{showInfo && infoTopic && infoTopics[infoTopic] && (<div className="absolute inset-0 bg-black/80 flex items-center justify-center p-4 z-50" onClick={() => { setShowInfo(false); setInfoTopic(null); }}><div className="bg-slate-800 rounded-xl p-4 max-w-md" onClick={e => e.stopPropagation()}><h3 className="text-lg font-bold text-orange-400 mb-2">{infoTopics[infoTopic].title}</h3><p className="text-sm text-slate-300">{infoTopics[infoTopic].content}</p><button onClick={() => { setShowInfo(false); setInfoTopic(null); }} className="mt-4 w-full py-2 bg-orange-600 rounded-lg">Got it!</button></div></div>)}<div className="p-3 bg-black/30 border-b border-orange-500/30 flex justify-between items-center"><span className="font-bold">🔄 Pivot Decision</span><span className="text-orange-400">{scenario + 1}/{scenarios.length}</span><span className="text-amber-400">Score: {score}</span></div><div className="flex-1 p-4 overflow-auto"><div className="bg-black/30 rounded-xl p-3 mb-3"><p className="text-sm mb-3">{s.situation}</p><div className="grid grid-cols-2 gap-2 text-xs"><div><p className="text-red-400 mb-1">🚩 Warning:</p>{s.signals.bad.map((sig,i) => <p key={i} className="text-slate-300">• {sig}</p>)}</div><div><p className="text-green-400 mb-1">✓ Positive:</p>{s.signals.good.map((sig,i) => <p key={i} className="text-slate-300">• {sig}</p>)}</div></div></div><div className="bg-black/30 rounded-xl p-4 mb-3"><p className="font-medium">{s.q}</p></div><div className="grid gap-2">{s.opts.map((opt, i) => (<button key={i} onClick={() => answer(i)} disabled={answered} className={`p-3 rounded-lg text-left text-sm ${answered ? i === s.correct ? 'bg-green-600' : i === selected ? 'bg-red-600' : 'bg-black/30' : 'bg-black/30 hover:bg-orange-600/50'}`}>{opt}</button>))}</div>{answered && (<div className="mt-3 p-3 bg-black/30 rounded-lg"><p className="text-sm text-slate-300">{s.explain}</p><button onClick={next} className="mt-3 w-full py-2 bg-orange-600 rounded-lg">{scenario >= scenarios.length - 1 ? 'See Results' : 'Next'}</button></div>)}</div><div className="p-3 bg-black/30 border-t border-orange-500/30 flex gap-2 justify-center">{Object.keys(infoTopics).map(k => <button key={k} onClick={() => {setInfoTopic(k);setShowInfo(true);}} className="text-xs text-orange-400">ℹ️ {infoTopics[k].title}</button>)}</div></div>);
+   };
+
+   // --- TEAM BUILDING RENDERER ---
+   const TeamBuildingRenderer = () => {
+      const [phase, setPhase] = useState<'intro' | 'play' | 'result'>('intro');
+      const [scenario, setScenario] = useState(0);
+      const [score, setScore] = useState(0);
+      const [selected, setSelected] = useState<number | null>(null);
+      const [answered, setAnswered] = useState(false);
+      const [log, setLog] = useState<string[]>([]);
+      const [showInfo, setShowInfo] = useState(false);
+      const [infoTopic, setInfoTopic] = useState<string | null>(null);
+
+      const scenarios = [
+         { situation: "You're building your founding team. A brilliant engineer wants 40% equity but can only work part-time.", q: "What's the best approach?", opts: ["Give them what they ask", "Counter with 10% and full vesting", "Propose milestone-based equity", "Walk away entirely"], correct: 2, explain: "Milestone-based equity aligns incentives with commitment. They earn more as they contribute more, protecting both parties." },
+         { situation: "Your co-founder has a different vision for the product direction. The disagreement is affecting team morale.", q: "How should you handle this?", opts: ["Assert your authority as CEO", "Have a structured discussion with clear decision criteria", "Let the team vote", "Avoid the conflict and work around it"], correct: 1, explain: "Structured discussions with clear criteria lead to better decisions and model healthy conflict resolution for the team." },
+         { situation: "You need a CTO but can't afford market-rate salary. A talented candidate is interested but hesitant.", q: "What's your best offer strategy?", opts: ["Stretch your runway for full salary", "Offer below-market with significant equity", "Promise future raises when funded", "Hire a cheaper, less experienced option"], correct: 1, explain: "Below-market salary plus meaningful equity is the classic startup trade-off. It aligns incentives and preserves runway." },
+         { situation: "Your team is growing and you're seeing silos forming between engineering and product.", q: "What's the most effective intervention?", opts: ["Hire a project manager", "Create cross-functional squads", "Add more meetings", "Let it resolve naturally"], correct: 1, explain: "Cross-functional squads break down silos by embedding different disciplines together with shared goals." },
+         { situation: "A key team member is burning out but your startup can't afford to lose them.", q: "What should you prioritize?", opts: ["Offer a raise to keep them motivated", "Redistribute work and check in regularly", "Hire their replacement just in case", "Push through—startups are hard"], correct: 1, explain: "Redistributing work and showing genuine care prevents burnout from becoming departure. People remember how you treated them." }
+      ];
+      const s = scenarios[scenario];
+      const infoTopics: Record<string, {title: string; content: string}> = {
+         equity: { title: "Equity Distribution", content: "Founder equity should vest over 4 years with a 1-year cliff. This protects the company if someone leaves early. Early employees typically get 0.5-2% with similar vesting." },
+         roles: { title: "Defining Roles", content: "Clear role definition prevents conflict. Use RACI matrices (Responsible, Accountable, Consulted, Informed) for key decisions. Revisit roles every 6 months as the company grows." },
+         culture: { title: "Culture Building", content: "Culture is how your team behaves when you're not watching. Define core values early, hire for culture fit, and recognize behaviors that reinforce your values." },
+         hiring: { title: "Early Hiring", content: "First 10 hires set your culture. Prioritize: 1) Mission alignment, 2) Skill-culture balance, 3) Flexibility to wear multiple hats, 4) Self-motivation." }
+      };
+      const answer = (i: number) => { if(answered) return; setSelected(i); setAnswered(true); if(i === s.correct) { setScore(p => p + 1); setLog(l => [...l, `✓ Scenario ${scenario + 1}: Correct!`]); } else { setLog(l => [...l, `✗ Scenario ${scenario + 1}: Better answer was "${s.opts[s.correct]}"`]); } };
+      const next = () => { if(scenario >= scenarios.length - 1) { setPhase('result'); } else { setScenario(p => p + 1); setAnswered(false); setSelected(null); } };
+      const grade = score >= 4 ? 'A' : score >= 3 ? 'B' : score >= 2 ? 'C' : 'D';
+      if(phase === 'intro') return (<div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-900 text-white p-6"><div className="text-6xl mb-4">👥</div><h2 className="text-2xl font-bold mb-2">Team Building Simulator</h2><p className="text-slate-300 text-center mb-6 max-w-md">Build your dream team! Navigate hiring, equity, and team dynamics challenges.</p><button onClick={() => setPhase('play')} className="px-8 py-3 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-xl font-bold">Build Team</button></div>);
+      if(phase === 'result') return (<div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-900 text-white p-6"><div className="text-6xl mb-4">{grade === 'A' ? '🏆' : grade === 'B' ? '👥' : '🔧'}</div><h2 className="text-2xl font-bold mb-2">Team Built!</h2><div className="text-4xl font-bold text-indigo-400 mb-2">{score}/{scenarios.length}</div><div className="text-6xl mb-4">{grade}</div><p className="text-slate-400 mb-4">{grade === 'A' ? 'Natural leader!' : grade === 'B' ? 'Good team builder!' : 'Keep learning!'}</p><div className="w-full max-w-md bg-black/30 rounded-lg p-3 mb-4 max-h-32 overflow-y-auto">{log.map((l,i) => <p key={i} className="text-xs text-slate-300">{l}</p>)}</div><button onClick={() => {setPhase('intro');setScenario(0);setScore(0);setAnswered(false);setSelected(null);setLog([]);}} className="px-6 py-2 bg-indigo-600 rounded-lg">Try Again</button></div>);
+      return (<div className="w-full h-full flex flex-col bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-900 text-white overflow-hidden">{showInfo && infoTopic && infoTopics[infoTopic] && (<div className="absolute inset-0 bg-black/80 flex items-center justify-center p-4 z-50" onClick={() => { setShowInfo(false); setInfoTopic(null); }}><div className="bg-slate-800 rounded-xl p-4 max-w-md" onClick={e => e.stopPropagation()}><h3 className="text-lg font-bold text-indigo-400 mb-2">{infoTopics[infoTopic].title}</h3><p className="text-sm text-slate-300">{infoTopics[infoTopic].content}</p><button onClick={() => { setShowInfo(false); setInfoTopic(null); }} className="mt-4 w-full py-2 bg-indigo-600 rounded-lg">Got it!</button></div></div>)}<div className="p-3 bg-black/30 border-b border-indigo-500/30 flex justify-between items-center"><span className="font-bold">👥 Team Building</span><span className="text-indigo-400">{scenario + 1}/{scenarios.length}</span><span className="text-purple-400">Score: {score}</span></div><div className="flex-1 p-4 overflow-auto"><div className="bg-black/30 rounded-xl p-4 mb-4"><p className="text-sm text-slate-300">{s.situation}</p></div><div className="bg-black/30 rounded-xl p-4 mb-3"><p className="font-medium">{s.q}</p></div><div className="grid gap-2">{s.opts.map((opt, i) => (<button key={i} onClick={() => answer(i)} disabled={answered} className={`p-3 rounded-lg text-left text-sm ${answered ? i === s.correct ? 'bg-green-600' : i === selected ? 'bg-red-600' : 'bg-black/30' : 'bg-black/30 hover:bg-indigo-600/50'}`}>{opt}</button>))}</div>{answered && (<div className="mt-3 p-3 bg-black/30 rounded-lg"><p className="text-sm text-slate-300">{s.explain}</p><button onClick={next} className="mt-3 w-full py-2 bg-indigo-600 rounded-lg">{scenario >= scenarios.length - 1 ? 'See Results' : 'Next'}</button></div>)}</div><div className="p-3 bg-black/30 border-t border-indigo-500/30 flex gap-2 justify-center flex-wrap">{Object.keys(infoTopics).map(k => <button key={k} onClick={() => {setInfoTopic(k);setShowInfo(true);}} className="text-xs text-indigo-400">ℹ️ {infoTopics[k].title}</button>)}</div></div>);
+   };
+
+   // --- HIRING RENDERER ---
+   const HiringRenderer = () => {
+      const [phase, setPhase] = useState<'intro' | 'play' | 'result'>('intro');
+      const [step, setStep] = useState(0);
+      const [score, setScore] = useState(0);
+      const [selected, setSelected] = useState<number | null>(null);
+      const [answered, setAnswered] = useState(false);
+      const [log, setLog] = useState<string[]>([]);
+      const [showInfo, setShowInfo] = useState(false);
+      const [infoTopic, setInfoTopic] = useState<string | null>(null);
+
+      const challenges = [
+         { stage: "Job Description", situation: "You're writing a job post for your first full-stack developer. What should you emphasize?", opts: ["10+ years experience required", "Specific tech stack flexibility and growth potential", "Long list of must-have frameworks", "Highest salary in the market"], correct: 1, explain: "Startups attract talent through growth opportunities, not rigid requirements. Flexibility signals a healthy learning culture." },
+         { stage: "Sourcing", situation: "You need to find candidates but have limited recruiting budget.", opts: ["Post on premium job boards only", "Leverage your network and LinkedIn outreach", "Wait for inbound applications", "Hire a contingency recruiter immediately"], correct: 1, explain: "Network referrals often yield the best early-stage hires. They're pre-vetted and understand startup culture." },
+         { stage: "Screening", situation: "A candidate has amazing skills but job-hopped every 8 months for the past 3 years.", opts: ["Automatic rejection", "Dig deeper into reasons for each move", "Offer shorter contract first", "Ignore it if skills are right"], correct: 1, explain: "Context matters. Maybe they were at early startups that failed, or grew out of roles quickly. Always investigate patterns." },
+         { stage: "Interview", situation: "During the technical interview, the candidate struggles with a problem but asks great clarifying questions.", opts: ["Fail them immediately", "Value their problem-solving approach", "Give them the answer", "Switch to easier questions"], correct: 1, explain: "How candidates think matters more than memorized answers. Asking good questions shows they'll succeed with support." },
+         { stage: "Offer", situation: "Your top candidate has a competing offer $20K higher from a big tech company.", opts: ["Match the salary exactly", "Highlight equity, mission, and growth opportunity", "Let them go", "Promise future raises"], correct: 1, explain: "You can't win on salary alone. Sell the unique value: equity upside, learning opportunities, impact, and culture." }
+      ];
+      const c = challenges[step];
+      const infoTopics: Record<string, {title: string; content: string}> = {
+         pipeline: { title: "Hiring Pipeline", content: "A typical pipeline: Job posting → Screening → Phone screen → Technical interview → Culture fit → Reference check → Offer. Track conversion rates at each stage to identify bottlenecks." },
+         sourcing: { title: "Sourcing Channels", content: "Best startup channels: 1) Employee referrals (highest quality), 2) LinkedIn outreach, 3) AngelList/Wellfound, 4) Twitter/X, 5) University partnerships. Avoid expensive agencies early on." },
+         interview: { title: "Interview Best Practices", content: "Use structured interviews with consistent questions. Include: technical assessment, behavioral questions (STAR method), culture fit, and reverse interview time. Always leave time for candidate questions." },
+         offer: { title: "Competitive Offers", content: "Startup offers combine: base salary (80-90% of market), equity (0.5-2% for early employees), benefits, and intangibles (impact, learning, flexibility). Be transparent about trade-offs." }
+      };
+      const answer = (i: number) => { if(answered) return; setSelected(i); setAnswered(true); if(i === c.correct) { setScore(p => p + 1); setLog(l => [...l, `✓ ${c.stage}: Great choice!`]); } else { setLog(l => [...l, `✗ ${c.stage}: Better approach was "${c.opts[c.correct]}"`]); } };
+      const next = () => { if(step >= challenges.length - 1) { setPhase('result'); } else { setStep(p => p + 1); setAnswered(false); setSelected(null); } };
+      const grade = score >= 4 ? 'A' : score >= 3 ? 'B' : score >= 2 ? 'C' : 'D';
+      if(phase === 'intro') return (<div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-teal-900 via-cyan-900 to-blue-900 text-white p-6"><div className="text-6xl mb-4">🎯</div><h2 className="text-2xl font-bold mb-2">Hiring Process Mastery</h2><p className="text-slate-300 text-center mb-6 max-w-md">Master the startup hiring pipeline from job description to offer acceptance!</p><button onClick={() => setPhase('play')} className="px-8 py-3 bg-gradient-to-r from-teal-500 to-cyan-500 rounded-xl font-bold">Start Hiring</button></div>);
+      if(phase === 'result') return (<div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-teal-900 via-cyan-900 to-blue-900 text-white p-6"><div className="text-6xl mb-4">{grade === 'A' ? '🌟' : grade === 'B' ? '🎯' : '📋'}</div><h2 className="text-2xl font-bold mb-2">Hiring Complete!</h2><div className="text-4xl font-bold text-teal-400 mb-2">{score}/{challenges.length}</div><div className="text-6xl mb-4">{grade}</div><p className="text-slate-400 mb-4">{grade === 'A' ? 'Hiring expert!' : grade === 'B' ? 'Good instincts!' : 'Keep practicing!'}</p><div className="w-full max-w-md bg-black/30 rounded-lg p-3 mb-4 max-h-32 overflow-y-auto">{log.map((l,i) => <p key={i} className="text-xs text-slate-300">{l}</p>)}</div><button onClick={() => {setPhase('intro');setStep(0);setScore(0);setAnswered(false);setSelected(null);setLog([]);}} className="px-6 py-2 bg-teal-600 rounded-lg">Try Again</button></div>);
+      return (<div className="w-full h-full flex flex-col bg-gradient-to-br from-teal-900 via-cyan-900 to-blue-900 text-white overflow-hidden">{showInfo && infoTopic && infoTopics[infoTopic] && (<div className="absolute inset-0 bg-black/80 flex items-center justify-center p-4 z-50" onClick={() => { setShowInfo(false); setInfoTopic(null); }}><div className="bg-slate-800 rounded-xl p-4 max-w-md" onClick={e => e.stopPropagation()}><h3 className="text-lg font-bold text-teal-400 mb-2">{infoTopics[infoTopic].title}</h3><p className="text-sm text-slate-300">{infoTopics[infoTopic].content}</p><button onClick={() => { setShowInfo(false); setInfoTopic(null); }} className="mt-4 w-full py-2 bg-teal-600 rounded-lg">Got it!</button></div></div>)}<div className="p-3 bg-black/30 border-b border-teal-500/30 flex justify-between items-center"><span className="font-bold">🎯 {c.stage}</span><span className="text-teal-400">Step {step + 1}/{challenges.length}</span><span className="text-cyan-400">Score: {score}</span></div><div className="flex-1 p-4 overflow-auto"><div className="flex gap-1 mb-4">{challenges.map((_, i) => (<div key={i} className={`flex-1 h-2 rounded ${i < step ? 'bg-teal-500' : i === step ? 'bg-cyan-400' : 'bg-slate-700'}`} />))}</div><div className="bg-black/30 rounded-xl p-4 mb-4"><p className="text-sm text-slate-300">{c.situation}</p></div><div className="grid gap-2">{c.opts.map((opt, i) => (<button key={i} onClick={() => answer(i)} disabled={answered} className={`p-3 rounded-lg text-left text-sm ${answered ? i === c.correct ? 'bg-green-600' : i === selected ? 'bg-red-600' : 'bg-black/30' : 'bg-black/30 hover:bg-teal-600/50'}`}>{opt}</button>))}</div>{answered && (<div className="mt-3 p-3 bg-black/30 rounded-lg"><p className="text-sm text-slate-300">{c.explain}</p><button onClick={next} className="mt-3 w-full py-2 bg-teal-600 rounded-lg">{step >= challenges.length - 1 ? 'See Results' : 'Next Stage'}</button></div>)}</div><div className="p-3 bg-black/30 border-t border-teal-500/30 flex gap-2 justify-center flex-wrap">{Object.keys(infoTopics).map(k => <button key={k} onClick={() => {setInfoTopic(k);setShowInfo(true);}} className="text-xs text-teal-400">ℹ️ {infoTopics[k].title}</button>)}</div></div>);
+   };
+
+   // --- LEADERSHIP RENDERER ---
+   const LeadershipRenderer = () => {
+      const [phase, setPhase] = useState<'intro' | 'play' | 'result'>('intro');
+      const [scenario, setScenario] = useState(0);
+      const [score, setScore] = useState(0);
+      const [selected, setSelected] = useState<number | null>(null);
+      const [answered, setAnswered] = useState(false);
+      const [log, setLog] = useState<string[]>([]);
+      const [showInfo, setShowInfo] = useState(false);
+      const [infoTopic, setInfoTopic] = useState<string | null>(null);
+
+      const scenarios = [
+         { context: "Crisis Management", situation: "Your startup's main product has a critical bug affecting 50% of users. Your team is panicking.", q: "What's your first action as a leader?", opts: ["Take over and fix it yourself", "Stay calm, assign clear roles, and communicate transparently", "Find someone to blame", "Wait for more information"], correct: 1, explain: "Leaders set the emotional tone. Calm, clear direction with transparent communication builds trust and enables effective crisis response." },
+         { context: "Difficult Feedback", situation: "A team member you like personally is consistently underperforming and affecting team morale.", q: "How do you handle this?", opts: ["Ignore it hoping they improve", "Have direct, specific feedback conversation with clear expectations", "Complain to other team members", "Immediately let them go"], correct: 1, explain: "Direct, kind feedback with specific examples and clear expectations gives people the chance to improve while maintaining team standards." },
+         { context: "Delegation", situation: "You have an important investor presentation next week and a product launch to manage simultaneously.", q: "What approach demonstrates best leadership?", opts: ["Work 20-hour days to do both", "Delegate the launch to your capable team", "Postpone the investor meeting", "Do both poorly"], correct: 1, explain: "Great leaders delegate to develop their team. Trusting capable people with important work shows confidence and builds organizational capacity." },
+         { context: "Vision Alignment", situation: "Half your team wants to focus on feature A, half on feature B. Both have merit but resources are limited.", q: "How do you decide?", opts: ["Let the team vote", "Make an executive decision aligned with company vision", "Work on both with half effort", "Avoid the decision"], correct: 1, explain: "Leaders tie decisions to vision and strategy. A clear rationale helps the team understand and commit, even if they preferred the other option." },
+         { context: "Building Culture", situation: "You notice your growing team is losing the collaborative spirit that made early days special.", q: "What's the most effective intervention?", opts: ["Send an email about values", "Model the behavior, recognize examples, and create rituals", "Hire a culture consultant", "Accept it as inevitable"], correct: 1, explain: "Culture is caught, not taught. Leaders shape culture by consistently modeling values, recognizing aligned behaviors, and creating meaningful rituals." }
+      ];
+      const s = scenarios[scenario];
+      const infoTopics: Record<string, {title: string; content: string}> = {
+         styles: { title: "Leadership Styles", content: "Effective founders adapt their style: Directive (crisis), Coaching (development), Supportive (skilled teams), Delegative (autonomous experts). Match your style to the situation and team maturity." },
+         feedback: { title: "Giving Feedback", content: "Use SBI: Situation (when/where), Behavior (specific actions), Impact (effect on team/outcomes). Focus on behaviors, not personality. Ask for their perspective and agree on next steps." },
+         delegation: { title: "Art of Delegation", content: "Delegate outcomes, not tasks. Provide context (why), clarity (what success looks like), resources (support available), and check-ins (not micromanagement). Let them own the how." },
+         trust: { title: "Building Trust", content: "Trust = Credibility (expertise) + Reliability (consistency) + Intimacy (safety) - Self-Interest. Build trust through competence, keeping promises, creating psychological safety, and putting team first." }
+      };
+      const answer = (i: number) => { if(answered) return; setSelected(i); setAnswered(true); if(i === s.correct) { setScore(p => p + 1); setLog(l => [...l, `✓ ${s.context}: Great leadership!`]); } else { setLog(l => [...l, `✗ ${s.context}: Better approach was "${s.opts[s.correct]}"`]); } };
+      const next = () => { if(scenario >= scenarios.length - 1) { setPhase('result'); } else { setScenario(p => p + 1); setAnswered(false); setSelected(null); } };
+      const grade = score >= 4 ? 'A' : score >= 3 ? 'B' : score >= 2 ? 'C' : 'D';
+      if(phase === 'intro') return (<div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-amber-900 via-orange-900 to-red-900 text-white p-6"><div className="text-6xl mb-4">👔</div><h2 className="text-2xl font-bold mb-2">Leadership Styles</h2><p className="text-slate-300 text-center mb-6 max-w-md">Master different leadership approaches for startup challenges!</p><button onClick={() => setPhase('play')} className="px-8 py-3 bg-gradient-to-r from-amber-500 to-orange-500 rounded-xl font-bold">Lead the Way</button></div>);
+      if(phase === 'result') return (<div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-amber-900 via-orange-900 to-red-900 text-white p-6"><div className="text-6xl mb-4">{grade === 'A' ? '👑' : grade === 'B' ? '👔' : '📚'}</div><h2 className="text-2xl font-bold mb-2">Leadership Assessment</h2><div className="text-4xl font-bold text-amber-400 mb-2">{score}/{scenarios.length}</div><div className="text-6xl mb-4">{grade}</div><p className="text-slate-400 mb-4">{grade === 'A' ? 'Born leader!' : grade === 'B' ? 'Strong leadership!' : 'Keep developing!'}</p><div className="w-full max-w-md bg-black/30 rounded-lg p-3 mb-4 max-h-32 overflow-y-auto">{log.map((l,i) => <p key={i} className="text-xs text-slate-300">{l}</p>)}</div><button onClick={() => {setPhase('intro');setScenario(0);setScore(0);setAnswered(false);setSelected(null);setLog([]);}} className="px-6 py-2 bg-amber-600 rounded-lg">Try Again</button></div>);
+      return (<div className="w-full h-full flex flex-col bg-gradient-to-br from-amber-900 via-orange-900 to-red-900 text-white overflow-hidden">{showInfo && infoTopic && infoTopics[infoTopic] && (<div className="absolute inset-0 bg-black/80 flex items-center justify-center p-4 z-50" onClick={() => { setShowInfo(false); setInfoTopic(null); }}><div className="bg-slate-800 rounded-xl p-4 max-w-md" onClick={e => e.stopPropagation()}><h3 className="text-lg font-bold text-amber-400 mb-2">{infoTopics[infoTopic].title}</h3><p className="text-sm text-slate-300">{infoTopics[infoTopic].content}</p><button onClick={() => { setShowInfo(false); setInfoTopic(null); }} className="mt-4 w-full py-2 bg-amber-600 rounded-lg">Got it!</button></div></div>)}<div className="p-3 bg-black/30 border-b border-amber-500/30 flex justify-between items-center"><span className="font-bold">👔 {s.context}</span><span className="text-amber-400">{scenario + 1}/{scenarios.length}</span><span className="text-orange-400">Score: {score}</span></div><div className="flex-1 p-4 overflow-auto"><div className="bg-black/30 rounded-xl p-4 mb-4"><p className="text-sm text-slate-300">{s.situation}</p></div><div className="bg-black/30 rounded-xl p-4 mb-3"><p className="font-medium">{s.q}</p></div><div className="grid gap-2">{s.opts.map((opt, i) => (<button key={i} onClick={() => answer(i)} disabled={answered} className={`p-3 rounded-lg text-left text-sm ${answered ? i === s.correct ? 'bg-green-600' : i === selected ? 'bg-red-600' : 'bg-black/30' : 'bg-black/30 hover:bg-amber-600/50'}`}>{opt}</button>))}</div>{answered && (<div className="mt-3 p-3 bg-black/30 rounded-lg"><p className="text-sm text-slate-300">{s.explain}</p><button onClick={next} className="mt-3 w-full py-2 bg-amber-600 rounded-lg">{scenario >= scenarios.length - 1 ? 'See Results' : 'Next'}</button></div>)}</div><div className="p-3 bg-black/30 border-t border-amber-500/30 flex gap-2 justify-center flex-wrap">{Object.keys(infoTopics).map(k => <button key={k} onClick={() => {setInfoTopic(k);setShowInfo(true);}} className="text-xs text-amber-400">ℹ️ {infoTopics[k].title}</button>)}</div></div>);
+   };
+
+   // --- CUSTOMER JOURNEY RENDERER ---
+   const CustomerJourneyRenderer = () => {
+      const [phase, setPhase] = useState<'intro' | 'play' | 'result'>('intro');
+      const [stage, setStage] = useState(0);
+      const [score, setScore] = useState(0);
+      const [selected, setSelected] = useState<number | null>(null);
+      const [answered, setAnswered] = useState(false);
+      const [log, setLog] = useState<string[]>([]);
+      const [showInfo, setShowInfo] = useState(false);
+      const [infoTopic, setInfoTopic] = useState<string | null>(null);
+
+      const stages = [
+         { name: "Awareness", icon: "👀", situation: "A potential customer is searching for solutions to their problem. They've never heard of your startup.", q: "What's the most effective awareness strategy?", opts: ["Cold email blast to purchased lists", "Content marketing addressing their pain points", "Expensive TV ads", "Wait for word of mouth"], correct: 1, explain: "Content marketing that addresses pain points attracts qualified prospects actively seeking solutions. It builds trust before you ask for anything." },
+         { name: "Consideration", icon: "🤔", situation: "The prospect found your blog and is comparing you to 3 competitors. They're reading your pricing page.", q: "How do you stand out at this stage?", opts: ["Undercut competitor pricing significantly", "Offer clear differentiation and social proof", "Add more features to the comparison", "Send aggressive sales emails"], correct: 1, explain: "Clear differentiation (why you, not what) plus social proof (testimonials, case studies) helps prospects self-select. Price wars erode value." },
+         { name: "Decision", icon: "✅", situation: "The prospect is ready to buy but is hesitating. They've added to cart but haven't completed checkout.", q: "What's the most effective nudge?", opts: ["Pop-up with 50% discount", "Clear value reminder with easy support access", "Countdown timer creating urgency", "More product features"], correct: 1, explain: "Address hesitation with clarity and support, not manipulation. Genuine help at decision time creates loyal customers, not just transactions." },
+         { name: "Retention", icon: "🔄", situation: "A customer has used your product for 3 months but engagement is dropping. You notice they haven't logged in for 2 weeks.", q: "What's your re-engagement strategy?", opts: ["Send guilt-trip emails about missed features", "Personalized check-in with helpful resources", "Offer discounts to stay", "Wait until they cancel"], correct: 1, explain: "Proactive, helpful outreach shows you care about their success. Understanding why engagement dropped helps improve the product for everyone." },
+         { name: "Advocacy", icon: "📣", situation: "A customer just achieved amazing results with your product and shared it on LinkedIn.", q: "How do you cultivate this into advocacy?", opts: ["Ask immediately for referrals", "Celebrate their success and make sharing easy", "Offer affiliate commissions", "Ignore it—they're already sharing"], correct: 1, explain: "Celebrate customer wins genuinely. Make it easy (not pushy) to share. The best advocacy feels like sharing something valuable, not selling." }
+      ];
+      const st = stages[stage];
+      const infoTopics: Record<string, {title: string; content: string}> = {
+         touchpoints: { title: "Customer Touchpoints", content: "Every interaction shapes perception: website, emails, support, product, billing. Map all touchpoints and ensure consistency. One bad experience can undo ten good ones." },
+         metrics: { title: "Journey Metrics", content: "Track: CAC (cost to acquire), Time to value (activation speed), NPS (loyalty), Churn rate (retention), LTV (lifetime value). Each stage has key metrics to optimize." },
+         emotions: { title: "Emotional Journey", content: "Customers make emotional decisions, then rationalize. Map emotional highs and lows in your journey. Reduce friction at low points, amplify delight at high points." },
+         personas: { title: "Customer Personas", content: "Different personas take different journeys. A technical buyer researches deeply; an executive wants ROI summaries. Create journey maps for each key persona." }
+      };
+      const answer = (i: number) => { if(answered) return; setSelected(i); setAnswered(true); if(i === st.correct) { setScore(p => p + 1); setLog(l => [...l, `✓ ${st.name}: Excellent approach!`]); } else { setLog(l => [...l, `✗ ${st.name}: Try "${st.opts[st.correct]}" next time`]); } };
+      const next = () => { if(stage >= stages.length - 1) { setPhase('result'); } else { setStage(p => p + 1); setAnswered(false); setSelected(null); } };
+      const grade = score >= 4 ? 'A' : score >= 3 ? 'B' : score >= 2 ? 'C' : 'D';
+      if(phase === 'intro') return (<div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-violet-900 via-purple-900 to-fuchsia-900 text-white p-6"><div className="text-6xl mb-4">🗺️</div><h2 className="text-2xl font-bold mb-2">Customer Journey Mapping</h2><p className="text-slate-300 text-center mb-6 max-w-md">Guide customers from strangers to advocates! Master every stage of the journey.</p><button onClick={() => setPhase('play')} className="px-8 py-3 bg-gradient-to-r from-violet-500 to-fuchsia-500 rounded-xl font-bold">Start Journey</button></div>);
+      if(phase === 'result') return (<div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-violet-900 via-purple-900 to-fuchsia-900 text-white p-6"><div className="text-6xl mb-4">{grade === 'A' ? '🌟' : grade === 'B' ? '🗺️' : '📍'}</div><h2 className="text-2xl font-bold mb-2">Journey Complete!</h2><div className="text-4xl font-bold text-violet-400 mb-2">{score}/{stages.length}</div><div className="text-6xl mb-4">{grade}</div><p className="text-slate-400 mb-4">{grade === 'A' ? 'Customer journey expert!' : grade === 'B' ? 'Great understanding!' : 'Keep mapping!'}</p><div className="w-full max-w-md bg-black/30 rounded-lg p-3 mb-4 max-h-32 overflow-y-auto">{log.map((l,i) => <p key={i} className="text-xs text-slate-300">{l}</p>)}</div><button onClick={() => {setPhase('intro');setStage(0);setScore(0);setAnswered(false);setSelected(null);setLog([]);}} className="px-6 py-2 bg-violet-600 rounded-lg">Try Again</button></div>);
+      return (<div className="w-full h-full flex flex-col bg-gradient-to-br from-violet-900 via-purple-900 to-fuchsia-900 text-white overflow-hidden">{showInfo && infoTopic && infoTopics[infoTopic] && (<div className="absolute inset-0 bg-black/80 flex items-center justify-center p-4 z-50" onClick={() => { setShowInfo(false); setInfoTopic(null); }}><div className="bg-slate-800 rounded-xl p-4 max-w-md" onClick={e => e.stopPropagation()}><h3 className="text-lg font-bold text-violet-400 mb-2">{infoTopics[infoTopic].title}</h3><p className="text-sm text-slate-300">{infoTopics[infoTopic].content}</p><button onClick={() => { setShowInfo(false); setInfoTopic(null); }} className="mt-4 w-full py-2 bg-violet-600 rounded-lg">Got it!</button></div></div>)}<div className="p-3 bg-black/30 border-b border-violet-500/30 flex justify-between items-center"><span className="font-bold">{st.icon} {st.name}</span><span className="text-violet-400">{stage + 1}/{stages.length}</span><span className="text-fuchsia-400">Score: {score}</span></div><div className="flex-1 p-4 overflow-auto"><div className="flex gap-1 mb-4">{stages.map((s, i) => (<div key={i} className="flex-1 text-center"><div className={`text-2xl ${i <= stage ? 'opacity-100' : 'opacity-30'}`}>{s.icon}</div><div className={`h-1 mt-1 rounded ${i < stage ? 'bg-violet-500' : i === stage ? 'bg-fuchsia-400' : 'bg-slate-700'}`} /></div>))}</div><div className="bg-black/30 rounded-xl p-4 mb-4"><p className="text-sm text-slate-300">{st.situation}</p></div><div className="bg-black/30 rounded-xl p-4 mb-3"><p className="font-medium">{st.q}</p></div><div className="grid gap-2">{st.opts.map((opt, i) => (<button key={i} onClick={() => answer(i)} disabled={answered} className={`p-3 rounded-lg text-left text-sm ${answered ? i === st.correct ? 'bg-green-600' : i === selected ? 'bg-red-600' : 'bg-black/30' : 'bg-black/30 hover:bg-violet-600/50'}`}>{opt}</button>))}</div>{answered && (<div className="mt-3 p-3 bg-black/30 rounded-lg"><p className="text-sm text-slate-300">{st.explain}</p><button onClick={next} className="mt-3 w-full py-2 bg-violet-600 rounded-lg">{stage >= stages.length - 1 ? 'See Results' : 'Next Stage'}</button></div>)}</div><div className="p-3 bg-black/30 border-t border-violet-500/30 flex gap-2 justify-center flex-wrap">{Object.keys(infoTopics).map(k => <button key={k} onClick={() => {setInfoTopic(k);setShowInfo(true);}} className="text-xs text-violet-400">ℹ️ {infoTopics[k].title}</button>)}</div></div>);
+   };
+
+   // --- SALES FUNNEL RENDERER ---
+   const SalesFunnelRenderer = () => {
+      const [phase, setPhase] = useState<'intro' | 'play' | 'result'>('intro');
+      const [level, setLevel] = useState(0);
+      const [score, setScore] = useState(0);
+      const [selected, setSelected] = useState<number | null>(null);
+      const [answered, setAnswered] = useState(false);
+      const [log, setLog] = useState<string[]>([]);
+      const [showInfo, setShowInfo] = useState(false);
+      const [infoTopic, setInfoTopic] = useState<string | null>(null);
+
+      const levels = [
+         { stage: "Top of Funnel (TOFU)", width: "100%", visitors: "10,000", situation: "You have traffic but low engagement. Visitors bounce after viewing one page.", q: "What's the best TOFU optimization?", opts: ["Add more pop-ups for email capture", "Create valuable lead magnets matching search intent", "Require registration to view content", "Buy more traffic ads"], correct: 1, explain: "Lead magnets that match search intent capture qualified leads. Force gates and pop-ups increase bounce rates and hurt SEO." },
+         { stage: "Middle of Funnel (MOFU)", width: "60%", visitors: "2,000", situation: "Leads download your content but don't engage further. Email open rates are declining.", q: "How do you nurture MOFU leads effectively?", opts: ["Send daily promotional emails", "Provide segmented educational content based on behavior", "Call every lead immediately", "Wait for them to reach out"], correct: 1, explain: "Segmented content based on behavior shows you understand their needs. Over-communication or generic blasts cause unsubscribes." },
+         { stage: "Bottom of Funnel (BOFU)", width: "30%", visitors: "500", situation: "Qualified leads are requesting demos but not converting. Sales cycle is 60+ days.", q: "What shortens the BOFU conversion cycle?", opts: ["Offer massive discounts", "Provide case studies, ROI calculators, and address objections proactively", "Add pressure tactics", "Wait patiently"], correct: 1, explain: "Decision-makers need ammunition to justify purchases. Case studies, ROI proof, and objection handling accelerate internal approvals." },
+         { stage: "Conversion", width: "15%", visitors: "100", situation: "Customers sign up but 30% churn in the first month. Acquisition cost isn't being recovered.", q: "What improves early retention?", opts: ["Lock customers into annual contracts", "Invest in onboarding and time-to-value reduction", "Add more features", "Offer discounts to stay"], correct: 1, explain: "Fast time-to-value is the #1 retention driver. Customers who see value quickly become long-term users and advocates." },
+         { stage: "Expansion", width: "10%", visitors: "70", situation: "Retained customers are happy but revenue per customer is flat. No upsells are converting.", q: "What drives expansion revenue?", opts: ["Constant upsell emails", "Usage-based triggers with value-aligned upgrades", "Price increases for everyone", "Bundle unnecessary features"], correct: 1, explain: "Usage-based triggers identify customers who would genuinely benefit from upgrades. Pushy upsells damage trust and satisfaction." }
+      ];
+      const l = levels[level];
+      const infoTopics: Record<string, {title: string; content: string}> = {
+         metrics: { title: "Funnel Metrics", content: "Key metrics: Conversion rate (stage to stage), CAC (customer acquisition cost), LTV (lifetime value), Time in stage, Drop-off points. Optimize the biggest leaks first." },
+         automation: { title: "Marketing Automation", content: "Automate based on behavior: page visits, email clicks, content downloads. Trigger relevant follow-ups. Don't automate relationship-building—that needs human touch." },
+         qualification: { title: "Lead Qualification", content: "Use BANT (Budget, Authority, Need, Timeline) or similar. Score leads based on fit (demographics) and engagement (behavior). Focus sales effort on high-score leads." },
+         attribution: { title: "Attribution Models", content: "Track which channels drive conversions: first-touch, last-touch, or multi-touch attribution. Understand the full journey to allocate marketing spend effectively." }
+      };
+      const answer = (i: number) => { if(answered) return; setSelected(i); setAnswered(true); if(i === l.correct) { setScore(p => p + 1); setLog(l => [...l, `✓ ${levels[level].stage}: Optimized!`]); } else { setLog(l => [...l, `✗ ${levels[level].stage}: Better: "${levels[level].opts[levels[level].correct]}"`]); } };
+      const next = () => { if(level >= levels.length - 1) { setPhase('result'); } else { setLevel(p => p + 1); setAnswered(false); setSelected(null); } };
+      const grade = score >= 4 ? 'A' : score >= 3 ? 'B' : score >= 2 ? 'C' : 'D';
+      if(phase === 'intro') return (<div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-rose-900 via-pink-900 to-red-900 text-white p-6"><div className="text-6xl mb-4">🔻</div><h2 className="text-2xl font-bold mb-2">Sales Funnel Mastery</h2><p className="text-slate-300 text-center mb-6 max-w-md">Optimize every stage of your funnel from awareness to expansion!</p><button onClick={() => setPhase('play')} className="px-8 py-3 bg-gradient-to-r from-rose-500 to-pink-500 rounded-xl font-bold">Optimize Funnel</button></div>);
+      if(phase === 'result') return (<div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-rose-900 via-pink-900 to-red-900 text-white p-6"><div className="text-6xl mb-4">{grade === 'A' ? '💎' : grade === 'B' ? '🔻' : '📊'}</div><h2 className="text-2xl font-bold mb-2">Funnel Optimized!</h2><div className="text-4xl font-bold text-rose-400 mb-2">{score}/{levels.length}</div><div className="text-6xl mb-4">{grade}</div><p className="text-slate-400 mb-4">{grade === 'A' ? 'Funnel master!' : grade === 'B' ? 'Good optimization!' : 'Keep refining!'}</p><div className="w-full max-w-md bg-black/30 rounded-lg p-3 mb-4 max-h-32 overflow-y-auto">{log.map((l,i) => <p key={i} className="text-xs text-slate-300">{l}</p>)}</div><button onClick={() => {setPhase('intro');setLevel(0);setScore(0);setAnswered(false);setSelected(null);setLog([]);}} className="px-6 py-2 bg-rose-600 rounded-lg">Try Again</button></div>);
+      return (<div className="w-full h-full flex flex-col bg-gradient-to-br from-rose-900 via-pink-900 to-red-900 text-white overflow-hidden">{showInfo && infoTopic && infoTopics[infoTopic] && (<div className="absolute inset-0 bg-black/80 flex items-center justify-center p-4 z-50" onClick={() => { setShowInfo(false); setInfoTopic(null); }}><div className="bg-slate-800 rounded-xl p-4 max-w-md" onClick={e => e.stopPropagation()}><h3 className="text-lg font-bold text-rose-400 mb-2">{infoTopics[infoTopic].title}</h3><p className="text-sm text-slate-300">{infoTopics[infoTopic].content}</p><button onClick={() => { setShowInfo(false); setInfoTopic(null); }} className="mt-4 w-full py-2 bg-rose-600 rounded-lg">Got it!</button></div></div>)}<div className="p-3 bg-black/30 border-b border-rose-500/30 flex justify-between items-center"><span className="font-bold">🔻 {l.stage}</span><span className="text-rose-400">{level + 1}/{levels.length}</span><span className="text-pink-400">Score: {score}</span></div><div className="flex-1 p-4 overflow-auto"><div className="flex flex-col items-center gap-1 mb-4">{levels.map((lv, i) => (<div key={i} style={{width: lv.width}} className={`h-6 rounded flex items-center justify-center text-xs ${i < level ? 'bg-rose-500' : i === level ? 'bg-pink-400' : 'bg-slate-700'}`}>{lv.visitors}</div>))}</div><div className="bg-black/30 rounded-xl p-4 mb-4"><p className="text-sm text-slate-300">{l.situation}</p></div><div className="bg-black/30 rounded-xl p-4 mb-3"><p className="font-medium">{l.q}</p></div><div className="grid gap-2">{l.opts.map((opt, i) => (<button key={i} onClick={() => answer(i)} disabled={answered} className={`p-3 rounded-lg text-left text-sm ${answered ? i === l.correct ? 'bg-green-600' : i === selected ? 'bg-red-600' : 'bg-black/30' : 'bg-black/30 hover:bg-rose-600/50'}`}>{opt}</button>))}</div>{answered && (<div className="mt-3 p-3 bg-black/30 rounded-lg"><p className="text-sm text-slate-300">{l.explain}</p><button onClick={next} className="mt-3 w-full py-2 bg-rose-600 rounded-lg">{level >= levels.length - 1 ? 'See Results' : 'Next Level'}</button></div>)}</div><div className="p-3 bg-black/30 border-t border-rose-500/30 flex gap-2 justify-center flex-wrap">{Object.keys(infoTopics).map(k => <button key={k} onClick={() => {setInfoTopic(k);setShowInfo(true);}} className="text-xs text-rose-400">ℹ️ {infoTopics[k].title}</button>)}</div></div>);
+   };
+
+   // --- DESIGN THINKING RENDERER ---
+   const DesignThinkingRenderer = () => {
+      const [phase, setPhase] = useState<'intro' | 'play' | 'result'>('intro');
+      const [step, setStep] = useState(0);
+      const [score, setScore] = useState(0);
+      const [selected, setSelected] = useState<number | null>(null);
+      const [answered, setAnswered] = useState(false);
+      const [log, setLog] = useState<string[]>([]);
+      const [showInfo, setShowInfo] = useState(false);
+      const [infoTopic, setInfoTopic] = useState<string | null>(null);
+
+      const steps = [
+         { name: "Empathize", icon: "❤️", situation: "You're building a productivity app. You have assumptions about what users need based on your own experience.", q: "What's the best way to start the empathize phase?", opts: ["Survey 1000 random people", "Interview 5-10 target users and observe their workflow", "Read competitor reviews", "Build what you would want"], correct: 1, explain: "Deep interviews with small groups reveal insights surveys miss. Observing real workflows uncovers needs users can't articulate." },
+         { name: "Define", icon: "🎯", situation: "From your research, you have pages of notes, recordings, and observations from 8 user interviews.", q: "How do you synthesize this into actionable insights?", opts: ["Pick the most common complaint", "Create a Point of View statement: User + Need + Insight", "Let the team vote on what to build", "Build features for every problem mentioned"], correct: 1, explain: "POV statements (User + Need + Insight) focus the team on solving the right problem. 'How might we...' questions spark solutions." },
+         { name: "Ideate", icon: "💡", situation: "Your team is brainstorming solutions. After 10 minutes, the loudest person's idea is dominating the discussion.", q: "How do you generate more diverse ideas?", opts: ["Move on—that idea is probably good", "Use silent brainstorming followed by structured sharing", "Assign the quiet people to speak", "Have the leader decide"], correct: 1, explain: "Silent ideation gives everyone equal voice. Structured sharing (round-robin, dot voting) prevents groupthink and hierarchy bias." },
+         { name: "Prototype", icon: "🔧", situation: "You have 3 promising concepts. The team wants to build a full MVP to test with users.", q: "What's the optimal prototyping approach?", opts: ["Build a complete MVP for the best idea", "Create low-fidelity prototypes for all 3 concepts", "Write detailed specs for developers", "Skip to launch and iterate"], correct: 1, explain: "Low-fidelity prototypes (paper, Figma, Wizard of Oz) test concepts quickly and cheaply. Fail fast, learn fast, before investing heavily." },
+         { name: "Test", icon: "🧪", situation: "Users are testing your prototype. One user is confused by the navigation but says 'it's fine, I'll figure it out.'", q: "How should you interpret and act on this feedback?", opts: ["They said it's fine, move on", "Probe deeper: observe actions, not just words", "Redesign everything", "Add a tutorial"], correct: 1, explain: "Watch what users do, not just what they say. 'I'll figure it out' often means 'this is confusing but I'm being polite.'" }
+      ];
+      const st = steps[step];
+      const infoTopics: Record<string, {title: string; content: string}> = {
+         process: { title: "Design Thinking Process", content: "The 5 phases (Empathize, Define, Ideate, Prototype, Test) are iterative, not linear. You might prototype, test, then go back to empathize with new insights. Embrace the loops." },
+         hmw: { title: "How Might We Questions", content: "'How might we...' (HMW) frames problems as opportunities. Too broad: 'HMW fix everything?' Too narrow: 'HMW add a button?' Right: 'HMW help users find content faster?'" },
+         prototypes: { title: "Prototyping Methods", content: "Match fidelity to learning goals: Paper sketches (flow testing), Clickable mockups (UI testing), Wizard of Oz (fake the backend), Concierge (manual service first)." },
+         iteration: { title: "Iterative Design", content: "Plan for multiple iterations. First prototype tests if the concept resonates. Later prototypes refine details. Budget time for 3-5 cycles before committing to build." }
+      };
+      const answer = (i: number) => { if(answered) return; setSelected(i); setAnswered(true); if(i === st.correct) { setScore(p => p + 1); setLog(l => [...l, `✓ ${st.name}: Great approach!`]); } else { setLog(l => [...l, `✗ ${st.name}: Try "${st.opts[st.correct]}" next time`]); } };
+      const next = () => { if(step >= steps.length - 1) { setPhase('result'); } else { setStep(p => p + 1); setAnswered(false); setSelected(null); } };
+      const grade = score >= 4 ? 'A' : score >= 3 ? 'B' : score >= 2 ? 'C' : 'D';
+      if(phase === 'intro') return (<div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-sky-900 via-blue-900 to-indigo-900 text-white p-6"><div className="text-6xl mb-4">💭</div><h2 className="text-2xl font-bold mb-2">Design Thinking Workshop</h2><p className="text-slate-300 text-center mb-6 max-w-md">Master the human-centered design process from empathy to testing!</p><button onClick={() => setPhase('play')} className="px-8 py-3 bg-gradient-to-r from-sky-500 to-blue-500 rounded-xl font-bold">Start Design</button></div>);
+      if(phase === 'result') return (<div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-sky-900 via-blue-900 to-indigo-900 text-white p-6"><div className="text-6xl mb-4">{grade === 'A' ? '🎨' : grade === 'B' ? '💭' : '📐'}</div><h2 className="text-2xl font-bold mb-2">Design Complete!</h2><div className="text-4xl font-bold text-sky-400 mb-2">{score}/{steps.length}</div><div className="text-6xl mb-4">{grade}</div><p className="text-slate-400 mb-4">{grade === 'A' ? 'Design thinking master!' : grade === 'B' ? 'Great design sense!' : 'Keep iterating!'}</p><div className="w-full max-w-md bg-black/30 rounded-lg p-3 mb-4 max-h-32 overflow-y-auto">{log.map((l,i) => <p key={i} className="text-xs text-slate-300">{l}</p>)}</div><button onClick={() => {setPhase('intro');setStep(0);setScore(0);setAnswered(false);setSelected(null);setLog([]);}} className="px-6 py-2 bg-sky-600 rounded-lg">Try Again</button></div>);
+      return (<div className="w-full h-full flex flex-col bg-gradient-to-br from-sky-900 via-blue-900 to-indigo-900 text-white overflow-hidden">{showInfo && infoTopic && infoTopics[infoTopic] && (<div className="absolute inset-0 bg-black/80 flex items-center justify-center p-4 z-50" onClick={() => { setShowInfo(false); setInfoTopic(null); }}><div className="bg-slate-800 rounded-xl p-4 max-w-md" onClick={e => e.stopPropagation()}><h3 className="text-lg font-bold text-sky-400 mb-2">{infoTopics[infoTopic].title}</h3><p className="text-sm text-slate-300">{infoTopics[infoTopic].content}</p><button onClick={() => { setShowInfo(false); setInfoTopic(null); }} className="mt-4 w-full py-2 bg-sky-600 rounded-lg">Got it!</button></div></div>)}<div className="p-3 bg-black/30 border-b border-sky-500/30 flex justify-between items-center"><span className="font-bold">{st.icon} {st.name}</span><span className="text-sky-400">{step + 1}/{steps.length}</span><span className="text-blue-400">Score: {score}</span></div><div className="flex-1 p-4 overflow-auto"><div className="flex gap-1 mb-4">{steps.map((s, i) => (<div key={i} className="flex-1 text-center"><div className={`text-2xl ${i <= step ? 'opacity-100' : 'opacity-30'}`}>{s.icon}</div><div className={`h-1 mt-1 rounded ${i < step ? 'bg-sky-500' : i === step ? 'bg-blue-400' : 'bg-slate-700'}`} /></div>))}</div><div className="bg-black/30 rounded-xl p-4 mb-4"><p className="text-sm text-slate-300">{st.situation}</p></div><div className="bg-black/30 rounded-xl p-4 mb-3"><p className="font-medium">{st.q}</p></div><div className="grid gap-2">{st.opts.map((opt, i) => (<button key={i} onClick={() => answer(i)} disabled={answered} className={`p-3 rounded-lg text-left text-sm ${answered ? i === st.correct ? 'bg-green-600' : i === selected ? 'bg-red-600' : 'bg-black/30' : 'bg-black/30 hover:bg-sky-600/50'}`}>{opt}</button>))}</div>{answered && (<div className="mt-3 p-3 bg-black/30 rounded-lg"><p className="text-sm text-slate-300">{st.explain}</p><button onClick={next} className="mt-3 w-full py-2 bg-sky-600 rounded-lg">{step >= steps.length - 1 ? 'See Results' : 'Next Phase'}</button></div>)}</div><div className="p-3 bg-black/30 border-t border-sky-500/30 flex gap-2 justify-center flex-wrap">{Object.keys(infoTopics).map(k => <button key={k} onClick={() => {setInfoTopic(k);setShowInfo(true);}} className="text-xs text-sky-400">ℹ️ {infoTopics[k].title}</button>)}</div></div>);
+   };
+
+   // --- MVP DEVELOPMENT RENDERER ---
+   const MVPRenderer = () => {
+      const [phase, setPhase] = useState<'intro' | 'play' | 'result'>('intro');
+      const [decision, setDecision] = useState(0);
+      const [score, setScore] = useState(0);
+      const [selected, setSelected] = useState<number | null>(null);
+      const [answered, setAnswered] = useState(false);
+      const [log, setLog] = useState<string[]>([]);
+      const [showInfo, setShowInfo] = useState(false);
+      const [infoTopic, setInfoTopic] = useState<string | null>(null);
+
+      const decisions = [
+         { topic: "Feature Scope", situation: "Your team has brainstormed 50 features for the product. Engineering estimates 6 months to build everything.", q: "What's the MVP approach?", opts: ["Build all features but faster", "Identify the ONE core value prop and build only that", "Build 50% of features at 50% quality", "Outsource to build faster"], correct: 1, explain: "MVP means ONE thing done well, not many things done poorly. The core value proposition should be undeniably clear to users." },
+         { topic: "Build vs Buy", situation: "You need user authentication for your MVP. Your team wants to build a custom solution for future flexibility.", q: "What's the right MVP decision?", opts: ["Build custom auth from scratch", "Use existing auth services (Auth0, Firebase, etc.)", "Skip auth for MVP", "Build simple auth, plan to replace"], correct: 1, explain: "For MVP, buy/use existing solutions for non-core features. Auth isn't your value prop—focus engineering time on what differentiates you." },
+         { topic: "Tech Stack", situation: "Your technical co-founder wants to use cutting-edge technology (new framework, latest architecture patterns).", q: "How should you choose MVP technology?", opts: ["Use the newest tech for future-proofing", "Choose boring, proven tech your team knows well", "Let engineers decide based on interest", "Build in multiple technologies to compare"], correct: 1, explain: "Boring technology works. Speed matters more than perfection for MVP. Use what your team knows to ship fast and learn faster." },
+         { topic: "Quality vs Speed", situation: "Your MVP is 80% done. The last 20% (edge cases, polish) will take as long as the first 80%.", q: "What should you do?", opts: ["Finish the remaining 20% properly", "Ship at 80% and handle edge cases based on real usage", "Hire more people to finish faster", "Start over with a simpler scope"], correct: 1, explain: "The 80/20 rule applies: 80% of value comes from 20% of features. Ship, learn, then decide which edge cases actually matter." },
+         { topic: "Launch Timing", situation: "Your MVP is functional but you're embarrassed by the design. A designer could polish it in 2 more weeks.", q: "When should you launch?", opts: ["Wait for the design polish", "Launch now if core functionality works", "Do a soft launch to friends only", "Rebuild with better design first"], correct: 1, explain: "If you're not embarrassed by V1, you launched too late. Early users care about solving their problem, not pixel-perfect design." }
+      ];
+      const d = decisions[decision];
+      const infoTopics: Record<string, {title: string; content: string}> = {
+         definition: { title: "What is MVP?", content: "Minimum Viable Product: the smallest thing you can build to learn whether customers want your solution. It's not a cheap product—it's a learning vehicle. Emphasis on learning, not product." },
+         scope: { title: "Scoping MVP", content: "Start with the problem, not features. Ask: 'What's the smallest thing that proves people will pay/use this?' Cut ruthlessly. If removing a feature doesn't kill the learning goal, remove it." },
+         metrics: { title: "MVP Success Metrics", content: "Define success BEFORE building: 'If X users do Y in Z time, we've validated the hypothesis.' Vanity metrics (downloads, signups) mislead. Focus on engagement and retention." },
+         iteration: { title: "Post-MVP Iteration", content: "MVP is the start, not the goal. Plan: Build → Measure → Learn → Repeat. Each iteration should have a clear hypothesis to test. Pivot or persevere based on data, not ego." }
+      };
+      const answer = (i: number) => { if(answered) return; setSelected(i); setAnswered(true); if(i === d.correct) { setScore(p => p + 1); setLog(l => [...l, `✓ ${d.topic}: Lean thinking!`]); } else { setLog(l => [...l, `✗ ${d.topic}: Better: "${d.opts[d.correct]}"`]); } };
+      const next = () => { if(decision >= decisions.length - 1) { setPhase('result'); } else { setDecision(p => p + 1); setAnswered(false); setSelected(null); } };
+      const grade = score >= 4 ? 'A' : score >= 3 ? 'B' : score >= 2 ? 'C' : 'D';
+      if(phase === 'intro') return (<div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-lime-900 via-green-900 to-emerald-900 text-white p-6"><div className="text-6xl mb-4">🚀</div><h2 className="text-2xl font-bold mb-2">MVP Development</h2><p className="text-slate-300 text-center mb-6 max-w-md">Master the art of building Minimum Viable Products that maximize learning!</p><button onClick={() => setPhase('play')} className="px-8 py-3 bg-gradient-to-r from-lime-500 to-green-500 rounded-xl font-bold">Build MVP</button></div>);
+      if(phase === 'result') return (<div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-lime-900 via-green-900 to-emerald-900 text-white p-6"><div className="text-6xl mb-4">{grade === 'A' ? '🎯' : grade === 'B' ? '🚀' : '🔧'}</div><h2 className="text-2xl font-bold mb-2">MVP Complete!</h2><div className="text-4xl font-bold text-lime-400 mb-2">{score}/{decisions.length}</div><div className="text-6xl mb-4">{grade}</div><p className="text-slate-400 mb-4">{grade === 'A' ? 'Lean startup master!' : grade === 'B' ? 'Good MVP thinking!' : 'Keep learning!'}</p><div className="w-full max-w-md bg-black/30 rounded-lg p-3 mb-4 max-h-32 overflow-y-auto">{log.map((l,i) => <p key={i} className="text-xs text-slate-300">{l}</p>)}</div><button onClick={() => {setPhase('intro');setDecision(0);setScore(0);setAnswered(false);setSelected(null);setLog([]);}} className="px-6 py-2 bg-lime-600 rounded-lg">Try Again</button></div>);
+      return (<div className="w-full h-full flex flex-col bg-gradient-to-br from-lime-900 via-green-900 to-emerald-900 text-white overflow-hidden">{showInfo && infoTopic && infoTopics[infoTopic] && (<div className="absolute inset-0 bg-black/80 flex items-center justify-center p-4 z-50" onClick={() => { setShowInfo(false); setInfoTopic(null); }}><div className="bg-slate-800 rounded-xl p-4 max-w-md" onClick={e => e.stopPropagation()}><h3 className="text-lg font-bold text-lime-400 mb-2">{infoTopics[infoTopic].title}</h3><p className="text-sm text-slate-300">{infoTopics[infoTopic].content}</p><button onClick={() => { setShowInfo(false); setInfoTopic(null); }} className="mt-4 w-full py-2 bg-lime-600 rounded-lg">Got it!</button></div></div>)}<div className="p-3 bg-black/30 border-b border-lime-500/30 flex justify-between items-center"><span className="font-bold">🚀 {d.topic}</span><span className="text-lime-400">{decision + 1}/{decisions.length}</span><span className="text-green-400">Score: {score}</span></div><div className="flex-1 p-4 overflow-auto"><div className="bg-black/30 rounded-xl p-4 mb-4"><p className="text-sm text-slate-300">{d.situation}</p></div><div className="bg-black/30 rounded-xl p-4 mb-3"><p className="font-medium">{d.q}</p></div><div className="grid gap-2">{d.opts.map((opt, i) => (<button key={i} onClick={() => answer(i)} disabled={answered} className={`p-3 rounded-lg text-left text-sm ${answered ? i === d.correct ? 'bg-green-600' : i === selected ? 'bg-red-600' : 'bg-black/30' : 'bg-black/30 hover:bg-lime-600/50'}`}>{opt}</button>))}</div>{answered && (<div className="mt-3 p-3 bg-black/30 rounded-lg"><p className="text-sm text-slate-300">{d.explain}</p><button onClick={next} className="mt-3 w-full py-2 bg-lime-600 rounded-lg">{decision >= decisions.length - 1 ? 'See Results' : 'Next Decision'}</button></div>)}</div><div className="p-3 bg-black/30 border-t border-lime-500/30 flex gap-2 justify-center flex-wrap">{Object.keys(infoTopics).map(k => <button key={k} onClick={() => {setInfoTopic(k);setShowInfo(true);}} className="text-xs text-lime-400">ℹ️ {infoTopics[k].title}</button>)}</div></div>);
+   };
+
+   // --- RISK ASSESSMENT RENDERER ---
+   const RiskAssessmentRenderer = () => {
+      const [phase, setPhase] = useState<'intro' | 'play' | 'result'>('intro');
+      const [risk, setRisk] = useState(0);
+      const [score, setScore] = useState(0);
+      const [selected, setSelected] = useState<number | null>(null);
+      const [answered, setAnswered] = useState(false);
+      const [log, setLog] = useState<string[]>([]);
+      const [showInfo, setShowInfo] = useState(false);
+      const [infoTopic, setInfoTopic] = useState<string | null>(null);
+
+      const risks = [
+         { category: "Market Risk", icon: "📉", situation: "Your startup is entering a market dominated by two well-funded competitors with 95% market share combined.", q: "How do you assess and mitigate this risk?", opts: ["Avoid the market entirely", "Find an underserved niche and differentiate strongly", "Compete directly on price", "Hope competitors ignore you"], correct: 1, explain: "Dominated markets often have underserved segments. Find a niche where your differentiation matters and grow from there." },
+         { category: "Technical Risk", icon: "⚙️", situation: "Your product relies on a new AI model that works 80% of the time in testing. Users need 99% reliability.", q: "What's the best risk mitigation?", opts: ["Launch and fix in production", "Add human fallback for the 20% failures", "Wait until 99% works", "Pivot to simpler technology"], correct: 1, explain: "Hybrid approaches (AI + human fallback) manage technical risk while still delivering value. You can improve automation over time." },
+         { category: "Financial Risk", icon: "💸", situation: "You have 8 months of runway. Sales cycles are taking longer than expected—average 6 months to close.", q: "How do you manage this financial risk?", opts: ["Spend more on marketing to accelerate", "Cut burn rate and extend runway while refining sales", "Raise emergency funding now", "Accept you'll run out of money"], correct: 1, explain: "Extend runway AND fix the problem. Raising while desperate gives bad terms. Cutting burn buys time to learn and adjust." },
+         { category: "Team Risk", icon: "👥", situation: "Your CTO, who holds critical knowledge, hints they might leave for another opportunity.", q: "How do you mitigate this key person risk?", opts: ["Offer immediate raise to retain them", "Start knowledge transfer and document systems now", "Ignore hints—they're probably bluffing", "Start looking for replacement secretly"], correct: 1, explain: "Knowledge concentration is a critical risk. Start documentation and cross-training immediately. Address retention, but also reduce single-point-of-failure." },
+         { category: "Regulatory Risk", icon: "⚖️", situation: "Your fintech startup operates in a gray area. A new regulation might require expensive compliance or ban your business model.", q: "What's the smart approach?", opts: ["Ignore until regulation passes", "Engage with regulators proactively and build compliance into product", "Move to unregulated jurisdiction", "Pivot to different industry"], correct: 1, explain: "Proactive regulatory engagement often influences outcomes favorably. Building compliance early creates competitive advantage when regulation hits." }
+      ];
+      const r = risks[risk];
+      const infoTopics: Record<string, {title: string; content: string}> = {
+         framework: { title: "Risk Assessment Framework", content: "Assess: Probability × Impact = Priority. For each risk: Identify → Assess → Mitigate → Monitor. Focus on high-probability, high-impact risks first. Accept some risks consciously." },
+         types: { title: "Startup Risk Types", content: "Key risks: Market (will they buy?), Product (can we build it?), Financial (can we afford it?), Team (can we execute?), Regulatory (is it legal?), Competitive (can we win?)." },
+         mitigation: { title: "Mitigation Strategies", content: "Options: Avoid (don't take the risk), Transfer (insurance, partners), Mitigate (reduce probability/impact), Accept (acknowledge and monitor). Match strategy to risk type." },
+         monitoring: { title: "Risk Monitoring", content: "Set leading indicators for each risk. Market risk: watch for customer churn signals. Financial: monitor burn rate weekly. Create escalation triggers before problems become crises." }
+      };
+      const answer = (i: number) => { if(answered) return; setSelected(i); setAnswered(true); if(i === r.correct) { setScore(p => p + 1); setLog(l => [...l, `✓ ${r.category}: Risk managed!`]); } else { setLog(l => [...l, `✗ ${r.category}: Better: "${r.opts[r.correct]}"`]); } };
+      const next = () => { if(risk >= risks.length - 1) { setPhase('result'); } else { setRisk(p => p + 1); setAnswered(false); setSelected(null); } };
+      const grade = score >= 4 ? 'A' : score >= 3 ? 'B' : score >= 2 ? 'C' : 'D';
+      if(phase === 'intro') return (<div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-red-900 via-rose-900 to-orange-900 text-white p-6"><div className="text-6xl mb-4">⚠️</div><h2 className="text-2xl font-bold mb-2">Risk Assessment Matrix</h2><p className="text-slate-300 text-center mb-6 max-w-md">Identify, assess, and mitigate startup risks before they become crises!</p><button onClick={() => setPhase('play')} className="px-8 py-3 bg-gradient-to-r from-red-500 to-orange-500 rounded-xl font-bold">Assess Risks</button></div>);
+      if(phase === 'result') return (<div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-red-900 via-rose-900 to-orange-900 text-white p-6"><div className="text-6xl mb-4">{grade === 'A' ? '🛡️' : grade === 'B' ? '⚠️' : '🎲'}</div><h2 className="text-2xl font-bold mb-2">Assessment Complete!</h2><div className="text-4xl font-bold text-red-400 mb-2">{score}/{risks.length}</div><div className="text-6xl mb-4">{grade}</div><p className="text-slate-400 mb-4">{grade === 'A' ? 'Risk management pro!' : grade === 'B' ? 'Good risk awareness!' : 'High risk tolerance!'}</p><div className="w-full max-w-md bg-black/30 rounded-lg p-3 mb-4 max-h-32 overflow-y-auto">{log.map((l,i) => <p key={i} className="text-xs text-slate-300">{l}</p>)}</div><button onClick={() => {setPhase('intro');setRisk(0);setScore(0);setAnswered(false);setSelected(null);setLog([]);}} className="px-6 py-2 bg-red-600 rounded-lg">Try Again</button></div>);
+      return (<div className="w-full h-full flex flex-col bg-gradient-to-br from-red-900 via-rose-900 to-orange-900 text-white overflow-hidden">{showInfo && infoTopic && infoTopics[infoTopic] && (<div className="absolute inset-0 bg-black/80 flex items-center justify-center p-4 z-50" onClick={() => { setShowInfo(false); setInfoTopic(null); }}><div className="bg-slate-800 rounded-xl p-4 max-w-md" onClick={e => e.stopPropagation()}><h3 className="text-lg font-bold text-red-400 mb-2">{infoTopics[infoTopic].title}</h3><p className="text-sm text-slate-300">{infoTopics[infoTopic].content}</p><button onClick={() => { setShowInfo(false); setInfoTopic(null); }} className="mt-4 w-full py-2 bg-red-600 rounded-lg">Got it!</button></div></div>)}<div className="p-3 bg-black/30 border-b border-red-500/30 flex justify-between items-center"><span className="font-bold">{r.icon} {r.category}</span><span className="text-red-400">{risk + 1}/{risks.length}</span><span className="text-orange-400">Score: {score}</span></div><div className="flex-1 p-4 overflow-auto"><div className="flex gap-1 mb-4">{risks.map((rs, i) => (<div key={i} className="flex-1 text-center"><div className={`text-xl ${i <= risk ? 'opacity-100' : 'opacity-30'}`}>{rs.icon}</div><div className={`h-1 mt-1 rounded ${i < risk ? 'bg-red-500' : i === risk ? 'bg-orange-400' : 'bg-slate-700'}`} /></div>))}</div><div className="bg-black/30 rounded-xl p-4 mb-4"><p className="text-sm text-slate-300">{r.situation}</p></div><div className="bg-black/30 rounded-xl p-4 mb-3"><p className="font-medium">{r.q}</p></div><div className="grid gap-2">{r.opts.map((opt, i) => (<button key={i} onClick={() => answer(i)} disabled={answered} className={`p-3 rounded-lg text-left text-sm ${answered ? i === r.correct ? 'bg-green-600' : i === selected ? 'bg-red-600' : 'bg-black/30' : 'bg-black/30 hover:bg-red-600/50'}`}>{opt}</button>))}</div>{answered && (<div className="mt-3 p-3 bg-black/30 rounded-lg"><p className="text-sm text-slate-300">{r.explain}</p><button onClick={next} className="mt-3 w-full py-2 bg-red-600 rounded-lg">{risk >= risks.length - 1 ? 'See Results' : 'Next Risk'}</button></div>)}</div><div className="p-3 bg-black/30 border-t border-red-500/30 flex gap-2 justify-center flex-wrap">{Object.keys(infoTopics).map(k => <button key={k} onClick={() => {setInfoTopic(k);setShowInfo(true);}} className="text-xs text-red-400">ℹ️ {infoTopics[k].title}</button>)}</div></div>);
+   };
+
+   // --- SUSTAINABILITY RENDERER ---
+   const SustainabilityRenderer = () => {
+      const [phase, setPhase] = useState<'intro' | 'play' | 'result'>('intro');
+      const [topic, setTopic] = useState(0);
+      const [score, setScore] = useState(0);
+      const [selected, setSelected] = useState<number | null>(null);
+      const [answered, setAnswered] = useState(false);
+      const [log, setLog] = useState<string[]>([]);
+      const [showInfo, setShowInfo] = useState(false);
+      const [infoTopic, setInfoTopic] = useState<string | null>(null);
+
+      const topics = [
+         { area: "Environmental", icon: "🌱", situation: "Your e-commerce startup ships 10,000 packages monthly. Customers are asking about your environmental practices.", q: "What's the best sustainable business approach?", opts: ["Ignore—customers won't pay more for green", "Implement sustainable packaging with carbon offset options", "Greenwash with vague claims", "Only ship once a week to reduce trips"], correct: 1, explain: "Genuine sustainability creates differentiation and customer loyalty. Transparent practices (recyclable packaging, carbon offsets) attract conscious consumers." },
+         { area: "Social Impact", icon: "🤝", situation: "Your startup is growing and you want to build a diverse team, but all applicants look similar to your founders.", q: "How do you improve diversity sustainably?", opts: ["Lower hiring standards for diversity", "Expand recruiting sources and remove bias from hiring process", "Set strict quotas regardless of fit", "Ignore—hire whoever is best"], correct: 1, explain: "Sustainable diversity means fixing the pipeline (where you recruit) and process (how you evaluate). This attracts diverse talent without compromising standards." },
+         { area: "Governance", icon: "⚖️", situation: "Investors are offering term sheets. One offers more money but wants control that could force short-term thinking.", q: "How do you balance funding with sustainable governance?", opts: ["Take the money—figure out governance later", "Negotiate governance terms that protect long-term mission", "Reject all outside investment", "Accept any terms to survive"], correct: 1, explain: "Governance structure determines long-term sustainability. Protect founder vision with voting rights, board composition, and clear decision authorities." },
+         { area: "Economic", icon: "💰", situation: "Your startup is profitable but growth is slowing. VCs want you to burn more to grow faster.", q: "What's the economically sustainable path?", opts: ["Burn aggressively to hit growth targets", "Balance growth investment with profitability runway", "Stop all growth spending", "Pivot to a new market entirely"], correct: 1, explain: "Sustainable growth balances ambition with resilience. Profitability gives options; excessive burn creates pressure that compromises decisions." },
+         { area: "Long-term Thinking", icon: "🔮", situation: "A lucrative enterprise deal requires customizations that would fragment your product and slow down roadmap.", q: "How do you balance short-term revenue with long-term sustainability?", opts: ["Take any revenue available", "Evaluate if deal aligns with product vision long-term", "Reject all enterprise deals", "Build everything they ask"], correct: 1, explain: "Sustainable growth evaluates each opportunity against long-term vision. Some revenue creates technical debt that costs more than it earns." }
+      ];
+      const t = topics[topic];
+      const infoTopics: Record<string, {title: string; content: string}> = {
+         esg: { title: "ESG for Startups", content: "ESG (Environmental, Social, Governance) isn't just for big companies. Investors increasingly evaluate startups on sustainability. Build good practices early—they're easier to scale than fix." },
+         triple: { title: "Triple Bottom Line", content: "Measure success by People (social impact), Planet (environmental impact), and Profit (financial returns). Sustainable businesses optimize all three, not just profit." },
+         circular: { title: "Circular Economy", content: "Design products and services for reuse, repair, and recycling. Reduce waste by keeping materials in use longer. This reduces costs and appeals to eco-conscious customers." },
+         bcorp: { title: "B Corp Certification", content: "B Corps meet high standards of social and environmental performance. Certification signals commitment to stakeholders beyond shareholders. Consider if it aligns with your mission." }
+      };
+      const answer = (i: number) => { if(answered) return; setSelected(i); setAnswered(true); if(i === t.correct) { setScore(p => p + 1); setLog(l => [...l, `✓ ${t.area}: Sustainable choice!`]); } else { setLog(l => [...l, `✗ ${t.area}: Better: "${t.opts[t.correct]}"`]); } };
+      const next = () => { if(topic >= topics.length - 1) { setPhase('result'); } else { setTopic(p => p + 1); setAnswered(false); setSelected(null); } };
+      const grade = score >= 4 ? 'A' : score >= 3 ? 'B' : score >= 2 ? 'C' : 'D';
+      if(phase === 'intro') return (<div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-emerald-900 via-teal-900 to-cyan-900 text-white p-6"><div className="text-6xl mb-4">🌍</div><h2 className="text-2xl font-bold mb-2">Sustainability & Impact</h2><p className="text-slate-300 text-center mb-6 max-w-md">Build a business that's good for people, planet, and profit!</p><button onClick={() => setPhase('play')} className="px-8 py-3 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-xl font-bold">Go Sustainable</button></div>);
+      if(phase === 'result') return (<div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-emerald-900 via-teal-900 to-cyan-900 text-white p-6"><div className="text-6xl mb-4">{grade === 'A' ? '🌟' : grade === 'B' ? '🌍' : '🌱'}</div><h2 className="text-2xl font-bold mb-2">Impact Assessment!</h2><div className="text-4xl font-bold text-emerald-400 mb-2">{score}/{topics.length}</div><div className="text-6xl mb-4">{grade}</div><p className="text-slate-400 mb-4">{grade === 'A' ? 'Sustainability champion!' : grade === 'B' ? 'Good impact awareness!' : 'Room to grow!'}</p><div className="w-full max-w-md bg-black/30 rounded-lg p-3 mb-4 max-h-32 overflow-y-auto">{log.map((l,i) => <p key={i} className="text-xs text-slate-300">{l}</p>)}</div><button onClick={() => {setPhase('intro');setTopic(0);setScore(0);setAnswered(false);setSelected(null);setLog([]);}} className="px-6 py-2 bg-emerald-600 rounded-lg">Try Again</button></div>);
+      return (<div className="w-full h-full flex flex-col bg-gradient-to-br from-emerald-900 via-teal-900 to-cyan-900 text-white overflow-hidden">{showInfo && infoTopic && infoTopics[infoTopic] && (<div className="absolute inset-0 bg-black/80 flex items-center justify-center p-4 z-50" onClick={() => { setShowInfo(false); setInfoTopic(null); }}><div className="bg-slate-800 rounded-xl p-4 max-w-md" onClick={e => e.stopPropagation()}><h3 className="text-lg font-bold text-emerald-400 mb-2">{infoTopics[infoTopic].title}</h3><p className="text-sm text-slate-300">{infoTopics[infoTopic].content}</p><button onClick={() => { setShowInfo(false); setInfoTopic(null); }} className="mt-4 w-full py-2 bg-emerald-600 rounded-lg">Got it!</button></div></div>)}<div className="p-3 bg-black/30 border-b border-emerald-500/30 flex justify-between items-center"><span className="font-bold">{t.icon} {t.area}</span><span className="text-emerald-400">{topic + 1}/{topics.length}</span><span className="text-teal-400">Score: {score}</span></div><div className="flex-1 p-4 overflow-auto"><div className="flex gap-1 mb-4">{topics.map((tp, i) => (<div key={i} className="flex-1 text-center"><div className={`text-xl ${i <= topic ? 'opacity-100' : 'opacity-30'}`}>{tp.icon}</div><div className={`h-1 mt-1 rounded ${i < topic ? 'bg-emerald-500' : i === topic ? 'bg-teal-400' : 'bg-slate-700'}`} /></div>))}</div><div className="bg-black/30 rounded-xl p-4 mb-4"><p className="text-sm text-slate-300">{t.situation}</p></div><div className="bg-black/30 rounded-xl p-4 mb-3"><p className="font-medium">{t.q}</p></div><div className="grid gap-2">{t.opts.map((opt, i) => (<button key={i} onClick={() => answer(i)} disabled={answered} className={`p-3 rounded-lg text-left text-sm ${answered ? i === t.correct ? 'bg-green-600' : i === selected ? 'bg-red-600' : 'bg-black/30' : 'bg-black/30 hover:bg-emerald-600/50'}`}>{opt}</button>))}</div>{answered && (<div className="mt-3 p-3 bg-black/30 rounded-lg"><p className="text-sm text-slate-300">{t.explain}</p><button onClick={next} className="mt-3 w-full py-2 bg-emerald-600 rounded-lg">{topic >= topics.length - 1 ? 'See Results' : 'Next Topic'}</button></div>)}</div><div className="p-3 bg-black/30 border-t border-emerald-500/30 flex gap-2 justify-center flex-wrap">{Object.keys(infoTopics).map(k => <button key={k} onClick={() => {setInfoTopic(k);setShowInfo(true);}} className="text-xs text-emerald-400">ℹ️ {infoTopics[k].title}</button>)}</div></div>);
+   };
+
+   // --- EXIT STRATEGY RENDERER ---
+   const ExitStrategyRenderer = () => {
+      const [phase, setPhase] = useState<'intro' | 'play' | 'result'>('intro');
+      const [scenario, setScenario] = useState(0);
+      const [score, setScore] = useState(0);
+      const [selected, setSelected] = useState<number | null>(null);
+      const [answered, setAnswered] = useState(false);
+      const [log, setLog] = useState<string[]>([]);
+      const [showInfo, setShowInfo] = useState(false);
+      const [infoTopic, setInfoTopic] = useState<string | null>(null);
+
+      const scenarios = [
+         { type: "Acquisition", icon: "🏢", situation: "A larger company offers to acquire your startup for 3x your last valuation. The offer requires you to stay for 3 years.", q: "How do you evaluate this acquisition offer?", opts: ["Accept immediately—3x is great", "Evaluate strategic fit, team treatment, and earnout terms carefully", "Reject—always hold out for IPO", "Counter with 10x valuation"], correct: 1, explain: "Exit evaluation goes beyond price: strategic fit, earnout structure, team retention packages, and your personal goals all matter. Don't rush." },
+         { type: "IPO Readiness", icon: "📈", situation: "Your startup has $50M ARR growing 60% YoY. Investment bankers are suggesting you could IPO in 18 months.", q: "What should you assess for IPO readiness?", opts: ["Revenue growth is enough—proceed", "Evaluate predictability, governance, compliance, and market timing", "Wait for $100M ARR minimum", "IPO immediately to capture the market"], correct: 1, explain: "IPO readiness requires: predictable revenue, strong governance, SOX compliance readiness, experienced CFO, and favorable market conditions. It's a journey, not an event." },
+         { type: "Secondary Sale", icon: "💵", situation: "You've been grinding for 7 years. An investor offers to buy $5M of your shares in a secondary transaction.", q: "How should you think about secondary sales?", opts: ["Refuse—it shows lack of confidence", "Consider if it enables focus and reduces personal financial pressure", "Sell all your shares", "Wait for full exit only"], correct: 1, explain: "Secondary sales can provide founders financial security without full exit. This often enables better long-term decisions by reducing personal financial pressure." },
+         { type: "Acqui-hire", icon: "👥", situation: "Your startup is running low on runway. A big tech company wants to acqui-hire your team but shut down the product.", q: "How do you handle an acqui-hire offer?", opts: ["Reject—we'll find another way", "Negotiate best terms for team while being transparent with stakeholders", "Accept any terms to save team", "Pivot to new product instead"], correct: 1, explain: "Acqui-hires happen. Negotiate team packages, handle investor communication transparently, and ensure everyone understands the terms. It's not failure—it's transition." },
+         { type: "Strategic Exit", icon: "🎯", situation: "You're approached by two acquirers: one offers more cash, the other offers better strategic fit and team opportunities.", q: "How do you choose between exit offers?", opts: ["Always take the highest cash offer", "Weight strategic fit, team outcomes, and your long-term goals alongside price", "Let investors decide", "Reject both and stay independent"], correct: 1, explain: "Exit decisions blend financial returns with strategic considerations. Higher offers with poor fit often underperform. Consider earnouts, team retention, and your own goals." }
+      ];
+      const s = scenarios[scenario];
+      const infoTopics: Record<string, {title: string; content: string}> = {
+         types: { title: "Exit Types", content: "Common exits: M&A (most common), IPO (rare but lucrative), Acqui-hire (team-focused), Secondary (partial liquidity), Management buyout. Each has different implications for founders, team, and investors." },
+         valuation: { title: "Exit Valuation", content: "Exit valuations consider: revenue multiples (industry-specific), strategic premium (buyer synergies), competitive tension (multiple bidders), growth trajectory, and profitability path." },
+         negotiation: { title: "Exit Negotiation", content: "Key terms: Purchase price, Earnouts (performance-based), Escrow (holdbacks), Reps & warranties (liability), Non-compete terms, Team retention packages, Founder role post-acquisition." },
+         timing: { title: "Exit Timing", content: "Best time to exit: when you have options, not when you need to. Build relationships with potential acquirers early. The best exits often come from long-term strategic partnerships." }
+      };
+      const answer = (i: number) => { if(answered) return; setSelected(i); setAnswered(true); if(i === s.correct) { setScore(p => p + 1); setLog(l => [...l, `✓ ${s.type}: Smart exit thinking!`]); } else { setLog(l => [...l, `✗ ${s.type}: Consider: "${s.opts[s.correct]}"`]); } };
+      const next = () => { if(scenario >= scenarios.length - 1) { setPhase('result'); } else { setScenario(p => p + 1); setAnswered(false); setSelected(null); } };
+      const grade = score >= 4 ? 'A' : score >= 3 ? 'B' : score >= 2 ? 'C' : 'D';
+      if(phase === 'intro') return (<div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-yellow-900 via-amber-900 to-orange-900 text-white p-6"><div className="text-6xl mb-4">🚪</div><h2 className="text-2xl font-bold mb-2">Exit Strategy Planning</h2><p className="text-slate-300 text-center mb-6 max-w-md">Plan your endgame! Master acquisition, IPO, and exit negotiation scenarios.</p><button onClick={() => setPhase('play')} className="px-8 py-3 bg-gradient-to-r from-yellow-500 to-amber-500 rounded-xl font-bold">Plan Exit</button></div>);
+      if(phase === 'result') return (<div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-yellow-900 via-amber-900 to-orange-900 text-white p-6"><div className="text-6xl mb-4">{grade === 'A' ? '🏆' : grade === 'B' ? '🚪' : '📊'}</div><h2 className="text-2xl font-bold mb-2">Exit Planning Complete!</h2><div className="text-4xl font-bold text-yellow-400 mb-2">{score}/{scenarios.length}</div><div className="text-6xl mb-4">{grade}</div><p className="text-slate-400 mb-4">{grade === 'A' ? 'Exit strategist!' : grade === 'B' ? 'Good exit sense!' : 'Keep learning!'}</p><div className="w-full max-w-md bg-black/30 rounded-lg p-3 mb-4 max-h-32 overflow-y-auto">{log.map((l,i) => <p key={i} className="text-xs text-slate-300">{l}</p>)}</div><button onClick={() => {setPhase('intro');setScenario(0);setScore(0);setAnswered(false);setSelected(null);setLog([]);}} className="px-6 py-2 bg-yellow-600 rounded-lg">Try Again</button></div>);
+      return (<div className="w-full h-full flex flex-col bg-gradient-to-br from-yellow-900 via-amber-900 to-orange-900 text-white overflow-hidden">{showInfo && infoTopic && infoTopics[infoTopic] && (<div className="absolute inset-0 bg-black/80 flex items-center justify-center p-4 z-50" onClick={() => { setShowInfo(false); setInfoTopic(null); }}><div className="bg-slate-800 rounded-xl p-4 max-w-md" onClick={e => e.stopPropagation()}><h3 className="text-lg font-bold text-yellow-400 mb-2">{infoTopics[infoTopic].title}</h3><p className="text-sm text-slate-300">{infoTopics[infoTopic].content}</p><button onClick={() => { setShowInfo(false); setInfoTopic(null); }} className="mt-4 w-full py-2 bg-yellow-600 rounded-lg">Got it!</button></div></div>)}<div className="p-3 bg-black/30 border-b border-yellow-500/30 flex justify-between items-center"><span className="font-bold">{s.icon} {s.type}</span><span className="text-yellow-400">{scenario + 1}/{scenarios.length}</span><span className="text-amber-400">Score: {score}</span></div><div className="flex-1 p-4 overflow-auto"><div className="flex gap-1 mb-4">{scenarios.map((sc, i) => (<div key={i} className="flex-1 text-center"><div className={`text-xl ${i <= scenario ? 'opacity-100' : 'opacity-30'}`}>{sc.icon}</div><div className={`h-1 mt-1 rounded ${i < scenario ? 'bg-yellow-500' : i === scenario ? 'bg-amber-400' : 'bg-slate-700'}`} /></div>))}</div><div className="bg-black/30 rounded-xl p-4 mb-4"><p className="text-sm text-slate-300">{s.situation}</p></div><div className="bg-black/30 rounded-xl p-4 mb-3"><p className="font-medium">{s.q}</p></div><div className="grid gap-2">{s.opts.map((opt, i) => (<button key={i} onClick={() => answer(i)} disabled={answered} className={`p-3 rounded-lg text-left text-sm ${answered ? i === s.correct ? 'bg-green-600' : i === selected ? 'bg-red-600' : 'bg-black/30' : 'bg-black/30 hover:bg-yellow-600/50'}`}>{opt}</button>))}</div>{answered && (<div className="mt-3 p-3 bg-black/30 rounded-lg"><p className="text-sm text-slate-300">{s.explain}</p><button onClick={next} className="mt-3 w-full py-2 bg-yellow-600 rounded-lg">{scenario >= scenarios.length - 1 ? 'See Results' : 'Next Scenario'}</button></div>)}</div><div className="p-3 bg-black/30 border-t border-yellow-500/30 flex gap-2 justify-center flex-wrap">{Object.keys(infoTopics).map(k => <button key={k} onClick={() => {setInfoTopic(k);setShowInfo(true);}} className="text-xs text-yellow-400">ℹ️ {infoTopics[k].title}</button>)}</div></div>);
+   };
+
+   // --- TIME MANAGEMENT RENDERER ---
+   const TimeManagementRenderer = () => {
+      const [phase, setPhase] = useState<'intro' | 'play' | 'result'>('intro');
+      const [challenge, setChallenge] = useState(0);
+      const [score, setScore] = useState(0);
+      const [selected, setSelected] = useState<number | null>(null);
+      const [answered, setAnswered] = useState(false);
+      const [log, setLog] = useState<string[]>([]);
+      const [showInfo, setShowInfo] = useState(false);
+      const [infoTopic, setInfoTopic] = useState<string | null>(null);
+
+      const challenges = [
+         { area: "Prioritization", icon: "📋", situation: "It's Monday morning. You have: investor update due, product bug affecting 10 users, customer demo at 3pm, and 47 unread emails.", q: "How do you prioritize your day?", opts: ["Start with emails to clear your inbox", "Fix the bug, prep demo, then investor update—emails last", "Delegate everything and focus on strategy", "Work on whatever feels most urgent"], correct: 1, explain: "Prioritize by impact: the bug affects users now, the demo is time-bound revenue opportunity, investor update is important but flexible. Emails can wait." },
+         { area: "Focus Time", icon: "🎯", situation: "You need 4 hours of deep work to finish the pitch deck, but your calendar shows 30-minute gaps between meetings.", q: "How do you create focus time?", opts: ["Work in the gaps—it's fine", "Block calendar for tomorrow morning, reschedule non-urgent meetings", "Work on it over the weekend", "Ask someone else to do it"], correct: 1, explain: "Context switching kills productivity. Block dedicated focus time, protect it like a meeting. Deep work requires uninterrupted blocks, not fragments." },
+         { area: "Delegation", icon: "🤝", situation: "You're spending 10 hours/week on tasks your team could do, but it feels faster to do them yourself.", q: "What's the right delegation mindset?", opts: ["Keep doing them—speed matters", "Invest time training others to create leverage", "Hire an assistant", "Deprioritize those tasks entirely"], correct: 1, explain: "Delegation is an investment: slower initially but creates massive leverage. Train others to free yourself for CEO-level work only you can do." },
+         { area: "Meetings", icon: "📅", situation: "Your week has 25 hours of meetings. You're exhausted and have no time for strategic thinking.", q: "How do you reclaim your time?", opts: ["Cancel all meetings", "Audit meetings: reduce frequency, shorten, decline, or delegate attendance", "Hire more people so you can stop attending", "Work longer hours"], correct: 1, explain: "Audit each meeting: Does it need to happen? Does it need me? Can it be shorter? Can it be async? Protect 40% of your week for non-meeting work." },
+         { area: "Work-Life", icon: "⚖️", situation: "You've worked 80-hour weeks for 3 months. You're burning out but the startup needs you.", q: "How do you handle founder burnout?", opts: ["Push through—it's temporary", "Build sustainable rhythms with recovery time and boundaries", "Take a month off", "Hire your replacement"], correct: 1, explain: "Sustainable pace beats sprints. Startups are marathons. Build in recovery: exercise, sleep, vacation. A burned-out founder makes bad decisions." }
+      ];
+      const c = challenges[challenge];
+      const infoTopics: Record<string, {title: string; content: string}> = {
+         eisenhower: { title: "Eisenhower Matrix", content: "Categorize tasks: Urgent+Important (do now), Important+Not Urgent (schedule), Urgent+Not Important (delegate), Neither (eliminate). Most strategic work is Important but Not Urgent." },
+         pomodoro: { title: "Time Blocking", content: "Block your calendar for specific work types: deep work mornings, meetings afternoons, email windows. Protect focus time. Batch similar tasks to reduce context switching." },
+         energy: { title: "Energy Management", content: "Track your energy, not just time. Do creative work when you're sharpest. Save low-energy tasks for slumps. Physical health (sleep, exercise) is productivity infrastructure." },
+         saying_no: { title: "Strategic No", content: "Every yes is a no to something else. Evaluate requests against your priorities. Practice saying: 'That's not a priority right now' or 'Let me check my commitments.'" }
+      };
+      const answer = (i: number) => { if(answered) return; setSelected(i); setAnswered(true); if(i === c.correct) { setScore(p => p + 1); setLog(l => [...l, `✓ ${c.area}: Time well spent!`]); } else { setLog(l => [...l, `✗ ${c.area}: Try: "${c.opts[c.correct]}"`]); } };
+      const next = () => { if(challenge >= challenges.length - 1) { setPhase('result'); } else { setChallenge(p => p + 1); setAnswered(false); setSelected(null); } };
+      const grade = score >= 4 ? 'A' : score >= 3 ? 'B' : score >= 2 ? 'C' : 'D';
+      if(phase === 'intro') return (<div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-slate-900 via-zinc-900 to-neutral-900 text-white p-6"><div className="text-6xl mb-4">⏰</div><h2 className="text-2xl font-bold mb-2">Time Management Mastery</h2><p className="text-slate-300 text-center mb-6 max-w-md">Master prioritization, focus, and sustainable productivity as a founder!</p><button onClick={() => setPhase('play')} className="px-8 py-3 bg-gradient-to-r from-slate-500 to-zinc-500 rounded-xl font-bold">Manage Time</button></div>);
+      if(phase === 'result') return (<div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-slate-900 via-zinc-900 to-neutral-900 text-white p-6"><div className="text-6xl mb-4">{grade === 'A' ? '⚡' : grade === 'B' ? '⏰' : '📅'}</div><h2 className="text-2xl font-bold mb-2">Time Assessment!</h2><div className="text-4xl font-bold text-slate-400 mb-2">{score}/{challenges.length}</div><div className="text-6xl mb-4">{grade}</div><p className="text-slate-400 mb-4">{grade === 'A' ? 'Time master!' : grade === 'B' ? 'Good time sense!' : 'Room to improve!'}</p><div className="w-full max-w-md bg-black/30 rounded-lg p-3 mb-4 max-h-32 overflow-y-auto">{log.map((l,i) => <p key={i} className="text-xs text-slate-300">{l}</p>)}</div><button onClick={() => {setPhase('intro');setChallenge(0);setScore(0);setAnswered(false);setSelected(null);setLog([]);}} className="px-6 py-2 bg-slate-600 rounded-lg">Try Again</button></div>);
+      return (<div className="w-full h-full flex flex-col bg-gradient-to-br from-slate-900 via-zinc-900 to-neutral-900 text-white overflow-hidden">{showInfo && infoTopic && infoTopics[infoTopic] && (<div className="absolute inset-0 bg-black/80 flex items-center justify-center p-4 z-50" onClick={() => { setShowInfo(false); setInfoTopic(null); }}><div className="bg-slate-800 rounded-xl p-4 max-w-md" onClick={e => e.stopPropagation()}><h3 className="text-lg font-bold text-slate-400 mb-2">{infoTopics[infoTopic].title}</h3><p className="text-sm text-slate-300">{infoTopics[infoTopic].content}</p><button onClick={() => { setShowInfo(false); setInfoTopic(null); }} className="mt-4 w-full py-2 bg-slate-600 rounded-lg">Got it!</button></div></div>)}<div className="p-3 bg-black/30 border-b border-slate-500/30 flex justify-between items-center"><span className="font-bold">{c.icon} {c.area}</span><span className="text-slate-400">{challenge + 1}/{challenges.length}</span><span className="text-zinc-400">Score: {score}</span></div><div className="flex-1 p-4 overflow-auto"><div className="flex gap-1 mb-4">{challenges.map((ch, i) => (<div key={i} className="flex-1 text-center"><div className={`text-xl ${i <= challenge ? 'opacity-100' : 'opacity-30'}`}>{ch.icon}</div><div className={`h-1 mt-1 rounded ${i < challenge ? 'bg-slate-500' : i === challenge ? 'bg-zinc-400' : 'bg-slate-700'}`} /></div>))}</div><div className="bg-black/30 rounded-xl p-4 mb-4"><p className="text-sm text-slate-300">{c.situation}</p></div><div className="bg-black/30 rounded-xl p-4 mb-3"><p className="font-medium">{c.q}</p></div><div className="grid gap-2">{c.opts.map((opt, i) => (<button key={i} onClick={() => answer(i)} disabled={answered} className={`p-3 rounded-lg text-left text-sm ${answered ? i === c.correct ? 'bg-green-600' : i === selected ? 'bg-red-600' : 'bg-black/30' : 'bg-black/30 hover:bg-slate-600/50'}`}>{opt}</button>))}</div>{answered && (<div className="mt-3 p-3 bg-black/30 rounded-lg"><p className="text-sm text-slate-300">{c.explain}</p><button onClick={next} className="mt-3 w-full py-2 bg-slate-600 rounded-lg">{challenge >= challenges.length - 1 ? 'See Results' : 'Next Challenge'}</button></div>)}</div><div className="p-3 bg-black/30 border-t border-slate-500/30 flex gap-2 justify-center flex-wrap">{Object.keys(infoTopics).map(k => <button key={k} onClick={() => {setInfoTopic(k);setShowInfo(true);}} className="text-xs text-slate-400">ℹ️ {infoTopics[k].title}</button>)}</div></div>);
+   };
+
    // --- GENERIC RENDERER ---
    const GenericRenderer = () => {
       if (type === 'poster' || type === 'infographic') {
@@ -24243,6 +30001,92 @@ const GeneratedDiagram: React.FC<DiagramProps> = ({ type, data, title }) => {
             return <CrowdfundingRenderer />;
          case 'pitch_deck':
             return <PitchDeckRenderer />;
+         // ============================================
+         // ENTREPRENEURSHIP GRAPHICS PART 2 (50)
+         // Section VI: Operations & Management
+         // ============================================
+         case 'supply_chain':
+            return <SupplyChainRenderer />;
+         case 'inventory_management':
+            return <InventoryManagementRenderer />;
+         case 'outsourcing':
+            return <OutsourcingRenderer />;
+         case 'hiring':
+            return <HiringRenderer />;
+         case 'project_management':
+            return <ProjectManagementRenderer />;
+         case 'quality_control':
+            return <QualityControlRenderer />;
+         case 'customer_success':
+            return <CustomerSuccessRenderer />;
+         case 'agile':
+            return <AgileRenderer />;
+         case 'time_management':
+            return <TimeManagementRenderer />;
+         case 'business_structures':
+            return <BusinessStructuresRenderer />;
+         case 'intellectual_property':
+            return <IntellectualPropertyRenderer />;
+         case 'contracts':
+            return <ContractsRenderer />;
+         case 'permits':
+            return <PermitsRenderer />;
+         case 'employment_law':
+            return <EmploymentLawRenderer />;
+         case 'ecommerce':
+            return <EcommerceRenderer />;
+         case 'social_media':
+            return <SocialMediaRenderer />;
+         case 'seo':
+            return <SEORenderer />;
+         case 'analytics':
+            return <AnalyticsRenderer />;
+         case 'cybersecurity':
+            return <CybersecurityRenderer />;
+         case 'elevator_pitch':
+            return <ElevatorPitchRenderer />;
+         case 'networking':
+            return <NetworkingRenderer />;
+         case 'branding':
+            return <BrandingRenderer />;
+         case 'public_relations':
+            return <PublicRelationsRenderer />;
+         case 'negotiation':
+            return <NegotiationRenderer />;
+         case 'fundraising':
+            return <FundraisingRenderer />;
+         case 'financial_statements':
+            return <FinancialStatementsRenderer />;
+         case 'pricing_strategy':
+            return <PricingStrategyRenderer />;
+         case 'budgeting':
+            return <BudgetingRenderer />;
+         case 'unit_economics':
+            return <UnitEconomicsRenderer />;
+         case 'market_research':
+            return <MarketResearchRenderer />;
+         case 'competitive_analysis':
+            return <CompetitiveAnalysisRenderer />;
+         case 'business_model':
+            return <BusinessModelRenderer />;
+         case 'growth_strategy':
+            return <GrowthStrategyRenderer />;
+         case 'pivot_decision':
+            return <PivotDecisionRenderer />;
+         case 'team_building':
+            return <TeamBuildingRenderer />;
+         case 'leadership':
+            return <LeadershipRenderer />;
+         case 'customer_journey':
+            return <CustomerJourneyRenderer />;
+         case 'mvp':
+            return <MVPRenderer />;
+         case 'risk_assessment':
+            return <RiskAssessmentRenderer />;
+         case 'sustainability':
+            return <SustainabilityRenderer />;
+         case 'exit_strategy':
+            return <ExitStrategyRenderer />;
          default:
             return <GenericRenderer />;
       }

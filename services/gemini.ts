@@ -294,6 +294,51 @@ When a concept comes up, follow this lookup process:
 • Venture Capital / VC Stages → 'venture_capital'
 • Crowdfunding / Crowd Financing → 'crowdfunding'
 • Pitch Decks / Investor Presentations → 'pitch_deck'
+• Supply Chain Management / Logistics → 'supply_chain'
+• Inventory Management / Stock Control / EOQ → 'inventory_management'
+• Outsourcing / Make vs Buy / Build vs Buy → 'outsourcing'
+• Hiring & Team Culture / Recruiting / Building Teams → 'hiring'
+• Project Management / Kanban / Sprints / Agile Boards → 'project_management'
+• Quality Control / Six Sigma / Defects / Inspection → 'quality_control'
+• Customer Success / Retention / Churn / NPS / LTV → 'customer_success'
+• Agile / Scrum / Sprints / Velocity / User Stories → 'agile'
+• Time Management / Eisenhower Matrix / Productivity / Deep Work → 'time_management'
+• Business Structures / LLC / S-Corp / C-Corp / Sole Proprietorship → 'business_structures'
+• Intellectual Property / Patents / Trademarks / Copyrights / Trade Secrets → 'intellectual_property'
+• Contracts / Agreements / Clauses / Red Flags / Terms → 'contracts'
+• Permits & Licenses / Business Compliance / Zoning / Regulations → 'permits'
+• Employment Law / Hiring Laws / Workplace Rights / Labor Law → 'employment_law'
+• E-Commerce / Online Store / Shopping Cart / Product Pricing → 'ecommerce'
+• Social Media / Instagram / TikTok / Twitter / Content Strategy → 'social_media'
+• SEO / Search Engine Optimization / Keywords / Rankings / Backlinks → 'seo'
+• Analytics / Metrics / KPIs / Dashboards / Data Analysis → 'analytics'
+• Cybersecurity / Phishing / Malware / Password Security / Data Protection → 'cybersecurity'
+• Elevator Pitch / Pitching / Investor Pitch / 60-Second Pitch → 'elevator_pitch'
+• Networking / Professional Connections / Business Events / Relationship Building → 'networking'
+• Branding / Brand Identity / Logo / Visual Style / Brand Personality → 'branding'
+• Public Relations / PR / Media Relations / Crisis Management / Press → 'public_relations'
+• Negotiation / Deal Making / Business Deals / Contracts / Salary → 'negotiation'
+• Fundraising / Startup Funding / VC / Angel Investors / Seed Round → 'fundraising'
+• Financial Statements / Income Statement / Balance Sheet / Cash Flow → 'financial_statements'
+• Pricing Strategy / Price Setting / Margins / Value Pricing → 'pricing_strategy'
+• Budgeting / Budget Management / Cash Runway / Burn Rate → 'budgeting'
+• Unit Economics / LTV / CAC / Breakeven / Contribution Margin → 'unit_economics'
+• Market Research / TAM SAM SOM / Customer Validation / Product-Market Fit → 'market_research'
+• Competitive Analysis / Competitors / Market Position / Strategic Advantage → 'competitive_analysis'
+• Business Model / Business Model Canvas / Value Proposition / Revenue Streams → 'business_model'
+• Growth Strategy / Scaling / Growth Channels / Customer Acquisition → 'growth_strategy'
+• Pivot / Persevere / Business Direction / Strategy Change / Startup Decisions → 'pivot_decision'
+• Team Building / Founding Team / Co-founders / Team Dynamics / Equity Split → 'team_building'
+• Hiring / Recruiting / Job Descriptions / Interview Process / Talent Acquisition → 'hiring'
+• Leadership / Management Styles / Delegation / Team Leadership / Founder Leadership → 'leadership'
+• Customer Journey / User Journey / Touchpoints / Customer Experience / Lifecycle → 'customer_journey'
+• Sales Funnel / TOFU MOFU BOFU / Lead Generation / Conversion Funnel / Pipeline → 'sales_funnel'
+• Design Thinking / Human-Centered Design / Empathize Define Ideate Prototype Test → 'design_thinking'
+• MVP / Minimum Viable Product / Lean Startup / Build Measure Learn / Product Development → 'mvp'
+• Risk Assessment / Risk Management / Startup Risks / Mitigation / Risk Analysis → 'risk_assessment'
+• Sustainability / ESG / Social Impact / Environmental / Triple Bottom Line → 'sustainability'
+• Exit Strategy / Acquisition / IPO / M&A / Startup Exit / Liquidity Event → 'exit_strategy'
+• Time Management / Prioritization / Focus / Productivity / Work-Life Balance → 'time_management'
 
 **STEP 2: IF NO MATCH → BUILD CUSTOM**
 Only if the topic is NOT covered above, use \`type: 'dynamic_blueprint'\` with custom JSON.
@@ -1063,6 +1108,268 @@ Only if the topic is NOT covered above, use \`type: 'dynamic_blueprint'\` with c
     → Investor presentation builder
     → 8-slide structure: Problem→Solution→Market→Model→Traction→Team→Financials→Ask
     → KEY INSIGHT: Tell a story investors want to be part of
+- **Operations / Supply Chain Management:** Use \`type: 'supply_chain'\`, \`data: '{}'\`
+    → 10-day supply chain simulation from supplier to customer
+    → Manage 5 stages: Supplier→Manufacturer→Warehouse→Distributor→Retailer
+    → Choose suppliers (cheap/reliable/fast), set order quantities, handle disruptions
+    → Track money, customer satisfaction, delivery rate
+    → KEY INSIGHT: Buffer stock, lead times, and supplier reliability create tradeoffs
+- **Operations / Inventory Management:** Use \`type: 'inventory_management'\`, \`data: '{}'\`
+    → 12-week inventory simulation with variable demand
+    → Set reorder point (ROP) and order quantity (EOQ concept)
+    → Balance holding costs, ordering costs, and stockout costs
+    → Choose demand variability level (low/medium/high)
+    → KEY INSIGHT: Safety stock protects against variability; stockouts are costlier than holding
+- **Operations / Outsourcing Decisions:** Use \`type: 'outsourcing'\`, \`data: '{}'\`
+    → Make vs Buy decision simulator for 6 business functions
+    → Evaluate: Software Dev, Accounting, Customer Support, Design, Legal, Marketing
+    → Compare in-house vs outsource: cost, quality, control, speed
+    → Track budget, quality score, and control level
+    → KEY INSIGHT: Keep core competencies in-house; outsource non-core activities
+- **Operations / Hiring & Team Culture:** Use \`type: 'hiring'\`, \`data: '{}'\`
+    → Define company values first (choose 3 from 6 options)
+    → Evaluate 5 candidates with skills, culture fit, salary, red/green flags
+    → Culture fit calculated dynamically based on your selected values
+    → Track budget ($300K), team size, culture score, productivity
+    → KEY INSIGHT: Define values first; hire for culture fit, train for skills
+- **Operations / Project Management / Kanban:** Use \`type: 'project_management'\`, \`data: '{}'\`
+    → Kanban board simulation with Backlog, To Do, In Progress, Done columns
+    → 14-day deadline to complete 8 initial tasks plus scope creep additions
+    → Tasks have effort points, priorities (high/medium/low), and dependencies
+    → Team capacity of 3 tasks in progress at a time (WIP limit)
+    → Random scope creep events add urgent tasks mid-project
+    → Track day, progress, blocked tasks, and deadline pressure
+    → KEY INSIGHT: WIP limits prevent bottlenecks; dependencies need planning
+- **Operations / Quality Control / Six Sigma:** Use \`type: 'quality_control'\`, \`data: '{}'\`
+    → Manage quality control for 10 production batches of 100 units each
+    → Set inspection rate (0-100%) and quality standard (loose/standard/strict)
+    → Balance inspection costs ($2/unit) vs return costs ($50/unit)
+    → Track defects found, defects shipped, customer returns, reputation
+    → Educational tooltips covering Six Sigma, Cost of Quality, Kaizen
+    → KEY INSIGHT: Prevention is cheaper than detection; detection cheaper than failure
+- **Operations / Customer Success / Retention:** Use \`type: 'customer_success'\`, \`data: '{}'\`
+    → 12-month simulation starting with 100 customers and $10K monthly budget
+    → Invest in 5 retention strategies: Support, Onboarding, Engagement, Loyalty, Feedback
+    → Satisfaction drives churn rate and referral acquisition
+    → Track customers, revenue, churn, NPS, and customer lifetime value
+    → Educational tooltips covering Churn, LTV, NPS, Onboarding, Retention
+    → KEY INSIGHT: It costs 5x more to acquire than retain; satisfaction drives growth
+- **Operations / Agile Methodology / Scrum:** Use \`type: 'agile'\`, \`data: '{}'\`
+    → Run 6 sprints (2 weeks each) managing a product backlog
+    → Select features, bugs, and tech debt items for each sprint
+    → Team velocity ~20 story points, affected by morale
+    → Random events: sick days, scope creep, breakthroughs
+    → Track points delivered, velocity, features shipped, bugs fixed, tech debt paid
+    → Educational tooltips covering Scrum, Velocity, User Stories, Retrospectives, Tech Debt
+    → KEY INSIGHT: Balance features with maintenance; sustainable pace beats heroics
+- **Operations / Time Management / Productivity:** Use \`type: 'time_management'\`, \`data: '{}'\`
+    → 5-day work week simulation with 8 hours/day and energy management
+    → Tasks categorized by Eisenhower Matrix (urgent/important quadrants)
+    → Balance deep work, meetings, admin, and interruptions
+    → Random interruptions pop up requiring handle/decline decisions
+    → Take breaks to recover energy; manage burnout
+    → Educational tooltips covering Eisenhower Matrix, Deep Work, Pomodoro, Energy, Time Blocking
+    → KEY INSIGHT: Focus on important over urgent; protect deep work time
+- **Legal / Business Structures / Entity Types:** Use \`type: 'business_structures'\`, \`data: '{}'\`
+    → Business entity advisor based on your business profile
+    → Answer questions about liability needs, investor plans, profit distribution
+    → Get personalized recommendation for LLC, S-Corp, C-Corp, Sole Prop, or Partnership
+    → Educational tooltips covering liability protection, tax implications, ownership structure
+    → KEY INSIGHT: Choose structure based on liability needs, tax goals, and growth plans
+- **Legal / Intellectual Property / IP Protection:** Use \`type: 'intellectual_property'\`, \`data: '{}'\`
+    → Match business assets with correct IP protection type
+    → Learn when to use Patents, Trademarks, Copyrights, or Trade Secrets
+    → Score points for correct matches across 8 rounds
+    → Educational tooltips covering each IP type, duration, costs, and process
+    → KEY INSIGHT: Different creations need different protections; choose wisely
+- **Legal / Contracts / Agreement Red Flags:** Use \`type: 'contracts'\`, \`data: '{}'\`
+    → Identify red flags in contract clauses before signing
+    → Analyze clauses for unlimited liability, auto-renewal traps, IP assignment issues
+    → Learn to spot problematic terms that could hurt your business
+    → Educational tooltips covering contract basics, negotiation tips, legal terms
+    → KEY INSIGHT: Read every clause; hidden terms can cost you everything
+- **Legal / Permits & Licenses / Business Compliance:** Use \`type: 'permits'\`, \`data: '{}'\`
+    → Select correct permits and licenses for different business types
+    → Match business activities with required permits (health, zoning, professional, etc.)
+    → Learn about federal, state, and local compliance requirements
+    → Educational tooltips covering permit types, application process, penalties
+    → KEY INSIGHT: Operating without permits can shut down your business
+- **Legal / Employment Law / Workplace Compliance:** Use \`type: 'employment_law'\`, \`data: '{}'\`
+    → Identify legal vs illegal workplace scenarios
+    → Learn about discrimination, overtime, termination, and harassment rules
+    → Quiz format testing knowledge of employment regulations
+    → Educational tooltips covering FLSA, EEOC, at-will employment, worker classification
+    → KEY INSIGHT: Employment law violations can result in costly lawsuits
+- **Digital / E-Commerce / Online Store:** Use \`type: 'ecommerce'\`, \`data: '{}'\`
+    → 7-day online store simulation with pricing and inventory management
+    → Set product prices, restock inventory, maximize profits
+    → Demand based on pricing decisions; balance margins vs volume
+    → Educational tooltips covering pricing strategy, inventory, margins, conversion
+    → KEY INSIGHT: Pricing affects demand; balance profit margins with sales volume
+- **Digital / Social Media / Content Strategy:** Use \`type: 'social_media'\`, \`data: '{}'\`
+    → 8-week social media campaign simulation
+    → Choose platforms (Instagram, TikTok, Twitter, LinkedIn) and content types
+    → Grow followers and engagement through strategic posting
+    → Educational tooltips covering algorithms, consistency, engagement rate, reach
+    → KEY INSIGHT: Platform choice and content type drive different outcomes
+- **Digital / SEO / Search Optimization:** Use \`type: 'seo'\`, \`data: '{}'\`
+    → 8-question quiz on search engine optimization best practices
+    → Learn about title tags, keywords, backlinks, page speed, URLs
+    → Educational explanations after each answer
+    → Educational tooltips covering keywords, backlinks, technical SEO, content quality
+    → KEY INSIGHT: Quality content and technical excellence drive rankings
+- **Digital / Analytics / Data Interpretation:** Use \`type: 'analytics'\`, \`data: '{}'\`
+    → Dashboard data interpretation challenges
+    → Calculate conversion rates, ROAS, LTV:CAC, engagement metrics
+    → Learn to read and analyze business dashboards
+    → Educational tooltips covering key metrics, funnels, cohort analysis, A/B testing
+    → KEY INSIGHT: Data-driven decisions require understanding the right metrics
+- **Digital / Cybersecurity / Threat Detection:** Use \`type: 'cybersecurity'\`, \`data: '{}'\`
+    → 8-scenario security threat identification training
+    → Identify phishing, malware, social engineering, and safe practices
+    → Learn to protect business data and accounts
+    → Educational tooltips covering phishing, malware, social engineering, passwords
+    → KEY INSIGHT: Human error is the biggest security vulnerability
+- **Communication / Elevator Pitch / Pitching:** Use \`type: 'elevator_pitch'\`, \`data: '{}'\`
+    → 5-step pitch builder choosing hook, value prop, differentiator, proof, CTA
+    → Score pitch effectiveness based on choices
+    → Learn what makes an investor-ready 60-second pitch
+    → Educational tooltips covering hook, value proposition, pitch structure, practice tips
+    → KEY INSIGHT: Great pitches are crafted, not improvised; structure wins
+- **Communication / Networking / Professional Connections:** Use \`type: 'networking'\`, \`data: '{}'\`
+    → 5-person networking event simulation with energy management
+    → Choose how to approach founders, investors, experts, partners
+    → Balance connection quantity vs relationship quality
+    → Educational tooltips covering quality vs quantity, follow-up, giving first, active listening
+    → KEY INSIGHT: Real relationships beat business card collecting
+- **Communication / Branding / Brand Identity:** Use \`type: 'branding'\`, \`data: '{}'\`
+    → 5-step brand identity builder (personality, colors, typography, voice, style)
+    → Choices affect trust and energy brand archetype
+    → Learn brand consistency and positioning
+    → Educational tooltips covering consistency, personality, positioning, brand story
+    → KEY INSIGHT: Strong brands feel like a consistent personality across all touchpoints
+- **Communication / Public Relations / PR:** Use \`type: 'public_relations'\`, \`data: '{}'\`
+    → 5-scenario PR crisis and media situation simulator
+    → Balance reputation protection with gaining positive coverage
+    → Handle reporters, viral complaints, launches, controversies
+    → Educational tooltips covering crisis management, media relations, messaging, timing
+    → KEY INSIGHT: Respond quickly with empathy; silence makes crises worse
+- **Communication / Negotiation / Deal Making:** Use \`type: 'negotiation'\`, \`data: '{}'\`
+    → 5-round business negotiation simulator (salary, suppliers, investors, clients, partners)
+    → Balance value captured vs relationship maintained
+    → Learn BATNA, win-win, anchoring, and silence tactics
+    → Educational tooltips covering BATNA, win-win, anchoring, power of silence
+    → KEY INSIGHT: Best negotiators create value before claiming it
+- **Finance / Fundraising / Startup Funding:** Use \`type: 'fundraising'\`, \`data: '{}'\`
+    → 6-scenario funding source matching game
+    → Match startup situations with right funding (bootstrap, VC, angels, crowdfunding, loans)
+    → Learn when each funding type is appropriate
+    → Educational tooltips covering funding stages, dilution, term sheets, alternatives
+    → KEY INSIGHT: Not every startup needs VC; match funding to your situation
+- **Finance / Financial Statements / Accounting:** Use \`type: 'financial_statements'\`, \`data: '{}'\`
+    → 6-question quiz on income statements, balance sheets, cash flow
+    → Calculate net income, working capital, margins, and ratios
+    → Learn the language of business finance
+    → Educational tooltips covering income statement, balance sheet, cash flow, key ratios
+    → KEY INSIGHT: Profit ≠ Cash; understand all three statements
+- **Finance / Pricing Strategy / Price Setting:** Use \`type: 'pricing_strategy'\`, \`data: '{}'\`
+    → 5-round pricing simulation across product types
+    → Balance profit margins with customer demand
+    → See competitor prices and make strategic decisions
+    → Educational tooltips covering cost-plus, value-based, competitive, and psychological pricing
+    → KEY INSIGHT: Price based on value delivered, not just costs
+- **Finance / Budgeting / Cash Management:** Use \`type: 'budgeting'\`, \`data: '{}'\`
+    → 6-month startup budget allocation simulation
+    → Allocate $20k monthly revenue across payroll, marketing, ops, R&D, emergency
+    → Build cash reserves while investing in growth
+    → Educational tooltips covering cash runway, burn rate, zero-based budgeting, forecasting
+    → KEY INSIGHT: Cash is oxygen; know your runway at all times
+- **Finance / Unit Economics / Metrics:** Use \`type: 'unit_economics'\`, \`data: '{}'\`
+    → 6-scenario unit economics calculation challenges
+    → Calculate LTV, CAC, contribution margin, breakeven, ARPU
+    → Learn if your business model is sustainable
+    → Educational tooltips covering LTV, CAC, LTV:CAC ratio, CAC payback
+    → KEY INSIGHT: LTV:CAC of 3:1 is the benchmark for healthy economics
+- **Strategy / Market Research:** Use \`type: 'market_research'\`, \`data: '{}'\`
+    → 4-stage market research simulation: sizing, validation, PMF, positioning
+    → Calculate TAM/SAM/SOM, survey prospects, measure retention
+    → Educational tooltips covering market sizing, validation, product-market fit
+    → KEY INSIGHT: Great products solve real problems for specific customers
+- **Strategy / Competitive Analysis:** Use \`type: 'competitive_analysis'\`, \`data: '{}'\`
+    → Analyze 4 competitors: identify strengths, weaknesses, opportunities
+    → Choose competitive strategies (differentiation, cost, niche, innovation)
+    → Educational tooltips covering Porter's 5 Forces, SWOT, competitive moats
+    → KEY INSIGHT: Compete where others can't easily follow
+- **Strategy / Business Model Canvas:** Use \`type: 'business_model'\`, \`data: '{}'\`
+    → Build business model canvas in 9 blocks
+    → Select value propositions, channels, customer segments, revenue streams
+    → Educational tooltips covering business model components and lean canvas
+    → KEY INSIGHT: A business model is a system where all parts connect
+- **Strategy / Growth Strategy:** Use \`type: 'growth_strategy'\`, \`data: '{}'\`
+    → Match 5 businesses with optimal growth channels
+    → Choose from viral, content, paid, sales, partnerships
+    → Educational tooltips covering growth loops, CAC optimization, channel fit
+    → KEY INSIGHT: The best growth channel depends on product and customer
+- **Strategy / Pivot Decisions:** Use \`type: 'pivot_decision'\`, \`data: '{}'\`
+    → Analyze 5 startup scenarios: pivot, persevere, or shut down?
+    → Evaluate runway, traction, market signals, team morale
+    → Educational tooltips covering types of pivots, sunk cost fallacy, lean startup
+    → KEY INSIGHT: A good pivot preserves vision while changing strategy
+- **Team / Team Building:** Use \`type: 'team_building'\`, \`data: '{}'\`
+    → Navigate 5 team scenarios: equity splits, co-founder conflicts, hiring
+    → Build a founding team with the right dynamics and structure
+    → Educational tooltips covering equity, roles, culture, early hiring
+    → KEY INSIGHT: First hires shape company culture forever
+- **Team / Hiring Process:** Use \`type: 'hiring'\`, \`data: '{}'\`
+    → Master 5 stages: job description, sourcing, screening, interview, offer
+    → Learn startup hiring best practices at each pipeline stage
+    → Educational tooltips covering pipeline, sourcing, interviews, offers
+    → KEY INSIGHT: Great hiring is about finding culture fit, not just skills
+- **Leadership / Leadership Styles:** Use \`type: 'leadership'\`, \`data: '{}'\`
+    → Handle 5 leadership challenges: crisis, feedback, delegation, vision, culture
+    → Develop situational leadership skills for startup contexts
+    → Educational tooltips covering styles, feedback, delegation, trust
+    → KEY INSIGHT: Leaders adapt their style to the situation and team
+- **Sales / Customer Journey:** Use \`type: 'customer_journey'\`, \`data: '{}'\`
+    → Guide customers through 5 stages: awareness, consideration, decision, retention, advocacy
+    → Optimize touchpoints at each stage of the journey
+    → Educational tooltips covering touchpoints, metrics, emotions, personas
+    → KEY INSIGHT: The journey is emotional—map feelings, not just actions
+- **Sales / Sales Funnel:** Use \`type: 'sales_funnel'\`, \`data: '{}'\`
+    → Optimize 5 funnel levels: TOFU, MOFU, BOFU, conversion, expansion
+    → Learn to plug leaks and improve conversion at each stage
+    → Educational tooltips covering metrics, automation, qualification, attribution
+    → KEY INSIGHT: Fix the biggest leaks first for maximum impact
+- **Product / Design Thinking:** Use \`type: 'design_thinking'\`, \`data: '{}'\`
+    → Master 5 phases: empathize, define, ideate, prototype, test
+    → Learn human-centered design for product development
+    → Educational tooltips covering process, HMW questions, prototypes, iteration
+    → KEY INSIGHT: Design thinking is iterative, not linear
+- **Product / MVP Development:** Use \`type: 'mvp'\`, \`data: '{}'\`
+    → Make 5 MVP decisions: scope, build vs buy, tech stack, quality, timing
+    → Learn lean startup principles for building the right thing
+    → Educational tooltips covering MVP definition, scoping, metrics, iteration
+    → KEY INSIGHT: MVP is about learning, not shipping features
+- **Operations / Risk Assessment:** Use \`type: 'risk_assessment'\`, \`data: '{}'\`
+    → Assess 5 risk types: market, technical, financial, team, regulatory
+    → Learn to identify, evaluate, and mitigate startup risks
+    → Educational tooltips covering framework, risk types, mitigation, monitoring
+    → KEY INSIGHT: The best risk management is proactive, not reactive
+- **Operations / Sustainability:** Use \`type: 'sustainability'\`, \`data: '{}'\`
+    → Balance 5 areas: environmental, social, governance, economic, long-term
+    → Build a business that's good for people, planet, and profit
+    → Educational tooltips covering ESG, triple bottom line, circular economy, B Corp
+    → KEY INSIGHT: Sustainability creates competitive advantage
+- **Strategy / Exit Planning:** Use \`type: 'exit_strategy'\`, \`data: '{}'\`
+    → Evaluate 5 exit types: acquisition, IPO, secondary, acqui-hire, strategic
+    → Learn to plan and negotiate successful exits
+    → Educational tooltips covering exit types, valuation, negotiation, timing
+    → KEY INSIGHT: The best time to exit is when you have options
+- **Operations / Time Management:** Use \`type: 'time_management'\`, \`data: '{}'\`
+    → Master 5 areas: prioritization, focus, delegation, meetings, work-life
+    → Build sustainable productivity habits as a founder
+    → Educational tooltips covering Eisenhower matrix, time blocking, energy, saying no
+    → KEY INSIGHT: Sustainable pace beats burnout sprints
 
 **CUSTOM SIMULATIONS (only if no pre-built exists):**
 3. For dynamic text, use: \`"content": "Range: {{calculations.range}} m"\`
