@@ -30745,48 +30745,346 @@ const GeneratedDiagram: React.FC<DiagramProps> = ({ type, data, title }) => {
 
    // --- FINANCE & FUNDING RENDERERS ---
    const FundraisingRenderer = () => {
-      const [phase, setPhase] = useState<'intro'|'play'|'result'>('intro');
+      const [phase, setPhase] = useState<'intro' | 'play' | 'result'>('intro');
       const [showInfo, setShowInfo] = useState(false);
-      const [infoTopic, setInfoTopic] = useState<string|null>(null);
+      const [infoTopic, setInfoTopic] = useState<string | null>(null);
       const [scenario, setScenario] = useState(0);
       const [score, setScore] = useState(0);
+      const [selected, setSelected] = useState<number | null>(null);
       const [answered, setAnswered] = useState(false);
-      const [selected, setSelected] = useState<number|null>(null);
-      const [log, setLog] = useState<string[]>([]);
+      const [gameLog, setGameLog] = useState<string[]>([]);
+      const [conceptGaps, setConceptGaps] = useState<string[]>([]);
+
+      // Fundraising Psychology Lab - Understanding investor thinking, term sheet traps, and founder mistakes
       const scenarios = [
-         {situation:'Pre-revenue startup with a prototype, needs $50k to launch MVP.',best:0,options:['Bootstrap + Friends & Family','Series A VC ($5M+)','Bank Loan','IPO'],explain:'At pre-revenue, VCs want traction. Bootstrap and F&F are realistic for early validation.'},
-         {situation:'$100k MRR SaaS with 50% growth, needs $2M for sales team.',best:1,options:['Crowdfunding','Seed/Series A VC','Credit Card Debt','Government Grant'],explain:'Strong metrics make you attractive to VCs. $2M for growth is a typical seed/Series A raise.'},
-         {situation:'Profitable small business, needs $500k for equipment.',best:2,options:['Angel Investors','Venture Capital','SBA Bank Loan','Convertible Note'],explain:'Profitable businesses can get traditional bank loans. No equity dilution needed.'},
-         {situation:'Hardware product needs $200k for first production run.',best:1,options:['Bootstrap','Kickstarter/Crowdfunding','Series B VC','Revenue-Based Financing'],explain:'Crowdfunding validates demand AND raises capital. Perfect for consumer hardware.'},
-         {situation:'Biotech startup needs $10M for clinical trials, 5+ years to revenue.',best:2,options:['Angel Investors','Crowdfunding','Specialized VC','Bank Loan'],explain:'Long timelines and high capital needs require specialized VCs who understand biotech.'},
-         {situation:'E-commerce doing $1M/year, needs $100k for inventory.',best:3,options:['Equity Crowdfunding','Venture Debt','Angel Investment','Revenue-Based Financing'],explain:'RBF is perfect: pay back as a % of revenue, no equity dilution, quick approval.'}
+         {
+            title: "The Valuation Trap",
+            context: "You're raising your seed round. Two VCs make offers: VC A offers $1.5M at $15M valuation (10% dilution). VC B offers $2M at $8M valuation (25% dilution). VC B has better network, more experience with your space, and offers hands-on help.",
+            question: "Which offer is actually BETTER for your startup's success?",
+            opts: [
+               'VC A - higher valuation protects your ownership',
+               'VC B - more money and better support despite higher dilution',
+               'Neither - both valuations are bad, keep negotiating',
+               'VC A - take the money and find advisors separately'
+            ],
+            correct: 1,
+            wrongExplanations: [
+               "Higher valuation at seed creates a 'valuation trap.' You need to grow into it or take a down round later. Many unicorn founders took LOW seed valuations from the RIGHT investors. Ownership matters less than company success.",
+               "", // Correct
+               "At seed stage, these are reasonable offers. Endless negotiation burns relationships and time. Investors talk to each other - being difficult early can hurt your reputation.",
+               "Advisors aren't the same as investors. VC B is invested in your success with capital AND time. Separate advisors have divided attention and no skin in the game."
+            ],
+            realWorld: "Airbnb's seed round was at ~$2.5M valuation - tiny! But Sequoia's involvement helped them become a $100B company. Brian Chesky owns less than 15% but that stake is worth billions. Would he trade Sequoia for higher seed valuation? Never.",
+            concept: "valuation_psychology",
+            why: "Ownership percentage is vanity; absolute value is sanity. 10% of a $100M company > 25% of a $10M company. Great investors add 10x+ value through intros, advice, follow-on funding, and credibility. The 'best' valuation often comes from investors who add the least value."
+         },
+         {
+            title: "The Hot Market Mistake",
+            context: "The market is hot. Three VCs are competing for your deal. You're tempted to run a full auction process - playing them against each other, using FOMO, and maximizing valuation. Your advisor says 'strike while the iron is hot.'",
+            question: "What's the HIDDEN RISK of running an aggressive auction?",
+            opts: [
+               'VCs will band together and refuse to invest',
+               'You might get a high valuation you can\'t grow into',
+               'The process takes too long and the market cools',
+               'All of the above - but reputation damage is worst'
+            ],
+            correct: 3,
+            wrongExplanations: [
+               "VCs rarely 'band together' - they're too competitive. But they DO share notes and remember founders who acted badly. One fund passing doesn't stop others from investing.",
+               "Valuation is ONE risk. But it's predictable and manageable. The reputation damage from aggressive tactics follows you for decades.",
+               "Timing is ONE risk. But good companies can still raise when markets cool. What you can't recover is trust.",
+               "" // Correct
+            ],
+            realWorld: "WeWork's Adam Neumann maximized valuations through aggressive tactics. When he needed support, VCs felt burned and let him fall. Compare to Patrick Collison (Stripe) who deliberately took lower valuations from investors who added value. When Stripe needed help, investors went to bat for them.",
+            concept: "investor_relationships",
+            why: "Fundraising isn't a one-time transaction - it's the start of a 10+ year relationship. You'll need these investors for follow-on rounds, bridge loans, introductions, and support during crises. A founder known for playing games will find doors closed when they need them most. Reputation > Valuation."
+         },
+         {
+            title: "The Term Sheet Trap",
+            context: "A VC offers $3M at $12M pre-money valuation. Sounds great! But buried in the term sheet: 2x participating preferred, full ratchet anti-dilution, 3 board seats (you have 2), and blocking rights on all major decisions. Your lawyer flags these as 'aggressive but not unusual.'",
+            question: "What's the REAL impact of these terms?",
+            opts: [
+               'Minor details - valuation is what matters',
+               'You\'ll likely get fired from your own company',
+               'In an exit, investors get paid before you, possibly leaving you with nothing',
+               'Both B and C - these terms transfer control and economics'
+            ],
+            correct: 3,
+            wrongExplanations: [
+               "These are NOT minor details. 2x participating preferred means in a $30M exit, investors take $6M first AND their pro-rata share. You might get pennies. Valuation is just the headline; terms are the substance.",
+               "Getting fired is ONE risk. Board control enables this. But even if you stay, the economic terms can wipe out your stake.",
+               "Getting nothing in exit is ONE risk. But losing control of decision-making means they can FORCE a bad exit or block a good one.",
+               "" // Correct
+            ],
+            realWorld: "Plenty of founders had 'unicorn exits' and made nothing because of liquidation preferences. In the dot-com bust, founders with 2x+ preferences often got $0 while investors recovered their money. Groupon's founders made less than early employees due to term sheet structures.",
+            concept: "term_sheet_mechanics",
+            why: "Liquidation preferences determine who gets paid first. Participating preferred means they get their preference AND their share. Full ratchet anti-dilution can crush you in a down round. Board control means they can replace you. Together, these terms mean you're an employee with stock options, not an owner. Always negotiate terms, not just price."
+         },
+         {
+            title: "The Timing Paradox",
+            context: "Your SaaS startup has $50K MRR, growing 15% month-over-month. You have 18 months of runway. Your co-founder says 'Let's raise now while we're growing!' Your advisor says 'Wait until you hit $100K MRR - better valuation.' You're seeing other startups raise in your space.",
+            question: "What's the STRATEGICALLY CORRECT timing decision?",
+            opts: [
+               'Raise now - 18 months isn\'t much runway',
+               'Wait for $100K MRR milestone',
+               'Start fundraising process now, close in 3-4 months when metrics are stronger',
+               'Wait and see if market conditions stay favorable'
+            ],
+            correct: 2,
+            wrongExplanations: [
+               "18 months is actually good runway. Raising now means fundraising from a weaker position. You'd be optimizing for speed over outcome quality.",
+               "Waiting for a specific milestone is rigid thinking. What if growth slows? What if a competitor raises? What if the market turns? Milestones don't guarantee anything.",
+               "", // Correct
+               "Waiting passively is never strategic. Markets change, competitors move, and opportunities close. Proactive > Reactive."
+            ],
+            realWorld: "Instagram started fundraising conversations with Sequoia months before they were 'ready.' By the time they hit inflection, the relationship was warm and they raised in days. Cold outreach at $100K MRR takes months. Warm outreach at $50K MRR with relationship building often closes faster and better.",
+            concept: "fundraising_timing",
+            why: "Fundraising takes 3-6 months. Start when you have 12+ months runway so you're not desperate. Begin relationship-building BEFORE you need money. The best time to raise is when you don't need to - that's when you have leverage. Starting now and closing later gives you optionality without desperation."
+         },
+         {
+            title: "The Investor Pass Psychology",
+            context: "You've pitched 20 VCs. 15 passed. 3 want 'to see more progress.' 2 are interested but moving slowly. You're frustrated and questioning everything. A friend says 'If no one's investing, maybe your idea is bad.'",
+            question: "How should you INTERPRET these results?",
+            opts: [
+               'The market is telling you something - pivot or quit',
+               'This is normal - most successful companies got many rejections first',
+               'Your pitch needs work - hire a pitch coach',
+               'VCs are pattern-matching wrong - you need different investors'
+            ],
+            correct: 1,
+            wrongExplanations: [
+               "20 meetings with 2 interested is actually not bad for early-stage. Many legendary companies were rejected 50+ times. VC passes tell you about VC patterns, not about your company's potential.",
+               "", // Correct
+               "Pitch mechanics are rarely the issue. Most rejections are about pattern matching, thesis fit, or timing. A slightly better pitch won't change a VC's thesis.",
+               "Blaming VCs is a coping mechanism, not a strategy. The real insight is understanding WHY they're passing and whether it's addressable or thesis-driven."
+            ],
+            realWorld: "Airbnb was rejected by 7 prominent VCs who are now embarrassed about it. WhatsApp was rejected by Facebook (who later bought them for $19B). Zoom was passed on by many VCs who invested in competitors. VC rejection ≠ Startup quality. 2/20 interested is a fundable conversion rate.",
+            concept: "rejection_interpretation",
+            why: "VCs pass for many reasons: wrong thesis, portfolio conflict, partner dynamics, or simply missing the vision. ~5-10% conversion rate (meetings to term sheets) is normal for good companies. The key is finding the 1-2 investors who GET IT, not convincing the masses. 2 interested investors out of 20 meetings means you're on track."
+         }
       ];
-      const infoTopics:{[k:string]:{title:string,content:string}} = {
-         stages:{title:'Funding Stages',content:'Pre-seed → Seed → Series A → B → C → IPO. Each stage has different investors, amounts, and expectations.'},
-         dilution:{title:'Dilution',content:'Each funding round reduces your ownership %. Giving up 20% per round means owning <50% after 3 rounds.'},
-         terms:{title:'Term Sheets',content:'Valuation, liquidation preferences, board seats, anti-dilution, vesting. Get a lawyer before signing anything.'},
-         alternatives:{title:'Alternative Funding',content:'Grants, competitions, revenue-based financing, crowdfunding, strategic partnerships. Not everything needs VC.'}
+
+      const conceptLabels: { [key: string]: string } = {
+         valuation_psychology: "Valuation vs Value-Add Trade-offs",
+         investor_relationships: "Long-term Investor Relationship Management",
+         term_sheet_mechanics: "Term Sheet Structure & Economics",
+         fundraising_timing: "Strategic Fundraising Timing",
+         rejection_interpretation: "Understanding VC Decision-Making"
       };
-      const answer = (idx:number) => {
-         if(answered) return;
-         setSelected(idx);
-         setAnswered(true);
-         if(idx === scenarios[scenario].best) {
-            setScore(s => s + 1);
-            setLog(l => [...l, `Scenario ${scenario+1}: Correct!`]);
-         } else {
-            setLog(l => [...l, `Scenario ${scenario+1}: Wrong`]);
+
+      const infoTopics: { [k: string]: { title: string; content: string } } = {
+         stages: {
+            title: "Funding Stages",
+            content: "Pre-seed ($100K-$500K): Idea/prototype. Seed ($500K-$3M): Early traction. Series A ($5M-$15M): Product-market fit, repeatable sales. Series B ($15M-$50M): Scaling proven model. Series C+ ($50M+): Market expansion. Each stage has different investors, metrics, and expectations. Don't raise the wrong stage."
+         },
+         dilution: {
+            title: "Dilution Math",
+            content: "Each round typically dilutes 15-25%. After 3 rounds: Founders often own 30-40%. After 5 rounds + options pool: Founders might own 15-25%. This is NORMAL for venture-scale companies. The goal isn't maximizing ownership - it's maximizing absolute value. 10% of $10B > 80% of $10M."
+         },
+         terms: {
+            title: "Critical Term Sheet Terms",
+            content: "1) Liquidation preference: 1x non-participating is founder-friendly. 2) Anti-dilution: Weighted average is standard, full ratchet is predatory. 3) Board composition: Keep founder control through Series A at minimum. 4) Protective provisions: Limit what requires investor approval. 5) Pro-rata rights: Standard, helps good investors follow on."
+         },
+         psychology: {
+            title: "Investor Psychology",
+            content: "VCs invest in patterns: Right team, right market, right timing. They're optimizing for home runs, not singles. A 'no' often means 'not pattern match' not 'bad company.' VCs have thesis constraints, partner dynamics, and portfolio considerations you can't see. Don't take rejection personally - find investors whose thesis matches your company."
          }
       };
-      const next = () => {
-         if(scenario >= scenarios.length - 1) setPhase('result');
-         else { setScenario(s => s + 1); setAnswered(false); setSelected(null); }
+
+      const answer = (idx: number) => {
+         if (answered) return;
+         setSelected(idx);
+         setAnswered(true);
+         const s = scenarios[scenario];
+         if (idx === s.correct) {
+            setScore(prev => prev + 1);
+            setGameLog(prev => [...prev, `✓ ${s.title}: Correct! Understood ${conceptLabels[s.concept]}`]);
+         } else {
+            setGameLog(prev => [...prev, `✗ ${s.title}: Missed. The trap was "${s.opts[idx]}"`]);
+            if (!conceptGaps.includes(s.concept)) {
+               setConceptGaps(prev => [...prev, s.concept]);
+            }
+         }
       };
-      const grade = score >= 5 ? 'A' : score >= 4 ? 'B' : score >= 2 ? 'C' : 'D';
+
+      const next = () => {
+         if (scenario >= scenarios.length - 1) {
+            setPhase('result');
+         } else {
+            setScenario(prev => prev + 1);
+            setAnswered(false);
+            setSelected(null);
+         }
+      };
+
+      const grade = score >= 5 ? 'A' : score >= 4 ? 'B' : score >= 3 ? 'C' : 'D';
       const s = scenarios[scenario];
-      if(phase === 'intro') return (<div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-emerald-900 via-green-900 to-teal-900 text-white p-6"><div className="text-6xl mb-4">💰</div><h2 className="text-2xl font-bold mb-2">Fundraising Navigator</h2><p className="text-slate-300 text-center mb-6 max-w-md">Match startups with the right funding source! Learn when to bootstrap, raise VC, or use alternatives.</p><button onClick={() => setPhase('play')} className="px-8 py-3 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-xl font-bold">Start Matching</button></div>);
-      if(phase === 'result') return (<div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-emerald-900 via-green-900 to-teal-900 text-white p-6"><div className="text-6xl mb-4">{grade === 'A' ? '🏆' : grade === 'B' ? '💰' : '📊'}</div><h2 className="text-2xl font-bold mb-2">Complete!</h2><div className="text-4xl font-bold text-emerald-400 mb-2">{score}/{scenarios.length}</div><div className="text-6xl mb-4">{grade}</div><p className="text-slate-400 mb-4">{grade === 'A' ? 'Funding expert!' : grade === 'B' ? 'Good instincts!' : 'Keep learning!'}</p><button onClick={() => {setPhase('intro');setScenario(0);setScore(0);setAnswered(false);setSelected(null);setLog([]);}} className="px-6 py-2 bg-emerald-600 rounded-lg">Try Again</button></div>);
-      return (<div className="w-full h-full flex flex-col bg-gradient-to-br from-emerald-900 via-green-900 to-teal-900 text-white overflow-hidden">{showInfo && infoTopic && infoTopics[infoTopic] && (<div className="absolute inset-0 bg-black/80 flex items-center justify-center p-4 z-50" onClick={() => { setShowInfo(false); setInfoTopic(null); }}><div className="bg-slate-800 rounded-xl p-4 max-w-md" onClick={e => e.stopPropagation()}><h3 className="text-lg font-bold text-emerald-400 mb-2">{infoTopics[infoTopic].title}</h3><p className="text-sm text-slate-300">{infoTopics[infoTopic].content}</p><button onClick={() => { setShowInfo(false); setInfoTopic(null); }} className="mt-4 w-full py-2 bg-emerald-600 rounded-lg">Got it!</button></div></div>)}<div className="p-3 bg-black/30 border-b border-emerald-500/30 flex justify-between items-center"><span className="font-bold">💰 Fundraising</span><span className="text-emerald-400">{scenario + 1}/{scenarios.length}</span><span className="text-teal-400">Score: {score}</span></div><div className="flex-1 p-4 flex flex-col justify-center"><div className="bg-black/30 rounded-xl p-4 mb-4"><p className="text-sm">{s.situation}</p><p className="text-xs text-slate-400 mt-2">What funding source fits best?</p></div><div className="grid gap-2">{s.options.map((opt, i) => (<button key={i} onClick={() => answer(i)} disabled={answered} className={`p-3 rounded-lg text-left text-sm ${answered ? i === s.best ? 'bg-green-600' : i === selected ? 'bg-red-600' : 'bg-black/30' : 'bg-black/30 hover:bg-emerald-600/50'}`}>{opt}</button>))}</div>{answered && (<div className="mt-3 p-3 bg-black/30 rounded-lg"><p className="text-sm text-slate-300">{s.explain}</p><button onClick={next} className="mt-3 w-full py-2 bg-emerald-600 rounded-lg">{scenario >= scenarios.length - 1 ? 'See Results' : 'Next'}</button></div>)}</div><div className="p-3 bg-black/30 border-t border-emerald-500/30 flex gap-2 justify-center">{Object.keys(infoTopics).map(k => <button key={k} onClick={() => {setInfoTopic(k);setShowInfo(true);}} className="text-xs text-emerald-400">ℹ️ {infoTopics[k].title}</button>)}</div></div>);
+
+      if (phase === 'intro') {
+         return (
+            <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-emerald-900 via-green-900 to-teal-900 text-white p-6">
+               <div className="text-6xl mb-4">💰</div>
+               <h2 className="text-2xl font-bold mb-2">Investor Psychology Lab</h2>
+               <p className="text-slate-300 text-center mb-4 max-w-md">
+                  Master the psychology of fundraising - what investors really think and the traps founders fall into.
+               </p>
+               <div className="bg-black/30 rounded-xl p-4 mb-6 max-w-md text-sm">
+                  <p className="text-emerald-400 font-bold mb-2">⚠️ Common Founder Mistakes:</p>
+                  <ul className="text-slate-300 space-y-1 text-xs">
+                     <li>• Optimizing for valuation over value-add</li>
+                     <li>• Ignoring term sheet details that cost millions</li>
+                     <li>• Misreading investor signals and timing</li>
+                     <li>• Taking rejection personally instead of strategically</li>
+                  </ul>
+               </div>
+               <button
+                  onClick={() => setPhase('play')}
+                  className="px-8 py-3 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-xl font-bold hover:from-emerald-400 hover:to-teal-400 transition-all"
+               >
+                  Enter the Fundraising Arena
+               </button>
+            </div>
+         );
+      }
+
+      if (phase === 'result') {
+         return (
+            <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-emerald-900 via-green-900 to-teal-900 text-white p-6 overflow-auto">
+               <div className="text-6xl mb-4">{grade === 'A' ? '🏆' : grade === 'B' ? '💰' : grade === 'C' ? '📊' : '📚'}</div>
+               <h2 className="text-2xl font-bold mb-2">Fundraising Assessment Complete</h2>
+               <div className="text-4xl font-bold text-emerald-400 mb-2">{score}/{scenarios.length}</div>
+               <div className="text-5xl mb-4">{grade}</div>
+               <p className="text-slate-400 mb-4 text-center">
+                  {grade === 'A' ? 'Fundraising sophisticate! You think like a seasoned founder.' :
+                   grade === 'B' ? 'Good fundraising instincts. Some blind spots to address.' :
+                   grade === 'C' ? 'Common founder mistakes detected. Study before raising.' :
+                   'Many costly misconceptions. Essential to study before fundraising.'}
+               </p>
+
+               {conceptGaps.length > 0 && (
+                  <div className="bg-black/30 rounded-xl p-4 max-w-md w-full mb-4">
+                     <p className="text-emerald-400 font-bold text-sm mb-2">📚 Concepts to Study:</p>
+                     <ul className="text-slate-300 text-xs space-y-1">
+                        {conceptGaps.map(gap => (
+                           <li key={gap}>• {conceptLabels[gap]}</li>
+                        ))}
+                     </ul>
+                  </div>
+               )}
+
+               <div className="bg-black/30 rounded-xl p-4 max-w-md w-full mb-4 max-h-32 overflow-y-auto">
+                  <p className="text-emerald-400 font-bold text-sm mb-2">Session Log:</p>
+                  {gameLog.map((entry, i) => (
+                     <p key={i} className="text-xs text-slate-300">{entry}</p>
+                  ))}
+               </div>
+
+               <button
+                  onClick={() => {
+                     setPhase('intro');
+                     setScenario(0);
+                     setScore(0);
+                     setAnswered(false);
+                     setSelected(null);
+                     setGameLog([]);
+                     setConceptGaps([]);
+                  }}
+                  className="px-6 py-2 bg-emerald-600 rounded-lg hover:bg-emerald-500"
+               >
+                  Try Again
+               </button>
+            </div>
+         );
+      }
+
+      return (
+         <div className="w-full h-full flex flex-col bg-gradient-to-br from-emerald-900 via-green-900 to-teal-900 text-white overflow-hidden">
+            {showInfo && infoTopic && infoTopics[infoTopic] && (
+               <div className="absolute inset-0 bg-black/80 flex items-center justify-center p-4 z-50" onClick={() => { setShowInfo(false); setInfoTopic(null); }}>
+                  <div className="bg-slate-800 rounded-xl p-4 max-w-md" onClick={e => e.stopPropagation()}>
+                     <h3 className="text-lg font-bold text-emerald-400 mb-2">{infoTopics[infoTopic].title}</h3>
+                     <p className="text-sm text-slate-300">{infoTopics[infoTopic].content}</p>
+                     <button onClick={() => { setShowInfo(false); setInfoTopic(null); }} className="mt-4 w-full py-2 bg-emerald-600 rounded-lg">Got it!</button>
+                  </div>
+               </div>
+            )}
+
+            <div className="p-3 bg-black/30 border-b border-emerald-500/30 flex justify-between items-center">
+               <span className="font-bold">💰 Investor Psychology</span>
+               <span className="text-emerald-400">{scenario + 1}/{scenarios.length}</span>
+               <span className="text-teal-400">Score: {score}</span>
+            </div>
+
+            <div className="flex-1 p-4 overflow-auto">
+               <div className="bg-black/30 rounded-xl p-3 mb-3">
+                  <p className="font-bold text-emerald-400 mb-2">{s.title}</p>
+                  <p className="text-sm text-slate-300">{s.context}</p>
+               </div>
+
+               <div className="bg-black/30 rounded-xl p-4 mb-3">
+                  <p className="font-medium text-white">{s.question}</p>
+               </div>
+
+               <div className="grid gap-2">
+                  {s.opts.map((opt, i) => (
+                     <button
+                        key={i}
+                        onClick={() => answer(i)}
+                        disabled={answered}
+                        className={`p-3 rounded-lg text-left text-sm transition-all ${
+                           answered
+                              ? i === s.correct
+                                 ? 'bg-green-600'
+                                 : i === selected
+                                    ? 'bg-red-600'
+                                    : 'bg-black/30'
+                              : 'bg-black/30 hover:bg-emerald-600/50'
+                        }`}
+                     >
+                        {opt}
+                     </button>
+                  ))}
+               </div>
+
+               {answered && (
+                  <div className="mt-3 space-y-3">
+                     {selected !== s.correct && s.wrongExplanations[selected!] && (
+                        <div className="p-3 bg-red-900/50 rounded-lg border border-red-500/30">
+                           <p className="text-xs text-red-300 font-bold mb-1">❌ Why This Was Wrong:</p>
+                           <p className="text-sm text-red-100">{s.wrongExplanations[selected!]}</p>
+                        </div>
+                     )}
+                     <div className="p-3 bg-green-900/50 rounded-lg border border-green-500/30">
+                        <p className="text-xs text-green-300 font-bold mb-1">✓ Strategic Insight:</p>
+                        <p className="text-sm text-green-100">{s.why}</p>
+                     </div>
+                     <div className="p-3 bg-blue-900/50 rounded-lg border border-blue-500/30">
+                        <p className="text-xs text-blue-300 font-bold mb-1">📖 Real World:</p>
+                        <p className="text-sm text-blue-100">{s.realWorld}</p>
+                     </div>
+                     <button
+                        onClick={next}
+                        className="w-full py-2 bg-emerald-600 rounded-lg hover:bg-emerald-500"
+                     >
+                        {scenario >= scenarios.length - 1 ? 'See Results' : 'Next Scenario'}
+                     </button>
+                  </div>
+               )}
+            </div>
+
+            <div className="p-3 bg-black/30 border-t border-emerald-500/30 flex gap-2 justify-center flex-wrap">
+               {Object.keys(infoTopics).map(k => (
+                  <button
+                     key={k}
+                     onClick={() => { setInfoTopic(k); setShowInfo(true); }}
+                     className="text-xs text-emerald-400 hover:text-emerald-300"
+                  >
+                     ℹ️ {infoTopics[k].title}
+                  </button>
+               ))}
+            </div>
+         </div>
+      );
    };
 
    const FinancialStatementsRenderer = () => {
@@ -31344,47 +31642,346 @@ const GeneratedDiagram: React.FC<DiagramProps> = ({ type, data, title }) => {
    };
 
    const CompetitiveAnalysisRenderer = () => {
-      const [phase, setPhase] = useState<'intro'|'play'|'result'>('intro');
+      const [phase, setPhase] = useState<'intro' | 'play' | 'result'>('intro');
       const [showInfo, setShowInfo] = useState(false);
-      const [infoTopic, setInfoTopic] = useState<string|null>(null);
+      const [infoTopic, setInfoTopic] = useState<string | null>(null);
       const [scenario, setScenario] = useState(0);
       const [score, setScore] = useState(0);
+      const [selected, setSelected] = useState<number | null>(null);
       const [answered, setAnswered] = useState(false);
-      const [selected, setSelected] = useState<number|null>(null);
-      const [log, setLog] = useState<string[]>([]);
+      const [gameLog, setGameLog] = useState<string[]>([]);
+      const [conceptGaps, setConceptGaps] = useState<string[]>([]);
+
+      // Strategic Competitive Analysis - Deep understanding of when to attack, when to defend, when to flee
       const scenarios = [
-         {competitor:{name:'BigCorp',strengths:['Brand','Resources','Distribution'],weaknesses:['Slow','Expensive','Poor UX']},q:'Best strategy against this competitor?',opts:['Compete on price','Move faster with better UX','Build bigger brand','Copy their model'],correct:1,explain:'Attack weaknesses. Being nimble with better UX exploits their slow/poor UX weaknesses.'},
-         {competitor:{name:'Startup X',strengths:['Innovative','Fast','VC-funded'],weaknesses:['Unproven','Burning cash','Small team']},q:'What is their biggest vulnerability?',opts:['Innovation','Speed','Cash burn sustainability','Team size'],correct:2,explain:'VC money runs out. If they are burning cash without revenue, they are racing against runway.'},
-         {competitor:{name:'Market Leader',strengths:['80% market share','Network effects','Data moat'],weaknesses:['Complacent','Legacy tech','Ignored segments']},q:'Where should you attack?',opts:['Go head-to-head','Target ignored segments','Build same network','Copy their tech'],correct:1,explain:'Attack where they are not looking. Ignored segments can become beachheads for expansion.'},
-         {competitor:{name:'Open Source',strengths:['Free','Community','Customizable'],weaknesses:['No support','Complex setup','Fragmented']},q:'How do you compete with free?',opts:['Also be free','Premium support & simplicity','Ignore them','Acquire them'],correct:1,explain:'Compete on convenience, support, and integration. Enterprises pay for reliability over free.'},
-         {competitor:{name:'Direct Clone',strengths:['Copies your features','Undercuts price','Well-funded'],weaknesses:['No innovation','Following not leading','No brand']},q:'Best response to a copycat?',opts:['Sue them','Lower prices','Out-innovate','Ignore them'],correct:2,explain:'Keep innovating. They can copy features but not your vision, speed, or customer relationships.'}
+         {
+            title: "The Incumbent's Dilemma",
+            context: "You're a streaming startup in 2010. Netflix dominates DVD-by-mail with 20M subscribers, massive distribution infrastructure, and first-mover advantage. But they're starting to experiment with streaming. You have better streaming tech.",
+            question: "What's the WORST strategic move you could make?",
+            opts: [
+               'Wait for Netflix to fully commit to streaming, then attack DVD market',
+               'Race Netflix to streaming, trying to beat them on technology',
+               'Target a niche Netflix ignores (anime, international films)',
+               'Partner with studios Netflix has alienated'
+            ],
+            correct: 0,
+            wrongExplanations: [
+               "", // Correct - this is the worst move
+               "Racing on tech is risky but not the worst. At least you're moving toward the future. Netflix's tech advantage was beatable - Hulu and Amazon proved that.",
+               "Niche targeting is actually smart strategy. Crunchyroll built a billion-dollar business in anime that Netflix ignored for years.",
+               "Studio partnerships are viable. Netflix burned bridges early. Amazon and Apple leveraged this to get exclusive deals."
+            ],
+            realWorld: "Blockbuster made this exact mistake - waiting for Netflix to commit to streaming while clinging to physical stores. By the time they reacted, Netflix had insurmountable scale. The DVD market died faster than anyone predicted.",
+            concept: "disruption_timing",
+            why: "Clayton Christensen's Innovator's Dilemma: Incumbents are trapped serving current customers with current business models. Attacking their LEGACY business gives them time to transition. Instead, attack where they're GOING - that forces them to fight on two fronts. Netflix was vulnerable during transition, not after."
+         },
+         {
+            title: "The Moat Mirage",
+            context: "You're analyzing a competitor with: 50% market share, strong brand recognition, patents expiring in 2 years, and enterprise customers locked into 5-year contracts. Investors call them 'unassailable.'",
+            question: "Which 'moat' is actually weakest?",
+            opts: [
+               'Market share - 50% means half the market is available',
+               'Brand recognition - brands can be displaced by category change',
+               'Patents - 2 years is enough time to prepare your attack',
+               'Customer contracts - switching costs protect them'
+            ],
+            correct: 1,
+            wrongExplanations: [
+               "50% market share is genuinely concerning - network effects may apply, and the other 50% may be fragmented low-value segments. Market share CAN be a real moat.",
+               "", // Correct
+               "Patents expiring in 2 years is actually actionable - you can plan product launches around that timeline. This is more predictable than you'd think.",
+               "5-year contracts are real protection. Enterprises hate switching. This gives them time to respond to any threat."
+            ],
+            realWorld: "BlackBerry had dominant brand recognition in smartphones. But Apple didn't compete on 'business phones' - they created 'personal computers in your pocket.' Brand moats collapse when category definitions change. Nokia, Kodak, and Yahoo all had 'strong brands.'",
+            concept: "moat_analysis",
+            why: "Brands feel permanent but they're tied to CATEGORIES. When Tesla entered cars, BMW's brand didn't help because Tesla redefined the category as 'technology' not 'German engineering.' Always ask: 'What category does their brand own, and can I create a new category?'"
+         },
+         {
+            title: "The Copycat Paradox",
+            context: "You've built a successful SaaS product. A well-funded competitor launches a near-perfect copy at 50% of your price. They're burning cash to grab share. Your customers are nervous. Your board wants you to respond.",
+            question: "What's the strategically CORRECT response?",
+            opts: [
+               'Match their price - you can\'t lose customers',
+               'Sue for IP infringement',
+               'Double-down on innovation and customer success',
+               'Raise prices on your most valuable features'
+            ],
+            correct: 3,
+            wrongExplanations: [
+               "Price matching is what they WANT you to do. It validates their strategy and destroys your margins. You're playing their game on their terms. This is a trap.",
+               "Lawsuits take years and rarely work. Meanwhile they're eating your market. Even if you win, you've distracted your team and spent millions. Patents rarely cover business models.",
+               "Doubling down on innovation sounds right but is a slow response. While you're 'innovating,' price-sensitive customers are leaving. You need to segment NOW.",
+               "" // Correct
+            ],
+            realWorld: "When low-cost airlines attacked legacy carriers, successful airlines like Emirates RAISED prices and improved first-class. They ceded price-sensitive segments and doubled down on premium. Trying to serve everyone serves no one.",
+            concept: "price_response",
+            why: "Price wars destroy industries - everyone loses. Instead, SEGMENT: Let them take price-sensitive customers (often your worst customers anyway). Raise prices for premium buyers who value your differentiation. Slack did this when Microsoft Teams launched free - they went upmarket to enterprise."
+         },
+         {
+            title: "The Partnership Trap",
+            context: "A larger competitor offers to 'partner' with you. They'll give you access to their sales channel (10x your reach) and distribution network. In return, they want API access to your core technology and co-branding rights. Your board is excited.",
+            question: "What's the hidden danger in this partnership?",
+            opts: [
+               'They\'ll steal your technology through the API',
+               'They\'re learning your playbook to build a competitor',
+               'Co-branding will dilute your brand value',
+               'All of the above - this is a classic acquisition play'
+            ],
+            correct: 3,
+            wrongExplanations: [
+               "API access is ONE risk, but it's not the only one. Even with contractual protections, they gain strategic intelligence.",
+               "Learning your playbook is ONE risk. But the pattern is bigger - they're gathering intel for build vs buy decisions.",
+               "Brand dilution is ONE risk. But when customers associate you with them, you become a feature, not a product.",
+               "" // Correct
+            ],
+            realWorld: "Microsoft's 1997 'partnership' with Apple included a $150M investment. But it also meant Microsoft got Apple to drop IE lawsuit and make Office for Mac, learning Apple's direction. Amazon 'partnered' with many marketplace sellers before launching Amazon Basics versions of their best products.",
+            concept: "partnership_dynamics",
+            why: "Large companies don't partner with small ones out of kindness. They're either: 1) Evaluating you for acquisition (due diligence disguised as partnership), 2) Keeping you close while they build competitive features, or 3) Preventing you from partnering with their real competitors. 'Keep your friends close and enemies closer' is their strategy."
+         },
+         {
+            title: "The Data Advantage",
+            context: "You're competing against Google in a new market. They have 10 years of user data, AI/ML expertise, and infinite resources. Your product is better designed but you have 1/1000th of their data. VCs ask how you'll win.",
+            question: "What's the MOST credible competitive strategy?",
+            opts: [
+               'Build better AI/ML algorithms that need less data',
+               'Focus on privacy as a differentiator against their data practices',
+               'Create a proprietary data source they cannot access or replicate',
+               'Partner with other companies who also fear Google'
+            ],
+            correct: 2,
+            wrongExplanations: [
+               "Better algorithms rarely overcome massive data disadvantages. Google has the best AI researchers in the world. You won't out-algorithm them - they'll copy any innovation in months.",
+               "Privacy as a differentiator worked for Apple (bundled with hardware) and DuckDuckGo (search is simple). But for complex products, most users still choose features over privacy. This is niche, not winning.",
+               "", // Correct
+               "Anti-Google coalitions look good on paper but rarely execute. Each partner has different priorities. Microsoft, Apple, and others have tried this - coordination is nearly impossible."
+            ],
+            realWorld: "LinkedIn's data moat wasn't AI - it was the professional graph no one else had. Waze beat Google Maps initially by crowdsourcing real-time traffic data Google couldn't access. Spotify's advantage isn't algorithm - it's 600M+ user-generated playlists creating unique data.",
+            concept: "data_moats",
+            why: "Data advantages come from UNIQUE sources, not more of the same. Google has more web data, but they don't have: your customer's proprietary data, community-generated content, real-time IoT feeds from your devices, or domain-specific signals from your vertical. Find data THEY CAN'T GET."
+         }
       ];
-      const infoTopics:{[k:string]:{title:string,content:string}} = {
-         porter:{title:"Porter's 5 Forces",content:'Supplier power, Buyer power, Competitive rivalry, Threat of substitution, Threat of new entry. Analyze industry attractiveness.'},
-         moats:{title:'Competitive Moats',content:'Network effects, Switching costs, Brand, Scale, Patents, Data. Sustainable advantages that protect market position.'},
-         positioning:{title:'Positioning',content:'Own a unique space in customer minds. Be #1 at something specific rather than okay at everything.'},
-         swot:{title:'SWOT Analysis',content:'Strengths, Weaknesses, Opportunities, Threats. Match internal capabilities to external environment.'}
+
+      const conceptLabels: { [key: string]: string } = {
+         disruption_timing: "Disruption & Timing Strategy",
+         moat_analysis: "Competitive Moat Evaluation",
+         price_response: "Pricing Strategy & Segmentation",
+         partnership_dynamics: "Strategic Partnerships",
+         data_moats: "Data Competitive Advantage"
       };
-      const answer = (idx:number) => {
-         if(answered) return;
-         setSelected(idx);
-         setAnswered(true);
-         if(idx === scenarios[scenario].correct) {
-            setScore(s => s + 1);
-            setLog(l => [...l, `Scenario ${scenario+1}: Correct!`]);
-         } else {
-            setLog(l => [...l, `Scenario ${scenario+1}: Wrong`]);
+
+      const infoTopics: { [k: string]: { title: string; content: string } } = {
+         porter: {
+            title: "Porter's 5 Forces",
+            content: "Michael Porter's framework: 1) Supplier Power - can they raise prices? 2) Buyer Power - can customers demand discounts? 3) Competitive Rivalry - how intense is competition? 4) Threat of Substitution - can customers use alternatives? 5) Threat of New Entry - how easy to enter your market? High forces = low profitability. Analyze all 5 before entering any market."
+         },
+         moats: {
+            title: "Competitive Moats",
+            content: "Warren Buffett's concept: sustainable advantages that protect profits. 7 types: 1) Network effects (Facebook, Uber) 2) Switching costs (Salesforce, SAP) 3) Brand (Apple, Coca-Cola) 4) Scale economics (Walmart, Amazon) 5) Counter-positioning (Southwest vs legacy airlines) 6) Patents/IP (Pharma, Qualcomm) 7) Process power (Toyota Production System). Most moats are WEAKER than founders think."
+         },
+         disruption: {
+            title: "Disruptive Innovation",
+            content: "Clayton Christensen's theory: Startups win by targeting overlooked segments with 'worse' products that improve over time. Incumbents can't respond because serving their best customers is more profitable than fighting for marginal ones. Classic examples: Steel mini-mills vs integrated mills, PCs vs mainframes, Netflix vs Blockbuster. Disruption happens from BELOW."
+         },
+         asymmetry: {
+            title: "Asymmetric Competition",
+            content: "When you're small, fight asymmetrically: 1) Speed - decide in days what takes them months, 2) Focus - do one thing better vs their 100 things, 3) Risk tolerance - bet on unproven approaches, 4) Customer intimacy - know 100 customers deeply vs 1M superficially, 5) Talent density - your 10 people are better than their 10,000's average. Don't fight symmetric wars you can't win."
          }
       };
-      const next = () => {
-         if(scenario >= scenarios.length - 1) setPhase('result');
-         else { setScenario(s => s + 1); setAnswered(false); setSelected(null); }
+
+      const answer = (idx: number) => {
+         if (answered) return;
+         setSelected(idx);
+         setAnswered(true);
+         const s = scenarios[scenario];
+         if (idx === s.correct) {
+            setScore(prev => prev + 1);
+            setGameLog(prev => [...prev, `✓ ${s.title}: Correct! Demonstrated ${conceptLabels[s.concept]}`]);
+         } else {
+            setGameLog(prev => [...prev, `✗ ${s.title}: Missed. The trap was "${s.opts[idx]}"`]);
+            if (!conceptGaps.includes(s.concept)) {
+               setConceptGaps(prev => [...prev, s.concept]);
+            }
+         }
       };
-      const grade = score >= 4 ? 'A' : score >= 3 ? 'B' : score >= 2 ? 'C' : 'D';
+
+      const next = () => {
+         if (scenario >= scenarios.length - 1) {
+            setPhase('result');
+         } else {
+            setScenario(prev => prev + 1);
+            setAnswered(false);
+            setSelected(null);
+         }
+      };
+
+      const grade = score >= 5 ? 'A' : score >= 4 ? 'B' : score >= 3 ? 'C' : 'D';
       const s = scenarios[scenario];
-      if(phase === 'intro') return (<div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-red-900 via-rose-900 to-pink-900 text-white p-6"><div className="text-6xl mb-4">⚔️</div><h2 className="text-2xl font-bold mb-2">Competitive Analysis</h2><p className="text-slate-300 text-center mb-6 max-w-md">Analyze competitors and find winning strategies! Learn to identify weaknesses and attack vectors.</p><button onClick={() => setPhase('play')} className="px-8 py-3 bg-gradient-to-r from-red-500 to-rose-500 rounded-xl font-bold">Start Analysis</button></div>);
-      if(phase === 'result') return (<div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-red-900 via-rose-900 to-pink-900 text-white p-6"><div className="text-6xl mb-4">{grade === 'A' ? '🏆' : grade === 'B' ? '⚔️' : '📊'}</div><h2 className="text-2xl font-bold mb-2">Analysis Complete!</h2><div className="text-4xl font-bold text-red-400 mb-2">{score}/{scenarios.length}</div><div className="text-6xl mb-4">{grade}</div><p className="text-slate-400 mb-4">{grade === 'A' ? 'Strategic genius!' : grade === 'B' ? 'Good strategist!' : 'Study competitors more!'}</p><button onClick={() => {setPhase('intro');setScenario(0);setScore(0);setAnswered(false);setSelected(null);setLog([]);}} className="px-6 py-2 bg-red-600 rounded-lg">Try Again</button></div>);
-      return (<div className="w-full h-full flex flex-col bg-gradient-to-br from-red-900 via-rose-900 to-pink-900 text-white overflow-hidden">{showInfo && infoTopic && infoTopics[infoTopic] && (<div className="absolute inset-0 bg-black/80 flex items-center justify-center p-4 z-50" onClick={() => { setShowInfo(false); setInfoTopic(null); }}><div className="bg-slate-800 rounded-xl p-4 max-w-md" onClick={e => e.stopPropagation()}><h3 className="text-lg font-bold text-red-400 mb-2">{infoTopics[infoTopic].title}</h3><p className="text-sm text-slate-300">{infoTopics[infoTopic].content}</p><button onClick={() => { setShowInfo(false); setInfoTopic(null); }} className="mt-4 w-full py-2 bg-red-600 rounded-lg">Got it!</button></div></div>)}<div className="p-3 bg-black/30 border-b border-red-500/30 flex justify-between items-center"><span className="font-bold">⚔️ Competitive Analysis</span><span className="text-red-400">{scenario + 1}/{scenarios.length}</span><span className="text-rose-400">Score: {score}</span></div><div className="flex-1 p-4 overflow-auto"><div className="bg-black/30 rounded-xl p-3 mb-3"><p className="font-bold text-red-400 mb-2">{s.competitor.name}</p><div className="grid grid-cols-2 gap-2 text-xs"><div><p className="text-green-400 mb-1">Strengths:</p>{s.competitor.strengths.map((str,i) => <p key={i} className="text-slate-300">• {str}</p>)}</div><div><p className="text-red-400 mb-1">Weaknesses:</p>{s.competitor.weaknesses.map((w,i) => <p key={i} className="text-slate-300">• {w}</p>)}</div></div></div><div className="bg-black/30 rounded-xl p-4 mb-3"><p className="font-medium">{s.q}</p></div><div className="grid gap-2">{s.opts.map((opt, i) => (<button key={i} onClick={() => answer(i)} disabled={answered} className={`p-3 rounded-lg text-left text-sm ${answered ? i === s.correct ? 'bg-green-600' : i === selected ? 'bg-red-600' : 'bg-black/30' : 'bg-black/30 hover:bg-red-600/50'}`}>{opt}</button>))}</div>{answered && (<div className="mt-3 p-3 bg-black/30 rounded-lg"><p className="text-sm text-slate-300">{s.explain}</p><button onClick={next} className="mt-3 w-full py-2 bg-red-600 rounded-lg">{scenario >= scenarios.length - 1 ? 'See Results' : 'Next'}</button></div>)}</div><div className="p-3 bg-black/30 border-t border-red-500/30 flex gap-2 justify-center">{Object.keys(infoTopics).map(k => <button key={k} onClick={() => {setInfoTopic(k);setShowInfo(true);}} className="text-xs text-red-400">ℹ️ {infoTopics[k].title}</button>)}</div></div>);
+
+      if (phase === 'intro') {
+         return (
+            <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-red-900 via-rose-900 to-pink-900 text-white p-6">
+               <div className="text-6xl mb-4">⚔️</div>
+               <h2 className="text-2xl font-bold mb-2">Competitive Strategy Lab</h2>
+               <p className="text-slate-300 text-center mb-4 max-w-md">
+                  Master the strategic thinking that separates winning startups from failed ones.
+               </p>
+               <div className="bg-black/30 rounded-xl p-4 mb-6 max-w-md text-sm">
+                  <p className="text-red-400 font-bold mb-2">⚠️ Warning: These aren't simple answers</p>
+                  <ul className="text-slate-300 space-y-1 text-xs">
+                     <li>• Real competitive strategy requires nuanced thinking</li>
+                     <li>• Every option will seem reasonable - only one is correct</li>
+                     <li>• You'll learn from real case studies: Netflix, Apple, Google</li>
+                     <li>• Wrong answers reveal common strategic mistakes</li>
+                  </ul>
+               </div>
+               <button
+                  onClick={() => setPhase('play')}
+                  className="px-8 py-3 bg-gradient-to-r from-red-500 to-rose-500 rounded-xl font-bold hover:from-red-400 hover:to-rose-400 transition-all"
+               >
+                  Begin Strategy Analysis
+               </button>
+            </div>
+         );
+      }
+
+      if (phase === 'result') {
+         return (
+            <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-red-900 via-rose-900 to-pink-900 text-white p-6 overflow-auto">
+               <div className="text-6xl mb-4">{grade === 'A' ? '🏆' : grade === 'B' ? '⚔️' : grade === 'C' ? '📊' : '📚'}</div>
+               <h2 className="text-2xl font-bold mb-2">Strategy Assessment Complete</h2>
+               <div className="text-4xl font-bold text-red-400 mb-2">{score}/{scenarios.length}</div>
+               <div className="text-5xl mb-4">{grade}</div>
+               <p className="text-slate-400 mb-4 text-center">
+                  {grade === 'A' ? 'Strategic mastermind! You think like a seasoned strategist.' :
+                   grade === 'B' ? 'Strong strategic intuition. Minor blind spots to address.' :
+                   grade === 'C' ? 'Good foundation, but falling for common strategic traps.' :
+                   'Competitive strategy requires study. Many dangerous misconceptions.'}
+               </p>
+
+               {conceptGaps.length > 0 && (
+                  <div className="bg-black/30 rounded-xl p-4 max-w-md w-full mb-4">
+                     <p className="text-red-400 font-bold text-sm mb-2">📚 Concepts to Study:</p>
+                     <ul className="text-slate-300 text-xs space-y-1">
+                        {conceptGaps.map(gap => (
+                           <li key={gap}>• {conceptLabels[gap]}</li>
+                        ))}
+                     </ul>
+                  </div>
+               )}
+
+               <div className="bg-black/30 rounded-xl p-4 max-w-md w-full mb-4 max-h-32 overflow-y-auto">
+                  <p className="text-red-400 font-bold text-sm mb-2">Session Log:</p>
+                  {gameLog.map((entry, i) => (
+                     <p key={i} className="text-xs text-slate-300">{entry}</p>
+                  ))}
+               </div>
+
+               <button
+                  onClick={() => {
+                     setPhase('intro');
+                     setScenario(0);
+                     setScore(0);
+                     setAnswered(false);
+                     setSelected(null);
+                     setGameLog([]);
+                     setConceptGaps([]);
+                  }}
+                  className="px-6 py-2 bg-red-600 rounded-lg hover:bg-red-500"
+               >
+                  Try Again
+               </button>
+            </div>
+         );
+      }
+
+      return (
+         <div className="w-full h-full flex flex-col bg-gradient-to-br from-red-900 via-rose-900 to-pink-900 text-white overflow-hidden">
+            {showInfo && infoTopic && infoTopics[infoTopic] && (
+               <div className="absolute inset-0 bg-black/80 flex items-center justify-center p-4 z-50" onClick={() => { setShowInfo(false); setInfoTopic(null); }}>
+                  <div className="bg-slate-800 rounded-xl p-4 max-w-md" onClick={e => e.stopPropagation()}>
+                     <h3 className="text-lg font-bold text-red-400 mb-2">{infoTopics[infoTopic].title}</h3>
+                     <p className="text-sm text-slate-300">{infoTopics[infoTopic].content}</p>
+                     <button onClick={() => { setShowInfo(false); setInfoTopic(null); }} className="mt-4 w-full py-2 bg-red-600 rounded-lg">Got it!</button>
+                  </div>
+               </div>
+            )}
+
+            <div className="p-3 bg-black/30 border-b border-red-500/30 flex justify-between items-center">
+               <span className="font-bold">⚔️ Strategy Lab</span>
+               <span className="text-red-400">{scenario + 1}/{scenarios.length}</span>
+               <span className="text-rose-400">Score: {score}</span>
+            </div>
+
+            <div className="flex-1 p-4 overflow-auto">
+               <div className="bg-black/30 rounded-xl p-3 mb-3">
+                  <p className="font-bold text-red-400 mb-2">{s.title}</p>
+                  <p className="text-sm text-slate-300">{s.context}</p>
+               </div>
+
+               <div className="bg-black/30 rounded-xl p-4 mb-3">
+                  <p className="font-medium text-white">{s.question}</p>
+               </div>
+
+               <div className="grid gap-2">
+                  {s.opts.map((opt, i) => (
+                     <button
+                        key={i}
+                        onClick={() => answer(i)}
+                        disabled={answered}
+                        className={`p-3 rounded-lg text-left text-sm transition-all ${
+                           answered
+                              ? i === s.correct
+                                 ? 'bg-green-600'
+                                 : i === selected
+                                    ? 'bg-red-600'
+                                    : 'bg-black/30'
+                              : 'bg-black/30 hover:bg-red-600/50'
+                        }`}
+                     >
+                        {opt}
+                     </button>
+                  ))}
+               </div>
+
+               {answered && (
+                  <div className="mt-3 space-y-3">
+                     {selected !== s.correct && s.wrongExplanations[selected!] && (
+                        <div className="p-3 bg-red-900/50 rounded-lg border border-red-500/30">
+                           <p className="text-xs text-red-300 font-bold mb-1">❌ Why This Was Wrong:</p>
+                           <p className="text-sm text-red-100">{s.wrongExplanations[selected!]}</p>
+                        </div>
+                     )}
+                     <div className="p-3 bg-green-900/50 rounded-lg border border-green-500/30">
+                        <p className="text-xs text-green-300 font-bold mb-1">✓ Strategic Insight:</p>
+                        <p className="text-sm text-green-100">{s.why}</p>
+                     </div>
+                     <div className="p-3 bg-blue-900/50 rounded-lg border border-blue-500/30">
+                        <p className="text-xs text-blue-300 font-bold mb-1">📖 Real World:</p>
+                        <p className="text-sm text-blue-100">{s.realWorld}</p>
+                     </div>
+                     <button
+                        onClick={next}
+                        className="w-full py-2 bg-red-600 rounded-lg hover:bg-red-500"
+                     >
+                        {scenario >= scenarios.length - 1 ? 'See Results' : 'Next Scenario'}
+                     </button>
+                  </div>
+               )}
+            </div>
+
+            <div className="p-3 bg-black/30 border-t border-red-500/30 flex gap-2 justify-center flex-wrap">
+               {Object.keys(infoTopics).map(k => (
+                  <button
+                     key={k}
+                     onClick={() => { setInfoTopic(k); setShowInfo(true); }}
+                     className="text-xs text-red-400 hover:text-red-300"
+                  >
+                     ℹ️ {infoTopics[k].title}
+                  </button>
+               ))}
+            </div>
+         </div>
+      );
    };
 
    const BusinessModelRenderer = () => {
