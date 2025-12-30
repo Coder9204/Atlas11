@@ -30075,16 +30075,10 @@ const GeneratedDiagram: React.FC<DiagramProps> = ({ type, data, title }) => {
             return <PivotDecisionRenderer />;
          case 'team_building':
             return <TeamBuildingRenderer />;
-         case 'hiring':
-            return <HiringRenderer />;
          case 'leadership':
             return <LeadershipRenderer />;
          case 'customer_journey':
             return <CustomerJourneyRenderer />;
-         case 'sales_funnel':
-            return <SalesFunnelRenderer />;
-         case 'design_thinking':
-            return <DesignThinkingRenderer />;
          case 'mvp':
             return <MVPRenderer />;
          case 'risk_assessment':
@@ -30093,8 +30087,6 @@ const GeneratedDiagram: React.FC<DiagramProps> = ({ type, data, title }) => {
             return <SustainabilityRenderer />;
          case 'exit_strategy':
             return <ExitStrategyRenderer />;
-         case 'time_management':
-            return <TimeManagementRenderer />;
          default:
             return <GenericRenderer />;
       }
