@@ -301,6 +301,7 @@ When a concept comes up, follow this lookup process:
 • Project Management / Kanban / Sprints / Agile Boards → 'project_management'
 • Quality Control / Six Sigma / Defects / Inspection → 'quality_control'
 • Customer Success / Retention / Churn / NPS / LTV → 'customer_success'
+• Agile / Scrum / Sprints / Velocity / User Stories → 'agile'
 
 **STEP 2: IF NO MATCH → BUILD CUSTOM**
 Only if the topic is NOT covered above, use \`type: 'dynamic_blueprint'\` with custom JSON.
@@ -1116,6 +1117,14 @@ Only if the topic is NOT covered above, use \`type: 'dynamic_blueprint'\` with c
     → Track customers, revenue, churn, NPS, and customer lifetime value
     → Educational tooltips covering Churn, LTV, NPS, Onboarding, Retention
     → KEY INSIGHT: It costs 5x more to acquire than retain; satisfaction drives growth
+- **Operations / Agile Methodology / Scrum:** Use \`type: 'agile'\`, \`data: '{}'\`
+    → Run 6 sprints (2 weeks each) managing a product backlog
+    → Select features, bugs, and tech debt items for each sprint
+    → Team velocity ~20 story points, affected by morale
+    → Random events: sick days, scope creep, breakthroughs
+    → Track points delivered, velocity, features shipped, bugs fixed, tech debt paid
+    → Educational tooltips covering Scrum, Velocity, User Stories, Retrospectives, Tech Debt
+    → KEY INSIGHT: Balance features with maintenance; sustainable pace beats heroics
 
 **CUSTOM SIMULATIONS (only if no pre-built exists):**
 3. For dynamic text, use: \`"content": "Range: {{calculations.range}} m"\`

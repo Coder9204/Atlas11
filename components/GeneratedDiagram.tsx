@@ -27114,6 +27114,556 @@ const GeneratedDiagram: React.FC<DiagramProps> = ({ type, data, title }) => {
       );
    };
 
+   // --- AGILE METHODOLOGY RENDERER ---
+   const AgileRenderer = () => {
+      const [phase, setPhase] = useState<'intro' | 'play' | 'result'>('intro');
+      const [showInfo, setShowInfo] = useState(false);
+      const [infoTopic, setInfoTopic] = useState<string | null>(null);
+      const [sprint, setSprint] = useState(1);
+      const [gameLog, setGameLog] = useState<string[]>([]);
+
+      const totalSprints = 6;
+      const sprintLength = 2; // weeks
+
+      const [teamVelocity, setTeamVelocity] = useState(20); // story points per sprint
+      const [teamMorale, setTeamMorale] = useState(80);
+
+      const [backlog, setBacklog] = useState<{
+         id: string;
+         title: string;
+         points: number;
+         priority: 'critical' | 'high' | 'medium' | 'low';
+         status: 'backlog' | 'sprint' | 'done';
+         type: 'feature' | 'bug' | 'tech_debt';
+      }[]>([]);
+
+      const [sprintBacklog, setSprintBacklog] = useState<string[]>([]);
+
+      const [stats, setStats] = useState({
+         totalPointsDelivered: 0,
+         totalSprints: 0,
+         averageVelocity: 0,
+         bugsFixed: 0,
+         featuresShipped: 0,
+         techDebtPaid: 0,
+         scopeChanges: 0,
+      });
+
+      const [sprintHistory, setSprintHistory] = useState<{
+         sprint: number;
+         planned: number;
+         delivered: number;
+         velocity: number;
+         morale: number;
+      }[]>([]);
+
+      const [sprintEvent, setSprintEvent] = useState<string | null>(null);
+
+      const infoTopics: Record<string, { title: string; content: string }> = {
+         scrum: {
+            title: "Scrum Framework",
+            content: "Scrum is an Agile framework with fixed-length sprints (usually 2 weeks). Key roles: Product Owner (what to build), Scrum Master (process), Dev Team (how to build). Key events: Sprint Planning, Daily Standup, Sprint Review, Retrospective."
+         },
+         velocity: {
+            title: "Team Velocity",
+            content: "Velocity is story points completed per sprint. It's a planning tool, not a performance metric! Use past velocity to forecast future sprints. Velocity stabilizes over time as the team finds its rhythm. Never compare velocities between teams."
+         },
+         stories: {
+            title: "User Stories",
+            content: "User stories describe features from the user's perspective: 'As a [user], I want [feature] so that [benefit].' Stories are estimated in story points (relative complexity), not hours. Common scale: 1, 2, 3, 5, 8, 13 (Fibonacci). If it's bigger than 13, break it down!"
+         },
+         retrospective: {
+            title: "Retrospectives",
+            content: "The 'retro' happens after each sprint to improve the process. Ask: What went well? What didn't? What will we change? This is where real improvement happens. Teams that skip retros stop improving. Psychological safety is crucial for honest feedback."
+         },
+         debt: {
+            title: "Technical Debt",
+            content: "Tech debt is the cost of shortcuts taken for speed. Like financial debt, it accumulates interest—making future work harder. Balance: Some debt is acceptable for speed-to-market, but pay it down regularly or velocity will slow. Budget 20% of each sprint for debt."
+         }
+      };
+
+      useEffect(() => {
+         if (infoTopic && infoTopics[infoTopic]) {
+            setShowInfo(true);
+         }
+      }, [infoTopic]);
+
+      const startGame = () => {
+         setPhase('play');
+         setSprint(1);
+         setTeamVelocity(20);
+         setTeamMorale(80);
+         setSprintBacklog([]);
+         setSprintEvent(null);
+         setStats({
+            totalPointsDelivered: 0,
+            totalSprints: 0,
+            averageVelocity: 0,
+            bugsFixed: 0,
+            featuresShipped: 0,
+            techDebtPaid: 0,
+            scopeChanges: 0,
+         });
+         setSprintHistory([]);
+
+         // Generate initial backlog
+         const initialBacklog = [
+            { id: 'f1', title: 'User Authentication', points: 8, priority: 'critical' as const, status: 'backlog' as const, type: 'feature' as const },
+            { id: 'f2', title: 'Dashboard UI', points: 5, priority: 'high' as const, status: 'backlog' as const, type: 'feature' as const },
+            { id: 'f3', title: 'Payment Integration', points: 13, priority: 'critical' as const, status: 'backlog' as const, type: 'feature' as const },
+            { id: 'f4', title: 'Email Notifications', points: 5, priority: 'medium' as const, status: 'backlog' as const, type: 'feature' as const },
+            { id: 'f5', title: 'Search Feature', points: 8, priority: 'high' as const, status: 'backlog' as const, type: 'feature' as const },
+            { id: 'b1', title: 'Login Bug Fix', points: 3, priority: 'critical' as const, status: 'backlog' as const, type: 'bug' as const },
+            { id: 'b2', title: 'Mobile Layout Issues', points: 5, priority: 'high' as const, status: 'backlog' as const, type: 'bug' as const },
+            { id: 't1', title: 'Refactor Database', points: 8, priority: 'medium' as const, status: 'backlog' as const, type: 'tech_debt' as const },
+            { id: 't2', title: 'Update Dependencies', points: 3, priority: 'low' as const, status: 'backlog' as const, type: 'tech_debt' as const },
+            { id: 'f6', title: 'User Profiles', points: 5, priority: 'medium' as const, status: 'backlog' as const, type: 'feature' as const },
+            { id: 'f7', title: 'Admin Panel', points: 8, priority: 'low' as const, status: 'backlog' as const, type: 'feature' as const },
+            { id: 'f8', title: 'Analytics Dashboard', points: 13, priority: 'medium' as const, status: 'backlog' as const, type: 'feature' as const },
+         ];
+         setBacklog(initialBacklog);
+         setGameLog(["Agile simulation started - Plan your first sprint!"]);
+      };
+
+      const addToSprint = (itemId: string) => {
+         const item = backlog.find(b => b.id === itemId);
+         if (!item) return;
+
+         const currentPoints = sprintBacklog.reduce((sum, id) => {
+            const i = backlog.find(b => b.id === id);
+            return sum + (i?.points || 0);
+         }, 0);
+
+         if (currentPoints + item.points <= teamVelocity + 5) { // Allow slight over-commitment
+            setSprintBacklog(prev => [...prev, itemId]);
+            setBacklog(prev => prev.map(b => b.id === itemId ? { ...b, status: 'sprint' as const } : b));
+         }
+      };
+
+      const removeFromSprint = (itemId: string) => {
+         setSprintBacklog(prev => prev.filter(id => id !== itemId));
+         setBacklog(prev => prev.map(b => b.id === itemId ? { ...b, status: 'backlog' as const } : b));
+      };
+
+      const runSprint = () => {
+         const plannedPoints = sprintBacklog.reduce((sum, id) => {
+            const item = backlog.find(b => b.id === id);
+            return sum + (item?.points || 0);
+         }, 0);
+
+         // Random events that affect the sprint
+         const events = [
+            { text: "🎉 Team collaboration was excellent!", velocityMod: 1.1, moraleMod: 5 },
+            { text: "🐛 Critical production bug diverted resources", velocityMod: 0.7, moraleMod: -10 },
+            { text: "📋 Stakeholder added urgent requirements", velocityMod: 0.8, moraleMod: -5, scopeChange: true },
+            { text: "🚀 New team member ramped up quickly", velocityMod: 1.05, moraleMod: 5 },
+            { text: "😷 Team member was sick for a week", velocityMod: 0.85, moraleMod: -5 },
+            { text: "💡 Found a simpler solution!", velocityMod: 1.15, moraleMod: 10 },
+            { text: "📚 Sprint went smoothly as planned", velocityMod: 1.0, moraleMod: 0 },
+         ];
+
+         const event = events[Math.floor(Math.random() * events.length)];
+         setSprintEvent(event.text);
+
+         // Calculate actual delivery
+         const effectiveVelocity = Math.round(teamVelocity * event.velocityMod);
+         let remainingCapacity = effectiveVelocity;
+         let delivered = 0;
+         let bugsFixed = 0;
+         let featuresShipped = 0;
+         let techDebtPaid = 0;
+
+         const updatedBacklog = backlog.map(item => {
+            if (item.status === 'sprint' && remainingCapacity >= item.points) {
+               remainingCapacity -= item.points;
+               delivered += item.points;
+               if (item.type === 'bug') bugsFixed++;
+               if (item.type === 'feature') featuresShipped++;
+               if (item.type === 'tech_debt') techDebtPaid++;
+               return { ...item, status: 'done' as const };
+            } else if (item.status === 'sprint') {
+               // Incomplete - back to backlog
+               return { ...item, status: 'backlog' as const };
+            }
+            return item;
+         });
+
+         setBacklog(updatedBacklog);
+         setSprintBacklog([]);
+
+         // Update morale
+         const newMorale = Math.max(20, Math.min(100, teamMorale + event.moraleMod + (delivered >= plannedPoints ? 5 : -5)));
+         setTeamMorale(newMorale);
+
+         // Update velocity based on morale
+         const moraleEffect = (newMorale - 50) / 100; // -0.3 to +0.5
+         const newVelocity = Math.round(20 * (1 + moraleEffect));
+         setTeamVelocity(newVelocity);
+
+         const newStats = {
+            totalPointsDelivered: stats.totalPointsDelivered + delivered,
+            totalSprints: stats.totalSprints + 1,
+            averageVelocity: Math.round((stats.totalPointsDelivered + delivered) / (stats.totalSprints + 1)),
+            bugsFixed: stats.bugsFixed + bugsFixed,
+            featuresShipped: stats.featuresShipped + featuresShipped,
+            techDebtPaid: stats.techDebtPaid + techDebtPaid,
+            scopeChanges: stats.scopeChanges + (event.scopeChange ? 1 : 0),
+         };
+         setStats(newStats);
+
+         setSprintHistory(prev => [...prev, {
+            sprint,
+            planned: plannedPoints,
+            delivered,
+            velocity: effectiveVelocity,
+            morale: newMorale
+         }]);
+
+         setGameLog(prev => [...prev,
+            `Sprint ${sprint}: Planned ${plannedPoints}pts, delivered ${delivered}pts. ${event.text}`
+         ]);
+
+         if (sprint >= totalSprints) {
+            setGameLog(prev => [...prev,
+               `Project complete! Total delivered: ${newStats.totalPointsDelivered} points`
+            ]);
+            setPhase('result');
+         } else {
+            setSprint(sprint + 1);
+         }
+      };
+
+      const getSprintPoints = () => {
+         return sprintBacklog.reduce((sum, id) => {
+            const item = backlog.find(b => b.id === id);
+            return sum + (item?.points || 0);
+         }, 0);
+      };
+
+      const getScore = () => {
+         const deliveryScore = Math.min(40, stats.totalPointsDelivered / 2);
+         const moraleScore = teamMorale * 0.3;
+         const balanceScore = Math.min(30, (stats.bugsFixed * 3 + stats.techDebtPaid * 5));
+         return Math.round(deliveryScore + moraleScore + balanceScore);
+      };
+
+      const getGrade = () => {
+         const score = getScore();
+         if (score >= 85) return { letter: 'A', label: 'Agile Master', color: 'text-green-400' };
+         if (score >= 70) return { letter: 'B', label: 'Sprint Champion', color: 'text-blue-400' };
+         if (score >= 55) return { letter: 'C', label: 'Learning Scrum', color: 'text-yellow-400' };
+         return { letter: 'D', label: 'Waterfall Refugee', color: 'text-red-400' };
+      };
+
+      const getPriorityColor = (priority: string) => {
+         switch (priority) {
+            case 'critical': return 'text-red-400 bg-red-500/20';
+            case 'high': return 'text-orange-400 bg-orange-500/20';
+            case 'medium': return 'text-yellow-400 bg-yellow-500/20';
+            case 'low': return 'text-slate-400 bg-slate-500/20';
+            default: return 'text-slate-400';
+         }
+      };
+
+      const getTypeIcon = (type: string) => {
+         switch (type) {
+            case 'feature': return '✨';
+            case 'bug': return '🐛';
+            case 'tech_debt': return '🔧';
+            default: return '📋';
+         }
+      };
+
+      // Intro Phase
+      if (phase === 'intro') {
+         return (
+            <div className="w-full h-full flex flex-col bg-gradient-to-br from-indigo-900 via-purple-900 to-slate-900 text-white p-4 overflow-auto">
+               <div className="text-center mb-4">
+                  <h1 className="text-2xl font-bold mb-2">🏃 Agile Sprint Simulator</h1>
+                  <p className="text-purple-300 text-sm">Master Scrum and deliver value iteratively</p>
+               </div>
+
+               <div className="bg-black/30 rounded-xl p-4 mb-4">
+                  <h2 className="text-lg font-bold mb-3 text-purple-400">📋 How It Works</h2>
+                  <div className="space-y-2 text-sm">
+                     <p>• Run <span className="text-white font-bold">{totalSprints} sprints</span> ({sprintLength} weeks each)</p>
+                     <p>• Select items from the <span className="text-purple-400">Product Backlog</span> for each sprint</p>
+                     <p>• Balance features, bugs, and tech debt</p>
+                     <p>• Team velocity is ~<span className="text-white font-bold">20 points/sprint</span></p>
+                     <p>• Random events affect delivery—adapt and overcome!</p>
+                  </div>
+               </div>
+
+               <div className="grid grid-cols-3 gap-2 mb-4 text-center">
+                  <div className="bg-black/30 rounded-lg p-2">
+                     <span className="text-lg">✨</span>
+                     <p className="text-xs text-slate-300">Features</p>
+                  </div>
+                  <div className="bg-black/30 rounded-lg p-2">
+                     <span className="text-lg">🐛</span>
+                     <p className="text-xs text-slate-300">Bugs</p>
+                  </div>
+                  <div className="bg-black/30 rounded-lg p-2">
+                     <span className="text-lg">🔧</span>
+                     <p className="text-xs text-slate-300">Tech Debt</p>
+                  </div>
+               </div>
+
+               <div className="flex flex-wrap gap-2 mb-4">
+                  {Object.keys(infoTopics).map(key => (
+                     <button
+                        key={key}
+                        onClick={() => setInfoTopic(key)}
+                        className="text-xs bg-purple-500/20 hover:bg-purple-500/40 px-2 py-1 rounded-full text-purple-300"
+                     >
+                        ℹ️ {infoTopics[key].title}
+                     </button>
+                  ))}
+               </div>
+
+               <button
+                  onClick={startGame}
+                  className="w-full py-3 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 rounded-xl font-bold text-lg transition-all"
+               >
+                  ▶️ START SPRINT 1
+               </button>
+
+               {showInfo && infoTopic && infoTopics[infoTopic] && (
+                  <div className="absolute inset-0 bg-black/80 flex items-center justify-center p-4 z-50" onClick={() => { setShowInfo(false); setInfoTopic(null); }}>
+                     <div className="bg-slate-800 rounded-xl p-4 max-w-md" onClick={e => e.stopPropagation()}>
+                        <h3 className="text-lg font-bold text-purple-400 mb-2">{infoTopics[infoTopic].title}</h3>
+                        <p className="text-sm text-slate-300">{infoTopics[infoTopic].content}</p>
+                        <button onClick={() => { setShowInfo(false); setInfoTopic(null); }} className="mt-4 w-full py-2 bg-purple-600 rounded-lg">Got it!</button>
+                     </div>
+                  </div>
+               )}
+            </div>
+         );
+      }
+
+      // Result Phase
+      if (phase === 'result') {
+         const grade = getGrade();
+
+         return (
+            <div className="w-full h-full flex flex-col bg-gradient-to-br from-indigo-900 via-purple-900 to-slate-900 text-white p-4 overflow-auto">
+               <div className="text-center mb-4">
+                  <div className={`text-6xl font-bold ${grade.color}`}>{grade.letter}</div>
+                  <div className="text-xl font-bold">{grade.label}</div>
+                  <div className="text-purple-400">Score: {getScore()}/100</div>
+               </div>
+
+               <div className="grid grid-cols-2 gap-3 mb-4">
+                  <div className="bg-black/30 rounded-lg p-3 text-center">
+                     <div className="text-2xl font-bold text-purple-400">{stats.totalPointsDelivered}</div>
+                     <div className="text-xs text-slate-400">Points Delivered</div>
+                  </div>
+                  <div className="bg-black/30 rounded-lg p-3 text-center">
+                     <div className="text-2xl font-bold text-blue-400">{stats.averageVelocity}</div>
+                     <div className="text-xs text-slate-400">Avg Velocity</div>
+                  </div>
+                  <div className="bg-black/30 rounded-lg p-3 text-center">
+                     <div className="text-2xl font-bold text-green-400">{stats.featuresShipped}</div>
+                     <div className="text-xs text-slate-400">Features Shipped</div>
+                  </div>
+                  <div className="bg-black/30 rounded-lg p-3 text-center">
+                     <div className="text-2xl font-bold text-yellow-400">{teamMorale}%</div>
+                     <div className="text-xs text-slate-400">Team Morale</div>
+                  </div>
+               </div>
+
+               <div className="bg-black/30 rounded-xl p-3 mb-4">
+                  <h3 className="font-bold text-purple-400 mb-2">📊 Sprint Breakdown</h3>
+                  <div className="grid grid-cols-3 gap-2 text-center text-xs">
+                     <div>
+                        <div className="font-bold text-lg text-green-400">{stats.featuresShipped}</div>
+                        <div className="text-slate-400">✨ Features</div>
+                     </div>
+                     <div>
+                        <div className="font-bold text-lg text-red-400">{stats.bugsFixed}</div>
+                        <div className="text-slate-400">🐛 Bugs Fixed</div>
+                     </div>
+                     <div>
+                        <div className="font-bold text-lg text-orange-400">{stats.techDebtPaid}</div>
+                        <div className="text-slate-400">🔧 Debt Paid</div>
+                     </div>
+                  </div>
+               </div>
+
+               <div className="bg-black/30 rounded-xl p-3 mb-4">
+                  <h3 className="font-bold text-purple-400 mb-2">💡 Key Insight</h3>
+                  <p className="text-sm text-slate-300">
+                     {stats.techDebtPaid === 0
+                        ? "You shipped features but ignored tech debt! In real projects, this slows velocity over time. Budget ~20% of each sprint for maintenance."
+                        : stats.bugsFixed < 2
+                        ? "Bugs pile up when ignored. Fixing bugs early prevents bigger problems. Critical bugs should jump to the top of the backlog."
+                        : teamMorale < 50
+                        ? "Team morale affects velocity! Overcommitting and missing targets hurts morale. Sustainable pace > heroic sprints."
+                        : "Great balance of features, bugs, and tech debt! Sustainable teams deliver more value over time than teams that burn out."
+                     }
+                  </p>
+               </div>
+
+               <button
+                  onClick={startGame}
+                  className="w-full py-3 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 rounded-xl font-bold transition-all"
+               >
+                  🔄 TRY AGAIN
+               </button>
+            </div>
+         );
+      }
+
+      // Play Phase
+      const sprintPoints = getSprintPoints();
+      const availableBacklog = backlog.filter(b => b.status === 'backlog');
+      const sprintItems = backlog.filter(b => b.status === 'sprint');
+
+      return (
+         <div className="w-full h-full flex flex-col bg-gradient-to-br from-indigo-900 via-purple-900 to-slate-900 text-white overflow-hidden">
+            {/* Info Modal */}
+            {showInfo && infoTopic && infoTopics[infoTopic] && (
+               <div className="absolute inset-0 bg-black/80 flex items-center justify-center p-4 z-50" onClick={() => { setShowInfo(false); setInfoTopic(null); }}>
+                  <div className="bg-slate-800 rounded-xl p-4 max-w-md" onClick={e => e.stopPropagation()}>
+                     <h3 className="text-lg font-bold text-purple-400 mb-2">{infoTopics[infoTopic].title}</h3>
+                     <p className="text-sm text-slate-300">{infoTopics[infoTopic].content}</p>
+                     <button onClick={() => { setShowInfo(false); setInfoTopic(null); }} className="mt-4 w-full py-2 bg-purple-600 rounded-lg">Got it!</button>
+                  </div>
+               </div>
+            )}
+
+            {/* Header */}
+            <div className="p-3 bg-black/30 border-b border-purple-500/30">
+               <div className="flex justify-between items-center mb-2">
+                  <span className="font-bold">🏃 Sprint {sprint}/{totalSprints}</span>
+                  <span className="text-purple-400">{sprintLength} weeks</span>
+               </div>
+               <div className="grid grid-cols-4 gap-2 text-center text-xs">
+                  <div className="bg-black/30 rounded p-1">
+                     <div className="text-purple-400 font-bold">{sprintPoints}/{teamVelocity}</div>
+                     <div className="text-slate-500">Points</div>
+                  </div>
+                  <div className="bg-black/30 rounded p-1">
+                     <div className="text-blue-400 font-bold">{teamVelocity}</div>
+                     <div className="text-slate-500">Velocity</div>
+                  </div>
+                  <div className="bg-black/30 rounded p-1">
+                     <div className={`font-bold ${teamMorale >= 60 ? 'text-green-400' : teamMorale >= 40 ? 'text-yellow-400' : 'text-red-400'}`}>{teamMorale}%</div>
+                     <div className="text-slate-500">Morale</div>
+                  </div>
+                  <div className="bg-black/30 rounded p-1">
+                     <div className="text-green-400 font-bold">{stats.totalPointsDelivered}</div>
+                     <div className="text-slate-500">Delivered</div>
+                  </div>
+               </div>
+               {sprintEvent && (
+                  <div className="mt-2 text-xs text-center text-purple-300 bg-purple-500/20 rounded p-1">
+                     {sprintEvent}
+                  </div>
+               )}
+            </div>
+
+            {/* Main Content */}
+            <div className="flex-1 p-3 overflow-auto">
+               {/* Sprint Backlog */}
+               <div className="mb-3">
+                  <div className="flex justify-between items-center mb-2">
+                     <span className="text-sm font-bold">📋 Sprint Backlog</span>
+                     <span className={`text-xs ${sprintPoints > teamVelocity ? 'text-red-400' : 'text-purple-400'}`}>
+                        {sprintPoints} / {teamVelocity} pts
+                     </span>
+                  </div>
+                  {sprintItems.length === 0 ? (
+                     <div className="bg-black/20 rounded-lg p-3 text-center text-slate-500 text-sm">
+                        Add items from the backlog below
+                     </div>
+                  ) : (
+                     <div className="space-y-1">
+                        {sprintItems.map(item => (
+                           <div key={item.id} className="bg-purple-500/20 rounded-lg p-2 flex justify-between items-center">
+                              <div className="flex items-center gap-2">
+                                 <span>{getTypeIcon(item.type)}</span>
+                                 <span className="text-xs">{item.title}</span>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                 <span className={`text-xs px-1 rounded ${getPriorityColor(item.priority)}`}>{item.points}pts</span>
+                                 <button onClick={() => removeFromSprint(item.id)} className="text-red-400 text-xs">✕</button>
+                              </div>
+                           </div>
+                        ))}
+                     </div>
+                  )}
+               </div>
+
+               {/* Product Backlog */}
+               <div>
+                  <div className="flex justify-between items-center mb-2">
+                     <span className="text-sm font-bold">📦 Product Backlog</span>
+                     <span className="text-xs text-slate-400">{availableBacklog.length} items</span>
+                  </div>
+                  <div className="space-y-1 max-h-40 overflow-auto">
+                     {availableBacklog.map(item => (
+                        <div key={item.id} className="bg-black/30 rounded-lg p-2 flex justify-between items-center">
+                           <div className="flex items-center gap-2">
+                              <span>{getTypeIcon(item.type)}</span>
+                              <span className="text-xs">{item.title}</span>
+                           </div>
+                           <div className="flex items-center gap-2">
+                              <span className={`text-xs px-1 rounded ${getPriorityColor(item.priority)}`}>{item.priority}</span>
+                              <span className="text-xs text-slate-400">{item.points}pts</span>
+                              <button
+                                 onClick={() => addToSprint(item.id)}
+                                 disabled={sprintPoints + item.points > teamVelocity + 5}
+                                 className="text-green-400 text-xs disabled:opacity-50"
+                              >
+                                 +
+                              </button>
+                           </div>
+                        </div>
+                     ))}
+                  </div>
+               </div>
+
+               {/* Sprint History */}
+               {sprintHistory.length > 0 && (
+                  <div className="mt-3 bg-black/30 rounded-lg p-2">
+                     <span className="text-xs font-bold text-slate-400">Sprint History</span>
+                     <div className="mt-1 space-y-1 max-h-16 overflow-auto">
+                        {sprintHistory.slice(-3).map((h, i) => (
+                           <div key={i} className="flex justify-between text-xs">
+                              <span>Sprint {h.sprint}</span>
+                              <span className="text-slate-400">{h.planned}→{h.delivered}pts</span>
+                              <span className={h.delivered >= h.planned ? 'text-green-400' : 'text-red-400'}>
+                                 {h.delivered >= h.planned ? '✓' : '✗'}
+                              </span>
+                           </div>
+                        ))}
+                     </div>
+                  </div>
+               )}
+            </div>
+
+            {/* Action Bar */}
+            <div className="p-3 bg-black/30 border-t border-purple-500/30">
+               <div className="flex gap-2 items-center justify-between mb-2">
+                  <div className="flex gap-2">
+                     <button onClick={() => setInfoTopic('velocity')} className="text-xs text-purple-400 hover:text-white">📈 Velocity</button>
+                     <button onClick={() => setInfoTopic('stories')} className="text-xs text-purple-400 hover:text-white">📝 Stories</button>
+                     <button onClick={() => setInfoTopic('debt')} className="text-xs text-purple-400 hover:text-white">🔧 Tech Debt</button>
+                  </div>
+               </div>
+               <button
+                  onClick={runSprint}
+                  disabled={sprintItems.length === 0}
+                  className="w-full py-3 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 disabled:opacity-50 rounded-xl font-bold transition-all"
+               >
+                  🏃 RUN SPRINT {sprint}
+               </button>
+            </div>
+         </div>
+      );
+   };
+
    // --- GENERIC RENDERER ---
    const GenericRenderer = () => {
       if (type === 'poster' || type === 'infographic') {
@@ -27538,6 +28088,8 @@ const GeneratedDiagram: React.FC<DiagramProps> = ({ type, data, title }) => {
             return <QualityControlRenderer />;
          case 'customer_success':
             return <CustomerSuccessRenderer />;
+         case 'agile':
+            return <AgileRenderer />;
          default:
             return <GenericRenderer />;
       }
