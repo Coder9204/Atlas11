@@ -25611,230 +25611,805 @@ const GeneratedDiagram: React.FC<DiagramProps> = ({ type, data, title }) => {
    // 47. ANGEL INVESTORS - Investor Pitch Match
    const AngelInvestorsRenderer = () => {
       const [phase, setPhase] = useState<'intro' | 'play' | 'result'>('intro');
-      const [showInfo, setShowInfo] = useState(false);
+      const [scenario, setScenario] = useState(0);
       const [score, setScore] = useState(0);
-      const [current, setCurrent] = useState(0);
+      const [selected, setSelected] = useState<number | null>(null);
+      const [answered, setAnswered] = useState(false);
+      const [gameLog, setGameLog] = useState<string[]>([]);
+      const [showInfo, setShowInfo] = useState(false);
+      const [infoTopic, setInfoTopic] = useState<string | null>(null);
+      const [conceptGaps, setConceptGaps] = useState<string[]>([]);
 
-      const questions = [
-         { q: 'What do angel investors typically invest?', options: [
-            { text: '$5K - $10K', score: 3 },
-            { text: '$25K - $500K', score: 10 },
-            { text: '$1M - $10M', score: 2 }
-         ]},
-         { q: 'What do angels primarily look for?', options: [
-            { text: 'Proven profitability', score: 3 },
-            { text: 'Team + market opportunity', score: 10 },
-            { text: 'Lowest valuation', score: 2 }
-         ]},
-         { q: 'Typical angel equity stake?', options: [
-            { text: '1-5%', score: 3 },
-            { text: '10-25%', score: 10 },
-            { text: '51%+ majority', score: 1 }
-         ]}
+      const scenarios = [
+         {
+            title: "The Angel Syndicate Math",
+            context: "You're raising $500K from angels. One angel offers $250K for 20% equity (valuing you at $1.25M). A syndicate of 5 angels offers $500K total for 25% equity (valuing you at $2M). The solo angel has extensive industry experience in your space. The syndicate has mixed backgrounds with one having weak reputation.",
+            question: "Which offer creates more long-term value?",
+            opts: [
+               "A) Solo angel - industry expertise is invaluable for early-stage",
+               "B) Syndicate - higher valuation means less dilution for you",
+               "C) Solo angel - simpler cap table is better for future rounds",
+               "D) Syndicate - more connections means more opportunities"
+            ],
+            correct: 0,
+            wrongExplanations: [
+               "",
+               "Higher valuation sounds good, but experienced angels in your industry can add 10x more value than the extra 5% equity saved. Plus, a weak-reputation angel can poison future fundraising.",
+               "Cap table simplicity matters, but that's not the key issue. One engaged angel beats five passive ones.",
+               "More connections ≠ better connections. Mixed-background syndicates often provide diluted value and conflicting advice."
+            ],
+            realWorld: "Uber's first angel Chris Sacca provided $300K but more importantly introduced Travis to key engineers and investors. His industry knowledge was worth far more than his check size. Ron Conway's Angels have backed Google, PayPal, Pinterest - angels with domain expertise create disproportionate value.",
+            concept: "strategic_value",
+            why: "Angel investing isn't just about capital - it's about who can open doors, make introductions, and provide expert guidance. A single angel with deep industry expertise can accelerate your startup more than a group of angels who just write checks. The 'smart money' premium is real."
+         },
+         {
+            title: "The Valuation Trap",
+            context: "You're a pre-revenue SaaS startup. Two angels are interested. Angel A offers $100K at a $2M valuation (5% equity). Angel B offers $100K at a $500K valuation (20% equity) but has built and sold 3 SaaS companies, has deep customer relationships in your target market, and commits to weekly advisory calls.",
+            question: "Which offer should you take?",
+            opts: [
+               "A) Angel A - preserving equity is the #1 priority in early stages",
+               "B) Angel B - the expertise and connections justify the higher equity",
+               "C) Neither - $2M pre-revenue valuation means you should raise from VCs",
+               "D) Negotiate Angel B down to 10% with the same advisory commitment"
+            ],
+            correct: 1,
+            wrongExplanations: [
+               "Preserving equity sounds smart but owning 95% of nothing is worse than owning 80% of something that works. At pre-revenue, execution risk is your biggest challenge.",
+               "",
+               "Pre-revenue startups rarely qualify for VC. VCs typically want $1M+ ARR. This shows misunderstanding of funding stages.",
+               "This sounds clever but an experienced angel will walk away. They know their value. Trying to commoditize their expertise signals founder naivety."
+            ],
+            realWorld: "WhatsApp's Jim Goetz at Sequoia got 18% for $8M - considered expensive at the time. But his guidance on growth strategy helped them reach 450M users. Facebook acquired WhatsApp for $19B. The 'expensive' equity became $3.4B in value. Stripe gave 10% to their first angel despite a low valuation - that angel connected them to PayPal's Peter Thiel.",
+            concept: "smart_money_premium",
+            why: "Pre-revenue startups face massive execution risk. An experienced operator-angel who's built what you're building can compress your learning curve from 3 years to 6 months. At early stages, the quality of your investor matters more than your valuation. The equity you give up is paying for de-risking your company."
+         },
+         {
+            title: "The Pro-Rata Rights Puzzle",
+            context: "An angel is investing $50K at a $1M valuation (5% equity). They're asking for pro-rata rights - the right to invest their proportional share in future rounds to maintain their 5%. You're planning to raise a $5M Series A in 18 months. If they exercise pro-rata, they'd need to invest $250K in your Series A.",
+            question: "Should you grant pro-rata rights?",
+            opts: [
+               "A) No - it limits flexibility for future rounds and may scare off VCs",
+               "B) Yes - it's standard and shows the angel believes in long-term",
+               "C) Yes, but cap it - allow pro-rata up to $100K in any future round",
+               "D) No - angels shouldn't participate in VC rounds"
+            ],
+            correct: 2,
+            wrongExplanations: [
+               "Denying pro-rata completely is a red flag. It signals you don't expect them to want to reinvest, or you're hiding something. Most angels expect some form of pro-rata.",
+               "Uncapped pro-rata can be problematic. If the angel can't actually write the check, it creates delays. If they can, uncapped rights let them block VCs who want full allocation.",
+               "",
+               "This is simply wrong. Many angels successfully invest in later rounds. YC's standard documents specifically include angel pro-rata provisions."
+            ],
+            realWorld: "Airbnb's angel investors had pro-rata rights but they were capped. This let angels continue participating while ensuring Sequoia could lead the Series A with their required allocation. Instagram's angels had unlimited pro-rata which created friction during their Series A - Benchmark had to negotiate angel participation levels.",
+            concept: "pro_rata_rights",
+            why: "Pro-rata rights align incentives - angels who can follow on are more committed. But uncapped rights can create problems when VCs want larger allocations. Capped pro-rata is the Goldilocks solution: it rewards committed angels, maintains your relationship, but preserves space for institutional investors."
+         },
+         {
+            title: "The Convertible Note Conversion",
+            context: "You raised $200K on a SAFE with a $4M valuation cap and 20% discount. Now you're raising a $2M Series A at a $10M pre-money valuation. The angels are trying to understand their ownership after conversion.",
+            question: "What ownership do the SAFE holders get?",
+            opts: [
+               "A) 5% - they get the 20% discount on $10M = $8M effective valuation",
+               "B) 5% - $200K / $4M cap = 5%, the cap is lower than discounted price",
+               "C) 2% - $200K / $10M valuation = 2%, SAFEs convert at round price",
+               "D) 20% - the discount percentage equals their ownership"
+            ],
+            correct: 1,
+            wrongExplanations: [
+               "The math is wrong. With 20% discount on $10M, the effective valuation would be $8M, giving 2.5% ownership ($200K/$8M). But you're missing the cap!",
+               "",
+               "SAFEs don't convert at round price - that would defeat the purpose. The cap and discount exist to reward early risk-taking angels.",
+               "The 20% discount is a price discount, not ownership percentage. This shows fundamental misunderstanding of convertible instruments."
+            ],
+            realWorld: "Y Combinator created the SAFE specifically because convertible note math confused founders. Dropbox's early angels on notes with caps got much better deals than later angels because their caps were low. When Dropbox's Series A valued them at $4M, angels with $1M caps got 4x the ownership of their check size vs. new investors.",
+            concept: "safe_conversion",
+            why: "SAFEs convert at the lower of: (1) the valuation cap, or (2) the discounted round price. Here: Cap price = $4M, Discount price = $10M × 0.8 = $8M. Since $4M < $8M, the cap wins. Ownership = $200K ÷ $4M = 5%. Understanding this math is crucial for managing your cap table."
+         },
+         {
+            title: "The Angels vs. Accelerator Decision",
+            context: "You're a first-time founder with a working MVP. You have two options: (1) Y Combinator - $500K for 7% equity plus $125K uncapped MFN SAFE, plus network and signal, or (2) A group of 3 angels offering $300K total for 8% equity, all with operational experience in your industry, one is a potential customer.",
+            question: "Which path creates more value?",
+            opts: [
+               "A) YC - the network and signal are worth far more than the 7%",
+               "B) Angels - less equity and they have relevant industry experience",
+               "C) YC - the $125K MFN SAFE sweetens the deal significantly",
+               "D) Depends - what's your biggest constraint: capital, expertise, or credibility?"
+            ],
+            correct: 3,
+            wrongExplanations: [
+               "YC is amazing but not for everyone. Some startups (deep tech, specific industries) benefit more from domain experts than generalist networks.",
+               "Industry experience is valuable but YC's signal can increase Series A valuations by 2-3x, potentially worth more than the equity difference.",
+               "The MFN SAFE is nice but marginal. It doesn't change the fundamental calculus of network vs. industry expertise.",
+               ""
+            ],
+            realWorld: "Stripe did YC and benefited from the network - introductions to early customers. But Calm, the meditation app, skipped YC and raised from angels with wellness industry connections. Both became unicorns. Zapier's founders were remote and chose YC for the forcing function and credibility. Basecamp stayed bootstrapped because they didn't need network or credibility.",
+            concept: "funding_path_selection",
+            why: "There's no universal 'best' option. If you're an unknown founder who needs credibility with enterprise customers, YC's signal is invaluable. If you're already connected in your industry and need operational help, domain-expert angels might be better. The right answer depends on your specific constraints - that's why 'it depends' is correct here."
+         }
       ];
+
+      const conceptLabels: Record<string, string> = {
+         strategic_value: "Strategic Angel Value",
+         smart_money_premium: "Smart Money Premium",
+         pro_rata_rights: "Pro-Rata Rights",
+         safe_conversion: "SAFE Conversion Math",
+         funding_path_selection: "Funding Path Selection"
+      };
+
+      const infoTopics: Record<string, string> = {
+         strategic_value: "Strategic angels provide more than capital - they bring industry knowledge, customer introductions, and operational expertise. The best angels have built companies in your space and can accelerate your learning curve by years.",
+         smart_money_premium: "Smart money refers to investors who add value beyond capital. The premium you pay (in equity) for smart money often returns 10-100x through faster growth, fewer mistakes, and better introductions.",
+         pro_rata_rights: "Pro-rata rights let investors maintain their ownership percentage in future rounds. Uncapped pro-rata can create conflicts with VCs. Capped pro-rata balances angel relationships with institutional investor needs.",
+         safe_conversion: "SAFEs convert to equity at the lower of: valuation cap or discounted price. The cap protects early investors if the company's valuation grows significantly before the next round.",
+         funding_path_selection: "Choosing between accelerators, angels, or bootstrapping depends on your constraints: Do you need credibility? Industry connections? Capital? Mentorship? Each path optimizes for different needs."
+      };
+
+      const handleAnswer = (optIndex: number) => {
+         if (answered) return;
+         setSelected(optIndex);
+         setAnswered(true);
+         const isCorrect = optIndex === scenarios[scenario].correct;
+         const newScore = isCorrect ? score + 1 : score;
+         setScore(newScore);
+         if (!isCorrect) {
+            setConceptGaps([...conceptGaps, scenarios[scenario].concept]);
+         }
+         setGameLog([...gameLog, `Scenario ${scenario + 1}: ${isCorrect ? 'Correct' : 'Incorrect'} - ${scenarios[scenario].title}`]);
+      };
+
+      const nextScenario = () => {
+         if (scenario < scenarios.length - 1) {
+            setScenario(scenario + 1);
+            setSelected(null);
+            setAnswered(false);
+         } else {
+            setPhase('result');
+         }
+      };
+
+      const getGrade = () => {
+         const pct = (score / scenarios.length) * 100;
+         if (pct >= 80) return { grade: 'A', label: 'Angel Expert', color: 'text-green-400' };
+         if (pct >= 60) return { grade: 'B', label: 'Strong Foundation', color: 'text-blue-400' };
+         if (pct >= 40) return { grade: 'C', label: 'Growing Understanding', color: 'text-yellow-400' };
+         return { grade: 'D', label: 'More Practice Needed', color: 'text-red-400' };
+      };
 
       if (phase === 'intro') return (
          <div className="flex flex-col items-center justify-center h-full bg-gradient-to-br from-yellow-900 via-amber-900 to-orange-900 text-white p-8 text-center">
             <button onClick={() => setShowInfo(!showInfo)} className="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/20 flex items-center justify-center text-xl">ℹ️</button>
             {showInfo && (
-               <div className="absolute top-16 right-4 bg-black/90 p-4 rounded-xl max-w-xs text-left text-sm">
-                  <p className="font-bold mb-2">Angel Investors</p>
-                  <p>High-net-worth individuals who invest personal funds in early-stage startups, often providing mentorship alongside capital.</p>
+               <div className="absolute top-16 right-4 bg-black/90 p-4 rounded-xl max-w-xs text-left text-sm z-10">
+                  <p className="font-bold mb-2">Angel Investment Lab</p>
+                  <p className="mb-2">Master the strategic decisions of angel fundraising:</p>
+                  <ul className="text-xs space-y-1 opacity-90">
+                     <li>• When expertise beats valuation</li>
+                     <li>• Pro-rata rights negotiation</li>
+                     <li>• SAFE/note conversion math</li>
+                     <li>• Angels vs. accelerators</li>
+                     <li>• Real cases from Uber, WhatsApp, Stripe</li>
+                  </ul>
                </div>
             )}
             <p className="text-6xl mb-4">👼</p>
-            <h2 className="text-3xl font-bold mb-4">Angel Investors</h2>
-            <p className="text-lg opacity-80 max-w-md mb-8">Test your knowledge of angel investing fundamentals.</p>
-            <button onClick={() => setPhase('play')} className="px-8 py-4 bg-yellow-500 rounded-2xl font-bold text-xl hover:bg-yellow-400 transition-all text-black">START QUIZ →</button>
+            <h2 className="text-3xl font-bold mb-4">Angel Investment Lab</h2>
+            <p className="text-lg opacity-80 max-w-md mb-8">Navigate real angel investing decisions. Learn when to optimize for value over valuation, and the math behind convertible instruments.</p>
+            <button onClick={() => setPhase('play')} className="px-8 py-4 bg-yellow-500 rounded-2xl font-bold text-xl hover:bg-yellow-400 transition-all text-black">START LAB →</button>
          </div>
       );
 
-      if (phase === 'result') return (
-         <div className="flex flex-col items-center justify-center h-full bg-gradient-to-br from-yellow-900 via-amber-900 to-orange-900 text-white p-8 text-center">
-            <p className="text-6xl mb-4">{score >= 25 ? '🏆' : score >= 15 ? '⭐' : '📚'}</p>
-            <h2 className="text-3xl font-bold mb-4">Angel Knowledge</h2>
-            <p className="text-5xl font-bold text-yellow-400 mb-4">{score}/{questions.length * 10}</p>
-            <button onClick={() => { setPhase('intro'); setScore(0); setCurrent(0); }} className="px-6 py-3 bg-yellow-500 rounded-xl font-bold text-black">TRY AGAIN</button>
-         </div>
-      );
+      if (phase === 'result') {
+         const { grade, label, color } = getGrade();
+         return (
+            <div className="flex flex-col h-full bg-gradient-to-br from-yellow-900 via-amber-900 to-orange-900 text-white p-8">
+               <div className="text-center mb-6">
+                  <p className="text-6xl mb-4">{grade === 'A' ? '👼' : grade === 'B' ? '⭐' : '📚'}</p>
+                  <h2 className="text-2xl font-bold mb-2">Angel Lab Complete</h2>
+                  <p className={`text-5xl font-bold ${color}`}>{grade}</p>
+                  <p className="text-lg opacity-80">{label}</p>
+                  <p className="text-xl mt-2">{score}/{scenarios.length} Correct</p>
+               </div>
+               {conceptGaps.length > 0 && (
+                  <div className="bg-black/30 rounded-xl p-4 mb-4">
+                     <p className="font-bold mb-2">Review these concepts:</p>
+                     <div className="flex flex-wrap gap-2">
+                        {[...new Set(conceptGaps)].map((gap, i) => (
+                           <span key={i} className="px-3 py-1 bg-yellow-500/30 rounded-full text-sm">{conceptLabels[gap]}</span>
+                        ))}
+                     </div>
+                  </div>
+               )}
+               <div className="bg-black/30 rounded-xl p-4 mb-4 flex-1 overflow-y-auto">
+                  <p className="font-bold mb-2">Session Log:</p>
+                  {gameLog.map((log, i) => (
+                     <p key={i} className="text-sm opacity-80">{log}</p>
+                  ))}
+               </div>
+               <button onClick={() => { setPhase('intro'); setScenario(0); setScore(0); setSelected(null); setAnswered(false); setGameLog([]); setConceptGaps([]); }} className="px-6 py-3 bg-yellow-500 rounded-xl font-bold text-black">TRY AGAIN</button>
+            </div>
+         );
+      }
 
-      const handleSelect = (optScore: number) => {
-         setScore(score + optScore);
-         if (current < questions.length - 1) setCurrent(current + 1);
-         else setPhase('result');
-      };
-
-      const q = questions[current];
+      const s = scenarios[scenario];
       return (
-         <div className="flex flex-col h-full bg-gradient-to-br from-yellow-900 via-amber-900 to-orange-900 text-white p-8">
-            <div className="bg-black/30 rounded-2xl p-6 mb-6 text-center">
-               <p className="text-sm opacity-70 mb-2">Question {current + 1}/{questions.length}</p>
-               <p className="text-xl font-bold">{q.q}</p>
+         <div className="flex flex-col h-full bg-gradient-to-br from-yellow-900 via-amber-900 to-orange-900 text-white p-4">
+            <div className="flex justify-between items-center mb-3">
+               <span className="text-sm opacity-70">Scenario {scenario + 1}/{scenarios.length}</span>
+               <div className="flex items-center gap-2">
+                  <span className="text-sm">Score: {score}/{scenario + (answered ? 1 : 0)}</span>
+                  <button onClick={() => { setInfoTopic(infoTopic === s.concept ? null : s.concept); }} className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center text-sm">ℹ️</button>
+               </div>
             </div>
-            <div className="flex flex-col gap-3 flex-1">
-               {q.options.map((opt, i) => (
-                  <button key={i} onClick={() => handleSelect(opt.score)}
-                     className="p-4 bg-black/30 rounded-xl hover:bg-yellow-500/30 transition-all text-left font-medium">
-                     {opt.text}
-                  </button>
-               ))}
-            </div>
-         </div>
-      );
-   };
-
-   // 48. VENTURE CAPITAL - VC Term Sheet Game
-   const VentureCapitalRenderer = () => {
-      const [phase, setPhase] = useState<'intro' | 'play' | 'result'>('intro');
-      const [showInfo, setShowInfo] = useState(false);
-      const [score, setScore] = useState(0);
-      const [current, setCurrent] = useState(0);
-
-      const terms = [
-         { term: 'Pre-Money Valuation', correct: 'Company value BEFORE investment', options: [
-            'Company value BEFORE investment',
-            'Company value AFTER investment',
-            'Total investment amount'
-         ]},
-         { term: 'Liquidation Preference', correct: 'VCs get paid first in exit', options: [
-            'How profits are shared annually',
-            'VCs get paid first in exit',
-            'Order of founder payouts'
-         ]},
-         { term: 'Anti-Dilution', correct: 'Protection against down rounds', options: [
-            'Prevents hiring more employees',
-            'Protection against down rounds',
-            'Limits company growth'
-         ]}
-      ];
-
-      if (phase === 'intro') return (
-         <div className="flex flex-col items-center justify-center h-full bg-gradient-to-br from-slate-900 via-gray-900 to-zinc-900 text-white p-8 text-center">
-            <button onClick={() => setShowInfo(!showInfo)} className="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/20 flex items-center justify-center text-xl">ℹ️</button>
-            {showInfo && (
-               <div className="absolute top-16 right-4 bg-black/90 p-4 rounded-xl max-w-xs text-left text-sm">
-                  <p className="font-bold mb-2">Venture Capital</p>
-                  <p>Professional investors managing pooled funds. Invest $1M-$100M+ for high-growth potential. Expect 10x+ returns.</p>
+            {infoTopic && (
+               <div className="bg-black/90 p-3 rounded-xl mb-3 text-sm">
+                  <p className="font-bold mb-1">{conceptLabels[infoTopic]}</p>
+                  <p className="opacity-90">{infoTopics[infoTopic]}</p>
                </div>
             )}
-            <p className="text-6xl mb-4">🏛️</p>
-            <h2 className="text-3xl font-bold mb-4">VC Term Sheet Game</h2>
-            <p className="text-lg opacity-80 max-w-md mb-8">Learn key venture capital terms every founder should know.</p>
-            <button onClick={() => setPhase('play')} className="px-8 py-4 bg-slate-600 rounded-2xl font-bold text-xl hover:bg-slate-500 transition-all">START LEARNING →</button>
-         </div>
-      );
-
-      if (phase === 'result') return (
-         <div className="flex flex-col items-center justify-center h-full bg-gradient-to-br from-slate-900 via-gray-900 to-zinc-900 text-white p-8 text-center">
-            <p className="text-6xl mb-4">{score >= 25 ? '🏆' : score >= 15 ? '⭐' : '📚'}</p>
-            <h2 className="text-3xl font-bold mb-4">VC Knowledge</h2>
-            <p className="text-5xl font-bold text-slate-400 mb-4">{score}/{terms.length * 10}</p>
-            <button onClick={() => { setPhase('intro'); setScore(0); setCurrent(0); }} className="px-6 py-3 bg-slate-600 rounded-xl font-bold">TRY AGAIN</button>
-         </div>
-      );
-
-      const handleSelect = (answer: string) => {
-         const isCorrect = answer === terms[current].correct;
-         setScore(score + (isCorrect ? 10 : 3));
-         if (current < terms.length - 1) setCurrent(current + 1);
-         else setPhase('result');
-      };
-
-      const t = terms[current];
-      return (
-         <div className="flex flex-col h-full bg-gradient-to-br from-slate-900 via-gray-900 to-zinc-900 text-white p-8">
-            <div className="bg-black/30 rounded-2xl p-6 mb-6 text-center">
-               <p className="text-sm opacity-70 mb-2">Term {current + 1}/{terms.length}</p>
-               <p className="text-2xl font-bold">"{t.term}"</p>
-               <p className="text-sm opacity-70 mt-2">What does this mean?</p>
+            <div className="bg-black/30 rounded-xl p-3 mb-3">
+               <h3 className="font-bold text-yellow-400 mb-2">{s.title}</h3>
+               <p className="text-sm opacity-90 mb-2">{s.context}</p>
+               <p className="font-medium">{s.question}</p>
             </div>
-            <div className="flex flex-col gap-3 flex-1">
-               {t.options.map((opt, i) => (
-                  <button key={i} onClick={() => handleSelect(opt)}
-                     className="p-4 bg-black/30 rounded-xl hover:bg-slate-500/30 transition-all text-left font-medium">
+            <div className="flex flex-col gap-2 flex-1 overflow-y-auto">
+               {s.opts.map((opt, i) => (
+                  <button key={i} onClick={() => handleAnswer(i)} disabled={answered}
+                     className={`p-3 rounded-xl text-left text-sm transition-all ${
+                        answered
+                           ? i === s.correct ? 'bg-green-600/50 border-2 border-green-400' : i === selected ? 'bg-red-600/50 border-2 border-red-400' : 'bg-black/20 opacity-50'
+                           : 'bg-black/30 hover:bg-yellow-500/30'
+                     }`}>
                      {opt}
                   </button>
                ))}
             </div>
+            {answered && (
+               <div className="bg-black/50 rounded-xl p-3 mt-3">
+                  {selected !== s.correct && <p className="text-red-400 text-sm mb-2">{s.wrongExplanations[selected!]}</p>}
+                  <p className="text-sm mb-2">{s.why}</p>
+                  <p className="text-xs text-yellow-400 italic">{s.realWorld}</p>
+                  <button onClick={nextScenario} className="w-full mt-3 py-2 bg-yellow-500 rounded-xl font-bold text-black">
+                     {scenario < scenarios.length - 1 ? 'NEXT SCENARIO →' : 'SEE RESULTS'}
+                  </button>
+               </div>
+            )}
          </div>
       );
    };
 
-   // 49. CROWDFUNDING - Campaign Builder
+   // 48. VENTURE CAPITAL - VC Term Sheet Lab
+   const VentureCapitalRenderer = () => {
+      const [phase, setPhase] = useState<'intro' | 'play' | 'result'>('intro');
+      const [scenario, setScenario] = useState(0);
+      const [score, setScore] = useState(0);
+      const [selected, setSelected] = useState<number | null>(null);
+      const [answered, setAnswered] = useState(false);
+      const [gameLog, setGameLog] = useState<string[]>([]);
+      const [showInfo, setShowInfo] = useState(false);
+      const [infoTopic, setInfoTopic] = useState<string | null>(null);
+      const [conceptGaps, setConceptGaps] = useState<string[]>([]);
+
+      const scenarios = [
+         {
+            title: "The Liquidation Preference Trap",
+            context: "A VC offers $5M at $20M pre-money valuation (20% ownership) with 2x participating liquidation preference. Your company later sells for $30M. The VC's 2x preference means they get $10M first, then 20% of the remaining $20M ($4M).",
+            question: "What does the founder actually receive from this $30M exit?",
+            opts: [
+               "A) $24M - founders keep 80% of the exit",
+               "B) $16M - the rest after VC takes their $14M",
+               "C) $20M - we subtract VC's 20% ownership",
+               "D) $10M - VC takes $20M with participating preferred"
+            ],
+            correct: 1,
+            wrongExplanations: [
+               "This ignores the liquidation preference entirely. With 2x participating preferred, VCs get paid twice - preference PLUS participation.",
+               "",
+               "You're only accounting for straight ownership, not the liquidation preference stack. This is a common and costly mistake.",
+               "Close but wrong math. VCs get $10M (2x preference) + $4M (20% of remaining $20M) = $14M, not $20M."
+            ],
+            realWorld: "This destroyed value for Fab.com founders. After raising $336M, they sold for $15M. With multiple rounds of preferences stacking, founders received almost nothing while VCs recovered some capital. Good Future (AI education) raised at high valuations with aggressive preferences - the founders realized too late that a moderate exit would leave them with nothing.",
+            concept: "liquidation_preference",
+            why: "2x participating preferred is one of the most aggressive terms. The VC gets 2× their investment ($10M) BEFORE anyone else, then ALSO participates in the remaining proceeds pro-rata (20% of $20M = $4M). Total VC take: $14M. Founders get: $16M. Always model your exit scenarios with the actual preference stack."
+         },
+         {
+            title: "The Anti-Dilution Ratchet",
+            context: "Your Series A investor invested $3M at $12M pre-money (20% ownership, $15/share). Business struggled and you need a Series B at $8M pre-money (down round). Your Series A investor has 'full ratchet' anti-dilution protection.",
+            question: "What happens to the Series A investor's ownership?",
+            opts: [
+               "A) Stays at 20% - they already own their shares",
+               "B) Increases to ~37.5% - their shares reprice to the new lower price",
+               "C) Decreases due to new dilution - everyone gets diluted equally",
+               "D) Depends on negotiation - anti-dilution is just a starting point"
+            ],
+            correct: 1,
+            wrongExplanations: [
+               "Full ratchet anti-dilution specifically exists to protect investors from down rounds. Their shares don't stay the same.",
+               "",
+               "Anti-dilution provisions specifically protect earlier investors from proportional dilution. Common shareholders bear the burden.",
+               "Full ratchet is a contractual right, not a negotiation point. The investor can enforce it or waive it, but founders can't just negotiate it away."
+            ],
+            realWorld: "Square faced a brutal down round in 2011. Their early investors with full ratchet protection had their ownership recalculated, massively diluting founders and employees. This is why experienced founders negotiate for 'weighted average' anti-dilution instead. Zenefits' down round from $4.5B to $2B triggered anti-dilution clauses that crushed employee option pools.",
+            concept: "anti_dilution",
+            why: "Full ratchet means the investor's shares reprice to the new round's price. Originally $15/share for $3M = 200K shares (20%). New price $8/share with full ratchet: $3M ÷ $8 = 375K shares. If fully-diluted shares were 1M, they now own 375K/1M = 37.5%. The founders and employees absorb all the dilution. ALWAYS negotiate for weighted average anti-dilution instead."
+         },
+         {
+            title: "The Board Seat Dynamics",
+            context: "You're raising a $4M Series A. The lead VC wants 2 board seats (out of 5 total). The cap table after the round: Founders 60%, Series A 25%, Angel/ESOP 15%. The VC argues that since they're the largest single outside shareholder and providing governance, 2 seats is standard.",
+            question: "What's the strategic issue with this board composition?",
+            opts: [
+               "A) No issue - 2/5 is still minority control for investors",
+               "B) VCs can block decisions requiring 60% supermajority approval",
+               "C) With one independent, VCs effectively control the board 3-2",
+               "D) Founders should always maintain 3 seats regardless of ownership"
+            ],
+            correct: 2,
+            wrongExplanations: [
+               "Raw seat count isn't the issue. The problem is how the independent seat typically votes.",
+               "Board decisions usually don't require supermajority - this confuses board voting with stockholder voting rights.",
+               "",
+               "This is naive. Board composition should reflect the cap table and governance needs, not arbitrary founder control."
+            ],
+            realWorld: "Travis Kalanick lost his Uber CEO role partly because the board composition allowed investors to force him out. Jerry Kaplan at Atari saw VCs use board control to replace him. On the flip side, Mark Zuckerberg maintained board control through dual-class shares even as ownership diluted. WeWork's Adam Neumann had board control that let him make questionable decisions - board composition cuts both ways.",
+            concept: "board_control",
+            why: "The 'independent' director is typically nominated by the VC and often sides with them. 2 VCs + 1 VC-aligned independent = 3 votes. 2 founders = 2 votes. VCs control 3-2. This isn't necessarily bad if you have good VCs, but understand the reality. Key decisions (CEO replacement, M&A) often go through the board. Control matters."
+         },
+         {
+            title: "The Protective Provisions Maze",
+            context: "Your Series A term sheet includes protective provisions requiring investor consent for: issuing new shares, taking debt over $500K, changing company charter, approving annual budget, and selling the company. You own 70% of the company post-funding.",
+            question: "In practice, how much control do founders actually have?",
+            opts: [
+               "A) Full control - 70% ownership means 70% voting power on all matters",
+               "B) Day-to-day control only - major decisions require investor consent",
+               "C) No effective control - investors can block everything important",
+               "D) Depends on the relationship - good VCs never use these provisions"
+            ],
+            correct: 1,
+            wrongExplanations: [
+               "Ownership percentage is different from decision rights. Protective provisions carve out specific decisions requiring investor approval regardless of ownership.",
+               "",
+               "This is too extreme. Founders run daily operations. Protective provisions are for major structural decisions, not everything.",
+               "This is dangerously naive. VCs absolutely use protective provisions - that's why they negotiate for them. Good relationships help, but contracts matter."
+            ],
+            realWorld: "Color Labs raised $41M and wanted to pivot, but protective provisions gave investors effective veto over strategy changes requiring new fundraising. Clinkle's founder wanted to spend on marketing but needed investor approval for budget changes. The protective provisions that seem boilerplate during fundraising become very real when founder-investor interests diverge.",
+            concept: "protective_provisions",
+            why: "Protective provisions create a 'consent regime' for major decisions. Even with 70% ownership, you can't raise more money, take significant debt, sell the company, or change strategic direction without investor approval. This is the difference between ownership and control. You run the company day-to-day, but investors have veto rights on anything that changes the risk profile of their investment."
+         },
+         {
+            title: "The Pay-to-Play Calculation",
+            context: "You're raising a $6M Series B at $30M pre-money. Your Series A investor (who invested $2M for 15%) has pay-to-play provisions requiring them to invest their pro-rata ($1.5M) or convert to common stock. They're struggling to raise their new fund and can only invest $500K.",
+            question: "What's the likely outcome for the Series A investor?",
+            opts: [
+               "A) They maintain full preferred rights with $500K investment",
+               "B) Their preferred converts to common, losing liquidation preference",
+               "C) They're forced out of the cap table entirely",
+               "D) They negotiate a waiver since they're investing something"
+            ],
+            correct: 1,
+            wrongExplanations: [
+               "Pay-to-play specifically prevents this. Partial participation doesn't protect preferred status.",
+               "",
+               "They don't lose their shares - they just convert from preferred to common stock.",
+               "Waivers are possible but the question asks about the 'likely' outcome. The contractual default is conversion."
+            ],
+            realWorld: "During the 2022 downturn, many funds couldn't meet pay-to-play requirements. Battery Ventures had to let preferred convert in some portfolio companies. This mechanism was designed after the 2001 crash when investors would abandon companies - pay-to-play forces commitment or removes preferential rights. It's actually founder-friendly because it prevents zombie investors who block future rounds while adding no value.",
+            concept: "pay_to_play",
+            why: "Pay-to-play protects companies from investors who want to maintain preferred status without continued financial commitment. If they don't play (invest pro-rata), they don't pay (keep preferred rights). Conversion to common means: no liquidation preference, no anti-dilution, no protective provisions. It aligns incentives - investors must put more money in to maintain their special rights."
+         }
+      ];
+
+      const conceptLabels: Record<string, string> = {
+         liquidation_preference: "Liquidation Preferences",
+         anti_dilution: "Anti-Dilution Protection",
+         board_control: "Board Control Dynamics",
+         protective_provisions: "Protective Provisions",
+         pay_to_play: "Pay-to-Play Provisions"
+      };
+
+      const infoTopics: Record<string, string> = {
+         liquidation_preference: "Liquidation preference determines who gets paid first in an exit. '1x non-participating' is founder-friendly (VCs choose preference OR participation). '2x participating' is aggressive (VCs get 2x preference AND pro-rata share of remainder).",
+         anti_dilution: "Anti-dilution protects investors when you raise at a lower valuation. 'Weighted average' adjusts proportionally. 'Full ratchet' reprices all shares to the new price - very founder-unfriendly.",
+         board_control: "Board seats determine who controls major company decisions. The 'independent' director often sides with whoever nominated them. Voting control ≠ ownership percentage.",
+         protective_provisions: "Protective provisions give investors veto rights over specific decisions regardless of ownership. Standard provisions cover: new equity, significant debt, charter changes, M&A, and budget.",
+         pay_to_play: "Pay-to-play requires existing investors to invest pro-rata in new rounds to maintain preferred status. If they don't invest, preferred shares convert to common, removing special rights."
+      };
+
+      const handleAnswer = (optIndex: number) => {
+         if (answered) return;
+         setSelected(optIndex);
+         setAnswered(true);
+         const isCorrect = optIndex === scenarios[scenario].correct;
+         const newScore = isCorrect ? score + 1 : score;
+         setScore(newScore);
+         if (!isCorrect) {
+            setConceptGaps([...conceptGaps, scenarios[scenario].concept]);
+         }
+         setGameLog([...gameLog, `Scenario ${scenario + 1}: ${isCorrect ? 'Correct' : 'Incorrect'} - ${scenarios[scenario].title}`]);
+      };
+
+      const nextScenario = () => {
+         if (scenario < scenarios.length - 1) {
+            setScenario(scenario + 1);
+            setSelected(null);
+            setAnswered(false);
+         } else {
+            setPhase('result');
+         }
+      };
+
+      const getGrade = () => {
+         const pct = (score / scenarios.length) * 100;
+         if (pct >= 80) return { grade: 'A', label: 'Term Sheet Expert', color: 'text-green-400' };
+         if (pct >= 60) return { grade: 'B', label: 'Solid Understanding', color: 'text-blue-400' };
+         if (pct >= 40) return { grade: 'C', label: 'Needs More Study', color: 'text-yellow-400' };
+         return { grade: 'D', label: 'Review Fundamentals', color: 'text-red-400' };
+      };
+
+      if (phase === 'intro') return (
+         <div className="flex flex-col items-center justify-center h-full bg-gradient-to-br from-slate-900 via-gray-900 to-zinc-900 text-white p-8 text-center">
+            <button onClick={() => setShowInfo(!showInfo)} className="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/20 flex items-center justify-center text-xl">ℹ️</button>
+            {showInfo && (
+               <div className="absolute top-16 right-4 bg-black/90 p-4 rounded-xl max-w-xs text-left text-sm z-10">
+                  <p className="font-bold mb-2">VC Term Sheet Lab</p>
+                  <p className="mb-2">Navigate the terms that determine founder outcomes:</p>
+                  <ul className="text-xs space-y-1 opacity-90">
+                     <li>• Liquidation preference mechanics</li>
+                     <li>• Anti-dilution provisions</li>
+                     <li>• Board control dynamics</li>
+                     <li>• Protective provisions impact</li>
+                     <li>• Real cases: Fab.com, Square, Uber</li>
+                  </ul>
+               </div>
+            )}
+            <p className="text-6xl mb-4">🏛️</p>
+            <h2 className="text-3xl font-bold mb-4">VC Term Sheet Lab</h2>
+            <p className="text-lg opacity-80 max-w-md mb-8">Term sheets determine more than valuation. Learn the provisions that actually decide what founders get in an exit.</p>
+            <button onClick={() => setPhase('play')} className="px-8 py-4 bg-slate-600 rounded-2xl font-bold text-xl hover:bg-slate-500 transition-all">START LAB →</button>
+         </div>
+      );
+
+      if (phase === 'result') {
+         const { grade, label, color } = getGrade();
+         return (
+            <div className="flex flex-col h-full bg-gradient-to-br from-slate-900 via-gray-900 to-zinc-900 text-white p-8">
+               <div className="text-center mb-6">
+                  <p className="text-6xl mb-4">{grade === 'A' ? '🏛️' : grade === 'B' ? '⭐' : '📚'}</p>
+                  <h2 className="text-2xl font-bold mb-2">Term Sheet Lab Complete</h2>
+                  <p className={`text-5xl font-bold ${color}`}>{grade}</p>
+                  <p className="text-lg opacity-80">{label}</p>
+                  <p className="text-xl mt-2">{score}/{scenarios.length} Correct</p>
+               </div>
+               {conceptGaps.length > 0 && (
+                  <div className="bg-black/30 rounded-xl p-4 mb-4">
+                     <p className="font-bold mb-2">Review these concepts:</p>
+                     <div className="flex flex-wrap gap-2">
+                        {[...new Set(conceptGaps)].map((gap, i) => (
+                           <span key={i} className="px-3 py-1 bg-slate-500/30 rounded-full text-sm">{conceptLabels[gap]}</span>
+                        ))}
+                     </div>
+                  </div>
+               )}
+               <div className="bg-black/30 rounded-xl p-4 mb-4 flex-1 overflow-y-auto">
+                  <p className="font-bold mb-2">Session Log:</p>
+                  {gameLog.map((log, i) => (
+                     <p key={i} className="text-sm opacity-80">{log}</p>
+                  ))}
+               </div>
+               <button onClick={() => { setPhase('intro'); setScenario(0); setScore(0); setSelected(null); setAnswered(false); setGameLog([]); setConceptGaps([]); }} className="px-6 py-3 bg-slate-600 rounded-xl font-bold">TRY AGAIN</button>
+            </div>
+         );
+      }
+
+      const s = scenarios[scenario];
+      return (
+         <div className="flex flex-col h-full bg-gradient-to-br from-slate-900 via-gray-900 to-zinc-900 text-white p-4">
+            <div className="flex justify-between items-center mb-3">
+               <span className="text-sm opacity-70">Scenario {scenario + 1}/{scenarios.length}</span>
+               <div className="flex items-center gap-2">
+                  <span className="text-sm">Score: {score}/{scenario + (answered ? 1 : 0)}</span>
+                  <button onClick={() => { setInfoTopic(infoTopic === s.concept ? null : s.concept); }} className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center text-sm">ℹ️</button>
+               </div>
+            </div>
+            {infoTopic && (
+               <div className="bg-black/90 p-3 rounded-xl mb-3 text-sm">
+                  <p className="font-bold mb-1">{conceptLabels[infoTopic]}</p>
+                  <p className="opacity-90">{infoTopics[infoTopic]}</p>
+               </div>
+            )}
+            <div className="bg-black/30 rounded-xl p-3 mb-3">
+               <h3 className="font-bold text-slate-400 mb-2">{s.title}</h3>
+               <p className="text-sm opacity-90 mb-2">{s.context}</p>
+               <p className="font-medium">{s.question}</p>
+            </div>
+            <div className="flex flex-col gap-2 flex-1 overflow-y-auto">
+               {s.opts.map((opt, i) => (
+                  <button key={i} onClick={() => handleAnswer(i)} disabled={answered}
+                     className={`p-3 rounded-xl text-left text-sm transition-all ${
+                        answered
+                           ? i === s.correct ? 'bg-green-600/50 border-2 border-green-400' : i === selected ? 'bg-red-600/50 border-2 border-red-400' : 'bg-black/20 opacity-50'
+                           : 'bg-black/30 hover:bg-slate-500/30'
+                     }`}>
+                     {opt}
+                  </button>
+               ))}
+            </div>
+            {answered && (
+               <div className="bg-black/50 rounded-xl p-3 mt-3">
+                  {selected !== s.correct && <p className="text-red-400 text-sm mb-2">{s.wrongExplanations[selected!]}</p>}
+                  <p className="text-sm mb-2">{s.why}</p>
+                  <p className="text-xs text-slate-400 italic">{s.realWorld}</p>
+                  <button onClick={nextScenario} className="w-full mt-3 py-2 bg-slate-600 rounded-xl font-bold">
+                     {scenario < scenarios.length - 1 ? 'NEXT SCENARIO →' : 'SEE RESULTS'}
+                  </button>
+               </div>
+            )}
+         </div>
+      );
+   };
+
+   // 49. CROWDFUNDING - Crowdfunding Strategy Lab
    const CrowdfundingRenderer = () => {
       const [phase, setPhase] = useState<'intro' | 'play' | 'result'>('intro');
+      const [scenario, setScenario] = useState(0);
+      const [score, setScore] = useState(0);
+      const [selected, setSelected] = useState<number | null>(null);
+      const [answered, setAnswered] = useState(false);
+      const [gameLog, setGameLog] = useState<string[]>([]);
       const [showInfo, setShowInfo] = useState(false);
-      const [campaign, setCampaign] = useState({ title: '', goal: '', reward1: '', reward2: '' });
-      const [step, setStep] = useState(0);
-      const [inputValue, setInputValue] = useState('');
+      const [infoTopic, setInfoTopic] = useState<string | null>(null);
+      const [conceptGaps, setConceptGaps] = useState<string[]>([]);
 
-      const steps = [
-         { key: 'title', icon: '🎯', label: 'Campaign Title', prompt: 'Create a compelling campaign name' },
-         { key: 'goal', icon: '💰', label: 'Funding Goal', prompt: 'How much do you need to raise?' },
-         { key: 'reward1', icon: '🎁', label: 'Early Bird Reward', prompt: 'What do early backers get?' },
-         { key: 'reward2', icon: '⭐', label: 'Premium Reward', prompt: 'What\'s the top-tier reward?' }
+      const scenarios = [
+         {
+            title: "The Funding Goal Trap",
+            context: "You're launching a Kickstarter for a smart water bottle. Production costs: $50K minimum order (1000 units), tooling $15K, Kickstarter fees 8%, payment processing 3%, shipping $5K. You want to price at $79 to be competitive. Your manufacturing contact says the sweet spot for unit economics is 2000+ units.",
+            question: "What funding goal should you set?",
+            opts: [
+               "A) $79,000 - covers 1000 units at retail price",
+               "B) $65,000 - minimum production + tooling costs",
+               "C) $95,000 - buffer for fees and unexpected costs",
+               "D) $158,000 - optimal 2000 unit batch with all fees"
+            ],
+            correct: 2,
+            wrongExplanations: [
+               "$79K sounds right but ignores platform fees (11%), tooling, and shipping. You'd actually lose money hitting this goal.",
+               "This covers raw costs but doesn't account for Kickstarter's 8% + 3% processing fees. You'd be short $7K+ before shipping.",
+               "",
+               "This is the ideal scenario but too ambitious for a first campaign. Higher goals have lower success rates - campaigns that don't fund get nothing."
+            ],
+            realWorld: "Pebble's original $100K goal was carefully calculated - they knew $100K would prove demand while covering minimum viable production. They raised $10M. The Coolest Cooler set a $50K goal but underestimated production complexity - they raised $13M but couldn't fulfill all orders due to cost overruns. Many campaigns fail by setting goals too low and running out of money after 'success.'",
+            concept: "funding_goal",
+            why: "Your goal must cover: production ($50K) + tooling ($15K) + shipping ($5K) + platform fees (11% of goal). So: Goal = ($70K) / (1 - 0.11) = ~$78.6K. But add 20% buffer for unexpected costs: ~$95K. Setting a goal that's achievable but fully funded prevents the Coolest Cooler trap - raising money you can't actually use to deliver."
+         },
+         {
+            title: "The Reward Tier Psychology",
+            context: "Your smart backpack campaign has three tiers: $49 (early bird, 30% off), $69 (regular), $99 (backpack + accessories bundle). After 48 hours, you've sold 200 early birds, 50 regular, and 10 bundles. The early bird tier is almost sold out.",
+            question: "What's the optimal next move?",
+            opts: [
+               "A) Add more early bird slots - it's clearly what people want",
+               "B) Let early bird sell out, add a 'late bird' at $59",
+               "C) Remove regular tier - it's not selling well anyway",
+               "D) Discount the bundle to $79 to move more units"
+            ],
+            correct: 1,
+            wrongExplanations: [
+               "Infinite early birds destroy urgency and devalue your product. Early backers feel cheated. Your per-unit margin also suffers.",
+               "",
+               "The regular tier serves as a price anchor making the early bird feel valuable. Removing it confuses the value proposition.",
+               "Discounting your premium tier signals desperation and reduces perceived value. It also cannibalizes your regular tier sales."
+            ],
+            realWorld: "Peak Design mastered tier psychology with their Everyday Backpack - limited early bird, then 'late bird,' creating FOMO that drove $6.5M in pledges. The Fidget Cube campaign used scarcity on early bird tiers to create urgency, raising $6.4M. Campaigns that flood the market with endless early birds often stall after initial momentum.",
+            concept: "reward_psychology",
+            why: "Scarcity creates urgency. When early bird sells out, backers who missed it will pay more rather than wait or miss out entirely. The 'late bird' tier captures this demand at $59 instead of $69, still feeling like a deal. This staged reveal keeps momentum throughout the campaign and maximizes total revenue while maintaining perceived value."
+         },
+         {
+            title: "The Stretch Goal Strategy",
+            context: "Your card game campaign funded at $15K in 24 hours. You've hit $40K by day 5 with 25 days left. Your stretch goals are: $50K (premium card stock), $75K (metal coins), $100K (custom card sleeves), $150K (expansion pack). The next 20 days historically see 40% of total pledges.",
+            question: "What's wrong with this stretch goal structure?",
+            opts: [
+               "A) Nothing - these are reasonable incremental improvements",
+               "B) Gaps too large - momentum dies between goals",
+               "C) Metal coins at $75K will eat into margins significantly",
+               "D) Should save expansion pack for a separate campaign"
+            ],
+            correct: 1,
+            wrongExplanations: [
+               "The goal amounts might be reasonable, but the structure creates dead zones where nothing happens, killing momentum.",
+               "",
+               "This might be true but isn't the structural problem. Margin management is important but secondary to momentum.",
+               "This is actually good advice for a different reason, but isn't the core structural problem here."
+            ],
+            realWorld: "Exploding Kittens raised $8.7M with frequent, exciting stretch goals every $500K - constant momentum. Compare to campaigns with $50K gaps that see pledges flatline between goals. Cards Against Humanity's expansions used rapid-fire stretch goals to maintain engagement. The psychology of 'almost there' is powerful - wide gaps kill it.",
+            concept: "stretch_goals",
+            why: "At $40K with 40% left to come, you'll likely hit ~$67K. Your next goal ($50K) is achievable, but then there's a $25K gap to $75K. You need goals at $50K, $60K, $70K, $80K to maintain momentum. Each unlock creates a dopamine hit and social sharing. Dead zones between goals let backers forget about your campaign. Frequent small wins beat rare big wins."
+         },
+         {
+            title: "The Pre-Launch List Paradox",
+            context: "You've spent 3 months building a pre-launch email list of 5,000 subscribers for your portable monitor campaign. Industry average conversion is 2-3%. Your funding goal is $50,000. You're debating whether to launch now or spend another month growing the list.",
+            question: "What's the strategic decision?",
+            opts: [
+               "A) Launch now - 5,000 subscribers at 3% = $50K goal met on day 1",
+               "B) Wait - need 10,000+ subscribers to guarantee funding",
+               "C) Launch now but lower the goal to $25K for safety",
+               "D) Launch now - list size matters less than list engagement"
+            ],
+            correct: 3,
+            wrongExplanations: [
+               "Math is wrong. 5,000 × 3% = 150 backers. Even at $200 average pledge, that's $30K - below your goal. You're conflating subscribers with dollars.",
+               "More subscribers help but an extra month costs momentum and may reduce engagement. Bigger list ≠ proportionally more conversions.",
+               "Lowering the goal might help you fund but could signal lack of confidence and create production problems if you actually need $50K."
+            ],
+            realWorld: "Tile Bluetooth trackers had a smaller list but incredibly engaged community from their 'founding member' program - they raised $2.6M. Meanwhile, campaigns with 50K cold email subscribers often fail because those subscribers were bought, not built. MVMT watches succeeded with a small but highly engaged Instagram community that shared organically.",
+            concept: "list_engagement",
+            why: "List size is vanity; engagement is sanity. 1,000 highly engaged subscribers who open every email, share with friends, and are ready to buy will outperform 10,000 cold subscribers who signed up for a giveaway. Before launch, measure: open rates (40%+ is excellent), reply rates, and whether subscribers share your content. An engaged list creates the day-1 spike that triggers algorithmic promotion."
+         },
+         {
+            title: "The Fulfillment Nightmare",
+            context: "Your minimalist wallet campaign raised $500K (10x goal). You promised delivery in 4 months. It's now month 3: factory is delayed 6 weeks, shipping costs doubled due to container shortage, and 15% of backers want changes to their orders (color, shipping address). You're getting angry emails.",
+            question: "What's the highest-priority action?",
+            opts: [
+               "A) Focus on factory - nothing else matters until product ships",
+               "B) Send detailed update explaining all delays with new timeline",
+               "C) Process the 15% order changes before they become cancellations",
+               "D) Find alternative shipping to absorb cost and maintain timeline"
+            ],
+            correct: 1,
+            wrongExplanations: [
+               "Factory focus is important but silent founders create PR disasters. Backers can handle delays; they can't handle uncertainty.",
+               "",
+               "Order changes matter but 15% changing is normal. Don't let the vocal minority distract from the 85% patiently waiting.",
+               "Absorbing costs on a $500K campaign could mean $50K+ losses. This might bankrupt the project trying to save a few weeks."
+            ],
+            realWorld: "The Coolest Cooler's biggest failure wasn't delays - it was poor communication. They raised $13M and went nearly silent, creating a PR nightmare. Contrast with Peak Design, who sends weekly video updates during fulfillment, building loyalty for future campaigns. Oculus faced hardware delays but Palmer Luckey's transparent forum posts maintained community trust - they sold to Facebook for $2B.",
+            concept: "backer_communication",
+            why: "Crowdfunding is a relationship, not a transaction. Backers invested in you, not just the product. Transparent communication - even about bad news - builds trust. The formula: acknowledge the problem, explain why it happened, provide a new realistic timeline, and show you're actively solving it. Most backers are reasonable; they become unreasonable when kept in the dark."
+         }
       ];
+
+      const conceptLabels: Record<string, string> = {
+         funding_goal: "Funding Goal Math",
+         reward_psychology: "Reward Tier Psychology",
+         stretch_goals: "Stretch Goal Strategy",
+         list_engagement: "List Quality vs. Quantity",
+         backer_communication: "Backer Communication"
+      };
+
+      const infoTopics: Record<string, string> = {
+         funding_goal: "Your funding goal must cover all costs including platform fees (8-10%), payment processing (3%), production, tooling, shipping, and a 20% buffer. Setting it too low means running out of money after 'success.'",
+         reward_psychology: "Reward tiers use scarcity (limited early bird), anchoring (higher price makes deals feel better), and bundling (premium tiers with accessories). Urgency drives action.",
+         stretch_goals: "Stretch goals maintain momentum throughout a campaign. Small, frequent unlocks beat large gaps. Each unlock triggers dopamine, shares, and renewed backing activity.",
+         list_engagement: "An engaged email list (40%+ open rates, active replies) outperforms a large cold list 10:1. Quality subscribers share, comment, and back on day 1 - triggering algorithmic promotion.",
+         backer_communication: "Backers tolerate delays but not silence. Weekly updates, even with bad news, build trust and loyalty. Transparent communication turns crowdfunding buyers into lifelong customers."
+      };
+
+      const handleAnswer = (optIndex: number) => {
+         if (answered) return;
+         setSelected(optIndex);
+         setAnswered(true);
+         const isCorrect = optIndex === scenarios[scenario].correct;
+         const newScore = isCorrect ? score + 1 : score;
+         setScore(newScore);
+         if (!isCorrect) {
+            setConceptGaps([...conceptGaps, scenarios[scenario].concept]);
+         }
+         setGameLog([...gameLog, `Scenario ${scenario + 1}: ${isCorrect ? 'Correct' : 'Incorrect'} - ${scenarios[scenario].title}`]);
+      };
+
+      const nextScenario = () => {
+         if (scenario < scenarios.length - 1) {
+            setScenario(scenario + 1);
+            setSelected(null);
+            setAnswered(false);
+         } else {
+            setPhase('result');
+         }
+      };
+
+      const getGrade = () => {
+         const pct = (score / scenarios.length) * 100;
+         if (pct >= 80) return { grade: 'A', label: 'Crowdfunding Expert', color: 'text-green-400' };
+         if (pct >= 60) return { grade: 'B', label: 'Campaign Ready', color: 'text-blue-400' };
+         if (pct >= 40) return { grade: 'C', label: 'More Research Needed', color: 'text-yellow-400' };
+         return { grade: 'D', label: 'Study the Basics', color: 'text-red-400' };
+      };
 
       if (phase === 'intro') return (
          <div className="flex flex-col items-center justify-center h-full bg-gradient-to-br from-pink-900 via-rose-900 to-red-900 text-white p-8 text-center">
             <button onClick={() => setShowInfo(!showInfo)} className="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/20 flex items-center justify-center text-xl">ℹ️</button>
             {showInfo && (
-               <div className="absolute top-16 right-4 bg-black/90 p-4 rounded-xl max-w-xs text-left text-sm">
-                  <p className="font-bold mb-2">Crowdfunding</p>
-                  <p>Raise money from many small backers. Platforms: Kickstarter, Indiegogo. Keys: compelling story, clear rewards, marketing.</p>
+               <div className="absolute top-16 right-4 bg-black/90 p-4 rounded-xl max-w-xs text-left text-sm z-10">
+                  <p className="font-bold mb-2">Crowdfunding Strategy Lab</p>
+                  <p className="mb-2">Master the strategies that separate successful campaigns:</p>
+                  <ul className="text-xs space-y-1 opacity-90">
+                     <li>• Funding goal mathematics</li>
+                     <li>• Reward tier psychology</li>
+                     <li>• Stretch goal momentum</li>
+                     <li>• Pre-launch list building</li>
+                     <li>• Real cases: Pebble, Peak Design, Coolest Cooler</li>
+                  </ul>
                </div>
             )}
             <p className="text-6xl mb-4">🚀</p>
-            <h2 className="text-3xl font-bold mb-4">Crowdfunding Campaign</h2>
-            <p className="text-lg opacity-80 max-w-md mb-8">Design a crowdfunding campaign with compelling rewards.</p>
-            <button onClick={() => setPhase('play')} className="px-8 py-4 bg-pink-500 rounded-2xl font-bold text-xl hover:bg-pink-400 transition-all">CREATE CAMPAIGN →</button>
+            <h2 className="text-3xl font-bold mb-4">Crowdfunding Strategy Lab</h2>
+            <p className="text-lg opacity-80 max-w-md mb-8">Learn why some campaigns raise millions while others fail. Master the strategy behind successful crowdfunding.</p>
+            <button onClick={() => setPhase('play')} className="px-8 py-4 bg-pink-500 rounded-2xl font-bold text-xl hover:bg-pink-400 transition-all">START LAB →</button>
          </div>
       );
 
-      if (phase === 'result') return (
-         <div className="flex flex-col h-full bg-gradient-to-br from-pink-900 via-rose-900 to-red-900 text-white p-8">
-            <h2 className="text-2xl font-bold text-center mb-6">🚀 Campaign Preview</h2>
-            <div className="bg-black/30 rounded-xl p-6 flex-1">
-               <h3 className="text-2xl font-bold mb-2">{campaign.title}</h3>
-               <p className="text-pink-400 text-lg mb-4">Goal: {campaign.goal}</p>
-               <div className="border-t border-white/20 pt-4">
-                  <p className="font-bold mb-2">Reward Tiers:</p>
-                  <div className="bg-black/20 rounded-lg p-3 mb-2">
-                     <p className="text-sm opacity-70">🎁 Early Bird</p>
-                     <p className="font-medium">{campaign.reward1}</p>
+      if (phase === 'result') {
+         const { grade, label, color } = getGrade();
+         return (
+            <div className="flex flex-col h-full bg-gradient-to-br from-pink-900 via-rose-900 to-red-900 text-white p-8">
+               <div className="text-center mb-6">
+                  <p className="text-6xl mb-4">{grade === 'A' ? '🚀' : grade === 'B' ? '⭐' : '📚'}</p>
+                  <h2 className="text-2xl font-bold mb-2">Crowdfunding Lab Complete</h2>
+                  <p className={`text-5xl font-bold ${color}`}>{grade}</p>
+                  <p className="text-lg opacity-80">{label}</p>
+                  <p className="text-xl mt-2">{score}/{scenarios.length} Correct</p>
+               </div>
+               {conceptGaps.length > 0 && (
+                  <div className="bg-black/30 rounded-xl p-4 mb-4">
+                     <p className="font-bold mb-2">Review these concepts:</p>
+                     <div className="flex flex-wrap gap-2">
+                        {[...new Set(conceptGaps)].map((gap, i) => (
+                           <span key={i} className="px-3 py-1 bg-pink-500/30 rounded-full text-sm">{conceptLabels[gap]}</span>
+                        ))}
+                     </div>
                   </div>
-                  <div className="bg-black/20 rounded-lg p-3">
-                     <p className="text-sm opacity-70">⭐ Premium</p>
-                     <p className="font-medium">{campaign.reward2}</p>
-                  </div>
+               )}
+               <div className="bg-black/30 rounded-xl p-4 mb-4 flex-1 overflow-y-auto">
+                  <p className="font-bold mb-2">Session Log:</p>
+                  {gameLog.map((log, i) => (
+                     <p key={i} className="text-sm opacity-80">{log}</p>
+                  ))}
+               </div>
+               <button onClick={() => { setPhase('intro'); setScenario(0); setScore(0); setSelected(null); setAnswered(false); setGameLog([]); setConceptGaps([]); }} className="px-6 py-3 bg-pink-500 rounded-xl font-bold">TRY AGAIN</button>
+            </div>
+         );
+      }
+
+      const s = scenarios[scenario];
+      return (
+         <div className="flex flex-col h-full bg-gradient-to-br from-pink-900 via-rose-900 to-red-900 text-white p-4">
+            <div className="flex justify-between items-center mb-3">
+               <span className="text-sm opacity-70">Scenario {scenario + 1}/{scenarios.length}</span>
+               <div className="flex items-center gap-2">
+                  <span className="text-sm">Score: {score}/{scenario + (answered ? 1 : 0)}</span>
+                  <button onClick={() => { setInfoTopic(infoTopic === s.concept ? null : s.concept); }} className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center text-sm">ℹ️</button>
                </div>
             </div>
-            <button onClick={() => { setPhase('intro'); setCampaign({ title: '', goal: '', reward1: '', reward2: '' }); setStep(0); }} className="px-6 py-3 bg-pink-500 rounded-xl font-bold mt-4">CREATE NEW</button>
-         </div>
-      );
-
-      const submitStep = () => {
-         setCampaign({ ...campaign, [steps[step].key]: inputValue });
-         setInputValue('');
-         if (step < 3) setStep(step + 1);
-         else setPhase('result');
-      };
-
-      return (
-         <div className="flex flex-col h-full bg-gradient-to-br from-pink-900 via-rose-900 to-red-900 text-white p-8">
-            <div className="flex gap-2 mb-6">
-               {steps.map((_, i) => <div key={i} className={`flex-1 h-2 rounded-full ${i <= step ? 'bg-pink-400' : 'bg-black/30'}`}></div>)}
+            {infoTopic && (
+               <div className="bg-black/90 p-3 rounded-xl mb-3 text-sm">
+                  <p className="font-bold mb-1">{conceptLabels[infoTopic]}</p>
+                  <p className="opacity-90">{infoTopics[infoTopic]}</p>
+               </div>
+            )}
+            <div className="bg-black/30 rounded-xl p-3 mb-3">
+               <h3 className="font-bold text-pink-400 mb-2">{s.title}</h3>
+               <p className="text-sm opacity-90 mb-2">{s.context}</p>
+               <p className="font-medium">{s.question}</p>
             </div>
-            <div className="bg-black/30 rounded-2xl p-6 mb-4 text-center">
-               <p className="text-4xl mb-2">{steps[step].icon}</p>
-               <p className="text-xl font-bold">{steps[step].label}</p>
-               <p className="text-sm opacity-75 mt-2">{steps[step].prompt}</p>
+            <div className="flex flex-col gap-2 flex-1 overflow-y-auto">
+               {s.opts.map((opt, i) => (
+                  <button key={i} onClick={() => handleAnswer(i)} disabled={answered}
+                     className={`p-3 rounded-xl text-left text-sm transition-all ${
+                        answered
+                           ? i === s.correct ? 'bg-green-600/50 border-2 border-green-400' : i === selected ? 'bg-red-600/50 border-2 border-red-400' : 'bg-black/20 opacity-50'
+                           : 'bg-black/30 hover:bg-pink-500/30'
+                     }`}>
+                     {opt}
+                  </button>
+               ))}
             </div>
-            <input value={inputValue} onChange={(e) => setInputValue(e.target.value)}
-               placeholder="Your answer..." className="p-4 rounded-xl bg-black/30 border border-pink-500/30 text-white mb-4" />
-            <button onClick={submitStep} className="px-6 py-3 bg-pink-500 rounded-xl font-bold">
-               {step < 3 ? 'NEXT →' : 'PREVIEW CAMPAIGN'}
-            </button>
+            {answered && (
+               <div className="bg-black/50 rounded-xl p-3 mt-3">
+                  {selected !== s.correct && <p className="text-red-400 text-sm mb-2">{s.wrongExplanations[selected!]}</p>}
+                  <p className="text-sm mb-2">{s.why}</p>
+                  <p className="text-xs text-pink-400 italic">{s.realWorld}</p>
+                  <button onClick={nextScenario} className="w-full mt-3 py-2 bg-pink-500 rounded-xl font-bold">
+                     {scenario < scenarios.length - 1 ? 'NEXT SCENARIO →' : 'SEE RESULTS'}
+                  </button>
+               </div>
+            )}
          </div>
       );
    };
