@@ -28647,34 +28647,455 @@ const GeneratedDiagram: React.FC<DiagramProps> = ({ type, data, title }) => {
       const [phase, setPhase] = useState<'intro' | 'play' | 'result'>('intro');
       const [showInfo, setShowInfo] = useState(false);
       const [infoTopic, setInfoTopic] = useState<string | null>(null);
-      const [clause, setClause] = useState(0);
+      const [scenario, setScenario] = useState(0);
       const [score, setScore] = useState(0);
-      const [answers, setAnswers] = useState<boolean[]>([]);
+      const [selected, setSelected] = useState<number | null>(null);
+      const [answered, setAnswered] = useState(false);
+      const [gameLog, setGameLog] = useState<string[]>([]);
+      const [conceptGaps, setConceptGaps] = useState<string[]>([]);
 
-      const clauses = [
-         { text: "Payment due NET 90 days after delivery", flag: 'red', issue: 'Payment too long', advice: 'NET 30 is standard. NET 90 hurts cash flow.' },
-         { text: "Either party may terminate with 30 days written notice", flag: 'green', issue: 'Fair termination', advice: 'Mutual termination rights are fair.' },
-         { text: "Contractor assigns ALL IP including pre-existing work", flag: 'red', issue: 'IP overreach', advice: 'Never assign pre-existing IP!' },
-         { text: "Client indemnifies Contractor for claims from Client materials", flag: 'green', issue: 'Appropriate indemnification', advice: 'Each party should indemnify for their own materials.' },
-         { text: "Contractor liable for unlimited damages for any breach", flag: 'red', issue: 'Unlimited liability', advice: 'Always cap liability at 1-2x contract value.' },
-         { text: "Disputes resolved by binding arbitration in neutral location", flag: 'green', issue: 'Fair dispute resolution', advice: 'Arbitration is faster than courts.' },
-         { text: "Non-compete: Cannot work in industry for 5 years globally", flag: 'red', issue: 'Broad non-compete', advice: 'Non-competes must be reasonable in scope.' },
-         { text: "Confidentiality survives 3 years after termination", flag: 'green', issue: 'Reasonable confidentiality', advice: '2-5 years is standard.' },
+      // Context-dependent scenarios - same clause can be OK or bad depending on situation
+      const scenarios = [
+         {
+            title: "The Payment Trap",
+            role: "Freelance Developer",
+            context: "You're a solo freelancer. A Fortune 500 company wants to hire you for a $50K project. Their standard contract says:",
+            clause: "Payment: NET 90 days after project acceptance, subject to internal approval process.",
+            question: "What's the BEST response to this clause?",
+            opts: [
+               'Accept it - big company, they will pay eventually',
+               'Reject the project - NET 90 is unacceptable',
+               'Counter: 50% upfront, 50% NET 30 with late fees',
+               'Counter: NET 30 only, no other changes'
+            ],
+            correct: 2,
+            wrongExplanations: [
+               "DANGEROUS! 'Subject to internal approval' + NET 90 means 4-6 months to payment. As a freelancer, you could go bankrupt waiting. Large companies know solo contractors can't sue them.",
+               "Walking away loses a $50K opportunity. The clause IS bad, but big companies expect negotiation. Walking away should be your last resort, not first response.",
+               "", // Correct
+               "Better than accepting, but you're leaving money on the table. Big companies have cash—asking for upfront payment is standard and protects your cash flow risk."
+            ],
+            realWorld: "In 2019, Hertz filed bankruptcy owing contractors $16M+ in unpaid invoices. Contractors with 'NET 90 subject to approval' clauses got pennies on the dollar.",
+            concept: "payment_terms",
+            why: "Big company ≠ safe payment. NET 90 + 'approval process' can mean 6+ months. Always get upfront payment for projects over 30 days, especially with large companies that have slow bureaucracies."
+         },
+         {
+            title: "The Liability Landmine",
+            role: "SaaS Startup Founder",
+            context: "You're selling your $500/month software to an enterprise client. Their legal team sends back your contract with this added:",
+            clause: "Vendor shall indemnify Client for any and all damages, losses, and liabilities arising from use of the software, including consequential and indirect damages, without limitation.",
+            question: "How should you handle this indemnification clause?",
+            opts: [
+               'Accept - they are a big client, worth the risk',
+               'Cap liability at 12 months of fees paid ($6,000)',
+               'Cap liability at total contract value and exclude consequential damages',
+               'Reject any indemnification - your software, your rules'
+            ],
+            correct: 2,
+            wrongExplanations: [
+               "NEVER accept unlimited liability! If their business loses $10M 'because of your software' (even if it's their fault), they can sue you for the full amount. This has bankrupted startups.",
+               "12 months is reasonable for liability cap, BUT you forgot to exclude consequential damages. 'Consequential' means lost profits, lost business, reputation damage—could be millions even with a $6K cap.",
+               "", // Correct
+               "Refusing any indemnification will kill the deal. Enterprise clients legitimately need some protection. The key is REASONABLE limits, not zero responsibility."
+            ],
+            realWorld: "A startup was sued for $4.2M when their client's employee misused the software causing a data breach. Unlimited indemnification meant the startup paid, not the employee who caused it.",
+            concept: "liability_caps",
+            why: "Indemnification without caps is a blank check. Always: (1) Cap at contract value or 12 months fees, (2) Exclude consequential/indirect damages, (3) Require client to mitigate damages."
+         },
+         {
+            title: "The IP Ownership Puzzle",
+            role: "Contract Developer",
+            context: "A client wants you to build custom software. You'll use your own reusable framework (built over 5 years) as the foundation. Their contract states:",
+            clause: "All work product, including all intellectual property, code, documentation, and materials created under this Agreement shall be the sole property of Client as work-for-hire.",
+            question: "What's wrong with this clause, and how should you fix it?",
+            opts: [
+               'Nothing wrong - they are paying, they own it',
+               'Add: "excluding Contractor pre-existing IP which is licensed to Client"',
+               'Change to: "Client owns custom code; Contractor retains framework under perpetual license to Client"',
+               'Reject - never assign IP to clients'
+            ],
+            correct: 2,
+            wrongExplanations: [
+               "WRONG! This would transfer your 5-year framework to them. You couldn't use YOUR OWN code for any other client. This destroys your business value.",
+               "Better, but 'licensed' is vague. Does Client get exclusive rights? Can they sublicense? What happens if they stop paying? You need specific license terms.",
+               "", // Correct
+               "Too extreme. Clients legitimately need to own custom work they paid for. The issue is protecting YOUR pre-existing tools while giving them what they need."
+            ],
+            realWorld: "A developer lost rights to their component library (worth $200K+) because a client's 'all IP' clause was interpreted to include pre-existing code integrated into the project.",
+            concept: "ip_assignment",
+            why: "Separate custom deliverables (client owns) from your tools/frameworks (you retain, license to client). Specify: non-exclusive, perpetual, royalty-free license for your pre-existing IP."
+         },
+         {
+            title: "The Termination Trap",
+            role: "Marketing Agency Owner",
+            context: "You've signed a 12-month retainer contract ($10K/month) with a client. Three months in, they want to cancel. Your contract says:",
+            clause: "Either party may terminate with 30 days written notice. Upon termination, Client shall pay for all work completed to date.",
+            question: "You've turned down other clients for this retainer. What's the problem?",
+            opts: [
+               'No problem - 30 days notice is fair and standard',
+               'Problem: No early termination fee protects your lost opportunity',
+               'Problem: Should require cause for termination (breach only)',
+               'Problem: Need 90 days notice minimum for long-term contracts'
+            ],
+            correct: 1,
+            wrongExplanations: [
+               "30 days notice IS standard, but you're missing the bigger picture. You turned down 9 months of other work ($90K opportunity cost) based on this contract. 30 days notice doesn't compensate for that.",
+               "", // Correct
+               "Cause-only termination is too restrictive and unreasonable. Clients legitimately need exit options. The issue is compensation for early exit, not preventing exit.",
+               "90 days is excessive and may not be enforceable. Courts prefer reasonable exit terms. The solution is financial compensation, not longer notice periods."
+            ],
+            realWorld: "An agency lost $400K in projected revenue when a client terminated a 2-year contract after 3 months. Their 'mutual termination' clause had no early exit penalty.",
+            concept: "termination_clauses",
+            why: "For long-term contracts, include graduated termination fees: e.g., 'Early termination requires payment of 50% of remaining contract value, decreasing 10% per quarter completed.'"
+         },
+         {
+            title: "The Auto-Renewal Ambush",
+            role: "Small Business Owner",
+            context: "You're reviewing a software subscription renewal. The original contract you signed 11 months ago included:",
+            clause: "This Agreement automatically renews for successive 12-month terms unless either party provides written notice of non-renewal at least 60 days before the current term expires.",
+            question: "It's now 45 days before renewal. What's your situation?",
+            opts: [
+               'Send cancellation notice now - 45 days is reasonable',
+               'You are legally locked in for another 12 months',
+               'Call and negotiate - auto-renewal clauses are not enforceable',
+               'Send notice now and dispute the charge if they bill you'
+            ],
+            correct: 1,
+            wrongExplanations: [
+               "You MISSED the 60-day window. 45 days notice does NOT satisfy the contract. Your notice is legally ineffective, and you will be auto-renewed.",
+               "", // Correct
+               "Auto-renewal clauses ARE generally enforceable when clearly disclosed (which this was). Some states require specific notice, but most don't void the clause entirely.",
+               "Disputing the charge will fail. You signed the contract, the clause is valid, you missed the deadline. Chargeback disputes will side with the vendor."
+            ],
+            realWorld: "A company paid $180K for software they didn't want because they missed a 90-day cancellation window by 2 weeks. The vendor refused to negotiate.",
+            concept: "auto_renewal",
+            why: "Calendar ALL renewal deadlines immediately when signing. Auto-renewal benefits vendors—build systems to track and send notices 90 days early. Some states now require renewal reminders."
+         }
       ];
-      const infoTopics: Record<string, { title: string; content: string }> = {
-         elements: { title: "Contract Elements", content: "Valid contracts need: Offer, Acceptance, Consideration, Capacity, Legality. Missing any = unenforceable." },
-         redflags: { title: "Red Flags", content: "Watch for: Unlimited liability, auto-renewal, one-sided terms, IP overreach, unreasonable non-competes." },
-         negotiate: { title: "Negotiation", content: "Everything is negotiable! Mark concerns, propose alternatives. Don't be afraid to walk away." },
-      };
-      useEffect(() => { if (infoTopic && infoTopics[infoTopic]) setShowInfo(true); }, [infoTopic]);
-      const startGame = () => { setPhase('play'); setClause(0); setScore(0); setAnswers([]); };
-      const answer = (isRed: boolean) => { const correct = (clauses[clause].flag === 'red') === isRed; if (correct) setScore(prev => prev + 1); setAnswers(prev => [...prev, correct]); if (clause >= clauses.length - 1) setPhase('result'); else setClause(prev => prev + 1); };
-      const getGrade = () => { const pct = (score / clauses.length) * 100; if (pct >= 90) return { letter: 'A', label: 'Contract Pro', color: 'text-green-400' }; if (pct >= 70) return { letter: 'B', label: 'Good Eye', color: 'text-blue-400' }; if (pct >= 50) return { letter: 'C', label: 'Needs Practice', color: 'text-yellow-400' }; return { letter: 'D', label: 'Risky', color: 'text-red-400' }; };
 
-      if (phase === 'intro') return (<div className="w-full h-full flex flex-col bg-gradient-to-br from-rose-900 via-pink-900 to-slate-900 text-white p-4 overflow-auto"><div className="text-center mb-4"><h1 className="text-2xl font-bold mb-2">📝 Contract Review Game</h1><p className="text-rose-300 text-sm">Spot red flags before you sign!</p></div><div className="bg-black/30 rounded-xl p-4 mb-4"><h2 className="text-lg font-bold mb-3 text-rose-400">📋 How It Works</h2><div className="space-y-2 text-sm"><p>• Review <span className="text-white font-bold">{clauses.length} contract clauses</span></p><p>• Identify <span className="text-red-400">🚩 Red Flags</span> or <span className="text-green-400">✓ OK</span></p><p>• Learn why certain terms are problematic</p></div></div><div className="flex flex-wrap gap-2 mb-4">{Object.keys(infoTopics).map(key => (<button key={key} onClick={() => setInfoTopic(key)} className="text-xs bg-rose-500/20 px-2 py-1 rounded-full text-rose-300">ℹ️ {infoTopics[key].title}</button>))}</div><button onClick={startGame} className="w-full py-3 bg-gradient-to-r from-rose-600 to-pink-600 rounded-xl font-bold">▶️ START</button>{showInfo && infoTopic && infoTopics[infoTopic] && (<div className="absolute inset-0 bg-black/80 flex items-center justify-center p-4 z-50" onClick={() => { setShowInfo(false); setInfoTopic(null); }}><div className="bg-slate-800 rounded-xl p-4 max-w-md" onClick={e => e.stopPropagation()}><h3 className="text-lg font-bold text-rose-400 mb-2">{infoTopics[infoTopic].title}</h3><p className="text-sm text-slate-300">{infoTopics[infoTopic].content}</p><button onClick={() => { setShowInfo(false); setInfoTopic(null); }} className="mt-4 w-full py-2 bg-rose-600 rounded-lg">Got it!</button></div></div>)}</div>);
-      if (phase === 'result') { const grade = getGrade(); return (<div className="w-full h-full flex flex-col bg-gradient-to-br from-rose-900 via-pink-900 to-slate-900 text-white p-4 overflow-auto"><div className="text-center mb-4"><div className={`text-6xl font-bold ${grade.color}`}>{grade.letter}</div><div className="text-xl font-bold">{grade.label}</div><div className="text-rose-400">{score}/{clauses.length}</div></div><div className="bg-black/30 rounded-xl p-3 mb-3 max-h-40 overflow-auto"><h3 className="font-bold text-rose-400 mb-2">📊 Review</h3>{clauses.map((c, i) => (<div key={i} className="py-1 border-b border-slate-700 text-xs"><div className="flex justify-between"><span className={c.flag === 'red' ? 'text-red-400' : 'text-green-400'}>{c.flag === 'red' ? '🚩' : '✓'} {c.issue}</span><span>{answers[i] ? '✓' : '✗'}</span></div><p className="text-slate-400">{c.advice}</p></div>))}</div><div className="bg-black/30 rounded-xl p-3 mb-4"><h3 className="font-bold text-rose-400 mb-2">💡 Key Insight</h3><p className="text-sm text-slate-300">Always read contracts fully. Red flags: unlimited liability, IP overreach, unfair termination, bad payment terms.</p></div><button onClick={startGame} className="w-full py-3 bg-gradient-to-r from-rose-600 to-pink-600 rounded-xl font-bold">🔄 TRY AGAIN</button></div>); }
-      const c = clauses[clause];
-      return (<div className="w-full h-full flex flex-col bg-gradient-to-br from-rose-900 via-pink-900 to-slate-900 text-white overflow-hidden">{showInfo && infoTopic && infoTopics[infoTopic] && (<div className="absolute inset-0 bg-black/80 flex items-center justify-center p-4 z-50" onClick={() => { setShowInfo(false); setInfoTopic(null); }}><div className="bg-slate-800 rounded-xl p-4 max-w-md" onClick={e => e.stopPropagation()}><h3 className="text-lg font-bold text-rose-400 mb-2">{infoTopics[infoTopic].title}</h3><p className="text-sm text-slate-300">{infoTopics[infoTopic].content}</p><button onClick={() => { setShowInfo(false); setInfoTopic(null); }} className="mt-4 w-full py-2 bg-rose-600 rounded-lg">Got it!</button></div></div>)}<div className="p-3 bg-black/30 border-b border-rose-500/30"><div className="flex justify-between items-center"><span className="font-bold">📝 Contract Review</span><span className="text-rose-400">{clause + 1}/{clauses.length}</span></div><div className="flex gap-1 mt-2">{answers.map((a, i) => <div key={i} className={`w-3 h-3 rounded ${a ? 'bg-green-500' : 'bg-red-500'}`} />)}</div></div><div className="flex-1 p-4 flex flex-col justify-center"><div className="bg-black/30 rounded-xl p-4 mb-4"><p className="text-sm font-mono text-slate-200">"{c.text}"</p></div><p className="text-center text-sm text-slate-400 mb-4">Is this a red flag?</p><div className="grid grid-cols-2 gap-3"><button onClick={() => answer(true)} className="py-4 bg-red-600/50 hover:bg-red-500/50 rounded-xl font-bold">🚩 Red Flag</button><button onClick={() => answer(false)} className="py-4 bg-green-600/50 hover:bg-green-500/50 rounded-xl font-bold">✓ OK</button></div></div><div className="p-3 bg-black/30 border-t border-rose-500/30"><button onClick={() => setInfoTopic('redflags')} className="text-xs text-rose-400">ℹ️ Red Flags</button></div></div>);
+      const infoTopics: Record<string, { title: string; content: string }> = {
+         payment: {
+            title: "Payment Terms Strategy",
+            content: "NET 30 is standard. For projects >$10K or >30 days, get 25-50% upfront. Add late fees (1.5%/month). Milestone payments for long projects. 'Subject to approval' = red flag. For large companies, shorter payment terms because their AP departments are slow."
+         },
+         liability: {
+            title: "Liability & Indemnification",
+            content: "Always cap liability (1-2x contract value). Exclude consequential, indirect, and punitive damages. Mutual indemnification is fair. Never accept unlimited liability—it's not worth any contract amount. Insurance can help but caps are essential."
+         },
+         ip_rights: {
+            title: "IP Ownership Structures",
+            content: "Custom work: client owns. Your tools/frameworks: you retain, license to client. License types: exclusive (only them), non-exclusive (you keep using). Always specify: scope, duration, territory, sublicense rights. Pre-existing IP must be carved out explicitly."
+         },
+         termination: {
+            title: "Termination Provisions",
+            content: "Convenience termination: either party can exit. For-cause termination: only for breach. Long-term contracts need early exit fees. Include cure periods (30 days to fix breach). Specify what happens to IP, payments, and confidentiality post-termination."
+         },
+         negotiation: {
+            title: "Negotiation Tactics",
+            content: "Everything is negotiable (especially with big companies). Start with your ideal terms. Know your walkaway point before negotiating. Bundle concessions ('I'll accept NET 60 if you add early termination fee'). Get changes in writing before signing."
+         },
+         red_flags: {
+            title: "Immediate Red Flags",
+            content: "Unlimited liability, auto-renewal without notice requirements, 'all IP' without carve-outs, payment 'subject to approval', non-compete over 1 year or outside your industry, unilateral amendment rights, jurisdiction in another country."
+         }
+      };
+
+      useEffect(() => { if (infoTopic && infoTopics[infoTopic]) setShowInfo(true); }, [infoTopic]);
+
+      const startGame = () => {
+         setPhase('play');
+         setScenario(0);
+         setScore(0);
+         setSelected(null);
+         setAnswered(false);
+         setGameLog([]);
+         setConceptGaps([]);
+      };
+
+      const answer = (idx: number) => {
+         if (answered) return;
+         setSelected(idx);
+         setAnswered(true);
+         const s = scenarios[scenario];
+         const isCorrect = idx === s.correct;
+         if (isCorrect) {
+            setScore(prev => prev + 20);
+            setGameLog(prev => [...prev, `✓ ${s.title}: Understood ${s.concept}`]);
+         } else {
+            setConceptGaps(prev => prev.includes(s.concept) ? prev : [...prev, s.concept]);
+            setGameLog(prev => [...prev, `✗ ${s.title}: Gap in ${s.concept}`]);
+         }
+      };
+
+      const next = () => {
+         if (scenario >= scenarios.length - 1) {
+            setPhase('result');
+         } else {
+            setScenario(prev => prev + 1);
+            setSelected(null);
+            setAnswered(false);
+         }
+      };
+
+      const getGrade = () => {
+         const pct = (score / (scenarios.length * 20)) * 100;
+         if (pct >= 90) return { letter: 'A', label: 'Contract Strategist', color: 'text-green-400' };
+         if (pct >= 70) return { letter: 'B', label: 'Protected', color: 'text-blue-400' };
+         if (pct >= 50) return { letter: 'C', label: 'Vulnerable', color: 'text-yellow-400' };
+         return { letter: 'D', label: 'High Risk', color: 'text-red-400' };
+      };
+
+      const conceptLabels: Record<string, string> = {
+         payment_terms: "Payment Terms & Cash Flow Protection",
+         liability_caps: "Liability Caps & Indemnification",
+         ip_assignment: "IP Ownership & Licensing",
+         termination_clauses: "Termination Fees & Exit Strategy",
+         auto_renewal: "Auto-Renewal Traps & Calendar Management"
+      };
+
+      // INTRO PHASE
+      if (phase === 'intro') return (
+         <div className="w-full h-full flex flex-col bg-gradient-to-br from-rose-900 via-pink-900 to-slate-900 text-white p-4 overflow-auto">
+            <div className="text-center mb-4">
+               <h1 className="text-2xl font-bold mb-2">📜 Contract Negotiation Lab</h1>
+               <p className="text-rose-300 text-sm">Context matters. Strategy wins. Protect your business.</p>
+            </div>
+
+            <div className="bg-black/30 rounded-xl p-4 mb-4">
+               <h2 className="text-lg font-bold mb-3 text-rose-400">⚠️ Why This Matters</h2>
+               <div className="space-y-2 text-sm text-slate-300">
+                  <p>• <span className="text-red-400 font-bold">83%</span> of small businesses sign contracts without negotiating</p>
+                  <p>• <span className="text-yellow-400 font-bold">$50B+</span> lost annually to unfavorable contract terms</p>
+                  <p>• <span className="text-green-400 font-bold">Same clause</span> can be OK or devastating—context determines everything</p>
+               </div>
+            </div>
+
+            <div className="bg-black/30 rounded-xl p-4 mb-4">
+               <h2 className="text-lg font-bold mb-3 text-rose-400">🎯 How This Works</h2>
+               <div className="space-y-2 text-sm">
+                  <p>• <span className="text-white font-bold">5 real contract scenarios</span> from different perspectives</p>
+                  <p>• Decide: <span className="text-yellow-400">What should you DO?</span> (not just flag)</p>
+                  <p>• Learn <span className="text-cyan-400">strategic responses</span> that protect your interests</p>
+                  <p>• See <span className="text-red-400">real consequences</span> of bad contract decisions</p>
+               </div>
+            </div>
+
+            <div className="flex flex-wrap gap-2 mb-4">
+               {Object.keys(infoTopics).map(key => (
+                  <button
+                     key={key}
+                     onClick={() => setInfoTopic(key)}
+                     className="text-xs bg-rose-500/20 px-2 py-1 rounded-full text-rose-300 hover:bg-rose-500/30"
+                  >
+                     ℹ️ {infoTopics[key].title.split(' ').slice(0, 2).join(' ')}
+                  </button>
+               ))}
+            </div>
+
+            <button onClick={startGame} className="w-full py-3 bg-gradient-to-r from-rose-600 to-pink-600 rounded-xl font-bold text-lg">
+               ▶️ BEGIN NEGOTIATION
+            </button>
+
+            {showInfo && infoTopic && infoTopics[infoTopic] && (
+               <div className="absolute inset-0 bg-black/80 flex items-center justify-center p-4 z-50" onClick={() => { setShowInfo(false); setInfoTopic(null); }}>
+                  <div className="bg-slate-800 rounded-xl p-4 max-w-md" onClick={e => e.stopPropagation()}>
+                     <h3 className="text-lg font-bold text-rose-400 mb-2">{infoTopics[infoTopic].title}</h3>
+                     <p className="text-sm text-slate-300 leading-relaxed">{infoTopics[infoTopic].content}</p>
+                     <button onClick={() => { setShowInfo(false); setInfoTopic(null); }} className="mt-4 w-full py-2 bg-rose-600 rounded-lg font-bold">Got it!</button>
+                  </div>
+               </div>
+            )}
+         </div>
+      );
+
+      // RESULT PHASE
+      if (phase === 'result') {
+         const grade = getGrade();
+         return (
+            <div className="w-full h-full flex flex-col bg-gradient-to-br from-rose-900 via-pink-900 to-slate-900 text-white p-4 overflow-auto">
+               <div className="text-center mb-4">
+                  <div className={`text-6xl font-bold ${grade.color}`}>{grade.letter}</div>
+                  <div className="text-xl font-bold">{grade.label}</div>
+                  <div className="text-rose-400">Score: {score}/{scenarios.length * 20}</div>
+               </div>
+
+               {conceptGaps.length > 0 && (
+                  <div className="bg-red-900/30 border border-red-500/50 rounded-xl p-3 mb-3">
+                     <h3 className="font-bold text-red-400 mb-2">📚 Contract Gaps to Study</h3>
+                     <div className="space-y-1">
+                        {conceptGaps.map((gap, i) => (
+                           <div key={i} className="flex items-center gap-2 text-sm">
+                              <span className="text-red-400">→</span>
+                              <span className="text-slate-300">{conceptLabels[gap] || gap}</span>
+                              <button
+                                 onClick={() => {
+                                    const topic = gap === 'payment_terms' ? 'payment' :
+                                                  gap === 'liability_caps' ? 'liability' :
+                                                  gap === 'ip_assignment' ? 'ip_rights' :
+                                                  gap === 'termination_clauses' ? 'termination' : 'red_flags';
+                                    setInfoTopic(topic);
+                                 }}
+                                 className="text-xs text-rose-400 underline"
+                              >
+                                 Learn
+                              </button>
+                           </div>
+                        ))}
+                     </div>
+                  </div>
+               )}
+
+               {conceptGaps.length === 0 && (
+                  <div className="bg-green-900/30 border border-green-500/50 rounded-xl p-3 mb-3">
+                     <h3 className="font-bold text-green-400 mb-2">🎉 Contract Expert!</h3>
+                     <p className="text-sm text-slate-300">You understand the strategic nuances of contract negotiation—payment protection, liability caps, IP structures, and termination strategies.</p>
+                  </div>
+               )}
+
+               <div className="bg-black/30 rounded-xl p-3 mb-3 max-h-32 overflow-auto">
+                  <h3 className="font-bold text-rose-400 mb-2">📋 Session Log</h3>
+                  {gameLog.map((log, i) => (
+                     <p key={i} className="text-xs text-slate-400">{log}</p>
+                  ))}
+               </div>
+
+               <div className="bg-black/30 rounded-xl p-3 mb-4">
+                  <h3 className="font-bold text-rose-400 mb-2">💡 Key Strategic Principles</h3>
+                  <ul className="text-sm text-slate-300 space-y-1">
+                     <li>• <span className="text-yellow-400">Context determines risk</span>—same clause can be OK or dangerous</li>
+                     <li>• <span className="text-yellow-400">Everything is negotiable</span>—especially with large companies</li>
+                     <li>• <span className="text-yellow-400">Protect cash flow</span>—upfront payments for long projects</li>
+                     <li>• <span className="text-yellow-400">Calendar everything</span>—renewal traps are real</li>
+                  </ul>
+               </div>
+
+               <button onClick={startGame} className="w-full py-3 bg-gradient-to-r from-rose-600 to-pink-600 rounded-xl font-bold">
+                  🔄 TRY AGAIN
+               </button>
+
+               {showInfo && infoTopic && infoTopics[infoTopic] && (
+                  <div className="absolute inset-0 bg-black/80 flex items-center justify-center p-4 z-50" onClick={() => { setShowInfo(false); setInfoTopic(null); }}>
+                     <div className="bg-slate-800 rounded-xl p-4 max-w-md" onClick={e => e.stopPropagation()}>
+                        <h3 className="text-lg font-bold text-rose-400 mb-2">{infoTopics[infoTopic].title}</h3>
+                        <p className="text-sm text-slate-300 leading-relaxed">{infoTopics[infoTopic].content}</p>
+                        <button onClick={() => { setShowInfo(false); setInfoTopic(null); }} className="mt-4 w-full py-2 bg-rose-600 rounded-lg font-bold">Got it!</button>
+                     </div>
+                  </div>
+               )}
+            </div>
+         );
+      }
+
+      // PLAY PHASE
+      const s = scenarios[scenario];
+      return (
+         <div className="w-full h-full flex flex-col bg-gradient-to-br from-rose-900 via-pink-900 to-slate-900 text-white overflow-hidden">
+            {showInfo && infoTopic && infoTopics[infoTopic] && (
+               <div className="absolute inset-0 bg-black/80 flex items-center justify-center p-4 z-50" onClick={() => { setShowInfo(false); setInfoTopic(null); }}>
+                  <div className="bg-slate-800 rounded-xl p-4 max-w-md" onClick={e => e.stopPropagation()}>
+                     <h3 className="text-lg font-bold text-rose-400 mb-2">{infoTopics[infoTopic].title}</h3>
+                     <p className="text-sm text-slate-300 leading-relaxed">{infoTopics[infoTopic].content}</p>
+                     <button onClick={() => { setShowInfo(false); setInfoTopic(null); }} className="mt-4 w-full py-2 bg-rose-600 rounded-lg font-bold">Got it!</button>
+                  </div>
+               </div>
+            )}
+
+            {/* Header */}
+            <div className="p-3 bg-black/30 border-b border-rose-500/30">
+               <div className="flex justify-between items-center">
+                  <div>
+                     <span className="font-bold text-sm">📜 {s.title}</span>
+                     <span className="ml-2 text-xs text-rose-400 bg-rose-500/20 px-2 py-0.5 rounded">{s.role}</span>
+                  </div>
+                  <span className="text-rose-400 text-sm">{scenario + 1}/{scenarios.length}</span>
+               </div>
+               <div className="flex gap-1 mt-2">
+                  {scenarios.slice(0, scenario).map((_, i) => (
+                     <div key={i} className={`w-3 h-3 rounded ${gameLog[i]?.startsWith('✓') ? 'bg-green-500' : 'bg-red-500'}`} />
+                  ))}
+                  <div className="w-3 h-3 rounded bg-rose-500 animate-pulse" />
+                  {scenarios.slice(scenario + 1).map((_, i) => (
+                     <div key={i} className="w-3 h-3 rounded bg-slate-600" />
+                  ))}
+               </div>
+            </div>
+
+            {/* Scenario */}
+            <div className="flex-1 p-3 overflow-auto">
+               {/* Context */}
+               <div className="bg-black/30 rounded-lg p-3 mb-2">
+                  <p className="text-xs text-slate-400 mb-1">SITUATION:</p>
+                  <p className="text-sm text-slate-200">{s.context}</p>
+               </div>
+
+               {/* Contract Clause */}
+               <div className="bg-slate-800/50 border-l-4 border-rose-500 rounded-r-lg p-3 mb-3">
+                  <p className="text-xs text-rose-400 mb-1">CONTRACT CLAUSE:</p>
+                  <p className="text-sm font-mono text-slate-200 italic">"{s.clause}"</p>
+               </div>
+
+               <p className="text-sm font-bold text-rose-400 mb-2">{s.question}</p>
+
+               <div className="space-y-2">
+                  {s.opts.map((opt, i) => (
+                     <button
+                        key={i}
+                        onClick={() => answer(i)}
+                        disabled={answered}
+                        className={`w-full p-3 rounded-lg text-left text-sm transition-all ${
+                           answered
+                              ? i === s.correct
+                                 ? 'bg-green-600 border-2 border-green-400'
+                                 : i === selected
+                                    ? 'bg-red-600 border-2 border-red-400'
+                                    : 'bg-black/30 opacity-50'
+                              : 'bg-black/30 hover:bg-rose-600/50 border-2 border-transparent'
+                        }`}
+                     >
+                        <span className="flex items-start gap-2">
+                           <span className="font-bold text-rose-400">{String.fromCharCode(65 + i)}.</span>
+                           <span>{opt}</span>
+                        </span>
+                     </button>
+                  ))}
+               </div>
+
+               {/* Explanation after answer */}
+               {answered && (
+                  <div className="mt-3 space-y-2">
+                     {selected !== s.correct && (
+                        <div className="p-3 bg-red-900/30 border border-red-500/50 rounded-lg">
+                           <p className="text-xs font-bold text-red-400 mb-1">❌ Why {String.fromCharCode(65 + (selected || 0))} is Wrong:</p>
+                           <p className="text-sm text-slate-300">{s.wrongExplanations[selected || 0]}</p>
+                        </div>
+                     )}
+
+                     <div className="p-3 bg-green-900/30 border border-green-500/50 rounded-lg">
+                        <p className="text-xs font-bold text-green-400 mb-1">✓ Strategic Response:</p>
+                        <p className="text-sm text-slate-300">{s.why}</p>
+                     </div>
+
+                     <div className="p-3 bg-amber-900/30 border border-amber-500/50 rounded-lg">
+                        <p className="text-xs font-bold text-amber-400 mb-1">⚠️ Real Case:</p>
+                        <p className="text-sm text-slate-300">{s.realWorld}</p>
+                     </div>
+
+                     <button onClick={next} className="w-full py-3 bg-gradient-to-r from-rose-600 to-pink-600 rounded-xl font-bold mt-2">
+                        {scenario >= scenarios.length - 1 ? 'See Results' : 'Next Scenario →'}
+                     </button>
+                  </div>
+               )}
+            </div>
+
+            {/* Info Buttons Footer */}
+            <div className="p-3 bg-black/30 border-t border-rose-500/30 flex gap-2 justify-center flex-wrap">
+               <button onClick={() => setInfoTopic('payment')} className="text-xs text-rose-400 hover:text-rose-300">ℹ️ Payment</button>
+               <button onClick={() => setInfoTopic('liability')} className="text-xs text-rose-400 hover:text-rose-300">ℹ️ Liability</button>
+               <button onClick={() => setInfoTopic('ip_rights')} className="text-xs text-rose-400 hover:text-rose-300">ℹ️ IP Rights</button>
+               <button onClick={() => setInfoTopic('termination')} className="text-xs text-rose-400 hover:text-rose-300">ℹ️ Termination</button>
+            </div>
+         </div>
+      );
    };
 
    // --- PERMITS RENDERER ---
