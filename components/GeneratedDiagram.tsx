@@ -23624,73 +23624,279 @@ const GeneratedDiagram: React.FC<DiagramProps> = ({ type, data, title }) => {
    // 40. COPYWRITING - Headline Writing Practice
    const CopywritingRenderer = () => {
       const [phase, setPhase] = useState<'intro' | 'play' | 'result'>('intro');
-      const [showInfo, setShowInfo] = useState(false);
+      const [scenario, setScenario] = useState(0);
       const [score, setScore] = useState(0);
-      const [current, setCurrent] = useState(0);
+      const [selected, setSelected] = useState<number | null>(null);
+      const [answered, setAnswered] = useState(false);
+      const [gameLog, setGameLog] = useState<string[]>([]);
+      const [showInfo, setShowInfo] = useState(false);
+      const [infoTopic, setInfoTopic] = useState<string | null>(null);
+      const [conceptGaps, setConceptGaps] = useState<string[]>([]);
 
-      const headlines = [
-         { product: 'Time Management App', best: 'b', options: [
-            { id: 'a', text: 'Our App is Great for Time', score: 3 },
-            { id: 'b', text: 'Get 3 Extra Hours in Your Day', score: 10 },
-            { id: 'c', text: 'Download Our Time App Now', score: 4 }
-         ]},
-         { product: 'Organic Dog Food', best: 'c', options: [
-            { id: 'a', text: 'Buy Organic Dog Food', score: 3 },
-            { id: 'b', text: 'Food for Dogs That is Organic', score: 2 },
-            { id: 'c', text: 'Give Your Best Friend 5 More Healthy Years', score: 10 }
-         ]},
-         { product: 'Online Coding Course', best: 'a', options: [
-            { id: 'a', text: 'From Zero to Your First Job in 12 Weeks', score: 10 },
-            { id: 'b', text: 'Learn Coding Online', score: 3 },
-            { id: 'c', text: 'Programming Classes Available', score: 2 }
-         ]}
+      const scenarios = [
+         {
+            title: "The Feature Trap",
+            context: "You're writing the homepage headline for a B2B analytics platform. The product has: real-time dashboards, 50+ integrations, AI-powered insights, SOC 2 compliance. The CEO wants to highlight that you have 'the most features in the category.' Target audience: busy marketing directors who need to prove ROI to their CMO.",
+            question: "Which headline will convert best?",
+            opts: [
+               "A) 'The Most Powerful Analytics Platform with 50+ Integrations'",
+               "B) 'See Exactly Which Campaigns Drive Revenue—in 5 Minutes'",
+               "C) 'AI-Powered, Real-Time Analytics for Modern Marketing Teams'",
+               "D) 'Finally, Enterprise Analytics That's Actually Easy to Use'"
+            ],
+            correct: 1,
+            wrongExplanations: [
+               "Feature lists don't sell. 'Most powerful' is a claim; 'prove ROI to CMO' is the job. Nobody wakes up wanting '50+ integrations'—they want results. This is inside-out thinking.",
+               "",
+               "'AI-powered' is every product now—it's meaningless differentiation. 'Real-time' and 'modern' are jargon. This headline describes what you ARE, not what you DO for the customer.",
+               "'Enterprise that's easy' is a good angle but vague. How easy? What does easy mean? The promise isn't concrete enough to believe. It's a claim, not proof."
+            ],
+            realWorld: "Slack didn't launch with 'Team messaging with 2,000 integrations.' They said 'Be less busy.' Stripe didn't say 'Payment infrastructure with SOC 2 compliance.' They said 'Payments for developers.' The best headlines describe the OUTCOME, not the product.",
+            concept: "benefit_focus",
+            why: "The marketing director's job isn't 'use analytics tools'—it's 'prove which campaigns work.' The headline that mirrors their actual job (showing ROI to CMO) and adds specificity (5 minutes) wins. Time + outcome = believable promise. Features are proof points for the landing page, not the headline."
+         },
+         {
+            title: "The Specificity Test",
+            context: "You're writing an email subject line for a SaaS onboarding sequence. The email contains tips for getting value from the product faster. Open rates for this sequence have dropped from 45% to 28%. Current subject line: 'Tips to get more from [Product]'. The email is sent 3 days after signup.",
+            question: "Which subject line will lift open rates?",
+            opts: [
+               "A) '5 quick wins you can get today'",
+               "B) '3 things successful users do in their first week (you haven't done #2)'",
+               "C) 'Getting started with [Product]—helpful tips inside!'",
+               "D) 'Don't miss these important product updates'"
+            ],
+            correct: 1,
+            wrongExplanations: [
+               "'5 quick wins' is good but generic. It could be from any product. The specificity of 'first week' and the curiosity gap of '#2' creates more urgency to open.",
+               "",
+               "This is the boring version of the original subject line. 'Tips inside' is newsletter-speak that trained inboxes to ignore. No curiosity, no urgency, no specificity.",
+               "False urgency about 'updates' when the email is tips destroys trust. Users will open once, see it's not updates, and never trust your subject lines again."
+            ],
+            realWorld: "Booking.com A/B tests everything. They found 'Only 2 rooms left!' outperforms 'Book now!' by 200%+. The specificity ('2 rooms') creates believability. Obama's campaign famously A/B tested 'Hey' as a subject line—simple curiosity beat formal asks.",
+            concept: "curiosity_gap",
+            why: "The curiosity gap principle: open a loop the reader must close. 'You haven't done #2' creates a gap—what's #2? Am I missing something? Combined with social proof ('successful users do'), it implies value the reader is leaving on the table. Urgency without specificity is spam; specificity without urgency is ignored."
+         },
+         {
+            title: "The Social Proof Dilemma",
+            context: "You're writing a landing page for a new productivity app. You have: 500 users after 2 months of beta, 4.8/5 average rating from 47 reviews, one testimonial from an employee at a famous company (mid-level, not exec), zero case studies. Marketing wants to lead with 'Trusted by teams at [Famous Company].'",
+            question: "How should you use social proof at this stage?",
+            opts: [
+               "A) Lead with 'Trusted by teams at [Famous Company]'—the logo carries weight",
+               "B) Lead with outcome, use specific testimonials in context, save logos for later",
+               "C) Show '4.8/5 stars from 47 reviews' prominently",
+               "D) Skip social proof until you have more impressive numbers"
+            ],
+            correct: 1,
+            wrongExplanations: [
+               "One mid-level employee ≠ 'trusted by teams.' If a journalist investigates and finds one person, not company-wide adoption, you've damaged credibility. This is startup social proof inflation—savvy buyers see through it.",
+               "",
+               "47 reviews looks thin for a productivity app. Visitors will compare to established tools with thousands of reviews. Leading with a small number can actually hurt rather than help.",
+               "No social proof makes you look unvalidated. The goal isn't more—it's smarter use. Specific, believable proof beats impressive-sounding claims that feel hollow."
+            ],
+            realWorld: "Basecamp in early days didn't fake 'Enterprise trusted' logos. They showed real quotes from real users saying specific things. 'This saved me 4 hours a week' beats 'Trusted by Fortune 500' when you're not actually trusted by Fortune 500s. Authenticity at your stage beats aspirational positioning.",
+            concept: "authentic_proof",
+            why: "Social proof must be believable. Specific testimonials ('I saved 4 hours/week') beat vague endorsements. Lead with the outcome—what the product does for the reader—then support with proof that's proportional to your actual traction. Fake enterprise positioning damages trust with the customers who will actually buy at this stage."
+         },
+         {
+            title: "The CTA Optimization",
+            context: "Your SaaS has a 14-day free trial. The current CTA button says 'Start Free Trial.' Conversion rate from landing page to trial signup is 3.2%. Your main competitor's CTA says 'Get Started Free.' You're testing new CTA copy. The product requires significant setup before users see value (about 30 minutes of configuration).",
+            question: "Which CTA will likely improve conversion?",
+            opts: [
+               "A) 'Start Your Free Trial' (add 'Your' for personalization)",
+               "B) 'See [Product] in Action' (implies less commitment than 'Start')",
+               "C) 'Get Started Free' (match the competitor)",
+               "D) 'Start Free Trial — No Credit Card Required'"
+            ],
+            correct: 1,
+            wrongExplanations: [
+               "Adding 'Your' is micro-optimization. The real issue is 'Start Trial' implies commitment and work. For a product requiring 30 minutes of setup, that's a big ask upfront.",
+               "",
+               "Copying competitors tells you nothing. Their CTA might be underperforming too. 'Get Started' still implies work. You're copying, not optimizing.",
+               "'No credit card' is good for reducing friction but doesn't address the real objection—the 30-minute setup. Users hesitate at effort, not just money."
+            ],
+            realWorld: "Crazy Egg increased conversions 363% by changing 'View Plans and Pricing' to 'Show Me My Heatmap.' The new CTA promised an immediate outcome, not a process. Netflix doesn't say 'Start Free Trial'—they say 'Watch Free for 30 Days.' The action verb matters.",
+            concept: "action_alignment",
+            why: "'See in Action' reduces perceived commitment—it's watching, not working. For products with significant setup, implying immediate gratification ('see it') beats implying work ('start'). The CTA should match what users actually want to do, not what you want them to do. They want to see value; you want them to commit."
+         },
+         {
+            title: "The Long-Form vs Short Debate",
+            context: "You're writing a landing page for a $2,000/month B2B SaaS. Current page is short: headline, 3 benefits, testimonial, CTA. Bounce rate is 68%. Time on page is 45 seconds. Sales says most demo requests come from people who've done extensive research elsewhere. The product solves a complex problem (compliance automation for financial services).",
+            question: "What's wrong with the short landing page approach?",
+            opts: [
+               "A) Nothing—short pages convert better; the traffic quality is the problem",
+               "B) Complex, high-cost purchases need more information to convert on-page",
+               "C) Add more testimonials—social proof is the missing element",
+               "D) The page is fine; invest in better retargeting"
+            ],
+            correct: 1,
+            wrongExplanations: [
+               "'Short pages convert better' is a myth. It depends on price point and complexity. For a $24K/year commitment, 45 seconds isn't consideration—it's drive-by. People aren't 'not interested'; they don't have enough information.",
+               "",
+               "More testimonials help but don't solve the core issue: 45 seconds isn't enough time to understand a complex compliance solution. You need more content for testimonials to reinforce.",
+               "Retargeting people who bounced because they didn't understand the product means showing them the same confusing page again. Fix the page first."
+            ],
+            realWorld: "Crazy Egg tested a page 20x longer than their original and conversion increased 363%. For high-consideration B2B, long-form works because buyers need to justify the purchase. Gong, Drift, and other B2B leaders use extensive landing pages with deep content. The myth that 'nobody reads' doesn't apply when $24K is on the line.",
+            concept: "consideration_match",
+            why: "Page length should match purchase consideration. $10 impulse buy? Short page. $24K/year business commitment? Buyers need objection handling, use cases, proof points, and detailed explanations. 68% bounce + 45 seconds = people aren't finding what they need to make a decision. Give them the information on-page instead of forcing them to research elsewhere."
+         }
       ];
 
-      if (phase === 'intro') return (
-         <div className="flex flex-col items-center justify-center h-full bg-gradient-to-br from-amber-900 via-orange-900 to-red-900 text-white p-8 text-center">
-            <button onClick={() => setShowInfo(!showInfo)} className="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/20 flex items-center justify-center text-xl">ℹ️</button>
-            {showInfo && (
-               <div className="absolute top-16 right-4 bg-black/90 p-4 rounded-xl max-w-xs text-left text-sm">
-                  <p className="font-bold mb-2">Copywriting Principles</p>
-                  <p>Focus on benefits, not features. Use specific numbers. Create urgency. Address the reader directly.</p>
-               </div>
-            )}
-            <p className="text-6xl mb-4">✍️</p>
-            <h2 className="text-3xl font-bold mb-4">Headline Writing</h2>
-            <p className="text-lg opacity-80 max-w-md mb-8">Choose the most effective headline for each product.</p>
-            <button onClick={() => setPhase('play')} className="px-8 py-4 bg-amber-500 rounded-2xl font-bold text-xl hover:bg-amber-400 transition-all text-black">START WRITING →</button>
-         </div>
-      );
-
-      if (phase === 'result') return (
-         <div className="flex flex-col items-center justify-center h-full bg-gradient-to-br from-amber-900 via-orange-900 to-red-900 text-white p-8 text-center">
-            <p className="text-6xl mb-4">{score >= 25 ? '🏆' : score >= 15 ? '⭐' : '📚'}</p>
-            <h2 className="text-3xl font-bold mb-4">Copywriting Score</h2>
-            <p className="text-5xl font-bold text-amber-400 mb-4">{score}/{headlines.length * 10}</p>
-            <p className="text-lg opacity-80 mb-8">{score >= 25 ? 'Master copywriter!' : score >= 15 ? 'Good eye for copy!' : 'Study the greats!'}</p>
-            <button onClick={() => { setPhase('intro'); setScore(0); setCurrent(0); }} className="px-6 py-3 bg-amber-500 rounded-xl font-bold text-black">TRY AGAIN</button>
-         </div>
-      );
-
-      const handleSelect = (optScore: number) => {
-         setScore(score + optScore);
-         if (current < headlines.length - 1) setCurrent(current + 1);
-         else setPhase('result');
+      const conceptLabels: { [key: string]: string } = {
+         benefit_focus: "Benefit-First Headlines",
+         curiosity_gap: "Curiosity Gap Technique",
+         authentic_proof: "Authentic Social Proof",
+         action_alignment: "CTA Action Alignment",
+         consideration_match: "Content-Consideration Match"
       };
 
-      const h = headlines[current];
-      return (
-         <div className="flex flex-col h-full bg-gradient-to-br from-amber-900 via-orange-900 to-red-900 text-white p-8">
-            <div className="bg-black/30 rounded-2xl p-6 mb-6 text-center">
-               <p className="text-sm opacity-70 mb-2">Product {current + 1}/{headlines.length}</p>
-               <p className="text-xl font-bold">📦 {h.product}</p>
+      const infoTopics: { [k: string]: { title: string; content: string } } = {
+         headlines: { title: "Headline Psychology", content: "Headlines have one job: make the reader want to read the next line. Specificity beats cleverness. Benefits beat features. Outcomes beat processes. The best headlines mirror the reader's internal dialogue—what they're already thinking about." },
+         proof: { title: "Social Proof Hierarchy", content: "In order of power: Case studies with numbers > Specific testimonials > Customer logos > User counts > Star ratings. Use proof proportional to your stage. Fake enterprise positioning hurts more than no positioning." },
+         ctas: { title: "CTA Psychology", content: "CTAs should describe what the user wants, not what you want. 'See your results' beats 'Sign up.' Reduce perceived commitment for high-friction actions. Match the action verb to the actual experience." },
+         length: { title: "Content Length", content: "Length should match purchase consideration. Low-cost impulse: short. High-cost considered: long. If visitors research elsewhere, that content should be on YOUR page. The myth that 'nobody reads' is only true for content not worth reading." }
+      };
+
+      const sc = scenarios[scenario];
+
+      const answer = (i: number) => {
+         if (answered) return;
+         setSelected(i);
+         setAnswered(true);
+         if (i === sc.correct) {
+            setScore(s => s + 1);
+            setGameLog(l => [...l, `✓ ${sc.title}: Strong copy instincts`]);
+         } else {
+            setGameLog(l => [...l, `✗ ${sc.title}: ${sc.wrongExplanations[i]}`]);
+            if (!conceptGaps.includes(sc.concept)) {
+               setConceptGaps(g => [...g, sc.concept]);
+            }
+         }
+      };
+
+      const next = () => {
+         if (scenario >= scenarios.length - 1) {
+            setPhase('result');
+         } else {
+            setScenario(s => s + 1);
+            setSelected(null);
+            setAnswered(false);
+         }
+      };
+
+      const grade = score >= 5 ? 'A' : score >= 4 ? 'B' : score >= 3 ? 'C' : 'D';
+
+      if (phase === 'intro') {
+         return (
+            <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-amber-900 via-orange-900 to-red-900 text-white p-6">
+               <div className="text-6xl mb-4">✍️</div>
+               <h2 className="text-2xl font-bold mb-2">Conversion Copy Lab</h2>
+               <p className="text-amber-300 text-center mb-4 max-w-md">
+                  Master the psychology behind copy that converts—from headlines to CTAs to landing pages.
+               </p>
+               <div className="bg-black/30 rounded-lg p-4 mb-6 max-w-md">
+                  <p className="text-sm text-slate-300 mb-2">You'll analyze scenarios involving:</p>
+                  <ul className="text-xs text-slate-400 space-y-1">
+                     <li>• Feature-focused vs benefit-focused headlines</li>
+                     <li>• Email subject lines and the curiosity gap</li>
+                     <li>• Social proof at different company stages</li>
+                     <li>• CTA psychology and action alignment</li>
+                     <li>• Long-form vs short-form for different prices</li>
+                  </ul>
+               </div>
+               <button onClick={() => setPhase('play')} className="px-8 py-3 bg-gradient-to-r from-amber-500 to-orange-500 rounded-xl font-bold text-black">
+                  Start Writing
+               </button>
             </div>
-            <p className="text-center mb-4 opacity-80">Pick the best headline:</p>
-            <div className="flex flex-col gap-3 flex-1">
-               {h.options.map((opt) => (
-                  <button key={opt.id} onClick={() => handleSelect(opt.score)}
-                     className="p-4 bg-black/30 rounded-xl hover:bg-amber-500/30 transition-all text-left">
-                     <p className="font-bold text-lg">"{opt.text}"</p>
+         );
+      }
+
+      if (phase === 'result') {
+         return (
+            <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-amber-900 via-orange-900 to-red-900 text-white p-6 overflow-auto">
+               <div className="text-5xl mb-3">{grade === 'A' ? '🏆' : grade === 'B' ? '✍️' : grade === 'C' ? '📝' : '📚'}</div>
+               <h2 className="text-xl font-bold mb-2">Copywriting Assessment</h2>
+               <div className="text-3xl font-bold text-amber-400 mb-1">{score}/{scenarios.length}</div>
+               <div className="text-4xl mb-3">{grade}</div>
+               <p className="text-slate-400 text-sm mb-3 text-center">
+                  {grade === 'A' ? 'Master copywriter! You understand the psychology behind conversion.' :
+                   grade === 'B' ? 'Strong copy instincts—you see through common traps.' :
+                   grade === 'C' ? 'Some conventional mistakes—focus on outcomes over features.' :
+                   'Review copywriting fundamentals—feature-focus is hurting your conversions.'}
+               </p>
+               {conceptGaps.length > 0 && (
+                  <div className="w-full max-w-md bg-red-900/30 border border-red-500/30 rounded-lg p-3 mb-3">
+                     <p className="text-xs text-red-400 font-semibold mb-2">Copy Skills to Develop:</p>
+                     <ul className="text-xs text-red-300 space-y-1">
+                        {conceptGaps.map(g => <li key={g}>• {conceptLabels[g]}</li>)}
+                     </ul>
+                  </div>
+               )}
+               <div className="w-full max-w-md bg-black/30 rounded-lg p-3 mb-4 max-h-28 overflow-y-auto">
+                  {gameLog.map((l, i) => <p key={i} className="text-xs text-slate-300 mb-1">{l}</p>)}
+               </div>
+               <button onClick={() => { setPhase('intro'); setScenario(0); setScore(0); setAnswered(false); setSelected(null); setGameLog([]); setConceptGaps([]); }} className="px-6 py-2 bg-amber-600 rounded-lg">
+                  Try Again
+               </button>
+            </div>
+         );
+      }
+
+      return (
+         <div className="w-full h-full flex flex-col bg-gradient-to-br from-amber-900 via-orange-900 to-red-900 text-white overflow-hidden">
+            {showInfo && infoTopic && infoTopics[infoTopic] && (
+               <div className="absolute inset-0 bg-black/80 flex items-center justify-center p-4 z-50" onClick={() => { setShowInfo(false); setInfoTopic(null); }}>
+                  <div className="bg-slate-800 rounded-xl p-4 max-w-sm" onClick={e => e.stopPropagation()}>
+                     <h3 className="text-lg font-bold text-amber-400 mb-2">{infoTopics[infoTopic].title}</h3>
+                     <p className="text-sm text-slate-300">{infoTopics[infoTopic].content}</p>
+                     <button onClick={() => { setShowInfo(false); setInfoTopic(null); }} className="mt-4 w-full py-2 bg-amber-600 rounded-lg">Got it!</button>
+                  </div>
+               </div>
+            )}
+            <div className="p-3 bg-black/30 border-b border-amber-500/30 flex justify-between items-center">
+               <span className="font-bold text-sm">✍️ {sc.title}</span>
+               <span className="text-amber-400 text-sm">{scenario + 1}/{scenarios.length}</span>
+               <span className="text-orange-400 text-sm">Score: {score}</span>
+            </div>
+            <div className="flex-1 p-4 overflow-auto">
+               <div className="bg-black/30 rounded-lg p-3 mb-3">
+                  <p className="text-sm text-slate-300">{sc.context}</p>
+               </div>
+               <div className="bg-amber-800/30 rounded-lg p-3 mb-3">
+                  <p className="font-medium text-sm">{sc.question}</p>
+               </div>
+               <div className="grid gap-2 mb-3">
+                  {sc.opts.map((opt, i) => (
+                     <button key={i} onClick={() => answer(i)} disabled={answered} className={`p-3 rounded-lg text-left text-sm transition-all ${answered ? i === sc.correct ? 'bg-green-600' : i === selected ? 'bg-red-600' : 'bg-black/30 opacity-50' : 'bg-black/30 hover:bg-amber-600/50'}`}>
+                        {opt}
+                     </button>
+                  ))}
+               </div>
+               {answered && (
+                  <div className="space-y-3">
+                     <div className="bg-green-900/30 border border-green-500/30 rounded-lg p-3">
+                        <p className="text-xs text-green-400 font-semibold mb-1">Why This Works:</p>
+                        <p className="text-sm text-slate-300">{sc.why}</p>
+                     </div>
+                     {selected !== sc.correct && sc.wrongExplanations[selected!] && (
+                        <div className="bg-red-900/30 border border-red-500/30 rounded-lg p-3">
+                           <p className="text-xs text-red-400 font-semibold mb-1">Why That Fails:</p>
+                           <p className="text-sm text-slate-300">{sc.wrongExplanations[selected!]}</p>
+                        </div>
+                     )}
+                     <div className="bg-amber-900/30 border border-amber-500/30 rounded-lg p-3">
+                        <p className="text-xs text-amber-400 font-semibold mb-1">📊 Real World:</p>
+                        <p className="text-sm text-slate-300">{sc.realWorld}</p>
+                     </div>
+                     <button onClick={next} className="w-full py-2 bg-amber-600 rounded-lg font-medium">
+                        {scenario >= scenarios.length - 1 ? 'See Results' : 'Next Scenario'}
+                     </button>
+                  </div>
+               )}
+            </div>
+            <div className="p-2 bg-black/30 border-t border-amber-500/30 flex gap-2 justify-center flex-wrap">
+               {Object.keys(infoTopics).map(k => (
+                  <button key={k} onClick={() => { setInfoTopic(k); setShowInfo(true); }} className="text-xs text-amber-400 hover:text-amber-300">
+                     ℹ️ {infoTopics[k].title}
                   </button>
                ))}
             </div>
