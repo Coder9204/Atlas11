@@ -33948,6 +33948,698 @@ const GeneratedDiagram: React.FC<DiagramProps> = ({ type, data, title }) => {
       );
    };
 
+   // ============================================================================
+   // ACCOUNTING EQUATION INTERACTIVE SIMULATION
+   // Assets = Liabilities + Equity - The Foundation of All Accounting
+   // ============================================================================
+   const AccountingEquationRenderer = () => {
+      const [phase, setPhase] = useState<'intro' | 'play' | 'result'>('intro');
+      const [showInfo, setShowInfo] = useState(false);
+      const [infoTopic, setInfoTopic] = useState<string | null>(null);
+      const [showTutorial, setShowTutorial] = useState(false);
+
+      // Financial state
+      const [assets, setAssets] = useState({
+         cash: 30000,
+         accountsReceivable: 10000,
+         inventory: 5000,
+         equipment: 5000
+      });
+      const [liabilities, setLiabilities] = useState({
+         accountsPayable: 8000,
+         loansPayable: 12000
+      });
+      const [equity, setEquity] = useState({
+         ownerCapital: 25000,
+         retainedEarnings: 5000
+      });
+
+      // Game state
+      const [transactionHistory, setTransactionHistory] = useState<{id: number; name: string; description: string; balanceAfter: boolean}[]>([]);
+      const [currentTransaction, setCurrentTransaction] = useState<number | null>(null);
+      const [showTransactionResult, setShowTransactionResult] = useState(false);
+      const [lastTransactionEffect, setLastTransactionEffect] = useState<string>('');
+      const [guidanceMessage, setGuidanceMessage] = useState<string>('');
+      const [gameLog, setGameLog] = useState<string[]>([]);
+      const [challengeMode, setChallengeMode] = useState(false);
+      const [challengeCompleted, setChallengeCompleted] = useState(false);
+
+      // Calculate totals
+      const totalAssets = Object.values(assets).reduce((a, b) => a + b, 0);
+      const totalLiabilities = Object.values(liabilities).reduce((a, b) => a + b, 0);
+      const totalEquity = Object.values(equity).reduce((a, b) => a + b, 0);
+      const isBalanced = totalAssets === (totalLiabilities + totalEquity);
+
+      // Transaction definitions
+      const transactions = [
+         {
+            id: 1,
+            name: '📦 Buy Equipment with Cash',
+            shortName: 'Buy Equipment',
+            description: 'Purchase $5,000 of equipment using cash',
+            icon: '📦',
+            effect: () => {
+               setAssets(prev => ({ ...prev, cash: prev.cash - 5000, equipment: prev.equipment + 5000 }));
+               return 'Swapped cash (one asset) for equipment (another asset). Total assets unchanged!';
+            },
+            explanation: 'This is an asset-for-asset exchange. Cash decreased by $5,000, Equipment increased by $5,000. The equation stays balanced because total assets remain the same.',
+            category: 'asset_exchange'
+         },
+         {
+            id: 2,
+            name: '💰 Take a Bank Loan',
+            shortName: 'Take Loan',
+            description: 'Borrow $10,000 from the bank',
+            icon: '💰',
+            effect: () => {
+               setAssets(prev => ({ ...prev, cash: prev.cash + 10000 }));
+               setLiabilities(prev => ({ ...prev, loansPayable: prev.loansPayable + 10000 }));
+               return 'Got cash but now owe the bank. Both sides increased equally!';
+            },
+            explanation: 'Taking a loan increases assets (cash) AND liabilities (loan payable) by the same amount. The equation stays balanced.',
+            category: 'both_sides'
+         },
+         {
+            id: 3,
+            name: '👤 Owner Invests Cash',
+            shortName: 'Owner Invests',
+            description: 'Owner puts in $8,000 of personal money',
+            icon: '👤',
+            effect: () => {
+               setAssets(prev => ({ ...prev, cash: prev.cash + 8000 }));
+               setEquity(prev => ({ ...prev, ownerCapital: prev.ownerCapital + 8000 }));
+               return "Owner's investment increases both cash and equity. Still balanced!";
+            },
+            explanation: "When an owner invests, assets (cash) increase AND equity (owner's capital) increases by the same amount. The owner now has more stake in the business.",
+            category: 'equity_increase'
+         },
+         {
+            id: 4,
+            name: '💵 Make a Sale for Cash',
+            shortName: 'Make Sale',
+            description: 'Sell products worth $3,000 for cash',
+            icon: '💵',
+            effect: () => {
+               setAssets(prev => ({ ...prev, cash: prev.cash + 3000, inventory: Math.max(0, prev.inventory - 1500) }));
+               setEquity(prev => ({ ...prev, retainedEarnings: prev.retainedEarnings + 1500 }));
+               return 'Revenue increases equity through retained earnings. Profit stays in the business!';
+            },
+            explanation: 'A profitable sale: Cash increases by $3,000, Inventory decreases by $1,500 (cost of goods sold), and Retained Earnings increases by $1,500 (the profit). Assets net up $1,500, Equity up $1,500.',
+            category: 'revenue'
+         },
+         {
+            id: 5,
+            name: '📝 Pay a Bill',
+            shortName: 'Pay Bill',
+            description: 'Pay $4,000 of accounts payable',
+            icon: '📝',
+            effect: () => {
+               setAssets(prev => ({ ...prev, cash: prev.cash - 4000 }));
+               setLiabilities(prev => ({ ...prev, accountsPayable: Math.max(0, prev.accountsPayable - 4000) }));
+               return 'Paid off debt. Both cash and what you owe decreased equally!';
+            },
+            explanation: 'Paying a bill decreases both assets (cash) AND liabilities (accounts payable) by the same amount. You have less cash, but you also owe less.',
+            category: 'liability_decrease'
+         },
+         {
+            id: 6,
+            name: '📤 Pay Owner Dividend',
+            shortName: 'Pay Dividend',
+            description: 'Distribute $2,000 to the owner',
+            icon: '📤',
+            effect: () => {
+               setAssets(prev => ({ ...prev, cash: prev.cash - 2000 }));
+               setEquity(prev => ({ ...prev, retainedEarnings: prev.retainedEarnings - 2000 }));
+               return 'Cash left the business, reducing both assets and equity!';
+            },
+            explanation: 'Dividends reduce both cash (asset) and retained earnings (equity). The owner gets cash, but their stake in the business decreases.',
+            category: 'equity_decrease'
+         }
+      ];
+
+      // Info topics for the ℹ️ buttons
+      const infoTopics: Record<string, { title: string; content: string; example: string }> = {
+         assets: {
+            title: 'What Are Assets?',
+            content: 'Assets are things the business OWNS that have value. They can be physical (cash, equipment, inventory) or non-physical (patents, receivables).',
+            example: 'If you have $10,000 cash, a $5,000 computer, and customers owe you $3,000, your total assets are $18,000.'
+         },
+         liabilities: {
+            title: 'What Are Liabilities?',
+            content: 'Liabilities are what the business OWES to others. These are obligations that must be paid in the future.',
+            example: 'If you owe the bank $10,000 on a loan and have $2,000 in unpaid bills, your total liabilities are $12,000.'
+         },
+         equity: {
+            title: "What Is Owner's Equity?",
+            content: "Equity is what's LEFT for the owners after paying all debts. It's also called net worth or book value. Equity = Assets - Liabilities.",
+            example: 'If you have $50,000 in assets and $20,000 in liabilities, your equity is $30,000. This is what the owner truly "owns."'
+         },
+         equation: {
+            title: 'Why Does It Always Balance?',
+            content: 'Every transaction affects at least two accounts. This is called "double-entry" bookkeeping. Either both sides change equally, or items within one side swap.',
+            example: 'Buy equipment with cash: Cash ↓ $5K, Equipment ↑ $5K. Total assets unchanged. Take a loan: Cash ↑ $10K, Loans ↑ $10K. Both sides up equally.'
+         },
+         doubleEntry: {
+            title: 'Double-Entry Explained',
+            content: 'Every business transaction has two effects that keep the equation balanced. This 500-year-old system is how all businesses track money.',
+            example: 'When you buy inventory on credit: Inventory (asset) ↑ AND Accounts Payable (liability) ↑ by the same amount.'
+         },
+         balanceSheet: {
+            title: 'The Balance Sheet Connection',
+            content: 'The accounting equation IS the balance sheet. Assets are listed on one side, Liabilities and Equity on the other. They always equal.',
+            example: "Apple's 2023 Balance Sheet: $352B Assets = $290B Liabilities + $62B Equity. It balances!"
+         }
+      };
+
+      // Handle transaction execution
+      const executeTransaction = (transactionId: number) => {
+         const transaction = transactions.find(t => t.id === transactionId);
+         if (!transaction) return;
+
+         // Store pre-transaction state for logging
+         const preTotal = totalAssets;
+
+         // Execute the transaction effect
+         const resultMessage = transaction.effect();
+         setLastTransactionEffect(resultMessage);
+         setCurrentTransaction(transactionId);
+         setShowTransactionResult(true);
+
+         // Add to history
+         setTransactionHistory(prev => [...prev, {
+            id: transactionId,
+            name: transaction.shortName,
+            description: transaction.description,
+            balanceAfter: true // Will always be true in valid transactions
+         }]);
+
+         // Add to game log for AI coach
+         setGameLog(prev => [...prev,
+            `[Transaction] ${transaction.name}`,
+            `[Effect] ${resultMessage}`,
+            `[Balance] Assets: $${preTotal.toLocaleString()} → $${totalAssets.toLocaleString()}`
+         ]);
+
+         // Set guidance message based on transaction type
+         const guidanceMessages: Record<string, string> = {
+            'asset_exchange': "Great! You swapped one asset for another. Notice how total assets stayed the same—the equation still balances!",
+            'both_sides': "Perfect! Both sides of the equation increased equally. This is the magic of double-entry: equal changes keep balance.",
+            'equity_increase': "Owner investment increases both assets AND equity. The business has more resources, and the owner has a bigger stake.",
+            'revenue': "Revenue flows to Retained Earnings (part of Equity). This is how businesses build value over time!",
+            'liability_decrease': "Paying off debt reduces both what you have (cash) and what you owe. Notice both decreased equally!",
+            'equity_decrease': "Dividends reduce both assets and equity. Cash leaves the business and so does part of the owner's stake."
+         };
+         setGuidanceMessage(guidanceMessages[transaction.category] || '');
+
+         // Check challenge completion
+         if (challengeMode && transactionHistory.length >= 3) {
+            setChallengeCompleted(true);
+         }
+      };
+
+      // Reset state
+      const resetSimulation = () => {
+         setAssets({ cash: 30000, accountsReceivable: 10000, inventory: 5000, equipment: 5000 });
+         setLiabilities({ accountsPayable: 8000, loansPayable: 12000 });
+         setEquity({ ownerCapital: 25000, retainedEarnings: 5000 });
+         setTransactionHistory([]);
+         setCurrentTransaction(null);
+         setShowTransactionResult(false);
+         setLastTransactionEffect('');
+         setGuidanceMessage('');
+         setChallengeMode(false);
+         setChallengeCompleted(false);
+      };
+
+      const startGame = () => {
+         resetSimulation();
+         setPhase('play');
+         setGuidanceMessage("Welcome! This business has $50,000 in assets. Click a transaction to see how it affects the equation.");
+         setGameLog(['[Session Started] Accounting Equation Simulation', `[Initial State] Assets: $50,000 | Liabilities: $20,000 | Equity: $30,000`]);
+      };
+
+      const finishSession = () => {
+         setGameLog(prev => [...prev,
+            `[Session Complete] ${transactionHistory.length} transactions performed`,
+            `[Final State] Assets: $${totalAssets.toLocaleString()} | Liabilities: $${totalLiabilities.toLocaleString()} | Equity: $${totalEquity.toLocaleString()}`,
+            `[Balanced: ${isBalanced ? 'YES' : 'NO'}]`
+         ]);
+         setPhase('result');
+      };
+
+      // INTRO PHASE
+      if (phase === 'intro') return (
+         <div className="w-full h-full flex flex-col bg-gradient-to-br from-emerald-900 via-teal-900 to-cyan-900 text-white overflow-hidden">
+            {/* Tutorial Modal */}
+            {showTutorial && (
+               <div className="absolute inset-0 bg-black/80 flex items-center justify-center p-4 z-50" onClick={() => setShowTutorial(false)}>
+                  <div className="bg-slate-800 rounded-2xl p-6 max-w-md max-h-[80vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+                     <h3 className="text-xl font-bold text-emerald-400 mb-4">📖 Quick Tutorial</h3>
+                     <div className="space-y-4 text-sm">
+                        <div className="bg-black/30 rounded-lg p-3">
+                           <p className="font-bold text-teal-300 mb-1">1. The Balance Scale</p>
+                           <p className="text-slate-300">Assets must ALWAYS equal Liabilities + Equity. Think of it like a scale that must stay level.</p>
+                        </div>
+                        <div className="bg-black/30 rounded-lg p-3">
+                           <p className="font-bold text-teal-300 mb-1">2. Click Transactions</p>
+                           <p className="text-slate-300">Click any transaction button to apply it. Watch how the numbers change on both sides.</p>
+                        </div>
+                        <div className="bg-black/30 rounded-lg p-3">
+                           <p className="font-bold text-teal-300 mb-1">3. Learn the Pattern</p>
+                           <p className="text-slate-300">Every transaction affects TWO things. This is "double-entry" bookkeeping—it's why the equation always balances!</p>
+                        </div>
+                        <div className="bg-black/30 rounded-lg p-3">
+                           <p className="font-bold text-teal-300 mb-1">4. ℹ️ Info Buttons</p>
+                           <p className="text-slate-300">Click the ℹ️ icons anytime to learn more about assets, liabilities, equity, and how they work.</p>
+                        </div>
+                     </div>
+                     <button onClick={() => setShowTutorial(false)} className="mt-4 w-full py-3 bg-emerald-600 hover:bg-emerald-500 rounded-xl font-bold transition-all">
+                        Got It! 👍
+                     </button>
+                  </div>
+               </div>
+            )}
+
+            <div className="flex-1 p-6 overflow-y-auto">
+               {/* Header */}
+               <div className="text-center mb-6">
+                  <div className="text-5xl mb-3">⚖️</div>
+                  <h1 className="text-2xl font-black mb-2">THE ACCOUNTING EQUATION</h1>
+                  <p className="text-3xl font-bold text-emerald-400">Assets = Liabilities + Equity</p>
+               </div>
+
+               {/* Simple Explanation */}
+               <div className="bg-black/30 rounded-2xl p-5 mb-6 border border-emerald-500/30">
+                  <p className="text-lg text-center leading-relaxed">
+                     Everything a business <span className="text-emerald-400 font-bold">OWNS</span> must be funded by
+                     either <span className="text-amber-400 font-bold">DEBT</span> (money owed to others)
+                     or <span className="text-cyan-400 font-bold">OWNER INVESTMENT</span>.
+                  </p>
+               </div>
+
+               {/* Why It Matters */}
+               <div className="bg-gradient-to-r from-emerald-800/50 to-cyan-800/50 rounded-xl p-4 mb-6">
+                  <h2 className="font-bold text-emerald-300 mb-2 flex items-center gap-2">
+                     <span>🎯</span> WHY THIS MATTERS
+                  </h2>
+                  <p className="text-slate-200">
+                     This is the foundation of ALL financial statements. Understanding it helps you read any balance sheet
+                     and understand a company's financial health instantly.
+                  </p>
+               </div>
+
+               {/* What You'll Do */}
+               <div className="bg-black/20 rounded-xl p-4 mb-6 border border-teal-500/30">
+                  <h2 className="font-bold text-teal-300 mb-2 flex items-center gap-2">
+                     <span>🎮</span> WHAT YOU'LL DO
+                  </h2>
+                  <ul className="text-slate-200 space-y-2">
+                     <li className="flex items-start gap-2">
+                        <span className="text-emerald-400">▸</span>
+                        <span>Click transactions to see how they affect the equation</span>
+                     </li>
+                     <li className="flex items-start gap-2">
+                        <span className="text-emerald-400">▸</span>
+                        <span>Watch the balance scale respond in real-time</span>
+                     </li>
+                     <li className="flex items-start gap-2">
+                        <span className="text-emerald-400">▸</span>
+                        <span>Discover why the equation ALWAYS balances</span>
+                     </li>
+                  </ul>
+               </div>
+
+               {/* Visual Preview */}
+               <div className="bg-black/30 rounded-xl p-4 mb-6">
+                  <div className="flex justify-around items-center text-center">
+                     <div>
+                        <div className="text-3xl mb-1">📊</div>
+                        <p className="text-sm text-emerald-400 font-bold">ASSETS</p>
+                        <p className="text-xs text-slate-400">What you OWN</p>
+                     </div>
+                     <div className="text-2xl text-teal-400">=</div>
+                     <div>
+                        <div className="text-3xl mb-1">📋</div>
+                        <p className="text-sm text-amber-400 font-bold">LIABILITIES</p>
+                        <p className="text-xs text-slate-400">What you OWE</p>
+                     </div>
+                     <div className="text-2xl text-teal-400">+</div>
+                     <div>
+                        <div className="text-3xl mb-1">👤</div>
+                        <p className="text-sm text-cyan-400 font-bold">EQUITY</p>
+                        <p className="text-xs text-slate-400">Owner's stake</p>
+                     </div>
+                  </div>
+               </div>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="p-4 bg-black/30 border-t border-emerald-500/30 space-y-3">
+               <button
+                  onClick={startGame}
+                  className="w-full py-4 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 rounded-xl font-bold text-lg transition-all transform hover:scale-[1.02] shadow-lg"
+               >
+                  ▶️ START LEARNING
+               </button>
+               <button
+                  onClick={() => setShowTutorial(true)}
+                  className="w-full py-3 bg-white/10 hover:bg-white/20 rounded-xl font-medium transition-all"
+               >
+                  📖 Quick Tutorial (30 seconds)
+               </button>
+            </div>
+         </div>
+      );
+
+      // RESULT PHASE
+      if (phase === 'result') return (
+         <div className="w-full h-full flex flex-col bg-gradient-to-br from-emerald-900 via-teal-900 to-cyan-900 text-white overflow-hidden">
+            <div className="flex-1 p-6 overflow-y-auto">
+               {/* Success Header */}
+               <div className="text-center mb-6">
+                  <div className="text-6xl mb-3">🎓</div>
+                  <h1 className="text-2xl font-black mb-2">SESSION COMPLETE!</h1>
+                  <p className="text-emerald-400">You performed {transactionHistory.length} transactions</p>
+               </div>
+
+               {/* Final State */}
+               <div className="bg-black/30 rounded-xl p-4 mb-6">
+                  <h3 className="font-bold text-teal-300 mb-3 text-center">📊 Final Financial Position</h3>
+                  <div className="grid grid-cols-3 gap-3 text-center">
+                     <div className="bg-emerald-900/50 rounded-lg p-3">
+                        <p className="text-2xl font-bold text-emerald-400">${totalAssets.toLocaleString()}</p>
+                        <p className="text-xs text-slate-300">ASSETS</p>
+                     </div>
+                     <div className="bg-amber-900/50 rounded-lg p-3">
+                        <p className="text-2xl font-bold text-amber-400">${totalLiabilities.toLocaleString()}</p>
+                        <p className="text-xs text-slate-300">LIABILITIES</p>
+                     </div>
+                     <div className="bg-cyan-900/50 rounded-lg p-3">
+                        <p className="text-2xl font-bold text-cyan-400">${totalEquity.toLocaleString()}</p>
+                        <p className="text-xs text-slate-300">EQUITY</p>
+                     </div>
+                  </div>
+                  <div className="mt-3 text-center">
+                     <span className={`inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-bold ${isBalanced ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'}`}>
+                        {isBalanced ? '✓ EQUATION BALANCED' : '✗ ERROR - Not Balanced'}
+                     </span>
+                  </div>
+               </div>
+
+               {/* Key Insight */}
+               <div className="bg-gradient-to-r from-purple-900/50 to-indigo-900/50 rounded-xl p-5 mb-6 border border-purple-500/30">
+                  <h3 className="font-bold text-purple-300 mb-3 flex items-center gap-2">
+                     <span className="text-xl">💡</span> KEY INSIGHT
+                  </h3>
+                  <p className="text-lg text-white mb-4 leading-relaxed">
+                     The accounting equation <span className="text-emerald-400 font-bold">ALWAYS balances</span> because
+                     every transaction has TWO effects. This is called <span className="text-cyan-400 font-bold">"double-entry" bookkeeping</span>.
+                  </p>
+                  <div className="space-y-2 text-sm text-slate-200">
+                     <p className="flex items-start gap-2">
+                        <span className="text-purple-400">▸</span>
+                        <span>Buying something with cash just swaps one asset for another</span>
+                     </p>
+                     <p className="flex items-start gap-2">
+                        <span className="text-purple-400">▸</span>
+                        <span>Taking a loan increases both assets AND liabilities equally</span>
+                     </p>
+                     <p className="flex items-start gap-2">
+                        <span className="text-purple-400">▸</span>
+                        <span>Owner investment increases both assets AND equity</span>
+                     </p>
+                  </div>
+               </div>
+
+               {/* Real-World Application */}
+               <div className="bg-black/30 rounded-xl p-4 mb-6">
+                  <h3 className="font-bold text-amber-300 mb-2 flex items-center gap-2">
+                     <span>🌍</span> REAL-WORLD APPLICATION
+                  </h3>
+                  <p className="text-slate-200">
+                     When you look at any company's balance sheet, check if Assets = Liabilities + Equity.
+                     If it doesn't balance, there's an error—or worse, potential fraud.
+                     This simple equation is how auditors catch financial manipulation.
+                  </p>
+               </div>
+
+               {/* Transaction History */}
+               <div className="bg-black/30 rounded-xl p-4 mb-6">
+                  <h3 className="font-bold text-teal-300 mb-3">📝 Your Transaction Log</h3>
+                  <div className="space-y-2 max-h-32 overflow-y-auto">
+                     {transactionHistory.map((t, i) => (
+                        <div key={i} className="flex items-center gap-2 text-sm bg-black/30 rounded-lg px-3 py-2">
+                           <span className="text-emerald-400">{i + 1}.</span>
+                           <span className="text-slate-300">{t.name}</span>
+                           <span className="ml-auto text-green-400">✓</span>
+                        </div>
+                     ))}
+                  </div>
+               </div>
+
+               {/* AI Coach Sync Info */}
+               <div className="bg-indigo-900/30 rounded-xl p-4 border border-indigo-500/30">
+                  <h3 className="font-bold text-indigo-300 mb-2 flex items-center gap-2">
+                     <span>🤖</span> Session Synced with AI Coach
+                  </h3>
+                  <p className="text-sm text-slate-300">
+                     Your learning session has been logged. Ask your AI coach to review your transactions,
+                     explain any concepts, or provide additional practice scenarios.
+                  </p>
+               </div>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="p-4 bg-black/30 border-t border-emerald-500/30 flex gap-3">
+               <button
+                  onClick={() => { resetSimulation(); setPhase('intro'); }}
+                  className="flex-1 py-3 bg-white/10 hover:bg-white/20 rounded-xl font-bold transition-all"
+               >
+                  🔄 Try Again
+               </button>
+               <button
+                  onClick={() => setPhase('intro')}
+                  className="flex-1 py-3 bg-emerald-600 hover:bg-emerald-500 rounded-xl font-bold transition-all"
+               >
+                  ➡️ Continue
+               </button>
+            </div>
+         </div>
+      );
+
+      // PLAY PHASE
+      return (
+         <div className="w-full h-full flex flex-col bg-gradient-to-br from-emerald-900 via-teal-900 to-cyan-900 text-white overflow-hidden">
+            {/* Info Modal */}
+            {showInfo && infoTopic && infoTopics[infoTopic] && (
+               <div className="absolute inset-0 bg-black/80 flex items-center justify-center p-4 z-50" onClick={() => { setShowInfo(false); setInfoTopic(null); }}>
+                  <div className="bg-slate-800 rounded-2xl p-5 max-w-md" onClick={e => e.stopPropagation()}>
+                     <h3 className="text-lg font-bold text-emerald-400 mb-3">{infoTopics[infoTopic].title}</h3>
+                     <p className="text-slate-200 mb-4">{infoTopics[infoTopic].content}</p>
+                     <div className="bg-black/30 rounded-lg p-3 mb-4">
+                        <p className="text-xs text-teal-400 font-bold mb-1">EXAMPLE:</p>
+                        <p className="text-sm text-slate-300">{infoTopics[infoTopic].example}</p>
+                     </div>
+                     <button onClick={() => { setShowInfo(false); setInfoTopic(null); }} className="w-full py-2 bg-emerald-600 hover:bg-emerald-500 rounded-xl font-bold transition-all">
+                        Got it! 👍
+                     </button>
+                  </div>
+               </div>
+            )}
+
+            {/* Transaction Result Modal */}
+            {showTransactionResult && currentTransaction && (
+               <div className="absolute inset-0 bg-black/80 flex items-center justify-center p-4 z-50" onClick={() => setShowTransactionResult(false)}>
+                  <div className="bg-slate-800 rounded-2xl p-5 max-w-md" onClick={e => e.stopPropagation()}>
+                     <div className="text-center mb-4">
+                        <span className="text-4xl">{transactions.find(t => t.id === currentTransaction)?.icon}</span>
+                        <h3 className="text-lg font-bold text-emerald-400 mt-2">
+                           {transactions.find(t => t.id === currentTransaction)?.shortName}
+                        </h3>
+                     </div>
+                     <div className="bg-green-900/30 rounded-lg p-4 mb-4 border border-green-500/30">
+                        <p className="text-green-400 font-medium">{lastTransactionEffect}</p>
+                     </div>
+                     <div className="bg-black/30 rounded-lg p-3 mb-4">
+                        <p className="text-xs text-teal-400 font-bold mb-1">WHY IT BALANCES:</p>
+                        <p className="text-sm text-slate-300">
+                           {transactions.find(t => t.id === currentTransaction)?.explanation}
+                        </p>
+                     </div>
+                     <button onClick={() => setShowTransactionResult(false)} className="w-full py-3 bg-emerald-600 hover:bg-emerald-500 rounded-xl font-bold transition-all">
+                        Continue ➡️
+                     </button>
+                  </div>
+               </div>
+            )}
+
+            {/* Header */}
+            <div className="p-3 bg-black/30 border-b border-emerald-500/30">
+               <div className="flex justify-between items-center">
+                  <span className="font-bold text-lg">⚖️ Accounting Equation</span>
+                  <div className="flex items-center gap-2">
+                     <span className="text-xs bg-emerald-600/50 px-2 py-1 rounded-full">
+                        {transactionHistory.length} transactions
+                     </span>
+                     <button onClick={() => { setInfoTopic('equation'); setShowInfo(true); }} className="w-7 h-7 rounded-full bg-white/20 hover:bg-white/30 flex items-center justify-center text-sm transition-all">
+                        ℹ️
+                     </button>
+                  </div>
+               </div>
+            </div>
+
+            {/* Main Content */}
+            <div className="flex-1 p-4 overflow-y-auto">
+               {/* Balance Visualization */}
+               <div className="bg-black/30 rounded-xl p-4 mb-4">
+                  {/* The Equation Display */}
+                  <div className="flex items-center justify-center gap-3 mb-4">
+                     <div className="text-center flex-1">
+                        <div className="flex items-center justify-center gap-1">
+                           <span className="text-xs text-emerald-400 font-bold">ASSETS</span>
+                           <button onClick={() => { setInfoTopic('assets'); setShowInfo(true); }} className="text-xs">ℹ️</button>
+                        </div>
+                        <div className="text-2xl font-bold text-emerald-400">${totalAssets.toLocaleString()}</div>
+                     </div>
+                     <div className="text-2xl font-bold text-white">=</div>
+                     <div className="text-center flex-1">
+                        <div className="flex items-center justify-center gap-1">
+                           <span className="text-xs text-amber-400 font-bold">LIABILITIES</span>
+                           <button onClick={() => { setInfoTopic('liabilities'); setShowInfo(true); }} className="text-xs">ℹ️</button>
+                        </div>
+                        <div className="text-2xl font-bold text-amber-400">${totalLiabilities.toLocaleString()}</div>
+                     </div>
+                     <div className="text-2xl font-bold text-white">+</div>
+                     <div className="text-center flex-1">
+                        <div className="flex items-center justify-center gap-1">
+                           <span className="text-xs text-cyan-400 font-bold">EQUITY</span>
+                           <button onClick={() => { setInfoTopic('equity'); setShowInfo(true); }} className="text-xs">ℹ️</button>
+                        </div>
+                        <div className="text-2xl font-bold text-cyan-400">${totalEquity.toLocaleString()}</div>
+                     </div>
+                  </div>
+
+                  {/* Balance Scale Visual */}
+                  <div className="relative h-16 flex items-center justify-center">
+                     <div className="absolute inset-x-0 top-1/2 h-1 bg-slate-600 rounded-full"></div>
+                     <div className="absolute left-1/2 top-0 bottom-0 w-1 bg-slate-500 -translate-x-1/2"></div>
+                     <div className={`absolute inset-x-8 h-2 rounded-full transition-all duration-500 ${isBalanced ? 'bg-green-500 top-1/2 -translate-y-1/2' : 'bg-red-500 rotate-6'}`}></div>
+                     <div className="absolute left-8 top-1/2 -translate-y-1/2 w-4 h-4 rounded-full bg-emerald-400 border-2 border-emerald-300 shadow-lg"></div>
+                     <div className="absolute right-8 top-1/2 -translate-y-1/2 w-4 h-4 rounded-full bg-cyan-400 border-2 border-cyan-300 shadow-lg"></div>
+                  </div>
+
+                  {/* Balance Status */}
+                  <div className="text-center mt-2">
+                     <span className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold ${isBalanced ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'}`}>
+                        {isBalanced ? '✓ BALANCED' : '✗ UNBALANCED'}
+                     </span>
+                  </div>
+               </div>
+
+               {/* Detailed Breakdown */}
+               <div className="grid grid-cols-3 gap-2 mb-4">
+                  {/* Assets Detail */}
+                  <div className="bg-emerald-900/30 rounded-lg p-2 border border-emerald-500/20">
+                     <p className="text-xs font-bold text-emerald-400 mb-2 text-center">ASSETS</p>
+                     <div className="space-y-1 text-xs">
+                        <div className="flex justify-between"><span className="text-slate-400">Cash</span><span className="text-emerald-300">${assets.cash.toLocaleString()}</span></div>
+                        <div className="flex justify-between"><span className="text-slate-400">AR</span><span className="text-emerald-300">${assets.accountsReceivable.toLocaleString()}</span></div>
+                        <div className="flex justify-between"><span className="text-slate-400">Inventory</span><span className="text-emerald-300">${assets.inventory.toLocaleString()}</span></div>
+                        <div className="flex justify-between"><span className="text-slate-400">Equipment</span><span className="text-emerald-300">${assets.equipment.toLocaleString()}</span></div>
+                     </div>
+                  </div>
+
+                  {/* Liabilities Detail */}
+                  <div className="bg-amber-900/30 rounded-lg p-2 border border-amber-500/20">
+                     <p className="text-xs font-bold text-amber-400 mb-2 text-center">LIABILITIES</p>
+                     <div className="space-y-1 text-xs">
+                        <div className="flex justify-between"><span className="text-slate-400">AP</span><span className="text-amber-300">${liabilities.accountsPayable.toLocaleString()}</span></div>
+                        <div className="flex justify-between"><span className="text-slate-400">Loans</span><span className="text-amber-300">${liabilities.loansPayable.toLocaleString()}</span></div>
+                     </div>
+                  </div>
+
+                  {/* Equity Detail */}
+                  <div className="bg-cyan-900/30 rounded-lg p-2 border border-cyan-500/20">
+                     <p className="text-xs font-bold text-cyan-400 mb-2 text-center">EQUITY</p>
+                     <div className="space-y-1 text-xs">
+                        <div className="flex justify-between"><span className="text-slate-400">Capital</span><span className="text-cyan-300">${equity.ownerCapital.toLocaleString()}</span></div>
+                        <div className="flex justify-between"><span className="text-slate-400">Retained</span><span className="text-cyan-300">${equity.retainedEarnings.toLocaleString()}</span></div>
+                     </div>
+                  </div>
+               </div>
+
+               {/* Guidance Message */}
+               {guidanceMessage && (
+                  <div className="bg-indigo-900/30 rounded-lg p-3 mb-4 border border-indigo-500/30">
+                     <div className="flex items-start gap-2">
+                        <span className="text-lg">💬</span>
+                        <p className="text-sm text-indigo-200">{guidanceMessage}</p>
+                     </div>
+                  </div>
+               )}
+
+               {/* Transaction Buttons */}
+               <div className="mb-4">
+                  <div className="flex items-center justify-between mb-3">
+                     <h3 className="font-bold text-teal-300 flex items-center gap-2">
+                        <span>📝</span> Click a Transaction
+                     </h3>
+                     <button onClick={() => { setInfoTopic('doubleEntry'); setShowInfo(true); }} className="text-xs text-teal-400 hover:text-teal-300">
+                        ℹ️ How it works
+                     </button>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2">
+                     {transactions.map(t => (
+                        <button
+                           key={t.id}
+                           onClick={() => executeTransaction(t.id)}
+                           className="p-3 bg-black/30 hover:bg-emerald-600/30 rounded-xl text-left transition-all border border-transparent hover:border-emerald-500/50 group"
+                        >
+                           <div className="flex items-center gap-2 mb-1">
+                              <span className="text-lg">{t.icon}</span>
+                              <span className="font-medium text-sm text-white group-hover:text-emerald-300">{t.shortName}</span>
+                           </div>
+                           <p className="text-xs text-slate-400">{t.description}</p>
+                        </button>
+                     ))}
+                  </div>
+               </div>
+
+               {/* Transaction History */}
+               {transactionHistory.length > 0 && (
+                  <div className="bg-black/20 rounded-lg p-3">
+                     <h4 className="text-xs font-bold text-slate-400 mb-2">TRANSACTION HISTORY</h4>
+                     <div className="flex flex-wrap gap-1">
+                        {transactionHistory.map((t, i) => (
+                           <span key={i} className="px-2 py-1 bg-emerald-600/30 rounded text-xs text-emerald-300">
+                              {i + 1}. {t.name}
+                           </span>
+                        ))}
+                     </div>
+                  </div>
+               )}
+            </div>
+
+            {/* Footer Actions */}
+            <div className="p-3 bg-black/30 border-t border-emerald-500/30 flex gap-2">
+               <button onClick={resetSimulation} className="px-4 py-2 bg-white/10 hover:bg-white/20 rounded-lg text-sm font-medium transition-all">
+                  🔄 Reset
+               </button>
+               <button onClick={() => { setInfoTopic('balanceSheet'); setShowInfo(true); }} className="px-4 py-2 bg-white/10 hover:bg-white/20 rounded-lg text-sm font-medium transition-all">
+                  ℹ️ Learn More
+               </button>
+               <button
+                  onClick={finishSession}
+                  disabled={transactionHistory.length < 2}
+                  className="flex-1 py-2 bg-emerald-600 hover:bg-emerald-500 disabled:bg-slate-600 disabled:opacity-50 rounded-lg font-bold transition-all"
+               >
+                  {transactionHistory.length < 2 ? `Try ${2 - transactionHistory.length} more...` : 'Finish & See Insights →'}
+               </button>
+            </div>
+         </div>
+      );
+   };
+
    const FinancialStatementsRenderer = () => {
       const [phase, setPhase] = useState<'intro' | 'play' | 'result'>('intro');
       const [showInfo, setShowInfo] = useState(false);
@@ -37749,6 +38441,8 @@ const GeneratedDiagram: React.FC<DiagramProps> = ({ type, data, title }) => {
             return <FundraisingRenderer />;
          case 'financial_statements':
             return <FinancialStatementsRenderer />;
+         case 'accounting_equation':
+            return <AccountingEquationRenderer />;
          case 'pricing_strategy':
             return <PricingStrategyRenderer />;
          case 'budgeting':
