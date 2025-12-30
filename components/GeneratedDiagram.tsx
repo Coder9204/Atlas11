@@ -22715,74 +22715,342 @@ const GeneratedDiagram: React.FC<DiagramProps> = ({ type, data, title }) => {
    const SalesFunnelRenderer = () => {
       const [phase, setPhase] = useState<'intro' | 'play' | 'result'>('intro');
       const [showInfo, setShowInfo] = useState(false);
-      const [funnel, setFunnel] = useState({ awareness: '', interest: '', decision: '', action: '' });
-      const [step, setStep] = useState(0);
-      const [inputValue, setInputValue] = useState('');
+      const [infoTopic, setInfoTopic] = useState<string | null>(null);
+      const [scenario, setScenario] = useState(0);
+      const [score, setScore] = useState(0);
+      const [selected, setSelected] = useState<number | null>(null);
+      const [answered, setAnswered] = useState(false);
+      const [gameLog, setGameLog] = useState<string[]>([]);
+      const [conceptGaps, setConceptGaps] = useState<string[]>([]);
 
-      const stages = [
-         { key: 'awareness', icon: '👁️', label: 'Awareness', color: 'from-blue-500 to-blue-600', prompt: 'How will people discover you? (Ads, content, SEO, etc.)' },
-         { key: 'interest', icon: '🤔', label: 'Interest', color: 'from-green-500 to-green-600', prompt: 'How will you capture interest? (Lead magnets, free trials, etc.)' },
-         { key: 'decision', icon: '⚖️', label: 'Decision', color: 'from-yellow-500 to-yellow-600', prompt: 'How will you help them decide? (Demos, testimonials, etc.)' },
-         { key: 'action', icon: '💰', label: 'Action', color: 'from-red-500 to-red-600', prompt: 'How will they buy? (Checkout, call, signup, etc.)' }
+      // Funnel Optimization Lab - Master conversion psychology and identify funnel leaks
+      const scenarios = [
+         {
+            title: "The Leaky Bucket",
+            context: "Your SaaS funnel: 10,000 visitors → 500 signups (5%) → 50 trials (10%) → 5 paid (10%). Industry benchmarks: Visitor→Signup 3%, Signup→Trial 30%, Trial→Paid 25%.",
+            question: "Where should you focus optimization efforts FIRST?",
+            opts: [
+               'Top of funnel - get more visitors since you\'re above benchmark',
+               'Middle of funnel - signup to trial is way below benchmark (10% vs 30%)',
+               'Bottom of funnel - trial to paid is below benchmark',
+               'All stages equally - optimize everything at once'
+            ],
+            correct: 1,
+            wrongExplanations: [
+               "You're ABOVE benchmark on visitors→signup (5% vs 3%). Optimizing your strength wastes resources. Fix the biggest leak first.",
+               "", // Correct
+               "Trial→Paid (10% vs 25%) is bad, but fixing it only improves 50 trials → maybe 12 paid. Fixing Signup→Trial could give you 150 trials → 37 paid. Fix the bigger leak first.",
+               "Optimizing everything dilutes focus. Startups win by finding the biggest lever and pulling hard. Identify your constraint."
+            ],
+            realWorld: "Dropbox found their signup→activation was leaky (users signed up but never uploaded files). They added an onboarding checklist and 2x'd activation. The insight: fix one stage at a time, starting with the worst relative to benchmarks.",
+            concept: "funnel_diagnostics",
+            why: "Funnel optimization is about finding constraints. A 3x improvement in your worst stage (10%→30%) has more impact than 1.5x improvement in three stages. Your Signup→Trial is 3x below benchmark - that's your constraint. Fix it before touching anything else."
+         },
+         {
+            title: "The Conversion Killer",
+            context: "Your landing page converts at 1.5% (industry: 3%). You have data: Time on page is high (4 min avg), scroll depth is good (70% reach CTA), but CTA clicks are low (2%). Bounce rate is normal (40%).",
+            question: "What's the MOST LIKELY problem?",
+            opts: [
+               'The headline isn\'t compelling enough',
+               'The CTA button color/placement is wrong',
+               'The value proposition is unclear or the CTA copy doesn\'t match intent',
+               'You need more social proof on the page'
+            ],
+            correct: 2,
+            wrongExplanations: [
+               "If the headline was bad, time-on-page and scroll depth would be poor. People ARE reading - they just aren't clicking. The problem is downstream.",
+               "Button color rarely matters more than 5-10%. High engagement + low CTA clicks suggests a VALUE problem, not a design problem.",
+               "", // Correct
+               "More social proof might help marginally, but high engagement with low CTA clicks suggests people understand the product but don't see enough value to take action."
+            ],
+            realWorld: "Basecamp tested 37 landing page variations. The winner wasn't about colors or buttons - it was about clearly stating what happens AFTER you click. 'Start your free trial' beat 'Get started' by 30% because it reduced uncertainty.",
+            concept: "conversion_psychology",
+            why: "High engagement + low conversion = disconnect between content and CTA. Users are interested (they're reading) but the CTA doesn't match their readiness or the value proposition isn't clear. The fix: clarify what happens next and why it's worth their time."
+         },
+         {
+            title: "The Pricing Page Paradox",
+            context: "You offer 3 tiers: Basic ($9), Pro ($29), Enterprise ($99). Traffic splits: Basic page 50%, Pro 35%, Enterprise 15%. But conversions: Basic 8%, Pro 2%, Enterprise 5%. Basic customers churn at 15%/month, Pro at 3%/month.",
+            question: "What's the strategic problem with this funnel?",
+            opts: [
+               'Enterprise pricing is too high - lower it to get more volume',
+               'You\'re optimizing for the wrong tier - Pro has best LTV but lowest conversion',
+               'Basic tier is cannibalizing Pro - too many features at low price',
+               'Both B and C - you need to restructure to push users toward Pro'
+            ],
+            correct: 3,
+            wrongExplanations: [
+               "Enterprise at 5% conversion with presumably high LTV is fine. The problem is your funnel pushes people to Basic, which churns fast.",
+               "This is PART of the problem. Pro has best retention (3% churn) but worst conversion (2%). But WHY is Pro converting poorly?",
+               "This is PART of the problem. If Basic has too many features, value-conscious buyers choose it instead of Pro. But you need to fix both issues.",
+               "" // Correct
+            ],
+            realWorld: "Slack deliberately made their free tier limited enough that growing teams HAD to upgrade. They optimized for paid conversion, not free signups. Result: 30% of free teams convert to paid - unheard of in freemium.",
+            concept: "tier_optimization",
+            why: "Your funnel is broken in two ways: 1) Basic is too attractive (50% traffic, 8% conversion) but churns fast (15%/mo). 2) Pro has best retention but converts poorly - likely because Basic offers too much. Solution: Nerf Basic, add value to Pro, restructure pricing page to anchor on Pro."
+         },
+         {
+            title: "The Email Sequence Mystery",
+            context: "Your trial→paid nurture sequence: Email 1 (Day 1): 45% open, 8% click. Email 2 (Day 3): 35% open, 5% click. Email 3 (Day 7): 20% open, 2% click. Email 4 (Day 10): 12% open, 1% click. Trial conversion: 8% (industry: 15%).",
+            question: "What does this data tell you about your sequence?",
+            opts: [
+               'Your subject lines are getting worse - focus on better copywriting',
+               'Email fatigue is normal - this sequence is fine',
+               'Users are losing interest because emails aren\'t driving product engagement',
+               'You\'re sending too many emails - reduce frequency'
+            ],
+            correct: 2,
+            wrongExplanations: [
+               "Declining opens are NORMAL in sequences (email fatigue). The real problem: clicks are low AND declining. If emails drove product value, engagement would stay higher.",
+               "This sequence is NOT fine. 8% trial conversion vs 15% industry benchmark means you're leaving 50%+ on the table. Something is broken.",
+               "", // Correct
+               "Frequency isn't the issue. The issue is that emails aren't creating product 'aha moments.' Fewer bad emails won't help."
+            ],
+            realWorld: "Slack's onboarding emails don't sell - they teach ONE feature per email and measure whether users TRY that feature. Their 'aha moment' is sending 2,000 messages as a team. Every email drives toward that metric.",
+            concept: "activation_sequences",
+            why: "Email opens declining is normal. But click decline + low trial conversion means your emails aren't driving the 'aha moment.' Winning sequences: 1) Identify your activation metric (Slack: 2K messages, Dropbox: 1 file), 2) Make every email drive toward that metric, 3) Measure product engagement, not email engagement."
+         },
+         {
+            title: "The Retargeting Trap",
+            context: "You're retargeting cart abandoners: Audience of 10,000 abandoners. Retargeting ad CTR: 2% (good). Landing page conversion: 15% (good). But ROI is negative - you're spending $5 to acquire customers worth $3.",
+            question: "What's wrong with this retargeting strategy?",
+            opts: [
+               'Your ads aren\'t compelling enough',
+               'Landing page needs optimization',
+               'You\'re retargeting ALL abandoners instead of segmenting by intent',
+               'Retargeting doesn\'t work - stop doing it'
+            ],
+            correct: 2,
+            wrongExplanations: [
+               "2% CTR is good for retargeting. Ad creative isn't the problem - targeting is.",
+               "15% conversion is excellent. The landing page is working.",
+               "", // Correct
+               "Retargeting works extremely well when done right. The issue is strategy, not the channel."
+            ],
+            realWorld: "Amazon segments cart abandoners: 1) Added item but left immediately (low intent - minimal spend), 2) Filled cart and entered checkout (high intent - aggressive retargeting), 3) Abandoned at payment (friction - offer support). Same channel, 5x different CPAs.",
+            concept: "retargeting_segmentation",
+            why: "Treating all abandoners equally wastes money. Someone who left after 10 seconds has different intent than someone who reached the payment page. Segment by: 1) Time on site, 2) Cart value, 3) Checkout progress, 4) Return visits. Spend more on high-intent, less on low-intent."
+         }
       ];
 
-      if (phase === 'intro') return (
-         <div className="flex flex-col items-center justify-center h-full bg-gradient-to-br from-slate-900 via-gray-900 to-zinc-900 text-white p-8 text-center">
-            <button onClick={() => setShowInfo(!showInfo)} className="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/20 flex items-center justify-center text-xl">ℹ️</button>
-            {showInfo && (
-               <div className="absolute top-16 right-4 bg-black/90 p-4 rounded-xl max-w-xs text-left text-sm">
-                  <p className="font-bold mb-2">Sales Funnel (AIDA)</p>
-                  <p>Awareness → Interest → Decision → Action. Each stage narrows as prospects move toward purchase.</p>
-               </div>
-            )}
-            <p className="text-6xl mb-4">🔻</p>
-            <h2 className="text-3xl font-bold mb-4">Build Your Sales Funnel</h2>
-            <p className="text-lg opacity-80 max-w-md mb-8">Design each stage of your customer journey from awareness to action.</p>
-            <button onClick={() => setPhase('play')} className="px-8 py-4 bg-blue-500 rounded-2xl font-bold text-xl hover:bg-blue-400 transition-all">BUILD FUNNEL →</button>
-         </div>
-      );
-
-      if (phase === 'result') return (
-         <div className="flex flex-col h-full bg-gradient-to-br from-slate-900 via-gray-900 to-zinc-900 text-white p-8">
-            <h2 className="text-2xl font-bold text-center mb-6">🔻 Your Sales Funnel</h2>
-            <div className="flex-1 flex flex-col items-center justify-center gap-2">
-               {stages.map((s, i) => (
-                  <div key={s.key} className={`bg-gradient-to-r ${s.color} rounded-xl p-4 text-center transition-all`}
-                     style={{ width: `${100 - i * 15}%` }}>
-                     <p className="font-bold">{s.icon} {s.label}</p>
-                     <p className="text-sm opacity-90">{funnel[s.key as keyof typeof funnel]}</p>
-                  </div>
-               ))}
-            </div>
-            <button onClick={() => { setPhase('intro'); setFunnel({ awareness: '', interest: '', decision: '', action: '' }); setStep(0); }} className="px-6 py-3 bg-blue-500 rounded-xl font-bold mt-4">CREATE NEW FUNNEL</button>
-         </div>
-      );
-
-      const submitStep = () => {
-         setFunnel({ ...funnel, [stages[step].key]: inputValue });
-         setInputValue('');
-         if (step < 3) setStep(step + 1);
-         else setPhase('result');
+      const conceptLabels: { [key: string]: string } = {
+         funnel_diagnostics: "Funnel Constraint Analysis",
+         conversion_psychology: "Conversion Psychology & CTA Optimization",
+         tier_optimization: "Pricing Tier Strategy",
+         activation_sequences: "Activation & Onboarding Sequences",
+         retargeting_segmentation: "Behavioral Retargeting Segmentation"
       };
 
-      const s = stages[step];
+      const infoTopics: { [k: string]: { title: string; content: string } } = {
+         aida: {
+            title: "AIDA Framework",
+            content: "Attention → Interest → Desire → Action. Classic funnel stages. But modern funnels add: Awareness → Consideration → Conversion → Retention → Advocacy. The best funnels optimize for RETENTION, not just initial conversion. A 5% improvement in retention often beats 25% improvement in acquisition."
+         },
+         metrics: {
+            title: "Key Funnel Metrics",
+            content: "Track: 1) Stage-by-stage conversion rates, 2) Time between stages, 3) Drop-off points, 4) Cohort retention, 5) CAC payback period. Compare to industry benchmarks: SaaS visitor→trial 2-5%, trial→paid 15-25%, B2C e-commerce cart→purchase 2-4%. Your biggest gap = your biggest opportunity."
+         },
+         psychology: {
+            title: "Conversion Psychology",
+            content: "Cialdini's 6 principles: 1) Reciprocity (give before asking), 2) Scarcity (limited time/quantity), 3) Authority (expert endorsement), 4) Consistency (small commitments lead to big ones), 5) Liking (similarity, compliments), 6) Social proof (others are doing it). Use ethically."
+         },
+         testing: {
+            title: "A/B Testing Fundamentals",
+            content: "Rules: 1) Test ONE variable at a time, 2) Run until statistical significance (95%+ confidence), 3) Test big changes first (headlines, offers), then small (colors, buttons), 4) Document everything, 5) Winning tests often reveal customer psychology insights more valuable than the lift itself."
+         }
+      };
+
+      const answer = (idx: number) => {
+         if (answered) return;
+         setSelected(idx);
+         setAnswered(true);
+         const s = scenarios[scenario];
+         if (idx === s.correct) {
+            setScore(prev => prev + 1);
+            setGameLog(prev => [...prev, `✓ ${s.title}: Correct! Mastered ${conceptLabels[s.concept]}`]);
+         } else {
+            setGameLog(prev => [...prev, `✗ ${s.title}: Missed. Fell for "${s.opts[idx].substring(0, 40)}..."`]);
+            if (!conceptGaps.includes(s.concept)) {
+               setConceptGaps(prev => [...prev, s.concept]);
+            }
+         }
+      };
+
+      const next = () => {
+         if (scenario >= scenarios.length - 1) {
+            setPhase('result');
+         } else {
+            setScenario(prev => prev + 1);
+            setAnswered(false);
+            setSelected(null);
+         }
+      };
+
+      const grade = score >= 5 ? 'A' : score >= 4 ? 'B' : score >= 3 ? 'C' : 'D';
+      const s = scenarios[scenario];
+
+      if (phase === 'intro') {
+         return (
+            <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-blue-900 via-indigo-900 to-violet-900 text-white p-6">
+               <div className="text-6xl mb-4">🔻</div>
+               <h2 className="text-2xl font-bold mb-2">Funnel Optimization Lab</h2>
+               <p className="text-slate-300 text-center mb-4 max-w-md">
+                  Master the art of diagnosing and fixing conversion funnels like a growth expert.
+               </p>
+               <div className="bg-black/30 rounded-xl p-4 mb-6 max-w-md text-sm">
+                  <p className="text-blue-400 font-bold mb-2">🎯 What You'll Learn:</p>
+                  <ul className="text-slate-300 space-y-1 text-xs">
+                     <li>• How to find the biggest leaks in any funnel</li>
+                     <li>• Why high engagement doesn't always mean high conversion</li>
+                     <li>• The psychology behind why people don't convert</li>
+                     <li>• Real optimization strategies from Dropbox, Slack, Amazon</li>
+                  </ul>
+               </div>
+               <button
+                  onClick={() => setPhase('play')}
+                  className="px-8 py-3 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-xl font-bold hover:from-blue-400 hover:to-indigo-400 transition-all"
+               >
+                  Start Optimizing
+               </button>
+            </div>
+         );
+      }
+
+      if (phase === 'result') {
+         return (
+            <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-blue-900 via-indigo-900 to-violet-900 text-white p-6 overflow-auto">
+               <div className="text-6xl mb-4">{grade === 'A' ? '🏆' : grade === 'B' ? '🔻' : grade === 'C' ? '📊' : '📚'}</div>
+               <h2 className="text-2xl font-bold mb-2">Funnel Analysis Complete</h2>
+               <div className="text-4xl font-bold text-blue-400 mb-2">{score}/{scenarios.length}</div>
+               <div className="text-5xl mb-4">{grade}</div>
+               <p className="text-slate-400 mb-4 text-center">
+                  {grade === 'A' ? 'Conversion expert! You think like a growth lead.' :
+                   grade === 'B' ? 'Strong funnel intuition. Some optimization gaps to fill.' :
+                   grade === 'C' ? 'Decent foundation, but missing key conversion concepts.' :
+                   'Funnel optimization requires more study. Review the fundamentals.'}
+               </p>
+
+               {conceptGaps.length > 0 && (
+                  <div className="bg-black/30 rounded-xl p-4 max-w-md w-full mb-4">
+                     <p className="text-blue-400 font-bold text-sm mb-2">📚 Concepts to Study:</p>
+                     <ul className="text-slate-300 text-xs space-y-1">
+                        {conceptGaps.map(gap => (
+                           <li key={gap}>• {conceptLabels[gap]}</li>
+                        ))}
+                     </ul>
+                  </div>
+               )}
+
+               <div className="bg-black/30 rounded-xl p-4 max-w-md w-full mb-4 max-h-32 overflow-y-auto">
+                  <p className="text-blue-400 font-bold text-sm mb-2">Session Log:</p>
+                  {gameLog.map((entry, i) => (
+                     <p key={i} className="text-xs text-slate-300">{entry}</p>
+                  ))}
+               </div>
+
+               <button
+                  onClick={() => {
+                     setPhase('intro');
+                     setScenario(0);
+                     setScore(0);
+                     setAnswered(false);
+                     setSelected(null);
+                     setGameLog([]);
+                     setConceptGaps([]);
+                  }}
+                  className="px-6 py-2 bg-blue-600 rounded-lg hover:bg-blue-500"
+               >
+                  Try Again
+               </button>
+            </div>
+         );
+      }
+
       return (
-         <div className="flex flex-col h-full bg-gradient-to-br from-slate-900 via-gray-900 to-zinc-900 text-white p-8">
-            <div className="flex justify-center gap-2 mb-6">
-               {stages.map((_, i) => (
-                  <div key={i} className={`w-12 h-2 rounded-full ${i <= step ? 'bg-blue-400' : 'bg-black/30'}`}></div>
+         <div className="w-full h-full flex flex-col bg-gradient-to-br from-blue-900 via-indigo-900 to-violet-900 text-white overflow-hidden">
+            {showInfo && infoTopic && infoTopics[infoTopic] && (
+               <div className="absolute inset-0 bg-black/80 flex items-center justify-center p-4 z-50" onClick={() => { setShowInfo(false); setInfoTopic(null); }}>
+                  <div className="bg-slate-800 rounded-xl p-4 max-w-md" onClick={e => e.stopPropagation()}>
+                     <h3 className="text-lg font-bold text-blue-400 mb-2">{infoTopics[infoTopic].title}</h3>
+                     <p className="text-sm text-slate-300">{infoTopics[infoTopic].content}</p>
+                     <button onClick={() => { setShowInfo(false); setInfoTopic(null); }} className="mt-4 w-full py-2 bg-blue-600 rounded-lg">Got it!</button>
+                  </div>
+               </div>
+            )}
+
+            <div className="p-3 bg-black/30 border-b border-blue-500/30 flex justify-between items-center">
+               <span className="font-bold">🔻 Funnel Lab</span>
+               <span className="text-blue-400">{scenario + 1}/{scenarios.length}</span>
+               <span className="text-indigo-400">Score: {score}</span>
+            </div>
+
+            <div className="flex-1 p-4 overflow-auto">
+               <div className="bg-black/30 rounded-xl p-3 mb-3">
+                  <p className="font-bold text-blue-400 mb-2">{s.title}</p>
+                  <p className="text-sm text-slate-300">{s.context}</p>
+               </div>
+
+               <div className="bg-black/30 rounded-xl p-4 mb-3">
+                  <p className="font-medium text-white">{s.question}</p>
+               </div>
+
+               <div className="grid gap-2">
+                  {s.opts.map((opt, i) => (
+                     <button
+                        key={i}
+                        onClick={() => answer(i)}
+                        disabled={answered}
+                        className={`p-3 rounded-lg text-left text-sm transition-all ${
+                           answered
+                              ? i === s.correct
+                                 ? 'bg-green-600'
+                                 : i === selected
+                                    ? 'bg-red-600'
+                                    : 'bg-black/30'
+                              : 'bg-black/30 hover:bg-blue-600/50'
+                        }`}
+                     >
+                        {opt}
+                     </button>
+                  ))}
+               </div>
+
+               {answered && (
+                  <div className="mt-3 space-y-3">
+                     {selected !== s.correct && s.wrongExplanations[selected!] && (
+                        <div className="p-3 bg-red-900/50 rounded-lg border border-red-500/30">
+                           <p className="text-xs text-red-300 font-bold mb-1">❌ Why This Was Wrong:</p>
+                           <p className="text-sm text-red-100">{s.wrongExplanations[selected!]}</p>
+                        </div>
+                     )}
+                     <div className="p-3 bg-green-900/50 rounded-lg border border-green-500/30">
+                        <p className="text-xs text-green-300 font-bold mb-1">✓ Optimization Insight:</p>
+                        <p className="text-sm text-green-100">{s.why}</p>
+                     </div>
+                     <div className="p-3 bg-blue-900/50 rounded-lg border border-blue-500/30">
+                        <p className="text-xs text-blue-300 font-bold mb-1">📖 Real World:</p>
+                        <p className="text-sm text-blue-100">{s.realWorld}</p>
+                     </div>
+                     <button
+                        onClick={next}
+                        className="w-full py-2 bg-blue-600 rounded-lg hover:bg-blue-500"
+                     >
+                        {scenario >= scenarios.length - 1 ? 'See Results' : 'Next Scenario'}
+                     </button>
+                  </div>
+               )}
+            </div>
+
+            <div className="p-3 bg-black/30 border-t border-blue-500/30 flex gap-2 justify-center flex-wrap">
+               {Object.keys(infoTopics).map(k => (
+                  <button
+                     key={k}
+                     onClick={() => { setInfoTopic(k); setShowInfo(true); }}
+                     className="text-xs text-blue-400 hover:text-blue-300"
+                  >
+                     ℹ️ {infoTopics[k].title}
+                  </button>
                ))}
             </div>
-            <div className={`bg-gradient-to-r ${s.color} rounded-2xl p-6 mb-4 text-center`}>
-               <p className="text-4xl mb-2">{s.icon}</p>
-               <p className="text-xl font-bold">{s.label} Stage</p>
-               <p className="text-sm opacity-90 mt-2">{s.prompt}</p>
-            </div>
-            <textarea value={inputValue} onChange={(e) => setInputValue(e.target.value)}
-               placeholder="Describe your strategy..." className="flex-1 p-4 rounded-xl bg-black/30 border border-white/20 text-white mb-4 resize-none" />
-            <button onClick={submitStep} className="px-6 py-3 bg-blue-500 rounded-xl font-bold">
-               {step < 3 ? 'NEXT STAGE →' : 'VIEW FUNNEL'}
-            </button>
          </div>
       );
    };
@@ -32018,48 +32286,346 @@ const GeneratedDiagram: React.FC<DiagramProps> = ({ type, data, title }) => {
    };
 
    const GrowthStrategyRenderer = () => {
-      const [phase, setPhase] = useState<'intro'|'play'|'result'>('intro');
+      const [phase, setPhase] = useState<'intro' | 'play' | 'result'>('intro');
       const [showInfo, setShowInfo] = useState(false);
-      const [infoTopic, setInfoTopic] = useState<string|null>(null);
+      const [infoTopic, setInfoTopic] = useState<string | null>(null);
       const [scenario, setScenario] = useState(0);
       const [score, setScore] = useState(0);
+      const [selected, setSelected] = useState<number | null>(null);
       const [answered, setAnswered] = useState(false);
-      const [selected, setSelected] = useState<number|null>(null);
-      const [log, setLog] = useState<string[]>([]);
+      const [gameLog, setGameLog] = useState<string[]>([]);
+      const [conceptGaps, setConceptGaps] = useState<string[]>([]);
+
+      // Growth Channel Mastery - Understanding which channels work for which businesses and why
       const scenarios = [
-         {situation:'B2B SaaS with $50k ACV, complex product, long sales cycle.',best:2,options:['Viral loops','Paid social ads','Enterprise sales team','Content marketing'],explain:'High ACV and complexity require consultative sales. Enterprise sales team has best ROI here.'},
-         {situation:'Consumer app, low price point, high potential for word-of-mouth.',best:0,options:['Viral/referral loops','Outbound sales','Trade shows','TV advertising'],explain:'Low price + WOM potential = viral loops. Dropbox and Uber grew this way.'},
-         {situation:'Developer tools, technical audience, trust is crucial.',best:3,options:['Cold calling','Display ads','Influencer marketing','Content + community'],explain:'Developers hate being sold to. Educational content and community build trust authentically.'},
-         {situation:'Local services business, customers search when they need you.',best:1,options:['Brand awareness ads','SEO + Google Ads','Social media','Referral program'],explain:'Intent-based search is perfect. Be there when customers are actively looking.'},
-         {situation:'E-commerce, visual product, impulse purchase potential.',best:2,options:['LinkedIn ads','Email outreach','Instagram/TikTok ads','Podcast sponsorship'],explain:'Visual product + impulse = Instagram/TikTok. Show the product where attention lives.'},
-         {situation:'Professional services, high-trust relationship business.',best:3,options:['Mass advertising','Cold email blasts','Discount promotions','Referrals + thought leadership'],explain:'Trust businesses grow through reputation. Referrals and expertise demonstration win.'}
+         {
+            title: "The Viral Illusion",
+            context: "You're building a B2B project management tool. Your team is excited about adding viral features: 'Invite teammates to earn premium features!' and social sharing. A competitor without viral features is growing faster through content marketing.",
+            question: "Why is viral growth WRONG for this product?",
+            opts: [
+               'Viral features are never effective for B2B',
+               'The buying decision isn\'t made by individual users who benefit from inviting',
+               'Project management is too boring to go viral',
+               'Content marketing is always better than viral'
+            ],
+            correct: 1,
+            wrongExplanations: [
+               "Viral CAN work for B2B - Slack, Notion, and Figma all grew virally. But the incentive structure must match the buyer's motivation.",
+               "", // Correct
+               "Boring doesn't prevent virality. Dropbox (file storage) and Zoom (video calls) grew virally with 'boring' products. The key is incentive alignment.",
+               "Content marketing isn't universally better. It depends on the product and audience. The issue here is incentive mismatch."
+            ],
+            realWorld: "Slack grew virally because individual team members WANTED to use it and could convince their team. Compare to enterprise software where procurement decides - viral incentives for end-users don't influence purchasing. Know your buyer.",
+            concept: "viral_incentive_alignment",
+            why: "Viral growth requires: 1) Users personally benefit from inviting others, 2) Users have autonomy to invite, 3) The product improves with more users. B2B project management fails #2 - the person who would invite doesn't make the buying decision. Their CTO/procurement does. Incentives are misaligned."
+         },
+         {
+            title: "The Paid Acquisition Trap",
+            context: "Your e-commerce startup has $100 LTV. You're spending on Facebook ads with $50 CAC (2x LTV:CAC ratio). Your CFO says 'We're profitable! Let's 10x ad spend.' But when you scale from $10K to $100K monthly, CAC rises to $80 and LTV drops to $90.",
+            question: "What caused this performance collapse?",
+            opts: [
+               'Facebook ads just don\'t work at scale',
+               'You exhausted your best audience and now reach lower-intent users',
+               'Your competitors started outbidding you',
+               'The algorithm broke'
+            ],
+            correct: 1,
+            wrongExplanations: [
+               "Facebook ads work at massive scale for many companies. The issue isn't the platform - it's the audience targeting strategy.",
+               "", // Correct
+               "Competition affects costs, but a 60% CAC increase while spending 10x more suggests audience quality decline, not just competition.",
+               "Algorithms don't 'break.' Performance changes reflect real dynamics in targeting, audience saturation, and ad fatigue."
+            ],
+            realWorld: "Every paid channel has a 'best audience' - the 1% who are perfect fits. As you scale, you reach the 5%, then 20%, then 50%. Each tier converts worse. Uber solved this by launching city-by-city, dominating the best audience before expanding.",
+            concept: "audience_saturation",
+            why: "Paid channels have natural limits. Your first $10K finds ideal customers actively searching. Your next $100K reaches people who might want your product. Your next $1M reaches everyone. Each layer converts worse and churns faster. Scale by adding NEW high-intent channels, not by forcing more through saturated ones."
+         },
+         {
+            title: "The Content Paradox",
+            context: "You publish 10 blog posts/month. Traffic is growing 20% quarterly. But despite 50K monthly visitors, only 50 become customers (0.1% conversion). Your competitor publishes 2 posts/month but converts 2% of visitors.",
+            question: "What's the strategic difference between you and your competitor?",
+            opts: [
+               'They have better SEO and rank higher',
+               'They\'re writing for buyers while you\'re writing for browsers',
+               'They just have a better product',
+               'Conversion rate is less important than total traffic'
+            ],
+            correct: 1,
+            wrongExplanations: [
+               "Ranking doesn't determine conversion rate. You could rank #1 for the wrong keywords and still convert poorly.",
+               "", // Correct
+               "Product quality affects conversion, but a 20x difference (0.1% vs 2%) is too large to be product alone. Content strategy matters.",
+               "Conversion rate is critical. 50K × 0.1% = 50 customers. 5K × 2% = 100 customers. They get 2x customers with 10% of your traffic."
+            ],
+            realWorld: "HubSpot's early content targeted 'inbound marketing' - a term they invented. Every reader was a potential buyer. Compare to companies blogging about industry news - high traffic, low intent. Shopify blogs about 'how to start a business' - readers who need their product.",
+            concept: "content_intent_matching",
+            why: "Traffic is vanity, conversions are sanity. High-volume, low-intent content (industry news, entertainment) attracts browsers. High-intent content (how to solve the problem your product solves) attracts buyers. 2 posts targeting buyers beat 10 posts targeting browsers."
+         },
+         {
+            title: "The Sales Scaling Myth",
+            context: "Your enterprise SaaS closes $200K deals with a 6-month sales cycle. One rep closes 10 deals/year ($2M). You hire 5 more reps expecting $10M additional revenue. After 12 months, the 5 new reps combined closed only 8 deals ($1.6M).",
+            question: "What's the MOST LIKELY cause of this failure?",
+            opts: [
+               'The new reps were less talented',
+               'The market became more competitive',
+               'You didn\'t have enough pipeline/leads for 6 reps',
+               'Enterprise sales can\'t scale'
+            ],
+            correct: 2,
+            wrongExplanations: [
+               "Rep talent varies, but 5 average reps should still close more than 8 deals combined. The failure is too systematic to be talent alone.",
+               "Competition affects everyone, including your star rep. If competition was the cause, your original rep would have declined too.",
+               "", // Correct
+               "Enterprise sales scales very well - Salesforce, Oracle, and SAP prove this. The constraint is usually pipeline, not the model."
+            ],
+            realWorld: "Salesforce learned this early: before adding sales reps, they invested heavily in marketing/SDR teams to generate pipeline. The rule of thumb: each enterprise rep needs 3-4x their quota in qualified pipeline. You hired reps without the leads to feed them.",
+            concept: "sales_pipeline_math",
+            why: "Sales scaling fails when you hire closers without leads. Pipeline math: if each rep needs $800K pipeline to close $200K (25% close rate), 6 reps need $4.8M pipeline. If you only generated $2M in pipeline, reps fight over the same deals. Solution: scale marketing/SDR BEFORE hiring more closers."
+         },
+         {
+            title: "The Community Confusion",
+            context: "You're building a developer tool. Everyone says 'build community!' You launch a Discord with 2,000 members. Activity is high - lots of memes, off-topic chat, and support questions. But few are buying your product.",
+            question: "What's wrong with this community strategy?",
+            opts: [
+               'Discord is the wrong platform for developers',
+               'Communities take years to generate revenue',
+               'The community attracts users, not buyers - wrong incentive structure',
+               '2,000 members isn\'t big enough to drive sales'
+            ],
+            correct: 2,
+            wrongExplanations: [
+               "Discord works well for developers - Midjourney, Vercel, and many dev tools use it successfully. Platform isn't the issue.",
+               "Well-designed communities can drive revenue quickly. Figma's community drove adoption within months. The issue is strategy, not time.",
+               "", // Correct
+               "Size doesn't determine revenue. 100 highly-engaged potential buyers beat 10,000 people looking for free support."
+            ],
+            realWorld: "Figma built a community of DESIGNERS who shared templates. Each template showcase was implicit product marketing. Compare to dev tools with 'support communities' - members come for free help, not to buy. Notion built a community of POWER USERS who became evangelists.",
+            concept: "community_purpose",
+            why: "Communities fail when they attract free-seekers instead of potential buyers. The fix: build community around OUTCOMES your product enables, not around the product itself. A 'design inspiration' community attracts designers who might buy Figma. A 'Figma support' community attracts people avoiding payment."
+         }
       ];
-      const infoTopics:{[k:string]:{title:string,content:string}} = {
-         channels:{title:'Growth Channels',content:'Viral, Paid, Content, Sales, Partnerships, Community. Different products need different channels.'},
-         loops:{title:'Growth Loops',content:'Viral loop: User invites users. Content loop: Content attracts users who create content. Paid loop: Revenue funds ads.'},
-         metrics:{title:'Growth Metrics',content:'CAC, LTV, Viral coefficient, Payback period. Know your numbers before scaling.'},
-         pmf:{title:'PMF First',content:'Growth without product-market fit is a leaky bucket. Fix retention before acquisition.'}
+
+      const conceptLabels: { [key: string]: string } = {
+         viral_incentive_alignment: "Viral Growth Incentive Structures",
+         audience_saturation: "Paid Acquisition & Audience Saturation",
+         content_intent_matching: "Content Strategy & Buyer Intent",
+         sales_pipeline_math: "Sales Scaling & Pipeline Mathematics",
+         community_purpose: "Community Building for Growth"
       };
-      const answer = (idx:number) => {
-         if(answered) return;
-         setSelected(idx);
-         setAnswered(true);
-         if(idx === scenarios[scenario].best) {
-            setScore(s => s + 1);
-            setLog(l => [...l, `Scenario ${scenario+1}: Correct!`]);
-         } else {
-            setLog(l => [...l, `Scenario ${scenario+1}: Wrong`]);
+
+      const infoTopics: { [k: string]: { title: string; content: string } } = {
+         channels: {
+            title: "Growth Channel Framework",
+            content: "19 traction channels (Bullseye Framework): Viral, PR, Content, SEO, Social, Email, Partnerships, Biz Dev, Sales, Trade Shows, Speaking, Community, Ads, Affiliate, Existing Platforms, Offline, Engineering as Marketing, Guerrilla, Trade Publications. Test 3, focus on 1."
+         },
+         loops: {
+            title: "Growth Loops",
+            content: "Sustainable growth comes from LOOPS, not funnels. Viral loop: User invites → new users invite. Content loop: Content ranks → users create content. Paid loop: Revenue → reinvest in ads → more revenue. Sales loop: Customer success → referrals → new sales. Identify which loop fits your model."
+         },
+         metrics: {
+            title: "Growth Metrics That Matter",
+            content: "CAC (Customer Acquisition Cost), LTV (Lifetime Value), LTV:CAC ratio (aim for 3:1+), Payback period (months to recover CAC), Viral coefficient (users acquired per user), Magic number (net new ARR / prior quarter S&M spend). Track the metric that matters for YOUR stage."
+         },
+         stages: {
+            title: "Growth Stage Matching",
+            content: "Pre-PMF: Do things that don't scale, find channels that work. Early growth: Double down on 1-2 channels. Scaling: Add channels while maintaining efficiency. Each stage has different optimal strategies. Premature scaling is the #1 startup killer."
          }
       };
-      const next = () => {
-         if(scenario >= scenarios.length - 1) setPhase('result');
-         else { setScenario(s => s + 1); setAnswered(false); setSelected(null); }
+
+      const answer = (idx: number) => {
+         if (answered) return;
+         setSelected(idx);
+         setAnswered(true);
+         const s = scenarios[scenario];
+         if (idx === s.correct) {
+            setScore(prev => prev + 1);
+            setGameLog(prev => [...prev, `✓ ${s.title}: Correct! Understood ${conceptLabels[s.concept]}`]);
+         } else {
+            setGameLog(prev => [...prev, `✗ ${s.title}: Missed. Fell for "${s.opts[idx].substring(0, 35)}..."`]);
+            if (!conceptGaps.includes(s.concept)) {
+               setConceptGaps(prev => [...prev, s.concept]);
+            }
+         }
       };
-      const grade = score >= 5 ? 'A' : score >= 4 ? 'B' : score >= 2 ? 'C' : 'D';
+
+      const next = () => {
+         if (scenario >= scenarios.length - 1) {
+            setPhase('result');
+         } else {
+            setScenario(prev => prev + 1);
+            setAnswered(false);
+            setSelected(null);
+         }
+      };
+
+      const grade = score >= 5 ? 'A' : score >= 4 ? 'B' : score >= 3 ? 'C' : 'D';
       const s = scenarios[scenario];
-      if(phase === 'intro') return (<div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-green-900 via-lime-900 to-emerald-900 text-white p-6"><div className="text-6xl mb-4">🚀</div><h2 className="text-2xl font-bold mb-2">Growth Strategy</h2><p className="text-slate-300 text-center mb-6 max-w-md">Match businesses with the right growth channels! Learn viral, paid, content, and sales strategies.</p><button onClick={() => setPhase('play')} className="px-8 py-3 bg-gradient-to-r from-green-500 to-lime-500 rounded-xl font-bold">Start Growing</button></div>);
-      if(phase === 'result') return (<div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-green-900 via-lime-900 to-emerald-900 text-white p-6"><div className="text-6xl mb-4">{grade === 'A' ? '🚀' : grade === 'B' ? '📈' : '📊'}</div><h2 className="text-2xl font-bold mb-2">Complete!</h2><div className="text-4xl font-bold text-green-400 mb-2">{score}/{scenarios.length}</div><div className="text-6xl mb-4">{grade}</div><p className="text-slate-400 mb-4">{grade === 'A' ? 'Growth expert!' : grade === 'B' ? 'Good instincts!' : 'Study channels more!'}</p><button onClick={() => {setPhase('intro');setScenario(0);setScore(0);setAnswered(false);setSelected(null);setLog([]);}} className="px-6 py-2 bg-green-600 rounded-lg">Try Again</button></div>);
-      return (<div className="w-full h-full flex flex-col bg-gradient-to-br from-green-900 via-lime-900 to-emerald-900 text-white overflow-hidden">{showInfo && infoTopic && infoTopics[infoTopic] && (<div className="absolute inset-0 bg-black/80 flex items-center justify-center p-4 z-50" onClick={() => { setShowInfo(false); setInfoTopic(null); }}><div className="bg-slate-800 rounded-xl p-4 max-w-md" onClick={e => e.stopPropagation()}><h3 className="text-lg font-bold text-green-400 mb-2">{infoTopics[infoTopic].title}</h3><p className="text-sm text-slate-300">{infoTopics[infoTopic].content}</p><button onClick={() => { setShowInfo(false); setInfoTopic(null); }} className="mt-4 w-full py-2 bg-green-600 rounded-lg">Got it!</button></div></div>)}<div className="p-3 bg-black/30 border-b border-green-500/30 flex justify-between items-center"><span className="font-bold">🚀 Growth Strategy</span><span className="text-green-400">{scenario + 1}/{scenarios.length}</span><span className="text-lime-400">Score: {score}</span></div><div className="flex-1 p-4 flex flex-col justify-center"><div className="bg-black/30 rounded-xl p-4 mb-4"><p className="text-sm">{s.situation}</p><p className="text-xs text-slate-400 mt-2">Best growth channel?</p></div><div className="grid gap-2">{s.options.map((opt, i) => (<button key={i} onClick={() => answer(i)} disabled={answered} className={`p-3 rounded-lg text-left text-sm ${answered ? i === s.best ? 'bg-green-600' : i === selected ? 'bg-red-600' : 'bg-black/30' : 'bg-black/30 hover:bg-green-600/50'}`}>{opt}</button>))}</div>{answered && (<div className="mt-3 p-3 bg-black/30 rounded-lg"><p className="text-sm text-slate-300">{s.explain}</p><button onClick={next} className="mt-3 w-full py-2 bg-green-600 rounded-lg">{scenario >= scenarios.length - 1 ? 'See Results' : 'Next'}</button></div>)}</div><div className="p-3 bg-black/30 border-t border-green-500/30 flex gap-2 justify-center">{Object.keys(infoTopics).map(k => <button key={k} onClick={() => {setInfoTopic(k);setShowInfo(true);}} className="text-xs text-green-400">ℹ️ {infoTopics[k].title}</button>)}</div></div>);
+
+      if (phase === 'intro') {
+         return (
+            <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-green-900 via-lime-900 to-emerald-900 text-white p-6">
+               <div className="text-6xl mb-4">🚀</div>
+               <h2 className="text-2xl font-bold mb-2">Growth Channel Mastery</h2>
+               <p className="text-slate-300 text-center mb-4 max-w-md">
+                  Learn why growth strategies fail and how to match channels to your business model.
+               </p>
+               <div className="bg-black/30 rounded-xl p-4 mb-6 max-w-md text-sm">
+                  <p className="text-green-400 font-bold mb-2">🎯 Common Growth Mistakes:</p>
+                  <ul className="text-slate-300 space-y-1 text-xs">
+                     <li>• Copying strategies that worked for different business models</li>
+                     <li>• Scaling paid acquisition before understanding audience limits</li>
+                     <li>• Building community for the wrong audience</li>
+                     <li>• Hiring sales reps without pipeline to support them</li>
+                  </ul>
+               </div>
+               <button
+                  onClick={() => setPhase('play')}
+                  className="px-8 py-3 bg-gradient-to-r from-green-500 to-lime-500 rounded-xl font-bold hover:from-green-400 hover:to-lime-400 transition-all"
+               >
+                  Start Growing
+               </button>
+            </div>
+         );
+      }
+
+      if (phase === 'result') {
+         return (
+            <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-green-900 via-lime-900 to-emerald-900 text-white p-6 overflow-auto">
+               <div className="text-6xl mb-4">{grade === 'A' ? '🚀' : grade === 'B' ? '📈' : grade === 'C' ? '📊' : '📚'}</div>
+               <h2 className="text-2xl font-bold mb-2">Growth Assessment Complete</h2>
+               <div className="text-4xl font-bold text-green-400 mb-2">{score}/{scenarios.length}</div>
+               <div className="text-5xl mb-4">{grade}</div>
+               <p className="text-slate-400 mb-4 text-center">
+                  {grade === 'A' ? 'Growth expert! You understand channel-product fit.' :
+                   grade === 'B' ? 'Strong growth intuition. Some channel blindspots.' :
+                   grade === 'C' ? 'Decent foundation, but falling for common growth myths.' :
+                   'Growth strategy needs work. Study channel-product matching.'}
+               </p>
+
+               {conceptGaps.length > 0 && (
+                  <div className="bg-black/30 rounded-xl p-4 max-w-md w-full mb-4">
+                     <p className="text-green-400 font-bold text-sm mb-2">📚 Concepts to Study:</p>
+                     <ul className="text-slate-300 text-xs space-y-1">
+                        {conceptGaps.map(gap => (
+                           <li key={gap}>• {conceptLabels[gap]}</li>
+                        ))}
+                     </ul>
+                  </div>
+               )}
+
+               <div className="bg-black/30 rounded-xl p-4 max-w-md w-full mb-4 max-h-32 overflow-y-auto">
+                  <p className="text-green-400 font-bold text-sm mb-2">Session Log:</p>
+                  {gameLog.map((entry, i) => (
+                     <p key={i} className="text-xs text-slate-300">{entry}</p>
+                  ))}
+               </div>
+
+               <button
+                  onClick={() => {
+                     setPhase('intro');
+                     setScenario(0);
+                     setScore(0);
+                     setAnswered(false);
+                     setSelected(null);
+                     setGameLog([]);
+                     setConceptGaps([]);
+                  }}
+                  className="px-6 py-2 bg-green-600 rounded-lg hover:bg-green-500"
+               >
+                  Try Again
+               </button>
+            </div>
+         );
+      }
+
+      return (
+         <div className="w-full h-full flex flex-col bg-gradient-to-br from-green-900 via-lime-900 to-emerald-900 text-white overflow-hidden">
+            {showInfo && infoTopic && infoTopics[infoTopic] && (
+               <div className="absolute inset-0 bg-black/80 flex items-center justify-center p-4 z-50" onClick={() => { setShowInfo(false); setInfoTopic(null); }}>
+                  <div className="bg-slate-800 rounded-xl p-4 max-w-md" onClick={e => e.stopPropagation()}>
+                     <h3 className="text-lg font-bold text-green-400 mb-2">{infoTopics[infoTopic].title}</h3>
+                     <p className="text-sm text-slate-300">{infoTopics[infoTopic].content}</p>
+                     <button onClick={() => { setShowInfo(false); setInfoTopic(null); }} className="mt-4 w-full py-2 bg-green-600 rounded-lg">Got it!</button>
+                  </div>
+               </div>
+            )}
+
+            <div className="p-3 bg-black/30 border-b border-green-500/30 flex justify-between items-center">
+               <span className="font-bold">🚀 Growth Strategy</span>
+               <span className="text-green-400">{scenario + 1}/{scenarios.length}</span>
+               <span className="text-lime-400">Score: {score}</span>
+            </div>
+
+            <div className="flex-1 p-4 overflow-auto">
+               <div className="bg-black/30 rounded-xl p-3 mb-3">
+                  <p className="font-bold text-green-400 mb-2">{s.title}</p>
+                  <p className="text-sm text-slate-300">{s.context}</p>
+               </div>
+
+               <div className="bg-black/30 rounded-xl p-4 mb-3">
+                  <p className="font-medium text-white">{s.question}</p>
+               </div>
+
+               <div className="grid gap-2">
+                  {s.opts.map((opt, i) => (
+                     <button
+                        key={i}
+                        onClick={() => answer(i)}
+                        disabled={answered}
+                        className={`p-3 rounded-lg text-left text-sm transition-all ${
+                           answered
+                              ? i === s.correct
+                                 ? 'bg-green-600'
+                                 : i === selected
+                                    ? 'bg-red-600'
+                                    : 'bg-black/30'
+                              : 'bg-black/30 hover:bg-green-600/50'
+                        }`}
+                     >
+                        {opt}
+                     </button>
+                  ))}
+               </div>
+
+               {answered && (
+                  <div className="mt-3 space-y-3">
+                     {selected !== s.correct && s.wrongExplanations[selected!] && (
+                        <div className="p-3 bg-red-900/50 rounded-lg border border-red-500/30">
+                           <p className="text-xs text-red-300 font-bold mb-1">❌ Why This Was Wrong:</p>
+                           <p className="text-sm text-red-100">{s.wrongExplanations[selected!]}</p>
+                        </div>
+                     )}
+                     <div className="p-3 bg-green-900/50 rounded-lg border border-green-500/30">
+                        <p className="text-xs text-green-300 font-bold mb-1">✓ Growth Insight:</p>
+                        <p className="text-sm text-green-100">{s.why}</p>
+                     </div>
+                     <div className="p-3 bg-blue-900/50 rounded-lg border border-blue-500/30">
+                        <p className="text-xs text-blue-300 font-bold mb-1">📖 Real World:</p>
+                        <p className="text-sm text-blue-100">{s.realWorld}</p>
+                     </div>
+                     <button
+                        onClick={next}
+                        className="w-full py-2 bg-green-600 rounded-lg hover:bg-green-500"
+                     >
+                        {scenario >= scenarios.length - 1 ? 'See Results' : 'Next Scenario'}
+                     </button>
+                  </div>
+               )}
+            </div>
+
+            <div className="p-3 bg-black/30 border-t border-green-500/30 flex gap-2 justify-center flex-wrap">
+               {Object.keys(infoTopics).map(k => (
+                  <button
+                     key={k}
+                     onClick={() => { setInfoTopic(k); setShowInfo(true); }}
+                     className="text-xs text-green-400 hover:text-green-300"
+                  >
+                     ℹ️ {infoTopics[k].title}
+                  </button>
+               ))}
+            </div>
+         </div>
+      );
    };
 
    const PivotDecisionRenderer = () => {
