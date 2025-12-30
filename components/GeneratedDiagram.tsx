@@ -26664,6 +26664,456 @@ const GeneratedDiagram: React.FC<DiagramProps> = ({ type, data, title }) => {
       );
    };
 
+   // --- CUSTOMER SUCCESS RENDERER ---
+   const CustomerSuccessRenderer = () => {
+      const [phase, setPhase] = useState<'intro' | 'play' | 'result'>('intro');
+      const [showInfo, setShowInfo] = useState(false);
+      const [infoTopic, setInfoTopic] = useState<string | null>(null);
+      const [month, setMonth] = useState(1);
+      const [gameLog, setGameLog] = useState<string[]>([]);
+
+      const totalMonths = 12;
+
+      const [budget, setBudget] = useState(10000); // Monthly CS budget
+      const [customers, setCustomers] = useState(100);
+      const [satisfaction, setSatisfaction] = useState(70); // 0-100
+      const [churnRate, setChurnRate] = useState(5); // % per month
+
+      const [investments, setInvestments] = useState({
+         support: 0,      // Customer support quality
+         onboarding: 0,   // Onboarding experience
+         engagement: 0,   // Proactive engagement
+         loyalty: 0,      // Loyalty rewards
+         feedback: 0,     // Feedback & improvements
+      });
+
+      const [stats, setStats] = useState({
+         totalRevenue: 0,
+         totalChurned: 0,
+         totalAcquired: 0,
+         totalSpent: 0,
+         averageLTV: 0,
+         nps: 0,
+      });
+
+      const [monthHistory, setMonthHistory] = useState<{
+         month: number;
+         customers: number;
+         churned: number;
+         acquired: number;
+         satisfaction: number;
+         revenue: number;
+      }[]>([]);
+
+      const infoTopics: Record<string, { title: string; content: string }> = {
+         churn: {
+            title: "Customer Churn",
+            content: "The percentage of customers who stop using your product each period. A 5% monthly churn means losing half your customers in a year! Reducing churn by even 1% can dramatically increase lifetime value. It costs 5-25x more to acquire a new customer than retain an existing one."
+         },
+         ltv: {
+            title: "Customer Lifetime Value (LTV)",
+            content: "The total revenue expected from a customer over their entire relationship. LTV = Average Revenue × Customer Lifespan. If monthly revenue is $100 and average lifespan is 20 months, LTV = $2,000. Higher LTV justifies higher acquisition costs."
+         },
+         nps: {
+            title: "Net Promoter Score (NPS)",
+            content: "Measures customer loyalty: 'How likely are you to recommend us?' (0-10). Promoters (9-10) minus Detractors (0-6) = NPS. Score ranges from -100 to +100. Above 0 is good, above 50 is excellent. Promoters drive organic growth through referrals!"
+         },
+         onboarding: {
+            title: "Customer Onboarding",
+            content: "The process of helping new customers succeed with your product. Good onboarding reduces early churn dramatically—most churn happens in the first 90 days! Include welcome sequences, tutorials, milestone celebrations, and check-ins."
+         },
+         retention: {
+            title: "Retention Strategies",
+            content: "Key tactics: 1) Proactive support (don't wait for complaints), 2) Regular engagement (newsletters, updates), 3) Loyalty rewards (discounts, perks), 4) Feedback loops (act on input), 5) Community building. The goal is to become indispensable!"
+         }
+      };
+
+      useEffect(() => {
+         if (infoTopic && infoTopics[infoTopic]) {
+            setShowInfo(true);
+         }
+      }, [infoTopic]);
+
+      const startGame = () => {
+         setPhase('play');
+         setMonth(1);
+         setBudget(10000);
+         setCustomers(100);
+         setSatisfaction(70);
+         setChurnRate(5);
+         setInvestments({ support: 0, onboarding: 0, engagement: 0, loyalty: 0, feedback: 0 });
+         setStats({ totalRevenue: 0, totalChurned: 0, totalAcquired: 0, totalSpent: 0, averageLTV: 0, nps: 0 });
+         setMonthHistory([]);
+         setGameLog(["Customer Success simulation started with 100 customers"]);
+      };
+
+      const getTotalInvestment = () => {
+         return Object.values(investments).reduce((a, b) => a + b, 0);
+      };
+
+      const processMonth = () => {
+         const totalInvested = getTotalInvestment();
+
+         // Calculate satisfaction change based on investments
+         const supportImpact = investments.support * 0.02;
+         const onboardingImpact = investments.onboarding * 0.015;
+         const engagementImpact = investments.engagement * 0.018;
+         const loyaltyImpact = investments.loyalty * 0.012;
+         const feedbackImpact = investments.feedback * 0.015;
+
+         const satisfactionChange = supportImpact + onboardingImpact + engagementImpact + loyaltyImpact + feedbackImpact - 3; // Natural decay of 3
+         const newSatisfaction = Math.max(0, Math.min(100, satisfaction + satisfactionChange));
+
+         // Churn rate based on satisfaction
+         const baseChurn = 15 - (newSatisfaction / 10); // High satisfaction = low churn
+         const newChurnRate = Math.max(1, Math.min(20, baseChurn));
+
+         // Calculate churned customers
+         const churned = Math.floor(customers * (newChurnRate / 100));
+
+         // New customers (word of mouth based on satisfaction + small organic)
+         const referralRate = newSatisfaction > 80 ? 0.08 : newSatisfaction > 60 ? 0.04 : 0.02;
+         const acquired = Math.floor(customers * referralRate) + Math.floor(Math.random() * 5);
+
+         // Revenue ($50 per customer per month)
+         const revenuePerCustomer = 50;
+         const monthlyRevenue = customers * revenuePerCustomer;
+
+         // Update customers
+         const newCustomers = customers - churned + acquired;
+
+         // Calculate NPS based on satisfaction
+         const nps = Math.round((newSatisfaction - 50) * 2);
+
+         // Update state
+         setSatisfaction(newSatisfaction);
+         setChurnRate(newChurnRate);
+         setCustomers(newCustomers);
+         setBudget(prev => prev - totalInvested + 10000); // Replenish budget each month
+
+         const newStats = {
+            totalRevenue: stats.totalRevenue + monthlyRevenue,
+            totalChurned: stats.totalChurned + churned,
+            totalAcquired: stats.totalAcquired + acquired,
+            totalSpent: stats.totalSpent + totalInvested,
+            averageLTV: Math.round((stats.totalRevenue + monthlyRevenue) / (stats.totalChurned + churned + 1) * 12),
+            nps: nps,
+         };
+         setStats(newStats);
+
+         setMonthHistory(prev => [...prev, {
+            month,
+            customers,
+            churned,
+            acquired,
+            satisfaction: Math.round(newSatisfaction),
+            revenue: monthlyRevenue
+         }]);
+
+         setGameLog(prev => [...prev,
+            `Month ${month}: ${churned} churned, ${acquired} acquired, satisfaction ${Math.round(newSatisfaction)}%, revenue $${monthlyRevenue}`
+         ]);
+
+         if (month >= totalMonths) {
+            setGameLog(prev => [...prev,
+               `Year complete! Final customers: ${newCustomers}, Total revenue: $${newStats.totalRevenue}`
+            ]);
+            setPhase('result');
+         } else {
+            setMonth(month + 1);
+         }
+      };
+
+      const adjustInvestment = (category: keyof typeof investments, delta: number) => {
+         const newValue = Math.max(0, Math.min(5000, investments[category] + delta));
+         const newTotal = getTotalInvestment() - investments[category] + newValue;
+         if (newTotal <= budget) {
+            setInvestments(prev => ({ ...prev, [category]: newValue }));
+         }
+      };
+
+      const getScore = () => {
+         const revenueScore = Math.min(40, stats.totalRevenue / 2000);
+         const retentionScore = Math.min(30, (1 - stats.totalChurned / 200) * 30);
+         const satisfactionScore = satisfaction * 0.3;
+         return Math.round(revenueScore + retentionScore + satisfactionScore);
+      };
+
+      const getGrade = () => {
+         const score = getScore();
+         if (score >= 85) return { letter: 'A', label: 'Customer Champion', color: 'text-green-400' };
+         if (score >= 70) return { letter: 'B', label: 'Success Manager', color: 'text-blue-400' };
+         if (score >= 55) return { letter: 'C', label: 'Learning the Ropes', color: 'text-yellow-400' };
+         return { letter: 'D', label: 'Needs Work', color: 'text-red-400' };
+      };
+
+      // Intro Phase
+      if (phase === 'intro') {
+         return (
+            <div className="w-full h-full flex flex-col bg-gradient-to-br from-emerald-900 via-green-900 to-slate-900 text-white p-4 overflow-auto">
+               <div className="text-center mb-4">
+                  <h1 className="text-2xl font-bold mb-2">💚 Customer Success Simulator</h1>
+                  <p className="text-emerald-300 text-sm">Master retention and grow your customer base</p>
+               </div>
+
+               <div className="bg-black/30 rounded-xl p-4 mb-4">
+                  <h2 className="text-lg font-bold mb-3 text-emerald-400">📋 How It Works</h2>
+                  <div className="space-y-2 text-sm">
+                     <p>• You start with <span className="text-white font-bold">100 customers</span> and a <span className="text-white font-bold">$10K monthly budget</span></p>
+                     <p>• Each customer generates <span className="text-emerald-400">$50/month</span> in revenue</p>
+                     <p>• Invest in retention strategies to reduce churn</p>
+                     <p>• Happy customers refer new ones—satisfaction drives growth!</p>
+                     <p>• Run your business for <span className="text-white font-bold">12 months</span></p>
+                  </div>
+               </div>
+
+               <div className="grid grid-cols-2 gap-3 mb-4">
+                  <div className="bg-black/30 rounded-lg p-3">
+                     <h3 className="font-bold text-red-400 mb-2">⚠️ The Challenge</h3>
+                     <p className="text-xs text-slate-300">5% monthly churn = 46% annual loss!</p>
+                     <p className="text-xs text-slate-300">Acquire costs 5x more than retain</p>
+                  </div>
+                  <div className="bg-black/30 rounded-lg p-3">
+                     <h3 className="font-bold text-green-400 mb-2">🎯 Goal</h3>
+                     <p className="text-xs text-slate-300">Maximize customer base</p>
+                     <p className="text-xs text-slate-300">Keep satisfaction high!</p>
+                  </div>
+               </div>
+
+               <div className="flex flex-wrap gap-2 mb-4">
+                  {Object.keys(infoTopics).map(key => (
+                     <button
+                        key={key}
+                        onClick={() => setInfoTopic(key)}
+                        className="text-xs bg-emerald-500/20 hover:bg-emerald-500/40 px-2 py-1 rounded-full text-emerald-300"
+                     >
+                        ℹ️ {infoTopics[key].title}
+                     </button>
+                  ))}
+               </div>
+
+               <button
+                  onClick={startGame}
+                  className="w-full py-3 bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-500 hover:to-green-500 rounded-xl font-bold text-lg transition-all"
+               >
+                  ▶️ START YEAR 1
+               </button>
+
+               {showInfo && infoTopic && infoTopics[infoTopic] && (
+                  <div className="absolute inset-0 bg-black/80 flex items-center justify-center p-4 z-50" onClick={() => { setShowInfo(false); setInfoTopic(null); }}>
+                     <div className="bg-slate-800 rounded-xl p-4 max-w-md" onClick={e => e.stopPropagation()}>
+                        <h3 className="text-lg font-bold text-emerald-400 mb-2">{infoTopics[infoTopic].title}</h3>
+                        <p className="text-sm text-slate-300">{infoTopics[infoTopic].content}</p>
+                        <button onClick={() => { setShowInfo(false); setInfoTopic(null); }} className="mt-4 w-full py-2 bg-emerald-600 rounded-lg">Got it!</button>
+                     </div>
+                  </div>
+               )}
+            </div>
+         );
+      }
+
+      // Result Phase
+      if (phase === 'result') {
+         const grade = getGrade();
+         const customerGrowth = customers - 100;
+         const growthPercent = ((customers / 100 - 1) * 100).toFixed(0);
+
+         return (
+            <div className="w-full h-full flex flex-col bg-gradient-to-br from-emerald-900 via-green-900 to-slate-900 text-white p-4 overflow-auto">
+               <div className="text-center mb-4">
+                  <div className={`text-6xl font-bold ${grade.color}`}>{grade.letter}</div>
+                  <div className="text-xl font-bold">{grade.label}</div>
+                  <div className="text-emerald-400">Score: {getScore()}/100</div>
+               </div>
+
+               <div className="grid grid-cols-2 gap-3 mb-4">
+                  <div className="bg-black/30 rounded-lg p-3 text-center">
+                     <div className="text-2xl font-bold text-green-400">{customers}</div>
+                     <div className="text-xs text-slate-400">Final Customers</div>
+                     <div className={`text-xs ${customerGrowth >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                        {customerGrowth >= 0 ? '+' : ''}{growthPercent}%
+                     </div>
+                  </div>
+                  <div className="bg-black/30 rounded-lg p-3 text-center">
+                     <div className="text-2xl font-bold text-emerald-400">${stats.totalRevenue.toLocaleString()}</div>
+                     <div className="text-xs text-slate-400">Total Revenue</div>
+                  </div>
+                  <div className="bg-black/30 rounded-lg p-3 text-center">
+                     <div className="text-2xl font-bold text-red-400">{stats.totalChurned}</div>
+                     <div className="text-xs text-slate-400">Total Churned</div>
+                  </div>
+                  <div className="bg-black/30 rounded-lg p-3 text-center">
+                     <div className="text-2xl font-bold text-blue-400">{stats.totalAcquired}</div>
+                     <div className="text-xs text-slate-400">Total Acquired</div>
+                  </div>
+               </div>
+
+               <div className="bg-black/30 rounded-xl p-3 mb-4">
+                  <h3 className="font-bold text-emerald-400 mb-2">📊 Key Metrics</h3>
+                  <div className="grid grid-cols-3 gap-2 text-center text-xs">
+                     <div>
+                        <div className="font-bold text-lg">{Math.round(satisfaction)}%</div>
+                        <div className="text-slate-400">Satisfaction</div>
+                     </div>
+                     <div>
+                        <div className="font-bold text-lg">{churnRate.toFixed(1)}%</div>
+                        <div className="text-slate-400">Churn Rate</div>
+                     </div>
+                     <div>
+                        <div className={`font-bold text-lg ${stats.nps >= 0 ? 'text-green-400' : 'text-red-400'}`}>{stats.nps > 0 ? '+' : ''}{stats.nps}</div>
+                        <div className="text-slate-400">NPS</div>
+                     </div>
+                  </div>
+               </div>
+
+               <div className="bg-black/30 rounded-xl p-3 mb-4">
+                  <h3 className="font-bold text-emerald-400 mb-2">💡 Key Insight</h3>
+                  <p className="text-sm text-slate-300">
+                     {customers > 100
+                        ? "Great job growing your customer base! High satisfaction leads to referrals, creating a virtuous cycle. Remember: happy customers are your best marketing."
+                        : stats.totalChurned > 50
+                        ? "High churn ate into your customer base. Investing more in retention (support, onboarding, engagement) reduces churn and increases lifetime value."
+                        : "Retention is the key to sustainable growth. It costs 5x more to acquire a customer than retain one. Focus on making existing customers successful!"
+                     }
+                  </p>
+               </div>
+
+               <button
+                  onClick={startGame}
+                  className="w-full py-3 bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-500 hover:to-green-500 rounded-xl font-bold transition-all"
+               >
+                  🔄 TRY AGAIN
+               </button>
+            </div>
+         );
+      }
+
+      // Play Phase
+      const totalInvested = getTotalInvestment();
+      const remaining = budget - totalInvested;
+
+      return (
+         <div className="w-full h-full flex flex-col bg-gradient-to-br from-emerald-900 via-green-900 to-slate-900 text-white overflow-hidden">
+            {/* Info Modal */}
+            {showInfo && infoTopic && infoTopics[infoTopic] && (
+               <div className="absolute inset-0 bg-black/80 flex items-center justify-center p-4 z-50" onClick={() => { setShowInfo(false); setInfoTopic(null); }}>
+                  <div className="bg-slate-800 rounded-xl p-4 max-w-md" onClick={e => e.stopPropagation()}>
+                     <h3 className="text-lg font-bold text-emerald-400 mb-2">{infoTopics[infoTopic].title}</h3>
+                     <p className="text-sm text-slate-300">{infoTopics[infoTopic].content}</p>
+                     <button onClick={() => { setShowInfo(false); setInfoTopic(null); }} className="mt-4 w-full py-2 bg-emerald-600 rounded-lg">Got it!</button>
+                  </div>
+               </div>
+            )}
+
+            {/* Header */}
+            <div className="p-3 bg-black/30 border-b border-emerald-500/30">
+               <div className="flex justify-between items-center mb-2">
+                  <span className="font-bold">💚 Customer Success</span>
+                  <span className="text-emerald-400">Month {month}/{totalMonths}</span>
+               </div>
+               <div className="grid grid-cols-4 gap-2 text-center text-xs">
+                  <div className="bg-black/30 rounded p-1">
+                     <div className="text-green-400 font-bold">{customers}</div>
+                     <div className="text-slate-500">Customers</div>
+                  </div>
+                  <div className="bg-black/30 rounded p-1">
+                     <div className="text-emerald-400 font-bold">{Math.round(satisfaction)}%</div>
+                     <div className="text-slate-500">Satisfaction</div>
+                  </div>
+                  <div className="bg-black/30 rounded p-1">
+                     <div className="text-red-400 font-bold">{churnRate.toFixed(1)}%</div>
+                     <div className="text-slate-500">Churn</div>
+                  </div>
+                  <div className="bg-black/30 rounded p-1">
+                     <div className="text-yellow-400 font-bold">${remaining.toLocaleString()}</div>
+                     <div className="text-slate-500">Budget Left</div>
+                  </div>
+               </div>
+            </div>
+
+            {/* Investment Sliders */}
+            <div className="flex-1 p-3 overflow-auto space-y-2">
+               <div className="flex justify-between items-center mb-2">
+                  <span className="text-sm font-bold">Monthly Investments</span>
+                  <button onClick={() => setInfoTopic('retention')} className="text-emerald-400 text-xs">ℹ️ Strategies</button>
+               </div>
+
+               {[
+                  { key: 'support', label: '🎧 Support Quality', desc: 'Fast, helpful customer service' },
+                  { key: 'onboarding', label: '🚀 Onboarding', desc: 'Help new customers succeed' },
+                  { key: 'engagement', label: '📧 Engagement', desc: 'Proactive outreach & updates' },
+                  { key: 'loyalty', label: '🎁 Loyalty Rewards', desc: 'Perks for long-term customers' },
+                  { key: 'feedback', label: '📝 Feedback Loop', desc: 'Listen and improve' },
+               ].map(({ key, label, desc }) => (
+                  <div key={key} className="bg-black/30 rounded-lg p-2">
+                     <div className="flex justify-between items-center mb-1">
+                        <span className="text-xs font-bold">{label}</span>
+                        <span className="text-xs text-emerald-400">${investments[key as keyof typeof investments].toLocaleString()}</span>
+                     </div>
+                     <div className="flex items-center gap-2">
+                        <button
+                           onClick={() => adjustInvestment(key as keyof typeof investments, -500)}
+                           className="px-2 py-1 bg-red-600/50 hover:bg-red-500/50 rounded text-xs"
+                        >
+                           -$500
+                        </button>
+                        <div className="flex-1 h-2 bg-slate-700 rounded-full overflow-hidden">
+                           <div
+                              className="h-full bg-emerald-500 transition-all"
+                              style={{ width: `${(investments[key as keyof typeof investments] / 5000) * 100}%` }}
+                           />
+                        </div>
+                        <button
+                           onClick={() => adjustInvestment(key as keyof typeof investments, 500)}
+                           disabled={remaining < 500}
+                           className="px-2 py-1 bg-green-600/50 hover:bg-green-500/50 disabled:opacity-50 rounded text-xs"
+                        >
+                           +$500
+                        </button>
+                     </div>
+                     <p className="text-[10px] text-slate-500 mt-1">{desc}</p>
+                  </div>
+               ))}
+
+               {/* History */}
+               {monthHistory.length > 0 && (
+                  <div className="bg-black/30 rounded-lg p-2 mt-3">
+                     <span className="text-xs font-bold text-slate-400">Recent History</span>
+                     <div className="mt-1 space-y-1 max-h-20 overflow-auto">
+                        {monthHistory.slice(-4).map((h, i) => (
+                           <div key={i} className="flex justify-between text-xs">
+                              <span>Month {h.month}</span>
+                              <span className="text-red-400">-{h.churned}</span>
+                              <span className="text-green-400">+{h.acquired}</span>
+                              <span className="text-emerald-400">{h.satisfaction}%</span>
+                           </div>
+                        ))}
+                     </div>
+                  </div>
+               )}
+            </div>
+
+            {/* Action Bar */}
+            <div className="p-3 bg-black/30 border-t border-emerald-500/30">
+               <div className="flex gap-2 items-center justify-between mb-2">
+                  <div className="flex gap-2">
+                     <button onClick={() => setInfoTopic('churn')} className="text-xs text-emerald-400 hover:text-white">📉 Churn</button>
+                     <button onClick={() => setInfoTopic('ltv')} className="text-xs text-emerald-400 hover:text-white">💰 LTV</button>
+                     <button onClick={() => setInfoTopic('nps')} className="text-xs text-emerald-400 hover:text-white">📊 NPS</button>
+                  </div>
+                  <span className="text-xs text-emerald-400">Revenue: ${(customers * 50).toLocaleString()}/mo</span>
+               </div>
+               <button
+                  onClick={processMonth}
+                  className="w-full py-3 bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-500 hover:to-green-500 rounded-xl font-bold transition-all"
+               >
+                  ▶️ END MONTH {month}
+               </button>
+            </div>
+         </div>
+      );
+   };
+
    // --- GENERIC RENDERER ---
    const GenericRenderer = () => {
       if (type === 'poster' || type === 'infographic') {
@@ -27086,6 +27536,8 @@ const GeneratedDiagram: React.FC<DiagramProps> = ({ type, data, title }) => {
             return <ProjectManagementRenderer />;
          case 'quality_control':
             return <QualityControlRenderer />;
+         case 'customer_success':
+            return <CustomerSuccessRenderer />;
          default:
             return <GenericRenderer />;
       }

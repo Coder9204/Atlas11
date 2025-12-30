@@ -300,6 +300,7 @@ When a concept comes up, follow this lookup process:
 • Hiring & Team Culture / Recruiting / Building Teams → 'hiring'
 • Project Management / Kanban / Sprints / Agile Boards → 'project_management'
 • Quality Control / Six Sigma / Defects / Inspection → 'quality_control'
+• Customer Success / Retention / Churn / NPS / LTV → 'customer_success'
 
 **STEP 2: IF NO MATCH → BUILD CUSTOM**
 Only if the topic is NOT covered above, use \`type: 'dynamic_blueprint'\` with custom JSON.
@@ -1108,6 +1109,13 @@ Only if the topic is NOT covered above, use \`type: 'dynamic_blueprint'\` with c
     → Track defects found, defects shipped, customer returns, reputation
     → Educational tooltips covering Six Sigma, Cost of Quality, Kaizen
     → KEY INSIGHT: Prevention is cheaper than detection; detection cheaper than failure
+- **Operations / Customer Success / Retention:** Use \`type: 'customer_success'\`, \`data: '{}'\`
+    → 12-month simulation starting with 100 customers and $10K monthly budget
+    → Invest in 5 retention strategies: Support, Onboarding, Engagement, Loyalty, Feedback
+    → Satisfaction drives churn rate and referral acquisition
+    → Track customers, revenue, churn, NPS, and customer lifetime value
+    → Educational tooltips covering Churn, LTV, NPS, Onboarding, Retention
+    → KEY INSIGHT: It costs 5x more to acquire than retain; satisfaction drives growth
 
 **CUSTOM SIMULATIONS (only if no pre-built exists):**
 3. For dynamic text, use: \`"content": "Range: {{calculations.range}} m"\`
