@@ -32989,34 +32989,147 @@ const GeneratedDiagram: React.FC<DiagramProps> = ({ type, data, title }) => {
    // --- TEAM BUILDING RENDERER ---
    const TeamBuildingRenderer = () => {
       const [phase, setPhase] = useState<'intro' | 'play' | 'result'>('intro');
+      const [showInfo, setShowInfo] = useState(false);
+      const [infoTopic, setInfoTopic] = useState<string | null>(null);
       const [scenario, setScenario] = useState(0);
       const [score, setScore] = useState(0);
       const [selected, setSelected] = useState<number | null>(null);
       const [answered, setAnswered] = useState(false);
-      const [log, setLog] = useState<string[]>([]);
-      const [showInfo, setShowInfo] = useState(false);
-      const [infoTopic, setInfoTopic] = useState<string | null>(null);
+      const [gameLog, setGameLog] = useState<string[]>([]);
+      const [conceptGaps, setConceptGaps] = useState<string[]>([]);
 
+      // Co-founder & Team Dynamics Lab - Real scenarios that destroy companies
       const scenarios = [
-         { situation: "You're building your founding team. A brilliant engineer wants 40% equity but can only work part-time.", q: "What's the best approach?", opts: ["Give them what they ask", "Counter with 10% and full vesting", "Propose milestone-based equity", "Walk away entirely"], correct: 2, explain: "Milestone-based equity aligns incentives with commitment. They earn more as they contribute more, protecting both parties." },
-         { situation: "Your co-founder has a different vision for the product direction. The disagreement is affecting team morale.", q: "How should you handle this?", opts: ["Assert your authority as CEO", "Have a structured discussion with clear decision criteria", "Let the team vote", "Avoid the conflict and work around it"], correct: 1, explain: "Structured discussions with clear criteria lead to better decisions and model healthy conflict resolution for the team." },
-         { situation: "You need a CTO but can't afford market-rate salary. A talented candidate is interested but hesitant.", q: "What's your best offer strategy?", opts: ["Stretch your runway for full salary", "Offer below-market with significant equity", "Promise future raises when funded", "Hire a cheaper, less experienced option"], correct: 1, explain: "Below-market salary plus meaningful equity is the classic startup trade-off. It aligns incentives and preserves runway." },
-         { situation: "Your team is growing and you're seeing silos forming between engineering and product.", q: "What's the most effective intervention?", opts: ["Hire a project manager", "Create cross-functional squads", "Add more meetings", "Let it resolve naturally"], correct: 1, explain: "Cross-functional squads break down silos by embedding different disciplines together with shared goals." },
-         { situation: "A key team member is burning out but your startup can't afford to lose them.", q: "What should you prioritize?", opts: ["Offer a raise to keep them motivated", "Redistribute work and check in regularly", "Hire their replacement just in case", "Push through—startups are hard"], correct: 1, explain: "Redistributing work and showing genuine care prevents burnout from becoming departure. People remember how you treated them." }
+         {
+            title: "The Equity Time Bomb",
+            context: "You and your co-founder started 50/50. After 18 months, you've raised $2M and have 10 employees. Your co-founder wants to leave for a 'better opportunity' - they've only vested 25% (1.5 years of 4-year vesting). They want to keep all 50% because they were 'there from the start.'",
+            question: "How should you handle this situation?",
+            opts: [
+               'Let them keep the full 50% - they were essential early on',
+               'They keep only their vested 25% - the agreement is clear',
+               'Negotiate a middle ground to preserve the relationship',
+               'Accelerate their vesting as a goodwill gesture'
+            ],
+            correct: 1,
+            wrongExplanations: [
+               "Giving 50% to someone who contributed 1.5 of 10 years is unfair to you, your team, and your investors. It also sets terrible precedent.",
+               "", // Correct
+               "Middle ground sounds nice but undermines the vesting agreement. Future employees will expect the same exceptions. Agreements exist for this reason.",
+               "Accelerating vesting rewards leaving. This creates perverse incentives for everyone else to leave early and demand acceleration."
+            ],
+            realWorld: "The Winklevoss twins and Mark Zuckerberg. Eduardo Saverin and Mark Zuckerberg. Co-founder disputes with unclear or unenforced vesting destroy companies. Vesting exists specifically for this scenario.",
+            concept: "cofounder_vesting",
+            why: "Vesting protects everyone. If they leave at 18 months, they've earned 18 months of equity. Honoring the agreement: 1) Is fair to remaining team members, 2) Protects your cap table for future fundraising, 3) Sets clear precedent."
+         },
+         {
+            title: "The Silent Disagreement",
+            context: "You're CEO, your co-founder is CTO. You disagree on a major technical decision: they want to rebuild the platform (6 months, $500K), you think the current system is fine. They haven't explicitly objected but have stopped contributing to planning meetings.",
+            question: "What's the REAL problem here?",
+            opts: [
+               'Force a decision as CEO - someone has to lead',
+               'The technical disagreement - find a compromise on the rebuild',
+               'The communication breakdown - address the disengagement directly',
+               'Give them what they want to restore motivation'
+            ],
+            correct: 2,
+            wrongExplanations: [
+               "Forcing decisions without addressing communication creates resentment. You'll 'win' but lose engagement on everything else.",
+               "The technical debate is the symptom, not the disease. Solve this and the pattern repeats on the next conflict.",
+               "", // Correct
+               "Capitulating teaches that disengagement works. Your co-founder learns passive-aggression gets results."
+            ],
+            realWorld: "Most co-founder breakups aren't about the disagreement itself - they're about how disagreements are handled. Companies die when co-founders stop talking honestly.",
+            concept: "cofounder_communication",
+            why: "The technical decision matters less than the meta-problem: your co-founder is withdrawing instead of engaging. Address this directly: 'I noticed you've pulled back. What's going on?' Healthy relationships require surfacing conflict, not avoiding it."
+         },
+         {
+            title: "The Brilliant Jerk",
+            context: "Your 3rd engineer is exceptional - 3x more productive than anyone else, built your core infrastructure. But they're toxic: dismissive of others, hostile in code reviews, and two good engineers quit citing them as the reason.",
+            question: "What should you do about this engineer?",
+            opts: [
+               'Keep them - losing 3x productivity would devastate the company',
+               'Coach them intensively - their skills justify the investment',
+               'Fire them - cultural damage exceeds productivity value',
+               'Isolate them - let them work alone on critical projects'
+            ],
+            correct: 2,
+            wrongExplanations: [
+               "3x productivity minus 2 departures (and future departures) is negative. Plus, the remaining team operates at reduced effectiveness around them.",
+               "Coaching rarely fixes deeply ingrained behavior patterns in adults. You'll invest heavily while the damage continues.",
+               "", // Correct
+               "Isolation signals bad behavior is acceptable if you're skilled enough. Culture becomes: 'values don't apply to top performers.'"
+            ],
+            realWorld: "Netflix's culture doc: 'Brilliant jerks' are not tolerated because teamwork damage exceeds individual contribution. Apple fired brilliant engineers for undermining teams.",
+            concept: "culture_enforcement",
+            why: "One toxic hire costs: departures, reduced team productivity, damaged psychological safety, cultural erosion. Fire fast. The relief confirms it was right."
+         },
+         {
+            title: "The First Marketing Hire",
+            context: "Candidate A: Ex-Google, perfect resume, wants $180K + 0.5% equity, talks about 'brand building.' Candidate B: 5 years at startups, scrappy, wants $100K + 1% equity, talks about 'CAC, LTV, and experiment velocity.'",
+            question: "Which candidate should you hire?",
+            opts: [
+               'Candidate A - big company experience means quality and best practices',
+               'Candidate B - startup experience and metrics focus match your stage',
+               'Neither - keep doing marketing yourself until you find someone better',
+               'Candidate A at Candidate B\'s compensation - negotiate hard'
+            ],
+            correct: 1,
+            wrongExplanations: [
+               "Big company marketers optimize for large budgets and brand consistency. Startups need scrappy experimentation and small budget efficiency. Wrong skill set.",
+               "", // Correct
+               "Founder time is valuable. Marketing yourself takes time from product, fundraising, and strategy.",
+               "If they accept B's terms, it signals desperation or misunderstanding. Misaligned expectations create problems later."
+            ],
+            realWorld: "Airbnb's early marketing was cereal boxes and Craigslist hacks, not 'brand awareness.' Early stage needs someone who runs experiments on $5K budgets, not $5M campaigns.",
+            concept: "stage_appropriate_hiring",
+            why: "Stage-appropriate hiring is crucial. Language reveals mindset: 'CAC/LTV' = growth thinking. 'Brand building' = wrong stage for a startup."
+         },
+         {
+            title: "The Scaling Struggle",
+            context: "An early employee who was amazing in the scrappy phase is struggling at scale. They can't manage their growing team, miss deadlines, and quality dropped. They've been here since the beginning. You've given feedback 3 times with no improvement.",
+            question: "What's the right decision?",
+            opts: [
+               'Fire them - 3 feedback rounds is enough',
+               'Move them to an individual contributor role',
+               'Keep coaching - loyalty deserves more patience',
+               'Wait for them to realize and leave voluntarily'
+            ],
+            correct: 1,
+            wrongExplanations: [
+               "Firing is an option but not best. They were excellent as an IC and might still be. Firing wastes domain knowledge.",
+               "", // Correct
+               "3 rounds with no improvement suggests capability, not effort. More coaching won't solve a fundamental mismatch.",
+               "Waiting is worst. Their team suffers, they suffer, and the problem grows. Leaders make hard decisions."
+            ],
+            realWorld: "Many founding team members become ICs as companies scale. Stripe and Airbnb moved early employees to IC roles successfully. The conversation: 'Your greatest value is X. Let's put you there.'",
+            concept: "role_evolution",
+            why: "Great at Stage A doesn't mean great at Stage B. Move to IC: honors contribution, uses expertise, protects their team. It's kind, not cruel."
+         }
       ];
-      const s = scenarios[scenario];
-      const infoTopics: Record<string, {title: string; content: string}> = {
-         equity: { title: "Equity Distribution", content: "Founder equity should vest over 4 years with a 1-year cliff. This protects the company if someone leaves early. Early employees typically get 0.5-2% with similar vesting." },
-         roles: { title: "Defining Roles", content: "Clear role definition prevents conflict. Use RACI matrices (Responsible, Accountable, Consulted, Informed) for key decisions. Revisit roles every 6 months as the company grows." },
-         culture: { title: "Culture Building", content: "Culture is how your team behaves when you're not watching. Define core values early, hire for culture fit, and recognize behaviors that reinforce your values." },
-         hiring: { title: "Early Hiring", content: "First 10 hires set your culture. Prioritize: 1) Mission alignment, 2) Skill-culture balance, 3) Flexibility to wear multiple hats, 4) Self-motivation." }
+
+      const conceptLabels: { [key: string]: string } = {
+         cofounder_vesting: "Co-founder Equity & Vesting",
+         cofounder_communication: "Co-founder Communication Patterns",
+         culture_enforcement: "Culture Enforcement",
+         stage_appropriate_hiring: "Stage-Appropriate Hiring",
+         role_evolution: "Role Evolution & Scaling"
       };
-      const answer = (i: number) => { if(answered) return; setSelected(i); setAnswered(true); if(i === s.correct) { setScore(p => p + 1); setLog(l => [...l, `✓ Scenario ${scenario + 1}: Correct!`]); } else { setLog(l => [...l, `✗ Scenario ${scenario + 1}: Better answer was "${s.opts[s.correct]}"`]); } };
-      const next = () => { if(scenario >= scenarios.length - 1) { setPhase('result'); } else { setScenario(p => p + 1); setAnswered(false); setSelected(null); } };
-      const grade = score >= 4 ? 'A' : score >= 3 ? 'B' : score >= 2 ? 'C' : 'D';
-      if(phase === 'intro') return (<div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-900 text-white p-6"><div className="text-6xl mb-4">👥</div><h2 className="text-2xl font-bold mb-2">Team Building Simulator</h2><p className="text-slate-300 text-center mb-6 max-w-md">Build your dream team! Navigate hiring, equity, and team dynamics challenges.</p><button onClick={() => setPhase('play')} className="px-8 py-3 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-xl font-bold">Build Team</button></div>);
-      if(phase === 'result') return (<div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-900 text-white p-6"><div className="text-6xl mb-4">{grade === 'A' ? '🏆' : grade === 'B' ? '👥' : '🔧'}</div><h2 className="text-2xl font-bold mb-2">Team Built!</h2><div className="text-4xl font-bold text-indigo-400 mb-2">{score}/{scenarios.length}</div><div className="text-6xl mb-4">{grade}</div><p className="text-slate-400 mb-4">{grade === 'A' ? 'Natural leader!' : grade === 'B' ? 'Good team builder!' : 'Keep learning!'}</p><div className="w-full max-w-md bg-black/30 rounded-lg p-3 mb-4 max-h-32 overflow-y-auto">{log.map((l,i) => <p key={i} className="text-xs text-slate-300">{l}</p>)}</div><button onClick={() => {setPhase('intro');setScenario(0);setScore(0);setAnswered(false);setSelected(null);setLog([]);}} className="px-6 py-2 bg-indigo-600 rounded-lg">Try Again</button></div>);
-      return (<div className="w-full h-full flex flex-col bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-900 text-white overflow-hidden">{showInfo && infoTopic && infoTopics[infoTopic] && (<div className="absolute inset-0 bg-black/80 flex items-center justify-center p-4 z-50" onClick={() => { setShowInfo(false); setInfoTopic(null); }}><div className="bg-slate-800 rounded-xl p-4 max-w-md" onClick={e => e.stopPropagation()}><h3 className="text-lg font-bold text-indigo-400 mb-2">{infoTopics[infoTopic].title}</h3><p className="text-sm text-slate-300">{infoTopics[infoTopic].content}</p><button onClick={() => { setShowInfo(false); setInfoTopic(null); }} className="mt-4 w-full py-2 bg-indigo-600 rounded-lg">Got it!</button></div></div>)}<div className="p-3 bg-black/30 border-b border-indigo-500/30 flex justify-between items-center"><span className="font-bold">👥 Team Building</span><span className="text-indigo-400">{scenario + 1}/{scenarios.length}</span><span className="text-purple-400">Score: {score}</span></div><div className="flex-1 p-4 overflow-auto"><div className="bg-black/30 rounded-xl p-4 mb-4"><p className="text-sm text-slate-300">{s.situation}</p></div><div className="bg-black/30 rounded-xl p-4 mb-3"><p className="font-medium">{s.q}</p></div><div className="grid gap-2">{s.opts.map((opt, i) => (<button key={i} onClick={() => answer(i)} disabled={answered} className={`p-3 rounded-lg text-left text-sm ${answered ? i === s.correct ? 'bg-green-600' : i === selected ? 'bg-red-600' : 'bg-black/30' : 'bg-black/30 hover:bg-indigo-600/50'}`}>{opt}</button>))}</div>{answered && (<div className="mt-3 p-3 bg-black/30 rounded-lg"><p className="text-sm text-slate-300">{s.explain}</p><button onClick={next} className="mt-3 w-full py-2 bg-indigo-600 rounded-lg">{scenario >= scenarios.length - 1 ? 'See Results' : 'Next'}</button></div>)}</div><div className="p-3 bg-black/30 border-t border-indigo-500/30 flex gap-2 justify-center flex-wrap">{Object.keys(infoTopics).map(k => <button key={k} onClick={() => {setInfoTopic(k);setShowInfo(true);}} className="text-xs text-indigo-400">ℹ️ {infoTopics[k].title}</button>)}</div></div>);
+
+      const infoTopics: { [k: string]: { title: string; content: string } } = {
+         vesting: { title: "Vesting Fundamentals", content: "Standard: 4-year vesting, 1-year cliff. After 1 year: 25% vests. Then monthly for remaining 3 years. ALL founders should vest. Accelerated vesting on acquisition (single trigger) or acquisition + termination (double trigger)." },
+         equity: { title: "Equity Split Guidelines", content: "Equal splits work when both founders are equally committed. Unequal when one has idea/expertise or started earlier. Address equity early - it only gets harder to discuss later." },
+         culture: { title: "Culture & Values", content: "Culture = how your team behaves when you're not watching. Define values early, hire for them, fire for violations. Culture debt is as dangerous as technical debt." },
+         hiring: { title: "Early Hiring", content: "First 10 hires set culture. Prioritize: 1) Can do the job, 2) Will do the job, 3) Fit the team, 4) Can grow. For startups: bias toward generalists." }
+      };
+
+      const answer = (idx: number) => { if (answered) return; setSelected(idx); setAnswered(true); const s = scenarios[scenario]; if (idx === s.correct) { setScore(p => p + 1); setGameLog(l => [...l, `✓ ${s.title}: Correct!`]); } else { setGameLog(l => [...l, `✗ ${s.title}: Missed`]); if (!conceptGaps.includes(s.concept)) { setConceptGaps(g => [...g, s.concept]); } } };
+      const next = () => { if (scenario >= scenarios.length - 1) { setPhase('result'); } else { setScenario(p => p + 1); setAnswered(false); setSelected(null); } };
+      const grade = score >= 5 ? 'A' : score >= 4 ? 'B' : score >= 3 ? 'C' : 'D';
+      const s = scenarios[scenario];
+
+      if (phase === 'intro') return (<div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-900 text-white p-6"><div className="text-6xl mb-4">👥</div><h2 className="text-2xl font-bold mb-2">Co-founder & Team Lab</h2><p className="text-slate-300 text-center mb-4 max-w-md">Navigate the human dynamics that make or break startups.</p><div className="bg-black/30 rounded-xl p-4 mb-6 max-w-md text-sm"><p className="text-indigo-400 font-bold mb-2">💔 65% of startups fail due to co-founder conflict</p></div><button onClick={() => setPhase('play')} className="px-8 py-3 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-xl font-bold">Build Team</button></div>);
+      if (phase === 'result') return (<div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-900 text-white p-6 overflow-auto"><div className="text-6xl mb-4">{grade === 'A' ? '🏆' : grade === 'B' ? '👥' : '🔧'}</div><h2 className="text-2xl font-bold mb-2">Team Assessment</h2><div className="text-4xl font-bold text-indigo-400 mb-2">{score}/{scenarios.length}</div><div className="text-5xl mb-4">{grade}</div>{conceptGaps.length > 0 && (<div className="bg-black/30 rounded-xl p-4 max-w-md w-full mb-4"><p className="text-indigo-400 font-bold text-sm mb-2">📚 Study:</p><ul className="text-slate-300 text-xs">{conceptGaps.map(g => <li key={g}>• {conceptLabels[g]}</li>)}</ul></div>)}<div className="bg-black/30 rounded-xl p-4 max-w-md w-full mb-4 max-h-32 overflow-y-auto">{gameLog.map((l,i) => <p key={i} className="text-xs text-slate-300">{l}</p>)}</div><button onClick={() => {setPhase('intro');setScenario(0);setScore(0);setAnswered(false);setSelected(null);setGameLog([]);setConceptGaps([]);}} className="px-6 py-2 bg-indigo-600 rounded-lg">Try Again</button></div>);
+      return (<div className="w-full h-full flex flex-col bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-900 text-white overflow-hidden">{showInfo && infoTopic && infoTopics[infoTopic] && (<div className="absolute inset-0 bg-black/80 flex items-center justify-center p-4 z-50" onClick={() => { setShowInfo(false); setInfoTopic(null); }}><div className="bg-slate-800 rounded-xl p-4 max-w-md" onClick={e => e.stopPropagation()}><h3 className="text-lg font-bold text-indigo-400 mb-2">{infoTopics[infoTopic].title}</h3><p className="text-sm text-slate-300">{infoTopics[infoTopic].content}</p><button onClick={() => { setShowInfo(false); setInfoTopic(null); }} className="mt-4 w-full py-2 bg-indigo-600 rounded-lg">Got it!</button></div></div>)}<div className="p-3 bg-black/30 border-b border-indigo-500/30 flex justify-between items-center"><span className="font-bold">👥 Team Lab</span><span className="text-indigo-400">{scenario + 1}/{scenarios.length}</span><span className="text-purple-400">Score: {score}</span></div><div className="flex-1 p-4 overflow-auto"><div className="bg-black/30 rounded-xl p-3 mb-3"><p className="font-bold text-indigo-400 mb-2">{s.title}</p><p className="text-sm text-slate-300">{s.context}</p></div><div className="bg-black/30 rounded-xl p-4 mb-3"><p className="font-medium">{s.question}</p></div><div className="grid gap-2">{s.opts.map((opt, i) => (<button key={i} onClick={() => answer(i)} disabled={answered} className={`p-3 rounded-lg text-left text-sm ${answered ? i === s.correct ? 'bg-green-600' : i === selected ? 'bg-red-600' : 'bg-black/30' : 'bg-black/30 hover:bg-indigo-600/50'}`}>{opt}</button>))}</div>{answered && (<div className="mt-3 space-y-3">{selected !== s.correct && s.wrongExplanations[selected!] && (<div className="p-3 bg-red-900/50 rounded-lg border border-red-500/30"><p className="text-xs text-red-300 font-bold mb-1">❌ Why This Fails:</p><p className="text-sm text-red-100">{s.wrongExplanations[selected!]}</p></div>)}<div className="p-3 bg-green-900/50 rounded-lg border border-green-500/30"><p className="text-xs text-green-300 font-bold mb-1">✓ Insight:</p><p className="text-sm text-green-100">{s.why}</p></div><div className="p-3 bg-blue-900/50 rounded-lg border border-blue-500/30"><p className="text-xs text-blue-300 font-bold mb-1">📖 Real World:</p><p className="text-sm text-blue-100">{s.realWorld}</p></div><button onClick={next} className="w-full py-2 bg-indigo-600 rounded-lg">{scenario >= scenarios.length - 1 ? 'See Results' : 'Next'}</button></div>)}</div><div className="p-3 bg-black/30 border-t border-indigo-500/30 flex gap-2 justify-center flex-wrap">{Object.keys(infoTopics).map(k => <button key={k} onClick={() => {setInfoTopic(k);setShowInfo(true);}} className="text-xs text-indigo-400">ℹ️ {infoTopics[k].title}</button>)}</div></div>);
    };
 
    // --- LEADERSHIP RENDERER ---
