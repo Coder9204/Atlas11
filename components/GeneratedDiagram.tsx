@@ -23058,73 +23058,279 @@ const GeneratedDiagram: React.FC<DiagramProps> = ({ type, data, title }) => {
    // 38. PUBLIC RELATIONS - PR Crisis Simulator
    const PublicRelationsRenderer = () => {
       const [phase, setPhase] = useState<'intro' | 'play' | 'result'>('intro');
-      const [showInfo, setShowInfo] = useState(false);
+      const [scenario, setScenario] = useState(0);
       const [score, setScore] = useState(0);
-      const [current, setCurrent] = useState(0);
+      const [selected, setSelected] = useState<number | null>(null);
+      const [answered, setAnswered] = useState(false);
+      const [gameLog, setGameLog] = useState<string[]>([]);
+      const [showInfo, setShowInfo] = useState(false);
+      const [infoTopic, setInfoTopic] = useState<string | null>(null);
+      const [conceptGaps, setConceptGaps] = useState<string[]>([]);
 
-      const crises = [
-         { scenario: 'A customer posts a viral video complaining about your product defect', best: 'acknowledge', options: [
-            { id: 'ignore', label: '🙈 Ignore and hope it blows over', score: 0 },
-            { id: 'acknowledge', label: '✅ Publicly acknowledge, apologize, offer solution', score: 10 },
-            { id: 'blame', label: '👆 Blame the customer for misuse', score: -5 }
-         ]},
-         { scenario: 'A journalist wants to interview you about industry concerns', best: 'prepare', options: [
-            { id: 'decline', label: '❌ Decline all interviews', score: 3 },
-            { id: 'prepare', label: '📋 Prepare key messages and do the interview', score: 10 },
-            { id: 'wing', label: '🎤 Do it spontaneously without prep', score: 2 }
-         ]},
-         { scenario: 'Your competitor spreads false information about you', best: 'factual', options: [
-            { id: 'attack', label: '⚔️ Attack them back publicly', score: 1 },
-            { id: 'factual', label: '📊 Release factual corrections professionally', score: 10 },
-            { id: 'legal', label: '⚖️ Immediately threaten lawsuits', score: 4 }
-         ]}
+      const scenarios = [
+         {
+            title: "The Viral Complaint",
+            context: "A customer posts a TikTok showing your product catching fire during normal use. Video: 2.3M views in 12 hours. Comments are brutal. Your product team confirms it's a rare manufacturing defect affecting ~0.01% of units. Legal says 'say nothing until we investigate.' Marketing wants to wait until the news cycle moves on. Customer service is getting flooded.",
+            question: "What's the right immediate response?",
+            opts: [
+               "A) Stay silent—let legal complete the investigation first",
+               "B) Acknowledge quickly, express concern, announce immediate investigation and remedy",
+               "C) Post a counter-video explaining the customer was using it wrong",
+               "D) Offer the complaining customer money to delete the video"
+            ],
+            correct: 1,
+            wrongExplanations: [
+               "Silence in a viral crisis is interpreted as guilt. Every hour of silence spawns more negative coverage. Legal caution is appropriate for statements of liability, not for expressing concern and announcing action.",
+               "",
+               "Blaming the customer when video shows normal use is gasoline on fire. It creates 'company vs customer' narrative that the internet will rally against. Even if true, the timing makes you look defensive.",
+               "Paying for deletion is bribery that will leak. When it does, the story becomes 'Company tried to cover up dangerous product.' This turns a product crisis into an ethics scandal."
+            ],
+            realWorld: "Samsung's Galaxy Note 7 battery fires in 2016: Initial silence and denial cost them $5B+ and permanent brand damage. Contrast with Johnson & Johnson's 1982 Tylenol crisis: Immediate recall, transparent communication, and prioritizing safety over profits—they recovered market share within a year and set the gold standard for crisis response.",
+            concept: "crisis_speed",
+            why: "In viral crises, speed beats perfection. You don't need all answers—you need to show you care and are acting. Template: 1) Acknowledge the issue exists, 2) Express genuine concern for those affected, 3) Announce immediate investigation, 4) Promise updates. This buys goodwill while you figure out details."
+         },
+         {
+            title: "The Media Ambush",
+            context: "A journalist from a major tech publication emails: 'We're publishing a story tomorrow about toxic culture at your startup. Multiple former employees describe harassment that leadership ignored. We'd like your comment by 5pm today.' You have 4 hours. Some allegations are false, some are exaggerated versions of real incidents, one is accurate and serious.",
+            question: "How should you respond to this media request?",
+            opts: [
+               "A) Decline to comment—anything you say will be used against you",
+               "B) Respond with prepared statement addressing each allegation specifically",
+               "C) Threaten legal action if they publish false claims",
+               "D) Ask for a week extension to investigate internally"
+            ],
+            correct: 1,
+            wrongExplanations: [
+               "'No comment' appears in print as 'Company declined to respond to allegations.' Readers assume guilt. You've given up your only chance to shape the narrative before publication.",
+               "",
+               "Legal threats against journalists almost always backfire. It becomes 'Company tries to silence reporters'—a worse story than the original. Media organizations have legal teams and view threats as confirmation of wrongdoing.",
+               "Journalists have their own deadlines and won't wait a week. This request will be noted as 'Company asked for unreasonable delay.' They'll publish without your input, which is worse than a prepared response."
+            ],
+            realWorld: "Uber's 2017 culture crisis: Susan Fowler's blog post led to avalanche of media investigations. Uber's initial denials and legal posturing made things worse. Companies that survive scandals (Microsoft under Nadella) respond with: acknowledge problems exist, show specific changes underway, demonstrate accountability.",
+            concept: "media_response",
+            why: "The statement approach: Address true allegations with accountability ('We take this seriously, here's what we're doing'). For false allegations, factually correct with evidence. Never attack the journalist or sources. Provide context without being defensive. Your response shapes how the story reads."
+         },
+         {
+            title: "The Competitor Attack",
+            context: "Your main competitor's CEO tweets: 'Surprised @YourCompany is still in business given their data breach last year. We've never had a security incident.' This is misleading—your 'breach' was a minor vulnerability disclosed and patched within hours; they've had unreported incidents. The tweet has 50K impressions and industry analysts are watching.",
+            question: "What's the strategic response to competitor attacks?",
+            opts: [
+               "A) Publicly expose their unreported security incidents",
+               "B) Respond professionally with facts, then pivot to your strengths",
+               "C) Ignore it—don't give them more attention",
+               "D) Have your investors or customers attack them on your behalf"
+            ],
+            correct: 1,
+            wrongExplanations: [
+               "Exposing their incidents makes you look petty and starts a public mud fight. Analysts watching see two companies attacking each other—neither looks professional. You become the story instead of solving it.",
+               "",
+               "Ignoring leaves their false claim unchallenged. Analysts and customers who see it may believe it. In B2B especially, unanswered attacks can influence deals. Silence isn't always golden.",
+               "Proxy attacks are transparent and embarrassing when discovered. It looks like you're orchestrating a campaign rather than being confident in your position. This damages relationships with investors and customers."
+            ],
+            realWorld: "The 'Get a Mac' campaign was brilliant because Apple focused on its own strengths while making gentle comparisons. Contrast with the Pepsi/Coke wars that made both look petty. The best competitive responses are factual, brief, and pivot quickly to value proposition.",
+            concept: "competitive_response",
+            why: "The professional response: 'To clarify: [brief factual correction]. We're proud of [your actual strength]. Happy to discuss our security practices with any customer.' Then stop engaging. You've corrected the record without escalating. Multiple tweets make you look defensive."
+         },
+         {
+            title: "The Founder Scandal",
+            context: "Your CEO's old tweets from 10 years ago surface—offensive jokes that don't reflect current values. An activist account with 500K followers is calling for boycott. Board is split: half want immediate resignation, half say 'wait and see.' CEO wrote genuine apology last night but hasn't posted it. Company has major funding round closing next week.",
+            question: "How should the company navigate this founder scandal?",
+            opts: [
+               "A) CEO should resign immediately to protect the company",
+               "B) Post genuine apology quickly, demonstrate growth, then get back to work",
+               "C) Delete the old tweets and hope the story dies down",
+               "D) Attack the activist account's credibility and motives"
+            ],
+            correct: 1,
+            wrongExplanations: [
+               "Immediate resignation signals the company agrees the offense is unforgivable. It doesn't actually satisfy critics (they just move to the next target) and destabilizes the company. Resignation should be reserved for ongoing or severe misconduct, not old statements.",
+               "",
+               "Deleting evidence looks like coverup. Screenshots already exist. The story becomes 'CEO tries to hide past' instead of 'CEO has grown.' Deletion is almost never the right move.",
+               "Attacking critics makes the CEO look defensive and petty. It shifts the story to 'CEO attacks activist' which is more engaging than 'CEO apologizes.' Never give critics new ammunition."
+            ],
+            realWorld: "James Gunn was fired from Guardians of the Galaxy over old tweets, then rehired after reflection showed genuine growth. Kevin Hart stepped down from Oscars hosting but was later rehabilitated. The pattern: genuine acknowledgment of past mistakes + evidence of growth = path forward. Denial or attack = escalation.",
+            concept: "personal_crisis",
+            why: "The playbook for old statements: 1) Don't delete—acknowledge they exist, 2) Apologize genuinely without excuses ('I wrote those things, they were wrong'), 3) Show growth ('Here's how I've changed'), 4) Point to actions not words ('Here's what we've done as a company'). Then—critically—stop apologizing and start demonstrating."
+         },
+         {
+            title: "The Layoff Leak",
+            context: "You're planning layoffs affecting 30% of staff next week. Somehow, tech blogs have the story and are publishing in 2 hours with the headline 'Mass Layoffs Coming.' Employees are panicking on Slack—they saw the headline before any internal communication. Your carefully planned announcement sequence is ruined. HR is furious, employees are scared, and media is calling.",
+            question: "How do you handle a leaked negative announcement?",
+            opts: [
+               "A) Deny the story until you're ready for the official announcement",
+               "B) Immediately address employees first, then media—transparency now",
+               "C) Find and fire the leaker to send a message",
+               "D) No comment until lawyers review everything"
+            ],
+            correct: 1,
+            wrongExplanations: [
+               "Denying a true story that's about to be confirmed destroys credibility. Employees will remember you lied to them. Trust, once lost to lies, is nearly impossible to rebuild.",
+               "",
+               "Leaker-hunting during a crisis is a distraction that changes the narrative. 'Company hunts for whistleblower' is worse press than the layoffs themselves. It also terrifies remaining employees about speaking up.",
+               "Silence while employees panic is abandonment. Every minute without communication, they're imagining worst-case scenarios and updating LinkedIn. You lose good people who could have stayed."
+            ],
+            realWorld: "Airbnb's 2020 layoffs under Brian Chesky became a masterclass: honest, empathetic internal communication first, then public memo that treated departing employees with dignity. He offered extended healthcare, equity vesting, and outplacement. The result: positive press about how layoffs were handled, and alumni became brand ambassadors.",
+            concept: "leaked_news",
+            why: "When your announcement leaks: 1) Accept the timeline is now, not next week, 2) Internal communication FIRST—even if just 'We're preparing a statement, all-hands in 30 minutes,' 3) Then media, 4) Be as transparent as possible about the 'why.' The story is happening—your only control is how you show up in it."
+         }
       ];
 
-      if (phase === 'intro') return (
-         <div className="flex flex-col items-center justify-center h-full bg-gradient-to-br from-emerald-900 via-teal-900 to-cyan-900 text-white p-8 text-center">
-            <button onClick={() => setShowInfo(!showInfo)} className="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/20 flex items-center justify-center text-xl">ℹ️</button>
-            {showInfo && (
-               <div className="absolute top-16 right-4 bg-black/90 p-4 rounded-xl max-w-xs text-left text-sm">
-                  <p className="font-bold mb-2">Public Relations</p>
-                  <p>Managing your public image and reputation. Crisis communication requires speed, transparency, and empathy.</p>
-               </div>
-            )}
-            <p className="text-6xl mb-4">📰</p>
-            <h2 className="text-3xl font-bold mb-4">PR Crisis Simulator</h2>
-            <p className="text-lg opacity-80 max-w-md mb-8">Navigate PR scenarios and protect your brand's reputation.</p>
-            <button onClick={() => setPhase('play')} className="px-8 py-4 bg-emerald-500 rounded-2xl font-bold text-xl hover:bg-emerald-400 transition-all">START SIMULATION →</button>
-         </div>
-      );
-
-      if (phase === 'result') return (
-         <div className="flex flex-col items-center justify-center h-full bg-gradient-to-br from-emerald-900 via-teal-900 to-cyan-900 text-white p-8 text-center">
-            <p className="text-6xl mb-4">{score >= 25 ? '🏆' : score >= 15 ? '⭐' : '📚'}</p>
-            <h2 className="text-3xl font-bold mb-4">PR Score</h2>
-            <p className="text-5xl font-bold text-emerald-400 mb-4">{score}/{crises.length * 10}</p>
-            <p className="text-lg opacity-80 mb-8">{score >= 25 ? 'PR expert!' : score >= 15 ? 'Good instincts!' : 'Study crisis management!'}</p>
-            <button onClick={() => { setPhase('intro'); setScore(0); setCurrent(0); }} className="px-6 py-3 bg-emerald-500 rounded-xl font-bold">TRY AGAIN</button>
-         </div>
-      );
-
-      const handleSelect = (optScore: number) => {
-         setScore(score + optScore);
-         if (current < crises.length - 1) setCurrent(current + 1);
-         else setPhase('result');
+      const conceptLabels: { [key: string]: string } = {
+         crisis_speed: "Crisis Response Timing",
+         media_response: "Media Request Handling",
+         competitive_response: "Competitive Attack Response",
+         personal_crisis: "Founder Personal Crisis",
+         leaked_news: "Leaked Announcement Management"
       };
 
-      const c = crises[current];
-      return (
-         <div className="flex flex-col h-full bg-gradient-to-br from-emerald-900 via-teal-900 to-cyan-900 text-white p-8">
-            <div className="bg-red-500/20 border border-red-500/50 rounded-2xl p-6 mb-6 text-center">
-               <p className="text-sm opacity-70 mb-2">⚠️ CRISIS {current + 1} of {crises.length}</p>
-               <p className="text-lg font-bold">{c.scenario}</p>
+      const infoTopics: { [k: string]: { title: string; content: string } } = {
+         crisis: { title: "Crisis Communication Basics", content: "The 3 C's: Care (show genuine concern), Commitment (promise action), Consistency (one message across channels). First 24 hours determine narrative. Speed beats perfection. Acknowledge, don't speculate. Promise updates, then deliver them." },
+         media: { title: "Media Relations", content: "Journalists have jobs to do—help them do it accurately. Provide clear, quotable statements. Never say 'no comment.' Prepare key messages in advance. Everything is on the record. Build relationships before you need them." },
+         social: { title: "Social Media Crises", content: "Social moves fast—hours, not days. Monitor constantly. Respond on the platform where the crisis started. Don't delete (screenshots exist). Be human, not corporate. Sometimes not responding IS the response. Know when to take conversations offline." },
+         reputation: { title: "Reputation Building", content: "Reputation is built in calm times, tested in crises. Proactive thought leadership builds credibility reserves. Relationships with journalists, analysts, and influencers should exist BEFORE crises. Authenticity compounds; inauthenticity is eventually exposed." }
+      };
+
+      const sc = scenarios[scenario];
+
+      const answer = (i: number) => {
+         if (answered) return;
+         setSelected(i);
+         setAnswered(true);
+         if (i === sc.correct) {
+            setScore(s => s + 1);
+            setGameLog(l => [...l, `✓ ${sc.title}: Handled crisis effectively`]);
+         } else {
+            setGameLog(l => [...l, `✗ ${sc.title}: ${sc.wrongExplanations[i]}`]);
+            if (!conceptGaps.includes(sc.concept)) {
+               setConceptGaps(g => [...g, sc.concept]);
+            }
+         }
+      };
+
+      const next = () => {
+         if (scenario >= scenarios.length - 1) {
+            setPhase('result');
+         } else {
+            setScenario(s => s + 1);
+            setSelected(null);
+            setAnswered(false);
+         }
+      };
+
+      const grade = score >= 5 ? 'A' : score >= 4 ? 'B' : score >= 3 ? 'C' : 'D';
+
+      if (phase === 'intro') {
+         return (
+            <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-emerald-900 via-teal-900 to-cyan-900 text-white p-6">
+               <div className="text-6xl mb-4">📰</div>
+               <h2 className="text-2xl font-bold mb-2">PR Crisis Simulator</h2>
+               <p className="text-emerald-300 text-center mb-4 max-w-md">
+                  Navigate high-stakes PR crises where timing, tone, and transparency determine whether your brand survives or burns.
+               </p>
+               <div className="bg-black/30 rounded-lg p-4 mb-6 max-w-md">
+                  <p className="text-sm text-slate-300 mb-2">You'll face scenarios involving:</p>
+                  <ul className="text-xs text-slate-400 space-y-1">
+                     <li>• Viral customer complaints with millions of views</li>
+                     <li>• Journalists with damaging stories on deadline</li>
+                     <li>• Competitor attacks that spread misinformation</li>
+                     <li>• Founder scandals from the past surfacing</li>
+                     <li>• Leaked announcements that destroy your timeline</li>
+                  </ul>
+               </div>
+               <button onClick={() => setPhase('play')} className="px-8 py-3 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-xl font-bold">
+                  Enter the Crisis
+               </button>
             </div>
-            <p className="text-center mb-4 opacity-80">How do you respond?</p>
-            <div className="flex flex-col gap-3 flex-1">
-               {c.options.map((opt) => (
-                  <button key={opt.id} onClick={() => handleSelect(opt.score)}
-                     className="p-4 bg-black/30 rounded-xl hover:bg-emerald-500/30 transition-all text-left font-medium">
-                     {opt.label}
+         );
+      }
+
+      if (phase === 'result') {
+         return (
+            <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-emerald-900 via-teal-900 to-cyan-900 text-white p-6 overflow-auto">
+               <div className="text-5xl mb-3">{grade === 'A' ? '🏆' : grade === 'B' ? '📰' : grade === 'C' ? '⚠️' : '🔥'}</div>
+               <h2 className="text-xl font-bold mb-2">Crisis Response Assessment</h2>
+               <div className="text-3xl font-bold text-emerald-400 mb-1">{score}/{scenarios.length}</div>
+               <div className="text-4xl mb-3">{grade}</div>
+               <p className="text-slate-400 text-sm mb-3 text-center">
+                  {grade === 'A' ? 'Crisis communications expert! You protected the brand through every storm.' :
+                   grade === 'B' ? 'Strong PR instincts—you understand speed and transparency.' :
+                   grade === 'C' ? 'Some missteps would cause lasting damage—study crisis response patterns.' :
+                   'Review crisis fundamentals—several responses would have made situations worse.'}
+               </p>
+               {conceptGaps.length > 0 && (
+                  <div className="w-full max-w-md bg-red-900/30 border border-red-500/30 rounded-lg p-3 mb-3">
+                     <p className="text-xs text-red-400 font-semibold mb-2">PR Skills to Develop:</p>
+                     <ul className="text-xs text-red-300 space-y-1">
+                        {conceptGaps.map(g => <li key={g}>• {conceptLabels[g]}</li>)}
+                     </ul>
+                  </div>
+               )}
+               <div className="w-full max-w-md bg-black/30 rounded-lg p-3 mb-4 max-h-28 overflow-y-auto">
+                  {gameLog.map((l, i) => <p key={i} className="text-xs text-slate-300 mb-1">{l}</p>)}
+               </div>
+               <button onClick={() => { setPhase('intro'); setScenario(0); setScore(0); setAnswered(false); setSelected(null); setGameLog([]); setConceptGaps([]); }} className="px-6 py-2 bg-emerald-600 rounded-lg">
+                  Try Again
+               </button>
+            </div>
+         );
+      }
+
+      return (
+         <div className="w-full h-full flex flex-col bg-gradient-to-br from-emerald-900 via-teal-900 to-cyan-900 text-white overflow-hidden">
+            {showInfo && infoTopic && infoTopics[infoTopic] && (
+               <div className="absolute inset-0 bg-black/80 flex items-center justify-center p-4 z-50" onClick={() => { setShowInfo(false); setInfoTopic(null); }}>
+                  <div className="bg-slate-800 rounded-xl p-4 max-w-sm" onClick={e => e.stopPropagation()}>
+                     <h3 className="text-lg font-bold text-emerald-400 mb-2">{infoTopics[infoTopic].title}</h3>
+                     <p className="text-sm text-slate-300">{infoTopics[infoTopic].content}</p>
+                     <button onClick={() => { setShowInfo(false); setInfoTopic(null); }} className="mt-4 w-full py-2 bg-emerald-600 rounded-lg">Got it!</button>
+                  </div>
+               </div>
+            )}
+            <div className="p-3 bg-black/30 border-b border-red-500/30 flex justify-between items-center">
+               <span className="font-bold text-sm">⚠️ {sc.title}</span>
+               <span className="text-emerald-400 text-sm">{scenario + 1}/{scenarios.length}</span>
+               <span className="text-teal-400 text-sm">Score: {score}</span>
+            </div>
+            <div className="flex-1 p-4 overflow-auto">
+               <div className="bg-red-900/30 border border-red-500/30 rounded-lg p-3 mb-3">
+                  <p className="text-sm text-slate-300">{sc.context}</p>
+               </div>
+               <div className="bg-emerald-800/30 rounded-lg p-3 mb-3">
+                  <p className="font-medium text-sm">{sc.question}</p>
+               </div>
+               <div className="grid gap-2 mb-3">
+                  {sc.opts.map((opt, i) => (
+                     <button key={i} onClick={() => answer(i)} disabled={answered} className={`p-3 rounded-lg text-left text-sm transition-all ${answered ? i === sc.correct ? 'bg-green-600' : i === selected ? 'bg-red-600' : 'bg-black/30 opacity-50' : 'bg-black/30 hover:bg-emerald-600/50'}`}>
+                        {opt}
+                     </button>
+                  ))}
+               </div>
+               {answered && (
+                  <div className="space-y-3">
+                     <div className="bg-green-900/30 border border-green-500/30 rounded-lg p-3">
+                        <p className="text-xs text-green-400 font-semibold mb-1">Effective Response:</p>
+                        <p className="text-sm text-slate-300">{sc.why}</p>
+                     </div>
+                     {selected !== sc.correct && sc.wrongExplanations[selected!] && (
+                        <div className="bg-red-900/30 border border-red-500/30 rounded-lg p-3">
+                           <p className="text-xs text-red-400 font-semibold mb-1">Why that backfires:</p>
+                           <p className="text-sm text-slate-300">{sc.wrongExplanations[selected!]}</p>
+                        </div>
+                     )}
+                     <div className="bg-emerald-900/30 border border-emerald-500/30 rounded-lg p-3">
+                        <p className="text-xs text-emerald-400 font-semibold mb-1">📊 Real World:</p>
+                        <p className="text-sm text-slate-300">{sc.realWorld}</p>
+                     </div>
+                     <button onClick={next} className="w-full py-2 bg-emerald-600 rounded-lg font-medium">
+                        {scenario >= scenarios.length - 1 ? 'See Results' : 'Next Crisis'}
+                     </button>
+                  </div>
+               )}
+            </div>
+            <div className="p-2 bg-black/30 border-t border-emerald-500/30 flex gap-2 justify-center flex-wrap">
+               {Object.keys(infoTopics).map(k => (
+                  <button key={k} onClick={() => { setInfoTopic(k); setShowInfo(true); }} className="text-xs text-emerald-400 hover:text-emerald-300">
+                     ℹ️ {infoTopics[k].title}
                   </button>
                ))}
             </div>
@@ -23135,72 +23341,279 @@ const GeneratedDiagram: React.FC<DiagramProps> = ({ type, data, title }) => {
    // 39. GUERRILLA MARKETING - Creative Campaign Ideas
    const GuerrillaMarketingRenderer = () => {
       const [phase, setPhase] = useState<'intro' | 'play' | 'result'>('intro');
-      const [showInfo, setShowInfo] = useState(false);
+      const [scenario, setScenario] = useState(0);
       const [score, setScore] = useState(0);
-      const [current, setCurrent] = useState(0);
-
-      const tactics = [
-         { name: 'Flash Mob', icon: '💃', desc: 'Coordinated public performance', viral: 9, cost: 2, risk: 4 },
-         { name: 'Street Art', icon: '🎨', desc: 'Creative murals or chalk art', viral: 7, cost: 1, risk: 5 },
-         { name: 'Pop-Up Experience', icon: '🎪', desc: 'Temporary immersive installation', viral: 8, cost: 5, risk: 2 },
-         { name: 'Sticker Campaign', icon: '🏷️', desc: 'Strategic sticker placement', viral: 5, cost: 1, risk: 6 },
-         { name: 'Viral Stunt', icon: '🎬', desc: 'Attention-grabbing public act', viral: 10, cost: 4, risk: 8 }
-      ];
+      const [selected, setSelected] = useState<number | null>(null);
+      const [answered, setAnswered] = useState(false);
+      const [gameLog, setGameLog] = useState<string[]>([]);
+      const [showInfo, setShowInfo] = useState(false);
+      const [infoTopic, setInfoTopic] = useState<string | null>(null);
+      const [conceptGaps, setConceptGaps] = useState<string[]>([]);
 
       const scenarios = [
-         { goal: 'Launch a coffee shop on a tiny budget', best: 'Sticker Campaign' },
-         { goal: 'Create massive buzz for a movie premiere', best: 'Viral Stunt' },
-         { goal: 'Promote a dance studio opening', best: 'Flash Mob' }
+         {
+            title: "The Zero-Budget Launch",
+            context: "You're launching a specialty coffee roaster in a trendy urban neighborhood. Budget: literally $500 for all marketing. Established competitors spend $10K/month on ads. Your differentiator: you roast beans on-site daily (rare). You have 2 weeks until opening. The area has heavy foot traffic from office workers.",
+            question: "What guerrilla tactic maximizes impact with $500?",
+            opts: [
+               "A) Spend it all on Instagram ads targeting the neighborhood",
+               "B) Create a 'follow the aroma' scent trail with free sample stations at peak hours",
+               "C) Print 5,000 flyers and distribute to nearby offices",
+               "D) Hire a local influencer for a single post"
+            ],
+            correct: 1,
+            wrongExplanations: [
+               "Instagram ads at $500 in a competitive market will reach maybe 10-50K impressions—not enough to break through noise. You're competing against well-funded competitors on their turf. Ads are not guerrilla.",
+               "",
+               "Flyers have 1-2% engagement rates at best. 5,000 flyers = 50-100 potential customers. Most end up as litter, which damages your brand. This is old-school marketing, not guerrilla.",
+               "A single influencer post for $500 gets low-tier influencers with fake engagement. One post doesn't create sustained awareness. You'd get 50-100 likes, maybe 5 customers. Not worth the spend."
+            ],
+            realWorld: "Death Wish Coffee used guerrilla marketing to become the 'world's strongest coffee.' They gave free samples at gas stations where truckers stopped, creating word-of-mouth. The sensory experience of on-site roasting IS the marketing—let people smell and taste. Starbucks grew initially through aroma and sampling, not ads.",
+            concept: "sensory_marketing",
+            why: "Guerrilla marketing uses strengths competitors can't copy. Your on-site roasting creates aroma competitors can't replicate. A scent trail is free advertising that stops people. Free samples at 8AM when office workers need coffee creates habit. $500 covers cups and signage. This is experiential, shareable, and builds on your unique differentiator."
+         },
+         {
+            title: "The Viral Stunt Gamble",
+            context: "Your fitness app is launching against well-funded competitors (Peloton, etc.). Marketing suggests a 'bold stunt'—hiring 50 people to do synchronized workouts in Times Square, costing $25K for permits, participants, and production. Potential outcome: viral video or complete obscurity. Company has 6 months runway.",
+            question: "Should you pursue this viral stunt?",
+            opts: [
+               "A) Yes—viral moments can define a brand overnight",
+               "B) No—the risk/reward ratio is wrong for a company with 6 months runway",
+               "C) Do it but cheaper—10 people instead of 50",
+               "D) Wait until you have more funding, then do it bigger"
+            ],
+            correct: 1,
+            wrongExplanations: [
+               "Viral moments are lottery tickets. For every Dollar Shave Club, there are thousands of stunts that flopped. With 6 months runway, you can't afford lottery tickets. One failed expensive campaign could mean death.",
+               "",
+               "10 people doesn't create the 'spectacle' needed for virality. It looks like a small group working out—not news. You'd spend money without achieving the scale needed for impact. Worst of both worlds.",
+               "Waiting for more funding assumes you'll get it. You might not. And 'bigger later' doesn't solve the fundamental risk—you'd just be betting more. The strategy is flawed, not the budget."
+            ],
+            realWorld: "Red Bull spends on stunts (Stratos jump cost $30M+) because they have billions in revenue to absorb failure. For startups, guerrilla should be low-cost, high-reward. Dropbox's viral referral program cost nearly nothing and drove exponential growth. Airbnb's Obama O's cereal got press coverage for the cost of cereal boxes.",
+            concept: "asymmetric_bets",
+            why: "True guerrilla is asymmetric: low cost, high potential impact. A $25K stunt with uncertain outcome is not guerrilla—it's a gamble. With 6 months runway, invest in 25 smaller experiments at $1K each. Some will work, and you'll learn which to scale. Betting everything on one viral moment is Vegas, not strategy."
+         },
+         {
+            title: "The Community Hijack",
+            context: "You're launching a B2B SaaS for small business accounting. Marketing budget: $3K/month. Your target: small business owners who hate accounting. There's a popular podcast for small business owners with 50K listeners—the host charges $5K for sponsored episodes (too expensive). The host also runs a free Slack community with 2,000 members.",
+            question: "How do you reach this audience guerrilla-style?",
+            opts: [
+               "A) Save up for the $5K podcast sponsorship—it's the best channel",
+               "B) Become genuinely valuable in the Slack community, then offer free beta access",
+               "C) Cold email the podcast listeners you can find on LinkedIn",
+               "D) Run ads targeted at the podcast audience"
+            ],
+            correct: 1,
+            wrongExplanations: [
+               "Saving $5K means 2 months of your marketing budget on one podcast episode that listeners might skip. Podcast ads have uncertain ROI. You'd burn budget on a single bet rather than learning what works.",
+               "",
+               "Cold emailing podcast listeners is spam. They didn't consent to hearing from you. It damages your brand and probably violates CAN-SPAM. This isn't guerrilla—it's annoying.",
+               "You can't effectively target 'podcast listeners' with ads—platforms don't have that data. You'd be guessing at demographics and wasting budget on broad targeting."
+            ],
+            realWorld: "Superhuman grew through 'community-led growth'—showing up where customers were and providing genuine value before asking for anything. Buffer's founder Leo Widrich wrote guest posts for months before launching. The principle: give value, build relationships, then offer your product. Community trust is free but requires time investment.",
+            concept: "community_infiltration",
+            why: "Guerrilla marketing in B2B means becoming a trusted community member. Answer questions. Share insights. Help people for free. After 4-6 weeks of adding value, you've earned the right to mention your solution. Beta invites to community members create word-of-mouth. This costs time, not money—the guerrilla advantage."
+         },
+         {
+            title: "The Newsjacking Opportunity",
+            context: "A major tech company just announced they're shutting down a product that 500K users depend on. Your startup offers a similar solution. Twitter is exploding with angry users asking 'what do we switch to?' This is a 24-48 hour window. Your marketing team is suggesting a $20K Google Ads campaign targeting the competitor's brand name.",
+            question: "What's the guerrilla response to this breaking news?",
+            opts: [
+               "A) Run the $20K Google Ads campaign—capture the search traffic",
+               "B) Create a free migration tool and tweet it directly to angry users",
+               "C) Write a blog post comparing your product to the dying one",
+               "D) Wait—aggressive marketing during competitor's death looks vulturous"
+            ],
+            correct: 1,
+            wrongExplanations: [
+               "Google Ads take hours to set up and approve. By the time they're running, the news cycle has moved on. Plus, everyone else is bidding on that keyword—prices spike during news events. You'd pay premium for late traffic.",
+               "",
+               "Blog posts take time to rank. No one will find it in the 24-hour window. SEO is a long game; newsjacking requires immediate action on the platforms where the conversation is happening.",
+               "Waiting is leaving money on the table. 500K users are actively looking for alternatives RIGHT NOW. Helping them isn't vulturous—it's solving their problem. Your competitors aren't waiting."
+            ],
+            realWorld: "When Google killed Google Reader, Feedly newsjacked by tweeting 'We've got you covered' and saw 3M users join in 2 weeks. When Vine died, TikTok (then Musical.ly) created migration tools. The pattern: be immediately helpful at the moment of pain, before competitors react. Speed is the guerrilla advantage.",
+            concept: "newsjacking",
+            why: "Newsjacking = real-time marketing that inserts your brand into breaking news. The free migration tool is the key: you're not just saying 'use us'—you're solving their immediate problem. Tweet at the angry users directly. They're receptive because they're in pain NOW. This costs engineering time, not marketing dollars. Ship fast; capture the moment."
+         },
+         {
+            title: "The Anti-Advertising Play",
+            context: "Your sustainable fashion brand targets Gen Z consumers who actively distrust advertising. They skip ads, use ad blockers, and mock branded content. You have $10K for a campaign. Traditional influencer marketing feels inauthentic. Your clothes are genuinely sustainable (certified, transparent supply chain)—but so are competitors' claims.",
+            question: "How do you market to an ad-hostile audience?",
+            opts: [
+               "A) Find micro-influencers who seem more 'authentic'",
+               "B) Create genuine entertainment or utility content that happens to feature your product",
+               "C) Lean into educational content about sustainability—establish thought leadership",
+               "D) Focus on PR—get earned media coverage in fashion publications"
+            ],
+            correct: 1,
+            wrongExplanations: [
+               "Gen Z can smell sponsored content regardless of follower count. 'Micro-influencers' who post branded content are still advertisements. The format is recognized and dismissed. You're putting lipstick on an ad.",
+               "",
+               "Educational content is valuable but doesn't differentiate—everyone claims sustainability. 'Thought leadership' from a brand is still branded content. Gen Z questions the messenger as much as the message.",
+               "PR coverage is good but not controllable or guerrilla. Fashion publications are saturated with sustainable brands. Getting coverage requires news, not just existence."
+            ],
+            realWorld: "Patagonia's 'Don't Buy This Jacket' campaign worked because it was genuinely counter to their commercial interest. Liquid Death sells water in tallboy cans and creates comedy content that barely mentions water. The brand IS entertainment. Gen Z shares what's genuinely funny or interesting, not what's 'authentic-seeming.'",
+            concept: "entertainment_first",
+            why: "The only content that spreads in ad-hostile environments is content worth sharing on its own merits. Not 'authentic ads'—actual entertainment, humor, or utility. If your content wouldn't be shared without your logo, it won't be shared with it. Invest in genuinely good content where your product is incidental, not central. This is brand building, not conversion marketing."
+         }
       ];
 
-      if (phase === 'intro') return (
-         <div className="flex flex-col items-center justify-center h-full bg-gradient-to-br from-lime-900 via-green-900 to-emerald-900 text-white p-8 text-center">
-            <button onClick={() => setShowInfo(!showInfo)} className="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/20 flex items-center justify-center text-xl">ℹ️</button>
-            {showInfo && (
-               <div className="absolute top-16 right-4 bg-black/90 p-4 rounded-xl max-w-xs text-left text-sm">
-                  <p className="font-bold mb-2">Guerrilla Marketing</p>
-                  <p>Unconventional, low-cost tactics designed to generate buzz and word-of-mouth. High creativity, high impact.</p>
-               </div>
-            )}
-            <p className="text-6xl mb-4">🎭</p>
-            <h2 className="text-3xl font-bold mb-4">Guerrilla Marketing</h2>
-            <p className="text-lg opacity-80 max-w-md mb-8">Match unconventional marketing tactics to business scenarios.</p>
-            <button onClick={() => setPhase('play')} className="px-8 py-4 bg-lime-500 rounded-2xl font-bold text-xl hover:bg-lime-400 transition-all text-black">START →</button>
-         </div>
-      );
-
-      if (phase === 'result') return (
-         <div className="flex flex-col items-center justify-center h-full bg-gradient-to-br from-lime-900 via-green-900 to-emerald-900 text-white p-8 text-center">
-            <p className="text-6xl mb-4">{score >= scenarios.length * 8 ? '🏆' : '⭐'}</p>
-            <h2 className="text-3xl font-bold mb-4">Creativity Score</h2>
-            <p className="text-5xl font-bold text-lime-400 mb-4">{score}/{scenarios.length * 10}</p>
-            <button onClick={() => { setPhase('intro'); setScore(0); setCurrent(0); }} className="px-6 py-3 bg-lime-500 rounded-xl font-bold text-black">TRY AGAIN</button>
-         </div>
-      );
-
-      const handleSelect = (tactic: string) => {
-         const isCorrect = tactic === scenarios[current].best;
-         setScore(score + (isCorrect ? 10 : 4));
-         if (current < scenarios.length - 1) setCurrent(current + 1);
-         else setPhase('result');
+      const conceptLabels: { [key: string]: string } = {
+         sensory_marketing: "Sensory & Experiential Marketing",
+         asymmetric_bets: "Asymmetric Risk/Reward",
+         community_infiltration: "Community-Led Growth",
+         newsjacking: "Real-Time News Marketing",
+         entertainment_first: "Entertainment-First Content"
       };
 
-      return (
-         <div className="flex flex-col h-full bg-gradient-to-br from-lime-900 via-green-900 to-emerald-900 text-white p-8">
-            <div className="bg-black/30 rounded-2xl p-4 mb-4 text-center">
-               <p className="text-sm opacity-70">Scenario {current + 1}/{scenarios.length}</p>
-               <p className="text-lg font-bold mt-2">{scenarios[current].goal}</p>
+      const infoTopics: { [k: string]: { title: string; content: string } } = {
+         principles: { title: "Guerrilla Principles", content: "Low cost, high impact. Use creativity instead of budget. Be where competitors aren't. Create experiences, not ads. Make sharing irresistible. Time investment often beats money. Small can be an advantage—you're nimble." },
+         risks: { title: "Guerrilla Risks", content: "Legal issues (permits, trespassing). Brand damage if tone is wrong. Backfire potential (stunts gone wrong go viral for wrong reasons). Scalability limits. Time intensity. Not all guerrilla is appropriate for all brands." },
+         digital: { title: "Digital Guerrilla", content: "Newsjacking (insert into trending conversations). Community infiltration (earn trust, then sell). Content hijacking (parody, commentary). Platform exploits (algorithm hacks, feature abuse). Tool marketing (build something useful, add your brand)." },
+         measurement: { title: "Measuring Guerrilla", content: "Traditional metrics often don't apply. Track: social mentions, organic reach, earned media value, community sentiment, referral traffic. Success may be brand awareness, not immediate conversion. Set expectations appropriately." }
+      };
+
+      const sc = scenarios[scenario];
+
+      const answer = (i: number) => {
+         if (answered) return;
+         setSelected(i);
+         setAnswered(true);
+         if (i === sc.correct) {
+            setScore(s => s + 1);
+            setGameLog(l => [...l, `✓ ${sc.title}: Creative guerrilla thinking`]);
+         } else {
+            setGameLog(l => [...l, `✗ ${sc.title}: ${sc.wrongExplanations[i]}`]);
+            if (!conceptGaps.includes(sc.concept)) {
+               setConceptGaps(g => [...g, sc.concept]);
+            }
+         }
+      };
+
+      const next = () => {
+         if (scenario >= scenarios.length - 1) {
+            setPhase('result');
+         } else {
+            setScenario(s => s + 1);
+            setSelected(null);
+            setAnswered(false);
+         }
+      };
+
+      const grade = score >= 5 ? 'A' : score >= 4 ? 'B' : score >= 3 ? 'C' : 'D';
+
+      if (phase === 'intro') {
+         return (
+            <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-lime-900 via-green-900 to-emerald-900 text-white p-6">
+               <div className="text-6xl mb-4">🎭</div>
+               <h2 className="text-2xl font-bold mb-2">Guerrilla Marketing Lab</h2>
+               <p className="text-lime-300 text-center mb-4 max-w-md">
+                  Master unconventional marketing tactics that use creativity instead of budget to create outsized impact.
+               </p>
+               <div className="bg-black/30 rounded-lg p-4 mb-6 max-w-md">
+                  <p className="text-sm text-slate-300 mb-2">You'll face scenarios involving:</p>
+                  <ul className="text-xs text-slate-400 space-y-1">
+                     <li>• Zero-budget launches against funded competitors</li>
+                     <li>• Viral stunt gambles with limited runway</li>
+                     <li>• Community infiltration vs paid advertising</li>
+                     <li>• Newsjacking opportunities with 24-hour windows</li>
+                     <li>• Marketing to ad-hostile audiences</li>
+                  </ul>
+               </div>
+               <button onClick={() => setPhase('play')} className="px-8 py-3 bg-gradient-to-r from-lime-500 to-green-500 rounded-xl font-bold text-black">
+                  Go Guerrilla
+               </button>
             </div>
-            <p className="text-center mb-4 opacity-80">Select the best tactic:</p>
-            <div className="grid grid-cols-1 gap-2 flex-1 overflow-auto">
-               {tactics.map((t) => (
-                  <button key={t.name} onClick={() => handleSelect(t.name)}
-                     className="p-3 bg-black/30 rounded-xl hover:bg-lime-500/30 transition-all text-left flex items-center gap-3">
-                     <span className="text-2xl">{t.icon}</span>
-                     <div>
-                        <p className="font-bold">{t.name}</p>
-                        <p className="text-xs opacity-70">{t.desc}</p>
+         );
+      }
+
+      if (phase === 'result') {
+         return (
+            <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-lime-900 via-green-900 to-emerald-900 text-white p-6 overflow-auto">
+               <div className="text-5xl mb-3">{grade === 'A' ? '🏆' : grade === 'B' ? '🎭' : grade === 'C' ? '📢' : '💸'}</div>
+               <h2 className="text-xl font-bold mb-2">Guerrilla Marketing Assessment</h2>
+               <div className="text-3xl font-bold text-lime-400 mb-1">{score}/{scenarios.length}</div>
+               <div className="text-4xl mb-3">{grade}</div>
+               <p className="text-slate-400 text-sm mb-3 text-center">
+                  {grade === 'A' ? 'Guerrilla marketing genius! You think creatively and asymmetrically.' :
+                   grade === 'B' ? 'Strong unconventional instincts—you understand scrappy marketing.' :
+                   grade === 'C' ? 'Some conventional thinking crept in—guerrilla means more creative risk.' :
+                   'Review guerrilla principles—you defaulted to traditional marketing approaches.'}
+               </p>
+               {conceptGaps.length > 0 && (
+                  <div className="w-full max-w-md bg-red-900/30 border border-red-500/30 rounded-lg p-3 mb-3">
+                     <p className="text-xs text-red-400 font-semibold mb-2">Tactics to Study:</p>
+                     <ul className="text-xs text-red-300 space-y-1">
+                        {conceptGaps.map(g => <li key={g}>• {conceptLabels[g]}</li>)}
+                     </ul>
+                  </div>
+               )}
+               <div className="w-full max-w-md bg-black/30 rounded-lg p-3 mb-4 max-h-28 overflow-y-auto">
+                  {gameLog.map((l, i) => <p key={i} className="text-xs text-slate-300 mb-1">{l}</p>)}
+               </div>
+               <button onClick={() => { setPhase('intro'); setScenario(0); setScore(0); setAnswered(false); setSelected(null); setGameLog([]); setConceptGaps([]); }} className="px-6 py-2 bg-lime-600 rounded-lg">
+                  Try Again
+               </button>
+            </div>
+         );
+      }
+
+      return (
+         <div className="w-full h-full flex flex-col bg-gradient-to-br from-lime-900 via-green-900 to-emerald-900 text-white overflow-hidden">
+            {showInfo && infoTopic && infoTopics[infoTopic] && (
+               <div className="absolute inset-0 bg-black/80 flex items-center justify-center p-4 z-50" onClick={() => { setShowInfo(false); setInfoTopic(null); }}>
+                  <div className="bg-slate-800 rounded-xl p-4 max-w-sm" onClick={e => e.stopPropagation()}>
+                     <h3 className="text-lg font-bold text-lime-400 mb-2">{infoTopics[infoTopic].title}</h3>
+                     <p className="text-sm text-slate-300">{infoTopics[infoTopic].content}</p>
+                     <button onClick={() => { setShowInfo(false); setInfoTopic(null); }} className="mt-4 w-full py-2 bg-lime-600 rounded-lg">Got it!</button>
+                  </div>
+               </div>
+            )}
+            <div className="p-3 bg-black/30 border-b border-lime-500/30 flex justify-between items-center">
+               <span className="font-bold text-sm">🎭 {sc.title}</span>
+               <span className="text-lime-400 text-sm">{scenario + 1}/{scenarios.length}</span>
+               <span className="text-green-400 text-sm">Score: {score}</span>
+            </div>
+            <div className="flex-1 p-4 overflow-auto">
+               <div className="bg-black/30 rounded-lg p-3 mb-3">
+                  <p className="text-sm text-slate-300">{sc.context}</p>
+               </div>
+               <div className="bg-lime-800/30 rounded-lg p-3 mb-3">
+                  <p className="font-medium text-sm">{sc.question}</p>
+               </div>
+               <div className="grid gap-2 mb-3">
+                  {sc.opts.map((opt, i) => (
+                     <button key={i} onClick={() => answer(i)} disabled={answered} className={`p-3 rounded-lg text-left text-sm transition-all ${answered ? i === sc.correct ? 'bg-green-600' : i === selected ? 'bg-red-600' : 'bg-black/30 opacity-50' : 'bg-black/30 hover:bg-lime-600/50'}`}>
+                        {opt}
+                     </button>
+                  ))}
+               </div>
+               {answered && (
+                  <div className="space-y-3">
+                     <div className="bg-green-900/30 border border-green-500/30 rounded-lg p-3">
+                        <p className="text-xs text-green-400 font-semibold mb-1">Guerrilla Thinking:</p>
+                        <p className="text-sm text-slate-300">{sc.why}</p>
                      </div>
+                     {selected !== sc.correct && sc.wrongExplanations[selected!] && (
+                        <div className="bg-red-900/30 border border-red-500/30 rounded-lg p-3">
+                           <p className="text-xs text-red-400 font-semibold mb-1">Why that's too conventional:</p>
+                           <p className="text-sm text-slate-300">{sc.wrongExplanations[selected!]}</p>
+                        </div>
+                     )}
+                     <div className="bg-lime-900/30 border border-lime-500/30 rounded-lg p-3">
+                        <p className="text-xs text-lime-400 font-semibold mb-1">📊 Real World:</p>
+                        <p className="text-sm text-slate-300">{sc.realWorld}</p>
+                     </div>
+                     <button onClick={next} className="w-full py-2 bg-lime-600 rounded-lg font-medium">
+                        {scenario >= scenarios.length - 1 ? 'See Results' : 'Next Scenario'}
+                     </button>
+                  </div>
+               )}
+            </div>
+            <div className="p-2 bg-black/30 border-t border-lime-500/30 flex gap-2 justify-center flex-wrap">
+               {Object.keys(infoTopics).map(k => (
+                  <button key={k} onClick={() => { setInfoTopic(k); setShowInfo(true); }} className="text-xs text-lime-400 hover:text-lime-300">
+                     ℹ️ {infoTopics[k].title}
                   </button>
                ))}
             </div>
