@@ -32629,47 +32629,361 @@ const GeneratedDiagram: React.FC<DiagramProps> = ({ type, data, title }) => {
    };
 
    const PivotDecisionRenderer = () => {
-      const [phase, setPhase] = useState<'intro'|'play'|'result'>('intro');
+      const [phase, setPhase] = useState<'intro' | 'play' | 'result'>('intro');
       const [showInfo, setShowInfo] = useState(false);
-      const [infoTopic, setInfoTopic] = useState<string|null>(null);
+      const [infoTopic, setInfoTopic] = useState<string | null>(null);
       const [scenario, setScenario] = useState(0);
       const [score, setScore] = useState(0);
+      const [selected, setSelected] = useState<number | null>(null);
       const [answered, setAnswered] = useState(false);
-      const [selected, setSelected] = useState<number|null>(null);
-      const [log, setLog] = useState<string[]>([]);
+      const [gameLog, setGameLog] = useState<string[]>([]);
+      const [conceptGaps, setConceptGaps] = useState<string[]>([]);
+
+      // Startup Survival Simulator - Learning from real failure patterns
       const scenarios = [
-         {situation:'6 months in, 100 users but 2% weekly retention. Team believes in vision.',signals:{bad:['Low retention','No growth'],good:['Team conviction','Early users']},q:'What should you do?',opts:['Pivot completely','Double down on marketing','Talk to churned users, iterate','Shut down'],correct:2,explain:'Low retention = product problem, not marketing. Learn why users leave before pivoting or quitting.'},
-         {situation:'Strong retention (60% monthly) but CAC is 5x LTV. Burned through 80% of runway.',signals:{bad:['Unsustainable CAC','Low runway'],good:['Great retention','Product works']},q:'Best path forward?',opts:['Raise more money','Pivot to new market','Find cheaper channels','Shut down'],correct:2,explain:'Product works (retention proves it). Find organic/cheaper channels before pivoting what works.'},
-         {situation:'B2B product. Enterprise loves it but sales cycle is 9 months. You have 6 months runway.',signals:{bad:['Long sales cycle','Short runway'],good:['Enterprise demand','Validated need']},q:'What should you do?',opts:['Pivot to SMB','Wait for enterprise deals','Raise bridge funding','Add more salespeople'],correct:0,explain:'9-month cycle with 6-month runway = death. Pivot down-market to survive and prove model faster.'},
-         {situation:'Consumer app went viral once, now flat. Team is burned out. Still have 12 months runway.',signals:{bad:['Growth stalled','Team burnout'],good:['Past viral success','Runway exists']},q:'Best decision?',opts:['Pivot product','Hire growth team','Take a break, then reassess','Push harder'],correct:2,explain:'Burnout kills startups. With runway, take a break, regain perspective, then decide with fresh eyes.'},
-         {situation:'Customers love product but market is shrinking 10% yearly. Profitable but not growing.',signals:{bad:['Shrinking market','No growth'],good:['Profitability','Customer love']},q:'What should you do?',opts:['Milk it while it lasts','Pivot to adjacent market','Sell the business','Invest heavily in R&D'],correct:1,explain:'Profitable + loved but shrinking = use profits to expand to adjacent growing markets.'}
+         {
+            title: "The Traction Trap",
+            context: "18 months in. You've built a beautifully designed productivity app. 5,000 signups, but only 50 active weekly users (1%). You've iterated on features 12 times based on 'user feedback.' Your runway is 8 months. The team is demoralized.",
+            signals: { bad: ['1% active rate', '12 iterations without improvement', 'Team demoralized'], good: ['5,000 signups', '8 months runway', 'Beautiful product'] },
+            question: "What's the CORE problem you need to solve?",
+            opts: [
+               'Keep iterating - you haven\'t found the right feature yet',
+               'You\'re solving a problem users don\'t actually have',
+               'Marketing is the issue - get more signups',
+               'The product needs to be rebuilt from scratch'
+            ],
+            correct: 1,
+            wrongExplanations: [
+               "12 iterations with no retention improvement is a signal: features aren't the problem. More features on a product nobody needs won't help.",
+               "", // Correct
+               "5,000 signups proves marketing works. 50 active users proves the product doesn't. Pouring water into a leaky bucket doesn't fill it.",
+               "The product being 'beautiful' isn't the issue. The problem is product-MARKET fit, not product quality. A rebuild solves the wrong problem."
+            ],
+            realWorld: "Color Labs raised $41M, built beautiful photo-sharing tech, got downloads... but nobody used it. The problem they solved (photo sharing with nearby strangers) wasn't a real problem. They pivoted twice before shutting down. Lesson: validate the PROBLEM before building the solution.",
+            concept: "problem_validation",
+            why: "Low activation despite signups = problem-solution mismatch. Users are curious enough to try, but the product doesn't solve a real problem they have. The fix isn't more features or more marketing - it's going back to customer discovery to find a problem worth solving."
+         },
+         {
+            title: "The Zombie Company",
+            context: "Your SaaS has $30K MRR, 200 customers, 2% monthly churn, and you're profitable. But growth has flatlined for 18 months. Revenue: $30K→$31K→$30K→$32K. You've tried new features, new marketing channels, and price changes. Nothing moves the needle.",
+            signals: { bad: ['18 months flat', 'No growth despite efforts', 'Market might be saturated'], good: ['Profitable', 'Low churn', 'Real customers'] },
+            question: "What should you do with this business?",
+            opts: [
+               'Keep trying new growth tactics - something will work',
+               'Raise funding to accelerate growth',
+               'Accept it as a lifestyle business or seek acquisition',
+               'Pivot to a completely different product'
+            ],
+            correct: 2,
+            wrongExplanations: [
+               "18 months of trying suggests you've tested most reasonable tactics. Doing the same thing expecting different results is the definition of insanity.",
+               "VCs don't fund flat-growth companies. Even if you got funding, more money in a stagnant market won't create growth. You'd be diluting for nothing.",
+               "", // Correct
+               "You have a profitable business with happy customers. Pivoting abandons proven revenue for uncertain new ventures. That's irrational."
+            ],
+            realWorld: "Basecamp (37signals) deliberately stayed small and profitable rather than chasing hockey-stick growth. Many 'zombie' companies are acquired by larger players who value the customer base. Mailchimp grew slowly for years before exploding. Not every company needs to be a unicorn.",
+            concept: "growth_ceiling",
+            why: "Some markets have natural ceilings. You've validated the business (profitability + low churn) but may have captured most of your addressable market. Options: 1) Run as lifestyle business, 2) Sell to strategic acquirer, 3) Expand to adjacent market. Forcing growth in a saturated market wastes resources."
+         },
+         {
+            title: "The Pivot Paradox",
+            context: "You started as a B2C social app. After 2 years: 100K users, no revenue model that works. You pivot to B2B, selling analytics to brands. 6 months in: 5 paying customers ($50K ARR), strong retention, but long sales cycles. Board wants you to pivot again to 'something scalable.'",
+            signals: { bad: ['B2C failed', 'Long B2B sales cycle', 'Board pressure'], good: ['$50K ARR in 6 months', 'Strong retention', 'Real revenue'] },
+            question: "Should you pivot again as the board suggests?",
+            opts: [
+               'Yes - B2B enterprise is too slow for venture returns',
+               'No - you finally have product-market fit, double down',
+               'Yes - listen to your board, they have more experience',
+               'No - but negotiate a smaller market to go after'
+            ],
+            correct: 1,
+            wrongExplanations: [
+               "Slow doesn't mean bad. Salesforce, Workday, and many successful companies have long sales cycles. $50K ARR in 6 months is a strong signal.",
+               "", // Correct
+               "Boards can be wrong. They're optimizing for fund returns, not necessarily your company. 5 paying customers with retention is rare - most startups never get here.",
+               "You're not negotiating the market size, you're validating product-market fit. Focus on the signal: customers are paying and staying."
+            ],
+            realWorld: "Slack pivoted from a gaming company to B2B chat. Early enterprise sales were slow. If they had pivoted again instead of doubling down, we wouldn't have Slack. Instagram pivoted from Burbn and stuck with their new direction despite early doubts. One successful pivot is enough.",
+            concept: "pivot_commitment",
+            why: "The most dangerous time is right after a successful pivot, when you're tempted to pivot again before the new direction has time to mature. 5 customers + strong retention = signal. Give it time. Most successful startups did ONE major pivot, not many."
+         },
+         {
+            title: "The Runway Reckoning",
+            context: "You have 4 months of runway. Revenue is $15K MRR, growing 8% month-over-month. At current burn ($40K/mo), you'll die before reaching profitability. VCs are passing because you're 'too early.' You can cut to 2-person team and extend runway to 12 months.",
+            signals: { bad: ['4 months runway', 'VCs passing', '$25K monthly burn'], good: ['8% MoM growth', '$15K MRR', 'Clear path visible'] },
+            question: "What's the RIGHT decision for this startup?",
+            opts: [
+               'Keep the team and die trying - cutting kills momentum',
+               'Cut aggressively, extend runway, and keep growing',
+               'Pivot to something that raises easier',
+               'Shut down now while you can return money to investors'
+            ],
+            correct: 1,
+            wrongExplanations: [
+               "Dead startups don't have momentum. Pride in team size over survival is a common founder mistake. Survival > team size.",
+               "", // Correct
+               "You have 8% MoM growth and paying customers. Pivoting away from traction to chase 'easier fundraising' abandons real validation.",
+               "Shutting down a growing business with 12 months of possible runway (after cuts) is premature. Many great companies survived near-death moments."
+            ],
+            realWorld: "Airbnb cut to core team and survived on credit cards before Y Combinator. Tesla was days from bankruptcy multiple times. Companies that survive and win are often the ones willing to cut deep to extend runway during tough times. Survival is the only metric that matters.",
+            concept: "runway_survival",
+            why: "8% MoM growth means you double every 9 months. With 12 months runway (post-cuts), you could reach $30K+ MRR - much more fundable. The math: survive long enough for growth to compound. Cut everything that isn't directly driving growth or survival."
+         },
+         {
+            title: "The Signal vs Noise",
+            context: "Your dev tool has 3 customer types: Enterprises (slow to close, high ACV), SMBs (medium speed, medium ACV), and Developers (fast to close, low ACV but high volume). Last quarter: 2 enterprise deals ($50K), 10 SMB ($30K), 200 developer signups ($10K). Everyone says 'go enterprise.'",
+            signals: { bad: ['Scattered focus', 'Different sales motions needed', 'Resource constraints'], good: ['Revenue from all segments', 'Developer volume', 'Enterprise interest'] },
+            question: "Which segment should you focus on?",
+            opts: [
+               'Enterprise - highest revenue per customer',
+               'SMB - balanced between volume and value',
+               'Developer - highest volume, fastest feedback loops',
+               'All three - diversification reduces risk'
+            ],
+            correct: 2,
+            wrongExplanations: [
+               "Enterprise has highest ACV but slowest velocity. With limited resources, 2 deals/quarter means you can't iterate fast enough to find product-market fit.",
+               "SMB is a reasonable choice but 10 deals/quarter still limits learning velocity. You need faster feedback loops at this stage.",
+               "", // Correct
+               "Diversification at early stage = diluted focus. You can't build three different sales motions, support systems, and product experiences with a small team."
+            ],
+            realWorld: "Stripe focused on developers first, ignoring enterprise for years. Developers became their distribution channel - when devs joined big companies, they brought Stripe. Twilio did the same. Developer-first created pull demand that made enterprise sales easier later.",
+            concept: "segment_focus",
+            why: "At early stage, velocity of learning > revenue per customer. 200 developers = 200 feedback loops. 2 enterprises = 2 feedback loops. Developers compound: they become advocates, build on your platform, and pull enterprises toward you. Focus creates momentum."
+         }
       ];
-      const infoTopics:{[k:string]:{title:string,content:string}} = {
-         when:{title:'When to Pivot',content:'Consistent low retention, unable to find sustainable channel, market too small, or thesis proven wrong. Pivot early, not late.'},
-         types:{title:'Pivot Types',content:'Customer pivot, Problem pivot, Channel pivot, Revenue model pivot, Technology pivot. Change one thing, not everything.'},
-         signs:{title:'Warning Signs',content:'Flat growth, high churn, long sales cycles, customer apathy, founder burnout. Listen to the signals.'},
-         persist:{title:'When to Persist',content:'Strong retention, clear value prop, improving metrics, passionate users. Sometimes success takes time.'}
+
+      const conceptLabels: { [key: string]: string } = {
+         problem_validation: "Problem-Solution Fit Validation",
+         growth_ceiling: "Market Size & Growth Ceilings",
+         pivot_commitment: "Pivot Timing & Commitment",
+         runway_survival: "Runway Management & Survival",
+         segment_focus: "Customer Segment Focus"
       };
-      const answer = (idx:number) => {
-         if(answered) return;
-         setSelected(idx);
-         setAnswered(true);
-         if(idx === scenarios[scenario].correct) {
-            setScore(s => s + 1);
-            setLog(l => [...l, `Scenario ${scenario+1}: Correct!`]);
-         } else {
-            setLog(l => [...l, `Scenario ${scenario+1}: Wrong`]);
+
+      const infoTopics: { [k: string]: { title: string; content: string } } = {
+         when: {
+            title: "When to Pivot",
+            content: "Pivot when: 1) Consistent low retention despite iterations, 2) Unable to find sustainable acquisition channel, 3) Market too small for your ambitions, 4) Core thesis proven wrong by data. DON'T pivot when: you have paying customers with retention, you're just impatient, or because others are doing something 'hotter.'"
+         },
+         types: {
+            title: "Types of Pivots",
+            content: "Customer segment pivot (same product, different buyer), Problem pivot (same customer, different pain), Solution pivot (same problem, different approach), Channel pivot (same product, different distribution), Revenue model pivot (same product, different monetization), Technology pivot (same outcome, different tech). Change ONE thing, not everything."
+         },
+         signs: {
+            title: "Warning Signs to Watch",
+            content: "Danger signs: Flat growth despite efforts, High churn regardless of features, Long sales cycles eating runway, Customer apathy ('nice to have' not 'must have'), Founder burnout and loss of conviction, Every growth channel fails. The absence of pull demand is the clearest signal."
+         },
+         persistence: {
+            title: "When to Persist",
+            content: "Persist when: Strong retention (users who try it, keep it), Clear word-of-mouth (users recommend without prompts), Improving metrics over time, Passionate user segment (even if small), External tailwinds coming. Many legendary companies took 3-5 years to find PMF. Patience ≠ complacency."
          }
       };
-      const next = () => {
-         if(scenario >= scenarios.length - 1) setPhase('result');
-         else { setScenario(s => s + 1); setAnswered(false); setSelected(null); }
+
+      const answer = (idx: number) => {
+         if (answered) return;
+         setSelected(idx);
+         setAnswered(true);
+         const s = scenarios[scenario];
+         if (idx === s.correct) {
+            setScore(prev => prev + 1);
+            setGameLog(prev => [...prev, `✓ ${s.title}: Correct decision! Understood ${conceptLabels[s.concept]}`]);
+         } else {
+            setGameLog(prev => [...prev, `✗ ${s.title}: Wrong call. Fell for "${s.opts[idx].substring(0, 30)}..."`]);
+            if (!conceptGaps.includes(s.concept)) {
+               setConceptGaps(prev => [...prev, s.concept]);
+            }
+         }
       };
-      const grade = score >= 4 ? 'A' : score >= 3 ? 'B' : score >= 2 ? 'C' : 'D';
+
+      const next = () => {
+         if (scenario >= scenarios.length - 1) {
+            setPhase('result');
+         } else {
+            setScenario(prev => prev + 1);
+            setAnswered(false);
+            setSelected(null);
+         }
+      };
+
+      const grade = score >= 5 ? 'A' : score >= 4 ? 'B' : score >= 3 ? 'C' : 'D';
       const s = scenarios[scenario];
-      if(phase === 'intro') return (<div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-orange-900 via-amber-900 to-yellow-900 text-white p-6"><div className="text-6xl mb-4">🔄</div><h2 className="text-2xl font-bold mb-2">Pivot or Persist?</h2><p className="text-slate-300 text-center mb-6 max-w-md">The hardest startup decision! Learn when to pivot, persist, or shut down.</p><button onClick={() => setPhase('play')} className="px-8 py-3 bg-gradient-to-r from-orange-500 to-amber-500 rounded-xl font-bold">Start Deciding</button></div>);
-      if(phase === 'result') return (<div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-orange-900 via-amber-900 to-yellow-900 text-white p-6"><div className="text-6xl mb-4">{grade === 'A' ? '🎯' : grade === 'B' ? '🔄' : '⚠️'}</div><h2 className="text-2xl font-bold mb-2">Decisions Complete!</h2><div className="text-4xl font-bold text-orange-400 mb-2">{score}/{scenarios.length}</div><div className="text-6xl mb-4">{grade}</div><p className="text-slate-400 mb-4">{grade === 'A' ? 'Strategic thinker!' : grade === 'B' ? 'Good judgment!' : 'Tricky decisions!'}</p><button onClick={() => {setPhase('intro');setScenario(0);setScore(0);setAnswered(false);setSelected(null);setLog([]);}} className="px-6 py-2 bg-orange-600 rounded-lg">Try Again</button></div>);
-      return (<div className="w-full h-full flex flex-col bg-gradient-to-br from-orange-900 via-amber-900 to-yellow-900 text-white overflow-hidden">{showInfo && infoTopic && infoTopics[infoTopic] && (<div className="absolute inset-0 bg-black/80 flex items-center justify-center p-4 z-50" onClick={() => { setShowInfo(false); setInfoTopic(null); }}><div className="bg-slate-800 rounded-xl p-4 max-w-md" onClick={e => e.stopPropagation()}><h3 className="text-lg font-bold text-orange-400 mb-2">{infoTopics[infoTopic].title}</h3><p className="text-sm text-slate-300">{infoTopics[infoTopic].content}</p><button onClick={() => { setShowInfo(false); setInfoTopic(null); }} className="mt-4 w-full py-2 bg-orange-600 rounded-lg">Got it!</button></div></div>)}<div className="p-3 bg-black/30 border-b border-orange-500/30 flex justify-between items-center"><span className="font-bold">🔄 Pivot Decision</span><span className="text-orange-400">{scenario + 1}/{scenarios.length}</span><span className="text-amber-400">Score: {score}</span></div><div className="flex-1 p-4 overflow-auto"><div className="bg-black/30 rounded-xl p-3 mb-3"><p className="text-sm mb-3">{s.situation}</p><div className="grid grid-cols-2 gap-2 text-xs"><div><p className="text-red-400 mb-1">🚩 Warning:</p>{s.signals.bad.map((sig,i) => <p key={i} className="text-slate-300">• {sig}</p>)}</div><div><p className="text-green-400 mb-1">✓ Positive:</p>{s.signals.good.map((sig,i) => <p key={i} className="text-slate-300">• {sig}</p>)}</div></div></div><div className="bg-black/30 rounded-xl p-4 mb-3"><p className="font-medium">{s.q}</p></div><div className="grid gap-2">{s.opts.map((opt, i) => (<button key={i} onClick={() => answer(i)} disabled={answered} className={`p-3 rounded-lg text-left text-sm ${answered ? i === s.correct ? 'bg-green-600' : i === selected ? 'bg-red-600' : 'bg-black/30' : 'bg-black/30 hover:bg-orange-600/50'}`}>{opt}</button>))}</div>{answered && (<div className="mt-3 p-3 bg-black/30 rounded-lg"><p className="text-sm text-slate-300">{s.explain}</p><button onClick={next} className="mt-3 w-full py-2 bg-orange-600 rounded-lg">{scenario >= scenarios.length - 1 ? 'See Results' : 'Next'}</button></div>)}</div><div className="p-3 bg-black/30 border-t border-orange-500/30 flex gap-2 justify-center">{Object.keys(infoTopics).map(k => <button key={k} onClick={() => {setInfoTopic(k);setShowInfo(true);}} className="text-xs text-orange-400">ℹ️ {infoTopics[k].title}</button>)}</div></div>);
+
+      if (phase === 'intro') {
+         return (
+            <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-orange-900 via-amber-900 to-yellow-900 text-white p-6">
+               <div className="text-6xl mb-4">🔄</div>
+               <h2 className="text-2xl font-bold mb-2">Startup Survival Simulator</h2>
+               <p className="text-slate-300 text-center mb-4 max-w-md">
+                  Navigate the hardest decisions founders face: pivot, persist, or shut down.
+               </p>
+               <div className="bg-black/30 rounded-xl p-4 mb-6 max-w-md text-sm">
+                  <p className="text-orange-400 font-bold mb-2">💀 Why Most Startups Fail:</p>
+                  <ul className="text-slate-300 space-y-1 text-xs">
+                     <li>• 42% - No market need (building what nobody wants)</li>
+                     <li>• 29% - Ran out of cash (bad runway management)</li>
+                     <li>• 23% - Wrong team (co-founder issues)</li>
+                     <li>• 19% - Got outcompeted (wrong strategy)</li>
+                  </ul>
+               </div>
+               <button
+                  onClick={() => setPhase('play')}
+                  className="px-8 py-3 bg-gradient-to-r from-orange-500 to-amber-500 rounded-xl font-bold hover:from-orange-400 hover:to-amber-400 transition-all"
+               >
+                  Start Making Decisions
+               </button>
+            </div>
+         );
+      }
+
+      if (phase === 'result') {
+         return (
+            <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-orange-900 via-amber-900 to-yellow-900 text-white p-6 overflow-auto">
+               <div className="text-6xl mb-4">{grade === 'A' ? '🎯' : grade === 'B' ? '🔄' : grade === 'C' ? '⚠️' : '💀'}</div>
+               <h2 className="text-2xl font-bold mb-2">Survival Assessment Complete</h2>
+               <div className="text-4xl font-bold text-orange-400 mb-2">{score}/{scenarios.length}</div>
+               <div className="text-5xl mb-4">{grade}</div>
+               <p className="text-slate-400 mb-4 text-center">
+                  {grade === 'A' ? 'Survival instincts! You make tough calls correctly.' :
+                   grade === 'B' ? 'Good judgment. Some dangerous blind spots remain.' :
+                   grade === 'C' ? 'Mixed results. Study the failure patterns.' :
+                   'Dangerous misconceptions. Learn before betting your company.'}
+               </p>
+
+               {conceptGaps.length > 0 && (
+                  <div className="bg-black/30 rounded-xl p-4 max-w-md w-full mb-4">
+                     <p className="text-orange-400 font-bold text-sm mb-2">📚 Concepts to Study:</p>
+                     <ul className="text-slate-300 text-xs space-y-1">
+                        {conceptGaps.map(gap => (
+                           <li key={gap}>• {conceptLabels[gap]}</li>
+                        ))}
+                     </ul>
+                  </div>
+               )}
+
+               <div className="bg-black/30 rounded-xl p-4 max-w-md w-full mb-4 max-h-32 overflow-y-auto">
+                  <p className="text-orange-400 font-bold text-sm mb-2">Decision Log:</p>
+                  {gameLog.map((entry, i) => (
+                     <p key={i} className="text-xs text-slate-300">{entry}</p>
+                  ))}
+               </div>
+
+               <button
+                  onClick={() => {
+                     setPhase('intro');
+                     setScenario(0);
+                     setScore(0);
+                     setAnswered(false);
+                     setSelected(null);
+                     setGameLog([]);
+                     setConceptGaps([]);
+                  }}
+                  className="px-6 py-2 bg-orange-600 rounded-lg hover:bg-orange-500"
+               >
+                  Try Again
+               </button>
+            </div>
+         );
+      }
+
+      return (
+         <div className="w-full h-full flex flex-col bg-gradient-to-br from-orange-900 via-amber-900 to-yellow-900 text-white overflow-hidden">
+            {showInfo && infoTopic && infoTopics[infoTopic] && (
+               <div className="absolute inset-0 bg-black/80 flex items-center justify-center p-4 z-50" onClick={() => { setShowInfo(false); setInfoTopic(null); }}>
+                  <div className="bg-slate-800 rounded-xl p-4 max-w-md" onClick={e => e.stopPropagation()}>
+                     <h3 className="text-lg font-bold text-orange-400 mb-2">{infoTopics[infoTopic].title}</h3>
+                     <p className="text-sm text-slate-300">{infoTopics[infoTopic].content}</p>
+                     <button onClick={() => { setShowInfo(false); setInfoTopic(null); }} className="mt-4 w-full py-2 bg-orange-600 rounded-lg">Got it!</button>
+                  </div>
+               </div>
+            )}
+
+            <div className="p-3 bg-black/30 border-b border-orange-500/30 flex justify-between items-center">
+               <span className="font-bold">🔄 Survival Sim</span>
+               <span className="text-orange-400">{scenario + 1}/{scenarios.length}</span>
+               <span className="text-amber-400">Score: {score}</span>
+            </div>
+
+            <div className="flex-1 p-4 overflow-auto">
+               <div className="bg-black/30 rounded-xl p-3 mb-3">
+                  <p className="font-bold text-orange-400 mb-2">{s.title}</p>
+                  <p className="text-sm text-slate-300 mb-3">{s.context}</p>
+                  <div className="grid grid-cols-2 gap-2 text-xs">
+                     <div>
+                        <p className="text-red-400 mb-1">🚩 Warning Signs:</p>
+                        {s.signals.bad.map((sig, i) => <p key={i} className="text-slate-300">• {sig}</p>)}
+                     </div>
+                     <div>
+                        <p className="text-green-400 mb-1">✓ Positive Signs:</p>
+                        {s.signals.good.map((sig, i) => <p key={i} className="text-slate-300">• {sig}</p>)}
+                     </div>
+                  </div>
+               </div>
+
+               <div className="bg-black/30 rounded-xl p-4 mb-3">
+                  <p className="font-medium text-white">{s.question}</p>
+               </div>
+
+               <div className="grid gap-2">
+                  {s.opts.map((opt, i) => (
+                     <button
+                        key={i}
+                        onClick={() => answer(i)}
+                        disabled={answered}
+                        className={`p-3 rounded-lg text-left text-sm transition-all ${
+                           answered
+                              ? i === s.correct
+                                 ? 'bg-green-600'
+                                 : i === selected
+                                    ? 'bg-red-600'
+                                    : 'bg-black/30'
+                              : 'bg-black/30 hover:bg-orange-600/50'
+                        }`}
+                     >
+                        {opt}
+                     </button>
+                  ))}
+               </div>
+
+               {answered && (
+                  <div className="mt-3 space-y-3">
+                     {selected !== s.correct && s.wrongExplanations[selected!] && (
+                        <div className="p-3 bg-red-900/50 rounded-lg border border-red-500/30">
+                           <p className="text-xs text-red-300 font-bold mb-1">❌ Why This Kills Companies:</p>
+                           <p className="text-sm text-red-100">{s.wrongExplanations[selected!]}</p>
+                        </div>
+                     )}
+                     <div className="p-3 bg-green-900/50 rounded-lg border border-green-500/30">
+                        <p className="text-xs text-green-300 font-bold mb-1">✓ Survival Insight:</p>
+                        <p className="text-sm text-green-100">{s.why}</p>
+                     </div>
+                     <div className="p-3 bg-blue-900/50 rounded-lg border border-blue-500/30">
+                        <p className="text-xs text-blue-300 font-bold mb-1">📖 Real Example:</p>
+                        <p className="text-sm text-blue-100">{s.realWorld}</p>
+                     </div>
+                     <button
+                        onClick={next}
+                        className="w-full py-2 bg-orange-600 rounded-lg hover:bg-orange-500"
+                     >
+                        {scenario >= scenarios.length - 1 ? 'See Assessment' : 'Next Decision'}
+                     </button>
+                  </div>
+               )}
+            </div>
+
+            <div className="p-3 bg-black/30 border-t border-orange-500/30 flex gap-2 justify-center flex-wrap">
+               {Object.keys(infoTopics).map(k => (
+                  <button
+                     key={k}
+                     onClick={() => { setInfoTopic(k); setShowInfo(true); }}
+                     className="text-xs text-orange-400 hover:text-orange-300"
+                  >
+                     ℹ️ {infoTopics[k].title}
+                  </button>
+               ))}
+            </div>
+         </div>
+      );
    };
 
    // --- TEAM BUILDING RENDERER ---
