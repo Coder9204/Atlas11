@@ -328,6 +328,17 @@ When a concept comes up, follow this lookup process:
 • Business Model / Business Model Canvas / Value Proposition / Revenue Streams → 'business_model'
 • Growth Strategy / Scaling / Growth Channels / Customer Acquisition → 'growth_strategy'
 • Pivot / Persevere / Business Direction / Strategy Change / Startup Decisions → 'pivot_decision'
+• Team Building / Founding Team / Co-founders / Team Dynamics / Equity Split → 'team_building'
+• Hiring / Recruiting / Job Descriptions / Interview Process / Talent Acquisition → 'hiring'
+• Leadership / Management Styles / Delegation / Team Leadership / Founder Leadership → 'leadership'
+• Customer Journey / User Journey / Touchpoints / Customer Experience / Lifecycle → 'customer_journey'
+• Sales Funnel / TOFU MOFU BOFU / Lead Generation / Conversion Funnel / Pipeline → 'sales_funnel'
+• Design Thinking / Human-Centered Design / Empathize Define Ideate Prototype Test → 'design_thinking'
+• MVP / Minimum Viable Product / Lean Startup / Build Measure Learn / Product Development → 'mvp'
+• Risk Assessment / Risk Management / Startup Risks / Mitigation / Risk Analysis → 'risk_assessment'
+• Sustainability / ESG / Social Impact / Environmental / Triple Bottom Line → 'sustainability'
+• Exit Strategy / Acquisition / IPO / M&A / Startup Exit / Liquidity Event → 'exit_strategy'
+• Time Management / Prioritization / Focus / Productivity / Work-Life Balance → 'time_management'
 
 **STEP 2: IF NO MATCH → BUILD CUSTOM**
 Only if the topic is NOT covered above, use \`type: 'dynamic_blueprint'\` with custom JSON.
@@ -1304,6 +1315,61 @@ Only if the topic is NOT covered above, use \`type: 'dynamic_blueprint'\` with c
     → Evaluate runway, traction, market signals, team morale
     → Educational tooltips covering types of pivots, sunk cost fallacy, lean startup
     → KEY INSIGHT: A good pivot preserves vision while changing strategy
+- **Team / Team Building:** Use \`type: 'team_building'\`, \`data: '{}'\`
+    → Navigate 5 team scenarios: equity splits, co-founder conflicts, hiring
+    → Build a founding team with the right dynamics and structure
+    → Educational tooltips covering equity, roles, culture, early hiring
+    → KEY INSIGHT: First hires shape company culture forever
+- **Team / Hiring Process:** Use \`type: 'hiring'\`, \`data: '{}'\`
+    → Master 5 stages: job description, sourcing, screening, interview, offer
+    → Learn startup hiring best practices at each pipeline stage
+    → Educational tooltips covering pipeline, sourcing, interviews, offers
+    → KEY INSIGHT: Great hiring is about finding culture fit, not just skills
+- **Leadership / Leadership Styles:** Use \`type: 'leadership'\`, \`data: '{}'\`
+    → Handle 5 leadership challenges: crisis, feedback, delegation, vision, culture
+    → Develop situational leadership skills for startup contexts
+    → Educational tooltips covering styles, feedback, delegation, trust
+    → KEY INSIGHT: Leaders adapt their style to the situation and team
+- **Sales / Customer Journey:** Use \`type: 'customer_journey'\`, \`data: '{}'\`
+    → Guide customers through 5 stages: awareness, consideration, decision, retention, advocacy
+    → Optimize touchpoints at each stage of the journey
+    → Educational tooltips covering touchpoints, metrics, emotions, personas
+    → KEY INSIGHT: The journey is emotional—map feelings, not just actions
+- **Sales / Sales Funnel:** Use \`type: 'sales_funnel'\`, \`data: '{}'\`
+    → Optimize 5 funnel levels: TOFU, MOFU, BOFU, conversion, expansion
+    → Learn to plug leaks and improve conversion at each stage
+    → Educational tooltips covering metrics, automation, qualification, attribution
+    → KEY INSIGHT: Fix the biggest leaks first for maximum impact
+- **Product / Design Thinking:** Use \`type: 'design_thinking'\`, \`data: '{}'\`
+    → Master 5 phases: empathize, define, ideate, prototype, test
+    → Learn human-centered design for product development
+    → Educational tooltips covering process, HMW questions, prototypes, iteration
+    → KEY INSIGHT: Design thinking is iterative, not linear
+- **Product / MVP Development:** Use \`type: 'mvp'\`, \`data: '{}'\`
+    → Make 5 MVP decisions: scope, build vs buy, tech stack, quality, timing
+    → Learn lean startup principles for building the right thing
+    → Educational tooltips covering MVP definition, scoping, metrics, iteration
+    → KEY INSIGHT: MVP is about learning, not shipping features
+- **Operations / Risk Assessment:** Use \`type: 'risk_assessment'\`, \`data: '{}'\`
+    → Assess 5 risk types: market, technical, financial, team, regulatory
+    → Learn to identify, evaluate, and mitigate startup risks
+    → Educational tooltips covering framework, risk types, mitigation, monitoring
+    → KEY INSIGHT: The best risk management is proactive, not reactive
+- **Operations / Sustainability:** Use \`type: 'sustainability'\`, \`data: '{}'\`
+    → Balance 5 areas: environmental, social, governance, economic, long-term
+    → Build a business that's good for people, planet, and profit
+    → Educational tooltips covering ESG, triple bottom line, circular economy, B Corp
+    → KEY INSIGHT: Sustainability creates competitive advantage
+- **Strategy / Exit Planning:** Use \`type: 'exit_strategy'\`, \`data: '{}'\`
+    → Evaluate 5 exit types: acquisition, IPO, secondary, acqui-hire, strategic
+    → Learn to plan and negotiate successful exits
+    → Educational tooltips covering exit types, valuation, negotiation, timing
+    → KEY INSIGHT: The best time to exit is when you have options
+- **Operations / Time Management:** Use \`type: 'time_management'\`, \`data: '{}'\`
+    → Master 5 areas: prioritization, focus, delegation, meetings, work-life
+    → Build sustainable productivity habits as a founder
+    → Educational tooltips covering Eisenhower matrix, time blocking, energy, saying no
+    → KEY INSIGHT: Sustainable pace beats burnout sprints
 
 **CUSTOM SIMULATIONS (only if no pre-built exists):**
 3. For dynamic text, use: \`"content": "Range: {{calculations.range}} m"\`
