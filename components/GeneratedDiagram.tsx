@@ -28616,6 +28616,192 @@ const GeneratedDiagram: React.FC<DiagramProps> = ({ type, data, title }) => {
       return (<div className="w-full h-full flex flex-col bg-gradient-to-br from-slate-900 via-red-900 to-slate-900 text-white overflow-hidden">{showInfo && infoTopic && infoTopics[infoTopic] && (<div className="absolute inset-0 bg-black/80 flex items-center justify-center p-4 z-50" onClick={() => { setShowInfo(false); setInfoTopic(null); }}><div className="bg-slate-800 rounded-xl p-4 max-w-md" onClick={e => e.stopPropagation()}><h3 className="text-lg font-bold text-red-400 mb-2">{infoTopics[infoTopic].title}</h3><p className="text-sm text-slate-300">{infoTopics[infoTopic].content}</p><button onClick={() => { setShowInfo(false); setInfoTopic(null); }} className="mt-4 w-full py-2 bg-red-600 rounded-lg">Got it!</button></div></div>)}<div className="p-3 bg-black/30 border-b border-red-500/30 flex justify-between items-center"><span className="font-bold">🔒 Cybersecurity</span><span className="text-red-400">{scenario + 1}/{scenarios.length}</span><span className="text-orange-400">Score: {score}</span></div><div className="flex-1 p-4 flex flex-col justify-center"><div className="bg-black/30 rounded-xl p-4 mb-4"><p className="text-sm text-slate-200">{s.situation}</p></div><p className="text-center text-sm text-slate-400 mb-4">Is this safe or a threat?</p><div className="grid grid-cols-2 gap-3"><button onClick={() => answer(true)} disabled={answered} className={`py-4 rounded-xl font-bold ${answered ? (s.safe ? 'bg-green-600' : selected === 'safe' ? 'bg-red-600' : 'bg-black/30') : 'bg-green-600/50 hover:bg-green-500/50'}`}>✓ Safe</button><button onClick={() => answer(false)} disabled={answered} className={`py-4 rounded-xl font-bold ${answered ? (!s.safe ? 'bg-green-600' : selected === 'threat' ? 'bg-red-600' : 'bg-black/30') : 'bg-red-600/50 hover:bg-red-500/50'}`}>⚠️ Threat</button></div>{answered && (<div className="mt-4 p-3 bg-black/30 rounded-lg"><p className="text-sm text-slate-300">{s.explain}</p><button onClick={next} className="mt-3 w-full py-2 bg-red-600 rounded-lg">{scenario >= scenarios.length - 1 ? 'See Results' : 'Next'}</button></div>)}</div><div className="p-3 bg-black/30 border-t border-red-500/30 flex gap-2 justify-center">{Object.keys(infoTopics).map(k => <button key={k} onClick={() => {setInfoTopic(k);setShowInfo(true);}} className="text-xs text-red-400">ℹ️ {infoTopics[k].title}</button>)}</div></div>);
    };
 
+   // --- COMMUNICATION & MARKETING RENDERERS ---
+   const ElevatorPitchRenderer = () => {
+      const [phase, setPhase] = useState<'intro'|'play'|'result'>('intro');
+      const [showInfo, setShowInfo] = useState(false);
+      const [infoTopic, setInfoTopic] = useState<string|null>(null);
+      const [step, setStep] = useState(0);
+      const [choices, setChoices] = useState<number[]>([]);
+      const [log, setLog] = useState<string[]>([]);
+      const steps = [
+         {prompt:'How do you open your pitch?',opts:[{text:'Hi, I sell software...',score:1},{text:'What if you could save 10 hours a week?',score:3},{text:'Our company was founded in 2020...',score:1},{text:'Have you ever struggled with X?',score:2}],tip:'Hook'},
+         {prompt:'How do you describe your solution?',opts:[{text:'We use AI and blockchain...',score:1},{text:'We help [target] achieve [result] by [method]',score:3},{text:'Our platform has many features...',score:1},{text:'We are the Uber of X',score:2}],tip:'Value'},
+         {prompt:'What makes you different?',opts:[{text:'We are the best in the market',score:1},{text:'Unlike X, we do Y which means Z for you',score:3},{text:'We have great customer service',score:1},{text:'Our team is very experienced',score:2}],tip:'Differentiator'},
+         {prompt:'How do you prove credibility?',opts:[{text:'Trust me, it works',score:1},{text:'We have 500 customers saving $1M total',score:3},{text:'We have been in business for years',score:1},{text:'Top investors back us',score:2}],tip:'Proof'},
+         {prompt:'What is your call to action?',opts:[{text:'Let me know if interested',score:1},{text:'Can we schedule 15 min this week?',score:3},{text:'Check out our website',score:1},{text:'Here is my card',score:2}],tip:'CTA'}
+      ];
+      const infoTopics:{[k:string]:{title:string,content:string}} = {
+         hook:{title:'The Hook',content:'Start with a question or surprising fact that grabs attention. You have 5 seconds to capture interest.'},
+         value:{title:'Value Proposition',content:'Clearly state who you help, what result you deliver, and how. Avoid jargon and buzzwords.'},
+         structure:{title:'Pitch Structure',content:'Hook → Problem → Solution → Differentiator → Proof → Call to Action. Keep it under 60 seconds.'},
+         practice:{title:'Practice Tips',content:'Record yourself, time it, get feedback. Great pitches sound natural but are carefully crafted.'}
+      };
+      const choose = (idx:number) => {
+         const newChoices = [...choices, idx];
+         setChoices(newChoices);
+         setLog(l => [...l, `Step ${step+1}: Option ${idx+1}`]);
+         if(step >= steps.length - 1) setPhase('result');
+         else setStep(s => s + 1);
+      };
+      const totalScore = choices.reduce((a, c, i) => a + steps[i].opts[c].score, 0);
+      const maxScore = steps.length * 3;
+      const grade = totalScore >= 13 ? 'A' : totalScore >= 10 ? 'B' : totalScore >= 7 ? 'C' : 'D';
+      if(phase === 'intro') return (<div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-violet-900 via-purple-900 to-fuchsia-900 text-white p-6"><div className="text-6xl mb-4">🎤</div><h2 className="text-2xl font-bold mb-2">Elevator Pitch Builder</h2><p className="text-slate-300 text-center mb-6 max-w-md">Craft a compelling 60-second pitch! Choose the best option for each part of your pitch.</p><button onClick={() => setPhase('play')} className="px-8 py-3 bg-gradient-to-r from-violet-500 to-fuchsia-500 rounded-xl font-bold">Build Pitch</button></div>);
+      if(phase === 'result') return (<div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-violet-900 via-purple-900 to-fuchsia-900 text-white p-6"><div className="text-6xl mb-4">{grade === 'A' ? '🌟' : grade === 'B' ? '👏' : '📝'}</div><h2 className="text-2xl font-bold mb-2">Pitch Complete!</h2><div className="text-4xl font-bold text-violet-400 mb-2">{totalScore}/{maxScore}</div><div className="text-6xl mb-4">{grade}</div><p className="text-slate-400 mb-4">{grade === 'A' ? 'Investor-ready pitch!' : grade === 'B' ? 'Strong pitch!' : 'Keep refining!'}</p><button onClick={() => {setPhase('intro');setStep(0);setChoices([]);setLog([]);}} className="px-6 py-2 bg-violet-600 rounded-lg">Try Again</button></div>);
+      const s = steps[step];
+      return (<div className="w-full h-full flex flex-col bg-gradient-to-br from-violet-900 via-purple-900 to-fuchsia-900 text-white overflow-hidden">{showInfo && infoTopic && infoTopics[infoTopic] && (<div className="absolute inset-0 bg-black/80 flex items-center justify-center p-4 z-50" onClick={() => { setShowInfo(false); setInfoTopic(null); }}><div className="bg-slate-800 rounded-xl p-4 max-w-md" onClick={e => e.stopPropagation()}><h3 className="text-lg font-bold text-violet-400 mb-2">{infoTopics[infoTopic].title}</h3><p className="text-sm text-slate-300">{infoTopics[infoTopic].content}</p><button onClick={() => { setShowInfo(false); setInfoTopic(null); }} className="mt-4 w-full py-2 bg-violet-600 rounded-lg">Got it!</button></div></div>)}<div className="p-3 bg-black/30 border-b border-violet-500/30 flex justify-between items-center"><span className="font-bold">🎤 Elevator Pitch</span><span className="text-violet-400">{step + 1}/{steps.length}</span><span className="text-fuchsia-400">{s.tip}</span></div><div className="flex-1 p-4 flex flex-col justify-center"><div className="bg-black/30 rounded-xl p-4 mb-4"><p className="text-lg font-medium">{s.prompt}</p></div><div className="grid gap-2">{s.opts.map((opt, i) => (<button key={i} onClick={() => choose(i)} className="p-3 bg-black/30 hover:bg-violet-600/50 rounded-lg text-left text-sm">{opt.text}</button>))}</div></div><div className="p-3 bg-black/30 border-t border-violet-500/30 flex gap-2 justify-center">{Object.keys(infoTopics).map(k => <button key={k} onClick={() => {setInfoTopic(k);setShowInfo(true);}} className="text-xs text-violet-400">ℹ️ {infoTopics[k].title}</button>)}</div></div>);
+   };
+
+   const NetworkingRenderer = () => {
+      const [phase, setPhase] = useState<'intro'|'play'|'result'>('intro');
+      const [showInfo, setShowInfo] = useState(false);
+      const [infoTopic, setInfoTopic] = useState<string|null>(null);
+      const [event, setEvent] = useState(0);
+      const [connections, setConnections] = useState(0);
+      const [quality, setQuality] = useState(0);
+      const [energy, setEnergy] = useState(100);
+      const [log, setLog] = useState<string[]>([]);
+      const events = [
+         {person:'Startup Founder',options:[{action:'Ask about their business',conn:1,qual:2,nrg:-10},{action:'Pitch your idea immediately',conn:0,qual:-1,nrg:-15},{action:'Exchange cards silently',conn:1,qual:0,nrg:-5},{action:'Find common interests first',conn:1,qual:3,nrg:-10}]},
+         {person:'Potential Investor',options:[{action:'Ask for money right away',conn:0,qual:-2,nrg:-20},{action:'Share your vision briefly',conn:1,qual:2,nrg:-15},{action:'Ask about their portfolio',conn:1,qual:3,nrg:-10},{action:'Ignore, too intimidating',conn:0,qual:0,nrg:-5}]},
+         {person:'Industry Expert',options:[{action:'Ask for free advice',conn:1,qual:0,nrg:-10},{action:'Compliment their work genuinely',conn:1,qual:2,nrg:-10},{action:'Offer to help with something',conn:1,qual:3,nrg:-15},{action:'Monologue about yourself',conn:0,qual:-1,nrg:-20}]},
+         {person:'Potential Partner',options:[{action:'Propose partnership immediately',conn:0,qual:0,nrg:-15},{action:'Explore synergies casually',conn:1,qual:3,nrg:-10},{action:'Get their contact for later',conn:1,qual:1,nrg:-5},{action:'Compare businesses competitively',conn:0,qual:-1,nrg:-10}]},
+         {person:'Fellow Entrepreneur',options:[{action:'Share war stories',conn:1,qual:2,nrg:-10},{action:'One-up their achievements',conn:0,qual:-2,nrg:-15},{action:'Offer genuine support',conn:1,qual:3,nrg:-10},{action:'Keep it surface level',conn:1,qual:0,nrg:-5}]}
+      ];
+      const infoTopics:{[k:string]:{title:string,content:string}} = {
+         quality:{title:'Quality vs Quantity',content:'10 meaningful connections beat 100 business cards. Focus on building real relationships, not collecting contacts.'},
+         followup:{title:'Follow Up',content:'80% of networking value is in the follow-up. Send a personalized message within 24-48 hours.'},
+         give:{title:'Give First',content:'Lead with value. Ask "How can I help?" before "What can you do for me?" Build reciprocity.'},
+         listen:{title:'Active Listening',content:'Ask open questions, listen more than you talk. People remember how you made them feel.'}
+      };
+      const choose = (idx:number) => {
+         const opt = events[event].options[idx];
+         setConnections(c => c + opt.conn);
+         setQuality(q => q + opt.qual);
+         setEnergy(e => Math.max(0, e + opt.nrg));
+         setLog(l => [...l, `${events[event].person}: ${opt.action}`]);
+         if(event >= events.length - 1 || energy + opt.nrg <= 0) setPhase('result');
+         else setEvent(e => e + 1);
+      };
+      const score = connections * 10 + quality * 5;
+      const grade = score >= 35 ? 'A' : score >= 25 ? 'B' : score >= 15 ? 'C' : 'D';
+      if(phase === 'intro') return (<div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-cyan-900 via-teal-900 to-emerald-900 text-white p-6"><div className="text-6xl mb-4">🤝</div><h2 className="text-2xl font-bold mb-2">Networking Event</h2><p className="text-slate-300 text-center mb-6 max-w-md">Work the room at a startup mixer! Build quality connections before your energy runs out.</p><button onClick={() => setPhase('play')} className="px-8 py-3 bg-gradient-to-r from-cyan-500 to-emerald-500 rounded-xl font-bold">Enter Event</button></div>);
+      if(phase === 'result') return (<div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-cyan-900 via-teal-900 to-emerald-900 text-white p-6"><div className="text-6xl mb-4">{grade === 'A' ? '🌟' : grade === 'B' ? '🤝' : '📇'}</div><h2 className="text-2xl font-bold mb-2">Event Over!</h2><div className="text-2xl font-bold text-cyan-400 mb-2">{connections} Connections | {quality > 0 ? '+' : ''}{quality} Quality</div><div className="text-6xl mb-4">{grade}</div><p className="text-slate-400 mb-4">{grade === 'A' ? 'Master networker!' : grade === 'B' ? 'Good connections!' : 'Keep practicing!'}</p><button onClick={() => {setPhase('intro');setEvent(0);setConnections(0);setQuality(0);setEnergy(100);setLog([]);}} className="px-6 py-2 bg-cyan-600 rounded-lg">Try Again</button></div>);
+      const e = events[event];
+      return (<div className="w-full h-full flex flex-col bg-gradient-to-br from-cyan-900 via-teal-900 to-emerald-900 text-white overflow-hidden">{showInfo && infoTopic && infoTopics[infoTopic] && (<div className="absolute inset-0 bg-black/80 flex items-center justify-center p-4 z-50" onClick={() => { setShowInfo(false); setInfoTopic(null); }}><div className="bg-slate-800 rounded-xl p-4 max-w-md" onClick={e => e.stopPropagation()}><h3 className="text-lg font-bold text-cyan-400 mb-2">{infoTopics[infoTopic].title}</h3><p className="text-sm text-slate-300">{infoTopics[infoTopic].content}</p><button onClick={() => { setShowInfo(false); setInfoTopic(null); }} className="mt-4 w-full py-2 bg-cyan-600 rounded-lg">Got it!</button></div></div>)}<div className="p-3 bg-black/30 border-b border-cyan-500/30"><div className="flex justify-between items-center mb-2"><span className="font-bold">🤝 Networking</span><span className="text-cyan-400">{event + 1}/{events.length}</span></div><div className="flex gap-4 text-sm"><span>👥 {connections}</span><span>⭐ {quality > 0 ? '+' : ''}{quality}</span><span>⚡ {energy}%</span></div></div><div className="flex-1 p-4 flex flex-col justify-center"><div className="bg-black/30 rounded-xl p-4 mb-4 text-center"><p className="text-2xl mb-2">👤</p><p className="text-lg font-medium">{e.person}</p></div><div className="grid gap-2">{e.options.map((opt, i) => (<button key={i} onClick={() => choose(i)} className="p-3 bg-black/30 hover:bg-cyan-600/50 rounded-lg text-left text-sm">{opt.action}</button>))}</div></div><div className="p-3 bg-black/30 border-t border-cyan-500/30 flex gap-2 justify-center">{Object.keys(infoTopics).map(k => <button key={k} onClick={() => {setInfoTopic(k);setShowInfo(true);}} className="text-xs text-cyan-400">ℹ️ {infoTopics[k].title}</button>)}</div></div>);
+   };
+
+   const BrandingRenderer = () => {
+      const [phase, setPhase] = useState<'intro'|'play'|'result'>('intro');
+      const [showInfo, setShowInfo] = useState(false);
+      const [infoTopic, setInfoTopic] = useState<string|null>(null);
+      const [step, setStep] = useState(0);
+      const [brand, setBrand] = useState<{[k:string]:number}>({});
+      const [log, setLog] = useState<string[]>([]);
+      const steps = [
+         {element:'Brand Personality',options:[{text:'Professional & Trustworthy',traits:{trust:3,energy:1}},{text:'Fun & Playful',traits:{trust:1,energy:3}},{text:'Innovative & Bold',traits:{trust:2,energy:2}},{text:'Warm & Caring',traits:{trust:2,energy:2}}]},
+         {element:'Color Palette',options:[{text:'Blue & White (Trust)',traits:{trust:3,energy:1}},{text:'Orange & Yellow (Energy)',traits:{trust:1,energy:3}},{text:'Green & Earth (Growth)',traits:{trust:2,energy:2}},{text:'Purple & Gold (Premium)',traits:{trust:2,energy:2}}]},
+         {element:'Typography',options:[{text:'Serif (Traditional)',traits:{trust:3,energy:1}},{text:'Sans-serif (Modern)',traits:{trust:2,energy:2}},{text:'Display (Bold)',traits:{trust:1,energy:3}},{text:'Handwritten (Personal)',traits:{trust:1,energy:2}}]},
+         {element:'Voice & Tone',options:[{text:'Formal & Authoritative',traits:{trust:3,energy:1}},{text:'Casual & Friendly',traits:{trust:1,energy:3}},{text:'Inspirational & Motivating',traits:{trust:2,energy:3}},{text:'Simple & Clear',traits:{trust:2,energy:2}}]},
+         {element:'Visual Style',options:[{text:'Minimalist & Clean',traits:{trust:2,energy:2}},{text:'Vibrant & Colorful',traits:{trust:1,energy:3}},{text:'Classic & Elegant',traits:{trust:3,energy:1}},{text:'Tech & Futuristic',traits:{trust:2,energy:2}}]}
+      ];
+      const infoTopics:{[k:string]:{title:string,content:string}} = {
+         consistency:{title:'Brand Consistency',content:'Use the same colors, fonts, voice across all touchpoints. Consistency builds recognition and trust.'},
+         personality:{title:'Brand Personality',content:'Your brand should feel like a person. Define 3-5 traits that guide all communications.'},
+         positioning:{title:'Positioning',content:'Own a unique space in customers minds. What one word should they associate with you?'},
+         story:{title:'Brand Story',content:'People connect with stories, not features. Share your why, origin, and mission.'}
+      };
+      const choose = (idx:number) => {
+         const opt = steps[step].options[idx];
+         setBrand(b => ({...b, [steps[step].element]: idx, trust: (b.trust || 0) + opt.traits.trust, energy: (b.energy || 0) + opt.traits.energy}));
+         setLog(l => [...l, `${steps[step].element}: ${opt.text}`]);
+         if(step >= steps.length - 1) setPhase('result');
+         else setStep(s => s + 1);
+      };
+      const trust = brand.trust || 0;
+      const energy = brand.energy || 0;
+      const archetype = trust > energy ? 'Sage/Caregiver' : energy > trust ? 'Creator/Explorer' : 'Hero/Magician';
+      const score = trust + energy;
+      const grade = score >= 12 ? 'A' : score >= 9 ? 'B' : score >= 6 ? 'C' : 'D';
+      if(phase === 'intro') return (<div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-rose-900 via-pink-900 to-fuchsia-900 text-white p-6"><div className="text-6xl mb-4">🎨</div><h2 className="text-2xl font-bold mb-2">Brand Builder</h2><p className="text-slate-300 text-center mb-6 max-w-md">Create your brand identity! Make choices that define your brand personality and visual style.</p><button onClick={() => setPhase('play')} className="px-8 py-3 bg-gradient-to-r from-rose-500 to-fuchsia-500 rounded-xl font-bold">Start Building</button></div>);
+      if(phase === 'result') return (<div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-rose-900 via-pink-900 to-fuchsia-900 text-white p-6"><div className="text-6xl mb-4">🎨</div><h2 className="text-2xl font-bold mb-2">Brand Complete!</h2><div className="text-xl font-bold text-rose-400 mb-2">{archetype} Brand</div><div className="flex gap-4 mb-4"><span className="text-cyan-400">Trust: {trust}</span><span className="text-orange-400">Energy: {energy}</span></div><div className="text-6xl mb-4">{grade}</div><p className="text-slate-400 mb-4">{grade === 'A' ? 'Cohesive brand!' : grade === 'B' ? 'Strong identity!' : 'Refine your choices!'}</p><button onClick={() => {setPhase('intro');setStep(0);setBrand({});setLog([]);}} className="px-6 py-2 bg-rose-600 rounded-lg">Try Again</button></div>);
+      const s = steps[step];
+      return (<div className="w-full h-full flex flex-col bg-gradient-to-br from-rose-900 via-pink-900 to-fuchsia-900 text-white overflow-hidden">{showInfo && infoTopic && infoTopics[infoTopic] && (<div className="absolute inset-0 bg-black/80 flex items-center justify-center p-4 z-50" onClick={() => { setShowInfo(false); setInfoTopic(null); }}><div className="bg-slate-800 rounded-xl p-4 max-w-md" onClick={e => e.stopPropagation()}><h3 className="text-lg font-bold text-rose-400 mb-2">{infoTopics[infoTopic].title}</h3><p className="text-sm text-slate-300">{infoTopics[infoTopic].content}</p><button onClick={() => { setShowInfo(false); setInfoTopic(null); }} className="mt-4 w-full py-2 bg-rose-600 rounded-lg">Got it!</button></div></div>)}<div className="p-3 bg-black/30 border-b border-rose-500/30 flex justify-between items-center"><span className="font-bold">🎨 Brand Builder</span><span className="text-rose-400">{step + 1}/{steps.length}</span></div><div className="flex-1 p-4 flex flex-col justify-center"><div className="bg-black/30 rounded-xl p-4 mb-4"><p className="text-lg font-medium text-center">{s.element}</p></div><div className="grid gap-2">{s.options.map((opt, i) => (<button key={i} onClick={() => choose(i)} className="p-3 bg-black/30 hover:bg-rose-600/50 rounded-lg text-left text-sm">{opt.text}</button>))}</div></div><div className="p-3 bg-black/30 border-t border-rose-500/30 flex gap-2 justify-center">{Object.keys(infoTopics).map(k => <button key={k} onClick={() => {setInfoTopic(k);setShowInfo(true);}} className="text-xs text-rose-400">ℹ️ {infoTopics[k].title}</button>)}</div></div>);
+   };
+
+   const PublicRelationsRenderer = () => {
+      const [phase, setPhase] = useState<'intro'|'play'|'result'>('intro');
+      const [showInfo, setShowInfo] = useState(false);
+      const [infoTopic, setInfoTopic] = useState<string|null>(null);
+      const [scenario, setScenario] = useState(0);
+      const [reputation, setReputation] = useState(50);
+      const [coverage, setCoverage] = useState(0);
+      const [log, setLog] = useState<string[]>([]);
+      const scenarios = [
+         {situation:'A reporter asks about a product delay.',options:[{text:'No comment',rep:-10,cov:0},{text:'Blame the supplier publicly',rep:-20,cov:5},{text:'Acknowledge delay, share new timeline',rep:5,cov:10},{text:'Offer exclusive interview with CEO',rep:10,cov:15}]},
+         {situation:'Competitor spreads false claims about you.',options:[{text:'Attack them back publicly',rep:-15,cov:10},{text:'Ignore it completely',rep:-5,cov:0},{text:'Issue factual correction with evidence',rep:10,cov:10},{text:'Sue them immediately',rep:0,cov:5}]},
+         {situation:'Customer complaint goes viral on social media.',options:[{text:'Delete negative comments',rep:-20,cov:5},{text:'Respond publicly with empathy + solution',rep:15,cov:15},{text:'Ignore until it blows over',rep:-10,cov:0},{text:'Offer refund via private message only',rep:5,cov:5}]},
+         {situation:'You want to announce a new product launch.',options:[{text:'Mass email blast to everyone',rep:0,cov:5},{text:'Exclusive preview for key journalists',rep:10,cov:15},{text:'Post on social media only',rep:0,cov:5},{text:'Host launch event with demos',rep:15,cov:20}]},
+         {situation:'Employee posts something controversial online.',options:[{text:'Fire them publicly',rep:-10,cov:10},{text:'Internal review, public values statement',rep:10,cov:10},{text:'Ignore and hope no one notices',rep:-5,cov:0},{text:'Delete their post without comment',rep:-15,cov:5}]}
+      ];
+      const infoTopics:{[k:string]:{title:string,content:string}} = {
+         crisis:{title:'Crisis Management',content:'Respond quickly, take responsibility, show empathy, fix the problem. Silence or deflection makes it worse.'},
+         media:{title:'Media Relations',content:'Build relationships before you need them. Provide value, be a reliable source, respect deadlines.'},
+         messaging:{title:'Key Messages',content:'Develop 3 core messages. Stay on message. Bridge back from difficult questions.'},
+         timing:{title:'Timing',content:'Bad news on Friday, good news early week. Never announce during major events. Consider news cycles.'}
+      };
+      const choose = (idx:number) => {
+         const opt = scenarios[scenario].options[idx];
+         setReputation(r => Math.max(0, Math.min(100, r + opt.rep)));
+         setCoverage(c => c + opt.cov);
+         setLog(l => [...l, `Scenario ${scenario+1}: ${opt.text}`]);
+         if(scenario >= scenarios.length - 1) setPhase('result');
+         else setScenario(s => s + 1);
+      };
+      const grade = reputation >= 70 && coverage >= 40 ? 'A' : reputation >= 50 && coverage >= 25 ? 'B' : reputation >= 30 ? 'C' : 'D';
+      if(phase === 'intro') return (<div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-amber-900 via-yellow-900 to-orange-900 text-white p-6"><div className="text-6xl mb-4">📰</div><h2 className="text-2xl font-bold mb-2">PR Crisis Simulator</h2><p className="text-slate-300 text-center mb-6 max-w-md">Handle media situations! Balance reputation protection with getting positive coverage.</p><button onClick={() => setPhase('play')} className="px-8 py-3 bg-gradient-to-r from-amber-500 to-orange-500 rounded-xl font-bold">Start PR</button></div>);
+      if(phase === 'result') return (<div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-amber-900 via-yellow-900 to-orange-900 text-white p-6"><div className="text-6xl mb-4">{grade === 'A' ? '📰' : grade === 'B' ? '📋' : '⚠️'}</div><h2 className="text-2xl font-bold mb-2">Campaign Over!</h2><div className="flex gap-4 mb-4"><span className="text-amber-400">Rep: {reputation}%</span><span className="text-orange-400">Coverage: {coverage}</span></div><div className="text-6xl mb-4">{grade}</div><p className="text-slate-400 mb-4">{grade === 'A' ? 'PR Pro!' : grade === 'B' ? 'Good handling!' : 'Reputation damaged!'}</p><button onClick={() => {setPhase('intro');setScenario(0);setReputation(50);setCoverage(0);setLog([]);}} className="px-6 py-2 bg-amber-600 rounded-lg">Try Again</button></div>);
+      const s = scenarios[scenario];
+      return (<div className="w-full h-full flex flex-col bg-gradient-to-br from-amber-900 via-yellow-900 to-orange-900 text-white overflow-hidden">{showInfo && infoTopic && infoTopics[infoTopic] && (<div className="absolute inset-0 bg-black/80 flex items-center justify-center p-4 z-50" onClick={() => { setShowInfo(false); setInfoTopic(null); }}><div className="bg-slate-800 rounded-xl p-4 max-w-md" onClick={e => e.stopPropagation()}><h3 className="text-lg font-bold text-amber-400 mb-2">{infoTopics[infoTopic].title}</h3><p className="text-sm text-slate-300">{infoTopics[infoTopic].content}</p><button onClick={() => { setShowInfo(false); setInfoTopic(null); }} className="mt-4 w-full py-2 bg-amber-600 rounded-lg">Got it!</button></div></div>)}<div className="p-3 bg-black/30 border-b border-amber-500/30"><div className="flex justify-between items-center mb-2"><span className="font-bold">📰 Public Relations</span><span className="text-amber-400">{scenario + 1}/{scenarios.length}</span></div><div className="flex gap-4 text-sm"><span>🏆 Rep: {reputation}%</span><span>📺 Coverage: {coverage}</span></div></div><div className="flex-1 p-4 flex flex-col justify-center"><div className="bg-black/30 rounded-xl p-4 mb-4"><p className="text-sm">{s.situation}</p></div><div className="grid gap-2">{s.options.map((opt, i) => (<button key={i} onClick={() => choose(i)} className="p-3 bg-black/30 hover:bg-amber-600/50 rounded-lg text-left text-sm">{opt.text}</button>))}</div></div><div className="p-3 bg-black/30 border-t border-amber-500/30 flex gap-2 justify-center">{Object.keys(infoTopics).map(k => <button key={k} onClick={() => {setInfoTopic(k);setShowInfo(true);}} className="text-xs text-amber-400">ℹ️ {infoTopics[k].title}</button>)}</div></div>);
+   };
+
+   const NegotiationRenderer = () => {
+      const [phase, setPhase] = useState<'intro'|'play'|'result'>('intro');
+      const [showInfo, setShowInfo] = useState(false);
+      const [infoTopic, setInfoTopic] = useState<string|null>(null);
+      const [round, setRound] = useState(0);
+      const [yourValue, setYourValue] = useState(0);
+      const [relationship, setRelationship] = useState(50);
+      const [log, setLog] = useState<string[]>([]);
+      const rounds = [
+         {context:'Negotiating your startup salary with a new hire who wants $120k. Your budget is $90-110k.',options:[{text:'Offer $85k, leave room to negotiate up',val:-5,rel:-10},{text:'Offer $95k with equity bonus',val:10,rel:10},{text:'Match $120k to close quickly',val:-15,rel:5},{text:'Offer $100k + performance bonus path to $120k',val:15,rel:15}]},
+         {context:'Supplier wants to raise prices 20%. You need them but have alternatives.',options:[{text:'Threaten to leave immediately',val:5,rel:-20},{text:'Accept the increase to maintain relationship',val:-20,rel:10},{text:'Negotiate 10% now with volume commitment',val:15,rel:10},{text:'Demand they keep old prices or you walk',val:0,rel:-15}]},
+         {context:'Investor offers $500k for 25% equity. You wanted $500k for 15%.',options:[{text:'Accept their terms immediately',val:-15,rel:5},{text:'Counter with 18% and board seat',val:15,rel:5},{text:'Reject and walk away',val:0,rel:-20},{text:'Ask for $600k at 20%',val:10,rel:0}]},
+         {context:'Client wants 30% discount on your services for a long-term contract.',options:[{text:'Give 30% to win the deal',val:-10,rel:10},{text:'Offer 15% with 2-year commitment',val:15,rel:10},{text:'Refuse any discount',val:5,rel:-10},{text:'Offer 20% + case study rights',val:10,rel:15}]},
+         {context:'Partner wants 50/50 split but you are doing 70% of the work.',options:[{text:'Accept 50/50 to avoid conflict',val:-15,rel:5},{text:'Demand 80/20 based on work',val:5,rel:-15},{text:'Propose 60/40 with role clarity',val:15,rel:10},{text:'Suggest equity vesting based on milestones',val:20,rel:15}]}
+      ];
+      const infoTopics:{[k:string]:{title:string,content:string}} = {
+         batna:{title:'BATNA',content:'Best Alternative To Negotiated Agreement. Know your walkaway point. The better your alternatives, the stronger your position.'},
+         winwin:{title:'Win-Win',content:'Expand the pie before dividing it. Look for creative solutions where both sides gain value.'},
+         anchor:{title:'Anchoring',content:'First number sets the frame. Anchor ambitiously but credibly. Counter-anchor to reset unrealistic positions.'},
+         silence:{title:'Silence',content:'Silence is powerful. After making an offer, stop talking. Let them fill the uncomfortable silence.'}
+      };
+      const choose = (idx:number) => {
+         const opt = rounds[round].options[idx];
+         setYourValue(v => v + opt.val);
+         setRelationship(r => Math.max(0, Math.min(100, r + opt.rel)));
+         setLog(l => [...l, `Round ${round+1}: ${opt.text}`]);
+         if(round >= rounds.length - 1) setPhase('result');
+         else setRound(r => r + 1);
+      };
+      const grade = yourValue >= 50 && relationship >= 50 ? 'A' : yourValue >= 25 && relationship >= 30 ? 'B' : yourValue >= 0 ? 'C' : 'D';
+      if(phase === 'intro') return (<div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-indigo-900 via-blue-900 to-slate-900 text-white p-6"><div className="text-6xl mb-4">🤝</div><h2 className="text-2xl font-bold mb-2">Negotiation Master</h2><p className="text-slate-300 text-center mb-6 max-w-md">Navigate 5 business negotiations! Balance getting value with maintaining relationships.</p><button onClick={() => setPhase('play')} className="px-8 py-3 bg-gradient-to-r from-indigo-500 to-blue-500 rounded-xl font-bold">Start Negotiating</button></div>);
+      if(phase === 'result') return (<div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-indigo-900 via-blue-900 to-slate-900 text-white p-6"><div className="text-6xl mb-4">{grade === 'A' ? '🏆' : grade === 'B' ? '🤝' : '📉'}</div><h2 className="text-2xl font-bold mb-2">Negotiations Complete!</h2><div className="flex gap-4 mb-4"><span className="text-indigo-400">Value: {yourValue > 0 ? '+' : ''}{yourValue}</span><span className="text-blue-400">Relationship: {relationship}%</span></div><div className="text-6xl mb-4">{grade}</div><p className="text-slate-400 mb-4">{grade === 'A' ? 'Master negotiator!' : grade === 'B' ? 'Good deals!' : 'Room to improve!'}</p><button onClick={() => {setPhase('intro');setRound(0);setYourValue(0);setRelationship(50);setLog([]);}} className="px-6 py-2 bg-indigo-600 rounded-lg">Try Again</button></div>);
+      const r = rounds[round];
+      return (<div className="w-full h-full flex flex-col bg-gradient-to-br from-indigo-900 via-blue-900 to-slate-900 text-white overflow-hidden">{showInfo && infoTopic && infoTopics[infoTopic] && (<div className="absolute inset-0 bg-black/80 flex items-center justify-center p-4 z-50" onClick={() => { setShowInfo(false); setInfoTopic(null); }}><div className="bg-slate-800 rounded-xl p-4 max-w-md" onClick={e => e.stopPropagation()}><h3 className="text-lg font-bold text-indigo-400 mb-2">{infoTopics[infoTopic].title}</h3><p className="text-sm text-slate-300">{infoTopics[infoTopic].content}</p><button onClick={() => { setShowInfo(false); setInfoTopic(null); }} className="mt-4 w-full py-2 bg-indigo-600 rounded-lg">Got it!</button></div></div>)}<div className="p-3 bg-black/30 border-b border-indigo-500/30"><div className="flex justify-between items-center mb-2"><span className="font-bold">🤝 Negotiation</span><span className="text-indigo-400">{round + 1}/{rounds.length}</span></div><div className="flex gap-4 text-sm"><span>💰 Value: {yourValue > 0 ? '+' : ''}{yourValue}</span><span>❤️ Relationship: {relationship}%</span></div></div><div className="flex-1 p-4 flex flex-col justify-center"><div className="bg-black/30 rounded-xl p-4 mb-4"><p className="text-sm">{r.context}</p></div><div className="grid gap-2">{r.options.map((opt, i) => (<button key={i} onClick={() => choose(i)} className="p-3 bg-black/30 hover:bg-indigo-600/50 rounded-lg text-left text-sm">{opt.text}</button>))}</div></div><div className="p-3 bg-black/30 border-t border-indigo-500/30 flex gap-2 justify-center">{Object.keys(infoTopics).map(k => <button key={k} onClick={() => {setInfoTopic(k);setShowInfo(true);}} className="text-xs text-indigo-400">ℹ️ {infoTopics[k].title}</button>)}</div></div>);
+   };
+
    // --- GENERIC RENDERER ---
    const GenericRenderer = () => {
       if (type === 'poster' || type === 'infographic') {
@@ -29064,6 +29250,16 @@ const GeneratedDiagram: React.FC<DiagramProps> = ({ type, data, title }) => {
             return <AnalyticsRenderer />;
          case 'cybersecurity':
             return <CybersecurityRenderer />;
+         case 'elevator_pitch':
+            return <ElevatorPitchRenderer />;
+         case 'networking':
+            return <NetworkingRenderer />;
+         case 'branding':
+            return <BrandingRenderer />;
+         case 'public_relations':
+            return <PublicRelationsRenderer />;
+         case 'negotiation':
+            return <NegotiationRenderer />;
          default:
             return <GenericRenderer />;
       }

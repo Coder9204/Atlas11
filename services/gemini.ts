@@ -313,6 +313,11 @@ When a concept comes up, follow this lookup process:
 • SEO / Search Engine Optimization / Keywords / Rankings / Backlinks → 'seo'
 • Analytics / Metrics / KPIs / Dashboards / Data Analysis → 'analytics'
 • Cybersecurity / Phishing / Malware / Password Security / Data Protection → 'cybersecurity'
+• Elevator Pitch / Pitching / Investor Pitch / 60-Second Pitch → 'elevator_pitch'
+• Networking / Professional Connections / Business Events / Relationship Building → 'networking'
+• Branding / Brand Identity / Logo / Visual Style / Brand Personality → 'branding'
+• Public Relations / PR / Media Relations / Crisis Management / Press → 'public_relations'
+• Negotiation / Deal Making / Business Deals / Contracts / Salary → 'negotiation'
 
 **STEP 2: IF NO MATCH → BUILD CUSTOM**
 Only if the topic is NOT covered above, use \`type: 'dynamic_blueprint'\` with custom JSON.
@@ -1204,6 +1209,36 @@ Only if the topic is NOT covered above, use \`type: 'dynamic_blueprint'\` with c
     → Learn to protect business data and accounts
     → Educational tooltips covering phishing, malware, social engineering, passwords
     → KEY INSIGHT: Human error is the biggest security vulnerability
+- **Communication / Elevator Pitch / Pitching:** Use \`type: 'elevator_pitch'\`, \`data: '{}'\`
+    → 5-step pitch builder choosing hook, value prop, differentiator, proof, CTA
+    → Score pitch effectiveness based on choices
+    → Learn what makes an investor-ready 60-second pitch
+    → Educational tooltips covering hook, value proposition, pitch structure, practice tips
+    → KEY INSIGHT: Great pitches are crafted, not improvised; structure wins
+- **Communication / Networking / Professional Connections:** Use \`type: 'networking'\`, \`data: '{}'\`
+    → 5-person networking event simulation with energy management
+    → Choose how to approach founders, investors, experts, partners
+    → Balance connection quantity vs relationship quality
+    → Educational tooltips covering quality vs quantity, follow-up, giving first, active listening
+    → KEY INSIGHT: Real relationships beat business card collecting
+- **Communication / Branding / Brand Identity:** Use \`type: 'branding'\`, \`data: '{}'\`
+    → 5-step brand identity builder (personality, colors, typography, voice, style)
+    → Choices affect trust and energy brand archetype
+    → Learn brand consistency and positioning
+    → Educational tooltips covering consistency, personality, positioning, brand story
+    → KEY INSIGHT: Strong brands feel like a consistent personality across all touchpoints
+- **Communication / Public Relations / PR:** Use \`type: 'public_relations'\`, \`data: '{}'\`
+    → 5-scenario PR crisis and media situation simulator
+    → Balance reputation protection with gaining positive coverage
+    → Handle reporters, viral complaints, launches, controversies
+    → Educational tooltips covering crisis management, media relations, messaging, timing
+    → KEY INSIGHT: Respond quickly with empathy; silence makes crises worse
+- **Communication / Negotiation / Deal Making:** Use \`type: 'negotiation'\`, \`data: '{}'\`
+    → 5-round business negotiation simulator (salary, suppliers, investors, clients, partners)
+    → Balance value captured vs relationship maintained
+    → Learn BATNA, win-win, anchoring, and silence tactics
+    → Educational tooltips covering BATNA, win-win, anchoring, power of silence
+    → KEY INSIGHT: Best negotiators create value before claiming it
 
 **CUSTOM SIMULATIONS (only if no pre-built exists):**
 3. For dynamic text, use: \`"content": "Range: {{calculations.range}} m"\`
