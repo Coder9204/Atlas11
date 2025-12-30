@@ -28381,6 +28381,241 @@ const GeneratedDiagram: React.FC<DiagramProps> = ({ type, data, title }) => {
       return (<div className="w-full h-full flex flex-col bg-gradient-to-br from-lime-900 via-green-900 to-slate-900 text-white overflow-hidden">{showInfo && infoTopic && infoTopics[infoTopic] && (<div className="absolute inset-0 bg-black/80 flex items-center justify-center p-4 z-50" onClick={() => { setShowInfo(false); setInfoTopic(null); }}><div className="bg-slate-800 rounded-xl p-4 max-w-md" onClick={e => e.stopPropagation()}><h3 className="text-lg font-bold text-lime-400 mb-2">{infoTopics[infoTopic].title}</h3><p className="text-sm text-slate-300">{infoTopics[infoTopic].content}</p><button onClick={() => { setShowInfo(false); setInfoTopic(null); }} className="mt-4 w-full py-2 bg-lime-600 rounded-lg">Got it!</button></div></div>)}<div className="p-3 bg-black/30 border-b border-lime-500/30"><div className="flex justify-between items-center"><span className="font-bold">⚖️ Employment Law</span><span className="text-lime-400">{scenario + 1}/{scenarios.length}</span></div><div className="flex gap-1 mt-2">{answers.map((a, i) => <div key={i} className={`w-3 h-3 rounded ${a ? 'bg-green-500' : 'bg-red-500'}`} />)}</div></div><div className="flex-1 p-4 flex flex-col justify-center"><div className="bg-black/30 rounded-xl p-4 mb-4"><p className="text-sm text-slate-200">{s.situation}</p></div><p className="text-center text-sm text-slate-400 mb-4">Is this legal?</p><div className="grid grid-cols-2 gap-3"><button onClick={() => answer(true)} className="py-4 bg-green-600/50 hover:bg-green-500/50 rounded-xl font-bold">✓ Legal</button><button onClick={() => answer(false)} className="py-4 bg-red-600/50 hover:bg-red-500/50 rounded-xl font-bold">✗ Illegal</button></div></div><div className="p-3 bg-black/30 border-t border-lime-500/30"><button onClick={() => setInfoTopic('discrimination')} className="text-xs text-lime-400">ℹ️ Discrimination</button></div></div>);
    };
 
+   // --- DIGITAL & TECHNOLOGY RENDERERS ---
+   const EcommerceRenderer = () => {
+      const [phase, setPhase] = useState<'intro'|'play'|'result'>('intro');
+      const [showInfo, setShowInfo] = useState(false);
+      const [infoTopic, setInfoTopic] = useState<string|null>(null);
+      const [day, setDay] = useState(1);
+      const [cash, setCash] = useState(500);
+      const [inventory, setInventory] = useState<{[k:string]:number}>({tshirt:10,mug:15,sticker:30});
+      const [prices, setPrices] = useState<{[k:string]:number}>({tshirt:25,mug:15,sticker:5});
+      const [sales, setSales] = useState<{item:string,qty:number,price:number}[]>([]);
+      const [log, setLog] = useState<string[]>([]);
+      const products = [{id:'tshirt',name:'T-Shirt',cost:12,icon:'👕'},{id:'mug',name:'Mug',cost:6,icon:'☕'},{id:'sticker',name:'Sticker',cost:1,icon:'🏷️'}];
+      const infoTopics:{[k:string]:{title:string,content:string}} = {
+         pricing:{title:'Pricing Strategy',content:'Set prices based on costs, competition, and perceived value. Too high loses customers, too low loses profit.'},
+         inventory:{title:'Inventory Management',content:'Balance stock levels - too much ties up cash, too little means lost sales and unhappy customers.'},
+         margins:{title:'Profit Margins',content:'Margin = (Price - Cost) / Price. Higher margins mean more profit per sale but may reduce volume.'},
+         conversion:{title:'Conversion Rate',content:'The percentage of visitors who make a purchase. Improve with better UX, pricing, and product presentation.'}
+      };
+      const simulateDay = () => {
+         let daySales:{item:string,qty:number,price:number}[] = [];
+         let newInv = {...inventory};
+         let revenue = 0;
+         products.forEach(p => {
+            const demand = Math.max(0, Math.floor((30 - prices[p.id]) / 3) + Math.floor(Math.random() * 3));
+            const sold = Math.min(demand, newInv[p.id]);
+            if(sold > 0) {
+               daySales.push({item:p.id,qty:sold,price:prices[p.id]});
+               revenue += sold * prices[p.id];
+               newInv[p.id] -= sold;
+            }
+         });
+         setInventory(newInv);
+         setCash(c => c + revenue);
+         setSales(s => [...s, ...daySales]);
+         setLog(l => [...l, `Day ${day}: Earned $${revenue}`]);
+         if(day >= 7) setPhase('result');
+         else setDay(d => d + 1);
+      };
+      const restock = (id:string) => {
+         const p = products.find(x=>x.id===id)!;
+         const qty = 10;
+         const cost = qty * p.cost;
+         if(cash >= cost) {
+            setCash(c => c - cost);
+            setInventory(inv => ({...inv, [id]: inv[id] + qty}));
+            setLog(l => [...l, `Restocked ${qty} ${p.name}s for $${cost}`]);
+         }
+      };
+      const totalRevenue = sales.reduce((a,s) => a + s.qty * s.price, 0);
+      const grade = cash >= 1000 ? 'A' : cash >= 750 ? 'B' : cash >= 500 ? 'C' : 'D';
+      if(phase === 'intro') return (<div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-blue-900 via-indigo-900 to-purple-900 text-white p-6"><div className="text-6xl mb-4">🛒</div><h2 className="text-2xl font-bold mb-2">E-Commerce Simulator</h2><p className="text-slate-300 text-center mb-6 max-w-md">Run your online store for 7 days! Set prices, manage inventory, and maximize profits.</p><button onClick={() => setPhase('play')} className="px-8 py-3 bg-gradient-to-r from-blue-500 to-purple-500 rounded-xl font-bold">Open Store</button></div>);
+      if(phase === 'result') return (<div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-blue-900 via-indigo-900 to-purple-900 text-white p-6"><div className="text-6xl mb-4">{grade === 'A' ? '🏆' : grade === 'B' ? '⭐' : '📊'}</div><h2 className="text-2xl font-bold mb-2">Week Complete!</h2><div className="text-4xl font-bold text-green-400 mb-2">${cash}</div><p className="text-slate-300 mb-2">Final Cash (Started: $500)</p><div className="text-6xl mb-4">{grade}</div><p className="text-slate-400 mb-4">Revenue: ${totalRevenue} | {sales.reduce((a,s)=>a+s.qty,0)} items sold</p><button onClick={() => {setPhase('intro');setDay(1);setCash(500);setInventory({tshirt:10,mug:15,sticker:30});setSales([]);setLog([]);}} className="px-6 py-2 bg-blue-600 rounded-lg">Try Again</button></div>);
+      return (<div className="w-full h-full flex flex-col bg-gradient-to-br from-blue-900 via-indigo-900 to-purple-900 text-white overflow-hidden">{showInfo && infoTopic && infoTopics[infoTopic] && (<div className="absolute inset-0 bg-black/80 flex items-center justify-center p-4 z-50" onClick={() => { setShowInfo(false); setInfoTopic(null); }}><div className="bg-slate-800 rounded-xl p-4 max-w-md" onClick={e => e.stopPropagation()}><h3 className="text-lg font-bold text-blue-400 mb-2">{infoTopics[infoTopic].title}</h3><p className="text-sm text-slate-300">{infoTopics[infoTopic].content}</p><button onClick={() => { setShowInfo(false); setInfoTopic(null); }} className="mt-4 w-full py-2 bg-blue-600 rounded-lg">Got it!</button></div></div>)}<div className="p-3 bg-black/30 border-b border-blue-500/30 flex justify-between items-center"><span className="font-bold">🛒 E-Commerce</span><span className="text-blue-400">Day {day}/7</span><span className="text-green-400 font-bold">${cash}</span></div><div className="flex-1 p-3 overflow-auto"><div className="grid gap-2">{products.map(p => (<div key={p.id} className="bg-black/30 rounded-lg p-3"><div className="flex justify-between items-center mb-2"><span className="text-xl">{p.icon} {p.name}</span><span className="text-sm text-slate-400">Stock: {inventory[p.id]}</span></div><div className="flex items-center gap-2"><span className="text-xs text-slate-400">Price: $</span><input type="number" value={prices[p.id]} onChange={e => setPrices(pr => ({...pr, [p.id]: Number(e.target.value)}))} className="w-16 bg-slate-700 rounded px-2 py-1 text-sm" min={1} /><button onClick={() => restock(p.id)} className="ml-auto text-xs bg-blue-600/50 px-2 py-1 rounded">+10 (${p.cost * 10})</button></div></div>))}</div></div><div className="p-3 bg-black/30 border-t border-blue-500/30"><button onClick={simulateDay} className="w-full py-3 bg-gradient-to-r from-blue-500 to-purple-500 rounded-xl font-bold">End Day {day}</button><div className="flex gap-2 mt-2 justify-center">{Object.keys(infoTopics).map(k => <button key={k} onClick={() => {setInfoTopic(k);setShowInfo(true);}} className="text-xs text-blue-400">ℹ️ {infoTopics[k].title.split(' ')[0]}</button>)}</div></div></div>);
+   };
+
+   const SocialMediaRenderer = () => {
+      const [phase, setPhase] = useState<'intro'|'play'|'result'>('intro');
+      const [showInfo, setShowInfo] = useState(false);
+      const [infoTopic, setInfoTopic] = useState<string|null>(null);
+      const [followers, setFollowers] = useState(100);
+      const [engagement, setEngagement] = useState(5);
+      const [week, setWeek] = useState(1);
+      const [budget, setBudget] = useState(200);
+      const [log, setLog] = useState<string[]>([]);
+      const platforms = [{id:'instagram',name:'Instagram',icon:'📸',reach:1.2},{id:'twitter',name:'Twitter/X',icon:'🐦',reach:0.8},{id:'tiktok',name:'TikTok',icon:'🎵',reach:1.5},{id:'linkedin',name:'LinkedIn',icon:'💼',reach:0.6}];
+      const contentTypes = [{id:'educational',name:'Educational',cost:20,engBoost:2,followBoost:15},{id:'entertaining',name:'Entertaining',cost:15,engBoost:3,followBoost:25},{id:'promotional',name:'Promotional',cost:10,engBoost:-1,followBoost:5},{id:'behindscenes',name:'Behind Scenes',cost:5,engBoost:1,followBoost:10}];
+      const infoTopics:{[k:string]:{title:string,content:string}} = {
+         algorithm:{title:'Algorithm',content:'Social platforms prioritize content with high engagement. More likes, comments, and shares = more visibility.'},
+         consistency:{title:'Consistency',content:'Regular posting builds audience expectations and algorithmic favor. Quality over quantity, but maintain presence.'},
+         engagement:{title:'Engagement Rate',content:'(Likes + Comments + Shares) / Followers × 100. A rate above 3% is considered good.'},
+         reach:{title:'Organic Reach',content:'The number of people who see your content without paid promotion. Varies by platform and content type.'}
+      };
+      const [selectedPlatform, setSelectedPlatform] = useState<string|null>(null);
+      const [selectedContent, setSelectedContent] = useState<string|null>(null);
+      const postContent = () => {
+         if(!selectedPlatform || !selectedContent) return;
+         const plat = platforms.find(p => p.id === selectedPlatform)!;
+         const cont = contentTypes.find(c => c.id === selectedContent)!;
+         if(budget < cont.cost) return;
+         setBudget(b => b - cont.cost);
+         const newFollowers = Math.floor(cont.followBoost * plat.reach * (1 + Math.random() * 0.5));
+         const newEng = Math.max(1, engagement + cont.engBoost + Math.floor(Math.random() * 2 - 1));
+         setFollowers(f => f + newFollowers);
+         setEngagement(newEng);
+         setLog(l => [...l, `Week ${week}: +${newFollowers} followers on ${plat.name}`]);
+         setSelectedPlatform(null);
+         setSelectedContent(null);
+         if(week >= 8) setPhase('result');
+         else setWeek(w => w + 1);
+      };
+      const grade = followers >= 500 ? 'A' : followers >= 300 ? 'B' : followers >= 200 ? 'C' : 'D';
+      if(phase === 'intro') return (<div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-pink-900 via-purple-900 to-indigo-900 text-white p-6"><div className="text-6xl mb-4">📱</div><h2 className="text-2xl font-bold mb-2">Social Media Strategy</h2><p className="text-slate-300 text-center mb-6 max-w-md">Grow your brand's social presence over 8 weeks! Choose platforms and content types wisely.</p><button onClick={() => setPhase('play')} className="px-8 py-3 bg-gradient-to-r from-pink-500 to-purple-500 rounded-xl font-bold">Start Campaign</button></div>);
+      if(phase === 'result') return (<div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-pink-900 via-purple-900 to-indigo-900 text-white p-6"><div className="text-6xl mb-4">{grade === 'A' ? '🌟' : grade === 'B' ? '📈' : '📊'}</div><h2 className="text-2xl font-bold mb-2">Campaign Complete!</h2><div className="text-4xl font-bold text-pink-400 mb-2">{followers} Followers</div><p className="text-slate-300 mb-2">Started: 100 | Engagement: {engagement}%</p><div className="text-6xl mb-4">{grade}</div><button onClick={() => {setPhase('intro');setFollowers(100);setEngagement(5);setWeek(1);setBudget(200);setLog([]);}} className="px-6 py-2 bg-pink-600 rounded-lg">Try Again</button></div>);
+      return (<div className="w-full h-full flex flex-col bg-gradient-to-br from-pink-900 via-purple-900 to-indigo-900 text-white overflow-hidden">{showInfo && infoTopic && infoTopics[infoTopic] && (<div className="absolute inset-0 bg-black/80 flex items-center justify-center p-4 z-50" onClick={() => { setShowInfo(false); setInfoTopic(null); }}><div className="bg-slate-800 rounded-xl p-4 max-w-md" onClick={e => e.stopPropagation()}><h3 className="text-lg font-bold text-pink-400 mb-2">{infoTopics[infoTopic].title}</h3><p className="text-sm text-slate-300">{infoTopics[infoTopic].content}</p><button onClick={() => { setShowInfo(false); setInfoTopic(null); }} className="mt-4 w-full py-2 bg-pink-600 rounded-lg">Got it!</button></div></div>)}<div className="p-3 bg-black/30 border-b border-pink-500/30 flex justify-between items-center"><span className="font-bold">📱 Social Media</span><span className="text-pink-400">Week {week}/8</span><span className="text-green-400">${budget}</span></div><div className="flex-1 p-3 overflow-auto"><div className="bg-black/30 rounded-lg p-3 mb-3 flex justify-around"><div className="text-center"><div className="text-2xl font-bold text-pink-400">{followers}</div><div className="text-xs text-slate-400">Followers</div></div><div className="text-center"><div className="text-2xl font-bold text-purple-400">{engagement}%</div><div className="text-xs text-slate-400">Engagement</div></div></div><p className="text-xs text-slate-400 mb-2">Choose Platform:</p><div className="grid grid-cols-2 gap-2 mb-3">{platforms.map(p => (<button key={p.id} onClick={() => setSelectedPlatform(p.id)} className={`p-2 rounded-lg text-sm ${selectedPlatform === p.id ? 'bg-pink-600' : 'bg-black/30'}`}>{p.icon} {p.name}</button>))}</div><p className="text-xs text-slate-400 mb-2">Choose Content:</p><div className="grid grid-cols-2 gap-2">{contentTypes.map(c => (<button key={c.id} onClick={() => setSelectedContent(c.id)} className={`p-2 rounded-lg text-sm ${selectedContent === c.id ? 'bg-purple-600' : 'bg-black/30'}`}>{c.name} (${c.cost})</button>))}</div></div><div className="p-3 bg-black/30 border-t border-pink-500/30"><button onClick={postContent} disabled={!selectedPlatform || !selectedContent} className="w-full py-3 bg-gradient-to-r from-pink-500 to-purple-500 rounded-xl font-bold disabled:opacity-50">Post Content</button><div className="flex gap-2 mt-2 justify-center">{Object.keys(infoTopics).slice(0,3).map(k => <button key={k} onClick={() => {setInfoTopic(k);setShowInfo(true);}} className="text-xs text-pink-400">ℹ️ {infoTopics[k].title}</button>)}</div></div></div>);
+   };
+
+   const SEORenderer = () => {
+      const [phase, setPhase] = useState<'intro'|'play'|'result'>('intro');
+      const [showInfo, setShowInfo] = useState(false);
+      const [infoTopic, setInfoTopic] = useState<string|null>(null);
+      const [question, setQuestion] = useState(0);
+      const [score, setScore] = useState(0);
+      const [answered, setAnswered] = useState(false);
+      const [selected, setSelected] = useState<number|null>(null);
+      const [log, setLog] = useState<string[]>([]);
+      const questions = [
+         {q:'Which is the most important on-page SEO element?',opts:['Meta keywords','Title tag','Footer links','Sidebar widgets'],correct:1,explain:'Title tags are the most important on-page element, appearing in search results and browser tabs.'},
+         {q:'What is "keyword stuffing"?',opts:['Using one keyword','Overusing keywords unnaturally','Researching keywords','Hiding keywords'],correct:1,explain:'Keyword stuffing is overusing keywords, which search engines penalize as spam.'},
+         {q:'Which improves page load speed?',opts:['More images','Larger fonts','Image compression','More scripts'],correct:2,explain:'Compressing images reduces file size and improves load speed, a ranking factor.'},
+         {q:'What does a 301 redirect do?',opts:['Blocks page','Permanent redirect','Temporary redirect','Deletes page'],correct:1,explain:'A 301 is a permanent redirect, passing link equity to the new URL.'},
+         {q:'Which backlink is most valuable?',opts:['From unrelated site','From new blog','From authority site in your niche','From social media'],correct:2,explain:'Backlinks from authoritative, relevant sites carry the most SEO weight.'},
+         {q:'What is "alt text" used for?',opts:['Styling images','Describing images for SEO/accessibility','Link building','Keywords only'],correct:1,explain:'Alt text describes images for screen readers and helps search engines understand image content.'},
+         {q:'Which URL structure is best for SEO?',opts:['example.com/p=123','example.com/blog/seo-tips','example.com/page1','example.com/🔥'],correct:1,explain:'Descriptive, readable URLs with keywords are best for SEO and user experience.'},
+         {q:'What is "bounce rate"?',opts:['Email returns','Single-page visits','Crawl errors','Loading time'],correct:1,explain:'Bounce rate is the percentage of visitors who leave after viewing only one page.'}
+      ];
+      const infoTopics:{[k:string]:{title:string,content:string}} = {
+         keywords:{title:'Keywords',content:'Words and phrases people search for. Use them naturally in titles, headings, content, and URLs.'},
+         backlinks:{title:'Backlinks',content:'Links from other sites to yours. Quality matters more than quantity - one link from NYTimes beats 100 from spam sites.'},
+         technical:{title:'Technical SEO',content:'Site speed, mobile-friendliness, crawlability, and structured data all affect rankings.'},
+         content:{title:'Content Quality',content:'Create valuable, original content that answers user questions. Length matters less than depth and usefulness.'}
+      };
+      const answer = (idx:number) => {
+         if(answered) return;
+         setSelected(idx);
+         setAnswered(true);
+         if(idx === questions[question].correct) {
+            setScore(s => s + 1);
+            setLog(l => [...l, `Q${question+1}: Correct!`]);
+         } else {
+            setLog(l => [...l, `Q${question+1}: Wrong`]);
+         }
+      };
+      const next = () => {
+         if(question >= questions.length - 1) setPhase('result');
+         else { setQuestion(q => q + 1); setAnswered(false); setSelected(null); }
+      };
+      const grade = score >= 7 ? 'A' : score >= 5 ? 'B' : score >= 3 ? 'C' : 'D';
+      const q = questions[question];
+      if(phase === 'intro') return (<div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-green-900 via-teal-900 to-cyan-900 text-white p-6"><div className="text-6xl mb-4">🔍</div><h2 className="text-2xl font-bold mb-2">SEO Mastery Quiz</h2><p className="text-slate-300 text-center mb-6 max-w-md">Test your Search Engine Optimization knowledge! Learn what makes websites rank higher.</p><button onClick={() => setPhase('play')} className="px-8 py-3 bg-gradient-to-r from-green-500 to-teal-500 rounded-xl font-bold">Start Quiz</button></div>);
+      if(phase === 'result') return (<div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-green-900 via-teal-900 to-cyan-900 text-white p-6"><div className="text-6xl mb-4">{grade === 'A' ? '🏆' : grade === 'B' ? '⭐' : '📊'}</div><h2 className="text-2xl font-bold mb-2">Quiz Complete!</h2><div className="text-4xl font-bold text-green-400 mb-2">{score}/{questions.length}</div><div className="text-6xl mb-4">{grade}</div><p className="text-slate-400 mb-4">{grade === 'A' ? 'SEO Expert!' : grade === 'B' ? 'Good understanding!' : 'Keep learning!'}</p><button onClick={() => {setPhase('intro');setQuestion(0);setScore(0);setAnswered(false);setSelected(null);setLog([]);}} className="px-6 py-2 bg-green-600 rounded-lg">Try Again</button></div>);
+      return (<div className="w-full h-full flex flex-col bg-gradient-to-br from-green-900 via-teal-900 to-cyan-900 text-white overflow-hidden">{showInfo && infoTopic && infoTopics[infoTopic] && (<div className="absolute inset-0 bg-black/80 flex items-center justify-center p-4 z-50" onClick={() => { setShowInfo(false); setInfoTopic(null); }}><div className="bg-slate-800 rounded-xl p-4 max-w-md" onClick={e => e.stopPropagation()}><h3 className="text-lg font-bold text-green-400 mb-2">{infoTopics[infoTopic].title}</h3><p className="text-sm text-slate-300">{infoTopics[infoTopic].content}</p><button onClick={() => { setShowInfo(false); setInfoTopic(null); }} className="mt-4 w-full py-2 bg-green-600 rounded-lg">Got it!</button></div></div>)}<div className="p-3 bg-black/30 border-b border-green-500/30 flex justify-between items-center"><span className="font-bold">🔍 SEO Quiz</span><span className="text-green-400">{question + 1}/{questions.length}</span><span className="text-cyan-400">Score: {score}</span></div><div className="flex-1 p-4 flex flex-col justify-center"><div className="bg-black/30 rounded-xl p-4 mb-4"><p className="text-lg font-medium">{q.q}</p></div><div className="grid gap-2">{q.opts.map((opt, i) => (<button key={i} onClick={() => answer(i)} disabled={answered} className={`p-3 rounded-lg text-left ${answered ? i === q.correct ? 'bg-green-600' : i === selected ? 'bg-red-600' : 'bg-black/30' : 'bg-black/30 hover:bg-black/50'}`}>{opt}</button>))}</div>{answered && (<div className="mt-4 p-3 bg-black/30 rounded-lg"><p className="text-sm text-slate-300">{q.explain}</p><button onClick={next} className="mt-3 w-full py-2 bg-green-600 rounded-lg">{question >= questions.length - 1 ? 'See Results' : 'Next Question'}</button></div>)}</div><div className="p-3 bg-black/30 border-t border-green-500/30 flex gap-2 justify-center">{Object.keys(infoTopics).map(k => <button key={k} onClick={() => {setInfoTopic(k);setShowInfo(true);}} className="text-xs text-green-400">ℹ️ {infoTopics[k].title}</button>)}</div></div>);
+   };
+
+   const AnalyticsRenderer = () => {
+      const [phase, setPhase] = useState<'intro'|'play'|'result'>('intro');
+      const [showInfo, setShowInfo] = useState(false);
+      const [infoTopic, setInfoTopic] = useState<string|null>(null);
+      const [scenario, setScenario] = useState(0);
+      const [score, setScore] = useState(0);
+      const [answered, setAnswered] = useState(false);
+      const [selected, setSelected] = useState<number|null>(null);
+      const [log, setLog] = useState<string[]>([]);
+      const scenarios = [
+         {data:{visitors:5000,conversions:50,bounceRate:65,avgTime:'1:30'},q:'What is the conversion rate?',opts:['0.1%','1%','5%','10%'],correct:1,explain:'Conversion rate = 50/5000 = 1%. This measures how many visitors take desired action.'},
+         {data:{visitors:10000,pageViews:35000,sessions:12000,newUsers:8000},q:'What is the pages per session?',opts:['2.9','3.5','1.2','0.8'],correct:0,explain:'Pages/session = 35000/12000 ≈ 2.9. Shows how engaged users are with your content.'},
+         {data:{revenue:50000,adSpend:10000,customers:500,returns:25},q:'What is the ROAS (Return on Ad Spend)?',opts:['2x','5x','10x','50x'],correct:1,explain:'ROAS = $50,000/$10,000 = 5x. For every $1 spent on ads, you got $5 in revenue.'},
+         {data:{emailsSent:10000,opened:2500,clicked:500,unsubscribed:100},q:'What is the click-through rate (CTR)?',opts:['2%','5%','20%','25%'],correct:1,explain:'CTR = 500/10000 = 5%. Measures how many recipients clicked a link in the email.'},
+         {data:{monthlyUsers:100000,dailyUsers:15000,weeklyUsers:45000,churned:5000},q:'What is the DAU/MAU ratio (stickiness)?',opts:['5%','10%','15%','45%'],correct:2,explain:'DAU/MAU = 15000/100000 = 15%. Higher ratio means users return more frequently.'},
+         {data:{cac:50,ltv:200,paybackMonths:6,margin:'40%'},q:'What is the LTV:CAC ratio?',opts:['1:1','2:1','4:1','6:1'],correct:2,explain:'LTV:CAC = $200:$50 = 4:1. Generally, 3:1 or higher indicates healthy unit economics.'}
+      ];
+      const infoTopics:{[k:string]:{title:string,content:string}} = {
+         metrics:{title:'Key Metrics',content:'Focus on metrics that drive decisions: conversion rate, CAC, LTV, churn, engagement. Vanity metrics look good but do not inform action.'},
+         funnels:{title:'Funnels',content:'Track user journey stages: Awareness → Interest → Decision → Action. Find where users drop off and optimize.'},
+         cohorts:{title:'Cohort Analysis',content:'Group users by sign-up date to compare behavior over time. Shows if product improvements actually help retention.'},
+         ab:{title:'A/B Testing',content:'Compare two versions to see which performs better. Need statistical significance before drawing conclusions.'}
+      };
+      const answer = (idx:number) => {
+         if(answered) return;
+         setSelected(idx);
+         setAnswered(true);
+         if(idx === scenarios[scenario].correct) {
+            setScore(s => s + 1);
+            setLog(l => [...l, `Q${scenario+1}: Correct!`]);
+         } else {
+            setLog(l => [...l, `Q${scenario+1}: Wrong`]);
+         }
+      };
+      const next = () => {
+         if(scenario >= scenarios.length - 1) setPhase('result');
+         else { setScenario(s => s + 1); setAnswered(false); setSelected(null); }
+      };
+      const grade = score >= 5 ? 'A' : score >= 4 ? 'B' : score >= 2 ? 'C' : 'D';
+      const s = scenarios[scenario];
+      if(phase === 'intro') return (<div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-orange-900 via-amber-900 to-yellow-900 text-white p-6"><div className="text-6xl mb-4">📊</div><h2 className="text-2xl font-bold mb-2">Analytics Dashboard</h2><p className="text-slate-300 text-center mb-6 max-w-md">Interpret real business data! Calculate key metrics and make data-driven decisions.</p><button onClick={() => setPhase('play')} className="px-8 py-3 bg-gradient-to-r from-orange-500 to-amber-500 rounded-xl font-bold">Start Analysis</button></div>);
+      if(phase === 'result') return (<div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-orange-900 via-amber-900 to-yellow-900 text-white p-6"><div className="text-6xl mb-4">{grade === 'A' ? '📈' : grade === 'B' ? '⭐' : '📊'}</div><h2 className="text-2xl font-bold mb-2">Analysis Complete!</h2><div className="text-4xl font-bold text-orange-400 mb-2">{score}/{scenarios.length}</div><div className="text-6xl mb-4">{grade}</div><p className="text-slate-400 mb-4">{grade === 'A' ? 'Data Analyst!' : grade === 'B' ? 'Good insights!' : 'Keep practicing!'}</p><button onClick={() => {setPhase('intro');setScenario(0);setScore(0);setAnswered(false);setSelected(null);setLog([]);}} className="px-6 py-2 bg-orange-600 rounded-lg">Try Again</button></div>);
+      return (<div className="w-full h-full flex flex-col bg-gradient-to-br from-orange-900 via-amber-900 to-yellow-900 text-white overflow-hidden">{showInfo && infoTopic && infoTopics[infoTopic] && (<div className="absolute inset-0 bg-black/80 flex items-center justify-center p-4 z-50" onClick={() => { setShowInfo(false); setInfoTopic(null); }}><div className="bg-slate-800 rounded-xl p-4 max-w-md" onClick={e => e.stopPropagation()}><h3 className="text-lg font-bold text-orange-400 mb-2">{infoTopics[infoTopic].title}</h3><p className="text-sm text-slate-300">{infoTopics[infoTopic].content}</p><button onClick={() => { setShowInfo(false); setInfoTopic(null); }} className="mt-4 w-full py-2 bg-orange-600 rounded-lg">Got it!</button></div></div>)}<div className="p-3 bg-black/30 border-b border-orange-500/30 flex justify-between items-center"><span className="font-bold">📊 Analytics</span><span className="text-orange-400">{scenario + 1}/{scenarios.length}</span><span className="text-amber-400">Score: {score}</span></div><div className="flex-1 p-4 overflow-auto"><div className="bg-black/30 rounded-xl p-3 mb-3"><p className="text-xs text-slate-400 mb-2">Dashboard Data:</p><div className="grid grid-cols-2 gap-2">{Object.entries(s.data).map(([k,v]) => (<div key={k} className="bg-black/30 rounded p-2 text-center"><div className="text-lg font-bold text-orange-400">{v}</div><div className="text-xs text-slate-400 capitalize">{k.replace(/([A-Z])/g, ' $1')}</div></div>))}</div></div><div className="bg-black/30 rounded-xl p-4 mb-3"><p className="font-medium">{s.q}</p></div><div className="grid grid-cols-2 gap-2">{s.opts.map((opt, i) => (<button key={i} onClick={() => answer(i)} disabled={answered} className={`p-3 rounded-lg ${answered ? i === s.correct ? 'bg-green-600' : i === selected ? 'bg-red-600' : 'bg-black/30' : 'bg-black/30 hover:bg-black/50'}`}>{opt}</button>))}</div>{answered && (<div className="mt-3 p-3 bg-black/30 rounded-lg"><p className="text-sm text-slate-300">{s.explain}</p><button onClick={next} className="mt-3 w-full py-2 bg-orange-600 rounded-lg">{scenario >= scenarios.length - 1 ? 'See Results' : 'Next'}</button></div>)}</div><div className="p-3 bg-black/30 border-t border-orange-500/30 flex gap-2 justify-center">{Object.keys(infoTopics).map(k => <button key={k} onClick={() => {setInfoTopic(k);setShowInfo(true);}} className="text-xs text-orange-400">ℹ️ {infoTopics[k].title}</button>)}</div></div>);
+   };
+
+   const CybersecurityRenderer = () => {
+      const [phase, setPhase] = useState<'intro'|'play'|'result'>('intro');
+      const [showInfo, setShowInfo] = useState(false);
+      const [infoTopic, setInfoTopic] = useState<string|null>(null);
+      const [scenario, setScenario] = useState(0);
+      const [score, setScore] = useState(0);
+      const [answered, setAnswered] = useState(false);
+      const [selected, setSelected] = useState<string|null>(null);
+      const [log, setLog] = useState<string[]>([]);
+      const scenarios = [
+         {situation:'Email from "IT Support" asking you to click a link to verify your password immediately or your account will be deleted.',threat:'phishing',safe:false,explain:'Classic phishing - urgency, impersonation, and suspicious links. Real IT never asks for passwords via email.'},
+         {situation:'A pop-up saying "Your computer is infected! Call this number immediately for Microsoft Support."',threat:'scam',safe:false,explain:'Tech support scam. Microsoft never shows pop-ups with phone numbers. Close the browser and run your own antivirus.'},
+         {situation:'Your password manager suggests using "j8#kL9$mN2@pQ" as a password.',threat:'none',safe:true,explain:'Strong password! Long, random, with mixed characters. Password managers generate and store secure passwords.'},
+         {situation:'A USB drive labeled "Employee Salaries 2024" is found in the parking lot.',threat:'baiting',safe:false,explain:'Baiting attack. Never plug unknown USB drives into your computer - they may contain malware.'},
+         {situation:'Website URL shows "https://yourbank.com" with a green padlock.',threat:'none',safe:true,explain:'HTTPS with correct domain is good. But still verify you navigated there yourself, not from a suspicious link.'},
+         {situation:'Coworker asks for your login to "quickly check something" while you are on vacation.',threat:'social_engineering',safe:false,explain:'Social engineering. Never share credentials, even with coworkers. They should request their own access.'},
+         {situation:'Email attachment named "Invoice.pdf.exe" from unknown sender.',threat:'malware',safe:false,explain:'Malware! The .exe extension is hidden. Never open executable files from unknown sources.'},
+         {situation:'Your company requires 2FA (two-factor authentication) for all accounts.',threat:'none',safe:true,explain:'2FA adds crucial security. Even if password is stolen, attacker cannot access without second factor.'}
+      ];
+      const infoTopics:{[k:string]:{title:string,content:string}} = {
+         phishing:{title:'Phishing',content:'Fraudulent emails/sites impersonating trusted entities. Check sender, hover over links, never give passwords.'},
+         malware:{title:'Malware',content:'Malicious software including viruses, ransomware, spyware. Keep software updated, use antivirus, avoid suspicious downloads.'},
+         social:{title:'Social Engineering',content:'Manipulating people into giving up confidential info. Attackers exploit trust, authority, and urgency.'},
+         passwords:{title:'Password Security',content:'Use unique, long passwords for each account. Enable 2FA. Use a password manager. Never share credentials.'}
+      };
+      const answer = (safe:boolean) => {
+         if(answered) return;
+         setSelected(safe ? 'safe' : 'threat');
+         setAnswered(true);
+         if(safe === scenarios[scenario].safe) {
+            setScore(s => s + 1);
+            setLog(l => [...l, `Scenario ${scenario+1}: Correct!`]);
+         } else {
+            setLog(l => [...l, `Scenario ${scenario+1}: Wrong`]);
+         }
+      };
+      const next = () => {
+         if(scenario >= scenarios.length - 1) setPhase('result');
+         else { setScenario(s => s + 1); setAnswered(false); setSelected(null); }
+      };
+      const grade = score >= 7 ? 'A' : score >= 5 ? 'B' : score >= 3 ? 'C' : 'D';
+      const s = scenarios[scenario];
+      if(phase === 'intro') return (<div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-slate-900 via-red-900 to-slate-900 text-white p-6"><div className="text-6xl mb-4">🔒</div><h2 className="text-2xl font-bold mb-2">Cybersecurity Training</h2><p className="text-slate-300 text-center mb-6 max-w-md">Identify security threats! Learn to spot phishing, malware, and social engineering attacks.</p><button onClick={() => setPhase('play')} className="px-8 py-3 bg-gradient-to-r from-red-500 to-orange-500 rounded-xl font-bold">Start Training</button></div>);
+      if(phase === 'result') return (<div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-slate-900 via-red-900 to-slate-900 text-white p-6"><div className="text-6xl mb-4">{grade === 'A' ? '🛡️' : grade === 'B' ? '🔐' : '⚠️'}</div><h2 className="text-2xl font-bold mb-2">Training Complete!</h2><div className="text-4xl font-bold text-red-400 mb-2">{score}/{scenarios.length}</div><div className="text-6xl mb-4">{grade}</div><p className="text-slate-400 mb-4">{grade === 'A' ? 'Security Expert!' : grade === 'B' ? 'Good awareness!' : 'Stay vigilant!'}</p><button onClick={() => {setPhase('intro');setScenario(0);setScore(0);setAnswered(false);setSelected(null);setLog([]);}} className="px-6 py-2 bg-red-600 rounded-lg">Try Again</button></div>);
+      return (<div className="w-full h-full flex flex-col bg-gradient-to-br from-slate-900 via-red-900 to-slate-900 text-white overflow-hidden">{showInfo && infoTopic && infoTopics[infoTopic] && (<div className="absolute inset-0 bg-black/80 flex items-center justify-center p-4 z-50" onClick={() => { setShowInfo(false); setInfoTopic(null); }}><div className="bg-slate-800 rounded-xl p-4 max-w-md" onClick={e => e.stopPropagation()}><h3 className="text-lg font-bold text-red-400 mb-2">{infoTopics[infoTopic].title}</h3><p className="text-sm text-slate-300">{infoTopics[infoTopic].content}</p><button onClick={() => { setShowInfo(false); setInfoTopic(null); }} className="mt-4 w-full py-2 bg-red-600 rounded-lg">Got it!</button></div></div>)}<div className="p-3 bg-black/30 border-b border-red-500/30 flex justify-between items-center"><span className="font-bold">🔒 Cybersecurity</span><span className="text-red-400">{scenario + 1}/{scenarios.length}</span><span className="text-orange-400">Score: {score}</span></div><div className="flex-1 p-4 flex flex-col justify-center"><div className="bg-black/30 rounded-xl p-4 mb-4"><p className="text-sm text-slate-200">{s.situation}</p></div><p className="text-center text-sm text-slate-400 mb-4">Is this safe or a threat?</p><div className="grid grid-cols-2 gap-3"><button onClick={() => answer(true)} disabled={answered} className={`py-4 rounded-xl font-bold ${answered ? (s.safe ? 'bg-green-600' : selected === 'safe' ? 'bg-red-600' : 'bg-black/30') : 'bg-green-600/50 hover:bg-green-500/50'}`}>✓ Safe</button><button onClick={() => answer(false)} disabled={answered} className={`py-4 rounded-xl font-bold ${answered ? (!s.safe ? 'bg-green-600' : selected === 'threat' ? 'bg-red-600' : 'bg-black/30') : 'bg-red-600/50 hover:bg-red-500/50'}`}>⚠️ Threat</button></div>{answered && (<div className="mt-4 p-3 bg-black/30 rounded-lg"><p className="text-sm text-slate-300">{s.explain}</p><button onClick={next} className="mt-3 w-full py-2 bg-red-600 rounded-lg">{scenario >= scenarios.length - 1 ? 'See Results' : 'Next'}</button></div>)}</div><div className="p-3 bg-black/30 border-t border-red-500/30 flex gap-2 justify-center">{Object.keys(infoTopics).map(k => <button key={k} onClick={() => {setInfoTopic(k);setShowInfo(true);}} className="text-xs text-red-400">ℹ️ {infoTopics[k].title}</button>)}</div></div>);
+   };
+
    // --- GENERIC RENDERER ---
    const GenericRenderer = () => {
       if (type === 'poster' || type === 'infographic') {
@@ -28819,6 +29054,16 @@ const GeneratedDiagram: React.FC<DiagramProps> = ({ type, data, title }) => {
             return <PermitsRenderer />;
          case 'employment_law':
             return <EmploymentLawRenderer />;
+         case 'ecommerce':
+            return <EcommerceRenderer />;
+         case 'social_media':
+            return <SocialMediaRenderer />;
+         case 'seo':
+            return <SEORenderer />;
+         case 'analytics':
+            return <AnalyticsRenderer />;
+         case 'cybersecurity':
+            return <CybersecurityRenderer />;
          default:
             return <GenericRenderer />;
       }

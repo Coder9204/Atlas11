@@ -308,6 +308,11 @@ When a concept comes up, follow this lookup process:
 • Contracts / Agreements / Clauses / Red Flags / Terms → 'contracts'
 • Permits & Licenses / Business Compliance / Zoning / Regulations → 'permits'
 • Employment Law / Hiring Laws / Workplace Rights / Labor Law → 'employment_law'
+• E-Commerce / Online Store / Shopping Cart / Product Pricing → 'ecommerce'
+• Social Media / Instagram / TikTok / Twitter / Content Strategy → 'social_media'
+• SEO / Search Engine Optimization / Keywords / Rankings / Backlinks → 'seo'
+• Analytics / Metrics / KPIs / Dashboards / Data Analysis → 'analytics'
+• Cybersecurity / Phishing / Malware / Password Security / Data Protection → 'cybersecurity'
 
 **STEP 2: IF NO MATCH → BUILD CUSTOM**
 Only if the topic is NOT covered above, use \`type: 'dynamic_blueprint'\` with custom JSON.
@@ -1169,6 +1174,36 @@ Only if the topic is NOT covered above, use \`type: 'dynamic_blueprint'\` with c
     → Quiz format testing knowledge of employment regulations
     → Educational tooltips covering FLSA, EEOC, at-will employment, worker classification
     → KEY INSIGHT: Employment law violations can result in costly lawsuits
+- **Digital / E-Commerce / Online Store:** Use \`type: 'ecommerce'\`, \`data: '{}'\`
+    → 7-day online store simulation with pricing and inventory management
+    → Set product prices, restock inventory, maximize profits
+    → Demand based on pricing decisions; balance margins vs volume
+    → Educational tooltips covering pricing strategy, inventory, margins, conversion
+    → KEY INSIGHT: Pricing affects demand; balance profit margins with sales volume
+- **Digital / Social Media / Content Strategy:** Use \`type: 'social_media'\`, \`data: '{}'\`
+    → 8-week social media campaign simulation
+    → Choose platforms (Instagram, TikTok, Twitter, LinkedIn) and content types
+    → Grow followers and engagement through strategic posting
+    → Educational tooltips covering algorithms, consistency, engagement rate, reach
+    → KEY INSIGHT: Platform choice and content type drive different outcomes
+- **Digital / SEO / Search Optimization:** Use \`type: 'seo'\`, \`data: '{}'\`
+    → 8-question quiz on search engine optimization best practices
+    → Learn about title tags, keywords, backlinks, page speed, URLs
+    → Educational explanations after each answer
+    → Educational tooltips covering keywords, backlinks, technical SEO, content quality
+    → KEY INSIGHT: Quality content and technical excellence drive rankings
+- **Digital / Analytics / Data Interpretation:** Use \`type: 'analytics'\`, \`data: '{}'\`
+    → Dashboard data interpretation challenges
+    → Calculate conversion rates, ROAS, LTV:CAC, engagement metrics
+    → Learn to read and analyze business dashboards
+    → Educational tooltips covering key metrics, funnels, cohort analysis, A/B testing
+    → KEY INSIGHT: Data-driven decisions require understanding the right metrics
+- **Digital / Cybersecurity / Threat Detection:** Use \`type: 'cybersecurity'\`, \`data: '{}'\`
+    → 8-scenario security threat identification training
+    → Identify phishing, malware, social engineering, and safe practices
+    → Learn to protect business data and accounts
+    → Educational tooltips covering phishing, malware, social engineering, passwords
+    → KEY INSIGHT: Human error is the biggest security vulnerability
 
 **CUSTOM SIMULATIONS (only if no pre-built exists):**
 3. For dynamic text, use: \`"content": "Range: {{calculations.range}} m"\`
