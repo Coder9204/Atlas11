@@ -33135,34 +33135,147 @@ const GeneratedDiagram: React.FC<DiagramProps> = ({ type, data, title }) => {
    // --- LEADERSHIP RENDERER ---
    const LeadershipRenderer = () => {
       const [phase, setPhase] = useState<'intro' | 'play' | 'result'>('intro');
+      const [showInfo, setShowInfo] = useState(false);
+      const [infoTopic, setInfoTopic] = useState<string | null>(null);
       const [scenario, setScenario] = useState(0);
       const [score, setScore] = useState(0);
       const [selected, setSelected] = useState<number | null>(null);
       const [answered, setAnswered] = useState(false);
-      const [log, setLog] = useState<string[]>([]);
-      const [showInfo, setShowInfo] = useState(false);
-      const [infoTopic, setInfoTopic] = useState<string | null>(null);
+      const [gameLog, setGameLog] = useState<string[]>([]);
+      const [conceptGaps, setConceptGaps] = useState<string[]>([]);
 
+      // Situational Leadership Lab - Context determines the right approach
       const scenarios = [
-         { context: "Crisis Management", situation: "Your startup's main product has a critical bug affecting 50% of users. Your team is panicking.", q: "What's your first action as a leader?", opts: ["Take over and fix it yourself", "Stay calm, assign clear roles, and communicate transparently", "Find someone to blame", "Wait for more information"], correct: 1, explain: "Leaders set the emotional tone. Calm, clear direction with transparent communication builds trust and enables effective crisis response." },
-         { context: "Difficult Feedback", situation: "A team member you like personally is consistently underperforming and affecting team morale.", q: "How do you handle this?", opts: ["Ignore it hoping they improve", "Have direct, specific feedback conversation with clear expectations", "Complain to other team members", "Immediately let them go"], correct: 1, explain: "Direct, kind feedback with specific examples and clear expectations gives people the chance to improve while maintaining team standards." },
-         { context: "Delegation", situation: "You have an important investor presentation next week and a product launch to manage simultaneously.", q: "What approach demonstrates best leadership?", opts: ["Work 20-hour days to do both", "Delegate the launch to your capable team", "Postpone the investor meeting", "Do both poorly"], correct: 1, explain: "Great leaders delegate to develop their team. Trusting capable people with important work shows confidence and builds organizational capacity." },
-         { context: "Vision Alignment", situation: "Half your team wants to focus on feature A, half on feature B. Both have merit but resources are limited.", q: "How do you decide?", opts: ["Let the team vote", "Make an executive decision aligned with company vision", "Work on both with half effort", "Avoid the decision"], correct: 1, explain: "Leaders tie decisions to vision and strategy. A clear rationale helps the team understand and commit, even if they preferred the other option." },
-         { context: "Building Culture", situation: "You notice your growing team is losing the collaborative spirit that made early days special.", q: "What's the most effective intervention?", opts: ["Send an email about values", "Model the behavior, recognize examples, and create rituals", "Hire a culture consultant", "Accept it as inevitable"], correct: 1, explain: "Culture is caught, not taught. Leaders shape culture by consistently modeling values, recognizing aligned behaviors, and creating meaningful rituals." }
+         {
+            title: "The Founder's Trap",
+            context: "You're a technical founder who built the first version of the product. Now you have 15 engineers. You still review every PR, attend every standup, and make every technical decision. Your CTO hire just quit, saying 'you won't let anyone else lead.'",
+            question: "What's the REAL problem with your leadership?",
+            opts: [
+               'You need to hire a better CTO who can work with you',
+               'You\'re bottlenecking the organization by not delegating',
+               'Your standards are too high - lower them',
+               'The team needs more training before you can step back'
+            ],
+            correct: 1,
+            wrongExplanations: [
+               "Every CTO will face the same problem. The issue isn't them - it's that you're not creating space for leadership to emerge. You'll keep losing leaders.",
+               "", // Correct
+               "High standards aren't the problem. The problem is that YOU are the only one who can meet them. That's a system failure, not a standards issue.",
+               "Waiting for the 'right time' to delegate is a trap. Teams develop BY being given responsibility, not before."
+            ],
+            realWorld: "Steve Jobs was fired from Apple partly for micromanaging. When he returned, he'd learned to hire great people and give them space. Elon Musk struggles with this - his companies succeed despite his micromanagement, not because of it.",
+            concept: "delegation_scaling",
+            why: "Founders who built the first version often become the constraint on the next version. Every decision that runs through you is a decision that's slower than it should be. Your job shifts from 'doing' to 'enabling others to do.' If you're the smartest person in every room, you've failed at hiring."
+         },
+         {
+            title: "The Transparency Dilemma",
+            context: "Your startup is in trouble. Runway is 4 months, fundraising is stalling, and you might need layoffs. Your team doesn't know - you've been shielding them to protect morale. But rumors are spreading and anxiety is rising.",
+            question: "What's the RIGHT level of transparency here?",
+            opts: [
+               'Keep shielding them - leaders carry the burden so others can work',
+               'Full transparency - share everything, let them decide if they want to stay',
+               'Partial transparency - share the challenge, your plan, and what you need from them',
+               'Wait until you have a solution, then share'
+            ],
+            correct: 2,
+            wrongExplanations: [
+               "Shielding creates worse anxiety. People know something is wrong and imagine worse scenarios. You're also denying them agency to help or prepare.",
+               "Full transparency without context or plan creates panic. Sharing 'we might die' without 'here's how we might survive' is irresponsible.",
+               "", // Correct
+               "Waiting erodes trust. If you solve it, they'll wonder what else you're hiding. If you don't, they'll resent not having time to prepare."
+            ],
+            realWorld: "Buffer shared their runway publicly during a crisis - it built trust. But they also shared their plan. Contrast with startups that say nothing until layoffs: employees feel betrayed and survivors lose trust.",
+            concept: "transparency_calibration",
+            why: "The right formula: Share the challenge (honest), Share your plan (action), Share what you need (agency), Acknowledge uncertainty (humble). This treats your team as adults who can handle hard truths while giving them a way to contribute to the solution."
+         },
+         {
+            title: "The Loyalty vs Performance",
+            context: "Your first employee was critical in the early days. They took a pay cut, worked nights, and believed when no one else did. Now they're a director, but they're clearly not at the level the role requires. They're defensive about feedback and their team is struggling.",
+            question: "What does good leadership require here?",
+            opts: [
+               'Keep them in role - loyalty must be rewarded',
+               'Quietly move responsibilities away while keeping their title',
+               'Have an honest conversation about the gap and explore options together',
+               'Fire them - performance is all that matters'
+            ],
+            correct: 2,
+            wrongExplanations: [
+               "Keeping underperformers in roles they can't handle hurts them (stress, failure), their team (bad leadership), and the company. Loyalty isn't an excuse for harm.",
+               "Shadow-removing responsibilities is dishonest and humiliating. They'll know, others will know, and trust erodes. It's cowardly, not kind.",
+               "", // Correct
+               "Immediate firing without conversation ignores their contribution and your responsibility to help them succeed. It also sends a message that loyalty is punished."
+            ],
+            realWorld: "Netflix's culture of 'adequate performance gets a generous severance' sounds harsh but is actually clearer and kinder than companies that keep people in failing roles for years. The key: have the conversation EARLY, not after resentment builds.",
+            concept: "performance_conversations",
+            why: "The honest conversation: 'The role has outgrown where you are right now. I value you and want you here. Let's figure out together where you can succeed - whether that's a different role, development support, or an honest exit.' This honors their contribution while addressing reality."
+         },
+         {
+            title: "The Visionary Trap",
+            context: "You have a bold vision for the company. Your team keeps pushing back with 'practical concerns' about execution, resources, and risk. You believe great leaders push through doubt. But you've noticed the best people are becoming disengaged.",
+            question: "What's happening with your leadership?",
+            opts: [
+               'Your team doesn\'t share your vision - replace doubters with believers',
+               'Great visions always face resistance - push harder',
+               'You\'re confusing conviction with stubbornness - leadership requires listening',
+               'Lower your ambitions to match team capability'
+            ],
+            correct: 2,
+            wrongExplanations: [
+               "Replacing doubters with yes-people creates echo chambers. The best people push back because they care. Losing them is a warning sign, not a hiring problem.",
+               "There's a difference between vision pushback (expected) and disengagement from your best people (danger signal). The latter suggests your leadership style is the problem.",
+               "", // Correct
+               "This isn't about lowering ambitions - it's about how you hold them. You can have bold vision AND listen to execution concerns."
+            ],
+            realWorld: "Travis Kalanick pushed his vision at Uber despite pushback on ethics. His conviction created massive value but also massive problems. Contrast with Satya Nadella, who transformed Microsoft by holding bold vision while genuinely listening.",
+            concept: "vision_vs_stubbornness",
+            why: "Vision + Stubbornness = Blind spots and exit of best people. Vision + Listening = Course-corrected execution and engaged team. The test: Are your best people leaning in or checking out? If checking out, the problem is you, not them."
+         },
+         {
+            title: "The Crisis Leader",
+            context: "A major customer just publicly accused your company of data mishandling on Twitter. Your PR person wants to issue a corporate statement. Your lawyer wants to say nothing. Your customer success lead wants to apologize immediately. Your team is looking to you.",
+            question: "What's the MOST important leadership action right now?",
+            opts: [
+               'Get the facts before responding - you can\'t lead without information',
+               'Make a quick decision - any direction is better than paralysis',
+               'Let the experts (PR, legal) handle it - they know their domains',
+               'Gather the team, acknowledge the crisis, assign clear roles, and set a timeline'
+            ],
+            correct: 3,
+            wrongExplanations: [
+               "Facts are important, but in crisis, speed matters. Perfect information never arrives. You need enough to act, not everything.",
+               "Quick decisions without coordination create chaos. Different people doing different things makes crises worse.",
+               "Domain experts have narrow views. Legal wants to minimize liability. PR wants reputation. You need someone integrating all concerns - that's leadership.",
+               "" // Correct
+            ],
+            realWorld: "Johnson & Johnson's Tylenol crisis response is legendary: immediate action, clear leadership, transparent communication. Contrast with Boeing's 737 MAX response: delayed, defensive, and diffuse leadership. The difference was leadership clarity, not facts.",
+            concept: "crisis_leadership",
+            why: "In crisis, your team needs: 1) Acknowledgment (yes, this is serious), 2) Calm (not panic), 3) Structure (who does what), 4) Timeline (when we'll know more). The facts matter, but leadership coordination matters more. You're the one who sees the whole picture."
+         }
       ];
-      const s = scenarios[scenario];
-      const infoTopics: Record<string, {title: string; content: string}> = {
-         styles: { title: "Leadership Styles", content: "Effective founders adapt their style: Directive (crisis), Coaching (development), Supportive (skilled teams), Delegative (autonomous experts). Match your style to the situation and team maturity." },
-         feedback: { title: "Giving Feedback", content: "Use SBI: Situation (when/where), Behavior (specific actions), Impact (effect on team/outcomes). Focus on behaviors, not personality. Ask for their perspective and agree on next steps." },
-         delegation: { title: "Art of Delegation", content: "Delegate outcomes, not tasks. Provide context (why), clarity (what success looks like), resources (support available), and check-ins (not micromanagement). Let them own the how." },
-         trust: { title: "Building Trust", content: "Trust = Credibility (expertise) + Reliability (consistency) + Intimacy (safety) - Self-Interest. Build trust through competence, keeping promises, creating psychological safety, and putting team first." }
+
+      const conceptLabels: { [key: string]: string } = {
+         delegation_scaling: "Delegation & Scaling Leadership",
+         transparency_calibration: "Transparency & Communication",
+         performance_conversations: "Performance & Loyalty Tradeoffs",
+         vision_vs_stubbornness: "Vision vs. Stubbornness",
+         crisis_leadership: "Crisis Leadership"
       };
-      const answer = (i: number) => { if(answered) return; setSelected(i); setAnswered(true); if(i === s.correct) { setScore(p => p + 1); setLog(l => [...l, `✓ ${s.context}: Great leadership!`]); } else { setLog(l => [...l, `✗ ${s.context}: Better approach was "${s.opts[s.correct]}"`]); } };
-      const next = () => { if(scenario >= scenarios.length - 1) { setPhase('result'); } else { setScenario(p => p + 1); setAnswered(false); setSelected(null); } };
-      const grade = score >= 4 ? 'A' : score >= 3 ? 'B' : score >= 2 ? 'C' : 'D';
-      if(phase === 'intro') return (<div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-amber-900 via-orange-900 to-red-900 text-white p-6"><div className="text-6xl mb-4">👔</div><h2 className="text-2xl font-bold mb-2">Leadership Styles</h2><p className="text-slate-300 text-center mb-6 max-w-md">Master different leadership approaches for startup challenges!</p><button onClick={() => setPhase('play')} className="px-8 py-3 bg-gradient-to-r from-amber-500 to-orange-500 rounded-xl font-bold">Lead the Way</button></div>);
-      if(phase === 'result') return (<div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-amber-900 via-orange-900 to-red-900 text-white p-6"><div className="text-6xl mb-4">{grade === 'A' ? '👑' : grade === 'B' ? '👔' : '📚'}</div><h2 className="text-2xl font-bold mb-2">Leadership Assessment</h2><div className="text-4xl font-bold text-amber-400 mb-2">{score}/{scenarios.length}</div><div className="text-6xl mb-4">{grade}</div><p className="text-slate-400 mb-4">{grade === 'A' ? 'Born leader!' : grade === 'B' ? 'Strong leadership!' : 'Keep developing!'}</p><div className="w-full max-w-md bg-black/30 rounded-lg p-3 mb-4 max-h-32 overflow-y-auto">{log.map((l,i) => <p key={i} className="text-xs text-slate-300">{l}</p>)}</div><button onClick={() => {setPhase('intro');setScenario(0);setScore(0);setAnswered(false);setSelected(null);setLog([]);}} className="px-6 py-2 bg-amber-600 rounded-lg">Try Again</button></div>);
-      return (<div className="w-full h-full flex flex-col bg-gradient-to-br from-amber-900 via-orange-900 to-red-900 text-white overflow-hidden">{showInfo && infoTopic && infoTopics[infoTopic] && (<div className="absolute inset-0 bg-black/80 flex items-center justify-center p-4 z-50" onClick={() => { setShowInfo(false); setInfoTopic(null); }}><div className="bg-slate-800 rounded-xl p-4 max-w-md" onClick={e => e.stopPropagation()}><h3 className="text-lg font-bold text-amber-400 mb-2">{infoTopics[infoTopic].title}</h3><p className="text-sm text-slate-300">{infoTopics[infoTopic].content}</p><button onClick={() => { setShowInfo(false); setInfoTopic(null); }} className="mt-4 w-full py-2 bg-amber-600 rounded-lg">Got it!</button></div></div>)}<div className="p-3 bg-black/30 border-b border-amber-500/30 flex justify-between items-center"><span className="font-bold">👔 {s.context}</span><span className="text-amber-400">{scenario + 1}/{scenarios.length}</span><span className="text-orange-400">Score: {score}</span></div><div className="flex-1 p-4 overflow-auto"><div className="bg-black/30 rounded-xl p-4 mb-4"><p className="text-sm text-slate-300">{s.situation}</p></div><div className="bg-black/30 rounded-xl p-4 mb-3"><p className="font-medium">{s.q}</p></div><div className="grid gap-2">{s.opts.map((opt, i) => (<button key={i} onClick={() => answer(i)} disabled={answered} className={`p-3 rounded-lg text-left text-sm ${answered ? i === s.correct ? 'bg-green-600' : i === selected ? 'bg-red-600' : 'bg-black/30' : 'bg-black/30 hover:bg-amber-600/50'}`}>{opt}</button>))}</div>{answered && (<div className="mt-3 p-3 bg-black/30 rounded-lg"><p className="text-sm text-slate-300">{s.explain}</p><button onClick={next} className="mt-3 w-full py-2 bg-amber-600 rounded-lg">{scenario >= scenarios.length - 1 ? 'See Results' : 'Next'}</button></div>)}</div><div className="p-3 bg-black/30 border-t border-amber-500/30 flex gap-2 justify-center flex-wrap">{Object.keys(infoTopics).map(k => <button key={k} onClick={() => {setInfoTopic(k);setShowInfo(true);}} className="text-xs text-amber-400">ℹ️ {infoTopics[k].title}</button>)}</div></div>);
+
+      const infoTopics: { [k: string]: { title: string; content: string } } = {
+         styles: { title: "Situational Leadership", content: "Adapt your style to the situation: Directing (crisis, new hires), Coaching (willing but not able), Supporting (able but not confident), Delegating (able and willing). The same person needs different styles at different times." },
+         feedback: { title: "Feedback Framework (SBI)", content: "Situation: When/where did it happen? Behavior: What specifically did they do? Impact: What was the effect? Then ask for their perspective. Agree on next steps together. Focus on behaviors, not character." },
+         delegation: { title: "Delegation Levels", content: "Level 1: Do exactly this. Level 2: Research and recommend. Level 3: Research, recommend, and act. Level 4: Act and inform me. Level 5: Act independently. Match level to trust and competence." },
+         trust: { title: "Trust Equation", content: "Trust = (Credibility + Reliability + Intimacy) / Self-Interest. Build trust through demonstrated competence, keeping commitments, creating psychological safety, and visibly putting team before self." }
+      };
+
+      const answer = (idx: number) => { if (answered) return; setSelected(idx); setAnswered(true); const s = scenarios[scenario]; if (idx === s.correct) { setScore(p => p + 1); setGameLog(l => [...l, `✓ ${s.title}: Correct!`]); } else { setGameLog(l => [...l, `✗ ${s.title}: Missed`]); if (!conceptGaps.includes(s.concept)) { setConceptGaps(g => [...g, s.concept]); } } };
+      const next = () => { if (scenario >= scenarios.length - 1) { setPhase('result'); } else { setScenario(p => p + 1); setAnswered(false); setSelected(null); } };
+      const grade = score >= 5 ? 'A' : score >= 4 ? 'B' : score >= 3 ? 'C' : 'D';
+      const s = scenarios[scenario];
+
+      if (phase === 'intro') return (<div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-amber-900 via-orange-900 to-red-900 text-white p-6"><div className="text-6xl mb-4">👔</div><h2 className="text-2xl font-bold mb-2">Situational Leadership Lab</h2><p className="text-slate-300 text-center mb-4 max-w-md">Master the leadership challenges that derail founders.</p><div className="bg-black/30 rounded-xl p-4 mb-6 max-w-md text-sm"><p className="text-amber-400 font-bold mb-2">🎯 Leadership is contextual:</p><ul className="text-slate-300 space-y-1 text-xs"><li>• Same situation requires different approaches at different stages</li><li>• What works in crisis fails in growth, and vice versa</li></ul></div><button onClick={() => setPhase('play')} className="px-8 py-3 bg-gradient-to-r from-amber-500 to-orange-500 rounded-xl font-bold">Lead the Way</button></div>);
+      if (phase === 'result') return (<div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-amber-900 via-orange-900 to-red-900 text-white p-6 overflow-auto"><div className="text-6xl mb-4">{grade === 'A' ? '👑' : grade === 'B' ? '👔' : '📚'}</div><h2 className="text-2xl font-bold mb-2">Leadership Assessment</h2><div className="text-4xl font-bold text-amber-400 mb-2">{score}/{scenarios.length}</div><div className="text-5xl mb-4">{grade}</div>{conceptGaps.length > 0 && (<div className="bg-black/30 rounded-xl p-4 max-w-md w-full mb-4"><p className="text-amber-400 font-bold text-sm mb-2">📚 Study:</p><ul className="text-slate-300 text-xs">{conceptGaps.map(g => <li key={g}>• {conceptLabels[g]}</li>)}</ul></div>)}<div className="bg-black/30 rounded-xl p-4 max-w-md w-full mb-4 max-h-32 overflow-y-auto">{gameLog.map((l,i) => <p key={i} className="text-xs text-slate-300">{l}</p>)}</div><button onClick={() => {setPhase('intro');setScenario(0);setScore(0);setAnswered(false);setSelected(null);setGameLog([]);setConceptGaps([]);}} className="px-6 py-2 bg-amber-600 rounded-lg">Try Again</button></div>);
+      return (<div className="w-full h-full flex flex-col bg-gradient-to-br from-amber-900 via-orange-900 to-red-900 text-white overflow-hidden">{showInfo && infoTopic && infoTopics[infoTopic] && (<div className="absolute inset-0 bg-black/80 flex items-center justify-center p-4 z-50" onClick={() => { setShowInfo(false); setInfoTopic(null); }}><div className="bg-slate-800 rounded-xl p-4 max-w-md" onClick={e => e.stopPropagation()}><h3 className="text-lg font-bold text-amber-400 mb-2">{infoTopics[infoTopic].title}</h3><p className="text-sm text-slate-300">{infoTopics[infoTopic].content}</p><button onClick={() => { setShowInfo(false); setInfoTopic(null); }} className="mt-4 w-full py-2 bg-amber-600 rounded-lg">Got it!</button></div></div>)}<div className="p-3 bg-black/30 border-b border-amber-500/30 flex justify-between items-center"><span className="font-bold">👔 Leadership</span><span className="text-amber-400">{scenario + 1}/{scenarios.length}</span><span className="text-orange-400">Score: {score}</span></div><div className="flex-1 p-4 overflow-auto"><div className="bg-black/30 rounded-xl p-3 mb-3"><p className="font-bold text-amber-400 mb-2">{s.title}</p><p className="text-sm text-slate-300">{s.context}</p></div><div className="bg-black/30 rounded-xl p-4 mb-3"><p className="font-medium">{s.question}</p></div><div className="grid gap-2">{s.opts.map((opt, i) => (<button key={i} onClick={() => answer(i)} disabled={answered} className={`p-3 rounded-lg text-left text-sm ${answered ? i === s.correct ? 'bg-green-600' : i === selected ? 'bg-red-600' : 'bg-black/30' : 'bg-black/30 hover:bg-amber-600/50'}`}>{opt}</button>))}</div>{answered && (<div className="mt-3 space-y-3">{selected !== s.correct && s.wrongExplanations[selected!] && (<div className="p-3 bg-red-900/50 rounded-lg border border-red-500/30"><p className="text-xs text-red-300 font-bold mb-1">❌ Why This Fails:</p><p className="text-sm text-red-100">{s.wrongExplanations[selected!]}</p></div>)}<div className="p-3 bg-green-900/50 rounded-lg border border-green-500/30"><p className="text-xs text-green-300 font-bold mb-1">✓ Leadership Insight:</p><p className="text-sm text-green-100">{s.why}</p></div><div className="p-3 bg-blue-900/50 rounded-lg border border-blue-500/30"><p className="text-xs text-blue-300 font-bold mb-1">📖 Real World:</p><p className="text-sm text-blue-100">{s.realWorld}</p></div><button onClick={next} className="w-full py-2 bg-amber-600 rounded-lg">{scenario >= scenarios.length - 1 ? 'See Results' : 'Next'}</button></div>)}</div><div className="p-3 bg-black/30 border-t border-amber-500/30 flex gap-2 justify-center flex-wrap">{Object.keys(infoTopics).map(k => <button key={k} onClick={() => {setInfoTopic(k);setShowInfo(true);}} className="text-xs text-amber-400">ℹ️ {infoTopics[k].title}</button>)}</div></div>);
    };
 
    // --- CUSTOMER JOURNEY RENDERER ---
