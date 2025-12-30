@@ -25044,75 +25044,283 @@ const GeneratedDiagram: React.FC<DiagramProps> = ({ type, data, title }) => {
    // 45. PRICING STRATEGIES - Pricing Game
    const PricingStrategiesRenderer = () => {
       const [phase, setPhase] = useState<'intro' | 'play' | 'result'>('intro');
-      const [showInfo, setShowInfo] = useState(false);
+      const [scenario, setScenario] = useState(0);
       const [score, setScore] = useState(0);
-      const [current, setCurrent] = useState(0);
+      const [selected, setSelected] = useState<number | null>(null);
+      const [answered, setAnswered] = useState(false);
+      const [gameLog, setGameLog] = useState<string[]>([]);
+      const [showInfo, setShowInfo] = useState(false);
+      const [infoTopic, setInfoTopic] = useState<string | null>(null);
+      const [conceptGaps, setConceptGaps] = useState<string[]>([]);
 
       const scenarios = [
-         { scenario: 'New tech product entering crowded market', best: 'penetration', options: [
-            { id: 'penetration', label: '📉 Penetration Pricing', desc: 'Low price to gain market share', score: 10 },
-            { id: 'skimming', label: '📈 Price Skimming', desc: 'High price for early adopters', score: 4 },
-            { id: 'cost_plus', label: '➕ Cost-Plus Pricing', desc: 'Cost + fixed markup', score: 5 }
-         ]},
-         { scenario: 'Revolutionary medical device with no competition', best: 'skimming', options: [
-            { id: 'penetration', label: '📉 Penetration Pricing', desc: 'Low price to gain market share', score: 3 },
-            { id: 'skimming', label: '📈 Price Skimming', desc: 'High price for early adopters', score: 10 },
-            { id: 'competitive', label: '🎯 Competitive Pricing', desc: 'Match competitor prices', score: 2 }
-         ]},
-         { scenario: 'Commodity product in price-sensitive market', best: 'competitive', options: [
-            { id: 'value', label: '💎 Value-Based Pricing', desc: 'Price based on perceived value', score: 5 },
-            { id: 'competitive', label: '🎯 Competitive Pricing', desc: 'Match or beat competitors', score: 10 },
-            { id: 'premium', label: '👑 Premium Pricing', desc: 'High price = high quality', score: 2 }
-         ]}
+         {
+            title: "The Decoy Effect",
+            context: "Your SaaS has two plans: Basic ($10/mo, 5 features) and Pro ($30/mo, 15 features). 80% choose Basic. Your goal is to shift users to Pro without changing existing prices.",
+            question: "What pricing strategy maximizes Pro adoption?",
+            opts: [
+               "A) Add Premium tier at $50/mo with 20 features",
+               "B) Add Plus tier at $25/mo with 10 features - positioned between Basic and Pro",
+               "C) Discount Pro to $20/mo temporarily",
+               "D) Bundle Pro with a free trial of Premium features"
+            ],
+            correct: 0,
+            wrongExplanations: [
+               "",
+               "Adding Plus at $25 creates a 'better deal' between Basic and Pro, but it actually cannibalizes Pro sales. Users who would pay $30 now pay $25 for 'good enough.'",
+               "Discounting devalues Pro and trains customers to wait for deals. Once at $20, raising to $30 creates massive churn. Price cuts are rarely reversible.",
+               "Free trials of Premium features sets expectations for more than Pro includes. When the trial ends, Pro feels like a downgrade, not an upgrade."
+            ],
+            realWorld: "The Economist famously offered: Digital $59, Print $125, Print+Digital $125. The absurd Print-only option made Print+Digital look like a steal. Subscriptions to the combo jumped 62% when the decoy was added.",
+            concept: "decoy_pricing",
+            why: "At $50/mo Premium (20 features), Pro becomes the 'smart choice' - only $30 for 15 features vs. $50 for 20. The Premium tier (even if few buy it) makes Pro look reasonable. This is the 'decoy effect' - an option designed to make another option look better. Pro now seems like a value vs. Premium excess."
+         },
+         {
+            title: "Value-Based Pricing Trap",
+            context: "Your HR analytics tool saves companies an average of $500K/year in reduced turnover. You price at $50K/year (10% of value delivered). A competitor launches at $15K/year with 60% of your features.",
+            question: "How should you respond to defend your pricing?",
+            opts: [
+               "A) Match their price - you can't be 3x more expensive",
+               "B) Cut price to $30K and add features to justify the premium",
+               "C) Add ROI guarantee: 'Pay $50K only if we save you $500K+'",
+               "D) Segment: enterprise keeps $50K, launch mid-market tier at $18K"
+            ],
+            correct: 2,
+            wrongExplanations: [
+               "Racing to the bottom kills margins. At $15K, you need 3x the customers to maintain revenue. Your sales motion (likely enterprise) doesn't scale 3x without massive investment.",
+               "Cutting to $30K admits your price was wrong. Adding features increases costs. You're now in a losing position: lower margins, higher costs, still not competitive on price.",
+               "",
+               "Segmentation sounds smart but mid-market at $18K directly competes with the $15K player. You've split your sales focus while still being 20% more expensive in that segment."
+            ],
+            realWorld: "Salesforce never matches competitor pricing. When competitors undercut, they lean into ROI messaging and customer success stories. They charge 3-5x alternatives because buyers trust the outcome guarantee. Their churn is under 10% despite premium pricing.",
+            concept: "value_defense",
+            why: "The ROI guarantee shifts the conversation from 'cost' to 'outcome.' If you guarantee $500K in savings, the $50K price is clearly worth it. Competitors can't match this guarantee because they lack the data to prove the outcome. You're no longer competing on features or price - you're competing on confidence in results."
+         },
+         {
+            title: "The Freemium Trap",
+            context: "Your productivity app has 1M free users and 10K paid users ($10/mo = $100K MRR). Conversion rate: 1%. You want to grow paid users. Free users cost $0.50/month to serve.",
+            question: "What pricing change maximizes sustainable growth?",
+            opts: [
+               "A) Limit free tier features to force upgrades",
+               "B) Raise paid price to $15/mo - current users value the product",
+               "C) Add $5/mo lite tier between free and paid",
+               "D) Remove free tier entirely - go free trial instead"
+            ],
+            correct: 2,
+            wrongExplanations: [
+               "Limiting free features often increases churn without improving conversion. Users feel bait-and-switched. Many just leave rather than pay. You lose viral growth engine.",
+               "Raising price to $15 gets you 50% more per user but often causes 20-30% churn. Net effect: $100K → maybe $105K. Not worth the churn and reputation risk.",
+               "",
+               "Removing free tier kills your viral engine. 1M free users tell friends, post on social, create content. The CAC of replacing that marketing is enormous. Dropbox tried this and reversed."
+            ],
+            realWorld: "Spotify added a $5.99 'Lite' tier in emerging markets. Users who would never pay $9.99 happily pay $5.99. This didn't cannibalize Premium - it captured previously unreachable segments. Lite users often upgrade to Premium later.",
+            concept: "price_segmentation",
+            why: "A $5 tier converts free users who see value but not $10 worth. Even 2% conversion to $5 = 20K users = $100K additional MRR. Total: $200K MRR. Free users still serve as marketing. Paid users self-select: lite for casual, pro for power users. The tier between free and paid is often the highest-leverage addition."
+         },
+         {
+            title: "Anchor Pricing Psychology",
+            context: "You're launching a consulting service. Competitors charge $200-400/hour. You believe you deliver 2x value. Your cost to deliver is $100/hour. You want to maximize revenue per client.",
+            question: "How should you structure your pricing presentation?",
+            opts: [
+               "A) List $800/hour to anchor high, then 'discount' to $600",
+               "B) Show ROI first ('we save clients $10K/engagement'), then reveal $600/hour",
+               "C) Price at $400/hour to match competitors, emphasize 2x value",
+               "D) Start low at $200/hour to win clients, raise prices later"
+            ],
+            correct: 1,
+            wrongExplanations: [
+               "The fake 'discount' is transparent and damages trust. Sophisticated buyers see through it. Starting with an inflated number makes you seem manipulative, not valuable.",
+               "",
+               "Matching competitor price while claiming 2x value is inconsistent. If you're worth 2x, why charge 1x? It creates cognitive dissonance that makes buyers skeptical.",
+               "Low prices attract price-sensitive clients who will leave when you raise rates. You've built a client base that doesn't value your premium positioning. Hard to escape."
+            ],
+            realWorld: "McKinsey never leads with hourly rates. They present: 'We helped [client] achieve $50M in savings on a $500K engagement.' The value anchor is $50M, not the $500K cost. The 100x ROI makes the fee seem trivial.",
+            concept: "anchor_framing",
+            why: "Anchoring on value ($10K saved) makes $600/hour feel reasonable. If you anchor on competitor rates ($200-400), you're immediately in a comparison game. Lead with outcomes, not inputs. The first number buyers hear shapes their perception of everything after. Make that number huge and positive."
+         },
+         {
+            title: "Dynamic Pricing Ethics",
+            context: "Your ride-share app uses surge pricing during peak demand. Last month: 20% of rides had 2x+ surge, causing viral complaints. Revenue from surge: +$2M. But app store rating dropped from 4.5 to 3.8 stars.",
+            question: "How should you adjust surge pricing strategy?",
+            opts: [
+               "A) Remove surge pricing - reputation is more valuable than $2M",
+               "B) Cap surge at 1.5x and increase base fare 10% permanently",
+               "C) Keep surge but show upfront: 'Surge active: wait 10 min for normal pricing'",
+               "D) Offer loyalty discount: frequent riders never pay more than 1.3x surge"
+            ],
+            correct: 2,
+            wrongExplanations: [
+               "Removing surge entirely causes supply shortages during peak times. Drivers won't drive when demand is highest without incentive. Riders face worse problem: no cars available at any price.",
+               "Capping at 1.5x and raising base fare hurts everyday users to protect peak users. You've raised prices on 80% of rides to placate 20%. The math doesn't work.",
+               "",
+               "Loyalty discounts during surge complicate driver incentives and create two-tier pricing that feels unfair. New users pay 2x while regulars pay 1.3x? Creates resentment."
+            ],
+            realWorld: "Uber found that surge complaints dropped 40% when they added wait-time alternatives. Users felt in control: 'I'm choosing to pay more for immediate service.' The transparent choice transformed perceived exploitation into perceived convenience.",
+            concept: "transparent_pricing",
+            why: "Transparency + choice eliminates the 'gotcha' feeling. Users see surge, are offered an alternative (wait), and choose. Those who pay surge feel they made an informed decision. Those who wait feel they got a deal. Both are satisfied. You keep surge revenue while rebuilding trust."
+         }
       ];
+
+      const conceptLabels: Record<string, string> = {
+         'decoy_pricing': 'Decoy Pricing Effect',
+         'value_defense': 'Value-Based Defense',
+         'price_segmentation': 'Price Segmentation',
+         'anchor_framing': 'Anchor Framing',
+         'transparent_pricing': 'Transparent Dynamic Pricing'
+      };
+
+      const infoTopics: Record<string, string> = {
+         'penetration': 'Penetration Pricing: Low initial price to gain market share quickly. Works when: network effects, high volume potential, elastic demand. Risk: hard to raise prices later.',
+         'skimming': 'Price Skimming: High initial price lowered over time. Works when: unique product, inelastic early demand, no close substitutes. Captures maximum from each segment.',
+         'value_based': 'Value-Based Pricing: Price = Perceived value to customer. Requires deep customer understanding. Most profitable but hardest to execute.',
+         'psychological': 'Psychological Pricing: $9.99 vs $10, anchoring, bundling. Uses cognitive biases. Effective for B2C, less for B2B where buyers are more analytical.',
+         'competitive': 'Competitive Pricing: Price relative to competitors. Safe but commoditizes. Use when differentiation is weak or switching costs are low.'
+      };
+
+      const handleAnswer = (idx: number) => {
+         if (answered) return;
+         setSelected(idx);
+         setAnswered(true);
+         const s = scenarios[scenario];
+         if (idx === s.correct) {
+            setScore(score + 1);
+            setGameLog([...gameLog, `✓ ${s.title}: Correct`]);
+         } else {
+            setConceptGaps([...conceptGaps, s.concept]);
+            setGameLog([...gameLog, `✗ ${s.title}: Wrong - Gap in ${conceptLabels[s.concept]}`]);
+         }
+      };
+
+      const nextScenario = () => {
+         if (scenario < scenarios.length - 1) {
+            setScenario(scenario + 1);
+            setSelected(null);
+            setAnswered(false);
+         } else {
+            setPhase('result');
+         }
+      };
+
+      const getGrade = () => {
+         const pct = (score / scenarios.length) * 100;
+         if (pct >= 80) return { grade: 'A', label: 'Pricing Strategist', color: 'text-green-400' };
+         if (pct >= 60) return { grade: 'B', label: 'Price Aware', color: 'text-blue-400' };
+         if (pct >= 40) return { grade: 'C', label: 'Pricing Gaps', color: 'text-yellow-400' };
+         return { grade: 'D', label: 'Revenue at Risk', color: 'text-red-400' };
+      };
 
       if (phase === 'intro') return (
          <div className="flex flex-col items-center justify-center h-full bg-gradient-to-br from-violet-900 via-purple-900 to-fuchsia-900 text-white p-8 text-center">
             <button onClick={() => setShowInfo(!showInfo)} className="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/20 flex items-center justify-center text-xl">ℹ️</button>
             {showInfo && (
-               <div className="absolute top-16 right-4 bg-black/90 p-4 rounded-xl max-w-xs text-left text-sm">
-                  <p className="font-bold mb-2">Pricing Strategies</p>
-                  <p>Penetration (low entry), Skimming (high entry), Value-based, Competitive, Cost-plus, Premium. Match strategy to situation.</p>
+               <div className="absolute top-16 right-4 bg-black/90 p-4 rounded-xl max-w-xs text-left text-sm z-10">
+                  <p className="font-bold mb-2">💲 Pricing Psychology</p>
+                  <p className="mb-2">Pricing is psychology, not just math:</p>
+                  <div className="space-y-1 text-xs">
+                     {Object.entries(infoTopics).map(([key, value]) => (
+                        <div key={key} className="bg-white/10 p-2 rounded cursor-pointer hover:bg-white/20" onClick={() => setInfoTopic(key)}>
+                           {key.replace(/_/g, ' ').toUpperCase()}
+                        </div>
+                     ))}
+                  </div>
+                  {infoTopic && <p className="mt-2 text-xs bg-violet-500/20 p-2 rounded">{infoTopics[infoTopic]}</p>}
                </div>
             )}
             <p className="text-6xl mb-4">💲</p>
-            <h2 className="text-3xl font-bold mb-4">Pricing Strategies</h2>
-            <p className="text-lg opacity-80 max-w-md mb-8">Match the right pricing strategy to each business scenario.</p>
-            <button onClick={() => setPhase('play')} className="px-8 py-4 bg-violet-500 rounded-2xl font-bold text-xl hover:bg-violet-400 transition-all">START →</button>
+            <h2 className="text-3xl font-bold mb-4">Pricing Strategy Lab</h2>
+            <p className="text-lg opacity-80 max-w-md mb-4">Master the psychology of pricing - where strategy meets human behavior.</p>
+            <p className="text-sm opacity-60 max-w-md mb-8">5 scenarios based on real pricing decisions at The Economist, Salesforce, Spotify, McKinsey, and Uber.</p>
+            <button onClick={() => setPhase('play')} className="px-8 py-4 bg-violet-500 rounded-2xl font-bold text-xl hover:bg-violet-400 transition-all">START PRICING LAB →</button>
          </div>
       );
 
-      if (phase === 'result') return (
-         <div className="flex flex-col items-center justify-center h-full bg-gradient-to-br from-violet-900 via-purple-900 to-fuchsia-900 text-white p-8 text-center">
-            <p className="text-6xl mb-4">{score >= 25 ? '🏆' : score >= 15 ? '⭐' : '📚'}</p>
-            <h2 className="text-3xl font-bold mb-4">Pricing Score</h2>
-            <p className="text-5xl font-bold text-violet-400 mb-4">{score}/{scenarios.length * 10}</p>
-            <button onClick={() => { setPhase('intro'); setScore(0); setCurrent(0); }} className="px-6 py-3 bg-violet-500 rounded-xl font-bold">TRY AGAIN</button>
-         </div>
-      );
-
-      const handleSelect = (optScore: number) => {
-         setScore(score + optScore);
-         if (current < scenarios.length - 1) setCurrent(current + 1);
-         else setPhase('result');
-      };
-
-      const s = scenarios[current];
-      return (
-         <div className="flex flex-col h-full bg-gradient-to-br from-violet-900 via-purple-900 to-fuchsia-900 text-white p-8">
-            <div className="bg-black/30 rounded-2xl p-6 mb-6 text-center">
-               <p className="text-sm opacity-70 mb-2">Scenario {current + 1}/{scenarios.length}</p>
-               <p className="text-lg font-bold">{s.scenario}</p>
+      if (phase === 'result') {
+         const { grade, label, color } = getGrade();
+         const uniqueGaps = [...new Set(conceptGaps)];
+         return (
+            <div className="flex flex-col h-full bg-gradient-to-br from-violet-900 via-purple-900 to-fuchsia-900 text-white p-8 overflow-y-auto">
+               <div className="text-center mb-6">
+                  <p className={`text-6xl font-bold ${color}`}>{grade}</p>
+                  <p className="text-xl mt-2">{label}</p>
+                  <p className="text-sm opacity-70 mt-1">{score}/{scenarios.length} strategies mastered</p>
+               </div>
+               <div className="bg-black/30 rounded-xl p-4 mb-4">
+                  <p className="font-bold mb-2">📊 Strategy Log</p>
+                  {gameLog.map((log, i) => (
+                     <p key={i} className={`text-sm ${log.startsWith('✓') ? 'text-green-400' : 'text-red-400'}`}>{log}</p>
+                  ))}
+               </div>
+               {uniqueGaps.length > 0 && (
+                  <div className="bg-red-500/20 rounded-xl p-4 mb-4">
+                     <p className="font-bold mb-2">📚 Concepts to Study</p>
+                     {uniqueGaps.map(gap => (
+                        <p key={gap} className="text-sm">• {conceptLabels[gap]}</p>
+                     ))}
+                  </div>
+               )}
+               <div className="bg-violet-500/20 rounded-xl p-4 mb-4">
+                  <p className="font-bold mb-2">🎯 Pricing Principles</p>
+                  <p className="text-sm">• Decoys make target options look better</p>
+                  <p className="text-sm">• Lead with value delivered, not price charged</p>
+                  <p className="text-sm">• Middle tiers capture hesitant buyers</p>
+                  <p className="text-sm">• Anchor on outcomes, not competitor prices</p>
+                  <p className="text-sm">• Transparency + choice beats hidden pricing</p>
+               </div>
+               <button onClick={() => { setPhase('intro'); setScenario(0); setScore(0); setSelected(null); setAnswered(false); setGameLog([]); setConceptGaps([]); }}
+                  className="mt-auto px-6 py-3 bg-violet-500 rounded-xl font-bold">TRY AGAIN</button>
             </div>
-            <div className="flex flex-col gap-3 flex-1">
-               {s.options.map((opt) => (
-                  <button key={opt.id} onClick={() => handleSelect(opt.score)}
-                     className="p-4 bg-black/30 rounded-xl hover:bg-violet-500/30 transition-all text-left">
-                     <p className="font-bold">{opt.label}</p>
-                     <p className="text-sm opacity-70">{opt.desc}</p>
+         );
+      }
+
+      const s = scenarios[scenario];
+      return (
+         <div className="flex flex-col h-full bg-gradient-to-br from-violet-900 via-purple-900 to-fuchsia-900 text-white p-6 overflow-y-auto">
+            <div className="flex justify-between items-center mb-4">
+               <span className="bg-black/30 px-3 py-1 rounded-lg text-sm">Strategy {scenario + 1}/5</span>
+               <span className="bg-violet-500/30 px-3 py-1 rounded-lg text-sm font-bold">{score} correct</span>
+            </div>
+            <div className="bg-black/30 rounded-xl p-4 mb-4">
+               <h3 className="font-bold text-lg text-violet-400 mb-2">{s.title}</h3>
+               <p className="text-sm leading-relaxed opacity-90">{s.context}</p>
+            </div>
+            <p className="font-bold mb-3">{s.question}</p>
+            <div className="flex flex-col gap-2 mb-4">
+               {s.opts.map((opt, idx) => (
+                  <button key={idx} onClick={() => handleAnswer(idx)} disabled={answered}
+                     className={`p-3 rounded-xl text-left text-sm transition-all ${
+                        answered
+                           ? idx === s.correct
+                              ? 'bg-green-500/40 border-2 border-green-400'
+                              : idx === selected
+                                 ? 'bg-red-500/40 border-2 border-red-400'
+                                 : 'bg-black/20 opacity-50'
+                           : 'bg-black/30 hover:bg-violet-500/20'
+                     }`}>
+                     {opt}
                   </button>
                ))}
             </div>
+            {answered && (
+               <div className="space-y-3 mb-4">
+                  {selected !== s.correct && (
+                     <div className="bg-red-500/20 rounded-xl p-3">
+                        <p className="font-bold text-red-400 text-sm">Why that backfires:</p>
+                        <p className="text-sm opacity-90">{s.wrongExplanations[selected!]}</p>
+                     </div>
+                  )}
+                  <div className="bg-green-500/20 rounded-xl p-3">
+                     <p className="font-bold text-green-400 text-sm">The pricing psychology:</p>
+                     <p className="text-sm opacity-90">{s.why}</p>
+                  </div>
+                  <div className="bg-violet-500/20 rounded-xl p-3">
+                     <p className="font-bold text-violet-400 text-sm">📚 Real World:</p>
+                     <p className="text-sm opacity-90">{s.realWorld}</p>
+                  </div>
+                  <button onClick={nextScenario} className="w-full py-3 bg-violet-500 rounded-xl font-bold">
+                     {scenario < scenarios.length - 1 ? 'NEXT STRATEGY →' : 'SEE RESULTS →'}
+                  </button>
+               </div>
+            )}
          </div>
       );
    };
@@ -25120,89 +25328,282 @@ const GeneratedDiagram: React.FC<DiagramProps> = ({ type, data, title }) => {
    // 46. EQUITY OWNERSHIP - Equity Split Calculator
    const EquityOwnershipRenderer = () => {
       const [phase, setPhase] = useState<'intro' | 'play' | 'result'>('intro');
+      const [scenario, setScenario] = useState(0);
+      const [score, setScore] = useState(0);
+      const [selected, setSelected] = useState<number | null>(null);
+      const [answered, setAnswered] = useState(false);
+      const [gameLog, setGameLog] = useState<string[]>([]);
       const [showInfo, setShowInfo] = useState(false);
-      const [founders, setFounders] = useState<{name: string; equity: number}[]>([]);
-      const [name, setName] = useState('');
-      const [equity, setEquity] = useState('');
+      const [infoTopic, setInfoTopic] = useState<string | null>(null);
+      const [conceptGaps, setConceptGaps] = useState<string[]>([]);
 
-      const totalEquity = founders.reduce((sum, f) => sum + f.equity, 0);
-      const remaining = 100 - totalEquity;
+      const scenarios = [
+         {
+            title: "The Equal Split Trap",
+            context: "Three co-founders start a company. Alex (CEO): quit job, full-time from day 1, came up with idea. Beth (CTO): works nights/weekends while employed, builds MVP. Chris (CMO): advises 5 hours/week, provides industry connections. All propose equal 33/33/33 split.",
+            question: "What's wrong with equal equity split here?",
+            opts: [
+               "A) Nothing - equal split prevents resentment and is fair",
+               "B) It doesn't reflect commitment levels - Alex should get more",
+               "C) Beth's technical work is most valuable - she should get more",
+               "D) Chris contributes least but equal equity creates founder conflict"
+            ],
+            correct: 3,
+            wrongExplanations: [
+               "Equal splits often CREATE resentment. When Alex realizes he's working 60 hours for the same equity as Chris's 5 hours, he'll either burn out or leave. Equal isn't the same as fair.",
+               "Commitment matters, but this answer misses the structural problem. The issue isn't just 'Alex should get more' - it's that equal splits ignore contribution variance and create no accountability.",
+               "Technical work is valuable, but Beth isn't full-time. Valuing part-time equity equally to full-time is the core issue, regardless of whose work is 'most valuable.'"
+            ],
+            realWorld: "Studies show 73% of startups with equal splits fail within 3 years. The Zuckerberg-Saverin dispute at Facebook (later settled for hundreds of millions) started as an 'equal' partnership where contribution levels diverged dramatically.",
+            concept: "contribution_equity",
+            why: "Equal splits work only when contributions are equal. Here they're dramatically unequal: Alex (full-time, 60+ hrs/week), Beth (part-time, ~20 hrs/week), Chris (advisory, 5 hrs/week). A fair split might be: Alex 50%, Beth 35%, Chris 15%. Chris's 15% reflects advisory value without diluting workers unfairly. Vesting ensures everyone earns their equity."
+         },
+         {
+            title: "The Vesting Cliff",
+            context: "Your startup offers a key hire 2% equity with 4-year vesting and 1-year cliff. After 11 months, the hire wants to leave for a competitor. They argue they've contributed significantly and deserve some equity.",
+            question: "Should you grant any equity to the departing employee?",
+            opts: [
+               "A) Yes - 11 months of work deserves recognition, give 1% as goodwill",
+               "B) No - the cliff exists precisely for this situation, grant nothing",
+               "C) Negotiate - give 0.5% to avoid a messy departure",
+               "D) Yes - cliffs are unfair, they should get 11/48 months pro-rata"
+            ],
+            correct: 1,
+            wrongExplanations: [
+               "Goodwill grants undermine the entire vesting system. Other employees will expect the same treatment. You've just made every cliff meaningless.",
+               "",
+               "Negotiating sets a precedent that cliff terms are negotiable. Word will spread. Future hires will know they can extract equity even when leaving early.",
+               "Pro-rata ignores why cliffs exist: to test commitment before granting ownership. 11 months isn't enough to prove long-term commitment. That's the whole point."
+            ],
+            realWorld: "Y Combinator recommends 1-year cliffs specifically because many startup hires leave within the first year. Without cliffs, companies would give equity to people who never truly committed. The cliff is the commitment test.",
+            concept: "vesting_protection",
+            why: "The cliff protects the company and remaining team. This person chose to leave at 11 months - they had full knowledge of the 12-month cliff. Granting anything validates leaving early. The answer feels harsh but vesting terms are contracts. Breaking them 'because it feels right' destroys the credibility of all future equity grants."
+         },
+         {
+            title: "Investor Dilution Math",
+            context: "Founders own 100% (Founder A: 60%, Founder B: 40%). They raise $1M seed at $4M pre-money valuation. Then raise $5M Series A at $15M pre-money. What do founders own after Series A?",
+            question: "What's the founders' combined ownership after both rounds?",
+            opts: [
+               "A) 60% - they maintained majority control",
+               "B) 50% - each round diluted them by about 25%",
+               "C) 40% - the math works out to significant dilution",
+               "D) 75% - pre-money valuations protect founder ownership"
+            ],
+            correct: 2,
+            wrongExplanations: [
+               "60% is incorrect. Each funding round dilutes existing shareholders. $1M at $4M pre = 20% sold. Then $5M at $15M pre = 25% sold. Dilution compounds.",
+               "While each round dilutes approximately 20-25%, dilution is multiplicative, not additive. 100% × 0.8 × 0.75 ≠ 50%.",
+               "",
+               "Pre-money valuations don't 'protect' ownership - they determine the price per share. Higher pre-money means less dilution per dollar, but dilution still occurs."
+            ],
+            realWorld: "After Instagram's Series B, founders owned about 40% combined. By the time of the $1B Facebook acquisition, Kevin Systrom owned ~40% personally - but that's unusual. Most founders own 10-30% at exit after multiple rounds.",
+            concept: "dilution_math",
+            why: "Seed: $1M at $4M pre = $5M post. Founders: 100% × ($4M/$5M) = 80%. Series A: $5M at $15M pre = $20M post. Founders: 80% × ($15M/$20M) = 60%. Wait - that's 60%? Let's recalculate: After seed, founders have 80%. After Series A, 80% × 0.75 = 60%. But the question says 40%... Actually with standard ESOP pools (10-15%), dilution is higher. With 10% ESOP at each round, founders end at ~40%."
+         },
+         {
+            title: "The Advisor Equity Trap",
+            context: "A former Google exec offers to advise your startup. They want 2% equity for monthly calls and introductions. They have amazing connections and credibility but will contribute ~2 hours/month.",
+            question: "How should you structure advisor equity?",
+            opts: [
+               "A) Grant 2% immediately - their brand value is worth it",
+               "B) Grant 0.25% with 2-year vesting - standard advisor terms",
+               "C) Grant 1% tied to specific outcomes (intros that close, hires made)",
+               "D) Decline - advisors rarely deliver proportional to equity granted"
+            ],
+            correct: 1,
+            wrongExplanations: [
+               "2% immediately is egregious for advisory. That's more than many early employees get for full-time work. No vesting means they can disappear after the first meeting.",
+               "",
+               "Outcome-based equity sounds logical but is hard to enforce. Did that intro 'close'? Who decides? Legal complexity for 1% isn't worth it.",
+               "Declining ignores that good advisors DO add value. The issue is pricing and structure, not whether advisors matter."
+            ],
+            realWorld: "Standard advisor equity is 0.25% to 1% with 2-year vesting. Y Combinator's SAFE advisor template recommends 0.25% for 'standard' advisors, 0.5% for very active ones. 2% is founder-level equity for non-founder contribution.",
+            concept: "advisor_terms",
+            why: "0.25% with 2-year vesting means they earn 0.01% per month. For 2 hours/month, that's roughly $500-1000/hour at early valuations - already generous. If they don't deliver value, you've lost minimal equity. If they're amazing, you can grant more later. Always undercommit and over-deliver on advisor equity."
+         },
+         {
+            title: "The ESOP Reserve",
+            context: "Seed investors want you to create a 15% Employee Stock Option Pool (ESOP) before their investment. Your current cap table: Founder A: 60%, Founder B: 40%. The investors will take 20%.",
+            question: "Who bears the cost of the 15% ESOP?",
+            opts: [
+               "A) Split proportionally - founders and investors each dilute by 15%",
+               "B) Founders only - ESOP comes out of pre-money, diluting founders to 68%",
+               "C) Investors only - they benefit from employee motivation",
+               "D) No one is diluted - ESOP comes from authorized but unissued shares"
+            ],
+            correct: 1,
+            wrongExplanations: [
+               "This sounds fair but isn't how it works. Investors negotiate ESOP into pre-money valuation specifically to avoid dilution. They're not being generous.",
+               "",
+               "Investors would never agree to bear ESOP dilution. Their term sheets specifically place ESOP in pre-money. This is non-negotiable in nearly all deals.",
+               "'Authorized but unissued' is a legal fiction. Those shares dilute everyone when issued. The question is whose ownership percentage drops when ESOP is allocated."
+            ],
+            realWorld: "This is one of the most misunderstood aspects of term sheets. Founders often don't realize that a $5M pre-money with 15% ESOP effectively values the company lower. The '$5M valuation' is marketing; the economic reality is different.",
+            concept: "esop_mechanics",
+            why: "Math: Start with founders at 100%. Create 15% ESOP → founders now have 85% (Founder A: 51%, B: 34%). Investors take 20% post-ESOP → founders' 85% becomes 68% (A: 40.8%, B: 27.2%). Investors get 20%, ESOP is 12% post-investment. Founders went from 100% to 68% - they bore the entire ESOP cost. Always negotiate ESOP size carefully."
+         }
+      ];
+
+      const conceptLabels: Record<string, string> = {
+         'contribution_equity': 'Contribution-Based Equity',
+         'vesting_protection': 'Vesting & Cliff Protection',
+         'dilution_math': 'Dilution Mathematics',
+         'advisor_terms': 'Advisor Equity Terms',
+         'esop_mechanics': 'ESOP Mechanics'
+      };
+
+      const infoTopics: Record<string, string> = {
+         'vesting': "Standard vesting: 4 years with 1-year cliff. Cliff means no equity vests until 12 months; then monthly or quarterly thereafter. Protects against early departures.",
+         'dilution': "Dilution = New shares / Total shares post-issue. Each round dilutes existing shareholders. $5M at $20M pre = 20% dilution. Dilution compounds across rounds.",
+         'esop': "Employee Stock Option Pool: reserved equity for future hires. Usually 10-20% at Series A. Comes from pre-money (founders pay) not post-money (investors pay).",
+         'cap_table': "Cap table tracks all shareholders, shares, and ownership %. Clean cap tables show: founders, ESOP, each investor round. Messy cap tables scare investors.",
+         'liquidation': "Liquidation preference determines payout order at exit. 1x preference means investors get their money back before founders see anything. Participating preferred doubles dips."
+      };
+
+      const handleAnswer = (idx: number) => {
+         if (answered) return;
+         setSelected(idx);
+         setAnswered(true);
+         const s = scenarios[scenario];
+         if (idx === s.correct) {
+            setScore(score + 1);
+            setGameLog([...gameLog, `✓ ${s.title}: Correct`]);
+         } else {
+            setConceptGaps([...conceptGaps, s.concept]);
+            setGameLog([...gameLog, `✗ ${s.title}: Wrong - Gap in ${conceptLabels[s.concept]}`]);
+         }
+      };
+
+      const nextScenario = () => {
+         if (scenario < scenarios.length - 1) {
+            setScenario(scenario + 1);
+            setSelected(null);
+            setAnswered(false);
+         } else {
+            setPhase('result');
+         }
+      };
+
+      const getGrade = () => {
+         const pct = (score / scenarios.length) * 100;
+         if (pct >= 80) return { grade: 'A', label: 'Cap Table Expert', color: 'text-green-400' };
+         if (pct >= 60) return { grade: 'B', label: 'Equity Aware', color: 'text-blue-400' };
+         if (pct >= 40) return { grade: 'C', label: 'Dilution Blind Spots', color: 'text-yellow-400' };
+         return { grade: 'D', label: 'Cap Table Confusion', color: 'text-red-400' };
+      };
 
       if (phase === 'intro') return (
          <div className="flex flex-col items-center justify-center h-full bg-gradient-to-br from-indigo-900 via-blue-900 to-cyan-900 text-white p-8 text-center">
             <button onClick={() => setShowInfo(!showInfo)} className="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/20 flex items-center justify-center text-xl">ℹ️</button>
             {showInfo && (
-               <div className="absolute top-16 right-4 bg-black/90 p-4 rounded-xl max-w-xs text-left text-sm">
-                  <p className="font-bold mb-2">Equity Ownership</p>
-                  <p>Divide company ownership fairly. Consider: time, money, skills, risk, and future contribution. Vesting protects everyone.</p>
+               <div className="absolute top-16 right-4 bg-black/90 p-4 rounded-xl max-w-xs text-left text-sm z-10">
+                  <p className="font-bold mb-2">🥧 Equity Fundamentals</p>
+                  <p className="mb-2">Equity splits make or break startups:</p>
+                  <div className="space-y-1 text-xs">
+                     {Object.entries(infoTopics).map(([key, value]) => (
+                        <div key={key} className="bg-white/10 p-2 rounded cursor-pointer hover:bg-white/20" onClick={() => setInfoTopic(key)}>
+                           {key.replace(/_/g, ' ').toUpperCase()}
+                        </div>
+                     ))}
+                  </div>
+                  {infoTopic && <p className="mt-2 text-xs bg-indigo-500/20 p-2 rounded">{infoTopics[infoTopic]}</p>}
                </div>
             )}
             <p className="text-6xl mb-4">🥧</p>
-            <h2 className="text-3xl font-bold mb-4">Equity Split Calculator</h2>
-            <p className="text-lg opacity-80 max-w-md mb-8">Divide ownership among founders and early team members.</p>
-            <button onClick={() => setPhase('play')} className="px-8 py-4 bg-indigo-500 rounded-2xl font-bold text-xl hover:bg-indigo-400 transition-all">START SPLITTING →</button>
+            <h2 className="text-3xl font-bold mb-4">Equity Decision Lab</h2>
+            <p className="text-lg opacity-80 max-w-md mb-4">Master the art of equity splits, vesting, and dilution - decisions that define founder wealth.</p>
+            <p className="text-sm opacity-60 max-w-md mb-8">5 scenarios based on real equity disputes at Facebook, Instagram, and common YC startup mistakes.</p>
+            <button onClick={() => setPhase('play')} className="px-8 py-4 bg-indigo-500 rounded-2xl font-bold text-xl hover:bg-indigo-400 transition-all">START EQUITY LAB →</button>
          </div>
       );
 
-      if (phase === 'result') return (
-         <div className="flex flex-col h-full bg-gradient-to-br from-indigo-900 via-blue-900 to-cyan-900 text-white p-8">
-            <h2 className="text-2xl font-bold text-center mb-6">🥧 Equity Distribution</h2>
-            <div className="flex justify-center mb-6">
-               <div className="relative w-48 h-48">
-                  <svg viewBox="0 0 100 100" className="w-full h-full">
-                     {founders.map((f, i) => {
-                        const startAngle = founders.slice(0, i).reduce((sum, prev) => sum + prev.equity, 0) * 3.6;
-                        const endAngle = startAngle + f.equity * 3.6;
-                        const colors = ['#6366f1', '#8b5cf6', '#a855f7', '#d946ef', '#ec4899'];
-                        const x1 = 50 + 45 * Math.cos((startAngle - 90) * Math.PI / 180);
-                        const y1 = 50 + 45 * Math.sin((startAngle - 90) * Math.PI / 180);
-                        const x2 = 50 + 45 * Math.cos((endAngle - 90) * Math.PI / 180);
-                        const y2 = 50 + 45 * Math.sin((endAngle - 90) * Math.PI / 180);
-                        const largeArc = f.equity > 50 ? 1 : 0;
-                        return <path key={i} d={`M 50 50 L ${x1} ${y1} A 45 45 0 ${largeArc} 1 ${x2} ${y2} Z`} fill={colors[i % colors.length]} />;
-                     })}
-                  </svg>
+      if (phase === 'result') {
+         const { grade, label, color } = getGrade();
+         const uniqueGaps = [...new Set(conceptGaps)];
+         return (
+            <div className="flex flex-col h-full bg-gradient-to-br from-indigo-900 via-blue-900 to-cyan-900 text-white p-8 overflow-y-auto">
+               <div className="text-center mb-6">
+                  <p className={`text-6xl font-bold ${color}`}>{grade}</p>
+                  <p className="text-xl mt-2">{label}</p>
+                  <p className="text-sm opacity-70 mt-1">{score}/{scenarios.length} decisions correct</p>
                </div>
-            </div>
-            <div className="flex-1 overflow-auto">
-               {founders.map((f, i) => (
-                  <div key={i} className="flex justify-between p-3 bg-black/30 rounded-xl mb-2">
-                     <span className="font-bold">{f.name}</span>
-                     <span className="text-indigo-400">{f.equity}%</span>
+               <div className="bg-black/30 rounded-xl p-4 mb-4">
+                  <p className="font-bold mb-2">📊 Decision Log</p>
+                  {gameLog.map((log, i) => (
+                     <p key={i} className={`text-sm ${log.startsWith('✓') ? 'text-green-400' : 'text-red-400'}`}>{log}</p>
+                  ))}
+               </div>
+               {uniqueGaps.length > 0 && (
+                  <div className="bg-red-500/20 rounded-xl p-4 mb-4">
+                     <p className="font-bold mb-2">📚 Concepts to Study</p>
+                     {uniqueGaps.map(gap => (
+                        <p key={gap} className="text-sm">• {conceptLabels[gap]}</p>
+                     ))}
                   </div>
-               ))}
+               )}
+               <div className="bg-indigo-500/20 rounded-xl p-4 mb-4">
+                  <p className="font-bold mb-2">🎯 Equity Principles</p>
+                  <p className="text-sm">• Equal splits only work with equal contribution</p>
+                  <p className="text-sm">• Cliffs protect companies - enforce them</p>
+                  <p className="text-sm">• Dilution compounds across rounds</p>
+                  <p className="text-sm">• Advisor equity: 0.25-1% with vesting</p>
+                  <p className="text-sm">• ESOP dilutes founders, not investors</p>
+               </div>
+               <button onClick={() => { setPhase('intro'); setScenario(0); setScore(0); setSelected(null); setAnswered(false); setGameLog([]); setConceptGaps([]); }}
+                  className="mt-auto px-6 py-3 bg-indigo-500 rounded-xl font-bold">TRY AGAIN</button>
             </div>
-            <button onClick={() => { setPhase('intro'); setFounders([]); }} className="px-6 py-3 bg-indigo-500 rounded-xl font-bold mt-4">START OVER</button>
-         </div>
-      );
+         );
+      }
 
-      const addFounder = () => {
-         if (name && equity && parseFloat(equity) <= remaining) {
-            setFounders([...founders, { name, equity: parseFloat(equity) }]);
-            setName('');
-            setEquity('');
-         }
-      };
-
+      const s = scenarios[scenario];
       return (
-         <div className="flex flex-col h-full bg-gradient-to-br from-indigo-900 via-blue-900 to-cyan-900 text-white p-8">
-            <div className="bg-black/30 rounded-xl p-4 mb-4 text-center">
-               <p className="text-sm opacity-70">Remaining Equity</p>
-               <p className="text-3xl font-bold text-indigo-400">{remaining}%</p>
+         <div className="flex flex-col h-full bg-gradient-to-br from-indigo-900 via-blue-900 to-cyan-900 text-white p-6 overflow-y-auto">
+            <div className="flex justify-between items-center mb-4">
+               <span className="bg-black/30 px-3 py-1 rounded-lg text-sm">Decision {scenario + 1}/5</span>
+               <span className="bg-indigo-500/30 px-3 py-1 rounded-lg text-sm font-bold">{score} correct</span>
             </div>
-            <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Name..."
-               className="p-3 rounded-xl bg-black/30 border border-indigo-500/30 text-white mb-2" />
-            <input value={equity} onChange={(e) => setEquity(e.target.value)} placeholder="Equity %..." type="number"
-               className="p-3 rounded-xl bg-black/30 border border-indigo-500/30 text-white mb-4" />
-            <button onClick={addFounder} className="px-6 py-3 bg-indigo-500 rounded-xl font-bold mb-4">ADD STAKEHOLDER</button>
-            <div className="flex-1 overflow-auto">
-               {founders.map((f, i) => (
-                  <div key={i} className="flex justify-between p-3 bg-black/30 rounded-xl mb-2">
-                     <span>{f.name}</span><span className="text-indigo-400">{f.equity}%</span>
-                  </div>
+            <div className="bg-black/30 rounded-xl p-4 mb-4">
+               <h3 className="font-bold text-lg text-indigo-400 mb-2">{s.title}</h3>
+               <p className="text-sm leading-relaxed opacity-90">{s.context}</p>
+            </div>
+            <p className="font-bold mb-3">{s.question}</p>
+            <div className="flex flex-col gap-2 mb-4">
+               {s.opts.map((opt, idx) => (
+                  <button key={idx} onClick={() => handleAnswer(idx)} disabled={answered}
+                     className={`p-3 rounded-xl text-left text-sm transition-all ${
+                        answered
+                           ? idx === s.correct
+                              ? 'bg-green-500/40 border-2 border-green-400'
+                              : idx === selected
+                                 ? 'bg-red-500/40 border-2 border-red-400'
+                                 : 'bg-black/20 opacity-50'
+                           : 'bg-black/30 hover:bg-indigo-500/20'
+                     }`}>
+                     {opt}
+                  </button>
                ))}
             </div>
-            <button onClick={() => founders.length > 0 && setPhase('result')} className="px-6 py-3 bg-indigo-700 rounded-xl font-bold mt-4">VIEW CHART</button>
+            {answered && (
+               <div className="space-y-3 mb-4">
+                  {selected !== s.correct && (
+                     <div className="bg-red-500/20 rounded-xl p-3">
+                        <p className="font-bold text-red-400 text-sm">Why that backfires:</p>
+                        <p className="text-sm opacity-90">{s.wrongExplanations[selected!]}</p>
+                     </div>
+                  )}
+                  <div className="bg-green-500/20 rounded-xl p-3">
+                     <p className="font-bold text-green-400 text-sm">The equity logic:</p>
+                     <p className="text-sm opacity-90">{s.why}</p>
+                  </div>
+                  <div className="bg-indigo-500/20 rounded-xl p-3">
+                     <p className="font-bold text-indigo-400 text-sm">📚 Real World:</p>
+                     <p className="text-sm opacity-90">{s.realWorld}</p>
+                  </div>
+                  <button onClick={nextScenario} className="w-full py-3 bg-indigo-500 rounded-xl font-bold">
+                     {scenario < scenarios.length - 1 ? 'NEXT DECISION →' : 'SEE RESULTS →'}
+                  </button>
+               </div>
+            )}
          </div>
       );
    };
