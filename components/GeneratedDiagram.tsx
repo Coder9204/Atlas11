@@ -29103,42 +29103,434 @@ const GeneratedDiagram: React.FC<DiagramProps> = ({ type, data, title }) => {
       const [phase, setPhase] = useState<'intro' | 'play' | 'result'>('intro');
       const [showInfo, setShowInfo] = useState(false);
       const [infoTopic, setInfoTopic] = useState<string | null>(null);
-      const [businessType, setBusinessType] = useState<string | null>(null);
-      const [selectedPermits, setSelectedPermits] = useState<string[]>([]);
-      const [budget, setBudget] = useState(5000);
+      const [scenario, setScenario] = useState(0);
+      const [score, setScore] = useState(0);
+      const [selected, setSelected] = useState<number | null>(null);
+      const [answered, setAnswered] = useState(false);
+      const [gameLog, setGameLog] = useState<string[]>([]);
+      const [conceptGaps, setConceptGaps] = useState<string[]>([]);
 
-      const businessTypes = [
-         { id: 'restaurant', name: 'Restaurant', icon: '🍽️', required: ['business_license', 'health', 'food_handler', 'fire'] },
-         { id: 'retail', name: 'Retail Store', icon: '🛍️', required: ['business_license', 'sales_tax', 'signage'] },
-         { id: 'construction', name: 'Construction', icon: '🏗️', required: ['business_license', 'contractor', 'bonding'] },
-         { id: 'homebased', name: 'Home-Based', icon: '🏠', required: ['business_license', 'home_occupation'] },
+      // Real compliance scenarios with consequences
+      const scenarios = [
+         {
+            title: "The Food Truck Launch",
+            situation: "You're launching a food truck selling tacos. You got your business license and food handler permits. Opening day arrives. The health inspector shows up.",
+            question: "What permit are you MOST LIKELY missing that could shut you down immediately?",
+            opts: [
+               'Sales Tax Permit - need to collect taxes',
+               'Mobile Food Vendor Permit - specific to food trucks',
+               'Fire Extinguisher Certificate - safety requirement',
+               'Music License - playing radio while serving'
+            ],
+            correct: 1,
+            wrongExplanations: [
+               "Sales tax permits are important but inspectors don't check for them on opening day. The state catches this later during tax audits, not health inspections.",
+               "", // Correct
+               "Fire extinguisher certs are part of the mobile vendor permit inspection, not a separate permit in most jurisdictions.",
+               "Music licenses (ASCAP/BMI) are for businesses, but no inspector checks this on opening day. This becomes an issue if you're caught, but not from health inspectors."
+            ],
+            realWorld: "A LA food truck owner was fined $5,000 and shut down for 2 weeks for operating with a restaurant permit instead of a mobile food vendor permit—different inspection requirements, different commissary rules.",
+            concept: "industry_specific",
+            why: "Food trucks need MOBILE-specific permits, not restaurant permits. Requirements include: commissary agreement (where you prep/clean), specific route permits (some cities), and mobile vendor inspections. Standard food permits don't cover mobile operations."
+         },
+         {
+            title: "The Home Bakery Surprise",
+            situation: "You're baking and selling cookies from home. You've been operating for 6 months with just a home occupation permit and business license. A neighbor complains about delivery trucks.",
+            question: "What's the REAL compliance issue that could shut you down?",
+            opts: [
+               'The neighbor complaint about trucks - noise violation',
+               'Missing cottage food license - home food production laws',
+               'Zoning violation - residential zone restrictions',
+               'No health inspection - food safety requirement'
+            ],
+            correct: 1,
+            wrongExplanations: [
+               "Truck noise is a nuisance complaint, not a permit issue. Code enforcement might give a warning, but it won't shut down your business.",
+               "", // Correct
+               "Zoning is secondary here. Most residential zones allow home occupations—the issue is the TYPE of home business (food production has special rules).",
+               "Cottage food operations are actually EXEMPT from health inspections in most states—that's the whole point of cottage food laws. But you need the cottage food license first."
+            ],
+            realWorld: "A Texas home baker was fined $25,000 for selling without a cottage food license. She had a home occupation permit but didn't know cottage food was a separate requirement.",
+            concept: "cottage_food",
+            why: "Cottage food laws allow home food production but with strict limits: specific foods only (usually baked goods, jams, not meat/dairy), annual sales caps ($25K-$75K depending on state), labeling requirements, and registration. Regular business license doesn't cover this."
+         },
+         {
+            title: "The Contractor Nightmare",
+            situation: "You're a general contractor hired to remodel a kitchen ($40K job). You have your contractor's license and business license. Midway through, a city inspector arrives.",
+            question: "What permit issue could result in the homeowner being forced to TEAR OUT your completed work?",
+            opts: [
+               'Missing workers comp insurance for your crew',
+               'No building permit pulled for the project',
+               'Expired contractor license - needs annual renewal',
+               'Wrong contractor class - residential vs commercial'
+            ],
+            correct: 1,
+            wrongExplanations: [
+               "Workers comp is serious (you can be sued), but inspectors don't check this. It's an insurance/labor issue, not a building inspection issue.",
+               "", // Correct
+               "Expired license is bad, but work done under an expired license is usually grandfathered. The city won't tear out work for this—they'll fine you and stop future work.",
+               "Wrong class violations result in fines and license issues, not demolition of completed work."
+            ],
+            realWorld: "A $200K kitchen remodel in California was ordered demolished because no permits were pulled. The drywall hid unpermitted electrical work. Homeowner sued contractor for $350K including demolition costs.",
+            concept: "building_permits",
+            why: "Building permits aren't just paperwork—they ensure code compliance through inspections at each stage. Unpermitted work: (1) must be exposed for inspection or torn out, (2) voids insurance claims, (3) kills home sales, (4) creates contractor liability for FULL reconstruction."
+         },
+         {
+            title: "The Retail Pop-Up Trap",
+            situation: "You're opening a 3-day pop-up shop in a vacant retail space. The landlord says 'just set up, it's temporary.' You bring inventory and start selling.",
+            question: "What's the MOST LIKELY reason you'll get shut down on day one?",
+            opts: [
+               'No sales tax permit - can\'t legally collect tax',
+               'Temporary Use Permit from the city - pop-ups need authorization',
+               'Fire marshal approval - occupancy limits',
+               'No ADA compliance - accessibility requirements'
+            ],
+            correct: 1,
+            wrongExplanations: [
+               "Sales tax permits are state-level and don't trigger immediate shutdown. You'll face penalties later, but enforcement is slow.",
+               "", // Correct
+               "Fire marshal checks are typically part of permanent occupancy permits, not pop-up enforcement. They might check after complaints.",
+               "ADA compliance is a lawsuit risk, not a permit issue. No inspector shuts you down for ADA on day one—it's civil liability."
+            ],
+            realWorld: "A pop-up holiday market in Denver was shut down 2 hours after opening—vendors had business licenses but no temporary use permits. City lost $50K in fees they would have collected if vendors had applied.",
+            concept: "temporary_permits",
+            why: "Pop-ups/temporary events need: (1) Temporary Use Permit from city planning, (2) Special event permit if selling food/alcohol, (3) Landlord written permission (verbal isn't enough), (4) Liability insurance naming the city. 'Temporary' doesn't mean 'no permits.'"
+         },
+         {
+            title: "The SaaS Startup Surprise",
+            situation: "You're running a profitable SaaS company from home. You have a home occupation permit and business license. You've hired 3 remote employees. An auditor calls about 'business personal property tax.'",
+            question: "What compliance issue do most tech startups miss that triggers this audit?",
+            opts: [
+               'Not paying self-employment tax on profits',
+               'Business Personal Property Tax on computers/equipment',
+               'Remote employee work permits in their states',
+               'Software sales tax collection requirements'
+            ],
+            correct: 1,
+            wrongExplanations: [
+               "Self-employment tax is an IRS issue, not a local auditor issue. This wouldn't trigger a call from a 'business personal property' auditor.",
+               "", // Correct
+               "Remote employee work permits aren't typically a thing (employees work under your business license). Nexus/tax registration in their states is, but that's not 'personal property tax.'",
+               "SaaS sales tax is complex but it's state-level, not what a 'business personal property tax' auditor is calling about."
+            ],
+            realWorld: "A tech startup in Texas was hit with $12,000 in back taxes plus penalties for never filing Business Personal Property Tax returns on their computers, servers, and office equipment.",
+            concept: "property_tax",
+            why: "Business Personal Property Tax applies to business equipment (computers, furniture, machinery) in most states. It's separate from real estate tax. Many home-based businesses miss this because they think 'home office' means residential tax treatment. Equipment used for business is taxed as business property."
+         }
       ];
-      const permits = [
-         { id: 'business_license', name: 'Business License', cost: 100, desc: 'Required for all' },
-         { id: 'sales_tax', name: 'Sales Tax Permit', cost: 0, desc: 'Selling goods' },
-         { id: 'health', name: 'Health Permit', cost: 500, desc: 'Food service' },
-         { id: 'food_handler', name: 'Food Handler Card', cost: 50, desc: 'Food workers' },
-         { id: 'signage', name: 'Sign Permit', cost: 200, desc: 'Exterior signs' },
-         { id: 'fire', name: 'Fire Inspection', cost: 150, desc: 'Public spaces' },
-         { id: 'contractor', name: 'Contractor License', cost: 800, desc: 'Construction' },
-         { id: 'bonding', name: 'Surety Bond', cost: 1000, desc: 'Contractor guarantee' },
-         { id: 'home_occupation', name: 'Home Occupation', cost: 75, desc: 'Home business' },
-         { id: 'liquor', name: 'Liquor License', cost: 2000, desc: 'Alcohol sales' },
-      ];
+
       const infoTopics: Record<string, { title: string; content: string }> = {
-         license: { title: "Business Licenses", content: "Almost every business needs a basic license. Costs $50-500. Annual renewal. Operating without one = fines." },
-         zoning: { title: "Zoning", content: "Zoning laws control what businesses can operate where. Check before signing a lease!" },
-         industry: { title: "Industry Permits", content: "Some industries need special permits: Food = health, Construction = contractor license, Alcohol = liquor license." },
+         business_license: {
+            title: "Business License Basics",
+            content: "Required in almost every city/county. Costs $50-500. Annual renewal. Operating without = daily fines ($100-500/day in some cities). Usually tied to your physical address—moving means new license."
+         },
+         zoning: {
+            title: "Zoning & Land Use",
+            content: "Controls WHAT businesses can operate WHERE. Home occupations have limits (no customers, no employees, no signage in some zones). Changing use (retail to restaurant) requires zoning approval. Check BEFORE signing a lease."
+         },
+         industry_permits: {
+            title: "Industry-Specific Permits",
+            content: "Food = Health permits + cottage food or commercial kitchen. Alcohol = Liquor license (can take 6+ months). Construction = Contractor license + building permits per project. Childcare = State licensing. Each industry has hidden requirements."
+         },
+         building_permits: {
+            title: "Building & Construction Permits",
+            content: "Required for: electrical, plumbing, structural changes, HVAC. NOT just for new construction—renovations need them too. Unpermitted work = tear out + redo. Kills home sales. Voids insurance claims."
+         },
+         state_federal: {
+            title: "State & Federal Requirements",
+            content: "EIN (federal) = free, apply online. State tax registration = required to collect sales tax. Professional licenses (doctors, lawyers, contractors) = state-level. Industry regulations (FDA, EPA, OSHA) = federal. Layer of requirements varies by business."
+         },
+         compliance_timeline: {
+            title: "Permit Timeline Reality",
+            content: "Business license: 1-2 weeks. Health permits: 2-8 weeks. Liquor license: 3-12 months (!). Building permits: 2-12 weeks. Zoning changes: 3-6 months. Plan backwards from your launch date. Rush fees exist but are expensive."
+         }
       };
-      useEffect(() => { if (infoTopic && infoTopics[infoTopic]) setShowInfo(true); }, [infoTopic]);
-      const startGame = () => { setPhase('play'); setBusinessType(null); setSelectedPermits([]); setBudget(5000); };
-      const togglePermit = (id: string) => { const p = permits.find(pt => pt.id === id); if (!p) return; if (selectedPermits.includes(id)) { setSelectedPermits(prev => prev.filter(x => x !== id)); setBudget(prev => prev + p.cost); } else if (budget >= p.cost) { setSelectedPermits(prev => [...prev, id]); setBudget(prev => prev - p.cost); } };
-      const getScore = () => { if (!businessType) return 0; const biz = businessTypes.find(b => b.id === businessType); if (!biz) return 0; const hasAll = biz.required.every(r => selectedPermits.includes(r)); const extras = selectedPermits.filter(p => !biz.required.includes(p)).length; let s = hasAll ? 80 : (selectedPermits.filter(p => biz.required.includes(p)).length / biz.required.length) * 60; s -= extras * 5; return Math.max(0, Math.min(100, Math.round(s + (hasAll ? 20 : 0)))); };
-      const getGrade = () => { const s = getScore(); if (s >= 90) return { letter: 'A', label: 'Compliant', color: 'text-green-400' }; if (s >= 70) return { letter: 'B', label: 'Mostly OK', color: 'text-blue-400' }; if (s >= 50) return { letter: 'C', label: 'Gaps Exist', color: 'text-yellow-400' }; return { letter: 'D', label: 'Non-Compliant', color: 'text-red-400' }; };
 
-      if (phase === 'intro') return (<div className="w-full h-full flex flex-col bg-gradient-to-br from-sky-900 via-cyan-900 to-slate-900 text-white p-4 overflow-auto"><div className="text-center mb-4"><h1 className="text-2xl font-bold mb-2">📋 Permits & Licenses</h1><p className="text-sky-300 text-sm">Get your business compliant</p></div><div className="bg-black/30 rounded-xl p-4 mb-4"><h2 className="text-lg font-bold mb-3 text-sky-400">📋 How It Works</h2><div className="space-y-2 text-sm"><p>• Choose your <span className="text-white font-bold">business type</span></p><p>• Select required <span className="text-sky-400">permits</span></p><p>• Budget: <span className="text-green-400">$5,000</span></p></div></div><div className="grid grid-cols-4 gap-2 mb-4 text-center text-xs">{businessTypes.map(b => (<div key={b.id} className="bg-black/30 rounded-lg p-2"><span className="text-lg">{b.icon}</span><p className="text-slate-300">{b.name}</p></div>))}</div><div className="flex flex-wrap gap-2 mb-4">{Object.keys(infoTopics).map(key => (<button key={key} onClick={() => setInfoTopic(key)} className="text-xs bg-sky-500/20 px-2 py-1 rounded-full text-sky-300">ℹ️ {infoTopics[key].title}</button>))}</div><button onClick={startGame} className="w-full py-3 bg-gradient-to-r from-sky-600 to-cyan-600 rounded-xl font-bold">▶️ START</button>{showInfo && infoTopic && infoTopics[infoTopic] && (<div className="absolute inset-0 bg-black/80 flex items-center justify-center p-4 z-50" onClick={() => { setShowInfo(false); setInfoTopic(null); }}><div className="bg-slate-800 rounded-xl p-4 max-w-md" onClick={e => e.stopPropagation()}><h3 className="text-lg font-bold text-sky-400 mb-2">{infoTopics[infoTopic].title}</h3><p className="text-sm text-slate-300">{infoTopics[infoTopic].content}</p><button onClick={() => { setShowInfo(false); setInfoTopic(null); }} className="mt-4 w-full py-2 bg-sky-600 rounded-lg">Got it!</button></div></div>)}</div>);
-      if (phase === 'result') { const grade = getGrade(); const biz = businessTypes.find(b => b.id === businessType); const required = biz?.required || []; const missing = required.filter(r => !selectedPermits.includes(r)); const extras = selectedPermits.filter(p => !required.includes(p)); return (<div className="w-full h-full flex flex-col bg-gradient-to-br from-sky-900 via-cyan-900 to-slate-900 text-white p-4 overflow-auto"><div className="text-center mb-4"><div className={`text-6xl font-bold ${grade.color}`}>{grade.letter}</div><div className="text-xl font-bold">{grade.label}</div><div className="text-sky-400">Score: {getScore()}%</div></div><div className="bg-black/30 rounded-xl p-3 mb-3"><h3 className="font-bold text-sky-400 mb-2">📊 Check</h3>{missing.length > 0 && (<div className="mb-2"><span className="text-red-400 text-sm">Missing:</span>{missing.map(m => <span key={m} className="ml-2 text-xs bg-red-500/30 px-2 py-1 rounded">{permits.find(p => p.id === m)?.name}</span>)}</div>)}{extras.length > 0 && (<div><span className="text-yellow-400 text-sm">Unnecessary:</span>{extras.map(u => <span key={u} className="ml-2 text-xs bg-yellow-500/30 px-2 py-1 rounded">{permits.find(p => p.id === u)?.name}</span>)}</div>)}{missing.length === 0 && extras.length === 0 && <p className="text-green-400">✓ Perfect!</p>}</div><div className="bg-black/30 rounded-xl p-3 mb-4"><h3 className="font-bold text-sky-400 mb-2">💡 Key Insight</h3><p className="text-sm text-slate-300">Every business type has specific permit requirements. Missing = fines. Unnecessary = wasted money.</p></div><button onClick={startGame} className="w-full py-3 bg-gradient-to-r from-sky-600 to-cyan-600 rounded-xl font-bold">🔄 TRY AGAIN</button></div>); }
-      return (<div className="w-full h-full flex flex-col bg-gradient-to-br from-sky-900 via-cyan-900 to-slate-900 text-white overflow-hidden">{showInfo && infoTopic && infoTopics[infoTopic] && (<div className="absolute inset-0 bg-black/80 flex items-center justify-center p-4 z-50" onClick={() => { setShowInfo(false); setInfoTopic(null); }}><div className="bg-slate-800 rounded-xl p-4 max-w-md" onClick={e => e.stopPropagation()}><h3 className="text-lg font-bold text-sky-400 mb-2">{infoTopics[infoTopic].title}</h3><p className="text-sm text-slate-300">{infoTopics[infoTopic].content}</p><button onClick={() => { setShowInfo(false); setInfoTopic(null); }} className="mt-4 w-full py-2 bg-sky-600 rounded-lg">Got it!</button></div></div>)}<div className="p-3 bg-black/30 border-b border-sky-500/30"><div className="flex justify-between items-center"><span className="font-bold">📋 Permits</span><span className="text-green-400">${budget}</span></div></div><div className="flex-1 p-3 overflow-auto">{!businessType ? (<div className="space-y-3"><h3 className="font-bold">Select business type:</h3>{businessTypes.map(b => (<button key={b.id} onClick={() => setBusinessType(b.id)} className="w-full bg-black/30 rounded-lg p-3 text-left hover:bg-sky-500/20"><span className="text-xl mr-2">{b.icon}</span><span className="font-bold">{b.name}</span></button>))}</div>) : (<div className="space-y-2"><div className="flex items-center gap-2 mb-3"><span className="text-xl">{businessTypes.find(b => b.id === businessType)?.icon}</span><span className="font-bold">{businessTypes.find(b => b.id === businessType)?.name}</span></div><p className="text-sm text-slate-400 mb-2">Select permits:</p>{permits.map(p => (<div key={p.id} onClick={() => togglePermit(p.id)} className={`rounded-lg p-2 cursor-pointer border-2 ${selectedPermits.includes(p.id) ? 'border-green-500 bg-green-500/20' : 'border-transparent bg-black/30'}`}><div className="flex justify-between items-center"><span className="font-bold text-sm">{p.name}</span><span className="text-xs text-green-400">{p.cost === 0 ? 'Free' : `$${p.cost}`}</span></div><p className="text-xs text-slate-400">{p.desc}</p></div>))}</div>)}</div>{businessType && (<div className="p-3 bg-black/30 border-t border-sky-500/30"><button onClick={() => setPhase('result')} className="w-full py-3 bg-gradient-to-r from-sky-600 to-cyan-600 rounded-xl font-bold">✓ CHECK</button></div>)}</div>);
+      useEffect(() => { if (infoTopic && infoTopics[infoTopic]) setShowInfo(true); }, [infoTopic]);
+
+      const startGame = () => {
+         setPhase('play');
+         setScenario(0);
+         setScore(0);
+         setSelected(null);
+         setAnswered(false);
+         setGameLog([]);
+         setConceptGaps([]);
+      };
+
+      const answer = (idx: number) => {
+         if (answered) return;
+         setSelected(idx);
+         setAnswered(true);
+         const s = scenarios[scenario];
+         const isCorrect = idx === s.correct;
+         if (isCorrect) {
+            setScore(prev => prev + 20);
+            setGameLog(prev => [...prev, `✓ ${s.title}: Understood ${s.concept}`]);
+         } else {
+            setConceptGaps(prev => prev.includes(s.concept) ? prev : [...prev, s.concept]);
+            setGameLog(prev => [...prev, `✗ ${s.title}: Gap in ${s.concept}`]);
+         }
+      };
+
+      const next = () => {
+         if (scenario >= scenarios.length - 1) {
+            setPhase('result');
+         } else {
+            setScenario(prev => prev + 1);
+            setSelected(null);
+            setAnswered(false);
+         }
+      };
+
+      const getGrade = () => {
+         const pct = (score / (scenarios.length * 20)) * 100;
+         if (pct >= 90) return { letter: 'A', label: 'Compliance Expert', color: 'text-green-400' };
+         if (pct >= 70) return { letter: 'B', label: 'Mostly Compliant', color: 'text-blue-400' };
+         if (pct >= 50) return { letter: 'C', label: 'Risky Gaps', color: 'text-yellow-400' };
+         return { letter: 'D', label: 'Violation Risk', color: 'text-red-400' };
+      };
+
+      const conceptLabels: Record<string, string> = {
+         industry_specific: "Industry-Specific Permit Requirements",
+         cottage_food: "Cottage Food & Home Business Laws",
+         building_permits: "Building Permits & Inspections",
+         temporary_permits: "Temporary Use & Pop-Up Permits",
+         property_tax: "Business Personal Property Tax"
+      };
+
+      // INTRO PHASE
+      if (phase === 'intro') return (
+         <div className="w-full h-full flex flex-col bg-gradient-to-br from-sky-900 via-cyan-900 to-slate-900 text-white p-4 overflow-auto">
+            <div className="text-center mb-4">
+               <h1 className="text-2xl font-bold mb-2">🏛️ Compliance Crisis Simulator</h1>
+               <p className="text-sky-300 text-sm">The permits you don't know about will shut you down.</p>
+            </div>
+
+            <div className="bg-black/30 rounded-xl p-4 mb-4">
+               <h2 className="text-lg font-bold mb-3 text-sky-400">⚠️ Why This Matters</h2>
+               <div className="space-y-2 text-sm text-slate-300">
+                  <p>• <span className="text-red-400 font-bold">30%</span> of small businesses face permit violations in year one</p>
+                  <p>• <span className="text-yellow-400 font-bold">$10,000+</span> average cost of compliance failures (fines + remediation)</p>
+                  <p>• <span className="text-green-400 font-bold">Hidden permits</span> vary by industry, location, and business type</p>
+               </div>
+            </div>
+
+            <div className="bg-black/30 rounded-xl p-4 mb-4">
+               <h2 className="text-lg font-bold mb-3 text-sky-400">🎯 How This Works</h2>
+               <div className="space-y-2 text-sm">
+                  <p>• <span className="text-white font-bold">5 real compliance scenarios</span> entrepreneurs face</p>
+                  <p>• Identify <span className="text-yellow-400">hidden permit requirements</span> that cause shutdowns</p>
+                  <p>• Learn <span className="text-cyan-400">real consequences</span> and how to avoid them</p>
+                  <p>• Discover <span className="text-red-400">permits you didn't know existed</span></p>
+               </div>
+            </div>
+
+            <div className="flex flex-wrap gap-2 mb-4">
+               {Object.keys(infoTopics).map(key => (
+                  <button
+                     key={key}
+                     onClick={() => setInfoTopic(key)}
+                     className="text-xs bg-sky-500/20 px-2 py-1 rounded-full text-sky-300 hover:bg-sky-500/30"
+                  >
+                     ℹ️ {infoTopics[key].title.split(' ').slice(0, 2).join(' ')}
+                  </button>
+               ))}
+            </div>
+
+            <button onClick={startGame} className="w-full py-3 bg-gradient-to-r from-sky-600 to-cyan-600 rounded-xl font-bold text-lg">
+               ▶️ BEGIN SIMULATION
+            </button>
+
+            {showInfo && infoTopic && infoTopics[infoTopic] && (
+               <div className="absolute inset-0 bg-black/80 flex items-center justify-center p-4 z-50" onClick={() => { setShowInfo(false); setInfoTopic(null); }}>
+                  <div className="bg-slate-800 rounded-xl p-4 max-w-md" onClick={e => e.stopPropagation()}>
+                     <h3 className="text-lg font-bold text-sky-400 mb-2">{infoTopics[infoTopic].title}</h3>
+                     <p className="text-sm text-slate-300 leading-relaxed">{infoTopics[infoTopic].content}</p>
+                     <button onClick={() => { setShowInfo(false); setInfoTopic(null); }} className="mt-4 w-full py-2 bg-sky-600 rounded-lg font-bold">Got it!</button>
+                  </div>
+               </div>
+            )}
+         </div>
+      );
+
+      // RESULT PHASE
+      if (phase === 'result') {
+         const grade = getGrade();
+         return (
+            <div className="w-full h-full flex flex-col bg-gradient-to-br from-sky-900 via-cyan-900 to-slate-900 text-white p-4 overflow-auto">
+               <div className="text-center mb-4">
+                  <div className={`text-6xl font-bold ${grade.color}`}>{grade.letter}</div>
+                  <div className="text-xl font-bold">{grade.label}</div>
+                  <div className="text-sky-400">Score: {score}/{scenarios.length * 20}</div>
+               </div>
+
+               {conceptGaps.length > 0 && (
+                  <div className="bg-red-900/30 border border-red-500/50 rounded-xl p-3 mb-3">
+                     <h3 className="font-bold text-red-400 mb-2">📚 Compliance Gaps to Research</h3>
+                     <div className="space-y-1">
+                        {conceptGaps.map((gap, i) => (
+                           <div key={i} className="flex items-center gap-2 text-sm">
+                              <span className="text-red-400">→</span>
+                              <span className="text-slate-300">{conceptLabels[gap] || gap}</span>
+                              <button
+                                 onClick={() => {
+                                    const topic = gap === 'industry_specific' ? 'industry_permits' :
+                                                  gap === 'cottage_food' ? 'zoning' :
+                                                  gap === 'building_permits' ? 'building_permits' :
+                                                  gap === 'temporary_permits' ? 'zoning' : 'state_federal';
+                                    setInfoTopic(topic);
+                                 }}
+                                 className="text-xs text-sky-400 underline"
+                              >
+                                 Learn
+                              </button>
+                           </div>
+                        ))}
+                     </div>
+                  </div>
+               )}
+
+               {conceptGaps.length === 0 && (
+                  <div className="bg-green-900/30 border border-green-500/50 rounded-xl p-3 mb-3">
+                     <h3 className="font-bold text-green-400 mb-2">🎉 Compliance Expert!</h3>
+                     <p className="text-sm text-slate-300">You understand the hidden permit requirements that catch most entrepreneurs. You know to look beyond basic business licenses.</p>
+                  </div>
+               )}
+
+               <div className="bg-black/30 rounded-xl p-3 mb-3 max-h-32 overflow-auto">
+                  <h3 className="font-bold text-sky-400 mb-2">📋 Session Log</h3>
+                  {gameLog.map((log, i) => (
+                     <p key={i} className="text-xs text-slate-400">{log}</p>
+                  ))}
+               </div>
+
+               <div className="bg-black/30 rounded-xl p-3 mb-4">
+                  <h3 className="font-bold text-sky-400 mb-2">💡 Compliance Strategy</h3>
+                  <ul className="text-sm text-slate-300 space-y-1">
+                     <li>• <span className="text-yellow-400">Research industry-specific</span> permits beyond business license</li>
+                     <li>• <span className="text-yellow-400">Check city AND county AND state</span> requirements separately</li>
+                     <li>• <span className="text-yellow-400">Timeline matters</span>—some permits take months</li>
+                     <li>• <span className="text-yellow-400">Ask your city clerk</span>—they know what you need</li>
+                  </ul>
+               </div>
+
+               <button onClick={startGame} className="w-full py-3 bg-gradient-to-r from-sky-600 to-cyan-600 rounded-xl font-bold">
+                  🔄 TRY AGAIN
+               </button>
+
+               {showInfo && infoTopic && infoTopics[infoTopic] && (
+                  <div className="absolute inset-0 bg-black/80 flex items-center justify-center p-4 z-50" onClick={() => { setShowInfo(false); setInfoTopic(null); }}>
+                     <div className="bg-slate-800 rounded-xl p-4 max-w-md" onClick={e => e.stopPropagation()}>
+                        <h3 className="text-lg font-bold text-sky-400 mb-2">{infoTopics[infoTopic].title}</h3>
+                        <p className="text-sm text-slate-300 leading-relaxed">{infoTopics[infoTopic].content}</p>
+                        <button onClick={() => { setShowInfo(false); setInfoTopic(null); }} className="mt-4 w-full py-2 bg-sky-600 rounded-lg font-bold">Got it!</button>
+                     </div>
+                  </div>
+               )}
+            </div>
+         );
+      }
+
+      // PLAY PHASE
+      const s = scenarios[scenario];
+      return (
+         <div className="w-full h-full flex flex-col bg-gradient-to-br from-sky-900 via-cyan-900 to-slate-900 text-white overflow-hidden">
+            {showInfo && infoTopic && infoTopics[infoTopic] && (
+               <div className="absolute inset-0 bg-black/80 flex items-center justify-center p-4 z-50" onClick={() => { setShowInfo(false); setInfoTopic(null); }}>
+                  <div className="bg-slate-800 rounded-xl p-4 max-w-md" onClick={e => e.stopPropagation()}>
+                     <h3 className="text-lg font-bold text-sky-400 mb-2">{infoTopics[infoTopic].title}</h3>
+                     <p className="text-sm text-slate-300 leading-relaxed">{infoTopics[infoTopic].content}</p>
+                     <button onClick={() => { setShowInfo(false); setInfoTopic(null); }} className="mt-4 w-full py-2 bg-sky-600 rounded-lg font-bold">Got it!</button>
+                  </div>
+               </div>
+            )}
+
+            {/* Header */}
+            <div className="p-3 bg-black/30 border-b border-sky-500/30">
+               <div className="flex justify-between items-center">
+                  <span className="font-bold text-sm">🏛️ {s.title}</span>
+                  <span className="text-sky-400 text-sm">{scenario + 1}/{scenarios.length}</span>
+               </div>
+               <div className="flex gap-1 mt-2">
+                  {scenarios.slice(0, scenario).map((_, i) => (
+                     <div key={i} className={`w-3 h-3 rounded ${gameLog[i]?.startsWith('✓') ? 'bg-green-500' : 'bg-red-500'}`} />
+                  ))}
+                  <div className="w-3 h-3 rounded bg-sky-500 animate-pulse" />
+                  {scenarios.slice(scenario + 1).map((_, i) => (
+                     <div key={i} className="w-3 h-3 rounded bg-slate-600" />
+                  ))}
+               </div>
+            </div>
+
+            {/* Scenario */}
+            <div className="flex-1 p-3 overflow-auto">
+               <div className="bg-black/30 rounded-lg p-3 mb-3">
+                  <p className="text-sm text-slate-200 leading-relaxed">{s.situation}</p>
+               </div>
+
+               <p className="text-sm font-bold text-sky-400 mb-2">{s.question}</p>
+
+               <div className="space-y-2">
+                  {s.opts.map((opt, i) => (
+                     <button
+                        key={i}
+                        onClick={() => answer(i)}
+                        disabled={answered}
+                        className={`w-full p-3 rounded-lg text-left text-sm transition-all ${
+                           answered
+                              ? i === s.correct
+                                 ? 'bg-green-600 border-2 border-green-400'
+                                 : i === selected
+                                    ? 'bg-red-600 border-2 border-red-400'
+                                    : 'bg-black/30 opacity-50'
+                              : 'bg-black/30 hover:bg-sky-600/50 border-2 border-transparent'
+                        }`}
+                     >
+                        <span className="flex items-start gap-2">
+                           <span className="font-bold text-sky-400">{String.fromCharCode(65 + i)}.</span>
+                           <span>{opt}</span>
+                        </span>
+                     </button>
+                  ))}
+               </div>
+
+               {/* Explanation after answer */}
+               {answered && (
+                  <div className="mt-3 space-y-2">
+                     {selected !== s.correct && (
+                        <div className="p-3 bg-red-900/30 border border-red-500/50 rounded-lg">
+                           <p className="text-xs font-bold text-red-400 mb-1">❌ Why {String.fromCharCode(65 + (selected || 0))} is Wrong:</p>
+                           <p className="text-sm text-slate-300">{s.wrongExplanations[selected || 0]}</p>
+                        </div>
+                     )}
+
+                     <div className="p-3 bg-green-900/30 border border-green-500/50 rounded-lg">
+                        <p className="text-xs font-bold text-green-400 mb-1">✓ The Hidden Requirement:</p>
+                        <p className="text-sm text-slate-300">{s.why}</p>
+                     </div>
+
+                     <div className="p-3 bg-amber-900/30 border border-amber-500/50 rounded-lg">
+                        <p className="text-xs font-bold text-amber-400 mb-1">⚠️ Real Case:</p>
+                        <p className="text-sm text-slate-300">{s.realWorld}</p>
+                     </div>
+
+                     <button onClick={next} className="w-full py-3 bg-gradient-to-r from-sky-600 to-cyan-600 rounded-xl font-bold mt-2">
+                        {scenario >= scenarios.length - 1 ? 'See Results' : 'Next Scenario →'}
+                     </button>
+                  </div>
+               )}
+            </div>
+
+            {/* Info Buttons Footer */}
+            <div className="p-3 bg-black/30 border-t border-sky-500/30 flex gap-2 justify-center flex-wrap">
+               <button onClick={() => setInfoTopic('business_license')} className="text-xs text-sky-400 hover:text-sky-300">ℹ️ Licenses</button>
+               <button onClick={() => setInfoTopic('zoning')} className="text-xs text-sky-400 hover:text-sky-300">ℹ️ Zoning</button>
+               <button onClick={() => setInfoTopic('industry_permits')} className="text-xs text-sky-400 hover:text-sky-300">ℹ️ Industry</button>
+               <button onClick={() => setInfoTopic('compliance_timeline')} className="text-xs text-sky-400 hover:text-sky-300">ℹ️ Timeline</button>
+            </div>
+         </div>
+      );
    };
 
    // --- EMPLOYMENT LAW RENDERER ---
