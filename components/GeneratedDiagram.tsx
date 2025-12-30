@@ -28237,35 +28237,409 @@ const GeneratedDiagram: React.FC<DiagramProps> = ({ type, data, title }) => {
       const [phase, setPhase] = useState<'intro' | 'play' | 'result'>('intro');
       const [showInfo, setShowInfo] = useState(false);
       const [infoTopic, setInfoTopic] = useState<string | null>(null);
-      const [assets, setAssets] = useState<{ id: string; name: string; type: string; protected: string | null; value: number; correct: string }[]>([]);
-      const [budget, setBudget] = useState(10000);
+      const [scenario, setScenario] = useState(0);
+      const [score, setScore] = useState(0);
+      const [selected, setSelected] = useState<number | null>(null);
+      const [answered, setAnswered] = useState(false);
+      const [gameLog, setGameLog] = useState<string[]>([]);
+      const [conceptGaps, setConceptGaps] = useState<string[]>([]);
 
-      const protectionTypes = [
-         { id: 'patent', name: 'Patent', icon: '📜', cost: 5000, desc: 'Inventions, processes' },
-         { id: 'trademark', name: 'Trademark', icon: '™️', cost: 1500, desc: 'Brand names, logos' },
-         { id: 'copyright', name: 'Copyright', icon: '©️', cost: 500, desc: 'Creative works, code' },
-         { id: 'trade_secret', name: 'Trade Secret', icon: '🤫', cost: 200, desc: 'Confidential info' },
-      ];
+      // Complex scenarios with non-obvious answers and trap options
       const scenarios = [
-         { name: 'App Logo', type: 'brand', correct: 'trademark' }, { name: 'Unique Algorithm', type: 'invention', correct: 'patent' },
-         { name: 'Marketing Copy', type: 'creative', correct: 'copyright' }, { name: 'Secret Recipe', type: 'formula', correct: 'trade_secret' },
-         { name: 'Company Name', type: 'brand', correct: 'trademark' }, { name: 'Software Code', type: 'creative', correct: 'copyright' },
+         {
+            title: "The Algorithm Dilemma",
+            situation: "Your startup developed a revolutionary ML algorithm that gives you a major competitive edge. A VC is interested but wants to see a demo. Your lead developer might leave for a competitor next year.",
+            question: "What's the BEST IP strategy for this algorithm?",
+            opts: ['Patent it immediately', 'Keep as Trade Secret', 'Copyright the code', 'Publish openly for credibility'],
+            correct: 1,
+            wrongExplanations: [
+               "Patents require PUBLIC DISCLOSURE. Once filed, your algorithm is public after 18 months—competitors can design around it. Also takes 2-3 years and $15K+. Meanwhile, your advantage is gone.",
+               "", // Correct answer
+               "Copyright only protects the specific code expression, NOT the underlying algorithm idea. Competitors can rewrite your algorithm in different code legally.",
+               "Publishing destroys all IP rights. You can't patent it after. Competitors can freely copy. Only makes sense for research institutions seeking academic credit."
+            ],
+            realWorld: "Coca-Cola's formula has been a trade secret for 130+ years. If they had patented it, it would have expired in 1906 and anyone could make Coke.",
+            concept: "patent_vs_secret",
+            why: "Trade secrets protect INDEFINITELY but only if kept secret. Patents expire after 20 years. For algorithms that are hard to reverse-engineer, trade secrets often win."
+         },
+         {
+            title: "The Contractor Trap",
+            situation: "You hired a freelance developer to build your mobile app. The contract says 'work for hire' but doesn't specifically mention IP assignment. The freelancer used some of their pre-existing code libraries.",
+            question: "Who owns the IP rights to the app?",
+            opts: ['You own everything—you paid for it', 'Split ownership based on contribution', 'Freelancer owns it unless explicitly assigned', 'Only you own the new code, they keep library rights'],
+            correct: 3,
+            wrongExplanations: [
+               "WRONG! Payment doesn't equal ownership. Under copyright law, the creator owns their work by default. 'Work for hire' only applies to employees or specific contract categories.",
+               "Copyright law doesn't do 'split ownership' automatically. This creates a legal nightmare where neither party can fully use the work.",
+               "Close but incomplete. The freelancer owns new code by default without explicit assignment, BUT they always retain rights to their pre-existing libraries unless explicitly assigned.",
+               "" // Correct answer
+            ],
+            realWorld: "In the famous Playboy v. Dumas case, Playboy lost rights to artwork they paid for because the artist was a contractor without proper IP assignment.",
+            concept: "work_for_hire",
+            why: "Pre-existing IP stays with creators unless EXPLICITLY assigned. Always get written IP assignment agreements that distinguish new work from pre-existing code/tools."
+         },
+         {
+            title: "The Naming Nightmare",
+            situation: "You're launching 'ByteForce' as your company name. Another company has 'ByteForce' registered for enterprise software (USPTO Class 9). You're in fitness wearables (also Class 9).",
+            question: "Can you legally use 'ByteForce' for your fitness wearables?",
+            opts: ['Yes—different products, no conflict', 'Yes—first to use in fitness wins', 'No—same trademark class means conflict', 'Maybe—depends on likelihood of confusion'],
+            correct: 2,
+            wrongExplanations: [
+               "Same trademark class IS the conflict. Class 9 covers all 'computer hardware and software'—both enterprise software and fitness wearables fall under this class.",
+               "Trademark law isn't 'first to use per product.' The other company has priority in the entire Class 9 and can block you from registration.",
+               "", // Correct answer
+               "This isn't a 'maybe'—same class with identical name is almost certainly infringement. 'Likelihood of confusion' analysis matters more for similar (not identical) marks."
+            ],
+            realWorld: "Apple Corps (Beatles) sued Apple Computer repeatedly because both were in 'Class 9' even though music and computers seemed different.",
+            concept: "trademark_classes",
+            why: "Trademark protection is class-based. 'ByteForce' for hamburgers (Class 43) might be fine, but anything in Class 9 creates direct conflict. Always search USPTO BEFORE naming."
+         },
+         {
+            title: "The Employee Exit",
+            situation: "Your senior engineer is leaving for a competitor. She has deep knowledge of your proprietary systems, customer lists, and upcoming product roadmap. She signed an NDA but NOT a non-compete.",
+            question: "What can you legally prevent her from doing?",
+            opts: ['Working for any competitor for 2 years', 'Using or disclosing your trade secrets', 'Taking any clients she worked with', 'Nothing—without non-compete you have no rights'],
+            correct: 1,
+            wrongExplanations: [
+               "Without a signed non-compete, you cannot restrict where she works. Non-competes are also unenforceable in California and increasingly restricted nationwide.",
+               "", // Correct answer
+               "Client relationships are complex. She can contact clients she has personal relationships with unless those relationships ARE trade secrets (like a secret client list).",
+               "NDAs are powerful! Trade secret law (DTSA) protects confidential business information even without non-competes. She cannot use or disclose what she learned."
+            ],
+            realWorld: "Waymo vs Uber: Anthony Levandowski left Google and allegedly took trade secrets to Uber. Cost Uber $245M settlement despite no non-compete.",
+            concept: "nda_vs_noncompete",
+            why: "NDAs protect INFORMATION (trade secrets). Non-competes restrict WHERE someone works. NDAs are enforceable everywhere; non-competes are not. Build protection through NDAs + trade secret protocols."
+         },
+         {
+            title: "The Design Dilemma",
+            situation: "You designed a unique, innovative smartwatch case shape. A competitor just launched a very similar-looking product. You never filed any IP protection but have been selling for 8 months.",
+            question: "What IP protection could you STILL potentially claim?",
+            opts: ['Utility patent—you invented it first', 'Design patent—you can still file', 'Trade dress—distinctive product appearance', 'None—you missed the window completely'],
+            correct: 2,
+            wrongExplanations: [
+               "Utility patents protect HOW something works (function), not how it looks (form). A case shape is ornamental, not functional.",
+               "Design patents must be filed within 12 months of first public sale. However, the process takes 1-2 years and only lasts 15 years. But trade dress might be stronger here.",
+               "", // Correct answer
+               "Trade dress protection for distinctive product design doesn't require registration! If consumers associate your distinctive shape with your brand, you may have enforceable rights."
+            ],
+            realWorld: "Apple successfully sued Samsung for trade dress infringement on iPhone design elements, winning $539M for 'look and feel' even beyond their patents.",
+            concept: "trade_dress",
+            why: "Trade dress protects product appearance that consumers associate with a brand. No registration required (though it helps). Requires proving distinctiveness + consumer association."
+         }
       ];
-      const infoTopics: Record<string, { title: string; content: string }> = {
-         patent: { title: "Patents", content: "Protect inventions for 20 years. Types: Utility, Design, Plant. Expensive ($5K+) and slow (1-3 years). Worth it for key innovations." },
-         trademark: { title: "Trademarks", content: "Protect brand identifiers: names, logos, slogans. ™ is free, ® requires registration. Strength: Generic→Fanciful." },
-         copyright: { title: "Copyrights", content: "Protect creative works: writing, code, art. Automatic upon creation! Registration needed to sue." },
-         trade_secret: { title: "Trade Secrets", content: "Protect confidential info. No registration—just keep it secret! Use NDAs. Lost forever if disclosed." },
-      };
-      useEffect(() => { if (infoTopic && infoTopics[infoTopic]) setShowInfo(true); }, [infoTopic]);
-      const startGame = () => { setPhase('play'); setBudget(10000); const shuffled = [...scenarios].sort(() => Math.random() - 0.5).slice(0, 5); setAssets(shuffled.map((s, i) => ({ id: `asset-${i}`, name: s.name, type: s.type, protected: null, value: 1000 + Math.random() * 5000, correct: s.correct }))); };
-      const protectAsset = (assetId: string, protectionId: string) => { const p = protectionTypes.find(pt => pt.id === protectionId); if (!p || budget < p.cost) return; setBudget(prev => prev - p.cost); setAssets(prev => prev.map(a => a.id === assetId ? { ...a, protected: protectionId } : a)); };
-      const getScore = () => { let score = 0; assets.forEach(a => { if (a.protected === a.correct) score += 20; else if (a.protected) score += 8; }); return Math.min(100, score); };
-      const getGrade = () => { const s = getScore(); if (s >= 90) return { letter: 'A', label: 'IP Master', color: 'text-green-400' }; if (s >= 70) return { letter: 'B', label: 'Protected', color: 'text-blue-400' }; if (s >= 50) return { letter: 'C', label: 'Partial', color: 'text-yellow-400' }; return { letter: 'D', label: 'Vulnerable', color: 'text-red-400' }; };
 
-      if (phase === 'intro') return (<div className="w-full h-full flex flex-col bg-gradient-to-br from-violet-900 via-purple-900 to-slate-900 text-white p-4 overflow-auto"><div className="text-center mb-4"><h1 className="text-2xl font-bold mb-2">🔒 IP Protection Simulator</h1><p className="text-violet-300 text-sm">Protect your intellectual property</p></div><div className="bg-black/30 rounded-xl p-4 mb-4"><h2 className="text-lg font-bold mb-3 text-violet-400">📋 How It Works</h2><div className="space-y-2 text-sm"><p>• Protect <span className="text-white font-bold">5 assets</span> with correct IP type</p><p>• Budget: <span className="text-green-400">$10,000</span></p><p>• Match assets with right protection!</p></div></div><div className="grid grid-cols-4 gap-2 mb-4 text-center text-xs">{protectionTypes.map(p => (<div key={p.id} className="bg-black/30 rounded-lg p-2"><span className="text-lg">{p.icon}</span><p className="text-slate-300">{p.name}</p><p className="text-green-400">${p.cost}</p></div>))}</div><div className="flex flex-wrap gap-2 mb-4">{Object.keys(infoTopics).map(key => (<button key={key} onClick={() => setInfoTopic(key)} className="text-xs bg-violet-500/20 px-2 py-1 rounded-full text-violet-300">ℹ️ {infoTopics[key].title}</button>))}</div><button onClick={startGame} className="w-full py-3 bg-gradient-to-r from-violet-600 to-purple-600 rounded-xl font-bold">▶️ START</button>{showInfo && infoTopic && infoTopics[infoTopic] && (<div className="absolute inset-0 bg-black/80 flex items-center justify-center p-4 z-50" onClick={() => { setShowInfo(false); setInfoTopic(null); }}><div className="bg-slate-800 rounded-xl p-4 max-w-md" onClick={e => e.stopPropagation()}><h3 className="text-lg font-bold text-violet-400 mb-2">{infoTopics[infoTopic].title}</h3><p className="text-sm text-slate-300">{infoTopics[infoTopic].content}</p><button onClick={() => { setShowInfo(false); setInfoTopic(null); }} className="mt-4 w-full py-2 bg-violet-600 rounded-lg">Got it!</button></div></div>)}</div>);
-      if (phase === 'result') { const grade = getGrade(); return (<div className="w-full h-full flex flex-col bg-gradient-to-br from-violet-900 via-purple-900 to-slate-900 text-white p-4 overflow-auto"><div className="text-center mb-4"><div className={`text-6xl font-bold ${grade.color}`}>{grade.letter}</div><div className="text-xl font-bold">{grade.label}</div><div className="text-violet-400">Score: {getScore()}%</div></div><div className="bg-black/30 rounded-xl p-3 mb-3"><h3 className="font-bold text-violet-400 mb-2">📊 Results</h3>{assets.map(a => { const isCorrect = a.protected === a.correct; const prot = protectionTypes.find(p => p.id === a.protected); const correct = protectionTypes.find(p => p.id === a.correct); return (<div key={a.id} className="flex justify-between items-center py-1 border-b border-slate-700 text-sm"><span>{a.name}</span><div className="flex items-center gap-2"><span className={isCorrect ? 'text-green-400' : 'text-red-400'}>{prot?.icon || '❌'}</span>{!isCorrect && <span className="text-xs text-slate-400">→ {correct?.icon}</span>}</div></div>); })}</div><div className="bg-black/30 rounded-xl p-3 mb-4"><h3 className="font-bold text-violet-400 mb-2">💡 Key Insight</h3><p className="text-sm text-slate-300">Match protection to asset: Patents for inventions, Trademarks for brands, Copyrights for creative works, Trade Secrets for confidential info.</p></div><button onClick={startGame} className="w-full py-3 bg-gradient-to-r from-violet-600 to-purple-600 rounded-xl font-bold">🔄 TRY AGAIN</button></div>); }
-      return (<div className="w-full h-full flex flex-col bg-gradient-to-br from-violet-900 via-purple-900 to-slate-900 text-white overflow-hidden">{showInfo && infoTopic && infoTopics[infoTopic] && (<div className="absolute inset-0 bg-black/80 flex items-center justify-center p-4 z-50" onClick={() => { setShowInfo(false); setInfoTopic(null); }}><div className="bg-slate-800 rounded-xl p-4 max-w-md" onClick={e => e.stopPropagation()}><h3 className="text-lg font-bold text-violet-400 mb-2">{infoTopics[infoTopic].title}</h3><p className="text-sm text-slate-300">{infoTopics[infoTopic].content}</p><button onClick={() => { setShowInfo(false); setInfoTopic(null); }} className="mt-4 w-full py-2 bg-violet-600 rounded-lg">Got it!</button></div></div>)}<div className="p-3 bg-black/30 border-b border-violet-500/30"><div className="flex justify-between items-center"><span className="font-bold">🔒 IP Protection</span><span className="text-green-400">${budget.toLocaleString()}</span></div></div><div className="flex-1 p-3 overflow-auto"><p className="text-sm mb-3">Select protection for each asset:</p>{assets.map(a => (<div key={a.id} className="bg-black/30 rounded-lg p-3 mb-2"><div className="flex justify-between items-center mb-2"><span className="font-bold">{a.name}</span><span className="text-xs text-slate-400">{a.type}</span></div>{a.protected ? (<div className="flex items-center gap-2 text-green-400 text-sm"><span>{protectionTypes.find(p => p.id === a.protected)?.icon}</span><span>Protected</span></div>) : (<div className="grid grid-cols-4 gap-1">{protectionTypes.map(p => (<button key={p.id} onClick={() => protectAsset(a.id, p.id)} disabled={budget < p.cost} className="py-1 px-2 bg-violet-600/50 hover:bg-violet-500/50 disabled:opacity-30 rounded text-xs flex flex-col items-center"><span>{p.icon}</span><span>${p.cost}</span></button>))}</div>)}</div>))}</div><div className="p-3 bg-black/30 border-t border-violet-500/30"><button onClick={() => setPhase('result')} className="w-full py-3 bg-gradient-to-r from-violet-600 to-purple-600 rounded-xl font-bold">✓ FINISH</button></div></div>);
+      const infoTopics: Record<string, { title: string; content: string }> = {
+         patent: {
+            title: "Patents: The Trade-Off",
+            content: "Patents give 20-year monopoly BUT require full public disclosure. Cost: $15K-30K+, Time: 2-4 years. Best for: innovations that are easy to reverse-engineer. Worst for: algorithms competitors can't see anyway."
+         },
+         trade_secret: {
+            title: "Trade Secrets: Infinite but Fragile",
+            content: "Last forever if kept secret. No registration needed. BUT: one disclosure = gone forever. Requires NDAs, access controls, exit interviews. Best for: formulas, algorithms, customer lists. Examples: Coca-Cola formula, Google's PageRank algorithm."
+         },
+         trademark: {
+            title: "Trademarks: Brand Protection",
+            content: "Protect brand identifiers in specific classes. ™ (unregistered) vs ® (registered). Last forever if actively used. Classes matter—same name in different class is usually OK. Search USPTO BEFORE naming your company!"
+         },
+         copyright: {
+            title: "Copyright: Expression Not Ideas",
+            content: "Automatic upon creation—no registration needed to own. BUT registration required to sue for damages. Protects specific expression (your code), NOT underlying ideas (algorithms). Lasts: life + 70 years."
+         },
+         work_for_hire: {
+            title: "Work for Hire: The Contractor Trap",
+            content: "Employees: employer owns work automatically. Contractors: CREATOR owns work unless written assignment. 'Work for hire' only applies to employees or 9 specific categories (not software!). Always get explicit IP assignment in contractor agreements."
+         },
+         trade_dress: {
+            title: "Trade Dress: Look & Feel Protection",
+            content: "Protects distinctive product appearance/packaging that consumers associate with a brand. No registration required (helps in court). Examples: Coca-Cola bottle shape, Apple store design, Tiffany blue box."
+         }
+      };
+
+      useEffect(() => { if (infoTopic && infoTopics[infoTopic]) setShowInfo(true); }, [infoTopic]);
+
+      const startGame = () => {
+         setPhase('play');
+         setScenario(0);
+         setScore(0);
+         setSelected(null);
+         setAnswered(false);
+         setGameLog([]);
+         setConceptGaps([]);
+      };
+
+      const answer = (idx: number) => {
+         if (answered) return;
+         setSelected(idx);
+         setAnswered(true);
+         const s = scenarios[scenario];
+         const isCorrect = idx === s.correct;
+         if (isCorrect) {
+            setScore(prev => prev + 20);
+            setGameLog(prev => [...prev, `✓ ${s.title}: Understood ${s.concept}`]);
+         } else {
+            setConceptGaps(prev => prev.includes(s.concept) ? prev : [...prev, s.concept]);
+            setGameLog(prev => [...prev, `✗ ${s.title}: Gap in ${s.concept}`]);
+         }
+      };
+
+      const next = () => {
+         if (scenario >= scenarios.length - 1) {
+            setPhase('result');
+         } else {
+            setScenario(prev => prev + 1);
+            setSelected(null);
+            setAnswered(false);
+         }
+      };
+
+      const getGrade = () => {
+         const pct = (score / (scenarios.length * 20)) * 100;
+         if (pct >= 90) return { letter: 'A', label: 'IP Strategist', color: 'text-green-400' };
+         if (pct >= 70) return { letter: 'B', label: 'Protected', color: 'text-blue-400' };
+         if (pct >= 50) return { letter: 'C', label: 'Risky Gaps', color: 'text-yellow-400' };
+         return { letter: 'D', label: 'Exposed', color: 'text-red-400' };
+      };
+
+      const conceptLabels: Record<string, string> = {
+         patent_vs_secret: "Patent vs Trade Secret Strategy",
+         work_for_hire: "Contractor IP Ownership",
+         trademark_classes: "Trademark Classification",
+         nda_vs_noncompete: "NDA vs Non-Compete Protection",
+         trade_dress: "Trade Dress & Design Rights"
+      };
+
+      // INTRO PHASE
+      if (phase === 'intro') return (
+         <div className="w-full h-full flex flex-col bg-gradient-to-br from-violet-900 via-purple-900 to-slate-900 text-white p-4 overflow-auto">
+            <div className="text-center mb-4">
+               <h1 className="text-2xl font-bold mb-2">🔐 IP Strategy Challenge</h1>
+               <p className="text-violet-300 text-sm">Real decisions. Real consequences. Master IP protection.</p>
+            </div>
+
+            <div className="bg-black/30 rounded-xl p-4 mb-4">
+               <h2 className="text-lg font-bold mb-3 text-violet-400">⚡ Why This Matters</h2>
+               <div className="space-y-2 text-sm text-slate-300">
+                  <p>• <span className="text-red-400 font-bold">$5.4 TRILLION</span> in IP theft annually worldwide</p>
+                  <p>• <span className="text-yellow-400 font-bold">67%</span> of startup value is in intangible IP assets</p>
+                  <p>• <span className="text-green-400 font-bold">Wrong IP strategy</span> can destroy your competitive advantage</p>
+               </div>
+            </div>
+
+            <div className="bg-black/30 rounded-xl p-4 mb-4">
+               <h2 className="text-lg font-bold mb-3 text-violet-400">🎯 How This Works</h2>
+               <div className="space-y-2 text-sm">
+                  <p>• <span className="text-white font-bold">5 real-world scenarios</span> with trap answers</p>
+                  <p>• Understand <span className="text-yellow-400">WHY</span> each strategy works or fails</p>
+                  <p>• Learn from <span className="text-cyan-400">famous cases</span> and costly mistakes</p>
+                  <p>• Get <span className="text-green-400">personalized gaps</span> for further study</p>
+               </div>
+            </div>
+
+            <div className="flex flex-wrap gap-2 mb-4">
+               {Object.keys(infoTopics).map(key => (
+                  <button
+                     key={key}
+                     onClick={() => setInfoTopic(key)}
+                     className="text-xs bg-violet-500/20 px-2 py-1 rounded-full text-violet-300 hover:bg-violet-500/30"
+                  >
+                     ℹ️ {infoTopics[key].title.split(':')[0]}
+                  </button>
+               ))}
+            </div>
+
+            <button onClick={startGame} className="w-full py-3 bg-gradient-to-r from-violet-600 to-purple-600 rounded-xl font-bold text-lg">
+               ▶️ BEGIN CHALLENGE
+            </button>
+
+            {showInfo && infoTopic && infoTopics[infoTopic] && (
+               <div className="absolute inset-0 bg-black/80 flex items-center justify-center p-4 z-50" onClick={() => { setShowInfo(false); setInfoTopic(null); }}>
+                  <div className="bg-slate-800 rounded-xl p-4 max-w-md" onClick={e => e.stopPropagation()}>
+                     <h3 className="text-lg font-bold text-violet-400 mb-2">{infoTopics[infoTopic].title}</h3>
+                     <p className="text-sm text-slate-300 leading-relaxed">{infoTopics[infoTopic].content}</p>
+                     <button onClick={() => { setShowInfo(false); setInfoTopic(null); }} className="mt-4 w-full py-2 bg-violet-600 rounded-lg font-bold">Got it!</button>
+                  </div>
+               </div>
+            )}
+         </div>
+      );
+
+      // RESULT PHASE
+      if (phase === 'result') {
+         const grade = getGrade();
+         return (
+            <div className="w-full h-full flex flex-col bg-gradient-to-br from-violet-900 via-purple-900 to-slate-900 text-white p-4 overflow-auto">
+               <div className="text-center mb-4">
+                  <div className={`text-6xl font-bold ${grade.color}`}>{grade.letter}</div>
+                  <div className="text-xl font-bold">{grade.label}</div>
+                  <div className="text-violet-400">Score: {score}/{scenarios.length * 20}</div>
+               </div>
+
+               {conceptGaps.length > 0 && (
+                  <div className="bg-red-900/30 border border-red-500/50 rounded-xl p-3 mb-3">
+                     <h3 className="font-bold text-red-400 mb-2">📚 Knowledge Gaps to Study</h3>
+                     <div className="space-y-1">
+                        {conceptGaps.map((gap, i) => (
+                           <div key={i} className="flex items-center gap-2 text-sm">
+                              <span className="text-red-400">→</span>
+                              <span className="text-slate-300">{conceptLabels[gap] || gap}</span>
+                              <button
+                                 onClick={() => {
+                                    const topic = gap === 'patent_vs_secret' ? 'patent' :
+                                                  gap === 'work_for_hire' ? 'work_for_hire' :
+                                                  gap === 'trademark_classes' ? 'trademark' :
+                                                  gap === 'nda_vs_noncompete' ? 'trade_secret' : 'trade_dress';
+                                    setInfoTopic(topic);
+                                 }}
+                                 className="text-xs text-violet-400 underline"
+                              >
+                                 Learn
+                              </button>
+                           </div>
+                        ))}
+                     </div>
+                  </div>
+               )}
+
+               {conceptGaps.length === 0 && (
+                  <div className="bg-green-900/30 border border-green-500/50 rounded-xl p-3 mb-3">
+                     <h3 className="font-bold text-green-400 mb-2">🎉 Perfect Understanding!</h3>
+                     <p className="text-sm text-slate-300">You correctly identified the optimal IP strategy in every scenario. You understand the nuances of patent vs trade secret, contractor IP, trademark classes, and protection mechanisms.</p>
+                  </div>
+               )}
+
+               <div className="bg-black/30 rounded-xl p-3 mb-3 max-h-32 overflow-auto">
+                  <h3 className="font-bold text-violet-400 mb-2">📋 Session Log</h3>
+                  {gameLog.map((log, i) => (
+                     <p key={i} className="text-xs text-slate-400">{log}</p>
+                  ))}
+               </div>
+
+               <div className="bg-black/30 rounded-xl p-3 mb-4">
+                  <h3 className="font-bold text-violet-400 mb-2">💡 Key Strategic Insights</h3>
+                  <ul className="text-sm text-slate-300 space-y-1">
+                     <li>• <span className="text-yellow-400">Trade secrets</span> often beat patents for algorithms</li>
+                     <li>• <span className="text-yellow-400">Written IP assignment</span> is essential for contractors</li>
+                     <li>• <span className="text-yellow-400">Trademark class</span> determines conflict, not product similarity</li>
+                     <li>• <span className="text-yellow-400">NDAs</span> protect information even without non-competes</li>
+                  </ul>
+               </div>
+
+               <button onClick={startGame} className="w-full py-3 bg-gradient-to-r from-violet-600 to-purple-600 rounded-xl font-bold">
+                  🔄 TRY AGAIN
+               </button>
+
+               {showInfo && infoTopic && infoTopics[infoTopic] && (
+                  <div className="absolute inset-0 bg-black/80 flex items-center justify-center p-4 z-50" onClick={() => { setShowInfo(false); setInfoTopic(null); }}>
+                     <div className="bg-slate-800 rounded-xl p-4 max-w-md" onClick={e => e.stopPropagation()}>
+                        <h3 className="text-lg font-bold text-violet-400 mb-2">{infoTopics[infoTopic].title}</h3>
+                        <p className="text-sm text-slate-300 leading-relaxed">{infoTopics[infoTopic].content}</p>
+                        <button onClick={() => { setShowInfo(false); setInfoTopic(null); }} className="mt-4 w-full py-2 bg-violet-600 rounded-lg font-bold">Got it!</button>
+                     </div>
+                  </div>
+               )}
+            </div>
+         );
+      }
+
+      // PLAY PHASE
+      const s = scenarios[scenario];
+      return (
+         <div className="w-full h-full flex flex-col bg-gradient-to-br from-violet-900 via-purple-900 to-slate-900 text-white overflow-hidden">
+            {showInfo && infoTopic && infoTopics[infoTopic] && (
+               <div className="absolute inset-0 bg-black/80 flex items-center justify-center p-4 z-50" onClick={() => { setShowInfo(false); setInfoTopic(null); }}>
+                  <div className="bg-slate-800 rounded-xl p-4 max-w-md" onClick={e => e.stopPropagation()}>
+                     <h3 className="text-lg font-bold text-violet-400 mb-2">{infoTopics[infoTopic].title}</h3>
+                     <p className="text-sm text-slate-300 leading-relaxed">{infoTopics[infoTopic].content}</p>
+                     <button onClick={() => { setShowInfo(false); setInfoTopic(null); }} className="mt-4 w-full py-2 bg-violet-600 rounded-lg font-bold">Got it!</button>
+                  </div>
+               </div>
+            )}
+
+            {/* Header */}
+            <div className="p-3 bg-black/30 border-b border-violet-500/30">
+               <div className="flex justify-between items-center">
+                  <span className="font-bold text-sm">🔐 {s.title}</span>
+                  <span className="text-violet-400 text-sm">{scenario + 1}/{scenarios.length}</span>
+               </div>
+               <div className="flex gap-1 mt-2">
+                  {scenarios.slice(0, scenario).map((_, i) => (
+                     <div key={i} className={`w-3 h-3 rounded ${gameLog[i]?.startsWith('✓') ? 'bg-green-500' : 'bg-red-500'}`} />
+                  ))}
+                  <div className="w-3 h-3 rounded bg-violet-500 animate-pulse" />
+                  {scenarios.slice(scenario + 1).map((_, i) => (
+                     <div key={i} className="w-3 h-3 rounded bg-slate-600" />
+                  ))}
+               </div>
+            </div>
+
+            {/* Scenario */}
+            <div className="flex-1 p-3 overflow-auto">
+               <div className="bg-black/30 rounded-lg p-3 mb-3">
+                  <p className="text-sm text-slate-200 leading-relaxed">{s.situation}</p>
+               </div>
+
+               <p className="text-sm font-bold text-violet-400 mb-2">{s.question}</p>
+
+               <div className="space-y-2">
+                  {s.opts.map((opt, i) => (
+                     <button
+                        key={i}
+                        onClick={() => answer(i)}
+                        disabled={answered}
+                        className={`w-full p-3 rounded-lg text-left text-sm transition-all ${
+                           answered
+                              ? i === s.correct
+                                 ? 'bg-green-600 border-2 border-green-400'
+                                 : i === selected
+                                    ? 'bg-red-600 border-2 border-red-400'
+                                    : 'bg-black/30 opacity-50'
+                              : 'bg-black/30 hover:bg-violet-600/50 border-2 border-transparent'
+                        }`}
+                     >
+                        <span className="flex items-start gap-2">
+                           <span className="font-bold text-violet-400">{String.fromCharCode(65 + i)}.</span>
+                           <span>{opt}</span>
+                        </span>
+                     </button>
+                  ))}
+               </div>
+
+               {/* Explanation after answer */}
+               {answered && (
+                  <div className="mt-3 space-y-2">
+                     {selected !== s.correct && (
+                        <div className="p-3 bg-red-900/30 border border-red-500/50 rounded-lg">
+                           <p className="text-xs font-bold text-red-400 mb-1">❌ Why {String.fromCharCode(65 + (selected || 0))} is Wrong:</p>
+                           <p className="text-sm text-slate-300">{s.wrongExplanations[selected || 0]}</p>
+                        </div>
+                     )}
+
+                     <div className="p-3 bg-green-900/30 border border-green-500/50 rounded-lg">
+                        <p className="text-xs font-bold text-green-400 mb-1">✓ Why {String.fromCharCode(65 + s.correct)} is Best:</p>
+                        <p className="text-sm text-slate-300">{s.why}</p>
+                     </div>
+
+                     <div className="p-3 bg-cyan-900/30 border border-cyan-500/50 rounded-lg">
+                        <p className="text-xs font-bold text-cyan-400 mb-1">📰 Real-World Case:</p>
+                        <p className="text-sm text-slate-300">{s.realWorld}</p>
+                     </div>
+
+                     <button onClick={next} className="w-full py-3 bg-gradient-to-r from-violet-600 to-purple-600 rounded-xl font-bold mt-2">
+                        {scenario >= scenarios.length - 1 ? 'See Results' : 'Next Scenario →'}
+                     </button>
+                  </div>
+               )}
+            </div>
+
+            {/* Info Buttons Footer */}
+            <div className="p-3 bg-black/30 border-t border-violet-500/30 flex gap-2 justify-center flex-wrap">
+               <button onClick={() => setInfoTopic('patent')} className="text-xs text-violet-400 hover:text-violet-300">ℹ️ Patents</button>
+               <button onClick={() => setInfoTopic('trade_secret')} className="text-xs text-violet-400 hover:text-violet-300">ℹ️ Trade Secrets</button>
+               <button onClick={() => setInfoTopic('trademark')} className="text-xs text-violet-400 hover:text-violet-300">ℹ️ Trademarks</button>
+               <button onClick={() => setInfoTopic('copyright')} className="text-xs text-violet-400 hover:text-violet-300">ℹ️ Copyright</button>
+            </div>
+         </div>
+      );
    };
 
    // --- CONTRACTS RENDERER ---
