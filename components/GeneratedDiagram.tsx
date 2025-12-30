@@ -30318,39 +30318,429 @@ const GeneratedDiagram: React.FC<DiagramProps> = ({ type, data, title }) => {
    };
 
    const NegotiationRenderer = () => {
-      const [phase, setPhase] = useState<'intro'|'play'|'result'>('intro');
+      const [phase, setPhase] = useState<'intro' | 'play' | 'result'>('intro');
       const [showInfo, setShowInfo] = useState(false);
-      const [infoTopic, setInfoTopic] = useState<string|null>(null);
-      const [round, setRound] = useState(0);
-      const [yourValue, setYourValue] = useState(0);
-      const [relationship, setRelationship] = useState(50);
-      const [log, setLog] = useState<string[]>([]);
-      const rounds = [
-         {context:'Negotiating your startup salary with a new hire who wants $120k. Your budget is $90-110k.',options:[{text:'Offer $85k, leave room to negotiate up',val:-5,rel:-10},{text:'Offer $95k with equity bonus',val:10,rel:10},{text:'Match $120k to close quickly',val:-15,rel:5},{text:'Offer $100k + performance bonus path to $120k',val:15,rel:15}]},
-         {context:'Supplier wants to raise prices 20%. You need them but have alternatives.',options:[{text:'Threaten to leave immediately',val:5,rel:-20},{text:'Accept the increase to maintain relationship',val:-20,rel:10},{text:'Negotiate 10% now with volume commitment',val:15,rel:10},{text:'Demand they keep old prices or you walk',val:0,rel:-15}]},
-         {context:'Investor offers $500k for 25% equity. You wanted $500k for 15%.',options:[{text:'Accept their terms immediately',val:-15,rel:5},{text:'Counter with 18% and board seat',val:15,rel:5},{text:'Reject and walk away',val:0,rel:-20},{text:'Ask for $600k at 20%',val:10,rel:0}]},
-         {context:'Client wants 30% discount on your services for a long-term contract.',options:[{text:'Give 30% to win the deal',val:-10,rel:10},{text:'Offer 15% with 2-year commitment',val:15,rel:10},{text:'Refuse any discount',val:5,rel:-10},{text:'Offer 20% + case study rights',val:10,rel:15}]},
-         {context:'Partner wants 50/50 split but you are doing 70% of the work.',options:[{text:'Accept 50/50 to avoid conflict',val:-15,rel:5},{text:'Demand 80/20 based on work',val:5,rel:-15},{text:'Propose 60/40 with role clarity',val:15,rel:10},{text:'Suggest equity vesting based on milestones',val:20,rel:15}]}
+      const [infoTopic, setInfoTopic] = useState<string | null>(null);
+      const [scenario, setScenario] = useState(0);
+      const [score, setScore] = useState(0);
+      const [selected, setSelected] = useState<number | null>(null);
+      const [answered, setAnswered] = useState(false);
+      const [gameLog, setGameLog] = useState<string[]>([]);
+      const [conceptGaps, setConceptGaps] = useState<string[]>([]);
+
+      const scenarios = [
+         {
+            title: "The Anchor Battle",
+            context: "You're selling your SaaS company. Your target is $5M. A strategic buyer opens with: 'We're thinking around $2M given market conditions.'",
+            question: "What's the best response to this low anchor?",
+            opts: [
+               'Counter at $8M to split the difference at $5M',
+               'Explain why $2M undervalues the company and reanchor at $6.5M with comps',
+               'Walk away - the gap is too large',
+               'Accept $3M as a compromise to close quickly'
+            ],
+            correct: 1,
+            wrongExplanations: [
+               "Anchoring at $8M looks unserious and damages credibility. They'll think you're not negotiating in good faith. Counter-anchors should be aggressive but defensible.",
+               "", // Correct
+               "Walking away too early loses the deal. The opening offer is just an anchor - it's not their final position. Most acquisitions close 40-60% above opening offers.",
+               "Never accept a quick compromise on price. Their $2M anchor worked on you psychologically. You just gave up $2M+ because you felt pressure to 'meet in the middle.'"
+            ],
+            realWorld: "Instagram was initially offered $500M by Facebook. Systrom countered with specific metrics justifying $1B and got it. The key: data-backed counter-anchors, not arbitrary numbers.",
+            concept: "anchoring",
+            why: "Counter-anchoring requires: (1) Acknowledge their number without accepting it, (2) Reframe with data/comps that justify your position, (3) Anchor slightly above your target. The first number that gets accepted as 'reasonable' sets the negotiation range."
+         },
+         {
+            title: "The BATNA Bluff",
+            context: "A key supplier is raising prices 25%. You've researched alternatives but switching would take 6 months and cost $50K. They know you're their biggest customer (30% of their revenue).",
+            question: "How do you leverage your BATNA here?",
+            opts: [
+               'Bluff that you can switch immediately',
+               'Accept the increase - your BATNA is weak',
+               'Explain you\'re evaluating alternatives and need 12 months at current prices to transition',
+               'Threaten to switch publicly and damage their reputation'
+            ],
+            correct: 2,
+            wrongExplanations: [
+               "Bluffing a strong BATNA you don't have is dangerous. If they call your bluff, you lose credibility AND leverage. They may know your switching costs better than you think.",
+               "Your BATNA isn't weak - THEIRS is! You're 30% of their revenue. Losing you is catastrophic for them. Don't negotiate against yourself.",
+               "", // Correct
+               "Threats and reputation damage destroy relationships. You may need this supplier long-term. Even if you win this battle, you'll lose the war."
+            ],
+            realWorld: "Apple negotiated with Samsung for phone components while simultaneously building in-house alternatives. They never bluffed - they actually created BATNAs, which gave them real leverage.",
+            concept: "batna",
+            why: "Your BATNA matters, but so does THEIRS. Calculate: What happens to them if you leave? 30% revenue loss is devastating. Frame it as: 'I need time to evaluate, let's phase any increases over 18 months' - you get time, they keep you."
+         },
+         {
+            title: "The Equity Split",
+            context: "Your technical cofounder built the MVP (6 months work). You've been doing sales/biz dev (3 months) but have industry connections and brought the initial customer. Time to formalize equity.",
+            question: "What's the fairest negotiation approach?",
+            opts: [
+               '50/50 - cofounders should be equal partners',
+               '70/30 favoring technical - they did more work',
+               'Dynamic split based on future milestones and vesting',
+               '60/40 favoring technical with your equity front-loaded'
+            ],
+            correct: 2,
+            wrongExplanations: [
+               "50/50 sounds fair but creates deadlock on decisions. Also ignores that contributions WILL diverge over time. What happens when one person works 80 hours and the other works 20?",
+               "Past work matters less than future value. The MVP is done - what drives growth? If your sales/connections are critical for the next 5 years, this split may be backward.",
+               "", // Correct
+               "Front-loading your equity protects you but signals distrust. Also, 60/40 doesn't account for the startup's evolution. What if technical work becomes less important as you scale?"
+            ],
+            realWorld: "Many YC startups use vesting + milestone-based adjustments. One founder got additional 5% when they closed Series A, another when product hit 10K users. Aligned incentives to future value creation.",
+            concept: "equity_negotiation",
+            why: "The best equity negotiations focus on future value, not past work. Use: (1) 4-year vesting with 1-year cliff (everyone), (2) Milestone bonuses for key achievements, (3) Clear role definitions with adjustment mechanisms. Past contributions matter less than who'll drive the next 10 years."
+         },
+         {
+            title: "The Silence Trap",
+            context: "You're negotiating a $200K enterprise deal. You've presented your proposal at $180K. The buyer says: 'That's higher than we expected.' Then goes silent, staring at you.",
+            question: "What should you do?",
+            opts: [
+               'Fill the silence: "I can probably do $160K"',
+               'Stay silent and maintain eye contact',
+               'Explain the value to justify the price',
+               'Ask: "What budget did you have in mind?"'
+            ],
+            correct: 1,
+            wrongExplanations: [
+               "You just negotiated against yourself! They said nothing about price being a dealbreaker. That silence cost you $20K. Never fill silence with concessions.",
+               "", // Correct
+               "Explaining value after silence looks defensive. You're justifying a price you already quoted. This signals you expected pushback and had weak conviction in your pricing.",
+               "Asking their budget gives away your power. You anchor first, they counter. If you ask their budget now, you've surrendered the anchor and look uncertain."
+            ],
+            realWorld: "A study found that negotiators who waited just 3 extra seconds before responding got 10-15% better outcomes. The discomfort of silence causes the other party to make concessions.",
+            concept: "silence_power",
+            why: "Silence is uncomfortable - your brain wants to fill it. But whoever speaks first after an offer typically concedes. After stating your position: STOP TALKING. Count to 10 in your head. Let them break the silence with their response or counter."
+         },
+         {
+            title: "The Win-Win Expansion",
+            context: "You're negotiating office lease renewal. Landlord wants 20% rent increase ($4K/month more). Your budget can't handle it, but you need this location.",
+            question: "How do you create a win-win?",
+            opts: [
+               'Negotiate hard on price - it\'s a zero-sum game',
+               'Offer a longer lease term in exchange for current rates',
+               'Accept the increase but ask for 3 months free rent',
+               'Offer to prepay 6 months rent for 10% increase instead of 20%'
+            ],
+            correct: 3,
+            wrongExplanations: [
+               "Zero-sum thinking limits outcomes. Landlords have needs beyond just rent: cash flow certainty, avoiding vacancy costs, reducing turnover. Find those interests.",
+               "Longer term helps them but still leaves the price gap. You're giving something (flexibility) without solving the core budget issue.",
+               "Free rent just delays the problem. In 3 months you still can't afford the increase. You've kicked the can down the road.",
+               "" // Correct
+            ],
+            realWorld: "Airbnb negotiated their early office lease by offering to feature the building in their marketing materials. Cost them nothing, gave landlord valuable exposure. Creative value exchange.",
+            concept: "expanding_pie",
+            why: "Win-win requires finding what they value that costs you less than what you'd pay otherwise. Prepaying: You pay $36K now vs $48K increase over the year. They get guaranteed cash flow and lower vacancy risk. Both sides gain value their way."
+         }
       ];
-      const infoTopics:{[k:string]:{title:string,content:string}} = {
-         batna:{title:'BATNA',content:'Best Alternative To Negotiated Agreement. Know your walkaway point. The better your alternatives, the stronger your position.'},
-         winwin:{title:'Win-Win',content:'Expand the pie before dividing it. Look for creative solutions where both sides gain value.'},
-         anchor:{title:'Anchoring',content:'First number sets the frame. Anchor ambitiously but credibly. Counter-anchor to reset unrealistic positions.'},
-         silence:{title:'Silence',content:'Silence is powerful. After making an offer, stop talking. Let them fill the uncomfortable silence.'}
+
+      const infoTopics: Record<string, { title: string; content: string }> = {
+         anchoring: {
+            title: "Anchoring Psychology",
+            content: "First numbers create cognitive reference points. Studies show anchors influence outcomes even when obviously arbitrary. To counter: (1) Ignore their number verbally, (2) Introduce your own anchor with supporting data, (3) Never 'split the difference' from their anchor."
+         },
+         batna: {
+            title: "BATNA Strategy",
+            content: "Best Alternative To Negotiated Agreement determines your walkaway point. Key insight: Their BATNA matters too! A strong BATNA comes from real alternatives, not bluffs. Invest in creating alternatives before negotiating."
+         },
+         silence: {
+            title: "The Power of Silence",
+            content: "Silence creates psychological pressure. After making an offer, STOP TALKING. The urge to fill silence leads to unnecessary concessions. Practice: State your position, then count to 10 silently. Let them respond first."
+         },
+         expanding: {
+            title: "Expanding the Pie",
+            content: "Most negotiations aren't zero-sum. Before haggling on price, find what they value that costs you less: terms, timing, payment structure, bundled services, case study rights, referrals. Create value before claiming it."
+         },
+         interests: {
+            title: "Interests vs Positions",
+            content: "Positions are WHAT people ask for. Interests are WHY they want it. 'I need $100K' is a position. 'I need security and market rate' are interests. Uncover interests to find creative solutions that satisfy both sides."
+         },
+         preparation: {
+            title: "Negotiation Prep",
+            content: "Research: their constraints, alternatives, timeline, decision-makers. Know: your BATNA, walkaway point, ideal outcome, first offer. Prepare: opening statement, responses to objections, concession strategy. Never negotiate unprepared."
+         }
       };
-      const choose = (idx:number) => {
-         const opt = rounds[round].options[idx];
-         setYourValue(v => v + opt.val);
-         setRelationship(r => Math.max(0, Math.min(100, r + opt.rel)));
-         setLog(l => [...l, `Round ${round+1}: ${opt.text}`]);
-         if(round >= rounds.length - 1) setPhase('result');
-         else setRound(r => r + 1);
+
+      useEffect(() => { if (infoTopic && infoTopics[infoTopic]) setShowInfo(true); }, [infoTopic]);
+
+      const startGame = () => {
+         setPhase('play');
+         setScenario(0);
+         setScore(0);
+         setSelected(null);
+         setAnswered(false);
+         setGameLog([]);
+         setConceptGaps([]);
       };
-      const grade = yourValue >= 50 && relationship >= 50 ? 'A' : yourValue >= 25 && relationship >= 30 ? 'B' : yourValue >= 0 ? 'C' : 'D';
-      if(phase === 'intro') return (<div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-indigo-900 via-blue-900 to-slate-900 text-white p-6"><div className="text-6xl mb-4">🤝</div><h2 className="text-2xl font-bold mb-2">Negotiation Master</h2><p className="text-slate-300 text-center mb-6 max-w-md">Navigate 5 business negotiations! Balance getting value with maintaining relationships.</p><button onClick={() => setPhase('play')} className="px-8 py-3 bg-gradient-to-r from-indigo-500 to-blue-500 rounded-xl font-bold">Start Negotiating</button></div>);
-      if(phase === 'result') return (<div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-indigo-900 via-blue-900 to-slate-900 text-white p-6"><div className="text-6xl mb-4">{grade === 'A' ? '🏆' : grade === 'B' ? '🤝' : '📉'}</div><h2 className="text-2xl font-bold mb-2">Negotiations Complete!</h2><div className="flex gap-4 mb-4"><span className="text-indigo-400">Value: {yourValue > 0 ? '+' : ''}{yourValue}</span><span className="text-blue-400">Relationship: {relationship}%</span></div><div className="text-6xl mb-4">{grade}</div><p className="text-slate-400 mb-4">{grade === 'A' ? 'Master negotiator!' : grade === 'B' ? 'Good deals!' : 'Room to improve!'}</p><button onClick={() => {setPhase('intro');setRound(0);setYourValue(0);setRelationship(50);setLog([]);}} className="px-6 py-2 bg-indigo-600 rounded-lg">Try Again</button></div>);
-      const r = rounds[round];
-      return (<div className="w-full h-full flex flex-col bg-gradient-to-br from-indigo-900 via-blue-900 to-slate-900 text-white overflow-hidden">{showInfo && infoTopic && infoTopics[infoTopic] && (<div className="absolute inset-0 bg-black/80 flex items-center justify-center p-4 z-50" onClick={() => { setShowInfo(false); setInfoTopic(null); }}><div className="bg-slate-800 rounded-xl p-4 max-w-md" onClick={e => e.stopPropagation()}><h3 className="text-lg font-bold text-indigo-400 mb-2">{infoTopics[infoTopic].title}</h3><p className="text-sm text-slate-300">{infoTopics[infoTopic].content}</p><button onClick={() => { setShowInfo(false); setInfoTopic(null); }} className="mt-4 w-full py-2 bg-indigo-600 rounded-lg">Got it!</button></div></div>)}<div className="p-3 bg-black/30 border-b border-indigo-500/30"><div className="flex justify-between items-center mb-2"><span className="font-bold">🤝 Negotiation</span><span className="text-indigo-400">{round + 1}/{rounds.length}</span></div><div className="flex gap-4 text-sm"><span>💰 Value: {yourValue > 0 ? '+' : ''}{yourValue}</span><span>❤️ Relationship: {relationship}%</span></div></div><div className="flex-1 p-4 flex flex-col justify-center"><div className="bg-black/30 rounded-xl p-4 mb-4"><p className="text-sm">{r.context}</p></div><div className="grid gap-2">{r.options.map((opt, i) => (<button key={i} onClick={() => choose(i)} className="p-3 bg-black/30 hover:bg-indigo-600/50 rounded-lg text-left text-sm">{opt.text}</button>))}</div></div><div className="p-3 bg-black/30 border-t border-indigo-500/30 flex gap-2 justify-center">{Object.keys(infoTopics).map(k => <button key={k} onClick={() => {setInfoTopic(k);setShowInfo(true);}} className="text-xs text-indigo-400">ℹ️ {infoTopics[k].title}</button>)}</div></div>);
+
+      const answer = (idx: number) => {
+         if (answered) return;
+         setSelected(idx);
+         setAnswered(true);
+         const s = scenarios[scenario];
+         const isCorrect = idx === s.correct;
+         if (isCorrect) {
+            setScore(prev => prev + 20);
+            setGameLog(prev => [...prev, `✓ ${s.title}: Mastered ${s.concept}`]);
+         } else {
+            setConceptGaps(prev => prev.includes(s.concept) ? prev : [...prev, s.concept]);
+            setGameLog(prev => [...prev, `✗ ${s.title}: Gap in ${s.concept}`]);
+         }
+      };
+
+      const next = () => {
+         if (scenario >= scenarios.length - 1) {
+            setPhase('result');
+         } else {
+            setScenario(prev => prev + 1);
+            setSelected(null);
+            setAnswered(false);
+         }
+      };
+
+      const getGrade = () => {
+         const pct = (score / (scenarios.length * 20)) * 100;
+         if (pct >= 90) return { letter: 'A', label: 'Master Negotiator', color: 'text-green-400' };
+         if (pct >= 70) return { letter: 'B', label: 'Skilled Negotiator', color: 'text-blue-400' };
+         if (pct >= 50) return { letter: 'C', label: 'Developing', color: 'text-yellow-400' };
+         return { letter: 'D', label: 'Needs Practice', color: 'text-red-400' };
+      };
+
+      const conceptLabels: Record<string, string> = {
+         anchoring: "Counter-Anchoring Techniques",
+         batna: "BATNA & Alternative Leverage",
+         equity_negotiation: "Equity & Partnership Splits",
+         silence_power: "Silence as a Tactic",
+         expanding_pie: "Win-Win Value Creation"
+      };
+
+      if (phase === 'intro') return (
+         <div className="w-full h-full flex flex-col bg-gradient-to-br from-indigo-900 via-blue-900 to-slate-900 text-white p-4 overflow-auto">
+            <div className="text-center mb-4">
+               <h1 className="text-2xl font-bold mb-2">🤝 Negotiation Tactics Lab</h1>
+               <p className="text-indigo-300 text-sm">Psychology. Strategy. Leverage. Master the art of the deal.</p>
+            </div>
+
+            <div className="bg-black/30 rounded-xl p-4 mb-4">
+               <h2 className="text-lg font-bold mb-3 text-indigo-400">⚠️ Why This Matters</h2>
+               <div className="space-y-2 text-sm text-slate-300">
+                  <p>• <span className="text-red-400 font-bold">$1M+</span> left on the table by average entrepreneur over career</p>
+                  <p>• <span className="text-yellow-400 font-bold">80%</span> of negotiation outcome determined before you speak</p>
+                  <p>• <span className="text-green-400 font-bold">Best negotiators</span> create value, not just claim it</p>
+               </div>
+            </div>
+
+            <div className="bg-black/30 rounded-xl p-4 mb-4">
+               <h2 className="text-lg font-bold mb-3 text-indigo-400">🎯 How This Works</h2>
+               <div className="space-y-2 text-sm">
+                  <p>• <span className="text-white font-bold">5 realistic negotiations</span> with psychological depth</p>
+                  <p>• Learn <span className="text-yellow-400">specific tactics</span> that change outcomes</p>
+                  <p>• Avoid <span className="text-red-400">common traps</span> that cost you money</p>
+                  <p>• Understand <span className="text-cyan-400">why</span> each approach works or fails</p>
+               </div>
+            </div>
+
+            <div className="flex flex-wrap gap-2 mb-4">
+               {Object.keys(infoTopics).map(key => (
+                  <button
+                     key={key}
+                     onClick={() => setInfoTopic(key)}
+                     className="text-xs bg-indigo-500/20 px-2 py-1 rounded-full text-indigo-300 hover:bg-indigo-500/30"
+                  >
+                     ℹ️ {infoTopics[key].title.split(' ')[0]}
+                  </button>
+               ))}
+            </div>
+
+            <button onClick={startGame} className="w-full py-3 bg-gradient-to-r from-indigo-600 to-blue-600 rounded-xl font-bold text-lg">
+               ▶️ BEGIN NEGOTIATIONS
+            </button>
+
+            {showInfo && infoTopic && infoTopics[infoTopic] && (
+               <div className="absolute inset-0 bg-black/80 flex items-center justify-center p-4 z-50" onClick={() => { setShowInfo(false); setInfoTopic(null); }}>
+                  <div className="bg-slate-800 rounded-xl p-4 max-w-md" onClick={e => e.stopPropagation()}>
+                     <h3 className="text-lg font-bold text-indigo-400 mb-2">{infoTopics[infoTopic].title}</h3>
+                     <p className="text-sm text-slate-300 leading-relaxed">{infoTopics[infoTopic].content}</p>
+                     <button onClick={() => { setShowInfo(false); setInfoTopic(null); }} className="mt-4 w-full py-2 bg-indigo-600 rounded-lg font-bold">Got it!</button>
+                  </div>
+               </div>
+            )}
+         </div>
+      );
+
+      if (phase === 'result') {
+         const grade = getGrade();
+         return (
+            <div className="w-full h-full flex flex-col bg-gradient-to-br from-indigo-900 via-blue-900 to-slate-900 text-white p-4 overflow-auto">
+               <div className="text-center mb-4">
+                  <div className={`text-6xl font-bold ${grade.color}`}>{grade.letter}</div>
+                  <div className="text-xl font-bold">{grade.label}</div>
+                  <div className="text-indigo-400">Score: {score}/{scenarios.length * 20}</div>
+               </div>
+
+               {conceptGaps.length > 0 && (
+                  <div className="bg-red-900/30 border border-red-500/50 rounded-xl p-3 mb-3">
+                     <h3 className="font-bold text-red-400 mb-2">📚 Tactics to Study</h3>
+                     <div className="space-y-1">
+                        {conceptGaps.map((gap, i) => (
+                           <div key={i} className="flex items-center gap-2 text-sm">
+                              <span className="text-red-400">→</span>
+                              <span className="text-slate-300">{conceptLabels[gap] || gap}</span>
+                              <button
+                                 onClick={() => {
+                                    const topic = gap === 'anchoring' ? 'anchoring' :
+                                                  gap === 'batna' ? 'batna' :
+                                                  gap === 'silence_power' ? 'silence' :
+                                                  gap === 'expanding_pie' ? 'expanding' : 'interests';
+                                    setInfoTopic(topic);
+                                 }}
+                                 className="text-xs text-indigo-400 underline"
+                              >
+                                 Learn
+                              </button>
+                           </div>
+                        ))}
+                     </div>
+                  </div>
+               )}
+
+               {conceptGaps.length === 0 && (
+                  <div className="bg-green-900/30 border border-green-500/50 rounded-xl p-3 mb-3">
+                     <h3 className="font-bold text-green-400 mb-2">🎉 Master Negotiator!</h3>
+                     <p className="text-sm text-slate-300">You understand the psychology of negotiation—anchoring, BATNA leverage, silence, and value creation.</p>
+                  </div>
+               )}
+
+               <div className="bg-black/30 rounded-xl p-3 mb-3 max-h-32 overflow-auto">
+                  <h3 className="font-bold text-indigo-400 mb-2">📋 Session Log</h3>
+                  {gameLog.map((log, i) => (
+                     <p key={i} className="text-xs text-slate-400">{log}</p>
+                  ))}
+               </div>
+
+               <div className="bg-black/30 rounded-xl p-3 mb-4">
+                  <h3 className="font-bold text-indigo-400 mb-2">💡 Key Tactics</h3>
+                  <ul className="text-sm text-slate-300 space-y-1">
+                     <li>• <span className="text-yellow-400">Counter-anchor with data</span>, not arbitrary numbers</li>
+                     <li>• <span className="text-yellow-400">Their BATNA matters</span> as much as yours</li>
+                     <li>• <span className="text-yellow-400">Silence is power</span>—never fill it with concessions</li>
+                     <li>• <span className="text-yellow-400">Expand the pie</span> before dividing it</li>
+                  </ul>
+               </div>
+
+               <button onClick={startGame} className="w-full py-3 bg-gradient-to-r from-indigo-600 to-blue-600 rounded-xl font-bold">
+                  🔄 TRY AGAIN
+               </button>
+
+               {showInfo && infoTopic && infoTopics[infoTopic] && (
+                  <div className="absolute inset-0 bg-black/80 flex items-center justify-center p-4 z-50" onClick={() => { setShowInfo(false); setInfoTopic(null); }}>
+                     <div className="bg-slate-800 rounded-xl p-4 max-w-md" onClick={e => e.stopPropagation()}>
+                        <h3 className="text-lg font-bold text-indigo-400 mb-2">{infoTopics[infoTopic].title}</h3>
+                        <p className="text-sm text-slate-300 leading-relaxed">{infoTopics[infoTopic].content}</p>
+                        <button onClick={() => { setShowInfo(false); setInfoTopic(null); }} className="mt-4 w-full py-2 bg-indigo-600 rounded-lg font-bold">Got it!</button>
+                     </div>
+                  </div>
+               )}
+            </div>
+         );
+      }
+
+      const s = scenarios[scenario];
+      return (
+         <div className="w-full h-full flex flex-col bg-gradient-to-br from-indigo-900 via-blue-900 to-slate-900 text-white overflow-hidden">
+            {showInfo && infoTopic && infoTopics[infoTopic] && (
+               <div className="absolute inset-0 bg-black/80 flex items-center justify-center p-4 z-50" onClick={() => { setShowInfo(false); setInfoTopic(null); }}>
+                  <div className="bg-slate-800 rounded-xl p-4 max-w-md" onClick={e => e.stopPropagation()}>
+                     <h3 className="text-lg font-bold text-indigo-400 mb-2">{infoTopics[infoTopic].title}</h3>
+                     <p className="text-sm text-slate-300 leading-relaxed">{infoTopics[infoTopic].content}</p>
+                     <button onClick={() => { setShowInfo(false); setInfoTopic(null); }} className="mt-4 w-full py-2 bg-indigo-600 rounded-lg font-bold">Got it!</button>
+                  </div>
+               </div>
+            )}
+
+            <div className="p-3 bg-black/30 border-b border-indigo-500/30">
+               <div className="flex justify-between items-center">
+                  <span className="font-bold text-sm">🤝 {s.title}</span>
+                  <span className="text-indigo-400 text-sm">{scenario + 1}/{scenarios.length}</span>
+               </div>
+               <div className="flex gap-1 mt-2">
+                  {scenarios.slice(0, scenario).map((_, i) => (
+                     <div key={i} className={`w-3 h-3 rounded ${gameLog[i]?.startsWith('✓') ? 'bg-green-500' : 'bg-red-500'}`} />
+                  ))}
+                  <div className="w-3 h-3 rounded bg-indigo-500 animate-pulse" />
+                  {scenarios.slice(scenario + 1).map((_, i) => (
+                     <div key={i} className="w-3 h-3 rounded bg-slate-600" />
+                  ))}
+               </div>
+            </div>
+
+            <div className="flex-1 p-3 overflow-auto">
+               <div className="bg-black/30 rounded-lg p-3 mb-3">
+                  <p className="text-sm text-slate-200 leading-relaxed">{s.context}</p>
+               </div>
+
+               <p className="text-sm font-bold text-indigo-400 mb-2">{s.question}</p>
+
+               <div className="space-y-2">
+                  {s.opts.map((opt, i) => (
+                     <button
+                        key={i}
+                        onClick={() => answer(i)}
+                        disabled={answered}
+                        className={`w-full p-3 rounded-lg text-left text-sm transition-all ${
+                           answered
+                              ? i === s.correct
+                                 ? 'bg-green-600 border-2 border-green-400'
+                                 : i === selected
+                                    ? 'bg-red-600 border-2 border-red-400'
+                                    : 'bg-black/30 opacity-50'
+                              : 'bg-black/30 hover:bg-indigo-600/50 border-2 border-transparent'
+                        }`}
+                     >
+                        <span className="flex items-start gap-2">
+                           <span className="font-bold text-indigo-400">{String.fromCharCode(65 + i)}.</span>
+                           <span>{opt}</span>
+                        </span>
+                     </button>
+                  ))}
+               </div>
+
+               {answered && (
+                  <div className="mt-3 space-y-2">
+                     {selected !== s.correct && (
+                        <div className="p-3 bg-red-900/30 border border-red-500/50 rounded-lg">
+                           <p className="text-xs font-bold text-red-400 mb-1">❌ Why {String.fromCharCode(65 + (selected || 0))} Fails:</p>
+                           <p className="text-sm text-slate-300">{s.wrongExplanations[selected || 0]}</p>
+                        </div>
+                     )}
+
+                     <div className="p-3 bg-green-900/30 border border-green-500/50 rounded-lg">
+                        <p className="text-xs font-bold text-green-400 mb-1">✓ The Winning Move:</p>
+                        <p className="text-sm text-slate-300">{s.why}</p>
+                     </div>
+
+                     <div className="p-3 bg-cyan-900/30 border border-cyan-500/50 rounded-lg">
+                        <p className="text-xs font-bold text-cyan-400 mb-1">📰 Real World:</p>
+                        <p className="text-sm text-slate-300">{s.realWorld}</p>
+                     </div>
+
+                     <button onClick={next} className="w-full py-3 bg-gradient-to-r from-indigo-600 to-blue-600 rounded-xl font-bold mt-2">
+                        {scenario >= scenarios.length - 1 ? 'See Results' : 'Next Scenario →'}
+                     </button>
+                  </div>
+               )}
+            </div>
+
+            <div className="p-3 bg-black/30 border-t border-indigo-500/30 flex gap-2 justify-center flex-wrap">
+               <button onClick={() => setInfoTopic('anchoring')} className="text-xs text-indigo-400 hover:text-indigo-300">ℹ️ Anchoring</button>
+               <button onClick={() => setInfoTopic('batna')} className="text-xs text-indigo-400 hover:text-indigo-300">ℹ️ BATNA</button>
+               <button onClick={() => setInfoTopic('silence')} className="text-xs text-indigo-400 hover:text-indigo-300">ℹ️ Silence</button>
+               <button onClick={() => setInfoTopic('expanding')} className="text-xs text-indigo-400 hover:text-indigo-300">ℹ️ Win-Win</button>
+            </div>
+         </div>
+      );
    };
 
    // --- FINANCE & FUNDING RENDERERS ---
