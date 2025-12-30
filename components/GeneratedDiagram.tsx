@@ -30790,48 +30790,429 @@ const GeneratedDiagram: React.FC<DiagramProps> = ({ type, data, title }) => {
    };
 
    const FinancialStatementsRenderer = () => {
-      const [phase, setPhase] = useState<'intro'|'play'|'result'>('intro');
+      const [phase, setPhase] = useState<'intro' | 'play' | 'result'>('intro');
       const [showInfo, setShowInfo] = useState(false);
-      const [infoTopic, setInfoTopic] = useState<string|null>(null);
-      const [question, setQuestion] = useState(0);
+      const [infoTopic, setInfoTopic] = useState<string | null>(null);
+      const [scenario, setScenario] = useState(0);
       const [score, setScore] = useState(0);
+      const [selected, setSelected] = useState<number | null>(null);
       const [answered, setAnswered] = useState(false);
-      const [selected, setSelected] = useState<number|null>(null);
-      const [log, setLog] = useState<string[]>([]);
-      const questions = [
-         {q:'Revenue is $500k, COGS is $200k, Operating Expenses are $150k. What is Net Income?',opts:['$500k','$300k','$150k','$50k'],correct:2,explain:'Net Income = Revenue - COGS - OpEx = $500k - $200k - $150k = $150k (before taxes).'},
-         {q:'Which financial statement shows a snapshot of what the company owns and owes?',opts:['Income Statement','Balance Sheet','Cash Flow Statement','Cap Table'],correct:1,explain:'Balance Sheet shows Assets = Liabilities + Equity at a specific point in time.'},
-         {q:'Company has $100k cash, $50k AR, $30k inventory, $80k AP. What is working capital?',opts:['$100k','$180k','$100k','$80k'],correct:0,explain:'Working Capital = Current Assets - Current Liabilities = ($100k+$50k+$30k) - $80k = $100k.'},
-         {q:'Net Income is $100k but Cash increased only $20k. Most likely reason?',opts:['Accounting error','Increased inventory/AR','Fraud','Impossible scenario'],correct:1,explain:'Cash and profit differ due to timing: buying inventory or customers not paying yet reduces cash.'},
-         {q:'Gross Margin is 60%, Operating Margin is 20%. What does this tell you?',opts:['Company is losing money','40% goes to operating expenses','Pricing is too low','COGS is too high'],correct:1,explain:'The 40% gap between gross and operating margin is spent on sales, marketing, R&D, admin.'},
-         {q:'Which ratio measures ability to pay short-term debts?',opts:['ROE','Current Ratio','Debt-to-Equity','Gross Margin'],correct:1,explain:'Current Ratio = Current Assets / Current Liabilities. Above 1.0 means can cover short-term debts.'}
+      const [gameLog, setGameLog] = useState<string[]>([]);
+      const [conceptGaps, setConceptGaps] = useState<string[]>([]);
+
+      const scenarios = [
+         {
+            title: "The Profitable Bankruptcy",
+            context: "A SaaS startup shows: Revenue $2M, Net Income $400K (20% margin). But they're asking for emergency funding. Their balance sheet shows: Cash $50K, AR $800K (90-day terms), AP $600K (due in 30 days).",
+            question: "Why is this profitable company in financial trouble?",
+            opts: [
+               'The profit margin is too low',
+               'Cash flow crisis - AR collection too slow vs AP due dates',
+               'They have too much debt',
+               'Revenue is declining'
+            ],
+            correct: 1,
+            wrongExplanations: [
+               "20% net margin is excellent for SaaS. Margin isn't the problem here. Look at the timing mismatch between assets and liabilities.",
+               "", // Correct
+               "There's no mention of debt. The issue is working capital timing - they're owed money that won't arrive before bills are due.",
+               "Nothing indicates declining revenue. This is a TIMING problem, not a revenue problem. Profitable companies can run out of cash."
+            ],
+            realWorld: "Toys 'R' Us was profitable in many years before bankruptcy. They couldn't manage working capital during seasonal inventory buildups. Profit ≠ Cash.",
+            concept: "cash_vs_profit",
+            why: "Profit is accounting. Cash is survival. They have $800K coming but only $50K in hand, with $600K due NOW. They'll be profitable on paper while bouncing checks. This is why the Cash Flow Statement matters more than the Income Statement for survival."
+         },
+         {
+            title: "The Margin Mystery",
+            context: "Two competitors: Company A has 70% gross margin but 5% net margin. Company B has 40% gross margin but 15% net margin. Same revenue ($10M each).",
+            question: "What does this tell you about their business models?",
+            opts: [
+               'Company A is more efficient',
+               'Company B has better products',
+               'Company A overspends on sales/marketing/overhead',
+               'Company B has lower quality products'
+            ],
+            correct: 2,
+            wrongExplanations: [
+               "Company A is LESS efficient. They make more per sale (70% vs 40%) but keep less (5% vs 15%). Something is eating their profits between gross and net.",
+               "", // Close but wrong framing
+               "", // Correct
+               "Lower gross margin doesn't mean lower quality. It often means different business models - physical vs digital, commoditized vs differentiated."
+            ],
+            realWorld: "WeWork had 80%+ gross margins on desks but burned billions on sales, marketing, and Adam Neumann's expenses. High gross margin means nothing if operating costs eat it all.",
+            concept: "margin_analysis",
+            why: "The GAP between gross and net margin reveals operating efficiency. Company A: 70% - 5% = 65% goes to OpEx. Company B: 40% - 15% = 25% to OpEx. Company A spends 2.6x more on operations per dollar of gross profit. That's a red flag."
+         },
+         {
+            title: "The Growth Trap",
+            context: "A startup's 3-year trend: Year 1: Revenue $1M, Burn $500K. Year 2: Revenue $3M, Burn $2M. Year 3: Revenue $8M, Burn $6M. They're raising Series B.",
+            question: "What's the critical question investors will ask?",
+            opts: [
+               'Why is revenue growing so fast?',
+               'When will burn rate decrease?',
+               'What is the path to unit economics profitability?',
+               'Why don\'t you have more customers?'
+            ],
+            correct: 2,
+            wrongExplanations: [
+               "Fast revenue growth is GOOD - investors want that. The question is whether that growth is sustainable and eventually profitable.",
+               "Burn rate might never decrease if you're scaling. The question is whether each dollar of burn generates profitable returns eventually.",
+               "", // Correct
+               "Revenue is 8x in 3 years - customer acquisition isn't the problem here. The question is whether those customers are profitable."
+            ],
+            realWorld: "Uber scaled to $10B+ revenue while losing billions. Investors finally asked: 'Will a ride EVER be profitable?' Unit economics matter more than total growth.",
+            concept: "unit_economics",
+            why: "Unit economics = profit per customer/transaction. If you lose money on each sale, more sales = more losses. Investors want to see: 'We lose money overall because of fixed costs, but each new customer is profitable. At X scale, we'll be profitable.'"
+         },
+         {
+            title: "The Debt Dilemma",
+            context: "Company has $5M revenue, $1M net income. Balance sheet shows: $2M cash, $3M debt at 8% interest ($240K/year). They're considering taking $5M more debt to expand.",
+            question: "What financial metric should guide this decision?",
+            opts: [
+               'Current ratio - can they pay short-term bills?',
+               'Interest coverage ratio - can they service the debt?',
+               'Gross margin - are products profitable?',
+               'Revenue growth rate - is business growing?'
+            ],
+            correct: 1,
+            wrongExplanations: [
+               "Current ratio measures short-term liquidity, not debt capacity. They have $2M cash which is fine for short-term. The question is long-term debt service.",
+               "", // Correct
+               "Gross margin matters for product profitability, not debt decisions. They're already net profitable - the question is debt capacity.",
+               "Growth rate is important but doesn't answer: 'Can we afford this debt?' Fast-growing companies have gone bankrupt from over-leveraging."
+            ],
+            realWorld: "Hertz had strong revenue but took on too much debt. When COVID hit, they couldn't make interest payments and filed bankruptcy despite having a real business.",
+            concept: "leverage_ratios",
+            why: "Interest Coverage = EBIT / Interest Expense. Current: ~$1.2M / $240K = 5x (healthy). With $5M more at 8%: $640K total interest. New ratio: ~1.9x (danger zone). Banks want 3x+ coverage. This expansion could make them fragile."
+         },
+         {
+            title: "The AR Alarm",
+            context: "Your SaaS dashboard shows: MRR grew 50% this year ($100K→$150K). But AR also grew 200% ($50K→$150K). Days Sales Outstanding went from 30 to 90 days.",
+            question: "What's the hidden problem these numbers reveal?",
+            opts: [
+               'Growth is too fast to manage',
+               'Customers are churning',
+               'Revenue recognition is aggressive or customers aren\'t paying',
+               'Pricing is too low'
+            ],
+            correct: 2,
+            wrongExplanations: [
+               "Fast growth is manageable - the problem is specifically in collections/AR. Growth itself isn't the issue.",
+               "If customers churned, revenue would drop, not grow. This is a payment issue, not a retention issue.",
+               "", // Correct
+               "Pricing doesn't explain why AR grew 4x while revenue grew 1.5x. The issue is cash collection, not pricing."
+            ],
+            realWorld: "Luckin Coffee (China Starbucks competitor) showed massive revenue growth, but AR grew faster. Investigation revealed fabricated sales that never collected payment. $300M fraud.",
+            concept: "ar_analysis",
+            why: "Red flags: (1) AR growing faster than revenue = customers not paying, (2) DSO tripling = it takes 3x longer to collect, (3) Either sales are 'recognized' before payment is certain (aggressive accounting) OR customers are slow/unable to pay. Both are serious. Investigate immediately."
+         }
       ];
-      const infoTopics:{[k:string]:{title:string,content:string}} = {
-         income:{title:'Income Statement',content:'Revenue - Expenses = Profit. Shows performance over a period. Also called P&L (Profit & Loss).'},
-         balance:{title:'Balance Sheet',content:'Assets = Liabilities + Equity. Snapshot at a point in time. Shows what you own, owe, and shareholders stake.'},
-         cashflow:{title:'Cash Flow',content:'Operating + Investing + Financing activities. Profit ≠ Cash. You can be profitable and run out of cash.'},
-         ratios:{title:'Key Ratios',content:'Gross Margin, Net Margin, Current Ratio, Quick Ratio, ROE. These help compare companies and spot trends.'}
-      };
-      const answer = (idx:number) => {
-         if(answered) return;
-         setSelected(idx);
-         setAnswered(true);
-         if(idx === questions[question].correct) {
-            setScore(s => s + 1);
-            setLog(l => [...l, `Q${question+1}: Correct!`]);
-         } else {
-            setLog(l => [...l, `Q${question+1}: Wrong`]);
+
+      const infoTopics: Record<string, { title: string; content: string }> = {
+         income: {
+            title: "Income Statement Deep Dive",
+            content: "Revenue - COGS = Gross Profit. Gross - OpEx = Operating Income. Operating - Interest - Taxes = Net Income. Watch the GAPS between margins - they reveal where money goes. High gross but low net = operational inefficiency."
+         },
+         balance: {
+            title: "Balance Sheet Analysis",
+            content: "Assets = Liabilities + Equity. Current assets/liabilities = due within 1 year. Working Capital = Current Assets - Current Liabilities. Negative working capital = potential cash crisis. Watch AR trends - growing faster than revenue is a red flag."
+         },
+         cashflow: {
+            title: "Cash Flow Statement",
+            content: "Operating: cash from business. Investing: buying/selling assets. Financing: debt/equity changes. Profitable companies can have negative operating cash flow (growing AR/inventory). Cash is survival - profit is accounting."
+         },
+         ratios: {
+            title: "Critical Financial Ratios",
+            content: "Current Ratio = Current Assets / Current Liabilities (liquidity). Interest Coverage = EBIT / Interest (debt safety). DSO = AR / (Revenue/365) (collection speed). Gross Margin trends reveal pricing power. Compare ratios to industry benchmarks."
+         },
+         redflags: {
+            title: "Financial Red Flags",
+            content: "AR growing faster than revenue. Inventory building up. Decreasing margins over time. Debt increasing while profits fall. Revenue up but cash flow down. These patterns often precede major problems or fraud."
+         },
+         uniteconomics: {
+            title: "Unit Economics",
+            content: "LTV (Customer Lifetime Value) vs CAC (Customer Acquisition Cost). LTV/CAC should be 3x+. Payback period = months to recover CAC. Contribution margin per unit. If unit economics don't work, scale just accelerates losses."
          }
       };
-      const next = () => {
-         if(question >= questions.length - 1) setPhase('result');
-         else { setQuestion(q => q + 1); setAnswered(false); setSelected(null); }
+
+      useEffect(() => { if (infoTopic && infoTopics[infoTopic]) setShowInfo(true); }, [infoTopic]);
+
+      const startGame = () => {
+         setPhase('play');
+         setScenario(0);
+         setScore(0);
+         setSelected(null);
+         setAnswered(false);
+         setGameLog([]);
+         setConceptGaps([]);
       };
-      const grade = score >= 5 ? 'A' : score >= 4 ? 'B' : score >= 2 ? 'C' : 'D';
-      const q = questions[question];
-      if(phase === 'intro') return (<div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-blue-900 via-slate-900 to-gray-900 text-white p-6"><div className="text-6xl mb-4">📊</div><h2 className="text-2xl font-bold mb-2">Financial Statements</h2><p className="text-slate-300 text-center mb-6 max-w-md">Master the language of business! Understand income statements, balance sheets, and cash flow.</p><button onClick={() => setPhase('play')} className="px-8 py-3 bg-gradient-to-r from-blue-500 to-slate-500 rounded-xl font-bold">Start Quiz</button></div>);
-      if(phase === 'result') return (<div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-blue-900 via-slate-900 to-gray-900 text-white p-6"><div className="text-6xl mb-4">{grade === 'A' ? '📈' : grade === 'B' ? '📊' : '📉'}</div><h2 className="text-2xl font-bold mb-2">Quiz Complete!</h2><div className="text-4xl font-bold text-blue-400 mb-2">{score}/{questions.length}</div><div className="text-6xl mb-4">{grade}</div><p className="text-slate-400 mb-4">{grade === 'A' ? 'CFO material!' : grade === 'B' ? 'Good foundation!' : 'Review the basics!'}</p><button onClick={() => {setPhase('intro');setQuestion(0);setScore(0);setAnswered(false);setSelected(null);setLog([]);}} className="px-6 py-2 bg-blue-600 rounded-lg">Try Again</button></div>);
-      return (<div className="w-full h-full flex flex-col bg-gradient-to-br from-blue-900 via-slate-900 to-gray-900 text-white overflow-hidden">{showInfo && infoTopic && infoTopics[infoTopic] && (<div className="absolute inset-0 bg-black/80 flex items-center justify-center p-4 z-50" onClick={() => { setShowInfo(false); setInfoTopic(null); }}><div className="bg-slate-800 rounded-xl p-4 max-w-md" onClick={e => e.stopPropagation()}><h3 className="text-lg font-bold text-blue-400 mb-2">{infoTopics[infoTopic].title}</h3><p className="text-sm text-slate-300">{infoTopics[infoTopic].content}</p><button onClick={() => { setShowInfo(false); setInfoTopic(null); }} className="mt-4 w-full py-2 bg-blue-600 rounded-lg">Got it!</button></div></div>)}<div className="p-3 bg-black/30 border-b border-blue-500/30 flex justify-between items-center"><span className="font-bold">📊 Financials</span><span className="text-blue-400">{question + 1}/{questions.length}</span><span className="text-slate-400">Score: {score}</span></div><div className="flex-1 p-4 flex flex-col justify-center"><div className="bg-black/30 rounded-xl p-4 mb-4"><p className="text-sm">{q.q}</p></div><div className="grid gap-2">{q.opts.map((opt, i) => (<button key={i} onClick={() => answer(i)} disabled={answered} className={`p-3 rounded-lg text-left text-sm ${answered ? i === q.correct ? 'bg-green-600' : i === selected ? 'bg-red-600' : 'bg-black/30' : 'bg-black/30 hover:bg-blue-600/50'}`}>{opt}</button>))}</div>{answered && (<div className="mt-3 p-3 bg-black/30 rounded-lg"><p className="text-sm text-slate-300">{q.explain}</p><button onClick={next} className="mt-3 w-full py-2 bg-blue-600 rounded-lg">{question >= questions.length - 1 ? 'See Results' : 'Next'}</button></div>)}</div><div className="p-3 bg-black/30 border-t border-blue-500/30 flex gap-2 justify-center">{Object.keys(infoTopics).map(k => <button key={k} onClick={() => {setInfoTopic(k);setShowInfo(true);}} className="text-xs text-blue-400">ℹ️ {infoTopics[k].title}</button>)}</div></div>);
+
+      const answer = (idx: number) => {
+         if (answered) return;
+         setSelected(idx);
+         setAnswered(true);
+         const s = scenarios[scenario];
+         const isCorrect = idx === s.correct;
+         if (isCorrect) {
+            setScore(prev => prev + 20);
+            setGameLog(prev => [...prev, `✓ ${s.title}: Understood ${s.concept}`]);
+         } else {
+            setConceptGaps(prev => prev.includes(s.concept) ? prev : [...prev, s.concept]);
+            setGameLog(prev => [...prev, `✗ ${s.title}: Gap in ${s.concept}`]);
+         }
+      };
+
+      const next = () => {
+         if (scenario >= scenarios.length - 1) {
+            setPhase('result');
+         } else {
+            setScenario(prev => prev + 1);
+            setSelected(null);
+            setAnswered(false);
+         }
+      };
+
+      const getGrade = () => {
+         const pct = (score / (scenarios.length * 20)) * 100;
+         if (pct >= 90) return { letter: 'A', label: 'Financial Analyst', color: 'text-green-400' };
+         if (pct >= 70) return { letter: 'B', label: 'Financially Literate', color: 'text-blue-400' };
+         if (pct >= 50) return { letter: 'C', label: 'Developing', color: 'text-yellow-400' };
+         return { letter: 'D', label: 'Study Needed', color: 'text-red-400' };
+      };
+
+      const conceptLabels: Record<string, string> = {
+         cash_vs_profit: "Cash Flow vs Profit",
+         margin_analysis: "Margin Analysis & Efficiency",
+         unit_economics: "Unit Economics & Scalability",
+         leverage_ratios: "Debt & Leverage Ratios",
+         ar_analysis: "Accounts Receivable Red Flags"
+      };
+
+      if (phase === 'intro') return (
+         <div className="w-full h-full flex flex-col bg-gradient-to-br from-blue-900 via-slate-900 to-gray-900 text-white p-4 overflow-auto">
+            <div className="text-center mb-4">
+               <h1 className="text-2xl font-bold mb-2">📊 Financial Detective</h1>
+               <p className="text-blue-300 text-sm">Read between the lines. Numbers tell stories—if you know what to look for.</p>
+            </div>
+
+            <div className="bg-black/30 rounded-xl p-4 mb-4">
+               <h2 className="text-lg font-bold mb-3 text-blue-400">⚠️ Why This Matters</h2>
+               <div className="space-y-2 text-sm text-slate-300">
+                  <p>• <span className="text-red-400 font-bold">Profitable companies</span> go bankrupt every year</p>
+                  <p>• <span className="text-yellow-400 font-bold">Financial fraud</span> often hides in plain sight</p>
+                  <p>• <span className="text-green-400 font-bold">The real story</span> is in the trends, not the headlines</p>
+               </div>
+            </div>
+
+            <div className="bg-black/30 rounded-xl p-4 mb-4">
+               <h2 className="text-lg font-bold mb-3 text-blue-400">🎯 How This Works</h2>
+               <div className="space-y-2 text-sm">
+                  <p>• <span className="text-white font-bold">5 real financial scenarios</span> with hidden problems</p>
+                  <p>• Analyze <span className="text-yellow-400">income statements, balance sheets, cash flow</span></p>
+                  <p>• Spot <span className="text-red-400">red flags</span> that indicate trouble ahead</p>
+                  <p>• Learn what <span className="text-cyan-400">investors and lenders</span> actually look for</p>
+               </div>
+            </div>
+
+            <div className="flex flex-wrap gap-2 mb-4">
+               {Object.keys(infoTopics).map(key => (
+                  <button
+                     key={key}
+                     onClick={() => setInfoTopic(key)}
+                     className="text-xs bg-blue-500/20 px-2 py-1 rounded-full text-blue-300 hover:bg-blue-500/30"
+                  >
+                     ℹ️ {infoTopics[key].title.split(' ')[0]}
+                  </button>
+               ))}
+            </div>
+
+            <button onClick={startGame} className="w-full py-3 bg-gradient-to-r from-blue-600 to-slate-600 rounded-xl font-bold text-lg">
+               ▶️ BEGIN ANALYSIS
+            </button>
+
+            {showInfo && infoTopic && infoTopics[infoTopic] && (
+               <div className="absolute inset-0 bg-black/80 flex items-center justify-center p-4 z-50" onClick={() => { setShowInfo(false); setInfoTopic(null); }}>
+                  <div className="bg-slate-800 rounded-xl p-4 max-w-md" onClick={e => e.stopPropagation()}>
+                     <h3 className="text-lg font-bold text-blue-400 mb-2">{infoTopics[infoTopic].title}</h3>
+                     <p className="text-sm text-slate-300 leading-relaxed">{infoTopics[infoTopic].content}</p>
+                     <button onClick={() => { setShowInfo(false); setInfoTopic(null); }} className="mt-4 w-full py-2 bg-blue-600 rounded-lg font-bold">Got it!</button>
+                  </div>
+               </div>
+            )}
+         </div>
+      );
+
+      if (phase === 'result') {
+         const grade = getGrade();
+         return (
+            <div className="w-full h-full flex flex-col bg-gradient-to-br from-blue-900 via-slate-900 to-gray-900 text-white p-4 overflow-auto">
+               <div className="text-center mb-4">
+                  <div className={`text-6xl font-bold ${grade.color}`}>{grade.letter}</div>
+                  <div className="text-xl font-bold">{grade.label}</div>
+                  <div className="text-blue-400">Score: {score}/{scenarios.length * 20}</div>
+               </div>
+
+               {conceptGaps.length > 0 && (
+                  <div className="bg-red-900/30 border border-red-500/50 rounded-xl p-3 mb-3">
+                     <h3 className="font-bold text-red-400 mb-2">📚 Concepts to Study</h3>
+                     <div className="space-y-1">
+                        {conceptGaps.map((gap, i) => (
+                           <div key={i} className="flex items-center gap-2 text-sm">
+                              <span className="text-red-400">→</span>
+                              <span className="text-slate-300">{conceptLabels[gap] || gap}</span>
+                              <button
+                                 onClick={() => {
+                                    const topic = gap === 'cash_vs_profit' ? 'cashflow' :
+                                                  gap === 'margin_analysis' ? 'income' :
+                                                  gap === 'unit_economics' ? 'uniteconomics' :
+                                                  gap === 'leverage_ratios' ? 'ratios' : 'redflags';
+                                    setInfoTopic(topic);
+                                 }}
+                                 className="text-xs text-blue-400 underline"
+                              >
+                                 Learn
+                              </button>
+                           </div>
+                        ))}
+                     </div>
+                  </div>
+               )}
+
+               {conceptGaps.length === 0 && (
+                  <div className="bg-green-900/30 border border-green-500/50 rounded-xl p-3 mb-3">
+                     <h3 className="font-bold text-green-400 mb-2">🎉 Financial Expert!</h3>
+                     <p className="text-sm text-slate-300">You can read between the financial lines—spotting cash crises, margin problems, and red flags before they become disasters.</p>
+                  </div>
+               )}
+
+               <div className="bg-black/30 rounded-xl p-3 mb-3 max-h-32 overflow-auto">
+                  <h3 className="font-bold text-blue-400 mb-2">📋 Session Log</h3>
+                  {gameLog.map((log, i) => (
+                     <p key={i} className="text-xs text-slate-400">{log}</p>
+                  ))}
+               </div>
+
+               <div className="bg-black/30 rounded-xl p-3 mb-4">
+                  <h3 className="font-bold text-blue-400 mb-2">💡 Key Insights</h3>
+                  <ul className="text-sm text-slate-300 space-y-1">
+                     <li>• <span className="text-yellow-400">Profit ≠ Cash</span>—timing kills profitable companies</li>
+                     <li>• <span className="text-yellow-400">Margin gaps</span> reveal operational efficiency</li>
+                     <li>• <span className="text-yellow-400">AR growing faster than revenue</span> is a red flag</li>
+                     <li>• <span className="text-yellow-400">Unit economics</span> matter more than total growth</li>
+                  </ul>
+               </div>
+
+               <button onClick={startGame} className="w-full py-3 bg-gradient-to-r from-blue-600 to-slate-600 rounded-xl font-bold">
+                  🔄 TRY AGAIN
+               </button>
+
+               {showInfo && infoTopic && infoTopics[infoTopic] && (
+                  <div className="absolute inset-0 bg-black/80 flex items-center justify-center p-4 z-50" onClick={() => { setShowInfo(false); setInfoTopic(null); }}>
+                     <div className="bg-slate-800 rounded-xl p-4 max-w-md" onClick={e => e.stopPropagation()}>
+                        <h3 className="text-lg font-bold text-blue-400 mb-2">{infoTopics[infoTopic].title}</h3>
+                        <p className="text-sm text-slate-300 leading-relaxed">{infoTopics[infoTopic].content}</p>
+                        <button onClick={() => { setShowInfo(false); setInfoTopic(null); }} className="mt-4 w-full py-2 bg-blue-600 rounded-lg font-bold">Got it!</button>
+                     </div>
+                  </div>
+               )}
+            </div>
+         );
+      }
+
+      const s = scenarios[scenario];
+      return (
+         <div className="w-full h-full flex flex-col bg-gradient-to-br from-blue-900 via-slate-900 to-gray-900 text-white overflow-hidden">
+            {showInfo && infoTopic && infoTopics[infoTopic] && (
+               <div className="absolute inset-0 bg-black/80 flex items-center justify-center p-4 z-50" onClick={() => { setShowInfo(false); setInfoTopic(null); }}>
+                  <div className="bg-slate-800 rounded-xl p-4 max-w-md" onClick={e => e.stopPropagation()}>
+                     <h3 className="text-lg font-bold text-blue-400 mb-2">{infoTopics[infoTopic].title}</h3>
+                     <p className="text-sm text-slate-300 leading-relaxed">{infoTopics[infoTopic].content}</p>
+                     <button onClick={() => { setShowInfo(false); setInfoTopic(null); }} className="mt-4 w-full py-2 bg-blue-600 rounded-lg font-bold">Got it!</button>
+                  </div>
+               </div>
+            )}
+
+            <div className="p-3 bg-black/30 border-b border-blue-500/30">
+               <div className="flex justify-between items-center">
+                  <span className="font-bold text-sm">📊 {s.title}</span>
+                  <span className="text-blue-400 text-sm">{scenario + 1}/{scenarios.length}</span>
+               </div>
+               <div className="flex gap-1 mt-2">
+                  {scenarios.slice(0, scenario).map((_, i) => (
+                     <div key={i} className={`w-3 h-3 rounded ${gameLog[i]?.startsWith('✓') ? 'bg-green-500' : 'bg-red-500'}`} />
+                  ))}
+                  <div className="w-3 h-3 rounded bg-blue-500 animate-pulse" />
+                  {scenarios.slice(scenario + 1).map((_, i) => (
+                     <div key={i} className="w-3 h-3 rounded bg-slate-600" />
+                  ))}
+               </div>
+            </div>
+
+            <div className="flex-1 p-3 overflow-auto">
+               <div className="bg-black/30 rounded-lg p-3 mb-3">
+                  <p className="text-sm text-slate-200 leading-relaxed">{s.context}</p>
+               </div>
+
+               <p className="text-sm font-bold text-blue-400 mb-2">{s.question}</p>
+
+               <div className="space-y-2">
+                  {s.opts.map((opt, i) => (
+                     <button
+                        key={i}
+                        onClick={() => answer(i)}
+                        disabled={answered}
+                        className={`w-full p-3 rounded-lg text-left text-sm transition-all ${
+                           answered
+                              ? i === s.correct
+                                 ? 'bg-green-600 border-2 border-green-400'
+                                 : i === selected
+                                    ? 'bg-red-600 border-2 border-red-400'
+                                    : 'bg-black/30 opacity-50'
+                              : 'bg-black/30 hover:bg-blue-600/50 border-2 border-transparent'
+                        }`}
+                     >
+                        <span className="flex items-start gap-2">
+                           <span className="font-bold text-blue-400">{String.fromCharCode(65 + i)}.</span>
+                           <span>{opt}</span>
+                        </span>
+                     </button>
+                  ))}
+               </div>
+
+               {answered && (
+                  <div className="mt-3 space-y-2">
+                     {selected !== s.correct && (
+                        <div className="p-3 bg-red-900/30 border border-red-500/50 rounded-lg">
+                           <p className="text-xs font-bold text-red-400 mb-1">❌ Why {String.fromCharCode(65 + (selected || 0))} is Wrong:</p>
+                           <p className="text-sm text-slate-300">{s.wrongExplanations[selected || 0]}</p>
+                        </div>
+                     )}
+
+                     <div className="p-3 bg-green-900/30 border border-green-500/50 rounded-lg">
+                        <p className="text-xs font-bold text-green-400 mb-1">✓ The Real Issue:</p>
+                        <p className="text-sm text-slate-300">{s.why}</p>
+                     </div>
+
+                     <div className="p-3 bg-amber-900/30 border border-amber-500/50 rounded-lg">
+                        <p className="text-xs font-bold text-amber-400 mb-1">📰 Real Case:</p>
+                        <p className="text-sm text-slate-300">{s.realWorld}</p>
+                     </div>
+
+                     <button onClick={next} className="w-full py-3 bg-gradient-to-r from-blue-600 to-slate-600 rounded-xl font-bold mt-2">
+                        {scenario >= scenarios.length - 1 ? 'See Results' : 'Next Case →'}
+                     </button>
+                  </div>
+               )}
+            </div>
+
+            <div className="p-3 bg-black/30 border-t border-blue-500/30 flex gap-2 justify-center flex-wrap">
+               <button onClick={() => setInfoTopic('income')} className="text-xs text-blue-400 hover:text-blue-300">ℹ️ Income</button>
+               <button onClick={() => setInfoTopic('balance')} className="text-xs text-blue-400 hover:text-blue-300">ℹ️ Balance</button>
+               <button onClick={() => setInfoTopic('cashflow')} className="text-xs text-blue-400 hover:text-blue-300">ℹ️ Cash Flow</button>
+               <button onClick={() => setInfoTopic('redflags')} className="text-xs text-blue-400 hover:text-blue-300">ℹ️ Red Flags</button>
+            </div>
+         </div>
+      );
    };
 
    const PricingStrategyRenderer = () => {
