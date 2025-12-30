@@ -339,6 +339,7 @@ When a concept comes up, follow this lookup process:
 • Sustainability / ESG / Social Impact / Environmental / Triple Bottom Line → 'sustainability'
 • Exit Strategy / Acquisition / IPO / M&A / Startup Exit / Liquidity Event → 'exit_strategy'
 • Time Management / Prioritization / Focus / Productivity / Work-Life Balance → 'time_management'
+• Business Structures / Legal Entity / LLC / Corporation / Sole Proprietorship / S-Corp / C-Corp → 'business_structures'
 
 **STEP 2: IF NO MATCH → BUILD CUSTOM**
 Only if the topic is NOT covered above, use \`type: 'dynamic_blueprint'\` with custom JSON.
@@ -1370,6 +1371,11 @@ Only if the topic is NOT covered above, use \`type: 'dynamic_blueprint'\` with c
     → Build sustainable productivity habits as a founder
     → Educational tooltips covering Eisenhower matrix, time blocking, energy, saying no
     → KEY INSIGHT: Sustainable pace beats burnout sprints
+- **Legal / Business Structures:** Use \`type: 'business_structures'\`, \`data: '{}'\`
+    → Choose the right legal entity: Sole Proprietorship, LLC, S-Corp, C-Corp
+    → 5 real-world scenarios teaching liability, taxes, and growth considerations
+    → Educational tooltips covering liability protection, tax implications, formation costs, funding readiness
+    → KEY INSIGHT: Structure choice depends on liability needs, tax situation, and growth plans
 
 **CUSTOM SIMULATIONS (only if no pre-built exists):**
 3. For dynamic text, use: \`"content": "Range: {{calculations.range}} m"\`
