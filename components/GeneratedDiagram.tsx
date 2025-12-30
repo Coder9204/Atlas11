@@ -23911,83 +23911,281 @@ const GeneratedDiagram: React.FC<DiagramProps> = ({ type, data, title }) => {
    // 41. BOOTSTRAPPING - Resource Management Simulator
    const BootstrappingRenderer = () => {
       const [phase, setPhase] = useState<'intro' | 'play' | 'result'>('intro');
+      const [scenario, setScenario] = useState(0);
+      const [score, setScore] = useState(0);
+      const [selected, setSelected] = useState<number | null>(null);
+      const [answered, setAnswered] = useState(false);
+      const [gameLog, setGameLog] = useState<string[]>([]);
       const [showInfo, setShowInfo] = useState(false);
-      const [budget, setBudget] = useState(10000);
-      const [month, setMonth] = useState(1);
-      const [decisions, setDecisions] = useState<string[]>([]);
+      const [infoTopic, setInfoTopic] = useState<string | null>(null);
+      const [conceptGaps, setConceptGaps] = useState<string[]>([]);
 
       const scenarios = [
-         { situation: 'You need office space', options: [
-            { label: '🏢 Rent office ($2000/mo)', cost: 2000, benefit: 'Professional image' },
-            { label: '🏠 Work from home ($0)', cost: 0, benefit: 'Save money' },
-            { label: '☕ Coworking ($500/mo)', cost: 500, benefit: 'Networking' }
-         ]},
-         { situation: 'Marketing your product', options: [
-            { label: '📺 Paid ads ($3000)', cost: 3000, benefit: 'Fast reach' },
-            { label: '📱 Social media ($0)', cost: 0, benefit: 'Organic growth' },
-            { label: '🤝 Partnerships ($500)', cost: 500, benefit: 'Credibility' }
-         ]},
-         { situation: 'Hiring help', options: [
-            { label: '👔 Full-time ($4000/mo)', cost: 4000, benefit: 'Dedicated team' },
-            { label: '🎯 Freelancer ($1000)', cost: 1000, benefit: 'Flexible' },
-            { label: '🤖 Automation ($500)', cost: 500, benefit: 'Scalable' }
-         ]}
+         {
+            title: "Revenue Before Features",
+            context: "Your SaaS MVP has 50 users paying $29/month ($1,450 MRR). Users request: 1) API integration ($15K dev cost), 2) mobile app ($25K), 3) white-labeling ($8K). You have $12K runway. Your churn is 8% monthly.",
+            question: "How should you prioritize development to bootstrap sustainably?",
+            opts: [
+               "A) Build the mobile app - it's what most users want",
+               "B) Build white-labeling - it can command premium pricing from enterprise",
+               "C) Build nothing new - focus on reducing churn first",
+               "D) Build API integration - it enables partner revenue sharing"
+            ],
+            correct: 2,
+            wrongExplanations: [
+               "Mobile apps are expensive and don't address your core problem: 8% churn means you lose half your customers in 8 months. Building more features won't help if customers leave.",
+               "White-labeling sounds profitable but requires enterprise sales cycles (3-6 months). With $12K runway and 8% churn, you'll run out of money before closing deals.",
+               "",
+               "API integration can generate revenue but 8% monthly churn is catastrophic. At $1,450 MRR with 8% churn, you need $116 new MRR monthly just to stay flat."
+            ],
+            realWorld: "Basecamp (37signals) maintained profitability by obsessing over customer retention before adding features. They've been profitable since 2004 with no VC funding. Contrast with feature-heavy startups that burned through cash.",
+            concept: "churn_economics",
+            why: "At 8% monthly churn, you lose half your customer base in 8 months. No feature development matters if your bucket has holes. Reducing churn from 8% to 4% effectively doubles customer lifetime value. Bootstrapped companies must prioritize retention over acquisition because CAC payback periods must be short."
+         },
+         {
+            title: "The Consulting Trap",
+            context: "Your dev tool generates $3K/month in product revenue. A big client offers $15K/month for custom development work. It would consume 80% of your time but triple your income. Your product is growing 12% monthly.",
+            question: "What's the optimal bootstrapping decision?",
+            opts: [
+               "A) Take the contract - you need the money to fund product development",
+               "B) Decline and focus 100% on product growth",
+               "C) Accept but hire a contractor to do the work for $8K/month",
+               "D) Negotiate a smaller engagement at $6K/month for 30% of time"
+            ],
+            correct: 3,
+            wrongExplanations: [
+               "This is the classic consulting trap. At 80% time consumption, your 12% monthly product growth stalls. In 12 months, your product could be at $12K MRR but instead you're dependent on one client.",
+               "Noble but risky. $3K/month doesn't provide enough runway cushion. One bad month and you're in trouble. Bootstrapping requires prudent cash management, not all-or-nothing bets.",
+               "The math doesn't work: $15K - $8K = $7K profit, but you still need to manage the contractor (20% of your time). You're trading product growth for $7K/month in profit."
+            ],
+            realWorld: "ConvertKit's Nathan Barry kept a $250K/year consulting business while building ConvertKit. He gradually reduced consulting as product revenue grew, hitting $1M ARR in 2.5 years. Full product focus came only after product revenue exceeded consulting.",
+            concept: "revenue_diversification",
+            why: "The 30% time / $6K revenue deal preserves 70% for product development while adding 200% to monthly revenue. This extends runway without killing growth. At 12% monthly growth, your product reaches $12K MRR in 12 months while you've banked $72K from consulting. Best of both worlds."
+         },
+         {
+            title: "Customer Acquisition Efficiency",
+            context: "You're spending $500/month on Google Ads (10 customers, $50 CAC) and $200/month on content marketing (2 customers, $100 CAC). Customer LTV is $300. Organic traffic is growing 20% monthly from content. You have $6K marketing budget.",
+            question: "How should you allocate your $6K budget for maximum bootstrapped growth?",
+            opts: [
+               "A) Put it all in Google Ads - $50 CAC vs $300 LTV is 6x return",
+               "B) Split 80% ads, 20% content to maintain organic growth",
+               "C) Put it all in content - 20% monthly organic growth will compound",
+               "D) Put 60% in content, 40% in ads for balanced short and long-term"
+            ],
+            correct: 3,
+            wrongExplanations: [
+               "Google Ads provides immediate customers but no compounding. When you stop spending, growth stops. Bootstrapped businesses need assets that compound, not just transactions.",
+               "Better than all-ads but still underweights the compounding asset. Content at 20% monthly growth doubles every 4 months. This ratio misses the asymmetric opportunity.",
+               "All-content is too risky. Content takes 6-12 months to compound meaningfully. With $6K budget and $500/month product revenue, you may not survive to see the payoff."
+            ],
+            realWorld: "Ahrefs bootstrapped to $100M ARR spending 80% of marketing budget on content. Their blog generates 500K+ organic visits monthly - an asset that compounds. But they balanced with targeted paid acquisition to maintain cash flow while content matured.",
+            concept: "compounding_assets",
+            why: "60% content ($3,600) accelerates the 20% monthly compounding - in 12 months you'll have 8x the organic traffic generating 16+ customers/month for $0 marginal cost. The 40% in ads ($2,400 = 48 customers) maintains cash flow. Total: immediate customers + an asset that scales to $0 CAC."
+         },
+         {
+            title: "The Pricing Paradox",
+            context: "Your B2B tool is priced at $49/month with 200 customers ($9,800 MRR). Competitors charge $200-400/month. Support load is crushing you - 200 customers generate 300+ tickets monthly. Your NPS is 45.",
+            question: "What pricing strategy optimizes for bootstrapped sustainability?",
+            opts: [
+               "A) Raise prices to $149/month and accept that many will churn",
+               "B) Keep prices but hire part-time support at $2K/month",
+               "C) Raise to $99/month as middle ground to minimize churn",
+               "D) Grandfather existing users and price new customers at $199/month"
+            ],
+            correct: 0,
+            wrongExplanations: [
+               "",
+               "Hiring doesn't solve the root problem. Low-price customers have high support expectations but low stakes. You'll need to keep hiring as you grow. This creates a support cost treadmill.",
+               "Middle-ground pricing pleases no one. You still attract price-sensitive customers who create support load, but you're not premium enough to attract low-maintenance enterprise buyers.",
+               "Two-tier pricing creates resentment and operational complexity. Grandfathered users at $49 will still generate 1.5 tickets each while new customers at $199 subsidize them. This is a hidden tax on growth."
+            ],
+            realWorld: "Basecamp raised prices from $24/month to $99/month. They lost 30% of customers but increased revenue and dramatically reduced support load. Price-sensitive customers are often the most demanding. Higher prices attract serious buyers who value their time over money.",
+            concept: "price_customer_fit",
+            why: "At $49/month, customers don't value the product enough to figure things out themselves - their time isn't worth much to them. At $149/month, you attract customers whose time is worth $100+/hour. They self-serve more, generate fewer tickets, and churn less. Even losing 50% of customers at 3x price = 50% revenue increase with 75% fewer support tickets."
+         },
+         {
+            title: "The Growth Inflection",
+            context: "After 18 months bootstrapping, you hit $25K MRR with 15% margins ($3,750/month profit). A VC offers $2M at $10M valuation. Competitors just raised $50M and are hiring aggressively. Your growth rate is 8% monthly.",
+            question: "What's the strategic bootstrapping decision?",
+            opts: [
+               "A) Take the funding - you need it to compete against well-funded rivals",
+               "B) Decline and continue bootstrapping at 8% growth",
+               "C) Decline and invest all profits into accelerating growth",
+               "D) Counter-offer: take $500K as convertible note to extend runway"
+            ],
+            correct: 1,
+            wrongExplanations: [
+               "VC money comes with growth expectations (3-5x annual). Your 8% monthly = 150% annual, impressive but VCs will push for faster growth via spending. This often destroys the capital efficiency that made you successful.",
+               "",
+               "Investing all profits risks everything on growth acceleration. If CAC rises or conversion drops, you have no cushion. Bootstrapped companies survive by maintaining margins, not by burning them.",
+               "Convertible notes delay but don't solve the problem. You'll still have investors expecting VC-style returns. The note converts at next round, pressuring you to raise more. This is venture-lite, not bootstrapping."
+            ],
+            realWorld: "Mailchimp declined multiple VC offers and bootstrapped to $700M revenue before a $12B acquisition. Competitors like Constant Contact who raised VC sold for much less. Mailchimp's founders retained control and captured $12B vs. diluted cap tables at competitors.",
+            concept: "capital_efficiency",
+            why: "At 8% monthly growth, you'll hit $75K MRR in 12 months and $225K MRR in 24 months - all while maintaining profitability. The $50M-funded competitor will spend $3-4M annually and might capture market share, but they'll need $500K+ MRR just to break even. Your 15% margins vs. their -300% margins means you survive any market downturn. Time arbitrage beats capital in most markets."
+         }
       ];
+
+      const conceptLabels: Record<string, string> = {
+         'churn_economics': 'Churn Economics',
+         'revenue_diversification': 'Revenue Diversification',
+         'compounding_assets': 'Compounding Assets',
+         'price_customer_fit': 'Price-Customer Fit',
+         'capital_efficiency': 'Capital Efficiency'
+      };
+
+      const infoTopics: Record<string, string> = {
+         'churn': 'Monthly churn rate shows what percentage of customers leave each month. 5% monthly = 46% annual churn. Reducing churn by 1% can increase LTV by 20%+.',
+         'runway': 'Runway = Cash / Monthly Burn Rate. Bootstrapped companies target 12+ months runway. Below 6 months is danger zone requiring immediate action.',
+         'cac_ltv': 'Customer Acquisition Cost vs. Lifetime Value. Bootstrapped companies need CAC payback in 3-6 months. VC-backed can wait 12-18 months. 3:1 LTV:CAC minimum.',
+         'compounding': 'Bootstrapping favors assets that compound: content, SEO, partnerships. These require upfront investment but generate returns indefinitely at $0 marginal cost.',
+         'margins': 'Gross margin = Revenue - Cost of Goods Sold. Bootstrapped SaaS needs 70%+ margins. Services businesses at 30-50%. Margins fund growth without external capital.'
+      };
+
+      const handleAnswer = (idx: number) => {
+         if (answered) return;
+         setSelected(idx);
+         setAnswered(true);
+         const s = scenarios[scenario];
+         if (idx === s.correct) {
+            setScore(score + 1);
+            setGameLog([...gameLog, `✓ ${s.title}: Correct`]);
+         } else {
+            setConceptGaps([...conceptGaps, s.concept]);
+            setGameLog([...gameLog, `✗ ${s.title}: Wrong - Gap in ${conceptLabels[s.concept]}`]);
+         }
+      };
+
+      const nextScenario = () => {
+         if (scenario < scenarios.length - 1) {
+            setScenario(scenario + 1);
+            setSelected(null);
+            setAnswered(false);
+         } else {
+            setPhase('result');
+         }
+      };
+
+      const getGrade = () => {
+         const pct = (score / scenarios.length) * 100;
+         if (pct >= 80) return { grade: 'A', label: 'Bootstrap Master', color: 'text-green-400' };
+         if (pct >= 60) return { grade: 'B', label: 'Sustainable Founder', color: 'text-blue-400' };
+         if (pct >= 40) return { grade: 'C', label: 'Capital Dependent', color: 'text-yellow-400' };
+         return { grade: 'D', label: 'VC Required', color: 'text-red-400' };
+      };
 
       if (phase === 'intro') return (
          <div className="flex flex-col items-center justify-center h-full bg-gradient-to-br from-green-900 via-emerald-900 to-teal-900 text-white p-8 text-center">
             <button onClick={() => setShowInfo(!showInfo)} className="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/20 flex items-center justify-center text-xl">ℹ️</button>
             {showInfo && (
-               <div className="absolute top-16 right-4 bg-black/90 p-4 rounded-xl max-w-xs text-left text-sm">
-                  <p className="font-bold mb-2">Bootstrapping</p>
-                  <p>Building a business with minimal external funding. Focus on revenue, frugality, and creative resource management.</p>
+               <div className="absolute top-16 right-4 bg-black/90 p-4 rounded-xl max-w-xs text-left text-sm z-10">
+                  <p className="font-bold mb-2">🥾 Bootstrapping Strategy</p>
+                  <p className="mb-2">Building a business with minimal external funding requires mastering:</p>
+                  <div className="space-y-1 text-xs">
+                     {Object.entries(infoTopics).map(([key, value]) => (
+                        <div key={key} className="bg-white/10 p-2 rounded cursor-pointer hover:bg-white/20" onClick={() => setInfoTopic(key)}>
+                           {key.replace('_', ' ').toUpperCase()}
+                        </div>
+                     ))}
+                  </div>
+                  {infoTopic && <p className="mt-2 text-xs bg-green-500/20 p-2 rounded">{infoTopics[infoTopic]}</p>}
                </div>
             )}
             <p className="text-6xl mb-4">🥾</p>
-            <h2 className="text-3xl font-bold mb-4">Bootstrapping Simulator</h2>
-            <p className="text-lg opacity-80 max-w-md mb-8">Start with $10,000 and make smart decisions to grow your business.</p>
-            <button onClick={() => setPhase('play')} className="px-8 py-4 bg-green-500 rounded-2xl font-bold text-xl hover:bg-green-400 transition-all">START BOOTSTRAP →</button>
+            <h2 className="text-3xl font-bold mb-4">Bootstrap Survival Lab</h2>
+            <p className="text-lg opacity-80 max-w-md mb-4">Master the art of building profitable businesses without external funding.</p>
+            <p className="text-sm opacity-60 max-w-md mb-8">5 strategic scenarios based on real bootstrapped companies like Mailchimp ($12B exit), Basecamp (25+ years profitable), and ConvertKit ($33M ARR).</p>
+            <button onClick={() => setPhase('play')} className="px-8 py-4 bg-green-500 rounded-2xl font-bold text-xl hover:bg-green-400 transition-all">START SURVIVAL LAB →</button>
          </div>
       );
 
-      if (phase === 'result') return (
-         <div className="flex flex-col items-center justify-center h-full bg-gradient-to-br from-green-900 via-emerald-900 to-teal-900 text-white p-8 text-center">
-            <p className="text-6xl mb-4">{budget > 5000 ? '🏆' : budget > 0 ? '⭐' : '💸'}</p>
-            <h2 className="text-3xl font-bold mb-4">Final Balance</h2>
-            <p className="text-5xl font-bold text-green-400 mb-4">${budget.toLocaleString()}</p>
-            <div className="text-sm opacity-80 mb-6">
-               {decisions.map((d, i) => <p key={i}>Month {i+1}: {d}</p>)}
+      if (phase === 'result') {
+         const { grade, label, color } = getGrade();
+         const uniqueGaps = [...new Set(conceptGaps)];
+         return (
+            <div className="flex flex-col h-full bg-gradient-to-br from-green-900 via-emerald-900 to-teal-900 text-white p-8 overflow-y-auto">
+               <div className="text-center mb-6">
+                  <p className={`text-6xl font-bold ${color}`}>{grade}</p>
+                  <p className="text-xl mt-2">{label}</p>
+                  <p className="text-sm opacity-70 mt-1">{score}/{scenarios.length} decisions mastered</p>
+               </div>
+               <div className="bg-black/30 rounded-xl p-4 mb-4">
+                  <p className="font-bold mb-2">📊 Decision Log</p>
+                  {gameLog.map((log, i) => (
+                     <p key={i} className={`text-sm ${log.startsWith('✓') ? 'text-green-400' : 'text-red-400'}`}>{log}</p>
+                  ))}
+               </div>
+               {uniqueGaps.length > 0 && (
+                  <div className="bg-red-500/20 rounded-xl p-4 mb-4">
+                     <p className="font-bold mb-2">📚 Concept Gaps to Study</p>
+                     {uniqueGaps.map(gap => (
+                        <p key={gap} className="text-sm">• {conceptLabels[gap]}</p>
+                     ))}
+                  </div>
+               )}
+               <div className="bg-green-500/20 rounded-xl p-4 mb-4">
+                  <p className="font-bold mb-2">🎯 Bootstrap Principles</p>
+                  <p className="text-sm">• Revenue before features - cash flow trumps roadmaps</p>
+                  <p className="text-sm">• Churn kills - fix retention before acquisition</p>
+                  <p className="text-sm">• Build compounding assets - content, SEO, referrals</p>
+                  <p className="text-sm">• Premium pricing attracts better customers</p>
+                  <p className="text-sm">• Time arbitrage beats capital in most markets</p>
+               </div>
+               <button onClick={() => { setPhase('intro'); setScenario(0); setScore(0); setSelected(null); setAnswered(false); setGameLog([]); setConceptGaps([]); }}
+                  className="mt-auto px-6 py-3 bg-green-500 rounded-xl font-bold">TRY AGAIN</button>
             </div>
-            <button onClick={() => { setPhase('intro'); setBudget(10000); setMonth(1); setDecisions([]); }} className="px-6 py-3 bg-green-500 rounded-xl font-bold">TRY AGAIN</button>
-         </div>
-      );
+         );
+      }
 
-      const handleChoice = (cost: number, label: string) => {
-         setBudget(budget - cost);
-         setDecisions([...decisions, label]);
-         if (month < scenarios.length) setMonth(month + 1);
-         else setPhase('result');
-      };
-
-      const s = scenarios[month - 1];
+      const s = scenarios[scenario];
       return (
-         <div className="flex flex-col h-full bg-gradient-to-br from-green-900 via-emerald-900 to-teal-900 text-white p-8">
-            <div className="flex justify-between mb-6">
-               <span className="bg-black/30 px-4 py-2 rounded-xl">Month {month}/3</span>
-               <span className="bg-green-500/30 px-4 py-2 rounded-xl font-bold">${budget.toLocaleString()}</span>
+         <div className="flex flex-col h-full bg-gradient-to-br from-green-900 via-emerald-900 to-teal-900 text-white p-6 overflow-y-auto">
+            <div className="flex justify-between items-center mb-4">
+               <span className="bg-black/30 px-3 py-1 rounded-lg text-sm">Decision {scenario + 1}/5</span>
+               <span className="bg-green-500/30 px-3 py-1 rounded-lg text-sm font-bold">{score} correct</span>
             </div>
-            <div className="bg-black/30 rounded-2xl p-6 mb-6 text-center">
-               <p className="text-xl font-bold">{s.situation}</p>
+            <div className="bg-black/30 rounded-xl p-4 mb-4">
+               <h3 className="font-bold text-lg text-green-400 mb-2">{s.title}</h3>
+               <p className="text-sm leading-relaxed opacity-90">{s.context}</p>
             </div>
-            <div className="flex flex-col gap-3 flex-1">
-               {s.options.map((opt) => (
-                  <button key={opt.label} onClick={() => handleChoice(opt.cost, opt.label)}
-                     className="p-4 bg-black/30 rounded-xl hover:bg-green-500/30 transition-all text-left">
-                     <p className="font-bold">{opt.label}</p>
-                     <p className="text-sm opacity-70">Cost: ${opt.cost} • {opt.benefit}</p>
+            <p className="font-bold mb-3">{s.question}</p>
+            <div className="flex flex-col gap-2 mb-4">
+               {s.opts.map((opt, idx) => (
+                  <button key={idx} onClick={() => handleAnswer(idx)} disabled={answered}
+                     className={`p-3 rounded-xl text-left text-sm transition-all ${
+                        answered
+                           ? idx === s.correct
+                              ? 'bg-green-500/40 border-2 border-green-400'
+                              : idx === selected
+                                 ? 'bg-red-500/40 border-2 border-red-400'
+                                 : 'bg-black/20 opacity-50'
+                           : 'bg-black/30 hover:bg-green-500/20'
+                     }`}>
+                     {opt}
                   </button>
                ))}
             </div>
+            {answered && (
+               <div className="space-y-3 mb-4">
+                  {selected !== s.correct && (
+                     <div className="bg-red-500/20 rounded-xl p-3">
+                        <p className="font-bold text-red-400 text-sm">Why your choice fails:</p>
+                        <p className="text-sm opacity-90">{s.wrongExplanations[selected!]}</p>
+                     </div>
+                  )}
+                  <div className="bg-green-500/20 rounded-xl p-3">
+                     <p className="font-bold text-green-400 text-sm">Why it works:</p>
+                     <p className="text-sm opacity-90">{s.why}</p>
+                  </div>
+                  <div className="bg-blue-500/20 rounded-xl p-3">
+                     <p className="font-bold text-blue-400 text-sm">📚 Real World:</p>
+                     <p className="text-sm opacity-90">{s.realWorld}</p>
+                  </div>
+                  <button onClick={nextScenario} className="w-full py-3 bg-green-500 rounded-xl font-bold">
+                     {scenario < scenarios.length - 1 ? 'NEXT DECISION →' : 'SEE RESULTS →'}
+                  </button>
+               </div>
+            )}
          </div>
       );
    };
@@ -24652,74 +24850,283 @@ const GeneratedDiagram: React.FC<DiagramProps> = ({ type, data, title }) => {
    // 50. PITCH DECK - Pitch Deck Builder
    const PitchDeckRenderer = () => {
       const [phase, setPhase] = useState<'intro' | 'play' | 'result'>('intro');
+      const [scenario, setScenario] = useState(0);
+      const [score, setScore] = useState(0);
+      const [selected, setSelected] = useState<number | null>(null);
+      const [answered, setAnswered] = useState(false);
+      const [gameLog, setGameLog] = useState<string[]>([]);
       const [showInfo, setShowInfo] = useState(false);
-      const [slides, setSlides] = useState({ problem: '', solution: '', market: '', ask: '' });
-      const [step, setStep] = useState(0);
-      const [inputValue, setInputValue] = useState('');
+      const [infoTopic, setInfoTopic] = useState<string | null>(null);
+      const [conceptGaps, setConceptGaps] = useState<string[]>([]);
 
-      const slideSteps = [
-         { key: 'problem', icon: '😰', label: 'The Problem', prompt: 'What pain point are you solving?' },
-         { key: 'solution', icon: '💡', label: 'Your Solution', prompt: 'How do you solve it?' },
-         { key: 'market', icon: '🌍', label: 'Market Size', prompt: 'How big is the opportunity?' },
-         { key: 'ask', icon: '🤝', label: 'The Ask', prompt: 'How much are you raising and for what?' }
+      const scenarios = [
+         {
+            title: "The Problem Slide Trap",
+            context: "You're pitching a B2B HR software to automate performance reviews. Your problem slide says: 'Performance reviews are broken. 85% of HR leaders say annual reviews are ineffective. Our AI-powered platform transforms this outdated process.'",
+            question: "What's wrong with this problem slide?",
+            opts: [
+               "A) The statistic isn't compelling enough - need more data",
+               "B) It's too abstract - doesn't show who loses money and how much",
+               "C) It focuses on the symptom (reviews) not the root cause",
+               "D) Nothing wrong - it has a stat and mentions the solution"
+            ],
+            correct: 1,
+            wrongExplanations: [
+               "Adding more statistics won't fix the core issue. Investors don't care about 'broken reviews' - they care about measurable business impact. Stats without dollar signs are academic.",
+               "",
+               "The symptom/cause distinction matters for product development, but investors want to know ONE thing: whose wallet is this hurting and by how much?",
+               "This slide commits the cardinal sin of pitch decks: it's investor-forgettable. After 10 pitches, an investor won't remember your 85% stat but they'll remember '$47B lost to turnover caused by bad reviews.'"
+            ],
+            realWorld: "Airbnb's legendary pitch deck didn't say 'hotels are expensive.' It said '$10.6 billion spent on travel accommodations annually, with average hotel stay costing $150/night.' Specific numbers create urgency.",
+            concept: "problem_quantification",
+            why: "The problem slide must answer: WHO has this problem, HOW MUCH is it costing them, and HOW MANY have it? Your slide needs: 'Enterprise companies lose $47B annually to employee turnover. Bad performance feedback is cited as #1 reason for leaving (Gallup 2023). A 1,000-person company loses $4.7M/year.' Now investors see the dollar opportunity."
+         },
+         {
+            title: "Market Size Credibility",
+            context: "Your fintech app helps small businesses manage invoices. Your market slide shows: TAM: $240B global fintech market, SAM: $45B SMB financial tools, SOM: $2B invoice management. An investor asks: 'How did you calculate your SOM?'",
+            question: "What's the most fundable answer?",
+            opts: [
+               "A) Industry reports from Gartner and McKinsey estimate the invoice market at $2B",
+               "B) We calculated bottom-up: 30M SMBs × $67 average annual spend on invoicing = $2B",
+               "C) We're targeting 0.8% of SAM which is conservative for a 5-year horizon",
+               "D) Our competitors' combined revenue suggests a $2B addressable market"
+            ],
+            correct: 1,
+            wrongExplanations: [
+               "Top-down analysis from industry reports is lazy and shows you haven't done the work. Every pitch deck cites the same Gartner reports. Investors have seen these numbers 100 times.",
+               "",
+               "Percentage-of-SAM is the weakest possible answer. It shows you don't understand your specific customer. How do you get 0.8%? Magic?",
+               "Competitor revenue analysis is useful but doesn't show YOUR path to market. It also suggests a crowded market with established players."
+            ],
+            realWorld: "When Uber pitched, they didn't say 'the taxi market is $100B.' They calculated: '3 million rides/day in SF × $15 average fare × 20% take rate = $3.3M/day potential in SF alone. Expand to 50 cities = X.' Investors could verify the logic.",
+            concept: "bottom_up_sizing",
+            why: "Bottom-up market sizing shows you understand your specific customer economics. '30M SMBs' is verifiable (SBA data), '$67/year' is testable (survey your users), the multiplication is transparent. Investors can poke holes in your assumptions - that's the point. Weak assumptions get fixed; made-up TAM numbers get you shown the door."
+         },
+         {
+            title: "Traction vs. Vanity",
+            context: "Your social commerce platform is 8 months old. Your traction slide shows: 50,000 app downloads, 12,000 registered users, 2,400 weekly active users, $18,000 GMV last month, 156% month-over-month growth in DAUs.",
+            question: "Which metric should you lead with to maximize investor interest?",
+            opts: [
+               "A) 50,000 downloads - shows strong market interest",
+               "B) 156% MoM DAU growth - shows explosive growth trajectory",
+               "C) $18,000 GMV - proves real economic activity",
+               "D) 2,400 weekly active users - shows engaged community"
+            ],
+            correct: 2,
+            wrongExplanations: [
+               "Downloads are the ultimate vanity metric. 50,000 downloads with 2,400 WAU means 95% of users abandoned your app. This actually raises red flags about product-market fit.",
+               "156% MoM sounds amazing but investors will ask 'from what base?' Going from 50 DAUs to 128 DAUs is 156% growth but meaningless. Percentage growth without absolute numbers is a red flag.",
+               "",
+               "2,400 WAU is a honest number but doesn't show business viability. Social platforms often have engaged users who never pay. Instagram had millions of users before any revenue."
+            ],
+            realWorld: "DoorDash's early pitch focused on GMV per restaurant ($4,000/month) and unit economics (25% take rate). They could have shown user growth, but GMV proved the business model worked. They raised $2.4M seed on $26K monthly GMV.",
+            concept: "revenue_metrics",
+            why: "$18,000 GMV is the only number that proves paying customers exist. From this, investors can calculate: take rate, customer acquisition cost, and path to profitability. Lead with GMV, then show 156% growth in GMV, then mention the user numbers as supporting context. Revenue metrics > engagement metrics > vanity metrics."
+         },
+         {
+            title: "The Competition Slide Mistake",
+            context: "Your AI writing tool competes with Jasper, Copy.ai, and ChatGPT. Your competition slide shows a 2x2 matrix with 'Price' and 'Quality' axes. You're positioned in the 'High Quality, Low Price' corner. All competitors are in other quadrants.",
+            question: "Why will this slide hurt your fundraise?",
+            opts: [
+               "A) You shouldn't include ChatGPT - it's too dominant",
+               "B) 2x2 matrices are outdated - investors want feature comparison tables",
+               "C) Claiming 'best quality, lowest price' signals you don't understand your differentiation",
+               "D) You need more competitors on the slide to show market validation"
+            ],
+            correct: 2,
+            wrongExplanations: [
+               "Excluding ChatGPT would be worse - it shows you're afraid of the elephant in the room. Every AI pitch must address the OpenAI question directly.",
+               "2x2 matrices are perfectly fine. The format isn't the problem - the axes and positioning are the problem.",
+               "",
+               "More competitors wouldn't fix the fundamental issue. The problem is that 'high quality + low price' is what EVERYONE claims. It's meaningless."
+            ],
+            realWorld: "Figma's competition slide didn't claim 'better than Sketch.' It positioned on 'Collaboration vs. Individual' and 'Browser vs. Desktop.' They picked axes where they naturally won. Adobe paid $20B for a company that never claimed to be 'better quality.'",
+            concept: "strategic_positioning",
+            why: "'Best quality, lowest price' is impossible and investors know it. It signals either: you're lying, or you don't understand your costs. Pick axes where you genuinely win: 'Built for non-writers vs. Built for professionals' or 'Real-time collaboration vs. Solo creation.' Position yourself in a quadrant that competitors can't easily enter without abandoning their core business."
+         },
+         {
+            title: "The Ask Slide Execution",
+            context: "You're raising a $3M seed round for your EdTech platform. Your ask slide says: 'Raising $3M seed round. Use of funds: 40% Engineering, 30% Sales & Marketing, 20% Operations, 10% Reserve.'",
+            question: "How should you restructure this ask to maximize investor confidence?",
+            opts: [
+               "A) Add specific milestones: '$3M gets us to $1M ARR in 18 months'",
+               "B) Show detailed hiring plan: '6 engineers, 3 sales reps, 2 ops'",
+               "C) Link spend to metrics: '$1.2M engineering = ship mobile app → 40% retention boost → hit $2M ARR milestone for Series A'",
+               "D) Include comparable raises: 'Similar stage EdTech companies raised $2-4M'"
+            ],
+            correct: 2,
+            wrongExplanations: [
+               "Milestones are necessary but not sufficient. '$1M ARR in 18 months' doesn't explain HOW you get there. Investors need to see the causal logic between spending and outcomes.",
+               "Headcount plans are operational details, not strategy. '6 engineers' means nothing unless investors know what those engineers build and how it drives revenue.",
+               "",
+               "Comparable raises are irrelevant - they show what market rate is, not why YOU deserve funding. Investors are buying your future outcomes, not market averages."
+            ],
+            realWorld: "Notion's seed deck broke down: '$1.5M → Build mobile app + API → 80% of enterprise contracts require mobile → Expected 3x enterprise conversion = $X ARR → Series A ready.' Each dollar had a causal chain to revenue.",
+            concept: "milestone_mapping",
+            why: "The ask slide must show CAUSATION: Money → Action → Measurable Output → Revenue Impact → Next Fundraise Readiness. '$1.2M engineering → mobile app → 40% retention boost → $2M ARR → Series A metrics achieved.' Now investors can verify each link. If they don't believe mobile improves retention, they'll say so. If they do believe it, they'll fund it."
+         }
       ];
+
+      const conceptLabels: Record<string, string> = {
+         'problem_quantification': 'Problem Quantification',
+         'bottom_up_sizing': 'Bottom-Up Market Sizing',
+         'revenue_metrics': 'Revenue Metrics Priority',
+         'strategic_positioning': 'Strategic Positioning',
+         'milestone_mapping': 'Milestone Mapping'
+      };
+
+      const infoTopics: Record<string, string> = {
+         'deck_flow': "The best decks follow: Problem → Solution → Why Now → Market Size → Product → Traction → Team → Business Model → Competition → Ask. Each slide answers a question the previous slide raises.",
+         'investor_time': "VCs spend 3 minutes 44 seconds on average reviewing a deck. Front-load key metrics. If they don't see traction by slide 5, they stop reading.",
+         'slides_count': "10-15 slides maximum. Each slide should have ONE message. If you need two messages, make two slides. Dense slides kill momentum.",
+         'social_proof': "Warm intros convert 50%+ while cold emails convert <1%. Name-drop advisors, customers, and existing investors early to build credibility.",
+         'appendix': "Put detailed financials, technical architecture, and market research in an appendix. Reference them ('see slide 18 for projections') but don't clutter the narrative."
+      };
+
+      const handleAnswer = (idx: number) => {
+         if (answered) return;
+         setSelected(idx);
+         setAnswered(true);
+         const s = scenarios[scenario];
+         if (idx === s.correct) {
+            setScore(score + 1);
+            setGameLog([...gameLog, `✓ ${s.title}: Correct`]);
+         } else {
+            setConceptGaps([...conceptGaps, s.concept]);
+            setGameLog([...gameLog, `✗ ${s.title}: Wrong - Gap in ${conceptLabels[s.concept]}`]);
+         }
+      };
+
+      const nextScenario = () => {
+         if (scenario < scenarios.length - 1) {
+            setScenario(scenario + 1);
+            setSelected(null);
+            setAnswered(false);
+         } else {
+            setPhase('result');
+         }
+      };
+
+      const getGrade = () => {
+         const pct = (score / scenarios.length) * 100;
+         if (pct >= 80) return { grade: 'A', label: 'Pitch Pro', color: 'text-green-400' };
+         if (pct >= 60) return { grade: 'B', label: 'Fundable Founder', color: 'text-blue-400' };
+         if (pct >= 40) return { grade: 'C', label: 'Deck Doctor Needed', color: 'text-yellow-400' };
+         return { grade: 'D', label: 'Back to Drawing Board', color: 'text-red-400' };
+      };
 
       if (phase === 'intro') return (
          <div className="flex flex-col items-center justify-center h-full bg-gradient-to-br from-blue-900 via-purple-900 to-pink-900 text-white p-8 text-center">
             <button onClick={() => setShowInfo(!showInfo)} className="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/20 flex items-center justify-center text-xl">ℹ️</button>
             {showInfo && (
-               <div className="absolute top-16 right-4 bg-black/90 p-4 rounded-xl max-w-xs text-left text-sm">
-                  <p className="font-bold mb-2">Pitch Deck Essentials</p>
-                  <p>10-15 slides: Problem, Solution, Market, Product, Traction, Team, Financials, Competition, Ask. Tell a compelling story!</p>
+               <div className="absolute top-16 right-4 bg-black/90 p-4 rounded-xl max-w-xs text-left text-sm z-10">
+                  <p className="font-bold mb-2">📑 Pitch Deck Mastery</p>
+                  <p className="mb-2">What separates funded decks from rejected ones:</p>
+                  <div className="space-y-1 text-xs">
+                     {Object.entries(infoTopics).map(([key, value]) => (
+                        <div key={key} className="bg-white/10 p-2 rounded cursor-pointer hover:bg-white/20" onClick={() => setInfoTopic(key)}>
+                           {key.replace(/_/g, ' ').toUpperCase()}
+                        </div>
+                     ))}
+                  </div>
+                  {infoTopic && <p className="mt-2 text-xs bg-purple-500/20 p-2 rounded">{infoTopics[infoTopic]}</p>}
                </div>
             )}
             <p className="text-6xl mb-4">📑</p>
-            <h2 className="text-3xl font-bold mb-4">Pitch Deck Builder</h2>
-            <p className="text-lg opacity-80 max-w-md mb-8">Create the core slides every investor pitch needs.</p>
-            <button onClick={() => setPhase('play')} className="px-8 py-4 bg-gradient-to-r from-blue-500 to-purple-500 rounded-2xl font-bold text-xl hover:opacity-90 transition-all">BUILD DECK →</button>
+            <h2 className="text-3xl font-bold mb-4">Pitch Deck Mastery Lab</h2>
+            <p className="text-lg opacity-80 max-w-md mb-4">Learn what makes the difference between funded and forgotten pitch decks.</p>
+            <p className="text-sm opacity-60 max-w-md mb-8">5 scenarios analyzing real pitch deck mistakes and the psychology behind investor decisions. Based on decks from Airbnb, Uber, DoorDash, Figma, and Notion.</p>
+            <button onClick={() => setPhase('play')} className="px-8 py-4 bg-gradient-to-r from-blue-500 to-purple-500 rounded-2xl font-bold text-xl hover:opacity-90 transition-all">START DECK REVIEW →</button>
          </div>
       );
 
-      if (phase === 'result') return (
-         <div className="flex flex-col h-full bg-gradient-to-br from-blue-900 via-purple-900 to-pink-900 text-white p-8">
-            <h2 className="text-2xl font-bold text-center mb-6">📑 Your Pitch Deck</h2>
-            <div className="flex-1 overflow-auto">
-               {slideSteps.map((s) => (
-                  <div key={s.key} className="bg-black/30 rounded-xl p-4 mb-3">
-                     <div className="flex items-center gap-2 mb-2">
-                        <span className="text-xl">{s.icon}</span>
-                        <span className="font-bold">{s.label}</span>
-                     </div>
-                     <p className="text-sm opacity-80 ml-8">{slides[s.key as keyof typeof slides]}</p>
+      if (phase === 'result') {
+         const { grade, label, color } = getGrade();
+         const uniqueGaps = [...new Set(conceptGaps)];
+         return (
+            <div className="flex flex-col h-full bg-gradient-to-br from-blue-900 via-purple-900 to-pink-900 text-white p-8 overflow-y-auto">
+               <div className="text-center mb-6">
+                  <p className={`text-6xl font-bold ${color}`}>{grade}</p>
+                  <p className="text-xl mt-2">{label}</p>
+                  <p className="text-sm opacity-70 mt-1">{score}/{scenarios.length} slides mastered</p>
+               </div>
+               <div className="bg-black/30 rounded-xl p-4 mb-4">
+                  <p className="font-bold mb-2">📊 Deck Review Log</p>
+                  {gameLog.map((log, i) => (
+                     <p key={i} className={`text-sm ${log.startsWith('✓') ? 'text-green-400' : 'text-red-400'}`}>{log}</p>
+                  ))}
+               </div>
+               {uniqueGaps.length > 0 && (
+                  <div className="bg-red-500/20 rounded-xl p-4 mb-4">
+                     <p className="font-bold mb-2">📚 Concepts to Study</p>
+                     {uniqueGaps.map(gap => (
+                        <p key={gap} className="text-sm">• {conceptLabels[gap]}</p>
+                     ))}
                   </div>
+               )}
+               <div className="bg-purple-500/20 rounded-xl p-4 mb-4">
+                  <p className="font-bold mb-2">🎯 Pitch Deck Principles</p>
+                  <p className="text-sm">• Quantify the problem in dollars lost</p>
+                  <p className="text-sm">• Bottom-up market sizing beats top-down</p>
+                  <p className="text-sm">• Lead with revenue metrics over vanity</p>
+                  <p className="text-sm">• Position on axes where you win</p>
+                  <p className="text-sm">• Map every dollar to measurable outcomes</p>
+               </div>
+               <button onClick={() => { setPhase('intro'); setScenario(0); setScore(0); setSelected(null); setAnswered(false); setGameLog([]); setConceptGaps([]); }}
+                  className="mt-auto px-6 py-3 bg-gradient-to-r from-blue-500 to-purple-500 rounded-xl font-bold">TRY AGAIN</button>
+            </div>
+         );
+      }
+
+      const s = scenarios[scenario];
+      return (
+         <div className="flex flex-col h-full bg-gradient-to-br from-blue-900 via-purple-900 to-pink-900 text-white p-6 overflow-y-auto">
+            <div className="flex justify-between items-center mb-4">
+               <span className="bg-black/30 px-3 py-1 rounded-lg text-sm">Slide {scenario + 1}/5</span>
+               <span className="bg-purple-500/30 px-3 py-1 rounded-lg text-sm font-bold">{score} correct</span>
+            </div>
+            <div className="bg-black/30 rounded-xl p-4 mb-4">
+               <h3 className="font-bold text-lg text-purple-400 mb-2">{s.title}</h3>
+               <p className="text-sm leading-relaxed opacity-90">{s.context}</p>
+            </div>
+            <p className="font-bold mb-3">{s.question}</p>
+            <div className="flex flex-col gap-2 mb-4">
+               {s.opts.map((opt, idx) => (
+                  <button key={idx} onClick={() => handleAnswer(idx)} disabled={answered}
+                     className={`p-3 rounded-xl text-left text-sm transition-all ${
+                        answered
+                           ? idx === s.correct
+                              ? 'bg-green-500/40 border-2 border-green-400'
+                              : idx === selected
+                                 ? 'bg-red-500/40 border-2 border-red-400'
+                                 : 'bg-black/20 opacity-50'
+                           : 'bg-black/30 hover:bg-purple-500/20'
+                     }`}>
+                     {opt}
+                  </button>
                ))}
             </div>
-            <button onClick={() => { setPhase('intro'); setSlides({ problem: '', solution: '', market: '', ask: '' }); setStep(0); }} className="px-6 py-3 bg-gradient-to-r from-blue-500 to-purple-500 rounded-xl font-bold mt-4">CREATE NEW DECK</button>
-         </div>
-      );
-
-      const submitStep = () => {
-         setSlides({ ...slides, [slideSteps[step].key]: inputValue });
-         setInputValue('');
-         if (step < 3) setStep(step + 1);
-         else setPhase('result');
-      };
-
-      return (
-         <div className="flex flex-col h-full bg-gradient-to-br from-blue-900 via-purple-900 to-pink-900 text-white p-8">
-            <div className="flex gap-2 mb-6">
-               {slideSteps.map((_, i) => <div key={i} className={`flex-1 h-2 rounded-full ${i <= step ? 'bg-purple-400' : 'bg-black/30'}`}></div>)}
-            </div>
-            <div className="bg-black/30 rounded-2xl p-6 mb-4 text-center">
-               <p className="text-4xl mb-2">{slideSteps[step].icon}</p>
-               <p className="text-xl font-bold">{slideSteps[step].label}</p>
-               <p className="text-sm opacity-75 mt-2">{slideSteps[step].prompt}</p>
-            </div>
-            <textarea value={inputValue} onChange={(e) => setInputValue(e.target.value)}
-               placeholder="Your answer..." className="flex-1 p-4 rounded-xl bg-black/30 border border-purple-500/30 text-white mb-4 resize-none" />
-            <button onClick={submitStep} className="px-6 py-3 bg-gradient-to-r from-blue-500 to-purple-500 rounded-xl font-bold">
-               {step < 3 ? 'NEXT SLIDE →' : 'VIEW DECK'}
-            </button>
+            {answered && (
+               <div className="space-y-3 mb-4">
+                  {selected !== s.correct && (
+                     <div className="bg-red-500/20 rounded-xl p-3">
+                        <p className="font-bold text-red-400 text-sm">Why that's wrong:</p>
+                        <p className="text-sm opacity-90">{s.wrongExplanations[selected!]}</p>
+                     </div>
+                  )}
+                  <div className="bg-green-500/20 rounded-xl p-3">
+                     <p className="font-bold text-green-400 text-sm">The investor lens:</p>
+                     <p className="text-sm opacity-90">{s.why}</p>
+                  </div>
+                  <div className="bg-blue-500/20 rounded-xl p-3">
+                     <p className="font-bold text-blue-400 text-sm">📚 Real Deck Example:</p>
+                     <p className="text-sm opacity-90">{s.realWorld}</p>
+                  </div>
+                  <button onClick={nextScenario} className="w-full py-3 bg-gradient-to-r from-blue-500 to-purple-500 rounded-xl font-bold">
+                     {scenario < scenarios.length - 1 ? 'NEXT SLIDE →' : 'SEE RESULTS →'}
+                  </button>
+               </div>
+            )}
          </div>
       );
    };
