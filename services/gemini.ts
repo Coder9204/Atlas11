@@ -299,6 +299,7 @@ When a concept comes up, follow this lookup process:
 • Outsourcing / Make vs Buy / Build vs Buy → 'outsourcing'
 • Hiring & Team Culture / Recruiting / Building Teams → 'hiring'
 • Project Management / Kanban / Sprints / Agile Boards → 'project_management'
+• Quality Control / Six Sigma / Defects / Inspection → 'quality_control'
 
 **STEP 2: IF NO MATCH → BUILD CUSTOM**
 Only if the topic is NOT covered above, use \`type: 'dynamic_blueprint'\` with custom JSON.
@@ -1100,6 +1101,13 @@ Only if the topic is NOT covered above, use \`type: 'dynamic_blueprint'\` with c
     → Random scope creep events add urgent tasks mid-project
     → Track day, progress, blocked tasks, and deadline pressure
     → KEY INSIGHT: WIP limits prevent bottlenecks; dependencies need planning
+- **Operations / Quality Control / Six Sigma:** Use \`type: 'quality_control'\`, \`data: '{}'\`
+    → Manage quality control for 10 production batches of 100 units each
+    → Set inspection rate (0-100%) and quality standard (loose/standard/strict)
+    → Balance inspection costs ($2/unit) vs return costs ($50/unit)
+    → Track defects found, defects shipped, customer returns, reputation
+    → Educational tooltips covering Six Sigma, Cost of Quality, Kaizen
+    → KEY INSIGHT: Prevention is cheaper than detection; detection cheaper than failure
 
 **CUSTOM SIMULATIONS (only if no pre-built exists):**
 3. For dynamic text, use: \`"content": "Range: {{calculations.range}} m"\`

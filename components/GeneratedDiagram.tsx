@@ -26179,6 +26179,491 @@ const GeneratedDiagram: React.FC<DiagramProps> = ({ type, data, title }) => {
       );
    };
 
+   // --- QUALITY CONTROL RENDERER ---
+   const QualityControlRenderer = () => {
+      const [phase, setPhase] = useState<'intro' | 'play' | 'result'>('intro');
+      const [showInfo, setShowInfo] = useState(false);
+      const [infoTopic, setInfoTopic] = useState<string | null>(null);
+      const [batch, setBatch] = useState(1);
+      const [gameLog, setGameLog] = useState<string[]>([]);
+
+      const totalBatches = 10;
+      const batchSize = 100; // units per batch
+
+      const [inspectionRate, setInspectionRate] = useState(20); // % of units inspected
+      const [qualityStandard, setQualityStandard] = useState<'loose' | 'standard' | 'strict'>('standard');
+
+      const [stats, setStats] = useState({
+         totalProduced: 0,
+         totalInspected: 0,
+         defectsFound: 0,
+         defectsShipped: 0,
+         customerReturns: 0,
+         inspectionCost: 0,
+         returnCost: 0,
+         reputationScore: 100,
+      });
+
+      const [currentBatch, setCurrentBatch] = useState<{
+         units: { id: number; hasDefect: boolean; inspected: boolean; shipped: boolean }[];
+         baseDefectRate: number;
+      } | null>(null);
+
+      const [batchHistory, setBatchHistory] = useState<{
+         batch: number;
+         defectRate: number;
+         defectsFound: number;
+         defectsShipped: number;
+         returns: number;
+      }[]>([]);
+
+      const infoTopics: Record<string, { title: string; content: string }> = {
+         inspection: {
+            title: "Inspection Rate",
+            content: "The percentage of products you physically check for defects. 100% inspection catches all defects but is expensive. Sampling (checking 10-30%) reduces costs but lets some defects through. Statistical quality control helps find the optimal balance."
+         },
+         standards: {
+            title: "Quality Standards",
+            content: "How strict your acceptance criteria are. LOOSE: Accept minor flaws, fewer rejections but more customer complaints. STANDARD: Industry-normal tolerances. STRICT: Reject anything imperfect—higher costs but better reputation. Six Sigma aims for 3.4 defects per million!"
+         },
+         cost_of_quality: {
+            title: "Cost of Quality",
+            content: "Quality costs include: PREVENTION (training, better equipment), APPRAISAL (inspection, testing), INTERNAL FAILURE (rework, scrap), EXTERNAL FAILURE (returns, warranty, reputation damage). It's often cheaper to prevent defects than find them later!"
+         },
+         six_sigma: {
+            title: "Six Sigma",
+            content: "A methodology targeting near-perfect quality: only 3.4 defects per million opportunities. Uses DMAIC: Define, Measure, Analyze, Improve, Control. Developed at Motorola, popularized by GE. A 'sigma level' measures process capability—6σ means 99.99966% defect-free."
+         },
+         continuous: {
+            title: "Continuous Improvement",
+            content: "Kaizen (Japanese for 'change for better') means constantly making small improvements. Track defects, find root causes, implement fixes, verify results. Quality isn't a destination—it's an ongoing journey. Every defect is a learning opportunity!"
+         }
+      };
+
+      useEffect(() => {
+         if (infoTopic && infoTopics[infoTopic]) {
+            setShowInfo(true);
+         }
+      }, [infoTopic]);
+
+      const startGame = () => {
+         setPhase('play');
+         setBatch(1);
+         setStats({
+            totalProduced: 0,
+            totalInspected: 0,
+            defectsFound: 0,
+            defectsShipped: 0,
+            customerReturns: 0,
+            inspectionCost: 0,
+            returnCost: 0,
+            reputationScore: 100,
+         });
+         setBatchHistory([]);
+         setGameLog(["Quality Control simulation started"]);
+         generateBatch(1);
+      };
+
+      const generateBatch = (batchNum: number) => {
+         // Base defect rate varies by batch (simulating process variation)
+         const baseRate = 0.05 + Math.random() * 0.15; // 5-20% defect rate
+
+         const units = Array.from({ length: batchSize }, (_, i) => ({
+            id: i,
+            hasDefect: Math.random() < baseRate,
+            inspected: false,
+            shipped: false,
+         }));
+
+         setCurrentBatch({ units, baseDefectRate: baseRate });
+         setGameLog(prev => [...prev, `Batch ${batchNum} produced with ${batchSize} units`]);
+      };
+
+      const processBatch = () => {
+         if (!currentBatch) return;
+
+         const unitsToInspect = Math.floor(batchSize * (inspectionRate / 100));
+         const inspectionCostPerUnit = 2;
+         const returnCostPerUnit = 50;
+
+         // Randomly select units to inspect
+         const shuffled = [...currentBatch.units].sort(() => Math.random() - 0.5);
+         const inspected = shuffled.slice(0, unitsToInspect);
+         const notInspected = shuffled.slice(unitsToInspect);
+
+         // Find defects based on quality standard
+         const defectThreshold = qualityStandard === 'loose' ? 0.7 : qualityStandard === 'strict' ? 0.3 : 0.5;
+
+         let defectsFound = 0;
+         inspected.forEach(unit => {
+            if (unit.hasDefect && Math.random() > defectThreshold) {
+               defectsFound++;
+            }
+         });
+
+         // Defects that slip through (not inspected or missed during inspection)
+         const actualDefects = currentBatch.units.filter(u => u.hasDefect).length;
+         const defectsShipped = actualDefects - defectsFound;
+
+         // Customer returns (some % of shipped defects get returned)
+         const returnRate = qualityStandard === 'loose' ? 0.6 : qualityStandard === 'strict' ? 0.3 : 0.4;
+         const returns = Math.floor(defectsShipped * returnRate);
+
+         // Calculate costs
+         const batchInspectionCost = unitsToInspect * inspectionCostPerUnit;
+         const batchReturnCost = returns * returnCostPerUnit;
+
+         // Reputation impact
+         const reputationHit = returns * 2;
+
+         const newStats = {
+            totalProduced: stats.totalProduced + batchSize,
+            totalInspected: stats.totalInspected + unitsToInspect,
+            defectsFound: stats.defectsFound + defectsFound,
+            defectsShipped: stats.defectsShipped + defectsShipped,
+            customerReturns: stats.customerReturns + returns,
+            inspectionCost: stats.inspectionCost + batchInspectionCost,
+            returnCost: stats.returnCost + batchReturnCost,
+            reputationScore: Math.max(0, stats.reputationScore - reputationHit),
+         };
+         setStats(newStats);
+
+         setBatchHistory(prev => [...prev, {
+            batch,
+            defectRate: currentBatch.baseDefectRate * 100,
+            defectsFound,
+            defectsShipped,
+            returns
+         }]);
+
+         setGameLog(prev => [...prev,
+            `Batch ${batch}: Inspected ${unitsToInspect} units, found ${defectsFound} defects, ${defectsShipped} shipped with defects, ${returns} returns`
+         ]);
+
+         if (batch >= totalBatches) {
+            setGameLog(prev => [...prev,
+               `Simulation complete! Total cost: $${newStats.inspectionCost + newStats.returnCost}, Reputation: ${newStats.reputationScore}%`
+            ]);
+            setPhase('result');
+         } else {
+            setBatch(batch + 1);
+            generateBatch(batch + 1);
+         }
+      };
+
+      const getScore = () => {
+         const totalCost = stats.inspectionCost + stats.returnCost;
+         const costScore = Math.max(0, 100 - (totalCost / 50)); // Lower cost = higher score
+         const reputationScore = stats.reputationScore;
+         const defectRateScore = Math.max(0, 100 - (stats.defectsShipped / stats.totalProduced) * 500);
+
+         return Math.round((costScore + reputationScore + defectRateScore) / 3);
+      };
+
+      const getGrade = () => {
+         const score = getScore();
+         if (score >= 85) return { letter: 'A', label: 'Quality Master', color: 'text-green-400' };
+         if (score >= 70) return { letter: 'B', label: 'Quality Manager', color: 'text-blue-400' };
+         if (score >= 55) return { letter: 'C', label: 'Quality Novice', color: 'text-yellow-400' };
+         return { letter: 'D', label: 'Needs Improvement', color: 'text-red-400' };
+      };
+
+      // Intro Phase
+      if (phase === 'intro') {
+         return (
+            <div className="w-full h-full flex flex-col bg-gradient-to-br from-teal-900 via-cyan-900 to-slate-900 text-white p-4 overflow-auto">
+               <div className="text-center mb-4">
+                  <h1 className="text-2xl font-bold mb-2">🔍 Quality Control Simulator</h1>
+                  <p className="text-cyan-300 text-sm">Master the art of balancing cost and quality</p>
+               </div>
+
+               <div className="bg-black/30 rounded-xl p-4 mb-4">
+                  <h2 className="text-lg font-bold mb-3 text-cyan-400">📋 How It Works</h2>
+                  <div className="space-y-2 text-sm">
+                     <p>• You manage quality control for <span className="text-white font-bold">{totalBatches} production batches</span></p>
+                     <p>• Each batch contains <span className="text-white font-bold">{batchSize} units</span> with varying defect rates</p>
+                     <p>• Set your <span className="text-cyan-400">inspection rate</span> (% of units to check)</p>
+                     <p>• Choose your <span className="text-cyan-400">quality standard</span> (how strict)</p>
+                     <p>• Balance inspection costs vs customer returns!</p>
+                  </div>
+               </div>
+
+               <div className="grid grid-cols-2 gap-3 mb-4">
+                  <div className="bg-black/30 rounded-lg p-3">
+                     <h3 className="font-bold text-red-400 mb-2">💸 Costs</h3>
+                     <p className="text-xs text-slate-300">Inspection: $2/unit</p>
+                     <p className="text-xs text-slate-300">Return: $50/unit</p>
+                  </div>
+                  <div className="bg-black/30 rounded-lg p-3">
+                     <h3 className="font-bold text-green-400 mb-2">🎯 Goal</h3>
+                     <p className="text-xs text-slate-300">Minimize total costs</p>
+                     <p className="text-xs text-slate-300">Keep reputation high!</p>
+                  </div>
+               </div>
+
+               <div className="flex flex-wrap gap-2 mb-4">
+                  {Object.keys(infoTopics).map(key => (
+                     <button
+                        key={key}
+                        onClick={() => setInfoTopic(key)}
+                        className="text-xs bg-cyan-500/20 hover:bg-cyan-500/40 px-2 py-1 rounded-full text-cyan-300"
+                     >
+                        ℹ️ {infoTopics[key].title}
+                     </button>
+                  ))}
+               </div>
+
+               <button
+                  onClick={startGame}
+                  className="w-full py-3 bg-gradient-to-r from-cyan-600 to-teal-600 hover:from-cyan-500 hover:to-teal-500 rounded-xl font-bold text-lg transition-all"
+               >
+                  ▶️ START PRODUCTION
+               </button>
+
+               {showInfo && infoTopic && infoTopics[infoTopic] && (
+                  <div className="absolute inset-0 bg-black/80 flex items-center justify-center p-4 z-50" onClick={() => { setShowInfo(false); setInfoTopic(null); }}>
+                     <div className="bg-slate-800 rounded-xl p-4 max-w-md" onClick={e => e.stopPropagation()}>
+                        <h3 className="text-lg font-bold text-cyan-400 mb-2">{infoTopics[infoTopic].title}</h3>
+                        <p className="text-sm text-slate-300">{infoTopics[infoTopic].content}</p>
+                        <button onClick={() => { setShowInfo(false); setInfoTopic(null); }} className="mt-4 w-full py-2 bg-cyan-600 rounded-lg">Got it!</button>
+                     </div>
+                  </div>
+               )}
+            </div>
+         );
+      }
+
+      // Result Phase
+      if (phase === 'result') {
+         const grade = getGrade();
+         const totalCost = stats.inspectionCost + stats.returnCost;
+         const defectRate = ((stats.defectsShipped / stats.totalProduced) * 100).toFixed(1);
+
+         return (
+            <div className="w-full h-full flex flex-col bg-gradient-to-br from-teal-900 via-cyan-900 to-slate-900 text-white p-4 overflow-auto">
+               <div className="text-center mb-4">
+                  <div className={`text-6xl font-bold ${grade.color}`}>{grade.letter}</div>
+                  <div className="text-xl font-bold">{grade.label}</div>
+                  <div className="text-cyan-400">Score: {getScore()}/100</div>
+               </div>
+
+               <div className="grid grid-cols-2 gap-3 mb-4">
+                  <div className="bg-black/30 rounded-lg p-3 text-center">
+                     <div className="text-2xl font-bold text-green-400">{stats.reputationScore}%</div>
+                     <div className="text-xs text-slate-400">Reputation</div>
+                  </div>
+                  <div className="bg-black/30 rounded-lg p-3 text-center">
+                     <div className="text-2xl font-bold text-red-400">${totalCost}</div>
+                     <div className="text-xs text-slate-400">Total Cost</div>
+                  </div>
+                  <div className="bg-black/30 rounded-lg p-3 text-center">
+                     <div className="text-2xl font-bold text-yellow-400">{defectRate}%</div>
+                     <div className="text-xs text-slate-400">Shipped Defect Rate</div>
+                  </div>
+                  <div className="bg-black/30 rounded-lg p-3 text-center">
+                     <div className="text-2xl font-bold text-orange-400">{stats.customerReturns}</div>
+                     <div className="text-xs text-slate-400">Customer Returns</div>
+                  </div>
+               </div>
+
+               <div className="bg-black/30 rounded-xl p-3 mb-4">
+                  <h3 className="font-bold text-cyan-400 mb-2">📊 Cost Breakdown</h3>
+                  <div className="flex justify-between text-sm">
+                     <span>Inspection Costs:</span>
+                     <span className="text-cyan-300">${stats.inspectionCost}</span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                     <span>Return Costs:</span>
+                     <span className="text-red-300">${stats.returnCost}</span>
+                  </div>
+                  <div className="flex justify-between text-sm font-bold border-t border-slate-600 mt-2 pt-2">
+                     <span>Total:</span>
+                     <span>${totalCost}</span>
+                  </div>
+               </div>
+
+               <div className="bg-black/30 rounded-xl p-3 mb-4">
+                  <h3 className="font-bold text-cyan-400 mb-2">💡 Key Insight</h3>
+                  <p className="text-sm text-slate-300">
+                     {stats.returnCost > stats.inspectionCost
+                        ? "Your return costs exceeded inspection costs! It's often cheaper to catch defects before shipping than to handle returns. Consider increasing your inspection rate."
+                        : stats.reputationScore < 60
+                        ? "Your reputation took a hit from too many defective products reaching customers. Quality builds trust—invest in prevention!"
+                        : "Good balance! You found the sweet spot between inspection costs and quality. Remember: prevention is cheaper than correction."
+                     }
+                  </p>
+               </div>
+
+               <button
+                  onClick={startGame}
+                  className="w-full py-3 bg-gradient-to-r from-cyan-600 to-teal-600 hover:from-cyan-500 hover:to-teal-500 rounded-xl font-bold transition-all"
+               >
+                  🔄 TRY AGAIN
+               </button>
+            </div>
+         );
+      }
+
+      // Play Phase
+      return (
+         <div className="w-full h-full flex flex-col bg-gradient-to-br from-teal-900 via-cyan-900 to-slate-900 text-white overflow-hidden">
+            {/* Info Modal */}
+            {showInfo && infoTopic && infoTopics[infoTopic] && (
+               <div className="absolute inset-0 bg-black/80 flex items-center justify-center p-4 z-50" onClick={() => { setShowInfo(false); setInfoTopic(null); }}>
+                  <div className="bg-slate-800 rounded-xl p-4 max-w-md" onClick={e => e.stopPropagation()}>
+                     <h3 className="text-lg font-bold text-cyan-400 mb-2">{infoTopics[infoTopic].title}</h3>
+                     <p className="text-sm text-slate-300">{infoTopics[infoTopic].content}</p>
+                     <button onClick={() => { setShowInfo(false); setInfoTopic(null); }} className="mt-4 w-full py-2 bg-cyan-600 rounded-lg">Got it!</button>
+                  </div>
+               </div>
+            )}
+
+            {/* Header */}
+            <div className="p-3 bg-black/30 border-b border-cyan-500/30">
+               <div className="flex justify-between items-center mb-2">
+                  <span className="font-bold">🔍 Quality Control</span>
+                  <span className="text-cyan-400">Batch {batch}/{totalBatches}</span>
+               </div>
+               <div className="grid grid-cols-4 gap-2 text-center text-xs">
+                  <div className="bg-black/30 rounded p-1">
+                     <div className="text-green-400 font-bold">{stats.reputationScore}%</div>
+                     <div className="text-slate-500">Reputation</div>
+                  </div>
+                  <div className="bg-black/30 rounded p-1">
+                     <div className="text-cyan-400 font-bold">${stats.inspectionCost}</div>
+                     <div className="text-slate-500">Inspect $</div>
+                  </div>
+                  <div className="bg-black/30 rounded p-1">
+                     <div className="text-red-400 font-bold">${stats.returnCost}</div>
+                     <div className="text-slate-500">Return $</div>
+                  </div>
+                  <div className="bg-black/30 rounded p-1">
+                     <div className="text-yellow-400 font-bold">{stats.customerReturns}</div>
+                     <div className="text-slate-500">Returns</div>
+                  </div>
+               </div>
+            </div>
+
+            {/* Control Panel */}
+            <div className="p-3 space-y-3">
+               {/* Inspection Rate Slider */}
+               <div className="bg-black/30 rounded-lg p-3">
+                  <div className="flex justify-between items-center mb-2">
+                     <span className="text-sm font-bold">Inspection Rate</span>
+                     <button onClick={() => setInfoTopic('inspection')} className="text-cyan-400 text-xs">ℹ️</button>
+                  </div>
+                  <input
+                     type="range"
+                     min="0"
+                     max="100"
+                     step="10"
+                     value={inspectionRate}
+                     onChange={(e) => setInspectionRate(Number(e.target.value))}
+                     className="w-full accent-cyan-500"
+                  />
+                  <div className="flex justify-between text-xs text-slate-400 mt-1">
+                     <span>0%</span>
+                     <span className="text-cyan-400 font-bold">{inspectionRate}% ({Math.floor(batchSize * inspectionRate / 100)} units)</span>
+                     <span>100%</span>
+                  </div>
+               </div>
+
+               {/* Quality Standard Selector */}
+               <div className="bg-black/30 rounded-lg p-3">
+                  <div className="flex justify-between items-center mb-2">
+                     <span className="text-sm font-bold">Quality Standard</span>
+                     <button onClick={() => setInfoTopic('standards')} className="text-cyan-400 text-xs">ℹ️</button>
+                  </div>
+                  <div className="grid grid-cols-3 gap-2">
+                     {(['loose', 'standard', 'strict'] as const).map(std => (
+                        <button
+                           key={std}
+                           onClick={() => setQualityStandard(std)}
+                           className={`py-2 rounded-lg text-xs font-bold transition-all ${
+                              qualityStandard === std
+                                 ? 'bg-cyan-600 text-white'
+                                 : 'bg-slate-700/50 text-slate-400 hover:bg-slate-600/50'
+                           }`}
+                        >
+                           {std === 'loose' && '😌 Loose'}
+                           {std === 'standard' && '⚖️ Standard'}
+                           {std === 'strict' && '🔬 Strict'}
+                        </button>
+                     ))}
+                  </div>
+                  <div className="text-xs text-slate-400 mt-2 text-center">
+                     {qualityStandard === 'loose' && 'Accept minor flaws • Lower cost • More returns'}
+                     {qualityStandard === 'standard' && 'Industry normal • Balanced approach'}
+                     {qualityStandard === 'strict' && 'Zero tolerance • Higher cost • Fewer returns'}
+                  </div>
+               </div>
+            </div>
+
+            {/* Batch Visualization */}
+            {currentBatch && (
+               <div className="flex-1 p-3 overflow-auto">
+                  <div className="bg-black/30 rounded-lg p-3">
+                     <div className="flex justify-between items-center mb-2">
+                        <span className="text-sm font-bold">📦 Current Batch</span>
+                        <span className="text-xs text-slate-400">{batchSize} units</span>
+                     </div>
+                     <div className="grid grid-cols-20 gap-[2px]">
+                        {currentBatch.units.slice(0, 100).map((unit, i) => (
+                           <div
+                              key={i}
+                              className={`w-2 h-2 rounded-sm ${
+                                 unit.hasDefect
+                                    ? 'bg-red-500/30'
+                                    : 'bg-green-500/30'
+                              }`}
+                              title={unit.hasDefect ? 'May have defect' : 'Good unit'}
+                           />
+                        ))}
+                     </div>
+                     <p className="text-xs text-slate-500 mt-2 text-center">
+                        (Defects hidden until shipped - just like real production!)
+                     </p>
+                  </div>
+
+                  {/* History */}
+                  {batchHistory.length > 0 && (
+                     <div className="mt-3 bg-black/30 rounded-lg p-3">
+                        <span className="text-xs font-bold text-slate-400">History</span>
+                        <div className="mt-2 space-y-1 max-h-24 overflow-auto">
+                           {batchHistory.slice(-5).map((h, i) => (
+                              <div key={i} className="flex justify-between text-xs">
+                                 <span>Batch {h.batch}</span>
+                                 <span className="text-green-400">✓{h.defectsFound}</span>
+                                 <span className="text-red-400">✗{h.defectsShipped}</span>
+                                 <span className="text-yellow-400">↩{h.returns}</span>
+                              </div>
+                           ))}
+                        </div>
+                     </div>
+                  )}
+               </div>
+            )}
+
+            {/* Action Bar */}
+            <div className="p-3 bg-black/30 border-t border-cyan-500/30">
+               <div className="flex gap-2 items-center justify-between mb-2">
+                  <div className="flex gap-2">
+                     <button onClick={() => setInfoTopic('cost_of_quality')} className="text-xs text-cyan-400 hover:text-white">💰 Cost of Quality</button>
+                     <button onClick={() => setInfoTopic('six_sigma')} className="text-xs text-cyan-400 hover:text-white">📊 Six Sigma</button>
+                     <button onClick={() => setInfoTopic('continuous')} className="text-xs text-cyan-400 hover:text-white">🔄 Kaizen</button>
+                  </div>
+               </div>
+               <button
+                  onClick={processBatch}
+                  className="w-full py-3 bg-gradient-to-r from-cyan-600 to-teal-600 hover:from-cyan-500 hover:to-teal-500 rounded-xl font-bold transition-all"
+               >
+                  📦 SHIP BATCH {batch}
+               </button>
+            </div>
+         </div>
+      );
+   };
+
    // --- GENERIC RENDERER ---
    const GenericRenderer = () => {
       if (type === 'poster' || type === 'infographic') {
@@ -26599,6 +27084,8 @@ const GeneratedDiagram: React.FC<DiagramProps> = ({ type, data, title }) => {
             return <HiringRenderer />;
          case 'project_management':
             return <ProjectManagementRenderer />;
+         case 'quality_control':
+            return <QualityControlRenderer />;
          default:
             return <GenericRenderer />;
       }
