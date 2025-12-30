@@ -24193,88 +24193,282 @@ const GeneratedDiagram: React.FC<DiagramProps> = ({ type, data, title }) => {
    // 42. CASH FLOW - Cash Flow Tracker
    const CashFlowRenderer = () => {
       const [phase, setPhase] = useState<'intro' | 'play' | 'result'>('intro');
+      const [scenario, setScenario] = useState(0);
+      const [score, setScore] = useState(0);
+      const [selected, setSelected] = useState<number | null>(null);
+      const [answered, setAnswered] = useState(false);
+      const [gameLog, setGameLog] = useState<string[]>([]);
       const [showInfo, setShowInfo] = useState(false);
-      const [inflows, setInflows] = useState<{name: string; amount: number}[]>([]);
-      const [outflows, setOutflows] = useState<{name: string; amount: number}[]>([]);
-      const [name, setName] = useState('');
-      const [amount, setAmount] = useState('');
-      const [isInflow, setIsInflow] = useState(true);
+      const [infoTopic, setInfoTopic] = useState<string | null>(null);
+      const [conceptGaps, setConceptGaps] = useState<string[]>([]);
 
-      const totalIn = inflows.reduce((sum, i) => sum + i.amount, 0);
-      const totalOut = outflows.reduce((sum, o) => sum + o.amount, 0);
-      const netCashFlow = totalIn - totalOut;
+      const scenarios = [
+         {
+            title: "The Profitable Bankruptcy",
+            context: "Your e-commerce business shows $150K profit on paper this quarter. But you're $80K behind on vendor payments with $12K in the bank. A major retailer just placed a $200K order (50% upfront, 50% on delivery in 60 days). Your vendor requires prepayment for the $120K in inventory needed.",
+            question: "What's your most viable cash flow solution?",
+            opts: [
+               "A) Take the order - the $100K upfront covers most of inventory costs",
+               "B) Negotiate with the vendor for Net-30 payment terms",
+               "C) Decline the order - you can't finance it",
+               "D) Factor your $80K in existing receivables at 5% to bridge the gap"
+            ],
+            correct: 3,
+            wrongExplanations: [
+               "The math doesn't work: $100K upfront - $120K inventory = -$20K. Plus you're already $80K behind on vendor payments. You'd need $200K cash but only have $112K coming in.",
+               "Vendors rarely give Net-30 to customers who already owe them $80K. Your negotiating position is weak. Even if successful, you still need $20K more than you have.",
+               "Declining preserves your current situation but doesn't solve the underlying cash flow crisis. You're still $80K behind with only $12K in the bank."
+            ],
+            realWorld: "Toys 'R' Us was profitable on paper but filed bankruptcy with $5B in debt because cash couldn't keep up with obligations. Meanwhile, Amazon operated at losses for years but had positive cash flow through customer prepayments and fast inventory turns.",
+            concept: "cash_vs_profit",
+            why: "Factoring $80K receivables at 5% ($4K cost) gives you $76K immediately. Add $100K order deposit = $176K. Pay $80K to vendor (clearing debt) + $120K new inventory = $200K. You're $24K short but now have a clean vendor relationship to negotiate. Revenue timing kills more businesses than lack of profit."
+         },
+         {
+            title: "The Growth Trap",
+            context: "Your SaaS is growing 20% monthly. Current: $50K MRR, $30K monthly burn (CAC heavy). You have $200K in the bank. A new enterprise client wants to prepay $500K annually, but requires 6 months of custom development ($180K cost) before launch.",
+            question: "What's the cash flow implication of this deal?",
+            opts: [
+               "A) Take it - $500K upfront more than covers $180K development cost",
+               "B) Accept but negotiate milestone payments aligned with development",
+               "C) Pass - it'll slow your growth trajectory",
+               "D) Accept only if they pay the full $500K before development starts"
+            ],
+            correct: 1,
+            wrongExplanations: [
+               "$500K is recognized as REVENUE over 12 months ($42K/month), but you need $180K CASH upfront for development. Enterprise contracts typically pay Net-30 after contract signing. Your $200K runway disappears while waiting.",
+               "",
+               "Passing on $500K ARR because of cash timing is financially naive. The deal is good - the structure needs work. Don't throw out the baby with the bathwater.",
+               "Demanding full prepayment is unrealistic for enterprise. You'll lose the deal entirely. Enterprise clients don't prepay fully for unbuilt products."
+            ],
+            realWorld: "WeWork's collapse was partly because they signed long-term lease obligations (cash out) funded by member revenue that could churn (uncertain cash in). Mismatch between outflow certainty and inflow uncertainty created the crisis.",
+            concept: "cash_timing",
+            why: "Milestone-based payments align cash IN with cash OUT. Structure: $100K on signing (covers initial dev), $100K at 3-month milestone, $100K at 6-month launch, then $200K over remaining 6 months. Your development cost of $180K is covered by first two payments. No runway drain."
+         },
+         {
+            title: "Inventory Cash Trap",
+            context: "Your product business has 90-day inventory (purchased at $300K), 45-day receivables ($150K outstanding), and 30-day payables ($75K owed). Sales are $100K/month with 50% gross margin. A supplier offers 15% discount for ordering 6-month inventory upfront.",
+            question: "Should you take the bulk discount?",
+            opts: [
+               "A) Yes - 15% savings on $600K order = $90K saved",
+               "B) No - you can't afford to tie up that much cash",
+               "C) Negotiate for 3-month inventory with 10% discount",
+               "D) Yes, if you finance it with a credit line"
+            ],
+            correct: 2,
+            wrongExplanations: [
+               "The $90K savings ignores opportunity cost and risk. You're tying up $600K for 6 months. If demand drops 20%, you have $120K of dead inventory. The savings become a loss.",
+               "This answer is directionally right but fails to capture the middle-ground opportunity. Some bulk benefit is achievable without the full risk.",
+               "",
+               "Credit lines aren't free. At 8% APR, 6 months of financing $600K costs $24K. Plus carrying cost, insurance, storage. Net savings drop to maybe $50K while taking all the demand risk."
+            ],
+            realWorld: "Circuit City bought massive inventory before holiday season 2008. When demand crashed, they had $1B in unsellable TVs. Best Buy, with leaner inventory, survived. Circuit City liquidated. Inventory is cash sitting on shelves depreciating.",
+            concept: "working_capital",
+            why: "Cash Conversion Cycle = Inventory Days + Receivables Days - Payables Days = 90 + 45 - 30 = 105 days. Every day of inventory is cash trapped. 3-month order with 10% discount saves $30K, only traps cash for 90 extra days vs. 180. You preserve flexibility while capturing 1/3 of the savings at half the risk."
+         },
+         {
+            title: "The Seasonality Crunch",
+            context: "Your business does 60% of annual revenue in Q4 ($1.2M). Other quarters average $200K each ($600K total). Monthly fixed costs are $80K. You end Q4 with $400K cash. It's January 1st.",
+            question: "How should you manage cash through the slow quarters?",
+            opts: [
+               "A) Cut fixed costs by 30% in Q1-Q3, restore in Q4",
+               "B) Establish a $300K credit line before you need it",
+               "C) Reduce Q1-Q3 costs and maintain $200K cash reserve",
+               "D) Invest Q4 profits in growth for next Q4"
+            ],
+            correct: 1,
+            wrongExplanations: [
+               "Cutting costs 30% ($24K/month) sounds prudent but you're cutting bone, not fat. Laying off staff in January and rehiring in September destroys institutional knowledge and morale.",
+               "",
+               "A $200K reserve is only 2.5 months of burn. Q1-Q3 is 9 months. Even with reduced revenue, you'll run out. This is false security.",
+               "Investing profits when you have 9 lean months ahead is reckless. Growth investments should come from predictable cash flow, not last year's windfall."
+            ],
+            realWorld: "Retail businesses like Macy's maintain credit facilities specifically for seasonal inventory purchases. They draw in Q3, buy inventory, sell in Q4, repay in January. The cost of credit is built into Q4 margins.",
+            concept: "seasonal_management",
+            why: "Q1-Q3 math: 9 months × $80K costs = $720K. Revenue: $600K. Gap: -$120K. You have $400K starting cash but want to enter Q4 with reserves for inventory. A $300K credit line (drawn as needed, ~$150K average balance, ~$9K annual cost) provides runway without draining reserves. Draw in slow months, repay from Q4 windfall."
+         },
+         {
+            title: "The Subscription Timing",
+            context: "Your SaaS offers monthly ($99/mo) and annual plans ($999/yr - 16% discount). Currently: 1,000 monthly subscribers = $99K MRR. You're spending $150K/month (50% on growth). Runway: 4 months.",
+            question: "What pricing strategy optimizes cash flow survival?",
+            opts: [
+               "A) Push annual aggressively - each conversion brings forward 11 months of cash",
+               "B) Raise monthly price to $129 to extend runway",
+               "C) Cut spending to $80K/month and extend runway to 12+ months",
+               "D) Offer 25% annual discount to drive faster conversion"
+            ],
+            correct: 0,
+            wrongExplanations: [
+               "",
+               "Price increases take time to impact (new customers only) and may increase churn. With 4 months runway, you don't have time for gradual impact. This doesn't solve the immediate crisis.",
+               "Cutting from $150K to $80K means eliminating growth spending. But you're not profitable at current scale. You'd be slowly dying instead of quickly dying. Neither is good.",
+               "A 25% discount ($749/yr = $62/mo) is worse than monthly pricing. You're trading cash now for less total revenue. This extends runway but damages unit economics permanently."
+            ],
+            realWorld: "ClassPass survived a 2020 crisis by converting monthly members to discounted credits packages. They traded future revenue for immediate cash. Annual prepay gave them runway to pivot to hybrid model. They're now valued at $1B+.",
+            concept: "prepayment_strategy",
+            why: "Converting 200 monthly users to annual at current pricing: 200 × $999 = $199.8K cash infusion. You 'lose' $99 × 200 × 11 months = $218K in future monthly payments but you GET $200K NOW. With 4 months runway, future revenue is worthless if you don't survive. The 16% annual discount costs $190/customer/year - cheap compared to death."
+         }
+      ];
+
+      const conceptLabels: Record<string, string> = {
+         'cash_vs_profit': 'Cash vs. Profit',
+         'cash_timing': 'Cash Timing',
+         'working_capital': 'Working Capital',
+         'seasonal_management': 'Seasonal Cash Management',
+         'prepayment_strategy': 'Prepayment Strategy'
+      };
+
+      const infoTopics: Record<string, string> = {
+         'operating': 'Operating cash flow = Net income + Non-cash expenses (depreciation) +/- Changes in working capital. Positive operating cash flow means the core business generates cash.',
+         'investing': 'Investing cash flow = Cash spent on long-term assets (equipment, acquisitions) minus sales of assets. Usually negative for growing companies.',
+         'financing': 'Financing cash flow = Cash from debt, equity issuance, or dividends. Positive when raising capital, negative when repaying debt or distributing profits.',
+         'runway': 'Runway = Cash Balance / Monthly Burn Rate. Below 6 months requires immediate action. 12+ months provides safety for strategic decisions.',
+         'conversion': 'Cash Conversion Cycle = Days Inventory + Days Receivables - Days Payables. Lower is better. Negative CCC (like Amazon) means customers pay before you pay suppliers.'
+      };
+
+      const handleAnswer = (idx: number) => {
+         if (answered) return;
+         setSelected(idx);
+         setAnswered(true);
+         const s = scenarios[scenario];
+         if (idx === s.correct) {
+            setScore(score + 1);
+            setGameLog([...gameLog, `✓ ${s.title}: Correct`]);
+         } else {
+            setConceptGaps([...conceptGaps, s.concept]);
+            setGameLog([...gameLog, `✗ ${s.title}: Wrong - Gap in ${conceptLabels[s.concept]}`]);
+         }
+      };
+
+      const nextScenario = () => {
+         if (scenario < scenarios.length - 1) {
+            setScenario(scenario + 1);
+            setSelected(null);
+            setAnswered(false);
+         } else {
+            setPhase('result');
+         }
+      };
+
+      const getGrade = () => {
+         const pct = (score / scenarios.length) * 100;
+         if (pct >= 80) return { grade: 'A', label: 'Cash Flow Master', color: 'text-green-400' };
+         if (pct >= 60) return { grade: 'B', label: 'Financially Literate', color: 'text-blue-400' };
+         if (pct >= 40) return { grade: 'C', label: 'Cash Blind Spots', color: 'text-yellow-400' };
+         return { grade: 'D', label: 'Bankruptcy Risk', color: 'text-red-400' };
+      };
 
       if (phase === 'intro') return (
          <div className="flex flex-col items-center justify-center h-full bg-gradient-to-br from-blue-900 via-indigo-900 to-violet-900 text-white p-8 text-center">
             <button onClick={() => setShowInfo(!showInfo)} className="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/20 flex items-center justify-center text-xl">ℹ️</button>
             {showInfo && (
-               <div className="absolute top-16 right-4 bg-black/90 p-4 rounded-xl max-w-xs text-left text-sm">
-                  <p className="font-bold mb-2">Cash Flow</p>
-                  <p>Cash In - Cash Out = Net Cash Flow. Positive cash flow keeps your business alive. Track it religiously!</p>
+               <div className="absolute top-16 right-4 bg-black/90 p-4 rounded-xl max-w-xs text-left text-sm z-10">
+                  <p className="font-bold mb-2">💵 Cash Flow Management</p>
+                  <p className="mb-2">Cash is oxygen. Profit is a concept - cash is survival:</p>
+                  <div className="space-y-1 text-xs">
+                     {Object.entries(infoTopics).map(([key, value]) => (
+                        <div key={key} className="bg-white/10 p-2 rounded cursor-pointer hover:bg-white/20" onClick={() => setInfoTopic(key)}>
+                           {key.replace(/_/g, ' ').toUpperCase()}
+                        </div>
+                     ))}
+                  </div>
+                  {infoTopic && <p className="mt-2 text-xs bg-blue-500/20 p-2 rounded">{infoTopics[infoTopic]}</p>}
                </div>
             )}
             <p className="text-6xl mb-4">💵</p>
-            <h2 className="text-3xl font-bold mb-4">Cash Flow Tracker</h2>
-            <p className="text-lg opacity-80 max-w-md mb-8">Track your money coming in and going out to understand your cash position.</p>
-            <button onClick={() => setPhase('play')} className="px-8 py-4 bg-blue-500 rounded-2xl font-bold text-xl hover:bg-blue-400 transition-all">START TRACKING →</button>
+            <h2 className="text-3xl font-bold mb-4">Cash Flow Crisis Lab</h2>
+            <p className="text-lg opacity-80 max-w-md mb-4">Master the art of managing cash - the lifeblood of every business.</p>
+            <p className="text-sm opacity-60 max-w-md mb-8">5 scenarios based on real cash crises at Toys 'R' Us, WeWork, Circuit City, and others. Learn why profitable companies go bankrupt.</p>
+            <button onClick={() => setPhase('play')} className="px-8 py-4 bg-blue-500 rounded-2xl font-bold text-xl hover:bg-blue-400 transition-all">START CASH CRISIS →</button>
          </div>
       );
 
-      if (phase === 'result') return (
-         <div className="flex flex-col h-full bg-gradient-to-br from-blue-900 via-indigo-900 to-violet-900 text-white p-8">
-            <h2 className="text-2xl font-bold text-center mb-6">💵 Cash Flow Summary</h2>
-            <div className="grid grid-cols-2 gap-4 mb-6">
-               <div className="bg-green-500/20 rounded-xl p-4 text-center">
-                  <p className="text-sm opacity-70">Total Inflows</p>
-                  <p className="text-2xl font-bold text-green-400">+${totalIn.toLocaleString()}</p>
+      if (phase === 'result') {
+         const { grade, label, color } = getGrade();
+         const uniqueGaps = [...new Set(conceptGaps)];
+         return (
+            <div className="flex flex-col h-full bg-gradient-to-br from-blue-900 via-indigo-900 to-violet-900 text-white p-8 overflow-y-auto">
+               <div className="text-center mb-6">
+                  <p className={`text-6xl font-bold ${color}`}>{grade}</p>
+                  <p className="text-xl mt-2">{label}</p>
+                  <p className="text-sm opacity-70 mt-1">{score}/{scenarios.length} crises resolved</p>
                </div>
-               <div className="bg-red-500/20 rounded-xl p-4 text-center">
-                  <p className="text-sm opacity-70">Total Outflows</p>
-                  <p className="text-2xl font-bold text-red-400">-${totalOut.toLocaleString()}</p>
+               <div className="bg-black/30 rounded-xl p-4 mb-4">
+                  <p className="font-bold mb-2">📊 Crisis Response Log</p>
+                  {gameLog.map((log, i) => (
+                     <p key={i} className={`text-sm ${log.startsWith('✓') ? 'text-green-400' : 'text-red-400'}`}>{log}</p>
+                  ))}
                </div>
-            </div>
-            <div className={`rounded-xl p-6 text-center mb-6 ${netCashFlow >= 0 ? 'bg-green-500/30' : 'bg-red-500/30'}`}>
-               <p className="text-sm opacity-70">Net Cash Flow</p>
-               <p className={`text-4xl font-bold ${netCashFlow >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                  {netCashFlow >= 0 ? '+' : ''}{netCashFlow.toLocaleString()}
-               </p>
-            </div>
-            <button onClick={() => { setPhase('intro'); setInflows([]); setOutflows([]); }} className="px-6 py-3 bg-blue-500 rounded-xl font-bold">START OVER</button>
-         </div>
-      );
-
-      const addEntry = () => {
-         if (name && amount) {
-            const entry = { name, amount: parseFloat(amount) };
-            if (isInflow) setInflows([...inflows, entry]);
-            else setOutflows([...outflows, entry]);
-            setName('');
-            setAmount('');
-         }
-      };
-
-      return (
-         <div className="flex flex-col h-full bg-gradient-to-br from-blue-900 via-indigo-900 to-violet-900 text-white p-8">
-            <div className="flex gap-2 mb-4">
-               <button onClick={() => setIsInflow(true)} className={`flex-1 py-2 rounded-xl font-bold ${isInflow ? 'bg-green-500' : 'bg-black/30'}`}>+ Inflow</button>
-               <button onClick={() => setIsInflow(false)} className={`flex-1 py-2 rounded-xl font-bold ${!isInflow ? 'bg-red-500' : 'bg-black/30'}`}>- Outflow</button>
-            </div>
-            <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Description..."
-               className="p-3 rounded-xl bg-black/30 border border-blue-500/30 text-white mb-2" />
-            <input value={amount} onChange={(e) => setAmount(e.target.value)} placeholder="Amount..." type="number"
-               className="p-3 rounded-xl bg-black/30 border border-blue-500/30 text-white mb-4" />
-            <button onClick={addEntry} className="px-6 py-3 bg-blue-500 rounded-xl font-bold mb-4">ADD ENTRY</button>
-            <div className="flex-1 overflow-auto">
-               {[...inflows.map(i => ({...i, type: 'in'})), ...outflows.map(o => ({...o, type: 'out'}))].map((e, i) => (
-                  <div key={i} className={`p-3 rounded-xl mb-2 ${e.type === 'in' ? 'bg-green-500/20' : 'bg-red-500/20'}`}>
-                     <span className="font-bold">{e.name}</span>
-                     <span className={`float-right ${e.type === 'in' ? 'text-green-400' : 'text-red-400'}`}>
-                        {e.type === 'in' ? '+' : '-'}${e.amount}
-                     </span>
+               {uniqueGaps.length > 0 && (
+                  <div className="bg-red-500/20 rounded-xl p-4 mb-4">
+                     <p className="font-bold mb-2">📚 Concepts to Study</p>
+                     {uniqueGaps.map(gap => (
+                        <p key={gap} className="text-sm">• {conceptLabels[gap]}</p>
+                     ))}
                   </div>
+               )}
+               <div className="bg-blue-500/20 rounded-xl p-4 mb-4">
+                  <p className="font-bold mb-2">🎯 Cash Flow Principles</p>
+                  <p className="text-sm">• Cash ≠ Profit - you can be profitable and bankrupt</p>
+                  <p className="text-sm">• Timing matters - revenue recognized ≠ cash received</p>
+                  <p className="text-sm">• Working capital traps cash in inventory/receivables</p>
+                  <p className="text-sm">• Seasonal businesses need credit facilities</p>
+                  <p className="text-sm">• Prepayments solve runway, annual plans accelerate cash</p>
+               </div>
+               <button onClick={() => { setPhase('intro'); setScenario(0); setScore(0); setSelected(null); setAnswered(false); setGameLog([]); setConceptGaps([]); }}
+                  className="mt-auto px-6 py-3 bg-blue-500 rounded-xl font-bold">TRY AGAIN</button>
+            </div>
+         );
+      }
+
+      const s = scenarios[scenario];
+      return (
+         <div className="flex flex-col h-full bg-gradient-to-br from-blue-900 via-indigo-900 to-violet-900 text-white p-6 overflow-y-auto">
+            <div className="flex justify-between items-center mb-4">
+               <span className="bg-black/30 px-3 py-1 rounded-lg text-sm">Crisis {scenario + 1}/5</span>
+               <span className="bg-blue-500/30 px-3 py-1 rounded-lg text-sm font-bold">{score} resolved</span>
+            </div>
+            <div className="bg-black/30 rounded-xl p-4 mb-4">
+               <h3 className="font-bold text-lg text-blue-400 mb-2">{s.title}</h3>
+               <p className="text-sm leading-relaxed opacity-90">{s.context}</p>
+            </div>
+            <p className="font-bold mb-3">{s.question}</p>
+            <div className="flex flex-col gap-2 mb-4">
+               {s.opts.map((opt, idx) => (
+                  <button key={idx} onClick={() => handleAnswer(idx)} disabled={answered}
+                     className={`p-3 rounded-xl text-left text-sm transition-all ${
+                        answered
+                           ? idx === s.correct
+                              ? 'bg-green-500/40 border-2 border-green-400'
+                              : idx === selected
+                                 ? 'bg-red-500/40 border-2 border-red-400'
+                                 : 'bg-black/20 opacity-50'
+                           : 'bg-black/30 hover:bg-blue-500/20'
+                     }`}>
+                     {opt}
+                  </button>
                ))}
             </div>
-            <button onClick={() => (inflows.length > 0 || outflows.length > 0) && setPhase('result')} className="px-6 py-3 bg-blue-700 rounded-xl font-bold mt-4">VIEW SUMMARY</button>
+            {answered && (
+               <div className="space-y-3 mb-4">
+                  {selected !== s.correct && (
+                     <div className="bg-red-500/20 rounded-xl p-3">
+                        <p className="font-bold text-red-400 text-sm">Why that fails:</p>
+                        <p className="text-sm opacity-90">{s.wrongExplanations[selected!]}</p>
+                     </div>
+                  )}
+                  <div className="bg-green-500/20 rounded-xl p-3">
+                     <p className="font-bold text-green-400 text-sm">The cash flow solution:</p>
+                     <p className="text-sm opacity-90">{s.why}</p>
+                  </div>
+                  <div className="bg-blue-500/20 rounded-xl p-3">
+                     <p className="font-bold text-blue-400 text-sm">📚 Real World:</p>
+                     <p className="text-sm opacity-90">{s.realWorld}</p>
+                  </div>
+                  <button onClick={nextScenario} className="w-full py-3 bg-blue-500 rounded-xl font-bold">
+                     {scenario < scenarios.length - 1 ? 'NEXT CRISIS →' : 'SEE RESULTS →'}
+                  </button>
+               </div>
+            )}
          </div>
       );
    };
@@ -24282,86 +24476,283 @@ const GeneratedDiagram: React.FC<DiagramProps> = ({ type, data, title }) => {
    // 43. PROFIT & LOSS - P&L Statement Builder
    const ProfitLossRenderer = () => {
       const [phase, setPhase] = useState<'intro' | 'play' | 'result'>('intro');
+      const [scenario, setScenario] = useState(0);
+      const [score, setScore] = useState(0);
+      const [selected, setSelected] = useState<number | null>(null);
+      const [answered, setAnswered] = useState(false);
+      const [gameLog, setGameLog] = useState<string[]>([]);
       const [showInfo, setShowInfo] = useState(false);
-      const [revenue, setRevenue] = useState(0);
-      const [cogs, setCogs] = useState(0);
-      const [expenses, setExpenses] = useState(0);
-      const [step, setStep] = useState(0);
-      const [inputValue, setInputValue] = useState('');
+      const [infoTopic, setInfoTopic] = useState<string | null>(null);
+      const [conceptGaps, setConceptGaps] = useState<string[]>([]);
 
-      const steps = [
-         { key: 'revenue', icon: '💰', label: 'Revenue', prompt: 'Enter your total sales/revenue' },
-         { key: 'cogs', icon: '📦', label: 'Cost of Goods Sold', prompt: 'Enter direct costs (materials, labor, etc.)' },
-         { key: 'expenses', icon: '🏢', label: 'Operating Expenses', prompt: 'Enter overhead (rent, utilities, salaries, etc.)' }
+      const scenarios = [
+         {
+            title: "The Margin Mirage",
+            context: "Two restaurants each report $1M annual revenue. Restaurant A: 28% gross margin, 8% net margin. Restaurant B: 65% gross margin, 4% net margin. Restaurant B has higher gross margins but lower net profit.",
+            question: "What's the most likely cause of Restaurant B's margin compression?",
+            opts: [
+               "A) Restaurant B has more expensive ingredients (higher COGS)",
+               "B) Restaurant B has excessive overhead (rent, labor, marketing)",
+               "C) Restaurant B prices too low relative to costs",
+               "D) Restaurant B has tax inefficiencies"
+            ],
+            correct: 1,
+            wrongExplanations: [
+               "Higher COGS would lower gross margin, not raise it. Restaurant B's 65% gross margin means COGS is only 35% of revenue - their food costs are actually lean.",
+               "",
+               "Low pricing would show up in gross margin. With 65% gross margin, pricing is fine. The problem is between gross and net.",
+               "Tax expenses typically appear below the operating profit line. The gap between 65% gross and 4% net (61 points!) is too large to be explained by taxes alone."
+            ],
+            realWorld: "The Cheesecake Factory has famously high food costs (low gross margin) but maintains strong net margins through operational efficiency. Sweetgreen has excellent gross margins but burned cash for years due to high rent and labor in premium locations.",
+            concept: "margin_analysis",
+            why: "The 61-point drop from gross to net margin means operating expenses consume 61% of revenue. At $1M revenue, that's $610K in overhead vs. only $350K in food costs. Restaurant B is likely in an expensive location, overstaffed, or spending too much on marketing. The P&L structure reveals where money leaks."
+         },
+         {
+            title: "Revenue Recognition Trap",
+            context: "A SaaS company books a $120K annual contract in January. Their CFO records $120K as January revenue, showing their best month ever. Gross margin: 85%. Operating expenses: $80K/month. The CEO celebrates profitability.",
+            question: "What's wrong with this P&L presentation?",
+            opts: [
+               "A) Nothing - they earned the contract, they can book the revenue",
+               "B) Revenue should be recognized as $10K/month over 12 months (GAAP)",
+               "C) The 85% gross margin is too high to be realistic",
+               "D) Operating expenses should be capitalized, not expensed"
+            ],
+            correct: 1,
+            wrongExplanations: [
+               "GAAP and IFRS require revenue to be recognized as earned. Booking $120K in January overstates that month and understates the next 11 months. Investors and auditors will flag this.",
+               "",
+               "85% gross margin is normal for SaaS (low marginal cost of serving customers). The margin isn't the problem.",
+               "Operating expenses for day-to-day operations should be expensed. Capitalizing regular opex would violate GAAP and inflate profits artificially."
+            ],
+            realWorld: "Under Armour inflated revenues by shipping products to retailers before they ordered them (channel stuffing). When restated, $400M+ in revenue shifted between periods. SEC investigated. Stock dropped 90% from peak.",
+            concept: "revenue_recognition",
+            why: "Proper P&L for January: Revenue $10K (1/12 of annual contract), COGS $1.5K, Gross Profit $8.5K, OpEx $80K, Net Loss -$71.5K. The company isn't profitable at all - they're losing $71.5K/month until they get more customers. Improper revenue recognition masks true economics."
+         },
+         {
+            title: "The COGS Classification",
+            context: "An e-commerce company sells $500K/month in products bought for $200K (60% gross margin). They pay $50K/month in shipping to customers. Their P&L shows shipping as operating expense, resulting in 60% gross margin and 35% operating margin.",
+            question: "How should shipping be classified for accurate P&L analysis?",
+            opts: [
+               "A) Keep as operating expense - it's not directly tied to products",
+               "B) Move to COGS - it's a direct cost of delivering each sale",
+               "C) Capitalize it - shipping is an investment in customer satisfaction",
+               "D) Split between COGS and operating expense"
+            ],
+            correct: 1,
+            wrongExplanations: [
+               "Shipping IS directly tied to products. Every order requires shipping. Classifying it as operating expense makes gross margin look artificially high.",
+               "",
+               "Shipping is consumed immediately when the product is delivered. It has no future value and cannot be capitalized under any accounting standard.",
+               "Splitting would create arbitrary allocations. Shipping is directly variable with sales - every sale has a shipping cost. It belongs entirely in COGS."
+            ],
+            realWorld: "Amazon includes shipping in COGS, which is why their retail gross margins look thin (20-25%). Many e-commerce brands hide shipping in operating expenses to show 50%+ gross margins. Investors eventually discover the true unit economics.",
+            concept: "cogs_classification",
+            why: "Correctly restated: Revenue $500K, COGS $250K ($200K products + $50K shipping) = 50% gross margin, not 60%. This 10-point swing is massive. True gross margin reveals you make $250K per $500K sold, not $300K. Misclassification hides the real cost of each sale and inflates apparent profitability."
+         },
+         {
+            title: "Operating Leverage Analysis",
+            context: "Two software companies each have $10M revenue. Company A: $8M fixed costs, $1M variable costs, $1M profit. Company B: $2M fixed costs, $6M variable costs, $2M profit. Both are considering a 20% revenue increase.",
+            question: "Which company benefits more from the revenue increase?",
+            opts: [
+               "A) Company B - they already have higher profits ($2M vs $1M)",
+               "B) Company A - high fixed costs means profit grows faster with scale",
+               "C) Equal benefit - both get 20% more revenue",
+               "D) Company B - lower fixed costs means less risk"
+            ],
+            correct: 1,
+            wrongExplanations: [
+               "Current profitability doesn't determine future growth rate. The cost structure does. Company B's high variable costs will consume most of the revenue increase.",
+               "",
+               "Revenue increases equally, but profit increases differently. Variable costs scale with revenue; fixed costs don't. This creates operating leverage.",
+               "Lower fixed costs indeed means less risk in a downturn, but the question asks about benefiting from growth, not surviving decline."
+            ],
+            realWorld: "Microsoft has 70%+ gross margins with high fixed R&D costs. When Cloud revenue grew, profits exploded because marginal cost of serving new customers is near zero. Consulting firms with variable labor costs see profit grow linearly with revenue.",
+            concept: "operating_leverage",
+            why: "Company A at $12M revenue: Fixed $8M + Variable $1.2M (scales 20%) = $9.2M costs → $2.8M profit (180% increase). Company B at $12M revenue: Fixed $2M + Variable $7.2M = $9.2M costs → $2.8M profit (40% increase). Same ending profit but Company A's profit nearly tripled while B's grew 40%. High fixed cost structures amplify growth."
+         },
+         {
+            title: "The Profitability Illusion",
+            context: "A hardware startup reports: Revenue $2M, COGS $1.4M (30% gross margin), OpEx $400K, Net Profit $200K (10% net margin). Investors celebrate profitability. But looking deeper: $800K of 'revenue' came from one-time patent licensing, and R&D was only $50K (1% of revenue).",
+            question: "What should investors actually conclude about this P&L?",
+            opts: [
+               "A) The company is genuinely profitable with healthy margins",
+               "B) Adjust for licensing: real product margins are negative with weak R&D",
+               "C) The low R&D is smart - they're focused on execution, not innovation",
+               "D) One-time revenue is fine - it's still cash in the bank"
+            ],
+            correct: 1,
+            wrongExplanations: [
+               "The profitability is an illusion. Remove one-time licensing and the picture changes completely. Investors need recurring economics, not one-off windfalls.",
+               "",
+               "1% R&D for a hardware company is catastrophically low. Industry average is 8-15%. Without R&D, there's no future product innovation. They're harvesting, not building.",
+               "One-time revenue is cash, but it masks whether the core business is viable. Investors valuing this company on 'profit' will be shocked when licensing doesn't recur."
+            ],
+            realWorld: "GoPro's P&L looked profitable in 2015, but stripping out non-recurring gains and analyzing true product economics showed trouble. Stock fell from $86 to $5 as 'profitability' evaporated without one-time items.",
+            concept: "earnings_quality",
+            why: "Adjusted P&L: Revenue $1.2M (core product only), COGS $1.4M, Gross Loss -$200K. They're losing money on every product sold. The $800K licensing masked a failing core business. Plus, 1% R&D means no product roadmap. Quality of earnings analysis separates sustainable profit from accounting illusions."
+         }
       ];
 
-      const grossProfit = revenue - cogs;
-      const netProfit = grossProfit - expenses;
-      const grossMargin = revenue > 0 ? ((grossProfit / revenue) * 100).toFixed(1) : '0';
-      const netMargin = revenue > 0 ? ((netProfit / revenue) * 100).toFixed(1) : '0';
+      const conceptLabels: Record<string, string> = {
+         'margin_analysis': 'Margin Structure Analysis',
+         'revenue_recognition': 'Revenue Recognition',
+         'cogs_classification': 'COGS Classification',
+         'operating_leverage': 'Operating Leverage',
+         'earnings_quality': 'Earnings Quality'
+      };
+
+      const infoTopics: Record<string, string> = {
+         'gross_margin': 'Gross Margin = (Revenue - COGS) / Revenue. Measures production efficiency. High GM means strong pricing power or low unit costs. SaaS: 70-85%, Retail: 25-40%, Restaurants: 60-70%.',
+         'operating_margin': 'Operating Margin = Operating Income / Revenue. Shows efficiency after all operating costs. Includes SG&A, R&D. Excludes interest and taxes. Healthy range: 10-25% for most industries.',
+         'net_margin': 'Net Margin = Net Income / Revenue. Bottom line after everything including interest, taxes. What shareholders actually keep. Apple: 25%, Amazon: 3%, Airlines: 2-5%.',
+         'contribution': 'Contribution Margin = (Revenue - Variable Costs) / Revenue. Shows how much each sale contributes to fixed costs and profit. Critical for break-even analysis.',
+         'ebitda': 'EBITDA = Earnings Before Interest, Taxes, Depreciation, Amortization. Removes financing and accounting decisions. Useful for comparing companies with different capital structures.'
+      };
+
+      const handleAnswer = (idx: number) => {
+         if (answered) return;
+         setSelected(idx);
+         setAnswered(true);
+         const s = scenarios[scenario];
+         if (idx === s.correct) {
+            setScore(score + 1);
+            setGameLog([...gameLog, `✓ ${s.title}: Correct`]);
+         } else {
+            setConceptGaps([...conceptGaps, s.concept]);
+            setGameLog([...gameLog, `✗ ${s.title}: Wrong - Gap in ${conceptLabels[s.concept]}`]);
+         }
+      };
+
+      const nextScenario = () => {
+         if (scenario < scenarios.length - 1) {
+            setScenario(scenario + 1);
+            setSelected(null);
+            setAnswered(false);
+         } else {
+            setPhase('result');
+         }
+      };
+
+      const getGrade = () => {
+         const pct = (score / scenarios.length) * 100;
+         if (pct >= 80) return { grade: 'A', label: 'P&L Expert', color: 'text-green-400' };
+         if (pct >= 60) return { grade: 'B', label: 'Financially Literate', color: 'text-blue-400' };
+         if (pct >= 40) return { grade: 'C', label: 'P&L Blind Spots', color: 'text-yellow-400' };
+         return { grade: 'D', label: 'Easily Fooled', color: 'text-red-400' };
+      };
 
       if (phase === 'intro') return (
          <div className="flex flex-col items-center justify-center h-full bg-gradient-to-br from-amber-900 via-yellow-900 to-orange-900 text-white p-8 text-center">
             <button onClick={() => setShowInfo(!showInfo)} className="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/20 flex items-center justify-center text-xl">ℹ️</button>
             {showInfo && (
-               <div className="absolute top-16 right-4 bg-black/90 p-4 rounded-xl max-w-xs text-left text-sm">
-                  <p className="font-bold mb-2">Profit & Loss Statement</p>
-                  <p>Revenue - COGS = Gross Profit. Gross Profit - Expenses = Net Profit. Shows if you're making or losing money.</p>
+               <div className="absolute top-16 right-4 bg-black/90 p-4 rounded-xl max-w-xs text-left text-sm z-10">
+                  <p className="font-bold mb-2">📊 P&L Mastery</p>
+                  <p className="mb-2">Learn to read between the lines of profit statements:</p>
+                  <div className="space-y-1 text-xs">
+                     {Object.entries(infoTopics).map(([key, value]) => (
+                        <div key={key} className="bg-white/10 p-2 rounded cursor-pointer hover:bg-white/20" onClick={() => setInfoTopic(key)}>
+                           {key.replace(/_/g, ' ').toUpperCase()}
+                        </div>
+                     ))}
+                  </div>
+                  {infoTopic && <p className="mt-2 text-xs bg-amber-500/20 p-2 rounded">{infoTopics[infoTopic]}</p>}
                </div>
             )}
             <p className="text-6xl mb-4">📊</p>
-            <h2 className="text-3xl font-bold mb-4">Profit & Loss Statement</h2>
-            <p className="text-lg opacity-80 max-w-md mb-8">Build your P&L to understand your profitability.</p>
-            <button onClick={() => setPhase('play')} className="px-8 py-4 bg-amber-500 rounded-2xl font-bold text-xl hover:bg-amber-400 transition-all text-black">BUILD P&L →</button>
+            <h2 className="text-3xl font-bold mb-4">P&L Analysis Lab</h2>
+            <p className="text-lg opacity-80 max-w-md mb-4">Master the art of reading profit and loss statements - the story behind the numbers.</p>
+            <p className="text-sm opacity-60 max-w-md mb-8">5 scenarios exposing P&L manipulation, misclassification, and analysis traps. Based on real cases from GoPro, Under Armour, and others.</p>
+            <button onClick={() => setPhase('play')} className="px-8 py-4 bg-amber-500 rounded-2xl font-bold text-xl hover:bg-amber-400 transition-all text-black">START P&L LAB →</button>
          </div>
       );
 
-      if (phase === 'result') return (
-         <div className="flex flex-col h-full bg-gradient-to-br from-amber-900 via-yellow-900 to-orange-900 text-white p-8">
-            <h2 className="text-2xl font-bold text-center mb-6">📊 P&L Statement</h2>
-            <div className="bg-black/30 rounded-xl p-4 mb-4">
-               <div className="flex justify-between mb-2"><span>Revenue</span><span className="font-bold">${revenue.toLocaleString()}</span></div>
-               <div className="flex justify-between mb-2 text-red-300"><span>- COGS</span><span>-${cogs.toLocaleString()}</span></div>
-               <div className="border-t border-white/20 pt-2 flex justify-between"><span className="font-bold">Gross Profit</span><span className="font-bold text-green-400">${grossProfit.toLocaleString()}</span></div>
-               <p className="text-xs text-right opacity-70">Margin: {grossMargin}%</p>
-            </div>
-            <div className="bg-black/30 rounded-xl p-4 mb-4">
-               <div className="flex justify-between mb-2 text-red-300"><span>- Operating Expenses</span><span>-${expenses.toLocaleString()}</span></div>
-               <div className="border-t border-white/20 pt-2 flex justify-between">
-                  <span className="font-bold">Net Profit</span>
-                  <span className={`font-bold ${netProfit >= 0 ? 'text-green-400' : 'text-red-400'}`}>${netProfit.toLocaleString()}</span>
+      if (phase === 'result') {
+         const { grade, label, color } = getGrade();
+         const uniqueGaps = [...new Set(conceptGaps)];
+         return (
+            <div className="flex flex-col h-full bg-gradient-to-br from-amber-900 via-yellow-900 to-orange-900 text-white p-8 overflow-y-auto">
+               <div className="text-center mb-6">
+                  <p className={`text-6xl font-bold ${color}`}>{grade}</p>
+                  <p className="text-xl mt-2">{label}</p>
+                  <p className="text-sm opacity-70 mt-1">{score}/{scenarios.length} analyses correct</p>
                </div>
-               <p className="text-xs text-right opacity-70">Net Margin: {netMargin}%</p>
+               <div className="bg-black/30 rounded-xl p-4 mb-4">
+                  <p className="font-bold mb-2">📊 Analysis Log</p>
+                  {gameLog.map((log, i) => (
+                     <p key={i} className={`text-sm ${log.startsWith('✓') ? 'text-green-400' : 'text-red-400'}`}>{log}</p>
+                  ))}
+               </div>
+               {uniqueGaps.length > 0 && (
+                  <div className="bg-red-500/20 rounded-xl p-4 mb-4">
+                     <p className="font-bold mb-2">📚 Concepts to Study</p>
+                     {uniqueGaps.map(gap => (
+                        <p key={gap} className="text-sm">• {conceptLabels[gap]}</p>
+                     ))}
+                  </div>
+               )}
+               <div className="bg-amber-500/20 rounded-xl p-4 mb-4">
+                  <p className="font-bold mb-2 text-black">🎯 P&L Principles</p>
+                  <p className="text-sm">• Gross margin reveals pricing power and unit economics</p>
+                  <p className="text-sm">• Gap between gross and net exposes overhead problems</p>
+                  <p className="text-sm">• Revenue recognition timing can mask or create profits</p>
+                  <p className="text-sm">• COGS classification changes the story entirely</p>
+                  <p className="text-sm">• One-time items hide true recurring economics</p>
+               </div>
+               <button onClick={() => { setPhase('intro'); setScenario(0); setScore(0); setSelected(null); setAnswered(false); setGameLog([]); setConceptGaps([]); }}
+                  className="mt-auto px-6 py-3 bg-amber-500 rounded-xl font-bold text-black">TRY AGAIN</button>
             </div>
-            <button onClick={() => { setPhase('intro'); setRevenue(0); setCogs(0); setExpenses(0); setStep(0); }} className="px-6 py-3 bg-amber-500 rounded-xl font-bold text-black mt-auto">CREATE NEW P&L</button>
-         </div>
-      );
+         );
+      }
 
-      const submitStep = () => {
-         const value = parseFloat(inputValue) || 0;
-         if (step === 0) setRevenue(value);
-         else if (step === 1) setCogs(value);
-         else setExpenses(value);
-         setInputValue('');
-         if (step < 2) setStep(step + 1);
-         else setPhase('result');
-      };
-
+      const s = scenarios[scenario];
       return (
-         <div className="flex flex-col h-full bg-gradient-to-br from-amber-900 via-yellow-900 to-orange-900 text-white p-8">
-            <div className="flex gap-2 mb-6">
-               {steps.map((_, i) => <div key={i} className={`flex-1 h-2 rounded-full ${i <= step ? 'bg-amber-400' : 'bg-black/30'}`}></div>)}
+         <div className="flex flex-col h-full bg-gradient-to-br from-amber-900 via-yellow-900 to-orange-900 text-white p-6 overflow-y-auto">
+            <div className="flex justify-between items-center mb-4">
+               <span className="bg-black/30 px-3 py-1 rounded-lg text-sm">Analysis {scenario + 1}/5</span>
+               <span className="bg-amber-500/30 px-3 py-1 rounded-lg text-sm font-bold">{score} correct</span>
             </div>
-            <div className="bg-black/30 rounded-2xl p-6 mb-4 text-center">
-               <p className="text-4xl mb-2">{steps[step].icon}</p>
-               <p className="text-xl font-bold">{steps[step].label}</p>
-               <p className="text-sm opacity-75 mt-2">{steps[step].prompt}</p>
+            <div className="bg-black/30 rounded-xl p-4 mb-4">
+               <h3 className="font-bold text-lg text-amber-400 mb-2">{s.title}</h3>
+               <p className="text-sm leading-relaxed opacity-90">{s.context}</p>
             </div>
-            <input value={inputValue} onChange={(e) => setInputValue(e.target.value)} type="number"
-               placeholder="$0" className="p-4 rounded-xl bg-black/30 border border-amber-500/30 text-white mb-4 text-center text-2xl" />
-            <button onClick={submitStep} className="px-6 py-3 bg-amber-500 rounded-xl font-bold text-black">
-               {step < 2 ? 'NEXT →' : 'VIEW P&L'}
-            </button>
+            <p className="font-bold mb-3">{s.question}</p>
+            <div className="flex flex-col gap-2 mb-4">
+               {s.opts.map((opt, idx) => (
+                  <button key={idx} onClick={() => handleAnswer(idx)} disabled={answered}
+                     className={`p-3 rounded-xl text-left text-sm transition-all ${
+                        answered
+                           ? idx === s.correct
+                              ? 'bg-green-500/40 border-2 border-green-400'
+                              : idx === selected
+                                 ? 'bg-red-500/40 border-2 border-red-400'
+                                 : 'bg-black/20 opacity-50'
+                           : 'bg-black/30 hover:bg-amber-500/20'
+                     }`}>
+                     {opt}
+                  </button>
+               ))}
+            </div>
+            {answered && (
+               <div className="space-y-3 mb-4">
+                  {selected !== s.correct && (
+                     <div className="bg-red-500/20 rounded-xl p-3">
+                        <p className="font-bold text-red-400 text-sm">Why that's wrong:</p>
+                        <p className="text-sm opacity-90">{s.wrongExplanations[selected!]}</p>
+                     </div>
+                  )}
+                  <div className="bg-green-500/20 rounded-xl p-3">
+                     <p className="font-bold text-green-400 text-sm">The real analysis:</p>
+                     <p className="text-sm opacity-90">{s.why}</p>
+                  </div>
+                  <div className="bg-amber-500/20 rounded-xl p-3">
+                     <p className="font-bold text-amber-400 text-sm">📚 Real World:</p>
+                     <p className="text-sm opacity-90">{s.realWorld}</p>
+                  </div>
+                  <button onClick={nextScenario} className="w-full py-3 bg-amber-500 rounded-xl font-bold text-black">
+                     {scenario < scenarios.length - 1 ? 'NEXT ANALYSIS →' : 'SEE RESULTS →'}
+                  </button>
+               </div>
+            )}
          </div>
       );
    };
@@ -24369,83 +24760,283 @@ const GeneratedDiagram: React.FC<DiagramProps> = ({ type, data, title }) => {
    // 44. BREAK EVEN - Break-Even Calculator
    const BreakEvenRenderer = () => {
       const [phase, setPhase] = useState<'intro' | 'play' | 'result'>('intro');
+      const [scenario, setScenario] = useState(0);
+      const [score, setScore] = useState(0);
+      const [selected, setSelected] = useState<number | null>(null);
+      const [answered, setAnswered] = useState(false);
+      const [gameLog, setGameLog] = useState<string[]>([]);
       const [showInfo, setShowInfo] = useState(false);
-      const [fixedCosts, setFixedCosts] = useState(0);
-      const [pricePerUnit, setPricePerUnit] = useState(0);
-      const [costPerUnit, setCostPerUnit] = useState(0);
-      const [step, setStep] = useState(0);
-      const [inputValue, setInputValue] = useState('');
+      const [infoTopic, setInfoTopic] = useState<string | null>(null);
+      const [conceptGaps, setConceptGaps] = useState<string[]>([]);
 
-      const contributionMargin = pricePerUnit - costPerUnit;
-      const breakEvenUnits = contributionMargin > 0 ? Math.ceil(fixedCosts / contributionMargin) : 0;
-      const breakEvenRevenue = breakEvenUnits * pricePerUnit;
-
-      const steps = [
-         { key: 'fixed', icon: '🏢', label: 'Fixed Costs', prompt: 'Total monthly fixed costs (rent, salaries, etc.)' },
-         { key: 'price', icon: '🏷️', label: 'Price Per Unit', prompt: 'How much do you sell each unit for?' },
-         { key: 'cost', icon: '📦', label: 'Cost Per Unit', prompt: 'How much does each unit cost to make?' }
+      const scenarios = [
+         {
+            title: "The Hidden Cost Trap",
+            context: "A coffee shop charges $5/cup with $1.50 in direct costs (beans, cup, lid). Monthly rent: $8,000. They calculate break-even at 2,286 cups/month. After 3 months selling 3,000 cups/month, they're still losing money.",
+            question: "What break-even error did they make?",
+            opts: [
+               "A) They forgot to include labor costs in variable costs",
+               "B) They underpriced their coffee",
+               "C) They forgot semi-variable costs (utilities, supplies, waste)",
+               "D) Their rent is too high for the location"
+            ],
+            correct: 2,
+            wrongExplanations: [
+               "Labor is often treated as a fixed cost for break-even (salaried baristas work regardless of cups sold). It should be in fixed costs, not variable, for this calculation.",
+               "At $5/cup with $1.50 variable cost, the contribution margin is $3.50. Pricing seems reasonable for coffee. The price isn't the problem.",
+               "",
+               "Rent being 'too high' doesn't explain the calculation error. High rent just means you need to sell more, which their calculation should have shown."
+            ],
+            realWorld: "Many restaurants fail in year one because break-even analysis only includes COGS and rent. They forget: credit card fees (2-3% of revenue), food waste (5-10% of inventory), cleaning supplies, POS fees, uniforms, and marketing. True variable costs are often 40-60% higher than naive estimates.",
+            concept: "hidden_costs",
+            why: "Real variable costs per cup: $1.50 beans/cup + $0.30 credit card fee (6% of $5) + $0.20 waste/spillage + $0.15 supplies = $2.15/cup. True contribution margin: $5 - $2.15 = $2.85 (not $3.50). Real break-even: $8,000 / $2.85 = 2,807 cups. They're 200 cups short every month."
+         },
+         {
+            title: "The Volume Illusion",
+            context: "A startup sells SaaS at $99/month with $19 marginal cost (hosting, support). Fixed costs: $50K/month. Break-even: 625 customers. Currently at 400 customers, they offer a 50% discount to accelerate growth.",
+            question: "What's the impact on break-even?",
+            opts: [
+               "A) Break-even stays at 625 - they're just getting there faster with discounts",
+               "B) Break-even increases to 1,667 customers - the discount destroys unit economics",
+               "C) Break-even decreases - volume growth compounds customer lifetime value",
+               "D) Break-even increases slightly to ~750 customers"
+            ],
+            correct: 1,
+            wrongExplanations: [
+               "Discounts change the contribution margin per customer. Fewer dollars per customer = more customers needed. Break-even absolutely changes.",
+               "",
+               "Discounting reduces LTV, it doesn't increase it. Customers acquired at 50% off have 50% less revenue potential. Volume doesn't compensate for halved margins.",
+               "The math is more severe than 'slightly.' Halving price while keeping costs constant dramatically increases break-even."
+            ],
+            realWorld: "Groupon merchants learned this painfully. A restaurant at 50% off with 50% Groupon commission nets 25% of regular price. If food cost is 30%, they're LOSING money on every Groupon customer. Many went bankrupt chasing 'volume.'",
+            concept: "margin_sensitivity",
+            why: "At 50% discount: New price $49.50, Variable cost still $19, New contribution margin: $30.50 (was $80). New break-even: $50,000 / $30.50 = 1,639 customers. They went from needing 225 more customers to needing 1,239 more. The discount made profitability 5.5x harder to achieve."
+         },
+         {
+            title: "Fixed Cost Leverage",
+            context: "Two SaaS companies. Company A: $200K fixed costs, 70% gross margin. Company B: $80K fixed costs, 30% gross margin. Both want to hit $100K monthly profit.",
+            question: "Which company reaches profitability faster from zero revenue?",
+            opts: [
+               "A) Company A - higher margins mean each dollar of revenue is more valuable",
+               "B) Company B - lower fixed costs mean faster break-even",
+               "C) Equal - different paths to same destination",
+               "D) Depends entirely on their customer acquisition costs"
+            ],
+            correct: 1,
+            wrongExplanations: [
+               "Higher margins are great AFTER break-even. But Company A needs $286K in revenue just to break even ($200K / 70%), while Company B needs only $267K ($80K / 30%). Time to profitability includes time to break-even.",
+               "",
+               "The paths are quantifiably different. Lower fixed costs mean reaching cash-flow positive sooner, which provides runway to reach the $100K profit target.",
+               "CAC matters for growth rate, but the question is about which business model reaches profitability faster. Structure determines trajectory."
+            ],
+            realWorld: "Amazon operated with razor-thin margins (low gross margin) but dominated because low fixed costs per transaction meant they broke even at modest volumes. High-margin luxury retailers with high fixed costs (fancy stores, lots of staff) couldn't compete on time-to-profitability.",
+            concept: "fixed_cost_leverage",
+            why: "Company A break-even: $200K / 0.70 = $286K revenue. To add $100K profit: ($200K + $100K) / 0.70 = $429K needed. Company B break-even: $80K / 0.30 = $267K revenue. To add $100K profit: ($80K + $100K) / 0.30 = $600K needed. B reaches break-even first ($267K vs $286K), but A reaches $100K profit target first at lower revenue ($429K vs $600K). Early-stage B wins; scale-stage A wins."
+         },
+         {
+            title: "The Multi-Product Puzzle",
+            context: "A bakery sells: Croissants ($4, $1 cost, 60% of sales), Bread loaves ($6, $2 cost, 30%), Cakes ($30, $12 cost, 10%). Monthly fixed costs: $12,000. They calculate break-even using average contribution margin.",
+            question: "What's the flaw in averaging contribution margins for break-even?",
+            opts: [
+               "A) Nothing - weighted average contribution margin is the correct approach",
+               "B) They should only calculate break-even for the highest-margin product",
+               "C) Product mix changes with volume, invalidating the average",
+               "D) Cakes should be excluded because they're specialty items"
+            ],
+            correct: 2,
+            wrongExplanations: [
+               "Weighted average is a snapshot of CURRENT mix. But mix changes! When you discount, when seasons change, when you push one product, the average contribution margin shifts. Break-even calculated on a frozen mix is unreliable.",
+               "Focusing only on highest-margin ignores that you need all products for customer traffic and basket size. It's not realistic to sell only cakes.",
+               "",
+               "Excluding any product gives an incomplete picture. Cakes might be 10% of volume but 30% of profit."
+            ],
+            realWorld: "Fast food chains constantly adjust menu mix to hit profit targets. McDonald's knows exactly what happens to break-even when customers shift from burgers (high margin) to McCafé (lower margin). They engineer the menu to protect contribution margin.",
+            concept: "product_mix",
+            why: "Current weighted CM: (60% × $3) + (30% × $4) + (10% × $18) = $1.80 + $1.20 + $1.80 = $4.80 average. Break-even: 2,500 units ($12K/$4.80). But if croissant sales drop to 40% and bread rises to 50%: (40% × $3) + (50% × $4) + (10% × $18) = $5.00 average. New break-even: 2,400 units. Small mix shifts move break-even by 100+ units. The 'break-even' is a moving target."
+         },
+         {
+            title: "Time-to-Break-Even",
+            context: "Two business plans for the same market. Plan A: $500K investment, $100K monthly fixed costs, 60% gross margin, reaches break-even at $167K MRR. Plan B: $200K investment, $60K monthly fixed costs, 40% gross margin, reaches break-even at $150K MRR.",
+            question: "An investor focused on return on capital should prefer which plan?",
+            opts: [
+               "A) Plan A - higher gross margin means better long-term economics",
+               "B) Plan B - lower investment with faster break-even preserves capital",
+               "C) Plan A - the higher fixed costs can be leveraged for growth",
+               "D) Need to know customer acquisition cost before deciding"
+            ],
+            correct: 1,
+            wrongExplanations: [
+               "Higher gross margin matters for mature, scaled businesses. For a new venture, survival to break-even is priority #1. You can't enjoy great margins if you run out of money first.",
+               "",
+               "High fixed costs are 'leverage' only if you survive to use them. With more capital at risk and longer time to break-even, Plan A has higher failure probability.",
+               "CAC is important but the fundamental business model comparison can be made without it. Both plans face the same market; what differs is capital efficiency."
+            ],
+            realWorld: "Venture capitalists often prefer 'capital efficient' startups - those that reach profitability with less investment. Basecamp raised $0 and reached profitability quickly. Many VC-backed competitors with 'better' unit economics burned more and failed. Cash runway matters more than theoretical margins.",
+            concept: "capital_efficiency",
+            why: "Plan A: $500K invested, $100K/mo burn until $167K MRR. If it takes 12 months to reach $167K MRR, you've burned $1.2M before break-even (12 × $100K). Total capital needed: $500K + $1.2M = $1.7M. Plan B: $200K invested, $60K/mo burn until $150K MRR. Same 12 months: $720K burned. Total capital: $920K. Plan B uses 46% less capital to reach profitability."
+         }
       ];
+
+      const conceptLabels: Record<string, string> = {
+         'hidden_costs': 'Hidden Cost Identification',
+         'margin_sensitivity': 'Margin Sensitivity',
+         'fixed_cost_leverage': 'Fixed Cost Leverage',
+         'product_mix': 'Product Mix Dynamics',
+         'capital_efficiency': 'Capital Efficiency'
+      };
+
+      const infoTopics: Record<string, string> = {
+         'contribution': 'Contribution Margin = Price - Variable Cost. The amount each sale contributes to covering fixed costs. Once fixed costs are covered, contribution margin becomes profit.',
+         'breakeven': 'Break-Even Units = Fixed Costs / Contribution Margin per Unit. Break-Even Revenue = Fixed Costs / Contribution Margin Ratio. The point where Total Revenue = Total Costs.',
+         'safety': 'Margin of Safety = (Actual Sales - Break-Even Sales) / Actual Sales. Shows how much sales can drop before hitting break-even. Higher is safer.',
+         'leverage': 'Operating Leverage = Contribution Margin / Net Operating Income. High leverage means profit changes dramatically with small revenue changes. Risky but rewarding.',
+         'multiproduct': 'For multiple products, use weighted average contribution margin based on sales mix. Break-even in units becomes break-even in "composite units" reflecting the mix.'
+      };
+
+      const handleAnswer = (idx: number) => {
+         if (answered) return;
+         setSelected(idx);
+         setAnswered(true);
+         const s = scenarios[scenario];
+         if (idx === s.correct) {
+            setScore(score + 1);
+            setGameLog([...gameLog, `✓ ${s.title}: Correct`]);
+         } else {
+            setConceptGaps([...conceptGaps, s.concept]);
+            setGameLog([...gameLog, `✗ ${s.title}: Wrong - Gap in ${conceptLabels[s.concept]}`]);
+         }
+      };
+
+      const nextScenario = () => {
+         if (scenario < scenarios.length - 1) {
+            setScenario(scenario + 1);
+            setSelected(null);
+            setAnswered(false);
+         } else {
+            setPhase('result');
+         }
+      };
+
+      const getGrade = () => {
+         const pct = (score / scenarios.length) * 100;
+         if (pct >= 80) return { grade: 'A', label: 'Break-Even Master', color: 'text-green-400' };
+         if (pct >= 60) return { grade: 'B', label: 'Cost-Aware', color: 'text-blue-400' };
+         if (pct >= 40) return { grade: 'C', label: 'Margin Blind Spots', color: 'text-yellow-400' };
+         return { grade: 'D', label: 'Profitability Risk', color: 'text-red-400' };
+      };
 
       if (phase === 'intro') return (
          <div className="flex flex-col items-center justify-center h-full bg-gradient-to-br from-cyan-900 via-teal-900 to-emerald-900 text-white p-8 text-center">
             <button onClick={() => setShowInfo(!showInfo)} className="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/20 flex items-center justify-center text-xl">ℹ️</button>
             {showInfo && (
-               <div className="absolute top-16 right-4 bg-black/90 p-4 rounded-xl max-w-xs text-left text-sm">
-                  <p className="font-bold mb-2">Break-Even Analysis</p>
-                  <p>Break-Even Point = Fixed Costs / (Price - Variable Cost). The point where revenue equals total costs.</p>
+               <div className="absolute top-16 right-4 bg-black/90 p-4 rounded-xl max-w-xs text-left text-sm z-10">
+                  <p className="font-bold mb-2">⚖️ Break-Even Mastery</p>
+                  <p className="mb-2">Master the mechanics of profitability:</p>
+                  <div className="space-y-1 text-xs">
+                     {Object.entries(infoTopics).map(([key, value]) => (
+                        <div key={key} className="bg-white/10 p-2 rounded cursor-pointer hover:bg-white/20" onClick={() => setInfoTopic(key)}>
+                           {key.replace(/_/g, ' ').toUpperCase()}
+                        </div>
+                     ))}
+                  </div>
+                  {infoTopic && <p className="mt-2 text-xs bg-cyan-500/20 p-2 rounded">{infoTopics[infoTopic]}</p>}
                </div>
             )}
             <p className="text-6xl mb-4">⚖️</p>
-            <h2 className="text-3xl font-bold mb-4">Break-Even Calculator</h2>
-            <p className="text-lg opacity-80 max-w-md mb-8">Find out how many units you need to sell to cover all your costs.</p>
-            <button onClick={() => setPhase('play')} className="px-8 py-4 bg-cyan-500 rounded-2xl font-bold text-xl hover:bg-cyan-400 transition-all text-black">CALCULATE →</button>
+            <h2 className="text-3xl font-bold mb-4">Break-Even Strategy Lab</h2>
+            <p className="text-lg opacity-80 max-w-md mb-4">Master the art of break-even analysis - the foundation of profitable business decisions.</p>
+            <p className="text-sm opacity-60 max-w-md mb-8">5 scenarios exposing common break-even mistakes: hidden costs, margin sensitivity, and the capital efficiency trap.</p>
+            <button onClick={() => setPhase('play')} className="px-8 py-4 bg-cyan-500 rounded-2xl font-bold text-xl hover:bg-cyan-400 transition-all text-black">START BREAK-EVEN LAB →</button>
          </div>
       );
 
-      if (phase === 'result') return (
-         <div className="flex flex-col h-full bg-gradient-to-br from-cyan-900 via-teal-900 to-emerald-900 text-white p-8">
-            <h2 className="text-2xl font-bold text-center mb-6">⚖️ Break-Even Analysis</h2>
-            <div className="bg-black/30 rounded-xl p-6 mb-4 text-center">
-               <p className="text-sm opacity-70">Units to Break Even</p>
-               <p className="text-5xl font-bold text-cyan-400">{breakEvenUnits.toLocaleString()}</p>
+      if (phase === 'result') {
+         const { grade, label, color } = getGrade();
+         const uniqueGaps = [...new Set(conceptGaps)];
+         return (
+            <div className="flex flex-col h-full bg-gradient-to-br from-cyan-900 via-teal-900 to-emerald-900 text-white p-8 overflow-y-auto">
+               <div className="text-center mb-6">
+                  <p className={`text-6xl font-bold ${color}`}>{grade}</p>
+                  <p className="text-xl mt-2">{label}</p>
+                  <p className="text-sm opacity-70 mt-1">{score}/{scenarios.length} analyses correct</p>
+               </div>
+               <div className="bg-black/30 rounded-xl p-4 mb-4">
+                  <p className="font-bold mb-2">📊 Analysis Log</p>
+                  {gameLog.map((log, i) => (
+                     <p key={i} className={`text-sm ${log.startsWith('✓') ? 'text-green-400' : 'text-red-400'}`}>{log}</p>
+                  ))}
+               </div>
+               {uniqueGaps.length > 0 && (
+                  <div className="bg-red-500/20 rounded-xl p-4 mb-4">
+                     <p className="font-bold mb-2">📚 Concepts to Study</p>
+                     {uniqueGaps.map(gap => (
+                        <p key={gap} className="text-sm">• {conceptLabels[gap]}</p>
+                     ))}
+                  </div>
+               )}
+               <div className="bg-cyan-500/20 rounded-xl p-4 mb-4">
+                  <p className="font-bold mb-2 text-black">🎯 Break-Even Principles</p>
+                  <p className="text-sm">• Include ALL variable costs: fees, waste, supplies</p>
+                  <p className="text-sm">• Discounts destroy margins more than they add volume</p>
+                  <p className="text-sm">• Lower fixed costs = faster path to profitability</p>
+                  <p className="text-sm">• Product mix changes break-even dynamically</p>
+                  <p className="text-sm">• Capital efficiency beats theoretical margins</p>
+               </div>
+               <button onClick={() => { setPhase('intro'); setScenario(0); setScore(0); setSelected(null); setAnswered(false); setGameLog([]); setConceptGaps([]); }}
+                  className="mt-auto px-6 py-3 bg-cyan-500 rounded-xl font-bold text-black">TRY AGAIN</button>
             </div>
-            <div className="bg-black/30 rounded-xl p-6 mb-4 text-center">
-               <p className="text-sm opacity-70">Revenue at Break-Even</p>
-               <p className="text-3xl font-bold">${breakEvenRevenue.toLocaleString()}</p>
+         );
+      }
+
+      const s = scenarios[scenario];
+      return (
+         <div className="flex flex-col h-full bg-gradient-to-br from-cyan-900 via-teal-900 to-emerald-900 text-white p-6 overflow-y-auto">
+            <div className="flex justify-between items-center mb-4">
+               <span className="bg-black/30 px-3 py-1 rounded-lg text-sm">Scenario {scenario + 1}/5</span>
+               <span className="bg-cyan-500/30 px-3 py-1 rounded-lg text-sm font-bold">{score} correct</span>
             </div>
             <div className="bg-black/30 rounded-xl p-4 mb-4">
-               <p className="text-sm opacity-70 mb-2">Contribution Margin per Unit</p>
-               <p className="font-bold">${contributionMargin} (${pricePerUnit} - ${costPerUnit})</p>
+               <h3 className="font-bold text-lg text-cyan-400 mb-2">{s.title}</h3>
+               <p className="text-sm leading-relaxed opacity-90">{s.context}</p>
             </div>
-            <button onClick={() => { setPhase('intro'); setFixedCosts(0); setPricePerUnit(0); setCostPerUnit(0); setStep(0); }} className="px-6 py-3 bg-cyan-500 rounded-xl font-bold text-black mt-auto">RECALCULATE</button>
-         </div>
-      );
-
-      const submitStep = () => {
-         const value = parseFloat(inputValue) || 0;
-         if (step === 0) setFixedCosts(value);
-         else if (step === 1) setPricePerUnit(value);
-         else setCostPerUnit(value);
-         setInputValue('');
-         if (step < 2) setStep(step + 1);
-         else setPhase('result');
-      };
-
-      return (
-         <div className="flex flex-col h-full bg-gradient-to-br from-cyan-900 via-teal-900 to-emerald-900 text-white p-8">
-            <div className="flex gap-2 mb-6">
-               {steps.map((_, i) => <div key={i} className={`flex-1 h-2 rounded-full ${i <= step ? 'bg-cyan-400' : 'bg-black/30'}`}></div>)}
+            <p className="font-bold mb-3">{s.question}</p>
+            <div className="flex flex-col gap-2 mb-4">
+               {s.opts.map((opt, idx) => (
+                  <button key={idx} onClick={() => handleAnswer(idx)} disabled={answered}
+                     className={`p-3 rounded-xl text-left text-sm transition-all ${
+                        answered
+                           ? idx === s.correct
+                              ? 'bg-green-500/40 border-2 border-green-400'
+                              : idx === selected
+                                 ? 'bg-red-500/40 border-2 border-red-400'
+                                 : 'bg-black/20 opacity-50'
+                           : 'bg-black/30 hover:bg-cyan-500/20'
+                     }`}>
+                     {opt}
+                  </button>
+               ))}
             </div>
-            <div className="bg-black/30 rounded-2xl p-6 mb-4 text-center">
-               <p className="text-4xl mb-2">{steps[step].icon}</p>
-               <p className="text-xl font-bold">{steps[step].label}</p>
-               <p className="text-sm opacity-75 mt-2">{steps[step].prompt}</p>
-            </div>
-            <input value={inputValue} onChange={(e) => setInputValue(e.target.value)} type="number"
-               placeholder="$0" className="p-4 rounded-xl bg-black/30 border border-cyan-500/30 text-white mb-4 text-center text-2xl" />
-            <button onClick={submitStep} className="px-6 py-3 bg-cyan-500 rounded-xl font-bold text-black">
-               {step < 2 ? 'NEXT →' : 'CALCULATE'}
-            </button>
+            {answered && (
+               <div className="space-y-3 mb-4">
+                  {selected !== s.correct && (
+                     <div className="bg-red-500/20 rounded-xl p-3">
+                        <p className="font-bold text-red-400 text-sm">Why that's wrong:</p>
+                        <p className="text-sm opacity-90">{s.wrongExplanations[selected!]}</p>
+                     </div>
+                  )}
+                  <div className="bg-green-500/20 rounded-xl p-3">
+                     <p className="font-bold text-green-400 text-sm">The real analysis:</p>
+                     <p className="text-sm opacity-90">{s.why}</p>
+                  </div>
+                  <div className="bg-cyan-500/20 rounded-xl p-3">
+                     <p className="font-bold text-cyan-400 text-sm">📚 Real World:</p>
+                     <p className="text-sm opacity-90">{s.realWorld}</p>
+                  </div>
+                  <button onClick={nextScenario} className="w-full py-3 bg-cyan-500 rounded-xl font-bold text-black">
+                     {scenario < scenarios.length - 1 ? 'NEXT SCENARIO →' : 'SEE RESULTS →'}
+                  </button>
+               </div>
+            )}
          </div>
       );
    };
