@@ -29020,6 +29020,218 @@ const GeneratedDiagram: React.FC<DiagramProps> = ({ type, data, title }) => {
       return (<div className="w-full h-full flex flex-col bg-gradient-to-br from-cyan-900 via-sky-900 to-blue-900 text-white overflow-hidden">{showInfo && infoTopic && infoTopics[infoTopic] && (<div className="absolute inset-0 bg-black/80 flex items-center justify-center p-4 z-50" onClick={() => { setShowInfo(false); setInfoTopic(null); }}><div className="bg-slate-800 rounded-xl p-4 max-w-md" onClick={e => e.stopPropagation()}><h3 className="text-lg font-bold text-cyan-400 mb-2">{infoTopics[infoTopic].title}</h3><p className="text-sm text-slate-300">{infoTopics[infoTopic].content}</p><button onClick={() => { setShowInfo(false); setInfoTopic(null); }} className="mt-4 w-full py-2 bg-cyan-600 rounded-lg">Got it!</button></div></div>)}<div className="p-3 bg-black/30 border-b border-cyan-500/30 flex justify-between items-center"><span className="font-bold">📐 Unit Economics</span><span className="text-cyan-400">{scenario + 1}/{scenarios.length}</span><span className="text-sky-400">Score: {score}</span></div><div className="flex-1 p-4 overflow-auto"><div className="bg-black/30 rounded-xl p-3 mb-3"><p className="text-xs text-slate-400 mb-2">Given Data:</p><div className="grid grid-cols-2 gap-2">{Object.entries(s.data).map(([k,v]) => (<div key={k} className="bg-black/30 rounded p-2 text-center"><div className="text-lg font-bold text-cyan-400">{v}</div><div className="text-xs text-slate-400 uppercase">{k}</div></div>))}</div></div><div className="bg-black/30 rounded-xl p-4 mb-3"><p className="font-medium">{s.q}</p></div><div className="grid gap-2">{s.opts.map((opt, i) => (<button key={i} onClick={() => answer(i)} disabled={answered} className={`p-3 rounded-lg text-left ${answered ? i === s.correct ? 'bg-green-600' : i === selected ? 'bg-red-600' : 'bg-black/30' : 'bg-black/30 hover:bg-cyan-600/50'}`}>{opt}</button>))}</div>{answered && (<div className="mt-3 p-3 bg-black/30 rounded-lg"><p className="text-sm text-slate-300">{s.explain}</p><button onClick={next} className="mt-3 w-full py-2 bg-cyan-600 rounded-lg">{scenario >= scenarios.length - 1 ? 'See Results' : 'Next'}</button></div>)}</div><div className="p-3 bg-black/30 border-t border-cyan-500/30 flex gap-2 justify-center">{Object.keys(infoTopics).map(k => <button key={k} onClick={() => {setInfoTopic(k);setShowInfo(true);}} className="text-xs text-cyan-400">ℹ️ {infoTopics[k].title}</button>)}</div></div>);
    };
 
+   // --- STRATEGY & GROWTH RENDERERS ---
+   const MarketResearchRenderer = () => {
+      const [phase, setPhase] = useState<'intro'|'play'|'result'>('intro');
+      const [showInfo, setShowInfo] = useState(false);
+      const [infoTopic, setInfoTopic] = useState<string|null>(null);
+      const [question, setQuestion] = useState(0);
+      const [score, setScore] = useState(0);
+      const [answered, setAnswered] = useState(false);
+      const [selected, setSelected] = useState<number|null>(null);
+      const [log, setLog] = useState<string[]>([]);
+      const questions = [
+         {q:'TAM is $10B, SAM is $1B, SOM is $100M. What does SOM represent?',opts:['Total market globally','Market you can serve','Market you can realistically capture','Your current revenue'],correct:2,explain:'SOM (Serviceable Obtainable Market) is the realistic portion you can capture given resources and competition.'},
+         {q:'Which research method gives qualitative insights but is hard to scale?',opts:['Surveys','Customer interviews','A/B testing','Analytics'],correct:1,explain:'Interviews provide deep insights into motivations and pain points but are time-intensive to conduct.'},
+         {q:'Your survey has 1000 responses with 60% saying they would buy. How many will actually buy?',opts:['600','300','60','Unknown without more data'],correct:2,explain:'Rule of thumb: divide stated intent by 10. People overstate purchase intent. 60% stated = ~6% actual.'},
+         {q:'What is a "Jobs to be Done" framework used for?',opts:['HR hiring','Understanding why customers buy','Task management','Market sizing'],correct:1,explain:'JTBD focuses on the underlying job/goal customers are trying to accomplish, not product features.'},
+         {q:'Which metric best validates product-market fit?',opts:['Website traffic','Social media followers','40%+ would be very disappointed without product','Investor interest'],correct:2,explain:'Sean Ellis test: if 40%+ of users would be "very disappointed" without your product, you have PMF.'},
+         {q:'Primary research is data you collect yourself. What is secondary research?',opts:['Less important research','Research using existing data/reports','Research done second','Backup research'],correct:1,explain:'Secondary research uses existing sources: industry reports, census data, competitor filings, etc.'}
+      ];
+      const infoTopics:{[k:string]:{title:string,content:string}} = {
+         tam:{title:'TAM/SAM/SOM',content:'TAM = Total market. SAM = Serviceable (you could reach). SOM = Obtainable (you can realistically get). Investors want big TAM, realistic SOM.'},
+         methods:{title:'Research Methods',content:'Surveys (quantitative), Interviews (qualitative), Focus groups, Observation, Analytics. Mix methods for best insights.'},
+         validation:{title:'Validation',content:'Talk to 50+ potential customers before building. Ask about problems, not solutions. "Would you buy?" means little.'},
+         pmf:{title:'Product-Market Fit',content:'When customers desperately want your product. Signs: organic growth, low churn, word of mouth, pull not push.'}
+      };
+      const answer = (idx:number) => {
+         if(answered) return;
+         setSelected(idx);
+         setAnswered(true);
+         if(idx === questions[question].correct) {
+            setScore(s => s + 1);
+            setLog(l => [...l, `Q${question+1}: Correct!`]);
+         } else {
+            setLog(l => [...l, `Q${question+1}: Wrong`]);
+         }
+      };
+      const next = () => {
+         if(question >= questions.length - 1) setPhase('result');
+         else { setQuestion(q => q + 1); setAnswered(false); setSelected(null); }
+      };
+      const grade = score >= 5 ? 'A' : score >= 4 ? 'B' : score >= 2 ? 'C' : 'D';
+      const q = questions[question];
+      if(phase === 'intro') return (<div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-teal-900 via-emerald-900 to-green-900 text-white p-6"><div className="text-6xl mb-4">🔬</div><h2 className="text-2xl font-bold mb-2">Market Research</h2><p className="text-slate-300 text-center mb-6 max-w-md">Master market research! Learn TAM/SAM/SOM, validation methods, and product-market fit.</p><button onClick={() => setPhase('play')} className="px-8 py-3 bg-gradient-to-r from-teal-500 to-emerald-500 rounded-xl font-bold">Start Learning</button></div>);
+      if(phase === 'result') return (<div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-teal-900 via-emerald-900 to-green-900 text-white p-6"><div className="text-6xl mb-4">{grade === 'A' ? '🔬' : grade === 'B' ? '📊' : '📋'}</div><h2 className="text-2xl font-bold mb-2">Research Complete!</h2><div className="text-4xl font-bold text-teal-400 mb-2">{score}/{questions.length}</div><div className="text-6xl mb-4">{grade}</div><p className="text-slate-400 mb-4">{grade === 'A' ? 'Research expert!' : grade === 'B' ? 'Good foundation!' : 'Keep learning!'}</p><button onClick={() => {setPhase('intro');setQuestion(0);setScore(0);setAnswered(false);setSelected(null);setLog([]);}} className="px-6 py-2 bg-teal-600 rounded-lg">Try Again</button></div>);
+      return (<div className="w-full h-full flex flex-col bg-gradient-to-br from-teal-900 via-emerald-900 to-green-900 text-white overflow-hidden">{showInfo && infoTopic && infoTopics[infoTopic] && (<div className="absolute inset-0 bg-black/80 flex items-center justify-center p-4 z-50" onClick={() => { setShowInfo(false); setInfoTopic(null); }}><div className="bg-slate-800 rounded-xl p-4 max-w-md" onClick={e => e.stopPropagation()}><h3 className="text-lg font-bold text-teal-400 mb-2">{infoTopics[infoTopic].title}</h3><p className="text-sm text-slate-300">{infoTopics[infoTopic].content}</p><button onClick={() => { setShowInfo(false); setInfoTopic(null); }} className="mt-4 w-full py-2 bg-teal-600 rounded-lg">Got it!</button></div></div>)}<div className="p-3 bg-black/30 border-b border-teal-500/30 flex justify-between items-center"><span className="font-bold">🔬 Market Research</span><span className="text-teal-400">{question + 1}/{questions.length}</span><span className="text-emerald-400">Score: {score}</span></div><div className="flex-1 p-4 flex flex-col justify-center"><div className="bg-black/30 rounded-xl p-4 mb-4"><p className="text-sm">{q.q}</p></div><div className="grid gap-2">{q.opts.map((opt, i) => (<button key={i} onClick={() => answer(i)} disabled={answered} className={`p-3 rounded-lg text-left text-sm ${answered ? i === q.correct ? 'bg-green-600' : i === selected ? 'bg-red-600' : 'bg-black/30' : 'bg-black/30 hover:bg-teal-600/50'}`}>{opt}</button>))}</div>{answered && (<div className="mt-3 p-3 bg-black/30 rounded-lg"><p className="text-sm text-slate-300">{q.explain}</p><button onClick={next} className="mt-3 w-full py-2 bg-teal-600 rounded-lg">{question >= questions.length - 1 ? 'See Results' : 'Next'}</button></div>)}</div><div className="p-3 bg-black/30 border-t border-teal-500/30 flex gap-2 justify-center">{Object.keys(infoTopics).map(k => <button key={k} onClick={() => {setInfoTopic(k);setShowInfo(true);}} className="text-xs text-teal-400">ℹ️ {infoTopics[k].title}</button>)}</div></div>);
+   };
+
+   const CompetitiveAnalysisRenderer = () => {
+      const [phase, setPhase] = useState<'intro'|'play'|'result'>('intro');
+      const [showInfo, setShowInfo] = useState(false);
+      const [infoTopic, setInfoTopic] = useState<string|null>(null);
+      const [scenario, setScenario] = useState(0);
+      const [score, setScore] = useState(0);
+      const [answered, setAnswered] = useState(false);
+      const [selected, setSelected] = useState<number|null>(null);
+      const [log, setLog] = useState<string[]>([]);
+      const scenarios = [
+         {competitor:{name:'BigCorp',strengths:['Brand','Resources','Distribution'],weaknesses:['Slow','Expensive','Poor UX']},q:'Best strategy against this competitor?',opts:['Compete on price','Move faster with better UX','Build bigger brand','Copy their model'],correct:1,explain:'Attack weaknesses. Being nimble with better UX exploits their slow/poor UX weaknesses.'},
+         {competitor:{name:'Startup X',strengths:['Innovative','Fast','VC-funded'],weaknesses:['Unproven','Burning cash','Small team']},q:'What is their biggest vulnerability?',opts:['Innovation','Speed','Cash burn sustainability','Team size'],correct:2,explain:'VC money runs out. If they are burning cash without revenue, they are racing against runway.'},
+         {competitor:{name:'Market Leader',strengths:['80% market share','Network effects','Data moat'],weaknesses:['Complacent','Legacy tech','Ignored segments']},q:'Where should you attack?',opts:['Go head-to-head','Target ignored segments','Build same network','Copy their tech'],correct:1,explain:'Attack where they are not looking. Ignored segments can become beachheads for expansion.'},
+         {competitor:{name:'Open Source',strengths:['Free','Community','Customizable'],weaknesses:['No support','Complex setup','Fragmented']},q:'How do you compete with free?',opts:['Also be free','Premium support & simplicity','Ignore them','Acquire them'],correct:1,explain:'Compete on convenience, support, and integration. Enterprises pay for reliability over free.'},
+         {competitor:{name:'Direct Clone',strengths:['Copies your features','Undercuts price','Well-funded'],weaknesses:['No innovation','Following not leading','No brand'],correct:2,q:'Best response to a copycat?',opts:['Sue them','Lower prices','Out-innovate','Ignore them'],explain:'Keep innovating. They can copy features but not your vision, speed, or customer relationships.'}
+      ];
+      const infoTopics:{[k:string]:{title:string,content:string}} = {
+         porter:{title:"Porter's 5 Forces",content:'Supplier power, Buyer power, Competitive rivalry, Threat of substitution, Threat of new entry. Analyze industry attractiveness.'},
+         moats:{title:'Competitive Moats',content:'Network effects, Switching costs, Brand, Scale, Patents, Data. Sustainable advantages that protect market position.'},
+         positioning:{title:'Positioning',content:'Own a unique space in customer minds. Be #1 at something specific rather than okay at everything.'},
+         swot:{title:'SWOT Analysis',content:'Strengths, Weaknesses, Opportunities, Threats. Match internal capabilities to external environment.'}
+      };
+      const answer = (idx:number) => {
+         if(answered) return;
+         setSelected(idx);
+         setAnswered(true);
+         if(idx === scenarios[scenario].correct) {
+            setScore(s => s + 1);
+            setLog(l => [...l, `Scenario ${scenario+1}: Correct!`]);
+         } else {
+            setLog(l => [...l, `Scenario ${scenario+1}: Wrong`]);
+         }
+      };
+      const next = () => {
+         if(scenario >= scenarios.length - 1) setPhase('result');
+         else { setScenario(s => s + 1); setAnswered(false); setSelected(null); }
+      };
+      const grade = score >= 4 ? 'A' : score >= 3 ? 'B' : score >= 2 ? 'C' : 'D';
+      const s = scenarios[scenario];
+      if(phase === 'intro') return (<div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-red-900 via-rose-900 to-pink-900 text-white p-6"><div className="text-6xl mb-4">⚔️</div><h2 className="text-2xl font-bold mb-2">Competitive Analysis</h2><p className="text-slate-300 text-center mb-6 max-w-md">Analyze competitors and find winning strategies! Learn to identify weaknesses and attack vectors.</p><button onClick={() => setPhase('play')} className="px-8 py-3 bg-gradient-to-r from-red-500 to-rose-500 rounded-xl font-bold">Start Analysis</button></div>);
+      if(phase === 'result') return (<div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-red-900 via-rose-900 to-pink-900 text-white p-6"><div className="text-6xl mb-4">{grade === 'A' ? '🏆' : grade === 'B' ? '⚔️' : '📊'}</div><h2 className="text-2xl font-bold mb-2">Analysis Complete!</h2><div className="text-4xl font-bold text-red-400 mb-2">{score}/{scenarios.length}</div><div className="text-6xl mb-4">{grade}</div><p className="text-slate-400 mb-4">{grade === 'A' ? 'Strategic genius!' : grade === 'B' ? 'Good strategist!' : 'Study competitors more!'}</p><button onClick={() => {setPhase('intro');setScenario(0);setScore(0);setAnswered(false);setSelected(null);setLog([]);}} className="px-6 py-2 bg-red-600 rounded-lg">Try Again</button></div>);
+      return (<div className="w-full h-full flex flex-col bg-gradient-to-br from-red-900 via-rose-900 to-pink-900 text-white overflow-hidden">{showInfo && infoTopic && infoTopics[infoTopic] && (<div className="absolute inset-0 bg-black/80 flex items-center justify-center p-4 z-50" onClick={() => { setShowInfo(false); setInfoTopic(null); }}><div className="bg-slate-800 rounded-xl p-4 max-w-md" onClick={e => e.stopPropagation()}><h3 className="text-lg font-bold text-red-400 mb-2">{infoTopics[infoTopic].title}</h3><p className="text-sm text-slate-300">{infoTopics[infoTopic].content}</p><button onClick={() => { setShowInfo(false); setInfoTopic(null); }} className="mt-4 w-full py-2 bg-red-600 rounded-lg">Got it!</button></div></div>)}<div className="p-3 bg-black/30 border-b border-red-500/30 flex justify-between items-center"><span className="font-bold">⚔️ Competitive Analysis</span><span className="text-red-400">{scenario + 1}/{scenarios.length}</span><span className="text-rose-400">Score: {score}</span></div><div className="flex-1 p-4 overflow-auto"><div className="bg-black/30 rounded-xl p-3 mb-3"><p className="font-bold text-red-400 mb-2">{s.competitor.name}</p><div className="grid grid-cols-2 gap-2 text-xs"><div><p className="text-green-400 mb-1">Strengths:</p>{s.competitor.strengths.map((str,i) => <p key={i} className="text-slate-300">• {str}</p>)}</div><div><p className="text-red-400 mb-1">Weaknesses:</p>{s.competitor.weaknesses.map((w,i) => <p key={i} className="text-slate-300">• {w}</p>)}</div></div></div><div className="bg-black/30 rounded-xl p-4 mb-3"><p className="font-medium">{s.q}</p></div><div className="grid gap-2">{s.opts.map((opt, i) => (<button key={i} onClick={() => answer(i)} disabled={answered} className={`p-3 rounded-lg text-left text-sm ${answered ? i === s.correct ? 'bg-green-600' : i === selected ? 'bg-red-600' : 'bg-black/30' : 'bg-black/30 hover:bg-red-600/50'}`}>{opt}</button>))}</div>{answered && (<div className="mt-3 p-3 bg-black/30 rounded-lg"><p className="text-sm text-slate-300">{s.explain}</p><button onClick={next} className="mt-3 w-full py-2 bg-red-600 rounded-lg">{scenario >= scenarios.length - 1 ? 'See Results' : 'Next'}</button></div>)}</div><div className="p-3 bg-black/30 border-t border-red-500/30 flex gap-2 justify-center">{Object.keys(infoTopics).map(k => <button key={k} onClick={() => {setInfoTopic(k);setShowInfo(true);}} className="text-xs text-red-400">ℹ️ {infoTopics[k].title}</button>)}</div></div>);
+   };
+
+   const BusinessModelRenderer = () => {
+      const [phase, setPhase] = useState<'intro'|'play'|'result'>('intro');
+      const [showInfo, setShowInfo] = useState(false);
+      const [infoTopic, setInfoTopic] = useState<string|null>(null);
+      const [step, setStep] = useState(0);
+      const [model, setModel] = useState<{[k:string]:string}>({});
+      const [log, setLog] = useState<string[]>([]);
+      const steps = [
+         {element:'Customer Segments',question:'Who are your customers?',options:['Mass market (everyone)','Niche market (specific segment)','Multi-sided platform (2+ groups)','Diversified (unrelated segments)']},
+         {element:'Value Proposition',question:'What value do you deliver?',options:['Newness (innovation)','Performance (better/faster)','Convenience (easier access)','Price (cheaper alternative)']},
+         {element:'Revenue Streams',question:'How do you make money?',options:['One-time sales','Subscription recurring','Freemium + premium','Transaction fees/commission']},
+         {element:'Channels',question:'How do you reach customers?',options:['Direct sales team','Online/digital only','Partner distribution','Retail/physical stores']},
+         {element:'Key Resources',question:'What is your key asset?',options:['Technology/IP','Human expertise','Brand/community','Physical assets']}
+      ];
+      const infoTopics:{[k:string]:{title:string,content:string}} = {
+         canvas:{title:'Business Model Canvas',content:'9 blocks: Customer Segments, Value Prop, Channels, Customer Relationships, Revenue, Key Resources, Activities, Partners, Costs.'},
+         revenue:{title:'Revenue Models',content:'Subscription, Freemium, Marketplace, Advertising, Licensing, Transaction fees. Match model to value delivery.'},
+         lean:{title:'Lean Canvas',content:'Startup-focused version: Problem, Solution, Key Metrics, Unique Value Prop, Unfair Advantage, Channels, Segments, Costs, Revenue.'},
+         fit:{title:'Model-Market Fit',content:'Your business model must match how customers want to buy. B2B enterprise ≠ B2C consumer.'}
+      };
+      const choose = (idx:number) => {
+         setModel(m => ({...m, [steps[step].element]: steps[step].options[idx]}));
+         setLog(l => [...l, `${steps[step].element}: ${steps[step].options[idx]}`]);
+         if(step >= steps.length - 1) setPhase('result');
+         else setStep(s => s + 1);
+      };
+      const modelType = model['Revenue Streams']?.includes('Subscription') ? 'SaaS' : model['Revenue Streams']?.includes('commission') ? 'Marketplace' : model['Revenue Streams']?.includes('Freemium') ? 'Freemium' : 'Traditional';
+      if(phase === 'intro') return (<div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-purple-900 via-violet-900 to-indigo-900 text-white p-6"><div className="text-6xl mb-4">🏗️</div><h2 className="text-2xl font-bold mb-2">Business Model Builder</h2><p className="text-slate-300 text-center mb-6 max-w-md">Design your business model! Choose elements that define how you create and capture value.</p><button onClick={() => setPhase('play')} className="px-8 py-3 bg-gradient-to-r from-purple-500 to-indigo-500 rounded-xl font-bold">Start Building</button></div>);
+      if(phase === 'result') return (<div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-purple-900 via-violet-900 to-indigo-900 text-white p-6"><div className="text-6xl mb-4">🏗️</div><h2 className="text-2xl font-bold mb-2">Model Complete!</h2><div className="text-xl font-bold text-purple-400 mb-4">{modelType} Business Model</div><div className="bg-black/30 rounded-xl p-4 mb-4 text-left max-w-sm w-full">{Object.entries(model).map(([k,v]) => (<div key={k} className="mb-2"><span className="text-purple-400 text-xs">{k}:</span><p className="text-sm">{v}</p></div>))}</div><button onClick={() => {setPhase('intro');setStep(0);setModel({});setLog([]);}} className="px-6 py-2 bg-purple-600 rounded-lg">Build Another</button></div>);
+      const s = steps[step];
+      return (<div className="w-full h-full flex flex-col bg-gradient-to-br from-purple-900 via-violet-900 to-indigo-900 text-white overflow-hidden">{showInfo && infoTopic && infoTopics[infoTopic] && (<div className="absolute inset-0 bg-black/80 flex items-center justify-center p-4 z-50" onClick={() => { setShowInfo(false); setInfoTopic(null); }}><div className="bg-slate-800 rounded-xl p-4 max-w-md" onClick={e => e.stopPropagation()}><h3 className="text-lg font-bold text-purple-400 mb-2">{infoTopics[infoTopic].title}</h3><p className="text-sm text-slate-300">{infoTopics[infoTopic].content}</p><button onClick={() => { setShowInfo(false); setInfoTopic(null); }} className="mt-4 w-full py-2 bg-purple-600 rounded-lg">Got it!</button></div></div>)}<div className="p-3 bg-black/30 border-b border-purple-500/30 flex justify-between items-center"><span className="font-bold">🏗️ Business Model</span><span className="text-purple-400">{step + 1}/{steps.length}</span></div><div className="flex-1 p-4 flex flex-col justify-center"><div className="bg-black/30 rounded-xl p-4 mb-4"><p className="text-purple-400 text-sm mb-1">{s.element}</p><p className="text-lg font-medium">{s.question}</p></div><div className="grid gap-2">{s.options.map((opt, i) => (<button key={i} onClick={() => choose(i)} className="p-3 bg-black/30 hover:bg-purple-600/50 rounded-lg text-left text-sm">{opt}</button>))}</div></div><div className="p-3 bg-black/30 border-t border-purple-500/30 flex gap-2 justify-center">{Object.keys(infoTopics).map(k => <button key={k} onClick={() => {setInfoTopic(k);setShowInfo(true);}} className="text-xs text-purple-400">ℹ️ {infoTopics[k].title}</button>)}</div></div>);
+   };
+
+   const GrowthStrategyRenderer = () => {
+      const [phase, setPhase] = useState<'intro'|'play'|'result'>('intro');
+      const [showInfo, setShowInfo] = useState(false);
+      const [infoTopic, setInfoTopic] = useState<string|null>(null);
+      const [scenario, setScenario] = useState(0);
+      const [score, setScore] = useState(0);
+      const [answered, setAnswered] = useState(false);
+      const [selected, setSelected] = useState<number|null>(null);
+      const [log, setLog] = useState<string[]>([]);
+      const scenarios = [
+         {situation:'B2B SaaS with $50k ACV, complex product, long sales cycle.',best:2,options:['Viral loops','Paid social ads','Enterprise sales team','Content marketing'],explain:'High ACV and complexity require consultative sales. Enterprise sales team has best ROI here.'},
+         {situation:'Consumer app, low price point, high potential for word-of-mouth.',best:0,options:['Viral/referral loops','Outbound sales','Trade shows','TV advertising'],explain:'Low price + WOM potential = viral loops. Dropbox and Uber grew this way.'},
+         {situation:'Developer tools, technical audience, trust is crucial.',best:3,options:['Cold calling','Display ads','Influencer marketing','Content + community'],explain:'Developers hate being sold to. Educational content and community build trust authentically.'},
+         {situation:'Local services business, customers search when they need you.',best:1,options:['Brand awareness ads','SEO + Google Ads','Social media','Referral program'],explain:'Intent-based search is perfect. Be there when customers are actively looking.'},
+         {situation:'E-commerce, visual product, impulse purchase potential.',best:2,options:['LinkedIn ads','Email outreach','Instagram/TikTok ads','Podcast sponsorship'],explain:'Visual product + impulse = Instagram/TikTok. Show the product where attention lives.'},
+         {situation:'Professional services, high-trust relationship business.',best:3,options:['Mass advertising','Cold email blasts','Discount promotions','Referrals + thought leadership'],explain:'Trust businesses grow through reputation. Referrals and expertise demonstration win.'}
+      ];
+      const infoTopics:{[k:string]:{title:string,content:string}} = {
+         channels:{title:'Growth Channels',content:'Viral, Paid, Content, Sales, Partnerships, Community. Different products need different channels.'},
+         loops:{title:'Growth Loops',content:'Viral loop: User invites users. Content loop: Content attracts users who create content. Paid loop: Revenue funds ads.'},
+         metrics:{title:'Growth Metrics',content:'CAC, LTV, Viral coefficient, Payback period. Know your numbers before scaling.'},
+         pmf:{title:'PMF First',content:'Growth without product-market fit is a leaky bucket. Fix retention before acquisition.'}
+      };
+      const answer = (idx:number) => {
+         if(answered) return;
+         setSelected(idx);
+         setAnswered(true);
+         if(idx === scenarios[scenario].best) {
+            setScore(s => s + 1);
+            setLog(l => [...l, `Scenario ${scenario+1}: Correct!`]);
+         } else {
+            setLog(l => [...l, `Scenario ${scenario+1}: Wrong`]);
+         }
+      };
+      const next = () => {
+         if(scenario >= scenarios.length - 1) setPhase('result');
+         else { setScenario(s => s + 1); setAnswered(false); setSelected(null); }
+      };
+      const grade = score >= 5 ? 'A' : score >= 4 ? 'B' : score >= 2 ? 'C' : 'D';
+      const s = scenarios[scenario];
+      if(phase === 'intro') return (<div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-green-900 via-lime-900 to-emerald-900 text-white p-6"><div className="text-6xl mb-4">🚀</div><h2 className="text-2xl font-bold mb-2">Growth Strategy</h2><p className="text-slate-300 text-center mb-6 max-w-md">Match businesses with the right growth channels! Learn viral, paid, content, and sales strategies.</p><button onClick={() => setPhase('play')} className="px-8 py-3 bg-gradient-to-r from-green-500 to-lime-500 rounded-xl font-bold">Start Growing</button></div>);
+      if(phase === 'result') return (<div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-green-900 via-lime-900 to-emerald-900 text-white p-6"><div className="text-6xl mb-4">{grade === 'A' ? '🚀' : grade === 'B' ? '📈' : '📊'}</div><h2 className="text-2xl font-bold mb-2">Complete!</h2><div className="text-4xl font-bold text-green-400 mb-2">{score}/{scenarios.length}</div><div className="text-6xl mb-4">{grade}</div><p className="text-slate-400 mb-4">{grade === 'A' ? 'Growth expert!' : grade === 'B' ? 'Good instincts!' : 'Study channels more!'}</p><button onClick={() => {setPhase('intro');setScenario(0);setScore(0);setAnswered(false);setSelected(null);setLog([]);}} className="px-6 py-2 bg-green-600 rounded-lg">Try Again</button></div>);
+      return (<div className="w-full h-full flex flex-col bg-gradient-to-br from-green-900 via-lime-900 to-emerald-900 text-white overflow-hidden">{showInfo && infoTopic && infoTopics[infoTopic] && (<div className="absolute inset-0 bg-black/80 flex items-center justify-center p-4 z-50" onClick={() => { setShowInfo(false); setInfoTopic(null); }}><div className="bg-slate-800 rounded-xl p-4 max-w-md" onClick={e => e.stopPropagation()}><h3 className="text-lg font-bold text-green-400 mb-2">{infoTopics[infoTopic].title}</h3><p className="text-sm text-slate-300">{infoTopics[infoTopic].content}</p><button onClick={() => { setShowInfo(false); setInfoTopic(null); }} className="mt-4 w-full py-2 bg-green-600 rounded-lg">Got it!</button></div></div>)}<div className="p-3 bg-black/30 border-b border-green-500/30 flex justify-between items-center"><span className="font-bold">🚀 Growth Strategy</span><span className="text-green-400">{scenario + 1}/{scenarios.length}</span><span className="text-lime-400">Score: {score}</span></div><div className="flex-1 p-4 flex flex-col justify-center"><div className="bg-black/30 rounded-xl p-4 mb-4"><p className="text-sm">{s.situation}</p><p className="text-xs text-slate-400 mt-2">Best growth channel?</p></div><div className="grid gap-2">{s.options.map((opt, i) => (<button key={i} onClick={() => answer(i)} disabled={answered} className={`p-3 rounded-lg text-left text-sm ${answered ? i === s.best ? 'bg-green-600' : i === selected ? 'bg-red-600' : 'bg-black/30' : 'bg-black/30 hover:bg-green-600/50'}`}>{opt}</button>))}</div>{answered && (<div className="mt-3 p-3 bg-black/30 rounded-lg"><p className="text-sm text-slate-300">{s.explain}</p><button onClick={next} className="mt-3 w-full py-2 bg-green-600 rounded-lg">{scenario >= scenarios.length - 1 ? 'See Results' : 'Next'}</button></div>)}</div><div className="p-3 bg-black/30 border-t border-green-500/30 flex gap-2 justify-center">{Object.keys(infoTopics).map(k => <button key={k} onClick={() => {setInfoTopic(k);setShowInfo(true);}} className="text-xs text-green-400">ℹ️ {infoTopics[k].title}</button>)}</div></div>);
+   };
+
+   const PivotDecisionRenderer = () => {
+      const [phase, setPhase] = useState<'intro'|'play'|'result'>('intro');
+      const [showInfo, setShowInfo] = useState(false);
+      const [infoTopic, setInfoTopic] = useState<string|null>(null);
+      const [scenario, setScenario] = useState(0);
+      const [score, setScore] = useState(0);
+      const [answered, setAnswered] = useState(false);
+      const [selected, setSelected] = useState<number|null>(null);
+      const [log, setLog] = useState<string[]>([]);
+      const scenarios = [
+         {situation:'6 months in, 100 users but 2% weekly retention. Team believes in vision.',signals:{bad:['Low retention','No growth'],good:['Team conviction','Early users']},q:'What should you do?',opts:['Pivot completely','Double down on marketing','Talk to churned users, iterate','Shut down'],correct:2,explain:'Low retention = product problem, not marketing. Learn why users leave before pivoting or quitting.'},
+         {situation:'Strong retention (60% monthly) but CAC is 5x LTV. Burned through 80% of runway.',signals:{bad:['Unsustainable CAC','Low runway'],good:['Great retention','Product works']},q:'Best path forward?',opts:['Raise more money','Pivot to new market','Find cheaper channels','Shut down'],correct:2,explain:'Product works (retention proves it). Find organic/cheaper channels before pivoting what works.'},
+         {situation:'B2B product. Enterprise loves it but sales cycle is 9 months. You have 6 months runway.',signals:{bad:['Long sales cycle','Short runway'],good:['Enterprise demand','Validated need']},q:'What should you do?',opts:['Pivot to SMB','Wait for enterprise deals','Raise bridge funding','Add more salespeople'],correct:0,explain:'9-month cycle with 6-month runway = death. Pivot down-market to survive and prove model faster.'},
+         {situation:'Consumer app went viral once, now flat. Team is burned out. Still have 12 months runway.',signals:{bad:['Growth stalled','Team burnout'],good:['Past viral success','Runway exists']},q:'Best decision?',opts:['Pivot product','Hire growth team','Take a break, then reassess','Push harder'],correct:2,explain:'Burnout kills startups. With runway, take a break, regain perspective, then decide with fresh eyes.'},
+         {situation:'Customers love product but market is shrinking 10% yearly. Profitable but not growing.',signals:{bad:['Shrinking market','No growth'],good:['Profitability','Customer love']},q:'What should you do?',opts:['Milk it while it lasts','Pivot to adjacent market','Sell the business','Invest heavily in R&D'],correct:1,explain:'Profitable + loved but shrinking = use profits to expand to adjacent growing markets.'}
+      ];
+      const infoTopics:{[k:string]:{title:string,content:string}} = {
+         when:{title:'When to Pivot',content:'Consistent low retention, unable to find sustainable channel, market too small, or thesis proven wrong. Pivot early, not late.'},
+         types:{title:'Pivot Types',content:'Customer pivot, Problem pivot, Channel pivot, Revenue model pivot, Technology pivot. Change one thing, not everything.'},
+         signs:{title:'Warning Signs',content:'Flat growth, high churn, long sales cycles, customer apathy, founder burnout. Listen to the signals.'},
+         persist:{title:'When to Persist',content:'Strong retention, clear value prop, improving metrics, passionate users. Sometimes success takes time.'}
+      };
+      const answer = (idx:number) => {
+         if(answered) return;
+         setSelected(idx);
+         setAnswered(true);
+         if(idx === scenarios[scenario].correct) {
+            setScore(s => s + 1);
+            setLog(l => [...l, `Scenario ${scenario+1}: Correct!`]);
+         } else {
+            setLog(l => [...l, `Scenario ${scenario+1}: Wrong`]);
+         }
+      };
+      const next = () => {
+         if(scenario >= scenarios.length - 1) setPhase('result');
+         else { setScenario(s => s + 1); setAnswered(false); setSelected(null); }
+      };
+      const grade = score >= 4 ? 'A' : score >= 3 ? 'B' : score >= 2 ? 'C' : 'D';
+      const s = scenarios[scenario];
+      if(phase === 'intro') return (<div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-orange-900 via-amber-900 to-yellow-900 text-white p-6"><div className="text-6xl mb-4">🔄</div><h2 className="text-2xl font-bold mb-2">Pivot or Persist?</h2><p className="text-slate-300 text-center mb-6 max-w-md">The hardest startup decision! Learn when to pivot, persist, or shut down.</p><button onClick={() => setPhase('play')} className="px-8 py-3 bg-gradient-to-r from-orange-500 to-amber-500 rounded-xl font-bold">Start Deciding</button></div>);
+      if(phase === 'result') return (<div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-orange-900 via-amber-900 to-yellow-900 text-white p-6"><div className="text-6xl mb-4">{grade === 'A' ? '🎯' : grade === 'B' ? '🔄' : '⚠️'}</div><h2 className="text-2xl font-bold mb-2">Decisions Complete!</h2><div className="text-4xl font-bold text-orange-400 mb-2">{score}/{scenarios.length}</div><div className="text-6xl mb-4">{grade}</div><p className="text-slate-400 mb-4">{grade === 'A' ? 'Strategic thinker!' : grade === 'B' ? 'Good judgment!' : 'Tricky decisions!'}</p><button onClick={() => {setPhase('intro');setScenario(0);setScore(0);setAnswered(false);setSelected(null);setLog([]);}} className="px-6 py-2 bg-orange-600 rounded-lg">Try Again</button></div>);
+      return (<div className="w-full h-full flex flex-col bg-gradient-to-br from-orange-900 via-amber-900 to-yellow-900 text-white overflow-hidden">{showInfo && infoTopic && infoTopics[infoTopic] && (<div className="absolute inset-0 bg-black/80 flex items-center justify-center p-4 z-50" onClick={() => { setShowInfo(false); setInfoTopic(null); }}><div className="bg-slate-800 rounded-xl p-4 max-w-md" onClick={e => e.stopPropagation()}><h3 className="text-lg font-bold text-orange-400 mb-2">{infoTopics[infoTopic].title}</h3><p className="text-sm text-slate-300">{infoTopics[infoTopic].content}</p><button onClick={() => { setShowInfo(false); setInfoTopic(null); }} className="mt-4 w-full py-2 bg-orange-600 rounded-lg">Got it!</button></div></div>)}<div className="p-3 bg-black/30 border-b border-orange-500/30 flex justify-between items-center"><span className="font-bold">🔄 Pivot Decision</span><span className="text-orange-400">{scenario + 1}/{scenarios.length}</span><span className="text-amber-400">Score: {score}</span></div><div className="flex-1 p-4 overflow-auto"><div className="bg-black/30 rounded-xl p-3 mb-3"><p className="text-sm mb-3">{s.situation}</p><div className="grid grid-cols-2 gap-2 text-xs"><div><p className="text-red-400 mb-1">🚩 Warning:</p>{s.signals.bad.map((sig,i) => <p key={i} className="text-slate-300">• {sig}</p>)}</div><div><p className="text-green-400 mb-1">✓ Positive:</p>{s.signals.good.map((sig,i) => <p key={i} className="text-slate-300">• {sig}</p>)}</div></div></div><div className="bg-black/30 rounded-xl p-4 mb-3"><p className="font-medium">{s.q}</p></div><div className="grid gap-2">{s.opts.map((opt, i) => (<button key={i} onClick={() => answer(i)} disabled={answered} className={`p-3 rounded-lg text-left text-sm ${answered ? i === s.correct ? 'bg-green-600' : i === selected ? 'bg-red-600' : 'bg-black/30' : 'bg-black/30 hover:bg-orange-600/50'}`}>{opt}</button>))}</div>{answered && (<div className="mt-3 p-3 bg-black/30 rounded-lg"><p className="text-sm text-slate-300">{s.explain}</p><button onClick={next} className="mt-3 w-full py-2 bg-orange-600 rounded-lg">{scenario >= scenarios.length - 1 ? 'See Results' : 'Next'}</button></div>)}</div><div className="p-3 bg-black/30 border-t border-orange-500/30 flex gap-2 justify-center">{Object.keys(infoTopics).map(k => <button key={k} onClick={() => {setInfoTopic(k);setShowInfo(true);}} className="text-xs text-orange-400">ℹ️ {infoTopics[k].title}</button>)}</div></div>);
+   };
+
    // --- GENERIC RENDERER ---
    const GenericRenderer = () => {
       if (type === 'poster' || type === 'infographic') {
@@ -29488,6 +29700,16 @@ const GeneratedDiagram: React.FC<DiagramProps> = ({ type, data, title }) => {
             return <BudgetingRenderer />;
          case 'unit_economics':
             return <UnitEconomicsRenderer />;
+         case 'market_research':
+            return <MarketResearchRenderer />;
+         case 'competitive_analysis':
+            return <CompetitiveAnalysisRenderer />;
+         case 'business_model':
+            return <BusinessModelRenderer />;
+         case 'growth_strategy':
+            return <GrowthStrategyRenderer />;
+         case 'pivot_decision':
+            return <PivotDecisionRenderer />;
          default:
             return <GenericRenderer />;
       }

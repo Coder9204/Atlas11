@@ -323,6 +323,11 @@ When a concept comes up, follow this lookup process:
 • Pricing Strategy / Price Setting / Margins / Value Pricing → 'pricing_strategy'
 • Budgeting / Budget Management / Cash Runway / Burn Rate → 'budgeting'
 • Unit Economics / LTV / CAC / Breakeven / Contribution Margin → 'unit_economics'
+• Market Research / TAM SAM SOM / Customer Validation / Product-Market Fit → 'market_research'
+• Competitive Analysis / Competitors / Market Position / Strategic Advantage → 'competitive_analysis'
+• Business Model / Business Model Canvas / Value Proposition / Revenue Streams → 'business_model'
+• Growth Strategy / Scaling / Growth Channels / Customer Acquisition → 'growth_strategy'
+• Pivot / Persevere / Business Direction / Strategy Change / Startup Decisions → 'pivot_decision'
 
 **STEP 2: IF NO MATCH → BUILD CUSTOM**
 Only if the topic is NOT covered above, use \`type: 'dynamic_blueprint'\` with custom JSON.
@@ -1274,6 +1279,31 @@ Only if the topic is NOT covered above, use \`type: 'dynamic_blueprint'\` with c
     → Learn if your business model is sustainable
     → Educational tooltips covering LTV, CAC, LTV:CAC ratio, CAC payback
     → KEY INSIGHT: LTV:CAC of 3:1 is the benchmark for healthy economics
+- **Strategy / Market Research:** Use \`type: 'market_research'\`, \`data: '{}'\`
+    → 4-stage market research simulation: sizing, validation, PMF, positioning
+    → Calculate TAM/SAM/SOM, survey prospects, measure retention
+    → Educational tooltips covering market sizing, validation, product-market fit
+    → KEY INSIGHT: Great products solve real problems for specific customers
+- **Strategy / Competitive Analysis:** Use \`type: 'competitive_analysis'\`, \`data: '{}'\`
+    → Analyze 4 competitors: identify strengths, weaknesses, opportunities
+    → Choose competitive strategies (differentiation, cost, niche, innovation)
+    → Educational tooltips covering Porter's 5 Forces, SWOT, competitive moats
+    → KEY INSIGHT: Compete where others can't easily follow
+- **Strategy / Business Model Canvas:** Use \`type: 'business_model'\`, \`data: '{}'\`
+    → Build business model canvas in 9 blocks
+    → Select value propositions, channels, customer segments, revenue streams
+    → Educational tooltips covering business model components and lean canvas
+    → KEY INSIGHT: A business model is a system where all parts connect
+- **Strategy / Growth Strategy:** Use \`type: 'growth_strategy'\`, \`data: '{}'\`
+    → Match 5 businesses with optimal growth channels
+    → Choose from viral, content, paid, sales, partnerships
+    → Educational tooltips covering growth loops, CAC optimization, channel fit
+    → KEY INSIGHT: The best growth channel depends on product and customer
+- **Strategy / Pivot Decisions:** Use \`type: 'pivot_decision'\`, \`data: '{}'\`
+    → Analyze 5 startup scenarios: pivot, persevere, or shut down?
+    → Evaluate runway, traction, market signals, team morale
+    → Educational tooltips covering types of pivots, sunk cost fallacy, lean startup
+    → KEY INSIGHT: A good pivot preserves vision while changing strategy
 
 **CUSTOM SIMULATIONS (only if no pre-built exists):**
 3. For dynamic text, use: \`"content": "Range: {{calculations.range}} m"\`
