@@ -27664,6 +27664,541 @@ const GeneratedDiagram: React.FC<DiagramProps> = ({ type, data, title }) => {
       );
    };
 
+   // --- TIME MANAGEMENT RENDERER ---
+   const TimeManagementRenderer = () => {
+      const [phase, setPhase] = useState<'intro' | 'play' | 'result'>('intro');
+      const [showInfo, setShowInfo] = useState(false);
+      const [infoTopic, setInfoTopic] = useState<string | null>(null);
+      const [day, setDay] = useState(1);
+      const [gameLog, setGameLog] = useState<string[]>([]);
+
+      const totalDays = 5; // Work week
+      const hoursPerDay = 8;
+
+      const [hoursRemaining, setHoursRemaining] = useState(hoursPerDay);
+      const [energy, setEnergy] = useState(100);
+
+      const [tasks, setTasks] = useState<{
+         id: string;
+         title: string;
+         hours: number;
+         urgent: boolean;
+         important: boolean;
+         completed: boolean;
+         type: 'deep' | 'meeting' | 'admin' | 'interruption';
+      }[]>([]);
+
+      const [stats, setStats] = useState({
+         tasksCompleted: 0,
+         importantCompleted: 0,
+         urgentCompleted: 0,
+         deepWorkHours: 0,
+         meetingHours: 0,
+         adminHours: 0,
+         interruptionHours: 0,
+         energyWasted: 0,
+      });
+
+      const [dayHistory, setDayHistory] = useState<{
+         day: number;
+         completed: number;
+         important: number;
+         hoursWorked: number;
+         endEnergy: number;
+      }[]>([]);
+
+      const [interruption, setInterruption] = useState<{ title: string; hours: number } | null>(null);
+
+      const infoTopics: Record<string, { title: string; content: string }> = {
+         eisenhower: {
+            title: "Eisenhower Matrix",
+            content: "Prioritize by URGENT vs IMPORTANT: Q1 (Urgent+Important): Do first—crises, deadlines. Q2 (Important, Not Urgent): Schedule—planning, growth, prevention. Q3 (Urgent, Not Important): Delegate—interruptions, some meetings. Q4 (Neither): Eliminate—time wasters. Spend most time in Q2!"
+         },
+         deep_work: {
+            title: "Deep Work",
+            content: "Cal Newport's concept: focused, uninterrupted work on cognitively demanding tasks. Deep work creates value and improves skills. Requires 90+ minute blocks without distractions. Most people can only do 4 hours of deep work per day. Protect this time ruthlessly!"
+         },
+         pomodoro: {
+            title: "Pomodoro Technique",
+            content: "Work in 25-minute focused bursts (pomodoros) with 5-minute breaks. After 4 pomodoros, take a 15-30 minute break. Helps maintain focus and prevents burnout. Track pomodoros to understand your capacity. One task per pomodoro—no multitasking!"
+         },
+         energy: {
+            title: "Energy Management",
+            content: "Energy matters more than time! Schedule hard tasks during peak energy (usually morning). Batch similar tasks together. Take breaks before you're exhausted. Meetings and context-switching drain energy fast. Protect your golden hours for important work."
+         },
+         timeblock: {
+            title: "Time Blocking",
+            content: "Schedule specific blocks for specific work types. Example: Deep work 9-12, meetings 2-4, email 4-5. Defend your calendar! Every minute should be assigned. Review and adjust weekly. Leave buffer time for unexpected tasks. Say no to protect your blocks."
+         }
+      };
+
+      useEffect(() => {
+         if (infoTopic && infoTopics[infoTopic]) {
+            setShowInfo(true);
+         }
+      }, [infoTopic]);
+
+      const generateDayTasks = () => {
+         const taskPool = [
+            { title: 'Strategic Planning', hours: 2, urgent: false, important: true, type: 'deep' as const },
+            { title: 'Client Presentation', hours: 1.5, urgent: true, important: true, type: 'meeting' as const },
+            { title: 'Team Meeting', hours: 1, urgent: true, important: false, type: 'meeting' as const },
+            { title: 'Email Inbox', hours: 1, urgent: false, important: false, type: 'admin' as const },
+            { title: 'Code Review', hours: 1.5, urgent: false, important: true, type: 'deep' as const },
+            { title: 'Bug Fix (Critical)', hours: 2, urgent: true, important: true, type: 'deep' as const },
+            { title: 'Status Report', hours: 0.5, urgent: true, important: false, type: 'admin' as const },
+            { title: 'Learning/Training', hours: 1, urgent: false, important: true, type: 'deep' as const },
+            { title: 'Social Media Check', hours: 0.5, urgent: false, important: false, type: 'admin' as const },
+            { title: 'Process Documentation', hours: 1, urgent: false, important: true, type: 'deep' as const },
+            { title: '1:1 with Manager', hours: 0.5, urgent: true, important: true, type: 'meeting' as const },
+            { title: 'Expense Reports', hours: 0.5, urgent: true, important: false, type: 'admin' as const },
+         ];
+
+         // Select 6-8 random tasks for the day
+         const shuffled = [...taskPool].sort(() => Math.random() - 0.5);
+         const selected = shuffled.slice(0, 6 + Math.floor(Math.random() * 3));
+
+         return selected.map((t, i) => ({
+            ...t,
+            id: `task-${day}-${i}`,
+            completed: false,
+         }));
+      };
+
+      const startGame = () => {
+         setPhase('play');
+         setDay(1);
+         setHoursRemaining(hoursPerDay);
+         setEnergy(100);
+         setInterruption(null);
+         setStats({
+            tasksCompleted: 0,
+            importantCompleted: 0,
+            urgentCompleted: 0,
+            deepWorkHours: 0,
+            meetingHours: 0,
+            adminHours: 0,
+            interruptionHours: 0,
+            energyWasted: 0,
+         });
+         setDayHistory([]);
+         setTasks(generateDayTasks());
+         setGameLog(["Time Management simulation started - Day 1"]);
+      };
+
+      const completeTask = (taskId: string) => {
+         const task = tasks.find(t => t.id === taskId);
+         if (!task || task.completed || hoursRemaining < task.hours) return;
+
+         // Energy cost
+         let energyCost = task.hours * 10;
+         if (task.type === 'meeting') energyCost += 5; // Meetings drain more
+         if (task.type === 'deep' && energy < 50) energyCost += 10; // Deep work when tired is harder
+
+         // Check if we have energy
+         if (energy - energyCost < 0) {
+            setGameLog(prev => [...prev, `Too exhausted to complete ${task.title}!`]);
+            return;
+         }
+
+         setTasks(prev => prev.map(t => t.id === taskId ? { ...t, completed: true } : t));
+         setHoursRemaining(prev => prev - task.hours);
+         setEnergy(prev => Math.max(0, prev - energyCost));
+
+         // Update stats
+         setStats(prev => ({
+            ...prev,
+            tasksCompleted: prev.tasksCompleted + 1,
+            importantCompleted: prev.importantCompleted + (task.important ? 1 : 0),
+            urgentCompleted: prev.urgentCompleted + (task.urgent ? 1 : 0),
+            deepWorkHours: prev.deepWorkHours + (task.type === 'deep' ? task.hours : 0),
+            meetingHours: prev.meetingHours + (task.type === 'meeting' ? task.hours : 0),
+            adminHours: prev.adminHours + (task.type === 'admin' ? task.hours : 0),
+         }));
+
+         setGameLog(prev => [...prev, `Completed: ${task.title} (${task.hours}h)`]);
+
+         // Random interruption chance
+         if (Math.random() < 0.2) {
+            triggerInterruption();
+         }
+      };
+
+      const triggerInterruption = () => {
+         const interruptions = [
+            { title: '📱 Urgent Slack message', hours: 0.5 },
+            { title: '🚨 Production issue!', hours: 1 },
+            { title: '📞 Surprise call', hours: 0.5 },
+            { title: '👋 Coworker needs help', hours: 0.5 },
+            { title: '📧 Executive email needs reply', hours: 0.5 },
+         ];
+         setInterruption(interruptions[Math.floor(Math.random() * interruptions.length)]);
+      };
+
+      const handleInterruption = (accept: boolean) => {
+         if (!interruption) return;
+
+         if (accept) {
+            if (hoursRemaining >= interruption.hours) {
+               setHoursRemaining(prev => prev - interruption.hours);
+               setEnergy(prev => Math.max(0, prev - 15)); // Interruptions are costly
+               setStats(prev => ({
+                  ...prev,
+                  interruptionHours: prev.interruptionHours + interruption.hours,
+               }));
+               setGameLog(prev => [...prev, `Handled interruption: ${interruption.title}`]);
+            }
+         } else {
+            setEnergy(prev => Math.max(0, prev - 5)); // Saying no has a small cost too
+            setGameLog(prev => [...prev, `Declined: ${interruption.title}`]);
+         }
+         setInterruption(null);
+      };
+
+      const takeBreak = () => {
+         if (hoursRemaining < 0.5) return;
+         setHoursRemaining(prev => prev - 0.5);
+         setEnergy(prev => Math.min(100, prev + 20));
+         setGameLog(prev => [...prev, "Took a 30-minute break, recovered energy"]);
+      };
+
+      const endDay = () => {
+         const dayCompleted = tasks.filter(t => t.completed).length;
+         const dayImportant = tasks.filter(t => t.completed && t.important).length;
+
+         setDayHistory(prev => [...prev, {
+            day,
+            completed: dayCompleted,
+            important: dayImportant,
+            hoursWorked: hoursPerDay - hoursRemaining,
+            endEnergy: energy
+         }]);
+
+         if (day >= totalDays) {
+            setGameLog(prev => [...prev, `Week complete! Tasks done: ${stats.tasksCompleted + dayCompleted}`]);
+            setPhase('result');
+         } else {
+            setDay(day + 1);
+            setHoursRemaining(hoursPerDay);
+            setEnergy(Math.min(100, 70 + energy * 0.3)); // Partial recovery overnight
+            setTasks(generateDayTasks());
+            setGameLog(prev => [...prev, `Day ${day + 1} started`]);
+         }
+      };
+
+      const getQuadrant = (task: typeof tasks[0]) => {
+         if (task.urgent && task.important) return { label: 'Q1: DO', color: 'bg-red-500/30 border-red-500' };
+         if (!task.urgent && task.important) return { label: 'Q2: SCHEDULE', color: 'bg-green-500/30 border-green-500' };
+         if (task.urgent && !task.important) return { label: 'Q3: DELEGATE', color: 'bg-yellow-500/30 border-yellow-500' };
+         return { label: 'Q4: ELIMINATE', color: 'bg-slate-500/30 border-slate-500' };
+      };
+
+      const getScore = () => {
+         const importantScore = stats.importantCompleted * 10;
+         const deepWorkScore = Math.min(30, stats.deepWorkHours * 5);
+         const efficiencyScore = Math.min(30, (stats.tasksCompleted / (stats.tasksCompleted + 5)) * 30);
+         const balanceScore = energy > 30 ? 10 : 0; // Ended with energy
+         return Math.round(importantScore + deepWorkScore + efficiencyScore + balanceScore);
+      };
+
+      const getGrade = () => {
+         const score = getScore();
+         if (score >= 85) return { letter: 'A', label: 'Time Master', color: 'text-green-400' };
+         if (score >= 70) return { letter: 'B', label: 'Productive Pro', color: 'text-blue-400' };
+         if (score >= 55) return { letter: 'C', label: 'Getting There', color: 'text-yellow-400' };
+         return { letter: 'D', label: 'Time Challenged', color: 'text-red-400' };
+      };
+
+      // Intro Phase
+      if (phase === 'intro') {
+         return (
+            <div className="w-full h-full flex flex-col bg-gradient-to-br from-amber-900 via-orange-900 to-slate-900 text-white p-4 overflow-auto">
+               <div className="text-center mb-4">
+                  <h1 className="text-2xl font-bold mb-2">⏰ Time Management Simulator</h1>
+                  <p className="text-amber-300 text-sm">Master your day with the Eisenhower Matrix</p>
+               </div>
+
+               <div className="bg-black/30 rounded-xl p-4 mb-4">
+                  <h2 className="text-lg font-bold mb-3 text-amber-400">📋 How It Works</h2>
+                  <div className="space-y-2 text-sm">
+                     <p>• Manage a <span className="text-white font-bold">5-day work week</span></p>
+                     <p>• Each day has <span className="text-white font-bold">8 hours</span> and limited energy</p>
+                     <p>• Prioritize tasks using the <span className="text-amber-400">Eisenhower Matrix</span></p>
+                     <p>• Handle interruptions and manage energy</p>
+                     <p>• Focus on <span className="text-green-400">Important</span> over Urgent!</p>
+                  </div>
+               </div>
+
+               <div className="grid grid-cols-2 gap-2 mb-4 text-xs">
+                  <div className="bg-red-500/20 border border-red-500/50 rounded-lg p-2 text-center">
+                     <div className="font-bold">Q1: URGENT + IMPORTANT</div>
+                     <div className="text-slate-300">Do First</div>
+                  </div>
+                  <div className="bg-green-500/20 border border-green-500/50 rounded-lg p-2 text-center">
+                     <div className="font-bold">Q2: IMPORTANT</div>
+                     <div className="text-slate-300">Schedule (Best ROI!)</div>
+                  </div>
+                  <div className="bg-yellow-500/20 border border-yellow-500/50 rounded-lg p-2 text-center">
+                     <div className="font-bold">Q3: URGENT</div>
+                     <div className="text-slate-300">Delegate</div>
+                  </div>
+                  <div className="bg-slate-500/20 border border-slate-500/50 rounded-lg p-2 text-center">
+                     <div className="font-bold">Q4: NEITHER</div>
+                     <div className="text-slate-300">Eliminate</div>
+                  </div>
+               </div>
+
+               <div className="flex flex-wrap gap-2 mb-4">
+                  {Object.keys(infoTopics).map(key => (
+                     <button
+                        key={key}
+                        onClick={() => setInfoTopic(key)}
+                        className="text-xs bg-amber-500/20 hover:bg-amber-500/40 px-2 py-1 rounded-full text-amber-300"
+                     >
+                        ℹ️ {infoTopics[key].title}
+                     </button>
+                  ))}
+               </div>
+
+               <button
+                  onClick={startGame}
+                  className="w-full py-3 bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500 rounded-xl font-bold text-lg transition-all"
+               >
+                  ▶️ START WORK WEEK
+               </button>
+
+               {showInfo && infoTopic && infoTopics[infoTopic] && (
+                  <div className="absolute inset-0 bg-black/80 flex items-center justify-center p-4 z-50" onClick={() => { setShowInfo(false); setInfoTopic(null); }}>
+                     <div className="bg-slate-800 rounded-xl p-4 max-w-md" onClick={e => e.stopPropagation()}>
+                        <h3 className="text-lg font-bold text-amber-400 mb-2">{infoTopics[infoTopic].title}</h3>
+                        <p className="text-sm text-slate-300">{infoTopics[infoTopic].content}</p>
+                        <button onClick={() => { setShowInfo(false); setInfoTopic(null); }} className="mt-4 w-full py-2 bg-amber-600 rounded-lg">Got it!</button>
+                     </div>
+                  </div>
+               )}
+            </div>
+         );
+      }
+
+      // Result Phase
+      if (phase === 'result') {
+         const grade = getGrade();
+
+         return (
+            <div className="w-full h-full flex flex-col bg-gradient-to-br from-amber-900 via-orange-900 to-slate-900 text-white p-4 overflow-auto">
+               <div className="text-center mb-4">
+                  <div className={`text-6xl font-bold ${grade.color}`}>{grade.letter}</div>
+                  <div className="text-xl font-bold">{grade.label}</div>
+                  <div className="text-amber-400">Score: {getScore()}/100</div>
+               </div>
+
+               <div className="grid grid-cols-2 gap-3 mb-4">
+                  <div className="bg-black/30 rounded-lg p-3 text-center">
+                     <div className="text-2xl font-bold text-amber-400">{stats.tasksCompleted}</div>
+                     <div className="text-xs text-slate-400">Tasks Done</div>
+                  </div>
+                  <div className="bg-black/30 rounded-lg p-3 text-center">
+                     <div className="text-2xl font-bold text-green-400">{stats.importantCompleted}</div>
+                     <div className="text-xs text-slate-400">Important Done</div>
+                  </div>
+                  <div className="bg-black/30 rounded-lg p-3 text-center">
+                     <div className="text-2xl font-bold text-blue-400">{stats.deepWorkHours.toFixed(1)}h</div>
+                     <div className="text-xs text-slate-400">Deep Work</div>
+                  </div>
+                  <div className="bg-black/30 rounded-lg p-3 text-center">
+                     <div className="text-2xl font-bold text-red-400">{stats.interruptionHours.toFixed(1)}h</div>
+                     <div className="text-xs text-slate-400">Interruptions</div>
+                  </div>
+               </div>
+
+               <div className="bg-black/30 rounded-xl p-3 mb-4">
+                  <h3 className="font-bold text-amber-400 mb-2">📊 Time Breakdown</h3>
+                  <div className="space-y-1 text-sm">
+                     <div className="flex justify-between">
+                        <span>🧠 Deep Work:</span>
+                        <span className="text-blue-400">{stats.deepWorkHours.toFixed(1)}h</span>
+                     </div>
+                     <div className="flex justify-between">
+                        <span>👥 Meetings:</span>
+                        <span className="text-yellow-400">{stats.meetingHours.toFixed(1)}h</span>
+                     </div>
+                     <div className="flex justify-between">
+                        <span>📝 Admin:</span>
+                        <span className="text-slate-400">{stats.adminHours.toFixed(1)}h</span>
+                     </div>
+                     <div className="flex justify-between">
+                        <span>🚨 Interruptions:</span>
+                        <span className="text-red-400">{stats.interruptionHours.toFixed(1)}h</span>
+                     </div>
+                  </div>
+               </div>
+
+               <div className="bg-black/30 rounded-xl p-3 mb-4">
+                  <h3 className="font-bold text-amber-400 mb-2">💡 Key Insight</h3>
+                  <p className="text-sm text-slate-300">
+                     {stats.deepWorkHours < 10
+                        ? "Not enough deep work! Protect 2-4 hours daily for focused, important work. This is where real value is created."
+                        : stats.interruptionHours > 5
+                        ? "Interruptions consumed too much time. Learn to say no or batch interruption handling into specific time slots."
+                        : stats.importantCompleted < stats.urgentCompleted
+                        ? "You prioritized urgent over important. Q2 tasks (important but not urgent) build long-term success. Don't let urgency hijack your priorities!"
+                        : "Great balance! You focused on important work while managing energy. This is the path to sustainable productivity."
+                     }
+                  </p>
+               </div>
+
+               <button
+                  onClick={startGame}
+                  className="w-full py-3 bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500 rounded-xl font-bold transition-all"
+               >
+                  🔄 TRY AGAIN
+               </button>
+            </div>
+         );
+      }
+
+      // Play Phase
+      const incompleteTasks = tasks.filter(t => !t.completed);
+
+      return (
+         <div className="w-full h-full flex flex-col bg-gradient-to-br from-amber-900 via-orange-900 to-slate-900 text-white overflow-hidden">
+            {/* Interruption Modal */}
+            {interruption && (
+               <div className="absolute inset-0 bg-black/80 flex items-center justify-center p-4 z-50">
+                  <div className="bg-slate-800 rounded-xl p-4 max-w-sm">
+                     <h3 className="text-lg font-bold text-red-400 mb-2">🚨 Interruption!</h3>
+                     <p className="text-white mb-2">{interruption.title}</p>
+                     <p className="text-sm text-slate-400 mb-4">This will take {interruption.hours}h. Handle it?</p>
+                     <div className="flex gap-2">
+                        <button onClick={() => handleInterruption(true)} className="flex-1 py-2 bg-red-600 rounded-lg">Handle It</button>
+                        <button onClick={() => handleInterruption(false)} className="flex-1 py-2 bg-slate-600 rounded-lg">Say No</button>
+                     </div>
+                  </div>
+               </div>
+            )}
+
+            {/* Info Modal */}
+            {showInfo && infoTopic && infoTopics[infoTopic] && (
+               <div className="absolute inset-0 bg-black/80 flex items-center justify-center p-4 z-50" onClick={() => { setShowInfo(false); setInfoTopic(null); }}>
+                  <div className="bg-slate-800 rounded-xl p-4 max-w-md" onClick={e => e.stopPropagation()}>
+                     <h3 className="text-lg font-bold text-amber-400 mb-2">{infoTopics[infoTopic].title}</h3>
+                     <p className="text-sm text-slate-300">{infoTopics[infoTopic].content}</p>
+                     <button onClick={() => { setShowInfo(false); setInfoTopic(null); }} className="mt-4 w-full py-2 bg-amber-600 rounded-lg">Got it!</button>
+                  </div>
+               </div>
+            )}
+
+            {/* Header */}
+            <div className="p-3 bg-black/30 border-b border-amber-500/30">
+               <div className="flex justify-between items-center mb-2">
+                  <span className="font-bold">⏰ Day {day}/{totalDays}</span>
+                  <span className="text-amber-400">{hoursRemaining.toFixed(1)}h left</span>
+               </div>
+               <div className="grid grid-cols-3 gap-2 text-center text-xs">
+                  <div className="bg-black/30 rounded p-1">
+                     <div className="text-amber-400 font-bold">{hoursRemaining.toFixed(1)}h</div>
+                     <div className="text-slate-500">Time Left</div>
+                  </div>
+                  <div className="bg-black/30 rounded p-1">
+                     <div className={`font-bold ${energy >= 50 ? 'text-green-400' : energy >= 25 ? 'text-yellow-400' : 'text-red-400'}`}>{energy}%</div>
+                     <div className="text-slate-500">Energy</div>
+                  </div>
+                  <div className="bg-black/30 rounded p-1">
+                     <div className="text-green-400 font-bold">{stats.tasksCompleted}</div>
+                     <div className="text-slate-500">Done</div>
+                  </div>
+               </div>
+               {/* Energy bar */}
+               <div className="mt-2 h-2 bg-slate-700 rounded-full overflow-hidden">
+                  <div
+                     className={`h-full transition-all ${energy >= 50 ? 'bg-green-500' : energy >= 25 ? 'bg-yellow-500' : 'bg-red-500'}`}
+                     style={{ width: `${energy}%` }}
+                  />
+               </div>
+            </div>
+
+            {/* Tasks */}
+            <div className="flex-1 p-3 overflow-auto">
+               <div className="flex justify-between items-center mb-2">
+                  <span className="text-sm font-bold">Today's Tasks</span>
+                  <button onClick={() => setInfoTopic('eisenhower')} className="text-amber-400 text-xs">ℹ️ Matrix</button>
+               </div>
+
+               <div className="space-y-2">
+                  {incompleteTasks.map(task => {
+                     const quadrant = getQuadrant(task);
+                     const canComplete = hoursRemaining >= task.hours && energy >= task.hours * 10;
+
+                     return (
+                        <div key={task.id} className={`rounded-lg p-2 border ${quadrant.color}`}>
+                           <div className="flex justify-between items-start mb-1">
+                              <span className="text-sm font-medium">{task.title}</span>
+                              <span className="text-xs bg-black/30 px-1 rounded">{task.hours}h</span>
+                           </div>
+                           <div className="flex justify-between items-center">
+                              <span className="text-[10px] text-slate-400">{quadrant.label}</span>
+                              <button
+                                 onClick={() => completeTask(task.id)}
+                                 disabled={!canComplete}
+                                 className="text-xs px-2 py-1 bg-amber-600/50 hover:bg-amber-500/50 disabled:opacity-50 rounded"
+                              >
+                                 Do It
+                              </button>
+                           </div>
+                        </div>
+                     );
+                  })}
+
+                  {incompleteTasks.length === 0 && (
+                     <div className="text-center text-slate-400 py-4">
+                        All tasks completed! 🎉
+                     </div>
+                  )}
+               </div>
+
+               {/* Day History */}
+               {dayHistory.length > 0 && (
+                  <div className="mt-3 bg-black/30 rounded-lg p-2">
+                     <span className="text-xs font-bold text-slate-400">This Week</span>
+                     <div className="mt-1 space-y-1 max-h-16 overflow-auto">
+                        {dayHistory.map((h, i) => (
+                           <div key={i} className="flex justify-between text-xs">
+                              <span>Day {h.day}</span>
+                              <span className="text-green-400">{h.completed} done</span>
+                              <span className="text-amber-400">{h.important} important</span>
+                           </div>
+                        ))}
+                     </div>
+                  </div>
+               )}
+            </div>
+
+            {/* Action Bar */}
+            <div className="p-3 bg-black/30 border-t border-amber-500/30">
+               <div className="flex gap-2 items-center justify-between mb-2">
+                  <div className="flex gap-2">
+                     <button onClick={() => setInfoTopic('deep_work')} className="text-xs text-amber-400 hover:text-white">🧠 Deep Work</button>
+                     <button onClick={() => setInfoTopic('energy')} className="text-xs text-amber-400 hover:text-white">⚡ Energy</button>
+                     <button
+                        onClick={takeBreak}
+                        disabled={hoursRemaining < 0.5}
+                        className="text-xs text-green-400 hover:text-white disabled:opacity-50"
+                     >
+                        ☕ Break
+                     </button>
+                  </div>
+               </div>
+               <button
+                  onClick={endDay}
+                  className="w-full py-3 bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500 rounded-xl font-bold transition-all"
+               >
+                  🌙 END DAY {day}
+               </button>
+            </div>
+         </div>
+      );
+   };
+
    // --- GENERIC RENDERER ---
    const GenericRenderer = () => {
       if (type === 'poster' || type === 'infographic') {
@@ -28090,6 +28625,8 @@ const GeneratedDiagram: React.FC<DiagramProps> = ({ type, data, title }) => {
             return <CustomerSuccessRenderer />;
          case 'agile':
             return <AgileRenderer />;
+         case 'time_management':
+            return <TimeManagementRenderer />;
          default:
             return <GenericRenderer />;
       }

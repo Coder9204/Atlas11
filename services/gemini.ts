@@ -302,6 +302,7 @@ When a concept comes up, follow this lookup process:
 • Quality Control / Six Sigma / Defects / Inspection → 'quality_control'
 • Customer Success / Retention / Churn / NPS / LTV → 'customer_success'
 • Agile / Scrum / Sprints / Velocity / User Stories → 'agile'
+• Time Management / Eisenhower Matrix / Productivity / Deep Work → 'time_management'
 
 **STEP 2: IF NO MATCH → BUILD CUSTOM**
 Only if the topic is NOT covered above, use \`type: 'dynamic_blueprint'\` with custom JSON.
@@ -1125,6 +1126,14 @@ Only if the topic is NOT covered above, use \`type: 'dynamic_blueprint'\` with c
     → Track points delivered, velocity, features shipped, bugs fixed, tech debt paid
     → Educational tooltips covering Scrum, Velocity, User Stories, Retrospectives, Tech Debt
     → KEY INSIGHT: Balance features with maintenance; sustainable pace beats heroics
+- **Operations / Time Management / Productivity:** Use \`type: 'time_management'\`, \`data: '{}'\`
+    → 5-day work week simulation with 8 hours/day and energy management
+    → Tasks categorized by Eisenhower Matrix (urgent/important quadrants)
+    → Balance deep work, meetings, admin, and interruptions
+    → Random interruptions pop up requiring handle/decline decisions
+    → Take breaks to recover energy; manage burnout
+    → Educational tooltips covering Eisenhower Matrix, Deep Work, Pomodoro, Energy, Time Blocking
+    → KEY INSIGHT: Focus on important over urgent; protect deep work time
 
 **CUSTOM SIMULATIONS (only if no pre-built exists):**
 3. For dynamic text, use: \`"content": "Range: {{calculations.range}} m"\`
