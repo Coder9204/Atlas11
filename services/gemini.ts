@@ -318,6 +318,11 @@ When a concept comes up, follow this lookup process:
 • Branding / Brand Identity / Logo / Visual Style / Brand Personality → 'branding'
 • Public Relations / PR / Media Relations / Crisis Management / Press → 'public_relations'
 • Negotiation / Deal Making / Business Deals / Contracts / Salary → 'negotiation'
+• Fundraising / Startup Funding / VC / Angel Investors / Seed Round → 'fundraising'
+• Financial Statements / Income Statement / Balance Sheet / Cash Flow → 'financial_statements'
+• Pricing Strategy / Price Setting / Margins / Value Pricing → 'pricing_strategy'
+• Budgeting / Budget Management / Cash Runway / Burn Rate → 'budgeting'
+• Unit Economics / LTV / CAC / Breakeven / Contribution Margin → 'unit_economics'
 
 **STEP 2: IF NO MATCH → BUILD CUSTOM**
 Only if the topic is NOT covered above, use \`type: 'dynamic_blueprint'\` with custom JSON.
@@ -1239,6 +1244,36 @@ Only if the topic is NOT covered above, use \`type: 'dynamic_blueprint'\` with c
     → Learn BATNA, win-win, anchoring, and silence tactics
     → Educational tooltips covering BATNA, win-win, anchoring, power of silence
     → KEY INSIGHT: Best negotiators create value before claiming it
+- **Finance / Fundraising / Startup Funding:** Use \`type: 'fundraising'\`, \`data: '{}'\`
+    → 6-scenario funding source matching game
+    → Match startup situations with right funding (bootstrap, VC, angels, crowdfunding, loans)
+    → Learn when each funding type is appropriate
+    → Educational tooltips covering funding stages, dilution, term sheets, alternatives
+    → KEY INSIGHT: Not every startup needs VC; match funding to your situation
+- **Finance / Financial Statements / Accounting:** Use \`type: 'financial_statements'\`, \`data: '{}'\`
+    → 6-question quiz on income statements, balance sheets, cash flow
+    → Calculate net income, working capital, margins, and ratios
+    → Learn the language of business finance
+    → Educational tooltips covering income statement, balance sheet, cash flow, key ratios
+    → KEY INSIGHT: Profit ≠ Cash; understand all three statements
+- **Finance / Pricing Strategy / Price Setting:** Use \`type: 'pricing_strategy'\`, \`data: '{}'\`
+    → 5-round pricing simulation across product types
+    → Balance profit margins with customer demand
+    → See competitor prices and make strategic decisions
+    → Educational tooltips covering cost-plus, value-based, competitive, and psychological pricing
+    → KEY INSIGHT: Price based on value delivered, not just costs
+- **Finance / Budgeting / Cash Management:** Use \`type: 'budgeting'\`, \`data: '{}'\`
+    → 6-month startup budget allocation simulation
+    → Allocate $20k monthly revenue across payroll, marketing, ops, R&D, emergency
+    → Build cash reserves while investing in growth
+    → Educational tooltips covering cash runway, burn rate, zero-based budgeting, forecasting
+    → KEY INSIGHT: Cash is oxygen; know your runway at all times
+- **Finance / Unit Economics / Metrics:** Use \`type: 'unit_economics'\`, \`data: '{}'\`
+    → 6-scenario unit economics calculation challenges
+    → Calculate LTV, CAC, contribution margin, breakeven, ARPU
+    → Learn if your business model is sustainable
+    → Educational tooltips covering LTV, CAC, LTV:CAC ratio, CAC payback
+    → KEY INSIGHT: LTV:CAC of 3:1 is the benchmark for healthy economics
 
 **CUSTOM SIMULATIONS (only if no pre-built exists):**
 3. For dynamic text, use: \`"content": "Range: {{calculations.range}} m"\`

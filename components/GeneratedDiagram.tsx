@@ -28802,6 +28802,224 @@ const GeneratedDiagram: React.FC<DiagramProps> = ({ type, data, title }) => {
       return (<div className="w-full h-full flex flex-col bg-gradient-to-br from-indigo-900 via-blue-900 to-slate-900 text-white overflow-hidden">{showInfo && infoTopic && infoTopics[infoTopic] && (<div className="absolute inset-0 bg-black/80 flex items-center justify-center p-4 z-50" onClick={() => { setShowInfo(false); setInfoTopic(null); }}><div className="bg-slate-800 rounded-xl p-4 max-w-md" onClick={e => e.stopPropagation()}><h3 className="text-lg font-bold text-indigo-400 mb-2">{infoTopics[infoTopic].title}</h3><p className="text-sm text-slate-300">{infoTopics[infoTopic].content}</p><button onClick={() => { setShowInfo(false); setInfoTopic(null); }} className="mt-4 w-full py-2 bg-indigo-600 rounded-lg">Got it!</button></div></div>)}<div className="p-3 bg-black/30 border-b border-indigo-500/30"><div className="flex justify-between items-center mb-2"><span className="font-bold">🤝 Negotiation</span><span className="text-indigo-400">{round + 1}/{rounds.length}</span></div><div className="flex gap-4 text-sm"><span>💰 Value: {yourValue > 0 ? '+' : ''}{yourValue}</span><span>❤️ Relationship: {relationship}%</span></div></div><div className="flex-1 p-4 flex flex-col justify-center"><div className="bg-black/30 rounded-xl p-4 mb-4"><p className="text-sm">{r.context}</p></div><div className="grid gap-2">{r.options.map((opt, i) => (<button key={i} onClick={() => choose(i)} className="p-3 bg-black/30 hover:bg-indigo-600/50 rounded-lg text-left text-sm">{opt.text}</button>))}</div></div><div className="p-3 bg-black/30 border-t border-indigo-500/30 flex gap-2 justify-center">{Object.keys(infoTopics).map(k => <button key={k} onClick={() => {setInfoTopic(k);setShowInfo(true);}} className="text-xs text-indigo-400">ℹ️ {infoTopics[k].title}</button>)}</div></div>);
    };
 
+   // --- FINANCE & FUNDING RENDERERS ---
+   const FundraisingRenderer = () => {
+      const [phase, setPhase] = useState<'intro'|'play'|'result'>('intro');
+      const [showInfo, setShowInfo] = useState(false);
+      const [infoTopic, setInfoTopic] = useState<string|null>(null);
+      const [scenario, setScenario] = useState(0);
+      const [score, setScore] = useState(0);
+      const [answered, setAnswered] = useState(false);
+      const [selected, setSelected] = useState<number|null>(null);
+      const [log, setLog] = useState<string[]>([]);
+      const scenarios = [
+         {situation:'Pre-revenue startup with a prototype, needs $50k to launch MVP.',best:0,options:['Bootstrap + Friends & Family','Series A VC ($5M+)','Bank Loan','IPO'],explain:'At pre-revenue, VCs want traction. Bootstrap and F&F are realistic for early validation.'},
+         {situation:'$100k MRR SaaS with 50% growth, needs $2M for sales team.',best:1,options:['Crowdfunding','Seed/Series A VC','Credit Card Debt','Government Grant'],explain:'Strong metrics make you attractive to VCs. $2M for growth is a typical seed/Series A raise.'},
+         {situation:'Profitable small business, needs $500k for equipment.',best:2,options:['Angel Investors','Venture Capital','SBA Bank Loan','Convertible Note'],explain:'Profitable businesses can get traditional bank loans. No equity dilution needed.'},
+         {situation:'Hardware product needs $200k for first production run.',best:1,options:['Bootstrap','Kickstarter/Crowdfunding','Series B VC','Revenue-Based Financing'],explain:'Crowdfunding validates demand AND raises capital. Perfect for consumer hardware.'},
+         {situation:'Biotech startup needs $10M for clinical trials, 5+ years to revenue.',best:2,options:['Angel Investors','Crowdfunding','Specialized VC','Bank Loan'],explain:'Long timelines and high capital needs require specialized VCs who understand biotech.'},
+         {situation:'E-commerce doing $1M/year, needs $100k for inventory.',best:3,options:['Equity Crowdfunding','Venture Debt','Angel Investment','Revenue-Based Financing'],explain:'RBF is perfect: pay back as a % of revenue, no equity dilution, quick approval.'}
+      ];
+      const infoTopics:{[k:string]:{title:string,content:string}} = {
+         stages:{title:'Funding Stages',content:'Pre-seed → Seed → Series A → B → C → IPO. Each stage has different investors, amounts, and expectations.'},
+         dilution:{title:'Dilution',content:'Each funding round reduces your ownership %. Giving up 20% per round means owning <50% after 3 rounds.'},
+         terms:{title:'Term Sheets',content:'Valuation, liquidation preferences, board seats, anti-dilution, vesting. Get a lawyer before signing anything.'},
+         alternatives:{title:'Alternative Funding',content:'Grants, competitions, revenue-based financing, crowdfunding, strategic partnerships. Not everything needs VC.'}
+      };
+      const answer = (idx:number) => {
+         if(answered) return;
+         setSelected(idx);
+         setAnswered(true);
+         if(idx === scenarios[scenario].best) {
+            setScore(s => s + 1);
+            setLog(l => [...l, `Scenario ${scenario+1}: Correct!`]);
+         } else {
+            setLog(l => [...l, `Scenario ${scenario+1}: Wrong`]);
+         }
+      };
+      const next = () => {
+         if(scenario >= scenarios.length - 1) setPhase('result');
+         else { setScenario(s => s + 1); setAnswered(false); setSelected(null); }
+      };
+      const grade = score >= 5 ? 'A' : score >= 4 ? 'B' : score >= 2 ? 'C' : 'D';
+      const s = scenarios[scenario];
+      if(phase === 'intro') return (<div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-emerald-900 via-green-900 to-teal-900 text-white p-6"><div className="text-6xl mb-4">💰</div><h2 className="text-2xl font-bold mb-2">Fundraising Navigator</h2><p className="text-slate-300 text-center mb-6 max-w-md">Match startups with the right funding source! Learn when to bootstrap, raise VC, or use alternatives.</p><button onClick={() => setPhase('play')} className="px-8 py-3 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-xl font-bold">Start Matching</button></div>);
+      if(phase === 'result') return (<div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-emerald-900 via-green-900 to-teal-900 text-white p-6"><div className="text-6xl mb-4">{grade === 'A' ? '🏆' : grade === 'B' ? '💰' : '📊'}</div><h2 className="text-2xl font-bold mb-2">Complete!</h2><div className="text-4xl font-bold text-emerald-400 mb-2">{score}/{scenarios.length}</div><div className="text-6xl mb-4">{grade}</div><p className="text-slate-400 mb-4">{grade === 'A' ? 'Funding expert!' : grade === 'B' ? 'Good instincts!' : 'Keep learning!'}</p><button onClick={() => {setPhase('intro');setScenario(0);setScore(0);setAnswered(false);setSelected(null);setLog([]);}} className="px-6 py-2 bg-emerald-600 rounded-lg">Try Again</button></div>);
+      return (<div className="w-full h-full flex flex-col bg-gradient-to-br from-emerald-900 via-green-900 to-teal-900 text-white overflow-hidden">{showInfo && infoTopic && infoTopics[infoTopic] && (<div className="absolute inset-0 bg-black/80 flex items-center justify-center p-4 z-50" onClick={() => { setShowInfo(false); setInfoTopic(null); }}><div className="bg-slate-800 rounded-xl p-4 max-w-md" onClick={e => e.stopPropagation()}><h3 className="text-lg font-bold text-emerald-400 mb-2">{infoTopics[infoTopic].title}</h3><p className="text-sm text-slate-300">{infoTopics[infoTopic].content}</p><button onClick={() => { setShowInfo(false); setInfoTopic(null); }} className="mt-4 w-full py-2 bg-emerald-600 rounded-lg">Got it!</button></div></div>)}<div className="p-3 bg-black/30 border-b border-emerald-500/30 flex justify-between items-center"><span className="font-bold">💰 Fundraising</span><span className="text-emerald-400">{scenario + 1}/{scenarios.length}</span><span className="text-teal-400">Score: {score}</span></div><div className="flex-1 p-4 flex flex-col justify-center"><div className="bg-black/30 rounded-xl p-4 mb-4"><p className="text-sm">{s.situation}</p><p className="text-xs text-slate-400 mt-2">What funding source fits best?</p></div><div className="grid gap-2">{s.options.map((opt, i) => (<button key={i} onClick={() => answer(i)} disabled={answered} className={`p-3 rounded-lg text-left text-sm ${answered ? i === s.best ? 'bg-green-600' : i === selected ? 'bg-red-600' : 'bg-black/30' : 'bg-black/30 hover:bg-emerald-600/50'}`}>{opt}</button>))}</div>{answered && (<div className="mt-3 p-3 bg-black/30 rounded-lg"><p className="text-sm text-slate-300">{s.explain}</p><button onClick={next} className="mt-3 w-full py-2 bg-emerald-600 rounded-lg">{scenario >= scenarios.length - 1 ? 'See Results' : 'Next'}</button></div>)}</div><div className="p-3 bg-black/30 border-t border-emerald-500/30 flex gap-2 justify-center">{Object.keys(infoTopics).map(k => <button key={k} onClick={() => {setInfoTopic(k);setShowInfo(true);}} className="text-xs text-emerald-400">ℹ️ {infoTopics[k].title}</button>)}</div></div>);
+   };
+
+   const FinancialStatementsRenderer = () => {
+      const [phase, setPhase] = useState<'intro'|'play'|'result'>('intro');
+      const [showInfo, setShowInfo] = useState(false);
+      const [infoTopic, setInfoTopic] = useState<string|null>(null);
+      const [question, setQuestion] = useState(0);
+      const [score, setScore] = useState(0);
+      const [answered, setAnswered] = useState(false);
+      const [selected, setSelected] = useState<number|null>(null);
+      const [log, setLog] = useState<string[]>([]);
+      const questions = [
+         {q:'Revenue is $500k, COGS is $200k, Operating Expenses are $150k. What is Net Income?',opts:['$500k','$300k','$150k','$50k'],correct:2,explain:'Net Income = Revenue - COGS - OpEx = $500k - $200k - $150k = $150k (before taxes).'},
+         {q:'Which financial statement shows a snapshot of what the company owns and owes?',opts:['Income Statement','Balance Sheet','Cash Flow Statement','Cap Table'],correct:1,explain:'Balance Sheet shows Assets = Liabilities + Equity at a specific point in time.'},
+         {q:'Company has $100k cash, $50k AR, $30k inventory, $80k AP. What is working capital?',opts:['$100k','$180k','$100k','$80k'],correct:0,explain:'Working Capital = Current Assets - Current Liabilities = ($100k+$50k+$30k) - $80k = $100k.'},
+         {q:'Net Income is $100k but Cash increased only $20k. Most likely reason?',opts:['Accounting error','Increased inventory/AR','Fraud','Impossible scenario'],correct:1,explain:'Cash and profit differ due to timing: buying inventory or customers not paying yet reduces cash.'},
+         {q:'Gross Margin is 60%, Operating Margin is 20%. What does this tell you?',opts:['Company is losing money','40% goes to operating expenses','Pricing is too low','COGS is too high'],correct:1,explain:'The 40% gap between gross and operating margin is spent on sales, marketing, R&D, admin.'},
+         {q:'Which ratio measures ability to pay short-term debts?',opts:['ROE','Current Ratio','Debt-to-Equity','Gross Margin'],correct:1,explain:'Current Ratio = Current Assets / Current Liabilities. Above 1.0 means can cover short-term debts.'}
+      ];
+      const infoTopics:{[k:string]:{title:string,content:string}} = {
+         income:{title:'Income Statement',content:'Revenue - Expenses = Profit. Shows performance over a period. Also called P&L (Profit & Loss).'},
+         balance:{title:'Balance Sheet',content:'Assets = Liabilities + Equity. Snapshot at a point in time. Shows what you own, owe, and shareholders stake.'},
+         cashflow:{title:'Cash Flow',content:'Operating + Investing + Financing activities. Profit ≠ Cash. You can be profitable and run out of cash.'},
+         ratios:{title:'Key Ratios',content:'Gross Margin, Net Margin, Current Ratio, Quick Ratio, ROE. These help compare companies and spot trends.'}
+      };
+      const answer = (idx:number) => {
+         if(answered) return;
+         setSelected(idx);
+         setAnswered(true);
+         if(idx === questions[question].correct) {
+            setScore(s => s + 1);
+            setLog(l => [...l, `Q${question+1}: Correct!`]);
+         } else {
+            setLog(l => [...l, `Q${question+1}: Wrong`]);
+         }
+      };
+      const next = () => {
+         if(question >= questions.length - 1) setPhase('result');
+         else { setQuestion(q => q + 1); setAnswered(false); setSelected(null); }
+      };
+      const grade = score >= 5 ? 'A' : score >= 4 ? 'B' : score >= 2 ? 'C' : 'D';
+      const q = questions[question];
+      if(phase === 'intro') return (<div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-blue-900 via-slate-900 to-gray-900 text-white p-6"><div className="text-6xl mb-4">📊</div><h2 className="text-2xl font-bold mb-2">Financial Statements</h2><p className="text-slate-300 text-center mb-6 max-w-md">Master the language of business! Understand income statements, balance sheets, and cash flow.</p><button onClick={() => setPhase('play')} className="px-8 py-3 bg-gradient-to-r from-blue-500 to-slate-500 rounded-xl font-bold">Start Quiz</button></div>);
+      if(phase === 'result') return (<div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-blue-900 via-slate-900 to-gray-900 text-white p-6"><div className="text-6xl mb-4">{grade === 'A' ? '📈' : grade === 'B' ? '📊' : '📉'}</div><h2 className="text-2xl font-bold mb-2">Quiz Complete!</h2><div className="text-4xl font-bold text-blue-400 mb-2">{score}/{questions.length}</div><div className="text-6xl mb-4">{grade}</div><p className="text-slate-400 mb-4">{grade === 'A' ? 'CFO material!' : grade === 'B' ? 'Good foundation!' : 'Review the basics!'}</p><button onClick={() => {setPhase('intro');setQuestion(0);setScore(0);setAnswered(false);setSelected(null);setLog([]);}} className="px-6 py-2 bg-blue-600 rounded-lg">Try Again</button></div>);
+      return (<div className="w-full h-full flex flex-col bg-gradient-to-br from-blue-900 via-slate-900 to-gray-900 text-white overflow-hidden">{showInfo && infoTopic && infoTopics[infoTopic] && (<div className="absolute inset-0 bg-black/80 flex items-center justify-center p-4 z-50" onClick={() => { setShowInfo(false); setInfoTopic(null); }}><div className="bg-slate-800 rounded-xl p-4 max-w-md" onClick={e => e.stopPropagation()}><h3 className="text-lg font-bold text-blue-400 mb-2">{infoTopics[infoTopic].title}</h3><p className="text-sm text-slate-300">{infoTopics[infoTopic].content}</p><button onClick={() => { setShowInfo(false); setInfoTopic(null); }} className="mt-4 w-full py-2 bg-blue-600 rounded-lg">Got it!</button></div></div>)}<div className="p-3 bg-black/30 border-b border-blue-500/30 flex justify-between items-center"><span className="font-bold">📊 Financials</span><span className="text-blue-400">{question + 1}/{questions.length}</span><span className="text-slate-400">Score: {score}</span></div><div className="flex-1 p-4 flex flex-col justify-center"><div className="bg-black/30 rounded-xl p-4 mb-4"><p className="text-sm">{q.q}</p></div><div className="grid gap-2">{q.opts.map((opt, i) => (<button key={i} onClick={() => answer(i)} disabled={answered} className={`p-3 rounded-lg text-left text-sm ${answered ? i === q.correct ? 'bg-green-600' : i === selected ? 'bg-red-600' : 'bg-black/30' : 'bg-black/30 hover:bg-blue-600/50'}`}>{opt}</button>))}</div>{answered && (<div className="mt-3 p-3 bg-black/30 rounded-lg"><p className="text-sm text-slate-300">{q.explain}</p><button onClick={next} className="mt-3 w-full py-2 bg-blue-600 rounded-lg">{question >= questions.length - 1 ? 'See Results' : 'Next'}</button></div>)}</div><div className="p-3 bg-black/30 border-t border-blue-500/30 flex gap-2 justify-center">{Object.keys(infoTopics).map(k => <button key={k} onClick={() => {setInfoTopic(k);setShowInfo(true);}} className="text-xs text-blue-400">ℹ️ {infoTopics[k].title}</button>)}</div></div>);
+   };
+
+   const PricingStrategyRenderer = () => {
+      const [phase, setPhase] = useState<'intro'|'play'|'result'>('intro');
+      const [showInfo, setShowInfo] = useState(false);
+      const [infoTopic, setInfoTopic] = useState<string|null>(null);
+      const [round, setRound] = useState(0);
+      const [revenue, setRevenue] = useState(0);
+      const [customers, setCustomers] = useState(0);
+      const [log, setLog] = useState<string[]>([]);
+      const rounds = [
+         {product:'SaaS Tool',cost:20,competitors:[49,79,99],options:[{price:29,demand:100},{price:49,demand:70},{price:79,demand:40},{price:99,demand:20}]},
+         {product:'Online Course',cost:50,competitors:[197,297,497],options:[{price:97,demand:80},{price:197,demand:50},{price:297,demand:30},{price:497,demand:15}]},
+         {product:'Consulting Hour',cost:0,competitors:[150,250,400],options:[{price:100,demand:90},{price:200,demand:50},{price:350,demand:25},{price:500,demand:10}]},
+         {product:'Physical Product',cost:15,competitors:[29,39,49],options:[{price:24,demand:100},{price:34,demand:70},{price:44,demand:45},{price:54,demand:25}]},
+         {product:'Mobile App',cost:5,competitors:[0,4.99,9.99],options:[{price:0,demand:1000},{price:2.99,demand:200},{price:6.99,demand:80},{price:12.99,demand:30}]}
+      ];
+      const infoTopics:{[k:string]:{title:string,content:string}} = {
+         costplus:{title:'Cost-Plus Pricing',content:'Price = Cost + Markup. Simple but ignores what customers will pay and competitor prices.'},
+         value:{title:'Value-Based Pricing',content:'Price based on value delivered to customer. Can charge premium if you solve expensive problems.'},
+         competition:{title:'Competitive Pricing',content:'Price relative to competitors. Can undercut, match, or premium price based on differentiation.'},
+         psychology:{title:'Price Psychology',content:'$99 vs $100 matters. Anchoring, decoy pricing, bundling all influence perceived value.'}
+      };
+      const choose = (idx:number) => {
+         const r = rounds[round];
+         const opt = r.options[idx];
+         const profit = (opt.price - r.cost) * opt.demand;
+         setRevenue(rev => rev + profit);
+         setCustomers(c => c + opt.demand);
+         setLog(l => [...l, `${r.product}: $${opt.price} x ${opt.demand} = $${profit} profit`]);
+         if(round >= rounds.length - 1) setPhase('result');
+         else setRound(rnd => rnd + 1);
+      };
+      const grade = revenue >= 50000 ? 'A' : revenue >= 35000 ? 'B' : revenue >= 20000 ? 'C' : 'D';
+      if(phase === 'intro') return (<div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-yellow-900 via-amber-900 to-orange-900 text-white p-6"><div className="text-6xl mb-4">🏷️</div><h2 className="text-2xl font-bold mb-2">Pricing Strategy</h2><p className="text-slate-300 text-center mb-6 max-w-md">Set prices for 5 products! Balance profit margins with customer demand.</p><button onClick={() => setPhase('play')} className="px-8 py-3 bg-gradient-to-r from-yellow-500 to-orange-500 rounded-xl font-bold">Start Pricing</button></div>);
+      if(phase === 'result') return (<div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-yellow-900 via-amber-900 to-orange-900 text-white p-6"><div className="text-6xl mb-4">{grade === 'A' ? '💰' : grade === 'B' ? '📈' : '📊'}</div><h2 className="text-2xl font-bold mb-2">Pricing Complete!</h2><div className="text-2xl font-bold text-yellow-400 mb-2">${revenue.toLocaleString()} Profit</div><div className="text-sm text-slate-400 mb-4">{customers} total customers</div><div className="text-6xl mb-4">{grade}</div><p className="text-slate-400 mb-4">{grade === 'A' ? 'Pricing genius!' : grade === 'B' ? 'Good margins!' : 'Left money on table!'}</p><button onClick={() => {setPhase('intro');setRound(0);setRevenue(0);setCustomers(0);setLog([]);}} className="px-6 py-2 bg-yellow-600 rounded-lg">Try Again</button></div>);
+      const r = rounds[round];
+      return (<div className="w-full h-full flex flex-col bg-gradient-to-br from-yellow-900 via-amber-900 to-orange-900 text-white overflow-hidden">{showInfo && infoTopic && infoTopics[infoTopic] && (<div className="absolute inset-0 bg-black/80 flex items-center justify-center p-4 z-50" onClick={() => { setShowInfo(false); setInfoTopic(null); }}><div className="bg-slate-800 rounded-xl p-4 max-w-md" onClick={e => e.stopPropagation()}><h3 className="text-lg font-bold text-yellow-400 mb-2">{infoTopics[infoTopic].title}</h3><p className="text-sm text-slate-300">{infoTopics[infoTopic].content}</p><button onClick={() => { setShowInfo(false); setInfoTopic(null); }} className="mt-4 w-full py-2 bg-yellow-600 rounded-lg">Got it!</button></div></div>)}<div className="p-3 bg-black/30 border-b border-yellow-500/30"><div className="flex justify-between items-center mb-2"><span className="font-bold">🏷️ Pricing</span><span className="text-yellow-400">{round + 1}/{rounds.length}</span></div><div className="flex gap-4 text-sm"><span>💰 ${revenue.toLocaleString()}</span><span>👥 {customers}</span></div></div><div className="flex-1 p-4 flex flex-col justify-center"><div className="bg-black/30 rounded-xl p-4 mb-3"><p className="font-bold text-lg">{r.product}</p><p className="text-sm text-slate-400">Your cost: ${r.cost} | Competitors: ${r.competitors.join(', $')}</p></div><div className="grid gap-2">{r.options.map((opt, i) => (<button key={i} onClick={() => choose(i)} className="p-3 bg-black/30 hover:bg-yellow-600/50 rounded-lg text-left"><div className="flex justify-between"><span className="font-bold">${opt.price}</span><span className="text-sm text-slate-400">~{opt.demand} customers</span></div><div className="text-xs text-slate-500">Profit: ${(opt.price - r.cost) * opt.demand}</div></button>))}</div></div><div className="p-3 bg-black/30 border-t border-yellow-500/30 flex gap-2 justify-center">{Object.keys(infoTopics).map(k => <button key={k} onClick={() => {setInfoTopic(k);setShowInfo(true);}} className="text-xs text-yellow-400">ℹ️ {infoTopics[k].title}</button>)}</div></div>);
+   };
+
+   const BudgetingRenderer = () => {
+      const [phase, setPhase] = useState<'intro'|'play'|'result'>('intro');
+      const [showInfo, setShowInfo] = useState(false);
+      const [infoTopic, setInfoTopic] = useState<string|null>(null);
+      const [month, setMonth] = useState(1);
+      const [cash, setCash] = useState(50000);
+      const [revenue] = useState(20000);
+      const [allocations, setAllocations] = useState<{[k:string]:number}>({});
+      const [log, setLog] = useState<string[]>([]);
+      const categories = [
+         {id:'payroll',name:'Payroll',icon:'👥',min:8000,max:15000,impact:'team'},
+         {id:'marketing',name:'Marketing',icon:'📢',min:0,max:8000,impact:'growth'},
+         {id:'operations',name:'Operations',icon:'⚙️',min:2000,max:5000,impact:'stability'},
+         {id:'rnd',name:'R&D',icon:'🔬',min:0,max:6000,impact:'product'},
+         {id:'emergency',name:'Emergency Fund',icon:'🛡️',min:0,max:5000,impact:'safety'}
+      ];
+      const infoTopics:{[k:string]:{title:string,content:string}} = {
+         runway:{title:'Cash Runway',content:'Months of operation before running out of cash. Runway = Cash / Monthly Burn. Always know your runway.'},
+         burn:{title:'Burn Rate',content:'How much cash you spend per month. Gross burn = total spending. Net burn = spending - revenue.'},
+         zero:{title:'Zero-Based Budgeting',content:'Start from zero each period, justify every expense. Prevents bloat but takes more time.'},
+         forecast:{title:'Forecasting',content:'Project future revenue and expenses. Be conservative on revenue, generous on expenses.'}
+      };
+      const [budgetSet, setBudgetSet] = useState(false);
+      const setBudget = (id:string, val:number) => {
+         setAllocations(a => ({...a, [id]: val}));
+      };
+      const totalAllocated = Object.values(allocations).reduce((a,b) => a + b, 0);
+      const confirmBudget = () => {
+         if(totalAllocated > revenue) return;
+         setBudgetSet(true);
+         const saved = revenue - totalAllocated;
+         setCash(c => c + saved);
+         setLog(l => [...l, `Month ${month}: Allocated $${totalAllocated}, Saved $${saved}`]);
+      };
+      const nextMonth = () => {
+         if(month >= 6) setPhase('result');
+         else { setMonth(m => m + 1); setAllocations({}); setBudgetSet(false); }
+      };
+      const grade = cash >= 80000 ? 'A' : cash >= 60000 ? 'B' : cash >= 40000 ? 'C' : 'D';
+      if(phase === 'intro') return (<div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-violet-900 via-purple-900 to-indigo-900 text-white p-6"><div className="text-6xl mb-4">📋</div><h2 className="text-2xl font-bold mb-2">Startup Budgeting</h2><p className="text-slate-300 text-center mb-6 max-w-md">Manage your startup budget for 6 months! Allocate $20k monthly revenue across categories.</p><button onClick={() => setPhase('play')} className="px-8 py-3 bg-gradient-to-r from-violet-500 to-indigo-500 rounded-xl font-bold">Start Budgeting</button></div>);
+      if(phase === 'result') return (<div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-violet-900 via-purple-900 to-indigo-900 text-white p-6"><div className="text-6xl mb-4">{grade === 'A' ? '🏆' : grade === 'B' ? '📈' : '📊'}</div><h2 className="text-2xl font-bold mb-2">6 Months Complete!</h2><div className="text-2xl font-bold text-violet-400 mb-2">${cash.toLocaleString()} Cash</div><div className="text-sm text-slate-400 mb-4">Started: $50,000</div><div className="text-6xl mb-4">{grade}</div><p className="text-slate-400 mb-4">{grade === 'A' ? 'Financial wizard!' : grade === 'B' ? 'Good management!' : 'Watch the burn!'}</p><button onClick={() => {setPhase('intro');setMonth(1);setCash(50000);setAllocations({});setBudgetSet(false);setLog([]);}} className="px-6 py-2 bg-violet-600 rounded-lg">Try Again</button></div>);
+      return (<div className="w-full h-full flex flex-col bg-gradient-to-br from-violet-900 via-purple-900 to-indigo-900 text-white overflow-hidden">{showInfo && infoTopic && infoTopics[infoTopic] && (<div className="absolute inset-0 bg-black/80 flex items-center justify-center p-4 z-50" onClick={() => { setShowInfo(false); setInfoTopic(null); }}><div className="bg-slate-800 rounded-xl p-4 max-w-md" onClick={e => e.stopPropagation()}><h3 className="text-lg font-bold text-violet-400 mb-2">{infoTopics[infoTopic].title}</h3><p className="text-sm text-slate-300">{infoTopics[infoTopic].content}</p><button onClick={() => { setShowInfo(false); setInfoTopic(null); }} className="mt-4 w-full py-2 bg-violet-600 rounded-lg">Got it!</button></div></div>)}<div className="p-3 bg-black/30 border-b border-violet-500/30"><div className="flex justify-between items-center mb-2"><span className="font-bold">📋 Budget</span><span className="text-violet-400">Month {month}/6</span></div><div className="flex gap-4 text-sm"><span>💵 Cash: ${cash.toLocaleString()}</span><span>📈 Revenue: ${revenue.toLocaleString()}</span></div></div><div className="flex-1 p-3 overflow-auto">{!budgetSet ? (<div className="space-y-3">{categories.map(cat => (<div key={cat.id} className="bg-black/30 rounded-lg p-3"><div className="flex justify-between mb-2"><span>{cat.icon} {cat.name}</span><span className="text-violet-400">${allocations[cat.id] || 0}</span></div><input type="range" min={cat.min} max={cat.max} step={500} value={allocations[cat.id] || cat.min} onChange={e => setBudget(cat.id, Number(e.target.value))} className="w-full" /></div>))}<div className={`text-center p-2 rounded ${totalAllocated > revenue ? 'bg-red-600/50' : 'bg-green-600/50'}`}>{totalAllocated > revenue ? `Over budget by $${totalAllocated - revenue}` : `$${revenue - totalAllocated} unallocated (savings)`}</div></div>) : (<div className="text-center p-4"><p className="text-xl mb-4">Budget set for Month {month}</p><p className="text-slate-400">Allocated: ${totalAllocated}</p><p className="text-green-400">Saved: ${revenue - totalAllocated}</p></div>)}</div><div className="p-3 bg-black/30 border-t border-violet-500/30">{!budgetSet ? (<button onClick={confirmBudget} disabled={totalAllocated > revenue} className="w-full py-3 bg-violet-600 rounded-xl font-bold disabled:opacity-50">Confirm Budget</button>) : (<button onClick={nextMonth} className="w-full py-3 bg-violet-600 rounded-xl font-bold">{month >= 6 ? 'See Results' : 'Next Month'}</button>)}<div className="flex gap-2 mt-2 justify-center">{Object.keys(infoTopics).map(k => <button key={k} onClick={() => {setInfoTopic(k);setShowInfo(true);}} className="text-xs text-violet-400">ℹ️ {infoTopics[k].title}</button>)}</div></div></div>);
+   };
+
+   const UnitEconomicsRenderer = () => {
+      const [phase, setPhase] = useState<'intro'|'play'|'result'>('intro');
+      const [showInfo, setShowInfo] = useState(false);
+      const [infoTopic, setInfoTopic] = useState<string|null>(null);
+      const [scenario, setScenario] = useState(0);
+      const [score, setScore] = useState(0);
+      const [answered, setAnswered] = useState(false);
+      const [selected, setSelected] = useState<number|null>(null);
+      const [log, setLog] = useState<string[]>([]);
+      const scenarios = [
+         {data:{cac:100,monthlyRevenue:50,churn:'5%'},q:'What is the LTV if avg customer stays 20 months?',opts:['$100','$500','$1000','$2000'],correct:2,explain:'LTV = Monthly Revenue × Months = $50 × 20 = $1000. LTV:CAC = 10:1 (excellent).'},
+         {data:{price:99,cogs:30,marketing:20,overhead:15},q:'What is the contribution margin per unit?',opts:['$99','$69','$49','$34'],correct:2,explain:'Contribution Margin = Price - COGS - Variable Costs = $99 - $30 - $20 = $49.'},
+         {data:{fixedCosts:10000,contributionMargin:50,price:100},q:'What is the breakeven point in units?',opts:['100 units','200 units','500 units','1000 units'],correct:1,explain:'Breakeven = Fixed Costs / Contribution Margin = $10,000 / $50 = 200 units.'},
+         {data:{cac:200,ltv:600,payback:'8 months'},q:'Is this a healthy LTV:CAC ratio?',opts:['No, too low','Borderline acceptable','Yes, healthy','Exceptional'],correct:2,explain:'LTV:CAC = 3:1 is the benchmark for healthy unit economics. 600:200 = 3:1 exactly.'},
+         {data:{revenue:100000,customers:500,cac:150,churn:'3%'},q:'What is the ARPU (Average Revenue Per User)?',opts:['$50','$100','$150','$200'],correct:3,explain:'ARPU = Revenue / Customers = $100,000 / 500 = $200 per customer.'},
+         {data:{grossMargin:'70%',netMargin:'10%',revenue:1000000},q:'What are the operating expenses?',opts:['$100k','$300k','$600k','$700k'],correct:2,explain:'Gross Profit = $700k. Net Profit = $100k. OpEx = $700k - $100k = $600k.'}
+      ];
+      const infoTopics:{[k:string]:{title:string,content:string}} = {
+         ltv:{title:'LTV (Lifetime Value)',content:'Total revenue from a customer over their lifetime. LTV = ARPU × Average Lifespan. Higher is better.'},
+         cac:{title:'CAC (Customer Acquisition Cost)',content:'Cost to acquire one customer. Include all sales and marketing divided by new customers.'},
+         ratio:{title:'LTV:CAC Ratio',content:'3:1 is healthy benchmark. Below 1:1 means you lose money on each customer. Above 5:1 may mean underinvesting.'},
+         payback:{title:'CAC Payback',content:'Months to recover acquisition cost. Under 12 months is good for SaaS. Shorter = faster reinvestment.'}
+      };
+      const answer = (idx:number) => {
+         if(answered) return;
+         setSelected(idx);
+         setAnswered(true);
+         if(idx === scenarios[scenario].correct) {
+            setScore(s => s + 1);
+            setLog(l => [...l, `Scenario ${scenario+1}: Correct!`]);
+         } else {
+            setLog(l => [...l, `Scenario ${scenario+1}: Wrong`]);
+         }
+      };
+      const next = () => {
+         if(scenario >= scenarios.length - 1) setPhase('result');
+         else { setScenario(s => s + 1); setAnswered(false); setSelected(null); }
+      };
+      const grade = score >= 5 ? 'A' : score >= 4 ? 'B' : score >= 2 ? 'C' : 'D';
+      const s = scenarios[scenario];
+      if(phase === 'intro') return (<div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-cyan-900 via-sky-900 to-blue-900 text-white p-6"><div className="text-6xl mb-4">📐</div><h2 className="text-2xl font-bold mb-2">Unit Economics</h2><p className="text-slate-300 text-center mb-6 max-w-md">Master the numbers that matter! Calculate LTV, CAC, margins, and breakeven.</p><button onClick={() => setPhase('play')} className="px-8 py-3 bg-gradient-to-r from-cyan-500 to-blue-500 rounded-xl font-bold">Start Calculating</button></div>);
+      if(phase === 'result') return (<div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-cyan-900 via-sky-900 to-blue-900 text-white p-6"><div className="text-6xl mb-4">{grade === 'A' ? '🧮' : grade === 'B' ? '📊' : '📉'}</div><h2 className="text-2xl font-bold mb-2">Complete!</h2><div className="text-4xl font-bold text-cyan-400 mb-2">{score}/{scenarios.length}</div><div className="text-6xl mb-4">{grade}</div><p className="text-slate-400 mb-4">{grade === 'A' ? 'Unit economics master!' : grade === 'B' ? 'Good grasp!' : 'Review the formulas!'}</p><button onClick={() => {setPhase('intro');setScenario(0);setScore(0);setAnswered(false);setSelected(null);setLog([]);}} className="px-6 py-2 bg-cyan-600 rounded-lg">Try Again</button></div>);
+      return (<div className="w-full h-full flex flex-col bg-gradient-to-br from-cyan-900 via-sky-900 to-blue-900 text-white overflow-hidden">{showInfo && infoTopic && infoTopics[infoTopic] && (<div className="absolute inset-0 bg-black/80 flex items-center justify-center p-4 z-50" onClick={() => { setShowInfo(false); setInfoTopic(null); }}><div className="bg-slate-800 rounded-xl p-4 max-w-md" onClick={e => e.stopPropagation()}><h3 className="text-lg font-bold text-cyan-400 mb-2">{infoTopics[infoTopic].title}</h3><p className="text-sm text-slate-300">{infoTopics[infoTopic].content}</p><button onClick={() => { setShowInfo(false); setInfoTopic(null); }} className="mt-4 w-full py-2 bg-cyan-600 rounded-lg">Got it!</button></div></div>)}<div className="p-3 bg-black/30 border-b border-cyan-500/30 flex justify-between items-center"><span className="font-bold">📐 Unit Economics</span><span className="text-cyan-400">{scenario + 1}/{scenarios.length}</span><span className="text-sky-400">Score: {score}</span></div><div className="flex-1 p-4 overflow-auto"><div className="bg-black/30 rounded-xl p-3 mb-3"><p className="text-xs text-slate-400 mb-2">Given Data:</p><div className="grid grid-cols-2 gap-2">{Object.entries(s.data).map(([k,v]) => (<div key={k} className="bg-black/30 rounded p-2 text-center"><div className="text-lg font-bold text-cyan-400">{v}</div><div className="text-xs text-slate-400 uppercase">{k}</div></div>))}</div></div><div className="bg-black/30 rounded-xl p-4 mb-3"><p className="font-medium">{s.q}</p></div><div className="grid gap-2">{s.opts.map((opt, i) => (<button key={i} onClick={() => answer(i)} disabled={answered} className={`p-3 rounded-lg text-left ${answered ? i === s.correct ? 'bg-green-600' : i === selected ? 'bg-red-600' : 'bg-black/30' : 'bg-black/30 hover:bg-cyan-600/50'}`}>{opt}</button>))}</div>{answered && (<div className="mt-3 p-3 bg-black/30 rounded-lg"><p className="text-sm text-slate-300">{s.explain}</p><button onClick={next} className="mt-3 w-full py-2 bg-cyan-600 rounded-lg">{scenario >= scenarios.length - 1 ? 'See Results' : 'Next'}</button></div>)}</div><div className="p-3 bg-black/30 border-t border-cyan-500/30 flex gap-2 justify-center">{Object.keys(infoTopics).map(k => <button key={k} onClick={() => {setInfoTopic(k);setShowInfo(true);}} className="text-xs text-cyan-400">ℹ️ {infoTopics[k].title}</button>)}</div></div>);
+   };
+
    // --- GENERIC RENDERER ---
    const GenericRenderer = () => {
       if (type === 'poster' || type === 'infographic') {
@@ -29260,6 +29478,16 @@ const GeneratedDiagram: React.FC<DiagramProps> = ({ type, data, title }) => {
             return <PublicRelationsRenderer />;
          case 'negotiation':
             return <NegotiationRenderer />;
+         case 'fundraising':
+            return <FundraisingRenderer />;
+         case 'financial_statements':
+            return <FinancialStatementsRenderer />;
+         case 'pricing_strategy':
+            return <PricingStrategyRenderer />;
+         case 'budgeting':
+            return <BudgetingRenderer />;
+         case 'unit_economics':
+            return <UnitEconomicsRenderer />;
          default:
             return <GenericRenderer />;
       }
