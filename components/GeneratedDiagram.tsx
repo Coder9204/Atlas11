@@ -47706,6 +47706,288 @@ const GeneratedDiagram: React.FC<DiagramProps> = ({ type, data, title }) => {
       return null;
    };
 
+   const PayrollProcessingRenderer = () => {
+      const [phase, setPhase] = useState<'intro' | 'tutorial' | 'play' | 'result'>('intro');
+      const [tutorialStep, setTutorialStep] = useState(0);
+      const [showInfo, setShowInfo] = useState(false);
+      const [infoTopic, setInfoTopic] = useState<string | null>(null);
+      const [scenarioIndex, setScenarioIndex] = useState(0);
+      const [score, setScore] = useState(0);
+      const [answered, setAnswered] = useState(false);
+      const [selectedCalcs, setSelectedCalcs] = useState<{[key: string]: number}>({});
+      const [quizIndex, setQuizIndex] = useState(0);
+      const [quizAnswered, setQuizAnswered] = useState(false);
+      const [quizScore, setQuizScore] = useState(0);
+      const [gameLog, setGameLog] = useState<string[]>([]);
+
+      const infoContent: {[key: string]: { title: string; content: string }} = {
+         fica: { title: 'FICA Taxes', content: 'Federal Insurance Contributions Act taxes include Social Security (6.2% up to wage base) and Medicare (1.45% + 0.9% additional for high earners). Employers match the employee portion.' },
+         federal_withholding: { title: 'Federal Income Tax Withholding', content: 'Based on W-4 form, filing status, allowances, and tax tables. Uses progressive tax brackets with marginal rates.' },
+         state_withholding: { title: 'State Income Tax', content: 'Varies by state - some have flat rates, progressive brackets, or no income tax. Must withhold for work state and sometimes residence state.' },
+         pretax_deductions: { title: 'Pre-Tax Deductions', content: '401(k) contributions, health insurance, HSA, FSA reduce taxable income before calculating withholding. Saves employees on taxes.' },
+         posttax_deductions: { title: 'Post-Tax Deductions', content: 'Roth 401(k), garnishments, voluntary benefits taken after taxes. Dont reduce taxable income but must track separately.' },
+         employer_taxes: { title: 'Employer Payroll Taxes', content: 'FUTA (6% on first $7,000, usually 0.6% after credit), SUTA (varies by state and experience rating), employer FICA match.' },
+         pay_frequency: { title: 'Pay Frequency Considerations', content: 'Weekly, bi-weekly, semi-monthly, monthly affect withholding calculations. Annual salary ÷ pay periods. Overtime calculated weekly regardless.' }
+      };
+
+      const tutorialSteps = [
+         { title: 'Welcome to Payroll Processing', content: 'Learn to calculate gross pay, withholdings, deductions, and employer taxes. Master the paycheck journey from gross to net.' },
+         { title: 'Gross Pay Calculation', content: 'Start with base pay. For hourly: hours × rate. For salary: annual ÷ pay periods. Add overtime (1.5x after 40 hours weekly), bonuses, commissions.' },
+         { title: 'Pre-Tax Deductions', content: 'Subtract 401(k), health insurance, HSA, FSA before calculating taxes. These reduce taxable income and save the employee money.' },
+         { title: 'FICA Withholding', content: 'Calculate Social Security (6.2% up to $168,600 in 2024) and Medicare (1.45% + 0.9% above $200K). Apply to taxable wages after pre-tax deductions.' },
+         { title: 'Income Tax Withholding', content: 'Use W-4 info, pay frequency, and tax tables. Federal uses progressive brackets. State varies - check specific rules.' },
+         { title: 'Post-Tax Deductions', content: 'Subtract Roth contributions, garnishments, union dues after taxes. These dont reduce the tax burden but come out of net pay.' },
+         { title: 'Employer Payroll Taxes', content: 'Employers pay matching FICA, plus FUTA and SUTA. Total employer cost exceeds gross pay by 7-10% typically.' }
+      ];
+
+      const scenarios = [
+         {
+            title: 'Standard Bi-Weekly Payroll',
+            employee: { name: 'Sarah Martinez', salary: 75000, payFrequency: 'bi-weekly', filingStatus: 'single', state: 'CA' },
+            deductions: { health: 200, dental: 25, vision: 10, retirement401k: 6 },
+            grossPay: 2884.62,
+            calculations: {
+               preTaxDeductions: { value: 408.08, label: 'Pre-Tax Deductions', items: 'Health $200 + Dental $25 + Vision $10 + 401k 6% = $173.08' },
+               taxableWages: { value: 2476.54, label: 'Taxable Wages', items: 'Gross - Pre-Tax' },
+               socialSecurity: { value: 153.55, label: 'Social Security', items: '6.2% of taxable wages' },
+               medicare: { value: 35.91, label: 'Medicare', items: '1.45% of taxable wages' },
+               federalTax: { value: 289.00, label: 'Federal Withholding', items: 'Single, bi-weekly, using tax tables' },
+               stateTax: { value: 86.30, label: 'CA State Tax', items: 'California progressive rates' },
+               netPay: { value: 1911.78, label: 'Net Pay', items: 'Taxable - All Withholdings' }
+            }
+         },
+         {
+            title: 'Hourly with Overtime',
+            employee: { name: 'Mike Thompson', hourlyRate: 28, hoursWorked: 48, payFrequency: 'weekly', filingStatus: 'married', state: 'TX' },
+            deductions: { health: 150, retirement401k: 4 },
+            grossPay: 1456.00,
+            calculations: {
+               regularPay: { value: 1120.00, label: 'Regular Pay', items: '40 hours × $28' },
+               overtimePay: { value: 336.00, label: 'Overtime Pay', items: '8 hours × $42 (1.5×)' },
+               preTaxDeductions: { value: 208.24, label: 'Pre-Tax Deductions', items: 'Health $150 + 401k 4% = $58.24' },
+               taxableWages: { value: 1247.76, label: 'Taxable Wages', items: 'Gross - Pre-Tax' },
+               socialSecurity: { value: 77.36, label: 'Social Security', items: '6.2% of taxable wages' },
+               medicare: { value: 18.09, label: 'Medicare', items: '1.45% of taxable wages' },
+               federalTax: { value: 98.00, label: 'Federal Withholding', items: 'MFJ, weekly tables' },
+               netPay: { value: 1054.31, label: 'Net Pay', items: 'No state tax in Texas' }
+            }
+         },
+         {
+            title: 'High Earner with Additional Medicare',
+            employee: { name: 'Jennifer Wu', salary: 280000, payFrequency: 'semi-monthly', filingStatus: 'single', state: 'NY' },
+            deductions: { health: 400, hsa: 150, retirement401k: 10, roth401k: 5 },
+            grossPay: 11666.67,
+            calculations: {
+               preTaxDeductions: { value: 1716.67, label: 'Pre-Tax Deductions', items: 'Health $400 + HSA $150 + 401k 10% = $1166.67' },
+               taxableWages: { value: 9950.00, label: 'Taxable Wages', items: 'Gross - Pre-Tax' },
+               socialSecurity: { value: 616.90, label: 'Social Security', items: '6.2% (not yet at wage base)' },
+               medicare: { value: 144.28, label: 'Medicare', items: '1.45% base rate' },
+               additionalMedicare: { value: 89.55, label: 'Additional Medicare', items: '0.9% (income > $200K)' },
+               federalTax: { value: 2890.00, label: 'Federal Withholding', items: 'Single, 35% marginal bracket' },
+               stateTax: { value: 685.00, label: 'NY State Tax', items: 'NY progressive + NYC tax' },
+               rothDeduction: { value: 583.33, label: 'Roth 401k (Post-Tax)', items: '5% after-tax contribution' },
+               netPay: { value: 4940.94, label: 'Net Pay', items: 'After all deductions' }
+            }
+         },
+         {
+            title: 'Employee with Garnishment',
+            employee: { name: 'Robert Chen', salary: 52000, payFrequency: 'bi-weekly', filingStatus: 'single', state: 'FL' },
+            deductions: { health: 175, retirement401k: 3, childSupport: 450 },
+            grossPay: 2000.00,
+            calculations: {
+               preTaxDeductions: { value: 235.00, label: 'Pre-Tax Deductions', items: 'Health $175 + 401k 3% = $60' },
+               taxableWages: { value: 1765.00, label: 'Taxable Wages', items: 'Gross - Pre-Tax' },
+               socialSecurity: { value: 109.43, label: 'Social Security', items: '6.2% of taxable wages' },
+               medicare: { value: 25.59, label: 'Medicare', items: '1.45% of taxable wages' },
+               federalTax: { value: 158.00, label: 'Federal Withholding', items: 'Single, bi-weekly' },
+               garnishment: { value: 450.00, label: 'Child Support', items: 'Court-ordered garnishment' },
+               netPay: { value: 1022.98, label: 'Net Pay', items: 'FL has no state tax' }
+            }
+         }
+      ];
+
+      const quizQuestions = [
+         { q: 'Pre-tax deductions reduce which amount?', options: ['Gross pay', 'Taxable wages for withholding', 'FUTA wages', 'Net pay'], correct: 1 },
+         { q: 'When does the additional 0.9% Medicare tax apply?', options: ['All wages', 'Wages over $168,600', 'Wages over $200,000', 'Only self-employment'], correct: 2 },
+         { q: 'Overtime is calculated based on what time period?', options: ['Daily hours over 8', 'Weekly hours over 40', 'Bi-weekly hours over 80', 'Monthly total'], correct: 1 },
+         { q: 'Which is a post-tax deduction?', options: ['Health insurance premium', '401(k) contribution', 'Court-ordered garnishment', 'HSA contribution'], correct: 2 },
+         { q: 'What does the employer pay that employees dont?', options: ['Social Security', 'Medicare', 'FUTA and SUTA', 'State income tax'], correct: 2 }
+      ];
+
+      if (phase === 'intro') {
+         return (
+            <div className="space-y-6">
+               <div className="text-center">
+                  <div className="text-6xl mb-4">💰</div>
+                  <h2 className="text-2xl font-bold text-blue-800">Payroll Processing Master</h2>
+                  <p className="text-gray-600 mt-2">Calculate paychecks from gross to net</p>
+               </div>
+               <div className="bg-blue-50 p-4 rounded-xl">
+                  <h3 className="font-semibold text-blue-800 mb-2">What You'll Learn:</h3>
+                  <ul className="space-y-1 text-sm text-gray-700">
+                     <li>✓ Gross pay calculations including overtime</li>
+                     <li>✓ Pre-tax and post-tax deduction handling</li>
+                     <li>✓ FICA tax calculations (Social Security & Medicare)</li>
+                     <li>✓ Federal and state withholding</li>
+                     <li>✓ Employer payroll tax obligations</li>
+                  </ul>
+               </div>
+               <button onClick={() => { setPhase('tutorial'); setGameLog(['Started payroll processing tutorial']); }} className="w-full py-3 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700">Start Learning</button>
+            </div>
+         );
+      }
+
+      if (phase === 'tutorial') {
+         const step = tutorialSteps[tutorialStep];
+         return (
+            <div className="space-y-6">
+               <div className="flex justify-between items-center">
+                  <span className="text-sm text-gray-500">Tutorial {tutorialStep + 1} of {tutorialSteps.length}</span>
+                  <div className="flex gap-1">
+                     {tutorialSteps.map((_, i) => (<div key={i} className={`w-3 h-3 rounded-full ${i <= tutorialStep ? 'bg-blue-600' : 'bg-gray-200'}`} />))}
+                  </div>
+               </div>
+               <div className="bg-gradient-to-br from-blue-50 to-indigo-100 p-6 rounded-xl">
+                  <h3 className="text-xl font-bold text-blue-800 mb-3">{step.title}</h3>
+                  <p className="text-gray-700">{step.content}</p>
+               </div>
+               <div className="flex gap-2">
+                  {tutorialStep > 0 && (<button onClick={() => setTutorialStep(tutorialStep - 1)} className="flex-1 py-2 border border-blue-600 text-blue-600 rounded-lg hover:bg-blue-50">← Back</button>)}
+                  <button onClick={() => { if (tutorialStep < tutorialSteps.length - 1) { setTutorialStep(tutorialStep + 1); } else { setPhase('play'); setGameLog([...gameLog, 'Completed tutorial, starting scenarios']); } }} className="flex-1 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">{tutorialStep < tutorialSteps.length - 1 ? 'Next →' : 'Start Practice →'}</button>
+               </div>
+            </div>
+         );
+      }
+
+      if (phase === 'play') {
+         const sc = scenarios[scenarioIndex];
+         const calcKeys = Object.keys(sc.calculations);
+         const allCorrect = calcKeys.every(key => selectedCalcs[key] === (sc.calculations as any)[key].value);
+
+         return (
+            <div className="space-y-4">
+               <div className="flex justify-between items-center">
+                  <span className="text-sm font-medium text-gray-600">Scenario {scenarioIndex + 1}/{scenarios.length}</span>
+                  <span className="text-sm font-semibold text-green-600">Score: {score}</span>
+               </div>
+               <div className="bg-gradient-to-r from-green-50 to-emerald-100 p-4 rounded-xl">
+                  <div className="flex justify-between items-start">
+                     <h3 className="font-bold text-green-800">{sc.title}</h3>
+                     <button onClick={() => { setShowInfo(true); setInfoTopic('pay_frequency'); }} className="text-green-600 hover:text-green-800">ℹ️</button>
+                  </div>
+                  <div className="mt-2 text-sm text-gray-700 space-y-1">
+                     <p><strong>Employee:</strong> {sc.employee.name}</p>
+                     {'salary' in sc.employee && <p><strong>Salary:</strong> ${sc.employee.salary.toLocaleString()}/year ({sc.employee.payFrequency})</p>}
+                     {'hourlyRate' in sc.employee && <p><strong>Rate:</strong> ${(sc.employee as any).hourlyRate}/hr | Hours: {(sc.employee as any).hoursWorked}</p>}
+                     <p><strong>Filing Status:</strong> {sc.employee.filingStatus} | <strong>State:</strong> {sc.employee.state}</p>
+                     <p><strong>Gross Pay This Period:</strong> ${sc.grossPay.toFixed(2)}</p>
+                  </div>
+               </div>
+
+               <div className="space-y-3">
+                  <h4 className="font-semibold text-gray-700">Match Each Calculation:</h4>
+                  {calcKeys.map((key, i) => {
+                     const calc = (sc.calculations as any)[key];
+                     const isSelected = selectedCalcs[key] !== undefined;
+                     const isCorrect = selectedCalcs[key] === calc.value;
+                     return (
+                        <div key={key} className={`p-3 rounded-lg border-2 ${isSelected ? (isCorrect ? 'border-green-500 bg-green-50' : 'border-red-500 bg-red-50') : 'border-gray-200 bg-white'}`}>
+                           <div className="flex justify-between items-center">
+                              <div className="flex items-center gap-2">
+                                 <span className="font-medium">{calc.label}</span>
+                                 <button onClick={() => { setShowInfo(true); setInfoTopic(key.includes('social') ? 'fica' : key.includes('federal') ? 'federal_withholding' : key.includes('state') ? 'state_withholding' : key.includes('pre') ? 'pretax_deductions' : 'posttax_deductions'); }} className="text-blue-500 text-sm">ℹ️</button>
+                              </div>
+                              {!answered && (
+                                 <select value={selectedCalcs[key] || ''} onChange={(e) => setSelectedCalcs({...selectedCalcs, [key]: parseFloat(e.target.value)})} className="p-1 border rounded text-sm">
+                                    <option value="">Select...</option>
+                                    {[...calcKeys.map(k => (sc.calculations as any)[k].value)].sort((a, b) => a - b).map(v => (<option key={v} value={v}>${v.toFixed(2)}</option>))}
+                                 </select>
+                              )}
+                              {answered && <span className={`font-bold ${isCorrect ? 'text-green-600' : 'text-red-600'}`}>${calc.value.toFixed(2)}</span>}
+                           </div>
+                           {answered && <p className="text-xs text-gray-600 mt-1">{calc.items}</p>}
+                        </div>
+                     );
+                  })}
+               </div>
+
+               {!answered ? (
+                  <button onClick={() => { setAnswered(true); const correct = calcKeys.filter(key => selectedCalcs[key] === (sc.calculations as any)[key].value).length; setScore(score + correct); setGameLog([...gameLog, `Scenario ${scenarioIndex + 1}: ${correct}/${calcKeys.length} correct`]); }} disabled={Object.keys(selectedCalcs).length < calcKeys.length} className="w-full py-3 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700 disabled:bg-gray-300">Check Calculations</button>
+               ) : (
+                  <div className="space-y-3">
+                     <div className={`p-3 rounded-lg ${allCorrect ? 'bg-green-100 border border-green-300' : 'bg-yellow-100 border border-yellow-300'}`}>
+                        <p className="font-semibold">{allCorrect ? '✅ Perfect! All calculations correct!' : `📊 ${calcKeys.filter(key => selectedCalcs[key] === (sc.calculations as any)[key].value).length}/${calcKeys.length} correct. Review the items above.`}</p>
+                     </div>
+                     <button onClick={() => { if (scenarioIndex < scenarios.length - 1) { setScenarioIndex(scenarioIndex + 1); setSelectedCalcs({}); setAnswered(false); } else { setPhase('result'); } }} className="w-full py-3 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700">{scenarioIndex < scenarios.length - 1 ? 'Next Scenario →' : 'See Results →'}</button>
+                  </div>
+               )}
+
+               {showInfo && infoTopic && infoContent[infoTopic] && (
+                  <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+                     <div className="bg-white rounded-xl p-6 max-w-md">
+                        <h3 className="font-bold text-lg mb-2">{infoContent[infoTopic].title}</h3>
+                        <p className="text-gray-700">{infoContent[infoTopic].content}</p>
+                        <button onClick={() => setShowInfo(false)} className="mt-4 w-full py-2 bg-blue-600 text-white rounded-lg">Got It</button>
+                     </div>
+                  </div>
+               )}
+            </div>
+         );
+      }
+
+      if (phase === 'result') {
+         if (quizIndex < quizQuestions.length) {
+            const q = quizQuestions[quizIndex];
+            return (
+               <div className="space-y-6">
+                  <div className="text-center">
+                     <h3 className="text-xl font-bold text-blue-800">Final Assessment</h3>
+                     <p className="text-sm text-gray-500">Question {quizIndex + 1} of {quizQuestions.length}</p>
+                  </div>
+                  <div className="bg-blue-50 p-4 rounded-xl">
+                     <p className="font-medium text-gray-800">{q.q}</p>
+                  </div>
+                  <div className="space-y-2">
+                     {q.options.map((opt, i) => (
+                        <button key={i} onClick={() => { if (!quizAnswered) { setQuizAnswered(true); if (i === q.correct) { setQuizScore(quizScore + 1); setGameLog([...gameLog, `Quiz ${quizIndex + 1}: Correct`]); } else { setGameLog([...gameLog, `Quiz ${quizIndex + 1}: Incorrect`]); } } }} disabled={quizAnswered} className={`w-full p-3 rounded-lg text-left border-2 transition-all ${quizAnswered ? (i === q.correct ? 'border-green-500 bg-green-50' : 'border-gray-200') : 'border-gray-200 hover:border-blue-400'}`}>{opt}</button>
+                     ))}
+                  </div>
+                  {quizAnswered && (<button onClick={() => { setQuizIndex(quizIndex + 1); setQuizAnswered(false); }} className="w-full py-3 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700">Next Question →</button>)}
+               </div>
+            );
+         }
+
+         const totalPossible = scenarios.reduce((acc, sc) => acc + Object.keys(sc.calculations).length, 0);
+         const percentage = Math.round(((score + quizScore) / (totalPossible + quizQuestions.length)) * 100);
+         return (
+            <div className="space-y-6">
+               <div className="text-center">
+                  <div className="text-6xl mb-4">{percentage >= 80 ? '🏆' : percentage >= 60 ? '📊' : '📚'}</div>
+                  <h2 className="text-2xl font-bold text-blue-800">Payroll Complete!</h2>
+               </div>
+               <div className="bg-gradient-to-br from-blue-50 to-indigo-100 p-6 rounded-xl">
+                  <div className="grid grid-cols-2 gap-4 text-center">
+                     <div>
+                        <div className="text-3xl font-bold text-blue-600">{score}/{totalPossible}</div>
+                        <div className="text-sm text-gray-600">Calculations</div>
+                     </div>
+                     <div>
+                        <div className="text-3xl font-bold text-green-600">{quizScore}/{quizQuestions.length}</div>
+                        <div className="text-sm text-gray-600">Quiz Score</div>
+                     </div>
+                  </div>
+                  <div className="mt-4 text-center">
+                     <div className="text-4xl font-bold text-indigo-600">{percentage}%</div>
+                     <div className="text-sm text-gray-600">Overall Mastery</div>
+                  </div>
+               </div>
+               <button onClick={() => { setPhase('intro'); setScore(0); setScenarioIndex(0); setSelectedCalcs({}); setAnswered(false); setQuizIndex(0); setQuizAnswered(false); setQuizScore(0); }} className="w-full py-3 bg-green-600 text-white rounded-xl font-semibold hover:bg-green-700">Practice Again</button>
+            </div>
+         );
+      }
+      return null;
+   };
+
    const FinancialStatementsRenderer = () => {
       const [phase, setPhase] = useState<'intro' | 'play' | 'result'>('intro');
       const [showInfo, setShowInfo] = useState(false);
@@ -51569,6 +51851,8 @@ const GeneratedDiagram: React.FC<DiagramProps> = ({ type, data, title }) => {
             return <TaxStructuresRenderer />;
          case 'sales_tax_nexus':
             return <SalesTaxNexusRenderer />;
+         case 'payroll_processing':
+            return <PayrollProcessingRenderer />;
          case 'pricing_strategy':
             return <PricingStrategyRenderer />;
          case 'budgeting':
