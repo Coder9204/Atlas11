@@ -39378,6 +39378,371 @@ const GeneratedDiagram: React.FC<DiagramProps> = ({ type, data, title }) => {
       return null;
    };
 
+   const BalanceSheetRenderer = () => {
+      const [phase, setPhase] = useState<'intro' | 'tutorial' | 'play' | 'result'>('intro');
+      const [tutorialStep, setTutorialStep] = useState(0);
+      const [showInfo, setShowInfo] = useState(false);
+      const [infoTopic, setInfoTopic] = useState<string | null>(null);
+      const [score, setScore] = useState(0);
+      const [level, setLevel] = useState(0);
+      const [gameLog, setGameLog] = useState<string[]>([]);
+      const [placements, setPlacements] = useState<{[key: string]: string}>({});
+      const [showFeedback, setShowFeedback] = useState(false);
+      const [quizIndex, setQuizIndex] = useState(0);
+      const [quizAnswered, setQuizAnswered] = useState(false);
+
+      const tutorials = [
+         { title: "The Balance Sheet Equation", content: "Assets = Liabilities + Equity. This MUST always balance! If it doesn't, something is wrong.", icon: "⚖️" },
+         { title: "Assets", content: "What the company OWNS. Split into Current (cash within 1 year) and Non-Current (long-term like buildings, equipment).", icon: "💰" },
+         { title: "Liabilities", content: "What the company OWES. Current (due within 1 year) and Long-term (mortgages, bonds).", icon: "📋" },
+         { title: "Equity", content: "What's left for OWNERS after paying all debts. Includes invested capital and retained earnings.", icon: "👥" },
+         { title: "Liquidity Order", content: "Assets listed most liquid first (cash) to least liquid (property). This shows how quickly assets convert to cash.", icon: "🔄" },
+         { title: "Point in Time", content: "Balance sheet is a SNAPSHOT at a specific date, not over a period. 'As of December 31, 2024' not 'For the year 2024'.", icon: "📸" },
+         { title: "Working Capital", content: "Current Assets - Current Liabilities = Working Capital. Positive means company can pay short-term bills!", icon: "📊" }
+      ];
+
+      const infoTopics: {[key: string]: string} = {
+         current_assets: "Current assets are expected to convert to cash within one year: Cash, Accounts Receivable, Inventory, Prepaid Expenses.",
+         non_current_assets: "Non-current (fixed) assets provide value for more than one year: Property, Plant & Equipment (PP&E), Intangible Assets, Long-term Investments.",
+         current_liabilities: "Current liabilities are due within one year: Accounts Payable, Short-term Debt, Accrued Expenses, Current portion of Long-term Debt.",
+         long_term_liabilities: "Long-term liabilities are due beyond one year: Bonds Payable, Long-term Loans, Lease Obligations, Pension Liabilities.",
+         equity: "Shareholders' equity includes: Common Stock (invested capital), Retained Earnings (accumulated profits), Additional Paid-in Capital, Treasury Stock.",
+         working_capital: "Working Capital = Current Assets - Current Liabilities. Positive working capital means the company can meet short-term obligations. Negative could signal liquidity problems."
+      };
+
+      const levels = [
+         {
+            name: "Classify Balance Sheet Items",
+            items: [
+               { id: 'cash', name: 'Cash & Equivalents', correct: 'current_assets', hint: 'Most liquid asset' },
+               { id: 'ar', name: 'Accounts Receivable', correct: 'current_assets', hint: 'Money owed by customers' },
+               { id: 'inventory', name: 'Inventory', correct: 'current_assets', hint: 'Goods for sale' },
+               { id: 'ppe', name: 'Property, Plant & Equipment', correct: 'non_current_assets', hint: 'Physical long-term assets' },
+               { id: 'ap', name: 'Accounts Payable', correct: 'current_liabilities', hint: 'Money owed to suppliers' },
+               { id: 'wages', name: 'Wages Payable', correct: 'current_liabilities', hint: 'Owed to employees' },
+               { id: 'mortgage', name: 'Mortgage Payable', correct: 'long_term_liabilities', hint: 'Long-term building loan' },
+               { id: 'common', name: 'Common Stock', correct: 'equity', hint: 'Invested by shareholders' },
+               { id: 'retained', name: 'Retained Earnings', correct: 'equity', hint: 'Accumulated profits' }
+            ],
+            categories: ['current_assets', 'non_current_assets', 'current_liabilities', 'long_term_liabilities', 'equity']
+         },
+         {
+            name: "Build a Balanced Sheet",
+            scenario: {
+               totalAssets: 500000,
+               currentAssets: 180000,
+               nonCurrentAssets: 320000,
+               totalLiabilities: 200000,
+               currentLiabilities: 80000,
+               longTermLiabilities: 120000,
+               equity: 300000
+            },
+            questions: [
+               { q: "If Total Assets = $500,000 and Total Liabilities = $200,000, what is Equity?", a: 300000, explain: "A = L + E, so E = A - L = $500,000 - $200,000 = $300,000" },
+               { q: "Current Assets = $180,000, Current Liabilities = $80,000. What's Working Capital?", a: 100000, explain: "Working Capital = CA - CL = $180,000 - $80,000 = $100,000" },
+               { q: "If Equity increases by $50,000 and Liabilities stay same, what happens to Assets?", a: 50000, explain: "A = L + E. If E goes up $50K and L unchanged, A must go up $50K to stay balanced!" }
+            ]
+         }
+      ];
+
+      const categories = [
+         { id: 'current_assets', label: 'Current Assets', color: 'bg-green-100 border-green-400' },
+         { id: 'non_current_assets', label: 'Non-Current Assets', color: 'bg-green-200 border-green-500' },
+         { id: 'current_liabilities', label: 'Current Liabilities', color: 'bg-red-100 border-red-400' },
+         { id: 'long_term_liabilities', label: 'Long-Term Liabilities', color: 'bg-red-200 border-red-500' },
+         { id: 'equity', label: "Shareholders' Equity", color: 'bg-blue-100 border-blue-400' }
+      ];
+
+      const handlePlacement = (itemId: string, categoryId: string) => {
+         const item = levels[0].items.find(i => i.id === itemId);
+         if (!item) return;
+
+         setPlacements(prev => ({ ...prev, [itemId]: categoryId }));
+
+         if (categoryId === item.correct) {
+            setScore(prev => prev + 10);
+            setGameLog(prev => [...prev, `Correct: ${item.name} is a ${categoryId.replace(/_/g, ' ')}`]);
+         } else {
+            setGameLog(prev => [...prev, `Incorrect: ${item.name} belongs in ${item.correct.replace(/_/g, ' ')}, not ${categoryId.replace(/_/g, ' ')}`]);
+         }
+      };
+
+      const checkLevel = () => {
+         setShowFeedback(true);
+         const correctCount = levels[0].items.filter(item => placements[item.id] === item.correct).length;
+         if (correctCount === levels[0].items.length) {
+            setScore(prev => prev + 50);
+            setGameLog(prev => [...prev, 'All items classified correctly!']);
+         }
+      };
+
+      const quizzes = [
+         { q: "Which appears FIRST on a balance sheet?", opts: ["Accounts Receivable", "Cash", "Inventory", "Equipment"], correct: 1, explain: "Cash is the most liquid asset and appears first in liquidity order." },
+         { q: "A company has $100K assets, $40K liabilities. What's owner equity?", opts: ["$140,000", "$40,000", "$60,000", "$100,000"], correct: 2, explain: "A = L + E → $100K = $40K + E → E = $60K" },
+         { q: "Working capital of -$20,000 indicates:", opts: ["Company is profitable", "Company may have trouble paying short-term debts", "Company has too much cash", "Company should expand"], correct: 1, explain: "Negative working capital means current liabilities exceed current assets - a liquidity concern." },
+         { q: "Retained earnings belong in:", opts: ["Assets", "Current Liabilities", "Long-term Liabilities", "Shareholders' Equity"], correct: 3, explain: "Retained earnings are accumulated profits kept in the business, part of equity." },
+         { q: "A 10-year loan taken today appears as:", opts: ["Current Asset", "Non-Current Asset", "Current Liability only", "Both Current and Long-term Liability"], correct: 3, explain: "The portion due within 1 year is current liability; remaining is long-term. 10-year loans split across both." },
+         { q: "Balance sheet is dated 'As of Dec 31'. This means:", opts: ["For the entire year", "A snapshot on that specific date", "Projected for next year", "Average for December"], correct: 1, explain: "Balance sheets capture a point in time, unlike income statements which cover a period." }
+      ];
+
+      const handleQuizAnswer = (idx: number) => {
+         if (quizAnswered) return;
+         setQuizAnswered(true);
+         if (idx === quizzes[quizIndex].correct) {
+            setScore(prev => prev + 15);
+            setGameLog(prev => [...prev, `Quiz ${quizIndex + 1}: Correct!`]);
+         } else {
+            setGameLog(prev => [...prev, `Quiz ${quizIndex + 1}: Incorrect. ${quizzes[quizIndex].explain}`]);
+         }
+      };
+
+      const nextQuiz = () => {
+         if (quizIndex < quizzes.length - 1) {
+            setQuizIndex(prev => prev + 1);
+            setQuizAnswered(false);
+         } else {
+            setPhase('result');
+         }
+      };
+
+      const InfoModal = ({ topic, onClose }: { topic: string; onClose: () => void }) => (
+         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={onClose}>
+            <div className="bg-white rounded-xl p-6 max-w-md" onClick={e => e.stopPropagation()}>
+               <h3 className="text-lg font-bold text-gray-800 mb-3">ℹ️ {topic.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}</h3>
+               <p className="text-gray-600">{infoTopics[topic]}</p>
+               <button onClick={onClose} className="mt-4 w-full py-2 bg-indigo-500 text-white rounded-lg hover:bg-indigo-600">Got it!</button>
+            </div>
+         </div>
+      );
+
+      if (phase === 'intro') {
+         return (
+            <div className="flex flex-col items-center justify-center min-h-full bg-gradient-to-br from-indigo-50 to-purple-100 p-6">
+               <div className="bg-white rounded-2xl shadow-xl p-8 max-w-lg w-full text-center">
+                  <div className="text-6xl mb-4">⚖️</div>
+                  <h1 className="text-2xl font-bold text-gray-800 mb-3">The Balance Sheet</h1>
+                  <p className="text-gray-600 mb-6">Master the fundamental accounting equation. Learn to read what a company owns, owes, and what's left for shareholders.</p>
+                  <div className="bg-indigo-50 rounded-lg p-4 mb-6">
+                     <p className="text-2xl font-bold text-indigo-700 mb-2">Assets = Liabilities + Equity</p>
+                     <p className="text-sm text-indigo-600">This equation MUST always balance!</p>
+                  </div>
+                  <button onClick={() => setPhase('tutorial')} className="w-full py-3 bg-indigo-500 text-white rounded-xl font-semibold hover:bg-indigo-600 transition-all">
+                     Start Learning
+                  </button>
+               </div>
+            </div>
+         );
+      }
+
+      if (phase === 'tutorial') {
+         const tut = tutorials[tutorialStep];
+         return (
+            <div className="flex flex-col items-center justify-center min-h-full bg-gradient-to-br from-indigo-50 to-purple-100 p-6">
+               <div className="bg-white rounded-2xl shadow-xl p-8 max-w-lg w-full">
+                  <div className="flex justify-between items-center mb-6">
+                     <span className="text-sm text-gray-500">Step {tutorialStep + 1} of {tutorials.length}</span>
+                     <div className="flex gap-1">
+                        {tutorials.map((_, i) => (
+                           <div key={i} className={`w-2 h-2 rounded-full ${i <= tutorialStep ? 'bg-indigo-500' : 'bg-gray-200'}`} />
+                        ))}
+                     </div>
+                  </div>
+                  <div className="text-4xl mb-4 text-center">{tut.icon}</div>
+                  <h2 className="text-xl font-bold text-gray-800 mb-3 text-center">{tut.title}</h2>
+                  <p className="text-gray-600 text-center mb-8">{tut.content}</p>
+                  <div className="flex gap-3">
+                     {tutorialStep > 0 && (
+                        <button onClick={() => setTutorialStep(prev => prev - 1)} className="flex-1 py-3 border-2 border-gray-200 rounded-xl font-semibold text-gray-600 hover:bg-gray-50">
+                           Back
+                        </button>
+                     )}
+                     <button
+                        onClick={() => tutorialStep < tutorials.length - 1 ? setTutorialStep(prev => prev + 1) : setPhase('play')}
+                        className="flex-1 py-3 bg-indigo-500 text-white rounded-xl font-semibold hover:bg-indigo-600"
+                     >
+                        {tutorialStep < tutorials.length - 1 ? 'Next' : 'Start Classifying!'}
+                     </button>
+                  </div>
+               </div>
+            </div>
+         );
+      }
+
+      if (phase === 'play') {
+         const allPlaced = Object.keys(placements).length === levels[0].items.length;
+         const inQuizMode = level === 1;
+
+         if (!inQuizMode) {
+            return (
+               <div className="flex flex-col min-h-full bg-gradient-to-br from-indigo-50 to-purple-100 p-4">
+                  {showInfo && infoTopic && <InfoModal topic={infoTopic} onClose={() => setShowInfo(false)} />}
+
+                  <div className="flex justify-between items-center mb-4">
+                     <div>
+                        <h2 className="font-bold text-gray-800">Classify Balance Sheet Items</h2>
+                        <p className="text-sm text-gray-600">Select the correct category for each item</p>
+                     </div>
+                     <span className="text-xl font-bold text-indigo-600">{score} pts</span>
+                  </div>
+
+                  <div className="grid grid-cols-5 gap-2 mb-4">
+                     {categories.map(cat => (
+                        <div key={cat.id} className="text-center">
+                           <button
+                              onClick={() => { setInfoTopic(cat.id); setShowInfo(true); }}
+                              className={`w-full py-2 px-1 rounded-lg text-xs font-semibold ${cat.color} border-2 hover:opacity-80`}
+                           >
+                              {cat.label} ℹ️
+                           </button>
+                        </div>
+                     ))}
+                  </div>
+
+                  <div className="flex-1 bg-white rounded-xl shadow-lg p-4 overflow-y-auto">
+                     <div className="space-y-3">
+                        {levels[0].items.map(item => (
+                           <div key={item.id} className="border rounded-lg p-3 bg-gray-50">
+                              <div className="flex items-center justify-between mb-2">
+                                 <div>
+                                    <span className="font-medium text-gray-800">{item.name}</span>
+                                    <span className="text-xs text-gray-500 ml-2">({item.hint})</span>
+                                 </div>
+                                 {showFeedback && (
+                                    <span className={`text-sm ${placements[item.id] === item.correct ? 'text-green-600' : 'text-red-600'}`}>
+                                       {placements[item.id] === item.correct ? '✓' : `→ ${item.correct.replace(/_/g, ' ')}`}
+                                    </span>
+                                 )}
+                              </div>
+                              <div className="flex flex-wrap gap-1">
+                                 {categories.map(cat => (
+                                    <button
+                                       key={cat.id}
+                                       onClick={() => !showFeedback && handlePlacement(item.id, cat.id)}
+                                       disabled={showFeedback}
+                                       className={`px-2 py-1 rounded text-xs font-medium transition-all ${placements[item.id] === cat.id ? 'ring-2 ring-indigo-500 ' + cat.color : 'bg-gray-100 hover:bg-gray-200'}`}
+                                    >
+                                       {cat.label.split(' ')[0]}
+                                    </button>
+                                 ))}
+                              </div>
+                           </div>
+                        ))}
+                     </div>
+                  </div>
+
+                  <div className="mt-4">
+                     {!showFeedback ? (
+                        <button
+                           onClick={checkLevel}
+                           disabled={!allPlaced}
+                           className={`w-full py-3 rounded-xl font-semibold transition-all ${allPlaced ? 'bg-indigo-500 text-white hover:bg-indigo-600' : 'bg-gray-200 text-gray-400'}`}
+                        >
+                           Check Classifications
+                        </button>
+                     ) : (
+                        <button
+                           onClick={() => setLevel(1)}
+                           className="w-full py-3 bg-indigo-500 text-white rounded-xl font-semibold hover:bg-indigo-600"
+                        >
+                           Continue to Quiz →
+                        </button>
+                     )}
+                  </div>
+               </div>
+            );
+         }
+
+         // Quiz mode
+         const quiz = quizzes[quizIndex];
+         return (
+            <div className="flex flex-col min-h-full bg-gradient-to-br from-indigo-50 to-purple-100 p-4">
+               <div className="flex justify-between items-center mb-4">
+                  <div>
+                     <h2 className="font-bold text-gray-800">Balance Sheet Quiz</h2>
+                     <p className="text-sm text-gray-600">Question {quizIndex + 1} of {quizzes.length}</p>
+                  </div>
+                  <span className="text-xl font-bold text-indigo-600">{score} pts</span>
+               </div>
+
+               <div className="flex-1 bg-white rounded-xl shadow-lg p-6">
+                  <h3 className="text-lg font-semibold text-gray-800 mb-6">{quiz.q}</h3>
+                  <div className="space-y-3">
+                     {quiz.opts.map((opt, idx) => (
+                        <button
+                           key={idx}
+                           onClick={() => handleQuizAnswer(idx)}
+                           disabled={quizAnswered}
+                           className={`w-full p-4 rounded-lg text-left font-medium transition-all ${quizAnswered
+                              ? idx === quiz.correct
+                                 ? 'bg-green-100 border-2 border-green-500 text-green-800'
+                                 : 'bg-gray-100 text-gray-500'
+                              : 'bg-gray-50 hover:bg-indigo-50 border-2 border-transparent hover:border-indigo-300'
+                           }`}
+                        >
+                           {opt}
+                        </button>
+                     ))}
+                  </div>
+                  {quizAnswered && (
+                     <div className="mt-4 p-4 bg-yellow-50 rounded-lg">
+                        <p className="text-sm text-yellow-800">💡 {quiz.explain}</p>
+                     </div>
+                  )}
+               </div>
+
+               <div className="mt-4">
+                  {quizAnswered && (
+                     <button onClick={nextQuiz} className="w-full py-3 bg-indigo-500 text-white rounded-xl font-semibold hover:bg-indigo-600">
+                        {quizIndex < quizzes.length - 1 ? 'Next Question →' : 'See Results'}
+                     </button>
+                  )}
+               </div>
+            </div>
+         );
+      }
+
+      if (phase === 'result') {
+         const maxScore = 90 + 50 + 90; // 9 items + bonus + 6 quizzes
+         const percentage = Math.round((score / maxScore) * 100);
+
+         return (
+            <div className="flex flex-col items-center justify-center min-h-full bg-gradient-to-br from-indigo-50 to-purple-100 p-6">
+               <div className="bg-white rounded-2xl shadow-xl p-8 max-w-lg w-full text-center">
+                  <div className="text-6xl mb-4">{percentage >= 80 ? '🏆' : percentage >= 60 ? '📊' : '📚'}</div>
+                  <h1 className="text-2xl font-bold text-gray-800 mb-2">Balance Sheet Mastered!</h1>
+                  <div className="text-4xl font-bold text-indigo-600 mb-4">{score} / {maxScore}</div>
+                  <div className="w-full bg-gray-200 rounded-full h-3 mb-6">
+                     <div className="bg-indigo-500 h-3 rounded-full transition-all" style={{ width: `${percentage}%` }} />
+                  </div>
+
+                  <div className="bg-gray-50 rounded-lg p-4 text-left mb-6">
+                     <h3 className="font-semibold text-gray-800 mb-2">🎯 Key Takeaways:</h3>
+                     <ul className="text-sm text-gray-600 space-y-2">
+                        <li>• <strong>Assets = Liabilities + Equity</strong> must ALWAYS balance</li>
+                        <li>• Current items convert/due within <strong>1 year</strong></li>
+                        <li>• Listed in <strong>liquidity order</strong> (cash first)</li>
+                        <li>• Balance sheet = <strong>snapshot</strong> at a specific date</li>
+                     </ul>
+                  </div>
+
+                  <div className="bg-indigo-50 rounded-lg p-4 text-left mb-6">
+                     <h3 className="font-semibold text-indigo-800 mb-2">💡 Pro Insight:</h3>
+                     <p className="text-sm text-indigo-700">
+                        The balance sheet reveals financial health: High current ratio (CA/CL {">"} 2) suggests stability. High debt-to-equity warns of risk. Compare over time to spot trends!
+                     </p>
+                  </div>
+
+                  <button onClick={() => { setPhase('intro'); setScore(0); setLevel(0); setPlacements({}); setShowFeedback(false); setQuizIndex(0); setQuizAnswered(false); setGameLog([]); }} className="w-full py-3 bg-indigo-500 text-white rounded-xl font-semibold hover:bg-indigo-600">
+                     Practice Again
+                  </button>
+               </div>
+            </div>
+         );
+      }
+
+      return null;
+   };
+
    const FinancialStatementsRenderer = () => {
       const [phase, setPhase] = useState<'intro' | 'play' | 'result'>('intro');
       const [showInfo, setShowInfo] = useState(false);
@@ -43197,6 +43562,8 @@ const GeneratedDiagram: React.FC<DiagramProps> = ({ type, data, title }) => {
             return <AccountsReceivableRenderer />;
          case 'bank_reconciliation':
             return <BankReconciliationRenderer />;
+         case 'balance_sheet':
+            return <BalanceSheetRenderer />;
          case 'pricing_strategy':
             return <PricingStrategyRenderer />;
          case 'budgeting':
