@@ -46748,6 +46748,964 @@ const GeneratedDiagram: React.FC<DiagramProps> = ({ type, data, title }) => {
       return null;
    };
 
+   // Topic 29: Audit Preparation - Getting Ready for Auditors
+   const AuditPrepRenderer = () => {
+      const [phase, setPhase] = useState<'intro' | 'tutorial' | 'play' | 'result'>('intro');
+      const [tutorialStep, setTutorialStep] = useState(0);
+      const [score, setScore] = useState(0);
+      const [scenarioIndex, setScenarioIndex] = useState(0);
+      const [gameLog, setGameLog] = useState<string[]>([]);
+      const [quizIndex, setQuizIndex] = useState(0);
+      const [quizAnswered, setQuizAnswered] = useState(false);
+      const [showInfo, setShowInfo] = useState(false);
+      const [infoContent, setInfoContent] = useState({ title: '', content: '' });
+      const [checklist, setChecklist] = useState<Record<string, boolean>>({});
+      const [submitted, setSubmitted] = useState(false);
+
+      const tutorialSteps = [
+         { title: 'Welcome to Audit Preparation!', content: 'Learn to prepare for financial audits efficiently. Good preparation reduces audit time, costs, and stress while building auditor confidence.' },
+         { title: 'Types of Audits', content: 'External Audit: Independent CPA reviews financials. Internal Audit: Company\'s own review of controls. Tax Audit: IRS/state review of tax returns. SOX Audit: Public company control testing.' },
+         { title: 'The Audit Timeline', content: 'Planning (2-4 weeks before): Gather documents, reconcile accounts. Fieldwork (1-4 weeks): Auditors test transactions. Wrap-up: Review findings, issue opinion.' },
+         { title: 'Key Documents Needed', content: 'Bank statements & reconciliations, General ledger & trial balance, Supporting invoices/receipts, Contracts & agreements, Board minutes, Prior year audit reports.' },
+         { title: 'Account Reconciliations', content: 'Reconcile ALL balance sheet accounts monthly. Investigate and clear old reconciling items. Document explanations for unusual items. Sign-off by preparer and reviewer.' },
+         { title: 'Common Audit Requests', content: 'Auditors will ask for: Confirmations (bank, AR, AP), Cutoff testing support, Inventory count sheets, Fixed asset schedules, Debt agreements, Revenue contracts.' },
+         { title: 'Ready to Prepare!', content: 'You\'ll organize audit workpapers, prioritize tasks, and ensure nothing is missed. A well-prepared audit is a successful audit!' }
+      ];
+
+      const scenarios = [
+         {
+            title: 'Year-End Close Checklist',
+            company: 'GrowthTech Solutions',
+            auditType: 'External Financial Audit',
+            daysUntilAudit: 14,
+            tasks: [
+               { id: 'bank_rec', name: 'Complete bank reconciliations', priority: 'critical', category: 'reconciliation' },
+               { id: 'ar_aging', name: 'Review AR aging and allowance', priority: 'critical', category: 'reconciliation' },
+               { id: 'inventory', name: 'Complete physical inventory count', priority: 'critical', category: 'verification' },
+               { id: 'accruals', name: 'Record all accrued expenses', priority: 'high', category: 'adjustments' },
+               { id: 'prepaid', name: 'Update prepaid expense schedules', priority: 'medium', category: 'reconciliation' },
+               { id: 'fixed_assets', name: 'Reconcile fixed asset register', priority: 'high', category: 'reconciliation' },
+               { id: 'debt', name: 'Confirm debt balances and covenants', priority: 'high', category: 'confirmation' },
+               { id: 'revenue', name: 'Test revenue cutoff (last 5 days)', priority: 'critical', category: 'cutoff' }
+            ],
+            criticalCount: 4
+         },
+         {
+            title: 'PBC List Organization',
+            company: 'MediCare Supplies',
+            auditType: 'First-Year Audit',
+            daysUntilAudit: 21,
+            tasks: [
+               { id: 'gl', name: 'Export complete general ledger', priority: 'critical', category: 'documentation' },
+               { id: 'trial', name: 'Prepare trial balance with lead sheets', priority: 'critical', category: 'documentation' },
+               { id: 'contracts', name: 'Gather all significant contracts', priority: 'high', category: 'documentation' },
+               { id: 'minutes', name: 'Compile board meeting minutes', priority: 'medium', category: 'governance' },
+               { id: 'org_chart', name: 'Update organizational chart', priority: 'low', category: 'documentation' },
+               { id: 'policies', name: 'Document accounting policies', priority: 'high', category: 'documentation' },
+               { id: 'related', name: 'Identify related party transactions', priority: 'critical', category: 'disclosure' },
+               { id: 'subsequent', name: 'List subsequent events', priority: 'critical', category: 'disclosure' }
+            ],
+            criticalCount: 4
+         },
+         {
+            title: 'Internal Control Documentation',
+            company: 'SecureFinance Corp',
+            auditType: 'SOX 404 Audit',
+            daysUntilAudit: 30,
+            tasks: [
+               { id: 'narratives', name: 'Update process narratives', priority: 'critical', category: 'controls' },
+               { id: 'flowcharts', name: 'Review and update flowcharts', priority: 'high', category: 'controls' },
+               { id: 'risk_matrix', name: 'Complete risk control matrix', priority: 'critical', category: 'controls' },
+               { id: 'testing', name: 'Perform control self-testing', priority: 'critical', category: 'testing' },
+               { id: 'remediation', name: 'Document remediation of deficiencies', priority: 'critical', category: 'controls' },
+               { id: 'access', name: 'Review user access reports', priority: 'high', category: 'it_controls' },
+               { id: 'segregation', name: 'Verify segregation of duties', priority: 'high', category: 'controls' },
+               { id: 'management', name: 'Prepare management representation letter', priority: 'medium', category: 'governance' }
+            ],
+            criticalCount: 4
+         }
+      ];
+
+      const quizQuestions = [
+         { q: 'The "PBC list" stands for:', options: ['Preliminary Balance Check', 'Provided By Client', 'Pre-Audit Business Checklist', 'Post-Balance Confirmation'], correct: 1 },
+         { q: 'Bank confirmations are sent to:', options: ['The client', 'The auditor directly', 'Both client and auditor', 'The bank\'s auditor'], correct: 1 },
+         { q: 'Revenue cutoff testing verifies:', options: ['Total revenue is correct', 'Revenue is recorded in the right period', 'All customers paid', 'Prices are accurate'], correct: 1 },
+         { q: 'Which document is NOT typically needed for audit?', options: ['Bank reconciliations', 'Employee vacation schedules', 'Debt agreements', 'Board minutes'], correct: 1 },
+         { q: 'The management representation letter is signed by:', options: ['The auditor', 'Company management/CEO/CFO', 'The board of directors', 'External legal counsel'], correct: 1 },
+         { q: 'Subsequent events are transactions that occur:', options: ['Before year-end', 'After year-end but before audit completion', 'After audit completion', 'During the audit only'], correct: 1 }
+      ];
+
+      const openInfo = (title: string, content: string) => {
+         setInfoContent({ title, content });
+         setShowInfo(true);
+      };
+
+      const toggleTask = (taskId: string) => {
+         if (submitted) return;
+         setChecklist(prev => ({ ...prev, [taskId]: !prev[taskId] }));
+      };
+
+      const calculateScore = () => {
+         const scenario = scenarios[scenarioIndex];
+         let points = 0;
+         const criticalTasks = scenario.tasks.filter(t => t.priority === 'critical');
+         const completedCritical = criticalTasks.filter(t => checklist[t.id]).length;
+         points += completedCritical * 10;
+         const highTasks = scenario.tasks.filter(t => t.priority === 'high');
+         const completedHigh = highTasks.filter(t => checklist[t.id]).length;
+         points += completedHigh * 5;
+         if (completedCritical === criticalTasks.length) points += 20; // Bonus for all critical
+         return points;
+      };
+
+      const handleSubmit = () => {
+         const earnedPoints = calculateScore();
+         setScore(s => s + earnedPoints);
+         setSubmitted(true);
+         setGameLog(prev => [...prev, `${scenarios[scenarioIndex].company}: Earned ${earnedPoints} points`]);
+      };
+
+      const nextScenario = () => {
+         if (scenarioIndex < scenarios.length - 1) {
+            setScenarioIndex(scenarioIndex + 1);
+            setChecklist({});
+            setSubmitted(false);
+         } else {
+            setPhase('result');
+         }
+      };
+
+      // Intro Phase
+      if (phase === 'intro') {
+         return (
+            <div className="p-6 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl max-w-2xl mx-auto">
+               <h2 className="text-2xl font-bold text-blue-800 mb-4 flex items-center gap-2">
+                  📋 Audit Preparation
+                  <button onClick={() => openInfo('Why Audit Prep Matters', 'Good preparation: Reduces audit fees (less auditor time), Minimizes disruptions to operations, Demonstrates strong controls, Builds creditor/investor confidence, Avoids last-minute scrambles.')} className="text-blue-500 hover:text-blue-700">ℹ️</button>
+               </h2>
+               <div className="bg-white/80 p-5 rounded-xl mb-6">
+                  <p className="text-gray-700 mb-4">Master the art of audit readiness!</p>
+                  <div className="grid grid-cols-4 gap-2 mb-4">
+                     <div className="bg-blue-50 p-2 rounded-lg text-center">
+                        <div className="text-xl mb-1">📊</div>
+                        <div className="text-xs text-blue-700">Reconcile</div>
+                     </div>
+                     <div className="bg-green-50 p-2 rounded-lg text-center">
+                        <div className="text-xl mb-1">📁</div>
+                        <div className="text-xs text-green-700">Document</div>
+                     </div>
+                     <div className="bg-amber-50 p-2 rounded-lg text-center">
+                        <div className="text-xl mb-1">✅</div>
+                        <div className="text-xs text-amber-700">Verify</div>
+                     </div>
+                     <div className="bg-purple-50 p-2 rounded-lg text-center">
+                        <div className="text-xl mb-1">🔍</div>
+                        <div className="text-xs text-purple-700">Review</div>
+                     </div>
+                  </div>
+                  <div className="text-sm text-gray-600">
+                     <strong>You'll learn:</strong> PBC list management, Reconciliation priorities, Control documentation, Audit timeline
+                  </div>
+               </div>
+               <button onClick={() => setPhase('tutorial')} className="w-full py-3 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700 transition-all">Start Learning</button>
+               {showInfo && (
+                  <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" onClick={() => setShowInfo(false)}>
+                     <div className="bg-white p-6 rounded-xl max-w-md m-4" onClick={e => e.stopPropagation()}>
+                        <h3 className="font-bold text-lg mb-2">{infoContent.title}</h3>
+                        <p className="text-gray-600">{infoContent.content}</p>
+                        <button onClick={() => setShowInfo(false)} className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg">Got it!</button>
+                     </div>
+                  </div>
+               )}
+            </div>
+         );
+      }
+
+      // Tutorial Phase
+      if (phase === 'tutorial') {
+         const step = tutorialSteps[tutorialStep];
+         return (
+            <div className="p-6 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl max-w-2xl mx-auto">
+               <div className="flex justify-between items-center mb-4">
+                  <h2 className="text-xl font-bold text-blue-800">Tutorial</h2>
+                  <span className="text-sm text-blue-600">Step {tutorialStep + 1} of {tutorialSteps.length}</span>
+               </div>
+               <div className="bg-white/90 p-6 rounded-xl mb-6">
+                  <h3 className="font-bold text-lg text-gray-800 mb-3">{step.title}</h3>
+                  <p className="text-gray-600">{step.content}</p>
+                  {tutorialStep === 2 && (
+                     <div className="mt-4 flex gap-2">
+                        <div className="flex-1 bg-blue-50 p-3 rounded-lg text-center">
+                           <div className="text-xs text-blue-600">Planning</div>
+                           <div className="font-bold text-blue-800">2-4 weeks</div>
+                        </div>
+                        <div className="flex-1 bg-amber-50 p-3 rounded-lg text-center">
+                           <div className="text-xs text-amber-600">Fieldwork</div>
+                           <div className="font-bold text-amber-800">1-4 weeks</div>
+                        </div>
+                        <div className="flex-1 bg-green-50 p-3 rounded-lg text-center">
+                           <div className="text-xs text-green-600">Wrap-up</div>
+                           <div className="font-bold text-green-800">1-2 weeks</div>
+                        </div>
+                     </div>
+                  )}
+               </div>
+               <div className="w-full bg-gray-200 rounded-full h-2 mb-4">
+                  <div className="bg-blue-600 h-2 rounded-full transition-all" style={{ width: `${((tutorialStep + 1) / tutorialSteps.length) * 100}%` }}></div>
+               </div>
+               <div className="flex gap-3">
+                  {tutorialStep > 0 && <button onClick={() => setTutorialStep(tutorialStep - 1)} className="flex-1 py-2 bg-gray-200 rounded-lg hover:bg-gray-300">Back</button>}
+                  <button onClick={() => tutorialStep < tutorialSteps.length - 1 ? setTutorialStep(tutorialStep + 1) : setPhase('play')} className="flex-1 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+                     {tutorialStep < tutorialSteps.length - 1 ? 'Next' : 'Start Preparing!'}
+                  </button>
+               </div>
+            </div>
+         );
+      }
+
+      // Play Phase
+      if (phase === 'play') {
+         const scenario = scenarios[scenarioIndex];
+         const completedCount = Object.values(checklist).filter(Boolean).length;
+         return (
+            <div className="p-6 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl max-w-2xl mx-auto">
+               <div className="flex justify-between items-center mb-4">
+                  <h2 className="text-xl font-bold text-blue-800">{scenario.company}</h2>
+                  <div className="flex items-center gap-3">
+                     <span className="bg-blue-100 px-3 py-1 rounded-full text-blue-700 text-sm">Score: {score}</span>
+                     <span className="text-sm text-gray-500">Audit {scenarioIndex + 1}/{scenarios.length}</span>
+                  </div>
+               </div>
+
+               <div className="bg-white/90 p-4 rounded-xl mb-4">
+                  <div className="flex justify-between items-center mb-3">
+                     <div>
+                        <div className="font-semibold text-gray-800">{scenario.title}</div>
+                        <div className="text-sm text-gray-500">{scenario.auditType}</div>
+                     </div>
+                     <div className="bg-amber-100 px-3 py-1 rounded-full">
+                        <span className="text-amber-700 text-sm font-semibold">{scenario.daysUntilAudit} days until audit</span>
+                     </div>
+                  </div>
+
+                  <div className="text-sm text-gray-600 mb-3">Select all critical and high-priority items to complete:</div>
+
+                  <div className="space-y-2 max-h-64 overflow-y-auto">
+                     {scenario.tasks.map(task => (
+                        <button
+                           key={task.id}
+                           onClick={() => toggleTask(task.id)}
+                           disabled={submitted}
+                           className={`w-full p-3 rounded-lg text-left flex items-center gap-3 transition-all ${
+                              checklist[task.id]
+                                 ? 'bg-green-50 border-2 border-green-400'
+                                 : 'bg-gray-50 border-2 border-gray-200 hover:border-blue-300'
+                           }`}
+                        >
+                           <div className={`w-5 h-5 rounded border-2 flex items-center justify-center ${
+                              checklist[task.id] ? 'bg-green-500 border-green-500' : 'border-gray-300'
+                           }`}>
+                              {checklist[task.id] && <span className="text-white text-xs">✓</span>}
+                           </div>
+                           <div className="flex-1">
+                              <span className="text-sm">{task.name}</span>
+                           </div>
+                           <span className={`text-xs px-2 py-0.5 rounded ${
+                              task.priority === 'critical' ? 'bg-red-100 text-red-700' :
+                              task.priority === 'high' ? 'bg-amber-100 text-amber-700' :
+                              task.priority === 'medium' ? 'bg-blue-100 text-blue-700' :
+                              'bg-gray-100 text-gray-600'
+                           }`}>
+                              {task.priority}
+                           </span>
+                        </button>
+                     ))}
+                  </div>
+
+                  <div className="mt-3 flex justify-between text-sm">
+                     <span className="text-gray-500">Completed: {completedCount}/{scenario.tasks.length}</span>
+                     <span className="text-red-600">Critical items: {scenario.criticalCount}</span>
+                  </div>
+               </div>
+
+               {!submitted ? (
+                  <button onClick={handleSubmit} className="w-full py-3 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700">
+                     Submit Preparation Checklist
+                  </button>
+               ) : (
+                  <div className="bg-green-50 p-4 rounded-xl border-2 border-green-300 mb-4">
+                     <div className="font-bold text-green-800 mb-2">Checklist Reviewed!</div>
+                     <div className="text-sm text-gray-700">
+                        Critical items completed: {scenario.tasks.filter(t => t.priority === 'critical' && checklist[t.id]).length}/{scenario.criticalCount}
+                     </div>
+                     <button onClick={nextScenario} className="mt-3 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+                        {scenarioIndex < scenarios.length - 1 ? 'Next Audit →' : 'Complete Training'}
+                     </button>
+                  </div>
+               )}
+            </div>
+         );
+      }
+
+      // Result Phase
+      if (phase === 'result') {
+         const quiz = quizQuestions[quizIndex];
+         const maxScore = 180 + (quizQuestions.length * 10);
+         const percentage = Math.round((score / maxScore) * 100);
+
+         if (quizIndex < quizQuestions.length) {
+            return (
+               <div className="p-6 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl max-w-2xl mx-auto">
+                  <h2 className="text-xl font-bold text-blue-800 mb-4">Knowledge Check</h2>
+                  <div className="bg-white/90 p-5 rounded-xl mb-4">
+                     <div className="text-sm text-gray-500 mb-2">Question {quizIndex + 1} of {quizQuestions.length}</div>
+                     <p className="font-semibold text-gray-800 mb-4">{quiz.q}</p>
+                     <div className="grid gap-2">
+                        {quiz.options.map((opt, i) => (
+                           <button
+                              key={i}
+                              onClick={() => { if (!quizAnswered) { if (i === quiz.correct) setScore(s => s + 10); setQuizAnswered(true); }}}
+                              disabled={quizAnswered}
+                              className={`p-3 rounded-lg text-left transition-all ${quizAnswered ? (i === quiz.correct ? 'bg-green-100 border-green-500' : 'bg-gray-100') : 'bg-gray-50 hover:bg-gray-100'} border-2 ${quizAnswered && i === quiz.correct ? 'border-green-500' : 'border-transparent'}`}
+                           >
+                              {opt}
+                           </button>
+                        ))}
+                     </div>
+                  </div>
+                  {quizAnswered && (
+                     <button onClick={() => { setQuizIndex(quizIndex + 1); setQuizAnswered(false); }} className="w-full py-3 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700">
+                        {quizIndex < quizQuestions.length - 1 ? 'Next Question' : 'See Results'}
+                     </button>
+                  )}
+               </div>
+            );
+         }
+
+         return (
+            <div className="p-6 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl max-w-2xl mx-auto">
+               <h2 className="text-2xl font-bold text-blue-800 mb-4">🎉 Audit Prep Complete!</h2>
+               <div className="bg-white/90 p-6 rounded-xl mb-6">
+                  <div className="text-center mb-6">
+                     <div className="text-5xl font-bold text-blue-600 mb-2">{percentage}%</div>
+                     <div className="text-gray-600">Final Score: {score} / {maxScore}</div>
+                     <div className="text-lg font-semibold mt-2">
+                        {percentage >= 90 ? '🏆 Audit Ready!' : percentage >= 70 ? '📋 Well Prepared' : percentage >= 50 ? '📈 Good Start' : '📚 Keep Practicing'}
+                     </div>
+                  </div>
+                  <div className="bg-blue-50 p-4 rounded-lg">
+                     <h3 className="font-bold text-blue-800 mb-2">Audit Prep Checklist:</h3>
+                     <ul className="text-sm text-gray-700 space-y-1">
+                        <li>• Prioritize critical reconciliations first</li>
+                        <li>• Prepare PBC items before auditors arrive</li>
+                        <li>• Document all significant judgments</li>
+                        <li>• Clear old reconciling items</li>
+                        <li>• Test controls before external testing</li>
+                     </ul>
+                  </div>
+               </div>
+               <button onClick={() => { setPhase('intro'); setScore(0); setScenarioIndex(0); setChecklist({}); setSubmitted(false); setQuizIndex(0); setQuizAnswered(false); }} className="w-full py-3 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700">Practice Again</button>
+            </div>
+         );
+      }
+      return null;
+   };
+
+   // Topic 30: Tax Structures - Understanding Business Entity Taxation
+   const TaxStructuresRenderer = () => {
+      const [phase, setPhase] = useState<'intro' | 'tutorial' | 'play' | 'result'>('intro');
+      const [tutorialStep, setTutorialStep] = useState(0);
+      const [score, setScore] = useState(0);
+      const [scenarioIndex, setScenarioIndex] = useState(0);
+      const [gameLog, setGameLog] = useState<string[]>([]);
+      const [quizIndex, setQuizIndex] = useState(0);
+      const [quizAnswered, setQuizAnswered] = useState(false);
+      const [showInfo, setShowInfo] = useState(false);
+      const [infoContent, setInfoContent] = useState({ title: '', content: '' });
+      const [selectedEntity, setSelectedEntity] = useState<string | null>(null);
+      const [answered, setAnswered] = useState(false);
+
+      const tutorialSteps = [
+         { title: 'Welcome to Tax Structures!', content: 'Learn how different business entities are taxed. Choosing the right structure can save thousands in taxes and provide liability protection.' },
+         { title: 'Sole Proprietorship', content: 'Simplest structure. No separate tax return - income flows to personal Form 1040 Schedule C. Self-employment tax applies (15.3%). No liability protection.' },
+         { title: 'Partnership / LLC', content: 'Pass-through taxation: No entity-level tax. Partners report their share on personal returns (K-1). Flexibility in profit/loss allocation. LLC adds liability protection.' },
+         { title: 'S Corporation', content: 'Pass-through taxation like partnership. Key benefit: Only "reasonable salary" subject to payroll tax. Remaining profits avoid self-employment tax. Limited to 100 shareholders.' },
+         { title: 'C Corporation', content: 'Separate taxable entity (21% federal rate). Profits taxed at corporate level, then dividends taxed again = "Double Taxation." Best for reinvesting profits or going public.' },
+         { title: 'Tax Planning Strategies', content: 'Choose based on: Income level, Need for liability protection, Plans for investors, Exit strategy. Many businesses start as LLC, convert to S-Corp as income grows.' },
+         { title: 'Ready to Advise!', content: 'You\'ll recommend entity structures for different business scenarios. Consider taxes, liability, and growth plans!' }
+      ];
+
+      const scenarios = [
+         {
+            business: 'Sarah\'s Consulting',
+            description: 'Solo marketing consultant earning $150K/year. No employees, no plans for investors. Wants liability protection.',
+            income: 150000,
+            factors: ['Solo owner', 'High income', 'Liability concern', 'No investors'],
+            bestEntity: 's_corp',
+            options: [
+               { id: 'sole_prop', name: 'Sole Proprietorship', taxSavings: 0 },
+               { id: 'llc', name: 'Single-Member LLC', taxSavings: 0 },
+               { id: 's_corp', name: 'S Corporation', taxSavings: 12000 },
+               { id: 'c_corp', name: 'C Corporation', taxSavings: -5000 }
+            ],
+            explanation: 'S-Corp allows Sarah to pay herself a reasonable salary (~$80K) and take remaining $70K as distributions, saving ~$10K in self-employment tax.'
+         },
+         {
+            business: 'TechVenture Startup',
+            description: 'Tech startup seeking VC funding. Plans to issue stock options to employees and eventually go public.',
+            income: 500000,
+            factors: ['VC funding needed', 'Stock options', 'IPO plans', 'Multiple share classes'],
+            bestEntity: 'c_corp',
+            options: [
+               { id: 'sole_prop', name: 'Sole Proprietorship', taxSavings: 0 },
+               { id: 'llc', name: 'LLC', taxSavings: 0 },
+               { id: 's_corp', name: 'S Corporation', taxSavings: 0 },
+               { id: 'c_corp', name: 'C Corporation (Delaware)', taxSavings: 0 }
+            ],
+            explanation: 'VCs require C-Corp structure. Allows multiple share classes, easy stock option plans, and standard IPO path. Delaware is preferred for investor-friendly laws.'
+         },
+         {
+            business: 'Downtown Deli Partners',
+            description: 'Three friends opening a restaurant. Each investing different amounts, want flexible profit sharing based on involvement.',
+            income: 200000,
+            factors: ['Multiple owners', 'Flexible allocation', 'Active involvement', 'Moderate income'],
+            bestEntity: 'llc',
+            options: [
+               { id: 'sole_prop', name: 'Sole Proprietorship', taxSavings: 0 },
+               { id: 'llc', name: 'LLC (Partnership)', taxSavings: 8000 },
+               { id: 's_corp', name: 'S Corporation', taxSavings: 5000 },
+               { id: 'c_corp', name: 'C Corporation', taxSavings: -10000 }
+            ],
+            explanation: 'LLC taxed as partnership offers maximum flexibility. Partners can allocate profits/losses based on involvement, not just ownership percentage. Liability protection included.'
+         },
+         {
+            business: 'QuickFix Plumbing',
+            description: 'Established plumbing business, $80K/year profit. Owner handles all work, occasionally hires helpers.',
+            income: 80000,
+            factors: ['Modest income', 'Solo operation', 'Simple needs', 'Minimal admin preferred'],
+            bestEntity: 'llc',
+            options: [
+               { id: 'sole_prop', name: 'Sole Proprietorship', taxSavings: 0 },
+               { id: 'llc', name: 'Single-Member LLC', taxSavings: 0 },
+               { id: 's_corp', name: 'S Corporation', taxSavings: 2000 },
+               { id: 'c_corp', name: 'C Corporation', taxSavings: -8000 }
+            ],
+            explanation: 'At $80K, S-Corp savings don\'t justify extra compliance costs. LLC provides liability protection with minimal paperwork. As income grows, reconsider S-Corp.'
+         }
+      ];
+
+      const quizQuestions = [
+         { q: 'Which entity type has "double taxation"?', options: ['LLC', 'S Corporation', 'C Corporation', 'Sole Proprietorship'], correct: 2 },
+         { q: 'Pass-through taxation means:', options: ['Taxes are paid twice', 'Profits flow to owners\' personal returns', 'No taxes are owed', 'State taxes pass to federal'], correct: 1 },
+         { q: 'Self-employment tax is approximately:', options: ['7.65%', '15.3%', '21%', '37%'], correct: 1 },
+         { q: 'S Corporations are limited to:', options: ['10 shareholders', '50 shareholders', '100 shareholders', 'Unlimited shareholders'], correct: 2 },
+         { q: 'VCs typically require which structure?', options: ['LLC', 'S Corporation', 'C Corporation', 'Partnership'], correct: 2 },
+         { q: 'The main benefit of S-Corp over LLC is:', options: ['Liability protection', 'Simpler filing', 'Self-employment tax savings', 'Unlimited owners'], correct: 2 }
+      ];
+
+      const openInfo = (title: string, content: string) => {
+         setInfoContent({ title, content });
+         setShowInfo(true);
+      };
+
+      const handleEntitySelect = (entityId: string) => {
+         if (answered) return;
+         setSelectedEntity(entityId);
+         setAnswered(true);
+         const scenario = scenarios[scenarioIndex];
+         if (entityId === scenario.bestEntity) {
+            setScore(s => s + 20);
+            setGameLog(prev => [...prev, `Correct recommendation for ${scenario.business}`]);
+         }
+      };
+
+      const nextScenario = () => {
+         if (scenarioIndex < scenarios.length - 1) {
+            setScenarioIndex(scenarioIndex + 1);
+            setSelectedEntity(null);
+            setAnswered(false);
+         } else {
+            setPhase('result');
+         }
+      };
+
+      if (phase === 'intro') {
+         return (
+            <div className="p-6 bg-gradient-to-br from-green-50 to-emerald-50 rounded-2xl max-w-2xl mx-auto">
+               <h2 className="text-2xl font-bold text-green-800 mb-4 flex items-center gap-2">
+                  🏛️ Tax Structures
+                  <button onClick={() => openInfo('Entity Selection Impact', 'Wrong structure can cost 10-20% extra in taxes. Consider: Current income, Growth plans, Need for investors, Liability exposure, Administrative burden.')} className="text-green-500 hover:text-green-700">ℹ️</button>
+               </h2>
+               <div className="bg-white/80 p-5 rounded-xl mb-6">
+                  <p className="text-gray-700 mb-4">Choose the right business entity for tax efficiency!</p>
+                  <div className="grid grid-cols-2 gap-3 mb-4">
+                     <div className="bg-blue-50 p-3 rounded-lg">
+                        <div className="font-bold text-blue-800 text-sm">Pass-Through</div>
+                        <div className="text-xs text-blue-600">LLC, S-Corp, Partnership</div>
+                        <div className="text-xs text-gray-500">One level of tax</div>
+                     </div>
+                     <div className="bg-purple-50 p-3 rounded-lg">
+                        <div className="font-bold text-purple-800 text-sm">Double Tax</div>
+                        <div className="text-xs text-purple-600">C Corporation</div>
+                        <div className="text-xs text-gray-500">Corp + dividend tax</div>
+                     </div>
+                  </div>
+               </div>
+               <button onClick={() => setPhase('tutorial')} className="w-full py-3 bg-green-600 text-white rounded-xl font-semibold hover:bg-green-700 transition-all">Start Learning</button>
+               {showInfo && (
+                  <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" onClick={() => setShowInfo(false)}>
+                     <div className="bg-white p-6 rounded-xl max-w-md m-4" onClick={e => e.stopPropagation()}>
+                        <h3 className="font-bold text-lg mb-2">{infoContent.title}</h3>
+                        <p className="text-gray-600">{infoContent.content}</p>
+                        <button onClick={() => setShowInfo(false)} className="mt-4 px-4 py-2 bg-green-600 text-white rounded-lg">Got it!</button>
+                     </div>
+                  </div>
+               )}
+            </div>
+         );
+      }
+
+      if (phase === 'tutorial') {
+         const step = tutorialSteps[tutorialStep];
+         return (
+            <div className="p-6 bg-gradient-to-br from-green-50 to-emerald-50 rounded-2xl max-w-2xl mx-auto">
+               <div className="flex justify-between items-center mb-4">
+                  <h2 className="text-xl font-bold text-green-800">Tutorial</h2>
+                  <span className="text-sm text-green-600">Step {tutorialStep + 1} of {tutorialSteps.length}</span>
+               </div>
+               <div className="bg-white/90 p-6 rounded-xl mb-6">
+                  <h3 className="font-bold text-lg text-gray-800 mb-3">{step.title}</h3>
+                  <p className="text-gray-600">{step.content}</p>
+                  {tutorialStep === 3 && (
+                     <div className="mt-4 p-4 bg-green-50 rounded-lg border border-green-200">
+                        <div className="text-sm font-semibold text-green-800 mb-2">S-Corp Tax Savings Example:</div>
+                        <div className="text-xs text-gray-600 space-y-1">
+                           <div>Income: $150,000</div>
+                           <div>Reasonable Salary: $80,000 (subject to payroll tax)</div>
+                           <div>Distribution: $70,000 (NO payroll tax)</div>
+                           <div className="text-green-700 font-bold">Savings: ~$10,700 in self-employment tax</div>
+                        </div>
+                     </div>
+                  )}
+               </div>
+               <div className="w-full bg-gray-200 rounded-full h-2 mb-4">
+                  <div className="bg-green-600 h-2 rounded-full transition-all" style={{ width: `${((tutorialStep + 1) / tutorialSteps.length) * 100}%` }}></div>
+               </div>
+               <div className="flex gap-3">
+                  {tutorialStep > 0 && <button onClick={() => setTutorialStep(tutorialStep - 1)} className="flex-1 py-2 bg-gray-200 rounded-lg hover:bg-gray-300">Back</button>}
+                  <button onClick={() => tutorialStep < tutorialSteps.length - 1 ? setTutorialStep(tutorialStep + 1) : setPhase('play')} className="flex-1 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700">
+                     {tutorialStep < tutorialSteps.length - 1 ? 'Next' : 'Start Advising!'}
+                  </button>
+               </div>
+            </div>
+         );
+      }
+
+      if (phase === 'play') {
+         const scenario = scenarios[scenarioIndex];
+         return (
+            <div className="p-6 bg-gradient-to-br from-green-50 to-emerald-50 rounded-2xl max-w-2xl mx-auto">
+               <div className="flex justify-between items-center mb-4">
+                  <h2 className="text-xl font-bold text-green-800">{scenario.business}</h2>
+                  <div className="flex items-center gap-3">
+                     <span className="bg-green-100 px-3 py-1 rounded-full text-green-700 text-sm">Score: {score}</span>
+                     <span className="text-sm text-gray-500">Case {scenarioIndex + 1}/{scenarios.length}</span>
+                  </div>
+               </div>
+
+               <div className="bg-white/90 p-5 rounded-xl mb-4">
+                  <p className="text-gray-700 mb-3">{scenario.description}</p>
+                  <div className="flex flex-wrap gap-2 mb-4">
+                     {scenario.factors.map((factor, i) => (
+                        <span key={i} className="bg-green-100 text-green-700 px-2 py-1 rounded-full text-xs">{factor}</span>
+                     ))}
+                  </div>
+                  <div className="bg-amber-50 p-3 rounded-lg mb-4">
+                     <span className="text-amber-800 text-sm font-semibold">Annual Income: ${scenario.income.toLocaleString()}</span>
+                  </div>
+
+                  <p className="font-semibold text-gray-800 mb-3">Recommend the best entity structure:</p>
+                  <div className="grid grid-cols-2 gap-3">
+                     {scenario.options.map(option => (
+                        <button
+                           key={option.id}
+                           onClick={() => handleEntitySelect(option.id)}
+                           disabled={answered}
+                           className={`p-4 rounded-lg text-center transition-all border-2 ${
+                              answered
+                                 ? option.id === scenario.bestEntity
+                                    ? 'bg-green-50 border-green-500'
+                                    : selectedEntity === option.id
+                                       ? 'bg-red-50 border-red-400'
+                                       : 'bg-gray-50 border-gray-200'
+                                 : 'bg-gray-50 border-gray-200 hover:border-green-400'
+                           }`}
+                        >
+                           <div className="font-semibold text-sm">{option.name}</div>
+                        </button>
+                     ))}
+                  </div>
+
+                  {answered && (
+                     <div className={`mt-4 p-4 rounded-xl ${selectedEntity === scenario.bestEntity ? 'bg-green-50 border-2 border-green-300' : 'bg-amber-50 border-2 border-amber-300'}`}>
+                        <div className="font-bold mb-2">{selectedEntity === scenario.bestEntity ? '✅ Excellent Advice!' : '📚 Consider This:'}</div>
+                        <p className="text-sm text-gray-700">{scenario.explanation}</p>
+                        <button onClick={nextScenario} className="mt-3 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700">
+                           {scenarioIndex < scenarios.length - 1 ? 'Next Client →' : 'Complete Training'}
+                        </button>
+                     </div>
+                  )}
+               </div>
+            </div>
+         );
+      }
+
+      if (phase === 'result') {
+         const quiz = quizQuestions[quizIndex];
+         const maxScore = (scenarios.length * 20) + (quizQuestions.length * 10);
+         const percentage = Math.round((score / maxScore) * 100);
+
+         if (quizIndex < quizQuestions.length) {
+            return (
+               <div className="p-6 bg-gradient-to-br from-green-50 to-emerald-50 rounded-2xl max-w-2xl mx-auto">
+                  <h2 className="text-xl font-bold text-green-800 mb-4">Knowledge Check</h2>
+                  <div className="bg-white/90 p-5 rounded-xl mb-4">
+                     <div className="text-sm text-gray-500 mb-2">Question {quizIndex + 1} of {quizQuestions.length}</div>
+                     <p className="font-semibold text-gray-800 mb-4">{quiz.q}</p>
+                     <div className="grid gap-2">
+                        {quiz.options.map((opt, i) => (
+                           <button key={i} onClick={() => { if (!quizAnswered) { if (i === quiz.correct) setScore(s => s + 10); setQuizAnswered(true); }}} disabled={quizAnswered}
+                              className={`p-3 rounded-lg text-left transition-all ${quizAnswered ? (i === quiz.correct ? 'bg-green-100 border-green-500' : 'bg-gray-100') : 'bg-gray-50 hover:bg-gray-100'} border-2 ${quizAnswered && i === quiz.correct ? 'border-green-500' : 'border-transparent'}`}
+                           >{opt}</button>
+                        ))}
+                     </div>
+                  </div>
+                  {quizAnswered && <button onClick={() => { setQuizIndex(quizIndex + 1); setQuizAnswered(false); }} className="w-full py-3 bg-green-600 text-white rounded-xl font-semibold hover:bg-green-700">{quizIndex < quizQuestions.length - 1 ? 'Next Question' : 'See Results'}</button>}
+               </div>
+            );
+         }
+
+         return (
+            <div className="p-6 bg-gradient-to-br from-green-50 to-emerald-50 rounded-2xl max-w-2xl mx-auto">
+               <h2 className="text-2xl font-bold text-green-800 mb-4">🎉 Tax Structure Expert!</h2>
+               <div className="bg-white/90 p-6 rounded-xl mb-6">
+                  <div className="text-center mb-6">
+                     <div className="text-5xl font-bold text-green-600 mb-2">{percentage}%</div>
+                     <div className="text-gray-600">Final Score: {score} / {maxScore}</div>
+                  </div>
+                  <div className="bg-green-50 p-4 rounded-lg">
+                     <h3 className="font-bold text-green-800 mb-2">Entity Selection Guide:</h3>
+                     <ul className="text-sm text-gray-700 space-y-1">
+                        <li>• Simple/low income → LLC</li>
+                        <li>• High income, solo → S-Corp</li>
+                        <li>• Need investors/IPO → C-Corp</li>
+                        <li>• Multiple owners, flexible → LLC/Partnership</li>
+                     </ul>
+                  </div>
+               </div>
+               <button onClick={() => { setPhase('intro'); setScore(0); setScenarioIndex(0); setSelectedEntity(null); setAnswered(false); setQuizIndex(0); setQuizAnswered(false); }} className="w-full py-3 bg-green-600 text-white rounded-xl font-semibold hover:bg-green-700">Practice Again</button>
+            </div>
+         );
+      }
+      return null;
+   };
+
+   // Topic 31: Sales Tax Nexus - Understanding Multi-State Tax Obligations
+   const SalesTaxNexusRenderer = () => {
+      const [phase, setPhase] = useState<'intro' | 'tutorial' | 'play' | 'result'>('intro');
+      const [tutorialStep, setTutorialStep] = useState(0);
+      const [score, setScore] = useState(0);
+      const [scenarioIndex, setScenarioIndex] = useState(0);
+      const [gameLog, setGameLog] = useState<string[]>([]);
+      const [quizIndex, setQuizIndex] = useState(0);
+      const [quizAnswered, setQuizAnswered] = useState(false);
+      const [showInfo, setShowInfo] = useState(false);
+      const [infoContent, setInfoContent] = useState({ title: '', content: '' });
+      const [selectedStates, setSelectedStates] = useState<string[]>([]);
+      const [answered, setAnswered] = useState(false);
+
+      const tutorialSteps = [
+         { title: 'Welcome to Sales Tax Nexus!', content: 'Learn when your business must collect sales tax in different states. Post-Wayfair, this affects almost every online seller.' },
+         { title: 'What is Nexus?', content: 'Nexus = sufficient connection to a state requiring tax collection. Traditional: Physical presence (office, warehouse, employees). Economic: Sales volume or transaction count.' },
+         { title: 'The Wayfair Decision (2018)', content: 'Supreme Court ruled states can require tax collection based on economic activity alone. Most states adopted thresholds: typically $100K in sales OR 200 transactions.' },
+         { title: 'Common Thresholds', content: 'Most states: $100K sales OR 200 transactions. Some variations: California $500K, Texas $500K, New York $500K + 100 transactions. Always check current state rules!' },
+         { title: 'Physical Nexus Triggers', content: 'Creates nexus: Office or store, Warehouse/inventory, Employees working, Trade shows (sometimes), Affiliate relationships. Remote workers can create nexus in their state!' },
+         { title: 'Compliance Requirements', content: 'Once nexus exists: Register for sales tax permit, Collect appropriate rate, File returns (monthly/quarterly/annual), Remit tax collected. Penalties for non-compliance are severe!' },
+         { title: 'Ready to Analyze!', content: 'You\'ll evaluate business activities and determine which states have nexus. Protect your business from tax liability!' }
+      ];
+
+      const scenarios = [
+         {
+            business: 'CloudSoft SaaS',
+            description: 'Software company based in Texas. Sells subscriptions online to customers in all 50 states.',
+            homeState: 'Texas',
+            activities: [
+               { state: 'Texas', activity: 'Headquarters with 20 employees', sales: 500000, transactions: 1000 },
+               { state: 'California', activity: 'Remote sales rep works from home', sales: 250000, transactions: 400 },
+               { state: 'New York', activity: 'Online sales only, no presence', sales: 150000, transactions: 180 },
+               { state: 'Florida', activity: 'Online sales only, no presence', sales: 80000, transactions: 150 },
+               { state: 'Washington', activity: 'Online sales only, no presence', sales: 120000, transactions: 250 }
+            ],
+            nexusStates: ['Texas', 'California', 'Washington'],
+            explanation: 'Texas: HQ. California: Remote employee creates physical nexus. Washington: Exceeds $100K threshold. NY and FL below thresholds.'
+         },
+         {
+            business: 'Artisan Goods Co',
+            description: 'Handmade products sold on Etsy and own website. Ships from Ohio warehouse.',
+            homeState: 'Ohio',
+            activities: [
+               { state: 'Ohio', activity: 'Warehouse and shipping operations', sales: 200000, transactions: 800 },
+               { state: 'Pennsylvania', activity: 'Attends 4 craft fairs per year', sales: 45000, transactions: 300 },
+               { state: 'Michigan', activity: 'Online sales only', sales: 110000, transactions: 220 },
+               { state: 'Indiana', activity: 'Online sales only', sales: 60000, transactions: 180 },
+               { state: 'Kentucky', activity: 'Online sales only', sales: 25000, transactions: 90 }
+            ],
+            nexusStates: ['Ohio', 'Pennsylvania', 'Michigan'],
+            explanation: 'Ohio: Warehouse. PA: Trade show presence creates nexus. Michigan: Exceeds both thresholds. IN/KY below thresholds.'
+         },
+         {
+            business: 'TechParts Wholesale',
+            description: 'B2B electronics distributor. Uses third-party fulfillment centers.',
+            homeState: 'New Jersey',
+            activities: [
+               { state: 'New Jersey', activity: 'Corporate office', sales: 800000, transactions: 500 },
+               { state: 'Nevada', activity: '3PL warehouse stores inventory', sales: 400000, transactions: 200 },
+               { state: 'Georgia', activity: 'Online sales only', sales: 180000, transactions: 150 },
+               { state: 'Texas', activity: 'Online sales only', sales: 600000, transactions: 300 },
+               { state: 'Illinois', activity: 'Online sales only', sales: 95000, transactions: 180 }
+            ],
+            nexusStates: ['New Jersey', 'Nevada', 'Georgia', 'Texas'],
+            explanation: 'NJ: HQ. Nevada: Inventory in 3PL = physical nexus. Georgia & Texas: Exceed $100K. Illinois just under threshold.'
+         }
+      ];
+
+      const quizQuestions = [
+         { q: 'The Wayfair decision allowed states to require tax collection based on:', options: ['Physical presence only', 'Economic activity', 'Population size', 'Time zone'], correct: 1 },
+         { q: 'The most common economic nexus threshold is:', options: ['$50K or 100 transactions', '$100K or 200 transactions', '$500K or 500 transactions', '$1M or 1000 transactions'], correct: 1 },
+         { q: 'A remote employee working from home creates nexus in:', options: ['Only the company HQ state', 'The employee\'s state', 'All states', 'No states'], correct: 1 },
+         { q: 'Inventory stored at a 3PL warehouse creates:', options: ['No nexus', 'Physical nexus', 'Economic nexus only', 'Temporary nexus'], correct: 1 },
+         { q: 'Which is NOT typically a nexus trigger?', options: ['Office location', 'Trade show attendance', 'Advertising in a state', 'Warehouse'], correct: 2 },
+         { q: 'Marketplace facilitators (Amazon, Etsy) are responsible for:', options: ['Nothing', 'Collecting and remitting tax', 'Only collecting', 'Only reporting'], correct: 1 }
+      ];
+
+      const openInfo = (title: string, content: string) => {
+         setInfoContent({ title, content });
+         setShowInfo(true);
+      };
+
+      const toggleState = (state: string) => {
+         if (answered) return;
+         setSelectedStates(prev => prev.includes(state) ? prev.filter(s => s !== state) : [...prev, state]);
+      };
+
+      const checkAnswer = () => {
+         const scenario = scenarios[scenarioIndex];
+         const correct = scenario.nexusStates.sort().join(',') === selectedStates.sort().join(',');
+         if (correct) {
+            setScore(s => s + 25);
+            setGameLog(prev => [...prev, `Perfect nexus analysis for ${scenario.business}`]);
+         } else {
+            const partialScore = selectedStates.filter(s => scenario.nexusStates.includes(s)).length * 5;
+            setScore(s => s + partialScore);
+         }
+         setAnswered(true);
+      };
+
+      const nextScenario = () => {
+         if (scenarioIndex < scenarios.length - 1) {
+            setScenarioIndex(scenarioIndex + 1);
+            setSelectedStates([]);
+            setAnswered(false);
+         } else {
+            setPhase('result');
+         }
+      };
+
+      if (phase === 'intro') {
+         return (
+            <div className="p-6 bg-gradient-to-br from-orange-50 to-red-50 rounded-2xl max-w-2xl mx-auto">
+               <h2 className="text-2xl font-bold text-orange-800 mb-4 flex items-center gap-2">
+                  🗺️ Sales Tax Nexus
+                  <button onClick={() => openInfo('Nexus Penalties', 'Failing to collect required sales tax can result in: Back taxes owed, Interest charges, Penalties up to 25%, Personal liability for owners. States are actively auditing!')} className="text-orange-500 hover:text-orange-700">ℹ️</button>
+               </h2>
+               <div className="bg-white/80 p-5 rounded-xl mb-6">
+                  <p className="text-gray-700 mb-4">Determine where your business must collect sales tax!</p>
+                  <div className="grid grid-cols-2 gap-3 mb-4">
+                     <div className="bg-blue-50 p-3 rounded-lg">
+                        <div className="font-bold text-blue-800 text-sm">Physical Nexus</div>
+                        <div className="text-xs text-blue-600">Office, warehouse, employees</div>
+                     </div>
+                     <div className="bg-green-50 p-3 rounded-lg">
+                        <div className="font-bold text-green-800 text-sm">Economic Nexus</div>
+                        <div className="text-xs text-green-600">$100K sales OR 200 transactions</div>
+                     </div>
+                  </div>
+               </div>
+               <button onClick={() => setPhase('tutorial')} className="w-full py-3 bg-orange-600 text-white rounded-xl font-semibold hover:bg-orange-700 transition-all">Start Learning</button>
+               {showInfo && (
+                  <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" onClick={() => setShowInfo(false)}>
+                     <div className="bg-white p-6 rounded-xl max-w-md m-4" onClick={e => e.stopPropagation()}>
+                        <h3 className="font-bold text-lg mb-2">{infoContent.title}</h3>
+                        <p className="text-gray-600">{infoContent.content}</p>
+                        <button onClick={() => setShowInfo(false)} className="mt-4 px-4 py-2 bg-orange-600 text-white rounded-lg">Got it!</button>
+                     </div>
+                  </div>
+               )}
+            </div>
+         );
+      }
+
+      if (phase === 'tutorial') {
+         const step = tutorialSteps[tutorialStep];
+         return (
+            <div className="p-6 bg-gradient-to-br from-orange-50 to-red-50 rounded-2xl max-w-2xl mx-auto">
+               <div className="flex justify-between items-center mb-4">
+                  <h2 className="text-xl font-bold text-orange-800">Tutorial</h2>
+                  <span className="text-sm text-orange-600">Step {tutorialStep + 1} of {tutorialSteps.length}</span>
+               </div>
+               <div className="bg-white/90 p-6 rounded-xl mb-6">
+                  <h3 className="font-bold text-lg text-gray-800 mb-3">{step.title}</h3>
+                  <p className="text-gray-600">{step.content}</p>
+                  {tutorialStep === 3 && (
+                     <div className="mt-4 p-4 bg-orange-50 rounded-lg border border-orange-200">
+                        <div className="text-sm font-semibold text-orange-800 mb-2">Common State Thresholds:</div>
+                        <div className="grid grid-cols-2 gap-2 text-xs">
+                           <div>Most states: $100K / 200 tx</div>
+                           <div>California: $500K</div>
+                           <div>Texas: $500K</div>
+                           <div>New York: $500K + 100 tx</div>
+                        </div>
+                     </div>
+                  )}
+               </div>
+               <div className="w-full bg-gray-200 rounded-full h-2 mb-4">
+                  <div className="bg-orange-600 h-2 rounded-full transition-all" style={{ width: `${((tutorialStep + 1) / tutorialSteps.length) * 100}%` }}></div>
+               </div>
+               <div className="flex gap-3">
+                  {tutorialStep > 0 && <button onClick={() => setTutorialStep(tutorialStep - 1)} className="flex-1 py-2 bg-gray-200 rounded-lg hover:bg-gray-300">Back</button>}
+                  <button onClick={() => tutorialStep < tutorialSteps.length - 1 ? setTutorialStep(tutorialStep + 1) : setPhase('play')} className="flex-1 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700">
+                     {tutorialStep < tutorialSteps.length - 1 ? 'Next' : 'Start Analysis!'}
+                  </button>
+               </div>
+            </div>
+         );
+      }
+
+      if (phase === 'play') {
+         const scenario = scenarios[scenarioIndex];
+         return (
+            <div className="p-6 bg-gradient-to-br from-orange-50 to-red-50 rounded-2xl max-w-2xl mx-auto">
+               <div className="flex justify-between items-center mb-4">
+                  <h2 className="text-xl font-bold text-orange-800">{scenario.business}</h2>
+                  <div className="flex items-center gap-3">
+                     <span className="bg-orange-100 px-3 py-1 rounded-full text-orange-700 text-sm">Score: {score}</span>
+                     <span className="text-sm text-gray-500">Case {scenarioIndex + 1}/{scenarios.length}</span>
+                  </div>
+               </div>
+
+               <div className="bg-white/90 p-4 rounded-xl mb-4">
+                  <p className="text-gray-700 mb-3">{scenario.description}</p>
+                  <p className="font-semibold text-gray-800 mb-3">Select ALL states where nexus exists:</p>
+
+                  <div className="space-y-2">
+                     {scenario.activities.map(act => (
+                        <button
+                           key={act.state}
+                           onClick={() => toggleState(act.state)}
+                           disabled={answered}
+                           className={`w-full p-3 rounded-lg text-left flex justify-between items-center transition-all border-2 ${
+                              answered
+                                 ? scenario.nexusStates.includes(act.state)
+                                    ? 'bg-green-50 border-green-500'
+                                    : selectedStates.includes(act.state)
+                                       ? 'bg-red-50 border-red-400'
+                                       : 'bg-gray-50 border-gray-200'
+                                 : selectedStates.includes(act.state)
+                                    ? 'bg-orange-100 border-orange-400'
+                                    : 'bg-gray-50 border-gray-200 hover:border-orange-300'
+                           }`}
+                        >
+                           <div>
+                              <div className="font-semibold text-sm">{act.state}</div>
+                              <div className="text-xs text-gray-500">{act.activity}</div>
+                           </div>
+                           <div className="text-right text-xs">
+                              <div className="text-gray-600">${act.sales.toLocaleString()} sales</div>
+                              <div className="text-gray-500">{act.transactions} transactions</div>
+                           </div>
+                        </button>
+                     ))}
+                  </div>
+               </div>
+
+               {!answered ? (
+                  <button onClick={checkAnswer} className="w-full py-3 bg-orange-600 text-white rounded-xl font-semibold hover:bg-orange-700">
+                     Submit Nexus Analysis
+                  </button>
+               ) : (
+                  <div className="bg-orange-50 p-4 rounded-xl border-2 border-orange-300">
+                     <div className="font-bold mb-2">Nexus States: {scenario.nexusStates.join(', ')}</div>
+                     <p className="text-sm text-gray-700 mb-3">{scenario.explanation}</p>
+                     <button onClick={nextScenario} className="px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700">
+                        {scenarioIndex < scenarios.length - 1 ? 'Next Business →' : 'Complete Training'}
+                     </button>
+                  </div>
+               )}
+            </div>
+         );
+      }
+
+      if (phase === 'result') {
+         const quiz = quizQuestions[quizIndex];
+         const maxScore = (scenarios.length * 25) + (quizQuestions.length * 10);
+         const percentage = Math.round((score / maxScore) * 100);
+
+         if (quizIndex < quizQuestions.length) {
+            return (
+               <div className="p-6 bg-gradient-to-br from-orange-50 to-red-50 rounded-2xl max-w-2xl mx-auto">
+                  <h2 className="text-xl font-bold text-orange-800 mb-4">Knowledge Check</h2>
+                  <div className="bg-white/90 p-5 rounded-xl mb-4">
+                     <div className="text-sm text-gray-500 mb-2">Question {quizIndex + 1} of {quizQuestions.length}</div>
+                     <p className="font-semibold text-gray-800 mb-4">{quiz.q}</p>
+                     <div className="grid gap-2">
+                        {quiz.options.map((opt, i) => (
+                           <button key={i} onClick={() => { if (!quizAnswered) { if (i === quiz.correct) setScore(s => s + 10); setQuizAnswered(true); }}} disabled={quizAnswered}
+                              className={`p-3 rounded-lg text-left transition-all ${quizAnswered ? (i === quiz.correct ? 'bg-green-100 border-green-500' : 'bg-gray-100') : 'bg-gray-50 hover:bg-gray-100'} border-2 ${quizAnswered && i === quiz.correct ? 'border-green-500' : 'border-transparent'}`}
+                           >{opt}</button>
+                        ))}
+                     </div>
+                  </div>
+                  {quizAnswered && <button onClick={() => { setQuizIndex(quizIndex + 1); setQuizAnswered(false); }} className="w-full py-3 bg-orange-600 text-white rounded-xl font-semibold hover:bg-orange-700">{quizIndex < quizQuestions.length - 1 ? 'Next Question' : 'See Results'}</button>}
+               </div>
+            );
+         }
+
+         return (
+            <div className="p-6 bg-gradient-to-br from-orange-50 to-red-50 rounded-2xl max-w-2xl mx-auto">
+               <h2 className="text-2xl font-bold text-orange-800 mb-4">🎉 Nexus Expert!</h2>
+               <div className="bg-white/90 p-6 rounded-xl mb-6">
+                  <div className="text-center mb-6">
+                     <div className="text-5xl font-bold text-orange-600 mb-2">{percentage}%</div>
+                     <div className="text-gray-600">Final Score: {score} / {maxScore}</div>
+                  </div>
+                  <div className="bg-orange-50 p-4 rounded-lg">
+                     <h3 className="font-bold text-orange-800 mb-2">Nexus Checklist:</h3>
+                     <ul className="text-sm text-gray-700 space-y-1">
+                        <li>• Monitor sales by state monthly</li>
+                        <li>• Track remote employee locations</li>
+                        <li>• Review 3PL and inventory locations</li>
+                        <li>• Register before threshold is crossed</li>
+                        <li>• Use automated tax software</li>
+                     </ul>
+                  </div>
+               </div>
+               <button onClick={() => { setPhase('intro'); setScore(0); setScenarioIndex(0); setSelectedStates([]); setAnswered(false); setQuizIndex(0); setQuizAnswered(false); }} className="w-full py-3 bg-orange-600 text-white rounded-xl font-semibold hover:bg-orange-700">Practice Again</button>
+            </div>
+         );
+      }
+      return null;
+   };
+
    const FinancialStatementsRenderer = () => {
       const [phase, setPhase] = useState<'intro' | 'play' | 'result'>('intro');
       const [showInfo, setShowInfo] = useState(false);
@@ -50605,6 +51563,12 @@ const GeneratedDiagram: React.FC<DiagramProps> = ({ type, data, title }) => {
             return <BreakEvenAnalysisRenderer />;
          case 'internal_controls':
             return <InternalControlsRenderer />;
+         case 'audit_prep':
+            return <AuditPrepRenderer />;
+         case 'tax_structures':
+            return <TaxStructuresRenderer />;
+         case 'sales_tax_nexus':
+            return <SalesTaxNexusRenderer />;
          case 'pricing_strategy':
             return <PricingStrategyRenderer />;
          case 'budgeting':
