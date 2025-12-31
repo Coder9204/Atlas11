@@ -43502,6 +43502,394 @@ const GeneratedDiagram: React.FC<DiagramProps> = ({ type, data, title }) => {
       return null;
    };
 
+   const WorkingCapitalManagementRenderer = () => {
+      const [phase, setPhase] = useState<'intro' | 'tutorial' | 'play' | 'result'>('intro');
+      const [tutorialStep, setTutorialStep] = useState(0);
+      const [score, setScore] = useState(0);
+      const [level, setLevel] = useState(0);
+      const [gameLog, setGameLog] = useState<string[]>([]);
+      const [dio, setDio] = useState(30);
+      const [dso, setDso] = useState(45);
+      const [dpo, setDpo] = useState(30);
+      const [quizIndex, setQuizIndex] = useState(0);
+      const [quizAnswered, setQuizAnswered] = useState(false);
+      const [showInfo, setShowInfo] = useState(false);
+      const [infoContent, setInfoContent] = useState({ title: '', content: '' });
+      const [optimized, setOptimized] = useState(false);
+
+      const tutorials = [
+         { title: 'What is Working Capital?', content: 'Working Capital = Current Assets − Current Liabilities. It\'s the money available for day-to-day operations. Too little = can\'t pay bills. Too much = money sitting idle.', icon: '💵' },
+         { title: 'The Cash Conversion Cycle', content: 'CCC measures how long cash is tied up in operations. It tracks the journey: Buy Inventory → Sell Product → Collect Cash. Shorter cycle = faster cash recovery!', icon: '🔄' },
+         { title: 'Days Inventory Outstanding (DIO)', content: 'DIO = (Avg Inventory ÷ COGS) × 365. How many days inventory sits before selling. Lower is better—but not so low you run out of stock!', icon: '📦' },
+         { title: 'Days Sales Outstanding (DSO)', content: 'DSO = (Avg Receivables ÷ Revenue) × 365. How long customers take to pay you. Lower DSO = faster cash collection. Watch for slow-paying customers!', icon: '📋' },
+         { title: 'Days Payables Outstanding (DPO)', content: 'DPO = (Avg Payables ÷ COGS) × 365. How long YOU take to pay suppliers. Higher DPO = you keep cash longer. But don\'t damage supplier relationships!', icon: '📝' },
+         { title: 'The CCC Formula', content: 'Cash Conversion Cycle = DIO + DSO − DPO. Positive CCC = you fund the gap. Negative CCC = suppliers fund your operations (the Amazon model!).', icon: '🧮' },
+         { title: 'Your Challenge', content: 'Optimize working capital for different businesses. Adjust DIO, DSO, and DPO to minimize CCC while avoiding operational problems!', icon: '🎮' }
+      ];
+
+      const scenarios = [
+         {
+            name: 'Traditional Retailer',
+            industry: 'Retail',
+            description: 'MidTown Goods has typical retail metrics. Can you improve their cash cycle?',
+            initial: { dio: 45, dso: 5, dpo: 30 },
+            target: { ccc: 10 },
+            constraints: { minDio: 20, maxDpo: 45, maxDso: 10 },
+            revenue: 5000000,
+            insight: 'Retail has low DSO (customers pay at purchase) but must balance inventory levels against stockouts.'
+         },
+         {
+            name: 'B2B Manufacturer',
+            industry: 'Manufacturing',
+            description: 'IndustrialParts sells to businesses on 60-day terms. Long receivables are the challenge.',
+            initial: { dio: 60, dso: 60, dpo: 45 },
+            target: { ccc: 45 },
+            constraints: { minDio: 30, maxDpo: 60, minDso: 30 },
+            revenue: 10000000,
+            insight: 'B2B companies face long DSO. Offering early payment discounts (2/10 net 30) can accelerate collections.'
+         },
+         {
+            name: 'Tech Startup (SaaS)',
+            industry: 'Software',
+            description: 'CloudApp bills annually upfront. No inventory, fast collections. What\'s their advantage?',
+            initial: { dio: 0, dso: 15, dpo: 30 },
+            target: { ccc: -20 },
+            constraints: { maxDio: 5, maxDso: 20, minDpo: 25 },
+            revenue: 2000000,
+            insight: 'SaaS with annual prepayment has negative CCC! Customers pay before you deliver the full service—you\'re funded by customers.'
+         },
+         {
+            name: 'Amazon-Style Marketplace',
+            industry: 'E-commerce',
+            description: 'FastShip wants to replicate Amazon\'s negative CCC. How do they do it?',
+            initial: { dio: 25, dso: 2, dpo: 45 },
+            target: { ccc: -30 },
+            constraints: { minDio: 15, maxDso: 5, minDpo: 40 },
+            revenue: 50000000,
+            insight: 'Amazon\'s secret: Fast inventory turnover + instant customer payment + slow supplier payment = negative CCC. Suppliers fund Amazon\'s growth!'
+         }
+      ];
+
+      const quizzes = [
+         {
+            question: 'A company has DIO of 30, DSO of 45, and DPO of 60. What is their Cash Conversion Cycle?',
+            options: ['135 days', '75 days', '15 days', '-15 days'],
+            correct: 2,
+            explanation: 'CCC = DIO + DSO − DPO = 30 + 45 − 60 = 15 days. Cash is tied up for only 15 days!'
+         },
+         {
+            question: 'Why is a negative Cash Conversion Cycle considered advantageous?',
+            options: ['It means the company is losing money', 'Suppliers are funding operations before payment is received', 'The company collects cash before paying suppliers', 'It indicates high debt levels'],
+            correct: 2,
+            explanation: 'Negative CCC means you collect from customers BEFORE paying suppliers. You\'re using supplier money to fund operations—free financing!'
+         },
+         {
+            question: 'Which action would INCREASE (worsen) the Cash Conversion Cycle?',
+            options: ['Paying suppliers faster', 'Collecting from customers faster', 'Selling inventory faster', 'Reducing inventory levels'],
+            correct: 0,
+            explanation: 'Paying suppliers faster reduces DPO, which INCREASES CCC. You want to hold onto cash longer (higher DPO) to improve CCC.'
+         },
+         {
+            question: 'A retailer has $500K in current assets and $300K in current liabilities. What is their working capital?',
+            options: ['$800,000', '$500,000', '$300,000', '$200,000'],
+            correct: 3,
+            explanation: 'Working Capital = Current Assets − Current Liabilities = $500K − $300K = $200,000. This is the cushion for daily operations.'
+         },
+         {
+            question: 'Why might a company NOT want to maximize DPO (delay supplier payments)?',
+            options: ['It reduces the CCC too much', 'It could damage supplier relationships and pricing', 'It increases inventory levels', 'It speeds up customer collections'],
+            correct: 1,
+            explanation: 'While high DPO improves CCC, paying too slowly can damage supplier relationships, lead to worse terms, or suppliers refusing to do business.'
+         },
+         {
+            question: 'A company offers "2/10 net 30" terms. What does this mean and why offer it?',
+            options: ['2% discount if paid in 10 days, otherwise due in 30', '2% interest charged after 10 days', '10% discount if paid in 2 days', '30% markup for late payment'],
+            correct: 0,
+            explanation: '2/10 net 30 = 2% discount for paying in 10 days, full amount due in 30 days. Companies offer this to reduce DSO and get cash faster.'
+         }
+      ];
+
+      const current = scenarios[level];
+      const ccc = dio + dso - dpo;
+      const workingCapitalNeeded = Math.round((current.revenue / 365) * Math.max(0, ccc));
+
+      const handleOptimize = () => {
+         const targetMet = ccc <= current.target.ccc;
+         const constraintsMet = dio >= current.constraints.minDio &&
+                               dpo <= current.constraints.maxDpo &&
+                               (current.constraints.minDso ? dso >= current.constraints.minDso : true) &&
+                               (current.constraints.maxDso ? dso <= current.constraints.maxDso : true);
+
+         if (targetMet && constraintsMet) {
+            setScore(prev => prev + 5);
+            setGameLog(prev => [...prev, `${current.name}: Optimized CCC to ${ccc} days! +5 points`]);
+         } else if (targetMet) {
+            setScore(prev => prev + 3);
+            setGameLog(prev => [...prev, `${current.name}: CCC target met but constraints violated. +3 points`]);
+         } else {
+            setGameLog(prev => [...prev, `${current.name}: CCC ${ccc} days, target was ${current.target.ccc} days`]);
+         }
+         setOptimized(true);
+      };
+
+      const nextScenario = () => {
+         if (level < scenarios.length - 1) {
+            setLevel(prev => prev + 1);
+            const next = scenarios[level + 1];
+            setDio(next.initial.dio);
+            setDso(next.initial.dso);
+            setDpo(next.initial.dpo);
+            setOptimized(false);
+         } else {
+            setPhase('result');
+         }
+      };
+
+      const handleQuizAnswer = (idx: number) => {
+         if (quizAnswered) return;
+         setQuizAnswered(true);
+         if (idx === quizzes[quizIndex].correct) {
+            setScore(prev => prev + 2);
+            setGameLog(prev => [...prev, `Quiz ${quizIndex + 1}: Correct!`]);
+         }
+      };
+
+      const nextQuiz = () => {
+         if (quizIndex < quizzes.length - 1) {
+            setQuizIndex(prev => prev + 1);
+            setQuizAnswered(false);
+         } else {
+            setPhase('result');
+         }
+      };
+
+      const showInfoModal = (title: string, content: string) => {
+         setInfoContent({ title, content });
+         setShowInfo(true);
+      };
+
+      if (phase === 'intro') {
+         return (
+            <div className="h-full flex flex-col items-center justify-center p-6 bg-gradient-to-br from-cyan-50 to-blue-100">
+               <div className="text-6xl mb-4">🔄</div>
+               <h1 className="text-2xl font-bold text-cyan-800 mb-2">Working Capital Management</h1>
+               <p className="text-cyan-600 text-center mb-6 max-w-md">Master the Cash Conversion Cycle and learn how companies like Amazon use negative working capital to fund growth.</p>
+               <button onClick={() => setPhase('tutorial')} className="px-8 py-3 bg-cyan-500 text-white rounded-xl font-semibold hover:bg-cyan-600 transition-all">Start Learning</button>
+            </div>
+         );
+      }
+
+      if (phase === 'tutorial') {
+         const t = tutorials[tutorialStep];
+         return (
+            <div className="h-full flex flex-col p-6 bg-gradient-to-br from-cyan-50 to-blue-100">
+               <div className="flex justify-between items-center mb-4">
+                  <span className="text-sm text-cyan-600">Tutorial {tutorialStep + 1}/{tutorials.length}</span>
+                  <div className="w-32 h-2 bg-cyan-200 rounded-full">
+                     <div className="h-full bg-cyan-500 rounded-full transition-all" style={{ width: `${((tutorialStep + 1) / tutorials.length) * 100}%` }}></div>
+                  </div>
+               </div>
+               <div className="flex-1 flex flex-col items-center justify-center">
+                  <div className="text-5xl mb-4">{t.icon}</div>
+                  <h2 className="text-xl font-bold text-cyan-800 mb-3">{t.title}</h2>
+                  <p className="text-cyan-700 text-center max-w-md leading-relaxed">{t.content}</p>
+               </div>
+               <div className="flex justify-between">
+                  <button onClick={() => setTutorialStep(prev => Math.max(0, prev - 1))} disabled={tutorialStep === 0} className="px-4 py-2 bg-cyan-200 text-cyan-700 rounded-lg disabled:opacity-50">Back</button>
+                  {tutorialStep < tutorials.length - 1 ? (
+                     <button onClick={() => setTutorialStep(prev => prev + 1)} className="px-4 py-2 bg-cyan-500 text-white rounded-lg hover:bg-cyan-600">Next</button>
+                  ) : (
+                     <button onClick={() => { setPhase('play'); setDio(scenarios[0].initial.dio); setDso(scenarios[0].initial.dso); setDpo(scenarios[0].initial.dpo); }} className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600">Start Optimizing →</button>
+                  )}
+               </div>
+            </div>
+         );
+      }
+
+      if (phase === 'play') {
+         return (
+            <div className="h-full flex flex-col p-3 bg-gradient-to-br from-cyan-50 to-blue-100 overflow-auto">
+               <div className="flex justify-between items-center mb-2">
+                  <span className="text-sm font-medium text-cyan-700">Scenario {level + 1}/{scenarios.length}</span>
+                  <span className="text-sm font-semibold text-cyan-800">Score: {score}</span>
+               </div>
+
+               <div className="bg-white rounded-xl p-3 mb-3 shadow-sm">
+                  <div className="flex items-center gap-2 mb-1">
+                     <h3 className="font-bold text-cyan-800">{current.name}</h3>
+                     <span className="px-2 py-0.5 bg-cyan-100 text-cyan-700 rounded text-xs">{current.industry}</span>
+                  </div>
+                  <p className="text-xs text-gray-600 mb-2">{current.description}</p>
+                  <div className="text-xs text-cyan-700 font-medium">Target CCC: ≤ {current.target.ccc} days</div>
+               </div>
+
+               <div className="bg-white rounded-xl p-3 mb-3 shadow-sm">
+                  <div className="text-center mb-3">
+                     <div className="text-xs text-gray-500 mb-1">Cash Conversion Cycle</div>
+                     <div className={`text-3xl font-bold ${ccc < 0 ? 'text-green-600' : ccc <= current.target.ccc ? 'text-cyan-600' : 'text-orange-600'}`}>
+                        {ccc} days
+                     </div>
+                     <div className="text-xs text-gray-500 mt-1">
+                        {ccc < 0 ? '🎉 Negative CCC! Suppliers fund you!' : ccc <= current.target.ccc ? '✓ Target achieved!' : '↓ Reduce to meet target'}
+                     </div>
+                  </div>
+
+                  <div className="bg-cyan-50 rounded-lg p-2 mb-3">
+                     <div className="flex justify-center items-center text-xs font-mono">
+                        <span className="px-2 py-1 bg-blue-200 rounded">{dio}</span>
+                        <span className="mx-1">+</span>
+                        <span className="px-2 py-1 bg-purple-200 rounded">{dso}</span>
+                        <span className="mx-1">−</span>
+                        <span className="px-2 py-1 bg-green-200 rounded">{dpo}</span>
+                        <span className="mx-1">=</span>
+                        <span className={`px-2 py-1 rounded font-bold ${ccc < 0 ? 'bg-green-300' : 'bg-orange-200'}`}>{ccc}</span>
+                     </div>
+                     <div className="flex justify-center text-xs text-gray-500 mt-1">
+                        <span className="px-2">DIO</span>
+                        <span className="px-2">DSO</span>
+                        <span className="px-2">DPO</span>
+                        <span className="px-2">CCC</span>
+                     </div>
+                  </div>
+
+                  <div className="space-y-3">
+                     <div>
+                        <div className="flex justify-between items-center mb-1">
+                           <div className="flex items-center gap-1">
+                              <span className="text-xs font-medium text-gray-700">📦 Days Inventory (DIO)</span>
+                              <button onClick={() => showInfoModal('DIO', 'How long inventory sits before selling. Lower = faster turnover. Min for this scenario: ' + current.constraints.minDio + ' days')} className="text-cyan-400 text-xs">ℹ️</button>
+                           </div>
+                           <span className="text-sm font-semibold text-blue-600">{dio} days</span>
+                        </div>
+                        <input type="range" min={current.constraints.minDio || 0} max="90" value={dio} onChange={(e) => setDio(Number(e.target.value))} disabled={optimized} className="w-full h-2 bg-blue-200 rounded-lg appearance-none cursor-pointer" />
+                     </div>
+
+                     <div>
+                        <div className="flex justify-between items-center mb-1">
+                           <div className="flex items-center gap-1">
+                              <span className="text-xs font-medium text-gray-700">📋 Days Sales Outstanding (DSO)</span>
+                              <button onClick={() => showInfoModal('DSO', 'How long customers take to pay. Lower = faster cash. Range: ' + (current.constraints.minDso || 0) + '-' + (current.constraints.maxDso || 90) + ' days')} className="text-cyan-400 text-xs">ℹ️</button>
+                           </div>
+                           <span className="text-sm font-semibold text-purple-600">{dso} days</span>
+                        </div>
+                        <input type="range" min={current.constraints.minDso || 0} max={current.constraints.maxDso || 90} value={dso} onChange={(e) => setDso(Number(e.target.value))} disabled={optimized} className="w-full h-2 bg-purple-200 rounded-lg appearance-none cursor-pointer" />
+                     </div>
+
+                     <div>
+                        <div className="flex justify-between items-center mb-1">
+                           <div className="flex items-center gap-1">
+                              <span className="text-xs font-medium text-gray-700">📝 Days Payables (DPO)</span>
+                              <button onClick={() => showInfoModal('DPO', 'How long you take to pay suppliers. Higher = keep cash longer. Max for this scenario: ' + current.constraints.maxDpo + ' days')} className="text-cyan-400 text-xs">ℹ️</button>
+                           </div>
+                           <span className="text-sm font-semibold text-green-600">{dpo} days</span>
+                        </div>
+                        <input type="range" min={current.constraints.minDpo || 0} max={current.constraints.maxDpo || 90} value={dpo} onChange={(e) => setDpo(Number(e.target.value))} disabled={optimized} className="w-full h-2 bg-green-200 rounded-lg appearance-none cursor-pointer" />
+                     </div>
+                  </div>
+               </div>
+
+               <div className="bg-white rounded-xl p-3 mb-3 shadow-sm">
+                  <div className="flex justify-between text-xs">
+                     <span className="text-gray-600">Working Capital Needed:</span>
+                     <span className="font-semibold text-cyan-700">${workingCapitalNeeded.toLocaleString()}</span>
+                  </div>
+                  <div className="text-xs text-gray-500 mt-1">Based on ${current.revenue.toLocaleString()} annual revenue</div>
+               </div>
+
+               {optimized && (
+                  <div className="bg-cyan-50 rounded-xl p-3 mb-3 border border-cyan-200">
+                     <div className="text-xs font-semibold text-cyan-800 mb-1">💡 Industry Insight:</div>
+                     <p className="text-xs text-cyan-700">{current.insight}</p>
+                  </div>
+               )}
+
+               {!optimized ? (
+                  <button onClick={handleOptimize} className="w-full py-3 bg-cyan-500 text-white rounded-xl font-semibold hover:bg-cyan-600">Lock In Optimization</button>
+               ) : (
+                  <button onClick={nextScenario} className="w-full py-3 bg-cyan-500 text-white rounded-xl font-semibold hover:bg-cyan-600">
+                     {level < scenarios.length - 1 ? 'Next Scenario →' : 'Take Quiz →'}
+                  </button>
+               )}
+
+               {showInfo && (
+                  <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+                     <div className="bg-white rounded-xl p-4 max-w-sm">
+                        <h4 className="font-bold text-cyan-800 mb-2">{infoContent.title}</h4>
+                        <p className="text-sm text-gray-600 mb-3">{infoContent.content}</p>
+                        <button onClick={() => setShowInfo(false)} className="w-full py-2 bg-cyan-500 text-white rounded-lg">Got it!</button>
+                     </div>
+                  </div>
+               )}
+            </div>
+         );
+      }
+
+      if (phase === 'result') {
+         if (quizIndex < quizzes.length) {
+            const q = quizzes[quizIndex];
+            return (
+               <div className="h-full flex flex-col p-4 bg-gradient-to-br from-cyan-50 to-blue-100">
+                  <div className="flex justify-between items-center mb-4">
+                     <span className="text-sm text-cyan-600">Quiz {quizIndex + 1}/{quizzes.length}</span>
+                     <span className="text-sm font-semibold text-cyan-800">Score: {score}</span>
+                  </div>
+                  <div className="flex-1">
+                     <div className="bg-white rounded-xl p-4 shadow-sm mb-4">
+                        <p className="font-medium text-gray-800 mb-4">{q.question}</p>
+                        <div className="space-y-2">
+                           {q.options.map((opt, i) => (
+                              <button key={i} onClick={() => handleQuizAnswer(i)} disabled={quizAnswered} className={`w-full p-3 rounded-lg text-left text-sm transition-all ${quizAnswered ? (i === q.correct ? 'bg-green-100 border-2 border-green-500' : 'bg-gray-50 opacity-60') : 'bg-gray-50 hover:bg-cyan-50 border-2 border-transparent hover:border-cyan-300'}`}>
+                                 {opt}
+                              </button>
+                           ))}
+                        </div>
+                     </div>
+                     {quizAnswered && (
+                        <div className="bg-blue-50 rounded-lg p-3 mb-4">
+                           <p className="text-sm text-blue-800">{q.explanation}</p>
+                        </div>
+                     )}
+                  </div>
+                  {quizAnswered && (
+                     <button onClick={nextQuiz} className="w-full py-3 bg-cyan-500 text-white rounded-xl font-semibold hover:bg-cyan-600">
+                        {quizIndex < quizzes.length - 1 ? 'Next Question →' : 'See Final Results →'}
+                     </button>
+                  )}
+               </div>
+            );
+         }
+
+         const maxScore = scenarios.length * 5 + quizzes.length * 2;
+         const pct = Math.round((score / maxScore) * 100);
+
+         return (
+            <div className="h-full flex flex-col p-6 bg-gradient-to-br from-cyan-50 to-blue-100">
+               <div className="flex-1 flex flex-col items-center justify-center">
+                  <div className="text-5xl mb-4">{pct >= 80 ? '🏆' : pct >= 60 ? '🔄' : '📚'}</div>
+                  <h2 className="text-xl font-bold text-cyan-800 mb-2">Working Capital Mastery!</h2>
+                  <p className="text-3xl font-bold text-cyan-600 mb-2">{score}/{maxScore} points</p>
+                  <p className="text-cyan-700 mb-4">{pct}% Accuracy</p>
+                  <div className="w-full max-w-xs h-3 bg-cyan-200 rounded-full mb-4">
+                     <div className="h-full bg-cyan-500 rounded-full transition-all" style={{ width: `${pct}%` }}></div>
+                  </div>
+                  <div className="bg-white rounded-xl p-4 w-full max-w-md text-sm">
+                     <h4 className="font-semibold text-cyan-800 mb-2">Key Takeaways:</h4>
+                     <ul className="text-gray-600 space-y-1">
+                        <li>• CCC = DIO + DSO − DPO</li>
+                        <li>• Negative CCC = suppliers fund your operations</li>
+                        <li>• Lower DIO & DSO improve cash cycle</li>
+                        <li>• Higher DPO helps, but respect supplier relationships</li>
+                        <li>• Amazon's secret: Negative CCC funds growth!</li>
+                     </ul>
+                  </div>
+                  <button onClick={() => { setPhase('intro'); setScore(0); setLevel(0); setOptimized(false); setQuizIndex(0); setQuizAnswered(false); }} className="w-full max-w-md mt-4 py-3 bg-cyan-500 text-white rounded-xl font-semibold hover:bg-cyan-600">Practice Again</button>
+               </div>
+            </div>
+         );
+      }
+      return null;
+   };
+
    const FinancialStatementsRenderer = () => {
       const [phase, setPhase] = useState<'intro' | 'play' | 'result'>('intro');
       const [showInfo, setShowInfo] = useState(false);
@@ -47343,6 +47731,8 @@ const GeneratedDiagram: React.FC<DiagramProps> = ({ type, data, title }) => {
             return <ProfitMarginRenderer />;
          case 'financial_ratio_analysis':
             return <FinancialRatioAnalysisRenderer />;
+         case 'working_capital':
+            return <WorkingCapitalManagementRenderer />;
          case 'pricing_strategy':
             return <PricingStrategyRenderer />;
          case 'budgeting':
