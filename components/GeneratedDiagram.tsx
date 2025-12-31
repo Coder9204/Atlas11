@@ -42223,6 +42223,434 @@ const GeneratedDiagram: React.FC<DiagramProps> = ({ type, data, title }) => {
       return null;
    };
 
+   const COGSCalculationRenderer = () => {
+      const [phase, setPhase] = useState<'intro' | 'tutorial' | 'play' | 'result'>('intro');
+      const [tutorialStep, setTutorialStep] = useState(0);
+      const [score, setScore] = useState(0);
+      const [level, setLevel] = useState(0);
+      const [gameLog, setGameLog] = useState<string[]>([]);
+      const [answers, setAnswers] = useState<{[key: string]: number}>({});
+      const [showResults, setShowResults] = useState(false);
+      const [quizIndex, setQuizIndex] = useState(0);
+      const [quizAnswered, setQuizAnswered] = useState(false);
+      const [showInfo, setShowInfo] = useState(false);
+      const [infoContent, setInfoContent] = useState({ title: '', content: '' });
+
+      const tutorials = [
+         { title: 'What is COGS?', content: 'Cost of Goods Sold (COGS) represents the direct costs of producing goods that were sold during a period. It\'s subtracted from revenue to calculate gross profit.', icon: '📊' },
+         { title: 'The Basic COGS Formula', content: 'COGS = Beginning Inventory + Purchases − Ending Inventory. This formula tracks the cost of inventory that "flows through" to sales.', icon: '🧮' },
+         { title: 'Retail vs Manufacturing', content: 'Retailers: COGS = purchase cost of merchandise. Manufacturers: COGS includes raw materials, direct labor, and manufacturing overhead.', icon: '🏭' },
+         { title: 'Cost of Goods Manufactured', content: 'For manufacturers: COGM = Beginning WIP + Manufacturing Costs (DM + DL + OH) − Ending WIP. This feeds into the COGS calculation.', icon: '⚙️' },
+         { title: 'What\'s Included in COGS?', content: 'Included: Direct materials, direct labor, factory overhead. NOT included: Selling expenses, administrative costs, interest, income tax.', icon: '✅' },
+         { title: 'COGS Impact on Profits', content: 'Higher COGS = Lower gross profit. Companies try to reduce COGS through efficiency, bulk purchasing, or automation while maintaining quality.', icon: '💰' },
+         { title: 'Your Challenge', content: 'Calculate COGS for different business types—from simple retail to complex manufacturing. Master the formulas that drive profitability!', icon: '🎮' }
+      ];
+
+      const scenarios = [
+         {
+            type: 'retail',
+            title: 'Simple Retail Store',
+            description: 'Budget Books sells used textbooks. Calculate their January COGS:',
+            data: {
+               beginningInventory: 15000,
+               purchases: 42000,
+               purchaseReturns: 2000,
+               freightIn: 1500,
+               endingInventory: 18000
+            },
+            formula: 'COGS = Beginning Inv + Net Purchases − Ending Inv',
+            steps: ['Net Purchases = Purchases − Returns + Freight In', 'Net Purchases = $42,000 − $2,000 + $1,500 = $41,500', 'COGS = $15,000 + $41,500 − $18,000 = $38,500'],
+            answer: 38500
+         },
+         {
+            type: 'retail_multi',
+            title: 'Multi-Product Retailer',
+            description: 'GadgetWorld tracks inventory by category. Calculate total COGS:',
+            data: {
+               electronics: { beginning: 50000, purchases: 120000, ending: 45000 },
+               accessories: { beginning: 12000, purchases: 35000, ending: 15000 },
+               services: { beginning: 0, purchases: 0, ending: 0 }
+            },
+            formula: 'Sum COGS across all product categories',
+            steps: ['Electronics: $50K + $120K − $45K = $125,000', 'Accessories: $12K + $35K − $15K = $32,000', 'Total COGS = $125,000 + $32,000 = $157,000'],
+            answer: 157000
+         },
+         {
+            type: 'manufacturing',
+            title: 'Manufacturing Company',
+            description: 'FurnitureCraft makes custom tables. Calculate COGS for Q1:',
+            data: {
+               beginningFG: 25000,
+               directMaterials: 85000,
+               directLabor: 65000,
+               manufacturingOH: 45000,
+               beginningWIP: 10000,
+               endingWIP: 15000,
+               endingFG: 30000
+            },
+            formula: 'COGS = Beginning FG + COGM − Ending FG',
+            steps: [
+               'COGM = Beg WIP + (DM + DL + OH) − End WIP',
+               'COGM = $10K + ($85K + $65K + $45K) − $15K = $190,000',
+               'COGS = $25,000 + $190,000 − $30,000 = $185,000'
+            ],
+            answer: 185000
+         },
+         {
+            type: 'complex',
+            title: 'Complex Manufacturing',
+            description: 'TechAssembly Inc. has detailed cost tracking. Find COGS:',
+            data: {
+               beginningRM: 20000,
+               purchasesRM: 150000,
+               endingRM: 25000,
+               directLabor: 180000,
+               factoryRent: 36000,
+               utilities: 12000,
+               depreciation: 24000,
+               supervision: 48000,
+               beginningWIP: 35000,
+               endingWIP: 40000,
+               beginningFG: 60000,
+               endingFG: 55000
+            },
+            formula: 'Track costs through Raw Materials → WIP → Finished Goods',
+            steps: [
+               'DM Used = $20K + $150K − $25K = $145,000',
+               'OH = $36K + $12K + $24K + $48K = $120,000',
+               'Total Mfg = $145K + $180K + $120K = $445,000',
+               'COGM = $35K + $445K − $40K = $440,000',
+               'COGS = $60K + $440K − $55K = $445,000'
+            ],
+            answer: 445000
+         }
+      ];
+
+      const quizzes = [
+         {
+            question: 'Which of the following is NOT included in COGS?',
+            options: ['Direct materials used in production', 'Factory workers\' wages', 'Sales team commissions', 'Manufacturing equipment depreciation'],
+            correct: 2,
+            explanation: 'Sales commissions are a selling expense, not a production cost. COGS only includes costs directly tied to manufacturing/acquiring the goods sold.'
+         },
+         {
+            question: 'If Beginning Inventory is $50K, Purchases are $200K, and Ending Inventory is $60K, what is COGS?',
+            options: ['$190,000', '$210,000', '$250,000', '$310,000'],
+            correct: 0,
+            explanation: 'COGS = Beginning Inv + Purchases − Ending Inv = $50K + $200K − $60K = $190,000.'
+         },
+         {
+            question: 'A company\'s COGS increased while sales remained flat. What happened to gross profit margin?',
+            options: ['Increased', 'Decreased', 'Stayed the same', 'Cannot determine'],
+            correct: 1,
+            explanation: 'Gross Profit = Revenue − COGS. If COGS increases and revenue stays flat, gross profit decreases, reducing the gross profit margin.'
+         },
+         {
+            question: 'In manufacturing, what does COGM stand for?',
+            options: ['Cost of General Materials', 'Cost of Goods Manufactured', 'Calculation of Gross Margin', 'Cost of Goods Marketed'],
+            correct: 1,
+            explanation: 'COGM = Cost of Goods Manufactured, representing the total production cost of goods completed during the period.'
+         },
+         {
+            question: 'Why might a service company have zero or minimal COGS?',
+            options: ['They don\'t sell anything', 'Services don\'t involve physical inventory', 'COGS only applies to manufacturers', 'They expense everything immediately'],
+            correct: 1,
+            explanation: 'Service companies (consulting, software) primarily sell labor and expertise, not physical products. Their costs are typically categorized as operating expenses.'
+         },
+         {
+            question: 'What happens to COGS when a company switches from FIFO to LIFO during inflation?',
+            options: ['COGS decreases', 'COGS increases', 'COGS stays the same', 'COGS becomes unpredictable'],
+            correct: 1,
+            explanation: 'During inflation, LIFO assigns the most recent (higher) costs to COGS, increasing COGS compared to FIFO.'
+         }
+      ];
+
+      const current = scenarios[level];
+
+      const handleAnswer = (field: string, value: number) => {
+         setAnswers(prev => ({ ...prev, [field]: value }));
+      };
+
+      const checkAnswer = () => {
+         const userAnswer = answers['cogs'] || 0;
+         const tolerance = current.answer * 0.02;
+         const correct = Math.abs(userAnswer - current.answer) <= tolerance;
+
+         if (correct) {
+            setScore(prev => prev + 3);
+            setGameLog(prev => [...prev, `Scenario ${level + 1}: Correctly calculated COGS as $${current.answer.toLocaleString()}`]);
+         } else {
+            setGameLog(prev => [...prev, `Scenario ${level + 1}: Incorrect - answered $${userAnswer.toLocaleString()}, correct was $${current.answer.toLocaleString()}`]);
+         }
+         setShowResults(true);
+      };
+
+      const nextLevel = () => {
+         if (level < scenarios.length - 1) {
+            setLevel(prev => prev + 1);
+            setAnswers({});
+            setShowResults(false);
+         } else {
+            setPhase('result');
+         }
+      };
+
+      const handleQuizAnswer = (idx: number) => {
+         if (quizAnswered) return;
+         setQuizAnswered(true);
+         if (idx === quizzes[quizIndex].correct) {
+            setScore(prev => prev + 2);
+            setGameLog(prev => [...prev, `Quiz ${quizIndex + 1}: Correct! +2 points`]);
+         } else {
+            setGameLog(prev => [...prev, `Quiz ${quizIndex + 1}: Incorrect`]);
+         }
+      };
+
+      const nextQuiz = () => {
+         if (quizIndex < quizzes.length - 1) {
+            setQuizIndex(prev => prev + 1);
+            setQuizAnswered(false);
+         } else {
+            setPhase('result');
+         }
+      };
+
+      const showInfoModal = (title: string, content: string) => {
+         setInfoContent({ title, content });
+         setShowInfo(true);
+      };
+
+      if (phase === 'intro') {
+         return (
+            <div className="h-full flex flex-col items-center justify-center p-6 bg-gradient-to-br from-red-50 to-orange-100">
+               <div className="text-6xl mb-4">🧮</div>
+               <h1 className="text-2xl font-bold text-red-800 mb-2">Cost of Goods Sold (COGS)</h1>
+               <p className="text-red-600 text-center mb-6 max-w-md">Master the COGS formula and understand how it impacts profitability for retail and manufacturing businesses.</p>
+               <button onClick={() => setPhase('tutorial')} className="px-8 py-3 bg-red-500 text-white rounded-xl font-semibold hover:bg-red-600 transition-all">Start Learning</button>
+            </div>
+         );
+      }
+
+      if (phase === 'tutorial') {
+         const t = tutorials[tutorialStep];
+         return (
+            <div className="h-full flex flex-col p-6 bg-gradient-to-br from-red-50 to-orange-100">
+               <div className="flex justify-between items-center mb-4">
+                  <span className="text-sm text-red-600">Tutorial {tutorialStep + 1}/{tutorials.length}</span>
+                  <div className="w-32 h-2 bg-red-200 rounded-full">
+                     <div className="h-full bg-red-500 rounded-full transition-all" style={{ width: `${((tutorialStep + 1) / tutorials.length) * 100}%` }}></div>
+                  </div>
+               </div>
+               <div className="flex-1 flex flex-col items-center justify-center">
+                  <div className="text-5xl mb-4">{t.icon}</div>
+                  <h2 className="text-xl font-bold text-red-800 mb-3">{t.title}</h2>
+                  <p className="text-red-700 text-center max-w-md leading-relaxed">{t.content}</p>
+               </div>
+               <div className="flex justify-between">
+                  <button onClick={() => setTutorialStep(prev => Math.max(0, prev - 1))} disabled={tutorialStep === 0} className="px-4 py-2 bg-red-200 text-red-700 rounded-lg disabled:opacity-50">Back</button>
+                  {tutorialStep < tutorials.length - 1 ? (
+                     <button onClick={() => setTutorialStep(prev => prev + 1)} className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600">Next</button>
+                  ) : (
+                     <button onClick={() => setPhase('play')} className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600">Start Practice →</button>
+                  )}
+               </div>
+            </div>
+         );
+      }
+
+      if (phase === 'play') {
+         if (!showResults) {
+            return (
+               <div className="h-full flex flex-col p-4 bg-gradient-to-br from-red-50 to-orange-100 overflow-auto">
+                  <div className="flex justify-between items-center mb-3">
+                     <span className="text-sm font-medium text-red-700">Scenario {level + 1}/{scenarios.length}</span>
+                     <span className="text-sm font-semibold text-red-800">Score: {score}</span>
+                  </div>
+
+                  <div className="bg-white rounded-xl p-4 mb-3 shadow-sm">
+                     <div className="flex items-center gap-2 mb-2">
+                        <span className="px-2 py-0.5 bg-red-100 text-red-700 rounded text-xs font-medium">{current.type === 'retail' || current.type === 'retail_multi' ? 'Retail' : 'Manufacturing'}</span>
+                        <h3 className="font-bold text-red-800">{current.title}</h3>
+                        <button onClick={() => showInfoModal('COGS Formula', current.formula)} className="text-red-400 hover:text-red-600">ℹ️</button>
+                     </div>
+                     <p className="text-sm text-gray-600 mb-3">{current.description}</p>
+
+                     <div className="bg-red-50 rounded-lg p-3 text-xs space-y-2">
+                        {current.type === 'retail' && (
+                           <>
+                              <div className="flex justify-between"><span>Beginning Inventory:</span><span className="font-semibold">${current.data.beginningInventory?.toLocaleString()}</span></div>
+                              <div className="flex justify-between"><span>Purchases:</span><span className="font-semibold">${current.data.purchases?.toLocaleString()}</span></div>
+                              <div className="flex justify-between"><span>Purchase Returns:</span><span className="font-semibold text-red-600">−${current.data.purchaseReturns?.toLocaleString()}</span></div>
+                              <div className="flex justify-between"><span>Freight In:</span><span className="font-semibold">+${current.data.freightIn?.toLocaleString()}</span></div>
+                              <div className="flex justify-between border-t pt-2"><span>Ending Inventory:</span><span className="font-semibold">${current.data.endingInventory?.toLocaleString()}</span></div>
+                           </>
+                        )}
+                        {current.type === 'retail_multi' && (
+                           <>
+                              <div className="font-semibold text-red-800 mb-1">Electronics:</div>
+                              <div className="flex justify-between pl-2"><span>Beg: ${current.data.electronics?.beginning?.toLocaleString()}</span><span>Purch: ${current.data.electronics?.purchases?.toLocaleString()}</span><span>End: ${current.data.electronics?.ending?.toLocaleString()}</span></div>
+                              <div className="font-semibold text-red-800 mt-2 mb-1">Accessories:</div>
+                              <div className="flex justify-between pl-2"><span>Beg: ${current.data.accessories?.beginning?.toLocaleString()}</span><span>Purch: ${current.data.accessories?.purchases?.toLocaleString()}</span><span>End: ${current.data.accessories?.ending?.toLocaleString()}</span></div>
+                           </>
+                        )}
+                        {current.type === 'manufacturing' && (
+                           <>
+                              <div className="font-semibold text-red-800">Finished Goods:</div>
+                              <div className="flex justify-between pl-2"><span>Beginning FG:</span><span>${current.data.beginningFG?.toLocaleString()}</span></div>
+                              <div className="flex justify-between pl-2"><span>Ending FG:</span><span>${current.data.endingFG?.toLocaleString()}</span></div>
+                              <div className="font-semibold text-red-800 mt-2">Manufacturing Costs:</div>
+                              <div className="flex justify-between pl-2"><span>Direct Materials:</span><span>${current.data.directMaterials?.toLocaleString()}</span></div>
+                              <div className="flex justify-between pl-2"><span>Direct Labor:</span><span>${current.data.directLabor?.toLocaleString()}</span></div>
+                              <div className="flex justify-between pl-2"><span>Manufacturing OH:</span><span>${current.data.manufacturingOH?.toLocaleString()}</span></div>
+                              <div className="font-semibold text-red-800 mt-2">Work in Progress:</div>
+                              <div className="flex justify-between pl-2"><span>Beginning WIP:</span><span>${current.data.beginningWIP?.toLocaleString()}</span></div>
+                              <div className="flex justify-between pl-2"><span>Ending WIP:</span><span>${current.data.endingWIP?.toLocaleString()}</span></div>
+                           </>
+                        )}
+                        {current.type === 'complex' && (
+                           <>
+                              <div className="font-semibold text-red-800">Raw Materials:</div>
+                              <div className="flex justify-between pl-2 text-xs"><span>Beg RM: ${current.data.beginningRM?.toLocaleString()}</span><span>Purch: ${current.data.purchasesRM?.toLocaleString()}</span><span>End RM: ${current.data.endingRM?.toLocaleString()}</span></div>
+                              <div className="font-semibold text-red-800 mt-2">Direct Labor: <span className="font-normal">${current.data.directLabor?.toLocaleString()}</span></div>
+                              <div className="font-semibold text-red-800 mt-2">Factory Overhead:</div>
+                              <div className="grid grid-cols-2 gap-1 pl-2 text-xs">
+                                 <span>Rent: ${current.data.factoryRent?.toLocaleString()}</span>
+                                 <span>Utilities: ${current.data.utilities?.toLocaleString()}</span>
+                                 <span>Depreciation: ${current.data.depreciation?.toLocaleString()}</span>
+                                 <span>Supervision: ${current.data.supervision?.toLocaleString()}</span>
+                              </div>
+                              <div className="font-semibold text-red-800 mt-2">WIP & FG:</div>
+                              <div className="flex justify-between pl-2"><span>Beg WIP: ${current.data.beginningWIP?.toLocaleString()}</span><span>End WIP: ${current.data.endingWIP?.toLocaleString()}</span></div>
+                              <div className="flex justify-between pl-2"><span>Beg FG: ${current.data.beginningFG?.toLocaleString()}</span><span>End FG: ${current.data.endingFG?.toLocaleString()}</span></div>
+                           </>
+                        )}
+                     </div>
+                  </div>
+
+                  <div className="bg-white rounded-xl p-4 mb-3 shadow-sm">
+                     <label className="block text-sm font-medium text-gray-700 mb-2">Your COGS Calculation:</label>
+                     <div className="flex items-center gap-2">
+                        <span className="text-lg text-gray-500">$</span>
+                        <input type="number" value={answers['cogs'] || ''} onChange={(e) => handleAnswer('cogs', Number(e.target.value))} placeholder="Enter COGS amount" className="flex-1 px-3 py-2 border-2 border-red-200 rounded-lg focus:border-red-500 focus:outline-none text-lg" />
+                     </div>
+                  </div>
+
+                  <button onClick={checkAnswer} disabled={!answers['cogs']} className="w-full py-3 bg-red-500 text-white rounded-xl font-semibold hover:bg-red-600 disabled:opacity-50">Check Answer</button>
+
+                  {showInfo && (
+                     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+                        <div className="bg-white rounded-xl p-4 max-w-sm">
+                           <h4 className="font-bold text-red-800 mb-2">{infoContent.title}</h4>
+                           <p className="text-sm text-gray-600 mb-3">{infoContent.content}</p>
+                           <button onClick={() => setShowInfo(false)} className="w-full py-2 bg-red-500 text-white rounded-lg">Got it!</button>
+                        </div>
+                     </div>
+                  )}
+               </div>
+            );
+         }
+
+         const userAnswer = answers['cogs'] || 0;
+         const isCorrect = Math.abs(userAnswer - current.answer) <= current.answer * 0.02;
+
+         return (
+            <div className="h-full flex flex-col p-4 bg-gradient-to-br from-red-50 to-orange-100 overflow-auto">
+               <div className={`rounded-xl p-4 mb-3 ${isCorrect ? 'bg-green-100 border-2 border-green-500' : 'bg-red-100 border-2 border-red-400'}`}>
+                  <div className="flex items-center gap-2 mb-2">
+                     <span className="text-2xl">{isCorrect ? '✅' : '❌'}</span>
+                     <span className="font-bold text-lg">{isCorrect ? 'Correct!' : 'Not quite right'}</span>
+                  </div>
+                  <div className="text-sm">
+                     <p>Your answer: <span className="font-semibold">${userAnswer.toLocaleString()}</span></p>
+                     <p>Correct answer: <span className="font-semibold text-green-700">${current.answer.toLocaleString()}</span></p>
+                  </div>
+               </div>
+
+               <div className="bg-white rounded-xl p-4 mb-3 shadow-sm">
+                  <h4 className="font-bold text-red-800 mb-2">Step-by-Step Solution:</h4>
+                  <div className="space-y-2 text-sm">
+                     {current.steps.map((step, i) => (
+                        <div key={i} className="flex items-start gap-2">
+                           <span className="w-5 h-5 bg-red-500 text-white rounded-full text-xs flex items-center justify-center flex-shrink-0">{i + 1}</span>
+                           <span className="text-gray-700">{step}</span>
+                        </div>
+                     ))}
+                  </div>
+               </div>
+
+               <button onClick={nextLevel} className="w-full py-3 bg-red-500 text-white rounded-xl font-semibold hover:bg-red-600">
+                  {level < scenarios.length - 1 ? 'Next Scenario →' : 'Take Quiz →'}
+               </button>
+            </div>
+         );
+      }
+
+      if (phase === 'result') {
+         if (quizIndex < quizzes.length) {
+            const q = quizzes[quizIndex];
+            return (
+               <div className="h-full flex flex-col p-4 bg-gradient-to-br from-red-50 to-orange-100">
+                  <div className="flex justify-between items-center mb-4">
+                     <span className="text-sm text-red-600">Quiz {quizIndex + 1}/{quizzes.length}</span>
+                     <span className="text-sm font-semibold text-red-800">Score: {score}</span>
+                  </div>
+                  <div className="flex-1">
+                     <div className="bg-white rounded-xl p-4 shadow-sm mb-4">
+                        <p className="font-medium text-gray-800 mb-4">{q.question}</p>
+                        <div className="space-y-2">
+                           {q.options.map((opt, i) => (
+                              <button key={i} onClick={() => handleQuizAnswer(i)} disabled={quizAnswered} className={`w-full p-3 rounded-lg text-left text-sm transition-all ${quizAnswered ? (i === q.correct ? 'bg-green-100 border-2 border-green-500' : 'bg-gray-50 opacity-60') : 'bg-gray-50 hover:bg-red-50 border-2 border-transparent hover:border-red-300'}`}>
+                                 {opt}
+                              </button>
+                           ))}
+                        </div>
+                     </div>
+                     {quizAnswered && (
+                        <div className="bg-blue-50 rounded-lg p-3 mb-4">
+                           <p className="text-sm text-blue-800">{q.explanation}</p>
+                        </div>
+                     )}
+                  </div>
+                  {quizAnswered && (
+                     <button onClick={nextQuiz} className="w-full py-3 bg-red-500 text-white rounded-xl font-semibold hover:bg-red-600">
+                        {quizIndex < quizzes.length - 1 ? 'Next Question →' : 'See Final Results →'}
+                     </button>
+                  )}
+               </div>
+            );
+         }
+
+         const maxScore = scenarios.length * 3 + quizzes.length * 2;
+         const pct = Math.round((score / maxScore) * 100);
+
+         return (
+            <div className="h-full flex flex-col p-6 bg-gradient-to-br from-red-50 to-orange-100">
+               <div className="flex-1 flex flex-col items-center justify-center">
+                  <div className="text-5xl mb-4">{pct >= 80 ? '🏆' : pct >= 60 ? '🧮' : '📚'}</div>
+                  <h2 className="text-xl font-bold text-red-800 mb-2">COGS Mastery Complete!</h2>
+                  <p className="text-3xl font-bold text-red-600 mb-2">{score}/{maxScore} points</p>
+                  <p className="text-red-700 mb-4">{pct}% Accuracy</p>
+                  <div className="w-full max-w-xs h-3 bg-red-200 rounded-full mb-4">
+                     <div className="h-full bg-red-500 rounded-full transition-all" style={{ width: `${pct}%` }}></div>
+                  </div>
+                  <div className="bg-white rounded-xl p-4 w-full max-w-md text-sm">
+                     <h4 className="font-semibold text-red-800 mb-2">Key Takeaways:</h4>
+                     <ul className="text-gray-600 space-y-1">
+                        <li>• COGS = Beg Inv + Purchases − End Inv</li>
+                        <li>• Manufacturing adds: DM + DL + OH</li>
+                        <li>• COGM feeds into COGS for manufacturers</li>
+                        <li>• Only production costs in COGS, not admin/selling</li>
+                        <li>• Higher COGS = Lower gross profit margin</li>
+                     </ul>
+                  </div>
+                  <button onClick={() => { setPhase('intro'); setScore(0); setLevel(0); setAnswers({}); setShowResults(false); setQuizIndex(0); setQuizAnswered(false); }} className="w-full max-w-md mt-4 py-3 bg-red-500 text-white rounded-xl font-semibold hover:bg-red-600">Practice Again</button>
+               </div>
+            </div>
+         );
+      }
+      return null;
+   };
+
    const FinancialStatementsRenderer = () => {
       const [phase, setPhase] = useState<'intro' | 'play' | 'result'>('intro');
       const [showInfo, setShowInfo] = useState(false);
@@ -46058,6 +46486,8 @@ const GeneratedDiagram: React.FC<DiagramProps> = ({ type, data, title }) => {
             return <AmortizationRenderer />;
          case 'inventory_valuation':
             return <InventoryValuationRenderer />;
+         case 'cogs_calculation':
+            return <COGSCalculationRenderer />;
          case 'pricing_strategy':
             return <PricingStrategyRenderer />;
          case 'budgeting':
