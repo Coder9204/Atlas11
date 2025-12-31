@@ -41552,6 +41552,273 @@ const GeneratedDiagram: React.FC<DiagramProps> = ({ type, data, title }) => {
       return null;
    };
 
+   const AmortizationRenderer = () => {
+      const [phase, setPhase] = useState<'intro' | 'tutorial' | 'play' | 'result'>('intro');
+      const [tutorialStep, setTutorialStep] = useState(0);
+      const [score, setScore] = useState(0);
+      const [level, setLevel] = useState(0);
+      const [gameLog, setGameLog] = useState<string[]>([]);
+      const [answers, setAnswers] = useState<{[key: string]: number}>({});
+      const [showResults, setShowResults] = useState(false);
+      const [quizIndex, setQuizIndex] = useState(0);
+      const [quizAnswered, setQuizAnswered] = useState(false);
+
+      const tutorials = [
+         { title: "Amortization vs Depreciation", content: "Depreciation = tangible assets (equipment). Amortization = intangible assets (patents, copyrights). Same concept, different assets!", icon: "📝" },
+         { title: "Intangible Assets", content: "Assets you can't touch: patents, trademarks, copyrights, goodwill, customer lists, software licenses. Often more valuable than physical assets!", icon: "💡" },
+         { title: "Finite vs Indefinite Life", content: "Finite life intangibles (patents, licenses) are amortized. Indefinite life (trademarks, goodwill) are NOT amortized but tested for impairment.", icon: "♾️" },
+         { title: "Straight-Line Amortization", content: "Most intangibles use straight-line: Cost ÷ Useful Life. A $100K patent with 10-year life = $10K/year amortization.", icon: "➖" },
+         { title: "Legal vs Economic Life", content: "Use the SHORTER of legal life (patent = 20 years) or economic life (technology obsolete in 5 years). Be conservative!", icon: "⚖️" },
+         { title: "Goodwill is Special", content: "Goodwill (premium paid in acquisition) is NOT amortized. Instead, it's tested annually for impairment and written down if value drops.", icon: "⭐" },
+         { title: "No Residual Value", content: "Unlike depreciation, amortization usually assumes $0 residual value. The entire cost is expensed over the useful life.", icon: "0️⃣" }
+      ];
+
+      const intangibles = [
+         { name: "Software Patent", cost: 500000, life: 10, type: "Patent" },
+         { name: "Customer List Acquisition", cost: 150000, life: 5, type: "Customer Intangible" },
+         { name: "Franchise License", cost: 300000, life: 15, type: "License" }
+      ];
+
+      const currentIntangible = intangibles[level];
+
+      const quizzes = [
+         { q: "Which is amortized?", opts: ["Machinery", "Patent", "Building", "Land"], correct: 1, explain: "Patents (intangible, finite life) are amortized. Machinery/buildings are depreciated. Land is neither." },
+         { q: "Goodwill acquired in a merger is:", opts: ["Amortized over 15 years", "Expensed immediately", "Tested for impairment annually", "Depreciated"], correct: 2, explain: "Goodwill is tested for impairment yearly. If value drops below carrying amount, it's written down." },
+         { q: "A patent costs $60K with 20-year legal life but 5-year useful life. Annual amortization?", opts: ["$3,000", "$12,000", "$60,000", "$6,000"], correct: 1, explain: "Use shorter life: $60K ÷ 5 years = $12,000/year. Economic life often shorter than legal." },
+         { q: "Amortization typically uses which method?", opts: ["Double declining", "Units of production", "Straight-line", "Sum of years' digits"], correct: 2, explain: "Intangibles almost always use straight-line amortization. The benefit is usually consumed evenly over time." },
+         { q: "A trademark you've held for 50 years should be:", opts: ["Fully amortized by now", "Never amortized", "Written off", "Revalued annually"], correct: 1, explain: "Trademarks have indefinite life - they're not amortized. Only tested for impairment." },
+         { q: "Intangible amortization expense appears on:", opts: ["Balance sheet only", "Income statement", "Cash flow statement only", "Statement of retained earnings"], correct: 1, explain: "Amortization is an expense on the income statement, reducing operating income." }
+      ];
+
+      const checkAnswer = () => {
+         setShowResults(true);
+         const expected = currentIntangible.cost / currentIntangible.life;
+         if (answers.annual === expected) {
+            setScore(prev => prev + 25);
+            setGameLog(prev => [...prev, `Correct! Annual amortization = $${expected.toLocaleString()}`]);
+         } else {
+            setGameLog(prev => [...prev, `Incorrect. ${currentIntangible.name}: $${currentIntangible.cost.toLocaleString()} ÷ ${currentIntangible.life} years = $${expected.toLocaleString()}`]);
+         }
+      };
+
+      const handleQuizAnswer = (idx: number) => {
+         if (quizAnswered) return;
+         setQuizAnswered(true);
+         if (idx === quizzes[quizIndex].correct) {
+            setScore(prev => prev + 15);
+            setGameLog(prev => [...prev, `Quiz ${quizIndex + 1}: Correct!`]);
+         }
+      };
+
+      const nextQuiz = () => {
+         if (quizIndex < quizzes.length - 1) {
+            setQuizIndex(prev => prev + 1);
+            setQuizAnswered(false);
+         } else {
+            setPhase('result');
+         }
+      };
+
+      const nextIntangible = () => {
+         if (level < intangibles.length - 1) {
+            setLevel(prev => prev + 1);
+            setAnswers({});
+            setShowResults(false);
+         } else {
+            setLevel(intangibles.length);
+         }
+      };
+
+      if (phase === 'intro') {
+         return (
+            <div className="flex flex-col items-center justify-center min-h-full bg-gradient-to-br from-purple-50 to-violet-100 p-6">
+               <div className="bg-white rounded-2xl shadow-xl p-8 max-w-lg w-full text-center">
+                  <div className="text-6xl mb-4">📝</div>
+                  <h1 className="text-2xl font-bold text-gray-800 mb-3">Amortization of Intangibles</h1>
+                  <p className="text-gray-600 mb-6">Learn to allocate the cost of intangible assets - patents, copyrights, trademarks, and more!</p>
+                  <div className="bg-purple-50 rounded-lg p-4 mb-6 text-left">
+                     <p className="text-sm text-purple-800">
+                        <strong>Key Intangibles:</strong><br/>
+                        💡 Patents - Legal protection for inventions<br/>
+                        ©️ Copyrights - Creative works protection<br/>
+                        ™️ Trademarks - Brand identity (indefinite)<br/>
+                        ⭐ Goodwill - Acquisition premium (no amortization)
+                     </p>
+                  </div>
+                  <button onClick={() => setPhase('tutorial')} className="w-full py-3 bg-purple-500 text-white rounded-xl font-semibold hover:bg-purple-600 transition-all">
+                     Start Learning
+                  </button>
+               </div>
+            </div>
+         );
+      }
+
+      if (phase === 'tutorial') {
+         const tut = tutorials[tutorialStep];
+         return (
+            <div className="flex flex-col items-center justify-center min-h-full bg-gradient-to-br from-purple-50 to-violet-100 p-6">
+               <div className="bg-white rounded-2xl shadow-xl p-8 max-w-lg w-full">
+                  <div className="flex justify-between items-center mb-6">
+                     <span className="text-sm text-gray-500">Step {tutorialStep + 1} of {tutorials.length}</span>
+                     <div className="flex gap-1">
+                        {tutorials.map((_, i) => (
+                           <div key={i} className={`w-2 h-2 rounded-full ${i <= tutorialStep ? 'bg-purple-500' : 'bg-gray-200'}`} />
+                        ))}
+                     </div>
+                  </div>
+                  <div className="text-4xl mb-4 text-center">{tut.icon}</div>
+                  <h2 className="text-xl font-bold text-gray-800 mb-3 text-center">{tut.title}</h2>
+                  <p className="text-gray-600 text-center mb-8">{tut.content}</p>
+                  <div className="flex gap-3">
+                     {tutorialStep > 0 && (
+                        <button onClick={() => setTutorialStep(prev => prev - 1)} className="flex-1 py-3 border-2 border-gray-200 rounded-xl font-semibold text-gray-600 hover:bg-gray-50">Back</button>
+                     )}
+                     <button
+                        onClick={() => tutorialStep < tutorials.length - 1 ? setTutorialStep(prev => prev + 1) : setPhase('play')}
+                        className="flex-1 py-3 bg-purple-500 text-white rounded-xl font-semibold hover:bg-purple-600"
+                     >
+                        {tutorialStep < tutorials.length - 1 ? 'Next' : 'Calculate Amortization!'}
+                     </button>
+                  </div>
+               </div>
+            </div>
+         );
+      }
+
+      if (phase === 'play') {
+         const inQuizMode = level >= intangibles.length;
+
+         if (!inQuizMode) {
+            const expected = currentIntangible.cost / currentIntangible.life;
+            return (
+               <div className="flex flex-col min-h-full bg-gradient-to-br from-purple-50 to-violet-100 p-4">
+                  <div className="flex justify-between items-center mb-4">
+                     <div>
+                        <h2 className="font-bold text-gray-800">{currentIntangible.name}</h2>
+                        <p className="text-sm text-gray-600">Calculate annual amortization</p>
+                     </div>
+                     <span className="text-xl font-bold text-purple-600">{score} pts</span>
+                  </div>
+
+                  <div className="bg-white rounded-xl shadow-lg p-6 mb-4">
+                     <div className="text-center mb-4">
+                        <span className="px-3 py-1 bg-purple-100 text-purple-700 rounded-full text-sm font-medium">{currentIntangible.type}</span>
+                     </div>
+                     <div className="grid grid-cols-2 gap-4 text-center">
+                        <div className="bg-gray-50 rounded-lg p-4">
+                           <p className="text-sm text-gray-500">Cost</p>
+                           <p className="text-2xl font-bold text-gray-800">${currentIntangible.cost.toLocaleString()}</p>
+                        </div>
+                        <div className="bg-gray-50 rounded-lg p-4">
+                           <p className="text-sm text-gray-500">Useful Life</p>
+                           <p className="text-2xl font-bold text-gray-800">{currentIntangible.life} years</p>
+                        </div>
+                     </div>
+                  </div>
+
+                  <div className="flex-1 bg-white rounded-xl shadow-lg p-6">
+                     <div className="text-center mb-4">
+                        <p className="text-lg font-semibold text-gray-800">Annual Amortization Expense</p>
+                        <p className="text-sm text-gray-500">Cost ÷ Useful Life = ?</p>
+                     </div>
+                     <div className="flex items-center justify-center gap-2">
+                        <span className="text-xl text-gray-600">$</span>
+                        <input
+                           type="number"
+                           value={answers.annual || ''}
+                           onChange={(e) => setAnswers({ annual: Number(e.target.value) })}
+                           disabled={showResults}
+                           className="w-40 px-4 py-3 text-xl text-center border-2 border-purple-300 rounded-xl"
+                           placeholder="Calculate..."
+                        />
+                     </div>
+                     {showResults && (
+                        <div className={`mt-4 p-4 rounded-lg text-center ${answers.annual === expected ? 'bg-green-50' : 'bg-red-50'}`}>
+                           <p className={`font-bold ${answers.annual === expected ? 'text-green-600' : 'text-red-600'}`}>
+                              {answers.annual === expected ? '✓ Correct!' : `Correct answer: $${expected.toLocaleString()}`}
+                           </p>
+                           <p className="text-sm text-gray-600 mt-1">${currentIntangible.cost.toLocaleString()} ÷ {currentIntangible.life} = ${expected.toLocaleString()}/year</p>
+                        </div>
+                     )}
+                  </div>
+
+                  <div className="mt-4">
+                     {!showResults ? (
+                        <button onClick={checkAnswer} disabled={!answers.annual} className={`w-full py-3 rounded-xl font-semibold ${answers.annual ? 'bg-purple-500 text-white hover:bg-purple-600' : 'bg-gray-200 text-gray-400'}`}>
+                           Check Answer
+                        </button>
+                     ) : (
+                        <button onClick={nextIntangible} className="w-full py-3 bg-purple-500 text-white rounded-xl font-semibold hover:bg-purple-600">
+                           {level < intangibles.length - 1 ? 'Next Intangible →' : 'Continue to Quiz →'}
+                        </button>
+                     )}
+                  </div>
+               </div>
+            );
+         }
+
+         const quiz = quizzes[quizIndex];
+         return (
+            <div className="flex flex-col min-h-full bg-gradient-to-br from-purple-50 to-violet-100 p-4">
+               <div className="flex justify-between items-center mb-4">
+                  <div>
+                     <h2 className="font-bold text-gray-800">Amortization Quiz</h2>
+                     <p className="text-sm text-gray-600">Question {quizIndex + 1} of {quizzes.length}</p>
+                  </div>
+                  <span className="text-xl font-bold text-purple-600">{score} pts</span>
+               </div>
+               <div className="flex-1 bg-white rounded-xl shadow-lg p-6">
+                  <h3 className="text-lg font-semibold text-gray-800 mb-6">{quiz.q}</h3>
+                  <div className="space-y-3">
+                     {quiz.opts.map((opt, idx) => (
+                        <button key={idx} onClick={() => handleQuizAnswer(idx)} disabled={quizAnswered}
+                           className={`w-full p-4 rounded-lg text-left font-medium transition-all ${quizAnswered ? idx === quiz.correct ? 'bg-green-100 border-2 border-green-500' : 'bg-gray-100' : 'bg-gray-50 hover:bg-purple-50 border-2 border-transparent hover:border-purple-300'}`}>
+                           {opt}
+                        </button>
+                     ))}
+                  </div>
+                  {quizAnswered && <div className="mt-4 p-4 bg-yellow-50 rounded-lg"><p className="text-sm text-yellow-800">💡 {quiz.explain}</p></div>}
+               </div>
+               {quizAnswered && (
+                  <div className="mt-4">
+                     <button onClick={nextQuiz} className="w-full py-3 bg-purple-500 text-white rounded-xl font-semibold hover:bg-purple-600">
+                        {quizIndex < quizzes.length - 1 ? 'Next Question →' : 'See Results'}
+                     </button>
+                  </div>
+               )}
+            </div>
+         );
+      }
+
+      if (phase === 'result') {
+         const maxScore = (intangibles.length * 25) + (quizzes.length * 15);
+         const percentage = Math.round((score / maxScore) * 100);
+         return (
+            <div className="flex flex-col items-center justify-center min-h-full bg-gradient-to-br from-purple-50 to-violet-100 p-6">
+               <div className="bg-white rounded-2xl shadow-xl p-8 max-w-lg w-full text-center">
+                  <div className="text-6xl mb-4">{percentage >= 80 ? '🏆' : percentage >= 60 ? '📊' : '📚'}</div>
+                  <h1 className="text-2xl font-bold text-gray-800 mb-2">Amortization Expert!</h1>
+                  <div className="text-4xl font-bold text-purple-600 mb-4">{score} / {maxScore}</div>
+                  <div className="w-full bg-gray-200 rounded-full h-3 mb-6">
+                     <div className="bg-purple-500 h-3 rounded-full" style={{ width: `${percentage}%` }} />
+                  </div>
+                  <div className="bg-gray-50 rounded-lg p-4 text-left mb-6">
+                     <h3 className="font-semibold text-gray-800 mb-2">🎯 Key Takeaways:</h3>
+                     <ul className="text-sm text-gray-600 space-y-2">
+                        <li>• Amortization = intangibles; Depreciation = tangibles</li>
+                        <li>• Use shorter of legal or economic life</li>
+                        <li>• Goodwill & trademarks: impairment test, no amortization</li>
+                        <li>• Usually straight-line, no salvage value</li>
+                     </ul>
+                  </div>
+                  <button onClick={() => { setPhase('intro'); setScore(0); setLevel(0); setAnswers({}); setShowResults(false); setQuizIndex(0); setQuizAnswered(false); }} className="w-full py-3 bg-purple-500 text-white rounded-xl font-semibold hover:bg-purple-600">Practice Again</button>
+               </div>
+            </div>
+         );
+      }
+      return null;
+   };
+
    const FinancialStatementsRenderer = () => {
       const [phase, setPhase] = useState<'intro' | 'play' | 'result'>('intro');
       const [showInfo, setShowInfo] = useState(false);
@@ -45383,6 +45650,8 @@ const GeneratedDiagram: React.FC<DiagramProps> = ({ type, data, title }) => {
             return <AccrualCashBasisRenderer />;
          case 'depreciation_methods':
             return <DepreciationMethodsRenderer />;
+         case 'amortization':
+            return <AmortizationRenderer />;
          case 'pricing_strategy':
             return <PricingStrategyRenderer />;
          case 'budgeting':
