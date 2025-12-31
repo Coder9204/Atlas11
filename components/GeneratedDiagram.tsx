@@ -46308,6 +46308,446 @@ const GeneratedDiagram: React.FC<DiagramProps> = ({ type, data, title }) => {
       return null;
    };
 
+   // Topic 28: Internal Controls - Protecting Business Assets
+   const InternalControlsRenderer = () => {
+      const [phase, setPhase] = useState<'intro' | 'tutorial' | 'play' | 'result'>('intro');
+      const [tutorialStep, setTutorialStep] = useState(0);
+      const [score, setScore] = useState(0);
+      const [scenarioIndex, setScenarioIndex] = useState(0);
+      const [gameLog, setGameLog] = useState<string[]>([]);
+      const [quizIndex, setQuizIndex] = useState(0);
+      const [quizAnswered, setQuizAnswered] = useState(false);
+      const [showInfo, setShowInfo] = useState(false);
+      const [infoContent, setInfoContent] = useState({ title: '', content: '' });
+      const [selectedControl, setSelectedControl] = useState<string | null>(null);
+      const [answered, setAnswered] = useState(false);
+
+      const tutorialSteps = [
+         { title: 'Welcome to Internal Controls!', content: 'Learn to design and evaluate controls that protect assets, ensure accurate records, and prevent fraud. Essential for any business!' },
+         { title: 'What Are Internal Controls?', content: 'Policies and procedures that: Safeguard assets, Ensure reliable financial reporting, Promote operational efficiency, Encourage compliance with laws.' },
+         { title: 'Preventive Controls', content: 'Stop problems BEFORE they happen. Examples: Segregation of duties, Authorization requirements, Access controls, Training programs.' },
+         { title: 'Detective Controls', content: 'Find problems AFTER they occur. Examples: Reconciliations, Audits, Exception reports, Variance analysis, Inventory counts.' },
+         { title: 'Corrective Controls', content: 'Fix problems once detected. Examples: Backup/recovery procedures, Disciplinary actions, Process improvements, Error correction workflows.' },
+         { title: 'Segregation of Duties', content: 'No single person should control all aspects of a transaction. Separate: Authorization, Custody, Recording. This prevents fraud and errors.' },
+         { title: 'Ready to Protect!', content: 'You\'ll identify control weaknesses, recommend fixes, and design control frameworks. Become a guardian of business integrity!' }
+      ];
+
+      const scenarios = [
+         {
+            title: 'Cash Handling Risk',
+            company: 'QuickMart Retail',
+            situation: 'The same employee opens mail, records customer payments, makes bank deposits, and reconciles the bank statement.',
+            weakness: 'No segregation of duties - one person controls entire cash cycle',
+            controlType: 'preventive',
+            bestControl: 'segregation',
+            options: [
+               { id: 'segregation', text: 'Separate duties among different employees', correct: true },
+               { id: 'camera', text: 'Install security cameras', correct: false },
+               { id: 'audit', text: 'Conduct surprise cash audits', correct: false },
+               { id: 'training', text: 'Provide ethics training', correct: false }
+            ],
+            explanation: 'Segregation of duties is the primary preventive control. Different people should handle receiving, recording, depositing, and reconciling.'
+         },
+         {
+            title: 'Inventory Shrinkage',
+            company: 'TechWare Distribution',
+            situation: 'Warehouse staff report inventory shortages, but no one knows when or how items went missing. There\'s no tracking of who accesses the warehouse.',
+            weakness: 'No detective controls to identify inventory discrepancies',
+            controlType: 'detective',
+            bestControl: 'reconciliation',
+            options: [
+               { id: 'reconciliation', text: 'Implement regular cycle counts and reconciliations', correct: true },
+               { id: 'lock', text: 'Add more locks to warehouse', correct: false },
+               { id: 'hire', text: 'Hire more warehouse staff', correct: false },
+               { id: 'insurance', text: 'Increase insurance coverage', correct: false }
+            ],
+            explanation: 'Regular cycle counts and reconciliation of physical inventory to records is a detective control that identifies when and where shrinkage occurs.'
+         },
+         {
+            title: 'Unauthorized Purchases',
+            company: 'GrowthStart Inc.',
+            situation: 'Any employee can create purchase orders without approval. Last month, someone ordered $50,000 of equipment that wasn\'t needed.',
+            weakness: 'No authorization controls on purchasing',
+            controlType: 'preventive',
+            bestControl: 'authorization',
+            options: [
+               { id: 'authorization', text: 'Require manager approval for purchases over $1,000', correct: true },
+               { id: 'review', text: 'Review all purchases monthly', correct: false },
+               { id: 'budget', text: 'Create a purchase budget', correct: false },
+               { id: 'vendor', text: 'Limit approved vendors', correct: false }
+            ],
+            explanation: 'Authorization limits are preventive controls that stop unauthorized purchases before they happen. Approval thresholds based on amount are common.'
+         },
+         {
+            title: 'Data Breach Risk',
+            company: 'HealthData Systems',
+            situation: 'All employees have access to the entire customer database including sensitive health information. There are no access logs.',
+            weakness: 'No access controls or monitoring',
+            controlType: 'preventive',
+            bestControl: 'access',
+            options: [
+               { id: 'access', text: 'Implement role-based access controls with audit logs', correct: true },
+               { id: 'encrypt', text: 'Encrypt all data at rest', correct: false },
+               { id: 'firewall', text: 'Upgrade the firewall', correct: false },
+               { id: 'training', text: 'Security awareness training', correct: false }
+            ],
+            explanation: 'Role-based access control (RBAC) limits data access to only what employees need. Audit logs provide detective capability to track who accessed what.'
+         },
+         {
+            title: 'Financial Reporting Errors',
+            company: 'AccuBooks Accounting',
+            situation: 'The company discovered that last quarter\'s financial statements had material errors. Journal entries were posted without review.',
+            weakness: 'No review controls over financial entries',
+            controlType: 'preventive',
+            bestControl: 'review',
+            options: [
+               { id: 'review', text: 'Require supervisor review of all journal entries', correct: true },
+               { id: 'software', text: 'Upgrade accounting software', correct: false },
+               { id: 'restate', text: 'Restate prior financials', correct: false },
+               { id: 'outsource', text: 'Outsource bookkeeping', correct: false }
+            ],
+            explanation: 'Supervisory review of journal entries is a preventive control that catches errors before they affect financial statements. This is a key control for SOX compliance.'
+         },
+         {
+            title: 'Payroll Fraud',
+            company: 'ServicePro Solutions',
+            situation: 'The HR manager who sets up new employees in the system also approves payroll and has access to change direct deposit information.',
+            weakness: 'Lack of segregation in payroll processing',
+            controlType: 'preventive',
+            bestControl: 'segregation',
+            options: [
+               { id: 'segregation', text: 'Separate employee setup from payroll approval', correct: true },
+               { id: 'audit', text: 'Annual payroll audit', correct: false },
+               { id: 'verify', text: 'Verify new hire documents', correct: false },
+               { id: 'limit', text: 'Limit pay rate changes', correct: false }
+            ],
+            explanation: 'In payroll, separate: 1) Adding/modifying employees, 2) Approving timesheets, 3) Processing payments, 4) Reconciling payroll. No single person should control multiple steps.'
+         }
+      ];
+
+      const quizQuestions = [
+         { q: 'Which control type PREVENTS problems before they occur?', options: ['Detective', 'Corrective', 'Preventive', 'Reactive'], correct: 2 },
+         { q: 'Bank reconciliation is an example of a:', options: ['Preventive control', 'Detective control', 'Corrective control', 'Physical control'], correct: 1 },
+         { q: 'Segregation of duties means:', options: ['Multiple approvals required', 'No single person controls entire process', 'Annual rotation of duties', 'Documented procedures'], correct: 1 },
+         { q: 'Which is NOT a component of the COSO framework?', options: ['Control Environment', 'Risk Assessment', 'Profit Maximization', 'Monitoring Activities'], correct: 2 },
+         { q: 'Access controls are primarily:', options: ['Detective', 'Corrective', 'Preventive', 'Compensating'], correct: 2 },
+         { q: 'A surprise cash count is a:', options: ['Preventive control', 'Detective control', 'Corrective control', 'IT control'], correct: 1 }
+      ];
+
+      const openInfo = (title: string, content: string) => {
+         setInfoContent({ title, content });
+         setShowInfo(true);
+      };
+
+      const handleControlSelect = (controlId: string) => {
+         if (answered) return;
+         setSelectedControl(controlId);
+         setAnswered(true);
+         const scenario = scenarios[scenarioIndex];
+         const isCorrect = scenario.options.find(o => o.id === controlId)?.correct;
+         if (isCorrect) {
+            setScore(s => s + 15);
+            setGameLog(prev => [...prev, `Correct control identified for ${scenario.company}`]);
+         } else {
+            setGameLog(prev => [...prev, `Incorrect - review ${scenario.controlType} controls`]);
+         }
+      };
+
+      const nextScenario = () => {
+         if (scenarioIndex < scenarios.length - 1) {
+            setScenarioIndex(scenarioIndex + 1);
+            setSelectedControl(null);
+            setAnswered(false);
+         } else {
+            setPhase('result');
+         }
+      };
+
+      // Intro Phase
+      if (phase === 'intro') {
+         return (
+            <div className="p-6 bg-gradient-to-br from-slate-50 to-gray-100 rounded-2xl max-w-2xl mx-auto">
+               <h2 className="text-2xl font-bold text-slate-800 mb-4 flex items-center gap-2">
+                  🛡️ Internal Controls
+                  <button onClick={() => openInfo('Why Internal Controls Matter', 'Strong internal controls: Prevent fraud and theft, Ensure accurate financial reporting, Maintain regulatory compliance, Protect company reputation, Reduce operational risks.')} className="text-slate-500 hover:text-slate-700">ℹ️</button>
+               </h2>
+               <div className="bg-white/80 p-5 rounded-xl mb-6">
+                  <p className="text-gray-700 mb-4">Design controls that protect assets and ensure integrity!</p>
+                  <div className="grid grid-cols-3 gap-3 mb-4">
+                     <div className="bg-blue-50 p-3 rounded-lg text-center border-t-4 border-blue-500">
+                        <div className="text-2xl mb-1">🚫</div>
+                        <div className="font-bold text-blue-800 text-sm">Preventive</div>
+                        <div className="text-xs text-blue-600">Stop before it happens</div>
+                     </div>
+                     <div className="bg-amber-50 p-3 rounded-lg text-center border-t-4 border-amber-500">
+                        <div className="text-2xl mb-1">🔍</div>
+                        <div className="font-bold text-amber-800 text-sm">Detective</div>
+                        <div className="text-xs text-amber-600">Find after it occurs</div>
+                     </div>
+                     <div className="bg-green-50 p-3 rounded-lg text-center border-t-4 border-green-500">
+                        <div className="text-2xl mb-1">🔧</div>
+                        <div className="font-bold text-green-800 text-sm">Corrective</div>
+                        <div className="text-xs text-green-600">Fix the problem</div>
+                     </div>
+                  </div>
+                  <div className="text-sm text-gray-600">
+                     <strong>You'll learn:</strong> Control types, Segregation of duties, Risk assessment, Control design
+                  </div>
+               </div>
+               <button onClick={() => setPhase('tutorial')} className="w-full py-3 bg-slate-700 text-white rounded-xl font-semibold hover:bg-slate-800 transition-all">Start Learning</button>
+               {showInfo && (
+                  <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" onClick={() => setShowInfo(false)}>
+                     <div className="bg-white p-6 rounded-xl max-w-md m-4" onClick={e => e.stopPropagation()}>
+                        <h3 className="font-bold text-lg mb-2">{infoContent.title}</h3>
+                        <p className="text-gray-600">{infoContent.content}</p>
+                        <button onClick={() => setShowInfo(false)} className="mt-4 px-4 py-2 bg-slate-700 text-white rounded-lg">Got it!</button>
+                     </div>
+                  </div>
+               )}
+            </div>
+         );
+      }
+
+      // Tutorial Phase
+      if (phase === 'tutorial') {
+         const step = tutorialSteps[tutorialStep];
+         return (
+            <div className="p-6 bg-gradient-to-br from-slate-50 to-gray-100 rounded-2xl max-w-2xl mx-auto">
+               <div className="flex justify-between items-center mb-4">
+                  <h2 className="text-xl font-bold text-slate-800">Tutorial</h2>
+                  <span className="text-sm text-slate-600">Step {tutorialStep + 1} of {tutorialSteps.length}</span>
+               </div>
+               <div className="bg-white/90 p-6 rounded-xl mb-6">
+                  <h3 className="font-bold text-lg text-gray-800 mb-3">{step.title}</h3>
+                  <p className="text-gray-600">{step.content}</p>
+
+                  {tutorialStep === 2 && (
+                     <div className="mt-4 p-4 bg-blue-50 rounded-lg border border-blue-200">
+                        <div className="font-semibold text-blue-800 mb-2">🚫 Preventive Control Examples:</div>
+                        <div className="grid grid-cols-2 gap-2 text-sm text-blue-700">
+                           <span>• Segregation of duties</span>
+                           <span>• Password requirements</span>
+                           <span>• Approval workflows</span>
+                           <span>• Access restrictions</span>
+                        </div>
+                     </div>
+                  )}
+
+                  {tutorialStep === 3 && (
+                     <div className="mt-4 p-4 bg-amber-50 rounded-lg border border-amber-200">
+                        <div className="font-semibold text-amber-800 mb-2">🔍 Detective Control Examples:</div>
+                        <div className="grid grid-cols-2 gap-2 text-sm text-amber-700">
+                           <span>• Bank reconciliations</span>
+                           <span>• Variance reports</span>
+                           <span>• Physical inventory counts</span>
+                           <span>• Internal audits</span>
+                        </div>
+                     </div>
+                  )}
+
+                  {tutorialStep === 5 && (
+                     <div className="mt-4 p-4 bg-purple-50 rounded-lg border border-purple-200">
+                        <div className="font-semibold text-purple-800 mb-2">Segregation of Duties Triangle:</div>
+                        <div className="flex justify-center items-center gap-4 mt-2">
+                           <div className="text-center p-2 bg-white rounded-lg">
+                              <div className="text-xl">✍️</div>
+                              <div className="text-xs text-purple-700">Authorization</div>
+                           </div>
+                           <div className="text-center p-2 bg-white rounded-lg">
+                              <div className="text-xl">🔐</div>
+                              <div className="text-xs text-purple-700">Custody</div>
+                           </div>
+                           <div className="text-center p-2 bg-white rounded-lg">
+                              <div className="text-xl">📝</div>
+                              <div className="text-xs text-purple-700">Recording</div>
+                           </div>
+                        </div>
+                        <div className="text-xs text-center text-gray-500 mt-2">Each function should be performed by different people</div>
+                     </div>
+                  )}
+               </div>
+               <div className="w-full bg-gray-200 rounded-full h-2 mb-4">
+                  <div className="bg-slate-700 h-2 rounded-full transition-all" style={{ width: `${((tutorialStep + 1) / tutorialSteps.length) * 100}%` }}></div>
+               </div>
+               <div className="flex gap-3">
+                  {tutorialStep > 0 && <button onClick={() => setTutorialStep(tutorialStep - 1)} className="flex-1 py-2 bg-gray-200 rounded-lg hover:bg-gray-300">Back</button>}
+                  <button onClick={() => tutorialStep < tutorialSteps.length - 1 ? setTutorialStep(tutorialStep + 1) : setPhase('play')} className="flex-1 py-2 bg-slate-700 text-white rounded-lg hover:bg-slate-800">
+                     {tutorialStep < tutorialSteps.length - 1 ? 'Next' : 'Start Assessment!'}
+                  </button>
+               </div>
+            </div>
+         );
+      }
+
+      // Play Phase
+      if (phase === 'play') {
+         const scenario = scenarios[scenarioIndex];
+         return (
+            <div className="p-6 bg-gradient-to-br from-slate-50 to-gray-100 rounded-2xl max-w-2xl mx-auto">
+               <div className="flex justify-between items-center mb-4">
+                  <h2 className="text-xl font-bold text-slate-800">{scenario.company}</h2>
+                  <div className="flex items-center gap-3">
+                     <span className="bg-slate-200 px-3 py-1 rounded-full text-slate-700 text-sm">Score: {score}</span>
+                     <span className="text-sm text-gray-500">Case {scenarioIndex + 1}/{scenarios.length}</span>
+                  </div>
+               </div>
+
+               <div className="bg-white/90 p-5 rounded-xl mb-4">
+                  <h3 className="font-bold text-gray-800 mb-2">{scenario.title}</h3>
+
+                  {/* Situation */}
+                  <div className="bg-red-50 p-4 rounded-lg mb-4 border-l-4 border-red-400">
+                     <div className="text-sm font-semibold text-red-800 mb-1">⚠️ Situation:</div>
+                     <p className="text-sm text-gray-700">{scenario.situation}</p>
+                  </div>
+
+                  {/* Weakness Identified */}
+                  <div className="bg-amber-50 p-3 rounded-lg mb-4">
+                     <div className="text-sm text-amber-800">
+                        <strong>Control Weakness:</strong> {scenario.weakness}
+                     </div>
+                     <div className="text-xs text-amber-600 mt-1">
+                        Recommended: <span className="capitalize font-semibold">{scenario.controlType}</span> control
+                     </div>
+                  </div>
+
+                  {/* Control Options */}
+                  <div className="mb-4">
+                     <p className="font-semibold text-gray-800 mb-3">Select the best control to address this weakness:</p>
+                     <div className="grid gap-2">
+                        {scenario.options.map(option => (
+                           <button
+                              key={option.id}
+                              onClick={() => handleControlSelect(option.id)}
+                              disabled={answered}
+                              className={`p-3 rounded-lg text-left transition-all border-2 ${
+                                 answered
+                                    ? option.correct
+                                       ? 'bg-green-50 border-green-500'
+                                       : selectedControl === option.id
+                                          ? 'bg-red-50 border-red-500'
+                                          : 'bg-gray-50 border-gray-200'
+                                    : 'bg-gray-50 border-gray-200 hover:border-slate-400 hover:bg-slate-50'
+                              }`}
+                           >
+                              <span className="text-sm">{option.text}</span>
+                           </button>
+                        ))}
+                     </div>
+                  </div>
+
+                  {/* Explanation */}
+                  {answered && (
+                     <div className={`p-4 rounded-xl ${scenarios[scenarioIndex].options.find(o => o.id === selectedControl)?.correct ? 'bg-green-50 border-2 border-green-300' : 'bg-amber-50 border-2 border-amber-300'}`}>
+                        <div className="font-bold mb-2">
+                           {scenarios[scenarioIndex].options.find(o => o.id === selectedControl)?.correct ? '✅ Excellent!' : '📚 Learning Opportunity'}
+                        </div>
+                        <p className="text-sm text-gray-700">{scenario.explanation}</p>
+                        <button onClick={nextScenario} className="mt-3 px-4 py-2 bg-slate-700 text-white rounded-lg hover:bg-slate-800">
+                           {scenarioIndex < scenarios.length - 1 ? 'Next Case →' : 'Complete Assessment'}
+                        </button>
+                     </div>
+                  )}
+               </div>
+
+               {/* Control Type Legend */}
+               <div className="bg-white/60 p-3 rounded-lg">
+                  <div className="grid grid-cols-3 gap-2 text-xs text-center">
+                     <div className={`p-2 rounded ${scenario.controlType === 'preventive' ? 'bg-blue-100 ring-2 ring-blue-400' : 'bg-blue-50'}`}>
+                        <span className="text-blue-700">🚫 Preventive</span>
+                     </div>
+                     <div className={`p-2 rounded ${scenario.controlType === 'detective' ? 'bg-amber-100 ring-2 ring-amber-400' : 'bg-amber-50'}`}>
+                        <span className="text-amber-700">🔍 Detective</span>
+                     </div>
+                     <div className={`p-2 rounded ${scenario.controlType === 'corrective' ? 'bg-green-100 ring-2 ring-green-400' : 'bg-green-50'}`}>
+                        <span className="text-green-700">🔧 Corrective</span>
+                     </div>
+                  </div>
+               </div>
+
+               {showInfo && (
+                  <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" onClick={() => setShowInfo(false)}>
+                     <div className="bg-white p-6 rounded-xl max-w-md m-4" onClick={e => e.stopPropagation()}>
+                        <h3 className="font-bold text-lg mb-2">{infoContent.title}</h3>
+                        <p className="text-gray-600">{infoContent.content}</p>
+                        <button onClick={() => setShowInfo(false)} className="mt-4 px-4 py-2 bg-slate-700 text-white rounded-lg">Got it!</button>
+                     </div>
+                  </div>
+               )}
+            </div>
+         );
+      }
+
+      // Result Phase
+      if (phase === 'result') {
+         const quiz = quizQuestions[quizIndex];
+         const maxScore = (scenarios.length * 15) + (quizQuestions.length * 10);
+         const percentage = Math.round((score / maxScore) * 100);
+
+         if (quizIndex < quizQuestions.length) {
+            return (
+               <div className="p-6 bg-gradient-to-br from-slate-50 to-gray-100 rounded-2xl max-w-2xl mx-auto">
+                  <h2 className="text-xl font-bold text-slate-800 mb-4">Knowledge Check</h2>
+                  <div className="bg-white/90 p-5 rounded-xl mb-4">
+                     <div className="text-sm text-gray-500 mb-2">Question {quizIndex + 1} of {quizQuestions.length}</div>
+                     <p className="font-semibold text-gray-800 mb-4">{quiz.q}</p>
+                     <div className="grid gap-2">
+                        {quiz.options.map((opt, i) => (
+                           <button
+                              key={i}
+                              onClick={() => {
+                                 if (!quizAnswered) {
+                                    if (i === quiz.correct) setScore(s => s + 10);
+                                    setQuizAnswered(true);
+                                    setGameLog(prev => [...prev, `Quiz ${quizIndex + 1}: ${i === quiz.correct ? 'Correct!' : 'Incorrect'}`]);
+                                 }
+                              }}
+                              disabled={quizAnswered}
+                              className={`p-3 rounded-lg text-left transition-all ${quizAnswered ? (i === quiz.correct ? 'bg-green-100 border-green-500' : 'bg-gray-100') : 'bg-gray-50 hover:bg-gray-100'} border-2 ${quizAnswered && i === quiz.correct ? 'border-green-500' : 'border-transparent'}`}
+                           >
+                              {opt}
+                           </button>
+                        ))}
+                     </div>
+                  </div>
+                  {quizAnswered && (
+                     <button onClick={() => { setQuizIndex(quizIndex + 1); setQuizAnswered(false); }} className="w-full py-3 bg-slate-700 text-white rounded-xl font-semibold hover:bg-slate-800">
+                        {quizIndex < quizQuestions.length - 1 ? 'Next Question' : 'See Results'}
+                     </button>
+                  )}
+               </div>
+            );
+         }
+
+         return (
+            <div className="p-6 bg-gradient-to-br from-slate-50 to-gray-100 rounded-2xl max-w-2xl mx-auto">
+               <h2 className="text-2xl font-bold text-slate-800 mb-4">🎉 Controls Assessment Complete!</h2>
+               <div className="bg-white/90 p-6 rounded-xl mb-6">
+                  <div className="text-center mb-6">
+                     <div className="text-5xl font-bold text-slate-700 mb-2">{percentage}%</div>
+                     <div className="text-gray-600">Final Score: {score} / {maxScore}</div>
+                     <div className="text-lg font-semibold mt-2">
+                        {percentage >= 90 ? '🏆 Control Expert!' : percentage >= 70 ? '🛡️ Strong Guardian' : percentage >= 50 ? '📈 Good Progress' : '📚 Keep Learning'}
+                     </div>
+                  </div>
+                  <div className="bg-slate-100 p-4 rounded-lg">
+                     <h3 className="font-bold text-slate-800 mb-2">Key Control Principles:</h3>
+                     <ul className="text-sm text-gray-700 space-y-1">
+                        <li>• Preventive controls stop problems before they happen</li>
+                        <li>• Detective controls find problems after they occur</li>
+                        <li>• Segregate authorization, custody, and recording</li>
+                        <li>• Layer controls for defense in depth</li>
+                        <li>• Monitor and test controls regularly</li>
+                     </ul>
+                  </div>
+               </div>
+               <button onClick={() => { setPhase('intro'); setScore(0); setScenarioIndex(0); setSelectedControl(null); setAnswered(false); setQuizIndex(0); setQuizAnswered(false); }} className="w-full py-3 bg-slate-700 text-white rounded-xl font-semibold hover:bg-slate-800">Practice Again</button>
+            </div>
+         );
+      }
+      return null;
+   };
+
    const FinancialStatementsRenderer = () => {
       const [phase, setPhase] = useState<'intro' | 'play' | 'result'>('intro');
       const [showInfo, setShowInfo] = useState(false);
@@ -50163,6 +50603,8 @@ const GeneratedDiagram: React.FC<DiagramProps> = ({ type, data, title }) => {
             return <FixedVariableCostsRenderer />;
          case 'break_even_analysis':
             return <BreakEvenAnalysisRenderer />;
+         case 'internal_controls':
+            return <InternalControlsRenderer />;
          case 'pricing_strategy':
             return <PricingStrategyRenderer />;
          case 'budgeting':
