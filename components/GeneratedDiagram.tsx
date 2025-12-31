@@ -38676,6 +38676,335 @@ const GeneratedDiagram: React.FC<DiagramProps> = ({ type, data, title }) => {
       return null;
    };
 
+   // TOPIC 8: Accounts Receivable & Collections - Interactive Educational Game
+   const AccountsReceivableRenderer = () => {
+      const [phase, setPhase] = useState<'intro' | 'tutorial' | 'aging' | 'collect' | 'result'>('intro');
+      const [tutorialStep, setTutorialStep] = useState(0);
+      const [showInfo, setShowInfo] = useState(false);
+      const [infoContent, setInfoContent] = useState<{title: string; content: string} | null>(null);
+      const [score, setScore] = useState(0);
+      const [selectedCustomer, setSelectedCustomer] = useState<number | null>(null);
+      const [collectionActions, setCollectionActions] = useState<{id: number; action: string; result: string}[]>([]);
+      const [currentScenario, setCurrentScenario] = useState(0);
+      const [scenarioAnswer, setScenarioAnswer] = useState<string | null>(null);
+      const [showFeedback, setShowFeedback] = useState(false);
+      const [feedbackCorrect, setFeedbackCorrect] = useState(false);
+      const [gameLog, setGameLog] = useState<string[]>([]);
+      const [correctAnswers, setCorrectAnswers] = useState(0);
+      const [totalAnswered, setTotalAnswered] = useState(0);
+      const [totalCollected, setTotalCollected] = useState(0);
+
+      const customers = [
+         { id: 1, name: 'Acme Corp', current: 5000, days30: 0, days60: 0, days90: 0, total: 5000, creditLimit: 20000, paymentHistory: 'Excellent', contact: 'John Smith' },
+         { id: 2, name: 'Beta LLC', current: 0, days30: 3000, days60: 0, days90: 0, total: 3000, creditLimit: 10000, paymentHistory: 'Good', contact: 'Jane Doe' },
+         { id: 3, name: 'Gamma Inc', current: 0, days30: 0, days60: 8000, days90: 0, total: 8000, creditLimit: 15000, paymentHistory: 'Fair', contact: 'Bob Wilson' },
+         { id: 4, name: 'Delta Co', current: 0, days30: 0, days60: 0, days90: 12000, total: 12000, creditLimit: 25000, paymentHistory: 'Poor', contact: 'Mary Johnson' },
+         { id: 5, name: 'Epsilon Ltd', current: 2000, days30: 1500, days60: 3000, days90: 0, total: 6500, creditLimit: 12000, paymentHistory: 'Good', contact: 'Tom Brown' },
+         { id: 6, name: 'Zeta Systems', current: 0, days30: 0, days60: 0, days90: 5000, total: 5000, creditLimit: 8000, paymentHistory: 'Poor', contact: 'Sue Davis' }
+      ];
+
+      const collectionStrategies = [
+         { id: 'reminder', name: '📧 Send Reminder', description: 'Friendly email reminder', effectiveness: { current: 90, days30: 70, days60: 40, days90: 20 }, cost: 0 },
+         { id: 'call', name: '📞 Phone Call', description: 'Personal follow-up call', effectiveness: { current: 95, days30: 80, days60: 60, days90: 40 }, cost: 0 },
+         { id: 'discount', name: '💸 Offer Discount', description: '5% discount for immediate payment', effectiveness: { current: 80, days30: 85, days60: 75, days90: 60 }, cost: 5 },
+         { id: 'payment_plan', name: '📅 Payment Plan', description: 'Structured installment schedule', effectiveness: { current: 50, days30: 60, days60: 70, days90: 75 }, cost: 0 },
+         { id: 'collections', name: '⚖️ Send to Collections', description: 'Third-party collection agency', effectiveness: { current: 20, days30: 30, days60: 50, days90: 65 }, cost: 25 },
+         { id: 'writeoff', name: '❌ Write Off', description: 'Record as bad debt expense', effectiveness: { current: 0, days30: 0, days60: 0, days90: 0 }, cost: 100 }
+      ];
+
+      const scenarios = [
+         { question: 'Customer has $10,000 outstanding for 45 days. They claim they never received the invoice. Best action?', correctAnswer: 'Resend invoice and call to confirm receipt', options: ['Resend invoice and call to confirm receipt', 'Send to collections immediately', 'Write off as bad debt', 'Offer 50% discount'], explanation: 'Always verify the customer received the invoice first. Many "late" payments are simply communication issues.' },
+         { question: 'Long-time customer (5 years, always paid on time) is suddenly 60 days late. What do you do first?', correctAnswer: 'Call to understand their situation', options: ['Send to collections', 'Call to understand their situation', 'Stop all future orders', 'Write off immediately'], explanation: 'Good customers deserve the benefit of the doubt. A call may reveal temporary issues and preserve the relationship.' },
+         { question: 'Customer owes $5,000 for 90+ days. They offer to pay $3,000 immediately to settle. Accept?', correctAnswer: 'Accept - 60% recovery beats collections risk', options: ['Refuse - demand full amount', 'Accept - 60% recovery beats collections risk', 'Send to collections for full amount', 'Offer 50% instead'], explanation: 'At 90+ days, recovery rates drop significantly. Accepting $3,000 (60%) now is often better than risking $0 or paying 25%+ to collections.' },
+         { question: 'Your AR aging shows: Current $50K, 30-day $20K, 60-day $10K, 90+ day $10K. DSO is 45 days. Is this healthy?', correctAnswer: 'Concerning - too much in 60+ day buckets', options: ['Excellent - most is current', 'Concerning - too much in 60+ day buckets', 'Terrible - DSO should be 15 days', 'Cannot determine without more info'], explanation: 'While 55% is current, having 22% in 60+ buckets signals collection issues. Industry benchmark for DSO varies but 45 days with this aging pattern warrants attention.' },
+         { question: 'What does "Allowance for Doubtful Accounts" represent?', correctAnswer: 'Estimated uncollectible receivables', options: ['Cash reserve for bad debts', 'Estimated uncollectible receivables', 'Interest charged on late payments', 'Discount for early payment'], explanation: 'The Allowance is a contra-asset that reduces AR on the balance sheet. It estimates what portion of AR will never be collected.' },
+         { question: 'Customer with poor payment history wants to place a $15,000 order. Their credit limit is $10,000. Best approach?', correctAnswer: 'Require prepayment or reduce order size', options: ['Approve it anyway', 'Require prepayment or reduce order size', 'Refuse the order entirely', 'Double their credit limit'], explanation: 'Protecting cash flow means enforcing credit policies. Options: prepayment, COD, or order within credit limit.' }
+      ];
+
+      const tutorialSteps = [
+         { title: 'Welcome to Accounts Receivable!', content: 'AR is what others OWE YOU. The faster you collect, the better your cash flow. Late AR = cash stuck that could be working for you.', highlight: 'overview' },
+         { title: 'The AR Aging Report', content: 'Aging buckets show how long invoices are outstanding: Current (0-30), 31-60 days, 61-90 days, 90+ days. Older = harder to collect.', highlight: 'aging' },
+         { title: 'Days Sales Outstanding (DSO)', content: 'DSO = (AR ÷ Revenue) × Days. It measures average collection time. Lower DSO = faster cash conversion. Industry benchmarks vary.', highlight: 'dso' },
+         { title: 'Collection Strategies', content: 'Match strategy to situation: Reminders for recent, calls for relationships, payment plans for struggling customers, collections for non-responsive.', highlight: 'strategies' },
+         { title: 'Bad Debt & Allowance', content: 'Some AR will never be collected. The Allowance for Doubtful Accounts estimates this. When certain, write off against the allowance.', highlight: 'baddebt' },
+         { title: 'Credit Policy', content: 'Prevention > Collection. Set credit limits, check credit history, require deposits for risky customers. Balance sales vs. risk.', highlight: 'credit' },
+         { title: "Let's Practice!", content: "Analyze an AR aging report, choose collection strategies, and test your knowledge with real scenarios!", highlight: 'game' }
+      ];
+
+      const showInfoModal = (title: string, content: string) => { setInfoContent({ title, content }); setShowInfo(true); };
+
+      const getTotalAR = () => customers.reduce((sum, c) => sum + c.total, 0);
+      const getAgingTotals = () => ({
+         current: customers.reduce((sum, c) => sum + c.current, 0),
+         days30: customers.reduce((sum, c) => sum + c.days30, 0),
+         days60: customers.reduce((sum, c) => sum + c.days60, 0),
+         days90: customers.reduce((sum, c) => sum + c.days90, 0)
+      });
+
+      const getAgingBucket = (customer: typeof customers[0]) => {
+         if (customer.days90 > 0) return '90+';
+         if (customer.days60 > 0) return '60';
+         if (customer.days30 > 0) return '30';
+         return 'current';
+      };
+
+      const handleCollectionAction = (customerId: number, strategyId: string) => {
+         const customer = customers.find(c => c.id === customerId);
+         const strategy = collectionStrategies.find(s => s.id === strategyId);
+         if (!customer || !strategy) return;
+
+         const bucket = getAgingBucket(customer);
+         const effectivenessKey = bucket === '90+' ? 'days90' : bucket === '60' ? 'days60' : bucket === '30' ? 'days30' : 'current';
+         const successRate = strategy.effectiveness[effectivenessKey];
+         const success = Math.random() * 100 < successRate;
+
+         let result = '';
+         let collected = 0;
+         let points = 0;
+
+         if (strategyId === 'writeoff') {
+            result = `Bad debt expense recorded: $${customer.total.toLocaleString()}`;
+            points = 5;
+         } else if (success) {
+            collected = Math.round(customer.total * (1 - strategy.cost / 100));
+            result = `Collected $${collected.toLocaleString()}${strategy.cost > 0 ? ` (after ${strategy.cost}% cost)` : ''}`;
+            points = 20 + (bucket === '90+' ? 10 : bucket === '60' ? 5 : 0);
+            setTotalCollected(p => p + collected);
+         } else {
+            result = `No response yet. Try different approach or escalate.`;
+            points = 5;
+         }
+
+         setCollectionActions(p => [...p, { id: customerId, action: strategy.name, result }]);
+         setScore(p => p + points);
+         setTotalAnswered(p => p + 1);
+         if (success || strategyId === 'writeoff') setCorrectAnswers(p => p + 1);
+         setGameLog(p => [...p, `${strategy.name} on ${customer.name}: ${result}`]);
+         setSelectedCustomer(null);
+
+         if (collectionActions.length >= 5) {
+            setTimeout(() => { setPhase('collect'); setGameLog(p => [...p, 'Moving to scenario questions']); }, 1000);
+         }
+      };
+
+      const handleScenarioAnswer = (ans: string) => {
+         const s = scenarios[currentScenario];
+         const correct = ans === s.correctAnswer;
+         setScenarioAnswer(ans); setShowFeedback(true); setFeedbackCorrect(correct); setTotalAnswered(p => p + 1);
+         if (correct) { setScore(p => p + 25); setCorrectAnswers(p => p + 1); setGameLog(p => [...p, `✓ ${s.question.substring(0, 40)}...`]); }
+         else setGameLog(p => [...p, `✗ ${s.question.substring(0, 40)}...`]);
+         setTimeout(() => {
+            setShowFeedback(false); setScenarioAnswer(null);
+            if (currentScenario < scenarios.length - 1) setCurrentScenario(p => p + 1);
+            else { setPhase('result'); setGameLog(p => [...p, `Completed! Score: ${score + (correct ? 25 : 0)}`]); }
+         }, 2500);
+      };
+
+      if (phase === 'intro') {
+         const aging = getAgingTotals();
+         return (
+            <div className="p-6 bg-gradient-to-br from-slate-900 via-sky-900 to-slate-900 rounded-2xl text-white min-h-[600px]">
+               <div className="text-center mb-8">
+                  <h2 className="text-3xl font-bold mb-3">💰 Accounts Receivable & Collections</h2>
+                  <p className="text-lg text-white/80">Master what others OWE YOU</p>
+               </div>
+               <div className="bg-white/10 backdrop-blur rounded-xl p-6 mb-6">
+                  <div className="flex items-start gap-3"><span className="text-3xl">💡</span>
+                     <div><h3 className="font-bold text-xl mb-2">Key Insight</h3>
+                        <p className="text-white/90">AR is what others owe you. The faster you collect, the better your cash flow. Aging reports show who's late—older buckets are harder to collect.</p>
+                     </div>
+                  </div>
+               </div>
+               <div className="grid grid-cols-2 gap-4 mb-6">
+                  <div className="bg-white/5 rounded-xl p-4">
+                     <h3 className="font-bold mb-3 flex items-center gap-2">🎯 What You'll Learn <button onClick={() => showInfoModal('Objectives', 'Master AR aging analysis, collection strategies, DSO calculation, bad debt management, and credit policy.')} className="text-sky-400">ℹ️</button></h3>
+                     <ul className="space-y-2 text-white/80 text-sm">
+                        <li className="flex items-center gap-2"><span className="text-green-400">✓</span> Reading AR aging reports</li>
+                        <li className="flex items-center gap-2"><span className="text-green-400">✓</span> Collection strategies by situation</li>
+                        <li className="flex items-center gap-2"><span className="text-green-400">✓</span> Days Sales Outstanding (DSO)</li>
+                        <li className="flex items-center gap-2"><span className="text-green-400">✓</span> Bad debt & allowance</li>
+                     </ul>
+                  </div>
+                  <div className="bg-white/5 rounded-xl p-4">
+                     <h3 className="font-bold mb-3">🎮 Game Structure</h3>
+                     <ul className="space-y-2 text-white/80 text-sm">
+                        <li className="flex items-center gap-2"><span className="text-sky-400">1</span> Tutorial</li>
+                        <li className="flex items-center gap-2"><span className="text-sky-400">2</span> Analyze aging report</li>
+                        <li className="flex items-center gap-2"><span className="text-sky-400">3</span> Choose collection actions</li>
+                        <li className="flex items-center gap-2"><span className="text-sky-400">4</span> Scenario challenges</li>
+                     </ul>
+                  </div>
+               </div>
+               <div className="bg-gradient-to-r from-sky-500/20 to-blue-500/20 rounded-xl p-4 mb-6">
+                  <h3 className="font-bold mb-3">📊 Sample AR Aging</h3>
+                  <div className="grid grid-cols-5 gap-2 text-center text-sm">
+                     <div className="bg-emerald-500/30 rounded p-2"><div className="font-bold">${aging.current.toLocaleString()}</div><div className="text-xs">Current</div></div>
+                     <div className="bg-amber-500/30 rounded p-2"><div className="font-bold">${aging.days30.toLocaleString()}</div><div className="text-xs">1-30 Days</div></div>
+                     <div className="bg-orange-500/30 rounded p-2"><div className="font-bold">${aging.days60.toLocaleString()}</div><div className="text-xs">31-60 Days</div></div>
+                     <div className="bg-rose-500/30 rounded p-2"><div className="font-bold">${aging.days90.toLocaleString()}</div><div className="text-xs">61-90+ Days</div></div>
+                     <div className="bg-white/20 rounded p-2"><div className="font-bold">${getTotalAR().toLocaleString()}</div><div className="text-xs">Total AR</div></div>
+                  </div>
+               </div>
+               <button onClick={() => setPhase('tutorial')} className="w-full py-4 bg-gradient-to-r from-sky-600 to-blue-600 hover:from-sky-500 hover:to-blue-500 rounded-xl font-bold text-lg">Start Learning →</button>
+               {showInfo && infoContent && (<div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"><div className="bg-slate-800 rounded-xl p-6 max-w-md"><h3 className="text-xl font-bold mb-3">{infoContent.title}</h3><p className="text-white/80 mb-4">{infoContent.content}</p><button onClick={() => setShowInfo(false)} className="w-full py-2 bg-sky-600 rounded-lg">Got it!</button></div></div>)}
+            </div>
+         );
+      }
+
+      if (phase === 'tutorial') {
+         const step = tutorialSteps[tutorialStep];
+         return (
+            <div className="p-6 bg-gradient-to-br from-slate-900 via-sky-900 to-slate-900 rounded-2xl text-white min-h-[600px]">
+               <div className="flex justify-between items-center mb-6"><h2 className="text-2xl font-bold">📚 Tutorial</h2><div className="text-white/60">Step {tutorialStep + 1}/{tutorialSteps.length}</div></div>
+               <div className="w-full bg-white/10 rounded-full h-2 mb-6"><div className="bg-gradient-to-r from-sky-500 to-blue-500 h-2 rounded-full" style={{ width: `${((tutorialStep + 1) / tutorialSteps.length) * 100}%` }} /></div>
+               <div className="bg-white/10 rounded-xl p-6 mb-6">
+                  <h3 className="text-xl font-bold mb-4">{step.title}</h3>
+                  <p className="text-lg text-white/90 mb-6">{step.content}</p>
+                  {step.highlight === 'aging' && (
+                     <div className="bg-white/10 rounded-lg p-4">
+                        <div className="font-bold text-center mb-3 text-sky-400">AR Aging Buckets</div>
+                        <div className="grid grid-cols-4 gap-2 text-sm">
+                           <div className="bg-emerald-500/30 rounded p-2 text-center"><div className="font-bold">Current</div><div className="text-xs">0-30 days</div><div className="text-xs text-white/60">~95% collectible</div></div>
+                           <div className="bg-amber-500/30 rounded p-2 text-center"><div className="font-bold">31-60</div><div className="text-xs">Past due</div><div className="text-xs text-white/60">~85% collectible</div></div>
+                           <div className="bg-orange-500/30 rounded p-2 text-center"><div className="font-bold">61-90</div><div className="text-xs">Overdue</div><div className="text-xs text-white/60">~70% collectible</div></div>
+                           <div className="bg-rose-500/30 rounded p-2 text-center"><div className="font-bold">90+</div><div className="text-xs">Delinquent</div><div className="text-xs text-white/60">~50% collectible</div></div>
+                        </div>
+                     </div>
+                  )}
+                  {step.highlight === 'dso' && (
+                     <div className="bg-sky-500/20 border border-sky-500/50 rounded-lg p-4">
+                        <div className="font-bold mb-2">📐 DSO Formula</div>
+                        <div className="font-mono text-center text-lg mb-2">DSO = (AR ÷ Revenue) × Days</div>
+                        <div className="text-sm text-white/70">Example: $100K AR ÷ $300K quarterly revenue × 90 days = <span className="text-sky-400 font-bold">30 days DSO</span></div>
+                     </div>
+                  )}
+                  {step.highlight === 'strategies' && (
+                     <div className="grid grid-cols-3 gap-2 text-sm">
+                        <div className="bg-emerald-500/20 rounded p-2"><div className="font-bold">📧 Reminder</div><div className="text-xs">Current/30 days</div></div>
+                        <div className="bg-amber-500/20 rounded p-2"><div className="font-bold">📞 Call</div><div className="text-xs">30-60 days</div></div>
+                        <div className="bg-rose-500/20 rounded p-2"><div className="font-bold">⚖️ Collections</div><div className="text-xs">90+ days</div></div>
+                     </div>
+                  )}
+               </div>
+               <div className="flex gap-3">
+                  {tutorialStep > 0 && <button onClick={() => setTutorialStep(p => p - 1)} className="flex-1 py-3 bg-white/10 hover:bg-white/20 rounded-xl font-bold">← Back</button>}
+                  <button onClick={() => { if (tutorialStep < tutorialSteps.length - 1) setTutorialStep(p => p + 1); else { setPhase('aging'); setGameLog(['Started AR aging analysis']); } }} className="flex-1 py-3 bg-gradient-to-r from-sky-600 to-blue-600 rounded-xl font-bold">{tutorialStep < tutorialSteps.length - 1 ? 'Next →' : 'Analyze Aging →'}</button>
+               </div>
+            </div>
+         );
+      }
+
+      if (phase === 'aging') {
+         const aging = getAgingTotals();
+         return (
+            <div className="p-6 bg-gradient-to-br from-slate-900 via-sky-900 to-slate-900 rounded-2xl text-white min-h-[600px]">
+               <div className="flex justify-between items-center mb-4">
+                  <div><h2 className="text-xl font-bold">📊 AR Aging Report</h2><p className="text-white/60 text-sm">Select customers to take collection action</p></div>
+                  <div className="text-right"><div className="text-xs text-white/60">Collected</div><div className="font-mono font-bold text-emerald-400">${totalCollected.toLocaleString()}</div></div>
+               </div>
+               <div className="grid grid-cols-5 gap-2 mb-4 text-center text-sm">
+                  <div className="bg-emerald-500/30 rounded p-2"><div className="font-bold">${aging.current.toLocaleString()}</div><div className="text-xs">Current</div></div>
+                  <div className="bg-amber-500/30 rounded p-2"><div className="font-bold">${aging.days30.toLocaleString()}</div><div className="text-xs">1-30</div></div>
+                  <div className="bg-orange-500/30 rounded p-2"><div className="font-bold">${aging.days60.toLocaleString()}</div><div className="text-xs">31-60</div></div>
+                  <div className="bg-rose-500/30 rounded p-2"><div className="font-bold">${aging.days90.toLocaleString()}</div><div className="text-xs">61-90+</div></div>
+                  <div className="bg-white/20 rounded p-2"><div className="font-bold">${getTotalAR().toLocaleString()}</div><div className="text-xs">Total</div></div>
+               </div>
+               <div className="bg-white/5 rounded-xl overflow-hidden mb-4">
+                  <div className="grid grid-cols-12 gap-1 p-2 bg-white/10 text-xs font-bold">
+                     <div className="col-span-2">Customer</div>
+                     <div className="col-span-2 text-right">Current</div>
+                     <div className="col-span-2 text-right">1-30</div>
+                     <div className="col-span-2 text-right">31-60</div>
+                     <div className="col-span-2 text-right">61-90+</div>
+                     <div className="col-span-2 text-right">Total</div>
+                  </div>
+                  {customers.map(c => (
+                     <div key={c.id} onClick={() => setSelectedCustomer(selectedCustomer === c.id ? null : c.id)} className={`grid grid-cols-12 gap-1 p-2 text-xs border-b border-white/5 cursor-pointer hover:bg-white/10 ${selectedCustomer === c.id ? 'bg-sky-500/20' : ''}`}>
+                        <div className="col-span-2 flex items-center gap-1">{c.name} {c.days90 > 0 && <span className="text-rose-400">⚠️</span>}</div>
+                        <div className="col-span-2 text-right font-mono">{c.current > 0 ? `$${c.current.toLocaleString()}` : '-'}</div>
+                        <div className="col-span-2 text-right font-mono text-amber-400">{c.days30 > 0 ? `$${c.days30.toLocaleString()}` : '-'}</div>
+                        <div className="col-span-2 text-right font-mono text-orange-400">{c.days60 > 0 ? `$${c.days60.toLocaleString()}` : '-'}</div>
+                        <div className="col-span-2 text-right font-mono text-rose-400">{c.days90 > 0 ? `$${c.days90.toLocaleString()}` : '-'}</div>
+                        <div className="col-span-2 text-right font-mono font-bold">${c.total.toLocaleString()}</div>
+                     </div>
+                  ))}
+               </div>
+               {selectedCustomer && (() => { const c = customers.find(cu => cu.id === selectedCustomer); return c ? (
+                  <div className="bg-white/10 rounded-xl p-4 mb-4">
+                     <div className="flex justify-between items-start mb-3">
+                        <div><h3 className="font-bold">{c.name}</h3><div className="text-xs text-white/60">Contact: {c.contact} | History: <span className={c.paymentHistory === 'Excellent' ? 'text-emerald-400' : c.paymentHistory === 'Good' ? 'text-sky-400' : c.paymentHistory === 'Fair' ? 'text-amber-400' : 'text-rose-400'}>{c.paymentHistory}</span></div></div>
+                        <button onClick={() => setSelectedCustomer(null)} className="text-white/60">✕</button>
+                     </div>
+                     <div className="text-sm mb-3">Credit Limit: ${c.creditLimit.toLocaleString()} | Outstanding: ${c.total.toLocaleString()} ({Math.round(c.total/c.creditLimit*100)}% utilized)</div>
+                     <div className="text-xs text-white/60 mb-2">Choose collection action:</div>
+                     <div className="grid grid-cols-3 gap-2">
+                        {collectionStrategies.map(s => (
+                           <button key={s.id} onClick={() => handleCollectionAction(c.id, s.id)} className="bg-white/10 hover:bg-white/20 rounded-lg p-2 text-left">
+                              <div className="font-bold text-sm">{s.name}</div>
+                              <div className="text-xs text-white/60">{s.description}</div>
+                           </button>
+                        ))}
+                     </div>
+                  </div>
+               ) : null; })()}
+               {collectionActions.length > 0 && (
+                  <div className="bg-white/5 rounded-xl p-3 mb-4 max-h-24 overflow-y-auto">
+                     <div className="text-xs font-bold mb-1">Recent Actions:</div>
+                     {collectionActions.slice(-3).map((a, i) => (<div key={i} className="text-xs text-white/70">{a.action}: {a.result}</div>))}
+                  </div>
+               )}
+               <button onClick={() => { setPhase('collect'); setGameLog(p => [...p, 'Moving to scenario questions']); }} className="w-full py-3 bg-gradient-to-r from-sky-600 to-blue-600 rounded-xl font-bold">Continue to Scenarios →</button>
+            </div>
+         );
+      }
+
+      if (phase === 'collect') {
+         const s = scenarios[currentScenario];
+         return (
+            <div className="p-6 bg-gradient-to-br from-slate-900 via-sky-900 to-slate-900 rounded-2xl text-white min-h-[600px]">
+               <div className="flex justify-between items-center mb-4"><div><h2 className="text-xl font-bold">🎯 Collection Scenarios</h2><p className="text-white/60 text-sm">Q{currentScenario + 1}/{scenarios.length}</p></div><div className="bg-white/10 rounded-lg px-3 py-1">Score: <span className="font-bold">{score}</span></div></div>
+               <div className="w-full bg-white/10 rounded-full h-2 mb-6"><div className="bg-gradient-to-r from-amber-500 to-orange-500 h-2 rounded-full" style={{ width: `${((currentScenario + 1) / scenarios.length) * 100}%` }} /></div>
+               <div className="bg-white/10 rounded-xl p-6 mb-4">
+                  <p className="text-lg mb-6">{s.question}</p>
+                  <div className="space-y-2">{s.options.map(o => (<button key={o} onClick={() => !showFeedback && handleScenarioAnswer(o)} disabled={showFeedback} className={`w-full py-3 px-4 rounded-xl font-medium text-left transition-all ${showFeedback && o === s.correctAnswer ? 'bg-emerald-500' : showFeedback && scenarioAnswer === o && o !== s.correctAnswer ? 'bg-rose-500' : 'bg-white/10 hover:bg-white/20'}`}>{o}</button>))}</div>
+               </div>
+               {showFeedback && (<div className={`p-4 rounded-xl ${feedbackCorrect ? 'bg-emerald-500/30 border border-emerald-500' : 'bg-rose-500/30 border border-rose-500'}`}><div className="flex items-start gap-2"><span className="text-xl">{feedbackCorrect ? '✓' : '✗'}</span><div><div className="font-bold mb-1">{feedbackCorrect ? 'Correct!' : 'Not quite'}</div><div className="text-sm text-white/80">{s.explanation}</div></div></div></div>)}
+            </div>
+         );
+      }
+
+      if (phase === 'result') {
+         const acc = totalAnswered > 0 ? Math.round((correctAnswers / totalAnswered) * 100) : 0;
+         const grade = acc >= 90 ? 'A' : acc >= 80 ? 'B' : acc >= 70 ? 'C' : acc >= 60 ? 'D' : 'F';
+         return (
+            <div className="p-6 bg-gradient-to-br from-slate-900 via-sky-900 to-slate-900 rounded-2xl text-white min-h-[600px]">
+               <div className="text-center mb-6"><div className="text-6xl mb-4">💰</div><h2 className="text-3xl font-bold mb-2">AR & Collections Mastered!</h2></div>
+               <div className="grid grid-cols-4 gap-3 mb-6">
+                  <div className="bg-white/10 rounded-xl p-4 text-center"><div className="text-2xl font-bold text-amber-400">{score}</div><div className="text-white/60 text-sm">Points</div></div>
+                  <div className="bg-white/10 rounded-xl p-4 text-center"><div className="text-2xl font-bold text-emerald-400">{acc}%</div><div className="text-white/60 text-sm">Accuracy</div></div>
+                  <div className="bg-white/10 rounded-xl p-4 text-center"><div className={`text-2xl font-bold ${grade === 'A' ? 'text-emerald-400' : 'text-sky-400'}`}>{grade}</div><div className="text-white/60 text-sm">Grade</div></div>
+                  <div className="bg-white/10 rounded-xl p-4 text-center"><div className="text-2xl font-bold text-green-400">${totalCollected.toLocaleString()}</div><div className="text-white/60 text-sm">Collected</div></div>
+               </div>
+               <div className="bg-white/10 rounded-xl p-6 mb-6">
+                  <h3 className="font-bold text-lg mb-4">💡 Key Takeaways</h3>
+                  <ul className="space-y-2 text-sm">
+                     <li className="flex items-start gap-2"><span className="text-emerald-400">✓</span><span><strong>Aging Analysis:</strong> Older buckets = higher risk, lower collectibility</span></li>
+                     <li className="flex items-start gap-2"><span className="text-emerald-400">✓</span><span><strong>Match Strategy:</strong> Reminders for recent, calls for relationships, collections for 90+</span></li>
+                     <li className="flex items-start gap-2"><span className="text-emerald-400">✓</span><span><strong>DSO Matters:</strong> Lower DSO = faster cash conversion</span></li>
+                     <li className="flex items-start gap-2"><span className="text-emerald-400">✓</span><span><strong>Prevention:</strong> Credit policies prevent bad debt</span></li>
+                  </ul>
+               </div>
+               <div className="flex gap-3">
+                  <button onClick={() => { setPhase('intro'); setScore(0); setCurrentScenario(0); setCollectionActions([]); setTotalCollected(0); setCorrectAnswers(0); setTotalAnswered(0); }} className="flex-1 py-3 bg-white/10 hover:bg-white/20 rounded-xl font-bold">🔄 Again</button>
+                  <button onClick={() => setPhase('intro')} className="flex-1 py-3 bg-gradient-to-r from-sky-600 to-blue-600 rounded-xl font-bold">✓ Done</button>
+               </div>
+            </div>
+         );
+      }
+
+      return null;
+   };
+
    const FinancialStatementsRenderer = () => {
       const [phase, setPhase] = useState<'intro' | 'play' | 'result'>('intro');
       const [showInfo, setShowInfo] = useState(false);
@@ -42491,6 +42820,8 @@ const GeneratedDiagram: React.FC<DiagramProps> = ({ type, data, title }) => {
             return <GeneralLedgerRenderer />;
          case 'accounts_payable':
             return <AccountsPayableRenderer />;
+         case 'accounts_receivable':
+            return <AccountsReceivableRenderer />;
          case 'pricing_strategy':
             return <PricingStrategyRenderer />;
          case 'budgeting':
