@@ -37162,6 +37162,894 @@ const GeneratedDiagram: React.FC<DiagramProps> = ({ type, data, title }) => {
       return null;
    };
 
+   // TOPIC 5: Chart of Accounts Setup - Interactive Educational Game
+   const ChartOfAccountsRenderer = () => {
+      const [phase, setPhase] = useState<'intro' | 'tutorial' | 'play' | 'subcategory' | 'numbering' | 'result'>('intro');
+      const [tutorialStep, setTutorialStep] = useState(0);
+      const [showInfo, setShowInfo] = useState(false);
+      const [infoContent, setInfoContent] = useState<{title: string; content: string} | null>(null);
+      const [currentLevel, setCurrentLevel] = useState(0);
+      const [score, setScore] = useState(0);
+      const [totalAnswered, setTotalAnswered] = useState(0);
+      const [correctAnswers, setCorrectAnswers] = useState(0);
+      const [draggedAccount, setDraggedAccount] = useState<string | null>(null);
+      const [placedAccounts, setPlacedAccounts] = useState<{[key: string]: string[]}>({
+         assets: [], liabilities: [], equity: [], revenue: [], expenses: []
+      });
+      const [currentAccounts, setCurrentAccounts] = useState<string[]>([]);
+      const [feedback, setFeedback] = useState<{show: boolean; correct: boolean; message: string}>({show: false, correct: false, message: ''});
+      const [subCategoryPlaced, setSubCategoryPlaced] = useState<{[key: string]: string[]}>({});
+      const [numberingAnswers, setNumberingAnswers] = useState<{[key: string]: string}>({});
+      const [gameLog, setGameLog] = useState<string[]>([]);
+      const [conceptsStruggled, setConceptsStruggled] = useState<string[]>([]);
+      const [showHint, setShowHint] = useState(false);
+
+      // Account categories with detailed info
+      const categories = {
+         assets: {
+            name: 'Assets',
+            color: 'from-emerald-500 to-green-600',
+            bgColor: 'bg-emerald-500/20',
+            borderColor: 'border-emerald-500',
+            description: 'What the business OWNS - resources with economic value',
+            subCategories: ['Current Assets', 'Fixed Assets', 'Intangible Assets'],
+            examples: ['Cash', 'Accounts Receivable', 'Inventory', 'Equipment', 'Buildings', 'Patents'],
+            numberRange: '1000-1999',
+            info: 'Assets are resources controlled by a company that provide future economic benefits. They appear on the left side of the balance sheet and follow the liquidity order - most liquid (cash) first, least liquid (property) last.'
+         },
+         liabilities: {
+            name: 'Liabilities',
+            color: 'from-rose-500 to-red-600',
+            bgColor: 'bg-rose-500/20',
+            borderColor: 'border-rose-500',
+            description: 'What the business OWES - obligations to others',
+            subCategories: ['Current Liabilities', 'Long-term Liabilities'],
+            examples: ['Accounts Payable', 'Loans Payable', 'Wages Payable', 'Bonds Payable'],
+            numberRange: '2000-2999',
+            info: 'Liabilities are obligations that require the company to transfer assets or provide services in the future. They are listed by maturity - current (due within 1 year) first, then long-term obligations.'
+         },
+         equity: {
+            name: 'Equity',
+            color: 'from-violet-500 to-purple-600',
+            bgColor: 'bg-violet-500/20',
+            borderColor: 'border-violet-500',
+            description: "Owner's claim - what's left after liabilities",
+            subCategories: ['Contributed Capital', 'Retained Earnings'],
+            examples: ['Common Stock', 'Retained Earnings', 'Additional Paid-in Capital', 'Treasury Stock'],
+            numberRange: '3000-3999',
+            info: 'Equity represents the residual interest in assets after deducting liabilities. It shows how much of the company truly belongs to the owners. The accounting equation: Assets = Liabilities + Equity.'
+         },
+         revenue: {
+            name: 'Revenue',
+            color: 'from-sky-500 to-blue-600',
+            bgColor: 'bg-sky-500/20',
+            borderColor: 'border-sky-500',
+            description: 'Money EARNED from business operations',
+            subCategories: ['Operating Revenue', 'Non-operating Revenue'],
+            examples: ['Sales Revenue', 'Service Revenue', 'Interest Income', 'Rental Income'],
+            numberRange: '4000-4999',
+            info: 'Revenue is income earned from normal business operations. It increases equity through the income statement. Revenue is recognized when earned (accrual basis), not necessarily when cash is received.'
+         },
+         expenses: {
+            name: 'Expenses',
+            color: 'from-amber-500 to-orange-600',
+            bgColor: 'bg-amber-500/20',
+            borderColor: 'border-amber-500',
+            description: 'Costs INCURRED to generate revenue',
+            subCategories: ['Operating Expenses', 'Cost of Goods Sold', 'Non-operating Expenses'],
+            examples: ['Rent Expense', 'Salaries Expense', 'Utilities Expense', 'Depreciation Expense', 'Interest Expense'],
+            numberRange: '5000-9999',
+            info: 'Expenses are costs incurred to generate revenue. They decrease equity through the income statement. Expenses are matched to the revenue they help generate (matching principle).'
+         }
+      };
+
+      // Accounts to categorize at each level
+      const levels = [
+         {
+            name: 'Basic Accounts',
+            accounts: [
+               { name: 'Cash', category: 'assets', hint: 'Money in hand or bank' },
+               { name: 'Accounts Payable', category: 'liabilities', hint: 'Money owed to suppliers' },
+               { name: 'Common Stock', category: 'equity', hint: 'Investment by shareholders' },
+               { name: 'Sales Revenue', category: 'revenue', hint: 'Income from selling products' },
+               { name: 'Rent Expense', category: 'expenses', hint: 'Cost of leasing space' }
+            ]
+         },
+         {
+            name: 'Common Business Accounts',
+            accounts: [
+               { name: 'Accounts Receivable', category: 'assets', hint: 'Money customers owe you' },
+               { name: 'Inventory', category: 'assets', hint: 'Products held for sale' },
+               { name: 'Wages Payable', category: 'liabilities', hint: 'Salaries owed to employees' },
+               { name: 'Retained Earnings', category: 'equity', hint: 'Accumulated profits kept in business' },
+               { name: 'Service Revenue', category: 'revenue', hint: 'Income from providing services' },
+               { name: 'Utilities Expense', category: 'expenses', hint: 'Cost of electricity, water, etc.' }
+            ]
+         },
+         {
+            name: 'Advanced Accounts',
+            accounts: [
+               { name: 'Prepaid Insurance', category: 'assets', hint: 'Insurance paid in advance' },
+               { name: 'Equipment', category: 'assets', hint: 'Machinery used in operations' },
+               { name: 'Notes Payable', category: 'liabilities', hint: 'Formal written promise to pay' },
+               { name: 'Unearned Revenue', category: 'liabilities', hint: 'Payment received before service delivered' },
+               { name: 'Interest Income', category: 'revenue', hint: 'Earnings from lending money' },
+               { name: 'Depreciation Expense', category: 'expenses', hint: 'Allocation of asset cost over time' },
+               { name: 'Cost of Goods Sold', category: 'expenses', hint: 'Direct cost of products sold' }
+            ]
+         },
+         {
+            name: 'Complex Accounts',
+            accounts: [
+               { name: 'Accumulated Depreciation', category: 'assets', hint: 'Contra-asset reducing equipment value' },
+               { name: 'Goodwill', category: 'assets', hint: 'Premium paid for acquired company' },
+               { name: 'Bonds Payable', category: 'liabilities', hint: 'Long-term debt securities issued' },
+               { name: 'Treasury Stock', category: 'equity', hint: 'Company\'s own repurchased shares' },
+               { name: 'Dividend Revenue', category: 'revenue', hint: 'Income from stock investments' },
+               { name: 'Amortization Expense', category: 'expenses', hint: 'Spreading intangible asset costs' },
+               { name: 'Bad Debt Expense', category: 'expenses', hint: 'Uncollectible customer accounts' }
+            ]
+         }
+      ];
+
+      // Sub-category challenge
+      const subCategoryChallenge = {
+         assets: [
+            { account: 'Cash', subCategory: 'Current Assets', hint: 'Highly liquid, available now' },
+            { account: 'Accounts Receivable', subCategory: 'Current Assets', hint: 'Collected within a year' },
+            { account: 'Inventory', subCategory: 'Current Assets', hint: 'Sold within normal cycle' },
+            { account: 'Equipment', subCategory: 'Fixed Assets', hint: 'Long-term physical asset' },
+            { account: 'Buildings', subCategory: 'Fixed Assets', hint: 'Property held for use' },
+            { account: 'Patents', subCategory: 'Intangible Assets', hint: 'Non-physical legal right' },
+            { account: 'Goodwill', subCategory: 'Intangible Assets', hint: 'Value beyond physical assets' }
+         ]
+      };
+
+      // Numbering quiz
+      const numberingQuiz = [
+         { account: 'Cash', correctNumber: '1010', category: 'assets', options: ['1010', '2010', '4010', '5010'] },
+         { account: 'Accounts Payable', correctNumber: '2010', category: 'liabilities', options: ['1020', '2010', '3010', '5020'] },
+         { account: 'Common Stock', correctNumber: '3010', category: 'equity', options: ['1030', '2030', '3010', '4030'] },
+         { account: 'Sales Revenue', correctNumber: '4010', category: 'revenue', options: ['1010', '3010', '4010', '5010'] },
+         { account: 'Rent Expense', correctNumber: '5010', category: 'expenses', options: ['2010', '3010', '4010', '5010'] },
+         { account: 'Equipment', correctNumber: '1500', category: 'assets', options: ['1500', '2500', '3500', '5500'] },
+         { account: 'Bonds Payable', correctNumber: '2500', category: 'liabilities', options: ['1500', '2500', '4500', '5500'] },
+         { account: 'Interest Income', correctNumber: '4500', category: 'revenue', options: ['1500', '2500', '4500', '5500'] }
+      ];
+
+      const tutorialSteps = [
+         {
+            title: 'Welcome to Chart of Accounts Setup!',
+            content: "The Chart of Accounts is your business's financial filing system. Every transaction gets categorized here, and it determines how your financial statements are generated.",
+            highlight: 'overview'
+         },
+         {
+            title: 'The Five Account Categories',
+            content: 'Every account falls into one of five categories: Assets (what you own), Liabilities (what you owe), Equity (owner\'s stake), Revenue (money earned), and Expenses (costs incurred).',
+            highlight: 'categories'
+         },
+         {
+            title: 'Assets - What You OWN',
+            content: 'Assets are resources with economic value. They include cash, receivables, inventory, equipment, and buildings. Assets are numbered 1000-1999 and appear on the Balance Sheet.',
+            highlight: 'assets'
+         },
+         {
+            title: 'Liabilities - What You OWE',
+            content: 'Liabilities are obligations to pay others. They include accounts payable, loans, and wages owed. Liabilities are numbered 2000-2999 and appear on the Balance Sheet.',
+            highlight: 'liabilities'
+         },
+         {
+            title: 'Equity - Owner\'s Stake',
+            content: 'Equity is what remains after subtracting liabilities from assets. It includes invested capital and retained earnings. Equity is numbered 3000-3999.',
+            highlight: 'equity'
+         },
+         {
+            title: 'Revenue - Money Earned',
+            content: 'Revenue is income from business operations - sales, services, interest. It increases equity and appears on the Income Statement. Revenue is numbered 4000-4999.',
+            highlight: 'revenue'
+         },
+         {
+            title: 'Expenses - Costs Incurred',
+            content: 'Expenses are costs to generate revenue - rent, salaries, utilities. They decrease equity and appear on the Income Statement. Expenses are numbered 5000-9999.',
+            highlight: 'expenses'
+         },
+         {
+            title: 'The Numbering System',
+            content: 'Account numbers organize your chart: 1000s=Assets, 2000s=Liabilities, 3000s=Equity, 4000s=Revenue, 5000-9000s=Expenses. This makes finding accounts and generating reports easy!',
+            highlight: 'numbering'
+         },
+         {
+            title: 'Let\'s Practice!',
+            content: 'Now you\'ll categorize accounts by dragging them to the correct category. Start with basic accounts and progress to more complex ones. Use the hint button if you need help!',
+            highlight: 'game'
+         }
+      ];
+
+      const showInfoModal = (title: string, content: string) => {
+         setInfoContent({ title, content });
+         setShowInfo(true);
+      };
+
+      const initLevel = (level: number) => {
+         const accounts = levels[level].accounts.map(a => a.name);
+         setCurrentAccounts(shuffleArray([...accounts]));
+         setPlacedAccounts({ assets: [], liabilities: [], equity: [], revenue: [], expenses: [] });
+         setFeedback({ show: false, correct: false, message: '' });
+      };
+
+      const shuffleArray = (array: string[]) => {
+         const shuffled = [...array];
+         for (let i = shuffled.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+         }
+         return shuffled;
+      };
+
+      const handleDrop = (category: string) => {
+         if (!draggedAccount) return;
+
+         const accountInfo = levels[currentLevel].accounts.find(a => a.name === draggedAccount);
+         if (!accountInfo) return;
+
+         const isCorrect = accountInfo.category === category;
+
+         if (isCorrect) {
+            setPlacedAccounts(prev => ({
+               ...prev,
+               [category]: [...prev[category], draggedAccount]
+            }));
+            setCurrentAccounts(prev => prev.filter(a => a !== draggedAccount));
+            setScore(prev => prev + 10);
+            setCorrectAnswers(prev => prev + 1);
+            setFeedback({ show: true, correct: true, message: `Correct! ${draggedAccount} is an ${categories[category as keyof typeof categories].name.slice(0, -1)}.` });
+            setGameLog(prev => [...prev, `✓ Correctly placed ${draggedAccount} in ${category}`]);
+         } else {
+            setFeedback({
+               show: true,
+               correct: false,
+               message: `Not quite. ${draggedAccount} is actually a ${categories[accountInfo.category as keyof typeof categories].name.slice(0, -1)}. ${accountInfo.hint}`
+            });
+            if (!conceptsStruggled.includes(accountInfo.category)) {
+               setConceptsStruggled(prev => [...prev, accountInfo.category]);
+            }
+            setGameLog(prev => [...prev, `✗ Incorrectly placed ${draggedAccount} in ${category} (should be ${accountInfo.category})`]);
+         }
+
+         setTotalAnswered(prev => prev + 1);
+         setDraggedAccount(null);
+         setShowHint(false);
+
+         // Check if level complete
+         setTimeout(() => {
+            if (currentAccounts.length === 1 && isCorrect) {
+               if (currentLevel < levels.length - 1) {
+                  setCurrentLevel(prev => prev + 1);
+                  initLevel(currentLevel + 1);
+                  setGameLog(prev => [...prev, `Completed Level ${currentLevel + 1}: ${levels[currentLevel].name}`]);
+               } else {
+                  setPhase('subcategory');
+                  setGameLog(prev => [...prev, 'Moving to Sub-category Challenge']);
+               }
+            }
+            setFeedback({ show: false, correct: false, message: '' });
+         }, 1500);
+      };
+
+      const handleNumberingAnswer = (account: string, answer: string) => {
+         const quiz = numberingQuiz.find(q => q.account === account);
+         if (!quiz) return;
+
+         setNumberingAnswers(prev => ({ ...prev, [account]: answer }));
+         const isCorrect = answer === quiz.correctNumber;
+
+         if (isCorrect) {
+            setScore(prev => prev + 15);
+            setCorrectAnswers(prev => prev + 1);
+            setGameLog(prev => [...prev, `✓ Correct number for ${account}: ${answer}`]);
+         } else {
+            setGameLog(prev => [...prev, `✗ Wrong number for ${account}: ${answer} (correct: ${quiz.correctNumber})`]);
+         }
+         setTotalAnswered(prev => prev + 1);
+      };
+
+      // Intro Phase
+      if (phase === 'intro') {
+         return (
+            <div className="p-6 bg-gradient-to-br from-slate-900 via-indigo-900 to-slate-900 rounded-2xl text-white min-h-[600px]">
+               <div className="text-center mb-8">
+                  <h2 className="text-3xl font-bold mb-3">📊 Chart of Accounts Setup</h2>
+                  <p className="text-lg text-white/80">Master the foundation of financial organization</p>
+               </div>
+
+               <div className="bg-white/10 backdrop-blur rounded-xl p-6 mb-6">
+                  <div className="flex items-start gap-3 mb-4">
+                     <span className="text-3xl">💡</span>
+                     <div>
+                        <h3 className="font-bold text-xl mb-2">Key Insight</h3>
+                        <p className="text-white/90">The Chart of Accounts is your business's filing system for money—organized correctly, it makes reporting easy; organized poorly, it creates chaos.</p>
+                     </div>
+                  </div>
+               </div>
+
+               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                  <div className="bg-white/5 rounded-xl p-4">
+                     <h3 className="font-bold text-lg mb-3 flex items-center gap-2">
+                        🎯 What You'll Learn
+                        <button onClick={() => showInfoModal('Learning Objectives', 'By the end of this module, you\'ll understand how to categorize any business account, organize sub-categories, and use the standard numbering system that accountants use worldwide.')} className="text-sky-400 hover:text-sky-300">ℹ️</button>
+                     </h3>
+                     <ul className="space-y-2 text-white/80">
+                        <li className="flex items-center gap-2"><span className="text-green-400">✓</span> Five account categories and their purposes</li>
+                        <li className="flex items-center gap-2"><span className="text-green-400">✓</span> How to classify any business account</li>
+                        <li className="flex items-center gap-2"><span className="text-green-400">✓</span> Sub-category organization (current vs. fixed)</li>
+                        <li className="flex items-center gap-2"><span className="text-green-400">✓</span> Standard numbering system (1000s-9000s)</li>
+                     </ul>
+                  </div>
+                  <div className="bg-white/5 rounded-xl p-4">
+                     <h3 className="font-bold text-lg mb-3 flex items-center gap-2">
+                        🎮 Game Structure
+                        <button onClick={() => showInfoModal('How This Works', 'You\'ll progress through 4 levels of account categorization, then tackle sub-category organization, and finally master the numbering system. Each correct answer earns points!')} className="text-sky-400 hover:text-sky-300">ℹ️</button>
+                     </h3>
+                     <ul className="space-y-2 text-white/80">
+                        <li className="flex items-center gap-2"><span className="text-emerald-400">1</span> Interactive tutorial</li>
+                        <li className="flex items-center gap-2"><span className="text-emerald-400">2</span> Drag-and-drop categorization (4 levels)</li>
+                        <li className="flex items-center gap-2"><span className="text-emerald-400">3</span> Sub-category challenge</li>
+                        <li className="flex items-center gap-2"><span className="text-emerald-400">4</span> Account numbering quiz</li>
+                     </ul>
+                  </div>
+               </div>
+
+               <div className="bg-gradient-to-r from-indigo-500/20 to-purple-500/20 rounded-xl p-4 mb-6">
+                  <h3 className="font-bold mb-2">📋 The Standard Number System</h3>
+                  <div className="grid grid-cols-5 gap-2 text-center text-sm">
+                     <div className="bg-emerald-500/30 rounded p-2">
+                        <div className="font-bold">1000s</div>
+                        <div className="text-xs text-white/70">Assets</div>
+                     </div>
+                     <div className="bg-rose-500/30 rounded p-2">
+                        <div className="font-bold">2000s</div>
+                        <div className="text-xs text-white/70">Liabilities</div>
+                     </div>
+                     <div className="bg-violet-500/30 rounded p-2">
+                        <div className="font-bold">3000s</div>
+                        <div className="text-xs text-white/70">Equity</div>
+                     </div>
+                     <div className="bg-sky-500/30 rounded p-2">
+                        <div className="font-bold">4000s</div>
+                        <div className="text-xs text-white/70">Revenue</div>
+                     </div>
+                     <div className="bg-amber-500/30 rounded p-2">
+                        <div className="font-bold">5000-9000</div>
+                        <div className="text-xs text-white/70">Expenses</div>
+                     </div>
+                  </div>
+               </div>
+
+               <button
+                  onClick={() => setPhase('tutorial')}
+                  className="w-full py-4 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 rounded-xl font-bold text-lg transition-all"
+               >
+                  Start Learning →
+               </button>
+
+               {showInfo && infoContent && (
+                  <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+                     <div className="bg-slate-800 rounded-xl p-6 max-w-md">
+                        <h3 className="text-xl font-bold mb-3">{infoContent.title}</h3>
+                        <p className="text-white/80 mb-4">{infoContent.content}</p>
+                        <button onClick={() => setShowInfo(false)} className="w-full py-2 bg-indigo-600 hover:bg-indigo-500 rounded-lg">Got it!</button>
+                     </div>
+                  </div>
+               )}
+            </div>
+         );
+      }
+
+      // Tutorial Phase
+      if (phase === 'tutorial') {
+         const step = tutorialSteps[tutorialStep];
+         return (
+            <div className="p-6 bg-gradient-to-br from-slate-900 via-indigo-900 to-slate-900 rounded-2xl text-white min-h-[600px]">
+               <div className="flex justify-between items-center mb-6">
+                  <h2 className="text-2xl font-bold">📚 Tutorial</h2>
+                  <div className="text-white/60">Step {tutorialStep + 1} of {tutorialSteps.length}</div>
+               </div>
+
+               <div className="w-full bg-white/10 rounded-full h-2 mb-6">
+                  <div
+                     className="bg-gradient-to-r from-indigo-500 to-purple-500 h-2 rounded-full transition-all"
+                     style={{ width: `${((tutorialStep + 1) / tutorialSteps.length) * 100}%` }}
+                  />
+               </div>
+
+               <div className="bg-white/10 backdrop-blur rounded-xl p-6 mb-6">
+                  <h3 className="text-xl font-bold mb-4">{step.title}</h3>
+                  <p className="text-lg text-white/90 mb-6">{step.content}</p>
+
+                  {step.highlight === 'categories' && (
+                     <div className="grid grid-cols-5 gap-2">
+                        {Object.entries(categories).map(([key, cat]) => (
+                           <div key={key} className={`${cat.bgColor} rounded-lg p-3 text-center`}>
+                              <div className="font-bold text-sm">{cat.name}</div>
+                              <div className="text-xs text-white/70 mt-1">{cat.description.split(' ').slice(0, 3).join(' ')}</div>
+                           </div>
+                        ))}
+                     </div>
+                  )}
+
+                  {['assets', 'liabilities', 'equity', 'revenue', 'expenses'].includes(step.highlight) && (
+                     <div className={`${categories[step.highlight as keyof typeof categories].bgColor} rounded-lg p-4`}>
+                        <div className="flex justify-between items-start mb-3">
+                           <div>
+                              <div className="font-bold text-lg">{categories[step.highlight as keyof typeof categories].name}</div>
+                              <div className="text-white/70">{categories[step.highlight as keyof typeof categories].description}</div>
+                           </div>
+                           <div className="text-right">
+                              <div className="font-mono bg-white/20 px-2 py-1 rounded text-sm">
+                                 {categories[step.highlight as keyof typeof categories].numberRange}
+                              </div>
+                           </div>
+                        </div>
+                        <div className="flex flex-wrap gap-2 mt-3">
+                           {categories[step.highlight as keyof typeof categories].examples.slice(0, 4).map((ex, i) => (
+                              <span key={i} className="bg-white/20 px-2 py-1 rounded text-sm">{ex}</span>
+                           ))}
+                        </div>
+                     </div>
+                  )}
+
+                  {step.highlight === 'numbering' && (
+                     <div className="space-y-2">
+                        {Object.entries(categories).map(([key, cat]) => (
+                           <div key={key} className={`${cat.bgColor} rounded-lg p-3 flex justify-between items-center`}>
+                              <span className="font-bold">{cat.name}</span>
+                              <span className="font-mono bg-white/20 px-3 py-1 rounded">{cat.numberRange}</span>
+                           </div>
+                        ))}
+                     </div>
+                  )}
+               </div>
+
+               <div className="flex gap-3">
+                  {tutorialStep > 0 && (
+                     <button
+                        onClick={() => setTutorialStep(prev => prev - 1)}
+                        className="flex-1 py-3 bg-white/10 hover:bg-white/20 rounded-xl font-bold"
+                     >
+                        ← Back
+                     </button>
+                  )}
+                  <button
+                     onClick={() => {
+                        if (tutorialStep < tutorialSteps.length - 1) {
+                           setTutorialStep(prev => prev + 1);
+                        } else {
+                           setPhase('play');
+                           initLevel(0);
+                           setGameLog(['Started Chart of Accounts game']);
+                        }
+                     }}
+                     className="flex-1 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 rounded-xl font-bold"
+                  >
+                     {tutorialStep < tutorialSteps.length - 1 ? 'Next →' : 'Start Game →'}
+                  </button>
+               </div>
+            </div>
+         );
+      }
+
+      // Play Phase - Drag and Drop Categorization
+      if (phase === 'play') {
+         return (
+            <div className="p-6 bg-gradient-to-br from-slate-900 via-indigo-900 to-slate-900 rounded-2xl text-white min-h-[600px]">
+               <div className="flex justify-between items-center mb-4">
+                  <div>
+                     <h2 className="text-xl font-bold">Level {currentLevel + 1}: {levels[currentLevel].name}</h2>
+                     <p className="text-white/60 text-sm">Drag each account to the correct category</p>
+                  </div>
+                  <div className="flex items-center gap-4">
+                     <div className="bg-white/10 rounded-lg px-3 py-1">
+                        <span className="text-white/60 text-sm">Score:</span>
+                        <span className="font-bold ml-2">{score}</span>
+                     </div>
+                     <button onClick={() => showInfoModal('Categories Reference', Object.entries(categories).map(([k, v]) => `${v.name} (${v.numberRange}): ${v.description}`).join('\n\n'))} className="text-sky-400 hover:text-sky-300 text-xl">ℹ️</button>
+                  </div>
+               </div>
+
+               {/* Progress bar */}
+               <div className="w-full bg-white/10 rounded-full h-2 mb-6">
+                  <div
+                     className="bg-gradient-to-r from-emerald-500 to-green-500 h-2 rounded-full transition-all"
+                     style={{ width: `${((levels[currentLevel].accounts.length - currentAccounts.length) / levels[currentLevel].accounts.length) * 100}%` }}
+                  />
+               </div>
+
+               {/* Accounts to categorize */}
+               <div className="bg-white/5 rounded-xl p-4 mb-4">
+                  <div className="flex justify-between items-center mb-3">
+                     <h3 className="font-bold">Accounts to Categorize ({currentAccounts.length} remaining)</h3>
+                     <button
+                        onClick={() => setShowHint(!showHint)}
+                        className="text-sm bg-amber-500/30 hover:bg-amber-500/40 px-3 py-1 rounded-lg"
+                     >
+                        💡 {showHint ? 'Hide' : 'Show'} Hints
+                     </button>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                     {currentAccounts.map(account => {
+                        const accountInfo = levels[currentLevel].accounts.find(a => a.name === account);
+                        return (
+                           <div
+                              key={account}
+                              draggable
+                              onDragStart={() => setDraggedAccount(account)}
+                              onDragEnd={() => setDraggedAccount(null)}
+                              className={`px-4 py-2 bg-gradient-to-r from-slate-600 to-slate-700 rounded-lg cursor-grab hover:from-slate-500 hover:to-slate-600 transition-all ${draggedAccount === account ? 'opacity-50 scale-95' : ''}`}
+                           >
+                              <div className="font-medium">{account}</div>
+                              {showHint && accountInfo && (
+                                 <div className="text-xs text-white/60 mt-1">{accountInfo.hint}</div>
+                              )}
+                           </div>
+                        );
+                     })}
+                  </div>
+               </div>
+
+               {/* Drop zones */}
+               <div className="grid grid-cols-5 gap-2 mb-4">
+                  {Object.entries(categories).map(([key, cat]) => (
+                     <div
+                        key={key}
+                        onDragOver={(e) => e.preventDefault()}
+                        onDrop={() => handleDrop(key)}
+                        className={`${cat.bgColor} border-2 ${cat.borderColor} border-dashed rounded-xl p-3 min-h-[180px] transition-all ${draggedAccount ? 'hover:border-solid hover:bg-opacity-40' : ''}`}
+                     >
+                        <div className="flex justify-between items-center mb-2">
+                           <h4 className="font-bold text-sm">{cat.name}</h4>
+                           <button onClick={() => showInfoModal(cat.name, cat.info)} className="text-white/60 hover:text-white text-xs">ℹ️</button>
+                        </div>
+                        <div className="text-xs text-white/50 mb-2">{cat.numberRange}</div>
+                        <div className="space-y-1">
+                           {placedAccounts[key].map((account, i) => (
+                              <div key={i} className="bg-white/20 rounded px-2 py-1 text-xs">
+                                 {account}
+                              </div>
+                           ))}
+                        </div>
+                     </div>
+                  ))}
+               </div>
+
+               {/* Feedback */}
+               {feedback.show && (
+                  <div className={`p-4 rounded-xl ${feedback.correct ? 'bg-emerald-500/30 border border-emerald-500' : 'bg-rose-500/30 border border-rose-500'}`}>
+                     <div className="flex items-center gap-2">
+                        <span className="text-xl">{feedback.correct ? '✓' : '✗'}</span>
+                        <span>{feedback.message}</span>
+                     </div>
+                  </div>
+               )}
+
+               {showInfo && infoContent && (
+                  <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+                     <div className="bg-slate-800 rounded-xl p-6 max-w-md">
+                        <h3 className="text-xl font-bold mb-3">{infoContent.title}</h3>
+                        <p className="text-white/80 mb-4 whitespace-pre-line">{infoContent.content}</p>
+                        <button onClick={() => setShowInfo(false)} className="w-full py-2 bg-indigo-600 hover:bg-indigo-500 rounded-lg">Got it!</button>
+                     </div>
+                  </div>
+               )}
+            </div>
+         );
+      }
+
+      // Sub-category Phase
+      if (phase === 'subcategory') {
+         const [subItems] = useState(shuffleArray([...subCategoryChallenge.assets]));
+         const [currentSubIndex, setCurrentSubIndex] = useState(0);
+         const [subPlaced, setSubPlaced] = useState<{[key: string]: string[]}>({
+            'Current Assets': [], 'Fixed Assets': [], 'Intangible Assets': []
+         });
+         const [subFeedback, setSubFeedback] = useState<{show: boolean; correct: boolean; message: string}>({show: false, correct: false, message: ''});
+
+         const handleSubDrop = (subCategory: string) => {
+            if (currentSubIndex >= subItems.length) return;
+
+            const item = subItems[currentSubIndex];
+            const isCorrect = item.subCategory === subCategory;
+
+            if (isCorrect) {
+               setSubPlaced(prev => ({
+                  ...prev,
+                  [subCategory]: [...prev[subCategory], item.account]
+               }));
+               setScore(prev => prev + 15);
+               setCorrectAnswers(prev => prev + 1);
+               setSubFeedback({ show: true, correct: true, message: `Correct! ${item.account} is a ${subCategory}.` });
+               setGameLog(prev => [...prev, `✓ Correctly placed ${item.account} in ${subCategory}`]);
+            } else {
+               setSubFeedback({
+                  show: true,
+                  correct: false,
+                  message: `Not quite. ${item.account} is actually a ${item.subCategory}. ${item.hint}`
+               });
+               setGameLog(prev => [...prev, `✗ Incorrectly placed ${item.account} in ${subCategory}`]);
+            }
+
+            setTotalAnswered(prev => prev + 1);
+
+            setTimeout(() => {
+               setSubFeedback({ show: false, correct: false, message: '' });
+               if (currentSubIndex < subItems.length - 1) {
+                  setCurrentSubIndex(prev => prev + 1);
+               } else {
+                  setPhase('numbering');
+                  setGameLog(prev => [...prev, 'Moving to Account Numbering Quiz']);
+               }
+            }, 1500);
+         };
+
+         return (
+            <div className="p-6 bg-gradient-to-br from-slate-900 via-indigo-900 to-slate-900 rounded-2xl text-white min-h-[600px]">
+               <div className="flex justify-between items-center mb-4">
+                  <div>
+                     <h2 className="text-xl font-bold">Sub-Category Challenge</h2>
+                     <p className="text-white/60 text-sm">Organize assets into sub-categories</p>
+                  </div>
+                  <div className="bg-white/10 rounded-lg px-3 py-1">
+                     <span className="text-white/60 text-sm">Score:</span>
+                     <span className="font-bold ml-2">{score}</span>
+                  </div>
+               </div>
+
+               <div className="w-full bg-white/10 rounded-full h-2 mb-6">
+                  <div
+                     className="bg-gradient-to-r from-violet-500 to-purple-500 h-2 rounded-full transition-all"
+                     style={{ width: `${((currentSubIndex + 1) / subItems.length) * 100}%` }}
+                  />
+               </div>
+
+               {currentSubIndex < subItems.length && (
+                  <div className="bg-white/10 rounded-xl p-6 mb-4 text-center">
+                     <div className="text-lg text-white/60 mb-2">Categorize this asset:</div>
+                     <div className="text-2xl font-bold">{subItems[currentSubIndex].account}</div>
+                     <div className="text-sm text-white/50 mt-2">Hint: {subItems[currentSubIndex].hint}</div>
+                  </div>
+               )}
+
+               <div className="grid grid-cols-3 gap-4 mb-4">
+                  {['Current Assets', 'Fixed Assets', 'Intangible Assets'].map(subCat => (
+                     <button
+                        key={subCat}
+                        onClick={() => handleSubDrop(subCat)}
+                        className="bg-emerald-500/20 border-2 border-emerald-500/50 hover:border-emerald-500 rounded-xl p-4 min-h-[150px] transition-all"
+                     >
+                        <div className="flex justify-between items-center mb-2">
+                           <h4 className="font-bold">{subCat}</h4>
+                           <button onClick={(e) => { e.stopPropagation(); showInfoModal(subCat, subCat === 'Current Assets' ? 'Assets expected to be converted to cash or used within one year. Examples: Cash, Accounts Receivable, Inventory, Prepaid Expenses.' : subCat === 'Fixed Assets' ? 'Long-term tangible assets used in operations. Also called Property, Plant & Equipment (PP&E). Examples: Land, Buildings, Equipment, Vehicles.' : 'Non-physical assets with value. Examples: Patents, Trademarks, Copyrights, Goodwill, Software.'); }} className="text-white/60 hover:text-white">ℹ️</button>
+                        </div>
+                        <div className="space-y-1 text-left">
+                           {subPlaced[subCat].map((item, i) => (
+                              <div key={i} className="bg-white/20 rounded px-2 py-1 text-sm">{item}</div>
+                           ))}
+                        </div>
+                     </button>
+                  ))}
+               </div>
+
+               {subFeedback.show && (
+                  <div className={`p-4 rounded-xl ${subFeedback.correct ? 'bg-emerald-500/30 border border-emerald-500' : 'bg-rose-500/30 border border-rose-500'}`}>
+                     <div className="flex items-center gap-2">
+                        <span className="text-xl">{subFeedback.correct ? '✓' : '✗'}</span>
+                        <span>{subFeedback.message}</span>
+                     </div>
+                  </div>
+               )}
+
+               {showInfo && infoContent && (
+                  <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+                     <div className="bg-slate-800 rounded-xl p-6 max-w-md">
+                        <h3 className="text-xl font-bold mb-3">{infoContent.title}</h3>
+                        <p className="text-white/80 mb-4">{infoContent.content}</p>
+                        <button onClick={() => setShowInfo(false)} className="w-full py-2 bg-indigo-600 hover:bg-indigo-500 rounded-lg">Got it!</button>
+                     </div>
+                  </div>
+               )}
+            </div>
+         );
+      }
+
+      // Numbering Phase
+      if (phase === 'numbering') {
+         const [currentNumIndex, setCurrentNumIndex] = useState(0);
+         const [numFeedback, setNumFeedback] = useState<{show: boolean; correct: boolean; message: string}>({show: false, correct: false, message: ''});
+
+         const handleNumberSelect = (answer: string) => {
+            const quiz = numberingQuiz[currentNumIndex];
+            const isCorrect = answer === quiz.correctNumber;
+
+            handleNumberingAnswer(quiz.account, answer);
+
+            if (isCorrect) {
+               setNumFeedback({ show: true, correct: true, message: `Correct! ${quiz.account} is account ${quiz.correctNumber} (${categories[quiz.category as keyof typeof categories].name} range: ${categories[quiz.category as keyof typeof categories].numberRange}).` });
+            } else {
+               setNumFeedback({
+                  show: true,
+                  correct: false,
+                  message: `Not quite. ${quiz.account} should be ${quiz.correctNumber}. It's a ${categories[quiz.category as keyof typeof categories].name} account (${categories[quiz.category as keyof typeof categories].numberRange}).`
+               });
+            }
+
+            setTimeout(() => {
+               setNumFeedback({ show: false, correct: false, message: '' });
+               if (currentNumIndex < numberingQuiz.length - 1) {
+                  setCurrentNumIndex(prev => prev + 1);
+               } else {
+                  setPhase('result');
+                  setGameLog(prev => [...prev, `Game completed! Final score: ${score}`]);
+               }
+            }, 2000);
+         };
+
+         return (
+            <div className="p-6 bg-gradient-to-br from-slate-900 via-indigo-900 to-slate-900 rounded-2xl text-white min-h-[600px]">
+               <div className="flex justify-between items-center mb-4">
+                  <div>
+                     <h2 className="text-xl font-bold">Account Numbering Quiz</h2>
+                     <p className="text-white/60 text-sm">Select the correct account number</p>
+                  </div>
+                  <div className="bg-white/10 rounded-lg px-3 py-1">
+                     <span className="text-white/60 text-sm">Score:</span>
+                     <span className="font-bold ml-2">{score}</span>
+                  </div>
+               </div>
+
+               <div className="w-full bg-white/10 rounded-full h-2 mb-6">
+                  <div
+                     className="bg-gradient-to-r from-amber-500 to-orange-500 h-2 rounded-full transition-all"
+                     style={{ width: `${((currentNumIndex + 1) / numberingQuiz.length) * 100}%` }}
+                  />
+               </div>
+
+               <div className="bg-gradient-to-r from-indigo-500/20 to-purple-500/20 rounded-xl p-4 mb-6">
+                  <div className="grid grid-cols-5 gap-2 text-center text-sm">
+                     {Object.entries(categories).map(([key, cat]) => (
+                        <div key={key} className={`${cat.bgColor} rounded p-2`}>
+                           <div className="font-bold">{cat.numberRange.split('-')[0]}</div>
+                           <div className="text-xs text-white/70">{cat.name}</div>
+                        </div>
+                     ))}
+                  </div>
+               </div>
+
+               {currentNumIndex < numberingQuiz.length && (
+                  <div className="bg-white/10 rounded-xl p-6 mb-4">
+                     <div className="text-lg text-white/60 mb-2">Question {currentNumIndex + 1} of {numberingQuiz.length}</div>
+                     <div className="text-xl font-bold mb-4">What account number would you assign to: <span className="text-amber-400">{numberingQuiz[currentNumIndex].account}</span>?</div>
+
+                     <div className="grid grid-cols-2 gap-3">
+                        {numberingQuiz[currentNumIndex].options.map(option => (
+                           <button
+                              key={option}
+                              onClick={() => handleNumberSelect(option)}
+                              disabled={numFeedback.show}
+                              className={`py-3 px-4 rounded-xl font-mono text-lg font-bold transition-all ${
+                                 numFeedback.show && option === numberingQuiz[currentNumIndex].correctNumber
+                                    ? 'bg-emerald-500 text-white'
+                                    : numFeedback.show && numberingAnswers[numberingQuiz[currentNumIndex].account] === option && option !== numberingQuiz[currentNumIndex].correctNumber
+                                    ? 'bg-rose-500 text-white'
+                                    : 'bg-white/10 hover:bg-white/20'
+                              }`}
+                           >
+                              {option}
+                           </button>
+                        ))}
+                     </div>
+                  </div>
+               )}
+
+               {numFeedback.show && (
+                  <div className={`p-4 rounded-xl ${numFeedback.correct ? 'bg-emerald-500/30 border border-emerald-500' : 'bg-rose-500/30 border border-rose-500'}`}>
+                     <div className="flex items-center gap-2">
+                        <span className="text-xl">{numFeedback.correct ? '✓' : '✗'}</span>
+                        <span>{numFeedback.message}</span>
+                     </div>
+                  </div>
+               )}
+            </div>
+         );
+      }
+
+      // Result Phase
+      if (phase === 'result') {
+         const accuracy = totalAnswered > 0 ? Math.round((correctAnswers / totalAnswered) * 100) : 0;
+         const grade = accuracy >= 90 ? 'A' : accuracy >= 80 ? 'B' : accuracy >= 70 ? 'C' : accuracy >= 60 ? 'D' : 'F';
+
+         return (
+            <div className="p-6 bg-gradient-to-br from-slate-900 via-indigo-900 to-slate-900 rounded-2xl text-white min-h-[600px]">
+               <div className="text-center mb-6">
+                  <div className="text-6xl mb-4">🎉</div>
+                  <h2 className="text-3xl font-bold mb-2">Chart of Accounts Mastered!</h2>
+                  <p className="text-white/60">You've completed all challenges</p>
+               </div>
+
+               <div className="grid grid-cols-3 gap-4 mb-6">
+                  <div className="bg-white/10 rounded-xl p-4 text-center">
+                     <div className="text-3xl font-bold text-amber-400">{score}</div>
+                     <div className="text-white/60">Total Points</div>
+                  </div>
+                  <div className="bg-white/10 rounded-xl p-4 text-center">
+                     <div className="text-3xl font-bold text-emerald-400">{accuracy}%</div>
+                     <div className="text-white/60">Accuracy</div>
+                  </div>
+                  <div className="bg-white/10 rounded-xl p-4 text-center">
+                     <div className={`text-3xl font-bold ${grade === 'A' ? 'text-emerald-400' : grade === 'B' ? 'text-sky-400' : grade === 'C' ? 'text-amber-400' : 'text-rose-400'}`}>{grade}</div>
+                     <div className="text-white/60">Grade</div>
+                  </div>
+               </div>
+
+               <div className="bg-white/10 rounded-xl p-6 mb-6">
+                  <h3 className="font-bold text-lg mb-4 flex items-center gap-2">
+                     💡 Key Takeaways
+                     <button onClick={() => showInfoModal('Why This Matters', 'A well-organized Chart of Accounts is the foundation of accurate financial reporting. It enables quick transaction categorization, consistent financial statements, and easy auditing.')} className="text-sky-400 hover:text-sky-300 text-sm">ℹ️</button>
+                  </h3>
+                  <ul className="space-y-3">
+                     <li className="flex items-start gap-3">
+                        <span className="text-emerald-400">✓</span>
+                        <span><strong>5 Categories:</strong> Assets (own), Liabilities (owe), Equity (owner's stake), Revenue (earned), Expenses (costs)</span>
+                     </li>
+                     <li className="flex items-start gap-3">
+                        <span className="text-emerald-400">✓</span>
+                        <span><strong>Numbering System:</strong> 1000s=Assets, 2000s=Liabilities, 3000s=Equity, 4000s=Revenue, 5000-9000s=Expenses</span>
+                     </li>
+                     <li className="flex items-start gap-3">
+                        <span className="text-emerald-400">✓</span>
+                        <span><strong>Sub-categories:</strong> Current vs Fixed Assets, Current vs Long-term Liabilities matter for liquidity analysis</span>
+                     </li>
+                     <li className="flex items-start gap-3">
+                        <span className="text-emerald-400">✓</span>
+                        <span><strong>Real-world Impact:</strong> Proper setup enables automatic financial statement generation</span>
+                     </li>
+                  </ul>
+               </div>
+
+               {conceptsStruggled.length > 0 && (
+                  <div className="bg-amber-500/20 border border-amber-500/50 rounded-xl p-4 mb-6">
+                     <h3 className="font-bold mb-2">📚 Areas to Review</h3>
+                     <p className="text-white/80">You had some difficulty with: {conceptsStruggled.map(c => categories[c as keyof typeof categories].name).join(', ')}. Consider reviewing these categories.</p>
+                  </div>
+               )}
+
+               <div className="bg-white/5 rounded-xl p-4 mb-6">
+                  <h3 className="font-bold mb-2">🤖 AI Coach Summary</h3>
+                  <p className="text-white/70 text-sm">Session data synced for personalized follow-up. Your coach can reference your performance in future sessions.</p>
+                  <div className="mt-2 max-h-24 overflow-y-auto text-xs text-white/50">
+                     {gameLog.slice(-5).map((log, i) => <div key={i}>{log}</div>)}
+                  </div>
+               </div>
+
+               <div className="flex gap-3">
+                  <button onClick={() => { setPhase('intro'); setCurrentLevel(0); setScore(0); setTotalAnswered(0); setCorrectAnswers(0); setConceptsStruggled([]); setGameLog([]); }} className="flex-1 py-3 bg-white/10 hover:bg-white/20 rounded-xl font-bold">🔄 Play Again</button>
+                  <button onClick={() => setPhase('intro')} className="flex-1 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 rounded-xl font-bold">✓ Done</button>
+               </div>
+
+               {showInfo && infoContent && (
+                  <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+                     <div className="bg-slate-800 rounded-xl p-6 max-w-md">
+                        <h3 className="text-xl font-bold mb-3">{infoContent.title}</h3>
+                        <p className="text-white/80 mb-4">{infoContent.content}</p>
+                        <button onClick={() => setShowInfo(false)} className="w-full py-2 bg-indigo-600 hover:bg-indigo-500 rounded-lg">Got it!</button>
+                     </div>
+                  </div>
+               )}
+            </div>
+         );
+      }
+
+      return null;
+   };
+
    const FinancialStatementsRenderer = () => {
       const [phase, setPhase] = useState<'intro' | 'play' | 'result'>('intro');
       const [showInfo, setShowInfo] = useState(false);
@@ -40971,6 +41859,8 @@ const GeneratedDiagram: React.FC<DiagramProps> = ({ type, data, title }) => {
             return <GAAPComplianceRenderer />;
          case 'gaap_vs_ifrs':
             return <GAAPvsIFRSRenderer />;
+         case 'chart_of_accounts':
+            return <ChartOfAccountsRenderer />;
          case 'pricing_strategy':
             return <PricingStrategyRenderer />;
          case 'budgeting':
