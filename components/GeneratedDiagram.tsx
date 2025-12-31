@@ -38350,6 +38350,332 @@ const GeneratedDiagram: React.FC<DiagramProps> = ({ type, data, title }) => {
       return null;
    };
 
+   // TOPIC 7: Accounts Payable Automation - Interactive Educational Game
+   const AccountsPayableRenderer = () => {
+      const [phase, setPhase] = useState<'intro' | 'tutorial' | 'workflow' | 'discount' | 'result'>('intro');
+      const [tutorialStep, setTutorialStep] = useState(0);
+      const [showInfo, setShowInfo] = useState(false);
+      const [infoContent, setInfoContent] = useState<{title: string; content: string} | null>(null);
+      const [score, setScore] = useState(0);
+      const [currentInvoice, setCurrentInvoice] = useState(0);
+      const [processedInvoices, setProcessedInvoices] = useState<{id: number; action: string; timing: string}[]>([]);
+      const [cashBalance, setCashBalance] = useState(50000);
+      const [discountQuiz, setDiscountQuiz] = useState(0);
+      const [quizAnswer, setQuizAnswer] = useState<string | null>(null);
+      const [showFeedback, setShowFeedback] = useState(false);
+      const [feedbackCorrect, setFeedbackCorrect] = useState(false);
+      const [gameLog, setGameLog] = useState<string[]>([]);
+      const [correctAnswers, setCorrectAnswers] = useState(0);
+      const [totalAnswered, setTotalAnswered] = useState(0);
+
+      const invoices = [
+         { id: 1, vendor: 'Office Supplies Inc', amount: 2500, terms: '2/10 net 30', dueDate: '2024-02-15', received: '2024-01-16', po: 'PO-1001', status: 'pending', category: 'Supplies' },
+         { id: 2, vendor: 'Tech Hardware Co', amount: 8500, terms: 'net 30', dueDate: '2024-02-20', received: '2024-01-21', po: 'PO-1002', status: 'pending', category: 'Equipment' },
+         { id: 3, vendor: 'Utility Company', amount: 1200, terms: 'net 15', dueDate: '2024-02-01', received: '2024-01-17', po: null, status: 'pending', category: 'Utilities' },
+         { id: 4, vendor: 'Marketing Agency', amount: 5000, terms: '1/15 net 45', dueDate: '2024-03-01', received: '2024-01-15', po: 'PO-1003', status: 'pending', category: 'Marketing' },
+         { id: 5, vendor: 'Raw Materials Ltd', amount: 15000, terms: '2/10 net 30', dueDate: '2024-02-10', received: '2024-01-11', po: 'PO-1004', status: 'pending', category: 'Inventory' },
+         { id: 6, vendor: 'Cleaning Services', amount: 800, terms: 'net 30', dueDate: '2024-02-25', received: '2024-01-26', po: null, status: 'pending', category: 'Services' }
+      ];
+
+      const discountQuizzes = [
+         { question: 'Invoice: $10,000 with terms "2/10 net 30". If paid in 8 days, how much do you pay?', correctAnswer: '$9,800', options: ['$10,000', '$9,800', '$9,900', '$9,700'], explanation: '2% discount on $10,000 = $200 off. Pay $9,800. The discount is earned by paying within 10 days.' },
+         { question: 'What is the annualized return on taking a 2/10 net 30 discount?', correctAnswer: '36.7%', options: ['2%', '24%', '36.7%', '12%'], explanation: '2% for 20 days early = 2% × (365/20) = 36.7% annualized. This is why companies prioritize early payment discounts!' },
+         { question: 'Terms are "1/15 net 45". The discount period is how many days?', correctAnswer: '15 days', options: ['1 day', '15 days', '45 days', '30 days'], explanation: '1/15 net 45 means: 1% discount if paid within 15 days, otherwise full amount due in 45 days.' },
+         { question: 'You have $5,000 cash. Invoice A: $3,000 (2/10 net 30, day 5). Invoice B: $4,000 (net 30, day 25). Which to pay first?', correctAnswer: 'Invoice A - take the discount', options: ['Invoice A - take the discount', 'Invoice B - older first', 'Pay both partially', 'Wait for more cash'], explanation: 'Always prioritize discount-eligible invoices when cash allows. The 2% discount on $3,000 = $60 saved, equivalent to 36%+ annualized return.' },
+         { question: 'Supplier offers "3/10 net 60". What does the 60 mean?', correctAnswer: 'Full payment due in 60 days', options: ['60% discount', 'Pay in 60 installments', 'Full payment due in 60 days', '60 days to dispute'], explanation: 'Net 60 means the full invoice amount is due 60 days from invoice date if discount is not taken.' },
+         { question: 'AP aging shows $50K in 0-30 days, $20K in 31-60 days, $10K in 61-90 days. Which is most concerning?', correctAnswer: '61-90 days bucket', options: ['0-30 days bucket', '31-60 days bucket', '61-90 days bucket', 'All equally concerning'], explanation: 'Invoices 61-90 days old are significantly overdue and may damage vendor relationships or credit terms.' }
+      ];
+
+      const tutorialSteps = [
+         { title: 'Welcome to Accounts Payable!', content: 'AP is what you OWE others. Automating it means paying the right amount, to the right vendor, at the right time—without errors.', highlight: 'overview' },
+         { title: 'The AP Workflow', content: 'Receive Invoice → Match to PO → Approve → Schedule Payment → Process → Reconcile. Each step prevents errors and fraud.', highlight: 'workflow' },
+         { title: 'Three-Way Matching', content: 'Match: 1) Invoice 2) Purchase Order 3) Receiving Report. All three must agree before payment. This prevents paying for goods not received.', highlight: 'matching' },
+         { title: 'Payment Terms', content: '"2/10 net 30" means: 2% discount if paid in 10 days, otherwise full amount due in 30 days. Taking discounts = free money!', highlight: 'terms' },
+         { title: 'The Discount Math', content: '2% for paying 20 days early = 36.7% annualized return! Companies with good cash flow always take early payment discounts.', highlight: 'discount' },
+         { title: 'Cash Flow Management', content: "Don't pay too early (lose cash flexibility) or too late (damage relationships). Schedule payments strategically.", highlight: 'cashflow' },
+         { title: "Let's Practice!", content: "Process invoices, decide when to pay, and calculate discount savings. Watch your cash flow!", highlight: 'game' }
+      ];
+
+      const showInfoModal = (title: string, content: string) => { setInfoContent({ title, content }); setShowInfo(true); };
+
+      const calculateDiscount = (amount: number, terms: string) => {
+         const match = terms.match(/(\d+)\/(\d+)/);
+         if (match) return { percent: parseInt(match[1]), days: parseInt(match[2]), savings: amount * (parseInt(match[1]) / 100) };
+         return null;
+      };
+
+      const getDaysUntilDue = (dueDate: string) => {
+         const due = new Date(dueDate);
+         const today = new Date('2024-01-20');
+         return Math.ceil((due.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+      };
+
+      const processInvoice = (action: 'payNow' | 'payOnDue' | 'schedule') => {
+         const inv = invoices[currentInvoice];
+         const discount = calculateDiscount(inv.amount, inv.terms);
+         let timing = '';
+         let payment = inv.amount;
+
+         if (action === 'payNow' && discount) {
+            payment = inv.amount - discount.savings;
+            timing = `Paid early, saved $${discount.savings.toFixed(0)}`;
+            setScore(p => p + 25);
+            setCorrectAnswers(p => p + 1);
+            setGameLog(p => [...p, `✓ Took ${discount.percent}% discount on ${inv.vendor}: saved $${discount.savings.toFixed(0)}`]);
+         } else if (action === 'payNow' && !discount) {
+            timing = 'Paid immediately (no discount available)';
+            setScore(p => p + 10);
+            setGameLog(p => [...p, `Paid ${inv.vendor} immediately (no discount terms)`]);
+         } else if (action === 'payOnDue') {
+            timing = `Scheduled for due date: ${inv.dueDate}`;
+            if (discount) {
+               setGameLog(p => [...p, `⚠ Missed ${discount.percent}% discount on ${inv.vendor}`]);
+               setScore(p => p + 5);
+            } else {
+               setScore(p => p + 15);
+               setGameLog(p => [...p, `Scheduled ${inv.vendor} for due date`]);
+            }
+         } else {
+            timing = 'Held for review';
+            setGameLog(p => [...p, `Held ${inv.vendor} invoice for review`]);
+         }
+
+         setCashBalance(p => action === 'payNow' ? p - payment : p);
+         setProcessedInvoices(p => [...p, { id: inv.id, action, timing }]);
+         setTotalAnswered(p => p + 1);
+
+         if (currentInvoice < invoices.length - 1) {
+            setCurrentInvoice(p => p + 1);
+         } else {
+            setPhase('discount');
+            setGameLog(p => [...p, 'Moving to discount calculation quiz']);
+         }
+      };
+
+      const handleQuizAnswer = (ans: string) => {
+         const q = discountQuizzes[discountQuiz];
+         const correct = ans === q.correctAnswer;
+         setQuizAnswer(ans); setShowFeedback(true); setFeedbackCorrect(correct); setTotalAnswered(p => p + 1);
+         if (correct) { setScore(p => p + 20); setCorrectAnswers(p => p + 1); setGameLog(p => [...p, `✓ ${q.question.substring(0, 40)}...`]); }
+         else setGameLog(p => [...p, `✗ ${q.question.substring(0, 40)}...`]);
+         setTimeout(() => {
+            setShowFeedback(false); setQuizAnswer(null);
+            if (discountQuiz < discountQuizzes.length - 1) setDiscountQuiz(p => p + 1);
+            else { setPhase('result'); setGameLog(p => [...p, `Completed! Score: ${score + (correct ? 20 : 0)}`]); }
+         }, 2500);
+      };
+
+      if (phase === 'intro') {
+         return (
+            <div className="p-6 bg-gradient-to-br from-slate-900 via-rose-900 to-slate-900 rounded-2xl text-white min-h-[600px]">
+               <div className="text-center mb-8">
+                  <h2 className="text-3xl font-bold mb-3">💳 Accounts Payable Automation</h2>
+                  <p className="text-lg text-white/80">Master what you OWE and when to pay</p>
+               </div>
+               <div className="bg-white/10 backdrop-blur rounded-xl p-6 mb-6">
+                  <div className="flex items-start gap-3"><span className="text-3xl">💡</span>
+                     <div><h3 className="font-bold text-xl mb-2">Key Insight</h3>
+                        <p className="text-white/90">"2/10 net 30" means: Take 2% off if you pay within 10 days. That 2% equals a 36% annualized return on early payment!</p>
+                     </div>
+                  </div>
+               </div>
+               <div className="grid grid-cols-2 gap-4 mb-6">
+                  <div className="bg-white/5 rounded-xl p-4">
+                     <h3 className="font-bold mb-3 flex items-center gap-2">🎯 What You'll Learn <button onClick={() => showInfoModal('Objectives', 'Master AP workflow, three-way matching, payment terms, discount calculations, and cash flow optimization.')} className="text-sky-400">ℹ️</button></h3>
+                     <ul className="space-y-2 text-white/80 text-sm">
+                        <li className="flex items-center gap-2"><span className="text-green-400">✓</span> Invoice processing workflow</li>
+                        <li className="flex items-center gap-2"><span className="text-green-400">✓</span> Payment terms (2/10 net 30)</li>
+                        <li className="flex items-center gap-2"><span className="text-green-400">✓</span> Discount calculations</li>
+                        <li className="flex items-center gap-2"><span className="text-green-400">✓</span> Cash flow optimization</li>
+                     </ul>
+                  </div>
+                  <div className="bg-white/5 rounded-xl p-4">
+                     <h3 className="font-bold mb-3">🎮 Game Structure</h3>
+                     <ul className="space-y-2 text-white/80 text-sm">
+                        <li className="flex items-center gap-2"><span className="text-rose-400">1</span> Tutorial</li>
+                        <li className="flex items-center gap-2"><span className="text-rose-400">2</span> Process invoices</li>
+                        <li className="flex items-center gap-2"><span className="text-rose-400">3</span> Payment decisions</li>
+                        <li className="flex items-center gap-2"><span className="text-rose-400">4</span> Discount quiz</li>
+                     </ul>
+                  </div>
+               </div>
+               <div className="bg-gradient-to-r from-rose-500/20 to-pink-500/20 rounded-xl p-4 mb-6">
+                  <h3 className="font-bold mb-2">📊 AP Workflow</h3>
+                  <div className="flex items-center justify-between text-xs">
+                     {['Receive', 'Match PO', 'Approve', 'Schedule', 'Pay', 'Reconcile'].map((item, i) => (
+                        <div key={i} className="flex items-center">
+                           <div className="bg-white/20 rounded p-2 text-center"><div className="font-bold">{item}</div></div>
+                           {i < 5 && <span className="mx-1 text-white/40">→</span>}
+                        </div>
+                     ))}
+                  </div>
+               </div>
+               <button onClick={() => setPhase('tutorial')} className="w-full py-4 bg-gradient-to-r from-rose-600 to-pink-600 hover:from-rose-500 hover:to-pink-500 rounded-xl font-bold text-lg">Start Learning →</button>
+               {showInfo && infoContent && (<div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"><div className="bg-slate-800 rounded-xl p-6 max-w-md"><h3 className="text-xl font-bold mb-3">{infoContent.title}</h3><p className="text-white/80 mb-4">{infoContent.content}</p><button onClick={() => setShowInfo(false)} className="w-full py-2 bg-rose-600 rounded-lg">Got it!</button></div></div>)}
+            </div>
+         );
+      }
+
+      if (phase === 'tutorial') {
+         const step = tutorialSteps[tutorialStep];
+         return (
+            <div className="p-6 bg-gradient-to-br from-slate-900 via-rose-900 to-slate-900 rounded-2xl text-white min-h-[600px]">
+               <div className="flex justify-between items-center mb-6"><h2 className="text-2xl font-bold">📚 Tutorial</h2><div className="text-white/60">Step {tutorialStep + 1}/{tutorialSteps.length}</div></div>
+               <div className="w-full bg-white/10 rounded-full h-2 mb-6"><div className="bg-gradient-to-r from-rose-500 to-pink-500 h-2 rounded-full" style={{ width: `${((tutorialStep + 1) / tutorialSteps.length) * 100}%` }} /></div>
+               <div className="bg-white/10 rounded-xl p-6 mb-6">
+                  <h3 className="text-xl font-bold mb-4">{step.title}</h3>
+                  <p className="text-lg text-white/90 mb-6">{step.content}</p>
+                  {step.highlight === 'terms' && (
+                     <div className="bg-white/10 rounded-lg p-4">
+                        <div className="font-bold text-center mb-3 text-rose-400">Payment Terms Decoded</div>
+                        <div className="grid grid-cols-3 gap-3 text-sm">
+                           <div className="bg-white/10 rounded p-2"><div className="font-bold">2/10 net 30</div><div className="text-xs text-white/60">2% off if paid in 10 days</div></div>
+                           <div className="bg-white/10 rounded p-2"><div className="font-bold">1/15 net 45</div><div className="text-xs text-white/60">1% off if paid in 15 days</div></div>
+                           <div className="bg-white/10 rounded p-2"><div className="font-bold">net 30</div><div className="text-xs text-white/60">Full amount due in 30 days</div></div>
+                        </div>
+                     </div>
+                  )}
+                  {step.highlight === 'discount' && (
+                     <div className="bg-emerald-500/20 border border-emerald-500/50 rounded-lg p-4">
+                        <div className="font-bold mb-2">💰 The Math That Matters</div>
+                        <div className="text-sm">2% discount for paying 20 days early = <span className="text-emerald-400 font-bold">36.7% annualized return</span></div>
+                        <div className="text-xs text-white/60 mt-2">Formula: Discount% × (365 ÷ Days Early) = 2% × (365 ÷ 20) = 36.5%</div>
+                     </div>
+                  )}
+                  {step.highlight === 'matching' && (
+                     <div className="flex justify-center gap-4 text-sm">
+                        <div className="bg-sky-500/20 rounded p-3 text-center"><div className="text-2xl mb-1">📄</div><div className="font-bold">Invoice</div></div>
+                        <div className="text-white/40 self-center">=</div>
+                        <div className="bg-violet-500/20 rounded p-3 text-center"><div className="text-2xl mb-1">📋</div><div className="font-bold">PO</div></div>
+                        <div className="text-white/40 self-center">=</div>
+                        <div className="bg-emerald-500/20 rounded p-3 text-center"><div className="text-2xl mb-1">📦</div><div className="font-bold">Receipt</div></div>
+                     </div>
+                  )}
+               </div>
+               <div className="flex gap-3">
+                  {tutorialStep > 0 && <button onClick={() => setTutorialStep(p => p - 1)} className="flex-1 py-3 bg-white/10 hover:bg-white/20 rounded-xl font-bold">← Back</button>}
+                  <button onClick={() => { if (tutorialStep < tutorialSteps.length - 1) setTutorialStep(p => p + 1); else { setPhase('workflow'); setGameLog(['Started AP invoice processing']); } }} className="flex-1 py-3 bg-gradient-to-r from-rose-600 to-pink-600 rounded-xl font-bold">{tutorialStep < tutorialSteps.length - 1 ? 'Next →' : 'Process Invoices →'}</button>
+               </div>
+            </div>
+         );
+      }
+
+      if (phase === 'workflow') {
+         const inv = invoices[currentInvoice];
+         const discount = calculateDiscount(inv.amount, inv.terms);
+         const daysUntilDue = getDaysUntilDue(inv.dueDate);
+         return (
+            <div className="p-6 bg-gradient-to-br from-slate-900 via-rose-900 to-slate-900 rounded-2xl text-white min-h-[600px]">
+               <div className="flex justify-between items-center mb-4">
+                  <div><h2 className="text-xl font-bold">📋 Invoice Processing</h2><p className="text-white/60 text-sm">Invoice {currentInvoice + 1} of {invoices.length}</p></div>
+                  <div className="text-right">
+                     <div className="text-xs text-white/60">Cash Balance</div>
+                     <div className="font-mono font-bold text-lg text-emerald-400">${cashBalance.toLocaleString()}</div>
+                  </div>
+               </div>
+               <div className="w-full bg-white/10 rounded-full h-2 mb-6"><div className="bg-gradient-to-r from-rose-500 to-pink-500 h-2 rounded-full" style={{ width: `${((currentInvoice + 1) / invoices.length) * 100}%` }} /></div>
+
+               <div className="bg-white/10 rounded-xl p-5 mb-4">
+                  <div className="flex justify-between items-start mb-4">
+                     <div>
+                        <div className="text-xl font-bold">{inv.vendor}</div>
+                        <div className="text-white/60 text-sm">{inv.category}</div>
+                     </div>
+                     <div className="text-right">
+                        <div className="text-2xl font-bold font-mono">${inv.amount.toLocaleString()}</div>
+                        <div className="text-sm text-white/60">{inv.terms}</div>
+                     </div>
+                  </div>
+                  <div className="grid grid-cols-3 gap-3 text-sm mb-4">
+                     <div className="bg-white/5 rounded p-2"><span className="text-white/60">Received:</span> {inv.received}</div>
+                     <div className="bg-white/5 rounded p-2"><span className="text-white/60">Due:</span> {inv.dueDate}</div>
+                     <div className="bg-white/5 rounded p-2"><span className="text-white/60">PO:</span> {inv.po || 'N/A'}</div>
+                  </div>
+                  {discount && (
+                     <div className="bg-emerald-500/20 border border-emerald-500/50 rounded-lg p-3 mb-4">
+                        <div className="flex justify-between items-center">
+                           <div><span className="font-bold text-emerald-400">{discount.percent}% Discount Available!</span><div className="text-xs text-white/60">Pay within {discount.days} days</div></div>
+                           <div className="text-right"><div className="font-mono font-bold">Save ${discount.savings.toFixed(0)}</div><div className="text-xs text-white/60">Pay ${(inv.amount - discount.savings).toLocaleString()}</div></div>
+                        </div>
+                     </div>
+                  )}
+                  <div className="flex items-center gap-2 text-sm">
+                     <span className={`px-2 py-1 rounded ${daysUntilDue <= 7 ? 'bg-rose-500/30 text-rose-300' : daysUntilDue <= 14 ? 'bg-amber-500/30 text-amber-300' : 'bg-emerald-500/30 text-emerald-300'}`}>
+                        {daysUntilDue} days until due
+                     </span>
+                     {inv.po && <span className="px-2 py-1 rounded bg-sky-500/30 text-sky-300">PO Matched</span>}
+                  </div>
+               </div>
+
+               <div className="text-sm text-white/60 mb-3 flex items-center gap-2">
+                  Choose action: <button onClick={() => showInfoModal('Payment Strategy', 'Take discounts when cash allows - the annualized return is excellent. Pay on due date if no discount. Never pay late unless absolutely necessary.')} className="text-sky-400">ℹ️</button>
+               </div>
+               <div className="grid grid-cols-3 gap-3">
+                  <button onClick={() => processInvoice('payNow')} disabled={cashBalance < (discount ? inv.amount - discount.savings : inv.amount)} className={`py-4 rounded-xl font-bold transition-all ${cashBalance >= (discount ? inv.amount - discount.savings : inv.amount) ? 'bg-emerald-600 hover:bg-emerald-500' : 'bg-white/10 opacity-50 cursor-not-allowed'}`}>
+                     <div>Pay Now</div>
+                     {discount && <div className="text-xs font-normal">Save ${discount.savings.toFixed(0)}</div>}
+                  </button>
+                  <button onClick={() => processInvoice('payOnDue')} className="py-4 bg-amber-600 hover:bg-amber-500 rounded-xl font-bold">
+                     <div>Pay on Due Date</div>
+                     <div className="text-xs font-normal">{inv.dueDate}</div>
+                  </button>
+                  <button onClick={() => processInvoice('schedule')} className="py-4 bg-white/10 hover:bg-white/20 rounded-xl font-bold">
+                     <div>Hold for Review</div>
+                     <div className="text-xs font-normal">Investigate</div>
+                  </button>
+               </div>
+            </div>
+         );
+      }
+
+      if (phase === 'discount') {
+         const q = discountQuizzes[discountQuiz];
+         return (
+            <div className="p-6 bg-gradient-to-br from-slate-900 via-rose-900 to-slate-900 rounded-2xl text-white min-h-[600px]">
+               <div className="flex justify-between items-center mb-4"><div><h2 className="text-xl font-bold">🧮 Discount Calculations</h2><p className="text-white/60 text-sm">Q{discountQuiz + 1}/{discountQuizzes.length}</p></div><div className="bg-white/10 rounded-lg px-3 py-1">Score: <span className="font-bold">{score}</span></div></div>
+               <div className="w-full bg-white/10 rounded-full h-2 mb-6"><div className="bg-gradient-to-r from-amber-500 to-orange-500 h-2 rounded-full" style={{ width: `${((discountQuiz + 1) / discountQuizzes.length) * 100}%` }} /></div>
+               <div className="bg-white/10 rounded-xl p-6 mb-4">
+                  <p className="text-lg mb-6">{q.question}</p>
+                  <div className="grid grid-cols-2 gap-3">{q.options.map(o => (<button key={o} onClick={() => !showFeedback && handleQuizAnswer(o)} disabled={showFeedback} className={`py-3 px-4 rounded-xl font-medium transition-all ${showFeedback && o === q.correctAnswer ? 'bg-emerald-500' : showFeedback && quizAnswer === o && o !== q.correctAnswer ? 'bg-rose-500' : 'bg-white/10 hover:bg-white/20'}`}>{o}</button>))}</div>
+               </div>
+               {showFeedback && (<div className={`p-4 rounded-xl ${feedbackCorrect ? 'bg-emerald-500/30 border border-emerald-500' : 'bg-rose-500/30 border border-rose-500'}`}><div className="flex items-start gap-2"><span className="text-xl">{feedbackCorrect ? '✓' : '✗'}</span><div><div className="font-bold mb-1">{feedbackCorrect ? 'Correct!' : 'Not quite'}</div><div className="text-sm text-white/80">{q.explanation}</div></div></div></div>)}
+            </div>
+         );
+      }
+
+      if (phase === 'result') {
+         const acc = totalAnswered > 0 ? Math.round((correctAnswers / totalAnswered) * 100) : 0;
+         const grade = acc >= 90 ? 'A' : acc >= 80 ? 'B' : acc >= 70 ? 'C' : acc >= 60 ? 'D' : 'F';
+         const totalSaved = processedInvoices.filter(p => p.timing.includes('saved')).reduce((sum, p) => { const match = p.timing.match(/\$(\d+)/); return sum + (match ? parseInt(match[1]) : 0); }, 0);
+         return (
+            <div className="p-6 bg-gradient-to-br from-slate-900 via-rose-900 to-slate-900 rounded-2xl text-white min-h-[600px]">
+               <div className="text-center mb-6"><div className="text-6xl mb-4">💳</div><h2 className="text-3xl font-bold mb-2">AP Automation Mastered!</h2></div>
+               <div className="grid grid-cols-4 gap-3 mb-6">
+                  <div className="bg-white/10 rounded-xl p-4 text-center"><div className="text-2xl font-bold text-amber-400">{score}</div><div className="text-white/60 text-sm">Points</div></div>
+                  <div className="bg-white/10 rounded-xl p-4 text-center"><div className="text-2xl font-bold text-emerald-400">{acc}%</div><div className="text-white/60 text-sm">Accuracy</div></div>
+                  <div className="bg-white/10 rounded-xl p-4 text-center"><div className={`text-2xl font-bold ${grade === 'A' ? 'text-emerald-400' : 'text-sky-400'}`}>{grade}</div><div className="text-white/60 text-sm">Grade</div></div>
+                  <div className="bg-white/10 rounded-xl p-4 text-center"><div className="text-2xl font-bold text-green-400">${totalSaved}</div><div className="text-white/60 text-sm">Saved</div></div>
+               </div>
+               <div className="bg-white/10 rounded-xl p-6 mb-6">
+                  <h3 className="font-bold text-lg mb-4">💡 Key Takeaways</h3>
+                  <ul className="space-y-2 text-sm">
+                     <li className="flex items-start gap-2"><span className="text-emerald-400">✓</span><span><strong>Take Discounts:</strong> 2/10 net 30 = 36% annualized return</span></li>
+                     <li className="flex items-start gap-2"><span className="text-emerald-400">✓</span><span><strong>Three-Way Match:</strong> Invoice + PO + Receipt before paying</span></li>
+                     <li className="flex items-start gap-2"><span className="text-emerald-400">✓</span><span><strong>Cash Flow:</strong> Balance early payment savings vs cash needs</span></li>
+                     <li className="flex items-start gap-2"><span className="text-emerald-400">✓</span><span><strong>Never Late:</strong> Protect vendor relationships and credit terms</span></li>
+                  </ul>
+               </div>
+               <div className="flex gap-3">
+                  <button onClick={() => { setPhase('intro'); setScore(0); setCurrentInvoice(0); setDiscountQuiz(0); setProcessedInvoices([]); setCashBalance(50000); setCorrectAnswers(0); setTotalAnswered(0); }} className="flex-1 py-3 bg-white/10 hover:bg-white/20 rounded-xl font-bold">🔄 Again</button>
+                  <button onClick={() => setPhase('intro')} className="flex-1 py-3 bg-gradient-to-r from-rose-600 to-pink-600 rounded-xl font-bold">✓ Done</button>
+               </div>
+            </div>
+         );
+      }
+
+      return null;
+   };
+
    const FinancialStatementsRenderer = () => {
       const [phase, setPhase] = useState<'intro' | 'play' | 'result'>('intro');
       const [showInfo, setShowInfo] = useState(false);
@@ -42163,6 +42489,8 @@ const GeneratedDiagram: React.FC<DiagramProps> = ({ type, data, title }) => {
             return <ChartOfAccountsRenderer />;
          case 'general_ledger':
             return <GeneralLedgerRenderer />;
+         case 'accounts_payable':
+            return <AccountsPayableRenderer />;
          case 'pricing_strategy':
             return <PricingStrategyRenderer />;
          case 'budgeting':
