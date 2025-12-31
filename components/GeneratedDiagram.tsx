@@ -39743,6 +39743,412 @@ const GeneratedDiagram: React.FC<DiagramProps> = ({ type, data, title }) => {
       return null;
    };
 
+   const IncomeStatementRenderer = () => {
+      const [phase, setPhase] = useState<'intro' | 'tutorial' | 'play' | 'result'>('intro');
+      const [tutorialStep, setTutorialStep] = useState(0);
+      const [showInfo, setShowInfo] = useState(false);
+      const [infoTopic, setInfoTopic] = useState<string | null>(null);
+      const [score, setScore] = useState(0);
+      const [level, setLevel] = useState(0);
+      const [gameLog, setGameLog] = useState<string[]>([]);
+      const [answers, setAnswers] = useState<{[key: string]: number}>({});
+      const [showResults, setShowResults] = useState(false);
+      const [quizIndex, setQuizIndex] = useState(0);
+      const [quizAnswered, setQuizAnswered] = useState(false);
+
+      const tutorials = [
+         { title: "The Income Statement", content: "Also called P&L (Profit & Loss). Shows revenues and expenses over a PERIOD of time (month, quarter, year).", icon: "📈" },
+         { title: "Revenue (Top Line)", content: "Money earned from selling products/services. This is the 'top line' because it appears first.", icon: "💵" },
+         { title: "Cost of Goods Sold (COGS)", content: "Direct costs to produce what you sold: materials, direct labor, manufacturing. Not overhead!", icon: "📦" },
+         { title: "Gross Profit", content: "Revenue - COGS = Gross Profit. Shows how much you make BEFORE operating expenses.", icon: "💰" },
+         { title: "Operating Expenses", content: "Costs to run the business: rent, salaries, marketing, R&D. Not directly tied to production.", icon: "🏢" },
+         { title: "Operating Income (EBIT)", content: "Gross Profit - Operating Expenses. Earnings Before Interest & Taxes. Core business profitability.", icon: "📊" },
+         { title: "Net Income (Bottom Line)", content: "What's left after ALL expenses including interest and taxes. The 'bottom line' - actual profit!", icon: "🎯" }
+      ];
+
+      const infoTopics: {[key: string]: string} = {
+         revenue: "Revenue is recognized when earned, not necessarily when cash is received. A $1M contract signed today but paid over 12 months still books revenue based on delivery.",
+         cogs: "COGS includes only DIRECT costs: raw materials, direct labor, manufacturing overhead. It does NOT include sales salaries, marketing, or administrative costs.",
+         gross_margin: "Gross Margin = Gross Profit / Revenue. A 40% gross margin means for every $1 sold, $0.40 remains after direct costs. Higher is usually better.",
+         operating_expenses: "OpEx includes SG&A (Selling, General & Administrative), R&D, and other costs not directly tied to production. These are 'period costs' expensed when incurred.",
+         ebitda: "EBITDA = Earnings Before Interest, Taxes, Depreciation & Amortization. Often used to compare companies since it removes financing and accounting differences.",
+         net_margin: "Net Margin = Net Income / Revenue. A 10% net margin means $0.10 profit per $1 of revenue. This is the ultimate profitability metric."
+      };
+
+      const buildScenarios = [
+         {
+            name: "Tech Startup P&L",
+            revenue: 1000000,
+            cogs: 200000,
+            operating_expenses: 600000,
+            interest: 20000,
+            taxes: 36000,
+            steps: ['gross_profit', 'operating_income', 'net_income']
+         },
+         {
+            name: "Retail Store P&L",
+            revenue: 500000,
+            cogs: 300000,
+            operating_expenses: 150000,
+            interest: 10000,
+            taxes: 8000,
+            steps: ['gross_profit', 'operating_income', 'net_income']
+         }
+      ];
+
+      const calculateCorrectAnswers = (scenario: typeof buildScenarios[0]) => ({
+         gross_profit: scenario.revenue - scenario.cogs,
+         operating_income: scenario.revenue - scenario.cogs - scenario.operating_expenses,
+         net_income: scenario.revenue - scenario.cogs - scenario.operating_expenses - scenario.interest - scenario.taxes
+      });
+
+      const quizzes = [
+         { q: "Revenue appears on which financial statement?", opts: ["Balance Sheet only", "Income Statement only", "Cash Flow Statement only", "All three"], correct: 1, explain: "Revenue is an income statement item. The balance sheet shows assets/liabilities, not revenues." },
+         { q: "A company has $800K revenue, $300K COGS, $200K OpEx. What's gross profit?", opts: ["$500,000", "$300,000", "$200,000", "$800,000"], correct: 0, explain: "Gross Profit = Revenue - COGS = $800K - $300K = $500K. Operating expenses come after!" },
+         { q: "Which is NOT included in COGS?", opts: ["Raw materials", "Factory rent", "Sales team salaries", "Direct labor"], correct: 2, explain: "Sales salaries are operating expenses (SG&A), not COGS. COGS is only direct production costs." },
+         { q: "Operating income is also called:", opts: ["Gross Profit", "EBIT", "Net Income", "Revenue"], correct: 1, explain: "Operating Income = EBIT (Earnings Before Interest and Taxes). It measures core business profitability." },
+         { q: "A company with high gross margin but low net margin likely has:", opts: ["Low COGS", "High operating expenses", "Low revenue", "No taxes"], correct: 1, explain: "If gross margin is high but net margin is low, operating expenses are eating into profits significantly." },
+         { q: "Income statement covers:", opts: ["A single point in time", "A period of time", "Only cash transactions", "Only credit transactions"], correct: 1, explain: "Unlike balance sheet (point in time), income statement covers a period: 'For the year ended Dec 31, 2024'." }
+      ];
+
+      const handleAnswer = (step: string, value: number) => {
+         setAnswers(prev => ({ ...prev, [step]: value }));
+      };
+
+      const checkAnswers = () => {
+         setShowResults(true);
+         const correct = calculateCorrectAnswers(buildScenarios[level]);
+         let points = 0;
+         buildScenarios[level].steps.forEach(step => {
+            if (answers[step] === correct[step as keyof typeof correct]) {
+               points += 25;
+               setGameLog(prev => [...prev, `Correct: ${step.replace(/_/g, ' ')} = $${correct[step as keyof typeof correct].toLocaleString()}`]);
+            }
+         });
+         setScore(prev => prev + points);
+      };
+
+      const handleQuizAnswer = (idx: number) => {
+         if (quizAnswered) return;
+         setQuizAnswered(true);
+         if (idx === quizzes[quizIndex].correct) {
+            setScore(prev => prev + 15);
+            setGameLog(prev => [...prev, `Quiz ${quizIndex + 1}: Correct!`]);
+         }
+      };
+
+      const nextQuiz = () => {
+         if (quizIndex < quizzes.length - 1) {
+            setQuizIndex(prev => prev + 1);
+            setQuizAnswered(false);
+         } else {
+            setPhase('result');
+         }
+      };
+
+      const InfoModal = ({ topic, onClose }: { topic: string; onClose: () => void }) => (
+         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={onClose}>
+            <div className="bg-white rounded-xl p-6 max-w-md" onClick={e => e.stopPropagation()}>
+               <h3 className="text-lg font-bold text-gray-800 mb-3">ℹ️ {topic.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}</h3>
+               <p className="text-gray-600">{infoTopics[topic]}</p>
+               <button onClick={onClose} className="mt-4 w-full py-2 bg-emerald-500 text-white rounded-lg hover:bg-emerald-600">Got it!</button>
+            </div>
+         </div>
+      );
+
+      if (phase === 'intro') {
+         return (
+            <div className="flex flex-col items-center justify-center min-h-full bg-gradient-to-br from-emerald-50 to-green-100 p-6">
+               <div className="bg-white rounded-2xl shadow-xl p-8 max-w-lg w-full text-center">
+                  <div className="text-6xl mb-4">📈</div>
+                  <h1 className="text-2xl font-bold text-gray-800 mb-3">Income Statement (P&L)</h1>
+                  <p className="text-gray-600 mb-6">Learn to read the Profit & Loss statement - from revenue at the top to net income at the bottom. Understand how every dollar flows!</p>
+                  <div className="bg-emerald-50 rounded-lg p-4 mb-6 text-left">
+                     <p className="text-sm text-emerald-800 font-mono">
+                        Revenue (Top Line)<br/>
+                        - COGS<br/>
+                        = Gross Profit<br/>
+                        - Operating Expenses<br/>
+                        = Operating Income<br/>
+                        - Interest & Taxes<br/>
+                        = <strong>Net Income (Bottom Line)</strong>
+                     </p>
+                  </div>
+                  <button onClick={() => setPhase('tutorial')} className="w-full py-3 bg-emerald-500 text-white rounded-xl font-semibold hover:bg-emerald-600 transition-all">
+                     Start Learning
+                  </button>
+               </div>
+            </div>
+         );
+      }
+
+      if (phase === 'tutorial') {
+         const tut = tutorials[tutorialStep];
+         return (
+            <div className="flex flex-col items-center justify-center min-h-full bg-gradient-to-br from-emerald-50 to-green-100 p-6">
+               <div className="bg-white rounded-2xl shadow-xl p-8 max-w-lg w-full">
+                  <div className="flex justify-between items-center mb-6">
+                     <span className="text-sm text-gray-500">Step {tutorialStep + 1} of {tutorials.length}</span>
+                     <div className="flex gap-1">
+                        {tutorials.map((_, i) => (
+                           <div key={i} className={`w-2 h-2 rounded-full ${i <= tutorialStep ? 'bg-emerald-500' : 'bg-gray-200'}`} />
+                        ))}
+                     </div>
+                  </div>
+                  <div className="text-4xl mb-4 text-center">{tut.icon}</div>
+                  <h2 className="text-xl font-bold text-gray-800 mb-3 text-center">{tut.title}</h2>
+                  <p className="text-gray-600 text-center mb-8">{tut.content}</p>
+                  <div className="flex gap-3">
+                     {tutorialStep > 0 && (
+                        <button onClick={() => setTutorialStep(prev => prev - 1)} className="flex-1 py-3 border-2 border-gray-200 rounded-xl font-semibold text-gray-600 hover:bg-gray-50">
+                           Back
+                        </button>
+                     )}
+                     <button
+                        onClick={() => tutorialStep < tutorials.length - 1 ? setTutorialStep(prev => prev + 1) : setPhase('play')}
+                        className="flex-1 py-3 bg-emerald-500 text-white rounded-xl font-semibold hover:bg-emerald-600"
+                     >
+                        {tutorialStep < tutorials.length - 1 ? 'Next' : 'Build a P&L!'}
+                     </button>
+                  </div>
+               </div>
+            </div>
+         );
+      }
+
+      if (phase === 'play') {
+         const scenario = buildScenarios[level];
+         const correct = calculateCorrectAnswers(scenario);
+         const inQuizMode = level >= buildScenarios.length;
+
+         if (!inQuizMode) {
+            return (
+               <div className="flex flex-col min-h-full bg-gradient-to-br from-emerald-50 to-green-100 p-4">
+                  {showInfo && infoTopic && <InfoModal topic={infoTopic} onClose={() => setShowInfo(false)} />}
+
+                  <div className="flex justify-between items-center mb-4">
+                     <div>
+                        <h2 className="font-bold text-gray-800">{scenario.name}</h2>
+                        <p className="text-sm text-gray-600">Calculate the missing values</p>
+                     </div>
+                     <span className="text-xl font-bold text-emerald-600">{score} pts</span>
+                  </div>
+
+                  <div className="flex-1 bg-white rounded-xl shadow-lg p-4 overflow-y-auto">
+                     <div className="space-y-3 font-mono text-sm">
+                        <div className="flex justify-between items-center py-2 border-b">
+                           <span className="flex items-center gap-2">
+                              Revenue <button onClick={() => { setInfoTopic('revenue'); setShowInfo(true); }} className="text-blue-500">ℹ️</button>
+                           </span>
+                           <span className="font-bold text-green-600">${scenario.revenue.toLocaleString()}</span>
+                        </div>
+                        <div className="flex justify-between items-center py-2 border-b">
+                           <span className="flex items-center gap-2">
+                              - COGS <button onClick={() => { setInfoTopic('cogs'); setShowInfo(true); }} className="text-blue-500">ℹ️</button>
+                           </span>
+                           <span className="text-red-600">({scenario.cogs.toLocaleString()})</span>
+                        </div>
+                        <div className="flex justify-between items-center py-2 border-b bg-yellow-50 px-2 rounded">
+                           <span className="flex items-center gap-2 font-semibold">
+                              = Gross Profit <button onClick={() => { setInfoTopic('gross_margin'); setShowInfo(true); }} className="text-blue-500">ℹ️</button>
+                           </span>
+                           {!showResults ? (
+                              <input
+                                 type="number"
+                                 placeholder="Calculate..."
+                                 value={answers.gross_profit || ''}
+                                 onChange={(e) => handleAnswer('gross_profit', Number(e.target.value))}
+                                 className="w-32 px-2 py-1 border rounded text-right"
+                              />
+                           ) : (
+                              <span className={answers.gross_profit === correct.gross_profit ? 'text-green-600 font-bold' : 'text-red-600'}>
+                                 ${correct.gross_profit.toLocaleString()} {answers.gross_profit === correct.gross_profit ? '✓' : `(you: ${answers.gross_profit?.toLocaleString()})`}
+                              </span>
+                           )}
+                        </div>
+                        <div className="flex justify-between items-center py-2 border-b">
+                           <span className="flex items-center gap-2">
+                              - Operating Expenses <button onClick={() => { setInfoTopic('operating_expenses'); setShowInfo(true); }} className="text-blue-500">ℹ️</button>
+                           </span>
+                           <span className="text-red-600">({scenario.operating_expenses.toLocaleString()})</span>
+                        </div>
+                        <div className="flex justify-between items-center py-2 border-b bg-yellow-50 px-2 rounded">
+                           <span className="flex items-center gap-2 font-semibold">
+                              = Operating Income <button onClick={() => { setInfoTopic('ebitda'); setShowInfo(true); }} className="text-blue-500">ℹ️</button>
+                           </span>
+                           {!showResults ? (
+                              <input
+                                 type="number"
+                                 placeholder="Calculate..."
+                                 value={answers.operating_income || ''}
+                                 onChange={(e) => handleAnswer('operating_income', Number(e.target.value))}
+                                 className="w-32 px-2 py-1 border rounded text-right"
+                              />
+                           ) : (
+                              <span className={answers.operating_income === correct.operating_income ? 'text-green-600 font-bold' : 'text-red-600'}>
+                                 ${correct.operating_income.toLocaleString()} {answers.operating_income === correct.operating_income ? '✓' : `(you: ${answers.operating_income?.toLocaleString()})`}
+                              </span>
+                           )}
+                        </div>
+                        <div className="flex justify-between items-center py-2 border-b">
+                           <span>- Interest Expense</span>
+                           <span className="text-red-600">({scenario.interest.toLocaleString()})</span>
+                        </div>
+                        <div className="flex justify-between items-center py-2 border-b">
+                           <span>- Income Taxes</span>
+                           <span className="text-red-600">({scenario.taxes.toLocaleString()})</span>
+                        </div>
+                        <div className="flex justify-between items-center py-3 bg-emerald-50 px-2 rounded border-2 border-emerald-300">
+                           <span className="flex items-center gap-2 font-bold text-lg">
+                              = Net Income <button onClick={() => { setInfoTopic('net_margin'); setShowInfo(true); }} className="text-blue-500">ℹ️</button>
+                           </span>
+                           {!showResults ? (
+                              <input
+                                 type="number"
+                                 placeholder="Calculate..."
+                                 value={answers.net_income || ''}
+                                 onChange={(e) => handleAnswer('net_income', Number(e.target.value))}
+                                 className="w-32 px-2 py-1 border rounded text-right"
+                              />
+                           ) : (
+                              <span className={answers.net_income === correct.net_income ? 'text-green-600 font-bold text-lg' : 'text-red-600'}>
+                                 ${correct.net_income.toLocaleString()} {answers.net_income === correct.net_income ? '✓' : `(you: ${answers.net_income?.toLocaleString()})`}
+                              </span>
+                           )}
+                        </div>
+                     </div>
+
+                     {showResults && (
+                        <div className="mt-4 p-3 bg-gray-50 rounded-lg">
+                           <p className="text-sm text-gray-700">
+                              <strong>Margins:</strong><br/>
+                              Gross Margin: {((correct.gross_profit / scenario.revenue) * 100).toFixed(1)}%<br/>
+                              Net Margin: {((correct.net_income / scenario.revenue) * 100).toFixed(1)}%
+                           </p>
+                        </div>
+                     )}
+                  </div>
+
+                  <div className="mt-4">
+                     {!showResults ? (
+                        <button
+                           onClick={checkAnswers}
+                           disabled={Object.keys(answers).length < 3}
+                           className={`w-full py-3 rounded-xl font-semibold ${Object.keys(answers).length >= 3 ? 'bg-emerald-500 text-white hover:bg-emerald-600' : 'bg-gray-200 text-gray-400'}`}
+                        >
+                           Check Answers
+                        </button>
+                     ) : (
+                        <button
+                           onClick={() => {
+                              if (level < buildScenarios.length - 1) {
+                                 setLevel(prev => prev + 1);
+                                 setAnswers({});
+                                 setShowResults(false);
+                              } else {
+                                 setLevel(buildScenarios.length);
+                              }
+                           }}
+                           className="w-full py-3 bg-emerald-500 text-white rounded-xl font-semibold hover:bg-emerald-600"
+                        >
+                           {level < buildScenarios.length - 1 ? 'Next Scenario →' : 'Continue to Quiz →'}
+                        </button>
+                     )}
+                  </div>
+               </div>
+            );
+         }
+
+         const quiz = quizzes[quizIndex];
+         return (
+            <div className="flex flex-col min-h-full bg-gradient-to-br from-emerald-50 to-green-100 p-4">
+               <div className="flex justify-between items-center mb-4">
+                  <div>
+                     <h2 className="font-bold text-gray-800">P&L Knowledge Check</h2>
+                     <p className="text-sm text-gray-600">Question {quizIndex + 1} of {quizzes.length}</p>
+                  </div>
+                  <span className="text-xl font-bold text-emerald-600">{score} pts</span>
+               </div>
+
+               <div className="flex-1 bg-white rounded-xl shadow-lg p-6">
+                  <h3 className="text-lg font-semibold text-gray-800 mb-6">{quiz.q}</h3>
+                  <div className="space-y-3">
+                     {quiz.opts.map((opt, idx) => (
+                        <button
+                           key={idx}
+                           onClick={() => handleQuizAnswer(idx)}
+                           disabled={quizAnswered}
+                           className={`w-full p-4 rounded-lg text-left font-medium transition-all ${quizAnswered
+                              ? idx === quiz.correct
+                                 ? 'bg-green-100 border-2 border-green-500 text-green-800'
+                                 : 'bg-gray-100 text-gray-500'
+                              : 'bg-gray-50 hover:bg-emerald-50 border-2 border-transparent hover:border-emerald-300'
+                           }`}
+                        >
+                           {opt}
+                        </button>
+                     ))}
+                  </div>
+                  {quizAnswered && (
+                     <div className="mt-4 p-4 bg-yellow-50 rounded-lg">
+                        <p className="text-sm text-yellow-800">💡 {quiz.explain}</p>
+                     </div>
+                  )}
+               </div>
+
+               {quizAnswered && (
+                  <div className="mt-4">
+                     <button onClick={nextQuiz} className="w-full py-3 bg-emerald-500 text-white rounded-xl font-semibold hover:bg-emerald-600">
+                        {quizIndex < quizzes.length - 1 ? 'Next Question →' : 'See Results'}
+                     </button>
+                  </div>
+               )}
+            </div>
+         );
+      }
+
+      if (phase === 'result') {
+         const maxScore = (buildScenarios.length * 75) + (quizzes.length * 15);
+         const percentage = Math.round((score / maxScore) * 100);
+
+         return (
+            <div className="flex flex-col items-center justify-center min-h-full bg-gradient-to-br from-emerald-50 to-green-100 p-6">
+               <div className="bg-white rounded-2xl shadow-xl p-8 max-w-lg w-full text-center">
+                  <div className="text-6xl mb-4">{percentage >= 80 ? '🏆' : percentage >= 60 ? '📊' : '📚'}</div>
+                  <h1 className="text-2xl font-bold text-gray-800 mb-2">P&L Master!</h1>
+                  <div className="text-4xl font-bold text-emerald-600 mb-4">{score} / {maxScore}</div>
+                  <div className="w-full bg-gray-200 rounded-full h-3 mb-6">
+                     <div className="bg-emerald-500 h-3 rounded-full transition-all" style={{ width: `${percentage}%` }} />
+                  </div>
+
+                  <div className="bg-gray-50 rounded-lg p-4 text-left mb-6">
+                     <h3 className="font-semibold text-gray-800 mb-2">🎯 Key Takeaways:</h3>
+                     <ul className="text-sm text-gray-600 space-y-2">
+                        <li>• <strong>Revenue - COGS = Gross Profit</strong></li>
+                        <li>• <strong>Gross Profit - OpEx = Operating Income</strong></li>
+                        <li>• <strong>Net Income</strong> is after ALL expenses (interest, taxes)</li>
+                        <li>• Income statement covers a <strong>period of time</strong></li>
+                     </ul>
+                  </div>
+
+                  <div className="bg-emerald-50 rounded-lg p-4 text-left mb-6">
+                     <h3 className="font-semibold text-emerald-800 mb-2">💡 Pro Insight:</h3>
+                     <p className="text-sm text-emerald-700">
+                        Compare P&L over time: Is revenue growing? Are margins improving or declining? Rising revenue with shrinking margins might signal pricing or cost problems.
+                     </p>
+                  </div>
+
+                  <button onClick={() => { setPhase('intro'); setScore(0); setLevel(0); setAnswers({}); setShowResults(false); setQuizIndex(0); setQuizAnswered(false); setGameLog([]); }} className="w-full py-3 bg-emerald-500 text-white rounded-xl font-semibold hover:bg-emerald-600">
+                     Practice Again
+                  </button>
+               </div>
+            </div>
+         );
+      }
+
+      return null;
+   };
+
    const FinancialStatementsRenderer = () => {
       const [phase, setPhase] = useState<'intro' | 'play' | 'result'>('intro');
       const [showInfo, setShowInfo] = useState(false);
@@ -43564,6 +43970,8 @@ const GeneratedDiagram: React.FC<DiagramProps> = ({ type, data, title }) => {
             return <BankReconciliationRenderer />;
          case 'balance_sheet':
             return <BalanceSheetRenderer />;
+         case 'income_statement':
+            return <IncomeStatementRenderer />;
          case 'pricing_strategy':
             return <PricingStrategyRenderer />;
          case 'budgeting':
