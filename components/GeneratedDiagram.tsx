@@ -47988,6 +47988,525 @@ const GeneratedDiagram: React.FC<DiagramProps> = ({ type, data, title }) => {
       return null;
    };
 
+   const TimeValueMoneyRenderer = () => {
+      const [phase, setPhase] = useState<'intro' | 'tutorial' | 'play' | 'result'>('intro');
+      const [tutorialStep, setTutorialStep] = useState(0);
+      const [showInfo, setShowInfo] = useState(false);
+      const [infoTopic, setInfoTopic] = useState<string | null>(null);
+      const [scenarioIndex, setScenarioIndex] = useState(0);
+      const [score, setScore] = useState(0);
+      const [answered, setAnswered] = useState(false);
+      const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
+      const [calculatorMode, setCalculatorMode] = useState<'pv' | 'fv' | 'pmt'>('fv');
+      const [calcInputs, setCalcInputs] = useState({ pv: 1000, fv: 0, rate: 5, periods: 10, pmt: 0 });
+      const [quizIndex, setQuizIndex] = useState(0);
+      const [quizAnswered, setQuizAnswered] = useState(false);
+      const [quizScore, setQuizScore] = useState(0);
+      const [gameLog, setGameLog] = useState<string[]>([]);
+
+      const infoContent: {[key: string]: { title: string; content: string }} = {
+         present_value: { title: 'Present Value (PV)', content: 'The current worth of a future sum of money. PV = FV / (1+r)^n. A dollar today is worth more than a dollar tomorrow because of earning potential.' },
+         future_value: { title: 'Future Value (FV)', content: 'The value of money at a specified date in the future. FV = PV × (1+r)^n. Shows how investments grow over time with compound interest.' },
+         discount_rate: { title: 'Discount Rate', content: 'The rate used to convert future values to present values. Reflects opportunity cost, risk, and inflation. Higher risk = higher discount rate.' },
+         compounding: { title: 'Compounding', content: 'Interest earned on interest. More frequent compounding (monthly vs annual) yields higher returns. The Rule of 72: years to double ≈ 72/rate.' },
+         annuity: { title: 'Annuities', content: 'A series of equal payments over time. Ordinary annuity pays at end of period; Annuity due pays at beginning. Used for loans, leases, retirement.' },
+         perpetuity: { title: 'Perpetuity', content: 'An infinite stream of equal payments. PV = Payment / Rate. Used to value preferred stock, endowments, and terminal values.' }
+      };
+
+      const tutorialSteps = [
+         { title: 'Welcome to Time Value of Money', content: 'Master the fundamental concept that money available now is worth more than the same amount in the future due to its earning potential.' },
+         { title: 'Present Value Concept', content: '$100 today vs $100 in 5 years? Today wins! You could invest that $100 and earn returns. PV helps us compare money across time.' },
+         { title: 'Future Value Calculation', content: 'FV = PV × (1+r)^n. $1,000 at 8% for 10 years = $1,000 × (1.08)^10 = $2,159. Compound interest is the 8th wonder of the world!' },
+         { title: 'Present Value Calculation', content: 'PV = FV / (1+r)^n. What is $2,159 in 10 years worth today at 8%? PV = $2,159 / (1.08)^10 = $1,000. We discount future cash.' },
+         { title: 'Choosing Discount Rates', content: 'Higher risk = higher rate. Government bonds ~3%, Corporate bonds ~6%, Startups 20%+. The rate reflects opportunity cost and risk.' },
+         { title: 'Annuities and Perpetuities', content: 'Equal payments over time. Mortgage payments, retirement withdrawals, dividend streams. Special formulas make these easier to calculate.' },
+         { title: 'Real-World Applications', content: 'Compare investment options, value bonds, calculate loan payments, plan retirement. TVM is the foundation of all financial decisions.' }
+      ];
+
+      const scenarios = [
+         {
+            title: 'Investment Comparison',
+            context: 'You can receive $10,000 today OR $15,000 in 5 years. Your alternative investments earn 8% annually.',
+            question: 'Which option has higher present value?',
+            options: [
+               { text: '$10,000 today', value: 10000 },
+               { text: '$15,000 in 5 years (PV: $10,209)', value: 10209 }
+            ],
+            correct: 1,
+            explanation: 'PV of $15,000 at 8% for 5 years = $15,000 / (1.08)^5 = $10,209. This exceeds $10,000 today by $209!'
+         },
+         {
+            title: 'Retirement Planning',
+            context: 'You want $1,000,000 at retirement in 30 years. Expected return is 7% annually.',
+            question: 'How much must you invest today (lump sum)?',
+            options: [
+               { text: '$131,367', value: 131367 },
+               { text: '$333,333', value: 333333 },
+               { text: '$500,000', value: 500000 },
+               { text: '$761,225', value: 761225 }
+            ],
+            correct: 0,
+            explanation: 'PV = $1,000,000 / (1.07)^30 = $131,367. The power of compound interest means you only need to invest 13% of your goal today!'
+         },
+         {
+            title: 'Lottery Decision',
+            context: 'Win $5M today OR $300,000/year for 25 years. Discount rate 6%.',
+            question: 'Which has higher present value?',
+            options: [
+               { text: '$5M lump sum', value: 5000000 },
+               { text: '$300K/year for 25 years (PV: $3.83M)', value: 3834000 }
+            ],
+            correct: 0,
+            explanation: 'PV of annuity = $300K × [(1-(1.06)^-25)/0.06] = $3.83M. The lump sum ($5M) is worth more! Always run the numbers.'
+         },
+         {
+            title: 'Bond Valuation',
+            context: 'A bond pays $50 annually for 10 years plus $1,000 at maturity. Market rate is 6%.',
+            question: 'What is the fair price of this bond?',
+            options: [
+               { text: '$926.40', value: 926 },
+               { text: '$1,000.00', value: 1000 },
+               { text: '$1,073.60', value: 1074 },
+               { text: '$1,500.00', value: 1500 }
+            ],
+            correct: 0,
+            explanation: 'PV of coupons ($368.00) + PV of principal ($558.39) = $926.40. Since coupon (5%) < market (6%), bond trades at discount.'
+         }
+      ];
+
+      const quizQuestions = [
+         { q: 'Which has a higher PV: $1,000 today or $1,000 in one year?', options: ['$1,000 today', '$1,000 in one year', 'They are equal', 'Depends on inflation'], correct: 0 },
+         { q: 'What happens to PV as discount rate increases?', options: ['PV increases', 'PV decreases', 'PV stays the same', 'Cannot determine'], correct: 1 },
+         { q: 'What is the PV of a $100 perpetuity at 5%?', options: ['$500', '$1,000', '$2,000', '$5,000'], correct: 2 },
+         { q: 'Using Rule of 72, how long to double at 9%?', options: ['6 years', '8 years', '9 years', '12 years'], correct: 1 },
+         { q: 'Which compounding frequency yields highest FV?', options: ['Annual', 'Semi-annual', 'Quarterly', 'Daily'], correct: 3 }
+      ];
+
+      const calculateFV = () => Math.round(calcInputs.pv * Math.pow(1 + calcInputs.rate / 100, calcInputs.periods) * 100) / 100;
+      const calculatePV = () => Math.round(calcInputs.fv / Math.pow(1 + calcInputs.rate / 100, calcInputs.periods) * 100) / 100;
+
+      if (phase === 'intro') {
+         return (
+            <div className="space-y-6">
+               <div className="text-center">
+                  <div className="text-6xl mb-4">⏰</div>
+                  <h2 className="text-2xl font-bold text-indigo-800">Time Value of Money</h2>
+                  <p className="text-gray-600 mt-2">Master the foundation of all finance</p>
+               </div>
+               <div className="bg-indigo-50 p-4 rounded-xl">
+                  <h3 className="font-semibold text-indigo-800 mb-2">What You'll Learn:</h3>
+                  <ul className="space-y-1 text-sm text-gray-700">
+                     <li>✓ Present Value and Future Value calculations</li>
+                     <li>✓ Discount rates and opportunity cost</li>
+                     <li>✓ Compound interest and the Rule of 72</li>
+                     <li>✓ Annuities and perpetuities</li>
+                     <li>✓ Real-world investment decisions</li>
+                  </ul>
+               </div>
+               <button onClick={() => { setPhase('tutorial'); setGameLog(['Started TVM tutorial']); }} className="w-full py-3 bg-indigo-600 text-white rounded-xl font-semibold hover:bg-indigo-700">Start Learning</button>
+            </div>
+         );
+      }
+
+      if (phase === 'tutorial') {
+         const step = tutorialSteps[tutorialStep];
+         return (
+            <div className="space-y-6">
+               <div className="flex justify-between items-center">
+                  <span className="text-sm text-gray-500">Tutorial {tutorialStep + 1} of {tutorialSteps.length}</span>
+                  <div className="flex gap-1">
+                     {tutorialSteps.map((_, i) => (<div key={i} className={`w-3 h-3 rounded-full ${i <= tutorialStep ? 'bg-indigo-600' : 'bg-gray-200'}`} />))}
+                  </div>
+               </div>
+               <div className="bg-gradient-to-br from-indigo-50 to-purple-100 p-6 rounded-xl">
+                  <h3 className="text-xl font-bold text-indigo-800 mb-3">{step.title}</h3>
+                  <p className="text-gray-700">{step.content}</p>
+               </div>
+               {tutorialStep === 2 && (
+                  <div className="bg-white border-2 border-indigo-200 p-4 rounded-xl">
+                     <h4 className="font-semibold text-indigo-700 mb-2">Try the Calculator:</h4>
+                     <div className="grid grid-cols-3 gap-2 text-sm">
+                        <div><label className="text-gray-600">PV ($)</label><input type="number" value={calcInputs.pv} onChange={(e) => setCalcInputs({...calcInputs, pv: parseFloat(e.target.value) || 0})} className="w-full p-1 border rounded" /></div>
+                        <div><label className="text-gray-600">Rate (%)</label><input type="number" value={calcInputs.rate} onChange={(e) => setCalcInputs({...calcInputs, rate: parseFloat(e.target.value) || 0})} className="w-full p-1 border rounded" /></div>
+                        <div><label className="text-gray-600">Years</label><input type="number" value={calcInputs.periods} onChange={(e) => setCalcInputs({...calcInputs, periods: parseInt(e.target.value) || 0})} className="w-full p-1 border rounded" /></div>
+                     </div>
+                     <div className="mt-3 p-3 bg-indigo-100 rounded-lg text-center">
+                        <span className="text-gray-600">Future Value = </span>
+                        <span className="text-2xl font-bold text-indigo-700">${calculateFV().toLocaleString()}</span>
+                     </div>
+                  </div>
+               )}
+               <div className="flex gap-2">
+                  {tutorialStep > 0 && (<button onClick={() => setTutorialStep(tutorialStep - 1)} className="flex-1 py-2 border border-indigo-600 text-indigo-600 rounded-lg hover:bg-indigo-50">← Back</button>)}
+                  <button onClick={() => { if (tutorialStep < tutorialSteps.length - 1) { setTutorialStep(tutorialStep + 1); } else { setPhase('play'); setGameLog([...gameLog, 'Completed tutorial']); } }} className="flex-1 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700">{tutorialStep < tutorialSteps.length - 1 ? 'Next →' : 'Start Practice →'}</button>
+               </div>
+            </div>
+         );
+      }
+
+      if (phase === 'play') {
+         const sc = scenarios[scenarioIndex];
+         return (
+            <div className="space-y-4">
+               <div className="flex justify-between items-center">
+                  <span className="text-sm font-medium text-gray-600">Scenario {scenarioIndex + 1}/{scenarios.length}</span>
+                  <span className="text-sm font-semibold text-green-600">Score: {score}/{scenarioIndex}</span>
+               </div>
+               <div className="bg-gradient-to-r from-indigo-50 to-purple-100 p-4 rounded-xl">
+                  <div className="flex justify-between items-start">
+                     <h3 className="font-bold text-indigo-800">{sc.title}</h3>
+                     <button onClick={() => { setShowInfo(true); setInfoTopic('present_value'); }} className="text-indigo-600 hover:text-indigo-800">ℹ️</button>
+                  </div>
+                  <p className="mt-2 text-gray-700">{sc.context}</p>
+                  <p className="mt-2 font-medium text-indigo-700">{sc.question}</p>
+               </div>
+
+               <div className="space-y-2">
+                  {sc.options.map((opt, i) => (
+                     <button key={i} onClick={() => { if (!answered) setSelectedAnswer(i); }} disabled={answered} className={`w-full p-3 rounded-lg text-left border-2 transition-all ${answered ? (i === sc.correct ? 'border-green-500 bg-green-50' : selectedAnswer === i ? 'border-red-500 bg-red-50' : 'border-gray-200') : selectedAnswer === i ? 'border-indigo-500 bg-indigo-50' : 'border-gray-200 hover:border-indigo-400'}`}>{opt.text}</button>
+                  ))}
+               </div>
+
+               {!answered ? (
+                  <button onClick={() => { setAnswered(true); if (selectedAnswer === sc.correct) { setScore(score + 1); setGameLog([...gameLog, `Scenario ${scenarioIndex + 1}: Correct`]); } else { setGameLog([...gameLog, `Scenario ${scenarioIndex + 1}: Incorrect`]); } }} disabled={selectedAnswer === null} className="w-full py-3 bg-indigo-600 text-white rounded-xl font-semibold hover:bg-indigo-700 disabled:bg-gray-300">Check Answer</button>
+               ) : (
+                  <div className="space-y-3">
+                     <div className={`p-3 rounded-lg ${selectedAnswer === sc.correct ? 'bg-green-100 border border-green-300' : 'bg-yellow-100 border border-yellow-300'}`}>
+                        <p className="font-semibold">{selectedAnswer === sc.correct ? '✅ Correct!' : '❌ Not quite...'}</p>
+                        <p className="text-sm text-gray-700 mt-1">{sc.explanation}</p>
+                     </div>
+                     <button onClick={() => { if (scenarioIndex < scenarios.length - 1) { setScenarioIndex(scenarioIndex + 1); setSelectedAnswer(null); setAnswered(false); } else { setPhase('result'); } }} className="w-full py-3 bg-indigo-600 text-white rounded-xl font-semibold hover:bg-indigo-700">{scenarioIndex < scenarios.length - 1 ? 'Next Scenario →' : 'See Results →'}</button>
+                  </div>
+               )}
+
+               {showInfo && infoTopic && infoContent[infoTopic] && (
+                  <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+                     <div className="bg-white rounded-xl p-6 max-w-md">
+                        <h3 className="font-bold text-lg mb-2">{infoContent[infoTopic].title}</h3>
+                        <p className="text-gray-700">{infoContent[infoTopic].content}</p>
+                        <button onClick={() => setShowInfo(false)} className="mt-4 w-full py-2 bg-indigo-600 text-white rounded-lg">Got It</button>
+                     </div>
+                  </div>
+               )}
+            </div>
+         );
+      }
+
+      if (phase === 'result') {
+         if (quizIndex < quizQuestions.length) {
+            const q = quizQuestions[quizIndex];
+            return (
+               <div className="space-y-6">
+                  <div className="text-center">
+                     <h3 className="text-xl font-bold text-indigo-800">Final Assessment</h3>
+                     <p className="text-sm text-gray-500">Question {quizIndex + 1} of {quizQuestions.length}</p>
+                  </div>
+                  <div className="bg-indigo-50 p-4 rounded-xl">
+                     <p className="font-medium text-gray-800">{q.q}</p>
+                  </div>
+                  <div className="space-y-2">
+                     {q.options.map((opt, i) => (
+                        <button key={i} onClick={() => { if (!quizAnswered) { setQuizAnswered(true); if (i === q.correct) { setQuizScore(quizScore + 1); } } }} disabled={quizAnswered} className={`w-full p-3 rounded-lg text-left border-2 ${quizAnswered ? (i === q.correct ? 'border-green-500 bg-green-50' : 'border-gray-200') : 'border-gray-200 hover:border-indigo-400'}`}>{opt}</button>
+                     ))}
+                  </div>
+                  {quizAnswered && (<button onClick={() => { setQuizIndex(quizIndex + 1); setQuizAnswered(false); }} className="w-full py-3 bg-indigo-600 text-white rounded-xl font-semibold hover:bg-indigo-700">Next Question →</button>)}
+               </div>
+            );
+         }
+
+         const percentage = Math.round(((score + quizScore) / (scenarios.length + quizQuestions.length)) * 100);
+         return (
+            <div className="space-y-6">
+               <div className="text-center">
+                  <div className="text-6xl mb-4">{percentage >= 80 ? '💰' : percentage >= 60 ? '📊' : '📚'}</div>
+                  <h2 className="text-2xl font-bold text-indigo-800">TVM Mastery Complete!</h2>
+               </div>
+               <div className="bg-gradient-to-br from-indigo-50 to-purple-100 p-6 rounded-xl">
+                  <div className="grid grid-cols-2 gap-4 text-center">
+                     <div>
+                        <div className="text-3xl font-bold text-indigo-600">{score}/{scenarios.length}</div>
+                        <div className="text-sm text-gray-600">Scenarios</div>
+                     </div>
+                     <div>
+                        <div className="text-3xl font-bold text-purple-600">{quizScore}/{quizQuestions.length}</div>
+                        <div className="text-sm text-gray-600">Quiz Score</div>
+                     </div>
+                  </div>
+                  <div className="mt-4 text-center">
+                     <div className="text-4xl font-bold text-indigo-700">{percentage}%</div>
+                     <div className="text-sm text-gray-600">Overall Mastery</div>
+                  </div>
+               </div>
+               <button onClick={() => { setPhase('intro'); setScore(0); setScenarioIndex(0); setSelectedAnswer(null); setAnswered(false); setQuizIndex(0); setQuizAnswered(false); setQuizScore(0); }} className="w-full py-3 bg-indigo-600 text-white rounded-xl font-semibold hover:bg-indigo-700">Practice Again</button>
+            </div>
+         );
+      }
+      return null;
+   };
+
+   const NpvIrrRenderer = () => {
+      const [phase, setPhase] = useState<'intro' | 'tutorial' | 'play' | 'result'>('intro');
+      const [tutorialStep, setTutorialStep] = useState(0);
+      const [showInfo, setShowInfo] = useState(false);
+      const [infoTopic, setInfoTopic] = useState<string | null>(null);
+      const [scenarioIndex, setScenarioIndex] = useState(0);
+      const [score, setScore] = useState(0);
+      const [answered, setAnswered] = useState(false);
+      const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
+      const [quizIndex, setQuizIndex] = useState(0);
+      const [quizAnswered, setQuizAnswered] = useState(false);
+      const [quizScore, setQuizScore] = useState(0);
+      const [gameLog, setGameLog] = useState<string[]>([]);
+
+      const infoContent: {[key: string]: { title: string; content: string }} = {
+         npv: { title: 'Net Present Value (NPV)', content: 'Sum of all cash flows discounted to present value. NPV > 0 means project adds value. Accept projects with positive NPV.' },
+         irr: { title: 'Internal Rate of Return (IRR)', content: 'The discount rate that makes NPV = 0. If IRR > cost of capital, accept the project. Higher IRR = better return.' },
+         wacc: { title: 'Weighted Average Cost of Capital', content: 'The blended cost of debt and equity financing. Used as discount rate for NPV. Represents minimum acceptable return.' },
+         payback: { title: 'Payback Period', content: 'Time to recover initial investment. Ignores TVM. Quick & simple but doesnt measure profitability or cash flows after payback.' },
+         profitability_index: { title: 'Profitability Index', content: 'PV of future cash flows / Initial Investment. PI > 1 means accept. Useful for capital rationing - ranking limited investment dollars.' },
+         capital_budgeting: { title: 'Capital Budgeting', content: 'Process of evaluating major investments. Uses NPV, IRR, Payback to decide which projects to pursue. Long-term strategic decisions.' }
+      };
+
+      const tutorialSteps = [
+         { title: 'Welcome to NPV & IRR', content: 'Learn to evaluate investment projects using the most important capital budgeting tools. Should you build the factory? Acquire the competitor? Launch the product?' },
+         { title: 'Net Present Value (NPV)', content: 'NPV = Sum of [Cash Flow / (1+r)^t] - Initial Investment. If NPV > 0, the project creates value. The gold standard of project evaluation.' },
+         { title: 'Calculating NPV', content: 'Example: Invest $100K today, receive $40K for 4 years at 10% discount rate. NPV = -$100K + $40K/(1.1) + $40K/(1.1)² + $40K/(1.1)³ + $40K/(1.1)⁴ = $26,795' },
+         { title: 'Internal Rate of Return', content: 'IRR is the discount rate where NPV = 0. If project IRR (15%) > hurdle rate (10%), accept. IRR shows the actual return percentage.' },
+         { title: 'NPV vs IRR Conflict', content: 'Sometimes they disagree! NPV assumes reinvestment at WACC (realistic), IRR assumes reinvestment at IRR (optimistic). When in doubt, trust NPV.' },
+         { title: 'Multiple Projects', content: 'Use NPV for mutually exclusive projects (pick highest NPV). Use IRR for independent projects (accept all IRR > hurdle). Use PI for capital rationing.' },
+         { title: 'Real-World Application', content: 'CEOs use these daily: Should we expand? Buy equipment? Enter a market? NPV and IRR quantify the value creation of strategic decisions.' }
+      ];
+
+      const scenarios = [
+         {
+            title: 'Factory Expansion',
+            context: 'Initial investment: $500,000. Expected cash flows: Year 1: $150K, Year 2: $180K, Year 3: $200K, Year 4: $220K. WACC: 12%.',
+            cashFlows: [-500000, 150000, 180000, 200000, 220000],
+            wacc: 12,
+            npv: 57800,
+            irr: 17.4,
+            question: 'Should the company proceed with this expansion?',
+            options: [
+               { text: 'Yes - NPV is positive ($57,800) and IRR (17.4%) > WACC (12%)', correct: true },
+               { text: 'No - The payback period is too long', correct: false },
+               { text: 'No - We should wait for higher returns', correct: false },
+               { text: 'Need more information about competitors', correct: false }
+            ],
+            correct: 0,
+            explanation: 'NPV = $57,800 > 0 and IRR = 17.4% > 12% WACC. Both metrics agree: this project creates shareholder value!'
+         },
+         {
+            title: 'Equipment vs Lease',
+            context: 'Option A: Buy equipment for $200K, saves $60K/year for 5 years. Option B: Lease for $45K/year for 5 years. Discount rate: 8%.',
+            question: 'Which option has lower total cost (higher NPV)?',
+            options: [
+               { text: 'Buy - NPV of savings is $39,600 after equipment cost', correct: true },
+               { text: 'Lease - Lower upfront commitment', correct: false },
+               { text: 'They are equivalent', correct: false },
+               { text: 'Cannot compare without IRR', correct: false }
+            ],
+            correct: 0,
+            explanation: 'Buy: PV of $60K savings × 5 years at 8% = $239,600 - $200K cost = $39,600. Lease: PV of $45K × 5 years = $179,700 cost. Buying saves $39,600 in present value!'
+         },
+         {
+            title: 'Mutually Exclusive Projects',
+            context: 'Project A: Invest $100K, NPV = $25K, IRR = 20%. Project B: Invest $200K, NPV = $35K, IRR = 15%. Only one can be chosen.',
+            question: 'Which project should be selected?',
+            options: [
+               { text: 'Project A - Higher IRR (20% vs 15%)', correct: false },
+               { text: 'Project B - Higher NPV ($35K vs $25K)', correct: true },
+               { text: 'Project A - Lower investment required', correct: false },
+               { text: 'Neither - Both IRRs are good', correct: false }
+            ],
+            correct: 1,
+            explanation: 'For mutually exclusive projects, choose highest NPV! Project B adds $35K of value vs $25K. The extra $100K investment earns a 10% return, still above cost of capital.'
+         },
+         {
+            title: 'Negative IRR Scenario',
+            context: 'Project: Invest $50K, receive $20K in Year 1, $15K in Year 2, $10K in Year 3. Total cash = $45K. WACC = 10%.',
+            question: 'What does the analysis reveal?',
+            options: [
+               { text: 'Accept - Positive total cash flow', correct: false },
+               { text: 'Reject - NPV is negative (-$8,150), IRR < WACC', correct: true },
+               { text: 'Need to calculate payback period first', correct: false },
+               { text: 'Acceptable if IRR > 5%', correct: false }
+            ],
+            correct: 1,
+            explanation: 'NPV at 10% = -$8,150 (negative!). Total cash ignores TVM. Even though you get $45K back on $50K, the TIME it takes destroys value at 10% opportunity cost.'
+         }
+      ];
+
+      const quizQuestions = [
+         { q: 'A project with NPV of $0 means:', options: ['Project loses money', 'Project earns exactly the cost of capital', 'Project is risk-free', 'IRR cannot be calculated'], correct: 1 },
+         { q: 'If IRR > WACC, then NPV is:', options: ['Negative', 'Zero', 'Positive', 'Cannot determine'], correct: 2 },
+         { q: 'Why might NPV and IRR give different rankings?', options: ['Different project scales', 'Different timing of cash flows', 'Reinvestment rate assumptions', 'All of the above'], correct: 3 },
+         { q: 'What discount rate makes NPV = 0?', options: ['WACC', 'IRR', 'Risk-free rate', 'Inflation rate'], correct: 1 },
+         { q: 'For capital rationing, which metric is best?', options: ['NPV', 'IRR', 'Profitability Index', 'Payback Period'], correct: 2 }
+      ];
+
+      if (phase === 'intro') {
+         return (
+            <div className="space-y-6">
+               <div className="text-center">
+                  <div className="text-6xl mb-4">📈</div>
+                  <h2 className="text-2xl font-bold text-emerald-800">NPV & IRR Analysis</h2>
+                  <p className="text-gray-600 mt-2">Master capital budgeting decisions</p>
+               </div>
+               <div className="bg-emerald-50 p-4 rounded-xl">
+                  <h3 className="font-semibold text-emerald-800 mb-2">What You'll Learn:</h3>
+                  <ul className="space-y-1 text-sm text-gray-700">
+                     <li>✓ Net Present Value calculation & interpretation</li>
+                     <li>✓ Internal Rate of Return analysis</li>
+                     <li>✓ When NPV and IRR conflict</li>
+                     <li>✓ Project ranking and selection</li>
+                     <li>✓ Real-world investment decisions</li>
+                  </ul>
+               </div>
+               <button onClick={() => { setPhase('tutorial'); setGameLog(['Started NPV/IRR tutorial']); }} className="w-full py-3 bg-emerald-600 text-white rounded-xl font-semibold hover:bg-emerald-700">Start Learning</button>
+            </div>
+         );
+      }
+
+      if (phase === 'tutorial') {
+         const step = tutorialSteps[tutorialStep];
+         return (
+            <div className="space-y-6">
+               <div className="flex justify-between items-center">
+                  <span className="text-sm text-gray-500">Tutorial {tutorialStep + 1} of {tutorialSteps.length}</span>
+                  <div className="flex gap-1">
+                     {tutorialSteps.map((_, i) => (<div key={i} className={`w-3 h-3 rounded-full ${i <= tutorialStep ? 'bg-emerald-600' : 'bg-gray-200'}`} />))}
+                  </div>
+               </div>
+               <div className="bg-gradient-to-br from-emerald-50 to-teal-100 p-6 rounded-xl">
+                  <h3 className="text-xl font-bold text-emerald-800 mb-3">{step.title}</h3>
+                  <p className="text-gray-700">{step.content}</p>
+               </div>
+               {tutorialStep === 2 && (
+                  <div className="bg-white border-2 border-emerald-200 p-4 rounded-xl">
+                     <h4 className="font-semibold text-emerald-700 mb-2">NPV Breakdown:</h4>
+                     <div className="text-sm space-y-1">
+                        <div className="flex justify-between"><span>Initial Investment:</span><span className="text-red-600">-$100,000</span></div>
+                        <div className="flex justify-between"><span>Year 1: $40K / 1.10 =</span><span className="text-green-600">+$36,364</span></div>
+                        <div className="flex justify-between"><span>Year 2: $40K / 1.21 =</span><span className="text-green-600">+$33,058</span></div>
+                        <div className="flex justify-between"><span>Year 3: $40K / 1.33 =</span><span className="text-green-600">+$30,053</span></div>
+                        <div className="flex justify-between"><span>Year 4: $40K / 1.46 =</span><span className="text-green-600">+$27,320</span></div>
+                        <div className="flex justify-between border-t pt-1 font-bold"><span>NPV =</span><span className="text-emerald-600">$26,795</span></div>
+                     </div>
+                  </div>
+               )}
+               <div className="flex gap-2">
+                  {tutorialStep > 0 && (<button onClick={() => setTutorialStep(tutorialStep - 1)} className="flex-1 py-2 border border-emerald-600 text-emerald-600 rounded-lg hover:bg-emerald-50">← Back</button>)}
+                  <button onClick={() => { if (tutorialStep < tutorialSteps.length - 1) { setTutorialStep(tutorialStep + 1); } else { setPhase('play'); setGameLog([...gameLog, 'Completed tutorial']); } }} className="flex-1 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700">{tutorialStep < tutorialSteps.length - 1 ? 'Next →' : 'Start Practice →'}</button>
+               </div>
+            </div>
+         );
+      }
+
+      if (phase === 'play') {
+         const sc = scenarios[scenarioIndex];
+         return (
+            <div className="space-y-4">
+               <div className="flex justify-between items-center">
+                  <span className="text-sm font-medium text-gray-600">Scenario {scenarioIndex + 1}/{scenarios.length}</span>
+                  <span className="text-sm font-semibold text-green-600">Score: {score}/{scenarioIndex}</span>
+               </div>
+               <div className="bg-gradient-to-r from-emerald-50 to-teal-100 p-4 rounded-xl">
+                  <div className="flex justify-between items-start">
+                     <h3 className="font-bold text-emerald-800">{sc.title}</h3>
+                     <button onClick={() => { setShowInfo(true); setInfoTopic('npv'); }} className="text-emerald-600 hover:text-emerald-800">ℹ️</button>
+                  </div>
+                  <p className="mt-2 text-gray-700 text-sm">{sc.context}</p>
+                  {'cashFlows' in sc && (
+                     <div className="mt-2 flex gap-2 flex-wrap">
+                        {sc.cashFlows.map((cf: number, i: number) => (<span key={i} className={`px-2 py-1 rounded text-xs font-medium ${cf < 0 ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'}`}>Y{i}: ${(cf/1000).toFixed(0)}K</span>))}
+                     </div>
+                  )}
+                  <p className="mt-3 font-medium text-emerald-700">{sc.question}</p>
+               </div>
+
+               <div className="space-y-2">
+                  {sc.options.map((opt, i) => (
+                     <button key={i} onClick={() => { if (!answered) setSelectedAnswer(i); }} disabled={answered} className={`w-full p-3 rounded-lg text-left border-2 text-sm transition-all ${answered ? (i === sc.correct ? 'border-green-500 bg-green-50' : selectedAnswer === i ? 'border-red-500 bg-red-50' : 'border-gray-200') : selectedAnswer === i ? 'border-emerald-500 bg-emerald-50' : 'border-gray-200 hover:border-emerald-400'}`}>{opt.text}</button>
+                  ))}
+               </div>
+
+               {!answered ? (
+                  <button onClick={() => { setAnswered(true); if (selectedAnswer === sc.correct) { setScore(score + 1); setGameLog([...gameLog, `Scenario ${scenarioIndex + 1}: Correct`]); } else { setGameLog([...gameLog, `Scenario ${scenarioIndex + 1}: Incorrect`]); } }} disabled={selectedAnswer === null} className="w-full py-3 bg-emerald-600 text-white rounded-xl font-semibold hover:bg-emerald-700 disabled:bg-gray-300">Check Answer</button>
+               ) : (
+                  <div className="space-y-3">
+                     <div className={`p-3 rounded-lg ${selectedAnswer === sc.correct ? 'bg-green-100 border border-green-300' : 'bg-yellow-100 border border-yellow-300'}`}>
+                        <p className="font-semibold">{selectedAnswer === sc.correct ? '✅ Correct!' : '❌ Not quite...'}</p>
+                        <p className="text-sm text-gray-700 mt-1">{sc.explanation}</p>
+                     </div>
+                     <button onClick={() => { if (scenarioIndex < scenarios.length - 1) { setScenarioIndex(scenarioIndex + 1); setSelectedAnswer(null); setAnswered(false); } else { setPhase('result'); } }} className="w-full py-3 bg-emerald-600 text-white rounded-xl font-semibold hover:bg-emerald-700">{scenarioIndex < scenarios.length - 1 ? 'Next Scenario →' : 'See Results →'}</button>
+                  </div>
+               )}
+
+               {showInfo && infoTopic && infoContent[infoTopic] && (
+                  <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+                     <div className="bg-white rounded-xl p-6 max-w-md">
+                        <h3 className="font-bold text-lg mb-2">{infoContent[infoTopic].title}</h3>
+                        <p className="text-gray-700">{infoContent[infoTopic].content}</p>
+                        <button onClick={() => setShowInfo(false)} className="mt-4 w-full py-2 bg-emerald-600 text-white rounded-lg">Got It</button>
+                     </div>
+                  </div>
+               )}
+            </div>
+         );
+      }
+
+      if (phase === 'result') {
+         if (quizIndex < quizQuestions.length) {
+            const q = quizQuestions[quizIndex];
+            return (
+               <div className="space-y-6">
+                  <div className="text-center">
+                     <h3 className="text-xl font-bold text-emerald-800">Final Assessment</h3>
+                     <p className="text-sm text-gray-500">Question {quizIndex + 1} of {quizQuestions.length}</p>
+                  </div>
+                  <div className="bg-emerald-50 p-4 rounded-xl">
+                     <p className="font-medium text-gray-800">{q.q}</p>
+                  </div>
+                  <div className="space-y-2">
+                     {q.options.map((opt, i) => (
+                        <button key={i} onClick={() => { if (!quizAnswered) { setQuizAnswered(true); if (i === q.correct) { setQuizScore(quizScore + 1); } } }} disabled={quizAnswered} className={`w-full p-3 rounded-lg text-left border-2 ${quizAnswered ? (i === q.correct ? 'border-green-500 bg-green-50' : 'border-gray-200') : 'border-gray-200 hover:border-emerald-400'}`}>{opt}</button>
+                     ))}
+                  </div>
+                  {quizAnswered && (<button onClick={() => { setQuizIndex(quizIndex + 1); setQuizAnswered(false); }} className="w-full py-3 bg-emerald-600 text-white rounded-xl font-semibold hover:bg-emerald-700">Next Question →</button>)}
+               </div>
+            );
+         }
+
+         const percentage = Math.round(((score + quizScore) / (scenarios.length + quizQuestions.length)) * 100);
+         return (
+            <div className="space-y-6">
+               <div className="text-center">
+                  <div className="text-6xl mb-4">{percentage >= 80 ? '📈' : percentage >= 60 ? '📊' : '📚'}</div>
+                  <h2 className="text-2xl font-bold text-emerald-800">NPV/IRR Complete!</h2>
+               </div>
+               <div className="bg-gradient-to-br from-emerald-50 to-teal-100 p-6 rounded-xl">
+                  <div className="grid grid-cols-2 gap-4 text-center">
+                     <div>
+                        <div className="text-3xl font-bold text-emerald-600">{score}/{scenarios.length}</div>
+                        <div className="text-sm text-gray-600">Scenarios</div>
+                     </div>
+                     <div>
+                        <div className="text-3xl font-bold text-teal-600">{quizScore}/{quizQuestions.length}</div>
+                        <div className="text-sm text-gray-600">Quiz Score</div>
+                     </div>
+                  </div>
+                  <div className="mt-4 text-center">
+                     <div className="text-4xl font-bold text-emerald-700">{percentage}%</div>
+                     <div className="text-sm text-gray-600">Overall Mastery</div>
+                  </div>
+               </div>
+               <button onClick={() => { setPhase('intro'); setScore(0); setScenarioIndex(0); setSelectedAnswer(null); setAnswered(false); setQuizIndex(0); setQuizAnswered(false); setQuizScore(0); }} className="w-full py-3 bg-emerald-600 text-white rounded-xl font-semibold hover:bg-emerald-700">Practice Again</button>
+            </div>
+         );
+      }
+      return null;
+   };
+
    const FinancialStatementsRenderer = () => {
       const [phase, setPhase] = useState<'intro' | 'play' | 'result'>('intro');
       const [showInfo, setShowInfo] = useState(false);
@@ -51853,6 +52372,10 @@ const GeneratedDiagram: React.FC<DiagramProps> = ({ type, data, title }) => {
             return <SalesTaxNexusRenderer />;
          case 'payroll_processing':
             return <PayrollProcessingRenderer />;
+         case 'time_value_money':
+            return <TimeValueMoneyRenderer />;
+         case 'npv_irr':
+            return <NpvIrrRenderer />;
          case 'pricing_strategy':
             return <PricingStrategyRenderer />;
          case 'budgeting':
