@@ -44716,6 +44716,432 @@ const GeneratedDiagram: React.FC<DiagramProps> = ({ type, data, title }) => {
       return null;
    };
 
+   // Topic 24: Zero-Based Budgeting - Building Budgets from Scratch
+   const ZeroBasedBudgetRenderer = () => {
+      const [phase, setPhase] = useState<'intro' | 'tutorial' | 'play' | 'result'>('intro');
+      const [tutorialStep, setTutorialStep] = useState(0);
+      const [score, setScore] = useState(0);
+      const [scenarioIndex, setScenarioIndex] = useState(0);
+      const [gameLog, setGameLog] = useState<string[]>([]);
+      const [quizIndex, setQuizIndex] = useState(0);
+      const [quizAnswered, setQuizAnswered] = useState(false);
+      const [showInfo, setShowInfo] = useState(false);
+      const [infoContent, setInfoContent] = useState({ title: '', content: '' });
+      const [allocations, setAllocations] = useState<Record<string, number>>({});
+      const [justifications, setJustifications] = useState<Record<string, string>>({});
+      const [submitted, setSubmitted] = useState(false);
+
+      const tutorialSteps = [
+         { title: 'Welcome to Zero-Based Budgeting!', content: 'Learn to build budgets from scratch, justifying every dollar spent rather than just adjusting last year\'s numbers.' },
+         { title: 'Traditional vs ZBB', content: 'Traditional: Start with last year + inflation. ZBB: Start at $0, justify every expense. ZBB forces critical thinking about resource allocation.' },
+         { title: 'The ZBB Process', content: 'Step 1: Define decision units (departments). Step 2: Create decision packages (activities). Step 3: Rank priorities. Step 4: Allocate resources.' },
+         { title: 'Decision Packages', content: 'Each activity is packaged with: Cost, Benefits, Consequences of not funding, Alternative levels of service (minimum, current, enhanced).' },
+         { title: 'Priority Ranking', content: 'All packages are ranked across the organization. High-impact, essential items get funded first. Forces trade-offs between competing needs.' },
+         { title: 'Benefits of ZBB', content: 'Eliminates wasteful spending, aligns resources with strategy, increases transparency, encourages innovation in cost reduction.' },
+         { title: 'Ready to Budget!', content: 'You\'ll allocate budgets for departments by justifying each expense from zero. Let\'s eliminate waste and fund what matters!' }
+      ];
+
+      const scenarios = [
+         {
+            title: 'Tech Startup Budget Allocation',
+            company: 'InnovateTech Inc.',
+            totalBudget: 1000000,
+            departments: [
+               { id: 'engineering', name: 'Engineering', lastYear: 400000, essential: 300000, description: 'Product development, infrastructure', priority: 1 },
+               { id: 'sales', name: 'Sales & Marketing', lastYear: 300000, essential: 150000, description: 'Customer acquisition, brand awareness', priority: 2 },
+               { id: 'operations', name: 'Operations', lastYear: 150000, essential: 100000, description: 'Office, admin, legal, HR', priority: 3 },
+               { id: 'rnd', name: 'R&D Innovation', lastYear: 100000, essential: 50000, description: 'Future product exploration', priority: 4 },
+               { id: 'training', name: 'Training & Development', lastYear: 50000, essential: 20000, description: 'Employee skills, certifications', priority: 5 }
+            ],
+            justificationOptions: [
+               { id: 'growth', text: 'Critical for growth targets', weight: 3 },
+               { id: 'retention', text: 'Required for customer retention', weight: 2 },
+               { id: 'compliance', text: 'Regulatory/legal requirement', weight: 3 },
+               { id: 'efficiency', text: 'Improves operational efficiency', weight: 2 },
+               { id: 'nice', text: 'Nice to have, not essential', weight: 0 }
+            ]
+         },
+         {
+            title: 'Non-Profit Organization Budget',
+            company: 'Community Helpers Foundation',
+            totalBudget: 500000,
+            departments: [
+               { id: 'programs', name: 'Program Services', lastYear: 250000, essential: 200000, description: 'Direct community services', priority: 1 },
+               { id: 'fundraising', name: 'Fundraising', lastYear: 100000, essential: 60000, description: 'Donor relations, events, grants', priority: 2 },
+               { id: 'admin', name: 'Administration', lastYear: 80000, essential: 50000, description: 'Executive, finance, HR', priority: 3 },
+               { id: 'outreach', name: 'Community Outreach', lastYear: 50000, essential: 30000, description: 'Awareness, volunteer coordination', priority: 4 },
+               { id: 'tech', name: 'Technology', lastYear: 20000, essential: 15000, description: 'Systems, website, databases', priority: 5 }
+            ],
+            justificationOptions: [
+               { id: 'mission', text: 'Directly supports mission', weight: 3 },
+               { id: 'revenue', text: 'Generates future donations', weight: 2 },
+               { id: 'required', text: 'Legally required', weight: 3 },
+               { id: 'efficiency', text: 'Reduces operational costs', weight: 2 },
+               { id: 'optional', text: 'Optional enhancement', weight: 0 }
+            ]
+         },
+         {
+            title: 'Manufacturing Cost Center',
+            company: 'PrecisionParts Manufacturing',
+            totalBudget: 2000000,
+            departments: [
+               { id: 'production', name: 'Production', lastYear: 1000000, essential: 800000, description: 'Direct manufacturing costs', priority: 1 },
+               { id: 'quality', name: 'Quality Control', lastYear: 300000, essential: 200000, description: 'Inspection, testing, compliance', priority: 2 },
+               { id: 'maintenance', name: 'Maintenance', lastYear: 250000, essential: 180000, description: 'Equipment upkeep, preventive maintenance', priority: 3 },
+               { id: 'logistics', name: 'Logistics', lastYear: 300000, essential: 200000, description: 'Warehousing, shipping, receiving', priority: 4 },
+               { id: 'safety', name: 'Safety & Environment', lastYear: 150000, essential: 100000, description: 'OSHA compliance, environmental', priority: 5 }
+            ],
+            justificationOptions: [
+               { id: 'production', text: 'Required for production output', weight: 3 },
+               { id: 'quality', text: 'Ensures product quality', weight: 2 },
+               { id: 'safety', text: 'Safety/regulatory requirement', weight: 3 },
+               { id: 'cost', text: 'Reduces long-term costs', weight: 2 },
+               { id: 'optional', text: 'Performance enhancement', weight: 0 }
+            ]
+         }
+      ];
+
+      const quizQuestions = [
+         { q: 'Zero-Based Budgeting requires you to:', options: ['Start from last year\'s budget', 'Justify every expense from zero', 'Only cut costs', 'Increase all budgets equally'], correct: 1 },
+         { q: 'A "decision package" in ZBB includes:', options: ['Only the cost amount', 'Cost, benefits, and alternatives', 'Historical spending data', 'Executive preferences'], correct: 1 },
+         { q: 'The main advantage of ZBB over traditional budgeting is:', options: ['It\'s faster to prepare', 'It eliminates wasteful spending', 'It requires less documentation', 'It always reduces total costs'], correct: 1 },
+         { q: 'In ZBB, priorities are ranked by:', options: ['Department seniority', 'Last year\'s allocation', 'Strategic value and necessity', 'Alphabetical order'], correct: 2 },
+         { q: 'ZBB is most useful when:', options: ['Budgets are unlimited', 'Resources are scarce and trade-offs needed', 'All costs are fixed', 'No changes are expected'], correct: 1 },
+         { q: 'A challenge of ZBB is:', options: ['Too simple to implement', 'Time-consuming justification process', 'Ignores strategic priorities', 'Cannot handle variable costs'], correct: 1 }
+      ];
+
+      const openInfo = (title: string, content: string) => {
+         setInfoContent({ title, content });
+         setShowInfo(true);
+      };
+
+      const handleAllocation = (deptId: string, amount: number) => {
+         setAllocations(prev => ({ ...prev, [deptId]: amount }));
+      };
+
+      const handleJustification = (deptId: string, justId: string) => {
+         setJustifications(prev => ({ ...prev, [deptId]: justId }));
+      };
+
+      const calculateScore = () => {
+         const scenario = scenarios[scenarioIndex];
+         let points = 0;
+
+         scenario.departments.forEach(dept => {
+            const allocation = allocations[dept.id] || 0;
+            const justification = justifications[dept.id];
+            const justWeight = scenario.justificationOptions.find(j => j.id === justification)?.weight || 0;
+
+            // Points for meeting essential minimum
+            if (allocation >= dept.essential) points += 10;
+            // Points for strong justification
+            points += justWeight * 5;
+            // Points for not over-allocating low priority items
+            if (dept.priority >= 4 && allocation <= dept.essential * 1.2) points += 5;
+         });
+
+         return points;
+      };
+
+      const handleSubmit = () => {
+         const earnedPoints = calculateScore();
+         setScore(s => s + earnedPoints);
+         setSubmitted(true);
+         setGameLog(prev => [...prev, `${scenarios[scenarioIndex].company}: Earned ${earnedPoints} points`]);
+      };
+
+      const nextScenario = () => {
+         if (scenarioIndex < scenarios.length - 1) {
+            setScenarioIndex(scenarioIndex + 1);
+            setAllocations({});
+            setJustifications({});
+            setSubmitted(false);
+         } else {
+            setPhase('result');
+         }
+      };
+
+      const getTotalAllocated = () => {
+         return Object.values(allocations).reduce((sum, val) => sum + val, 0);
+      };
+
+      // Intro Phase
+      if (phase === 'intro') {
+         return (
+            <div className="p-6 bg-gradient-to-br from-emerald-50 to-teal-50 rounded-2xl max-w-2xl mx-auto">
+               <h2 className="text-2xl font-bold text-emerald-800 mb-4 flex items-center gap-2">
+                  🎯 Zero-Based Budgeting
+                  <button onClick={() => openInfo('What is ZBB?', 'Zero-Based Budgeting (ZBB) requires managers to justify all expenses from scratch for each new period, rather than simply adjusting the previous year\'s budget. Every dollar must be justified.')} className="text-emerald-500 hover:text-emerald-700">ℹ️</button>
+               </h2>
+               <div className="bg-white/80 p-5 rounded-xl mb-6">
+                  <p className="text-gray-700 mb-4">Start from zero. Justify every expense. Allocate strategically.</p>
+                  <div className="grid grid-cols-2 gap-4 mb-4">
+                     <div className="bg-gray-100 p-3 rounded-lg">
+                        <div className="font-semibold text-gray-700">Traditional Budget</div>
+                        <div className="text-sm text-gray-500">Last Year + Adjustments</div>
+                        <div className="text-xs text-red-500 mt-1">❌ Perpetuates waste</div>
+                     </div>
+                     <div className="bg-emerald-100 p-3 rounded-lg">
+                        <div className="font-semibold text-emerald-700">Zero-Based Budget</div>
+                        <div className="text-sm text-emerald-600">$0 Base + Justifications</div>
+                        <div className="text-xs text-emerald-500 mt-1">✅ Every $ justified</div>
+                     </div>
+                  </div>
+                  <div className="text-sm text-gray-600">
+                     <strong>You'll learn:</strong> Decision packages, Priority ranking, Resource allocation, Strategic trade-offs
+                  </div>
+               </div>
+               <button onClick={() => setPhase('tutorial')} className="w-full py-3 bg-emerald-500 text-white rounded-xl font-semibold hover:bg-emerald-600 transition-all">Start Learning</button>
+               {showInfo && (
+                  <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" onClick={() => setShowInfo(false)}>
+                     <div className="bg-white p-6 rounded-xl max-w-md m-4" onClick={e => e.stopPropagation()}>
+                        <h3 className="font-bold text-lg mb-2">{infoContent.title}</h3>
+                        <p className="text-gray-600">{infoContent.content}</p>
+                        <button onClick={() => setShowInfo(false)} className="mt-4 px-4 py-2 bg-emerald-500 text-white rounded-lg">Got it!</button>
+                     </div>
+                  </div>
+               )}
+            </div>
+         );
+      }
+
+      // Tutorial Phase
+      if (phase === 'tutorial') {
+         const step = tutorialSteps[tutorialStep];
+         return (
+            <div className="p-6 bg-gradient-to-br from-emerald-50 to-teal-50 rounded-2xl max-w-2xl mx-auto">
+               <div className="flex justify-between items-center mb-4">
+                  <h2 className="text-xl font-bold text-emerald-800">Tutorial</h2>
+                  <span className="text-sm text-emerald-600">Step {tutorialStep + 1} of {tutorialSteps.length}</span>
+               </div>
+               <div className="bg-white/90 p-6 rounded-xl mb-6">
+                  <h3 className="font-bold text-lg text-gray-800 mb-3">{step.title}</h3>
+                  <p className="text-gray-600">{step.content}</p>
+
+                  {tutorialStep === 1 && (
+                     <div className="mt-4 grid grid-cols-2 gap-4">
+                        <div className="p-3 bg-gray-100 rounded-lg text-center">
+                           <div className="text-2xl mb-1">📊</div>
+                           <div className="font-semibold text-gray-700">Traditional</div>
+                           <div className="text-xs text-gray-500">$100K → $103K (+3%)</div>
+                        </div>
+                        <div className="p-3 bg-emerald-100 rounded-lg text-center">
+                           <div className="text-2xl mb-1">🎯</div>
+                           <div className="font-semibold text-emerald-700">ZBB</div>
+                           <div className="text-xs text-emerald-600">$0 → Justified Amount</div>
+                        </div>
+                     </div>
+                  )}
+
+                  {tutorialStep === 3 && (
+                     <div className="mt-4 p-4 bg-amber-50 rounded-lg border border-amber-200">
+                        <div className="text-sm font-semibold text-amber-800 mb-2">Decision Package Example:</div>
+                        <ul className="text-sm text-gray-600 space-y-1">
+                           <li>📦 <strong>Activity:</strong> Customer Support Team</li>
+                           <li>💰 <strong>Cost:</strong> $150,000/year</li>
+                           <li>✅ <strong>Benefit:</strong> 95% satisfaction rate</li>
+                           <li>⚠️ <strong>If not funded:</strong> Customer churn +20%</li>
+                        </ul>
+                     </div>
+                  )}
+               </div>
+               <div className="w-full bg-gray-200 rounded-full h-2 mb-4">
+                  <div className="bg-emerald-500 h-2 rounded-full transition-all" style={{ width: `${((tutorialStep + 1) / tutorialSteps.length) * 100}%` }}></div>
+               </div>
+               <div className="flex gap-3">
+                  {tutorialStep > 0 && <button onClick={() => setTutorialStep(tutorialStep - 1)} className="flex-1 py-2 bg-gray-200 rounded-lg hover:bg-gray-300">Back</button>}
+                  <button onClick={() => tutorialStep < tutorialSteps.length - 1 ? setTutorialStep(tutorialStep + 1) : setPhase('play')} className="flex-1 py-2 bg-emerald-500 text-white rounded-lg hover:bg-emerald-600">
+                     {tutorialStep < tutorialSteps.length - 1 ? 'Next' : 'Start Budgeting!'}
+                  </button>
+               </div>
+            </div>
+         );
+      }
+
+      // Play Phase
+      if (phase === 'play') {
+         const scenario = scenarios[scenarioIndex];
+         const totalAllocated = getTotalAllocated();
+         const remaining = scenario.totalBudget - totalAllocated;
+
+         return (
+            <div className="p-6 bg-gradient-to-br from-emerald-50 to-teal-50 rounded-2xl max-w-2xl mx-auto">
+               <div className="flex justify-between items-center mb-4">
+                  <h2 className="text-xl font-bold text-emerald-800">{scenario.company}</h2>
+                  <div className="flex items-center gap-3">
+                     <span className="bg-emerald-100 px-3 py-1 rounded-full text-emerald-700 text-sm">Score: {score}</span>
+                     <span className="text-sm text-gray-500">Org {scenarioIndex + 1}/{scenarios.length}</span>
+                  </div>
+               </div>
+
+               {/* Budget Summary Bar */}
+               <div className="bg-white/90 p-4 rounded-xl mb-4">
+                  <div className="flex justify-between text-sm mb-2">
+                     <span>Total Budget: ${scenario.totalBudget.toLocaleString()}</span>
+                     <span className={remaining < 0 ? 'text-red-600 font-bold' : 'text-emerald-600'}>
+                        Remaining: ${remaining.toLocaleString()}
+                     </span>
+                  </div>
+                  <div className="w-full bg-gray-200 rounded-full h-3">
+                     <div
+                        className={`h-3 rounded-full transition-all ${remaining < 0 ? 'bg-red-500' : 'bg-emerald-500'}`}
+                        style={{ width: `${Math.min((totalAllocated / scenario.totalBudget) * 100, 100)}%` }}
+                     ></div>
+                  </div>
+               </div>
+
+               {/* Department Allocations */}
+               <div className="space-y-3 mb-4">
+                  {scenario.departments.map((dept, idx) => (
+                     <div key={dept.id} className={`bg-white/90 p-4 rounded-xl border-2 ${submitted ? 'border-gray-200' : 'border-emerald-200'}`}>
+                        <div className="flex justify-between items-start mb-2">
+                           <div>
+                              <div className="flex items-center gap-2">
+                                 <span className="bg-emerald-100 text-emerald-700 text-xs px-2 py-0.5 rounded">P{dept.priority}</span>
+                                 <span className="font-semibold text-gray-800">{dept.name}</span>
+                              </div>
+                              <div className="text-xs text-gray-500">{dept.description}</div>
+                           </div>
+                           <div className="text-right text-xs">
+                              <div className="text-gray-400">Last Year: ${dept.lastYear.toLocaleString()}</div>
+                              <div className="text-emerald-600">Essential: ${dept.essential.toLocaleString()}</div>
+                           </div>
+                        </div>
+
+                        {!submitted ? (
+                           <>
+                              <div className="flex items-center gap-2 mb-2">
+                                 <span className="text-sm text-gray-600">Allocate: $</span>
+                                 <input
+                                    type="number"
+                                    value={allocations[dept.id] || ''}
+                                    onChange={(e) => handleAllocation(dept.id, Number(e.target.value))}
+                                    className="flex-1 p-2 border rounded-lg text-right"
+                                    placeholder="0"
+                                    step="10000"
+                                 />
+                              </div>
+                              <div className="flex flex-wrap gap-1">
+                                 {scenario.justificationOptions.map(just => (
+                                    <button
+                                       key={just.id}
+                                       onClick={() => handleJustification(dept.id, just.id)}
+                                       className={`text-xs px-2 py-1 rounded-full transition-all ${justifications[dept.id] === just.id ? 'bg-emerald-500 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
+                                    >
+                                       {just.text}
+                                    </button>
+                                 ))}
+                              </div>
+                           </>
+                        ) : (
+                           <div className="flex justify-between items-center">
+                              <span className="text-emerald-700 font-semibold">${(allocations[dept.id] || 0).toLocaleString()}</span>
+                              <span className={`text-xs px-2 py-1 rounded ${(allocations[dept.id] || 0) >= dept.essential ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+                                 {(allocations[dept.id] || 0) >= dept.essential ? '✓ Essential met' : '✗ Below essential'}
+                              </span>
+                           </div>
+                        )}
+                     </div>
+                  ))}
+               </div>
+
+               {!submitted ? (
+                  <button
+                     onClick={handleSubmit}
+                     disabled={remaining < 0}
+                     className={`w-full py-3 rounded-xl font-semibold transition-all ${remaining < 0 ? 'bg-gray-300 text-gray-500 cursor-not-allowed' : 'bg-emerald-500 text-white hover:bg-emerald-600'}`}
+                  >
+                     {remaining < 0 ? 'Over Budget!' : 'Submit Budget Allocation'}
+                  </button>
+               ) : (
+                  <button onClick={nextScenario} className="w-full py-3 bg-emerald-500 text-white rounded-xl font-semibold hover:bg-emerald-600">
+                     {scenarioIndex < scenarios.length - 1 ? 'Next Organization →' : 'Complete ZBB Challenge'}
+                  </button>
+               )}
+
+               {showInfo && (
+                  <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" onClick={() => setShowInfo(false)}>
+                     <div className="bg-white p-6 rounded-xl max-w-md m-4" onClick={e => e.stopPropagation()}>
+                        <h3 className="font-bold text-lg mb-2">{infoContent.title}</h3>
+                        <p className="text-gray-600">{infoContent.content}</p>
+                        <button onClick={() => setShowInfo(false)} className="mt-4 px-4 py-2 bg-emerald-500 text-white rounded-lg">Got it!</button>
+                     </div>
+                  </div>
+               )}
+            </div>
+         );
+      }
+
+      // Result Phase
+      if (phase === 'result') {
+         const quiz = quizQuestions[quizIndex];
+         const maxScore = (scenarios.length * 75) + (quizQuestions.length * 10);
+         const percentage = Math.round((score / maxScore) * 100);
+
+         if (quizIndex < quizQuestions.length) {
+            return (
+               <div className="p-6 bg-gradient-to-br from-emerald-50 to-teal-50 rounded-2xl max-w-2xl mx-auto">
+                  <h2 className="text-xl font-bold text-emerald-800 mb-4">Knowledge Check</h2>
+                  <div className="bg-white/90 p-5 rounded-xl mb-4">
+                     <div className="text-sm text-gray-500 mb-2">Question {quizIndex + 1} of {quizQuestions.length}</div>
+                     <p className="font-semibold text-gray-800 mb-4">{quiz.q}</p>
+                     <div className="grid gap-2">
+                        {quiz.options.map((opt, i) => (
+                           <button
+                              key={i}
+                              onClick={() => {
+                                 if (!quizAnswered) {
+                                    if (i === quiz.correct) setScore(s => s + 10);
+                                    setQuizAnswered(true);
+                                    setGameLog(prev => [...prev, `Quiz ${quizIndex + 1}: ${i === quiz.correct ? 'Correct!' : 'Incorrect'}`]);
+                                 }
+                              }}
+                              disabled={quizAnswered}
+                              className={`p-3 rounded-lg text-left transition-all ${quizAnswered ? (i === quiz.correct ? 'bg-green-100 border-green-500' : 'bg-gray-100') : 'bg-gray-50 hover:bg-gray-100'} border-2 ${quizAnswered && i === quiz.correct ? 'border-green-500' : 'border-transparent'}`}
+                           >
+                              {opt}
+                           </button>
+                        ))}
+                     </div>
+                  </div>
+                  {quizAnswered && (
+                     <button onClick={() => { setQuizIndex(quizIndex + 1); setQuizAnswered(false); }} className="w-full py-3 bg-emerald-500 text-white rounded-xl font-semibold hover:bg-emerald-600">
+                        {quizIndex < quizQuestions.length - 1 ? 'Next Question' : 'See Results'}
+                     </button>
+                  )}
+               </div>
+            );
+         }
+
+         return (
+            <div className="p-6 bg-gradient-to-br from-emerald-50 to-teal-50 rounded-2xl max-w-2xl mx-auto">
+               <h2 className="text-2xl font-bold text-emerald-800 mb-4">🎉 ZBB Challenge Complete!</h2>
+               <div className="bg-white/90 p-6 rounded-xl mb-6">
+                  <div className="text-center mb-6">
+                     <div className="text-5xl font-bold text-emerald-600 mb-2">{percentage}%</div>
+                     <div className="text-gray-600">Final Score: {score} / {maxScore}</div>
+                     <div className="text-lg font-semibold mt-2">
+                        {percentage >= 90 ? '🏆 Budget Master!' : percentage >= 70 ? '📊 Strategic Allocator' : percentage >= 50 ? '📈 Good Progress' : '📚 Keep Practicing'}
+                     </div>
+                  </div>
+                  <div className="bg-emerald-50 p-4 rounded-lg">
+                     <h3 className="font-bold text-emerald-800 mb-2">ZBB Best Practices:</h3>
+                     <ul className="text-sm text-gray-700 space-y-1">
+                        <li>• Start every budget cycle at zero</li>
+                        <li>• Require justification for every expense</li>
+                        <li>• Create decision packages with alternatives</li>
+                        <li>• Rank all activities by strategic value</li>
+                        <li>• Force trade-offs rather than across-the-board cuts</li>
+                     </ul>
+                  </div>
+               </div>
+               <button onClick={() => { setPhase('intro'); setScore(0); setScenarioIndex(0); setAllocations({}); setJustifications({}); setSubmitted(false); setQuizIndex(0); setQuizAnswered(false); }} className="w-full py-3 bg-emerald-500 text-white rounded-xl font-semibold hover:bg-emerald-600">Practice Again</button>
+            </div>
+         );
+      }
+      return null;
+   };
+
    const FinancialStatementsRenderer = () => {
       const [phase, setPhase] = useState<'intro' | 'play' | 'result'>('intro');
       const [showInfo, setShowInfo] = useState(false);
@@ -48563,6 +48989,8 @@ const GeneratedDiagram: React.FC<DiagramProps> = ({ type, data, title }) => {
             return <BudgetForecastRenderer />;
          case 'variance_analysis':
             return <VarianceAnalysisRenderer />;
+         case 'zero_based_budget':
+            return <ZeroBasedBudgetRenderer />;
          case 'pricing_strategy':
             return <PricingStrategyRenderer />;
          case 'budgeting':
