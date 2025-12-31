@@ -44281,6 +44281,441 @@ const GeneratedDiagram: React.FC<DiagramProps> = ({ type, data, title }) => {
       return null;
    };
 
+   // Topic 23: Variance Analysis - Analyzing Budget vs Actual Differences
+   const VarianceAnalysisRenderer = () => {
+      const [phase, setPhase] = useState<'intro' | 'tutorial' | 'play' | 'result'>('intro');
+      const [tutorialStep, setTutorialStep] = useState(0);
+      const [score, setScore] = useState(0);
+      const [scenarioIndex, setScenarioIndex] = useState(0);
+      const [gameLog, setGameLog] = useState<string[]>([]);
+      const [quizIndex, setQuizIndex] = useState(0);
+      const [quizAnswered, setQuizAnswered] = useState(false);
+      const [showInfo, setShowInfo] = useState(false);
+      const [infoContent, setInfoContent] = useState({ title: '', content: '' });
+      const [selectedVariance, setSelectedVariance] = useState<string | null>(null);
+      const [varianceExplained, setVarianceExplained] = useState(false);
+      const [rootCauseSelected, setRootCauseSelected] = useState<string | null>(null);
+
+      const tutorialSteps = [
+         { title: 'Welcome to Variance Analysis!', content: 'Learn to analyze differences between budgeted and actual performance to identify issues and opportunities.' },
+         { title: 'What is Variance?', content: 'Variance = Actual - Budget. Positive variance means you exceeded budget (good for revenue, bad for costs). Negative means you fell short.' },
+         { title: 'Favorable vs Unfavorable', content: 'Favorable: Benefits the company (higher revenue OR lower costs). Unfavorable: Hurts the company (lower revenue OR higher costs).' },
+         { title: 'Types of Variances', content: 'Price Variance: Difference in cost per unit. Quantity Variance: Difference in volume used. Both help isolate root causes.' },
+         { title: 'Price Variance Formula', content: 'Price Variance = (Actual Price - Budget Price) × Actual Quantity. Shows impact of price changes on costs.' },
+         { title: 'Quantity Variance Formula', content: 'Quantity Variance = (Actual Qty - Budget Qty) × Budget Price. Shows impact of usage efficiency.' },
+         { title: 'Ready to Analyze!', content: 'You\'ll examine real business scenarios, calculate variances, and identify root causes. Let\'s find those hidden insights!' }
+      ];
+
+      const scenarios = [
+         {
+            title: 'Manufacturing Materials Variance',
+            company: 'SteelWorks Industries',
+            category: 'Direct Materials',
+            budget: { price: 50, quantity: 10000, total: 500000 },
+            actual: { price: 55, quantity: 10800, total: 594000 },
+            totalVariance: 94000,
+            favorability: 'Unfavorable',
+            priceVariance: { value: 59400, formula: '($55 - $50) × 10,800 = $59,400 U' },
+            quantityVariance: { value: 40000, formula: '(10,800 - 10,000) × $50 = $40,000 U' },
+            rootCauses: [
+               { id: 'supplier', text: 'Supplier raised prices due to steel shortage', correct: true },
+               { id: 'waste', text: 'Production inefficiency caused excess material waste', correct: true },
+               { id: 'demand', text: 'Customer demand decreased unexpectedly', correct: false },
+               { id: 'labor', text: 'Labor costs increased', correct: false }
+            ],
+            insight: 'Both price and quantity variances are unfavorable. The $55/unit actual price vs $50 budget shows supplier cost pressure, while 10,800 vs 10,000 units used indicates production inefficiency or waste.'
+         },
+         {
+            title: 'Sales Revenue Variance',
+            company: 'TechGadgets Direct',
+            category: 'Revenue',
+            budget: { price: 200, quantity: 5000, total: 1000000 },
+            actual: { price: 185, quantity: 5800, total: 1073000 },
+            totalVariance: 73000,
+            favorability: 'Favorable',
+            priceVariance: { value: -87000, formula: '($185 - $200) × 5,800 = -$87,000 U' },
+            quantityVariance: { value: 160000, formula: '(5,800 - 5,000) × $200 = $160,000 F' },
+            rootCauses: [
+               { id: 'promo', text: 'Promotional pricing drove higher volume', correct: true },
+               { id: 'competition', text: 'Competitor pricing forced price reduction', correct: true },
+               { id: 'quality', text: 'Product quality issues reduced demand', correct: false },
+               { id: 'inventory', text: 'Inventory shortage limited sales', correct: false }
+            ],
+            insight: 'Price decrease hurt revenue by $87K, but volume increase added $160K. Net favorable $73K! The price-volume tradeoff worked - lower prices drove enough additional sales to more than compensate.'
+         },
+         {
+            title: 'Labor Cost Variance',
+            company: 'AssemblePro Manufacturing',
+            category: 'Direct Labor',
+            budget: { price: 25, quantity: 8000, total: 200000 },
+            actual: { price: 28, quantity: 7200, total: 201600 },
+            totalVariance: 1600,
+            favorability: 'Unfavorable',
+            priceVariance: { value: 21600, formula: '($28 - $25) × 7,200 = $21,600 U' },
+            quantityVariance: { value: -20000, formula: '(7,200 - 8,000) × $25 = -$20,000 F' },
+            rootCauses: [
+               { id: 'overtime', text: 'Overtime pay increased average hourly rate', correct: true },
+               { id: 'efficiency', text: 'New equipment improved labor efficiency', correct: true },
+               { id: 'turnover', text: 'High turnover caused training delays', correct: false },
+               { id: 'demand', text: 'Customer demand exceeded forecasts', correct: false }
+            ],
+            insight: 'Interesting tradeoff: Higher wages ($21.6K unfavorable) but fewer hours needed ($20K favorable). New equipment investment paid off - workers cost more per hour but finished faster!'
+         },
+         {
+            title: 'Overhead Cost Variance',
+            company: 'DataCenter Operations',
+            category: 'Fixed Overhead',
+            budget: { price: 100, quantity: 1000, total: 100000 },
+            actual: { price: 100, quantity: 1200, total: 120000 },
+            totalVariance: 20000,
+            favorability: 'Unfavorable',
+            priceVariance: { value: 0, formula: '($100 - $100) × 1,200 = $0' },
+            quantityVariance: { value: 20000, formula: '(1,200 - 1,000) × $100 = $20,000 U' },
+            rootCauses: [
+               { id: 'expansion', text: 'Business growth required additional capacity', correct: true },
+               { id: 'inefficiency', text: 'Energy inefficiency in older equipment', correct: true },
+               { id: 'pricing', text: 'Utility company reduced rates', correct: false },
+               { id: 'automation', text: 'Automation reduced overhead needs', correct: false }
+            ],
+            insight: 'Price per unit stayed on budget, but volume increased 20%. This could be growth (good) or inefficiency (bad). The root cause determines whether this variance signals success or a problem to fix.'
+         }
+      ];
+
+      const quizQuestions = [
+         { q: 'Revenue came in at $90K vs budget of $100K. This variance is:', options: ['Favorable', 'Unfavorable', 'Neutral', 'Cannot determine'], correct: 1 },
+         { q: 'Cost of materials was $45K vs budget of $50K. This variance is:', options: ['Favorable', 'Unfavorable', 'Neutral', 'Cannot determine'], correct: 0 },
+         { q: 'Price Variance isolates the impact of:', options: ['Volume changes', 'Cost per unit changes', 'Both price and volume', 'Fixed cost changes'], correct: 1 },
+         { q: 'If Actual Qty > Budget Qty for a cost item, the quantity variance is:', options: ['Always favorable', 'Always unfavorable', 'Depends on the price', 'Cannot calculate'], correct: 1 },
+         { q: 'Total Variance = Price Variance + Quantity Variance. True or False?', options: ['True (always)', 'True (approximately)', 'False', 'Only for revenue'], correct: 1 },
+         { q: 'A flexible budget adjusts for:', options: ['Inflation only', 'Actual activity levels', 'Management preferences', 'Prior year results'], correct: 1 }
+      ];
+
+      const openInfo = (title: string, content: string) => {
+         setInfoContent({ title, content });
+         setShowInfo(true);
+      };
+
+      const handleRootCauseSelect = (causeId: string) => {
+         setRootCauseSelected(causeId);
+         const scenario = scenarios[scenarioIndex];
+         const cause = scenario.rootCauses.find(c => c.id === causeId);
+         if (cause?.correct) {
+            setScore(s => s + 15);
+            setGameLog(prev => [...prev, `Correct root cause identified for ${scenario.company}!`]);
+         } else {
+            setGameLog(prev => [...prev, `Incorrect root cause - review the variance patterns.`]);
+         }
+      };
+
+      const nextScenario = () => {
+         if (scenarioIndex < scenarios.length - 1) {
+            setScenarioIndex(scenarioIndex + 1);
+            setSelectedVariance(null);
+            setVarianceExplained(false);
+            setRootCauseSelected(null);
+         } else {
+            setPhase('result');
+         }
+      };
+
+      // Intro Phase
+      if (phase === 'intro') {
+         return (
+            <div className="p-6 bg-gradient-to-br from-red-50 to-orange-50 rounded-2xl max-w-2xl mx-auto">
+               <h2 className="text-2xl font-bold text-red-800 mb-4 flex items-center gap-2">
+                  📊 Variance Analysis Detective
+                  <button onClick={() => openInfo('What is Variance Analysis?', 'Variance analysis compares planned (budgeted) results to actual results to understand performance and identify areas needing attention. It answers: Did we hit our targets? If not, why?')} className="text-red-500 hover:text-red-700">ℹ️</button>
+               </h2>
+               <div className="bg-white/80 p-5 rounded-xl mb-6">
+                  <p className="text-gray-700 mb-4">Master the art of analyzing budget vs. actual differences!</p>
+                  <div className="grid grid-cols-2 gap-4 mb-4">
+                     <div className="bg-green-50 p-3 rounded-lg border-l-4 border-green-500">
+                        <div className="font-semibold text-green-800">Favorable ✓</div>
+                        <div className="text-sm text-green-600">Benefits the company</div>
+                     </div>
+                     <div className="bg-red-50 p-3 rounded-lg border-l-4 border-red-500">
+                        <div className="font-semibold text-red-800">Unfavorable ✗</div>
+                        <div className="text-sm text-red-600">Hurts the company</div>
+                     </div>
+                  </div>
+                  <div className="text-sm text-gray-600">
+                     <strong>You'll learn:</strong> Price variance, Quantity variance, Root cause analysis, Management decision-making
+                  </div>
+               </div>
+               <button onClick={() => setPhase('tutorial')} className="w-full py-3 bg-red-500 text-white rounded-xl font-semibold hover:bg-red-600 transition-all">Start Learning</button>
+               {showInfo && (
+                  <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" onClick={() => setShowInfo(false)}>
+                     <div className="bg-white p-6 rounded-xl max-w-md m-4" onClick={e => e.stopPropagation()}>
+                        <h3 className="font-bold text-lg mb-2">{infoContent.title}</h3>
+                        <p className="text-gray-600">{infoContent.content}</p>
+                        <button onClick={() => setShowInfo(false)} className="mt-4 px-4 py-2 bg-red-500 text-white rounded-lg">Got it!</button>
+                     </div>
+                  </div>
+               )}
+            </div>
+         );
+      }
+
+      // Tutorial Phase
+      if (phase === 'tutorial') {
+         const step = tutorialSteps[tutorialStep];
+         return (
+            <div className="p-6 bg-gradient-to-br from-red-50 to-orange-50 rounded-2xl max-w-2xl mx-auto">
+               <div className="flex justify-between items-center mb-4">
+                  <h2 className="text-xl font-bold text-red-800">Tutorial</h2>
+                  <span className="text-sm text-red-600">Step {tutorialStep + 1} of {tutorialSteps.length}</span>
+               </div>
+               <div className="bg-white/90 p-6 rounded-xl mb-6">
+                  <h3 className="font-bold text-lg text-gray-800 mb-3">{step.title}</h3>
+                  <p className="text-gray-600">{step.content}</p>
+
+                  {tutorialStep === 1 && (
+                     <div className="mt-4 p-4 bg-gray-100 rounded-lg">
+                        <div className="font-mono text-center text-lg">
+                           <span className="text-blue-600">Variance</span> = <span className="text-green-600">Actual</span> - <span className="text-purple-600">Budget</span>
+                        </div>
+                     </div>
+                  )}
+
+                  {tutorialStep === 4 && (
+                     <div className="mt-4 p-4 bg-amber-50 rounded-lg border border-amber-200">
+                        <div className="font-mono text-sm">
+                           <div className="text-amber-800 font-bold mb-2">Price Variance:</div>
+                           <div>(Actual Price - Budget Price) × Actual Qty</div>
+                           <div className="text-xs text-gray-500 mt-1">Example: ($55 - $50) × 1,000 = $5,000 U</div>
+                        </div>
+                     </div>
+                  )}
+
+                  {tutorialStep === 5 && (
+                     <div className="mt-4 p-4 bg-blue-50 rounded-lg border border-blue-200">
+                        <div className="font-mono text-sm">
+                           <div className="text-blue-800 font-bold mb-2">Quantity Variance:</div>
+                           <div>(Actual Qty - Budget Qty) × Budget Price</div>
+                           <div className="text-xs text-gray-500 mt-1">Example: (1,100 - 1,000) × $50 = $5,000 U</div>
+                        </div>
+                     </div>
+                  )}
+               </div>
+               <div className="w-full bg-gray-200 rounded-full h-2 mb-4">
+                  <div className="bg-red-500 h-2 rounded-full transition-all" style={{ width: `${((tutorialStep + 1) / tutorialSteps.length) * 100}%` }}></div>
+               </div>
+               <div className="flex gap-3">
+                  {tutorialStep > 0 && <button onClick={() => setTutorialStep(tutorialStep - 1)} className="flex-1 py-2 bg-gray-200 rounded-lg hover:bg-gray-300">Back</button>}
+                  <button onClick={() => tutorialStep < tutorialSteps.length - 1 ? setTutorialStep(tutorialStep + 1) : setPhase('play')} className="flex-1 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600">
+                     {tutorialStep < tutorialSteps.length - 1 ? 'Next' : 'Start Analysis!'}
+                  </button>
+               </div>
+            </div>
+         );
+      }
+
+      // Play Phase
+      if (phase === 'play') {
+         const scenario = scenarios[scenarioIndex];
+         return (
+            <div className="p-6 bg-gradient-to-br from-red-50 to-orange-50 rounded-2xl max-w-2xl mx-auto">
+               <div className="flex justify-between items-center mb-4">
+                  <h2 className="text-xl font-bold text-red-800">{scenario.company}</h2>
+                  <div className="flex items-center gap-3">
+                     <span className="bg-red-100 px-3 py-1 rounded-full text-red-700 text-sm">Score: {score}</span>
+                     <span className="text-sm text-gray-500">Case {scenarioIndex + 1}/{scenarios.length}</span>
+                  </div>
+               </div>
+
+               <div className="bg-white/90 p-5 rounded-xl mb-4">
+                  <div className="flex justify-between items-center mb-3">
+                     <h3 className="font-bold text-gray-800">{scenario.title}</h3>
+                     <span className={`px-2 py-1 rounded text-xs font-medium ${scenario.favorability === 'Favorable' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+                        {scenario.favorability}
+                     </span>
+                  </div>
+
+                  {/* Budget vs Actual Table */}
+                  <div className="overflow-x-auto mb-4">
+                     <table className="w-full text-sm">
+                        <thead>
+                           <tr className="bg-gray-100">
+                              <th className="p-2 text-left">{scenario.category}</th>
+                              <th className="p-2 text-right">Budget</th>
+                              <th className="p-2 text-right">Actual</th>
+                              <th className="p-2 text-right">Variance</th>
+                           </tr>
+                        </thead>
+                        <tbody>
+                           <tr>
+                              <td className="p-2">Price/Unit</td>
+                              <td className="p-2 text-right">${scenario.budget.price}</td>
+                              <td className="p-2 text-right">${scenario.actual.price}</td>
+                              <td className={`p-2 text-right ${scenario.actual.price > scenario.budget.price ? (scenario.category === 'Revenue' ? 'text-green-600' : 'text-red-600') : (scenario.category === 'Revenue' ? 'text-red-600' : 'text-green-600')}`}>
+                                 ${Math.abs(scenario.actual.price - scenario.budget.price)}
+                              </td>
+                           </tr>
+                           <tr className="bg-gray-50">
+                              <td className="p-2">Quantity</td>
+                              <td className="p-2 text-right">{scenario.budget.quantity.toLocaleString()}</td>
+                              <td className="p-2 text-right">{scenario.actual.quantity.toLocaleString()}</td>
+                              <td className={`p-2 text-right ${scenario.actual.quantity > scenario.budget.quantity ? (scenario.category === 'Revenue' ? 'text-green-600' : 'text-red-600') : (scenario.category === 'Revenue' ? 'text-red-600' : 'text-green-600')}`}>
+                                 {Math.abs(scenario.actual.quantity - scenario.budget.quantity).toLocaleString()}
+                              </td>
+                           </tr>
+                           <tr className="font-bold border-t-2">
+                              <td className="p-2">Total</td>
+                              <td className="p-2 text-right">${scenario.budget.total.toLocaleString()}</td>
+                              <td className="p-2 text-right">${scenario.actual.total.toLocaleString()}</td>
+                              <td className={`p-2 text-right ${scenario.favorability === 'Favorable' ? 'text-green-600' : 'text-red-600'}`}>
+                                 ${scenario.totalVariance.toLocaleString()} {scenario.favorability === 'Favorable' ? 'F' : 'U'}
+                              </td>
+                           </tr>
+                        </tbody>
+                     </table>
+                  </div>
+
+                  {/* Variance Breakdown */}
+                  <div className="grid grid-cols-2 gap-3 mb-4">
+                     <button
+                        onClick={() => { setSelectedVariance('price'); setScore(s => s + 5); }}
+                        className={`p-3 rounded-lg border-2 text-left transition-all ${selectedVariance === 'price' ? 'border-amber-500 bg-amber-50' : 'border-gray-200 hover:border-amber-300'}`}
+                     >
+                        <div className="font-semibold text-amber-800">Price Variance</div>
+                        <div className="text-sm text-gray-600 font-mono">{scenario.priceVariance.formula}</div>
+                     </button>
+                     <button
+                        onClick={() => { setSelectedVariance('quantity'); setScore(s => s + 5); }}
+                        className={`p-3 rounded-lg border-2 text-left transition-all ${selectedVariance === 'quantity' ? 'border-blue-500 bg-blue-50' : 'border-gray-200 hover:border-blue-300'}`}
+                     >
+                        <div className="font-semibold text-blue-800">Quantity Variance</div>
+                        <div className="text-sm text-gray-600 font-mono">{scenario.quantityVariance.formula}</div>
+                     </button>
+                  </div>
+
+                  {/* Insight Display */}
+                  {selectedVariance && !varianceExplained && (
+                     <div className="bg-amber-50 p-4 rounded-lg border border-amber-200 mb-4">
+                        <div className="font-semibold text-amber-800 mb-2">💡 Analysis Insight</div>
+                        <p className="text-sm text-gray-700">{scenario.insight}</p>
+                        <button onClick={() => setVarianceExplained(true)} className="mt-2 text-amber-600 text-sm hover:underline">Continue to Root Cause →</button>
+                     </div>
+                  )}
+
+                  {/* Root Cause Selection */}
+                  {varianceExplained && !rootCauseSelected && (
+                     <div className="bg-purple-50 p-4 rounded-lg border border-purple-200">
+                        <div className="font-semibold text-purple-800 mb-3">🔍 Identify Root Causes</div>
+                        <p className="text-sm text-gray-600 mb-3">Select the most likely root cause(s) for this variance:</p>
+                        <div className="grid gap-2">
+                           {scenario.rootCauses.map(cause => (
+                              <button
+                                 key={cause.id}
+                                 onClick={() => handleRootCauseSelect(cause.id)}
+                                 className="p-3 bg-white rounded-lg border border-purple-200 text-left hover:border-purple-400 hover:bg-purple-50 transition-all"
+                              >
+                                 {cause.text}
+                              </button>
+                           ))}
+                        </div>
+                     </div>
+                  )}
+
+                  {/* Root Cause Result */}
+                  {rootCauseSelected && (
+                     <div className={`p-4 rounded-lg border ${scenario.rootCauses.find(c => c.id === rootCauseSelected)?.correct ? 'bg-green-50 border-green-300' : 'bg-red-50 border-red-300'}`}>
+                        <div className="font-semibold mb-2">
+                           {scenario.rootCauses.find(c => c.id === rootCauseSelected)?.correct ? '✅ Correct!' : '❌ Not quite'}
+                        </div>
+                        <p className="text-sm text-gray-700">
+                           <strong>Valid causes:</strong> {scenario.rootCauses.filter(c => c.correct).map(c => c.text).join('; ')}
+                        </p>
+                        <button onClick={nextScenario} className="mt-3 px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600">
+                           {scenarioIndex < scenarios.length - 1 ? 'Next Case →' : 'Complete Analysis'}
+                        </button>
+                     </div>
+                  )}
+               </div>
+
+               {showInfo && (
+                  <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" onClick={() => setShowInfo(false)}>
+                     <div className="bg-white p-6 rounded-xl max-w-md m-4" onClick={e => e.stopPropagation()}>
+                        <h3 className="font-bold text-lg mb-2">{infoContent.title}</h3>
+                        <p className="text-gray-600">{infoContent.content}</p>
+                        <button onClick={() => setShowInfo(false)} className="mt-4 px-4 py-2 bg-red-500 text-white rounded-lg">Got it!</button>
+                     </div>
+                  </div>
+               )}
+            </div>
+         );
+      }
+
+      // Result Phase
+      if (phase === 'result') {
+         const quiz = quizQuestions[quizIndex];
+         const maxScore = (scenarios.length * 25) + (quizQuestions.length * 10);
+         const percentage = Math.round((score / maxScore) * 100);
+
+         if (quizIndex < quizQuestions.length) {
+            return (
+               <div className="p-6 bg-gradient-to-br from-red-50 to-orange-50 rounded-2xl max-w-2xl mx-auto">
+                  <h2 className="text-xl font-bold text-red-800 mb-4">Knowledge Check</h2>
+                  <div className="bg-white/90 p-5 rounded-xl mb-4">
+                     <div className="text-sm text-gray-500 mb-2">Question {quizIndex + 1} of {quizQuestions.length}</div>
+                     <p className="font-semibold text-gray-800 mb-4">{quiz.q}</p>
+                     <div className="grid gap-2">
+                        {quiz.options.map((opt, i) => (
+                           <button
+                              key={i}
+                              onClick={() => {
+                                 if (!quizAnswered) {
+                                    if (i === quiz.correct) setScore(s => s + 10);
+                                    setQuizAnswered(true);
+                                    setGameLog(prev => [...prev, `Quiz ${quizIndex + 1}: ${i === quiz.correct ? 'Correct!' : 'Incorrect'}`]);
+                                 }
+                              }}
+                              disabled={quizAnswered}
+                              className={`p-3 rounded-lg text-left transition-all ${quizAnswered ? (i === quiz.correct ? 'bg-green-100 border-green-500' : 'bg-gray-100') : 'bg-gray-50 hover:bg-gray-100'} border-2 ${quizAnswered && i === quiz.correct ? 'border-green-500' : 'border-transparent'}`}
+                           >
+                              {opt}
+                           </button>
+                        ))}
+                     </div>
+                  </div>
+                  {quizAnswered && (
+                     <button onClick={() => { setQuizIndex(quizIndex + 1); setQuizAnswered(false); }} className="w-full py-3 bg-red-500 text-white rounded-xl font-semibold hover:bg-red-600">
+                        {quizIndex < quizQuestions.length - 1 ? 'Next Question' : 'See Results'}
+                     </button>
+                  )}
+               </div>
+            );
+         }
+
+         return (
+            <div className="p-6 bg-gradient-to-br from-red-50 to-orange-50 rounded-2xl max-w-2xl mx-auto">
+               <h2 className="text-2xl font-bold text-red-800 mb-4">🎉 Analysis Complete!</h2>
+               <div className="bg-white/90 p-6 rounded-xl mb-6">
+                  <div className="text-center mb-6">
+                     <div className="text-5xl font-bold text-red-600 mb-2">{percentage}%</div>
+                     <div className="text-gray-600">Final Score: {score} / {maxScore}</div>
+                     <div className="text-lg font-semibold mt-2">
+                        {percentage >= 90 ? '🏆 Variance Master!' : percentage >= 70 ? '📊 Strong Analyst' : percentage >= 50 ? '📈 Good Progress' : '📚 Keep Learning'}
+                     </div>
+                  </div>
+                  <div className="bg-red-50 p-4 rounded-lg">
+                     <h3 className="font-bold text-red-800 mb-2">Key Takeaways:</h3>
+                     <ul className="text-sm text-gray-700 space-y-1">
+                        <li>• Break total variance into Price and Quantity components</li>
+                        <li>• Favorable for revenue = higher than budget</li>
+                        <li>• Favorable for costs = lower than budget</li>
+                        <li>• Always investigate root causes before acting</li>
+                        <li>• Variance analysis drives continuous improvement</li>
+                     </ul>
+                  </div>
+               </div>
+               <button onClick={() => { setPhase('intro'); setScore(0); setScenarioIndex(0); setSelectedVariance(null); setVarianceExplained(false); setRootCauseSelected(null); setQuizIndex(0); setQuizAnswered(false); }} className="w-full py-3 bg-red-500 text-white rounded-xl font-semibold hover:bg-red-600">Practice Again</button>
+            </div>
+         );
+      }
+      return null;
+   };
+
    const FinancialStatementsRenderer = () => {
       const [phase, setPhase] = useState<'intro' | 'play' | 'result'>('intro');
       const [showInfo, setShowInfo] = useState(false);
@@ -48126,6 +48561,8 @@ const GeneratedDiagram: React.FC<DiagramProps> = ({ type, data, title }) => {
             return <WorkingCapitalManagementRenderer />;
          case 'budget_forecast':
             return <BudgetForecastRenderer />;
+         case 'variance_analysis':
+            return <VarianceAnalysisRenderer />;
          case 'pricing_strategy':
             return <PricingStrategyRenderer />;
          case 'budgeting':
