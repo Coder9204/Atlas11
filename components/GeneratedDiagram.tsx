@@ -40509,6 +40509,380 @@ const GeneratedDiagram: React.FC<DiagramProps> = ({ type, data, title }) => {
       return null;
    };
 
+   const RetainedEarningsRenderer = () => {
+      const [phase, setPhase] = useState<'intro' | 'tutorial' | 'play' | 'result'>('intro');
+      const [tutorialStep, setTutorialStep] = useState(0);
+      const [showInfo, setShowInfo] = useState(false);
+      const [infoTopic, setInfoTopic] = useState<string | null>(null);
+      const [score, setScore] = useState(0);
+      const [level, setLevel] = useState(0);
+      const [gameLog, setGameLog] = useState<string[]>([]);
+      const [answers, setAnswers] = useState<{[key: string]: number}>({});
+      const [showResults, setShowResults] = useState(false);
+      const [quizIndex, setQuizIndex] = useState(0);
+      const [quizAnswered, setQuizAnswered] = useState(false);
+
+      const tutorials = [
+         { title: "What Are Retained Earnings?", content: "Accumulated profits kept in the business instead of paid out as dividends. It's the company's savings account of profits over its entire life.", icon: "🏦" },
+         { title: "The Formula", content: "Beginning RE + Net Income - Dividends = Ending RE. Simple but powerful - shows how profits flow to owners.", icon: "📐" },
+         { title: "Beginning Retained Earnings", content: "What you started the period with. This is last period's ending balance.", icon: "📅" },
+         { title: "Add: Net Income (or Subtract Loss)", content: "Profit from the income statement flows here. If there's a loss, it reduces retained earnings.", icon: "➕" },
+         { title: "Subtract: Dividends", content: "Cash or stock paid to shareholders. This is profit distribution, not an expense.", icon: "💸" },
+         { title: "Links All Statements", content: "Net Income comes from Income Statement. Ending RE goes to Balance Sheet equity. It's the bridge!", icon: "🔗" },
+         { title: "Negative Retained Earnings", content: "Called 'Accumulated Deficit'. Means lifetime losses exceed lifetime profits. Common in startups but a warning sign for mature companies.", icon: "⚠️" }
+      ];
+
+      const infoTopics: {[key: string]: string} = {
+         retained_earnings: "Retained earnings represent cumulative profits kept in the business. They fund growth, pay down debt, or save for future needs instead of going to shareholders.",
+         dividends: "Dividends reduce retained earnings but aren't expenses. They're distributions of profit to owners. Board declares dividends based on profitability and cash availability.",
+         net_income: "Net income from the income statement flows to retained earnings. It's the link between the two statements - profits that weren't distributed become retained.",
+         accumulated_deficit: "When cumulative losses exceed cumulative profits, retained earnings go negative (accumulated deficit). Amazon had a deficit for years before becoming profitable.",
+         prior_period_adjustment: "Rare adjustments to beginning balance for error corrections or accounting policy changes. They bypass the income statement and directly adjust RE."
+      };
+
+      const scenarios = [
+         {
+            name: "Growing Startup",
+            beginningRE: 50000,
+            netIncome: 120000,
+            dividends: 20000,
+            endingRE: 150000
+         },
+         {
+            name: "Dividend-Heavy Corporation",
+            beginningRE: 500000,
+            netIncome: 200000,
+            dividends: 180000,
+            endingRE: 520000
+         },
+         {
+            name: "Recovery from Loss",
+            beginningRE: -80000,
+            netIncome: 150000,
+            dividends: 0,
+            endingRE: 70000
+         }
+      ];
+
+      const quizzes = [
+         { q: "Retained earnings is found on which statement?", opts: ["Income Statement", "Balance Sheet", "Cash Flow Statement", "Tax Return"], correct: 1, explain: "Retained earnings appears in the equity section of the Balance Sheet. It accumulates over time." },
+         { q: "Beginning RE = $100K, Net Income = $50K, Dividends = $30K. Ending RE?", opts: ["$120,000", "$80,000", "$150,000", "$100,000"], correct: 0, explain: "$100K + $50K - $30K = $120K. Add income, subtract dividends." },
+         { q: "A company reports net loss. What happens to retained earnings?", opts: ["Increases", "Decreases", "No change", "Becomes zero"], correct: 1, explain: "Net loss reduces retained earnings. RE = Beginning + Net Income (negative) - Dividends." },
+         { q: "Dividends are:", opts: ["An expense on income statement", "A reduction of retained earnings", "An increase to assets", "Revenue"], correct: 1, explain: "Dividends aren't expenses! They're distributions of profit, reducing RE and cash." },
+         { q: "A startup with negative retained earnings means:", opts: ["Bankruptcy", "Poor management", "Cumulative losses exceed cumulative profits", "No dividends ever"], correct: 2, explain: "Negative RE (accumulated deficit) means lifetime losses > lifetime profits. Common for growth companies investing in expansion." },
+         { q: "Net Income 'flows' from which statement to retained earnings?", opts: ["Balance Sheet", "Cash Flow Statement", "Income Statement", "None"], correct: 2, explain: "Net Income from the Income Statement adds to Retained Earnings, which then appears on the Balance Sheet." }
+      ];
+
+      const handleAnswer = (field: string, value: number) => {
+         setAnswers(prev => ({ ...prev, [field]: value }));
+      };
+
+      const checkAnswers = () => {
+         setShowResults(true);
+         const scenario = scenarios[level];
+         let correct = 0;
+
+         if (answers.ending === scenario.endingRE) {
+            correct++;
+            setScore(prev => prev + 30);
+         }
+
+         setGameLog(prev => [...prev, `Scenario ${level + 1}: ${correct > 0 ? 'Correct!' : 'Incorrect'} Ending RE = $${scenario.endingRE.toLocaleString()}`]);
+      };
+
+      const handleQuizAnswer = (idx: number) => {
+         if (quizAnswered) return;
+         setQuizAnswered(true);
+         if (idx === quizzes[quizIndex].correct) {
+            setScore(prev => prev + 15);
+            setGameLog(prev => [...prev, `Quiz ${quizIndex + 1}: Correct!`]);
+         }
+      };
+
+      const nextQuiz = () => {
+         if (quizIndex < quizzes.length - 1) {
+            setQuizIndex(prev => prev + 1);
+            setQuizAnswered(false);
+         } else {
+            setPhase('result');
+         }
+      };
+
+      const nextScenario = () => {
+         if (level < scenarios.length - 1) {
+            setLevel(prev => prev + 1);
+            setAnswers({});
+            setShowResults(false);
+         } else {
+            setLevel(scenarios.length);
+         }
+      };
+
+      const InfoModal = ({ topic, onClose }: { topic: string; onClose: () => void }) => (
+         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={onClose}>
+            <div className="bg-white rounded-xl p-6 max-w-md" onClick={e => e.stopPropagation()}>
+               <h3 className="text-lg font-bold text-gray-800 mb-3">ℹ️ {topic.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}</h3>
+               <p className="text-gray-600">{infoTopics[topic]}</p>
+               <button onClick={onClose} className="mt-4 w-full py-2 bg-violet-500 text-white rounded-lg hover:bg-violet-600">Got it!</button>
+            </div>
+         </div>
+      );
+
+      if (phase === 'intro') {
+         return (
+            <div className="flex flex-col items-center justify-center min-h-full bg-gradient-to-br from-violet-50 to-purple-100 p-6">
+               <div className="bg-white rounded-2xl shadow-xl p-8 max-w-lg w-full text-center">
+                  <div className="text-6xl mb-4">🏦</div>
+                  <h1 className="text-2xl font-bold text-gray-800 mb-3">Statement of Retained Earnings</h1>
+                  <p className="text-gray-600 mb-6">Track how profits accumulate in the business. This statement bridges the Income Statement and Balance Sheet!</p>
+                  <div className="bg-violet-50 rounded-lg p-4 mb-6 text-left font-mono text-sm">
+                     <p className="text-violet-800">
+                        Beginning Retained Earnings<br/>
+                        <span className="text-green-600">+ Net Income</span><br/>
+                        <span className="text-red-600">- Dividends Declared</span><br/>
+                        ─────────────────────<br/>
+                        <strong>= Ending Retained Earnings</strong>
+                     </p>
+                  </div>
+                  <button onClick={() => setPhase('tutorial')} className="w-full py-3 bg-violet-500 text-white rounded-xl font-semibold hover:bg-violet-600 transition-all">
+                     Start Learning
+                  </button>
+               </div>
+            </div>
+         );
+      }
+
+      if (phase === 'tutorial') {
+         const tut = tutorials[tutorialStep];
+         return (
+            <div className="flex flex-col items-center justify-center min-h-full bg-gradient-to-br from-violet-50 to-purple-100 p-6">
+               <div className="bg-white rounded-2xl shadow-xl p-8 max-w-lg w-full">
+                  <div className="flex justify-between items-center mb-6">
+                     <span className="text-sm text-gray-500">Step {tutorialStep + 1} of {tutorials.length}</span>
+                     <div className="flex gap-1">
+                        {tutorials.map((_, i) => (
+                           <div key={i} className={`w-2 h-2 rounded-full ${i <= tutorialStep ? 'bg-violet-500' : 'bg-gray-200'}`} />
+                        ))}
+                     </div>
+                  </div>
+                  <div className="text-4xl mb-4 text-center">{tut.icon}</div>
+                  <h2 className="text-xl font-bold text-gray-800 mb-3 text-center">{tut.title}</h2>
+                  <p className="text-gray-600 text-center mb-8">{tut.content}</p>
+                  <div className="flex gap-3">
+                     {tutorialStep > 0 && (
+                        <button onClick={() => setTutorialStep(prev => prev - 1)} className="flex-1 py-3 border-2 border-gray-200 rounded-xl font-semibold text-gray-600 hover:bg-gray-50">
+                           Back
+                        </button>
+                     )}
+                     <button
+                        onClick={() => tutorialStep < tutorials.length - 1 ? setTutorialStep(prev => prev + 1) : setPhase('play')}
+                        className="flex-1 py-3 bg-violet-500 text-white rounded-xl font-semibold hover:bg-violet-600"
+                     >
+                        {tutorialStep < tutorials.length - 1 ? 'Next' : 'Calculate RE!'}
+                     </button>
+                  </div>
+               </div>
+            </div>
+         );
+      }
+
+      if (phase === 'play') {
+         const inQuizMode = level >= scenarios.length;
+
+         if (!inQuizMode) {
+            const scenario = scenarios[level];
+            return (
+               <div className="flex flex-col min-h-full bg-gradient-to-br from-violet-50 to-purple-100 p-4">
+                  {showInfo && infoTopic && <InfoModal topic={infoTopic} onClose={() => setShowInfo(false)} />}
+
+                  <div className="flex justify-between items-center mb-4">
+                     <div>
+                        <h2 className="font-bold text-gray-800">{scenario.name}</h2>
+                        <p className="text-sm text-gray-600">Calculate ending retained earnings</p>
+                     </div>
+                     <span className="text-xl font-bold text-violet-600">{score} pts</span>
+                  </div>
+
+                  <div className="flex-1 bg-white rounded-xl shadow-lg p-6">
+                     <div className="space-y-4 font-mono">
+                        <div className="flex justify-between items-center py-3 border-b">
+                           <span className="flex items-center gap-2">
+                              Beginning Retained Earnings
+                              <button onClick={() => { setInfoTopic('retained_earnings'); setShowInfo(true); }} className="text-blue-500">ℹ️</button>
+                           </span>
+                           <span className={`font-bold ${scenario.beginningRE >= 0 ? 'text-gray-800' : 'text-red-600'}`}>
+                              ${scenario.beginningRE.toLocaleString()}
+                           </span>
+                        </div>
+
+                        <div className="flex justify-between items-center py-3 border-b">
+                           <span className="flex items-center gap-2 text-green-600">
+                              + Net Income
+                              <button onClick={() => { setInfoTopic('net_income'); setShowInfo(true); }} className="text-blue-500">ℹ️</button>
+                           </span>
+                           <span className="font-bold text-green-600">
+                              +${scenario.netIncome.toLocaleString()}
+                           </span>
+                        </div>
+
+                        <div className="flex justify-between items-center py-3 border-b">
+                           <span className="flex items-center gap-2 text-red-600">
+                              - Dividends Declared
+                              <button onClick={() => { setInfoTopic('dividends'); setShowInfo(true); }} className="text-blue-500">ℹ️</button>
+                           </span>
+                           <span className="font-bold text-red-600">
+                              -${scenario.dividends.toLocaleString()}
+                           </span>
+                        </div>
+
+                        <div className="border-t-2 border-violet-300 pt-4">
+                           <div className="flex justify-between items-center">
+                              <span className="font-bold text-lg">= Ending Retained Earnings</span>
+                              {!showResults ? (
+                                 <input
+                                    type="number"
+                                    placeholder="Calculate..."
+                                    value={answers.ending || ''}
+                                    onChange={(e) => handleAnswer('ending', Number(e.target.value))}
+                                    className="w-40 px-3 py-2 border-2 border-violet-300 rounded-lg text-right font-bold"
+                                 />
+                              ) : (
+                                 <span className={`text-xl font-bold ${answers.ending === scenario.endingRE ? 'text-green-600' : 'text-red-600'}`}>
+                                    ${scenario.endingRE.toLocaleString()}
+                                    {answers.ending === scenario.endingRE ? ' ✓' : ` (you: $${answers.ending?.toLocaleString()})`}
+                                 </span>
+                              )}
+                           </div>
+                        </div>
+
+                        {showResults && (
+                           <div className="mt-4 p-4 bg-gray-50 rounded-lg">
+                              <p className="text-sm text-gray-700">
+                                 <strong>Calculation:</strong><br/>
+                                 ${scenario.beginningRE.toLocaleString()} + ${scenario.netIncome.toLocaleString()} - ${scenario.dividends.toLocaleString()} = ${scenario.endingRE.toLocaleString()}
+                              </p>
+                              {scenario.endingRE < 0 && (
+                                 <p className="text-sm text-red-600 mt-2">
+                                    ⚠️ Negative ending RE indicates an accumulated deficit
+                                 </p>
+                              )}
+                           </div>
+                        )}
+                     </div>
+                  </div>
+
+                  <div className="mt-4">
+                     {!showResults ? (
+                        <button
+                           onClick={checkAnswers}
+                           disabled={answers.ending === undefined}
+                           className={`w-full py-3 rounded-xl font-semibold ${answers.ending !== undefined ? 'bg-violet-500 text-white hover:bg-violet-600' : 'bg-gray-200 text-gray-400'}`}
+                        >
+                           Check Answer
+                        </button>
+                     ) : (
+                        <button
+                           onClick={nextScenario}
+                           className="w-full py-3 bg-violet-500 text-white rounded-xl font-semibold hover:bg-violet-600"
+                        >
+                           {level < scenarios.length - 1 ? 'Next Scenario →' : 'Continue to Quiz →'}
+                        </button>
+                     )}
+                  </div>
+               </div>
+            );
+         }
+
+         const quiz = quizzes[quizIndex];
+         return (
+            <div className="flex flex-col min-h-full bg-gradient-to-br from-violet-50 to-purple-100 p-4">
+               <div className="flex justify-between items-center mb-4">
+                  <div>
+                     <h2 className="font-bold text-gray-800">Retained Earnings Quiz</h2>
+                     <p className="text-sm text-gray-600">Question {quizIndex + 1} of {quizzes.length}</p>
+                  </div>
+                  <span className="text-xl font-bold text-violet-600">{score} pts</span>
+               </div>
+
+               <div className="flex-1 bg-white rounded-xl shadow-lg p-6">
+                  <h3 className="text-lg font-semibold text-gray-800 mb-6">{quiz.q}</h3>
+                  <div className="space-y-3">
+                     {quiz.opts.map((opt, idx) => (
+                        <button
+                           key={idx}
+                           onClick={() => handleQuizAnswer(idx)}
+                           disabled={quizAnswered}
+                           className={`w-full p-4 rounded-lg text-left font-medium transition-all ${quizAnswered
+                              ? idx === quiz.correct
+                                 ? 'bg-green-100 border-2 border-green-500 text-green-800'
+                                 : 'bg-gray-100 text-gray-500'
+                              : 'bg-gray-50 hover:bg-violet-50 border-2 border-transparent hover:border-violet-300'
+                           }`}
+                        >
+                           {opt}
+                        </button>
+                     ))}
+                  </div>
+                  {quizAnswered && (
+                     <div className="mt-4 p-4 bg-yellow-50 rounded-lg">
+                        <p className="text-sm text-yellow-800">💡 {quiz.explain}</p>
+                     </div>
+                  )}
+               </div>
+
+               {quizAnswered && (
+                  <div className="mt-4">
+                     <button onClick={nextQuiz} className="w-full py-3 bg-violet-500 text-white rounded-xl font-semibold hover:bg-violet-600">
+                        {quizIndex < quizzes.length - 1 ? 'Next Question →' : 'See Results'}
+                     </button>
+                  </div>
+               )}
+            </div>
+         );
+      }
+
+      if (phase === 'result') {
+         const maxScore = (scenarios.length * 30) + (quizzes.length * 15);
+         const percentage = Math.round((score / maxScore) * 100);
+
+         return (
+            <div className="flex flex-col items-center justify-center min-h-full bg-gradient-to-br from-violet-50 to-purple-100 p-6">
+               <div className="bg-white rounded-2xl shadow-xl p-8 max-w-lg w-full text-center">
+                  <div className="text-6xl mb-4">{percentage >= 80 ? '🏆' : percentage >= 60 ? '📊' : '📚'}</div>
+                  <h1 className="text-2xl font-bold text-gray-800 mb-2">RE Statement Expert!</h1>
+                  <div className="text-4xl font-bold text-violet-600 mb-4">{score} / {maxScore}</div>
+                  <div className="w-full bg-gray-200 rounded-full h-3 mb-6">
+                     <div className="bg-violet-500 h-3 rounded-full transition-all" style={{ width: `${percentage}%` }} />
+                  </div>
+
+                  <div className="bg-gray-50 rounded-lg p-4 text-left mb-6">
+                     <h3 className="font-semibold text-gray-800 mb-2">🎯 Key Takeaways:</h3>
+                     <ul className="text-sm text-gray-600 space-y-2">
+                        <li>• <strong>RE = Beginning RE + Net Income - Dividends</strong></li>
+                        <li>• Net Income flows FROM Income Statement</li>
+                        <li>• Ending RE flows TO Balance Sheet equity</li>
+                        <li>• Negative RE = Accumulated deficit (not always bad!)</li>
+                     </ul>
+                  </div>
+
+                  <div className="bg-violet-50 rounded-lg p-4 text-left mb-6">
+                     <h3 className="font-semibold text-violet-800 mb-2">💡 Pro Insight:</h3>
+                     <p className="text-sm text-violet-700">
+                        Watch the dividend payout ratio (Dividends / Net Income). High ratios leave less for growth. Low ratios may disappoint income-seeking investors. Balance is key!
+                     </p>
+                  </div>
+
+                  <button onClick={() => { setPhase('intro'); setScore(0); setLevel(0); setAnswers({}); setShowResults(false); setQuizIndex(0); setQuizAnswered(false); setGameLog([]); }} className="w-full py-3 bg-violet-500 text-white rounded-xl font-semibold hover:bg-violet-600">
+                     Practice Again
+                  </button>
+               </div>
+            </div>
+         );
+      }
+
+      return null;
+   };
+
    const FinancialStatementsRenderer = () => {
       const [phase, setPhase] = useState<'intro' | 'play' | 'result'>('intro');
       const [showInfo, setShowInfo] = useState(false);
@@ -44334,6 +44708,8 @@ const GeneratedDiagram: React.FC<DiagramProps> = ({ type, data, title }) => {
             return <IncomeStatementRenderer />;
          case 'cash_flow_statement':
             return <CashFlowStatementRenderer />;
+         case 'retained_earnings':
+            return <RetainedEarningsRenderer />;
          case 'pricing_strategy':
             return <PricingStrategyRenderer />;
          case 'budgeting':
