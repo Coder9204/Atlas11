@@ -36442,6 +36442,726 @@ const GeneratedDiagram: React.FC<DiagramProps> = ({ type, data, title }) => {
       return null;
    };
 
+   // ============================================================================
+   // GAAP vs IFRS COMPARISON INTERACTIVE SIMULATION
+   // Understanding the differences between US GAAP and International Standards
+   // Features: Side-by-side comparison, impact analysis, prediction challenges
+   // ============================================================================
+   const GAAPvsIFRSRenderer = () => {
+      // ============================================================
+      // PHASE & UI STATE
+      // ============================================================
+      const [phase, setPhase] = useState<'intro' | 'tutorial' | 'play' | 'result'>('intro');
+      const [tutorialStep, setTutorialStep] = useState(0);
+      const [showInfo, setShowInfo] = useState(false);
+      const [infoTopic, setInfoTopic] = useState<string | null>(null);
+
+      // ============================================================
+      // GAME STATE
+      // ============================================================
+      const [currentTopic, setCurrentTopic] = useState(0);
+      const [currentQuestion, setCurrentQuestion] = useState(0);
+      const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
+      const [showResult, setShowResult] = useState(false);
+      const [score, setScore] = useState(0);
+      const [correctAnswers, setCorrectAnswers] = useState(0);
+      const [totalAnswered, setTotalAnswered] = useState(0);
+
+      // ============================================================
+      // LEARNING TRACKING
+      // ============================================================
+      const [topicsExplored, setTopicsExplored] = useState<string[]>([]);
+      const [conceptsStruggled, setConceptsStruggled] = useState<string[]>([]);
+
+      // ============================================================
+      // AI COACH SYNC
+      // ============================================================
+      const [gameLog, setGameLog] = useState<string[]>([]);
+
+      // ============================================================
+      // KEY DIFFERENCES DATA
+      // ============================================================
+      const differences = [
+         {
+            id: 'inventory',
+            topic: 'Inventory Valuation',
+            icon: '📦',
+            gaap: {
+               rule: 'LIFO Allowed',
+               description: 'US GAAP allows LIFO (Last-In, First-Out), FIFO, and weighted average methods.',
+               example: 'During inflation, LIFO shows lower profits and lower taxes.'
+            },
+            ifrs: {
+               rule: 'LIFO NOT Allowed',
+               description: 'IFRS prohibits LIFO. Only FIFO and weighted average are permitted.',
+               example: 'Companies must use FIFO or average, often showing higher profits during inflation.'
+            },
+            impact: {
+               scenario: 'A company has inventory purchased at $80, $90, and $100. They sell one unit for $150.',
+               gaapResult: { inventory: 170, cogs: 100, profit: 50 },
+               ifrsResult: { inventory: 190, cogs: 80, profit: 70 },
+               explanation: 'Under GAAP with LIFO, the $100 item (last in) is sold first. Under IFRS with FIFO, the $80 item (first in) is sold first.'
+            },
+            whyDifferent: 'The US allows LIFO for tax benefits during inflation. Most other countries prioritize showing the actual flow of goods.',
+            realWorld: 'US companies like Caterpillar and Exxon use LIFO to reduce taxes. If they switched to IFRS, their reported profits would increase significantly.'
+         },
+         {
+            id: 'development',
+            topic: 'R&D Costs',
+            icon: '🔬',
+            gaap: {
+               rule: 'Expense All R&D',
+               description: 'Research AND development costs must be expensed immediately (with limited software exceptions).',
+               example: 'A pharma company spends $50M on drug development - all expensed in current year.'
+            },
+            ifrs: {
+               rule: 'Capitalize Development',
+               description: 'Research costs are expensed, but development costs CAN be capitalized if criteria are met.',
+               example: 'Same pharma company can capitalize $30M of development costs as an asset.'
+            },
+            impact: {
+               scenario: 'TechCorp spent $10M on research and $20M on development for a new product.',
+               gaapResult: { assets: 0, expense: 30, profit: -30 },
+               ifrsResult: { assets: 20, expense: 10, profit: -10 },
+               explanation: 'GAAP expenses everything. IFRS can capitalize development costs that meet feasibility criteria.'
+            },
+            whyDifferent: 'GAAP emphasizes conservatism and reliability. IFRS aims to better match costs with future revenues from the developed product.',
+            realWorld: 'Tech and pharma companies operating internationally often show very different profits depending on which standard they use.'
+         },
+         {
+            id: 'revaluation',
+            topic: 'Asset Revaluation',
+            icon: '🏢',
+            gaap: {
+               rule: 'Historical Cost Only',
+               description: 'Property, plant & equipment must stay at historical cost minus depreciation. No upward revaluation.',
+               example: 'Building bought for $1M in 2000 stays at book value even if worth $5M today.'
+            },
+            ifrs: {
+               rule: 'Revaluation Allowed',
+               description: 'Companies can choose to revalue assets to fair market value periodically.',
+               example: 'Same building can be revalued to $5M, with gain going to equity.'
+            },
+            impact: {
+               scenario: 'A company owns a building: Cost $2M, Current Value $5M, Accumulated Depreciation $500K.',
+               gaapResult: { bookValue: 1.5, equity: 0, assets: 1.5 },
+               ifrsResult: { bookValue: 5.0, equity: 3.5, assets: 5.0 },
+               explanation: 'GAAP shows $1.5M (cost minus depreciation). IFRS can show $5M with $3.5M revaluation surplus in equity.'
+            },
+            whyDifferent: 'GAAP prioritizes objectivity and verifiability. IFRS believes fair value provides more relevant information.',
+            realWorld: 'Real estate companies in Europe often show much higher asset values than US counterparts due to revaluation.'
+         },
+         {
+            id: 'impairment',
+            topic: 'Impairment Reversal',
+            icon: '📉',
+            gaap: {
+               rule: 'No Reversal Allowed',
+               description: 'Once an asset is written down for impairment, the writedown is permanent. Cannot be reversed.',
+               example: 'Equipment impaired by $100K stays impaired even if value recovers.'
+            },
+            ifrs: {
+               rule: 'Reversal Allowed',
+               description: 'Impairment losses can be reversed (except for goodwill) if conditions improve.',
+               example: 'If equipment value recovers, the impairment can be reversed up to original cost.'
+            },
+            impact: {
+               scenario: 'Equipment cost $500K, impaired to $300K last year. This year, value recovered to $450K.',
+               gaapResult: { bookValue: 300, currentYearGain: 0 },
+               ifrsResult: { bookValue: 450, currentYearGain: 150 },
+               explanation: 'GAAP keeps it at $300K. IFRS can reverse up to $150K, increasing assets and income.'
+            },
+            whyDifferent: 'GAAP is more conservative - once written down, stay down. IFRS allows reflection of improved conditions.',
+            realWorld: 'During economic recoveries, IFRS companies can show significant gains from impairment reversals that GAAP companies cannot.'
+         },
+         {
+            id: 'leases',
+            topic: 'Lease Classification',
+            icon: '🔑',
+            gaap: {
+               rule: 'Finance vs Operating',
+               description: 'Leases classified as Finance or Operating based on specific bright-line tests (>75% life, >90% value, etc.).',
+               example: 'A 7-year lease on 10-year equipment (70%) might be Operating under GAAP.'
+            },
+            ifrs: {
+               rule: 'Single Model (Mostly)',
+               description: 'Nearly all leases go on balance sheet. Less distinction between types. Principles-based.',
+               example: 'Same 7-year lease would likely go on balance sheet under IFRS 16.'
+            },
+            impact: {
+               scenario: 'Company leases equipment: 7-year term, 10-year asset life, $100K annual payments.',
+               gaapResult: { onBalance: 'Maybe', debtRatio: 'Lower if Operating' },
+               ifrsResult: { onBalance: 'Yes', debtRatio: 'Higher (more liabilities shown)' },
+               explanation: 'IFRS puts more leases on the balance sheet, increasing both assets and liabilities.'
+            },
+            whyDifferent: 'GAAP has more specific rules allowing some leases to stay off-balance-sheet. IFRS 16 requires most leases on balance sheet.',
+            realWorld: 'Airlines and retailers with many leases often show very different debt ratios under GAAP vs IFRS.'
+         },
+         {
+            id: 'revenue',
+            topic: 'Revenue Recognition',
+            icon: '💰',
+            gaap: {
+               rule: 'ASC 606 (Detailed)',
+               description: 'Very detailed industry-specific guidance with many rules and interpretations.',
+               example: 'Specific rules for software, construction, franchises, etc.'
+            },
+            ifrs: {
+               rule: 'IFRS 15 (Principles)',
+               description: 'Same 5-step model as GAAP but more principles-based with less detailed guidance.',
+               example: 'More judgment required, fewer specific industry rules.'
+            },
+            impact: {
+               scenario: 'Software company sells license + 2 years support for $120K bundled.',
+               gaapResult: { approach: 'Detailed allocation rules per ASC 606', notes: 'Specific guidance available' },
+               ifrsResult: { approach: 'Principles-based allocation', notes: 'More judgment required' },
+               explanation: 'Both use 5-step model but GAAP has more prescriptive guidance for specific situations.'
+            },
+            whyDifferent: 'These standards have converged significantly, but GAAP retains more industry-specific rules from legacy standards.',
+            realWorld: 'Revenue recognition is now largely converged, but differences remain in specific applications.'
+         }
+      ];
+
+      // ============================================================
+      // QUIZ QUESTIONS FOR EACH TOPIC
+      // ============================================================
+      const quizQuestions = [
+         // Inventory
+         {
+            topicId: 'inventory',
+            question: 'During high inflation, which standard typically shows HIGHER reported profits?',
+            options: ['US GAAP (with LIFO)', 'IFRS (without LIFO)', 'They show the same', 'Depends on the company'],
+            correct: 1,
+            explanation: 'IFRS requires FIFO or average cost. During inflation, older (cheaper) inventory is sold first, resulting in lower COGS and higher profits. GAAP companies using LIFO sell newer (expensive) inventory first, showing lower profits.'
+         },
+         {
+            topicId: 'inventory',
+            question: 'A US company using LIFO wants to list on the London Stock Exchange (IFRS required). What must they do?',
+            options: ['Keep using LIFO', 'Switch to FIFO or weighted average', 'Use LIFO but disclose it', 'Apply for an exemption'],
+            correct: 1,
+            explanation: 'IFRS prohibits LIFO entirely. The company must switch to an allowed method, which will likely increase their reported inventory value and profits.'
+         },
+         // Development costs
+         {
+            topicId: 'development',
+            question: 'A tech company spent $5M on research and $15M on development. Under IFRS, what could appear as an asset?',
+            options: ['$0', '$5M', '$15M (if criteria met)', '$20M'],
+            correct: 2,
+            explanation: 'Under IFRS, research is always expensed, but development costs CAN be capitalized if specific criteria are met (technical feasibility, intent to complete, etc.). Up to $15M could be an asset.'
+         },
+         {
+            topicId: 'development',
+            question: 'Why does GAAP require expensing all R&D immediately?',
+            options: ['To match international standards', 'For tax benefits', 'Due to uncertainty about future benefits', 'To increase reported profits'],
+            correct: 2,
+            explanation: 'GAAP takes a conservative approach - since future benefits from R&D are uncertain, it requires immediate expensing. This prevents overstating assets based on uncertain outcomes.'
+         },
+         // Asset revaluation
+         {
+            topicId: 'revaluation',
+            question: 'A European company (IFRS) and US company (GAAP) own identical buildings bought for $10M, now worth $25M. Which shows higher total assets?',
+            options: ['US company (GAAP)', 'European company (IFRS)', 'Same assets', 'Cannot determine'],
+            correct: 1,
+            explanation: 'The IFRS company can revalue the building to $25M. The GAAP company must keep it at historical cost minus depreciation. The IFRS company will show significantly higher assets.'
+         },
+         {
+            topicId: 'revaluation',
+            question: 'Where does the revaluation gain go under IFRS when an asset is written up?',
+            options: ['Income Statement as revenue', 'Directly to Retained Earnings', 'Revaluation Surplus in Equity', 'Reduce Liabilities'],
+            correct: 2,
+            explanation: 'Revaluation gains go to "Revaluation Surplus" in the equity section of the balance sheet, not through the income statement (unless reversing a previous impairment loss).'
+         },
+         // Impairment
+         {
+            topicId: 'impairment',
+            question: 'Equipment was impaired from $500K to $300K. Later it recovered to $450K. What does GAAP show?',
+            options: ['$300K (no reversal allowed)', '$450K (partial reversal)', '$500K (full reversal)', '$400K (average)'],
+            correct: 0,
+            explanation: 'US GAAP prohibits reversal of impairment losses. Once written down to $300K, it stays at $300K regardless of recovery. Only IFRS allows reversal.'
+         },
+         {
+            topicId: 'impairment',
+            question: 'Which type of asset can NEVER have impairment reversed under IFRS?',
+            options: ['Equipment', 'Buildings', 'Goodwill', 'Inventory'],
+            correct: 2,
+            explanation: 'Under IFRS, goodwill impairment can never be reversed. This is one area where IFRS and GAAP agree - goodwill writedowns are permanent under both standards.'
+         },
+         // Leases
+         {
+            topicId: 'leases',
+            question: 'After IFRS 16, what happens to most operating leases?',
+            options: ['Remain off-balance sheet', 'Go on the balance sheet', 'Become finance leases', 'Are eliminated'],
+            correct: 1,
+            explanation: 'IFRS 16 requires nearly all leases (except short-term and low-value) to be recognized on the balance sheet, increasing both assets and liabilities for lessees.'
+         },
+         {
+            topicId: 'leases',
+            question: 'Which financial ratio is most affected by putting leases on balance sheet?',
+            options: ['Gross Margin', 'Debt-to-Equity Ratio', 'Revenue Growth', 'Tax Rate'],
+            correct: 1,
+            explanation: 'When leases go on the balance sheet, both assets (right-of-use) and liabilities (lease liability) increase. This increases the debt-to-equity ratio significantly.'
+         },
+         // Revenue
+         {
+            topicId: 'revenue',
+            question: 'What is the main difference between ASC 606 (GAAP) and IFRS 15 in revenue recognition?',
+            options: ['Completely different models', 'GAAP is more principles-based', 'GAAP has more detailed guidance', 'IFRS requires faster recognition'],
+            correct: 2,
+            explanation: 'Both use the same 5-step model and are largely converged. However, GAAP (ASC 606) has more detailed, industry-specific guidance, while IFRS 15 is more principles-based.'
+         },
+         {
+            topicId: 'revenue',
+            question: 'The 5-step revenue recognition model is used by:',
+            options: ['Only US GAAP', 'Only IFRS', 'Both GAAP and IFRS', 'Neither - they use different models'],
+            correct: 2,
+            explanation: 'Revenue recognition is one area where GAAP and IFRS have largely converged. Both use the same 5-step model: identify contract, identify obligations, determine price, allocate price, recognize revenue.'
+         }
+      ];
+
+      // ============================================================
+      // HELPER FUNCTIONS
+      // ============================================================
+      const getCurrentDifference = () => differences[currentTopic];
+      const getQuestionsForTopic = (topicId: string) => quizQuestions.filter(q => q.topicId === topicId);
+      const getCurrentQuestionData = () => {
+         const topicQuestions = getQuestionsForTopic(differences[currentTopic].id);
+         return topicQuestions[currentQuestion];
+      };
+
+      const checkAnswer = () => {
+         const question = getCurrentQuestionData();
+         if (selectedAnswer === null) return;
+
+         const isCorrect = selectedAnswer === question.correct;
+         setShowResult(true);
+         setTotalAnswered(prev => prev + 1);
+
+         if (isCorrect) {
+            setCorrectAnswers(prev => prev + 1);
+            setScore(prev => prev + 100);
+            setGameLog(prev => [...prev, `[CORRECT] ${question.question.substring(0, 50)}...`]);
+         } else {
+            if (!conceptsStruggled.includes(differences[currentTopic].id)) {
+               setConceptsStruggled(prev => [...prev, differences[currentTopic].id]);
+            }
+            setGameLog(prev => [...prev, `[INCORRECT] ${question.question.substring(0, 50)}... User: ${selectedAnswer}, Correct: ${question.correct}`]);
+         }
+      };
+
+      const nextQuestion = () => {
+         setShowResult(false);
+         setSelectedAnswer(null);
+
+         const topicQuestions = getQuestionsForTopic(differences[currentTopic].id);
+
+         if (currentQuestion < topicQuestions.length - 1) {
+            setCurrentQuestion(prev => prev + 1);
+         } else if (currentTopic < differences.length - 1) {
+            // Move to next topic
+            if (!topicsExplored.includes(differences[currentTopic].id)) {
+               setTopicsExplored(prev => [...prev, differences[currentTopic].id]);
+            }
+            setCurrentTopic(prev => prev + 1);
+            setCurrentQuestion(0);
+         } else {
+            // Completed all
+            setTopicsExplored(prev => [...prev, differences[currentTopic].id]);
+            setGameLog(prev => [...prev, `[SESSION COMPLETE] Score: ${score}, Topics: ${topicsExplored.length + 1}`]);
+            setPhase('result');
+         }
+      };
+
+      const selectTopic = (index: number) => {
+         setCurrentTopic(index);
+         setCurrentQuestion(0);
+         setPhase('play');
+      };
+
+      const startGame = () => {
+         setPhase('tutorial');
+         setTutorialStep(0);
+         setGameLog(['[SESSION START] GAAP vs IFRS Comparison']);
+      };
+
+      const startPlaying = () => {
+         setPhase('play');
+      };
+
+      const tutorialSteps = [
+         { title: 'Two Accounting Languages', content: 'US companies use GAAP. Most other countries (140+) use IFRS. Same transaction, potentially different numbers!', visual: 'intro' },
+         { title: 'Why They Differ', content: 'GAAP is more rules-based (specific guidance). IFRS is more principles-based (judgment required). Neither is "wrong."', visual: 'why' },
+         { title: 'Key Differences', content: 'Major differences in: Inventory (LIFO), R&D costs, Asset revaluation, Impairment reversal, and Lease accounting.', visual: 'differences' },
+         { title: 'How to Play', content: 'Explore each difference side-by-side. See the financial impact. Answer questions to test your understanding!', visual: 'play' }
+      ];
+
+      // ============================================================
+      // INFO TOPICS
+      // ============================================================
+      const infoTopics: Record<string, { title: string; content: string; example: string }> = {
+         gaap: { title: 'US GAAP', content: 'Generally Accepted Accounting Principles used by US public companies. More rules-based with specific guidance.', example: 'SEC requires US-listed companies to use GAAP.' },
+         ifrs: { title: 'IFRS', content: 'International Financial Reporting Standards used by 140+ countries. More principles-based with room for judgment.', example: 'EU, Australia, Canada, and most of Asia use IFRS.' },
+         convergence: { title: 'Convergence Efforts', content: 'FASB and IASB have worked to align standards, achieving convergence in revenue recognition and leases.', example: 'ASC 606 and IFRS 15 are nearly identical 5-step models.' }
+      };
+
+      // ============================================================
+      // RENDER: INTRO PHASE
+      // ============================================================
+      if (phase === 'intro') {
+         return (
+            <div className="w-full h-full flex flex-col bg-gradient-to-br from-sky-900 via-blue-900 to-indigo-900 text-white overflow-hidden">
+               <div className="flex-1 p-6 overflow-y-auto">
+                  <div className="text-center mb-6">
+                     <div className="text-5xl mb-3">🌍</div>
+                     <h1 className="text-2xl font-black mb-2">GAAP vs IFRS</h1>
+                     <p className="text-xl font-bold text-sky-300">Same Company, Different Numbers</p>
+                  </div>
+
+                  <div className="bg-black/30 rounded-2xl p-5 mb-6 border border-sky-500/30">
+                     <div className="flex justify-center items-center gap-4 mb-4">
+                        <div className="text-center p-3 bg-blue-900/50 rounded-lg">
+                           <div className="text-2xl">🇺🇸</div>
+                           <div className="text-sm text-blue-300 font-bold">US GAAP</div>
+                        </div>
+                        <div className="text-2xl">≠</div>
+                        <div className="text-center p-3 bg-green-900/50 rounded-lg">
+                           <div className="text-2xl">🌍</div>
+                           <div className="text-sm text-green-300 font-bold">IFRS</div>
+                        </div>
+                     </div>
+                     <p className="text-lg text-center leading-relaxed">
+                        The <span className="text-blue-400 font-bold">same company</span> can report
+                        <span className="text-amber-400 font-bold"> different profits</span> depending on which standard they use!
+                     </p>
+                  </div>
+
+                  <div className="bg-gradient-to-r from-sky-800/30 to-blue-800/30 rounded-xl p-4 mb-6">
+                     <h2 className="font-bold text-sky-300 mb-2">🎯 WHY THIS MATTERS</h2>
+                     <p className="text-slate-200">When comparing international companies, you must understand these differences or you might think one is more profitable when they're actually equal.</p>
+                  </div>
+
+                  <div className="bg-black/20 rounded-xl p-4 mb-6 border border-indigo-500/30">
+                     <h2 className="font-bold text-indigo-300 mb-3">📚 KEY DIFFERENCES YOU'LL LEARN</h2>
+                     <div className="grid grid-cols-2 gap-2">
+                        {differences.slice(0, 6).map((d) => (
+                           <div key={d.id} className="flex items-center gap-2 text-sm bg-black/30 rounded-lg p-2">
+                              <span>{d.icon}</span><span className="text-slate-300">{d.topic}</span>
+                           </div>
+                        ))}
+                     </div>
+                  </div>
+               </div>
+
+               <div className="p-4 bg-black/30 border-t border-sky-500/30">
+                  <button onClick={startGame} className="w-full py-4 bg-gradient-to-r from-sky-600 to-blue-600 hover:from-sky-500 hover:to-blue-500 rounded-xl font-bold text-lg transition-all">
+                     ▶️ START LEARNING
+                  </button>
+               </div>
+            </div>
+         );
+      }
+
+      // ============================================================
+      // RENDER: TUTORIAL PHASE
+      // ============================================================
+      if (phase === 'tutorial') {
+         const step = tutorialSteps[tutorialStep];
+         return (
+            <div className="w-full h-full flex flex-col bg-gradient-to-br from-sky-900 via-blue-900 to-indigo-900 text-white overflow-hidden">
+               <div className="p-3 bg-black/30 border-b border-sky-500/30">
+                  <div className="flex items-center justify-between mb-2">
+                     <span className="text-sm text-sky-300">Understanding the Differences</span>
+                     <span className="text-sm text-slate-400">{tutorialStep + 1} of {tutorialSteps.length}</span>
+                  </div>
+                  <div className="h-2 bg-black/30 rounded-full overflow-hidden">
+                     <div className="h-full bg-gradient-to-r from-sky-500 to-blue-500 transition-all" style={{ width: `${((tutorialStep + 1) / tutorialSteps.length) * 100}%` }} />
+                  </div>
+               </div>
+
+               <div className="flex-1 p-6 overflow-y-auto">
+                  <h2 className="text-xl font-bold text-sky-300 mb-4 text-center">{step.title}</h2>
+                  <div className="bg-black/30 rounded-2xl p-6 mb-6 border border-sky-500/30">
+                     {step.visual === 'intro' && (
+                        <div className="flex justify-center gap-6 mb-4">
+                           <div className="text-center p-4 bg-blue-900/50 rounded-lg"><div className="text-4xl mb-2">🇺🇸</div><div className="text-blue-300 font-bold">1 Country</div></div>
+                           <div className="text-center p-4 bg-green-900/50 rounded-lg"><div className="text-4xl mb-2">🌍</div><div className="text-green-300 font-bold">140+ Countries</div></div>
+                        </div>
+                     )}
+                     {step.visual === 'why' && (
+                        <div className="grid grid-cols-2 gap-4 mb-4">
+                           <div className="bg-blue-900/30 rounded-lg p-3 text-center"><div className="font-bold text-blue-300 mb-1">GAAP</div><div className="text-xs text-slate-300">Rules-Based</div><div className="text-xs text-slate-400">Specific guidance</div></div>
+                           <div className="bg-green-900/30 rounded-lg p-3 text-center"><div className="font-bold text-green-300 mb-1">IFRS</div><div className="text-xs text-slate-300">Principles-Based</div><div className="text-xs text-slate-400">More judgment</div></div>
+                        </div>
+                     )}
+                     {step.visual === 'differences' && (
+                        <div className="flex flex-wrap justify-center gap-2 mb-4">
+                           {['📦 Inventory', '🔬 R&D', '🏢 Revaluation', '📉 Impairment', '🔑 Leases'].map((d, i) => (
+                              <span key={i} className="px-3 py-1 bg-sky-900/50 rounded-full text-sm">{d}</span>
+                           ))}
+                        </div>
+                     )}
+                     {step.visual === 'play' && (
+                        <div className="text-center mb-4">
+                           <div className="text-4xl mb-2">🎮</div>
+                           <div className="flex justify-center gap-2">
+                              <span className="px-3 py-1 bg-blue-600/50 rounded-lg text-sm">Explore</span>
+                              <span className="px-3 py-1 bg-green-600/50 rounded-lg text-sm">Compare</span>
+                              <span className="px-3 py-1 bg-purple-600/50 rounded-lg text-sm">Test</span>
+                           </div>
+                        </div>
+                     )}
+                     <p className="text-center text-slate-200">{step.content}</p>
+                  </div>
+               </div>
+
+               <div className="p-4 bg-black/30 border-t border-sky-500/30 flex gap-3">
+                  {tutorialStep > 0 && <button onClick={() => setTutorialStep(prev => prev - 1)} className="px-6 py-3 bg-white/10 hover:bg-white/20 rounded-xl font-bold">← Back</button>}
+                  <button onClick={() => tutorialStep < tutorialSteps.length - 1 ? setTutorialStep(prev => prev + 1) : startPlaying()} className="flex-1 py-3 bg-gradient-to-r from-sky-600 to-blue-600 rounded-xl font-bold">
+                     {tutorialStep < tutorialSteps.length - 1 ? 'Next →' : 'Start Exploring! 🔍'}
+                  </button>
+               </div>
+            </div>
+         );
+      }
+
+      // ============================================================
+      // RENDER: PLAY PHASE
+      // ============================================================
+      if (phase === 'play') {
+         const diff = getCurrentDifference();
+         const question = getCurrentQuestionData();
+         const topicQuestions = getQuestionsForTopic(diff.id);
+
+         return (
+            <div className="w-full h-full flex flex-col bg-gradient-to-br from-sky-900 via-blue-900 to-indigo-900 text-white overflow-hidden">
+               {/* Info Modal */}
+               {showInfo && infoTopic && infoTopics[infoTopic] && (
+                  <div className="absolute inset-0 bg-black/80 flex items-center justify-center p-4 z-50" onClick={() => { setShowInfo(false); setInfoTopic(null); }}>
+                     <div className="bg-slate-800 rounded-2xl p-5 max-w-md" onClick={e => e.stopPropagation()}>
+                        <h3 className="text-lg font-bold text-sky-400 mb-3">{infoTopics[infoTopic].title}</h3>
+                        <p className="text-slate-200 mb-4">{infoTopics[infoTopic].content}</p>
+                        <div className="bg-black/30 rounded-lg p-3 mb-4">
+                           <p className="text-xs text-sky-400 font-bold mb-1">EXAMPLE:</p>
+                           <p className="text-sm text-slate-300">{infoTopics[infoTopic].example}</p>
+                        </div>
+                        <button onClick={() => { setShowInfo(false); setInfoTopic(null); }} className="w-full py-2 bg-sky-600 hover:bg-sky-500 rounded-xl font-bold">Got it!</button>
+                     </div>
+                  </div>
+               )}
+
+               {/* Result Modal */}
+               {showResult && question && (
+                  <div className="absolute inset-0 bg-black/80 flex items-center justify-center p-4 z-50">
+                     <div className="bg-slate-800 rounded-2xl p-5 max-w-md w-full">
+                        <div className="text-center mb-4">
+                           <span className="text-5xl">{selectedAnswer === question.correct ? '✅' : '❌'}</span>
+                           <h3 className={`text-xl font-bold mt-2 ${selectedAnswer === question.correct ? 'text-green-400' : 'text-red-400'}`}>
+                              {selectedAnswer === question.correct ? 'Correct!' : 'Not Quite'}
+                           </h3>
+                        </div>
+                        <div className="bg-sky-900/30 rounded-lg p-4 mb-4 border border-sky-500/30">
+                           <p className="text-slate-200">{question.explanation}</p>
+                        </div>
+                        <button onClick={nextQuestion} className="w-full py-3 bg-sky-600 hover:bg-sky-500 rounded-xl font-bold">
+                           {currentQuestion < topicQuestions.length - 1 ? 'Next Question →' : currentTopic < differences.length - 1 ? 'Next Topic →' : 'See Results 📊'}
+                        </button>
+                     </div>
+                  </div>
+               )}
+
+               {/* Header */}
+               <div className="p-3 bg-black/30 border-b border-sky-500/30">
+                  <div className="flex justify-between items-center mb-2">
+                     <div className="flex items-center gap-2">
+                        <span className="text-xl">{diff.icon}</span>
+                        <span className="font-bold text-sky-300">{diff.topic}</span>
+                     </div>
+                     <span className="text-xs bg-sky-600/50 px-2 py-1 rounded-full">Score: {score}</span>
+                  </div>
+                  <div className="flex gap-1">
+                     {differences.map((_, idx) => (
+                        <div key={idx} className={`flex-1 h-1 rounded-full ${idx < currentTopic ? 'bg-green-500' : idx === currentTopic ? 'bg-sky-500' : 'bg-slate-600'}`} />
+                     ))}
+                  </div>
+               </div>
+
+               <div className="flex-1 p-4 overflow-y-auto">
+                  {/* Side-by-Side Comparison */}
+                  <div className="grid grid-cols-2 gap-3 mb-4">
+                     <div className="bg-blue-900/30 rounded-xl p-3 border border-blue-500/30">
+                        <div className="flex items-center gap-2 mb-2">
+                           <span>🇺🇸</span>
+                           <span className="font-bold text-blue-300">US GAAP</span>
+                           <button onClick={() => { setInfoTopic('gaap'); setShowInfo(true); }} className="ml-auto text-xs opacity-70 hover:opacity-100">ℹ️</button>
+                        </div>
+                        <div className="bg-blue-800/30 rounded-lg p-2 mb-2">
+                           <p className="text-sm font-bold text-blue-200">{diff.gaap.rule}</p>
+                        </div>
+                        <p className="text-xs text-slate-300">{diff.gaap.description}</p>
+                     </div>
+                     <div className="bg-green-900/30 rounded-xl p-3 border border-green-500/30">
+                        <div className="flex items-center gap-2 mb-2">
+                           <span>🌍</span>
+                           <span className="font-bold text-green-300">IFRS</span>
+                           <button onClick={() => { setInfoTopic('ifrs'); setShowInfo(true); }} className="ml-auto text-xs opacity-70 hover:opacity-100">ℹ️</button>
+                        </div>
+                        <div className="bg-green-800/30 rounded-lg p-2 mb-2">
+                           <p className="text-sm font-bold text-green-200">{diff.ifrs.rule}</p>
+                        </div>
+                        <p className="text-xs text-slate-300">{diff.ifrs.description}</p>
+                     </div>
+                  </div>
+
+                  {/* Impact Visualization */}
+                  <div className="bg-black/30 rounded-xl p-4 mb-4 border border-purple-500/30">
+                     <h4 className="font-bold text-purple-300 mb-2 text-sm">📊 FINANCIAL IMPACT</h4>
+                     <p className="text-xs text-slate-400 mb-3">{diff.impact.scenario}</p>
+                     <div className="grid grid-cols-2 gap-2 text-center">
+                        <div className="bg-blue-900/30 rounded-lg p-2">
+                           <div className="text-xs text-blue-400 mb-1">GAAP Result</div>
+                           {diff.impact.gaapResult.profit !== undefined && (
+                              <div className="text-lg font-bold text-blue-300">Profit: ${diff.impact.gaapResult.profit}K</div>
+                           )}
+                           {diff.impact.gaapResult.bookValue !== undefined && (
+                              <div className="text-lg font-bold text-blue-300">Book: ${diff.impact.gaapResult.bookValue}M</div>
+                           )}
+                        </div>
+                        <div className="bg-green-900/30 rounded-lg p-2">
+                           <div className="text-xs text-green-400 mb-1">IFRS Result</div>
+                           {diff.impact.ifrsResult.profit !== undefined && (
+                              <div className="text-lg font-bold text-green-300">Profit: ${diff.impact.ifrsResult.profit}K</div>
+                           )}
+                           {diff.impact.ifrsResult.bookValue !== undefined && (
+                              <div className="text-lg font-bold text-green-300">Book: ${diff.impact.ifrsResult.bookValue}M</div>
+                           )}
+                        </div>
+                     </div>
+                     <p className="text-xs text-slate-400 mt-2">{diff.impact.explanation}</p>
+                  </div>
+
+                  {/* Quiz Question */}
+                  {question && (
+                     <div className="bg-black/30 rounded-xl p-4 border border-amber-500/30">
+                        <div className="flex items-center justify-between mb-3">
+                           <span className="text-xs text-amber-400 font-bold">TEST YOUR UNDERSTANDING</span>
+                           <span className="text-xs text-slate-400">Q{currentQuestion + 1}/{topicQuestions.length}</span>
+                        </div>
+                        <p className="text-sm text-white mb-3">{question.question}</p>
+                        <div className="space-y-2">
+                           {question.options.map((opt, idx) => (
+                              <button
+                                 key={idx}
+                                 onClick={() => setSelectedAnswer(idx)}
+                                 className={`w-full text-left p-3 rounded-lg text-sm transition-all ${
+                                    selectedAnswer === idx
+                                       ? 'bg-amber-600 border-amber-400 border-2'
+                                       : 'bg-slate-700/50 hover:bg-slate-600/50 border border-slate-500/30'
+                                 }`}
+                              >
+                                 {opt}
+                              </button>
+                           ))}
+                        </div>
+                     </div>
+                  )}
+               </div>
+
+               {/* Footer */}
+               <div className="p-3 bg-black/30 border-t border-sky-500/30 flex gap-2">
+                  <button
+                     onClick={checkAnswer}
+                     disabled={selectedAnswer === null}
+                     className="flex-1 py-2 bg-sky-600 hover:bg-sky-500 disabled:bg-slate-600 disabled:opacity-50 rounded-lg font-bold"
+                  >
+                     Check Answer ✓
+                  </button>
+               </div>
+            </div>
+         );
+      }
+
+      // ============================================================
+      // RENDER: RESULT PHASE
+      // ============================================================
+      if (phase === 'result') {
+         const accuracy = totalAnswered > 0 ? Math.round((correctAnswers / totalAnswered) * 100) : 0;
+
+         return (
+            <div className="w-full h-full flex flex-col bg-gradient-to-br from-sky-900 via-blue-900 to-indigo-900 text-white overflow-hidden">
+               <div className="flex-1 p-6 overflow-y-auto">
+                  <div className="text-center mb-6">
+                     <div className="text-6xl mb-3">🎓</div>
+                     <h1 className="text-2xl font-black mb-2">SESSION COMPLETE!</h1>
+                     <p className="text-sky-300">GAAP vs IFRS Comparison Complete</p>
+                  </div>
+
+                  <div className="bg-black/30 rounded-xl p-4 mb-6">
+                     <div className="grid grid-cols-3 gap-3 text-center">
+                        <div className="bg-sky-900/50 rounded-lg p-3"><p className="text-2xl font-bold text-sky-400">{score}</p><p className="text-xs text-slate-300">SCORE</p></div>
+                        <div className="bg-green-900/50 rounded-lg p-3"><p className="text-2xl font-bold text-green-400">{accuracy}%</p><p className="text-xs text-slate-300">ACCURACY</p></div>
+                        <div className="bg-purple-900/50 rounded-lg p-3"><p className="text-2xl font-bold text-purple-400">{topicsExplored.length}/{differences.length}</p><p className="text-xs text-slate-300">TOPICS</p></div>
+                     </div>
+                  </div>
+
+                  <div className="bg-gradient-to-r from-sky-900/50 to-blue-900/50 rounded-xl p-5 mb-6 border border-sky-500/30">
+                     <h3 className="font-bold text-sky-300 mb-3">💡 KEY INSIGHT</h3>
+                     <p className="text-lg text-white mb-4">
+                        The <span className="text-blue-400 font-bold">SAME company</span> can report
+                        <span className="text-amber-400 font-bold"> DIFFERENT profits</span> under GAAP vs IFRS.
+                        Neither is wrong—they're different rule sets.
+                     </p>
+                     <div className="space-y-2 text-sm text-slate-200">
+                        <p>▸ LIFO: Allowed in GAAP, prohibited in IFRS</p>
+                        <p>▸ R&D: GAAP expenses all, IFRS can capitalize development</p>
+                        <p>▸ Revaluation: GAAP prohibits, IFRS allows upward</p>
+                     </div>
+                  </div>
+
+                  {topicsExplored.length > 0 && (
+                     <div className="bg-black/30 rounded-xl p-4 mb-6">
+                        <h3 className="font-bold text-green-300 mb-3">✅ Topics Explored</h3>
+                        <div className="flex flex-wrap gap-2">
+                           {topicsExplored.map((t, i) => {
+                              const d = differences.find(x => x.id === t);
+                              return <span key={i} className="px-3 py-1 bg-green-600/30 rounded-full text-sm text-green-300">{d?.icon} {d?.topic}</span>;
+                           })}
+                        </div>
+                     </div>
+                  )}
+
+                  {conceptsStruggled.length > 0 && (
+                     <div className="bg-black/30 rounded-xl p-4 mb-6">
+                        <h3 className="font-bold text-amber-300 mb-3">📚 Review These</h3>
+                        <div className="flex flex-wrap gap-2">
+                           {conceptsStruggled.map((c, i) => {
+                              const d = differences.find(x => x.id === c);
+                              return <span key={i} className="px-3 py-1 bg-amber-600/30 rounded-full text-sm text-amber-300">{d?.icon} {d?.topic}</span>;
+                           })}
+                        </div>
+                     </div>
+                  )}
+
+                  <div className="bg-black/30 rounded-xl p-4 mb-6">
+                     <h3 className="font-bold text-blue-300 mb-2">🌍 REAL-WORLD APPLICATION</h3>
+                     <p className="text-slate-200 text-sm">When comparing a US company (GAAP) to a European company (IFRS), adjust for these differences, or you might think one is more profitable when they're actually equal.</p>
+                  </div>
+
+                  <div className="bg-indigo-900/30 rounded-xl p-4 border border-indigo-500/30">
+                     <h3 className="font-bold text-indigo-300 mb-2">🤖 Session Synced with AI Coach</h3>
+                     <p className="text-sm text-slate-300">Ask your AI coach about specific GAAP vs IFRS differences or for help comparing international companies.</p>
+                  </div>
+               </div>
+
+               <div className="p-4 bg-black/30 border-t border-sky-500/30 flex gap-3">
+                  <button onClick={() => { setPhase('intro'); setCurrentTopic(0); setCurrentQuestion(0); setScore(0); setCorrectAnswers(0); setTotalAnswered(0); setTopicsExplored([]); setConceptsStruggled([]); setGameLog([]); }} className="flex-1 py-3 bg-white/10 hover:bg-white/20 rounded-xl font-bold">🔄 Play Again</button>
+                  <button onClick={() => setPhase('intro')} className="flex-1 py-3 bg-sky-600 hover:bg-sky-500 rounded-xl font-bold">➡️ Continue</button>
+               </div>
+            </div>
+         );
+      }
+
+      return null;
+   };
+
    const FinancialStatementsRenderer = () => {
       const [phase, setPhase] = useState<'intro' | 'play' | 'result'>('intro');
       const [showInfo, setShowInfo] = useState(false);
@@ -40249,6 +40969,8 @@ const GeneratedDiagram: React.FC<DiagramProps> = ({ type, data, title }) => {
             return <DoubleEntryBookkeepingRenderer />;
          case 'gaap_compliance':
             return <GAAPComplianceRenderer />;
+         case 'gaap_vs_ifrs':
+            return <GAAPvsIFRSRenderer />;
          case 'pricing_strategy':
             return <PricingStrategyRenderer />;
          case 'budgeting':
