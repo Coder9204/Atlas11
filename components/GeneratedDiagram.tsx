@@ -43890,6 +43890,397 @@ const GeneratedDiagram: React.FC<DiagramProps> = ({ type, data, title }) => {
       return null;
    };
 
+   const BudgetForecastRenderer = () => {
+      const [phase, setPhase] = useState<'intro' | 'tutorial' | 'play' | 'result'>('intro');
+      const [tutorialStep, setTutorialStep] = useState(0);
+      const [score, setScore] = useState(0);
+      const [currentMonth, setCurrentMonth] = useState(0);
+      const [gameLog, setGameLog] = useState<string[]>([]);
+      const [quizIndex, setQuizIndex] = useState(0);
+      const [quizAnswered, setQuizAnswered] = useState(false);
+      const [showInfo, setShowInfo] = useState(false);
+      const [infoContent, setInfoContent] = useState({ title: '', content: '' });
+      const [userPrediction, setUserPrediction] = useState<number | null>(null);
+      const [predictionSubmitted, setPredictionSubmitted] = useState(false);
+
+      const tutorials = [
+         { title: 'Budget vs. Forecast', content: 'A BUDGET is your financial plan—what you intend to spend and earn. A FORECAST is your prediction of what will actually happen based on current trends. Both are essential!', icon: '📊' },
+         { title: 'The Budget (Your Plan)', content: 'Budgets are set at the start of a period and typically stay fixed. They represent targets and commitments. "We plan to spend $100K on marketing this quarter."', icon: '📋' },
+         { title: 'The Forecast (Your Prediction)', content: 'Forecasts update as new information arrives. They predict likely outcomes. "Based on Q1 results, we now expect $95K in marketing spend this quarter."', icon: '🔮' },
+         { title: 'Actual Results (Reality)', content: 'Actuals are what really happened. Comparing Budget vs. Forecast vs. Actual reveals planning accuracy and helps improve future estimates.', icon: '✅' },
+         { title: 'Why Both Matter', content: 'Budgets set accountability and targets. Forecasts help you react to changes. A company with only budgets can\'t adapt. A company with only forecasts lacks discipline.', icon: '⚖️' },
+         { title: 'Rolling Forecasts', content: 'Many companies use "rolling forecasts" that always look 12-18 months ahead, updating monthly. This replaces rigid annual budgets with continuous planning.', icon: '🔄' },
+         { title: 'Your Challenge', content: 'Watch how budgets, forecasts, and actuals diverge over time. Predict where the company will land and understand why forecasts must adjust!', icon: '🎮' }
+      ];
+
+      const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'];
+
+      const scenarios = [
+         {
+            name: 'SaaS Startup - Revenue Growth',
+            metric: 'Monthly Revenue',
+            budget: [100000, 100000, 100000, 100000, 100000, 100000],
+            actuals: [98000, 95000, 92000, 88000, 85000, 82000],
+            forecasts: [100000, 97000, 93000, 89000, 86000, 83000],
+            insight: 'The budget assumed steady $100K/month, but customer churn increased. Forecasts adjusted down each month as the trend became clear. Budget stayed fixed—that was the original plan.',
+            question: 'What will June actual revenue be based on the trend?',
+            tolerance: 5000
+         },
+         {
+            name: 'Retail Store - Seasonal Sales',
+            metric: 'Monthly Sales',
+            budget: [80000, 85000, 90000, 100000, 120000, 150000],
+            actuals: [82000, 88000, 95000, 108000, 130000, 160000],
+            forecasts: [80000, 84000, 92000, 105000, 128000, 155000],
+            insight: 'Actual sales exceeded budget every month! This retailer had a strong season. The forecast adjusted upward as the pattern emerged, but the original budget was conservative.',
+            question: 'What will June actual sales be based on the trend?',
+            tolerance: 8000
+         },
+         {
+            name: 'Manufacturing - Cost Control',
+            metric: 'Monthly Expenses',
+            budget: [200000, 200000, 200000, 200000, 200000, 200000],
+            actuals: [210000, 225000, 240000, 250000, 255000, 258000],
+            forecasts: [200000, 215000, 235000, 248000, 254000, 257000],
+            insight: 'Costs spiraled above budget due to supply chain issues. Each month the forecast adjusted to reflect reality, while the budget stayed at the original $200K target. This gap signals a problem!',
+            question: 'What will June actual expenses be based on the trend?',
+            tolerance: 6000
+         }
+      ];
+
+      const currentScenario = scenarios[Math.min(Math.floor(currentMonth / 6), scenarios.length - 1)];
+      const scenarioMonth = currentMonth % 6;
+
+      const handlePrediction = () => {
+         if (userPrediction === null) return;
+
+         const actual = currentScenario.actuals[5];
+         const diff = Math.abs(userPrediction - actual);
+
+         if (diff <= currentScenario.tolerance) {
+            setScore(prev => prev + 5);
+            setGameLog(prev => [...prev, `${currentScenario.name}: Excellent prediction! Within $${diff.toLocaleString()} of actual.`]);
+         } else if (diff <= currentScenario.tolerance * 2) {
+            setScore(prev => prev + 3);
+            setGameLog(prev => [...prev, `${currentScenario.name}: Good prediction! Off by $${diff.toLocaleString()}.`]);
+         } else {
+            setScore(prev => prev + 1);
+            setGameLog(prev => [...prev, `${currentScenario.name}: Prediction was $${diff.toLocaleString()} off from actual.`]);
+         }
+         setPredictionSubmitted(true);
+      };
+
+      const nextScenario = () => {
+         if (currentMonth < (scenarios.length * 6) - 1) {
+            setCurrentMonth(prev => Math.floor(prev / 6) * 6 + 6);
+            setUserPrediction(null);
+            setPredictionSubmitted(false);
+         } else {
+            setPhase('result');
+         }
+      };
+
+      const quizzes = [
+         {
+            question: 'What is the key difference between a budget and a forecast?',
+            options: ['Budgets are for expenses, forecasts are for revenue', 'Budgets are fixed plans, forecasts adjust to reality', 'Budgets are monthly, forecasts are annual', 'There is no difference'],
+            correct: 1,
+            explanation: 'Budgets are set plans that typically stay fixed. Forecasts are predictions that update as new information becomes available.'
+         },
+         {
+            question: 'A company budgeted $50K for marketing but the forecast now shows $60K. What does this indicate?',
+            options: ['The budget was wrong', 'Spending is trending higher than planned', 'Marketing is failing', 'The forecast is always more accurate'],
+            correct: 1,
+            explanation: 'The forecast adjusting upward indicates actual spending is trending above the original plan. This is a signal to investigate why and decide if action is needed.'
+         },
+         {
+            question: 'Why might a company use "rolling forecasts" instead of annual budgets?',
+            options: ['They\'re easier to create', 'They provide continuous visibility into the future', 'They eliminate the need for planning', 'They\'re required by accounting standards'],
+            correct: 1,
+            explanation: 'Rolling forecasts always look 12-18 months ahead and update regularly, providing continuous forward visibility rather than a once-a-year planning exercise.'
+         },
+         {
+            question: 'If actual results consistently beat the budget, what might this suggest?',
+            options: ['The team is performing well', 'The budget was too conservative', 'Forecasting is unnecessary', 'Both A and B could be true'],
+            correct: 3,
+            explanation: 'Consistently beating budget could mean strong performance OR that the budget was set too low. Good analysis considers both possibilities.'
+         },
+         {
+            question: 'When should you revise a budget mid-year?',
+            options: ['Never - budgets are fixed', 'Whenever actuals differ from budget', 'Only for major business changes', 'Monthly, like a forecast'],
+            correct: 2,
+            explanation: 'Budgets typically stay fixed to maintain accountability. However, major changes (acquisitions, market shifts) may warrant a formal budget revision.'
+         },
+         {
+            question: 'A forecast shows revenue declining but the budget shows growth. What should management do?',
+            options: ['Ignore the forecast and trust the budget', 'Investigate the gap and take corrective action', 'Replace the budget with the forecast', 'Wait until year-end to assess'],
+            correct: 1,
+            explanation: 'The gap between forecast and budget is a warning signal. Management should investigate why reality differs from plan and take action if needed.'
+         }
+      ];
+
+      const handleQuizAnswer = (idx: number) => {
+         if (quizAnswered) return;
+         setQuizAnswered(true);
+         if (idx === quizzes[quizIndex].correct) {
+            setScore(prev => prev + 2);
+            setGameLog(prev => [...prev, `Quiz ${quizIndex + 1}: Correct!`]);
+         }
+      };
+
+      const nextQuiz = () => {
+         if (quizIndex < quizzes.length - 1) {
+            setQuizIndex(prev => prev + 1);
+            setQuizAnswered(false);
+         } else {
+            setPhase('result');
+         }
+      };
+
+      if (phase === 'intro') {
+         return (
+            <div className="h-full flex flex-col items-center justify-center p-6 bg-gradient-to-br from-violet-50 to-purple-100">
+               <div className="text-6xl mb-4">📊</div>
+               <h1 className="text-2xl font-bold text-violet-800 mb-2">Budgeting vs. Forecasting</h1>
+               <p className="text-violet-600 text-center mb-6 max-w-md">Learn the difference between financial plans and predictions, and why successful companies need both.</p>
+               <button onClick={() => setPhase('tutorial')} className="px-8 py-3 bg-violet-500 text-white rounded-xl font-semibold hover:bg-violet-600 transition-all">Start Learning</button>
+            </div>
+         );
+      }
+
+      if (phase === 'tutorial') {
+         const t = tutorials[tutorialStep];
+         return (
+            <div className="h-full flex flex-col p-6 bg-gradient-to-br from-violet-50 to-purple-100">
+               <div className="flex justify-between items-center mb-4">
+                  <span className="text-sm text-violet-600">Tutorial {tutorialStep + 1}/{tutorials.length}</span>
+                  <div className="w-32 h-2 bg-violet-200 rounded-full">
+                     <div className="h-full bg-violet-500 rounded-full transition-all" style={{ width: `${((tutorialStep + 1) / tutorials.length) * 100}%` }}></div>
+                  </div>
+               </div>
+               <div className="flex-1 flex flex-col items-center justify-center">
+                  <div className="text-5xl mb-4">{t.icon}</div>
+                  <h2 className="text-xl font-bold text-violet-800 mb-3">{t.title}</h2>
+                  <p className="text-violet-700 text-center max-w-md leading-relaxed">{t.content}</p>
+               </div>
+               <div className="flex justify-between">
+                  <button onClick={() => setTutorialStep(prev => Math.max(0, prev - 1))} disabled={tutorialStep === 0} className="px-4 py-2 bg-violet-200 text-violet-700 rounded-lg disabled:opacity-50">Back</button>
+                  {tutorialStep < tutorials.length - 1 ? (
+                     <button onClick={() => setTutorialStep(prev => prev + 1)} className="px-4 py-2 bg-violet-500 text-white rounded-lg hover:bg-violet-600">Next</button>
+                  ) : (
+                     <button onClick={() => setPhase('play')} className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600">Start Simulation →</button>
+                  )}
+               </div>
+            </div>
+         );
+      }
+
+      if (phase === 'play') {
+         const scenarioIndex = Math.floor(currentMonth / 6);
+
+         return (
+            <div className="h-full flex flex-col p-3 bg-gradient-to-br from-violet-50 to-purple-100 overflow-auto">
+               <div className="flex justify-between items-center mb-2">
+                  <span className="text-sm font-medium text-violet-700">Scenario {scenarioIndex + 1}/{scenarios.length}</span>
+                  <span className="text-sm font-semibold text-violet-800">Score: {score}</span>
+               </div>
+
+               <div className="bg-white rounded-xl p-3 mb-3 shadow-sm">
+                  <h3 className="font-bold text-violet-800 mb-1">{currentScenario.name}</h3>
+                  <p className="text-xs text-gray-600">Tracking: {currentScenario.metric}</p>
+               </div>
+
+               <div className="bg-white rounded-xl p-3 mb-3 shadow-sm">
+                  <div className="flex items-center gap-4 mb-3 text-xs">
+                     <div className="flex items-center gap-1">
+                        <div className="w-3 h-3 bg-blue-500 rounded"></div>
+                        <span>Budget (Plan)</span>
+                     </div>
+                     <div className="flex items-center gap-1">
+                        <div className="w-3 h-3 bg-amber-500 rounded"></div>
+                        <span>Forecast</span>
+                     </div>
+                     <div className="flex items-center gap-1">
+                        <div className="w-3 h-3 bg-green-500 rounded"></div>
+                        <span>Actual</span>
+                     </div>
+                  </div>
+
+                  <div className="overflow-x-auto">
+                     <table className="w-full text-xs">
+                        <thead>
+                           <tr className="border-b">
+                              <th className="text-left py-1 px-2">Month</th>
+                              {months.map((m, i) => (
+                                 <th key={m} className={`text-center py-1 px-2 ${i === 5 && !predictionSubmitted ? 'bg-violet-100' : ''}`}>{m}</th>
+                              ))}
+                           </tr>
+                        </thead>
+                        <tbody>
+                           <tr className="border-b">
+                              <td className="py-1 px-2 font-medium text-blue-700">Budget</td>
+                              {currentScenario.budget.map((val, i) => (
+                                 <td key={i} className="text-center py-1 px-2">${(val/1000).toFixed(0)}K</td>
+                              ))}
+                           </tr>
+                           <tr className="border-b">
+                              <td className="py-1 px-2 font-medium text-amber-700">Forecast</td>
+                              {currentScenario.forecasts.map((val, i) => (
+                                 <td key={i} className={`text-center py-1 px-2 ${i === 5 && !predictionSubmitted ? 'bg-amber-50' : ''}`}>
+                                    {i < 5 || predictionSubmitted ? `$${(val/1000).toFixed(0)}K` : '?'}
+                                 </td>
+                              ))}
+                           </tr>
+                           <tr>
+                              <td className="py-1 px-2 font-medium text-green-700">Actual</td>
+                              {currentScenario.actuals.map((val, i) => (
+                                 <td key={i} className={`text-center py-1 px-2 ${i === 5 && !predictionSubmitted ? 'bg-green-50' : ''}`}>
+                                    {i < 5 || predictionSubmitted ? `$${(val/1000).toFixed(0)}K` : '?'}
+                                 </td>
+                              ))}
+                           </tr>
+                        </tbody>
+                     </table>
+                  </div>
+
+                  <div className="mt-3 pt-3 border-t">
+                     <div className="flex justify-between text-xs mb-1">
+                        <span className="text-gray-600">Budget Total:</span>
+                        <span className="font-semibold text-blue-700">${(currentScenario.budget.reduce((a,b) => a+b, 0)/1000).toFixed(0)}K</span>
+                     </div>
+                     {predictionSubmitted && (
+                        <>
+                           <div className="flex justify-between text-xs mb-1">
+                              <span className="text-gray-600">Forecast Total:</span>
+                              <span className="font-semibold text-amber-700">${(currentScenario.forecasts.reduce((a,b) => a+b, 0)/1000).toFixed(0)}K</span>
+                           </div>
+                           <div className="flex justify-between text-xs">
+                              <span className="text-gray-600">Actual Total:</span>
+                              <span className="font-semibold text-green-700">${(currentScenario.actuals.reduce((a,b) => a+b, 0)/1000).toFixed(0)}K</span>
+                           </div>
+                        </>
+                     )}
+                  </div>
+               </div>
+
+               {!predictionSubmitted ? (
+                  <div className="bg-white rounded-xl p-4 mb-3 shadow-sm">
+                     <p className="text-sm font-medium text-gray-700 mb-3">{currentScenario.question}</p>
+                     <div className="flex items-center gap-2 mb-3">
+                        <span className="text-gray-500">$</span>
+                        <input
+                           type="number"
+                           value={userPrediction || ''}
+                           onChange={(e) => setUserPrediction(Number(e.target.value))}
+                           placeholder="Your prediction"
+                           className="flex-1 px-3 py-2 border-2 border-violet-200 rounded-lg focus:border-violet-500 focus:outline-none"
+                        />
+                     </div>
+                     <button onClick={handlePrediction} disabled={!userPrediction} className="w-full py-2 bg-violet-500 text-white rounded-lg font-semibold hover:bg-violet-600 disabled:opacity-50">
+                        Submit Prediction
+                     </button>
+                  </div>
+               ) : (
+                  <div className="bg-violet-50 rounded-xl p-3 mb-3 border border-violet-200">
+                     <div className="flex items-center gap-2 mb-2">
+                        <span className="text-lg">💡</span>
+                        <span className="font-semibold text-violet-800">Insight:</span>
+                     </div>
+                     <p className="text-xs text-violet-700">{currentScenario.insight}</p>
+                     <div className="mt-2 pt-2 border-t border-violet-200 text-xs">
+                        <span className="text-gray-600">Your prediction: </span>
+                        <span className="font-semibold">${userPrediction?.toLocaleString()}</span>
+                        <span className="text-gray-600"> | Actual: </span>
+                        <span className="font-semibold text-green-700">${currentScenario.actuals[5].toLocaleString()}</span>
+                     </div>
+                  </div>
+               )}
+
+               {predictionSubmitted && (
+                  <button onClick={nextScenario} className="w-full py-3 bg-violet-500 text-white rounded-xl font-semibold hover:bg-violet-600">
+                     {scenarioIndex < scenarios.length - 1 ? 'Next Scenario →' : 'Take Quiz →'}
+                  </button>
+               )}
+
+               {showInfo && (
+                  <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+                     <div className="bg-white rounded-xl p-4 max-w-sm">
+                        <h4 className="font-bold text-violet-800 mb-2">{infoContent.title}</h4>
+                        <p className="text-sm text-gray-600 mb-3">{infoContent.content}</p>
+                        <button onClick={() => setShowInfo(false)} className="w-full py-2 bg-violet-500 text-white rounded-lg">Got it!</button>
+                     </div>
+                  </div>
+               )}
+            </div>
+         );
+      }
+
+      if (phase === 'result') {
+         if (quizIndex < quizzes.length) {
+            const q = quizzes[quizIndex];
+            return (
+               <div className="h-full flex flex-col p-4 bg-gradient-to-br from-violet-50 to-purple-100">
+                  <div className="flex justify-between items-center mb-4">
+                     <span className="text-sm text-violet-600">Quiz {quizIndex + 1}/{quizzes.length}</span>
+                     <span className="text-sm font-semibold text-violet-800">Score: {score}</span>
+                  </div>
+                  <div className="flex-1">
+                     <div className="bg-white rounded-xl p-4 shadow-sm mb-4">
+                        <p className="font-medium text-gray-800 mb-4">{q.question}</p>
+                        <div className="space-y-2">
+                           {q.options.map((opt, i) => (
+                              <button key={i} onClick={() => handleQuizAnswer(i)} disabled={quizAnswered} className={`w-full p-3 rounded-lg text-left text-sm transition-all ${quizAnswered ? (i === q.correct ? 'bg-green-100 border-2 border-green-500' : 'bg-gray-50 opacity-60') : 'bg-gray-50 hover:bg-violet-50 border-2 border-transparent hover:border-violet-300'}`}>
+                                 {opt}
+                              </button>
+                           ))}
+                        </div>
+                     </div>
+                     {quizAnswered && (
+                        <div className="bg-blue-50 rounded-lg p-3 mb-4">
+                           <p className="text-sm text-blue-800">{q.explanation}</p>
+                        </div>
+                     )}
+                  </div>
+                  {quizAnswered && (
+                     <button onClick={nextQuiz} className="w-full py-3 bg-violet-500 text-white rounded-xl font-semibold hover:bg-violet-600">
+                        {quizIndex < quizzes.length - 1 ? 'Next Question →' : 'See Final Results →'}
+                     </button>
+                  )}
+               </div>
+            );
+         }
+
+         const maxScore = scenarios.length * 5 + quizzes.length * 2;
+         const pct = Math.round((score / maxScore) * 100);
+
+         return (
+            <div className="h-full flex flex-col p-6 bg-gradient-to-br from-violet-50 to-purple-100">
+               <div className="flex-1 flex flex-col items-center justify-center">
+                  <div className="text-5xl mb-4">{pct >= 80 ? '🏆' : pct >= 60 ? '📊' : '📚'}</div>
+                  <h2 className="text-xl font-bold text-violet-800 mb-2">Budget & Forecast Mastery!</h2>
+                  <p className="text-3xl font-bold text-violet-600 mb-2">{score}/{maxScore} points</p>
+                  <p className="text-violet-700 mb-4">{pct}% Accuracy</p>
+                  <div className="w-full max-w-xs h-3 bg-violet-200 rounded-full mb-4">
+                     <div className="h-full bg-violet-500 rounded-full transition-all" style={{ width: `${pct}%` }}></div>
+                  </div>
+                  <div className="bg-white rounded-xl p-4 w-full max-w-md text-sm">
+                     <h4 className="font-semibold text-violet-800 mb-2">Key Takeaways:</h4>
+                     <ul className="text-gray-600 space-y-1">
+                        <li>• Budget = Fixed plan, sets accountability</li>
+                        <li>• Forecast = Dynamic prediction, adapts to reality</li>
+                        <li>• Compare both to actual for full picture</li>
+                        <li>• Gaps signal need for investigation</li>
+                        <li>• Rolling forecasts provide continuous visibility</li>
+                     </ul>
+                  </div>
+                  <button onClick={() => { setPhase('intro'); setScore(0); setCurrentMonth(0); setUserPrediction(null); setPredictionSubmitted(false); setQuizIndex(0); setQuizAnswered(false); }} className="w-full max-w-md mt-4 py-3 bg-violet-500 text-white rounded-xl font-semibold hover:bg-violet-600">Practice Again</button>
+               </div>
+            </div>
+         );
+      }
+      return null;
+   };
+
    const FinancialStatementsRenderer = () => {
       const [phase, setPhase] = useState<'intro' | 'play' | 'result'>('intro');
       const [showInfo, setShowInfo] = useState(false);
@@ -47733,6 +48124,8 @@ const GeneratedDiagram: React.FC<DiagramProps> = ({ type, data, title }) => {
             return <FinancialRatioAnalysisRenderer />;
          case 'working_capital':
             return <WorkingCapitalManagementRenderer />;
+         case 'budget_forecast':
+            return <BudgetForecastRenderer />;
          case 'pricing_strategy':
             return <PricingStrategyRenderer />;
          case 'budgeting':
