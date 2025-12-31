@@ -39005,6 +39005,379 @@ const GeneratedDiagram: React.FC<DiagramProps> = ({ type, data, title }) => {
       return null;
    };
 
+   const BankReconciliationRenderer = () => {
+      const [phase, setPhase] = useState<'intro' | 'tutorial' | 'play' | 'result'>('intro');
+      const [tutorialStep, setTutorialStep] = useState(0);
+      const [showInfo, setShowInfo] = useState(false);
+      const [infoTopic, setInfoTopic] = useState<string | null>(null);
+      const [score, setScore] = useState(0);
+      const [level, setLevel] = useState(0);
+      const [gameLog, setGameLog] = useState<string[]>([]);
+      const [reconciledItems, setReconciledItems] = useState<number[]>([]);
+      const [adjustments, setAdjustments] = useState<{[key: number]: 'book' | 'bank' | null}>({});
+      const [showReconciliation, setShowReconciliation] = useState(false);
+
+      const tutorials = [
+         { title: "Why Reconcile?", content: "Bank reconciliation catches errors, fraud, and timing differences between your records and the bank's records.", icon: "🎯" },
+         { title: "Bank Statement Balance", content: "Starting point: The ending balance from your bank statement. This is what the bank says you have.", icon: "🏦" },
+         { title: "Book Balance", content: "Your internal records (accounting system). This is what YOU think you have.", icon: "📒" },
+         { title: "Deposits in Transit", content: "Money you've recorded as deposited but hasn't cleared the bank yet. Add to bank balance.", icon: "📥" },
+         { title: "Outstanding Checks", content: "Checks you've written and recorded but haven't been cashed yet. Subtract from bank balance.", icon: "✉️" },
+         { title: "Bank Charges & Interest", content: "Fees or interest the bank recorded but you haven't yet. Adjust book balance.", icon: "💳" },
+         { title: "Goal: Balances Match!", content: "After adjustments, adjusted book balance must equal adjusted bank balance. Differences = errors!", icon: "✅" }
+      ];
+
+      const infoTopics: {[key: string]: string} = {
+         deposit_in_transit: "Deposits in transit occur when you deposit money near month-end. You've recorded it, but the bank processes it the next business day. Common with Friday deposits!",
+         outstanding_check: "Outstanding checks are written and mailed but not yet cashed. A check written Dec 28 might not be cashed until January. The bank doesn't know about it yet!",
+         bank_charge: "Bank charges include monthly fees, wire transfer fees, overdraft fees, and check printing charges. Banks often deduct these without notice!",
+         nsf_check: "NSF (Non-Sufficient Funds) checks are customer checks that bounced. The bank initially credited you, then reversed it when the check bounced. You need to reverse your entry too!",
+         bank_error: "Banks make mistakes too! If they posted a deposit to wrong account or miscounted cash, you note the error but THEY fix their records, not you.",
+         book_error: "Book errors are YOUR mistakes - transposed digits (writing $96 instead of $69), wrong amounts, or missed entries. These require correcting journal entries."
+      };
+
+      const levels = [
+         {
+            name: "Basic Reconciliation",
+            bankBalance: 15420.00,
+            bookBalance: 14850.00,
+            items: [
+               { id: 1, desc: "Check #1045 to ABC Supply", amount: -350.00, type: 'outstanding_check', side: 'bank' as const, explanation: "Check written Dec 28, not yet cashed by vendor" },
+               { id: 2, desc: "Dec 31 customer deposit", amount: 520.00, type: 'deposit_in_transit', side: 'bank' as const, explanation: "Deposited Friday PM, clears Monday" },
+               { id: 3, desc: "Monthly service charge", amount: -25.00, type: 'bank_charge', side: 'book' as const, explanation: "Bank deducted fee, you didn't know yet" },
+               { id: 4, desc: "Interest earned", amount: 15.00, type: 'interest', side: 'book' as const, explanation: "Bank credited interest you need to record" },
+               { id: 5, desc: "Check #1042 to vendor", amount: -280.00, type: 'outstanding_check', side: 'bank' as const, explanation: "Mailed last week, still not cashed" }
+            ],
+            targetBankAdjusted: 15310.00,
+            targetBookAdjusted: 14840.00
+         },
+         {
+            name: "NSF Check Challenge",
+            bankBalance: 28750.00,
+            bookBalance: 29180.00,
+            items: [
+               { id: 1, desc: "Customer check returned NSF", amount: -450.00, type: 'nsf_check', side: 'book' as const, explanation: "Customer's check bounced - bank reversed the deposit" },
+               { id: 2, desc: "Deposit in transit", amount: 1200.00, type: 'deposit_in_transit', side: 'bank' as const, explanation: "Friday deposit, won't clear until Monday" },
+               { id: 3, desc: "Outstanding check #2105", amount: -890.00, type: 'outstanding_check', side: 'bank' as const, explanation: "Large check to supplier not yet cashed" },
+               { id: 4, desc: "Bank wire fee", amount: -30.00, type: 'bank_charge', side: 'book' as const, explanation: "Fee for incoming wire transfer" },
+               { id: 5, desc: "Outstanding check #2108", amount: -320.00, type: 'outstanding_check', side: 'bank' as const, explanation: "Rent check, landlord slow to deposit" },
+               { id: 6, desc: "Collection by bank", amount: 260.00, type: 'collection', side: 'book' as const, explanation: "Bank collected note receivable for you" }
+            ],
+            targetBankAdjusted: 28740.00,
+            targetBookAdjusted: 28960.00
+         },
+         {
+            name: "Error Detection",
+            bankBalance: 45320.00,
+            bookBalance: 44780.00,
+            items: [
+               { id: 1, desc: "Check #3055 recorded as $540 (actual $450)", amount: 90.00, type: 'book_error', side: 'book' as const, explanation: "You recorded check for $540 but wrote it for $450. Add $90 back!" },
+               { id: 2, desc: "Bank error - deposit credited to wrong acct", amount: 800.00, type: 'bank_error', side: 'bank' as const, explanation: "Bank put your $800 in someone else's account" },
+               { id: 3, desc: "Outstanding checks total", amount: -1250.00, type: 'outstanding_check', side: 'bank' as const, explanation: "Three checks totaling $1,250 not yet cashed" },
+               { id: 4, desc: "Deposits in transit", amount: 650.00, type: 'deposit_in_transit', side: 'bank' as const, explanation: "End of month deposits not yet cleared" },
+               { id: 5, desc: "Bank charges", amount: -45.00, type: 'bank_charge', side: 'book' as const, explanation: "Monthly fees and check printing" },
+               { id: 6, desc: "NSF check from customer", amount: -225.00, type: 'nsf_check', side: 'book' as const, explanation: "Customer payment bounced" }
+            ],
+            targetBankAdjusted: 45520.00,
+            targetBookAdjusted: 44600.00
+         },
+         {
+            name: "Complex Month-End",
+            bankBalance: 87450.00,
+            bookBalance: 86280.00,
+            items: [
+               { id: 1, desc: "Deposits in transit (3 deposits)", amount: 2340.00, type: 'deposit_in_transit', side: 'bank' as const, explanation: "Three customer deposits made Dec 30-31" },
+               { id: 2, desc: "Outstanding checks (7 checks)", amount: -3180.00, type: 'outstanding_check', side: 'bank' as const, explanation: "Year-end vendor payments not yet cleared" },
+               { id: 3, desc: "Check #4521 transposed digits $860→$680", amount: 180.00, type: 'book_error', side: 'book' as const, explanation: "Wrote check for $680, recorded as $860" },
+               { id: 4, desc: "NSF checks (2 customers)", amount: -720.00, type: 'nsf_check', side: 'book' as const, explanation: "Two customer checks bounced" },
+               { id: 5, desc: "Bank loan payment auto-debit", amount: -1500.00, type: 'auto_debit', side: 'book' as const, explanation: "Automatic loan payment you forgot to record" },
+               { id: 6, desc: "Interest income", amount: 85.00, type: 'interest', side: 'book' as const, explanation: "Monthly interest earned on account" },
+               { id: 7, desc: "Wire transfer fee", amount: -45.00, type: 'bank_charge', side: 'book' as const, explanation: "Fees for outgoing wire" },
+               { id: 8, desc: "Customer direct deposit", amount: 950.00, type: 'eft', side: 'book' as const, explanation: "Customer paid via ACH, bank credited but you didn't record" }
+            ],
+            targetBankAdjusted: 86610.00,
+            targetBookAdjusted: 85230.00
+         }
+      ];
+
+      const currentLevel = levels[level];
+
+      const calculateAdjustedBalances = () => {
+         let adjBank = currentLevel.bankBalance;
+         let adjBook = currentLevel.bookBalance;
+
+         currentLevel.items.forEach((item, idx) => {
+            if (adjustments[item.id] === item.side) {
+               if (item.side === 'bank') {
+                  adjBank += item.amount;
+               } else {
+                  adjBook += item.amount;
+               }
+            }
+         });
+
+         return { adjBank, adjBook };
+      };
+
+      const handleAdjustment = (itemId: number, side: 'book' | 'bank') => {
+         const item = currentLevel.items.find(i => i.id === itemId);
+         if (!item) return;
+
+         const currentAdj = adjustments[itemId];
+         if (currentAdj === side) {
+            // Toggle off
+            setAdjustments(prev => ({ ...prev, [itemId]: null }));
+         } else {
+            setAdjustments(prev => ({ ...prev, [itemId]: side }));
+
+            if (side === item.side && !reconciledItems.includes(itemId)) {
+               setReconciledItems(prev => [...prev, itemId]);
+               setScore(prev => prev + 10);
+               setGameLog(prev => [...prev, `Correctly identified: ${item.desc} adjusts ${side} balance`]);
+            } else if (side !== item.side) {
+               setGameLog(prev => [...prev, `Incorrect: ${item.desc} should adjust ${item.side}, not ${side}`]);
+            }
+         }
+      };
+
+      const checkReconciliation = () => {
+         setShowReconciliation(true);
+         const { adjBank, adjBook } = calculateAdjustedBalances();
+         const allCorrect = currentLevel.items.every(item => adjustments[item.id] === item.side);
+
+         if (allCorrect) {
+            setScore(prev => prev + 50);
+            setGameLog(prev => [...prev, `Level ${level + 1} complete! Bank: $${adjBank.toFixed(2)}, Book: $${adjBook.toFixed(2)}`]);
+         }
+      };
+
+      const nextLevel = () => {
+         if (level < levels.length - 1) {
+            setLevel(prev => prev + 1);
+            setAdjustments({});
+            setReconciledItems([]);
+            setShowReconciliation(false);
+         } else {
+            setPhase('result');
+         }
+      };
+
+      const InfoModal = ({ topic, onClose }: { topic: string; onClose: () => void }) => (
+         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={onClose}>
+            <div className="bg-white rounded-xl p-6 max-w-md" onClick={e => e.stopPropagation()}>
+               <h3 className="text-lg font-bold text-gray-800 mb-3">ℹ️ {topic.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}</h3>
+               <p className="text-gray-600">{infoTopics[topic]}</p>
+               <button onClick={onClose} className="mt-4 w-full py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600">Got it!</button>
+            </div>
+         </div>
+      );
+
+      if (phase === 'intro') {
+         return (
+            <div className="flex flex-col items-center justify-center min-h-full bg-gradient-to-br from-teal-50 to-cyan-100 p-6">
+               <div className="bg-white rounded-2xl shadow-xl p-8 max-w-lg w-full text-center">
+                  <div className="text-6xl mb-4">🏦</div>
+                  <h1 className="text-2xl font-bold text-gray-800 mb-3">Bank Reconciliation</h1>
+                  <p className="text-gray-600 mb-6">Master the art of matching your books to the bank statement. Find timing differences, catch errors, and ensure every dollar is accounted for!</p>
+                  <div className="bg-teal-50 rounded-lg p-4 mb-6 text-left">
+                     <p className="text-sm text-teal-800">
+                        <strong>Why this matters:</strong> A $500 error caught through reconciliation once saved a company from a $50,000 fraud. The thief was writing small checks hoping they'd go unnoticed!
+                     </p>
+                  </div>
+                  <button onClick={() => setPhase('tutorial')} className="w-full py-3 bg-teal-500 text-white rounded-xl font-semibold hover:bg-teal-600 transition-all">
+                     Start Learning
+                  </button>
+               </div>
+            </div>
+         );
+      }
+
+      if (phase === 'tutorial') {
+         const tut = tutorials[tutorialStep];
+         return (
+            <div className="flex flex-col items-center justify-center min-h-full bg-gradient-to-br from-teal-50 to-cyan-100 p-6">
+               <div className="bg-white rounded-2xl shadow-xl p-8 max-w-lg w-full">
+                  <div className="flex justify-between items-center mb-6">
+                     <span className="text-sm text-gray-500">Step {tutorialStep + 1} of {tutorials.length}</span>
+                     <div className="flex gap-1">
+                        {tutorials.map((_, i) => (
+                           <div key={i} className={`w-2 h-2 rounded-full ${i <= tutorialStep ? 'bg-teal-500' : 'bg-gray-200'}`} />
+                        ))}
+                     </div>
+                  </div>
+                  <div className="text-4xl mb-4 text-center">{tut.icon}</div>
+                  <h2 className="text-xl font-bold text-gray-800 mb-3 text-center">{tut.title}</h2>
+                  <p className="text-gray-600 text-center mb-8">{tut.content}</p>
+                  <div className="flex gap-3">
+                     {tutorialStep > 0 && (
+                        <button onClick={() => setTutorialStep(prev => prev - 1)} className="flex-1 py-3 border-2 border-gray-200 rounded-xl font-semibold text-gray-600 hover:bg-gray-50">
+                           Back
+                        </button>
+                     )}
+                     <button
+                        onClick={() => tutorialStep < tutorials.length - 1 ? setTutorialStep(prev => prev + 1) : setPhase('play')}
+                        className="flex-1 py-3 bg-teal-500 text-white rounded-xl font-semibold hover:bg-teal-600"
+                     >
+                        {tutorialStep < tutorials.length - 1 ? 'Next' : 'Start Reconciling!'}
+                     </button>
+                  </div>
+               </div>
+            </div>
+         );
+      }
+
+      if (phase === 'play') {
+         const { adjBank, adjBook } = calculateAdjustedBalances();
+         const allCorrect = currentLevel.items.every(item => adjustments[item.id] === item.side);
+
+         return (
+            <div className="flex flex-col min-h-full bg-gradient-to-br from-teal-50 to-cyan-100 p-4">
+               {showInfo && infoTopic && <InfoModal topic={infoTopic} onClose={() => setShowInfo(false)} />}
+
+               <div className="flex justify-between items-center mb-4">
+                  <div>
+                     <h2 className="font-bold text-gray-800">Level {level + 1}: {currentLevel.name}</h2>
+                     <p className="text-sm text-gray-600">Match each item to the correct side</p>
+                  </div>
+                  <div className="text-right">
+                     <span className="text-xl font-bold text-teal-600">{score} pts</span>
+                  </div>
+               </div>
+
+               <div className="grid grid-cols-2 gap-4 mb-4">
+                  <div className="bg-blue-50 rounded-xl p-4 border-2 border-blue-200">
+                     <div className="flex items-center justify-between mb-2">
+                        <span className="text-sm font-semibold text-blue-700">🏦 Bank Statement</span>
+                     </div>
+                     <div className="text-lg font-bold text-blue-800">${currentLevel.bankBalance.toLocaleString('en-US', {minimumFractionDigits: 2})}</div>
+                     <div className="text-xs text-blue-600 mt-1">+ Deposits in Transit</div>
+                     <div className="text-xs text-blue-600">- Outstanding Checks</div>
+                     <div className="border-t border-blue-300 mt-2 pt-2">
+                        <div className="text-sm font-bold text-blue-800">Adjusted: ${adjBank.toLocaleString('en-US', {minimumFractionDigits: 2})}</div>
+                     </div>
+                  </div>
+                  <div className="bg-green-50 rounded-xl p-4 border-2 border-green-200">
+                     <div className="flex items-center justify-between mb-2">
+                        <span className="text-sm font-semibold text-green-700">📒 Book Balance</span>
+                     </div>
+                     <div className="text-lg font-bold text-green-800">${currentLevel.bookBalance.toLocaleString('en-US', {minimumFractionDigits: 2})}</div>
+                     <div className="text-xs text-green-600 mt-1">+ Interest/Collections</div>
+                     <div className="text-xs text-green-600">- Bank Charges/NSF</div>
+                     <div className="border-t border-green-300 mt-2 pt-2">
+                        <div className="text-sm font-bold text-green-800">Adjusted: ${adjBook.toLocaleString('en-US', {minimumFractionDigits: 2})}</div>
+                     </div>
+                  </div>
+               </div>
+
+               <div className="flex-1 bg-white rounded-xl shadow-lg p-4 overflow-y-auto">
+                  <h3 className="font-semibold text-gray-700 mb-3">Reconciling Items - Click to assign:</h3>
+                  <div className="space-y-2">
+                     {currentLevel.items.map(item => (
+                        <div key={item.id} className="border rounded-lg p-3 bg-gray-50">
+                           <div className="flex items-center justify-between">
+                              <div className="flex-1">
+                                 <div className="flex items-center gap-2">
+                                    <span className="font-medium text-gray-800">{item.desc}</span>
+                                    <button
+                                       onClick={() => { setInfoTopic(item.type); setShowInfo(true); }}
+                                       className="text-blue-500 hover:text-blue-700"
+                                    >ℹ️</button>
+                                 </div>
+                                 <span className={`text-sm font-semibold ${item.amount >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                                    {item.amount >= 0 ? '+' : ''}{item.amount.toLocaleString('en-US', {style: 'currency', currency: 'USD'})}
+                                 </span>
+                                 {adjustments[item.id] && adjustments[item.id] === item.side && (
+                                    <span className="ml-2 text-xs text-green-600">✓ Correct!</span>
+                                 )}
+                                 {adjustments[item.id] && adjustments[item.id] !== item.side && (
+                                    <span className="ml-2 text-xs text-red-600">✗ Wrong side</span>
+                                 )}
+                              </div>
+                              <div className="flex gap-2">
+                                 <button
+                                    onClick={() => handleAdjustment(item.id, 'bank')}
+                                    className={`px-3 py-1 rounded text-sm font-medium transition-all ${adjustments[item.id] === 'bank' ? 'bg-blue-500 text-white' : 'bg-blue-100 text-blue-700 hover:bg-blue-200'}`}
+                                 >Bank</button>
+                                 <button
+                                    onClick={() => handleAdjustment(item.id, 'book')}
+                                    className={`px-3 py-1 rounded text-sm font-medium transition-all ${adjustments[item.id] === 'book' ? 'bg-green-500 text-white' : 'bg-green-100 text-green-700 hover:bg-green-200'}`}
+                                 >Book</button>
+                              </div>
+                           </div>
+                           {showReconciliation && (
+                              <div className="mt-2 text-xs text-gray-600 bg-yellow-50 p-2 rounded">
+                                 💡 {item.explanation}
+                              </div>
+                           )}
+                        </div>
+                     ))}
+                  </div>
+               </div>
+
+               <div className="mt-4 flex gap-3">
+                  {!showReconciliation ? (
+                     <button
+                        onClick={checkReconciliation}
+                        disabled={Object.keys(adjustments).length < currentLevel.items.length}
+                        className={`flex-1 py-3 rounded-xl font-semibold transition-all ${Object.keys(adjustments).length >= currentLevel.items.length ? 'bg-teal-500 text-white hover:bg-teal-600' : 'bg-gray-200 text-gray-400'}`}
+                     >
+                        Check Reconciliation
+                     </button>
+                  ) : (
+                     <button
+                        onClick={nextLevel}
+                        className="flex-1 py-3 bg-teal-500 text-white rounded-xl font-semibold hover:bg-teal-600"
+                     >
+                        {allCorrect ? (level < levels.length - 1 ? 'Next Level →' : 'See Results') : 'Try Again'}
+                     </button>
+                  )}
+               </div>
+            </div>
+         );
+      }
+
+      if (phase === 'result') {
+         const maxScore = levels.reduce((sum, l) => sum + l.items.length * 10 + 50, 0);
+         const percentage = Math.round((score / maxScore) * 100);
+
+         return (
+            <div className="flex flex-col items-center justify-center min-h-full bg-gradient-to-br from-teal-50 to-cyan-100 p-6">
+               <div className="bg-white rounded-2xl shadow-xl p-8 max-w-lg w-full text-center">
+                  <div className="text-6xl mb-4">{percentage >= 80 ? '🏆' : percentage >= 60 ? '📊' : '📚'}</div>
+                  <h1 className="text-2xl font-bold text-gray-800 mb-2">Reconciliation Complete!</h1>
+                  <div className="text-4xl font-bold text-teal-600 mb-4">{score} / {maxScore}</div>
+                  <div className="w-full bg-gray-200 rounded-full h-3 mb-6">
+                     <div className="bg-teal-500 h-3 rounded-full transition-all" style={{ width: `${percentage}%` }} />
+                  </div>
+
+                  <div className="bg-gray-50 rounded-lg p-4 text-left mb-6">
+                     <h3 className="font-semibold text-gray-800 mb-2">🎯 Key Takeaways:</h3>
+                     <ul className="text-sm text-gray-600 space-y-2">
+                        <li>• <strong>Deposits in Transit & Outstanding Checks</strong> adjust the BANK balance</li>
+                        <li>• <strong>Bank Charges, NSF Checks & Interest</strong> adjust YOUR BOOK balance</li>
+                        <li>• <strong>Errors</strong> are fixed on whichever side made the mistake</li>
+                        <li>• Goal: Adjusted Bank = Adjusted Book (differences = problems!)</li>
+                     </ul>
+                  </div>
+
+                  <div className="bg-teal-50 rounded-lg p-4 text-left mb-6">
+                     <h3 className="font-semibold text-teal-800 mb-2">💡 Pro Insight:</h3>
+                     <p className="text-sm text-teal-700">
+                        Reconcile monthly, within 5 days of statement date. The longer you wait, the harder to find errors. Many frauds are caught because reconciliation revealed unauthorized transactions!
+                     </p>
+                  </div>
+
+                  <button onClick={() => { setPhase('intro'); setScore(0); setLevel(0); setAdjustments({}); setReconciledItems([]); setShowReconciliation(false); setGameLog([]); }} className="w-full py-3 bg-teal-500 text-white rounded-xl font-semibold hover:bg-teal-600">
+                     Practice Again
+                  </button>
+               </div>
+            </div>
+         );
+      }
+
+      return null;
+   };
+
    const FinancialStatementsRenderer = () => {
       const [phase, setPhase] = useState<'intro' | 'play' | 'result'>('intro');
       const [showInfo, setShowInfo] = useState(false);
@@ -42822,6 +43195,8 @@ const GeneratedDiagram: React.FC<DiagramProps> = ({ type, data, title }) => {
             return <AccountsPayableRenderer />;
          case 'accounts_receivable':
             return <AccountsReceivableRenderer />;
+         case 'bank_reconciliation':
+            return <BankReconciliationRenderer />;
          case 'pricing_strategy':
             return <PricingStrategyRenderer />;
          case 'budgeting':
