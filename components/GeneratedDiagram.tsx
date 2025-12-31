@@ -41819,6 +41819,410 @@ const GeneratedDiagram: React.FC<DiagramProps> = ({ type, data, title }) => {
       return null;
    };
 
+   const InventoryValuationRenderer = () => {
+      const [phase, setPhase] = useState<'intro' | 'tutorial' | 'play' | 'result'>('intro');
+      const [tutorialStep, setTutorialStep] = useState(0);
+      const [score, setScore] = useState(0);
+      const [level, setLevel] = useState(0);
+      const [gameLog, setGameLog] = useState<string[]>([]);
+      const [answers, setAnswers] = useState<{[key: string]: number}>({});
+      const [showResults, setShowResults] = useState(false);
+      const [quizIndex, setQuizIndex] = useState(0);
+      const [quizAnswered, setQuizAnswered] = useState(false);
+      const [showInfo, setShowInfo] = useState(false);
+      const [infoContent, setInfoContent] = useState({ title: '', content: '' });
+
+      const tutorials = [
+         { title: 'Inventory Valuation Methods', content: 'Companies must choose a method to assign costs to inventory sold. The three main methods—FIFO, LIFO, and Weighted Average—each produce different COGS and ending inventory values.', icon: '📦' },
+         { title: 'FIFO - First In, First Out', content: 'Oldest inventory costs are assigned to COGS first. Ending inventory reflects most recent (typically higher) costs. Results in lower COGS and higher profits during inflation.', icon: '➡️' },
+         { title: 'LIFO - Last In, First Out', content: 'Most recent inventory costs are assigned to COGS first. Ending inventory reflects oldest (typically lower) costs. Results in higher COGS and lower profits (tax savings) during inflation.', icon: '⬅️' },
+         { title: 'Weighted Average', content: 'Average cost of all units available = Total Cost ÷ Total Units. Same cost applied to both COGS and ending inventory. Smooths out price fluctuations.', icon: '⚖️' },
+         { title: 'Impact on Financial Statements', content: 'FIFO: Higher ending inventory, higher net income. LIFO: Lower ending inventory, lower net income (but tax savings). Weighted Average: Middle ground for both.', icon: '📊' },
+         { title: 'When to Use Each Method', content: 'FIFO: Perishables, tech products. LIFO: Tax savings (US only, not allowed under IFRS). Weighted Average: Commodity-type products, simplicity.', icon: '🎯' },
+         { title: 'The Scenario', content: 'You\'ll analyze inventory transactions and calculate COGS and ending inventory using each method. See how the same transactions produce different results!', icon: '🎮' }
+      ];
+
+      const scenarios = [
+         {
+            title: 'Basic Electronics Store',
+            description: 'Widget-Mart sells smartphones. Track the January inventory:',
+            beginning: { units: 0, cost: 0 },
+            transactions: [
+               { type: 'purchase', date: 'Jan 5', units: 100, cost: 200, total: 20000 },
+               { type: 'purchase', date: 'Jan 15', units: 80, cost: 220, total: 17600 },
+               { type: 'sale', date: 'Jan 25', units: 120, price: 350 }
+            ],
+            available: { units: 180, cost: 37600 },
+            fifo: { cogs: 28400, ending: 9200 },
+            lifo: { cogs: 30000, ending: 7600 },
+            avg: { cogs: 25067, ending: 12533 }
+         },
+         {
+            title: 'Growing Retailer',
+            description: 'Prices are rising. Fashion Depot tracks their premium handbags:',
+            beginning: { units: 50, cost: 150 },
+            transactions: [
+               { type: 'purchase', date: 'Feb 1', units: 50, cost: 150, total: 7500 },
+               { type: 'purchase', date: 'Feb 10', units: 60, cost: 175, total: 10500 },
+               { type: 'purchase', date: 'Feb 20', units: 40, cost: 200, total: 8000 },
+               { type: 'sale', date: 'Feb 28', units: 100, price: 300 }
+            ],
+            available: { units: 150, cost: 26000 },
+            fifo: { cogs: 15750, ending: 10250 },
+            lifo: { cogs: 18500, ending: 7500 },
+            avg: { cogs: 17333, ending: 8667 }
+         },
+         {
+            title: 'Complex Quarter',
+            description: 'Multiple purchases at varying costs for Tech Supply Co:',
+            beginning: { units: 200, cost: 50 },
+            transactions: [
+               { type: 'purchase', date: 'Mar 1', units: 200, cost: 50, total: 10000 },
+               { type: 'sale', date: 'Mar 5', units: 150, price: 85 },
+               { type: 'purchase', date: 'Mar 10', units: 300, cost: 55, total: 16500 },
+               { type: 'purchase', date: 'Mar 20', units: 100, cost: 60, total: 6000 },
+               { type: 'sale', date: 'Mar 28', units: 400, price: 90 }
+            ],
+            available: { units: 600, cost: 32500 },
+            fifo: { cogs: 28750, ending: 3750 },
+            lifo: { cogs: 30000, ending: 2500 },
+            avg: { cogs: 29792, ending: 2708 }
+         }
+      ];
+
+      const quizzes = [
+         {
+            question: 'During a period of rising prices, which method results in the HIGHEST net income?',
+            options: ['FIFO', 'LIFO', 'Weighted Average', 'All methods produce same income'],
+            correct: 0,
+            explanation: 'FIFO assigns older (lower) costs to COGS, resulting in lower COGS and higher gross profit/net income during inflation.'
+         },
+         {
+            question: 'Which inventory method is NOT allowed under IFRS?',
+            options: ['FIFO', 'LIFO', 'Weighted Average', 'Specific Identification'],
+            correct: 1,
+            explanation: 'LIFO is prohibited under IFRS but allowed under US GAAP. This creates comparability issues for international investors.'
+         },
+         {
+            question: 'A company wants to minimize income taxes during inflation. Which method should they use?',
+            options: ['FIFO - lower taxes', 'LIFO - higher COGS reduces taxable income', 'Weighted Average - tax neutral', 'All methods result in same taxes'],
+            correct: 1,
+            explanation: 'LIFO assigns higher (recent) costs to COGS during inflation, reducing taxable income and thus tax liability.'
+         },
+         {
+            question: 'If beginning inventory is 100 units @ $10 and you purchase 50 units @ $12, what is the weighted average cost per unit?',
+            options: ['$10.00', '$10.67', '$11.00', '$12.00'],
+            correct: 1,
+            explanation: 'Weighted Avg = (100 × $10 + 50 × $12) ÷ 150 = $1,600 ÷ 150 = $10.67 per unit.'
+         },
+         {
+            question: 'Which statement about FIFO is TRUE?',
+            options: ['Ending inventory reflects oldest costs', 'COGS reflects most recent costs', 'Ending inventory reflects most recent costs', 'Not allowed under US GAAP'],
+            correct: 2,
+            explanation: 'Under FIFO, oldest costs go to COGS first, leaving the most recent (typically higher) costs in ending inventory.'
+         },
+         {
+            question: 'A perishable goods company (dairy, produce) would most likely use:',
+            options: ['LIFO - matches physical flow', 'FIFO - matches physical flow', 'Weighted Average - simplest calculation', 'Specific Identification - tracks each item'],
+            correct: 1,
+            explanation: 'Perishable goods are sold in order received (oldest first) to prevent spoilage. FIFO matches this physical flow.'
+         }
+      ];
+
+      const current = scenarios[level];
+
+      const handleAnswer = (method: string, value: number) => {
+         setAnswers(prev => ({ ...prev, [method]: value }));
+      };
+
+      const checkAnswers = () => {
+         let pts = 0;
+         const tolerance = 100;
+
+         if (Math.abs((answers['fifo_cogs'] || 0) - current.fifo.cogs) <= tolerance) pts++;
+         if (Math.abs((answers['fifo_ending'] || 0) - current.fifo.ending) <= tolerance) pts++;
+         if (Math.abs((answers['lifo_cogs'] || 0) - current.lifo.cogs) <= tolerance) pts++;
+         if (Math.abs((answers['lifo_ending'] || 0) - current.lifo.ending) <= tolerance) pts++;
+         if (Math.abs((answers['avg_cogs'] || 0) - current.avg.cogs) <= tolerance) pts++;
+         if (Math.abs((answers['avg_ending'] || 0) - current.avg.ending) <= tolerance) pts++;
+
+         setScore(prev => prev + pts);
+         setGameLog(prev => [...prev, `Scenario ${level + 1}: Scored ${pts}/6 on ${current.title}`]);
+         setShowResults(true);
+      };
+
+      const nextLevel = () => {
+         if (level < scenarios.length - 1) {
+            setLevel(prev => prev + 1);
+            setAnswers({});
+            setShowResults(false);
+         } else {
+            setPhase('result');
+         }
+      };
+
+      const handleQuizAnswer = (idx: number) => {
+         if (quizAnswered) return;
+         setQuizAnswered(true);
+         if (idx === quizzes[quizIndex].correct) {
+            setScore(prev => prev + 2);
+            setGameLog(prev => [...prev, `Quiz ${quizIndex + 1}: Correct! +2 points`]);
+         } else {
+            setGameLog(prev => [...prev, `Quiz ${quizIndex + 1}: Incorrect`]);
+         }
+      };
+
+      const nextQuiz = () => {
+         if (quizIndex < quizzes.length - 1) {
+            setQuizIndex(prev => prev + 1);
+            setQuizAnswered(false);
+         } else {
+            setPhase('result');
+         }
+      };
+
+      const showInfoModal = (title: string, content: string) => {
+         setInfoContent({ title, content });
+         setShowInfo(true);
+      };
+
+      if (phase === 'intro') {
+         return (
+            <div className="h-full flex flex-col items-center justify-center p-6 bg-gradient-to-br from-orange-50 to-yellow-100">
+               <div className="text-6xl mb-4">📦</div>
+               <h1 className="text-2xl font-bold text-orange-800 mb-2">Inventory Valuation Methods</h1>
+               <p className="text-orange-600 text-center mb-6 max-w-md">Master FIFO, LIFO, and Weighted Average to understand how inventory costing affects financial statements and taxes.</p>
+               <button onClick={() => setPhase('tutorial')} className="px-8 py-3 bg-orange-500 text-white rounded-xl font-semibold hover:bg-orange-600 transition-all">Start Learning</button>
+            </div>
+         );
+      }
+
+      if (phase === 'tutorial') {
+         const t = tutorials[tutorialStep];
+         return (
+            <div className="h-full flex flex-col p-6 bg-gradient-to-br from-orange-50 to-yellow-100">
+               <div className="flex justify-between items-center mb-4">
+                  <span className="text-sm text-orange-600">Tutorial {tutorialStep + 1}/{tutorials.length}</span>
+                  <div className="w-32 h-2 bg-orange-200 rounded-full">
+                     <div className="h-full bg-orange-500 rounded-full transition-all" style={{ width: `${((tutorialStep + 1) / tutorials.length) * 100}%` }}></div>
+                  </div>
+               </div>
+               <div className="flex-1 flex flex-col items-center justify-center">
+                  <div className="text-5xl mb-4">{t.icon}</div>
+                  <h2 className="text-xl font-bold text-orange-800 mb-3">{t.title}</h2>
+                  <p className="text-orange-700 text-center max-w-md leading-relaxed">{t.content}</p>
+               </div>
+               <div className="flex justify-between">
+                  <button onClick={() => setTutorialStep(prev => Math.max(0, prev - 1))} disabled={tutorialStep === 0} className="px-4 py-2 bg-orange-200 text-orange-700 rounded-lg disabled:opacity-50">Back</button>
+                  {tutorialStep < tutorials.length - 1 ? (
+                     <button onClick={() => setTutorialStep(prev => prev + 1)} className="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600">Next</button>
+                  ) : (
+                     <button onClick={() => setPhase('play')} className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600">Start Practice →</button>
+                  )}
+               </div>
+            </div>
+         );
+      }
+
+      if (phase === 'play') {
+         const soldUnits = current.transactions.filter(t => t.type === 'sale').reduce((sum, t) => sum + t.units, 0);
+         const endingUnits = current.available.units - soldUnits;
+
+         if (!showResults) {
+            return (
+               <div className="h-full flex flex-col p-4 bg-gradient-to-br from-orange-50 to-yellow-100 overflow-auto">
+                  <div className="flex justify-between items-center mb-3">
+                     <span className="text-sm font-medium text-orange-700">Scenario {level + 1}/{scenarios.length}</span>
+                     <span className="text-sm font-semibold text-orange-800">Score: {score}</span>
+                  </div>
+
+                  <div className="bg-white rounded-xl p-4 mb-3 shadow-sm">
+                     <div className="flex items-center gap-2 mb-2">
+                        <h3 className="font-bold text-orange-800">{current.title}</h3>
+                        <button onClick={() => showInfoModal('Inventory Flow', 'Goods Available = Beginning Inventory + Purchases. COGS + Ending Inventory = Goods Available.')} className="text-orange-400 hover:text-orange-600">ℹ️</button>
+                     </div>
+                     <p className="text-sm text-gray-600 mb-3">{current.description}</p>
+
+                     <div className="bg-orange-50 rounded-lg p-3 text-xs">
+                        <div className="font-semibold mb-2 text-orange-800">Transactions:</div>
+                        {current.transactions.map((t, i) => (
+                           <div key={i} className="flex justify-between py-1 border-b border-orange-100 last:border-0">
+                              <span className="text-gray-600">{t.date}</span>
+                              <span className={t.type === 'purchase' ? 'text-green-600' : 'text-red-600'}>
+                                 {t.type === 'purchase' ? `+${t.units} @ $${t.cost}` : `Sold ${t.units} units`}
+                              </span>
+                              {t.type === 'purchase' && <span className="text-gray-500">${t.total?.toLocaleString()}</span>}
+                           </div>
+                        ))}
+                        <div className="flex justify-between pt-2 font-semibold text-orange-800">
+                           <span>Goods Available:</span>
+                           <span>{current.available.units} units = ${current.available.cost.toLocaleString()}</span>
+                        </div>
+                        <div className="text-gray-600 text-center mt-1">Units Sold: {soldUnits} | Ending Units: {endingUnits}</div>
+                     </div>
+                  </div>
+
+                  <div className="grid grid-cols-3 gap-2 mb-3">
+                     <div className="bg-blue-50 rounded-lg p-2">
+                        <div className="flex items-center gap-1 mb-1">
+                           <span className="text-xs font-bold text-blue-800">FIFO</span>
+                           <button onClick={() => showInfoModal('FIFO Method', 'First In, First Out: Oldest costs go to COGS first. Calculate COGS using earliest purchase prices, then remaining inventory at latest prices.')} className="text-blue-400 text-xs">ℹ️</button>
+                        </div>
+                        <input type="number" placeholder="COGS" value={answers['fifo_cogs'] || ''} onChange={(e) => handleAnswer('fifo_cogs', Number(e.target.value))} className="w-full px-2 py-1 text-xs border rounded mb-1" />
+                        <input type="number" placeholder="Ending Inv" value={answers['fifo_ending'] || ''} onChange={(e) => handleAnswer('fifo_ending', Number(e.target.value))} className="w-full px-2 py-1 text-xs border rounded" />
+                     </div>
+                     <div className="bg-purple-50 rounded-lg p-2">
+                        <div className="flex items-center gap-1 mb-1">
+                           <span className="text-xs font-bold text-purple-800">LIFO</span>
+                           <button onClick={() => showInfoModal('LIFO Method', 'Last In, First Out: Most recent costs go to COGS first. Calculate COGS using latest purchase prices, then remaining inventory at oldest prices.')} className="text-purple-400 text-xs">ℹ️</button>
+                        </div>
+                        <input type="number" placeholder="COGS" value={answers['lifo_cogs'] || ''} onChange={(e) => handleAnswer('lifo_cogs', Number(e.target.value))} className="w-full px-2 py-1 text-xs border rounded mb-1" />
+                        <input type="number" placeholder="Ending Inv" value={answers['lifo_ending'] || ''} onChange={(e) => handleAnswer('lifo_ending', Number(e.target.value))} className="w-full px-2 py-1 text-xs border rounded" />
+                     </div>
+                     <div className="bg-green-50 rounded-lg p-2">
+                        <div className="flex items-center gap-1 mb-1">
+                           <span className="text-xs font-bold text-green-800">Weighted Avg</span>
+                           <button onClick={() => showInfoModal('Weighted Average', `Avg Cost = Total Cost ÷ Total Units = $${current.available.cost.toLocaleString()} ÷ ${current.available.units} = $${(current.available.cost / current.available.units).toFixed(2)}/unit`)} className="text-green-400 text-xs">ℹ️</button>
+                        </div>
+                        <input type="number" placeholder="COGS" value={answers['avg_cogs'] || ''} onChange={(e) => handleAnswer('avg_cogs', Number(e.target.value))} className="w-full px-2 py-1 text-xs border rounded mb-1" />
+                        <input type="number" placeholder="Ending Inv" value={answers['avg_ending'] || ''} onChange={(e) => handleAnswer('avg_ending', Number(e.target.value))} className="w-full px-2 py-1 text-xs border rounded" />
+                     </div>
+                  </div>
+
+                  <button onClick={checkAnswers} className="w-full py-2 bg-orange-500 text-white rounded-lg font-semibold hover:bg-orange-600">Check Answers</button>
+
+                  {showInfo && (
+                     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+                        <div className="bg-white rounded-xl p-4 max-w-sm">
+                           <h4 className="font-bold text-orange-800 mb-2">{infoContent.title}</h4>
+                           <p className="text-sm text-gray-600 mb-3">{infoContent.content}</p>
+                           <button onClick={() => setShowInfo(false)} className="w-full py-2 bg-orange-500 text-white rounded-lg">Got it!</button>
+                        </div>
+                     </div>
+                  )}
+               </div>
+            );
+         }
+
+         return (
+            <div className="h-full flex flex-col p-4 bg-gradient-to-br from-orange-50 to-yellow-100 overflow-auto">
+               <h3 className="font-bold text-orange-800 mb-3 text-center">Results: {current.title}</h3>
+
+               <div className="bg-white rounded-xl p-4 mb-3 shadow-sm">
+                  <table className="w-full text-xs">
+                     <thead>
+                        <tr className="border-b">
+                           <th className="text-left py-1">Method</th>
+                           <th className="text-right py-1">Your COGS</th>
+                           <th className="text-right py-1">Correct</th>
+                           <th className="text-right py-1">Your End Inv</th>
+                           <th className="text-right py-1">Correct</th>
+                        </tr>
+                     </thead>
+                     <tbody>
+                        <tr className="border-b">
+                           <td className="py-1 font-medium text-blue-700">FIFO</td>
+                           <td className={`text-right ${Math.abs((answers['fifo_cogs'] || 0) - current.fifo.cogs) <= 100 ? 'text-green-600' : 'text-red-600'}`}>${(answers['fifo_cogs'] || 0).toLocaleString()}</td>
+                           <td className="text-right text-gray-600">${current.fifo.cogs.toLocaleString()}</td>
+                           <td className={`text-right ${Math.abs((answers['fifo_ending'] || 0) - current.fifo.ending) <= 100 ? 'text-green-600' : 'text-red-600'}`}>${(answers['fifo_ending'] || 0).toLocaleString()}</td>
+                           <td className="text-right text-gray-600">${current.fifo.ending.toLocaleString()}</td>
+                        </tr>
+                        <tr className="border-b">
+                           <td className="py-1 font-medium text-purple-700">LIFO</td>
+                           <td className={`text-right ${Math.abs((answers['lifo_cogs'] || 0) - current.lifo.cogs) <= 100 ? 'text-green-600' : 'text-red-600'}`}>${(answers['lifo_cogs'] || 0).toLocaleString()}</td>
+                           <td className="text-right text-gray-600">${current.lifo.cogs.toLocaleString()}</td>
+                           <td className={`text-right ${Math.abs((answers['lifo_ending'] || 0) - current.lifo.ending) <= 100 ? 'text-green-600' : 'text-red-600'}`}>${(answers['lifo_ending'] || 0).toLocaleString()}</td>
+                           <td className="text-right text-gray-600">${current.lifo.ending.toLocaleString()}</td>
+                        </tr>
+                        <tr>
+                           <td className="py-1 font-medium text-green-700">Wtd Avg</td>
+                           <td className={`text-right ${Math.abs((answers['avg_cogs'] || 0) - current.avg.cogs) <= 100 ? 'text-green-600' : 'text-red-600'}`}>${(answers['avg_cogs'] || 0).toLocaleString()}</td>
+                           <td className="text-right text-gray-600">${current.avg.cogs.toLocaleString()}</td>
+                           <td className={`text-right ${Math.abs((answers['avg_ending'] || 0) - current.avg.ending) <= 100 ? 'text-green-600' : 'text-red-600'}`}>${(answers['avg_ending'] || 0).toLocaleString()}</td>
+                           <td className="text-right text-gray-600">${current.avg.ending.toLocaleString()}</td>
+                        </tr>
+                     </tbody>
+                  </table>
+               </div>
+
+               <div className="bg-yellow-50 rounded-lg p-3 mb-3 text-xs">
+                  <div className="font-semibold text-yellow-800 mb-1">💡 Key Insight:</div>
+                  <p className="text-yellow-700">Notice how LIFO has highest COGS (${current.lifo.cogs.toLocaleString()}) and lowest ending inventory, while FIFO has lowest COGS (${current.fifo.cogs.toLocaleString()}) and highest ending inventory. Same transactions, different financial results!</p>
+               </div>
+
+               <button onClick={nextLevel} className="w-full py-2 bg-orange-500 text-white rounded-lg font-semibold hover:bg-orange-600">
+                  {level < scenarios.length - 1 ? 'Next Scenario →' : 'Take Quiz →'}
+               </button>
+            </div>
+         );
+      }
+
+      if (phase === 'result') {
+         if (quizIndex < quizzes.length) {
+            const q = quizzes[quizIndex];
+            return (
+               <div className="h-full flex flex-col p-4 bg-gradient-to-br from-orange-50 to-yellow-100">
+                  <div className="flex justify-between items-center mb-4">
+                     <span className="text-sm text-orange-600">Quiz {quizIndex + 1}/{quizzes.length}</span>
+                     <span className="text-sm font-semibold text-orange-800">Score: {score}</span>
+                  </div>
+                  <div className="flex-1">
+                     <div className="bg-white rounded-xl p-4 shadow-sm mb-4">
+                        <p className="font-medium text-gray-800 mb-4">{q.question}</p>
+                        <div className="space-y-2">
+                           {q.options.map((opt, i) => (
+                              <button key={i} onClick={() => handleQuizAnswer(i)} disabled={quizAnswered} className={`w-full p-3 rounded-lg text-left text-sm transition-all ${quizAnswered ? (i === q.correct ? 'bg-green-100 border-2 border-green-500' : 'bg-gray-50 opacity-60') : 'bg-gray-50 hover:bg-orange-50 border-2 border-transparent hover:border-orange-300'}`}>
+                                 {opt}
+                              </button>
+                           ))}
+                        </div>
+                     </div>
+                     {quizAnswered && (
+                        <div className="bg-blue-50 rounded-lg p-3 mb-4">
+                           <p className="text-sm text-blue-800">{q.explanation}</p>
+                        </div>
+                     )}
+                  </div>
+                  {quizAnswered && (
+                     <button onClick={nextQuiz} className="w-full py-3 bg-orange-500 text-white rounded-xl font-semibold hover:bg-orange-600">
+                        {quizIndex < quizzes.length - 1 ? 'Next Question →' : 'See Final Results →'}
+                     </button>
+                  )}
+               </div>
+            );
+         }
+
+         const maxScore = scenarios.length * 6 + quizzes.length * 2;
+         const pct = Math.round((score / maxScore) * 100);
+
+         return (
+            <div className="h-full flex flex-col p-6 bg-gradient-to-br from-orange-50 to-yellow-100">
+               <div className="flex-1 flex flex-col items-center justify-center">
+                  <div className="text-5xl mb-4">{pct >= 80 ? '🏆' : pct >= 60 ? '📦' : '📚'}</div>
+                  <h2 className="text-xl font-bold text-orange-800 mb-2">Inventory Valuation Complete!</h2>
+                  <p className="text-3xl font-bold text-orange-600 mb-2">{score}/{maxScore} points</p>
+                  <p className="text-orange-700 mb-4">{pct}% Accuracy</p>
+                  <div className="w-full max-w-xs h-3 bg-orange-200 rounded-full mb-4">
+                     <div className="h-full bg-orange-500 rounded-full transition-all" style={{ width: `${pct}%` }}></div>
+                  </div>
+                  <div className="bg-white rounded-xl p-4 w-full max-w-md text-sm">
+                     <h4 className="font-semibold text-orange-800 mb-2">Key Takeaways:</h4>
+                     <ul className="text-gray-600 space-y-1">
+                        <li>• FIFO: Lower COGS → Higher profit → Higher taxes</li>
+                        <li>• LIFO: Higher COGS → Lower profit → Tax savings</li>
+                        <li>• Weighted Avg: Smooths fluctuations</li>
+                        <li>• LIFO not allowed under IFRS</li>
+                        <li>• Same inventory, different financial results!</li>
+                     </ul>
+                  </div>
+                  <button onClick={() => { setPhase('intro'); setScore(0); setLevel(0); setAnswers({}); setShowResults(false); setQuizIndex(0); setQuizAnswered(false); }} className="w-full max-w-md mt-4 py-3 bg-orange-500 text-white rounded-xl font-semibold hover:bg-orange-600">Practice Again</button>
+               </div>
+            </div>
+         );
+      }
+      return null;
+   };
+
    const FinancialStatementsRenderer = () => {
       const [phase, setPhase] = useState<'intro' | 'play' | 'result'>('intro');
       const [showInfo, setShowInfo] = useState(false);
@@ -45652,6 +46056,8 @@ const GeneratedDiagram: React.FC<DiagramProps> = ({ type, data, title }) => {
             return <DepreciationMethodsRenderer />;
          case 'amortization':
             return <AmortizationRenderer />;
+         case 'inventory_valuation':
+            return <InventoryValuationRenderer />;
          case 'pricing_strategy':
             return <PricingStrategyRenderer />;
          case 'budgeting':
