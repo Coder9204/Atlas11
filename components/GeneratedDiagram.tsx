@@ -35846,6 +35846,602 @@ const GeneratedDiagram: React.FC<DiagramProps> = ({ type, data, title }) => {
       return null;
    };
 
+   // ============================================================================
+   // GAAP COMPLIANCE CHECKER INTERACTIVE SIMULATION
+   // Generally Accepted Accounting Principles - The Rules of Financial Reporting
+   // Features: Scenario-based decisions, principle reference, coaching, AI sync
+   // ============================================================================
+   const GAAPComplianceRenderer = () => {
+      // ============================================================
+      // PHASE & UI STATE
+      // ============================================================
+      const [phase, setPhase] = useState<'intro' | 'tutorial' | 'play' | 'result'>('intro');
+      const [tutorialStep, setTutorialStep] = useState(0);
+      const [showInfo, setShowInfo] = useState(false);
+      const [infoTopic, setInfoTopic] = useState<string | null>(null);
+
+      // ============================================================
+      // GAME STATE
+      // ============================================================
+      const [currentScenario, setCurrentScenario] = useState(0);
+      const [selectedAnswer, setSelectedAnswer] = useState<'compliant' | 'violation' | null>(null);
+      const [showResult, setShowResult] = useState(false);
+      const [score, setScore] = useState(0);
+      const [correctAnswers, setCorrectAnswers] = useState(0);
+      const [totalAnswered, setTotalAnswered] = useState(0);
+      const [streak, setStreak] = useState(0);
+
+      // ============================================================
+      // LEARNING TRACKING
+      // ============================================================
+      const [principlesMastered, setPrinciplesMastered] = useState<string[]>([]);
+      const [principlesStruggled, setPrinciplesStruggled] = useState<string[]>([]);
+      const [showPrincipleReference, setShowPrincipleReference] = useState(false);
+
+      // ============================================================
+      // COACHING STATE
+      // ============================================================
+      const [coachMessage, setCoachMessage] = useState<string>('');
+
+      // ============================================================
+      // AI COACH SYNC - GAME LOG
+      // ============================================================
+      const [gameLog, setGameLog] = useState<string[]>([]);
+
+      // ============================================================
+      // GAAP PRINCIPLES REFERENCE
+      // ============================================================
+      const gaapPrinciples: Record<string, { name: string; description: string; example: string; whyItMatters: string; icon: string }> = {
+         revenue_recognition: {
+            name: 'Revenue Recognition',
+            description: 'Revenue should be recognized when it is EARNED and REALIZABLE, not necessarily when cash is received. For services, this means when the service is performed.',
+            example: 'A gym sells a 12-month membership for $1,200 upfront. They should recognize $100/month over 12 months, not $1,200 immediately.',
+            whyItMatters: 'Prevents companies from inflating current revenue by recording future earnings now. This was a major issue in the Enron scandal.',
+            icon: '📈'
+         },
+         matching_principle: {
+            name: 'Matching Principle',
+            description: 'Expenses should be recorded in the SAME PERIOD as the revenues they helped generate. This connects costs to the benefits they produce.',
+            example: 'If you pay $12,000 for a year of insurance in January, you expense $1,000/month - matching the cost to each months protection.',
+            whyItMatters: 'Ensures profit calculations are meaningful by matching what you earned with what it cost to earn it.',
+            icon: '⚖️'
+         },
+         historical_cost: {
+            name: 'Historical Cost',
+            description: 'Assets are recorded at their ORIGINAL purchase price, not current market value. This provides objectivity and verifiability.',
+            example: 'Land bought for $100,000 in 1990 is still recorded at $100,000, even if its now worth $500,000.',
+            whyItMatters: 'Market values are subjective and fluctuate. Historical cost provides a reliable, verifiable number.',
+            icon: '🏷️'
+         },
+         full_disclosure: {
+            name: 'Full Disclosure',
+            description: 'Financial statements must include ALL information that would affect a users understanding. Material information cannot be hidden.',
+            example: 'A pending lawsuit that could cost millions must be disclosed in the notes, even if not yet resolved.',
+            whyItMatters: 'Investors and creditors need complete information to make decisions. Hidden risks can cause massive losses.',
+            icon: '📋'
+         },
+         consistency: {
+            name: 'Consistency',
+            description: 'Companies must use the SAME accounting methods from period to period. Changes require disclosure and justification.',
+            example: 'If you use FIFO for inventory this year, you cant switch to LIFO next year just because it looks better.',
+            whyItMatters: 'Allows meaningful comparison of financial statements over time. Prevents manipulation by switching methods.',
+            icon: '🔄'
+         },
+         conservatism: {
+            name: 'Conservatism',
+            description: 'When uncertain, choose the option that UNDERSTATES assets/income or OVERSTATES liabilities/expenses. Be cautious, not optimistic.',
+            example: 'If inventory might be worth $100K or $80K, record it at $80K.',
+            whyItMatters: 'Protects users from overly optimistic financial statements.',
+            icon: '🛡️'
+         },
+         materiality: {
+            name: 'Materiality',
+            description: 'Only information that would influence decisions needs strict treatment. Immaterial amounts can be simplified.',
+            example: 'A $50 stapler can be expensed immediately rather than depreciated over 5 years.',
+            whyItMatters: 'Allows practical application of rules. Not everything needs to be tracked to the penny.',
+            icon: '📊'
+         },
+         going_concern: {
+            name: 'Going Concern',
+            description: 'Financial statements assume the company will continue operating indefinitely, not liquidate soon.',
+            example: 'Assets are valued at what theyll generate over time, not fire sale prices.',
+            whyItMatters: 'If a company is about to fail, all valuations change dramatically.',
+            icon: '🏃'
+         }
+      };
+
+      // ============================================================
+      // SCENARIOS - REAL-WORLD GAAP COMPLIANCE DECISIONS
+      // ============================================================
+      const scenarios = [
+         {
+            id: 1, title: 'The Subscription Dilemma',
+            context: 'TechCorp sold a 2-year software subscription for $24,000 upfront in January. Their accountant recorded the full $24,000 as revenue in Year 1.',
+            question: 'Is this GAAP compliant?',
+            correctAnswer: 'violation' as const, principle: 'revenue_recognition',
+            explanation: 'This VIOLATES Revenue Recognition. Revenue should be recognized when EARNED. TechCorp should recognize $12,000 per year as the service is delivered.',
+            realWorld: 'This exact issue caused major problems for software companies in the 1990s.',
+            impact: 'Recording all revenue upfront would overstate Year 1 profits by $12,000.'
+         },
+         {
+            id: 2, title: 'The Insurance Expense',
+            context: 'A company paid $36,000 on January 1st for a 3-year insurance policy. They recorded the entire $36,000 as an expense in Year 1.',
+            question: 'Is this GAAP compliant?',
+            correctAnswer: 'violation' as const, principle: 'matching_principle',
+            explanation: 'This VIOLATES Matching. The insurance provides benefit over 3 years, so expense should be spread: $12,000 per year.',
+            realWorld: 'Prepaid expenses like insurance, rent must be allocated over their useful periods.',
+            impact: 'Expensing everything now would understate Year 1 profits by $24,000.'
+         },
+         {
+            id: 3, title: 'The Appreciated Land',
+            context: 'A company bought land for $500,000 in 2010. In 2024, an appraisal shows its worth $2,000,000. They updated the balance sheet to $2,000,000.',
+            question: 'Is this GAAP compliant?',
+            correctAnswer: 'violation' as const, principle: 'historical_cost',
+            explanation: 'This VIOLATES Historical Cost under US GAAP. Assets must remain at original purchase price. The land should stay at $500,000.',
+            realWorld: 'Note: IFRS allows revaluation. This is a key GAAP vs IFRS difference.',
+            impact: 'Recording appreciation would overstate assets by $1.5M.'
+         },
+         {
+            id: 4, title: 'The Hidden Lawsuit',
+            context: 'A company is being sued for $5 million. Lawyers say 60% chance theyll lose. They decided not to mention this in financial statements.',
+            question: 'Is this GAAP compliant?',
+            correctAnswer: 'violation' as const, principle: 'full_disclosure',
+            explanation: 'This VIOLATES Full Disclosure. A probable loss of this size is MATERIAL and must be disclosed, plus they should record a liability.',
+            realWorld: 'Hiding material litigation has led to massive securities fraud cases.',
+            impact: 'Investors might buy stock not knowing about a $5M potential liability.'
+         },
+         {
+            id: 5, title: 'The Method Switch',
+            context: 'A company used FIFO for inventory for 10 years. This year, they switched to LIFO without any disclosure because it reduces taxes.',
+            question: 'Is this GAAP compliant?',
+            correctAnswer: 'violation' as const, principle: 'consistency',
+            explanation: 'This VIOLATES Consistency. Changing methods requires justification, full disclosure, and restatement of prior periods.',
+            realWorld: 'Companies must disclose method changes in footnotes.',
+            impact: 'Silent method changes make financial statements incomparable.'
+         },
+         {
+            id: 6, title: 'The Optimistic Valuation',
+            context: 'Inventory cost $100,000. Market suggests it might sell for $80,000 or maybe $110,000. They recorded it at $110,000.',
+            question: 'Is this GAAP compliant?',
+            correctAnswer: 'violation' as const, principle: 'conservatism',
+            explanation: 'This VIOLATES Conservatism. When uncertain, use the LOWER value. Inventory should be at $80,000 or kept at cost.',
+            realWorld: 'Lower of Cost or Market rule requires writedowns when market drops below cost.',
+            impact: 'Overstating inventory overstates assets and net income.'
+         },
+         {
+            id: 7, title: 'The Proper Depreciation',
+            context: 'A company bought a delivery truck for $50,000 with 5-year useful life. Each year, they record $10,000 in depreciation expense.',
+            question: 'Is this GAAP compliant?',
+            correctAnswer: 'compliant' as const, principle: 'matching_principle',
+            explanation: 'This IS GAAP compliant! Straight-line depreciation ($50,000 ÷ 5 years) properly matches expense to revenue periods.',
+            realWorld: 'Several depreciation methods are acceptable if consistently applied.',
+            impact: 'Proper depreciation ensures each year bears its fair share of asset cost.'
+         },
+         {
+            id: 8, title: 'The Deferred Revenue',
+            context: 'A magazine publisher received $120 for 12-month subscription. They recorded it as Unearned Revenue, then recognize $10 each month.',
+            question: 'Is this GAAP compliant?',
+            correctAnswer: 'compliant' as const, principle: 'revenue_recognition',
+            explanation: 'This IS GAAP compliant! Revenue is recognized as EARNED (when magazines delivered), not when cash received.',
+            realWorld: 'Netflix, Spotify, all subscription companies use this exact treatment.',
+            impact: 'This provides accurate monthly revenue reflecting actual delivery.'
+         },
+         {
+            id: 9, title: 'The Contingent Liability',
+            context: 'A pending lawsuit has 40% chance of $2M loss. The company disclosed it in footnotes but did not record a liability.',
+            question: 'Is this GAAP compliant?',
+            correctAnswer: 'compliant' as const, principle: 'conservatism',
+            explanation: 'This IS GAAP compliant! For contingent liabilities: if PROBABLE (>50%), record it. At 40%, footnote disclosure is correct.',
+            realWorld: 'This is from ASC 450 - probability assessment is critical.',
+            impact: 'Proper treatment balances disclosure with avoiding premature liability recognition.'
+         },
+         {
+            id: 10, title: 'The Related Party Loan',
+            context: 'The CEO borrowed $500,000 from the company at 0% interest. This was not disclosed anywhere in financial statements.',
+            question: 'Is this GAAP compliant?',
+            correctAnswer: 'violation' as const, principle: 'full_disclosure',
+            explanation: 'This VIOLATES Full Disclosure. Related party transactions MUST be disclosed. A 0% loan to executive is especially material.',
+            realWorld: 'Hidden related party transactions were central to Enron and WorldCom frauds.',
+            impact: 'Shareholders deserve to know if company assets benefit executives personally.'
+         },
+         {
+            id: 11, title: 'The Going Concern Warning',
+            context: 'A company lost money for 3 years and may not survive. Auditors added a "going concern" warning and management disclosed the risks.',
+            question: 'Is this GAAP compliant?',
+            correctAnswer: 'compliant' as const, principle: 'going_concern',
+            explanation: 'This IS GAAP compliant! When substantial doubt exists about continuing operations, this MUST be disclosed.',
+            realWorld: 'Going concern warnings often precede bankruptcies - crucial warning signals.',
+            impact: 'This disclosure allows investors to make informed decisions about risk.'
+         },
+         {
+            id: 12, title: 'The Immaterial Error',
+            context: 'A $10 billion company found a $500 error from last year. Rather than restating, they adjusted it in current year.',
+            question: 'Is this GAAP compliant?',
+            correctAnswer: 'compliant' as const, principle: 'materiality',
+            explanation: 'This IS GAAP compliant! $500 in a $10B company (0.000005%) is clearly immaterial. Current correction is acceptable.',
+            realWorld: 'Materiality thresholds are typically 1-5% of relevant metrics.',
+            impact: 'Requiring restatement for immaterial amounts would waste resources.'
+         },
+         {
+            id: 13, title: 'The Premature Revenue',
+            context: 'A construction company signed a $10M contract in December. Work begins March. They recorded full $10M as revenue in December.',
+            question: 'Is this GAAP compliant?',
+            correctAnswer: 'violation' as const, principle: 'revenue_recognition',
+            explanation: 'This VIOLATES Revenue Recognition. For long-term contracts, revenue is recognized as work performed. Signed contract alone = zero revenue.',
+            realWorld: 'Construction firms must use percentage-of-completion or completed-contract methods.',
+            impact: 'This would massively overstate current year revenue.'
+         },
+         {
+            id: 14, title: 'The Wage Accrual',
+            context: 'Employees earned $50,000 in wages last week of December, paid January 5th. Company recorded Wages Payable and Expense in December.',
+            question: 'Is this GAAP compliant?',
+            correctAnswer: 'compliant' as const, principle: 'matching_principle',
+            explanation: 'This IS GAAP compliant! Matching requires recording expenses when incurred. Work was in December, so expense belongs there.',
+            realWorld: 'Year-end accruals for wages, utilities, interest are standard practice.',
+            impact: 'Without this accrual, December expenses would be understated.'
+         },
+         {
+            id: 15, title: 'The Revalued Building',
+            context: 'A US GAAP company had an appraiser value their building at $5M above book value. They increased it on balance sheet with "Revaluation Surplus."',
+            question: 'Is this GAAP compliant?',
+            correctAnswer: 'violation' as const, principle: 'historical_cost',
+            explanation: 'This VIOLATES US GAAP Historical Cost. Upward revaluation is NOT permitted under US GAAP (though allowed under IFRS).',
+            realWorld: 'This is a major GAAP vs IFRS difference.',
+            impact: 'Revaluation would overstate assets and equity based on subjective appraisals.'
+         }
+      ];
+
+      const getCurrentScenario = () => scenarios[currentScenario];
+
+      const checkAnswer = () => {
+         const scenario = getCurrentScenario();
+         if (!selectedAnswer) return;
+         const isCorrect = selectedAnswer === scenario.correctAnswer;
+         setShowResult(true);
+         setTotalAnswered(prev => prev + 1);
+         if (isCorrect) {
+            setCorrectAnswers(prev => prev + 1);
+            setScore(prev => prev + 100 + (streak * 20));
+            setStreak(prev => prev + 1);
+            if (!principlesMastered.includes(scenario.principle)) {
+               setPrinciplesMastered(prev => [...prev, scenario.principle]);
+            }
+            setPrinciplesStruggled(prev => prev.filter(p => p !== scenario.principle));
+            setGameLog(prev => [...prev, `[CORRECT] ${scenario.title} - ${scenario.principle}`]);
+         } else {
+            setStreak(0);
+            if (!principlesStruggled.includes(scenario.principle)) {
+               setPrinciplesStruggled(prev => [...prev, scenario.principle]);
+            }
+            setGameLog(prev => [...prev, `[INCORRECT] ${scenario.title} - User: ${selectedAnswer}, Correct: ${scenario.correctAnswer}`]);
+         }
+      };
+
+      const nextScenario = () => {
+         setShowResult(false);
+         setSelectedAnswer(null);
+         if (currentScenario < scenarios.length - 1) {
+            setCurrentScenario(prev => prev + 1);
+         } else {
+            setGameLog(prev => [...prev, `[SESSION COMPLETE] Score: ${score}, Accuracy: ${Math.round((correctAnswers / totalAnswered) * 100)}%`]);
+            setPhase('result');
+         }
+      };
+
+      const startGame = () => { setPhase('tutorial'); setTutorialStep(0); setGameLog(['[SESSION START] GAAP Compliance Checker']); };
+      const startPlaying = () => { setPhase('play'); setCoachMessage('Read each scenario carefully. Decide if GAAP compliant or violation.'); };
+
+      const tutorialSteps = [
+         { title: 'What is GAAP?', content: 'GAAP (Generally Accepted Accounting Principles) is the set of rules ALL US companies must follow when preparing financial statements.', visual: 'intro' },
+         { title: 'Why GAAP Matters', content: 'Without GAAP, companies could report finances however they wanted. GAAP ensures consistency, reliability, and comparability.', visual: 'why' },
+         { title: 'Core Principles', content: 'Key principles: Revenue Recognition, Matching, Historical Cost, Full Disclosure, Consistency, Conservatism.', visual: 'principles' },
+         { title: 'How to Play', content: 'Review real-world scenarios. Decide if each is GAAP COMPLIANT or VIOLATION. Use the principle reference anytime!', visual: 'play' }
+      ];
+
+      // INTRO PHASE
+      if (phase === 'intro') {
+         return (
+            <div className="w-full h-full flex flex-col bg-gradient-to-br from-slate-900 via-zinc-900 to-neutral-900 text-white overflow-hidden">
+               <div className="flex-1 p-6 overflow-y-auto">
+                  <div className="text-center mb-6">
+                     <div className="text-5xl mb-3">📋</div>
+                     <h1 className="text-2xl font-black mb-2">GAAP COMPLIANCE CHECKER</h1>
+                     <p className="text-xl font-bold text-amber-400">Master the Rules of Financial Reporting</p>
+                  </div>
+                  <div className="bg-black/30 rounded-2xl p-5 mb-6 border border-amber-500/30">
+                     <p className="text-lg text-center leading-relaxed">
+                        <span className="text-amber-400 font-bold">GAAP</span> ensures all companies report finances
+                        <span className="text-green-400 font-bold"> the same way</span> — making it possible to compare Apple to Microsoft.
+                     </p>
+                  </div>
+                  <div className="bg-gradient-to-r from-amber-800/30 to-orange-800/30 rounded-xl p-4 mb-6">
+                     <h2 className="font-bold text-amber-300 mb-2">🎯 WHY THIS MATTERS</h2>
+                     <p className="text-slate-200">Without GAAP, companies could manipulate their finances. GAAP creates a "common language" that prevents manipulation.</p>
+                  </div>
+                  <div className="bg-black/20 rounded-xl p-4 mb-6 border border-slate-500/30">
+                     <h2 className="font-bold text-slate-300 mb-3">📚 KEY PRINCIPLES</h2>
+                     <div className="grid grid-cols-2 gap-2">
+                        {Object.entries(gaapPrinciples).slice(0, 6).map(([key, p]) => (
+                           <div key={key} className="flex items-center gap-2 text-sm bg-black/30 rounded-lg p-2">
+                              <span>{p.icon}</span><span className="text-slate-300">{p.name}</span>
+                           </div>
+                        ))}
+                     </div>
+                  </div>
+               </div>
+               <div className="p-4 bg-black/30 border-t border-amber-500/30">
+                  <button onClick={startGame} className="w-full py-4 bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500 rounded-xl font-bold text-lg transition-all">
+                     ▶️ START LEARNING
+                  </button>
+               </div>
+            </div>
+         );
+      }
+
+      // TUTORIAL PHASE
+      if (phase === 'tutorial') {
+         const step = tutorialSteps[tutorialStep];
+         return (
+            <div className="w-full h-full flex flex-col bg-gradient-to-br from-slate-900 via-zinc-900 to-neutral-900 text-white overflow-hidden">
+               <div className="p-3 bg-black/30 border-b border-amber-500/30">
+                  <div className="flex items-center justify-between mb-2">
+                     <span className="text-sm text-amber-300">Understanding GAAP</span>
+                     <span className="text-sm text-slate-400">{tutorialStep + 1} of {tutorialSteps.length}</span>
+                  </div>
+                  <div className="h-2 bg-black/30 rounded-full overflow-hidden">
+                     <div className="h-full bg-gradient-to-r from-amber-500 to-orange-500 transition-all" style={{ width: `${((tutorialStep + 1) / tutorialSteps.length) * 100}%` }} />
+                  </div>
+               </div>
+               <div className="flex-1 p-6 overflow-y-auto">
+                  <h2 className="text-xl font-bold text-amber-300 mb-4 text-center">{step.title}</h2>
+                  <div className="bg-black/30 rounded-2xl p-6 mb-6 border border-amber-500/30">
+                     {step.visual === 'intro' && <div className="text-6xl text-center mb-4">📋 📊 🏛️</div>}
+                     {step.visual === 'why' && <div className="flex justify-center gap-4 mb-4"><div className="p-4 bg-blue-900/30 rounded-lg text-center"><div className="text-3xl">🍎</div><div className="text-sm text-blue-300">Apple</div></div><div className="text-3xl flex items-center">⚖️</div><div className="p-4 bg-green-900/30 rounded-lg text-center"><div className="text-3xl">🪟</div><div className="text-sm text-green-300">Microsoft</div></div></div>}
+                     {step.visual === 'principles' && <div className="grid grid-cols-2 gap-3 mb-4">{['📈 Revenue', '⚖️ Matching', '🏷️ Cost', '📋 Disclosure'].map((p, i) => <div key={i} className="bg-amber-900/30 rounded-lg p-3 text-center text-sm text-amber-300">{p}</div>)}</div>}
+                     {step.visual === 'play' && <div className="flex justify-center gap-4 mb-4"><div className="px-6 py-3 bg-green-600/50 rounded-lg font-bold">✓ COMPLIANT</div><div className="px-6 py-3 bg-red-600/50 rounded-lg font-bold">✗ VIOLATION</div></div>}
+                     <p className="text-center text-slate-200">{step.content}</p>
+                  </div>
+               </div>
+               <div className="p-4 bg-black/30 border-t border-amber-500/30 flex gap-3">
+                  {tutorialStep > 0 && <button onClick={() => setTutorialStep(prev => prev - 1)} className="px-6 py-3 bg-white/10 hover:bg-white/20 rounded-xl font-bold">← Back</button>}
+                  <button onClick={() => tutorialStep < tutorialSteps.length - 1 ? setTutorialStep(prev => prev + 1) : startPlaying()} className="flex-1 py-3 bg-gradient-to-r from-amber-600 to-orange-600 rounded-xl font-bold">
+                     {tutorialStep < tutorialSteps.length - 1 ? 'Next →' : 'Start Checking! 🔍'}
+                  </button>
+               </div>
+            </div>
+         );
+      }
+
+      // PLAY PHASE
+      if (phase === 'play') {
+         const scenario = getCurrentScenario();
+         return (
+            <div className="w-full h-full flex flex-col bg-gradient-to-br from-slate-900 via-zinc-900 to-neutral-900 text-white overflow-hidden">
+               {/* Info Modal */}
+               {showInfo && infoTopic && gaapPrinciples[infoTopic] && (
+                  <div className="absolute inset-0 bg-black/80 flex items-center justify-center p-4 z-50" onClick={() => { setShowInfo(false); setInfoTopic(null); }}>
+                     <div className="bg-slate-800 rounded-2xl p-5 max-w-md" onClick={e => e.stopPropagation()}>
+                        <div className="flex items-center gap-3 mb-3">
+                           <span className="text-3xl">{gaapPrinciples[infoTopic].icon}</span>
+                           <h3 className="text-lg font-bold text-amber-400">{gaapPrinciples[infoTopic].name}</h3>
+                        </div>
+                        <p className="text-slate-200 mb-4">{gaapPrinciples[infoTopic].description}</p>
+                        <div className="bg-black/30 rounded-lg p-3 mb-3">
+                           <p className="text-xs text-amber-400 font-bold mb-1">EXAMPLE:</p>
+                           <p className="text-sm text-slate-300">{gaapPrinciples[infoTopic].example}</p>
+                        </div>
+                        <div className="bg-amber-900/30 rounded-lg p-3 mb-4 border border-amber-500/30">
+                           <p className="text-xs text-amber-400 font-bold mb-1">WHY IT MATTERS:</p>
+                           <p className="text-sm text-slate-300">{gaapPrinciples[infoTopic].whyItMatters}</p>
+                        </div>
+                        <button onClick={() => { setShowInfo(false); setInfoTopic(null); }} className="w-full py-2 bg-amber-600 hover:bg-amber-500 rounded-xl font-bold">Got it! 👍</button>
+                     </div>
+                  </div>
+               )}
+
+               {/* Principle Reference Panel */}
+               {showPrincipleReference && (
+                  <div className="absolute inset-0 bg-black/80 flex items-center justify-center p-4 z-50" onClick={() => setShowPrincipleReference(false)}>
+                     <div className="bg-slate-800 rounded-2xl p-5 max-w-lg max-h-[80vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+                        <h3 className="text-lg font-bold text-amber-400 mb-4">📚 GAAP Principles Reference</h3>
+                        <div className="space-y-3">
+                           {Object.entries(gaapPrinciples).map(([key, p]) => (
+                              <button key={key} onClick={() => { setInfoTopic(key); setShowInfo(true); setShowPrincipleReference(false); }} className="w-full text-left p-3 bg-black/30 hover:bg-amber-900/30 rounded-lg">
+                                 <div className="flex items-center gap-3">
+                                    <span className="text-2xl">{p.icon}</span>
+                                    <div><div className="font-bold text-amber-300">{p.name}</div><div className="text-xs text-slate-400 line-clamp-1">{p.description.substring(0, 50)}...</div></div>
+                                 </div>
+                              </button>
+                           ))}
+                        </div>
+                        <button onClick={() => setShowPrincipleReference(false)} className="mt-4 w-full py-2 bg-white/10 hover:bg-white/20 rounded-xl font-bold">Close</button>
+                     </div>
+                  </div>
+               )}
+
+               {/* Result Modal */}
+               {showResult && (
+                  <div className="absolute inset-0 bg-black/80 flex items-center justify-center p-4 z-50">
+                     <div className="bg-slate-800 rounded-2xl p-5 max-w-md w-full max-h-[90vh] overflow-y-auto">
+                        <div className="text-center mb-4">
+                           <span className="text-5xl">{selectedAnswer === scenario.correctAnswer ? '✅' : '❌'}</span>
+                           <h3 className={`text-xl font-bold mt-2 ${selectedAnswer === scenario.correctAnswer ? 'text-green-400' : 'text-red-400'}`}>
+                              {selectedAnswer === scenario.correctAnswer ? 'Correct!' : 'Not Quite'}
+                           </h3>
+                           {selectedAnswer === scenario.correctAnswer && streak > 1 && <p className="text-amber-400 text-sm">🔥 {streak} streak!</p>}
+                        </div>
+                        <div className="flex justify-center mb-4">
+                           <span className={`px-4 py-2 rounded-full font-bold ${scenario.correctAnswer === 'compliant' ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'}`}>
+                              {scenario.correctAnswer === 'compliant' ? '✓ GAAP COMPLIANT' : '✗ GAAP VIOLATION'}
+                           </span>
+                        </div>
+                        <div className="bg-amber-900/30 rounded-lg p-3 mb-4 border border-amber-500/30">
+                           <div className="flex items-center gap-2 mb-2">
+                              <span className="text-xl">{gaapPrinciples[scenario.principle].icon}</span>
+                              <span className="font-bold text-amber-400">{gaapPrinciples[scenario.principle].name}</span>
+                              <button onClick={() => { setInfoTopic(scenario.principle); setShowInfo(true); }} className="ml-auto text-xs text-amber-400">ℹ️</button>
+                           </div>
+                        </div>
+                        <div className="bg-slate-700/50 rounded-lg p-4 mb-4 border border-slate-500/30">
+                           <p className="text-slate-200">{scenario.explanation}</p>
+                        </div>
+                        <div className="bg-black/30 rounded-lg p-3 mb-4">
+                           <p className="text-xs text-blue-400 font-bold mb-1">🌍 REAL-WORLD:</p>
+                           <p className="text-sm text-slate-300">{scenario.realWorld}</p>
+                        </div>
+                        <div className="bg-purple-900/30 rounded-lg p-3 mb-4 border border-purple-500/30">
+                           <p className="text-xs text-purple-400 font-bold mb-1">📊 IMPACT:</p>
+                           <p className="text-sm text-slate-300">{scenario.impact}</p>
+                        </div>
+                        <button onClick={nextScenario} className="w-full py-3 bg-amber-600 hover:bg-amber-500 rounded-xl font-bold">
+                           {currentScenario < scenarios.length - 1 ? 'Next Scenario →' : 'See Results 📊'}
+                        </button>
+                     </div>
+                  </div>
+               )}
+
+               {/* Header */}
+               <div className="p-3 bg-black/30 border-b border-amber-500/30">
+                  <div className="flex justify-between items-center mb-2">
+                     <span className="font-bold text-amber-300">GAAP Compliance Check</span>
+                     <div className="flex items-center gap-3">
+                        <span className="text-xs bg-amber-600/50 px-2 py-1 rounded-full">Score: {score}</span>
+                        {streak > 0 && <span className="text-xs bg-orange-600/50 px-2 py-1 rounded-full">🔥 {streak}</span>}
+                     </div>
+                  </div>
+                  <div className="flex gap-1">
+                     {scenarios.map((_, idx) => (
+                        <div key={idx} className={`flex-1 h-1 rounded-full ${idx < currentScenario ? 'bg-green-500' : idx === currentScenario ? 'bg-amber-500' : 'bg-slate-600'}`} />
+                     ))}
+                  </div>
+                  <div className="text-xs text-slate-400 mt-1 text-center">Scenario {currentScenario + 1} of {scenarios.length}</div>
+               </div>
+
+               {/* Main Content */}
+               <div className="flex-1 p-4 overflow-y-auto">
+                  <div className="bg-black/30 rounded-xl p-4 mb-4 border border-slate-500/30">
+                     <div className="flex items-center justify-between mb-3">
+                        <h3 className="font-bold text-lg text-white">{scenario.title}</h3>
+                        <button onClick={() => setShowPrincipleReference(true)} className="text-xs text-amber-400 hover:text-amber-300 underline">📚 Reference</button>
+                     </div>
+                     <div className="bg-slate-800/50 rounded-lg p-4 mb-4">
+                        <p className="text-slate-200 leading-relaxed">{scenario.context}</p>
+                     </div>
+                     <div className="bg-amber-900/20 rounded-lg p-3 border border-amber-500/30">
+                        <p className="text-amber-300 font-medium text-center">{scenario.question}</p>
+                     </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3 mb-4">
+                     <button onClick={() => setSelectedAnswer('compliant')} className={`p-4 rounded-xl font-bold transition-all border-2 ${selectedAnswer === 'compliant' ? 'bg-green-600 border-green-400 scale-105' : 'bg-green-900/30 border-green-500/30 hover:bg-green-900/50'}`}>
+                        <div className="text-2xl mb-1">✓</div>
+                        <div className="text-green-300">COMPLIANT</div>
+                        <div className="text-xs text-green-400/70">Follows GAAP</div>
+                     </button>
+                     <button onClick={() => setSelectedAnswer('violation')} className={`p-4 rounded-xl font-bold transition-all border-2 ${selectedAnswer === 'violation' ? 'bg-red-600 border-red-400 scale-105' : 'bg-red-900/30 border-red-500/30 hover:bg-red-900/50'}`}>
+                        <div className="text-2xl mb-1">✗</div>
+                        <div className="text-red-300">VIOLATION</div>
+                        <div className="text-xs text-red-400/70">Breaks GAAP</div>
+                     </button>
+                  </div>
+
+                  <div className="bg-black/20 rounded-xl p-3">
+                     <p className="text-xs text-slate-400 font-bold mb-2">QUICK REFERENCE:</p>
+                     <div className="flex flex-wrap gap-2">
+                        {Object.entries(gaapPrinciples).slice(0, 6).map(([key, p]) => (
+                           <button key={key} onClick={() => { setInfoTopic(key); setShowInfo(true); }} className="px-2 py-1 bg-slate-700/50 hover:bg-amber-900/30 rounded text-xs text-slate-300 flex items-center gap-1">
+                              <span>{p.icon}</span><span>{p.name}</span>
+                           </button>
+                        ))}
+                     </div>
+                  </div>
+               </div>
+
+               <div className="p-3 bg-black/30 border-t border-amber-500/30 flex gap-2">
+                  <button onClick={() => setShowPrincipleReference(true)} className="px-4 py-2 bg-white/10 hover:bg-white/20 rounded-lg text-sm font-medium">📚 Principles</button>
+                  <button onClick={checkAnswer} disabled={!selectedAnswer} className="flex-1 py-2 bg-amber-600 hover:bg-amber-500 disabled:bg-slate-600 disabled:opacity-50 rounded-lg font-bold">Submit Answer ✓</button>
+               </div>
+            </div>
+         );
+      }
+
+      // RESULT PHASE
+      if (phase === 'result') {
+         const accuracy = totalAnswered > 0 ? Math.round((correctAnswers / totalAnswered) * 100) : 0;
+         return (
+            <div className="w-full h-full flex flex-col bg-gradient-to-br from-slate-900 via-zinc-900 to-neutral-900 text-white overflow-hidden">
+               <div className="flex-1 p-6 overflow-y-auto">
+                  <div className="text-center mb-6">
+                     <div className="text-6xl mb-3">🎓</div>
+                     <h1 className="text-2xl font-black mb-2">SESSION COMPLETE!</h1>
+                     <p className="text-amber-300">GAAP Compliance Checker Complete</p>
+                  </div>
+                  <div className="bg-black/30 rounded-xl p-4 mb-6">
+                     <div className="grid grid-cols-3 gap-3 text-center">
+                        <div className="bg-amber-900/50 rounded-lg p-3"><p className="text-2xl font-bold text-amber-400">{score}</p><p className="text-xs text-slate-300">SCORE</p></div>
+                        <div className="bg-green-900/50 rounded-lg p-3"><p className="text-2xl font-bold text-green-400">{accuracy}%</p><p className="text-xs text-slate-300">ACCURACY</p></div>
+                        <div className="bg-purple-900/50 rounded-lg p-3"><p className="text-2xl font-bold text-purple-400">{correctAnswers}/{totalAnswered}</p><p className="text-xs text-slate-300">CORRECT</p></div>
+                     </div>
+                  </div>
+                  <div className="bg-gradient-to-r from-amber-900/50 to-orange-900/50 rounded-xl p-5 mb-6 border border-amber-500/30">
+                     <h3 className="font-bold text-amber-300 mb-3">💡 KEY INSIGHT</h3>
+                     <p className="text-lg text-white mb-4">GAAP exists to <span className="text-amber-400 font-bold">prevent manipulation</span> and <span className="text-green-400 font-bold">enable comparison</span>.</p>
+                     <div className="space-y-2 text-sm text-slate-200">
+                        <p>▸ Revenue Recognition: Record when EARNED</p>
+                        <p>▸ Matching: Connect expenses to revenues</p>
+                        <p>▸ Conservatism: When uncertain, be cautious</p>
+                     </div>
+                  </div>
+                  {principlesMastered.length > 0 && (
+                     <div className="bg-black/30 rounded-xl p-4 mb-6">
+                        <h3 className="font-bold text-green-300 mb-3">✅ Principles Mastered</h3>
+                        <div className="flex flex-wrap gap-2">
+                           {principlesMastered.map((p, i) => <span key={i} className="px-3 py-1 bg-green-600/30 rounded-full text-sm text-green-300">{gaapPrinciples[p]?.icon} {gaapPrinciples[p]?.name}</span>)}
+                        </div>
+                     </div>
+                  )}
+                  {principlesStruggled.length > 0 && (
+                     <div className="bg-black/30 rounded-xl p-4 mb-6">
+                        <h3 className="font-bold text-amber-300 mb-3">📚 Review These</h3>
+                        <div className="flex flex-wrap gap-2">
+                           {principlesStruggled.map((p, i) => <button key={i} onClick={() => { setInfoTopic(p); setShowInfo(true); }} className="px-3 py-1 bg-amber-600/30 hover:bg-amber-600/50 rounded-full text-sm text-amber-300">{gaapPrinciples[p]?.icon} {gaapPrinciples[p]?.name}</button>)}
+                        </div>
+                     </div>
+                  )}
+                  <div className="bg-indigo-900/30 rounded-xl p-4 border border-indigo-500/30">
+                     <h3 className="font-bold text-indigo-300 mb-2">🤖 Session Synced with AI Coach</h3>
+                     <p className="text-sm text-slate-300">Ask your AI coach to review specific principles or test you on advanced cases.</p>
+                  </div>
+               </div>
+
+               {showInfo && infoTopic && gaapPrinciples[infoTopic] && (
+                  <div className="absolute inset-0 bg-black/80 flex items-center justify-center p-4 z-50" onClick={() => { setShowInfo(false); setInfoTopic(null); }}>
+                     <div className="bg-slate-800 rounded-2xl p-5 max-w-md" onClick={e => e.stopPropagation()}>
+                        <div className="flex items-center gap-3 mb-3">
+                           <span className="text-3xl">{gaapPrinciples[infoTopic].icon}</span>
+                           <h3 className="text-lg font-bold text-amber-400">{gaapPrinciples[infoTopic].name}</h3>
+                        </div>
+                        <p className="text-slate-200 mb-4">{gaapPrinciples[infoTopic].description}</p>
+                        <div className="bg-black/30 rounded-lg p-3 mb-3">
+                           <p className="text-xs text-amber-400 font-bold mb-1">EXAMPLE:</p>
+                           <p className="text-sm text-slate-300">{gaapPrinciples[infoTopic].example}</p>
+                        </div>
+                        <button onClick={() => { setShowInfo(false); setInfoTopic(null); }} className="w-full py-2 bg-amber-600 hover:bg-amber-500 rounded-xl font-bold">Got it! 👍</button>
+                     </div>
+                  </div>
+               )}
+
+               <div className="p-4 bg-black/30 border-t border-amber-500/30 flex gap-3">
+                  <button onClick={() => { setPhase('intro'); setCurrentScenario(0); setScore(0); setCorrectAnswers(0); setTotalAnswered(0); setStreak(0); setPrinciplesMastered([]); setPrinciplesStruggled([]); setGameLog([]); setSelectedAnswer(null); }} className="flex-1 py-3 bg-white/10 hover:bg-white/20 rounded-xl font-bold">🔄 Play Again</button>
+                  <button onClick={() => setPhase('intro')} className="flex-1 py-3 bg-amber-600 hover:bg-amber-500 rounded-xl font-bold">➡️ Continue</button>
+               </div>
+            </div>
+         );
+      }
+
+      return null;
+   };
+
    const FinancialStatementsRenderer = () => {
       const [phase, setPhase] = useState<'intro' | 'play' | 'result'>('intro');
       const [showInfo, setShowInfo] = useState(false);
@@ -39651,6 +40247,8 @@ const GeneratedDiagram: React.FC<DiagramProps> = ({ type, data, title }) => {
             return <AccountingEquationRenderer />;
          case 'double_entry_bookkeeping':
             return <DoubleEntryBookkeepingRenderer />;
+         case 'gaap_compliance':
+            return <GAAPComplianceRenderer />;
          case 'pricing_strategy':
             return <PricingStrategyRenderer />;
          case 'budgeting':
