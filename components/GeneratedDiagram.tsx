@@ -45886,6 +45886,428 @@ const GeneratedDiagram: React.FC<DiagramProps> = ({ type, data, title }) => {
       return null;
    };
 
+   // Topic 27: Break-Even Analysis - Finding the Profit Point
+   const BreakEvenAnalysisRenderer = () => {
+      const [phase, setPhase] = useState<'intro' | 'tutorial' | 'play' | 'result'>('intro');
+      const [tutorialStep, setTutorialStep] = useState(0);
+      const [score, setScore] = useState(0);
+      const [scenarioIndex, setScenarioIndex] = useState(0);
+      const [gameLog, setGameLog] = useState<string[]>([]);
+      const [quizIndex, setQuizIndex] = useState(0);
+      const [quizAnswered, setQuizAnswered] = useState(false);
+      const [showInfo, setShowInfo] = useState(false);
+      const [infoContent, setInfoContent] = useState({ title: '', content: '' });
+      const [userAnswer, setUserAnswer] = useState('');
+      const [answered, setAnswered] = useState(false);
+      const [price, setPrice] = useState(100);
+      const [variableCost, setVariableCost] = useState(60);
+      const [fixedCosts, setFixedCosts] = useState(40000);
+
+      const tutorialSteps = [
+         { title: 'Welcome to Break-Even Analysis!', content: 'Learn to calculate the exact point where your business covers all costs - no profit, no loss. Essential for pricing, planning, and risk assessment.' },
+         { title: 'The Break-Even Concept', content: 'Break-Even Point (BEP) is where Total Revenue = Total Costs. Below BEP = Loss. Above BEP = Profit. Every unit sold above BEP adds to profit!' },
+         { title: 'Contribution Margin', content: 'Contribution Margin = Price - Variable Cost per Unit. It\'s what each unit "contributes" toward covering fixed costs and then generating profit.' },
+         { title: 'The BEP Formula', content: 'Break-Even Units = Fixed Costs ÷ Contribution Margin. Example: $40,000 fixed ÷ ($100 price - $60 variable) = 1,000 units to break even.' },
+         { title: 'Break-Even in Dollars', content: 'BEP in $ = BEP Units × Price. Or use: Fixed Costs ÷ CM Ratio. CM Ratio = CM ÷ Price = $40 ÷ $100 = 40%. BEP$ = $40K ÷ 0.4 = $100K' },
+         { title: 'Margin of Safety', content: 'How much sales can drop before you lose money. Margin of Safety = Current Sales - Break-Even Sales. Higher is safer!' },
+         { title: 'Ready to Calculate!', content: 'You\'ll analyze real business scenarios, calculate break-even points, and explore what-if scenarios. Master this critical business tool!' }
+      ];
+
+      const scenarios = [
+         {
+            company: 'CoffeeCart Mobile',
+            description: 'Food truck selling premium coffee',
+            fixedCosts: 3000,
+            variableCost: 2,
+            price: 5,
+            currentSales: 1500,
+            question: 'How many cups must CoffeeCart sell monthly to break even?',
+            correctAnswer: 1000,
+            unit: 'cups'
+         },
+         {
+            company: 'TechGadget Pro',
+            description: 'Electronics manufacturer',
+            fixedCosts: 500000,
+            variableCost: 150,
+            price: 250,
+            currentSales: 6000,
+            question: 'How many units must TechGadget sell to break even?',
+            correctAnswer: 5000,
+            unit: 'units'
+         },
+         {
+            company: 'FitClass Studio',
+            description: 'Boutique fitness studio',
+            fixedCosts: 8000,
+            variableCost: 5,
+            price: 25,
+            currentSales: 500,
+            question: 'How many class passes must FitClass sell monthly?',
+            correctAnswer: 400,
+            unit: 'passes'
+         },
+         {
+            company: 'PrintShop Express',
+            description: 'Custom printing services',
+            fixedCosts: 12000,
+            variableCost: 8,
+            price: 20,
+            currentSales: 1200,
+            question: 'How many print jobs needed to break even?',
+            correctAnswer: 1000,
+            unit: 'jobs'
+         }
+      ];
+
+      const quizQuestions = [
+         { q: 'Contribution Margin equals:', options: ['Price + Variable Cost', 'Price - Variable Cost', 'Fixed Cost ÷ Price', 'Total Revenue - Fixed Cost'], correct: 1 },
+         { q: 'At the break-even point, profit equals:', options: ['Revenue', 'Fixed costs', 'Zero', 'Contribution margin'], correct: 2 },
+         { q: 'If fixed costs increase, break-even point:', options: ['Decreases', 'Increases', 'Stays same', 'Becomes negative'], correct: 1 },
+         { q: 'If selling price increases (costs unchanged), BEP:', options: ['Increases', 'Decreases', 'Stays same', 'Cannot determine'], correct: 1 },
+         { q: 'Margin of Safety measures:', options: ['Profit per unit', 'Buffer above break-even', 'Total fixed costs', 'Variable cost ratio'], correct: 1 },
+         { q: 'CM Ratio of 40% means for every $1 of sales:', options: ['$0.40 covers fixed costs/profit', '$0.60 covers fixed costs/profit', '$0.40 is variable cost', 'Break-even is at 40%'], correct: 0 }
+      ];
+
+      const openInfo = (title: string, content: string) => {
+         setInfoContent({ title, content });
+         setShowInfo(true);
+      };
+
+      const checkAnswer = () => {
+         const scenario = scenarios[scenarioIndex];
+         const userNum = parseInt(userAnswer);
+         const isCorrect = Math.abs(userNum - scenario.correctAnswer) <= scenario.correctAnswer * 0.05; // 5% tolerance
+
+         if (isCorrect) {
+            setScore(s => s + 20);
+            setGameLog(prev => [...prev, `Correct! ${scenario.company} BEP = ${scenario.correctAnswer} ${scenario.unit}`]);
+         } else {
+            setGameLog(prev => [...prev, `Incorrect. ${scenario.company} BEP = ${scenario.correctAnswer} ${scenario.unit}`]);
+         }
+         setAnswered(true);
+      };
+
+      const nextScenario = () => {
+         if (scenarioIndex < scenarios.length - 1) {
+            setScenarioIndex(scenarioIndex + 1);
+            setUserAnswer('');
+            setAnswered(false);
+         } else {
+            setPhase('result');
+         }
+      };
+
+      const calculateBEP = () => {
+         const cm = price - variableCost;
+         const bepUnits = cm > 0 ? Math.ceil(fixedCosts / cm) : 0;
+         const bepDollars = bepUnits * price;
+         const cmRatio = price > 0 ? (cm / price) * 100 : 0;
+         return { cm, bepUnits, bepDollars, cmRatio };
+      };
+
+      // Intro Phase
+      if (phase === 'intro') {
+         return (
+            <div className="p-6 bg-gradient-to-br from-indigo-50 to-purple-50 rounded-2xl max-w-2xl mx-auto">
+               <h2 className="text-2xl font-bold text-indigo-800 mb-4 flex items-center gap-2">
+                  📈 Break-Even Analysis
+                  <button onClick={() => openInfo('Why Break-Even Matters', 'Knowing your break-even helps you: Set minimum sales targets, Price products correctly, Evaluate new ventures, Understand business risk, Make go/no-go decisions.')} className="text-indigo-500 hover:text-indigo-700">ℹ️</button>
+               </h2>
+               <div className="bg-white/80 p-5 rounded-xl mb-6">
+                  <p className="text-gray-700 mb-4">Find the magic number where costs meet revenue!</p>
+                  <div className="bg-gradient-to-r from-red-100 via-yellow-100 to-green-100 p-4 rounded-lg mb-4">
+                     <div className="flex justify-between items-center text-sm">
+                        <div className="text-center">
+                           <div className="text-red-600 font-bold">LOSS</div>
+                           <div className="text-xs text-gray-500">Below BEP</div>
+                        </div>
+                        <div className="text-center border-2 border-yellow-500 px-4 py-2 rounded-lg bg-yellow-50">
+                           <div className="text-yellow-700 font-bold">BREAK-EVEN</div>
+                           <div className="text-xs text-gray-500">Revenue = Costs</div>
+                        </div>
+                        <div className="text-center">
+                           <div className="text-green-600 font-bold">PROFIT</div>
+                           <div className="text-xs text-gray-500">Above BEP</div>
+                        </div>
+                     </div>
+                  </div>
+                  <div className="text-sm text-gray-600">
+                     <strong>You'll learn:</strong> BEP formulas, Contribution margin, What-if analysis, Margin of safety
+                  </div>
+               </div>
+               <button onClick={() => setPhase('tutorial')} className="w-full py-3 bg-indigo-500 text-white rounded-xl font-semibold hover:bg-indigo-600 transition-all">Start Learning</button>
+               {showInfo && (
+                  <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" onClick={() => setShowInfo(false)}>
+                     <div className="bg-white p-6 rounded-xl max-w-md m-4" onClick={e => e.stopPropagation()}>
+                        <h3 className="font-bold text-lg mb-2">{infoContent.title}</h3>
+                        <p className="text-gray-600">{infoContent.content}</p>
+                        <button onClick={() => setShowInfo(false)} className="mt-4 px-4 py-2 bg-indigo-500 text-white rounded-lg">Got it!</button>
+                     </div>
+                  </div>
+               )}
+            </div>
+         );
+      }
+
+      // Tutorial Phase
+      if (phase === 'tutorial') {
+         const step = tutorialSteps[tutorialStep];
+         const calc = calculateBEP();
+
+         return (
+            <div className="p-6 bg-gradient-to-br from-indigo-50 to-purple-50 rounded-2xl max-w-2xl mx-auto">
+               <div className="flex justify-between items-center mb-4">
+                  <h2 className="text-xl font-bold text-indigo-800">Tutorial</h2>
+                  <span className="text-sm text-indigo-600">Step {tutorialStep + 1} of {tutorialSteps.length}</span>
+               </div>
+               <div className="bg-white/90 p-6 rounded-xl mb-6">
+                  <h3 className="font-bold text-lg text-gray-800 mb-3">{step.title}</h3>
+                  <p className="text-gray-600">{step.content}</p>
+
+                  {tutorialStep === 2 && (
+                     <div className="mt-4 p-4 bg-indigo-50 rounded-lg border border-indigo-200">
+                        <div className="font-mono text-center text-lg">
+                           <span className="text-indigo-700">CM</span> = <span className="text-green-600">$100</span> - <span className="text-red-600">$60</span> = <span className="text-indigo-800 font-bold">$40</span>
+                        </div>
+                        <div className="text-xs text-center text-gray-500 mt-2">Each unit contributes $40 toward fixed costs and profit</div>
+                     </div>
+                  )}
+
+                  {tutorialStep === 3 && (
+                     <div className="mt-4 p-4 bg-green-50 rounded-lg border border-green-200">
+                        <div className="font-mono text-center">
+                           <div className="text-lg">BEP Units = <span className="text-indigo-700">Fixed Costs</span> ÷ <span className="text-green-700">CM</span></div>
+                           <div className="text-xl mt-2 font-bold text-green-800">$40,000 ÷ $40 = 1,000 units</div>
+                        </div>
+                     </div>
+                  )}
+
+                  {tutorialStep === 4 && (
+                     <div className="mt-4 p-4 bg-purple-50 rounded-lg border border-purple-200">
+                        <div className="grid grid-cols-2 gap-4 text-center">
+                           <div>
+                              <div className="text-sm text-purple-600">BEP in Units</div>
+                              <div className="font-bold text-purple-800">1,000 units</div>
+                           </div>
+                           <div>
+                              <div className="text-sm text-purple-600">BEP in Dollars</div>
+                              <div className="font-bold text-purple-800">$100,000</div>
+                           </div>
+                        </div>
+                        <div className="text-xs text-center text-gray-500 mt-2">1,000 units × $100 = $100,000 revenue needed</div>
+                     </div>
+                  )}
+               </div>
+               <div className="w-full bg-gray-200 rounded-full h-2 mb-4">
+                  <div className="bg-indigo-500 h-2 rounded-full transition-all" style={{ width: `${((tutorialStep + 1) / tutorialSteps.length) * 100}%` }}></div>
+               </div>
+               <div className="flex gap-3">
+                  {tutorialStep > 0 && <button onClick={() => setTutorialStep(tutorialStep - 1)} className="flex-1 py-2 bg-gray-200 rounded-lg hover:bg-gray-300">Back</button>}
+                  <button onClick={() => tutorialStep < tutorialSteps.length - 1 ? setTutorialStep(tutorialStep + 1) : setPhase('play')} className="flex-1 py-2 bg-indigo-500 text-white rounded-lg hover:bg-indigo-600">
+                     {tutorialStep < tutorialSteps.length - 1 ? 'Next' : 'Start Calculating!'}
+                  </button>
+               </div>
+            </div>
+         );
+      }
+
+      // Play Phase
+      if (phase === 'play') {
+         const scenario = scenarios[scenarioIndex];
+         const cm = scenario.price - scenario.variableCost;
+         const marginOfSafety = scenario.currentSales - scenario.correctAnswer;
+         const mosPercent = (marginOfSafety / scenario.currentSales) * 100;
+
+         return (
+            <div className="p-6 bg-gradient-to-br from-indigo-50 to-purple-50 rounded-2xl max-w-2xl mx-auto">
+               <div className="flex justify-between items-center mb-4">
+                  <h2 className="text-xl font-bold text-indigo-800">{scenario.company}</h2>
+                  <div className="flex items-center gap-3">
+                     <span className="bg-indigo-100 px-3 py-1 rounded-full text-indigo-700 text-sm">Score: {score}</span>
+                     <span className="text-sm text-gray-500">Case {scenarioIndex + 1}/{scenarios.length}</span>
+                  </div>
+               </div>
+
+               <div className="bg-white/90 p-5 rounded-xl mb-4">
+                  <p className="text-gray-600 text-sm mb-4">{scenario.description}</p>
+
+                  {/* Cost Structure Display */}
+                  <div className="grid grid-cols-3 gap-3 mb-4">
+                     <div className="bg-blue-50 p-3 rounded-lg text-center">
+                        <div className="text-xs text-blue-600">Fixed Costs</div>
+                        <div className="font-bold text-blue-800">${scenario.fixedCosts.toLocaleString()}</div>
+                     </div>
+                     <div className="bg-red-50 p-3 rounded-lg text-center">
+                        <div className="text-xs text-red-600">Variable/Unit</div>
+                        <div className="font-bold text-red-800">${scenario.variableCost}</div>
+                     </div>
+                     <div className="bg-green-50 p-3 rounded-lg text-center">
+                        <div className="text-xs text-green-600">Price/Unit</div>
+                        <div className="font-bold text-green-800">${scenario.price}</div>
+                     </div>
+                  </div>
+
+                  {/* Contribution Margin */}
+                  <div className="bg-indigo-50 p-3 rounded-lg mb-4 text-center">
+                     <div className="text-sm text-indigo-600">Contribution Margin = ${scenario.price} - ${scenario.variableCost} = <strong className="text-indigo-800">${cm}</strong> per unit</div>
+                  </div>
+
+                  {/* Question */}
+                  <div className="mb-4">
+                     <p className="font-semibold text-gray-800 mb-2">{scenario.question}</p>
+                     <div className="flex gap-2">
+                        <input
+                           type="number"
+                           value={userAnswer}
+                           onChange={(e) => setUserAnswer(e.target.value)}
+                           placeholder="Enter break-even quantity"
+                           className="flex-1 p-3 border-2 border-indigo-200 rounded-lg focus:border-indigo-500 outline-none"
+                           disabled={answered}
+                        />
+                        {!answered && (
+                           <button onClick={checkAnswer} className="px-6 py-3 bg-indigo-500 text-white rounded-lg font-semibold hover:bg-indigo-600">
+                              Check
+                           </button>
+                        )}
+                     </div>
+                  </div>
+
+                  {/* Result Display */}
+                  {answered && (
+                     <div className={`p-4 rounded-xl ${Math.abs(parseInt(userAnswer) - scenario.correctAnswer) <= scenario.correctAnswer * 0.05 ? 'bg-green-50 border-2 border-green-300' : 'bg-red-50 border-2 border-red-300'}`}>
+                        <div className="font-bold mb-2">
+                           {Math.abs(parseInt(userAnswer) - scenario.correctAnswer) <= scenario.correctAnswer * 0.05 ? '✅ Correct!' : '❌ Not quite'}
+                        </div>
+                        <div className="text-sm text-gray-700 space-y-1">
+                           <div><strong>Break-Even:</strong> {scenario.correctAnswer.toLocaleString()} {scenario.unit}</div>
+                           <div><strong>Formula:</strong> ${scenario.fixedCosts.toLocaleString()} ÷ ${cm} = {scenario.correctAnswer.toLocaleString()}</div>
+                           <div><strong>Current Sales:</strong> {scenario.currentSales.toLocaleString()} {scenario.unit}</div>
+                           <div><strong>Margin of Safety:</strong> {marginOfSafety.toLocaleString()} {scenario.unit} ({mosPercent.toFixed(1)}%)</div>
+                        </div>
+                        <button onClick={nextScenario} className="mt-3 px-4 py-2 bg-indigo-500 text-white rounded-lg hover:bg-indigo-600">
+                           {scenarioIndex < scenarios.length - 1 ? 'Next Business →' : 'Complete Analysis'}
+                        </button>
+                     </div>
+                  )}
+               </div>
+
+               {/* Interactive What-If Calculator */}
+               <div className="bg-white/70 p-4 rounded-xl">
+                  <div className="text-sm font-semibold text-gray-700 mb-3">🔧 What-If Calculator</div>
+                  <div className="grid grid-cols-3 gap-3 text-sm mb-3">
+                     <div>
+                        <label className="text-xs text-gray-500">Price ($)</label>
+                        <input type="number" value={price} onChange={(e) => setPrice(Number(e.target.value))} className="w-full p-2 border rounded" />
+                     </div>
+                     <div>
+                        <label className="text-xs text-gray-500">Variable ($)</label>
+                        <input type="number" value={variableCost} onChange={(e) => setVariableCost(Number(e.target.value))} className="w-full p-2 border rounded" />
+                     </div>
+                     <div>
+                        <label className="text-xs text-gray-500">Fixed ($)</label>
+                        <input type="number" value={fixedCosts} onChange={(e) => setFixedCosts(Number(e.target.value))} className="w-full p-2 border rounded" />
+                     </div>
+                  </div>
+                  <div className="grid grid-cols-3 gap-2 text-center text-xs">
+                     <div className="bg-indigo-50 p-2 rounded">
+                        <div className="text-indigo-600">CM</div>
+                        <div className="font-bold text-indigo-800">${calculateBEP().cm}</div>
+                     </div>
+                     <div className="bg-green-50 p-2 rounded">
+                        <div className="text-green-600">BEP Units</div>
+                        <div className="font-bold text-green-800">{calculateBEP().bepUnits.toLocaleString()}</div>
+                     </div>
+                     <div className="bg-purple-50 p-2 rounded">
+                        <div className="text-purple-600">BEP $</div>
+                        <div className="font-bold text-purple-800">${calculateBEP().bepDollars.toLocaleString()}</div>
+                     </div>
+                  </div>
+               </div>
+
+               {showInfo && (
+                  <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" onClick={() => setShowInfo(false)}>
+                     <div className="bg-white p-6 rounded-xl max-w-md m-4" onClick={e => e.stopPropagation()}>
+                        <h3 className="font-bold text-lg mb-2">{infoContent.title}</h3>
+                        <p className="text-gray-600">{infoContent.content}</p>
+                        <button onClick={() => setShowInfo(false)} className="mt-4 px-4 py-2 bg-indigo-500 text-white rounded-lg">Got it!</button>
+                     </div>
+                  </div>
+               )}
+            </div>
+         );
+      }
+
+      // Result Phase
+      if (phase === 'result') {
+         const quiz = quizQuestions[quizIndex];
+         const maxScore = (scenarios.length * 20) + (quizQuestions.length * 10);
+         const percentage = Math.round((score / maxScore) * 100);
+
+         if (quizIndex < quizQuestions.length) {
+            return (
+               <div className="p-6 bg-gradient-to-br from-indigo-50 to-purple-50 rounded-2xl max-w-2xl mx-auto">
+                  <h2 className="text-xl font-bold text-indigo-800 mb-4">Knowledge Check</h2>
+                  <div className="bg-white/90 p-5 rounded-xl mb-4">
+                     <div className="text-sm text-gray-500 mb-2">Question {quizIndex + 1} of {quizQuestions.length}</div>
+                     <p className="font-semibold text-gray-800 mb-4">{quiz.q}</p>
+                     <div className="grid gap-2">
+                        {quiz.options.map((opt, i) => (
+                           <button
+                              key={i}
+                              onClick={() => {
+                                 if (!quizAnswered) {
+                                    if (i === quiz.correct) setScore(s => s + 10);
+                                    setQuizAnswered(true);
+                                    setGameLog(prev => [...prev, `Quiz ${quizIndex + 1}: ${i === quiz.correct ? 'Correct!' : 'Incorrect'}`]);
+                                 }
+                              }}
+                              disabled={quizAnswered}
+                              className={`p-3 rounded-lg text-left transition-all ${quizAnswered ? (i === quiz.correct ? 'bg-green-100 border-green-500' : 'bg-gray-100') : 'bg-gray-50 hover:bg-gray-100'} border-2 ${quizAnswered && i === quiz.correct ? 'border-green-500' : 'border-transparent'}`}
+                           >
+                              {opt}
+                           </button>
+                        ))}
+                     </div>
+                  </div>
+                  {quizAnswered && (
+                     <button onClick={() => { setQuizIndex(quizIndex + 1); setQuizAnswered(false); }} className="w-full py-3 bg-indigo-500 text-white rounded-xl font-semibold hover:bg-indigo-600">
+                        {quizIndex < quizQuestions.length - 1 ? 'Next Question' : 'See Results'}
+                     </button>
+                  )}
+               </div>
+            );
+         }
+
+         return (
+            <div className="p-6 bg-gradient-to-br from-indigo-50 to-purple-50 rounded-2xl max-w-2xl mx-auto">
+               <h2 className="text-2xl font-bold text-indigo-800 mb-4">🎉 Break-Even Mastery!</h2>
+               <div className="bg-white/90 p-6 rounded-xl mb-6">
+                  <div className="text-center mb-6">
+                     <div className="text-5xl font-bold text-indigo-600 mb-2">{percentage}%</div>
+                     <div className="text-gray-600">Final Score: {score} / {maxScore}</div>
+                     <div className="text-lg font-semibold mt-2">
+                        {percentage >= 90 ? '🏆 Break-Even Expert!' : percentage >= 70 ? '📊 Strong Analyst' : percentage >= 50 ? '📈 Good Progress' : '📚 Keep Practicing'}
+                     </div>
+                  </div>
+                  <div className="bg-indigo-50 p-4 rounded-lg">
+                     <h3 className="font-bold text-indigo-800 mb-2">Key Formulas:</h3>
+                     <ul className="text-sm text-gray-700 space-y-1 font-mono">
+                        <li>• CM = Price - Variable Cost</li>
+                        <li>• BEP Units = Fixed Costs ÷ CM</li>
+                        <li>• BEP $ = BEP Units × Price</li>
+                        <li>• MoS = Current Sales - BEP</li>
+                        <li>• CM Ratio = CM ÷ Price</li>
+                     </ul>
+                  </div>
+               </div>
+               <button onClick={() => { setPhase('intro'); setScore(0); setScenarioIndex(0); setUserAnswer(''); setAnswered(false); setQuizIndex(0); setQuizAnswered(false); }} className="w-full py-3 bg-indigo-500 text-white rounded-xl font-semibold hover:bg-indigo-600">Practice Again</button>
+            </div>
+         );
+      }
+      return null;
+   };
+
    const FinancialStatementsRenderer = () => {
       const [phase, setPhase] = useState<'intro' | 'play' | 'result'>('intro');
       const [showInfo, setShowInfo] = useState(false);
@@ -49739,6 +50161,8 @@ const GeneratedDiagram: React.FC<DiagramProps> = ({ type, data, title }) => {
             return <CapExOpExRenderer />;
          case 'fixed_variable_costs':
             return <FixedVariableCostsRenderer />;
+         case 'break_even_analysis':
+            return <BreakEvenAnalysisRenderer />;
          case 'pricing_strategy':
             return <PricingStrategyRenderer />;
          case 'budgeting':
