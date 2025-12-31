@@ -42651,6 +42651,458 @@ const GeneratedDiagram: React.FC<DiagramProps> = ({ type, data, title }) => {
       return null;
    };
 
+   const ProfitMarginRenderer = () => {
+      const [phase, setPhase] = useState<'intro' | 'tutorial' | 'play' | 'result'>('intro');
+      const [tutorialStep, setTutorialStep] = useState(0);
+      const [score, setScore] = useState(0);
+      const [level, setLevel] = useState(0);
+      const [gameLog, setGameLog] = useState<string[]>([]);
+      const [answers, setAnswers] = useState<{[key: string]: number}>({});
+      const [showResults, setShowResults] = useState(false);
+      const [quizIndex, setQuizIndex] = useState(0);
+      const [quizAnswered, setQuizAnswered] = useState(false);
+      const [showInfo, setShowInfo] = useState(false);
+      const [infoContent, setInfoContent] = useState({ title: '', content: '' });
+
+      const tutorials = [
+         { title: 'Understanding Profit Margins', content: 'Profit margins measure how much profit a company keeps from each dollar of revenue. They\'re essential for evaluating business efficiency and comparing companies.', icon: '📈' },
+         { title: 'Gross Profit Margin', content: 'Gross Profit Margin = (Revenue − COGS) ÷ Revenue × 100%. Measures profitability after direct production costs. Higher margin = better production efficiency.', icon: '🏭' },
+         { title: 'Operating Profit Margin', content: 'Operating Margin = Operating Income ÷ Revenue × 100%. After COGS AND operating expenses (rent, salaries, marketing). Shows core business profitability.', icon: '⚙️' },
+         { title: 'Net Profit Margin', content: 'Net Profit Margin = Net Income ÷ Revenue × 100%. The "bottom line" after ALL expenses including taxes and interest. Shows overall profitability.', icon: '💰' },
+         { title: 'What Affects Each Margin?', content: 'Gross: COGS, pricing, suppliers. Operating: Rent, labor, efficiency. Net: Interest rates, tax strategy, one-time items. Each tells a different story!', icon: '🔍' },
+         { title: 'Industry Comparisons', content: 'Software: High gross margins (80%+). Retail: Low gross margins (25-40%). Restaurants: Medium gross, low net (3-9%). Always compare within industries!', icon: '📊' },
+         { title: 'Your Challenge', content: 'Analyze real company scenarios, calculate all three margins, and identify what\'s driving profitability—or killing it!', icon: '🎮' }
+      ];
+
+      const scenarios = [
+         {
+            title: 'SaaS Startup',
+            description: 'CloudTech offers subscription software. Q1 financials:',
+            data: {
+               revenue: 500000,
+               cogs: 75000,
+               operatingExpenses: 325000,
+               interestExpense: 10000,
+               taxes: 18000
+            },
+            grossProfit: 425000,
+            operatingIncome: 100000,
+            netIncome: 72000,
+            grossMargin: 85,
+            operatingMargin: 20,
+            netMargin: 14.4,
+            insight: 'Excellent gross margin typical for SaaS! But high OpEx (sales, R&D) eats into operating profit. Net margin is healthy but watch the spending.'
+         },
+         {
+            title: 'Retail Chain',
+            description: 'ValueMart operates 50 discount stores. Annual results:',
+            data: {
+               revenue: 12000000,
+               cogs: 8400000,
+               operatingExpenses: 3000000,
+               interestExpense: 150000,
+               taxes: 90000
+            },
+            grossProfit: 3600000,
+            operatingIncome: 600000,
+            netIncome: 360000,
+            grossMargin: 30,
+            operatingMargin: 5,
+            netMargin: 3,
+            insight: 'Thin margins typical for discount retail. Volume is key—they need to sell a lot to make money. A 1% improvement in margins = $120K more profit!'
+         },
+         {
+            title: 'Restaurant Group',
+            description: 'FreshBites owns 5 fast-casual restaurants:',
+            data: {
+               revenue: 2500000,
+               cogs: 875000,
+               operatingExpenses: 1500000,
+               interestExpense: 25000,
+               taxes: 20000
+            },
+            grossProfit: 1625000,
+            operatingIncome: 125000,
+            netIncome: 80000,
+            grossMargin: 65,
+            operatingMargin: 5,
+            netMargin: 3.2,
+            insight: 'Great gross margin (food costs controlled), but high labor and rent (OpEx) crush operating margins. This is the restaurant industry challenge!'
+         },
+         {
+            title: 'Manufacturing Company',
+            description: 'PrecisionParts makes industrial components:',
+            data: {
+               revenue: 8000000,
+               cogs: 5200000,
+               operatingExpenses: 1600000,
+               interestExpense: 200000,
+               taxes: 200000
+            },
+            grossProfit: 2800000,
+            operatingIncome: 1200000,
+            netIncome: 800000,
+            grossMargin: 35,
+            operatingMargin: 15,
+            netMargin: 10,
+            insight: 'Solid manufacturing margins. High interest suggests debt financing for equipment. Strong conversion from gross to net—efficient operations!'
+         }
+      ];
+
+      const quizzes = [
+         {
+            question: 'A company has Revenue of $1M, COGS of $600K, and Net Income of $80K. What is the gross profit margin?',
+            options: ['8%', '40%', '60%', '80%'],
+            correct: 1,
+            explanation: 'Gross Profit = $1M - $600K = $400K. Gross Margin = $400K ÷ $1M = 40%.'
+         },
+         {
+            question: 'Which margin is most affected by changes in raw material costs?',
+            options: ['Gross profit margin', 'Operating profit margin', 'Net profit margin', 'All equally affected'],
+            correct: 0,
+            explanation: 'Raw materials are part of COGS, which directly affects gross profit. While it flows through to other margins, gross margin sees the first and largest impact.'
+         },
+         {
+            question: 'Company A has 80% gross margin but 5% net margin. Company B has 30% gross margin but 15% net margin. What can you conclude?',
+            options: ['Company A is more profitable', 'Company B is more efficient at converting revenue to profit', 'Company A has lower COGS', 'Companies cannot be compared'],
+            correct: 1,
+            explanation: 'Company B keeps more of each revenue dollar as final profit. Company A\'s high gross margin is eroded by high operating expenses or other costs.'
+         },
+         {
+            question: 'Which expense would impact operating margin but NOT gross margin?',
+            options: ['Raw materials', 'Factory wages', 'Sales team salaries', 'Shipping costs to customers'],
+            correct: 2,
+            explanation: 'Sales salaries are operating expenses (SG&A), not part of COGS. They reduce operating income but don\'t affect gross profit.'
+         },
+         {
+            question: 'A software company reports 85% gross margin. Why might this be expected?',
+            options: ['Software has no costs', 'Once developed, marginal cost of each sale is very low', 'Software companies don\'t report COGS', 'This is unusually high for any industry'],
+            correct: 1,
+            explanation: 'Software has high upfront development costs but very low marginal cost per user (just hosting/support), resulting in high gross margins.'
+         },
+         {
+            question: 'If gross margin stays flat but net margin drops significantly, what might have happened?',
+            options: ['COGS increased', 'Operating expenses or interest/taxes increased', 'Revenue decreased', 'Nothing—this is impossible'],
+            correct: 1,
+            explanation: 'Flat gross margin means COGS is stable relative to revenue. The margin compression must come from increased OpEx, interest, or taxes.'
+         }
+      ];
+
+      const current = scenarios[level];
+
+      const handleAnswer = (field: string, value: number) => {
+         setAnswers(prev => ({ ...prev, [field]: value }));
+      };
+
+      const checkAnswers = () => {
+         let pts = 0;
+         const tolerance = 1;
+
+         if (Math.abs((answers['gross'] || 0) - current.grossMargin) <= tolerance) pts += 2;
+         if (Math.abs((answers['operating'] || 0) - current.operatingMargin) <= tolerance) pts += 2;
+         if (Math.abs((answers['net'] || 0) - current.netMargin) <= tolerance) pts += 2;
+
+         setScore(prev => prev + pts);
+         setGameLog(prev => [...prev, `${current.title}: Scored ${pts}/6 points`]);
+         setShowResults(true);
+      };
+
+      const nextLevel = () => {
+         if (level < scenarios.length - 1) {
+            setLevel(prev => prev + 1);
+            setAnswers({});
+            setShowResults(false);
+         } else {
+            setPhase('result');
+         }
+      };
+
+      const handleQuizAnswer = (idx: number) => {
+         if (quizAnswered) return;
+         setQuizAnswered(true);
+         if (idx === quizzes[quizIndex].correct) {
+            setScore(prev => prev + 2);
+            setGameLog(prev => [...prev, `Quiz ${quizIndex + 1}: Correct!`]);
+         } else {
+            setGameLog(prev => [...prev, `Quiz ${quizIndex + 1}: Incorrect`]);
+         }
+      };
+
+      const nextQuiz = () => {
+         if (quizIndex < quizzes.length - 1) {
+            setQuizIndex(prev => prev + 1);
+            setQuizAnswered(false);
+         } else {
+            setPhase('result');
+         }
+      };
+
+      const showInfoModal = (title: string, content: string) => {
+         setInfoContent({ title, content });
+         setShowInfo(true);
+      };
+
+      if (phase === 'intro') {
+         return (
+            <div className="h-full flex flex-col items-center justify-center p-6 bg-gradient-to-br from-emerald-50 to-teal-100">
+               <div className="text-6xl mb-4">📈</div>
+               <h1 className="text-2xl font-bold text-emerald-800 mb-2">Profit Margin Analysis</h1>
+               <p className="text-emerald-600 text-center mb-6 max-w-md">Master gross, operating, and net profit margins to understand what really drives business profitability.</p>
+               <button onClick={() => setPhase('tutorial')} className="px-8 py-3 bg-emerald-500 text-white rounded-xl font-semibold hover:bg-emerald-600 transition-all">Start Learning</button>
+            </div>
+         );
+      }
+
+      if (phase === 'tutorial') {
+         const t = tutorials[tutorialStep];
+         return (
+            <div className="h-full flex flex-col p-6 bg-gradient-to-br from-emerald-50 to-teal-100">
+               <div className="flex justify-between items-center mb-4">
+                  <span className="text-sm text-emerald-600">Tutorial {tutorialStep + 1}/{tutorials.length}</span>
+                  <div className="w-32 h-2 bg-emerald-200 rounded-full">
+                     <div className="h-full bg-emerald-500 rounded-full transition-all" style={{ width: `${((tutorialStep + 1) / tutorials.length) * 100}%` }}></div>
+                  </div>
+               </div>
+               <div className="flex-1 flex flex-col items-center justify-center">
+                  <div className="text-5xl mb-4">{t.icon}</div>
+                  <h2 className="text-xl font-bold text-emerald-800 mb-3">{t.title}</h2>
+                  <p className="text-emerald-700 text-center max-w-md leading-relaxed">{t.content}</p>
+               </div>
+               <div className="flex justify-between">
+                  <button onClick={() => setTutorialStep(prev => Math.max(0, prev - 1))} disabled={tutorialStep === 0} className="px-4 py-2 bg-emerald-200 text-emerald-700 rounded-lg disabled:opacity-50">Back</button>
+                  {tutorialStep < tutorials.length - 1 ? (
+                     <button onClick={() => setTutorialStep(prev => prev + 1)} className="px-4 py-2 bg-emerald-500 text-white rounded-lg hover:bg-emerald-600">Next</button>
+                  ) : (
+                     <button onClick={() => setPhase('play')} className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600">Start Practice →</button>
+                  )}
+               </div>
+            </div>
+         );
+      }
+
+      if (phase === 'play') {
+         if (!showResults) {
+            return (
+               <div className="h-full flex flex-col p-4 bg-gradient-to-br from-emerald-50 to-teal-100 overflow-auto">
+                  <div className="flex justify-between items-center mb-3">
+                     <span className="text-sm font-medium text-emerald-700">Scenario {level + 1}/{scenarios.length}</span>
+                     <span className="text-sm font-semibold text-emerald-800">Score: {score}</span>
+                  </div>
+
+                  <div className="bg-white rounded-xl p-4 mb-3 shadow-sm">
+                     <h3 className="font-bold text-emerald-800 mb-1">{current.title}</h3>
+                     <p className="text-sm text-gray-600 mb-3">{current.description}</p>
+
+                     <div className="bg-emerald-50 rounded-lg p-3 text-xs space-y-1">
+                        <div className="flex justify-between font-semibold text-emerald-800 border-b pb-1">
+                           <span>Revenue</span>
+                           <span>${current.data.revenue.toLocaleString()}</span>
+                        </div>
+                        <div className="flex justify-between">
+                           <span>Cost of Goods Sold</span>
+                           <span className="text-red-600">−${current.data.cogs.toLocaleString()}</span>
+                        </div>
+                        <div className="flex justify-between font-medium text-emerald-700 border-b pb-1">
+                           <span>Gross Profit</span>
+                           <span>${current.grossProfit.toLocaleString()}</span>
+                        </div>
+                        <div className="flex justify-between">
+                           <span>Operating Expenses</span>
+                           <span className="text-red-600">−${current.data.operatingExpenses.toLocaleString()}</span>
+                        </div>
+                        <div className="flex justify-between font-medium text-emerald-700 border-b pb-1">
+                           <span>Operating Income</span>
+                           <span>${current.operatingIncome.toLocaleString()}</span>
+                        </div>
+                        <div className="flex justify-between">
+                           <span>Interest Expense</span>
+                           <span className="text-red-600">−${current.data.interestExpense.toLocaleString()}</span>
+                        </div>
+                        <div className="flex justify-between">
+                           <span>Taxes</span>
+                           <span className="text-red-600">−${current.data.taxes.toLocaleString()}</span>
+                        </div>
+                        <div className="flex justify-between font-semibold text-emerald-800 border-t pt-1">
+                           <span>Net Income</span>
+                           <span>${current.netIncome.toLocaleString()}</span>
+                        </div>
+                     </div>
+                  </div>
+
+                  <div className="bg-white rounded-xl p-4 mb-3 shadow-sm">
+                     <div className="flex items-center gap-2 mb-3">
+                        <span className="font-semibold text-gray-700">Calculate the Margins (%):</span>
+                        <button onClick={() => showInfoModal('Margin Formulas', 'Gross = Gross Profit ÷ Revenue × 100\nOperating = Operating Income ÷ Revenue × 100\nNet = Net Income ÷ Revenue × 100')} className="text-emerald-400 hover:text-emerald-600">ℹ️</button>
+                     </div>
+                     <div className="grid grid-cols-3 gap-2">
+                        <div>
+                           <label className="text-xs font-medium text-gray-600 block mb-1">Gross Margin</label>
+                           <div className="flex items-center">
+                              <input type="number" value={answers['gross'] || ''} onChange={(e) => handleAnswer('gross', Number(e.target.value))} placeholder="%" className="w-full px-2 py-2 border-2 border-emerald-200 rounded-lg focus:border-emerald-500 focus:outline-none" />
+                              <span className="ml-1 text-gray-500">%</span>
+                           </div>
+                        </div>
+                        <div>
+                           <label className="text-xs font-medium text-gray-600 block mb-1">Operating Margin</label>
+                           <div className="flex items-center">
+                              <input type="number" value={answers['operating'] || ''} onChange={(e) => handleAnswer('operating', Number(e.target.value))} placeholder="%" className="w-full px-2 py-2 border-2 border-emerald-200 rounded-lg focus:border-emerald-500 focus:outline-none" />
+                              <span className="ml-1 text-gray-500">%</span>
+                           </div>
+                        </div>
+                        <div>
+                           <label className="text-xs font-medium text-gray-600 block mb-1">Net Margin</label>
+                           <div className="flex items-center">
+                              <input type="number" step="0.1" value={answers['net'] || ''} onChange={(e) => handleAnswer('net', Number(e.target.value))} placeholder="%" className="w-full px-2 py-2 border-2 border-emerald-200 rounded-lg focus:border-emerald-500 focus:outline-none" />
+                              <span className="ml-1 text-gray-500">%</span>
+                           </div>
+                        </div>
+                     </div>
+                  </div>
+
+                  <button onClick={checkAnswers} className="w-full py-3 bg-emerald-500 text-white rounded-xl font-semibold hover:bg-emerald-600">Check Answers</button>
+
+                  {showInfo && (
+                     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+                        <div className="bg-white rounded-xl p-4 max-w-sm">
+                           <h4 className="font-bold text-emerald-800 mb-2">{infoContent.title}</h4>
+                           <p className="text-sm text-gray-600 mb-3 whitespace-pre-line">{infoContent.content}</p>
+                           <button onClick={() => setShowInfo(false)} className="w-full py-2 bg-emerald-500 text-white rounded-lg">Got it!</button>
+                        </div>
+                     </div>
+                  )}
+               </div>
+            );
+         }
+
+         return (
+            <div className="h-full flex flex-col p-4 bg-gradient-to-br from-emerald-50 to-teal-100 overflow-auto">
+               <h3 className="font-bold text-emerald-800 mb-3 text-center">{current.title} - Results</h3>
+
+               <div className="bg-white rounded-xl p-4 mb-3 shadow-sm">
+                  <div className="grid grid-cols-3 gap-3 text-center mb-3">
+                     <div className={`p-2 rounded-lg ${Math.abs((answers['gross'] || 0) - current.grossMargin) <= 1 ? 'bg-green-100' : 'bg-red-100'}`}>
+                        <div className="text-xs text-gray-600">Gross Margin</div>
+                        <div className="font-bold">{current.grossMargin}%</div>
+                        <div className="text-xs text-gray-500">You: {answers['gross'] || 0}%</div>
+                     </div>
+                     <div className={`p-2 rounded-lg ${Math.abs((answers['operating'] || 0) - current.operatingMargin) <= 1 ? 'bg-green-100' : 'bg-red-100'}`}>
+                        <div className="text-xs text-gray-600">Operating Margin</div>
+                        <div className="font-bold">{current.operatingMargin}%</div>
+                        <div className="text-xs text-gray-500">You: {answers['operating'] || 0}%</div>
+                     </div>
+                     <div className={`p-2 rounded-lg ${Math.abs((answers['net'] || 0) - current.netMargin) <= 1 ? 'bg-green-100' : 'bg-red-100'}`}>
+                        <div className="text-xs text-gray-600">Net Margin</div>
+                        <div className="font-bold">{current.netMargin}%</div>
+                        <div className="text-xs text-gray-500">You: {answers['net'] || 0}%</div>
+                     </div>
+                  </div>
+
+                  <div className="bg-emerald-50 rounded-lg p-3">
+                     <div className="text-xs font-semibold text-emerald-800 mb-1">💡 Analysis:</div>
+                     <p className="text-xs text-emerald-700">{current.insight}</p>
+                  </div>
+               </div>
+
+               <div className="bg-white rounded-xl p-3 mb-3 shadow-sm">
+                  <div className="text-xs font-semibold text-gray-700 mb-2">Margin Waterfall:</div>
+                  <div className="space-y-1">
+                     <div className="flex items-center gap-2">
+                        <div className="w-20 text-xs text-gray-600">Gross</div>
+                        <div className="flex-1 bg-gray-200 rounded-full h-4">
+                           <div className="bg-green-500 h-full rounded-full" style={{ width: `${current.grossMargin}%` }}></div>
+                        </div>
+                        <span className="text-xs font-semibold w-10 text-right">{current.grossMargin}%</span>
+                     </div>
+                     <div className="flex items-center gap-2">
+                        <div className="w-20 text-xs text-gray-600">Operating</div>
+                        <div className="flex-1 bg-gray-200 rounded-full h-4">
+                           <div className="bg-blue-500 h-full rounded-full" style={{ width: `${current.operatingMargin}%` }}></div>
+                        </div>
+                        <span className="text-xs font-semibold w-10 text-right">{current.operatingMargin}%</span>
+                     </div>
+                     <div className="flex items-center gap-2">
+                        <div className="w-20 text-xs text-gray-600">Net</div>
+                        <div className="flex-1 bg-gray-200 rounded-full h-4">
+                           <div className="bg-purple-500 h-full rounded-full" style={{ width: `${current.netMargin * 3}%` }}></div>
+                        </div>
+                        <span className="text-xs font-semibold w-10 text-right">{current.netMargin}%</span>
+                     </div>
+                  </div>
+               </div>
+
+               <button onClick={nextLevel} className="w-full py-3 bg-emerald-500 text-white rounded-xl font-semibold hover:bg-emerald-600">
+                  {level < scenarios.length - 1 ? 'Next Scenario →' : 'Take Quiz →'}
+               </button>
+            </div>
+         );
+      }
+
+      if (phase === 'result') {
+         if (quizIndex < quizzes.length) {
+            const q = quizzes[quizIndex];
+            return (
+               <div className="h-full flex flex-col p-4 bg-gradient-to-br from-emerald-50 to-teal-100">
+                  <div className="flex justify-between items-center mb-4">
+                     <span className="text-sm text-emerald-600">Quiz {quizIndex + 1}/{quizzes.length}</span>
+                     <span className="text-sm font-semibold text-emerald-800">Score: {score}</span>
+                  </div>
+                  <div className="flex-1">
+                     <div className="bg-white rounded-xl p-4 shadow-sm mb-4">
+                        <p className="font-medium text-gray-800 mb-4">{q.question}</p>
+                        <div className="space-y-2">
+                           {q.options.map((opt, i) => (
+                              <button key={i} onClick={() => handleQuizAnswer(i)} disabled={quizAnswered} className={`w-full p-3 rounded-lg text-left text-sm transition-all ${quizAnswered ? (i === q.correct ? 'bg-green-100 border-2 border-green-500' : 'bg-gray-50 opacity-60') : 'bg-gray-50 hover:bg-emerald-50 border-2 border-transparent hover:border-emerald-300'}`}>
+                                 {opt}
+                              </button>
+                           ))}
+                        </div>
+                     </div>
+                     {quizAnswered && (
+                        <div className="bg-blue-50 rounded-lg p-3 mb-4">
+                           <p className="text-sm text-blue-800">{q.explanation}</p>
+                        </div>
+                     )}
+                  </div>
+                  {quizAnswered && (
+                     <button onClick={nextQuiz} className="w-full py-3 bg-emerald-500 text-white rounded-xl font-semibold hover:bg-emerald-600">
+                        {quizIndex < quizzes.length - 1 ? 'Next Question →' : 'See Final Results →'}
+                     </button>
+                  )}
+               </div>
+            );
+         }
+
+         const maxScore = scenarios.length * 6 + quizzes.length * 2;
+         const pct = Math.round((score / maxScore) * 100);
+
+         return (
+            <div className="h-full flex flex-col p-6 bg-gradient-to-br from-emerald-50 to-teal-100">
+               <div className="flex-1 flex flex-col items-center justify-center">
+                  <div className="text-5xl mb-4">{pct >= 80 ? '🏆' : pct >= 60 ? '📈' : '📚'}</div>
+                  <h2 className="text-xl font-bold text-emerald-800 mb-2">Profit Margin Mastery!</h2>
+                  <p className="text-3xl font-bold text-emerald-600 mb-2">{score}/{maxScore} points</p>
+                  <p className="text-emerald-700 mb-4">{pct}% Accuracy</p>
+                  <div className="w-full max-w-xs h-3 bg-emerald-200 rounded-full mb-4">
+                     <div className="h-full bg-emerald-500 rounded-full transition-all" style={{ width: `${pct}%` }}></div>
+                  </div>
+                  <div className="bg-white rounded-xl p-4 w-full max-w-md text-sm">
+                     <h4 className="font-semibold text-emerald-800 mb-2">Key Takeaways:</h4>
+                     <ul className="text-gray-600 space-y-1">
+                        <li>• Gross Margin = (Revenue − COGS) ÷ Revenue</li>
+                        <li>• Operating Margin = Operating Income ÷ Revenue</li>
+                        <li>• Net Margin = Net Income ÷ Revenue</li>
+                        <li>• Compare margins within same industry</li>
+                        <li>• Watch the "margin waterfall" to find problems</li>
+                     </ul>
+                  </div>
+                  <button onClick={() => { setPhase('intro'); setScore(0); setLevel(0); setAnswers({}); setShowResults(false); setQuizIndex(0); setQuizAnswered(false); }} className="w-full max-w-md mt-4 py-3 bg-emerald-500 text-white rounded-xl font-semibold hover:bg-emerald-600">Practice Again</button>
+               </div>
+            </div>
+         );
+      }
+      return null;
+   };
+
    const FinancialStatementsRenderer = () => {
       const [phase, setPhase] = useState<'intro' | 'play' | 'result'>('intro');
       const [showInfo, setShowInfo] = useState(false);
@@ -46488,6 +46940,8 @@ const GeneratedDiagram: React.FC<DiagramProps> = ({ type, data, title }) => {
             return <InventoryValuationRenderer />;
          case 'cogs_calculation':
             return <COGSCalculationRenderer />;
+         case 'profit_margin':
+            return <ProfitMarginRenderer />;
          case 'pricing_strategy':
             return <PricingStrategyRenderer />;
          case 'budgeting':
