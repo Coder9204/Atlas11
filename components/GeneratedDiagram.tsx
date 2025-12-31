@@ -45488,6 +45488,404 @@ const GeneratedDiagram: React.FC<DiagramProps> = ({ type, data, title }) => {
       return null;
    };
 
+   // Topic 26: Fixed vs Variable Costs - Understanding Cost Behavior
+   const FixedVariableCostsRenderer = () => {
+      const [phase, setPhase] = useState<'intro' | 'tutorial' | 'play' | 'result'>('intro');
+      const [tutorialStep, setTutorialStep] = useState(0);
+      const [score, setScore] = useState(0);
+      const [scenarioIndex, setScenarioIndex] = useState(0);
+      const [gameLog, setGameLog] = useState<string[]>([]);
+      const [quizIndex, setQuizIndex] = useState(0);
+      const [quizAnswered, setQuizAnswered] = useState(false);
+      const [showInfo, setShowInfo] = useState(false);
+      const [infoContent, setInfoContent] = useState({ title: '', content: '' });
+      const [selectedType, setSelectedType] = useState<'fixed' | 'variable' | 'mixed' | null>(null);
+      const [answered, setAnswered] = useState(false);
+      const [productionLevel, setProductionLevel] = useState(1000);
+
+      const tutorialSteps = [
+         { title: 'Welcome to Cost Behavior!', content: 'Understanding how costs change with activity levels is fundamental to pricing, budgeting, and profitability analysis.' },
+         { title: 'Fixed Costs', content: 'Fixed costs stay the same regardless of production volume. Examples: rent, salaries, insurance, depreciation. $10,000 rent stays $10,000 whether you make 1 unit or 10,000 units.' },
+         { title: 'Variable Costs', content: 'Variable costs change in direct proportion to activity. Examples: raw materials, direct labor, shipping, sales commissions. More units = more cost.' },
+         { title: 'Mixed Costs', content: 'Some costs have both fixed and variable components. Example: Utilities have a base charge (fixed) plus usage (variable). Phone plans with base + overage.' },
+         { title: 'Per-Unit Behavior', content: 'Key insight: Fixed costs per unit DECREASE as volume increases (spreading overhead). Variable costs per unit stay CONSTANT.' },
+         { title: 'Operating Leverage', content: 'High fixed costs = High operating leverage = Bigger profit swings. Small revenue changes create large profit changes. Risky but rewarding at high volumes!' },
+         { title: 'Ready to Classify!', content: 'You\'ll identify cost types and see how they behave as production changes. Master this to make better business decisions!' }
+      ];
+
+      const costItems = [
+         { name: 'Factory Rent', amount: 15000, type: 'fixed', description: 'Monthly lease payment for manufacturing facility', perUnit: false },
+         { name: 'Raw Materials', amount: 25, type: 'variable', description: 'Steel and components per unit produced', perUnit: true },
+         { name: 'CEO Salary', amount: 20000, type: 'fixed', description: 'Monthly executive compensation', perUnit: false },
+         { name: 'Sales Commission', amount: 50, type: 'variable', description: '5% commission on each $1,000 sale', perUnit: true },
+         { name: 'Electricity', amount: 3000, type: 'mixed', description: 'Base charge $1,000 + $2 per machine hour', perUnit: false },
+         { name: 'Packaging Materials', amount: 5, type: 'variable', description: 'Boxes and wrapping per unit shipped', perUnit: true },
+         { name: 'Equipment Depreciation', amount: 8000, type: 'fixed', description: 'Monthly depreciation on machinery', perUnit: false },
+         { name: 'Shipping Costs', amount: 15, type: 'variable', description: 'Freight cost per unit delivered', perUnit: true },
+         { name: 'Property Insurance', amount: 2500, type: 'fixed', description: 'Annual premium paid monthly', perUnit: false },
+         { name: 'Phone/Internet', amount: 500, type: 'mixed', description: 'Base service $300 + usage charges', perUnit: false },
+         { name: 'Direct Labor', amount: 35, type: 'variable', description: 'Hourly wages for production workers', perUnit: true },
+         { name: 'Quality Inspection', amount: 3, type: 'variable', description: 'Testing cost per unit produced', perUnit: true }
+      ];
+
+      const quizQuestions = [
+         { q: 'As production volume doubles, total fixed costs:', options: ['Double', 'Stay the same', 'Cut in half', 'Increase slightly'], correct: 1 },
+         { q: 'As production volume doubles, fixed cost PER UNIT:', options: ['Doubles', 'Stays the same', 'Cuts in half', 'Increases slightly'], correct: 2 },
+         { q: 'Variable costs per unit typically:', options: ['Decrease with volume', 'Stay constant', 'Increase with volume', 'Become fixed'], correct: 1 },
+         { q: 'High fixed costs create:', options: ['Low operating leverage', 'High operating leverage', 'No leverage effect', 'Variable leverage'], correct: 1 },
+         { q: 'A cost with both fixed and variable components is called:', options: ['Semi-fixed', 'Mixed/Semi-variable', 'Hybrid fixed', 'Dual cost'], correct: 1 },
+         { q: 'Which business model has highest operating leverage?', options: ['Consulting firm (mostly labor)', 'Software company (mostly fixed)', 'Retail store (mixed)', 'Food truck (mostly variable)'], correct: 1 }
+      ];
+
+      const openInfo = (title: string, content: string) => {
+         setInfoContent({ title, content });
+         setShowInfo(true);
+      };
+
+      const handleClassification = (type: 'fixed' | 'variable' | 'mixed') => {
+         if (answered) return;
+         setSelectedType(type);
+         setAnswered(true);
+         const item = costItems[scenarioIndex];
+         if (type === item.type) {
+            setScore(s => s + 10);
+            setGameLog(prev => [...prev, `Correct: ${item.name} is ${type}`]);
+         } else {
+            setGameLog(prev => [...prev, `Incorrect: ${item.name} is ${item.type}, not ${type}`]);
+         }
+      };
+
+      const nextScenario = () => {
+         if (scenarioIndex < costItems.length - 1) {
+            setScenarioIndex(scenarioIndex + 1);
+            setSelectedType(null);
+            setAnswered(false);
+         } else {
+            setPhase('result');
+         }
+      };
+
+      const calculateCosts = (units: number) => {
+         const fixed = 45500; // Sum of fixed costs
+         const variablePerUnit = 133; // Sum of variable per-unit costs
+         const totalVariable = variablePerUnit * units;
+         const totalCost = fixed + totalVariable;
+         const costPerUnit = totalCost / units;
+         return { fixed, totalVariable, totalCost, costPerUnit, variablePerUnit };
+      };
+
+      // Intro Phase
+      if (phase === 'intro') {
+         return (
+            <div className="p-6 bg-gradient-to-br from-amber-50 to-yellow-50 rounded-2xl max-w-2xl mx-auto">
+               <h2 className="text-2xl font-bold text-amber-800 mb-4 flex items-center gap-2">
+                  📊 Fixed vs Variable Costs
+                  <button onClick={() => openInfo('Why Cost Behavior Matters', 'Understanding how costs behave helps you: Set profitable prices, Create accurate budgets, Make break-even decisions, Evaluate business risk, Choose between business models.')} className="text-amber-500 hover:text-amber-700">ℹ️</button>
+               </h2>
+               <div className="bg-white/80 p-5 rounded-xl mb-6">
+                  <p className="text-gray-700 mb-4">Master how costs behave as business activity changes!</p>
+                  <div className="grid grid-cols-3 gap-3 mb-4">
+                     <div className="bg-blue-50 p-3 rounded-lg text-center border-t-4 border-blue-500">
+                        <div className="text-2xl mb-1">🏢</div>
+                        <div className="font-bold text-blue-800 text-sm">Fixed</div>
+                        <div className="text-xs text-blue-600">Same total regardless of volume</div>
+                     </div>
+                     <div className="bg-green-50 p-3 rounded-lg text-center border-t-4 border-green-500">
+                        <div className="text-2xl mb-1">📦</div>
+                        <div className="font-bold text-green-800 text-sm">Variable</div>
+                        <div className="text-xs text-green-600">Changes with each unit</div>
+                     </div>
+                     <div className="bg-purple-50 p-3 rounded-lg text-center border-t-4 border-purple-500">
+                        <div className="text-2xl mb-1">⚡</div>
+                        <div className="font-bold text-purple-800 text-sm">Mixed</div>
+                        <div className="text-xs text-purple-600">Has both components</div>
+                     </div>
+                  </div>
+                  <div className="text-sm text-gray-600">
+                     <strong>You'll learn:</strong> Cost classification, Per-unit behavior, Operating leverage, Break-even impact
+                  </div>
+               </div>
+               <button onClick={() => setPhase('tutorial')} className="w-full py-3 bg-amber-500 text-white rounded-xl font-semibold hover:bg-amber-600 transition-all">Start Learning</button>
+               {showInfo && (
+                  <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" onClick={() => setShowInfo(false)}>
+                     <div className="bg-white p-6 rounded-xl max-w-md m-4" onClick={e => e.stopPropagation()}>
+                        <h3 className="font-bold text-lg mb-2">{infoContent.title}</h3>
+                        <p className="text-gray-600">{infoContent.content}</p>
+                        <button onClick={() => setShowInfo(false)} className="mt-4 px-4 py-2 bg-amber-500 text-white rounded-lg">Got it!</button>
+                     </div>
+                  </div>
+               )}
+            </div>
+         );
+      }
+
+      // Tutorial Phase
+      if (phase === 'tutorial') {
+         const step = tutorialSteps[tutorialStep];
+         return (
+            <div className="p-6 bg-gradient-to-br from-amber-50 to-yellow-50 rounded-2xl max-w-2xl mx-auto">
+               <div className="flex justify-between items-center mb-4">
+                  <h2 className="text-xl font-bold text-amber-800">Tutorial</h2>
+                  <span className="text-sm text-amber-600">Step {tutorialStep + 1} of {tutorialSteps.length}</span>
+               </div>
+               <div className="bg-white/90 p-6 rounded-xl mb-6">
+                  <h3 className="font-bold text-lg text-gray-800 mb-3">{step.title}</h3>
+                  <p className="text-gray-600">{step.content}</p>
+
+                  {tutorialStep === 1 && (
+                     <div className="mt-4 p-4 bg-blue-50 rounded-lg border border-blue-200">
+                        <div className="font-semibold text-blue-800 mb-2">Fixed Cost Examples:</div>
+                        <div className="grid grid-cols-2 gap-2 text-sm text-blue-700">
+                           <span>🏠 Rent/Lease</span>
+                           <span>👔 Salaries</span>
+                           <span>📋 Insurance</span>
+                           <span>🏭 Depreciation</span>
+                        </div>
+                        <div className="mt-2 text-xs text-gray-500">100 units or 10,000 units → Same total cost</div>
+                     </div>
+                  )}
+
+                  {tutorialStep === 2 && (
+                     <div className="mt-4 p-4 bg-green-50 rounded-lg border border-green-200">
+                        <div className="font-semibold text-green-800 mb-2">Variable Cost Examples:</div>
+                        <div className="grid grid-cols-2 gap-2 text-sm text-green-700">
+                           <span>🔩 Raw Materials</span>
+                           <span>📦 Packaging</span>
+                           <span>🚚 Shipping</span>
+                           <span>💰 Commissions</span>
+                        </div>
+                        <div className="mt-2 text-xs text-gray-500">2x units → 2x total variable cost</div>
+                     </div>
+                  )}
+
+                  {tutorialStep === 4 && (
+                     <div className="mt-4">
+                        <div className="grid grid-cols-2 gap-4">
+                           <div className="p-3 bg-blue-50 rounded-lg">
+                              <div className="text-sm font-semibold text-blue-800">Fixed: $10,000 rent</div>
+                              <div className="text-xs text-gray-600 mt-1">1,000 units → $10/unit</div>
+                              <div className="text-xs text-gray-600">10,000 units → $1/unit</div>
+                              <div className="text-xs text-green-600 mt-1">↓ Per unit as volume ↑</div>
+                           </div>
+                           <div className="p-3 bg-green-50 rounded-lg">
+                              <div className="text-sm font-semibold text-green-800">Variable: $5/unit</div>
+                              <div className="text-xs text-gray-600 mt-1">1,000 units → $5/unit</div>
+                              <div className="text-xs text-gray-600">10,000 units → $5/unit</div>
+                              <div className="text-xs text-amber-600 mt-1">→ Per unit stays same</div>
+                           </div>
+                        </div>
+                     </div>
+                  )}
+               </div>
+               <div className="w-full bg-gray-200 rounded-full h-2 mb-4">
+                  <div className="bg-amber-500 h-2 rounded-full transition-all" style={{ width: `${((tutorialStep + 1) / tutorialSteps.length) * 100}%` }}></div>
+               </div>
+               <div className="flex gap-3">
+                  {tutorialStep > 0 && <button onClick={() => setTutorialStep(tutorialStep - 1)} className="flex-1 py-2 bg-gray-200 rounded-lg hover:bg-gray-300">Back</button>}
+                  <button onClick={() => tutorialStep < tutorialSteps.length - 1 ? setTutorialStep(tutorialStep + 1) : setPhase('play')} className="flex-1 py-2 bg-amber-500 text-white rounded-lg hover:bg-amber-600">
+                     {tutorialStep < tutorialSteps.length - 1 ? 'Next' : 'Start Classifying!'}
+                  </button>
+               </div>
+            </div>
+         );
+      }
+
+      // Play Phase
+      if (phase === 'play') {
+         const item = costItems[scenarioIndex];
+         const costs = calculateCosts(productionLevel);
+
+         return (
+            <div className="p-6 bg-gradient-to-br from-amber-50 to-yellow-50 rounded-2xl max-w-2xl mx-auto">
+               <div className="flex justify-between items-center mb-4">
+                  <h2 className="text-xl font-bold text-amber-800">Classify the Cost</h2>
+                  <div className="flex items-center gap-3">
+                     <span className="bg-amber-100 px-3 py-1 rounded-full text-amber-700 text-sm">Score: {score}</span>
+                     <span className="text-sm text-gray-500">Item {scenarioIndex + 1}/{costItems.length}</span>
+                  </div>
+               </div>
+
+               <div className="bg-white/90 p-5 rounded-xl mb-4">
+                  <div className="text-center mb-4">
+                     <h3 className="text-xl font-bold text-gray-800">{item.name}</h3>
+                     <p className="text-gray-600 text-sm mt-1">{item.description}</p>
+                     <div className="mt-2 text-lg font-semibold text-amber-700">
+                        ${item.amount.toLocaleString()}{item.perUnit ? ' per unit' : ' per month'}
+                     </div>
+                  </div>
+
+                  {!answered ? (
+                     <div className="grid grid-cols-3 gap-3">
+                        <button
+                           onClick={() => handleClassification('fixed')}
+                           className="p-4 bg-blue-50 border-2 border-blue-200 rounded-xl hover:border-blue-500 hover:bg-blue-100 transition-all"
+                        >
+                           <div className="text-2xl mb-1">🏢</div>
+                           <div className="font-bold text-blue-800">Fixed</div>
+                           <div className="text-xs text-blue-600">Same total</div>
+                        </button>
+                        <button
+                           onClick={() => handleClassification('variable')}
+                           className="p-4 bg-green-50 border-2 border-green-200 rounded-xl hover:border-green-500 hover:bg-green-100 transition-all"
+                        >
+                           <div className="text-2xl mb-1">📦</div>
+                           <div className="font-bold text-green-800">Variable</div>
+                           <div className="text-xs text-green-600">Per unit</div>
+                        </button>
+                        <button
+                           onClick={() => handleClassification('mixed')}
+                           className="p-4 bg-purple-50 border-2 border-purple-200 rounded-xl hover:border-purple-500 hover:bg-purple-100 transition-all"
+                        >
+                           <div className="text-2xl mb-1">⚡</div>
+                           <div className="font-bold text-purple-800">Mixed</div>
+                           <div className="text-xs text-purple-600">Both parts</div>
+                        </button>
+                     </div>
+                  ) : (
+                     <div className={`p-4 rounded-xl ${selectedType === item.type ? 'bg-green-50 border-2 border-green-300' : 'bg-red-50 border-2 border-red-300'}`}>
+                        <div className="font-bold mb-2">
+                           {selectedType === item.type ? '✅ Correct!' : '❌ Incorrect'}
+                        </div>
+                        <div className="text-sm text-gray-700">
+                           <strong>{item.name}</strong> is a <strong className="capitalize">{item.type}</strong> cost.
+                        </div>
+                        <div className="text-sm text-gray-600 mt-1">
+                           {item.type === 'fixed' && 'This cost stays the same regardless of how many units are produced.'}
+                           {item.type === 'variable' && 'This cost increases proportionally with each unit produced.'}
+                           {item.type === 'mixed' && 'This cost has a fixed base plus a variable component based on usage.'}
+                        </div>
+                        <button onClick={nextScenario} className="mt-3 px-4 py-2 bg-amber-500 text-white rounded-lg hover:bg-amber-600">
+                           {scenarioIndex < costItems.length - 1 ? 'Next Cost →' : 'See Cost Behavior'}
+                        </button>
+                     </div>
+                  )}
+               </div>
+
+               {/* Cost Behavior Visualization */}
+               <div className="bg-white/70 p-4 rounded-xl">
+                  <div className="flex justify-between items-center mb-2">
+                     <span className="text-sm font-semibold text-gray-700">Cost Behavior at Different Volumes</span>
+                     <button onClick={() => openInfo('Operating Leverage', 'Companies with high fixed costs have high operating leverage. This means profits are more sensitive to sales changes - they lose more when sales drop but gain more when sales rise.')} className="text-amber-500">ℹ️</button>
+                  </div>
+                  <div className="mb-2">
+                     <input
+                        type="range"
+                        min="500"
+                        max="5000"
+                        step="500"
+                        value={productionLevel}
+                        onChange={(e) => setProductionLevel(Number(e.target.value))}
+                        className="w-full"
+                     />
+                     <div className="flex justify-between text-xs text-gray-500">
+                        <span>500 units</span>
+                        <span className="font-semibold text-amber-700">{productionLevel.toLocaleString()} units</span>
+                        <span>5,000 units</span>
+                     </div>
+                  </div>
+                  <div className="grid grid-cols-4 gap-2 text-center text-xs">
+                     <div className="bg-blue-50 p-2 rounded">
+                        <div className="text-blue-600">Fixed Total</div>
+                        <div className="font-bold text-blue-800">${costs.fixed.toLocaleString()}</div>
+                     </div>
+                     <div className="bg-green-50 p-2 rounded">
+                        <div className="text-green-600">Variable Total</div>
+                        <div className="font-bold text-green-800">${costs.totalVariable.toLocaleString()}</div>
+                     </div>
+                     <div className="bg-amber-50 p-2 rounded">
+                        <div className="text-amber-600">Total Cost</div>
+                        <div className="font-bold text-amber-800">${costs.totalCost.toLocaleString()}</div>
+                     </div>
+                     <div className="bg-purple-50 p-2 rounded">
+                        <div className="text-purple-600">Cost/Unit</div>
+                        <div className="font-bold text-purple-800">${costs.costPerUnit.toFixed(2)}</div>
+                     </div>
+                  </div>
+               </div>
+
+               {showInfo && (
+                  <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" onClick={() => setShowInfo(false)}>
+                     <div className="bg-white p-6 rounded-xl max-w-md m-4" onClick={e => e.stopPropagation()}>
+                        <h3 className="font-bold text-lg mb-2">{infoContent.title}</h3>
+                        <p className="text-gray-600">{infoContent.content}</p>
+                        <button onClick={() => setShowInfo(false)} className="mt-4 px-4 py-2 bg-amber-500 text-white rounded-lg">Got it!</button>
+                     </div>
+                  </div>
+               )}
+            </div>
+         );
+      }
+
+      // Result Phase
+      if (phase === 'result') {
+         const quiz = quizQuestions[quizIndex];
+         const maxScore = (costItems.length * 10) + (quizQuestions.length * 10);
+         const percentage = Math.round((score / maxScore) * 100);
+
+         if (quizIndex < quizQuestions.length) {
+            return (
+               <div className="p-6 bg-gradient-to-br from-amber-50 to-yellow-50 rounded-2xl max-w-2xl mx-auto">
+                  <h2 className="text-xl font-bold text-amber-800 mb-4">Knowledge Check</h2>
+                  <div className="bg-white/90 p-5 rounded-xl mb-4">
+                     <div className="text-sm text-gray-500 mb-2">Question {quizIndex + 1} of {quizQuestions.length}</div>
+                     <p className="font-semibold text-gray-800 mb-4">{quiz.q}</p>
+                     <div className="grid gap-2">
+                        {quiz.options.map((opt, i) => (
+                           <button
+                              key={i}
+                              onClick={() => {
+                                 if (!quizAnswered) {
+                                    if (i === quiz.correct) setScore(s => s + 10);
+                                    setQuizAnswered(true);
+                                    setGameLog(prev => [...prev, `Quiz ${quizIndex + 1}: ${i === quiz.correct ? 'Correct!' : 'Incorrect'}`]);
+                                 }
+                              }}
+                              disabled={quizAnswered}
+                              className={`p-3 rounded-lg text-left transition-all ${quizAnswered ? (i === quiz.correct ? 'bg-green-100 border-green-500' : 'bg-gray-100') : 'bg-gray-50 hover:bg-gray-100'} border-2 ${quizAnswered && i === quiz.correct ? 'border-green-500' : 'border-transparent'}`}
+                           >
+                              {opt}
+                           </button>
+                        ))}
+                     </div>
+                  </div>
+                  {quizAnswered && (
+                     <button onClick={() => { setQuizIndex(quizIndex + 1); setQuizAnswered(false); }} className="w-full py-3 bg-amber-500 text-white rounded-xl font-semibold hover:bg-amber-600">
+                        {quizIndex < quizQuestions.length - 1 ? 'Next Question' : 'See Results'}
+                     </button>
+                  )}
+               </div>
+            );
+         }
+
+         return (
+            <div className="p-6 bg-gradient-to-br from-amber-50 to-yellow-50 rounded-2xl max-w-2xl mx-auto">
+               <h2 className="text-2xl font-bold text-amber-800 mb-4">🎉 Cost Analysis Complete!</h2>
+               <div className="bg-white/90 p-6 rounded-xl mb-6">
+                  <div className="text-center mb-6">
+                     <div className="text-5xl font-bold text-amber-600 mb-2">{percentage}%</div>
+                     <div className="text-gray-600">Final Score: {score} / {maxScore}</div>
+                     <div className="text-lg font-semibold mt-2">
+                        {percentage >= 90 ? '🏆 Cost Behavior Expert!' : percentage >= 70 ? '📊 Strong Understanding' : percentage >= 50 ? '📈 Good Progress' : '📚 Keep Practicing'}
+                     </div>
+                  </div>
+                  <div className="bg-amber-50 p-4 rounded-lg">
+                     <h3 className="font-bold text-amber-800 mb-2">Key Takeaways:</h3>
+                     <ul className="text-sm text-gray-700 space-y-1">
+                        <li>• Fixed costs: Same total regardless of volume</li>
+                        <li>• Variable costs: Change with each unit produced</li>
+                        <li>• Fixed cost per unit decreases as volume increases</li>
+                        <li>• Variable cost per unit stays constant</li>
+                        <li>• High fixed costs = High operating leverage = Higher risk/reward</li>
+                     </ul>
+                  </div>
+               </div>
+               <button onClick={() => { setPhase('intro'); setScore(0); setScenarioIndex(0); setSelectedType(null); setAnswered(false); setQuizIndex(0); setQuizAnswered(false); setProductionLevel(1000); }} className="w-full py-3 bg-amber-500 text-white rounded-xl font-semibold hover:bg-amber-600">Practice Again</button>
+            </div>
+         );
+      }
+      return null;
+   };
+
    const FinancialStatementsRenderer = () => {
       const [phase, setPhase] = useState<'intro' | 'play' | 'result'>('intro');
       const [showInfo, setShowInfo] = useState(false);
@@ -49339,6 +49737,8 @@ const GeneratedDiagram: React.FC<DiagramProps> = ({ type, data, title }) => {
             return <ZeroBasedBudgetRenderer />;
          case 'capex_opex':
             return <CapExOpExRenderer />;
+         case 'fixed_variable_costs':
+            return <FixedVariableCostsRenderer />;
          case 'pricing_strategy':
             return <PricingStrategyRenderer />;
          case 'budgeting':
