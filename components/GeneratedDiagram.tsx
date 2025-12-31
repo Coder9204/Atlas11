@@ -41255,6 +41255,303 @@ const GeneratedDiagram: React.FC<DiagramProps> = ({ type, data, title }) => {
       return null;
    };
 
+   const DepreciationMethodsRenderer = () => {
+      const [phase, setPhase] = useState<'intro' | 'tutorial' | 'play' | 'result'>('intro');
+      const [tutorialStep, setTutorialStep] = useState(0);
+      const [showInfo, setShowInfo] = useState(false);
+      const [infoTopic, setInfoTopic] = useState<string | null>(null);
+      const [score, setScore] = useState(0);
+      const [level, setLevel] = useState(0);
+      const [gameLog, setGameLog] = useState<string[]>([]);
+      const [selectedMethod, setSelectedMethod] = useState<string | null>(null);
+      const [calculations, setCalculations] = useState<{[key: string]: number}>({});
+      const [showResults, setShowResults] = useState(false);
+
+      const tutorials = [
+         { title: "What is Depreciation?", content: "Allocating an asset's cost over its useful life. A $50,000 machine used for 10 years isn't a $50K expense in Year 1 - it's $5K/year.", icon: "📉" },
+         { title: "Why Depreciate?", content: "Matching principle: Match expense to periods benefiting from the asset. Also provides tax benefits by reducing taxable income each year.", icon: "🎯" },
+         { title: "Straight-Line Method", content: "(Cost - Salvage) ÷ Useful Life = Annual Depreciation. Same amount every year. Simple and most common.", icon: "➖" },
+         { title: "Double Declining Balance", content: "2 × Straight-Line Rate × Book Value. Faster depreciation early, slower later. Good for assets losing value quickly.", icon: "📈" },
+         { title: "Units of Production", content: "(Cost - Salvage) ÷ Total Units × Units This Period. Ties depreciation to usage. Great for machinery with variable use.", icon: "⚙️" },
+         { title: "Sum of Years' Digits", content: "Remaining Life ÷ Sum of Years × Depreciable Base. Another accelerated method, declining each year.", icon: "🔢" },
+         { title: "Book Value & Salvage", content: "Book Value = Cost - Accumulated Depreciation. Never depreciate below salvage value (expected value at end of life).", icon: "📚" }
+      ];
+
+      const infoTopics: {[key: string]: string} = {
+         straight_line: "Straight-line: (Cost - Salvage) ÷ Life. A $10,000 asset with $1,000 salvage over 5 years = ($10,000 - $1,000) ÷ 5 = $1,800/year.",
+         double_declining: "DDB: 2 × (1/Life) × Book Value. For 5-year asset: 2 × 20% = 40% rate. Year 1: 40% × $10,000 = $4,000. Year 2: 40% × $6,000 = $2,400.",
+         units_production: "Units of Production: Per-unit rate × units used. $9,000 depreciable ÷ 100,000 units = $0.09/unit. Use 20,000 units? $1,800 depreciation.",
+         sum_years_digits: "SYD for 5-year asset: Sum = 5+4+3+2+1 = 15. Year 1: 5/15, Year 2: 4/15, etc. Faster in early years like DDB.",
+         accumulated_depreciation: "Accumulated depreciation is a contra-asset account. It increases over time, reducing the asset's book value on the balance sheet.",
+         tax_vs_book: "Companies often use straight-line for financial reporting (smoother earnings) and accelerated for taxes (more deductions early). Two sets of books, both legal!"
+      };
+
+      const assets = [
+         {
+            name: "Delivery Truck",
+            cost: 60000,
+            salvage: 6000,
+            life: 5,
+            totalUnits: 150000,
+            unitsYear1: 35000
+         },
+         {
+            name: "Manufacturing Equipment",
+            cost: 100000,
+            salvage: 10000,
+            life: 10,
+            totalUnits: 500000,
+            unitsYear1: 60000
+         },
+         {
+            name: "Computer System",
+            cost: 25000,
+            salvage: 1000,
+            life: 4,
+            totalUnits: 20000,
+            unitsYear1: 6000
+         }
+      ];
+
+      const currentAsset = assets[level];
+
+      const calculateDepreciation = (method: string) => {
+         const { cost, salvage, life, totalUnits, unitsYear1 } = currentAsset;
+         const depreciableBase = cost - salvage;
+
+         switch (method) {
+            case 'straight_line':
+               return Math.round(depreciableBase / life);
+            case 'double_declining':
+               const rate = 2 / life;
+               return Math.round(cost * rate);
+            case 'units_production':
+               return Math.round((depreciableBase / totalUnits) * unitsYear1);
+            case 'sum_years_digits':
+               const sumYears = (life * (life + 1)) / 2;
+               return Math.round((life / sumYears) * depreciableBase);
+            default:
+               return 0;
+         }
+      };
+
+      const methods = [
+         { id: 'straight_line', name: 'Straight-Line', formula: '(Cost - Salvage) ÷ Life' },
+         { id: 'double_declining', name: 'Double Declining', formula: '2 × (1/Life) × Cost' },
+         { id: 'units_production', name: 'Units of Production', formula: '(Cost-Salvage)/Total Units × Year 1 Units' },
+         { id: 'sum_years_digits', name: 'Sum of Years Digits', formula: '(Years Remaining/Sum) × (Cost-Salvage)' }
+      ];
+
+      const checkCalculation = () => {
+         setShowResults(true);
+         let correct = 0;
+         methods.forEach(m => {
+            const expected = calculateDepreciation(m.id);
+            if (calculations[m.id] === expected) {
+               correct++;
+               setScore(prev => prev + 20);
+            }
+         });
+         setGameLog(prev => [...prev, `Asset ${level + 1}: ${correct}/4 methods calculated correctly`]);
+      };
+
+      const nextAsset = () => {
+         if (level < assets.length - 1) {
+            setLevel(prev => prev + 1);
+            setCalculations({});
+            setShowResults(false);
+         } else {
+            setPhase('result');
+         }
+      };
+
+      const InfoModal = ({ topic, onClose }: { topic: string; onClose: () => void }) => (
+         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={onClose}>
+            <div className="bg-white rounded-xl p-6 max-w-md" onClick={e => e.stopPropagation()}>
+               <h3 className="text-lg font-bold text-gray-800 mb-3">ℹ️ {topic.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}</h3>
+               <p className="text-gray-600">{infoTopics[topic]}</p>
+               <button onClick={onClose} className="mt-4 w-full py-2 bg-rose-500 text-white rounded-lg hover:bg-rose-600">Got it!</button>
+            </div>
+         </div>
+      );
+
+      if (phase === 'intro') {
+         return (
+            <div className="flex flex-col items-center justify-center min-h-full bg-gradient-to-br from-rose-50 to-pink-100 p-6">
+               <div className="bg-white rounded-2xl shadow-xl p-8 max-w-lg w-full text-center">
+                  <div className="text-6xl mb-4">📉</div>
+                  <h1 className="text-2xl font-bold text-gray-800 mb-3">Depreciation Methods</h1>
+                  <p className="text-gray-600 mb-6">Master the art of allocating asset costs over time. Different methods, different financial impacts!</p>
+                  <div className="bg-rose-50 rounded-lg p-4 mb-6 text-left">
+                     <p className="text-sm text-rose-800">
+                        <strong>Four Methods:</strong><br/>
+                        ➖ Straight-Line (equal yearly)<br/>
+                        📈 Double Declining (fast early)<br/>
+                        ⚙️ Units of Production (usage-based)<br/>
+                        🔢 Sum of Years' Digits (accelerated)
+                     </p>
+                  </div>
+                  <button onClick={() => setPhase('tutorial')} className="w-full py-3 bg-rose-500 text-white rounded-xl font-semibold hover:bg-rose-600 transition-all">
+                     Start Learning
+                  </button>
+               </div>
+            </div>
+         );
+      }
+
+      if (phase === 'tutorial') {
+         const tut = tutorials[tutorialStep];
+         return (
+            <div className="flex flex-col items-center justify-center min-h-full bg-gradient-to-br from-rose-50 to-pink-100 p-6">
+               <div className="bg-white rounded-2xl shadow-xl p-8 max-w-lg w-full">
+                  <div className="flex justify-between items-center mb-6">
+                     <span className="text-sm text-gray-500">Step {tutorialStep + 1} of {tutorials.length}</span>
+                     <div className="flex gap-1">
+                        {tutorials.map((_, i) => (
+                           <div key={i} className={`w-2 h-2 rounded-full ${i <= tutorialStep ? 'bg-rose-500' : 'bg-gray-200'}`} />
+                        ))}
+                     </div>
+                  </div>
+                  <div className="text-4xl mb-4 text-center">{tut.icon}</div>
+                  <h2 className="text-xl font-bold text-gray-800 mb-3 text-center">{tut.title}</h2>
+                  <p className="text-gray-600 text-center mb-8">{tut.content}</p>
+                  <div className="flex gap-3">
+                     {tutorialStep > 0 && (
+                        <button onClick={() => setTutorialStep(prev => prev - 1)} className="flex-1 py-3 border-2 border-gray-200 rounded-xl font-semibold text-gray-600 hover:bg-gray-50">
+                           Back
+                        </button>
+                     )}
+                     <button
+                        onClick={() => tutorialStep < tutorials.length - 1 ? setTutorialStep(prev => prev + 1) : setPhase('play')}
+                        className="flex-1 py-3 bg-rose-500 text-white rounded-xl font-semibold hover:bg-rose-600"
+                     >
+                        {tutorialStep < tutorials.length - 1 ? 'Next' : 'Calculate Depreciation!'}
+                     </button>
+                  </div>
+               </div>
+            </div>
+         );
+      }
+
+      if (phase === 'play') {
+         return (
+            <div className="flex flex-col min-h-full bg-gradient-to-br from-rose-50 to-pink-100 p-4">
+               {showInfo && infoTopic && <InfoModal topic={infoTopic} onClose={() => setShowInfo(false)} />}
+
+               <div className="flex justify-between items-center mb-4">
+                  <div>
+                     <h2 className="font-bold text-gray-800">{currentAsset.name}</h2>
+                     <p className="text-sm text-gray-600">Calculate Year 1 depreciation for each method</p>
+                  </div>
+                  <span className="text-xl font-bold text-rose-600">{score} pts</span>
+               </div>
+
+               <div className="bg-white rounded-xl shadow-lg p-4 mb-4">
+                  <div className="grid grid-cols-2 gap-3 text-sm">
+                     <div><span className="text-gray-500">Cost:</span> <span className="font-bold">${currentAsset.cost.toLocaleString()}</span></div>
+                     <div><span className="text-gray-500">Salvage:</span> <span className="font-bold">${currentAsset.salvage.toLocaleString()}</span></div>
+                     <div><span className="text-gray-500">Useful Life:</span> <span className="font-bold">{currentAsset.life} years</span></div>
+                     <div><span className="text-gray-500">Year 1 Units:</span> <span className="font-bold">{currentAsset.unitsYear1.toLocaleString()}</span></div>
+                     <div className="col-span-2"><span className="text-gray-500">Total Units:</span> <span className="font-bold">{currentAsset.totalUnits.toLocaleString()}</span></div>
+                  </div>
+               </div>
+
+               <div className="flex-1 bg-white rounded-xl shadow-lg p-4 overflow-y-auto">
+                  <div className="space-y-4">
+                     {methods.map(method => (
+                        <div key={method.id} className="border rounded-lg p-3">
+                           <div className="flex items-center justify-between mb-2">
+                              <div className="flex items-center gap-2">
+                                 <span className="font-bold text-gray-800">{method.name}</span>
+                                 <button onClick={() => { setInfoTopic(method.id); setShowInfo(true); }} className="text-blue-500">ℹ️</button>
+                              </div>
+                           </div>
+                           <p className="text-xs text-gray-500 mb-2">{method.formula}</p>
+                           <div className="flex items-center gap-2">
+                              <span className="text-gray-500">Year 1: $</span>
+                              <input
+                                 type="number"
+                                 value={calculations[method.id] || ''}
+                                 onChange={(e) => setCalculations(prev => ({ ...prev, [method.id]: Number(e.target.value) }))}
+                                 disabled={showResults}
+                                 className="flex-1 px-3 py-2 border rounded-lg"
+                                 placeholder="Calculate..."
+                              />
+                              {showResults && (
+                                 <span className={calculations[method.id] === calculateDepreciation(method.id) ? 'text-green-600 font-bold' : 'text-red-600'}>
+                                    {calculations[method.id] === calculateDepreciation(method.id) ? '✓' : `→ $${calculateDepreciation(method.id).toLocaleString()}`}
+                                 </span>
+                              )}
+                           </div>
+                        </div>
+                     ))}
+                  </div>
+               </div>
+
+               <div className="mt-4">
+                  {!showResults ? (
+                     <button
+                        onClick={checkCalculation}
+                        disabled={Object.keys(calculations).length < methods.length}
+                        className={`w-full py-3 rounded-xl font-semibold ${Object.keys(calculations).length >= methods.length ? 'bg-rose-500 text-white hover:bg-rose-600' : 'bg-gray-200 text-gray-400'}`}
+                     >
+                        Check Calculations
+                     </button>
+                  ) : (
+                     <button
+                        onClick={nextAsset}
+                        className="w-full py-3 bg-rose-500 text-white rounded-xl font-semibold hover:bg-rose-600"
+                     >
+                        {level < assets.length - 1 ? 'Next Asset →' : 'See Results'}
+                     </button>
+                  )}
+               </div>
+            </div>
+         );
+      }
+
+      if (phase === 'result') {
+         const maxScore = assets.length * methods.length * 20;
+         const percentage = Math.round((score / maxScore) * 100);
+
+         return (
+            <div className="flex flex-col items-center justify-center min-h-full bg-gradient-to-br from-rose-50 to-pink-100 p-6">
+               <div className="bg-white rounded-2xl shadow-xl p-8 max-w-lg w-full text-center">
+                  <div className="text-6xl mb-4">{percentage >= 80 ? '🏆' : percentage >= 60 ? '📊' : '📚'}</div>
+                  <h1 className="text-2xl font-bold text-gray-800 mb-2">Depreciation Expert!</h1>
+                  <div className="text-4xl font-bold text-rose-600 mb-4">{score} / {maxScore}</div>
+                  <div className="w-full bg-gray-200 rounded-full h-3 mb-6">
+                     <div className="bg-rose-500 h-3 rounded-full transition-all" style={{ width: `${percentage}%` }} />
+                  </div>
+
+                  <div className="bg-gray-50 rounded-lg p-4 text-left mb-6">
+                     <h3 className="font-semibold text-gray-800 mb-2">🎯 Key Takeaways:</h3>
+                     <ul className="text-sm text-gray-600 space-y-2">
+                        <li>• <strong>Straight-line</strong>: Simplest, equal amounts</li>
+                        <li>• <strong>DDB & SYD</strong>: Accelerated, more early, less later</li>
+                        <li>• <strong>Units of Production</strong>: Ties to actual usage</li>
+                        <li>• Never depreciate below salvage value!</li>
+                     </ul>
+                  </div>
+
+                  <div className="bg-rose-50 rounded-lg p-4 text-left mb-6">
+                     <h3 className="font-semibold text-rose-800 mb-2">💡 Pro Insight:</h3>
+                     <p className="text-sm text-rose-700">
+                        Method choice affects reported profit! Accelerated methods reduce early profits but increase later profits. Use straight-line for stable earnings, accelerated for tax benefits.
+                     </p>
+                  </div>
+
+                  <button onClick={() => { setPhase('intro'); setScore(0); setLevel(0); setCalculations({}); setShowResults(false); setGameLog([]); }} className="w-full py-3 bg-rose-500 text-white rounded-xl font-semibold hover:bg-rose-600">
+                     Practice Again
+                  </button>
+               </div>
+            </div>
+         );
+      }
+
+      return null;
+   };
+
    const FinancialStatementsRenderer = () => {
       const [phase, setPhase] = useState<'intro' | 'play' | 'result'>('intro');
       const [showInfo, setShowInfo] = useState(false);
@@ -45084,6 +45381,8 @@ const GeneratedDiagram: React.FC<DiagramProps> = ({ type, data, title }) => {
             return <RetainedEarningsRenderer />;
          case 'accrual_cash_basis':
             return <AccrualCashBasisRenderer />;
+         case 'depreciation_methods':
+            return <DepreciationMethodsRenderer />;
          case 'pricing_strategy':
             return <PricingStrategyRenderer />;
          case 'budgeting':
