@@ -34640,6 +34640,1212 @@ const GeneratedDiagram: React.FC<DiagramProps> = ({ type, data, title }) => {
       );
    };
 
+   // ============================================================================
+   // DOUBLE-ENTRY BOOKKEEPING INTERACTIVE SIMULATION
+   // Every transaction affects at least two accounts - debits and credits
+   // Features: Drag-and-drop T-accounts, progressive levels, coaching, AI sync
+   // ============================================================================
+   const DoubleEntryBookkeepingRenderer = () => {
+      // ============================================================
+      // PHASE & UI STATE
+      // ============================================================
+      const [phase, setPhase] = useState<'intro' | 'tutorial' | 'play' | 'result'>('intro');
+      const [tutorialStep, setTutorialStep] = useState(0);
+      const [showInfo, setShowInfo] = useState(false);
+      const [infoTopic, setInfoTopic] = useState<string | null>(null);
+
+      // ============================================================
+      // GAME STATE
+      // ============================================================
+      const [currentLevel, setCurrentLevel] = useState(0);
+      const [currentScenario, setCurrentScenario] = useState(0);
+      const [score, setScore] = useState(0);
+      const [streak, setStreak] = useState(0);
+      const [bestStreak, setBestStreak] = useState(0);
+      const [totalAttempts, setTotalAttempts] = useState(0);
+      const [correctAttempts, setCorrectAttempts] = useState(0);
+
+      // ============================================================
+      // DRAG AND DROP STATE
+      // ============================================================
+      const [draggedItem, setDraggedItem] = useState<{type: 'increase' | 'decrease'; amount: number} | null>(null);
+      const [placements, setPlacements] = useState<{
+         account1Debit: number | null;
+         account1Credit: number | null;
+         account2Debit: number | null;
+         account2Credit: number | null;
+      }>({ account1Debit: null, account1Credit: null, account2Debit: null, account2Credit: null });
+      const [showResult, setShowResult] = useState(false);
+      const [isCorrect, setIsCorrect] = useState(false);
+
+      // ============================================================
+      // RUNNING TOTALS FOR BALANCE CHECK
+      // ============================================================
+      const [runningDebits, setRunningDebits] = useState(0);
+      const [runningCredits, setRunningCredits] = useState(0);
+
+      // ============================================================
+      // COACHING STATE
+      // ============================================================
+      const [coachMessage, setCoachMessage] = useState<string>('');
+      const [showHint, setShowHint] = useState(false);
+
+      // ============================================================
+      // AI COACH SYNC - GAME LOG
+      // ============================================================
+      const [gameLog, setGameLog] = useState<string[]>([]);
+      const [conceptsLearned, setConceptsLearned] = useState<string[]>([]);
+      const [mistakePatterns, setMistakePatterns] = useState<string[]>([]);
+
+      // ============================================================
+      // ACCOUNT TYPES REFERENCE
+      // ============================================================
+      type AccountType = 'asset' | 'liability' | 'equity' | 'revenue' | 'expense';
+
+      interface Account {
+         name: string;
+         type: AccountType;
+         normalBalance: 'debit' | 'credit';
+      }
+
+      // ============================================================
+      // SCENARIO DEFINITIONS - PROGRESSIVE DIFFICULTY
+      // ============================================================
+      const levels = [
+         { name: 'Level 1: Asset Exchanges', description: 'Simple swaps between asset accounts' },
+         { name: 'Level 2: Revenue Transactions', description: 'Earning money for services' },
+         { name: 'Level 3: Expense Transactions', description: 'Paying for business costs' },
+         { name: 'Level 4: Liability Transactions', description: 'Borrowing and paying back' },
+         { name: 'Level 5: Complex Transactions', description: 'Multi-step real-world scenarios' }
+      ];
+
+      const scenarios = [
+         // LEVEL 1: Asset Exchanges
+         [
+            {
+               id: 1,
+               description: 'Bought office supplies for $500 cash',
+               account1: { name: 'Office Supplies', type: 'asset' as AccountType, normalBalance: 'debit' as const },
+               account2: { name: 'Cash', type: 'asset' as AccountType, normalBalance: 'debit' as const },
+               amount: 500,
+               correctAnswer: { account1Debit: 500, account1Credit: null, account2Debit: null, account2Credit: 500 },
+               explanation: 'Office Supplies (asset) increases → DEBIT. Cash (asset) decreases → CREDIT. Both are assets, but one goes up and one goes down.',
+               whyItBalances: 'Debit $500 = Credit $500. You traded one asset for another.',
+               realWorld: 'Every time you buy something with cash, this exact entry happens in the books.'
+            },
+            {
+               id: 2,
+               description: 'Purchased equipment for $3,000 cash',
+               account1: { name: 'Equipment', type: 'asset' as AccountType, normalBalance: 'debit' as const },
+               account2: { name: 'Cash', type: 'asset' as AccountType, normalBalance: 'debit' as const },
+               amount: 3000,
+               correctAnswer: { account1Debit: 3000, account1Credit: null, account2Debit: null, account2Credit: 3000 },
+               explanation: 'Equipment (asset) increases → DEBIT. Cash (asset) decreases → CREDIT. You converted cash into a long-term asset.',
+               whyItBalances: 'Debit $3,000 = Credit $3,000. Total assets unchanged, just the form changed.',
+               realWorld: 'Buying a computer, desk, or machinery all follow this pattern.'
+            },
+            {
+               id: 3,
+               description: 'Deposited $2,000 from petty cash into the bank',
+               account1: { name: 'Bank Account', type: 'asset' as AccountType, normalBalance: 'debit' as const },
+               account2: { name: 'Petty Cash', type: 'asset' as AccountType, normalBalance: 'debit' as const },
+               amount: 2000,
+               correctAnswer: { account1Debit: 2000, account1Credit: null, account2Debit: null, account2Credit: 2000 },
+               explanation: 'Bank Account (asset) increases → DEBIT. Petty Cash (asset) decreases → CREDIT. Moving money between accounts.',
+               whyItBalances: 'Debit $2,000 = Credit $2,000. Just moving cash from one place to another.',
+               realWorld: 'Moving money between checking and savings follows this same logic.'
+            }
+         ],
+         // LEVEL 2: Revenue Transactions
+         [
+            {
+               id: 4,
+               description: 'Received $1,500 cash for consulting services',
+               account1: { name: 'Cash', type: 'asset' as AccountType, normalBalance: 'debit' as const },
+               account2: { name: 'Service Revenue', type: 'revenue' as AccountType, normalBalance: 'credit' as const },
+               amount: 1500,
+               correctAnswer: { account1Debit: 1500, account1Credit: null, account2Debit: null, account2Credit: 1500 },
+               explanation: 'Cash (asset) increases → DEBIT. Service Revenue increases → CREDIT. Revenue has a credit normal balance!',
+               whyItBalances: 'Debit $1,500 = Credit $1,500. You got cash and recorded the earning.',
+               realWorld: 'Every sale you make creates this entry - cash in, revenue recorded.'
+            },
+            {
+               id: 5,
+               description: 'Earned $800 for web design, client will pay later',
+               account1: { name: 'Accounts Receivable', type: 'asset' as AccountType, normalBalance: 'debit' as const },
+               account2: { name: 'Service Revenue', type: 'revenue' as AccountType, normalBalance: 'credit' as const },
+               amount: 800,
+               correctAnswer: { account1Debit: 800, account1Credit: null, account2Debit: null, account2Credit: 800 },
+               explanation: 'Accounts Receivable (asset) increases → DEBIT. Revenue increases → CREDIT. You earned it even though cash hasnt arrived.',
+               whyItBalances: 'Debit $800 = Credit $800. Revenue is recorded when EARNED, not when paid.',
+               realWorld: 'This is accrual accounting - recording revenue when the work is done, not when you get paid.'
+            },
+            {
+               id: 6,
+               description: 'Sold products for $2,200 cash',
+               account1: { name: 'Cash', type: 'asset' as AccountType, normalBalance: 'debit' as const },
+               account2: { name: 'Sales Revenue', type: 'revenue' as AccountType, normalBalance: 'credit' as const },
+               amount: 2200,
+               correctAnswer: { account1Debit: 2200, account1Credit: null, account2Debit: null, account2Credit: 2200 },
+               explanation: 'Cash (asset) increases → DEBIT. Sales Revenue increases → CREDIT. Simple cash sale.',
+               whyItBalances: 'Debit $2,200 = Credit $2,200. Cash in, revenue recorded.',
+               realWorld: 'Every retail transaction at a store creates this exact entry.'
+            }
+         ],
+         // LEVEL 3: Expense Transactions
+         [
+            {
+               id: 7,
+               description: 'Paid $1,200 rent for the month',
+               account1: { name: 'Rent Expense', type: 'expense' as AccountType, normalBalance: 'debit' as const },
+               account2: { name: 'Cash', type: 'asset' as AccountType, normalBalance: 'debit' as const },
+               amount: 1200,
+               correctAnswer: { account1Debit: 1200, account1Credit: null, account2Debit: null, account2Credit: 1200 },
+               explanation: 'Rent Expense increases → DEBIT (expenses have debit normal balance). Cash decreases → CREDIT.',
+               whyItBalances: 'Debit $1,200 = Credit $1,200. You spent cash on an expense.',
+               realWorld: 'Every monthly bill payment - rent, utilities, insurance - follows this pattern.'
+            },
+            {
+               id: 8,
+               description: 'Paid employees $4,500 in wages',
+               account1: { name: 'Wages Expense', type: 'expense' as AccountType, normalBalance: 'debit' as const },
+               account2: { name: 'Cash', type: 'asset' as AccountType, normalBalance: 'debit' as const },
+               amount: 4500,
+               correctAnswer: { account1Debit: 4500, account1Credit: null, account2Debit: null, account2Credit: 4500 },
+               explanation: 'Wages Expense increases → DEBIT. Cash decreases → CREDIT. Paying for labor.',
+               whyItBalances: 'Debit $4,500 = Credit $4,500. Cash out, expense recorded.',
+               realWorld: 'Payroll is usually the biggest expense for most businesses.'
+            },
+            {
+               id: 9,
+               description: 'Paid $350 for advertising',
+               account1: { name: 'Advertising Expense', type: 'expense' as AccountType, normalBalance: 'debit' as const },
+               account2: { name: 'Cash', type: 'asset' as AccountType, normalBalance: 'debit' as const },
+               amount: 350,
+               correctAnswer: { account1Debit: 350, account1Credit: null, account2Debit: null, account2Credit: 350 },
+               explanation: 'Advertising Expense increases → DEBIT. Cash decreases → CREDIT.',
+               whyItBalances: 'Debit $350 = Credit $350. Marketing spend recorded.',
+               realWorld: 'Every Facebook ad, Google ad, or billboard creates this entry.'
+            }
+         ],
+         // LEVEL 4: Liability Transactions
+         [
+            {
+               id: 10,
+               description: 'Borrowed $10,000 from the bank',
+               account1: { name: 'Cash', type: 'asset' as AccountType, normalBalance: 'debit' as const },
+               account2: { name: 'Bank Loan Payable', type: 'liability' as AccountType, normalBalance: 'credit' as const },
+               amount: 10000,
+               correctAnswer: { account1Debit: 10000, account1Credit: null, account2Debit: null, account2Credit: 10000 },
+               explanation: 'Cash (asset) increases → DEBIT. Bank Loan (liability) increases → CREDIT. Liabilities increase with credits!',
+               whyItBalances: 'Debit $10,000 = Credit $10,000. You got cash but now owe money.',
+               realWorld: 'Every business loan, mortgage, or line of credit works this way.'
+            },
+            {
+               id: 11,
+               description: 'Paid $2,000 on the bank loan',
+               account1: { name: 'Bank Loan Payable', type: 'liability' as AccountType, normalBalance: 'credit' as const },
+               account2: { name: 'Cash', type: 'asset' as AccountType, normalBalance: 'debit' as const },
+               amount: 2000,
+               correctAnswer: { account1Debit: 2000, account1Credit: null, account2Debit: null, account2Credit: 2000 },
+               explanation: 'Bank Loan (liability) decreases → DEBIT (opposite of normal). Cash decreases → CREDIT.',
+               whyItBalances: 'Debit $2,000 = Credit $2,000. You reduced what you owe.',
+               realWorld: 'Every loan payment you make reduces your liability this way.'
+            },
+            {
+               id: 12,
+               description: 'Received $5,000 from an investor for company stock',
+               account1: { name: 'Cash', type: 'asset' as AccountType, normalBalance: 'debit' as const },
+               account2: { name: 'Common Stock', type: 'equity' as AccountType, normalBalance: 'credit' as const },
+               amount: 5000,
+               correctAnswer: { account1Debit: 5000, account1Credit: null, account2Debit: null, account2Credit: 5000 },
+               explanation: 'Cash (asset) increases → DEBIT. Common Stock (equity) increases → CREDIT. Equity grows with credits!',
+               whyItBalances: 'Debit $5,000 = Credit $5,000. Cash in, ownership stake recorded.',
+               realWorld: 'This is how startups record investment rounds.'
+            }
+         ],
+         // LEVEL 5: Complex Transactions
+         [
+            {
+               id: 13,
+               description: 'Purchased $3,000 of inventory on credit (will pay later)',
+               account1: { name: 'Inventory', type: 'asset' as AccountType, normalBalance: 'debit' as const },
+               account2: { name: 'Accounts Payable', type: 'liability' as AccountType, normalBalance: 'credit' as const },
+               amount: 3000,
+               correctAnswer: { account1Debit: 3000, account1Credit: null, account2Debit: null, account2Credit: 3000 },
+               explanation: 'Inventory (asset) increases → DEBIT. Accounts Payable (liability) increases → CREDIT. You got goods but owe for them.',
+               whyItBalances: 'Debit $3,000 = Credit $3,000. Asset up, liability up by same amount.',
+               realWorld: 'Most businesses buy inventory on credit terms (net 30, net 60).'
+            },
+            {
+               id: 14,
+               description: 'Paid off $1,500 of accounts payable',
+               account1: { name: 'Accounts Payable', type: 'liability' as AccountType, normalBalance: 'credit' as const },
+               account2: { name: 'Cash', type: 'asset' as AccountType, normalBalance: 'debit' as const },
+               amount: 1500,
+               correctAnswer: { account1Debit: 1500, account1Credit: null, account2Debit: null, account2Credit: 1500 },
+               explanation: 'Accounts Payable (liability) decreases → DEBIT. Cash decreases → CREDIT.',
+               whyItBalances: 'Debit $1,500 = Credit $1,500. Paid what you owed.',
+               realWorld: 'Paying vendor invoices is one of the most common transactions.'
+            },
+            {
+               id: 15,
+               description: 'Owner withdrew $2,000 for personal use',
+               account1: { name: 'Owner Drawings', type: 'equity' as AccountType, normalBalance: 'debit' as const },
+               account2: { name: 'Cash', type: 'asset' as AccountType, normalBalance: 'debit' as const },
+               amount: 2000,
+               correctAnswer: { account1Debit: 2000, account1Credit: null, account2Debit: null, account2Credit: 2000 },
+               explanation: 'Owner Drawings (reduces equity) → DEBIT. Cash decreases → CREDIT. Drawings reduce the owners stake.',
+               whyItBalances: 'Debit $2,000 = Credit $2,000. Owner took money out.',
+               realWorld: 'In sole proprietorships, owners often take draws instead of salary.'
+            }
+         ]
+      ];
+
+      // ============================================================
+      // INFO TOPICS - COMPREHENSIVE EXPLANATIONS
+      // ============================================================
+      const infoTopics: Record<string, { title: string; content: string; example: string; whyItMatters: string }> = {
+         debit: {
+            title: 'What is a DEBIT?',
+            content: 'A debit is an entry on the LEFT side of a T-account. For assets and expenses, a debit means INCREASE. For liabilities, equity, and revenue, a debit means DECREASE.',
+            example: 'When you receive $1,000 cash, you DEBIT the Cash account because cash (an asset) is increasing.',
+            whyItMatters: 'Understanding debits is essential for recording any transaction correctly. Remember: Assets & Expenses increase with debits.'
+         },
+         credit: {
+            title: 'What is a CREDIT?',
+            content: 'A credit is an entry on the RIGHT side of a T-account. For liabilities, equity, and revenue, a credit means INCREASE. For assets and expenses, a credit means DECREASE.',
+            example: 'When you earn $1,000 in revenue, you CREDIT the Revenue account because revenue increases with credits.',
+            whyItMatters: 'Credits balance out debits. Every transaction must have equal debits and credits - this is the foundation of accounting accuracy.'
+         },
+         tAccount: {
+            title: 'What is a T-Account?',
+            content: 'A T-account is a visual representation of a ledger account. It looks like the letter "T" with the account name on top, debits on the left, and credits on the right.',
+            example: 'The Cash T-account shows all increases (debits) on the left and all decreases (credits) on the right.',
+            whyItMatters: 'T-accounts help visualize how transactions flow through accounts. They are the building blocks of the general ledger.'
+         },
+         normalBalance: {
+            title: 'What is Normal Balance?',
+            content: 'Each account type has a "normal" side where increases are recorded. Assets & Expenses: Debit normal. Liabilities, Equity & Revenue: Credit normal.',
+            example: 'Cash has a debit normal balance, so increases go on the left. Revenue has a credit normal balance, so increases go on the right.',
+            whyItMatters: 'Knowing normal balances tells you instantly which side to use for increases vs decreases.'
+         },
+         assets: {
+            title: 'Asset Accounts',
+            content: 'Assets are resources owned by the business that have future value. Examples: Cash, Accounts Receivable, Inventory, Equipment, Buildings.',
+            example: 'When you buy equipment for $5,000 cash, Equipment (asset) increases with a DEBIT and Cash (asset) decreases with a CREDIT.',
+            whyItMatters: 'Assets appear on the balance sheet and show what the company owns. They increase with debits.'
+         },
+         liabilities: {
+            title: 'Liability Accounts',
+            content: 'Liabilities are obligations the business owes to others. Examples: Accounts Payable, Loans Payable, Wages Payable, Unearned Revenue.',
+            example: 'When you borrow $10,000, Cash increases (debit) and Loans Payable increases (credit).',
+            whyItMatters: 'Liabilities show what the company owes. They increase with credits - opposite of assets!'
+         },
+         equity: {
+            title: 'Equity Accounts',
+            content: 'Equity represents the owners claim on assets after liabilities are paid. Examples: Common Stock, Retained Earnings, Owner Capital.',
+            example: 'When an owner invests $5,000, Cash increases (debit) and Owner Capital increases (credit).',
+            whyItMatters: 'Equity = Assets - Liabilities. It grows when the business is profitable and shrinks with losses or withdrawals.'
+         },
+         revenue: {
+            title: 'Revenue Accounts',
+            content: 'Revenue is income earned from business operations. Examples: Sales Revenue, Service Revenue, Interest Revenue.',
+            example: 'When you earn $1,000 for services, Cash increases (debit) and Service Revenue increases (credit).',
+            whyItMatters: 'Revenue increases equity through retained earnings. More revenue = higher profits = more owner value.'
+         },
+         expenses: {
+            title: 'Expense Accounts',
+            content: 'Expenses are costs incurred to generate revenue. Examples: Rent Expense, Wages Expense, Utilities Expense, Advertising Expense.',
+            example: 'When you pay $500 rent, Rent Expense increases (debit) and Cash decreases (credit).',
+            whyItMatters: 'Expenses reduce equity through retained earnings. Controlling expenses is key to profitability.'
+         },
+         balance: {
+            title: 'Why Must Debits = Credits?',
+            content: 'The double-entry system requires every transaction to have equal debits and credits. This ensures the accounting equation (Assets = Liabilities + Equity) always stays balanced.',
+            example: 'If you record a $1,000 debit without a matching credit, your trial balance wont balance - signaling an error.',
+            whyItMatters: 'This is how accountants catch errors and fraud. If debits dont equal credits, something is wrong.'
+         }
+      };
+
+      // ============================================================
+      // HELPER FUNCTIONS
+      // ============================================================
+      const getCurrentScenarioData = () => {
+         return scenarios[currentLevel]?.[currentScenario];
+      };
+
+      const checkAnswer = () => {
+         const scenario = getCurrentScenarioData();
+         if (!scenario) return;
+
+         const correct = scenario.correctAnswer;
+         const isAnswerCorrect =
+            placements.account1Debit === correct.account1Debit &&
+            placements.account1Credit === correct.account1Credit &&
+            placements.account2Debit === correct.account2Debit &&
+            placements.account2Credit === correct.account2Credit;
+
+         setIsCorrect(isAnswerCorrect);
+         setShowResult(true);
+         setTotalAttempts(prev => prev + 1);
+
+         if (isAnswerCorrect) {
+            setCorrectAttempts(prev => prev + 1);
+            setScore(prev => prev + 100 + (streak * 10));
+            setStreak(prev => prev + 1);
+            if (streak + 1 > bestStreak) setBestStreak(streak + 1);
+            setRunningDebits(prev => prev + scenario.amount);
+            setRunningCredits(prev => prev + scenario.amount);
+            setCoachMessage(`Excellent! ${scenario.explanation}`);
+
+            // Log success
+            setGameLog(prev => [...prev,
+               `[CORRECT] ${scenario.description}`,
+               `[ENTRY] DR ${scenario.account1.name} $${scenario.amount} | CR ${scenario.account2.name} $${scenario.amount}`
+            ]);
+
+            // Track concepts learned
+            if (!conceptsLearned.includes(scenario.account1.type)) {
+               setConceptsLearned(prev => [...prev, scenario.account1.type]);
+            }
+            if (!conceptsLearned.includes(scenario.account2.type)) {
+               setConceptsLearned(prev => [...prev, scenario.account2.type]);
+            }
+         } else {
+            setStreak(0);
+            setCoachMessage(`Not quite. ${scenario.explanation}`);
+
+            // Track mistakes
+            setGameLog(prev => [...prev,
+               `[INCORRECT] ${scenario.description}`,
+               `[USER PLACED] DR1:${placements.account1Debit} CR1:${placements.account1Credit} DR2:${placements.account2Debit} CR2:${placements.account2Credit}`,
+               `[CORRECT WAS] DR1:${correct.account1Debit} CR1:${correct.account1Credit} DR2:${correct.account2Debit} CR2:${correct.account2Credit}`
+            ]);
+
+            // Pattern detection for mistakes
+            const scenario_data = getCurrentScenarioData();
+            if (scenario_data) {
+               const accountTypes = [scenario_data.account1.type, scenario_data.account2.type];
+               accountTypes.forEach(type => {
+                  if (!mistakePatterns.includes(type)) {
+                     setMistakePatterns(prev => [...prev, type]);
+                  }
+               });
+            }
+         }
+      };
+
+      const nextScenario = () => {
+         setShowResult(false);
+         setPlacements({ account1Debit: null, account1Credit: null, account2Debit: null, account2Credit: null });
+         setShowHint(false);
+
+         if (currentScenario < scenarios[currentLevel].length - 1) {
+            setCurrentScenario(prev => prev + 1);
+         } else if (currentLevel < levels.length - 1) {
+            setCurrentLevel(prev => prev + 1);
+            setCurrentScenario(0);
+            setCoachMessage(`Level Up! Welcome to ${levels[currentLevel + 1].name}`);
+         } else {
+            // Completed all levels
+            setGameLog(prev => [...prev,
+               `[SESSION COMPLETE]`,
+               `[FINAL SCORE] ${score}`,
+               `[ACCURACY] ${Math.round((correctAttempts / totalAttempts) * 100)}%`,
+               `[BEST STREAK] ${bestStreak}`,
+               `[CONCEPTS LEARNED] ${conceptsLearned.join(', ')}`,
+               `[STRUGGLED WITH] ${mistakePatterns.join(', ')}`
+            ]);
+            setPhase('result');
+         }
+      };
+
+      const resetPlacements = () => {
+         setPlacements({ account1Debit: null, account1Credit: null, account2Debit: null, account2Credit: null });
+      };
+
+      const handleDrop = (zone: 'account1Debit' | 'account1Credit' | 'account2Debit' | 'account2Credit') => {
+         if (!draggedItem) return;
+         const scenario = getCurrentScenarioData();
+         if (!scenario) return;
+
+         setPlacements(prev => ({
+            ...prev,
+            [zone]: scenario.amount
+         }));
+         setDraggedItem(null);
+      };
+
+      const startGame = () => {
+         setPhase('tutorial');
+         setTutorialStep(0);
+         setGameLog(['[SESSION START] Double-Entry Bookkeeping Simulation']);
+      };
+
+      const startPlaying = () => {
+         setPhase('play');
+         setCoachMessage(`Let's practice! ${levels[0].description}. Drag the amounts to the correct T-account sides.`);
+      };
+
+      const finishSession = () => {
+         setGameLog(prev => [...prev,
+            `[SESSION COMPLETE]`,
+            `[FINAL SCORE] ${score}`,
+            `[ACCURACY] ${totalAttempts > 0 ? Math.round((correctAttempts / totalAttempts) * 100) : 0}%`,
+            `[BEST STREAK] ${bestStreak}`,
+            `[LEVELS COMPLETED] ${currentLevel + 1}/${levels.length}`,
+            `[CONCEPTS MASTERED] ${conceptsLearned.join(', ')}`,
+            `[AREAS FOR REVIEW] ${mistakePatterns.join(', ')}`
+         ]);
+         setPhase('result');
+      };
+
+      // ============================================================
+      // TUTORIAL STEPS
+      // ============================================================
+      const tutorialSteps = [
+         {
+            title: 'Welcome to Double-Entry Bookkeeping!',
+            content: 'Every financial transaction affects at least TWO accounts. This 500-year-old system is how every business in the world tracks money.',
+            visual: 'intro'
+         },
+         {
+            title: 'The T-Account',
+            content: 'Each account looks like a "T". The LEFT side is called DEBIT. The RIGHT side is called CREDIT. These are just positions - not good or bad!',
+            visual: 'tAccount'
+         },
+         {
+            title: 'The Golden Rules',
+            content: 'Assets & Expenses: Increase with DEBIT (left)\nLiabilities, Equity & Revenue: Increase with CREDIT (right)\n\nTo decrease, use the opposite side!',
+            visual: 'rules'
+         },
+         {
+            title: 'The Balance Requirement',
+            content: 'EVERY transaction must have equal Debits and Credits. This is why the books always "balance" - and how we catch errors!',
+            visual: 'balance'
+         },
+         {
+            title: 'How to Play',
+            content: 'You\'ll see a transaction and two T-accounts. Drag the increase/decrease amounts to the correct sides. Match the correct pattern to score points!',
+            visual: 'play'
+         }
+      ];
+
+      // ============================================================
+      // RENDER: INTRO PHASE
+      // ============================================================
+      if (phase === 'intro') {
+         return (
+            <div className="w-full h-full flex flex-col bg-gradient-to-br from-blue-900 via-indigo-900 to-purple-900 text-white overflow-hidden">
+               <div className="flex-1 p-6 overflow-y-auto">
+                  {/* Header */}
+                  <div className="text-center mb-6">
+                     <div className="text-5xl mb-3">📒</div>
+                     <h1 className="text-2xl font-black mb-2">DOUBLE-ENTRY BOOKKEEPING</h1>
+                     <p className="text-xl font-bold text-blue-300">Master the Foundation of All Accounting</p>
+                  </div>
+
+                  {/* Core Concept */}
+                  <div className="bg-black/30 rounded-2xl p-5 mb-6 border border-blue-500/30">
+                     <p className="text-lg text-center leading-relaxed">
+                        Every transaction affects <span className="text-blue-400 font-bold">TWO accounts</span> —
+                        one <span className="text-green-400 font-bold">DEBIT</span> and
+                        one <span className="text-amber-400 font-bold">CREDIT</span>.
+                        This is why the books always balance!
+                     </p>
+                  </div>
+
+                  {/* Why It Matters */}
+                  <div className="bg-gradient-to-r from-blue-800/50 to-purple-800/50 rounded-xl p-4 mb-6">
+                     <h2 className="font-bold text-blue-300 mb-2 flex items-center gap-2">
+                        <span>🎯</span> WHY THIS MATTERS
+                     </h2>
+                     <p className="text-slate-200">
+                        This 500-year-old system is how EVERY business in the world tracks money.
+                        Understanding debits and credits helps you catch errors, prevent fraud, and read any financial statement.
+                     </p>
+                  </div>
+
+                  {/* What You'll Learn */}
+                  <div className="bg-black/20 rounded-xl p-4 mb-6 border border-indigo-500/30">
+                     <h2 className="font-bold text-indigo-300 mb-3 flex items-center gap-2">
+                        <span>📚</span> WHAT YOU'LL LEARN
+                     </h2>
+                     <ul className="text-slate-200 space-y-2">
+                        <li className="flex items-start gap-2">
+                           <span className="text-green-400">✓</span>
+                           <span>How to record debits and credits correctly</span>
+                        </li>
+                        <li className="flex items-start gap-2">
+                           <span className="text-green-400">✓</span>
+                           <span>Why every transaction affects two accounts</span>
+                        </li>
+                        <li className="flex items-start gap-2">
+                           <span className="text-green-400">✓</span>
+                           <span>The rules for different account types</span>
+                        </li>
+                        <li className="flex items-start gap-2">
+                           <span className="text-green-400">✓</span>
+                           <span>How to verify your books are balanced</span>
+                        </li>
+                     </ul>
+                  </div>
+
+                  {/* Level Preview */}
+                  <div className="bg-black/30 rounded-xl p-4 mb-6">
+                     <h3 className="font-bold text-purple-300 mb-3">🎮 5 PROGRESSIVE LEVELS</h3>
+                     <div className="space-y-2">
+                        {levels.map((level, idx) => (
+                           <div key={idx} className="flex items-center gap-3 text-sm">
+                              <span className="w-6 h-6 rounded-full bg-purple-600/50 flex items-center justify-center text-xs font-bold">{idx + 1}</span>
+                              <span className="text-slate-300">{level.name}</span>
+                           </div>
+                        ))}
+                     </div>
+                  </div>
+               </div>
+
+               {/* Action Button */}
+               <div className="p-4 bg-black/30 border-t border-blue-500/30">
+                  <button
+                     onClick={startGame}
+                     className="w-full py-4 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 rounded-xl font-bold text-lg transition-all transform hover:scale-[1.02] shadow-lg"
+                  >
+                     ▶️ START LEARNING
+                  </button>
+               </div>
+            </div>
+         );
+      }
+
+      // ============================================================
+      // RENDER: TUTORIAL PHASE
+      // ============================================================
+      if (phase === 'tutorial') {
+         const step = tutorialSteps[tutorialStep];
+         return (
+            <div className="w-full h-full flex flex-col bg-gradient-to-br from-blue-900 via-indigo-900 to-purple-900 text-white overflow-hidden">
+               {/* Progress Bar */}
+               <div className="p-3 bg-black/30 border-b border-blue-500/30">
+                  <div className="flex items-center justify-between mb-2">
+                     <span className="text-sm text-blue-300">Tutorial</span>
+                     <span className="text-sm text-slate-400">{tutorialStep + 1} of {tutorialSteps.length}</span>
+                  </div>
+                  <div className="h-2 bg-black/30 rounded-full overflow-hidden">
+                     <div
+                        className="h-full bg-gradient-to-r from-blue-500 to-indigo-500 transition-all duration-300"
+                        style={{ width: `${((tutorialStep + 1) / tutorialSteps.length) * 100}%` }}
+                     />
+                  </div>
+               </div>
+
+               <div className="flex-1 p-6 overflow-y-auto">
+                  {/* Step Title */}
+                  <div className="text-center mb-6">
+                     <h2 className="text-xl font-bold text-blue-300 mb-4">{step.title}</h2>
+                  </div>
+
+                  {/* Visual Content Based on Step */}
+                  {step.visual === 'intro' && (
+                     <div className="bg-black/30 rounded-2xl p-6 mb-6 border border-blue-500/30">
+                        <div className="text-6xl text-center mb-4">📒 ↔️ 📊</div>
+                        <p className="text-center text-lg text-slate-200">{step.content}</p>
+                     </div>
+                  )}
+
+                  {step.visual === 'tAccount' && (
+                     <div className="bg-black/30 rounded-2xl p-6 mb-6 border border-blue-500/30">
+                        <div className="flex justify-center mb-4">
+                           <div className="w-64 border-2 border-blue-400 rounded-lg overflow-hidden">
+                              <div className="bg-blue-600/50 text-center py-2 font-bold">CASH</div>
+                              <div className="flex">
+                                 <div className="flex-1 border-r border-blue-400 p-4 text-center">
+                                    <div className="text-green-400 font-bold mb-2">DEBIT</div>
+                                    <div className="text-sm text-slate-300">(Left Side)</div>
+                                    <div className="text-xs text-slate-400 mt-2">Increases for Assets</div>
+                                 </div>
+                                 <div className="flex-1 p-4 text-center">
+                                    <div className="text-amber-400 font-bold mb-2">CREDIT</div>
+                                    <div className="text-sm text-slate-300">(Right Side)</div>
+                                    <div className="text-xs text-slate-400 mt-2">Decreases for Assets</div>
+                                 </div>
+                              </div>
+                           </div>
+                        </div>
+                        <p className="text-center text-slate-200">{step.content}</p>
+                     </div>
+                  )}
+
+                  {step.visual === 'rules' && (
+                     <div className="bg-black/30 rounded-2xl p-6 mb-6 border border-blue-500/30">
+                        <div className="grid grid-cols-2 gap-4 mb-4">
+                           <div className="bg-green-900/30 rounded-lg p-4 border border-green-500/30">
+                              <h4 className="font-bold text-green-400 mb-2">DEBIT to Increase</h4>
+                              <ul className="text-sm text-slate-300 space-y-1">
+                                 <li>• Assets</li>
+                                 <li>• Expenses</li>
+                              </ul>
+                           </div>
+                           <div className="bg-amber-900/30 rounded-lg p-4 border border-amber-500/30">
+                              <h4 className="font-bold text-amber-400 mb-2">CREDIT to Increase</h4>
+                              <ul className="text-sm text-slate-300 space-y-1">
+                                 <li>• Liabilities</li>
+                                 <li>• Equity</li>
+                                 <li>• Revenue</li>
+                              </ul>
+                           </div>
+                        </div>
+                        <p className="text-center text-slate-200 whitespace-pre-line">{step.content}</p>
+                     </div>
+                  )}
+
+                  {step.visual === 'balance' && (
+                     <div className="bg-black/30 rounded-2xl p-6 mb-6 border border-blue-500/30">
+                        <div className="flex justify-center items-center gap-4 mb-4">
+                           <div className="bg-green-900/50 rounded-lg p-4 text-center">
+                              <div className="text-2xl font-bold text-green-400">$1,000</div>
+                              <div className="text-sm text-slate-300">Total Debits</div>
+                           </div>
+                           <div className="text-3xl font-bold text-blue-400">=</div>
+                           <div className="bg-amber-900/50 rounded-lg p-4 text-center">
+                              <div className="text-2xl font-bold text-amber-400">$1,000</div>
+                              <div className="text-sm text-slate-300">Total Credits</div>
+                           </div>
+                        </div>
+                        <div className="text-center">
+                           <span className="inline-flex items-center gap-2 px-4 py-2 bg-green-500/20 rounded-full text-green-400 font-bold">
+                              ✓ BALANCED
+                           </span>
+                        </div>
+                        <p className="text-center text-slate-200 mt-4">{step.content}</p>
+                     </div>
+                  )}
+
+                  {step.visual === 'play' && (
+                     <div className="bg-black/30 rounded-2xl p-6 mb-6 border border-blue-500/30">
+                        <div className="text-4xl text-center mb-4">🎮</div>
+                        <div className="bg-indigo-900/30 rounded-lg p-4 mb-4">
+                           <p className="text-center text-indigo-200 font-medium">
+                              "Bought supplies for $500 cash"
+                           </p>
+                        </div>
+                        <div className="flex justify-center gap-2 mb-4">
+                           <div className="px-4 py-2 bg-blue-600/50 rounded-lg cursor-move">
+                              💰 $500 ↑
+                           </div>
+                           <div className="px-4 py-2 bg-blue-600/50 rounded-lg cursor-move">
+                              💰 $500 ↓
+                           </div>
+                        </div>
+                        <p className="text-center text-slate-200">{step.content}</p>
+                     </div>
+                  )}
+               </div>
+
+               {/* Navigation */}
+               <div className="p-4 bg-black/30 border-t border-blue-500/30 flex gap-3">
+                  {tutorialStep > 0 && (
+                     <button
+                        onClick={() => setTutorialStep(prev => prev - 1)}
+                        className="px-6 py-3 bg-white/10 hover:bg-white/20 rounded-xl font-bold transition-all"
+                     >
+                        ← Back
+                     </button>
+                  )}
+                  <button
+                     onClick={() => {
+                        if (tutorialStep < tutorialSteps.length - 1) {
+                           setTutorialStep(prev => prev + 1);
+                        } else {
+                           startPlaying();
+                        }
+                     }}
+                     className="flex-1 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 rounded-xl font-bold transition-all"
+                  >
+                     {tutorialStep < tutorialSteps.length - 1 ? 'Next →' : 'Start Playing! 🎮'}
+                  </button>
+               </div>
+            </div>
+         );
+      }
+
+      // ============================================================
+      // RENDER: PLAY PHASE
+      // ============================================================
+      if (phase === 'play') {
+         const scenario = getCurrentScenarioData();
+
+         if (!scenario) {
+            return <div className="p-4 text-white">Loading...</div>;
+         }
+
+         return (
+            <div className="w-full h-full flex flex-col bg-gradient-to-br from-blue-900 via-indigo-900 to-purple-900 text-white overflow-hidden">
+               {/* Info Modal */}
+               {showInfo && infoTopic && infoTopics[infoTopic] && (
+                  <div className="absolute inset-0 bg-black/80 flex items-center justify-center p-4 z-50" onClick={() => { setShowInfo(false); setInfoTopic(null); }}>
+                     <div className="bg-slate-800 rounded-2xl p-5 max-w-md" onClick={e => e.stopPropagation()}>
+                        <h3 className="text-lg font-bold text-blue-400 mb-3">{infoTopics[infoTopic].title}</h3>
+                        <p className="text-slate-200 mb-4">{infoTopics[infoTopic].content}</p>
+                        <div className="bg-black/30 rounded-lg p-3 mb-3">
+                           <p className="text-xs text-indigo-400 font-bold mb-1">EXAMPLE:</p>
+                           <p className="text-sm text-slate-300">{infoTopics[infoTopic].example}</p>
+                        </div>
+                        <div className="bg-purple-900/30 rounded-lg p-3 mb-4 border border-purple-500/30">
+                           <p className="text-xs text-purple-400 font-bold mb-1">WHY IT MATTERS:</p>
+                           <p className="text-sm text-slate-300">{infoTopics[infoTopic].whyItMatters}</p>
+                        </div>
+                        <button onClick={() => { setShowInfo(false); setInfoTopic(null); }} className="w-full py-2 bg-blue-600 hover:bg-blue-500 rounded-xl font-bold transition-all">
+                           Got it! 👍
+                        </button>
+                     </div>
+                  </div>
+               )}
+
+               {/* Result Modal */}
+               {showResult && (
+                  <div className="absolute inset-0 bg-black/80 flex items-center justify-center p-4 z-50">
+                     <div className="bg-slate-800 rounded-2xl p-5 max-w-md w-full">
+                        <div className="text-center mb-4">
+                           <span className={`text-5xl ${isCorrect ? '' : ''}`}>{isCorrect ? '✅' : '❌'}</span>
+                           <h3 className={`text-xl font-bold mt-2 ${isCorrect ? 'text-green-400' : 'text-red-400'}`}>
+                              {isCorrect ? 'Correct!' : 'Not Quite'}
+                           </h3>
+                           {isCorrect && streak > 1 && (
+                              <p className="text-amber-400 text-sm mt-1">🔥 {streak} streak!</p>
+                           )}
+                        </div>
+
+                        <div className={`rounded-lg p-4 mb-4 border ${isCorrect ? 'bg-green-900/30 border-green-500/30' : 'bg-red-900/30 border-red-500/30'}`}>
+                           <p className="text-slate-200">{scenario.explanation}</p>
+                        </div>
+
+                        <div className="bg-black/30 rounded-lg p-3 mb-4">
+                           <p className="text-xs text-blue-400 font-bold mb-1">WHY IT BALANCES:</p>
+                           <p className="text-sm text-slate-300">{scenario.whyItBalances}</p>
+                        </div>
+
+                        <div className="bg-indigo-900/30 rounded-lg p-3 mb-4 border border-indigo-500/30">
+                           <p className="text-xs text-indigo-400 font-bold mb-1">🌍 REAL-WORLD:</p>
+                           <p className="text-sm text-slate-300">{scenario.realWorld}</p>
+                        </div>
+
+                        <button
+                           onClick={nextScenario}
+                           className="w-full py-3 bg-blue-600 hover:bg-blue-500 rounded-xl font-bold transition-all"
+                        >
+                           {currentScenario < scenarios[currentLevel].length - 1
+                              ? 'Next Transaction →'
+                              : currentLevel < levels.length - 1
+                                 ? 'Next Level! 🎉'
+                                 : 'See Results 📊'}
+                        </button>
+                     </div>
+                  </div>
+               )}
+
+               {/* Header */}
+               <div className="p-3 bg-black/30 border-b border-blue-500/30">
+                  <div className="flex justify-between items-center mb-2">
+                     <span className="font-bold text-blue-300">{levels[currentLevel].name}</span>
+                     <div className="flex items-center gap-3">
+                        <span className="text-xs bg-purple-600/50 px-2 py-1 rounded-full">
+                           Score: {score}
+                        </span>
+                        {streak > 0 && (
+                           <span className="text-xs bg-amber-600/50 px-2 py-1 rounded-full">
+                              🔥 {streak}
+                           </span>
+                        )}
+                     </div>
+                  </div>
+                  <div className="flex gap-1">
+                     {scenarios[currentLevel].map((_, idx) => (
+                        <div
+                           key={idx}
+                           className={`flex-1 h-1 rounded-full ${
+                              idx < currentScenario ? 'bg-green-500' :
+                              idx === currentScenario ? 'bg-blue-500' : 'bg-slate-600'
+                           }`}
+                        />
+                     ))}
+                  </div>
+               </div>
+
+               {/* Main Content */}
+               <div className="flex-1 p-4 overflow-y-auto">
+                  {/* Transaction Description */}
+                  <div className="bg-indigo-900/30 rounded-xl p-4 mb-4 border border-indigo-500/30">
+                     <div className="flex items-center justify-between mb-2">
+                        <span className="text-xs text-indigo-400 font-bold">TRANSACTION:</span>
+                        <button
+                           onClick={() => setShowHint(!showHint)}
+                           className="text-xs text-indigo-400 hover:text-indigo-300 underline"
+                        >
+                           {showHint ? 'Hide Hint' : 'Show Hint'}
+                        </button>
+                     </div>
+                     <p className="text-lg font-medium text-white">{scenario.description}</p>
+                     {showHint && (
+                        <div className="mt-3 p-3 bg-black/30 rounded-lg">
+                           <p className="text-sm text-amber-300">
+                              💡 {scenario.account1.name} is a {scenario.account1.type} account.
+                              {scenario.account2.name} is a {scenario.account2.type} account.
+                              {scenario.account1.type === 'asset' || scenario.account1.type === 'expense'
+                                 ? ' Assets & Expenses increase with DEBIT.'
+                                 : ' Liabilities, Equity & Revenue increase with CREDIT.'}
+                           </p>
+                        </div>
+                     )}
+                  </div>
+
+                  {/* T-Accounts */}
+                  <div className="grid grid-cols-2 gap-3 mb-4">
+                     {/* Account 1 */}
+                     <div className="bg-black/30 rounded-xl overflow-hidden border border-blue-500/30">
+                        <div className="bg-blue-600/50 px-3 py-2 flex items-center justify-between">
+                           <span className="font-bold text-sm">{scenario.account1.name}</span>
+                           <button
+                              onClick={() => { setInfoTopic(scenario.account1.type + 's'); setShowInfo(true); }}
+                              className="text-xs opacity-70 hover:opacity-100"
+                           >
+                              ℹ️
+                           </button>
+                        </div>
+                        <div className="text-xs text-center py-1 text-slate-400 bg-black/20">
+                           ({scenario.account1.type.charAt(0).toUpperCase() + scenario.account1.type.slice(1)} Account)
+                        </div>
+                        <div className="flex divide-x divide-blue-500/30">
+                           {/* Debit Side */}
+                           <div
+                              className={`flex-1 p-3 min-h-[80px] flex flex-col items-center justify-center transition-all ${
+                                 placements.account1Debit ? 'bg-green-900/30' : 'hover:bg-blue-800/30'
+                              }`}
+                              onDragOver={(e) => e.preventDefault()}
+                              onDrop={() => handleDrop('account1Debit')}
+                           >
+                              <div className="text-xs text-green-400 font-bold mb-1 flex items-center gap-1">
+                                 DEBIT
+                                 <button onClick={() => { setInfoTopic('debit'); setShowInfo(true); }} className="opacity-60 hover:opacity-100">ℹ️</button>
+                              </div>
+                              {placements.account1Debit ? (
+                                 <div className="text-lg font-bold text-green-400">${placements.account1Debit.toLocaleString()}</div>
+                              ) : (
+                                 <div className="text-xs text-slate-500 text-center">Drop here</div>
+                              )}
+                           </div>
+                           {/* Credit Side */}
+                           <div
+                              className={`flex-1 p-3 min-h-[80px] flex flex-col items-center justify-center transition-all ${
+                                 placements.account1Credit ? 'bg-amber-900/30' : 'hover:bg-blue-800/30'
+                              }`}
+                              onDragOver={(e) => e.preventDefault()}
+                              onDrop={() => handleDrop('account1Credit')}
+                           >
+                              <div className="text-xs text-amber-400 font-bold mb-1 flex items-center gap-1">
+                                 CREDIT
+                                 <button onClick={() => { setInfoTopic('credit'); setShowInfo(true); }} className="opacity-60 hover:opacity-100">ℹ️</button>
+                              </div>
+                              {placements.account1Credit ? (
+                                 <div className="text-lg font-bold text-amber-400">${placements.account1Credit.toLocaleString()}</div>
+                              ) : (
+                                 <div className="text-xs text-slate-500 text-center">Drop here</div>
+                              )}
+                           </div>
+                        </div>
+                     </div>
+
+                     {/* Account 2 */}
+                     <div className="bg-black/30 rounded-xl overflow-hidden border border-blue-500/30">
+                        <div className="bg-blue-600/50 px-3 py-2 flex items-center justify-between">
+                           <span className="font-bold text-sm">{scenario.account2.name}</span>
+                           <button
+                              onClick={() => { setInfoTopic(scenario.account2.type + 's'); setShowInfo(true); }}
+                              className="text-xs opacity-70 hover:opacity-100"
+                           >
+                              ℹ️
+                           </button>
+                        </div>
+                        <div className="text-xs text-center py-1 text-slate-400 bg-black/20">
+                           ({scenario.account2.type.charAt(0).toUpperCase() + scenario.account2.type.slice(1)} Account)
+                        </div>
+                        <div className="flex divide-x divide-blue-500/30">
+                           {/* Debit Side */}
+                           <div
+                              className={`flex-1 p-3 min-h-[80px] flex flex-col items-center justify-center transition-all ${
+                                 placements.account2Debit ? 'bg-green-900/30' : 'hover:bg-blue-800/30'
+                              }`}
+                              onDragOver={(e) => e.preventDefault()}
+                              onDrop={() => handleDrop('account2Debit')}
+                           >
+                              <div className="text-xs text-green-400 font-bold mb-1">DEBIT</div>
+                              {placements.account2Debit ? (
+                                 <div className="text-lg font-bold text-green-400">${placements.account2Debit.toLocaleString()}</div>
+                              ) : (
+                                 <div className="text-xs text-slate-500 text-center">Drop here</div>
+                              )}
+                           </div>
+                           {/* Credit Side */}
+                           <div
+                              className={`flex-1 p-3 min-h-[80px] flex flex-col items-center justify-center transition-all ${
+                                 placements.account2Credit ? 'bg-amber-900/30' : 'hover:bg-blue-800/30'
+                              }`}
+                              onDragOver={(e) => e.preventDefault()}
+                              onDrop={() => handleDrop('account2Credit')}
+                           >
+                              <div className="text-xs text-amber-400 font-bold mb-1">CREDIT</div>
+                              {placements.account2Credit ? (
+                                 <div className="text-lg font-bold text-amber-400">${placements.account2Credit.toLocaleString()}</div>
+                              ) : (
+                                 <div className="text-xs text-slate-500 text-center">Drop here</div>
+                              )}
+                           </div>
+                        </div>
+                     </div>
+                  </div>
+
+                  {/* Draggable Items */}
+                  <div className="bg-black/30 rounded-xl p-4 mb-4 border border-purple-500/30">
+                     <p className="text-xs text-purple-400 font-bold mb-3 text-center">DRAG TO THE CORRECT SIDE:</p>
+                     <div className="flex justify-center gap-4">
+                        <div
+                           draggable
+                           onDragStart={() => setDraggedItem({ type: 'increase', amount: scenario.amount })}
+                           onDragEnd={() => setDraggedItem(null)}
+                           className="px-6 py-3 bg-gradient-to-r from-green-600 to-emerald-600 rounded-xl cursor-move hover:scale-105 transition-transform shadow-lg"
+                        >
+                           <div className="flex items-center gap-2">
+                              <span className="text-lg">💰</span>
+                              <span className="font-bold">${scenario.amount.toLocaleString()}</span>
+                              <span className="text-green-200">↑</span>
+                           </div>
+                           <div className="text-xs text-green-200 text-center">(Increase)</div>
+                        </div>
+                        <div
+                           draggable
+                           onDragStart={() => setDraggedItem({ type: 'decrease', amount: scenario.amount })}
+                           onDragEnd={() => setDraggedItem(null)}
+                           className="px-6 py-3 bg-gradient-to-r from-amber-600 to-orange-600 rounded-xl cursor-move hover:scale-105 transition-transform shadow-lg"
+                        >
+                           <div className="flex items-center gap-2">
+                              <span className="text-lg">💰</span>
+                              <span className="font-bold">${scenario.amount.toLocaleString()}</span>
+                              <span className="text-amber-200">↓</span>
+                           </div>
+                           <div className="text-xs text-amber-200 text-center">(Decrease)</div>
+                        </div>
+                     </div>
+                  </div>
+
+                  {/* Balance Check */}
+                  <div className="bg-black/30 rounded-xl p-3 mb-4">
+                     <div className="flex items-center justify-between">
+                        <div className="text-center flex-1">
+                           <div className="text-xs text-green-400 font-bold">Total Debits</div>
+                           <div className="text-lg font-bold text-green-400">
+                              ${((placements.account1Debit || 0) + (placements.account2Debit || 0) + runningDebits).toLocaleString()}
+                           </div>
+                        </div>
+                        <div className="px-4">
+                           {(placements.account1Debit || 0) + (placements.account2Debit || 0) ===
+                            (placements.account1Credit || 0) + (placements.account2Credit || 0) &&
+                            ((placements.account1Debit || 0) + (placements.account2Debit || 0)) > 0 ? (
+                              <span className="text-2xl text-green-400">=</span>
+                           ) : (placements.account1Debit || placements.account1Credit || placements.account2Debit || placements.account2Credit) ? (
+                              <span className="text-2xl text-red-400">≠</span>
+                           ) : (
+                              <span className="text-2xl text-slate-500">=</span>
+                           )}
+                        </div>
+                        <div className="text-center flex-1">
+                           <div className="text-xs text-amber-400 font-bold">Total Credits</div>
+                           <div className="text-lg font-bold text-amber-400">
+                              ${((placements.account1Credit || 0) + (placements.account2Credit || 0) + runningCredits).toLocaleString()}
+                           </div>
+                        </div>
+                     </div>
+                  </div>
+
+                  {/* Coach Message */}
+                  {coachMessage && (
+                     <div className="bg-indigo-900/30 rounded-lg p-3 border border-indigo-500/30">
+                        <div className="flex items-start gap-2">
+                           <span className="text-lg">💬</span>
+                           <p className="text-sm text-indigo-200">{coachMessage}</p>
+                        </div>
+                     </div>
+                  )}
+               </div>
+
+               {/* Footer Actions */}
+               <div className="p-3 bg-black/30 border-t border-blue-500/30 flex gap-2">
+                  <button
+                     onClick={resetPlacements}
+                     className="px-4 py-2 bg-white/10 hover:bg-white/20 rounded-lg text-sm font-medium transition-all"
+                  >
+                     🔄 Reset
+                  </button>
+                  <button
+                     onClick={() => { setInfoTopic('balance'); setShowInfo(true); }}
+                     className="px-4 py-2 bg-white/10 hover:bg-white/20 rounded-lg text-sm font-medium transition-all"
+                  >
+                     ℹ️ Rules
+                  </button>
+                  <button
+                     onClick={checkAnswer}
+                     disabled={!placements.account1Debit && !placements.account1Credit && !placements.account2Debit && !placements.account2Credit}
+                     className="flex-1 py-2 bg-blue-600 hover:bg-blue-500 disabled:bg-slate-600 disabled:opacity-50 rounded-lg font-bold transition-all"
+                  >
+                     Check Answer ✓
+                  </button>
+               </div>
+            </div>
+         );
+      }
+
+      // ============================================================
+      // RENDER: RESULT PHASE
+      // ============================================================
+      if (phase === 'result') {
+         const accuracy = totalAttempts > 0 ? Math.round((correctAttempts / totalAttempts) * 100) : 0;
+
+         return (
+            <div className="w-full h-full flex flex-col bg-gradient-to-br from-blue-900 via-indigo-900 to-purple-900 text-white overflow-hidden">
+               <div className="flex-1 p-6 overflow-y-auto">
+                  {/* Success Header */}
+                  <div className="text-center mb-6">
+                     <div className="text-6xl mb-3">🎓</div>
+                     <h1 className="text-2xl font-black mb-2">SESSION COMPLETE!</h1>
+                     <p className="text-blue-300">You've practiced double-entry bookkeeping</p>
+                  </div>
+
+                  {/* Score Card */}
+                  <div className="bg-black/30 rounded-xl p-4 mb-6">
+                     <div className="grid grid-cols-3 gap-3 text-center">
+                        <div className="bg-purple-900/50 rounded-lg p-3">
+                           <p className="text-2xl font-bold text-purple-400">{score}</p>
+                           <p className="text-xs text-slate-300">SCORE</p>
+                        </div>
+                        <div className="bg-green-900/50 rounded-lg p-3">
+                           <p className="text-2xl font-bold text-green-400">{accuracy}%</p>
+                           <p className="text-xs text-slate-300">ACCURACY</p>
+                        </div>
+                        <div className="bg-amber-900/50 rounded-lg p-3">
+                           <p className="text-2xl font-bold text-amber-400">{bestStreak}</p>
+                           <p className="text-xs text-slate-300">BEST STREAK</p>
+                        </div>
+                     </div>
+                  </div>
+
+                  {/* Key Insight */}
+                  <div className="bg-gradient-to-r from-purple-900/50 to-indigo-900/50 rounded-xl p-5 mb-6 border border-purple-500/30">
+                     <h3 className="font-bold text-purple-300 mb-3 flex items-center gap-2">
+                        <span className="text-xl">💡</span> KEY INSIGHT
+                     </h3>
+                     <p className="text-lg text-white mb-4 leading-relaxed">
+                        Debits and credits are NOT good or bad—they're just <span className="text-green-400 font-bold">LEFT</span> and <span className="text-amber-400 font-bold">RIGHT</span>.
+                        The trick is knowing which side increases each account type.
+                     </p>
+                     <div className="grid grid-cols-2 gap-3 text-sm">
+                        <div className="bg-green-900/30 rounded-lg p-3">
+                           <p className="font-bold text-green-400 mb-1">DEBIT to Increase:</p>
+                           <p className="text-slate-300">Assets & Expenses</p>
+                        </div>
+                        <div className="bg-amber-900/30 rounded-lg p-3">
+                           <p className="font-bold text-amber-400 mb-1">CREDIT to Increase:</p>
+                           <p className="text-slate-300">Liabilities, Equity, Revenue</p>
+                        </div>
+                     </div>
+                  </div>
+
+                  {/* Concepts Learned */}
+                  {conceptsLearned.length > 0 && (
+                     <div className="bg-black/30 rounded-xl p-4 mb-6">
+                        <h3 className="font-bold text-green-300 mb-3">✅ Concepts You Practiced</h3>
+                        <div className="flex flex-wrap gap-2">
+                           {conceptsLearned.map((concept, idx) => (
+                              <span key={idx} className="px-3 py-1 bg-green-600/30 rounded-full text-sm text-green-300 capitalize">
+                                 {concept} Accounts
+                              </span>
+                           ))}
+                        </div>
+                     </div>
+                  )}
+
+                  {/* Areas for Review */}
+                  {mistakePatterns.length > 0 && (
+                     <div className="bg-black/30 rounded-xl p-4 mb-6">
+                        <h3 className="font-bold text-amber-300 mb-3">📚 Review These Areas</h3>
+                        <div className="flex flex-wrap gap-2">
+                           {mistakePatterns.map((pattern, idx) => (
+                              <span key={idx} className="px-3 py-1 bg-amber-600/30 rounded-full text-sm text-amber-300 capitalize">
+                                 {pattern} Accounts
+                              </span>
+                           ))}
+                        </div>
+                     </div>
+                  )}
+
+                  {/* Real-World Application */}
+                  <div className="bg-black/30 rounded-xl p-4 mb-6">
+                     <h3 className="font-bold text-blue-300 mb-2 flex items-center gap-2">
+                        <span>🌍</span> REAL-WORLD APPLICATION
+                     </h3>
+                     <p className="text-slate-200">
+                        If your books don't balance (debits ≠ credits), you've made an error.
+                        This is how accountants catch mistakes—and how auditors catch fraud.
+                        Every transaction in every company follows these exact rules.
+                     </p>
+                  </div>
+
+                  {/* AI Coach Sync */}
+                  <div className="bg-indigo-900/30 rounded-xl p-4 border border-indigo-500/30">
+                     <h3 className="font-bold text-indigo-300 mb-2 flex items-center gap-2">
+                        <span>🤖</span> Session Synced with AI Coach
+                     </h3>
+                     <p className="text-sm text-slate-300">
+                        Your learning session has been logged. Ask your AI coach to review your performance,
+                        explain any concepts you found tricky, or give you more practice scenarios.
+                     </p>
+                  </div>
+               </div>
+
+               {/* Action Buttons */}
+               <div className="p-4 bg-black/30 border-t border-blue-500/30 flex gap-3">
+                  <button
+                     onClick={() => {
+                        setPhase('intro');
+                        setCurrentLevel(0);
+                        setCurrentScenario(0);
+                        setScore(0);
+                        setStreak(0);
+                        setCorrectAttempts(0);
+                        setTotalAttempts(0);
+                        setRunningDebits(0);
+                        setRunningCredits(0);
+                        setConceptsLearned([]);
+                        setMistakePatterns([]);
+                        setGameLog([]);
+                     }}
+                     className="flex-1 py-3 bg-white/10 hover:bg-white/20 rounded-xl font-bold transition-all"
+                  >
+                     🔄 Play Again
+                  </button>
+                  <button
+                     onClick={() => setPhase('intro')}
+                     className="flex-1 py-3 bg-blue-600 hover:bg-blue-500 rounded-xl font-bold transition-all"
+                  >
+                     ➡️ Continue
+                  </button>
+               </div>
+            </div>
+         );
+      }
+
+      return null;
+   };
+
    const FinancialStatementsRenderer = () => {
       const [phase, setPhase] = useState<'intro' | 'play' | 'result'>('intro');
       const [showInfo, setShowInfo] = useState(false);
@@ -38443,6 +39649,8 @@ const GeneratedDiagram: React.FC<DiagramProps> = ({ type, data, title }) => {
             return <FinancialStatementsRenderer />;
          case 'accounting_equation':
             return <AccountingEquationRenderer />;
+         case 'double_entry_bookkeeping':
+            return <DoubleEntryBookkeepingRenderer />;
          case 'pricing_strategy':
             return <PricingStrategyRenderer />;
          case 'budgeting':
