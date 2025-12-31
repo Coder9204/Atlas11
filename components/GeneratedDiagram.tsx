@@ -38050,6 +38050,306 @@ const GeneratedDiagram: React.FC<DiagramProps> = ({ type, data, title }) => {
       return null;
    };
 
+   // TOPIC 6: General Ledger Management - Interactive Educational Game
+   const GeneralLedgerRenderer = () => {
+      const [phase, setPhase] = useState<'intro' | 'tutorial' | 'explore' | 'audit' | 'result'>('intro');
+      const [tutorialStep, setTutorialStep] = useState(0);
+      const [showInfo, setShowInfo] = useState(false);
+      const [infoContent, setInfoContent] = useState<{title: string; content: string} | null>(null);
+      const [selectedAccount, setSelectedAccount] = useState<string | null>(null);
+      const [selectedTransaction, setSelectedTransaction] = useState<number | null>(null);
+      const [filterAccount, setFilterAccount] = useState<string>('all');
+      const [filterDateRange, setFilterDateRange] = useState<string>('all');
+      const [score, setScore] = useState(0);
+      const [currentChallenge, setCurrentChallenge] = useState(0);
+      const [traceAnswer, setTraceAnswer] = useState<string | null>(null);
+      const [showFeedback, setShowFeedback] = useState(false);
+      const [feedbackCorrect, setFeedbackCorrect] = useState(false);
+      const [gameLog, setGameLog] = useState<string[]>([]);
+      const [correctAnswers, setCorrectAnswers] = useState(0);
+      const [totalAnswered, setTotalAnswered] = useState(0);
+
+      const transactions = [
+         { id: 1, date: '2024-01-03', description: 'Received payment from Customer A', debitAccount: 'Cash', creditAccount: 'Accounts Receivable', amount: 5000, source: 'Cash Receipts Journal', docRef: 'CR-001' },
+         { id: 2, date: '2024-01-05', description: 'Purchased office supplies', debitAccount: 'Office Supplies', creditAccount: 'Cash', amount: 350, source: 'Cash Disbursements Journal', docRef: 'CD-001' },
+         { id: 3, date: '2024-01-08', description: 'Sold merchandise on credit', debitAccount: 'Accounts Receivable', creditAccount: 'Sales Revenue', amount: 8500, source: 'Sales Journal', docRef: 'SJ-001' },
+         { id: 4, date: '2024-01-10', description: 'Paid monthly rent', debitAccount: 'Rent Expense', creditAccount: 'Cash', amount: 2500, source: 'Cash Disbursements Journal', docRef: 'CD-002' },
+         { id: 5, date: '2024-01-12', description: 'Received utility bill', debitAccount: 'Utilities Expense', creditAccount: 'Accounts Payable', amount: 480, source: 'General Journal', docRef: 'GJ-001' },
+         { id: 6, date: '2024-01-15', description: 'Paid employee salaries', debitAccount: 'Salaries Expense', creditAccount: 'Cash', amount: 6200, source: 'Cash Disbursements Journal', docRef: 'CD-003' },
+         { id: 7, date: '2024-01-18', description: 'Purchased inventory on credit', debitAccount: 'Inventory', creditAccount: 'Accounts Payable', amount: 4200, source: 'Purchases Journal', docRef: 'PJ-001' },
+         { id: 8, date: '2024-01-20', description: 'Customer B paid invoice', debitAccount: 'Cash', creditAccount: 'Accounts Receivable', amount: 3200, source: 'Cash Receipts Journal', docRef: 'CR-002' },
+         { id: 9, date: '2024-01-22', description: 'Recorded depreciation', debitAccount: 'Depreciation Expense', creditAccount: 'Accumulated Depreciation', amount: 750, source: 'General Journal', docRef: 'GJ-002' },
+         { id: 10, date: '2024-01-25', description: 'Paid supplier invoice', debitAccount: 'Accounts Payable', creditAccount: 'Cash', amount: 3500, source: 'Cash Disbursements Journal', docRef: 'CD-004' },
+         { id: 11, date: '2024-01-28', description: 'Cash sale', debitAccount: 'Cash', creditAccount: 'Sales Revenue', amount: 1200, source: 'Cash Receipts Journal', docRef: 'CR-003' },
+         { id: 12, date: '2024-01-30', description: 'Interest on loan', debitAccount: 'Interest Expense', creditAccount: 'Interest Payable', amount: 320, source: 'General Journal', docRef: 'GJ-003' }
+      ];
+
+      const accounts: {[key: string]: {type: string; normalBalance: string; info: string}} = {
+         'Cash': { type: 'Asset', normalBalance: 'Debit', info: 'Money on hand and in bank. Increases with debits.' },
+         'Accounts Receivable': { type: 'Asset', normalBalance: 'Debit', info: 'Money owed by customers. Increases when selling on credit.' },
+         'Inventory': { type: 'Asset', normalBalance: 'Debit', info: 'Goods held for sale.' },
+         'Office Supplies': { type: 'Asset', normalBalance: 'Debit', info: 'Supplies for office use.' },
+         'Accumulated Depreciation': { type: 'Contra-Asset', normalBalance: 'Credit', info: 'Total depreciation. Reduces fixed asset value.' },
+         'Accounts Payable': { type: 'Liability', normalBalance: 'Credit', info: 'Money owed to suppliers.' },
+         'Interest Payable': { type: 'Liability', normalBalance: 'Credit', info: 'Accrued interest not yet paid.' },
+         'Sales Revenue': { type: 'Revenue', normalBalance: 'Credit', info: 'Income from sales. Increases equity.' },
+         'Rent Expense': { type: 'Expense', normalBalance: 'Debit', info: 'Cost of renting space.' },
+         'Utilities Expense': { type: 'Expense', normalBalance: 'Debit', info: 'Cost of utilities.' },
+         'Salaries Expense': { type: 'Expense', normalBalance: 'Debit', info: 'Employee compensation.' },
+         'Depreciation Expense': { type: 'Expense', normalBalance: 'Debit', info: 'Asset cost allocation.' },
+         'Interest Expense': { type: 'Expense', normalBalance: 'Debit', info: 'Cost of borrowing.' }
+      };
+
+      const traceChallenges = [
+         { question: 'An auditor asks: "Where did the $5,000 cash receipt on January 3rd come from?" Trace to source.', transactionId: 1, correctAnswer: 'Cash Receipts Journal', options: ['Cash Receipts Journal', 'Sales Journal', 'General Journal', 'Cash Disbursements Journal'], explanation: 'Cash receipts from customers are recorded in the Cash Receipts Journal.' },
+         { question: 'The CFO wants to verify the $8,500 sales entry. Which journal has the original?', transactionId: 3, correctAnswer: 'Sales Journal', options: ['Cash Receipts Journal', 'Sales Journal', 'Purchases Journal', 'General Journal'], explanation: 'Credit sales are in the Sales Journal. Cash sales go to Cash Receipts.' },
+         { question: 'An auditor questions the $750 depreciation. What document reference?', transactionId: 9, correctAnswer: 'GJ-002', options: ['CD-003', 'GJ-002', 'CR-002', 'PJ-001'], explanation: 'Adjusting entries like depreciation use GJ (General Journal) references.' },
+         { question: 'Which account shows a CREDIT of $8,500 after January 8th sale?', transactionId: 3, correctAnswer: 'Sales Revenue', options: ['Cash', 'Accounts Receivable', 'Sales Revenue', 'Inventory'], explanation: 'Revenue has credit normal balance. Sales credits Revenue, debits AR.' },
+         { question: 'After paying rent on January 10th, which statement is affected?', transactionId: 4, correctAnswer: 'Both statements', options: ['Only Balance Sheet', 'Only Income Statement', 'Both statements', 'Neither'], explanation: 'Rent Expense hits Income Statement. Cash reduction hits Balance Sheet.' },
+         { question: 'The $4,200 inventory purchase created a liability. When will it affect cash?', transactionId: 7, correctAnswer: 'When invoice is paid', options: ['Immediately', 'When sold', 'When invoice is paid', 'At month end'], explanation: 'Credit purchases create AP. Cash affected only when paid.' }
+      ];
+
+      const tutorialSteps = [
+         { title: 'Welcome to General Ledger Management!', content: 'The General Ledger is the "master record" of all transactions. Every journal entry flows here.', highlight: 'overview' },
+         { title: 'What is a General Ledger?', content: 'Think of it as the central hub where transactions are organized by account. Each has a ledger card.', highlight: 'ledger' },
+         { title: 'Transaction Flow', content: 'Source Docs → Journals → General Ledger → Trial Balance → Financial Statements', highlight: 'flow' },
+         { title: 'Account Ledger Cards', content: 'Each account shows: Date, Description, Debit, Credit, and Running Balance.', highlight: 'cards' },
+         { title: 'Filtering & Searching', content: 'Filter by account, date, or amount. Essential for reporting and analysis.', highlight: 'filter' },
+         { title: 'The Audit Trail', content: 'Every entry references its source journal and document. Creates traceable path.', highlight: 'audit' },
+         { title: "Let's Explore!", content: "Explore the GL, filter transactions, view ledger cards, then face audit challenges!", highlight: 'game' }
+      ];
+
+      const showInfoModal = (title: string, content: string) => { setInfoContent({ title, content }); setShowInfo(true); };
+
+      const getAccountTransactions = (acct: string) => transactions.filter(t => t.debitAccount === acct || t.creditAccount === acct);
+
+      const calculateBalance = (acct: string) => {
+         const info = accounts[acct];
+         let bal = 0;
+         transactions.forEach(t => {
+            if (t.debitAccount === acct) bal += info?.normalBalance === 'Debit' ? t.amount : -t.amount;
+            if (t.creditAccount === acct) bal += info?.normalBalance === 'Credit' ? t.amount : -t.amount;
+         });
+         return bal;
+      };
+
+      const getFiltered = () => {
+         let f = [...transactions];
+         if (filterAccount !== 'all') f = f.filter(t => t.debitAccount === filterAccount || t.creditAccount === filterAccount);
+         if (filterDateRange === 'week1') f = f.filter(t => parseInt(t.date.split('-')[2]) <= 7);
+         else if (filterDateRange === 'week2') f = f.filter(t => { const d = parseInt(t.date.split('-')[2]); return d > 7 && d <= 14; });
+         else if (filterDateRange === 'week3') f = f.filter(t => { const d = parseInt(t.date.split('-')[2]); return d > 14 && d <= 21; });
+         else if (filterDateRange === 'week4') f = f.filter(t => parseInt(t.date.split('-')[2]) > 21);
+         return f;
+      };
+
+      const handleAnswer = (ans: string) => {
+         const ch = traceChallenges[currentChallenge];
+         const correct = ans === ch.correctAnswer;
+         setTraceAnswer(ans); setShowFeedback(true); setFeedbackCorrect(correct); setTotalAnswered(p => p + 1);
+         if (correct) { setScore(p => p + 20); setCorrectAnswers(p => p + 1); setGameLog(p => [...p, `✓ ${ch.question.substring(0, 40)}...`]); }
+         else setGameLog(p => [...p, `✗ ${ch.question.substring(0, 40)}...`]);
+         setTimeout(() => {
+            setShowFeedback(false); setTraceAnswer(null);
+            if (currentChallenge < traceChallenges.length - 1) setCurrentChallenge(p => p + 1);
+            else { setPhase('result'); setGameLog(p => [...p, `Completed! Score: ${score + (correct ? 20 : 0)}`]); }
+         }, 2500);
+      };
+
+      if (phase === 'intro') {
+         return (
+            <div className="p-6 bg-gradient-to-br from-slate-900 via-emerald-900 to-slate-900 rounded-2xl text-white min-h-[600px]">
+               <div className="text-center mb-8">
+                  <h2 className="text-3xl font-bold mb-3">📒 General Ledger Management</h2>
+                  <p className="text-lg text-white/80">Master the central hub of financial records</p>
+               </div>
+               <div className="bg-white/10 backdrop-blur rounded-xl p-6 mb-6">
+                  <div className="flex items-start gap-3"><span className="text-3xl">💡</span>
+                     <div><h3 className="font-bold text-xl mb-2">Key Insight</h3>
+                        <p className="text-white/90">The General Ledger is the master record of all transactions. Every journal entry flows here—it's the complete financial story.</p>
+                     </div>
+                  </div>
+               </div>
+               <div className="grid grid-cols-2 gap-4 mb-6">
+                  <div className="bg-white/5 rounded-xl p-4">
+                     <h3 className="font-bold mb-3 flex items-center gap-2">🎯 What You'll Learn <button onClick={() => showInfoModal('Objectives', 'Master GL navigation, account ledger cards, filtering, and audit trail tracing.')} className="text-sky-400">ℹ️</button></h3>
+                     <ul className="space-y-2 text-white/80 text-sm">
+                        <li className="flex items-center gap-2"><span className="text-green-400">✓</span> Transaction flow to GL</li>
+                        <li className="flex items-center gap-2"><span className="text-green-400">✓</span> Reading ledger cards</li>
+                        <li className="flex items-center gap-2"><span className="text-green-400">✓</span> Filtering records</li>
+                        <li className="flex items-center gap-2"><span className="text-green-400">✓</span> Audit trail tracing</li>
+                     </ul>
+                  </div>
+                  <div className="bg-white/5 rounded-xl p-4">
+                     <h3 className="font-bold mb-3">🎮 Game Structure</h3>
+                     <ul className="space-y-2 text-white/80 text-sm">
+                        <li className="flex items-center gap-2"><span className="text-emerald-400">1</span> Tutorial</li>
+                        <li className="flex items-center gap-2"><span className="text-emerald-400">2</span> Explore GL</li>
+                        <li className="flex items-center gap-2"><span className="text-emerald-400">3</span> View ledger cards</li>
+                        <li className="flex items-center gap-2"><span className="text-emerald-400">4</span> Audit challenges</li>
+                     </ul>
+                  </div>
+               </div>
+               <div className="bg-gradient-to-r from-emerald-500/20 to-teal-500/20 rounded-xl p-4 mb-6">
+                  <h3 className="font-bold mb-2">📊 Transaction Flow</h3>
+                  <div className="flex items-center justify-between text-xs">
+                     {['Source Docs', 'Journals', 'General Ledger', 'Trial Balance', 'Statements'].map((item, i) => (
+                        <div key={i} className="flex items-center">
+                           <div className={`rounded p-2 text-center ${item === 'General Ledger' ? 'bg-emerald-500/40 border border-emerald-400' : 'bg-white/20'}`}><div className="font-bold">{item}</div></div>
+                           {i < 4 && <span className="mx-1 text-white/40">→</span>}
+                        </div>
+                     ))}
+                  </div>
+               </div>
+               <button onClick={() => setPhase('tutorial')} className="w-full py-4 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 rounded-xl font-bold text-lg">Start Learning →</button>
+               {showInfo && infoContent && (<div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"><div className="bg-slate-800 rounded-xl p-6 max-w-md"><h3 className="text-xl font-bold mb-3">{infoContent.title}</h3><p className="text-white/80 mb-4">{infoContent.content}</p><button onClick={() => setShowInfo(false)} className="w-full py-2 bg-emerald-600 rounded-lg">Got it!</button></div></div>)}
+            </div>
+         );
+      }
+
+      if (phase === 'tutorial') {
+         const step = tutorialSteps[tutorialStep];
+         return (
+            <div className="p-6 bg-gradient-to-br from-slate-900 via-emerald-900 to-slate-900 rounded-2xl text-white min-h-[600px]">
+               <div className="flex justify-between items-center mb-6"><h2 className="text-2xl font-bold">📚 Tutorial</h2><div className="text-white/60">Step {tutorialStep + 1}/{tutorialSteps.length}</div></div>
+               <div className="w-full bg-white/10 rounded-full h-2 mb-6"><div className="bg-gradient-to-r from-emerald-500 to-teal-500 h-2 rounded-full" style={{ width: `${((tutorialStep + 1) / tutorialSteps.length) * 100}%` }} /></div>
+               <div className="bg-white/10 rounded-xl p-6 mb-6">
+                  <h3 className="text-xl font-bold mb-4">{step.title}</h3>
+                  <p className="text-lg text-white/90 mb-6">{step.content}</p>
+                  {step.highlight === 'flow' && (
+                     <div className="flex items-center justify-between text-xs bg-white/5 rounded-lg p-3">
+                        {['Source Docs', 'Journals', 'General Ledger', 'Trial Balance', 'Statements'].map((item, i) => (
+                           <div key={i} className="flex items-center">
+                              <div className={`rounded p-2 ${item === 'General Ledger' ? 'bg-emerald-500/40 border border-emerald-400' : 'bg-white/20'}`}><div className="font-bold">{item}</div></div>
+                              {i < 4 && <span className="mx-1 text-white/40">→</span>}
+                           </div>
+                        ))}
+                     </div>
+                  )}
+                  {step.highlight === 'cards' && (
+                     <div className="bg-white/10 rounded-lg p-3">
+                        <div className="text-center font-bold mb-2 text-emerald-400">Sample Ledger Card</div>
+                        <div className="grid grid-cols-5 gap-2 text-xs font-bold border-b border-white/20 pb-1 mb-1"><div>Date</div><div>Desc</div><div className="text-right">Debit</div><div className="text-right">Credit</div><div className="text-right">Balance</div></div>
+                        <div className="grid grid-cols-5 gap-2 text-xs"><div>Jan 3</div><div>Payment</div><div className="text-right text-emerald-400">$5,000</div><div className="text-right">-</div><div className="text-right">$5,000</div></div>
+                     </div>
+                  )}
+               </div>
+               <div className="flex gap-3">
+                  {tutorialStep > 0 && <button onClick={() => setTutorialStep(p => p - 1)} className="flex-1 py-3 bg-white/10 hover:bg-white/20 rounded-xl font-bold">← Back</button>}
+                  <button onClick={() => { if (tutorialStep < tutorialSteps.length - 1) setTutorialStep(p => p + 1); else { setPhase('explore'); setGameLog(['Started GL exploration']); } }} className="flex-1 py-3 bg-gradient-to-r from-emerald-600 to-teal-600 rounded-xl font-bold">{tutorialStep < tutorialSteps.length - 1 ? 'Next →' : 'Explore →'}</button>
+               </div>
+            </div>
+         );
+      }
+
+      if (phase === 'explore') {
+         const filtered = getFiltered();
+         return (
+            <div className="p-6 bg-gradient-to-br from-slate-900 via-emerald-900 to-slate-900 rounded-2xl text-white min-h-[600px]">
+               <div className="flex justify-between items-center mb-4">
+                  <div><h2 className="text-xl font-bold">📒 General Ledger Explorer</h2><p className="text-white/60 text-sm">Click transactions or accounts to explore</p></div>
+                  <button onClick={() => showInfoModal('Help', 'Filter by account/date. Click rows for details. Click account names for ledger cards.')} className="text-sky-400 text-xl">ℹ️</button>
+               </div>
+               <div className="flex gap-4 mb-4">
+                  <div className="flex-1"><label className="text-xs text-white/60 block mb-1">Account</label>
+                     <select value={filterAccount} onChange={(e) => setFilterAccount(e.target.value)} className="w-full bg-white/10 border border-white/20 rounded-lg px-3 py-2 text-sm">
+                        <option value="all">All Accounts</option>
+                        {Object.keys(accounts).map(a => <option key={a} value={a}>{a}</option>)}
+                     </select>
+                  </div>
+                  <div className="flex-1"><label className="text-xs text-white/60 block mb-1">Date Range</label>
+                     <select value={filterDateRange} onChange={(e) => setFilterDateRange(e.target.value)} className="w-full bg-white/10 border border-white/20 rounded-lg px-3 py-2 text-sm">
+                        <option value="all">All Dates</option><option value="week1">Week 1</option><option value="week2">Week 2</option><option value="week3">Week 3</option><option value="week4">Week 4</option>
+                     </select>
+                  </div>
+               </div>
+               <div className="bg-white/5 rounded-xl overflow-hidden mb-4">
+                  <div className="grid grid-cols-12 gap-1 p-2 bg-white/10 text-xs font-bold"><div className="col-span-1">Date</div><div className="col-span-3">Description</div><div className="col-span-2">Debit</div><div className="col-span-2">Credit</div><div className="col-span-2 text-right">Amount</div><div className="col-span-2">Ref</div></div>
+                  <div className="max-h-[200px] overflow-y-auto">
+                     {filtered.map(t => (
+                        <div key={t.id} onClick={() => setSelectedTransaction(selectedTransaction === t.id ? null : t.id)} className={`grid grid-cols-12 gap-1 p-2 text-xs border-b border-white/5 cursor-pointer hover:bg-white/10 ${selectedTransaction === t.id ? 'bg-emerald-500/20' : ''}`}>
+                           <div className="col-span-1">{t.date.slice(5)}</div>
+                           <div className="col-span-3 truncate">{t.description}</div>
+                           <div className="col-span-2"><button onClick={(e) => { e.stopPropagation(); setSelectedAccount(t.debitAccount); }} className="text-emerald-400 hover:underline">{t.debitAccount}</button></div>
+                           <div className="col-span-2"><button onClick={(e) => { e.stopPropagation(); setSelectedAccount(t.creditAccount); }} className="text-rose-400 hover:underline">{t.creditAccount}</button></div>
+                           <div className="col-span-2 text-right font-mono">${t.amount.toLocaleString()}</div>
+                           <div className="col-span-2 text-white/60">{t.docRef}</div>
+                        </div>
+                     ))}
+                  </div>
+               </div>
+               {selectedTransaction && (() => { const t = transactions.find(tr => tr.id === selectedTransaction); return t ? (
+                  <div className="bg-white/10 rounded-xl p-4 mb-4">
+                     <div className="flex justify-between mb-2"><h3 className="font-bold">Transaction Details</h3><button onClick={() => setSelectedTransaction(null)} className="text-white/60">✕</button></div>
+                     <div className="text-sm space-y-1"><div><span className="text-white/60">Date:</span> {t.date}</div><div><span className="text-white/60">Source:</span> <span className="text-amber-400">{t.source}</span></div><div><span className="text-white/60">Ref:</span> {t.docRef}</div></div>
+                     <div className="grid grid-cols-2 gap-4 mt-3">
+                        <div className="bg-emerald-500/20 rounded p-2"><div className="text-xs text-white/60">DEBIT</div><div className="font-bold">{t.debitAccount}</div><div className="font-mono">${t.amount.toLocaleString()}</div></div>
+                        <div className="bg-rose-500/20 rounded p-2"><div className="text-xs text-white/60">CREDIT</div><div className="font-bold">{t.creditAccount}</div><div className="font-mono">${t.amount.toLocaleString()}</div></div>
+                     </div>
+                  </div>
+               ) : null; })()}
+               {selectedAccount && (
+                  <div className="bg-white/10 rounded-xl p-4 mb-4">
+                     <div className="flex justify-between mb-2"><div><h3 className="font-bold">{selectedAccount}</h3><div className="text-xs text-white/60">{accounts[selectedAccount]?.type} • {accounts[selectedAccount]?.normalBalance} <button onClick={() => showInfoModal(selectedAccount, accounts[selectedAccount]?.info || '')} className="text-sky-400 ml-1">ℹ️</button></div></div><button onClick={() => setSelectedAccount(null)} className="text-white/60">✕</button></div>
+                     <div className="grid grid-cols-5 gap-1 text-xs font-bold border-b border-white/20 pb-1 mb-1"><div>Date</div><div>Desc</div><div className="text-right">DR</div><div className="text-right">CR</div><div className="text-right">Bal</div></div>
+                     {(() => { let bal = 0; const info = accounts[selectedAccount]; return getAccountTransactions(selectedAccount).map(t => { const isDr = t.debitAccount === selectedAccount; if (isDr) bal += info?.normalBalance === 'Debit' ? t.amount : -t.amount; else bal += info?.normalBalance === 'Credit' ? t.amount : -t.amount; return (<div key={t.id} className="grid grid-cols-5 gap-1 text-xs py-1 border-b border-white/5"><div>{t.date.slice(5)}</div><div className="truncate">{t.description}</div><div className="text-right text-emerald-400">{isDr ? `$${t.amount.toLocaleString()}` : '-'}</div><div className="text-right text-rose-400">{!isDr ? `$${t.amount.toLocaleString()}` : '-'}</div><div className="text-right font-mono">${bal.toLocaleString()}</div></div>); }); })()}
+                     <div className="mt-2 pt-2 border-t border-white/20 text-sm flex justify-between"><span className="font-bold">Balance:</span><span className="font-mono font-bold">${calculateBalance(selectedAccount).toLocaleString()}</span></div>
+                  </div>
+               )}
+               <button onClick={() => { setPhase('audit'); setGameLog(p => [...p, 'Started audit challenges']); }} className="w-full py-3 bg-gradient-to-r from-emerald-600 to-teal-600 rounded-xl font-bold">Start Audit Challenges →</button>
+               {showInfo && infoContent && (<div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"><div className="bg-slate-800 rounded-xl p-6 max-w-md"><h3 className="text-xl font-bold mb-3">{infoContent.title}</h3><p className="text-white/80 mb-4">{infoContent.content}</p><button onClick={() => setShowInfo(false)} className="w-full py-2 bg-emerald-600 rounded-lg">Got it!</button></div></div>)}
+            </div>
+         );
+      }
+
+      if (phase === 'audit') {
+         const ch = traceChallenges[currentChallenge];
+         const t = transactions.find(tr => tr.id === ch.transactionId);
+         return (
+            <div className="p-6 bg-gradient-to-br from-slate-900 via-emerald-900 to-slate-900 rounded-2xl text-white min-h-[600px]">
+               <div className="flex justify-between items-center mb-4"><div><h2 className="text-xl font-bold">🔍 Audit Trace</h2><p className="text-white/60 text-sm">Q{currentChallenge + 1}/{traceChallenges.length}</p></div><div className="bg-white/10 rounded-lg px-3 py-1">Score: <span className="font-bold">{score}</span></div></div>
+               <div className="w-full bg-white/10 rounded-full h-2 mb-6"><div className="bg-gradient-to-r from-amber-500 to-orange-500 h-2 rounded-full" style={{ width: `${((currentChallenge + 1) / traceChallenges.length) * 100}%` }} /></div>
+               <div className="bg-white/10 rounded-xl p-6 mb-4">
+                  <p className="text-lg mb-4">{ch.question}</p>
+                  {t && (<div className="bg-white/5 rounded-lg p-3 mb-4 text-sm"><div className="text-white/60 mb-1">Transaction:</div><div className="grid grid-cols-2 gap-1"><div>Date: {t.date}</div><div>Amt: ${t.amount.toLocaleString()}</div><div>DR: <span className="text-emerald-400">{t.debitAccount}</span></div><div>CR: <span className="text-rose-400">{t.creditAccount}</span></div></div></div>)}
+                  <div className="grid grid-cols-2 gap-3">{ch.options.map(o => (<button key={o} onClick={() => !showFeedback && handleAnswer(o)} disabled={showFeedback} className={`py-3 px-4 rounded-xl font-medium transition-all ${showFeedback && o === ch.correctAnswer ? 'bg-emerald-500' : showFeedback && traceAnswer === o && o !== ch.correctAnswer ? 'bg-rose-500' : 'bg-white/10 hover:bg-white/20'}`}>{o}</button>))}</div>
+               </div>
+               {showFeedback && (<div className={`p-4 rounded-xl ${feedbackCorrect ? 'bg-emerald-500/30 border border-emerald-500' : 'bg-rose-500/30 border border-rose-500'}`}><div className="flex items-start gap-2"><span className="text-xl">{feedbackCorrect ? '✓' : '✗'}</span><div><div className="font-bold mb-1">{feedbackCorrect ? 'Correct!' : 'Not quite'}</div><div className="text-sm text-white/80">{ch.explanation}</div></div></div></div>)}
+            </div>
+         );
+      }
+
+      if (phase === 'result') {
+         const acc = totalAnswered > 0 ? Math.round((correctAnswers / totalAnswered) * 100) : 0;
+         const grade = acc >= 90 ? 'A' : acc >= 80 ? 'B' : acc >= 70 ? 'C' : acc >= 60 ? 'D' : 'F';
+         return (
+            <div className="p-6 bg-gradient-to-br from-slate-900 via-emerald-900 to-slate-900 rounded-2xl text-white min-h-[600px]">
+               <div className="text-center mb-6"><div className="text-6xl mb-4">📒</div><h2 className="text-3xl font-bold mb-2">General Ledger Mastered!</h2></div>
+               <div className="grid grid-cols-3 gap-4 mb-6">
+                  <div className="bg-white/10 rounded-xl p-4 text-center"><div className="text-3xl font-bold text-amber-400">{score}</div><div className="text-white/60">Points</div></div>
+                  <div className="bg-white/10 rounded-xl p-4 text-center"><div className="text-3xl font-bold text-emerald-400">{acc}%</div><div className="text-white/60">Accuracy</div></div>
+                  <div className="bg-white/10 rounded-xl p-4 text-center"><div className={`text-3xl font-bold ${grade === 'A' ? 'text-emerald-400' : 'text-sky-400'}`}>{grade}</div><div className="text-white/60">Grade</div></div>
+               </div>
+               <div className="bg-white/10 rounded-xl p-6 mb-6">
+                  <h3 className="font-bold text-lg mb-4">💡 Key Takeaways</h3>
+                  <ul className="space-y-2 text-sm">
+                     <li className="flex items-start gap-2"><span className="text-emerald-400">✓</span><span><strong>Master Record:</strong> GL contains all transactions by account</span></li>
+                     <li className="flex items-start gap-2"><span className="text-emerald-400">✓</span><span><strong>Audit Trail:</strong> Every entry traces to source journals</span></li>
+                     <li className="flex items-start gap-2"><span className="text-emerald-400">✓</span><span><strong>Ledger Cards:</strong> Show running balances and history</span></li>
+                     <li className="flex items-start gap-2"><span className="text-emerald-400">✓</span><span><strong>Statements:</strong> Built from GL account balances</span></li>
+                  </ul>
+               </div>
+               <div className="flex gap-3">
+                  <button onClick={() => { setPhase('intro'); setScore(0); setCurrentChallenge(0); setCorrectAnswers(0); setTotalAnswered(0); }} className="flex-1 py-3 bg-white/10 hover:bg-white/20 rounded-xl font-bold">🔄 Again</button>
+                  <button onClick={() => setPhase('intro')} className="flex-1 py-3 bg-gradient-to-r from-emerald-600 to-teal-600 rounded-xl font-bold">✓ Done</button>
+               </div>
+            </div>
+         );
+      }
+
+      return null;
+   };
+
    const FinancialStatementsRenderer = () => {
       const [phase, setPhase] = useState<'intro' | 'play' | 'result'>('intro');
       const [showInfo, setShowInfo] = useState(false);
@@ -41861,6 +42161,8 @@ const GeneratedDiagram: React.FC<DiagramProps> = ({ type, data, title }) => {
             return <GAAPvsIFRSRenderer />;
          case 'chart_of_accounts':
             return <ChartOfAccountsRenderer />;
+         case 'general_ledger':
+            return <GeneralLedgerRenderer />;
          case 'pricing_strategy':
             return <PricingStrategyRenderer />;
          case 'budgeting':
