@@ -40883,6 +40883,378 @@ const GeneratedDiagram: React.FC<DiagramProps> = ({ type, data, title }) => {
       return null;
    };
 
+   const AccrualCashBasisRenderer = () => {
+      const [phase, setPhase] = useState<'intro' | 'tutorial' | 'play' | 'result'>('intro');
+      const [tutorialStep, setTutorialStep] = useState(0);
+      const [showInfo, setShowInfo] = useState(false);
+      const [infoTopic, setInfoTopic] = useState<string | null>(null);
+      const [score, setScore] = useState(0);
+      const [level, setLevel] = useState(0);
+      const [gameLog, setGameLog] = useState<string[]>([]);
+      const [answers, setAnswers] = useState<{[key: string]: string}>({});
+      const [showResults, setShowResults] = useState(false);
+      const [quizIndex, setQuizIndex] = useState(0);
+      const [quizAnswered, setQuizAnswered] = useState(false);
+
+      const tutorials = [
+         { title: "Two Ways to Count", content: "Cash basis records when money moves. Accrual basis records when economic events occur. Same business, very different pictures!", icon: "🔀" },
+         { title: "Cash Basis", content: "Revenue when you GET paid. Expense when you PAY. Simple but can distort reality - December sales collected in January don't show in December.", icon: "💵" },
+         { title: "Accrual Basis", content: "Revenue when EARNED (delivered). Expense when INCURRED (used). Matches revenue with related expenses for true profitability.", icon: "📊" },
+         { title: "Matching Principle", content: "Accrual's superpower: match expenses TO the revenue they generate. Sold inventory in December? COGS in December, even if paid in January.", icon: "🎯" },
+         { title: "Revenue Recognition", content: "Accrual: Record revenue when earned (goods delivered, services performed). Cash: Record only when payment received.", icon: "📝" },
+         { title: "Who Uses What?", content: "Small businesses often use cash (simpler). GAAP requires accrual for public companies. IRS allows both for small businesses (<$26M revenue).", icon: "🏢" },
+         { title: "The Big Difference", content: "Cash shows liquidity (do we have money?). Accrual shows profitability (did we make money?). Both valuable, different purposes!", icon: "⚖️" }
+      ];
+
+      const infoTopics: {[key: string]: string} = {
+         cash_basis: "Cash basis is simple: money in = revenue, money out = expense. Great for tracking bank balance but can hide financial problems (profitable on paper but broke in reality).",
+         accrual_basis: "Accrual matches economic activity: sale made = revenue (even if not collected), expense incurred = recorded (even if not paid). Required by GAAP for larger companies.",
+         matching_principle: "Match expenses to the revenue they help generate in the SAME period. If you sell something in December, record both revenue AND the cost of goods in December.",
+         revenue_recognition: "Under accrual, recognize revenue when: (1) earned through delivery/performance, (2) measurable, (3) collectability reasonably assured. Not when cash received!",
+         prepaid_expenses: "Prepaid expenses (like insurance) are paid upfront but expensed over time under accrual. Pay $12K for 12 months insurance → expense $1K per month.",
+         accrued_expenses: "Accrued expenses are incurred but not yet paid. Employees work in December but get paid in January → expense in December, liability until paid."
+      };
+
+      const scenarios = [
+         {
+            name: "December Consulting Invoice",
+            description: "You complete $10,000 consulting project in December. Client pays in January.",
+            cash_december: 0,
+            cash_january: 10000,
+            accrual_december: 10000,
+            accrual_january: 0,
+            questions: [
+               { field: 'dec_cash', q: "Cash basis - December revenue?", correct: '0' },
+               { field: 'jan_cash', q: "Cash basis - January revenue?", correct: '10000' },
+               { field: 'dec_accrual', q: "Accrual basis - December revenue?", correct: '10000' },
+               { field: 'jan_accrual', q: "Accrual basis - January revenue?", correct: '0' }
+            ]
+         },
+         {
+            name: "Annual Insurance Premium",
+            description: "Pay $6,000 on Jan 1 for 12-month insurance policy.",
+            cash_january_expense: 6000,
+            cash_monthly_expense: 0,
+            accrual_january_expense: 500,
+            accrual_monthly_expense: 500,
+            questions: [
+               { field: 'jan_cash', q: "Cash basis - January expense?", correct: '6000' },
+               { field: 'feb_cash', q: "Cash basis - February expense?", correct: '0' },
+               { field: 'jan_accrual', q: "Accrual basis - January expense?", correct: '500' },
+               { field: 'feb_accrual', q: "Accrual basis - February expense?", correct: '500' }
+            ]
+         },
+         {
+            name: "December Wages",
+            description: "Employees work Dec 26-31 ($5,000 wages). Paycheck issued Jan 5.",
+            cash_december_expense: 0,
+            cash_january_expense: 5000,
+            accrual_december_expense: 5000,
+            accrual_january_expense: 0,
+            questions: [
+               { field: 'dec_cash', q: "Cash basis - December wage expense?", correct: '0' },
+               { field: 'jan_cash', q: "Cash basis - January wage expense?", correct: '5000' },
+               { field: 'dec_accrual', q: "Accrual basis - December wage expense?", correct: '5000' },
+               { field: 'jan_accrual', q: "Accrual basis - January wage expense?", correct: '0' }
+            ]
+         }
+      ];
+
+      const quizzes = [
+         { q: "GAAP requires which accounting method for public companies?", opts: ["Cash basis", "Accrual basis", "Either one", "Hybrid"], correct: 1, explain: "GAAP requires accrual accounting for all but the smallest companies. It provides a more accurate picture of financial performance." },
+         { q: "A company delivers goods Dec 15, receives payment Jan 10. When is revenue recognized under accrual?", opts: ["January 10", "December 15", "December 31", "January 1"], correct: 1, explain: "Under accrual, revenue is recognized when earned (goods delivered) - December 15." },
+         { q: "Cash basis is better for tracking:", opts: ["Profitability", "Liquidity/cash flow", "Long-term trends", "Investor relations"], correct: 1, explain: "Cash basis directly tracks money movement - perfect for understanding actual cash position." },
+         { q: "The matching principle requires:", opts: ["Matching debits and credits", "Matching expenses to related revenue", "Matching cash in and out", "Matching assets to liabilities"], correct: 1, explain: "Matching principle: recognize expenses in the same period as the revenue they helped generate." },
+         { q: "Prepaid rent under accrual is initially recorded as:", opts: ["Expense", "Revenue", "Asset", "Liability"], correct: 2, explain: "Prepaid rent is an asset (prepaid expense) - you've paid for future benefit. It becomes expense as time passes." },
+         { q: "Year-end: $50K sales made, $30K collected. Under accrual, revenue is:", opts: ["$30,000", "$50,000", "$20,000", "$80,000"], correct: 1, explain: "Under accrual, all $50K is revenue (earned). Collection doesn't matter for revenue recognition." }
+      ];
+
+      const currentScenario = scenarios[level];
+
+      const checkAnswers = () => {
+         setShowResults(true);
+         let correct = 0;
+         currentScenario.questions.forEach(q => {
+            if (answers[q.field] === q.correct) {
+               correct++;
+               setScore(prev => prev + 15);
+            }
+         });
+         setGameLog(prev => [...prev, `Scenario ${level + 1}: ${correct}/${currentScenario.questions.length} correct`]);
+      };
+
+      const handleQuizAnswer = (idx: number) => {
+         if (quizAnswered) return;
+         setQuizAnswered(true);
+         if (idx === quizzes[quizIndex].correct) {
+            setScore(prev => prev + 15);
+            setGameLog(prev => [...prev, `Quiz ${quizIndex + 1}: Correct!`]);
+         }
+      };
+
+      const nextQuiz = () => {
+         if (quizIndex < quizzes.length - 1) {
+            setQuizIndex(prev => prev + 1);
+            setQuizAnswered(false);
+         } else {
+            setPhase('result');
+         }
+      };
+
+      const nextScenario = () => {
+         if (level < scenarios.length - 1) {
+            setLevel(prev => prev + 1);
+            setAnswers({});
+            setShowResults(false);
+         } else {
+            setLevel(scenarios.length);
+         }
+      };
+
+      const InfoModal = ({ topic, onClose }: { topic: string; onClose: () => void }) => (
+         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={onClose}>
+            <div className="bg-white rounded-xl p-6 max-w-md" onClick={e => e.stopPropagation()}>
+               <h3 className="text-lg font-bold text-gray-800 mb-3">ℹ️ {topic.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}</h3>
+               <p className="text-gray-600">{infoTopics[topic]}</p>
+               <button onClick={onClose} className="mt-4 w-full py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600">Got it!</button>
+            </div>
+         </div>
+      );
+
+      if (phase === 'intro') {
+         return (
+            <div className="flex flex-col items-center justify-center min-h-full bg-gradient-to-br from-orange-50 to-amber-100 p-6">
+               <div className="bg-white rounded-2xl shadow-xl p-8 max-w-lg w-full text-center">
+                  <div className="text-6xl mb-4">🔀</div>
+                  <h1 className="text-2xl font-bold text-gray-800 mb-3">Accrual vs Cash Basis</h1>
+                  <p className="text-gray-600 mb-6">Two different ways to record the same transactions. Same business, very different financial statements!</p>
+                  <div className="grid grid-cols-2 gap-4 mb-6">
+                     <div className="bg-blue-50 rounded-lg p-3 text-left">
+                        <p className="font-bold text-blue-700">💵 Cash Basis</p>
+                        <p className="text-xs text-blue-600">Record when money moves</p>
+                     </div>
+                     <div className="bg-green-50 rounded-lg p-3 text-left">
+                        <p className="font-bold text-green-700">📊 Accrual Basis</p>
+                        <p className="text-xs text-green-600">Record when earned/incurred</p>
+                     </div>
+                  </div>
+                  <button onClick={() => setPhase('tutorial')} className="w-full py-3 bg-orange-500 text-white rounded-xl font-semibold hover:bg-orange-600 transition-all">
+                     Start Learning
+                  </button>
+               </div>
+            </div>
+         );
+      }
+
+      if (phase === 'tutorial') {
+         const tut = tutorials[tutorialStep];
+         return (
+            <div className="flex flex-col items-center justify-center min-h-full bg-gradient-to-br from-orange-50 to-amber-100 p-6">
+               <div className="bg-white rounded-2xl shadow-xl p-8 max-w-lg w-full">
+                  <div className="flex justify-between items-center mb-6">
+                     <span className="text-sm text-gray-500">Step {tutorialStep + 1} of {tutorials.length}</span>
+                     <div className="flex gap-1">
+                        {tutorials.map((_, i) => (
+                           <div key={i} className={`w-2 h-2 rounded-full ${i <= tutorialStep ? 'bg-orange-500' : 'bg-gray-200'}`} />
+                        ))}
+                     </div>
+                  </div>
+                  <div className="text-4xl mb-4 text-center">{tut.icon}</div>
+                  <h2 className="text-xl font-bold text-gray-800 mb-3 text-center">{tut.title}</h2>
+                  <p className="text-gray-600 text-center mb-8">{tut.content}</p>
+                  <div className="flex gap-3">
+                     {tutorialStep > 0 && (
+                        <button onClick={() => setTutorialStep(prev => prev - 1)} className="flex-1 py-3 border-2 border-gray-200 rounded-xl font-semibold text-gray-600 hover:bg-gray-50">
+                           Back
+                        </button>
+                     )}
+                     <button
+                        onClick={() => tutorialStep < tutorials.length - 1 ? setTutorialStep(prev => prev + 1) : setPhase('play')}
+                        className="flex-1 py-3 bg-orange-500 text-white rounded-xl font-semibold hover:bg-orange-600"
+                     >
+                        {tutorialStep < tutorials.length - 1 ? 'Next' : 'Compare Methods!'}
+                     </button>
+                  </div>
+               </div>
+            </div>
+         );
+      }
+
+      if (phase === 'play') {
+         const inQuizMode = level >= scenarios.length;
+
+         if (!inQuizMode) {
+            return (
+               <div className="flex flex-col min-h-full bg-gradient-to-br from-orange-50 to-amber-100 p-4">
+                  {showInfo && infoTopic && <InfoModal topic={infoTopic} onClose={() => setShowInfo(false)} />}
+
+                  <div className="flex justify-between items-center mb-4">
+                     <div>
+                        <h2 className="font-bold text-gray-800">{currentScenario.name}</h2>
+                        <p className="text-sm text-gray-600">Determine amounts under each method</p>
+                     </div>
+                     <span className="text-xl font-bold text-orange-600">{score} pts</span>
+                  </div>
+
+                  <div className="bg-white rounded-xl shadow-lg p-4 mb-4">
+                     <p className="text-gray-700">{currentScenario.description}</p>
+                  </div>
+
+                  <div className="flex-1 bg-white rounded-xl shadow-lg p-4 overflow-y-auto">
+                     <div className="grid grid-cols-2 gap-4 mb-4">
+                        <div className="p-3 rounded-lg bg-blue-50 border-2 border-blue-200">
+                           <div className="flex items-center gap-2 mb-2">
+                              <span className="font-bold text-blue-700">💵 Cash Basis</span>
+                              <button onClick={() => { setInfoTopic('cash_basis'); setShowInfo(true); }} className="text-blue-500">ℹ️</button>
+                           </div>
+                           <p className="text-xs text-blue-600">When money changes hands</p>
+                        </div>
+                        <div className="p-3 rounded-lg bg-green-50 border-2 border-green-200">
+                           <div className="flex items-center gap-2 mb-2">
+                              <span className="font-bold text-green-700">📊 Accrual Basis</span>
+                              <button onClick={() => { setInfoTopic('accrual_basis'); setShowInfo(true); }} className="text-blue-500">ℹ️</button>
+                           </div>
+                           <p className="text-xs text-green-600">When earned or incurred</p>
+                        </div>
+                     </div>
+
+                     <div className="space-y-3">
+                        {currentScenario.questions.map((q, idx) => (
+                           <div key={q.field} className={`p-3 rounded-lg ${q.field.includes('cash') ? 'bg-blue-50' : 'bg-green-50'}`}>
+                              <label className="block text-sm font-medium text-gray-700 mb-2">{q.q}</label>
+                              <div className="flex items-center gap-2">
+                                 <span className="text-gray-500">$</span>
+                                 <input
+                                    type="number"
+                                    value={answers[q.field] || ''}
+                                    onChange={(e) => setAnswers(prev => ({ ...prev, [q.field]: e.target.value }))}
+                                    disabled={showResults}
+                                    className="flex-1 px-3 py-2 border rounded-lg"
+                                    placeholder="Enter amount"
+                                 />
+                                 {showResults && (
+                                    <span className={answers[q.field] === q.correct ? 'text-green-600 font-bold' : 'text-red-600'}>
+                                       {answers[q.field] === q.correct ? '✓' : `→ $${q.correct}`}
+                                    </span>
+                                 )}
+                              </div>
+                           </div>
+                        ))}
+                     </div>
+                  </div>
+
+                  <div className="mt-4">
+                     {!showResults ? (
+                        <button
+                           onClick={checkAnswers}
+                           disabled={Object.keys(answers).length < currentScenario.questions.length}
+                           className={`w-full py-3 rounded-xl font-semibold ${Object.keys(answers).length >= currentScenario.questions.length ? 'bg-orange-500 text-white hover:bg-orange-600' : 'bg-gray-200 text-gray-400'}`}
+                        >
+                           Check Answers
+                        </button>
+                     ) : (
+                        <button
+                           onClick={nextScenario}
+                           className="w-full py-3 bg-orange-500 text-white rounded-xl font-semibold hover:bg-orange-600"
+                        >
+                           {level < scenarios.length - 1 ? 'Next Scenario →' : 'Continue to Quiz →'}
+                        </button>
+                     )}
+                  </div>
+               </div>
+            );
+         }
+
+         const quiz = quizzes[quizIndex];
+         return (
+            <div className="flex flex-col min-h-full bg-gradient-to-br from-orange-50 to-amber-100 p-4">
+               <div className="flex justify-between items-center mb-4">
+                  <div>
+                     <h2 className="font-bold text-gray-800">Accrual vs Cash Quiz</h2>
+                     <p className="text-sm text-gray-600">Question {quizIndex + 1} of {quizzes.length}</p>
+                  </div>
+                  <span className="text-xl font-bold text-orange-600">{score} pts</span>
+               </div>
+
+               <div className="flex-1 bg-white rounded-xl shadow-lg p-6">
+                  <h3 className="text-lg font-semibold text-gray-800 mb-6">{quiz.q}</h3>
+                  <div className="space-y-3">
+                     {quiz.opts.map((opt, idx) => (
+                        <button
+                           key={idx}
+                           onClick={() => handleQuizAnswer(idx)}
+                           disabled={quizAnswered}
+                           className={`w-full p-4 rounded-lg text-left font-medium transition-all ${quizAnswered
+                              ? idx === quiz.correct
+                                 ? 'bg-green-100 border-2 border-green-500 text-green-800'
+                                 : 'bg-gray-100 text-gray-500'
+                              : 'bg-gray-50 hover:bg-orange-50 border-2 border-transparent hover:border-orange-300'
+                           }`}
+                        >
+                           {opt}
+                        </button>
+                     ))}
+                  </div>
+                  {quizAnswered && (
+                     <div className="mt-4 p-4 bg-yellow-50 rounded-lg">
+                        <p className="text-sm text-yellow-800">💡 {quiz.explain}</p>
+                     </div>
+                  )}
+               </div>
+
+               {quizAnswered && (
+                  <div className="mt-4">
+                     <button onClick={nextQuiz} className="w-full py-3 bg-orange-500 text-white rounded-xl font-semibold hover:bg-orange-600">
+                        {quizIndex < quizzes.length - 1 ? 'Next Question →' : 'See Results'}
+                     </button>
+                  </div>
+               )}
+            </div>
+         );
+      }
+
+      if (phase === 'result') {
+         const maxScore = (scenarios.reduce((sum, s) => sum + s.questions.length * 15, 0)) + (quizzes.length * 15);
+         const percentage = Math.round((score / maxScore) * 100);
+
+         return (
+            <div className="flex flex-col items-center justify-center min-h-full bg-gradient-to-br from-orange-50 to-amber-100 p-6">
+               <div className="bg-white rounded-2xl shadow-xl p-8 max-w-lg w-full text-center">
+                  <div className="text-6xl mb-4">{percentage >= 80 ? '🏆' : percentage >= 60 ? '📊' : '📚'}</div>
+                  <h1 className="text-2xl font-bold text-gray-800 mb-2">Accounting Method Master!</h1>
+                  <div className="text-4xl font-bold text-orange-600 mb-4">{score} / {maxScore}</div>
+                  <div className="w-full bg-gray-200 rounded-full h-3 mb-6">
+                     <div className="bg-orange-500 h-3 rounded-full transition-all" style={{ width: `${percentage}%` }} />
+                  </div>
+
+                  <div className="bg-gray-50 rounded-lg p-4 text-left mb-6">
+                     <h3 className="font-semibold text-gray-800 mb-2">🎯 Key Takeaways:</h3>
+                     <ul className="text-sm text-gray-600 space-y-2">
+                        <li>• <strong>Cash</strong>: Records when money moves (simple, tracks liquidity)</li>
+                        <li>• <strong>Accrual</strong>: Records when earned/incurred (GAAP required)</li>
+                        <li>• <strong>Matching principle</strong>: Expenses match related revenue</li>
+                        <li>• Same business can look very different under each method!</li>
+                     </ul>
+                  </div>
+
+                  <div className="bg-orange-50 rounded-lg p-4 text-left mb-6">
+                     <h3 className="font-semibold text-orange-800 mb-2">💡 Pro Insight:</h3>
+                     <p className="text-sm text-orange-700">
+                        Accrual shows economic reality (are we profitable?). Cash shows financial reality (can we pay bills?). Smart managers track both!
+                     </p>
+                  </div>
+
+                  <button onClick={() => { setPhase('intro'); setScore(0); setLevel(0); setAnswers({}); setShowResults(false); setQuizIndex(0); setQuizAnswered(false); setGameLog([]); }} className="w-full py-3 bg-orange-500 text-white rounded-xl font-semibold hover:bg-orange-600">
+                     Practice Again
+                  </button>
+               </div>
+            </div>
+         );
+      }
+
+      return null;
+   };
+
    const FinancialStatementsRenderer = () => {
       const [phase, setPhase] = useState<'intro' | 'play' | 'result'>('intro');
       const [showInfo, setShowInfo] = useState(false);
@@ -44710,6 +45082,8 @@ const GeneratedDiagram: React.FC<DiagramProps> = ({ type, data, title }) => {
             return <CashFlowStatementRenderer />;
          case 'retained_earnings':
             return <RetainedEarningsRenderer />;
+         case 'accrual_cash_basis':
+            return <AccrualCashBasisRenderer />;
          case 'pricing_strategy':
             return <PricingStrategyRenderer />;
          case 'budgeting':
