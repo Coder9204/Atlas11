@@ -45142,6 +45142,352 @@ const GeneratedDiagram: React.FC<DiagramProps> = ({ type, data, title }) => {
       return null;
    };
 
+   // Topic 25: CapEx vs OpEx - Understanding Capital vs Operating Expenses
+   const CapExOpExRenderer = () => {
+      const [phase, setPhase] = useState<'intro' | 'tutorial' | 'play' | 'result'>('intro');
+      const [tutorialStep, setTutorialStep] = useState(0);
+      const [score, setScore] = useState(0);
+      const [scenarioIndex, setScenarioIndex] = useState(0);
+      const [gameLog, setGameLog] = useState<string[]>([]);
+      const [quizIndex, setQuizIndex] = useState(0);
+      const [quizAnswered, setQuizAnswered] = useState(false);
+      const [showInfo, setShowInfo] = useState(false);
+      const [infoContent, setInfoContent] = useState({ title: '', content: '' });
+      const [selectedClassification, setSelectedClassification] = useState<'capex' | 'opex' | null>(null);
+      const [answered, setAnswered] = useState(false);
+
+      const tutorialSteps = [
+         { title: 'Welcome to CapEx vs OpEx!', content: 'Learn to classify business expenses correctly - a critical skill for financial reporting, tax planning, and investment analysis.' },
+         { title: 'What is CapEx?', content: 'Capital Expenditure (CapEx): Long-term investments in assets. Appears on Balance Sheet, then depreciated over useful life. Examples: buildings, equipment, vehicles.' },
+         { title: 'What is OpEx?', content: 'Operating Expense (OpEx): Day-to-day costs of running the business. Fully expensed in the current period on Income Statement. Examples: rent, utilities, salaries.' },
+         { title: 'The Key Difference', content: 'CapEx: Benefit extends beyond 1 year → Capitalize & Depreciate. OpEx: Benefit consumed in current period → Expense immediately.' },
+         { title: 'Impact on Financials', content: 'CapEx: Lower initial expense, higher assets, spreads cost over years. OpEx: Full expense hit now, no asset recorded, immediate tax deduction.' },
+         { title: 'The Capitalization Threshold', content: 'Companies set thresholds (e.g., $5,000). Items below = OpEx regardless of life. Items above + lasting benefit = CapEx.' },
+         { title: 'Ready to Classify!', content: 'You\'ll analyze real business purchases and classify them correctly. Consider useful life, benefit period, and company policy!' }
+      ];
+
+      const scenarios = [
+         { item: 'New Manufacturing Equipment', cost: 250000, life: '10 years', description: 'CNC machine for production line expansion', correct: 'capex', reason: 'Long useful life, major asset, will be depreciated over 10 years' },
+         { item: 'Office Supplies', cost: 500, life: 'Immediate', description: 'Printer paper, pens, staplers for the month', correct: 'opex', reason: 'Low cost, consumed immediately, no lasting benefit beyond current period' },
+         { item: 'Software License (Annual)', cost: 12000, life: '1 year', description: 'Annual SaaS subscription for CRM system', correct: 'opex', reason: 'Subscription = no asset ownership, expense as incurred over the year' },
+         { item: 'Building Renovation', cost: 500000, life: '15 years', description: 'Major HVAC system replacement', correct: 'capex', reason: 'Extends building useful life, significant cost, capitalize and depreciate' },
+         { item: 'Employee Training', cost: 25000, life: 'Ongoing', description: 'Sales team certification program', correct: 'opex', reason: 'While valuable, no tangible asset created - expense in current period' },
+         { item: 'Delivery Vehicle', cost: 45000, life: '5 years', description: 'New truck for distribution fleet', correct: 'capex', reason: 'Depreciable asset with multi-year useful life' },
+         { item: 'Website Redesign', cost: 75000, life: '3 years', description: 'Complete overhaul of company website', correct: 'capex', reason: 'Significant cost, creates lasting digital asset, amortize over useful life' },
+         { item: 'Monthly Cloud Hosting', cost: 2000, life: '1 month', description: 'AWS infrastructure costs for the month', correct: 'opex', reason: 'Pay-as-you-go service, no asset, expense when incurred' },
+         { item: 'Office Furniture', cost: 3500, life: '7 years', description: 'New desk and chair set', correct: 'opex', reason: 'Below typical $5,000 capitalization threshold, expense immediately' },
+         { item: 'Patent Application', cost: 50000, life: '20 years', description: 'Legal fees for new patent filing', correct: 'capex', reason: 'Creates intangible asset (IP), amortize over patent life' }
+      ];
+
+      const quizQuestions = [
+         { q: 'CapEx appears on which financial statement initially?', options: ['Income Statement', 'Balance Sheet', 'Cash Flow only', 'None'], correct: 1 },
+         { q: 'OpEx is fully recognized in:', options: ['The asset\'s useful life', 'The current period', 'Over 5 years', 'When sold'], correct: 1 },
+         { q: 'A $3,000 laptop with 4-year life is typically:', options: ['Always CapEx', 'Always OpEx', 'Depends on capitalization threshold', 'Ignored'], correct: 2 },
+         { q: 'SaaS subscriptions are usually classified as:', options: ['CapEx', 'OpEx', 'Both', 'Neither'], correct: 1 },
+         { q: 'Which provides immediate tax benefit?', options: ['CapEx', 'OpEx', 'Both equally', 'Neither'], correct: 1 },
+         { q: 'Depreciation is associated with:', options: ['OpEx items', 'CapEx items', 'Both', 'Revenue only'], correct: 1 }
+      ];
+
+      const openInfo = (title: string, content: string) => {
+         setInfoContent({ title, content });
+         setShowInfo(true);
+      };
+
+      const handleClassification = (classification: 'capex' | 'opex') => {
+         if (answered) return;
+         setSelectedClassification(classification);
+         setAnswered(true);
+         const scenario = scenarios[scenarioIndex];
+         if (classification === scenario.correct) {
+            setScore(s => s + 10);
+            setGameLog(prev => [...prev, `Correct: ${scenario.item} is ${classification.toUpperCase()}`]);
+         } else {
+            setGameLog(prev => [...prev, `Incorrect: ${scenario.item} should be ${scenario.correct.toUpperCase()}`]);
+         }
+      };
+
+      const nextScenario = () => {
+         if (scenarioIndex < scenarios.length - 1) {
+            setScenarioIndex(scenarioIndex + 1);
+            setSelectedClassification(null);
+            setAnswered(false);
+         } else {
+            setPhase('result');
+         }
+      };
+
+      // Intro Phase
+      if (phase === 'intro') {
+         return (
+            <div className="p-6 bg-gradient-to-br from-cyan-50 to-sky-50 rounded-2xl max-w-2xl mx-auto">
+               <h2 className="text-2xl font-bold text-cyan-800 mb-4 flex items-center gap-2">
+                  💰 CapEx vs OpEx Classifier
+                  <button onClick={() => openInfo('Why does it matter?', 'Misclassifying expenses can distort financial statements, affect tax liability, mislead investors, and even trigger audit findings. Getting it right is critical!')} className="text-cyan-500 hover:text-cyan-700">ℹ️</button>
+               </h2>
+               <div className="bg-white/80 p-5 rounded-xl mb-6">
+                  <p className="text-gray-700 mb-4">Master the art of classifying business expenses!</p>
+                  <div className="grid grid-cols-2 gap-4 mb-4">
+                     <div className="bg-blue-50 p-4 rounded-lg border-l-4 border-blue-500">
+                        <div className="font-bold text-blue-800">CapEx</div>
+                        <div className="text-sm text-blue-600">Capital Expenditure</div>
+                        <div className="text-xs text-gray-500 mt-2">→ Balance Sheet</div>
+                        <div className="text-xs text-gray-500">→ Depreciated over time</div>
+                     </div>
+                     <div className="bg-orange-50 p-4 rounded-lg border-l-4 border-orange-500">
+                        <div className="font-bold text-orange-800">OpEx</div>
+                        <div className="text-sm text-orange-600">Operating Expense</div>
+                        <div className="text-xs text-gray-500 mt-2">→ Income Statement</div>
+                        <div className="text-xs text-gray-500">→ Expensed immediately</div>
+                     </div>
+                  </div>
+                  <div className="text-sm text-gray-600">
+                     <strong>You'll learn:</strong> Classification rules, Capitalization thresholds, Financial impact, Tax implications
+                  </div>
+               </div>
+               <button onClick={() => setPhase('tutorial')} className="w-full py-3 bg-cyan-500 text-white rounded-xl font-semibold hover:bg-cyan-600 transition-all">Start Learning</button>
+               {showInfo && (
+                  <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" onClick={() => setShowInfo(false)}>
+                     <div className="bg-white p-6 rounded-xl max-w-md m-4" onClick={e => e.stopPropagation()}>
+                        <h3 className="font-bold text-lg mb-2">{infoContent.title}</h3>
+                        <p className="text-gray-600">{infoContent.content}</p>
+                        <button onClick={() => setShowInfo(false)} className="mt-4 px-4 py-2 bg-cyan-500 text-white rounded-lg">Got it!</button>
+                     </div>
+                  </div>
+               )}
+            </div>
+         );
+      }
+
+      // Tutorial Phase
+      if (phase === 'tutorial') {
+         const step = tutorialSteps[tutorialStep];
+         return (
+            <div className="p-6 bg-gradient-to-br from-cyan-50 to-sky-50 rounded-2xl max-w-2xl mx-auto">
+               <div className="flex justify-between items-center mb-4">
+                  <h2 className="text-xl font-bold text-cyan-800">Tutorial</h2>
+                  <span className="text-sm text-cyan-600">Step {tutorialStep + 1} of {tutorialSteps.length}</span>
+               </div>
+               <div className="bg-white/90 p-6 rounded-xl mb-6">
+                  <h3 className="font-bold text-lg text-gray-800 mb-3">{step.title}</h3>
+                  <p className="text-gray-600">{step.content}</p>
+
+                  {tutorialStep === 1 && (
+                     <div className="mt-4 p-4 bg-blue-50 rounded-lg border border-blue-200">
+                        <div className="font-semibold text-blue-800 mb-2">CapEx Examples:</div>
+                        <div className="grid grid-cols-3 gap-2 text-xs text-blue-700">
+                           <span>🏭 Machinery</span>
+                           <span>🏢 Buildings</span>
+                           <span>🚚 Vehicles</span>
+                           <span>💻 Major IT systems</span>
+                           <span>🔧 Equipment</span>
+                           <span>📜 Patents</span>
+                        </div>
+                     </div>
+                  )}
+
+                  {tutorialStep === 2 && (
+                     <div className="mt-4 p-4 bg-orange-50 rounded-lg border border-orange-200">
+                        <div className="font-semibold text-orange-800 mb-2">OpEx Examples:</div>
+                        <div className="grid grid-cols-3 gap-2 text-xs text-orange-700">
+                           <span>🏠 Rent</span>
+                           <span>💡 Utilities</span>
+                           <span>👥 Salaries</span>
+                           <span>📋 Insurance</span>
+                           <span>🔧 Repairs</span>
+                           <span>📊 Subscriptions</span>
+                        </div>
+                     </div>
+                  )}
+
+                  {tutorialStep === 4 && (
+                     <div className="mt-4 grid grid-cols-2 gap-4">
+                        <div className="p-3 bg-blue-50 rounded-lg text-center">
+                           <div className="text-2xl mb-1">📊</div>
+                           <div className="font-semibold text-blue-700 text-sm">CapEx: $100K machine</div>
+                           <div className="text-xs text-gray-500">Year 1: $10K expense</div>
+                           <div className="text-xs text-gray-500">(depreciation)</div>
+                        </div>
+                        <div className="p-3 bg-orange-50 rounded-lg text-center">
+                           <div className="text-2xl mb-1">💸</div>
+                           <div className="font-semibold text-orange-700 text-sm">OpEx: $100K rent</div>
+                           <div className="text-xs text-gray-500">Year 1: $100K expense</div>
+                           <div className="text-xs text-gray-500">(full deduction)</div>
+                        </div>
+                     </div>
+                  )}
+               </div>
+               <div className="w-full bg-gray-200 rounded-full h-2 mb-4">
+                  <div className="bg-cyan-500 h-2 rounded-full transition-all" style={{ width: `${((tutorialStep + 1) / tutorialSteps.length) * 100}%` }}></div>
+               </div>
+               <div className="flex gap-3">
+                  {tutorialStep > 0 && <button onClick={() => setTutorialStep(tutorialStep - 1)} className="flex-1 py-2 bg-gray-200 rounded-lg hover:bg-gray-300">Back</button>}
+                  <button onClick={() => tutorialStep < tutorialSteps.length - 1 ? setTutorialStep(tutorialStep + 1) : setPhase('play')} className="flex-1 py-2 bg-cyan-500 text-white rounded-lg hover:bg-cyan-600">
+                     {tutorialStep < tutorialSteps.length - 1 ? 'Next' : 'Start Classifying!'}
+                  </button>
+               </div>
+            </div>
+         );
+      }
+
+      // Play Phase
+      if (phase === 'play') {
+         const scenario = scenarios[scenarioIndex];
+         return (
+            <div className="p-6 bg-gradient-to-br from-cyan-50 to-sky-50 rounded-2xl max-w-2xl mx-auto">
+               <div className="flex justify-between items-center mb-4">
+                  <h2 className="text-xl font-bold text-cyan-800">Classify the Expense</h2>
+                  <div className="flex items-center gap-3">
+                     <span className="bg-cyan-100 px-3 py-1 rounded-full text-cyan-700 text-sm">Score: {score}</span>
+                     <span className="text-sm text-gray-500">Item {scenarioIndex + 1}/{scenarios.length}</span>
+                  </div>
+               </div>
+
+               <div className="bg-white/90 p-5 rounded-xl mb-4">
+                  <div className="text-center mb-4">
+                     <h3 className="text-xl font-bold text-gray-800">{scenario.item}</h3>
+                     <p className="text-gray-600 text-sm mt-1">{scenario.description}</p>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4 mb-4">
+                     <div className="bg-gray-50 p-3 rounded-lg text-center">
+                        <div className="text-xs text-gray-500">Cost</div>
+                        <div className="font-bold text-lg text-gray-800">${scenario.cost.toLocaleString()}</div>
+                     </div>
+                     <div className="bg-gray-50 p-3 rounded-lg text-center">
+                        <div className="text-xs text-gray-500">Useful Life</div>
+                        <div className="font-bold text-lg text-gray-800">{scenario.life}</div>
+                     </div>
+                  </div>
+
+                  {!answered ? (
+                     <div className="grid grid-cols-2 gap-4">
+                        <button
+                           onClick={() => handleClassification('capex')}
+                           className="p-4 bg-blue-50 border-2 border-blue-200 rounded-xl hover:border-blue-500 hover:bg-blue-100 transition-all"
+                        >
+                           <div className="text-2xl mb-1">📊</div>
+                           <div className="font-bold text-blue-800">CapEx</div>
+                           <div className="text-xs text-blue-600">Capitalize & Depreciate</div>
+                        </button>
+                        <button
+                           onClick={() => handleClassification('opex')}
+                           className="p-4 bg-orange-50 border-2 border-orange-200 rounded-xl hover:border-orange-500 hover:bg-orange-100 transition-all"
+                        >
+                           <div className="text-2xl mb-1">💸</div>
+                           <div className="font-bold text-orange-800">OpEx</div>
+                           <div className="text-xs text-orange-600">Expense Immediately</div>
+                        </button>
+                     </div>
+                  ) : (
+                     <div className={`p-4 rounded-xl ${selectedClassification === scenario.correct ? 'bg-green-50 border-2 border-green-300' : 'bg-red-50 border-2 border-red-300'}`}>
+                        <div className="font-bold mb-2">
+                           {selectedClassification === scenario.correct ? '✅ Correct!' : '❌ Incorrect'}
+                        </div>
+                        <div className="text-sm text-gray-700">
+                           <strong>Answer:</strong> {scenario.correct.toUpperCase()}
+                        </div>
+                        <div className="text-sm text-gray-600 mt-1">
+                           <strong>Why:</strong> {scenario.reason}
+                        </div>
+                        <button onClick={nextScenario} className="mt-3 px-4 py-2 bg-cyan-500 text-white rounded-lg hover:bg-cyan-600">
+                           {scenarioIndex < scenarios.length - 1 ? 'Next Item →' : 'Complete Challenge'}
+                        </button>
+                     </div>
+                  )}
+               </div>
+
+               {/* Decision Helper */}
+               <div className="bg-white/60 p-3 rounded-lg">
+                  <div className="text-xs font-semibold text-gray-600 mb-2">💡 Decision Checklist:</div>
+                  <div className="grid grid-cols-2 gap-2 text-xs">
+                     <div className="text-blue-700">CapEx if: Life {'>'} 1 year, Major cost, Creates asset</div>
+                     <div className="text-orange-700">OpEx if: Consumed now, Below threshold, No lasting asset</div>
+                  </div>
+               </div>
+
+               {showInfo && (
+                  <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" onClick={() => setShowInfo(false)}>
+                     <div className="bg-white p-6 rounded-xl max-w-md m-4" onClick={e => e.stopPropagation()}>
+                        <h3 className="font-bold text-lg mb-2">{infoContent.title}</h3>
+                        <p className="text-gray-600">{infoContent.content}</p>
+                        <button onClick={() => setShowInfo(false)} className="mt-4 px-4 py-2 bg-cyan-500 text-white rounded-lg">Got it!</button>
+                     </div>
+                  </div>
+               )}
+            </div>
+         );
+      }
+
+      // Result Phase
+      if (phase === 'result') {
+         const quiz = quizQuestions[quizIndex];
+         const maxScore = (scenarios.length * 10) + (quizQuestions.length * 10);
+         const percentage = Math.round((score / maxScore) * 100);
+
+         if (quizIndex < quizQuestions.length) {
+            return (
+               <div className="p-6 bg-gradient-to-br from-cyan-50 to-sky-50 rounded-2xl max-w-2xl mx-auto">
+                  <h2 className="text-xl font-bold text-cyan-800 mb-4">Knowledge Check</h2>
+                  <div className="bg-white/90 p-5 rounded-xl mb-4">
+                     <div className="text-sm text-gray-500 mb-2">Question {quizIndex + 1} of {quizQuestions.length}</div>
+                     <p className="font-semibold text-gray-800 mb-4">{quiz.q}</p>
+                     <div className="grid gap-2">
+                        {quiz.options.map((opt, i) => (
+                           <button
+                              key={i}
+                              onClick={() => {
+                                 if (!quizAnswered) {
+                                    if (i === quiz.correct) setScore(s => s + 10);
+                                    setQuizAnswered(true);
+                                    setGameLog(prev => [...prev, `Quiz ${quizIndex + 1}: ${i === quiz.correct ? 'Correct!' : 'Incorrect'}`]);
+                                 }
+                              }}
+                              disabled={quizAnswered}
+                              className={`p-3 rounded-lg text-left transition-all ${quizAnswered ? (i === quiz.correct ? 'bg-green-100 border-green-500' : 'bg-gray-100') : 'bg-gray-50 hover:bg-gray-100'} border-2 ${quizAnswered && i === quiz.correct ? 'border-green-500' : 'border-transparent'}`}
+                           >
+                              {opt}
+                           </button>
+                        ))}
+                     </div>
+                  </div>
+                  {quizAnswered && (
+                     <button onClick={() => { setQuizIndex(quizIndex + 1); setQuizAnswered(false); }} className="w-full py-3 bg-cyan-500 text-white rounded-xl font-semibold hover:bg-cyan-600">
+                        {quizIndex < quizQuestions.length - 1 ? 'Next Question' : 'See Results'}
+                     </button>
+                  )}
+               </div>
+            );
+         }
+
+         return (
+            <div className="p-6 bg-gradient-to-br from-cyan-50 to-sky-50 rounded-2xl max-w-2xl mx-auto">
+               <h2 className="text-2xl font-bold text-cyan-800 mb-4">🎉 Classification Complete!</h2>
+               <div className="bg-white/90 p-6 rounded-xl mb-6">
+                  <div className="text-center mb-6">
+                     <div className="text-5xl font-bold text-cyan-600 mb-2">{percentage}%</div>
+                     <div className="text-gray-600">Final Score: {score} / {maxScore}</div>
+                     <div className="text-lg font-semibold mt-2">
+                        {percentage >= 90 ? '🏆 Classification Expert!' : percentage >= 70 ? '📊 Strong Understanding' : percentage >= 50 ? '📈 Good Progress' : '📚 Keep Practicing'}
+                     </div>
+                  </div>
+                  <div className="bg-cyan-50 p-4 rounded-lg">
+                     <h3 className="font-bold text-cyan-800 mb-2">Key Takeaways:</h3>
+                     <ul className="text-sm text-gray-700 space-y-1">
+                        <li>• CapEx: Long-term assets, capitalize, depreciate over life</li>
+                        <li>• OpEx: Current period costs, expense immediately</li>
+                        <li>• Check capitalization threshold (often $5,000)</li>
+                        <li>• Subscriptions/rentals are typically OpEx</li>
+                        <li>• Classification affects both financials and taxes</li>
+                     </ul>
+                  </div>
+               </div>
+               <button onClick={() => { setPhase('intro'); setScore(0); setScenarioIndex(0); setSelectedClassification(null); setAnswered(false); setQuizIndex(0); setQuizAnswered(false); }} className="w-full py-3 bg-cyan-500 text-white rounded-xl font-semibold hover:bg-cyan-600">Practice Again</button>
+            </div>
+         );
+      }
+      return null;
+   };
+
    const FinancialStatementsRenderer = () => {
       const [phase, setPhase] = useState<'intro' | 'play' | 'result'>('intro');
       const [showInfo, setShowInfo] = useState(false);
@@ -48991,6 +49337,8 @@ const GeneratedDiagram: React.FC<DiagramProps> = ({ type, data, title }) => {
             return <VarianceAnalysisRenderer />;
          case 'zero_based_budget':
             return <ZeroBasedBudgetRenderer />;
+         case 'capex_opex':
+            return <CapExOpExRenderer />;
          case 'pricing_strategy':
             return <PricingStrategyRenderer />;
          case 'budgeting':
