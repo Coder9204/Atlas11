@@ -49674,6 +49674,114 @@ const GeneratedDiagram: React.FC<DiagramProps> = ({ type, data, title }) => {
       return null;
    };
 
+   const AsoKeywordsRenderer = () => {
+      const [phase, setPhase] = useState<'intro' | 'tutorial' | 'play' | 'result'>('intro');
+      const [tutorialStep, setTutorialStep] = useState(0);
+      const [showInfo, setShowInfo] = useState(false);
+      const [infoKey, setInfoKey] = useState<string>('');
+      const [platform, setPlatform] = useState<'ios' | 'android'>('ios');
+      const [selectedKeywords, setSelectedKeywords] = useState<string[]>([]);
+      const [scenarioIndex, setScenarioIndex] = useState(0);
+      const [score, setScore] = useState(0);
+      const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
+      const [answered, setAnswered] = useState(false);
+      const [quizIndex, setQuizIndex] = useState(0);
+      const [quizScore, setQuizScore] = useState(0);
+      const [quizAnswered, setQuizAnswered] = useState(false);
+      const [gameLog, setGameLog] = useState<string[]>([]);
+
+      const infoContent: Record<string, { title: string; content: string }> = {
+         'search_volume': { title: 'Search Volume', content: 'Number of times this term is searched monthly in the app store. Higher volume = more potential traffic, but usually more competition.' },
+         'difficulty': { title: 'Keyword Difficulty', content: 'How hard it is to rank for this keyword. Based on competitor strength and number of apps targeting it. 1-10 scale, higher = harder.' },
+         'chance': { title: 'Ranking Chance', content: 'Your probability of ranking in top 10 for this keyword, based on your current app authority and competition level.' },
+         'ios_field': { title: 'iOS Keyword Field', content: 'Apple gives you 100 characters for keywords. Use commas to separate, no spaces after commas. Don\'t repeat words from your title - it wastes space.' },
+         'android_keywords': { title: 'Android Keywords', content: 'Google extracts keywords from your title and description. Repeat important keywords 3-5 times naturally. Phrase matching is more forgiving than iOS.' },
+         'long_tail': { title: 'Long-Tail Keywords', content: 'Longer, more specific phrases with lower volume but higher intent. "fitness app" is broad; "home workout for beginners" is long-tail with better conversion.' }
+      };
+
+      const tutorialSteps = [
+         { title: 'Welcome to ASO Keywords', desc: '65% of app installs come from search. Master keywords to get discovered by the right users.', icon: '🔍' },
+         { title: 'How Users Find Apps', desc: 'Users type search queries in the App Store. Your app appears if your keywords match their search. No match = invisible.', icon: '📱' },
+         { title: 'The Keyword Tradeoff', desc: 'High volume keywords have more searches but fierce competition. Low difficulty keywords are easier to rank but fewer searches apply.', icon: '⚖️' },
+         { title: 'iOS vs Android Differences', desc: 'iOS: 100-char keyword field, exact match. Android: Keywords in title/description, phrase matching. Different strategies required.', icon: '🍎' },
+         { title: 'The Sweet Spot', desc: 'Target keywords with decent volume AND achievable rankings. Ranking #5 for 10 terms beats ranking #50 for 2 popular terms.', icon: '🎯' },
+         { title: 'Keyword Research Process', desc: 'Analyze competitors, check search volume, assess difficulty, test different combinations, and iterate based on ranking changes.', icon: '📊' },
+         { title: 'Start Optimizing!', desc: 'Apply ASO keyword strategies to boost organic app discovery.', icon: '🚀' }
+      ];
+
+      const keywordDatabase = [
+         { keyword: 'fitness tracker', volume: 85, difficulty: 9, chance: 12 },
+         { keyword: 'workout app', volume: 92, difficulty: 10, chance: 5 },
+         { keyword: 'home workout', volume: 78, difficulty: 8, chance: 18 },
+         { keyword: 'exercise log', volume: 45, difficulty: 5, chance: 45 },
+         { keyword: 'gym tracker', volume: 52, difficulty: 6, chance: 38 },
+         { keyword: 'calorie counter', volume: 88, difficulty: 9, chance: 8 },
+         { keyword: 'step counter', volume: 65, difficulty: 7, chance: 22 },
+         { keyword: 'weight loss', volume: 95, difficulty: 10, chance: 3 },
+         { keyword: 'HIIT timer', volume: 28, difficulty: 4, chance: 62 },
+         { keyword: 'workout planner', volume: 38, difficulty: 5, chance: 48 }
+      ];
+
+      const scenarios = [
+         { title: 'New App Launch Strategy', situation: 'You\'re launching a new fitness app with zero existing authority. Your budget is limited. You need organic installs fast.', question: 'Which keyword strategy is best for a new app?', options: ['Target highest volume keywords like "fitness app"', 'Focus on low difficulty keywords you can actually rank for', 'Copy exact keywords from top competitor', 'Use only branded keywords'], correct: 1, explanation: 'New apps can\'t compete for high-volume keywords. Start with low-difficulty, medium-volume keywords where you can rank top 10. Build authority, then expand to harder keywords. Ranking #5 for "HIIT timer" beats ranking #150 for "fitness app".' },
+         { title: 'iOS Character Limit', situation: 'iOS gives 100 characters for keywords. Your title is "FitPro - Workout Tracker". You\'ve drafted: "fitness tracker, workout app, exercise log, gym, health, fit, training, routine"', question: 'What\'s wrong with this keyword list?', options: ['Too many keywords', 'Keywords are too generic', '"Workout" and "tracker" waste space (already in title)', 'Should include competitor names'], correct: 2, explanation: 'Apple indexes your title separately. "Workout" and "tracker" are already covered - repeating them wastes 16 characters. Remove duplicates, add unique keywords. Also, single words like "gym" "health" "fit" are too broad and competitive.' },
+         { title: 'Android Long Description', situation: 'Your Android app description needs keyword optimization. You want to rank for "home workout for beginners".', question: 'How should you incorporate this keyword?', options: ['Stuff it 20 times throughout the description', 'Use it naturally 3-5 times in context', 'Put it only in the first sentence', 'Don\'t use it - Google ignores descriptions'], correct: 1, explanation: 'Google reads your full description but penalizes keyword stuffing. Use target keywords 3-5 times naturally. Variations help: "home workouts", "beginner workout at home". First paragraph is weighted more heavily, so include primary keywords there.' },
+         { title: 'Competitor Keyword Analysis', situation: 'Your top competitor ranks #1 for "daily workout reminder". They have 50K reviews, you have 500. The keyword has medium volume.', question: 'Should you target this keyword?', options: ['Yes - if they rank, you can too', 'Yes - but as secondary priority, not primary', 'No - you can\'t beat 50K reviews', 'No - competitor keywords are off-limits'], correct: 1, explanation: 'You CAN target competitor keywords, but prioritize realistically. With 500 vs 50K reviews, you won\'t rank #1 soon. Add it to your list but don\'t make it your primary focus. Target keywords where the gap is smaller while building authority.' }
+      ];
+
+      const quizQuestions = [
+         { q: 'What percentage of app installs come from App Store search?', options: ['25%', '45%', '65%', '85%'], correct: 2 },
+         { q: 'iOS keyword field character limit is:', options: ['50 characters', '100 characters', '200 characters', 'Unlimited'], correct: 1 },
+         { q: 'The best keyword strategy targets:', options: ['Highest volume only', 'Lowest difficulty only', 'Balance of volume and achievable ranking', 'Competitor exact keywords'], correct: 2 },
+         { q: 'On Android, Google extracts keywords from:', options: ['Hidden keyword field', 'Title and description', 'Only the title', 'User reviews'], correct: 1 },
+         { q: 'Long-tail keywords are characterized by:', options: ['High volume, high competition', 'Low volume, higher intent', 'Only brand terms', 'Single words'], correct: 1 }
+      ];
+
+      const getCharCount = () => selectedKeywords.join(',').length;
+      const maxChars = platform === 'ios' ? 100 : 500;
+
+      const toggleKeyword = (kw: string) => {
+         if (selectedKeywords.includes(kw)) {
+            setSelectedKeywords(selectedKeywords.filter(k => k !== kw));
+         } else if (getCharCount() + kw.length + 1 <= maxChars) {
+            setSelectedKeywords([...selectedKeywords, kw]);
+         }
+      };
+
+      const getProjectedInstalls = () => {
+         return selectedKeywords.reduce((total, kw) => {
+            const kwData = keywordDatabase.find(k => k.keyword === kw);
+            if (kwData && kwData.chance > 30) return total + Math.floor(kwData.volume * 0.15);
+            if (kwData && kwData.chance > 15) return total + Math.floor(kwData.volume * 0.05);
+            return total + 5;
+         }, 0);
+      };
+
+      if (phase === 'intro') {
+         return (<div className="space-y-6"><div className="text-center"><div className="text-6xl mb-4">🔍</div><h2 className="text-2xl font-bold text-blue-800">ASO Keywords</h2><p className="text-gray-600 mt-2">Master App Store Optimization to get discovered</p></div><div className="bg-blue-50 p-4 rounded-xl"><h3 className="font-semibold text-blue-700 mb-2">You'll Master:</h3><ul className="space-y-1 text-sm text-gray-600"><li>• Keyword research and selection</li><li>• iOS vs Android differences</li><li>• Volume vs difficulty tradeoffs</li><li>• Ranking strategy for new apps</li></ul></div><div className="bg-amber-50 p-3 rounded-lg border border-amber-200"><p className="text-sm text-amber-800"><strong>Why It Matters:</strong> 65% of installs come from search. Wrong keywords = invisible app.</p></div><button onClick={() => setPhase('tutorial')} className="w-full py-3 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700">Start Learning →</button></div>);
+      }
+
+      if (phase === 'tutorial') {
+         const step = tutorialSteps[tutorialStep];
+         return (<div className="space-y-6"><div className="flex justify-between text-sm text-gray-500 mb-2"><span>Tutorial</span><span>{tutorialStep + 1}/{tutorialSteps.length}</span></div><div className="w-full bg-gray-200 h-2 rounded-full"><div className="bg-blue-600 h-2 rounded-full transition-all" style={{ width: `${((tutorialStep + 1) / tutorialSteps.length) * 100}%` }} /></div><div className="text-center py-8"><div className="text-5xl mb-4">{step.icon}</div><h3 className="text-xl font-bold text-blue-800">{step.title}</h3><p className="text-gray-600 mt-3">{step.desc}</p></div>{tutorialStep === 1 && (<div className="bg-gray-100 p-4 rounded-xl text-sm"><div className="font-mono text-center">User types: "workout tracker"<br/>↓<br/>App Store searches all keywords<br/>↓<br/>Your app appears if keywords match</div></div>)}{tutorialStep === 2 && (<div className="bg-gray-100 p-4 rounded-xl"><div className="flex justify-between text-sm"><div className="text-center"><div className="font-bold text-red-600">High Volume</div><div>More searches</div><div>More competition</div><div>Harder to rank</div></div><div className="text-center"><div className="font-bold text-green-600">Low Difficulty</div><div>Fewer searches</div><div>Less competition</div><div>Easier to rank</div></div></div></div>)}<div className="flex gap-3">{tutorialStep > 0 && (<button onClick={() => setTutorialStep(tutorialStep - 1)} className="flex-1 py-3 bg-gray-200 rounded-xl font-semibold">← Back</button>)}<button onClick={() => { if (tutorialStep < tutorialSteps.length - 1) setTutorialStep(tutorialStep + 1); else { setPhase('play'); setGameLog(['ASO keyword optimization started']); } }} className="flex-1 py-3 bg-blue-600 text-white rounded-xl font-semibold">{tutorialStep < tutorialSteps.length - 1 ? 'Next →' : 'Practice Keywords →'}</button></div></div>);
+      }
+
+      if (phase === 'play') {
+         const sc = scenarios[scenarioIndex];
+         return (<div className="space-y-4"><div className="flex justify-between items-center"><span className="text-sm font-medium text-blue-600">Scenario {scenarioIndex + 1}/{scenarios.length}</span><span className="text-sm">Score: {score}/{scenarioIndex}</span></div><div className="flex gap-2 mb-2"><button onClick={() => setPlatform('ios')} className={`flex-1 py-2 rounded-lg text-sm font-medium ${platform === 'ios' ? 'bg-blue-600 text-white' : 'bg-gray-200'}`}>🍎 iOS</button><button onClick={() => setPlatform('android')} className={`flex-1 py-2 rounded-lg text-sm font-medium ${platform === 'android' ? 'bg-green-600 text-white' : 'bg-gray-200'}`}>🤖 Android</button></div><div className="bg-blue-100 p-4 rounded-xl"><div className="flex justify-between items-start"><h3 className="font-bold text-blue-800">{sc.title}</h3><button onClick={() => { setInfoKey('search_volume'); setShowInfo(true); }} className="text-blue-500 hover:text-blue-700">ℹ️</button></div><p className="text-sm text-gray-700 mt-2">{sc.situation}</p></div><div className="bg-amber-50 p-3 rounded-lg"><p className="font-medium text-amber-900">{sc.question}</p></div><div className="space-y-2">{sc.options.map((opt, i) => (<button key={i} onClick={() => { if (!answered) { setSelectedAnswer(i); setAnswered(true); if (i === sc.correct) { setScore(score + 1); setGameLog([...gameLog, `Correct: ${sc.title}`]); } else { setGameLog([...gameLog, `Review: ${sc.title}`]); } } }} disabled={answered} className={`w-full p-3 rounded-lg text-left text-sm border-2 ${answered ? (i === sc.correct ? 'border-green-500 bg-green-50' : i === selectedAnswer ? 'border-red-400 bg-red-50' : 'border-gray-200') : 'border-gray-200 hover:border-blue-400'}`}>{opt}</button>))}</div>{answered && (<div className="bg-blue-50 p-4 rounded-xl"><p className="text-sm text-blue-800"><strong>Key Insight:</strong> {sc.explanation}</p></div>)}{answered && (<button onClick={() => { if (scenarioIndex < scenarios.length - 1) { setScenarioIndex(scenarioIndex + 1); setSelectedAnswer(null); setAnswered(false); } else setPhase('result'); }} className="w-full py-3 bg-blue-600 text-white rounded-xl font-semibold">{scenarioIndex < scenarios.length - 1 ? 'Next Scenario →' : 'Final Assessment →'}</button>)}{showInfo && (<div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"><div className="bg-white rounded-2xl p-6 max-w-sm w-full"><h3 className="font-bold text-lg text-blue-800">{infoContent[infoKey]?.title}</h3><p className="text-gray-600 mt-2 text-sm">{infoContent[infoKey]?.content}</p><button onClick={() => setShowInfo(false)} className="mt-4 w-full py-2 bg-blue-600 text-white rounded-xl">Close</button></div></div>)}</div>);
+      }
+
+      if (phase === 'result') {
+         if (quizIndex < quizQuestions.length) {
+            const q = quizQuestions[quizIndex];
+            return (<div className="space-y-6"><div className="text-center"><h3 className="text-xl font-bold text-blue-800">ASO Knowledge Check</h3><p className="text-sm text-gray-500">Question {quizIndex + 1}/{quizQuestions.length}</p></div><div className="bg-blue-50 p-4 rounded-xl"><p className="font-medium">{q.q}</p></div><div className="space-y-2">{q.options.map((opt, i) => (<button key={i} onClick={() => { if (!quizAnswered) { setQuizAnswered(true); if (i === q.correct) setQuizScore(quizScore + 1); } }} disabled={quizAnswered} className={`w-full p-3 rounded-lg text-left border-2 ${quizAnswered ? (i === q.correct ? 'border-green-500 bg-green-50' : 'border-gray-200') : 'border-gray-200 hover:border-blue-400'}`}>{opt}</button>))}</div>{quizAnswered && (<button onClick={() => { setQuizIndex(quizIndex + 1); setQuizAnswered(false); }} className="w-full py-3 bg-blue-600 text-white rounded-xl font-semibold">Next →</button>)}</div>);
+         }
+         const pct = Math.round(((score + quizScore) / (scenarios.length + quizQuestions.length)) * 100);
+         return (<div className="space-y-6"><div className="text-center"><div className="text-6xl mb-4">{pct >= 80 ? '🏆' : '🔍'}</div><h2 className="text-2xl font-bold text-blue-800">ASO Keywords Complete!</h2></div><div className="bg-blue-50 p-6 rounded-xl text-center"><div className="text-4xl font-bold text-blue-700">{pct}%</div><div className="text-sm text-gray-600">ASO Mastery</div></div><div className="bg-gray-50 p-4 rounded-xl text-sm"><p className="font-semibold mb-2">Key Takeaways:</p><ul className="space-y-1 text-gray-600"><li>• 65% of installs come from search</li><li>• Target achievable keywords first</li><li>• iOS: 100 chars, exact match</li><li>• Android: Title + description</li></ul></div><button onClick={() => { setPhase('intro'); setScore(0); setScenarioIndex(0); setSelectedAnswer(null); setAnswered(false); setQuizIndex(0); setQuizAnswered(false); setQuizScore(0); }} className="w-full py-3 bg-blue-600 text-white rounded-xl font-semibold">Practice Again</button></div>);
+      }
+      return null;
+   };
+
    const FinancialStatementsRenderer = () => {
       const [phase, setPhase] = useState<'intro' | 'play' | 'result'>('intro');
       const [showInfo, setShowInfo] = useState(false);
@@ -53575,6 +53683,8 @@ const GeneratedDiagram: React.FC<DiagramProps> = ({ type, data, title }) => {
             return <TaxCreditsRenderer />;
          case 'fractional_cfo':
             return <FractionalCfoRenderer />;
+         case 'aso_keywords':
+            return <AsoKeywordsRenderer />;
          case 'pricing_strategy':
             return <PricingStrategyRenderer />;
          case 'budgeting':
