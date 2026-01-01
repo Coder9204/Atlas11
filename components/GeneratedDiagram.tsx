@@ -48743,6 +48743,361 @@ const GeneratedDiagram: React.FC<DiagramProps> = ({ type, data, title }) => {
       return null;
    };
 
+   const DividendPolicyRenderer = () => {
+      const [phase, setPhase] = useState<'intro' | 'tutorial' | 'play' | 'result'>('intro');
+      const [tutorialStep, setTutorialStep] = useState(0);
+      const [showInfo, setShowInfo] = useState(false);
+      const [infoTopic, setInfoTopic] = useState<string | null>(null);
+      const [scenarioIndex, setScenarioIndex] = useState(0);
+      const [score, setScore] = useState(0);
+      const [answered, setAnswered] = useState(false);
+      const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
+      const [quizIndex, setQuizIndex] = useState(0);
+      const [quizAnswered, setQuizAnswered] = useState(false);
+      const [quizScore, setQuizScore] = useState(0);
+      const [gameLog, setGameLog] = useState<string[]>([]);
+
+      const infoContent: {[key: string]: { title: string; content: string }} = {
+         dividend: { title: 'Cash Dividends', content: 'Regular cash payments to shareholders from profits. Signals financial health and commitment to returning value.' },
+         buyback: { title: 'Share Buybacks', content: 'Company repurchases its own shares. Reduces share count, increases EPS. More tax-efficient than dividends for shareholders.' },
+         payout_ratio: { title: 'Payout Ratio', content: 'Dividends / Net Income. Shows what % of earnings paid out. High ratio = less reinvestment, low ratio = growth focus.' },
+         dividend_yield: { title: 'Dividend Yield', content: 'Annual dividend / Stock price. Compares dividend income across stocks. Utilities often 3-5%, tech often 0-1%.' }
+      };
+
+      const tutorialSteps = [
+         { title: 'Dividend Policy Decisions', content: 'Should companies pay dividends, buy back shares, or reinvest profits? This fundamental decision shapes shareholder returns and company growth.' },
+         { title: 'Cash Dividends', content: 'Regular cash payments to shareholders. Usually quarterly. Once started, hard to cut (signals trouble). Creates consistent income for investors.' },
+         { title: 'Share Buybacks', content: 'Company buys its own shares in the market. Reduces shares outstanding, boosting EPS. More flexible than dividends - can stop anytime.' },
+         { title: 'Dividend Irrelevance Theory', content: 'Modigliani-Miller: In perfect markets, dividend policy doesnt matter. Reality: taxes, signals, and investor preferences make it matter.' },
+         { title: 'Signaling Effects', content: 'Dividend increases signal management confidence. Cuts signal trouble. Investors watch dividend announcements closely for hidden messages.' },
+         { title: 'Tax Considerations', content: 'Dividends taxed as income when received. Buybacks defer taxes until sale. For taxable accounts, buybacks often more efficient.' },
+         { title: 'Lifecycle Approach', content: 'Growth companies: reinvest everything. Mature companies: return cash. Microsoft paid no dividend for 28 years, now pays billions.' }
+      ];
+
+      const scenarios = [
+         { title: 'Startup with $10M Cash', context: 'Fast-growing tech startup, 50% YoY growth, needs capital for expansion. Investors asking about dividends.', question: 'What dividend policy?', options: ['Pay 20% as dividends', 'No dividends - reinvest all', 'Share buyback program', 'Special one-time dividend'], correct: 1, explanation: 'Growth companies should reinvest. 50% growth rate means $1 reinvested could be worth $2.25 in 2 years. Dividends would slow growth.' },
+         { title: 'Mature Utility Company', context: 'Stable regulated utility, 3% growth, $500M free cash flow, limited reinvestment opportunities.', question: 'Best capital return strategy?', options: ['Reinvest in new markets', 'High dividend payout (70-80%)', 'Aggressive buybacks only', 'Hold cash for acquisitions'], correct: 1, explanation: 'Utilities have stable cash flows and limited growth. High dividends attract income investors and match the business model.' },
+         { title: 'Tech Giant with $100B Cash', context: 'Apple-like company: mature products, huge cash pile, 15% growth, strong stock price.', question: 'Optimal return policy?', options: ['All dividends', 'All buybacks', 'Mix of dividends and buybacks', 'No returns - save for M&A'], correct: 2, explanation: 'Combination works best: dividends for income investors, buybacks for tax efficiency and EPS boost. Apple does exactly this.' },
+         { title: 'Company Facing Headwinds', context: 'Retail company, declining sales, currently pays $2/share dividend. Cash getting tight.', question: 'Should they cut the dividend?', options: ['Maintain - cutting signals weakness', 'Cut now before forced to', 'Suspend and do buybacks', 'Increase to show confidence'], correct: 1, explanation: 'Better to cut proactively than be forced. Maintain erodes cash, increase is reckless. Honest communication about the cut helps.' }
+      ];
+
+      const quizQuestions = [
+         { q: 'Which is more tax-efficient for shareholders?', options: ['Cash dividends', 'Share buybacks', 'Equal efficiency', 'Depends on holding period'], correct: 1 },
+         { q: 'Dividend payout ratio is:', options: ['Dividend / Stock Price', 'Dividend / Net Income', 'Dividend / Revenue', 'Dividend / Cash Flow'], correct: 1 },
+         { q: 'A dividend cut typically signals:', options: ['Strong growth ahead', 'Financial difficulty', 'Tax optimization', 'Stock split coming'], correct: 1 },
+         { q: 'Which company type typically has highest dividend yield?', options: ['Tech startups', 'Utilities', 'Biotech', 'Social media'], correct: 1 },
+         { q: 'Share buybacks affect EPS by:', options: ['Increasing net income', 'Reducing shares outstanding', 'Both A and B', 'No EPS effect'], correct: 1 }
+      ];
+
+      if (phase === 'intro') {
+         return (<div className="space-y-6"><div className="text-center"><div className="text-6xl mb-4">💵</div><h2 className="text-2xl font-bold text-green-800">Dividend Policy</h2><p className="text-gray-600 mt-2">Master shareholder return decisions</p></div><div className="bg-green-50 p-4 rounded-xl"><h3 className="font-semibold text-green-800 mb-2">What You'll Learn:</h3><ul className="space-y-1 text-sm text-gray-700"><li>✓ Dividends vs buybacks</li><li>✓ Payout ratios and yields</li><li>✓ Signaling effects</li><li>✓ Tax considerations</li></ul></div><button onClick={() => { setPhase('tutorial'); setGameLog(['Started dividend policy tutorial']); }} className="w-full py-3 bg-green-600 text-white rounded-xl font-semibold hover:bg-green-700">Start Learning</button></div>);
+      }
+
+      if (phase === 'tutorial') {
+         const step = tutorialSteps[tutorialStep];
+         return (<div className="space-y-6"><div className="flex justify-between items-center"><span className="text-sm text-gray-500">Tutorial {tutorialStep + 1}/{tutorialSteps.length}</span><div className="flex gap-1">{tutorialSteps.map((_, i) => (<div key={i} className={`w-3 h-3 rounded-full ${i <= tutorialStep ? 'bg-green-600' : 'bg-gray-200'}`} />))}</div></div><div className="bg-gradient-to-br from-green-50 to-emerald-100 p-6 rounded-xl"><h3 className="text-xl font-bold text-green-800 mb-3">{step.title}</h3><p className="text-gray-700">{step.content}</p></div><div className="flex gap-2">{tutorialStep > 0 && (<button onClick={() => setTutorialStep(tutorialStep - 1)} className="flex-1 py-2 border border-green-600 text-green-600 rounded-lg">← Back</button>)}<button onClick={() => { if (tutorialStep < tutorialSteps.length - 1) { setTutorialStep(tutorialStep + 1); } else { setPhase('play'); } }} className="flex-1 py-2 bg-green-600 text-white rounded-lg">{tutorialStep < tutorialSteps.length - 1 ? 'Next →' : 'Start Practice →'}</button></div></div>);
+      }
+
+      if (phase === 'play') {
+         const sc = scenarios[scenarioIndex];
+         return (<div className="space-y-4"><div className="flex justify-between items-center"><span className="text-sm text-gray-600">Scenario {scenarioIndex + 1}/{scenarios.length}</span><span className="text-sm font-semibold text-green-600">Score: {score}</span></div><div className="bg-gradient-to-r from-green-50 to-emerald-100 p-4 rounded-xl"><div className="flex justify-between"><h3 className="font-bold text-green-800">{sc.title}</h3><button onClick={() => { setShowInfo(true); setInfoTopic('dividend'); }} className="text-green-600">ℹ️</button></div><p className="mt-2 text-gray-700 text-sm">{sc.context}</p><p className="mt-3 font-medium text-green-700">{sc.question}</p></div><div className="space-y-2">{sc.options.map((opt, i) => (<button key={i} onClick={() => { if (!answered) setSelectedAnswer(i); }} disabled={answered} className={`w-full p-3 rounded-lg text-left border-2 text-sm ${answered ? (i === sc.correct ? 'border-green-500 bg-green-50' : selectedAnswer === i ? 'border-red-500 bg-red-50' : 'border-gray-200') : selectedAnswer === i ? 'border-green-500 bg-green-50' : 'border-gray-200 hover:border-green-400'}`}>{opt}</button>))}</div>{!answered ? (<button onClick={() => { setAnswered(true); if (selectedAnswer === sc.correct) setScore(score + 1); }} disabled={selectedAnswer === null} className="w-full py-3 bg-green-600 text-white rounded-xl font-semibold disabled:bg-gray-300">Check Answer</button>) : (<div className="space-y-3"><div className={`p-3 rounded-lg ${selectedAnswer === sc.correct ? 'bg-green-100' : 'bg-yellow-100'}`}><p className="font-semibold">{selectedAnswer === sc.correct ? '✅ Correct!' : '❌ Not quite...'}</p><p className="text-sm text-gray-700 mt-1">{sc.explanation}</p></div><button onClick={() => { if (scenarioIndex < scenarios.length - 1) { setScenarioIndex(scenarioIndex + 1); setSelectedAnswer(null); setAnswered(false); } else { setPhase('result'); } }} className="w-full py-3 bg-green-600 text-white rounded-xl font-semibold">{scenarioIndex < scenarios.length - 1 ? 'Next →' : 'See Results →'}</button></div>)}{showInfo && infoTopic && infoContent[infoTopic] && (<div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50"><div className="bg-white rounded-xl p-6 max-w-md"><h3 className="font-bold text-lg mb-2">{infoContent[infoTopic].title}</h3><p className="text-gray-700">{infoContent[infoTopic].content}</p><button onClick={() => setShowInfo(false)} className="mt-4 w-full py-2 bg-green-600 text-white rounded-lg">Got It</button></div></div>)}</div>);
+      }
+
+      if (phase === 'result') {
+         if (quizIndex < quizQuestions.length) {
+            const q = quizQuestions[quizIndex];
+            return (<div className="space-y-6"><div className="text-center"><h3 className="text-xl font-bold text-green-800">Final Assessment</h3><p className="text-sm text-gray-500">Question {quizIndex + 1}/{quizQuestions.length}</p></div><div className="bg-green-50 p-4 rounded-xl"><p className="font-medium">{q.q}</p></div><div className="space-y-2">{q.options.map((opt, i) => (<button key={i} onClick={() => { if (!quizAnswered) { setQuizAnswered(true); if (i === q.correct) setQuizScore(quizScore + 1); } }} disabled={quizAnswered} className={`w-full p-3 rounded-lg text-left border-2 ${quizAnswered ? (i === q.correct ? 'border-green-500 bg-green-50' : 'border-gray-200') : 'border-gray-200 hover:border-green-400'}`}>{opt}</button>))}</div>{quizAnswered && (<button onClick={() => { setQuizIndex(quizIndex + 1); setQuizAnswered(false); }} className="w-full py-3 bg-green-600 text-white rounded-xl font-semibold">Next →</button>)}</div>);
+         }
+         const pct = Math.round(((score + quizScore) / (scenarios.length + quizQuestions.length)) * 100);
+         return (<div className="space-y-6"><div className="text-center"><div className="text-6xl mb-4">{pct >= 80 ? '💵' : '📊'}</div><h2 className="text-2xl font-bold text-green-800">Complete!</h2></div><div className="bg-green-50 p-6 rounded-xl text-center"><div className="text-4xl font-bold text-green-700">{pct}%</div><div className="text-sm text-gray-600">Overall Mastery</div></div><button onClick={() => { setPhase('intro'); setScore(0); setScenarioIndex(0); setSelectedAnswer(null); setAnswered(false); setQuizIndex(0); setQuizAnswered(false); setQuizScore(0); }} className="w-full py-3 bg-green-600 text-white rounded-xl font-semibold">Practice Again</button></div>);
+      }
+      return null;
+   };
+
+   const FinancialModelingRenderer = () => {
+      const [phase, setPhase] = useState<'intro' | 'tutorial' | 'play' | 'result'>('intro');
+      const [tutorialStep, setTutorialStep] = useState(0);
+      const [showInfo, setShowInfo] = useState(false);
+      const [infoTopic, setInfoTopic] = useState<string | null>(null);
+      const [scenarioIndex, setScenarioIndex] = useState(0);
+      const [score, setScore] = useState(0);
+      const [answered, setAnswered] = useState(false);
+      const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
+      const [quizIndex, setQuizIndex] = useState(0);
+      const [quizAnswered, setQuizAnswered] = useState(false);
+      const [quizScore, setQuizScore] = useState(0);
+      const [gameLog, setGameLog] = useState<string[]>([]);
+
+      const infoContent: {[key: string]: { title: string; content: string }} = {
+         three_statement: { title: '3-Statement Model', content: 'Links Income Statement, Balance Sheet, and Cash Flow. Changes flow through all statements. Foundation of all financial models.' },
+         dcf: { title: 'DCF Model', content: 'Discounted Cash Flow: Project future cash flows, discount to present value. Intrinsic valuation method used in M&A and investing.' },
+         sensitivity: { title: 'Sensitivity Analysis', content: 'Tests how outputs change with different inputs. Data tables show ranges. Identifies key value drivers and risks.' },
+         scenarios: { title: 'Scenario Analysis', content: 'Base, upside, downside cases. Tests different assumptions together. More realistic than single-variable sensitivity.' }
+      };
+
+      const tutorialSteps = [
+         { title: 'Financial Modeling Basics', content: 'Financial models translate business assumptions into numbers. Used for valuations, budgets, M&A, and strategic decisions.' },
+         { title: 'The 3-Statement Model', content: 'Core of all models: Income Statement drives Balance Sheet changes, which drives Cash Flow Statement. All must balance and link properly.' },
+         { title: 'Building a Revenue Model', content: 'Revenue = Units × Price or Users × ARPU. Build bottom-up from drivers. Historical trends inform growth assumptions.' },
+         { title: 'Expense Projections', content: 'Fixed vs variable costs. Some scale with revenue (COGS), some step-function (hiring), some fixed (rent). Be realistic.' },
+         { title: 'Working Capital Modeling', content: 'AR, AP, Inventory affect cash. Use days metrics: DSO, DPO, DIO. Changes in working capital hit cash flow.' },
+         { title: 'DCF Valuation', content: 'Project free cash flows, calculate terminal value, discount at WACC. Sum of PVs = enterprise value. Most common valuation method.' },
+         { title: 'Best Practices', content: 'Clear formatting, separate inputs/calculations/outputs, error checks, documentation. A model is only as good as its assumptions.' }
+      ];
+
+      const scenarios = [
+         { title: 'Revenue Driver Selection', context: 'SaaS company model. Need to project revenue for next 5 years.', question: 'Best revenue driver approach?', options: ['Total revenue growth %', 'Customers × ARPU with churn', 'Industry market share', 'Analyst estimates'], correct: 1, explanation: 'Bottom-up (Customers × ARPU) captures business dynamics: new customer acquisition, churn, expansion revenue. More defensible than top-down.' },
+         { title: 'Balance Sheet Check', context: 'Your model shows: Assets $100M, Liabilities $60M, Equity $35M.', question: 'Whats wrong?', options: ['Nothing - looks fine', 'Assets - Liabilities ≠ Equity', 'Need more debt', 'Equity too low'], correct: 1, explanation: 'Assets ($100M) must equal Liabilities ($60M) + Equity ($35M = $95M). The $5M gap means an error in the model. Always check!' },
+         { title: 'Terminal Value Method', context: 'DCF model, 5-year projection, stable mature business, 3% long-term growth expected.', question: 'Best terminal value approach?', options: ['Exit multiple only', 'Gordon Growth: FCF×(1+g)/(WACC-g)', '10× Year 5 revenue', 'Zero terminal value'], correct: 1, explanation: 'Gordon Growth suits stable businesses with predictable growth. Exit multiples work too but require comparable transactions. Use both as sanity check.' },
+         { title: 'Sensitivity Table Setup', context: 'DCF shows $50/share value. Want to test revenue growth and WACC assumptions.', question: 'How to build sensitivity table?', options: ['One variable at a time only', 'Two-way table: growth vs WACC', 'Three variables minimum', 'Sensitivity not needed'], correct: 1, explanation: 'Two-way data table shows value at different growth/WACC combinations. Reveals which assumptions matter most and risk ranges.' }
+      ];
+
+      const quizQuestions = [
+         { q: 'What links the 3 financial statements?', options: ['Revenue', 'Net Income and Cash', 'Only manual inputs', 'They dont link'], correct: 1 },
+         { q: 'DCF terminal value typically represents:', options: ['10% of total value', '25% of total value', '50-80% of total value', 'No significant value'], correct: 2 },
+         { q: 'Best practice for model inputs:', options: ['Hardcode everywhere', 'Separate input section, link cells', 'Hide assumptions', 'No documentation needed'], correct: 1 },
+         { q: 'If WACC increases, DCF value:', options: ['Increases', 'Decreases', 'No change', 'Depends on growth'], correct: 1 },
+         { q: 'Working capital increase means:', options: ['Cash inflow', 'Cash outflow', 'No cash impact', 'Higher profits'], correct: 1 }
+      ];
+
+      if (phase === 'intro') {
+         return (<div className="space-y-6"><div className="text-center"><div className="text-6xl mb-4">📊</div><h2 className="text-2xl font-bold text-blue-800">Financial Modeling</h2><p className="text-gray-600 mt-2">Build models like an analyst</p></div><div className="bg-blue-50 p-4 rounded-xl"><h3 className="font-semibold text-blue-800 mb-2">What You'll Learn:</h3><ul className="space-y-1 text-sm text-gray-700"><li>✓ 3-Statement model structure</li><li>✓ Revenue and expense drivers</li><li>✓ DCF valuation</li><li>✓ Sensitivity analysis</li></ul></div><button onClick={() => { setPhase('tutorial'); setGameLog(['Started financial modeling tutorial']); }} className="w-full py-3 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700">Start Learning</button></div>);
+      }
+
+      if (phase === 'tutorial') {
+         const step = tutorialSteps[tutorialStep];
+         return (<div className="space-y-6"><div className="flex justify-between items-center"><span className="text-sm text-gray-500">Tutorial {tutorialStep + 1}/{tutorialSteps.length}</span><div className="flex gap-1">{tutorialSteps.map((_, i) => (<div key={i} className={`w-3 h-3 rounded-full ${i <= tutorialStep ? 'bg-blue-600' : 'bg-gray-200'}`} />))}</div></div><div className="bg-gradient-to-br from-blue-50 to-indigo-100 p-6 rounded-xl"><h3 className="text-xl font-bold text-blue-800 mb-3">{step.title}</h3><p className="text-gray-700">{step.content}</p></div><div className="flex gap-2">{tutorialStep > 0 && (<button onClick={() => setTutorialStep(tutorialStep - 1)} className="flex-1 py-2 border border-blue-600 text-blue-600 rounded-lg">← Back</button>)}<button onClick={() => { if (tutorialStep < tutorialSteps.length - 1) { setTutorialStep(tutorialStep + 1); } else { setPhase('play'); } }} className="flex-1 py-2 bg-blue-600 text-white rounded-lg">{tutorialStep < tutorialSteps.length - 1 ? 'Next →' : 'Start Practice →'}</button></div></div>);
+      }
+
+      if (phase === 'play') {
+         const sc = scenarios[scenarioIndex];
+         return (<div className="space-y-4"><div className="flex justify-between items-center"><span className="text-sm text-gray-600">Scenario {scenarioIndex + 1}/{scenarios.length}</span><span className="text-sm font-semibold text-green-600">Score: {score}</span></div><div className="bg-gradient-to-r from-blue-50 to-indigo-100 p-4 rounded-xl"><div className="flex justify-between"><h3 className="font-bold text-blue-800">{sc.title}</h3><button onClick={() => { setShowInfo(true); setInfoTopic('three_statement'); }} className="text-blue-600">ℹ️</button></div><p className="mt-2 text-gray-700 text-sm">{sc.context}</p><p className="mt-3 font-medium text-blue-700">{sc.question}</p></div><div className="space-y-2">{sc.options.map((opt, i) => (<button key={i} onClick={() => { if (!answered) setSelectedAnswer(i); }} disabled={answered} className={`w-full p-3 rounded-lg text-left border-2 text-sm ${answered ? (i === sc.correct ? 'border-green-500 bg-green-50' : selectedAnswer === i ? 'border-red-500 bg-red-50' : 'border-gray-200') : selectedAnswer === i ? 'border-blue-500 bg-blue-50' : 'border-gray-200 hover:border-blue-400'}`}>{opt}</button>))}</div>{!answered ? (<button onClick={() => { setAnswered(true); if (selectedAnswer === sc.correct) setScore(score + 1); }} disabled={selectedAnswer === null} className="w-full py-3 bg-blue-600 text-white rounded-xl font-semibold disabled:bg-gray-300">Check Answer</button>) : (<div className="space-y-3"><div className={`p-3 rounded-lg ${selectedAnswer === sc.correct ? 'bg-green-100' : 'bg-yellow-100'}`}><p className="font-semibold">{selectedAnswer === sc.correct ? '✅ Correct!' : '❌ Not quite...'}</p><p className="text-sm text-gray-700 mt-1">{sc.explanation}</p></div><button onClick={() => { if (scenarioIndex < scenarios.length - 1) { setScenarioIndex(scenarioIndex + 1); setSelectedAnswer(null); setAnswered(false); } else { setPhase('result'); } }} className="w-full py-3 bg-blue-600 text-white rounded-xl font-semibold">{scenarioIndex < scenarios.length - 1 ? 'Next →' : 'See Results →'}</button></div>)}{showInfo && infoTopic && infoContent[infoTopic] && (<div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50"><div className="bg-white rounded-xl p-6 max-w-md"><h3 className="font-bold text-lg mb-2">{infoContent[infoTopic].title}</h3><p className="text-gray-700">{infoContent[infoTopic].content}</p><button onClick={() => setShowInfo(false)} className="mt-4 w-full py-2 bg-blue-600 text-white rounded-lg">Got It</button></div></div>)}</div>);
+      }
+
+      if (phase === 'result') {
+         if (quizIndex < quizQuestions.length) {
+            const q = quizQuestions[quizIndex];
+            return (<div className="space-y-6"><div className="text-center"><h3 className="text-xl font-bold text-blue-800">Final Assessment</h3><p className="text-sm text-gray-500">Question {quizIndex + 1}/{quizQuestions.length}</p></div><div className="bg-blue-50 p-4 rounded-xl"><p className="font-medium">{q.q}</p></div><div className="space-y-2">{q.options.map((opt, i) => (<button key={i} onClick={() => { if (!quizAnswered) { setQuizAnswered(true); if (i === q.correct) setQuizScore(quizScore + 1); } }} disabled={quizAnswered} className={`w-full p-3 rounded-lg text-left border-2 ${quizAnswered ? (i === q.correct ? 'border-green-500 bg-green-50' : 'border-gray-200') : 'border-gray-200 hover:border-blue-400'}`}>{opt}</button>))}</div>{quizAnswered && (<button onClick={() => { setQuizIndex(quizIndex + 1); setQuizAnswered(false); }} className="w-full py-3 bg-blue-600 text-white rounded-xl font-semibold">Next →</button>)}</div>);
+         }
+         const pct = Math.round(((score + quizScore) / (scenarios.length + quizQuestions.length)) * 100);
+         return (<div className="space-y-6"><div className="text-center"><div className="text-6xl mb-4">{pct >= 80 ? '📊' : '📈'}</div><h2 className="text-2xl font-bold text-blue-800">Modeling Complete!</h2></div><div className="bg-blue-50 p-6 rounded-xl text-center"><div className="text-4xl font-bold text-blue-700">{pct}%</div><div className="text-sm text-gray-600">Overall Mastery</div></div><button onClick={() => { setPhase('intro'); setScore(0); setScenarioIndex(0); setSelectedAnswer(null); setAnswered(false); setQuizIndex(0); setQuizAnswered(false); setQuizScore(0); }} className="w-full py-3 bg-blue-600 text-white rounded-xl font-semibold">Practice Again</button></div>);
+      }
+      return null;
+   };
+
+   const CloudAccountingRenderer = () => {
+      const [phase, setPhase] = useState<'intro' | 'tutorial' | 'play' | 'result'>('intro');
+      const [tutorialStep, setTutorialStep] = useState(0);
+      const [showInfo, setShowInfo] = useState(false);
+      const [infoTopic, setInfoTopic] = useState<string | null>(null);
+      const [scenarioIndex, setScenarioIndex] = useState(0);
+      const [score, setScore] = useState(0);
+      const [answered, setAnswered] = useState(false);
+      const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
+      const [quizIndex, setQuizIndex] = useState(0);
+      const [quizAnswered, setQuizAnswered] = useState(false);
+      const [quizScore, setQuizScore] = useState(0);
+      const [gameLog, setGameLog] = useState<string[]>([]);
+
+      const infoContent: {[key: string]: { title: string; content: string }} = {
+         saas: { title: 'SaaS Accounting', content: 'Software as a Service. Subscription model with monthly/annual fees. No software ownership, always updated, accessible anywhere.' },
+         integration: { title: 'API Integrations', content: 'Connect accounting to banks, payroll, POS, CRM. Automates data entry, reduces errors, real-time sync.' },
+         automation: { title: 'Accounting Automation', content: 'Rules-based categorization, recurring transactions, bank feeds. Reduces manual entry by 80%+. Focus on analysis, not data entry.' },
+         security: { title: 'Cloud Security', content: 'Encryption, SOC 2 compliance, regular backups, access controls. Often more secure than local systems. Multi-factor authentication.' }
+      };
+
+      const tutorialSteps = [
+         { title: 'Cloud Accounting Revolution', content: 'Cloud accounting (QBO, Xero, FreshBooks) replaced desktop software. Access anywhere, real-time collaboration, automatic updates.' },
+         { title: 'Key Benefits', content: 'Real-time data, bank feeds, mobile access, automatic backups, multi-user collaboration. No IT infrastructure needed.' },
+         { title: 'Bank Feed Automation', content: 'Transactions import automatically from banks. Create rules to categorize recurring items. Review and approve instead of manual entry.' },
+         { title: 'Integration Ecosystem', content: 'Connect payroll (Gusto), payments (Stripe), expenses (Expensify), inventory (DEAR). Data flows automatically between systems.' },
+         { title: 'Real-Time Reporting', content: 'Dashboards show live P&L, cash position, AR aging. No waiting for month-end. Make decisions with current data.' },
+         { title: 'Multi-Entity and Multi-Currency', content: 'Manage multiple companies, consolidate reports, handle foreign transactions. Built for modern global businesses.' },
+         { title: 'Security Considerations', content: 'SOC 2 certification, encryption, role-based access, audit trails. Enable MFA, review user permissions regularly.' }
+      ];
+
+      const scenarios = [
+         { title: 'Software Selection', context: 'Small business with 50 transactions/month, needs invoicing, expenses, and basic reports. Budget-conscious.', question: 'Best cloud accounting choice?', options: ['QuickBooks Enterprise', 'Wave (free) or QBO Simple Start', 'SAP Business One', 'Custom built solution'], correct: 1, explanation: 'For low volume, Wave (free) or QBO Simple Start ($30/mo) is perfect. Enterprise solutions are overkill and expensive.' },
+         { title: 'Bank Reconciliation Issue', context: 'Bank feed shows $5,000 deposit not in accounting system. Customer claims they paid.', question: 'First troubleshooting step?', options: ['Delete and re-import bank feed', 'Check if payment matched to wrong invoice', 'Call the bank', 'Ignore - will sort itself out'], correct: 1, explanation: 'Unmatched deposits often matched to wrong invoice or recorded twice. Check matching rules before re-importing or calling bank.' },
+         { title: 'Integration Strategy', context: 'E-commerce business: Shopify store, Stripe payments, shipping with ShipStation. Manual order entry taking hours.', question: 'Best integration approach?', options: ['Hire data entry staff', 'Connect Shopify → Accounting directly', 'Use integration platform (A2X, Synder)', 'Export CSVs weekly'], correct: 2, explanation: 'Integration platforms handle e-commerce complexity: refunds, fees, multi-currency, and proper revenue recognition. Direct integrations often miss details.' },
+         { title: 'Access Control', context: 'Growing team: CEO, CFO, bookkeeper, external accountant. Setting up permissions.', question: 'Best permission structure?', options: ['Everyone gets admin access', 'Role-based: Admin, Standard, Reports-only', 'One shared login', 'Bookkeeper only has access'], correct: 1, explanation: 'Role-based access: CEO/CFO as Admin, bookkeeper as Standard (no delete), accountant as Reports-only. Audit trail tracks who did what.' }
+      ];
+
+      const quizQuestions = [
+         { q: 'Main advantage of cloud vs desktop accounting:', options: ['Lower cost always', 'Real-time access anywhere', 'More features', 'Better for large companies'], correct: 1 },
+         { q: 'Bank feeds in cloud accounting:', options: ['Manual file upload only', 'Automatic daily import', 'Not available', 'Requires IT setup'], correct: 1 },
+         { q: 'SOC 2 certification indicates:', options: ['Tax compliance', 'Security controls verified', 'GAAP compliance', 'Audit completion'], correct: 1 },
+         { q: 'Best practice for cloud accounting security:', options: ['Share passwords for efficiency', 'Disable two-factor auth', 'Enable MFA, role-based access', 'Use personal email accounts'], correct: 2 },
+         { q: 'Cloud accounting integrations reduce:', options: ['Reporting capabilities', 'Manual data entry', 'Security', 'Available features'], correct: 1 }
+      ];
+
+      if (phase === 'intro') {
+         return (<div className="space-y-6"><div className="text-center"><div className="text-6xl mb-4">☁️</div><h2 className="text-2xl font-bold text-sky-800">Cloud Accounting</h2><p className="text-gray-600 mt-2">Master modern accounting tools</p></div><div className="bg-sky-50 p-4 rounded-xl"><h3 className="font-semibold text-sky-800 mb-2">What You'll Learn:</h3><ul className="space-y-1 text-sm text-gray-700"><li>✓ Cloud vs desktop software</li><li>✓ Bank feed automation</li><li>✓ Integration ecosystem</li><li>✓ Security best practices</li></ul></div><button onClick={() => { setPhase('tutorial'); setGameLog(['Started cloud accounting tutorial']); }} className="w-full py-3 bg-sky-600 text-white rounded-xl font-semibold hover:bg-sky-700">Start Learning</button></div>);
+      }
+
+      if (phase === 'tutorial') {
+         const step = tutorialSteps[tutorialStep];
+         return (<div className="space-y-6"><div className="flex justify-between items-center"><span className="text-sm text-gray-500">Tutorial {tutorialStep + 1}/{tutorialSteps.length}</span><div className="flex gap-1">{tutorialSteps.map((_, i) => (<div key={i} className={`w-3 h-3 rounded-full ${i <= tutorialStep ? 'bg-sky-600' : 'bg-gray-200'}`} />))}</div></div><div className="bg-gradient-to-br from-sky-50 to-blue-100 p-6 rounded-xl"><h3 className="text-xl font-bold text-sky-800 mb-3">{step.title}</h3><p className="text-gray-700">{step.content}</p></div><div className="flex gap-2">{tutorialStep > 0 && (<button onClick={() => setTutorialStep(tutorialStep - 1)} className="flex-1 py-2 border border-sky-600 text-sky-600 rounded-lg">← Back</button>)}<button onClick={() => { if (tutorialStep < tutorialSteps.length - 1) { setTutorialStep(tutorialStep + 1); } else { setPhase('play'); } }} className="flex-1 py-2 bg-sky-600 text-white rounded-lg">{tutorialStep < tutorialSteps.length - 1 ? 'Next →' : 'Start Practice →'}</button></div></div>);
+      }
+
+      if (phase === 'play') {
+         const sc = scenarios[scenarioIndex];
+         return (<div className="space-y-4"><div className="flex justify-between items-center"><span className="text-sm text-gray-600">Scenario {scenarioIndex + 1}/{scenarios.length}</span><span className="text-sm font-semibold text-green-600">Score: {score}</span></div><div className="bg-gradient-to-r from-sky-50 to-blue-100 p-4 rounded-xl"><div className="flex justify-between"><h3 className="font-bold text-sky-800">{sc.title}</h3><button onClick={() => { setShowInfo(true); setInfoTopic('saas'); }} className="text-sky-600">ℹ️</button></div><p className="mt-2 text-gray-700 text-sm">{sc.context}</p><p className="mt-3 font-medium text-sky-700">{sc.question}</p></div><div className="space-y-2">{sc.options.map((opt, i) => (<button key={i} onClick={() => { if (!answered) setSelectedAnswer(i); }} disabled={answered} className={`w-full p-3 rounded-lg text-left border-2 text-sm ${answered ? (i === sc.correct ? 'border-green-500 bg-green-50' : selectedAnswer === i ? 'border-red-500 bg-red-50' : 'border-gray-200') : selectedAnswer === i ? 'border-sky-500 bg-sky-50' : 'border-gray-200 hover:border-sky-400'}`}>{opt}</button>))}</div>{!answered ? (<button onClick={() => { setAnswered(true); if (selectedAnswer === sc.correct) setScore(score + 1); }} disabled={selectedAnswer === null} className="w-full py-3 bg-sky-600 text-white rounded-xl font-semibold disabled:bg-gray-300">Check Answer</button>) : (<div className="space-y-3"><div className={`p-3 rounded-lg ${selectedAnswer === sc.correct ? 'bg-green-100' : 'bg-yellow-100'}`}><p className="font-semibold">{selectedAnswer === sc.correct ? '✅ Correct!' : '❌ Not quite...'}</p><p className="text-sm text-gray-700 mt-1">{sc.explanation}</p></div><button onClick={() => { if (scenarioIndex < scenarios.length - 1) { setScenarioIndex(scenarioIndex + 1); setSelectedAnswer(null); setAnswered(false); } else { setPhase('result'); } }} className="w-full py-3 bg-sky-600 text-white rounded-xl font-semibold">{scenarioIndex < scenarios.length - 1 ? 'Next →' : 'See Results →'}</button></div>)}{showInfo && infoTopic && infoContent[infoTopic] && (<div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50"><div className="bg-white rounded-xl p-6 max-w-md"><h3 className="font-bold text-lg mb-2">{infoContent[infoTopic].title}</h3><p className="text-gray-700">{infoContent[infoTopic].content}</p><button onClick={() => setShowInfo(false)} className="mt-4 w-full py-2 bg-sky-600 text-white rounded-lg">Got It</button></div></div>)}</div>);
+      }
+
+      if (phase === 'result') {
+         if (quizIndex < quizQuestions.length) {
+            const q = quizQuestions[quizIndex];
+            return (<div className="space-y-6"><div className="text-center"><h3 className="text-xl font-bold text-sky-800">Final Assessment</h3><p className="text-sm text-gray-500">Question {quizIndex + 1}/{quizQuestions.length}</p></div><div className="bg-sky-50 p-4 rounded-xl"><p className="font-medium">{q.q}</p></div><div className="space-y-2">{q.options.map((opt, i) => (<button key={i} onClick={() => { if (!quizAnswered) { setQuizAnswered(true); if (i === q.correct) setQuizScore(quizScore + 1); } }} disabled={quizAnswered} className={`w-full p-3 rounded-lg text-left border-2 ${quizAnswered ? (i === q.correct ? 'border-green-500 bg-green-50' : 'border-gray-200') : 'border-gray-200 hover:border-sky-400'}`}>{opt}</button>))}</div>{quizAnswered && (<button onClick={() => { setQuizIndex(quizIndex + 1); setQuizAnswered(false); }} className="w-full py-3 bg-sky-600 text-white rounded-xl font-semibold">Next →</button>)}</div>);
+         }
+         const pct = Math.round(((score + quizScore) / (scenarios.length + quizQuestions.length)) * 100);
+         return (<div className="space-y-6"><div className="text-center"><div className="text-6xl mb-4">{pct >= 80 ? '☁️' : '📊'}</div><h2 className="text-2xl font-bold text-sky-800">Cloud Complete!</h2></div><div className="bg-sky-50 p-6 rounded-xl text-center"><div className="text-4xl font-bold text-sky-700">{pct}%</div><div className="text-sm text-gray-600">Overall Mastery</div></div><button onClick={() => { setPhase('intro'); setScore(0); setScenarioIndex(0); setSelectedAnswer(null); setAnswered(false); setQuizIndex(0); setQuizAnswered(false); setQuizScore(0); }} className="w-full py-3 bg-sky-600 text-white rounded-xl font-semibold">Practice Again</button></div>);
+      }
+      return null;
+   };
+
+   const ErpBasicsRenderer = () => {
+      const [phase, setPhase] = useState<'intro' | 'tutorial' | 'play' | 'result'>('intro');
+      const [tutorialStep, setTutorialStep] = useState(0);
+      const [showInfo, setShowInfo] = useState(false);
+      const [infoTopic, setInfoTopic] = useState<string | null>(null);
+      const [scenarioIndex, setScenarioIndex] = useState(0);
+      const [score, setScore] = useState(0);
+      const [answered, setAnswered] = useState(false);
+      const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
+      const [quizIndex, setQuizIndex] = useState(0);
+      const [quizAnswered, setQuizAnswered] = useState(false);
+      const [quizScore, setQuizScore] = useState(0);
+      const [gameLog, setGameLog] = useState<string[]>([]);
+
+      const infoContent: {[key: string]: { title: string; content: string }} = {
+         erp: { title: 'ERP Systems', content: 'Enterprise Resource Planning: unified system for finance, HR, inventory, manufacturing, sales. Single source of truth for the organization.' },
+         modules: { title: 'ERP Modules', content: 'Finance, HR, Supply Chain, Manufacturing, CRM, Projects. Each module integrates with others. Buy what you need.' },
+         implementation: { title: 'ERP Implementation', content: 'Major project: 6-24 months. Requires process redesign, data migration, training. High failure rate if poorly planned.' },
+         master_data: { title: 'Master Data', content: 'Core reference data: customers, vendors, products, GL accounts. Must be clean and consistent. Foundation of ERP success.' }
+      };
+
+      const tutorialSteps = [
+         { title: 'What is ERP?', content: 'Enterprise Resource Planning systems (SAP, Oracle, NetSuite) integrate all business functions into one platform. Finance, HR, inventory, sales - all connected.' },
+         { title: 'Why Companies Need ERP', content: 'Eliminate data silos, reduce manual work, improve visibility. One version of truth instead of conflicting spreadsheets.' },
+         { title: 'Core ERP Modules', content: 'Finance/GL, Accounts Payable/Receivable, Inventory, Order Management, HR/Payroll, Manufacturing, CRM. Modules share common data.' },
+         { title: 'The General Ledger Core', content: 'Chart of accounts, journal entries, financial reporting. All modules post to GL. The heart of financial ERP.' },
+         { title: 'Procure-to-Pay Process', content: 'Requisition → Purchase Order → Goods Receipt → Invoice → Payment. ERP enforces controls and automates matching.' },
+         { title: 'Order-to-Cash Process', content: 'Quote → Sales Order → Shipment → Invoice → Collection. ERP tracks entire customer lifecycle and revenue.' },
+         { title: 'Implementation Challenges', content: 'Data migration, process changes, user adoption, customization vs configuration. Plan thoroughly, train extensively, expect bumps.' }
+      ];
+
+      const scenarios = [
+         { title: 'ERP Selection', context: 'Mid-size manufacturer: $50M revenue, 200 employees, complex inventory, outgrowing QuickBooks.', question: 'Best ERP approach?', options: ['Stay with QuickBooks', 'NetSuite or Acumatica (cloud mid-market)', 'SAP S/4HANA (enterprise)', 'Build custom system'], correct: 1, explanation: 'Mid-market cloud ERP (NetSuite, Acumatica, Sage Intacct) fits the size and needs. SAP is overkill, QuickBooks is outgrown.' },
+         { title: 'Three-Way Match Failure', context: 'AP trying to pay invoice. PO says 100 units at $10. Receipt shows 95 units. Invoice says 100 units at $10.', question: 'What should happen?', options: ['Pay full invoice amount', 'System blocks - quantity mismatch', 'Pay for 95 units only', 'Delete the PO'], correct: 1, explanation: 'Three-way match (PO, Receipt, Invoice) must agree. System should block payment until resolved: short shipment or receiving error?' },
+         { title: 'Master Data Issue', context: 'Same customer exists twice: "ABC Corp" and "ABC Corporation". Different terms and credit limits each.', question: 'What problem does this cause?', options: ['No problem - more flexibility', 'Split credit exposure, wrong AR aging', 'Better for sales territories', 'Required for subsidiaries'], correct: 1, explanation: 'Duplicate master data creates chaos: credit exposure invisible, AR aging wrong, reporting unreliable. Data governance is critical.' },
+         { title: 'Go-Live Decision', context: 'ERP implementation: finance module ready, inventory has bugs, users partially trained. Deadline pressure.', question: 'Best approach?', options: ['Go live on schedule anyway', 'Delay until 100% ready', 'Phased: finance now, inventory later', 'Cancel the project'], correct: 2, explanation: 'Phased rollout reduces risk. Get finance stable, fix inventory issues, complete training. Full cutover with bugs is dangerous.' }
+      ];
+
+      const quizQuestions = [
+         { q: 'ERP stands for:', options: ['Enterprise Resource Planning', 'Electronic Record Processing', 'Efficient Reporting Platform', 'Extended Revenue Program'], correct: 0 },
+         { q: 'Three-way match compares:', options: ['Three invoices', 'PO, Receipt, Invoice', 'Three vendors', 'Three GL accounts'], correct: 1 },
+         { q: 'Master data includes:', options: ['Transaction history', 'Customer and product records', 'Financial statements', 'Audit reports'], correct: 1 },
+         { q: 'Biggest ERP implementation risk:', options: ['Software cost', 'Hardware failure', 'Poor change management', 'Vendor bankruptcy'], correct: 2 },
+         { q: 'Which is NOT typically an ERP module?', options: ['General Ledger', 'Accounts Payable', 'Social Media Marketing', 'Inventory Management'], correct: 2 }
+      ];
+
+      if (phase === 'intro') {
+         return (<div className="space-y-6"><div className="text-center"><div className="text-6xl mb-4">🏢</div><h2 className="text-2xl font-bold text-purple-800">ERP Basics</h2><p className="text-gray-600 mt-2">Understand enterprise systems</p></div><div className="bg-purple-50 p-4 rounded-xl"><h3 className="font-semibold text-purple-800 mb-2">What You'll Learn:</h3><ul className="space-y-1 text-sm text-gray-700"><li>✓ What ERP systems do</li><li>✓ Core modules and processes</li><li>✓ Implementation considerations</li><li>✓ Master data management</li></ul></div><button onClick={() => { setPhase('tutorial'); setGameLog(['Started ERP tutorial']); }} className="w-full py-3 bg-purple-600 text-white rounded-xl font-semibold hover:bg-purple-700">Start Learning</button></div>);
+      }
+
+      if (phase === 'tutorial') {
+         const step = tutorialSteps[tutorialStep];
+         return (<div className="space-y-6"><div className="flex justify-between items-center"><span className="text-sm text-gray-500">Tutorial {tutorialStep + 1}/{tutorialSteps.length}</span><div className="flex gap-1">{tutorialSteps.map((_, i) => (<div key={i} className={`w-3 h-3 rounded-full ${i <= tutorialStep ? 'bg-purple-600' : 'bg-gray-200'}`} />))}</div></div><div className="bg-gradient-to-br from-purple-50 to-violet-100 p-6 rounded-xl"><h3 className="text-xl font-bold text-purple-800 mb-3">{step.title}</h3><p className="text-gray-700">{step.content}</p></div><div className="flex gap-2">{tutorialStep > 0 && (<button onClick={() => setTutorialStep(tutorialStep - 1)} className="flex-1 py-2 border border-purple-600 text-purple-600 rounded-lg">← Back</button>)}<button onClick={() => { if (tutorialStep < tutorialSteps.length - 1) { setTutorialStep(tutorialStep + 1); } else { setPhase('play'); } }} className="flex-1 py-2 bg-purple-600 text-white rounded-lg">{tutorialStep < tutorialSteps.length - 1 ? 'Next →' : 'Start Practice →'}</button></div></div>);
+      }
+
+      if (phase === 'play') {
+         const sc = scenarios[scenarioIndex];
+         return (<div className="space-y-4"><div className="flex justify-between items-center"><span className="text-sm text-gray-600">Scenario {scenarioIndex + 1}/{scenarios.length}</span><span className="text-sm font-semibold text-green-600">Score: {score}</span></div><div className="bg-gradient-to-r from-purple-50 to-violet-100 p-4 rounded-xl"><div className="flex justify-between"><h3 className="font-bold text-purple-800">{sc.title}</h3><button onClick={() => { setShowInfo(true); setInfoTopic('erp'); }} className="text-purple-600">ℹ️</button></div><p className="mt-2 text-gray-700 text-sm">{sc.context}</p><p className="mt-3 font-medium text-purple-700">{sc.question}</p></div><div className="space-y-2">{sc.options.map((opt, i) => (<button key={i} onClick={() => { if (!answered) setSelectedAnswer(i); }} disabled={answered} className={`w-full p-3 rounded-lg text-left border-2 text-sm ${answered ? (i === sc.correct ? 'border-green-500 bg-green-50' : selectedAnswer === i ? 'border-red-500 bg-red-50' : 'border-gray-200') : selectedAnswer === i ? 'border-purple-500 bg-purple-50' : 'border-gray-200 hover:border-purple-400'}`}>{opt}</button>))}</div>{!answered ? (<button onClick={() => { setAnswered(true); if (selectedAnswer === sc.correct) setScore(score + 1); }} disabled={selectedAnswer === null} className="w-full py-3 bg-purple-600 text-white rounded-xl font-semibold disabled:bg-gray-300">Check Answer</button>) : (<div className="space-y-3"><div className={`p-3 rounded-lg ${selectedAnswer === sc.correct ? 'bg-green-100' : 'bg-yellow-100'}`}><p className="font-semibold">{selectedAnswer === sc.correct ? '✅ Correct!' : '❌ Not quite...'}</p><p className="text-sm text-gray-700 mt-1">{sc.explanation}</p></div><button onClick={() => { if (scenarioIndex < scenarios.length - 1) { setScenarioIndex(scenarioIndex + 1); setSelectedAnswer(null); setAnswered(false); } else { setPhase('result'); } }} className="w-full py-3 bg-purple-600 text-white rounded-xl font-semibold">{scenarioIndex < scenarios.length - 1 ? 'Next →' : 'See Results →'}</button></div>)}{showInfo && infoTopic && infoContent[infoTopic] && (<div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50"><div className="bg-white rounded-xl p-6 max-w-md"><h3 className="font-bold text-lg mb-2">{infoContent[infoTopic].title}</h3><p className="text-gray-700">{infoContent[infoTopic].content}</p><button onClick={() => setShowInfo(false)} className="mt-4 w-full py-2 bg-purple-600 text-white rounded-lg">Got It</button></div></div>)}</div>);
+      }
+
+      if (phase === 'result') {
+         if (quizIndex < quizQuestions.length) {
+            const q = quizQuestions[quizIndex];
+            return (<div className="space-y-6"><div className="text-center"><h3 className="text-xl font-bold text-purple-800">Final Assessment</h3><p className="text-sm text-gray-500">Question {quizIndex + 1}/{quizQuestions.length}</p></div><div className="bg-purple-50 p-4 rounded-xl"><p className="font-medium">{q.q}</p></div><div className="space-y-2">{q.options.map((opt, i) => (<button key={i} onClick={() => { if (!quizAnswered) { setQuizAnswered(true); if (i === q.correct) setQuizScore(quizScore + 1); } }} disabled={quizAnswered} className={`w-full p-3 rounded-lg text-left border-2 ${quizAnswered ? (i === q.correct ? 'border-green-500 bg-green-50' : 'border-gray-200') : 'border-gray-200 hover:border-purple-400'}`}>{opt}</button>))}</div>{quizAnswered && (<button onClick={() => { setQuizIndex(quizIndex + 1); setQuizAnswered(false); }} className="w-full py-3 bg-purple-600 text-white rounded-xl font-semibold">Next →</button>)}</div>);
+         }
+         const pct = Math.round(((score + quizScore) / (scenarios.length + quizQuestions.length)) * 100);
+         return (<div className="space-y-6"><div className="text-center"><div className="text-6xl mb-4">{pct >= 80 ? '🏢' : '📊'}</div><h2 className="text-2xl font-bold text-purple-800">ERP Complete!</h2></div><div className="bg-purple-50 p-6 rounded-xl text-center"><div className="text-4xl font-bold text-purple-700">{pct}%</div><div className="text-sm text-gray-600">Overall Mastery</div></div><button onClick={() => { setPhase('intro'); setScore(0); setScenarioIndex(0); setSelectedAnswer(null); setAnswered(false); setQuizIndex(0); setQuizAnswered(false); setQuizScore(0); }} className="w-full py-3 bg-purple-600 text-white rounded-xl font-semibold">Practice Again</button></div>);
+      }
+      return null;
+   };
+
+   const AuditTrailsRenderer = () => {
+      const [phase, setPhase] = useState<'intro' | 'tutorial' | 'play' | 'result'>('intro');
+      const [tutorialStep, setTutorialStep] = useState(0);
+      const [showInfo, setShowInfo] = useState(false);
+      const [infoTopic, setInfoTopic] = useState<string | null>(null);
+      const [scenarioIndex, setScenarioIndex] = useState(0);
+      const [score, setScore] = useState(0);
+      const [answered, setAnswered] = useState(false);
+      const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
+      const [quizIndex, setQuizIndex] = useState(0);
+      const [quizAnswered, setQuizAnswered] = useState(false);
+      const [quizScore, setQuizScore] = useState(0);
+      const [gameLog, setGameLog] = useState<string[]>([]);
+
+      const infoContent: {[key: string]: { title: string; content: string }} = {
+         audit_trail: { title: 'Audit Trail', content: 'Chronological record of all changes: who, what, when. Creates accountability and enables investigation of issues.' },
+         sox: { title: 'SOX Compliance', content: 'Sarbanes-Oxley requires public companies to maintain internal controls including audit trails. Heavy penalties for non-compliance.' },
+         immutability: { title: 'Immutability', content: 'Audit logs should not be editable or deletable. Prevents cover-ups. Write-once storage or blockchain approaches.' },
+         retention: { title: 'Retention Policies', content: 'How long to keep audit logs. Legal requirements vary: tax records 7 years, SOX indefinitely. Storage costs vs compliance.' }
+      };
+
+      const tutorialSteps = [
+         { title: 'What are Audit Trails?', content: 'Complete history of all changes to financial records. Every edit, delete, approval logged with user ID and timestamp. Critical for compliance.' },
+         { title: 'Why Audit Trails Matter', content: 'Detect fraud, support investigations, prove compliance, enable debugging. If something goes wrong, you can trace exactly what happened.' },
+         { title: 'Key Information Captured', content: 'User ID, timestamp, action type (create/edit/delete), before and after values, IP address, transaction reference. Complete picture.' },
+         { title: 'SOX Requirements', content: 'Sarbanes-Oxley Section 404: maintain internal controls. Audit trails prove controls exist and work. Required for public companies.' },
+         { title: 'Immutability Principle', content: 'Audit logs must be tamper-proof. No editing or deleting. Separate storage, restricted access, cryptographic verification.' },
+         { title: 'Using Audit Trails', content: 'Investigate discrepancies, support auditors, track user activity, identify training needs. Proactive monitoring catches issues early.' },
+         { title: 'Retention and Storage', content: 'Legal retention varies: 7 years typical for tax. SOX: indefinite for key records. Balance storage costs with compliance needs.' }
+      ];
+
+      const scenarios = [
+         { title: 'Missing Invoice', context: 'Vendor claims they sent invoice 30 days ago. Your AP says they never received it. Invoice not in system.', question: 'How does audit trail help?', options: ['Cannot help - invoice not entered', 'Check if invoice was deleted and by whom', 'Automatically creates missing invoices', 'Emails the vendor'], correct: 1, explanation: 'Audit trail shows if invoice was entered then deleted. Who deleted it? When? This catches errors and potential fraud.' },
+         { title: 'Unauthorized Change', context: 'Customer credit limit was $50K, now shows $500K. Customer placed $400K order that shipped.', question: 'First investigation step?', options: ['Approve the change retroactively', 'Check audit trail for who changed limit', 'Bill the customer immediately', 'Disable the customer account'], correct: 1, explanation: 'Audit trail reveals: Who made the change? When? Was proper approval obtained? This is either fraud or control failure - both serious.' },
+         { title: 'Auditor Request', context: 'External auditors request evidence of journal entry approvals for all entries over $100K.', question: 'How to respond?', options: ['Manual review of all entries', 'Export audit trail filtered by amount', 'Tell them its not tracked', 'Provide GL balances only'], correct: 1, explanation: 'Audit trail export shows all entries with approver IDs and timestamps. Quick, complete, and auditor-friendly. This is why we have audit trails.' },
+         { title: 'System Access Review', context: 'Annual access review required. Need to verify only appropriate users have sensitive access.', question: 'What audit trail feature helps?', options: ['Transaction logs only', 'User access and permission change logs', 'Financial statement exports', 'Vendor payment history'], correct: 1, explanation: 'Audit trails track permission changes: who granted access, when, what level. Compare current access to approved access. Catch orphan accounts.' }
+      ];
+
+      const quizQuestions = [
+         { q: 'Audit trails should be:', options: ['Editable by admins', 'Immutable/tamper-proof', 'Deleted after 1 year', 'Optional for small companies'], correct: 1 },
+         { q: 'SOX Section 404 requires:', options: ['External audits only', 'Internal controls documentation', 'Quarterly earnings calls', 'CEO signature on checks'], correct: 1 },
+         { q: 'Minimum audit trail should capture:', options: ['User, timestamp, action', 'Only dollar amounts', 'Just the final value', 'Approver name only'], correct: 0 },
+         { q: 'Typical financial record retention:', options: ['1 year', '3 years', '7 years', '30 days'], correct: 2 },
+         { q: 'Audit trail helps detect:', options: ['Future transactions', 'Unauthorized changes', 'Market conditions', 'Vendor pricing'], correct: 1 }
+      ];
+
+      if (phase === 'intro') {
+         return (<div className="space-y-6"><div className="text-center"><div className="text-6xl mb-4">🔍</div><h2 className="text-2xl font-bold text-rose-800">Audit Trails</h2><p className="text-gray-600 mt-2">Master compliance and controls</p></div><div className="bg-rose-50 p-4 rounded-xl"><h3 className="font-semibold text-rose-800 mb-2">What You'll Learn:</h3><ul className="space-y-1 text-sm text-gray-700"><li>✓ What audit trails capture</li><li>✓ SOX compliance requirements</li><li>✓ Investigation techniques</li><li>✓ Retention policies</li></ul></div><button onClick={() => { setPhase('tutorial'); setGameLog(['Started audit trails tutorial']); }} className="w-full py-3 bg-rose-600 text-white rounded-xl font-semibold hover:bg-rose-700">Start Learning</button></div>);
+      }
+
+      if (phase === 'tutorial') {
+         const step = tutorialSteps[tutorialStep];
+         return (<div className="space-y-6"><div className="flex justify-between items-center"><span className="text-sm text-gray-500">Tutorial {tutorialStep + 1}/{tutorialSteps.length}</span><div className="flex gap-1">{tutorialSteps.map((_, i) => (<div key={i} className={`w-3 h-3 rounded-full ${i <= tutorialStep ? 'bg-rose-600' : 'bg-gray-200'}`} />))}</div></div><div className="bg-gradient-to-br from-rose-50 to-pink-100 p-6 rounded-xl"><h3 className="text-xl font-bold text-rose-800 mb-3">{step.title}</h3><p className="text-gray-700">{step.content}</p></div><div className="flex gap-2">{tutorialStep > 0 && (<button onClick={() => setTutorialStep(tutorialStep - 1)} className="flex-1 py-2 border border-rose-600 text-rose-600 rounded-lg">← Back</button>)}<button onClick={() => { if (tutorialStep < tutorialSteps.length - 1) { setTutorialStep(tutorialStep + 1); } else { setPhase('play'); } }} className="flex-1 py-2 bg-rose-600 text-white rounded-lg">{tutorialStep < tutorialSteps.length - 1 ? 'Next →' : 'Start Practice →'}</button></div></div>);
+      }
+
+      if (phase === 'play') {
+         const sc = scenarios[scenarioIndex];
+         return (<div className="space-y-4"><div className="flex justify-between items-center"><span className="text-sm text-gray-600">Scenario {scenarioIndex + 1}/{scenarios.length}</span><span className="text-sm font-semibold text-green-600">Score: {score}</span></div><div className="bg-gradient-to-r from-rose-50 to-pink-100 p-4 rounded-xl"><div className="flex justify-between"><h3 className="font-bold text-rose-800">{sc.title}</h3><button onClick={() => { setShowInfo(true); setInfoTopic('audit_trail'); }} className="text-rose-600">ℹ️</button></div><p className="mt-2 text-gray-700 text-sm">{sc.context}</p><p className="mt-3 font-medium text-rose-700">{sc.question}</p></div><div className="space-y-2">{sc.options.map((opt, i) => (<button key={i} onClick={() => { if (!answered) setSelectedAnswer(i); }} disabled={answered} className={`w-full p-3 rounded-lg text-left border-2 text-sm ${answered ? (i === sc.correct ? 'border-green-500 bg-green-50' : selectedAnswer === i ? 'border-red-500 bg-red-50' : 'border-gray-200') : selectedAnswer === i ? 'border-rose-500 bg-rose-50' : 'border-gray-200 hover:border-rose-400'}`}>{opt}</button>))}</div>{!answered ? (<button onClick={() => { setAnswered(true); if (selectedAnswer === sc.correct) setScore(score + 1); }} disabled={selectedAnswer === null} className="w-full py-3 bg-rose-600 text-white rounded-xl font-semibold disabled:bg-gray-300">Check Answer</button>) : (<div className="space-y-3"><div className={`p-3 rounded-lg ${selectedAnswer === sc.correct ? 'bg-green-100' : 'bg-yellow-100'}`}><p className="font-semibold">{selectedAnswer === sc.correct ? '✅ Correct!' : '❌ Not quite...'}</p><p className="text-sm text-gray-700 mt-1">{sc.explanation}</p></div><button onClick={() => { if (scenarioIndex < scenarios.length - 1) { setScenarioIndex(scenarioIndex + 1); setSelectedAnswer(null); setAnswered(false); } else { setPhase('result'); } }} className="w-full py-3 bg-rose-600 text-white rounded-xl font-semibold">{scenarioIndex < scenarios.length - 1 ? 'Next →' : 'See Results →'}</button></div>)}{showInfo && infoTopic && infoContent[infoTopic] && (<div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50"><div className="bg-white rounded-xl p-6 max-w-md"><h3 className="font-bold text-lg mb-2">{infoContent[infoTopic].title}</h3><p className="text-gray-700">{infoContent[infoTopic].content}</p><button onClick={() => setShowInfo(false)} className="mt-4 w-full py-2 bg-rose-600 text-white rounded-lg">Got It</button></div></div>)}</div>);
+      }
+
+      if (phase === 'result') {
+         if (quizIndex < quizQuestions.length) {
+            const q = quizQuestions[quizIndex];
+            return (<div className="space-y-6"><div className="text-center"><h3 className="text-xl font-bold text-rose-800">Final Assessment</h3><p className="text-sm text-gray-500">Question {quizIndex + 1}/{quizQuestions.length}</p></div><div className="bg-rose-50 p-4 rounded-xl"><p className="font-medium">{q.q}</p></div><div className="space-y-2">{q.options.map((opt, i) => (<button key={i} onClick={() => { if (!quizAnswered) { setQuizAnswered(true); if (i === q.correct) setQuizScore(quizScore + 1); } }} disabled={quizAnswered} className={`w-full p-3 rounded-lg text-left border-2 ${quizAnswered ? (i === q.correct ? 'border-green-500 bg-green-50' : 'border-gray-200') : 'border-gray-200 hover:border-rose-400'}`}>{opt}</button>))}</div>{quizAnswered && (<button onClick={() => { setQuizIndex(quizIndex + 1); setQuizAnswered(false); }} className="w-full py-3 bg-rose-600 text-white rounded-xl font-semibold">Next →</button>)}</div>);
+         }
+         const pct = Math.round(((score + quizScore) / (scenarios.length + quizQuestions.length)) * 100);
+         return (<div className="space-y-6"><div className="text-center"><div className="text-6xl mb-4">{pct >= 80 ? '🔍' : '📊'}</div><h2 className="text-2xl font-bold text-rose-800">Audit Trails Complete!</h2></div><div className="bg-rose-50 p-6 rounded-xl text-center"><div className="text-4xl font-bold text-rose-700">{pct}%</div><div className="text-sm text-gray-600">Overall Mastery</div></div><button onClick={() => { setPhase('intro'); setScore(0); setScenarioIndex(0); setSelectedAnswer(null); setAnswered(false); setQuizIndex(0); setQuizAnswered(false); setQuizScore(0); }} className="w-full py-3 bg-rose-600 text-white rounded-xl font-semibold">Practice Again</button></div>);
+      }
+      return null;
+   };
+
    const FinancialStatementsRenderer = () => {
       const [phase, setPhase] = useState<'intro' | 'play' | 'result'>('intro');
       const [showInfo, setShowInfo] = useState(false);
@@ -52618,6 +52973,16 @@ const GeneratedDiagram: React.FC<DiagramProps> = ({ type, data, title }) => {
             return <WaccRenderer />;
          case 'stock_options':
             return <StockOptionsRenderer />;
+         case 'dividend_policy':
+            return <DividendPolicyRenderer />;
+         case 'financial_modeling':
+            return <FinancialModelingRenderer />;
+         case 'cloud_accounting':
+            return <CloudAccountingRenderer />;
+         case 'erp_basics':
+            return <ErpBasicsRenderer />;
+         case 'audit_trails':
+            return <AuditTrailsRenderer />;
          case 'pricing_strategy':
             return <PricingStrategyRenderer />;
          case 'budgeting':
