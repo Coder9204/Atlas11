@@ -53596,6 +53596,210 @@ const GeneratedDiagram: React.FC<DiagramProps> = ({ type, data, title }) => {
       return null;
    };
 
+   // Topic 135: Localization Strategy Interactive Educational Game
+   const LocalizationStrategyRenderer = () => {
+      const [phase, setPhase] = useState<'intro' | 'tutorial' | 'play' | 'result'>('intro');
+      const [tutorialStep, setTutorialStep] = useState(0);
+      const [showInfo, setShowInfo] = useState(false);
+      const [infoTopic, setInfoTopic] = useState('');
+      const [scenarioIndex, setScenarioIndex] = useState(0);
+      const [score, setScore] = useState(0);
+      const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
+      const [answered, setAnswered] = useState(false);
+      const [quizIndex, setQuizIndex] = useState(0);
+      const [quizScore, setQuizScore] = useState(0);
+      const [quizAnswered, setQuizAnswered] = useState(false);
+      const [gameLog, setGameLog] = useState<string[]>([]);
+
+      const infoContent: Record<string, string> = {
+         'localization_vs_translation': 'Localization goes beyond translation. It adapts content culturally—date formats, currencies, colors, imagery, humor, and cultural references. Translation converts text; localization converts experiences.',
+         'market_prioritization': 'Prioritize markets based on: market size, competition level, cultural distance from your base, monetization potential, and localization costs. Start with high-ROI markets before expanding.',
+         'pseudo_localization': 'Pseudo-localization tests your app with fake translated strings (áccéntéd characters, extended text) to catch UI issues before real translation. It reveals text truncation, hardcoded strings, and layout problems.',
+         'translation_management': 'Translation Management Systems (TMS) like Lokalise, Phrase, or Crowdin streamline localization workflows. They provide context for translators, version control, and integration with development pipelines.',
+         'cultural_adaptation': 'Cultural adaptation includes: color meanings (red means luck in China, danger in West), imagery (hand gestures, religious symbols), date/number formats, payment preferences, and content sensitivities.',
+         'app_store_localization': 'App Store Optimization requires localized metadata: title, subtitle, keywords, description, and screenshots. Localized ASO can increase downloads 2-5x in target markets.',
+         'continuous_localization': 'Continuous localization integrates translation into CI/CD pipelines. New strings are automatically sent to translators and returned before release, preventing localization from blocking releases.'
+      };
+
+      const tutorialSteps = [
+         { title: 'Localization vs. Translation', content: 'Localization is more than translating words—it\'s adapting your entire app experience for a new culture. This includes dates, currencies, imagery, colors, and cultural references that resonate locally.', icon: 'localization_vs_translation' },
+         { title: 'Market Prioritization', content: 'Not all markets deserve equal investment. Analyze market size, competition, monetization potential, and localization complexity to identify high-ROI expansion targets.', icon: 'market_prioritization' },
+         { title: 'Pseudo-Localization Testing', content: 'Pseudo-localization uses fake translated strings to test your app\'s internationalization. It catches UI problems like text truncation and hardcoded strings before expensive real translations.', icon: 'pseudo_localization' },
+         { title: 'Translation Management', content: 'Translation Management Systems centralize localization workflows. They provide context for translators, manage terminology, track progress, and integrate with your development process.', icon: 'translation_management' },
+         { title: 'Cultural Adaptation', content: 'Cultural adaptation goes beyond language. Colors, imagery, gestures, humor, and payment methods all need local consideration. What works in one culture may offend or confuse in another.', icon: 'cultural_adaptation' },
+         { title: 'App Store Localization', content: 'Localizing your App Store presence (title, description, screenshots, keywords) is often more impactful than in-app localization for driving downloads in new markets.', icon: 'app_store_localization' },
+         { title: 'Continuous Localization', content: 'Modern localization is continuous, not batch. Integrate translation into your CI/CD pipeline so new content is automatically translated without blocking releases.', icon: 'continuous_localization' }
+      ];
+
+      const scenarios = [
+         { title: 'Market Expansion Decision', situation: 'Your fitness app is successful in the US. You\'re planning international expansion. Which market should you prioritize first?', options: [
+            { text: 'China—largest mobile market', points: 10, feedback: 'China offers massive scale but requires significant cultural adaptation, regulatory compliance (ICP license), and faces strong local competition. High risk for first expansion.' },
+            { text: 'UK—English-speaking, similar culture', points: 30, feedback: 'Excellent first choice! Minimal localization needed (date formats, spelling), similar culture, strong monetization, and serves as test for further expansion.' },
+            { text: 'Brazil—large population and growing market', points: 20, feedback: 'Brazil has potential but requires full Portuguese localization, local payment integration, and cultural adaptation. Better as a second phase target.' },
+            { text: 'Japan—high ARPU mobile market', points: 15, feedback: 'Japan has excellent monetization but requires extensive localization (language, UI, cultural preferences) and faces strong local competition.' }
+         ]},
+         { title: 'Cultural Adaptation Challenge', situation: 'Your meditation app uses calming blue colors and a lotus flower icon. You\'re expanding to markets across Asia and Middle East. What\'s your priority concern?', options: [
+            { text: 'Blue is a sad color in some cultures—change to green globally', points: 10, feedback: 'Blue has mixed meanings but green is a safe choice in many cultures. However, changing globally might alienate existing users. Consider market-specific themes.' },
+            { text: 'Review imagery and symbols per market—lotus has religious connotations in some regions', points: 30, feedback: 'Smart approach! The lotus has Buddhist/Hindu associations that may be inappropriate in some contexts. Symbol meanings vary significantly—research each market.' },
+            { text: 'Focus only on translation—colors and imagery are universal', points: 5, feedback: 'Visual elements carry strong cultural meaning. Ignoring cultural adaptation risks offending users or failing to resonate with local preferences.' },
+            { text: 'Use abstract geometric shapes instead of any cultural symbols', points: 20, feedback: 'Safe but potentially boring. Abstract designs avoid offense but may also lack the emotional connection that culturally-appropriate imagery creates.' }
+         ]},
+         { title: 'Localization Workflow Decision', situation: 'Your team releases updates weekly. Current localization takes 2 weeks per release, causing delayed international launches. What\'s the best solution?', options: [
+            { text: 'Slow down releases to monthly to give translators more time', points: 10, feedback: 'This compromises development velocity for all users. Better to optimize the localization process than slow down the entire team.' },
+            { text: 'Implement continuous localization with CI/CD integration', points: 30, feedback: 'Perfect solution! Continuous localization sends strings for translation automatically as they\'re added, returning translations before release without blocking development.' },
+            { text: 'Launch English-only, then localize in batches quarterly', points: 15, feedback: 'This creates poor experiences for international users and may violate expectations in non-English markets. Continuous localization is a better approach.' },
+            { text: 'Use machine translation only for speed', points: 5, feedback: 'Machine translation quality is insufficient for production. It can supplement human translation but shouldn\'t replace it for customer-facing content.' }
+         ]},
+         { title: 'App Store Localization Priority', situation: 'You have budget to localize for 3 new markets. Your analytics show significant organic traffic from Germany, France, and Spain. What\'s your localization priority?', options: [
+            { text: 'Fully localize the app for all three markets simultaneously', points: 15, feedback: 'Comprehensive but expensive. Consider whether full app localization is needed or if App Store localization alone could capture significant value.' },
+            { text: 'Localize App Store presence first for all three, then prioritize full localization based on results', points: 30, feedback: 'Strategic approach! App Store localization has high ROI and lets you validate market potential before investing in full localization.' },
+            { text: 'Pick one market, fully localize it, then move to the next', points: 20, feedback: 'Thorough but slow. You could test all three markets with App Store localization faster and learn which deserves full investment.' },
+            { text: 'Rely on English since most Europeans speak it', points: 5, feedback: 'While many Europeans speak English, they prefer apps in their native language. Localized apps significantly outperform English-only in conversion rates.' }
+         ]}
+      ];
+
+      const quizQuestions = [
+         { question: 'Why is pseudo-localization valuable before starting real translation?', options: ['It\'s cheaper than real translation', 'It reveals UI issues like text truncation and hardcoded strings that break with longer translated text', 'Translators require pseudo-localized files', 'App stores require pseudo-localization testing'], correct: 1, explanation: 'Pseudo-localization tests internationalization readiness by simulating translated text (with accents and length expansion). It catches technical problems cheaply before expensive human translation begins.' },
+         { question: 'Why should App Store localization often come before full app localization?', options: ['App stores require it first', 'Localized metadata drives downloads before users even see the in-app experience, validating market potential cost-effectively', 'It\'s easier to translate', 'Users only read App Store descriptions'], correct: 1, explanation: 'App Store localization (title, description, screenshots) directly impacts conversion in new markets. It\'s cheaper than full localization and proves market demand before larger investment.' },
+         { question: 'Why is cultural adaptation more important than perfect translation?', options: ['Cultural mistakes can offend users, destroy trust, and render perfect translations meaningless', 'Translation is automated now', 'Culture changes faster than language', 'App stores penalize untranslated content'], correct: 0, explanation: 'Perfect translation of culturally inappropriate content still fails. A thumbs-up icon (offensive in some cultures), wrong color associations, or insensitive imagery can undermine even flawless translations.' },
+         { question: 'Why should continuous localization be integrated into CI/CD pipelines?', options: ['It reduces server costs', 'It enables localization to happen in parallel with development rather than blocking releases', 'CI/CD systems translate faster', 'Translators prefer working in CI/CD tools'], correct: 1, explanation: 'Batch localization creates bottlenecks—development waits for translation. Continuous localization sends strings automatically as they\'re added, returning translations before release without delays.' },
+         { question: 'Why start international expansion with culturally similar markets?', options: ['They have more users', 'Lower localization costs and risks validate your international strategy before tackling high-complexity markets', 'Similar cultures have higher app usage', 'App stores recommend this approach'], correct: 1, explanation: 'Culturally similar markets (US→UK, Spain→Latin America) require minimal adaptation, reducing risk and cost. Success there builds capability and confidence for more challenging expansions.' }
+      ];
+
+      const handleScenarioAnswer = (points: number, feedback: string) => { if (answered) return; setScore(prev => prev + points); setAnswered(true); setGameLog(prev => [...prev, `Scenario ${scenarioIndex + 1}: Scored ${points}/30 - ${feedback}`]); };
+      const handleQuizAnswer = (index: number) => { if (quizAnswered) return; setSelectedAnswer(index); setQuizAnswered(true); if (index === quizQuestions[quizIndex].correct) { setQuizScore(prev => prev + 1); setGameLog(prev => [...prev, `Quiz ${quizIndex + 1}: Correct`]); } else { setGameLog(prev => [...prev, `Quiz ${quizIndex + 1}: Incorrect`]); } };
+      const nextScenario = () => { if (scenarioIndex < scenarios.length - 1) { setScenarioIndex(prev => prev + 1); setSelectedAnswer(null); setAnswered(false); } else { setQuizIndex(0); setQuizAnswered(false); setSelectedAnswer(null); } };
+      const nextQuiz = () => { if (quizIndex < quizQuestions.length - 1) { setQuizIndex(prev => prev + 1); setSelectedAnswer(null); setQuizAnswered(false); } else { setPhase('result'); } };
+
+      if (phase === 'intro') {
+         return (
+            <div className="p-6 bg-gradient-to-br from-violet-50 to-purple-100 rounded-xl shadow-lg max-w-2xl mx-auto">
+               <h2 className="text-2xl font-bold text-violet-800 mb-4">Localization Strategy Mastery</h2>
+               <p className="text-violet-700 mb-4">Learn how to effectively localize your app for international markets, going beyond translation to true cultural adaptation and strategic market expansion.</p>
+               <div className="bg-white/70 rounded-lg p-4 mb-4">
+                  <h3 className="font-semibold text-violet-800 mb-2">Learning Objectives:</h3>
+                  <ul className="text-violet-700 space-y-1 text-sm">
+                     <li>• Understand the difference between translation and localization</li>
+                     <li>• Prioritize markets for expansion strategically</li>
+                     <li>• Master cultural adaptation beyond language</li>
+                     <li>• Implement efficient continuous localization workflows</li>
+                  </ul>
+               </div>
+               <button onClick={() => setPhase('tutorial')} className="w-full py-3 bg-violet-600 text-white rounded-lg hover:bg-violet-700 font-semibold">Start Learning</button>
+            </div>
+         );
+      }
+
+      if (phase === 'tutorial') {
+         const step = tutorialSteps[tutorialStep];
+         return (
+            <div className="p-6 bg-gradient-to-br from-violet-50 to-purple-100 rounded-xl shadow-lg max-w-2xl mx-auto">
+               <div className="flex justify-between items-center mb-4">
+                  <h2 className="text-xl font-bold text-violet-800">Step {tutorialStep + 1} of {tutorialSteps.length}</h2>
+                  <span className="text-violet-600 text-sm">{Math.round(((tutorialStep + 1) / tutorialSteps.length) * 100)}% Complete</span>
+               </div>
+               <div className="bg-white/80 rounded-lg p-5 mb-4">
+                  <div className="flex items-start gap-3 mb-3">
+                     <h3 className="font-semibold text-violet-800 text-lg">{step.title}</h3>
+                     <button onClick={() => { setInfoTopic(step.icon); setShowInfo(true); }} className="text-violet-500 hover:text-violet-700">ℹ️</button>
+                  </div>
+                  <p className="text-violet-700">{step.content}</p>
+               </div>
+               <div className="bg-purple-100 rounded-lg p-3 mb-4">
+                  <p className="text-purple-800 text-sm">💡 <strong>AI Coach:</strong> {tutorialStep === 0 ? 'Remember: users don\'t want translated apps—they want apps built for them!' : tutorialStep === 4 ? 'Cultural research prevents expensive mistakes. Always validate with local users.' : 'Start small, learn fast, then scale your localization efforts.'}</p>
+               </div>
+               <div className="flex gap-3">
+                  {tutorialStep > 0 && <button onClick={() => setTutorialStep(prev => prev - 1)} className="flex-1 py-2 border border-violet-600 text-violet-600 rounded-lg hover:bg-violet-50">Previous</button>}
+                  <button onClick={() => tutorialStep < tutorialSteps.length - 1 ? setTutorialStep(prev => prev + 1) : setPhase('play')} className="flex-1 py-2 bg-violet-600 text-white rounded-lg hover:bg-violet-700">{tutorialStep < tutorialSteps.length - 1 ? 'Next' : 'Start Practice'}</button>
+               </div>
+               {showInfo && (
+                  <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" onClick={() => setShowInfo(false)}>
+                     <div className="bg-white rounded-xl p-6 max-w-md m-4" onClick={e => e.stopPropagation()}>
+                        <h3 className="font-bold text-violet-800 mb-2">{step.title}</h3>
+                        <p className="text-violet-700 text-sm">{infoContent[infoTopic]}</p>
+                        <button onClick={() => setShowInfo(false)} className="mt-4 w-full py-2 bg-violet-600 text-white rounded-lg">Close</button>
+                     </div>
+                  </div>
+               )}
+            </div>
+         );
+      }
+
+      if (phase === 'play') {
+         if (scenarioIndex < scenarios.length) {
+            const scenario = scenarios[scenarioIndex];
+            return (
+               <div className="p-6 bg-gradient-to-br from-violet-50 to-purple-100 rounded-xl shadow-lg max-w-2xl mx-auto">
+                  <div className="flex justify-between items-center mb-4">
+                     <h2 className="text-xl font-bold text-violet-800">Scenario {scenarioIndex + 1} of {scenarios.length}</h2>
+                     <span className="text-violet-600 font-semibold">Score: {score}</span>
+                  </div>
+                  <div className="bg-white/80 rounded-lg p-5 mb-4">
+                     <h3 className="font-semibold text-violet-800 mb-2">{scenario.title}</h3>
+                     <p className="text-violet-700 mb-4">{scenario.situation}</p>
+                     <div className="space-y-2">
+                        {scenario.options.map((option, i) => (
+                           <button key={i} onClick={() => { setSelectedAnswer(i); handleScenarioAnswer(option.points, option.feedback); }} disabled={answered} className={`w-full p-3 text-left rounded-lg border transition-all ${answered && selectedAnswer === i ? option.points >= 25 ? 'bg-green-100 border-green-500' : option.points >= 15 ? 'bg-yellow-100 border-yellow-500' : 'bg-red-100 border-red-500' : 'bg-white border-violet-200 hover:border-violet-400'} ${answered ? 'cursor-default' : 'cursor-pointer'}`}>
+                              <span className="text-violet-800">{option.text}</span>
+                              {answered && selectedAnswer === i && <p className="text-sm mt-2 text-violet-600">{option.feedback}</p>}
+                           </button>
+                        ))}
+                     </div>
+                  </div>
+                  {answered && <button onClick={nextScenario} className="w-full py-3 bg-violet-600 text-white rounded-lg hover:bg-violet-700">{scenarioIndex < scenarios.length - 1 ? 'Next Scenario' : 'Continue to Quiz'}</button>}
+               </div>
+            );
+         }
+         const quiz = quizQuestions[quizIndex];
+         return (
+            <div className="p-6 bg-gradient-to-br from-violet-50 to-purple-100 rounded-xl shadow-lg max-w-2xl mx-auto">
+               <div className="flex justify-between items-center mb-4">
+                  <h2 className="text-xl font-bold text-violet-800">Quiz {quizIndex + 1} of {quizQuestions.length}</h2>
+                  <span className="text-violet-600 font-semibold">Quiz Score: {quizScore}/{quizIndex + (quizAnswered ? 1 : 0)}</span>
+               </div>
+               <div className="bg-white/80 rounded-lg p-5 mb-4">
+                  <p className="text-violet-800 font-medium mb-4">{quiz.question}</p>
+                  <div className="space-y-2">
+                     {quiz.options.map((option, i) => (
+                        <button key={i} onClick={() => handleQuizAnswer(i)} disabled={quizAnswered} className={`w-full p-3 text-left rounded-lg border transition-all ${quizAnswered ? i === quiz.correct ? 'bg-green-100 border-green-500' : selectedAnswer === i ? 'bg-red-100 border-red-500' : 'bg-white border-violet-200' : 'bg-white border-violet-200 hover:border-violet-400'}`}>{option}</button>
+                     ))}
+                  </div>
+                  {quizAnswered && <div className="mt-4 p-3 bg-purple-50 rounded-lg"><p className="text-purple-800 text-sm"><strong>Explanation:</strong> {quiz.explanation}</p></div>}
+               </div>
+               {quizAnswered && <button onClick={nextQuiz} className="w-full py-3 bg-violet-600 text-white rounded-lg hover:bg-violet-700">{quizIndex < quizQuestions.length - 1 ? 'Next Question' : 'See Results'}</button>}
+            </div>
+         );
+      }
+
+      if (phase === 'result') {
+         const maxScore = scenarios.reduce((sum, s) => sum + Math.max(...s.options.map(o => o.points)), 0);
+         return (
+            <div className="p-6 bg-gradient-to-br from-violet-50 to-purple-100 rounded-xl shadow-lg max-w-2xl mx-auto">
+               <h2 className="text-2xl font-bold text-violet-800 mb-4">Localization Strategy Complete!</h2>
+               <div className="bg-white/80 rounded-lg p-5 mb-4">
+                  <div className="text-center mb-4">
+                     <p className="text-4xl font-bold text-violet-600">{Math.round((score / maxScore) * 100)}%</p>
+                     <p className="text-violet-700">Scenario Score: {score}/{maxScore}</p>
+                     <p className="text-violet-700">Quiz Score: {quizScore}/{quizQuestions.length}</p>
+                  </div>
+                  <div className="border-t pt-4">
+                     <h3 className="font-semibold text-violet-800 mb-2">Key Insights:</h3>
+                     <ul className="text-violet-700 text-sm space-y-1">
+                        <li>• Localization is cultural adaptation, not just translation</li>
+                        <li>• Start with culturally similar, high-ROI markets</li>
+                        <li>• Use pseudo-localization to catch issues early</li>
+                        <li>• App Store localization often has highest ROI</li>
+                        <li>• Integrate localization into CI/CD for continuous flow</li>
+                     </ul>
+                  </div>
+               </div>
+               <button onClick={() => { setPhase('intro'); setScore(0); setScenarioIndex(0); setQuizIndex(0); setQuizScore(0); setAnswered(false); setQuizAnswered(false); setSelectedAnswer(null); setTutorialStep(0); setGameLog([]); }} className="w-full py-3 bg-violet-600 text-white rounded-lg hover:bg-violet-700">Play Again</button>
+            </div>
+         );
+      }
+      return null;
+   };
+
    const FinancialStatementsRenderer = () => {
       const [phase, setPhase] = useState<'intro' | 'play' | 'result'>('intro');
       const [showInfo, setShowInfo] = useState(false);
@@ -57563,6 +57767,8 @@ const GeneratedDiagram: React.FC<DiagramProps> = ({ type, data, title }) => {
             return <AppStoreFeaturesRenderer />;
          case 'cross_promotion':
             return <CrossPromotionRenderer />;
+         case 'localization_strategy':
+            return <LocalizationStrategyRenderer />;
          case 'pricing_strategy':
             return <PricingStrategyRenderer />;
          case 'budgeting':
