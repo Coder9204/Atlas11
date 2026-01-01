@@ -53392,6 +53392,210 @@ const GeneratedDiagram: React.FC<DiagramProps> = ({ type, data, title }) => {
       return null;
    };
 
+   // Topic 134: Cross-Promotion Interactive Educational Game
+   const CrossPromotionRenderer = () => {
+      const [phase, setPhase] = useState<'intro' | 'tutorial' | 'play' | 'result'>('intro');
+      const [tutorialStep, setTutorialStep] = useState(0);
+      const [showInfo, setShowInfo] = useState(false);
+      const [infoTopic, setInfoTopic] = useState('');
+      const [scenarioIndex, setScenarioIndex] = useState(0);
+      const [score, setScore] = useState(0);
+      const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
+      const [answered, setAnswered] = useState(false);
+      const [quizIndex, setQuizIndex] = useState(0);
+      const [quizScore, setQuizScore] = useState(0);
+      const [quizAnswered, setQuizAnswered] = useState(false);
+      const [gameLog, setGameLog] = useState<string[]>([]);
+
+      const infoContent: Record<string, string> = {
+         'cross_promo_types': 'Cross-promotion includes: in-app interstitials (full-screen ads for your other apps), banner placements, "More Apps" sections, smart banners that appear contextually, and cross-app deep linking that launches partner apps directly.',
+         'partner_selection': 'Ideal cross-promo partners share similar demographics but aren\'t direct competitors. Look for complementary apps (fitness + nutrition, productivity + calendar), similar DAU patterns, and comparable production quality.',
+         'promo_networks': 'Cross-promotion networks like Chartboost, Fyber, or ironSource enable scaling beyond your own app portfolio. They match your inventory with similar apps, tracking installs and optimizing placements automatically.',
+         'attribution_tracking': 'Track cross-promotion performance using install attribution, post-install engagement, and LTV comparison. Compare users acquired through cross-promo vs. other channels to measure true incremental value.',
+         'cannibalization_risk': 'Cross-promoting between your own apps risks cannibalizing active users. Mitigate by: targeting inactive users, promoting during natural session ends, limiting frequency caps, and measuring user-level cross-app LTV.',
+         'creative_optimization': 'Effective cross-promo creatives show gameplay/app value in 3 seconds, use similar visual style to the host app, include clear CTAs, and are regularly refreshed to combat banner blindness.',
+         'smart_targeting': 'Smart cross-promotion targets users based on behavior: users who completed levels, engaged heavily, or show signs of churn. Different user segments respond to different apps and messaging.'
+      };
+
+      const tutorialSteps = [
+         { title: 'Cross-Promotion Fundamentals', content: 'Cross-promotion promotes your apps within your own app portfolio or through partnerships. It\'s cost-effective acquisition that leverages existing audiences, bypassing paid advertising costs.', icon: 'cross_promo_types' },
+         { title: 'Partner Selection Strategy', content: 'Choosing the right cross-promo partners is critical. Look for apps with similar user demographics, non-competing functionality, and comparable quality. Complementary apps convert better than random partnerships.', icon: 'partner_selection' },
+         { title: 'Cross-Promotion Networks', content: 'Cross-promo networks connect your inventory with a marketplace of apps. They handle matching, attribution, and optimization, enabling you to scale beyond your own portfolio.', icon: 'promo_networks' },
+         { title: 'Attribution & Measurement', content: 'Proper attribution distinguishes cross-promo installs from organic. Track not just installs, but post-install engagement and LTV to understand the true value of cross-promo users.', icon: 'attribution_tracking' },
+         { title: 'Avoiding Cannibalization', content: 'Promoting your apps to active users risks pulling them away from high-engagement apps. Target dormant or churning users, and measure cross-app LTV to ensure net positive impact.', icon: 'cannibalization_risk' },
+         { title: 'Creative Best Practices', content: 'Cross-promo creatives must capture attention fast. Show the promoted app\'s core value proposition, match the host app\'s visual style, and refresh regularly to maintain effectiveness.', icon: 'creative_optimization' },
+         { title: 'Smart Targeting', content: 'Behavioral targeting improves cross-promo performance. Users who finished content, engaged deeply, or are about to churn are prime targets for relevant app recommendations.', icon: 'smart_targeting' }
+      ];
+
+      const scenarios = [
+         { title: 'Partner Selection Decision', situation: 'Your meditation app (1M MAU) is considering cross-promo partners. Which partnership offers the best strategic fit?', options: [
+            { text: 'A competing meditation app with 2M MAU', points: 5, feedback: 'Direct competitors risk confusing users and may drive them to alternatives. Cross-promo works best with complementary, non-competing apps.' },
+            { text: 'A sleep tracking app with 500K MAU and similar user demographics', points: 30, feedback: 'Perfect! Complementary functionality (meditation + sleep), aligned demographics, and non-competing positioning create ideal cross-promo synergy.' },
+            { text: 'A high-action mobile game with 5M MAU', points: 10, feedback: 'The audience mismatch is too significant. Mobile gamers and meditation app users have very different behavioral patterns and interests.' },
+            { text: 'A brand new journaling app from a friend\'s startup', points: 15, feedback: 'Complementary concept, but new apps lack the user base to provide reciprocal value. Cross-promo works best when both sides benefit.' }
+         ]},
+         { title: 'Cannibalization Prevention', situation: 'You have a portfolio of 5 successful apps. Analytics show cross-promo is driving installs but overall portfolio revenue is flat. What should you investigate?', options: [
+            { text: 'Increase cross-promo frequency to drive more installs', points: 5, feedback: 'More frequency without understanding the problem could accelerate cannibalization. Diagnose first, then optimize.' },
+            { text: 'Analyze whether cross-promo users maintain engagement in both apps or abandon the source app', points: 30, feedback: 'Exactly right! If users abandon the source app, you\'re just moving users around rather than growing. Measure cross-app LTV, not just installs.' },
+            { text: 'Stop all cross-promotion immediately', points: 10, feedback: 'Overcorrection. Cross-promo can be valuable when done right. The issue is likely targeting or implementation, not the strategy itself.' },
+            { text: 'Focus cross-promo only on your lowest-performing app', points: 15, feedback: 'This could help, but without understanding user behavior across apps, you might still cannibalize your successful apps.' }
+         ]},
+         { title: 'Targeting Strategy', situation: 'Your puzzle game has users across engagement levels. Which segment should you target with cross-promo for your new word game?', options: [
+            { text: 'Your most engaged daily players', points: 10, feedback: 'Risky target. These users are valuable where they are. Cross-promo might reduce their engagement in the puzzle game.' },
+            { text: 'Users who completed all levels and show declining engagement', points: 30, feedback: 'Optimal targeting! These users have exhausted content and are at risk of churning. A new game extends their lifecycle within your portfolio.' },
+            { text: 'Brand new users in their first week', points: 5, feedback: 'Too early. New users haven\'t established engagement patterns yet. Cross-promo might confuse or overwhelm them.' },
+            { text: 'All users equally with random targeting', points: 15, feedback: 'Inefficient. Different user segments have different propensities to convert. Smart targeting outperforms random targeting significantly.' }
+         ]},
+         { title: 'Network vs. Direct Partnership', situation: 'Your indie game studio has 3 apps totaling 500K MAU. A cross-promo network offers to include your apps. What\'s the key consideration?', options: [
+            { text: 'Join immediately—more exposure is always better', points: 10, feedback: 'Consider the trade-offs first. Networks take a cut and you lose control over which apps appear in your inventory.' },
+            { text: 'Evaluate the network\'s app quality standards and whether their partner apps align with your brand', points: 30, feedback: 'Smart approach. Network quality matters—low-quality ads can hurt user experience and your brand. Ensure partners match your standards.' },
+            { text: 'Reject networks entirely and only do direct partnerships', points: 15, feedback: 'Direct partnerships offer more control but limited scale. Networks can be valuable if they maintain quality standards and good fill rates.' },
+            { text: 'Join multiple networks to maximize coverage', points: 5, feedback: 'Multiple networks create inventory conflicts and can lead to waterfall issues. Better to find one quality network that fits your needs.' }
+         ]}
+      ];
+
+      const quizQuestions = [
+         { question: 'Why should cross-promotion target users who are about to churn rather than highly engaged users?', options: ['Churning users are easier to convert', 'Targeting engaged users risks cannibalizing them from high-value apps', 'Engaged users don\'t respond to ads', 'It\'s cheaper to target churning users'], correct: 1, explanation: 'Highly engaged users are valuable where they are. Moving them to another app might not increase portfolio value. Churning users would otherwise be lost, so cross-promo extends their lifecycle.' },
+         { question: 'Why do complementary apps make better cross-promo partners than similar apps?', options: ['They have more users', 'Users see added value without feeling they need to choose between competing solutions', 'Apple requires complementary partnerships', 'Similar apps are too expensive'], correct: 1, explanation: 'Complementary apps (fitness + nutrition) create win-win: users get expanded value, both apps benefit from shared audiences. Similar apps create substitution risk—users might switch rather than add.' },
+         { question: 'Why is measuring cross-app LTV more important than just tracking installs?', options: ['Installs are hard to track accurately', 'LTV reveals whether cross-promo grows portfolio value or just shuffles users between apps', 'Apple requires LTV reporting', 'LTV is easier to measure'], correct: 1, explanation: 'High install numbers mean nothing if users abandon the source app. Cross-app LTV measures total user value across your portfolio, revealing whether cross-promo creates net growth.' },
+         { question: 'Why should cross-promo creatives match the host app\'s visual style?', options: ['It\'s required by app store guidelines', 'It creates a seamless experience that feels like a native recommendation rather than an intrusive ad', 'Matching styles are cheaper to produce', 'Users can\'t tell the difference otherwise'], correct: 1, explanation: 'Native-feeling recommendations convert better than jarring ads. When cross-promo blends with the host app experience, users perceive it as a helpful suggestion rather than advertising.' },
+         { question: 'Why is it important to refresh cross-promo creatives regularly?', options: ['App stores require fresh creatives', 'Banner blindness reduces effectiveness as users see the same creative repeatedly', 'Old creatives use outdated technology', 'Fresh creatives are cheaper to run'], correct: 1, explanation: 'Users develop banner blindness to familiar ads, causing CTR to decline over time. Regular creative refreshes maintain visibility and engagement with your cross-promo placements.' }
+      ];
+
+      const handleScenarioAnswer = (points: number, feedback: string) => { if (answered) return; setScore(prev => prev + points); setAnswered(true); setGameLog(prev => [...prev, `Scenario ${scenarioIndex + 1}: Scored ${points}/30 - ${feedback}`]); };
+      const handleQuizAnswer = (index: number) => { if (quizAnswered) return; setSelectedAnswer(index); setQuizAnswered(true); if (index === quizQuestions[quizIndex].correct) { setQuizScore(prev => prev + 1); setGameLog(prev => [...prev, `Quiz ${quizIndex + 1}: Correct`]); } else { setGameLog(prev => [...prev, `Quiz ${quizIndex + 1}: Incorrect`]); } };
+      const nextScenario = () => { if (scenarioIndex < scenarios.length - 1) { setScenarioIndex(prev => prev + 1); setSelectedAnswer(null); setAnswered(false); } else { setQuizIndex(0); setQuizAnswered(false); setSelectedAnswer(null); } };
+      const nextQuiz = () => { if (quizIndex < quizQuestions.length - 1) { setQuizIndex(prev => prev + 1); setSelectedAnswer(null); setQuizAnswered(false); } else { setPhase('result'); } };
+
+      if (phase === 'intro') {
+         return (
+            <div className="p-6 bg-gradient-to-br from-emerald-50 to-green-100 rounded-xl shadow-lg max-w-2xl mx-auto">
+               <h2 className="text-2xl font-bold text-emerald-800 mb-4">Cross-Promotion Mastery</h2>
+               <p className="text-emerald-700 mb-4">Learn how to effectively cross-promote apps within your portfolio and through strategic partnerships to maximize user acquisition at minimal cost.</p>
+               <div className="bg-white/70 rounded-lg p-4 mb-4">
+                  <h3 className="font-semibold text-emerald-800 mb-2">Learning Objectives:</h3>
+                  <ul className="text-emerald-700 space-y-1 text-sm">
+                     <li>• Understand cross-promotion types and strategies</li>
+                     <li>• Select ideal partners for mutual benefit</li>
+                     <li>• Avoid cannibalization and measure true impact</li>
+                     <li>• Master targeting and creative optimization</li>
+                  </ul>
+               </div>
+               <button onClick={() => setPhase('tutorial')} className="w-full py-3 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 font-semibold">Start Learning</button>
+            </div>
+         );
+      }
+
+      if (phase === 'tutorial') {
+         const step = tutorialSteps[tutorialStep];
+         return (
+            <div className="p-6 bg-gradient-to-br from-emerald-50 to-green-100 rounded-xl shadow-lg max-w-2xl mx-auto">
+               <div className="flex justify-between items-center mb-4">
+                  <h2 className="text-xl font-bold text-emerald-800">Step {tutorialStep + 1} of {tutorialSteps.length}</h2>
+                  <span className="text-emerald-600 text-sm">{Math.round(((tutorialStep + 1) / tutorialSteps.length) * 100)}% Complete</span>
+               </div>
+               <div className="bg-white/80 rounded-lg p-5 mb-4">
+                  <div className="flex items-start gap-3 mb-3">
+                     <h3 className="font-semibold text-emerald-800 text-lg">{step.title}</h3>
+                     <button onClick={() => { setInfoTopic(step.icon); setShowInfo(true); }} className="text-emerald-500 hover:text-emerald-700">ℹ️</button>
+                  </div>
+                  <p className="text-emerald-700">{step.content}</p>
+               </div>
+               <div className="bg-green-100 rounded-lg p-3 mb-4">
+                  <p className="text-green-800 text-sm">💡 <strong>AI Coach:</strong> {tutorialStep === 0 ? 'Cross-promo is the most cost-effective UA channel when done right!' : tutorialStep === 4 ? 'Always measure cross-app LTV—installs alone can be misleading.' : 'Strategic partnerships beat random ad networks for quality users.'}</p>
+               </div>
+               <div className="flex gap-3">
+                  {tutorialStep > 0 && <button onClick={() => setTutorialStep(prev => prev - 1)} className="flex-1 py-2 border border-emerald-600 text-emerald-600 rounded-lg hover:bg-emerald-50">Previous</button>}
+                  <button onClick={() => tutorialStep < tutorialSteps.length - 1 ? setTutorialStep(prev => prev + 1) : setPhase('play')} className="flex-1 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700">{tutorialStep < tutorialSteps.length - 1 ? 'Next' : 'Start Practice'}</button>
+               </div>
+               {showInfo && (
+                  <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" onClick={() => setShowInfo(false)}>
+                     <div className="bg-white rounded-xl p-6 max-w-md m-4" onClick={e => e.stopPropagation()}>
+                        <h3 className="font-bold text-emerald-800 mb-2">{step.title}</h3>
+                        <p className="text-emerald-700 text-sm">{infoContent[infoTopic]}</p>
+                        <button onClick={() => setShowInfo(false)} className="mt-4 w-full py-2 bg-emerald-600 text-white rounded-lg">Close</button>
+                     </div>
+                  </div>
+               )}
+            </div>
+         );
+      }
+
+      if (phase === 'play') {
+         if (scenarioIndex < scenarios.length) {
+            const scenario = scenarios[scenarioIndex];
+            return (
+               <div className="p-6 bg-gradient-to-br from-emerald-50 to-green-100 rounded-xl shadow-lg max-w-2xl mx-auto">
+                  <div className="flex justify-between items-center mb-4">
+                     <h2 className="text-xl font-bold text-emerald-800">Scenario {scenarioIndex + 1} of {scenarios.length}</h2>
+                     <span className="text-emerald-600 font-semibold">Score: {score}</span>
+                  </div>
+                  <div className="bg-white/80 rounded-lg p-5 mb-4">
+                     <h3 className="font-semibold text-emerald-800 mb-2">{scenario.title}</h3>
+                     <p className="text-emerald-700 mb-4">{scenario.situation}</p>
+                     <div className="space-y-2">
+                        {scenario.options.map((option, i) => (
+                           <button key={i} onClick={() => { setSelectedAnswer(i); handleScenarioAnswer(option.points, option.feedback); }} disabled={answered} className={`w-full p-3 text-left rounded-lg border transition-all ${answered && selectedAnswer === i ? option.points >= 25 ? 'bg-green-100 border-green-500' : option.points >= 15 ? 'bg-yellow-100 border-yellow-500' : 'bg-red-100 border-red-500' : 'bg-white border-emerald-200 hover:border-emerald-400'} ${answered ? 'cursor-default' : 'cursor-pointer'}`}>
+                              <span className="text-emerald-800">{option.text}</span>
+                              {answered && selectedAnswer === i && <p className="text-sm mt-2 text-emerald-600">{option.feedback}</p>}
+                           </button>
+                        ))}
+                     </div>
+                  </div>
+                  {answered && <button onClick={nextScenario} className="w-full py-3 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700">{scenarioIndex < scenarios.length - 1 ? 'Next Scenario' : 'Continue to Quiz'}</button>}
+               </div>
+            );
+         }
+         const quiz = quizQuestions[quizIndex];
+         return (
+            <div className="p-6 bg-gradient-to-br from-emerald-50 to-green-100 rounded-xl shadow-lg max-w-2xl mx-auto">
+               <div className="flex justify-between items-center mb-4">
+                  <h2 className="text-xl font-bold text-emerald-800">Quiz {quizIndex + 1} of {quizQuestions.length}</h2>
+                  <span className="text-emerald-600 font-semibold">Quiz Score: {quizScore}/{quizIndex + (quizAnswered ? 1 : 0)}</span>
+               </div>
+               <div className="bg-white/80 rounded-lg p-5 mb-4">
+                  <p className="text-emerald-800 font-medium mb-4">{quiz.question}</p>
+                  <div className="space-y-2">
+                     {quiz.options.map((option, i) => (
+                        <button key={i} onClick={() => handleQuizAnswer(i)} disabled={quizAnswered} className={`w-full p-3 text-left rounded-lg border transition-all ${quizAnswered ? i === quiz.correct ? 'bg-green-100 border-green-500' : selectedAnswer === i ? 'bg-red-100 border-red-500' : 'bg-white border-emerald-200' : 'bg-white border-emerald-200 hover:border-emerald-400'}`}>{option}</button>
+                     ))}
+                  </div>
+                  {quizAnswered && <div className="mt-4 p-3 bg-green-50 rounded-lg"><p className="text-green-800 text-sm"><strong>Explanation:</strong> {quiz.explanation}</p></div>}
+               </div>
+               {quizAnswered && <button onClick={nextQuiz} className="w-full py-3 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700">{quizIndex < quizQuestions.length - 1 ? 'Next Question' : 'See Results'}</button>}
+            </div>
+         );
+      }
+
+      if (phase === 'result') {
+         const maxScore = scenarios.reduce((sum, s) => sum + Math.max(...s.options.map(o => o.points)), 0);
+         return (
+            <div className="p-6 bg-gradient-to-br from-emerald-50 to-green-100 rounded-xl shadow-lg max-w-2xl mx-auto">
+               <h2 className="text-2xl font-bold text-emerald-800 mb-4">Cross-Promotion Complete!</h2>
+               <div className="bg-white/80 rounded-lg p-5 mb-4">
+                  <div className="text-center mb-4">
+                     <p className="text-4xl font-bold text-emerald-600">{Math.round((score / maxScore) * 100)}%</p>
+                     <p className="text-emerald-700">Scenario Score: {score}/{maxScore}</p>
+                     <p className="text-emerald-700">Quiz Score: {quizScore}/{quizQuestions.length}</p>
+                  </div>
+                  <div className="border-t pt-4">
+                     <h3 className="font-semibold text-emerald-800 mb-2">Key Insights:</h3>
+                     <ul className="text-emerald-700 text-sm space-y-1">
+                        <li>• Choose complementary, non-competing partners</li>
+                        <li>• Target churning users to avoid cannibalization</li>
+                        <li>• Measure cross-app LTV, not just installs</li>
+                        <li>• Match creative style to host app experience</li>
+                        <li>• Refresh creatives to combat banner blindness</li>
+                     </ul>
+                  </div>
+               </div>
+               <button onClick={() => { setPhase('intro'); setScore(0); setScenarioIndex(0); setQuizIndex(0); setQuizScore(0); setAnswered(false); setQuizAnswered(false); setSelectedAnswer(null); setTutorialStep(0); setGameLog([]); }} className="w-full py-3 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700">Play Again</button>
+            </div>
+         );
+      }
+      return null;
+   };
+
    const FinancialStatementsRenderer = () => {
       const [phase, setPhase] = useState<'intro' | 'play' | 'result'>('intro');
       const [showInfo, setShowInfo] = useState(false);
@@ -57357,6 +57561,8 @@ const GeneratedDiagram: React.FC<DiagramProps> = ({ type, data, title }) => {
             return <InfluencerPartnershipsRenderer />;
          case 'app_store_features':
             return <AppStoreFeaturesRenderer />;
+         case 'cross_promotion':
+            return <CrossPromotionRenderer />;
          case 'pricing_strategy':
             return <PricingStrategyRenderer />;
          case 'budgeting':
