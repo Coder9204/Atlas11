@@ -49458,6 +49458,222 @@ const GeneratedDiagram: React.FC<DiagramProps> = ({ type, data, title }) => {
       return null;
    };
 
+   const CryptoAccountingRenderer = () => {
+      const [phase, setPhase] = useState<'intro' | 'tutorial' | 'play' | 'result'>('intro');
+      const [tutorialStep, setTutorialStep] = useState(0);
+      const [showInfo, setShowInfo] = useState(false);
+      const [infoKey, setInfoKey] = useState<string>('');
+      const [scenarioIndex, setScenarioIndex] = useState(0);
+      const [score, setScore] = useState(0);
+      const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
+      const [answered, setAnswered] = useState(false);
+      const [quizIndex, setQuizIndex] = useState(0);
+      const [quizScore, setQuizScore] = useState(0);
+      const [quizAnswered, setQuizAnswered] = useState(false);
+      const [gameLog, setGameLog] = useState<string[]>([]);
+
+      const infoContent: Record<string, { title: string; content: string }> = {
+         'cost_basis': { title: 'Cost Basis Methods', content: 'FIFO: First coins bought sold first. LIFO: Last coins sold first. Specific ID: Choose which coins to sell. HIFO: Highest cost first (minimizes gains).' },
+         'fair_value': { title: 'Fair Value Measurement', content: 'Crypto typically valued at fair value. Use principal market price. Impairment losses recognized immediately under old rules; FASB now allows fair value gains too.' },
+         'defi_yield': { title: 'DeFi Yield Accounting', content: 'Staking rewards: Income when received. Liquidity mining: Complex - may be income or cost basis adjustment. Airdrops: Income at FMV when dominion established.' },
+         'nft_accounting': { title: 'NFT Accounting', content: 'NFTs are intangible assets. Cost includes gas fees. Royalties on secondary sales recognized when received. Impairment testing required.' },
+         'wallet_tracking': { title: 'Wallet Tracking', content: 'Track across all wallets and exchanges. Each transfer needs documentation. Gas fees add to cost basis or are deductible expenses.' }
+      };
+
+      const tutorialSteps = [
+         { title: 'Welcome to Crypto Accounting', desc: 'Navigate the complex world of cryptocurrency taxation and financial reporting.' },
+         { title: 'Cost Basis Tracking', desc: 'Every purchase creates a tax lot. Track acquisition date, cost, and fees for each crypto unit.', icon: '📊' },
+         { title: 'Taxable Events', desc: 'Selling, trading, spending crypto triggers gains/losses. Transferring between your wallets does not.', icon: '💸' },
+         { title: 'DeFi Complexities', desc: 'Staking, yield farming, liquidity pools each have unique tax implications.', icon: '🔄' },
+         { title: 'Fair Value Reporting', desc: 'GAAP requires fair value measurement. New FASB rules allow recognizing both gains and losses.', icon: '📈' },
+         { title: 'Record Keeping', desc: 'Maintain detailed records of all transactions, wallets, and cost basis calculations.', icon: '📝' },
+         { title: 'Start Trading!', desc: 'Apply crypto accounting to real scenarios.', icon: '₿' }
+      ];
+
+      const scenarios = [
+         { title: 'Cost Basis Selection', situation: 'Bought 1 BTC at $20K (Jan), 1 BTC at $40K (Mar), 1 BTC at $30K (Jun). Selling 1 BTC now at $50K. Want to minimize taxes.', question: 'Which cost basis method minimizes gain?', options: ['FIFO - $30K gain', 'LIFO - $20K gain', 'HIFO - $10K gain', 'Average - $20K gain'], correct: 2, explanation: 'HIFO (Highest In, First Out) uses $40K cost basis, creating only $10K gain. Specific identification lets you choose which lot to sell. FIFO would use $20K basis = $30K gain.' },
+         { title: 'Staking Rewards Tax', situation: 'Staked 10 ETH, received 0.5 ETH in staking rewards over the year. ETH price was $2,000 when rewards received.', question: 'What is the tax treatment?', options: ['No tax until sold', '$1,000 ordinary income', '$1,000 capital gain', 'Depends on holding period'], correct: 1, explanation: 'Staking rewards are ordinary income when received, valued at FMV ($2,000 × 0.5 = $1,000). This becomes the cost basis. Future sale creates capital gain/loss from this basis.' },
+         { title: 'NFT Creator Taxes', situation: 'Artist mints NFT (gas: $100), sells for 2 ETH ($4,000). Later receives 0.2 ETH ($400) royalty on secondary sale.', question: 'Total taxable income?', options: ['$4,000', '$4,300', '$3,900 + $400 = $4,300', '$4,400'], correct: 2, explanation: 'Primary sale: $4,000 - $100 gas = $3,900 income (or self-employment income). Royalty: $400 ordinary income when received. Total: $4,300. Gas is cost of goods sold.' },
+         { title: 'Wrapped Token Swap', situation: 'Swap 1 ETH ($3,000 FMV, $1,000 basis) for 1 WETH. Later unwrap WETH back to ETH.', question: 'Tax treatment of wrapping/unwrapping?', options: ['Taxable - $2,000 gain on wrap', 'Non-taxable - like-kind exchange', 'IRS position unclear, conservative = taxable', 'Only taxable on unwrap'], correct: 2, explanation: 'IRS hasn\'t provided clear guidance. Conservative approach treats as taxable (like crypto-to-crypto trades). Some argue wrapping is non-taxable as economically equivalent. Document your position.' }
+      ];
+
+      const quizQuestions = [
+         { q: 'Transferring crypto between your own wallets is:', options: ['Taxable event', 'Non-taxable', 'Capital gain', 'Ordinary income'], correct: 1 },
+         { q: 'Crypto staking rewards are taxed as:', options: ['Capital gains', 'Ordinary income', 'Not taxable', 'Depends on amount'], correct: 1 },
+         { q: 'HIFO method stands for:', options: ['High Income First Out', 'Highest In First Out', 'Historic Investment First Out', 'Holding Index First Out'], correct: 1 },
+         { q: 'Gas fees paid to buy crypto:', options: ['Are lost', 'Add to cost basis', 'Are immediately deductible', 'Reduce sale price'], correct: 1 },
+         { q: 'New FASB crypto rules allow:', options: ['Only impairment losses', 'Fair value gains and losses', 'No mark-to-market', 'Cost basis only'], correct: 1 }
+      ];
+
+      if (phase === 'intro') {
+         return (<div className="space-y-6"><div className="text-center"><div className="text-6xl mb-4">₿</div><h2 className="text-2xl font-bold text-orange-800">Crypto Accounting</h2><p className="text-gray-600 mt-2">Cryptocurrency taxation and reporting</p></div><div className="bg-orange-50 p-4 rounded-xl"><h3 className="font-semibold text-orange-700 mb-2">You'll Master:</h3><ul className="space-y-1 text-sm text-gray-600"><li>• Cost basis tracking methods</li><li>• Taxable vs non-taxable events</li><li>• DeFi and staking taxes</li><li>• NFT accounting</li></ul></div><button onClick={() => setPhase('tutorial')} className="w-full py-3 bg-orange-600 text-white rounded-xl font-semibold hover:bg-orange-700">Start Learning →</button></div>);
+      }
+
+      if (phase === 'tutorial') {
+         const step = tutorialSteps[tutorialStep];
+         return (<div className="space-y-6"><div className="flex justify-between text-sm text-gray-500 mb-2"><span>Tutorial</span><span>{tutorialStep + 1}/{tutorialSteps.length}</span></div><div className="w-full bg-gray-200 h-2 rounded-full"><div className="bg-orange-600 h-2 rounded-full transition-all" style={{ width: `${((tutorialStep + 1) / tutorialSteps.length) * 100}%` }} /></div><div className="text-center py-8"><div className="text-5xl mb-4">{step.icon || '₿'}</div><h3 className="text-xl font-bold text-orange-800">{step.title}</h3><p className="text-gray-600 mt-3">{step.desc}</p></div><div className="flex gap-3">{tutorialStep > 0 && (<button onClick={() => setTutorialStep(tutorialStep - 1)} className="flex-1 py-3 bg-gray-200 rounded-xl font-semibold">← Back</button>)}<button onClick={() => { if (tutorialStep < tutorialSteps.length - 1) setTutorialStep(tutorialStep + 1); else { setPhase('play'); setGameLog(['Crypto accounting started']); } }} className="flex-1 py-3 bg-orange-600 text-white rounded-xl font-semibold">{tutorialStep < tutorialSteps.length - 1 ? 'Next →' : 'Start →'}</button></div></div>);
+      }
+
+      if (phase === 'play') {
+         const sc = scenarios[scenarioIndex];
+         return (<div className="space-y-4"><div className="flex justify-between items-center"><span className="text-sm font-medium text-orange-600">Scenario {scenarioIndex + 1}/{scenarios.length}</span><span className="text-sm">Score: {score}/{scenarioIndex}</span></div><div className="bg-orange-100 p-4 rounded-xl"><div className="flex justify-between items-start"><h3 className="font-bold text-orange-800">{sc.title}</h3><button onClick={() => { setInfoKey('cost_basis'); setShowInfo(true); }} className="text-orange-500">ℹ️</button></div><p className="text-sm text-gray-700 mt-2">{sc.situation}</p></div><div className="bg-amber-50 p-3 rounded-lg"><p className="font-medium text-amber-900">{sc.question}</p></div><div className="space-y-2">{sc.options.map((opt, i) => (<button key={i} onClick={() => { if (!answered) { setSelectedAnswer(i); setAnswered(true); if (i === sc.correct) { setScore(score + 1); setGameLog([...gameLog, `Correct: ${sc.title}`]); } } }} disabled={answered} className={`w-full p-3 rounded-lg text-left text-sm border-2 ${answered ? (i === sc.correct ? 'border-green-500 bg-green-50' : i === selectedAnswer ? 'border-red-400 bg-red-50' : 'border-gray-200') : 'border-gray-200 hover:border-orange-400'}`}>{opt}</button>))}</div>{answered && (<div className="bg-orange-50 p-4 rounded-xl"><p className="text-sm text-orange-800"><strong>Analysis:</strong> {sc.explanation}</p></div>)}{answered && (<button onClick={() => { if (scenarioIndex < scenarios.length - 1) { setScenarioIndex(scenarioIndex + 1); setSelectedAnswer(null); setAnswered(false); } else setPhase('result'); }} className="w-full py-3 bg-orange-600 text-white rounded-xl font-semibold">{scenarioIndex < scenarios.length - 1 ? 'Next →' : 'Quiz →'}</button>)}{showInfo && (<div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"><div className="bg-white rounded-2xl p-6 max-w-sm w-full"><h3 className="font-bold text-lg text-orange-800">{infoContent[infoKey]?.title}</h3><p className="text-gray-600 mt-2 text-sm">{infoContent[infoKey]?.content}</p><button onClick={() => setShowInfo(false)} className="mt-4 w-full py-2 bg-orange-600 text-white rounded-xl">Close</button></div></div>)}</div>);
+      }
+
+      if (phase === 'result') {
+         if (quizIndex < quizQuestions.length) {
+            const q = quizQuestions[quizIndex];
+            return (<div className="space-y-6"><div className="text-center"><h3 className="text-xl font-bold text-orange-800">Crypto Tax Quiz</h3><p className="text-sm text-gray-500">Question {quizIndex + 1}/{quizQuestions.length}</p></div><div className="bg-orange-50 p-4 rounded-xl"><p className="font-medium">{q.q}</p></div><div className="space-y-2">{q.options.map((opt, i) => (<button key={i} onClick={() => { if (!quizAnswered) { setQuizAnswered(true); if (i === q.correct) setQuizScore(quizScore + 1); } }} disabled={quizAnswered} className={`w-full p-3 rounded-lg text-left border-2 ${quizAnswered ? (i === q.correct ? 'border-green-500 bg-green-50' : 'border-gray-200') : 'border-gray-200 hover:border-orange-400'}`}>{opt}</button>))}</div>{quizAnswered && (<button onClick={() => { setQuizIndex(quizIndex + 1); setQuizAnswered(false); }} className="w-full py-3 bg-orange-600 text-white rounded-xl font-semibold">Next →</button>)}</div>);
+         }
+         const pct = Math.round(((score + quizScore) / (scenarios.length + quizQuestions.length)) * 100);
+         return (<div className="space-y-6"><div className="text-center"><div className="text-6xl mb-4">{pct >= 80 ? '🏆' : '₿'}</div><h2 className="text-2xl font-bold text-orange-800">Crypto Accounting Complete!</h2></div><div className="bg-orange-50 p-6 rounded-xl text-center"><div className="text-4xl font-bold text-orange-700">{pct}%</div><div className="text-sm text-gray-600">Crypto Mastery</div></div><button onClick={() => { setPhase('intro'); setScore(0); setScenarioIndex(0); setSelectedAnswer(null); setAnswered(false); setQuizIndex(0); setQuizAnswered(false); setQuizScore(0); }} className="w-full py-3 bg-orange-600 text-white rounded-xl font-semibold">Practice Again</button></div>);
+      }
+      return null;
+   };
+
+   const TaxCreditsRenderer = () => {
+      const [phase, setPhase] = useState<'intro' | 'tutorial' | 'play' | 'result'>('intro');
+      const [tutorialStep, setTutorialStep] = useState(0);
+      const [showInfo, setShowInfo] = useState(false);
+      const [infoKey, setInfoKey] = useState<string>('');
+      const [scenarioIndex, setScenarioIndex] = useState(0);
+      const [score, setScore] = useState(0);
+      const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
+      const [answered, setAnswered] = useState(false);
+      const [quizIndex, setQuizIndex] = useState(0);
+      const [quizScore, setQuizScore] = useState(0);
+      const [quizAnswered, setQuizAnswered] = useState(false);
+      const [gameLog, setGameLog] = useState<string[]>([]);
+
+      const infoContent: Record<string, { title: string; content: string }> = {
+         'rd_credit': { title: 'R&D Tax Credit', content: 'Credit for qualified research expenses. 20% of expenses over base amount, or 14% simplified method. Can offset payroll taxes for startups.' },
+         'work_opportunity': { title: 'Work Opportunity Credit', content: 'Credit for hiring from targeted groups (veterans, ex-felons, SNAP recipients). Up to $9,600 per qualified employee.' },
+         'investment_credits': { title: 'Investment Tax Credits', content: 'Credits for specific investments: solar (30% ITC), historic rehabilitation (20%), low-income housing, energy efficiency.' },
+         'refundable_vs_non': { title: 'Refundable vs Non-Refundable', content: 'Refundable: Get cash even with no tax liability. Non-refundable: Only reduces tax to zero. Carryforward rules vary.' },
+         'state_credits': { title: 'State Tax Credits', content: 'States offer additional credits: job creation, film production, enterprise zones, angel investment. Stack with federal credits.' }
+      };
+
+      const tutorialSteps = [
+         { title: 'Welcome to Tax Credits', desc: 'Learn to identify and maximize valuable tax credits for businesses.' },
+         { title: 'Credits vs Deductions', desc: 'Credits reduce tax dollar-for-dollar. Deductions only reduce taxable income. $1 credit = $1 savings!', icon: '💵' },
+         { title: 'R&D Tax Credit', desc: 'One of the most valuable credits. Covers wages, supplies, and contractor costs for qualified research.', icon: '🔬' },
+         { title: 'Employment Credits', desc: 'Work Opportunity, Employee Retention, and other credits reward hiring and retention.', icon: '👥' },
+         { title: 'Investment Credits', desc: 'Solar, historic rehabilitation, and energy credits incentivize specific investments.', icon: '🏗️' },
+         { title: 'Credit Optimization', desc: 'Stack federal and state credits. Understand carryback/carryforward rules.', icon: '📊' },
+         { title: 'Start Claiming!', desc: 'Apply tax credit strategies to maximize savings.', icon: '✅' }
+      ];
+
+      const scenarios = [
+         { title: 'R&D Credit Qualification', situation: 'Software company spent: $200K developer salaries (new features), $50K bug fixes, $30K cloud hosting for dev, $20K third-party API licenses.', question: 'Which expenses qualify for R&D credit?', options: ['All $300K', '$200K salaries only', '$200K salaries + $30K cloud', '$250K (salaries + cloud + some fixes)'], correct: 2, explanation: 'Developer salaries for new features qualify. Cloud hosting for development qualifies. Bug fixes generally don\'t (not technological uncertainty). API licenses are supplies but may not qualify if not consumed in research.' },
+         { title: 'Startup R&D Election', situation: 'Pre-revenue startup with $100K R&D credit but $0 income tax liability. Has $500K in payroll taxes annually.', question: 'How can they use the credit?', options: ['Carry forward only', 'Offset up to $250K payroll tax', 'Get cash refund', 'Credit is lost'], correct: 1, explanation: 'Qualified small businesses (< $5M revenue, < 5 years) can elect to apply R&D credit against payroll taxes. Up to $250K per year for up to 5 years. Huge benefit for startups!' },
+         { title: 'Work Opportunity Credit', situation: 'Restaurant hires: 2 veterans (worked 500+ hours each), 1 SNAP recipient (worked 300 hours), 1 ex-felon (worked 150 hours).', question: 'Maximum WOTC credit available?', options: ['$4,800', '$9,600', '$14,400', '$19,200'], correct: 2, explanation: 'Veterans 500+ hrs: $2,400 each = $4,800. SNAP 300 hrs: partial credit ~$1,500. Ex-felon 150 hrs: below 120-hr minimum = $0. But max for disabled vets can be $9,600. Approx $14,400 total depending on wages.' },
+         { title: 'Solar Investment Credit', situation: 'Company installs $1M solar system in 2024. Also received $200K state rebate. Placed in service December 2024.', question: 'What is the federal ITC?', options: ['$300K (30% of $1M)', '$240K (30% of net cost)', '$200K (20% rate)', '$260K (30% of $1M less half rebate)'], correct: 1, explanation: 'ITC basis must be reduced by government grants/rebates. $1M - $200K = $800K eligible basis. 30% × $800K = $240K credit. Timing matters - placed in service in 2024 gets 30% rate.' }
+      ];
+
+      const quizQuestions = [
+         { q: 'Tax credits differ from deductions because credits:', options: ['Reduce taxable income', 'Reduce tax dollar-for-dollar', 'Are always refundable', 'Only apply to corporations'], correct: 1 },
+         { q: 'Startups can apply R&D credits against:', options: ['Income tax only', 'Payroll taxes', 'Sales tax', 'Property tax'], correct: 1 },
+         { q: 'Work Opportunity Credit requires minimum hours of:', options: ['40 hours', '120 hours', '400 hours', '1,000 hours'], correct: 1 },
+         { q: 'The current solar ITC rate is:', options: ['10%', '20%', '26%', '30%'], correct: 3 },
+         { q: 'Non-refundable credits can:', options: ['Generate cash refund', 'Only reduce tax to zero', 'Be sold to others', 'Never carry forward'], correct: 1 }
+      ];
+
+      if (phase === 'intro') {
+         return (<div className="space-y-6"><div className="text-center"><div className="text-6xl mb-4">💰</div><h2 className="text-2xl font-bold text-emerald-800">Tax Credits</h2><p className="text-gray-600 mt-2">Maximize valuable business tax credits</p></div><div className="bg-emerald-50 p-4 rounded-xl"><h3 className="font-semibold text-emerald-700 mb-2">You'll Master:</h3><ul className="space-y-1 text-sm text-gray-600"><li>• R&D tax credit strategies</li><li>• Employment-based credits</li><li>• Investment tax credits</li><li>• Credit optimization</li></ul></div><button onClick={() => setPhase('tutorial')} className="w-full py-3 bg-emerald-600 text-white rounded-xl font-semibold hover:bg-emerald-700">Start Learning →</button></div>);
+      }
+
+      if (phase === 'tutorial') {
+         const step = tutorialSteps[tutorialStep];
+         return (<div className="space-y-6"><div className="flex justify-between text-sm text-gray-500 mb-2"><span>Tutorial</span><span>{tutorialStep + 1}/{tutorialSteps.length}</span></div><div className="w-full bg-gray-200 h-2 rounded-full"><div className="bg-emerald-600 h-2 rounded-full transition-all" style={{ width: `${((tutorialStep + 1) / tutorialSteps.length) * 100}%` }} /></div><div className="text-center py-8"><div className="text-5xl mb-4">{step.icon || '💰'}</div><h3 className="text-xl font-bold text-emerald-800">{step.title}</h3><p className="text-gray-600 mt-3">{step.desc}</p></div><div className="flex gap-3">{tutorialStep > 0 && (<button onClick={() => setTutorialStep(tutorialStep - 1)} className="flex-1 py-3 bg-gray-200 rounded-xl font-semibold">← Back</button>)}<button onClick={() => { if (tutorialStep < tutorialSteps.length - 1) setTutorialStep(tutorialStep + 1); else { setPhase('play'); setGameLog(['Tax credit analysis started']); } }} className="flex-1 py-3 bg-emerald-600 text-white rounded-xl font-semibold">{tutorialStep < tutorialSteps.length - 1 ? 'Next →' : 'Start →'}</button></div></div>);
+      }
+
+      if (phase === 'play') {
+         const sc = scenarios[scenarioIndex];
+         return (<div className="space-y-4"><div className="flex justify-between items-center"><span className="text-sm font-medium text-emerald-600">Scenario {scenarioIndex + 1}/{scenarios.length}</span><span className="text-sm">Score: {score}/{scenarioIndex}</span></div><div className="bg-emerald-100 p-4 rounded-xl"><div className="flex justify-between items-start"><h3 className="font-bold text-emerald-800">{sc.title}</h3><button onClick={() => { setInfoKey('rd_credit'); setShowInfo(true); }} className="text-emerald-500">ℹ️</button></div><p className="text-sm text-gray-700 mt-2">{sc.situation}</p></div><div className="bg-amber-50 p-3 rounded-lg"><p className="font-medium text-amber-900">{sc.question}</p></div><div className="space-y-2">{sc.options.map((opt, i) => (<button key={i} onClick={() => { if (!answered) { setSelectedAnswer(i); setAnswered(true); if (i === sc.correct) { setScore(score + 1); setGameLog([...gameLog, `Correct: ${sc.title}`]); } } }} disabled={answered} className={`w-full p-3 rounded-lg text-left text-sm border-2 ${answered ? (i === sc.correct ? 'border-green-500 bg-green-50' : i === selectedAnswer ? 'border-red-400 bg-red-50' : 'border-gray-200') : 'border-gray-200 hover:border-emerald-400'}`}>{opt}</button>))}</div>{answered && (<div className="bg-emerald-50 p-4 rounded-xl"><p className="text-sm text-emerald-800"><strong>Analysis:</strong> {sc.explanation}</p></div>)}{answered && (<button onClick={() => { if (scenarioIndex < scenarios.length - 1) { setScenarioIndex(scenarioIndex + 1); setSelectedAnswer(null); setAnswered(false); } else setPhase('result'); }} className="w-full py-3 bg-emerald-600 text-white rounded-xl font-semibold">{scenarioIndex < scenarios.length - 1 ? 'Next →' : 'Quiz →'}</button>)}{showInfo && (<div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"><div className="bg-white rounded-2xl p-6 max-w-sm w-full"><h3 className="font-bold text-lg text-emerald-800">{infoContent[infoKey]?.title}</h3><p className="text-gray-600 mt-2 text-sm">{infoContent[infoKey]?.content}</p><button onClick={() => setShowInfo(false)} className="mt-4 w-full py-2 bg-emerald-600 text-white rounded-xl">Close</button></div></div>)}</div>);
+      }
+
+      if (phase === 'result') {
+         if (quizIndex < quizQuestions.length) {
+            const q = quizQuestions[quizIndex];
+            return (<div className="space-y-6"><div className="text-center"><h3 className="text-xl font-bold text-emerald-800">Tax Credit Quiz</h3><p className="text-sm text-gray-500">Question {quizIndex + 1}/{quizQuestions.length}</p></div><div className="bg-emerald-50 p-4 rounded-xl"><p className="font-medium">{q.q}</p></div><div className="space-y-2">{q.options.map((opt, i) => (<button key={i} onClick={() => { if (!quizAnswered) { setQuizAnswered(true); if (i === q.correct) setQuizScore(quizScore + 1); } }} disabled={quizAnswered} className={`w-full p-3 rounded-lg text-left border-2 ${quizAnswered ? (i === q.correct ? 'border-green-500 bg-green-50' : 'border-gray-200') : 'border-gray-200 hover:border-emerald-400'}`}>{opt}</button>))}</div>{quizAnswered && (<button onClick={() => { setQuizIndex(quizIndex + 1); setQuizAnswered(false); }} className="w-full py-3 bg-emerald-600 text-white rounded-xl font-semibold">Next →</button>)}</div>);
+         }
+         const pct = Math.round(((score + quizScore) / (scenarios.length + quizQuestions.length)) * 100);
+         return (<div className="space-y-6"><div className="text-center"><div className="text-6xl mb-4">{pct >= 80 ? '🏆' : '💰'}</div><h2 className="text-2xl font-bold text-emerald-800">Tax Credits Complete!</h2></div><div className="bg-emerald-50 p-6 rounded-xl text-center"><div className="text-4xl font-bold text-emerald-700">{pct}%</div><div className="text-sm text-gray-600">Tax Credit Mastery</div></div><button onClick={() => { setPhase('intro'); setScore(0); setScenarioIndex(0); setSelectedAnswer(null); setAnswered(false); setQuizIndex(0); setQuizAnswered(false); setQuizScore(0); }} className="w-full py-3 bg-emerald-600 text-white rounded-xl font-semibold">Practice Again</button></div>);
+      }
+      return null;
+   };
+
+   const FractionalCfoRenderer = () => {
+      const [phase, setPhase] = useState<'intro' | 'tutorial' | 'play' | 'result'>('intro');
+      const [tutorialStep, setTutorialStep] = useState(0);
+      const [showInfo, setShowInfo] = useState(false);
+      const [infoKey, setInfoKey] = useState<string>('');
+      const [scenarioIndex, setScenarioIndex] = useState(0);
+      const [score, setScore] = useState(0);
+      const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
+      const [answered, setAnswered] = useState(false);
+      const [quizIndex, setQuizIndex] = useState(0);
+      const [quizScore, setQuizScore] = useState(0);
+      const [quizAnswered, setQuizAnswered] = useState(false);
+      const [gameLog, setGameLog] = useState<string[]>([]);
+
+      const infoContent: Record<string, { title: string; content: string }> = {
+         'fractional_model': { title: 'Fractional CFO Model', content: 'Part-time CFO services for companies that need strategic finance but can\'t justify full-time cost. Typically 10-20 hours/month.' },
+         'cash_runway': { title: 'Cash Runway', content: 'Months of operation remaining at current burn rate. Runway = Cash Balance ÷ Monthly Burn. Critical metric for startups.' },
+         'board_reporting': { title: 'Board Reporting', content: 'Monthly/quarterly financial packages for board. Include: P&L vs budget, cash position, KPIs, risks, and forward guidance.' },
+         'fundraising': { title: 'Fundraising Support', content: 'Prepare data room, financial model, cap table. Support due diligence, negotiate terms, coordinate legal/accounting.' },
+         'financial_systems': { title: 'Financial Systems', content: 'Implement accounting software, reporting dashboards, budgeting tools. Build scalable processes for growth.' }
+      };
+
+      const tutorialSteps = [
+         { title: 'Welcome to Fractional CFO', desc: 'Learn to provide strategic finance leadership to growing companies.' },
+         { title: 'The Fractional Model', desc: 'Provide CFO-level expertise part-time. Perfect for $1-20M revenue companies.', icon: '👔' },
+         { title: 'Cash Management', desc: 'Monitor runway, forecast cash needs, optimize working capital. Survival first.', icon: '💵' },
+         { title: 'Strategic Planning', desc: 'Build financial models, set KPIs, guide pricing and growth strategy.', icon: '📊' },
+         { title: 'Board & Investor Relations', desc: 'Prepare board packages, support fundraising, manage investor communications.', icon: '🤝' },
+         { title: 'Systems & Processes', desc: 'Implement scalable financial infrastructure, controls, and reporting.', icon: '⚙️' },
+         { title: 'Start Advising!', desc: 'Apply fractional CFO skills to real client scenarios.', icon: '🎯' }
+      ];
+
+      const scenarios = [
+         { title: 'Runway Crisis', situation: 'SaaS startup: $500K cash, $100K monthly burn, 8 months from profitability. Fundraising will take 4-6 months. Current runway: 5 months.', question: 'What is your immediate priority?', options: ['Start fundraising immediately', 'Cut burn to extend runway to 8+ months', 'Both - cut costs AND start fundraising', 'Focus on growth to hit profitability faster'], correct: 2, explanation: 'Need runway cushion for fundraising timeline. Cut burn to 8+ months immediately AND start fundraising. Can\'t rely on hitting profitability - too risky. Growth focus without runway is a death spiral.' },
+         { title: 'Board Package Essentials', situation: 'First board meeting with new investors. CEO asks what to include in financial package.', question: 'What are the essential components?', options: ['Just P&L and balance sheet', 'P&L vs budget, cash forecast, KPIs, risks', 'Detailed transaction list', 'Only forward projections'], correct: 1, explanation: 'Board needs: actual vs budget variance analysis (P&L), cash position and forecast, key metrics/KPIs trending, risk register, and forward guidance. Historical detail less important than trends and outlook.' },
+         { title: 'Pricing Strategy Review', situation: 'Client sells SaaS at $99/month. CAC is $800, LTV is $1,200 (12-month average lifetime). Gross margin 80%.', question: 'What is your pricing recommendation?', options: ['Price is fine - 1.5x LTV/CAC', 'Raise prices - LTV/CAC too low', 'Lower prices for volume', 'Focus on reducing CAC first'], correct: 1, explanation: 'LTV/CAC of 1.5x is below 3x target. With 80% margin, price increase flows to profit. Raising to $129 would boost LTV to ~$1,550. Also work on retention to extend lifetime. CAC reduction helps but pricing has immediate impact.' },
+         { title: 'Due Diligence Prep', situation: 'Series A investor sends due diligence request list. Client has messy books, no data room, contracts scattered.', question: 'How do you prioritize the 2-week deadline?', options: ['Clean up all historical books first', 'Build data room with available docs, flag gaps', 'Ask for extension', 'Have client handle it directly'], correct: 1, explanation: 'Time is critical in fundraising. Build data room with what\'s available, clearly flag gaps and remediation timeline. Investors expect some messiness in early stage. Delays kill deals. Clean up in parallel, don\'t block.' }
+      ];
+
+      const quizQuestions = [
+         { q: 'Fractional CFO typically works:', options: ['Full-time', '10-20 hours/month', 'Only during fundraising', 'Hourly as needed'], correct: 1 },
+         { q: 'Target LTV/CAC ratio for SaaS is:', options: ['1:1', '2:1', '3:1 or higher', '5:1 minimum'], correct: 2 },
+         { q: 'Cash runway calculation is:', options: ['Revenue ÷ Expenses', 'Cash ÷ Monthly Burn', 'Assets ÷ Liabilities', 'Profit × 12'], correct: 1 },
+         { q: 'Board packages should emphasize:', options: ['Transaction details', 'Variance analysis and trends', 'Tax planning', 'Employee data'], correct: 1 },
+         { q: 'First priority in cash crisis:', options: ['Raise prices', 'Cut costs to extend runway', 'Hire more sales', 'Wait and see'], correct: 1 }
+      ];
+
+      if (phase === 'intro') {
+         return (<div className="space-y-6"><div className="text-center"><div className="text-6xl mb-4">👔</div><h2 className="text-2xl font-bold text-indigo-800">Fractional CFO</h2><p className="text-gray-600 mt-2">Strategic finance leadership for growing companies</p></div><div className="bg-indigo-50 p-4 rounded-xl"><h3 className="font-semibold text-indigo-700 mb-2">You'll Master:</h3><ul className="space-y-1 text-sm text-gray-600"><li>• Cash runway management</li><li>• Board and investor relations</li><li>• Strategic financial planning</li><li>• Fundraising support</li></ul></div><button onClick={() => setPhase('tutorial')} className="w-full py-3 bg-indigo-600 text-white rounded-xl font-semibold hover:bg-indigo-700">Start Learning →</button></div>);
+      }
+
+      if (phase === 'tutorial') {
+         const step = tutorialSteps[tutorialStep];
+         return (<div className="space-y-6"><div className="flex justify-between text-sm text-gray-500 mb-2"><span>Tutorial</span><span>{tutorialStep + 1}/{tutorialSteps.length}</span></div><div className="w-full bg-gray-200 h-2 rounded-full"><div className="bg-indigo-600 h-2 rounded-full transition-all" style={{ width: `${((tutorialStep + 1) / tutorialSteps.length) * 100}%` }} /></div><div className="text-center py-8"><div className="text-5xl mb-4">{step.icon || '👔'}</div><h3 className="text-xl font-bold text-indigo-800">{step.title}</h3><p className="text-gray-600 mt-3">{step.desc}</p></div><div className="flex gap-3">{tutorialStep > 0 && (<button onClick={() => setTutorialStep(tutorialStep - 1)} className="flex-1 py-3 bg-gray-200 rounded-xl font-semibold">← Back</button>)}<button onClick={() => { if (tutorialStep < tutorialSteps.length - 1) setTutorialStep(tutorialStep + 1); else { setPhase('play'); setGameLog(['CFO engagement started']); } }} className="flex-1 py-3 bg-indigo-600 text-white rounded-xl font-semibold">{tutorialStep < tutorialSteps.length - 1 ? 'Next →' : 'Start →'}</button></div></div>);
+      }
+
+      if (phase === 'play') {
+         const sc = scenarios[scenarioIndex];
+         return (<div className="space-y-4"><div className="flex justify-between items-center"><span className="text-sm font-medium text-indigo-600">Client {scenarioIndex + 1}/{scenarios.length}</span><span className="text-sm">Score: {score}/{scenarioIndex}</span></div><div className="bg-indigo-100 p-4 rounded-xl"><div className="flex justify-between items-start"><h3 className="font-bold text-indigo-800">{sc.title}</h3><button onClick={() => { setInfoKey('cash_runway'); setShowInfo(true); }} className="text-indigo-500">ℹ️</button></div><p className="text-sm text-gray-700 mt-2">{sc.situation}</p></div><div className="bg-amber-50 p-3 rounded-lg"><p className="font-medium text-amber-900">{sc.question}</p></div><div className="space-y-2">{sc.options.map((opt, i) => (<button key={i} onClick={() => { if (!answered) { setSelectedAnswer(i); setAnswered(true); if (i === sc.correct) { setScore(score + 1); setGameLog([...gameLog, `Advised: ${sc.title}`]); } } }} disabled={answered} className={`w-full p-3 rounded-lg text-left text-sm border-2 ${answered ? (i === sc.correct ? 'border-green-500 bg-green-50' : i === selectedAnswer ? 'border-red-400 bg-red-50' : 'border-gray-200') : 'border-gray-200 hover:border-indigo-400'}`}>{opt}</button>))}</div>{answered && (<div className="bg-indigo-50 p-4 rounded-xl"><p className="text-sm text-indigo-800"><strong>Strategic Insight:</strong> {sc.explanation}</p></div>)}{answered && (<button onClick={() => { if (scenarioIndex < scenarios.length - 1) { setScenarioIndex(scenarioIndex + 1); setSelectedAnswer(null); setAnswered(false); } else setPhase('result'); }} className="w-full py-3 bg-indigo-600 text-white rounded-xl font-semibold">{scenarioIndex < scenarios.length - 1 ? 'Next Client →' : 'Final Assessment →'}</button>)}{showInfo && (<div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"><div className="bg-white rounded-2xl p-6 max-w-sm w-full"><h3 className="font-bold text-lg text-indigo-800">{infoContent[infoKey]?.title}</h3><p className="text-gray-600 mt-2 text-sm">{infoContent[infoKey]?.content}</p><button onClick={() => setShowInfo(false)} className="mt-4 w-full py-2 bg-indigo-600 text-white rounded-xl">Close</button></div></div>)}</div>);
+      }
+
+      if (phase === 'result') {
+         if (quizIndex < quizQuestions.length) {
+            const q = quizQuestions[quizIndex];
+            return (<div className="space-y-6"><div className="text-center"><h3 className="text-xl font-bold text-indigo-800">CFO Assessment</h3><p className="text-sm text-gray-500">Question {quizIndex + 1}/{quizQuestions.length}</p></div><div className="bg-indigo-50 p-4 rounded-xl"><p className="font-medium">{q.q}</p></div><div className="space-y-2">{q.options.map((opt, i) => (<button key={i} onClick={() => { if (!quizAnswered) { setQuizAnswered(true); if (i === q.correct) setQuizScore(quizScore + 1); } }} disabled={quizAnswered} className={`w-full p-3 rounded-lg text-left border-2 ${quizAnswered ? (i === q.correct ? 'border-green-500 bg-green-50' : 'border-gray-200') : 'border-gray-200 hover:border-indigo-400'}`}>{opt}</button>))}</div>{quizAnswered && (<button onClick={() => { setQuizIndex(quizIndex + 1); setQuizAnswered(false); }} className="w-full py-3 bg-indigo-600 text-white rounded-xl font-semibold">Next →</button>)}</div>);
+         }
+         const pct = Math.round(((score + quizScore) / (scenarios.length + quizQuestions.length)) * 100);
+         return (<div className="space-y-6"><div className="text-center"><div className="text-6xl mb-4">{pct >= 80 ? '🎯' : '👔'}</div><h2 className="text-2xl font-bold text-indigo-800">Fractional CFO Complete!</h2></div><div className="bg-indigo-50 p-6 rounded-xl text-center"><div className="text-4xl font-bold text-indigo-700">{pct}%</div><div className="text-sm text-gray-600">CFO Mastery</div></div><button onClick={() => { setPhase('intro'); setScore(0); setScenarioIndex(0); setSelectedAnswer(null); setAnswered(false); setQuizIndex(0); setQuizAnswered(false); setQuizScore(0); }} className="w-full py-3 bg-indigo-600 text-white rounded-xl font-semibold">Practice Again</button></div>);
+      }
+      return null;
+   };
+
    const FinancialStatementsRenderer = () => {
       const [phase, setPhase] = useState<'intro' | 'play' | 'result'>('intro');
       const [showInfo, setShowInfo] = useState(false);
@@ -53353,6 +53569,12 @@ const GeneratedDiagram: React.FC<DiagramProps> = ({ type, data, title }) => {
             return <FinancialStatementAuditingRenderer />;
          case 'esg_reporting':
             return <EsgReportingRenderer />;
+         case 'crypto_accounting':
+            return <CryptoAccountingRenderer />;
+         case 'tax_credits':
+            return <TaxCreditsRenderer />;
+         case 'fractional_cfo':
+            return <FractionalCfoRenderer />;
          case 'pricing_strategy':
             return <PricingStrategyRenderer />;
          case 'budgeting':
