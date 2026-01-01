@@ -48507,6 +48507,242 @@ const GeneratedDiagram: React.FC<DiagramProps> = ({ type, data, title }) => {
       return null;
    };
 
+   const EquityDebtFinancingRenderer = () => {
+      const [phase, setPhase] = useState<'intro' | 'tutorial' | 'play' | 'result'>('intro');
+      const [tutorialStep, setTutorialStep] = useState(0);
+      const [showInfo, setShowInfo] = useState(false);
+      const [infoTopic, setInfoTopic] = useState<string | null>(null);
+      const [scenarioIndex, setScenarioIndex] = useState(0);
+      const [score, setScore] = useState(0);
+      const [answered, setAnswered] = useState(false);
+      const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
+      const [quizIndex, setQuizIndex] = useState(0);
+      const [quizAnswered, setQuizAnswered] = useState(false);
+      const [quizScore, setQuizScore] = useState(0);
+      const [gameLog, setGameLog] = useState<string[]>([]);
+
+      const infoContent: {[key: string]: { title: string; content: string }} = {
+         equity: { title: 'Equity Financing', content: 'Selling ownership stakes (stock) to raise capital. No repayment required, but dilutes ownership and shares future profits.' },
+         debt: { title: 'Debt Financing', content: 'Borrowing money to be repaid with interest. Keeps ownership intact but creates fixed obligations. Interest is tax-deductible.' },
+         dilution: { title: 'Ownership Dilution', content: 'When new shares are issued, existing owners percentage decreases. 100% of $1M vs 50% of $10M - dilution can create value.' },
+         leverage: { title: 'Financial Leverage', content: 'Using borrowed money to amplify returns. Magnifies both gains and losses. High leverage = high risk.' }
+      };
+
+      const tutorialSteps = [
+         { title: 'Equity vs Debt Decision', content: 'Every growing company faces this: sell ownership (equity) or borrow money (debt)? Each has trade-offs that shape your companys future.' },
+         { title: 'Equity Financing Explained', content: 'Sell shares to investors. No repayment, no interest. But you give up ownership and control. VCs, angels, IPOs are equity sources.' },
+         { title: 'Debt Financing Explained', content: 'Borrow from banks or issue bonds. Must repay principal + interest regardless of performance. But you keep 100% ownership.' },
+         { title: 'The Tax Shield Advantage', content: 'Interest payments are tax-deductible! If you pay $100K interest at 25% tax rate, it really costs $75K. Dividends are NOT deductible.' },
+         { title: 'Financial Leverage Effect', content: 'Borrow at 6%, invest for 15% return = 9% spread goes to equity holders. But if returns drop to 3%, you still owe 6%.' },
+         { title: 'Choosing the Right Mix', content: 'Startups: more equity (unpredictable cash flows). Mature companies: more debt (stable cash flows). Industry norms matter.' },
+         { title: 'Real-World Trade-offs', content: 'Tesla raised billions in equity. Apple issues debt despite $200B cash (tax efficiency). Every choice has strategic implications.' }
+      ];
+
+      const scenarios = [
+         { title: 'Startup Funding Round', context: 'Your startup needs $2M. Option A: VC offers $2M for 25% equity. Option B: Bank loan at 8% interest, 5-year term.', question: 'Which financing makes more sense for an early-stage startup?', options: [{ text: 'Equity - Unpredictable cash flows make debt risky', correct: true }, { text: 'Debt - Keep full ownership', correct: false }, { text: 'Split 50/50', correct: false }, { text: 'Neither - Bootstrap instead', correct: false }], correct: 0, explanation: 'Early startups have unpredictable revenue. Missing loan payments = bankruptcy. VCs share the risk.' },
+         { title: 'Profitable Company Expansion', context: 'Your $10M revenue company needs $3M. 20% profit margin, stable cash flows. Debt at 7% or sell 15% equity.', question: 'Which option maximizes shareholder value?', options: [{ text: 'Equity - Reduce financial risk', correct: false }, { text: 'Debt - Tax shield + retain ownership', correct: true }, { text: 'Lease equipment instead', correct: false }, { text: 'Delay expansion', correct: false }], correct: 1, explanation: 'Stable cash flows can service debt. At 25% tax rate, 7% debt costs 5.25% after tax.' },
+         { title: 'High-Growth Tech Company', context: 'SaaS company growing 100% YoY, burning $1M/month. Need $20M runway. Debt at 12% or Series B.', question: 'What should the founder choose?', options: [{ text: 'Debt - Minimize dilution', correct: false }, { text: 'Equity - Cant service debt while burning cash', correct: true }, { text: 'Convertible note', correct: false }, { text: 'Cut burn rate', correct: false }], correct: 1, explanation: 'Negative cash flow = cant pay interest. High-growth companies trade dilution for runway.' },
+         { title: 'Leveraged Buyout', context: 'PE firm acquiring stable manufacturing company for $50M. EBITDA $8M/year. Can get 5x debt ($40M) plus $10M equity.', question: 'Why use high leverage in this LBO?', options: [{ text: 'Amplify equity returns using stable cash flows', correct: true }, { text: 'Minimize total capital', correct: false }, { text: 'Tax benefits only', correct: false }, { text: 'Too risky', correct: false }], correct: 0, explanation: '$8M EBITDA covers $2.4M interest. After paying down debt, equity value explodes.' }
+      ];
+
+      const quizQuestions = [
+         { q: 'Which financing has no required repayment?', options: ['Bank loan', 'Bonds', 'Common stock', 'Credit line'], correct: 2 },
+         { q: 'Why is debt often cheaper than equity?', options: ['Lower risk', 'Tax deductibility', 'No covenants', 'Easier'], correct: 1 },
+         { q: 'What happens in ownership dilution?', options: ['Value decreases', 'Shareholders % decreases', 'Debt increases', 'Dividends stop'], correct: 1 },
+         { q: 'When is high leverage most appropriate?', options: ['Startups', 'Stable cash flows', 'Recessions', 'Equity is cheap'], correct: 1 },
+         { q: 'What is a debt covenant?', options: ['Interest rate', 'Lender restriction', 'Conversion right', 'Tax benefit'], correct: 1 }
+      ];
+
+      if (phase === 'intro') {
+         return (
+            <div className="space-y-6">
+               <div className="text-center"><div className="text-6xl mb-4">⚖️</div><h2 className="text-2xl font-bold text-violet-800">Equity vs Debt Financing</h2><p className="text-gray-600 mt-2">Master the capital structure decision</p></div>
+               <div className="bg-violet-50 p-4 rounded-xl"><h3 className="font-semibold text-violet-800 mb-2">What You'll Learn:</h3><ul className="space-y-1 text-sm text-gray-700"><li>✓ Equity vs debt trade-offs</li><li>✓ Tax shield and leverage effects</li><li>✓ When to use each financing type</li><li>✓ Dilution and ownership implications</li></ul></div>
+               <button onClick={() => { setPhase('tutorial'); setGameLog(['Started equity/debt tutorial']); }} className="w-full py-3 bg-violet-600 text-white rounded-xl font-semibold hover:bg-violet-700">Start Learning</button>
+            </div>
+         );
+      }
+
+      if (phase === 'tutorial') {
+         const step = tutorialSteps[tutorialStep];
+         return (
+            <div className="space-y-6">
+               <div className="flex justify-between items-center"><span className="text-sm text-gray-500">Tutorial {tutorialStep + 1}/{tutorialSteps.length}</span><div className="flex gap-1">{tutorialSteps.map((_, i) => (<div key={i} className={`w-3 h-3 rounded-full ${i <= tutorialStep ? 'bg-violet-600' : 'bg-gray-200'}`} />))}</div></div>
+               <div className="bg-gradient-to-br from-violet-50 to-purple-100 p-6 rounded-xl"><h3 className="text-xl font-bold text-violet-800 mb-3">{step.title}</h3><p className="text-gray-700">{step.content}</p></div>
+               <div className="flex gap-2">
+                  {tutorialStep > 0 && (<button onClick={() => setTutorialStep(tutorialStep - 1)} className="flex-1 py-2 border border-violet-600 text-violet-600 rounded-lg">← Back</button>)}
+                  <button onClick={() => { if (tutorialStep < tutorialSteps.length - 1) { setTutorialStep(tutorialStep + 1); } else { setPhase('play'); } }} className="flex-1 py-2 bg-violet-600 text-white rounded-lg">{tutorialStep < tutorialSteps.length - 1 ? 'Next →' : 'Start Practice →'}</button>
+               </div>
+            </div>
+         );
+      }
+
+      if (phase === 'play') {
+         const sc = scenarios[scenarioIndex];
+         return (
+            <div className="space-y-4">
+               <div className="flex justify-between items-center"><span className="text-sm text-gray-600">Scenario {scenarioIndex + 1}/{scenarios.length}</span><span className="text-sm font-semibold text-green-600">Score: {score}</span></div>
+               <div className="bg-gradient-to-r from-violet-50 to-purple-100 p-4 rounded-xl"><div className="flex justify-between"><h3 className="font-bold text-violet-800">{sc.title}</h3><button onClick={() => { setShowInfo(true); setInfoTopic('equity'); }} className="text-violet-600">ℹ️</button></div><p className="mt-2 text-gray-700 text-sm">{sc.context}</p><p className="mt-3 font-medium text-violet-700">{sc.question}</p></div>
+               <div className="space-y-2">{sc.options.map((opt, i) => (<button key={i} onClick={() => { if (!answered) setSelectedAnswer(i); }} disabled={answered} className={`w-full p-3 rounded-lg text-left border-2 text-sm ${answered ? (i === sc.correct ? 'border-green-500 bg-green-50' : selectedAnswer === i ? 'border-red-500 bg-red-50' : 'border-gray-200') : selectedAnswer === i ? 'border-violet-500 bg-violet-50' : 'border-gray-200 hover:border-violet-400'}`}>{opt.text}</button>))}</div>
+               {!answered ? (<button onClick={() => { setAnswered(true); if (selectedAnswer === sc.correct) setScore(score + 1); }} disabled={selectedAnswer === null} className="w-full py-3 bg-violet-600 text-white rounded-xl font-semibold disabled:bg-gray-300">Check Answer</button>) : (<div className="space-y-3"><div className={`p-3 rounded-lg ${selectedAnswer === sc.correct ? 'bg-green-100' : 'bg-yellow-100'}`}><p className="font-semibold">{selectedAnswer === sc.correct ? '✅ Correct!' : '❌ Not quite...'}</p><p className="text-sm text-gray-700 mt-1">{sc.explanation}</p></div><button onClick={() => { if (scenarioIndex < scenarios.length - 1) { setScenarioIndex(scenarioIndex + 1); setSelectedAnswer(null); setAnswered(false); } else { setPhase('result'); } }} className="w-full py-3 bg-violet-600 text-white rounded-xl font-semibold">{scenarioIndex < scenarios.length - 1 ? 'Next →' : 'See Results →'}</button></div>)}
+               {showInfo && infoTopic && infoContent[infoTopic] && (<div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50"><div className="bg-white rounded-xl p-6 max-w-md"><h3 className="font-bold text-lg mb-2">{infoContent[infoTopic].title}</h3><p className="text-gray-700">{infoContent[infoTopic].content}</p><button onClick={() => setShowInfo(false)} className="mt-4 w-full py-2 bg-violet-600 text-white rounded-lg">Got It</button></div></div>)}
+            </div>
+         );
+      }
+
+      if (phase === 'result') {
+         if (quizIndex < quizQuestions.length) {
+            const q = quizQuestions[quizIndex];
+            return (<div className="space-y-6"><div className="text-center"><h3 className="text-xl font-bold text-violet-800">Final Assessment</h3><p className="text-sm text-gray-500">Question {quizIndex + 1}/{quizQuestions.length}</p></div><div className="bg-violet-50 p-4 rounded-xl"><p className="font-medium">{q.q}</p></div><div className="space-y-2">{q.options.map((opt, i) => (<button key={i} onClick={() => { if (!quizAnswered) { setQuizAnswered(true); if (i === q.correct) setQuizScore(quizScore + 1); } }} disabled={quizAnswered} className={`w-full p-3 rounded-lg text-left border-2 ${quizAnswered ? (i === q.correct ? 'border-green-500 bg-green-50' : 'border-gray-200') : 'border-gray-200 hover:border-violet-400'}`}>{opt}</button>))}</div>{quizAnswered && (<button onClick={() => { setQuizIndex(quizIndex + 1); setQuizAnswered(false); }} className="w-full py-3 bg-violet-600 text-white rounded-xl font-semibold">Next →</button>)}</div>);
+         }
+         const pct = Math.round(((score + quizScore) / (scenarios.length + quizQuestions.length)) * 100);
+         return (<div className="space-y-6"><div className="text-center"><div className="text-6xl mb-4">{pct >= 80 ? '⚖️' : '📊'}</div><h2 className="text-2xl font-bold text-violet-800">Complete!</h2></div><div className="bg-violet-50 p-6 rounded-xl text-center"><div className="text-4xl font-bold text-violet-700">{pct}%</div><div className="text-sm text-gray-600">Overall Mastery</div></div><button onClick={() => { setPhase('intro'); setScore(0); setScenarioIndex(0); setSelectedAnswer(null); setAnswered(false); setQuizIndex(0); setQuizAnswered(false); setQuizScore(0); }} className="w-full py-3 bg-violet-600 text-white rounded-xl font-semibold">Practice Again</button></div>);
+      }
+      return null;
+   };
+
+   const WaccRenderer = () => {
+      const [phase, setPhase] = useState<'intro' | 'tutorial' | 'play' | 'result'>('intro');
+      const [tutorialStep, setTutorialStep] = useState(0);
+      const [showInfo, setShowInfo] = useState(false);
+      const [infoTopic, setInfoTopic] = useState<string | null>(null);
+      const [scenarioIndex, setScenarioIndex] = useState(0);
+      const [score, setScore] = useState(0);
+      const [answered, setAnswered] = useState(false);
+      const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
+      const [quizIndex, setQuizIndex] = useState(0);
+      const [quizAnswered, setQuizAnswered] = useState(false);
+      const [quizScore, setQuizScore] = useState(0);
+      const [gameLog, setGameLog] = useState<string[]>([]);
+
+      const infoContent: {[key: string]: { title: string; content: string }} = {
+         wacc: { title: 'WACC Formula', content: 'WACC = (E/V × Re) + (D/V × Rd × (1-T)). Weighted average of equity cost and after-tax debt cost.' },
+         cost_equity: { title: 'Cost of Equity', content: 'Return required by shareholders. Calculated via CAPM: Re = Rf + β(Rm - Rf).' },
+         cost_debt: { title: 'Cost of Debt', content: 'Interest rate on borrowings. Tax-adjusted in WACC because interest is deductible.' },
+         beta: { title: 'Beta (β)', content: 'Measures stock volatility vs market. β=1 is average risk. β>1 is riskier than market.' }
+      };
+
+      const tutorialSteps = [
+         { title: 'What is WACC?', content: 'Weighted Average Cost of Capital - the blended cost of all your financing. Its the minimum return needed to satisfy investors.' },
+         { title: 'Why WACC Matters', content: 'WACC is your hurdle rate. If a project returns 10% but WACC is 12%, youre destroying value.' },
+         { title: 'The WACC Formula', content: 'WACC = (E/V × Re) + (D/V × Rd × (1-T)). E=equity, D=debt, V=total, Re=equity cost, Rd=debt cost, T=tax rate.' },
+         { title: 'Cost of Equity (CAPM)', content: 'Re = Rf + β(Rm-Rf). Risk-free rate + Beta × Market risk premium. Higher beta = higher cost.' },
+         { title: 'After-Tax Cost of Debt', content: 'Interest is tax-deductible! Rd × (1-T). 8% debt at 25% tax = 6% after-tax cost.' },
+         { title: 'Capital Structure Weights', content: 'Use market values, not book values. Calculate % equity and % debt in total capital.' },
+         { title: 'WACC in Practice', content: 'Tech: 8-12%. Utilities: 5-7%. Use WACC as discount rate for NPV calculations.' }
+      ];
+
+      const scenarios = [
+         { title: 'Calculate Basic WACC', context: 'Company has $80M equity (cost 12%), $20M debt (cost 6%), tax rate 25%.', question: 'What is the WACC?', options: ['10.5%', '10.1%', '9.6%', '11.2%'], correct: 0, explanation: 'WACC = (80/100 × 12%) + (20/100 × 6% × 0.75) = 9.6% + 0.9% = 10.5%' },
+         { title: 'More Debt Impact', context: 'Shift to $60M equity (cost 14%), $40M debt (cost 6%), tax 25%.', question: 'New WACC?', options: ['10.2%', '9.8%', '11.4%', '10.6%'], correct: 0, explanation: 'WACC = (0.6 × 14%) + (0.4 × 6% × 0.75) = 8.4% + 1.8% = 10.2%' },
+         { title: 'High-Growth Tech WACC', context: 'Tech startup: 100% equity, Beta=1.8, Rf=3%, Market premium=6%.', question: 'Cost of equity (and WACC)?', options: ['12.6%', '13.8%', '14.4%', '10.8%'], correct: 1, explanation: 'Re = 3% + 1.8(6%) = 13.8%. With 100% equity, WACC = Re = 13.8%' },
+         { title: 'Project Evaluation', context: 'WACC is 9%. Project A: IRR 11%. Project B: IRR 8%. Project C: IRR 9%.', question: 'Which projects accept?', options: ['Only A (IRR > WACC)', 'A and C', 'All three', 'None'], correct: 0, explanation: 'Only accept if IRR > WACC. A (11% > 9%) ✓. B (8% < 9%) ✗. C (9% = 9%) marginal.' }
+      ];
+
+      const quizQuestions = [
+         { q: 'What does WACC represent?', options: ['Max borrowing rate', 'Minimum required return', 'Average stock return', 'Bond yield'], correct: 1 },
+         { q: 'Why multiply debt cost by (1-T)?', options: ['Inflation', 'Risk adjustment', 'Interest is tax-deductible', 'Principal'], correct: 2 },
+         { q: 'Higher beta means:', options: ['Lower equity cost', 'Higher equity cost', 'No WACC effect', 'Lower debt cost'], correct: 1 },
+         { q: 'If WACC increases, NPVs:', options: ['Increase', 'Decrease', 'No change', 'Depends'], correct: 1 },
+         { q: 'Use what weights in WACC?', options: ['Book values', 'Historical costs', 'Market values', 'Par values'], correct: 2 }
+      ];
+
+      if (phase === 'intro') {
+         return (<div className="space-y-6"><div className="text-center"><div className="text-6xl mb-4">📐</div><h2 className="text-2xl font-bold text-cyan-800">WACC Calculator</h2><p className="text-gray-600 mt-2">Master the cost of capital</p></div><div className="bg-cyan-50 p-4 rounded-xl"><h3 className="font-semibold text-cyan-800 mb-2">What You'll Learn:</h3><ul className="space-y-1 text-sm text-gray-700"><li>✓ WACC formula and components</li><li>✓ Cost of equity via CAPM</li><li>✓ After-tax cost of debt</li><li>✓ Using WACC as hurdle rate</li></ul></div><button onClick={() => { setPhase('tutorial'); setGameLog(['Started WACC tutorial']); }} className="w-full py-3 bg-cyan-600 text-white rounded-xl font-semibold hover:bg-cyan-700">Start Learning</button></div>);
+      }
+
+      if (phase === 'tutorial') {
+         const step = tutorialSteps[tutorialStep];
+         return (<div className="space-y-6"><div className="flex justify-between items-center"><span className="text-sm text-gray-500">Tutorial {tutorialStep + 1}/{tutorialSteps.length}</span><div className="flex gap-1">{tutorialSteps.map((_, i) => (<div key={i} className={`w-3 h-3 rounded-full ${i <= tutorialStep ? 'bg-cyan-600' : 'bg-gray-200'}`} />))}</div></div><div className="bg-gradient-to-br from-cyan-50 to-blue-100 p-6 rounded-xl"><h3 className="text-xl font-bold text-cyan-800 mb-3">{step.title}</h3><p className="text-gray-700">{step.content}</p></div>{tutorialStep === 2 && (<div className="bg-white border-2 border-cyan-200 p-4 rounded-xl text-center"><div className="text-lg font-mono bg-cyan-50 p-3 rounded-lg">WACC = <span className="text-blue-600">(E/V × Re)</span> + <span className="text-green-600">(D/V × Rd × (1-T))</span></div></div>)}<div className="flex gap-2">{tutorialStep > 0 && (<button onClick={() => setTutorialStep(tutorialStep - 1)} className="flex-1 py-2 border border-cyan-600 text-cyan-600 rounded-lg">← Back</button>)}<button onClick={() => { if (tutorialStep < tutorialSteps.length - 1) { setTutorialStep(tutorialStep + 1); } else { setPhase('play'); } }} className="flex-1 py-2 bg-cyan-600 text-white rounded-lg">{tutorialStep < tutorialSteps.length - 1 ? 'Next →' : 'Start Practice →'}</button></div></div>);
+      }
+
+      if (phase === 'play') {
+         const sc = scenarios[scenarioIndex];
+         return (<div className="space-y-4"><div className="flex justify-between items-center"><span className="text-sm text-gray-600">Scenario {scenarioIndex + 1}/{scenarios.length}</span><span className="text-sm font-semibold text-green-600">Score: {score}</span></div><div className="bg-gradient-to-r from-cyan-50 to-blue-100 p-4 rounded-xl"><div className="flex justify-between"><h3 className="font-bold text-cyan-800">{sc.title}</h3><button onClick={() => { setShowInfo(true); setInfoTopic('wacc'); }} className="text-cyan-600">ℹ️</button></div><p className="mt-2 text-gray-700 text-sm">{sc.context}</p><p className="mt-3 font-medium text-cyan-700">{sc.question}</p></div><div className="space-y-2">{sc.options.map((opt, i) => (<button key={i} onClick={() => { if (!answered) setSelectedAnswer(i); }} disabled={answered} className={`w-full p-3 rounded-lg text-left border-2 font-medium ${answered ? (i === sc.correct ? 'border-green-500 bg-green-50' : selectedAnswer === i ? 'border-red-500 bg-red-50' : 'border-gray-200') : selectedAnswer === i ? 'border-cyan-500 bg-cyan-50' : 'border-gray-200 hover:border-cyan-400'}`}>{opt}</button>))}</div>{!answered ? (<button onClick={() => { setAnswered(true); if (selectedAnswer === sc.correct) setScore(score + 1); }} disabled={selectedAnswer === null} className="w-full py-3 bg-cyan-600 text-white rounded-xl font-semibold disabled:bg-gray-300">Check Answer</button>) : (<div className="space-y-3"><div className={`p-3 rounded-lg ${selectedAnswer === sc.correct ? 'bg-green-100' : 'bg-yellow-100'}`}><p className="font-semibold">{selectedAnswer === sc.correct ? '✅ Correct!' : '❌ Not quite...'}</p><p className="text-sm text-gray-700 mt-1">{sc.explanation}</p></div><button onClick={() => { if (scenarioIndex < scenarios.length - 1) { setScenarioIndex(scenarioIndex + 1); setSelectedAnswer(null); setAnswered(false); } else { setPhase('result'); } }} className="w-full py-3 bg-cyan-600 text-white rounded-xl font-semibold">{scenarioIndex < scenarios.length - 1 ? 'Next →' : 'See Results →'}</button></div>)}{showInfo && infoTopic && infoContent[infoTopic] && (<div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50"><div className="bg-white rounded-xl p-6 max-w-md"><h3 className="font-bold text-lg mb-2">{infoContent[infoTopic].title}</h3><p className="text-gray-700">{infoContent[infoTopic].content}</p><button onClick={() => setShowInfo(false)} className="mt-4 w-full py-2 bg-cyan-600 text-white rounded-lg">Got It</button></div></div>)}</div>);
+      }
+
+      if (phase === 'result') {
+         if (quizIndex < quizQuestions.length) {
+            const q = quizQuestions[quizIndex];
+            return (<div className="space-y-6"><div className="text-center"><h3 className="text-xl font-bold text-cyan-800">Final Assessment</h3><p className="text-sm text-gray-500">Question {quizIndex + 1}/{quizQuestions.length}</p></div><div className="bg-cyan-50 p-4 rounded-xl"><p className="font-medium">{q.q}</p></div><div className="space-y-2">{q.options.map((opt, i) => (<button key={i} onClick={() => { if (!quizAnswered) { setQuizAnswered(true); if (i === q.correct) setQuizScore(quizScore + 1); } }} disabled={quizAnswered} className={`w-full p-3 rounded-lg text-left border-2 ${quizAnswered ? (i === q.correct ? 'border-green-500 bg-green-50' : 'border-gray-200') : 'border-gray-200 hover:border-cyan-400'}`}>{opt}</button>))}</div>{quizAnswered && (<button onClick={() => { setQuizIndex(quizIndex + 1); setQuizAnswered(false); }} className="w-full py-3 bg-cyan-600 text-white rounded-xl font-semibold">Next →</button>)}</div>);
+         }
+         const pct = Math.round(((score + quizScore) / (scenarios.length + quizQuestions.length)) * 100);
+         return (<div className="space-y-6"><div className="text-center"><div className="text-6xl mb-4">{pct >= 80 ? '📐' : '📊'}</div><h2 className="text-2xl font-bold text-cyan-800">WACC Complete!</h2></div><div className="bg-cyan-50 p-6 rounded-xl text-center"><div className="text-4xl font-bold text-cyan-700">{pct}%</div><div className="text-sm text-gray-600">Overall Mastery</div></div><button onClick={() => { setPhase('intro'); setScore(0); setScenarioIndex(0); setSelectedAnswer(null); setAnswered(false); setQuizIndex(0); setQuizAnswered(false); setQuizScore(0); }} className="w-full py-3 bg-cyan-600 text-white rounded-xl font-semibold">Practice Again</button></div>);
+      }
+      return null;
+   };
+
+   const StockOptionsRenderer = () => {
+      const [phase, setPhase] = useState<'intro' | 'tutorial' | 'play' | 'result'>('intro');
+      const [tutorialStep, setTutorialStep] = useState(0);
+      const [showInfo, setShowInfo] = useState(false);
+      const [infoTopic, setInfoTopic] = useState<string | null>(null);
+      const [scenarioIndex, setScenarioIndex] = useState(0);
+      const [score, setScore] = useState(0);
+      const [answered, setAnswered] = useState(false);
+      const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
+      const [quizIndex, setQuizIndex] = useState(0);
+      const [quizAnswered, setQuizAnswered] = useState(false);
+      const [quizScore, setQuizScore] = useState(0);
+      const [gameLog, setGameLog] = useState<string[]>([]);
+
+      const infoContent: {[key: string]: { title: string; content: string }} = {
+         iso: { title: 'Incentive Stock Options', content: 'Tax-advantaged options. No tax at exercise if held 1+ year after exercise and 2+ years after grant.' },
+         nso: { title: 'Non-Qualified Options', content: 'Standard options taxed as ordinary income on the spread at exercise. More flexible but less tax-advantaged.' },
+         vesting: { title: 'Vesting Schedule', content: 'Period before options are yours. Typical: 4-year vest with 1-year cliff. Leave before cliff = get nothing.' },
+         strike: { title: 'Strike Price', content: 'The price you pay to buy shares. Set at fair market value on grant date. Profit = Current - Strike.' }
+      };
+
+      const tutorialSteps = [
+         { title: 'What Are Stock Options?', content: 'Options give you the right to buy company shares at a fixed price. If the company grows, you profit from the difference.' },
+         { title: 'How Options Work', content: 'You get options at $1 strike. Stock reaches $10. You exercise (buy at $1) and sell at $10 = $9 profit per share.' },
+         { title: 'Vesting Explained', content: 'Typical: 4-year vesting with 1-year cliff. After 1 year, 25% vests. Then monthly. Leave early = lose unvested.' },
+         { title: 'ISO vs NSO', content: 'ISOs: Tax-advantaged but complex. Hold 1yr after exercise + 2yr after grant. NSOs: Taxed as ordinary income at exercise.' },
+         { title: 'The 409A Valuation', content: 'Private companies must set FMV for option pricing. 409A ensures IRS compliance. Usually lower than VC valuation.' },
+         { title: 'Exercise Decisions', content: 'Exercise early (start capital gains clock) or wait (less cash risk). Consider AMT for ISOs.' },
+         { title: 'Real-World Value', content: 'Startup options can be worth millions or nothing. Understand your grant, vesting, and taxes before joining.' }
+      ];
+
+      const scenarios = [
+         { title: 'Evaluating an Offer', context: '10,000 options, $2 strike, 4yr vest. Company could reach $50/share.', question: 'Potential upside at $50/share?', options: ['$480,000 (10K × $48)', '$500,000', '$200,000', 'Cannot calculate'], correct: 0, explanation: 'Profit = 10,000 × ($50 - $2) = $480,000. But remember vesting, taxes, and risk!' },
+         { title: 'Early Exercise', context: '10,000 ISOs at $1 strike. Current FMV is $1 (no spread). Can early exercise with 83(b).', question: 'Why early exercise?', options: ['Avoid paying', 'Start capital gains clock now', 'Get more shares', 'Avoid vesting'], correct: 1, explanation: 'Early exercise at FMV = no taxable spread. 83(b) starts holding period for long-term gains.' },
+         { title: 'Leaving Company', context: 'After 2.5 years: 6,250 vested options. Strike $3, FMV $15. 90-day exercise window.', question: 'Cash needed to exercise?', options: ['$18,750 (6,250 × $3)', '$93,750', '$75,000', 'Nothing'], correct: 0, explanation: 'Exercise cost = 6,250 × $3 = $18,750. Plus taxes on $75K spread!' },
+         { title: 'ISO vs NSO Tax', context: '1,000 shares exercised at $5, sold at $25. ISO held qualifying period vs NSO.', question: 'Tax difference?', options: ['ISO: ~$4K (20%). NSO: ~$7.4K (37%)', 'Same taxes', 'NSO has no tax', 'ISO higher taxes'], correct: 0, explanation: 'ISO with qualifying disposition saves ~$3,400 vs NSO ordinary income treatment.' }
+      ];
+
+      const quizQuestions = [
+         { q: 'What is the "cliff" in vesting?', options: ['Options expire', 'No vesting until cliff date', 'Extra options', 'Price increase'], correct: 1 },
+         { q: 'When are ISOs taxed favorably?', options: ['At grant', 'At exercise', 'If held 1yr + 2yr requirement', 'Never'], correct: 2 },
+         { q: 'What is 409A valuation?', options: ['Tax form', 'IRS fair value for private stock', 'Exercise multiplier', 'Vesting schedule'], correct: 1 },
+         { q: 'Unvested options if you leave?', options: ['Fully vest', 'Forfeited', 'Strike reduces', 'Convert to RSUs'], correct: 1 },
+         { q: 'Standard exercise window after leaving?', options: ['30 days', '90 days', '1 year', 'Unlimited'], correct: 1 }
+      ];
+
+      if (phase === 'intro') {
+         return (<div className="space-y-6"><div className="text-center"><div className="text-6xl mb-4">📈</div><h2 className="text-2xl font-bold text-amber-800">Stock Options Mastery</h2><p className="text-gray-600 mt-2">Understand equity compensation</p></div><div className="bg-amber-50 p-4 rounded-xl"><h3 className="font-semibold text-amber-800 mb-2">What You'll Learn:</h3><ul className="space-y-1 text-sm text-gray-700"><li>✓ How stock options work</li><li>✓ Vesting schedules and cliffs</li><li>✓ ISO vs NSO tax implications</li><li>✓ Exercise strategies</li></ul></div><button onClick={() => { setPhase('tutorial'); setGameLog(['Started options tutorial']); }} className="w-full py-3 bg-amber-600 text-white rounded-xl font-semibold hover:bg-amber-700">Start Learning</button></div>);
+      }
+
+      if (phase === 'tutorial') {
+         const step = tutorialSteps[tutorialStep];
+         return (<div className="space-y-6"><div className="flex justify-between items-center"><span className="text-sm text-gray-500">Tutorial {tutorialStep + 1}/{tutorialSteps.length}</span><div className="flex gap-1">{tutorialSteps.map((_, i) => (<div key={i} className={`w-3 h-3 rounded-full ${i <= tutorialStep ? 'bg-amber-600' : 'bg-gray-200'}`} />))}</div></div><div className="bg-gradient-to-br from-amber-50 to-orange-100 p-6 rounded-xl"><h3 className="text-xl font-bold text-amber-800 mb-3">{step.title}</h3><p className="text-gray-700">{step.content}</p></div>{tutorialStep === 2 && (<div className="bg-white border-2 border-amber-200 p-4 rounded-xl"><h4 className="font-semibold text-amber-700 mb-2">Vesting Timeline:</h4><div className="flex items-center justify-between text-sm"><div className="text-center"><div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-xs">0%</div><div className="text-xs mt-1">Start</div></div><div className="flex-1 h-1 bg-gray-200 mx-1"></div><div className="text-center"><div className="w-8 h-8 rounded-full bg-amber-500 text-white flex items-center justify-center text-xs">25%</div><div className="text-xs mt-1">1Y</div></div><div className="flex-1 h-1 bg-amber-200 mx-1"></div><div className="text-center"><div className="w-8 h-8 rounded-full bg-amber-600 text-white flex items-center justify-center text-xs">100%</div><div className="text-xs mt-1">4Y</div></div></div></div>)}<div className="flex gap-2">{tutorialStep > 0 && (<button onClick={() => setTutorialStep(tutorialStep - 1)} className="flex-1 py-2 border border-amber-600 text-amber-600 rounded-lg">← Back</button>)}<button onClick={() => { if (tutorialStep < tutorialSteps.length - 1) { setTutorialStep(tutorialStep + 1); } else { setPhase('play'); } }} className="flex-1 py-2 bg-amber-600 text-white rounded-lg">{tutorialStep < tutorialSteps.length - 1 ? 'Next →' : 'Start Practice →'}</button></div></div>);
+      }
+
+      if (phase === 'play') {
+         const sc = scenarios[scenarioIndex];
+         return (<div className="space-y-4"><div className="flex justify-between items-center"><span className="text-sm text-gray-600">Scenario {scenarioIndex + 1}/{scenarios.length}</span><span className="text-sm font-semibold text-green-600">Score: {score}</span></div><div className="bg-gradient-to-r from-amber-50 to-orange-100 p-4 rounded-xl"><div className="flex justify-between"><h3 className="font-bold text-amber-800">{sc.title}</h3><button onClick={() => { setShowInfo(true); setInfoTopic('vesting'); }} className="text-amber-600">ℹ️</button></div><p className="mt-2 text-gray-700 text-sm">{sc.context}</p><p className="mt-3 font-medium text-amber-700">{sc.question}</p></div><div className="space-y-2">{sc.options.map((opt, i) => (<button key={i} onClick={() => { if (!answered) setSelectedAnswer(i); }} disabled={answered} className={`w-full p-3 rounded-lg text-left border-2 text-sm ${answered ? (i === sc.correct ? 'border-green-500 bg-green-50' : selectedAnswer === i ? 'border-red-500 bg-red-50' : 'border-gray-200') : selectedAnswer === i ? 'border-amber-500 bg-amber-50' : 'border-gray-200 hover:border-amber-400'}`}>{opt}</button>))}</div>{!answered ? (<button onClick={() => { setAnswered(true); if (selectedAnswer === sc.correct) setScore(score + 1); }} disabled={selectedAnswer === null} className="w-full py-3 bg-amber-600 text-white rounded-xl font-semibold disabled:bg-gray-300">Check Answer</button>) : (<div className="space-y-3"><div className={`p-3 rounded-lg ${selectedAnswer === sc.correct ? 'bg-green-100' : 'bg-yellow-100'}`}><p className="font-semibold">{selectedAnswer === sc.correct ? '✅ Correct!' : '❌ Not quite...'}</p><p className="text-sm text-gray-700 mt-1">{sc.explanation}</p></div><button onClick={() => { if (scenarioIndex < scenarios.length - 1) { setScenarioIndex(scenarioIndex + 1); setSelectedAnswer(null); setAnswered(false); } else { setPhase('result'); } }} className="w-full py-3 bg-amber-600 text-white rounded-xl font-semibold">{scenarioIndex < scenarios.length - 1 ? 'Next →' : 'See Results →'}</button></div>)}{showInfo && infoTopic && infoContent[infoTopic] && (<div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50"><div className="bg-white rounded-xl p-6 max-w-md"><h3 className="font-bold text-lg mb-2">{infoContent[infoTopic].title}</h3><p className="text-gray-700">{infoContent[infoTopic].content}</p><button onClick={() => setShowInfo(false)} className="mt-4 w-full py-2 bg-amber-600 text-white rounded-lg">Got It</button></div></div>)}</div>);
+      }
+
+      if (phase === 'result') {
+         if (quizIndex < quizQuestions.length) {
+            const q = quizQuestions[quizIndex];
+            return (<div className="space-y-6"><div className="text-center"><h3 className="text-xl font-bold text-amber-800">Final Assessment</h3><p className="text-sm text-gray-500">Question {quizIndex + 1}/{quizQuestions.length}</p></div><div className="bg-amber-50 p-4 rounded-xl"><p className="font-medium">{q.q}</p></div><div className="space-y-2">{q.options.map((opt, i) => (<button key={i} onClick={() => { if (!quizAnswered) { setQuizAnswered(true); if (i === q.correct) setQuizScore(quizScore + 1); } }} disabled={quizAnswered} className={`w-full p-3 rounded-lg text-left border-2 ${quizAnswered ? (i === q.correct ? 'border-green-500 bg-green-50' : 'border-gray-200') : 'border-gray-200 hover:border-amber-400'}`}>{opt}</button>))}</div>{quizAnswered && (<button onClick={() => { setQuizIndex(quizIndex + 1); setQuizAnswered(false); }} className="w-full py-3 bg-amber-600 text-white rounded-xl font-semibold">Next →</button>)}</div>);
+         }
+         const pct = Math.round(((score + quizScore) / (scenarios.length + quizQuestions.length)) * 100);
+         return (<div className="space-y-6"><div className="text-center"><div className="text-6xl mb-4">{pct >= 80 ? '📈' : '📊'}</div><h2 className="text-2xl font-bold text-amber-800">Options Complete!</h2></div><div className="bg-amber-50 p-6 rounded-xl text-center"><div className="text-4xl font-bold text-amber-700">{pct}%</div><div className="text-sm text-gray-600">Overall Mastery</div></div><button onClick={() => { setPhase('intro'); setScore(0); setScenarioIndex(0); setSelectedAnswer(null); setAnswered(false); setQuizIndex(0); setQuizAnswered(false); setQuizScore(0); }} className="w-full py-3 bg-amber-600 text-white rounded-xl font-semibold">Practice Again</button></div>);
+      }
+      return null;
+   };
+
    const FinancialStatementsRenderer = () => {
       const [phase, setPhase] = useState<'intro' | 'play' | 'result'>('intro');
       const [showInfo, setShowInfo] = useState(false);
@@ -52376,6 +52612,12 @@ const GeneratedDiagram: React.FC<DiagramProps> = ({ type, data, title }) => {
             return <TimeValueMoneyRenderer />;
          case 'npv_irr':
             return <NpvIrrRenderer />;
+         case 'equity_debt_financing':
+            return <EquityDebtFinancingRenderer />;
+         case 'wacc':
+            return <WaccRenderer />;
+         case 'stock_options':
+            return <StockOptionsRenderer />;
          case 'pricing_strategy':
             return <PricingStrategyRenderer />;
          case 'budgeting':
