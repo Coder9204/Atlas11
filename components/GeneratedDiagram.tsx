@@ -52495,6 +52495,237 @@ const GeneratedDiagram: React.FC<DiagramProps> = ({ type, data, title }) => {
       return null;
    };
 
+   // Topic 130: Platform Strategy Interactive Educational Game
+   const PlatformStrategyRenderer = () => {
+      const [phase, setPhase] = useState<'intro' | 'tutorial' | 'play' | 'result'>('intro');
+      const [tutorialStep, setTutorialStep] = useState(0);
+      const [showInfo, setShowInfo] = useState(false);
+      const [infoTopic, setInfoTopic] = useState('');
+      const [scenarioIndex, setScenarioIndex] = useState(0);
+      const [score, setScore] = useState(0);
+      const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
+      const [answered, setAnswered] = useState(false);
+      const [quizIndex, setQuizIndex] = useState(0);
+      const [quizScore, setQuizScore] = useState(0);
+      const [quizAnswered, setQuizAnswered] = useState(false);
+      const [gameLog, setGameLog] = useState<string[]>([]);
+
+      const infoContent: Record<string, string> = {
+         'platform_business': 'Platform businesses create value by facilitating exchanges between producers and consumers. Unlike products that sell value, platforms enable value creation by others—and capture a share.',
+         'api_strategy': 'APIs enable third-party developers to build on your platform. Well-designed APIs with good documentation create ecosystems that extend your platform\'s value beyond what you could build alone.',
+         'developer_ecosystem': 'Developer ecosystems multiply your platform\'s capabilities. Attract developers with market access, good DX, and clear monetization. Their apps create value for your users.',
+         'partner_integration': 'Strategic integrations extend platform reach. Integrate with complementary products to expand use cases and reduce friction for users who use multiple tools.',
+         'platform_extensibility': 'Extensibility lets users customize your platform (plugins, apps, integrations). Balance openness for innovation with control for quality and security.',
+         'governance': 'Platform governance sets rules for participants: what\'s allowed, how disputes are handled, and how policies evolve. Good governance builds trust; poor governance creates exodus.',
+         'platform_monetization': 'Monetize platforms through transaction fees (marketplace), subscriptions (SaaS), revenue share (app stores), or advertising. Align monetization with the value you enable.'
+      };
+
+      const tutorialSteps = [
+         { title: 'Welcome to Platform Strategy', content: 'Platforms create value by enabling exchanges between participants. Learn to design, grow, and govern platforms that build lasting competitive advantages.' },
+         { title: 'Platform vs Product', content: 'Products create value directly; platforms enable others to create value. Platforms can achieve scale and defensibility that products cannot, but they\'re harder to start.' },
+         { title: 'API Strategy', content: 'APIs open your platform to third-party developers. Good APIs are well-documented, stable, and enable use cases you couldn\'t build yourself. They turn developers into partners.' },
+         { title: 'Developer Ecosystems', content: 'Attract developers with market access, great DX, and monetization opportunities. Their apps create value for your users and make your platform more valuable.' },
+         { title: 'Integration Strategy', content: 'Integrate with adjacent products to expand your platform\'s utility. Be the hub in the user\'s workflow, not a disconnected tool.' },
+         { title: 'Platform Extensibility', content: 'Enable customization through plugins, apps, and integrations. Balance openness (enabling innovation) with control (ensuring quality and security).' },
+         { title: 'Governance & Monetization', content: 'Set clear rules and enforce them fairly. Monetize in ways that align with participant value—take fees when you enable transactions, not when you create friction.' }
+      ];
+
+      const scenarios = [
+         {
+            title: 'Launching an API Program',
+            description: 'Your SaaS product has strong traction, and users are asking for integrations with other tools. You\'re considering launching a public API. What\'s the best approach?',
+            options: [
+               { text: 'Build internal APIs first and expose them as-is to external developers', feedback: 'Internal APIs aren\'t designed for external consumption. They lack documentation, stability guarantees, and developer-friendly design.', correct: false },
+               { text: 'Design a versioned, documented API with sandbox environment and developer portal', feedback: 'Excellent! Developer-friendly APIs with proper documentation, versioning, and testing environments attract quality integrations and build ecosystem trust.', correct: true },
+               { text: 'Wait until developers request specific endpoints before building anything', feedback: 'Reactive API development leads to inconsistent, poorly designed APIs. A strategic approach creates better long-term outcomes.', correct: false },
+               { text: 'Make the API read-only to protect your platform', feedback: 'Read-only limits the value developers can create. Write capabilities enable richer integrations and more valuable apps.', correct: false }
+            ]
+         },
+         {
+            title: 'Growing Developer Ecosystem',
+            description: 'Your API launched 6 months ago but only has 50 active developers. Most apps built are low-quality utilities. You want to attract serious developers who build valuable apps.',
+            options: [
+               { text: 'Pay developers to build apps for your platform', feedback: 'Paid apps often lack ongoing support and genuine value. When payments stop, developers leave.', correct: false },
+               { text: 'Restrict API access to only vetted, approved developers', feedback: 'Gatekeeping reduces experimentation and may exclude innovative developers. Start open, then feature the best.', correct: false },
+               { text: 'Create a partner program with market access, support, and revenue sharing for quality apps', feedback: 'Perfect! Partner programs attract serious developers by offering distribution, support, and economic incentives aligned with app quality and user value.', correct: true },
+               { text: 'Add more API endpoints to enable more use cases', feedback: 'More endpoints without developer support and incentives won\'t attract quality developers. The problem is ecosystem, not functionality.', correct: false }
+            ]
+         },
+         {
+            title: 'Managing Platform Governance',
+            description: 'A popular app in your ecosystem is using data in ways that concern users—technically allowed by your terms but ethically questionable. Users are complaining.',
+            options: [
+               { text: 'Remove the app immediately to protect users', feedback: 'Sudden removal without warning damages developer trust and may cause legal issues. Process matters.', correct: false },
+               { text: 'Do nothing since they haven\'t technically violated terms', feedback: 'Technical compliance isn\'t enough. User trust damage affects your platform\'s reputation, not just the app\'s.', correct: false },
+               { text: 'Update policies with clear notice, work with the developer on compliance, then enforce', feedback: 'Excellent! Fair governance includes clear rules, reasonable notice, and consistent enforcement. Developers and users both trust transparent processes.', correct: true },
+               { text: 'Let users decide by adding a warning label to the app', feedback: 'Passing responsibility to users doesn\'t protect them or address the policy gap. Platform governance requires platform action.', correct: false }
+            ]
+         },
+         {
+            title: 'Platform Monetization Decision',
+            description: 'Your developer platform is growing, but you need to monetize. Developers currently use the API for free. You\'re deciding on the pricing model.',
+            options: [
+               { text: 'Charge a flat fee for all API access', feedback: 'Flat fees discourage experimentation and may price out valuable small developers who could grow into large ones.', correct: false },
+               { text: 'Take 30% of all revenue developers generate through your platform', feedback: 'A 30% take rate is aggressive for most platforms and may drive developers to build alternatives or leave.', correct: false },
+               { text: 'Tiered usage-based pricing with generous free tier and enterprise options', feedback: 'Perfect! Usage-based pricing aligns your revenue with developer success. Free tiers enable experimentation; paid tiers capture value from successful apps.', correct: true },
+               { text: 'Keep it free forever and monetize only through your core product', feedback: 'Free APIs can work but miss the opportunity to invest in developer experience. Sustainable funding improves the ecosystem.', correct: false }
+            ]
+         }
+      ];
+
+      const quizQuestions = [
+         { question: 'What distinguishes a platform business from a product business?', options: ['Platforms are always digital', 'Platforms enable others to create value rather than creating it directly', 'Platforms are larger than products', 'Platforms don\'t need customers'], correct: 1, explanation: 'Products create value directly; platforms facilitate value creation by others (developers, sellers, creators). This enables network effects and ecosystem growth.' },
+         { question: 'What makes an API "developer-friendly"?', options: ['Maximum functionality with no limits', 'Clear documentation, stable versioning, and sandbox testing', 'Free access with no restrictions', 'Direct database access'], correct: 1, explanation: 'Developer-friendly APIs have clear documentation, predictable behavior, versioning for stability, and environments for testing—reducing friction for developers.' },
+         { question: 'Why is platform governance important?', options: ['It generates revenue', 'It builds trust through fair, transparent rules and enforcement', 'It reduces competition', 'It\'s legally required'], correct: 1, explanation: 'Good governance builds trust with all participants—users trust quality, developers trust fairness. Poor governance drives exodus to competing platforms.' },
+         { question: 'What is the best way to attract quality developers to your platform?', options: ['Pay them upfront to build apps', 'Create partner programs with distribution, support, and revenue sharing', 'Make APIs completely unrestricted', 'Require developers to apply for access'], correct: 1, explanation: 'Partner programs align incentives: developers get distribution and revenue, you get quality apps. This creates sustainable ecosystem growth.' },
+         { question: 'How should platform monetization be structured?', options: ['Charge maximum fees to maximize revenue', 'Align pricing with the value you enable for participants', 'Keep everything free forever', 'Charge only enterprise customers'], correct: 1, explanation: 'Monetization should align with value creation. Usage-based pricing captures value from success while enabling experimentation through free or low tiers.' }
+      ];
+
+      const handleAnswer = (optionIndex: number) => {
+         if (answered) return;
+         setSelectedAnswer(optionIndex);
+         setAnswered(true);
+         const isCorrect = scenarios[scenarioIndex].options[optionIndex].correct;
+         if (isCorrect) setScore(score + 1);
+         setGameLog([...gameLog, `Scenario ${scenarioIndex + 1}: ${isCorrect ? 'Correct' : 'Incorrect'}`]);
+      };
+
+      const nextScenario = () => {
+         if (scenarioIndex < scenarios.length - 1) {
+            setScenarioIndex(scenarioIndex + 1);
+            setSelectedAnswer(null);
+            setAnswered(false);
+         } else {
+            setPhase('result');
+         }
+      };
+
+      const handleQuizAnswer = (optionIndex: number) => {
+         if (quizAnswered) return;
+         setQuizAnswered(true);
+         if (optionIndex === quizQuestions[quizIndex].correct) {
+            setQuizScore(quizScore + 1);
+         }
+      };
+
+      const nextQuiz = () => {
+         if (quizIndex < quizQuestions.length - 1) {
+            setQuizIndex(quizIndex + 1);
+            setQuizAnswered(false);
+         }
+      };
+
+      if (phase === 'intro') {
+         return (
+            <div className="p-6 bg-gradient-to-br from-slate-50 to-blue-100 rounded-xl shadow-lg max-w-2xl mx-auto">
+               <h2 className="text-2xl font-bold text-slate-800 mb-4">🌐 Platform Strategy Mastery</h2>
+               <p className="text-slate-700 mb-4">Learn to design and grow platform businesses. Master API strategy, developer ecosystems, and governance that creates lasting competitive advantage.</p>
+               <div className="bg-white p-4 rounded-lg mb-4">
+                  <h3 className="font-semibold text-slate-800 mb-2">What You'll Learn:</h3>
+                  <ul className="text-sm text-slate-600 space-y-1">
+                     <li>• API and developer ecosystem strategy</li>
+                     <li>• Partner and integration approaches</li>
+                     <li>• Platform governance and policies</li>
+                     <li>• Monetization aligned with value creation</li>
+                  </ul>
+               </div>
+               <button onClick={() => setPhase('tutorial')} className="w-full py-3 bg-slate-600 text-white rounded-lg font-semibold hover:bg-slate-700 transition">Start Learning</button>
+            </div>
+         );
+      }
+
+      if (phase === 'tutorial') {
+         return (
+            <div className="p-6 bg-gradient-to-br from-slate-50 to-blue-100 rounded-xl shadow-lg max-w-2xl mx-auto">
+               <div className="flex justify-between items-center mb-4">
+                  <h2 className="text-xl font-bold text-slate-800">Tutorial: {tutorialSteps[tutorialStep].title}</h2>
+                  <span className="text-sm text-slate-600">{tutorialStep + 1} / {tutorialSteps.length}</span>
+               </div>
+               <div className="bg-white p-4 rounded-lg mb-4">
+                  <p className="text-slate-700">{tutorialSteps[tutorialStep].content}</p>
+               </div>
+               <div className="flex flex-wrap gap-2 mb-4">
+                  {Object.keys(infoContent).map(topic => (
+                     <button key={topic} onClick={() => { setInfoTopic(topic); setShowInfo(true); }} className="text-xs px-2 py-1 bg-slate-100 text-slate-700 rounded-full hover:bg-slate-200 transition">ℹ️ {topic.replace(/_/g, ' ')}</button>
+                  ))}
+               </div>
+               {showInfo && (
+                  <div className="bg-slate-50 border border-slate-200 p-3 rounded-lg mb-4">
+                     <div className="flex justify-between items-center mb-2">
+                        <span className="font-semibold text-slate-800">{infoTopic.replace(/_/g, ' ')}</span>
+                        <button onClick={() => setShowInfo(false)} className="text-slate-600">✕</button>
+                     </div>
+                     <p className="text-sm text-slate-600">{infoContent[infoTopic]}</p>
+                  </div>
+               )}
+               <div className="flex gap-2">
+                  {tutorialStep > 0 && <button onClick={() => setTutorialStep(tutorialStep - 1)} className="flex-1 py-2 border border-slate-300 text-slate-600 rounded-lg hover:bg-slate-50 transition">Back</button>}
+                  <button onClick={() => tutorialStep < tutorialSteps.length - 1 ? setTutorialStep(tutorialStep + 1) : setPhase('play')} className="flex-1 py-2 bg-slate-600 text-white rounded-lg hover:bg-slate-700 transition">{tutorialStep < tutorialSteps.length - 1 ? 'Next' : 'Start Practice'}</button>
+               </div>
+            </div>
+         );
+      }
+
+      if (phase === 'play') {
+         const currentScenario = scenarios[scenarioIndex];
+         return (
+            <div className="p-6 bg-gradient-to-br from-slate-50 to-blue-100 rounded-xl shadow-lg max-w-2xl mx-auto">
+               <div className="flex justify-between items-center mb-4">
+                  <h2 className="text-xl font-bold text-slate-800">Scenario {scenarioIndex + 1} of {scenarios.length}</h2>
+                  <span className="text-sm bg-slate-200 text-slate-800 px-2 py-1 rounded">Score: {score}</span>
+               </div>
+               <div className="bg-white p-4 rounded-lg mb-4">
+                  <h3 className="font-semibold text-slate-800 mb-2">{currentScenario.title}</h3>
+                  <p className="text-slate-700 text-sm">{currentScenario.description}</p>
+               </div>
+               <div className="space-y-2 mb-4">
+                  {currentScenario.options.map((option, idx) => (
+                     <button key={idx} onClick={() => handleAnswer(idx)} disabled={answered} className={`w-full p-3 text-left rounded-lg transition text-sm ${answered ? option.correct ? 'bg-green-100 border-2 border-green-500' : selectedAnswer === idx ? 'bg-red-100 border-2 border-red-500' : 'bg-gray-100' : 'bg-white hover:bg-slate-50 border border-slate-200'}`}>
+                        {option.text}
+                        {answered && selectedAnswer === idx && <p className="mt-2 text-xs text-gray-600">{option.feedback}</p>}
+                     </button>
+                  ))}
+               </div>
+               {answered && <button onClick={nextScenario} className="w-full py-2 bg-slate-600 text-white rounded-lg hover:bg-slate-700 transition">{scenarioIndex < scenarios.length - 1 ? 'Next Scenario' : 'See Results'}</button>}
+            </div>
+         );
+      }
+
+      if (phase === 'result') {
+         return (
+            <div className="p-6 bg-gradient-to-br from-slate-50 to-blue-100 rounded-xl shadow-lg max-w-2xl mx-auto">
+               <h2 className="text-2xl font-bold text-slate-800 mb-4">🎯 Results</h2>
+               <div className="bg-white p-4 rounded-lg mb-4">
+                  <p className="text-lg text-slate-700">Scenario Score: <span className="font-bold">{score} / {scenarios.length}</span></p>
+                  <p className="text-lg text-slate-700">Quiz Score: <span className="font-bold">{quizScore} / {quizQuestions.length}</span></p>
+               </div>
+               <div className="bg-white p-4 rounded-lg mb-4">
+                  <h3 className="font-semibold text-slate-800 mb-2">Quiz: Test Your Knowledge</h3>
+                  <p className="text-sm text-slate-700 mb-3">{quizQuestions[quizIndex].question}</p>
+                  <div className="space-y-2">
+                     {quizQuestions[quizIndex].options.map((opt, idx) => (
+                        <button key={idx} onClick={() => handleQuizAnswer(idx)} disabled={quizAnswered} className={`w-full p-2 text-left text-sm rounded transition ${quizAnswered ? idx === quizQuestions[quizIndex].correct ? 'bg-green-100 border border-green-500' : 'bg-gray-100' : 'bg-slate-50 hover:bg-slate-100'}`}>{opt}</button>
+                     ))}
+                  </div>
+                  {quizAnswered && <p className="mt-2 text-sm text-slate-600">{quizQuestions[quizIndex].explanation}</p>}
+                  {quizAnswered && quizIndex < quizQuestions.length - 1 && <button onClick={nextQuiz} className="mt-2 px-4 py-1 bg-slate-600 text-white rounded text-sm">Next Question</button>}
+               </div>
+               <div className="bg-slate-100 p-4 rounded-lg">
+                  <h3 className="font-semibold text-slate-800 mb-2">🔑 Key Takeaways</h3>
+                  <ul className="text-sm text-slate-700 space-y-1">
+                     <li>• Platforms enable others to create value—different from products</li>
+                     <li>• Developer-friendly APIs with good DX attract quality integrations</li>
+                     <li>• Partner programs align incentives for ecosystem growth</li>
+                     <li>• Fair governance builds trust; poor governance drives exodus</li>
+                     <li>• Monetize in alignment with the value you enable</li>
+                  </ul>
+               </div>
+            </div>
+         );
+      }
+      return null;
+   };
+
    const FinancialStatementsRenderer = () => {
       const [phase, setPhase] = useState<'intro' | 'play' | 'result'>('intro');
       const [showInfo, setShowInfo] = useState(false);
@@ -56452,6 +56683,8 @@ const GeneratedDiagram: React.FC<DiagramProps> = ({ type, data, title }) => {
             return <SubscriptionModelsRenderer />;
          case 'marketplace_dynamics':
             return <MarketplaceDynamicsRenderer />;
+         case 'platform_strategy':
+            return <PlatformStrategyRenderer />;
          case 'pricing_strategy':
             return <PricingStrategyRenderer />;
          case 'budgeting':
