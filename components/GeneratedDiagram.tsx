@@ -51571,6 +51571,237 @@ const GeneratedDiagram: React.FC<DiagramProps> = ({ type, data, title }) => {
       return null;
    };
 
+   // Topic 126: Community Building Interactive Educational Game
+   const CommunityBuildingRenderer = () => {
+      const [phase, setPhase] = useState<'intro' | 'tutorial' | 'play' | 'result'>('intro');
+      const [tutorialStep, setTutorialStep] = useState(0);
+      const [showInfo, setShowInfo] = useState(false);
+      const [infoTopic, setInfoTopic] = useState('');
+      const [scenarioIndex, setScenarioIndex] = useState(0);
+      const [score, setScore] = useState(0);
+      const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
+      const [answered, setAnswered] = useState(false);
+      const [quizIndex, setQuizIndex] = useState(0);
+      const [quizScore, setQuizScore] = useState(0);
+      const [quizAnswered, setQuizAnswered] = useState(false);
+      const [gameLog, setGameLog] = useState<string[]>([]);
+
+      const infoContent: Record<string, string> = {
+         'community_strategy': 'Community strategy defines why your community exists, who it serves, and what success looks like. Strong communities align member value with business goals—members get connection and learning, businesses get loyalty and advocacy.',
+         'platform_selection': 'Platform choice depends on audience and goals. Discord for real-time chat and gaming culture. Slack for professional B2B. Forums for searchable, long-form discussions. Social groups for casual engagement.',
+         'member_activation': 'Activation converts lurkers to participants. Use welcome sequences, starter prompts, easy first actions, and buddy systems. The first 48 hours are critical—engaged early members become long-term contributors.',
+         'content_programming': 'Programming creates reasons to engage: AMAs, challenges, themed discussions, member spotlights, learning sessions. Consistent cadence builds habits. Mix synchronous events with asynchronous content.',
+         'moderation': 'Moderation protects community culture. Clear guidelines, consistent enforcement, and empowered moderators. Balance safety with openness. Community self-moderation emerges in healthy cultures.',
+         'community_metrics': 'Key metrics: DAU/MAU ratio (engagement health), posts per active member, response rate, time to first response, member retention. Qualitative signals matter too—sentiment, story quality, relationship depth.',
+         'scaling_community': 'Scaling requires systems: documentation, moderator training, member leadership programs, automated workflows. The goal is community that runs itself with oversight, not constant intervention.'
+      };
+
+      const tutorialSteps = [
+         { title: 'Welcome to Community Building', content: 'Communities create lasting relationships between your brand and customers. Learn to build, engage, and scale communities that drive retention, advocacy, and organic growth.' },
+         { title: 'Defining Community Strategy', content: 'Start with purpose: Why should this community exist? What value do members get? How does it serve business goals? Alignment between member value and company value creates sustainable communities.' },
+         { title: 'Choosing Your Platform', content: 'Match platform to audience. Discord for real-time, younger audiences. Slack for B2B professionals. Forums for searchable knowledge. Consider where your audience already spends time.' },
+         { title: 'Member Activation', content: 'The first 48 hours determine if new members become active participants. Welcome them personally, provide easy first actions, connect them with peers, and celebrate early contributions.' },
+         { title: 'Content & Programming', content: 'Regular programming gives reasons to return: weekly discussions, AMAs, challenges, member spotlights. Mix events with evergreen content. Consistency builds engagement habits.' },
+         { title: 'Moderation & Culture', content: 'Culture is your community\'s personality. Define and enforce clear guidelines. Empower trusted members as moderators. Address conflicts quickly but fairly. Protect psychological safety.' },
+         { title: 'Measuring & Scaling', content: 'Track engagement (DAU/MAU), participation depth, retention, and qualitative health. Scale through member leadership, documentation, and automation—not just more staff.' }
+      ];
+
+      const scenarios = [
+         {
+            title: 'Launching a Customer Community',
+            description: 'Your SaaS company wants to build a customer community to reduce support tickets and increase retention. You need to decide on the initial approach.',
+            options: [
+               { text: 'Launch a public forum and invite all customers immediately', feedback: 'Mass invites to empty communities feel hollow. Starting too big makes it hard to establish culture and engagement patterns.', correct: false },
+               { text: 'Start with a small group of power users to seed content and culture', feedback: 'Excellent! Founding members establish culture and create initial content. Their engagement makes the community feel alive when you expand.', correct: true },
+               { text: 'Wait until you have dedicated community staff before starting', feedback: 'You can start small with existing team members. Waiting for perfect conditions delays learning what your community actually needs.', correct: false },
+               { text: 'Create the community inside your product with mandatory participation', feedback: 'Forced participation creates resentment, not community. Genuine engagement requires choice and perceived value.', correct: false }
+            ]
+         },
+         {
+            title: 'Handling Low Engagement',
+            description: 'Your community launched 3 months ago with 500 members, but only 20-30 participate regularly. Most members joined and never returned.',
+            options: [
+               { text: 'Send more email reminders about the community', feedback: 'More emails to unengaged members creates noise, not engagement. You need to fix the in-community experience first.', correct: false },
+               { text: 'Add gamification with points and leaderboards', feedback: 'Gamification can increase activity but often creates shallow engagement. Address root value issues first.', correct: false },
+               { text: 'Interview active members to understand what keeps them engaged, then replicate', feedback: 'Perfect! Understanding why active members stay reveals what value you\'re actually providing. Amplify what works rather than guessing.', correct: true },
+               { text: 'Close the community and try a different platform', feedback: 'Platform rarely causes engagement problems. The issue is likely value proposition or activation, not the tool.', correct: false }
+            ]
+         },
+         {
+            title: 'Managing Community Conflict',
+            description: 'A heated debate between two respected members is creating tension. Other members are taking sides, and some are leaving the community.',
+            options: [
+               { text: 'Delete the thread and pretend it didn\'t happen', feedback: 'Censorship without explanation damages trust. Members will notice and may feel unsafe expressing opinions.', correct: false },
+               { text: 'Let them work it out themselves without intervention', feedback: 'Unaddressed conflict can poison community culture. Leadership should guide resolution, especially when others are affected.', correct: false },
+               { text: 'Privately message both parties, acknowledge the issue publicly, and reinforce community values', feedback: 'Excellent! Private outreach shows respect, public acknowledgment shows leadership, and values reinforcement resets expectations for everyone.', correct: true },
+               { text: 'Ban both members to send a strong message', feedback: 'Banning respected members for a disagreement is heavy-handed and may cause more departures than the conflict itself.', correct: false }
+            ]
+         },
+         {
+            title: 'Scaling Community Operations',
+            description: 'Your community has grown to 5,000 active members. You\'re spending 40+ hours weekly on moderation and engagement. You need to scale sustainably.',
+            options: [
+               { text: 'Hire three full-time community managers immediately', feedback: 'Throwing staff at the problem is expensive and may not address systemic issues. Build systems before adding headcount.', correct: false },
+               { text: 'Reduce programming and engagement to what one person can handle', feedback: 'Cutting back may cause engagement decline. Scale through leverage, not reduction.', correct: false },
+               { text: 'Create a member leadership program and document processes for delegation', feedback: 'Perfect! Empowered member leaders scale engagement authentically. Documentation enables consistent quality as you delegate.', correct: true },
+               { text: 'Automate all moderation with AI bots', feedback: 'Full automation removes the human connection that makes communities valuable. Use automation for routine tasks, not relationship-building.', correct: false }
+            ]
+         }
+      ];
+
+      const quizQuestions = [
+         { question: 'Why should you start a community with a small founding member group?', options: ['To save money on platform costs', 'Founding members establish culture and seed initial engagement', 'Small groups are easier to moderate', 'Larger launches always fail'], correct: 1, explanation: 'Founding members create the initial culture, content, and engagement patterns. When you expand, new members join an already-active community.' },
+         { question: 'What is the most important period for new community member activation?', options: ['The first year', 'The first month', 'The first 48 hours', 'It doesn\'t matter when'], correct: 2, explanation: 'The first 48 hours are critical. Members who engage early are much more likely to become long-term participants. First impressions set engagement patterns.' },
+         { question: 'How should community conflicts be handled?', options: ['Always publicly to set examples', 'Always privately to avoid embarrassment', 'Private outreach with public acknowledgment and values reinforcement', 'Ignore them until they resolve naturally'], correct: 2, explanation: 'Private outreach respects individuals, public acknowledgment shows leadership, and values reinforcement reminds everyone of expected behavior.' },
+         { question: 'What is the best way to scale community operations?', options: ['Hire more staff proportional to member growth', 'Empower member leaders and build documentation for delegation', 'Reduce programming to manageable levels', 'Fully automate with AI tools'], correct: 1, explanation: 'Member leadership programs scale authentically—engaged members become community stewards. Documentation ensures quality as you delegate responsibilities.' },
+         { question: 'What does a healthy DAU/MAU ratio indicate in communities?', options: ['Total member count', 'How often members return and engage', 'Revenue per member', 'Content publication frequency'], correct: 1, explanation: 'DAU/MAU (daily active users / monthly active users) measures engagement frequency. Higher ratios indicate members return regularly, signaling community health.' }
+      ];
+
+      const handleAnswer = (optionIndex: number) => {
+         if (answered) return;
+         setSelectedAnswer(optionIndex);
+         setAnswered(true);
+         const isCorrect = scenarios[scenarioIndex].options[optionIndex].correct;
+         if (isCorrect) setScore(score + 1);
+         setGameLog([...gameLog, `Scenario ${scenarioIndex + 1}: ${isCorrect ? 'Correct' : 'Incorrect'}`]);
+      };
+
+      const nextScenario = () => {
+         if (scenarioIndex < scenarios.length - 1) {
+            setScenarioIndex(scenarioIndex + 1);
+            setSelectedAnswer(null);
+            setAnswered(false);
+         } else {
+            setPhase('result');
+         }
+      };
+
+      const handleQuizAnswer = (optionIndex: number) => {
+         if (quizAnswered) return;
+         setQuizAnswered(true);
+         if (optionIndex === quizQuestions[quizIndex].correct) {
+            setQuizScore(quizScore + 1);
+         }
+      };
+
+      const nextQuiz = () => {
+         if (quizIndex < quizQuestions.length - 1) {
+            setQuizIndex(quizIndex + 1);
+            setQuizAnswered(false);
+         }
+      };
+
+      if (phase === 'intro') {
+         return (
+            <div className="p-6 bg-gradient-to-br from-rose-50 to-pink-100 rounded-xl shadow-lg max-w-2xl mx-auto">
+               <h2 className="text-2xl font-bold text-rose-800 mb-4">👥 Community Building Mastery</h2>
+               <p className="text-rose-700 mb-4">Learn to build thriving communities that drive loyalty, advocacy, and organic growth. Great communities turn customers into evangelists.</p>
+               <div className="bg-white p-4 rounded-lg mb-4">
+                  <h3 className="font-semibold text-rose-800 mb-2">What You'll Learn:</h3>
+                  <ul className="text-sm text-rose-600 space-y-1">
+                     <li>• Community strategy and platform selection</li>
+                     <li>• Member activation and engagement</li>
+                     <li>• Moderation and culture building</li>
+                     <li>• Scaling community operations</li>
+                  </ul>
+               </div>
+               <button onClick={() => setPhase('tutorial')} className="w-full py-3 bg-rose-600 text-white rounded-lg font-semibold hover:bg-rose-700 transition">Start Learning</button>
+            </div>
+         );
+      }
+
+      if (phase === 'tutorial') {
+         return (
+            <div className="p-6 bg-gradient-to-br from-rose-50 to-pink-100 rounded-xl shadow-lg max-w-2xl mx-auto">
+               <div className="flex justify-between items-center mb-4">
+                  <h2 className="text-xl font-bold text-rose-800">Tutorial: {tutorialSteps[tutorialStep].title}</h2>
+                  <span className="text-sm text-rose-600">{tutorialStep + 1} / {tutorialSteps.length}</span>
+               </div>
+               <div className="bg-white p-4 rounded-lg mb-4">
+                  <p className="text-rose-700">{tutorialSteps[tutorialStep].content}</p>
+               </div>
+               <div className="flex flex-wrap gap-2 mb-4">
+                  {Object.keys(infoContent).map(topic => (
+                     <button key={topic} onClick={() => { setInfoTopic(topic); setShowInfo(true); }} className="text-xs px-2 py-1 bg-rose-100 text-rose-700 rounded-full hover:bg-rose-200 transition">ℹ️ {topic.replace(/_/g, ' ')}</button>
+                  ))}
+               </div>
+               {showInfo && (
+                  <div className="bg-rose-50 border border-rose-200 p-3 rounded-lg mb-4">
+                     <div className="flex justify-between items-center mb-2">
+                        <span className="font-semibold text-rose-800">{infoTopic.replace(/_/g, ' ')}</span>
+                        <button onClick={() => setShowInfo(false)} className="text-rose-600">✕</button>
+                     </div>
+                     <p className="text-sm text-rose-600">{infoContent[infoTopic]}</p>
+                  </div>
+               )}
+               <div className="flex gap-2">
+                  {tutorialStep > 0 && <button onClick={() => setTutorialStep(tutorialStep - 1)} className="flex-1 py-2 border border-rose-300 text-rose-600 rounded-lg hover:bg-rose-50 transition">Back</button>}
+                  <button onClick={() => tutorialStep < tutorialSteps.length - 1 ? setTutorialStep(tutorialStep + 1) : setPhase('play')} className="flex-1 py-2 bg-rose-600 text-white rounded-lg hover:bg-rose-700 transition">{tutorialStep < tutorialSteps.length - 1 ? 'Next' : 'Start Practice'}</button>
+               </div>
+            </div>
+         );
+      }
+
+      if (phase === 'play') {
+         const currentScenario = scenarios[scenarioIndex];
+         return (
+            <div className="p-6 bg-gradient-to-br from-rose-50 to-pink-100 rounded-xl shadow-lg max-w-2xl mx-auto">
+               <div className="flex justify-between items-center mb-4">
+                  <h2 className="text-xl font-bold text-rose-800">Scenario {scenarioIndex + 1} of {scenarios.length}</h2>
+                  <span className="text-sm bg-rose-200 text-rose-800 px-2 py-1 rounded">Score: {score}</span>
+               </div>
+               <div className="bg-white p-4 rounded-lg mb-4">
+                  <h3 className="font-semibold text-rose-800 mb-2">{currentScenario.title}</h3>
+                  <p className="text-rose-700 text-sm">{currentScenario.description}</p>
+               </div>
+               <div className="space-y-2 mb-4">
+                  {currentScenario.options.map((option, idx) => (
+                     <button key={idx} onClick={() => handleAnswer(idx)} disabled={answered} className={`w-full p-3 text-left rounded-lg transition text-sm ${answered ? option.correct ? 'bg-green-100 border-2 border-green-500' : selectedAnswer === idx ? 'bg-red-100 border-2 border-red-500' : 'bg-gray-100' : 'bg-white hover:bg-rose-50 border border-rose-200'}`}>
+                        {option.text}
+                        {answered && selectedAnswer === idx && <p className="mt-2 text-xs text-gray-600">{option.feedback}</p>}
+                     </button>
+                  ))}
+               </div>
+               {answered && <button onClick={nextScenario} className="w-full py-2 bg-rose-600 text-white rounded-lg hover:bg-rose-700 transition">{scenarioIndex < scenarios.length - 1 ? 'Next Scenario' : 'See Results'}</button>}
+            </div>
+         );
+      }
+
+      if (phase === 'result') {
+         return (
+            <div className="p-6 bg-gradient-to-br from-rose-50 to-pink-100 rounded-xl shadow-lg max-w-2xl mx-auto">
+               <h2 className="text-2xl font-bold text-rose-800 mb-4">🎯 Results</h2>
+               <div className="bg-white p-4 rounded-lg mb-4">
+                  <p className="text-lg text-rose-700">Scenario Score: <span className="font-bold">{score} / {scenarios.length}</span></p>
+                  <p className="text-lg text-rose-700">Quiz Score: <span className="font-bold">{quizScore} / {quizQuestions.length}</span></p>
+               </div>
+               <div className="bg-white p-4 rounded-lg mb-4">
+                  <h3 className="font-semibold text-rose-800 mb-2">Quiz: Test Your Knowledge</h3>
+                  <p className="text-sm text-rose-700 mb-3">{quizQuestions[quizIndex].question}</p>
+                  <div className="space-y-2">
+                     {quizQuestions[quizIndex].options.map((opt, idx) => (
+                        <button key={idx} onClick={() => handleQuizAnswer(idx)} disabled={quizAnswered} className={`w-full p-2 text-left text-sm rounded transition ${quizAnswered ? idx === quizQuestions[quizIndex].correct ? 'bg-green-100 border border-green-500' : 'bg-gray-100' : 'bg-rose-50 hover:bg-rose-100'}`}>{opt}</button>
+                     ))}
+                  </div>
+                  {quizAnswered && <p className="mt-2 text-sm text-rose-600">{quizQuestions[quizIndex].explanation}</p>}
+                  {quizAnswered && quizIndex < quizQuestions.length - 1 && <button onClick={nextQuiz} className="mt-2 px-4 py-1 bg-rose-600 text-white rounded text-sm">Next Question</button>}
+               </div>
+               <div className="bg-rose-100 p-4 rounded-lg">
+                  <h3 className="font-semibold text-rose-800 mb-2">🔑 Key Takeaways</h3>
+                  <ul className="text-sm text-rose-700 space-y-1">
+                     <li>• Start small with founding members who establish culture</li>
+                     <li>• The first 48 hours are critical for new member activation</li>
+                     <li>• Consistent programming creates engagement habits</li>
+                     <li>• Handle conflicts with private outreach and public values reinforcement</li>
+                     <li>• Scale through member leadership, not just staff</li>
+                  </ul>
+               </div>
+            </div>
+         );
+      }
+      return null;
+   };
+
    const FinancialStatementsRenderer = () => {
       const [phase, setPhase] = useState<'intro' | 'play' | 'result'>('intro');
       const [showInfo, setShowInfo] = useState(false);
@@ -55520,6 +55751,8 @@ const GeneratedDiagram: React.FC<DiagramProps> = ({ type, data, title }) => {
             return <GrowthLoopsRenderer />;
          case 'product_led_growth':
             return <ProductLedGrowthRenderer />;
+         case 'community_building':
+            return <CommunityBuildingRenderer />;
          case 'pricing_strategy':
             return <PricingStrategyRenderer />;
          case 'budgeting':
