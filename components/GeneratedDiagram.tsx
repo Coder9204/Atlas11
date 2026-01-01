@@ -51109,6 +51109,237 @@ const GeneratedDiagram: React.FC<DiagramProps> = ({ type, data, title }) => {
       return null;
    };
 
+   // Topic 124: Growth Loops Interactive Educational Game
+   const GrowthLoopsRenderer = () => {
+      const [phase, setPhase] = useState<'intro' | 'tutorial' | 'play' | 'result'>('intro');
+      const [tutorialStep, setTutorialStep] = useState(0);
+      const [showInfo, setShowInfo] = useState(false);
+      const [infoTopic, setInfoTopic] = useState('');
+      const [scenarioIndex, setScenarioIndex] = useState(0);
+      const [score, setScore] = useState(0);
+      const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
+      const [answered, setAnswered] = useState(false);
+      const [quizIndex, setQuizIndex] = useState(0);
+      const [quizScore, setQuizScore] = useState(0);
+      const [quizAnswered, setQuizAnswered] = useState(false);
+      const [gameLog, setGameLog] = useState<string[]>([]);
+
+      const infoContent: Record<string, string> = {
+         'viral_loop': 'A viral loop is a self-reinforcing cycle where users invite others who become users themselves. Key metric is viral coefficient (K): if K > 1, each user brings in more than one new user, creating exponential growth.',
+         'content_loop': 'Content loops leverage user-generated content to drive organic acquisition. Users create content → content gets indexed/shared → new users discover content → new users create more content. Examples: YouTube, Pinterest, Medium.',
+         'paid_loop': 'Paid loops reinvest revenue into acquisition. Users pay → revenue funds ads → ads acquire new users → new users pay. Sustainable when LTV > CAC with healthy margins for reinvestment.',
+         'product_loop': 'Product loops are engagement cycles where usage creates more value. Using the product → creates value → attracts more users → network effects → more value for everyone. Examples: Slack, LinkedIn.',
+         'compound_growth': 'Compound growth occurs when multiple loops reinforce each other. A product might have viral sharing, content creation, and paid acquisition all working together, each amplifying the others.',
+         'loop_metrics': 'Key loop metrics: Cycle Time (how fast users complete a loop), Conversion Rate (% who complete each step), Viral Coefficient (users generated per user), Retention Rate (users who stay in the loop).',
+         'loop_friction': 'Loop friction includes any barriers that prevent users from completing the growth cycle. Reducing friction (simpler sharing, easier invites, faster value delivery) accelerates loop velocity.'
+      };
+
+      const tutorialSteps = [
+         { title: 'Welcome to Growth Loops', content: 'Growth loops are self-reinforcing systems that drive sustainable growth. Unlike linear funnels, loops create compounding effects where each cycle generates inputs for the next cycle.' },
+         { title: 'Viral Loops', content: 'Viral loops spread through user referrals. The viral coefficient (K) measures users generated per user. With K > 1, you get exponential growth. Even K < 1 amplifies other acquisition channels.' },
+         { title: 'Content Loops', content: 'Content loops use user-generated content as a growth engine. Content → SEO/Social discovery → New users → More content. Pinterest, YouTube, and Reddit all run on content loops.' },
+         { title: 'Paid Loops', content: 'Paid loops reinvest revenue into acquisition. Revenue → Paid ads → New users → Revenue. Sustainable when LTV exceeds CAC with margin for reinvestment and growth.' },
+         { title: 'Product Loops', content: 'Product loops create value through usage itself. More users → More value → More attractive to new users. Network effects in Slack, Figma, and LinkedIn exemplify product loops.' },
+         { title: 'Compound Growth', content: 'The most powerful growth comes from multiple loops reinforcing each other. Viral sharing drives content, content improves SEO, SEO funds paid acquisition, and all loops compound.' },
+         { title: 'Measuring & Optimizing Loops', content: 'Track cycle time, step conversion rates, viral coefficient, and retention. Identify friction points and systematically reduce them to accelerate loop velocity and improve output.' }
+      ];
+
+      const scenarios = [
+         {
+            title: 'Designing a Referral Program',
+            description: 'Your mobile app has strong retention but slow organic growth. You\'re tasked with designing a referral program to create a viral loop.',
+            options: [
+               { text: 'Offer cash rewards for referrals with no restrictions', feedback: 'Unrestricted cash rewards attract fraud and low-quality users who only want the reward, not your product.', correct: false },
+               { text: 'Give referrers credit when referred users complete a valuable action', feedback: 'Excellent! Tying rewards to valuable actions (purchase, subscription, activation) ensures quality referrals and sustainable unit economics.', correct: true },
+               { text: 'Make sharing mandatory to use premium features', feedback: 'Forced sharing creates resentment and low-quality referrals. Users share spam links that damage brand perception.', correct: false },
+               { text: 'Only reward the referred user, not the referrer', feedback: 'Without incentives for referrers, sharing rates will be low. Both sides need motivation for viral loops to work.', correct: false }
+            ]
+         },
+         {
+            title: 'Building a Content Loop',
+            description: 'You\'re growing a professional community platform. Users can post articles and discussions. How do you create a sustainable content loop?',
+            options: [
+               { text: 'Pay users per article to maximize content volume', feedback: 'Paid content often becomes low-quality content farms. Quality suffers, and it\'s not sustainable at scale.', correct: false },
+               { text: 'Enable SEO-optimized public profiles and content that rank on Google', feedback: 'Perfect! Public, indexed content drives organic discovery. New users find content → join → create content → attract more users through search.', correct: true },
+               { text: 'Keep all content private to create exclusivity', feedback: 'Private content can\'t be discovered organically. You miss the acquisition portion of the content loop.', correct: false },
+               { text: 'Auto-generate content using AI to fill the platform', feedback: 'AI content lacks authenticity and doesn\'t create the user engagement needed for a true content loop.', correct: false }
+            ]
+         },
+         {
+            title: 'Optimizing a Paid Loop',
+            description: 'Your SaaS product has LTV of $300 and CAC of $200. You want to build a sustainable paid acquisition loop. What\'s the best approach?',
+            options: [
+               { text: 'Spend all profit on ads to maximize growth', feedback: 'No margin for operations, R&D, or market changes. This aggressive approach is risky and unsustainable.', correct: false },
+               { text: 'Reduce CAC through better targeting and creative optimization', feedback: 'Good partial answer, but only focuses on cost. The best paid loops also focus on increasing LTV.', correct: false },
+               { text: 'Increase LTV through upsells while optimizing CAC, reinvesting 50% of profit', feedback: 'Excellent! Improving both sides of the equation while maintaining sustainable reinvestment creates a healthy, scalable paid loop.', correct: true },
+               { text: 'Stop paid acquisition since organic is cheaper', feedback: 'Paid acquisition, when the math works, is a valuable growth channel. The goal is optimization, not elimination.', correct: false }
+            ]
+         },
+         {
+            title: 'Creating Network Effects',
+            description: 'You\'re building a B2B collaboration tool. Each company uses it internally, but there\'s no cross-company interaction. How do you create a product loop with network effects?',
+            options: [
+               { text: 'Add social features like public profiles and followers', feedback: 'B2B users often don\'t want public exposure. Social features may not align with professional use cases.', correct: false },
+               { text: 'Enable external collaboration where companies invite clients/partners', feedback: 'Perfect! External sharing creates a product loop: companies invite partners → partners adopt → partners invite their clients → exponential network growth.', correct: true },
+               { text: 'Create a marketplace for companies to sell to each other', feedback: 'A marketplace is a different business model that may not align with your collaboration tool\'s core value.', correct: false },
+               { text: 'Focus only on making the internal experience better', feedback: 'Without cross-company interaction, there\'s no network effect. Each company is isolated, limiting viral potential.', correct: false }
+            ]
+         }
+      ];
+
+      const quizQuestions = [
+         { question: 'What does a viral coefficient (K) greater than 1 indicate?', options: ['The product is profitable', 'Each user brings more than one new user on average', 'Marketing costs are too high', 'Retention is above average'], correct: 1, explanation: 'K > 1 means exponential viral growth: each user generates more than one additional user, creating a self-sustaining acquisition engine.' },
+         { question: 'Why are growth loops more powerful than linear funnels?', options: ['They\'re easier to implement', 'Each cycle creates inputs for the next cycle, compounding over time', 'They require less budget', 'They only work for B2C products'], correct: 1, explanation: 'Loops compound because outputs become inputs. A funnel ends; a loop continues cycling, creating accelerating growth over time.' },
+         { question: 'What makes a content loop effective for organic growth?', options: ['Paying users to create content', 'User content that ranks in search and drives new user discovery', 'Keeping content exclusive to premium users', 'Limiting content to prevent spam'], correct: 1, explanation: 'Content loops work when user content is discoverable (SEO, social sharing), bringing new users who create more discoverable content.' },
+         { question: 'What is the key to a sustainable paid acquisition loop?', options: ['Spending 100% of revenue on ads', 'Ensuring LTV significantly exceeds CAC with room for reinvestment', 'Only using organic channels', 'Acquiring users regardless of quality'], correct: 1, explanation: 'Paid loops require positive unit economics (LTV > CAC) with enough margin to reinvest in growth while funding operations.' },
+         { question: 'How do product loops create network effects?', options: ['By adding more features', 'By making the product more valuable as more people use it', 'By reducing prices for larger customers', 'By requiring annual contracts'], correct: 1, explanation: 'Product loops with network effects become more valuable with each additional user, creating a self-reinforcing cycle that attracts even more users.' }
+      ];
+
+      const handleAnswer = (optionIndex: number) => {
+         if (answered) return;
+         setSelectedAnswer(optionIndex);
+         setAnswered(true);
+         const isCorrect = scenarios[scenarioIndex].options[optionIndex].correct;
+         if (isCorrect) setScore(score + 1);
+         setGameLog([...gameLog, `Scenario ${scenarioIndex + 1}: ${isCorrect ? 'Correct' : 'Incorrect'}`]);
+      };
+
+      const nextScenario = () => {
+         if (scenarioIndex < scenarios.length - 1) {
+            setScenarioIndex(scenarioIndex + 1);
+            setSelectedAnswer(null);
+            setAnswered(false);
+         } else {
+            setPhase('result');
+         }
+      };
+
+      const handleQuizAnswer = (optionIndex: number) => {
+         if (quizAnswered) return;
+         setQuizAnswered(true);
+         if (optionIndex === quizQuestions[quizIndex].correct) {
+            setQuizScore(quizScore + 1);
+         }
+      };
+
+      const nextQuiz = () => {
+         if (quizIndex < quizQuestions.length - 1) {
+            setQuizIndex(quizIndex + 1);
+            setQuizAnswered(false);
+         }
+      };
+
+      if (phase === 'intro') {
+         return (
+            <div className="p-6 bg-gradient-to-br from-emerald-50 to-green-100 rounded-xl shadow-lg max-w-2xl mx-auto">
+               <h2 className="text-2xl font-bold text-emerald-800 mb-4">🔄 Growth Loops Mastery</h2>
+               <p className="text-emerald-700 mb-4">Learn to design self-reinforcing growth systems that compound over time. Growth loops are the secret behind the world's fastest-growing companies.</p>
+               <div className="bg-white p-4 rounded-lg mb-4">
+                  <h3 className="font-semibold text-emerald-800 mb-2">What You'll Learn:</h3>
+                  <ul className="text-sm text-emerald-600 space-y-1">
+                     <li>• Viral loops and viral coefficient optimization</li>
+                     <li>• Content loops for organic acquisition</li>
+                     <li>• Paid loops and sustainable reinvestment</li>
+                     <li>• Product loops and network effects</li>
+                  </ul>
+               </div>
+               <button onClick={() => setPhase('tutorial')} className="w-full py-3 bg-emerald-600 text-white rounded-lg font-semibold hover:bg-emerald-700 transition">Start Learning</button>
+            </div>
+         );
+      }
+
+      if (phase === 'tutorial') {
+         return (
+            <div className="p-6 bg-gradient-to-br from-emerald-50 to-green-100 rounded-xl shadow-lg max-w-2xl mx-auto">
+               <div className="flex justify-between items-center mb-4">
+                  <h2 className="text-xl font-bold text-emerald-800">Tutorial: {tutorialSteps[tutorialStep].title}</h2>
+                  <span className="text-sm text-emerald-600">{tutorialStep + 1} / {tutorialSteps.length}</span>
+               </div>
+               <div className="bg-white p-4 rounded-lg mb-4">
+                  <p className="text-emerald-700">{tutorialSteps[tutorialStep].content}</p>
+               </div>
+               <div className="flex flex-wrap gap-2 mb-4">
+                  {Object.keys(infoContent).map(topic => (
+                     <button key={topic} onClick={() => { setInfoTopic(topic); setShowInfo(true); }} className="text-xs px-2 py-1 bg-emerald-100 text-emerald-700 rounded-full hover:bg-emerald-200 transition">ℹ️ {topic.replace(/_/g, ' ')}</button>
+                  ))}
+               </div>
+               {showInfo && (
+                  <div className="bg-emerald-50 border border-emerald-200 p-3 rounded-lg mb-4">
+                     <div className="flex justify-between items-center mb-2">
+                        <span className="font-semibold text-emerald-800">{infoTopic.replace(/_/g, ' ')}</span>
+                        <button onClick={() => setShowInfo(false)} className="text-emerald-600">✕</button>
+                     </div>
+                     <p className="text-sm text-emerald-600">{infoContent[infoTopic]}</p>
+                  </div>
+               )}
+               <div className="flex gap-2">
+                  {tutorialStep > 0 && <button onClick={() => setTutorialStep(tutorialStep - 1)} className="flex-1 py-2 border border-emerald-300 text-emerald-600 rounded-lg hover:bg-emerald-50 transition">Back</button>}
+                  <button onClick={() => tutorialStep < tutorialSteps.length - 1 ? setTutorialStep(tutorialStep + 1) : setPhase('play')} className="flex-1 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition">{tutorialStep < tutorialSteps.length - 1 ? 'Next' : 'Start Practice'}</button>
+               </div>
+            </div>
+         );
+      }
+
+      if (phase === 'play') {
+         const currentScenario = scenarios[scenarioIndex];
+         return (
+            <div className="p-6 bg-gradient-to-br from-emerald-50 to-green-100 rounded-xl shadow-lg max-w-2xl mx-auto">
+               <div className="flex justify-between items-center mb-4">
+                  <h2 className="text-xl font-bold text-emerald-800">Scenario {scenarioIndex + 1} of {scenarios.length}</h2>
+                  <span className="text-sm bg-emerald-200 text-emerald-800 px-2 py-1 rounded">Score: {score}</span>
+               </div>
+               <div className="bg-white p-4 rounded-lg mb-4">
+                  <h3 className="font-semibold text-emerald-800 mb-2">{currentScenario.title}</h3>
+                  <p className="text-emerald-700 text-sm">{currentScenario.description}</p>
+               </div>
+               <div className="space-y-2 mb-4">
+                  {currentScenario.options.map((option, idx) => (
+                     <button key={idx} onClick={() => handleAnswer(idx)} disabled={answered} className={`w-full p-3 text-left rounded-lg transition text-sm ${answered ? option.correct ? 'bg-green-100 border-2 border-green-500' : selectedAnswer === idx ? 'bg-red-100 border-2 border-red-500' : 'bg-gray-100' : 'bg-white hover:bg-emerald-50 border border-emerald-200'}`}>
+                        {option.text}
+                        {answered && selectedAnswer === idx && <p className="mt-2 text-xs text-gray-600">{option.feedback}</p>}
+                     </button>
+                  ))}
+               </div>
+               {answered && <button onClick={nextScenario} className="w-full py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition">{scenarioIndex < scenarios.length - 1 ? 'Next Scenario' : 'See Results'}</button>}
+            </div>
+         );
+      }
+
+      if (phase === 'result') {
+         return (
+            <div className="p-6 bg-gradient-to-br from-emerald-50 to-green-100 rounded-xl shadow-lg max-w-2xl mx-auto">
+               <h2 className="text-2xl font-bold text-emerald-800 mb-4">🎯 Results</h2>
+               <div className="bg-white p-4 rounded-lg mb-4">
+                  <p className="text-lg text-emerald-700">Scenario Score: <span className="font-bold">{score} / {scenarios.length}</span></p>
+                  <p className="text-lg text-emerald-700">Quiz Score: <span className="font-bold">{quizScore} / {quizQuestions.length}</span></p>
+               </div>
+               <div className="bg-white p-4 rounded-lg mb-4">
+                  <h3 className="font-semibold text-emerald-800 mb-2">Quiz: Test Your Knowledge</h3>
+                  <p className="text-sm text-emerald-700 mb-3">{quizQuestions[quizIndex].question}</p>
+                  <div className="space-y-2">
+                     {quizQuestions[quizIndex].options.map((opt, idx) => (
+                        <button key={idx} onClick={() => handleQuizAnswer(idx)} disabled={quizAnswered} className={`w-full p-2 text-left text-sm rounded transition ${quizAnswered ? idx === quizQuestions[quizIndex].correct ? 'bg-green-100 border border-green-500' : 'bg-gray-100' : 'bg-emerald-50 hover:bg-emerald-100'}`}>{opt}</button>
+                     ))}
+                  </div>
+                  {quizAnswered && <p className="mt-2 text-sm text-emerald-600">{quizQuestions[quizIndex].explanation}</p>}
+                  {quizAnswered && quizIndex < quizQuestions.length - 1 && <button onClick={nextQuiz} className="mt-2 px-4 py-1 bg-emerald-600 text-white rounded text-sm">Next Question</button>}
+               </div>
+               <div className="bg-emerald-100 p-4 rounded-lg">
+                  <h3 className="font-semibold text-emerald-800 mb-2">🔑 Key Takeaways</h3>
+                  <ul className="text-sm text-emerald-700 space-y-1">
+                     <li>• Growth loops compound; funnels end. Design for cycles, not linearity.</li>
+                     <li>• Viral coefficient above 1 means exponential growth; even below 1 amplifies other channels</li>
+                     <li>• Content loops need discoverability (SEO, social) to drive acquisition</li>
+                     <li>• Paid loops require LTV {">"} CAC with margin for sustainable reinvestment</li>
+                     <li>• Product loops with network effects become more valuable with each user</li>
+                  </ul>
+               </div>
+            </div>
+         );
+      }
+      return null;
+   };
+
    const FinancialStatementsRenderer = () => {
       const [phase, setPhase] = useState<'intro' | 'play' | 'result'>('intro');
       const [showInfo, setShowInfo] = useState(false);
@@ -55054,6 +55285,8 @@ const GeneratedDiagram: React.FC<DiagramProps> = ({ type, data, title }) => {
             return <DeepLinkingRenderer />;
          case 'mobile_analytics':
             return <MobileAnalyticsRenderer />;
+         case 'growth_loops':
+            return <GrowthLoopsRenderer />;
          case 'pricing_strategy':
             return <PricingStrategyRenderer />;
          case 'budgeting':
