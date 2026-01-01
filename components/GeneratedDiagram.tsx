@@ -49098,6 +49098,366 @@ const GeneratedDiagram: React.FC<DiagramProps> = ({ type, data, title }) => {
       return null;
    };
 
+   const ForensicAccountingRenderer = () => {
+      const [phase, setPhase] = useState<'intro' | 'tutorial' | 'play' | 'result'>('intro');
+      const [tutorialStep, setTutorialStep] = useState(0);
+      const [showInfo, setShowInfo] = useState(false);
+      const [infoKey, setInfoKey] = useState<string>('');
+      const [scenarioIndex, setScenarioIndex] = useState(0);
+      const [score, setScore] = useState(0);
+      const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
+      const [answered, setAnswered] = useState(false);
+      const [quizIndex, setQuizIndex] = useState(0);
+      const [quizScore, setQuizScore] = useState(0);
+      const [quizAnswered, setQuizAnswered] = useState(false);
+      const [gameLog, setGameLog] = useState<string[]>([]);
+
+      const infoContent: Record<string, { title: string; content: string }> = {
+         'fraud_triangle': { title: 'Fraud Triangle', content: 'Three elements: Pressure (financial need), Opportunity (weak controls), Rationalization (justifying the act). All three must be present for fraud.' },
+         'benford_law': { title: "Benford's Law", content: 'Natural numbers follow predictable digit patterns. First digit is 1 about 30% of the time. Fraudsters create fake numbers that violate this.' },
+         'red_flags': { title: 'Red Flags', content: 'Warning signs: living beyond means, refusing vacation, excessive control, unusual entries, round numbers, sequential duplicates.' },
+         'skimming': { title: 'Skimming', content: 'Stealing cash before it enters books. Hard to detect since no record exists. Look for revenue anomalies vs industry benchmarks.' },
+         'shell_companies': { title: 'Shell Companies', content: 'Fake vendors for kickbacks or embezzlement. Signs: PO boxes, no website, round invoices, address matching employee.' }
+      };
+
+      const tutorialSteps = [
+         { title: 'Welcome to Forensic Accounting', desc: 'Learn to detect fraud, investigate irregularities, and follow the money trail.' },
+         { title: 'The Fraud Triangle', desc: 'Every fraud has three elements: Pressure, Opportunity, and Rationalization.', icon: '🔺' },
+         { title: 'Red Flag Detection', desc: 'Look for warning signs: unusual transactions, behavioral changes, control overrides.', icon: '🚩' },
+         { title: "Benford's Law Analysis", desc: 'Natural numbers follow predictable patterns. Fabricated data often violates these.', icon: '📊' },
+         { title: 'Follow the Money', desc: 'Trace transactions through accounts, identify shell companies, document evidence.', icon: '💰' },
+         { title: 'Investigation Protocol', desc: 'Preserve evidence, maintain chain of custody, conduct interviews strategically.', icon: '🔍' },
+         { title: 'Start Investigating!', desc: 'Analyze suspicious activity and build your case.', icon: '🕵️' }
+      ];
+
+      const scenarios = [
+         { title: 'The Overtime Scheme', situation: 'Payroll clerk processes overtime for 15 employees. Same 5 employees get overtime weekly, clerk refuses vacation, hours are always round (10, 20, 30).', question: 'What type of fraud is most likely?', options: ['Tax evasion', 'Ghost employee scheme', 'Overtime inflation/kickback scheme', 'Expense reimbursement fraud'], correct: 2, explanation: 'Classic overtime fraud: consistent beneficiaries, round numbers, clerk control with no vacation. Employees may be kickbacking part of inflated overtime.' },
+         { title: "Benford's Law Violation", situation: 'Vendor payments show first digit 5 appears 28% (expected: 8%), most invoices $4,500-$5,500, approval threshold is $5,000.', question: 'What does this pattern suggest?', options: ['Normal variation', 'Seasonal patterns', 'Invoice splitting to avoid approval', 'Vendor pricing strategy'], correct: 2, explanation: "Threshold manipulation. Invoices clustered below $5,000 to avoid approval. Benford's violation confirms artificial numbers." },
+         { title: 'Shell Company Detection', situation: 'New vendor "XYZ Consulting" receives $200K/year. PO Box address, no website, incorporated 1 month before first invoice, address matches employee spouse.', question: 'What is the most likely scheme?', options: ['Legitimate consulting', 'Billing scheme with fictitious vendor', 'Poor vendor vetting', 'Tax optimization'], correct: 1, explanation: 'Classic shell company fraud. Employee creates fake vendor, submits invoices, approves payments to themselves.' },
+         { title: 'The Lifestyle Audit', situation: 'Manager earning $75K drives new BMW, bought $400K house. Bank reconciliations show small cash shortages monthly, manager insists on doing recs personally.', question: 'What investigation step is most appropriate?', options: ['Confront immediately', 'Surprise cash count and bank confirmation', 'Wait for more evidence', 'Report to external auditors only'], correct: 1, explanation: 'Lifestyle exceeding income with control over cash suggests lapping or skimming. Surprise procedures prevent evidence destruction.' }
+      ];
+
+      const quizQuestions = [
+         { q: 'Which is NOT part of the fraud triangle?', options: ['Pressure', 'Opportunity', 'Rationalization', 'Documentation'], correct: 3 },
+         { q: "Benford's Law predicts first digit 1 appears:", options: ['10% of time', '~30% of time', '50% of time', 'Evenly distributed'], correct: 1 },
+         { q: '"Lapping" means:', options: ['Stealing petty cash', 'Using one payment to cover another theft', 'Creating fake vendors', 'Inflating expenses'], correct: 1 },
+         { q: 'Fraudsters refuse vacation because:', options: ['Dedicated employees', 'Fear of discovery', 'Heavy workload', 'No policy'], correct: 1 },
+         { q: 'Most common occupational fraud type:', options: ['Financial statement fraud', 'Asset misappropriation', 'Corruption', 'Cyber fraud'], correct: 1 }
+      ];
+
+      if (phase === 'intro') {
+         return (<div className="space-y-6"><div className="text-center"><div className="text-6xl mb-4">🕵️</div><h2 className="text-2xl font-bold text-slate-800">Forensic Accounting</h2><p className="text-gray-600 mt-2">Detect fraud and follow the money</p></div><div className="bg-slate-50 p-4 rounded-xl"><h3 className="font-semibold text-slate-700 mb-2">You'll Master:</h3><ul className="space-y-1 text-sm text-gray-600"><li>• Fraud triangle analysis</li><li>• Red flag identification</li><li>• Benford's Law application</li><li>• Investigation procedures</li></ul></div><button onClick={() => setPhase('tutorial')} className="w-full py-3 bg-slate-600 text-white rounded-xl font-semibold hover:bg-slate-700">Begin Training →</button></div>);
+      }
+
+      if (phase === 'tutorial') {
+         const step = tutorialSteps[tutorialStep];
+         return (<div className="space-y-6"><div className="flex justify-between text-sm text-gray-500 mb-2"><span>Tutorial</span><span>{tutorialStep + 1}/{tutorialSteps.length}</span></div><div className="w-full bg-gray-200 h-2 rounded-full"><div className="bg-slate-600 h-2 rounded-full transition-all" style={{ width: `${((tutorialStep + 1) / tutorialSteps.length) * 100}%` }} /></div><div className="text-center py-8"><div className="text-5xl mb-4">{step.icon || '🕵️'}</div><h3 className="text-xl font-bold text-slate-800">{step.title}</h3><p className="text-gray-600 mt-3">{step.desc}</p></div><div className="flex gap-3">{tutorialStep > 0 && (<button onClick={() => setTutorialStep(tutorialStep - 1)} className="flex-1 py-3 bg-gray-200 rounded-xl font-semibold">← Back</button>)}<button onClick={() => { if (tutorialStep < tutorialSteps.length - 1) setTutorialStep(tutorialStep + 1); else { setPhase('play'); setGameLog(['Investigation started']); } }} className="flex-1 py-3 bg-slate-600 text-white rounded-xl font-semibold">{tutorialStep < tutorialSteps.length - 1 ? 'Next →' : 'Start Cases →'}</button></div></div>);
+      }
+
+      if (phase === 'play') {
+         const sc = scenarios[scenarioIndex];
+         return (<div className="space-y-4"><div className="flex justify-between items-center"><span className="text-sm font-medium text-slate-600">Case {scenarioIndex + 1}/{scenarios.length}</span><span className="text-sm">Score: {score}/{scenarioIndex}</span></div><div className="bg-slate-100 p-4 rounded-xl"><div className="flex justify-between items-start"><h3 className="font-bold text-slate-800">{sc.title}</h3><button onClick={() => { setInfoKey('red_flags'); setShowInfo(true); }} className="text-slate-500 hover:text-slate-700">ℹ️</button></div><p className="text-sm text-gray-700 mt-2">{sc.situation}</p></div><div className="bg-amber-50 p-3 rounded-lg"><p className="font-medium text-amber-900">{sc.question}</p></div><div className="space-y-2">{sc.options.map((opt, i) => (<button key={i} onClick={() => { if (!answered) { setSelectedAnswer(i); setAnswered(true); if (i === sc.correct) { setScore(score + 1); setGameLog([...gameLog, `Solved: ${sc.title}`]); } } }} disabled={answered} className={`w-full p-3 rounded-lg text-left text-sm border-2 ${answered ? (i === sc.correct ? 'border-green-500 bg-green-50' : i === selectedAnswer ? 'border-red-400 bg-red-50' : 'border-gray-200') : 'border-gray-200 hover:border-slate-400'}`}>{opt}</button>))}</div>{answered && (<div className="bg-slate-50 p-4 rounded-xl"><p className="text-sm text-slate-700"><strong>Analysis:</strong> {sc.explanation}</p></div>)}{answered && (<button onClick={() => { if (scenarioIndex < scenarios.length - 1) { setScenarioIndex(scenarioIndex + 1); setSelectedAnswer(null); setAnswered(false); } else setPhase('result'); }} className="w-full py-3 bg-slate-600 text-white rounded-xl font-semibold">{scenarioIndex < scenarios.length - 1 ? 'Next Case →' : 'Final Quiz →'}</button>)}{showInfo && (<div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"><div className="bg-white rounded-2xl p-6 max-w-sm w-full"><h3 className="font-bold text-lg text-slate-800">{infoContent[infoKey]?.title}</h3><p className="text-gray-600 mt-2 text-sm">{infoContent[infoKey]?.content}</p><button onClick={() => setShowInfo(false)} className="mt-4 w-full py-2 bg-slate-600 text-white rounded-xl">Close</button></div></div>)}</div>);
+      }
+
+      if (phase === 'result') {
+         if (quizIndex < quizQuestions.length) {
+            const q = quizQuestions[quizIndex];
+            return (<div className="space-y-6"><div className="text-center"><h3 className="text-xl font-bold text-slate-800">Certification Exam</h3><p className="text-sm text-gray-500">Question {quizIndex + 1}/{quizQuestions.length}</p></div><div className="bg-slate-50 p-4 rounded-xl"><p className="font-medium">{q.q}</p></div><div className="space-y-2">{q.options.map((opt, i) => (<button key={i} onClick={() => { if (!quizAnswered) { setQuizAnswered(true); if (i === q.correct) setQuizScore(quizScore + 1); } }} disabled={quizAnswered} className={`w-full p-3 rounded-lg text-left border-2 ${quizAnswered ? (i === q.correct ? 'border-green-500 bg-green-50' : 'border-gray-200') : 'border-gray-200 hover:border-slate-400'}`}>{opt}</button>))}</div>{quizAnswered && (<button onClick={() => { setQuizIndex(quizIndex + 1); setQuizAnswered(false); }} className="w-full py-3 bg-slate-600 text-white rounded-xl font-semibold">Next →</button>)}</div>);
+         }
+         const pct = Math.round(((score + quizScore) / (scenarios.length + quizQuestions.length)) * 100);
+         return (<div className="space-y-6"><div className="text-center"><div className="text-6xl mb-4">{pct >= 80 ? '🕵️' : '📋'}</div><h2 className="text-2xl font-bold text-slate-800">Investigation Complete!</h2></div><div className="bg-slate-50 p-6 rounded-xl text-center"><div className="text-4xl font-bold text-slate-700">{pct}%</div><div className="text-sm text-gray-600">Forensic Mastery</div></div><button onClick={() => { setPhase('intro'); setScore(0); setScenarioIndex(0); setSelectedAnswer(null); setAnswered(false); setQuizIndex(0); setQuizAnswered(false); setQuizScore(0); }} className="w-full py-3 bg-slate-600 text-white rounded-xl font-semibold">Investigate Again</button></div>);
+      }
+      return null;
+   };
+
+   const CvpAnalysisRenderer = () => {
+      const [phase, setPhase] = useState<'intro' | 'tutorial' | 'play' | 'result'>('intro');
+      const [tutorialStep, setTutorialStep] = useState(0);
+      const [showInfo, setShowInfo] = useState(false);
+      const [infoKey, setInfoKey] = useState<string>('');
+      const [scenarioIndex, setScenarioIndex] = useState(0);
+      const [score, setScore] = useState(0);
+      const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
+      const [answered, setAnswered] = useState(false);
+      const [quizIndex, setQuizIndex] = useState(0);
+      const [quizScore, setQuizScore] = useState(0);
+      const [quizAnswered, setQuizAnswered] = useState(false);
+      const [gameLog, setGameLog] = useState<string[]>([]);
+
+      const infoContent: Record<string, { title: string; content: string }> = {
+         'contribution_margin': { title: 'Contribution Margin', content: 'Sales price minus variable costs. This "contributes" to covering fixed costs and profit. CM = Price - Variable Cost.' },
+         'break_even': { title: 'Break-Even Point', content: 'Where revenue equals total costs (profit = $0). BEP = Fixed Costs ÷ CM per Unit.' },
+         'margin_of_safety': { title: 'Margin of Safety', content: 'How far sales can drop before break-even. MOS = (Current - Break-Even) ÷ Current Sales.' },
+         'operating_leverage': { title: 'Operating Leverage', content: 'How sensitive profit is to sales changes. High fixed costs = high leverage = amplified swings.' },
+         'target_profit': { title: 'Target Profit', content: 'Units for desired profit: (Fixed Costs + Target Profit) ÷ CM per Unit.' }
+      };
+
+      const tutorialSteps = [
+         { title: 'Welcome to CVP Analysis', desc: 'Master Cost-Volume-Profit relationships for better pricing and volume decisions.' },
+         { title: 'Contribution Margin', desc: 'Price - Variable Cost = what each unit contributes to fixed costs and profit.', icon: '💵' },
+         { title: 'Break-Even Analysis', desc: 'Find where you neither profit nor lose. Fixed Costs ÷ CM = break-even units.', icon: '⚖️' },
+         { title: 'Target Profit Planning', desc: 'Work backwards from profit goals to determine required sales volume.', icon: '🎯' },
+         { title: 'Margin of Safety', desc: 'Measure your cushion - how far can sales fall before break-even?', icon: '🛡️' },
+         { title: 'Operating Leverage', desc: 'High fixed costs amplify profit changes. Understand your cost structure.', icon: '⚡' },
+         { title: 'Start Analyzing!', desc: 'Apply CVP concepts to strategic decisions.', icon: '📈' }
+      ];
+
+      const scenarios = [
+         { title: 'Coffee Shop Break-Even', situation: 'New coffee shop: Latte $5, Variable cost $1.50, Fixed costs $7,000/month.', question: 'How many lattes to break even monthly?', options: ['1,400', '2,000', '2,333', '4,667'], correct: 1, explanation: 'CM = $5 - $1.50 = $3.50. BEP = $7,000 ÷ $3.50 = 2,000 lattes. At 2,000 units, revenue covers all costs exactly.' },
+         { title: 'Pricing Decision', situation: 'SaaS: $50/month, $10 variable, $200K fixed, 6,000 subscribers. Consider $40 price to gain 2,000 more.', question: 'Should they lower price?', options: ['Yes - more revenue', 'No - current profit higher', 'Need more info', 'Same profit'], correct: 1, explanation: 'Current: $40 CM × 6,000 = $240K - $200K = $40K profit. New: $30 × 8,000 = $240K - $200K = $40K. Same profit but more customers to serve.' },
+         { title: 'Operating Leverage', situation: 'Company A: 80% fixed, 20% variable. Company B: 30% fixed, 70% variable. Same $1M revenue. Sales +10%.', question: 'Which sees larger profit increase?', options: ['Company A (high fixed)', 'Company B (high variable)', 'Same for both', 'Cannot determine'], correct: 0, explanation: 'Company A has 80% CM ratio - 10% sales adds $80K to profit. Company B has 30% CM - only $30K added. High fixed = amplified sensitivity.' },
+         { title: 'Margin of Safety', situation: 'Factory: 10,000 units, Price $100, VC $60, FC $250,000. Current sales $1M.', question: 'What is margin of safety %?', options: ['25%', '37.5%', '50%', '62.5%'], correct: 1, explanation: 'CM = $40. BEP = $250K ÷ $40 = 6,250 units ($625K). MOS = ($1M - $625K) ÷ $1M = 37.5%.' }
+      ];
+
+      const quizQuestions = [
+         { q: 'Contribution margin is:', options: ['Gross margin', 'Sales minus all costs', 'Sales minus variable costs', 'Net margin'], correct: 2 },
+         { q: 'Break-even is where:', options: ['Revenue = Variable costs', 'Profit = Fixed costs', 'Revenue = Total costs', 'CM = 0'], correct: 2 },
+         { q: 'High operating leverage means:', options: ['High variable costs', 'Low fixed costs', 'Profit sensitive to sales', 'Safe from losses'], correct: 2 },
+         { q: 'Target profit formula adds to fixed costs:', options: ['Variable costs', 'Desired profit', 'Tax expense', 'Depreciation'], correct: 1 },
+         { q: '50% margin of safety means:', options: ['50% profit margin', 'Sales can drop 50%', '50% costs fixed', 'Break-even at 50%'], correct: 1 }
+      ];
+
+      if (phase === 'intro') {
+         return (<div className="space-y-6"><div className="text-center"><div className="text-6xl mb-4">📊</div><h2 className="text-2xl font-bold text-green-800">CVP Analysis</h2><p className="text-gray-600 mt-2">Cost-Volume-Profit relationships</p></div><div className="bg-green-50 p-4 rounded-xl"><h3 className="font-semibold text-green-700 mb-2">You'll Master:</h3><ul className="space-y-1 text-sm text-gray-600"><li>• Contribution margin</li><li>• Break-even analysis</li><li>• Target profit planning</li><li>• Operating leverage</li></ul></div><button onClick={() => setPhase('tutorial')} className="w-full py-3 bg-green-600 text-white rounded-xl font-semibold hover:bg-green-700">Start Learning →</button></div>);
+      }
+
+      if (phase === 'tutorial') {
+         const step = tutorialSteps[tutorialStep];
+         return (<div className="space-y-6"><div className="flex justify-between text-sm text-gray-500 mb-2"><span>Tutorial</span><span>{tutorialStep + 1}/{tutorialSteps.length}</span></div><div className="w-full bg-gray-200 h-2 rounded-full"><div className="bg-green-600 h-2 rounded-full transition-all" style={{ width: `${((tutorialStep + 1) / tutorialSteps.length) * 100}%` }} /></div><div className="text-center py-8"><div className="text-5xl mb-4">{step.icon || '📊'}</div><h3 className="text-xl font-bold text-green-800">{step.title}</h3><p className="text-gray-600 mt-3">{step.desc}</p></div><div className="flex gap-3">{tutorialStep > 0 && (<button onClick={() => setTutorialStep(tutorialStep - 1)} className="flex-1 py-3 bg-gray-200 rounded-xl font-semibold">← Back</button>)}<button onClick={() => { if (tutorialStep < tutorialSteps.length - 1) setTutorialStep(tutorialStep + 1); else { setPhase('play'); setGameLog(['CVP analysis started']); } }} className="flex-1 py-3 bg-green-600 text-white rounded-xl font-semibold">{tutorialStep < tutorialSteps.length - 1 ? 'Next →' : 'Start →'}</button></div></div>);
+      }
+
+      if (phase === 'play') {
+         const sc = scenarios[scenarioIndex];
+         return (<div className="space-y-4"><div className="flex justify-between items-center"><span className="text-sm font-medium text-green-600">Scenario {scenarioIndex + 1}/{scenarios.length}</span><span className="text-sm">Score: {score}/{scenarioIndex}</span></div><div className="bg-green-100 p-4 rounded-xl"><div className="flex justify-between items-start"><h3 className="font-bold text-green-800">{sc.title}</h3><button onClick={() => { setInfoKey('contribution_margin'); setShowInfo(true); }} className="text-green-500">ℹ️</button></div><p className="text-sm text-gray-700 mt-2">{sc.situation}</p></div><div className="bg-amber-50 p-3 rounded-lg"><p className="font-medium text-amber-900">{sc.question}</p></div><div className="space-y-2">{sc.options.map((opt, i) => (<button key={i} onClick={() => { if (!answered) { setSelectedAnswer(i); setAnswered(true); if (i === sc.correct) { setScore(score + 1); setGameLog([...gameLog, `Solved: ${sc.title}`]); } } }} disabled={answered} className={`w-full p-3 rounded-lg text-left text-sm border-2 ${answered ? (i === sc.correct ? 'border-green-500 bg-green-50' : i === selectedAnswer ? 'border-red-400 bg-red-50' : 'border-gray-200') : 'border-gray-200 hover:border-green-400'}`}>{opt}</button>))}</div>{answered && (<div className="bg-green-50 p-4 rounded-xl"><p className="text-sm text-green-800"><strong>Analysis:</strong> {sc.explanation}</p></div>)}{answered && (<button onClick={() => { if (scenarioIndex < scenarios.length - 1) { setScenarioIndex(scenarioIndex + 1); setSelectedAnswer(null); setAnswered(false); } else setPhase('result'); }} className="w-full py-3 bg-green-600 text-white rounded-xl font-semibold">{scenarioIndex < scenarios.length - 1 ? 'Next →' : 'Quiz →'}</button>)}{showInfo && (<div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"><div className="bg-white rounded-2xl p-6 max-w-sm w-full"><h3 className="font-bold text-lg text-green-800">{infoContent[infoKey]?.title}</h3><p className="text-gray-600 mt-2 text-sm">{infoContent[infoKey]?.content}</p><button onClick={() => setShowInfo(false)} className="mt-4 w-full py-2 bg-green-600 text-white rounded-xl">Close</button></div></div>)}</div>);
+      }
+
+      if (phase === 'result') {
+         if (quizIndex < quizQuestions.length) {
+            const q = quizQuestions[quizIndex];
+            return (<div className="space-y-6"><div className="text-center"><h3 className="text-xl font-bold text-green-800">Quiz</h3><p className="text-sm text-gray-500">Question {quizIndex + 1}/{quizQuestions.length}</p></div><div className="bg-green-50 p-4 rounded-xl"><p className="font-medium">{q.q}</p></div><div className="space-y-2">{q.options.map((opt, i) => (<button key={i} onClick={() => { if (!quizAnswered) { setQuizAnswered(true); if (i === q.correct) setQuizScore(quizScore + 1); } }} disabled={quizAnswered} className={`w-full p-3 rounded-lg text-left border-2 ${quizAnswered ? (i === q.correct ? 'border-green-500 bg-green-50' : 'border-gray-200') : 'border-gray-200 hover:border-green-400'}`}>{opt}</button>))}</div>{quizAnswered && (<button onClick={() => { setQuizIndex(quizIndex + 1); setQuizAnswered(false); }} className="w-full py-3 bg-green-600 text-white rounded-xl font-semibold">Next →</button>)}</div>);
+         }
+         const pct = Math.round(((score + quizScore) / (scenarios.length + quizQuestions.length)) * 100);
+         return (<div className="space-y-6"><div className="text-center"><div className="text-6xl mb-4">{pct >= 80 ? '📈' : '📊'}</div><h2 className="text-2xl font-bold text-green-800">CVP Complete!</h2></div><div className="bg-green-50 p-6 rounded-xl text-center"><div className="text-4xl font-bold text-green-700">{pct}%</div><div className="text-sm text-gray-600">CVP Mastery</div></div><button onClick={() => { setPhase('intro'); setScore(0); setScenarioIndex(0); setSelectedAnswer(null); setAnswered(false); setQuizIndex(0); setQuizAnswered(false); setQuizScore(0); }} className="w-full py-3 bg-green-600 text-white rounded-xl font-semibold">Practice Again</button></div>);
+      }
+      return null;
+   };
+
+   const ManagerialAccountingRenderer = () => {
+      const [phase, setPhase] = useState<'intro' | 'tutorial' | 'play' | 'result'>('intro');
+      const [tutorialStep, setTutorialStep] = useState(0);
+      const [showInfo, setShowInfo] = useState(false);
+      const [infoKey, setInfoKey] = useState<string>('');
+      const [scenarioIndex, setScenarioIndex] = useState(0);
+      const [score, setScore] = useState(0);
+      const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
+      const [answered, setAnswered] = useState(false);
+      const [quizIndex, setQuizIndex] = useState(0);
+      const [quizScore, setQuizScore] = useState(0);
+      const [quizAnswered, setQuizAnswered] = useState(false);
+      const [gameLog, setGameLog] = useState<string[]>([]);
+
+      const infoContent: Record<string, { title: string; content: string }> = {
+         'relevant_costs': { title: 'Relevant Costs', content: 'Costs that differ between alternatives. Sunk costs are NEVER relevant. Focus on future, differential costs.' },
+         'variance_analysis': { title: 'Variance Analysis', content: 'Comparing actual to budget. Favorable = better than expected. Analyze to understand WHY.' },
+         'make_or_buy': { title: 'Make or Buy', content: 'Compare variable + avoidable fixed costs vs purchase price. Consider quality and reliability.' },
+         'cost_allocation': { title: 'Cost Allocation', content: 'Assigning indirect costs using allocation bases. Critical for pricing and profitability analysis.' },
+         'transfer_pricing': { title: 'Transfer Pricing', content: 'Prices between divisions. Methods: market, cost-plus, negotiated. Affects performance measurement.' }
+      };
+
+      const tutorialSteps = [
+         { title: 'Welcome to Managerial Accounting', desc: 'Use accounting for internal decision-making, planning, and control.' },
+         { title: 'Relevant Costs', desc: 'Not all costs matter for every decision. Focus on costs that differ between alternatives.', icon: '🎯' },
+         { title: 'Variance Analysis', desc: 'Compare actual to budget. Understand price, efficiency, and volume variances.', icon: '📊' },
+         { title: 'Cost Allocation', desc: 'Assign overhead fairly using appropriate allocation bases.', icon: '🔄' },
+         { title: 'Make or Buy', desc: 'Produce internally or outsource? Consider all relevant costs.', icon: '⚖️' },
+         { title: 'Special Orders', desc: 'Accept below-price orders? Focus on incremental costs and capacity.', icon: '📦' },
+         { title: 'Start Analyzing!', desc: 'Apply concepts to real business decisions.', icon: '💼' }
+      ];
+
+      const scenarios = [
+         { title: 'Sunk Cost Trap', situation: 'Spent $500K developing product. Market shows only $300K lifetime revenue. Additional $100K needed to launch.', question: 'Should they launch?', options: ['No - lost $500K', 'No - total loss $300K', 'Yes - $300K covers $100K', 'Need more info'], correct: 2, explanation: 'The $500K is sunk - already spent regardless. Compare future: $100K cost vs $300K revenue = $200K net gain. Launch!' },
+         { title: 'Make or Buy', situation: '10,000 units at $50 ($30 variable + $20 allocated fixed). Outsource offer: $40. Fixed costs continue.', question: 'Best decision?', options: ['Buy - saves $10', 'Make - saves $10', 'Indifferent', 'Buy - no overhead'], correct: 1, explanation: 'Make: $30 variable (fixed continues anyway). Buy: $40. Making saves $10/unit = $100K. Ignore allocated fixed!' },
+         { title: 'Special Order', situation: 'Current: 80,000 at $100, cost $75 (variable $50, fixed $25). Capacity: 100,000. Order: 15,000 at $60.', question: 'Accept the order?', options: ['No - below cost', 'No - below price', 'Yes - 15,000 units', 'Accept 10,000 only'], correct: 3, explanation: 'Only 20,000 capacity. At $60 vs $50 variable = $10 each. Accept 10,000 (capacity limit) for $100K extra profit.' },
+         { title: 'Variance Investigation', situation: 'Standard: 2 lbs × $5 = $10/unit. Actual: 2.3 lbs × $4.50 = $10.35. Produced 1,000 units.', question: 'Price and quantity variances?', options: ['$500F price, $650U qty', '$1,150F, $1,500U', '$1,000F, $1,350U', '$500U, $650F'], correct: 0, explanation: 'Price: ($5-$4.50) × 2,300 = $1,150F. Quantity: (2,000-2,300) × $5 = $1,500U. Net $350U matches actual variance.' }
+      ];
+
+      const quizQuestions = [
+         { q: 'Sunk costs are:', options: ['Always relevant', 'Never relevant', 'Sometimes relevant', 'Variable costs'], correct: 1 },
+         { q: 'Favorable variance means:', options: ['Higher than budget', 'Lower than budget', 'Better than expected', 'Worse than expected'], correct: 2 },
+         { q: 'In make-or-buy, which costs matter?', options: ['All manufacturing', 'Only variable', 'Avoidable costs', 'Allocated overhead'], correct: 2 },
+         { q: 'Special order price should exceed:', options: ['Full cost', 'Variable cost', 'Market price', 'Target profit'], correct: 1 },
+         { q: 'Transfer pricing affects:', options: ['External only', 'Divisional performance', 'GAAP only', 'Variable costs'], correct: 1 }
+      ];
+
+      if (phase === 'intro') {
+         return (<div className="space-y-6"><div className="text-center"><div className="text-6xl mb-4">📋</div><h2 className="text-2xl font-bold text-blue-800">Managerial Accounting</h2><p className="text-gray-600 mt-2">Decision-making, planning, control</p></div><div className="bg-blue-50 p-4 rounded-xl"><h3 className="font-semibold text-blue-700 mb-2">You'll Master:</h3><ul className="space-y-1 text-sm text-gray-600"><li>• Relevant cost analysis</li><li>• Variance analysis</li><li>• Make vs buy decisions</li><li>• Special order pricing</li></ul></div><button onClick={() => setPhase('tutorial')} className="w-full py-3 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700">Start Learning →</button></div>);
+      }
+
+      if (phase === 'tutorial') {
+         const step = tutorialSteps[tutorialStep];
+         return (<div className="space-y-6"><div className="flex justify-between text-sm text-gray-500 mb-2"><span>Tutorial</span><span>{tutorialStep + 1}/{tutorialSteps.length}</span></div><div className="w-full bg-gray-200 h-2 rounded-full"><div className="bg-blue-600 h-2 rounded-full transition-all" style={{ width: `${((tutorialStep + 1) / tutorialSteps.length) * 100}%` }} /></div><div className="text-center py-8"><div className="text-5xl mb-4">{step.icon || '📋'}</div><h3 className="text-xl font-bold text-blue-800">{step.title}</h3><p className="text-gray-600 mt-3">{step.desc}</p></div><div className="flex gap-3">{tutorialStep > 0 && (<button onClick={() => setTutorialStep(tutorialStep - 1)} className="flex-1 py-3 bg-gray-200 rounded-xl font-semibold">← Back</button>)}<button onClick={() => { if (tutorialStep < tutorialSteps.length - 1) setTutorialStep(tutorialStep + 1); else { setPhase('play'); setGameLog(['Analysis started']); } }} className="flex-1 py-3 bg-blue-600 text-white rounded-xl font-semibold">{tutorialStep < tutorialSteps.length - 1 ? 'Next →' : 'Start →'}</button></div></div>);
+      }
+
+      if (phase === 'play') {
+         const sc = scenarios[scenarioIndex];
+         return (<div className="space-y-4"><div className="flex justify-between items-center"><span className="text-sm font-medium text-blue-600">Decision {scenarioIndex + 1}/{scenarios.length}</span><span className="text-sm">Score: {score}/{scenarioIndex}</span></div><div className="bg-blue-100 p-4 rounded-xl"><div className="flex justify-between items-start"><h3 className="font-bold text-blue-800">{sc.title}</h3><button onClick={() => { setInfoKey('relevant_costs'); setShowInfo(true); }} className="text-blue-500">ℹ️</button></div><p className="text-sm text-gray-700 mt-2">{sc.situation}</p></div><div className="bg-amber-50 p-3 rounded-lg"><p className="font-medium text-amber-900">{sc.question}</p></div><div className="space-y-2">{sc.options.map((opt, i) => (<button key={i} onClick={() => { if (!answered) { setSelectedAnswer(i); setAnswered(true); if (i === sc.correct) { setScore(score + 1); setGameLog([...gameLog, `Correct: ${sc.title}`]); } } }} disabled={answered} className={`w-full p-3 rounded-lg text-left text-sm border-2 ${answered ? (i === sc.correct ? 'border-green-500 bg-green-50' : i === selectedAnswer ? 'border-red-400 bg-red-50' : 'border-gray-200') : 'border-gray-200 hover:border-blue-400'}`}>{opt}</button>))}</div>{answered && (<div className="bg-blue-50 p-4 rounded-xl"><p className="text-sm text-blue-800"><strong>Analysis:</strong> {sc.explanation}</p></div>)}{answered && (<button onClick={() => { if (scenarioIndex < scenarios.length - 1) { setScenarioIndex(scenarioIndex + 1); setSelectedAnswer(null); setAnswered(false); } else setPhase('result'); }} className="w-full py-3 bg-blue-600 text-white rounded-xl font-semibold">{scenarioIndex < scenarios.length - 1 ? 'Next →' : 'Quiz →'}</button>)}{showInfo && (<div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"><div className="bg-white rounded-2xl p-6 max-w-sm w-full"><h3 className="font-bold text-lg text-blue-800">{infoContent[infoKey]?.title}</h3><p className="text-gray-600 mt-2 text-sm">{infoContent[infoKey]?.content}</p><button onClick={() => setShowInfo(false)} className="mt-4 w-full py-2 bg-blue-600 text-white rounded-xl">Close</button></div></div>)}</div>);
+      }
+
+      if (phase === 'result') {
+         if (quizIndex < quizQuestions.length) {
+            const q = quizQuestions[quizIndex];
+            return (<div className="space-y-6"><div className="text-center"><h3 className="text-xl font-bold text-blue-800">Quiz</h3><p className="text-sm text-gray-500">Question {quizIndex + 1}/{quizQuestions.length}</p></div><div className="bg-blue-50 p-4 rounded-xl"><p className="font-medium">{q.q}</p></div><div className="space-y-2">{q.options.map((opt, i) => (<button key={i} onClick={() => { if (!quizAnswered) { setQuizAnswered(true); if (i === q.correct) setQuizScore(quizScore + 1); } }} disabled={quizAnswered} className={`w-full p-3 rounded-lg text-left border-2 ${quizAnswered ? (i === q.correct ? 'border-green-500 bg-green-50' : 'border-gray-200') : 'border-gray-200 hover:border-blue-400'}`}>{opt}</button>))}</div>{quizAnswered && (<button onClick={() => { setQuizIndex(quizIndex + 1); setQuizAnswered(false); }} className="w-full py-3 bg-blue-600 text-white rounded-xl font-semibold">Next →</button>)}</div>);
+         }
+         const pct = Math.round(((score + quizScore) / (scenarios.length + quizQuestions.length)) * 100);
+         return (<div className="space-y-6"><div className="text-center"><div className="text-6xl mb-4">{pct >= 80 ? '🎯' : '📋'}</div><h2 className="text-2xl font-bold text-blue-800">Complete!</h2></div><div className="bg-blue-50 p-6 rounded-xl text-center"><div className="text-4xl font-bold text-blue-700">{pct}%</div><div className="text-sm text-gray-600">Mastery</div></div><button onClick={() => { setPhase('intro'); setScore(0); setScenarioIndex(0); setSelectedAnswer(null); setAnswered(false); setQuizIndex(0); setQuizAnswered(false); setQuizScore(0); }} className="w-full py-3 bg-blue-600 text-white rounded-xl font-semibold">Practice Again</button></div>);
+      }
+      return null;
+   };
+
+   const FinancialStatementAuditingRenderer = () => {
+      const [phase, setPhase] = useState<'intro' | 'tutorial' | 'play' | 'result'>('intro');
+      const [tutorialStep, setTutorialStep] = useState(0);
+      const [showInfo, setShowInfo] = useState(false);
+      const [infoKey, setInfoKey] = useState<string>('');
+      const [scenarioIndex, setScenarioIndex] = useState(0);
+      const [score, setScore] = useState(0);
+      const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
+      const [answered, setAnswered] = useState(false);
+      const [quizIndex, setQuizIndex] = useState(0);
+      const [quizScore, setQuizScore] = useState(0);
+      const [quizAnswered, setQuizAnswered] = useState(false);
+      const [gameLog, setGameLog] = useState<string[]>([]);
+
+      const infoContent: Record<string, { title: string; content: string }> = {
+         'audit_opinion': { title: 'Audit Opinions', content: 'Unqualified: fairly presented. Qualified: except for issues. Adverse: misstated. Disclaimer: unable to form opinion.' },
+         'materiality': { title: 'Materiality', content: 'Threshold where misstatements matter. Typically 0.5-5% of benchmark. Drives audit scope.' },
+         'sampling': { title: 'Audit Sampling', content: 'Testing portion to draw conclusions. Statistical or judgmental methods available.' },
+         'assertions': { title: 'Assertions', content: 'Claims about statements: Existence, Completeness, Valuation, Rights, Presentation.' },
+         'internal_controls': { title: 'Internal Controls', content: 'Processes for reliable reporting. Strong controls = less testing needed.' }
+      };
+
+      const tutorialSteps = [
+         { title: 'Welcome to Financial Auditing', desc: 'Learn how external auditors verify financial statement accuracy.' },
+         { title: 'Materiality', desc: 'Set threshold for significance based on benchmarks like revenue or assets.', icon: '📏' },
+         { title: 'Audit Risk Model', desc: 'Audit Risk = Inherent × Control × Detection Risk. Plan accordingly.', icon: '⚖️' },
+         { title: 'Testing Approaches', desc: 'Tests of controls vs substantive tests. Different purposes.', icon: '🔍' },
+         { title: 'Audit Sampling', desc: 'Test samples to form conclusions about populations.', icon: '📊' },
+         { title: 'Audit Opinions', desc: 'Express whether statements are fairly presented.', icon: '📝' },
+         { title: 'Start Auditing!', desc: 'Apply procedures and form judgments.', icon: '✅' }
+      ];
+
+      const scenarios = [
+         { title: 'Materiality Determination', situation: 'Client: $50M revenue, $2M income, $30M assets. Thin margins, prior adjustments.', question: 'Best materiality approach?', options: ['5% of income = $100K', '0.5% of revenue = $250K', '1% of assets = $300K', '10% of income = $200K'], correct: 1, explanation: 'Revenue-based for thin margins. Income too volatile. 0.5% revenue = stable, conservative benchmark.' },
+         { title: 'Control Weakness', situation: 'Inventory: counts by warehouse only, no verification, perpetual rarely reconciled, shrinkage history.', question: 'Audit response?', options: ['Rely on controls', 'Adverse opinion', 'Expand inventory testing', 'Withdraw'], correct: 2, explanation: 'Weak controls = more substantive testing. Expand observation, cutoff tests, roll-forward procedures.' },
+         { title: 'Sampling Decision', situation: 'AR confirmations: 500 accounts, $2M total, materiality $100K, expecting 2% misstatement.', question: 'Best sampling approach?', options: ['Confirm all 500', 'Random sample 50', 'Stratified - focus large balances', 'Skip confirmations'], correct: 2, explanation: 'Stratified sampling targets risk. Large balances get more coverage, small accounts sampled randomly.' },
+         { title: 'Audit Report', situation: 'Found: $80K misstatement (materiality $100K), going concern disclosed, $50K scope limitation.', question: 'Appropriate opinion?', options: ['Unqualified', 'Unqualified + emphasis', 'Qualified', 'Adverse'], correct: 1, explanation: 'Misstatement below materiality. Going concern disclosed = emphasis paragraph. Scope limitation immaterial.' }
+      ];
+
+      const quizQuestions = [
+         { q: 'Unqualified opinion means:', options: ['No errors found', 'Fairly presented', 'Won\'t fail', 'Strong controls'], correct: 1 },
+         { q: 'Materiality based on:', options: ['Auditor preference', 'Benchmark %', 'Transaction count', 'Prior year only'], correct: 1 },
+         { q: 'Tests of controls evaluate:', options: ['Balances', 'Control effectiveness', 'Materiality', 'Audit risk'], correct: 1 },
+         { q: 'Qualified opinion indicates:', options: ['Perfect statements', 'Except for specific item', 'Cannot audit', 'Fraud found'], correct: 1 },
+         { q: 'Audit sampling used because:', options: ['Too expensive to test all', 'More accurate', 'GAAS required', 'Weak controls'], correct: 0 }
+      ];
+
+      if (phase === 'intro') {
+         return (<div className="space-y-6"><div className="text-center"><div className="text-6xl mb-4">📑</div><h2 className="text-2xl font-bold text-purple-800">Financial Statement Auditing</h2><p className="text-gray-600 mt-2">Audit procedures and opinions</p></div><div className="bg-purple-50 p-4 rounded-xl"><h3 className="font-semibold text-purple-700 mb-2">You'll Master:</h3><ul className="space-y-1 text-sm text-gray-600"><li>• Materiality determination</li><li>• Sampling techniques</li><li>• Control vs substantive tests</li><li>• Audit opinion types</li></ul></div><button onClick={() => setPhase('tutorial')} className="w-full py-3 bg-purple-600 text-white rounded-xl font-semibold hover:bg-purple-700">Begin Training →</button></div>);
+      }
+
+      if (phase === 'tutorial') {
+         const step = tutorialSteps[tutorialStep];
+         return (<div className="space-y-6"><div className="flex justify-between text-sm text-gray-500 mb-2"><span>Tutorial</span><span>{tutorialStep + 1}/{tutorialSteps.length}</span></div><div className="w-full bg-gray-200 h-2 rounded-full"><div className="bg-purple-600 h-2 rounded-full transition-all" style={{ width: `${((tutorialStep + 1) / tutorialSteps.length) * 100}%` }} /></div><div className="text-center py-8"><div className="text-5xl mb-4">{step.icon || '📑'}</div><h3 className="text-xl font-bold text-purple-800">{step.title}</h3><p className="text-gray-600 mt-3">{step.desc}</p></div><div className="flex gap-3">{tutorialStep > 0 && (<button onClick={() => setTutorialStep(tutorialStep - 1)} className="flex-1 py-3 bg-gray-200 rounded-xl font-semibold">← Back</button>)}<button onClick={() => { if (tutorialStep < tutorialSteps.length - 1) setTutorialStep(tutorialStep + 1); else { setPhase('play'); setGameLog(['Audit started']); } }} className="flex-1 py-3 bg-purple-600 text-white rounded-xl font-semibold">{tutorialStep < tutorialSteps.length - 1 ? 'Next →' : 'Start →'}</button></div></div>);
+      }
+
+      if (phase === 'play') {
+         const sc = scenarios[scenarioIndex];
+         return (<div className="space-y-4"><div className="flex justify-between items-center"><span className="text-sm font-medium text-purple-600">Issue {scenarioIndex + 1}/{scenarios.length}</span><span className="text-sm">Score: {score}/{scenarioIndex}</span></div><div className="bg-purple-100 p-4 rounded-xl"><div className="flex justify-between items-start"><h3 className="font-bold text-purple-800">{sc.title}</h3><button onClick={() => { setInfoKey('materiality'); setShowInfo(true); }} className="text-purple-500">ℹ️</button></div><p className="text-sm text-gray-700 mt-2">{sc.situation}</p></div><div className="bg-amber-50 p-3 rounded-lg"><p className="font-medium text-amber-900">{sc.question}</p></div><div className="space-y-2">{sc.options.map((opt, i) => (<button key={i} onClick={() => { if (!answered) { setSelectedAnswer(i); setAnswered(true); if (i === sc.correct) { setScore(score + 1); setGameLog([...gameLog, `Correct: ${sc.title}`]); } } }} disabled={answered} className={`w-full p-3 rounded-lg text-left text-sm border-2 ${answered ? (i === sc.correct ? 'border-green-500 bg-green-50' : i === selectedAnswer ? 'border-red-400 bg-red-50' : 'border-gray-200') : 'border-gray-200 hover:border-purple-400'}`}>{opt}</button>))}</div>{answered && (<div className="bg-purple-50 p-4 rounded-xl"><p className="text-sm text-purple-800"><strong>Guidance:</strong> {sc.explanation}</p></div>)}{answered && (<button onClick={() => { if (scenarioIndex < scenarios.length - 1) { setScenarioIndex(scenarioIndex + 1); setSelectedAnswer(null); setAnswered(false); } else setPhase('result'); }} className="w-full py-3 bg-purple-600 text-white rounded-xl font-semibold">{scenarioIndex < scenarios.length - 1 ? 'Next →' : 'Exam →'}</button>)}{showInfo && (<div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"><div className="bg-white rounded-2xl p-6 max-w-sm w-full"><h3 className="font-bold text-lg text-purple-800">{infoContent[infoKey]?.title}</h3><p className="text-gray-600 mt-2 text-sm">{infoContent[infoKey]?.content}</p><button onClick={() => setShowInfo(false)} className="mt-4 w-full py-2 bg-purple-600 text-white rounded-xl">Close</button></div></div>)}</div>);
+      }
+
+      if (phase === 'result') {
+         if (quizIndex < quizQuestions.length) {
+            const q = quizQuestions[quizIndex];
+            return (<div className="space-y-6"><div className="text-center"><h3 className="text-xl font-bold text-purple-800">CPA Prep</h3><p className="text-sm text-gray-500">Question {quizIndex + 1}/{quizQuestions.length}</p></div><div className="bg-purple-50 p-4 rounded-xl"><p className="font-medium">{q.q}</p></div><div className="space-y-2">{q.options.map((opt, i) => (<button key={i} onClick={() => { if (!quizAnswered) { setQuizAnswered(true); if (i === q.correct) setQuizScore(quizScore + 1); } }} disabled={quizAnswered} className={`w-full p-3 rounded-lg text-left border-2 ${quizAnswered ? (i === q.correct ? 'border-green-500 bg-green-50' : 'border-gray-200') : 'border-gray-200 hover:border-purple-400'}`}>{opt}</button>))}</div>{quizAnswered && (<button onClick={() => { setQuizIndex(quizIndex + 1); setQuizAnswered(false); }} className="w-full py-3 bg-purple-600 text-white rounded-xl font-semibold">Next →</button>)}</div>);
+         }
+         const pct = Math.round(((score + quizScore) / (scenarios.length + quizQuestions.length)) * 100);
+         return (<div className="space-y-6"><div className="text-center"><div className="text-6xl mb-4">{pct >= 80 ? '✅' : '📑'}</div><h2 className="text-2xl font-bold text-purple-800">Audit Complete!</h2></div><div className="bg-purple-50 p-6 rounded-xl text-center"><div className="text-4xl font-bold text-purple-700">{pct}%</div><div className="text-sm text-gray-600">Mastery</div></div><button onClick={() => { setPhase('intro'); setScore(0); setScenarioIndex(0); setSelectedAnswer(null); setAnswered(false); setQuizIndex(0); setQuizAnswered(false); setQuizScore(0); }} className="w-full py-3 bg-purple-600 text-white rounded-xl font-semibold">Practice Again</button></div>);
+      }
+      return null;
+   };
+
+   const EsgReportingRenderer = () => {
+      const [phase, setPhase] = useState<'intro' | 'tutorial' | 'play' | 'result'>('intro');
+      const [tutorialStep, setTutorialStep] = useState(0);
+      const [showInfo, setShowInfo] = useState(false);
+      const [infoKey, setInfoKey] = useState<string>('');
+      const [scenarioIndex, setScenarioIndex] = useState(0);
+      const [score, setScore] = useState(0);
+      const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
+      const [answered, setAnswered] = useState(false);
+      const [quizIndex, setQuizIndex] = useState(0);
+      const [quizScore, setQuizScore] = useState(0);
+      const [quizAnswered, setQuizAnswered] = useState(false);
+      const [gameLog, setGameLog] = useState<string[]>([]);
+
+      const infoContent: Record<string, { title: string; content: string }> = {
+         'scope_emissions': { title: 'Emission Scopes', content: 'Scope 1: Direct. Scope 2: Purchased energy. Scope 3: Supply chain, travel, products.' },
+         'materiality_esg': { title: 'Double Materiality', content: 'Financial impact ON company + company impact ON society/environment. EU requires both.' },
+         'frameworks': { title: 'ESG Frameworks', content: 'GRI: stakeholder focus. SASB: investor focus. TCFD: climate risk. ISSB: global baseline.' },
+         'greenwashing': { title: 'Greenwashing', content: 'Misleading environmental claims. Red flags: vague terms, no proof, hidden tradeoffs.' },
+         'carbon_accounting': { title: 'Carbon Accounting', content: 'Measuring GHG in CO2e. Methods: spend-based, activity-based, supplier-specific.' }
+      };
+
+      const tutorialSteps = [
+         { title: 'Welcome to ESG Reporting', desc: 'Measure and communicate Environmental, Social, and Governance performance.' },
+         { title: 'The Three Pillars', desc: 'E: Carbon, water, waste. S: Labor, diversity, community. G: Board, ethics, pay.', icon: '🌍' },
+         { title: 'Carbon Accounting', desc: 'Measure emissions across Scope 1, 2, and 3. Foundation of climate disclosure.', icon: '💨' },
+         { title: 'Frameworks', desc: 'GRI, SASB, TCFD, ISSB - know which apply and how they differ.', icon: '📊' },
+         { title: 'Double Materiality', desc: 'Both financial impact and societal impact matter.', icon: '⚖️' },
+         { title: 'Avoiding Greenwashing', desc: 'Claims must be specific, verifiable, meaningful.', icon: '🚫' },
+         { title: 'Start Reporting!', desc: 'Apply ESG concepts to real challenges.', icon: '📈' }
+      ];
+
+      const scenarios = [
+         { title: 'Scope 3 Challenge', situation: 'Manufacturing: Scope 1 = 10K tons, Scope 2 = 5K tons, Suppliers = 50K, Product use = 200K.', question: 'What % is Scope 3?', options: ['15%', '50%', '75%', '94%'], correct: 3, explanation: 'Total = 265K. Scope 3 = 250K = 94%. Typical - Scope 3 dominates but hardest to measure.' },
+         { title: 'Framework Selection', situation: 'Public oil company. Investors want climate disclosure. Operating in EU and US.', question: 'Best framework combo?', options: ['GRI only', 'SASB + TCFD', 'ISSB only', 'Proprietary'], correct: 1, explanation: 'SASB = industry-specific for investors. TCFD = climate risk focus. Together satisfy investor needs.' },
+         { title: 'Greenwashing Detection', situation: '"Made with recycled materials" (5% recycled). "Carbon neutral" (cheap offsets). "Eco-friendly" (no specifics).', question: 'Which claim is defensible?', options: ['Recycled claim', 'Carbon neutral', 'Eco-friendly', 'None as stated'], correct: 3, explanation: 'All are greenwashing. Need specificity, verification, honest context.' },
+         { title: 'Double Materiality', situation: 'Tech company: Water <0.1% of costs but data centers in water-stressed regions.', question: 'How treat water in reporting?', options: ['Exclude - immaterial', 'Include - impact materiality', 'Only if investors ask', 'Voluntary only'], correct: 1, explanation: 'Under double materiality, community impact makes it material despite low financial impact.' }
+      ];
+
+      const quizQuestions = [
+         { q: 'Scope 2 emissions are from:', options: ['Company vehicles', 'Purchased electricity', 'Supply chain', 'Product use'], correct: 1 },
+         { q: 'TCFD focuses on:', options: ['Labor practices', 'Climate financial risk', 'Board diversity', 'Water usage'], correct: 1 },
+         { q: 'Double materiality considers:', options: ['Financial only', 'Environmental only', 'Both financial and impact', 'Neither'], correct: 2 },
+         { q: 'Quality carbon offset requires:', options: ['Low cost', 'Additionality and permanence', 'Nearby location', 'Tree planting only'], correct: 1 },
+         { q: 'ESG measures:', options: ['Environmental only', 'Financial performance', 'E, S, and G factors', 'Stock price'], correct: 2 }
+      ];
+
+      if (phase === 'intro') {
+         return (<div className="space-y-6"><div className="text-center"><div className="text-6xl mb-4">🌍</div><h2 className="text-2xl font-bold text-teal-800">ESG Reporting</h2><p className="text-gray-600 mt-2">Sustainability and carbon accounting</p></div><div className="bg-teal-50 p-4 rounded-xl"><h3 className="font-semibold text-teal-700 mb-2">You'll Master:</h3><ul className="space-y-1 text-sm text-gray-600"><li>• Carbon accounting (Scopes 1-3)</li><li>• ESG frameworks</li><li>• Double materiality</li><li>• Greenwashing avoidance</li></ul></div><button onClick={() => setPhase('tutorial')} className="w-full py-3 bg-teal-600 text-white rounded-xl font-semibold hover:bg-teal-700">Begin Training →</button></div>);
+      }
+
+      if (phase === 'tutorial') {
+         const step = tutorialSteps[tutorialStep];
+         return (<div className="space-y-6"><div className="flex justify-between text-sm text-gray-500 mb-2"><span>Tutorial</span><span>{tutorialStep + 1}/{tutorialSteps.length}</span></div><div className="w-full bg-gray-200 h-2 rounded-full"><div className="bg-teal-600 h-2 rounded-full transition-all" style={{ width: `${((tutorialStep + 1) / tutorialSteps.length) * 100}%` }} /></div><div className="text-center py-8"><div className="text-5xl mb-4">{step.icon || '🌍'}</div><h3 className="text-xl font-bold text-teal-800">{step.title}</h3><p className="text-gray-600 mt-3">{step.desc}</p></div><div className="flex gap-3">{tutorialStep > 0 && (<button onClick={() => setTutorialStep(tutorialStep - 1)} className="flex-1 py-3 bg-gray-200 rounded-xl font-semibold">← Back</button>)}<button onClick={() => { if (tutorialStep < tutorialSteps.length - 1) setTutorialStep(tutorialStep + 1); else { setPhase('play'); setGameLog(['ESG assessment started']); } }} className="flex-1 py-3 bg-teal-600 text-white rounded-xl font-semibold">{tutorialStep < tutorialSteps.length - 1 ? 'Next →' : 'Start →'}</button></div></div>);
+      }
+
+      if (phase === 'play') {
+         const sc = scenarios[scenarioIndex];
+         return (<div className="space-y-4"><div className="flex justify-between items-center"><span className="text-sm font-medium text-teal-600">Case {scenarioIndex + 1}/{scenarios.length}</span><span className="text-sm">Score: {score}/{scenarioIndex}</span></div><div className="bg-teal-100 p-4 rounded-xl"><div className="flex justify-between items-start"><h3 className="font-bold text-teal-800">{sc.title}</h3><button onClick={() => { setInfoKey('scope_emissions'); setShowInfo(true); }} className="text-teal-500">ℹ️</button></div><p className="text-sm text-gray-700 mt-2">{sc.situation}</p></div><div className="bg-amber-50 p-3 rounded-lg"><p className="font-medium text-amber-900">{sc.question}</p></div><div className="space-y-2">{sc.options.map((opt, i) => (<button key={i} onClick={() => { if (!answered) { setSelectedAnswer(i); setAnswered(true); if (i === sc.correct) { setScore(score + 1); setGameLog([...gameLog, `Correct: ${sc.title}`]); } } }} disabled={answered} className={`w-full p-3 rounded-lg text-left text-sm border-2 ${answered ? (i === sc.correct ? 'border-green-500 bg-green-50' : i === selectedAnswer ? 'border-red-400 bg-red-50' : 'border-gray-200') : 'border-gray-200 hover:border-teal-400'}`}>{opt}</button>))}</div>{answered && (<div className="bg-teal-50 p-4 rounded-xl"><p className="text-sm text-teal-800"><strong>Analysis:</strong> {sc.explanation}</p></div>)}{answered && (<button onClick={() => { if (scenarioIndex < scenarios.length - 1) { setScenarioIndex(scenarioIndex + 1); setSelectedAnswer(null); setAnswered(false); } else setPhase('result'); }} className="w-full py-3 bg-teal-600 text-white rounded-xl font-semibold">{scenarioIndex < scenarios.length - 1 ? 'Next →' : 'Quiz →'}</button>)}{showInfo && (<div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"><div className="bg-white rounded-2xl p-6 max-w-sm w-full"><h3 className="font-bold text-lg text-teal-800">{infoContent[infoKey]?.title}</h3><p className="text-gray-600 mt-2 text-sm">{infoContent[infoKey]?.content}</p><button onClick={() => setShowInfo(false)} className="mt-4 w-full py-2 bg-teal-600 text-white rounded-xl">Close</button></div></div>)}</div>);
+      }
+
+      if (phase === 'result') {
+         if (quizIndex < quizQuestions.length) {
+            const q = quizQuestions[quizIndex];
+            return (<div className="space-y-6"><div className="text-center"><h3 className="text-xl font-bold text-teal-800">ESG Certification</h3><p className="text-sm text-gray-500">Question {quizIndex + 1}/{quizQuestions.length}</p></div><div className="bg-teal-50 p-4 rounded-xl"><p className="font-medium">{q.q}</p></div><div className="space-y-2">{q.options.map((opt, i) => (<button key={i} onClick={() => { if (!quizAnswered) { setQuizAnswered(true); if (i === q.correct) setQuizScore(quizScore + 1); } }} disabled={quizAnswered} className={`w-full p-3 rounded-lg text-left border-2 ${quizAnswered ? (i === q.correct ? 'border-green-500 bg-green-50' : 'border-gray-200') : 'border-gray-200 hover:border-teal-400'}`}>{opt}</button>))}</div>{quizAnswered && (<button onClick={() => { setQuizIndex(quizIndex + 1); setQuizAnswered(false); }} className="w-full py-3 bg-teal-600 text-white rounded-xl font-semibold">Next →</button>)}</div>);
+         }
+         const pct = Math.round(((score + quizScore) / (scenarios.length + quizQuestions.length)) * 100);
+         return (<div className="space-y-6"><div className="text-center"><div className="text-6xl mb-4">{pct >= 80 ? '🌱' : '🌍'}</div><h2 className="text-2xl font-bold text-teal-800">ESG Complete!</h2></div><div className="bg-teal-50 p-6 rounded-xl text-center"><div className="text-4xl font-bold text-teal-700">{pct}%</div><div className="text-sm text-gray-600">ESG Mastery</div></div><button onClick={() => { setPhase('intro'); setScore(0); setScenarioIndex(0); setSelectedAnswer(null); setAnswered(false); setQuizIndex(0); setQuizAnswered(false); setQuizScore(0); }} className="w-full py-3 bg-teal-600 text-white rounded-xl font-semibold">Practice Again</button></div>);
+      }
+      return null;
+   };
+
    const FinancialStatementsRenderer = () => {
       const [phase, setPhase] = useState<'intro' | 'play' | 'result'>('intro');
       const [showInfo, setShowInfo] = useState(false);
@@ -52983,6 +53343,16 @@ const GeneratedDiagram: React.FC<DiagramProps> = ({ type, data, title }) => {
             return <ErpBasicsRenderer />;
          case 'audit_trails':
             return <AuditTrailsRenderer />;
+         case 'forensic_accounting':
+            return <ForensicAccountingRenderer />;
+         case 'cvp_analysis':
+            return <CvpAnalysisRenderer />;
+         case 'managerial_accounting':
+            return <ManagerialAccountingRenderer />;
+         case 'financial_statement_auditing':
+            return <FinancialStatementAuditingRenderer />;
+         case 'esg_reporting':
+            return <EsgReportingRenderer />;
          case 'pricing_strategy':
             return <PricingStrategyRenderer />;
          case 'budgeting':
