@@ -54646,6 +54646,219 @@ const GeneratedDiagram: React.FC<DiagramProps> = ({ type, data, title }) => {
       return null;
    };
 
+   // Topic 140: Game Monetization Interactive Educational Game
+   const GameMonetizationRenderer = () => {
+      const [phase, setPhase] = useState<'intro' | 'tutorial' | 'play' | 'result'>('intro');
+      const [tutorialStep, setTutorialStep] = useState(0);
+      const [showInfo, setShowInfo] = useState(false);
+      const [infoTopic, setInfoTopic] = useState('');
+      const [scenarioIndex, setScenarioIndex] = useState(0);
+      const [score, setScore] = useState(0);
+      const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
+      const [answered, setAnswered] = useState(false);
+      const [quizIndex, setQuizIndex] = useState(0);
+      const [quizScore, setQuizScore] = useState(0);
+      const [quizAnswered, setQuizAnswered] = useState(false);
+      const [gameLog, setGameLog] = useState<string[]>([]);
+
+      const infoContent: Record<string, string> = {
+         'iap_design': 'In-App Purchases (IAP) should provide clear value and feel fair. The best IAPs solve player pain points (time, difficulty, customization) without creating pay-to-win dynamics. Successful IAP economies offer multiple price points, ensure free players can still enjoy the game, and make purchases feel rewarding rather than mandatory.',
+         'subscription_models': 'Subscriptions provide predictable revenue and player commitment. Battle passes, VIP memberships, and season passes work best when they offer substantial value over time (2-3x the direct purchase value). Monthly commitment reduces churn compared to one-time purchases. Always provide enough free value that non-subscribers stay engaged.',
+         'ad_monetization': 'Ad revenue works best for casual games with high session counts. Rewarded ads (watch to earn) have highest eCPM and player acceptance. Interstitial ads should be paced carefully—too frequent drives churn, too rare leaves money on the table. Banner ads have lowest eCPM but minimal friction. Hybrid models (ads + IAP) require careful balance.',
+         'ethical_monetization': 'Ethical monetization builds long-term trust and avoids regulatory scrutiny. Avoid targeting vulnerable players, be transparent about odds, ensure spending limits are visible, and never create artificial pressure. Games with ethical monetization have better retention and word-of-mouth. Dark patterns may boost short-term revenue but destroy lifetime value.',
+         'pricing_psychology': 'Pricing psychology leverages cognitive biases ethically. Anchor high (show expensive option first), use charm pricing ($4.99 vs $5.00), bundle for perceived value, and create urgency with limited-time offers. Price segmentation (different offers for different players) maximizes revenue while maintaining accessibility.',
+         'battle_pass': 'Battle passes combine subscription psychology with progression gameplay. Successful passes have 2-3 months duration, clear progress visibility, mix of free and premium tracks, and achievable completion for moderate play time. Passes should enhance—not replace—core gameplay. The free track should feel generous to convert future purchases.',
+         'first_purchase': 'The first purchase is the hardest. Starter packs, limited-time new player offers, and low-friction entry points ($0.99-$2.99) convert free players to payers. Once someone purchases once, repeat purchases become much more likely. Focus on removing friction: simple checkout, clear value, no regret.',
+         'whale_ethics': 'High spenders (whales) require special consideration. While they drive significant revenue, targeting vulnerable players or enabling harmful spending habits creates ethical and legal risks. Implement spending caps, provide self-exclusion options, and focus on entertainment value rather than exploitation. Sustainable games build lasting relationships with all player segments.'
+      };
+
+      const tutorialSteps = [
+         { title: 'In-App Purchase Design', content: 'IAP is the backbone of free-to-play monetization. The goal is offering genuine value that enhances the experience without making the game feel broken for non-payers. Best practices: clear value proposition, multiple price tiers, cosmetic options alongside gameplay items, and no pay-to-win in competitive modes.', icon: 'iap_design' },
+         { title: 'Subscription Models', content: 'Subscriptions create predictable revenue and player commitment. Battle passes, VIP clubs, and season passes work because they spread value over time and create daily login incentives. The key: deliver enough value that players feel they\'re getting a deal, typically 2-3x what they\'d pay for items individually.', icon: 'subscription_models' },
+         { title: 'Ad Monetization', content: 'Ads can monetize players who won\'t purchase. Rewarded ads (watch for rewards) have highest player acceptance and eCPM. The art is balancing ad frequency with player experience. Too aggressive drives churn; too passive leaves revenue on the table. Hybrid models require careful tuning.', icon: 'ad_monetization' },
+         { title: 'Ethical Monetization', content: 'Ethics isn\'t just morality—it\'s business strategy. Predatory practices invite regulation, damage brand reputation, and destroy word-of-mouth. Transparent odds, visible spending totals, and self-exclusion options build trust. Players who feel respected spend more over their lifetime than players who feel exploited.', icon: 'ethical_monetization' },
+         { title: 'Pricing Psychology', content: 'Price presentation matters as much as price itself. Anchoring (showing expensive options first) makes moderate options feel reasonable. Bundles feel like deals. Limited-time offers create urgency. Charm pricing ($9.99 vs $10) works. Use these tools ethically to help players choose, not to manipulate them.', icon: 'pricing_psychology' },
+         { title: 'Battle Pass Systems', content: 'Battle passes are the most successful modern monetization innovation. They combine progression (earn rewards over time), FOMO (season-limited content), value (more rewards than direct purchase), and engagement (daily/weekly quests). Design for achievable completion with moderate play.', icon: 'battle_pass' },
+         { title: 'First Purchase Conversion', content: 'Converting free players to payers is the critical monetization hurdle. Once someone pays once, they\'re much more likely to pay again. Starter packs, low-price entry points ($0.99-$2.99), and new player limited offers reduce friction. Make the first purchase feel great—no buyer\'s remorse.', icon: 'first_purchase' },
+         { title: 'Whale Ethics & Sustainability', content: 'High spenders drive disproportionate revenue, but ethical treatment matters. Implement spending limits, provide opt-out mechanisms, and never target vulnerable players. Sustainable monetization builds relationships—players who feel respected become advocates. Exploitation burns bridges.', icon: 'whale_ethics' }
+      ];
+
+      const scenarios = [
+         { title: 'The Free-to-Pay Conversion', situation: 'Your puzzle game has 500,000 monthly active users but only 1.2% ever purchase anything. The average paying player spends $15. Your team proposes four different starter pack strategies to improve first-purchase conversion. Which approach is most likely to increase paying users while maintaining healthy LTV?', options: [
+            { text: 'Create a $0.99 "Remove Ads Forever" one-time purchase', points: 20, feedback: 'This converts well but caps revenue from ad-payers without establishing purchase habit. It\'s a one-time transaction that doesn\'t build repeat purchase behavior. Better than nothing, but suboptimal.' },
+            { text: 'Offer a $2.99 starter pack with premium currency, exclusive cosmetic, and 7-day VIP trial—available only for first 48 hours', points: 30, feedback: 'Excellent! Low price point reduces friction, bundled value feels generous, exclusive cosmetic creates FOMO, VIP trial showcases subscription value, and time limit creates urgency without being predatory.' },
+            { text: 'Implement a $9.99 "Best Value" pack that appears after players hit a difficulty wall', points: 10, feedback: 'Friction point targeting feels manipulative and creates negative associations with purchasing. The price is also too high for a first-purchase barrier. Players may solve the wall through gameplay instead.' },
+            { text: 'Add a $4.99 weekly subscription that auto-renews with premium currency', points: 15, feedback: 'Subscriptions are powerful but asking for recurring commitment as a first purchase creates friction. Most players want to try before committing to ongoing payments. Better as a second or third purchase.' }
+         ]},
+         { title: 'Ad Frequency Dilemma', situation: 'Your hyper-casual game has an average session of 4 minutes with 8 sessions per day for active users. Currently, you show one interstitial ad every 3 minutes and rewarded ads are optional. Analytics shows 15% of interstitial ad views lead to session ends. What\'s the optimal adjustment?', options: [
+            { text: 'Remove interstitials entirely and rely only on rewarded ads—player experience first', points: 15, feedback: 'Rewarded-only sounds player-friendly but leaves significant revenue on the table. Some interstitial friction is acceptable if balanced. Pure rewarded also reduces ad inventory.' },
+            { text: 'Keep interstitials but show them between sessions (on level complete) rather than mid-session, and add an IAP option to remove ads', points: 30, feedback: 'Smart! Natural break points feel less intrusive. Between-session ads have lower drop rates than interrupting gameplay. The IAP option monetizes players who hate ads and creates a premium segment.' },
+            { text: 'Increase interstitials to every 2 minutes to maximize short-term revenue', points: 5, feedback: 'With 15% of views causing session ends, more frequent ads will accelerate churn. Short-term revenue might spike but DAU will drop, destroying long-term revenue. Classic trap.' },
+            { text: 'Show interstitials only after gameplay failures to create negative association with losing', points: 10, feedback: 'Psychological punishment for losing creates negative emotional patterns. Players will associate your game with frustration. This damages brand and retention for minimal revenue gain.' }
+         ]},
+         { title: 'Battle Pass Balance', situation: 'You\'re designing your game\'s first battle pass: 60-day duration, $9.99 price. You need to decide the completion curve and reward distribution. The average player plays 20 minutes per day. Which structure best balances engagement, conversion, and player satisfaction?', options: [
+            { text: 'Front-load the best rewards in the first week to hook players early', points: 10, feedback: 'Front-loading creates a "got all the good stuff" moment too early. Players may feel done after week one and disengage. The pass should maintain excitement throughout its duration.' },
+            { text: 'Make completion require 45+ minutes daily to encourage more play time', points: 5, feedback: 'Unrealistic requirements for your 20-minute average player base. Most players will fall behind, feel the pass was wasted money, and won\'t purchase next season. Recipe for churn.' },
+            { text: 'Design for 25-minute daily average with premium content evenly spaced and catch-up mechanics for missed days', points: 30, feedback: 'Perfect! Slightly above average requirement encourages engagement growth. Even distribution maintains excitement. Catch-up mechanics prevent falling behind from becoming abandonment. This respects player time.' },
+            { text: 'Put all exclusive items at level 100 to ensure only dedicated players get them', points: 15, feedback: 'Exclusive end-game content creates FOMO but also creates resentment among players who paid but couldn\'t complete. Battle passes should feel achievable for the target audience.' }
+         ]},
+         { title: 'Whale Spending Concern', situation: 'Your analytics flags a player who has spent $12,000 in the past month—their first month playing. Previous high spenders averaged $500/month. This player\'s spending pattern suggests they may be a problem gambler or using stolen payment methods. What\'s the appropriate response?', options: [
+            { text: 'Do nothing—they\'re an adult making their own choices and it\'s not your business', points: 0, feedback: 'Ignoring warning signs creates legal liability, ethical problems, and chargeback risk. If this is fraud or problem gambling, doing nothing enables harm. Responsible operators take action.' },
+            { text: 'Send a thank-you email with exclusive whale rewards to encourage continued spending', points: 0, feedback: 'Encouraging potentially problematic behavior is unethical and legally risky. This approach treats players as revenue sources rather than people. It\'s a fast path to regulation and PR disasters.' },
+            { text: 'Temporarily restrict purchasing, reach out through customer support to verify intent and offer spending controls, and enhance account security review', points: 30, feedback: 'Correct! Responsible action: pause to investigate, human touch to understand the situation, offer support tools if needed, verify the account isn\'t compromised. This protects both the player and your business.' },
+            { text: 'Permanently ban the account to avoid any liability', points: 10, feedback: 'Over-reaction. This might be a legitimate high spender who will be angry at unjust treatment. The right approach is investigation and communication, not immediate punishment without understanding.' }
+         ]}
+      ];
+
+      const quizQuestions = [
+         { question: 'Why is the first purchase considered the most important conversion event?', options: ['It generates the most revenue', 'Once players pay once, psychological barriers to future purchases are significantly reduced, dramatically increasing lifetime value', 'First purchases have the highest profit margin', 'App stores promote games with first purchases'], correct: 1, explanation: 'The first purchase crosses a psychological barrier. Before paying, players see themselves as "free players." After paying once, they become "customers" in their own minds. This identity shift makes repeat purchases feel natural rather than exceptional.' },
+         { question: 'What makes rewarded ads more accepted by players than interstitials?', options: ['They pay more to developers', 'Players choose to watch them in exchange for value—the transaction feels fair and voluntary rather than forced', 'They\'re shorter in duration', 'They show better products'], correct: 1, explanation: 'Rewarded ads flip the psychology from interruption to transaction. Players aren\'t having their experience interrupted—they\'re making a choice to exchange attention for in-game value. Voluntary transactions feel fair; forced interruptions feel exploitative.' },
+         { question: 'Why should battle passes be designed for achievable completion by moderate players?', options: ['Hardcore players don\'t buy battle passes', 'Passes that most buyers can\'t complete create buyer\'s remorse, reducing future purchase intent and damaging brand trust', 'It reduces server load', 'App store guidelines require it'], correct: 1, explanation: 'A battle pass is a promise: pay this, play reasonable amounts, get these rewards. Breaking that promise by making completion unrealistic creates regret. Players who feel cheated don\'t buy next season and tell others not to either.' },
+         { question: 'Why do ethical monetization practices improve long-term revenue?', options: ['Regulations require ethical practices', 'Trusted brands attract positive word-of-mouth, retain players longer, avoid regulatory intervention, and build sustainable player relationships', 'Ethical games are cheaper to develop', 'Players spend more when they feel guilty'], correct: 1, explanation: 'Trust is a competitive advantage. Players who feel respected recommend games to friends, stay longer, and spend sustainably. Exploitative games burn through audiences quickly and attract negative attention from press and regulators.' },
+         { question: 'What is the primary risk of aggressively monetizing high-spending "whale" players?', options: ['Whales always have unlimited money', 'Over-reliance on whale spending creates legal, ethical, and business risks—including fraud, problem gambling liability, and revenue concentration vulnerability', 'Other players will complain about whales', 'Whales demand too much customer support'], correct: 1, explanation: 'Whale concentration is risky: if your top 0.1% provides 50% of revenue, losing a few players devastates your business. Additionally, some extreme spenders are vulnerable individuals or fraudulent accounts. Responsible practices protect both players and business sustainability.' }
+      ];
+
+      const handleScenarioAnswer = (points: number, feedback: string) => { if (answered) return; setScore(prev => prev + points); setAnswered(true); setGameLog(prev => [...prev, `Scenario ${scenarioIndex + 1}: Scored ${points}/30 - ${feedback}`]); };
+      const handleQuizAnswer = (index: number) => { if (quizAnswered) return; setSelectedAnswer(index); setQuizAnswered(true); if (index === quizQuestions[quizIndex].correct) { setQuizScore(prev => prev + 1); setGameLog(prev => [...prev, `Quiz ${quizIndex + 1}: Correct`]); } else { setGameLog(prev => [...prev, `Quiz ${quizIndex + 1}: Incorrect`]); } };
+      const nextScenario = () => { if (scenarioIndex < scenarios.length - 1) { setScenarioIndex(prev => prev + 1); setSelectedAnswer(null); setAnswered(false); } else { setQuizIndex(0); setQuizAnswered(false); setSelectedAnswer(null); } };
+      const nextQuiz = () => { if (quizIndex < quizQuestions.length - 1) { setQuizIndex(prev => prev + 1); setSelectedAnswer(null); setQuizAnswered(false); } else { setPhase('result'); } };
+
+      if (phase === 'intro') {
+         return (
+            <div className="p-6 bg-gradient-to-br from-emerald-50 to-teal-100 rounded-xl shadow-lg max-w-2xl mx-auto">
+               <h2 className="text-2xl font-bold text-emerald-800 mb-4">💰 Game Monetization Mastery</h2>
+               <p className="text-emerald-700 mb-4">Learn to build sustainable revenue models that respect players while funding game development. From IAP design to ethical practices, master the art of monetization that players appreciate rather than resent.</p>
+               <div className="bg-white/70 rounded-lg p-4 mb-4">
+                  <h3 className="font-semibold text-emerald-800 mb-2">Learning Objectives:</h3>
+                  <ul className="text-emerald-700 space-y-1 text-sm">
+                     <li>• Design in-app purchases that provide genuine value</li>
+                     <li>• Implement subscription and battle pass systems effectively</li>
+                     <li>• Balance ad monetization with player experience</li>
+                     <li>• Apply pricing psychology ethically</li>
+                     <li>• Build sustainable, responsible monetization practices</li>
+                  </ul>
+               </div>
+               <button onClick={() => setPhase('tutorial')} className="w-full py-3 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 font-semibold">Start Learning</button>
+            </div>
+         );
+      }
+
+      if (phase === 'tutorial') {
+         const step = tutorialSteps[tutorialStep];
+         return (
+            <div className="p-6 bg-gradient-to-br from-emerald-50 to-teal-100 rounded-xl shadow-lg max-w-2xl mx-auto">
+               <div className="flex justify-between items-center mb-4">
+                  <h2 className="text-xl font-bold text-emerald-800">Step {tutorialStep + 1} of {tutorialSteps.length}</h2>
+                  <span className="text-emerald-600 text-sm">{Math.round(((tutorialStep + 1) / tutorialSteps.length) * 100)}% Complete</span>
+               </div>
+               <div className="bg-white/80 rounded-lg p-5 mb-4">
+                  <div className="flex items-start gap-3 mb-3">
+                     <h3 className="font-semibold text-emerald-800 text-lg">{step.title}</h3>
+                     <button onClick={() => { setInfoTopic(step.icon); setShowInfo(true); }} className="text-emerald-500 hover:text-emerald-700">ⓘ</button>
+                  </div>
+                  <p className="text-emerald-700">{step.content}</p>
+               </div>
+               <div className="bg-teal-100 rounded-lg p-3 mb-4">
+                  <p className="text-teal-800 text-sm">💡 <strong>AI Coach:</strong> {tutorialStep === 0 ? 'Think of IAP as a service, not a trick. Players who feel they got value become repeat customers; players who feel tricked become detractors.' : tutorialStep === 1 ? 'The best subscriptions make players feel smart for subscribing. They should think "I\'m getting such a deal" every time they play.' : tutorialStep === 2 ? 'Ad monetization is about rhythm. Find the natural pauses in your game where attention can shift without frustration.' : tutorialStep === 3 ? 'Ethical monetization isn\'t charity—it\'s strategy. Trust compounds like interest; exploitation compounds like debt.' : tutorialStep === 4 ? 'Pricing psychology should help players choose, not manipulate them into regret. Buyer\'s remorse is a business liability.' : tutorialStep === 5 ? 'A great battle pass is a 60-day relationship. Each day should feel like progress toward something exciting.' : tutorialStep === 6 ? 'The first purchase is about removing fear, not maximizing revenue. Make it so obviously good that saying no feels foolish.' : 'Your highest spenders are also your most vulnerable to harm. Protect them like you\'d protect a friend from their own excess.'}</p>
+               </div>
+               <div className="flex gap-3">
+                  {tutorialStep > 0 && <button onClick={() => setTutorialStep(prev => prev - 1)} className="flex-1 py-2 border border-emerald-600 text-emerald-600 rounded-lg hover:bg-emerald-50">Previous</button>}
+                  <button onClick={() => tutorialStep < tutorialSteps.length - 1 ? setTutorialStep(prev => prev + 1) : setPhase('play')} className="flex-1 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700">{tutorialStep < tutorialSteps.length - 1 ? 'Next' : 'Start Practice'}</button>
+               </div>
+               {showInfo && (
+                  <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" onClick={() => setShowInfo(false)}>
+                     <div className="bg-white rounded-xl p-6 max-w-md m-4" onClick={e => e.stopPropagation()}>
+                        <h3 className="font-bold text-emerald-800 mb-2">{step.title}</h3>
+                        <p className="text-emerald-700 text-sm">{infoContent[infoTopic]}</p>
+                        <button onClick={() => setShowInfo(false)} className="mt-4 w-full py-2 bg-emerald-600 text-white rounded-lg">Close</button>
+                     </div>
+                  </div>
+               )}
+            </div>
+         );
+      }
+
+      if (phase === 'play') {
+         if (scenarioIndex < scenarios.length) {
+            const scenario = scenarios[scenarioIndex];
+            return (
+               <div className="p-6 bg-gradient-to-br from-emerald-50 to-teal-100 rounded-xl shadow-lg max-w-2xl mx-auto">
+                  <div className="flex justify-between items-center mb-4">
+                     <h2 className="text-xl font-bold text-emerald-800">Scenario {scenarioIndex + 1} of {scenarios.length}</h2>
+                     <span className="text-emerald-600 font-semibold">Score: {score}</span>
+                  </div>
+                  <div className="bg-white/80 rounded-lg p-5 mb-4">
+                     <h3 className="font-semibold text-emerald-800 mb-2">{scenario.title}</h3>
+                     <p className="text-emerald-700 mb-4">{scenario.situation}</p>
+                     <div className="space-y-2">
+                        {scenario.options.map((option, i) => (
+                           <button key={i} onClick={() => { setSelectedAnswer(i); handleScenarioAnswer(option.points, option.feedback); }} disabled={answered} className={`w-full p-3 text-left rounded-lg border transition-all ${answered && selectedAnswer === i ? option.points >= 25 ? 'bg-green-100 border-green-500' : option.points >= 15 ? 'bg-yellow-100 border-yellow-500' : 'bg-red-100 border-red-500' : 'bg-white border-emerald-200 hover:border-emerald-400'} ${answered ? 'cursor-default' : 'cursor-pointer'}`}>
+                              <span className="text-emerald-800">{option.text}</span>
+                              {answered && selectedAnswer === i && <p className="text-sm mt-2 text-emerald-600">{option.feedback}</p>}
+                           </button>
+                        ))}
+                     </div>
+                  </div>
+                  {answered && <button onClick={nextScenario} className="w-full py-3 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700">{scenarioIndex < scenarios.length - 1 ? 'Next Scenario' : 'Continue to Quiz'}</button>}
+               </div>
+            );
+         }
+         const quiz = quizQuestions[quizIndex];
+         return (
+            <div className="p-6 bg-gradient-to-br from-emerald-50 to-teal-100 rounded-xl shadow-lg max-w-2xl mx-auto">
+               <div className="flex justify-between items-center mb-4">
+                  <h2 className="text-xl font-bold text-emerald-800">Quiz {quizIndex + 1} of {quizQuestions.length}</h2>
+                  <span className="text-emerald-600 font-semibold">Quiz Score: {quizScore}/{quizIndex + (quizAnswered ? 1 : 0)}</span>
+               </div>
+               <div className="bg-white/80 rounded-lg p-5 mb-4">
+                  <p className="text-emerald-800 font-medium mb-4">{quiz.question}</p>
+                  <div className="space-y-2">
+                     {quiz.options.map((option, i) => (
+                        <button key={i} onClick={() => handleQuizAnswer(i)} disabled={quizAnswered} className={`w-full p-3 text-left rounded-lg border transition-all ${quizAnswered ? i === quiz.correct ? 'bg-green-100 border-green-500' : selectedAnswer === i ? 'bg-red-100 border-red-500' : 'bg-white border-emerald-200' : 'bg-white border-emerald-200 hover:border-emerald-400'}`}>{option}</button>
+                     ))}
+                  </div>
+                  {quizAnswered && <div className="mt-4 p-3 bg-teal-50 rounded-lg"><p className="text-teal-800 text-sm"><strong>Explanation:</strong> {quiz.explanation}</p></div>}
+               </div>
+               {quizAnswered && <button onClick={nextQuiz} className="w-full py-3 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700">{quizIndex < quizQuestions.length - 1 ? 'Next Question' : 'See Results'}</button>}
+            </div>
+         );
+      }
+
+      if (phase === 'result') {
+         const maxScore = scenarios.reduce((sum, s) => sum + Math.max(...s.options.map(o => o.points)), 0);
+         const percentage = Math.round((score / maxScore) * 100);
+         return (
+            <div className="p-6 bg-gradient-to-br from-emerald-50 to-teal-100 rounded-xl shadow-lg max-w-2xl mx-auto">
+               <h2 className="text-2xl font-bold text-emerald-800 mb-4">💰 Game Monetization Complete!</h2>
+               <div className="bg-white/80 rounded-lg p-5 mb-4">
+                  <div className="text-center mb-4">
+                     <p className="text-4xl font-bold text-emerald-600">{percentage}%</p>
+                     <p className="text-emerald-700">Scenario Score: {score}/{maxScore}</p>
+                     <p className="text-emerald-700">Quiz Score: {quizScore}/{quizQuestions.length}</p>
+                  </div>
+                  <div className="border-t pt-4">
+                     <h3 className="font-semibold text-emerald-800 mb-2">Key Insights:</h3>
+                     <ul className="text-emerald-700 text-sm space-y-1">
+                        <li>• First purchase conversion is the critical monetization milestone</li>
+                        <li>• Subscriptions and battle passes create predictable, sustainable revenue</li>
+                        <li>• Rewarded ads succeed because players choose the transaction</li>
+                        <li>• Ethical monetization builds trust that compounds into higher LTV</li>
+                        <li>• Pricing psychology should help players, not manipulate them</li>
+                        <li>• Protecting high spenders protects your business and ethics</li>
+                     </ul>
+                  </div>
+                  <div className="border-t pt-4 mt-4">
+                     <h3 className="font-semibold text-emerald-800 mb-2">Real-World Application:</h3>
+                     <p className="text-emerald-700 text-sm">Audit your monetization: Is the first purchase irresistibly good value? Does your battle pass feel achievable? Are ads at natural break points? Would you feel proud explaining your monetization to a journalist? The best monetization passes the "explain it to your mother" test—if you\'d be embarrassed, reconsider.</p>
+                  </div>
+               </div>
+               <button onClick={() => { setPhase('intro'); setScore(0); setScenarioIndex(0); setQuizIndex(0); setQuizScore(0); setAnswered(false); setQuizAnswered(false); setSelectedAnswer(null); setTutorialStep(0); setGameLog([]); }} className="w-full py-3 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700">Play Again</button>
+            </div>
+         );
+      }
+      return null;
+   };
+
    const FinancialStatementsRenderer = () => {
       const [phase, setPhase] = useState<'intro' | 'play' | 'result'>('intro');
       const [showInfo, setShowInfo] = useState(false);
@@ -58623,6 +58836,8 @@ const GeneratedDiagram: React.FC<DiagramProps> = ({ type, data, title }) => {
             return <PlayerRetentionRenderer />;
          case 'live_ops':
             return <LiveOpsRenderer />;
+         case 'game_monetization':
+            return <GameMonetizationRenderer />;
          case 'pricing_strategy':
             return <PricingStrategyRenderer />;
          case 'budgeting':
