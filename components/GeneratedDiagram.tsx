@@ -53800,6 +53800,217 @@ const GeneratedDiagram: React.FC<DiagramProps> = ({ type, data, title }) => {
       return null;
    };
 
+   // Topic 136: Game Graphic Design Interactive Educational Game
+   const GameGraphicDesignRenderer = () => {
+      const [phase, setPhase] = useState<'intro' | 'tutorial' | 'play' | 'result'>('intro');
+      const [tutorialStep, setTutorialStep] = useState(0);
+      const [showInfo, setShowInfo] = useState(false);
+      const [infoTopic, setInfoTopic] = useState('');
+      const [scenarioIndex, setScenarioIndex] = useState(0);
+      const [score, setScore] = useState(0);
+      const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
+      const [answered, setAnswered] = useState(false);
+      const [quizIndex, setQuizIndex] = useState(0);
+      const [quizScore, setQuizScore] = useState(0);
+      const [quizAnswered, setQuizAnswered] = useState(false);
+      const [gameLog, setGameLog] = useState<string[]>([]);
+
+      const infoContent: Record<string, string> = {
+         'visual_hierarchy': 'Visual hierarchy guides players\' eyes to important elements first. Size, color, contrast, and position create a reading order. Primary actions should be largest and highest contrast; secondary elements recede. Without clear hierarchy, players feel lost or miss critical information.',
+         'color_psychology': 'Colors trigger emotional and behavioral responses. Red signals danger/urgency, green indicates safety/success, blue conveys trust/calm, gold suggests rewards/premium. Game UI uses color consistently—health is red, mana is blue, gold is currency. Breaking these conventions confuses players.',
+         'art_style_selection': 'Art style must match target audience, game genre, and production capabilities. Realistic graphics appeal to core gamers but are expensive. Stylized/cartoon art is cheaper, ages well, and appeals broadly. Minimalist works for puzzle games. The best style is one you can execute consistently.',
+         'feedback_visuals': 'Every player action needs visual confirmation. Button presses animate, damage shows hit effects, level-ups explode with particles. Without feedback, games feel unresponsive. The feedback intensity should match the action importance—collecting coins is subtle, boss defeats are spectacular.',
+         'screen_composition': 'Mobile screens are small and thumbs cover content. Place critical info at top (health, score), actions at bottom (buttons, controls), and gameplay in the center. Respect safe zones for notches. Left-right symmetry feels balanced but can be boring—use asymmetry purposefully.',
+         'icon_design': 'Icons must be readable at small sizes, distinct from each other, and culturally universal. Use simple silhouettes, consistent stroke weights, and recognizable metaphors. Test icons at 32x32 pixels—if unreadable, simplify. Icon sets should share visual DNA (style, weight, corner radius).',
+         'monetization_visuals': 'Premium items need premium presentation. Skin shops use dramatic lighting, camera angles, and particle effects. Limited-time offers use urgency colors (red, orange) and countdown timers. Price anchoring shows crossed-out original prices. Ethical design means never tricking players.'
+      };
+
+      const tutorialSteps = [
+         { title: 'Visual Hierarchy', content: 'Visual hierarchy determines what players see first. The most important elements should grab attention immediately through size, color, contrast, and position. In game UI, health bars, objective markers, and call-to-action buttons typically have highest hierarchy.', icon: 'visual_hierarchy' },
+         { title: 'Color Psychology in Games', content: 'Colors communicate meaning faster than text. Red universally signals danger or low health. Green means go, safe, or health. Blue represents mana, water, or calm. Gold signifies rewards and currency. Consistent color language reduces cognitive load.', icon: 'color_psychology' },
+         { title: 'Choosing Your Art Style', content: 'Your art style is a strategic decision. It affects development cost, target audience, and longevity. Pixel art is nostalgic and efficient. Low-poly is performant and stylish. Realistic requires expensive assets. Match style to your team capabilities and player expectations.', icon: 'art_style_selection' },
+         { title: 'Visual Feedback Systems', content: 'Great games feel responsive because every action produces visible feedback. Buttons scale on press, hits create impact frames, achievements burst with particles. The feedback intensity communicates action importance—small for routine actions, explosive for major achievements.', icon: 'feedback_visuals' },
+         { title: 'Mobile Screen Composition', content: 'Mobile UI must work with thumbs, small screens, and various aspect ratios. Place vital information at the top (visible above thumbs), interactive elements at thumb-reach zones (bottom corners), and the main action in the center. Always account for notches and safe areas.', icon: 'screen_composition' },
+         { title: 'Effective Icon Design', content: 'Game icons must communicate instantly at small sizes. Use bold silhouettes, consistent visual language, and universally understood metaphors. Each icon in a set should feel related but distinct. Test at the smallest size they\'ll appear—if unclear, simplify further.', icon: 'icon_design' },
+         { title: 'Monetization UI Design', content: 'Premium content needs premium presentation. High-quality skin previews, dramatic shop lighting, and polish signal value. However, ethical design never deceives—avoid dark patterns like hiding close buttons or disguising ads. Build trust through transparency for long-term revenue.', icon: 'monetization_visuals' }
+      ];
+
+      const scenarios = [
+         { title: 'Health Bar Redesign', situation: 'Your puzzle game has low session times. Analytics show players often die without noticing their health was low. The health bar is a thin green line at the bottom of the screen. What\'s the highest-impact fix?', options: [
+            { text: 'Add a sound when health is low', points: 15, feedback: 'Sound helps but visual problems need visual solutions. Audio-only players won\'t benefit, and many mobile players have sound off.' },
+            { text: 'Move health bar to top with larger size and add red glow when critical', points: 30, feedback: 'Excellent! Moving to top increases visibility (not obscured by thumbs), larger size creates hierarchy, and red glow adds urgency. This is comprehensive visual feedback.' },
+            { text: 'Add a text warning saying "Low Health!"', points: 10, feedback: 'Text is slower to process than color/shape during gameplay. Players shouldn\'t need to read in action moments—visual communication is faster.' },
+            { text: 'Make the entire health bar red instead of green', points: 20, feedback: 'Red increases urgency but doesn\'t solve the size or position problems. Players still won\'t see a thin bottom bar during intense gameplay.' }
+         ]},
+         { title: 'Art Style Decision', situation: 'You\'re a 2-person indie team starting a casual mobile RPG. Budget is limited, timeline is 8 months. Target audience is broad (ages 13-45). Which art style should you choose?', options: [
+            { text: 'Realistic 3D graphics to compete with AAA games', points: 5, feedback: 'Realistic 3D requires massive asset investment and skilled artists. A 2-person team can\'t match AAA quality—you\'ll look cheap instead of impressive.' },
+            { text: 'Stylized 2D with hand-drawn aesthetic', points: 30, feedback: 'Perfect choice! Stylized 2D is achievable by small teams, ages well, appeals to broad audiences, and doesn\'t compete directly with AAA. Focus on charm over fidelity.' },
+            { text: 'Hyper-realistic pixel art with detailed animations', points: 15, feedback: 'Detailed pixel art is more work than it appears. Complex animations eat timeline. Simple pixel art could work, but "hyper-realistic" scope is risky for small teams.' },
+            { text: 'Minimalist flat design with abstract shapes', points: 20, feedback: 'Minimalist works but may feel generic for an RPG where players expect characters and worlds. It\'s better suited for puzzle or strategy games.' }
+         ]},
+         { title: 'Shop Screen Optimization', situation: 'Your in-app purchase conversion rate is 0.5%, below the 2-3% benchmark. Your shop shows items in a plain grid with white backgrounds and small thumbnails. What change would likely have the biggest impact?', options: [
+            { text: 'Add dramatic lighting, larger previews, and particle effects to premium items', points: 30, feedback: 'Premium presentation sells premium items. Dramatic lighting, generous preview sizes, and subtle particles convey value and make items desirable. Presentation IS part of the product.' },
+            { text: 'Reduce prices by 50%', points: 10, feedback: 'Price cuts hurt revenue and rarely solve conversion issues. If items don\'t look valuable, even cheap prices won\'t convince players they\'re worth buying.' },
+            { text: 'Add more items to the shop', points: 5, feedback: 'More items with poor presentation just create more noise. Quality of presentation matters more than quantity of offerings.' },
+            { text: 'Make the shop button more visible on the main screen', points: 15, feedback: 'Visibility helps traffic but doesn\'t solve conversion. Players are visiting the shop—they\'re just not buying. The shop experience itself needs improvement.' }
+         ]},
+         { title: 'Color Palette Conflict', situation: 'Your tower defense game uses green for ally units and red for enemies. You want to add a "poison" status effect. Your artist suggests green poison clouds because "poison is green". What should you do?', options: [
+            { text: 'Use green poison—it\'s the universal color for poison', points: 10, feedback: 'While poison is often green, your game already uses green for allies. Players will momentarily confuse poison clouds with friendly units, breaking the visual language you\'ve established.' },
+            { text: 'Use purple poison to maintain your established color system', points: 30, feedback: 'Perfect! Purple is associated with poison/magic and doesn\'t conflict with your ally (green) or enemy (red) colors. Consistency in your color language is more important than real-world associations.' },
+            { text: 'Use yellow poison for visibility', points: 20, feedback: 'Yellow avoids the green conflict and is visible, but has no poison association. Purple would communicate "poison" more intuitively while also avoiding conflicts.' },
+            { text: 'Add a skull icon to the green clouds to differentiate', points: 15, feedback: 'Adding icons is a patch, not a solution. During fast gameplay, color is processed before icons. You\'re adding cognitive load instead of solving the root conflict.' }
+         ]}
+      ];
+
+      const quizQuestions = [
+         { question: 'Why should the most important UI elements be largest and highest contrast?', options: ['They\'re easier to tap', 'Visual hierarchy guides attention—players see high-contrast elements first, ensuring critical information isn\'t missed', 'It looks more professional', 'Mobile devices have low resolution'], correct: 1, explanation: 'Visual hierarchy uses size and contrast to control attention flow. Players\' eyes naturally gravitate to the largest, highest-contrast elements first. This ensures health bars, objectives, and call-to-actions are seen before decorative elements.' },
+         { question: 'Why is consistent color language more important than realistic color choices?', options: ['Realistic colors are harder to render', 'Consistency reduces cognitive load—once players learn "green = ally," they process faster without thinking', 'Players prefer stylized graphics', 'It\'s cheaper to produce'], correct: 1, explanation: 'Consistent color language creates instant recognition. When "red = danger" is always true, players don\'t need to consciously interpret each new red element. Breaking consistency forces players to think instead of react, slowing them down in critical moments.' },
+         { question: 'Why do premium in-app purchases need premium visual presentation?', options: ['To hide low-quality items', 'Visual presentation communicates value—if items don\'t look valuable, players won\'t feel they\'re worth buying regardless of actual utility', 'It\'s required by app stores', 'Players can\'t see the items otherwise'], correct: 1, explanation: 'Perceived value drives purchase decisions. A sword shown on a plain white grid looks worthless. The same sword with dramatic lighting, particle effects, and a rotating preview feels premium. Presentation is part of the product players are buying.' },
+         { question: 'Why should feedback intensity match action importance?', options: ['It saves processing power', 'Proportional feedback creates intuitive understanding—small effects for routine actions tell players what matters, while explosions for achievements create memorable moments', 'Players prefer consistent animations', 'It\'s easier to implement'], correct: 1, explanation: 'Feedback intensity teaches importance without words. When collecting a common coin produces a small sparkle but defeating a boss triggers screen shake and fireworks, players intuitively learn what matters. If everything is explosive, nothing feels special.' },
+         { question: 'Why is testing icons at their smallest display size critical?', options: ['To save file size', 'Icons that are clear at small sizes remain readable at all sizes—if details are lost at 32px, simplify until the silhouette alone communicates meaning', 'Players zoom in on icons', 'It prevents crashes'], correct: 1, explanation: 'Icons appear at various sizes but are most challenged at their smallest. A detailed icon that\'s beautiful at 128px might become an unreadable blob at 32px. By designing for the smallest use case and testing there, you ensure readability everywhere.' }
+      ];
+
+      const handleScenarioAnswer = (points: number, feedback: string) => { if (answered) return; setScore(prev => prev + points); setAnswered(true); setGameLog(prev => [...prev, `Scenario ${scenarioIndex + 1}: Scored ${points}/30 - ${feedback}`]); };
+      const handleQuizAnswer = (index: number) => { if (quizAnswered) return; setSelectedAnswer(index); setQuizAnswered(true); if (index === quizQuestions[quizIndex].correct) { setQuizScore(prev => prev + 1); setGameLog(prev => [...prev, `Quiz ${quizIndex + 1}: Correct`]); } else { setGameLog(prev => [...prev, `Quiz ${quizIndex + 1}: Incorrect`]); } };
+      const nextScenario = () => { if (scenarioIndex < scenarios.length - 1) { setScenarioIndex(prev => prev + 1); setSelectedAnswer(null); setAnswered(false); } else { setQuizIndex(0); setQuizAnswered(false); setSelectedAnswer(null); } };
+      const nextQuiz = () => { if (quizIndex < quizQuestions.length - 1) { setQuizIndex(prev => prev + 1); setSelectedAnswer(null); setQuizAnswered(false); } else { setPhase('result'); } };
+
+      if (phase === 'intro') {
+         return (
+            <div className="p-6 bg-gradient-to-br from-rose-50 to-orange-100 rounded-xl shadow-lg max-w-2xl mx-auto">
+               <h2 className="text-2xl font-bold text-rose-800 mb-4">🎨 Game Graphic Design Mastery</h2>
+               <p className="text-rose-700 mb-4">Master the visual design principles that make mobile games look professional, feel responsive, and convert players to payers. From color psychology to shop presentation, learn what separates amateur from pro game UI.</p>
+               <div className="bg-white/70 rounded-lg p-4 mb-4">
+                  <h3 className="font-semibold text-rose-800 mb-2">Learning Objectives:</h3>
+                  <ul className="text-rose-700 space-y-1 text-sm">
+                     <li>• Understand visual hierarchy and how to guide player attention</li>
+                     <li>• Apply color psychology to communicate game state instantly</li>
+                     <li>• Choose art styles strategically based on team and audience</li>
+                     <li>• Design visual feedback that makes games feel responsive</li>
+                     <li>• Create effective icons and monetization UI</li>
+                  </ul>
+               </div>
+               <button onClick={() => setPhase('tutorial')} className="w-full py-3 bg-rose-600 text-white rounded-lg hover:bg-rose-700 font-semibold">Start Learning</button>
+            </div>
+         );
+      }
+
+      if (phase === 'tutorial') {
+         const step = tutorialSteps[tutorialStep];
+         return (
+            <div className="p-6 bg-gradient-to-br from-rose-50 to-orange-100 rounded-xl shadow-lg max-w-2xl mx-auto">
+               <div className="flex justify-between items-center mb-4">
+                  <h2 className="text-xl font-bold text-rose-800">Step {tutorialStep + 1} of {tutorialSteps.length}</h2>
+                  <span className="text-rose-600 text-sm">{Math.round(((tutorialStep + 1) / tutorialSteps.length) * 100)}% Complete</span>
+               </div>
+               <div className="bg-white/80 rounded-lg p-5 mb-4">
+                  <div className="flex items-start gap-3 mb-3">
+                     <h3 className="font-semibold text-rose-800 text-lg">{step.title}</h3>
+                     <button onClick={() => { setInfoTopic(step.icon); setShowInfo(true); }} className="text-rose-500 hover:text-rose-700">ⓘ</button>
+                  </div>
+                  <p className="text-rose-700">{step.content}</p>
+               </div>
+               <div className="bg-orange-100 rounded-lg p-3 mb-4">
+                  <p className="text-orange-800 text-sm">💡 <strong>AI Coach:</strong> {tutorialStep === 0 ? 'Remember: if players can\'t find it, it doesn\'t exist. Hierarchy is about survival of information!' : tutorialStep === 1 ? 'Color is your fastest communication channel. Players process color before they read any text.' : tutorialStep === 3 ? 'The best feedback is invisible as a system but feels magical as an experience.' : tutorialStep === 6 ? 'Ethical monetization design builds trust. Dark patterns create short-term revenue but long-term reputation damage.' : 'Every visual choice either helps or hurts player experience. There are no neutral decisions.'}</p>
+               </div>
+               <div className="flex gap-3">
+                  {tutorialStep > 0 && <button onClick={() => setTutorialStep(prev => prev - 1)} className="flex-1 py-2 border border-rose-600 text-rose-600 rounded-lg hover:bg-rose-50">Previous</button>}
+                  <button onClick={() => tutorialStep < tutorialSteps.length - 1 ? setTutorialStep(prev => prev + 1) : setPhase('play')} className="flex-1 py-2 bg-rose-600 text-white rounded-lg hover:bg-rose-700">{tutorialStep < tutorialSteps.length - 1 ? 'Next' : 'Start Practice'}</button>
+               </div>
+               {showInfo && (
+                  <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" onClick={() => setShowInfo(false)}>
+                     <div className="bg-white rounded-xl p-6 max-w-md m-4" onClick={e => e.stopPropagation()}>
+                        <h3 className="font-bold text-rose-800 mb-2">{step.title}</h3>
+                        <p className="text-rose-700 text-sm">{infoContent[infoTopic]}</p>
+                        <button onClick={() => setShowInfo(false)} className="mt-4 w-full py-2 bg-rose-600 text-white rounded-lg">Close</button>
+                     </div>
+                  </div>
+               )}
+            </div>
+         );
+      }
+
+      if (phase === 'play') {
+         if (scenarioIndex < scenarios.length) {
+            const scenario = scenarios[scenarioIndex];
+            return (
+               <div className="p-6 bg-gradient-to-br from-rose-50 to-orange-100 rounded-xl shadow-lg max-w-2xl mx-auto">
+                  <div className="flex justify-between items-center mb-4">
+                     <h2 className="text-xl font-bold text-rose-800">Scenario {scenarioIndex + 1} of {scenarios.length}</h2>
+                     <span className="text-rose-600 font-semibold">Score: {score}</span>
+                  </div>
+                  <div className="bg-white/80 rounded-lg p-5 mb-4">
+                     <h3 className="font-semibold text-rose-800 mb-2">{scenario.title}</h3>
+                     <p className="text-rose-700 mb-4">{scenario.situation}</p>
+                     <div className="space-y-2">
+                        {scenario.options.map((option, i) => (
+                           <button key={i} onClick={() => { setSelectedAnswer(i); handleScenarioAnswer(option.points, option.feedback); }} disabled={answered} className={`w-full p-3 text-left rounded-lg border transition-all ${answered && selectedAnswer === i ? option.points >= 25 ? 'bg-green-100 border-green-500' : option.points >= 15 ? 'bg-yellow-100 border-yellow-500' : 'bg-red-100 border-red-500' : 'bg-white border-rose-200 hover:border-rose-400'} ${answered ? 'cursor-default' : 'cursor-pointer'}`}>
+                              <span className="text-rose-800">{option.text}</span>
+                              {answered && selectedAnswer === i && <p className="text-sm mt-2 text-rose-600">{option.feedback}</p>}
+                           </button>
+                        ))}
+                     </div>
+                  </div>
+                  {answered && <button onClick={nextScenario} className="w-full py-3 bg-rose-600 text-white rounded-lg hover:bg-rose-700">{scenarioIndex < scenarios.length - 1 ? 'Next Scenario' : 'Continue to Quiz'}</button>}
+               </div>
+            );
+         }
+         const quiz = quizQuestions[quizIndex];
+         return (
+            <div className="p-6 bg-gradient-to-br from-rose-50 to-orange-100 rounded-xl shadow-lg max-w-2xl mx-auto">
+               <div className="flex justify-between items-center mb-4">
+                  <h2 className="text-xl font-bold text-rose-800">Quiz {quizIndex + 1} of {quizQuestions.length}</h2>
+                  <span className="text-rose-600 font-semibold">Quiz Score: {quizScore}/{quizIndex + (quizAnswered ? 1 : 0)}</span>
+               </div>
+               <div className="bg-white/80 rounded-lg p-5 mb-4">
+                  <p className="text-rose-800 font-medium mb-4">{quiz.question}</p>
+                  <div className="space-y-2">
+                     {quiz.options.map((option, i) => (
+                        <button key={i} onClick={() => handleQuizAnswer(i)} disabled={quizAnswered} className={`w-full p-3 text-left rounded-lg border transition-all ${quizAnswered ? i === quiz.correct ? 'bg-green-100 border-green-500' : selectedAnswer === i ? 'bg-red-100 border-red-500' : 'bg-white border-rose-200' : 'bg-white border-rose-200 hover:border-rose-400'}`}>{option}</button>
+                     ))}
+                  </div>
+                  {quizAnswered && <div className="mt-4 p-3 bg-orange-50 rounded-lg"><p className="text-orange-800 text-sm"><strong>Explanation:</strong> {quiz.explanation}</p></div>}
+               </div>
+               {quizAnswered && <button onClick={nextQuiz} className="w-full py-3 bg-rose-600 text-white rounded-lg hover:bg-rose-700">{quizIndex < quizQuestions.length - 1 ? 'Next Question' : 'See Results'}</button>}
+            </div>
+         );
+      }
+
+      if (phase === 'result') {
+         const maxScore = scenarios.reduce((sum, s) => sum + Math.max(...s.options.map(o => o.points)), 0);
+         const percentage = Math.round((score / maxScore) * 100);
+         return (
+            <div className="p-6 bg-gradient-to-br from-rose-50 to-orange-100 rounded-xl shadow-lg max-w-2xl mx-auto">
+               <h2 className="text-2xl font-bold text-rose-800 mb-4">🎨 Game Graphic Design Complete!</h2>
+               <div className="bg-white/80 rounded-lg p-5 mb-4">
+                  <div className="text-center mb-4">
+                     <p className="text-4xl font-bold text-rose-600">{percentage}%</p>
+                     <p className="text-rose-700">Scenario Score: {score}/{maxScore}</p>
+                     <p className="text-rose-700">Quiz Score: {quizScore}/{quizQuestions.length}</p>
+                  </div>
+                  <div className="border-t pt-4">
+                     <h3 className="font-semibold text-rose-800 mb-2">Key Insights:</h3>
+                     <ul className="text-rose-700 text-sm space-y-1">
+                        <li>• Visual hierarchy guides attention—size and contrast control what players see first</li>
+                        <li>• Consistent color language reduces cognitive load and speeds reactions</li>
+                        <li>• Art style is strategic—match to team capability and audience</li>
+                        <li>• Feedback intensity teaches importance without words</li>
+                        <li>• Premium presentation sells premium items—visuals communicate value</li>
+                        <li>• Test icons at smallest size—if unreadable, simplify</li>
+                     </ul>
+                  </div>
+                  <div className="border-t pt-4 mt-4">
+                     <h3 className="font-semibold text-rose-800 mb-2">Real-World Application:</h3>
+                     <p className="text-rose-700 text-sm">Apply these principles to your next game: Audit your current UI for hierarchy issues, create a color language document, and user-test your shop presentation. Small visual improvements often have outsized impacts on retention and revenue.</p>
+                  </div>
+               </div>
+               <button onClick={() => { setPhase('intro'); setScore(0); setScenarioIndex(0); setQuizIndex(0); setQuizScore(0); setAnswered(false); setQuizAnswered(false); setSelectedAnswer(null); setTutorialStep(0); setGameLog([]); }} className="w-full py-3 bg-rose-600 text-white rounded-lg hover:bg-rose-700">Play Again</button>
+            </div>
+         );
+      }
+      return null;
+   };
+
    const FinancialStatementsRenderer = () => {
       const [phase, setPhase] = useState<'intro' | 'play' | 'result'>('intro');
       const [showInfo, setShowInfo] = useState(false);
@@ -57769,6 +57980,8 @@ const GeneratedDiagram: React.FC<DiagramProps> = ({ type, data, title }) => {
             return <CrossPromotionRenderer />;
          case 'localization_strategy':
             return <LocalizationStrategyRenderer />;
+         case 'game_graphic_design':
+            return <GameGraphicDesignRenderer />;
          case 'pricing_strategy':
             return <PricingStrategyRenderer />;
          case 'budgeting':
