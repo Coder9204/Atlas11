@@ -50647,6 +50647,237 @@ const GeneratedDiagram: React.FC<DiagramProps> = ({ type, data, title }) => {
       return null;
    };
 
+   // Topic 122: Deep Linking Interactive Educational Game
+   const DeepLinkingRenderer = () => {
+      const [phase, setPhase] = useState<'intro' | 'tutorial' | 'play' | 'result'>('intro');
+      const [tutorialStep, setTutorialStep] = useState(0);
+      const [showInfo, setShowInfo] = useState(false);
+      const [infoTopic, setInfoTopic] = useState('');
+      const [scenarioIndex, setScenarioIndex] = useState(0);
+      const [score, setScore] = useState(0);
+      const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
+      const [answered, setAnswered] = useState(false);
+      const [quizIndex, setQuizIndex] = useState(0);
+      const [quizScore, setQuizScore] = useState(0);
+      const [quizAnswered, setQuizAnswered] = useState(false);
+      const [gameLog, setGameLog] = useState<string[]>([]);
+
+      const infoContent: Record<string, string> = {
+         'deep_links': 'Deep links are URLs that direct users to specific content within a mobile app rather than opening a website. They enable seamless navigation from external sources (emails, ads, social media) directly into app content, improving user experience and conversion rates.',
+         'uri_schemes': 'URI schemes (myapp://) are custom protocols that apps register to handle specific links. While simple to implement, they lack fallback behavior when the app isn\'t installed and can cause security issues with scheme hijacking.',
+         'universal_links': 'Universal Links (iOS) and App Links (Android) use standard HTTPS URLs that work both as web links and deep links. They require server-side configuration but provide secure, fallback-enabled deep linking.',
+         'deferred_linking': 'Deferred deep links remember the intended destination through app installation. When a user clicks a link without the app installed, the link persists, and after installation, the app opens to the intended content.',
+         'contextual_data': 'Contextual deep links carry additional data (referrer ID, campaign source, user preferences) that can personalize the app experience, attribute conversions, and enable features like referral rewards.',
+         'routing_logic': 'Deep link routing determines how the app handles incoming links, parsing URL paths and parameters to navigate to the correct screen with the right data. Good routing handles edge cases and invalid links gracefully.',
+         'attribution': 'Deep link attribution tracks which links, campaigns, and channels drive app installs and engagement. This data helps optimize marketing spend and understand user acquisition sources.'
+      };
+
+      const tutorialSteps = [
+         { title: 'Welcome to Deep Linking', content: 'Deep linking connects the external world to specific content within your mobile app. Learn how to create seamless user journeys that boost engagement and conversions!' },
+         { title: 'Understanding Deep Link Types', content: 'Traditional deep links use custom URI schemes (myapp://product/123). Universal Links (iOS) and App Links (Android) use HTTPS URLs for better security and web fallback.' },
+         { title: 'Deferred Deep Links', content: 'Deferred links remember the destination through app installation. A user clicking your ad gets directed to the right product page even after downloading and installing your app.' },
+         { title: 'Contextual Data Passing', content: 'Deep links can carry contextual data like referrer IDs, promo codes, and campaign parameters. This enables personalization, attribution tracking, and feature activation.' },
+         { title: 'App Link Configuration', content: 'Universal Links require an Apple App Site Association (AASA) file on your server. Android App Links need a Digital Asset Links file. Both verify domain ownership.' },
+         { title: 'Routing and Navigation', content: 'Build robust routing logic to parse URLs and navigate to correct screens. Handle edge cases: invalid links, expired content, authentication requirements, and missing parameters.' },
+         { title: 'Testing and Validation', content: 'Test deep links across scenarios: app installed, not installed, logged in, logged out, different OS versions. Use link validators and real device testing for production quality.' }
+      ];
+
+      const scenarios = [
+         {
+            title: 'E-commerce App Launch Campaign',
+            description: 'You\'re launching a new e-commerce app with a major advertising campaign. You want users clicking ads to land on specific product pages, even if they need to install the app first.',
+            options: [
+               { text: 'Use custom URI schemes (myapp://product/123)', feedback: 'URI schemes don\'t work if the app isn\'t installed. Users would see an error instead of being directed to download.', correct: false },
+               { text: 'Implement deferred deep links with Universal Links', feedback: 'Excellent! Deferred deep links with Universal Links provide web fallback for non-app users and remember the destination through installation.', correct: true },
+               { text: 'Just link to your website\'s product pages', feedback: 'This misses the opportunity to drive app installs and provide the native app experience. App users have higher lifetime value.', correct: false },
+               { text: 'Create QR codes that open the app store', feedback: 'This doesn\'t provide product-specific deep linking. Users would have to manually find products after installing.', correct: false }
+            ]
+         },
+         {
+            title: 'Social Sharing Feature',
+            description: 'Users want to share content from your recipe app with friends. You need to implement shareable links that work whether recipients have the app or not.',
+            options: [
+               { text: 'Share custom scheme links that only work with the app', feedback: 'Recipients without the app would see broken links. This creates a poor experience and limits viral reach.', correct: false },
+               { text: 'Share web URLs that redirect to app or show web version', feedback: 'Perfect! Universal Links allow app users to open content in-app while web users see a full web experience with an app install prompt.', correct: true },
+               { text: 'Only allow sharing via in-app messaging', feedback: 'This limits sharing reach and doesn\'t solve the cross-platform link problem.', correct: false },
+               { text: 'Share app store links with recipe ID in notes', feedback: 'This creates friction and relies on users manually navigating after install. Poor user experience.', correct: false }
+            ]
+         },
+         {
+            title: 'Referral Program Deep Links',
+            description: 'You\'re building a referral program where existing users share links. New users should receive $10 credit, and referrers should be credited when the referee makes a purchase.',
+            options: [
+               { text: 'Append referrer_id as URL parameter with no backend tracking', feedback: 'Without backend persistence, you\'ll lose attribution if users don\'t immediately install or if the app is reinstalled.', correct: false },
+               { text: 'Use fingerprint matching without explicit parameters', feedback: 'Fingerprinting alone is unreliable and increasingly restricted by privacy policies. It shouldn\'t be your primary method.', correct: false },
+               { text: 'Implement contextual deep links with server-side attribution', feedback: 'Excellent! Contextual deep links carry referrer data, and server-side storage ensures attribution persists through installs and sessions.', correct: true },
+               { text: 'Have users manually enter referral codes', feedback: 'Manual entry creates friction and significantly reduces referral conversion rates. Automation is key.', correct: false }
+            ]
+         },
+         {
+            title: 'Email Re-engagement Campaign',
+            description: 'You\'re sending personalized emails to inactive users showing items they previously viewed. You want to bring them back into the app with minimal friction.',
+            options: [
+               { text: 'Link to web product pages only', feedback: 'This misses the opportunity to re-engage with the native app experience. App sessions are typically more valuable.', correct: false },
+               { text: 'Use deep links with authentication token and product ID', feedback: 'Perfect! Including auth tokens enables automatic login while product IDs ensure users land on relevant content. Minimal friction, maximum personalization.', correct: true },
+               { text: 'Just link to the app home screen', feedback: 'Users would need to search for previously viewed items. This creates friction and reduces re-engagement effectiveness.', correct: false },
+               { text: 'Use push notifications instead of email', feedback: 'This doesn\'t address the email campaign requirement. Push and email serve different purposes in re-engagement.', correct: false }
+            ]
+         }
+      ];
+
+      const quizQuestions = [
+         { question: 'Why are Universal Links preferred over custom URI schemes for production apps?', options: ['They\'re easier to implement', 'They provide web fallback and prevent scheme hijacking', 'They work on older iOS versions', 'They don\'t require server configuration'], correct: 1, explanation: 'Universal Links use HTTPS URLs that work as web links when the app isn\'t installed, and the domain verification prevents other apps from hijacking your links.' },
+         { question: 'What makes deferred deep links essential for install campaigns?', options: ['They work faster than regular deep links', 'They remember the destination through the app installation process', 'They don\'t require any special SDK', 'They only work with paid advertising'], correct: 1, explanation: 'Deferred deep links persist the intended destination (and contextual data) through the app store install flow, ensuring new users reach the right content.' },
+         { question: 'How should you handle a deep link to content that requires authentication?', options: ['Reject the link entirely', 'Show an error message', 'Navigate to login, then deep link after auth', 'Always bypass authentication'], correct: 2, explanation: 'Store the deep link destination, route to authentication, then continue to the intended content after successful login for the best user experience.' },
+         { question: 'What is the primary purpose of an Apple App Site Association (AASA) file?', options: ['To improve app store rankings', 'To verify domain ownership for Universal Links', 'To enable push notifications', 'To store user preferences'], correct: 1, explanation: 'The AASA file, hosted on your domain, proves to iOS that your app has legitimate authority to handle links from that domain.' },
+         { question: 'Why should contextual data be stored server-side for referral programs?', options: ['It\'s required by app stores', 'Client-side storage is always lost on reinstall', 'Server-side ensures attribution persists across installs and devices', 'It improves app performance'], correct: 2, explanation: 'Server-side storage ensures referral attribution survives app reinstalls, device changes, and delayed conversions that might occur days after the initial click.' }
+      ];
+
+      const handleAnswer = (optionIndex: number) => {
+         if (answered) return;
+         setSelectedAnswer(optionIndex);
+         setAnswered(true);
+         const isCorrect = scenarios[scenarioIndex].options[optionIndex].correct;
+         if (isCorrect) setScore(score + 1);
+         setGameLog([...gameLog, `Scenario ${scenarioIndex + 1}: ${isCorrect ? 'Correct' : 'Incorrect'}`]);
+      };
+
+      const nextScenario = () => {
+         if (scenarioIndex < scenarios.length - 1) {
+            setScenarioIndex(scenarioIndex + 1);
+            setSelectedAnswer(null);
+            setAnswered(false);
+         } else {
+            setPhase('result');
+         }
+      };
+
+      const handleQuizAnswer = (optionIndex: number) => {
+         if (quizAnswered) return;
+         setQuizAnswered(true);
+         if (optionIndex === quizQuestions[quizIndex].correct) {
+            setQuizScore(quizScore + 1);
+         }
+      };
+
+      const nextQuiz = () => {
+         if (quizIndex < quizQuestions.length - 1) {
+            setQuizIndex(quizIndex + 1);
+            setQuizAnswered(false);
+         }
+      };
+
+      if (phase === 'intro') {
+         return (
+            <div className="p-6 bg-gradient-to-br from-cyan-50 to-blue-100 rounded-xl shadow-lg max-w-2xl mx-auto">
+               <h2 className="text-2xl font-bold text-cyan-800 mb-4">🔗 Deep Linking Mastery</h2>
+               <p className="text-cyan-700 mb-4">Master the art of connecting users directly to your app content. Deep links are essential for marketing campaigns, social sharing, and seamless user experiences.</p>
+               <div className="bg-white p-4 rounded-lg mb-4">
+                  <h3 className="font-semibold text-cyan-800 mb-2">What You'll Learn:</h3>
+                  <ul className="text-sm text-cyan-600 space-y-1">
+                     <li>• Universal Links vs URI Schemes and when to use each</li>
+                     <li>• Deferred deep linking for install attribution</li>
+                     <li>• Contextual data passing for personalization</li>
+                     <li>• Server configuration and routing logic</li>
+                  </ul>
+               </div>
+               <button onClick={() => setPhase('tutorial')} className="w-full py-3 bg-cyan-600 text-white rounded-lg font-semibold hover:bg-cyan-700 transition">Start Learning</button>
+            </div>
+         );
+      }
+
+      if (phase === 'tutorial') {
+         return (
+            <div className="p-6 bg-gradient-to-br from-cyan-50 to-blue-100 rounded-xl shadow-lg max-w-2xl mx-auto">
+               <div className="flex justify-between items-center mb-4">
+                  <h2 className="text-xl font-bold text-cyan-800">Tutorial: {tutorialSteps[tutorialStep].title}</h2>
+                  <span className="text-sm text-cyan-600">{tutorialStep + 1} / {tutorialSteps.length}</span>
+               </div>
+               <div className="bg-white p-4 rounded-lg mb-4">
+                  <p className="text-cyan-700">{tutorialSteps[tutorialStep].content}</p>
+               </div>
+               <div className="flex flex-wrap gap-2 mb-4">
+                  {Object.keys(infoContent).map(topic => (
+                     <button key={topic} onClick={() => { setInfoTopic(topic); setShowInfo(true); }} className="text-xs px-2 py-1 bg-cyan-100 text-cyan-700 rounded-full hover:bg-cyan-200 transition">ℹ️ {topic.replace(/_/g, ' ')}</button>
+                  ))}
+               </div>
+               {showInfo && (
+                  <div className="bg-cyan-50 border border-cyan-200 p-3 rounded-lg mb-4">
+                     <div className="flex justify-between items-center mb-2">
+                        <span className="font-semibold text-cyan-800">{infoTopic.replace(/_/g, ' ')}</span>
+                        <button onClick={() => setShowInfo(false)} className="text-cyan-600">✕</button>
+                     </div>
+                     <p className="text-sm text-cyan-600">{infoContent[infoTopic]}</p>
+                  </div>
+               )}
+               <div className="flex gap-2">
+                  {tutorialStep > 0 && <button onClick={() => setTutorialStep(tutorialStep - 1)} className="flex-1 py-2 border border-cyan-300 text-cyan-600 rounded-lg hover:bg-cyan-50 transition">Back</button>}
+                  <button onClick={() => tutorialStep < tutorialSteps.length - 1 ? setTutorialStep(tutorialStep + 1) : setPhase('play')} className="flex-1 py-2 bg-cyan-600 text-white rounded-lg hover:bg-cyan-700 transition">{tutorialStep < tutorialSteps.length - 1 ? 'Next' : 'Start Practice'}</button>
+               </div>
+            </div>
+         );
+      }
+
+      if (phase === 'play') {
+         const currentScenario = scenarios[scenarioIndex];
+         return (
+            <div className="p-6 bg-gradient-to-br from-cyan-50 to-blue-100 rounded-xl shadow-lg max-w-2xl mx-auto">
+               <div className="flex justify-between items-center mb-4">
+                  <h2 className="text-xl font-bold text-cyan-800">Scenario {scenarioIndex + 1} of {scenarios.length}</h2>
+                  <span className="text-sm bg-cyan-200 text-cyan-800 px-2 py-1 rounded">Score: {score}</span>
+               </div>
+               <div className="bg-white p-4 rounded-lg mb-4">
+                  <h3 className="font-semibold text-cyan-800 mb-2">{currentScenario.title}</h3>
+                  <p className="text-cyan-700 text-sm">{currentScenario.description}</p>
+               </div>
+               <div className="space-y-2 mb-4">
+                  {currentScenario.options.map((option, idx) => (
+                     <button key={idx} onClick={() => handleAnswer(idx)} disabled={answered} className={`w-full p-3 text-left rounded-lg transition text-sm ${answered ? option.correct ? 'bg-green-100 border-2 border-green-500' : selectedAnswer === idx ? 'bg-red-100 border-2 border-red-500' : 'bg-gray-100' : 'bg-white hover:bg-cyan-50 border border-cyan-200'}`}>
+                        {option.text}
+                        {answered && selectedAnswer === idx && <p className="mt-2 text-xs text-gray-600">{option.feedback}</p>}
+                     </button>
+                  ))}
+               </div>
+               {answered && <button onClick={nextScenario} className="w-full py-2 bg-cyan-600 text-white rounded-lg hover:bg-cyan-700 transition">{scenarioIndex < scenarios.length - 1 ? 'Next Scenario' : 'See Results'}</button>}
+            </div>
+         );
+      }
+
+      if (phase === 'result') {
+         return (
+            <div className="p-6 bg-gradient-to-br from-cyan-50 to-blue-100 rounded-xl shadow-lg max-w-2xl mx-auto">
+               <h2 className="text-2xl font-bold text-cyan-800 mb-4">🎯 Results</h2>
+               <div className="bg-white p-4 rounded-lg mb-4">
+                  <p className="text-lg text-cyan-700">Scenario Score: <span className="font-bold">{score} / {scenarios.length}</span></p>
+                  <p className="text-lg text-cyan-700">Quiz Score: <span className="font-bold">{quizScore} / {quizQuestions.length}</span></p>
+               </div>
+               <div className="bg-white p-4 rounded-lg mb-4">
+                  <h3 className="font-semibold text-cyan-800 mb-2">Quiz: Test Your Knowledge</h3>
+                  <p className="text-sm text-cyan-700 mb-3">{quizQuestions[quizIndex].question}</p>
+                  <div className="space-y-2">
+                     {quizQuestions[quizIndex].options.map((opt, idx) => (
+                        <button key={idx} onClick={() => handleQuizAnswer(idx)} disabled={quizAnswered} className={`w-full p-2 text-left text-sm rounded transition ${quizAnswered ? idx === quizQuestions[quizIndex].correct ? 'bg-green-100 border border-green-500' : 'bg-gray-100' : 'bg-cyan-50 hover:bg-cyan-100'}`}>{opt}</button>
+                     ))}
+                  </div>
+                  {quizAnswered && <p className="mt-2 text-sm text-cyan-600">{quizQuestions[quizIndex].explanation}</p>}
+                  {quizAnswered && quizIndex < quizQuestions.length - 1 && <button onClick={nextQuiz} className="mt-2 px-4 py-1 bg-cyan-600 text-white rounded text-sm">Next Question</button>}
+               </div>
+               <div className="bg-cyan-100 p-4 rounded-lg">
+                  <h3 className="font-semibold text-cyan-800 mb-2">🔑 Key Takeaways</h3>
+                  <ul className="text-sm text-cyan-700 space-y-1">
+                     <li>• Use Universal Links / App Links for production - they provide security and fallback</li>
+                     <li>• Implement deferred deep links for marketing campaigns to preserve attribution through install</li>
+                     <li>• Store contextual data server-side for reliable attribution and personalization</li>
+                     <li>• Build robust routing logic that handles edge cases gracefully</li>
+                     <li>• Test deep links across all user states: installed/not installed, logged in/out</li>
+                  </ul>
+               </div>
+            </div>
+         );
+      }
+      return null;
+   };
+
    const FinancialStatementsRenderer = () => {
       const [phase, setPhase] = useState<'intro' | 'play' | 'result'>('intro');
       const [showInfo, setShowInfo] = useState(false);
@@ -54588,6 +54819,8 @@ const GeneratedDiagram: React.FC<DiagramProps> = ({ type, data, title }) => {
             return <ChurnPreventionRenderer />;
          case 'aso_advanced':
             return <ASOAdvancedRenderer />;
+         case 'deep_linking':
+            return <DeepLinkingRenderer />;
          case 'pricing_strategy':
             return <PricingStrategyRenderer />;
          case 'budgeting':
