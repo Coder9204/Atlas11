@@ -53188,6 +53188,210 @@ const GeneratedDiagram: React.FC<DiagramProps> = ({ type, data, title }) => {
       return null;
    };
 
+   // Topic 133: App Store Features Interactive Educational Game
+   const AppStoreFeaturesRenderer = () => {
+      const [phase, setPhase] = useState<'intro' | 'tutorial' | 'play' | 'result'>('intro');
+      const [tutorialStep, setTutorialStep] = useState(0);
+      const [showInfo, setShowInfo] = useState(false);
+      const [infoTopic, setInfoTopic] = useState('');
+      const [scenarioIndex, setScenarioIndex] = useState(0);
+      const [score, setScore] = useState(0);
+      const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
+      const [answered, setAnswered] = useState(false);
+      const [quizIndex, setQuizIndex] = useState(0);
+      const [quizScore, setQuizScore] = useState(0);
+      const [quizAnswered, setQuizAnswered] = useState(false);
+      const [gameLog, setGameLog] = useState<string[]>([]);
+
+      const infoContent: Record<string, string> = {
+         'featuring_process': 'App Store featuring is a curated editorial process. Apple\'s App Store team reviews apps based on quality, design excellence, innovation, and user experience. Being featured can increase downloads 10-50x and provides free exposure worth $100K+.',
+         'editorial_content': 'The App Store editorial team writes stories highlighting exceptional apps. To get noticed, submit to appstore.com/promote with a compelling pitch showing what makes your app unique, including high-quality assets, press kit, and any notable achievements.',
+         'today_tab': 'The Today tab is the most visible featuring location, showing curated stories, collections, and app spotlights. Apps featured here see the highest download spikes. Content is updated daily and tailored to seasons, events, and cultural moments.',
+         'in_app_events': 'In-App Events let you showcase timely events within your app (competitions, movie premieres, game updates). These appear on your product page and can be featured in Search and on the Today tab, driving engagement from both new and existing users.',
+         'product_page_optimization': 'Optimizing your product page is essential: compelling app icon, engaging screenshots showing value propositions, preview video under 30 seconds, clear description with key benefits upfront. A/B test elements using Product Page Optimization feature.',
+         'custom_product_pages': 'Custom Product Pages let you create up to 35 unique versions of your product page for different audiences. Each can have unique screenshots, promotional text, and preview videos. Use with Apple Search Ads for targeted ad campaigns.',
+         'featuring_timing': 'Timing featuring requests strategically matters. Submit 6-8 weeks before major updates, coordinate with holidays or cultural events, leverage iOS updates that showcase your app\'s use of new features. Apple prioritizes apps using latest technologies.'
+      };
+
+      const tutorialSteps = [
+         { title: 'Understanding App Store Featuring', content: 'Featuring is Apple\'s editorial curation of exceptional apps. Learn how the process works, what Apple looks for, and how to increase your chances of being featured on the App Store.', icon: 'featuring_process' },
+         { title: 'Editorial Submission Process', content: 'Apple accepts featuring nominations via appstore.com/promote. Craft a compelling story about your app, include press coverage, awards, and explain why your app deserves editorial attention.', icon: 'editorial_content' },
+         { title: 'Today Tab Opportunities', content: 'The Today tab showcases app stories, collections, and spotlights. Understanding the content calendar and editorial themes helps you position your app for featuring consideration.', icon: 'today_tab' },
+         { title: 'In-App Events Strategy', content: 'In-App Events let you promote timely content within your app. Create engaging event cards that appear in Search and the Today tab to drive new downloads and re-engage lapsed users.', icon: 'in_app_events' },
+         { title: 'Product Page Optimization', content: 'Your product page is your app\'s storefront. Optimize every element—icon, screenshots, video, description—and use A/B testing to continuously improve conversion rates.', icon: 'product_page_optimization' },
+         { title: 'Custom Product Pages', content: 'Create targeted landing experiences for different user segments. Custom product pages combined with Apple Search Ads enable precise audience messaging and higher conversion rates.', icon: 'custom_product_pages' },
+         { title: 'Strategic Timing', content: 'Timing featuring requests to coincide with major updates, holidays, or new iOS features maximizes featuring chances and impact. Plan your release calendar strategically.', icon: 'featuring_timing' }
+      ];
+
+      const scenarios = [
+         { title: 'Featuring Nomination Strategy', situation: 'Your meditation app has won a design award and has 4.8 stars. You want to submit for App Store featuring. When is the best time to submit?', options: [
+            { text: 'Submit immediately after winning the award', points: 20, feedback: 'Good timing! Fresh accolades strengthen your pitch, but consider coordinating with other factors.' },
+            { text: 'Wait for Mental Health Awareness Month and submit 6 weeks before', points: 30, feedback: 'Excellent strategy! Coordinating with relevant cultural moments and giving Apple lead time maximizes featuring probability.' },
+            { text: 'Submit right before your next app update launches', points: 10, feedback: 'Too rushed. Apple needs 6-8 weeks lead time to consider featuring, and you want the award fresh in your pitch.' },
+            { text: 'Wait until you reach 1 million downloads', points: 5, feedback: 'Download milestones matter less than app quality, timing, and compelling narrative for editorial featuring.' }
+         ]},
+         { title: 'In-App Events Launch', situation: 'Your fitness app is planning a New Year fitness challenge. How should you structure the In-App Event to maximize visibility and engagement?', options: [
+            { text: 'Create one long event spanning all of January', points: 15, feedback: 'Long events lose urgency. Shorter, sequential events create more engagement opportunities.' },
+            { text: 'Launch a 7-day challenge starting January 1st with daily milestones', points: 30, feedback: 'Perfect! Short duration creates urgency, daily milestones drive engagement, and New Year timing aligns with user intent.' },
+            { text: 'Start the event on December 26th to capture early planners', points: 20, feedback: 'Good thinking about early planners, but starting before New Year dilutes the resolution momentum.' },
+            { text: 'Create multiple overlapping events for different fitness levels', points: 25, feedback: 'Good segmentation! But be careful about event fatigue—sequential events often work better than overlapping ones.' }
+         ]},
+         { title: 'Custom Product Page Strategy', situation: 'Your language learning app is running Apple Search Ads for Spanish and French learners. How should you use Custom Product Pages?', options: [
+            { text: 'Create one generic page that mentions both languages', points: 5, feedback: 'Generic pages don\'t leverage the personalization opportunity. Custom pages should be targeted to specific audiences.' },
+            { text: 'Create separate pages with language-specific screenshots and copy for each', points: 30, feedback: 'Excellent! Language-specific screenshots and copy dramatically improve relevance and conversion rates for each audience.' },
+            { text: 'Use your default page for Spanish and create a custom page only for French', points: 15, feedback: 'Partial optimization. Both audiences deserve targeted experiences for maximum conversion.' },
+            { text: 'Create custom pages but use the same screenshots with translated text only', points: 20, feedback: 'Translation helps, but showing the specific language in screenshots creates stronger relevance and higher conversions.' }
+         ]},
+         { title: 'Product Page Optimization', situation: 'Your e-commerce app has a 2% conversion rate on the App Store. Analytics show users view an average of 2.3 screenshots. What\'s your optimization priority?', options: [
+            { text: 'Add more screenshots to showcase all features', points: 10, feedback: 'More screenshots won\'t help if users only view 2.3. Focus on making the first 2-3 screenshots compelling.' },
+            { text: 'Redesign the first two screenshots to highlight key value propositions', points: 30, feedback: 'Exactly right! Since users view 2.3 screenshots on average, optimizing the first ones has the highest impact on conversion.' },
+            { text: 'Create a longer app preview video showing all features', points: 15, feedback: 'Videos can help, but they autoplay without sound. First screenshots still matter most for initial impression.' },
+            { text: 'Rewrite the description with more keywords', points: 5, feedback: 'Description is lower in the viewing hierarchy. Users decide based on icon, screenshots, and ratings first.' }
+         ]}
+      ];
+
+      const quizQuestions = [
+         { question: 'Why should you submit featuring nominations 6-8 weeks before your target featuring date?', options: ['Apple requires this waiting period by policy', 'It allows editorial team time to review, plan content, and coordinate featuring', 'It takes this long for Apple to update the App Store', 'This is the required time for app review'], correct: 1, explanation: 'Apple\'s editorial team needs time to evaluate apps, write stories, capture assets, and plan the editorial calendar. Rush submissions don\'t allow proper consideration and content creation.' },
+         { question: 'Why do shorter In-App Events (3-7 days) often perform better than month-long events?', options: ['Apple limits longer events in search results', 'Shorter events create urgency and drive immediate action', 'Users can only see one event at a time', 'Apple charges more for longer events'], correct: 1, explanation: 'Psychological urgency drives action. Short, time-limited events trigger fear of missing out (FOMO), prompting users to engage immediately rather than postponing and forgetting.' },
+         { question: 'Why should Custom Product Pages have audience-specific screenshots rather than just translated text?', options: ['Apple requires visual differences for approval', 'Showing relevant content in screenshots creates immediate personal connection and higher relevance', 'Translated text doesn\'t display properly on all devices', 'Screenshots are the only element users can see'], correct: 1, explanation: 'Users process images faster than text. Seeing content directly relevant to their interests (e.g., Spanish lessons for Spanish learners) creates instant recognition and dramatically improves conversion rates.' },
+         { question: 'Why is the Today tab featuring more impactful than other featuring locations?', options: ['It\'s the only featuring location on the App Store', 'It\'s the default landing page with highest visibility and curated editorial storytelling', 'It shows more screenshots than other sections', 'It\'s the only place where apps can have videos'], correct: 1, explanation: 'The Today tab is where users land when opening the App Store. Its editorial storytelling format builds emotional connection, and prime placement ensures maximum visibility to engaged app seekers.' },
+         { question: 'Why is timing featuring submissions with iOS updates strategically valuable?', options: ['Apple only features apps during iOS updates', 'Apps showcasing new iOS features demonstrate innovation and align with Apple\'s promotion of platform capabilities', 'iOS updates reset the App Store algorithm', 'Users only download apps during iOS updates'], correct: 1, explanation: 'Apple wants to showcase platform capabilities through great apps. Apps using new iOS features (widgets, Live Activities, etc.) help Apple demonstrate platform value and are prioritized for featuring.' }
+      ];
+
+      const handleScenarioAnswer = (points: number, feedback: string) => { if (answered) return; setScore(prev => prev + points); setAnswered(true); setGameLog(prev => [...prev, `Scenario ${scenarioIndex + 1}: Scored ${points}/30 - ${feedback}`]); };
+      const handleQuizAnswer = (index: number) => { if (quizAnswered) return; setSelectedAnswer(index); setQuizAnswered(true); if (index === quizQuestions[quizIndex].correct) { setQuizScore(prev => prev + 1); setGameLog(prev => [...prev, `Quiz ${quizIndex + 1}: Correct`]); } else { setGameLog(prev => [...prev, `Quiz ${quizIndex + 1}: Incorrect`]); } };
+      const nextScenario = () => { if (scenarioIndex < scenarios.length - 1) { setScenarioIndex(prev => prev + 1); setSelectedAnswer(null); setAnswered(false); } else { setQuizIndex(0); setQuizAnswered(false); setSelectedAnswer(null); } };
+      const nextQuiz = () => { if (quizIndex < quizQuestions.length - 1) { setQuizIndex(prev => prev + 1); setSelectedAnswer(null); setQuizAnswered(false); } else { setPhase('result'); } };
+
+      if (phase === 'intro') {
+         return (
+            <div className="p-6 bg-gradient-to-br from-sky-50 to-cyan-100 rounded-xl shadow-lg max-w-2xl mx-auto">
+               <h2 className="text-2xl font-bold text-sky-800 mb-4">App Store Features Mastery</h2>
+               <p className="text-sky-700 mb-4">Master the strategies for getting your app featured on the App Store and optimizing your product page for maximum visibility and conversions.</p>
+               <div className="bg-white/70 rounded-lg p-4 mb-4">
+                  <h3 className="font-semibold text-sky-800 mb-2">Learning Objectives:</h3>
+                  <ul className="text-sky-700 space-y-1 text-sm">
+                     <li>• Understand Apple's editorial featuring process and criteria</li>
+                     <li>• Learn to craft compelling featuring nominations</li>
+                     <li>• Master In-App Events for engagement and discovery</li>
+                     <li>• Optimize product pages and leverage Custom Product Pages</li>
+                  </ul>
+               </div>
+               <button onClick={() => setPhase('tutorial')} className="w-full py-3 bg-sky-600 text-white rounded-lg hover:bg-sky-700 font-semibold">Start Learning</button>
+            </div>
+         );
+      }
+
+      if (phase === 'tutorial') {
+         const step = tutorialSteps[tutorialStep];
+         return (
+            <div className="p-6 bg-gradient-to-br from-sky-50 to-cyan-100 rounded-xl shadow-lg max-w-2xl mx-auto">
+               <div className="flex justify-between items-center mb-4">
+                  <h2 className="text-xl font-bold text-sky-800">Step {tutorialStep + 1} of {tutorialSteps.length}</h2>
+                  <span className="text-sky-600 text-sm">{Math.round(((tutorialStep + 1) / tutorialSteps.length) * 100)}% Complete</span>
+               </div>
+               <div className="bg-white/80 rounded-lg p-5 mb-4">
+                  <div className="flex items-start gap-3 mb-3">
+                     <h3 className="font-semibold text-sky-800 text-lg">{step.title}</h3>
+                     <button onClick={() => { setInfoTopic(step.icon); setShowInfo(true); }} className="text-sky-500 hover:text-sky-700">ℹ️</button>
+                  </div>
+                  <p className="text-sky-700">{step.content}</p>
+               </div>
+               <div className="bg-cyan-100 rounded-lg p-3 mb-4">
+                  <p className="text-cyan-800 text-sm">💡 <strong>AI Coach:</strong> {tutorialStep === 0 ? 'Featuring is earned, not bought. Focus on building an exceptional app first!' : tutorialStep === 3 ? 'In-App Events are underutilized—they can drive significant discovery!' : 'Study apps that get featured—they share common traits of polish and innovation.'}</p>
+               </div>
+               <div className="flex gap-3">
+                  {tutorialStep > 0 && <button onClick={() => setTutorialStep(prev => prev - 1)} className="flex-1 py-2 border border-sky-600 text-sky-600 rounded-lg hover:bg-sky-50">Previous</button>}
+                  <button onClick={() => tutorialStep < tutorialSteps.length - 1 ? setTutorialStep(prev => prev + 1) : setPhase('play')} className="flex-1 py-2 bg-sky-600 text-white rounded-lg hover:bg-sky-700">{tutorialStep < tutorialSteps.length - 1 ? 'Next' : 'Start Practice'}</button>
+               </div>
+               {showInfo && (
+                  <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" onClick={() => setShowInfo(false)}>
+                     <div className="bg-white rounded-xl p-6 max-w-md m-4" onClick={e => e.stopPropagation()}>
+                        <h3 className="font-bold text-sky-800 mb-2">{step.title}</h3>
+                        <p className="text-sky-700 text-sm">{infoContent[infoTopic]}</p>
+                        <button onClick={() => setShowInfo(false)} className="mt-4 w-full py-2 bg-sky-600 text-white rounded-lg">Close</button>
+                     </div>
+                  </div>
+               )}
+            </div>
+         );
+      }
+
+      if (phase === 'play') {
+         if (scenarioIndex < scenarios.length) {
+            const scenario = scenarios[scenarioIndex];
+            return (
+               <div className="p-6 bg-gradient-to-br from-sky-50 to-cyan-100 rounded-xl shadow-lg max-w-2xl mx-auto">
+                  <div className="flex justify-between items-center mb-4">
+                     <h2 className="text-xl font-bold text-sky-800">Scenario {scenarioIndex + 1} of {scenarios.length}</h2>
+                     <span className="text-sky-600 font-semibold">Score: {score}</span>
+                  </div>
+                  <div className="bg-white/80 rounded-lg p-5 mb-4">
+                     <h3 className="font-semibold text-sky-800 mb-2">{scenario.title}</h3>
+                     <p className="text-sky-700 mb-4">{scenario.situation}</p>
+                     <div className="space-y-2">
+                        {scenario.options.map((option, i) => (
+                           <button key={i} onClick={() => { setSelectedAnswer(i); handleScenarioAnswer(option.points, option.feedback); }} disabled={answered} className={`w-full p-3 text-left rounded-lg border transition-all ${answered && selectedAnswer === i ? option.points >= 25 ? 'bg-green-100 border-green-500' : option.points >= 15 ? 'bg-yellow-100 border-yellow-500' : 'bg-red-100 border-red-500' : 'bg-white border-sky-200 hover:border-sky-400'} ${answered ? 'cursor-default' : 'cursor-pointer'}`}>
+                              <span className="text-sky-800">{option.text}</span>
+                              {answered && selectedAnswer === i && <p className="text-sm mt-2 text-sky-600">{option.feedback}</p>}
+                           </button>
+                        ))}
+                     </div>
+                  </div>
+                  {answered && <button onClick={nextScenario} className="w-full py-3 bg-sky-600 text-white rounded-lg hover:bg-sky-700">{scenarioIndex < scenarios.length - 1 ? 'Next Scenario' : 'Continue to Quiz'}</button>}
+               </div>
+            );
+         }
+         const quiz = quizQuestions[quizIndex];
+         return (
+            <div className="p-6 bg-gradient-to-br from-sky-50 to-cyan-100 rounded-xl shadow-lg max-w-2xl mx-auto">
+               <div className="flex justify-between items-center mb-4">
+                  <h2 className="text-xl font-bold text-sky-800">Quiz {quizIndex + 1} of {quizQuestions.length}</h2>
+                  <span className="text-sky-600 font-semibold">Quiz Score: {quizScore}/{quizIndex + (quizAnswered ? 1 : 0)}</span>
+               </div>
+               <div className="bg-white/80 rounded-lg p-5 mb-4">
+                  <p className="text-sky-800 font-medium mb-4">{quiz.question}</p>
+                  <div className="space-y-2">
+                     {quiz.options.map((option, i) => (
+                        <button key={i} onClick={() => handleQuizAnswer(i)} disabled={quizAnswered} className={`w-full p-3 text-left rounded-lg border transition-all ${quizAnswered ? i === quiz.correct ? 'bg-green-100 border-green-500' : selectedAnswer === i ? 'bg-red-100 border-red-500' : 'bg-white border-sky-200' : 'bg-white border-sky-200 hover:border-sky-400'}`}>{option}</button>
+                     ))}
+                  </div>
+                  {quizAnswered && <div className="mt-4 p-3 bg-cyan-50 rounded-lg"><p className="text-cyan-800 text-sm"><strong>Explanation:</strong> {quiz.explanation}</p></div>}
+               </div>
+               {quizAnswered && <button onClick={nextQuiz} className="w-full py-3 bg-sky-600 text-white rounded-lg hover:bg-sky-700">{quizIndex < quizQuestions.length - 1 ? 'Next Question' : 'See Results'}</button>}
+            </div>
+         );
+      }
+
+      if (phase === 'result') {
+         const maxScore = scenarios.reduce((sum, s) => sum + Math.max(...s.options.map(o => o.points)), 0);
+         return (
+            <div className="p-6 bg-gradient-to-br from-sky-50 to-cyan-100 rounded-xl shadow-lg max-w-2xl mx-auto">
+               <h2 className="text-2xl font-bold text-sky-800 mb-4">App Store Features Complete!</h2>
+               <div className="bg-white/80 rounded-lg p-5 mb-4">
+                  <div className="text-center mb-4">
+                     <p className="text-4xl font-bold text-sky-600">{Math.round((score / maxScore) * 100)}%</p>
+                     <p className="text-sky-700">Scenario Score: {score}/{maxScore}</p>
+                     <p className="text-sky-700">Quiz Score: {quizScore}/{quizQuestions.length}</p>
+                  </div>
+                  <div className="border-t pt-4">
+                     <h3 className="font-semibold text-sky-800 mb-2">Key Insights:</h3>
+                     <ul className="text-sky-700 text-sm space-y-1">
+                        <li>• Submit featuring nominations 6-8 weeks before target dates</li>
+                        <li>• Coordinate with cultural moments and iOS updates</li>
+                        <li>• Use In-App Events for discovery and re-engagement</li>
+                        <li>• Optimize first 2-3 screenshots—that's all most users view</li>
+                        <li>• Create audience-specific Custom Product Pages</li>
+                     </ul>
+                  </div>
+               </div>
+               <button onClick={() => { setPhase('intro'); setScore(0); setScenarioIndex(0); setQuizIndex(0); setQuizScore(0); setAnswered(false); setQuizAnswered(false); setSelectedAnswer(null); setTutorialStep(0); setGameLog([]); }} className="w-full py-3 bg-sky-600 text-white rounded-lg hover:bg-sky-700">Play Again</button>
+            </div>
+         );
+      }
+      return null;
+   };
+
    const FinancialStatementsRenderer = () => {
       const [phase, setPhase] = useState<'intro' | 'play' | 'result'>('intro');
       const [showInfo, setShowInfo] = useState(false);
@@ -57151,6 +57355,8 @@ const GeneratedDiagram: React.FC<DiagramProps> = ({ type, data, title }) => {
             return <ViralMarketingRenderer />;
          case 'influencer_partnerships':
             return <InfluencerPartnershipsRenderer />;
+         case 'app_store_features':
+            return <AppStoreFeaturesRenderer />;
          case 'pricing_strategy':
             return <PricingStrategyRenderer />;
          case 'budgeting':
