@@ -54433,6 +54433,219 @@ const GeneratedDiagram: React.FC<DiagramProps> = ({ type, data, title }) => {
       return null;
    };
 
+   // Topic 139: Live Operations (LiveOps) Interactive Educational Game
+   const LiveOpsRenderer = () => {
+      const [phase, setPhase] = useState<'intro' | 'tutorial' | 'play' | 'result'>('intro');
+      const [tutorialStep, setTutorialStep] = useState(0);
+      const [showInfo, setShowInfo] = useState(false);
+      const [infoTopic, setInfoTopic] = useState('');
+      const [scenarioIndex, setScenarioIndex] = useState(0);
+      const [score, setScore] = useState(0);
+      const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
+      const [answered, setAnswered] = useState(false);
+      const [quizIndex, setQuizIndex] = useState(0);
+      const [quizScore, setQuizScore] = useState(0);
+      const [quizAnswered, setQuizAnswered] = useState(false);
+      const [gameLog, setGameLog] = useState<string[]>([]);
+
+      const infoContent: Record<string, string> = {
+         'live_events': 'Live events are time-limited in-game activities that drive engagement and spending. Successful events have clear start/end times, exclusive rewards, tiered participation goals, and create FOMO (fear of missing out). The best events require moderate effort for meaningful rewards and create social sharing moments.',
+         'content_calendar': 'A content calendar plans updates, events, and promotions weeks or months ahead. It balances different event types (competitive, cooperative, collection), avoids burnout by spacing major events, coordinates with marketing, and ensures technical teams have sufficient prep time. Great calendars have contingency buffers.',
+         'ab_testing': 'A/B testing in live games compares player behavior between control and variant groups. Test one variable at a time for clear results. Key metrics: engagement, retention, conversion, revenue per user. Statistical significance matters—small samples give unreliable results. Always have a hypothesis before testing.',
+         'economy_balance': 'Game economy balance prevents inflation (too much currency), deflation (not enough progression), and exploits (unintended shortcuts). Monitor sink-to-source ratios, track currency velocity, and watch for outliers who found exploits. Healthy economies feel abundant while maintaining long-term progression.',
+         'player_segmentation': 'Player segmentation groups users by behavior: whales (high spenders), dolphins (moderate), minnows (occasional), free players. Also segment by engagement: daily actives, weekly, lapsed. Different segments need different offers, events, and communication. One-size-fits-all hurts everyone.',
+         'community_management': 'Community management shapes player sentiment and catches issues early. Monitor social media, forums, and in-game chat. Address complaints quickly with empathy. Celebrate positive moments. Community managers are the bridge between players and developers—their insights prevent disasters.',
+         'feature_flags': 'Feature flags let you enable/disable features without app updates. Essential for: gradual rollouts (10% → 50% → 100%), quick rollbacks if problems emerge, A/B testing, and targeting features to specific segments. Flags reduce deployment risk and enable faster iteration.',
+         'incident_response': 'Incident response handles live issues: server outages, exploits, offensive content. Have runbooks for common issues. Establish severity levels and escalation paths. Communicate early and often with players. Post-mortems prevent repeat issues. The goal: minimize damage and restore trust.'
+      };
+
+      const tutorialSteps = [
+         { title: 'Live Events', content: 'Live events are the heartbeat of ongoing games. Time-limited activities create urgency, drive engagement, and generate revenue. The best events feel special—exclusive rewards, social competition, and memorable moments that players discuss long after they end.', icon: 'live_events' },
+         { title: 'Content Calendar', content: 'A well-planned content calendar is your roadmap to sustained engagement. It prevents content droughts, balances event intensity, and gives teams preparation time. Great calendars look months ahead while staying flexible enough to respond to unexpected opportunities or issues.', icon: 'content_calendar' },
+         { title: 'A/B Testing', content: 'Data-driven decisions require rigorous testing. A/B tests compare player behavior between variants, revealing what actually works versus what you think works. Test prices, rewards, UI changes, and features systematically to optimize the experience.', icon: 'ab_testing' },
+         { title: 'Economy Balance', content: 'A healthy game economy feels abundant while maintaining long-term goals. Monitor currency sources and sinks, watch for inflation, and identify exploits quickly. Economy problems compound over time—early intervention prevents crises.', icon: 'economy_balance' },
+         { title: 'Player Segmentation', content: 'Not all players are alike. Segmenting by spend level, engagement frequency, and behavior allows targeted offers and experiences. Whales need VIP treatment, lapsed players need win-back campaigns, and new players need onboarding focus.', icon: 'player_segmentation' },
+         { title: 'Community Management', content: 'Your community is both sensor and amplifier. They detect problems before analytics, and their sentiment shapes new player acquisition. Invest in community management to build loyalty, catch issues early, and create player advocates.', icon: 'community_management' },
+         { title: 'Feature Flags & Rollouts', content: 'Gradual rollouts reduce risk. Feature flags let you test changes with 10% of players before committing, quickly disable problematic features, and target specific segments. They transform deployment from scary to routine.', icon: 'feature_flags' },
+         { title: 'Incident Response', content: 'Things will go wrong. Prepared teams respond faster, communicate better, and recover trust quickly. Runbooks for common issues, clear escalation paths, and post-mortems that drive improvement separate good LiveOps from great.', icon: 'incident_response' }
+      ];
+
+      const scenarios = [
+         { title: 'Event Timing Crisis', situation: 'Your team has planned a major competitive event launching Friday. On Wednesday, your analytics team reports that a competitor is launching an almost identical event on the same day—and they\'ve already started marketing. Your event is fully built and marketing spend is committed. What\'s the best response?', options: [
+            { text: 'Launch anyway—your loyal players will choose your event over the competitor', points: 15, feedback: 'Loyal players might stay, but you\'re splitting the market\'s attention. Head-to-head competition when you have equal footing is acceptable, but there might be smarter timing options.' },
+            { text: 'Delay your event by one week to avoid direct competition and refresh marketing', points: 30, feedback: 'Smart! One week delay costs some momentum but avoids the attention split. Players who engage with the competitor\'s event will be ready for something new. Refreshed marketing can emphasize your unique angles.' },
+            { text: 'Move the event up to Thursday to beat them to market by one day', points: 20, feedback: 'Getting ahead has value, but one day isn\'t enough to capture the audience before they see competitor marketing. You also rush your own launch preparation, risking technical issues.' },
+            { text: 'Cancel the event entirely and wait for a completely clear window', points: 5, feedback: 'Canceling wastes all the development and marketing investment. Competition is normal—the goal is smart positioning, not avoiding the market entirely. Players expect regular content.' }
+         ]},
+         { title: 'Economy Emergency', situation: 'Players discovered an exploit that duplicates premium currency. It\'s been live for 18 hours before detection. Analytics shows about 5% of daily actives used it, generating roughly $200K worth of fake currency. The fix requires a client update that takes 24 hours to push. What\'s the priority order?', options: [
+            { text: 'Immediately ban all exploiters, then push the fix, then communicate to community', points: 10, feedback: 'Banning without communication first creates outrage. Some exploiters used it innocently or minimally. Leading with punishment before fixing the root cause looks reactive and harsh.' },
+            { text: 'Push the fix immediately, then assess impact, then decide on player action, then communicate', points: 15, feedback: 'The fix takes 24 hours—you can\'t wait that long to communicate. The exploit will spread further while you\'re silent. Players notice silence and assume the worst.' },
+            { text: 'Disable premium purchases to limit damage, communicate the issue publicly, push fix, then segment exploiters by severity for proportional responses', points: 30, feedback: 'Excellent! Stopping the bleeding first (disable purchases), transparent communication second, fix third, and proportional responses last. This minimizes damage while preserving trust.' },
+            { text: 'Quietly fix it without communication—acknowledging exploits encourages future exploitation', points: 5, feedback: 'The exploit is already known. Silence breeds conspiracy theories and distrust. Players who didn\'t exploit feel cheated by those who did. Transparency about fixing issues actually builds trust.' }
+         ]},
+         { title: 'A/B Test Dilemma', situation: 'You\'re running an A/B test on a new premium offer: Control shows $9.99 for 1000 gems, Variant shows $4.99 for 400 gems (worse value per dollar). After one week, Variant has 40% higher conversion but 15% lower revenue per purchaser. The test reaches statistical significance. Which conclusion is correct?', options: [
+            { text: 'Variant wins—higher conversion means more paying players, which is always better', points: 10, feedback: 'More payers isn\'t always better if they spend less each. You need to calculate total revenue: if 40% more people convert but spend 15% less, what\'s the net? Also consider long-term: did you train players to wait for cheap offers?' },
+            { text: 'Control wins—maximizing revenue per user is the goal of monetization', points: 15, feedback: 'Revenue per user matters, but so does total revenue and payer conversion rate. Fewer payers at higher value might mean lower total revenue. Also: converting free-to-payers is strategically valuable.' },
+            { text: 'Calculate total revenue per impression for both, but also check if Variant buyers purchase again or if they\'re one-time bargain hunters', points: 30, feedback: 'Perfect analysis! Total revenue per test user matters (conversion × average spend), but so does LTV of converters. If Variant creates one-time bargain hunters, the short-term win is a long-term loss.' },
+            { text: 'The test is inconclusive—run it longer to get more data', points: 5, feedback: 'The test reached statistical significance, meaning more data won\'t change the observed difference. The question is what the data means, not whether it\'s reliable.' }
+         ]},
+         { title: 'Segmentation Strategy', situation: 'Your game has three clear spending segments: Whales (2% of players, 60% of revenue), Dolphins (15% of players, 30% of revenue), and Minnows/Free (83% of players, 10% of revenue). You have budget for ONE targeted initiative this quarter. Which approach maximizes long-term value?', options: [
+            { text: 'VIP program for whales—protecting 60% of revenue is the clear priority', points: 25, feedback: 'Strong choice! Whale retention is critical since losing even a few dramatically impacts revenue. VIP programs increase switching costs and emotional investment. However, whale populations don\'t grow themselves...' },
+            { text: 'Conversion campaign for free players—the 83% population is untapped potential', points: 15, feedback: 'Large population, but extremely low conversion rates historically. Most free players will never convert regardless of offers. The resources might be better spent on populations with proven spending behavior.' },
+            { text: 'Dolphin nurturing program—develop dolphins into whales while the population is large enough to matter', points: 30, feedback: 'Optimal! Dolphins have proven willingness to spend and represent your whale pipeline. Moving 10% of dolphins to whale spending would significantly impact revenue while also growing the whale population for long-term health.' },
+            { text: 'Equal investment across all segments—fairness drives community health', points: 5, feedback: 'Equal treatment sounds fair but ignores economic reality. Different segments have different needs and different values. Treating everyone the same actually under-serves everyone.' }
+         ]}
+      ];
+
+      const quizQuestions = [
+         { question: 'Why do live events create urgency more effectively than permanent content?', options: ['They have better graphics and production value', 'Time limits and exclusive rewards trigger loss aversion—players fear missing out on things they can\'t get later', 'Events are always easier than regular content', 'Players prefer shorter content experiences'], correct: 1, explanation: 'FOMO (fear of missing out) is a powerful psychological motivator. When rewards are exclusive and time-limited, players prioritize engaging now rather than later. Permanent content can always be done tomorrow—event content cannot.' },
+         { question: 'What makes a content calendar more valuable than ad-hoc event planning?', options: ['It looks more professional to executives', 'Advance planning enables cross-team coordination, marketing preparation, and prevents content droughts while maintaining sustainable pace', 'Players prefer knowing exactly what\'s coming', 'It reduces the need for creativity'], correct: 1, explanation: 'Calendars coordinate engineering, art, marketing, and community teams. They ensure balanced event intensity (avoiding burnout), provide marketing lead time for promotion, and create predictable workloads. Ad-hoc planning leads to crunch, gaps, and miscoordination.' },
+         { question: 'When A/B testing a new feature, why is testing one variable at a time important?', options: ['It\'s faster to implement single variable tests', 'Multiple variables make it impossible to know which change caused the observed difference in results', 'Players prefer simpler changes', 'Regulators require single-variable testing'], correct: 1, explanation: 'If you test two changes simultaneously and see positive results, you don\'t know if Change A helped, Change B helped, both helped, or one helped so much it masked the other hurting. Isolating variables reveals causation, not just correlation.' },
+         { question: 'What is the primary risk of ignoring game economy inflation over time?', options: ['Server costs increase', 'Players accumulate so much currency that new content feels unrewarding and purchases feel pointless—destroying progression motivation', 'Leaderboards become unfair', 'New players have an advantage'], correct: 1, explanation: 'Inflation makes everyone "rich" in game terms, but this destroys the feeling of progression and accomplishment. When players have millions of coins, a reward of 1000 feels meaningless. It also devalues purchases since earned currency handles everything.' },
+         { question: 'Why is transparent communication important during live incidents?', options: ['It\'s legally required in most countries', 'Players are more forgiving of problems they understand than mysteries they imagine—silence breeds conspiracy theories and erodes trust', 'It reduces server load', 'Executives prefer transparency'], correct: 1, explanation: 'When problems occur and you\'re silent, players assume the worst and spread rumors. Transparent communication shows you\'re aware, working on it, and care about their experience. Trust built through honest handling of problems is more durable than trust that was never tested.' }
+      ];
+
+      const handleScenarioAnswer = (points: number, feedback: string) => { if (answered) return; setScore(prev => prev + points); setAnswered(true); setGameLog(prev => [...prev, `Scenario ${scenarioIndex + 1}: Scored ${points}/30 - ${feedback}`]); };
+      const handleQuizAnswer = (index: number) => { if (quizAnswered) return; setSelectedAnswer(index); setQuizAnswered(true); if (index === quizQuestions[quizIndex].correct) { setQuizScore(prev => prev + 1); setGameLog(prev => [...prev, `Quiz ${quizIndex + 1}: Correct`]); } else { setGameLog(prev => [...prev, `Quiz ${quizIndex + 1}: Incorrect`]); } };
+      const nextScenario = () => { if (scenarioIndex < scenarios.length - 1) { setScenarioIndex(prev => prev + 1); setSelectedAnswer(null); setAnswered(false); } else { setQuizIndex(0); setQuizAnswered(false); setSelectedAnswer(null); } };
+      const nextQuiz = () => { if (quizIndex < quizQuestions.length - 1) { setQuizIndex(prev => prev + 1); setSelectedAnswer(null); setQuizAnswered(false); } else { setPhase('result'); } };
+
+      if (phase === 'intro') {
+         return (
+            <div className="p-6 bg-gradient-to-br from-orange-50 to-amber-100 rounded-xl shadow-lg max-w-2xl mx-auto">
+               <h2 className="text-2xl font-bold text-orange-800 mb-4">🎮 Live Operations Mastery</h2>
+               <p className="text-orange-700 mb-4">Launching a game is just the beginning. Live Operations (LiveOps) is the art and science of running a game as an ongoing service—keeping players engaged, the economy healthy, and the community thriving month after month.</p>
+               <div className="bg-white/70 rounded-lg p-4 mb-4">
+                  <h3 className="font-semibold text-orange-800 mb-2">Learning Objectives:</h3>
+                  <ul className="text-orange-700 space-y-1 text-sm">
+                     <li>• Design and schedule compelling live events</li>
+                     <li>• Master A/B testing for data-driven decisions</li>
+                     <li>• Maintain healthy game economy balance</li>
+                     <li>• Segment players for targeted experiences</li>
+                     <li>• Handle live incidents with confidence</li>
+                  </ul>
+               </div>
+               <button onClick={() => setPhase('tutorial')} className="w-full py-3 bg-orange-600 text-white rounded-lg hover:bg-orange-700 font-semibold">Start Learning</button>
+            </div>
+         );
+      }
+
+      if (phase === 'tutorial') {
+         const step = tutorialSteps[tutorialStep];
+         return (
+            <div className="p-6 bg-gradient-to-br from-orange-50 to-amber-100 rounded-xl shadow-lg max-w-2xl mx-auto">
+               <div className="flex justify-between items-center mb-4">
+                  <h2 className="text-xl font-bold text-orange-800">Step {tutorialStep + 1} of {tutorialSteps.length}</h2>
+                  <span className="text-orange-600 text-sm">{Math.round(((tutorialStep + 1) / tutorialSteps.length) * 100)}% Complete</span>
+               </div>
+               <div className="bg-white/80 rounded-lg p-5 mb-4">
+                  <div className="flex items-start gap-3 mb-3">
+                     <h3 className="font-semibold text-orange-800 text-lg">{step.title}</h3>
+                     <button onClick={() => { setInfoTopic(step.icon); setShowInfo(true); }} className="text-orange-500 hover:text-orange-700">ⓘ</button>
+                  </div>
+                  <p className="text-orange-700">{step.content}</p>
+               </div>
+               <div className="bg-amber-100 rounded-lg p-3 mb-4">
+                  <p className="text-amber-800 text-sm">💡 <strong>AI Coach:</strong> {tutorialStep === 0 ? 'Think of live events as appointments with your players. The best games create moments players plan their week around.' : tutorialStep === 1 ? 'A content calendar is your strategic weapon. Teams with calendars ship consistently; teams without scramble constantly.' : tutorialStep === 2 ? 'Data beats opinions. A/B testing transforms "I think players want X" into "I know players respond better to Y."' : tutorialStep === 3 ? 'A healthy economy is invisible—players feel rewarded, not exploited. A broken economy is obvious—nothing feels valuable.' : tutorialStep === 4 ? 'Your best players deserve recognition. Your lapsed players deserve reminders. Generic treatment serves no one well.' : tutorialStep === 5 ? 'Your community knows when something feels wrong before your dashboards do. They\'re your early warning system.' : tutorialStep === 6 ? 'Feature flags turn "ship and pray" into "test and confirm." They\'re your safety net for bold experiments.' : 'When things go wrong—and they will—prepared teams recover trust while unprepared teams lose players permanently.'}</p>
+               </div>
+               <div className="flex gap-3">
+                  {tutorialStep > 0 && <button onClick={() => setTutorialStep(prev => prev - 1)} className="flex-1 py-2 border border-orange-600 text-orange-600 rounded-lg hover:bg-orange-50">Previous</button>}
+                  <button onClick={() => tutorialStep < tutorialSteps.length - 1 ? setTutorialStep(prev => prev + 1) : setPhase('play')} className="flex-1 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700">{tutorialStep < tutorialSteps.length - 1 ? 'Next' : 'Start Practice'}</button>
+               </div>
+               {showInfo && (
+                  <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" onClick={() => setShowInfo(false)}>
+                     <div className="bg-white rounded-xl p-6 max-w-md m-4" onClick={e => e.stopPropagation()}>
+                        <h3 className="font-bold text-orange-800 mb-2">{step.title}</h3>
+                        <p className="text-orange-700 text-sm">{infoContent[infoTopic]}</p>
+                        <button onClick={() => setShowInfo(false)} className="mt-4 w-full py-2 bg-orange-600 text-white rounded-lg">Close</button>
+                     </div>
+                  </div>
+               )}
+            </div>
+         );
+      }
+
+      if (phase === 'play') {
+         if (scenarioIndex < scenarios.length) {
+            const scenario = scenarios[scenarioIndex];
+            return (
+               <div className="p-6 bg-gradient-to-br from-orange-50 to-amber-100 rounded-xl shadow-lg max-w-2xl mx-auto">
+                  <div className="flex justify-between items-center mb-4">
+                     <h2 className="text-xl font-bold text-orange-800">Scenario {scenarioIndex + 1} of {scenarios.length}</h2>
+                     <span className="text-orange-600 font-semibold">Score: {score}</span>
+                  </div>
+                  <div className="bg-white/80 rounded-lg p-5 mb-4">
+                     <h3 className="font-semibold text-orange-800 mb-2">{scenario.title}</h3>
+                     <p className="text-orange-700 mb-4">{scenario.situation}</p>
+                     <div className="space-y-2">
+                        {scenario.options.map((option, i) => (
+                           <button key={i} onClick={() => { setSelectedAnswer(i); handleScenarioAnswer(option.points, option.feedback); }} disabled={answered} className={`w-full p-3 text-left rounded-lg border transition-all ${answered && selectedAnswer === i ? option.points >= 25 ? 'bg-green-100 border-green-500' : option.points >= 15 ? 'bg-yellow-100 border-yellow-500' : 'bg-red-100 border-red-500' : 'bg-white border-orange-200 hover:border-orange-400'} ${answered ? 'cursor-default' : 'cursor-pointer'}`}>
+                              <span className="text-orange-800">{option.text}</span>
+                              {answered && selectedAnswer === i && <p className="text-sm mt-2 text-orange-600">{option.feedback}</p>}
+                           </button>
+                        ))}
+                     </div>
+                  </div>
+                  {answered && <button onClick={nextScenario} className="w-full py-3 bg-orange-600 text-white rounded-lg hover:bg-orange-700">{scenarioIndex < scenarios.length - 1 ? 'Next Scenario' : 'Continue to Quiz'}</button>}
+               </div>
+            );
+         }
+         const quiz = quizQuestions[quizIndex];
+         return (
+            <div className="p-6 bg-gradient-to-br from-orange-50 to-amber-100 rounded-xl shadow-lg max-w-2xl mx-auto">
+               <div className="flex justify-between items-center mb-4">
+                  <h2 className="text-xl font-bold text-orange-800">Quiz {quizIndex + 1} of {quizQuestions.length}</h2>
+                  <span className="text-orange-600 font-semibold">Quiz Score: {quizScore}/{quizIndex + (quizAnswered ? 1 : 0)}</span>
+               </div>
+               <div className="bg-white/80 rounded-lg p-5 mb-4">
+                  <p className="text-orange-800 font-medium mb-4">{quiz.question}</p>
+                  <div className="space-y-2">
+                     {quiz.options.map((option, i) => (
+                        <button key={i} onClick={() => handleQuizAnswer(i)} disabled={quizAnswered} className={`w-full p-3 text-left rounded-lg border transition-all ${quizAnswered ? i === quiz.correct ? 'bg-green-100 border-green-500' : selectedAnswer === i ? 'bg-red-100 border-red-500' : 'bg-white border-orange-200' : 'bg-white border-orange-200 hover:border-orange-400'}`}>{option}</button>
+                     ))}
+                  </div>
+                  {quizAnswered && <div className="mt-4 p-3 bg-amber-50 rounded-lg"><p className="text-amber-800 text-sm"><strong>Explanation:</strong> {quiz.explanation}</p></div>}
+               </div>
+               {quizAnswered && <button onClick={nextQuiz} className="w-full py-3 bg-orange-600 text-white rounded-lg hover:bg-orange-700">{quizIndex < quizQuestions.length - 1 ? 'Next Question' : 'See Results'}</button>}
+            </div>
+         );
+      }
+
+      if (phase === 'result') {
+         const maxScore = scenarios.reduce((sum, s) => sum + Math.max(...s.options.map(o => o.points)), 0);
+         const percentage = Math.round((score / maxScore) * 100);
+         return (
+            <div className="p-6 bg-gradient-to-br from-orange-50 to-amber-100 rounded-xl shadow-lg max-w-2xl mx-auto">
+               <h2 className="text-2xl font-bold text-orange-800 mb-4">🎮 Live Operations Complete!</h2>
+               <div className="bg-white/80 rounded-lg p-5 mb-4">
+                  <div className="text-center mb-4">
+                     <p className="text-4xl font-bold text-orange-600">{percentage}%</p>
+                     <p className="text-orange-700">Scenario Score: {score}/{maxScore}</p>
+                     <p className="text-orange-700">Quiz Score: {quizScore}/{quizQuestions.length}</p>
+                  </div>
+                  <div className="border-t pt-4">
+                     <h3 className="font-semibold text-orange-800 mb-2">Key Insights:</h3>
+                     <ul className="text-orange-700 text-sm space-y-1">
+                        <li>• Live events drive engagement through urgency and exclusivity</li>
+                        <li>• Content calendars enable coordination and prevent burnout</li>
+                        <li>• A/B testing requires isolation of variables for valid conclusions</li>
+                        <li>• Economy health requires constant monitoring and quick intervention</li>
+                        <li>• Player segments deserve tailored experiences, not one-size-fits-all</li>
+                        <li>• Transparent incident communication builds more trust than silence</li>
+                     </ul>
+                  </div>
+                  <div className="border-t pt-4 mt-4">
+                     <h3 className="font-semibold text-orange-800 mb-2">Real-World Application:</h3>
+                     <p className="text-orange-700 text-sm">Start your LiveOps practice with three basics: 1) Plan one event per week on a 4-week rotating calendar. 2) Run one A/B test per feature launch—test before committing. 3) Create dashboards for daily active users, revenue, and retention before you need them in a crisis. These habits transform reactive firefighting into proactive management.</p>
+                  </div>
+               </div>
+               <button onClick={() => { setPhase('intro'); setScore(0); setScenarioIndex(0); setQuizIndex(0); setQuizScore(0); setAnswered(false); setQuizAnswered(false); setSelectedAnswer(null); setTutorialStep(0); setGameLog([]); }} className="w-full py-3 bg-orange-600 text-white rounded-lg hover:bg-orange-700">Play Again</button>
+            </div>
+         );
+      }
+      return null;
+   };
+
    const FinancialStatementsRenderer = () => {
       const [phase, setPhase] = useState<'intro' | 'play' | 'result'>('intro');
       const [showInfo, setShowInfo] = useState(false);
@@ -58408,6 +58621,8 @@ const GeneratedDiagram: React.FC<DiagramProps> = ({ type, data, title }) => {
             return <SoundDesignRenderer />;
          case 'player_retention':
             return <PlayerRetentionRenderer />;
+         case 'live_ops':
+            return <LiveOpsRenderer />;
          case 'pricing_strategy':
             return <PricingStrategyRenderer />;
          case 'budgeting':
