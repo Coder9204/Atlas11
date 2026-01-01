@@ -52033,6 +52033,237 @@ const GeneratedDiagram: React.FC<DiagramProps> = ({ type, data, title }) => {
       return null;
    };
 
+   // Topic 128: Subscription Models Interactive Educational Game
+   const SubscriptionModelsRenderer = () => {
+      const [phase, setPhase] = useState<'intro' | 'tutorial' | 'play' | 'result'>('intro');
+      const [tutorialStep, setTutorialStep] = useState(0);
+      const [showInfo, setShowInfo] = useState(false);
+      const [infoTopic, setInfoTopic] = useState('');
+      const [scenarioIndex, setScenarioIndex] = useState(0);
+      const [score, setScore] = useState(0);
+      const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
+      const [answered, setAnswered] = useState(false);
+      const [quizIndex, setQuizIndex] = useState(0);
+      const [quizScore, setQuizScore] = useState(0);
+      const [quizAnswered, setQuizAnswered] = useState(false);
+      const [gameLog, setGameLog] = useState<string[]>([]);
+
+      const infoContent: Record<string, string> = {
+         'mrr': 'Monthly Recurring Revenue (MRR) is the predictable revenue your subscription generates each month. Track New MRR, Expansion MRR, Churn MRR, and Net MRR to understand growth dynamics.',
+         'freemium': 'Freemium offers a free tier permanently alongside paid plans. It maximizes top-of-funnel but requires clear upgrade triggers. Works best when marginal cost per user is low.',
+         'free_trial': 'Free trials give full access temporarily (7-30 days). Higher conversion than freemium but smaller top-of-funnel. Works when value is realized quickly and features are sticky.',
+         'pricing_tiers': 'Tiered pricing offers good-better-best options. Each tier should have clear differentiation and a 10x value increase for each price jump. Avoid the "mushy middle" problem.',
+         'annual_billing': 'Annual billing improves cash flow and reduces churn through commitment. Offer 15-20% discount to incentivize. Balance between upfront cash and lower effective rate.',
+         'usage_based': 'Usage-based pricing scales with customer success (API calls, seats, storage). Aligns incentives but creates revenue unpredictability. Often combined with base subscription.',
+         'arpu': 'Average Revenue Per User (ARPU) measures monetization efficiency. Increase through upsells, add-ons, and tier upgrades. Track ARPU by cohort to understand customer evolution.'
+      };
+
+      const tutorialSteps = [
+         { title: 'Welcome to Subscription Models', content: 'Subscription models create recurring revenue that compounds over time. Learn to design pricing that maximizes customer value while building predictable revenue streams.' },
+         { title: 'Freemium vs Free Trial', content: 'Freemium offers permanent free access with upgrade incentives. Free trials offer full access temporarily. Choose based on time-to-value, product complexity, and go-to-market strategy.' },
+         { title: 'Designing Pricing Tiers', content: 'Create clear tier differentiation with 3-4 options. Each tier should offer 10x value for the price increase. Avoid feature parity that confuses customers about which tier to choose.' },
+         { title: 'Annual vs Monthly Billing', content: 'Annual billing improves cash flow and retention. Monthly billing lowers friction. Offer annual discounts (15-20%) but don\'t make monthly prohibitively expensive.' },
+         { title: 'Usage-Based Components', content: 'Add usage-based elements (seats, API calls, storage) to align pricing with customer success. Pure usage-based is risky for forecasting; hybrid models balance predictability with growth.' },
+         { title: 'Upgrade Paths & Expansion', content: 'Design natural upgrade triggers: hitting limits, needing new features, team growth. Make upgrading frictionless. Expansion revenue can exceed new customer revenue.' },
+         { title: 'Subscription Metrics', content: 'Track MRR (Monthly Recurring Revenue), ARPU (Average Revenue Per User), LTV:CAC ratio, and churn rate. These metrics tell the health story of your subscription business.' }
+      ];
+
+      const scenarios = [
+         {
+            title: 'Launching a New SaaS Product',
+            description: 'You\'re launching a project management tool. Your product requires some learning but delivers strong value once adopted. You need to decide between freemium and free trial.',
+            options: [
+               { text: 'Freemium with core features free, advanced features paid', feedback: 'Freemium builds a large user base but may struggle with conversion if core features are sufficient. Ensure upgrade triggers are clear.', correct: false },
+               { text: '14-day free trial with full access', feedback: 'Excellent! A learning-required product needs time to demonstrate value. Full access during trial lets users experience premium features before committing.', correct: true },
+               { text: 'No free option—paid only from day one', feedback: 'Paid-only works for established brands but creates high friction for new products without proven track records.', correct: false },
+               { text: 'Unlimited free trial with payment required to export data', feedback: 'This feels like a trap to users and creates poor trust. Payment gates should be on clear value boundaries.', correct: false }
+            ]
+         },
+         {
+            title: 'Pricing Tier Architecture',
+            description: 'Your analytics platform has three tiers: Basic ($29), Pro ($99), and Enterprise ($299). 80% of customers are on Basic, and sales complains Enterprise is hard to sell.',
+            options: [
+               { text: 'Add more features to Basic to improve customer satisfaction', feedback: 'This makes the upgrade path even less compelling. You need to increase differentiation, not reduce it.', correct: false },
+               { text: 'Lower Enterprise pricing to increase conversion', feedback: 'Price isn\'t the issue if value isn\'t clear. Lowering price commoditizes your offering without solving the value gap.', correct: false },
+               { text: 'Redefine tiers with clearer differentiation and 10x value jumps between levels', feedback: 'Perfect! Clear differentiation with compelling value at each tier makes the decision easy. 10x value for 3x price is a no-brainer upgrade.', correct: true },
+               { text: 'Eliminate the middle tier to force a clear choice', feedback: 'The middle tier often captures the majority. Eliminating it may lose customers who need more than Basic but less than Enterprise.', correct: false }
+            ]
+         },
+         {
+            title: 'Annual Billing Strategy',
+            description: 'Your monthly churn is 5%, and only 20% of customers choose annual plans. You want to increase annual adoption to improve retention and cash flow.',
+            options: [
+               { text: 'Increase the annual discount from 10% to 40%', feedback: 'A 40% discount severely impacts revenue. You\'re giving away too much value for the commitment.', correct: false },
+               { text: 'Remove monthly billing entirely', feedback: 'Removing monthly creates barrier for new customers who aren\'t ready to commit. You\'ll lose top-of-funnel.', correct: false },
+               { text: 'Offer 20% annual discount with exclusive annual-only features', feedback: 'Excellent! Combine financial incentive with exclusive value. Features like priority support or advanced capabilities make annual feel premium, not just cheaper.', correct: true },
+               { text: 'Require annual billing only for higher tiers', feedback: 'This creates friction at the upgrade point. Customers may stay on lower tiers to avoid annual commitment.', correct: false }
+            ]
+         },
+         {
+            title: 'Adding Usage-Based Pricing',
+            description: 'Your API platform charges a flat monthly fee, but usage varies wildly. Power users consume 100x more resources than average users at the same price.',
+            options: [
+               { text: 'Switch entirely to usage-based pricing', feedback: 'Pure usage-based creates forecasting challenges and may scare off customers with unpredictable costs.', correct: false },
+               { text: 'Keep flat pricing and absorb the cost of power users', feedback: 'This is unsustainable. Power users will increase while you can\'t raise prices proportionally.', correct: false },
+               { text: 'Implement base subscription plus usage-based overage after included quota', feedback: 'Perfect! This hybrid provides predictable base revenue while aligning incentives for high-usage customers. Include generous quota in base to avoid nickel-and-diming.', correct: true },
+               { text: 'Create separate "power user" tier at 10x the price', feedback: 'Power users may not self-identify. Usage-based naturally scales with consumption without requiring tier migration.', correct: false }
+            ]
+         }
+      ];
+
+      const quizQuestions = [
+         { question: 'When is freemium preferable to free trial?', options: ['When the product is complex and requires training', 'When marginal cost per user is low and virality is important', 'When sales team needs qualified leads', 'When the product has enterprise-only features'], correct: 1, explanation: 'Freemium works best when adding users costs little and free users can spread awareness. Complex products that need time to show value often benefit more from trials.' },
+         { question: 'What makes a good pricing tier structure?', options: ['As many tiers as possible for choice', 'Clear differentiation with roughly 10x value increase per tier', 'Identical features with different usage limits', 'Lowest price possible on the entry tier'], correct: 1, explanation: 'Clear differentiation makes the decision easy. 10x value for 3x price makes upgrades feel like good deals rather than expenses.' },
+         { question: 'Why offer annual billing discounts?', options: ['To compete with cheaper competitors', 'To improve cash flow and reduce churn through commitment', 'To make monthly billing unattractive', 'To simplify billing operations'], correct: 1, explanation: 'Annual billing provides upfront cash and creates commitment that reduces churn. The discount is an investment in retention and cash flow.' },
+         { question: 'What is the advantage of hybrid (base + usage) pricing?', options: ['It\'s simpler to understand', 'Combines revenue predictability with usage-aligned growth', 'It maximizes revenue from every customer', 'It eliminates the need for pricing tiers'], correct: 1, explanation: 'Hybrid pricing gives you predictable base revenue while allowing natural expansion as customers use more. It aligns your success with theirs.' },
+         { question: 'What does increasing ARPU through expansion indicate?', options: ['You\'re charging too much', 'Customers are getting more value and paying for it', 'You should lower prices', 'Churn is too low'], correct: 1, explanation: 'Growing ARPU through expansion means customers find enough value to pay more over time. This is the healthiest form of revenue growth.' }
+      ];
+
+      const handleAnswer = (optionIndex: number) => {
+         if (answered) return;
+         setSelectedAnswer(optionIndex);
+         setAnswered(true);
+         const isCorrect = scenarios[scenarioIndex].options[optionIndex].correct;
+         if (isCorrect) setScore(score + 1);
+         setGameLog([...gameLog, `Scenario ${scenarioIndex + 1}: ${isCorrect ? 'Correct' : 'Incorrect'}`]);
+      };
+
+      const nextScenario = () => {
+         if (scenarioIndex < scenarios.length - 1) {
+            setScenarioIndex(scenarioIndex + 1);
+            setSelectedAnswer(null);
+            setAnswered(false);
+         } else {
+            setPhase('result');
+         }
+      };
+
+      const handleQuizAnswer = (optionIndex: number) => {
+         if (quizAnswered) return;
+         setQuizAnswered(true);
+         if (optionIndex === quizQuestions[quizIndex].correct) {
+            setQuizScore(quizScore + 1);
+         }
+      };
+
+      const nextQuiz = () => {
+         if (quizIndex < quizQuestions.length - 1) {
+            setQuizIndex(quizIndex + 1);
+            setQuizAnswered(false);
+         }
+      };
+
+      if (phase === 'intro') {
+         return (
+            <div className="p-6 bg-gradient-to-br from-teal-50 to-cyan-100 rounded-xl shadow-lg max-w-2xl mx-auto">
+               <h2 className="text-2xl font-bold text-teal-800 mb-4">💳 Subscription Models Mastery</h2>
+               <p className="text-teal-700 mb-4">Learn to design subscription pricing that maximizes both customer value and recurring revenue. The right model compounds growth over time.</p>
+               <div className="bg-white p-4 rounded-lg mb-4">
+                  <h3 className="font-semibold text-teal-800 mb-2">What You'll Learn:</h3>
+                  <ul className="text-sm text-teal-600 space-y-1">
+                     <li>• Freemium vs free trial strategies</li>
+                     <li>• Pricing tier architecture</li>
+                     <li>• Annual vs monthly billing optimization</li>
+                     <li>• Usage-based and hybrid pricing</li>
+                  </ul>
+               </div>
+               <button onClick={() => setPhase('tutorial')} className="w-full py-3 bg-teal-600 text-white rounded-lg font-semibold hover:bg-teal-700 transition">Start Learning</button>
+            </div>
+         );
+      }
+
+      if (phase === 'tutorial') {
+         return (
+            <div className="p-6 bg-gradient-to-br from-teal-50 to-cyan-100 rounded-xl shadow-lg max-w-2xl mx-auto">
+               <div className="flex justify-between items-center mb-4">
+                  <h2 className="text-xl font-bold text-teal-800">Tutorial: {tutorialSteps[tutorialStep].title}</h2>
+                  <span className="text-sm text-teal-600">{tutorialStep + 1} / {tutorialSteps.length}</span>
+               </div>
+               <div className="bg-white p-4 rounded-lg mb-4">
+                  <p className="text-teal-700">{tutorialSteps[tutorialStep].content}</p>
+               </div>
+               <div className="flex flex-wrap gap-2 mb-4">
+                  {Object.keys(infoContent).map(topic => (
+                     <button key={topic} onClick={() => { setInfoTopic(topic); setShowInfo(true); }} className="text-xs px-2 py-1 bg-teal-100 text-teal-700 rounded-full hover:bg-teal-200 transition">ℹ️ {topic.replace(/_/g, ' ')}</button>
+                  ))}
+               </div>
+               {showInfo && (
+                  <div className="bg-teal-50 border border-teal-200 p-3 rounded-lg mb-4">
+                     <div className="flex justify-between items-center mb-2">
+                        <span className="font-semibold text-teal-800">{infoTopic.replace(/_/g, ' ')}</span>
+                        <button onClick={() => setShowInfo(false)} className="text-teal-600">✕</button>
+                     </div>
+                     <p className="text-sm text-teal-600">{infoContent[infoTopic]}</p>
+                  </div>
+               )}
+               <div className="flex gap-2">
+                  {tutorialStep > 0 && <button onClick={() => setTutorialStep(tutorialStep - 1)} className="flex-1 py-2 border border-teal-300 text-teal-600 rounded-lg hover:bg-teal-50 transition">Back</button>}
+                  <button onClick={() => tutorialStep < tutorialSteps.length - 1 ? setTutorialStep(tutorialStep + 1) : setPhase('play')} className="flex-1 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition">{tutorialStep < tutorialSteps.length - 1 ? 'Next' : 'Start Practice'}</button>
+               </div>
+            </div>
+         );
+      }
+
+      if (phase === 'play') {
+         const currentScenario = scenarios[scenarioIndex];
+         return (
+            <div className="p-6 bg-gradient-to-br from-teal-50 to-cyan-100 rounded-xl shadow-lg max-w-2xl mx-auto">
+               <div className="flex justify-between items-center mb-4">
+                  <h2 className="text-xl font-bold text-teal-800">Scenario {scenarioIndex + 1} of {scenarios.length}</h2>
+                  <span className="text-sm bg-teal-200 text-teal-800 px-2 py-1 rounded">Score: {score}</span>
+               </div>
+               <div className="bg-white p-4 rounded-lg mb-4">
+                  <h3 className="font-semibold text-teal-800 mb-2">{currentScenario.title}</h3>
+                  <p className="text-teal-700 text-sm">{currentScenario.description}</p>
+               </div>
+               <div className="space-y-2 mb-4">
+                  {currentScenario.options.map((option, idx) => (
+                     <button key={idx} onClick={() => handleAnswer(idx)} disabled={answered} className={`w-full p-3 text-left rounded-lg transition text-sm ${answered ? option.correct ? 'bg-green-100 border-2 border-green-500' : selectedAnswer === idx ? 'bg-red-100 border-2 border-red-500' : 'bg-gray-100' : 'bg-white hover:bg-teal-50 border border-teal-200'}`}>
+                        {option.text}
+                        {answered && selectedAnswer === idx && <p className="mt-2 text-xs text-gray-600">{option.feedback}</p>}
+                     </button>
+                  ))}
+               </div>
+               {answered && <button onClick={nextScenario} className="w-full py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition">{scenarioIndex < scenarios.length - 1 ? 'Next Scenario' : 'See Results'}</button>}
+            </div>
+         );
+      }
+
+      if (phase === 'result') {
+         return (
+            <div className="p-6 bg-gradient-to-br from-teal-50 to-cyan-100 rounded-xl shadow-lg max-w-2xl mx-auto">
+               <h2 className="text-2xl font-bold text-teal-800 mb-4">🎯 Results</h2>
+               <div className="bg-white p-4 rounded-lg mb-4">
+                  <p className="text-lg text-teal-700">Scenario Score: <span className="font-bold">{score} / {scenarios.length}</span></p>
+                  <p className="text-lg text-teal-700">Quiz Score: <span className="font-bold">{quizScore} / {quizQuestions.length}</span></p>
+               </div>
+               <div className="bg-white p-4 rounded-lg mb-4">
+                  <h3 className="font-semibold text-teal-800 mb-2">Quiz: Test Your Knowledge</h3>
+                  <p className="text-sm text-teal-700 mb-3">{quizQuestions[quizIndex].question}</p>
+                  <div className="space-y-2">
+                     {quizQuestions[quizIndex].options.map((opt, idx) => (
+                        <button key={idx} onClick={() => handleQuizAnswer(idx)} disabled={quizAnswered} className={`w-full p-2 text-left text-sm rounded transition ${quizAnswered ? idx === quizQuestions[quizIndex].correct ? 'bg-green-100 border border-green-500' : 'bg-gray-100' : 'bg-teal-50 hover:bg-teal-100'}`}>{opt}</button>
+                     ))}
+                  </div>
+                  {quizAnswered && <p className="mt-2 text-sm text-teal-600">{quizQuestions[quizIndex].explanation}</p>}
+                  {quizAnswered && quizIndex < quizQuestions.length - 1 && <button onClick={nextQuiz} className="mt-2 px-4 py-1 bg-teal-600 text-white rounded text-sm">Next Question</button>}
+               </div>
+               <div className="bg-teal-100 p-4 rounded-lg">
+                  <h3 className="font-semibold text-teal-800 mb-2">🔑 Key Takeaways</h3>
+                  <ul className="text-sm text-teal-700 space-y-1">
+                     <li>• Choose freemium for virality, trials for complex products</li>
+                     <li>• Design tiers with clear 10x value differentiation</li>
+                     <li>• Annual billing improves retention and cash flow</li>
+                     <li>• Hybrid pricing balances predictability with growth</li>
+                     <li>• Track MRR, ARPU, and expansion revenue religiously</li>
+                  </ul>
+               </div>
+            </div>
+         );
+      }
+      return null;
+   };
+
    const FinancialStatementsRenderer = () => {
       const [phase, setPhase] = useState<'intro' | 'play' | 'result'>('intro');
       const [showInfo, setShowInfo] = useState(false);
@@ -55986,6 +56217,8 @@ const GeneratedDiagram: React.FC<DiagramProps> = ({ type, data, title }) => {
             return <CommunityBuildingRenderer />;
          case 'customer_success_mobile':
             return <CustomerSuccessMobileRenderer />;
+         case 'subscription_models':
+            return <SubscriptionModelsRenderer />;
          case 'pricing_strategy':
             return <PricingStrategyRenderer />;
          case 'budgeting':
