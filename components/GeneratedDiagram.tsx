@@ -51340,6 +51340,237 @@ const GeneratedDiagram: React.FC<DiagramProps> = ({ type, data, title }) => {
       return null;
    };
 
+   // Topic 125: Product-Led Growth Interactive Educational Game
+   const ProductLedGrowthRenderer = () => {
+      const [phase, setPhase] = useState<'intro' | 'tutorial' | 'play' | 'result'>('intro');
+      const [tutorialStep, setTutorialStep] = useState(0);
+      const [showInfo, setShowInfo] = useState(false);
+      const [infoTopic, setInfoTopic] = useState('');
+      const [scenarioIndex, setScenarioIndex] = useState(0);
+      const [score, setScore] = useState(0);
+      const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
+      const [answered, setAnswered] = useState(false);
+      const [quizIndex, setQuizIndex] = useState(0);
+      const [quizScore, setQuizScore] = useState(0);
+      const [quizAnswered, setQuizAnswered] = useState(false);
+      const [gameLog, setGameLog] = useState<string[]>([]);
+
+      const infoContent: Record<string, string> = {
+         'plg_fundamentals': 'Product-Led Growth (PLG) is a go-to-market strategy where the product itself drives acquisition, activation, and retention. Users can self-serve, experience value quickly, and expand usage without sales involvement.',
+         'freemium_model': 'Freemium offers a free tier with limited features alongside paid plans. The free tier drives acquisition and lets users experience value before paying. Key: give enough value to hook, but reserve compelling features for paid.',
+         'pql': 'Product-Qualified Leads (PQLs) are users who have demonstrated buying intent through product usage (hitting limits, using advanced features, inviting teammates). PQLs convert 5-10x better than marketing-qualified leads.',
+         'self_serve_onboarding': 'Self-serve onboarding guides users to value without human intervention. It uses progressive disclosure, contextual tooltips, and quick wins to reduce time-to-value and increase activation rates.',
+         'usage_expansion': 'Usage-based expansion grows revenue from existing customers through increased product usage. As users invite teammates, use more storage, or hit higher tiers, they naturally upgrade.',
+         'viral_mechanics': 'PLG products often include viral mechanics: shared documents, collaborative workspaces, referral incentives. Each user action can naturally expose the product to potential new users.',
+         'in_product_conversion': 'In-product conversion prompts users to upgrade at moments of high intent: hitting limits, needing blocked features, or after demonstrating power user behavior. Context matters more than frequency.'
+      };
+
+      const tutorialSteps = [
+         { title: 'Welcome to Product-Led Growth', content: 'PLG lets your product do the selling. Users discover, try, adopt, and expand on their own. It\'s how Slack, Dropbox, Zoom, and Notion grew to billions in value.' },
+         { title: 'Freemium & Free Trials', content: 'Freemium gives users lasting free access with limitations. Free trials offer full features temporarily. Choose based on product complexity and sales cycle length.' },
+         { title: 'Self-Serve Onboarding', content: 'Great onboarding gets users to value fast. Show the "aha moment" early. Use progressive disclosure—don\'t overwhelm with features. Measure and optimize time-to-value.' },
+         { title: 'Product-Qualified Leads (PQLs)', content: 'PQLs show buying intent through actions: inviting teammates, hitting usage limits, exploring premium features. They convert at much higher rates than traditional leads.' },
+         { title: 'Usage-Based Expansion', content: 'Expand revenue naturally through increased usage. Seat-based pricing grows with teams. Usage-based pricing (API calls, storage) grows with success. Design limits that encourage upgrading.' },
+         { title: 'Viral & Network Effects', content: 'Build sharing into the product. Collaboration features naturally spread your product. Referral programs amplify organic sharing. Each user can become an acquisition channel.' },
+         { title: 'In-Product Conversion', content: 'Convert users at high-intent moments: when they hit limits or need premium features. Make upgrading frictionless. Show value before asking for payment.' }
+      ];
+
+      const scenarios = [
+         {
+            title: 'Launching a New B2B SaaS Tool',
+            description: 'You\'re launching a project management tool. The market has established competitors. You need to decide on your go-to-market strategy for initial traction.',
+            options: [
+               { text: 'Build an enterprise sales team from day one', feedback: 'Enterprise sales is expensive and slow for a new product without brand recognition. You\'ll burn cash before proving product-market fit.', correct: false },
+               { text: 'Launch with a generous freemium tier and self-serve signup', feedback: 'Excellent! Freemium with self-serve lets users experience value quickly, builds word-of-mouth, and creates PQLs for eventual sales conversations.', correct: true },
+               { text: 'Require demos for all signups to qualify leads', feedback: 'Requiring demos creates friction that kills conversion. Most B2B buyers want to try before committing to a sales conversation.', correct: false },
+               { text: 'Only offer annual contracts at premium prices', feedback: 'Without trust and proven value, premium pricing with long commitments will struggle against established competitors.', correct: false }
+            ]
+         },
+         {
+            title: 'Designing the Free Tier',
+            description: 'Your collaboration tool has good engagement, but free users rarely convert to paid. You need to redesign the free tier limits.',
+            options: [
+               { text: 'Make the free tier extremely limited to force upgrades', feedback: 'Overly restrictive free tiers frustrate users before they experience value. They\'ll churn rather than pay.', correct: false },
+               { text: 'Limit features that become valuable as usage grows (storage, history, team size)', feedback: 'Perfect! Usage-based limits let users experience value first. As they succeed with your product, they naturally hit limits that justify upgrading.', correct: true },
+               { text: 'Keep free tier unlimited but add premium support only', feedback: 'Most users don\'t value premium support enough to pay. You need feature differentiation that aligns with user success.', correct: false },
+               { text: 'Remove the free tier entirely and require payment', feedback: 'Without a free tier, you lose the acquisition and virality benefits of PLG. Conversion from cold traffic is much harder.', correct: false }
+            ]
+         },
+         {
+            title: 'Identifying Product-Qualified Leads',
+            description: 'Your sales team wants to know which free users to prioritize for outreach. You need to define what makes a Product-Qualified Lead.',
+            options: [
+               { text: 'Anyone who signed up in the last 30 days', feedback: 'Signup alone doesn\'t indicate buying intent. Many signups never activate or are individual hobbyists.', correct: false },
+               { text: 'Users with business email domains', feedback: 'Better than random, but email domain alone doesn\'t show buying intent or urgency.', correct: false },
+               { text: 'Users who invited teammates, hit usage limits, or explored premium features', feedback: 'Excellent! These behaviors indicate both successful adoption and potential buying intent. They\'re actively using the product and hitting its boundaries.', correct: true },
+               { text: 'Users who opened the pricing page at least once', feedback: 'Pricing page visits show some interest, but without usage data, you don\'t know if they\'re ready or just curious.', correct: false }
+            ]
+         },
+         {
+            title: 'Onboarding Optimization',
+            description: 'Your activation rate (users who reach core value) is 25%. Industry benchmarks are 40-60%. You need to improve onboarding without increasing support costs.',
+            options: [
+               { text: 'Add a mandatory 15-minute product tour covering all features', feedback: 'Long mandatory tours cause abandonment. Users want to do things, not watch tutorials. Show value, don\'t just describe it.', correct: false },
+               { text: 'Send more email reminders about unused features', feedback: 'Email has low engagement for onboarding. Users are in your product—guide them there, not in their inbox.', correct: false },
+               { text: 'Create a quick-win first task that demonstrates core value in under 2 minutes', feedback: 'Perfect! Get users to experience the "aha moment" fast. A successful first action builds momentum and proves value immediately.', correct: true },
+               { text: 'Offer live chat support to all new users', feedback: 'High-touch onboarding doesn\'t scale and adds cost. PLG focuses on self-serve success paths.', correct: false }
+            ]
+         }
+      ];
+
+      const quizQuestions = [
+         { question: 'What makes Product-Led Growth different from sales-led growth?', options: ['PLG is always cheaper', 'The product itself drives acquisition and expansion', 'PLG doesn\'t require marketing', 'PLG only works for B2C products'], correct: 1, explanation: 'PLG uses the product as the primary driver of user acquisition, activation, and expansion, rather than relying on sales teams to drive these motions.' },
+         { question: 'Why do Product-Qualified Leads convert better than Marketing-Qualified Leads?', options: ['They have bigger budgets', 'They\'ve already experienced product value and demonstrated buying intent', 'They skip the sales process', 'They\'re required to buy'], correct: 1, explanation: 'PQLs have used the product and shown buying signals through their behavior, indicating both fit and intent—unlike MQLs who only showed content interest.' },
+         { question: 'What should a freemium tier optimize for?', options: ['Maximum revenue from free users', 'Getting users to value quickly with usage-based upgrade triggers', 'Minimum features to force upgrades', 'Matching competitor free tiers exactly'], correct: 1, explanation: 'Freemium should deliver enough value to hook users and demonstrate product quality, while natural usage-based limits create organic upgrade triggers.' },
+         { question: 'What is "time to value" in PLG onboarding?', options: ['How long until the trial expires', 'How quickly users experience the core product benefit', 'The length of the sales cycle', 'Time between signup and first payment'], correct: 1, explanation: 'Time to value measures how quickly new users reach the "aha moment"—experiencing the core benefit that makes them want to continue using the product.' },
+         { question: 'How do viral mechanics support PLG?', options: ['They replace the need for marketing', 'Product usage naturally exposes new potential users through collaboration and sharing', 'They only work with social media integration', 'They require referral bonuses to function'], correct: 1, explanation: 'Viral mechanics make product usage itself an acquisition channel—shared documents, collaborative workspaces, and team invites all expose new potential users organically.' }
+      ];
+
+      const handleAnswer = (optionIndex: number) => {
+         if (answered) return;
+         setSelectedAnswer(optionIndex);
+         setAnswered(true);
+         const isCorrect = scenarios[scenarioIndex].options[optionIndex].correct;
+         if (isCorrect) setScore(score + 1);
+         setGameLog([...gameLog, `Scenario ${scenarioIndex + 1}: ${isCorrect ? 'Correct' : 'Incorrect'}`]);
+      };
+
+      const nextScenario = () => {
+         if (scenarioIndex < scenarios.length - 1) {
+            setScenarioIndex(scenarioIndex + 1);
+            setSelectedAnswer(null);
+            setAnswered(false);
+         } else {
+            setPhase('result');
+         }
+      };
+
+      const handleQuizAnswer = (optionIndex: number) => {
+         if (quizAnswered) return;
+         setQuizAnswered(true);
+         if (optionIndex === quizQuestions[quizIndex].correct) {
+            setQuizScore(quizScore + 1);
+         }
+      };
+
+      const nextQuiz = () => {
+         if (quizIndex < quizQuestions.length - 1) {
+            setQuizIndex(quizIndex + 1);
+            setQuizAnswered(false);
+         }
+      };
+
+      if (phase === 'intro') {
+         return (
+            <div className="p-6 bg-gradient-to-br from-indigo-50 to-blue-100 rounded-xl shadow-lg max-w-2xl mx-auto">
+               <h2 className="text-2xl font-bold text-indigo-800 mb-4">🚀 Product-Led Growth Mastery</h2>
+               <p className="text-indigo-700 mb-4">Learn to let your product drive growth. PLG is how modern software companies acquire, activate, and expand users without traditional sales-driven approaches.</p>
+               <div className="bg-white p-4 rounded-lg mb-4">
+                  <h3 className="font-semibold text-indigo-800 mb-2">What You'll Learn:</h3>
+                  <ul className="text-sm text-indigo-600 space-y-1">
+                     <li>• Freemium and free trial strategies</li>
+                     <li>• Self-serve onboarding optimization</li>
+                     <li>• Product-Qualified Leads (PQLs)</li>
+                     <li>• Usage-based expansion and viral mechanics</li>
+                  </ul>
+               </div>
+               <button onClick={() => setPhase('tutorial')} className="w-full py-3 bg-indigo-600 text-white rounded-lg font-semibold hover:bg-indigo-700 transition">Start Learning</button>
+            </div>
+         );
+      }
+
+      if (phase === 'tutorial') {
+         return (
+            <div className="p-6 bg-gradient-to-br from-indigo-50 to-blue-100 rounded-xl shadow-lg max-w-2xl mx-auto">
+               <div className="flex justify-between items-center mb-4">
+                  <h2 className="text-xl font-bold text-indigo-800">Tutorial: {tutorialSteps[tutorialStep].title}</h2>
+                  <span className="text-sm text-indigo-600">{tutorialStep + 1} / {tutorialSteps.length}</span>
+               </div>
+               <div className="bg-white p-4 rounded-lg mb-4">
+                  <p className="text-indigo-700">{tutorialSteps[tutorialStep].content}</p>
+               </div>
+               <div className="flex flex-wrap gap-2 mb-4">
+                  {Object.keys(infoContent).map(topic => (
+                     <button key={topic} onClick={() => { setInfoTopic(topic); setShowInfo(true); }} className="text-xs px-2 py-1 bg-indigo-100 text-indigo-700 rounded-full hover:bg-indigo-200 transition">ℹ️ {topic.replace(/_/g, ' ')}</button>
+                  ))}
+               </div>
+               {showInfo && (
+                  <div className="bg-indigo-50 border border-indigo-200 p-3 rounded-lg mb-4">
+                     <div className="flex justify-between items-center mb-2">
+                        <span className="font-semibold text-indigo-800">{infoTopic.replace(/_/g, ' ')}</span>
+                        <button onClick={() => setShowInfo(false)} className="text-indigo-600">✕</button>
+                     </div>
+                     <p className="text-sm text-indigo-600">{infoContent[infoTopic]}</p>
+                  </div>
+               )}
+               <div className="flex gap-2">
+                  {tutorialStep > 0 && <button onClick={() => setTutorialStep(tutorialStep - 1)} className="flex-1 py-2 border border-indigo-300 text-indigo-600 rounded-lg hover:bg-indigo-50 transition">Back</button>}
+                  <button onClick={() => tutorialStep < tutorialSteps.length - 1 ? setTutorialStep(tutorialStep + 1) : setPhase('play')} className="flex-1 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition">{tutorialStep < tutorialSteps.length - 1 ? 'Next' : 'Start Practice'}</button>
+               </div>
+            </div>
+         );
+      }
+
+      if (phase === 'play') {
+         const currentScenario = scenarios[scenarioIndex];
+         return (
+            <div className="p-6 bg-gradient-to-br from-indigo-50 to-blue-100 rounded-xl shadow-lg max-w-2xl mx-auto">
+               <div className="flex justify-between items-center mb-4">
+                  <h2 className="text-xl font-bold text-indigo-800">Scenario {scenarioIndex + 1} of {scenarios.length}</h2>
+                  <span className="text-sm bg-indigo-200 text-indigo-800 px-2 py-1 rounded">Score: {score}</span>
+               </div>
+               <div className="bg-white p-4 rounded-lg mb-4">
+                  <h3 className="font-semibold text-indigo-800 mb-2">{currentScenario.title}</h3>
+                  <p className="text-indigo-700 text-sm">{currentScenario.description}</p>
+               </div>
+               <div className="space-y-2 mb-4">
+                  {currentScenario.options.map((option, idx) => (
+                     <button key={idx} onClick={() => handleAnswer(idx)} disabled={answered} className={`w-full p-3 text-left rounded-lg transition text-sm ${answered ? option.correct ? 'bg-green-100 border-2 border-green-500' : selectedAnswer === idx ? 'bg-red-100 border-2 border-red-500' : 'bg-gray-100' : 'bg-white hover:bg-indigo-50 border border-indigo-200'}`}>
+                        {option.text}
+                        {answered && selectedAnswer === idx && <p className="mt-2 text-xs text-gray-600">{option.feedback}</p>}
+                     </button>
+                  ))}
+               </div>
+               {answered && <button onClick={nextScenario} className="w-full py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition">{scenarioIndex < scenarios.length - 1 ? 'Next Scenario' : 'See Results'}</button>}
+            </div>
+         );
+      }
+
+      if (phase === 'result') {
+         return (
+            <div className="p-6 bg-gradient-to-br from-indigo-50 to-blue-100 rounded-xl shadow-lg max-w-2xl mx-auto">
+               <h2 className="text-2xl font-bold text-indigo-800 mb-4">🎯 Results</h2>
+               <div className="bg-white p-4 rounded-lg mb-4">
+                  <p className="text-lg text-indigo-700">Scenario Score: <span className="font-bold">{score} / {scenarios.length}</span></p>
+                  <p className="text-lg text-indigo-700">Quiz Score: <span className="font-bold">{quizScore} / {quizQuestions.length}</span></p>
+               </div>
+               <div className="bg-white p-4 rounded-lg mb-4">
+                  <h3 className="font-semibold text-indigo-800 mb-2">Quiz: Test Your Knowledge</h3>
+                  <p className="text-sm text-indigo-700 mb-3">{quizQuestions[quizIndex].question}</p>
+                  <div className="space-y-2">
+                     {quizQuestions[quizIndex].options.map((opt, idx) => (
+                        <button key={idx} onClick={() => handleQuizAnswer(idx)} disabled={quizAnswered} className={`w-full p-2 text-left text-sm rounded transition ${quizAnswered ? idx === quizQuestions[quizIndex].correct ? 'bg-green-100 border border-green-500' : 'bg-gray-100' : 'bg-indigo-50 hover:bg-indigo-100'}`}>{opt}</button>
+                     ))}
+                  </div>
+                  {quizAnswered && <p className="mt-2 text-sm text-indigo-600">{quizQuestions[quizIndex].explanation}</p>}
+                  {quizAnswered && quizIndex < quizQuestions.length - 1 && <button onClick={nextQuiz} className="mt-2 px-4 py-1 bg-indigo-600 text-white rounded text-sm">Next Question</button>}
+               </div>
+               <div className="bg-indigo-100 p-4 rounded-lg">
+                  <h3 className="font-semibold text-indigo-800 mb-2">🔑 Key Takeaways</h3>
+                  <ul className="text-sm text-indigo-700 space-y-1">
+                     <li>• Let the product drive acquisition, activation, and expansion</li>
+                     <li>• Design freemium with enough value to hook, limits that trigger upgrades</li>
+                     <li>• Optimize time-to-value in onboarding—get to the "aha" moment fast</li>
+                     <li>• Identify PQLs through usage behavior, not just demographics</li>
+                     <li>• Build viral mechanics that make sharing a natural part of using the product</li>
+                  </ul>
+               </div>
+            </div>
+         );
+      }
+      return null;
+   };
+
    const FinancialStatementsRenderer = () => {
       const [phase, setPhase] = useState<'intro' | 'play' | 'result'>('intro');
       const [showInfo, setShowInfo] = useState(false);
@@ -55287,6 +55518,8 @@ const GeneratedDiagram: React.FC<DiagramProps> = ({ type, data, title }) => {
             return <MobileAnalyticsRenderer />;
          case 'growth_loops':
             return <GrowthLoopsRenderer />;
+         case 'product_led_growth':
+            return <ProductLedGrowthRenderer />;
          case 'pricing_strategy':
             return <PricingStrategyRenderer />;
          case 'budgeting':
