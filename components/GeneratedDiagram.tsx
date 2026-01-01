@@ -50878,6 +50878,237 @@ const GeneratedDiagram: React.FC<DiagramProps> = ({ type, data, title }) => {
       return null;
    };
 
+   // Topic 123: Mobile Analytics Interactive Educational Game
+   const MobileAnalyticsRenderer = () => {
+      const [phase, setPhase] = useState<'intro' | 'tutorial' | 'play' | 'result'>('intro');
+      const [tutorialStep, setTutorialStep] = useState(0);
+      const [showInfo, setShowInfo] = useState(false);
+      const [infoTopic, setInfoTopic] = useState('');
+      const [scenarioIndex, setScenarioIndex] = useState(0);
+      const [score, setScore] = useState(0);
+      const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
+      const [answered, setAnswered] = useState(false);
+      const [quizIndex, setQuizIndex] = useState(0);
+      const [quizScore, setQuizScore] = useState(0);
+      const [quizAnswered, setQuizAnswered] = useState(false);
+      const [gameLog, setGameLog] = useState<string[]>([]);
+
+      const infoContent: Record<string, string> = {
+         'event_tracking': 'Event tracking captures user actions within your app (button clicks, screen views, purchases). Well-designed events provide actionable insights into user behavior, feature adoption, and conversion paths.',
+         'user_properties': 'User properties are attributes associated with users (subscription tier, account age, location). They enable segmentation, personalization, and cohort analysis across your analytics reports.',
+         'session_metrics': 'Session metrics measure engagement periods: session duration, sessions per user, time between sessions. These metrics indicate user engagement health and help identify retention issues.',
+         'funnel_analysis': 'Funnel analysis tracks user progression through defined steps (signup → onboarding → first purchase). It reveals where users drop off and which steps need optimization.',
+         'attribution': 'Attribution connects user acquisitions to marketing sources (ads, organic search, referrals). Proper attribution enables ROI calculation and marketing spend optimization.',
+         'real_time_analytics': 'Real-time analytics show immediate data (active users, current events). Useful for monitoring launches, live events, and detecting issues quickly, but requires more infrastructure.',
+         'privacy_compliance': 'Privacy compliance (GDPR, CCPA, ATT) requires user consent for tracking, data minimization, and transparent data practices. Non-compliance risks fines and user trust.'
+      };
+
+      const tutorialSteps = [
+         { title: 'Welcome to Mobile Analytics', content: 'Mobile analytics helps you understand how users interact with your app. Learn to implement tracking, analyze behavior, and make data-driven decisions!' },
+         { title: 'Event Tracking Fundamentals', content: 'Events are the building blocks of mobile analytics. Track meaningful actions: screen views, button clicks, purchases, errors. Name events consistently and include relevant parameters.' },
+         { title: 'User Properties & Segmentation', content: 'User properties enable powerful segmentation. Set properties like subscription_status, account_age, and preferences. Segment users to understand different audience behaviors.' },
+         { title: 'Session & Engagement Metrics', content: 'Track session duration, frequency, and depth. High-value users typically have longer, more frequent sessions. Monitor session metrics to detect engagement changes early.' },
+         { title: 'Funnel & Conversion Analysis', content: 'Define critical funnels: onboarding, purchase, feature adoption. Measure conversion rates at each step. A/B test variations to improve weak steps in your funnels.' },
+         { title: 'Attribution & Acquisition', content: 'Connect users to acquisition sources for ROI analysis. Implement UTM parameters, deep link attribution, and integrate with ad networks for complete attribution data.' },
+         { title: 'Privacy-First Analytics', content: 'Design analytics with privacy by default. Collect only necessary data, implement proper consent flows, respect opt-outs, and ensure compliance with GDPR, CCPA, and ATT.' }
+      ];
+
+      const scenarios = [
+         {
+            title: 'E-commerce App Analytics Setup',
+            description: 'You\'re setting up analytics for a new e-commerce app. The product team wants to understand the purchase funnel, but you have limited engineering resources.',
+            options: [
+               { text: 'Track every single user interaction for maximum data', feedback: 'This creates noise, increases costs, and risks privacy issues. Focus on meaningful events that drive decisions.', correct: false },
+               { text: 'Define key events: view_product, add_to_cart, begin_checkout, purchase', feedback: 'Excellent! These events capture the critical purchase funnel while keeping implementation manageable and data actionable.', correct: true },
+               { text: 'Only track purchases since that\'s what matters most', feedback: 'Without funnel data, you can\'t identify where users drop off. You need pre-purchase events to optimize conversion.', correct: false },
+               { text: 'Wait until you have more resources to implement properly', feedback: 'Launching without analytics means missing crucial early user behavior data. Start with essential events now.', correct: false }
+            ]
+         },
+         {
+            title: 'Debugging a Conversion Drop',
+            description: 'Your checkout conversion rate dropped 15% last week. You need to identify the cause quickly using your analytics data.',
+            options: [
+               { text: 'Check overall app crash rates and session metrics', feedback: 'Good starting point, but crashes might not explain a checkout-specific drop. You need more targeted analysis.', correct: false },
+               { text: 'Segment funnel data by device, OS version, and app version', feedback: 'Perfect! Segmentation can reveal if the issue affects specific user groups, pointing to a potential code regression or device-specific bug.', correct: true },
+               { text: 'Look at last week\'s marketing campaigns for clues', feedback: 'Traffic quality could be a factor, but a 15% drop typically indicates a product issue rather than traffic quality.', correct: false },
+               { text: 'Survey users to ask why they didn\'t complete checkout', feedback: 'Surveys are slow and biased toward vocal users. Analytics can identify the issue faster for urgent drops.', correct: false }
+            ]
+         },
+         {
+            title: 'Implementing Apple ATT Compliance',
+            description: 'iOS 14.5 requires App Tracking Transparency (ATT) consent. You need to maintain analytics while respecting user privacy choices.',
+            options: [
+               { text: 'Prompt all users immediately on first app open', feedback: 'Immediate prompts get lower opt-in rates. Users need context on why tracking benefits them before deciding.', correct: false },
+               { text: 'Skip the prompt and hope Apple doesn\'t notice', feedback: 'This violates App Store policy and risks app removal. ATT compliance is mandatory.', correct: false },
+               { text: 'Design a pre-prompt explaining value, then show ATT, and implement privacy-safe analytics for opt-outs', feedback: 'Excellent! Contextual pre-prompts improve opt-in rates, and privacy-safe analytics (first-party, aggregated) maintains insights for all users.', correct: true },
+               { text: 'Disable all analytics for iOS users', feedback: 'This eliminates valuable insights for a major platform. Privacy-compliant first-party analytics is still possible.', correct: false }
+            ]
+         },
+         {
+            title: 'Real-Time vs Batch Analytics Decision',
+            description: 'Leadership wants real-time dashboards showing current active users and live event streams. You need to advise on the implementation approach.',
+            options: [
+               { text: 'Implement full real-time analytics for all events', feedback: 'Real-time for all events is expensive and often unnecessary. Most decisions don\'t require second-by-second data.', correct: false },
+               { text: 'Reject the request—batch analytics is always sufficient', feedback: 'Real-time has valid use cases: launch monitoring, live events, incident detection. A blanket rejection misses these needs.', correct: false },
+               { text: 'Implement real-time for active users and critical events; batch for detailed analysis', feedback: 'Perfect! This hybrid approach provides real-time visibility where it matters while keeping costs manageable for detailed historical analysis.', correct: true },
+               { text: 'Use a third-party real-time solution without integration', feedback: 'Disconnected systems create data silos and inconsistencies. Analytics should be integrated for reliable insights.', correct: false }
+            ]
+         }
+      ];
+
+      const quizQuestions = [
+         { question: 'What makes a good analytics event naming convention?', options: ['Using auto-generated names from the SDK', 'Consistent verb_noun format with relevant parameters', 'Maximum 5 characters for performance', 'Different naming patterns per feature team'], correct: 1, explanation: 'Consistent naming (like view_product, add_to_cart) makes data queryable and understandable across teams. Include parameters for context.' },
+         { question: 'Why is user segmentation critical for mobile analytics?', options: ['It reduces data storage costs', 'It enables understanding different user group behaviors', 'It\'s required by privacy regulations', 'It speeds up query performance'], correct: 1, explanation: 'Segmentation reveals how different user groups (free vs paid, new vs returning) behave differently, enabling targeted optimization.' },
+         { question: 'What should you do when funnel conversion drops unexpectedly?', options: ['Wait to see if it recovers naturally', 'Immediately revert all recent changes', 'Segment data by dimensions to isolate the cause', 'Send push notifications to encourage completion'], correct: 2, explanation: 'Segmenting by device, OS, app version, and user type helps identify if the drop affects specific groups, pointing to root cause.' },
+         { question: 'How does first-party analytics differ from third-party tracking?', options: ['First-party uses your own infrastructure and doesn\'t require consent', 'First-party collects data you own and control; less affected by tracking restrictions', 'There\'s no meaningful difference', 'Third-party is always more accurate'], correct: 1, explanation: 'First-party analytics uses your own data collection and isn\'t subject to cross-app tracking restrictions like ATT, though you should still respect privacy.' },
+         { question: 'When is real-time analytics most valuable?', options: ['For all historical trend analysis', 'During app launches, live events, and incident detection', 'For calculating lifetime value', 'When building cohort reports'], correct: 1, explanation: 'Real-time shines for monitoring active situations where immediate visibility enables quick response: launches, live events, and detecting issues.' }
+      ];
+
+      const handleAnswer = (optionIndex: number) => {
+         if (answered) return;
+         setSelectedAnswer(optionIndex);
+         setAnswered(true);
+         const isCorrect = scenarios[scenarioIndex].options[optionIndex].correct;
+         if (isCorrect) setScore(score + 1);
+         setGameLog([...gameLog, `Scenario ${scenarioIndex + 1}: ${isCorrect ? 'Correct' : 'Incorrect'}`]);
+      };
+
+      const nextScenario = () => {
+         if (scenarioIndex < scenarios.length - 1) {
+            setScenarioIndex(scenarioIndex + 1);
+            setSelectedAnswer(null);
+            setAnswered(false);
+         } else {
+            setPhase('result');
+         }
+      };
+
+      const handleQuizAnswer = (optionIndex: number) => {
+         if (quizAnswered) return;
+         setQuizAnswered(true);
+         if (optionIndex === quizQuestions[quizIndex].correct) {
+            setQuizScore(quizScore + 1);
+         }
+      };
+
+      const nextQuiz = () => {
+         if (quizIndex < quizQuestions.length - 1) {
+            setQuizIndex(quizIndex + 1);
+            setQuizAnswered(false);
+         }
+      };
+
+      if (phase === 'intro') {
+         return (
+            <div className="p-6 bg-gradient-to-br from-purple-50 to-indigo-100 rounded-xl shadow-lg max-w-2xl mx-auto">
+               <h2 className="text-2xl font-bold text-purple-800 mb-4">📊 Mobile Analytics Mastery</h2>
+               <p className="text-purple-700 mb-4">Transform data into decisions. Learn to implement effective mobile analytics, understand user behavior, and drive growth with data-driven insights.</p>
+               <div className="bg-white p-4 rounded-lg mb-4">
+                  <h3 className="font-semibold text-purple-800 mb-2">What You'll Learn:</h3>
+                  <ul className="text-sm text-purple-600 space-y-1">
+                     <li>• Event tracking design and implementation</li>
+                     <li>• User segmentation and cohort analysis</li>
+                     <li>• Funnel optimization and conversion tracking</li>
+                     <li>• Privacy-compliant analytics practices</li>
+                  </ul>
+               </div>
+               <button onClick={() => setPhase('tutorial')} className="w-full py-3 bg-purple-600 text-white rounded-lg font-semibold hover:bg-purple-700 transition">Start Learning</button>
+            </div>
+         );
+      }
+
+      if (phase === 'tutorial') {
+         return (
+            <div className="p-6 bg-gradient-to-br from-purple-50 to-indigo-100 rounded-xl shadow-lg max-w-2xl mx-auto">
+               <div className="flex justify-between items-center mb-4">
+                  <h2 className="text-xl font-bold text-purple-800">Tutorial: {tutorialSteps[tutorialStep].title}</h2>
+                  <span className="text-sm text-purple-600">{tutorialStep + 1} / {tutorialSteps.length}</span>
+               </div>
+               <div className="bg-white p-4 rounded-lg mb-4">
+                  <p className="text-purple-700">{tutorialSteps[tutorialStep].content}</p>
+               </div>
+               <div className="flex flex-wrap gap-2 mb-4">
+                  {Object.keys(infoContent).map(topic => (
+                     <button key={topic} onClick={() => { setInfoTopic(topic); setShowInfo(true); }} className="text-xs px-2 py-1 bg-purple-100 text-purple-700 rounded-full hover:bg-purple-200 transition">ℹ️ {topic.replace(/_/g, ' ')}</button>
+                  ))}
+               </div>
+               {showInfo && (
+                  <div className="bg-purple-50 border border-purple-200 p-3 rounded-lg mb-4">
+                     <div className="flex justify-between items-center mb-2">
+                        <span className="font-semibold text-purple-800">{infoTopic.replace(/_/g, ' ')}</span>
+                        <button onClick={() => setShowInfo(false)} className="text-purple-600">✕</button>
+                     </div>
+                     <p className="text-sm text-purple-600">{infoContent[infoTopic]}</p>
+                  </div>
+               )}
+               <div className="flex gap-2">
+                  {tutorialStep > 0 && <button onClick={() => setTutorialStep(tutorialStep - 1)} className="flex-1 py-2 border border-purple-300 text-purple-600 rounded-lg hover:bg-purple-50 transition">Back</button>}
+                  <button onClick={() => tutorialStep < tutorialSteps.length - 1 ? setTutorialStep(tutorialStep + 1) : setPhase('play')} className="flex-1 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition">{tutorialStep < tutorialSteps.length - 1 ? 'Next' : 'Start Practice'}</button>
+               </div>
+            </div>
+         );
+      }
+
+      if (phase === 'play') {
+         const currentScenario = scenarios[scenarioIndex];
+         return (
+            <div className="p-6 bg-gradient-to-br from-purple-50 to-indigo-100 rounded-xl shadow-lg max-w-2xl mx-auto">
+               <div className="flex justify-between items-center mb-4">
+                  <h2 className="text-xl font-bold text-purple-800">Scenario {scenarioIndex + 1} of {scenarios.length}</h2>
+                  <span className="text-sm bg-purple-200 text-purple-800 px-2 py-1 rounded">Score: {score}</span>
+               </div>
+               <div className="bg-white p-4 rounded-lg mb-4">
+                  <h3 className="font-semibold text-purple-800 mb-2">{currentScenario.title}</h3>
+                  <p className="text-purple-700 text-sm">{currentScenario.description}</p>
+               </div>
+               <div className="space-y-2 mb-4">
+                  {currentScenario.options.map((option, idx) => (
+                     <button key={idx} onClick={() => handleAnswer(idx)} disabled={answered} className={`w-full p-3 text-left rounded-lg transition text-sm ${answered ? option.correct ? 'bg-green-100 border-2 border-green-500' : selectedAnswer === idx ? 'bg-red-100 border-2 border-red-500' : 'bg-gray-100' : 'bg-white hover:bg-purple-50 border border-purple-200'}`}>
+                        {option.text}
+                        {answered && selectedAnswer === idx && <p className="mt-2 text-xs text-gray-600">{option.feedback}</p>}
+                     </button>
+                  ))}
+               </div>
+               {answered && <button onClick={nextScenario} className="w-full py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition">{scenarioIndex < scenarios.length - 1 ? 'Next Scenario' : 'See Results'}</button>}
+            </div>
+         );
+      }
+
+      if (phase === 'result') {
+         return (
+            <div className="p-6 bg-gradient-to-br from-purple-50 to-indigo-100 rounded-xl shadow-lg max-w-2xl mx-auto">
+               <h2 className="text-2xl font-bold text-purple-800 mb-4">🎯 Results</h2>
+               <div className="bg-white p-4 rounded-lg mb-4">
+                  <p className="text-lg text-purple-700">Scenario Score: <span className="font-bold">{score} / {scenarios.length}</span></p>
+                  <p className="text-lg text-purple-700">Quiz Score: <span className="font-bold">{quizScore} / {quizQuestions.length}</span></p>
+               </div>
+               <div className="bg-white p-4 rounded-lg mb-4">
+                  <h3 className="font-semibold text-purple-800 mb-2">Quiz: Test Your Knowledge</h3>
+                  <p className="text-sm text-purple-700 mb-3">{quizQuestions[quizIndex].question}</p>
+                  <div className="space-y-2">
+                     {quizQuestions[quizIndex].options.map((opt, idx) => (
+                        <button key={idx} onClick={() => handleQuizAnswer(idx)} disabled={quizAnswered} className={`w-full p-2 text-left text-sm rounded transition ${quizAnswered ? idx === quizQuestions[quizIndex].correct ? 'bg-green-100 border border-green-500' : 'bg-gray-100' : 'bg-purple-50 hover:bg-purple-100'}`}>{opt}</button>
+                     ))}
+                  </div>
+                  {quizAnswered && <p className="mt-2 text-sm text-purple-600">{quizQuestions[quizIndex].explanation}</p>}
+                  {quizAnswered && quizIndex < quizQuestions.length - 1 && <button onClick={nextQuiz} className="mt-2 px-4 py-1 bg-purple-600 text-white rounded text-sm">Next Question</button>}
+               </div>
+               <div className="bg-purple-100 p-4 rounded-lg">
+                  <h3 className="font-semibold text-purple-800 mb-2">🔑 Key Takeaways</h3>
+                  <ul className="text-sm text-purple-700 space-y-1">
+                     <li>• Design events around business questions, not just user actions</li>
+                     <li>• Use consistent naming conventions and meaningful parameters</li>
+                     <li>• Segment data to understand different user group behaviors</li>
+                     <li>• Build privacy-first analytics that comply with regulations</li>
+                     <li>• Balance real-time visibility with cost-effective batch analysis</li>
+                  </ul>
+               </div>
+            </div>
+         );
+      }
+      return null;
+   };
+
    const FinancialStatementsRenderer = () => {
       const [phase, setPhase] = useState<'intro' | 'play' | 'result'>('intro');
       const [showInfo, setShowInfo] = useState(false);
@@ -54821,6 +55052,8 @@ const GeneratedDiagram: React.FC<DiagramProps> = ({ type, data, title }) => {
             return <ASOAdvancedRenderer />;
          case 'deep_linking':
             return <DeepLinkingRenderer />;
+         case 'mobile_analytics':
+            return <MobileAnalyticsRenderer />;
          case 'pricing_strategy':
             return <PricingStrategyRenderer />;
          case 'budgeting':
