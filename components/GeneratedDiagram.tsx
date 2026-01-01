@@ -52264,6 +52264,237 @@ const GeneratedDiagram: React.FC<DiagramProps> = ({ type, data, title }) => {
       return null;
    };
 
+   // Topic 129: Marketplace Dynamics Interactive Educational Game
+   const MarketplaceDynamicsRenderer = () => {
+      const [phase, setPhase] = useState<'intro' | 'tutorial' | 'play' | 'result'>('intro');
+      const [tutorialStep, setTutorialStep] = useState(0);
+      const [showInfo, setShowInfo] = useState(false);
+      const [infoTopic, setInfoTopic] = useState('');
+      const [scenarioIndex, setScenarioIndex] = useState(0);
+      const [score, setScore] = useState(0);
+      const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
+      const [answered, setAnswered] = useState(false);
+      const [quizIndex, setQuizIndex] = useState(0);
+      const [quizScore, setQuizScore] = useState(0);
+      const [quizAnswered, setQuizAnswered] = useState(false);
+      const [gameLog, setGameLog] = useState<string[]>([]);
+
+      const infoContent: Record<string, string> = {
+         'two_sided': 'Two-sided marketplaces connect buyers and sellers, creating value through matching. Success requires both sides: Uber needs drivers AND riders. Value grows as both sides increase.',
+         'chicken_egg': 'The chicken-and-egg problem: buyers want sellers, sellers want buyers. Solutions include subsidizing one side, starting with constrained geography, or creating single-player value first.',
+         'liquidity': 'Marketplace liquidity measures how easily participants can transact. High liquidity means buyers find matches quickly and sellers make sales reliably. Low liquidity causes participant churn.',
+         'take_rate': 'Take rate is the percentage of transaction value the marketplace keeps. Higher rates mean more revenue but may drive participants to direct relationships or competitors.',
+         'network_effects': 'Marketplace network effects: more sellers attract more buyers, who attract more sellers. This flywheel creates defensibility but requires critical mass to start spinning.',
+         'trust_safety': 'Trust and safety systems (reviews, verification, guarantees) reduce transaction friction. Marketplaces that fail on trust lose both sides to competitors or direct relationships.',
+         'gmv': 'Gross Merchandise Value (GMV) is total transaction volume. Revenue = GMV × Take Rate. Track GMV growth, take rate, and unit economics to understand marketplace health.'
+      };
+
+      const tutorialSteps = [
+         { title: 'Welcome to Marketplace Dynamics', content: 'Marketplaces connect supply and demand, creating value through matching efficiency. Learn to build, balance, and scale marketplace businesses.' },
+         { title: 'Two-Sided Markets', content: 'Marketplaces serve two sides: buyers and sellers (or riders/drivers, guests/hosts). Success requires attracting and retaining both sides simultaneously.' },
+         { title: 'The Chicken-and-Egg Problem', content: 'Buyers want selection (need sellers), sellers want customers (need buyers). Solve by focusing on one side first, constraining geography, or subsidizing supply.' },
+         { title: 'Liquidity & Matching', content: 'Liquidity is the probability of a successful transaction. High liquidity = buyers find matches quickly, sellers make sales reliably. Low liquidity kills marketplaces.' },
+         { title: 'Take Rate Strategy', content: 'Take rate balances marketplace revenue with participant value. Start lower to drive adoption, increase as you prove value. Monitor for disintermediation risk.' },
+         { title: 'Trust & Safety', content: 'Reviews, verification, and guarantees build trust that enables transactions. Without trust, participants won\'t risk transacting with strangers on your platform.' },
+         { title: 'Network Effects & Defensibility', content: 'Strong marketplaces build network effects: more supply → better selection → more demand → more supply. This flywheel becomes your competitive moat.' }
+      ];
+
+      const scenarios = [
+         {
+            title: 'Launching a Local Services Marketplace',
+            description: 'You\'re launching a marketplace connecting homeowners with local contractors (plumbers, electricians, etc.). You have a small budget. How do you solve chicken-and-egg?',
+            options: [
+               { text: 'Launch nationwide and grow both sides everywhere', feedback: 'National launch spreads resources thin and creates low liquidity everywhere. Neither side gets enough value to stick.', correct: false },
+               { text: 'Focus on one city, recruit top contractors first with guaranteed leads', feedback: 'Excellent! Constraining geography increases liquidity. Guaranteed leads reduce risk for early supply. Quality supply attracts demand.', correct: true },
+               { text: 'Build demand first through heavy consumer marketing', feedback: 'Demand without supply creates frustration. Users come, find no contractors, and never return.', correct: false },
+               { text: 'Require both sides to pay upfront membership fees', feedback: 'Fees before proven value creates friction. Neither side will pay for an empty marketplace.', correct: false }
+            ]
+         },
+         {
+            title: 'Managing Marketplace Leakage',
+            description: 'Your freelancer marketplace has grown, but you notice repeat buyers and sellers exchanging contact info and transacting directly, avoiding your 15% take rate.',
+            options: [
+               { text: 'Increase surveillance and ban users who share contact info', feedback: 'Heavy-handed enforcement creates resentment. Users will find ways around it and distrust your platform.', correct: false },
+               { text: 'Lower take rate to 5% to reduce incentive to leave', feedback: 'Racing to the bottom hurts your economics. The goal is to provide enough value to justify the rate.', correct: false },
+               { text: 'Add exclusive value (payments, insurance, dispute resolution) that makes staying on platform worth the fee', feedback: 'Perfect! When platform value exceeds the take rate, users stay voluntarily. Make off-platform transactions riskier or less convenient.', correct: true },
+               { text: 'Charge a flat monthly fee instead of percentage', feedback: 'Flat fees can work but may price out smaller sellers. The core issue is value justification, not fee structure.', correct: false }
+            ]
+         },
+         {
+            title: 'Balancing Supply and Demand',
+            description: 'Your ride-sharing marketplace has abundant drivers in suburbs but constant surge pricing in the city. Suburban drivers complain about low earnings while city riders complain about high prices.',
+            options: [
+               { text: 'Cap surge pricing to keep riders happy', feedback: 'Price caps reduce driver incentive to serve high-demand areas, worsening the supply problem.', correct: false },
+               { text: 'Implement dynamic incentives that reward drivers for moving to high-demand areas', feedback: 'Excellent! Dynamic incentives balance supply and demand by directing drivers where they\'re needed most, optimizing liquidity across regions.', correct: true },
+               { text: 'Recruit more drivers to increase overall supply', feedback: 'More drivers doesn\'t solve geographic imbalance. You need drivers in the right places, not just more drivers.', correct: false },
+               { text: 'Limit driver accounts in oversupplied areas', feedback: 'Restricting supply hurts driver opportunity without solving the demand problem in undersupplied areas.', correct: false }
+            ]
+         },
+         {
+            title: 'Building Trust Systems',
+            description: 'Your peer-to-peer equipment rental marketplace is struggling with trust. Renters worry about equipment condition; owners worry about damage or theft.',
+            options: [
+               { text: 'Require all users to verify identity with government ID', feedback: 'ID verification helps but doesn\'t address the core concern: what happens when things go wrong?', correct: false },
+               { text: 'Let buyers and sellers work it out themselves', feedback: 'Absence of platform protection means high-stakes transactions won\'t happen. Users stick to trusted local options.', correct: false },
+               { text: 'Implement verified reviews, damage protection insurance, and secure payment escrow', feedback: 'Perfect! Reviews build reputation. Insurance transfers risk. Escrow ensures fair transactions. Together, they enable trust between strangers.', correct: true },
+               { text: 'Only allow rentals between users who know each other', feedback: 'This defeats the purpose of a marketplace. The goal is to enable transactions between strangers at scale.', correct: false }
+            ]
+         }
+      ];
+
+      const quizQuestions = [
+         { question: 'What is the best way to solve the chicken-and-egg problem?', options: ['Launch everywhere at once', 'Focus on one side in a constrained geography first', 'Wait until you have both sides ready', 'Require upfront commitment from both sides'], correct: 1, explanation: 'Constraining geography increases liquidity. Focusing on one side (usually supply) first gives value to the other side when they arrive.' },
+         { question: 'What does marketplace liquidity measure?', options: ['Total transaction volume', 'How easily participants can find matches and transact', 'The marketplace\'s cash reserves', 'Number of registered users'], correct: 1, explanation: 'Liquidity measures matching efficiency—how quickly buyers find what they need and sellers make sales. Low liquidity causes participant churn.' },
+         { question: 'How should you respond to marketplace disintermediation?', options: ['Ban users who transact directly', 'Lower take rate to zero', 'Add exclusive value that makes staying on platform worthwhile', 'Accept it as unavoidable'], correct: 2, explanation: 'When platform value exceeds the take rate, users stay voluntarily. Add payments, insurance, dispute resolution, or other services that make off-platform transactions risky.' },
+         { question: 'What creates defensibility in marketplace businesses?', options: ['Patents and trademarks', 'Network effects where both sides benefit from growth', 'Low prices', 'First-mover advantage alone'], correct: 1, explanation: 'Network effects create a flywheel: more supply attracts more demand, which attracts more supply. This becomes increasingly hard for competitors to overcome.' },
+         { question: 'Why are trust and safety systems critical for marketplaces?', options: ['They\'re legally required', 'They enable transactions between strangers by reducing risk', 'They increase take rate', 'They reduce customer support costs'], correct: 1, explanation: 'Marketplaces ask strangers to transact together. Without trust systems (reviews, verification, guarantees), participants won\'t risk it.' }
+      ];
+
+      const handleAnswer = (optionIndex: number) => {
+         if (answered) return;
+         setSelectedAnswer(optionIndex);
+         setAnswered(true);
+         const isCorrect = scenarios[scenarioIndex].options[optionIndex].correct;
+         if (isCorrect) setScore(score + 1);
+         setGameLog([...gameLog, `Scenario ${scenarioIndex + 1}: ${isCorrect ? 'Correct' : 'Incorrect'}`]);
+      };
+
+      const nextScenario = () => {
+         if (scenarioIndex < scenarios.length - 1) {
+            setScenarioIndex(scenarioIndex + 1);
+            setSelectedAnswer(null);
+            setAnswered(false);
+         } else {
+            setPhase('result');
+         }
+      };
+
+      const handleQuizAnswer = (optionIndex: number) => {
+         if (quizAnswered) return;
+         setQuizAnswered(true);
+         if (optionIndex === quizQuestions[quizIndex].correct) {
+            setQuizScore(quizScore + 1);
+         }
+      };
+
+      const nextQuiz = () => {
+         if (quizIndex < quizQuestions.length - 1) {
+            setQuizIndex(quizIndex + 1);
+            setQuizAnswered(false);
+         }
+      };
+
+      if (phase === 'intro') {
+         return (
+            <div className="p-6 bg-gradient-to-br from-violet-50 to-purple-100 rounded-xl shadow-lg max-w-2xl mx-auto">
+               <h2 className="text-2xl font-bold text-violet-800 mb-4">🏪 Marketplace Dynamics Mastery</h2>
+               <p className="text-violet-700 mb-4">Learn to build and scale two-sided marketplaces. Master the art of balancing supply and demand while creating defensible network effects.</p>
+               <div className="bg-white p-4 rounded-lg mb-4">
+                  <h3 className="font-semibold text-violet-800 mb-2">What You'll Learn:</h3>
+                  <ul className="text-sm text-violet-600 space-y-1">
+                     <li>• Solving the chicken-and-egg problem</li>
+                     <li>• Building marketplace liquidity</li>
+                     <li>• Take rate and disintermediation strategy</li>
+                     <li>• Trust, safety, and network effects</li>
+                  </ul>
+               </div>
+               <button onClick={() => setPhase('tutorial')} className="w-full py-3 bg-violet-600 text-white rounded-lg font-semibold hover:bg-violet-700 transition">Start Learning</button>
+            </div>
+         );
+      }
+
+      if (phase === 'tutorial') {
+         return (
+            <div className="p-6 bg-gradient-to-br from-violet-50 to-purple-100 rounded-xl shadow-lg max-w-2xl mx-auto">
+               <div className="flex justify-between items-center mb-4">
+                  <h2 className="text-xl font-bold text-violet-800">Tutorial: {tutorialSteps[tutorialStep].title}</h2>
+                  <span className="text-sm text-violet-600">{tutorialStep + 1} / {tutorialSteps.length}</span>
+               </div>
+               <div className="bg-white p-4 rounded-lg mb-4">
+                  <p className="text-violet-700">{tutorialSteps[tutorialStep].content}</p>
+               </div>
+               <div className="flex flex-wrap gap-2 mb-4">
+                  {Object.keys(infoContent).map(topic => (
+                     <button key={topic} onClick={() => { setInfoTopic(topic); setShowInfo(true); }} className="text-xs px-2 py-1 bg-violet-100 text-violet-700 rounded-full hover:bg-violet-200 transition">ℹ️ {topic.replace(/_/g, ' ')}</button>
+                  ))}
+               </div>
+               {showInfo && (
+                  <div className="bg-violet-50 border border-violet-200 p-3 rounded-lg mb-4">
+                     <div className="flex justify-between items-center mb-2">
+                        <span className="font-semibold text-violet-800">{infoTopic.replace(/_/g, ' ')}</span>
+                        <button onClick={() => setShowInfo(false)} className="text-violet-600">✕</button>
+                     </div>
+                     <p className="text-sm text-violet-600">{infoContent[infoTopic]}</p>
+                  </div>
+               )}
+               <div className="flex gap-2">
+                  {tutorialStep > 0 && <button onClick={() => setTutorialStep(tutorialStep - 1)} className="flex-1 py-2 border border-violet-300 text-violet-600 rounded-lg hover:bg-violet-50 transition">Back</button>}
+                  <button onClick={() => tutorialStep < tutorialSteps.length - 1 ? setTutorialStep(tutorialStep + 1) : setPhase('play')} className="flex-1 py-2 bg-violet-600 text-white rounded-lg hover:bg-violet-700 transition">{tutorialStep < tutorialSteps.length - 1 ? 'Next' : 'Start Practice'}</button>
+               </div>
+            </div>
+         );
+      }
+
+      if (phase === 'play') {
+         const currentScenario = scenarios[scenarioIndex];
+         return (
+            <div className="p-6 bg-gradient-to-br from-violet-50 to-purple-100 rounded-xl shadow-lg max-w-2xl mx-auto">
+               <div className="flex justify-between items-center mb-4">
+                  <h2 className="text-xl font-bold text-violet-800">Scenario {scenarioIndex + 1} of {scenarios.length}</h2>
+                  <span className="text-sm bg-violet-200 text-violet-800 px-2 py-1 rounded">Score: {score}</span>
+               </div>
+               <div className="bg-white p-4 rounded-lg mb-4">
+                  <h3 className="font-semibold text-violet-800 mb-2">{currentScenario.title}</h3>
+                  <p className="text-violet-700 text-sm">{currentScenario.description}</p>
+               </div>
+               <div className="space-y-2 mb-4">
+                  {currentScenario.options.map((option, idx) => (
+                     <button key={idx} onClick={() => handleAnswer(idx)} disabled={answered} className={`w-full p-3 text-left rounded-lg transition text-sm ${answered ? option.correct ? 'bg-green-100 border-2 border-green-500' : selectedAnswer === idx ? 'bg-red-100 border-2 border-red-500' : 'bg-gray-100' : 'bg-white hover:bg-violet-50 border border-violet-200'}`}>
+                        {option.text}
+                        {answered && selectedAnswer === idx && <p className="mt-2 text-xs text-gray-600">{option.feedback}</p>}
+                     </button>
+                  ))}
+               </div>
+               {answered && <button onClick={nextScenario} className="w-full py-2 bg-violet-600 text-white rounded-lg hover:bg-violet-700 transition">{scenarioIndex < scenarios.length - 1 ? 'Next Scenario' : 'See Results'}</button>}
+            </div>
+         );
+      }
+
+      if (phase === 'result') {
+         return (
+            <div className="p-6 bg-gradient-to-br from-violet-50 to-purple-100 rounded-xl shadow-lg max-w-2xl mx-auto">
+               <h2 className="text-2xl font-bold text-violet-800 mb-4">🎯 Results</h2>
+               <div className="bg-white p-4 rounded-lg mb-4">
+                  <p className="text-lg text-violet-700">Scenario Score: <span className="font-bold">{score} / {scenarios.length}</span></p>
+                  <p className="text-lg text-violet-700">Quiz Score: <span className="font-bold">{quizScore} / {quizQuestions.length}</span></p>
+               </div>
+               <div className="bg-white p-4 rounded-lg mb-4">
+                  <h3 className="font-semibold text-violet-800 mb-2">Quiz: Test Your Knowledge</h3>
+                  <p className="text-sm text-violet-700 mb-3">{quizQuestions[quizIndex].question}</p>
+                  <div className="space-y-2">
+                     {quizQuestions[quizIndex].options.map((opt, idx) => (
+                        <button key={idx} onClick={() => handleQuizAnswer(idx)} disabled={quizAnswered} className={`w-full p-2 text-left text-sm rounded transition ${quizAnswered ? idx === quizQuestions[quizIndex].correct ? 'bg-green-100 border border-green-500' : 'bg-gray-100' : 'bg-violet-50 hover:bg-violet-100'}`}>{opt}</button>
+                     ))}
+                  </div>
+                  {quizAnswered && <p className="mt-2 text-sm text-violet-600">{quizQuestions[quizIndex].explanation}</p>}
+                  {quizAnswered && quizIndex < quizQuestions.length - 1 && <button onClick={nextQuiz} className="mt-2 px-4 py-1 bg-violet-600 text-white rounded text-sm">Next Question</button>}
+               </div>
+               <div className="bg-violet-100 p-4 rounded-lg">
+                  <h3 className="font-semibold text-violet-800 mb-2">🔑 Key Takeaways</h3>
+                  <ul className="text-sm text-violet-700 space-y-1">
+                     <li>• Constrain geography and focus on supply first to solve chicken-and-egg</li>
+                     <li>• Liquidity is the lifeblood—prioritize matching efficiency</li>
+                     <li>• Prevent disintermediation by adding irreplaceable platform value</li>
+                     <li>• Trust systems enable transactions between strangers</li>
+                     <li>• Network effects create lasting competitive advantage</li>
+                  </ul>
+               </div>
+            </div>
+         );
+      }
+      return null;
+   };
+
    const FinancialStatementsRenderer = () => {
       const [phase, setPhase] = useState<'intro' | 'play' | 'result'>('intro');
       const [showInfo, setShowInfo] = useState(false);
@@ -56219,6 +56450,8 @@ const GeneratedDiagram: React.FC<DiagramProps> = ({ type, data, title }) => {
             return <CustomerSuccessMobileRenderer />;
          case 'subscription_models':
             return <SubscriptionModelsRenderer />;
+         case 'marketplace_dynamics':
+            return <MarketplaceDynamicsRenderer />;
          case 'pricing_strategy':
             return <PricingStrategyRenderer />;
          case 'budgeting':
