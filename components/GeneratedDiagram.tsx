@@ -52726,6 +52726,237 @@ const GeneratedDiagram: React.FC<DiagramProps> = ({ type, data, title }) => {
       return null;
    };
 
+   // Topic 131: Viral Marketing Interactive Educational Game
+   const ViralMarketingRenderer = () => {
+      const [phase, setPhase] = useState<'intro' | 'tutorial' | 'play' | 'result'>('intro');
+      const [tutorialStep, setTutorialStep] = useState(0);
+      const [showInfo, setShowInfo] = useState(false);
+      const [infoTopic, setInfoTopic] = useState('');
+      const [scenarioIndex, setScenarioIndex] = useState(0);
+      const [score, setScore] = useState(0);
+      const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
+      const [answered, setAnswered] = useState(false);
+      const [quizIndex, setQuizIndex] = useState(0);
+      const [quizScore, setQuizScore] = useState(0);
+      const [quizAnswered, setQuizAnswered] = useState(false);
+      const [gameLog, setGameLog] = useState<string[]>([]);
+
+      const infoContent: Record<string, string> = {
+         'viral_coefficient': 'The viral coefficient (K) measures how many new users each existing user brings. K = invites sent × conversion rate. If K > 1, you achieve exponential growth. Even K < 1 provides valuable amplification of other channels.',
+         'cycle_time': 'Viral cycle time is how long it takes for one user to invite another who converts. Shorter cycles mean faster compounding. A K of 0.8 with 1-day cycles outperforms K of 1.2 with 30-day cycles over time.',
+         'sharing_triggers': 'Sharing triggers are moments that naturally prompt users to share: achievements, milestones, created content, or emotional reactions. Design for triggers that are both shareable and valuable to recipients.',
+         'incentivized_viral': 'Incentivized virality rewards sharing (referral bonuses, unlocks, discounts). Effective but can attract low-quality users if rewards aren\'t tied to recipient engagement.',
+         'organic_viral': 'Organic virality happens without incentives—users share because the content or product is inherently shareable. More sustainable than incentivized but harder to engineer.',
+         'network_effects': 'Network effects make your product more valuable as more people use it. Direct effects (more users = more value) amplify virality by increasing conversion rates for invites.',
+         'viral_content': 'Viral content triggers emotional responses (awe, humor, outrage, inspiration) and is easily shareable. Format for the platform—what works on TikTok differs from LinkedIn or email.'
+      };
+
+      const tutorialSteps = [
+         { title: 'Welcome to Viral Marketing', content: 'Viral marketing turns your users into your acquisition channel. Learn to design sharing mechanics, optimize viral loops, and create content that spreads.' },
+         { title: 'The Viral Coefficient', content: 'K = invites × conversion rate. If each user brings 0.5 new users, you get 50% bonus growth on top of other channels. K > 1 means exponential, self-sustaining growth.' },
+         { title: 'Viral Cycle Time', content: 'Speed matters as much as K. Fast cycles compound quickly. Reduce friction in sharing, optimize invite channels, and make it easy for recipients to convert.' },
+         { title: 'Sharing Triggers', content: 'Design moments that naturally prompt sharing: achievements to celebrate, content worth showing, or features that require friends. Make sharing the obvious next action.' },
+         { title: 'Incentivized vs Organic', content: 'Incentives boost sharing volume but may attract wrong users. Organic sharing is harder but more sustainable. Best strategies combine both with quality controls.' },
+         { title: 'Viral Content Design', content: 'Viral content triggers emotion and easy sharing. Understand platform formats, audience psychology, and what makes people want to associate content with their identity.' },
+         { title: 'Measuring Virality', content: 'Track K-factor, cycle time, share rate per active user, and invite conversion rate. A/B test sharing flows and incentives. Small improvements compound dramatically.' }
+      ];
+
+      const scenarios = [
+         {
+            title: 'Designing a Referral Program',
+            description: 'Your fitness app has 100K engaged users but slow organic growth. You\'re designing a referral program. Current baseline: users invite 0.1 friends on average, 10% convert.',
+            options: [
+               { text: 'Give $20 cash to referrer for each signup', feedback: 'Cash incentives attract fraud and users motivated by money, not fitness. Quality suffers and unit economics break.', correct: false },
+               { text: 'Give both referrer and friend 1 month premium when friend completes first workout', feedback: 'Excellent! Double-sided incentives aligned with engagement ensure quality. Requiring workout completion filters for real users.', correct: true },
+               { text: 'Add share buttons but no incentives to test organic interest', feedback: 'Share buttons alone rarely drive meaningful virality. Some incentive or value exchange usually helps.', correct: false },
+               { text: 'Require referrals to unlock premium features', feedback: 'Forcing sharing creates resentment and low-quality invites. Voluntary sharing with incentives performs better.', correct: false }
+            ]
+         },
+         {
+            title: 'Optimizing Viral Cycle Time',
+            description: 'Your K-factor is 0.6 but viral cycle time is 14 days. Users share when they hit milestones that take weeks to achieve. How do you speed up the cycle?',
+            options: [
+               { text: 'Create artificial early milestones just for sharing', feedback: 'Fake milestones feel hollow and reduce share quality. Recipients learn to ignore these shares.', correct: false },
+               { text: 'Send reminder emails to share every day', feedback: 'Aggressive reminders annoy users and train them to ignore your emails. Frequency isn\'t the solution.', correct: false },
+               { text: 'Add shareable moments early in the journey plus in-app sharing prompts at natural pause points', feedback: 'Perfect! Early shareable moments (first workout, profile creation) plus contextual prompts reduce cycle time while maintaining share quality.', correct: true },
+               { text: 'Double the referral reward to motivate faster sharing', feedback: 'Higher rewards don\'t change when natural sharing moments occur. You need to create earlier triggers.', correct: false }
+            ]
+         },
+         {
+            title: 'Creating Viral Content',
+            description: 'Your meditation app wants to create shareable content for social media. Users love the app but rarely share their meditation practice publicly.',
+            options: [
+               { text: 'Create "I meditated for X days" streak graphics to share', feedback: 'Meditation streaks can feel like humble-bragging. Some users share, but many find it uncomfortable.', correct: false },
+               { text: 'Design beautiful, shareable quotes and insights that provide value without personal exposure', feedback: 'Excellent! Content that\'s valuable to share (wisdom, tips, insights) without personal vulnerability gets shared more widely and attracts aligned users.', correct: true },
+               { text: 'Add leaderboards comparing meditation time with friends', feedback: 'Competition conflicts with meditation\'s purpose. This might increase engagement but damages brand alignment.', correct: false },
+               { text: 'Partner with influencers to create viral content', feedback: 'Influencers can help, but this doesn\'t solve the user-generated viral content problem. It\'s paid amplification, not virality.', correct: false }
+            ]
+         },
+         {
+            title: 'Balancing Quality and Volume',
+            description: 'Your referral program increased K from 0.3 to 0.9, but referred users have 50% lower retention than organic users. What do you do?',
+            options: [
+               { text: 'Accept lower retention as the cost of growth', feedback: 'Low-retention users hurt LTV:CAC and may churn before referring others, breaking the viral loop long-term.', correct: false },
+               { text: 'Remove the referral program entirely', feedback: 'This throws away a valuable channel. The goal is to fix quality issues, not abandon the program.', correct: false },
+               { text: 'Tie referral rewards to referred user engagement, not just signup', feedback: 'Perfect! Rewards for referred user actions (first purchase, week 1 activity) align incentives with quality and filter out low-intent referrals.', correct: true },
+               { text: 'Reduce referral rewards to attract less reward-motivated referrers', feedback: 'Lower rewards reduce volume without necessarily improving quality. The incentive structure matters more than size.', correct: false }
+            ]
+         }
+      ];
+
+      const quizQuestions = [
+         { question: 'What does a viral coefficient (K) of 0.5 mean?', options: ['The product is failing', 'Each user brings 0.5 new users on average, providing 50% growth amplification', 'Half of users share the product', '50% of invites convert'], correct: 1, explanation: 'K = 0.5 means every 2 users bring 1 new user. This amplifies other acquisition channels by 50%—valuable even though it\'s not self-sustaining (K < 1).' },
+         { question: 'Why is viral cycle time as important as the viral coefficient?', options: ['Faster cycles mean less time to measure', 'Shorter cycles compound faster, accelerating growth over time', 'Users prefer quick sharing', 'It reduces customer acquisition cost'], correct: 1, explanation: 'Compounding frequency matters. K of 0.8 with daily cycles produces more growth than K of 1.2 with monthly cycles over a year.' },
+         { question: 'What makes a sharing trigger effective?', options: ['Large incentive rewards', 'It occurs at a natural moment when users want to share and recipients find value', 'Automatic sharing without user action', 'Appearing on every screen'], correct: 1, explanation: 'Effective triggers align with user psychology (moments of pride, creation, or discovery) and provide value to recipients, not just the sender.' },
+         { question: 'How do you improve referral quality without sacrificing volume?', options: ['Increase rewards', 'Decrease rewards', 'Tie rewards to referred user engagement, not just signup', 'Remove all incentives'], correct: 2, explanation: 'Engagement-based rewards attract referrers who bring quality users, since they only earn rewards when referrals actually engage.' },
+         { question: 'What distinguishes organic virality from incentivized virality?', options: ['Organic is faster', 'Organic happens because the product is inherently shareable, not because of rewards', 'Organic requires more engineering', 'There\'s no meaningful difference'], correct: 1, explanation: 'Organic virality comes from the product being worth sharing naturally. It\'s more sustainable than incentivized sharing but harder to engineer.' }
+      ];
+
+      const handleAnswer = (optionIndex: number) => {
+         if (answered) return;
+         setSelectedAnswer(optionIndex);
+         setAnswered(true);
+         const isCorrect = scenarios[scenarioIndex].options[optionIndex].correct;
+         if (isCorrect) setScore(score + 1);
+         setGameLog([...gameLog, `Scenario ${scenarioIndex + 1}: ${isCorrect ? 'Correct' : 'Incorrect'}`]);
+      };
+
+      const nextScenario = () => {
+         if (scenarioIndex < scenarios.length - 1) {
+            setScenarioIndex(scenarioIndex + 1);
+            setSelectedAnswer(null);
+            setAnswered(false);
+         } else {
+            setPhase('result');
+         }
+      };
+
+      const handleQuizAnswer = (optionIndex: number) => {
+         if (quizAnswered) return;
+         setQuizAnswered(true);
+         if (optionIndex === quizQuestions[quizIndex].correct) {
+            setQuizScore(quizScore + 1);
+         }
+      };
+
+      const nextQuiz = () => {
+         if (quizIndex < quizQuestions.length - 1) {
+            setQuizIndex(quizIndex + 1);
+            setQuizAnswered(false);
+         }
+      };
+
+      if (phase === 'intro') {
+         return (
+            <div className="p-6 bg-gradient-to-br from-fuchsia-50 to-pink-100 rounded-xl shadow-lg max-w-2xl mx-auto">
+               <h2 className="text-2xl font-bold text-fuchsia-800 mb-4">🚀 Viral Marketing Mastery</h2>
+               <p className="text-fuchsia-700 mb-4">Turn your users into your growth engine. Learn to design viral loops, optimize sharing mechanics, and create content that spreads organically.</p>
+               <div className="bg-white p-4 rounded-lg mb-4">
+                  <h3 className="font-semibold text-fuchsia-800 mb-2">What You'll Learn:</h3>
+                  <ul className="text-sm text-fuchsia-600 space-y-1">
+                     <li>• Viral coefficient and cycle time optimization</li>
+                     <li>• Designing effective sharing triggers</li>
+                     <li>• Balancing incentivized and organic virality</li>
+                     <li>• Creating shareable content and experiences</li>
+                  </ul>
+               </div>
+               <button onClick={() => setPhase('tutorial')} className="w-full py-3 bg-fuchsia-600 text-white rounded-lg font-semibold hover:bg-fuchsia-700 transition">Start Learning</button>
+            </div>
+         );
+      }
+
+      if (phase === 'tutorial') {
+         return (
+            <div className="p-6 bg-gradient-to-br from-fuchsia-50 to-pink-100 rounded-xl shadow-lg max-w-2xl mx-auto">
+               <div className="flex justify-between items-center mb-4">
+                  <h2 className="text-xl font-bold text-fuchsia-800">Tutorial: {tutorialSteps[tutorialStep].title}</h2>
+                  <span className="text-sm text-fuchsia-600">{tutorialStep + 1} / {tutorialSteps.length}</span>
+               </div>
+               <div className="bg-white p-4 rounded-lg mb-4">
+                  <p className="text-fuchsia-700">{tutorialSteps[tutorialStep].content}</p>
+               </div>
+               <div className="flex flex-wrap gap-2 mb-4">
+                  {Object.keys(infoContent).map(topic => (
+                     <button key={topic} onClick={() => { setInfoTopic(topic); setShowInfo(true); }} className="text-xs px-2 py-1 bg-fuchsia-100 text-fuchsia-700 rounded-full hover:bg-fuchsia-200 transition">ℹ️ {topic.replace(/_/g, ' ')}</button>
+                  ))}
+               </div>
+               {showInfo && (
+                  <div className="bg-fuchsia-50 border border-fuchsia-200 p-3 rounded-lg mb-4">
+                     <div className="flex justify-between items-center mb-2">
+                        <span className="font-semibold text-fuchsia-800">{infoTopic.replace(/_/g, ' ')}</span>
+                        <button onClick={() => setShowInfo(false)} className="text-fuchsia-600">✕</button>
+                     </div>
+                     <p className="text-sm text-fuchsia-600">{infoContent[infoTopic]}</p>
+                  </div>
+               )}
+               <div className="flex gap-2">
+                  {tutorialStep > 0 && <button onClick={() => setTutorialStep(tutorialStep - 1)} className="flex-1 py-2 border border-fuchsia-300 text-fuchsia-600 rounded-lg hover:bg-fuchsia-50 transition">Back</button>}
+                  <button onClick={() => tutorialStep < tutorialSteps.length - 1 ? setTutorialStep(tutorialStep + 1) : setPhase('play')} className="flex-1 py-2 bg-fuchsia-600 text-white rounded-lg hover:bg-fuchsia-700 transition">{tutorialStep < tutorialSteps.length - 1 ? 'Next' : 'Start Practice'}</button>
+               </div>
+            </div>
+         );
+      }
+
+      if (phase === 'play') {
+         const currentScenario = scenarios[scenarioIndex];
+         return (
+            <div className="p-6 bg-gradient-to-br from-fuchsia-50 to-pink-100 rounded-xl shadow-lg max-w-2xl mx-auto">
+               <div className="flex justify-between items-center mb-4">
+                  <h2 className="text-xl font-bold text-fuchsia-800">Scenario {scenarioIndex + 1} of {scenarios.length}</h2>
+                  <span className="text-sm bg-fuchsia-200 text-fuchsia-800 px-2 py-1 rounded">Score: {score}</span>
+               </div>
+               <div className="bg-white p-4 rounded-lg mb-4">
+                  <h3 className="font-semibold text-fuchsia-800 mb-2">{currentScenario.title}</h3>
+                  <p className="text-fuchsia-700 text-sm">{currentScenario.description}</p>
+               </div>
+               <div className="space-y-2 mb-4">
+                  {currentScenario.options.map((option, idx) => (
+                     <button key={idx} onClick={() => handleAnswer(idx)} disabled={answered} className={`w-full p-3 text-left rounded-lg transition text-sm ${answered ? option.correct ? 'bg-green-100 border-2 border-green-500' : selectedAnswer === idx ? 'bg-red-100 border-2 border-red-500' : 'bg-gray-100' : 'bg-white hover:bg-fuchsia-50 border border-fuchsia-200'}`}>
+                        {option.text}
+                        {answered && selectedAnswer === idx && <p className="mt-2 text-xs text-gray-600">{option.feedback}</p>}
+                     </button>
+                  ))}
+               </div>
+               {answered && <button onClick={nextScenario} className="w-full py-2 bg-fuchsia-600 text-white rounded-lg hover:bg-fuchsia-700 transition">{scenarioIndex < scenarios.length - 1 ? 'Next Scenario' : 'See Results'}</button>}
+            </div>
+         );
+      }
+
+      if (phase === 'result') {
+         return (
+            <div className="p-6 bg-gradient-to-br from-fuchsia-50 to-pink-100 rounded-xl shadow-lg max-w-2xl mx-auto">
+               <h2 className="text-2xl font-bold text-fuchsia-800 mb-4">🎯 Results</h2>
+               <div className="bg-white p-4 rounded-lg mb-4">
+                  <p className="text-lg text-fuchsia-700">Scenario Score: <span className="font-bold">{score} / {scenarios.length}</span></p>
+                  <p className="text-lg text-fuchsia-700">Quiz Score: <span className="font-bold">{quizScore} / {quizQuestions.length}</span></p>
+               </div>
+               <div className="bg-white p-4 rounded-lg mb-4">
+                  <h3 className="font-semibold text-fuchsia-800 mb-2">Quiz: Test Your Knowledge</h3>
+                  <p className="text-sm text-fuchsia-700 mb-3">{quizQuestions[quizIndex].question}</p>
+                  <div className="space-y-2">
+                     {quizQuestions[quizIndex].options.map((opt, idx) => (
+                        <button key={idx} onClick={() => handleQuizAnswer(idx)} disabled={quizAnswered} className={`w-full p-2 text-left text-sm rounded transition ${quizAnswered ? idx === quizQuestions[quizIndex].correct ? 'bg-green-100 border border-green-500' : 'bg-gray-100' : 'bg-fuchsia-50 hover:bg-fuchsia-100'}`}>{opt}</button>
+                     ))}
+                  </div>
+                  {quizAnswered && <p className="mt-2 text-sm text-fuchsia-600">{quizQuestions[quizIndex].explanation}</p>}
+                  {quizAnswered && quizIndex < quizQuestions.length - 1 && <button onClick={nextQuiz} className="mt-2 px-4 py-1 bg-fuchsia-600 text-white rounded text-sm">Next Question</button>}
+               </div>
+               <div className="bg-fuchsia-100 p-4 rounded-lg">
+                  <h3 className="font-semibold text-fuchsia-800 mb-2">🔑 Key Takeaways</h3>
+                  <ul className="text-sm text-fuchsia-700 space-y-1">
+                     <li>• K-factor measures users acquired per user; even K {"<"} 1 amplifies growth</li>
+                     <li>• Faster viral cycles compound more than higher K with slow cycles</li>
+                     <li>• Effective triggers align with natural sharing moments</li>
+                     <li>• Tie incentives to engagement, not just signups, for quality</li>
+                     <li>• Organic virality is more sustainable; combine with smart incentives</li>
+                  </ul>
+               </div>
+            </div>
+         );
+      }
+      return null;
+   };
+
    const FinancialStatementsRenderer = () => {
       const [phase, setPhase] = useState<'intro' | 'play' | 'result'>('intro');
       const [showInfo, setShowInfo] = useState(false);
@@ -56685,6 +56916,8 @@ const GeneratedDiagram: React.FC<DiagramProps> = ({ type, data, title }) => {
             return <MarketplaceDynamicsRenderer />;
          case 'platform_strategy':
             return <PlatformStrategyRenderer />;
+         case 'viral_marketing':
+            return <ViralMarketingRenderer />;
          case 'pricing_strategy':
             return <PricingStrategyRenderer />;
          case 'budgeting':
