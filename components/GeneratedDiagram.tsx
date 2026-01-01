@@ -49782,6 +49782,79 @@ const GeneratedDiagram: React.FC<DiagramProps> = ({ type, data, title }) => {
       return null;
    };
 
+   const AsoCreativeOptimizationRenderer = () => {
+      const [phase, setPhase] = useState<'intro' | 'tutorial' | 'play' | 'result'>('intro');
+      const [tutorialStep, setTutorialStep] = useState(0);
+      const [showInfo, setShowInfo] = useState(false);
+      const [infoKey, setInfoKey] = useState<string>('');
+      const [testVariant, setTestVariant] = useState<'A' | 'B'>('A');
+      const [scenarioIndex, setScenarioIndex] = useState(0);
+      const [score, setScore] = useState(0);
+      const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
+      const [answered, setAnswered] = useState(false);
+      const [quizIndex, setQuizIndex] = useState(0);
+      const [quizScore, setQuizScore] = useState(0);
+      const [quizAnswered, setQuizAnswered] = useState(false);
+      const [gameLog, setGameLog] = useState<string[]>([]);
+
+      const infoContent: Record<string, { title: string; content: string }> = {
+         'conversion_rate': { title: 'Store Conversion Rate', content: 'Percentage of users who view your store listing and then install. Industry average is 25-35%. Improving from 25% to 35% means 40% more installs from same traffic.' },
+         'icon_design': { title: 'Icon Best Practices', content: 'Icons appear at 60x60px in search. Use bold colors that stand out, avoid text (unreadable), ensure it\'s recognizable at thumbnail size.' },
+         'screenshot_order': { title: 'Screenshot Strategy', content: 'First 2-3 screenshots get 80% of views. Lead with your best feature. Use large text captions readable without tapping. Show the app, not just graphics.' },
+         'ab_testing': { title: 'A/B Testing', content: 'Test one element at a time (icon OR screenshots, not both). Run until statistically significant (95% confidence). Winner can improve conversion 10-40%.' },
+         'statistical_significance': { title: 'Statistical Significance', content: 'Need enough data to be confident results aren\'t random. 95% confidence means 5% chance the winner was just luck. More traffic = faster results.' }
+      };
+
+      const tutorialSteps = [
+         { title: 'Welcome to Creative Optimization', desc: 'Your icon and screenshots are your storefront. Users decide in 3 seconds whether to read more or scroll past.', icon: '🎨' },
+         { title: 'The 3-Second Decision', desc: 'Users scan hundreds of apps. Your visuals must instantly communicate what your app does and why it\'s worth installing.', icon: '⏱️' },
+         { title: 'Icon Design Principles', desc: 'Stand out from competitors. Be visible at 60x60px. Don\'t use text. Use colors that pop against the store\'s white background.', icon: '📱' },
+         { title: 'Screenshot Strategy', desc: 'First 2-3 screenshots matter most. Lead with your best feature. Use large captions. Show real app UI, not just marketing graphics.', icon: '🖼️' },
+         { title: 'A/B Testing Basics', desc: 'Never guess - test! Run controlled experiments to find what converts better. A 20% improvement means 20% more installs forever.', icon: '🔬' },
+         { title: 'Statistical Confidence', desc: 'Wait for 95% confidence before declaring a winner. Too little data = misleading results. Be patient with small traffic.', icon: '📊' },
+         { title: 'Start Optimizing!', desc: 'Apply A/B testing principles to improve your store conversion.', icon: '🚀' }
+      ];
+
+      const scenarios = [
+         { title: 'Icon Color Test', situation: 'Your fitness app has a blue icon. Most competitor icons are also blue or white. Your store conversion is 22% (below 30% category average).', question: 'What should you test first?', options: ['Add text to the icon for clarity', 'Test a bold green or orange icon', 'Make the icon more detailed', 'Copy the top competitor\'s icon'], correct: 1, explanation: 'Stand out from the sea of blue! Green and orange icons pop against competitors and the white store background. Text is unreadable at small sizes. Copying competitors makes you blend in. Color differentiation often improves conversion 15-30%.' },
+         { title: 'Screenshot Order', situation: 'Your app has these features: (A) Core workout tracking, (B) Social challenges, (C) AI coach, (D) Progress stats. Analytics show 70% of users only see first 2 screenshots.', question: 'How should you order your screenshots?', options: ['Alphabetically: AI, Challenges, Progress, Tracking', 'By development order: oldest to newest', 'By user priority: Tracking → Progress → AI → Social', 'By visual appeal: prettiest screenshots first'], correct: 2, explanation: 'Lead with your core value proposition (workout tracking), then show results (progress), then differentiators (AI). Most users only see 2-3 screenshots - put your best selling points first. Visual appeal matters, but relevance matters more.' },
+         { title: 'A/B Test Duration', situation: 'You\'re testing two icons. After 3 days: Variant A has 52% conversion (500 views), Variant B has 58% conversion (480 views). Statistical confidence is 72%.', question: 'What should you do?', options: ['Declare B the winner - 6% higher!', 'Wait for 95% confidence before deciding', 'End test - sample size is too small', 'Switch to testing screenshots instead'], correct: 1, explanation: '72% confidence means there\'s a 28% chance B\'s lead is random noise. The difference could disappear with more data. Wait for 95% confidence (only 5% chance of being wrong). Rushing to declare winners leads to bad decisions.' },
+         { title: 'Conversion Impact Analysis', situation: 'Your app gets 50,000 store impressions monthly. Current conversion: 25%. You\'ve run a successful icon test that improved conversion to 32%.', question: 'What\'s the annual impact of this improvement?', options: ['3,500 extra installs/year', '42,000 extra installs/year', '7,000 extra installs/month', 'Can\'t calculate without CPI'], correct: 1, explanation: 'Monthly: 50,000 × 25% = 12,500 installs before. 50,000 × 32% = 16,000 installs after. Difference: 3,500/month. Annual: 3,500 × 12 = 42,000 extra installs/year - all from ONE icon test! This is "free" growth with no ad spend increase.' }
+      ];
+
+      const quizQuestions = [
+         { q: 'Icon thumbnails in App Store search are approximately:', options: ['120x120 pixels', '60x60 pixels', '30x30 pixels', '200x200 pixels'], correct: 1 },
+         { q: 'What percentage of users typically only view first 2-3 screenshots?', options: ['30%', '50%', '70-80%', '95%'], correct: 2 },
+         { q: 'A/B tests should wait for what confidence level?', options: ['50%', '75%', '95%', '100%'], correct: 2 },
+         { q: 'Improving conversion from 25% to 35% means how many more installs?', options: ['10% more', '25% more', '40% more', '35% more'], correct: 2 },
+         { q: 'What should you NOT include in app icons?', options: ['Bold colors', 'Simple shapes', 'Text/words', 'Brand symbols'], correct: 2 }
+      ];
+
+      if (phase === 'intro') {
+         return (<div className="space-y-6"><div className="text-center"><div className="text-6xl mb-4">🎨</div><h2 className="text-2xl font-bold text-purple-800">ASO Creative Optimization</h2><p className="text-gray-600 mt-2">A/B test icons and screenshots for higher conversion</p></div><div className="bg-purple-50 p-4 rounded-xl"><h3 className="font-semibold text-purple-700 mb-2">You'll Master:</h3><ul className="space-y-1 text-sm text-gray-600"><li>• Icon design for conversion</li><li>• Screenshot strategy and ordering</li><li>• A/B testing methodology</li><li>• Statistical significance</li></ul></div><div className="bg-amber-50 p-3 rounded-lg border border-amber-200"><p className="text-sm text-amber-800"><strong>Why It Matters:</strong> A 20% conversion improvement = 20% more installs forever, at zero cost.</p></div><button onClick={() => setPhase('tutorial')} className="w-full py-3 bg-purple-600 text-white rounded-xl font-semibold hover:bg-purple-700">Start Learning →</button></div>);
+      }
+
+      if (phase === 'tutorial') {
+         const step = tutorialSteps[tutorialStep];
+         return (<div className="space-y-6"><div className="flex justify-between text-sm text-gray-500 mb-2"><span>Tutorial</span><span>{tutorialStep + 1}/{tutorialSteps.length}</span></div><div className="w-full bg-gray-200 h-2 rounded-full"><div className="bg-purple-600 h-2 rounded-full transition-all" style={{ width: `${((tutorialStep + 1) / tutorialSteps.length) * 100}%` }} /></div><div className="text-center py-8"><div className="text-5xl mb-4">{step.icon}</div><h3 className="text-xl font-bold text-purple-800">{step.title}</h3><p className="text-gray-600 mt-3">{step.desc}</p></div>{tutorialStep === 2 && (<div className="bg-gray-100 p-4 rounded-xl"><div className="flex justify-around items-center"><div className="text-center"><div className="w-12 h-12 bg-blue-500 rounded-xl mx-auto mb-1"></div><div className="text-xs text-gray-500">Blends in</div></div><div className="text-center"><div className="w-12 h-12 bg-green-500 rounded-xl mx-auto mb-1"></div><div className="text-xs text-green-600 font-bold">Stands out!</div></div><div className="text-center"><div className="w-12 h-12 bg-blue-400 rounded-xl mx-auto mb-1"></div><div className="text-xs text-gray-500">Blends in</div></div></div></div>)}{tutorialStep === 4 && (<div className="bg-gray-100 p-4 rounded-xl text-sm"><div className="grid grid-cols-2 gap-4"><div className="text-center p-3 bg-white rounded-lg"><div className="font-bold">Variant A</div><div className="text-2xl my-2">🔵</div><div className="text-gray-600">25% conversion</div></div><div className="text-center p-3 bg-green-50 rounded-lg border-2 border-green-400"><div className="font-bold">Variant B</div><div className="text-2xl my-2">🟢</div><div className="text-gray-600">32% conversion</div><div className="text-green-600 text-xs">+28% winner!</div></div></div></div>)}<div className="flex gap-3">{tutorialStep > 0 && (<button onClick={() => setTutorialStep(tutorialStep - 1)} className="flex-1 py-3 bg-gray-200 rounded-xl font-semibold">← Back</button>)}<button onClick={() => { if (tutorialStep < tutorialSteps.length - 1) setTutorialStep(tutorialStep + 1); else { setPhase('play'); setGameLog(['Creative optimization started']); } }} className="flex-1 py-3 bg-purple-600 text-white rounded-xl font-semibold">{tutorialStep < tutorialSteps.length - 1 ? 'Next →' : 'Practice Testing →'}</button></div></div>);
+      }
+
+      if (phase === 'play') {
+         const sc = scenarios[scenarioIndex];
+         return (<div className="space-y-4"><div className="flex justify-between items-center"><span className="text-sm font-medium text-purple-600">Test {scenarioIndex + 1}/{scenarios.length}</span><span className="text-sm">Score: {score}/{scenarioIndex}</span></div><div className="bg-purple-100 p-4 rounded-xl"><div className="flex justify-between items-start"><h3 className="font-bold text-purple-800">{sc.title}</h3><button onClick={() => { setInfoKey('ab_testing'); setShowInfo(true); }} className="text-purple-500 hover:text-purple-700">ℹ️</button></div><p className="text-sm text-gray-700 mt-2">{sc.situation}</p></div><div className="bg-amber-50 p-3 rounded-lg"><p className="font-medium text-amber-900">{sc.question}</p></div><div className="space-y-2">{sc.options.map((opt, i) => (<button key={i} onClick={() => { if (!answered) { setSelectedAnswer(i); setAnswered(true); if (i === sc.correct) { setScore(score + 1); setGameLog([...gameLog, `Correct: ${sc.title}`]); } } }} disabled={answered} className={`w-full p-3 rounded-lg text-left text-sm border-2 ${answered ? (i === sc.correct ? 'border-green-500 bg-green-50' : i === selectedAnswer ? 'border-red-400 bg-red-50' : 'border-gray-200') : 'border-gray-200 hover:border-purple-400'}`}>{opt}</button>))}</div>{answered && (<div className="bg-purple-50 p-4 rounded-xl"><p className="text-sm text-purple-800"><strong>Key Insight:</strong> {sc.explanation}</p></div>)}{answered && (<button onClick={() => { if (scenarioIndex < scenarios.length - 1) { setScenarioIndex(scenarioIndex + 1); setSelectedAnswer(null); setAnswered(false); } else setPhase('result'); }} className="w-full py-3 bg-purple-600 text-white rounded-xl font-semibold">{scenarioIndex < scenarios.length - 1 ? 'Next Test →' : 'Final Assessment →'}</button>)}{showInfo && (<div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"><div className="bg-white rounded-2xl p-6 max-w-sm w-full"><h3 className="font-bold text-lg text-purple-800">{infoContent[infoKey]?.title}</h3><p className="text-gray-600 mt-2 text-sm">{infoContent[infoKey]?.content}</p><button onClick={() => setShowInfo(false)} className="mt-4 w-full py-2 bg-purple-600 text-white rounded-xl">Close</button></div></div>)}</div>);
+      }
+
+      if (phase === 'result') {
+         if (quizIndex < quizQuestions.length) {
+            const q = quizQuestions[quizIndex];
+            return (<div className="space-y-6"><div className="text-center"><h3 className="text-xl font-bold text-purple-800">Creative Testing Quiz</h3><p className="text-sm text-gray-500">Question {quizIndex + 1}/{quizQuestions.length}</p></div><div className="bg-purple-50 p-4 rounded-xl"><p className="font-medium">{q.q}</p></div><div className="space-y-2">{q.options.map((opt, i) => (<button key={i} onClick={() => { if (!quizAnswered) { setQuizAnswered(true); if (i === q.correct) setQuizScore(quizScore + 1); } }} disabled={quizAnswered} className={`w-full p-3 rounded-lg text-left border-2 ${quizAnswered ? (i === q.correct ? 'border-green-500 bg-green-50' : 'border-gray-200') : 'border-gray-200 hover:border-purple-400'}`}>{opt}</button>))}</div>{quizAnswered && (<button onClick={() => { setQuizIndex(quizIndex + 1); setQuizAnswered(false); }} className="w-full py-3 bg-purple-600 text-white rounded-xl font-semibold">Next →</button>)}</div>);
+         }
+         const pct = Math.round(((score + quizScore) / (scenarios.length + quizQuestions.length)) * 100);
+         return (<div className="space-y-6"><div className="text-center"><div className="text-6xl mb-4">{pct >= 80 ? '🏆' : '🎨'}</div><h2 className="text-2xl font-bold text-purple-800">Creative Optimization Complete!</h2></div><div className="bg-purple-50 p-6 rounded-xl text-center"><div className="text-4xl font-bold text-purple-700">{pct}%</div><div className="text-sm text-gray-600">Creative Mastery</div></div><div className="bg-gray-50 p-4 rounded-xl text-sm"><p className="font-semibold mb-2">Key Takeaways:</p><ul className="space-y-1 text-gray-600"><li>• Icon color differentiation matters</li><li>• First 2-3 screenshots get 80% of views</li><li>• Wait for 95% statistical confidence</li><li>• 20% better conversion = 20% more installs</li></ul></div><button onClick={() => { setPhase('intro'); setScore(0); setScenarioIndex(0); setSelectedAnswer(null); setAnswered(false); setQuizIndex(0); setQuizAnswered(false); setQuizScore(0); }} className="w-full py-3 bg-purple-600 text-white rounded-xl font-semibold">Practice Again</button></div>);
+      }
+      return null;
+   };
+
    const FinancialStatementsRenderer = () => {
       const [phase, setPhase] = useState<'intro' | 'play' | 'result'>('intro');
       const [showInfo, setShowInfo] = useState(false);
@@ -53685,6 +53758,8 @@ const GeneratedDiagram: React.FC<DiagramProps> = ({ type, data, title }) => {
             return <FractionalCfoRenderer />;
          case 'aso_keywords':
             return <AsoKeywordsRenderer />;
+         case 'aso_creative_optimization':
+            return <AsoCreativeOptimizationRenderer />;
          case 'pricing_strategy':
             return <PricingStrategyRenderer />;
          case 'budgeting':
