@@ -52957,6 +52957,237 @@ const GeneratedDiagram: React.FC<DiagramProps> = ({ type, data, title }) => {
       return null;
    };
 
+   // Topic 132: Influencer Partnerships Interactive Educational Game
+   const InfluencerPartnershipsRenderer = () => {
+      const [phase, setPhase] = useState<'intro' | 'tutorial' | 'play' | 'result'>('intro');
+      const [tutorialStep, setTutorialStep] = useState(0);
+      const [showInfo, setShowInfo] = useState(false);
+      const [infoTopic, setInfoTopic] = useState('');
+      const [scenarioIndex, setScenarioIndex] = useState(0);
+      const [score, setScore] = useState(0);
+      const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
+      const [answered, setAnswered] = useState(false);
+      const [quizIndex, setQuizIndex] = useState(0);
+      const [quizScore, setQuizScore] = useState(0);
+      const [quizAnswered, setQuizAnswered] = useState(false);
+      const [gameLog, setGameLog] = useState<string[]>([]);
+
+      const infoContent: Record<string, string> = {
+         'influencer_tiers': 'Nano (1K-10K): High engagement, niche focus. Micro (10K-100K): Strong communities, cost-effective. Macro (100K-1M): Broader reach, professional content. Mega (1M+): Maximum reach, celebrity pricing.',
+         'authentic_influencers': 'Authentic influencers have consistent engagement rates (2-6%), genuine follower growth, relevant audience demographics, and content that naturally fits your product. Watch for fake followers and engagement pods.',
+         'campaign_types': 'Sponsored posts: One-time paid content. Affiliate: Commission on sales. Ambassadorships: Long-term partnerships. Product seeding: Free products for organic mentions. Each has different ROI profiles.',
+         'negotiation': 'Negotiation factors: Follower count, engagement rate, content exclusivity, usage rights, timeline, deliverables, and performance bonuses. Start with value exchange, not just cash.',
+         'creative_control': 'Balance brand guidelines with influencer authenticity. Over-scripted content feels inauthentic and underperforms. Provide talking points and restrictions, not scripts.',
+         'influencer_roi': 'Measure beyond vanity metrics: track unique codes, affiliate links, brand lift studies, and cost per acquisition. Compare to other channels. Factor in content repurposing value.',
+         'ftc_disclosure': 'FTC requires clear disclosure of paid partnerships (#ad, #sponsored). Disclosures must be prominent and unmissable. Non-compliance risks fines for both brand and influencer.'
+      };
+
+      const tutorialSteps = [
+         { title: 'Welcome to Influencer Partnerships', content: 'Influencer marketing leverages trusted voices to reach engaged audiences. Learn to identify, partner with, and measure influencer campaigns effectively.' },
+         { title: 'Understanding Influencer Tiers', content: 'Nano and micro-influencers often outperform on engagement and ROI. Macro and mega influencers provide reach but at higher cost. Match tier to campaign goals.' },
+         { title: 'Identifying Authentic Influencers', content: 'Look for consistent engagement rates, genuine audience interaction, and natural brand fit. Beware fake followers, engagement pods, and audience-content misalignment.' },
+         { title: 'Campaign Types', content: 'Sponsored posts for awareness, affiliate programs for performance, ambassadorships for long-term relationships. Product seeding works for organic integration with authentic voices.' },
+         { title: 'Negotiation & Contracts', content: 'Define deliverables, timeline, usage rights, exclusivity, and performance expectations. Include revision processes and approval workflows. Protect both parties.' },
+         { title: 'Creative Control Balance', content: 'Influencers know their audience. Provide brand guidelines and key messages, but allow creative freedom. Over-scripted content underperforms authentic integrations.' },
+         { title: 'Measuring ROI', content: 'Track unique codes, affiliate links, UTM parameters, and brand lift. Calculate cost per engagement, cost per acquisition, and content repurposing value. Compare to other channels.' }
+      ];
+
+      const scenarios = [
+         {
+            title: 'Selecting Influencer Partners',
+            description: 'Your skincare app has $10K for influencer marketing. You\'re choosing between: One macro influencer (500K followers, 1.5% engagement) or ten micro-influencers (20K-50K each, 4-6% engagement).',
+            options: [
+               { text: 'One macro influencer for maximum reach and professional content', feedback: 'Macro reach is impressive but lower engagement and higher risk if the partnership doesn\'t resonate. All eggs in one basket.', correct: false },
+               { text: 'Ten micro-influencers for higher engagement and diverse audiences', feedback: 'Excellent! Micro-influencers often deliver better ROI through higher engagement, authentic connections, and risk diversification across multiple partners.', correct: true },
+               { text: 'Save the budget for paid ads instead', feedback: 'Influencer content can outperform ads on trust and engagement, especially for skincare. The channel is worth testing.', correct: false },
+               { text: 'Find one mega influencer willing to negotiate down', feedback: 'Mega influencers at discounted rates often signal misalignment. Their true rates exist for a reason.', correct: false }
+            ]
+         },
+         {
+            title: 'Detecting Fake Influencers',
+            description: 'You found an influencer with 100K followers offering great rates. Their comments look generic ("Nice!", "Love this!", lots of emojis), follower growth shows sudden spikes, and engagement is 8%.',
+            options: [
+               { text: 'Partner with them—8% engagement is excellent', feedback: 'Abnormally high engagement plus generic comments often indicate engagement pods or bots. Real 8% engagement is extremely rare at 100K followers.', correct: false },
+               { text: 'Ask for detailed audience demographics before deciding', feedback: 'Good instinct, but fake followers often come with fake demographics. You need to investigate the red flags first.', correct: false },
+               { text: 'Decline—the combination of generic comments, growth spikes, and unusually high engagement suggests inauthenticity', feedback: 'Perfect! These are classic signs of fake engagement. Legitimate influencers at 100K typically have 2-4% engagement with substantive comments.', correct: true },
+               { text: 'Start with a small test campaign to verify', feedback: 'Testing wastes budget and time when red flags are this clear. Move on to authentic partners.', correct: false }
+            ]
+         },
+         {
+            title: 'Managing Creative Control',
+            description: 'Your brand has strict guidelines, and legal wants to approve all influencer content. An influencer says they\'ll only work with you if they have creative freedom.',
+            options: [
+               { text: 'Enforce full script and pre-approval requirements', feedback: 'Over-controlled content often underperforms. Audiences recognize inauthentic ads and disengage.', correct: false },
+               { text: 'Give complete creative freedom with no guidelines', feedback: 'Some guardrails protect your brand. Complete freedom risks off-brand or non-compliant content.', correct: false },
+               { text: 'Provide clear brand guidelines and key messages, but allow creative interpretation with one revision round', feedback: 'Excellent! Balance protects your brand while enabling authentic content. Clear expectations with reasonable flexibility creates the best outcomes.', correct: true },
+               { text: 'Find a different influencer who accepts more control', feedback: 'Influencers who accept heavy control often have less audience trust—the very thing you\'re paying for.', correct: false }
+            ]
+         },
+         {
+            title: 'Measuring Campaign Success',
+            description: 'Your influencer campaign generated 500K impressions, 25K engagements, and lots of positive comments. But sales didn\'t increase noticeably. Leadership questions the ROI.',
+            options: [
+               { text: 'Argue that brand awareness has long-term value', feedback: 'True, but you need to prove it. Without measurement frameworks, brand awareness claims are hard to defend.', correct: false },
+               { text: 'Blame the influencer for poor content quality', feedback: 'High engagement suggests the content resonated. The issue is likely measurement or attribution, not content.', correct: false },
+               { text: 'Implement tracking (unique codes, UTMs, brand lift studies) for future campaigns to properly measure impact', feedback: 'Perfect! You can\'t measure what you don\'t track. Set up proper attribution before the next campaign to prove—or disprove—value.', correct: true },
+               { text: 'Stop influencer marketing since it doesn\'t work', feedback: 'One unmeasured campaign isn\'t enough data. Many brands succeed with influencer marketing when measured properly.', correct: false }
+            ]
+         }
+      ];
+
+      const quizQuestions = [
+         { question: 'Why do micro-influencers often outperform macro-influencers on ROI?', options: ['They\'re cheaper', 'Higher engagement rates and more trusted relationships with their audience', 'They post more frequently', 'Their content is more professional'], correct: 1, explanation: 'Micro-influencers have closer relationships with their followers, leading to higher trust and engagement, which often converts better than broad reach.' },
+         { question: 'What are red flags for fake influencers?', options: ['High follower counts', 'Generic comments, sudden follower spikes, and abnormally high engagement', 'Working with other brands', 'Posting frequently'], correct: 1, explanation: 'Fake influencers often have bought followers, engagement pods, or bots that leave generic comments and cause unnatural growth patterns.' },
+         { question: 'Why should you avoid over-scripting influencer content?', options: ['It\'s more expensive', 'Audiences recognize inauthentic content and disengage', 'Influencers charge more for scripts', 'It takes too long'], correct: 1, explanation: 'Followers trust influencers for their authentic voice. Over-scripted content feels like an ad, reducing trust and engagement.' },
+         { question: 'How should you measure influencer marketing ROI?', options: ['Only count followers reached', 'Track unique codes, affiliate links, UTMs, and brand lift', 'Count likes and comments only', 'Ask the influencer for their metrics'], correct: 1, explanation: 'Proper attribution requires tracking mechanisms (codes, links, parameters) and brand lift studies to measure actual business impact.' },
+         { question: 'What does FTC disclosure require?', options: ['Disclosure is optional for small payments', 'Clear, prominent disclosure of paid partnerships (#ad, #sponsored)', 'Only disclosure in video content', 'Disclosure only for products over $100'], correct: 1, explanation: 'FTC requires clear, unmissable disclosure of any material relationship. This protects consumers and applies regardless of payment size.' }
+      ];
+
+      const handleAnswer = (optionIndex: number) => {
+         if (answered) return;
+         setSelectedAnswer(optionIndex);
+         setAnswered(true);
+         const isCorrect = scenarios[scenarioIndex].options[optionIndex].correct;
+         if (isCorrect) setScore(score + 1);
+         setGameLog([...gameLog, `Scenario ${scenarioIndex + 1}: ${isCorrect ? 'Correct' : 'Incorrect'}`]);
+      };
+
+      const nextScenario = () => {
+         if (scenarioIndex < scenarios.length - 1) {
+            setScenarioIndex(scenarioIndex + 1);
+            setSelectedAnswer(null);
+            setAnswered(false);
+         } else {
+            setPhase('result');
+         }
+      };
+
+      const handleQuizAnswer = (optionIndex: number) => {
+         if (quizAnswered) return;
+         setQuizAnswered(true);
+         if (optionIndex === quizQuestions[quizIndex].correct) {
+            setQuizScore(quizScore + 1);
+         }
+      };
+
+      const nextQuiz = () => {
+         if (quizIndex < quizQuestions.length - 1) {
+            setQuizIndex(quizIndex + 1);
+            setQuizAnswered(false);
+         }
+      };
+
+      if (phase === 'intro') {
+         return (
+            <div className="p-6 bg-gradient-to-br from-orange-50 to-amber-100 rounded-xl shadow-lg max-w-2xl mx-auto">
+               <h2 className="text-2xl font-bold text-orange-800 mb-4">🌟 Influencer Partnerships Mastery</h2>
+               <p className="text-orange-700 mb-4">Learn to identify, partner with, and measure influencer campaigns that drive real results. Master the art of authentic influencer marketing.</p>
+               <div className="bg-white p-4 rounded-lg mb-4">
+                  <h3 className="font-semibold text-orange-800 mb-2">What You'll Learn:</h3>
+                  <ul className="text-sm text-orange-600 space-y-1">
+                     <li>• Influencer tiers and selection criteria</li>
+                     <li>• Detecting fake influencers and engagement</li>
+                     <li>• Campaign types and negotiation strategies</li>
+                     <li>• Measuring ROI and FTC compliance</li>
+                  </ul>
+               </div>
+               <button onClick={() => setPhase('tutorial')} className="w-full py-3 bg-orange-600 text-white rounded-lg font-semibold hover:bg-orange-700 transition">Start Learning</button>
+            </div>
+         );
+      }
+
+      if (phase === 'tutorial') {
+         return (
+            <div className="p-6 bg-gradient-to-br from-orange-50 to-amber-100 rounded-xl shadow-lg max-w-2xl mx-auto">
+               <div className="flex justify-between items-center mb-4">
+                  <h2 className="text-xl font-bold text-orange-800">Tutorial: {tutorialSteps[tutorialStep].title}</h2>
+                  <span className="text-sm text-orange-600">{tutorialStep + 1} / {tutorialSteps.length}</span>
+               </div>
+               <div className="bg-white p-4 rounded-lg mb-4">
+                  <p className="text-orange-700">{tutorialSteps[tutorialStep].content}</p>
+               </div>
+               <div className="flex flex-wrap gap-2 mb-4">
+                  {Object.keys(infoContent).map(topic => (
+                     <button key={topic} onClick={() => { setInfoTopic(topic); setShowInfo(true); }} className="text-xs px-2 py-1 bg-orange-100 text-orange-700 rounded-full hover:bg-orange-200 transition">ℹ️ {topic.replace(/_/g, ' ')}</button>
+                  ))}
+               </div>
+               {showInfo && (
+                  <div className="bg-orange-50 border border-orange-200 p-3 rounded-lg mb-4">
+                     <div className="flex justify-between items-center mb-2">
+                        <span className="font-semibold text-orange-800">{infoTopic.replace(/_/g, ' ')}</span>
+                        <button onClick={() => setShowInfo(false)} className="text-orange-600">✕</button>
+                     </div>
+                     <p className="text-sm text-orange-600">{infoContent[infoTopic]}</p>
+                  </div>
+               )}
+               <div className="flex gap-2">
+                  {tutorialStep > 0 && <button onClick={() => setTutorialStep(tutorialStep - 1)} className="flex-1 py-2 border border-orange-300 text-orange-600 rounded-lg hover:bg-orange-50 transition">Back</button>}
+                  <button onClick={() => tutorialStep < tutorialSteps.length - 1 ? setTutorialStep(tutorialStep + 1) : setPhase('play')} className="flex-1 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition">{tutorialStep < tutorialSteps.length - 1 ? 'Next' : 'Start Practice'}</button>
+               </div>
+            </div>
+         );
+      }
+
+      if (phase === 'play') {
+         const currentScenario = scenarios[scenarioIndex];
+         return (
+            <div className="p-6 bg-gradient-to-br from-orange-50 to-amber-100 rounded-xl shadow-lg max-w-2xl mx-auto">
+               <div className="flex justify-between items-center mb-4">
+                  <h2 className="text-xl font-bold text-orange-800">Scenario {scenarioIndex + 1} of {scenarios.length}</h2>
+                  <span className="text-sm bg-orange-200 text-orange-800 px-2 py-1 rounded">Score: {score}</span>
+               </div>
+               <div className="bg-white p-4 rounded-lg mb-4">
+                  <h3 className="font-semibold text-orange-800 mb-2">{currentScenario.title}</h3>
+                  <p className="text-orange-700 text-sm">{currentScenario.description}</p>
+               </div>
+               <div className="space-y-2 mb-4">
+                  {currentScenario.options.map((option, idx) => (
+                     <button key={idx} onClick={() => handleAnswer(idx)} disabled={answered} className={`w-full p-3 text-left rounded-lg transition text-sm ${answered ? option.correct ? 'bg-green-100 border-2 border-green-500' : selectedAnswer === idx ? 'bg-red-100 border-2 border-red-500' : 'bg-gray-100' : 'bg-white hover:bg-orange-50 border border-orange-200'}`}>
+                        {option.text}
+                        {answered && selectedAnswer === idx && <p className="mt-2 text-xs text-gray-600">{option.feedback}</p>}
+                     </button>
+                  ))}
+               </div>
+               {answered && <button onClick={nextScenario} className="w-full py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition">{scenarioIndex < scenarios.length - 1 ? 'Next Scenario' : 'See Results'}</button>}
+            </div>
+         );
+      }
+
+      if (phase === 'result') {
+         return (
+            <div className="p-6 bg-gradient-to-br from-orange-50 to-amber-100 rounded-xl shadow-lg max-w-2xl mx-auto">
+               <h2 className="text-2xl font-bold text-orange-800 mb-4">🎯 Results</h2>
+               <div className="bg-white p-4 rounded-lg mb-4">
+                  <p className="text-lg text-orange-700">Scenario Score: <span className="font-bold">{score} / {scenarios.length}</span></p>
+                  <p className="text-lg text-orange-700">Quiz Score: <span className="font-bold">{quizScore} / {quizQuestions.length}</span></p>
+               </div>
+               <div className="bg-white p-4 rounded-lg mb-4">
+                  <h3 className="font-semibold text-orange-800 mb-2">Quiz: Test Your Knowledge</h3>
+                  <p className="text-sm text-orange-700 mb-3">{quizQuestions[quizIndex].question}</p>
+                  <div className="space-y-2">
+                     {quizQuestions[quizIndex].options.map((opt, idx) => (
+                        <button key={idx} onClick={() => handleQuizAnswer(idx)} disabled={quizAnswered} className={`w-full p-2 text-left text-sm rounded transition ${quizAnswered ? idx === quizQuestions[quizIndex].correct ? 'bg-green-100 border border-green-500' : 'bg-gray-100' : 'bg-orange-50 hover:bg-orange-100'}`}>{opt}</button>
+                     ))}
+                  </div>
+                  {quizAnswered && <p className="mt-2 text-sm text-orange-600">{quizQuestions[quizIndex].explanation}</p>}
+                  {quizAnswered && quizIndex < quizQuestions.length - 1 && <button onClick={nextQuiz} className="mt-2 px-4 py-1 bg-orange-600 text-white rounded text-sm">Next Question</button>}
+               </div>
+               <div className="bg-orange-100 p-4 rounded-lg">
+                  <h3 className="font-semibold text-orange-800 mb-2">🔑 Key Takeaways</h3>
+                  <ul className="text-sm text-orange-700 space-y-1">
+                     <li>• Micro-influencers often deliver better ROI through authentic engagement</li>
+                     <li>• Watch for fake followers, generic comments, and unusual engagement spikes</li>
+                     <li>• Balance brand guidelines with creative freedom for authentic content</li>
+                     <li>• Implement proper tracking to measure actual business impact</li>
+                     <li>• Ensure clear FTC disclosure for all paid partnerships</li>
+                  </ul>
+               </div>
+            </div>
+         );
+      }
+      return null;
+   };
+
    const FinancialStatementsRenderer = () => {
       const [phase, setPhase] = useState<'intro' | 'play' | 'result'>('intro');
       const [showInfo, setShowInfo] = useState(false);
@@ -56918,6 +57149,8 @@ const GeneratedDiagram: React.FC<DiagramProps> = ({ type, data, title }) => {
             return <PlatformStrategyRenderer />;
          case 'viral_marketing':
             return <ViralMarketingRenderer />;
+         case 'influencer_partnerships':
+            return <InfluencerPartnershipsRenderer />;
          case 'pricing_strategy':
             return <PricingStrategyRenderer />;
          case 'budgeting':
