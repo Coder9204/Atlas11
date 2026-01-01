@@ -54221,6 +54221,218 @@ const GeneratedDiagram: React.FC<DiagramProps> = ({ type, data, title }) => {
       return null;
    };
 
+   // Topic 138: Player Retention Interactive Educational Game
+   const PlayerRetentionRenderer = () => {
+      const [phase, setPhase] = useState<'intro' | 'tutorial' | 'play' | 'result'>('intro');
+      const [tutorialStep, setTutorialStep] = useState(0);
+      const [showInfo, setShowInfo] = useState(false);
+      const [infoTopic, setInfoTopic] = useState('');
+      const [scenarioIndex, setScenarioIndex] = useState(0);
+      const [score, setScore] = useState(0);
+      const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
+      const [answered, setAnswered] = useState(false);
+      const [quizIndex, setQuizIndex] = useState(0);
+      const [quizScore, setQuizScore] = useState(0);
+      const [quizAnswered, setQuizAnswered] = useState(false);
+      const [gameLog, setGameLog] = useState<string[]>([]);
+
+      const infoContent: Record<string, string> = {
+         'day1_retention': 'Day 1 retention measures what percentage of players return the day after installing. This is your most critical retention metric—if players don\'t come back day 1, they rarely come back ever. Industry benchmarks vary by genre: casual games target 40%+, mid-core 30%+, hardcore 25%+. Low D1 retention indicates onboarding or first-session problems.',
+         'day7_retention': 'Day 7 retention shows how many players return after a week. This measures whether your core loop is engaging enough for habit formation. Good D7 retention is typically 15-20% of D1. The drop from D1 to D7 reveals if your content depth and progression keep players interested beyond the initial curiosity.',
+         'day30_retention': 'Day 30 retention indicates long-term engagement and monetization potential. Players who stay 30 days are highly likely to become payers. D30 retention of 5-10% is considered healthy. These players have truly integrated your game into their routine and represent your core community.',
+         'session_length': 'Session length measures how long players stay per visit. Longer isn\'t always better—match-3 games thrive on short 3-5 minute sessions, while RPGs need 15-20 minutes. The key is matching session length to player context and game depth. Short sessions should feel complete; long sessions need save points.',
+         'session_frequency': 'Session frequency counts daily play sessions. More sessions indicate stronger habit formation. Games use notifications, daily rewards, and energy systems to drive multiple sessions. But beware: forcing too many sessions causes burnout. Aim for natural reasons to return, not manipulative nagging.',
+         'churn_prediction': 'Churn prediction uses player behavior patterns to identify who might quit before they do. Warning signs include: declining session length, skipped daily rewards, stopped spending, and reduced social activity. Early intervention with personalized offers or content can save at-risk players.',
+         'reengagement': 'Re-engagement brings lapsed players back. Strategies include: push notifications about new content, email campaigns with incentives, limited-time comeback bonuses, and friend referral reminders. The window matters—players gone 7 days are easier to recover than those gone 30. Never spam; always offer value.',
+         'onboarding_flow': 'First-time user experience (FTUE) determines D1 retention more than any other factor. Players should reach the core loop within 60 seconds, understand controls immediately, and feel successful quickly. Tutorial should teach by doing, not telling. Front-load rewards to create positive associations.'
+      };
+
+      const tutorialSteps = [
+         { title: 'Day 1 Retention', content: 'Day 1 retention is the percentage of players who return the day after installing. This is your make-or-break metric—if players don\'t return on day 1, they almost never will. It directly reflects the quality of your first session experience and onboarding.', icon: 'day1_retention' },
+         { title: 'Day 7 Retention', content: 'Day 7 retention shows whether players have formed a habit with your game. The transition from D1 to D7 tests whether your core gameplay loop is engaging enough to survive the initial curiosity phase. Content depth and progression pacing become critical here.', icon: 'day7_retention' },
+         { title: 'Day 30 Retention', content: 'Players who stay 30 days are your most valuable segment. They\'re likely to monetize, recommend the game, and form your core community. D30 retention is where sustainable revenue lives—acquiring players who leave in week one is expensive waste.', icon: 'day30_retention' },
+         { title: 'Session Length & Frequency', content: 'How long and how often players engage matters as much as if they return. Design sessions that fit player lifestyles—commute-friendly for casual, lean-back for hardcore. Multiple short sessions often indicate stronger habit formation than single long sessions.', icon: 'session_length' },
+         { title: 'Churn Prediction', content: 'The best retention strategy is preventing churn before it happens. Behavioral signals like declining engagement, skipped rewards, and reduced spending predict departure. Identifying at-risk players early allows targeted intervention with personalized content or offers.', icon: 'churn_prediction' },
+         { title: 'Re-engagement Strategies', content: 'Even the best games lose players. Smart re-engagement brings them back with well-timed notifications, comeback bonuses, and new content announcements. The key is adding value, not annoying—one compelling message beats ten spammy ones.', icon: 'reengagement' },
+         { title: 'Onboarding Excellence', content: 'The first 60 seconds determine whether players return. Great onboarding teaches through action, not text. It delivers quick wins to build confidence and reaches the core loop fast. Every friction point in onboarding directly reduces D1 retention.', icon: 'onboarding_flow' }
+      ];
+
+      const scenarios = [
+         { title: 'Vanishing Players', situation: 'Your puzzle game has good download numbers but terrible D1 retention (15%). Players install, play for 3-4 minutes, and never return. Analytics show most players quit during the tutorial, which is a 12-step guided process explaining every feature. What\'s the most impactful fix?', options: [
+            { text: 'Add more rewards during the tutorial to keep players interested', points: 10, feedback: 'More rewards don\'t fix the core problem—the tutorial is too long and players never reach actual gameplay. Rewards during a boring experience don\'t make it less boring.' },
+            { text: 'Cut the tutorial to 3 steps, teach only core mechanics, let players learn through play', points: 30, feedback: 'Exactly! Tutorial length directly correlates with D1 retention. Players want to play, not learn. Teach the minimum needed to start, reveal advanced features as players progress naturally.' },
+            { text: 'Make the tutorial optional so players can skip it', points: 15, feedback: 'Skipping helps impatient players but leaves others confused. The issue isn\'t that tutorials exist—it\'s that this one is too long. A short, engaging tutorial beats an optional bad one.' },
+            { text: 'Add voice-over narration to make the tutorial more engaging', points: 5, feedback: 'Polish doesn\'t fix design problems. A well-narrated 12-step tutorial is still a 12-step tutorial. Players don\'t need more content in onboarding—they need less.' }
+         ]},
+         { title: 'Week One Wall', situation: 'Your RPG has strong D1 retention (35%) but D7 drops to just 5%. Players enjoy the first day but don\'t return after a week. Looking at player progression data, most churned players hit a difficulty spike around level 8 where they lose repeatedly. What should you prioritize?', options: [
+            { text: 'Send push notifications reminding players to come back', points: 5, feedback: 'Notifications don\'t solve frustration—they remind players of it. If the last experience was losing repeatedly, a notification just triggers that negative memory.' },
+            { text: 'Add a level skip option for frustrated players', points: 10, feedback: 'Skip options acknowledge the problem but don\'t fix it. Players wanted to beat level 8, not bypass it. Skipping can feel like admitting failure and reduces investment.' },
+            { text: 'Smooth the difficulty curve at level 8, add dynamic difficulty adjustment', points: 30, feedback: 'Perfect! The D7 drop at a specific progression point reveals a design flaw. Smoothing difficulty and adding rubber-banding keeps challenge engaging without creating walls that cause rage-quits.' },
+            { text: 'Add more rewards at level 8 to compensate for difficulty', points: 15, feedback: 'Better rewards help but don\'t remove frustration. If players fail repeatedly, rewards feel like consolation prizes. Fix the difficulty that causes failure first.' }
+         ]},
+         { title: 'Silent Departure', situation: 'Your mid-core strategy game has decent retention but you notice high-value players (those who spent money) are churning without warning. They go from daily play and regular purchases to zero activity overnight. No gradual decline. What\'s the likely cause and best response?', options: [
+            { text: 'They ran out of content—add more levels immediately', points: 15, feedback: 'Content exhaustion could be the cause, but the abrupt stop suggests something more immediate. Content-exhausted players usually taper gradually, not vanish overnight.' },
+            { text: 'Analyze what happened right before each departure—look for frustrating events like PvP losses or failed purchases', points: 30, feedback: 'Correct! Abrupt departures by engaged players usually trace to specific triggers—a crushing defeat, a failed transaction, an insulting offer. Find the common event and fix or prevent it.' },
+            { text: 'Send them bigger discount offers to win them back', points: 10, feedback: 'Discounts might lure some back but don\'t prevent future departures. Without knowing why they left, you\'re treating symptoms, not causes. The trigger will keep churning players.' },
+            { text: 'This is normal—focus on acquiring new players instead', points: 0, feedback: 'Losing high-value players without understanding why is extremely costly. These players have proven willingness to pay—they\'re worth far more than new installs. Prevention beats acquisition.' }
+         ]},
+         { title: 'Re-engagement Campaign', situation: 'You\'re planning a re-engagement campaign for players who haven\'t played in 14-30 days. You can send one push notification. Which approach is most likely to bring players back?', options: [
+            { text: '"We miss you! Come back and play!"', points: 5, feedback: 'Generic emotional appeals feel like spam. They don\'t give players a reason to return—just guilt. What\'s different now? Why should they care?' },
+            { text: '"New content update! 50 new levels await you."', points: 25, feedback: 'New content gives a concrete reason to return. It signals the game has evolved since they left. The specific number (50 levels) makes the value tangible.' },
+            { text: '"Your base is under attack! Log in now to defend!"', points: 10, feedback: 'Urgency through negative scenarios can work but often feels manipulative. Players may resent returning to loss rather than opportunity. Use carefully.' },
+            { text: '"Welcome back gift: Claim your free Legendary Hero (expires in 24 hours)"', points: 30, feedback: 'Optimal! A high-value exclusive reward with time pressure creates urgency without negativity. The gift acknowledges their absence positively while giving concrete value for returning.' }
+         ]}
+      ];
+
+      const quizQuestions = [
+         { question: 'Why is Day 1 retention considered the most critical retention metric?', options: ['It\'s the easiest to measure accurately', 'If players don\'t return on Day 1, they almost never return—it reflects first session quality and determines if your acquisition spend was wasted', 'Day 1 is when most in-app purchases happen', 'Advertisers pay based on Day 1 numbers'], correct: 1, explanation: 'Day 1 is the gateway metric. A player who doesn\'t return day 1 has essentially uninstalled mentally—they may never open the app again. Every percentage point of D1 retention compounds across your entire player base. It\'s your first chance to form a habit.' },
+         { question: 'What does a large drop from D1 to D7 retention typically indicate?', options: ['Players didn\'t like the graphics', 'The core gameplay loop isn\'t engaging enough to sustain interest beyond initial curiosity—content depth or progression pacing needs work', 'Server problems on day 7', 'Too many notifications drove players away'], correct: 1, explanation: 'D1 to D7 is the "core loop test." Initial curiosity gets players through day 1, but only genuinely fun gameplay brings them back for a week. A steep D1-D7 drop means the novelty wore off faster than habit formed. The game needs more depth or better progression pacing.' },
+         { question: 'Why should tutorial length directly impact retention goals?', options: ['Shorter tutorials save development time', 'Every minute spent in tutorial is a minute not playing—long tutorials delay the core loop, increase drop-off, and create negative first impressions', 'Players can\'t learn complex games quickly', 'Tutorials are where most bugs occur'], correct: 1, explanation: 'Players install games to play them, not to watch tutorials. Every extra tutorial step increases the chance a player quits before reaching actual gameplay. The fastest path to fun is the shortest tutorial that still enables success.' },
+         { question: 'What\'s the main advantage of predicting churn before it happens?', options: ['It looks good in investor presentations', 'Early identification of at-risk players allows targeted intervention (special offers, personalized content) while they\'re still reachable', 'Predictions are more accurate than retrospective analysis', 'It reduces server costs'], correct: 1, explanation: 'A player who has already churned is much harder to bring back than one showing warning signs. Churn prediction gives you a window to act—personalized content, special offers, or addressing pain points—while the player is still somewhat engaged.' },
+         { question: 'Why is "We miss you!" an ineffective re-engagement message?', options: ['It\'s too short', 'Generic emotional appeals lack concrete value—players need a reason to return (new content, rewards, changes) not just guilt or sentimentality', 'Players don\'t read push notifications', 'It uses informal language'], correct: 1, explanation: 'Effective re-engagement answers "What\'s different now?" or "What do I get for returning?" Generic messages give neither. They feel like spam because they are—no information, no value, just noise. Every notification should offer something concrete.' }
+      ];
+
+      const handleScenarioAnswer = (points: number, feedback: string) => { if (answered) return; setScore(prev => prev + points); setAnswered(true); setGameLog(prev => [...prev, `Scenario ${scenarioIndex + 1}: Scored ${points}/30 - ${feedback}`]); };
+      const handleQuizAnswer = (index: number) => { if (quizAnswered) return; setSelectedAnswer(index); setQuizAnswered(true); if (index === quizQuestions[quizIndex].correct) { setQuizScore(prev => prev + 1); setGameLog(prev => [...prev, `Quiz ${quizIndex + 1}: Correct`]); } else { setGameLog(prev => [...prev, `Quiz ${quizIndex + 1}: Incorrect`]); } };
+      const nextScenario = () => { if (scenarioIndex < scenarios.length - 1) { setScenarioIndex(prev => prev + 1); setSelectedAnswer(null); setAnswered(false); } else { setQuizIndex(0); setQuizAnswered(false); setSelectedAnswer(null); } };
+      const nextQuiz = () => { if (quizIndex < quizQuestions.length - 1) { setQuizIndex(prev => prev + 1); setSelectedAnswer(null); setQuizAnswered(false); } else { setPhase('result'); } };
+
+      if (phase === 'intro') {
+         return (
+            <div className="p-6 bg-gradient-to-br from-green-50 to-emerald-100 rounded-xl shadow-lg max-w-2xl mx-auto">
+               <h2 className="text-2xl font-bold text-green-800 mb-4">📈 Player Retention Mastery</h2>
+               <p className="text-green-700 mb-4">Acquisition gets players in the door, but retention determines whether your game succeeds. Learn the metrics, strategies, and psychology that keep players coming back day after day.</p>
+               <div className="bg-white/70 rounded-lg p-4 mb-4">
+                  <h3 className="font-semibold text-green-800 mb-2">Learning Objectives:</h3>
+                  <ul className="text-green-700 space-y-1 text-sm">
+                     <li>• Master key retention metrics (D1, D7, D30)</li>
+                     <li>• Understand session length and frequency patterns</li>
+                     <li>• Learn churn prediction and prevention techniques</li>
+                     <li>• Design effective re-engagement campaigns</li>
+                     <li>• Optimize onboarding for maximum Day 1 retention</li>
+                  </ul>
+               </div>
+               <button onClick={() => setPhase('tutorial')} className="w-full py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 font-semibold">Start Learning</button>
+            </div>
+         );
+      }
+
+      if (phase === 'tutorial') {
+         const step = tutorialSteps[tutorialStep];
+         return (
+            <div className="p-6 bg-gradient-to-br from-green-50 to-emerald-100 rounded-xl shadow-lg max-w-2xl mx-auto">
+               <div className="flex justify-between items-center mb-4">
+                  <h2 className="text-xl font-bold text-green-800">Step {tutorialStep + 1} of {tutorialSteps.length}</h2>
+                  <span className="text-green-600 text-sm">{Math.round(((tutorialStep + 1) / tutorialSteps.length) * 100)}% Complete</span>
+               </div>
+               <div className="bg-white/80 rounded-lg p-5 mb-4">
+                  <div className="flex items-start gap-3 mb-3">
+                     <h3 className="font-semibold text-green-800 text-lg">{step.title}</h3>
+                     <button onClick={() => { setInfoTopic(step.icon); setShowInfo(true); }} className="text-green-500 hover:text-green-700">ⓘ</button>
+                  </div>
+                  <p className="text-green-700">{step.content}</p>
+               </div>
+               <div className="bg-emerald-100 rounded-lg p-3 mb-4">
+                  <p className="text-emerald-800 text-sm">💡 <strong>AI Coach:</strong> {tutorialStep === 0 ? 'Think of D1 retention as your game\'s first impression. Did players leave wanting more, or did they get everything they needed in one session?' : tutorialStep === 1 ? 'D7 is where habits form. Players returning a full week later have consciously chosen your game over all other entertainment options.' : tutorialStep === 2 ? 'D30 players aren\'t just retained—they\'re invested. These are the players who join communities, recommend to friends, and power your long-term success.' : tutorialStep === 4 ? 'The best retention is invisible—players simply want to play. Churn prediction catches those falling out of love before they realize it themselves.' : tutorialStep === 5 ? 'Re-engagement is a second chance at first impression. Make it count with genuine value, not desperate begging.' : 'Every friction point in onboarding is a potential last touch. Design like every screen might be a player\'s final one.'}</p>
+               </div>
+               <div className="flex gap-3">
+                  {tutorialStep > 0 && <button onClick={() => setTutorialStep(prev => prev - 1)} className="flex-1 py-2 border border-green-600 text-green-600 rounded-lg hover:bg-green-50">Previous</button>}
+                  <button onClick={() => tutorialStep < tutorialSteps.length - 1 ? setTutorialStep(prev => prev + 1) : setPhase('play')} className="flex-1 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700">{tutorialStep < tutorialSteps.length - 1 ? 'Next' : 'Start Practice'}</button>
+               </div>
+               {showInfo && (
+                  <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" onClick={() => setShowInfo(false)}>
+                     <div className="bg-white rounded-xl p-6 max-w-md m-4" onClick={e => e.stopPropagation()}>
+                        <h3 className="font-bold text-green-800 mb-2">{step.title}</h3>
+                        <p className="text-green-700 text-sm">{infoContent[infoTopic]}</p>
+                        <button onClick={() => setShowInfo(false)} className="mt-4 w-full py-2 bg-green-600 text-white rounded-lg">Close</button>
+                     </div>
+                  </div>
+               )}
+            </div>
+         );
+      }
+
+      if (phase === 'play') {
+         if (scenarioIndex < scenarios.length) {
+            const scenario = scenarios[scenarioIndex];
+            return (
+               <div className="p-6 bg-gradient-to-br from-green-50 to-emerald-100 rounded-xl shadow-lg max-w-2xl mx-auto">
+                  <div className="flex justify-between items-center mb-4">
+                     <h2 className="text-xl font-bold text-green-800">Scenario {scenarioIndex + 1} of {scenarios.length}</h2>
+                     <span className="text-green-600 font-semibold">Score: {score}</span>
+                  </div>
+                  <div className="bg-white/80 rounded-lg p-5 mb-4">
+                     <h3 className="font-semibold text-green-800 mb-2">{scenario.title}</h3>
+                     <p className="text-green-700 mb-4">{scenario.situation}</p>
+                     <div className="space-y-2">
+                        {scenario.options.map((option, i) => (
+                           <button key={i} onClick={() => { setSelectedAnswer(i); handleScenarioAnswer(option.points, option.feedback); }} disabled={answered} className={`w-full p-3 text-left rounded-lg border transition-all ${answered && selectedAnswer === i ? option.points >= 25 ? 'bg-green-100 border-green-500' : option.points >= 15 ? 'bg-yellow-100 border-yellow-500' : 'bg-red-100 border-red-500' : 'bg-white border-green-200 hover:border-green-400'} ${answered ? 'cursor-default' : 'cursor-pointer'}`}>
+                              <span className="text-green-800">{option.text}</span>
+                              {answered && selectedAnswer === i && <p className="text-sm mt-2 text-green-600">{option.feedback}</p>}
+                           </button>
+                        ))}
+                     </div>
+                  </div>
+                  {answered && <button onClick={nextScenario} className="w-full py-3 bg-green-600 text-white rounded-lg hover:bg-green-700">{scenarioIndex < scenarios.length - 1 ? 'Next Scenario' : 'Continue to Quiz'}</button>}
+               </div>
+            );
+         }
+         const quiz = quizQuestions[quizIndex];
+         return (
+            <div className="p-6 bg-gradient-to-br from-green-50 to-emerald-100 rounded-xl shadow-lg max-w-2xl mx-auto">
+               <div className="flex justify-between items-center mb-4">
+                  <h2 className="text-xl font-bold text-green-800">Quiz {quizIndex + 1} of {quizQuestions.length}</h2>
+                  <span className="text-green-600 font-semibold">Quiz Score: {quizScore}/{quizIndex + (quizAnswered ? 1 : 0)}</span>
+               </div>
+               <div className="bg-white/80 rounded-lg p-5 mb-4">
+                  <p className="text-green-800 font-medium mb-4">{quiz.question}</p>
+                  <div className="space-y-2">
+                     {quiz.options.map((option, i) => (
+                        <button key={i} onClick={() => handleQuizAnswer(i)} disabled={quizAnswered} className={`w-full p-3 text-left rounded-lg border transition-all ${quizAnswered ? i === quiz.correct ? 'bg-green-100 border-green-500' : selectedAnswer === i ? 'bg-red-100 border-red-500' : 'bg-white border-green-200' : 'bg-white border-green-200 hover:border-green-400'}`}>{option}</button>
+                     ))}
+                  </div>
+                  {quizAnswered && <div className="mt-4 p-3 bg-emerald-50 rounded-lg"><p className="text-emerald-800 text-sm"><strong>Explanation:</strong> {quiz.explanation}</p></div>}
+               </div>
+               {quizAnswered && <button onClick={nextQuiz} className="w-full py-3 bg-green-600 text-white rounded-lg hover:bg-green-700">{quizIndex < quizQuestions.length - 1 ? 'Next Question' : 'See Results'}</button>}
+            </div>
+         );
+      }
+
+      if (phase === 'result') {
+         const maxScore = scenarios.reduce((sum, s) => sum + Math.max(...s.options.map(o => o.points)), 0);
+         const percentage = Math.round((score / maxScore) * 100);
+         return (
+            <div className="p-6 bg-gradient-to-br from-green-50 to-emerald-100 rounded-xl shadow-lg max-w-2xl mx-auto">
+               <h2 className="text-2xl font-bold text-green-800 mb-4">📈 Player Retention Complete!</h2>
+               <div className="bg-white/80 rounded-lg p-5 mb-4">
+                  <div className="text-center mb-4">
+                     <p className="text-4xl font-bold text-green-600">{percentage}%</p>
+                     <p className="text-green-700">Scenario Score: {score}/{maxScore}</p>
+                     <p className="text-green-700">Quiz Score: {quizScore}/{quizQuestions.length}</p>
+                  </div>
+                  <div className="border-t pt-4">
+                     <h3 className="font-semibold text-green-800 mb-2">Key Insights:</h3>
+                     <ul className="text-green-700 text-sm space-y-1">
+                        <li>• D1 retention is the gateway—fix onboarding before anything else</li>
+                        <li>• D7 tests your core loop—shallow games lose players by week one</li>
+                        <li>• D30 players are your most valuable asset—treat them accordingly</li>
+                        <li>• Churn prediction enables prevention—act on warning signs early</li>
+                        <li>• Re-engagement requires value—guilt and begging don\'t work</li>
+                        <li>• Every tutorial step risks losing a player forever</li>
+                     </ul>
+                  </div>
+                  <div className="border-t pt-4 mt-4">
+                     <h3 className="font-semibold text-green-800 mb-2">Real-World Application:</h3>
+                     <p className="text-green-700 text-sm">Audit your game\'s retention funnel: What\'s your D1? Where do players drop between D1 and D7? What triggers D30 churn? Each metric tells a specific story—D1 is onboarding, D7 is core loop, D30 is endgame. Fix issues in order; later retention can\'t be fixed if earlier retention fails.</p>
+                  </div>
+               </div>
+               <button onClick={() => { setPhase('intro'); setScore(0); setScenarioIndex(0); setQuizIndex(0); setQuizScore(0); setAnswered(false); setQuizAnswered(false); setSelectedAnswer(null); setTutorialStep(0); setGameLog([]); }} className="w-full py-3 bg-green-600 text-white rounded-lg hover:bg-green-700">Play Again</button>
+            </div>
+         );
+      }
+      return null;
+   };
+
    const FinancialStatementsRenderer = () => {
       const [phase, setPhase] = useState<'intro' | 'play' | 'result'>('intro');
       const [showInfo, setShowInfo] = useState(false);
@@ -58194,6 +58406,8 @@ const GeneratedDiagram: React.FC<DiagramProps> = ({ type, data, title }) => {
             return <GameGraphicDesignRenderer />;
          case 'sound_design':
             return <SoundDesignRenderer />;
+         case 'player_retention':
+            return <PlayerRetentionRenderer />;
          case 'pricing_strategy':
             return <PricingStrategyRenderer />;
          case 'budgeting':
