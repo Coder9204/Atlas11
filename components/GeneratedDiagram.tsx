@@ -51802,6 +51802,237 @@ const GeneratedDiagram: React.FC<DiagramProps> = ({ type, data, title }) => {
       return null;
    };
 
+   // Topic 127: Customer Success Mobile Marketing Interactive Educational Game
+   const CustomerSuccessMobileRenderer = () => {
+      const [phase, setPhase] = useState<'intro' | 'tutorial' | 'play' | 'result'>('intro');
+      const [tutorialStep, setTutorialStep] = useState(0);
+      const [showInfo, setShowInfo] = useState(false);
+      const [infoTopic, setInfoTopic] = useState('');
+      const [scenarioIndex, setScenarioIndex] = useState(0);
+      const [score, setScore] = useState(0);
+      const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
+      const [answered, setAnswered] = useState(false);
+      const [quizIndex, setQuizIndex] = useState(0);
+      const [quizScore, setQuizScore] = useState(0);
+      const [quizAnswered, setQuizAnswered] = useState(false);
+      const [gameLog, setGameLog] = useState<string[]>([]);
+
+      const infoContent: Record<string, string> = {
+         'customer_success': 'Customer Success is a proactive function that ensures customers achieve their desired outcomes while using your product. It shifts from reactive support to proactive partnership, driving retention and expansion.',
+         'onboarding': 'Onboarding is the structured process of getting new customers to first value. Great onboarding reduces time-to-value, increases adoption, and sets the foundation for long-term success.',
+         'health_score': 'Health scores combine product usage, engagement, support tickets, and sentiment into a single metric predicting customer retention risk. Low scores trigger proactive intervention.',
+         'customer_journey': 'Customer journey maps the stages customers progress through: onboarding → adoption → value realization → expansion → advocacy. Each stage has specific goals and intervention points.',
+         'expansion': 'Expansion revenue comes from existing customers through upsells, cross-sells, and seat additions. Healthy CS programs generate 20-40% of revenue from expansion.',
+         'churn_prevention': 'Churn prevention identifies at-risk customers early through health indicators and deploys playbooks to address issues before cancellation. Prevention is cheaper than win-back.',
+         'cs_metrics': 'Key CS metrics: Net Revenue Retention (NRR), Gross Churn Rate, Time-to-Value, Health Score Distribution, NPS/CSAT, and Expansion Revenue. NRR above 100% indicates growth without new customers.'
+      };
+
+      const tutorialSteps = [
+         { title: 'Welcome to Customer Success', content: 'Customer Success is about proactively helping customers achieve their goals with your product. When customers succeed, they renew, expand, and become advocates.' },
+         { title: 'The Onboarding Foundation', content: 'Onboarding is where customer relationships are made or broken. Define clear milestones, measure time-to-value, and intervene when customers get stuck.' },
+         { title: 'Health Scoring', content: 'Health scores predict customer retention risk. Combine usage data, engagement metrics, support patterns, and sentiment. Segment customers by health for prioritized attention.' },
+         { title: 'The Customer Journey', content: 'Map the journey: Onboarding → Adoption → Value Realization → Expansion → Advocacy. Each stage has goals, metrics, and playbooks. Meet customers where they are.' },
+         { title: 'Driving Expansion', content: 'Expansion is earned, not pushed. When customers achieve outcomes, they naturally want more. Identify expansion opportunities through usage patterns and business growth signals.' },
+         { title: 'Preventing Churn', content: 'Churn prevention starts with early detection. Monitor health scores, track leading indicators (declining usage, support escalations), and deploy intervention playbooks quickly.' },
+         { title: 'Measuring Success', content: 'Net Revenue Retention (NRR) is the north star. Track gross churn, expansion rate, and time-to-value. Great CS teams achieve NRR above 110%.' }
+      ];
+
+      const scenarios = [
+         {
+            title: 'Designing Onboarding for Enterprise',
+            description: 'Your company just signed a $500K annual contract with a Fortune 500 company. They have complex requirements and multiple stakeholders. You need to design the onboarding approach.',
+            options: [
+               { text: 'Send them self-serve documentation and check in after 30 days', feedback: 'High-value enterprise customers need high-touch onboarding. Self-serve alone risks failed implementation and early churn.', correct: false },
+               { text: 'Create a structured onboarding plan with milestones, dedicated CSM, and executive sponsor alignment', feedback: 'Excellent! Enterprise onboarding requires structure, accountability, and executive alignment. Milestones ensure progress, and sponsors unblock obstacles.', correct: true },
+               { text: 'Let the sales team continue managing them until they\'re fully adopted', feedback: 'Sales expertise is closing deals, not driving adoption. Customer Success should own the relationship post-sale.', correct: false },
+               { text: 'Assign them to the same pool as all other customers for efficiency', feedback: 'One-size-fits-all doesn\'t work for enterprise. High-value customers need proportionally higher investment.', correct: false }
+            ]
+         },
+         {
+            title: 'Responding to Declining Health Score',
+            description: 'A mid-market customer\'s health score dropped from 85 to 55 over the past month. Usage is down 40%, and they haven\'t responded to your last two emails.',
+            options: [
+               { text: 'Wait to see if the score rebounds next month', feedback: 'A 30-point drop is a serious warning sign. Waiting risks losing the customer without intervention.', correct: false },
+               { text: 'Send an automated re-engagement email sequence', feedback: 'They haven\'t responded to emails. Automation alone won\'t solve this—you need a different channel and approach.', correct: false },
+               { text: 'Call the champion directly, research potential causes, and offer a strategy session', feedback: 'Perfect! Phone cuts through email noise. Research shows you care. A strategy session reestablishes value and identifies blockers.', correct: true },
+               { text: 'Offer a discount to prevent potential churn', feedback: 'Discounts don\'t address why they\'re disengaging. You might keep them short-term but won\'t fix underlying issues.', correct: false }
+            ]
+         },
+         {
+            title: 'Identifying Expansion Opportunity',
+            description: 'A customer has been consistently healthy for 6 months. They\'ve added users beyond their plan limit and are using your product for a new department. How do you approach expansion?',
+            options: [
+               { text: 'Immediately send a quote for a larger plan', feedback: 'Jumping to sales feels transactional. First, understand their success and how expansion supports their goals.', correct: false },
+               { text: 'Wait for them to ask about upgrading when they hit hard limits', feedback: 'Reactive approach misses the opportunity to position expansion as value, not cost. You also risk competitor evaluation.', correct: false },
+               { text: 'Schedule a business review to celebrate success and explore how expanded usage could support their goals', feedback: 'Excellent! Business reviews frame expansion around their success. You lead with value and align expansion to their objectives.', correct: true },
+               { text: 'Have the sales team take over the expansion conversation', feedback: 'CS has the relationship and context. Handing off to sales breaks continuity and feels like a bait-and-switch.', correct: false }
+            ]
+         },
+         {
+            title: 'Handling a Churn Request',
+            description: 'A customer just emailed saying they want to cancel their annual subscription. They have 3 months left on their contract. The reason given is "we\'re going in a different direction."',
+            options: [
+               { text: 'Remind them they\'re locked into the contract and cannot cancel early', feedback: 'Holding customers hostage damages reputation and guarantees they\'ll never return. Address the real issue.', correct: false },
+               { text: 'Immediately offer a 50% discount to stay', feedback: 'Discounts don\'t address "different direction." You\'ll delay churn but not solve the underlying problem.', correct: false },
+               { text: 'Request a call to understand what\'s driving the decision and explore if there\'s a path forward', feedback: 'Perfect! Understanding the real reason may reveal solvable problems. Even if they leave, you learn for future prevention.', correct: true },
+               { text: 'Accept the cancellation and process the refund', feedback: 'Don\'t give up without understanding why. Many churn requests can be reversed with proper conversation.', correct: false }
+            ]
+         }
+      ];
+
+      const quizQuestions = [
+         { question: 'What does Net Revenue Retention (NRR) above 100% indicate?', options: ['The company is profitable', 'Existing customers grow revenue even with some churn', 'All customers are renewing', 'Marketing is effective'], correct: 1, explanation: 'NRR above 100% means expansion revenue from existing customers exceeds revenue lost to churn—you grow without new customers.' },
+         { question: 'Why is proactive customer success more valuable than reactive support?', options: ['It\'s cheaper to staff', 'It prevents problems before they cause churn', 'Customers prefer less contact', 'It requires less product knowledge'], correct: 1, explanation: 'Proactive CS identifies and solves problems before they become churn risks. Prevention is cheaper and more effective than recovery.' },
+         { question: 'What makes health scores effective for customer success?', options: ['They automate all customer interactions', 'They combine signals to predict retention risk for prioritization', 'They replace the need for CSM relationships', 'They only track product usage'], correct: 1, explanation: 'Health scores aggregate multiple signals (usage, engagement, support, sentiment) to predict risk, enabling CSMs to prioritize attention.' },
+         { question: 'When is the right time to discuss expansion with a customer?', options: ['Immediately after they sign the contract', 'When their health score is low', 'After they\'ve demonstrated success and value realization', 'Only when they request it'], correct: 2, explanation: 'Expansion conversations are most successful after customers achieve value. Success builds trust and makes expansion a natural extension.' },
+         { question: 'What should you do when a healthy customer requests cancellation?', options: ['Accept it immediately', 'Enforce contract terms', 'Seek to understand the real reason driving the decision', 'Offer maximum discount'], correct: 2, explanation: 'Many cancellation requests mask solvable problems. Understanding the real reason may reveal opportunities to save the customer.' }
+      ];
+
+      const handleAnswer = (optionIndex: number) => {
+         if (answered) return;
+         setSelectedAnswer(optionIndex);
+         setAnswered(true);
+         const isCorrect = scenarios[scenarioIndex].options[optionIndex].correct;
+         if (isCorrect) setScore(score + 1);
+         setGameLog([...gameLog, `Scenario ${scenarioIndex + 1}: ${isCorrect ? 'Correct' : 'Incorrect'}`]);
+      };
+
+      const nextScenario = () => {
+         if (scenarioIndex < scenarios.length - 1) {
+            setScenarioIndex(scenarioIndex + 1);
+            setSelectedAnswer(null);
+            setAnswered(false);
+         } else {
+            setPhase('result');
+         }
+      };
+
+      const handleQuizAnswer = (optionIndex: number) => {
+         if (quizAnswered) return;
+         setQuizAnswered(true);
+         if (optionIndex === quizQuestions[quizIndex].correct) {
+            setQuizScore(quizScore + 1);
+         }
+      };
+
+      const nextQuiz = () => {
+         if (quizIndex < quizQuestions.length - 1) {
+            setQuizIndex(quizIndex + 1);
+            setQuizAnswered(false);
+         }
+      };
+
+      if (phase === 'intro') {
+         return (
+            <div className="p-6 bg-gradient-to-br from-amber-50 to-orange-100 rounded-xl shadow-lg max-w-2xl mx-auto">
+               <h2 className="text-2xl font-bold text-amber-800 mb-4">🎯 Customer Success Mastery</h2>
+               <p className="text-amber-700 mb-4">Learn to drive customer outcomes, prevent churn, and grow revenue through expansion. Customer Success is the engine of sustainable SaaS growth.</p>
+               <div className="bg-white p-4 rounded-lg mb-4">
+                  <h3 className="font-semibold text-amber-800 mb-2">What You'll Learn:</h3>
+                  <ul className="text-sm text-amber-600 space-y-1">
+                     <li>• Onboarding and time-to-value optimization</li>
+                     <li>• Health scoring and risk prediction</li>
+                     <li>• Expansion revenue strategies</li>
+                     <li>• Churn prevention and intervention</li>
+                  </ul>
+               </div>
+               <button onClick={() => setPhase('tutorial')} className="w-full py-3 bg-amber-600 text-white rounded-lg font-semibold hover:bg-amber-700 transition">Start Learning</button>
+            </div>
+         );
+      }
+
+      if (phase === 'tutorial') {
+         return (
+            <div className="p-6 bg-gradient-to-br from-amber-50 to-orange-100 rounded-xl shadow-lg max-w-2xl mx-auto">
+               <div className="flex justify-between items-center mb-4">
+                  <h2 className="text-xl font-bold text-amber-800">Tutorial: {tutorialSteps[tutorialStep].title}</h2>
+                  <span className="text-sm text-amber-600">{tutorialStep + 1} / {tutorialSteps.length}</span>
+               </div>
+               <div className="bg-white p-4 rounded-lg mb-4">
+                  <p className="text-amber-700">{tutorialSteps[tutorialStep].content}</p>
+               </div>
+               <div className="flex flex-wrap gap-2 mb-4">
+                  {Object.keys(infoContent).map(topic => (
+                     <button key={topic} onClick={() => { setInfoTopic(topic); setShowInfo(true); }} className="text-xs px-2 py-1 bg-amber-100 text-amber-700 rounded-full hover:bg-amber-200 transition">ℹ️ {topic.replace(/_/g, ' ')}</button>
+                  ))}
+               </div>
+               {showInfo && (
+                  <div className="bg-amber-50 border border-amber-200 p-3 rounded-lg mb-4">
+                     <div className="flex justify-between items-center mb-2">
+                        <span className="font-semibold text-amber-800">{infoTopic.replace(/_/g, ' ')}</span>
+                        <button onClick={() => setShowInfo(false)} className="text-amber-600">✕</button>
+                     </div>
+                     <p className="text-sm text-amber-600">{infoContent[infoTopic]}</p>
+                  </div>
+               )}
+               <div className="flex gap-2">
+                  {tutorialStep > 0 && <button onClick={() => setTutorialStep(tutorialStep - 1)} className="flex-1 py-2 border border-amber-300 text-amber-600 rounded-lg hover:bg-amber-50 transition">Back</button>}
+                  <button onClick={() => tutorialStep < tutorialSteps.length - 1 ? setTutorialStep(tutorialStep + 1) : setPhase('play')} className="flex-1 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition">{tutorialStep < tutorialSteps.length - 1 ? 'Next' : 'Start Practice'}</button>
+               </div>
+            </div>
+         );
+      }
+
+      if (phase === 'play') {
+         const currentScenario = scenarios[scenarioIndex];
+         return (
+            <div className="p-6 bg-gradient-to-br from-amber-50 to-orange-100 rounded-xl shadow-lg max-w-2xl mx-auto">
+               <div className="flex justify-between items-center mb-4">
+                  <h2 className="text-xl font-bold text-amber-800">Scenario {scenarioIndex + 1} of {scenarios.length}</h2>
+                  <span className="text-sm bg-amber-200 text-amber-800 px-2 py-1 rounded">Score: {score}</span>
+               </div>
+               <div className="bg-white p-4 rounded-lg mb-4">
+                  <h3 className="font-semibold text-amber-800 mb-2">{currentScenario.title}</h3>
+                  <p className="text-amber-700 text-sm">{currentScenario.description}</p>
+               </div>
+               <div className="space-y-2 mb-4">
+                  {currentScenario.options.map((option, idx) => (
+                     <button key={idx} onClick={() => handleAnswer(idx)} disabled={answered} className={`w-full p-3 text-left rounded-lg transition text-sm ${answered ? option.correct ? 'bg-green-100 border-2 border-green-500' : selectedAnswer === idx ? 'bg-red-100 border-2 border-red-500' : 'bg-gray-100' : 'bg-white hover:bg-amber-50 border border-amber-200'}`}>
+                        {option.text}
+                        {answered && selectedAnswer === idx && <p className="mt-2 text-xs text-gray-600">{option.feedback}</p>}
+                     </button>
+                  ))}
+               </div>
+               {answered && <button onClick={nextScenario} className="w-full py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition">{scenarioIndex < scenarios.length - 1 ? 'Next Scenario' : 'See Results'}</button>}
+            </div>
+         );
+      }
+
+      if (phase === 'result') {
+         return (
+            <div className="p-6 bg-gradient-to-br from-amber-50 to-orange-100 rounded-xl shadow-lg max-w-2xl mx-auto">
+               <h2 className="text-2xl font-bold text-amber-800 mb-4">🎯 Results</h2>
+               <div className="bg-white p-4 rounded-lg mb-4">
+                  <p className="text-lg text-amber-700">Scenario Score: <span className="font-bold">{score} / {scenarios.length}</span></p>
+                  <p className="text-lg text-amber-700">Quiz Score: <span className="font-bold">{quizScore} / {quizQuestions.length}</span></p>
+               </div>
+               <div className="bg-white p-4 rounded-lg mb-4">
+                  <h3 className="font-semibold text-amber-800 mb-2">Quiz: Test Your Knowledge</h3>
+                  <p className="text-sm text-amber-700 mb-3">{quizQuestions[quizIndex].question}</p>
+                  <div className="space-y-2">
+                     {quizQuestions[quizIndex].options.map((opt, idx) => (
+                        <button key={idx} onClick={() => handleQuizAnswer(idx)} disabled={quizAnswered} className={`w-full p-2 text-left text-sm rounded transition ${quizAnswered ? idx === quizQuestions[quizIndex].correct ? 'bg-green-100 border border-green-500' : 'bg-gray-100' : 'bg-amber-50 hover:bg-amber-100'}`}>{opt}</button>
+                     ))}
+                  </div>
+                  {quizAnswered && <p className="mt-2 text-sm text-amber-600">{quizQuestions[quizIndex].explanation}</p>}
+                  {quizAnswered && quizIndex < quizQuestions.length - 1 && <button onClick={nextQuiz} className="mt-2 px-4 py-1 bg-amber-600 text-white rounded text-sm">Next Question</button>}
+               </div>
+               <div className="bg-amber-100 p-4 rounded-lg">
+                  <h3 className="font-semibold text-amber-800 mb-2">🔑 Key Takeaways</h3>
+                  <ul className="text-sm text-amber-700 space-y-1">
+                     <li>• Onboarding sets the foundation—invest heavily in time-to-value</li>
+                     <li>• Health scores enable proactive intervention before churn</li>
+                     <li>• Expansion follows success—lead with value, not sales</li>
+                     <li>• Understand real reasons behind churn requests</li>
+                     <li>• NRR above 100% is the north star metric</li>
+                  </ul>
+               </div>
+            </div>
+         );
+      }
+      return null;
+   };
+
    const FinancialStatementsRenderer = () => {
       const [phase, setPhase] = useState<'intro' | 'play' | 'result'>('intro');
       const [showInfo, setShowInfo] = useState(false);
@@ -55753,6 +55984,8 @@ const GeneratedDiagram: React.FC<DiagramProps> = ({ type, data, title }) => {
             return <ProductLedGrowthRenderer />;
          case 'community_building':
             return <CommunityBuildingRenderer />;
+         case 'customer_success_mobile':
+            return <CustomerSuccessMobileRenderer />;
          case 'pricing_strategy':
             return <PricingStrategyRenderer />;
          case 'budgeting':
