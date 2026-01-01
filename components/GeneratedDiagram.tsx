@@ -54011,6 +54011,216 @@ const GeneratedDiagram: React.FC<DiagramProps> = ({ type, data, title }) => {
       return null;
    };
 
+   const SoundDesignRenderer = () => {
+      const [phase, setPhase] = useState<'intro' | 'tutorial' | 'play' | 'result'>('intro');
+      const [tutorialStep, setTutorialStep] = useState(0);
+      const [showInfo, setShowInfo] = useState(false);
+      const [infoTopic, setInfoTopic] = useState('');
+      const [scenarioIndex, setScenarioIndex] = useState(0);
+      const [score, setScore] = useState(0);
+      const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
+      const [answered, setAnswered] = useState(false);
+      const [quizIndex, setQuizIndex] = useState(0);
+      const [quizScore, setQuizScore] = useState(0);
+      const [quizAnswered, setQuizAnswered] = useState(false);
+      const [gameLog, setGameLog] = useState<string[]>([]);
+
+      const infoContent: Record<string, string> = {
+         'audio_hierarchy': 'Just like visual hierarchy, audio hierarchy ensures players hear the most important sounds first. Critical game events (damage, achievements, warnings) should cut through background music and ambient sounds. Layer sounds with clear priority levels—UI feedback is quietest, gameplay sounds medium, critical alerts loudest.',
+         'sound_feedback': 'Every player action needs audio confirmation. Button clicks need subtle sounds, attacks need satisfying impact, pickups need rewarding chimes. Audio feedback completes the sensory loop—actions without sound feel broken. The sound should match the visual weight and importance of the action.',
+         'adaptive_music': 'Dynamic music systems change based on gameplay state. Combat music intensifies during boss fights, ambient tracks play during exploration, victory themes celebrate achievements. Smooth transitions between states prevent jarring changes. Good adaptive music is invisible—players feel it without noticing it.',
+         'sound_spatialization': 'In mobile games, spatial audio helps players locate off-screen enemies or objectives. Left/right panning, distance-based volume, and occlusion effects create a sense of space. Even 2D games benefit from basic spatialization—approaching enemies get louder, distant events are muted.',
+         'audio_branding': 'Iconic games have iconic sounds. Mario\'s coin, Zelda\'s chest open, Sonic\'s rings. Your key game sounds should be instantly recognizable and emotionally connected to gameplay. Develop an audio identity—consistent instrument choices, sound design style, and memorable motifs.',
+         'mobile_audio_constraints': 'Mobile players often play muted or in public spaces. Never require audio for gameplay—always provide visual alternatives. Keep file sizes small (use compression wisely), support background audio, and handle interruptions gracefully. Sound enhances but never gates the experience.',
+         'emotional_audio': 'Audio directly triggers emotional responses. Low frequencies create tension, high frequencies spark excitement, slow tempos relax, fast tempos energize. Horror games use audio to scare, casual games use it to delight. Match audio emotion to intended gameplay feeling at each moment.'
+      };
+
+      const tutorialSteps = [
+         { title: 'Audio Hierarchy', content: 'Sound design has layers like an orchestra. Background music sets mood, ambient sounds create atmosphere, UI sounds provide feedback, and gameplay sounds communicate action. Critical sounds (damage, warnings) must cut through other layers—they\'re survival information.', icon: 'audio_hierarchy' },
+         { title: 'Sound Feedback Systems', content: 'Every interaction deserves audio acknowledgment. Button presses click, attacks whoosh, hits impact, pickups chime. Without sound, games feel unresponsive even if visuals are perfect. Sound completes the action-reaction loop that makes games feel alive.', icon: 'sound_feedback' },
+         { title: 'Adaptive & Dynamic Music', content: 'Static music loops get repetitive. Adaptive music responds to gameplay—intensity rises in combat, calms during exploration, swells for victories. Systems can layer instruments, crossfade tracks, or use stems. The goal: music that feels scored for each player\'s unique journey.', icon: 'adaptive_music' },
+         { title: 'Spatial Audio Design', content: 'Sound exists in space. Even on mobile, stereo panning helps players locate enemies and objectives. Volume decreases with distance, reverb suggests room size, obstacles muffle sounds. Spatial audio adds a dimension of awareness beyond the visible screen.', icon: 'sound_spatialization' },
+         { title: 'Building Audio Brand Identity', content: 'Legendary games have legendary sounds. The best game audio is instantly recognizable—think of any Nintendo franchise. Develop signature sounds for your game\'s core actions. These become emotional anchors that players associate with your brand forever.', icon: 'audio_branding' },
+         { title: 'Mobile-First Audio', content: 'Mobile players often mute games. Design accordingly: never require audio, always provide visual feedback alternatives, respect system volume and interruptions. Small file sizes matter—use smart compression. Offer separate volume controls for music, SFX, and voice.', icon: 'mobile_audio_constraints' },
+         { title: 'Emotional Audio Design', content: 'Sound bypasses logic and hits emotion directly. Low drones create dread, bright tones spark joy, sudden stingers shock. Music tempo affects perceived game speed. Use audio to amplify the emotional experience you want players to have at each moment.', icon: 'emotional_audio' }
+      ];
+
+      const scenarios = [
+         { title: 'Missing Impact Problem', situation: 'Playtesters say your action RPG combat feels "weak" despite having polished animations. Attacks connect but players report it doesn\'t feel satisfying. What audio element is most likely missing or underweight?', options: [
+            { text: 'Add louder background music during combat', points: 10, feedback: 'Louder music adds atmosphere but doesn\'t fix impact feel. The problem is the moment-of-contact feedback—when sword meets enemy, that instant needs punch.' },
+            { text: 'Add distinct impact sounds with bass punch, screen shake audio, and hit confirmation tones', points: 30, feedback: 'Exactly! Impact satisfaction comes from layered feedback at the hit moment: a meaty bass thud, subtle audio shake, and a confirmation tone. These micro-sounds make attacks feel powerful.' },
+            { text: 'Add voice lines for each attack', points: 15, feedback: 'Voice adds character but doesn\'t fix impact feel. Players want to FEEL hits land—that\'s about the contact sound design, not dialogue.' },
+            { text: 'Increase enemy death explosion sounds', points: 10, feedback: 'Better death sounds help but come too late. The "weak" feel happens at moment of impact, before enemies die. Fix the hit sounds first.' }
+         ]},
+         { title: 'Audio Fatigue Design', situation: 'Your match-3 game has a satisfying gem-match sound effect. But after 5 minutes, players are muting the game entirely. The sound plays dozens of times per minute. How do you solve audio fatigue?', options: [
+            { text: 'Make the sound quieter', points: 10, feedback: 'Quieter helps but doesn\'t solve repetition fatigue. Even quiet sounds become annoying when repeated constantly without variation.' },
+            { text: 'Create 8-12 variations of the sound with subtle pitch, timing, and tonal differences', points: 30, feedback: 'Perfect! Audio variation prevents fatigue. The brain stops noticing sounds when they repeat identically but stays engaged with subtle variety. Random selection from a pool keeps sounds fresh.' },
+            { text: 'Remove the sound entirely', points: 5, feedback: 'Removing feedback makes the game feel broken. The sound isn\'t the problem—the lack of variation is. Players want feedback, just not identical repetition.' },
+            { text: 'Add a cooldown so the sound only plays once per second', points: 15, feedback: 'Cooldowns reduce frequency but break the feedback loop. When matches don\'t make sounds, they feel unregistered. Better to have varied sounds for every action.' }
+         ]},
+         { title: 'Horror Audio Tension', situation: 'Your horror game\'s monster encounters aren\'t scary. Players see the monster, fight it, and move on without tension. The monster has detailed sound effects when attacking. What\'s the likely audio design gap?', options: [
+            { text: 'Make monster attack sounds louder and more distorted', points: 10, feedback: 'Louder attacks add shock but not tension. True horror builds dread BEFORE the encounter. Attack sounds are the release, not the buildup.' },
+            { text: 'Add approaching footsteps, distant growls, and audio cues that escalate before visual contact', points: 30, feedback: 'Excellent! Horror lives in anticipation. Audio that signals approaching danger—getting louder, more frequent, closer—builds dread. Players fear what they hear coming but can\'t see yet.' },
+            { text: 'Add creepy background music throughout the game', points: 15, feedback: 'Constant creepy music creates atmosphere but not moment-specific tension. The issue is the encounter itself lacks audio buildup. Music can\'t substitute for designed tension escalation.' },
+            { text: 'Add jump scare stingers when the monster appears', points: 10, feedback: 'Stingers create startle, not true horror tension. They\'re a cheap spike, not sustained dread. Real tension comes from audio building before the reveal, not just the reveal moment.' }
+         ]},
+         { title: 'Mobile Audio Interruption', situation: 'Your mobile game has adaptive music that changes between menu, gameplay, and combat. Players complain that when they receive a phone call and return, the music is wrong or missing. What\'s the proper handling?', options: [
+            { text: 'Restart the music from the beginning when players return', points: 15, feedback: 'Restarting is better than silence but feels jarring. If players were in intense combat, suddenly hearing calm menu music breaks immersion. The system should restore appropriate state.' },
+            { text: 'Track audio state before interruption and smoothly restore appropriate music based on current game state when resuming', points: 30, feedback: 'Perfect! Professional mobile audio handles interruptions gracefully. Save the audio state, and on resume, assess current game state (not old state—player might have been killed). Crossfade to appropriate track.' },
+            { text: 'Let the operating system handle it automatically', points: 5, feedback: 'OS audio handling is inconsistent across devices and often results in silence or glitches. Games must actively manage their audio state through app lifecycle events.' },
+            { text: 'Disable music entirely to avoid the problem', points: 0, feedback: 'Removing features isn\'t solving problems. Music adds significant emotional value. The solution is proper state management, not feature removal.' }
+         ]}
+      ];
+
+      const quizQuestions = [
+         { question: 'Why should critical gameplay sounds "cut through" background music and ambient audio?', options: ['To make them easier to implement', 'Critical sounds carry survival information—players must hear damage, warnings, and alerts even when music is playing', 'Background music is less important', 'It saves processing power'], correct: 1, explanation: 'Audio hierarchy prioritizes survival information. If a player takes damage but doesn\'t hear it because music is too loud, they\'ll die unfairly. Critical sounds need frequency ranges and volumes that penetrate other layers without being mixed out.' },
+         { question: 'Why do repeated identical sounds cause player fatigue faster than varied sounds?', options: ['Identical sounds use more memory', 'The brain habituates to identical stimuli but stays alert to variation—pattern repetition triggers fatigue, while subtle differences maintain engagement', 'Varied sounds are quieter', 'Players prefer complex audio'], correct: 1, explanation: 'The brain is wired to ignore constant, unchanging stimuli (habituation). When a sound plays identically hundreds of times, the brain marks it as "unimportant" and tunes it out—or finds it annoying. Subtle variation signals "this is new information" and maintains engagement.' },
+         { question: 'Why is audio anticipation often more effective for horror than loud sudden sounds?', options: ['Sudden sounds are technically harder to implement', 'Anticipatory audio builds sustained dread through imagination—the brain creates worse horrors than visuals can show when given audio hints', 'Players don\'t like loud sounds', 'It\'s cheaper to produce quiet audio'], correct: 1, explanation: 'Horror psychology: imagination is scarier than revelation. When players hear something approaching—footsteps getting closer, growls getting louder—their brain fills in terrifying possibilities. The jump scare moment is actually a release of tension, not the peak fear.' },
+         { question: 'Why must mobile games never require audio for essential gameplay?', options: ['Audio is too expensive to produce', 'Many mobile players play muted in public or with interruptions—audio should enhance but never gate the core experience', 'Mobile speakers are too quiet', 'Games load faster without audio'], correct: 1, explanation: 'Mobile context is unpredictable: commutes, waiting rooms, breaks. Many players mute games. If audio is required (like audio-only puzzles or unhearable warnings), you exclude a large audience. Always provide visual alternatives for any audio information.' },
+         { question: 'What makes a game sound become part of "audio branding"?', options: ['Using expensive recording equipment', 'Consistent use in memorable moments creates emotional association—players eventually hear the sound and feel the connected experience', 'Making it louder than other sounds', 'Using recognizable real-world sounds'], correct: 1, explanation: 'Audio branding emerges from emotion-linked repetition. Mario\'s coin sound works because it plays every time you feel reward. It\'s not special in isolation—it\'s special because of thousands of positive associations built over time. Consistency in meaningful moments creates iconic sounds.' }
+      ];
+
+      const handleScenarioAnswer = (points: number, feedback: string) => { if (answered) return; setScore(prev => prev + points); setAnswered(true); setGameLog(prev => [...prev, `Scenario ${scenarioIndex + 1}: Scored ${points}/30 - ${feedback}`]); };
+      const handleQuizAnswer = (index: number) => { if (quizAnswered) return; setSelectedAnswer(index); setQuizAnswered(true); if (index === quizQuestions[quizIndex].correct) { setQuizScore(prev => prev + 1); setGameLog(prev => [...prev, `Quiz ${quizIndex + 1}: Correct`]); } else { setGameLog(prev => [...prev, `Quiz ${quizIndex + 1}: Incorrect`]); } };
+      const nextScenario = () => { if (scenarioIndex < scenarios.length - 1) { setScenarioIndex(prev => prev + 1); setSelectedAnswer(null); setAnswered(false); } else { setQuizIndex(0); setQuizAnswered(false); setSelectedAnswer(null); } };
+      const nextQuiz = () => { if (quizIndex < quizQuestions.length - 1) { setQuizIndex(prev => prev + 1); setSelectedAnswer(null); setQuizAnswered(false); } else { setPhase('result'); } };
+
+      if (phase === 'intro') {
+         return (
+            <div className="p-6 bg-gradient-to-br from-purple-50 to-indigo-100 rounded-xl shadow-lg max-w-2xl mx-auto">
+               <h2 className="text-2xl font-bold text-purple-800 mb-4">🎵 Sound Design for Games</h2>
+               <p className="text-purple-700 mb-4">Master the audio elements that transform silent experiences into immersive worlds. From impact sounds to adaptive music, learn what separates memorable game audio from forgettable noise.</p>
+               <div className="bg-white/70 rounded-lg p-4 mb-4">
+                  <h3 className="font-semibold text-purple-800 mb-2">Learning Objectives:</h3>
+                  <ul className="text-purple-700 space-y-1 text-sm">
+                     <li>• Understand audio hierarchy and mixing priorities</li>
+                     <li>• Design satisfying sound feedback for player actions</li>
+                     <li>• Implement adaptive and dynamic music systems</li>
+                     <li>• Create spatial audio for enhanced awareness</li>
+                     <li>• Handle mobile-specific audio constraints professionally</li>
+                  </ul>
+               </div>
+               <button onClick={() => setPhase('tutorial')} className="w-full py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 font-semibold">Start Learning</button>
+            </div>
+         );
+      }
+
+      if (phase === 'tutorial') {
+         const step = tutorialSteps[tutorialStep];
+         return (
+            <div className="p-6 bg-gradient-to-br from-purple-50 to-indigo-100 rounded-xl shadow-lg max-w-2xl mx-auto">
+               <div className="flex justify-between items-center mb-4">
+                  <h2 className="text-xl font-bold text-purple-800">Step {tutorialStep + 1} of {tutorialSteps.length}</h2>
+                  <span className="text-purple-600 text-sm">{Math.round(((tutorialStep + 1) / tutorialSteps.length) * 100)}% Complete</span>
+               </div>
+               <div className="bg-white/80 rounded-lg p-5 mb-4">
+                  <div className="flex items-start gap-3 mb-3">
+                     <h3 className="font-semibold text-purple-800 text-lg">{step.title}</h3>
+                     <button onClick={() => { setInfoTopic(step.icon); setShowInfo(true); }} className="text-purple-500 hover:text-purple-700">ⓘ</button>
+                  </div>
+                  <p className="text-purple-700">{step.content}</p>
+               </div>
+               <div className="bg-indigo-100 rounded-lg p-3 mb-4">
+                  <p className="text-indigo-800 text-sm">💡 <strong>AI Coach:</strong> {tutorialStep === 0 ? 'Think of audio layers like an orchestra—each section has its role, and the conductor (you) ensures nothing drowns out what matters.' : tutorialStep === 1 ? 'The best sound feedback is invisible as a system but unmistakable as an experience. Players should feel, not analyze.' : tutorialStep === 2 ? 'Great adaptive music is like a film score that writes itself for each player\'s unique journey.' : tutorialStep === 4 ? 'Your signature sounds will outlive your current game. Invest in audio that becomes your studio\'s identity.' : tutorialStep === 5 ? 'Mobile-first means designing for the hardest case first: muted, interrupted, small speakers.' : 'Sound is the fastest path to emotion. Use this power thoughtfully.'}</p>
+               </div>
+               <div className="flex gap-3">
+                  {tutorialStep > 0 && <button onClick={() => setTutorialStep(prev => prev - 1)} className="flex-1 py-2 border border-purple-600 text-purple-600 rounded-lg hover:bg-purple-50">Previous</button>}
+                  <button onClick={() => tutorialStep < tutorialSteps.length - 1 ? setTutorialStep(prev => prev + 1) : setPhase('play')} className="flex-1 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700">{tutorialStep < tutorialSteps.length - 1 ? 'Next' : 'Start Practice'}</button>
+               </div>
+               {showInfo && (
+                  <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" onClick={() => setShowInfo(false)}>
+                     <div className="bg-white rounded-xl p-6 max-w-md m-4" onClick={e => e.stopPropagation()}>
+                        <h3 className="font-bold text-purple-800 mb-2">{step.title}</h3>
+                        <p className="text-purple-700 text-sm">{infoContent[infoTopic]}</p>
+                        <button onClick={() => setShowInfo(false)} className="mt-4 w-full py-2 bg-purple-600 text-white rounded-lg">Close</button>
+                     </div>
+                  </div>
+               )}
+            </div>
+         );
+      }
+
+      if (phase === 'play') {
+         if (scenarioIndex < scenarios.length) {
+            const scenario = scenarios[scenarioIndex];
+            return (
+               <div className="p-6 bg-gradient-to-br from-purple-50 to-indigo-100 rounded-xl shadow-lg max-w-2xl mx-auto">
+                  <div className="flex justify-between items-center mb-4">
+                     <h2 className="text-xl font-bold text-purple-800">Scenario {scenarioIndex + 1} of {scenarios.length}</h2>
+                     <span className="text-purple-600 font-semibold">Score: {score}</span>
+                  </div>
+                  <div className="bg-white/80 rounded-lg p-5 mb-4">
+                     <h3 className="font-semibold text-purple-800 mb-2">{scenario.title}</h3>
+                     <p className="text-purple-700 mb-4">{scenario.situation}</p>
+                     <div className="space-y-2">
+                        {scenario.options.map((option, i) => (
+                           <button key={i} onClick={() => { setSelectedAnswer(i); handleScenarioAnswer(option.points, option.feedback); }} disabled={answered} className={`w-full p-3 text-left rounded-lg border transition-all ${answered && selectedAnswer === i ? option.points >= 25 ? 'bg-green-100 border-green-500' : option.points >= 15 ? 'bg-yellow-100 border-yellow-500' : 'bg-red-100 border-red-500' : 'bg-white border-purple-200 hover:border-purple-400'} ${answered ? 'cursor-default' : 'cursor-pointer'}`}>
+                              <span className="text-purple-800">{option.text}</span>
+                              {answered && selectedAnswer === i && <p className="text-sm mt-2 text-purple-600">{option.feedback}</p>}
+                           </button>
+                        ))}
+                     </div>
+                  </div>
+                  {answered && <button onClick={nextScenario} className="w-full py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700">{scenarioIndex < scenarios.length - 1 ? 'Next Scenario' : 'Continue to Quiz'}</button>}
+               </div>
+            );
+         }
+         const quiz = quizQuestions[quizIndex];
+         return (
+            <div className="p-6 bg-gradient-to-br from-purple-50 to-indigo-100 rounded-xl shadow-lg max-w-2xl mx-auto">
+               <div className="flex justify-between items-center mb-4">
+                  <h2 className="text-xl font-bold text-purple-800">Quiz {quizIndex + 1} of {quizQuestions.length}</h2>
+                  <span className="text-purple-600 font-semibold">Quiz Score: {quizScore}/{quizIndex + (quizAnswered ? 1 : 0)}</span>
+               </div>
+               <div className="bg-white/80 rounded-lg p-5 mb-4">
+                  <p className="text-purple-800 font-medium mb-4">{quiz.question}</p>
+                  <div className="space-y-2">
+                     {quiz.options.map((option, i) => (
+                        <button key={i} onClick={() => handleQuizAnswer(i)} disabled={quizAnswered} className={`w-full p-3 text-left rounded-lg border transition-all ${quizAnswered ? i === quiz.correct ? 'bg-green-100 border-green-500' : selectedAnswer === i ? 'bg-red-100 border-red-500' : 'bg-white border-purple-200' : 'bg-white border-purple-200 hover:border-purple-400'}`}>{option}</button>
+                     ))}
+                  </div>
+                  {quizAnswered && <div className="mt-4 p-3 bg-indigo-50 rounded-lg"><p className="text-indigo-800 text-sm"><strong>Explanation:</strong> {quiz.explanation}</p></div>}
+               </div>
+               {quizAnswered && <button onClick={nextQuiz} className="w-full py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700">{quizIndex < quizQuestions.length - 1 ? 'Next Question' : 'See Results'}</button>}
+            </div>
+         );
+      }
+
+      if (phase === 'result') {
+         const maxScore = scenarios.reduce((sum, s) => sum + Math.max(...s.options.map(o => o.points)), 0);
+         const percentage = Math.round((score / maxScore) * 100);
+         return (
+            <div className="p-6 bg-gradient-to-br from-purple-50 to-indigo-100 rounded-xl shadow-lg max-w-2xl mx-auto">
+               <h2 className="text-2xl font-bold text-purple-800 mb-4">🎵 Sound Design Complete!</h2>
+               <div className="bg-white/80 rounded-lg p-5 mb-4">
+                  <div className="text-center mb-4">
+                     <p className="text-4xl font-bold text-purple-600">{percentage}%</p>
+                     <p className="text-purple-700">Scenario Score: {score}/{maxScore}</p>
+                     <p className="text-purple-700">Quiz Score: {quizScore}/{quizQuestions.length}</p>
+                  </div>
+                  <div className="border-t pt-4">
+                     <h3 className="font-semibold text-purple-800 mb-2">Key Insights:</h3>
+                     <ul className="text-purple-700 text-sm space-y-1">
+                        <li>• Audio hierarchy ensures critical sounds cut through ambient and music layers</li>
+                        <li>• Sound feedback completes the action-reaction loop—silence feels broken</li>
+                        <li>• Variation prevents fatigue—identical sounds repeated become annoying</li>
+                        <li>• Anticipatory audio builds tension better than sudden loud sounds</li>
+                        <li>• Mobile audio must never be required—always provide visual alternatives</li>
+                        <li>• Signature sounds create lasting emotional brand connections</li>
+                     </ul>
+                  </div>
+                  <div className="border-t pt-4 mt-4">
+                     <h3 className="font-semibold text-purple-800 mb-2">Real-World Application:</h3>
+                     <p className="text-purple-700 text-sm">Audit your game\'s audio: Do critical sounds cut through? Is there variation in repeated sounds? Does music adapt to game state? Does everything work muted? Small audio improvements often have outsized impact on perceived quality and emotional engagement.</p>
+                  </div>
+               </div>
+               <button onClick={() => { setPhase('intro'); setScore(0); setScenarioIndex(0); setQuizIndex(0); setQuizScore(0); setAnswered(false); setQuizAnswered(false); setSelectedAnswer(null); setTutorialStep(0); setGameLog([]); }} className="w-full py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700">Play Again</button>
+            </div>
+         );
+      }
+      return null;
+   };
+
    const FinancialStatementsRenderer = () => {
       const [phase, setPhase] = useState<'intro' | 'play' | 'result'>('intro');
       const [showInfo, setShowInfo] = useState(false);
@@ -57982,6 +58192,8 @@ const GeneratedDiagram: React.FC<DiagramProps> = ({ type, data, title }) => {
             return <LocalizationStrategyRenderer />;
          case 'game_graphic_design':
             return <GameGraphicDesignRenderer />;
+         case 'sound_design':
+            return <SoundDesignRenderer />;
          case 'pricing_strategy':
             return <PricingStrategyRenderer />;
          case 'budgeting':
