@@ -5,3 +5,8 @@ FinancialModelingRenderer:5
 FinancialModelingRenderer:6
 FinancialModelingRenderer:8
 FinancialModelingRenderer:13
+ZeroBasedBudgetRenderer:1
+ZeroBasedBudgetRenderer:4
+ZeroBasedBudgetRenderer:5
+ZeroBasedBudgetRenderer:7
+ZeroBasedBudgetRenderer:14
