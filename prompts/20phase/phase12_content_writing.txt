@@ -1,76 +1,54 @@
-PHASE 12 OF 20: CONTENT WRITING
-================================
-Time Investment: Careful | Output: All Text Content Implemented
+PHASE 12: CONTENT
+Goal: Write and implement all text
+Min to Proceed: 60%+ screens with text implemented
+Uses: Phase 2 insights, Phase 6 WHY, Phase 8 requirements
 
-Write and implement every piece of text in the game. Less is more.
+TEXT RULES:
+- Instructions: ≤8 words, start with verb
+- Feedback: ≤15 words, include learning
+- WHY: ≤12 words, include "because"
+- Labels: ≤6 words
 
-THE 10% TEXT RULE:
------------------
-Text is only 10% of content. Every word must earn its place.
+PER SCREEN, WRITE:
+- Instruction: "[verb]..."
+- Success: "Yes! Because..."
+- Help: "Try..."
+- WHY: "Because..."
+- CTA: "[2-3 words]"
 
-MAXIMUM LENGTHS:
----------------
-- Instructions: 8 words max
-- Feedback: 15 words max
-- Why statements: 12 words max
-- Labels: 6 words max
-- Takeaways: 20 words max
-
-WRITING PRINCIPLES:
-------------------
-- Start with verb for instructions ("Drag...", "Click...", "Choose...")
-- Lead with the learning for feedback
-- "Because" statements explain mechanism
-- No jargon until concept is understood
-- Friendly, not clinical
-
-TONE GUIDELINES:
----------------
-| Situation | DON'T Say | DO Say |
-|-----------|-----------|--------|
-| Correct | "Correct!" | "Yes! Because [mechanism]" |
-| Incorrect | "Wrong" | "Not quite. Watch [element]" |
-| Encourage | "Good job" | "You discovered: [insight]!" |
-| Complete | "You finished" | "You now understand: [takeaway]" |
-
-FOR EACH SCREEN, WRITE:
------------------------
-1. Instruction text (if needed) - Max 8 words
-2. Labels for elements - Max 6 words each
-3. Feedback for success - Include WHY
-4. Feedback for "not quite" - Include hint
-5. Why statement - "Because [mechanism]"
-6. CTA button text - 2-3 words
-
-LANGUAGE ACCESSIBILITY:
-----------------------
-- No jargon before explained
-- Short sentences (max 12 words)
-- Active voice
-- Concrete language
-- One idea per sentence
-
-BUILD NOW:
-----------
-Add all text content to screens:
-- Instructions
-- Labels
-- Feedback messages
-- Why statements
-- Button text
-
-OUTPUT:
--------
-Update comment block:
-
+OUTPUT FORMAT - Update ENHANCEMENT PLAN:
 /*
- * ENHANCEMENT PLAN - [GAME NAME]
- * Phase 12 Complete: Content Writing
- * - All text follows 10% rule
- * - Max lengths enforced
- * - Why statements on all feedback
+ * Phase 12: Content
+ *
+ * CONCEPT 1: [Name]
+ *
+ * Screen 1.1:
+ * - Instruction: "[text]"
+ * - CTA: "[text]"
+ *
+ * Screen 1.2:
+ * - Instruction: "[text]"
+ * - Success: "Yes! Because [mechanism]"
+ * - Help: "Try [hint]"
+ * - CTA: "[text]"
+ *
+ * [Continue for all screens]
+ *
+ * CARRY FORWARD:
+ * - Screens with content: X/total
+ * - Implemented in code: X/total
+ * - For Phase 14: All text ready
  *
  * READY FOR PHASE 13
  */
 
-Run: bash scripts/run_checks.sh
+NOW BUILD:
+- Add text content to screen components
+- Implement feedback messages
+- Add instruction text
+- Add CTA button labels
+
+RULES:
+- Follow word limits strictly
+- Include "because" in feedback
+- 60%+ screens with text = ready to proceed

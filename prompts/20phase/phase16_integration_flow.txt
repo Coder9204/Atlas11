@@ -1,76 +1,67 @@
-PHASE 16 OF 20: INTEGRATION & FLOW
-===================================
-Time Investment: Critical | Output: Unified, Working Game
-
-Connect everything and verify the complete experience.
+PHASE 16: INTEGRATION
+Goal: Verify complete game works end-to-end
+Min to Proceed: Full playthrough possible without errors
+Uses: Phase 7 structure, Phases 14-15
 
 INTEGRATION CHECKLIST:
----------------------
 
-NARRATIVE FLOW:
-- Game tells coherent story from start to finish
-- Concepts build on each other correctly
-- Integration checkpoints work properly
-- Final synthesis ties everything together
-- Ending is satisfying
+FLOW:
+□ Start to finish works without refresh
+□ Concepts build on each other correctly
+□ Checkpoint integrations work
+□ Final synthesis works
+□ Ending is satisfying
 
-DATA/STATE FLOW:
-- User progress persists throughout
-- Concept mastery is tracked
-- Predictions are compared to results
-- No state corruption through full playthrough
+STATE:
+□ Progress persists throughout
+□ User inputs remembered
+□ Predictions tracked correctly
+□ No state corruption on back/forward
 
-VISUAL CONSISTENCY:
-- Design system applied consistently
-- No visual style breaks between sections
-- Transitions smooth throughout
-- Animation timing consistent
+CONSISTENCY:
+□ Design system applied throughout
+□ No visual style breaks
+□ Animation timing consistent
+□ Text tone consistent
 
-CONTENT CONTINUITY:
-- Terminology consistent
-- Concepts correctly named throughout
-- No contradictory information
-- Learning builds progressively
+FULL PLAYTHROUGH TEST:
+1. Start from screen 0
+2. Complete EVERY screen
+3. Try EVERY interaction
+4. Navigate back and forward
+5. Reach completion
 
-COMPLETE PLAYTHROUGH TEST:
--------------------------
-Do this yourself before moving on:
-
-1. Clear all test data
-2. Start from beginning
-3. Complete EVERY screen
-4. Try EVERY interaction
-5. Read EVERY piece of text
-6. Watch EVERY animation
-
-LOG ANY ISSUES:
-- Confusing moments
-- Broken interactions
-- Missing feedback
-- Unclear instructions
-- Visual glitches
-- Navigation problems
-
-FIX ALL ISSUES FOUND before proceeding.
-
-TIME THE EXPERIENCE:
-- Total time target: 30-45 min
-- Per-concept time: 3-5 min each
-- Adjust if sections too long/short
-
-OUTPUT:
--------
-Update comment block:
-
+OUTPUT FORMAT - Update ENHANCEMENT PLAN:
 /*
- * ENHANCEMENT PLAN - [GAME NAME]
- * Phase 16 Complete: Integration & Flow
- * - Full playthrough: verified
- * - All concepts connected
- * - State flow: clean
- * - Total time: ~[X] minutes
+ * Phase 16: Integration
  *
- * BUILDING PHASES COMPLETE - READY FOR TESTING (Phase 17)
+ * FLOW:
+ * - Start to finish: Works/Issues
+ * - Checkpoints: Works/Issues
+ * - Final: Works/Issues
+ *
+ * STATE:
+ * - Progress persists: Yes/No
+ * - No corruption: Yes/No
+ *
+ * CONSISTENCY:
+ * - Design: Consistent/Issues
+ * - Animations: Consistent/Issues
+ *
+ * PLAYTHROUGH:
+ * - Completed: Yes/No
+ * - Issues found: [list any]
+ * - Fixed: [list fixes]
+ *
+ * CARRY FORWARD:
+ * - Playthrough: Works/Issues
+ * - Integration: Works/Issues
+ * - For Phases 17-20: Integrated game to test
+ *
+ * BUILDING COMPLETE - READY FOR TESTING (Phase 17)
  */
 
-Run: bash scripts/run_checks.sh
+RULES:
+- Must complete full playthrough
+- Fix any blocking issues found
+- Document any remaining issues for Phase 17

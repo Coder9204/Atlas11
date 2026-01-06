@@ -1,85 +1,71 @@
-PHASE 15 OF 20: ANIMATION & POLISH
-===================================
-Time Investment: Quality-Focused | Output: Polished Premium Experience
+PHASE 15: POLISH
+Goal: Smooth animations, visual refinement
+Min to Proceed: Core animations work, 60fps achieved
+Uses: Phase 9 animations, Phase 14 screens
 
-Add the finishing touches that make the game feel premium.
-
-ANIMATION CHECKLIST:
--------------------
+POLISH CHECKLIST:
 
 TRANSITIONS:
-- Screen-to-screen transitions smooth
-- Entry animations (ease-out)
-- Exit animations (ease-in)
-- Timing: 200-400ms
+□ Screen-to-screen smooth (300-500ms)
+□ ease-out for entrances
+□ ease-in for exits
+□ No jarring jumps
 
 FEEDBACK ANIMATIONS:
-- Visual responses immediate
-- Success animations satisfying
-- Error hints gentle and helpful
-- Progress celebrations reinforce learning
+□ Success: satisfying visual response
+□ Error/hint: gentle, not punishing
+□ Progress: encouraging advancement feel
 
 DATA ANIMATIONS:
-- Number changes animate smoothly
-- Charts/meters animate updates
-- Before/after transitions clear
-- Causation flows animated
+□ Numbers animate smoothly when changing
+□ Charts/meters update with motion
+□ Before/after transitions clear
 
-MICRO-INTERACTIONS:
-- Hover states respond
-- Click/tap has visual feedback
-- Drag has appropriate physics
-- Release has smooth settling
+QUALITY:
+□ All animations 60fps
+□ No jank or stuttering
+□ One clear focal point per screen
+□ Generous white space
+□ Apple/Airbnb quality feel
 
-TECHNICAL REQUIREMENTS:
-- All animations 60fps
-- Easing curves feel natural
-- No jarring movements
-- Consistent timing throughout
-
-IMPLEMENT:
----------
-
-// Transition wrapper
-const Transition = ({ children }) => (
-  <div className="transition-opacity duration-300 ease-out">
-    {children}
-  </div>
-);
-
-// Number animation
-const AnimatedNumber = ({ value }) => {
-  // Animate from previous to current value
-};
-
-// Success celebration
-const SuccessAnimation = () => {
-  // Brief, satisfying animation
-};
-
-APPLE/AIRBNB/NIKE QUALITY CHECK:
--------------------------------
-- Does this look like it belongs on Apple.com?
-- Would Airbnb put this in their app?
-- Does it have the confidence of Nike?
-- Is every element intentionally placed?
-- Is there enough white space?
-- Are colors sophisticated?
-- Do animations feel smooth and natural?
-
-OUTPUT:
--------
-Update comment block:
-
+OUTPUT FORMAT - Update ENHANCEMENT PLAN:
 /*
- * ENHANCEMENT PLAN - [GAME NAME]
- * Phase 15 Complete: Animation & Polish
- * - Transitions: smooth 200-300ms
- * - Micro-interactions: all responsive
- * - 60fps verified
- * - Premium quality achieved
+ * Phase 15: Polish
+ *
+ * TRANSITIONS:
+ * - Screen-to-screen: [timing, easing]
+ * - Status: Done/Partial
+ *
+ * FEEDBACK:
+ * - Success animation: [description]
+ * - Help animation: [description]
+ * - Status: Done/Partial
+ *
+ * DATA:
+ * - Number animations: Done/Partial
+ * - Chart animations: Done/Partial
+ *
+ * QUALITY CHECK:
+ * - 60fps: Yes/No
+ * - White space: Adequate/Needs work
+ * - Premium feel: Yes/Partial/No
+ *
+ * CARRY FORWARD:
+ * - Transitions: Done/Partial
+ * - Feedback: Done/Partial
+ * - 60fps: Yes/No
+ * - For Phase 16: Polished screens
  *
  * READY FOR PHASE 16
  */
 
-Run: bash scripts/run_checks.sh
+NOW BUILD:
+- Add CSS transitions to screen changes
+- Add success/feedback animations
+- Ensure smooth number updates
+- Test for 60fps performance
+
+RULES:
+- Core animations must work
+- Must achieve 60fps
+- Subtle and purposeful, not decorative

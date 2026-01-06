@@ -1,72 +1,54 @@
-PHASE 8 OF 20: SCREEN-BY-SCREEN SPECIFICATION
-==============================================
-Time Investment: Extensive | Output: Detailed Spec for Every Screen
+PHASE 8: SCREEN SPECS
+Goal: Detail every screen
+Min to Proceed: 60%+ screens with core spec (Q1-Q2 + nav)
+Uses: All Phases 2-7
 
-Specify every single screen in detail. This is the blueprint for building.
+PER SCREEN, ANSWER:
+Q1: What is the ONE action? (One verb + object)
+Q2: What is the ONE learning goal? (One "because" sentence)
+Q3: What changes after action? (Before → After)
+Q4: How is WHY shown? (From Phase 6 visualization)
 
-SCREEN ANATOMY STANDARD:
-------------------------
-| Section | Height | Content |
-|---------|--------|---------|
-| TOP | 50px | Progress indicator (dots, step X of Y) |
-| CENTER | 400px | Play Area - ONE focal point, ONE interaction |
-| BOTTOM | 50px | Single CTA button (appears after action) |
-
-FOR EACH SCREEN, SPECIFY:
--------------------------
-
-1. METADATA
-   - Concept number
-   - Screen type (Hook/Teach/Practice/etc.)
-   - Purpose (what this screen accomplishes)
-   - Duration (expected time on screen)
-
-2. VISUAL LAYOUT
-   - Focal Point: What draws the eye
-   - Interactive Element: What user can manipulate
-   - Feedback Display: Where results show
-
-3. THE ONE ACTION
-   - What user does (exactly one thing)
-   - Control type (Slider/Button/Drag/Toggle/Choice)
-
-4. THE ONE LEARNING GOAL
-   - Micro-concept (single "because" idea)
-   - By end of screen, user understands: [specific thing]
-
-5. STATE CHANGES
-   - BEFORE STATE: What user sees before acting
-   - USER ACTION: What they do
-   - AFTER STATE: What changes and how
-
-6. TEXT CONTENT (Minimal!)
-   - Instruction: Max 8 words
-   - Feedback: Max 15 words
-   - Why statement: Max 12 words
-
-OUTPUT FORMAT:
---------------
-Update the ENHANCEMENT PLAN comment block:
-
+OUTPUT FORMAT - Update ENHANCEMENT PLAN:
 /*
- * ENHANCEMENT PLAN - [GAME NAME]
- * Phase 8 Complete: Screen Specification
+ * Phase 8: Screen Specs
  *
- * [Keep Phase 1-7 content]
+ * CONCEPT 1: [Name] - [X] screens
  *
- * SCREEN SPECIFICATIONS:
+ * Screen 1.1: Hook
+ * - Action: [verb + object]
+ * - Goal: User sees [stakes]
+ * - Nav: → 1.2
  *
- * CONCEPT 1: [Name] - [X screens]
- * S1: Hook - [Brief description of visual + stake]
- * S2: Goal - [What success looks like]
- * S3: Teach - Action: [control], Learn: [micro-concept]
- * S4: Practice - [Variation on S3]
- * S5: Predict - Question: [prediction asked]
- * S6: Reveal - Mechanism: [how WHY is shown]
- * S7: Transfer - Context: [new scenario]
- * S8: Takeaway - Rule: [the principle]
+ * Screen 1.2: Teach
+ * - Action: [control type] [what]
+ * - Goal: "[X] affects [Y] because [Z]"
+ * - Before: [state] → After: [state]
+ * - WHY: [visualization]
+ * - Nav: ← 1.1 | 1.3 →
  *
- * [Repeat for all concepts - keep each screen to 1 line]
+ * [Continue for all screens in concept]
  *
- * PLANNING PHASES COMPLETE - READY FOR BUILDING (Phase 9)
+ * [Repeat for all concepts]
+ *
+ * TEXT TEMPLATES:
+ * - Instructions: "[verb]..." (≤8 words)
+ * - Feedback: "Yes! Because..." (≤15 words)
+ * - Help: "Try..." (≤15 words)
+ *
+ * CARRY FORWARD:
+ * - Fully specified: X/total
+ * - Core only (Q1-Q2+nav): X/total
+ * - For Phase 9: Visual needs
+ * - For Phase 10: Assets per screen
+ * - For Phase 11: Controls per screen
+ * - For Phase 12: Text per screen
+ * - For Phase 14: Build blueprint
+ *
+ * READY FOR PHASE 9
  */
+
+RULES:
+- Q1-Q2 + navigation minimum
+- Q3-Q4 can be partial
+- 60%+ with core spec = ready to proceed

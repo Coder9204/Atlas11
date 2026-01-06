@@ -1,62 +1,40 @@
-PHASE 2 OF 20: CONCEPT DEEP-DIVE DOCUMENTATION
-===============================================
-Time Investment: Substantial | Output: Detailed Concept Cards
+PHASE 2: CONCEPT DEEP-DIVE
+Goal: Understand WHY each works and what people get wrong
+Min to Proceed: 5+ concepts with Q1-Q3 answered
+Uses: Phase 1 concepts
 
-For each of the 10 concepts from Phase 1, create comprehensive documentation.
+PER CONCEPT, ANSWER:
+Q1: What's the core insight? (One sentence experts know, beginners don't)
+Q2: WHY does it work this way? (Cause → Effect → Deeper cause, 2+ levels)
+Q3: What do beginners get WRONG? (Misconception + why it seems true)
+Q4: What variables can users manipulate? (Input → Output)
+Q5: How would a pro use this? (Real decision it informs)
 
-FOR EACH CONCEPT, DOCUMENT:
----------------------------
-
-1. THE CORE INSIGHT
-   One sentence that captures the essential truth - what experts know that beginners don't
-
-2. WHY IT WORKS THIS WAY (The Causal Chain)
-   - Level 1 Cause: The immediate reason ("X happens because Y")
-   - Level 2 Cause: Why Level 1 is true ("Y happens because Z")
-   - The Complete Chain: Full cause-effect sequence
-
-3. THE COMMON MISCONCEPTION
-   - What Beginners Believe: The intuitive-but-incorrect belief
-   - Why It Seems True: Why this misconception is appealing
-   - The Critical Error: What specific thing they get wrong
-   - The Correction: The accurate mental model
-
-4. REAL-WORLD APPLICATION
-   - Professional Context: Who uses this? What role? What industry?
-   - Specific Decision: What exact decision does this inform?
-   - Without This Knowledge: What mistake would they make?
-   - With This Knowledge: What better decision would they make?
-
-5. THE VARIABLES AT PLAY
-   - Input Variable 1: Name, range, what user can manipulate
-   - Input Variable 2: Name, range, what user can manipulate
-   - Output Variable: What it is, how it changes, why it matters
-   - The Relationship: How inputs affect output
-
-OUTPUT FORMAT:
---------------
-Update the ENHANCEMENT PLAN comment block:
-
+OUTPUT FORMAT - Update ENHANCEMENT PLAN:
 /*
- * ENHANCEMENT PLAN - [GAME NAME]
- * Phase 2 Complete: Concept Deep-Dive
+ * Phase 2: Concept Deep-Dive
  *
- * [Keep Phase 1 content]
+ * CONCEPT 1: [Name]
+ * - Insight: [one sentence]
+ * - Chain: [X] because → [Y] because → [Z]
+ * - Misconception: [wrong belief] / Correction: [truth]
+ * - Variables: [input] → [output], Range: [values]
+ * - Pro use: [role] decides [what]
+ * - Status: Complete/Q1-Q3/Partial
  *
- * CONCEPT DEEP-DIVES:
+ * [Repeat for all concepts]
  *
- * Concept 1: [Name]
- * - Core insight: [One sentence]
- * - Causal chain: [X because Y because Z]
- * - Misconception: [What beginners wrongly believe]
- * - Variables: [Input1, Input2 -> Output]
- *
- * [Repeat for all 10 concepts - keep each to 4-5 lines]
+ * CARRY FORWARD:
+ * - Complete (all 5 Q's): X/10
+ * - Partial (Q1-Q3): X/10
+ * - For Phase 3: Misconceptions list
+ * - For Phase 5: Variables list
+ * - For Phase 6: Causal chains list
  *
  * READY FOR PHASE 3
  */
 
-IMPORTANT:
-- Keep each concept documentation to 4-5 lines
-- Focus on actionable details for later phases
-- Do NOT change game logic yet
+RULES:
+- Q1-Q3 minimum per concept
+- Q4-Q5 can be partial
+- 5+ with Q1-Q3 = ready to proceed

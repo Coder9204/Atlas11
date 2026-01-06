@@ -1,73 +1,58 @@
-PHASE 9 OF 20: VISUAL DESIGN SYSTEM
-====================================
-Time Investment: Quality-Focused | Output: Complete Design System
+PHASE 9: DESIGN SYSTEM
+Goal: Establish visual language
+Min to Proceed: Colors + typography defined
+Uses: Phase 5 scenarios, Phase 8 visual needs
 
-NOW WE START BUILDING. Establish visual language before implementing.
+QUESTIONS:
+Q1: What's the color palette? (Primary, secondary, success, error, neutrals)
+Q2: What's the typography? (Font, sizes for headings/body/labels/data)
+Q3: What do components look like? (Buttons, sliders, cards)
 
-QUALITY STANDARD: Apple, Airbnb, Nike
--------------------------------------
-- Apple: Minimalism, precision, white space, subtle shadows
-- Airbnb: Warmth, approachability, clear hierarchy
-- Nike: Bold confidence, dynamic energy, premium feel
-
-DESIGN SYSTEM TO IMPLEMENT:
----------------------------
-
-1. COLOR PALETTE
-   - Primary: Main actions, key elements
-   - Secondary: Supporting elements
-   - Accent: Highlights, success states
-   - Success: Green tones for positive feedback
-   - Warning: Amber for caution
-   - Error: Red for negative feedback
-   - Neutrals: Text, borders, backgrounds
-   Rule: Maximum 2-3 colors + neutrals. Sophisticated, not childish.
-
-2. TYPOGRAPHY
-   - Clean sans-serif (system fonts)
-   - Clear hierarchy: Headings > Body > Labels > Captions
-   - Generous line-height, never cramped
-
-3. SPACING
-   - 8px base unit
-   - Luxurious white space - elements breathe
-
-4. BORDERS & CORNERS
-   - Subtle, purposeful borders
-   - 8-16px border radius default
-
-5. SHADOWS
-   - Subtle, realistic depth
-   - Soft shadows, not harsh
-
-6. ANIMATIONS
-   - 150-200ms for micro-interactions
-   - 200-300ms for transitions
-   - Ease-out for entrances, ease-in for exits
-   - 60fps always
-
-BUILD NOW:
-----------
-Implement the design system in the renderer:
-- Add CSS-in-JS styles or Tailwind classes
-- Create color constants
-- Set up spacing scale
-- Configure animation timings
-
-OUTPUT:
--------
-Update comment block to show Phase 9 Complete.
-Add inline comments for key style decisions.
-
+OUTPUT FORMAT - Update ENHANCEMENT PLAN:
 /*
- * ENHANCEMENT PLAN - [GAME NAME]
- * Phase 9 Complete: Visual Design System
- * - Color palette: [Primary], [Secondary], [Accent]
- * - Typography: [Font family]
- * - Spacing: 8px base
- * - Animation timing: 200ms standard
+ * Phase 9: Design System
+ *
+ * COLORS:
+ * - Primary: #[hex] - [usage]
+ * - Secondary: #[hex] - [usage]
+ * - Success: #[hex] (green tones)
+ * - Error: #[hex] (red tones)
+ * - Neutral: #[hex] (grays)
+ * - Background: #[hex]
+ *
+ * TYPOGRAPHY:
+ * - Font: [name, e.g., Inter, SF Pro]
+ * - H1: [size]/[weight] - headings
+ * - H2: [size]/[weight] - subheadings
+ * - Body: [size]/[weight] - content
+ * - Label: [size]/[weight] - UI labels
+ * - Data: [size]/[weight] - numbers
+ *
+ * COMPONENTS:
+ * - Button: [bg], [text], [padding], [radius]
+ * - Slider: [track], [handle], [fill]
+ * - Card: [bg], [radius], [shadow]
+ *
+ * ANIMATIONS:
+ * - Micro: 150-200ms
+ * - Standard: 200-300ms
+ * - Major: 300-500ms
+ *
+ * CARRY FORWARD:
+ * - Colors: Done/Partial
+ * - Typography: Done/Partial
+ * - Components: Done/Partial
+ * - For Phase 10: Style for assets
+ * - For Phase 14-15: Implementation guide
  *
  * READY FOR PHASE 10
  */
 
-Run: bash scripts/run_checks.sh
+NOW BUILD:
+- Add CSS variables or style constants to the renderer
+- Apply design tokens to existing elements
+
+RULES:
+- Colors + typography minimum
+- Components can be partial
+- Sophisticated colors (Apple/Airbnb quality, not garish)

@@ -1,72 +1,35 @@
-PHASE 1 OF 20: EXPERT KNOWLEDGE EXTRACTION
-============================================
-Time Investment: Substantial | Output: The 10 Core Concepts List
+PHASE 1: CORE CONCEPTS
+Goal: Identify 10 essential things someone must understand
+Min to Proceed: 5+ concepts with confidence
 
-Before designing anything, become the expert. Research deeply.
+QUESTIONS:
+Q1: What do professionals think about daily that beginners don't?
+Q2: What separates a novice from an expert? What can't be faked?
+Q3: What costly mistakes come from not understanding this deeply?
+Q4: What will still matter in 2040? (Fundamentals, not trends)
 
-STEP 1: ANALYZE EXISTING GAME
------------------------------
-Read the current renderer code and document:
-- What concepts does it currently teach?
-- What interactive elements exist?
-- What feedback mechanisms are in place?
-- Current strengths and weaknesses?
-
-STEP 2: EXPERT KNOWLEDGE DISCOVERY
-----------------------------------
-Answer these questions:
-
-1. DAILY APPLICATION
-   - What do professionals in this field think about daily?
-   - What decisions do they make? What variables do they manipulate?
-   - What would get them fired if they didn't understand it?
-
-2. EXPERTISE DIFFERENTIATORS
-   - What separates a novice from a 10-year veteran?
-   - What's the knowledge that cannot be faked?
-   - What do experts "see" that beginners miss entirely?
-
-3. FUTURE RELEVANCE (2030s/2040s)
-   - Will this knowledge still matter in 15-20 years?
-   - What's fundamental vs. what's trendy?
-
-4. DECISION IMPACT
-   - What knowledge leads to better decisions?
-   - What misunderstandings lead to costly mistakes?
-
-STEP 3: IDENTIFY THE 10 CORE CONCEPTS
--------------------------------------
-Each concept must pass ALL criteria:
-- Applied Daily: Professional uses this at least weekly
-- Causal Understanding: Explains WHY, not just WHAT
-- Decision-Relevant: Changes decisions someone makes
-- Future-Proof: Still matters in 2040
-- Interconnected: Connects to at least 2 other concepts
-- Testable: Can verify through prediction/application
-- Non-Obvious: Beginners would get this wrong
-
-OUTPUT FORMAT:
---------------
-Add a comment block at the TOP of the renderer function:
-
+OUTPUT FORMAT - Add to renderer function:
 /*
  * ENHANCEMENT PLAN - [GAME NAME]
- * Phase 1 Complete: Expert Knowledge Extraction
+ * Phase 1: Core Concepts
  *
- * CURRENT STATE ANALYSIS:
- * - [What the game currently does]
- * - [Strengths]
- * - [Gaps to address]
+ * 10 CONCEPTS:
+ * 1. [Name] - [One sentence] - Confidence: H/M/L
+ * 2. [Name] - [One sentence] - Confidence: H/M/L
+ * ... (all 10)
  *
- * 10 CORE CONCEPTS:
- * 1. [Concept] - [Core insight] - [Misconception to address]
- * 2. [Concept] - [Core insight] - [Misconception to address]
- * ... (list all 10)
+ * RELATIONSHIPS: [how concepts connect]
+ *
+ * CARRY FORWARD:
+ * - Concepts identified: X/10
+ * - High confidence: [list]
+ * - For Phase 2: [concepts to deep-dive]
+ * - For Phase 4: [initial sequence ideas]
  *
  * READY FOR PHASE 2
  */
 
-IMPORTANT:
-- Keep concise (under 60 lines)
-- Focus on actionable insights
-- Do NOT change game logic yet
+RULES:
+- Answer what you can - partial progress is valid
+- Mark confidence levels (H/M/L)
+- 5+ concepts = ready to proceed

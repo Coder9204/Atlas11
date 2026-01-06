@@ -18,7 +18,7 @@ export GIT_EDITOR=true
 # ---- 11 PARTIAL Games ----
 GAMES="ProfitMarginRenderer FinancialRatioAnalysisRenderer FinancialStatementsRenderer InventoryValuationRenderer WorkingCapitalManagementRenderer ProfitLossRenderer BudgetForecastRenderer BreakEvenRenderer BreakEvenAnalysisRenderer AuditPrepRenderer RevenueModelsRenderer"
 
-MAX_TURNS=250
+MAX_TURNS=400
 
 # ---- Get phase name ----
 get_phase_name() {

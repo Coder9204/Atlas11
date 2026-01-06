@@ -1,0 +1,20 @@
+   - Concept 9: Revenue-Expense Dependency - 7 screens
+   - Concept 10: Forecasting Under Uncertainty - 8 screens
+
+2. **Integration checkpoints** (4 screens total):
+   - Integration 1: Runway Recalculation Challenge (2 screens)
+   - Integration 2: Zero-Based Budget Builder (2 screens)
+
+3. **Final integration** (3 screens) + **Takeaway** (1 screen)
+
+4. Each screen follows the standard anatomy with:
+   - Hook/Goal/Teach/Practice/Predict/Transfer/Takeaway structure
+   - Single action per screen
+   - One learning goal
+   - Minimal text (hooks, rules, predictions under word limits)
+
+5. **"PLANNING PHASES COMPLETE - READY FOR BUILDING (Phase 9)"** marker added
+
+The edit was successful and the comment block is valid TypeScript syntax (it's only a comment block update, no code changes).
+
+DONE BudgetingRenderer PHASE 8

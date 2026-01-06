@@ -1,76 +1,73 @@
-PHASE 19 OF 20: USABILITY VALIDATION
-=====================================
-Time Investment: Critical | Output: Verified Ease of Use
+PHASE 19: USABILITY TEST
+Goal: Verify clarity and authenticity
+Min to Proceed: Kid test passes
+Uses: Phase 5 scenarios, Phase 8 specs
 
-Verify the game is clear and usable for the target audience.
-
-THE 10-YEAR-OLD TEST:
---------------------
-For EACH screen:
-- Can complete WITHOUT reading instructions?
-- Is the ONE action obvious within 5 seconds?
-- Are all interactive elements CLEARLY interactive?
-- Is feedback IMMEDIATE and understandable?
-- Is there ONLY ONE thing to do?
-- Are touch/click targets at least 48px?
+10-YEAR-OLD TEST (per screen):
+□ ONE action obvious in 5 seconds
+□ Can complete without reading instructions
+□ Interactive elements clearly interactive
+□ Feedback immediate and understandable
+□ No confusion about what to do
 
 LANGUAGE CHECK:
-- No jargon without explanation?
-- Short sentences?
-- Friendly, encouraging tone?
-- "You discovered!" not "Correct"?
-- "Try again!" not "Error"?
+□ No jargon without explanation
+□ Short sentences (≤12 words)
+□ Friendly tone ("You discovered!" not "Correct")
+□ Encouraging ("Try again!" not "Error")
 
 FORGIVENESS CHECK:
-- Wrong actions prompt helpful hints?
-- No harsh buzzers or negative feedback?
-- No dead ends?
-- Can replay to test ideas?
+□ Wrong actions get helpful hints
+□ No harsh negative feedback
+□ No dead ends
+□ Can retry easily
 
-ENGAGEMENT CHECK:
-- Self-paced (no forced timers)?
-- Progress visible?
-- Celebrations reinforce learning?
-- Satisfying to complete?
+EXPERT TEST:
+□ Scenarios authentic (professional would recognize)
+□ Numbers realistic
+□ Terminology correct
+□ Complexity appropriate
 
-THE EXPERT TEST:
----------------
+ENGAGEMENT:
+□ Self-paced (no forced timers)
+□ Progress visible
+□ Satisfying to complete
 
-SCENARIO AUTHENTICITY:
-- Are scenarios authentic to real practice?
-- Are numbers/values realistic?
-- Would a professional recognize as accurate?
-- Is terminology correct?
-
-LEARNING DEPTH:
-- Does it teach something experts might not articulate?
-- Are causal mechanisms correct?
-- Is detail level appropriate?
-- Any misleading oversimplifications?
-
-PROFESSIONAL VALUE:
-- Would expert recommend to others?
-- Does it capture real-world complexity?
-
-FIX ALL USABILITY ISSUES:
-------------------------
-- Critical: Must fix (blocks completion)
-- Major: Should fix (causes confusion)
-- Minor: Can defer (polish items)
-
-OUTPUT:
--------
-Update comment block:
-
+OUTPUT FORMAT - Update ENHANCEMENT PLAN:
 /*
- * ENHANCEMENT PLAN - [GAME NAME]
- * Phase 19 Complete: Usability Validation
- * - 10-year-old test: PASS
- * - Expert test: PASS
- * - All critical issues: fixed
- * - Self-paced, engaging
+ * Phase 19: Usability Test
+ *
+ * 10-YEAR-OLD TEST:
+ * - 5-second clarity: Pass/Fail
+ * - No reading needed: Pass/Fail
+ * - Clear interactions: Pass/Fail
+ * - Immediate feedback: Pass/Fail
+ *
+ * LANGUAGE:
+ * - Friendly tone: Yes/No
+ * - Short sentences: Yes/No
+ *
+ * FORGIVENESS:
+ * - Helpful hints: Yes/No
+ * - No dead ends: Yes/No
+ *
+ * EXPERT TEST:
+ * - Authentic scenarios: Yes/Partial/No
+ * - Realistic numbers: Yes/No
+ *
+ * ENGAGEMENT:
+ * - Self-paced: Yes/No
+ * - Satisfying: Yes/No
+ *
+ * CARRY FORWARD:
+ * - Kid test: Pass/Fail
+ * - Expert test: Pass/Partial/Fail
+ * - For Phase 20: Usability status
  *
  * READY FOR PHASE 20
  */
 
-Run: bash scripts/run_checks.sh
+RULES:
+- Kid test MUST pass
+- Expert test should pass (partial OK)
+- Fix usability issues before proceeding

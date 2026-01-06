@@ -1,69 +1,47 @@
-PHASE 3 OF 20: LEARNING ARCHITECTURE DESIGN
-============================================
-Time Investment: Significant | Output: Understanding Levels + Learning Arcs
+PHASE 3: LEARNING ARCS
+Goal: Map journey from misconception to mastery
+Min to Proceed: 5+ concepts with stages 1-4
+Uses: Phase 2 misconceptions, causal chains, variables
 
-Design HOW understanding will develop for each concept.
+PER CONCEPT, DESIGN:
+Q1: What surprising result challenges their wrong belief?
+Q2: What do they manipulate to discover the pattern?
+Q3: How does the WHY become visible?
+Q4: What rule can they state after learning?
 
-UNDERSTANDING LEVELS (Apply to each concept):
----------------------------------------------
-Level 0: Misconception - The intuitive but wrong belief
-Level 1: Awareness - Knows the concept exists
-Level 2: Comprehension - Understands WHAT happens
-Level 3: Causation - Understands WHY it happens
-Level 4: Prediction - Can predict outcomes in new scenarios
-Level 5: Application - Can use it to make real decisions
+LEARNING ARC STAGES:
+1. WRONG BELIEF: They think [Phase 2 misconception], predict [wrong outcome]
+2. SURPRISE: [Q1 - unexpected result challenges them]
+3. EXPLORE: They try [Phase 2 variables], notice [pattern]
+4. REVEAL: They see [Phase 2 causal chain made visible]
+5. CONSOLIDATE: They can state [Phase 2 insight as rule]
+6. TRANSFER: New context where same principle applies
 
-TARGET: Every user reaches Level 4-5 for all 10 concepts.
-
-FOR EACH CONCEPT, DESIGN THE LEARNING ARC:
-------------------------------------------
-
-1. STARTING STATE (Level 0)
-   - What user likely believes (the misconception)
-   - Why they believe it
-
-2. COGNITIVE CONFLICT (The "wait, what?" moment)
-   - The experience that challenges their belief
-   - The data/result that doesn't match expectation
-
-3. EXPLORATION (Level 1-2)
-   - What they manipulate
-   - What patterns they observe
-
-4. REVELATION (Level 3 - The "aha!" moment)
-   - How the WHY is revealed
-   - The new understanding
-
-5. CONSOLIDATION (Level 4)
-   - The rule they can articulate
-   - The prediction they can now make
-
-6. TRANSFER (Level 5)
-   - New scenario with same principle
-   - How they apply it differently
-
-OUTPUT FORMAT:
---------------
-Update the ENHANCEMENT PLAN comment block:
-
+OUTPUT FORMAT - Update ENHANCEMENT PLAN:
 /*
- * ENHANCEMENT PLAN - [GAME NAME]
- * Phase 3 Complete: Learning Architecture
+ * Phase 3: Learning Arcs
  *
- * [Keep Phase 1-2 content]
+ * ARC 1: [Concept Name]
+ * - Wrong belief: [misconception] → predicts [X]
+ * - Surprise: [what challenges them]
+ * - Explore: [variables to try]
+ * - Reveal: [how WHY shown]
+ * - Rule: [what they can state]
+ * - Transfer: [new context]
+ * - Status: All 6 / 1-4 / Partial
  *
- * LEARNING ARCS:
+ * [Repeat for all concepts]
  *
- * Concept 1: [Name]
- * - Misconception: [What they start believing]
- * - Aha moment: [The revelation that changes their mind]
- * - Exit state: [What they can now do]
- *
- * [Repeat for all 10 - keep each to 3 lines]
- *
- * KEY CROSS-CONCEPT CONNECTIONS:
- * - [Concept X] reinforces [Concept Y] because...
- * - [Concept Z] must come before [Concept W] because...
+ * CARRY FORWARD:
+ * - Complete arcs (6 stages): X/10
+ * - Partial arcs (1-4): X/10
+ * - For Phase 4: Dependencies noticed
+ * - For Phase 6: Surprise moments, WHY reveals
  *
  * READY FOR PHASE 4
  */
+
+RULES:
+- Stages 1-4 minimum
+- Stages 5-6 can be partial
+- 5+ with stages 1-4 = ready to proceed

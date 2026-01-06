@@ -1,60 +1,47 @@
-PHASE 6 OF 20: WHY-TEACHING MECHANICS DESIGN
-=============================================
-Time Investment: Critical | Output: Interaction Designs for Each Concept
+PHASE 6: WHY-TEACHING MECHANICS
+Goal: Design interactions that reveal causation
+Min to Proceed: 5+ concepts with prediction loop designed
+Uses: Phase 2 chains, Phase 3 arcs, Phase 5 scenarios
 
-This is where good games become great. Design interactions that force users to confront the WHY.
+PER CONCEPT, DESIGN:
+Q1: What prediction exposes their misconception? (What will they answer wrong?)
+Q2: What control causes the change? (Slider/Choice/Drag from Phase 2 variables)
+Q3: How do we visualize the causal chain? (Show WHY, not just WHAT)
+Q4: What statement proves understanding? ("[Input] affects [Output] because [Mechanism]")
 
-THE PREDICTION-ACTION-REVELATION LOOP (Core Pattern):
-----------------------------------------------------
-1. PREDICT: "What do you think will happen?" - User commits to prediction
-2. ACT: User manipulates the variable
-3. OBSERVE: Immediate visual feedback shows result
-4. COMPARE: Show prediction vs. actual result
-5. REVEAL THE WHY: "This happened BECAUSE [mechanism]"
-6. ARTICULATE: User completes "[Variable] affects [Outcome] because [Mechanism]"
+THE PREDICTION LOOP:
+1. PREDICT: "What happens if [action]?" - Options include misconception answer
+2. ACT: Control type, what it adjusts, range from Phase 5
+3. OBSERVE: Before → After, surprise if prediction wrong
+4. REVEAL WHY: Visualization method + "Because [chain]"
+5. ARTICULATE: User completes "[___] affects [___] because [___]"
 
-FOR EACH CONCEPT, DESIGN:
--------------------------
-
-1. CAUSATION VISUALIZATION
-   - The Surface Effect: What's easy to see (the WHAT)
-   - The Hidden Mechanism: What must be revealed (the WHY)
-   - Visualization Method: How to make the WHY visible
-     Options: Flow diagram, intermediate variables, side-by-side,
-              slow-motion, layered reveal, before/after
-
-2. MISCONCEPTION CONFRONTATION
-   - The Setup: Scenario where misconception predicts outcome A
-   - The Reveal: Reality shows outcome B instead
-   - The Cognitive Conflict: The "wait, that doesn't make sense" moment
-   - The Explanation: Why reality differs from intuition
-   - The Resolution: The "of course!" moment
-
-3. TRANSFER CHALLENGE
-   - Familiar Context: Where they learned the concept
-   - Novel Context: Different domain, same principle
-   - The Bridge: Recognition cue connecting them
-   - Success Proof: How we know they truly understood
-
-OUTPUT FORMAT:
---------------
-Update the ENHANCEMENT PLAN comment block:
-
+OUTPUT FORMAT - Update ENHANCEMENT PLAN:
 /*
- * ENHANCEMENT PLAN - [GAME NAME]
- * Phase 6 Complete: WHY-Teaching Mechanics
+ * Phase 6: WHY-Teaching Mechanics
  *
- * [Keep Phase 1-5 content]
+ * MECHANIC 1: [Concept Name]
+ * - Predict: "What happens if [X]?" Options: [A/B/C]
+ * - Act: [Control type] adjusts [variable], range [X-Y]
+ * - Observe: Before [state] → After [state]
+ * - Reveal: [Visualization: flow/step/compare] "Because [chain]"
+ * - Articulate: "[___] affects [___] because [___]"
+ * - Status: Complete / Loop only / Partial
  *
- * WHY-TEACHING DESIGNS:
+ * [Repeat for all concepts]
  *
- * Concept 1: [Name]
- * - Prediction question: [What user predicts]
- * - Visualization: [How mechanism is shown]
- * - Misconception confronted: [The wrong belief challenged]
- * - Transfer context: [New scenario for same principle]
- *
- * [Repeat for all 10 - keep each to 4 lines]
+ * CARRY FORWARD:
+ * - Complete mechanics: X/10
+ * - Loop only: X/10
+ * - For Phase 7: Screen types per concept
+ * - For Phase 8: Interaction details
+ * - For Phase 10: Visualizations needed
+ * - For Phase 11: Control types list
  *
  * READY FOR PHASE 7
  */
+
+RULES:
+- Prediction loop (steps 1-4) minimum
+- Step 5 can be partial
+- 5+ with loop = ready to proceed

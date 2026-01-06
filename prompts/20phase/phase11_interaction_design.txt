@@ -1,80 +1,51 @@
-PHASE 11 OF 20: INTERACTION DESIGN SPECIFICATION
-=================================================
-Time Investment: Detailed | Output: All Interactive Controls Implemented
+PHASE 11: CONTROLS
+Goal: Define and implement interaction behaviors
+Min to Proceed: Control types + ranges defined, basic handlers implemented
+Uses: Phase 6 mechanics, Phase 8 controls, Phase 9 components
 
-Implement exactly how every interactive element behaves.
+QUESTIONS:
+Q1: What control types? (Sliders, buttons, drags, choices)
+Q2: What ranges/options? (From Phase 5 realistic numbers)
+Q3: What feedback timing? (<100ms response required)
 
-AFFORDANCE RULES:
------------------
-| Element | How to Show It's Interactive |
-|---------|------------------------------|
-| Buttons | Subtle shadow, clear label, hover state |
-| Sliders | Elegant handle, refined track (iOS-style) |
-| Draggables | Slight lift shadow on hover |
-| Choices | Clear selection state, obvious tap targets |
-| Static | NO affordances - clearly NOT interactive |
-
-NATURAL MAPPING:
----------------
-| Interaction | User Mental Model |
-|-------------|-------------------|
-| Drag | "I'm moving this thing" |
-| Slide | "I'm changing the amount" |
-| Tap/Click | "I'm choosing this" |
-| Toggle | "I'm switching this on/off" |
-
-FOR EACH CONTROL, IMPLEMENT:
-----------------------------
-
-1. STATES
-   - Default: Normal appearance
-   - Hover: Visual response (desktop)
-   - Active/Pressed: Pressed appearance
-   - Disabled: Cannot interact (if applicable)
-
-2. INTERACTION
-   - Input method (click/drag/touch)
-   - Constraints (min/max values)
-   - Step increments
-
-3. FEEDBACK
-   - Immediate response (<100ms!)
-   - Visual change on input
-   - Value display update
-
-4. VALUE HANDLING
-   - Range (min to max)
-   - Default starting value
-   - How value is displayed
-
-FEEDBACK TIMING REQUIREMENTS:
-----------------------------
-| Type | Timing |
-|------|--------|
-| Visual response | <100ms (CRITICAL - lag = "broken") |
-| Animation | 60fps always |
-| Screen transitions | <500ms |
-
-BUILD NOW:
-----------
-Implement all interactive controls:
-- Button components with states
-- Slider components with proper feedback
-- Choice/selection components
-- Drag handlers if needed
-
-OUTPUT:
--------
-Update comment block:
-
+OUTPUT FORMAT - Update ENHANCEMENT PLAN:
 /*
- * ENHANCEMENT PLAN - [GAME NAME]
- * Phase 11 Complete: Interaction Design
- * - Controls implemented: [List: buttons, sliders, etc.]
- * - Feedback timing: <100ms
- * - All states: default, hover, active, disabled
+ * Phase 11: Controls
+ *
+ * SLIDERS:
+ * | Name | Min | Max | Step | Default | Screen | Implemented |
+ * | [var] | [X] | [Y] | [Z] | [D] | [#] | Yes/No |
+ *
+ * BUTTONS:
+ * | Name | Action | Size | Screen | Implemented |
+ * | [name] | [what happens] | 48px+ | [#] | Yes/No |
+ *
+ * CHOICES:
+ * | Name | Options | Screen | Implemented |
+ * | [name] | [A/B/C] | [#] | Yes/No |
+ *
+ * TIMING:
+ * - Response: <100ms
+ * - Animations: 60fps
+ * - Feedback: immediate visual change
+ *
+ * CARRY FORWARD:
+ * - Sliders defined: X, implemented: Y
+ * - Buttons defined: X, implemented: Y
+ * - Choices defined: X, implemented: Y
+ * - For Phase 13: Input handlers
+ * - For Phase 14: Control implementation
  *
  * READY FOR PHASE 12
  */
 
-Run: bash scripts/run_checks.sh
+NOW BUILD:
+- Add slider components with proper ranges
+- Add button handlers
+- Add choice/selection components
+- Ensure <100ms response times
+
+RULES:
+- Types + ranges minimum
+- Start implementing handlers
+- All controls must have 48px+ touch targets

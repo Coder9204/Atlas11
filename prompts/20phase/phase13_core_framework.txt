@@ -1,92 +1,70 @@
-PHASE 13 OF 20: CORE BUILD - FRAMEWORK & FOUNDATION
-====================================================
-Time Investment: Focused | Output: Working Foundation
+PHASE 13: FRAMEWORK
+Goal: Build navigation and input systems
+Min to Proceed: Navigation + inputs work
+Uses: Phase 7 structure, Phase 8 navigation, Phase 11 controls
 
-Build the technical foundation before adding full content.
+QUESTIONS:
+Q1: Does navigation work forward/backward?
+Q2: Does state persist?
+Q3: Do all controls respond?
 
-FRAMEWORK REQUIREMENTS:
-----------------------
-1. Screen/state management system
-2. Navigation between screens
-3. Progress tracking
-4. User input handling
-5. Feedback/response system
-6. Animation system
-7. Data/state persistence within session
-8. Responsive layout (max 500px height)
+BUILD CHECKLIST:
 
-BUILD ORDER:
------------
+NAVIGATION:
+□ Screen container with currentScreen state
+□ Progress indicator (dots or step X of Y)
+□ Forward/backward buttons
+□ Smooth transitions (200-300ms)
 
-1. NAVIGATION SHELL
-   - Screen container
-   - Progress indicator (dots showing current position)
-   - Forward/back navigation
-   - Screen transition animations
+STATE:
+□ const [currentScreen, setCurrentScreen] = useState(0)
+□ User inputs persist across screens
+□ Progress tracking (concepts completed)
+□ Prediction history saved
 
-2. STATE MANAGEMENT
-   - currentScreen tracking
-   - User progress data (which concepts completed)
-   - Variable values (sliders, choices)
-   - Prediction history (what user predicted vs actual)
+INPUTS:
+□ Button onClick handlers
+□ Slider onChange handlers
+□ Choice selection handlers
+□ All respond <100ms
 
-3. INPUT SYSTEM
-   - Button click handlers
-   - Slider change handlers
-   - Drag handlers (if needed)
-   - Touch/click detection
-
-4. FEEDBACK SYSTEM
-   - Visual response triggers
-   - Text display components
-   - Animation triggers
-   - Success/error indicators
-
-5. LAYOUT SYSTEM
-   - Screen anatomy (header 50px / center 400px / footer 50px)
-   - Responsive constraints
-   - Spacing application
-   - Typography application
-
-IMPLEMENTATION:
---------------
-Add to the renderer:
-
-// State for screen navigation
-const [currentScreen, setCurrentScreen] = useState(0);
-const [userProgress, setUserProgress] = useState({});
-const [predictions, setPredictions] = useState({});
-
-// Navigation functions
-const nextScreen = () => setCurrentScreen(prev => prev + 1);
-const prevScreen = () => setCurrentScreen(prev => Math.max(0, prev - 1));
-
-// Screen container with transitions
-// Progress indicator
-// CTA button component
-
-FOUNDATION VERIFICATION:
------------------------
-Before moving on, verify:
-- Can navigate forward through screens
-- Can navigate backward
-- Progress indicator updates
-- State persists through navigation
-- No console errors
-
-OUTPUT:
--------
-Update comment block:
-
+OUTPUT FORMAT - Update ENHANCEMENT PLAN:
 /*
- * ENHANCEMENT PLAN - [GAME NAME]
- * Phase 13 Complete: Core Framework
- * - Navigation: implemented (currentScreen state)
- * - Progress: implemented (progress indicator)
- * - State: implemented (userProgress, predictions)
- * - Layout: 50/400/50 anatomy
+ * Phase 13: Framework
+ *
+ * NAVIGATION:
+ * - Screen state: [implemented/not]
+ * - Progress indicator: [implemented/not]
+ * - Forward/back: [implemented/not]
+ * - Transitions: [implemented/not]
+ *
+ * STATE:
+ * - Current screen: useState hook
+ * - User inputs: [how stored]
+ * - Progress: [how tracked]
+ *
+ * INPUTS:
+ * - Button handlers: [implemented/not]
+ * - Slider handlers: [implemented/not]
+ * - Choice handlers: [implemented/not]
+ *
+ * CARRY FORWARD:
+ * - Navigation: Works/Partial
+ * - State: Works/Partial
+ * - Inputs: Works/Partial
+ * - For Phase 14: Framework ready to build into
  *
  * READY FOR PHASE 14
  */
 
-Run: bash scripts/run_checks.sh
+NOW BUILD:
+- Add useState for currentScreen
+- Add navigation functions (nextScreen, prevScreen)
+- Add progress indicator component
+- Add input handlers
+- Test forward/backward navigation works
+
+RULES:
+- Navigation must work
+- Inputs must respond
+- State must persist

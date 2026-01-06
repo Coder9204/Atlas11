@@ -1,82 +1,61 @@
-PHASE 17 OF 20: FUNCTIONALITY TESTING
-======================================
-Time Investment: Thorough | Output: Bug-Free, Stable Game
+PHASE 17: FUNCTIONALITY TEST
+Goal: Find and fix all bugs
+Min to Proceed: 0 critical bugs, game playable
+Uses: Phase 8 specs, Phase 16 game
 
-A broken game teaches nothing. Test everything systematically.
+TEST CHECKLIST:
 
-FULL PLAYTHROUGH TEST:
----------------------
-- Play through ENTIRE game start to finish
-- Test EVERY button, slider, toggle, interactive element
-- Verify EVERY screen transition
-- Confirm NO blank screens, white screens, broken states
-- Ensure game NEVER requires refresh to continue
-- Check all animations complete properly
-- Verify all feedback appears correctly
+PLAYTHROUGH:
+□ Every screen loads completely
+□ Every button responds
+□ Every slider works
+□ Every choice selectable
+□ No blank/white screens
+□ No refresh needed to continue
+□ No console errors
 
-SCREEN-BY-SCREEN VERIFICATION:
------------------------------
-For EACH screen:
-- Screen loads completely with all elements
-- Interactive elements respond to input
-- Feedback appears within 100ms
-- State updates correctly
-- Transition to next screen works
-- No console errors
-- No visual glitches
+EDGE CASES:
+□ Rapid clicks don't break it
+□ Extreme slider values handled
+□ Nav stress test (back/forward repeatedly)
+□ Idle and return works
+□ Unexpected order doesn't crash
 
-EDGE CASE TESTING:
------------------
+BUG SEVERITY:
+- Critical: Blocks completion (MUST FIX)
+- Major: Confusing but workaround exists
+- Minor: Polish issue
 
-RAPID INTERACTION:
-- Click buttons multiple times rapidly
-- Rapid slider movement
-- Quick screen changes
-
-EXTREME VALUES:
-- Slider at minimum
-- Slider at maximum
-- Boundary conditions
-
-NAVIGATION STRESS:
-- Navigate backwards and forwards repeatedly
-- Return to earlier screens
-- Jump around if possible
-
-IDLE/TIMEOUT:
-- Leave game idle, return
-- Long pause between actions
-
-UNEXPECTED BEHAVIOR:
-- Complete actions in unexpected order
-- Interact before screen fully loads
-- Click outside interactive areas
-
-COMMON FAILURES TO FIX:
-----------------------
-| Failure | Fix |
-|---------|-----|
-| Blank screen | Ensure components render, data loads |
-| Frozen state | Verify all handlers connected |
-| Missing content | Ensure data loads before render |
-| Broken navigation | Verify all buttons link correctly |
-| Unresponsive controls | Verify handlers on all elements |
-
-FIX ALL ISSUES before proceeding.
-
-OUTPUT:
--------
-Update comment block:
-
+OUTPUT FORMAT - Update ENHANCEMENT PLAN:
 /*
- * ENHANCEMENT PLAN - [GAME NAME]
- * Phase 17 Complete: Functionality Testing
- * - Full playthrough: PASS
- * - All interactions: responsive
- * - Edge cases: handled
- * - Zero crashes, zero blank screens
+ * Phase 17: Functionality Test
+ *
+ * PLAYTHROUGH:
+ * - All screens load: Yes/No
+ * - All buttons work: Yes/No
+ * - All sliders work: Yes/No
+ * - No blank screens: Yes/No
+ * - No refresh needed: Yes/No
+ *
+ * EDGE CASES:
+ * - Rapid clicks: Safe/Issues
+ * - Extreme values: Handled/Issues
+ * - Nav stress: Passed/Issues
+ *
+ * BUGS FOUND:
+ * | Bug | Screen | Severity | Status |
+ * | [desc] | [#] | Crit/Maj/Min | Fixed/Open |
+ *
+ * CARRY FORWARD:
+ * - Critical bugs: 0
+ * - Major bugs: X
+ * - Minor bugs: X
+ * - For Phase 20: Functionality status
  *
  * READY FOR PHASE 18
  */
 
-Run: bash scripts/run_checks.sh
+RULES:
+- Fix all critical bugs before proceeding
+- Document all bugs found
+- 0 critical bugs = ready to proceed

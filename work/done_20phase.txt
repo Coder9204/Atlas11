@@ -11,3 +11,5 @@ ZeroBasedBudgetRenderer:5
 ZeroBasedBudgetRenderer:7
 ZeroBasedBudgetRenderer:14
 ZeroBasedBudgetRenderer:19
+BudgetingRenderer:8
+FinancialModelingRenderer:11

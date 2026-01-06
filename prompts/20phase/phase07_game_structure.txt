@@ -1,71 +1,42 @@
-PHASE 7 OF 20: GAME STRUCTURE ARCHITECTURE
-===========================================
-Time Investment: Detailed | Output: Master Game Structure
+PHASE 7: GAME STRUCTURE
+Goal: Calculate screens, timing, flow
+Min to Proceed: Total screens estimated, 5+ concepts structured
+Uses: Phase 4 sequence, Phase 6 mechanics
 
-Design the overall game structure before specifying individual screens.
+QUESTIONS:
+Q1: How many screens per concept? (Base: Hook + Teach×2-3 + Practice×2 + Reveal + Transfer = ~7-9)
+Q2: Is total time 30-60 minutes? (Screens × 20 sec average)
+Q3: Does 70/20/10 hold? (70% interactive, 20% graphics, 10% text)
 
-SCREEN TYPES TO USE:
--------------------
-| Type | Purpose | Duration |
-|------|---------|----------|
-| Hook | Capture attention, show stakes | 10-15 sec |
-| Goal | Establish what user is trying to achieve | 10-15 sec |
-| Teach | Introduce concept with guided interaction | 20-30 sec |
-| Practice | Repeat with variation | 15-20 sec |
-| Predict | User commits to prediction | 10-15 sec |
-| Reveal | Show result and explain WHY | 15-20 sec |
-| Challenge | Test understanding | 20-30 sec |
-| Transfer | Apply to new context | 20-30 sec |
-| Integrate | Combine multiple concepts | 30-45 sec |
-| Takeaway | Summarize learning | 15-20 sec |
-
-THE CORE LOOP (For each concept):
----------------------------------
-TRY -> FEEDBACK -> REWARD -> TRY AGAIN (slightly harder)
-
-STANDARD CONCEPT SEQUENCE (8-10 screens per concept):
-----------------------------------------------------
-1. HOOK - Shows world + stakes
-2. GOAL - One sentence goal + visual of success
-3. GUIDED FIRST MOVE - Highlight control, animate gesture
-4. IMMEDIATE RESULT - World changes, short "why"
-5-7. PRACTICE LOOP - Same concept, varied, 3 reps
-8. PREDICT + REVEAL - Prediction vs result + mechanism
-9. TRANSFER - New context, same concept
-10. CONCEPT TAKEAWAY - Visual summary + real-life rule
-
-THE 70/20/10 RULE:
------------------
-70% - Interactive Visuals (game world, manipulable elements)
-20% - Explanatory Graphics (charts, arrows, indicators)
-10% - Text (3-6 word labels, "because" statements)
-
-OUTPUT FORMAT:
---------------
-Update the ENHANCEMENT PLAN comment block:
-
+OUTPUT FORMAT - Update ENHANCEMENT PLAN:
 /*
- * ENHANCEMENT PLAN - [GAME NAME]
- * Phase 7 Complete: Game Structure Architecture
+ * Phase 7: Game Structure
  *
- * [Keep Phase 1-6 content]
+ * STRUCTURE:
+ * Pos 1: [Concept] - [X] screens - [Y] min
+ * Pos 2: [Concept] - [X] screens - [Y] min
+ * Pos 3: [Concept] - [X] screens - [Y] min
+ * CP1: Checkpoint - [X] screens - Combines 1-3
+ * Pos 4-6: [concepts with screen counts]
+ * CP2: Checkpoint - [X] screens - Combines 1-6
+ * Pos 7-10: [concepts with screen counts]
+ * FINAL: Synthesis - [X] screens
  *
- * GAME STRUCTURE:
+ * TOTALS:
+ * - Total screens: [X]
+ * - Total time: [X] min
+ * - Balance: [X]% interactive / [Y]% graphics / [Z]% text
  *
- * Total Concepts: 10
- * Screens per Concept: [4-8, varies by complexity]
- * Total Screens: [Sum, typically 60-80]
- * Estimated Play Time: 30-45 minutes
- *
- * CONCEPT SEQUENCE WITH SCREEN COUNTS:
- * 1. [Concept] - [X screens] - Foundation
- * 2. [Concept] - [X screens] - Builds on #1
- * ... (all 10)
- *
- * INTEGRATION CHECKPOINTS:
- * - After C3: [Challenge name] - Tests [what]
- * - After C6: [Challenge name] - Tests [what]
- * - After C10: [Final challenge] - Comprehensive
+ * CARRY FORWARD:
+ * - Concepts structured: X/10
+ * - For Phase 8: Screen list to specify
+ * - For Phase 13: Navigation structure
+ * - For Phase 14: Build order
  *
  * READY FOR PHASE 8
  */
+
+RULES:
+- Estimate total screens
+- 5+ concepts structured = ready to proceed
+- Target 30-60 min total playtime

@@ -18,7 +18,7 @@ export GIT_EDITOR=true
 # ---- 16 NOT STARTED Games ----
 GAMES="FinancialModelingRenderer ZeroBasedBudgetRenderer BudgetingRenderer CashFlowRenderer UnitEconomicsRenderer AuditTrailsRenderer FinancialStatementAuditingRenderer TaxStructuresRenderer SalesTaxNexusRenderer TaxCreditsRenderer EquityOwnershipRenderer EquityDebtFinancingRenderer AngelInvestorsRenderer VentureCapitalRenderer FundraisingRenderer PayrollProcessingRenderer"
 
-MAX_TURNS=250
+MAX_TURNS=400
 
 # ---- Get phase name ----
 get_phase_name() {

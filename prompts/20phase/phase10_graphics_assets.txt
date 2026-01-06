@@ -1,76 +1,51 @@
-PHASE 10 OF 20: GRAPHICS & ASSET PLANNING
-==========================================
-Time Investment: Quality-Focused | Output: Asset Inventory + Implementation
+PHASE 10: ASSETS
+Goal: List and create all graphics needed
+Min to Proceed: Core assets listed and basic implementation started
+Uses: Phase 5 scenarios, Phase 6 visualizations, Phase 8 screens
 
-Plan and implement all visual assets. Everything must be realistic and professional.
+QUESTIONS:
+Q1: What backgrounds? (From Phase 5 scenarios)
+Q2: What interactive elements? (From Phase 6 controls)
+Q3: What causation visualizations? (From Phase 6 WHY reveals)
 
-REALISM STANDARDS:
------------------
-- Graphics look realistic, not cartoonish or clip-art
-- High-resolution, crisp, professional
-- Every image supports learning (no decorative filler)
-- Consistent style throughout
-
-WHAT TO AVOID vs WHAT TO USE:
------------------------------
-AVOID: Clip art, cartoonish characters, flat childish icons
-USE: Professional graphics, elegant illustrations, refined icons
-
-ASSET CATEGORIES TO IMPLEMENT:
-------------------------------
-
-1. SCENARIO GRAPHICS
-   - Background environments (realistic settings)
-   - Objects relevant to scenarios
-   - Visual representations of abstract concepts
-
-2. DATA VISUALIZATIONS
-   - Charts and graphs (clean, modern style)
-   - Meters and indicators
-   - Progress displays
-   - Before/after comparisons
-
-3. ICONS
-   - Consistent stroke weight
-   - Clear meaning
-   - Multiple sizes if needed
-
-4. INTERACTIVE ELEMENTS
-   - Buttons (primary, secondary states)
-   - Sliders (track, handle, fill)
-   - Cards (containers for information)
-   - Input controls
-
-CONCEPT VISUAL MAPPING:
------------------------
-Every abstract concept gets ONE consistent visual:
-- Money/Budget: Green + dollar icon + meter
-- Growth: Upward arrow + green
-- Loss/Danger: Red + downward indicator
-- Time: Clock/timeline
-- Success: Gold star/check
-[Add domain-specific mappings for this topic]
-
-BUILD NOW:
-----------
-Implement visual assets:
-- Create SVG graphics or use icon libraries
-- Set up data visualization components
-- Ensure consistent styling
-
-OUTPUT:
--------
-Update comment block:
-
+OUTPUT FORMAT - Update ENHANCEMENT PLAN:
 /*
- * ENHANCEMENT PLAN - [GAME NAME]
- * Phase 10 Complete: Graphics & Assets
- * - Scenario graphics: [List key visuals]
- * - Data displays: [List chart types used]
- * - Icon set: [Source/style]
- * - Concept visuals: [Key mappings]
+ * Phase 10: Assets
+ *
+ * BACKGROUNDS:
+ * | Asset | Scenario | Implementation |
+ * | [name] | [from Phase 5] | [CSS/SVG/component] |
+ *
+ * INTERACTIVE ELEMENTS:
+ * | Asset | Type | States | Implementation |
+ * | [name] | [button/slider/etc] | D/H/A/Dis | [component] |
+ *
+ * VISUALIZATIONS:
+ * | Asset | Concept | Shows | Implementation |
+ * | [name] | [which] | [causal chain] | [how built] |
+ *
+ * ICONS:
+ * | Icon | Meaning | Source |
+ * | Progress | Step indicator | [emoji/SVG/unicode] |
+ * | Success | Correct answer | [emoji/SVG/unicode] |
+ * | Hint | Need help | [emoji/SVG/unicode] |
+ *
+ * CARRY FORWARD:
+ * - Backgrounds: X listed, Y implemented
+ * - Interactive: X listed, Y implemented
+ * - Visualizations: X listed, Y implemented
+ * - For Phase 14: Assets to use
+ * - For Phase 15: Assets to polish
  *
  * READY FOR PHASE 11
  */
 
-Run: bash scripts/run_checks.sh
+NOW BUILD:
+- Create basic visual components
+- Set up data visualization helpers
+- Implement core interactive element styles
+
+RULES:
+- Core assets listed minimum
+- Start implementation where possible
+- Use existing UI patterns from codebase
