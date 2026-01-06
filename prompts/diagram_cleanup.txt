@@ -1,0 +1,545 @@
+THE ULTIMATE EDUCATIONAL GAME & SIMULATION GENERATOR
+MISSION STATEMENT
+Create interactive games and simulations that produce genuine, transferable understanding—not surface-level familiarity. Every game must ensure the user can explain WHY things work the way they do, not just WHAT happens. The goal is expert-level intuition delivered through play.
+
+MANDATORY PROCESS: SEVEN PHASES
+CRITICAL INSTRUCTION: Complete each phase fully before proceeding. No shortcuts. Each phase builds the foundation for the next. Rushing produces mediocre games. Taking time produces transformative learning experiences.
+
+PHASE 1: EXPERT KNOWLEDGE EXTRACTION
+Time Investment: Substantial | Output: The 10 Core Concepts
+Before designing anything, become the expert. Research deeply. Think like someone who will use this knowledge professionally in the 2030s and 2040s.
+Step 1.1: Identify What Experts Actually Use
+Ask yourself:
+* If someone works in this field professionally, what do they actually think about daily?
+* What decisions do they make? What variables do they manipulate?
+* What would get them fired if they didn't understand it?
+* What separates a novice from a 10-year veteran?
+* What's the knowledge that cannot be faked—the stuff that reveals true understanding?
+Step 1.2: Filter for the Essential 10
+From your research, identify exactly 10 core concepts that meet ALL of these criteria:
+Criterion	Test Question
+Applied Daily	Would a professional use this concept at least weekly?
+Causal Understanding	Does this explain WHY something happens, not just THAT it happens?
+Decision-Relevant	Does understanding this change what decisions someone makes?
+Future-Proof	Will this still matter in 2040? (Avoid trends; prioritize fundamentals)
+Interconnected	Does this concept connect to at least 2 other core concepts?
+Testable	Can we verify understanding through prediction and application?
+Non-Obvious	Would most beginners get this wrong or misunderstand it?
+Step 1.3: Document Each Concept Deeply
+For each of the 10 concepts, complete this template:
+CONCEPT [#]: [Name]
+
+THE CORE INSIGHT:
+[One sentence that captures the essential truth—what experts know that beginners don't]
+
+WHY IT WORKS THIS WAY (The Causal Chain):
+[Explain the mechanism. Not "X affects Y" but "X affects Y BECAUSE..."]
+[Go at least 2 levels deep in the causal chain]
+
+THE COMMON MISCONCEPTION:
+[What do most people get wrong about this? What's the intuitive-but-incorrect belief?]
+
+REAL-WORLD APPLICATION (2030s/2040s):
+[Specific scenario where a professional would use this concept]
+[What decision would they make differently because they understand this?]
+
+THE VARIABLES AT PLAY:
+- Input Variable 1: [What can be changed]
+- Input Variable 2: [What can be changed]
+- Output: [What changes as a result]
+- The Relationship: [How inputs affect output and WHY]
+
+EXPERT INTUITION:
+[What does an expert "feel" about this concept that a beginner doesn't?]
+[What patterns do they recognize instantly?]
+Step 1.4: Map the Concept Relationships
+Create a concept map showing:
+* Which concepts must be understood before others (prerequisites)
+* Which concepts reinforce each other (clusters)
+* Which concepts have surprising connections
+* The optimal learning sequence (not always linear)
+Output of Phase 1: A detailed document with 10 deeply-researched concepts, their causal mechanisms, misconceptions, applications, and relationships.
+
+PHASE 2: UNDERSTANDING ARCHITECTURE
+Time Investment: Significant | Output: The Learning Blueprint
+Design HOW understanding will develop. Map the journey from confusion to clarity.
+Step 2.1: Define the Understanding Levels
+For each concept, define what understanding looks like at each level:
+Level	Description	User Can...
+Level 0: Misconception	The intuitive but wrong belief	State the common mistake
+Level 1: Awareness	Knows the concept exists	Name it and give basic definition
+Level 2: Comprehension	Understands WHAT happens	Describe the relationship accurately
+Level 3: Causation	Understands WHY it happens	Explain the mechanism
+Level 4: Prediction	Can predict outcomes	Forecast results of new scenarios
+Level 5: Application	Can use it to make decisions	Apply to novel real-world situations
+Target: Every user reaches Level 4-5 for all 10 concepts.
+Step 2.2: Design the Misconception-to-Mastery Arc
+For each concept:
+LEARNING ARC FOR CONCEPT [#]:
+
+STARTING STATE (What user likely believes):
+[The misconception or gap]
+
+COGNITIVE CONFLICT (The "wait, what?" moment):
+[The experience/data that challenges their belief]
+
+EXPLORATION (Let them discover):
+[What variables they manipulate to see the pattern]
+
+REVELATION (The "aha!" moment):
+[How the true mechanism becomes visible]
+
+CONSOLIDATION (Lock in understanding):
+[The summary/rule they can articulate]
+
+TRANSFER (Prove they got it):
+[New scenario where they apply the concept successfully]
+Step 2.3: Sequence the 10 Concepts
+Determine the optimal order:
+1. Foundation First: Which concepts must come early because others depend on them?
+2. Build Complexity: How does each concept add to the previous?
+3. Strategic Callbacks: Where should earlier concepts reappear in new contexts?
+4. Integration Points: Where do multiple concepts combine?
+5. Final Synthesis: How does the last concept tie everything together?
+Output of Phase 2: A complete learning architecture with understanding levels, misconception-to-mastery arcs for each concept, and optimal sequencing.
+
+PHASE 3: REAL-WORLD SCENARIO DESIGN
+Time Investment: Substantial | Output: 10+ Authentic Scenarios
+Every concept must be learned through a scenario that actually happens in the real world. No abstractions. No toy problems.
+Step 3.1: Scenario Authenticity Checklist
+Every scenario must pass ALL of these tests:
+Test	Question
+Real Stakes	Would a real person face actual consequences from this decision?
+Authentic Numbers	Are all values realistic? (Research actual ranges)
+True Options	Are these the actual choices available in real life?
+Accurate Outcomes	Do the results match what would actually happen?
+Current Relevance	Would this scenario exist in the 2030s/2040s?
+Professional Recognition	Would an expert say "Yes, this is exactly what it's like"?
+Step 3.2: Scenario Design Template
+For each concept, design a scenario:
+SCENARIO FOR CONCEPT [#]:
+
+THE SITUATION:
+[Who is the user in this scenario? What's their role?]
+[What's the context? What's at stake?]
+
+THE DECISION:
+[What specific choice(s) must they make?]
+[What variables can they control?]
+
+THE CONSTRAINT:
+[What makes this non-trivial? What's the tradeoff?]
+
+THE VISIBLE FEEDBACK:
+[What changes in the world when they act?]
+[How is cause-and-effect made visible?]
+
+THE HIDDEN MECHANISM (What they'll discover):
+[What underlying principle explains the outcomes?]
+
+REALISTIC DETAILS:
+- Setting: [Specific, vivid, believable]
+- Numbers: [Research-backed, realistic ranges]
+- Terminology: [What professionals actually call things]
+- Tools: [What interfaces/dashboards/controls exist in real life]
+Step 3.3: Vary the Contexts
+Ensure the 10 scenarios span different contexts to show concept transferability:
+* Different industries/domains where the concept applies
+* Different scales (individual, team, organization, society)
+* Different time horizons (immediate, short-term, long-term effects)
+* Different stakeholders affected
+Output of Phase 3: 10+ fully-designed, authentic scenarios with realistic details, accurate numbers, and clear decision points.
+
+PHASE 4: WHY-TEACHING MECHANICS
+Time Investment: Critical | Output: Interaction Designs That Reveal Causation
+This is where good games become great. Design interactions that force the user to confront the WHY.
+Step 4.1: The Prediction-Action-Revelation Loop
+Every core interaction follows this pattern:
+┌─────────────────────────────────────────────────────────────┐
+│  1. PREDICT                                                 │
+│     "What do you think will happen if you [action]?"        │
+│     User commits to a prediction (makes thinking visible)    │
+│                                                             │
+│  2. ACT                                                     │
+│     User manipulates the variable                           │
+│     (Slider, choice, drag, toggle)                          │
+│                                                             │
+│  3. OBSERVE                                                 │
+│     Immediate visual feedback shows the result              │
+│     Before state → After state (side by side or animated)   │
+│                                                             │
+│  4. COMPARE                                                 │
+│     Show: Your prediction vs. Actual result                 │
+│     If wrong: Cognitive conflict created                     │
+│     If right: Confidence reinforced                         │
+│                                                             │
+│  5. REVEAL THE WHY                                          │
+│     "This happened BECAUSE [mechanism]"                      │
+│     Visual showing the causal chain                         │
+│     The underlying principle made explicit                  │
+│                                                             │
+│  6. ARTICULATE                                              │
+│     User completes: "[Variable] affects [Outcome]           │
+│     because [Mechanism]"                                    │
+│     (Multiple choice or fill-in to verify understanding)    │
+└─────────────────────────────────────────────────────────────┘
+Step 4.2: Making Causation Visible
+Design specific visualizations that show WHY, not just WHAT:
+Instead of...	Show...
+"Revenue decreased"	The FLOW: Price ↑ → Some customers leave → Fewer sales → Revenue changes
+"Efficiency improved"	The MECHANISM: Automation → Fewer manual steps → Less time per unit → More output
+"Risk increased"	The CHAIN: Variable changed → Exposure increased → More scenarios cause loss
+For each concept, define:
+CAUSATION VISUALIZATION FOR CONCEPT [#]:
+
+THE SURFACE EFFECT (What's easy to see):
+[The outcome that changes]
+
+THE HIDDEN MECHANISM (What must be revealed):
+[The causal chain that explains it]
+
+VISUALIZATION APPROACH:
+[How will you make the mechanism visible?]
+- Flow diagram that animates?
+- Intermediate variables that become visible?
+- Side-by-side comparison of the "engine"?
+- Slow-motion replay of the causal chain?
+Step 4.3: Misconception Confrontation
+For each concept's common misconception, design a specific moment that challenges it:
+MISCONCEPTION CONFRONTATION FOR CONCEPT [#]:
+
+THE MISCONCEPTION:
+[What users wrongly believe]
+
+THE SETUP:
+[Scenario where the misconception would predict outcome A]
+
+THE REVEAL:
+[Reality shows outcome B instead]
+
+THE EXPLANATION:
+[Why reality differs from intuition]
+[The correct mental model]
+Step 4.4: Transfer Challenges
+Design scenarios where users apply understanding to novel situations:
+TRANSFER CHALLENGE FOR CONCEPT [#]:
+
+FAMILIAR CONTEXT (from learning):
+[The original scenario where they learned the concept]
+
+NOVEL CONTEXT (for transfer):
+[A different domain/situation with the same underlying principle]
+
+THE BRIDGE:
+[What's the same? What's different?]
+[How should they recognize this is the same concept?]
+
+SUCCESS CRITERIA:
+[How do we know they truly understood, not just memorized?]
+Output of Phase 4: Detailed interaction designs for each concept showing exactly how causation will be revealed, misconceptions confronted, and understanding transferred.
+
+PHASE 5: GAME FLOW & USER EXPERIENCE
+Time Investment: Detailed | Output: Complete Screen-by-Screen Specification
+Now design the actual user journey through the game.
+Step 5.1: The Master Structure
+GAME STRUCTURE OVERVIEW:
+
+Total Concepts: 10
+Screens per Concept: 4-8 (depending on complexity)
+Total Screens: 40-80
+Estimated Play Time: 30-60 minutes
+
+CONCEPT SEQUENCE:
+1. [Concept Name] - [# screens] - [Foundation/builds on what]
+2. [Concept Name] - [# screens] - [Foundation/builds on what]
+...
+10. [Concept Name] - [# screens] - [Synthesis of all]
+
+INTEGRATION POINTS:
+- After Concept 3: [Mini-challenge combining 1-3]
+- After Concept 6: [Mid-game synthesis]
+- After Concept 10: [Final integration challenge]
+Step 5.2: Screen-by-Screen Specification
+For EVERY screen, complete this template:
+SCREEN [#]: [Title]
+Concept: [Which of the 10]
+Purpose: [Hook/Teach/Practice/Test/Synthesize]
+
+┌─────────────────────────────────────────────────────────────┐
+│  VISUAL LAYOUT                                              │
+│  [Sketch or description of what user sees]                  │
+│  - What's the focal point?                                  │
+│  - What interactive element exists?                         │
+│  - What feedback mechanisms are visible?                    │
+└─────────────────────────────────────────────────────────────┘
+
+THE ONE ACTION:
+[Exactly what the user does on this screen]
+
+THE ONE LEARNING GOAL:
+[The single micro-concept this screen teaches]
+
+BEFORE STATE:
+[What the world looks like before user acts]
+
+AFTER STATE:
+[What changes after user acts]
+
+THE WHY (shown to user):
+[How causation is revealed]
+
+INSTRUCTION TEXT:
+[Exact words shown to user - max 10 words]
+
+FEEDBACK TEXT:
+[Exact words shown after action - max 15 words]
+
+SUCCESS CRITERIA:
+[How does game know user succeeded?]
+
+NEXT SCREEN TRIGGER:
+[What action/state enables progression?]
+Step 5.3: Instruction Clarity Protocol
+Every instruction must pass the "5-Second Kid Test":
+* Can a 10-year-old understand what to do within 5 seconds?
+* Is the action obvious without reading?
+* Is there only ONE thing to do?
+Instruction writing rules:
+Rule	Example
+Start with verb	"Drag the slider..."
+Max 8 words	"Drag the price slider. Watch what happens."
+No jargon first time	Introduce terms AFTER they're understood
+Show, don't tell	Animate the expected action if complex
+Step 5.4: Feedback Quality Standards
+Every piece of feedback must:
+* Appear within 100ms of action
+* Show WHAT changed (visual)
+* Explain WHY it changed (1 sentence)
+* Connect to the larger concept (subtle callback)
+FEEDBACK TEMPLATE:
+
+VISUAL CHANGE:
+[What animates/updates/moves]
+
+QUANTITATIVE FEEDBACK:
+[Numbers that change: "Customers: 100 → 72"]
+
+QUALITATIVE FEEDBACK:
+[Meaning of change: "Fewer customers at higher price"]
+
+WHY STATEMENT:
+[Causal explanation: "Because price-sensitive customers won't pay $12"]
+Output of Phase 5: Complete screen-by-screen specification with layouts, actions, learning goals, feedback, and transitions for the entire game.
+
+PHASE 6: VISUAL & INTERACTION DESIGN
+Time Investment: Quality-Focused | Output: Design Specifications
+Make it beautiful. Make it feel like Apple, Airbnb, and Nike designed it.
+Step 6.1: Visual Design System
+Define the visual language for the entire game:
+COLOR PALETTE:
+- Primary: [Color + hex + usage]
+- Secondary: [Color + hex + usage]
+- Success: [Color + hex + usage]
+- Warning: [Color + hex + usage]
+- Neutral: [Color + hex + usage]
+- Background: [Color + hex + usage]
+
+TYPOGRAPHY:
+- Headings: [Font, weight, sizes]
+- Body: [Font, weight, sizes]
+- Labels: [Font, weight, sizes]
+- Numbers/Data: [Font, weight, sizes]
+
+SPACING SYSTEM:
+- Base unit: [8px recommended]
+- Component padding: [multiples of base]
+- Section margins: [multiples of base]
+
+INTERACTIVE ELEMENTS:
+- Buttons: [Style, states, sizes]
+- Sliders: [Style, handle, track]
+- Cards: [Corners, shadows, borders]
+- Data displays: [Meters, charts, numbers]
+
+ANIMATION PRINCIPLES:
+- Duration: [200-400ms for micro, 400-800ms for major]
+- Easing: [ease-out for entrances, ease-in-out for transforms]
+- Stagger: [50-100ms for sequences]
+Step 6.2: Realistic Graphics Requirements
+For each major visual element:
+VISUAL ELEMENT: [Name]
+
+WHAT IT REPRESENTS:
+[Real-world object/concept]
+
+REALISM STANDARD:
+[What would this actually look like in real life?]
+[Reference images/examples]
+
+LEVEL OF DETAIL:
+[Essential details to include]
+[Details to simplify]
+
+INTERACTIVE STATES:
+- Default: [appearance]
+- Hover: [appearance]
+- Active: [appearance]
+- Disabled: [appearance]
+
+ANIMATION:
+[How does it move/respond?]
+Step 6.3: Premium Quality Checklist
+Before finalizing any screen:
+Apple Standard: □ Is there generous white space? □ Is the typography clean and hierarchical? □ Are shadows subtle and realistic? □ Is there one clear focal point? □ Would this feel at home on Apple.com?
+Airbnb Standard: □ Does it feel warm and approachable? □ Is information hierarchy crystal clear? □ Are interactive elements obviously tappable? □ Does it guide without overwhelming?
+Nike Standard: □ Does it feel confident and bold? □ Is there dynamic energy in the design? □ Does it create emotional impact? □ Does it feel premium?
+Step 6.4: Data Visualization Standards
+For every chart, graph, or data display:
+DATA VISUALIZATION: [Name]
+
+DATA BEING SHOWN:
+[What information]
+
+VISUALIZATION TYPE:
+[Chart type and why it's best for this data]
+
+DESIGN SPECIFICATIONS:
+- Axes: [Labels, ranges, increments]
+- Colors: [What colors mean what]
+- Animation: [How data updates animate]
+- Interactivity: [Can user hover/tap for details?]
+
+CLARITY TEST:
+[Can user extract the key insight in 3 seconds?]
+Output of Phase 6: Complete visual design system, realistic graphics specifications, and quality standards for the entire game.
+
+PHASE 7: TESTING & VALIDATION
+Time Investment: Thorough | Output: Verified, Working Game
+A broken game teaches nothing. A confusing game frustrates. Test everything.
+Step 7.1: Functionality Testing
+Complete Playthrough Protocol:
+□ Play through ENTIRE game from start to finish
+□ Test EVERY button, slider, toggle, and interactive element
+□ Verify EVERY screen transition works smoothly
+□ Confirm NO blank screens, white screens, or broken states
+□ Ensure game NEVER requires refresh to continue
+□ Check all animations complete properly
+□ Verify all feedback appears correctly
+□ Test on different viewport sizes
+Screen-by-Screen Verification: For each screen:
+□ Screen loads completely with all elements
+□ Interactive elements respond to input
+□ Feedback appears within 100ms
+□ State updates correctly
+□ Transition to next screen works
+□ No console errors
+□ No visual glitches
+Edge Case Testing:
+□ Rapid clicking doesn't break functionality
+□ Extreme slider values handled correctly
+□ Backward/forward navigation preserves state
+□ Idle state doesn't cause issues
+□ Unexpected action order handled gracefully
+Step 7.2: Learning Validation
+Does the game actually teach?
+For each concept, verify:
+CONCEPT [#] LEARNING VALIDATION:
+
+Can user answer:
+□ WHAT happens when [variable] changes? (Comprehension)
+□ WHY does this happen? (Causation)
+□ What would happen in [new scenario]? (Prediction)
+□ How would you apply this to [real decision]? (Application)
+
+The WHY test:
+□ Is the causal mechanism explicitly shown?
+□ Is it shown visually, not just stated?
+□ Does user articulate the mechanism themselves?
+
+The Transfer test:
+□ Is there a novel scenario for this concept?
+□ Can user succeed without hints?
+□ Would they recognize this pattern in real life?
+Step 7.3: Usability Validation
+The 10-Year-Old Test:
+□ Can someone complete each screen without reading?
+□ Is the one action obvious within 5 seconds?
+□ Are all interactive elements clearly interactive?
+□ Is feedback immediate and understandable?
+□ Is there only ONE thing to do per screen?
+The Expert Test:
+□ Are scenarios authentic to real practice?
+□ Are numbers/values realistic?
+□ Would a professional recognize this as accurate?
+□ Does it teach something even experts might not articulate?
+Step 7.4: Quality Gates
+GATE 1: FUNCTIONALITY (Must pass before any release)
+□ Zero crashes or broken states
+□ Zero blank/white screens
+□ All interactions work correctly
+□ Complete game playable without refresh
+GATE 2: LEARNING (Must pass for educational value)
+□ Each concept has clear WHY revelation
+□ Misconceptions are confronted
+□ Transfer challenges demonstrate real understanding
+□ User can articulate the principles afterward
+GATE 3: DESIGN (Must pass for professional quality)
+□ Meets Apple/Airbnb/Nike visual standard
+□ All graphics are realistic and professional
+□ Consistent visual language throughout
+□ Animations are smooth and purposeful
+GATE 4: EXPERIENCE (Must pass for engagement)
+□ 10-year-old can play without help
+□ Expert finds it valuable
+□ Self-paced with no frustration points
+□ Satisfying to complete
+Output of Phase 7: Fully tested, validated game that works flawlessly and demonstrably produces real understanding.
+
+EXECUTION INSTRUCTIONS
+For Each Game Creation Request:
+1. THINK BEFORE BUILDING
+Spend substantial time on Phases 1-4 before writing any code. The research and design phases are where quality is determined.
+2. DOCUMENT YOUR WORK
+Produce explicit outputs for each phase:
+* Phase 1: The 10 concepts with full detail
+* Phase 2: Learning architecture and sequencing
+* Phase 3: Authentic scenarios
+* Phase 4: WHY-teaching mechanics
+* Phase 5: Screen-by-screen specifications
+* Phase 6: Visual design system
+* Phase 7: Test results
+3. BUILD INCREMENTALLY
+* Build Concept 1's screens completely
+* Test thoroughly
+* Then Concept 2, etc.
+* Don't rush to "finish"—rush to "work perfectly"
+4. VERIFY UNDERSTANDING
+After building, ask yourself:
+* "If I were a user, would I understand WHY after playing this?"
+* "Could I explain the mechanism to someone else?"
+* "Would I make better real-world decisions?"
+If the answer to any is "no," redesign.
+
+QUALITY STANDARDS SUMMARY
+Dimension	Standard
+Concept Selection	10 most important, applied, future-proof concepts experts actually use
+Understanding Depth	User can explain WHY, not just WHAT
+Scenario Authenticity	Real situations with real numbers and real stakes
+Causation Visibility	Mechanisms shown visually, not just stated
+Misconception Handling	Wrong beliefs explicitly confronted and corrected
+Transfer Ability	User succeeds in novel scenarios with same principles
+Visual Quality	Apple/Airbnb/Nike professional standard
+Interaction Clarity	ONE action per screen, obvious within 5 seconds
+Functionality	Zero bugs, zero confusion, zero frustration
+Real-World Value	User makes better decisions after playing
+THE ULTIMATE TEST
+After someone plays your game, they should be able to:
+1. Name all 10 core concepts
+2. Explain how each works (the mechanism)
+3. Predict outcomes in new scenarios
+4. Apply the concepts to real decisions
+5. Teach the concepts to someone else
+If your game achieves this, you've built something exceptional.
+
+This prompt is designed to produce the best educational games in the world. Take your time. Do each phase properly. The quality of the output depends entirely on the quality of the thinking that precedes it.
+

@@ -1,0 +1,107 @@
+PHASE 3 OF 3: TESTING & POLISH
+===============================
+
+You are validating and polishing an educational game renderer. This phase focuses on TESTING and FINAL POLISH.
+
+PREREQUISITE: The renderer should have Phase 1 and Phase 2 marked complete in its ENHANCEMENT PLAN comment.
+
+OBJECTIVE: Ensure the game works flawlessly, teaches effectively, and meets premium quality standards.
+
+TESTING PROTOCOL
+----------------
+
+1. FUNCTIONALITY TESTING
+Run through the entire game and verify:
+[ ] Every button/slider/toggle responds correctly
+[ ] Every screen transition works smoothly
+[ ] No blank screens or broken states
+[ ] All animations complete properly
+[ ] All feedback appears correctly
+[ ] No TypeScript errors (run: bash scripts/run_checks.sh)
+
+2. LEARNING VALIDATION
+For each concept taught, verify:
+[ ] The WHY is explicitly shown (not just stated)
+[ ] Predictions are compared to actual results
+[ ] Misconceptions are confronted
+[ ] User must articulate understanding
+
+3. USABILITY TESTING (10-Year-Old Test)
+[ ] Is the ONE action obvious within 5 seconds?
+[ ] Are all interactive elements clearly interactive?
+[ ] Is feedback immediate and understandable?
+[ ] Can someone complete each screen without reading?
+
+4. EXPERT TEST
+[ ] Are scenarios authentic to real practice?
+[ ] Are numbers/values realistic?
+[ ] Would a professional recognize this as accurate?
+
+FIX ANY ISSUES FOUND
+--------------------
+Common issues to fix:
+- Missing state initialization
+- Buttons that don't work
+- Screens with no clear action
+- Missing feedback after actions
+- Confusing instructions
+- Broken progression (can't advance)
+- Visual inconsistencies
+
+POLISH CHECKLIST
+----------------
+[ ] Consistent color palette throughout
+[ ] All text is readable (contrast, size)
+[ ] Animations are smooth (not janky)
+[ ] Loading states where needed
+[ ] Error states handled gracefully
+[ ] Mobile-friendly (if applicable)
+
+FINAL OUTPUT
+------------
+1. Fix any bugs or issues found
+2. Update the ENHANCEMENT PLAN comment to mark Phase 3 complete:
+
+/*
+ * ENHANCEMENT PLAN - [GAME NAME]
+ * Phase 1 Complete: Research & Design
+ * Phase 2 Complete: Implementation
+ * Phase 3 Complete: Testing & Polish
+ *
+ * FINAL STATUS:
+ * - Screens: [count] fully functional screens
+ * - Concepts taught: [X]/10 with WHY mechanics
+ * - Quality gates passed: Functionality, Learning, Design, Experience
+ *
+ * GAME COMPLETE
+ */
+
+3. Run final check: bash scripts/run_checks.sh
+4. Ensure game is fully playable from start to finish
+
+QUALITY GATES (All must pass)
+-----------------------------
+GATE 1 - FUNCTIONALITY:
+[ ] Zero crashes or broken states
+[ ] All interactions work correctly
+[ ] Complete game playable without refresh
+
+GATE 2 - LEARNING:
+[ ] Each concept has clear WHY revelation
+[ ] Misconceptions are confronted
+[ ] User can articulate principles
+
+GATE 3 - DESIGN:
+[ ] Meets premium visual standard
+[ ] Consistent visual language
+[ ] Animations smooth and purposeful
+
+GATE 4 - EXPERIENCE:
+[ ] Self-paced with no frustration
+[ ] Satisfying to complete
+
+IMPORTANT:
+- This is the final quality check - be thorough
+- Fix issues, don't just note them
+- The game must be production-ready when complete
+- If major issues exist, fix them before marking complete

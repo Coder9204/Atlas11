@@ -1,0 +1,80 @@
+PHASE 11 OF 20: INTERACTION DESIGN SPECIFICATION
+=================================================
+Time Investment: Detailed | Output: All Interactive Controls Implemented
+
+Implement exactly how every interactive element behaves.
+
+AFFORDANCE RULES:
+-----------------
+| Element | How to Show It's Interactive |
+|---------|------------------------------|
+| Buttons | Subtle shadow, clear label, hover state |
+| Sliders | Elegant handle, refined track (iOS-style) |
+| Draggables | Slight lift shadow on hover |
+| Choices | Clear selection state, obvious tap targets |
+| Static | NO affordances - clearly NOT interactive |
+
+NATURAL MAPPING:
+---------------
+| Interaction | User Mental Model |
+|-------------|-------------------|
+| Drag | "I'm moving this thing" |
+| Slide | "I'm changing the amount" |
+| Tap/Click | "I'm choosing this" |
+| Toggle | "I'm switching this on/off" |
+
+FOR EACH CONTROL, IMPLEMENT:
+----------------------------
+
+1. STATES
+   - Default: Normal appearance
+   - Hover: Visual response (desktop)
+   - Active/Pressed: Pressed appearance
+   - Disabled: Cannot interact (if applicable)
+
+2. INTERACTION
+   - Input method (click/drag/touch)
+   - Constraints (min/max values)
+   - Step increments
+
+3. FEEDBACK
+   - Immediate response (<100ms!)
+   - Visual change on input
+   - Value display update
+
+4. VALUE HANDLING
+   - Range (min to max)
+   - Default starting value
+   - How value is displayed
+
+FEEDBACK TIMING REQUIREMENTS:
+----------------------------
+| Type | Timing |
+|------|--------|
+| Visual response | <100ms (CRITICAL - lag = "broken") |
+| Animation | 60fps always |
+| Screen transitions | <500ms |
+
+BUILD NOW:
+----------
+Implement all interactive controls:
+- Button components with states
+- Slider components with proper feedback
+- Choice/selection components
+- Drag handlers if needed
+
+OUTPUT:
+-------
+Update comment block:
+
+/*
+ * ENHANCEMENT PLAN - [GAME NAME]
+ * Phase 11 Complete: Interaction Design
+ * - Controls implemented: [List: buttons, sliders, etc.]
+ * - Feedback timing: <100ms
+ * - All states: default, hover, active, disabled
+ *
+ * READY FOR PHASE 12
+ */
+
+Run: bash scripts/run_checks.sh

@@ -1,0 +1,1 @@
+InventoryValuationRenderer:2a3

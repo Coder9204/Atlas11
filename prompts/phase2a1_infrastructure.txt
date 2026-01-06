@@ -1,0 +1,78 @@
+PHASE 2a1: PREDICTION INFRASTRUCTURE
+=====================================
+
+FOCUSED TASK: Add state management and prediction mechanics infrastructure ONLY.
+Do NOT implement screens or concepts yet - just the foundation.
+
+PREREQUISITE: Phase 1 ENHANCEMENT PLAN comment must exist.
+
+SCOPE - ONLY DO THESE:
+----------------------
+1. Add prediction-related useState hooks
+2. Add helper functions for prediction flow
+3. Add screen navigation state
+4. Keep existing game logic intact
+
+CODE TO ADD (adapt to existing patterns):
+-----------------------------------------
+// Add these state variables inside the renderer function:
+
+// Screen navigation (13 total: 10 concepts + 2 scenarios + 1 summary)
+const [currentScreen, setCurrentScreen] = useState(0);
+const totalScreens = 13;
+
+// Prediction mechanics
+const [showPredictionResult, setShowPredictionResult] = useState(false);
+const [predictionCorrect, setPredictionCorrect] = useState(false);
+
+// Tracking
+const [conceptsLearned, setConceptsLearned] = useState<string[]>([]);
+const [totalPredictions, setTotalPredictions] = useState(0);
+const [correctPredictions, setCorrectPredictions] = useState(0);
+
+// Helper function for prediction flow
+const handlePrediction = (prediction: string, correctAnswer: string, conceptName: string) => {
+  const isCorrect = prediction === correctAnswer;
+  setPredictionCorrect(isCorrect);
+  setShowPredictionResult(true);
+  setTotalPredictions(prev => prev + 1);
+  if (isCorrect) {
+    setCorrectPredictions(prev => prev + 1);
+  }
+  if (!conceptsLearned.includes(conceptName)) {
+    setConceptsLearned(prev => [...prev, conceptName]);
+  }
+};
+
+const nextScreen = () => {
+  setShowPredictionResult(false);
+  setPredictionCorrect(false);
+  setCurrentScreen(prev => Math.min(prev + 1, totalScreens - 1));
+};
+
+const prevScreen = () => {
+  setShowPredictionResult(false);
+  setPredictionCorrect(false);
+  setCurrentScreen(prev => Math.max(prev - 1, 0));
+};
+
+DO NOT:
+-------
+- Implement any new screens
+- Change existing game screens
+- Add visual components
+- Implement concept teaching
+
+OUTPUT:
+-------
+Update ENHANCEMENT PLAN comment:
+/*
+ * Phase 2a1 Complete: Infrastructure
+ * - [X] Prediction state variables
+ * - [X] Screen navigation state (totalScreens=13)
+ * - [X] handlePrediction helper
+ * - [X] nextScreen/prevScreen helpers
+ */
+
+Run: bash scripts/run_checks.sh
+Output: DONE [GAME] PHASE 2a1

@@ -1,0 +1,85 @@
+PHASE 15 OF 20: ANIMATION & POLISH
+===================================
+Time Investment: Quality-Focused | Output: Polished Premium Experience
+
+Add the finishing touches that make the game feel premium.
+
+ANIMATION CHECKLIST:
+-------------------
+
+TRANSITIONS:
+- Screen-to-screen transitions smooth
+- Entry animations (ease-out)
+- Exit animations (ease-in)
+- Timing: 200-400ms
+
+FEEDBACK ANIMATIONS:
+- Visual responses immediate
+- Success animations satisfying
+- Error hints gentle and helpful
+- Progress celebrations reinforce learning
+
+DATA ANIMATIONS:
+- Number changes animate smoothly
+- Charts/meters animate updates
+- Before/after transitions clear
+- Causation flows animated
+
+MICRO-INTERACTIONS:
+- Hover states respond
+- Click/tap has visual feedback
+- Drag has appropriate physics
+- Release has smooth settling
+
+TECHNICAL REQUIREMENTS:
+- All animations 60fps
+- Easing curves feel natural
+- No jarring movements
+- Consistent timing throughout
+
+IMPLEMENT:
+---------
+
+// Transition wrapper
+const Transition = ({ children }) => (
+  <div className="transition-opacity duration-300 ease-out">
+    {children}
+  </div>
+);
+
+// Number animation
+const AnimatedNumber = ({ value }) => {
+  // Animate from previous to current value
+};
+
+// Success celebration
+const SuccessAnimation = () => {
+  // Brief, satisfying animation
+};
+
+APPLE/AIRBNB/NIKE QUALITY CHECK:
+-------------------------------
+- Does this look like it belongs on Apple.com?
+- Would Airbnb put this in their app?
+- Does it have the confidence of Nike?
+- Is every element intentionally placed?
+- Is there enough white space?
+- Are colors sophisticated?
+- Do animations feel smooth and natural?
+
+OUTPUT:
+-------
+Update comment block:
+
+/*
+ * ENHANCEMENT PLAN - [GAME NAME]
+ * Phase 15 Complete: Animation & Polish
+ * - Transitions: smooth 200-300ms
+ * - Micro-interactions: all responsive
+ * - 60fps verified
+ * - Premium quality achieved
+ *
+ * READY FOR PHASE 16
+ */
+
+Run: bash scripts/run_checks.sh

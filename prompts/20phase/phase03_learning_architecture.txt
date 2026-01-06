@@ -1,0 +1,69 @@
+PHASE 3 OF 20: LEARNING ARCHITECTURE DESIGN
+============================================
+Time Investment: Significant | Output: Understanding Levels + Learning Arcs
+
+Design HOW understanding will develop for each concept.
+
+UNDERSTANDING LEVELS (Apply to each concept):
+---------------------------------------------
+Level 0: Misconception - The intuitive but wrong belief
+Level 1: Awareness - Knows the concept exists
+Level 2: Comprehension - Understands WHAT happens
+Level 3: Causation - Understands WHY it happens
+Level 4: Prediction - Can predict outcomes in new scenarios
+Level 5: Application - Can use it to make real decisions
+
+TARGET: Every user reaches Level 4-5 for all 10 concepts.
+
+FOR EACH CONCEPT, DESIGN THE LEARNING ARC:
+------------------------------------------
+
+1. STARTING STATE (Level 0)
+   - What user likely believes (the misconception)
+   - Why they believe it
+
+2. COGNITIVE CONFLICT (The "wait, what?" moment)
+   - The experience that challenges their belief
+   - The data/result that doesn't match expectation
+
+3. EXPLORATION (Level 1-2)
+   - What they manipulate
+   - What patterns they observe
+
+4. REVELATION (Level 3 - The "aha!" moment)
+   - How the WHY is revealed
+   - The new understanding
+
+5. CONSOLIDATION (Level 4)
+   - The rule they can articulate
+   - The prediction they can now make
+
+6. TRANSFER (Level 5)
+   - New scenario with same principle
+   - How they apply it differently
+
+OUTPUT FORMAT:
+--------------
+Update the ENHANCEMENT PLAN comment block:
+
+/*
+ * ENHANCEMENT PLAN - [GAME NAME]
+ * Phase 3 Complete: Learning Architecture
+ *
+ * [Keep Phase 1-2 content]
+ *
+ * LEARNING ARCS:
+ *
+ * Concept 1: [Name]
+ * - Misconception: [What they start believing]
+ * - Aha moment: [The revelation that changes their mind]
+ * - Exit state: [What they can now do]
+ *
+ * [Repeat for all 10 - keep each to 3 lines]
+ *
+ * KEY CROSS-CONCEPT CONNECTIONS:
+ * - [Concept X] reinforces [Concept Y] because...
+ * - [Concept Z] must come before [Concept W] because...
+ *
+ * READY FOR PHASE 4
+ */

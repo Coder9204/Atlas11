@@ -1,0 +1,62 @@
+PHASE 2 OF 20: CONCEPT DEEP-DIVE DOCUMENTATION
+===============================================
+Time Investment: Substantial | Output: Detailed Concept Cards
+
+For each of the 10 concepts from Phase 1, create comprehensive documentation.
+
+FOR EACH CONCEPT, DOCUMENT:
+---------------------------
+
+1. THE CORE INSIGHT
+   One sentence that captures the essential truth - what experts know that beginners don't
+
+2. WHY IT WORKS THIS WAY (The Causal Chain)
+   - Level 1 Cause: The immediate reason ("X happens because Y")
+   - Level 2 Cause: Why Level 1 is true ("Y happens because Z")
+   - The Complete Chain: Full cause-effect sequence
+
+3. THE COMMON MISCONCEPTION
+   - What Beginners Believe: The intuitive-but-incorrect belief
+   - Why It Seems True: Why this misconception is appealing
+   - The Critical Error: What specific thing they get wrong
+   - The Correction: The accurate mental model
+
+4. REAL-WORLD APPLICATION
+   - Professional Context: Who uses this? What role? What industry?
+   - Specific Decision: What exact decision does this inform?
+   - Without This Knowledge: What mistake would they make?
+   - With This Knowledge: What better decision would they make?
+
+5. THE VARIABLES AT PLAY
+   - Input Variable 1: Name, range, what user can manipulate
+   - Input Variable 2: Name, range, what user can manipulate
+   - Output Variable: What it is, how it changes, why it matters
+   - The Relationship: How inputs affect output
+
+OUTPUT FORMAT:
+--------------
+Update the ENHANCEMENT PLAN comment block:
+
+/*
+ * ENHANCEMENT PLAN - [GAME NAME]
+ * Phase 2 Complete: Concept Deep-Dive
+ *
+ * [Keep Phase 1 content]
+ *
+ * CONCEPT DEEP-DIVES:
+ *
+ * Concept 1: [Name]
+ * - Core insight: [One sentence]
+ * - Causal chain: [X because Y because Z]
+ * - Misconception: [What beginners wrongly believe]
+ * - Variables: [Input1, Input2 -> Output]
+ *
+ * [Repeat for all 10 concepts - keep each to 4-5 lines]
+ *
+ * READY FOR PHASE 3
+ */
+
+IMPORTANT:
+- Keep each concept documentation to 4-5 lines
+- Focus on actionable details for later phases
+- Do NOT change game logic yet

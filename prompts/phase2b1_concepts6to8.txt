@@ -1,0 +1,71 @@
+PHASE 2b1: CONCEPTS 6-8 SCREENS
+================================
+
+FOCUSED TASK: Implement 3 screens for concepts 6-8 (ONE screen per concept).
+
+PREREQUISITE: Phase 2a3 must be complete (concepts 1-5 done).
+
+CRITICAL: Use 1 COMBINED screen per concept (not 3 separate screens).
+
+SCOPE - ONLY DO THESE:
+----------------------
+1. Read concepts 6-8 from the ENHANCEMENT PLAN comment
+2. Create 1 screen per concept (3 screens total)
+3. Each screen has prediction built in (click to reveal)
+4. Continue screen numbering from where 2a3 left off
+
+COMBINED SCREEN PATTERN (use for each concept):
+-----------------------------------------------
+if (currentScreen === 5) {  // Adjust number based on previous screens
+  return (
+    <div className="p-6 bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 rounded-2xl text-white min-h-[500px]">
+      <div className="text-xs text-blue-400 font-bold mb-2">CONCEPT 6 OF 10</div>
+      <h2 className="text-xl font-bold mb-3">[Concept Name]</h2>
+
+      {!showPredictionResult ? (
+        <>
+          <div className="bg-white/10 rounded-xl p-4 mb-4">
+            <p className="text-sm text-white/80">[Scenario description - 2 sentences max]</p>
+          </div>
+          <p className="text-sm text-white/60 mb-3">What do you think happens?</p>
+          <div className="space-y-2">
+            <button onClick={() => handlePrediction('A')}
+              className="w-full p-3 bg-white/5 hover:bg-white/10 rounded-lg text-left text-sm">
+              [Option A]
+            </button>
+            <button onClick={() => handlePrediction('B')}
+              className="w-full p-3 bg-white/5 hover:bg-white/10 rounded-lg text-left text-sm">
+              [Option B]
+            </button>
+          </div>
+        </>
+      ) : (
+        <>
+          <div className={`p-3 rounded-lg mb-4 ${predictionCorrect ? 'bg-green-500/20' : 'bg-orange-500/20'}`}>
+            <span className="font-bold">{predictionCorrect ? '✓ Correct!' : '→ Not quite'}</span>
+          </div>
+          <div className="bg-white/10 rounded-xl p-4 mb-4">
+            <h3 className="font-bold text-sm mb-2">WHY:</h3>
+            <p className="text-sm text-white/80">[1-2 sentence explanation]</p>
+          </div>
+          <button onClick={nextScreen} className="w-full py-3 bg-blue-600 rounded-xl font-bold">
+            Next Concept →
+          </button>
+        </>
+      )}
+    </div>
+  );
+}
+
+OUTPUT:
+-------
+Update ENHANCEMENT PLAN comment:
+/*
+ * Phase 2b1 Complete: Concepts 6-8
+ * - [X] Concept 6: [name] - 1 screen
+ * - [X] Concept 7: [name] - 1 screen
+ * - [X] Concept 8: [name] - 1 screen
+ */
+
+Run: bash scripts/run_checks.sh
+Output: DONE [GAME] PHASE 2b1

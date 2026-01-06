@@ -1,0 +1,9 @@
+The changes are in place. The implementation looks correct based on the pattern used by the existing code. The added screens for concepts 4 and 5:
+
+1. **Concept 4: Shell Company Detection** (screen index 3) - teaches how to identify shell company fraud through red flags like newly incorporated entities, offshore addresses, no web presence, and segregation of duties violations
+
+2. **Concept 5: Lapping Schemes** (screen index 4) - teaches how lapping schemes work and why they are unsustainable, with detection methods like timing gap analysis and mandatory vacations
+
+Both use the same prediction-reveal pattern established by concepts 1-3 in Phase 2a2.
+
+DONE ForensicAccountingRenderer PHASE 2a3

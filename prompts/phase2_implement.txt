@@ -1,0 +1,90 @@
+PHASE 2 OF 3: IMPLEMENTATION
+=============================
+
+You are implementing enhancements to an educational game renderer. This phase focuses on BUILDING the improvements designed in Phase 1.
+
+PREREQUISITE: The renderer should have an ENHANCEMENT PLAN comment block from Phase 1. Read it first.
+
+OBJECTIVE: Implement the WHY-teaching mechanics, game flow, and visual design based on the Phase 1 plan.
+
+IMPLEMENTATION PRINCIPLES
+-------------------------
+
+1. WHY-TEACHING MECHANICS (Most Critical)
+Every interaction must follow the Prediction-Action-Revelation loop:
+- PREDICT: User commits to what they think will happen
+- ACT: User manipulates a variable (slider, button, drag)
+- OBSERVE: Immediate visual feedback shows result
+- COMPARE: Show prediction vs actual
+- REVEAL WHY: Explain the causal mechanism
+- ARTICULATE: User confirms understanding
+
+2. GAME FLOW
+- 10+ screens covering the core concepts
+- Each screen has ONE action and ONE learning goal
+- Clear progression from simple to complex
+- Integration points where multiple concepts combine
+
+3. VISUAL STANDARDS (Apple/Airbnb/Nike quality)
+- Generous white space
+- Clean typography hierarchy
+- Subtle, realistic shadows
+- One clear focal point per screen
+- Smooth animations (200-400ms)
+- Interactive elements obviously tappable
+
+4. SCREEN STRUCTURE
+For each screen implement:
+- Clear instruction (max 8 words, starts with verb)
+- Single interactive element
+- Immediate feedback (<100ms)
+- WHY explanation after action
+- Clear transition to next screen
+
+IMPLEMENTATION CHECKLIST
+------------------------
+[ ] Read the Phase 1 ENHANCEMENT PLAN comment
+[ ] Implement screens for at least 5 of the 10 concepts
+[ ] Each concept has: intro -> interaction -> feedback -> WHY reveal
+[ ] Include prediction mechanics (user guesses before seeing result)
+[ ] Add misconception confrontation (show why intuition was wrong)
+[ ] Implement at least 2 real-world scenarios
+[ ] Add progress tracking (screen X of Y)
+[ ] Include score/feedback system
+[ ] Polish visuals (gradients, shadows, animations)
+
+CODE QUALITY
+------------
+- Use React hooks properly (useState, useEffect)
+- Keep state management simple and local
+- Use Tailwind CSS for styling
+- Ensure TypeScript types are correct
+- No console errors or warnings
+
+OUTPUT REQUIREMENTS
+-------------------
+1. Update the renderer with full implementation
+2. Update the ENHANCEMENT PLAN comment to mark Phase 2 complete:
+
+/*
+ * ENHANCEMENT PLAN - [GAME NAME]
+ * Phase 1 Complete: Research & Design
+ * Phase 2 Complete: Implementation
+ *
+ * IMPLEMENTED:
+ * - [X] Screens: [count] screens covering [X] concepts
+ * - [X] WHY mechanics: prediction-reveal loops
+ * - [X] Scenarios: [list implemented scenarios]
+ * - [X] Visual polish: gradients, animations, feedback
+ *
+ * READY FOR PHASE 3: Testing
+ */
+
+3. The game must be PLAYABLE from start to finish
+4. Run: bash scripts/run_checks.sh to verify no TypeScript errors
+
+IMPORTANT:
+- Focus on quality over quantity - 5 well-designed screens beat 20 rushed ones
+- Every screen must teach WHY, not just WHAT
+- If the existing game is good, enhance it; don't rewrite from scratch
+- Preserve any good existing functionality

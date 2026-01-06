@@ -1,0 +1,60 @@
+PHASE 6 OF 20: WHY-TEACHING MECHANICS DESIGN
+=============================================
+Time Investment: Critical | Output: Interaction Designs for Each Concept
+
+This is where good games become great. Design interactions that force users to confront the WHY.
+
+THE PREDICTION-ACTION-REVELATION LOOP (Core Pattern):
+----------------------------------------------------
+1. PREDICT: "What do you think will happen?" - User commits to prediction
+2. ACT: User manipulates the variable
+3. OBSERVE: Immediate visual feedback shows result
+4. COMPARE: Show prediction vs. actual result
+5. REVEAL THE WHY: "This happened BECAUSE [mechanism]"
+6. ARTICULATE: User completes "[Variable] affects [Outcome] because [Mechanism]"
+
+FOR EACH CONCEPT, DESIGN:
+-------------------------
+
+1. CAUSATION VISUALIZATION
+   - The Surface Effect: What's easy to see (the WHAT)
+   - The Hidden Mechanism: What must be revealed (the WHY)
+   - Visualization Method: How to make the WHY visible
+     Options: Flow diagram, intermediate variables, side-by-side,
+              slow-motion, layered reveal, before/after
+
+2. MISCONCEPTION CONFRONTATION
+   - The Setup: Scenario where misconception predicts outcome A
+   - The Reveal: Reality shows outcome B instead
+   - The Cognitive Conflict: The "wait, that doesn't make sense" moment
+   - The Explanation: Why reality differs from intuition
+   - The Resolution: The "of course!" moment
+
+3. TRANSFER CHALLENGE
+   - Familiar Context: Where they learned the concept
+   - Novel Context: Different domain, same principle
+   - The Bridge: Recognition cue connecting them
+   - Success Proof: How we know they truly understood
+
+OUTPUT FORMAT:
+--------------
+Update the ENHANCEMENT PLAN comment block:
+
+/*
+ * ENHANCEMENT PLAN - [GAME NAME]
+ * Phase 6 Complete: WHY-Teaching Mechanics
+ *
+ * [Keep Phase 1-5 content]
+ *
+ * WHY-TEACHING DESIGNS:
+ *
+ * Concept 1: [Name]
+ * - Prediction question: [What user predicts]
+ * - Visualization: [How mechanism is shown]
+ * - Misconception confronted: [The wrong belief challenged]
+ * - Transfer context: [New scenario for same principle]
+ *
+ * [Repeat for all 10 - keep each to 4 lines]
+ *
+ * READY FOR PHASE 7
+ */

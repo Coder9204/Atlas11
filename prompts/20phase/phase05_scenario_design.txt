@@ -1,0 +1,69 @@
+PHASE 5 OF 20: REAL-WORLD SCENARIO DESIGN
+==========================================
+Time Investment: Substantial | Output: 10+ Authentic Scenarios
+
+Every concept must be learned through a scenario that actually happens in real life.
+
+SCENARIO AUTHENTICITY CHECKLIST (Every scenario must pass ALL):
+---------------------------------------------------------------
+- Real Stakes: Would a real person face actual consequences?
+- Authentic Numbers: Are all values realistic? (Research actual ranges)
+- True Options: Are these the actual choices available in real life?
+- Accurate Outcomes: Do results match what would actually happen?
+- Current Relevance: Would this scenario exist in 2030s/2040s?
+- Professional Recognition: Would an expert say "Yes, this is exactly what it's like"?
+
+FOR EACH CONCEPT, DESIGN A SCENARIO:
+------------------------------------
+
+1. THE SITUATION
+   - Who is the user (their role - be specific)
+   - The context (where they are, what's happening)
+   - What's at stake (real consequences)
+
+2. THE DECISION
+   - What they must decide
+   - Variables they control
+   - Information available
+
+3. THE CONSTRAINT
+   - What makes this non-trivial
+   - The tradeoff
+   - The tension between competing priorities
+
+4. THE VISIBLE FEEDBACK
+   - Immediate change (what shifts right away)
+   - Delayed effect (what changes over time)
+   - How cause-effect is shown visually
+
+5. THE HIDDEN MECHANISM
+   - The underlying principle (the WHY)
+   - How it becomes visible through experimentation
+
+OUTPUT FORMAT:
+--------------
+Update the ENHANCEMENT PLAN comment block:
+
+/*
+ * ENHANCEMENT PLAN - [GAME NAME]
+ * Phase 5 Complete: Scenario Design
+ *
+ * [Keep Phase 1-4 content]
+ *
+ * SCENARIOS:
+ *
+ * Scenario 1 (Concept 1): [Name]
+ * - Role: [Who user plays]
+ * - Decision: [What they decide]
+ * - Stakes: [What happens if wrong]
+ * - Mechanism revealed: [The WHY they discover]
+ *
+ * [Repeat for all 10+ scenarios - keep each to 4 lines]
+ *
+ * SCENARIO VARIETY CHECK:
+ * - Industries: [List 3+]
+ * - Scales: [Individual/Team/Org]
+ * - Time horizons: [Immediate/Short/Long term]
+ *
+ * READY FOR PHASE 6
+ */

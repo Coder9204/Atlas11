@@ -1,0 +1,78 @@
+PHASE 1 OF 3: RESEARCH & DESIGN
+=================================
+
+You are enhancing an existing educational game renderer. This phase focuses on RESEARCH and DESIGN PLANNING only.
+DO NOT write any code in this phase. Instead, analyze the existing game and create a detailed improvement plan.
+
+OBJECTIVE: Analyze the current game implementation and design improvements based on expert knowledge extraction, understanding architecture, and real-world scenario design.
+
+STEP 1: ANALYZE EXISTING GAME
+-----------------------------
+Read the current renderer code and document:
+- What concepts does it currently teach?
+- What interactive elements exist?
+- What feedback mechanisms are in place?
+- What are the current strengths and weaknesses?
+
+STEP 2: EXPERT KNOWLEDGE EXTRACTION (10 Core Concepts)
+------------------------------------------------------
+For this specific topic, identify the 10 most important concepts that:
+- A professional would use at least weekly
+- Explain WHY something happens, not just WHAT
+- Are decision-relevant and future-proof (still matter in 2040)
+- Would separate a novice from a 10-year veteran
+
+For each concept, briefly note:
+- The core insight (what experts know that beginners don't)
+- The common misconception
+- The causal chain (why it works this way)
+
+STEP 3: UNDERSTANDING ARCHITECTURE
+----------------------------------
+For each concept, define the learning journey:
+- Level 0: The misconception users start with
+- Level 5: The mastery state (can predict and apply)
+- The "aha moment" that bridges them
+
+STEP 4: SCENARIO DESIGN
+-----------------------
+Design 3-5 authentic real-world scenarios where users will learn these concepts:
+- Real stakes and consequences
+- Authentic numbers (research actual values)
+- Professional recognition ("yes, this is exactly what it's like")
+
+OUTPUT FORMAT:
+--------------
+After your analysis, add a comment block at the TOP of the renderer function with your research notes in this format:
+
+/*
+ * ENHANCEMENT PLAN - [GAME NAME]
+ * Phase 1 Complete: Research & Design
+ *
+ * CURRENT STATE ANALYSIS:
+ * - [What the game currently does]
+ * - [Strengths]
+ * - [Gaps to address]
+ *
+ * 10 CORE CONCEPTS:
+ * 1. [Concept] - [Core insight] - [Misconception to address]
+ * 2. [Concept] - [Core insight] - [Misconception to address]
+ * ... (list all 10)
+ *
+ * LEARNING ARCHITECTURE:
+ * - Concept sequence: [1] -> [2] -> ... -> [10]
+ * - Key "aha moments": [list 3-5]
+ *
+ * SCENARIOS:
+ * 1. [Scenario name]: [Brief description]
+ * 2. [Scenario name]: [Brief description]
+ * ... (3-5 scenarios)
+ *
+ * READY FOR PHASE 2: Implementation
+ */
+
+IMPORTANT:
+- Keep the comment block concise (under 100 lines)
+- Focus on actionable insights, not lengthy descriptions
+- The existing game code should remain UNCHANGED except for adding this comment block
+- This comment will guide Phase 2 implementation

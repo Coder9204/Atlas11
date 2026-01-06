@@ -1,0 +1,63 @@
+PHASE 2A OF 4: CORE IMPLEMENTATION
+===================================
+
+You are implementing the CORE mechanics for an educational game renderer.
+This is a focused subphase - implement the foundation, not everything.
+
+PREREQUISITE: The renderer should have an ENHANCEMENT PLAN comment block from Phase 1.
+
+OBJECTIVE: Implement core WHY-teaching mechanics and the first 5 concepts.
+
+SCOPE FOR THIS SUBPHASE (2A):
+-----------------------------
+1. Add state management for prediction mechanics
+2. Implement the Prediction-Action-Revelation loop structure
+3. Implement screens for concepts 1-5 from the Phase 1 plan
+4. Add basic progress tracking
+
+DO NOT in this subphase:
+- Implement all 10 concepts (save 6-10 for Phase 2b)
+- Add final visual polish (save for Phase 2b)
+- Add all scenarios (save complex ones for Phase 2b)
+
+IMPLEMENTATION CHECKLIST
+------------------------
+[ ] Read the Phase 1 ENHANCEMENT PLAN comment
+[ ] Add prediction state variables (userPrediction, showResult, etc.)
+[ ] Implement Prediction-Action-Revelation loop helper
+[ ] Create screens for concepts 1-5 with:
+    - Intro screen explaining the concept
+    - Interactive element (slider, button, drag)
+    - Prediction prompt ("What do you think will happen?")
+    - Result reveal with WHY explanation
+[ ] Add progress tracking (currentScreen, totalScreens)
+[ ] Ensure TypeScript compiles: bash scripts/run_checks.sh
+
+CODE STRUCTURE TO ADD:
+----------------------
+// Prediction mechanics state
+const [predictionMode, setPredictionMode] = useState(false);
+const [userPrediction, setUserPrediction] = useState<string | null>(null);
+const [showPredictionResult, setShowPredictionResult] = useState(false);
+const [currentScreen, setCurrentScreen] = useState(0);
+
+OUTPUT REQUIREMENTS
+-------------------
+1. Update the renderer with core implementation
+2. Update the ENHANCEMENT PLAN comment:
+
+/*
+ * ENHANCEMENT PLAN - [GAME NAME]
+ * Phase 1 Complete: Research & Design
+ * Phase 2a Complete: Core Implementation
+ *
+ * IMPLEMENTED IN 2A:
+ * - [X] Prediction mechanics state
+ * - [X] Concepts 1-5 with screens
+ * - [X] Progress tracking
+ *
+ * READY FOR PHASE 2b: Extended Implementation
+ */
+
+3. Run: bash scripts/run_checks.sh
+4. Output: DONE [GAME] PHASE 2a

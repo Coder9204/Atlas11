@@ -1,0 +1,76 @@
+PHASE 10 OF 20: GRAPHICS & ASSET PLANNING
+==========================================
+Time Investment: Quality-Focused | Output: Asset Inventory + Implementation
+
+Plan and implement all visual assets. Everything must be realistic and professional.
+
+REALISM STANDARDS:
+-----------------
+- Graphics look realistic, not cartoonish or clip-art
+- High-resolution, crisp, professional
+- Every image supports learning (no decorative filler)
+- Consistent style throughout
+
+WHAT TO AVOID vs WHAT TO USE:
+-----------------------------
+AVOID: Clip art, cartoonish characters, flat childish icons
+USE: Professional graphics, elegant illustrations, refined icons
+
+ASSET CATEGORIES TO IMPLEMENT:
+------------------------------
+
+1. SCENARIO GRAPHICS
+   - Background environments (realistic settings)
+   - Objects relevant to scenarios
+   - Visual representations of abstract concepts
+
+2. DATA VISUALIZATIONS
+   - Charts and graphs (clean, modern style)
+   - Meters and indicators
+   - Progress displays
+   - Before/after comparisons
+
+3. ICONS
+   - Consistent stroke weight
+   - Clear meaning
+   - Multiple sizes if needed
+
+4. INTERACTIVE ELEMENTS
+   - Buttons (primary, secondary states)
+   - Sliders (track, handle, fill)
+   - Cards (containers for information)
+   - Input controls
+
+CONCEPT VISUAL MAPPING:
+-----------------------
+Every abstract concept gets ONE consistent visual:
+- Money/Budget: Green + dollar icon + meter
+- Growth: Upward arrow + green
+- Loss/Danger: Red + downward indicator
+- Time: Clock/timeline
+- Success: Gold star/check
+[Add domain-specific mappings for this topic]
+
+BUILD NOW:
+----------
+Implement visual assets:
+- Create SVG graphics or use icon libraries
+- Set up data visualization components
+- Ensure consistent styling
+
+OUTPUT:
+-------
+Update comment block:
+
+/*
+ * ENHANCEMENT PLAN - [GAME NAME]
+ * Phase 10 Complete: Graphics & Assets
+ * - Scenario graphics: [List key visuals]
+ * - Data displays: [List chart types used]
+ * - Icon set: [Source/style]
+ * - Concept visuals: [Key mappings]
+ *
+ * READY FOR PHASE 11
+ */
+
+Run: bash scripts/run_checks.sh

@@ -1,0 +1,92 @@
+PHASE 2b2: CONCEPTS 9-10 + SCENARIOS
+=====================================
+
+FOCUSED TASK: Implement concepts 9-10 (1 screen each) and 2 scenario screens.
+
+PREREQUISITE: Phase 2b1 must be complete (concepts 1-8 done).
+
+SCOPE - ONLY DO THESE:
+----------------------
+1. Create 1 screen for concept 9
+2. Create 1 screen for concept 10
+3. Create 2 scenario challenge screens
+4. Total: 4 screens
+
+CONCEPT SCREEN PATTERN (same as before):
+-----------------------------------------
+if (currentScreen === 8) {
+  return (
+    <div className="p-6 bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 rounded-2xl text-white min-h-[500px]">
+      <div className="text-xs text-blue-400 font-bold mb-2">CONCEPT 9 OF 10</div>
+      <h2 className="text-xl font-bold mb-3">[Concept Name]</h2>
+      {!showPredictionResult ? (
+        <>
+          <div className="bg-white/10 rounded-xl p-4 mb-4">
+            <p className="text-sm text-white/80">[Scenario]</p>
+          </div>
+          <div className="space-y-2">
+            <button onClick={() => handlePrediction('A')} className="w-full p-3 bg-white/5 hover:bg-white/10 rounded-lg text-left text-sm">[Option A]</button>
+            <button onClick={() => handlePrediction('B')} className="w-full p-3 bg-white/5 hover:bg-white/10 rounded-lg text-left text-sm">[Option B]</button>
+          </div>
+        </>
+      ) : (
+        <>
+          <div className={`p-3 rounded-lg mb-4 ${predictionCorrect ? 'bg-green-500/20' : 'bg-orange-500/20'}`}>
+            <span className="font-bold">{predictionCorrect ? '✓ Correct!' : '→ Not quite'}</span>
+          </div>
+          <div className="bg-white/10 rounded-xl p-4 mb-4">
+            <p className="text-sm text-white/80">[WHY explanation]</p>
+          </div>
+          <button onClick={nextScreen} className="w-full py-3 bg-blue-600 rounded-xl font-bold">Next →</button>
+        </>
+      )}
+    </div>
+  );
+}
+
+SCENARIO SCREEN PATTERN:
+------------------------
+if (currentScreen === 10) {
+  return (
+    <div className="p-6 bg-gradient-to-br from-slate-900 via-emerald-900 to-slate-900 rounded-2xl text-white min-h-[500px]">
+      <div className="text-xs text-emerald-400 font-bold mb-2">SCENARIO CHALLENGE</div>
+      <h2 className="text-xl font-bold mb-3">[Scenario Name]</h2>
+      {!showPredictionResult ? (
+        <>
+          <div className="bg-white/10 rounded-xl p-4 mb-4">
+            <p className="text-sm text-white/80">[Real-world situation combining multiple concepts]</p>
+          </div>
+          <div className="space-y-2">
+            <button onClick={() => handlePrediction('A')} className="w-full p-3 bg-white/5 hover:bg-white/10 rounded-lg text-left text-sm">[Option A]</button>
+            <button onClick={() => handlePrediction('B')} className="w-full p-3 bg-white/5 hover:bg-white/10 rounded-lg text-left text-sm">[Option B]</button>
+          </div>
+        </>
+      ) : (
+        <>
+          <div className={`p-3 rounded-lg mb-4 ${predictionCorrect ? 'bg-green-500/20' : 'bg-orange-500/20'}`}>
+            <span className="font-bold">{predictionCorrect ? '✓ Correct!' : '→ Not quite'}</span>
+          </div>
+          <div className="bg-white/10 rounded-xl p-4 mb-4">
+            <p className="text-sm text-white/80">[Explanation of which concepts applied]</p>
+          </div>
+          <button onClick={nextScreen} className="w-full py-3 bg-blue-600 rounded-xl font-bold">Next →</button>
+        </>
+      )}
+    </div>
+  );
+}
+
+OUTPUT:
+-------
+Update ENHANCEMENT PLAN comment:
+/*
+ * Phase 2b2 Complete: Concepts 9-10 + Scenarios
+ * - [X] Concept 9: [name] - 1 screen
+ * - [X] Concept 10: [name] - 1 screen
+ * - [X] Scenario 1: [name]
+ * - [X] Scenario 2: [name]
+ * - Total screens: 12
+ */
+
+Run: bash scripts/run_checks.sh
+Output: DONE [GAME] PHASE 2b2

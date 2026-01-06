@@ -1,0 +1,73 @@
+PHASE 9 OF 20: VISUAL DESIGN SYSTEM
+====================================
+Time Investment: Quality-Focused | Output: Complete Design System
+
+NOW WE START BUILDING. Establish visual language before implementing.
+
+QUALITY STANDARD: Apple, Airbnb, Nike
+-------------------------------------
+- Apple: Minimalism, precision, white space, subtle shadows
+- Airbnb: Warmth, approachability, clear hierarchy
+- Nike: Bold confidence, dynamic energy, premium feel
+
+DESIGN SYSTEM TO IMPLEMENT:
+---------------------------
+
+1. COLOR PALETTE
+   - Primary: Main actions, key elements
+   - Secondary: Supporting elements
+   - Accent: Highlights, success states
+   - Success: Green tones for positive feedback
+   - Warning: Amber for caution
+   - Error: Red for negative feedback
+   - Neutrals: Text, borders, backgrounds
+   Rule: Maximum 2-3 colors + neutrals. Sophisticated, not childish.
+
+2. TYPOGRAPHY
+   - Clean sans-serif (system fonts)
+   - Clear hierarchy: Headings > Body > Labels > Captions
+   - Generous line-height, never cramped
+
+3. SPACING
+   - 8px base unit
+   - Luxurious white space - elements breathe
+
+4. BORDERS & CORNERS
+   - Subtle, purposeful borders
+   - 8-16px border radius default
+
+5. SHADOWS
+   - Subtle, realistic depth
+   - Soft shadows, not harsh
+
+6. ANIMATIONS
+   - 150-200ms for micro-interactions
+   - 200-300ms for transitions
+   - Ease-out for entrances, ease-in for exits
+   - 60fps always
+
+BUILD NOW:
+----------
+Implement the design system in the renderer:
+- Add CSS-in-JS styles or Tailwind classes
+- Create color constants
+- Set up spacing scale
+- Configure animation timings
+
+OUTPUT:
+-------
+Update comment block to show Phase 9 Complete.
+Add inline comments for key style decisions.
+
+/*
+ * ENHANCEMENT PLAN - [GAME NAME]
+ * Phase 9 Complete: Visual Design System
+ * - Color palette: [Primary], [Secondary], [Accent]
+ * - Typography: [Font family]
+ * - Spacing: 8px base
+ * - Animation timing: 200ms standard
+ *
+ * READY FOR PHASE 10
+ */
+
+Run: bash scripts/run_checks.sh

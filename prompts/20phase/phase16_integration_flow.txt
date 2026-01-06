@@ -1,0 +1,76 @@
+PHASE 16 OF 20: INTEGRATION & FLOW
+===================================
+Time Investment: Critical | Output: Unified, Working Game
+
+Connect everything and verify the complete experience.
+
+INTEGRATION CHECKLIST:
+---------------------
+
+NARRATIVE FLOW:
+- Game tells coherent story from start to finish
+- Concepts build on each other correctly
+- Integration checkpoints work properly
+- Final synthesis ties everything together
+- Ending is satisfying
+
+DATA/STATE FLOW:
+- User progress persists throughout
+- Concept mastery is tracked
+- Predictions are compared to results
+- No state corruption through full playthrough
+
+VISUAL CONSISTENCY:
+- Design system applied consistently
+- No visual style breaks between sections
+- Transitions smooth throughout
+- Animation timing consistent
+
+CONTENT CONTINUITY:
+- Terminology consistent
+- Concepts correctly named throughout
+- No contradictory information
+- Learning builds progressively
+
+COMPLETE PLAYTHROUGH TEST:
+-------------------------
+Do this yourself before moving on:
+
+1. Clear all test data
+2. Start from beginning
+3. Complete EVERY screen
+4. Try EVERY interaction
+5. Read EVERY piece of text
+6. Watch EVERY animation
+
+LOG ANY ISSUES:
+- Confusing moments
+- Broken interactions
+- Missing feedback
+- Unclear instructions
+- Visual glitches
+- Navigation problems
+
+FIX ALL ISSUES FOUND before proceeding.
+
+TIME THE EXPERIENCE:
+- Total time target: 30-45 min
+- Per-concept time: 3-5 min each
+- Adjust if sections too long/short
+
+OUTPUT:
+-------
+Update comment block:
+
+/*
+ * ENHANCEMENT PLAN - [GAME NAME]
+ * Phase 16 Complete: Integration & Flow
+ * - Full playthrough: verified
+ * - All concepts connected
+ * - State flow: clean
+ * - Total time: ~[X] minutes
+ *
+ * BUILDING PHASES COMPLETE - READY FOR TESTING (Phase 17)
+ */
+
+Run: bash scripts/run_checks.sh

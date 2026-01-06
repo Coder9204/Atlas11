@@ -1,0 +1,24 @@
+The implementation is complete. I have:
+
+1. **Added Concept 4: Constraint Analysis** (currentScreen === 3)
+   - Scenario about factory with 100 machine hours choosing between Product A ($40 margin, 4 hrs) vs Product B ($25 margin, 1 hr)
+   - Prediction with reveal showing that maximizing margin PER CONSTRAINT UNIT is correct
+   - Product B wins: $25/hr vs $10/hr = $2,500 vs $1,000 total profit
+
+2. **Added Concept 5: Make vs Buy Decisions** (currentScreen === 4)
+   - Scenario about part costing $50 to make ($30 variable + $20 allocated fixed) vs $40 to buy
+   - Prediction with reveal explaining that allocated fixed costs are irrelevant
+   - Making saves $10/unit when comparing only avoidable costs ($30 vs $40)
+
+3. **Updated ENHANCEMENT PLAN comment** to reflect Phase 2a3 completion
+
+Both screens follow the combined screen pattern with:
+- Gradient background styling
+- Concept label (4/10, 5/10)
+- Scenario description
+- Prediction options (A/B buttons)
+- Reveal with correct/incorrect feedback
+- WHY explanation
+- Next Concept button
+
+DONE ManagerialAccountingRenderer PHASE 2a3

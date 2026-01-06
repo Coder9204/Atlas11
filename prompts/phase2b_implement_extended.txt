@@ -1,0 +1,76 @@
+PHASE 2B OF 4: EXTENDED IMPLEMENTATION
+======================================
+
+You are completing the implementation for an educational game renderer.
+Phase 2a added core mechanics. Now add remaining concepts and polish.
+
+PREREQUISITE: Phase 2a must be complete (check ENHANCEMENT PLAN comment).
+
+OBJECTIVE: Implement remaining concepts 6-10, add scenarios, and visual polish.
+
+SCOPE FOR THIS SUBPHASE (2B):
+-----------------------------
+1. Implement screens for concepts 6-10 from the Phase 1 plan
+2. Add 2-3 real-world scenario screens
+3. Add visual polish (gradients, animations, shadows)
+4. Add misconception confrontation screens
+5. Add mastery/summary screen
+
+DO NOT in this subphase:
+- Rewrite what Phase 2a implemented (build on it)
+- Break existing functionality
+
+IMPLEMENTATION CHECKLIST
+------------------------
+[ ] Verify Phase 2a is complete (read ENHANCEMENT PLAN comment)
+[ ] Add screens for concepts 6-10 with WHY mechanics
+[ ] Implement at least 2 scenario-based challenges
+[ ] Add misconception confrontation (show why intuition was wrong)
+[ ] Add visual polish:
+    - Gradient backgrounds
+    - Smooth transitions (transition-all duration-300)
+    - Shadow effects (shadow-lg, shadow-xl)
+    - Hover states
+[ ] Add mastery summary screen showing key insights
+[ ] Ensure TypeScript compiles: bash scripts/run_checks.sh
+
+VISUAL POLISH PATTERNS:
+-----------------------
+// Gradient background
+className="bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900"
+
+// Card with shadow
+className="bg-white/10 backdrop-blur rounded-xl p-6 shadow-xl"
+
+// Animated button
+className="px-6 py-3 bg-blue-600 hover:bg-blue-500 rounded-xl font-bold transition-all duration-300 transform hover:scale-105"
+
+// Progress bar
+<div className="w-full bg-white/10 rounded-full h-2">
+  <div className="bg-gradient-to-r from-blue-500 to-cyan-500 h-2 rounded-full"
+       style={{ width: `${progress}%` }} />
+</div>
+
+OUTPUT REQUIREMENTS
+-------------------
+1. Complete the renderer implementation
+2. Update the ENHANCEMENT PLAN comment:
+
+/*
+ * ENHANCEMENT PLAN - [GAME NAME]
+ * Phase 1 Complete: Research & Design
+ * Phase 2a Complete: Core Implementation
+ * Phase 2b Complete: Extended Implementation
+ *
+ * IMPLEMENTED:
+ * - [X] All 10 concepts with WHY mechanics
+ * - [X] Prediction-reveal loops
+ * - [X] Real-world scenarios
+ * - [X] Misconception confrontation
+ * - [X] Visual polish
+ *
+ * READY FOR PHASE 3: Testing
+ */
+
+3. Run: bash scripts/run_checks.sh
+4. Output: DONE [GAME] PHASE 2b

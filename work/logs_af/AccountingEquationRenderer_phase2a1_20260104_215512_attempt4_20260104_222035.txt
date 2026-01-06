@@ -1,0 +1,27 @@
+The code looks syntactically correct. The infrastructure has been added:
+
+1. **Screen navigation state** (lines 39647-39649):
+   - `currentScreen` - tracks which screen user is on
+   - `totalScreens` - set to 14 (10 concepts + 2 scenarios + intro + summary)
+
+2. **Prediction mechanics state** (lines 39651-39655):
+   - `predictionMode` - whether user is in prediction mode
+   - `userPrediction` - user's selected prediction
+   - `showPredictionResult` - whether to show result feedback
+   - `predictionCorrect` - whether prediction was correct
+
+3. **Learning tracking state** (lines 39657-39660):
+   - `conceptsLearned` - array of learned concept names
+   - `totalPredictions` - count of all predictions made
+   - `correctPredictions` - count of correct predictions
+
+4. **Helper functions** (lines 39662-39689):
+   - `handlePrediction()` - processes user predictions, updates score tracking
+   - `nextScreen()` - moves forward, resets prediction state
+   - `prevScreen()` - moves backward, resets prediction state
+
+5. **Enhancement plan comment** updated to show Phase 2a1 complete with checklist of added items.
+
+The code follows the existing patterns in the file (useState hooks, arrow functions, proper TypeScript types) and all the infrastructure required for Phase 2a1 has been added.
+
+DONE AccountingEquationRenderer PHASE 2a1

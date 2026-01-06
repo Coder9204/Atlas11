@@ -1,0 +1,49 @@
+PHASE 4 OF 20: CONCEPT SEQUENCING & RELATIONSHIPS
+==================================================
+Time Investment: Moderate | Output: Optimal Learning Sequence + Concept Map
+
+Determine the optimal order for teaching concepts and how they relate.
+
+FOR EACH CONCEPT, IDENTIFY:
+---------------------------
+1. PREREQUISITES: What must be understood first? Why?
+2. ENABLES: What concepts become clearer after this? Why?
+3. REINFORCES: What concepts are mutually reinforcing?
+4. INTEGRATES WITH: What concepts combine for deeper insight?
+
+SEQUENCING PRINCIPLES:
+---------------------
+1. Foundation First - Which concepts must come early?
+2. Build Complexity - How does each add to previous?
+3. Strategic Callbacks - Where should earlier concepts reappear?
+4. Integration Points - Where do multiple concepts combine?
+5. Final Synthesis - How does the last concept tie everything?
+
+OUTPUT FORMAT:
+--------------
+Update the ENHANCEMENT PLAN comment block:
+
+/*
+ * ENHANCEMENT PLAN - [GAME NAME]
+ * Phase 4 Complete: Concept Sequencing
+ *
+ * [Keep Phase 1-3 content]
+ *
+ * OPTIMAL SEQUENCE:
+ * 1. [Concept] - FOUNDATION - Why first: [reason]
+ * 2. [Concept] - Builds on #1 - Why here: [reason]
+ * 3. [Concept] - Builds on #1,2 - Why here: [reason]
+ * ... (all 10 in order)
+ *
+ * INTEGRATION CHECKPOINTS:
+ * - After Concept 3: Mini-challenge combining 1-3
+ * - After Concept 6: Mid-point synthesis
+ * - After Concept 10: Final integration challenge
+ *
+ * GAME FLOW:
+ * [Hook] -> [C1] -> [C2] -> [C3] -> [Integration1]
+ * -> [C4] -> [C5] -> [C6] -> [Integration2]
+ * -> [C7] -> [C8] -> [C9] -> [C10] -> [Final] -> [Takeaway]
+ *
+ * READY FOR PHASE 5
+ */
