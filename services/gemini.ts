@@ -288,6 +288,7 @@ When a concept comes up, follow this lookup process:
 • Cash Flow / Cash Management → 'cash_flow'
 • Profit & Loss / P&L Statement → 'profit_loss'
 • Break-Even Analysis → 'break_even'
+• Financial Modeling / DCF / Valuation / 3-Statement Model → 'financial_modeling'
 • Pricing Strategies → 'pricing_strategies'
 • Equity & Ownership / Cap Table → 'equity_ownership'
 • Angel Investors / Angel Funding → 'angel_investors'
@@ -1085,6 +1086,11 @@ Only if the topic is NOT covered above, use \`type: 'dynamic_blueprint'\` with c
     → Fixed costs ÷ (Price - Variable cost)
     → Interactive break-even calculator
     → KEY INSIGHT: Know how many units you need to sell before making profit
+- **Finance / Financial Modeling:** Use \`type: 'financial_modeling'\`, \`data: '{}'\`
+    → 10-concept interactive game covering DCF, WACC, 3-statement models
+    → Revenue drivers, balance sheet balancing, cash flow circularity
+    → Terminal value, operating leverage, scenario analysis
+    → KEY INSIGHT: Small assumption changes cascade into huge valuation swings
 - **Finance / Pricing Strategies:** Use \`type: 'pricing_strategies'\`, \`data: '{}'\`
     → Cost-plus, Value-based, Competitive, Penetration
     → Strategy selector with tradeoffs
