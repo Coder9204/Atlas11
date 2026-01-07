@@ -283,6 +283,22 @@ When a concept comes up, follow this lookup process:
 • Guerrilla Marketing / Creative Tactics → 'guerrilla_marketing'
 • Copywriting / Persuasion Formulas → 'copywriting'
 
+📊 **ACCOUNTING & FINANCE (Interactive Games)**
+• Accounting Equation / Assets = Liabilities + Equity → 'accounting_equation'
+• Double-Entry Bookkeeping / Debits & Credits → 'double_entry_bookkeeping'
+• General Ledger / T-Accounts / Journal Entries → 'general_ledger'
+• Balance Sheet / Statement of Financial Position → 'balance_sheet'
+• Cash Flow Statement / Operating Investing Financing → 'cash_flow_statement'
+• Accrual vs Cash Basis / Revenue Recognition → 'accrual_cash_basis'
+• Depreciation Methods / Straight-Line / Declining Balance → 'depreciation_methods'
+• Amortization / Intangible Assets / Loan Amortization → 'amortization'
+• Financial Ratio Analysis / Liquidity / Profitability / Solvency → 'financial_ratio_analysis'
+• Profit Margin / Gross Margin / Net Margin / Operating Margin → 'profit_margin'
+• Managerial Accounting / Cost Accounting / Budgeting → 'managerial_accounting'
+• Cloud Accounting / QuickBooks / Xero / Modern Bookkeeping → 'cloud_accounting'
+• Crypto Accounting / Digital Assets / Blockchain Finance → 'crypto_accounting'
+• Forensic Accounting / Fraud Detection / Financial Investigation → 'forensic_accounting'
+
 💰 **ENTREPRENEURSHIP - FINANCIAL LITERACY**
 • Bootstrapping / Self-Funding → 'bootstrapping'
 • Cash Flow / Cash Management → 'cash_flow'
@@ -1070,6 +1086,51 @@ Only if the topic is NOT covered above, use \`type: 'dynamic_blueprint'\` with c
     → Persuasion formulas: AIDA, PAS, 4 Us
     → Interactive formula selector
     → KEY INSIGHT: Words that sell follow proven psychological patterns
+
+**ACCOUNTING & FINANCE GAMES:**
+- **Accounting / Accounting Equation:** Use \`type: 'accounting_equation'\`, \`data: '{}'\`
+    → Assets = Liabilities + Equity interactive balance
+    → KEY INSIGHT: Every transaction affects at least two accounts
+- **Accounting / Double-Entry Bookkeeping:** Use \`type: 'double_entry_bookkeeping'\`, \`data: '{}'\`
+    → Debits and credits, T-accounts, journal entries
+    → KEY INSIGHT: Debits must always equal credits
+- **Accounting / General Ledger:** Use \`type: 'general_ledger'\`, \`data: '{}'\`
+    → Chart of accounts, posting entries, trial balance
+    → KEY INSIGHT: The ledger is the source of truth for all financial reports
+- **Accounting / Balance Sheet:** Use \`type: 'balance_sheet'\`, \`data: '{}'\`
+    → Assets, liabilities, equity breakdown
+    → KEY INSIGHT: Balance sheet shows financial position at a point in time
+- **Accounting / Cash Flow Statement:** Use \`type: 'cash_flow_statement'\`, \`data: '{}'\`
+    → Operating, investing, financing activities
+    → KEY INSIGHT: Profitable companies can still run out of cash
+- **Accounting / Accrual vs Cash Basis:** Use \`type: 'accrual_cash_basis'\`, \`data: '{}'\`
+    → Revenue recognition, matching principle
+    → KEY INSIGHT: Accrual shows economic reality; cash shows liquidity
+- **Accounting / Depreciation:** Use \`type: 'depreciation_methods'\`, \`data: '{}'\`
+    → Straight-line, declining balance, units of production
+    → KEY INSIGHT: Depreciation allocates cost over useful life
+- **Accounting / Amortization:** Use \`type: 'amortization'\`, \`data: '{}'\`
+    → Intangible assets, loan amortization schedules
+    → KEY INSIGHT: Amortization spreads costs for intangibles and loans
+- **Accounting / Financial Ratios:** Use \`type: 'financial_ratio_analysis'\`, \`data: '{}'\`
+    → Liquidity, profitability, solvency, efficiency ratios
+    → KEY INSIGHT: Ratios reveal the story behind the numbers
+- **Accounting / Profit Margin:** Use \`type: 'profit_margin'\`, \`data: '{}'\`
+    → Gross, operating, and net margin analysis
+    → KEY INSIGHT: Margins show how efficiently you convert revenue to profit
+- **Accounting / Managerial Accounting:** Use \`type: 'managerial_accounting'\`, \`data: '{}'\`
+    → Cost accounting, variance analysis, internal reporting
+    → KEY INSIGHT: Managerial accounting drives internal decisions
+- **Accounting / Cloud Accounting:** Use \`type: 'cloud_accounting'\`, \`data: '{}'\`
+    → QuickBooks, Xero, modern bookkeeping tools
+    → KEY INSIGHT: Cloud tools automate reconciliation and reporting
+- **Accounting / Crypto Accounting:** Use \`type: 'crypto_accounting'\`, \`data: '{}'\`
+    → Digital asset valuation, blockchain transactions
+    → KEY INSIGHT: Crypto requires special treatment for fair value and taxes
+- **Accounting / Forensic Accounting:** Use \`type: 'forensic_accounting'\`, \`data: '{}'\`
+    → Fraud detection, financial investigation
+    → KEY INSIGHT: Follow the money to uncover financial crimes
+
 - **Finance / Bootstrapping:** Use \`type: 'bootstrapping'\`, \`data: '{}'\`
     → Start with personal savings and revenue
     → Pros and cons of self-funding
