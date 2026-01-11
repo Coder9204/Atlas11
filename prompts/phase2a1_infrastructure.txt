@@ -1,6 +1,10 @@
 PHASE 2a1: PREDICTION INFRASTRUCTURE
 =====================================
 
+SKILL FILES TO LOAD:
+- .claude/skills/implementation.md (PRIMARY - state architecture patterns)
+- .claude/skills/assessment-architecture.md (mastery dimensions, tracking)
+
 FOCUSED TASK: Add state management and prediction mechanics infrastructure ONLY.
 Do NOT implement screens or concepts yet - just the foundation.
 
@@ -11,12 +15,11 @@ SCOPE - ONLY DO THESE:
 1. Add prediction-related useState hooks
 2. Add helper functions for prediction flow
 3. Add screen navigation state
-4. Keep existing game logic intact
+4. Add mastery tracking (from Skill 4)
+5. Keep existing game logic intact
 
-CODE TO ADD (adapt to existing patterns):
------------------------------------------
-// Add these state variables inside the renderer function:
-
+STATE ARCHITECTURE (from Skill 5):
+----------------------------------
 // Screen navigation (13 total: 10 concepts + 2 scenarios + 1 summary)
 const [currentScreen, setCurrentScreen] = useState(0);
 const totalScreens = 13;
@@ -25,17 +28,24 @@ const totalScreens = 13;
 const [showPredictionResult, setShowPredictionResult] = useState(false);
 const [predictionCorrect, setPredictionCorrect] = useState(false);
 
-// Tracking
+// Mastery tracking (from Skill 4 - multi-dimensional)
 const [conceptsLearned, setConceptsLearned] = useState<string[]>([]);
 const [totalPredictions, setTotalPredictions] = useState(0);
 const [correctPredictions, setCorrectPredictions] = useState(0);
+const [attemptHistory, setAttemptHistory] = useState<{concept: string, correct: boolean}[]>([]);
 
-// Helper function for prediction flow
+HELPER FUNCTIONS (from Skill 5):
+--------------------------------
+// Prediction flow handler
 const handlePrediction = (prediction: string, correctAnswer: string, conceptName: string) => {
   const isCorrect = prediction === correctAnswer;
   setPredictionCorrect(isCorrect);
   setShowPredictionResult(true);
   setTotalPredictions(prev => prev + 1);
+
+  // Track attempt for mastery calculation
+  setAttemptHistory(prev => [...prev, { concept: conceptName, correct: isCorrect }]);
+
   if (isCorrect) {
     setCorrectPredictions(prev => prev + 1);
   }
@@ -44,6 +54,7 @@ const handlePrediction = (prediction: string, correctAnswer: string, conceptName
   }
 };
 
+// Navigation helpers (from Skill 5 - preserve state)
 const nextScreen = () => {
   setShowPredictionResult(false);
   setPredictionCorrect(false);
@@ -54,6 +65,26 @@ const prevScreen = () => {
   setShowPredictionResult(false);
   setPredictionCorrect(false);
   setCurrentScreen(prev => Math.max(prev - 1, 0));
+};
+
+// Reset for replay (from Skill 2 - Law 5: Generous Undo)
+const resetGame = () => {
+  setCurrentScreen(0);
+  setShowPredictionResult(false);
+  setPredictionCorrect(false);
+  setConceptsLearned([]);
+  setTotalPredictions(0);
+  setCorrectPredictions(0);
+  setAttemptHistory([]);
+};
+
+// Mastery tier calculation (from Skill 4)
+const getMasteryTier = () => {
+  if (totalPredictions === 0) return null;
+  const accuracy = correctPredictions / totalPredictions;
+  if (accuracy >= 0.9) return 'gold';
+  if (accuracy >= 0.7) return 'silver';
+  return 'bronze';
 };
 
 DO NOT:
@@ -71,7 +102,8 @@ Update ENHANCEMENT PLAN comment:
  * - [X] Prediction state variables
  * - [X] Screen navigation state (totalScreens=13)
  * - [X] handlePrediction helper
- * - [X] nextScreen/prevScreen helpers
+ * - [X] nextScreen/prevScreen/resetGame helpers
+ * - [X] Mastery tracking (attemptHistory, getMasteryTier)
  */
 
 Run: bash scripts/run_checks.sh

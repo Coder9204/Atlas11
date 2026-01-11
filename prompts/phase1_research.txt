@@ -1,10 +1,14 @@
-PHASE 1 OF 3: RESEARCH & DESIGN
-=================================
+PHASE 1 OF 8: RESEARCH & DESIGN
+================================
+
+SKILL FILES TO LOAD:
+- .claude/skills/concept-extraction.md (PRIMARY - follow the 7 Extraction Questions)
+- .claude/skills/learning-architecture.md (for KC graph design)
 
 You are enhancing an existing educational game renderer. This phase focuses on RESEARCH and DESIGN PLANNING only.
 DO NOT write any code in this phase. Instead, analyze the existing game and create a detailed improvement plan.
 
-OBJECTIVE: Analyze the current game implementation and design improvements based on expert knowledge extraction, understanding architecture, and real-world scenario design.
+OBJECTIVE: Apply Skill 1 (Concept Extraction) to analyze the topic and design the learning journey.
 
 STEP 1: ANALYZE EXISTING GAME
 -----------------------------
@@ -14,65 +18,97 @@ Read the current renderer code and document:
 - What feedback mechanisms are in place?
 - What are the current strengths and weaknesses?
 
-STEP 2: EXPERT KNOWLEDGE EXTRACTION (10 Core Concepts)
-------------------------------------------------------
-For this specific topic, identify the 10 most important concepts that:
+STEP 2: APPLY THE 7 EXTRACTION QUESTIONS (from Skill 1)
+-------------------------------------------------------
+For this specific topic:
+
+Q1: What is the ONE sentence an expert knows that a beginner doesn't?
+    - Not a definition. An INSIGHT that changes how you think.
+
+Q2: What do beginners get WRONG? (The misconception you're fighting)
+    - Pattern: "Most people think [X], but actually [Y], because [Z]."
+
+Q3: What are the VARIABLES in this system?
+    - INPUT VARIABLES (what can be changed)
+    - OUTPUT VARIABLES (what responds)
+    - KEY RELATIONSHIP (when X increases, Y changes because Z)
+
+Q4: What's the CAUSAL CHAIN?
+    - A happens → which causes B → which causes C → which results in D
+
+Q5: What creates the "AHA!" moment?
+    - Prediction failure? Extreme case? Side-by-side comparison?
+
+Q6: What REAL-WORLD SCENARIO makes this concrete for a child?
+    - Relatable person, stakes they care about, authentic decision
+
+Q7: What are the 3-5 KNOWLEDGE COMPONENTS?
+    - Teachable pieces that build on each other
+
+STEP 3: DESIGN 10 CORE CONCEPTS
+-------------------------------
+Based on your extraction, identify 10 concepts that:
 - A professional would use at least weekly
 - Explain WHY something happens, not just WHAT
-- Are decision-relevant and future-proof (still matter in 2040)
+- Are decision-relevant and future-proof
 - Would separate a novice from a 10-year veteran
 
-For each concept, briefly note:
+For each concept, document:
 - The core insight (what experts know that beginners don't)
 - The common misconception
-- The causal chain (why it works this way)
+- The aha moment trigger
 
-STEP 3: UNDERSTANDING ARCHITECTURE
-----------------------------------
-For each concept, define the learning journey:
-- Level 0: The misconception users start with
-- Level 5: The mastery state (can predict and apply)
-- The "aha moment" that bridges them
+STEP 4: DESIGN KC GRAPH (from Skill 3)
+--------------------------------------
+Structure concepts as a directed graph:
+- Which concepts are prerequisites for others?
+- What's the teaching sequence?
+- Where are the key "aha moments"?
 
-STEP 4: SCENARIO DESIGN
+STEP 5: SCENARIO DESIGN
 -----------------------
-Design 3-5 authentic real-world scenarios where users will learn these concepts:
+Design 3-5 authentic real-world scenarios:
 - Real stakes and consequences
 - Authentic numbers (research actual values)
 - Professional recognition ("yes, this is exactly what it's like")
+- Child-appropriate framing
 
 OUTPUT FORMAT:
 --------------
-After your analysis, add a comment block at the TOP of the renderer function with your research notes in this format:
+Add a comment block at the TOP of the renderer function:
 
 /*
  * ENHANCEMENT PLAN - [GAME NAME]
  * Phase 1 Complete: Research & Design
  *
- * CURRENT STATE ANALYSIS:
- * - [What the game currently does]
- * - [Strengths]
- * - [Gaps to address]
+ * CORE INSIGHT:
+ * After playing, users understand that _____________ because _____________.
  *
- * 10 CORE CONCEPTS:
- * 1. [Concept] - [Core insight] - [Misconception to address]
- * 2. [Concept] - [Core insight] - [Misconception to address]
- * ... (list all 10)
+ * MISCONCEPTION:
+ * Most beginners think _____________, but actually _____________.
  *
- * LEARNING ARCHITECTURE:
- * - Concept sequence: [1] -> [2] -> ... -> [10]
- * - Key "aha moments": [list 3-5]
+ * 10 CORE CONCEPTS (KC Graph):
+ * 1. [Concept] - [Core insight] - [Misconception] - Prereq: None
+ * 2. [Concept] - [Core insight] - [Misconception] - Prereq: KC-1
+ * ... (list all 10 with prerequisites)
+ *
+ * KEY RELATIONSHIPS:
+ * - When [input] changes, [output] changes because [mechanism]
+ *
+ * AHA MOMENTS:
+ * 1. [Pattern: prediction failure / extreme case / etc.] - [What they realize]
+ * 2. [Pattern] - [Realization]
  *
  * SCENARIOS:
- * 1. [Scenario name]: [Brief description]
- * 2. [Scenario name]: [Brief description]
+ * 1. [Name]: [Character, age, stakes, authentic decision]
+ * 2. [Name]: [Character, age, stakes, authentic decision]
  * ... (3-5 scenarios)
  *
  * READY FOR PHASE 2: Implementation
  */
 
 IMPORTANT:
-- Keep the comment block concise (under 100 lines)
-- Focus on actionable insights, not lengthy descriptions
-- The existing game code should remain UNCHANGED except for adding this comment block
-- This comment will guide Phase 2 implementation
+- Keep the comment block under 100 lines
+- Focus on actionable insights from Skill 1 extraction
+- The existing game code should remain UNCHANGED except for this comment
+- This comment guides all subsequent phases

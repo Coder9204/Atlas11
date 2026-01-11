@@ -1,51 +1,128 @@
 PHASE 2b3: VISUAL POLISH + SUMMARY
 ===================================
 
-FOCUSED TASK: Add progress bar and mastery summary screen.
+SKILL FILES TO LOAD:
+- .claude/skills/uiux-designer.md (PRIMARY - visual language, 7 Laws)
+- .claude/skills/implementation.md (component library, Debrief screen pattern)
+- .claude/skills/assessment-architecture.md (mastery tiers display)
+
+FOCUSED TASK: Add progress bar and mastery summary screen (Debrief screen from Skill 2).
 
 PREREQUISITE: Phase 2b2 must be complete (all concepts and scenarios done).
 
 SCOPE - ONLY DO THESE:
 ----------------------
-1. Add progress bar to each screen
-2. Add mastery summary as final screen (screen 12)
+1. Add progress bar to each screen (from Skill 2 visual language)
+2. Add mastery summary as final screen (Debrief screen pattern)
 3. Ensure totalScreens = 13
 
-PROGRESS BAR (add at top of each screen's return):
---------------------------------------------------
+PROGRESS BAR (from Skill 2 - shows journey progress):
+-----------------------------------------------------
 <div className="mb-4">
   <div className="flex justify-between text-xs text-white/60 mb-1">
     <span>Progress</span>
     <span>{currentScreen + 1} / {totalScreens}</span>
   </div>
   <div className="w-full bg-white/10 rounded-full h-2">
-    <div className="bg-gradient-to-r from-blue-500 to-cyan-500 h-2 rounded-full"
-         style={{ width: `${((currentScreen + 1) / totalScreens) * 100}%` }} />
+    <div
+      className="bg-gradient-to-r from-blue-500 to-cyan-500 h-2 rounded-full transition-all duration-300"
+      style={{ width: `${((currentScreen + 1) / totalScreens) * 100}%` }}
+    />
   </div>
 </div>
 
-MASTERY SUMMARY SCREEN (add as screen 12):
-------------------------------------------
+MASTERY SUMMARY SCREEN (Debrief pattern from Skill 2):
+------------------------------------------------------
+The final screen must:
+- Celebrate completion warmly
+- Show mastery tier (bronze/silver/gold) from Skill 4
+- Display specific achievements
+- Provide path forward (review or continue)
+
 if (currentScreen === 12) {
+  const tier = getMasteryTier();
+  const tierConfig = {
+    gold: { icon: '🥇', bg: 'from-yellow-500/20 to-amber-500/20', label: 'Gold Mastery!' },
+    silver: { icon: '🥈', bg: 'from-gray-400/20 to-gray-300/20', label: 'Silver Achievement!' },
+    bronze: { icon: '🥉', bg: 'from-amber-600/20 to-orange-500/20', label: 'Bronze Complete!' }
+  };
+  const t = tierConfig[tier || 'bronze'];
+
   return (
     <div className="p-6 bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 rounded-2xl text-white min-h-[500px]">
-      <div className="text-center">
-        <div className="text-5xl mb-4">🎓</div>
-        <h2 className="text-2xl font-bold mb-2">Mastery Complete!</h2>
-        <p className="text-white/70 mb-4">You've learned all 10 concepts</p>
-        <div className="bg-white/10 rounded-xl p-4 mb-4">
-          <div className="text-3xl font-bold text-green-400">
-            {correctPredictions}/{totalPredictions}
-          </div>
-          <div className="text-sm text-white/60">Predictions Correct</div>
+      {/* Progress bar */}
+      <div className="mb-4">
+        <div className="flex justify-between text-xs text-white/60 mb-1">
+          <span>Complete!</span>
+          <span>{totalScreens} / {totalScreens}</span>
         </div>
-        <button onClick={() => setCurrentScreen(0)} className="py-2 px-6 bg-blue-600 rounded-lg">
-          Review Again
-        </button>
+        <div className="w-full bg-white/10 rounded-full h-2">
+          <div className="bg-gradient-to-r from-green-500 to-emerald-500 h-2 rounded-full w-full" />
+        </div>
+      </div>
+
+      <div className="text-center">
+        {/* Mastery tier badge (from Skill 4) */}
+        <div className={`inline-block p-6 rounded-2xl bg-gradient-to-br ${t.bg} mb-4`}>
+          <div className="text-6xl mb-2">{t.icon}</div>
+          <div className="text-xl font-bold">{t.label}</div>
+        </div>
+
+        <h2 className="text-2xl font-bold mb-2">Journey Complete!</h2>
+        <p className="text-white/70 mb-4">You've mastered all 10 concepts</p>
+
+        {/* Stats display */}
+        <div className="grid grid-cols-2 gap-3 mb-6">
+          <div className="bg-white/10 rounded-xl p-4">
+            <div className="text-2xl font-bold text-green-400">
+              {correctPredictions}/{totalPredictions}
+            </div>
+            <div className="text-xs text-white/60">Correct Predictions</div>
+          </div>
+          <div className="bg-white/10 rounded-xl p-4">
+            <div className="text-2xl font-bold text-blue-400">
+              {conceptsLearned.length}/10
+            </div>
+            <div className="text-xs text-white/60">Concepts Learned</div>
+          </div>
+        </div>
+
+        {/* Path to gold hint (from Skill 4 - if not gold) */}
+        {tier !== 'gold' && (
+          <div className="bg-amber-500/10 border border-amber-500/20 rounded-lg p-3 mb-4 text-sm text-amber-300">
+            Tip: Review the concepts you missed to earn Gold mastery!
+          </div>
+        )}
+
+        {/* Action buttons - Law 5: Generous Undo */}
+        <div className="flex gap-3">
+          <button
+            onClick={resetGame}
+            className="flex-1 py-3 bg-white/10 hover:bg-white/20 rounded-xl font-medium transition-colors"
+          >
+            ↶ Start Over
+          </button>
+          <button
+            onClick={() => setCurrentScreen(0)}
+            className="flex-1 py-3 bg-blue-500 hover:bg-blue-600 rounded-xl font-bold transition-colors"
+          >
+            Review Concepts
+          </button>
+        </div>
       </div>
     </div>
   );
 }
+
+VISUAL STANDARDS (from Skill 2):
+--------------------------------
+- Mastery Colors:
+  - Gold: Yellow-500 (#EAB308)
+  - Silver: Gray-400 (#9CA3AF)
+  - Bronze: Amber-600 (#D97706)
+- Success: Green-500 (#22C55E)
+- Primary Action: Blue-500 (#3B82F6)
+- Touch targets: minimum 44px (py-3 achieves this)
 
 DO NOT:
 -------
@@ -59,7 +136,8 @@ Update ENHANCEMENT PLAN comment:
 /*
  * Phase 2b3 Complete: Visual Polish
  * - [X] Progress bar on all screens
- * - [X] Mastery summary screen
+ * - [X] Mastery summary screen with tier badges
+ * - [X] Path to gold hints
  * - Total screens: 13
  *
  * READY FOR PHASE 3: Testing

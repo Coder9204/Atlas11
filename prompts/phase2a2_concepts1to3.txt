@@ -1,6 +1,11 @@
 PHASE 2a2: CONCEPTS 1-3 SCREENS
 ================================
 
+SKILL FILES TO LOAD:
+- .claude/skills/uiux-designer.md (7 Laws, 6 screens, visual language)
+- .claude/skills/implementation.md (component patterns, state management)
+- .claude/skills/assessment-architecture.md (prediction prompts, mastery tiers)
+
 FOCUSED TASK: Implement 3 screens for concepts 1-3 (ONE screen per concept).
 
 PREREQUISITE: Phase 2a1 infrastructure must be complete.
@@ -14,41 +19,77 @@ SCOPE - ONLY DO THESE:
 3. Each screen has prediction built in (click to reveal)
 4. Use the prediction state from 2a1
 
-COMBINED SCREEN PATTERN (use for each concept):
------------------------------------------------
+DESIGN PRINCIPLES (from Skill 2):
+---------------------------------
+- Law 1: ONE purpose per screen (introduce ONE concept)
+- Law 2: 3-second rule (10-year-old understands instantly)
+- Law 3: Progressive disclosure (prediction → reveal)
+- Law 4: Immediate feedback (<100ms response)
+- Law 7: Touch targets minimum 44px
+
+INTERACTION PATTERN (from Skill 4):
+-----------------------------------
+Use PREDICT → ACT → COMPARE pattern:
+1. Present scenario and prediction options
+2. User commits to prediction
+3. Reveal actual result with WHY explanation
+4. Compare prediction to reality (the aha moment)
+
+COMBINED SCREEN PATTERN:
+------------------------
 if (currentScreen === 0) {
   return (
     <div className="p-6 bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 rounded-2xl text-white min-h-[500px]">
+      {/* Progress indicator */}
       <div className="text-xs text-blue-400 font-bold mb-2">CONCEPT 1 OF 10</div>
-      <h2 className="text-xl font-bold mb-3">[Concept Name]</h2>
+      <h2 className="text-xl font-bold mb-3">[Concept Name from ENHANCEMENT PLAN]</h2>
 
       {!showPredictionResult ? (
         <>
+          {/* Scenario - use real numbers from research */}
           <div className="bg-white/10 rounded-xl p-4 mb-4">
-            <p className="text-sm text-white/80">[Scenario description - 2 sentences max]</p>
+            <p className="text-sm text-white/80">[Child-friendly scenario - 2 sentences max]</p>
           </div>
+
+          {/* Prediction prompt */}
           <p className="text-sm text-white/60 mb-3">What do you think happens?</p>
+
+          {/* Options - minimum 44px touch targets */}
           <div className="space-y-2">
-            <button onClick={() => handlePrediction('A')}
-              className="w-full p-3 bg-white/5 hover:bg-white/10 rounded-lg text-left text-sm">
-              [Option A]
+            <button
+              onClick={() => handlePrediction('A')}
+              className="w-full p-4 min-h-[44px] bg-white/5 hover:bg-white/10 active:bg-white/20 rounded-xl text-left text-sm transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500">
+              [Option A - common misconception answer]
             </button>
-            <button onClick={() => handlePrediction('B')}
-              className="w-full p-3 bg-white/5 hover:bg-white/10 rounded-lg text-left text-sm">
-              [Option B]
+            <button
+              onClick={() => handlePrediction('B')}
+              className="w-full p-4 min-h-[44px] bg-white/5 hover:bg-white/10 active:bg-white/20 rounded-xl text-left text-sm transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500">
+              [Option B - correct answer]
             </button>
           </div>
         </>
       ) : (
         <>
-          <div className={`p-3 rounded-lg mb-4 ${predictionCorrect ? 'bg-green-500/20' : 'bg-orange-500/20'}`}>
-            <span className="font-bold">{predictionCorrect ? '✓ Correct!' : '→ Not quite'}</span>
+          {/* Result feedback - immediate */}
+          <div className={`p-4 rounded-xl mb-4 ${predictionCorrect ? 'bg-green-500/20 border border-green-500/30' : 'bg-amber-500/20 border border-amber-500/30'}`}>
+            <span className="font-bold text-lg">{predictionCorrect ? '✓ You got it!' : '→ Interesting prediction!'}</span>
           </div>
+
+          {/* WHY explanation - the core learning */}
           <div className="bg-white/10 rounded-xl p-4 mb-4">
-            <h3 className="font-bold text-sm mb-2">WHY:</h3>
-            <p className="text-sm text-white/80">[1-2 sentence explanation of the concept]</p>
+            <h3 className="font-bold text-sm mb-2 text-blue-300">Here's why:</h3>
+            <p className="text-sm text-white/90">[Causal chain explanation from ENHANCEMENT PLAN]</p>
           </div>
-          <button onClick={nextScreen} className="w-full py-3 bg-blue-600 rounded-xl font-bold">
+
+          {/* Key insight callout */}
+          <div className="bg-blue-500/20 rounded-lg p-3 mb-4 border border-blue-500/30">
+            <p className="text-sm font-medium">[Core insight for this concept]</p>
+          </div>
+
+          {/* Primary CTA - prominent */}
+          <button
+            onClick={nextScreen}
+            className="w-full py-4 min-h-[44px] bg-blue-500 hover:bg-blue-600 active:bg-blue-700 rounded-xl font-bold transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-slate-900">
             Next Concept →
           </button>
         </>
@@ -57,14 +98,29 @@ if (currentScreen === 0) {
   );
 }
 
+VISUAL LANGUAGE (from Skill 2):
+-------------------------------
+Colors:
+- Primary Action: Blue-500 (#3B82F6)
+- Success: Green-500 (#22C55E)
+- Warning/Attention: Amber-500 (#F59E0B)
+- Background gradient: slate-900 → blue-900
+
+Typography:
+- Screen title: text-xl font-bold
+- Body: text-sm
+- Labels: text-xs font-bold
+
+Spacing: Use 4px, 8px, 16px, 24px (8-point grid)
+
 OUTPUT:
 -------
 Update ENHANCEMENT PLAN comment:
 /*
  * Phase 2a2 Complete: Concepts 1-3
- * - [X] Concept 1: [name] - 1 screen
- * - [X] Concept 2: [name] - 1 screen
- * - [X] Concept 3: [name] - 1 screen
+ * - [X] Concept 1: [name] - prediction + reveal screen
+ * - [X] Concept 2: [name] - prediction + reveal screen
+ * - [X] Concept 3: [name] - prediction + reveal screen
  */
 
 Run: bash scripts/run_checks.sh

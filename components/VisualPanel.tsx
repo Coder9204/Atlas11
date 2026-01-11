@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { VisualContext } from '../types';
 import YouTubePlayer from './YouTubePlayer';
-import GeneratedDiagram from './GeneratedDiagram';
+import GeneratedDiagram, { GameEvent } from './GeneratedDiagram';
 import Whiteboard from './Whiteboard';
 import ScreenShareView from './ScreenShareView';
 import SmartDashboard from './SmartDashboard';
@@ -19,12 +19,13 @@ interface VisualPanelProps {
   onShareWorkspace: () => void;
   onShareWorkspaceUrl: () => void;
   onAssessmentComplete?: (result: any) => void;
+  onGameEvent?: (event: GameEvent) => void;
   history?: VisualContext[];
   onRestore?: (index: number) => void;
 }
 
 const VisualPanel: React.FC<VisualPanelProps> = ({
-  context, activeTopic, onClose, onTakeNote, onViewArchive, onShareWorkspace, onShareWorkspaceUrl, onAssessmentComplete, history = [], onRestore
+  context, activeTopic, onClose, onTakeNote, onViewArchive, onShareWorkspace, onShareWorkspaceUrl, onAssessmentComplete, onGameEvent, history = [], onRestore
 }) => {
   const [showTooltip, setShowTooltip] = useState<string | null>(null);
 
@@ -57,7 +58,7 @@ const VisualPanel: React.FC<VisualPanelProps> = ({
       case 'podcast': return <PodcastPlayer title={context.data.title} artist={context.data.artist} coverUrl={context.data.coverUrl} url={context.data.url} />;
       case 'briefing': return <BriefingView title={context.data.title} items={context.data.items} />;
       case 'assessment': return <AssessmentEngine data={context.data} onComplete={(res) => onAssessmentComplete && onAssessmentComplete(res)} />;
-      case 'diagram': return <GeneratedDiagram type={context.data.type} data={context.data.data} title={context.data.title} />;
+      case 'diagram': return <GeneratedDiagram type={context.data.type} data={context.data.data} title={context.data.title} onGameEvent={onGameEvent} />;
       case 'whiteboard': return <Whiteboard initialDrawing={context.data.initialDrawing} />;
       case 'screen': return <ScreenShareView stream={context.data.stream} />;
       case 'document': return (

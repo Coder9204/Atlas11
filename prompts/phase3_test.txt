@@ -1,107 +1,171 @@
-PHASE 3 OF 3: TESTING & POLISH
+PHASE 3 OF 8: TESTING & POLISH
 ===============================
+
+SKILL FILES TO LOAD:
+- .claude/skills/verification.md (PRIMARY - follow the complete verification checklist)
+- .claude/skills/uiux-designer.md (7 Laws compliance check)
 
 You are validating and polishing an educational game renderer. This phase focuses on TESTING and FINAL POLISH.
 
-PREREQUISITE: The renderer should have Phase 1 and Phase 2 marked complete in its ENHANCEMENT PLAN comment.
+PREREQUISITE: All Phase 2 sub-phases must be complete in the ENHANCEMENT PLAN comment.
 
-OBJECTIVE: Ensure the game works flawlessly, teaches effectively, and meets premium quality standards.
+OBJECTIVE: Apply Skill 6 (Verification) to ensure the game works flawlessly AND teaches effectively.
 
-TESTING PROTOCOL
-----------------
+TEST 1: FUNCTIONALITY (from Skill 6)
+------------------------------------
+Run through the ENTIRE game. Every path. Every button.
 
-1. FUNCTIONALITY TESTING
-Run through the entire game and verify:
-[ ] Every button/slider/toggle responds correctly
-[ ] Every screen transition works smoothly
-[ ] No blank screens or broken states
-[ ] All animations complete properly
-[ ] All feedback appears correctly
-[ ] No TypeScript errors (run: bash scripts/run_checks.sh)
+□ All screens load without errors
+□ Navigation works in all directions
+□ Progress persists through session
+□ Zero console errors
+□ No blank screens or frozen states
+□ All buttons respond to clicks
+□ All sliders update values instantly (<100ms)
+□ Game NEVER requires refresh to continue
 
-2. LEARNING VALIDATION
-For each concept taught, verify:
-[ ] The WHY is explicitly shown (not just stated)
-[ ] Predictions are compared to actual results
-[ ] Misconceptions are confronted
-[ ] User must articulate understanding
+TEST 2: LEARNING EFFECTIVENESS (from Skill 6)
+---------------------------------------------
+Apply the 5-Question Test. After completing, a user should be able to answer:
 
-3. USABILITY TESTING (10-Year-Old Test)
-[ ] Is the ONE action obvious within 5 seconds?
-[ ] Are all interactive elements clearly interactive?
-[ ] Is feedback immediate and understandable?
-[ ] Can someone complete each screen without reading?
+1. WHAT: Can they describe the core relationship?
+   "When X increases, Y increases because Z"
 
-4. EXPERT TEST
-[ ] Are scenarios authentic to real practice?
-[ ] Are numbers/values realistic?
-[ ] Would a professional recognize this as accurate?
+2. WHY: Can they explain the mechanism?
+   "This happens because..."
+
+3. PREDICT: Can they estimate outcomes for new numbers?
+   "If I set X to 50, Y will be approximately..."
+
+4. AVOID: Do they know the common misconception?
+   "Most people think X, but actually Y"
+
+5. APPLY: Can they use it for a real decision?
+   "If I were in situation X, I would do Y because..."
+
+The Teaching Test:
+> Can someone who completed this explain the concept to a friend—without ever reading a definition?
+
+If yes → Success
+If no → The learning is still in text, not mechanics. FIX THIS.
+
+TEST 3: ADAPTIVE QUALITY (from Skill 6)
+---------------------------------------
+□ Predictions compare to actual results
+□ Misconceptions are confronted directly
+□ WHY explanations are clear (causal chain)
+□ Feedback messages are warm and encouraging
+
+TEST 4: FLOW STATE (from Skill 6)
+---------------------------------
+□ First-attempt success rate feels achievable (30-70%)
+□ Players want to continue (not giving up)
+□ Failure feels like learning, not punishment
+□ Success feels earned, not given
+
+TEST 5: DESIGN QUALITY (from Skill 2)
+-------------------------------------
+Check all 7 Laws:
+
+□ Law 1: Each screen has ONE clear purpose
+□ Law 2: 10-year-old understands in 3 seconds
+□ Law 3: Only essential info shown (progressive disclosure)
+□ Law 4: Every action has immediate feedback
+□ Law 5: Undo/Reset always available
+□ Law 6: Animations explain, not decorate
+□ Law 7: Works for accessibility (44px touch targets, focus states)
+
+Visual Design Check:
+□ Colors follow semantic system (blue=action, green=success, amber=warning)
+□ Typography is clean with clear hierarchy
+□ Spacing uses 8-point grid
+□ Consistent visual language throughout
+
+TEST 6: CHILD-APPROPRIATENESS (from Skill 6)
+--------------------------------------------
+□ Scenarios feature relatable characters/situations
+□ Stakes are things children care about
+□ Numbers are comprehensible for age group
+□ Language is clear, no jargon
+□ Failure messages are encouraging, not punishing
+□ No time pressure that causes anxiety
 
 FIX ANY ISSUES FOUND
 --------------------
 Common issues to fix:
 - Missing state initialization
-- Buttons that don't work
+- Buttons that don't respond
 - Screens with no clear action
 - Missing feedback after actions
-- Confusing instructions
-- Broken progression (can't advance)
-- Visual inconsistencies
+- Touch targets under 44px
+- Missing focus states
+- WHY explanations that are too abstract
+- Misconceptions not being confronted
 
-POLISH CHECKLIST
-----------------
-[ ] Consistent color palette throughout
-[ ] All text is readable (contrast, size)
-[ ] Animations are smooth (not janky)
-[ ] Loading states where needed
-[ ] Error states handled gracefully
-[ ] Mobile-friendly (if applicable)
+FINAL SHIP CHECKLIST (from Skill 6)
+-----------------------------------
+All gates must pass:
+
+GATE 1 - FUNCTIONALITY:
+□ Zero crashes or broken states
+□ All interactions work correctly
+□ Complete game playable without refresh
+
+GATE 2 - LEARNING:
+□ Each concept has clear WHY revelation
+□ Misconceptions are confronted
+□ User can articulate principles (not just recall)
+□ Transfer possible to new contexts
+
+GATE 3 - DESIGN:
+□ 7 Laws all passing
+□ Premium visual standard (Apple/Airbnb/Nike quality)
+□ Animations smooth and purposeful
+
+GATE 4 - CHILD-FRIENDLY:
+□ 3-second clarity test passes
+□ Relatable scenarios and stakes
+□ Encouraging failure states
+□ Big touch targets (≥44px)
 
 FINAL OUTPUT
 ------------
-1. Fix any bugs or issues found
-2. Update the ENHANCEMENT PLAN comment to mark Phase 3 complete:
+1. Fix ALL bugs or issues found
+2. Update the ENHANCEMENT PLAN comment:
 
 /*
  * ENHANCEMENT PLAN - [GAME NAME]
  * Phase 1 Complete: Research & Design
- * Phase 2 Complete: Implementation
+ * Phase 2 Complete: Implementation (10 concepts + scenarios)
  * Phase 3 Complete: Testing & Polish
+ *
+ * VERIFICATION RESULTS:
+ * - Functionality: PASS (zero errors)
+ * - Learning: PASS (5-question test verified)
+ * - Design: PASS (7 Laws compliant)
+ * - Child-Friendly: PASS
  *
  * FINAL STATUS:
  * - Screens: [count] fully functional screens
- * - Concepts taught: [X]/10 with WHY mechanics
- * - Quality gates passed: Functionality, Learning, Design, Experience
+ * - Concepts taught: 10/10 with WHY mechanics
+ * - Quality gates: ALL PASSED
  *
- * GAME COMPLETE
+ * GAME COMPLETE - SHIP READY
  */
 
 3. Run final check: bash scripts/run_checks.sh
 4. Ensure game is fully playable from start to finish
 
-QUALITY GATES (All must pass)
------------------------------
-GATE 1 - FUNCTIONALITY:
-[ ] Zero crashes or broken states
-[ ] All interactions work correctly
-[ ] Complete game playable without refresh
+THE ULTIMATE TEST (from Skill 6)
+--------------------------------
+After playing, users can:
+□ NAME the concept
+□ EXPLAIN how it works (the mechanism)
+□ PREDICT new outcomes
+□ APPLY to real decisions
+□ TEACH it to someone else
 
-GATE 2 - LEARNING:
-[ ] Each concept has clear WHY revelation
-[ ] Misconceptions are confronted
-[ ] User can articulate principles
+WITHOUT ever being "taught" explicitly.
 
-GATE 3 - DESIGN:
-[ ] Meets premium visual standard
-[ ] Consistent visual language
-[ ] Animations smooth and purposeful
-
-GATE 4 - EXPERIENCE:
-[ ] Self-paced with no frustration
-[ ] Satisfying to complete
-
-IMPORTANT:
-- This is the final quality check - be thorough
-- Fix issues, don't just note them
-- The game must be production-ready when complete
-- If major issues exist, fix them before marking complete
+ALL GATES PASSED? → Output: DONE [GAME] PHASE 3
+ANY GATE FAILED? → Fix and re-test before marking complete
