@@ -1,0 +1,1931 @@
+'use client';
+
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+
+// Premium Design System
+const premiumDesign = {
+  colors: {
+    primary: '#6366F1',
+    primaryDark: '#4F46E5',
+    secondary: '#8B5CF6',
+    accent: '#F59E0B',
+    success: '#10B981',
+    warning: '#F59E0B',
+    error: '#EF4444',
+    background: {
+      primary: '#0F0F1A',
+      secondary: '#1A1A2E',
+      tertiary: '#252542',
+      card: 'rgba(255, 255, 255, 0.03)',
+    },
+    text: {
+      primary: '#FFFFFF',
+      secondary: 'rgba(255, 255, 255, 0.7)',
+      muted: 'rgba(255, 255, 255, 0.4)',
+    },
+    gradient: {
+      primary: 'linear-gradient(135deg, #6366F1 0%, #8B5CF6 100%)',
+      secondary: 'linear-gradient(135deg, #3B82F6 0%, #8B5CF6 100%)',
+      warm: 'linear-gradient(135deg, #F59E0B 0%, #EF4444 100%)',
+      cool: 'linear-gradient(135deg, #06B6D4 0%, #3B82F6 100%)',
+    },
+  },
+  typography: {
+    fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+  },
+  spacing: { xs: 4, sm: 8, md: 16, lg: 24, xl: 32 },
+  radius: { sm: 8, md: 12, lg: 16, xl: 24, full: 9999 },
+  shadows: {
+    sm: '0 2px 8px rgba(0, 0, 0, 0.2)',
+    md: '0 4px 16px rgba(0, 0, 0, 0.3)',
+    lg: '0 8px 32px rgba(0, 0, 0, 0.4)',
+    glow: (color: string) => `0 0 20px ${color}40`,
+  },
+};
+
+type Phase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
+const phaseOrder: Phase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
+
+interface Particle {
+  id: number;
+  x: number;
+  y: number;
+  vx: number;
+  vy: number;
+  temp: number;
+}
+
+interface ConvectionCurrentsRendererProps {
+  onBack?: () => void;
+  onNext?: () => void;
+}
+
+export default function ConvectionCurrentsRenderer({ onBack, onNext }: ConvectionCurrentsRendererProps) {
+  // Core State
+  const [phase, setPhase] = useState<Phase>('hook');
+  const [isMobile, setIsMobile] = useState(false);
+
+  // Debounce refs
+  const navigationLockRef = useRef(false);
+  const lastNavigationTime = useRef(0);
+
+  // Hook phase
+  const [hookStep, setHookStep] = useState(0);
+
+  // Predict phase
+  const [prediction, setPrediction] = useState<string | null>(null);
+
+  // Play phase - convection simulation
+  const [particles, setParticles] = useState<Particle[]>([]);
+  const [heatSource, setHeatSource] = useState<'bottom' | 'left' | 'right' | 'off'>('bottom');
+  const [isSimulating, setIsSimulating] = useState(false);
+  const animationRef = useRef<number | null>(null);
+
+  // Review phase
+  const [reviewStep, setReviewStep] = useState(0);
+
+  // Twist predict
+  const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
+
+  // Twist play - pot of water simulation
+  const [potParticles, setPotParticles] = useState<Particle[]>([]);
+  const [burnerPower, setBurnerPower] = useState(0);
+  const [isPotSimulating, setIsPotSimulating] = useState(false);
+  const potAnimationRef = useRef<number | null>(null);
+
+  // Twist review
+  const [twistReviewStep, setTwistReviewStep] = useState(0);
+
+  // Transfer phase
+  const [activeApp, setActiveApp] = useState(0);
+  const [completedApps, setCompletedApps] = useState<Set<number>>(new Set());
+
+  // Test phase
+  const [testQuestions] = useState([
+    {
+      question: "In convection, why does warm fluid rise?",
+      options: ["It weighs more", "It is less dense", "It moves faster", "It is more viscous"],
+      correct: 1,
+      explanation: "Warm fluid expands and becomes less dense than the surrounding cooler fluid. Buoyancy forces push the less dense fluid upward."
+    },
+    {
+      question: "What happens to fluid molecules when heated?",
+      options: ["They slow down", "They move faster and spread apart", "They bond together", "They become heavier"],
+      correct: 1,
+      explanation: "Heat increases the kinetic energy of molecules, causing them to move faster and spread apart, decreasing the fluid's density."
+    },
+    {
+      question: "What drives a convection current?",
+      options: ["Magnetic forces", "Temperature differences", "Electric current", "Sound waves"],
+      correct: 1,
+      explanation: "Convection currents are driven by temperature differences that create density differences in the fluid."
+    },
+    {
+      question: "In a pot of boiling water, where does the coolest water sink?",
+      options: ["Near the heat source", "Along the sides", "In the center only", "It doesn't sink"],
+      correct: 1,
+      explanation: "Water cools along the sides of the pot (away from heat) and sinks back down, completing the convection cycle."
+    },
+    {
+      question: "What type of heat transfer is convection?",
+      options: ["Transfer through electromagnetic waves", "Transfer through direct contact", "Transfer through fluid movement", "Transfer through a vacuum"],
+      correct: 2,
+      explanation: "Convection is heat transfer through the bulk movement of fluids (liquids or gases), carrying thermal energy with them."
+    },
+    {
+      question: "Why do convection currents form circular patterns?",
+      options: ["The earth's rotation", "Continuous heating and cooling cycle", "Magnetic fields", "Pressure differences only"],
+      correct: 1,
+      explanation: "Hot fluid rises, cools at the top, becomes denser, sinks, gets heated again - creating a continuous circular flow pattern."
+    },
+    {
+      question: "In atmospheric convection, what causes sea breezes?",
+      options: ["Moon's gravity", "Land heats faster than water", "Ocean currents", "Cloud formation"],
+      correct: 1,
+      explanation: "During the day, land heats faster than water. Hot air over land rises, and cooler air from over the sea flows in to replace it."
+    },
+    {
+      question: "What would happen to convection if gravity were eliminated?",
+      options: ["It would speed up", "It would stop", "No change", "It would reverse"],
+      correct: 1,
+      explanation: "Convection depends on buoyancy, which requires gravity. Without gravity, density differences wouldn't cause fluid movement."
+    },
+    {
+      question: "Which is NOT an example of convection?",
+      options: ["Boiling water", "Sea breeze", "Sunlight warming Earth", "Home radiator heating"],
+      correct: 2,
+      explanation: "Sunlight warming Earth is radiation, not convection. It doesn't require a medium and travels through the vacuum of space."
+    },
+    {
+      question: "In a convection oven, how is food cooked more evenly?",
+      options: ["Higher temperatures", "Circulating hot air", "Microwave radiation", "Infrared heat only"],
+      correct: 1,
+      explanation: "Convection ovens use fans to circulate hot air, ensuring even heat distribution around the food from all sides."
+    }
+  ]);
+  const [currentQuestion, setCurrentQuestion] = useState(0);
+  const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
+  const [showExplanation, setShowExplanation] = useState(false);
+  const [testScore, setTestScore] = useState(0);
+  const [testComplete, setTestComplete] = useState(false);
+
+  // Mobile detection
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
+  // Debounced navigation
+  const safeNavigate = useCallback((action: () => void) => {
+    const now = Date.now();
+    if (navigationLockRef.current || now - lastNavigationTime.current < 400) {
+      return;
+    }
+    navigationLockRef.current = true;
+    lastNavigationTime.current = now;
+    action();
+    setTimeout(() => {
+      navigationLockRef.current = false;
+    }, 400);
+  }, []);
+
+  const goToPhase = useCallback((newPhase: Phase) => {
+    safeNavigate(() => setPhase(newPhase));
+  }, [safeNavigate]);
+
+  const nextPhase = useCallback(() => {
+    const currentIndex = phaseOrder.indexOf(phase);
+    if (currentIndex < phaseOrder.length - 1) {
+      goToPhase(phaseOrder[currentIndex + 1]);
+    }
+  }, [phase, goToPhase]);
+
+  // Initialize particles for main simulation
+  const initParticles = useCallback(() => {
+    const newParticles: Particle[] = [];
+    for (let i = 0; i < 60; i++) {
+      newParticles.push({
+        id: i,
+        x: 50 + Math.random() * 200,
+        y: 50 + Math.random() * 200,
+        vx: 0,
+        vy: 0,
+        temp: 20,
+      });
+    }
+    setParticles(newParticles);
+  }, []);
+
+  // Initialize pot particles
+  const initPotParticles = useCallback(() => {
+    const newParticles: Particle[] = [];
+    for (let i = 0; i < 50; i++) {
+      newParticles.push({
+        id: i,
+        x: 60 + Math.random() * 180,
+        y: 80 + Math.random() * 140,
+        vx: 0,
+        vy: 0,
+        temp: 20,
+      });
+    }
+    setPotParticles(newParticles);
+  }, []);
+
+  useEffect(() => {
+    if (phase === 'play') {
+      initParticles();
+    }
+    if (phase === 'twist_play') {
+      initPotParticles();
+    }
+  }, [phase, initParticles, initPotParticles]);
+
+  // Main convection simulation
+  useEffect(() => {
+    if (phase === 'play' && isSimulating && heatSource !== 'off') {
+      const simulate = () => {
+        setParticles(prev => prev.map(p => {
+          let newTemp = p.temp;
+          let newVx = p.vx;
+          let newVy = p.vy;
+
+          // Heat source effects
+          if (heatSource === 'bottom' && p.y > 220) {
+            newTemp = Math.min(100, p.temp + 2);
+          } else if (heatSource === 'left' && p.x < 80) {
+            newTemp = Math.min(100, p.temp + 2);
+          } else if (heatSource === 'right' && p.x > 220) {
+            newTemp = Math.min(100, p.temp + 2);
+          }
+
+          // Cooling at top
+          if (p.y < 80) {
+            newTemp = Math.max(20, p.temp - 1);
+          }
+
+          // Buoyancy - hot rises, cold sinks
+          const buoyancy = (newTemp - 50) * 0.02;
+          newVy -= buoyancy;
+
+          // Convection flow pattern
+          if (heatSource === 'bottom') {
+            if (p.y < 100 && newTemp > 60) {
+              newVx += p.x < 150 ? -0.1 : 0.1;
+            }
+            if (p.y > 200 && newTemp < 40) {
+              newVx += p.x < 150 ? 0.1 : -0.1;
+            }
+          }
+
+          // Apply drag
+          newVx *= 0.95;
+          newVy *= 0.95;
+
+          // Update position
+          let newX = p.x + newVx;
+          let newY = p.y + newVy;
+
+          // Boundary collisions
+          if (newX < 50) { newX = 50; newVx *= -0.5; }
+          if (newX > 250) { newX = 250; newVx *= -0.5; }
+          if (newY < 50) { newY = 50; newVy *= -0.5; }
+          if (newY > 250) { newY = 250; newVy *= -0.5; }
+
+          return { ...p, x: newX, y: newY, vx: newVx, vy: newVy, temp: newTemp };
+        }));
+
+        animationRef.current = requestAnimationFrame(simulate);
+      };
+      animationRef.current = requestAnimationFrame(simulate);
+
+      return () => {
+        if (animationRef.current) {
+          cancelAnimationFrame(animationRef.current);
+        }
+      };
+    }
+  }, [phase, isSimulating, heatSource]);
+
+  // Pot simulation
+  useEffect(() => {
+    if (phase === 'twist_play' && isPotSimulating && burnerPower > 0) {
+      const simulate = () => {
+        setPotParticles(prev => prev.map(p => {
+          let newTemp = p.temp;
+          let newVx = p.vx;
+          let newVy = p.vy;
+
+          // Heat from bottom (burner)
+          if (p.y > 190) {
+            newTemp = Math.min(100, p.temp + burnerPower * 0.3);
+          }
+
+          // Cool at sides
+          if (p.x < 80 || p.x > 220) {
+            newTemp = Math.max(20, p.temp - 0.5);
+          }
+
+          // Cool at surface
+          if (p.y < 100) {
+            newTemp = Math.max(20, p.temp - 0.3);
+          }
+
+          // Buoyancy
+          const buoyancy = (newTemp - 50) * 0.025;
+          newVy -= buoyancy;
+
+          // Convection pattern - two cells
+          const centerX = 150;
+          if (p.y < 120 && newTemp > 60) {
+            newVx += p.x < centerX ? -0.15 : 0.15;
+          }
+          if (p.y > 180 && newTemp < 50) {
+            newVx += p.x < centerX ? 0.15 : -0.15;
+          }
+
+          // Drag
+          newVx *= 0.94;
+          newVy *= 0.94;
+
+          // Update position
+          let newX = p.x + newVx;
+          let newY = p.y + newVy;
+
+          // Pot boundaries
+          if (newX < 60) { newX = 60; newVx *= -0.5; }
+          if (newX > 240) { newX = 240; newVx *= -0.5; }
+          if (newY < 80) { newY = 80; newVy *= -0.5; }
+          if (newY > 220) { newY = 220; newVy *= -0.5; }
+
+          return { ...p, x: newX, y: newY, vx: newVx, vy: newVy, temp: newTemp };
+        }));
+
+        potAnimationRef.current = requestAnimationFrame(simulate);
+      };
+      potAnimationRef.current = requestAnimationFrame(simulate);
+
+      return () => {
+        if (potAnimationRef.current) {
+          cancelAnimationFrame(potAnimationRef.current);
+        }
+      };
+    }
+  }, [phase, isPotSimulating, burnerPower]);
+
+  // Cleanup animations on phase change
+  useEffect(() => {
+    return () => {
+      if (animationRef.current) cancelAnimationFrame(animationRef.current);
+      if (potAnimationRef.current) cancelAnimationFrame(potAnimationRef.current);
+    };
+  }, [phase]);
+
+  // Get temperature color
+  const getTempColor = (temp: number) => {
+    const t = (temp - 20) / 80;
+    const r = Math.round(66 + t * 173);
+    const g = Math.round(135 - t * 70);
+    const b = Math.round(245 - t * 177);
+    return `rgb(${r}, ${g}, ${b})`;
+  };
+
+  // Helper functions for UI elements (not React components)
+  function renderButton(
+    text: string,
+    onClick: () => void,
+    variant: 'primary' | 'secondary' | 'success' = 'primary',
+    disabled = false
+  ) {
+    const baseStyle: React.CSSProperties = {
+      padding: isMobile ? '14px 24px' : '16px 32px',
+      borderRadius: premiumDesign.radius.lg,
+      border: 'none',
+      fontSize: isMobile ? '15px' : '16px',
+      fontWeight: 600,
+      cursor: disabled ? 'not-allowed' : 'pointer',
+      transition: 'all 0.3s ease',
+      fontFamily: premiumDesign.typography.fontFamily,
+      opacity: disabled ? 0.5 : 1,
+    };
+
+    const variants = {
+      primary: {
+        background: premiumDesign.colors.gradient.primary,
+        color: 'white',
+        boxShadow: premiumDesign.shadows.glow(premiumDesign.colors.primary),
+      },
+      secondary: {
+        background: premiumDesign.colors.background.tertiary,
+        color: premiumDesign.colors.text.primary,
+        border: `1px solid rgba(255,255,255,0.1)`,
+      },
+      success: {
+        background: premiumDesign.colors.gradient.warm,
+        color: 'white',
+        boxShadow: premiumDesign.shadows.glow(premiumDesign.colors.success),
+      },
+    };
+
+    return (
+      <button
+        style={{ ...baseStyle, ...variants[variant] }}
+        onMouseDown={(e) => {
+          e.preventDefault();
+          if (!disabled) onClick();
+        }}
+        disabled={disabled}
+      >
+        {text}
+      </button>
+    );
+  }
+
+  function renderProgressBar() {
+    const currentIndex = phaseOrder.indexOf(phase);
+    const progress = ((currentIndex + 1) / phaseOrder.length) * 100;
+
+    return (
+      <div style={{ marginBottom: premiumDesign.spacing.lg }}>
+        <div style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          marginBottom: premiumDesign.spacing.xs,
+          fontSize: '12px',
+          color: premiumDesign.colors.text.muted,
+        }}>
+          <span>Phase {currentIndex + 1} of {phaseOrder.length}</span>
+          <span>{phase.replace('_', ' ').toUpperCase()}</span>
+        </div>
+        <div style={{
+          height: 6,
+          background: premiumDesign.colors.background.tertiary,
+          borderRadius: premiumDesign.radius.full,
+          overflow: 'hidden',
+        }}>
+          <div style={{
+            width: `${progress}%`,
+            height: '100%',
+            background: premiumDesign.colors.gradient.primary,
+            borderRadius: premiumDesign.radius.full,
+            transition: 'width 0.5s ease',
+          }} />
+        </div>
+      </div>
+    );
+  }
+
+  function renderBottomBar(
+    leftButton?: { text: string; onClick: () => void },
+    rightButton?: { text: string; onClick: () => void; variant?: 'primary' | 'secondary' | 'success'; disabled?: boolean }
+  ) {
+    return (
+      <div style={{
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginTop: premiumDesign.spacing.xl,
+        paddingTop: premiumDesign.spacing.lg,
+        borderTop: '1px solid rgba(255,255,255,0.1)',
+      }}>
+        {leftButton ? renderButton(leftButton.text, leftButton.onClick, 'secondary') : <div />}
+        {rightButton && renderButton(rightButton.text, rightButton.onClick, rightButton.variant || 'primary', rightButton.disabled)}
+      </div>
+    );
+  }
+
+  // Phase Renderers
+  function renderHookPhase() {
+    const hookContent = [
+      {
+        title: "🔥 The Mysterious Rising Smoke",
+        text: "Have you ever watched smoke rise from a campfire? It doesn't just float randomly—it rises in a graceful, billowing column. But why does hot smoke know to go UP?",
+      },
+      {
+        title: "🌊 Rivers in the Air",
+        text: "Right now, invisible rivers of air are flowing around you. When you feel a warm breeze or watch leaves swirl, you're witnessing the same force that drives ocean currents and creates weather patterns!",
+      },
+      {
+        title: "🔬 Discover Convection",
+        text: "Today we'll uncover how temperature differences create flowing currents in fluids—the remarkable phenomenon of convection that shapes our world from boiling pots to global climate!",
+      },
+    ];
+
+    return (
+      <div style={{ minHeight: '60vh', display: 'flex', flexDirection: 'column' }}>
+        {renderProgressBar()}
+
+        <div style={{
+          flex: 1,
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          textAlign: 'center',
+          padding: premiumDesign.spacing.xl,
+        }}>
+          <div style={{
+            fontSize: isMobile ? '48px' : '72px',
+            marginBottom: premiumDesign.spacing.lg,
+          }}>
+            {hookContent[hookStep].title.split(' ')[0]}
+          </div>
+
+          <h2 style={{
+            fontSize: isMobile ? '24px' : '32px',
+            fontWeight: 700,
+            color: premiumDesign.colors.text.primary,
+            marginBottom: premiumDesign.spacing.md,
+          }}>
+            {hookContent[hookStep].title.split(' ').slice(1).join(' ')}
+          </h2>
+
+          <p style={{
+            fontSize: isMobile ? '16px' : '18px',
+            color: premiumDesign.colors.text.secondary,
+            maxWidth: 600,
+            lineHeight: 1.7,
+          }}>
+            {hookContent[hookStep].text}
+          </p>
+
+          <div style={{
+            display: 'flex',
+            gap: premiumDesign.spacing.sm,
+            marginTop: premiumDesign.spacing.xl,
+          }}>
+            {hookContent.map((_, i) => (
+              <div
+                key={i}
+                style={{
+                  width: 10,
+                  height: 10,
+                  borderRadius: '50%',
+                  background: i === hookStep
+                    ? premiumDesign.colors.primary
+                    : premiumDesign.colors.background.tertiary,
+                  transition: 'all 0.3s ease',
+                }}
+              />
+            ))}
+          </div>
+        </div>
+
+        {renderBottomBar(
+          hookStep > 0 ? { text: '← Back', onClick: () => safeNavigate(() => setHookStep(h => h - 1)) } : undefined,
+          {
+            text: hookStep < hookContent.length - 1 ? 'Continue →' : 'Make a Prediction →',
+            onClick: () => {
+              if (hookStep < hookContent.length - 1) {
+                safeNavigate(() => setHookStep(h => h + 1));
+              } else {
+                nextPhase();
+              }
+            },
+          }
+        )}
+      </div>
+    );
+  }
+
+  function renderPredictPhase() {
+    const predictions = [
+      { id: 'rises', text: "Hot fluid rises because it expands and becomes lighter" },
+      { id: 'sinks', text: "Hot fluid sinks because heat makes things fall" },
+      { id: 'stays', text: "Hot fluid stays in place - heat doesn't affect movement" },
+      { id: 'random', text: "Hot fluid moves randomly in all directions" },
+    ];
+
+    return (
+      <div style={{ minHeight: '60vh', display: 'flex', flexDirection: 'column' }}>
+        {renderProgressBar()}
+
+        <div style={{ textAlign: 'center', marginBottom: premiumDesign.spacing.xl }}>
+          <h2 style={{
+            fontSize: isMobile ? '22px' : '28px',
+            fontWeight: 700,
+            color: premiumDesign.colors.text.primary,
+            marginBottom: premiumDesign.spacing.md,
+          }}>
+            🤔 Make Your Prediction
+          </h2>
+          <p style={{
+            color: premiumDesign.colors.text.secondary,
+            fontSize: '16px',
+          }}>
+            When you heat water at the bottom of a container, what do you think happens to the warm water?
+          </p>
+        </div>
+
+        <div style={{
+          display: 'flex',
+          flexDirection: 'column',
+          gap: premiumDesign.spacing.md,
+          maxWidth: 600,
+          margin: '0 auto',
+          flex: 1,
+        }}>
+          {predictions.map((p) => (
+            <button
+              key={p.id}
+              style={{
+                padding: premiumDesign.spacing.lg,
+                borderRadius: premiumDesign.radius.lg,
+                border: prediction === p.id
+                  ? `2px solid ${premiumDesign.colors.primary}`
+                  : '2px solid rgba(255,255,255,0.1)',
+                background: prediction === p.id
+                  ? 'rgba(99, 102, 241, 0.2)'
+                  : premiumDesign.colors.background.tertiary,
+                color: premiumDesign.colors.text.primary,
+                fontSize: '16px',
+                cursor: 'pointer',
+                textAlign: 'left',
+                transition: 'all 0.3s ease',
+              }}
+              onMouseDown={(e) => {
+                e.preventDefault();
+                safeNavigate(() => setPrediction(p.id));
+              }}
+            >
+              {p.text}
+            </button>
+          ))}
+        </div>
+
+        {renderBottomBar(
+          { text: '← Back', onClick: () => goToPhase('hook') },
+          {
+            text: 'Test My Prediction →',
+            onClick: nextPhase,
+            disabled: !prediction,
+          }
+        )}
+      </div>
+    );
+  }
+
+  function renderPlayPhase() {
+    return (
+      <div style={{ minHeight: '60vh', display: 'flex', flexDirection: 'column' }}>
+        {renderProgressBar()}
+
+        <div style={{ textAlign: 'center', marginBottom: premiumDesign.spacing.lg }}>
+          <h2 style={{
+            fontSize: isMobile ? '20px' : '26px',
+            fontWeight: 700,
+            color: premiumDesign.colors.text.primary,
+            marginBottom: premiumDesign.spacing.sm,
+          }}>
+            🌡️ Convection Current Simulator
+          </h2>
+          <p style={{ color: premiumDesign.colors.text.secondary }}>
+            Add heat and watch how temperature differences create fluid flow
+          </p>
+        </div>
+
+        <div style={{
+          display: 'flex',
+          flexDirection: isMobile ? 'column' : 'row',
+          gap: premiumDesign.spacing.lg,
+          flex: 1,
+        }}>
+          {/* Simulation View */}
+          <div style={{
+            flex: 2,
+            background: premiumDesign.colors.background.card,
+            borderRadius: premiumDesign.radius.xl,
+            padding: premiumDesign.spacing.lg,
+            border: '1px solid rgba(255,255,255,0.1)',
+          }}>
+            <svg viewBox="0 0 300 300" style={{ width: '100%', maxHeight: 350 }}>
+              {/* Container */}
+              <rect x="40" y="40" width="220" height="220" fill="none" stroke="rgba(255,255,255,0.3)" strokeWidth="2" rx="8" />
+
+              {/* Heat source indicators */}
+              {heatSource === 'bottom' && (
+                <g>
+                  <rect x="50" y="252" width="200" height="10" fill="url(#heatGradient)" rx="5" />
+                  <text x="150" y="280" textAnchor="middle" fill="#EF4444" fontSize="12">🔥 Heat Source 🔥</text>
+                </g>
+              )}
+              {heatSource === 'left' && (
+                <g>
+                  <rect x="28" y="50" width="10" height="200" fill="url(#heatGradientV)" rx="5" />
+                </g>
+              )}
+              {heatSource === 'right' && (
+                <g>
+                  <rect x="262" y="50" width="10" height="200" fill="url(#heatGradientV)" rx="5" />
+                </g>
+              )}
+
+              {/* Particles */}
+              {particles.map(p => (
+                <circle
+                  key={p.id}
+                  cx={p.x}
+                  cy={p.y}
+                  r={5}
+                  fill={getTempColor(p.temp)}
+                  opacity={0.8}
+                />
+              ))}
+
+              {/* Flow arrows when simulating */}
+              {isSimulating && heatSource === 'bottom' && (
+                <g opacity={0.4}>
+                  <path d="M150 200 L150 100" stroke="white" strokeWidth="2" markerEnd="url(#arrow)" />
+                  <path d="M100 80 L70 80 L70 220 L100 220" stroke="white" strokeWidth="1.5" fill="none" markerEnd="url(#arrow)" />
+                  <path d="M200 80 L230 80 L230 220 L200 220" stroke="white" strokeWidth="1.5" fill="none" markerEnd="url(#arrow)" />
+                </g>
+              )}
+
+              {/* Definitions */}
+              <defs>
+                <linearGradient id="heatGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" stopColor="#EF4444" />
+                  <stop offset="50%" stopColor="#F59E0B" />
+                  <stop offset="100%" stopColor="#EF4444" />
+                </linearGradient>
+                <linearGradient id="heatGradientV" x1="0%" y1="0%" x2="0%" y2="100%">
+                  <stop offset="0%" stopColor="#EF4444" />
+                  <stop offset="50%" stopColor="#F59E0B" />
+                  <stop offset="100%" stopColor="#EF4444" />
+                </linearGradient>
+                <marker id="arrow" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+                  <path d="M0,0 L0,6 L9,3 z" fill="white" />
+                </marker>
+              </defs>
+
+              {/* Temperature legend */}
+              <g transform="translate(260, 50)">
+                <text x="5" y="0" fill="white" fontSize="10">Temp</text>
+                <rect x="0" y="10" width="15" height="80" rx="3">
+                  <linearGradient id="tempLegend" x1="0%" y1="100%" x2="0%" y2="0%">
+                    <stop offset="0%" stopColor="#4287f5" />
+                    <stop offset="100%" stopColor="#ef4444" />
+                  </linearGradient>
+                </rect>
+                <rect x="0" y="10" width="15" height="80" fill="url(#tempLegend)" rx="3" />
+                <text x="20" y="18" fill="white" fontSize="8">Hot</text>
+                <text x="20" y="88" fill="white" fontSize="8">Cold</text>
+              </g>
+            </svg>
+          </div>
+
+          {/* Controls */}
+          <div style={{
+            flex: 1,
+            display: 'flex',
+            flexDirection: 'column',
+            gap: premiumDesign.spacing.md,
+          }}>
+            <div style={{
+              background: premiumDesign.colors.background.card,
+              borderRadius: premiumDesign.radius.lg,
+              padding: premiumDesign.spacing.lg,
+              border: '1px solid rgba(255,255,255,0.1)',
+            }}>
+              <h4 style={{ color: premiumDesign.colors.text.primary, marginBottom: premiumDesign.spacing.md }}>
+                Heat Source Position
+              </h4>
+              {['bottom', 'left', 'right', 'off'].map((pos) => (
+                <button
+                  key={pos}
+                  style={{
+                    display: 'block',
+                    width: '100%',
+                    padding: premiumDesign.spacing.sm,
+                    marginBottom: premiumDesign.spacing.xs,
+                    borderRadius: premiumDesign.radius.md,
+                    border: heatSource === pos ? `2px solid ${premiumDesign.colors.primary}` : '1px solid rgba(255,255,255,0.1)',
+                    background: heatSource === pos ? 'rgba(99,102,241,0.2)' : 'transparent',
+                    color: premiumDesign.colors.text.primary,
+                    cursor: 'pointer',
+                    textTransform: 'capitalize',
+                  }}
+                  onMouseDown={(e) => {
+                    e.preventDefault();
+                    setHeatSource(pos as any);
+                  }}
+                >
+                  {pos === 'off' ? '❄️ Off' : `🔥 ${pos}`}
+                </button>
+              ))}
+            </div>
+
+            <div style={{
+              background: premiumDesign.colors.background.card,
+              borderRadius: premiumDesign.radius.lg,
+              padding: premiumDesign.spacing.lg,
+              border: '1px solid rgba(255,255,255,0.1)',
+            }}>
+              {renderButton(
+                isSimulating ? '⏸ Pause' : '▶️ Start Simulation',
+                () => setIsSimulating(!isSimulating),
+                isSimulating ? 'secondary' : 'primary'
+              )}
+              <button
+                style={{
+                  display: 'block',
+                  width: '100%',
+                  padding: premiumDesign.spacing.sm,
+                  marginTop: premiumDesign.spacing.sm,
+                  borderRadius: premiumDesign.radius.md,
+                  border: '1px solid rgba(255,255,255,0.1)',
+                  background: 'transparent',
+                  color: premiumDesign.colors.text.secondary,
+                  cursor: 'pointer',
+                }}
+                onMouseDown={(e) => {
+                  e.preventDefault();
+                  initParticles();
+                }}
+              >
+                🔄 Reset Particles
+              </button>
+            </div>
+
+            <div style={{
+              background: 'rgba(99, 102, 241, 0.1)',
+              borderRadius: premiumDesign.radius.lg,
+              padding: premiumDesign.spacing.md,
+              border: '1px solid rgba(99, 102, 241, 0.3)',
+            }}>
+              <p style={{ color: premiumDesign.colors.text.secondary, fontSize: '14px', margin: 0 }}>
+                💡 Watch how hot particles (red) rise and cool particles (blue) sink, creating circular convection currents!
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {renderBottomBar(
+          { text: '← Back', onClick: () => goToPhase('predict') },
+          { text: 'Review Results →', onClick: nextPhase }
+        )}
+      </div>
+    );
+  }
+
+  function renderReviewPhase() {
+    const reviewContent = [
+      {
+        title: "Why Hot Fluid Rises",
+        content: "When fluid is heated, its molecules gain energy and move faster, spreading apart. This makes the fluid expand and become less dense than the cooler fluid around it. Due to buoyancy, the less dense hot fluid is pushed upward by the denser cold fluid.",
+        formula: "Density decreases: ρ_hot < ρ_cold",
+      },
+      {
+        title: "The Convection Cycle",
+        content: "As hot fluid rises, cooler fluid moves in to take its place near the heat source. The risen hot fluid then cools at the top, becomes denser, and sinks back down. This creates a continuous circular current!",
+        formula: "Convection Cell = Heat → Rise → Cool → Sink → Repeat",
+      },
+      {
+        title: "Your Prediction",
+        content: prediction === 'rises'
+          ? "You predicted correctly! Hot fluid does rise because it expands and becomes less dense (lighter per unit volume). This is the fundamental principle of convection."
+          : "The correct answer is that hot fluid rises because it expands and becomes less dense. Density differences create buoyancy forces that drive convection currents.",
+        formula: "Buoyancy Force ∝ (ρ_cold - ρ_hot) × g × V",
+      },
+    ];
+
+    return (
+      <div style={{ minHeight: '60vh', display: 'flex', flexDirection: 'column' }}>
+        {renderProgressBar()}
+
+        <div style={{ textAlign: 'center', marginBottom: premiumDesign.spacing.xl }}>
+          <h2 style={{
+            fontSize: isMobile ? '22px' : '28px',
+            fontWeight: 700,
+            color: premiumDesign.colors.text.primary,
+          }}>
+            📊 Understanding Convection
+          </h2>
+        </div>
+
+        <div style={{
+          background: premiumDesign.colors.background.card,
+          borderRadius: premiumDesign.radius.xl,
+          padding: premiumDesign.spacing.xl,
+          border: '1px solid rgba(255,255,255,0.1)',
+          flex: 1,
+        }}>
+          <h3 style={{
+            color: premiumDesign.colors.primary,
+            fontSize: '20px',
+            marginBottom: premiumDesign.spacing.md,
+          }}>
+            {reviewContent[reviewStep].title}
+          </h3>
+
+          <p style={{
+            color: premiumDesign.colors.text.secondary,
+            fontSize: '16px',
+            lineHeight: 1.7,
+            marginBottom: premiumDesign.spacing.lg,
+          }}>
+            {reviewContent[reviewStep].content}
+          </p>
+
+          <div style={{
+            background: 'rgba(99, 102, 241, 0.1)',
+            borderRadius: premiumDesign.radius.md,
+            padding: premiumDesign.spacing.md,
+            fontFamily: 'monospace',
+            color: premiumDesign.colors.primary,
+            textAlign: 'center',
+          }}>
+            {reviewContent[reviewStep].formula}
+          </div>
+
+          <div style={{
+            display: 'flex',
+            justifyContent: 'center',
+            gap: premiumDesign.spacing.sm,
+            marginTop: premiumDesign.spacing.xl,
+          }}>
+            {reviewContent.map((_, i) => (
+              <button
+                key={i}
+                style={{
+                  width: 40,
+                  height: 8,
+                  borderRadius: premiumDesign.radius.full,
+                  border: 'none',
+                  background: i === reviewStep
+                    ? premiumDesign.colors.primary
+                    : premiumDesign.colors.background.tertiary,
+                  cursor: 'pointer',
+                  transition: 'all 0.3s ease',
+                }}
+                onMouseDown={(e) => {
+                  e.preventDefault();
+                  safeNavigate(() => setReviewStep(i));
+                }}
+              />
+            ))}
+          </div>
+        </div>
+
+        {renderBottomBar(
+          { text: '← Back', onClick: () => goToPhase('play') },
+          {
+            text: reviewStep < reviewContent.length - 1 ? 'Continue →' : 'Try a Twist →',
+            onClick: () => {
+              if (reviewStep < reviewContent.length - 1) {
+                safeNavigate(() => setReviewStep(r => r + 1));
+              } else {
+                nextPhase();
+              }
+            },
+          }
+        )}
+      </div>
+    );
+  }
+
+  function renderTwistPredictPhase() {
+    const twistPredictions = [
+      { id: 'even', text: "The water heats evenly throughout the pot" },
+      { id: 'bottom', text: "Only the water at the bottom gets hot" },
+      { id: 'cells', text: "Convection cells form, distributing heat throughout" },
+      { id: 'top', text: "The top heats first because heat rises" },
+    ];
+
+    return (
+      <div style={{ minHeight: '60vh', display: 'flex', flexDirection: 'column' }}>
+        {renderProgressBar()}
+
+        <div style={{ textAlign: 'center', marginBottom: premiumDesign.spacing.xl }}>
+          <h2 style={{
+            fontSize: isMobile ? '22px' : '28px',
+            fontWeight: 700,
+            color: premiumDesign.colors.text.primary,
+            marginBottom: premiumDesign.spacing.md,
+          }}>
+            🔄 The Twist: Boiling a Pot of Water
+          </h2>
+          <p style={{
+            color: premiumDesign.colors.text.secondary,
+            fontSize: '16px',
+          }}>
+            When you heat a pot of water on a stove, the heat comes from the bottom. What happens to the water?
+          </p>
+        </div>
+
+        <div style={{
+          display: 'flex',
+          flexDirection: 'column',
+          gap: premiumDesign.spacing.md,
+          maxWidth: 600,
+          margin: '0 auto',
+          flex: 1,
+        }}>
+          {twistPredictions.map((p) => (
+            <button
+              key={p.id}
+              style={{
+                padding: premiumDesign.spacing.lg,
+                borderRadius: premiumDesign.radius.lg,
+                border: twistPrediction === p.id
+                  ? `2px solid ${premiumDesign.colors.secondary}`
+                  : '2px solid rgba(255,255,255,0.1)',
+                background: twistPrediction === p.id
+                  ? 'rgba(139, 92, 246, 0.2)'
+                  : premiumDesign.colors.background.tertiary,
+                color: premiumDesign.colors.text.primary,
+                fontSize: '16px',
+                cursor: 'pointer',
+                textAlign: 'left',
+                transition: 'all 0.3s ease',
+              }}
+              onMouseDown={(e) => {
+                e.preventDefault();
+                safeNavigate(() => setTwistPrediction(p.id));
+              }}
+            >
+              {p.text}
+            </button>
+          ))}
+        </div>
+
+        {renderBottomBar(
+          { text: '← Back', onClick: () => goToPhase('review') },
+          {
+            text: 'Test My Prediction →',
+            onClick: nextPhase,
+            disabled: !twistPrediction,
+          }
+        )}
+      </div>
+    );
+  }
+
+  function renderTwistPlayPhase() {
+    return (
+      <div style={{ minHeight: '60vh', display: 'flex', flexDirection: 'column' }}>
+        {renderProgressBar()}
+
+        <div style={{ textAlign: 'center', marginBottom: premiumDesign.spacing.lg }}>
+          <h2 style={{
+            fontSize: isMobile ? '20px' : '26px',
+            fontWeight: 700,
+            color: premiumDesign.colors.text.primary,
+            marginBottom: premiumDesign.spacing.sm,
+          }}>
+            🍳 Pot of Water Simulation
+          </h2>
+          <p style={{ color: premiumDesign.colors.text.secondary }}>
+            Heat water from below and watch convection cells form
+          </p>
+        </div>
+
+        <div style={{
+          display: 'flex',
+          flexDirection: isMobile ? 'column' : 'row',
+          gap: premiumDesign.spacing.lg,
+          flex: 1,
+        }}>
+          {/* Pot Simulation */}
+          <div style={{
+            flex: 2,
+            background: premiumDesign.colors.background.card,
+            borderRadius: premiumDesign.radius.xl,
+            padding: premiumDesign.spacing.lg,
+            border: '1px solid rgba(255,255,255,0.1)',
+          }}>
+            <svg viewBox="0 0 300 300" style={{ width: '100%', maxHeight: 350 }}>
+              {/* Pot shape */}
+              <path
+                d="M50 70 L50 230 Q50 250 70 250 L230 250 Q250 250 250 230 L250 70"
+                fill="none"
+                stroke="#666"
+                strokeWidth="6"
+              />
+              {/* Pot handles */}
+              <ellipse cx="30" cy="150" rx="15" ry="30" fill="none" stroke="#666" strokeWidth="4" />
+              <ellipse cx="270" cy="150" rx="15" ry="30" fill="none" stroke="#666" strokeWidth="4" />
+
+              {/* Water particles */}
+              {potParticles.map(p => (
+                <circle
+                  key={p.id}
+                  cx={p.x}
+                  cy={p.y}
+                  r={6}
+                  fill={getTempColor(p.temp)}
+                  opacity={0.8}
+                />
+              ))}
+
+              {/* Burner glow */}
+              {burnerPower > 0 && (
+                <g>
+                  <ellipse
+                    cx="150"
+                    cy="270"
+                    rx={60 + burnerPower * 10}
+                    ry="15"
+                    fill={`rgba(239, 68, 68, ${0.3 + burnerPower * 0.15})`}
+                  />
+                  <ellipse cx="150" cy="270" rx="50" ry="10" fill="#EF4444" opacity={burnerPower * 0.2} />
+                </g>
+              )}
+
+              {/* Burner ring */}
+              <circle cx="150" cy="270" r="40" fill="none" stroke="#444" strokeWidth="3" />
+              <circle cx="150" cy="270" r="30" fill="none" stroke="#444" strokeWidth="2" />
+              <circle cx="150" cy="270" r="20" fill="none" stroke="#444" strokeWidth="2" />
+
+              {/* Convection arrows when active */}
+              {isPotSimulating && burnerPower > 0 && (
+                <g opacity={0.3}>
+                  {/* Left cell */}
+                  <path d="M100 200 L100 120 L70 120 L70 200" stroke="white" strokeWidth="1.5" fill="none" strokeDasharray="5,5" />
+                  {/* Right cell */}
+                  <path d="M200 200 L200 120 L230 120 L230 200" stroke="white" strokeWidth="1.5" fill="none" strokeDasharray="5,5" />
+                  {/* Center up arrow */}
+                  <path d="M150 210 L150 100" stroke="white" strokeWidth="2" markerEnd="url(#arrowUp)" />
+                </g>
+              )}
+
+              <defs>
+                <marker id="arrowUp" markerWidth="10" markerHeight="10" refX="5" refY="10" orient="auto">
+                  <path d="M0,10 L5,0 L10,10" fill="white" />
+                </marker>
+              </defs>
+
+              {/* Steam bubbles at high heat */}
+              {burnerPower > 2 && isPotSimulating && (
+                <g>
+                  {[...Array(5)].map((_, i) => (
+                    <circle
+                      key={i}
+                      cx={100 + i * 25}
+                      cy={90 + Math.sin(Date.now() / 500 + i) * 10}
+                      r={3}
+                      fill="rgba(255,255,255,0.3)"
+                    >
+                      <animate
+                        attributeName="cy"
+                        values="90;70;90"
+                        dur={`${1 + i * 0.2}s`}
+                        repeatCount="indefinite"
+                      />
+                    </circle>
+                  ))}
+                </g>
+              )}
+            </svg>
+          </div>
+
+          {/* Controls */}
+          <div style={{
+            flex: 1,
+            display: 'flex',
+            flexDirection: 'column',
+            gap: premiumDesign.spacing.md,
+          }}>
+            <div style={{
+              background: premiumDesign.colors.background.card,
+              borderRadius: premiumDesign.radius.lg,
+              padding: premiumDesign.spacing.lg,
+              border: '1px solid rgba(255,255,255,0.1)',
+            }}>
+              <h4 style={{ color: premiumDesign.colors.text.primary, marginBottom: premiumDesign.spacing.md }}>
+                🔥 Burner Power: {burnerPower}
+              </h4>
+              <input
+                type="range"
+                min="0"
+                max="5"
+                value={burnerPower}
+                onChange={(e) => setBurnerPower(Number(e.target.value))}
+                style={{ width: '100%', accentColor: premiumDesign.colors.primary }}
+              />
+              <div style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                fontSize: '12px',
+                color: premiumDesign.colors.text.muted,
+                marginTop: premiumDesign.spacing.xs,
+              }}>
+                <span>Off</span>
+                <span>Low</span>
+                <span>Med</span>
+                <span>High</span>
+              </div>
+            </div>
+
+            <div style={{
+              background: premiumDesign.colors.background.card,
+              borderRadius: premiumDesign.radius.lg,
+              padding: premiumDesign.spacing.lg,
+              border: '1px solid rgba(255,255,255,0.1)',
+            }}>
+              {renderButton(
+                isPotSimulating ? '⏸ Pause' : '▶️ Start Heating',
+                () => setIsPotSimulating(!isPotSimulating),
+                isPotSimulating ? 'secondary' : 'primary'
+              )}
+              <button
+                style={{
+                  display: 'block',
+                  width: '100%',
+                  padding: premiumDesign.spacing.sm,
+                  marginTop: premiumDesign.spacing.sm,
+                  borderRadius: premiumDesign.radius.md,
+                  border: '1px solid rgba(255,255,255,0.1)',
+                  background: 'transparent',
+                  color: premiumDesign.colors.text.secondary,
+                  cursor: 'pointer',
+                }}
+                onMouseDown={(e) => {
+                  e.preventDefault();
+                  initPotParticles();
+                }}
+              >
+                🔄 Reset Water
+              </button>
+            </div>
+
+            <div style={{
+              background: 'rgba(139, 92, 246, 0.1)',
+              borderRadius: premiumDesign.radius.lg,
+              padding: premiumDesign.spacing.md,
+              border: '1px solid rgba(139, 92, 246, 0.3)',
+            }}>
+              <p style={{ color: premiumDesign.colors.text.secondary, fontSize: '14px', margin: 0 }}>
+                💡 Notice how water near the bottom heats up (turns red), rises to the top, cools (turns blue), and sinks along the sides!
+              </p>
+            </div>
+
+            {/* Average temperature display */}
+            <div style={{
+              background: premiumDesign.colors.background.card,
+              borderRadius: premiumDesign.radius.lg,
+              padding: premiumDesign.spacing.md,
+              border: '1px solid rgba(255,255,255,0.1)',
+              textAlign: 'center',
+            }}>
+              <div style={{ fontSize: '12px', color: premiumDesign.colors.text.muted }}>
+                Average Water Temp
+              </div>
+              <div style={{ fontSize: '24px', fontWeight: 700, color: premiumDesign.colors.primary }}>
+                {Math.round(potParticles.reduce((sum, p) => sum + p.temp, 0) / (potParticles.length || 1))}°C
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {renderBottomBar(
+          { text: '← Back', onClick: () => goToPhase('twist_predict') },
+          { text: 'Review Results →', onClick: nextPhase }
+        )}
+      </div>
+    );
+  }
+
+  function renderTwistReviewPhase() {
+    const twistReviewContent = [
+      {
+        title: "Convection Cells Form",
+        content: "When you heat water from below, convection cells form! Hot water at the bottom rises in the center, spreads across the surface, cools along the edges and walls, then sinks back down to be heated again.",
+        highlight: twistPrediction === 'cells'
+          ? "Excellent! You correctly predicted that convection cells would form."
+          : "The correct answer was that convection cells form, distributing heat throughout the pot.",
+      },
+      {
+        title: "Why This Matters",
+        content: "This is why you can heat an entire pot of water with just a burner at the bottom! Convection naturally circulates heat throughout the fluid, making it an efficient way to cook and warm things.",
+      },
+      {
+        title: "Two-Cell Pattern",
+        content: "In a typical pot, two convection cells form - one on each side. Water rises in the center where it's hottest, flows outward at the top, cools along the sides, and descends back to the bottom.",
+      },
+    ];
+
+    return (
+      <div style={{ minHeight: '60vh', display: 'flex', flexDirection: 'column' }}>
+        {renderProgressBar()}
+
+        <div style={{ textAlign: 'center', marginBottom: premiumDesign.spacing.xl }}>
+          <h2 style={{
+            fontSize: isMobile ? '22px' : '28px',
+            fontWeight: 700,
+            color: premiumDesign.colors.text.primary,
+          }}>
+            🔍 Twist Analysis
+          </h2>
+        </div>
+
+        <div style={{
+          background: premiumDesign.colors.background.card,
+          borderRadius: premiumDesign.radius.xl,
+          padding: premiumDesign.spacing.xl,
+          border: '1px solid rgba(255,255,255,0.1)',
+          flex: 1,
+        }}>
+          <h3 style={{
+            color: premiumDesign.colors.secondary,
+            fontSize: '20px',
+            marginBottom: premiumDesign.spacing.md,
+          }}>
+            {twistReviewContent[twistReviewStep].title}
+          </h3>
+
+          <p style={{
+            color: premiumDesign.colors.text.secondary,
+            fontSize: '16px',
+            lineHeight: 1.7,
+            marginBottom: premiumDesign.spacing.md,
+          }}>
+            {twistReviewContent[twistReviewStep].content}
+          </p>
+
+          {twistReviewContent[twistReviewStep].highlight && (
+            <div style={{
+              background: twistPrediction === 'cells'
+                ? 'rgba(16, 185, 129, 0.2)'
+                : 'rgba(239, 68, 68, 0.2)',
+              borderRadius: premiumDesign.radius.md,
+              padding: premiumDesign.spacing.md,
+              marginTop: premiumDesign.spacing.md,
+              border: `1px solid ${twistPrediction === 'cells' ? 'rgba(16, 185, 129, 0.5)' : 'rgba(239, 68, 68, 0.5)'}`,
+            }}>
+              <p style={{
+                color: twistPrediction === 'cells' ? premiumDesign.colors.success : '#EF4444',
+                margin: 0
+              }}>
+                {twistReviewContent[twistReviewStep].highlight}
+              </p>
+            </div>
+          )}
+
+          <div style={{
+            display: 'flex',
+            justifyContent: 'center',
+            gap: premiumDesign.spacing.sm,
+            marginTop: premiumDesign.spacing.xl,
+          }}>
+            {twistReviewContent.map((_, i) => (
+              <button
+                key={i}
+                style={{
+                  width: 40,
+                  height: 8,
+                  borderRadius: premiumDesign.radius.full,
+                  border: 'none',
+                  background: i === twistReviewStep
+                    ? premiumDesign.colors.secondary
+                    : premiumDesign.colors.background.tertiary,
+                  cursor: 'pointer',
+                  transition: 'all 0.3s ease',
+                }}
+                onMouseDown={(e) => {
+                  e.preventDefault();
+                  safeNavigate(() => setTwistReviewStep(i));
+                }}
+              />
+            ))}
+          </div>
+        </div>
+
+        {renderBottomBar(
+          { text: '← Back', onClick: () => goToPhase('twist_play') },
+          {
+            text: twistReviewStep < twistReviewContent.length - 1 ? 'Continue →' : 'Real-World Examples →',
+            onClick: () => {
+              if (twistReviewStep < twistReviewContent.length - 1) {
+                safeNavigate(() => setTwistReviewStep(t => t + 1));
+              } else {
+                nextPhase();
+              }
+            },
+          }
+        )}
+      </div>
+    );
+  }
+
+  function renderTransferPhase() {
+    const applications = [
+      {
+        title: "🌊 Ocean Currents",
+        description: "The Gulf Stream and other ocean currents are massive convection cells! Warm water near the equator rises and flows toward the poles, while cold polar water sinks and flows back toward the equator along the ocean floor.",
+        fact: "The Gulf Stream transports about 30 million cubic meters of water per second - more than all the world's rivers combined!",
+      },
+      {
+        title: "🌤️ Weather & Wind",
+        description: "Most weather patterns are driven by atmospheric convection. The sun heats the Earth's surface unevenly, creating rising warm air and sinking cool air. This convection drives winds, thunderstorms, and global circulation patterns.",
+        fact: "Sea breezes occur because land heats faster than water during the day, creating local convection cells along coastlines.",
+      },
+      {
+        title: "🏠 Home Heating",
+        description: "Radiators and forced-air heating systems use convection! Warm air rises from heaters, circulates around the room, cools, and sinks back down to be reheated. This is why radiators are often placed under windows.",
+        fact: "Placing furniture over a radiator blocks convection currents and can reduce heating efficiency by up to 40%!",
+      },
+      {
+        title: "🌋 Earth's Mantle",
+        description: "Deep inside Earth, convection currents in the molten mantle drive plate tectonics! Hot rock rises from the core, spreads along the surface, cools, and sinks back down - moving continents over millions of years.",
+        fact: "Mantle convection cells move at about 2-10 cm per year - roughly the speed your fingernails grow!",
+      },
+    ];
+
+    return (
+      <div style={{ minHeight: '60vh', display: 'flex', flexDirection: 'column' }}>
+        {renderProgressBar()}
+
+        <div style={{ textAlign: 'center', marginBottom: premiumDesign.spacing.xl }}>
+          <h2 style={{
+            fontSize: isMobile ? '22px' : '28px',
+            fontWeight: 700,
+            color: premiumDesign.colors.text.primary,
+            marginBottom: premiumDesign.spacing.sm,
+          }}>
+            🌍 Convection in the Real World
+          </h2>
+          <p style={{ color: premiumDesign.colors.text.secondary }}>
+            Explore all {applications.length} applications to unlock the quiz
+          </p>
+        </div>
+
+        {/* Tab Navigation */}
+        <div style={{
+          display: 'flex',
+          gap: premiumDesign.spacing.sm,
+          marginBottom: premiumDesign.spacing.lg,
+          flexWrap: 'wrap',
+          justifyContent: 'center',
+        }}>
+          {applications.map((app, index) => (
+            <button
+              key={index}
+              style={{
+                padding: `${premiumDesign.spacing.sm}px ${premiumDesign.spacing.md}px`,
+                borderRadius: premiumDesign.radius.full,
+                border: activeApp === index
+                  ? `2px solid ${premiumDesign.colors.primary}`
+                  : '2px solid rgba(255,255,255,0.1)',
+                background: activeApp === index
+                  ? 'rgba(99, 102, 241, 0.2)'
+                  : completedApps.has(index)
+                    ? 'rgba(16, 185, 129, 0.2)'
+                    : premiumDesign.colors.background.tertiary,
+                color: premiumDesign.colors.text.primary,
+                cursor: 'pointer',
+                fontSize: '14px',
+                transition: 'all 0.3s ease',
+              }}
+              onMouseDown={(e) => {
+                e.preventDefault();
+                safeNavigate(() => setActiveApp(index));
+              }}
+            >
+              {completedApps.has(index) && '✓ '}{app.title.split(' ')[0]}
+            </button>
+          ))}
+        </div>
+
+        {/* Application Content */}
+        <div style={{
+          background: premiumDesign.colors.background.card,
+          borderRadius: premiumDesign.radius.xl,
+          padding: premiumDesign.spacing.xl,
+          border: '1px solid rgba(255,255,255,0.1)',
+          flex: 1,
+        }}>
+          <h3 style={{
+            fontSize: '22px',
+            color: premiumDesign.colors.text.primary,
+            marginBottom: premiumDesign.spacing.md,
+          }}>
+            {applications[activeApp].title}
+          </h3>
+
+          <p style={{
+            color: premiumDesign.colors.text.secondary,
+            fontSize: '16px',
+            lineHeight: 1.7,
+            marginBottom: premiumDesign.spacing.lg,
+          }}>
+            {applications[activeApp].description}
+          </p>
+
+          <div style={{
+            background: 'rgba(245, 158, 11, 0.1)',
+            borderRadius: premiumDesign.radius.lg,
+            padding: premiumDesign.spacing.lg,
+            border: '1px solid rgba(245, 158, 11, 0.3)',
+          }}>
+            <p style={{ margin: 0, color: premiumDesign.colors.accent, fontWeight: 600 }}>
+              💡 Fun Fact
+            </p>
+            <p style={{ margin: `${premiumDesign.spacing.sm}px 0 0`, color: premiumDesign.colors.text.secondary }}>
+              {applications[activeApp].fact}
+            </p>
+          </div>
+
+          {/* Mark as read button */}
+          {!completedApps.has(activeApp) && (
+            <button
+              style={{
+                display: 'block',
+                width: '100%',
+                marginTop: premiumDesign.spacing.lg,
+                padding: premiumDesign.spacing.md,
+                borderRadius: premiumDesign.radius.md,
+                border: 'none',
+                background: premiumDesign.colors.gradient.primary,
+                color: 'white',
+                fontSize: '16px',
+                fontWeight: 600,
+                cursor: 'pointer',
+              }}
+              onMouseDown={(e) => {
+                e.preventDefault();
+                safeNavigate(() => {
+                  const newCompleted = new Set(completedApps);
+                  newCompleted.add(activeApp);
+                  setCompletedApps(newCompleted);
+                  // Auto-advance to next unread
+                  if (activeApp < applications.length - 1) {
+                    setActiveApp(activeApp + 1);
+                  }
+                });
+              }}
+            >
+              ✓ Mark as Read
+            </button>
+          )}
+        </div>
+
+        {/* Progress indicator */}
+        <div style={{
+          textAlign: 'center',
+          marginTop: premiumDesign.spacing.lg,
+          color: premiumDesign.colors.text.muted,
+        }}>
+          {completedApps.size} of {applications.length} applications explored
+        </div>
+
+        {renderBottomBar(
+          { text: '← Back', onClick: () => goToPhase('twist_review') },
+          {
+            text: completedApps.size === applications.length ? 'Take the Quiz →' : `Explore ${applications.length - completedApps.size} More →`,
+            onClick: nextPhase,
+            disabled: completedApps.size < applications.length,
+          }
+        )}
+      </div>
+    );
+  }
+
+  function renderTestPhase() {
+    const question = testQuestions[currentQuestion];
+
+    if (testComplete) {
+      const percentage = Math.round((testScore / testQuestions.length) * 100);
+      const passed = percentage >= 70;
+
+      return (
+        <div style={{ minHeight: '60vh', display: 'flex', flexDirection: 'column' }}>
+          {renderProgressBar()}
+
+          <div style={{
+            flex: 1,
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            textAlign: 'center',
+          }}>
+            <div style={{ fontSize: '72px', marginBottom: premiumDesign.spacing.lg }}>
+              {passed ? '🎉' : '📚'}
+            </div>
+
+            <h2 style={{
+              fontSize: isMobile ? '28px' : '36px',
+              fontWeight: 700,
+              color: premiumDesign.colors.text.primary,
+              marginBottom: premiumDesign.spacing.md,
+            }}>
+              {passed ? 'Excellent Work!' : 'Keep Learning!'}
+            </h2>
+
+            <div style={{
+              fontSize: '48px',
+              fontWeight: 700,
+              background: passed ? premiumDesign.colors.gradient.primary : 'linear-gradient(135deg, #F59E0B 0%, #EF4444 100%)',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+              marginBottom: premiumDesign.spacing.md,
+            }}>
+              {testScore}/{testQuestions.length}
+            </div>
+
+            <p style={{
+              color: premiumDesign.colors.text.secondary,
+              fontSize: '18px',
+              marginBottom: premiumDesign.spacing.xl,
+            }}>
+              {passed
+                ? 'You have mastered convection currents!'
+                : 'Review the material and try again.'}
+            </p>
+
+            {renderButton(
+              passed ? 'Continue to Mastery →' : 'Review Material',
+              () => {
+                if (passed) {
+                  nextPhase();
+                } else {
+                  setTestComplete(false);
+                  setCurrentQuestion(0);
+                  setTestScore(0);
+                  goToPhase('review');
+                }
+              },
+              passed ? 'success' : 'primary'
+            )}
+          </div>
+        </div>
+      );
+    }
+
+    return (
+      <div style={{ minHeight: '60vh', display: 'flex', flexDirection: 'column' }}>
+        {renderProgressBar()}
+
+        <div style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          marginBottom: premiumDesign.spacing.lg,
+        }}>
+          <span style={{ color: premiumDesign.colors.text.muted }}>
+            Question {currentQuestion + 1} of {testQuestions.length}
+          </span>
+          <span style={{ color: premiumDesign.colors.primary, fontWeight: 600 }}>
+            Score: {testScore}
+          </span>
+        </div>
+
+        <div style={{
+          background: premiumDesign.colors.background.card,
+          borderRadius: premiumDesign.radius.xl,
+          padding: premiumDesign.spacing.xl,
+          border: '1px solid rgba(255,255,255,0.1)',
+          flex: 1,
+        }}>
+          <h3 style={{
+            fontSize: isMobile ? '18px' : '22px',
+            color: premiumDesign.colors.text.primary,
+            marginBottom: premiumDesign.spacing.xl,
+            lineHeight: 1.5,
+          }}>
+            {question.question}
+          </h3>
+
+          <div style={{
+            display: 'flex',
+            flexDirection: 'column',
+            gap: premiumDesign.spacing.md,
+          }}>
+            {question.options.map((option, index) => {
+              let buttonStyle: React.CSSProperties = {
+                padding: premiumDesign.spacing.lg,
+                borderRadius: premiumDesign.radius.lg,
+                border: '2px solid rgba(255,255,255,0.1)',
+                background: premiumDesign.colors.background.tertiary,
+                color: premiumDesign.colors.text.primary,
+                fontSize: '16px',
+                cursor: showExplanation ? 'default' : 'pointer',
+                textAlign: 'left',
+                transition: 'all 0.3s ease',
+              };
+
+              if (showExplanation) {
+                if (index === question.correct) {
+                  buttonStyle.background = 'rgba(16, 185, 129, 0.2)';
+                  buttonStyle.borderColor = premiumDesign.colors.success;
+                } else if (index === selectedAnswer && index !== question.correct) {
+                  buttonStyle.background = 'rgba(239, 68, 68, 0.2)';
+                  buttonStyle.borderColor = '#EF4444';
+                }
+              } else if (selectedAnswer === index) {
+                buttonStyle.borderColor = premiumDesign.colors.primary;
+                buttonStyle.background = 'rgba(99, 102, 241, 0.2)';
+              }
+
+              return (
+                <button
+                  key={index}
+                  style={buttonStyle}
+                  onMouseDown={(e) => {
+                    e.preventDefault();
+                    if (!showExplanation) {
+                      safeNavigate(() => setSelectedAnswer(index));
+                    }
+                  }}
+                  disabled={showExplanation}
+                >
+                  {option}
+                </button>
+              );
+            })}
+          </div>
+
+          {showExplanation && (
+            <div style={{
+              marginTop: premiumDesign.spacing.xl,
+              padding: premiumDesign.spacing.lg,
+              background: 'rgba(99, 102, 241, 0.1)',
+              borderRadius: premiumDesign.radius.lg,
+              border: '1px solid rgba(99, 102, 241, 0.3)',
+            }}>
+              <p style={{ color: premiumDesign.colors.primary, fontWeight: 600, marginBottom: premiumDesign.spacing.sm }}>
+                Explanation:
+              </p>
+              <p style={{ color: premiumDesign.colors.text.secondary, margin: 0 }}>
+                {question.explanation}
+              </p>
+            </div>
+          )}
+        </div>
+
+        <div style={{ marginTop: premiumDesign.spacing.xl, display: 'flex', justifyContent: 'flex-end' }}>
+          {!showExplanation ? (
+            renderButton(
+              'Check Answer',
+              () => {
+                safeNavigate(() => {
+                  setShowExplanation(true);
+                  if (selectedAnswer === question.correct) {
+                    setTestScore(s => s + 1);
+                  }
+                });
+              },
+              'primary',
+              selectedAnswer === null
+            )
+          ) : (
+            renderButton(
+              currentQuestion < testQuestions.length - 1 ? 'Next Question →' : 'See Results',
+              () => {
+                safeNavigate(() => {
+                  if (currentQuestion < testQuestions.length - 1) {
+                    setCurrentQuestion(c => c + 1);
+                    setSelectedAnswer(null);
+                    setShowExplanation(false);
+                  } else {
+                    setTestComplete(true);
+                  }
+                });
+              },
+              'primary'
+            )
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  function renderMasteryPhase() {
+    return (
+      <div style={{
+        minHeight: '60vh',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        textAlign: 'center',
+        padding: premiumDesign.spacing.xl,
+      }}>
+        <div style={{
+          fontSize: '80px',
+          marginBottom: premiumDesign.spacing.xl,
+        }}>
+          🏆
+        </div>
+
+        <h1 style={{
+          fontSize: isMobile ? '32px' : '42px',
+          fontWeight: 700,
+          background: premiumDesign.colors.gradient.primary,
+          WebkitBackgroundClip: 'text',
+          WebkitTextFillColor: 'transparent',
+          marginBottom: premiumDesign.spacing.lg,
+        }}>
+          Convection Master!
+        </h1>
+
+        <p style={{
+          fontSize: '18px',
+          color: premiumDesign.colors.text.secondary,
+          maxWidth: 500,
+          lineHeight: 1.7,
+          marginBottom: premiumDesign.spacing.xl,
+        }}>
+          You now understand how temperature differences drive fluid motion, creating convection currents that shape everything from boiling water to global weather patterns!
+        </p>
+
+        <div style={{
+          background: premiumDesign.colors.background.card,
+          borderRadius: premiumDesign.radius.xl,
+          padding: premiumDesign.spacing.xl,
+          border: '1px solid rgba(255,255,255,0.1)',
+          maxWidth: 500,
+          width: '100%',
+          marginBottom: premiumDesign.spacing.xl,
+        }}>
+          <h3 style={{ color: premiumDesign.colors.primary, marginBottom: premiumDesign.spacing.md }}>
+            Key Concepts Mastered
+          </h3>
+          <ul style={{
+            textAlign: 'left',
+            color: premiumDesign.colors.text.secondary,
+            lineHeight: 2,
+            paddingLeft: premiumDesign.spacing.lg,
+          }}>
+            <li>Hot fluids expand, become less dense, and rise</li>
+            <li>Cool fluids contract, become denser, and sink</li>
+            <li>Convection cells create circular flow patterns</li>
+            <li>Convection drives ocean currents, weather, and more</li>
+          </ul>
+        </div>
+
+        <div style={{ display: 'flex', gap: premiumDesign.spacing.md, flexWrap: 'wrap', justifyContent: 'center' }}>
+          {renderButton('← Review Again', () => goToPhase('hook'), 'secondary')}
+          {onNext && renderButton('Next Topic →', onNext, 'success')}
+        </div>
+      </div>
+    );
+  }
+
+  // Main render
+  return (
+    <div style={{
+      minHeight: '100vh',
+      background: premiumDesign.colors.background.primary,
+      color: premiumDesign.colors.text.primary,
+      fontFamily: premiumDesign.typography.fontFamily,
+      padding: isMobile ? premiumDesign.spacing.md : premiumDesign.spacing.xl,
+    }}>
+      <div style={{ maxWidth: 900, margin: '0 auto' }}>
+        {/* Header */}
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          marginBottom: premiumDesign.spacing.xl,
+        }}>
+          {onBack && (
+            <button
+              style={{
+                background: 'transparent',
+                border: 'none',
+                color: premiumDesign.colors.text.secondary,
+                cursor: 'pointer',
+                fontSize: '16px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: premiumDesign.spacing.xs,
+              }}
+              onMouseDown={(e) => {
+                e.preventDefault();
+                onBack();
+              }}
+            >
+              ← Back
+            </button>
+          )}
+          <h1 style={{
+            fontSize: isMobile ? '20px' : '24px',
+            fontWeight: 700,
+            background: premiumDesign.colors.gradient.warm,
+            WebkitBackgroundClip: 'text',
+            WebkitTextFillColor: 'transparent',
+          }}>
+            🌊 Convection Currents
+          </h1>
+          <div style={{ width: 60 }} />
+        </div>
+
+        {/* Phase Content */}
+        {phase === 'hook' && renderHookPhase()}
+        {phase === 'predict' && renderPredictPhase()}
+        {phase === 'play' && renderPlayPhase()}
+        {phase === 'review' && renderReviewPhase()}
+        {phase === 'twist_predict' && renderTwistPredictPhase()}
+        {phase === 'twist_play' && renderTwistPlayPhase()}
+        {phase === 'twist_review' && renderTwistReviewPhase()}
+        {phase === 'transfer' && renderTransferPhase()}
+        {phase === 'test' && renderTestPhase()}
+        {phase === 'mastery' && renderMasteryPhase()}
+      </div>
+    </div>
+  );
+}

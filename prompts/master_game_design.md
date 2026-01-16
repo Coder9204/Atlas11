@@ -1,6 +1,26 @@
-# MASTER EDUCATIONAL GAME DEVELOPER
+# MASTER EDUCATIONAL GAME DEVELOPER v3.0
 
 ## The Complete Framework for Building World-Class Learning Games
+
+**Reference Implementation:** `WaveParticleDualityRenderer.tsx` - Study this file thoroughly before building any new game.
+
+---
+
+## CRITICAL REQUIREMENTS CHECKLIST
+
+Before reading further, ensure your game has ALL of these:
+
+- [ ] **10 phases** exactly: hook → predict → play → review → twist_predict → twist_play → twist_review → transfer → test → mastery
+- [ ] **Responsive design** with `isMobile` state and responsive breakpoints
+- [ ] **AI coach integration** with GameEvent emissions for every interaction
+- [ ] **Coach messages** for each phase (welcome, guidance, celebration)
+- [ ] **Hint messages** for each phase with phase-specific guidance
+- [ ] **4 real-world applications** in transfer phase with stats, examples, companies, future impact
+- [ ] **10 test questions** with scenarios, 4 options each, and explanations
+- [ ] **Premium SVG visualizations** with gradients, glows, animations
+- [ ] **Teaching milestones** that update in real-time during play phases
+- [ ] **gamePhase prop** for resume functionality
+- [ ] **Sound effects** via `playSound()` utility
 
 ---
 
@@ -21,808 +41,948 @@ You approach every learner like the most patient, loving teacher who:
 
 ---
 
-## THE 6-SKILL WORKFLOW
+## THE MANDATORY 10-PHASE STRUCTURE
 
-Execute these 6 skills in sequence. **Do not skip skills. Do not combine skills. Execute each fully before moving to the next.**
-
-```
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                                                                             │
-│  SKILL 1: CONCEPT EXTRACTION                                               │
-│  "What am I teaching and WHY does it matter?"                              │
-│  → Load: .claude/skills/concept-extraction.md                              │
-│                                                                             │
-│                              ↓                                              │
-│                                                                             │
-│  SKILL 2: INTERACTION & UI DESIGN                                          │
-│  "How will they DISCOVER it through doing?"                                │
-│  → Load: .claude/skills/uiux-designer.md                                   │
-│                                                                             │
-│                              ↓                                              │
-│                                                                             │
-│  SKILL 3: LEARNING ARCHITECTURE                                            │
-│  "How do I scaffold the journey from novice to mastery?"                   │
-│  → Load: .claude/skills/learning-architecture.md                           │
-│                                                                             │
-│                              ↓                                              │
-│                                                                             │
-│  SKILL 4: ASSESSMENT ARCHITECTURE                                          │
-│  "How do I KNOW they truly understand (and adapt when they don't)?"        │
-│  → Load: .claude/skills/assessment-architecture.md                         │
-│                                                                             │
-│                              ↓                                              │
-│                                                                             │
-│  SKILL 5: IMPLEMENTATION                                                   │
-│  "Build it with premium quality."                                          │
-│  → Load: .claude/skills/implementation.md                                  │
-│                                                                             │
-│                              ↓                                              │
-│                                                                             │
-│  SKILL 6: VERIFICATION                                                     │
-│  "Test EVERYTHING. Ship only when flawless."                               │
-│  → Load: .claude/skills/verification.md                                    │
-│                                                                             │
-└─────────────────────────────────────────────────────────────────────────────┘
-```
-
----
-
-## THE GOLDEN RULES (Non-Negotiable)
-
-| Rule | Requirement |
-|------|-------------|
-| **ONE Action Per Screen** | Every screen has exactly ONE thing the user does |
-| **ONE Learning Goal Per Screen** | Each screen teaches exactly ONE micro-concept |
-| **Kid-Friendly Clarity** | If a 10-year-old can't figure it out in 3 seconds, redesign |
-| **Teach the WHY** | Don't just show THAT things change—teach WHY they change |
-| **Real-World Only** | Every scenario must be something that actually happens |
-| **Clear Goal Always Visible** | User always knows: "What am I trying to achieve?" |
-| **Premium Design Always** | Every pixel should feel like Apple, Airbnb, or Nike designed it |
-| **Mechanics ARE Curriculum** | Understanding must be REQUIRED to progress—not optional |
-
----
-
-## THE CORE LEARNING LOOP: PREDICT → PLAY → REVIEW → TEST
-
-**THIS IS THE MOST IMPORTANT SECTION. EVERY GAME MUST FOLLOW THIS EXACT 4-PHASE FLOW.**
+**CRITICAL: Every game MUST implement ALL 10 phases in this EXACT order with this EXACT structure:**
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
-│                    THE MANDATORY 4-PHASE LEARNING LOOP                      │
+│                    THE 10-PHASE LEARNING JOURNEY                            │
 ├─────────────────────────────────────────────────────────────────────────────┤
-│                                                                             │
-│   ┌──────────┐     ┌──────────┐     ┌──────────┐     ┌──────────┐         │
-│   │ 1.PREDICT│ ──► │ 2. PLAY  │ ──► │ 3.REVIEW │ ──► │ 4. TEST  │         │
-│   └──────────┘     └──────────┘     └──────────┘     └──────────┘         │
-│        │                │                │                │                 │
-│   BEFORE playing,  They interact    Show gap between   NEW scenario       │
-│   ask: "What do    with simulation  prediction &       to verify           │
-│   you think will   and SEE what     reality. Explain   understanding.      │
-│   happen when...?" actually happens the WHY mechanism  Ask WHAT + WHY      │
-│                                                                             │
-│   User MUST commit  Keep prediction  If wrong: "You     Different context, │
-│   to an answer      visible during   predicted X, but   same concept.      │
-│   BEFORE they can   play. Highlight  Y happened. Here's User must predict  │
-│   interact.         the gap.         WHY..."            AND explain WHY.   │
-│                                                                             │
+│  1. HOOK          │ Engaging introduction with curiosity-building question  │
+│  2. PREDICT       │ User commits to prediction BEFORE seeing simulation     │
+│  3. PLAY          │ Interactive simulation with real-time teaching overlays │
+│  4. REVIEW        │ Explains WHY the phenomenon works (correct mental model)│
+│  5. TWIST_PREDICT │ New challenging scenario that creates cognitive conflict│
+│  6. TWIST_PLAY    │ Interactive simulation for the twist scenario           │
+│  7. TWIST_REVIEW  │ Deep explanation of the twist/paradox                   │
+│  8. TRANSFER      │ 4 Real-world applications with detailed visualizations  │
+│  9. TEST          │ 10-question knowledge test with scenarios & explanations│
+│ 10. MASTERY       │ Celebration + summary of concepts mastered              │
 └─────────────────────────────────────────────────────────────────────────────┘
 ```
 
-### WHY THIS FLOW IS NON-NEGOTIABLE
+---
 
-| Without This Flow | With This Flow |
-|-------------------|----------------|
-| User clicks around randomly | User forms hypothesis FIRST |
-| No cognitive investment | Brain is primed to learn |
-| "That's cool" → forgets | "Wait, I was WRONG!" → remembers |
-| Surface understanding | Deep causal understanding |
-| Can't apply to new situations | Proven transfer to novel contexts |
+## SOUND UTILITY (MANDATORY)
 
-### PHASE DETAILS
+Every game must include this sound utility at the top:
 
-#### PHASE 1: PREDICT (Before ANY Interaction)
-```
-┌─────────────────────────────────────────────────────────────────────────────┐
-│ WHAT TO DO:                                                                 │
-│ • Present a specific scenario with concrete numbers/settings                │
-│ • Ask: "What do you think will happen when [specific condition]?"           │
-│ • Force a COMMITMENT - they must select/answer before proceeding            │
-│ • Do NOT ask "why" yet - save that for the TEST phase                       │
-│                                                                             │
-│ EXAMPLE:                                                                    │
-│ "If two polarizers are rotated 90° apart, what happens to the light?"       │
-│   [ ] Light stays the same                                                  │
-│   [ ] Light gets dimmer                                                     │
-│   [ ] Complete darkness                                                     │
-│                                                                             │
-│ WHY IT WORKS:                                                               │
-│ • Creates cognitive investment ("I bet X will happen")                      │
-│ • Reveals their current mental model                                        │
-│ • Wrong predictions create curiosity and drive learning                     │
-└─────────────────────────────────────────────────────────────────────────────┘
-```
-
-#### PHASE 2: PLAY (Interact with Simulation)
-```
-┌─────────────────────────────────────────────────────────────────────────────┐
-│ WHAT TO DO:                                                                 │
-│ • Show their prediction visibly while they interact                         │
-│ • Let them manipulate the simulation and SEE what actually happens          │
-│ • Highlight the GAP: "You predicted X, actual result: Y"                    │
-│ • Allow free exploration after the initial discovery                        │
-│                                                                             │
-│ EXAMPLE:                                                                    │
-│ "Your prediction: Light stays the same"                                     │
-│ [Interactive polarizer simulation]                                          │
-│ "Actual result: 0% light at 90°"                                            │
-│                                                                             │
-│ WHY IT WORKS:                                                               │
-│ • Cognitive conflict drives deep processing                                 │
-│ • "Wait, that's not what I expected!" = learning moment                     │
-│ • Hands-on discovery is more memorable than being told                      │
-└─────────────────────────────────────────────────────────────────────────────┘
-```
-
-#### PHASE 3: REVIEW (Explain the WHY)
-```
-┌─────────────────────────────────────────────────────────────────────────────┐
-│ WHAT TO DO:                                                                 │
-│ • If CORRECT: "✓ Your mental model is accurate! Here's WHY it works..."    │
-│ • If WRONG: "The gap: You predicted X but Y happened. Here's WHY..."       │
-│ • Explain the CAUSAL MECHANISM - not just what happened, but WHY           │
-│ • Use analogies, visualizations, multiple explanations if needed           │
-│                                                                             │
-│ EXAMPLE:                                                                    │
-│ "Light waves vibrate in all directions. A polarizer only lets ONE          │
-│  direction through. Two crossed polarizers = first lets vertical through,  │
-│  second only accepts horizontal. Nothing can pass both!"                    │
-│                                                                             │
-│ WHY IT WORKS:                                                               │
-│ • Addresses the specific misconception they revealed                        │
-│ • Builds correct mental model to replace the wrong one                      │
-│ • Causal explanation enables prediction in new situations                   │
-└─────────────────────────────────────────────────────────────────────────────┘
-```
-
-#### PHASE 4: TEST (New Scenario = Prove Transfer)
-```
-┌─────────────────────────────────────────────────────────────────────────────┐
-│ WHAT TO DO:                                                                 │
-│ • Present a DIFFERENT scenario (new context, new numbers, new framing)      │
-│ • Ask "What will happen AND WHY?"                                           │
-│ • They must BOTH predict the outcome AND explain the mechanism              │
-│ • Evaluate their WHY explanation - this is the true comprehension check     │
-│                                                                             │
-│ EXAMPLE:                                                                    │
-│ "NEW SCENARIO: Your phone screen has two polarizers. What happens if you    │
-│  wear polarized sunglasses and rotate your phone 90°?"                      │
-│   1. What will happen? [Predict]                                            │
-│   2. WHY will this happen? [Explain mechanism]                              │
-│                                                                             │
-│ REQUIREMENTS:                                                               │
-│ • Must be a DIFFERENT scenario (not just the same thing again)              │
-│ • Must ask for BOTH prediction AND explanation                              │
-│ • Only pass learners who can articulate the mechanism                       │
-│                                                                             │
-│ WHY IT WORKS:                                                               │
-│ • New scenario = proves genuine understanding (not memorization)            │
-│ • Asking "why" = verifies they have the correct mental model                │
-│ • If they can explain it, they truly own the concept                        │
-└─────────────────────────────────────────────────────────────────────────────┘
-```
-
-### THE FLOW IN CODE
-
-```javascript
-const gamePhases = {
-  predict: {
-    screen: 'PredictionScreen',
-    required: true, // Cannot skip
-    mustCommit: true, // Must select answer before proceeding
-    captureAnswer: true,
-    askWhy: false // Save for test phase
-  },
-  play: {
-    screen: 'SimulationScreen',
-    showPrediction: true, // Keep visible
-    highlightGap: true, // Show "Predicted: X, Actual: Y"
-    allowExploration: true
-  },
-  review: {
-    screen: 'ExplanationScreen',
-    ifCorrect: 'ReinforceMentalModel',
-    ifWrong: 'CorrectMisconception',
-    explainCause: true // Always explain WHY
-  },
-  test: {
-    screen: 'TransferTestScreen',
-    newScenario: true, // MUST be different
-    askPrediction: true,
-    askWhy: true, // NOW we ask why
-    evaluateExplanation: true // This is the real test
-  }
+```typescript
+const playSound = (freq: number, duration: number = 0.15) => {
+   try {
+      const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+      const oscillator = audioContext.createOscillator();
+      const gainNode = audioContext.createGain();
+      oscillator.connect(gainNode);
+      gainNode.connect(audioContext.destination);
+      oscillator.frequency.value = freq;
+      oscillator.type = 'sine';
+      gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + duration);
+      oscillator.start(audioContext.currentTime);
+      oscillator.stop(audioContext.currentTime + duration);
+   } catch (e) {
+      // Silent fail if audio not available
+   }
 };
 ```
 
-This is model-based reasoning. This is how deep understanding forms.
+Use it for:
+- Phase transitions: `playSound(400 + Math.random() * 200, 0.1)`
+- Correct answers: `playSound(600, 0.2)`
+- Wrong answers: `playSound(200, 0.3)`
+- Milestone reached: `playSound(800, 0.15)`
 
 ---
 
-## THE 70/20/10 CONTENT BALANCE
+## THE HOOK PHASE (PHASE 1) - FIRST IMPRESSIONS
 
-| Percentage | Content Type | Purpose |
-|------------|--------------|---------|
-| **70%** | Interactive Visuals | The game world + manipulables. Learning by doing |
-| **20%** | Explanatory Graphics | Charts, arrows, meters. Show what changed and why |
-| **10%** | Text | Microcopy + short takeaways. 3-6 word labels max |
+The HOOK phase must grab attention and build curiosity. Use this exact structure:
 
-**Rule:** If you can replace a sentence with a visual change + a 3-6 word label, DO IT.
-
----
-
-## VISUALIZATION EXCELLENCE (NON-NEGOTIABLE)
-
-**THIS SECTION IS CRITICAL. Basic graphics kill learning. Premium visuals inspire it.**
-
-The visualization IS the learning. If the graphic doesn't clearly SHOW the physics/concept in action, the learner won't understand it. A basic rectangle is NOT a polarizer. A line is NOT a light beam.
-
-### THE VISUALIZATION QUALITY LADDER
-
-| Level | Description | Verdict |
-|-------|-------------|---------|
-| **Level 1: BASIC** | Plain rectangles, solid colors, no depth | ❌ NEVER SHIP |
-| **Level 2: STYLED** | Rounded corners, single gradients, basic shadows | ❌ NOT ENOUGH |
-| **Level 3: POLISHED** | Multi-stop gradients, glows, proper depth | ⚠️ MINIMUM ACCEPTABLE |
-| **Level 4: PREMIUM** | Realistic materials, particles, physics-accurate motion | ✅ TARGET STANDARD |
-| **Level 5: INSPIRING** | Cinematic quality, emotional impact, "wow" factor | 🌟 EXCELLENCE |
-
-**Every game must be Level 4 or higher. No exceptions.**
-
----
-
-### MANDATORY VISUAL ELEMENTS
-
-Every simulation MUST include these elements:
-
-#### 1. REALISTIC LIGHT & DEPTH
 ```jsx
-// ❌ NEVER - Basic flat shapes
-<rect fill="#3b82f6" />
+// HOOK Screen - Premium, responsive design
+if (phase === 'hook') {
+   return (
+      <div style={{
+         display: 'flex',
+         flexDirection: 'column',
+         height: '100%',
+         width: '100%',
+         background: 'linear-gradient(180deg, #0f172a 0%, #020617 100%)'
+      }}>
+         {renderProgressBar()}
 
-// ✅ ALWAYS - Multi-layered depth
-<defs>
-  <linearGradient id="glassGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-    <stop offset="0%" stopColor="#60a5fa" stopOpacity="0.9" />
-    <stop offset="50%" stopColor="#3b82f6" stopOpacity="0.7" />
-    <stop offset="100%" stopColor="#1d4ed8" stopOpacity="0.9" />
-  </linearGradient>
-  <filter id="glow">
-    <feGaussianBlur stdDeviation="4" result="blur" />
-    <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
-  </filter>
-</defs>
-<rect fill="url(#glassGradient)" filter="url(#glow)" rx="8" />
+         <div style={{
+            flex: 1,
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: isMobile ? '24px 16px' : '40px 24px',
+            textAlign: 'center',
+            overflow: 'auto'
+         }}>
+            {/* 1. ICON - Gradient circle with emoji */}
+            <div style={{
+               width: isMobile ? '60px' : '80px',
+               height: isMobile ? '60px' : '80px',
+               borderRadius: '50%',
+               background: 'linear-gradient(135deg, [PRIMARY] 0%, [ACCENT] 100%)',
+               display: 'flex',
+               alignItems: 'center',
+               justifyContent: 'center',
+               marginBottom: isMobile ? '20px' : '32px',
+               boxShadow: '0 20px 60px rgba([PRIMARY_RGB], 0.3)'
+            }}>
+               <span style={{ fontSize: isMobile ? '28px' : '36px' }}>🔬</span>
+            </div>
+
+            {/* 2. TITLE - Bold, memorable */}
+            <h1 style={{
+               fontSize: isMobile ? '24px' : '32px',
+               fontWeight: 800,
+               color: '#f8fafc',
+               marginBottom: isMobile ? '12px' : '16px',
+               lineHeight: 1.2
+            }}>
+               [Experiment/Concept Title]
+            </h1>
+
+            {/* 3. SUBTITLE - Famous quote or hook line */}
+            <p style={{
+               fontSize: isMobile ? '15px' : '18px',
+               color: '#94a3b8',
+               marginBottom: isMobile ? '24px' : '32px',
+               maxWidth: '480px',
+               lineHeight: 1.6,
+               padding: isMobile ? '0 8px' : 0
+            }}>
+               [Famous scientist] called this <span style={{ color: '#f8fafc', fontWeight: 600 }}>"[memorable quote]"</span>
+            </p>
+
+            {/* 4. FEATURE CARDS - 3 columns */}
+            <div style={{
+               display: 'grid',
+               gridTemplateColumns: 'repeat(3, 1fr)',
+               gap: isMobile ? '8px' : '12px',
+               width: '100%',
+               maxWidth: '400px',
+               marginBottom: isMobile ? '24px' : '40px'
+            }}>
+               {[
+                  { icon: '🔬', text: 'Interactive Lab' },
+                  { icon: '🎯', text: 'Predictions' },
+                  { icon: '💡', text: 'Real Apps' }
+               ].map((item, i) => (
+                  <div key={i} style={{
+                     padding: isMobile ? '12px 8px' : '16px',
+                     borderRadius: '12px',
+                     backgroundColor: 'rgba(30, 41, 59, 0.5)',
+                     border: '1px solid rgba(51, 65, 85, 0.5)'
+                  }}>
+                     <div style={{ fontSize: isMobile ? '20px' : '24px', marginBottom: '6px' }}>{item.icon}</div>
+                     <div style={{ fontSize: isMobile ? '10px' : '12px', fontWeight: 600, color: '#94a3b8' }}>{item.text}</div>
+                  </div>
+               ))}
+            </div>
+
+            {/* 5. CTA BUTTON - Touch-friendly */}
+            <button
+               style={{
+                  width: '100%',
+                  maxWidth: '320px',
+                  padding: isMobile ? '16px 24px' : '18px 32px',
+                  fontSize: isMobile ? '15px' : '16px',
+                  fontWeight: 700,
+                  background: 'linear-gradient(135deg, [PRIMARY] 0%, [ACCENT] 100%)',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '12px',
+                  cursor: 'pointer',
+                  boxShadow: '0 8px 32px rgba([PRIMARY_RGB], 0.4)',
+                  minHeight: '48px'  // Touch-friendly
+               }}
+               onMouseDown={() => goToPhase('predict')}
+            >
+               Start Experiment →
+            </button>
+
+            {/* 6. DURATION HINT */}
+            <p style={{
+               fontSize: isMobile ? '11px' : '12px',
+               color: '#64748b',
+               marginTop: isMobile ? '12px' : '16px'
+            }}>
+               ~5 minutes • Interactive • Test your intuition
+            </p>
+         </div>
+      </div>
+   );
+}
 ```
 
-#### 2. PARTICLE SYSTEMS FOR MOTION
-```jsx
-// ❌ NEVER - Static or simple moving shapes
-<circle cx={x} cy={y} fill="yellow" />
+---
 
-// ✅ ALWAYS - Particles with trails and physics
+## AI COACHING INTEGRATION (MANDATORY)
+
+Every game MUST integrate with the AI coaching system. This requires:
+
+### 1. GameEvent Interface
+
+```typescript
+export interface GameEvent {
+   eventType: 'screen_change' | 'prediction_made' | 'answer_submitted' | 'slider_changed' |
+              'button_clicked' | 'game_started' | 'game_completed' | 'hint_requested' |
+              'correct_answer' | 'incorrect_answer' | 'phase_changed' | 'value_changed' |
+              'selection_made' | 'timer_expired' | 'achievement_unlocked' | 'struggle_detected' |
+              'coach_prompt' | 'guide_paused' | 'guide_resumed' | 'question_changed' |
+              'answer_selected' | 'app_changed' | 'app_completed';
+   gameType: string;
+   gameTitle: string;
+   details: {
+      currentScreen?: number;
+      totalScreens?: number;
+      phase?: string;
+      phaseLabel?: string;
+      prediction?: string;
+      answer?: string;
+      isCorrect?: boolean;
+      score?: number;
+      maxScore?: number;
+      message?: string;
+      coachMessage?: string;
+      needsHelp?: boolean;
+      questionNumber?: number;
+      questionScenario?: string;
+      questionText?: string;
+      allOptions?: string;
+      selectedAnswer?: string;
+      appNumber?: number;
+      appTitle?: string;
+      appDescription?: string;
+      [key: string]: any;
+   };
+   timestamp: number;
+}
+```
+
+### 2. Required Props, State, and Event Emission
+
+```typescript
+interface GameRendererProps {
+   onGameEvent?: (event: GameEvent) => void;
+   gamePhase?: string;  // For resume functionality
+}
+
+const GameRenderer: React.FC<GameRendererProps> = ({ onGameEvent, gamePhase }) => {
+   // Type-safe phase definition
+   type Phase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
+   const validPhases: Phase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
+
+   // Initialize from gamePhase prop if valid (for resume)
+   const getInitialPhase = (): Phase => {
+      if (gamePhase && validPhases.includes(gamePhase as Phase)) {
+         return gamePhase as Phase;
+      }
+      return 'hook';
+   };
+
+   const [phase, setPhase] = useState<Phase>(getInitialPhase);
+
+   // Sync phase with gamePhase prop changes (for resume functionality)
+   useEffect(() => {
+      if (gamePhase && validPhases.includes(gamePhase as Phase) && gamePhase !== phase) {
+         console.log('[Game] Syncing phase from prop:', gamePhase);
+         setPhase(gamePhase as Phase);
+      }
+   }, [gamePhase]);
+
+   // --- RESPONSIVE DESIGN (MANDATORY) ---
+   const [isMobile, setIsMobile] = useState(false);
+   useEffect(() => {
+      const checkMobile = () => setIsMobile(window.innerWidth < 768);
+      checkMobile();
+      window.addEventListener('resize', checkMobile);
+      return () => window.removeEventListener('resize', checkMobile);
+   }, []);
+
+   // Emit events to AI coach
+   const emitGameEvent = useCallback((
+      eventType: GameEvent['eventType'],
+      details: GameEvent['details']
+   ) => {
+      if (onGameEvent) {
+         onGameEvent({
+            eventType,
+            gameType: 'your_game_type',
+            gameTitle: 'Your Game Title',
+            details,
+            timestamp: Date.now()
+         });
+      }
+   }, [onGameEvent]);
+```
+
+### 3. Required Events to Emit
+
+| Event | When to Emit | Required Details |
+|-------|--------------|------------------|
+| `game_started` | On component mount | phase, phaseLabel, currentScreen, totalScreens, coachMessage |
+| `phase_changed` | Every phase transition | phase, phaseLabel, currentScreen, totalScreens, coachMessage |
+| `prediction_made` | User makes prediction | prediction, predictionLabel, phase |
+| `question_changed` | Enter test phase OR move to next question | questionNumber, totalQuestions, questionScenario, questionText, allOptions |
+| `answer_selected` | User selects answer in test | questionNumber, questionScenario, questionText, selectedAnswer, allOptions |
+| `app_changed` | User views new real-world application | appNumber, appTitle, appDescription, appConnection |
+| `app_completed` | User completes an application section | appNumber, appTitle |
+| `game_completed` | Test submitted or lesson finished | score, totalQuestions, percentage, passed |
+
+### 4. Coach Messages for Each Phase
+
+```typescript
+const coachMessages: Record<Phase, string> = {
+   hook: "Welcome! [topic-specific engaging intro]",
+   predict: "Time to make a prediction! What do YOU think will happen?",
+   play: "Watch carefully! Notice what's happening...",
+   review: "Let's understand WHY this happens...",
+   twist_predict: "Here's where it gets REALLY interesting!",
+   twist_play: "Compare what happens when you change [variable]...",
+   twist_review: "You've discovered [key insight]!",
+   transfer: "Now let's see real-world applications!",
+   test: "Test your understanding! Need a hint? I'm here to help!",
+   mastery: "Congratulations! You've mastered [concept]!"
+};
+```
+
+### 5. Hint System Implementation
+
+```typescript
+const hintMessages: Record<Phase, string> = {
+   // Contextual hints for each phase
+   hook: "Take a moment to consider [setup context]...",
+   predict: "Think about what you'd expect if [scenario]...",
+   play: "Keep watching! [observation guidance]...",
+   // ... etc for each phase
+};
+
+const requestHint = useCallback(() => {
+   emitGameEvent('hint_requested', {
+      phase,
+      coachMessage: hintMessages[phase],
+      message: 'User requested a hint'
+   });
+   setLastCoachMessage(hintMessages[phase]);
+}, [phase, emitGameEvent]);
+```
+
+---
+
+## THE KNOWLEDGE TEST (PHASE 9)
+
+**MANDATORY: 10 questions with the following structure:**
+
+### Question Structure
+
+```typescript
+interface TestQuestion {
+   scenario: string;      // Real-world context (2-3 sentences)
+   question: string;      // The actual question
+   options: {
+      id: string;
+      label: string;
+      correct?: boolean;  // Only one option has this
+   }[];
+   explanation: string;   // WHY the correct answer is correct
+}
+```
+
+### Question Distribution Requirements
+
+| Question # | Type | Difficulty |
+|------------|------|------------|
+| Q1 | Core Concept | Easy |
+| Q2 | Core Concept | Medium |
+| Q3 | Deep Understanding | Medium |
+| Q4 | Real-World Application #1 | Medium-Hard |
+| Q5 | Real-World Application #2 | Hard |
+| Q6 | Real-World Application #3 | Medium |
+| Q7 | Real-World Application #4 | Hard |
+| Q8 | Synthesis (combines all applications) | Expert |
+| Q9 | Advanced/Edge Case | Expert |
+| Q10 | Practical Engineering Challenge | Hard |
+
+### Test Screen Implementation
+
+```typescript
+// TEST Screen structure
+if (phase === 'test') {
+   const currentQ = testQuestions[testQuestion];
+
+   // If test submitted - show results
+   if (testSubmitted) {
+      const score = calculateTestScore();
+      // Show score summary, question-by-question review with explanations
+      return (/* Score summary UI with correct/incorrect breakdown */);
+   }
+
+   // Active test - show current question
+   return (
+      <div className="flex flex-col h-full">
+         {renderProgressBar()}
+         <div className="flex-1 flex flex-col items-center p-6 overflow-y-auto">
+            {/* Question header with progress */}
+            <div>Question {testQuestion + 1} of {totalQuestions}</div>
+
+            {/* Progress dots */}
+            <div className="flex gap-1">
+               {Array.from({ length: totalQuestions }, (_, i) => (
+                  <div key={i} style={{
+                     background: i === testQuestion ? colors.warning
+                        : i < testQuestion ? colors.success
+                        : colors.bgCardLight
+                  }} />
+               ))}
+            </div>
+
+            {/* Scenario box */}
+            <div className="scenario-box">
+               <p className="label">Scenario</p>
+               <p>{currentQ.scenario}</p>
+            </div>
+
+            {/* Question */}
+            <p className="question-text">{currentQ.question}</p>
+
+            {/* Options - A, B, C, D format */}
+            <div className="grid gap-3">
+               {currentQ.options.map((opt, i) => (
+                  <button
+                     key={opt.id}
+                     onMouseDown={() => {
+                        // Update answer
+                        const newAnswers = [...testAnswers];
+                        newAnswers[testQuestion] = opt.id;
+                        setTestAnswers(newAnswers);
+
+                        // Emit event for AI coach
+                        emitGameEvent('answer_selected', {
+                           phase: 'test',
+                           questionNumber: testQuestion + 1,
+                           totalQuestions,
+                           questionScenario: currentQ.scenario,
+                           questionText: currentQ.question,
+                           selectedAnswer: opt.label,
+                           allOptions: currentQ.options.map((o, idx) =>
+                              `${String.fromCharCode(65 + idx)}: ${o.label}`).join(' | ')
+                        });
+                     }}
+                     style={{
+                        background: testAnswers[testQuestion] === opt.id
+                           ? `${colors.warning}20` : colors.bgCard,
+                        border: `2px solid ${testAnswers[testQuestion] === opt.id
+                           ? colors.warning : colors.border}`
+                     }}
+                  >
+                     <div className="letter-badge">
+                        {String.fromCharCode(65 + i)}
+                     </div>
+                     <p>{opt.label}</p>
+                  </button>
+               ))}
+            </div>
+         </div>
+
+         {/* Bottom bar with Next/Submit */}
+         {renderBottomBar(
+            true,
+            !!testAnswers[testQuestion],
+            testQuestion < totalQuestions - 1 ? `Question ${testQuestion + 2}` : 'Submit Test',
+            () => {
+               if (testQuestion < totalQuestions - 1) {
+                  // Move to next question
+                  const nextQ = testQuestion + 1;
+                  setTestQuestion(nextQ);
+                  // Emit question_changed with FULL content
+                  emitGameEvent('question_changed', {
+                     questionNumber: nextQ + 1,
+                     totalQuestions,
+                     questionScenario: testQuestions[nextQ].scenario,
+                     questionText: testQuestions[nextQ].question,
+                     allOptions: testQuestions[nextQ].options.map((o, idx) =>
+                        `${String.fromCharCode(65 + idx)}: ${o.label}`).join(' | ')
+                  });
+               } else {
+                  // Submit test
+                  setTestSubmitted(true);
+                  emitGameEvent('game_completed', {
+                     phase: 'test',
+                     score: calculateTestScore(),
+                     totalQuestions,
+                     percentage: Math.round((calculateTestScore() / totalQuestions) * 100),
+                     passed: calculateTestScore() >= Math.ceil(totalQuestions * 0.7)
+                  });
+               }
+            }
+         )}
+      </div>
+   );
+}
+```
+
+### First Question Emission on Test Phase Entry
+
+```typescript
+// Emit first question content when entering test phase
+const prevPhaseRef = React.useRef<string>('');
+React.useEffect(() => {
+   if (phase === 'test' && prevPhaseRef.current !== 'test') {
+      const firstQ = testQuestions[0];
+      emitGameEvent('question_changed', {
+         phase: 'test',
+         phaseLabel: 'Knowledge Test',
+         questionNumber: 1,
+         totalQuestions: testQuestions.length,
+         questionScenario: firstQ.scenario,
+         questionText: firstQ.question,
+         allOptions: firstQ.options.map((o, idx) =>
+            `${String.fromCharCode(65 + idx)}: ${o.label}`).join(' | ')
+      });
+   }
+   prevPhaseRef.current = phase;
+}, [phase, emitGameEvent]);
+```
+
+---
+
+## THE TRANSFER PHASE (PHASE 8) - REAL-WORLD APPLICATIONS
+
+**MANDATORY: 4 detailed real-world applications with this structure:**
+
+### Application Data Structure (MANDATORY FORMAT)
+
+```typescript
+interface RealWorldApplication {
+   icon: string;            // Emoji icon
+   title: string;           // e.g., "Quantum Computing"
+   short: string;           // Very short description (3-4 words)
+   tagline: string;         // Short hook phrase
+   color: string;           // Hex color for theming
+   description: string;     // 2-3 sentence overview
+   connection: string;      // How it connects to the core concept learned
+   howItWorks: string;      // Technical explanation (2-3 sentences)
+   stats: {                 // **MANDATORY: 3 impressive statistics**
+      value: string;        // e.g., "1,000+", "$65B", "100M×"
+      label: string;        // e.g., "Qubits achieved", "Market by 2030"
+      icon: string;         // Emoji for visual interest
+   }[];
+   examples: string[];      // 4 specific real-world examples with details
+   companies: string[];     // 4-5 companies using this technology
+   futureImpact: string;    // Future significance (1-2 sentences)
+}
+
+const realWorldApps: RealWorldApplication[] = [
+   {
+      icon: '💻',
+      title: 'Quantum Computing',
+      short: 'Qubits in superposition',
+      tagline: 'The Next Computing Revolution',
+      color: '#06b6d4',
+      description: 'Just like electrons passing through both slits simultaneously, quantum bits (qubits) exist in a superposition of 0 AND 1 at the same time.',
+      connection: 'The double-slit experiment demonstrates superposition — electrons exist in multiple states until measured. Qubits use this same principle.',
+      howItWorks: 'Qubits are made from trapped ions, superconducting circuits, or photons. They maintain quantum coherence at near absolute zero temperatures.',
+      stats: [
+         { value: '1,000+', label: 'Qubits achieved', icon: '⚡' },
+         { value: '$65B', label: 'Market by 2030', icon: '📈' },
+         { value: '100M×', label: 'Faster for some tasks', icon: '🚀' }
+      ],
+      examples: [
+         'Drug discovery: Simulate molecular interactions impossible for classical computers',
+         'Cryptography: Factor large primes to break/create encryption',
+         'AI/ML: Train models on quantum-enhanced algorithms',
+         'Finance: Portfolio optimization and risk analysis'
+      ],
+      companies: ['IBM', 'Google', 'Microsoft', 'IonQ', 'Rigetti'],
+      futureImpact: 'By 2030, quantum computers may solve problems in minutes that would take classical computers millions of years.'
+   },
+   // ... 3 more applications with same structure
+];
+```
+
+### Stats Display Template
+
+```jsx
+{/* Stats grid - 3 impressive statistics */}
+<div style={{
+   display: 'grid',
+   gridTemplateColumns: 'repeat(3, 1fr)',
+   gap: '12px',
+   marginBottom: '16px'
+}}>
+   {currentApp.stats.map((stat, i) => (
+      <div key={i} style={{
+         padding: '12px',
+         borderRadius: '12px',
+         background: `${currentApp.color}10`,
+         border: `1px solid ${currentApp.color}30`,
+         textAlign: 'center'
+      }}>
+         <div style={{ fontSize: '20px', marginBottom: '4px' }}>{stat.icon}</div>
+         <div style={{
+            fontSize: '18px',
+            fontWeight: 800,
+            color: currentApp.color
+         }}>{stat.value}</div>
+         <div style={{
+            fontSize: '10px',
+            color: colors.textMuted,
+            fontWeight: 600
+         }}>{stat.label}</div>
+      </div>
+   ))}
+</div>
+```
+
+### Transfer Phase Implementation
+
+```typescript
+// State for tracking progress
+const [selectedApp, setSelectedApp] = useState(0);
+const [completedApps, setCompletedApps] = useState<boolean[]>([false, false, false, false]);
+
+// Get current app
+const currentApp = realWorldApps[selectedApp];
+const isCurrentCompleted = completedApps[selectedApp];
+const allCompleted = completedApps.every(c => c);
+const completedCount = completedApps.filter(c => c).length;
+
+// Handle app completion
+const handleCompleteApp = () => {
+   const newCompleted = [...completedApps];
+   newCompleted[selectedApp] = true;
+   setCompletedApps(newCompleted);
+
+   emitGameEvent('app_completed', {
+      phase: 'transfer',
+      appNumber: selectedApp + 1,
+      appTitle: currentApp.title
+   });
+
+   // Auto-advance to next incomplete app
+   if (selectedApp < 3 && !completedApps[selectedApp + 1]) {
+      setTimeout(() => {
+         setSelectedApp(selectedApp + 1);
+         emitGameEvent('app_changed', {
+            appNumber: selectedApp + 2,
+            appTitle: realWorldApps[selectedApp + 1].title,
+            appDescription: realWorldApps[selectedApp + 1].description
+         });
+      }, 500);
+   }
+};
+
+// Transfer phase UI structure
+return (
+   <div className="flex flex-col h-full">
+      {renderProgressBar()}
+
+      {/* Scrollable content area */}
+      <div className="flex-1 overflow-y-auto p-4">
+         {/* Header */}
+         <div className="mb-4">
+            <span className="text-xs uppercase tracking-widest">Step 8 • Real World</span>
+            <h2 className="text-2xl font-black">{currentApp.title}</h2>
+            <p className="text-sm">{currentApp.tagline}</p>
+         </div>
+
+         {/* Application tabs */}
+         <div className="flex gap-2 mb-4">
+            {realWorldApps.map((app, i) => (
+               <button
+                  key={app.title}
+                  onClick={() => {
+                     setSelectedApp(i);
+                     emitGameEvent('app_changed', {
+                        appNumber: i + 1,
+                        appTitle: app.title,
+                        appDescription: app.description
+                     });
+                  }}
+                  className={`tab ${selectedApp === i ? 'active' : ''} ${completedApps[i] ? 'completed' : ''}`}
+               >
+                  {app.icon} {app.title}
+                  {completedApps[i] && <span>✓</span>}
+               </button>
+            ))}
+         </div>
+
+         {/* Main visualization (SVG specific to each application) */}
+         <div className="visualization-area">
+            {selectedApp === 0 && <App1Visualization />}
+            {selectedApp === 1 && <App2Visualization />}
+            {selectedApp === 2 && <App3Visualization />}
+            {selectedApp === 3 && <App4Visualization />}
+         </div>
+
+         {/* Connection to core concept */}
+         <div className="connection-box">
+            <span>🔗 Connection to [Core Experiment]</span>
+            <p>{currentApp.connection}</p>
+         </div>
+
+         {/* How it works */}
+         <div className="how-it-works-box">
+            <span>⚙️ How It Works</span>
+            <p>{currentApp.howItWorks}</p>
+         </div>
+
+         {/* Real-world examples */}
+         <div className="examples-grid">
+            {currentApp.examples.map((ex, i) => (
+               <div key={i} className="example-item">
+                  <span className="number">{i + 1}</span>
+                  <p>{ex}</p>
+               </div>
+            ))}
+         </div>
+
+         {/* Industry leaders */}
+         <div className="companies-section">
+            {currentApp.companies.map(company => (
+               <span key={company} className="company-badge">{company}</span>
+            ))}
+         </div>
+
+         {/* Future impact */}
+         <div className="future-impact-box">
+            <span>🚀 Future Impact</span>
+            <p>{currentApp.futureImpact}</p>
+         </div>
+      </div>
+
+      {/* Fixed bottom action bar */}
+      <div className="bottom-bar">
+         <button onClick={() => goToPhase('twist_review')}>← Back</button>
+
+         {!isCurrentCompleted ? (
+            <button onClick={handleCompleteApp} className="primary">
+               ✓ Complete & Continue →
+            </button>
+         ) : (
+            <span>✓ {currentApp.title} completed!</span>
+         )}
+
+         <button
+            onClick={() => allCompleted && goToPhase('test')}
+            disabled={!allCompleted}
+            className={allCompleted ? 'primary' : 'disabled'}
+         >
+            {allCompleted ? 'Take Test →' : `${completedCount}/4`}
+         </button>
+      </div>
+   </div>
+);
+```
+
+---
+
+## VISUALIZATION REQUIREMENTS (NON-NEGOTIABLE)
+
+### Required SVG Defs
+
+Every visualization MUST include:
+
+```jsx
+<defs>
+   {/* 1. Background gradient */}
+   <linearGradient id="bgGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stopColor="#030712" />
+      <stop offset="50%" stopColor="#0a0f1a" />
+      <stop offset="100%" stopColor="#030712" />
+   </linearGradient>
+
+   {/* 2. Multiple glow filters */}
+   <filter id="softGlow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="4" result="blur" />
+      <feMerge>
+         <feMergeNode in="blur" />
+         <feMergeNode in="SourceGraphic" />
+      </feMerge>
+   </filter>
+
+   {/* 3. Material gradients */}
+   <linearGradient id="metalGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stopColor="#64748b" />
+      <stop offset="50%" stopColor="#475569" />
+      <stop offset="100%" stopColor="#334155" />
+   </linearGradient>
+
+   {/* 4. Color-specific gradients for your domain */}
+   {/* e.g., for light: */}
+   <radialGradient id="lightGlow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stopColor="#ffffff" />
+      <stop offset="30%" stopColor="#fef08a" />
+      <stop offset="100%" stopColor="#fbbf24" stopOpacity="0" />
+   </radialGradient>
+
+   {/* 5. Grid pattern for lab background */}
+   <pattern id="labGrid" width="25" height="25" patternUnits="userSpaceOnUse">
+      <rect width="25" height="25" fill="none" stroke="#1e293b" strokeWidth="0.5" strokeOpacity="0.3" />
+   </pattern>
+</defs>
+```
+
+### Required Visual Layers (Bottom to Top)
+
+1. **Background** - Premium gradient, never flat
+2. **Grid/Reference** - Subtle lab/context pattern
+3. **Equipment Layer** - Realistic apparatus with depth
+4. **Active Elements** - Particles, beams, animations
+5. **Labels/UI Overlay** - Non-intrusive annotations
+
+### Animation Requirements
+
+```jsx
+// All moving elements need smooth animations
+<circle cx={x} cy={y} r="4" fill="#67e8f9">
+   <animate attributeName="opacity" values="0.6;1;0.6" dur="1s" repeatCount="indefinite" />
+</circle>
+
+// Particle trails for motion
 {particles.map(p => (
-  <g key={p.id}>
-    {/* Trail effect */}
-    {p.trail.map((t, i) => (
-      <circle cx={t.x} cy={t.y} r={p.size * (i / p.trail.length) * 0.5}
-        fill={`hsl(${p.hue}, 80%, 70%)`} opacity={(i / p.trail.length) * 0.4} />
-    ))}
-    {/* Core particle with glow */}
-    <circle cx={p.x} cy={p.y} r={p.size}
-      fill={`hsl(${p.hue}, 90%, 75%)`} filter="url(#glow)" />
-  </g>
+   <g key={p.id}>
+      {/* Trail */}
+      <line x1={p.prevX} y1={p.prevY} x2={p.x} y2={p.y}
+         stroke="#22d3ee" strokeWidth="1.5" opacity="0.3" />
+      {/* Core */}
+      <circle cx={p.x} cy={p.y} r="3" fill="#67e8f9" filter="url(#softGlow)" />
+   </g>
 ))}
 ```
 
-#### 3. ANIMATED STATE CHANGES
-```jsx
-// ❌ NEVER - Instant state changes
-<rect fill={isActive ? "blue" : "gray"} />
-
-// ✅ ALWAYS - Animated transitions with meaning
-<rect
-  fill={isActive ? "blue" : "gray"}
-  className="transition-all duration-300"
-  style={{
-    transform: isActive ? 'scale(1.05)' : 'scale(1)',
-    filter: isActive ? 'drop-shadow(0 0 10px rgba(59, 130, 246, 0.5))' : 'none'
-  }}
-/>
-```
-
-#### 4. REAL-WORLD VISUAL ANCHORING
-Every element must look like its real-world counterpart:
-
-| Concept | Basic (❌) | Premium (✅) |
-|---------|-----------|-------------|
-| Light source | Yellow circle | Glowing orb with rays, pulsing animation, gradient halo |
-| Polarizer | Gray rectangle | Glass panel with refraction lines, rotation indicator, subtle reflection |
-| Light beam | Yellow line | Gradient beam with particles, intensity-based opacity, wave animation |
-| Resistor | Zigzag line | 3D cylinder with color bands, heat glow when current flows |
-| Capacitor | Two parallel lines | Metal plates with electric field visualization, charge animation |
-| Wave | Sine curve | Animated oscillation with amplitude glow, frequency visualization |
-
 ---
 
-### SVG PREMIUM REQUIREMENTS
+## TEACHING MILESTONE SYSTEM
 
-Every SVG visualization MUST include:
+Every PLAY phase must have real-time teaching overlays:
 
-#### REQUIRED DEFS (Non-negotiable)
-```jsx
-<defs>
-  {/* 1. Background gradient - creates depth */}
-  <radialGradient id="bgGradient" cx="30%" cy="30%">
-    <stop offset="0%" stopColor="#1e1b4b" />
-    <stop offset="50%" stopColor="#0f172a" />
-    <stop offset="100%" stopColor="#020617" />
-  </radialGradient>
+```typescript
+const [teachingMilestone, setTeachingMilestone] = useState<'none' | 'milestone1' | 'milestone2' | 'milestone3' | 'final'>('none');
 
-  {/* 2. At least 2 glow filters - for emphasis */}
-  <filter id="softGlow" x="-100%" y="-100%" width="300%" height="300%">
-    <feGaussianBlur stdDeviation="8" result="blur" />
-    <feMerge>
-      <feMergeNode in="blur" />
-      <feMergeNode in="SourceGraphic" />
-    </feMerge>
-  </filter>
-  <filter id="strongGlow" x="-50%" y="-50%" width="200%" height="200%">
-    <feGaussianBlur stdDeviation="4" result="blur" />
-    <feComposite in="SourceGraphic" in2="blur" operator="over" />
-  </filter>
+// Update milestones based on user interaction
+useEffect(() => {
+   if (phase === 'play') {
+      if (particleCount < 15) setTeachingMilestone('milestone1');
+      else if (particleCount < 60) setTeachingMilestone('milestone2');
+      else if (particleCount < 150) setTeachingMilestone('milestone3');
+      else setTeachingMilestone('final');
+   }
+}, [particleCount, phase]);
 
-  {/* 3. Material gradients for realistic objects */}
-  <linearGradient id="metalGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-    <stop offset="0%" stopColor="#f1f5f9" />
-    <stop offset="50%" stopColor="#94a3b8" />
-    <stop offset="100%" stopColor="#64748b" />
-  </linearGradient>
+// Teaching messages with progressive revelation
+const teachingMessages = {
+   none: { title: '', message: '', color: '' },
+   milestone1: {
+      title: '🔬 [First Observation]',
+      message: 'Initial observation text explaining what they\'re seeing...',
+      color: colors.textMuted
+   },
+   milestone2: {
+      title: '🌟 [Pattern Emerging]',
+      message: 'Something interesting is happening! Point out the emerging pattern...',
+      color: colors.warning
+   },
+   milestone3: {
+      title: '✨ [Key Discovery]',
+      message: 'The main phenomenon is now clear. Explain the mechanism...',
+      color: colors.primary
+   },
+   final: {
+      title: '🎯 [Full Understanding]',
+      message: 'Complete explanation tying everything together...',
+      color: colors.success
+   }
+};
 
-  {/* 4. Patterns for texture */}
-  <pattern id="gridPattern" patternUnits="userSpaceOnUse" width="20" height="20">
-    <line x1="0" y1="0" x2="20" y2="0" stroke="#334155" strokeWidth="0.5" />
-    <line x1="0" y1="0" x2="0" y2="20" stroke="#334155" strokeWidth="0.5" />
-  </pattern>
-</defs>
-```
-
-#### REQUIRED VISUAL LAYERS (Bottom to Top)
-1. **Background** - Gradient, never flat color
-2. **Grid/Reference** - Subtle context lines
-3. **Secondary Elements** - Supporting visuals
-4. **Primary Elements** - Main interactive objects with full treatment
-5. **Particles/Effects** - Animated overlays
-6. **UI Overlay** - Labels, values, indicators
-
----
-
-### ANTI-PATTERNS (What NOT to Do)
-
-#### ❌ FLAT SHAPES WITHOUT DEPTH
-```jsx
-// BAD - Looks like a wireframe, not a simulation
-<rect x="100" y="50" width="20" height="100" fill="blue" />
-<rect x="200" y="50" width="20" height="100" fill="purple" />
-<line x1="50" y1="100" x2="250" y2="100" stroke="yellow" strokeWidth="2" />
-```
-
-#### ❌ ABSTRACT REPRESENTATIONS
-```jsx
-// BAD - Doesn't show HOW light interacts with polarizers
-<div className="flex items-center gap-4">
-  <div className="w-20 h-40 bg-blue-500 rotate-0" />
-  <div className="text-yellow-500">→→→</div>
-  <div className="w-20 h-40 bg-purple-500 rotate-90" />
-</div>
-```
-
-#### ❌ MISSING PHYSICS VISUALIZATION
-```jsx
-// BAD - Shows state but not mechanism
-<div>Intensity: {intensity}%</div>
-<div className="h-4 bg-gray-200 rounded">
-  <div className="h-4 bg-yellow-500" style={{ width: `${intensity}%` }} />
-</div>
+// Render overlay in visualization
+{teachingMilestone !== 'none' && (
+   <div className="absolute bottom-6 left-6 right-6 p-5 rounded-2xl backdrop-blur-md"
+      style={{
+         background: `linear-gradient(135deg, ${colors.bgCard}ee 0%, ${colors.bgCardLight}dd 100%)`,
+         border: `1px solid ${teachingMessages[teachingMilestone].color}50`
+      }}>
+      <p className="font-black" style={{ color: teachingMessages[teachingMilestone].color }}>
+         {teachingMessages[teachingMilestone].title}
+      </p>
+      <p className="text-sm" style={{ color: colors.textSecondary }}>
+         {teachingMessages[teachingMilestone].message}
+      </p>
+   </div>
+)}
 ```
 
 ---
 
-### PREMIUM PATTERNS (What TO Do)
+## COLOR SYSTEM (STANDARD PALETTE)
 
-#### ✅ REALISTIC LIGHT SOURCE
-```jsx
-<g transform={`translate(30, ${height/2})`}>
-  {/* Outer glow halo */}
-  <circle r="35" fill="url(#lightGlow)" filter="url(#softGlow)" opacity="0.8" />
-  {/* Inner core */}
-  <circle r="18" fill="#fef08a" filter="url(#strongGlow)" />
-  <circle r="12" fill="#fef9c3" />
-  {/* Animated rays */}
-  {[...Array(8)].map((_, i) => (
-    <line key={i}
-      x1="20" y1="0"
-      x2={28 + Math.sin(animTime * 2 + i) * 5} y2="0"
-      stroke="#fef08a" strokeWidth="2" strokeLinecap="round"
-      opacity={0.6 + Math.sin(animTime * 3 + i) * 0.3}
-      transform={`rotate(${i * 45})`}
-    />
-  ))}
-</g>
-```
+```typescript
+const colors = {
+   // Primary accents
+   primary: '#06b6d4',      // cyan-500 - Main interactive elements
+   primaryDark: '#0891b2',  // cyan-600
+   accent: '#a855f7',       // purple-500 - Secondary emphasis
+   accentDark: '#9333ea',   // purple-600
 
-#### ✅ GLASS-LIKE POLARIZER
-```jsx
-<g transform={`translate(${x}, ${height/2}) rotate(${angle})`}>
-  {/* Glass body with gradient */}
-  <rect x="-8" y="-70" width="16" height="140" rx="8"
-    fill="url(#glassGradient)" stroke="#60a5fa" strokeWidth="2" />
-  {/* Polarization lines pattern */}
-  <rect x="-6" y="-68" width="12" height="136" rx="6"
-    fill="url(#polarizationLines)" opacity="0.5" />
-  {/* Highlight reflection */}
-  <rect x="-6" y="-68" width="4" height="136" rx="2"
-    fill="white" opacity="0.2" />
-  {/* Direction indicator */}
-  <line x1="0" y1="-75" x2="0" y2="-60"
-    stroke="#93c5fd" strokeWidth="3" strokeLinecap="round" />
-</g>
-```
+   // Semantic colors
+   warning: '#f59e0b',      // amber-500 - Caution, test phase
+   success: '#10b981',      // emerald-500 - Correct, completed
+   danger: '#ef4444',       // red-500 - Wrong, observed state
 
-#### ✅ PHYSICS-ACCURATE LIGHT BEAM
-```jsx
-{/* Multi-layer beam showing intensity */}
-<g>
-  {/* Outer glow - intensity dependent */}
-  <rect x={startX} y={centerY - 25}
-    width={beamLength} height={50}
-    fill={`rgba(254, 240, 138, ${0.1 + intensity * 0.15})`}
-    rx="4" />
-  {/* Core beam */}
-  <rect x={startX} y={centerY - 15}
-    width={beamLength} height={30}
-    fill={`rgba(250, 204, 21, ${0.2 + intensity * 0.3})`}
-    rx="2" />
-  {/* Particle photons flowing through */}
-  {photons.map(p => (
-    <circle key={p.id} cx={p.x} cy={p.y} r={p.size}
-      fill={p.blocked ? '#ef4444' : `hsl(${p.hue}, 90%, 75%)`}
-      filter={p.blocked ? undefined : 'url(#glow)'}
-      opacity={p.blocked ? 0.5 : 1} />
-  ))}
-</g>
+   // Backgrounds
+   bgDark: '#020617',       // slate-950 - Deepest background
+   bgCard: '#0f172a',       // slate-900 - Card backgrounds
+   bgCardLight: '#1e293b',  // slate-800 - Lighter cards
+
+   // Borders and text
+   border: '#334155',       // slate-700
+   textPrimary: '#f8fafc',  // slate-50 - Headings
+   textSecondary: '#94a3b8',// slate-400 - Body text
+   textMuted: '#64748b',    // slate-500 - Subtle text
+};
 ```
 
 ---
 
-### THE VISUALIZATION CHECKLIST
+## COMPONENT STRUCTURE CHECKLIST
 
-Before shipping ANY game, verify:
+Before shipping, verify your game has:
 
-- [ ] **No flat shapes** - Every shape has gradient, shadow, or glow
-- [ ] **Realistic materials** - Objects look like their real-world counterparts
-- [ ] **Particle systems** - Moving elements have particles with trails
-- [ ] **Animated state changes** - All transitions are smooth and meaningful
-- [ ] **Depth layers** - Background, midground, foreground clearly defined
-- [ ] **Physics accuracy** - Visualization matches the actual physics
-- [ ] **Educational clarity** - A viewer can SEE how the concept works
-- [ ] **Premium polish** - Would you put this in an Apple commercial?
+### State Variables
+- [ ] `phase` - Current phase (type-safe enum)
+- [ ] `prediction` - User's initial prediction
+- [ ] `twistPrediction` - User's twist prediction
+- [ ] `testQuestion` - Current question index (0-9)
+- [ ] `testAnswers` - Array of 10 answer selections
+- [ ] `testSubmitted` - Boolean for showing results
+- [ ] `selectedApp` - Current transfer app index (0-3)
+- [ ] `completedApps` - Array of 4 booleans
+- [ ] `teachingMilestone` - Current teaching state
+- [ ] `time` - Animation time value
+- [ ] `confetti` - Mastery celebration particles
+- [ ] Interactive-specific state (sliders, toggles, etc.)
 
-**If ANY checkbox fails, DO NOT SHIP. Redesign until Level 4+ quality.**
+### Helper Functions
+- [ ] `emitGameEvent()` - AI coach communication
+- [ ] `goToPhase()` - Phase navigation with events
+- [ ] `renderProgressBar()` - Top progress indicator
+- [ ] `renderBottomBar()` - Navigation buttons
+- [ ] `calculateTestScore()` - Test evaluation
 
----
-
-## REAL-WORLD SIMULATION STANDARDS (CRITICAL)
-
-**The graphic must look like a REAL demo you'd see in a physics lab, not a cartoon diagram.**
-
-### Why Real-World Matters
-
-| Abstract Diagram | Real-World Simulation |
-|------------------|----------------------|
-| "A line represents light" | Glowing beam with photon particles flowing |
-| "A rectangle is a polarizer" | Crystal lens with gradient, reflections, visible axis |
-| "Output gets smaller" | Detector that glows/dims with visible intensity meter |
-| Learner thinks "this is a diagram" | Learner thinks "this is a real experiment" |
-
-### REFERENCE: What Real Equipment Looks Like
-
-#### LIGHT SOURCES
-```
-Real incandescent bulb:
-- Glass envelope (ellipse with radial gradient from white core to warm yellow edge)
-- Filament glow core (bright white/yellow center)
-- Emanating rays (animated, varying lengths, subtle opacity)
-- Atmospheric halo (soft gaussian blur around entire bulb)
-- Label: "UNPOLARIZED - All E-field directions"
-
-Real laser:
-- Cylindrical housing (linear gradient for 3D effect)
-- Coherent beam (tight, single color, minimal spread)
-- Beam particles (small dots flowing in straight line)
-- Exit aperture glow
-```
-
-#### OPTICAL ELEMENTS (Polarizers, Lenses, Mirrors)
-```
-Real polarizing crystal:
-- Transparent body with visible DEPTH (not flat rectangle)
-- Multi-stop gradient showing light refraction
-- Internal striations/pattern showing polarization axis
-- Edge highlights showing glass/crystal material
-- Visible axis indicator (arrow or line showing polarization direction)
-- Subtle glow aura around element
-- Label showing current angle
-
-Real mirror:
-- Reflective gradient (lighter on one side)
-- Frame/bezel around edge
-- Visible reflection of incoming beam
-- Slight curvature indication if curved mirror
-```
-
-#### WAVE VISUALIZATION
-```
-Real electromagnetic wave:
-- Sinusoidal oscillation (not just a line)
-- E-field vectors at peaks (arrows showing field direction)
-- Propagation animation (wave moves through space)
-- Amplitude changes based on intensity
-- Color coding for different polarization states
-- Wavelength visible and consistent
-
-Real particle/photon:
-- Core glow (bright center)
-- Surrounding halo (soft edge)
-- Motion trail (fading circles behind)
-- Wave-like path (sinusoidal motion for wave-particle duality)
-- Color indicating energy/frequency
-```
-
-#### DETECTORS/OUTPUT
-```
-Real intensity detector:
-- Circular sensor body (like a light meter)
-- Dynamic glow based on measured intensity
-- Digital/analog readout (percentage or value)
-- Color coding (green=bright, yellow=dim, red=dark)
-- Status label (BRIGHT/DIM/DARK)
-```
-
-### THE ANATOMY OF A PREMIUM VISUALIZATION
-
-Every simulation SVG must have these layers:
-
-```
-1. BACKGROUND LAYER
-   - Deep gradient (not flat color)
-   - Subtle elements (stars, grid, texture)
-   - Sets the "environment" mood
-
-2. BEAM/FIELD LAYER
-   - Light beams, electromagnetic waves, field lines
-   - Shows the PHYSICS in motion
-   - Animated, particle-based where appropriate
-
-3. EQUIPMENT LAYER
-   - All apparatus (sources, lenses, mirrors, detectors)
-   - Each piece looks like REAL equipment
-   - Interactive elements clearly indicated
-
-4. ANNOTATION LAYER
-   - Labels (non-intrusive)
-   - Formulas (in badge/pill format)
-   - Angle/value indicators
-   - Status overlays
-
-5. TEACHING OVERLAY LAYER
-   - Real-time explanations
-   - Milestone indicators
-   - WHY callouts
-```
-
----
-
-## COMPLETE GAME COMPLIANCE AUDIT
-
-**Before shipping ANY game, it MUST pass ALL sections of this audit.**
-
-### SECTION A: PHASE COMPLIANCE (All Required)
-
-| Phase | Required Elements | ✓ |
-|-------|-------------------|---|
-| **1. HOOK** | Engaging question/scenario that creates curiosity | ☐ |
-| **2. PREDICT** | Forces user to commit to prediction BEFORE interacting | ☐ |
-| **3. PLAY** | Interactive simulation with prediction visible | ☐ |
-| **4. PLAY-TEACH** | Real-time teaching overlays explaining WHY during interaction | ☐ |
-| **5. REVIEW** | Explains the gap between prediction and reality | ☐ |
-| **6. TWIST-PREDICT** | New challenging scenario (optional but recommended) | ☐ |
-| **7. TWIST-PLAY** | Simulation for twist scenario | ☐ |
-| **8. TWIST-REVIEW** | Explains the twist | ☐ |
-| **9. TRANSFER-WHAT** | Different context, asks what will happen | ☐ |
-| **10. TRANSFER-WHY** | User must explain the mechanism in their own words | ☐ |
-| **11. MASTERY** | Celebration + summary of what was learned | ☐ |
-
-### SECTION B: VISUALIZATION QUALITY (All Required)
-
-| Element | Requirement | ✓ |
-|---------|-------------|---|
-| **Light Sources** | Realistic bulb/laser with glow, rays, proper physics | ☐ |
-| **Optical Elements** | Crystal/glass appearance with gradients, axis indicators | ☐ |
-| **Beams/Waves** | Sinusoidal motion, particles with trails, E-field vectors | ☐ |
-| **Detectors** | Dynamic output visualization with intensity feedback | ☐ |
-| **Background** | Premium gradient, not flat color | ☐ |
-| **Animations** | 60fps smooth, physics-accurate timing | ☐ |
-| **Labels** | Clear but non-intrusive, proper typography | ☐ |
-
-### SECTION C: TEACHING QUALITY (All Required)
-
-| Element | Requirement | ✓ |
-|---------|-------------|---|
-| **Real-Time Teaching** | Explanations update AS user interacts, not just at end | ☐ |
-| **WHY Explanations** | Every milestone explains WHY, not just WHAT | ☐ |
-| **Math Visualization** | Formulas shown with live calculation (e.g., I = I₀cos²(θ) = X%) | ☐ |
-| **Analogy Provided** | At least one relatable analogy (e.g., picket fence) | ☐ |
-| **Misconception Addressed** | If user predicted wrong, explain why their model was incorrect | ☐ |
-| **Transfer Verification** | Final test uses DIFFERENT context to prove understanding | ☐ |
-
-### SECTION D: STABILITY (All Required)
-
-| Element | Requirement | ✓ |
-|---------|-------------|---|
-| **No Random Resets** | Game never resets unexpectedly during play | ☐ |
-| **User Controls Progression** | User decides when to move forward, not auto-advance | ☐ |
-| **State Preserved** | All user inputs preserved across phase transitions | ☐ |
-| **No emitGameEvent in Render** | Events only emitted at key moments, not during animations | ☐ |
-
----
-
-## THE 10-SCREEN PREMIUM TEMPLATE
-
-**Use this exact structure for every physics/science game:**
-
-```
-SCREEN 1: HOOK
-├── Attention-grabbing question
-├── Mini preview of the simulation
-├── "Let's find out!" button
-└── Sets up the core mystery
-
-SCREEN 2: PREDICT
-├── Specific scenario with numbers
-├── Multiple choice prediction (3 options)
-├── User MUST select before proceeding
-└── "Let's see what really happens" button
-
-SCREEN 3: PLAY (Interactive Discovery)
-├── Full simulation visualization
-├── User's prediction shown at top
-├── Interactive controls (slider, buttons)
-├── REAL-TIME teaching overlay (changes as they interact):
-│   ├── Current state title ("ALIGNED - Maximum Light!")
-│   ├── WHY explanation (updates at each milestone)
-│   └── Live formula calculation
-└── "I understand, show me more" button (appears when key discovery made)
-
-SCREEN 4: REVIEW
-├── Summary of what they discovered
-├── Analogy explanation (e.g., picket fence)
-├── The formula/law with explanation
-├── Feedback on their prediction (correct/incorrect)
-└── "Ready for a challenge?" button
-
-SCREEN 5: TWIST-PREDICT (Optional but Recommended)
-├── New surprising scenario
-├── Multiple choice prediction
-├── Creates cognitive conflict ("Wait, that doesn't make sense...")
-└── "Let's see!" button
-
-SCREEN 6: TWIST-PLAY
-├── Interactive simulation for twist scenario
-├── REAL-TIME teaching showing why this works
-├── Step-by-step calculation visualization
-└── "Explain this!" button
-
-SCREEN 7: TWIST-REVIEW
-├── Deep explanation of the paradox/twist
-├── Mathematical breakdown
-├── Key insight highlighted
-└── "Test my understanding" button
-
-SCREEN 8: TRANSFER-WHAT (New Context)
-├── Completely different real-world scenario
-├── Same underlying concept
-├── Multiple choice prediction
-└── "Now explain why" button
-
-SCREEN 9: TRANSFER-WHY
-├── Text input for explanation
-├── User must articulate the mechanism
-├── "Check my understanding" button
-├── Feedback on both prediction AND explanation
-└── "See what I mastered" button
-
-SCREEN 10: MASTERY
-├── Celebration animation
-├── Summary of concepts mastered (checklist)
-├── Connection to real-world applications
-└── "Play again" button
-```
-
----
-
-## SKILL REFERENCE
-
-When building a game, load the relevant skill file for detailed guidance:
-
-### Skill 1: Concept Extraction
-**File:** `.claude/skills/concept-extraction.md`
-**Key outputs:**
-- Core insight (one sentence an expert knows)
-- Misconception being fought
-- System variables (inputs/outputs)
-- Causal chain (WHY mechanism)
-- Aha moment design
-- Child-friendly scenario
-- Knowledge Components (KCs)
-
-### Skill 2: UI/UX Design
-**File:** `.claude/skills/uiux-designer.md`
-**Key outputs:**
-- 7 Immutable Laws compliance
-- Truth Engine (deterministic simulation)
-- 6 Interaction Patterns selection
-- 6 Essential Screens design
-- Visual language system
-- Premium design verification
-
-### Skill 3: Learning Architecture
-**File:** `.claude/skills/learning-architecture.md`
-**Key outputs:**
-- KC dependency graph
-- Progressive disclosure of verbs
-- Flow state calibration
-- Scaffolding that fades
-- Real-world anchoring
-- Level design (one thing per level)
-
-### Skill 4: Assessment Architecture
-**File:** `.claude/skills/assessment-architecture.md`
-**Key outputs:**
-- Multi-dimensional mastery scoring
-- Adaptive difficulty rules
-- Misconception detection patterns
-- Intelligent hint escalation
-- Transfer tests (near/medium/far)
-- Mastery gates configuration
-
-### Skill 5: Implementation
-**File:** `.claude/skills/implementation.md`
-**Key outputs:**
-- Master component structure
-- State architecture
-- Build order
-- Component library usage
-- Common pitfalls avoidance
-
-### Skill 6: Verification
-**File:** `.claude/skills/verification.md`
-**Key outputs:**
-- Complete playthrough test
-- Learning effectiveness test (5-Question Test)
-- Adaptive quality verification
-- Flow state verification
-- Design quality audit
-- Ship checklist
+### useEffect Hooks
+- [ ] Animation loop (30ms interval)
+- [ ] Initial game_started event on mount
+- [ ] Teaching milestone updates
+- [ ] First question emission on test phase entry
+- [ ] Confetti generation on mastery phase
 
 ---
 
@@ -830,43 +990,25 @@ When building a game, load the relevant skill file for detailed guidance:
 
 Before shipping, ask:
 
-1. **"Can a child who completes this explain it to a friend?"**
-   Without reading definitions. Without being taught. Just from playing.
-
-2. **"Would the game notice if they don't really understand?"**
-   Misconception detection? Transfer tests? Mastery gates?
-
-3. **"Does it meet them where they are?"**
-   Help when struggling? Challenge when coasting? Warm throughout?
-
-4. **"Will this help them in real life?"**
-   Real scenarios. Real numbers. Real decisions.
-
-5. **"Would I be proud to show this to both a parent AND a teacher?"**
-   Educational depth. Design quality. Child safety. Fun factor.
+1. **Does it have ALL 10 phases?** Hook through Mastery?
+2. **Does it emit events for AI coaching?** Every phase change, question, prediction?
+3. **Does the test have 10 scenario-based questions?** With explanations?
+4. **Does transfer have 4 real-world applications?** With visualizations?
+5. **Are visualizations Level 4+ premium quality?** Gradients, glows, animations?
+6. **Do teaching milestones update in real-time?** During PLAY phases?
+7. **Would you be proud to show this to Apple's design team?**
 
 ---
 
-## THE MANTRA
+## REFERENCE IMPLEMENTATION
 
-*"The best educational games don't feel like learning.*
-*They feel like playing.*
-*And then you realize you understand something you didn't before."*
+Study `WaveParticleDualityRenderer.tsx` for the gold standard implementation. This file demonstrates:
+- Full 10-phase structure
+- Complete AI coaching integration
+- 10-question knowledge test with scenarios
+- 4 detailed real-world applications
+- Premium SVG visualizations
+- Real-time teaching overlays
+- All required events and state management
 
-**If you can't teach it back, you don't own it yet.**
-
-**Retrieval beats rereading. Always.**
-
-**I do, we do, you do — that's the path to independence.**
-
-**Mistakes are data. What did this error teach us?**
-
-**Don't just know the recipe — be able to cook the meal.**
-
----
-
-**Execute the 6 skills in sequence.**
-**Load each skill file for detailed guidance.**
-**Ship something world-class.**
-
-**Build games where understanding is the only path to victory.**
+**Copy its structure. Match its quality. Ship games that teach.**

@@ -1,0 +1,2594 @@
+'use client';
+
+import { useState, useRef, useEffect, useCallback } from 'react';
+
+// =============================================================================
+// TOTAL INTERNAL REFLECTION RENDERER - LIGHT TRAPPED IN WATER
+// =============================================================================
+// Premium educational game demonstrating total internal reflection through
+// the classic "light in a water stream" experiment. Students discover how
+// light can be trapped and guided through curved paths.
+// =============================================================================
+
+// Premium Design System
+const defined = {
+  colors: {
+    primary: '#6366F1',
+    primaryDark: '#4F46E5',
+    secondary: '#8B5CF6',
+    accent: '#F59E0B',
+    success: '#10B981',
+    warning: '#F59E0B',
+    error: '#EF4444',
+    background: {
+      primary: '#0F172A',
+      secondary: '#1E293B',
+      tertiary: '#334155',
+      card: 'rgba(30, 41, 59, 0.8)',
+    },
+    text: {
+      primary: '#F8FAFC',
+      secondary: '#CBD5E1',
+      muted: '#64748B',
+    },
+    water: {
+      stream: 'rgba(56, 189, 248, 0.6)',
+      glow: 'rgba(56, 189, 248, 0.3)',
+    },
+    light: {
+      beam: '#22D3EE',
+      glow: 'rgba(34, 211, 238, 0.5)',
+      trapped: '#F472B6',
+    },
+    fiber: {
+      core: 'rgba(168, 85, 247, 0.8)',
+      cladding: 'rgba(100, 116, 139, 0.4)',
+    },
+  },
+  typography: {
+    fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+    sizes: {
+      xs: '0.75rem',
+      sm: '0.875rem',
+      base: '1rem',
+      lg: '1.125rem',
+      xl: '1.25rem',
+      '2xl': '1.5rem',
+      '3xl': '1.875rem',
+      '4xl': '2.25rem',
+    },
+    weights: {
+      normal: 400,
+      medium: 500,
+      semibold: 600,
+      bold: 700,
+    },
+  },
+  spacing: {
+    xs: '0.25rem',
+    sm: '0.5rem',
+    md: '1rem',
+    lg: '1.5rem',
+    xl: '2rem',
+    '2xl': '3rem',
+  },
+  radius: {
+    sm: '0.375rem',
+    md: '0.5rem',
+    lg: '0.75rem',
+    xl: '1rem',
+    full: '9999px',
+  },
+  shadows: {
+    sm: '0 1px 2px rgba(0, 0, 0, 0.05)',
+    md: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+    lg: '0 10px 15px -3px rgba(0, 0, 0, 0.1)',
+    xl: '0 20px 25px -5px rgba(0, 0, 0, 0.1)',
+    glow: '0 0 20px rgba(99, 102, 241, 0.3)',
+  },
+};
+
+// =============================================================================
+// PHYSICS CONSTANTS
+// =============================================================================
+const MATERIALS: Record<string, { name: string; n: number; criticalAngle: number; color: string }> = {
+  water: { name: 'Water', n: 1.333, criticalAngle: 48.6, color: 'rgba(56, 189, 248, 0.5)' },
+  glass: { name: 'Glass', n: 1.52, criticalAngle: 41.1, color: 'rgba(148, 163, 184, 0.4)' },
+  acrylic: { name: 'Acrylic', n: 1.49, criticalAngle: 42.2, color: 'rgba(167, 139, 250, 0.3)' },
+  diamond: { name: 'Diamond', n: 2.42, criticalAngle: 24.4, color: 'rgba(255, 255, 255, 0.4)' },
+};
+
+// =============================================================================
+// TYPE DEFINITIONS
+// =============================================================================
+type Phase =
+  | 'hook'
+  | 'predict'
+  | 'play'
+  | 'review'
+  | 'twist_predict'
+  | 'twist_play'
+  | 'twist_review'
+  | 'transfer'
+  | 'test'
+  | 'mastery';
+
+interface Question {
+  id: number;
+  question: string;
+  options: string[];
+  correctIndex: number;
+  explanation: string;
+}
+
+interface Application {
+  id: number;
+  title: string;
+  description: string;
+  icon: string;
+  details: string[];
+}
+
+// =============================================================================
+// QUESTIONS DATA
+// =============================================================================
+const questions: Question[] = [
+  {
+    id: 1,
+    question: 'What causes total internal reflection?',
+    options: [
+      'Light bouncing off a mirror',
+      'Light hitting a surface above the critical angle from inside a dense medium',
+      'Light slowing down in water',
+      'Light being absorbed by the material',
+    ],
+    correctIndex: 1,
+    explanation:
+      'TIR occurs when light traveling in a denser medium hits the boundary at an angle greater than the critical angle. The light cannot escape and reflects back completely.',
+  },
+  {
+    id: 2,
+    question: "What is the critical angle for water (n=1.33) to air?",
+    options: ['24.4°', '41.8°', '48.6°', '90°'],
+    correctIndex: 2,
+    explanation:
+      'The critical angle is calculated as arcsin(n_air/n_water) = arcsin(1/1.33) ≈ 48.6°. Above this angle, light cannot escape water into air.',
+  },
+  {
+    id: 3,
+    question: 'Why does diamond have such a small critical angle (24.4°)?',
+    options: [
+      'Diamond is very hard',
+      'Diamond has a very high refractive index (2.42)',
+      'Diamond is transparent',
+      'Diamond reflects all colors',
+    ],
+    correctIndex: 1,
+    explanation:
+      "Diamond's high refractive index means light slows dramatically inside it. The critical angle is arcsin(1/2.42) ≈ 24.4°, so light easily gets trapped and bounces inside.",
+  },
+  {
+    id: 4,
+    question: 'How do fiber optic cables carry light thousands of kilometers?',
+    options: [
+      'The light is amplified at each end',
+      'Light bounces via total internal reflection along the fiber',
+      'The fiber glows on its own',
+      'Electric current carries the signal',
+    ],
+    correctIndex: 1,
+    explanation:
+      'Fiber optic cables use TIR to trap light inside the glass core. Light bounces at shallow angles along the fiber with minimal loss, traveling huge distances.',
+  },
+  {
+    id: 5,
+    question: 'In the "light fountain" demonstration, what happens to the light?',
+    options: [
+      'Light is absorbed by water',
+      'Light follows the curved water stream via repeated TIR',
+      'Light travels straight and exits',
+      'Light disperses into a rainbow',
+    ],
+    correctIndex: 1,
+    explanation:
+      'As the water stream curves, light inside keeps hitting the water-air boundary above the critical angle. It reflects repeatedly, following the stream\'s curved path.',
+  },
+  {
+    id: 6,
+    question: 'What percentage of light is reflected during total internal reflection?',
+    options: ['50%', '75%', '90%', '100%'],
+    correctIndex: 3,
+    explanation:
+      'During TIR, 100% of the light is reflected - no light escapes. This makes TIR much more efficient than regular mirrors, which absorb some light.',
+  },
+  {
+    id: 7,
+    question: 'Binocular prisms use TIR instead of mirrors. Why?',
+    options: [
+      'Prisms are cheaper',
+      'TIR provides 100% reflection without the absorption losses of mirrors',
+      'Prisms are easier to clean',
+      'Mirrors are too heavy',
+    ],
+    correctIndex: 1,
+    explanation:
+      'Regular mirrors absorb some light at each reflection. TIR reflects 100%, so prism binoculars deliver brighter images, especially important in low light.',
+  },
+  {
+    id: 8,
+    question: 'For TIR to occur, light must travel from:',
+    options: [
+      'Air to water',
+      'Less dense to more dense medium',
+      'More dense to less dense medium',
+      'Any direction works',
+    ],
+    correctIndex: 2,
+    explanation:
+      'TIR only occurs when light goes from a denser medium (higher n) to a less dense medium (lower n). Going the other way, light simply refracts.',
+  },
+  {
+    id: 9,
+    question: 'What happens at exactly the critical angle?',
+    options: [
+      'Light reflects back completely',
+      'Light refracts at exactly 90° (parallel to surface)',
+      'Light splits into two beams',
+      'Light is absorbed',
+    ],
+    correctIndex: 1,
+    explanation:
+      'At exactly the critical angle, the refracted ray travels along the surface (90° from normal). Any steeper angle results in total internal reflection.',
+  },
+  {
+    id: 10,
+    question: 'Medical endoscopes use fiber optics for internal body imaging. What advantage does TIR provide?',
+    options: [
+      'It sterilizes the equipment',
+      'Light travels through thin, flexible fibers that can navigate body passages',
+      'It magnifies the image',
+      'It changes the light color for better visibility',
+    ],
+    correctIndex: 1,
+    explanation:
+      'TIR allows light to travel through thin, bendable glass fibers that can navigate curves in the body. Doctors can see inside without large incisions.',
+  },
+];
+
+// =============================================================================
+// APPLICATIONS DATA
+// =============================================================================
+const applications: Application[] = [
+  {
+    id: 1,
+    title: 'Fiber Optic Internet',
+    description: 'Light-speed data transmission',
+    icon: '🌐',
+    details: [
+      'Light bounces along glass fibers via TIR at near light-speed',
+      'Single fiber carries terabits of data per second',
+      'Undersea cables connect continents with 99% of internet traffic',
+      'Signal loss is so low that repeaters are only needed every 100km',
+    ],
+  },
+  {
+    id: 2,
+    title: 'Diamond Brilliance',
+    description: 'Why diamonds sparkle',
+    icon: '💎',
+    details: [
+      "Diamond's small critical angle (24.4°) traps light easily",
+      'Brilliant cut maximizes internal reflections before light exits top',
+      'Light bounces multiple times, creating intense sparkle',
+      'Fake diamonds with lower n let more light escape through the bottom',
+    ],
+  },
+  {
+    id: 3,
+    title: 'Prism Binoculars',
+    description: 'Superior reflection for bright images',
+    icon: '🔭',
+    details: [
+      'Porro prisms use TIR to flip and redirect the image',
+      'No metal mirror coating needed - pure glass reflection',
+      'Zero light absorption means brighter images in twilight',
+      'Used in premium binoculars, periscopes, and camera viewfinders',
+    ],
+  },
+  {
+    id: 4,
+    title: 'Medical Endoscopy',
+    description: 'Seeing inside the body',
+    icon: '🏥',
+    details: [
+      'Bundles of thin fibers carry light into and images out of the body',
+      'Fibers bend around corners while maintaining TIR',
+      'Enables minimally invasive surgery and diagnosis',
+      'Colonoscopy, arthroscopy, and laparoscopy all use this technology',
+    ],
+  },
+];
+
+// =============================================================================
+// MAIN COMPONENT
+// =============================================================================
+export default function TotalInternalReflectionRenderer() {
+  // State management
+  const [phase, setPhase] = useState<Phase>('hook');
+  const [prediction, setPrediction] = useState<string | null>(null);
+  const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
+  const [selectedApp, setSelectedApp] = useState(0);
+  const [completedApps, setCompletedApps] = useState<boolean[]>([false, false, false, false]);
+  const [currentQuestion, setCurrentQuestion] = useState(0);
+  const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
+  const [showResult, setShowResult] = useState(false);
+  const [score, setScore] = useState(0);
+  const [isMobile, setIsMobile] = useState(false);
+
+  // Interactive simulation state
+  const [incidentAngle, setIncidentAngle] = useState(30);
+  const [material, setMaterial] = useState<'water' | 'glass' | 'acrylic' | 'diamond'>('water');
+  const [streamCurvature, setStreamCurvature] = useState(50);
+  const [showLightPath, setShowLightPath] = useState(true);
+  const [animationFrame, setAnimationFrame] = useState(0);
+
+  // Navigation debouncing
+  const isNavigating = useRef(false);
+  const navigationTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const animationRef = useRef<number | null>(null);
+
+  // Responsive detection
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
+  // Animation loop for light traveling through stream
+  useEffect(() => {
+    const animate = () => {
+      setAnimationFrame((prev) => (prev + 1) % 360);
+      animationRef.current = requestAnimationFrame(animate);
+    };
+    animationRef.current = requestAnimationFrame(animate);
+    return () => {
+      if (animationRef.current) {
+        cancelAnimationFrame(animationRef.current);
+      }
+    };
+  }, []);
+
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (navigationTimeoutRef.current) {
+        clearTimeout(navigationTimeoutRef.current);
+      }
+    };
+  }, []);
+
+  // =============================================================================
+  // PHYSICS CALCULATIONS
+  // =============================================================================
+  const currentMaterial = MATERIALS[material];
+  const isTIR = incidentAngle > currentMaterial.criticalAngle;
+
+  const getReflectionPercentage = useCallback((): number => {
+    if (incidentAngle >= currentMaterial.criticalAngle) return 100;
+    // Fresnel equations simplified - reflection increases as we approach critical angle
+    const ratio = incidentAngle / currentMaterial.criticalAngle;
+    return Math.min(100, Math.pow(ratio, 3) * 50);
+  }, [incidentAngle, currentMaterial.criticalAngle]);
+
+  // =============================================================================
+  // NAVIGATION HANDLERS
+  // =============================================================================
+  const handleNavigation = useCallback((nextPhase: Phase) => {
+    if (isNavigating.current) return;
+    isNavigating.current = true;
+
+    setPhase(nextPhase);
+
+    if (navigationTimeoutRef.current) {
+      clearTimeout(navigationTimeoutRef.current);
+    }
+
+    navigationTimeoutRef.current = setTimeout(() => {
+      isNavigating.current = false;
+    }, 400);
+  }, []);
+
+  const handleCompleteApp = useCallback(() => {
+    const newCompleted = [...completedApps];
+    newCompleted[selectedApp] = true;
+    setCompletedApps(newCompleted);
+
+    if (selectedApp < applications.length - 1) {
+      setSelectedApp(selectedApp + 1);
+    }
+  }, [completedApps, selectedApp]);
+
+  const handleAnswerSelect = useCallback(
+    (index: number) => {
+      if (showResult) return;
+      setSelectedAnswer(index);
+      setShowResult(true);
+
+      if (index === questions[currentQuestion].correctIndex) {
+        setScore((prev) => prev + 1);
+      }
+    },
+    [showResult, currentQuestion]
+  );
+
+  const handleNextQuestion = useCallback(() => {
+    if (currentQuestion < questions.length - 1) {
+      setCurrentQuestion((prev) => prev + 1);
+      setSelectedAnswer(null);
+      setShowResult(false);
+    } else {
+      handleNavigation('mastery');
+    }
+  }, [currentQuestion, handleNavigation]);
+
+  const allAppsCompleted = completedApps.every(Boolean);
+
+  // =============================================================================
+  // BUTTON COMPONENT
+  // =============================================================================
+  const Button = useCallback(
+    ({
+      children,
+      onClick,
+      variant = 'primary',
+      disabled = false,
+      size = 'md',
+      fullWidth = false,
+    }: {
+      children: React.ReactNode;
+      onClick: () => void;
+      variant?: 'primary' | 'secondary' | 'ghost' | 'success';
+      disabled?: boolean;
+      size?: 'sm' | 'md' | 'lg';
+      fullWidth?: boolean;
+    }) => {
+      const buttonRef = useRef(false);
+
+      const handleClick = () => {
+        if (buttonRef.current || disabled) return;
+        buttonRef.current = true;
+        onClick();
+        setTimeout(() => {
+          buttonRef.current = false;
+        }, 400);
+      };
+
+      const baseStyles: React.CSSProperties = {
+        display: 'inline-flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: defined.spacing.sm,
+        borderRadius: defined.radius.lg,
+        fontFamily: defined.typography.fontFamily,
+        fontWeight: defined.typography.weights.semibold,
+        cursor: disabled ? 'not-allowed' : 'pointer',
+        transition: 'all 0.2s ease',
+        border: 'none',
+        opacity: disabled ? 0.5 : 1,
+        width: fullWidth ? '100%' : 'auto',
+        ...(size === 'sm' && {
+          padding: `${defined.spacing.sm} ${defined.spacing.md}`,
+          fontSize: defined.typography.sizes.sm,
+        }),
+        ...(size === 'md' && {
+          padding: `${defined.spacing.md} ${defined.spacing.lg}`,
+          fontSize: defined.typography.sizes.base,
+        }),
+        ...(size === 'lg' && {
+          padding: `${defined.spacing.lg} ${defined.spacing.xl}`,
+          fontSize: defined.typography.sizes.lg,
+        }),
+      };
+
+      const variantStyles: Record<string, React.CSSProperties> = {
+        primary: {
+          background: `linear-gradient(135deg, ${defined.colors.primary}, ${defined.colors.primaryDark})`,
+          color: defined.colors.text.primary,
+          boxShadow: defined.shadows.md,
+        },
+        secondary: {
+          background: defined.colors.background.tertiary,
+          color: defined.colors.text.primary,
+          border: `1px solid ${defined.colors.background.tertiary}`,
+        },
+        ghost: {
+          background: 'transparent',
+          color: defined.colors.text.secondary,
+        },
+        success: {
+          background: `linear-gradient(135deg, ${defined.colors.success}, #059669)`,
+          color: defined.colors.text.primary,
+          boxShadow: defined.shadows.md,
+        },
+      };
+
+      return (
+        <button
+          onMouseDown={handleClick}
+          disabled={disabled}
+          style={{ ...baseStyles, ...variantStyles[variant] }}
+        >
+          {children}
+        </button>
+      );
+    },
+    []
+  );
+
+  // =============================================================================
+  // PROGRESS BAR COMPONENT
+  // =============================================================================
+  const ProgressBar = useCallback(
+    ({ current, total }: { current: number; total: number }) => (
+      <div
+        style={{
+          display: 'flex',
+          gap: defined.spacing.xs,
+          justifyContent: 'center',
+          marginBottom: defined.spacing.lg,
+        }}
+      >
+        {Array.from({ length: total }).map((_, i) => (
+          <div
+            key={i}
+            style={{
+              width: isMobile ? '20px' : '32px',
+              height: '4px',
+              borderRadius: defined.radius.full,
+              background:
+                i < current
+                  ? defined.colors.primary
+                  : i === current
+                    ? defined.colors.accent
+                    : defined.colors.background.tertiary,
+              transition: 'all 0.3s ease',
+            }}
+          />
+        ))}
+      </div>
+    ),
+    [isMobile]
+  );
+
+  // =============================================================================
+  // WATER STREAM VISUALIZATION
+  // =============================================================================
+  const renderWaterStreamVisualization = useCallback(() => {
+    const width = isMobile ? 320 : 450;
+    const height = isMobile ? 350 : 420;
+    const curveStrength = streamCurvature / 100;
+
+    // Generate stream path - a curved path from top-left going down-right
+    const streamStartX = 80;
+    const streamStartY = 40;
+    const streamEndX = width - 40;
+    const streamEndY = height - 40;
+    const controlX = streamStartX + (streamEndX - streamStartX) * 0.3;
+    const controlY = streamStartY + (streamEndY - streamStartY) * (0.3 + curveStrength * 0.5);
+
+    // Create bezier curve path for stream
+    const streamPath = `M ${streamStartX} ${streamStartY} Q ${controlX} ${controlY}, ${streamEndX} ${streamEndY}`;
+
+    // Calculate light bounces along the stream
+    const numBounces = 8;
+    const lightPoints: { x: number; y: number }[] = [];
+
+    for (let i = 0; i <= numBounces; i++) {
+      const t = i / numBounces;
+      // Bezier curve point calculation
+      const x =
+        Math.pow(1 - t, 2) * streamStartX +
+        2 * (1 - t) * t * controlX +
+        Math.pow(t, 2) * streamEndX;
+      const y =
+        Math.pow(1 - t, 2) * streamStartY +
+        2 * (1 - t) * t * controlY +
+        Math.pow(t, 2) * streamEndY;
+
+      // Add small oscillation for zigzag effect
+      const offset = (i % 2 === 0 ? 1 : -1) * 8;
+      lightPoints.push({ x: x + offset, y });
+    }
+
+    // Animated light pulse position
+    const pulsePosition = (animationFrame / 360) * numBounces;
+    const pulseIndex = Math.floor(pulsePosition);
+    const pulseFrac = pulsePosition - pulseIndex;
+
+    let pulseX = streamStartX;
+    let pulseY = streamStartY;
+    if (pulseIndex < lightPoints.length - 1) {
+      pulseX =
+        lightPoints[pulseIndex].x +
+        (lightPoints[pulseIndex + 1].x - lightPoints[pulseIndex].x) * pulseFrac;
+      pulseY =
+        lightPoints[pulseIndex].y +
+        (lightPoints[pulseIndex + 1].y - lightPoints[pulseIndex].y) * pulseFrac;
+    }
+
+    return (
+      <div
+        style={{
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          gap: defined.spacing.md,
+        }}
+      >
+        <svg width={width} height={height} style={{ overflow: 'visible' }}>
+          <defs>
+            {/* Water gradient */}
+            <linearGradient id="waterStreamGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="rgba(56, 189, 248, 0.7)" />
+              <stop offset="100%" stopColor="rgba(14, 165, 233, 0.4)" />
+            </linearGradient>
+
+            {/* Light glow */}
+            <filter id="lightGlow" x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur stdDeviation="4" result="coloredBlur" />
+              <feMerge>
+                <feMergeNode in="coloredBlur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Pulse glow */}
+            <radialGradient id="pulseGlow">
+              <stop offset="0%" stopColor="rgba(34, 211, 238, 1)" />
+              <stop offset="100%" stopColor="rgba(34, 211, 238, 0)" />
+            </radialGradient>
+          </defs>
+
+          {/* Background */}
+          <rect width={width} height={height} fill={defined.colors.background.secondary} rx="12" />
+
+          {/* Faucet/Source */}
+          <rect x={streamStartX - 30} y={0} width={60} height={streamStartY + 10} fill="#475569" rx="4" />
+          <rect x={streamStartX - 20} y={streamStartY - 5} width={40} height={15} fill="#64748B" rx="2" />
+
+          {/* Water stream */}
+          <path
+            d={streamPath}
+            fill="none"
+            stroke="url(#waterStreamGradient)"
+            strokeWidth="24"
+            strokeLinecap="round"
+          />
+          {/* Stream highlights */}
+          <path
+            d={streamPath}
+            fill="none"
+            stroke="rgba(255, 255, 255, 0.2)"
+            strokeWidth="8"
+            strokeLinecap="round"
+          />
+
+          {/* Light source indicator */}
+          <circle
+            cx={streamStartX}
+            cy={streamStartY}
+            r="12"
+            fill={defined.colors.light.beam}
+            filter="url(#lightGlow)"
+          />
+          <text
+            x={streamStartX - 45}
+            y={streamStartY + 5}
+            fill={defined.colors.text.secondary}
+            fontSize="11"
+            fontFamily={defined.typography.fontFamily}
+          >
+            Light
+          </text>
+
+          {/* Light path (zigzag bounces) */}
+          {showLightPath && isTIR && (
+            <>
+              <polyline
+                points={lightPoints.map((p) => `${p.x},${p.y}`).join(' ')}
+                fill="none"
+                stroke={defined.colors.light.trapped}
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                filter="url(#lightGlow)"
+                opacity={0.8}
+              />
+              {/* Bounce indicators */}
+              {lightPoints.map((point, i) => (
+                <circle
+                  key={i}
+                  cx={point.x}
+                  cy={point.y}
+                  r="4"
+                  fill={defined.colors.light.trapped}
+                  opacity={0.6}
+                />
+              ))}
+            </>
+          )}
+
+          {/* Animated light pulse */}
+          {isTIR && (
+            <circle
+              cx={pulseX}
+              cy={pulseY}
+              r="10"
+              fill="url(#pulseGlow)"
+              filter="url(#lightGlow)"
+            />
+          )}
+
+          {/* If NOT TIR, show light escaping */}
+          {!isTIR && (
+            <g>
+              {/* Light escaping the stream */}
+              {[1, 2, 3].map((i) => {
+                const escapeX = streamStartX + i * 60;
+                const t = i / 4;
+                const escapeY =
+                  Math.pow(1 - t, 2) * streamStartY +
+                  2 * (1 - t) * t * controlY +
+                  Math.pow(t, 2) * streamEndY;
+
+                return (
+                  <g key={i}>
+                    <line
+                      x1={escapeX}
+                      y1={escapeY}
+                      x2={escapeX + 40}
+                      y2={escapeY - 30}
+                      stroke={defined.colors.light.beam}
+                      strokeWidth="2"
+                      opacity={0.5}
+                      strokeDasharray="4,4"
+                    />
+                    <text
+                      x={escapeX + 30}
+                      y={escapeY - 35}
+                      fill={defined.colors.warning}
+                      fontSize="9"
+                      fontFamily={defined.typography.fontFamily}
+                    >
+                      escapes
+                    </text>
+                  </g>
+                );
+              })}
+            </g>
+          )}
+
+          {/* Basin/collector */}
+          <ellipse
+            cx={streamEndX}
+            cy={streamEndY + 15}
+            rx="50"
+            ry="15"
+            fill="rgba(56, 189, 248, 0.3)"
+          />
+          <path
+            d={`M ${streamEndX - 50} ${streamEndY + 15} Q ${streamEndX - 50} ${streamEndY + 50}, ${streamEndX} ${streamEndY + 55} Q ${streamEndX + 50} ${streamEndY + 50}, ${streamEndX + 50} ${streamEndY + 15}`}
+            fill="rgba(56, 189, 248, 0.2)"
+          />
+
+          {/* TIR Status indicator */}
+          <rect
+            x={width - 130}
+            y={20}
+            width={110}
+            height={60}
+            rx="8"
+            fill={defined.colors.background.card}
+          />
+          <text
+            x={width - 75}
+            y={42}
+            fill={isTIR ? defined.colors.success : defined.colors.warning}
+            fontSize="12"
+            fontFamily={defined.typography.fontFamily}
+            textAnchor="middle"
+            fontWeight="bold"
+          >
+            {isTIR ? '✓ TIR Active' : '✗ Light Escaping'}
+          </text>
+          <text
+            x={width - 75}
+            y={62}
+            fill={defined.colors.text.muted}
+            fontSize="10"
+            fontFamily={defined.typography.fontFamily}
+            textAnchor="middle"
+          >
+            θ = {incidentAngle}° / θc = {currentMaterial.criticalAngle}°
+          </text>
+        </svg>
+
+        {/* Info panel */}
+        <div
+          style={{
+            background: defined.colors.background.card,
+            borderRadius: defined.radius.lg,
+            padding: defined.spacing.md,
+            textAlign: 'center',
+            backdropFilter: 'blur(10px)',
+            border: `1px solid ${isTIR ? 'rgba(16, 185, 129, 0.3)' : 'rgba(245, 158, 11, 0.3)'}`,
+            width: '100%',
+            maxWidth: '350px',
+          }}
+        >
+          <div
+            style={{
+              fontSize: defined.typography.sizes.lg,
+              fontWeight: defined.typography.weights.bold,
+              color: isTIR ? defined.colors.success : defined.colors.warning,
+              marginBottom: defined.spacing.xs,
+            }}
+          >
+            {isTIR ? '100% Light Trapped!' : `${getReflectionPercentage().toFixed(0)}% Reflected`}
+          </div>
+          <div
+            style={{
+              fontSize: defined.typography.sizes.sm,
+              color: defined.colors.text.secondary,
+            }}
+          >
+            {isTIR
+              ? 'Light bounces inside the stream, following its curve'
+              : `Increase angle above ${currentMaterial.criticalAngle}° to trap all light`}
+          </div>
+        </div>
+      </div>
+    );
+  }, [
+    isMobile,
+    streamCurvature,
+    showLightPath,
+    isTIR,
+    incidentAngle,
+    currentMaterial.criticalAngle,
+    animationFrame,
+    getReflectionPercentage,
+  ]);
+
+  // =============================================================================
+  // SIMPLE TIR DIAGRAM (for understanding)
+  // =============================================================================
+  const renderTIRDiagram = useCallback(() => {
+    const width = isMobile ? 280 : 350;
+    const height = 200;
+    const centerX = width / 2;
+    const centerY = 100;
+
+    const incidentRad = (incidentAngle * Math.PI) / 180;
+    const criticalRad = (currentMaterial.criticalAngle * Math.PI) / 180;
+
+    return (
+      <svg width={width} height={height} style={{ overflow: 'visible' }}>
+        <defs>
+          <linearGradient id="mediumGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor="rgba(56, 189, 248, 0.05)" />
+            <stop offset="100%" stopColor={currentMaterial.color} />
+          </linearGradient>
+        </defs>
+
+        {/* Air (top) */}
+        <rect x={0} y={0} width={width} height={centerY} fill="rgba(148, 163, 184, 0.05)" />
+        <text
+          x={10}
+          y={20}
+          fill={defined.colors.text.muted}
+          fontSize="11"
+          fontFamily={defined.typography.fontFamily}
+        >
+          Air (n=1.0)
+        </text>
+
+        {/* Dense medium (bottom) */}
+        <rect x={0} y={centerY} width={width} height={centerY} fill={currentMaterial.color} />
+        <text
+          x={10}
+          y={height - 10}
+          fill={defined.colors.text.muted}
+          fontSize="11"
+          fontFamily={defined.typography.fontFamily}
+        >
+          {currentMaterial.name} (n={currentMaterial.n})
+        </text>
+
+        {/* Interface */}
+        <line x1={0} y1={centerY} x2={width} y2={centerY} stroke="white" strokeWidth="1" opacity={0.5} />
+
+        {/* Normal line */}
+        <line
+          x1={centerX}
+          y1={centerY - 60}
+          x2={centerX}
+          y2={centerY + 60}
+          stroke="white"
+          strokeWidth="1"
+          strokeDasharray="4,4"
+          opacity={0.3}
+        />
+
+        {/* Critical angle line (dashed) */}
+        <line
+          x1={centerX}
+          y1={centerY}
+          x2={centerX + Math.sin(criticalRad) * 70}
+          y2={centerY - Math.cos(criticalRad) * 70}
+          stroke={defined.colors.warning}
+          strokeWidth="1"
+          strokeDasharray="4,4"
+          opacity={0.6}
+        />
+        <text
+          x={centerX + Math.sin(criticalRad) * 75}
+          y={centerY - Math.cos(criticalRad) * 75}
+          fill={defined.colors.warning}
+          fontSize="9"
+          fontFamily={defined.typography.fontFamily}
+        >
+          θc={currentMaterial.criticalAngle}°
+        </text>
+
+        {/* Incident ray (from inside medium going up) */}
+        <line
+          x1={centerX - Math.sin(incidentRad) * 60}
+          y1={centerY + Math.cos(incidentRad) * 60}
+          x2={centerX}
+          y2={centerY}
+          stroke={defined.colors.light.beam}
+          strokeWidth="3"
+        />
+
+        {/* Result ray */}
+        {isTIR ? (
+          // Reflected ray
+          <line
+            x1={centerX}
+            y1={centerY}
+            x2={centerX + Math.sin(incidentRad) * 60}
+            y2={centerY + Math.cos(incidentRad) * 60}
+            stroke={defined.colors.light.trapped}
+            strokeWidth="3"
+          />
+        ) : (
+          // Refracted ray
+          <line
+            x1={centerX}
+            y1={centerY}
+            x2={centerX + Math.sin(incidentRad * 1.5) * 50}
+            y2={centerY - Math.cos(incidentRad * 1.5) * 50}
+            stroke={defined.colors.light.beam}
+            strokeWidth="3"
+            opacity={0.5}
+          />
+        )}
+
+        {/* Angle arc */}
+        <path
+          d={`M ${centerX} ${centerY + 30} A 30 30 0 0 1 ${centerX - Math.sin(incidentRad) * 30} ${centerY + Math.cos(incidentRad) * 30}`}
+          fill="none"
+          stroke={isTIR ? defined.colors.success : defined.colors.primary}
+          strokeWidth="2"
+        />
+
+        {/* Status */}
+        <text
+          x={centerX}
+          y={25}
+          fill={isTIR ? defined.colors.success : defined.colors.text.secondary}
+          fontSize="12"
+          fontFamily={defined.typography.fontFamily}
+          textAnchor="middle"
+          fontWeight="bold"
+        >
+          {isTIR ? 'Total Internal Reflection!' : 'Light partially escapes'}
+        </text>
+      </svg>
+    );
+  }, [isMobile, incidentAngle, currentMaterial, isTIR]);
+
+  // =============================================================================
+  // CONTROLS PANEL
+  // =============================================================================
+  const renderControls = useCallback(
+    () => (
+      <div
+        style={{
+          display: 'flex',
+          flexDirection: 'column',
+          gap: defined.spacing.md,
+          background: defined.colors.background.card,
+          borderRadius: defined.radius.lg,
+          padding: defined.spacing.lg,
+          backdropFilter: 'blur(10px)',
+          border: '1px solid rgba(255,255,255,0.1)',
+          width: isMobile ? '100%' : '280px',
+        }}
+      >
+        {/* Incident Angle Slider */}
+        <div>
+          <label
+            style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              fontSize: defined.typography.sizes.sm,
+              color: defined.colors.text.secondary,
+              marginBottom: defined.spacing.sm,
+            }}
+          >
+            <span>Incident Angle</span>
+            <span
+              style={{
+                color: isTIR ? defined.colors.success : defined.colors.text.primary,
+                fontWeight: defined.typography.weights.semibold,
+              }}
+            >
+              {incidentAngle}°
+            </span>
+          </label>
+          <input
+            type="range"
+            min="0"
+            max="85"
+            value={incidentAngle}
+            onChange={(e) => setIncidentAngle(Number(e.target.value))}
+            style={{
+              width: '100%',
+              accentColor: isTIR ? defined.colors.success : defined.colors.primary,
+            }}
+          />
+          <div
+            style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              fontSize: defined.typography.sizes.xs,
+              color: defined.colors.text.muted,
+              marginTop: defined.spacing.xs,
+            }}
+          >
+            <span>0°</span>
+            <span style={{ color: defined.colors.warning }}>
+              Critical: {currentMaterial.criticalAngle}°
+            </span>
+            <span>85°</span>
+          </div>
+        </div>
+
+        {/* Stream Curvature */}
+        <div>
+          <label
+            style={{
+              display: 'block',
+              fontSize: defined.typography.sizes.sm,
+              color: defined.colors.text.secondary,
+              marginBottom: defined.spacing.sm,
+            }}
+          >
+            Stream Curvature: {streamCurvature}%
+          </label>
+          <input
+            type="range"
+            min="10"
+            max="90"
+            value={streamCurvature}
+            onChange={(e) => setStreamCurvature(Number(e.target.value))}
+            style={{
+              width: '100%',
+              accentColor: defined.colors.primary,
+            }}
+          />
+        </div>
+
+        {/* Material Selector */}
+        <div>
+          <label
+            style={{
+              display: 'block',
+              fontSize: defined.typography.sizes.sm,
+              color: defined.colors.text.secondary,
+              marginBottom: defined.spacing.sm,
+            }}
+          >
+            Material
+          </label>
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(2, 1fr)',
+              gap: defined.spacing.xs,
+            }}
+          >
+            {Object.entries(MATERIALS).map(([key, mat]) => (
+              <button
+                key={key}
+                onClick={() => setMaterial(key as typeof material)}
+                style={{
+                  padding: defined.spacing.sm,
+                  borderRadius: defined.radius.md,
+                  border:
+                    material === key
+                      ? `2px solid ${defined.colors.primary}`
+                      : '2px solid transparent',
+                  background:
+                    material === key
+                      ? defined.colors.background.tertiary
+                      : defined.colors.background.secondary,
+                  color: defined.colors.text.primary,
+                  cursor: 'pointer',
+                  fontFamily: defined.typography.fontFamily,
+                  fontSize: defined.typography.sizes.xs,
+                  transition: 'all 0.2s ease',
+                }}
+              >
+                <div>{mat.name}</div>
+                <div style={{ color: defined.colors.text.muted }}>θc={mat.criticalAngle}°</div>
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Show Light Path Toggle */}
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+          }}
+        >
+          <span
+            style={{
+              fontSize: defined.typography.sizes.sm,
+              color: defined.colors.text.secondary,
+            }}
+          >
+            Show Light Path
+          </span>
+          <button
+            onClick={() => setShowLightPath(!showLightPath)}
+            style={{
+              width: '48px',
+              height: '28px',
+              borderRadius: defined.radius.full,
+              border: 'none',
+              cursor: 'pointer',
+              background: showLightPath
+                ? defined.colors.primary
+                : defined.colors.background.tertiary,
+              position: 'relative',
+              transition: 'background 0.3s ease',
+            }}
+          >
+            <div
+              style={{
+                width: '22px',
+                height: '22px',
+                borderRadius: '50%',
+                background: 'white',
+                position: 'absolute',
+                top: '3px',
+                left: showLightPath ? '23px' : '3px',
+                transition: 'left 0.3s ease',
+              }}
+            />
+          </button>
+        </div>
+
+        {/* Quick insight */}
+        <div
+          style={{
+            background: isTIR
+              ? 'rgba(16, 185, 129, 0.1)'
+              : 'rgba(245, 158, 11, 0.1)',
+            borderRadius: defined.radius.md,
+            padding: defined.spacing.md,
+            border: `1px solid ${isTIR ? 'rgba(16, 185, 129, 0.2)' : 'rgba(245, 158, 11, 0.2)'}`,
+          }}
+        >
+          <div
+            style={{
+              fontSize: defined.typography.sizes.sm,
+              color: isTIR ? defined.colors.success : defined.colors.warning,
+              fontWeight: defined.typography.weights.semibold,
+              marginBottom: defined.spacing.xs,
+            }}
+          >
+            {isTIR ? '⚡ Light is trapped!' : '💡 Light escaping'}
+          </div>
+          <div
+            style={{
+              fontSize: defined.typography.sizes.xs,
+              color: defined.colors.text.secondary,
+            }}
+          >
+            {isTIR
+              ? `At ${incidentAngle}° (above ${currentMaterial.criticalAngle}°), 100% of light reflects back`
+              : `Need ${currentMaterial.criticalAngle - incidentAngle}° more to achieve TIR`}
+          </div>
+        </div>
+      </div>
+    ),
+    [isMobile, incidentAngle, streamCurvature, material, showLightPath, isTIR, currentMaterial]
+  );
+
+  // =============================================================================
+  // PHASE RENDERERS
+  // =============================================================================
+
+  // HOOK PHASE
+  const renderHook = () => (
+    <div
+      style={{
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        gap: defined.spacing.xl,
+        padding: defined.spacing.xl,
+        textAlign: 'center',
+      }}
+    >
+      <div
+        style={{
+          fontSize: isMobile ? defined.typography.sizes['3xl'] : defined.typography.sizes['4xl'],
+          marginBottom: defined.spacing.md,
+        }}
+      >
+        💧✨
+      </div>
+      <h1
+        style={{
+          fontSize: isMobile ? defined.typography.sizes['2xl'] : defined.typography.sizes['3xl'],
+          fontWeight: defined.typography.weights.bold,
+          color: defined.colors.text.primary,
+          margin: 0,
+        }}
+      >
+        Light Trapped in Water
+      </h1>
+      <p
+        style={{
+          fontSize: defined.typography.sizes.lg,
+          color: defined.colors.text.secondary,
+          maxWidth: '500px',
+          lineHeight: 1.6,
+        }}
+      >
+        Shine a laser into a curved stream of water. The light doesn't escape -
+        it
+        <span style={{ color: defined.colors.light.trapped, fontWeight: defined.typography.weights.semibold }}>
+          {' '}
+          follows the curve
+        </span>
+        ! This "light fountain" reveals a phenomenon called total internal reflection.
+      </p>
+
+      <div
+        style={{
+          background: defined.colors.background.card,
+          borderRadius: defined.radius.xl,
+          padding: defined.spacing.xl,
+          maxWidth: '400px',
+          backdropFilter: 'blur(10px)',
+          border: '1px solid rgba(255,255,255,0.1)',
+        }}
+      >
+        <div
+          style={{
+            fontSize: defined.typography.sizes.sm,
+            color: defined.colors.text.muted,
+            marginBottom: defined.spacing.md,
+          }}
+        >
+          THE MAGIC
+        </div>
+        {/* Simple illustration */}
+        <svg width="200" height="120" style={{ margin: '0 auto', display: 'block' }}>
+          {/* Water stream */}
+          <path
+            d="M 30 20 Q 100 60, 170 100"
+            fill="none"
+            stroke="rgba(56, 189, 248, 0.5)"
+            strokeWidth="20"
+            strokeLinecap="round"
+          />
+          {/* Light path inside */}
+          <path
+            d="M 35 20 L 50 35 L 65 25 L 80 40 L 95 30 L 110 45 L 125 35 L 140 50 L 155 40 L 170 55"
+            fill="none"
+            stroke="#F472B6"
+            strokeWidth="2"
+            strokeLinecap="round"
+          />
+          {/* Glow at end */}
+          <circle cx="170" cy="100" r="15" fill="rgba(244, 114, 182, 0.3)" />
+          <circle cx="170" cy="100" r="8" fill="#F472B6" />
+          {/* Labels */}
+          <text x="15" y="15" fill="#22D3EE" fontSize="10">
+            Light in
+          </text>
+          <text x="160" y="90" fill="#F472B6" fontSize="10">
+            Light out!
+          </text>
+        </svg>
+        <p
+          style={{
+            fontSize: defined.typography.sizes.sm,
+            color: defined.colors.text.secondary,
+            marginTop: defined.spacing.md,
+          }}
+        >
+          Light bounces inside the water, unable to escape into air!
+        </p>
+      </div>
+
+      {Button({
+        children: 'Discover Why Light Gets Trapped →',
+        onClick: () => handleNavigation('predict'),
+        size: 'lg',
+      })}
+    </div>
+  );
+
+  // PREDICT PHASE
+  const renderPredict = () => (
+    <div
+      style={{
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        gap: defined.spacing.xl,
+        padding: defined.spacing.xl,
+      }}
+    >
+      <h2
+        style={{
+          fontSize: isMobile ? defined.typography.sizes.xl : defined.typography.sizes['2xl'],
+          fontWeight: defined.typography.weights.bold,
+          color: defined.colors.text.primary,
+          textAlign: 'center',
+          margin: 0,
+        }}
+      >
+        Make Your Prediction
+      </h2>
+
+      <p
+        style={{
+          fontSize: defined.typography.sizes.base,
+          color: defined.colors.text.secondary,
+          textAlign: 'center',
+          maxWidth: '500px',
+        }}
+      >
+        Light travels from inside water toward the surface at a steep angle. Why might it get
+        "trapped" instead of exiting?
+      </p>
+
+      <div
+        style={{
+          display: 'flex',
+          flexDirection: 'column',
+          gap: defined.spacing.md,
+          width: '100%',
+          maxWidth: '500px',
+        }}
+      >
+        {[
+          {
+            id: 'critical',
+            text: 'At steep angles, light physically cannot exit - it must reflect back',
+          },
+          { id: 'absorb', text: 'Water absorbs all the light at steep angles' },
+          { id: 'scatter', text: 'Light scatters in all directions at the surface' },
+          { id: 'slow', text: 'Light slows down so much it stops and reverses' },
+        ].map((option) => (
+          <button
+            key={option.id}
+            onClick={() => setPrediction(option.id)}
+            style={{
+              padding: defined.spacing.lg,
+              borderRadius: defined.radius.lg,
+              border:
+                prediction === option.id
+                  ? `2px solid ${defined.colors.primary}`
+                  : '2px solid rgba(255,255,255,0.1)',
+              background:
+                prediction === option.id
+                  ? 'rgba(99, 102, 241, 0.2)'
+                  : defined.colors.background.secondary,
+              color: defined.colors.text.primary,
+              fontSize: defined.typography.sizes.base,
+              textAlign: 'left',
+              cursor: 'pointer',
+              fontFamily: defined.typography.fontFamily,
+              transition: 'all 0.2s ease',
+            }}
+          >
+            {option.text}
+          </button>
+        ))}
+      </div>
+
+      {Button({
+        children: 'Test My Prediction →',
+        onClick: () => handleNavigation('play'),
+        disabled: !prediction,
+        size: 'lg',
+      })}
+    </div>
+  );
+
+  // PLAY PHASE
+  const renderPlay = () => (
+    <div
+      style={{
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        gap: defined.spacing.lg,
+        padding: defined.spacing.lg,
+      }}
+    >
+      <h2
+        style={{
+          fontSize: isMobile ? defined.typography.sizes.xl : defined.typography.sizes['2xl'],
+          fontWeight: defined.typography.weights.bold,
+          color: defined.colors.text.primary,
+          margin: 0,
+        }}
+      >
+        Explore Total Internal Reflection
+      </h2>
+
+      <p
+        style={{
+          fontSize: defined.typography.sizes.sm,
+          color: defined.colors.text.secondary,
+          textAlign: 'center',
+          maxWidth: '500px',
+        }}
+      >
+        Increase the incident angle and watch what happens when you cross the critical angle. Can
+        you trap all the light?
+      </p>
+
+      <div
+        style={{
+          display: 'flex',
+          flexDirection: isMobile ? 'column' : 'row',
+          gap: defined.spacing.xl,
+          alignItems: 'flex-start',
+          width: '100%',
+          maxWidth: '900px',
+        }}
+      >
+        {renderWaterStreamVisualization()}
+        {renderControls()}
+      </div>
+
+      {Button({
+        children: isTIR ? 'I Trapped the Light! → Review' : 'Increase angle to trap light first',
+        onClick: () => handleNavigation('review'),
+        disabled: !isTIR,
+        size: 'lg',
+      })}
+    </div>
+  );
+
+  // REVIEW PHASE
+  const renderReview = () => (
+    <div
+      style={{
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        gap: defined.spacing.xl,
+        padding: defined.spacing.xl,
+      }}
+    >
+      <h2
+        style={{
+          fontSize: isMobile ? defined.typography.sizes.xl : defined.typography.sizes['2xl'],
+          fontWeight: defined.typography.weights.bold,
+          color: defined.colors.text.primary,
+          margin: 0,
+        }}
+      >
+        The Physics of Light Trapping
+      </h2>
+
+      <div
+        style={{
+          background:
+            prediction === 'critical' ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
+          borderRadius: defined.radius.lg,
+          padding: defined.spacing.lg,
+          maxWidth: '500px',
+          textAlign: 'center',
+          border: `1px solid ${prediction === 'critical' ? defined.colors.success : defined.colors.error}`,
+        }}
+      >
+        <div
+          style={{
+            fontSize: defined.typography.sizes.lg,
+            fontWeight: defined.typography.weights.semibold,
+            color: prediction === 'critical' ? defined.colors.success : defined.colors.error,
+            marginBottom: defined.spacing.sm,
+          }}
+        >
+          {prediction === 'critical' ? '✓ Correct!' : '✗ Not quite!'}
+        </div>
+        <p style={{ color: defined.colors.text.secondary, fontSize: defined.typography.sizes.sm }}>
+          Above the critical angle, light physically cannot refract out - Snell's Law would require
+          sinθ {">"} 1, which is impossible. 100% of light reflects back!
+        </p>
+      </div>
+
+      {/* Visual diagram */}
+      <div
+        style={{
+          background: defined.colors.background.card,
+          borderRadius: defined.radius.xl,
+          padding: defined.spacing.lg,
+          backdropFilter: 'blur(10px)',
+          border: '1px solid rgba(255,255,255,0.1)',
+        }}
+      >
+        {renderTIRDiagram()}
+      </div>
+
+      <div
+        style={{
+          display: 'grid',
+          gridTemplateColumns: isMobile ? '1fr' : 'repeat(2, 1fr)',
+          gap: defined.spacing.lg,
+          maxWidth: '700px',
+        }}
+      >
+        <div
+          style={{
+            background: defined.colors.background.card,
+            borderRadius: defined.radius.lg,
+            padding: defined.spacing.lg,
+            backdropFilter: 'blur(10px)',
+            border: '1px solid rgba(255,255,255,0.1)',
+          }}
+        >
+          <div style={{ fontSize: '1.5rem', marginBottom: defined.spacing.sm }}>📐</div>
+          <h3
+            style={{
+              color: defined.colors.text.primary,
+              fontSize: defined.typography.sizes.lg,
+              marginBottom: defined.spacing.sm,
+            }}
+          >
+            Critical Angle
+          </h3>
+          <p style={{ color: defined.colors.text.secondary, fontSize: defined.typography.sizes.sm }}>
+            θc = arcsin(n₂/n₁). For water→air: arcsin(1/1.33) = 48.6°. Above this, all light
+            reflects.
+          </p>
+        </div>
+
+        <div
+          style={{
+            background: defined.colors.background.card,
+            borderRadius: defined.radius.lg,
+            padding: defined.spacing.lg,
+            backdropFilter: 'blur(10px)',
+            border: '1px solid rgba(255,255,255,0.1)',
+          }}
+        >
+          <div style={{ fontSize: '1.5rem', marginBottom: defined.spacing.sm }}>💯</div>
+          <h3
+            style={{
+              color: defined.colors.text.primary,
+              fontSize: defined.typography.sizes.lg,
+              marginBottom: defined.spacing.sm,
+            }}
+          >
+            100% Reflection
+          </h3>
+          <p style={{ color: defined.colors.text.secondary, fontSize: defined.typography.sizes.sm }}>
+            Unlike mirrors (which absorb some light), TIR reflects 100%. Perfect for optical
+            applications!
+          </p>
+        </div>
+
+        <div
+          style={{
+            background: defined.colors.background.card,
+            borderRadius: defined.radius.lg,
+            padding: defined.spacing.lg,
+            backdropFilter: 'blur(10px)',
+            border: '1px solid rgba(255,255,255,0.1)',
+          }}
+        >
+          <div style={{ fontSize: '1.5rem', marginBottom: defined.spacing.sm }}>🔄</div>
+          <h3
+            style={{
+              color: defined.colors.text.primary,
+              fontSize: defined.typography.sizes.lg,
+              marginBottom: defined.spacing.sm,
+            }}
+          >
+            Repeated Bounces
+          </h3>
+          <p style={{ color: defined.colors.text.secondary, fontSize: defined.typography.sizes.sm }}>
+            In a curved stream, light bounces repeatedly. Each bounce exceeds the critical angle, so
+            light follows the curve!
+          </p>
+        </div>
+
+        <div
+          style={{
+            background: defined.colors.background.card,
+            borderRadius: defined.radius.lg,
+            padding: defined.spacing.lg,
+            backdropFilter: 'blur(10px)',
+            border: '1px solid rgba(255,255,255,0.1)',
+          }}
+        >
+          <div style={{ fontSize: '1.5rem', marginBottom: defined.spacing.sm }}>➡️</div>
+          <h3
+            style={{
+              color: defined.colors.text.primary,
+              fontSize: defined.typography.sizes.lg,
+              marginBottom: defined.spacing.sm,
+            }}
+          >
+            Dense → Less Dense
+          </h3>
+          <p style={{ color: defined.colors.text.secondary, fontSize: defined.typography.sizes.sm }}>
+            TIR only works when light travels FROM a denser medium TO a less dense one (e.g., water
+            → air, not air → water).
+          </p>
+        </div>
+      </div>
+
+      {Button({
+        children: 'Try Fiber Optics →',
+        onClick: () => handleNavigation('twist_predict'),
+        size: 'lg',
+      })}
+    </div>
+  );
+
+  // TWIST PREDICT PHASE
+  const renderTwistPredict = () => (
+    <div
+      style={{
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        gap: defined.spacing.xl,
+        padding: defined.spacing.xl,
+      }}
+    >
+      <div
+        style={{
+          background: 'rgba(245, 158, 11, 0.2)',
+          borderRadius: defined.radius.full,
+          padding: `${defined.spacing.sm} ${defined.spacing.lg}`,
+          border: '1px solid rgba(245, 158, 11, 0.3)',
+        }}
+      >
+        <span style={{ color: defined.colors.accent, fontWeight: defined.typography.weights.semibold }}>
+          🔄 TWIST CHALLENGE
+        </span>
+      </div>
+
+      <h2
+        style={{
+          fontSize: isMobile ? defined.typography.sizes.xl : defined.typography.sizes['2xl'],
+          fontWeight: defined.typography.weights.bold,
+          color: defined.colors.text.primary,
+          textAlign: 'center',
+          margin: 0,
+        }}
+      >
+        The Diamond Challenge
+      </h2>
+
+      <p
+        style={{
+          fontSize: defined.typography.sizes.base,
+          color: defined.colors.text.secondary,
+          textAlign: 'center',
+          maxWidth: '500px',
+        }}
+      >
+        Diamond has a refractive index of 2.42 (vs water's 1.33). How do you think this affects its
+        ability to trap light?
+      </p>
+
+      <div
+        style={{
+          display: 'flex',
+          flexDirection: 'column',
+          gap: defined.spacing.md,
+          width: '100%',
+          maxWidth: '500px',
+        }}
+      >
+        {[
+          { id: 'easier', text: 'EASIER to trap light - smaller critical angle (24.4°)' },
+          { id: 'harder', text: 'HARDER to trap light - light moves too fast' },
+          { id: 'same', text: 'SAME - refractive index doesn\'t affect TIR' },
+          { id: 'none', text: 'IMPOSSIBLE - diamond is too transparent' },
+        ].map((option) => (
+          <button
+            key={option.id}
+            onClick={() => setTwistPrediction(option.id)}
+            style={{
+              padding: defined.spacing.lg,
+              borderRadius: defined.radius.lg,
+              border:
+                twistPrediction === option.id
+                  ? `2px solid ${defined.colors.accent}`
+                  : '2px solid rgba(255,255,255,0.1)',
+              background:
+                twistPrediction === option.id
+                  ? 'rgba(245, 158, 11, 0.2)'
+                  : defined.colors.background.secondary,
+              color: defined.colors.text.primary,
+              fontSize: defined.typography.sizes.base,
+              textAlign: 'left',
+              cursor: 'pointer',
+              fontFamily: defined.typography.fontFamily,
+              transition: 'all 0.2s ease',
+            }}
+          >
+            {option.text}
+          </button>
+        ))}
+      </div>
+
+      {Button({
+        children: 'Test with Diamond →',
+        onClick: () => {
+          setMaterial('diamond');
+          setIncidentAngle(30);
+          handleNavigation('twist_play');
+        },
+        disabled: !twistPrediction,
+        size: 'lg',
+      })}
+    </div>
+  );
+
+  // TWIST PLAY PHASE
+  const renderTwistPlay = () => (
+    <div
+      style={{
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        gap: defined.spacing.lg,
+        padding: defined.spacing.lg,
+      }}
+    >
+      <div
+        style={{
+          background: 'rgba(245, 158, 11, 0.2)',
+          borderRadius: defined.radius.full,
+          padding: `${defined.spacing.sm} ${defined.spacing.lg}`,
+          border: '1px solid rgba(245, 158, 11, 0.3)',
+        }}
+      >
+        <span style={{ color: defined.colors.accent, fontWeight: defined.typography.weights.semibold }}>
+          💎 DIAMOND MODE
+        </span>
+      </div>
+
+      <h2
+        style={{
+          fontSize: isMobile ? defined.typography.sizes.xl : defined.typography.sizes['2xl'],
+          fontWeight: defined.typography.weights.bold,
+          color: defined.colors.text.primary,
+          margin: 0,
+        }}
+      >
+        Compare Materials
+      </h2>
+
+      <p
+        style={{
+          fontSize: defined.typography.sizes.sm,
+          color: defined.colors.text.secondary,
+          textAlign: 'center',
+          maxWidth: '500px',
+        }}
+      >
+        Switch between materials and notice how the critical angle changes. Diamond traps light
+        much more easily!
+      </p>
+
+      <div
+        style={{
+          display: 'flex',
+          flexDirection: isMobile ? 'column' : 'row',
+          gap: defined.spacing.xl,
+          alignItems: 'flex-start',
+          width: '100%',
+          maxWidth: '900px',
+        }}
+      >
+        {renderWaterStreamVisualization()}
+        {renderControls()}
+      </div>
+
+      {Button({
+        children: 'See Why This Matters →',
+        onClick: () => handleNavigation('twist_review'),
+        size: 'lg',
+      })}
+    </div>
+  );
+
+  // TWIST REVIEW PHASE
+  const renderTwistReview = () => (
+    <div
+      style={{
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        gap: defined.spacing.xl,
+        padding: defined.spacing.xl,
+      }}
+    >
+      <h2
+        style={{
+          fontSize: isMobile ? defined.typography.sizes.xl : defined.typography.sizes['2xl'],
+          fontWeight: defined.typography.weights.bold,
+          color: defined.colors.text.primary,
+          margin: 0,
+        }}
+      >
+        Why Diamonds Sparkle!
+      </h2>
+
+      <div
+        style={{
+          background:
+            twistPrediction === 'easier' ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
+          borderRadius: defined.radius.lg,
+          padding: defined.spacing.lg,
+          maxWidth: '500px',
+          textAlign: 'center',
+          border: `1px solid ${twistPrediction === 'easier' ? defined.colors.success : defined.colors.error}`,
+        }}
+      >
+        <div
+          style={{
+            fontSize: defined.typography.sizes.lg,
+            fontWeight: defined.typography.weights.semibold,
+            color: twistPrediction === 'easier' ? defined.colors.success : defined.colors.error,
+            marginBottom: defined.spacing.sm,
+          }}
+        >
+          {twistPrediction === 'easier' ? '✓ Exactly right!' : '✗ Interesting!'}
+        </div>
+        <p style={{ color: defined.colors.text.secondary, fontSize: defined.typography.sizes.sm }}>
+          Diamond's high refractive index (2.42) creates a tiny critical angle (24.4°). Light
+          entering from almost any direction gets trapped and bounces inside multiple times!
+        </p>
+      </div>
+
+      {/* Critical angle comparison */}
+      <div
+        style={{
+          background: defined.colors.background.card,
+          borderRadius: defined.radius.xl,
+          padding: defined.spacing.xl,
+          width: '100%',
+          maxWidth: '500px',
+          backdropFilter: 'blur(10px)',
+          border: '1px solid rgba(255,255,255,0.1)',
+        }}
+      >
+        <h3
+          style={{
+            color: defined.colors.text.primary,
+            fontSize: defined.typography.sizes.lg,
+            marginBottom: defined.spacing.lg,
+            textAlign: 'center',
+          }}
+        >
+          Critical Angle Comparison
+        </h3>
+        {Object.entries(MATERIALS).map(([key, mat]) => (
+          <div
+            key={key}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: defined.spacing.md,
+              marginBottom: defined.spacing.md,
+            }}
+          >
+            <div
+              style={{
+                width: '80px',
+                color: defined.colors.text.primary,
+                fontSize: defined.typography.sizes.sm,
+              }}
+            >
+              {mat.name}
+            </div>
+            <div
+              style={{
+                flex: 1,
+                height: '24px',
+                background: defined.colors.background.tertiary,
+                borderRadius: defined.radius.full,
+                overflow: 'hidden',
+                position: 'relative',
+              }}
+            >
+              <div
+                style={{
+                  width: `${(mat.criticalAngle / 90) * 100}%`,
+                  height: '100%',
+                  background:
+                    key === 'diamond'
+                      ? 'linear-gradient(90deg, #A855F7, #EC4899)'
+                      : defined.colors.primary,
+                  borderRadius: defined.radius.full,
+                }}
+              />
+              <span
+                style={{
+                  position: 'absolute',
+                  right: '8px',
+                  top: '50%',
+                  transform: 'translateY(-50%)',
+                  color: defined.colors.text.primary,
+                  fontSize: defined.typography.sizes.xs,
+                  fontWeight: defined.typography.weights.semibold,
+                }}
+              >
+                {mat.criticalAngle}°
+              </span>
+            </div>
+          </div>
+        ))}
+        <p
+          style={{
+            color: defined.colors.text.muted,
+            fontSize: defined.typography.sizes.xs,
+            textAlign: 'center',
+            marginTop: defined.spacing.md,
+          }}
+        >
+          Smaller critical angle = easier to trap light = more sparkle!
+        </p>
+      </div>
+
+      <div
+        style={{
+          display: 'grid',
+          gridTemplateColumns: isMobile ? '1fr' : 'repeat(2, 1fr)',
+          gap: defined.spacing.lg,
+          maxWidth: '600px',
+        }}
+      >
+        <div
+          style={{
+            background: defined.colors.background.card,
+            borderRadius: defined.radius.lg,
+            padding: defined.spacing.lg,
+            backdropFilter: 'blur(10px)',
+            border: '1px solid rgba(255,255,255,0.1)',
+          }}
+        >
+          <div style={{ fontSize: '2rem', marginBottom: defined.spacing.sm }}>💎</div>
+          <h3
+            style={{
+              color: defined.colors.text.primary,
+              fontSize: defined.typography.sizes.base,
+              marginBottom: defined.spacing.sm,
+            }}
+          >
+            The Brilliant Cut
+          </h3>
+          <p style={{ color: defined.colors.text.secondary, fontSize: defined.typography.sizes.sm }}>
+            Diamond cutters angle facets so light bounces multiple times via TIR before exiting
+            through the top - maximum sparkle!
+          </p>
+        </div>
+
+        <div
+          style={{
+            background: defined.colors.background.card,
+            borderRadius: defined.radius.lg,
+            padding: defined.spacing.lg,
+            backdropFilter: 'blur(10px)',
+            border: '1px solid rgba(255,255,255,0.1)',
+          }}
+        >
+          <div style={{ fontSize: '2rem', marginBottom: defined.spacing.sm }}>🌐</div>
+          <h3
+            style={{
+              color: defined.colors.text.primary,
+              fontSize: defined.typography.sizes.base,
+              marginBottom: defined.spacing.sm,
+            }}
+          >
+            Fiber Optic Design
+          </h3>
+          <p style={{ color: defined.colors.text.secondary, fontSize: defined.typography.sizes.sm }}>
+            Engineers choose core/cladding materials with optimal refractive index difference for
+            efficient light trapping.
+          </p>
+        </div>
+      </div>
+
+      {Button({
+        children: 'See Real-World Applications →',
+        onClick: () => handleNavigation('transfer'),
+        size: 'lg',
+      })}
+    </div>
+  );
+
+  // TRANSFER PHASE
+  const renderTransfer = () => {
+    const currentApp = applications[selectedApp];
+
+    return (
+      <div
+        style={{
+          display: 'flex',
+          flexDirection: 'column',
+          gap: defined.spacing.lg,
+          padding: defined.spacing.lg,
+          minHeight: '500px',
+        }}
+      >
+        <h2
+          style={{
+            fontSize: isMobile ? defined.typography.sizes.xl : defined.typography.sizes['2xl'],
+            fontWeight: defined.typography.weights.bold,
+            color: defined.colors.text.primary,
+            textAlign: 'center',
+            margin: 0,
+          }}
+        >
+          Real-World Applications
+        </h2>
+
+        {/* Progress indicator */}
+        <div
+          style={{
+            display: 'flex',
+            justifyContent: 'center',
+            gap: defined.spacing.xs,
+          }}
+        >
+          {applications.map((_, i) => (
+            <div
+              key={i}
+              style={{
+                width: '8px',
+                height: '8px',
+                borderRadius: '50%',
+                background: completedApps[i]
+                  ? defined.colors.success
+                  : i === selectedApp
+                    ? defined.colors.primary
+                    : defined.colors.background.tertiary,
+                transition: 'all 0.3s ease',
+              }}
+            />
+          ))}
+        </div>
+
+        {/* Application tabs */}
+        <div
+          style={{
+            display: 'flex',
+            gap: defined.spacing.sm,
+            justifyContent: 'center',
+            flexWrap: 'wrap',
+          }}
+        >
+          {applications.map((app, i) => {
+            const isCompleted = completedApps[i];
+            const isLocked = i > 0 && !completedApps[i - 1] && !isCompleted;
+
+            return (
+              <button
+                key={app.id}
+                onClick={() => !isLocked && setSelectedApp(i)}
+                disabled={isLocked}
+                style={{
+                  padding: `${defined.spacing.sm} ${defined.spacing.md}`,
+                  borderRadius: defined.radius.lg,
+                  border:
+                    selectedApp === i
+                      ? `2px solid ${defined.colors.primary}`
+                      : '2px solid transparent',
+                  background:
+                    selectedApp === i
+                      ? defined.colors.background.tertiary
+                      : defined.colors.background.secondary,
+                  color: isLocked ? defined.colors.text.muted : defined.colors.text.primary,
+                  cursor: isLocked ? 'not-allowed' : 'pointer',
+                  fontFamily: defined.typography.fontFamily,
+                  fontSize: defined.typography.sizes.sm,
+                  opacity: isLocked ? 0.5 : 1,
+                  transition: 'all 0.2s ease',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: defined.spacing.xs,
+                }}
+              >
+                <span>{isLocked ? '🔒' : app.icon}</span>
+                {!isMobile && app.title}
+                {isCompleted && <span style={{ color: defined.colors.success }}>✓</span>}
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Current application content */}
+        <div
+          style={{
+            background: defined.colors.background.card,
+            borderRadius: defined.radius.xl,
+            padding: defined.spacing.xl,
+            backdropFilter: 'blur(10px)',
+            border: '1px solid rgba(255,255,255,0.1)',
+            flex: 1,
+          }}
+        >
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: defined.spacing.md,
+              marginBottom: defined.spacing.lg,
+            }}
+          >
+            <span style={{ fontSize: '2.5rem' }}>{currentApp.icon}</span>
+            <div>
+              <h3
+                style={{
+                  color: defined.colors.text.primary,
+                  fontSize: defined.typography.sizes.xl,
+                  margin: 0,
+                }}
+              >
+                {currentApp.title}
+              </h3>
+              <p
+                style={{
+                  color: defined.colors.text.muted,
+                  fontSize: defined.typography.sizes.sm,
+                  margin: 0,
+                }}
+              >
+                {currentApp.description}
+              </p>
+            </div>
+          </div>
+
+          <ul
+            style={{
+              listStyle: 'none',
+              padding: 0,
+              margin: 0,
+              display: 'flex',
+              flexDirection: 'column',
+              gap: defined.spacing.md,
+            }}
+          >
+            {currentApp.details.map((detail, i) => (
+              <li
+                key={i}
+                style={{
+                  display: 'flex',
+                  alignItems: 'flex-start',
+                  gap: defined.spacing.md,
+                  color: defined.colors.text.secondary,
+                  fontSize: defined.typography.sizes.base,
+                }}
+              >
+                <span style={{ color: defined.colors.primary, fontWeight: 'bold' }}>•</span>
+                {detail}
+              </li>
+            ))}
+          </ul>
+        </div>
+
+        {/* Navigation */}
+        <div
+          style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            gap: defined.spacing.md,
+          }}
+        >
+          {Button({
+            children: '← Previous',
+            onClick: () => setSelectedApp(Math.max(0, selectedApp - 1)),
+            variant: 'secondary',
+            disabled: selectedApp === 0,
+          })}
+
+          {!completedApps[selectedApp] ? (
+            Button({
+              children:
+                selectedApp < applications.length - 1
+                  ? 'Next Application →'
+                  : 'Complete Applications',
+              onClick: handleCompleteApp,
+              variant: 'primary',
+            })
+          ) : selectedApp < applications.length - 1 ? (
+            Button({
+              children: 'Next Application →',
+              onClick: () => setSelectedApp(selectedApp + 1),
+              variant: 'secondary',
+            })
+          ) : allAppsCompleted ? (
+            Button({
+              children: 'Take the Quiz →',
+              onClick: () => handleNavigation('test'),
+              variant: 'success',
+            })
+          ) : (
+            <div style={{ color: defined.colors.text.muted, fontSize: defined.typography.sizes.sm }}>
+              Complete all applications to take the quiz
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  };
+
+  // TEST PHASE
+  const renderTest = () => {
+    const question = questions[currentQuestion];
+
+    return (
+      <div
+        style={{
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          gap: defined.spacing.xl,
+          padding: defined.spacing.xl,
+        }}
+      >
+        {ProgressBar({ current: currentQuestion, total: questions.length })}
+
+        <div
+          style={{
+            fontSize: defined.typography.sizes.sm,
+            color: defined.colors.text.muted,
+          }}
+        >
+          Question {currentQuestion + 1} of {questions.length}
+        </div>
+
+        <h2
+          style={{
+            fontSize: isMobile ? defined.typography.sizes.lg : defined.typography.sizes.xl,
+            fontWeight: defined.typography.weights.semibold,
+            color: defined.colors.text.primary,
+            textAlign: 'center',
+            margin: 0,
+            maxWidth: '600px',
+          }}
+        >
+          {question.question}
+        </h2>
+
+        <div
+          style={{
+            display: 'flex',
+            flexDirection: 'column',
+            gap: defined.spacing.md,
+            width: '100%',
+            maxWidth: '500px',
+          }}
+        >
+          {question.options.map((option, i) => {
+            let background = defined.colors.background.secondary;
+            let borderColor = 'rgba(255,255,255,0.1)';
+
+            if (showResult) {
+              if (i === question.correctIndex) {
+                background = 'rgba(16, 185, 129, 0.2)';
+                borderColor = defined.colors.success;
+              } else if (i === selectedAnswer && i !== question.correctIndex) {
+                background = 'rgba(239, 68, 68, 0.2)';
+                borderColor = defined.colors.error;
+              }
+            } else if (i === selectedAnswer) {
+              background = 'rgba(99, 102, 241, 0.2)';
+              borderColor = defined.colors.primary;
+            }
+
+            return (
+              <button
+                key={i}
+                onClick={() => handleAnswerSelect(i)}
+                disabled={showResult}
+                style={{
+                  padding: defined.spacing.lg,
+                  borderRadius: defined.radius.lg,
+                  border: `2px solid ${borderColor}`,
+                  background,
+                  color: defined.colors.text.primary,
+                  fontSize: defined.typography.sizes.base,
+                  textAlign: 'left',
+                  cursor: showResult ? 'default' : 'pointer',
+                  fontFamily: defined.typography.fontFamily,
+                  transition: 'all 0.2s ease',
+                }}
+              >
+                {option}
+              </button>
+            );
+          })}
+        </div>
+
+        {showResult && (
+          <div
+            style={{
+              background: defined.colors.background.card,
+              borderRadius: defined.radius.lg,
+              padding: defined.spacing.lg,
+              maxWidth: '500px',
+              backdropFilter: 'blur(10px)',
+              border: '1px solid rgba(255,255,255,0.1)',
+            }}
+          >
+            <p
+              style={{
+                color: defined.colors.text.secondary,
+                fontSize: defined.typography.sizes.sm,
+                margin: 0,
+              }}
+            >
+              {question.explanation}
+            </p>
+          </div>
+        )}
+
+        {showResult &&
+          Button({
+            children: currentQuestion < questions.length - 1 ? 'Next Question →' : 'See Results →',
+            onClick: handleNextQuestion,
+            size: 'lg',
+          })}
+      </div>
+    );
+  };
+
+  // MASTERY PHASE
+  const renderMastery = () => {
+    const percentage = (score / questions.length) * 100;
+    const passed = percentage >= 70;
+
+    return (
+      <div
+        style={{
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          gap: defined.spacing.xl,
+          padding: defined.spacing.xl,
+          textAlign: 'center',
+        }}
+      >
+        <div
+          style={{
+            fontSize: '4rem',
+            marginBottom: defined.spacing.md,
+          }}
+        >
+          {passed ? '✨' : '📚'}
+        </div>
+
+        <h1
+          style={{
+            fontSize: isMobile ? defined.typography.sizes['2xl'] : defined.typography.sizes['3xl'],
+            fontWeight: defined.typography.weights.bold,
+            color: defined.colors.text.primary,
+            margin: 0,
+          }}
+        >
+          {passed ? 'TIR Master!' : 'Keep Practicing!'}
+        </h1>
+
+        <div
+          style={{
+            background: defined.colors.background.card,
+            borderRadius: defined.radius.xl,
+            padding: defined.spacing.xl,
+            backdropFilter: 'blur(10px)',
+            border: '1px solid rgba(255,255,255,0.1)',
+          }}
+        >
+          <div
+            style={{
+              fontSize: defined.typography.sizes['4xl'],
+              fontWeight: defined.typography.weights.bold,
+              color: passed ? defined.colors.success : defined.colors.accent,
+              marginBottom: defined.spacing.sm,
+            }}
+          >
+            {score}/{questions.length}
+          </div>
+          <div
+            style={{
+              fontSize: defined.typography.sizes.lg,
+              color: defined.colors.text.secondary,
+            }}
+          >
+            {percentage.toFixed(0)}% Correct
+          </div>
+
+          {/* Progress bar */}
+          <div
+            style={{
+              width: '200px',
+              height: '8px',
+              background: defined.colors.background.tertiary,
+              borderRadius: defined.radius.full,
+              overflow: 'hidden',
+              margin: `${defined.spacing.lg} auto 0`,
+            }}
+          >
+            <div
+              style={{
+                width: `${percentage}%`,
+                height: '100%',
+                background: passed
+                  ? defined.colors.success
+                  : percentage >= 50
+                    ? defined.colors.accent
+                    : defined.colors.error,
+                transition: 'width 1s ease',
+              }}
+            />
+          </div>
+        </div>
+
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)',
+            gap: defined.spacing.md,
+            maxWidth: '600px',
+            width: '100%',
+          }}
+        >
+          <div
+            style={{
+              background: defined.colors.background.card,
+              borderRadius: defined.radius.lg,
+              padding: defined.spacing.md,
+              backdropFilter: 'blur(10px)',
+              border: '1px solid rgba(255,255,255,0.1)',
+            }}
+          >
+            <div style={{ fontSize: '1.5rem', marginBottom: defined.spacing.xs }}>📐</div>
+            <div style={{ color: defined.colors.text.muted, fontSize: defined.typography.sizes.sm }}>
+              Critical Angle
+            </div>
+          </div>
+          <div
+            style={{
+              background: defined.colors.background.card,
+              borderRadius: defined.radius.lg,
+              padding: defined.spacing.md,
+              backdropFilter: 'blur(10px)',
+              border: '1px solid rgba(255,255,255,0.1)',
+            }}
+          >
+            <div style={{ fontSize: '1.5rem', marginBottom: defined.spacing.xs }}>💯</div>
+            <div style={{ color: defined.colors.text.muted, fontSize: defined.typography.sizes.sm }}>
+              100% Reflection
+            </div>
+          </div>
+          <div
+            style={{
+              background: defined.colors.background.card,
+              borderRadius: defined.radius.lg,
+              padding: defined.spacing.md,
+              backdropFilter: 'blur(10px)',
+              border: '1px solid rgba(255,255,255,0.1)',
+            }}
+          >
+            <div style={{ fontSize: '1.5rem', marginBottom: defined.spacing.xs }}>🌐</div>
+            <div style={{ color: defined.colors.text.muted, fontSize: defined.typography.sizes.sm }}>
+              Fiber Optics
+            </div>
+          </div>
+        </div>
+
+        <p
+          style={{
+            fontSize: defined.typography.sizes.base,
+            color: defined.colors.text.secondary,
+            maxWidth: '500px',
+          }}
+        >
+          {passed
+            ? 'You understand how light can be trapped and guided through materials - the foundation of fiber optics and diamond brilliance!'
+            : 'Review the critical angle concept and try again. TIR is a fascinating phenomenon!'}
+        </p>
+
+        <div style={{ display: 'flex', gap: defined.spacing.md }}>
+          {Button({
+            children: 'Start Over',
+            onClick: () => {
+              setPhase('hook');
+              setPrediction(null);
+              setTwistPrediction(null);
+              setCurrentQuestion(0);
+              setSelectedAnswer(null);
+              setShowResult(false);
+              setScore(0);
+              setCompletedApps([false, false, false, false]);
+              setSelectedApp(0);
+              setMaterial('water');
+              setIncidentAngle(30);
+            },
+            variant: 'secondary',
+          })}
+        </div>
+      </div>
+    );
+  };
+
+  // =============================================================================
+  // RENDER
+  // =============================================================================
+  return (
+    <div
+      style={{
+        minHeight: '100vh',
+        background: `linear-gradient(135deg, ${defined.colors.background.primary} 0%, ${defined.colors.background.secondary} 100%)`,
+        fontFamily: defined.typography.fontFamily,
+        padding: defined.spacing.lg,
+      }}
+    >
+      <div
+        style={{
+          maxWidth: '900px',
+          margin: '0 auto',
+        }}
+      >
+        {phase === 'hook' && renderHook()}
+        {phase === 'predict' && renderPredict()}
+        {phase === 'play' && renderPlay()}
+        {phase === 'review' && renderReview()}
+        {phase === 'twist_predict' && renderTwistPredict()}
+        {phase === 'twist_play' && renderTwistPlay()}
+        {phase === 'twist_review' && renderTwistReview()}
+        {phase === 'transfer' && renderTransfer()}
+        {phase === 'test' && renderTest()}
+        {phase === 'mastery' && renderMastery()}
+      </div>
+    </div>
+  );
+}

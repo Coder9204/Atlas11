@@ -938,40 +938,74 @@ const GyroscopicPrecessionRenderer: React.FC<GyroscopicPrecessionRendererProps> 
   // TRANSFER
   if (phase === 'transfer') {
     const app = realWorldApps[selectedApp];
-    const allComplete = completedApps.every(c => c);
+    const isLastApp = selectedApp === realWorldApps.length - 1;
 
     return (
       <div style={{ display: 'flex', flexDirection: 'column', height: '100%', background: colors.bgPrimary }}>
         {renderProgressBar()}
 
-        {/* Tabs */}
+        {/* Progress indicator */}
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: space.sm,
+          padding: `${space.md} ${space.lg}`,
+          background: colors.bgSecondary,
+          borderBottom: `1px solid ${colors.border}`,
+        }}>
+          <span style={{ fontSize: '13px', color: colors.textSecondary }}>
+            Application {selectedApp + 1} of {realWorldApps.length}
+          </span>
+          <div style={{ display: 'flex', gap: '6px' }}>
+            {realWorldApps.map((_, idx) => (
+              <div
+                key={idx}
+                style={{
+                  width: '8px',
+                  height: '8px',
+                  borderRadius: '50%',
+                  background: idx <= selectedApp ? colors.primary : colors.bgTertiary,
+                  transition: 'background 0.3s ease'
+                }}
+              />
+            ))}
+          </div>
+        </div>
+
+        {/* Tabs - only allow clicking on viewed tabs */}
         <div style={{
           padding: `${space.sm} ${space.md}`,
           background: colors.bgSecondary,
           borderBottom: `1px solid ${colors.border}`,
         }}>
           <div style={{ display: 'flex', gap: space.xs }}>
-            {realWorldApps.map((a, i) => (
-              <button
-                key={i}
-                onMouseDown={() => handleButtonClick(() => setSelectedApp(i), tabLock)}
-                style={{
-                  flex: 1,
-                  padding: `${space.sm} ${space.xs}`,
-                  borderRadius: radius.sm,
-                  border: 'none',
-                  background: selectedApp === i ? `${a.color}20` : 'transparent',
-                  borderBottom: selectedApp === i ? `3px solid ${a.color}` : '3px solid transparent',
-                  cursor: 'pointer',
-                  display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px',
-                  transition: 'all 0.2s ease',
-                }}
-              >
-                <span style={{ fontSize: '20px' }}>{a.icon}</span>
-                <span style={{ fontSize: '9px', fontWeight: 600, color: selectedApp === i ? colors.textPrimary : colors.textTertiary }}>{a.title.split(' ')[0]}</span>
-                {completedApps[i] && <span style={{ fontSize: '10px', color: colors.success }}>✓</span>}
-              </button>
-            ))}
+            {realWorldApps.map((a, i) => {
+              const isViewed = i <= selectedApp;
+              const isCurrent = i === selectedApp;
+              return (
+                <button
+                  key={i}
+                  onMouseDown={() => isViewed && handleButtonClick(() => setSelectedApp(i), tabLock)}
+                  style={{
+                    flex: 1,
+                    padding: `${space.sm} ${space.xs}`,
+                    borderRadius: radius.sm,
+                    border: 'none',
+                    background: isCurrent ? `${a.color}20` : 'transparent',
+                    borderBottom: isCurrent ? `3px solid ${a.color}` : '3px solid transparent',
+                    cursor: isViewed ? 'pointer' : 'not-allowed',
+                    display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px',
+                    transition: 'all 0.2s ease',
+                    opacity: isViewed ? 1 : 0.5,
+                  }}
+                >
+                  <span style={{ fontSize: '20px' }}>{a.icon}</span>
+                  <span style={{ fontSize: '9px', fontWeight: 600, color: isCurrent ? colors.textPrimary : isViewed ? colors.textSecondary : colors.textTertiary }}>{a.title.split(' ')[0]}</span>
+                  {isViewed && i < selectedApp && <span style={{ fontSize: '10px', color: colors.success }}>✓</span>}
+                </button>
+              );
+            })}
           </div>
         </div>
 
@@ -1034,32 +1068,58 @@ const GyroscopicPrecessionRenderer: React.FC<GyroscopicPrecessionRendererProps> 
                 ))}
               </ul>
             </div>
-
-            {!completedApps[selectedApp] && (
-              <button
-                onMouseDown={() => handleButtonClick(() => {
-                  const newCompleted = [...completedApps];
-                  newCompleted[selectedApp] = true;
-                  setCompletedApps(newCompleted);
-                  if (selectedApp < 3) setSelectedApp(selectedApp + 1);
-                })}
-                style={{
-                  width: '100%',
-                  padding: space.md,
-                  borderRadius: radius.md,
-                  fontSize: '14px', fontWeight: 700,
-                  background: `linear-gradient(135deg, ${app.color} 0%, ${colors.accent} 100%)`,
-                  color: colors.textPrimary,
-                  border: 'none',
-                  cursor: 'pointer',
-                }}
-              >
-                ✓ Mark Complete & Continue
-              </button>
-            )}
           </div>
         </div>
-        {renderBottomBar(true, allComplete, 'Take the Quiz')}
+        {/* Bottom bar: Next Application or Take Quiz */}
+        <div style={{
+          padding: `${space.md} ${space.lg}`,
+          background: colors.bgSecondary,
+          borderTop: `1px solid ${colors.border}`,
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center'
+        }}>
+          {selectedApp > 0 ? (
+            <button
+              onMouseDown={() => handleButtonClick(() => setSelectedApp(selectedApp - 1), tabLock)}
+              style={{
+                padding: `${space.md} ${space.lg}`,
+                fontSize: '14px',
+                color: colors.textSecondary,
+                background: colors.bgTertiary,
+                border: `1px solid ${colors.border}`,
+                borderRadius: radius.md,
+                cursor: 'pointer'
+              }}
+            >
+              ← Previous
+            </button>
+          ) : (
+            <div />
+          )}
+          <button
+            onMouseDown={() => handleButtonClick(() => {
+              if (isLastApp) {
+                goToPhase('test');
+              } else {
+                setSelectedApp(selectedApp + 1);
+              }
+            }, isLastApp ? navigationLock : tabLock)}
+            style={{
+              padding: `${space.md} ${space.xl}`,
+              fontSize: '15px',
+              fontWeight: 700,
+              color: colors.textPrimary,
+              background: isLastApp ? colors.success : `linear-gradient(135deg, ${colors.primary} 0%, ${colors.accent} 100%)`,
+              border: 'none',
+              borderRadius: radius.md,
+              cursor: 'pointer',
+              boxShadow: shadows.sm
+            }}
+          >
+            {isLastApp ? 'Take the Quiz →' : 'Next Application →'}
+          </button>
+        </div>
       </div>
     );
   }

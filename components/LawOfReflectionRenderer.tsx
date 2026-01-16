@@ -1,0 +1,1696 @@
+'use client';
+
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+
+// ============================================================================
+// LAW OF REFLECTION RENDERER - MIRROR GEOMETRY
+// Premium 10-screen educational game following WaveParticleDualityRenderer pattern
+// ============================================================================
+
+interface LawOfReflectionRendererProps {
+  width?: number;
+  height?: number;
+  onBack?: () => void;
+  metadata?: {
+    currentPhase?: number;
+    showPrediction?: boolean;
+    showQuiz?: boolean;
+  };
+}
+
+// Premium Design System
+const colors = {
+  background: '#0a0f1a',
+  cardBg: '#141e2c',
+  primary: '#60a5fa',
+  secondary: '#818cf8',
+  accent: '#f472b6',
+  success: '#34d399',
+  warning: '#fbbf24',
+  text: '#f1f5f9',
+  textSecondary: '#94a3b8',
+  border: '#1e3a5f',
+  gradientStart: '#1e3a8a',
+  gradientEnd: '#7c3aed',
+};
+
+const typography = {
+  h1: { fontSize: '28px', fontWeight: '700', letterSpacing: '-0.02em' },
+  h2: { fontSize: '22px', fontWeight: '600', letterSpacing: '-0.01em' },
+  h3: { fontSize: '18px', fontWeight: '600' },
+  body: { fontSize: '16px', fontWeight: '400', lineHeight: '1.6' },
+  small: { fontSize: '14px', fontWeight: '400' },
+};
+
+const spacing = { xs: 4, sm: 8, md: 16, lg: 24, xl: 32 };
+const radius = { sm: 8, md: 12, lg: 16, xl: 24 };
+
+// ============================================================================
+// GAME CONTENT DATA
+// ============================================================================
+
+const phases = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'] as const;
+type Phase = typeof phases[number];
+
+const predictions = {
+  initial: {
+    question: "You shine a flashlight at a flat mirror at a 30° angle from the vertical (normal line). At what angle will the light bounce off?",
+    options: [
+      { id: 'a', text: '30° on the same side as the flashlight', icon: '↖️' },
+      { id: 'b', text: '30° on the opposite side from the flashlight', icon: '↗️' },
+      { id: 'c', text: '60° from the mirror surface', icon: '➡️' },
+      { id: 'd', text: 'Depends on the type of mirror material', icon: '🪞' },
+    ],
+    correct: 'b',
+    explanation: "The Law of Reflection: angle of incidence = angle of reflection. Light bounces at exactly the same angle on the other side of the normal. This is why you can see yourself in a mirror - each ray follows this simple rule!"
+  },
+  twist: {
+    question: "You place two mirrors at a 90° angle to each other (like a corner). If you shine light at one mirror, what happens to the outgoing beam?",
+    options: [
+      { id: 'a', text: 'It gets stuck bouncing between the mirrors forever', icon: '🔄' },
+      { id: 'b', text: 'It comes back parallel to the original direction', icon: '⬅️' },
+      { id: 'c', text: 'It scatters in all directions', icon: '💥' },
+      { id: 'd', text: 'It passes through the corner', icon: '➡️' },
+    ],
+    correct: 'b',
+    explanation: "A corner reflector sends light back exactly where it came from! Two 90° reflections rotate the beam by 180°. This is why corner reflectors are on road signs, bicycles, and were even placed on the Moon by Apollo astronauts!"
+  }
+};
+
+const realWorldApplications = [
+  {
+    id: 'mirrors',
+    title: '🪞 Bathroom Mirrors',
+    subtitle: 'Why you see yourself',
+    description: 'Flat mirrors create virtual images that appear to be behind the mirror. Every light ray from your face reflects according to the law, and your brain traces them back to where they seem to originate - creating your reflection at the same distance behind as you are in front.',
+    formula: 'Object distance = Image distance (for flat mirrors)',
+    realExample: 'Your reflection appears the same size as you and the same distance behind the mirror as you stand in front.',
+    interactiveHint: 'Touch your mirror - your reflection\'s finger meets yours exactly at the glass surface!'
+  },
+  {
+    id: 'periscopes',
+    title: '🔭 Periscopes',
+    subtitle: 'Seeing around corners',
+    description: 'Submarines and tanks use two 45° mirrors to redirect light. Each mirror turns the light 90°, allowing you to see above water or over walls while staying hidden below.',
+    formula: '45° + 45° = 90° turn × 2 = light redirected by 180°',
+    realExample: 'Submarine periscopes can be 30+ feet tall, using precision mirrors to see the surface from deep underwater.',
+    interactiveHint: 'Make a simple periscope with two small mirrors at 45° in a cardboard tube!'
+  },
+  {
+    id: 'retroreflectors',
+    title: '🚗 Road Safety Reflectors',
+    subtitle: 'Returning light to its source',
+    description: 'Corner cube reflectors (three mirrors at 90°) send light back exactly where it came from, regardless of entry angle. This is why road signs, bike reflectors, and cat\'s eyes glow so brightly in headlights.',
+    formula: '3 × 90° reflections = Light returns to source',
+    realExample: 'Apollo astronauts left corner reflectors on the Moon - we still bounce lasers off them to measure Earth-Moon distance!',
+    interactiveHint: 'Shine a flashlight at a bike reflector from any angle - it always reflects back to your eyes.'
+  },
+  {
+    id: 'kaleidoscopes',
+    title: '🔮 Kaleidoscopes',
+    subtitle: 'Infinite reflections',
+    description: 'Multiple mirrors at specific angles create stunning patterns through repeated reflections. Two mirrors at 60° create 5 reflections, at 45° create 7 reflections. The pattern depends on the angle between mirrors.',
+    formula: 'Number of images = (360°/angle) - 1',
+    realExample: 'A kaleidoscope with mirrors at 60° creates hexagonal patterns with 5 mirror images.',
+    interactiveHint: 'Stand between two parallel mirrors - you\'ll see infinite copies of yourself!'
+  }
+];
+
+const quizQuestions = [
+  {
+    question: "What is the Law of Reflection?",
+    options: [
+      "Light always reflects straight back",
+      "Angle of incidence equals angle of reflection",
+      "Light bends when it reflects",
+      "Reflection only works with flat surfaces"
+    ],
+    correct: 1,
+    explanation: "The Law of Reflection states that the angle of incidence (incoming) equals the angle of reflection (outgoing), both measured from the normal (perpendicular line)."
+  },
+  {
+    question: "Angles in reflection are measured from what reference line?",
+    options: [
+      "The mirror surface",
+      "The horizontal",
+      "The normal (perpendicular to surface)",
+      "The vertical"
+    ],
+    correct: 2,
+    explanation: "Both angles are measured from the normal - an imaginary line perpendicular to the mirror surface at the point where light hits."
+  },
+  {
+    question: "If light hits a mirror at 0° to the normal, at what angle does it reflect?",
+    options: ["90°", "45°", "180°", "0°"],
+    correct: 3,
+    explanation: "If light comes straight in (0° to normal), it bounces straight back (0° on the other side). This is called normal incidence."
+  },
+  {
+    question: "Why does a flat mirror create a 'virtual' image?",
+    options: [
+      "The image is blurry",
+      "The image doesn't really exist where it appears to be",
+      "The image is upside down",
+      "The image is smaller than the object"
+    ],
+    correct: 1,
+    explanation: "A virtual image is where light rays APPEAR to come from when traced backward. No actual light exists behind the mirror - it's an optical illusion created by your brain."
+  },
+  {
+    question: "In a flat mirror, how does the image distance compare to the object distance?",
+    options: [
+      "Image is closer",
+      "Image is farther",
+      "They are equal",
+      "Depends on mirror size"
+    ],
+    correct: 2,
+    explanation: "For a flat mirror, the virtual image appears exactly as far behind the mirror as the object is in front. This is why your reflection seems to be inside the mirror."
+  },
+  {
+    question: "Two mirrors are placed at 90° to form a corner. Light enters at 30° to one mirror. What angle does it exit?",
+    options: [
+      "30° in the same direction",
+      "30° but going back the way it came",
+      "60°",
+      "90°"
+    ],
+    correct: 1,
+    explanation: "A corner reflector (90° angle) always sends light back parallel to its incoming direction. After two reflections, the exit angle equals the entry angle but in the opposite direction."
+  },
+  {
+    question: "Why are corner cube reflectors used on road signs?",
+    options: [
+      "They're cheaper to make",
+      "They look prettier",
+      "They reflect light back to the source regardless of entry angle",
+      "They absorb less light"
+    ],
+    correct: 2,
+    explanation: "Corner cubes (three 90° mirrors) are retroreflectors - they send light back exactly where it came from. Car headlights reflect straight back to the driver's eyes."
+  },
+  {
+    question: "If you place two parallel mirrors facing each other, how many images do you see?",
+    options: ["2", "4", "Infinite (theoretically)", "1"],
+    correct: 2,
+    explanation: "Parallel mirrors create infinite reflections! Each image reflects in the other mirror, creating images of images. In practice, light loss limits how many you can see."
+  },
+  {
+    question: "A periscope uses two mirrors at what angle?",
+    options: ["30°", "45°", "60°", "90°"],
+    correct: 1,
+    explanation: "Periscope mirrors are at 45° to the vertical. Light hits at 45° and reflects at 45°, turning 90°. Two such mirrors redirect light by 180°, allowing you to see around corners."
+  },
+  {
+    question: "If mirrors are at 60° angle, how many images will you see between them?",
+    options: ["3", "4", "5", "6"],
+    correct: 2,
+    explanation: "The formula is: Number of images = (360°/angle) - 1. For 60°: (360/60) - 1 = 6 - 1 = 5 images. This is the principle behind kaleidoscopes."
+  }
+];
+
+// ============================================================================
+// MAIN COMPONENT
+// ============================================================================
+
+const LawOfReflectionRenderer: React.FC<LawOfReflectionRendererProps> = ({
+  width = 800,
+  height = 600,
+  onBack,
+  metadata
+}) => {
+  // Core state
+  const [phase, setPhase] = useState<Phase>('hook');
+  const [selectedPrediction, setSelectedPrediction] = useState<string | null>(null);
+  const [showPredictionFeedback, setShowPredictionFeedback] = useState(false);
+  const [score, setScore] = useState(0);
+  const [currentQuestion, setCurrentQuestion] = useState(0);
+  const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
+  const [showQuizFeedback, setShowQuizFeedback] = useState(false);
+  const [completedApps, setCompletedApps] = useState<string[]>([]);
+  const [currentAppIndex, setCurrentAppIndex] = useState(0);
+  const [isMobile, setIsMobile] = useState(false);
+
+  // Interactive state for simulation
+  const [incidentAngle, setIncidentAngle] = useState(45);
+  const [showNormal, setShowNormal] = useState(true);
+  const [showAngles, setShowAngles] = useState(true);
+  const [showVirtualImage, setShowVirtualImage] = useState(false);
+  const [mirrorAngle, setMirrorAngle] = useState(90); // For corner reflector
+  const [objectPosition, setObjectPosition] = useState({ x: 150, y: 100 });
+  const [animationTime, setAnimationTime] = useState(0);
+
+  // Animation ref
+  const animationRef = useRef<number>();
+  const isTransitioningRef = useRef(false);
+
+  // Mobile detection
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
+  // Animation loop
+  useEffect(() => {
+    const animate = () => {
+      setAnimationTime(t => t + 0.02);
+      animationRef.current = requestAnimationFrame(animate);
+    };
+    animationRef.current = requestAnimationFrame(animate);
+    return () => {
+      if (animationRef.current) {
+        cancelAnimationFrame(animationRef.current);
+      }
+    };
+  }, []);
+
+  // Phase navigation with debouncing
+  const goToPhase = useCallback((newPhase: Phase) => {
+    if (isTransitioningRef.current) return;
+    isTransitioningRef.current = true;
+
+    setPhase(newPhase);
+    setSelectedPrediction(null);
+    setShowPredictionFeedback(false);
+
+    // Reset simulation for certain phases
+    if (newPhase === 'play') {
+      setIncidentAngle(45);
+      setShowVirtualImage(false);
+      setMirrorAngle(90);
+    } else if (newPhase === 'twist_play') {
+      setIncidentAngle(30);
+      setMirrorAngle(90);
+    }
+
+    setTimeout(() => {
+      isTransitioningRef.current = false;
+    }, 400);
+  }, []);
+
+  // Prediction handling
+  const handlePredictionSelect = useCallback((optionId: string) => {
+    if (showPredictionFeedback || isTransitioningRef.current) return;
+    setSelectedPrediction(optionId);
+  }, [showPredictionFeedback]);
+
+  const handlePredictionSubmit = useCallback(() => {
+    if (!selectedPrediction || showPredictionFeedback || isTransitioningRef.current) return;
+    setShowPredictionFeedback(true);
+  }, [selectedPrediction, showPredictionFeedback]);
+
+  // Quiz handling
+  const handleAnswerSelect = useCallback((index: number) => {
+    if (showQuizFeedback || isTransitioningRef.current) return;
+    setSelectedAnswer(index);
+  }, [showQuizFeedback]);
+
+  const handleAnswerSubmit = useCallback(() => {
+    if (selectedAnswer === null || showQuizFeedback || isTransitioningRef.current) return;
+    setShowQuizFeedback(true);
+    if (selectedAnswer === quizQuestions[currentQuestion].correct) {
+      setScore(s => s + 1);
+    }
+  }, [selectedAnswer, showQuizFeedback, currentQuestion]);
+
+  const handleNextQuestion = useCallback(() => {
+    if (isTransitioningRef.current) return;
+    isTransitioningRef.current = true;
+
+    if (currentQuestion < quizQuestions.length - 1) {
+      setCurrentQuestion(q => q + 1);
+      setSelectedAnswer(null);
+      setShowQuizFeedback(false);
+    } else {
+      goToPhase('mastery');
+    }
+
+    setTimeout(() => {
+      isTransitioningRef.current = false;
+    }, 400);
+  }, [currentQuestion, goToPhase]);
+
+  // Application navigation with sequential unlock
+  const handleCompleteApp = useCallback((appId: string) => {
+    if (isTransitioningRef.current) return;
+    isTransitioningRef.current = true;
+
+    if (!completedApps.includes(appId)) {
+      setCompletedApps(prev => [...prev, appId]);
+    }
+
+    if (currentAppIndex < realWorldApplications.length - 1) {
+      setCurrentAppIndex(i => i + 1);
+    }
+
+    setTimeout(() => {
+      isTransitioningRef.current = false;
+    }, 400);
+  }, [completedApps, currentAppIndex]);
+
+  const canAccessQuiz = completedApps.length >= realWorldApplications.length;
+
+  // ============================================================================
+  // RENDER HELPERS (Functions, not components)
+  // ============================================================================
+
+  const renderButton = (
+    label: string,
+    onClick: () => void,
+    variant: 'primary' | 'secondary' | 'success' = 'primary',
+    disabled = false
+  ) => {
+    const bgColor = variant === 'primary' ? colors.primary
+      : variant === 'success' ? colors.success
+      : 'transparent';
+    const borderColor = variant === 'secondary' ? colors.primary : 'transparent';
+
+    return (
+      <button
+        onMouseDown={(e) => {
+          e.preventDefault();
+          if (!disabled) onClick();
+        }}
+        disabled={disabled}
+        style={{
+          padding: `${spacing.sm}px ${spacing.lg}px`,
+          fontSize: typography.body.fontSize,
+          fontWeight: '600',
+          color: variant === 'secondary' ? colors.primary : colors.text,
+          background: bgColor,
+          border: `2px solid ${borderColor}`,
+          borderRadius: radius.md,
+          cursor: disabled ? 'not-allowed' : 'pointer',
+          opacity: disabled ? 0.5 : 1,
+          transition: 'all 0.2s ease',
+        }}
+      >
+        {label}
+      </button>
+    );
+  };
+
+  const renderProgressBar = () => {
+    const currentIndex = phases.indexOf(phase);
+    const progress = ((currentIndex + 1) / phases.length) * 100;
+
+    return (
+      <div style={{ marginBottom: spacing.lg }}>
+        <div style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          marginBottom: spacing.xs,
+          fontSize: typography.small.fontSize,
+          color: colors.textSecondary,
+        }}>
+          <span>Progress</span>
+          <span>{Math.round(progress)}%</span>
+        </div>
+        <div style={{
+          height: 8,
+          background: colors.border,
+          borderRadius: radius.sm,
+          overflow: 'hidden',
+        }}>
+          <div style={{
+            height: '100%',
+            width: `${progress}%`,
+            background: `linear-gradient(90deg, ${colors.primary}, ${colors.secondary})`,
+            borderRadius: radius.sm,
+            transition: 'width 0.5s ease',
+          }} />
+        </div>
+      </div>
+    );
+  };
+
+  // ============================================================================
+  // REFLECTION VISUALIZATION
+  // ============================================================================
+
+  const renderReflectionSimulation = () => {
+    const simWidth = isMobile ? width - 40 : 500;
+    const simHeight = 320;
+    const mirrorY = simHeight / 2 + 40;
+    const centerX = simWidth / 2;
+    const rayLength = 100;
+
+    // Convert angle for SVG
+    const incidentRad = incidentAngle * Math.PI / 180;
+    const reflectedRad = incidentRad; // Same angle for reflection
+
+    // Calculate ray endpoints
+    const hitPoint = { x: centerX, y: mirrorY };
+    const incidentStart = {
+      x: centerX - Math.sin(incidentRad) * rayLength,
+      y: mirrorY - Math.cos(incidentRad) * rayLength
+    };
+    const reflectedEnd = {
+      x: centerX + Math.sin(reflectedRad) * rayLength,
+      y: mirrorY - Math.cos(reflectedRad) * rayLength
+    };
+
+    // Virtual image position (for object)
+    const virtualY = mirrorY + (mirrorY - objectPosition.y);
+
+    return (
+      <div style={{
+        background: 'linear-gradient(180deg, #1a1a2e 0%, #0a0a1a 100%)',
+        borderRadius: radius.lg,
+        padding: spacing.lg,
+        marginBottom: spacing.lg,
+      }}>
+        <svg width={simWidth} height={simHeight} style={{ display: 'block', margin: '0 auto' }}>
+          <defs>
+            <linearGradient id="mirrorGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#88c0d0" />
+              <stop offset="50%" stopColor="#5e81ac" />
+              <stop offset="100%" stopColor="#88c0d0" />
+            </linearGradient>
+            <pattern id="mirrorReflect" patternUnits="userSpaceOnUse" width="20" height="20">
+              <rect width="20" height="20" fill="#2e3440" />
+              <line x1="0" y1="0" x2="20" y2="20" stroke="#4c566a" strokeWidth="0.5" />
+            </pattern>
+          </defs>
+
+          {/* Area above mirror (real space) */}
+          <rect x={0} y={0} width={simWidth} height={mirrorY} fill="transparent" />
+          <text x={20} y={30} fill={colors.textSecondary} fontSize={12}>Real Space</text>
+
+          {/* Area below mirror (virtual space - shown faded) */}
+          {showVirtualImage && (
+            <>
+              <rect x={0} y={mirrorY} width={simWidth} height={simHeight - mirrorY}
+                    fill="url(#mirrorReflect)" opacity={0.3} />
+              <text x={20} y={mirrorY + 30} fill={colors.textSecondary} fontSize={12} opacity={0.6}>
+                Virtual Space (behind mirror)
+              </text>
+            </>
+          )}
+
+          {/* Mirror surface */}
+          <rect x={50} y={mirrorY - 3} width={simWidth - 100} height={6}
+                fill="url(#mirrorGrad)" />
+          <rect x={50} y={mirrorY + 3} width={simWidth - 100} height={10}
+                fill="#4c566a" />
+
+          {/* Normal line (dashed) */}
+          {showNormal && (
+            <>
+              <line
+                x1={centerX}
+                y1={mirrorY - 120}
+                x2={centerX}
+                y2={mirrorY + 60}
+                stroke={colors.textSecondary}
+                strokeWidth={1}
+                strokeDasharray="5,5"
+              />
+              <text x={centerX + 5} y={mirrorY - 105} fill={colors.textSecondary} fontSize={10}>
+                Normal
+              </text>
+            </>
+          )}
+
+          {/* Angle arcs */}
+          {showAngles && (
+            <>
+              {/* Incident angle arc */}
+              <path
+                d={`M ${centerX} ${mirrorY - 30} A 30 30 0 0 0 ${centerX - 30 * Math.sin(incidentRad)} ${mirrorY - 30 * Math.cos(incidentRad)}`}
+                fill="none"
+                stroke={colors.warning}
+                strokeWidth={2}
+              />
+              <text
+                x={centerX - 55}
+                y={mirrorY - 40}
+                fill={colors.warning}
+                fontSize={12}
+              >
+                θᵢ = {incidentAngle}°
+              </text>
+
+              {/* Reflected angle arc */}
+              <path
+                d={`M ${centerX} ${mirrorY - 30} A 30 30 0 0 1 ${centerX + 30 * Math.sin(reflectedRad)} ${mirrorY - 30 * Math.cos(reflectedRad)}`}
+                fill="none"
+                stroke={colors.success}
+                strokeWidth={2}
+              />
+              <text
+                x={centerX + 35}
+                y={mirrorY - 40}
+                fill={colors.success}
+                fontSize={12}
+              >
+                θᵣ = {incidentAngle}°
+              </text>
+            </>
+          )}
+
+          {/* Incident ray */}
+          <line
+            x1={incidentStart.x}
+            y1={incidentStart.y}
+            x2={hitPoint.x}
+            y2={hitPoint.y}
+            stroke="#ffd700"
+            strokeWidth={3}
+          />
+          {/* Arrow for incident */}
+          <polygon
+            points={`${hitPoint.x},${hitPoint.y} ${hitPoint.x - 8},${hitPoint.y - 15} ${hitPoint.x + 4},${hitPoint.y - 12}`}
+            fill="#ffd700"
+            transform={`rotate(${incidentAngle}, ${hitPoint.x}, ${hitPoint.y})`}
+          />
+
+          {/* Animated pulse on incident ray */}
+          {[0, 1, 2].map(i => {
+            const t = (animationTime + i * 0.33) % 1;
+            const x = incidentStart.x + (hitPoint.x - incidentStart.x) * t;
+            const y = incidentStart.y + (hitPoint.y - incidentStart.y) * t;
+            return (
+              <circle
+                key={`inc-${i}`}
+                cx={x}
+                cy={y}
+                r={4}
+                fill="#ffd700"
+                opacity={1 - t}
+              />
+            );
+          })}
+
+          {/* Reflected ray */}
+          <line
+            x1={hitPoint.x}
+            y1={hitPoint.y}
+            x2={reflectedEnd.x}
+            y2={reflectedEnd.y}
+            stroke={colors.success}
+            strokeWidth={3}
+          />
+          {/* Arrow for reflected */}
+          <polygon
+            points={`${reflectedEnd.x},${reflectedEnd.y} ${reflectedEnd.x - 4},${reflectedEnd.y + 12} ${reflectedEnd.x - 12},${reflectedEnd.y + 8}`}
+            fill={colors.success}
+            transform={`rotate(${-incidentAngle}, ${reflectedEnd.x}, ${reflectedEnd.y})`}
+          />
+
+          {/* Animated pulse on reflected ray */}
+          {[0, 1, 2].map(i => {
+            const t = ((animationTime - 0.5 + i * 0.33) % 1 + 1) % 1;
+            if (animationTime < 0.5 && i === 0) return null;
+            const x = hitPoint.x + (reflectedEnd.x - hitPoint.x) * t;
+            const y = hitPoint.y + (reflectedEnd.y - hitPoint.y) * t;
+            return (
+              <circle
+                key={`ref-${i}`}
+                cx={x}
+                cy={y}
+                r={4}
+                fill={colors.success}
+                opacity={1 - t}
+              />
+            );
+          })}
+
+          {/* Hit point indicator */}
+          <circle cx={hitPoint.x} cy={hitPoint.y} r={6} fill={colors.primary}>
+            <animate attributeName="r" values="6;9;6" dur="1s" repeatCount="indefinite" />
+          </circle>
+
+          {/* Virtual image line (extended behind mirror) */}
+          {showVirtualImage && (
+            <>
+              <line
+                x1={hitPoint.x}
+                y1={hitPoint.y}
+                x2={hitPoint.x - Math.sin(incidentRad) * 80}
+                y2={hitPoint.y + Math.cos(incidentRad) * 80}
+                stroke={colors.warning}
+                strokeWidth={2}
+                strokeDasharray="5,3"
+                opacity={0.5}
+              />
+              <text
+                x={hitPoint.x - 80}
+                y={mirrorY + 70}
+                fill={colors.warning}
+                fontSize={10}
+                opacity={0.7}
+              >
+                Virtual ray (traced back)
+              </text>
+            </>
+          )}
+
+          {/* Labels */}
+          <text x={incidentStart.x - 40} y={incidentStart.y - 5} fill="#ffd700" fontSize={11}>
+            Incident
+          </text>
+          <text x={reflectedEnd.x + 5} y={reflectedEnd.y - 5} fill={colors.success} fontSize={11}>
+            Reflected
+          </text>
+          <text x={simWidth / 2 - 20} y={mirrorY + 25} fill={colors.primary} fontSize={11}>
+            Mirror
+          </text>
+        </svg>
+
+        {/* Law display */}
+        <div style={{
+          textAlign: 'center',
+          marginTop: spacing.lg,
+          padding: spacing.md,
+          background: colors.background,
+          borderRadius: radius.md,
+        }}>
+          <div style={{
+            fontSize: '28px',
+            fontWeight: '700',
+            color: colors.primary,
+            fontFamily: 'monospace',
+          }}>
+            θᵢ = θᵣ
+          </div>
+          <div style={{
+            display: 'flex',
+            justifyContent: 'center',
+            gap: spacing.xl,
+            marginTop: spacing.sm,
+          }}>
+            <div>
+              <span style={{ color: colors.warning }}>Incident: </span>
+              <span style={{ color: colors.text, fontWeight: '600' }}>{incidentAngle}°</span>
+            </div>
+            <div>
+              <span style={{ color: colors.success }}>Reflected: </span>
+              <span style={{ color: colors.text, fontWeight: '600' }}>{incidentAngle}°</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  const renderCornerReflector = () => {
+    const simWidth = isMobile ? width - 40 : 500;
+    const simHeight = 320;
+    const cornerX = simWidth / 2;
+    const cornerY = simHeight / 2 + 40;
+
+    // Convert mirror angle to radians
+    const mirror2Rad = (180 - mirrorAngle) * Math.PI / 180;
+
+    // Calculate ray path through corner reflector
+    const incidentRad = incidentAngle * Math.PI / 180;
+
+    // First hit on horizontal mirror
+    const rayStart = { x: cornerX - 120, y: cornerY - 80 };
+    const hit1 = { x: cornerX - 40, y: cornerY };
+
+    // First reflection (off horizontal mirror)
+    const reflected1Angle = incidentAngle;
+    const reflected1Rad = reflected1Angle * Math.PI / 180;
+
+    // Second hit on vertical mirror
+    const hit2Y = cornerY - 60;
+    const hit2X = cornerX;
+
+    // After two 90° reflections, light returns parallel to original
+    const finalEnd = {
+      x: cornerX - 120,
+      y: hit2Y
+    };
+
+    return (
+      <div style={{
+        background: 'linear-gradient(180deg, #1a1a2e 0%, #0a0a1a 100%)',
+        borderRadius: radius.lg,
+        padding: spacing.lg,
+        marginBottom: spacing.lg,
+      }}>
+        <svg width={simWidth} height={simHeight} style={{ display: 'block', margin: '0 auto' }}>
+          <defs>
+            <linearGradient id="mirrorGrad2" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#88c0d0" />
+              <stop offset="50%" stopColor="#5e81ac" />
+              <stop offset="100%" stopColor="#88c0d0" />
+            </linearGradient>
+          </defs>
+
+          {/* Horizontal mirror */}
+          <rect x={cornerX - 100} y={cornerY - 3} width={100} height={6}
+                fill="url(#mirrorGrad2)" />
+          <rect x={cornerX - 100} y={cornerY + 3} width={100} height={8}
+                fill="#4c566a" />
+
+          {/* Vertical mirror */}
+          <rect x={cornerX - 3} y={cornerY - 100} width={6} height={100}
+                fill="url(#mirrorGrad2)"
+                transform={`rotate(${180 - mirrorAngle}, ${cornerX}, ${cornerY})`} />
+
+          {/* Corner point */}
+          <circle cx={cornerX} cy={cornerY} r={5} fill={colors.accent} />
+
+          {/* Normals */}
+          {showNormal && (
+            <>
+              {/* Normal to horizontal */}
+              <line
+                x1={hit1.x} y1={cornerY - 50}
+                x2={hit1.x} y2={cornerY + 30}
+                stroke={colors.textSecondary}
+                strokeWidth={1}
+                strokeDasharray="4,4"
+              />
+              {/* Normal to vertical */}
+              <line
+                x1={cornerX - 50} y1={hit2Y}
+                x2={cornerX + 30} y2={hit2Y}
+                stroke={colors.textSecondary}
+                strokeWidth={1}
+                strokeDasharray="4,4"
+              />
+            </>
+          )}
+
+          {/* Incoming ray */}
+          <line
+            x1={rayStart.x}
+            y1={rayStart.y}
+            x2={hit1.x}
+            y2={hit1.y}
+            stroke="#ffd700"
+            strokeWidth={3}
+          />
+          <polygon
+            points={`${hit1.x},${hit1.y} ${hit1.x - 10},${hit1.y - 10} ${hit1.x - 5},${hit1.y - 15}`}
+            fill="#ffd700"
+          />
+
+          {/* First reflection (to vertical mirror) */}
+          <line
+            x1={hit1.x}
+            y1={hit1.y}
+            x2={hit2X}
+            y2={hit2Y}
+            stroke={colors.secondary}
+            strokeWidth={3}
+          />
+
+          {/* Second reflection (back out) */}
+          <line
+            x1={hit2X}
+            y1={hit2Y}
+            x2={finalEnd.x}
+            y2={finalEnd.y}
+            stroke={colors.success}
+            strokeWidth={3}
+          />
+          <polygon
+            points={`${finalEnd.x},${finalEnd.y} ${finalEnd.x + 15},${finalEnd.y - 5} ${finalEnd.x + 15},${finalEnd.y + 5}`}
+            fill={colors.success}
+          />
+
+          {/* Animated pulses */}
+          {[0, 1].map(i => {
+            const t = (animationTime * 0.5 + i * 0.5) % 1;
+            let x, y;
+            if (t < 0.33) {
+              const segment = t / 0.33;
+              x = rayStart.x + (hit1.x - rayStart.x) * segment;
+              y = rayStart.y + (hit1.y - rayStart.y) * segment;
+            } else if (t < 0.66) {
+              const segment = (t - 0.33) / 0.33;
+              x = hit1.x + (hit2X - hit1.x) * segment;
+              y = hit1.y + (hit2Y - hit1.y) * segment;
+            } else {
+              const segment = (t - 0.66) / 0.34;
+              x = hit2X + (finalEnd.x - hit2X) * segment;
+              y = hit2Y + (finalEnd.y - hit2Y) * segment;
+            }
+            return (
+              <circle
+                key={`pulse-${i}`}
+                cx={x}
+                cy={y}
+                r={5}
+                fill={t < 0.33 ? '#ffd700' : t < 0.66 ? colors.secondary : colors.success}
+              />
+            );
+          })}
+
+          {/* Angle labels */}
+          {showAngles && (
+            <>
+              <text x={hit1.x - 30} y={cornerY - 55} fill={colors.warning} fontSize={11}>
+                {incidentAngle}°
+              </text>
+              <text x={hit1.x + 5} y={cornerY - 55} fill={colors.secondary} fontSize={11}>
+                {incidentAngle}°
+              </text>
+              <text x={cornerX - 45} y={hit2Y - 10} fill={colors.secondary} fontSize={11}>
+                {90 - incidentAngle}°
+              </text>
+              <text x={cornerX - 45} y={hit2Y + 20} fill={colors.success} fontSize={11}>
+                {90 - incidentAngle}°
+              </text>
+            </>
+          )}
+
+          {/* Labels */}
+          <text x={rayStart.x - 10} y={rayStart.y - 10} fill="#ffd700" fontSize={11}>
+            In
+          </text>
+          <text x={finalEnd.x - 10} y={finalEnd.y - 10} fill={colors.success} fontSize={11}>
+            Out (parallel!)
+          </text>
+          <text x={cornerX + 10} y={cornerY + 20} fill={colors.accent} fontSize={11}>
+            90° corner
+          </text>
+        </svg>
+
+        {/* Explanation */}
+        <div style={{
+          textAlign: 'center',
+          marginTop: spacing.lg,
+          padding: spacing.md,
+          background: colors.background,
+          borderRadius: radius.md,
+        }}>
+          <div style={{ color: colors.success, fontWeight: '600', marginBottom: spacing.xs }}>
+            Retroreflection!
+          </div>
+          <p style={{ color: colors.textSecondary, margin: 0, fontSize: typography.small.fontSize }}>
+            After two 90° reflections, light returns <strong>parallel</strong> to its original direction.
+            <br/>
+            Entry angle = {incidentAngle}° → Exit angle = {incidentAngle}° (opposite direction)
+          </p>
+        </div>
+      </div>
+    );
+  };
+
+  const renderControls = () => (
+    <div style={{
+      display: 'grid',
+      gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr',
+      gap: spacing.md,
+      marginBottom: spacing.lg,
+    }}>
+      <div style={{
+        background: colors.cardBg,
+        padding: spacing.md,
+        borderRadius: radius.md,
+        border: `1px solid ${colors.border}`,
+      }}>
+        <label style={{
+          color: colors.warning,
+          fontSize: typography.small.fontSize,
+          display: 'block',
+          marginBottom: 8
+        }}>
+          Incident Angle: {incidentAngle}°
+        </label>
+        <input
+          type="range"
+          min={5}
+          max={85}
+          value={incidentAngle}
+          onChange={(e) => setIncidentAngle(Number(e.target.value))}
+          style={{ width: '100%' }}
+        />
+      </div>
+
+      <div style={{
+        display: 'flex',
+        flexWrap: 'wrap',
+        gap: spacing.sm,
+        alignItems: 'center',
+        justifyContent: 'center',
+      }}>
+        <button
+          onMouseDown={() => setShowNormal(!showNormal)}
+          style={{
+            padding: `${spacing.xs}px ${spacing.md}px`,
+            background: showNormal ? colors.primary : colors.cardBg,
+            border: `1px solid ${colors.border}`,
+            borderRadius: radius.sm,
+            color: colors.text,
+            fontSize: typography.small.fontSize,
+            cursor: 'pointer',
+          }}
+        >
+          Normal Line
+        </button>
+        <button
+          onMouseDown={() => setShowAngles(!showAngles)}
+          style={{
+            padding: `${spacing.xs}px ${spacing.md}px`,
+            background: showAngles ? colors.secondary : colors.cardBg,
+            border: `1px solid ${colors.border}`,
+            borderRadius: radius.sm,
+            color: colors.text,
+            fontSize: typography.small.fontSize,
+            cursor: 'pointer',
+          }}
+        >
+          Angle Labels
+        </button>
+        {phase === 'play' && (
+          <button
+            onMouseDown={() => setShowVirtualImage(!showVirtualImage)}
+            style={{
+              padding: `${spacing.xs}px ${spacing.md}px`,
+              background: showVirtualImage ? colors.accent : colors.cardBg,
+              border: `1px solid ${colors.border}`,
+              borderRadius: radius.sm,
+              color: colors.text,
+              fontSize: typography.small.fontSize,
+              cursor: 'pointer',
+            }}
+          >
+            Virtual Image
+          </button>
+        )}
+      </div>
+    </div>
+  );
+
+  const renderQuickButtons = () => (
+    <div style={{
+      display: 'flex',
+      flexWrap: 'wrap',
+      gap: spacing.sm,
+      marginBottom: spacing.lg,
+      justifyContent: 'center',
+    }}>
+      {[15, 30, 45, 60, 75].map(angle => (
+        <button
+          key={angle}
+          onMouseDown={() => setIncidentAngle(angle)}
+          style={{
+            padding: `${spacing.xs}px ${spacing.md}px`,
+            background: incidentAngle === angle ? colors.primary : colors.cardBg,
+            border: `1px solid ${incidentAngle === angle ? colors.primary : colors.border}`,
+            borderRadius: radius.sm,
+            color: colors.text,
+            fontSize: typography.small.fontSize,
+            cursor: 'pointer',
+          }}
+        >
+          {angle}°
+        </button>
+      ))}
+    </div>
+  );
+
+  // ============================================================================
+  // PHASE RENDERERS
+  // ============================================================================
+
+  const renderHook = () => (
+    <div style={{ textAlign: 'center' }}>
+      <div style={{
+        fontSize: '72px',
+        marginBottom: spacing.lg,
+        animation: 'pulse 2s ease-in-out infinite',
+      }}>
+        🪞
+      </div>
+      <h1 style={{ ...typography.h1, color: colors.text, marginBottom: spacing.md }}>
+        The Mirror's Secret
+      </h1>
+      <p style={{ ...typography.body, color: colors.textSecondary, marginBottom: spacing.lg, maxWidth: 500, margin: '0 auto' }}>
+        Every time you look in a mirror, millions of light rays are following one elegant rule.
+        This same rule lets submarines see above water, makes road signs glow at night, and
+        even helps scientists measure the distance to the Moon!
+      </p>
+      <div style={{
+        background: `linear-gradient(135deg, ${colors.gradientStart}, ${colors.gradientEnd})`,
+        padding: spacing.lg,
+        borderRadius: radius.lg,
+        marginBottom: spacing.xl,
+        maxWidth: 400,
+        margin: '0 auto',
+      }}>
+        <div style={{ fontSize: '48px', marginBottom: spacing.sm }}>📐 = 📐</div>
+        <p style={{ color: colors.text, margin: 0 }}>
+          The simplest law with the biggest impact!
+        </p>
+      </div>
+      {renderButton('Discover the Law', () => goToPhase('predict'))}
+    </div>
+  );
+
+  const renderPrediction = (isTwist = false) => {
+    const pred = isTwist ? predictions.twist : predictions.initial;
+
+    return (
+      <div>
+        <h2 style={{ ...typography.h2, color: colors.text, marginBottom: spacing.lg, textAlign: 'center' }}>
+          {isTwist ? '🔮 Corner Magic' : '🤔 Make Your Prediction'}
+        </h2>
+        <p style={{ ...typography.body, color: colors.textSecondary, marginBottom: spacing.lg, textAlign: 'center' }}>
+          {pred.question}
+        </p>
+
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr',
+          gap: spacing.md,
+          marginBottom: spacing.lg,
+        }}>
+          {pred.options.map((opt) => (
+            <div
+              key={opt.id}
+              onClick={() => handlePredictionSelect(opt.id)}
+              style={{
+                padding: spacing.lg,
+                background: selectedPrediction === opt.id
+                  ? `linear-gradient(135deg, ${colors.primary}33, ${colors.secondary}33)`
+                  : colors.cardBg,
+                border: `2px solid ${selectedPrediction === opt.id ? colors.primary : colors.border}`,
+                borderRadius: radius.lg,
+                cursor: showPredictionFeedback ? 'default' : 'pointer',
+                transition: 'all 0.3s ease',
+              }}
+            >
+              <div style={{ fontSize: '32px', marginBottom: spacing.sm }}>{opt.icon}</div>
+              <p style={{ color: colors.text, margin: 0 }}>{opt.text}</p>
+            </div>
+          ))}
+        </div>
+
+        {showPredictionFeedback && (
+          <div style={{
+            padding: spacing.lg,
+            background: selectedPrediction === pred.correct
+              ? `${colors.success}22`
+              : `${colors.warning}22`,
+            border: `1px solid ${selectedPrediction === pred.correct ? colors.success : colors.warning}`,
+            borderRadius: radius.lg,
+            marginBottom: spacing.lg,
+          }}>
+            <h3 style={{
+              color: selectedPrediction === pred.correct ? colors.success : colors.warning,
+              marginBottom: spacing.sm,
+            }}>
+              {selectedPrediction === pred.correct ? '✓ Perfect!' : '✗ Let\'s explore this!'}
+            </h3>
+            <p style={{ color: colors.text, margin: 0 }}>{pred.explanation}</p>
+          </div>
+        )}
+
+        <div style={{ textAlign: 'center' }}>
+          {!showPredictionFeedback ? (
+            renderButton('Lock In Prediction', handlePredictionSubmit, 'primary', !selectedPrediction)
+          ) : (
+            renderButton('See It In Action →', () => goToPhase(isTwist ? 'twist_play' : 'play'))
+          )}
+        </div>
+      </div>
+    );
+  };
+
+  const renderPlay = (isTwist = false) => (
+    <div>
+      <h2 style={{ ...typography.h2, color: colors.text, marginBottom: spacing.md, textAlign: 'center' }}>
+        {isTwist ? '📐 Corner Reflector Lab' : '🪞 Reflection Playground'}
+      </h2>
+      <p style={{ ...typography.body, color: colors.textSecondary, marginBottom: spacing.lg, textAlign: 'center' }}>
+        {isTwist
+          ? 'Watch how two 90° mirrors send light back the way it came!'
+          : 'Change the angle and watch how incidence always equals reflection.'}
+      </p>
+
+      {isTwist ? renderCornerReflector() : renderReflectionSimulation()}
+      {renderControls()}
+      {!isTwist && renderQuickButtons()}
+
+      {isTwist && (
+        <div style={{
+          background: `${colors.accent}22`,
+          padding: spacing.lg,
+          borderRadius: radius.lg,
+          marginBottom: spacing.lg,
+        }}>
+          <h3 style={{ color: colors.accent, marginBottom: spacing.sm }}>🌙 Apollo Connection</h3>
+          <p style={{ color: colors.text, margin: 0 }}>
+            Astronauts left corner cube reflectors on the Moon. We bounce lasers off them to
+            measure Earth-Moon distance to within centimeters! The laser returns to Earth after
+            traveling 770,000 km - only possible because corner reflectors send light back exactly
+            where it came from.
+          </p>
+        </div>
+      )}
+
+      <div style={{ textAlign: 'center' }}>
+        {renderButton('I Understand This →', () => goToPhase(isTwist ? 'twist_review' : 'review'))}
+      </div>
+    </div>
+  );
+
+  const renderReview = (isTwist = false) => (
+    <div>
+      <h2 style={{ ...typography.h2, color: colors.text, marginBottom: spacing.lg, textAlign: 'center' }}>
+        {isTwist ? '🎯 Retroreflector Geometry' : '📚 The Law of Reflection'}
+      </h2>
+
+      <div style={{
+        background: colors.cardBg,
+        padding: spacing.xl,
+        borderRadius: radius.lg,
+        marginBottom: spacing.lg,
+      }}>
+        {isTwist ? (
+          <>
+            <h3 style={{ color: colors.accent, marginBottom: spacing.md }}>Why 90° Corners Work Magic</h3>
+
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr',
+              gap: spacing.lg,
+            }}>
+              <div style={{
+                background: colors.background,
+                padding: spacing.md,
+                borderRadius: radius.md,
+              }}>
+                <h4 style={{ color: colors.warning, marginBottom: spacing.sm }}>2D Corner (2 mirrors)</h4>
+                <p style={{ color: colors.textSecondary, margin: 0 }}>
+                  Light enters at angle θ<br/>
+                  First reflection: θ<br/>
+                  Second reflection: (90° - θ)<br/>
+                  <strong style={{ color: colors.success }}>Returns parallel to entry!</strong>
+                </p>
+              </div>
+              <div style={{
+                background: colors.background,
+                padding: spacing.md,
+                borderRadius: radius.md,
+              }}>
+                <h4 style={{ color: colors.secondary, marginBottom: spacing.sm }}>3D Corner Cube (3 mirrors)</h4>
+                <p style={{ color: colors.textSecondary, margin: 0 }}>
+                  Works in all 3 dimensions<br/>
+                  Light returns to source<br/>
+                  Regardless of entry angle<br/>
+                  <strong style={{ color: colors.success }}>True retroreflection!</strong>
+                </p>
+              </div>
+            </div>
+
+            <div style={{
+              marginTop: spacing.lg,
+              padding: spacing.md,
+              background: colors.background,
+              borderRadius: radius.md,
+              textAlign: 'center',
+            }}>
+              <p style={{ color: colors.text, margin: 0 }}>
+                <span style={{ fontSize: '24px' }}>🚗</span> This is why bike reflectors and road signs
+                are visible from any angle - <strong style={{ color: colors.accent }}>they reflect light
+                straight back to your headlights!</strong>
+              </p>
+            </div>
+          </>
+        ) : (
+          <>
+            <h3 style={{ color: colors.primary, marginBottom: spacing.md }}>The Fundamental Law</h3>
+
+            <div style={{
+              textAlign: 'center',
+              padding: spacing.lg,
+              background: colors.background,
+              borderRadius: radius.md,
+              marginBottom: spacing.lg,
+            }}>
+              <div style={{ fontSize: '32px', color: colors.primary, fontFamily: 'monospace' }}>
+                θᵢ = θᵣ
+              </div>
+              <p style={{ color: colors.textSecondary, margin: `${spacing.sm}px 0 0` }}>
+                Angle of incidence = Angle of reflection
+              </p>
+            </div>
+
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)',
+              gap: spacing.md,
+            }}>
+              <div style={{
+                background: colors.background,
+                padding: spacing.md,
+                borderRadius: radius.md,
+                textAlign: 'center',
+              }}>
+                <div style={{ fontSize: '32px', marginBottom: spacing.xs }}>📏</div>
+                <div style={{ color: colors.text, fontWeight: '600' }}>Measured from Normal</div>
+                <p style={{ color: colors.textSecondary, margin: 0, fontSize: typography.small.fontSize }}>
+                  Not from the mirror surface!
+                </p>
+              </div>
+              <div style={{
+                background: colors.background,
+                padding: spacing.md,
+                borderRadius: radius.md,
+                textAlign: 'center',
+              }}>
+                <div style={{ fontSize: '32px', marginBottom: spacing.xs }}>🔄</div>
+                <div style={{ color: colors.text, fontWeight: '600' }}>Same Plane</div>
+                <p style={{ color: colors.textSecondary, margin: 0, fontSize: typography.small.fontSize }}>
+                  Incident, reflected, and normal all in one plane
+                </p>
+              </div>
+              <div style={{
+                background: colors.background,
+                padding: spacing.md,
+                borderRadius: radius.md,
+                textAlign: 'center',
+              }}>
+                <div style={{ fontSize: '32px', marginBottom: spacing.xs }}>👻</div>
+                <div style={{ color: colors.text, fontWeight: '600' }}>Virtual Images</div>
+                <p style={{ color: colors.textSecondary, margin: 0, fontSize: typography.small.fontSize }}>
+                  Appear behind the mirror (not really there!)
+                </p>
+              </div>
+            </div>
+          </>
+        )}
+      </div>
+
+      <div style={{ textAlign: 'center' }}>
+        {renderButton(
+          isTwist ? 'See Real Applications →' : 'What\'s the Twist? →',
+          () => goToPhase(isTwist ? 'transfer' : 'twist_predict')
+        )}
+      </div>
+    </div>
+  );
+
+  const renderTransfer = () => {
+    const currentApp = realWorldApplications[currentAppIndex];
+
+    return (
+      <div>
+        <h2 style={{ ...typography.h2, color: colors.text, marginBottom: spacing.md, textAlign: 'center' }}>
+          🌍 Reflection in the Real World
+        </h2>
+
+        {/* App navigation dots */}
+        <div style={{
+          display: 'flex',
+          justifyContent: 'center',
+          gap: spacing.sm,
+          marginBottom: spacing.lg,
+        }}>
+          {realWorldApplications.map((app, index) => {
+            const isCompleted = completedApps.includes(app.id);
+            const isCurrent = index === currentAppIndex;
+            const isLocked = index > 0 && !completedApps.includes(realWorldApplications[index - 1].id);
+
+            return (
+              <div
+                key={app.id}
+                onClick={() => {
+                  if (!isLocked && !isTransitioningRef.current) {
+                    setCurrentAppIndex(index);
+                  }
+                }}
+                style={{
+                  width: 40,
+                  height: 40,
+                  borderRadius: '50%',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  background: isCurrent ? colors.primary : isCompleted ? colors.success : colors.cardBg,
+                  border: `2px solid ${isCurrent ? colors.primary : isCompleted ? colors.success : colors.border}`,
+                  cursor: isLocked ? 'not-allowed' : 'pointer',
+                  opacity: isLocked ? 0.4 : 1,
+                  transition: 'all 0.3s ease',
+                  fontSize: '16px',
+                }}
+              >
+                {isLocked ? '🔒' : isCompleted ? '✓' : index + 1}
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Current application card */}
+        <div style={{
+          background: colors.cardBg,
+          borderRadius: radius.lg,
+          padding: spacing.xl,
+          marginBottom: spacing.lg,
+        }}>
+          <div style={{ fontSize: '48px', marginBottom: spacing.md, textAlign: 'center' }}>
+            {currentApp.title.split(' ')[0]}
+          </div>
+          <h3 style={{ ...typography.h3, color: colors.primary, marginBottom: spacing.xs, textAlign: 'center' }}>
+            {currentApp.title.substring(currentApp.title.indexOf(' ') + 1)}
+          </h3>
+          <p style={{ color: colors.secondary, textAlign: 'center', marginBottom: spacing.lg }}>
+            {currentApp.subtitle}
+          </p>
+
+          <p style={{ ...typography.body, color: colors.text, marginBottom: spacing.lg }}>
+            {currentApp.description}
+          </p>
+
+          <div style={{
+            background: colors.background,
+            padding: spacing.md,
+            borderRadius: radius.md,
+            marginBottom: spacing.md,
+          }}>
+            <div style={{ color: colors.textSecondary, fontSize: typography.small.fontSize, marginBottom: 4 }}>
+              Key Concept:
+            </div>
+            <code style={{ color: colors.primary }}>{currentApp.formula}</code>
+          </div>
+
+          <div style={{
+            background: `${colors.success}22`,
+            padding: spacing.md,
+            borderRadius: radius.md,
+            marginBottom: spacing.md,
+          }}>
+            <div style={{ color: colors.success, marginBottom: 4 }}>💡 Real Example:</div>
+            <p style={{ color: colors.text, margin: 0 }}>{currentApp.realExample}</p>
+          </div>
+
+          <div style={{
+            background: `${colors.accent}22`,
+            padding: spacing.md,
+            borderRadius: radius.md,
+          }}>
+            <div style={{ color: colors.accent, marginBottom: 4 }}>🔬 Try This:</div>
+            <p style={{ color: colors.text, margin: 0 }}>{currentApp.interactiveHint}</p>
+          </div>
+        </div>
+
+        <div style={{ display: 'flex', justifyContent: 'center', gap: spacing.md }}>
+          {!completedApps.includes(currentApp.id) ? (
+            renderButton('Got It! ✓', () => handleCompleteApp(currentApp.id), 'success')
+          ) : currentAppIndex < realWorldApplications.length - 1 ? (
+            renderButton('Next Application →', () => setCurrentAppIndex(i => i + 1))
+          ) : null}
+
+          {canAccessQuiz && (
+            renderButton('Take the Quiz →', () => {
+              setCurrentQuestion(0);
+              setSelectedAnswer(null);
+              setShowQuizFeedback(false);
+              setScore(0);
+              goToPhase('test');
+            }, 'success')
+          )}
+        </div>
+
+        {!canAccessQuiz && (
+          <p style={{
+            textAlign: 'center',
+            color: colors.textSecondary,
+            marginTop: spacing.md,
+            fontSize: typography.small.fontSize,
+          }}>
+            Complete all {realWorldApplications.length} applications to unlock the quiz
+            ({completedApps.length}/{realWorldApplications.length} completed)
+          </p>
+        )}
+      </div>
+    );
+  };
+
+  const renderTest = () => {
+    const question = quizQuestions[currentQuestion];
+
+    return (
+      <div>
+        <div style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          marginBottom: spacing.lg,
+        }}>
+          <span style={{ color: colors.textSecondary }}>
+            Question {currentQuestion + 1} of {quizQuestions.length}
+          </span>
+          <span style={{ color: colors.success, fontWeight: '600' }}>
+            Score: {score}/{currentQuestion + (showQuizFeedback ? 1 : 0)}
+          </span>
+        </div>
+
+        <div style={{
+          background: colors.cardBg,
+          padding: spacing.xl,
+          borderRadius: radius.lg,
+          marginBottom: spacing.lg,
+        }}>
+          <h3 style={{ ...typography.h3, color: colors.text, marginBottom: spacing.lg }}>
+            {question.question}
+          </h3>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: spacing.sm }}>
+            {question.options.map((option, index) => {
+              const isSelected = selectedAnswer === index;
+              const isCorrect = index === question.correct;
+              const showResult = showQuizFeedback;
+
+              let bgColor = colors.background;
+              let borderColor = colors.border;
+
+              if (showResult) {
+                if (isCorrect) {
+                  bgColor = `${colors.success}33`;
+                  borderColor = colors.success;
+                } else if (isSelected && !isCorrect) {
+                  bgColor = `${colors.warning}33`;
+                  borderColor = colors.warning;
+                }
+              } else if (isSelected) {
+                bgColor = `${colors.primary}33`;
+                borderColor = colors.primary;
+              }
+
+              return (
+                <div
+                  key={index}
+                  onClick={() => handleAnswerSelect(index)}
+                  style={{
+                    padding: spacing.md,
+                    background: bgColor,
+                    border: `2px solid ${borderColor}`,
+                    borderRadius: radius.md,
+                    cursor: showQuizFeedback ? 'default' : 'pointer',
+                    transition: 'all 0.2s ease',
+                  }}
+                >
+                  <span style={{ color: colors.text }}>{option}</span>
+                  {showResult && isCorrect && <span style={{ marginLeft: 8 }}>✓</span>}
+                  {showResult && isSelected && !isCorrect && <span style={{ marginLeft: 8 }}>✗</span>}
+                </div>
+              );
+            })}
+          </div>
+
+          {showQuizFeedback && (
+            <div style={{
+              marginTop: spacing.lg,
+              padding: spacing.md,
+              background: `${colors.primary}22`,
+              borderRadius: radius.md,
+            }}>
+              <p style={{ color: colors.text, margin: 0 }}>{question.explanation}</p>
+            </div>
+          )}
+        </div>
+
+        <div style={{ textAlign: 'center' }}>
+          {!showQuizFeedback ? (
+            renderButton('Submit Answer', handleAnswerSubmit, 'primary', selectedAnswer === null)
+          ) : (
+            renderButton(
+              currentQuestion < quizQuestions.length - 1 ? 'Next Question →' : 'See Results →',
+              handleNextQuestion
+            )
+          )}
+        </div>
+      </div>
+    );
+  };
+
+  const renderMastery = () => {
+    const percentage = Math.round((score / quizQuestions.length) * 100);
+    const passed = percentage >= 70;
+
+    return (
+      <div style={{ textAlign: 'center' }}>
+        <div style={{ fontSize: '72px', marginBottom: spacing.lg }}>
+          {passed ? '🏆' : '📚'}
+        </div>
+        <h2 style={{ ...typography.h1, color: colors.text, marginBottom: spacing.md }}>
+          {passed ? 'Reflection Master!' : 'Keep Reflecting!'}
+        </h2>
+
+        <div style={{
+          background: colors.cardBg,
+          padding: spacing.xl,
+          borderRadius: radius.lg,
+          marginBottom: spacing.lg,
+          maxWidth: 400,
+          margin: '0 auto',
+        }}>
+          <div style={{
+            fontSize: '48px',
+            fontWeight: '700',
+            color: passed ? colors.success : colors.warning,
+            marginBottom: spacing.sm,
+          }}>
+            {percentage}%
+          </div>
+          <p style={{ color: colors.textSecondary, marginBottom: spacing.md }}>
+            {score} out of {quizQuestions.length} correct
+          </p>
+
+          <div style={{
+            height: 8,
+            background: colors.border,
+            borderRadius: radius.sm,
+            overflow: 'hidden',
+          }}>
+            <div style={{
+              height: '100%',
+              width: `${percentage}%`,
+              background: passed ? colors.success : colors.warning,
+              borderRadius: radius.sm,
+              transition: 'width 1s ease',
+            }} />
+          </div>
+        </div>
+
+        <div style={{
+          background: `linear-gradient(135deg, ${colors.gradientStart}, ${colors.gradientEnd})`,
+          padding: spacing.lg,
+          borderRadius: radius.lg,
+          marginBottom: spacing.xl,
+          maxWidth: 500,
+          margin: '0 auto 24px',
+        }}>
+          <h3 style={{ color: colors.text, marginBottom: spacing.sm }}>🧠 Key Takeaways</h3>
+          <ul style={{ color: colors.textSecondary, textAlign: 'left', margin: 0, paddingLeft: 20 }}>
+            <li>Law of Reflection: θᵢ = θᵣ (angles from normal)</li>
+            <li>Flat mirrors create virtual images</li>
+            <li>Image distance = object distance for flat mirrors</li>
+            <li>Corner reflectors return light to its source</li>
+            <li>Multiple mirrors can create many images</li>
+          </ul>
+        </div>
+
+        <div style={{ display: 'flex', gap: spacing.md, justifyContent: 'center', flexWrap: 'wrap' }}>
+          {!passed && renderButton('Try Again', () => {
+            setCurrentQuestion(0);
+            setSelectedAnswer(null);
+            setShowQuizFeedback(false);
+            setScore(0);
+            goToPhase('test');
+          })}
+          {renderButton('Restart Journey', () => {
+            setCompletedApps([]);
+            setCurrentAppIndex(0);
+            goToPhase('hook');
+          }, 'secondary')}
+          {onBack && renderButton('Back to Menu', onBack, 'secondary')}
+        </div>
+      </div>
+    );
+  };
+
+  // ============================================================================
+  // MAIN RENDER
+  // ============================================================================
+
+  const renderPhaseContent = () => {
+    switch (phase) {
+      case 'hook': return renderHook();
+      case 'predict': return renderPrediction(false);
+      case 'play': return renderPlay(false);
+      case 'review': return renderReview(false);
+      case 'twist_predict': return renderPrediction(true);
+      case 'twist_play': return renderPlay(true);
+      case 'twist_review': return renderReview(true);
+      case 'transfer': return renderTransfer();
+      case 'test': return renderTest();
+      case 'mastery': return renderMastery();
+      default: return renderHook();
+    }
+  };
+
+  return (
+    <div style={{
+      width: '100%',
+      minHeight: height,
+      background: colors.background,
+      color: colors.text,
+      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+      padding: isMobile ? spacing.md : spacing.xl,
+      boxSizing: 'border-box',
+    }}>
+      <div style={{ maxWidth: 800, margin: '0 auto' }}>
+        {/* Header */}
+        <div style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          marginBottom: spacing.lg,
+        }}>
+          {onBack && (
+            <button
+              onClick={onBack}
+              style={{
+                background: 'transparent',
+                border: 'none',
+                color: colors.textSecondary,
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: spacing.xs,
+                fontSize: typography.body.fontSize,
+              }}
+            >
+              ← Back
+            </button>
+          )}
+          <div style={{
+            padding: `${spacing.xs}px ${spacing.md}px`,
+            background: colors.cardBg,
+            borderRadius: radius.sm,
+            fontSize: typography.small.fontSize,
+            color: colors.textSecondary,
+          }}>
+            🪞 Law of Reflection
+          </div>
+        </div>
+
+        {renderProgressBar()}
+        {renderPhaseContent()}
+
+        {/* CSS Animation */}
+        <style>{`
+          @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+          }
+        `}</style>
+      </div>
+    </div>
+  );
+};
+
+export default LawOfReflectionRenderer;

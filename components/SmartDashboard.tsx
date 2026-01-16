@@ -5,9 +5,10 @@ interface SmartDashboardProps {
   topic: string;
   keyPoints: string[];
   level?: string;
+  onTestDiagram?: (type: string) => void;
 }
 
-const SmartDashboard: React.FC<SmartDashboardProps> = ({ topic, keyPoints, level = "Analyzing..." }) => {
+const SmartDashboard: React.FC<SmartDashboardProps> = ({ topic, keyPoints, level = "Analyzing...", onTestDiagram }) => {
   return (
     <div className="h-full flex flex-col bg-white overflow-y-auto">
       <div className="flex-1 p-12 max-w-5xl mx-auto w-full flex flex-col justify-center">
@@ -49,6 +50,136 @@ const SmartDashboard: React.FC<SmartDashboardProps> = ({ topic, keyPoints, level
                 </p>
               </div>
            </div>
+
+           {/* Quick Launch - Interactive Lessons */}
+           {onTestDiagram && (
+             <div className="md:col-span-2 p-6 bg-slate-50 rounded-3xl border border-slate-100">
+               <h3 className="text-sm font-bold text-slate-700 mb-4 flex items-center gap-2">
+                 <i className="fa-solid fa-rocket text-indigo-500"></i>
+                 Quick Launch - Interactive Lessons
+               </h3>
+               <div className="flex flex-wrap gap-2">
+                 {/* Wave Physics Games */}
+                 <button
+                   onClick={() => onTestDiagram('standing_waves')}
+                   className="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white rounded-lg text-sm font-bold transition-all"
+                 >
+                   Standing Waves
+                 </button>
+                 <button
+                   onClick={() => onTestDiagram('resonance')}
+                   className="px-4 py-2 bg-pink-500 hover:bg-pink-600 text-white rounded-lg text-sm font-bold transition-all"
+                 >
+                   Resonance
+                 </button>
+                 <button
+                   onClick={() => onTestDiagram('beats')}
+                   className="px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg text-sm font-bold transition-all"
+                 >
+                   Beats
+                 </button>
+                 <button
+                   onClick={() => onTestDiagram('doppler_effect')}
+                   className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg text-sm font-bold transition-all"
+                 >
+                   Doppler Effect
+                 </button>
+                 <button
+                   onClick={() => onTestDiagram('wave_speed_tension')}
+                   className="px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-lg text-sm font-bold transition-all"
+                 >
+                   Wave Speed & Tension
+                 </button>
+                 <button
+                   onClick={() => onTestDiagram('wave_interference')}
+                   className="px-4 py-2 bg-teal-500 hover:bg-teal-600 text-white rounded-lg text-sm font-bold transition-all"
+                 >
+                   Wave Interference
+                 </button>
+                 {/* Other Physics Games */}
+                 <button
+                   onClick={() => onTestDiagram('wave_particle_duality')}
+                   className="px-4 py-2 bg-cyan-500 hover:bg-cyan-600 text-white rounded-lg text-sm font-bold transition-all"
+                 >
+                   Wave-Particle Duality
+                 </button>
+                 <button
+                   onClick={() => onTestDiagram('photoelectric_effect')}
+                   className="px-4 py-2 bg-violet-500 hover:bg-violet-600 text-white rounded-lg text-sm font-bold transition-all"
+                 >
+                   Photoelectric Effect
+                 </button>
+                 <button
+                   onClick={() => onTestDiagram('thin_film')}
+                   className="px-4 py-2 bg-indigo-500 hover:bg-indigo-600 text-white rounded-lg text-sm font-bold transition-all"
+                 >
+                   Thin Film Interference
+                 </button>
+                 {/* New Physics Games */}
+                 <button
+                   onClick={() => onTestDiagram('p_waves_s_waves')}
+                   className="px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-lg text-sm font-bold transition-all"
+                 >
+                   P-Waves vs S-Waves
+                 </button>
+                 <button
+                   onClick={() => onTestDiagram('echo_time_of_flight')}
+                   className="px-4 py-2 bg-sky-500 hover:bg-sky-600 text-white rounded-lg text-sm font-bold transition-all"
+                 >
+                   Echo Time of Flight
+                 </button>
+                 <button
+                   onClick={() => onTestDiagram('diffusion_convection')}
+                   className="px-4 py-2 bg-purple-500 hover:bg-purple-600 text-white rounded-lg text-sm font-bold transition-all"
+                 >
+                   Diffusion vs Convection
+                 </button>
+                 <button
+                   onClick={() => onTestDiagram('inertia')}
+                   className="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-lg text-sm font-bold transition-all"
+                 >
+                   Inertia (Coin-Card-Cup)
+                 </button>
+                 <button
+                   onClick={() => onTestDiagram('newtons_third_law')}
+                   className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm font-bold transition-all"
+                 >
+                   Newton's 3rd Law
+                 </button>
+                 {/* Premium Mechanics Games - High Quality */}
+                 <button
+                   onClick={() => onTestDiagram('momentum_conservation')}
+                   className="px-4 py-2 bg-violet-600 hover:bg-violet-700 text-white rounded-lg text-sm font-bold transition-all ring-2 ring-violet-400 ring-offset-2 ring-offset-slate-50"
+                 >
+                   ⭐ Momentum Conservation
+                 </button>
+                 <button
+                   onClick={() => onTestDiagram('center_of_mass')}
+                   className="px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white rounded-lg text-sm font-bold transition-all ring-2 ring-teal-400 ring-offset-2 ring-offset-slate-50"
+                 >
+                   ⭐ Center of Mass
+                 </button>
+                 <button
+                   onClick={() => onTestDiagram('torque')}
+                   className="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-lg text-sm font-bold transition-all ring-2 ring-amber-400 ring-offset-2 ring-offset-slate-50"
+                 >
+                   ⭐ Torque
+                 </button>
+                 <button
+                   onClick={() => onTestDiagram('static_kinetic_friction')}
+                   className="px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-lg text-sm font-bold transition-all ring-2 ring-orange-400 ring-offset-2 ring-offset-slate-50"
+                 >
+                   ⭐ Static vs Kinetic Friction
+                 </button>
+                 <button
+                   onClick={() => onTestDiagram('inclined_plane')}
+                   className="px-4 py-2 bg-cyan-600 hover:bg-cyan-700 text-white rounded-lg text-sm font-bold transition-all ring-2 ring-cyan-400 ring-offset-2 ring-offset-slate-50"
+                 >
+                   ⭐ Inclined Plane
+                 </button>
+               </div>
+             </div>
+           )}
         </div>
       </div>
     </div>

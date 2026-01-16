@@ -16,7 +16,7 @@ const Sidebar: React.FC<SidebarProps> = ({ userState, activeTopic, notesCount })
   };
 
   return (
-    <aside className="w-16 lg:w-20 bg-slate-900 border-r border-slate-800 flex flex-col items-center py-6 z-30 transition-all duration-300">
+    <aside className="w-20 h-full bg-slate-900 border-r border-slate-800 flex flex-col items-center py-6 z-30">
       {/* Brand Icon */}
       <div className="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center text-white font-bold shadow-lg shadow-indigo-900/50 mb-8">
         <span className="font-serif text-lg">A</span>
