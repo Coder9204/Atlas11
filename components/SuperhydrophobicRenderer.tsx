@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // TYPES & INTERFACES
@@ -57,19 +57,19 @@ const TEST_QUESTIONS = [
     correct: 1
   },
   {
-    question: 'What is contact angle?',
+    question: 'What is contact angle in surface science?',
     options: [
-      'The angle at which rain hits the surface',
+      'The angle at which rain falls onto a surface',
       'The angle between the water droplet edge and the surface',
-      'The angle of the leaf to the ground',
-      'The angle of sunlight reflection'
+      'The angle of the surface to the ground',
+      'The angle of light reflecting from water'
     ],
     correct: 1
   },
   {
     question: 'Why are superhydrophobic surfaces self-cleaning?',
     options: [
-      'They release cleaning chemicals',
+      'They release cleaning chemicals automatically',
       'Water droplets roll and pick up dirt particles as they go',
       'The surface vibrates to shake off dirt',
       'UV light sterilizes the surface'
@@ -85,28 +85,88 @@ const TEST_QUESTIONS = [
       'Amphiphilic'
     ],
     correct: 1
+  },
+  {
+    question: 'What is the Cassie-Baxter state?',
+    options: [
+      'When water completely wets a rough surface',
+      'When a water droplet sits on air pockets trapped between surface features',
+      'When water is absorbed into the surface material',
+      'When water freezes on contact with the surface'
+    ],
+    correct: 1
+  },
+  {
+    question: 'How do micro-bumps on lotus leaves affect water droplets?',
+    options: [
+      'They absorb water into the leaf',
+      'They create a composite air-solid interface, reducing contact area',
+      'They chemically bond with water molecules',
+      'They heat up and evaporate the water'
+    ],
+    correct: 1
+  },
+  {
+    question: 'Why do dirt particles stick weakly to superhydrophobic surfaces?',
+    options: [
+      'The surface is chemically reactive',
+      'Particles only touch the tips of micro-bumps, minimizing contact',
+      'The surface is constantly wet',
+      'Static electricity repels dirt'
+    ],
+    correct: 1
+  },
+  {
+    question: 'What contact angle classifies a surface as hydrophilic?',
+    options: [
+      'Greater than 150°',
+      'Less than 90°',
+      'Exactly 90°',
+      'Between 120° and 150°'
+    ],
+    correct: 1
+  },
+  {
+    question: 'Which technology uses superhydrophobic coatings for safety?',
+    options: [
+      'Smartphone screens for better touch response',
+      'Aircraft wings to prevent ice accumulation',
+      'Solar panels to increase absorption',
+      'Computer chips for faster processing'
+    ],
+    correct: 1
+  },
+  {
+    question: 'What percentage of surface contact occurs on a superhydrophobic lotus leaf?',
+    options: [
+      'About 50%',
+      'About 3% (water mostly sits on air)',
+      'About 25%',
+      '100% - full contact'
+    ],
+    correct: 1
   }
 ];
 
 const TRANSFER_APPS = [
   {
     title: 'Self-Cleaning Glass',
-    description: 'Building windows with nano-texture stay clean - rain washes away dirt!',
+    description: 'Building windows with nano-texture stay clean - rain washes away dirt! Used in skyscrapers, greenhouses, and solar panels.',
     icon: '🏢'
   },
   {
     title: 'Water-Repellent Clothing',
-    description: 'Nano-coated fabrics let water bead off while remaining breathable.',
+    description: 'Nano-coated fabrics let water bead off while remaining breathable. Popular in outdoor gear and protective wear.',
     icon: '🧥'
   },
   {
     title: 'Anti-Icing Surfaces',
-    description: 'Aircraft wings and power lines with superhydrophobic coating resist ice formation.',
+    description: 'Aircraft wings and power lines with superhydrophobic coating resist ice formation, improving safety.',
     icon: '❄️'
   },
   {
     title: 'Corrosion Prevention',
-    description: 'Metal surfaces with lotus-effect coating resist water damage and rust.',
+    description: 'Metal surfaces with lotus-effect coating resist water damage and rust, extending equipment lifespan.',
     icon: '⚙️'
   }
 ];
@@ -146,6 +206,557 @@ function playSound(type: 'click' | 'success' | 'failure' | 'transition' | 'compl
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// PREMIUM UI COMPONENTS
+// ─────────────────────────────────────────────────────────────────────────────
+const ProgressIndicator: React.FC<{ phases: Phase[]; currentPhase: Phase }> = ({ phases, currentPhase }) => {
+  const currentIndex = phases.indexOf(currentPhase);
+  return (
+    <div className="flex items-center gap-1.5 mb-8">
+      {phases.map((p, i) => (
+        <div key={p} className="flex-1 flex items-center">
+          <div
+            className={`h-2 w-full rounded-full transition-all duration-500 ${
+              i < currentIndex
+                ? 'bg-gradient-to-r from-cyan-400 to-green-400'
+                : i === currentIndex
+                ? 'bg-gradient-to-r from-cyan-500 to-green-500 shadow-lg shadow-cyan-500/30'
+                : 'bg-slate-700'
+            }`}
+          />
+        </div>
+      ))}
+    </div>
+  );
+};
+
+const PrimaryButton: React.FC<{
+  children: React.ReactNode;
+  onMouseDown: (e: React.MouseEvent) => void;
+  variant?: 'cyan' | 'green' | 'teal';
+  disabled?: boolean;
+  className?: string;
+}> = ({ children, onMouseDown, variant = 'cyan', disabled = false, className = '' }) => {
+  const gradients = {
+    cyan: 'from-cyan-600 to-green-600 hover:from-cyan-500 hover:to-green-500 shadow-cyan-500/25',
+    green: 'from-green-600 to-teal-600 hover:from-green-500 hover:to-teal-500 shadow-green-500/25',
+    teal: 'from-teal-600 to-cyan-600 hover:from-teal-500 hover:to-cyan-500 shadow-teal-500/25'
+  };
+
+  return (
+    <button
+      onMouseDown={(e) => {
+        e.preventDefault();
+        if (!disabled) onMouseDown(e);
+      }}
+      disabled={disabled}
+      className={`px-8 py-3.5 bg-gradient-to-r ${gradients[variant]} rounded-2xl text-white font-semibold
+        shadow-lg transition-all duration-300 transform hover:scale-[1.02] active:scale-[0.98]
+        disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none ${className}`}
+    >
+      {children}
+    </button>
+  );
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+// APPLICATION GRAPHICS
+// ─────────────────────────────────────────────────────────────────────────────
+const SelfCleaningGlassGraphic: React.FC = () => {
+  const [dropY, setDropY] = useState(40);
+  const [dirtCollected, setDirtCollected] = useState(0);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setDropY(y => {
+        if (y > 200) {
+          setDirtCollected(d => Math.min(d + 1, 5));
+          return 40;
+        }
+        return y + 2;
+      });
+    }, 50);
+    return () => clearInterval(interval);
+  }, []);
+
+  return (
+    <svg viewBox="0 0 400 300" className="w-full h-64">
+      <defs>
+        <linearGradient id="glassGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor="#60a5fa" stopOpacity="0.3" />
+          <stop offset="50%" stopColor="#93c5fd" stopOpacity="0.2" />
+          <stop offset="100%" stopColor="#60a5fa" stopOpacity="0.3" />
+        </linearGradient>
+        <linearGradient id="skyGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+          <stop offset="0%" stopColor="#0369a1" />
+          <stop offset="100%" stopColor="#0ea5e9" />
+        </linearGradient>
+        <radialGradient id="waterDrop" cx="30%" cy="30%">
+          <stop offset="0%" stopColor="#93c5fd" />
+          <stop offset="100%" stopColor="#2563eb" />
+        </radialGradient>
+      </defs>
+
+      <rect width="400" height="300" fill="#0f172a" />
+
+      {/* Sky background */}
+      <rect x="50" y="30" width="200" height="220" fill="url(#skyGradient)" rx="4" />
+
+      {/* Glass panel with nano-coating */}
+      <rect x="50" y="30" width="200" height="220" fill="url(#glassGradient)" rx="4" stroke="#60a5fa" strokeWidth="2" />
+
+      {/* Nano-texture pattern */}
+      {[...Array(20)].map((_, i) => (
+        <g key={i}>
+          {[...Array(11)].map((_, j) => (
+            <circle
+              key={`${i}-${j}`}
+              cx={60 + i * 10}
+              cy={40 + j * 20}
+              r="1"
+              fill="#22d3ee"
+              opacity="0.3"
+            />
+          ))}
+        </g>
+      ))}
+
+      {/* Dirt particles on glass */}
+      {[...Array(5 - dirtCollected)].map((_, i) => (
+        <circle
+          key={i}
+          cx={80 + i * 35}
+          cy={100 + (i % 2) * 50}
+          r="4"
+          fill="#92400e"
+        />
+      ))}
+
+      {/* Water droplet rolling */}
+      <ellipse cx="150" cy={dropY} rx="10" ry="10" fill="url(#waterDrop)" />
+      {dropY > 80 && dropY < 180 && (
+        <circle cx="150" cy={dropY + 8} r="3" fill="#92400e" opacity="0.7" />
+      )}
+
+      {/* Building structure */}
+      <rect x="270" y="60" width="80" height="190" fill="#1e3a5f" stroke="#334155" strokeWidth="2" />
+      {[...Array(9)].map((_, i) => (
+        <g key={i}>
+          <rect x="280" y={70 + i * 20} width="25" height="15" fill="#0ea5e9" opacity="0.6" />
+          <rect x="315" y={70 + i * 20} width="25" height="15" fill="#0ea5e9" opacity="0.6" />
+        </g>
+      ))}
+
+      {/* Labels */}
+      <text x="150" y="270" textAnchor="middle" className="fill-cyan-400 text-xs font-medium">
+        Nano-Textured Self-Cleaning Glass
+      </text>
+      <text x="310" y="270" textAnchor="middle" className="fill-gray-400 text-xs">
+        Skyscraper
+      </text>
+
+      {/* Clean indicator */}
+      <g transform="translate(50, 255)">
+        <text className="fill-green-400 text-xs">Cleanliness: </text>
+        {[...Array(5)].map((_, i) => (
+          <rect
+            key={i}
+            x={70 + i * 18}
+            y="-8"
+            width="15"
+            height="10"
+            rx="2"
+            fill={i < dirtCollected ? '#22c55e' : '#374151'}
+          />
+        ))}
+      </g>
+    </svg>
+  );
+};
+
+const WaterRepellentClothingGraphic: React.FC = () => {
+  const [drops, setDrops] = useState([
+    { x: 120, y: 60, vy: 0 },
+    { x: 170, y: 80, vy: 0 },
+    { x: 220, y: 50, vy: 0 }
+  ]);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setDrops(prev => prev.map(drop => {
+        let newY = drop.y + drop.vy;
+        let newVy = drop.vy;
+
+        if (newY > 140 && newY < 180) {
+          // Hit fabric - bounce off
+          newVy = -3;
+          newY = 140;
+        } else if (newY > 240) {
+          // Reset
+          newY = 40 + Math.random() * 20;
+          newVy = 0;
+        } else {
+          newVy += 0.3;
+        }
+
+        return { ...drop, y: newY, vy: newVy };
+      }));
+    }, 50);
+    return () => clearInterval(interval);
+  }, []);
+
+  return (
+    <svg viewBox="0 0 400 300" className="w-full h-64">
+      <defs>
+        <linearGradient id="jacketGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+          <stop offset="0%" stopColor="#1e40af" />
+          <stop offset="100%" stopColor="#1e3a8a" />
+        </linearGradient>
+        <pattern id="nanoFabric" patternUnits="userSpaceOnUse" width="8" height="8">
+          <circle cx="4" cy="4" r="1.5" fill="#3b82f6" opacity="0.5" />
+        </pattern>
+      </defs>
+
+      <rect width="400" height="300" fill="#0f172a" />
+
+      {/* Rain background */}
+      {[...Array(15)].map((_, i) => (
+        <line
+          key={i}
+          x1={30 + i * 25}
+          y1="0"
+          x2={20 + i * 25}
+          y2="100"
+          stroke="#60a5fa"
+          strokeWidth="1"
+          opacity="0.3"
+        />
+      ))}
+
+      {/* Jacket body */}
+      <path
+        d="M100 100 L150 80 L170 80 L170 95 L230 95 L230 80 L250 80 L300 100 L290 220 L110 220 Z"
+        fill="url(#jacketGradient)"
+        stroke="#2563eb"
+        strokeWidth="2"
+      />
+
+      {/* Nano-coating texture */}
+      <path
+        d="M100 100 L150 80 L170 80 L170 95 L230 95 L230 80 L250 80 L300 100 L290 220 L110 220 Z"
+        fill="url(#nanoFabric)"
+      />
+
+      {/* Collar */}
+      <path
+        d="M150 80 L170 70 L200 65 L230 70 L250 80 L230 85 L200 80 L170 85 Z"
+        fill="#1e3a8a"
+        stroke="#2563eb"
+      />
+
+      {/* Zipper */}
+      <line x1="200" y1="85" x2="200" y2="220" stroke="#64748b" strokeWidth="3" />
+      {[...Array(14)].map((_, i) => (
+        <rect key={i} x="196" y={90 + i * 10} width="8" height="2" fill="#94a3b8" />
+      ))}
+
+      {/* Water droplets */}
+      {drops.map((drop, i) => (
+        <g key={i}>
+          <ellipse
+            cx={drop.x}
+            cy={drop.y}
+            rx="6"
+            ry={6 + Math.abs(drop.vy)}
+            fill="#60a5fa"
+            opacity="0.8"
+          />
+          {drop.y >= 138 && drop.y <= 145 && (
+            <>
+              <ellipse cx={drop.x - 10} cy={drop.y + 5} rx="4" ry="2" fill="#60a5fa" opacity="0.5" />
+              <ellipse cx={drop.x + 10} cy={drop.y + 5} rx="4" ry="2" fill="#60a5fa" opacity="0.5" />
+            </>
+          )}
+        </g>
+      ))}
+
+      {/* Droplet on fabric (beaded up) */}
+      <ellipse cx="150" cy="150" rx="8" ry="8" fill="#3b82f6" opacity="0.9" />
+      <ellipse cx="250" cy="170" rx="7" ry="7" fill="#3b82f6" opacity="0.9" />
+
+      {/* Labels */}
+      <text x="200" y="250" textAnchor="middle" className="fill-cyan-400 text-xs font-medium">
+        Nano-Coated Waterproof Fabric
+      </text>
+
+      {/* Contact angle indicator */}
+      <g transform="translate(300, 140)">
+        <text className="fill-gray-400 text-xs">θ = 155°</text>
+        <path d="M0 20 A15 15 0 0 1 -10 8" fill="none" stroke="#22d3ee" strokeWidth="2" />
+      </g>
+
+      {/* Feature label */}
+      <g transform="translate(30, 240)">
+        <rect width="100" height="20" rx="4" fill="#22c55e" opacity="0.2" />
+        <text x="50" y="14" textAnchor="middle" className="fill-green-400 text-xs font-medium">Breathable</text>
+      </g>
+    </svg>
+  );
+};
+
+const AntiIcingSurfaceGraphic: React.FC = () => {
+  const [iceDrops, setIceDrops] = useState<{x: number; y: number; bounced: boolean}[]>([
+    { x: 100, y: 30, bounced: false },
+    { x: 200, y: 50, bounced: false },
+    { x: 300, y: 20, bounced: false }
+  ]);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setIceDrops(prev => prev.map(drop => {
+        let newY = drop.y + 2;
+        let bounced = drop.bounced;
+
+        if (newY > 120 && !bounced) {
+          bounced = true;
+          newY = 120;
+        } else if (bounced && newY < 200) {
+          newY += 3;
+        } else if (newY > 250) {
+          return { x: 80 + Math.random() * 240, y: 20 + Math.random() * 20, bounced: false };
+        }
+
+        return { ...drop, y: newY, bounced };
+      }));
+    }, 60);
+    return () => clearInterval(interval);
+  }, []);
+
+  return (
+    <svg viewBox="0 0 400 300" className="w-full h-64">
+      <defs>
+        <linearGradient id="wingGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+          <stop offset="0%" stopColor="#475569" />
+          <stop offset="100%" stopColor="#334155" />
+        </linearGradient>
+        <linearGradient id="coatingGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+          <stop offset="0%" stopColor="#0ea5e9" stopOpacity="0.3" />
+          <stop offset="100%" stopColor="#22d3ee" stopOpacity="0.2" />
+        </linearGradient>
+      </defs>
+
+      <rect width="400" height="300" fill="#0f172a" />
+
+      {/* Sky with snow */}
+      {[...Array(20)].map((_, i) => (
+        <circle
+          key={i}
+          cx={20 + (i * 19)}
+          cy={10 + (i % 5) * 20}
+          r="2"
+          fill="#e2e8f0"
+          opacity="0.5"
+        />
+      ))}
+
+      {/* Aircraft wing cross-section */}
+      <path
+        d="M50 150 Q100 100 350 130 L350 160 Q100 190 50 150 Z"
+        fill="url(#wingGradient)"
+        stroke="#64748b"
+        strokeWidth="2"
+      />
+
+      {/* Superhydrophobic coating layer */}
+      <path
+        d="M50 150 Q100 100 350 130 L350 135 Q100 105 50 150 Z"
+        fill="url(#coatingGradient)"
+      />
+
+      {/* Nano-bumps on surface */}
+      {[...Array(30)].map((_, i) => (
+        <circle
+          key={i}
+          cx={70 + i * 10}
+          cy={130 - Math.sin(i * 0.3) * 10}
+          r="2"
+          fill="#22d3ee"
+          opacity="0.6"
+        />
+      ))}
+
+      {/* Ice droplets bouncing off */}
+      {iceDrops.map((drop, i) => (
+        <g key={i}>
+          <polygon
+            points={`${drop.x},${drop.y - 5} ${drop.x - 4},${drop.y + 3} ${drop.x + 4},${drop.y + 3}`}
+            fill="#bfdbfe"
+            opacity={drop.bounced ? 0.5 : 0.9}
+          />
+          {drop.bounced && drop.y < 180 && (
+            <>
+              <circle cx={drop.x - 6} cy={drop.y + 10} r="2" fill="#bfdbfe" opacity="0.4" />
+              <circle cx={drop.x + 6} cy={drop.y + 10} r="2" fill="#bfdbfe" opacity="0.4" />
+            </>
+          )}
+        </g>
+      ))}
+
+      {/* Temperature indicator */}
+      <g transform="translate(20, 40)">
+        <rect x="0" y="0" width="60" height="60" rx="8" fill="#1e293b" stroke="#334155" />
+        <text x="30" y="25" textAnchor="middle" className="fill-blue-400 text-sm font-bold">-15°C</text>
+        <text x="30" y="45" textAnchor="middle" className="fill-gray-500 text-xs">Freezing</text>
+      </g>
+
+      {/* Aircraft silhouette */}
+      <g transform="translate(310, 200)">
+        <path d="M0 0 L60 -20 L65 -20 L65 -15 L60 -10 L60 0 L40 0 L35 10 L25 10 L20 0 Z" fill="#475569" />
+        <rect x="25" y="-35" width="15" height="25" fill="#475569" />
+      </g>
+
+      {/* Labels */}
+      <text x="200" y="210" textAnchor="middle" className="fill-cyan-400 text-xs font-medium">
+        Anti-Icing Superhydrophobic Coating
+      </text>
+      <text x="200" y="225" textAnchor="middle" className="fill-gray-500 text-xs">
+        Ice droplets bounce off before freezing
+      </text>
+
+      {/* Status indicator */}
+      <g transform="translate(280, 35)">
+        <rect width="100" height="30" rx="6" fill="#22c55e" opacity="0.2" />
+        <text x="50" y="19" textAnchor="middle" className="fill-green-400 text-xs font-medium">ICE FREE ✓</text>
+      </g>
+    </svg>
+  );
+};
+
+const CorrosionPreventionGraphic: React.FC = () => {
+  const [waterLevel, setWaterLevel] = useState(0);
+  const [protectedRust, setProtectedRust] = useState(0);
+  const [unprotectedRust, setUnprotectedRust] = useState(0);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setWaterLevel(w => (w + 1) % 100);
+      if (waterLevel % 20 === 0) {
+        setUnprotectedRust(r => Math.min(r + 1, 10));
+      }
+    }, 100);
+    return () => clearInterval(interval);
+  }, [waterLevel]);
+
+  return (
+    <svg viewBox="0 0 400 300" className="w-full h-64">
+      <defs>
+        <linearGradient id="metalGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+          <stop offset="0%" stopColor="#64748b" />
+          <stop offset="50%" stopColor="#475569" />
+          <stop offset="100%" stopColor="#334155" />
+        </linearGradient>
+        <linearGradient id="rustGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+          <stop offset="0%" stopColor="#ea580c" />
+          <stop offset="100%" stopColor="#9a3412" />
+        </linearGradient>
+        <linearGradient id="waterSplash" x1="0%" y1="0%" x2="0%" y2="100%">
+          <stop offset="0%" stopColor="#3b82f6" stopOpacity="0.4" />
+          <stop offset="100%" stopColor="#1d4ed8" stopOpacity="0.2" />
+        </linearGradient>
+      </defs>
+
+      <rect width="400" height="300" fill="#0f172a" />
+
+      {/* Water environment */}
+      <rect x="0" y="200" width="400" height="100" fill="url(#waterSplash)" />
+      {[...Array(8)].map((_, i) => (
+        <ellipse
+          key={i}
+          cx={25 + i * 50}
+          cy={200 + Math.sin(waterLevel * 0.1 + i) * 5}
+          rx="30"
+          ry="3"
+          fill="#60a5fa"
+          opacity="0.3"
+        />
+      ))}
+
+      {/* Unprotected metal pipe (left) */}
+      <g transform="translate(60, 80)">
+        <text x="40" y="-10" textAnchor="middle" className="fill-red-400 text-xs font-medium">Unprotected</text>
+        <rect x="0" y="0" width="80" height="150" rx="4" fill="url(#metalGradient)" stroke="#475569" strokeWidth="2" />
+
+        {/* Rust spots */}
+        {[...Array(unprotectedRust)].map((_, i) => (
+          <ellipse
+            key={i}
+            cx={10 + (i % 3) * 25}
+            cy={20 + Math.floor(i / 3) * 40}
+            rx={8 + i * 0.5}
+            ry={6 + i * 0.3}
+            fill="url(#rustGradient)"
+            opacity="0.9"
+          />
+        ))}
+
+        {/* Corrosion indicator */}
+        <text x="40" y="170" textAnchor="middle" className="fill-orange-400 text-xs">
+          Rust: {unprotectedRust * 10}%
+        </text>
+      </g>
+
+      {/* Protected metal pipe (right) */}
+      <g transform="translate(260, 80)">
+        <text x="40" y="-10" textAnchor="middle" className="fill-green-400 text-xs font-medium">Lotus-Coated</text>
+        <rect x="0" y="0" width="80" height="150" rx="4" fill="url(#metalGradient)" stroke="#22d3ee" strokeWidth="2" />
+
+        {/* Nano-coating shimmer */}
+        <rect x="0" y="0" width="80" height="150" rx="4" fill="#22d3ee" opacity="0.15" />
+
+        {/* Nano-texture dots */}
+        {[...Array(8)].map((_, i) => (
+          [...Array(15)].map((_, j) => (
+            <circle
+              key={`${i}-${j}`}
+              cx={5 + i * 10}
+              cy={5 + j * 10}
+              r="1"
+              fill="#22d3ee"
+              opacity="0.4"
+            />
+          ))
+        ))}
+
+        {/* Water beading on surface */}
+        <ellipse cx="20" cy="50" rx="6" ry="6" fill="#3b82f6" opacity="0.8" />
+        <ellipse cx="60" cy="80" rx="5" ry="5" fill="#3b82f6" opacity="0.8" />
+        <ellipse cx="35" cy="120" rx="7" ry="7" fill="#3b82f6" opacity="0.8" />
+
+        {/* Protection indicator */}
+        <text x="40" y="170" textAnchor="middle" className="fill-green-400 text-xs">
+          Rust: {protectedRust}%
+        </text>
+      </g>
+
+      {/* VS indicator */}
+      <text x="200" y="150" textAnchor="middle" className="fill-gray-500 text-lg font-bold">VS</text>
+
+      {/* Time indicator */}
+      <g transform="translate(160, 250)">
+        <rect x="0" y="0" width="80" height="25" rx="4" fill="#1e293b" />
+        <text x="40" y="17" textAnchor="middle" className="fill-gray-400 text-xs">
+          Year {Math.floor(unprotectedRust / 2)}
+        </text>
+      </g>
+
+      {/* Labels */}
+      <text x="200" y="290" textAnchor="middle" className="fill-cyan-400 text-xs font-medium">
+        Superhydrophobic Corrosion Protection
+      </text>
+    </svg>
+  );
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
 // MAIN COMPONENT
 // ─────────────────────────────────────────────────────────────────────────────
 export default function SuperhydrophobicRenderer({ onEvent, savedState }: SuperhydrophobicRendererProps) {
@@ -153,14 +764,15 @@ export default function SuperhydrophobicRenderer({ onEvent, savedState }: Superh
   const [phase, setPhase] = useState<Phase>(savedState?.phase || 'hook');
   const [prediction, setPrediction] = useState<string | null>(savedState?.prediction || null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(savedState?.twistPrediction || null);
-  const [testAnswers, setTestAnswers] = useState<number[]>(savedState?.testAnswers || []);
+  const [testAnswers, setTestAnswers] = useState<number[]>(savedState?.testAnswers || Array(10).fill(-1));
   const [completedApps, setCompletedApps] = useState<Set<number>>(
     new Set(savedState?.completedApps || [])
   );
+  const [activeAppTab, setActiveAppTab] = useState(0);
 
   // Simulation state
   const [surfaceType, setSurfaceType] = useState<'smooth' | 'lotus' | 'glass'>('smooth');
-  const [dropletX, setDropletX] = useState(100);
+  const [dropletX] = useState(100);
   const [dropletY, setDropletY] = useState(50);
   const [isDropping, setIsDropping] = useState(false);
   const [animPhase, setAnimPhase] = useState(0);
@@ -171,6 +783,7 @@ export default function SuperhydrophobicRenderer({ onEvent, savedState }: Superh
   const [isCleaning, setIsCleaning] = useState(false);
 
   const navigationLockRef = useRef(false);
+  const lastClickRef = useRef(0);
 
   // Contact angles for different surfaces
   const getContactAngle = (surface: string): number => {
@@ -183,29 +796,58 @@ export default function SuperhydrophobicRenderer({ onEvent, savedState }: Superh
   };
 
   // ─── Helpers ─────────────────────────────────────────────────────────────────
-  const emitEvent = (type: GameEvent['type'], data: Record<string, unknown> = {}) => {
+  const emitEvent = useCallback((type: GameEvent['type'], data: Record<string, unknown> = {}) => {
     onEvent?.({ type, phase, data });
-  };
+  }, [onEvent, phase]);
 
-  const goToPhase = (newPhase: Phase) => {
+  const goToPhase = useCallback((newPhase: Phase) => {
+    const now = Date.now();
+    if (now - lastClickRef.current < 200) return;
     if (navigationLockRef.current) return;
+    lastClickRef.current = now;
     navigationLockRef.current = true;
 
     playSound('transition');
     setPhase(newPhase);
-    emitEvent('interaction', { action: 'phase_change', from: phase, to: newPhase });
 
     setTimeout(() => {
       navigationLockRef.current = false;
-    }, 400);
-  };
+    }, 200);
+  }, []);
 
-  const nextPhase = () => {
+  const nextPhase = useCallback(() => {
     const currentIndex = PHASES.indexOf(phase);
     if (currentIndex < PHASES.length - 1) {
       goToPhase(PHASES[currentIndex + 1]);
     }
-  };
+  }, [phase, goToPhase]);
+
+  const handlePrediction = useCallback((id: string) => {
+    playSound('click');
+    setPrediction(id);
+    emitEvent('prediction', { prediction: id });
+  }, [emitEvent]);
+
+  const handleTwistPrediction = useCallback((id: string) => {
+    playSound('click');
+    setTwistPrediction(id);
+    emitEvent('prediction', { twistPrediction: id });
+  }, [emitEvent]);
+
+  const handleTestAnswer = useCallback((questionIndex: number, answerIndex: number) => {
+    const newAnswers = [...testAnswers];
+    newAnswers[questionIndex] = answerIndex;
+    setTestAnswers(newAnswers);
+    playSound(answerIndex === TEST_QUESTIONS[questionIndex].correct ? 'success' : 'failure');
+    emitEvent('interaction', { question: questionIndex, answer: answerIndex });
+  }, [testAnswers, emitEvent]);
+
+  const handleAppComplete = useCallback((index: number) => {
+    playSound('click');
+    setCompletedApps(prev => new Set([...prev, index]));
+    setActiveAppTab(index);
+    emitEvent('interaction', { app: TRANSFER_APPS[index].title });
+  }, [emitEvent]);
 
   // ─── Animation Effects ───────────────────────────────────────────────────────
   useEffect(() => {
@@ -262,7 +904,6 @@ export default function SuperhydrophobicRenderer({ onEvent, savedState }: Superh
   useEffect(() => {
     if (phase === 'play') {
       setSurfaceType('smooth');
-      setDropletX(100);
       setDropletY(50);
       setIsDropping(false);
     }
@@ -280,21 +921,6 @@ export default function SuperhydrophobicRenderer({ onEvent, savedState }: Superh
   }, [phase]);
 
   // ─── Render Helpers ──────────────────────────────────────────────────────────
-  const renderProgressBar = () => (
-    <div className="flex items-center gap-1 mb-6">
-      {PHASES.map((p, i) => (
-        <div
-          key={p}
-          className={`h-2 flex-1 rounded-full transition-all duration-300 ${
-            i <= PHASES.indexOf(phase)
-              ? 'bg-gradient-to-r from-cyan-500 to-green-500'
-              : 'bg-gray-700'
-          }`}
-        />
-      ))}
-    </div>
-  );
-
   const renderDropletScene = () => {
     const contactAngle = getContactAngle(surfaceType);
     const isOnSurface = dropletY >= 150;
@@ -302,21 +928,16 @@ export default function SuperhydrophobicRenderer({ onEvent, savedState }: Superh
     // Droplet shape based on contact angle
     const getDropletShape = () => {
       if (!isOnSurface) {
-        // Falling droplet - spherical
         return { rx: 15, ry: 15, cy: dropletY };
       }
 
       if (contactAngle > 140) {
-        // Superhydrophobic - nearly spherical, barely touching
         return { rx: 18, ry: 18, cy: 145 };
       } else if (contactAngle > 90) {
-        // Hydrophobic - beaded up
         return { rx: 20, ry: 16, cy: 150 };
       } else if (contactAngle > 50) {
-        // Neutral - slightly spread
         return { rx: 25, ry: 12, cy: 155 };
       } else {
-        // Hydrophilic - very spread out
         return { rx: 40, ry: 6, cy: 162 };
       }
     };
@@ -324,24 +945,21 @@ export default function SuperhydrophobicRenderer({ onEvent, savedState }: Superh
     const dropletShape = getDropletShape();
 
     return (
-      <svg viewBox="0 0 400 280" className="w-full h-56">
-        <rect width="400" height="280" fill="#111827" />
+      <svg viewBox="0 0 400 280" className="w-full h-56 rounded-xl">
+        <rect width="400" height="280" fill="#0f172a" />
 
         {/* Surface with texture visualization */}
         <g transform="translate(50, 170)">
-          {/* Surface base */}
-          <rect x="0" y="0" width="300" height="60" fill={
+          <rect x="0" y="0" width="300" height="60" rx="4" fill={
             surfaceType === 'lotus' ? '#22c55e' :
             surfaceType === 'glass' ? '#60a5fa' : '#6b7280'
           } />
 
-          {/* Micro-texture for lotus */}
           {surfaceType === 'lotus' && (
             <g>
               {[...Array(30)].map((_, i) => (
                 <g key={i} transform={`translate(${10 + i * 10}, 0)`}>
                   <rect x="-2" y="-8" width="4" height="8" fill="#16a34a" rx="2" />
-                  {/* Air pockets visualization */}
                   <ellipse cx="0" cy="-2" rx="3" ry="2" fill="#0ea5e9" opacity="0.3" />
                 </g>
               ))}
@@ -351,14 +969,12 @@ export default function SuperhydrophobicRenderer({ onEvent, savedState }: Superh
             </g>
           )}
 
-          {/* Smooth surface */}
           {surfaceType === 'smooth' && (
             <text x="150" y="40" textAnchor="middle" className="fill-gray-400 text-xs">
               Smooth surface - moderate contact
             </text>
           )}
 
-          {/* Glass surface */}
           {surfaceType === 'glass' && (
             <g>
               <rect x="0" y="0" width="300" height="10" fill="#93c5fd" opacity="0.5" />
@@ -382,7 +998,6 @@ export default function SuperhydrophobicRenderer({ onEvent, savedState }: Superh
         {/* Contact angle indicator */}
         {isOnSurface && (
           <g transform={`translate(${dropletX}, 170)`}>
-            {/* Contact angle arc */}
             <path
               d={`M -30 0 A 30 30 0 0 1 ${-30 * Math.cos(contactAngle * Math.PI / 180)} ${-30 * Math.sin(contactAngle * Math.PI / 180)}`}
               fill="none"
@@ -404,7 +1019,6 @@ export default function SuperhydrophobicRenderer({ onEvent, savedState }: Superh
           <text x="0" y="65" className="fill-cyan-400 text-xs">&gt;150° Superhydrophobic</text>
         </g>
 
-        {/* Gradient definition */}
         <defs>
           <radialGradient id="waterGradient" cx="30%" cy="30%">
             <stop offset="0%" stopColor="#60a5fa" />
@@ -412,7 +1026,6 @@ export default function SuperhydrophobicRenderer({ onEvent, savedState }: Superh
           </radialGradient>
         </defs>
 
-        {/* Surface label */}
         <text x="200" y="270" textAnchor="middle" className="fill-gray-300 text-sm font-medium">
           {surfaceType === 'lotus' ? '🌿 Lotus Leaf Surface' :
            surfaceType === 'glass' ? '🔬 Clean Glass' : '⬜ Smooth Plastic'}
@@ -423,20 +1036,16 @@ export default function SuperhydrophobicRenderer({ onEvent, savedState }: Superh
 
   const renderCleaningScene = () => {
     return (
-      <svg viewBox="0 0 400 250" className="w-full h-48">
-        <rect width="400" height="250" fill="#111827" />
+      <svg viewBox="0 0 400 250" className="w-full h-48 rounded-xl">
+        <rect width="400" height="250" fill="#0f172a" />
 
-        {/* Lotus leaf surface */}
         <g transform="translate(25, 180)">
           <rect x="0" y="0" width="350" height="40" fill="#22c55e" rx="3" />
-
-          {/* Micro-texture */}
           {[...Array(35)].map((_, i) => (
             <rect key={i} x={5 + i * 10} y="-6" width="4" height="6" fill="#16a34a" rx="2" />
           ))}
         </g>
 
-        {/* Dirt particles */}
         {dirtParticles.map((particle, i) => (
           <circle
             key={i}
@@ -448,7 +1057,6 @@ export default function SuperhydrophobicRenderer({ onEvent, savedState }: Superh
           />
         ))}
 
-        {/* Rolling water droplet */}
         {isCleaning && (
           <g>
             <ellipse
@@ -458,7 +1066,6 @@ export default function SuperhydrophobicRenderer({ onEvent, savedState }: Superh
               ry={20}
               fill="url(#waterGradient2)"
             />
-            {/* Rolling indicator */}
             <line
               x1={cleaningDropX}
               y1={160}
@@ -470,19 +1077,16 @@ export default function SuperhydrophobicRenderer({ onEvent, savedState }: Superh
           </g>
         )}
 
-        {/* Collected dirt indicator */}
         {isCleaning && dirtParticles.filter(p => p.picked).length > 0 && (
           <text x={cleaningDropX} y={130} textAnchor="middle" className="fill-amber-400 text-xs">
             Dirt: {dirtParticles.filter(p => p.picked).length}
           </text>
         )}
 
-        {/* Explanation */}
         <text x="200" y="30" textAnchor="middle" className="fill-gray-300 text-sm font-semibold">
           Self-Cleaning: Water Rolls and Picks Up Dirt
         </text>
 
-        {/* Result indicator */}
         {!isCleaning && cleaningDropX > 300 && (
           <text x="200" y="240" textAnchor="middle" className="fill-green-400 text-sm font-bold">
             Surface cleaned! Dirt removed by rolling droplet.
@@ -499,38 +1103,60 @@ export default function SuperhydrophobicRenderer({ onEvent, savedState }: Superh
     );
   };
 
+  const renderApplicationGraphic = (index: number) => {
+    switch (index) {
+      case 0: return <SelfCleaningGlassGraphic />;
+      case 1: return <WaterRepellentClothingGraphic />;
+      case 2: return <AntiIcingSurfaceGraphic />;
+      case 3: return <CorrosionPreventionGraphic />;
+      default: return null;
+    }
+  };
+
   // ─── Phase Renderers ─────────────────────────────────────────────────────────
   const renderHook = () => (
-    <div className="text-center space-y-6">
-      <div className="text-6xl mb-4">🌿💧</div>
-      <h2 className="text-2xl font-bold text-white">The Lotus Leaf Mystery</h2>
-      <p className="text-gray-300 text-lg max-w-lg mx-auto">
-        Water on a lotus leaf forms <span className="text-cyan-400 font-semibold">perfect spheres</span> that
-        roll off instantly, leaving the leaf completely dry. But on glass, water
-        <span className="text-blue-400 font-semibold"> spreads into a thin film</span>.
-      </p>
-      <div className="bg-gradient-to-r from-cyan-900/50 to-green-900/50 rounded-xl p-6 max-w-md mx-auto">
-        <p className="text-cyan-300 font-medium">
+    <div className="text-center space-y-8">
+      <div className="relative">
+        <div className="text-8xl mb-6 animate-pulse">🌿💧</div>
+        <div className="absolute inset-0 bg-gradient-to-t from-slate-900 to-transparent pointer-events-none" />
+      </div>
+
+      <div className="space-y-4">
+        <h1 className="text-4xl font-bold bg-gradient-to-r from-cyan-400 via-green-400 to-cyan-400 bg-clip-text text-transparent">
+          The Lotus Leaf Mystery
+        </h1>
+        <p className="text-xl text-gray-300 max-w-xl mx-auto leading-relaxed">
+          Water on a lotus leaf forms <span className="text-cyan-400 font-semibold">perfect spheres</span> that
+          roll off instantly, leaving the leaf completely dry. But on glass, water
+          <span className="text-blue-400 font-semibold"> spreads into a thin film</span>.
+        </p>
+      </div>
+
+      <div className="bg-gradient-to-r from-cyan-900/40 to-green-900/40 rounded-2xl p-8 max-w-md mx-auto border border-cyan-500/20">
+        <p className="text-cyan-300 font-medium text-lg">
           What makes lotus leaves so water-repellent? 🤔
         </p>
       </div>
-      <button
+
+      <PrimaryButton
         onMouseDown={() => { playSound('click'); nextPhase(); }}
-        className="px-8 py-3 bg-gradient-to-r from-cyan-600 to-green-600 rounded-xl text-white font-semibold hover:from-cyan-500 hover:to-green-500 transition-all"
+        variant="cyan"
       >
         Investigate! →
-      </button>
+      </PrimaryButton>
     </div>
   );
 
   const renderPredict = () => (
-    <div className="space-y-6">
-      <h2 className="text-xl font-bold text-white text-center">Make Your Prediction</h2>
-      <p className="text-gray-300 text-center">
-        Under a microscope, a lotus leaf has tiny bumps. How do these bumps repel water?
-      </p>
+    <div className="space-y-8">
+      <div className="text-center">
+        <h2 className="text-2xl font-bold text-white mb-2">Make Your Prediction</h2>
+        <p className="text-gray-400">
+          Under a microscope, a lotus leaf has tiny bumps. How do these bumps repel water?
+        </p>
+      </div>
 
-      <div className="grid grid-cols-1 gap-3 max-w-lg mx-auto">
+      <div className="grid grid-cols-1 gap-4 max-w-xl mx-auto">
         {[
           { id: 'air', text: 'Bumps trap air pockets - water sits on air, barely touching the surface', icon: '💨' },
           { id: 'wax', text: 'The bumps are made of a special wax that repels water', icon: '🕯️' },
@@ -539,18 +1165,14 @@ export default function SuperhydrophobicRenderer({ onEvent, savedState }: Superh
         ].map((option) => (
           <button
             key={option.id}
-            onMouseDown={() => {
-              playSound('click');
-              setPrediction(option.id);
-              emitEvent('prediction', { prediction: option.id });
-            }}
-            className={`p-4 rounded-xl border-2 transition-all text-left ${
+            onMouseDown={(e) => { e.preventDefault(); handlePrediction(option.id); }}
+            className={`p-5 rounded-2xl border-2 transition-all text-left ${
               prediction === option.id
-                ? 'border-cyan-500 bg-cyan-900/30'
-                : 'border-gray-700 bg-gray-800/50 hover:border-gray-600'
+                ? 'border-cyan-500 bg-cyan-900/30 shadow-lg shadow-cyan-500/20'
+                : 'border-slate-700 bg-slate-800/50 hover:border-slate-600'
             }`}
           >
-            <span className="mr-2">{option.icon}</span>
+            <span className="text-2xl mr-3">{option.icon}</span>
             <span className="text-gray-200">{option.text}</span>
           </button>
         ))}
@@ -558,20 +1180,17 @@ export default function SuperhydrophobicRenderer({ onEvent, savedState }: Superh
 
       {prediction && (
         <div className="text-center">
-          <button
-            onMouseDown={() => { playSound('click'); nextPhase(); }}
-            className="px-8 py-3 bg-gradient-to-r from-cyan-600 to-green-600 rounded-xl text-white font-semibold hover:from-cyan-500 hover:to-green-500 transition-all"
-          >
+          <PrimaryButton onMouseDown={() => { playSound('click'); nextPhase(); }}>
             Test It! →
-          </button>
+          </PrimaryButton>
         </div>
       )}
     </div>
   );
 
   const renderPlay = () => (
-    <div className="space-y-4">
-      <h2 className="text-xl font-bold text-white text-center">Contact Angle Experiment</h2>
+    <div className="space-y-6">
+      <h2 className="text-2xl font-bold text-white text-center">Contact Angle Experiment</h2>
 
       {renderDropletScene()}
 
@@ -583,16 +1202,17 @@ export default function SuperhydrophobicRenderer({ onEvent, savedState }: Superh
         ].map((surface) => (
           <button
             key={surface.id}
-            onMouseDown={() => {
+            onMouseDown={(e) => {
+              e.preventDefault();
               playSound('click');
               setSurfaceType(surface.id as typeof surfaceType);
               setDropletY(50);
               setIsDropping(false);
             }}
-            className={`px-4 py-2 rounded-lg font-medium transition-all ${
+            className={`px-5 py-2.5 rounded-xl font-medium transition-all ${
               surfaceType === surface.id
-                ? 'bg-cyan-600 text-white'
-                : 'bg-gray-700 text-gray-300'
+                ? 'bg-cyan-600 text-white shadow-lg shadow-cyan-500/30'
+                : 'bg-slate-700 text-gray-300 hover:bg-slate-600'
             }`}
           >
             {surface.label} (θ={surface.angle}°)
@@ -602,19 +1222,20 @@ export default function SuperhydrophobicRenderer({ onEvent, savedState }: Superh
 
       <div className="flex justify-center">
         <button
-          onMouseDown={() => {
+          onMouseDown={(e) => {
+            e.preventDefault();
             playSound('click');
             setDropletY(50);
             setIsDropping(true);
           }}
           disabled={isDropping}
-          className="px-6 py-2 rounded-lg font-medium bg-blue-600 text-white hover:bg-blue-500 disabled:bg-gray-600"
+          className="px-6 py-2.5 rounded-xl font-medium bg-blue-600 text-white hover:bg-blue-500 disabled:bg-gray-600 disabled:cursor-not-allowed transition-all"
         >
           💧 Drop Water
         </button>
       </div>
 
-      <div className="bg-gradient-to-r from-cyan-900/30 to-green-900/30 rounded-xl p-4 max-w-lg mx-auto">
+      <div className="bg-gradient-to-r from-cyan-900/30 to-green-900/30 rounded-2xl p-5 max-w-xl mx-auto border border-cyan-500/20">
         <p className="text-cyan-300 text-sm text-center">
           <strong>Contact angle (θ)</strong> measures how much water spreads.
           Lotus leaves have θ &gt; 150° because air pockets reduce contact area!
@@ -622,38 +1243,35 @@ export default function SuperhydrophobicRenderer({ onEvent, savedState }: Superh
       </div>
 
       <div className="text-center">
-        <button
-          onMouseDown={() => { playSound('click'); nextPhase(); }}
-          className="px-8 py-3 bg-gradient-to-r from-cyan-600 to-green-600 rounded-xl text-white font-semibold hover:from-cyan-500 hover:to-green-500 transition-all"
-        >
+        <PrimaryButton onMouseDown={() => { playSound('click'); nextPhase(); }}>
           Continue →
-        </button>
+        </PrimaryButton>
       </div>
     </div>
   );
 
   const renderReview = () => (
     <div className="space-y-6">
-      <h2 className="text-xl font-bold text-white text-center">The Lotus Effect</h2>
+      <h2 className="text-2xl font-bold text-white text-center">The Lotus Effect</h2>
 
-      <div className="bg-gradient-to-br from-gray-800 to-gray-900 rounded-2xl p-6 max-w-lg mx-auto">
-        <div className="space-y-4">
-          <div className="flex items-start gap-3">
-            <div className="w-8 h-8 rounded-full bg-cyan-600 flex items-center justify-center text-white font-bold">1</div>
+      <div className="bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl p-6 max-w-xl mx-auto border border-slate-700">
+        <div className="space-y-5">
+          <div className="flex items-start gap-4">
+            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-cyan-500 to-cyan-600 flex items-center justify-center text-white font-bold shadow-lg">1</div>
             <div>
               <h3 className="text-white font-semibold">Microscopic Texture</h3>
               <p className="text-gray-400 text-sm">Tiny bumps (5-15 μm) with even smaller nano-bumps on top</p>
             </div>
           </div>
-          <div className="flex items-start gap-3">
-            <div className="w-8 h-8 rounded-full bg-green-600 flex items-center justify-center text-white font-bold">2</div>
+          <div className="flex items-start gap-4">
+            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-green-500 to-green-600 flex items-center justify-center text-white font-bold shadow-lg">2</div>
             <div>
               <h3 className="text-white font-semibold">Trapped Air</h3>
               <p className="text-gray-400 text-sm">Water sits on air pockets between bumps - only ~3% surface contact!</p>
             </div>
           </div>
-          <div className="flex items-start gap-3">
-            <div className="w-8 h-8 rounded-full bg-teal-600 flex items-center justify-center text-white font-bold">3</div>
+          <div className="flex items-start gap-4">
+            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-teal-500 to-teal-600 flex items-center justify-center text-white font-bold shadow-lg">3</div>
             <div>
               <h3 className="text-white font-semibold">High Contact Angle</h3>
               <p className="text-gray-400 text-sm">θ &gt; 150° means droplets are nearly spherical and roll easily</p>
@@ -662,35 +1280,40 @@ export default function SuperhydrophobicRenderer({ onEvent, savedState }: Superh
         </div>
       </div>
 
-      <div className="bg-cyan-900/30 rounded-xl p-4 max-w-lg mx-auto text-center">
+      <div className="bg-cyan-900/30 rounded-2xl p-5 max-w-xl mx-auto text-center border border-cyan-500/20">
         <p className="text-cyan-300 font-semibold">Cassie-Baxter State</p>
-        <p className="text-gray-400 text-sm mt-1">
+        <p className="text-gray-400 text-sm mt-2">
           Water droplet on composite surface of solid + air.
-          cos(θ*) = f·cos(θ) + (1-f)·cos(180°)
+          <br />
+          <code className="text-cyan-400">cos(θ*) = f·cos(θ) + (1-f)·cos(180°)</code>
         </p>
       </div>
 
       <div className="text-center">
-        <p className="text-gray-400 mb-2">Your prediction: <span className="text-cyan-400 font-semibold">{prediction === 'air' ? '✓ Correct!' : '✗ Not quite'}</span></p>
-        <button
-          onMouseDown={() => { playSound('click'); nextPhase(); }}
-          className="px-8 py-3 bg-gradient-to-r from-cyan-600 to-green-600 rounded-xl text-white font-semibold hover:from-cyan-500 hover:to-green-500 transition-all"
-        >
+        <p className="text-gray-400 mb-4">
+          Your prediction: <span className={prediction === 'air' ? 'text-green-400 font-semibold' : 'text-red-400'}>
+            {prediction === 'air' ? '✓ Correct!' : '✗ Not quite'}
+          </span>
+        </p>
+        <PrimaryButton onMouseDown={() => { playSound('click'); nextPhase(); }} variant="green">
           But wait... →
-        </button>
+        </PrimaryButton>
       </div>
     </div>
   );
 
   const renderTwistPredict = () => (
-    <div className="space-y-6">
-      <h2 className="text-xl font-bold text-white text-center">🔄 The Twist!</h2>
-      <p className="text-gray-300 text-center max-w-lg mx-auto">
-        Lotus leaves are famous for being <span className="text-green-400 font-semibold">&quot;self-cleaning&quot;</span>.
-        When it rains, dirt washes away. How does water repelling make the surface cleaner?
-      </p>
+    <div className="space-y-8">
+      <div className="text-center">
+        <div className="text-5xl mb-4">🔄</div>
+        <h2 className="text-2xl font-bold text-white mb-2">The Twist!</h2>
+        <p className="text-gray-400 max-w-xl mx-auto">
+          Lotus leaves are famous for being <span className="text-green-400 font-semibold">&quot;self-cleaning&quot;</span>.
+          When it rains, dirt washes away. How does water repelling make the surface cleaner?
+        </p>
+      </div>
 
-      <div className="grid grid-cols-1 gap-3 max-w-lg mx-auto">
+      <div className="grid grid-cols-1 gap-4 max-w-xl mx-auto">
         {[
           { id: 'roll', text: 'Rolling droplets pick up dirt particles as they go', icon: '🔄' },
           { id: 'dissolve', text: 'Water dissolves the dirt before rolling off', icon: '💧' },
@@ -699,18 +1322,14 @@ export default function SuperhydrophobicRenderer({ onEvent, savedState }: Superh
         ].map((option) => (
           <button
             key={option.id}
-            onMouseDown={() => {
-              playSound('click');
-              setTwistPrediction(option.id);
-              emitEvent('prediction', { twistPrediction: option.id });
-            }}
-            className={`p-4 rounded-xl border-2 transition-all text-left ${
+            onMouseDown={(e) => { e.preventDefault(); handleTwistPrediction(option.id); }}
+            className={`p-5 rounded-2xl border-2 transition-all text-left ${
               twistPrediction === option.id
-                ? 'border-green-500 bg-green-900/30'
-                : 'border-gray-700 bg-gray-800/50 hover:border-gray-600'
+                ? 'border-green-500 bg-green-900/30 shadow-lg shadow-green-500/20'
+                : 'border-slate-700 bg-slate-800/50 hover:border-slate-600'
             }`}
           >
-            <span className="mr-2">{option.icon}</span>
+            <span className="text-2xl mr-3">{option.icon}</span>
             <span className="text-gray-200">{option.text}</span>
           </button>
         ))}
@@ -718,26 +1337,24 @@ export default function SuperhydrophobicRenderer({ onEvent, savedState }: Superh
 
       {twistPrediction && (
         <div className="text-center">
-          <button
-            onMouseDown={() => { playSound('click'); nextPhase(); }}
-            className="px-8 py-3 bg-gradient-to-r from-green-600 to-teal-600 rounded-xl text-white font-semibold hover:from-green-500 hover:to-teal-500 transition-all"
-          >
+          <PrimaryButton onMouseDown={() => { playSound('click'); nextPhase(); }} variant="green">
             Test It! →
-          </button>
+          </PrimaryButton>
         </div>
       )}
     </div>
   );
 
   const renderTwistPlay = () => (
-    <div className="space-y-4">
-      <h2 className="text-xl font-bold text-white text-center">Self-Cleaning Surfaces</h2>
+    <div className="space-y-6">
+      <h2 className="text-2xl font-bold text-white text-center">Self-Cleaning Surfaces</h2>
 
       {renderCleaningScene()}
 
       <div className="flex justify-center gap-4">
         <button
-          onMouseDown={() => {
+          onMouseDown={(e) => {
+            e.preventDefault();
             playSound('click');
             setDirtParticles([
               { x: 80, y: 175, picked: false },
@@ -750,12 +1367,13 @@ export default function SuperhydrophobicRenderer({ onEvent, savedState }: Superh
             setIsCleaning(true);
           }}
           disabled={isCleaning}
-          className="px-6 py-2 rounded-lg font-medium bg-blue-600 text-white hover:bg-blue-500 disabled:bg-gray-600"
+          className="px-6 py-2.5 rounded-xl font-medium bg-blue-600 text-white hover:bg-blue-500 disabled:bg-gray-600 disabled:cursor-not-allowed transition-all"
         >
           💧 Roll Water Droplet
         </button>
         <button
-          onMouseDown={() => {
+          onMouseDown={(e) => {
+            e.preventDefault();
             playSound('click');
             setDirtParticles([
               { x: 80, y: 175, picked: false },
@@ -767,13 +1385,13 @@ export default function SuperhydrophobicRenderer({ onEvent, savedState }: Superh
             setCleaningDropX(-20);
             setIsCleaning(false);
           }}
-          className="px-6 py-2 rounded-lg font-medium bg-gray-700 text-gray-300 hover:bg-gray-600"
+          className="px-6 py-2.5 rounded-xl font-medium bg-slate-700 text-gray-300 hover:bg-slate-600 transition-all"
         >
           🔄 Reset
         </button>
       </div>
 
-      <div className="bg-gradient-to-r from-green-900/30 to-teal-900/30 rounded-xl p-4 max-w-lg mx-auto">
+      <div className="bg-gradient-to-r from-green-900/30 to-teal-900/30 rounded-2xl p-5 max-w-xl mx-auto border border-green-500/20">
         <p className="text-green-300 text-sm text-center">
           <strong>Self-cleaning mechanism:</strong> Dirt particles weakly adhere to the bump tips.
           Rolling water droplets easily pick them up and carry them away!
@@ -781,135 +1399,204 @@ export default function SuperhydrophobicRenderer({ onEvent, savedState }: Superh
       </div>
 
       <div className="text-center">
-        <button
-          onMouseDown={() => { playSound('click'); nextPhase(); }}
-          className="px-8 py-3 bg-gradient-to-r from-green-600 to-teal-600 rounded-xl text-white font-semibold hover:from-green-500 hover:to-teal-500 transition-all"
-        >
+        <PrimaryButton onMouseDown={() => { playSound('click'); nextPhase(); }} variant="green">
           Continue →
-        </button>
+        </PrimaryButton>
       </div>
     </div>
   );
 
   const renderTwistReview = () => (
     <div className="space-y-6">
-      <h2 className="text-xl font-bold text-white text-center">Nature&apos;s Self-Cleaning Design</h2>
+      <h2 className="text-2xl font-bold text-white text-center">Nature&apos;s Self-Cleaning Design</h2>
 
-      <div className="bg-gradient-to-br from-gray-800 to-gray-900 rounded-2xl p-6 max-w-lg mx-auto">
-        <p className="text-gray-300 text-center mb-4">
+      <div className="bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl p-6 max-w-xl mx-auto border border-slate-700">
+        <p className="text-gray-300 text-center mb-5">
           The combination of texture + chemistry creates:
         </p>
 
-        <div className="space-y-3 text-sm">
-          <div className="bg-cyan-900/30 rounded-lg p-3">
+        <div className="space-y-4">
+          <div className="bg-cyan-900/40 rounded-xl p-4 border border-cyan-500/20">
             <div className="text-cyan-400 font-semibold">High Contact Angle</div>
-            <div className="text-gray-500">Droplets remain spherical and mobile</div>
+            <div className="text-gray-400 text-sm">Droplets remain spherical and mobile</div>
           </div>
-          <div className="bg-green-900/30 rounded-lg p-3">
+          <div className="bg-green-900/40 rounded-xl p-4 border border-green-500/20">
             <div className="text-green-400 font-semibold">Low Adhesion for Dirt</div>
-            <div className="text-gray-500">Particles sit on bump tips, weakly attached</div>
+            <div className="text-gray-400 text-sm">Particles sit on bump tips, weakly attached</div>
           </div>
-          <div className="bg-teal-900/30 rounded-lg p-3">
+          <div className="bg-teal-900/40 rounded-xl p-4 border border-teal-500/20">
             <div className="text-teal-400 font-semibold">Rolling Action</div>
-            <div className="text-gray-500">Water-dirt adhesion &gt; dirt-surface adhesion → dirt leaves with water</div>
+            <div className="text-gray-400 text-sm">Water-dirt adhesion &gt; dirt-surface adhesion → dirt leaves with water</div>
           </div>
         </div>
       </div>
 
       <div className="text-center">
-        <p className="text-gray-400 mb-2">Your prediction: <span className="text-green-400 font-semibold">{twistPrediction === 'roll' ? '✓ Correct!' : '✗ Not quite'}</span></p>
-        <button
-          onMouseDown={() => { playSound('click'); nextPhase(); }}
-          className="px-8 py-3 bg-gradient-to-r from-green-600 to-teal-600 rounded-xl text-white font-semibold hover:from-green-500 hover:to-teal-500 transition-all"
-        >
+        <p className="text-gray-400 mb-4">
+          Your prediction: <span className={twistPrediction === 'roll' ? 'text-green-400 font-semibold' : 'text-red-400'}>
+            {twistPrediction === 'roll' ? '✓ Correct!' : '✗ Not quite'}
+          </span>
+        </p>
+        <PrimaryButton onMouseDown={() => { playSound('click'); nextPhase(); }} variant="teal">
           See Applications →
-        </button>
+        </PrimaryButton>
       </div>
     </div>
   );
 
   const renderTransfer = () => (
     <div className="space-y-6">
-      <h2 className="text-xl font-bold text-white text-center">Real-World Applications</h2>
-      <p className="text-gray-400 text-center">Tap each application to explore</p>
+      <div className="text-center">
+        <h2 className="text-2xl font-bold text-white mb-2">Real-World Applications</h2>
+        <p className="text-gray-400">Explore all 4 applications to unlock the quiz</p>
+      </div>
 
-      <div className="grid grid-cols-2 gap-4 max-w-lg mx-auto">
+      {/* Tab Navigation */}
+      <div className="flex gap-2 max-w-2xl mx-auto overflow-x-auto pb-2">
         {TRANSFER_APPS.map((app, index) => (
           <button
             key={index}
-            onMouseDown={() => {
-              playSound('click');
-              setCompletedApps(prev => new Set([...prev, index]));
-              emitEvent('interaction', { app: app.title });
-            }}
-            className={`p-4 rounded-xl border-2 transition-all text-left ${
-              completedApps.has(index)
-                ? 'border-cyan-500 bg-cyan-900/30'
-                : 'border-gray-700 bg-gray-800/50 hover:border-gray-600'
+            onMouseDown={(e) => { e.preventDefault(); handleAppComplete(index); }}
+            className={`flex-1 min-w-[120px] px-4 py-3 rounded-xl font-medium transition-all text-sm ${
+              activeAppTab === index
+                ? 'bg-gradient-to-r from-cyan-600 to-green-600 text-white shadow-lg'
+                : completedApps.has(index)
+                ? 'bg-cyan-900/40 text-cyan-300 border border-cyan-500/30'
+                : 'bg-slate-800 text-gray-400 hover:bg-slate-700'
             }`}
           >
-            <div className="text-3xl mb-2">{app.icon}</div>
-            <h3 className="text-white font-semibold text-sm">{app.title}</h3>
-            <p className="text-gray-400 text-xs mt-1">{app.description}</p>
+            <span className="text-xl block mb-1">{app.icon}</span>
+            <span className="block truncate">{app.title.split(' ')[0]}</span>
+            {completedApps.has(index) && <span className="text-green-400 text-xs">✓</span>}
           </button>
         ))}
       </div>
 
-      {completedApps.size >= 4 && (
-        <div className="text-center">
-          <button
-            onMouseDown={() => { playSound('click'); nextPhase(); }}
-            className="px-8 py-3 bg-gradient-to-r from-cyan-600 to-green-600 rounded-xl text-white font-semibold hover:from-cyan-500 hover:to-green-500 transition-all"
-          >
-            Take the Quiz →
-          </button>
+      {/* Application Content */}
+      <div className="bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl p-6 max-w-2xl mx-auto border border-slate-700">
+        <div className="mb-4">
+          {renderApplicationGraphic(activeAppTab)}
         </div>
-      )}
+        <h3 className="text-xl font-bold text-white mb-2">
+          {TRANSFER_APPS[activeAppTab].icon} {TRANSFER_APPS[activeAppTab].title}
+        </h3>
+        <p className="text-gray-300">
+          {TRANSFER_APPS[activeAppTab].description}
+        </p>
+      </div>
+
+      {/* Progress Indicator */}
+      <div className="text-center">
+        <p className="text-gray-400 mb-4">
+          Applications explored: {completedApps.size}/4
+        </p>
+        {completedApps.size >= 4 && (
+          <PrimaryButton onMouseDown={() => { playSound('click'); nextPhase(); }}>
+            Take the Quiz →
+          </PrimaryButton>
+        )}
+      </div>
     </div>
   );
 
   const renderTest = () => {
-    const currentQuestion = testAnswers.length;
-    const question = TEST_QUESTIONS[currentQuestion];
+    const answeredCount = testAnswers.filter(a => a !== -1).length;
+    const allAnswered = answeredCount === TEST_QUESTIONS.length;
+    const score = testAnswers.filter((a, i) => a === TEST_QUESTIONS[i].correct).length;
+    const passed = score >= 7;
 
-    if (!question) {
-      const score = testAnswers.filter((a, i) => a === TEST_QUESTIONS[i].correct).length;
+    if (allAnswered) {
       return (
-        <div className="text-center space-y-6">
-          <div className="text-6xl">{score >= 3 ? '🎉' : '📚'}</div>
-          <h2 className="text-2xl font-bold text-white">Quiz Complete!</h2>
-          <p className="text-gray-300">You got {score} out of {TEST_QUESTIONS.length} correct!</p>
-          <button
+        <div className="text-center space-y-8">
+          <div className="text-7xl">{passed ? '🎉' : '📚'}</div>
+          <div>
+            <h2 className="text-3xl font-bold text-white mb-2">Quiz Complete!</h2>
+            <p className="text-xl text-gray-300">
+              You scored <span className={passed ? 'text-green-400' : 'text-amber-400'}>{score}/10</span>
+            </p>
+            <p className="text-gray-500 mt-2">
+              {passed ? 'Excellent! You\'ve mastered superhydrophobic surfaces!' : 'Review the concepts and try again!'}
+            </p>
+          </div>
+          <PrimaryButton
             onMouseDown={() => {
-              playSound(score >= 3 ? 'complete' : 'click');
-              nextPhase();
+              playSound(passed ? 'complete' : 'click');
+              if (passed) nextPhase();
+              else setTestAnswers(Array(10).fill(-1));
             }}
-            className="px-8 py-3 bg-gradient-to-r from-cyan-600 to-green-600 rounded-xl text-white font-semibold hover:from-cyan-500 hover:to-green-500 transition-all"
+            variant={passed ? 'cyan' : 'green'}
           >
-            {score >= 3 ? 'Complete! 🎊' : 'Continue →'}
-          </button>
+            {passed ? 'Continue to Mastery! 🎊' : 'Try Again'}
+          </PrimaryButton>
         </div>
       );
     }
 
     return (
       <div className="space-y-6">
-        <h2 className="text-xl font-bold text-white text-center">Quiz: Question {currentQuestion + 1}/{TEST_QUESTIONS.length}</h2>
-        <p className="text-gray-300 text-center max-w-lg mx-auto">{question.question}</p>
+        <div className="text-center">
+          <h2 className="text-2xl font-bold text-white mb-2">Knowledge Check</h2>
+          <p className="text-gray-400">Answer all 10 questions (70% to pass)</p>
+        </div>
 
-        <div className="grid grid-cols-1 gap-3 max-w-lg mx-auto">
-          {question.options.map((option, i) => (
-            <button
+        {/* Progress bar */}
+        <div className="flex gap-1 max-w-xl mx-auto">
+          {TEST_QUESTIONS.map((_, i) => (
+            <div
               key={i}
-              onMouseDown={() => {
-                playSound(i === question.correct ? 'success' : 'failure');
-                setTestAnswers([...testAnswers, i]);
-                emitEvent('interaction', { question: currentQuestion, answer: i, correct: i === question.correct });
-              }}
-              className="p-4 rounded-xl border-2 border-gray-700 bg-gray-800/50 hover:border-cyan-500 transition-all text-left text-gray-200"
+              className={`h-2 flex-1 rounded-full transition-all ${
+                testAnswers[i] !== -1
+                  ? testAnswers[i] === TEST_QUESTIONS[i].correct
+                    ? 'bg-green-500'
+                    : 'bg-red-500'
+                  : 'bg-slate-700'
+              }`}
+            />
+          ))}
+        </div>
+
+        {/* Questions */}
+        <div className="space-y-6 max-w-2xl mx-auto">
+          {TEST_QUESTIONS.map((q, qIndex) => (
+            <div
+              key={qIndex}
+              className={`bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl p-5 border transition-all ${
+                testAnswers[qIndex] !== -1
+                  ? testAnswers[qIndex] === q.correct
+                    ? 'border-green-500/50'
+                    : 'border-red-500/50'
+                  : 'border-slate-700'
+              }`}
             >
-              {option}
-            </button>
+              <p className="text-white font-medium mb-4">
+                <span className="text-cyan-400">{qIndex + 1}.</span> {q.question}
+              </p>
+              <div className="grid grid-cols-1 gap-2">
+                {q.options.map((option, oIndex) => (
+                  <button
+                    key={oIndex}
+                    onMouseDown={(e) => {
+                      e.preventDefault();
+                      if (testAnswers[qIndex] === -1) handleTestAnswer(qIndex, oIndex);
+                    }}
+                    disabled={testAnswers[qIndex] !== -1}
+                    className={`p-3 rounded-xl text-left text-sm transition-all ${
+                      testAnswers[qIndex] === oIndex
+                        ? oIndex === q.correct
+                          ? 'bg-green-600/30 border border-green-500 text-green-300'
+                          : 'bg-red-600/30 border border-red-500 text-red-300'
+                        : testAnswers[qIndex] !== -1 && oIndex === q.correct
+                        ? 'bg-green-600/20 border border-green-500/50 text-green-400'
+                        : testAnswers[qIndex] !== -1
+                        ? 'bg-slate-800 text-gray-500 cursor-not-allowed'
+                        : 'bg-slate-800 text-gray-300 hover:bg-slate-700 cursor-pointer'
+                    }`}
+                  >
+                    {option}
+                  </button>
+                ))}
+              </div>
+            </div>
           ))}
         </div>
       </div>
@@ -917,30 +1604,44 @@ export default function SuperhydrophobicRenderer({ onEvent, savedState }: Superh
   };
 
   const renderMastery = () => (
-    <div className="text-center space-y-6">
-      <div className="text-6xl">🏆</div>
-      <h2 className="text-2xl font-bold text-white">Superhydrophobic Surface Master!</h2>
-      <div className="bg-gradient-to-r from-cyan-900/50 to-green-900/50 rounded-xl p-6 max-w-md mx-auto">
+    <div className="text-center space-y-8">
+      <div className="text-8xl animate-bounce">🏆</div>
+      <div>
+        <h2 className="text-3xl font-bold bg-gradient-to-r from-cyan-400 to-green-400 bg-clip-text text-transparent">
+          Superhydrophobic Surface Master!
+        </h2>
+      </div>
+      <div className="bg-gradient-to-r from-cyan-900/40 to-green-900/40 rounded-2xl p-8 max-w-lg mx-auto border border-cyan-500/20">
         <p className="text-cyan-300 font-medium mb-4">You now understand:</p>
-        <ul className="text-gray-300 text-sm space-y-2 text-left">
-          <li>✓ Micro/nano texture traps air pockets</li>
-          <li>✓ Contact angle determines water behavior</li>
-          <li>✓ θ &gt; 150° = superhydrophobic</li>
-          <li>✓ Self-cleaning: rolling droplets pick up dirt</li>
+        <ul className="text-gray-300 text-sm space-y-3 text-left">
+          <li className="flex items-center gap-2">
+            <span className="text-green-400">✓</span> Micro/nano texture traps air pockets
+          </li>
+          <li className="flex items-center gap-2">
+            <span className="text-green-400">✓</span> Contact angle determines water behavior
+          </li>
+          <li className="flex items-center gap-2">
+            <span className="text-green-400">✓</span> θ &gt; 150° = superhydrophobic
+          </li>
+          <li className="flex items-center gap-2">
+            <span className="text-green-400">✓</span> Self-cleaning: rolling droplets pick up dirt
+          </li>
+          <li className="flex items-center gap-2">
+            <span className="text-green-400">✓</span> Applications in glass, clothing, aviation, and industry
+          </li>
         </ul>
       </div>
-      <p className="text-gray-400 text-sm">
-        Biomimicry: engineers copy lotus leaves for amazing tech! 🌿
+      <p className="text-gray-400">
+        Biomimicry: engineers copy lotus leaves for amazing technology! 🌿
       </p>
-      <button
+      <PrimaryButton
         onMouseDown={() => {
           playSound('complete');
           emitEvent('completion', { mastered: true });
         }}
-        className="px-8 py-3 bg-gradient-to-r from-cyan-600 to-green-600 rounded-xl text-white font-semibold hover:from-cyan-500 hover:to-green-500 transition-all"
       >
         Complete! 🎊
-      </button>
+      </PrimaryButton>
     </div>
   );
 
@@ -962,9 +1663,9 @@ export default function SuperhydrophobicRenderer({ onEvent, savedState }: Superh
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-cyan-950 to-gray-900 p-6">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-cyan-950 to-slate-900 p-6">
       <div className="max-w-2xl mx-auto">
-        {renderProgressBar()}
+        <ProgressIndicator phases={PHASES} currentPhase={phase} />
         {renderPhase()}
       </div>
     </div>

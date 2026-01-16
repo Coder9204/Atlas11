@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { playSound } from '../lib/audio';
 
 // ────────────────────────────────────────────────────────────────────────────
@@ -20,16 +20,9 @@ type Phase =
   | 'mastery';
 
 const PHASES: Phase[] = [
-  'hook',
-  'predict',
-  'play',
-  'review',
-  'twist_predict',
-  'twist_play',
-  'twist_review',
-  'transfer',
-  'test',
-  'mastery',
+  'hook', 'predict', 'play', 'review',
+  'twist_predict', 'twist_play', 'twist_review',
+  'transfer', 'test', 'mastery',
 ];
 
 interface SavedState {
@@ -52,6 +45,63 @@ interface WirePowerLossRendererProps {
 }
 
 // ────────────────────────────────────────────────────────────────────────────
+// TEST QUESTIONS (10 questions)
+// ────────────────────────────────────────────────────────────────────────────
+
+const TEST_QUESTIONS = [
+  {
+    question: 'What is the formula for power loss in a wire?',
+    options: ['P = IR', 'P = I²R', 'P = V/R', 'P = R/I'],
+    correct: 1,
+  },
+  {
+    question: 'If you double the current, power loss becomes:',
+    options: ['2× more', '4× more', 'Same', 'Half'],
+    correct: 1,
+  },
+  {
+    question: 'Why do power companies use high voltage transmission?',
+    options: ['Faster electricity', 'Lower current means less I²R loss', 'Cheaper wires', 'Looks better'],
+    correct: 1,
+  },
+  {
+    question: 'What happens to resistance when wire length doubles?',
+    options: ['Halves', 'Stays same', 'Doubles', 'Quadruples'],
+    correct: 2,
+  },
+  {
+    question: 'Thicker wire gauge means:',
+    options: ['More resistance', 'Less resistance', 'Same resistance', 'No current flow'],
+    correct: 1,
+  },
+  {
+    question: 'Why does your phone charger get warm?',
+    options: ['Battery chemical reaction', 'I²R power loss in cable', 'Phone screen heat', 'Air friction'],
+    correct: 1,
+  },
+  {
+    question: 'A transformer is used to:',
+    options: ['Store electricity', 'Change voltage levels', 'Generate power', 'Measure current'],
+    correct: 1,
+  },
+  {
+    question: 'Power lines typically operate at:',
+    options: ['120V', '240V', '100,000V+', '12V'],
+    correct: 2,
+  },
+  {
+    question: 'Extension cord amp ratings exist because:',
+    options: ['Legal requirement only', 'Prevent overheating from I²R loss', 'Marketing', 'Color coding'],
+    correct: 1,
+  },
+  {
+    question: 'To deliver 1000W with less loss, you should:',
+    options: ['Use thin wires', 'Increase current', 'Increase voltage', 'Use longer wires'],
+    correct: 2,
+  },
+];
+
+// ────────────────────────────────────────────────────────────────────────────
 // MAIN COMPONENT
 // ────────────────────────────────────────────────────────────────────────────
 
@@ -69,7 +119,7 @@ export default function WirePowerLossRenderer({
     new Set(savedState?.completedApps || [])
   );
   const [testAnswers, setTestAnswers] = useState<number[]>(
-    savedState?.testAnswers || [-1, -1, -1]
+    savedState?.testAnswers || Array(10).fill(-1)
   );
   const [testScore, setTestScore] = useState<number | null>(
     savedState?.testScore ?? null
@@ -80,18 +130,22 @@ export default function WirePowerLossRenderer({
   const [showPredictionFeedback, setShowPredictionFeedback] = useState(false);
   const [showTwistFeedback, setShowTwistFeedback] = useState(false);
 
-  // Play phase: Wire simulator
-  const [current, setCurrent] = useState(1);
+  // Play phase state
+  const [current, setCurrent] = useState(3);
   const [wireGauge, setWireGauge] = useState<'thin' | 'medium' | 'thick'>('medium');
   const [wireLength, setWireLength] = useState(1);
   const [hasExperimented, setHasExperimented] = useState(false);
-  const [experimentCount, setExperimentCount] = useState(0);
 
-  // Twist phase: Transmission line voltage
+  // Twist phase state
   const [transmissionVoltage, setTransmissionVoltage] = useState<'low' | 'high'>('low');
   const [hasExploredTwist, setHasExploredTwist] = useState(false);
 
+  // Transfer phase
+  const [activeAppTab, setActiveAppTab] = useState(0);
+
+  // Navigation lock
   const navigationLockRef = useRef(false);
+  const lastClickRef = useRef(0);
 
   // ──────────────────────────────────────────────────────────────────────────
   // EFFECTS
@@ -120,416 +174,545 @@ export default function WirePowerLossRenderer({
   // NAVIGATION
   // ──────────────────────────────────────────────────────────────────────────
 
-  const goToPhase = (newPhase: Phase) => {
+  const goToPhase = useCallback((newPhase: Phase) => {
+    const now = Date.now();
+    if (now - lastClickRef.current < 200) return;
     if (navigationLockRef.current) return;
+
+    lastClickRef.current = now;
     navigationLockRef.current = true;
     playSound('transition');
     setPhase(newPhase);
+
     setTimeout(() => {
       navigationLockRef.current = false;
-    }, 400);
-  };
+    }, 200);
+  }, []);
 
-  const nextPhase = () => {
+  const nextPhase = useCallback(() => {
     const currentIndex = PHASES.indexOf(phase);
     if (currentIndex < PHASES.length - 1) {
       goToPhase(PHASES[currentIndex + 1]);
     }
-  };
+  }, [phase, goToPhase]);
 
   // ──────────────────────────────────────────────────────────────────────────
   // PHYSICS CALCULATIONS
   // ──────────────────────────────────────────────────────────────────────────
 
-  const getWireResistance = () => {
+  const getWireResistance = useCallback(() => {
     const gaugeResistance = wireGauge === 'thin' ? 1.0 : wireGauge === 'medium' ? 0.3 : 0.1;
     return gaugeResistance * wireLength;
-  };
+  }, [wireGauge, wireLength]);
 
-  const getPowerLoss = () => {
+  const getPowerLoss = useCallback(() => {
     const R = getWireResistance();
-    return current * current * R; // P = I²R
-  };
+    return current * current * R;
+  }, [current, getWireResistance]);
 
-  const getTemperature = () => {
+  const getTemperature = useCallback(() => {
     const loss = getPowerLoss();
-    return 20 + loss * 8; // Base temp + heating
-  };
+    return 20 + loss * 5;
+  }, [getPowerLoss]);
 
-  const getWireColor = () => {
-    const temp = getTemperature();
-    if (temp < 40) return '#3B82F6'; // Blue - cool
-    if (temp < 60) return '#22C55E'; // Green - warm
-    if (temp < 80) return '#F59E0B'; // Orange - hot
-    return '#EF4444'; // Red - dangerous
-  };
-
-  // Transmission calculations
-  const getTransmissionLoss = () => {
-    // Same power delivered (1000W), different voltages
+  const getTransmissionLoss = useCallback(() => {
     const power = 1000;
     const voltage = transmissionVoltage === 'low' ? 120 : 12000;
-    const current = power / voltage;
-    const lineResistance = 10; // ohms for long line
-    return current * current * lineResistance;
-  };
+    const lineCurrent = power / voltage;
+    const lineResistance = 10;
+    return lineCurrent * lineCurrent * lineResistance;
+  }, [transmissionVoltage]);
 
-  const getTransmissionEfficiency = () => {
+  const getTransmissionEfficiency = useCallback(() => {
     const power = 1000;
     const loss = getTransmissionLoss();
     return ((power - loss) / power) * 100;
-  };
+  }, [getTransmissionLoss]);
 
   // ──────────────────────────────────────────────────────────────────────────
   // HANDLERS
   // ──────────────────────────────────────────────────────────────────────────
 
-  const handlePrediction = (choice: string) => {
+  const handlePrediction = useCallback((choice: string) => {
+    if (showPredictionFeedback) return;
     playSound('click');
     setPrediction(choice);
     setShowPredictionFeedback(true);
-  };
+  }, [showPredictionFeedback]);
 
-  const handleTwistPrediction = (choice: string) => {
+  const handleTwistPrediction = useCallback((choice: string) => {
+    if (showTwistFeedback) return;
     playSound('click');
     setTwistPrediction(choice);
     setShowTwistFeedback(true);
-  };
+  }, [showTwistFeedback]);
 
-  const handleExperiment = () => {
-    setExperimentCount(prev => prev + 1);
-    if (experimentCount >= 2) {
-      setHasExperimented(true);
-    }
-  };
-
-  const handleCompleteApp = (appIndex: number) => {
+  const handleCompleteApp = useCallback((appIndex: number) => {
     playSound('success');
     setCompletedApps(prev => new Set([...prev, appIndex]));
-  };
+  }, []);
 
-  const handleTestAnswer = (questionIndex: number, answerIndex: number) => {
+  const handleTestAnswer = useCallback((questionIndex: number, answerIndex: number) => {
     playSound('click');
-    const newAnswers = [...testAnswers];
-    newAnswers[questionIndex] = answerIndex;
-    setTestAnswers(newAnswers);
-  };
+    setTestAnswers(prev => {
+      const newAnswers = [...prev];
+      newAnswers[questionIndex] = answerIndex;
+      return newAnswers;
+    });
+  }, []);
 
-  const handleSubmitTest = () => {
-    const correctAnswers = [1, 2, 0]; // Correct indices
+  const handleSubmitTest = useCallback(() => {
     let score = 0;
     testAnswers.forEach((answer, index) => {
-      if (answer === correctAnswers[index]) score++;
+      if (answer === TEST_QUESTIONS[index].correct) score++;
     });
     setTestScore(score);
-    playSound(score >= 2 ? 'success' : 'failure');
-  };
+    playSound(score >= 7 ? 'success' : 'failure');
+  }, [testAnswers]);
 
   // ──────────────────────────────────────────────────────────────────────────
-  // RENDER FUNCTIONS
+  // COMPONENTS
   // ──────────────────────────────────────────────────────────────────────────
 
-  const renderPhaseIndicator = () => (
-    <div className="flex items-center justify-between mb-6 px-2">
-      <div className="flex items-center gap-1">
+  const ProgressIndicator = () => (
+    <div className="flex items-center justify-between mb-8">
+      <div className="flex items-center gap-1.5">
         {PHASES.map((p, i) => (
           <div
             key={p}
-            className={`h-2 rounded-full transition-all duration-300 ${
-              i <= PHASES.indexOf(phase)
-                ? 'bg-orange-500 w-6'
-                : 'bg-gray-200 w-4'
+            className={`h-1.5 rounded-full transition-all duration-500 ${
+              i < PHASES.indexOf(phase)
+                ? 'bg-orange-500 w-8'
+                : i === PHASES.indexOf(phase)
+                ? 'bg-orange-400 w-10'
+                : 'bg-gray-200 w-6'
             }`}
           />
         ))}
       </div>
-      <span className="text-sm text-gray-500 font-medium">
-        {PHASES.indexOf(phase) + 1} / {PHASES.length}
+      <span className="text-sm font-semibold text-gray-400 tabular-nums">
+        {PHASES.indexOf(phase) + 1}/{PHASES.length}
       </span>
     </div>
   );
 
-  const renderWireSimulator = (interactive: boolean = true) => (
-    <svg viewBox="0 0 400 200" className="w-full h-48 mb-4">
-      {/* Power source */}
-      <rect x="20" y="70" width="60" height="60" fill="#1F2937" rx="8" />
-      <text x="50" y="105" textAnchor="middle" fill="white" fontSize="12" fontWeight="bold">
-        {current}A
-      </text>
-      <text x="50" y="120" textAnchor="middle" fill="#9CA3AF" fontSize="10">
-        SOURCE
-      </text>
+  const PrimaryButton = ({
+    children,
+    onClick,
+    disabled = false,
+    variant = 'primary'
+  }: {
+    children: React.ReactNode;
+    onClick: () => void;
+    disabled?: boolean;
+    variant?: 'primary' | 'secondary';
+  }) => (
+    <button
+      onMouseDown={(e) => {
+        e.preventDefault();
+        if (!disabled) onClick();
+      }}
+      disabled={disabled}
+      className={`
+        w-full py-4 px-6 rounded-2xl font-semibold text-lg
+        transition-all duration-200 transform
+        ${disabled
+          ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+          : variant === 'primary'
+            ? 'bg-gradient-to-r from-orange-500 to-red-500 text-white shadow-lg shadow-orange-500/25 hover:shadow-xl hover:shadow-orange-500/30 hover:-translate-y-0.5 active:translate-y-0'
+            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+        }
+      `}
+    >
+      {children}
+    </button>
+  );
 
-      {/* Wire - thickness based on gauge */}
-      <line
-        x1="80"
-        y1="100"
-        x2={80 + 150 * wireLength}
-        y2="100"
-        stroke={getWireColor()}
-        strokeWidth={wireGauge === 'thin' ? 4 : wireGauge === 'medium' ? 8 : 14}
-        strokeLinecap="round"
-      />
+  // ──────────────────────────────────────────────────────────────────────────
+  // GRAPHICS
+  // ──────────────────────────────────────────────────────────────────────────
 
-      {/* Heat waves for hot wire */}
-      {getTemperature() > 50 && (
-        <>
-          <path
-            d={`M ${80 + 75 * wireLength} 75 Q ${90 + 75 * wireLength} 65 ${80 + 75 * wireLength} 55`}
-            fill="none"
-            stroke="#EF4444"
-            strokeWidth="2"
-            opacity={Math.min((getTemperature() - 50) / 50, 1)}
-          >
-            <animate
-              attributeName="opacity"
-              values="0.3;0.8;0.3"
-              dur="1s"
-              repeatCount="indefinite"
-            />
-          </path>
-          <path
-            d={`M ${100 + 75 * wireLength} 70 Q ${110 + 75 * wireLength} 60 ${100 + 75 * wireLength} 50`}
-            fill="none"
-            stroke="#F59E0B"
-            strokeWidth="2"
-            opacity={Math.min((getTemperature() - 50) / 50, 1)}
-          >
-            <animate
-              attributeName="opacity"
-              values="0.5;1;0.5"
-              dur="1.2s"
-              repeatCount="indefinite"
-            />
-          </path>
-        </>
-      )}
+  const WireSimulatorGraphic = () => {
+    const loss = getPowerLoss();
+    const temp = getTemperature();
+    const resistance = getWireResistance();
 
-      {/* Load (light bulb) */}
-      <circle cx={100 + 150 * wireLength} cy="100" r="25" fill="#FEF3C7" stroke="#F59E0B" strokeWidth="3" />
-      <path
-        d={`M ${90 + 150 * wireLength} 110 L ${100 + 150 * wireLength} 95 L ${110 + 150 * wireLength} 110`}
-        fill="none"
-        stroke="#F59E0B"
-        strokeWidth="2"
-      />
+    const getWireColor = () => {
+      if (temp < 35) return '#3B82F6';
+      if (temp < 50) return '#22C55E';
+      if (temp < 70) return '#F59E0B';
+      return '#EF4444';
+    };
 
-      {/* Labels */}
-      <text x={80 + 75 * wireLength} y="140" textAnchor="middle" fill="#374151" fontSize="11">
-        {wireLength}m {wireGauge} wire
-      </text>
-      <text x={80 + 75 * wireLength} y="155" textAnchor="middle" fill="#6B7280" fontSize="10">
-        R = {getWireResistance().toFixed(2)}Ω
-      </text>
+    return (
+      <div className="bg-gradient-to-br from-slate-900 to-slate-800 rounded-3xl p-6 mb-6">
+        <svg viewBox="0 0 400 180" className="w-full h-44">
+          <defs>
+            <linearGradient id="wireHeat" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor={getWireColor()} />
+              <stop offset="50%" stopColor={temp > 50 ? '#EF4444' : getWireColor()} />
+              <stop offset="100%" stopColor={getWireColor()} />
+            </linearGradient>
+          </defs>
 
-      {/* Stats box */}
-      <rect x="280" y="30" width="110" height="80" fill="#FEF3C7" rx="8" />
-      <text x="335" y="52" textAnchor="middle" fill="#92400E" fontSize="11" fontWeight="bold">
-        POWER LOSS
-      </text>
-      <text x="335" y="75" textAnchor="middle" fill="#DC2626" fontSize="18" fontWeight="bold">
-        {getPowerLoss().toFixed(1)}W
-      </text>
-      <text x="335" y="95" textAnchor="middle" fill="#92400E" fontSize="11">
-        {getTemperature().toFixed(0)}°C
-      </text>
+          {/* Power Source */}
+          <rect x="20" y="55" width="60" height="70" rx="8" fill="#374151" />
+          <text x="50" y="85" textAnchor="middle" fill="#9CA3AF" fontSize="10">SOURCE</text>
+          <text x="50" y="105" textAnchor="middle" fill="white" fontSize="18" fontWeight="bold">{current}A</text>
+
+          {/* Wire */}
+          <line
+            x1="80"
+            y1="90"
+            x2={80 + 140 * wireLength}
+            y2="90"
+            stroke="url(#wireHeat)"
+            strokeWidth={wireGauge === 'thin' ? 6 : wireGauge === 'medium' ? 12 : 20}
+            strokeLinecap="round"
+          />
+
+          {/* Heat waves */}
+          {temp > 40 && (
+            <>
+              {[0, 1, 2].map(i => (
+                <path
+                  key={i}
+                  d={`M ${100 + i * 40 * wireLength} 65 Q ${110 + i * 40 * wireLength} 50 ${100 + i * 40 * wireLength} 35`}
+                  fill="none"
+                  stroke="#EF4444"
+                  strokeWidth="2"
+                  opacity={Math.min((temp - 40) / 40, 0.8)}
+                >
+                  <animate attributeName="opacity" values="0.3;0.8;0.3" dur="1s" repeatCount="indefinite" />
+                </path>
+              ))}
+            </>
+          )}
+
+          {/* Load */}
+          <circle cx={100 + 140 * wireLength} cy="90" r="30" fill="#FEF3C7" stroke="#F59E0B" strokeWidth="3" />
+          <text x={100 + 140 * wireLength} y="95" textAnchor="middle" fill="#92400E" fontSize="20">💡</text>
+
+          {/* Stats Panel */}
+          <g transform="translate(300, 20)">
+            <rect width="90" height="140" rx="12" fill="rgba(255,255,255,0.1)" />
+            <text x="45" y="22" textAnchor="middle" fill="#9ca3af" fontSize="9" fontWeight="600">STATS</text>
+
+            <rect x="8" y="30" width="74" height="32" rx="6" fill="rgba(239,68,68,0.2)" />
+            <text x="45" y="45" textAnchor="middle" fill="#fca5a5" fontSize="8">POWER LOSS</text>
+            <text x="45" y="58" textAnchor="middle" fill="#ef4444" fontSize="13" fontWeight="700">{loss.toFixed(1)}W</text>
+
+            <rect x="8" y="68" width="74" height="32" rx="6" fill="rgba(251,191,36,0.2)" />
+            <text x="45" y="83" textAnchor="middle" fill="#fcd34d" fontSize="8">TEMP</text>
+            <text x="45" y="96" textAnchor="middle" fill="#f59e0b" fontSize="13" fontWeight="700">{temp.toFixed(0)}°C</text>
+
+            <rect x="8" y="106" width="74" height="28" rx="6" fill="rgba(59,130,246,0.2)" />
+            <text x="45" y="119" textAnchor="middle" fill="#60a5fa" fontSize="8">RESISTANCE</text>
+            <text x="45" y="130" textAnchor="middle" fill="#3b82f6" fontSize="11" fontWeight="700">{resistance.toFixed(2)}Ω</text>
+          </g>
+
+          {/* Wire label */}
+          <text x={80 + 70 * wireLength} y="140" textAnchor="middle" fill="#9ca3af" fontSize="10">
+            {wireLength}m {wireGauge} wire
+          </text>
+        </svg>
+      </div>
+    );
+  };
+
+  const TransmissionLineGraphic = () => {
+    const loss = getTransmissionLoss();
+    const efficiency = getTransmissionEfficiency();
+    const isHighVoltage = transmissionVoltage === 'high';
+
+    return (
+      <div className="bg-gradient-to-br from-slate-900 to-slate-800 rounded-3xl p-6 mb-6">
+        <svg viewBox="0 0 400 160" className="w-full h-40">
+          {/* Power Plant */}
+          <rect x="15" y="50" width="50" height="50" rx="6" fill="#374151" />
+          <text x="40" y="80" textAnchor="middle" fill="white" fontSize="10" fontWeight="bold">1kW</text>
+
+          {/* Step-up Transformer */}
+          <rect x="80" y="60" width="30" height="30" rx="4" fill="#6366F1" />
+          <text x="95" y="80" textAnchor="middle" fill="white" fontSize="12">⚡</text>
+
+          {/* Transmission Line */}
+          <line
+            x1="110"
+            y1="75"
+            x2="260"
+            y2="75"
+            stroke={isHighVoltage ? '#22C55E' : '#EF4444'}
+            strokeWidth="6"
+          />
+
+          {/* Heat loss indicators for low voltage */}
+          {!isHighVoltage && (
+            <>
+              {[140, 170, 200, 230].map(x => (
+                <path
+                  key={x}
+                  d={`M ${x} 55 Q ${x + 5} 45 ${x} 35`}
+                  fill="none"
+                  stroke="#EF4444"
+                  strokeWidth="2"
+                >
+                  <animate attributeName="opacity" values="0.3;1;0.3" dur="0.8s" repeatCount="indefinite" />
+                </path>
+              ))}
+            </>
+          )}
+
+          {/* Step-down Transformer */}
+          <rect x="260" y="60" width="30" height="30" rx="4" fill="#6366F1" />
+          <text x="275" y="80" textAnchor="middle" fill="white" fontSize="12">⚡</text>
+
+          {/* House */}
+          <polygon points="320,75 340,50 360,75" fill="#F59E0B" />
+          <rect x="325" y="75" width="30" height="25" fill="#FEF3C7" />
+          <rect x="335" y="85" width="10" height="15" fill="#92400E" />
+
+          {/* Voltage label */}
+          <text x="185" y="100" textAnchor="middle" fill="#9ca3af" fontSize="10">
+            {isHighVoltage ? '12,000V • 0.08A' : '120V • 8.3A'}
+          </text>
+
+          {/* Results */}
+          <rect x="130" y="115" width="140" height="40" rx="8" fill={isHighVoltage ? 'rgba(34,197,94,0.2)' : 'rgba(239,68,68,0.2)'} />
+          <text x="200" y="132" textAnchor="middle" fill={isHighVoltage ? '#22c55e' : '#ef4444'} fontSize="10">
+            Loss: {loss.toFixed(0)}W
+          </text>
+          <text x="200" y="148" textAnchor="middle" fill={isHighVoltage ? '#22c55e' : '#ef4444'} fontSize="14" fontWeight="bold">
+            {efficiency.toFixed(1)}% Efficient
+          </text>
+        </svg>
+      </div>
+    );
+  };
+
+  // Application Graphics
+  const AppGraphic1 = () => (
+    <svg viewBox="0 0 300 140" className="w-full h-36">
+      <rect x="100" y="20" width="100" height="100" rx="12" fill="#374151" />
+      <rect x="110" y="30" width="80" height="50" rx="4" fill="#1f2937" />
+      <text x="150" y="60" textAnchor="middle" fill="#22c55e" fontSize="12">5V → 20V</text>
+      <rect x="115" y="90" width="70" height="20" rx="4" fill="#3b82f6" />
+      <text x="150" y="104" textAnchor="middle" fill="white" fontSize="9">USB-C PD</text>
+      <path d="M 150 5 L 150 20" stroke="#f59e0b" strokeWidth="3" strokeLinecap="round" />
+      <circle cx="150" cy="5" r="3" fill="#f59e0b" />
     </svg>
   );
 
-  const renderTransmissionLine = () => (
-    <svg viewBox="0 0 400 180" className="w-full h-44 mb-4">
-      {/* Power plant */}
-      <rect x="20" y="60" width="50" height="50" fill="#1F2937" rx="6" />
-      <text x="45" y="88" textAnchor="middle" fill="white" fontSize="10" fontWeight="bold">
-        1kW
-      </text>
+  const AppGraphic2 = () => (
+    <svg viewBox="0 0 300 140" className="w-full h-36">
+      <rect x="80" y="40" width="140" height="60" rx="8" fill="#374151" />
+      <rect x="90" y="50" width="30" height="40" rx="4" fill="#22c55e" />
+      <text x="105" y="75" textAnchor="middle" fill="white" fontSize="8">400V</text>
+      <line x1="120" y1="70" x2="150" y2="70" stroke="#f59e0b" strokeWidth="4" />
+      <rect x="150" y="55" width="60" height="30" rx="4" fill="#1f2937" />
+      <text x="180" y="72" textAnchor="middle" fill="#60a5fa" fontSize="8">BATTERY</text>
+      <text x="150" y="120" textAnchor="middle" fill="#9ca3af" fontSize="10">EV Fast Charging</text>
+    </svg>
+  );
 
-      {/* Transformer (step up) */}
-      <rect x="90" y="70" width="30" height="30" fill="#6366F1" rx="4" />
-      <text x="105" y="90" textAnchor="middle" fill="white" fontSize="8">⚡</text>
+  const AppGraphic3 = () => (
+    <svg viewBox="0 0 300 140" className="w-full h-36">
+      <line x1="50" y1="60" x2="250" y2="60" stroke="#6b7280" strokeWidth="8" />
+      <rect x="120" y="70" width="60" height="30" rx="4" fill="#374151" />
+      <text x="150" y="90" textAnchor="middle" fill="white" fontSize="9">15A MAX</text>
+      <circle cx="70" cy="60" r="12" fill="#f59e0b" />
+      <circle cx="230" cy="60" r="12" fill="#f59e0b" />
+      <text x="150" y="120" textAnchor="middle" fill="#9ca3af" fontSize="10">Extension Cord Rating</text>
+    </svg>
+  );
 
-      {/* Long transmission line */}
-      <line
-        x1="120"
-        y1="85"
-        x2="280"
-        y2="85"
-        stroke={transmissionVoltage === 'low' ? '#EF4444' : '#22C55E'}
-        strokeWidth="6"
-      />
-
-      {/* Power loss indicator */}
-      {transmissionVoltage === 'low' && (
-        <>
-          {[150, 180, 210, 240].map(x => (
-            <path
-              key={x}
-              d={`M ${x} 65 Q ${x + 5} 55 ${x} 45`}
-              fill="none"
-              stroke="#EF4444"
-              strokeWidth="2"
-            >
-              <animate
-                attributeName="opacity"
-                values="0.3;1;0.3"
-                dur="0.8s"
-                repeatCount="indefinite"
-              />
-            </path>
-          ))}
-        </>
-      )}
-
-      {/* Line stats */}
-      <text x="200" y="115" textAnchor="middle" fill="#6B7280" fontSize="10">
-        {transmissionVoltage === 'low' ? '120V' : '12,000V'} •
-        {transmissionVoltage === 'low' ? '8.3A' : '0.083A'}
-      </text>
-
-      {/* Transformer (step down) */}
-      <rect x="280" y="70" width="30" height="30" fill="#6366F1" rx="4" />
-      <text x="295" y="90" textAnchor="middle" fill="white" fontSize="8">⚡</text>
-
-      {/* House */}
-      <polygon points="340,85 360,60 380,85" fill="#F59E0B" />
-      <rect x="345" y="85" width="30" height="30" fill="#FEF3C7" />
-      <rect x="355" y="95" width="10" height="20" fill="#92400E" />
-
-      {/* Results box */}
-      <rect x="140" y="130" width="120" height="45" fill={transmissionVoltage === 'low' ? '#FEE2E2' : '#D1FAE5'} rx="8" />
-      <text x="200" y="148" textAnchor="middle" fill={transmissionVoltage === 'low' ? '#DC2626' : '#059669'} fontSize="11" fontWeight="bold">
-        Loss: {getTransmissionLoss().toFixed(0)}W
-      </text>
-      <text x="200" y="165" textAnchor="middle" fill={transmissionVoltage === 'low' ? '#DC2626' : '#059669'} fontSize="12" fontWeight="bold">
-        Efficiency: {getTransmissionEfficiency().toFixed(0)}%
-      </text>
+  const AppGraphic4 = () => (
+    <svg viewBox="0 0 300 140" className="w-full h-36">
+      <rect x="60" y="30" width="180" height="80" rx="8" fill="#1f2937" />
+      {[80, 130, 180, 220].map((x, i) => (
+        <g key={i}>
+          <line x1={x} y1="50" x2={x} y2="90" stroke="#ef4444" strokeWidth="2" />
+          <circle cx={x} cy="50" r="4" fill="#ef4444">
+            <animate attributeName="opacity" values="0.5;1;0.5" dur={`${0.5 + i * 0.2}s`} repeatCount="indefinite" />
+          </circle>
+        </g>
+      ))}
+      <text x="150" y="75" textAnchor="middle" fill="#9ca3af" fontSize="9">Heating Elements</text>
+      <text x="150" y="125" textAnchor="middle" fill="#9ca3af" fontSize="10">Resistive Heating</text>
     </svg>
   );
 
   // ──────────────────────────────────────────────────────────────────────────
-  // PHASE CONTENT
+  // PHASE RENDERS
   // ──────────────────────────────────────────────────────────────────────────
 
   const renderHook = () => (
-    <div className="text-center">
-      <div className="text-6xl mb-6">🔌🔥</div>
-      <h2 className="text-2xl font-bold text-gray-800 mb-4">
-        Why Does Your Phone Charger Get Warm?
-      </h2>
-      <p className="text-lg text-gray-600 mb-6">
-        Ever noticed that charging cables and power adapters heat up during use?
-        That heat is actually <span className="text-red-500 font-semibold">wasted energy</span>!
-      </p>
-      <div className="bg-orange-50 border border-orange-200 rounded-xl p-5 mb-6">
-        <p className="text-orange-800">
-          ⚡ This same effect explains why power companies use super-high voltages
-          for long-distance transmission, and why thick cables are needed for high-power devices.
-        </p>
+    <div className="text-center py-4">
+      <div className="relative w-32 h-32 mx-auto mb-8">
+        <div className="absolute inset-0 bg-gradient-to-br from-orange-400 to-red-500 rounded-3xl transform rotate-6 opacity-20" />
+        <div className="absolute inset-0 bg-gradient-to-br from-orange-400 to-red-500 rounded-3xl flex items-center justify-center">
+          <span className="text-5xl">🔌🔥</span>
+        </div>
       </div>
-      <p className="text-gray-600 mb-6">
-        Let&apos;s discover the physics of wire heating and the famous <strong>I²R</strong> power loss equation.
+
+      <h1 className="text-3xl font-bold text-gray-900 mb-4 tracking-tight">
+        Why Cables Get Hot
+      </h1>
+
+      <p className="text-lg text-gray-500 mb-8 leading-relaxed max-w-sm mx-auto">
+        Ever noticed your phone charger warming up? That heat is wasted energy
+        following the famous I²R power loss equation.
       </p>
-      <button
-        onMouseDown={() => goToPhase('predict')}
-        className="px-8 py-4 bg-orange-500 text-white rounded-xl font-bold text-lg shadow-lg hover:bg-orange-600 transition-colors"
-      >
-        Investigate Wire Heating →
-      </button>
+
+      <div className="bg-gradient-to-r from-orange-50 to-red-50 rounded-2xl p-6 mb-8 text-left border border-orange-100">
+        <div className="flex items-start gap-4">
+          <div className="w-12 h-12 bg-orange-100 rounded-xl flex items-center justify-center flex-shrink-0">
+            <span className="text-2xl">⚡</span>
+          </div>
+          <div>
+            <h3 className="font-semibold text-gray-900 mb-1">The Big Idea</h3>
+            <p className="text-gray-600 text-sm leading-relaxed">
+              Power loss = I²R. Doubling current quadruples the heat!
+              This is why power lines use incredibly high voltages.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div className="flex justify-center gap-6 mb-10">
+        {[
+          { icon: '🔥', label: 'I²R Heating' },
+          { icon: '⚡', label: 'High Voltage' },
+          { icon: '📐', label: 'Wire Gauges' },
+        ].map((item, i) => (
+          <div key={i} className="text-center">
+            <div className="text-2xl mb-2">{item.icon}</div>
+            <div className="text-xs text-gray-500 font-medium">{item.label}</div>
+          </div>
+        ))}
+      </div>
+
+      <PrimaryButton onClick={() => goToPhase('predict')}>
+        Start Learning
+      </PrimaryButton>
     </div>
   );
 
   const renderPredict = () => (
     <div>
-      <h2 className="text-xl font-bold text-gray-800 mb-4">Make Your Prediction</h2>
-      <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-6">
-        <p className="text-blue-800">
-          You have a wire carrying electrical current. If you <strong>double the current</strong>,
+      <div className="mb-6">
+        <span className="inline-block px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm font-medium mb-4">
+          Prediction
+        </span>
+        <h2 className="text-2xl font-bold text-gray-900 mb-3">
+          What do you think?
+        </h2>
+        <p className="text-gray-600">
+          A wire carries electrical current. If you <strong>double the current</strong>,
           how much more heat will the wire produce?
         </p>
       </div>
 
       <div className="space-y-3 mb-6">
         {[
-          { id: 'same', label: 'Same heat - current doesn\'t affect heating' },
-          { id: 'double', label: '2× more heat (doubles with current)' },
-          { id: 'quadruple', label: '4× more heat (squares with current)' },
+          { id: 'same', label: 'Same heat', desc: 'Current doesn\'t affect heating' },
+          { id: 'double', label: '2× more heat', desc: 'Doubles with current' },
+          { id: 'quadruple', label: '4× more heat', desc: 'Squares with current' },
         ].map(option => (
           <button
             key={option.id}
-            onMouseDown={() => handlePrediction(option.id)}
+            onMouseDown={(e) => {
+              e.preventDefault();
+              handlePrediction(option.id);
+            }}
             disabled={showPredictionFeedback}
-            className={`w-full p-4 rounded-xl border-2 text-left transition-all ${
+            className={`w-full p-4 rounded-2xl border-2 text-left transition-all duration-200 ${
               prediction === option.id
                 ? option.id === 'quadruple'
                   ? 'border-green-500 bg-green-50'
                   : 'border-red-300 bg-red-50'
-                : 'border-gray-200 hover:border-orange-300 hover:bg-orange-50'
-            } ${showPredictionFeedback ? 'cursor-default' : 'cursor-pointer'}`}
+                : showPredictionFeedback
+                ? 'border-gray-100 bg-gray-50 opacity-50'
+                : 'border-gray-200 hover:border-orange-300 hover:bg-orange-50 cursor-pointer'
+            }`}
           >
-            <span className="font-medium text-gray-700">{option.label}</span>
+            <div className="font-semibold text-gray-900">{option.label}</div>
+            <div className="text-sm text-gray-500">{option.desc}</div>
           </button>
         ))}
       </div>
 
       {showPredictionFeedback && (
-        <div className={`p-4 rounded-xl mb-4 ${
-          prediction === 'quadruple' ? 'bg-green-100 border border-green-300' : 'bg-amber-100 border border-amber-300'
+        <div className={`p-5 rounded-2xl mb-6 ${
+          prediction === 'quadruple'
+            ? 'bg-green-50 border border-green-200'
+            : 'bg-amber-50 border border-amber-200'
         }`}>
-          <p className={prediction === 'quadruple' ? 'text-green-800' : 'text-amber-800'}>
-            {prediction === 'quadruple' ? (
-              <><strong>Exactly right!</strong> Heat loss follows P = I²R, so doubling current means 2² = 4× the heat!</>
-            ) : (
-              <><strong>Good guess!</strong> Actually, heat loss follows P = I²R - the current is <em>squared</em>. Doubling current means 4× the heat!</>
-            )}
-          </p>
+          <div className="flex items-start gap-3">
+            <span className="text-2xl">{prediction === 'quadruple' ? '✓' : '→'}</span>
+            <p className={prediction === 'quadruple' ? 'text-green-800' : 'text-amber-800'}>
+              {prediction === 'quadruple'
+                ? 'Exactly right! P = I²R means doubling current gives 2² = 4× the heat!'
+                : 'Actually, heat follows P = I²R. Current is squared, so double current = 4× heat!'}
+            </p>
+          </div>
         </div>
       )}
 
       {showPredictionFeedback && (
-        <button
-          onMouseDown={nextPhase}
-          className="w-full py-3 bg-orange-500 text-white rounded-xl font-bold hover:bg-orange-600 transition-colors"
-        >
-          Test It Out →
-        </button>
+        <PrimaryButton onClick={nextPhase}>
+          Test It Out
+        </PrimaryButton>
       )}
     </div>
   );
 
   const renderPlay = () => (
     <div>
-      <h2 className="text-xl font-bold text-gray-800 mb-2">Wire Heating Simulator</h2>
-      <p className="text-gray-600 mb-4">
-        Experiment with current, wire thickness, and length to see how power loss and heating change.
-      </p>
+      <div className="mb-4">
+        <span className="inline-block px-3 py-1 bg-orange-100 text-orange-700 rounded-full text-sm font-medium mb-3">
+          Interactive Lab
+        </span>
+        <h2 className="text-xl font-bold text-gray-900 mb-2">
+          Wire Heating Simulator
+        </h2>
+        <p className="text-gray-500 text-sm">
+          Adjust current, wire thickness, and length to see power loss change.
+        </p>
+      </div>
 
-      {renderWireSimulator()}
+      <WireSimulatorGraphic />
 
-      <div className="space-y-4 mb-6">
+      <div className="space-y-5 mb-6">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Current: {current}A
-          </label>
+          <div className="flex justify-between mb-2">
+            <label className="text-sm font-medium text-gray-700">Current</label>
+            <span className="text-sm font-semibold text-orange-600">{current}A</span>
+          </div>
           <input
             type="range"
             min="1"
             max="10"
             value={current}
-            onChange={e => { setCurrent(Number(e.target.value)); handleExperiment(); }}
-            className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+            onChange={e => { setCurrent(Number(e.target.value)); setHasExperimented(true); }}
+            className="w-full h-2 bg-gray-200 rounded-full appearance-none cursor-pointer accent-orange-500"
           />
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">Wire Gauge:</label>
+          <label className="text-sm font-medium text-gray-700 mb-2 block">Wire Gauge</label>
           <div className="flex gap-2">
             {(['thin', 'medium', 'thick'] as const).map(gauge => (
               <button
                 key={gauge}
-                onMouseDown={() => { setWireGauge(gauge); handleExperiment(); }}
-                className={`flex-1 py-2 px-3 rounded-lg font-medium transition-colors ${
+                onMouseDown={(e) => {
+                  e.preventDefault();
+                  setWireGauge(gauge);
+                  setHasExperimented(true);
+                }}
+                className={`flex-1 py-2.5 rounded-xl font-medium text-sm transition-all ${
                   wireGauge === gauge
-                    ? 'bg-orange-500 text-white'
+                    ? 'bg-orange-500 text-white shadow-lg'
                     : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                 }`}
               >
@@ -540,172 +723,173 @@ export default function WirePowerLossRenderer({
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Wire Length: {wireLength}m
-          </label>
+          <div className="flex justify-between mb-2">
+            <label className="text-sm font-medium text-gray-700">Wire Length</label>
+            <span className="text-sm font-semibold text-orange-600">{wireLength}m</span>
+          </div>
           <input
             type="range"
             min="0.5"
             max="2"
             step="0.5"
             value={wireLength}
-            onChange={e => { setWireLength(Number(e.target.value)); handleExperiment(); }}
-            className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+            onChange={e => { setWireLength(Number(e.target.value)); setHasExperimented(true); }}
+            className="w-full h-2 bg-gray-200 rounded-full appearance-none cursor-pointer accent-orange-500"
           />
         </div>
       </div>
 
-      <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-4 mb-4">
-        <p className="text-yellow-800 text-sm">
-          <strong>Key insight:</strong> Power loss = I²R. Current matters most because it&apos;s <em>squared</em>!
-          Higher current → much more heat. Thicker/shorter wires have less resistance → less loss.
+      <div className="bg-blue-50 border border-blue-100 rounded-2xl p-4 mb-6">
+        <p className="text-blue-800 text-sm">
+          <strong>Key insight:</strong> Power loss = I²R. Current matters most because it&apos;s squared!
+          Thicker/shorter wires have less resistance = less loss.
         </p>
       </div>
 
-      <button
-        onMouseDown={nextPhase}
-        disabled={!hasExperimented}
-        className={`w-full py-3 rounded-xl font-bold transition-colors ${
-          hasExperimented
-            ? 'bg-orange-500 text-white hover:bg-orange-600'
-            : 'bg-gray-200 text-gray-400 cursor-not-allowed'
-        }`}
-      >
-        {hasExperimented ? 'Continue to Review →' : 'Try adjusting the controls...'}
-      </button>
+      <PrimaryButton onClick={nextPhase} disabled={!hasExperimented}>
+        {hasExperimented ? 'Continue' : 'Try the controls first...'}
+      </PrimaryButton>
     </div>
   );
 
   const renderReview = () => (
     <div>
-      <h2 className="text-xl font-bold text-gray-800 mb-4">Understanding I²R Loss</h2>
+      <span className="inline-block px-3 py-1 bg-green-100 text-green-700 rounded-full text-sm font-medium mb-4">
+        Key Concepts
+      </span>
+      <h2 className="text-2xl font-bold text-gray-900 mb-6">
+        Understanding I²R Loss
+      </h2>
 
-      <div className="bg-gradient-to-br from-orange-100 to-red-100 rounded-xl p-5 mb-6">
-        <div className="text-center mb-4">
-          <span className="text-3xl font-bold text-orange-700">P = I²R</span>
-        </div>
-        <p className="text-orange-800 text-center">
-          Power loss equals current squared times resistance
-        </p>
+      <div className="bg-gradient-to-br from-orange-100 to-red-100 rounded-2xl p-6 mb-6 text-center">
+        <div className="text-3xl font-bold text-gray-800 mb-2">P = I²R</div>
+        <p className="text-orange-700 text-sm">Power loss = Current² × Resistance</p>
       </div>
 
       <div className="space-y-4 mb-6">
-        <div className="bg-white border border-gray-200 rounded-xl p-4">
-          <h3 className="font-bold text-gray-800 mb-2">🔌 Current (I)</h3>
-          <p className="text-gray-600 text-sm">
-            The amount of electrical charge flowing. <strong>Squared</strong> in the equation,
-            so doubling current → 4× heat loss!
-          </p>
-        </div>
-
-        <div className="bg-white border border-gray-200 rounded-xl p-4">
-          <h3 className="font-bold text-gray-800 mb-2">📏 Resistance (R)</h3>
-          <p className="text-gray-600 text-sm">
-            Depends on wire material, length, and thickness. Longer/thinner wires = more resistance = more loss.
-          </p>
-        </div>
-
-        <div className="bg-white border border-gray-200 rounded-xl p-4">
-          <h3 className="font-bold text-gray-800 mb-2">🔥 Power Loss (P)</h3>
-          <p className="text-gray-600 text-sm">
-            Energy converted to heat every second. This is why cables warm up - and why proper
-            wire gauges matter for safety!
-          </p>
-        </div>
+        {[
+          { icon: '⚡', title: 'Current (I)', desc: 'Squared in the equation—doubling current = 4× heat loss!' },
+          { icon: '📏', title: 'Resistance (R)', desc: 'Longer/thinner wires = more resistance = more loss' },
+          { icon: '🔥', title: 'Power Loss (P)', desc: 'Energy converted to heat every second. This is why cables warm up!' },
+        ].map((item, i) => (
+          <div key={i} className="flex items-start gap-4 p-4 bg-white rounded-xl border border-gray-100">
+            <span className="text-2xl">{item.icon}</span>
+            <div>
+              <h3 className="font-semibold text-gray-900">{item.title}</h3>
+              <p className="text-gray-600 text-sm">{item.desc}</p>
+            </div>
+          </div>
+        ))}
       </div>
 
-      <button
-        onMouseDown={nextPhase}
-        className="w-full py-3 bg-orange-500 text-white rounded-xl font-bold hover:bg-orange-600 transition-colors"
-      >
-        Now for a Twist... →
-      </button>
+      <PrimaryButton onClick={nextPhase}>
+        Discover the Twist
+      </PrimaryButton>
     </div>
   );
 
   const renderTwistPredict = () => (
     <div>
-      <h2 className="text-xl font-bold text-gray-800 mb-4">The Power Grid Puzzle</h2>
-      <div className="bg-purple-50 border border-purple-200 rounded-xl p-4 mb-6">
-        <p className="text-purple-800">
-          Power companies need to transmit electricity over long distances.
-          They want to minimize I²R losses. What strategy do they use?
-        </p>
-      </div>
+      <span className="inline-block px-3 py-1 bg-purple-100 text-purple-700 rounded-full text-sm font-medium mb-4">
+        Plot Twist
+      </span>
+      <h2 className="text-2xl font-bold text-gray-900 mb-3">
+        The Power Grid Puzzle
+      </h2>
+      <p className="text-gray-600 mb-6">
+        Power companies need to transmit electricity over long distances while minimizing I²R losses.
+        What strategy do they use?
+      </p>
 
       <div className="space-y-3 mb-6">
         {[
-          { id: 'thick', label: 'Use extremely thick cables' },
-          { id: 'superconductor', label: 'Use superconducting cables' },
-          { id: 'highvoltage', label: 'Transmit at very high voltage (low current)' },
+          { id: 'thick', label: 'Extremely thick cables', desc: 'Reduce resistance' },
+          { id: 'superconductor', label: 'Superconducting cables', desc: 'Zero resistance' },
+          { id: 'highvoltage', label: 'Very high voltage', desc: 'Low current for same power' },
         ].map(option => (
           <button
             key={option.id}
-            onMouseDown={() => handleTwistPrediction(option.id)}
+            onMouseDown={(e) => {
+              e.preventDefault();
+              handleTwistPrediction(option.id);
+            }}
             disabled={showTwistFeedback}
-            className={`w-full p-4 rounded-xl border-2 text-left transition-all ${
+            className={`w-full p-4 rounded-2xl border-2 text-left transition-all ${
               twistPrediction === option.id
                 ? option.id === 'highvoltage'
                   ? 'border-green-500 bg-green-50'
                   : 'border-amber-300 bg-amber-50'
-                : 'border-gray-200 hover:border-purple-300 hover:bg-purple-50'
-            } ${showTwistFeedback ? 'cursor-default' : 'cursor-pointer'}`}
+                : showTwistFeedback
+                ? 'border-gray-100 bg-gray-50 opacity-50'
+                : 'border-gray-200 hover:border-purple-300 hover:bg-purple-50 cursor-pointer'
+            }`}
           >
-            <span className="font-medium text-gray-700">{option.label}</span>
+            <div className="font-semibold text-gray-900">{option.label}</div>
+            <div className="text-sm text-gray-500">{option.desc}</div>
           </button>
         ))}
       </div>
 
       {showTwistFeedback && (
-        <div className={`p-4 rounded-xl mb-4 ${
-          twistPrediction === 'highvoltage' ? 'bg-green-100 border border-green-300' : 'bg-amber-100 border border-amber-300'
+        <div className={`p-5 rounded-2xl mb-6 ${
+          twistPrediction === 'highvoltage'
+            ? 'bg-green-50 border border-green-200'
+            : 'bg-amber-50 border border-amber-200'
         }`}>
           <p className={twistPrediction === 'highvoltage' ? 'text-green-800' : 'text-amber-800'}>
-            {twistPrediction === 'highvoltage' ? (
-              <><strong>Brilliant!</strong> High voltage transmission is the key. Since P = I²R, reducing current dramatically cuts losses!</>
-            ) : (
-              <><strong>Creative thinking!</strong> But the clever trick is using high voltage. Power = Voltage × Current, so high V means low I for the same power - and losses drop dramatically!</>
-            )}
+            {twistPrediction === 'highvoltage'
+              ? 'Brilliant! High voltage means low current for same power. Since P = I²R, reducing current dramatically cuts losses!'
+              : 'The clever trick is high voltage. P = V × I, so high V means low I for same power—and losses drop dramatically!'}
           </p>
         </div>
       )}
 
       {showTwistFeedback && (
-        <button
-          onMouseDown={nextPhase}
-          className="w-full py-3 bg-orange-500 text-white rounded-xl font-bold hover:bg-orange-600 transition-colors"
-        >
-          See It In Action →
-        </button>
+        <PrimaryButton onClick={nextPhase}>
+          See It In Action
+        </PrimaryButton>
       )}
     </div>
   );
 
   const renderTwistPlay = () => (
     <div>
-      <h2 className="text-xl font-bold text-gray-800 mb-2">Transmission Line Simulator</h2>
-      <p className="text-gray-600 mb-4">
-        Compare transmitting 1000W at low voltage vs. high voltage over the same line.
+      <span className="inline-block px-3 py-1 bg-purple-100 text-purple-700 rounded-full text-sm font-medium mb-3">
+        Interactive Demo
+      </span>
+      <h2 className="text-xl font-bold text-gray-900 mb-2">
+        Transmission Line Simulator
+      </h2>
+      <p className="text-gray-500 text-sm mb-4">
+        Compare transmitting 1000W at low vs. high voltage.
       </p>
 
-      {renderTransmissionLine()}
+      <TransmissionLineGraphic />
 
       <div className="flex gap-3 mb-6">
         <button
-          onMouseDown={() => { setTransmissionVoltage('low'); setHasExploredTwist(true); }}
+          onMouseDown={(e) => {
+            e.preventDefault();
+            setTransmissionVoltage('low');
+            setHasExploredTwist(true);
+          }}
           className={`flex-1 py-3 px-4 rounded-xl font-bold transition-all ${
             transmissionVoltage === 'low'
-              ? 'bg-red-500 text-white'
+              ? 'bg-red-500 text-white shadow-lg'
               : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
           }`}
         >
           Low Voltage (120V)
         </button>
         <button
-          onMouseDown={() => { setTransmissionVoltage('high'); setHasExploredTwist(true); }}
+          onMouseDown={(e) => {
+            e.preventDefault();
+            setTransmissionVoltage('high');
+            setHasExploredTwist(true);
+          }}
           className={`flex-1 py-3 px-4 rounded-xl font-bold transition-all ${
             transmissionVoltage === 'high'
-              ? 'bg-green-500 text-white'
+              ? 'bg-green-500 text-white shadow-lg'
               : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
           }`}
         >
@@ -713,284 +897,272 @@ export default function WirePowerLossRenderer({
         </button>
       </div>
 
-      <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-4">
+      <div className="bg-blue-50 border border-blue-100 rounded-2xl p-4 mb-6">
         <p className="text-blue-800 text-sm">
           <strong>The math:</strong> At 120V, 1000W needs 8.3A → Loss = (8.3)² × 10Ω = 694W!
           At 12kV, same power needs only 0.083A → Loss = (0.083)² × 10Ω = 0.07W!
         </p>
       </div>
 
-      <button
-        onMouseDown={nextPhase}
-        disabled={!hasExploredTwist}
-        className={`w-full py-3 rounded-xl font-bold transition-colors ${
-          hasExploredTwist
-            ? 'bg-orange-500 text-white hover:bg-orange-600'
-            : 'bg-gray-200 text-gray-400 cursor-not-allowed'
-        }`}
-      >
-        {hasExploredTwist ? 'Continue →' : 'Try both voltage levels...'}
-      </button>
+      <PrimaryButton onClick={nextPhase} disabled={!hasExploredTwist}>
+        {hasExploredTwist ? 'Continue' : 'Try both voltage levels...'}
+      </PrimaryButton>
     </div>
   );
 
   const renderTwistReview = () => (
     <div>
-      <h2 className="text-xl font-bold text-gray-800 mb-4">The High-Voltage Solution</h2>
+      <h2 className="text-2xl font-bold text-gray-900 mb-6">
+        The High-Voltage Solution
+      </h2>
 
-      <div className="bg-gradient-to-br from-green-100 to-blue-100 rounded-xl p-5 mb-6">
-        <h3 className="font-bold text-gray-800 mb-3 text-center">Power Grid Strategy</h3>
-        <div className="flex items-center justify-center gap-3 mb-3">
+      <div className="bg-gradient-to-r from-green-100 to-blue-100 rounded-2xl p-6 mb-6">
+        <h3 className="font-semibold text-gray-800 text-center mb-4">Power Grid Strategy</h3>
+        <div className="flex items-center justify-center gap-3 text-sm">
           <div className="text-center">
             <div className="text-2xl mb-1">⚡</div>
-            <div className="text-sm text-gray-600">Generate</div>
+            <div className="text-gray-600">Generate</div>
           </div>
-          <div className="text-xl text-gray-400">→</div>
+          <div className="text-gray-400">→</div>
           <div className="text-center">
             <div className="text-2xl mb-1">⬆️</div>
-            <div className="text-sm text-gray-600">Step Up</div>
-            <div className="text-xs text-green-600">100,000V+</div>
+            <div className="text-green-600 font-semibold">Step Up</div>
+            <div className="text-xs text-gray-500">100kV+</div>
           </div>
-          <div className="text-xl text-gray-400">→</div>
+          <div className="text-gray-400">→</div>
           <div className="text-center">
             <div className="text-2xl mb-1">〰️</div>
-            <div className="text-sm text-gray-600">Transmit</div>
-            <div className="text-xs text-green-600">Low I²R loss</div>
+            <div className="text-gray-600">Transmit</div>
           </div>
-          <div className="text-xl text-gray-400">→</div>
+          <div className="text-gray-400">→</div>
           <div className="text-center">
             <div className="text-2xl mb-1">⬇️</div>
-            <div className="text-sm text-gray-600">Step Down</div>
-            <div className="text-xs text-blue-600">120V</div>
+            <div className="text-blue-600 font-semibold">Step Down</div>
+            <div className="text-xs text-gray-500">120V</div>
           </div>
         </div>
       </div>
 
       <div className="space-y-3 mb-6">
-        <div className="bg-white border border-gray-200 rounded-xl p-4">
-          <h4 className="font-bold text-gray-800 mb-1">🔌 Transformers</h4>
-          <p className="text-gray-600 text-sm">
-            Devices that convert between high and low voltage AC power with minimal loss.
-          </p>
+        <div className="p-4 bg-white rounded-xl border border-gray-100">
+          <h4 className="font-semibold text-gray-900 mb-1">Transformers</h4>
+          <p className="text-gray-600 text-sm">Convert between voltage levels with minimal loss.</p>
         </div>
-        <div className="bg-white border border-gray-200 rounded-xl p-4">
-          <h4 className="font-bold text-gray-800 mb-1">📊 100× Reduction</h4>
-          <p className="text-gray-600 text-sm">
-            Increasing voltage by 100× reduces current by 100×, cutting I²R losses by 10,000×!
-          </p>
+        <div className="p-4 bg-white rounded-xl border border-gray-100">
+          <h4 className="font-semibold text-gray-900 mb-1">100× Voltage Increase</h4>
+          <p className="text-gray-600 text-sm">Reduces current by 100×, cutting I²R losses by 10,000×!</p>
         </div>
       </div>
 
-      <button
-        onMouseDown={nextPhase}
-        className="w-full py-3 bg-orange-500 text-white rounded-xl font-bold hover:bg-orange-600 transition-colors"
-      >
-        Apply This Knowledge →
-      </button>
+      <PrimaryButton onClick={nextPhase}>
+        Real-World Applications
+      </PrimaryButton>
     </div>
   );
 
-  const renderTransfer = () => (
-    <div>
-      <h2 className="text-xl font-bold text-gray-800 mb-4">Real-World Applications</h2>
-      <p className="text-gray-600 mb-6">
-        Discover how I²R losses affect everyday electrical systems.
-      </p>
-
-      <div className="space-y-4">
-        {[
-          {
-            title: 'USB-C Power Delivery',
-            icon: '📱',
-            description: 'Fast chargers use higher voltage (up to 20V) to reduce heating in thin cables',
-          },
-          {
-            title: 'Electric Vehicle Charging',
-            icon: '🚗',
-            description: 'DC fast chargers use 400-800V to push high power through manageable cables',
-          },
-          {
-            title: 'Extension Cord Ratings',
-            icon: '🔌',
-            description: 'Amp ratings ensure the wire won\'t overheat - heavier gauge for higher loads',
-          },
-        ].map((app, index) => (
-          <div
-            key={index}
-            className={`p-4 rounded-xl border-2 transition-all ${
-              completedApps.has(index)
-                ? 'border-green-500 bg-green-50'
-                : 'border-gray-200 bg-white'
-            }`}
-          >
-            <div className="flex items-start gap-3">
-              <span className="text-2xl">{app.icon}</span>
-              <div className="flex-1">
-                <h3 className="font-bold text-gray-800">{app.title}</h3>
-                <p className="text-gray-600 text-sm mt-1">{app.description}</p>
-              </div>
-              {!completedApps.has(index) && (
-                <button
-                  onMouseDown={() => handleCompleteApp(index)}
-                  className="px-3 py-1 bg-orange-100 text-orange-600 rounded-lg text-sm font-medium hover:bg-orange-200 transition-colors"
-                >
-                  Got it
-                </button>
-              )}
-              {completedApps.has(index) && (
-                <span className="text-green-500 text-xl">✓</span>
-              )}
-            </div>
-          </div>
-        ))}
-      </div>
-
-      <button
-        onMouseDown={nextPhase}
-        disabled={completedApps.size < 3}
-        className={`w-full py-3 mt-6 rounded-xl font-bold transition-colors ${
-          completedApps.size >= 3
-            ? 'bg-orange-500 text-white hover:bg-orange-600'
-            : 'bg-gray-200 text-gray-400 cursor-not-allowed'
-        }`}
-      >
-        {completedApps.size >= 3 ? 'Take the Test →' : `Review all applications (${completedApps.size}/3)`}
-      </button>
-    </div>
-  );
-
-  const renderTest = () => {
-    const questions = [
+  const renderTransfer = () => {
+    const apps = [
       {
-        question: 'What does the I²R power loss equation tell us?',
-        options: [
-          'Power loss increases with voltage',
-          'Power loss increases with the square of current',
-          'Power loss decreases with resistance',
-        ],
+        title: 'USB-C Power Delivery',
+        icon: '📱',
+        desc: 'Fast chargers use higher voltage (up to 20V) instead of more current to reduce heating in thin cables.',
+        graphic: <AppGraphic1 />,
       },
       {
-        question: 'Why do power grids use high-voltage transmission?',
-        options: [
-          'High voltage travels faster through wires',
-          'It\'s safer than low voltage',
-          'Lower current means less I²R loss',
-        ],
+        title: 'EV Fast Charging',
+        icon: '🚗',
+        desc: 'DC fast chargers use 400-800V to push high power through manageable cable sizes without melting.',
+        graphic: <AppGraphic2 />,
       },
       {
-        question: 'A wire is carrying 2A. If current increases to 4A, power loss will:',
-        options: [
-          'Quadruple (4×)',
-          'Double (2×)',
-          'Stay the same',
-        ],
+        title: 'Extension Cord Ratings',
+        icon: '🔌',
+        desc: 'Amp ratings ensure wires won\'t overheat. Higher loads need thicker gauge (lower number = thicker).',
+        graphic: <AppGraphic3 />,
+      },
+      {
+        title: 'Resistive Heating',
+        icon: '🔥',
+        desc: 'Space heaters and toasters intentionally use I²R loss! High-resistance elements convert electricity to heat.',
+        graphic: <AppGraphic4 />,
       },
     ];
 
     return (
       <div>
-        <h2 className="text-xl font-bold text-gray-800 mb-4">Knowledge Check</h2>
+        <span className="inline-block px-3 py-1 bg-emerald-100 text-emerald-700 rounded-full text-sm font-medium mb-4">
+          Applications
+        </span>
+        <h2 className="text-2xl font-bold text-gray-900 mb-2">
+          Real-World Uses
+        </h2>
+        <p className="text-gray-500 text-sm mb-6">
+          Explore all 4 applications to unlock the knowledge test.
+        </p>
 
-        {testScore === null ? (
-          <>
-            <div className="space-y-6 mb-6">
-              {questions.map((q, qIndex) => (
-                <div key={qIndex} className="bg-white border border-gray-200 rounded-xl p-4">
-                  <p className="font-medium text-gray-800 mb-3">{q.question}</p>
-                  <div className="space-y-2">
-                    {q.options.map((option, oIndex) => (
-                      <button
-                        key={oIndex}
-                        onMouseDown={() => handleTestAnswer(qIndex, oIndex)}
-                        className={`w-full p-3 rounded-lg text-left text-sm transition-all ${
-                          testAnswers[qIndex] === oIndex
-                            ? 'bg-orange-500 text-white'
-                            : 'bg-gray-50 text-gray-700 hover:bg-orange-50'
-                        }`}
-                      >
-                        {option}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              ))}
-            </div>
-
+        <div className="flex gap-2 mb-4 overflow-x-auto pb-2">
+          {apps.map((app, i) => (
             <button
-              onMouseDown={handleSubmitTest}
-              disabled={testAnswers.includes(-1)}
-              className={`w-full py-3 rounded-xl font-bold transition-colors ${
-                !testAnswers.includes(-1)
-                  ? 'bg-orange-500 text-white hover:bg-orange-600'
-                  : 'bg-gray-200 text-gray-400 cursor-not-allowed'
+              key={i}
+              onMouseDown={(e) => {
+                e.preventDefault();
+                setActiveAppTab(i);
+                if (!completedApps.has(i)) {
+                  handleCompleteApp(i);
+                }
+              }}
+              className={`flex items-center gap-2 px-4 py-2 rounded-xl font-medium text-sm whitespace-nowrap transition-all ${
+                activeAppTab === i
+                  ? 'bg-orange-500 text-white shadow-lg'
+                  : completedApps.has(i)
+                  ? 'bg-green-100 text-green-700'
+                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
               }`}
             >
-              Submit Answers
+              <span>{app.icon}</span>
+              <span>{app.title}</span>
+              {completedApps.has(i) && activeAppTab !== i && <span>✓</span>}
             </button>
-          </>
-        ) : (
-          <div className="text-center">
-            <div className={`text-6xl mb-4 ${testScore >= 2 ? 'animate-bounce' : ''}`}>
-              {testScore >= 2 ? '🎉' : '📚'}
-            </div>
-            <p className="text-2xl font-bold text-gray-800 mb-2">
-              {testScore} / 3 Correct
-            </p>
-            <p className="text-gray-600 mb-6">
-              {testScore >= 2
-                ? 'Great understanding of I²R power losses!'
-                : 'Review the concepts and try again.'}
-            </p>
-            <button
-              onMouseDown={nextPhase}
-              className="px-8 py-3 bg-orange-500 text-white rounded-xl font-bold hover:bg-orange-600 transition-colors"
-            >
-              {testScore >= 2 ? 'Complete Lesson →' : 'See Summary →'}
-            </button>
+          ))}
+        </div>
+
+        <div className="bg-gray-50 rounded-2xl p-5 mb-6">
+          <div className="bg-white rounded-xl mb-4 overflow-hidden">
+            {apps[activeAppTab].graphic}
           </div>
-        )}
+          <h3 className="font-bold text-gray-900 text-lg mb-2">
+            {apps[activeAppTab].title}
+          </h3>
+          <p className="text-gray-600">
+            {apps[activeAppTab].desc}
+          </p>
+        </div>
+
+        <div className="flex items-center justify-between mb-6">
+          <span className="text-sm text-gray-500">
+            {completedApps.size}/4 applications reviewed
+          </span>
+          <div className="flex gap-1">
+            {[0, 1, 2, 3].map(i => (
+              <div
+                key={i}
+                className={`w-3 h-3 rounded-full ${
+                  completedApps.has(i) ? 'bg-green-500' : 'bg-gray-200'
+                }`}
+              />
+            ))}
+          </div>
+        </div>
+
+        <PrimaryButton onClick={nextPhase} disabled={completedApps.size < 4}>
+          {completedApps.size >= 4 ? 'Take Knowledge Test' : 'Review all 4 applications first'}
+        </PrimaryButton>
+      </div>
+    );
+  };
+
+  const renderTest = () => {
+    const allAnswered = !testAnswers.includes(-1);
+
+    if (testScore !== null) {
+      const passed = testScore >= 7;
+      return (
+        <div className="text-center py-6">
+          <div className={`text-7xl mb-6 ${passed ? 'animate-bounce' : ''}`}>
+            {passed ? '🎉' : '📚'}
+          </div>
+          <h2 className="text-3xl font-bold text-gray-900 mb-2">
+            {testScore}/10 Correct
+          </h2>
+          <p className="text-gray-600 mb-8">
+            {passed
+              ? 'Excellent! You\'ve mastered I²R power loss concepts!'
+              : 'Review the material and try again to improve your score.'}
+          </p>
+          <PrimaryButton onClick={nextPhase}>
+            {passed ? 'Complete Lesson' : 'See Summary'}
+          </PrimaryButton>
+        </div>
+      );
+    }
+
+    return (
+      <div>
+        <span className="inline-block px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm font-medium mb-4">
+          Knowledge Test
+        </span>
+        <h2 className="text-2xl font-bold text-gray-900 mb-2">
+          Test Your Understanding
+        </h2>
+        <p className="text-gray-500 text-sm mb-6">
+          Answer all 10 questions. You need 7 correct to pass.
+        </p>
+
+        <div className="space-y-6 mb-6">
+          {TEST_QUESTIONS.map((q, qIndex) => (
+            <div key={qIndex} className="bg-gray-50 rounded-2xl p-4">
+              <p className="font-medium text-gray-900 mb-3 text-sm">
+                {qIndex + 1}. {q.question}
+              </p>
+              <div className="grid grid-cols-2 gap-2">
+                {q.options.map((option, oIndex) => (
+                  <button
+                    key={oIndex}
+                    onMouseDown={(e) => {
+                      e.preventDefault();
+                      handleTestAnswer(qIndex, oIndex);
+                    }}
+                    className={`p-3 rounded-xl text-left text-sm transition-all ${
+                      testAnswers[qIndex] === oIndex
+                        ? 'bg-orange-500 text-white'
+                        : 'bg-white text-gray-700 hover:bg-orange-50 border border-gray-200'
+                    }`}
+                  >
+                    {option}
+                  </button>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <PrimaryButton onClick={handleSubmitTest} disabled={!allAnswered}>
+          {allAnswered ? 'Submit Answers' : `Answer all questions (${testAnswers.filter(a => a !== -1).length}/10)`}
+        </PrimaryButton>
       </div>
     );
   };
 
   const renderMastery = () => (
-    <div className="text-center">
-      <div className="text-6xl mb-6">⚡🏆</div>
-      <h2 className="text-2xl font-bold text-gray-800 mb-4">
-        I²R Power Loss Master!
+    <div className="text-center py-6">
+      <div className="text-7xl mb-6">🏆</div>
+      <h2 className="text-3xl font-bold text-gray-900 mb-4">
+        Congratulations!
       </h2>
-      <p className="text-lg text-gray-600 mb-6">
-        You now understand one of the most important principles in electrical engineering.
+      <p className="text-gray-600 mb-8">
+        You&apos;ve mastered I²R Power Loss concepts.
       </p>
 
-      <div className="bg-gradient-to-br from-orange-100 to-red-100 rounded-xl p-6 mb-6 text-left">
-        <h3 className="font-bold text-gray-800 mb-4">Key Takeaways:</h3>
-        <ul className="space-y-3 text-gray-700">
-          <li className="flex items-start gap-2">
-            <span className="text-orange-500">✓</span>
-            <span>Power loss in wires = I²R (current squared × resistance)</span>
-          </li>
-          <li className="flex items-start gap-2">
-            <span className="text-orange-500">✓</span>
-            <span>Doubling current quadruples heat loss</span>
-          </li>
-          <li className="flex items-start gap-2">
-            <span className="text-orange-500">✓</span>
-            <span>High voltage transmission reduces losses dramatically</span>
-          </li>
-          <li className="flex items-start gap-2">
-            <span className="text-orange-500">✓</span>
-            <span>Thicker/shorter wires have less resistance</span>
-          </li>
+      <div className="bg-gradient-to-br from-orange-50 to-red-50 rounded-2xl p-6 mb-8 text-left">
+        <h3 className="font-bold text-gray-900 mb-4">Key Takeaways</h3>
+        <ul className="space-y-3">
+          {[
+            'Power loss in wires = I²R (current squared × resistance)',
+            'Doubling current quadruples heat loss',
+            'High voltage transmission dramatically reduces losses',
+            'Wire gauge ratings prevent dangerous overheating',
+          ].map((item, i) => (
+            <li key={i} className="flex items-start gap-3">
+              <span className="text-orange-500 font-bold">✓</span>
+              <span className="text-gray-700">{item}</span>
+            </li>
+          ))}
         </ul>
       </div>
 
-      <button
-        onMouseDown={() => goToPhase('hook')}
-        className="px-8 py-3 bg-gray-200 text-gray-700 rounded-xl font-bold hover:bg-gray-300 transition-colors"
-      >
+      <PrimaryButton onClick={() => goToPhase('hook')} variant="secondary">
         Review Again
-      </button>
+      </PrimaryButton>
     </div>
   );
 
@@ -1015,10 +1187,10 @@ export default function WirePowerLossRenderer({
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-red-50 p-4">
-      <div className="max-w-lg mx-auto">
-        {renderPhaseIndicator()}
-        <div className="bg-white rounded-2xl shadow-lg p-6">
+    <div className="min-h-screen bg-gradient-to-b from-orange-50 via-white to-red-50">
+      <div className="max-w-md mx-auto px-5 py-8">
+        <ProgressIndicator />
+        <div className="bg-white rounded-3xl shadow-xl shadow-gray-200/50 p-6">
           {renderContent()}
         </div>
       </div>

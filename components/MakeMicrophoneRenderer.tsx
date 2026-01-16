@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { playSound } from '../lib/audio';
 
 // ────────────────────────────────────────────────────────────────────────────
@@ -52,6 +52,490 @@ interface MakeMicrophoneRendererProps {
 }
 
 // ────────────────────────────────────────────────────────────────────────────
+// 10-QUESTION TEST DATA
+// ────────────────────────────────────────────────────────────────────────────
+
+const TEST_QUESTIONS = [
+  {
+    question: 'How does a dynamic microphone generate electricity from sound?',
+    options: [
+      'Chemical reaction in the diaphragm',
+      'A coil attached to the diaphragm moves in a magnetic field, inducing voltage',
+      'Static electricity from compressed air',
+      'Heat from sound friction generates current',
+    ],
+    correct: 1,
+  },
+  {
+    question: 'Why can a speaker actually work as a microphone?',
+    options: [
+      'It has a hidden microphone inside',
+      'The magnet can store and replay sound',
+      'Electromagnetic induction is reversible - motion creates current',
+      'Speakers have special reverse circuits',
+    ],
+    correct: 2,
+  },
+  {
+    question: 'Which type of microphone needs phantom power (48V)?',
+    options: [
+      'Dynamic microphone',
+      'Ribbon microphone',
+      'Condenser microphone',
+      'Carbon microphone',
+    ],
+    correct: 2,
+  },
+  {
+    question: 'What physical principle do condenser microphones use?',
+    options: [
+      'Changing capacitance as diaphragm-to-backplate distance varies',
+      'Piezoelectric crystal compression',
+      'Coil movement in magnetic field',
+      'Carbon granule resistance changes',
+    ],
+    correct: 0,
+  },
+  {
+    question: 'Why are dynamic microphones preferred for live performances?',
+    options: [
+      'They have better frequency response',
+      'They are more sensitive to quiet sounds',
+      'They are rugged and need no external power',
+      'They produce louder output signals',
+    ],
+    correct: 2,
+  },
+  {
+    question: 'What is a transducer?',
+    options: [
+      'A device that amplifies sound',
+      'A device that converts one form of energy to another',
+      'A type of audio cable connector',
+      'A frequency filter for audio signals',
+    ],
+    correct: 1,
+  },
+  {
+    question: 'What are MEMS microphones commonly found in?',
+    options: [
+      'Professional recording studios only',
+      'Vintage radios and telephones',
+      'Smartphones and wireless earbuds',
+      'Large concert PA systems',
+    ],
+    correct: 2,
+  },
+  {
+    question: 'What happens when you increase sound amplitude (loudness) hitting a dynamic mic?',
+    options: [
+      'The frequency changes',
+      'The diaphragm moves more, producing stronger signal',
+      'The magnet becomes stronger',
+      'The resistance decreases',
+    ],
+    correct: 1,
+  },
+  {
+    question: 'How do bone conduction headphones deliver sound?',
+    options: [
+      'Through tiny speakers in the ear canal',
+      'By vibrating transducers against your skull bones',
+      'Using ultrasonic waves through air',
+      'Through electromagnetic brain stimulation',
+    ],
+    correct: 1,
+  },
+  {
+    question: 'What is the piezoelectric effect used for in audio?',
+    options: [
+      'Only for producing sound, not capturing it',
+      'Bidirectional conversion - both pickups and buzzers use it',
+      'Only in microphones, not speakers',
+      'Filtering out unwanted frequencies',
+    ],
+    correct: 1,
+  },
+];
+
+// ────────────────────────────────────────────────────────────────────────────
+// PREMIUM UI COMPONENTS
+// ────────────────────────────────────────────────────────────────────────────
+
+const ProgressIndicator: React.FC<{ current: number; total: number; phase: Phase }> = ({
+  current,
+  total,
+  phase,
+}) => {
+  const phaseLabels: Record<Phase, string> = {
+    hook: 'Introduction',
+    predict: 'Prediction',
+    play: 'Simulation',
+    review: 'Concepts',
+    twist_predict: 'Twist',
+    twist_play: 'Reversibility',
+    twist_review: 'Applications',
+    transfer: 'Real World',
+    test: 'Assessment',
+    mastery: 'Complete',
+  };
+
+  return (
+    <div className="mb-8">
+      <div className="flex items-center justify-between mb-3">
+        <span className="text-sm font-semibold text-teal-700 tracking-wide uppercase">
+          {phaseLabels[phase]}
+        </span>
+        <span className="text-sm font-medium text-slate-500">
+          {current} of {total}
+        </span>
+      </div>
+      <div className="h-2 bg-slate-200 rounded-full overflow-hidden">
+        <div
+          className="h-full bg-gradient-to-r from-teal-500 to-cyan-500 rounded-full transition-all duration-500 ease-out"
+          style={{ width: `${(current / total) * 100}%` }}
+        />
+      </div>
+    </div>
+  );
+};
+
+const PrimaryButton: React.FC<{
+  children: React.ReactNode;
+  onMouseDown: (e: React.MouseEvent) => void;
+  disabled?: boolean;
+  variant?: 'primary' | 'secondary' | 'success';
+  fullWidth?: boolean;
+}> = ({ children, onMouseDown, disabled, variant = 'primary', fullWidth = true }) => {
+  const baseClasses = `py-4 px-8 rounded-2xl font-semibold text-lg transition-all duration-200 transform ${
+    fullWidth ? 'w-full' : ''
+  }`;
+
+  const variantClasses = {
+    primary: disabled
+      ? 'bg-slate-200 text-slate-400 cursor-not-allowed'
+      : 'bg-gradient-to-r from-teal-500 to-cyan-500 text-white shadow-lg shadow-teal-500/30 hover:shadow-xl hover:shadow-teal-500/40 hover:-translate-y-0.5 active:translate-y-0',
+    secondary: disabled
+      ? 'bg-slate-100 text-slate-400 cursor-not-allowed'
+      : 'bg-white text-slate-700 border-2 border-slate-200 hover:border-teal-300 hover:bg-teal-50',
+    success: disabled
+      ? 'bg-slate-200 text-slate-400 cursor-not-allowed'
+      : 'bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-lg shadow-emerald-500/30 hover:shadow-xl hover:shadow-emerald-500/40 hover:-translate-y-0.5',
+  };
+
+  const handleClick = useCallback(
+    (e: React.MouseEvent) => {
+      e.preventDefault();
+      if (!disabled) {
+        onMouseDown(e);
+      }
+    },
+    [disabled, onMouseDown]
+  );
+
+  return (
+    <button
+      onMouseDown={handleClick}
+      disabled={disabled}
+      className={`${baseClasses} ${variantClasses[variant]}`}
+    >
+      {children}
+    </button>
+  );
+};
+
+// ────────────────────────────────────────────────────────────────────────────
+// APPLICATION GRAPHICS
+// ────────────────────────────────────────────────────────────────────────────
+
+const BoneConductionGraphic: React.FC = () => (
+  <svg viewBox="0 0 400 300" className="w-full h-64">
+    <defs>
+      <linearGradient id="boneGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stopColor="#0d9488" />
+        <stop offset="100%" stopColor="#0891b2" />
+      </linearGradient>
+    </defs>
+
+    {/* Background */}
+    <rect width="400" height="300" fill="#1e293b" rx="12" />
+
+    {/* Head outline */}
+    <ellipse cx="200" cy="150" rx="100" ry="120" fill="#334155" stroke="#475569" strokeWidth="3" />
+
+    {/* Face features */}
+    <ellipse cx="170" cy="130" rx="12" ry="8" fill="#1e293b" />
+    <ellipse cx="230" cy="130" rx="12" ry="8" fill="#1e293b" />
+    <path d="M190 170 Q200 185, 210 170" fill="none" stroke="#475569" strokeWidth="3" strokeLinecap="round" />
+
+    {/* Ear (inner ear) */}
+    <ellipse cx="310" cy="150" rx="15" ry="25" fill="#475569" stroke="#64748b" strokeWidth="2" />
+    <text x="310" y="190" textAnchor="middle" fill="#94a3b8" fontSize="9">Inner Ear</text>
+
+    {/* Bone conduction transducers */}
+    <rect x="90" y="120" width="25" height="40" fill="url(#boneGrad)" rx="6" />
+    <rect x="285" y="120" width="25" height="40" fill="url(#boneGrad)" rx="6" />
+
+    {/* Headband */}
+    <path d="M105 100 Q200 50, 295 100" fill="none" stroke="#0d9488" strokeWidth="8" strokeLinecap="round" />
+
+    {/* Vibration waves through skull */}
+    <path d="M115 140 C130 135, 140 145, 155 140" fill="none" stroke="#22d3ee" strokeWidth="2" opacity="0.6">
+      <animate attributeName="opacity" values="0.3;0.8;0.3" dur="0.5s" repeatCount="indefinite" />
+    </path>
+    <path d="M155 140 C170 135, 180 145, 200 140" fill="none" stroke="#22d3ee" strokeWidth="2" opacity="0.5">
+      <animate attributeName="opacity" values="0.3;0.8;0.3" dur="0.5s" begin="0.1s" repeatCount="indefinite" />
+    </path>
+    <path d="M200 140 C220 135, 240 145, 260 140" fill="none" stroke="#22d3ee" strokeWidth="2" opacity="0.4">
+      <animate attributeName="opacity" values="0.3;0.8;0.3" dur="0.5s" begin="0.2s" repeatCount="indefinite" />
+    </path>
+    <path d="M260 140 C270 135, 280 145, 295 140" fill="none" stroke="#22d3ee" strokeWidth="2" opacity="0.3">
+      <animate attributeName="opacity" values="0.3;0.8;0.3" dur="0.5s" begin="0.3s" repeatCount="indefinite" />
+    </path>
+
+    {/* Arrow to inner ear */}
+    <path d="M260 145 L290 150" stroke="#22d3ee" strokeWidth="2" markerEnd="url(#arrow)" />
+
+    {/* Labels */}
+    <text x="102" y="180" textAnchor="middle" fill="#0d9488" fontSize="10" fontWeight="bold">Transducer</text>
+    <text x="200" y="115" textAnchor="middle" fill="#22d3ee" fontSize="10">Vibrations through bone</text>
+
+    {/* Open ear indicator */}
+    <circle cx="330" cy="150" r="20" fill="none" stroke="#22c55e" strokeWidth="2" strokeDasharray="4,2" />
+    <text x="360" y="155" fill="#22c55e" fontSize="9">Open ear!</text>
+
+    {/* Title */}
+    <text x="200" y="35" textAnchor="middle" fill="#f8fafc" fontSize="16" fontWeight="bold">
+      Bone Conduction Headphones
+    </text>
+    <text x="200" y="55" textAnchor="middle" fill="#94a3b8" fontSize="12">
+      Sound bypasses eardrum, travels through skull bones
+    </text>
+  </svg>
+);
+
+const UltrasonicSensorGraphic: React.FC = () => (
+  <svg viewBox="0 0 400 300" className="w-full h-64">
+    <defs>
+      <linearGradient id="sensorGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+        <stop offset="0%" stopColor="#8b5cf6" />
+        <stop offset="100%" stopColor="#6366f1" />
+      </linearGradient>
+    </defs>
+
+    {/* Background */}
+    <rect width="400" height="300" fill="#1e293b" rx="12" />
+
+    {/* Sensor module */}
+    <rect x="40" y="100" width="120" height="80" fill="#374151" rx="8" stroke="#4b5563" strokeWidth="2" />
+
+    {/* Piezo elements */}
+    <circle cx="75" cy="140" r="25" fill="url(#sensorGrad)" stroke="#a5b4fc" strokeWidth="2" />
+    <circle cx="125" cy="140" r="25" fill="url(#sensorGrad)" stroke="#a5b4fc" strokeWidth="2" />
+    <text x="75" y="145" textAnchor="middle" fill="#ffffff" fontSize="10" fontWeight="bold">TX</text>
+    <text x="125" y="145" textAnchor="middle" fill="#ffffff" fontSize="10" fontWeight="bold">RX</text>
+
+    <text x="75" y="195" textAnchor="middle" fill="#a5b4fc" fontSize="9">Emit</text>
+    <text x="125" y="195" textAnchor="middle" fill="#a5b4fc" fontSize="9">Receive</text>
+
+    {/* Outgoing waves */}
+    {[0, 1, 2].map(i => (
+      <path key={`out-${i}`}
+        d={`M175 ${125 + i * 15} Q${220 + i * 25} 140, ${260 + i * 35} ${125 + i * 15}`}
+        fill="none" stroke="#8b5cf6" strokeWidth="2" opacity={0.8 - i * 0.2}>
+        <animate attributeName="d"
+          values={`M175 ${125 + i * 15} Q${220 + i * 25} 140, ${260 + i * 35} ${125 + i * 15};M185 ${125 + i * 15} Q${230 + i * 25} 140, ${270 + i * 35} ${125 + i * 15};M175 ${125 + i * 15} Q${220 + i * 25} 140, ${260 + i * 35} ${125 + i * 15}`}
+          dur="1s" repeatCount="indefinite" />
+      </path>
+    ))}
+
+    {/* Object */}
+    <rect x="300" y="90" width="60" height="100" fill="#475569" rx="6" stroke="#64748b" strokeWidth="2" />
+    <text x="330" y="145" textAnchor="middle" fill="#94a3b8" fontSize="11">Object</text>
+
+    {/* Returning waves */}
+    {[0, 1, 2].map(i => (
+      <path key={`back-${i}`}
+        d={`M295 ${175 + i * 15} Q${250 - i * 20} 165, ${200 - i * 30} ${175 + i * 15}`}
+        fill="none" stroke="#22d3ee" strokeWidth="2" strokeDasharray="4,2" opacity={0.8 - i * 0.2}>
+        <animate attributeName="opacity" values="0.3;0.8;0.3" dur="0.8s" begin={`${i * 0.2}s`} repeatCount="indefinite" />
+      </path>
+    ))}
+
+    {/* Distance calculation */}
+    <rect x="40" y="220" width="160" height="50" fill="#1f2937" rx="8" stroke="#374151" strokeWidth="2" />
+    <text x="120" y="240" textAnchor="middle" fill="#94a3b8" fontSize="10">Distance:</text>
+    <text x="120" y="260" textAnchor="middle" fill="#22d3ee" fontSize="18" fontWeight="bold">
+      <tspan>d = v × t / 2</tspan>
+    </text>
+
+    {/* Same element badge */}
+    <rect x="250" y="220" width="130" height="40" fill="#8b5cf6" rx="8" opacity="0.2" />
+    <text x="315" y="245" textAnchor="middle" fill="#a5b4fc" fontSize="11" fontWeight="bold">Same piezo element!</text>
+
+    {/* Title */}
+    <text x="200" y="35" textAnchor="middle" fill="#f8fafc" fontSize="16" fontWeight="bold">
+      Ultrasonic Distance Sensor
+    </text>
+    <text x="200" y="55" textAnchor="middle" fill="#94a3b8" fontSize="12">
+      Piezo transducer emits AND receives ultrasound
+    </text>
+  </svg>
+);
+
+const GuitarPickupGraphic: React.FC = () => (
+  <svg viewBox="0 0 400 300" className="w-full h-64">
+    <defs>
+      <linearGradient id="stringGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+        <stop offset="0%" stopColor="#d4d4d4" />
+        <stop offset="100%" stopColor="#a3a3a3" />
+      </linearGradient>
+      <linearGradient id="pickupGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+        <stop offset="0%" stopColor="#92400e" />
+        <stop offset="100%" stopColor="#78350f" />
+      </linearGradient>
+    </defs>
+
+    {/* Background */}
+    <rect width="400" height="300" fill="#1e293b" rx="12" />
+
+    {/* Guitar body outline */}
+    <path d="M50 100 L350 100 L350 200 L50 200 Z" fill="#7c2d12" rx="8" />
+
+    {/* Pickup housing */}
+    <rect x="100" y="140" width="200" height="40" fill="url(#pickupGrad)" rx="6" stroke="#451a03" strokeWidth="2" />
+
+    {/* Magnet poles */}
+    {[0, 1, 2, 3, 4, 5].map(i => (
+      <g key={i}>
+        <circle cx={120 + i * 35} cy="160" r="8" fill="#374151" stroke="#4b5563" strokeWidth="2" />
+        <text x={120 + i * 35} y="165" textAnchor="middle" fill="#94a3b8" fontSize="8">N</text>
+      </g>
+    ))}
+
+    {/* Strings */}
+    {[0, 1, 2, 3, 4, 5].map(i => (
+      <g key={`string-${i}`}>
+        <line x1="50" y1={115 + i * 15} x2="350" y2={115 + i * 15}
+          stroke="url(#stringGrad)" strokeWidth={3 - i * 0.3} />
+        {/* Vibration animation */}
+        <path d={`M${100 + i * 10} ${115 + i * 15} Q${150 + i * 5} ${110 + i * 15}, ${200} ${115 + i * 15} Q${250 - i * 5} ${120 + i * 15}, ${300 - i * 10} ${115 + i * 15}`}
+          fill="none" stroke="#22d3ee" strokeWidth="1" opacity="0.5">
+          <animate attributeName="d"
+            values={`M${100 + i * 10} ${115 + i * 15} Q${150 + i * 5} ${110 + i * 15}, ${200} ${115 + i * 15} Q${250 - i * 5} ${120 + i * 15}, ${300 - i * 10} ${115 + i * 15};M${100 + i * 10} ${115 + i * 15} Q${150 + i * 5} ${120 + i * 15}, ${200} ${115 + i * 15} Q${250 - i * 5} ${110 + i * 15}, ${300 - i * 10} ${115 + i * 15};M${100 + i * 10} ${115 + i * 15} Q${150 + i * 5} ${110 + i * 15}, ${200} ${115 + i * 15} Q${250 - i * 5} ${120 + i * 15}, ${300 - i * 10} ${115 + i * 15}`}
+            dur={`${0.3 + i * 0.05}s`} repeatCount="indefinite" />
+        </path>
+      </g>
+    ))}
+
+    {/* Coil wire */}
+    <rect x="105" y="185" width="190" height="15" fill="#b45309" rx="3" />
+    <text x="200" y="195" textAnchor="middle" fill="#fef3c7" fontSize="9">8,000 turns of wire</text>
+
+    {/* Magnetic field lines */}
+    <path d="M120 125 Q110 140, 120 155" fill="none" stroke="#f87171" strokeWidth="1" strokeDasharray="2,2" opacity="0.5" />
+    <path d="M295 125 Q305 140, 295 155" fill="none" stroke="#f87171" strokeWidth="1" strokeDasharray="2,2" opacity="0.5" />
+
+    {/* Output signal */}
+    <rect x="250" y="220" width="130" height="55" fill="#1f2937" rx="8" stroke="#374151" strokeWidth="2" />
+    <text x="315" y="240" textAnchor="middle" fill="#94a3b8" fontSize="10">Output Signal</text>
+    <path d="M265 255 Q280 245, 295 255 Q310 265, 325 255 Q340 245, 355 255 Q370 265, 365 255"
+      fill="none" stroke="#22c55e" strokeWidth="2">
+      <animate attributeName="d"
+        values="M265 255 Q280 245, 295 255 Q310 265, 325 255 Q340 245, 355 255 Q370 265, 365 255;M265 255 Q280 265, 295 255 Q310 245, 325 255 Q340 265, 355 255 Q370 245, 365 255;M265 255 Q280 245, 295 255 Q310 265, 325 255 Q340 245, 355 255 Q370 265, 365 255"
+        dur="0.3s" repeatCount="indefinite" />
+    </path>
+
+    {/* Label */}
+    <text x="80" y="245" fill="#94a3b8" fontSize="10">String vibration</text>
+    <text x="80" y="260" fill="#94a3b8" fontSize="10">disturbs magnetic</text>
+    <text x="80" y="275" fill="#94a3b8" fontSize="10">field → voltage</text>
+
+    {/* Title */}
+    <text x="200" y="35" textAnchor="middle" fill="#f8fafc" fontSize="16" fontWeight="bold">
+      Guitar Pickup
+    </text>
+    <text x="200" y="55" textAnchor="middle" fill="#94a3b8" fontSize="12">
+      String vibrations induce voltage in coil
+    </text>
+  </svg>
+);
+
+const MEMSMicGraphic: React.FC = () => (
+  <svg viewBox="0 0 400 300" className="w-full h-64">
+    <defs>
+      <linearGradient id="chipGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+        <stop offset="0%" stopColor="#1e293b" />
+        <stop offset="100%" stopColor="#0f172a" />
+      </linearGradient>
+    </defs>
+
+    {/* Background */}
+    <rect width="400" height="300" fill="#1e293b" rx="12" />
+
+    {/* Smartphone outline */}
+    <rect x="30" y="60" width="120" height="180" fill="#374151" rx="16" stroke="#4b5563" strokeWidth="3" />
+    <rect x="40" y="75" width="100" height="140" fill="#1f2937" rx="8" />
+    <circle cx="90" cy="230" r="12" fill="#475569" stroke="#64748b" strokeWidth="2" />
+
+    {/* MEMS mic location */}
+    <circle cx="60" cy="235" r="4" fill="#22c55e" />
+    <text x="60" y="250" textAnchor="middle" fill="#22c55e" fontSize="8">MIC</text>
+
+    {/* Zoomed MEMS chip */}
+    <rect x="180" y="80" width="180" height="140" fill="#475569" rx="8" stroke="#64748b" strokeWidth="2" />
+    <text x="270" y="105" textAnchor="middle" fill="#94a3b8" fontSize="11">MEMS Microphone (Zoomed)</text>
+
+    {/* Silicon structure */}
+    <rect x="200" y="120" width="140" height="80" fill="url(#chipGrad)" rx="4" stroke="#334155" strokeWidth="1" />
+
+    {/* Diaphragm */}
+    <rect x="220" y="140" width="60" height="4" fill="#0ea5e9" rx="1" />
+    <text x="250" y="155" textAnchor="middle" fill="#0ea5e9" fontSize="8">Diaphragm</text>
+
+    {/* Backplate */}
+    <rect x="220" y="170" width="60" height="4" fill="#8b5cf6" rx="1" />
+    <path d="M225 170 L225 165 M235 170 L235 165 M245 170 L245 165 M255 170 L255 165 M265 170 L265 165 M275 170 L275 165"
+      stroke="#8b5cf6" strokeWidth="1" />
+    <text x="250" y="190" textAnchor="middle" fill="#8b5cf6" fontSize="8">Backplate (holes)</text>
+
+    {/* ASIC amplifier */}
+    <rect x="300" y="135" width="30" height="40" fill="#22c55e" rx="4" opacity="0.8" />
+    <text x="315" y="160" textAnchor="middle" fill="#ffffff" fontSize="8">AMP</text>
+
+    {/* Air gap indicator */}
+    <line x1="285" y1="145" x2="285" y2="168" stroke="#fbbf24" strokeWidth="1" strokeDasharray="2,2" />
+    <text x="295" y="160" fill="#fbbf24" fontSize="7">Gap</text>
+
+    {/* Sound waves coming in */}
+    {[0, 1, 2].map(i => (
+      <path key={i} d={`M190 ${145 + i * 5} Q200 ${140 + i * 5}, 210 ${145 + i * 5}`}
+        fill="none" stroke="#0ea5e9" strokeWidth="1" opacity={0.8 - i * 0.2}>
+        <animate attributeName="opacity" values="0.3;0.8;0.3" dur="0.5s" begin={`${i * 0.1}s`} repeatCount="indefinite" />
+      </path>
+    ))}
+
+    {/* Output */}
+    <path d="M330 155 L350 155" stroke="#22c55e" strokeWidth="2" />
+    <text x="360" y="160" fill="#22c55e" fontSize="9">OUT</text>
+
+    {/* Size comparison */}
+    <rect x="200" y="220" width="160" height="55" fill="#1f2937" rx="8" />
+    <text x="280" y="240" textAnchor="middle" fill="#94a3b8" fontSize="10">Typical size: 3mm × 4mm</text>
+    <rect x="220" y="250" width="20" height="16" fill="#0ea5e9" rx="2" opacity="0.5" />
+    <text x="250" y="262" fill="#64748b" fontSize="8">← actual size</text>
+
+    {/* Title */}
+    <text x="200" y="35" textAnchor="middle" fill="#f8fafc" fontSize="16" fontWeight="bold">
+      MEMS Microphone
+    </text>
+    <text x="200" y="55" textAnchor="middle" fill="#94a3b8" fontSize="12">
+      Micro-electro-mechanical system with integrated amp
+    </text>
+  </svg>
+);
+
+// ────────────────────────────────────────────────────────────────────────────
 // MAIN COMPONENT
 // ────────────────────────────────────────────────────────────────────────────
 
@@ -69,11 +553,12 @@ export default function MakeMicrophoneRenderer({
     new Set(savedState?.completedApps || [])
   );
   const [testAnswers, setTestAnswers] = useState<number[]>(
-    savedState?.testAnswers || [-1, -1, -1]
+    savedState?.testAnswers || Array(10).fill(-1)
   );
   const [testScore, setTestScore] = useState<number | null>(
     savedState?.testScore ?? null
   );
+  const [activeAppTab, setActiveAppTab] = useState(0);
 
   const [prediction, setPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
@@ -93,6 +578,7 @@ export default function MakeMicrophoneRenderer({
   const [hasExploredTwist, setHasExploredTwist] = useState(false);
 
   const navigationLockRef = useRef(false);
+  const lastClickRef = useRef(0);
   const animationRef = useRef<number>(0);
 
   // ──────────────────────────────────────────────────────────────────────────
@@ -131,359 +617,350 @@ export default function MakeMicrophoneRenderer({
   }, [phase]);
 
   // ──────────────────────────────────────────────────────────────────────────
-  // NAVIGATION
+  // NAVIGATION WITH DUAL DEBOUNCING
   // ──────────────────────────────────────────────────────────────────────────
 
-  const goToPhase = (newPhase: Phase) => {
+  const goToPhase = useCallback((newPhase: Phase) => {
+    const now = Date.now();
+    if (now - lastClickRef.current < 200) return;
     if (navigationLockRef.current) return;
+    lastClickRef.current = now;
     navigationLockRef.current = true;
     playSound('transition');
     setPhase(newPhase);
     setTimeout(() => {
       navigationLockRef.current = false;
-    }, 400);
-  };
+    }, 200);
+  }, []);
 
-  const nextPhase = () => {
+  const nextPhase = useCallback(() => {
     const currentIndex = PHASES.indexOf(phase);
     if (currentIndex < PHASES.length - 1) {
       goToPhase(PHASES[currentIndex + 1]);
     }
-  };
+  }, [phase, goToPhase]);
 
   // ──────────────────────────────────────────────────────────────────────────
   // HANDLERS
   // ──────────────────────────────────────────────────────────────────────────
 
-  const handlePrediction = (choice: string) => {
+  const handlePrediction = useCallback((choice: string) => {
     playSound('click');
     setPrediction(choice);
     setShowPredictionFeedback(true);
-  };
+  }, []);
 
-  const handleTwistPrediction = (choice: string) => {
+  const handleTwistPrediction = useCallback((choice: string) => {
     playSound('click');
     setTwistPrediction(choice);
     setShowTwistFeedback(true);
-  };
+  }, []);
 
-  const handleExperiment = () => {
-    setExperimentCount(prev => prev + 1);
-    if (experimentCount >= 2) {
-      setHasExperimented(true);
-    }
-  };
+  const handleExperiment = useCallback(() => {
+    setExperimentCount(prev => {
+      const newCount = prev + 1;
+      if (newCount >= 3) {
+        setHasExperimented(true);
+      }
+      return newCount;
+    });
+  }, []);
 
-  const handleCompleteApp = (appIndex: number) => {
+  const handleCompleteApp = useCallback((appIndex: number) => {
     playSound('success');
     setCompletedApps(prev => new Set([...prev, appIndex]));
-  };
+  }, []);
 
-  const handleTestAnswer = (questionIndex: number, answerIndex: number) => {
+  const handleTestAnswer = useCallback((questionIndex: number, answerIndex: number) => {
     playSound('click');
-    const newAnswers = [...testAnswers];
-    newAnswers[questionIndex] = answerIndex;
-    setTestAnswers(newAnswers);
-  };
+    setTestAnswers(prev => {
+      const newAnswers = [...prev];
+      newAnswers[questionIndex] = answerIndex;
+      return newAnswers;
+    });
+  }, []);
 
-  const handleSubmitTest = () => {
-    const correctAnswers = [1, 0, 2]; // Correct indices
+  const handleSubmitTest = useCallback(() => {
     let score = 0;
     testAnswers.forEach((answer, index) => {
-      if (answer === correctAnswers[index]) score++;
+      if (answer === TEST_QUESTIONS[index].correct) score++;
     });
     setTestScore(score);
-    playSound(score >= 2 ? 'success' : 'failure');
-  };
+    playSound(score >= 7 ? 'success' : 'failure');
+  }, [testAnswers]);
 
   // ──────────────────────────────────────────────────────────────────────────
   // PHYSICS CALCULATIONS
   // ──────────────────────────────────────────────────────────────────────────
 
-  const getDiaphragmPosition = () => {
+  const getDiaphragmPosition = useCallback(() => {
     return Math.sin(soundWavePhase * soundFrequency) * soundAmplitude * 15;
-  };
+  }, [soundWavePhase, soundFrequency, soundAmplitude]);
 
-  const getOutputVoltage = () => {
+  const getOutputVoltage = useCallback(() => {
     const position = getDiaphragmPosition();
     const sensitivity = micType === 'dynamic' ? 0.8 : 1.2;
     return (position / 15) * sensitivity;
-  };
+  }, [getDiaphragmPosition, micType]);
 
   // ──────────────────────────────────────────────────────────────────────────
   // RENDER FUNCTIONS
   // ──────────────────────────────────────────────────────────────────────────
-
-  const renderPhaseIndicator = () => (
-    <div className="flex items-center justify-between mb-6 px-2">
-      <div className="flex items-center gap-1">
-        {PHASES.map((p, i) => (
-          <div
-            key={p}
-            className={`h-2 rounded-full transition-all duration-300 ${
-              i <= PHASES.indexOf(phase)
-                ? 'bg-teal-500 w-6'
-                : 'bg-gray-200 w-4'
-            }`}
-          />
-        ))}
-      </div>
-      <span className="text-sm text-gray-500 font-medium">
-        {PHASES.indexOf(phase) + 1} / {PHASES.length}
-      </span>
-    </div>
-  );
 
   const renderMicrophoneSimulator = () => {
     const diaphragmOffset = getDiaphragmPosition();
     const voltage = getOutputVoltage();
 
     return (
-      <svg viewBox="0 0 400 220" className="w-full h-52 mb-4">
-        {/* Sound waves incoming */}
-        {[0, 1, 2, 3].map(i => (
-          <path
-            key={i}
-            d={`M ${30 + i * 25} 110 Q ${40 + i * 25} ${90 + Math.sin(soundWavePhase + i * 0.5) * 20 * soundAmplitude}, ${50 + i * 25} 110 Q ${60 + i * 25} ${130 - Math.sin(soundWavePhase + i * 0.5) * 20 * soundAmplitude}, ${70 + i * 25} 110`}
-            fill="none"
-            stroke="#0D9488"
-            strokeWidth="2"
-            opacity={0.4 + (i * 0.15)}
-          />
-        ))}
-        <text x="60" y="150" textAnchor="middle" fill="#0D9488" fontSize="10">
-          Sound Waves
-        </text>
-
-        {/* Microphone housing */}
-        <rect x="140" y="60" width="100" height="100" fill="#374151" rx="10" />
-
-        {/* Diaphragm */}
-        <ellipse
-          cx="155"
-          cy="110"
-          rx="8"
-          ry="30"
-          fill="#9CA3AF"
-          stroke="#6B7280"
-          strokeWidth="2"
-          transform={`translate(${diaphragmOffset}, 0)`}
-        />
-        <text x="155" y="155" textAnchor="middle" fill="#9CA3AF" fontSize="9">
-          Diaphragm
-        </text>
-
-        {micType === 'dynamic' ? (
-          <>
-            {/* Voice coil */}
-            <rect
-              x={170 + diaphragmOffset}
-              y="95"
-              width="15"
-              height="30"
-              fill="#F59E0B"
-              rx="3"
-            />
-            <text x="177" y="135" textAnchor="middle" fill="#F59E0B" fontSize="8">
-              Coil
-            </text>
-
-            {/* Magnet */}
-            <rect x="195" y="80" width="30" height="60" fill="#DC2626" rx="4" />
-            <text x="210" y="115" textAnchor="middle" fill="white" fontSize="10" fontWeight="bold">
-              N S
-            </text>
-            <text x="210" y="155" textAnchor="middle" fill="#DC2626" fontSize="8">
-              Magnet
-            </text>
-
-            {/* Field lines */}
+      <div className="bg-gradient-to-br from-slate-900 to-slate-800 rounded-2xl p-4 mb-6">
+        <svg viewBox="0 0 400 220" className="w-full h-52">
+          {/* Sound waves incoming */}
+          {[0, 1, 2, 3].map(i => (
             <path
-              d="M 195 90 C 180 85, 180 135, 195 130"
+              key={i}
+              d={`M ${30 + i * 25} 110 Q ${40 + i * 25} ${90 + Math.sin(soundWavePhase + i * 0.5) * 20 * soundAmplitude}, ${50 + i * 25} 110 Q ${60 + i * 25} ${130 - Math.sin(soundWavePhase + i * 0.5) * 20 * soundAmplitude}, ${70 + i * 25} 110`}
               fill="none"
-              stroke="#FCA5A5"
-              strokeWidth="1"
-              strokeDasharray="3"
+              stroke="#0D9488"
+              strokeWidth="2"
+              opacity={0.4 + (i * 0.15)}
             />
-          </>
-        ) : (
-          <>
-            {/* Backplate (condenser) */}
-            <rect x="175" y="85" width="8" height="50" fill="#3B82F6" />
-            <text x="179" y="155" textAnchor="middle" fill="#3B82F6" fontSize="8">
-              Backplate
-            </text>
-
-            {/* Capacitor symbol */}
-            <line x1="168" y1="100" x2="168" y2="120" stroke="#6B7280" strokeWidth="2" />
-            <line x1="175" y1="100" x2="175" y2="120" stroke="#6B7280" strokeWidth="2" />
-
-            {/* Bias voltage */}
-            <text x="210" y="110" fill="#3B82F6" fontSize="9">
-              48V bias
-            </text>
-          </>
-        )}
-
-        {/* Output signal */}
-        <g transform="translate(260, 60)">
-          <rect width="120" height="100" fill="#F3F4F6" rx="8" />
-          <text x="60" y="20" textAnchor="middle" fill="#374151" fontSize="11" fontWeight="bold">
-            OUTPUT SIGNAL
+          ))}
+          <text x="60" y="150" textAnchor="middle" fill="#0D9488" fontSize="10">
+            Sound Waves
           </text>
 
-          {/* Waveform display */}
-          <path
-            d={`M 10 60 ${Array.from({ length: 20 }, (_, i) =>
-              `L ${10 + i * 5} ${60 - Math.sin((soundWavePhase + i * 0.5) * soundFrequency) * voltage * 25}`
-            ).join(' ')}`}
-            fill="none"
-            stroke="#0D9488"
+          {/* Microphone housing */}
+          <rect x="140" y="60" width="100" height="100" fill="#374151" rx="10" />
+
+          {/* Diaphragm */}
+          <ellipse
+            cx="155"
+            cy="110"
+            rx="8"
+            ry="30"
+            fill="#9CA3AF"
+            stroke="#6B7280"
             strokeWidth="2"
+            transform={`translate(${diaphragmOffset}, 0)`}
           />
-
-          {/* Voltage readout */}
-          <text x="60" y="90" textAnchor="middle" fill="#0D9488" fontSize="12" fontWeight="bold">
-            {(Math.abs(voltage) * 10).toFixed(1)} mV
+          <text x="155" y="155" textAnchor="middle" fill="#9CA3AF" fontSize="9">
+            Diaphragm
           </text>
-        </g>
-      </svg>
+
+          {micType === 'dynamic' ? (
+            <>
+              {/* Voice coil */}
+              <rect
+                x={170 + diaphragmOffset}
+                y="95"
+                width="15"
+                height="30"
+                fill="#F59E0B"
+                rx="3"
+              />
+              <text x="177" y="135" textAnchor="middle" fill="#F59E0B" fontSize="8">
+                Coil
+              </text>
+
+              {/* Magnet */}
+              <rect x="195" y="80" width="30" height="60" fill="#DC2626" rx="4" />
+              <text x="210" y="115" textAnchor="middle" fill="white" fontSize="10" fontWeight="bold">
+                N S
+              </text>
+              <text x="210" y="155" textAnchor="middle" fill="#DC2626" fontSize="8">
+                Magnet
+              </text>
+
+              {/* Field lines */}
+              <path
+                d="M 195 90 C 180 85, 180 135, 195 130"
+                fill="none"
+                stroke="#FCA5A5"
+                strokeWidth="1"
+                strokeDasharray="3"
+              />
+            </>
+          ) : (
+            <>
+              {/* Backplate (condenser) */}
+              <rect x="175" y="85" width="8" height="50" fill="#3B82F6" />
+              <text x="179" y="155" textAnchor="middle" fill="#3B82F6" fontSize="8">
+                Backplate
+              </text>
+
+              {/* Capacitor symbol */}
+              <line x1="168" y1="100" x2="168" y2="120" stroke="#6B7280" strokeWidth="2" />
+              <line x1="175" y1="100" x2="175" y2="120" stroke="#6B7280" strokeWidth="2" />
+
+              {/* Bias voltage */}
+              <text x="210" y="110" fill="#3B82F6" fontSize="9">
+                48V bias
+              </text>
+            </>
+          )}
+
+          {/* Output signal */}
+          <g transform="translate(260, 60)">
+            <rect width="120" height="100" fill="#1f2937" rx="8" />
+            <text x="60" y="20" textAnchor="middle" fill="#94a3b8" fontSize="11" fontWeight="bold">
+              OUTPUT SIGNAL
+            </text>
+
+            {/* Waveform display */}
+            <path
+              d={`M 10 60 ${Array.from({ length: 20 }, (_, i) =>
+                `L ${10 + i * 5} ${60 - Math.sin((soundWavePhase + i * 0.5) * soundFrequency) * voltage * 25}`
+              ).join(' ')}`}
+              fill="none"
+              stroke="#0D9488"
+              strokeWidth="2"
+            />
+
+            {/* Voltage readout */}
+            <text x="60" y="90" textAnchor="middle" fill="#0D9488" fontSize="12" fontWeight="bold">
+              {(Math.abs(voltage) * 10).toFixed(1)} mV
+            </text>
+          </g>
+        </svg>
+      </div>
     );
   };
 
   const renderSpeakerMicDemo = () => (
-    <svg viewBox="0 0 400 200" className="w-full h-48 mb-4">
-      {speakerMode === 'speaker' ? (
-        <>
-          {/* Audio input */}
-          <g transform="translate(20, 50)">
-            <rect width="80" height="60" fill="#374151" rx="8" />
-            <text x="40" y="25" textAnchor="middle" fill="white" fontSize="10">
-              AUDIO IN
+    <div className="bg-gradient-to-br from-slate-900 to-slate-800 rounded-2xl p-4 mb-6">
+      <svg viewBox="0 0 400 200" className="w-full h-48">
+        {speakerMode === 'speaker' ? (
+          <>
+            {/* Audio input */}
+            <g transform="translate(20, 50)">
+              <rect width="80" height="60" fill="#374151" rx="8" />
+              <text x="40" y="25" textAnchor="middle" fill="white" fontSize="10">
+                AUDIO IN
+              </text>
+              <path
+                d={`M 15 45 ${Array.from({ length: 12 }, (_, i) =>
+                  `L ${15 + i * 5} ${45 - Math.sin(soundWavePhase + i * 0.5) * 10}`
+                ).join(' ')}`}
+                fill="none"
+                stroke="#22C55E"
+                strokeWidth="2"
+              />
+            </g>
+
+            {/* Electrical signal arrow */}
+            <path d="M 100 80 L 130 80 L 125 75 M 130 80 L 125 85" fill="none" stroke="#22C55E" strokeWidth="2">
+              <animate attributeName="opacity" values="0.5;1;0.5" dur="0.5s" repeatCount="indefinite" />
+            </path>
+            <text x="115" y="95" textAnchor="middle" fill="#22C55E" fontSize="9">
+              Electric
             </text>
-            <path
-              d={`M 15 45 ${Array.from({ length: 12 }, (_, i) =>
-                `L ${15 + i * 5} ${45 - Math.sin(soundWavePhase + i * 0.5) * 10}`
-              ).join(' ')}`}
-              fill="none"
-              stroke="#22C55E"
-              strokeWidth="2"
-            />
-          </g>
 
-          {/* Electrical signal arrow */}
-          <path d="M 100 80 L 130 80 L 125 75 M 130 80 L 125 85" fill="none" stroke="#22C55E" strokeWidth="2">
-            <animate attributeName="opacity" values="0.5;1;0.5" dur="0.5s" repeatCount="indefinite" />
-          </path>
-          <text x="115" y="95" textAnchor="middle" fill="#22C55E" fontSize="9">
-            Electric
-          </text>
+            {/* Speaker cone */}
+            <g transform="translate(140, 40)">
+              <polygon
+                points={`60,60 ${100 + Math.sin(soundWavePhase) * 10},40 ${100 + Math.sin(soundWavePhase) * 10},80`}
+                fill="#9CA3AF"
+                stroke="#6B7280"
+                strokeWidth="2"
+              />
+              <rect x="100" y="50" width="30" height="20" fill="#F59E0B" rx="3" />
+              <rect x="130" y="45" width="20" height="30" fill="#DC2626" rx="3" />
+              <text x="90" y="100" textAnchor="middle" fill="#94a3b8" fontSize="10">
+                Speaker Cone
+              </text>
+            </g>
 
-          {/* Speaker cone */}
-          <g transform="translate(140, 40)">
-            <polygon
-              points={`60,60 ${100 + Math.sin(soundWavePhase) * 10},40 ${100 + Math.sin(soundWavePhase) * 10},80`}
-              fill="#9CA3AF"
-              stroke="#6B7280"
-              strokeWidth="2"
-            />
-            <rect x="100" y="50" width="30" height="20" fill="#F59E0B" rx="3" />
-            <rect x="130" y="45" width="20" height="30" fill="#DC2626" rx="3" />
-            <text x="90" y="100" textAnchor="middle" fill="#6B7280" fontSize="10">
-              Speaker Cone
+            {/* Sound waves out */}
+            {[0, 1, 2].map(i => (
+              <ellipse
+                key={i}
+                cx={320 + i * 20}
+                cy="60"
+                rx={10 + i * 8}
+                ry={20 + i * 10}
+                fill="none"
+                stroke="#0D9488"
+                strokeWidth="2"
+                opacity={0.7 - i * 0.2}
+              >
+                <animate attributeName="rx" values={`${10 + i * 8};${15 + i * 8};${10 + i * 8}`} dur="0.5s" repeatCount="indefinite" />
+              </ellipse>
+            ))}
+            <text x="340" y="100" textAnchor="middle" fill="#0D9488" fontSize="10">
+              Sound Out
             </text>
-          </g>
-
-          {/* Sound waves out */}
-          {[0, 1, 2].map(i => (
-            <ellipse
-              key={i}
-              cx={320 + i * 20}
-              cy="60"
-              rx={10 + i * 8}
-              ry={20 + i * 10}
-              fill="none"
-              stroke="#0D9488"
-              strokeWidth="2"
-              opacity={0.7 - i * 0.2}
-            >
-              <animate attributeName="rx" values={`${10 + i * 8};${15 + i * 8};${10 + i * 8}`} dur="0.5s" repeatCount="indefinite" />
-            </ellipse>
-          ))}
-          <text x="340" y="100" textAnchor="middle" fill="#0D9488" fontSize="10">
-            Sound Out
-          </text>
-        </>
-      ) : (
-        <>
-          {/* Sound waves in */}
-          {[0, 1, 2].map(i => (
-            <ellipse
-              key={i}
-              cx={60 + i * 20}
-              cy="60"
-              rx={10 + i * 8}
-              ry={20 + i * 10}
-              fill="none"
-              stroke="#0D9488"
-              strokeWidth="2"
-              opacity={0.3 + i * 0.2}
-            />
-          ))}
-          <text x="60" y="100" textAnchor="middle" fill="#0D9488" fontSize="10">
-            Sound In
-          </text>
-
-          {/* Speaker cone (as mic) */}
-          <g transform="translate(120, 40)">
-            <polygon
-              points={`${40 + Math.sin(soundWavePhase) * 5},60 0,40 0,80`}
-              fill="#9CA3AF"
-              stroke="#6B7280"
-              strokeWidth="2"
-            />
-            <rect x="0" y="50" width="30" height="20" fill="#F59E0B" rx="3" />
-            <rect x="-20" y="45" width="20" height="30" fill="#DC2626" rx="3" />
-            <text x="20" y="100" textAnchor="middle" fill="#6B7280" fontSize="10">
-              Same Speaker!
+          </>
+        ) : (
+          <>
+            {/* Sound waves in */}
+            {[0, 1, 2].map(i => (
+              <ellipse
+                key={i}
+                cx={60 + i * 20}
+                cy="60"
+                rx={10 + i * 8}
+                ry={20 + i * 10}
+                fill="none"
+                stroke="#0D9488"
+                strokeWidth="2"
+                opacity={0.3 + i * 0.2}
+              />
+            ))}
+            <text x="60" y="100" textAnchor="middle" fill="#0D9488" fontSize="10">
+              Sound In
             </text>
-          </g>
 
-          {/* Electrical signal arrow */}
-          <path d="M 200 80 L 230 80 L 225 75 M 230 80 L 225 85" fill="none" stroke="#22C55E" strokeWidth="2">
-            <animate attributeName="opacity" values="0.5;1;0.5" dur="0.5s" repeatCount="indefinite" />
-          </path>
-          <text x="215" y="95" textAnchor="middle" fill="#22C55E" fontSize="9">
-            Electric
-          </text>
+            {/* Speaker cone (as mic) */}
+            <g transform="translate(120, 40)">
+              <polygon
+                points={`${40 + Math.sin(soundWavePhase) * 5},60 0,40 0,80`}
+                fill="#9CA3AF"
+                stroke="#6B7280"
+                strokeWidth="2"
+              />
+              <rect x="0" y="50" width="30" height="20" fill="#F59E0B" rx="3" />
+              <rect x="-20" y="45" width="20" height="30" fill="#DC2626" rx="3" />
+              <text x="20" y="100" textAnchor="middle" fill="#94a3b8" fontSize="10">
+                Same Speaker!
+              </text>
+            </g>
 
-          {/* Audio output */}
-          <g transform="translate(250, 50)">
-            <rect width="100" height="60" fill="#374151" rx="8" />
-            <text x="50" y="20" textAnchor="middle" fill="white" fontSize="10">
-              AUDIO OUT
+            {/* Electrical signal arrow */}
+            <path d="M 200 80 L 230 80 L 225 75 M 230 80 L 225 85" fill="none" stroke="#22C55E" strokeWidth="2">
+              <animate attributeName="opacity" values="0.5;1;0.5" dur="0.5s" repeatCount="indefinite" />
+            </path>
+            <text x="215" y="95" textAnchor="middle" fill="#22C55E" fontSize="9">
+              Electric
             </text>
-            <path
-              d={`M 15 40 ${Array.from({ length: 14 }, (_, i) =>
-                `L ${15 + i * 5} ${40 - Math.sin(soundWavePhase + i * 0.5) * 8}`
-              ).join(' ')}`}
-              fill="none"
-              stroke="#22C55E"
-              strokeWidth="2"
-            />
-            <text x="50" y="55" textAnchor="middle" fill="#9CA3AF" fontSize="9">
-              (weaker signal)
-            </text>
-          </g>
-        </>
-      )}
 
-      {/* Mode label */}
-      <rect x="150" y="150" width="100" height="30" fill={speakerMode === 'speaker' ? '#3B82F6' : '#8B5CF6'} rx="15" />
-      <text x="200" y="170" textAnchor="middle" fill="white" fontSize="12" fontWeight="bold">
-        {speakerMode === 'speaker' ? '🔊 Speaker' : '🎤 Microphone'}
-      </text>
-    </svg>
+            {/* Audio output */}
+            <g transform="translate(250, 50)">
+              <rect width="100" height="60" fill="#374151" rx="8" />
+              <text x="50" y="20" textAnchor="middle" fill="white" fontSize="10">
+                AUDIO OUT
+              </text>
+              <path
+                d={`M 15 40 ${Array.from({ length: 14 }, (_, i) =>
+                  `L ${15 + i * 5} ${40 - Math.sin(soundWavePhase + i * 0.5) * 8}`
+                ).join(' ')}`}
+                fill="none"
+                stroke="#22C55E"
+                strokeWidth="2"
+              />
+              <text x="50" y="55" textAnchor="middle" fill="#9CA3AF" fontSize="9">
+                (weaker signal)
+              </text>
+            </g>
+          </>
+        )}
+
+        {/* Mode label */}
+        <rect x="150" y="150" width="100" height="30" fill={speakerMode === 'speaker' ? '#3B82F6' : '#8B5CF6'} rx="15" />
+        <text x="200" y="170" textAnchor="middle" fill="white" fontSize="12" fontWeight="bold">
+          {speakerMode === 'speaker' ? '🔊 Speaker' : '🎤 Microphone'}
+        </text>
+      </svg>
+    </div>
   );
 
   // ──────────────────────────────────────────────────────────────────────────
@@ -491,74 +968,103 @@ export default function MakeMicrophoneRenderer({
   // ──────────────────────────────────────────────────────────────────────────
 
   const renderHook = () => (
-    <div className="text-center">
-      <div className="text-6xl mb-6">🎤🔊</div>
-      <h2 className="text-2xl font-bold text-gray-800 mb-4">
+    <div className="text-center py-8">
+      <div className="mb-8">
+        <div className="inline-flex items-center justify-center w-24 h-24 rounded-full bg-gradient-to-br from-teal-500 to-cyan-600 shadow-xl shadow-teal-500/30 mb-6">
+          <span className="text-5xl">🎤</span>
+        </div>
+      </div>
+
+      <h1 className="text-3xl font-bold text-slate-800 mb-4 tracking-tight">
         How Does Your Voice Become Electricity?
-      </h2>
-      <p className="text-lg text-gray-600 mb-6">
-        When you speak into a microphone, invisible sound waves somehow transform into
+      </h1>
+
+      <p className="text-lg text-slate-600 mb-8 leading-relaxed max-w-md mx-auto">
+        When you speak into a microphone, invisible sound waves transform into
         electrical signals that travel through wires. How does this magic happen?
       </p>
-      <div className="bg-teal-50 border border-teal-200 rounded-xl p-5 mb-6">
-        <p className="text-teal-800">
-          🔬 The secret lies in <strong>transducers</strong>—devices that convert
-          one form of energy to another. And here&apos;s the amazing part:
-          the physics works <em>both ways</em>!
-        </p>
+
+      <div className="bg-gradient-to-br from-teal-50 to-cyan-50 border border-teal-200 rounded-2xl p-6 mb-8">
+        <div className="flex items-start gap-4">
+          <div className="flex-shrink-0 w-12 h-12 rounded-xl bg-teal-500 flex items-center justify-center">
+            <span className="text-2xl">🔬</span>
+          </div>
+          <div className="text-left">
+            <h3 className="font-semibold text-teal-900 mb-1">The Secret: Transducers</h3>
+            <p className="text-teal-800 text-sm leading-relaxed">
+              Transducers convert one form of energy to another. And here&apos;s the
+              amazing part: the physics works <em>both ways</em>!
+            </p>
+          </div>
+        </div>
       </div>
-      <p className="text-gray-600 mb-6">
-        Let&apos;s build understanding of how microphones capture sound.
-      </p>
-      <button
-        onMouseDown={() => goToPhase('predict')}
-        className="px-8 py-4 bg-teal-500 text-white rounded-xl font-bold text-lg shadow-lg hover:bg-teal-600 transition-colors"
-      >
+
+      <div className="grid grid-cols-3 gap-3 mb-8">
+        {[
+          { icon: '🎤', label: 'Microphones' },
+          { icon: '🔊', label: 'Speakers' },
+          { icon: '🎸', label: 'Pickups' },
+        ].map((item, i) => (
+          <div key={i} className="bg-slate-50 rounded-xl p-3">
+            <div className="text-2xl mb-1">{item.icon}</div>
+            <div className="text-xs text-slate-600">{item.label}</div>
+          </div>
+        ))}
+      </div>
+
+      <PrimaryButton onMouseDown={() => goToPhase('predict')}>
         Explore Transducers →
-      </button>
+      </PrimaryButton>
     </div>
   );
 
   const renderPredict = () => (
-    <div>
-      <h2 className="text-xl font-bold text-gray-800 mb-4">Make Your Prediction</h2>
-      <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-6">
-        <p className="text-blue-800">
-          A dynamic microphone uses a coil attached to a diaphragm, placed in a magnetic field.
-          What principle allows it to generate electricity from sound?
+    <div className="py-6">
+      <div className="flex items-center gap-3 mb-6">
+        <div className="w-10 h-10 rounded-xl bg-blue-100 flex items-center justify-center">
+          <span className="text-xl">🤔</span>
+        </div>
+        <h2 className="text-xl font-bold text-slate-800">Make Your Prediction</h2>
+      </div>
+
+      <div className="bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-200 rounded-2xl p-5 mb-6">
+        <p className="text-blue-800 leading-relaxed">
+          A dynamic microphone uses a <strong>coil attached to a diaphragm</strong>,
+          placed in a magnetic field. What principle allows it to generate electricity from sound?
         </p>
       </div>
 
       <div className="space-y-3 mb-6">
         {[
-          { id: 'heat', label: 'Sound heats the coil, generating current' },
-          { id: 'induction', label: 'Moving coil in magnetic field induces voltage' },
-          { id: 'pressure', label: 'Air pressure creates static electricity' },
+          { id: 'heat', label: 'Sound heats the coil, generating current', icon: '🔥' },
+          { id: 'induction', label: 'Moving coil in magnetic field induces voltage', icon: '⚡' },
+          { id: 'pressure', label: 'Air pressure creates static electricity', icon: '💨' },
         ].map(option => (
           <button
             key={option.id}
-            onMouseDown={() => handlePrediction(option.id)}
+            onMouseDown={(e) => { e.preventDefault(); handlePrediction(option.id); }}
             disabled={showPredictionFeedback}
-            className={`w-full p-4 rounded-xl border-2 text-left transition-all ${
+            className={`w-full p-4 rounded-2xl border-2 text-left transition-all duration-200 flex items-center gap-4 ${
               prediction === option.id
                 ? option.id === 'induction'
-                  ? 'border-green-500 bg-green-50'
+                  ? 'border-emerald-500 bg-emerald-50'
                   : 'border-red-300 bg-red-50'
-                : 'border-gray-200 hover:border-teal-300 hover:bg-teal-50'
+                : 'border-slate-200 hover:border-teal-300 hover:bg-teal-50'
             } ${showPredictionFeedback ? 'cursor-default' : 'cursor-pointer'}`}
           >
-            <span className="font-medium text-gray-700">{option.label}</span>
+            <span className="text-2xl">{option.icon}</span>
+            <span className="font-medium text-slate-700">{option.label}</span>
           </button>
         ))}
       </div>
 
       {showPredictionFeedback && (
-        <div className={`p-4 rounded-xl mb-4 ${
-          prediction === 'induction' ? 'bg-green-100 border border-green-300' : 'bg-amber-100 border border-amber-300'
+        <div className={`p-5 rounded-2xl mb-6 ${
+          prediction === 'induction' ? 'bg-emerald-100 border border-emerald-300' : 'bg-amber-100 border border-amber-300'
         }`}>
-          <p className={prediction === 'induction' ? 'text-green-800' : 'text-amber-800'}>
+          <p className={`leading-relaxed ${prediction === 'induction' ? 'text-emerald-800' : 'text-amber-800'}`}>
             {prediction === 'induction' ? (
-              <><strong>Exactly!</strong> Electromagnetic induction—when a conductor moves through a magnetic field, voltage is induced. Faraday&apos;s law at work!</>
+              <><strong>Exactly right!</strong> Electromagnetic induction—when a conductor moves through a magnetic field, voltage is induced. Faraday&apos;s law at work!</>
             ) : (
               <><strong>Good thinking!</strong> The actual mechanism is electromagnetic induction. Sound moves the diaphragm → coil moves in magnetic field → voltage is induced.</>
             )}
@@ -567,28 +1073,30 @@ export default function MakeMicrophoneRenderer({
       )}
 
       {showPredictionFeedback && (
-        <button
-          onMouseDown={nextPhase}
-          className="w-full py-3 bg-teal-500 text-white rounded-xl font-bold hover:bg-teal-600 transition-colors"
-        >
+        <PrimaryButton onMouseDown={nextPhase}>
           See How It Works →
-        </button>
+        </PrimaryButton>
       )}
     </div>
   );
 
   const renderPlay = () => (
-    <div>
-      <h2 className="text-xl font-bold text-gray-800 mb-2">Microphone Simulator</h2>
-      <p className="text-gray-600 mb-4">
-        Watch how sound waves become electrical signals. Adjust the sound and mic type.
-      </p>
+    <div className="py-6">
+      <div className="flex items-center gap-3 mb-4">
+        <div className="w-10 h-10 rounded-xl bg-teal-100 flex items-center justify-center">
+          <span className="text-xl">🔬</span>
+        </div>
+        <div>
+          <h2 className="text-xl font-bold text-slate-800">Microphone Simulator</h2>
+          <p className="text-sm text-slate-500">Watch sound become electricity</p>
+        </div>
+      </div>
 
       {renderMicrophoneSimulator()}
 
       <div className="space-y-4 mb-6">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-sm font-medium text-slate-700 mb-2">
             Sound Frequency
           </label>
           <input
@@ -598,12 +1106,12 @@ export default function MakeMicrophoneRenderer({
             step="0.5"
             value={soundFrequency}
             onChange={e => { setSoundFrequency(Number(e.target.value)); handleExperiment(); }}
-            className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+            className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-teal-500"
           />
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-sm font-medium text-slate-700 mb-2">
             Sound Amplitude (Loudness)
           </label>
           <input
@@ -613,29 +1121,29 @@ export default function MakeMicrophoneRenderer({
             step="0.1"
             value={soundAmplitude}
             onChange={e => { setSoundAmplitude(Number(e.target.value)); handleExperiment(); }}
-            className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+            className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-teal-500"
           />
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">Microphone Type:</label>
-          <div className="flex gap-2">
+          <label className="block text-sm font-medium text-slate-700 mb-2">Microphone Type:</label>
+          <div className="grid grid-cols-2 gap-3">
             <button
-              onMouseDown={() => { setMicType('dynamic'); handleExperiment(); }}
-              className={`flex-1 py-2 px-3 rounded-lg font-medium transition-colors ${
+              onMouseDown={(e) => { e.preventDefault(); setMicType('dynamic'); handleExperiment(); }}
+              className={`py-3 px-4 rounded-xl font-medium transition-all duration-200 ${
                 micType === 'dynamic'
-                  ? 'bg-teal-500 text-white'
-                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                  ? 'bg-gradient-to-r from-teal-500 to-cyan-500 text-white shadow-lg shadow-teal-500/30'
+                  : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
               }`}
             >
               Dynamic (Coil)
             </button>
             <button
-              onMouseDown={() => { setMicType('condenser'); handleExperiment(); }}
-              className={`flex-1 py-2 px-3 rounded-lg font-medium transition-colors ${
+              onMouseDown={(e) => { e.preventDefault(); setMicType('condenser'); handleExperiment(); }}
+              className={`py-3 px-4 rounded-xl font-medium transition-all duration-200 ${
                 micType === 'condenser'
-                  ? 'bg-teal-500 text-white'
-                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                  ? 'bg-gradient-to-r from-teal-500 to-cyan-500 text-white shadow-lg shadow-teal-500/30'
+                  : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
               }`}
             >
               Condenser
@@ -644,80 +1152,86 @@ export default function MakeMicrophoneRenderer({
         </div>
       </div>
 
-      <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-4 mb-4">
-        <p className="text-yellow-800 text-sm">
+      <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4 mb-6">
+        <p className="text-amber-800 text-sm leading-relaxed">
           <strong>Notice:</strong> Louder sounds → bigger diaphragm movement → stronger signal.
           Condenser mics are more sensitive but need phantom power (48V).
         </p>
       </div>
 
-      <button
+      <PrimaryButton
         onMouseDown={nextPhase}
         disabled={!hasExperimented}
-        className={`w-full py-3 rounded-xl font-bold transition-colors ${
-          hasExperimented
-            ? 'bg-teal-500 text-white hover:bg-teal-600'
-            : 'bg-gray-200 text-gray-400 cursor-not-allowed'
-        }`}
       >
-        {hasExperimented ? 'Continue to Review →' : 'Try adjusting the controls...'}
-      </button>
+        {hasExperimented ? 'Continue to Review →' : `Experiment ${Math.max(0, 3 - experimentCount)} more times...`}
+      </PrimaryButton>
     </div>
   );
 
   const renderReview = () => (
-    <div>
-      <h2 className="text-xl font-bold text-gray-800 mb-4">How Microphones Work</h2>
-
-      <div className="bg-gradient-to-br from-teal-100 to-cyan-100 rounded-xl p-5 mb-6">
-        <div className="text-center mb-3">
-          <span className="text-2xl">Sound → Motion → Electricity</span>
+    <div className="py-6">
+      <div className="flex items-center gap-3 mb-6">
+        <div className="w-10 h-10 rounded-xl bg-purple-100 flex items-center justify-center">
+          <span className="text-xl">📖</span>
         </div>
-        <p className="text-teal-800 text-center text-sm">
-          Microphones are transducers that convert acoustic energy to electrical energy
+        <h2 className="text-xl font-bold text-slate-800">How Microphones Work</h2>
+      </div>
+
+      <div className="bg-gradient-to-br from-teal-500 to-cyan-600 rounded-2xl p-6 mb-6 text-center text-white">
+        <p className="text-teal-100 text-sm mb-2">The Transduction Chain</p>
+        <div className="text-2xl font-bold mb-2">Sound → Motion → Electricity</div>
+        <p className="text-teal-100 text-sm">
+          Microphones convert acoustic energy to electrical energy
         </p>
       </div>
 
       <div className="space-y-4 mb-6">
-        <div className="bg-white border border-gray-200 rounded-xl p-4">
-          <h3 className="font-bold text-gray-800 mb-2">🎤 Dynamic Microphones</h3>
-          <p className="text-gray-600 text-sm">
-            Coil attached to diaphragm moves in magnetic field. Rugged, no power needed.
-            Great for live performances.
-          </p>
-        </div>
-
-        <div className="bg-white border border-gray-200 rounded-xl p-4">
-          <h3 className="font-bold text-gray-800 mb-2">🎙️ Condenser Microphones</h3>
-          <p className="text-gray-600 text-sm">
-            Diaphragm acts as capacitor plate. Distance changes → capacitance changes → signal.
-            More sensitive, needs phantom power.
-          </p>
-        </div>
-
-        <div className="bg-white border border-gray-200 rounded-xl p-4">
-          <h3 className="font-bold text-gray-800 mb-2">📱 MEMS Microphones</h3>
-          <p className="text-gray-600 text-sm">
-            Tiny silicon diaphragms in phones and earbuds. Miniature condenser design
-            with built-in amplifiers.
-          </p>
-        </div>
+        {[
+          {
+            icon: '🎤',
+            title: 'Dynamic Microphones',
+            desc: 'Coil attached to diaphragm moves in magnetic field. Rugged, no power needed. Great for live performances.',
+          },
+          {
+            icon: '🎙️',
+            title: 'Condenser Microphones',
+            desc: 'Diaphragm acts as capacitor plate. Distance changes → capacitance changes → signal. More sensitive, needs phantom power.',
+          },
+          {
+            icon: '📱',
+            title: 'MEMS Microphones',
+            desc: 'Tiny silicon diaphragms in phones and earbuds. Miniature condenser design with built-in amplifiers.',
+          },
+        ].map((item, i) => (
+          <div key={i} className="bg-white border border-slate-200 rounded-2xl p-4">
+            <div className="flex items-start gap-3">
+              <span className="text-2xl">{item.icon}</span>
+              <div>
+                <h3 className="font-bold text-slate-800 mb-1">{item.title}</h3>
+                <p className="text-slate-600 text-sm leading-relaxed">{item.desc}</p>
+              </div>
+            </div>
+          </div>
+        ))}
       </div>
 
-      <button
-        onMouseDown={nextPhase}
-        className="w-full py-3 bg-teal-500 text-white rounded-xl font-bold hover:bg-teal-600 transition-colors"
-      >
+      <PrimaryButton onMouseDown={nextPhase}>
         Now for a Twist... →
-      </button>
+      </PrimaryButton>
     </div>
   );
 
   const renderTwistPredict = () => (
-    <div>
-      <h2 className="text-xl font-bold text-gray-800 mb-4">The Reversibility Puzzle</h2>
-      <div className="bg-purple-50 border border-purple-200 rounded-xl p-4 mb-6">
-        <p className="text-purple-800">
+    <div className="py-6">
+      <div className="flex items-center gap-3 mb-6">
+        <div className="w-10 h-10 rounded-xl bg-purple-100 flex items-center justify-center">
+          <span className="text-xl">🔄</span>
+        </div>
+        <h2 className="text-xl font-bold text-slate-800">The Reversibility Puzzle</h2>
+      </div>
+
+      <div className="bg-gradient-to-br from-purple-50 to-pink-50 border border-purple-200 rounded-2xl p-5 mb-6">
+        <p className="text-purple-800 leading-relaxed">
           A speaker has a coil, magnet, and cone—the same basic parts as a dynamic microphone.
           What happens if you <strong>speak into a speaker</strong> instead of playing audio through it?
         </p>
@@ -725,32 +1239,33 @@ export default function MakeMicrophoneRenderer({
 
       <div className="space-y-3 mb-6">
         {[
-          { id: 'nothing', label: 'Nothing - speakers only output sound' },
-          { id: 'damage', label: 'You\'ll damage the speaker' },
-          { id: 'works', label: 'It works as a microphone!' },
+          { id: 'nothing', label: 'Nothing - speakers only output sound', icon: '🚫' },
+          { id: 'damage', label: "You'll damage the speaker", icon: '💥' },
+          { id: 'works', label: 'It works as a microphone!', icon: '🎤' },
         ].map(option => (
           <button
             key={option.id}
-            onMouseDown={() => handleTwistPrediction(option.id)}
+            onMouseDown={(e) => { e.preventDefault(); handleTwistPrediction(option.id); }}
             disabled={showTwistFeedback}
-            className={`w-full p-4 rounded-xl border-2 text-left transition-all ${
+            className={`w-full p-4 rounded-2xl border-2 text-left transition-all duration-200 flex items-center gap-4 ${
               twistPrediction === option.id
                 ? option.id === 'works'
-                  ? 'border-green-500 bg-green-50'
+                  ? 'border-emerald-500 bg-emerald-50'
                   : 'border-amber-300 bg-amber-50'
-                : 'border-gray-200 hover:border-purple-300 hover:bg-purple-50'
+                : 'border-slate-200 hover:border-purple-300 hover:bg-purple-50'
             } ${showTwistFeedback ? 'cursor-default' : 'cursor-pointer'}`}
           >
-            <span className="font-medium text-gray-700">{option.label}</span>
+            <span className="text-2xl">{option.icon}</span>
+            <span className="font-medium text-slate-700">{option.label}</span>
           </button>
         ))}
       </div>
 
       {showTwistFeedback && (
-        <div className={`p-4 rounded-xl mb-4 ${
-          twistPrediction === 'works' ? 'bg-green-100 border border-green-300' : 'bg-amber-100 border border-amber-300'
+        <div className={`p-5 rounded-2xl mb-6 ${
+          twistPrediction === 'works' ? 'bg-emerald-100 border border-emerald-300' : 'bg-amber-100 border border-amber-300'
         }`}>
-          <p className={twistPrediction === 'works' ? 'text-green-800' : 'text-amber-800'}>
+          <p className={`leading-relaxed ${twistPrediction === 'works' ? 'text-emerald-800' : 'text-amber-800'}`}>
             {twistPrediction === 'works' ? (
               <><strong>Amazing but true!</strong> The physics of electromagnetic induction works both ways. Sound moves cone → coil moves in magnetic field → voltage generated!</>
             ) : (
@@ -761,229 +1276,285 @@ export default function MakeMicrophoneRenderer({
       )}
 
       {showTwistFeedback && (
-        <button
-          onMouseDown={nextPhase}
-          className="w-full py-3 bg-teal-500 text-white rounded-xl font-bold hover:bg-teal-600 transition-colors"
-        >
+        <PrimaryButton onMouseDown={nextPhase}>
           See It In Action →
-        </button>
+        </PrimaryButton>
       )}
     </div>
   );
 
   const renderTwistPlay = () => (
-    <div>
-      <h2 className="text-xl font-bold text-gray-800 mb-2">Speaker ↔ Microphone</h2>
-      <p className="text-gray-600 mb-4">
-        Switch between modes to see the same device work both ways!
-      </p>
+    <div className="py-6">
+      <div className="flex items-center gap-3 mb-4">
+        <div className="w-10 h-10 rounded-xl bg-violet-100 flex items-center justify-center">
+          <span className="text-xl">🔄</span>
+        </div>
+        <div>
+          <h2 className="text-xl font-bold text-slate-800">Speaker ↔ Microphone</h2>
+          <p className="text-sm text-slate-500">Same device, both directions!</p>
+        </div>
+      </div>
 
       {renderSpeakerMicDemo()}
 
-      <div className="flex gap-3 mb-6">
+      <div className="grid grid-cols-2 gap-3 mb-6">
         <button
-          onMouseDown={() => { setSpeakerMode('speaker'); setHasExploredTwist(true); }}
-          className={`flex-1 py-3 px-4 rounded-xl font-bold transition-all ${
+          onMouseDown={(e) => { e.preventDefault(); setSpeakerMode('speaker'); setHasExploredTwist(true); }}
+          className={`py-4 px-4 rounded-2xl font-semibold transition-all duration-200 ${
             speakerMode === 'speaker'
-              ? 'bg-blue-500 text-white'
-              : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+              ? 'bg-gradient-to-r from-blue-500 to-indigo-500 text-white shadow-lg shadow-blue-500/30'
+              : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
           }`}
         >
           🔊 As Speaker
         </button>
         <button
-          onMouseDown={() => { setSpeakerMode('microphone'); setHasExploredTwist(true); }}
-          className={`flex-1 py-3 px-4 rounded-xl font-bold transition-all ${
+          onMouseDown={(e) => { e.preventDefault(); setSpeakerMode('microphone'); setHasExploredTwist(true); }}
+          className={`py-4 px-4 rounded-2xl font-semibold transition-all duration-200 ${
             speakerMode === 'microphone'
-              ? 'bg-purple-500 text-white'
-              : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+              ? 'bg-gradient-to-r from-purple-500 to-violet-500 text-white shadow-lg shadow-purple-500/30'
+              : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
           }`}
         >
           🎤 As Microphone
         </button>
       </div>
 
-      <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-4">
-        <p className="text-blue-800 text-sm">
+      <div className="bg-blue-50 border border-blue-200 rounded-2xl p-4 mb-6">
+        <p className="text-blue-800 text-sm leading-relaxed">
           <strong>Fun fact:</strong> Early intercoms used the same speaker for both talking and listening!
           The Green Bullet harmonica mic is actually a repurposed speaker element.
         </p>
       </div>
 
-      <button
+      <PrimaryButton
         onMouseDown={nextPhase}
         disabled={!hasExploredTwist}
-        className={`w-full py-3 rounded-xl font-bold transition-colors ${
-          hasExploredTwist
-            ? 'bg-teal-500 text-white hover:bg-teal-600'
-            : 'bg-gray-200 text-gray-400 cursor-not-allowed'
-        }`}
       >
         {hasExploredTwist ? 'Continue →' : 'Try both modes...'}
-      </button>
+      </PrimaryButton>
     </div>
   );
 
   const renderTwistReview = () => (
-    <div>
-      <h2 className="text-xl font-bold text-gray-800 mb-4">Transducer Reciprocity</h2>
+    <div className="py-6">
+      <div className="flex items-center gap-3 mb-6">
+        <div className="w-10 h-10 rounded-xl bg-pink-100 flex items-center justify-center">
+          <span className="text-xl">💡</span>
+        </div>
+        <h2 className="text-xl font-bold text-slate-800">Transducer Reciprocity</h2>
+      </div>
 
-      <div className="bg-gradient-to-br from-purple-100 to-pink-100 rounded-xl p-5 mb-6">
-        <h3 className="font-bold text-gray-800 mb-3 text-center">The Same Physics, Both Directions</h3>
-        <div className="flex items-center justify-center gap-4">
-          <div className="text-center">
-            <div className="text-2xl mb-1">🔊</div>
-            <div className="text-xs text-gray-600">Electric → Motion</div>
+      <div className="bg-gradient-to-br from-purple-50 to-pink-50 border border-purple-200 rounded-2xl p-6 mb-6">
+        <h3 className="font-bold text-slate-800 mb-4 text-center">The Same Physics, Both Directions</h3>
+        <div className="flex items-center justify-center gap-6">
+          <div className="text-center bg-white rounded-xl p-4">
+            <div className="text-3xl mb-2">🔊</div>
+            <div className="text-sm text-slate-700 font-medium">Electric → Motion</div>
+            <div className="text-xs text-purple-600">Speaker</div>
           </div>
-          <div className="text-2xl text-gray-400">⟷</div>
-          <div className="text-center">
-            <div className="text-2xl mb-1">🎤</div>
-            <div className="text-xs text-gray-600">Motion → Electric</div>
+          <div className="text-2xl text-slate-400">⟷</div>
+          <div className="text-center bg-white rounded-xl p-4">
+            <div className="text-3xl mb-2">🎤</div>
+            <div className="text-sm text-slate-700 font-medium">Motion → Electric</div>
+            <div className="text-xs text-purple-600">Microphone</div>
           </div>
         </div>
       </div>
 
       <div className="space-y-3 mb-6">
-        <div className="bg-white border border-gray-200 rounded-xl p-4">
-          <h4 className="font-bold text-gray-800 mb-1">🧲 Electromagnetic Induction</h4>
-          <p className="text-gray-600 text-sm">
+        <div className="bg-white border border-slate-200 rounded-2xl p-4">
+          <h4 className="font-bold text-slate-800 mb-1">🧲 Electromagnetic Induction</h4>
+          <p className="text-slate-600 text-sm leading-relaxed">
             Works both ways: current in coil creates motion OR motion in coil creates current.
           </p>
         </div>
-        <div className="bg-white border border-gray-200 rounded-xl p-4">
-          <h4 className="font-bold text-gray-800 mb-1">🎸 Piezoelectric Effect</h4>
-          <p className="text-gray-600 text-sm">
+        <div className="bg-white border border-slate-200 rounded-2xl p-4">
+          <h4 className="font-bold text-slate-800 mb-1">🎸 Piezoelectric Effect</h4>
+          <p className="text-slate-600 text-sm leading-relaxed">
             Also bidirectional: squeezing crystal makes voltage OR voltage bends crystal.
             Used in pickups AND buzzers!
           </p>
         </div>
       </div>
 
-      <button
-        onMouseDown={nextPhase}
-        className="w-full py-3 bg-teal-500 text-white rounded-xl font-bold hover:bg-teal-600 transition-colors"
-      >
+      <PrimaryButton onMouseDown={nextPhase}>
         Apply This Knowledge →
-      </button>
+      </PrimaryButton>
     </div>
   );
 
-  const renderTransfer = () => (
-    <div>
-      <h2 className="text-xl font-bold text-gray-800 mb-4">Real-World Applications</h2>
-      <p className="text-gray-600 mb-6">
-        See how transducer technology shapes modern devices.
-      </p>
-
-      <div className="space-y-4">
-        {[
-          {
-            title: 'Bone Conduction Headphones',
-            icon: '🎧',
-            description: 'Transducers on your skull vibrate to send sound directly to inner ear',
-          },
-          {
-            title: 'Ultrasonic Sensors',
-            icon: '📡',
-            description: 'Same piezo element emits ultrasound pulses and receives echoes',
-          },
-          {
-            title: 'Guitar Pickups',
-            icon: '🎸',
-            description: 'Magnets + coils convert string vibrations to electrical guitar signal',
-          },
-        ].map((app, index) => (
-          <div
-            key={index}
-            className={`p-4 rounded-xl border-2 transition-all ${
-              completedApps.has(index)
-                ? 'border-green-500 bg-green-50'
-                : 'border-gray-200 bg-white'
-            }`}
-          >
-            <div className="flex items-start gap-3">
-              <span className="text-2xl">{app.icon}</span>
-              <div className="flex-1">
-                <h3 className="font-bold text-gray-800">{app.title}</h3>
-                <p className="text-gray-600 text-sm mt-1">{app.description}</p>
-              </div>
-              {!completedApps.has(index) && (
-                <button
-                  onMouseDown={() => handleCompleteApp(index)}
-                  className="px-3 py-1 bg-teal-100 text-teal-600 rounded-lg text-sm font-medium hover:bg-teal-200 transition-colors"
-                >
-                  Got it
-                </button>
-              )}
-              {completedApps.has(index) && (
-                <span className="text-green-500 text-xl">✓</span>
-              )}
-            </div>
-          </div>
-        ))}
-      </div>
-
-      <button
-        onMouseDown={nextPhase}
-        disabled={completedApps.size < 3}
-        className={`w-full py-3 mt-6 rounded-xl font-bold transition-colors ${
-          completedApps.size >= 3
-            ? 'bg-teal-500 text-white hover:bg-teal-600'
-            : 'bg-gray-200 text-gray-400 cursor-not-allowed'
-        }`}
-      >
-        {completedApps.size >= 3 ? 'Take the Test →' : `Review all applications (${completedApps.size}/3)`}
-      </button>
-    </div>
-  );
-
-  const renderTest = () => {
-    const questions = [
+  const renderTransfer = () => {
+    const applications = [
       {
-        question: 'How does a dynamic microphone generate electricity?',
-        options: [
-          'Chemical reaction in the diaphragm',
-          'Coil moving in magnetic field induces voltage',
-          'Static electricity from air friction',
-        ],
+        title: 'Bone Conduction Headphones',
+        description: 'Transducers vibrate against your skull bones, bypassing the eardrum. Sound travels through bone directly to inner ear—keeping ears open for awareness.',
+        graphic: <BoneConductionGraphic />,
       },
       {
-        question: 'Why can a speaker work as a microphone?',
-        options: [
-          'Electromagnetic induction is reversible',
-          'It has a built-in microphone',
-          'The magnet stores sound',
-        ],
+        title: 'Ultrasonic Distance Sensors',
+        description: 'The same piezoelectric element emits ultrasound pulses AND receives echoes. Measures distance by timing the round-trip: d = v × t / 2.',
+        graphic: <UltrasonicSensorGraphic />,
       },
       {
-        question: 'What type of mic needs phantom power (48V)?',
-        options: [
-          'Dynamic microphone',
-          'Ribbon microphone',
-          'Condenser microphone',
-        ],
+        title: 'Guitar Pickups',
+        description: 'Magnets under strings create a field. When steel strings vibrate, they disturb the field, inducing voltage in the coil wrapped around the magnets.',
+        graphic: <GuitarPickupGraphic />,
+      },
+      {
+        title: 'MEMS Microphones in Smartphones',
+        description: 'Micro-electro-mechanical systems pack a tiny condenser microphone with integrated amplifier into a 3×4mm chip. Found in every modern phone.',
+        graphic: <MEMSMicGraphic />,
       },
     ];
 
+    const allAppsCompleted = completedApps.size >= 4;
+
     return (
-      <div>
-        <h2 className="text-xl font-bold text-gray-800 mb-4">Knowledge Check</h2>
+      <div className="py-6">
+        <div className="flex items-center gap-3 mb-6">
+          <div className="w-10 h-10 rounded-xl bg-orange-100 flex items-center justify-center">
+            <span className="text-xl">🌍</span>
+          </div>
+          <div>
+            <h2 className="text-xl font-bold text-slate-800">Real-World Applications</h2>
+            <p className="text-sm text-slate-500">
+              Complete all 4 to unlock the assessment
+            </p>
+          </div>
+        </div>
+
+        {/* App Tabs */}
+        <div className="flex gap-2 mb-6 overflow-x-auto pb-2">
+          {applications.map((app, index) => (
+            <button
+              key={index}
+              onMouseDown={(e) => {
+                e.preventDefault();
+                setActiveAppTab(index);
+              }}
+              className={`flex-shrink-0 px-4 py-2 rounded-xl font-medium text-sm transition-all duration-200 flex items-center gap-2 ${
+                activeAppTab === index
+                  ? 'bg-teal-500 text-white shadow-lg shadow-teal-500/30'
+                  : completedApps.has(index)
+                  ? 'bg-emerald-100 text-emerald-700 border border-emerald-300'
+                  : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+              }`}
+            >
+              {completedApps.has(index) && <span>✓</span>}
+              App {index + 1}
+            </button>
+          ))}
+        </div>
+
+        {/* Active Application Content */}
+        <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden mb-6">
+          {applications[activeAppTab].graphic}
+          <div className="p-5">
+            <h3 className="font-bold text-slate-800 text-lg mb-2">
+              {applications[activeAppTab].title}
+            </h3>
+            <p className="text-slate-600 text-sm leading-relaxed mb-4">
+              {applications[activeAppTab].description}
+            </p>
+            {!completedApps.has(activeAppTab) ? (
+              <button
+                onMouseDown={(e) => {
+                  e.preventDefault();
+                  handleCompleteApp(activeAppTab);
+                }}
+                className="w-full py-3 bg-gradient-to-r from-teal-500 to-cyan-500 text-white rounded-xl font-semibold shadow-lg shadow-teal-500/30 hover:shadow-xl transition-all duration-200"
+              >
+                Mark as Complete ✓
+              </button>
+            ) : (
+              <div className="w-full py-3 bg-emerald-100 text-emerald-700 rounded-xl font-semibold text-center">
+                ✓ Completed
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Progress indicator */}
+        <div className="bg-slate-50 rounded-2xl p-4 mb-6">
+          <div className="flex justify-between items-center mb-2">
+            <span className="text-sm font-medium text-slate-700">Progress</span>
+            <span className="text-sm font-bold text-teal-600">{completedApps.size}/4 Complete</span>
+          </div>
+          <div className="h-2 bg-slate-200 rounded-full overflow-hidden">
+            <div
+              className="h-full bg-gradient-to-r from-teal-500 to-cyan-500 rounded-full transition-all duration-500"
+              style={{ width: `${(completedApps.size / 4) * 100}%` }}
+            />
+          </div>
+        </div>
+
+        <PrimaryButton
+          onMouseDown={nextPhase}
+          disabled={!allAppsCompleted}
+        >
+          {allAppsCompleted ? 'Take the Assessment →' : `Complete ${4 - completedApps.size} more application${4 - completedApps.size !== 1 ? 's' : ''}`}
+        </PrimaryButton>
+      </div>
+    );
+  };
+
+  const renderTest = () => {
+    const answeredCount = testAnswers.filter(a => a !== -1).length;
+    const allAnswered = answeredCount === 10;
+
+    return (
+      <div className="py-6">
+        <div className="flex items-center gap-3 mb-6">
+          <div className="w-10 h-10 rounded-xl bg-violet-100 flex items-center justify-center">
+            <span className="text-xl">📝</span>
+          </div>
+          <div>
+            <h2 className="text-xl font-bold text-slate-800">Knowledge Assessment</h2>
+            <p className="text-sm text-slate-500">10 questions · 70% to pass</p>
+          </div>
+        </div>
 
         {testScore === null ? (
           <>
+            <div className="bg-slate-50 rounded-2xl p-4 mb-6">
+              <div className="flex justify-between items-center mb-2">
+                <span className="text-sm font-medium text-slate-700">Progress</span>
+                <span className="text-sm font-bold text-violet-600">{answeredCount}/10</span>
+              </div>
+              <div className="h-2 bg-slate-200 rounded-full overflow-hidden">
+                <div
+                  className="h-full bg-gradient-to-r from-violet-500 to-purple-500 rounded-full transition-all duration-300"
+                  style={{ width: `${(answeredCount / 10) * 100}%` }}
+                />
+              </div>
+            </div>
+
             <div className="space-y-6 mb-6">
-              {questions.map((q, qIndex) => (
-                <div key={qIndex} className="bg-white border border-gray-200 rounded-xl p-4">
-                  <p className="font-medium text-gray-800 mb-3">{q.question}</p>
-                  <div className="space-y-2">
+              {TEST_QUESTIONS.map((q, qIndex) => (
+                <div key={qIndex} className="bg-white border border-slate-200 rounded-2xl p-5">
+                  <div className="flex items-start gap-3 mb-4">
+                    <span className={`flex-shrink-0 w-7 h-7 rounded-lg flex items-center justify-center text-sm font-bold ${
+                      testAnswers[qIndex] !== -1
+                        ? 'bg-violet-500 text-white'
+                        : 'bg-slate-200 text-slate-600'
+                    }`}>
+                      {qIndex + 1}
+                    </span>
+                    <p className="font-medium text-slate-800 leading-relaxed">{q.question}</p>
+                  </div>
+                  <div className="space-y-2 ml-10">
                     {q.options.map((option, oIndex) => (
                       <button
                         key={oIndex}
-                        onMouseDown={() => handleTestAnswer(qIndex, oIndex)}
-                        className={`w-full p-3 rounded-lg text-left text-sm transition-all ${
+                        onMouseDown={(e) => {
+                          e.preventDefault();
+                          handleTestAnswer(qIndex, oIndex);
+                        }}
+                        className={`w-full p-3 rounded-xl text-left text-sm transition-all duration-200 ${
                           testAnswers[qIndex] === oIndex
-                            ? 'bg-teal-500 text-white'
-                            : 'bg-gray-50 text-gray-700 hover:bg-teal-50'
+                            ? 'bg-violet-500 text-white shadow-lg shadow-violet-500/30'
+                            : 'bg-slate-50 text-slate-700 hover:bg-violet-50 border border-slate-200'
                         }`}
                       >
                         {option}
@@ -994,37 +1565,50 @@ export default function MakeMicrophoneRenderer({
               ))}
             </div>
 
-            <button
+            <PrimaryButton
               onMouseDown={handleSubmitTest}
-              disabled={testAnswers.includes(-1)}
-              className={`w-full py-3 rounded-xl font-bold transition-colors ${
-                !testAnswers.includes(-1)
-                  ? 'bg-teal-500 text-white hover:bg-teal-600'
-                  : 'bg-gray-200 text-gray-400 cursor-not-allowed'
-              }`}
+              disabled={!allAnswered}
+              variant="success"
             >
-              Submit Answers
-            </button>
+              {allAnswered ? 'Submit Assessment' : `Answer ${10 - answeredCount} more question${10 - answeredCount !== 1 ? 's' : ''}`}
+            </PrimaryButton>
           </>
         ) : (
-          <div className="text-center">
-            <div className={`text-6xl mb-4 ${testScore >= 2 ? 'animate-bounce' : ''}`}>
-              {testScore >= 2 ? '🎤' : '📚'}
+          <div className="text-center py-8">
+            <div className={`inline-flex items-center justify-center w-24 h-24 rounded-full mb-6 ${
+              testScore >= 7
+                ? 'bg-gradient-to-br from-emerald-500 to-teal-500 shadow-xl shadow-emerald-500/30'
+                : 'bg-gradient-to-br from-amber-500 to-orange-500 shadow-xl shadow-amber-500/30'
+            }`}>
+              <span className="text-5xl">{testScore >= 7 ? '🎤' : '📚'}</span>
             </div>
-            <p className="text-2xl font-bold text-gray-800 mb-2">
-              {testScore} / 3 Correct
+
+            <h3 className="text-2xl font-bold text-slate-800 mb-2">
+              {testScore}/10 Correct
+            </h3>
+            <p className="text-slate-600 mb-8">
+              {testScore >= 7
+                ? 'Excellent! You understand transducers!'
+                : 'Review the concepts and try again to improve your score.'}
             </p>
-            <p className="text-gray-600 mb-6">
-              {testScore >= 2
-                ? 'You understand transducers!'
-                : 'Review the concepts and try again.'}
-            </p>
-            <button
-              onMouseDown={nextPhase}
-              className="px-8 py-3 bg-teal-500 text-white rounded-xl font-bold hover:bg-teal-600 transition-colors"
-            >
-              {testScore >= 2 ? 'Complete Lesson →' : 'See Summary →'}
-            </button>
+
+            {testScore >= 7 ? (
+              <PrimaryButton onMouseDown={nextPhase} variant="success">
+                Complete Lesson →
+              </PrimaryButton>
+            ) : (
+              <div className="space-y-3">
+                <PrimaryButton onMouseDown={() => {
+                  setTestScore(null);
+                  setTestAnswers(Array(10).fill(-1));
+                }} variant="secondary">
+                  Try Again
+                </PrimaryButton>
+                <PrimaryButton onMouseDown={nextPhase}>
+                  Continue Anyway →
+                </PrimaryButton>
+              </div>
+            )}
           </div>
         )}
       </div>
@@ -1032,43 +1616,50 @@ export default function MakeMicrophoneRenderer({
   };
 
   const renderMastery = () => (
-    <div className="text-center">
-      <div className="text-6xl mb-6">🎤🏆</div>
-      <h2 className="text-2xl font-bold text-gray-800 mb-4">
+    <div className="text-center py-8">
+      <div className="mb-8">
+        <div className="inline-flex items-center justify-center w-24 h-24 rounded-full bg-gradient-to-br from-teal-500 to-cyan-600 shadow-xl shadow-teal-500/30 mb-6 animate-pulse">
+          <span className="text-5xl">🏆</span>
+        </div>
+      </div>
+
+      <h1 className="text-3xl font-bold text-slate-800 mb-4 tracking-tight">
         Transducer Master!
-      </h2>
-      <p className="text-lg text-gray-600 mb-6">
-        You now understand how sound becomes electricity and vice versa.
+      </h1>
+
+      <p className="text-lg text-slate-600 mb-8 max-w-md mx-auto">
+        You now understand how sound becomes electricity and vice versa—the foundation of all audio technology.
       </p>
 
-      <div className="bg-gradient-to-br from-teal-100 to-cyan-100 rounded-xl p-6 mb-6 text-left">
-        <h3 className="font-bold text-gray-800 mb-4">Key Takeaways:</h3>
-        <ul className="space-y-3 text-gray-700">
-          <li className="flex items-start gap-2">
-            <span className="text-teal-500">✓</span>
-            <span>Microphones convert sound waves to electrical signals</span>
-          </li>
-          <li className="flex items-start gap-2">
-            <span className="text-teal-500">✓</span>
-            <span>Dynamic mics use coils in magnetic fields (induction)</span>
-          </li>
-          <li className="flex items-start gap-2">
-            <span className="text-teal-500">✓</span>
-            <span>Condenser mics use changing capacitance (need power)</span>
-          </li>
-          <li className="flex items-start gap-2">
-            <span className="text-teal-500">✓</span>
-            <span>Transduction is often reversible—speakers can be mics!</span>
-          </li>
+      <div className="bg-gradient-to-br from-teal-50 to-cyan-50 border border-teal-200 rounded-2xl p-6 mb-8 text-left">
+        <h3 className="font-bold text-slate-800 mb-4 text-center">Key Takeaways</h3>
+        <ul className="space-y-3 text-slate-700">
+          {[
+            'Microphones convert sound waves to electrical signals (transduction)',
+            'Dynamic mics use coils in magnetic fields (electromagnetic induction)',
+            'Condenser mics use changing capacitance (need phantom power)',
+            'Transduction is often reversible—speakers can be mics!',
+            'Piezoelectric and electromagnetic effects work both directions',
+          ].map((item, i) => (
+            <li key={i} className="flex items-start gap-3">
+              <span className="flex-shrink-0 w-6 h-6 rounded-full bg-teal-500 text-white flex items-center justify-center text-sm">✓</span>
+              <span className="text-sm leading-relaxed">{item}</span>
+            </li>
+          ))}
         </ul>
       </div>
 
-      <button
-        onMouseDown={() => goToPhase('hook')}
-        className="px-8 py-3 bg-gray-200 text-gray-700 rounded-xl font-bold hover:bg-gray-300 transition-colors"
-      >
+      {testScore !== null && (
+        <div className="bg-slate-100 rounded-2xl p-4 mb-8">
+          <p className="text-slate-600">
+            Assessment Score: <strong className="text-teal-600">{testScore}/10</strong>
+          </p>
+        </div>
+      )}
+
+      <PrimaryButton onMouseDown={() => goToPhase('hook')} variant="secondary">
         Review Again
-      </button>
+      </PrimaryButton>
     </div>
   );
 
@@ -1095,8 +1686,12 @@ export default function MakeMicrophoneRenderer({
   return (
     <div className="min-h-screen bg-gradient-to-br from-teal-50 via-white to-cyan-50 p-4">
       <div className="max-w-lg mx-auto">
-        {renderPhaseIndicator()}
-        <div className="bg-white rounded-2xl shadow-lg p-6">
+        <ProgressIndicator
+          current={PHASES.indexOf(phase) + 1}
+          total={PHASES.length}
+          phase={phase}
+        />
+        <div className="bg-white rounded-3xl shadow-xl shadow-slate-200/50 p-6 border border-slate-100">
           {renderContent()}
         </div>
       </div>

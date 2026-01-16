@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { playSound } from '../lib/audio';
 
 // ────────────────────────────────────────────────────────────────────────────
@@ -52,6 +52,500 @@ interface InductiveKickbackRendererProps {
 }
 
 // ────────────────────────────────────────────────────────────────────────────
+// 10-QUESTION TEST DATA
+// ────────────────────────────────────────────────────────────────────────────
+
+const TEST_QUESTIONS = [
+  {
+    question: 'What causes inductive kickback when a switch opens?',
+    options: [
+      'Capacitor discharge creates voltage',
+      'The collapsing magnetic field induces voltage (V = -L·di/dt)',
+      'Static electricity from the switch contacts',
+      'Heat from resistance generates voltage',
+    ],
+    correct: 1,
+  },
+  {
+    question: 'Why can kickback voltage be MUCH higher than the supply voltage?',
+    options: [
+      'The battery releases extra stored energy',
+      'Wire resistance amplifies the voltage',
+      'The rate of current change (di/dt) is extremely fast when interrupted',
+      'Magnetic fields naturally create higher voltages',
+    ],
+    correct: 2,
+  },
+  {
+    question: 'What is the purpose of a flyback diode?',
+    options: [
+      'To increase the kickback voltage',
+      'To convert AC to DC power',
+      'To provide a safe path for current, clamping the voltage spike',
+      'To store energy in the magnetic field',
+    ],
+    correct: 2,
+  },
+  {
+    question: 'In a car ignition system, what voltage does the coil produce from 12V?',
+    options: [
+      'About 24V (doubled)',
+      'About 120V (10x)',
+      'About 1,000V (100x)',
+      'About 40,000V (over 3,000x)',
+    ],
+    correct: 3,
+  },
+  {
+    question: 'How does a boost converter use inductive kickback?',
+    options: [
+      'It eliminates kickback to save energy',
+      'Controlled switching captures kickback energy to raise output voltage',
+      'It converts the kickback to heat',
+      'It only works by filtering out the kickback',
+    ],
+    correct: 1,
+  },
+  {
+    question: 'What happens if you control a relay from an Arduino WITHOUT a flyback diode?',
+    options: [
+      'The relay works perfectly fine',
+      'The Arduino runs faster',
+      'The kickback spike can damage or destroy the Arduino',
+      'The relay becomes more efficient',
+    ],
+    correct: 2,
+  },
+  {
+    question: 'Which formula describes the induced voltage from an inductor?',
+    options: [
+      'V = IR (Ohm\'s law)',
+      'P = IV (Power equation)',
+      'V = -L × (di/dt) (Inductor equation)',
+      'V = Q/C (Capacitor equation)',
+    ],
+    correct: 2,
+  },
+  {
+    question: 'What type of switching frequency do boost converters typically use?',
+    options: [
+      '50-60 Hz (like household AC)',
+      '100 Hz - 1 kHz (low frequency)',
+      '10 kHz - 1 MHz (high frequency switching)',
+      'They don\'t switch at all',
+    ],
+    correct: 2,
+  },
+  {
+    question: 'Why is inductance measured in Henrys (H)?',
+    options: [
+      'Named after the Henry battery company',
+      'Represents how much energy the magnetic field can store',
+      'Measures the resistance of the coil',
+      'Indicates the coil\'s temperature rating',
+    ],
+    correct: 1,
+  },
+  {
+    question: 'What makes inductive loads (motors, relays, solenoids) different from resistive loads?',
+    options: [
+      'They use more electricity',
+      'They store energy in magnetic fields that must be dissipated',
+      'They work on AC only',
+      'They generate heat immediately',
+    ],
+    correct: 1,
+  },
+];
+
+// ────────────────────────────────────────────────────────────────────────────
+// PREMIUM UI COMPONENTS
+// ────────────────────────────────────────────────────────────────────────────
+
+const ProgressIndicator: React.FC<{ current: number; total: number; phase: Phase }> = ({
+  current,
+  total,
+  phase,
+}) => {
+  const phaseLabels: Record<Phase, string> = {
+    hook: 'Introduction',
+    predict: 'Prediction',
+    play: 'Simulation',
+    review: 'Concepts',
+    twist_predict: 'Twist',
+    twist_play: 'Boost Demo',
+    twist_review: 'Applications',
+    transfer: 'Real World',
+    test: 'Assessment',
+    mastery: 'Complete',
+  };
+
+  return (
+    <div className="mb-8">
+      <div className="flex items-center justify-between mb-3">
+        <span className="text-sm font-semibold text-amber-700 tracking-wide uppercase">
+          {phaseLabels[phase]}
+        </span>
+        <span className="text-sm font-medium text-slate-500">
+          {current} of {total}
+        </span>
+      </div>
+      <div className="h-2 bg-slate-200 rounded-full overflow-hidden">
+        <div
+          className="h-full bg-gradient-to-r from-amber-500 to-orange-500 rounded-full transition-all duration-500 ease-out"
+          style={{ width: `${(current / total) * 100}%` }}
+        />
+      </div>
+    </div>
+  );
+};
+
+const PrimaryButton: React.FC<{
+  children: React.ReactNode;
+  onMouseDown: (e: React.MouseEvent) => void;
+  disabled?: boolean;
+  variant?: 'primary' | 'secondary' | 'success';
+  fullWidth?: boolean;
+}> = ({ children, onMouseDown, disabled, variant = 'primary', fullWidth = true }) => {
+  const baseClasses = `py-4 px-8 rounded-2xl font-semibold text-lg transition-all duration-200 transform ${
+    fullWidth ? 'w-full' : ''
+  }`;
+
+  const variantClasses = {
+    primary: disabled
+      ? 'bg-slate-200 text-slate-400 cursor-not-allowed'
+      : 'bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-lg shadow-amber-500/30 hover:shadow-xl hover:shadow-amber-500/40 hover:-translate-y-0.5 active:translate-y-0',
+    secondary: disabled
+      ? 'bg-slate-100 text-slate-400 cursor-not-allowed'
+      : 'bg-white text-slate-700 border-2 border-slate-200 hover:border-amber-300 hover:bg-amber-50',
+    success: disabled
+      ? 'bg-slate-200 text-slate-400 cursor-not-allowed'
+      : 'bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-lg shadow-emerald-500/30 hover:shadow-xl hover:shadow-emerald-500/40 hover:-translate-y-0.5',
+  };
+
+  const handleClick = useCallback(
+    (e: React.MouseEvent) => {
+      e.preventDefault();
+      if (!disabled) {
+        onMouseDown(e);
+      }
+    },
+    [disabled, onMouseDown]
+  );
+
+  return (
+    <button
+      onMouseDown={handleClick}
+      disabled={disabled}
+      className={`${baseClasses} ${variantClasses[variant]}`}
+    >
+      {children}
+    </button>
+  );
+};
+
+// ────────────────────────────────────────────────────────────────────────────
+// APPLICATION GRAPHICS
+// ────────────────────────────────────────────────────────────────────────────
+
+const IgnitionCoilGraphic: React.FC = () => (
+  <svg viewBox="0 0 400 300" className="w-full h-64">
+    <defs>
+      <linearGradient id="ignitionSparkGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stopColor="#fbbf24" />
+        <stop offset="100%" stopColor="#f97316" />
+      </linearGradient>
+      <linearGradient id="coilGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+        <stop offset="0%" stopColor="#6366f1" />
+        <stop offset="100%" stopColor="#4f46e5" />
+      </linearGradient>
+    </defs>
+
+    {/* Background */}
+    <rect width="400" height="300" fill="#1e293b" rx="12" />
+
+    {/* Battery */}
+    <rect x="30" y="120" width="60" height="80" fill="#374151" rx="8" stroke="#4b5563" strokeWidth="2" />
+    <rect x="45" y="110" width="30" height="12" fill="#4b5563" rx="2" />
+    <text x="60" y="168" textAnchor="middle" fill="#fbbf24" fontSize="18" fontWeight="bold">12V</text>
+
+    {/* Primary coil */}
+    <rect x="140" y="100" width="60" height="120" fill="url(#coilGrad)" rx="8" />
+    <path d="M155 130 Q165 120, 175 130 Q185 140, 195 130" fill="none" stroke="#a5b4fc" strokeWidth="3" />
+    <path d="M155 150 Q165 140, 175 150 Q185 160, 195 150" fill="none" stroke="#a5b4fc" strokeWidth="3" />
+    <path d="M155 170 Q165 160, 175 170 Q185 180, 195 170" fill="none" stroke="#a5b4fc" strokeWidth="3" />
+    <path d="M155 190 Q165 180, 175 190 Q185 200, 195 190" fill="none" stroke="#a5b4fc" strokeWidth="3" />
+    <text x="170" y="240" textAnchor="middle" fill="#94a3b8" fontSize="11">PRIMARY</text>
+    <text x="170" y="253" textAnchor="middle" fill="#64748b" fontSize="10">~200 turns</text>
+
+    {/* Secondary coil */}
+    <rect x="220" y="80" width="40" height="160" fill="url(#coilGrad)" rx="6" />
+    {[...Array(12)].map((_, i) => (
+      <path key={i} d={`M225 ${95 + i * 12} Q235 ${89 + i * 12}, 245 ${95 + i * 12} Q255 ${101 + i * 12}, 255 ${95 + i * 12}`}
+        fill="none" stroke="#c7d2fe" strokeWidth="1.5" />
+    ))}
+    <text x="240" y="260" textAnchor="middle" fill="#94a3b8" fontSize="11">SECONDARY</text>
+    <text x="240" y="273" textAnchor="middle" fill="#64748b" fontSize="10">~20,000 turns</text>
+
+    {/* Spark plug */}
+    <rect x="300" y="100" width="40" height="60" fill="#475569" rx="6" />
+    <rect x="308" y="80" width="24" height="25" fill="#1f2937" rx="4" />
+    <rect x="315" y="160" width="10" height="30" fill="#94a3b8" />
+    <rect x="312" y="190" width="16" height="8" fill="#64748b" rx="2" />
+
+    {/* Spark effect */}
+    <path d="M320 200 L315 215 L325 210 L318 230" fill="none" stroke="url(#ignitionSparkGrad)" strokeWidth="3" strokeLinecap="round">
+      <animate attributeName="opacity" values="1;0.3;1" dur="0.15s" repeatCount="indefinite" />
+    </path>
+    <circle cx="320" cy="220" r="15" fill="#fbbf24" opacity="0.3">
+      <animate attributeName="r" values="10;20;10" dur="0.3s" repeatCount="indefinite" />
+    </circle>
+
+    {/* Voltage labels */}
+    <rect x="90" y="130" width="35" height="24" fill="#1f2937" rx="4" />
+    <text x="107" y="147" textAnchor="middle" fill="#22c55e" fontSize="12" fontWeight="bold">12V</text>
+
+    <rect x="270" y="130" width="55" height="24" fill="#1f2937" rx="4" />
+    <text x="297" y="147" textAnchor="middle" fill="#ef4444" fontSize="12" fontWeight="bold">40,000V</text>
+
+    {/* Connection wires */}
+    <path d="M90 160 L140 160" stroke="#22c55e" strokeWidth="3" />
+    <path d="M200 160 L220 160" stroke="#6366f1" strokeWidth="4" strokeDasharray="4,2" />
+    <path d="M260 160 L300 160" stroke="#ef4444" strokeWidth="2" />
+
+    {/* Title */}
+    <text x="200" y="35" textAnchor="middle" fill="#f8fafc" fontSize="16" fontWeight="bold">
+      Automotive Ignition Coil
+    </text>
+    <text x="200" y="55" textAnchor="middle" fill="#94a3b8" fontSize="12">
+      Inductive kickback amplifies voltage 3,000×
+    </text>
+  </svg>
+);
+
+const BoostConverterGraphic: React.FC = () => (
+  <svg viewBox="0 0 400 300" className="w-full h-64">
+    <defs>
+      <linearGradient id="boostPowerGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+        <stop offset="0%" stopColor="#22c55e" />
+        <stop offset="100%" stopColor="#16a34a" />
+      </linearGradient>
+      <linearGradient id="inductorGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stopColor="#8b5cf6" />
+        <stop offset="100%" stopColor="#6366f1" />
+      </linearGradient>
+    </defs>
+
+    {/* Background */}
+    <rect width="400" height="300" fill="#1e293b" rx="12" />
+
+    {/* Input source */}
+    <rect x="20" y="110" width="55" height="70" fill="#374151" rx="8" stroke="#4b5563" strokeWidth="2" />
+    <text x="47" y="150" textAnchor="middle" fill="#22c55e" fontSize="16" fontWeight="bold">5V</text>
+    <text x="47" y="168" textAnchor="middle" fill="#94a3b8" fontSize="10">INPUT</text>
+
+    {/* Inductor */}
+    <rect x="95" y="100" width="70" height="90" fill="url(#inductorGrad)" rx="10" opacity="0.3" />
+    <path d="M105 145 Q120 125, 135 145 Q150 165, 165 145" fill="none" stroke="#a5b4fc" strokeWidth="5" strokeLinecap="round" />
+    <text x="130" y="205" textAnchor="middle" fill="#a5b4fc" fontSize="12" fontWeight="bold">INDUCTOR</text>
+
+    {/* MOSFET switch */}
+    <rect x="145" y="170" width="35" height="45" fill="#475569" rx="6" stroke="#64748b" strokeWidth="2" />
+    <text x="162" y="195" textAnchor="middle" fill="#fbbf24" fontSize="10" fontWeight="bold">FET</text>
+    <circle cx="162" cy="210" r="4" fill="#22c55e">
+      <animate attributeName="fill" values="#22c55e;#64748b;#22c55e" dur="0.1s" repeatCount="indefinite" />
+    </circle>
+
+    {/* Switching indicator */}
+    <rect x="125" y="220" width="75" height="20" fill="#1f2937" rx="4" />
+    <text x="162" y="234" textAnchor="middle" fill="#fbbf24" fontSize="10">100 kHz</text>
+
+    {/* Diode */}
+    <polygon points="205,130 230,145 205,160" fill="#6366f1" />
+    <line x1="230" y1="130" x2="230" y2="160" stroke="#6366f1" strokeWidth="4" />
+    <text x="217" y="180" textAnchor="middle" fill="#94a3b8" fontSize="10">Diode</text>
+
+    {/* Capacitor */}
+    <line x1="255" y1="115" x2="255" y2="175" stroke="#64748b" strokeWidth="4" />
+    <line x1="270" y1="115" x2="270" y2="175" stroke="#64748b" strokeWidth="4" />
+    <text x="262" y="195" textAnchor="middle" fill="#94a3b8" fontSize="10">Cap</text>
+
+    {/* Output */}
+    <rect x="300" y="95" width="80" height="100" fill="#1f2937" rx="10" stroke="#22c55e" strokeWidth="2" />
+    <text x="340" y="130" textAnchor="middle" fill="#94a3b8" fontSize="12">OUTPUT</text>
+    <text x="340" y="165" textAnchor="middle" fill="#22c55e" fontSize="28" fontWeight="bold">12V</text>
+
+    {/* Energy flow animation */}
+    <circle cx="88" cy="145" r="6" fill="#22c55e">
+      <animate attributeName="cx" values="88;160;88" dur="0.5s" repeatCount="indefinite" />
+      <animate attributeName="opacity" values="1;0.3;1" dur="0.5s" repeatCount="indefinite" />
+    </circle>
+
+    {/* Kickback arrow */}
+    <path d="M165 130 L165 100 L155 110 M165 100 L175 110" fill="none" stroke="#fbbf24" strokeWidth="2">
+      <animate attributeName="opacity" values="0;1;0" dur="0.1s" repeatCount="indefinite" />
+    </path>
+    <text x="165" y="90" textAnchor="middle" fill="#fbbf24" fontSize="9">KICKBACK</text>
+
+    {/* Connection lines */}
+    <path d="M75 145 L95 145" stroke="#22c55e" strokeWidth="3" />
+    <path d="M165 145 L205 145" stroke="#a5b4fc" strokeWidth="2" />
+    <path d="M230 145 L255 145" stroke="#6366f1" strokeWidth="2" />
+    <path d="M270 145 L300 145" stroke="#22c55e" strokeWidth="3" />
+
+    {/* Title */}
+    <text x="200" y="35" textAnchor="middle" fill="#f8fafc" fontSize="16" fontWeight="bold">
+      DC-DC Boost Converter
+    </text>
+    <text x="200" y="55" textAnchor="middle" fill="#94a3b8" fontSize="12">
+      Steps up voltage using controlled kickback
+    </text>
+  </svg>
+);
+
+const FlybackProtectionGraphic: React.FC = () => (
+  <svg viewBox="0 0 400 300" className="w-full h-64">
+    <defs>
+      <linearGradient id="protectionGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stopColor="#22c55e" />
+        <stop offset="100%" stopColor="#16a34a" />
+      </linearGradient>
+    </defs>
+
+    {/* Background */}
+    <rect width="400" height="300" fill="#1e293b" rx="12" />
+
+    {/* Arduino board */}
+    <rect x="20" y="80" width="100" height="140" fill="#0d9488" rx="8" stroke="#14b8a6" strokeWidth="2" />
+    <rect x="30" y="90" width="30" height="20" fill="#1f2937" rx="4" />
+    <text x="45" y="105" textAnchor="middle" fill="#94a3b8" fontSize="8">USB</text>
+    <text x="70" y="140" textAnchor="middle" fill="#ffffff" fontSize="12" fontWeight="bold">Arduino</text>
+
+    {/* Digital pin */}
+    <rect x="90" y="150" width="25" height="15" fill="#1f2937" rx="2" />
+    <text x="102" y="161" textAnchor="middle" fill="#fbbf24" fontSize="8">D7</text>
+
+    {/* Protection circuit box */}
+    <rect x="140" y="100" width="120" height="100" fill="#1f2937" rx="8" stroke="#475569" strokeWidth="2" strokeDasharray="4,2" />
+    <text x="200" y="120" textAnchor="middle" fill="#94a3b8" fontSize="10">PROTECTION CIRCUIT</text>
+
+    {/* Transistor */}
+    <circle cx="170" cy="160" r="18" fill="#374151" stroke="#6366f1" strokeWidth="2" />
+    <text x="170" y="165" textAnchor="middle" fill="#a5b4fc" fontSize="10">NPN</text>
+
+    {/* Flyback diode - highlighted */}
+    <polygon points="220,140 240,150 220,160" fill="url(#protectionGrad)" />
+    <line x1="240" y1="140" x2="240" y2="160" stroke="#22c55e" strokeWidth="4" />
+    <rect x="210" y="165" width="40" height="18" fill="#1f2937" rx="4" />
+    <text x="230" y="178" textAnchor="middle" fill="#22c55e" fontSize="9" fontWeight="bold">FLYBACK</text>
+
+    {/* Relay/Motor */}
+    <rect x="280" y="90" width="90" height="120" fill="#374151" rx="10" stroke="#4b5563" strokeWidth="2" />
+    <rect x="295" y="110" width="60" height="40" fill="#6366f1" rx="6" opacity="0.8" />
+    <path d="M305 130 Q320 115, 335 130 Q350 145, 350 130" fill="none" stroke="#a5b4fc" strokeWidth="3" />
+    <text x="325" y="170" textAnchor="middle" fill="#ffffff" fontSize="12" fontWeight="bold">RELAY</text>
+    <text x="325" y="185" textAnchor="middle" fill="#94a3b8" fontSize="10">Coil</text>
+
+    {/* Voltage spike visualization (blocked) */}
+    <path d="M275 130 L265 130 L268 120 L260 140 L263 130" fill="none" stroke="#ef4444" strokeWidth="2" opacity="0.5" />
+    <text x="262" y="115" textAnchor="middle" fill="#ef4444" fontSize="8">Spike</text>
+    <circle cx="262" cy="130" r="10" fill="none" stroke="#22c55e" strokeWidth="2" />
+    <path d="M255 123 L269 137" stroke="#22c55e" strokeWidth="2" />
+
+    {/* Safe indicator */}
+    <rect x="300" y="220" width="70" height="25" fill="#22c55e" rx="6" opacity="0.2" />
+    <text x="335" y="237" textAnchor="middle" fill="#22c55e" fontSize="11" fontWeight="bold">✓ SAFE</text>
+
+    {/* Connections */}
+    <path d="M115 158 L150 158" stroke="#fbbf24" strokeWidth="2" />
+    <path d="M188 160 L210 150" stroke="#6366f1" strokeWidth="2" />
+    <path d="M250 150 L280 130" stroke="#22c55e" strokeWidth="2" />
+
+    {/* Title */}
+    <text x="200" y="35" textAnchor="middle" fill="#f8fafc" fontSize="16" fontWeight="bold">
+      Microcontroller Relay Protection
+    </text>
+    <text x="200" y="55" textAnchor="middle" fill="#94a3b8" fontSize="12">
+      Flyback diode protects Arduino from voltage spikes
+    </text>
+  </svg>
+);
+
+const SwitchModeSupplyGraphic: React.FC = () => (
+  <svg viewBox="0 0 400 300" className="w-full h-64">
+    <defs>
+      <linearGradient id="smpsGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stopColor="#f59e0b" />
+        <stop offset="100%" stopColor="#d97706" />
+      </linearGradient>
+    </defs>
+
+    {/* Background */}
+    <rect width="400" height="300" fill="#1e293b" rx="12" />
+
+    {/* Power supply enclosure */}
+    <rect x="100" y="80" width="200" height="140" fill="#374151" rx="12" stroke="#4b5563" strokeWidth="3" />
+
+    {/* Input section */}
+    <rect x="30" y="120" width="60" height="60" fill="#1f2937" rx="6" />
+    <text x="60" y="140" textAnchor="middle" fill="#94a3b8" fontSize="10">AC IN</text>
+    <text x="60" y="160" textAnchor="middle" fill="#fbbf24" fontSize="14" fontWeight="bold">120V</text>
+    <text x="60" y="175" textAnchor="middle" fill="#64748b" fontSize="10">60Hz</text>
+
+    {/* Internal components */}
+    <rect x="115" y="100" width="40" height="30" fill="#6366f1" rx="4" opacity="0.7" />
+    <text x="135" y="120" textAnchor="middle" fill="#ffffff" fontSize="9">Rectifier</text>
+
+    <rect x="165" y="100" width="45" height="30" fill="url(#smpsGrad)" rx="4" />
+    <text x="187" y="115" textAnchor="middle" fill="#ffffff" fontSize="8">HF</text>
+    <text x="187" y="125" textAnchor="middle" fill="#ffffff" fontSize="8">Switch</text>
+
+    <rect x="220" y="95" width="30" height="40" fill="#8b5cf6" rx="4" />
+    <path d="M227 115 Q235 105, 243 115" fill="none" stroke="#c4b5fd" strokeWidth="2" />
+    <text x="235" y="145" textAnchor="middle" fill="#a5b4fc" fontSize="8">Xformer</text>
+
+    <rect x="260" y="105" width="30" height="25" fill="#22c55e" rx="4" opacity="0.7" />
+    <text x="275" y="122" textAnchor="middle" fill="#ffffff" fontSize="8">Filter</text>
+
+    {/* Feedback loop */}
+    <path d="M275 150 L275 185 L150 185 L150 145" fill="none" stroke="#fbbf24" strokeWidth="2" strokeDasharray="4,2" />
+    <text x="212" y="200" textAnchor="middle" fill="#fbbf24" fontSize="9">Feedback Control</text>
+
+    {/* Output section */}
+    <rect x="310" y="110" width="70" height="80" fill="#1f2937" rx="8" stroke="#22c55e" strokeWidth="2" />
+    <text x="345" y="135" textAnchor="middle" fill="#94a3b8" fontSize="10">DC OUT</text>
+    <text x="345" y="160" textAnchor="middle" fill="#22c55e" fontSize="18" fontWeight="bold">5V</text>
+    <text x="345" y="180" textAnchor="middle" fill="#94a3b8" fontSize="10">3A / 15W</text>
+
+    {/* Connection arrows */}
+    <path d="M90 150 L100 150" stroke="#fbbf24" strokeWidth="2" markerEnd="url(#arrow)" />
+    <path d="M300 150 L310 150" stroke="#22c55e" strokeWidth="3" />
+
+    {/* Efficiency badge */}
+    <rect x="170" y="155" width="60" height="24" fill="#22c55e" rx="12" opacity="0.2" />
+    <text x="200" y="172" textAnchor="middle" fill="#22c55e" fontSize="11" fontWeight="bold">90% Eff</text>
+
+    {/* Phone/device */}
+    <rect x="320" y="210" width="50" height="80" fill="#475569" rx="8" stroke="#64748b" strokeWidth="2" />
+    <rect x="328" y="220" width="34" height="50" fill="#1e293b" rx="4" />
+    <text x="345" y="250" textAnchor="middle" fill="#22c55e" fontSize="12">📱</text>
+
+    {/* Charging indicator */}
+    <path d="M345 195 L345 210" stroke="#22c55e" strokeWidth="2" strokeDasharray="2,2">
+      <animate attributeName="stroke-dashoffset" values="0;4" dur="0.5s" repeatCount="indefinite" />
+    </path>
+
+    {/* Title */}
+    <text x="200" y="35" textAnchor="middle" fill="#f8fafc" fontSize="16" fontWeight="bold">
+      Switch Mode Power Supply
+    </text>
+    <text x="200" y="55" textAnchor="middle" fill="#94a3b8" fontSize="12">
+      High-frequency switching enables compact, efficient design
+    </text>
+  </svg>
+);
+
+// ────────────────────────────────────────────────────────────────────────────
 // MAIN COMPONENT
 // ────────────────────────────────────────────────────────────────────────────
 
@@ -69,11 +563,12 @@ export default function InductiveKickbackRenderer({
     new Set(savedState?.completedApps || [])
   );
   const [testAnswers, setTestAnswers] = useState<number[]>(
-    savedState?.testAnswers || [-1, -1, -1]
+    savedState?.testAnswers || Array(10).fill(-1)
   );
   const [testScore, setTestScore] = useState<number | null>(
     savedState?.testScore ?? null
   );
+  const [activeAppTab, setActiveAppTab] = useState(0);
 
   const [prediction, setPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
@@ -94,6 +589,7 @@ export default function InductiveKickbackRenderer({
   const [hasExploredTwist, setHasExploredTwist] = useState(false);
 
   const navigationLockRef = useRef(false);
+  const lastClickRef = useRef(0);
   const animationRef = useRef<number>(0);
 
   // ──────────────────────────────────────────────────────────────────────────
@@ -130,313 +626,308 @@ export default function InductiveKickbackRenderer({
   }, [kickbackVoltage]);
 
   // ──────────────────────────────────────────────────────────────────────────
-  // NAVIGATION
+  // NAVIGATION WITH DUAL DEBOUNCING
   // ──────────────────────────────────────────────────────────────────────────
 
-  const goToPhase = (newPhase: Phase) => {
+  const goToPhase = useCallback((newPhase: Phase) => {
+    const now = Date.now();
+    if (now - lastClickRef.current < 200) return;
     if (navigationLockRef.current) return;
+    lastClickRef.current = now;
     navigationLockRef.current = true;
     playSound('transition');
     setPhase(newPhase);
     setTimeout(() => {
       navigationLockRef.current = false;
-    }, 400);
-  };
+    }, 200);
+  }, []);
 
-  const nextPhase = () => {
+  const nextPhase = useCallback(() => {
     const currentIndex = PHASES.indexOf(phase);
     if (currentIndex < PHASES.length - 1) {
       goToPhase(PHASES[currentIndex + 1]);
     }
-  };
+  }, [phase, goToPhase]);
 
   // ──────────────────────────────────────────────────────────────────────────
   // HANDLERS
   // ──────────────────────────────────────────────────────────────────────────
 
-  const handlePrediction = (choice: string) => {
+  const handlePrediction = useCallback((choice: string) => {
     playSound('click');
     setPrediction(choice);
     setShowPredictionFeedback(true);
-  };
+  }, []);
 
-  const handleTwistPrediction = (choice: string) => {
+  const handleTwistPrediction = useCallback((choice: string) => {
     playSound('click');
     setTwistPrediction(choice);
     setShowTwistFeedback(true);
-  };
+  }, []);
 
-  const handleSwitchToggle = () => {
+  const handleSwitchToggle = useCallback(() => {
     if (switchOn) {
-      // Turning OFF - induces kickback
       if (!hasFlybackDiode) {
         setKickbackVoltage(350);
         setShowSpark(true);
         setTimeout(() => setShowSpark(false), 300);
       } else {
-        setKickbackVoltage(12); // Clamped to supply voltage
+        setKickbackVoltage(12);
       }
     }
-    setSwitchOn(!switchOn);
-    setExperimentCount(prev => prev + 1);
-    if (experimentCount >= 2) {
-      setHasExperimented(true);
-    }
-  };
+    setSwitchOn(prev => !prev);
+    setExperimentCount(prev => {
+      const newCount = prev + 1;
+      if (newCount >= 3) {
+        setHasExperimented(true);
+      }
+      return newCount;
+    });
+  }, [switchOn, hasFlybackDiode]);
 
-  const handleBoostToggle = () => {
-    setBoostActive(!boostActive);
-    if (!boostActive) {
-      // Simulate boost ramping up
-      let output = 5;
-      const interval = setInterval(() => {
-        output += 3;
-        if (output >= 12) {
-          setBoostOutput(12);
-          clearInterval(interval);
-        } else {
-          setBoostOutput(output);
-        }
-      }, 100);
-    } else {
-      setBoostOutput(5);
-    }
+  const handleToggleDiode = useCallback(() => {
+    setHasFlybackDiode(prev => !prev);
+  }, []);
+
+  const handleBoostToggle = useCallback(() => {
+    setBoostActive(prev => {
+      if (!prev) {
+        let output = 5;
+        const interval = setInterval(() => {
+          output += 3;
+          if (output >= 12) {
+            setBoostOutput(12);
+            clearInterval(interval);
+          } else {
+            setBoostOutput(output);
+          }
+        }, 100);
+        return true;
+      } else {
+        setBoostOutput(5);
+        return false;
+      }
+    });
     setHasExploredTwist(true);
-  };
+  }, []);
 
-  const handleCompleteApp = (appIndex: number) => {
+  const handleCompleteApp = useCallback((appIndex: number) => {
     playSound('success');
     setCompletedApps(prev => new Set([...prev, appIndex]));
-  };
+  }, []);
 
-  const handleTestAnswer = (questionIndex: number, answerIndex: number) => {
+  const handleTestAnswer = useCallback((questionIndex: number, answerIndex: number) => {
     playSound('click');
-    const newAnswers = [...testAnswers];
-    newAnswers[questionIndex] = answerIndex;
-    setTestAnswers(newAnswers);
-  };
+    setTestAnswers(prev => {
+      const newAnswers = [...prev];
+      newAnswers[questionIndex] = answerIndex;
+      return newAnswers;
+    });
+  }, []);
 
-  const handleSubmitTest = () => {
-    const correctAnswers = [2, 1, 0]; // Correct indices
+  const handleSubmitTest = useCallback(() => {
     let score = 0;
     testAnswers.forEach((answer, index) => {
-      if (answer === correctAnswers[index]) score++;
+      if (answer === TEST_QUESTIONS[index].correct) score++;
     });
     setTestScore(score);
-    playSound(score >= 2 ? 'success' : 'failure');
-  };
+    playSound(score >= 7 ? 'success' : 'failure');
+  }, [testAnswers]);
 
   // ──────────────────────────────────────────────────────────────────────────
   // RENDER FUNCTIONS
   // ──────────────────────────────────────────────────────────────────────────
 
-  const renderPhaseIndicator = () => (
-    <div className="flex items-center justify-between mb-6 px-2">
-      <div className="flex items-center gap-1">
-        {PHASES.map((p, i) => (
-          <div
-            key={p}
-            className={`h-2 rounded-full transition-all duration-300 ${
-              i <= PHASES.indexOf(phase)
-                ? 'bg-indigo-500 w-6'
-                : 'bg-gray-200 w-4'
-            }`}
-          />
-        ))}
-      </div>
-      <span className="text-sm text-gray-500 font-medium">
-        {PHASES.indexOf(phase) + 1} / {PHASES.length}
-      </span>
+  const renderRelayCircuit = () => (
+    <div className="bg-gradient-to-br from-slate-900 to-slate-800 rounded-2xl p-4 mb-6">
+      <svg viewBox="0 0 400 220" className="w-full h-52">
+        {/* Battery */}
+        <rect x="30" y="80" width="40" height="60" fill="#374151" rx="4" />
+        <text x="50" y="115" textAnchor="middle" fill="white" fontSize="12" fontWeight="bold">
+          12V
+        </text>
+
+        {/* Wires */}
+        <path
+          d="M 70 100 L 120 100"
+          stroke={switchOn ? '#22C55E' : '#6B7280'}
+          strokeWidth="4"
+          fill="none"
+        />
+
+        {/* Switch */}
+        <circle cx="140" cy="100" r="8" fill="#F3F4F6" stroke="#374151" strokeWidth="2" />
+        <line
+          x1="140"
+          y1="100"
+          x2={switchOn ? '170' : '160'}
+          y2={switchOn ? '100' : '80'}
+          stroke="#374151"
+          strokeWidth="4"
+          strokeLinecap="round"
+        />
+        <circle cx="170" cy="100" r="6" fill="#F3F4F6" stroke="#374151" strokeWidth="2" />
+
+        {/* Spark effect */}
+        {showSpark && (
+          <>
+            <circle cx="155" cy="90" r="15" fill="#FEF08A" opacity="0.8">
+              <animate attributeName="r" values="5;20;5" dur="0.3s" />
+              <animate attributeName="opacity" values="1;0;1" dur="0.3s" />
+            </circle>
+            <text x="155" y="65" textAnchor="middle" fill="#DC2626" fontSize="14" fontWeight="bold">
+              ⚡ SPARK!
+            </text>
+          </>
+        )}
+
+        {/* Wire to coil */}
+        <path
+          d="M 180 100 L 220 100"
+          stroke={switchOn ? '#22C55E' : '#6B7280'}
+          strokeWidth="4"
+          fill="none"
+        />
+
+        {/* Inductor coil */}
+        <rect x="220" y="70" width="80" height="60" fill="none" stroke="#6366F1" strokeWidth="3" rx="8" />
+        <path
+          d="M 235 100 C 240 85, 250 85, 255 100 C 260 115, 270 115, 275 100 C 280 85, 290 85, 295 100"
+          fill="none"
+          stroke="#6366F1"
+          strokeWidth="3"
+        />
+        <text x="260" y="145" textAnchor="middle" fill="#a5b4fc" fontSize="11">
+          RELAY COIL
+        </text>
+
+        {/* Magnetic field indicator */}
+        {switchOn && (
+          <>
+            <ellipse cx="260" cy="100" rx="50" ry="25" fill="none" stroke="#A5B4FC" strokeWidth="1" strokeDasharray="4" opacity="0.6">
+              <animate attributeName="rx" values="45;55;45" dur="2s" repeatCount="indefinite" />
+            </ellipse>
+            <text x="260" y="60" textAnchor="middle" fill="#a5b4fc" fontSize="10">
+              Magnetic Field
+            </text>
+          </>
+        )}
+
+        {/* Flyback diode (if enabled) */}
+        {hasFlybackDiode && (
+          <>
+            <polygon points="260,165 275,180 245,180" fill="#22C55E" />
+            <line x1="245" y1="165" x2="275" y2="165" stroke="#22C55E" strokeWidth="3" />
+            <text x="260" y="200" textAnchor="middle" fill="#22c55e" fontSize="10" fontWeight="bold">
+              FLYBACK DIODE
+            </text>
+            <line x1="225" y1="130" x2="225" y2="172" stroke="#22C55E" strokeWidth="2" />
+            <line x1="225" y1="172" x2="245" y2="172" stroke="#22C55E" strokeWidth="2" />
+            <line x1="275" y1="172" x2="295" y2="172" stroke="#22C55E" strokeWidth="2" />
+            <line x1="295" y1="172" x2="295" y2="130" stroke="#22C55E" strokeWidth="2" />
+          </>
+        )}
+
+        {/* Return wire */}
+        <path
+          d="M 300 100 L 340 100 L 340 140 L 50 140 L 50 140"
+          stroke={switchOn ? '#22C55E' : '#6B7280'}
+          strokeWidth="4"
+          fill="none"
+        />
+
+        {/* Kickback voltage indicator */}
+        {kickbackVoltage > 0 && (
+          <g>
+            <rect x="320" y="20" width="70" height="40" fill={kickbackVoltage > 50 ? '#FEE2E2' : '#D1FAE5'} rx="6" />
+            <text x="355" y="38" textAnchor="middle" fill={kickbackVoltage > 50 ? '#DC2626' : '#059669'} fontSize="10">
+              SPIKE
+            </text>
+            <text x="355" y="52" textAnchor="middle" fill={kickbackVoltage > 50 ? '#DC2626' : '#059669'} fontSize="14" fontWeight="bold">
+              {kickbackVoltage.toFixed(0)}V
+            </text>
+          </g>
+        )}
+      </svg>
     </div>
   );
 
-  const renderRelayCircuit = () => (
-    <svg viewBox="0 0 400 220" className="w-full h-52 mb-4">
-      {/* Battery */}
-      <rect x="30" y="80" width="40" height="60" fill="#374151" rx="4" />
-      <text x="50" y="115" textAnchor="middle" fill="white" fontSize="12" fontWeight="bold">
-        12V
-      </text>
-
-      {/* Wires */}
-      <path
-        d="M 70 100 L 120 100"
-        stroke={switchOn ? '#22C55E' : '#6B7280'}
-        strokeWidth="4"
-        fill="none"
-      />
-
-      {/* Switch */}
-      <circle cx="140" cy="100" r="8" fill="#F3F4F6" stroke="#374151" strokeWidth="2" />
-      <line
-        x1="140"
-        y1="100"
-        x2={switchOn ? '170' : '160'}
-        y2={switchOn ? '100' : '80'}
-        stroke="#374151"
-        strokeWidth="4"
-        strokeLinecap="round"
-      />
-      <circle cx="170" cy="100" r="6" fill="#F3F4F6" stroke="#374151" strokeWidth="2" />
-
-      {/* Spark effect */}
-      {showSpark && (
-        <>
-          <circle cx="155" cy="90" r="15" fill="#FEF08A" opacity="0.8">
-            <animate attributeName="r" values="5;20;5" dur="0.3s" />
-            <animate attributeName="opacity" values="1;0;1" dur="0.3s" />
-          </circle>
-          <text x="155" y="65" textAnchor="middle" fill="#DC2626" fontSize="14" fontWeight="bold">
-            ⚡ SPARK!
-          </text>
-        </>
-      )}
-
-      {/* Wire to coil */}
-      <path
-        d="M 180 100 L 220 100"
-        stroke={switchOn ? '#22C55E' : '#6B7280'}
-        strokeWidth="4"
-        fill="none"
-      />
-
-      {/* Inductor coil */}
-      <rect x="220" y="70" width="80" height="60" fill="none" stroke="#6366F1" strokeWidth="3" rx="8" />
-      <path
-        d="M 235 100 C 240 85, 250 85, 255 100 C 260 115, 270 115, 275 100 C 280 85, 290 85, 295 100"
-        fill="none"
-        stroke="#6366F1"
-        strokeWidth="3"
-      />
-      <text x="260" y="145" textAnchor="middle" fill="#4F46E5" fontSize="11">
-        RELAY COIL
-      </text>
-
-      {/* Magnetic field indicator */}
-      {switchOn && (
-        <>
-          <ellipse cx="260" cy="100" rx="50" ry="25" fill="none" stroke="#A5B4FC" strokeWidth="1" strokeDasharray="4" opacity="0.6">
-            <animate attributeName="rx" values="45;55;45" dur="2s" repeatCount="indefinite" />
-          </ellipse>
-          <text x="260" y="60" textAnchor="middle" fill="#6366F1" fontSize="10">
-            Magnetic Field
-          </text>
-        </>
-      )}
-
-      {/* Flyback diode (if enabled) */}
-      {hasFlybackDiode && (
-        <>
-          <polygon points="260,165 275,180 245,180" fill="#22C55E" />
-          <line x1="245" y1="165" x2="275" y2="165" stroke="#22C55E" strokeWidth="3" />
-          <text x="260" y="200" textAnchor="middle" fill="#15803D" fontSize="10" fontWeight="bold">
-            FLYBACK DIODE
-          </text>
-          {/* Diode connections */}
-          <line x1="225" y1="130" x2="225" y2="172" stroke="#22C55E" strokeWidth="2" />
-          <line x1="225" y1="172" x2="245" y2="172" stroke="#22C55E" strokeWidth="2" />
-          <line x1="275" y1="172" x2="295" y2="172" stroke="#22C55E" strokeWidth="2" />
-          <line x1="295" y1="172" x2="295" y2="130" stroke="#22C55E" strokeWidth="2" />
-        </>
-      )}
-
-      {/* Return wire */}
-      <path
-        d="M 300 100 L 340 100 L 340 140 L 50 140 L 50 140"
-        stroke={switchOn ? '#22C55E' : '#6B7280'}
-        strokeWidth="4"
-        fill="none"
-      />
-
-      {/* Kickback voltage indicator */}
-      {kickbackVoltage > 0 && (
-        <g>
-          <rect x="320" y="20" width="70" height="40" fill={kickbackVoltage > 50 ? '#FEE2E2' : '#D1FAE5'} rx="6" />
-          <text x="355" y="38" textAnchor="middle" fill={kickbackVoltage > 50 ? '#DC2626' : '#059669'} fontSize="10">
-            SPIKE
-          </text>
-          <text x="355" y="52" textAnchor="middle" fill={kickbackVoltage > 50 ? '#DC2626' : '#059669'} fontSize="14" fontWeight="bold">
-            {kickbackVoltage.toFixed(0)}V
-          </text>
-        </g>
-      )}
-    </svg>
-  );
-
   const renderBoostConverter = () => (
-    <svg viewBox="0 0 400 180" className="w-full h-44 mb-4">
-      {/* Input battery */}
-      <rect x="20" y="60" width="50" height="60" fill="#374151" rx="6" />
-      <text x="45" y="95" textAnchor="middle" fill="white" fontSize="14" fontWeight="bold">
-        5V
-      </text>
+    <div className="bg-gradient-to-br from-slate-900 to-slate-800 rounded-2xl p-4 mb-6">
+      <svg viewBox="0 0 400 180" className="w-full h-44">
+        {/* Input battery */}
+        <rect x="20" y="60" width="50" height="60" fill="#374151" rx="6" />
+        <text x="45" y="95" textAnchor="middle" fill="white" fontSize="14" fontWeight="bold">
+          5V
+        </text>
 
-      {/* Inductor */}
-      <path
-        d="M 80 90 C 90 75, 100 75, 110 90 C 120 105, 130 105, 140 90"
-        fill="none"
-        stroke="#6366F1"
-        strokeWidth="4"
-      />
-
-      {/* Switch symbol */}
-      <rect x="150" y="100" width="30" height="20" fill={boostActive ? '#22C55E' : '#9CA3AF'} rx="4" />
-      <text x="165" y="114" textAnchor="middle" fill="white" fontSize="8" fontWeight="bold">
-        {boostActive ? 'ON' : 'OFF'}
-      </text>
-
-      {/* Switching frequency indicator */}
-      {boostActive && (
-        <g>
-          <rect x="145" y="70" width="40" height="20" fill="#DBEAFE" rx="4" />
-          <text x="165" y="84" textAnchor="middle" fill="#1D4ED8" fontSize="8">
-            100kHz
-          </text>
-        </g>
-      )}
-
-      {/* Diode */}
-      <polygon points="200,90 220,80 220,100" fill="#6366F1" />
-      <line x1="220" y1="80" x2="220" y2="100" stroke="#6366F1" strokeWidth="3" />
-
-      {/* Capacitor */}
-      <line x1="240" y1="75" x2="240" y2="105" stroke="#374151" strokeWidth="3" />
-      <line x1="250" y1="75" x2="250" y2="105" stroke="#374151" strokeWidth="3" />
-
-      {/* Output */}
-      <rect x="280" y="55" width="90" height="70" fill="#FEF3C7" rx="8" stroke="#F59E0B" strokeWidth="2" />
-      <text x="325" y="80" textAnchor="middle" fill="#92400E" fontSize="11">
-        OUTPUT
-      </text>
-      <text x="325" y="105" textAnchor="middle" fill={boostActive ? '#059669' : '#6B7280'} fontSize="24" fontWeight="bold">
-        {boostOutput}V
-      </text>
-
-      {/* Energy flow arrow */}
-      {boostActive && (
+        {/* Inductor */}
         <path
-          d="M 100 55 L 130 55 L 125 50 M 130 55 L 125 60"
+          d="M 80 90 C 90 75, 100 75, 110 90 C 120 105, 130 105, 140 90"
           fill="none"
-          stroke="#22C55E"
-          strokeWidth="2"
-        >
-          <animate attributeName="opacity" values="0.3;1;0.3" dur="0.5s" repeatCount="indefinite" />
-        </path>
-      )}
+          stroke="#6366F1"
+          strokeWidth="4"
+        />
 
-      {/* Labels */}
-      <text x="110" y="120" textAnchor="middle" fill="#6366F1" fontSize="10">
-        Inductor
-      </text>
-      <text x="245" y="120" textAnchor="middle" fill="#374151" fontSize="10">
-        Cap
-      </text>
+        {/* Switch symbol */}
+        <rect x="150" y="100" width="30" height="20" fill={boostActive ? '#22C55E' : '#9CA3AF'} rx="4" />
+        <text x="165" y="114" textAnchor="middle" fill="white" fontSize="8" fontWeight="bold">
+          {boostActive ? 'ON' : 'OFF'}
+        </text>
 
-      {/* Explanation */}
-      <text x="200" y="160" textAnchor="middle" fill="#6B7280" fontSize="11">
-        {boostActive ? 'Inductor kickback boosts voltage!' : 'Activate to see boost effect'}
-      </text>
-    </svg>
+        {/* Switching frequency indicator */}
+        {boostActive && (
+          <g>
+            <rect x="145" y="70" width="40" height="20" fill="#1e3a5f" rx="4" />
+            <text x="165" y="84" textAnchor="middle" fill="#60a5fa" fontSize="8">
+              100kHz
+            </text>
+          </g>
+        )}
+
+        {/* Diode */}
+        <polygon points="200,90 220,80 220,100" fill="#6366F1" />
+        <line x1="220" y1="80" x2="220" y2="100" stroke="#6366F1" strokeWidth="3" />
+
+        {/* Capacitor */}
+        <line x1="240" y1="75" x2="240" y2="105" stroke="#94a3b8" strokeWidth="3" />
+        <line x1="250" y1="75" x2="250" y2="105" stroke="#94a3b8" strokeWidth="3" />
+
+        {/* Output */}
+        <rect x="280" y="55" width="90" height="70" fill="#1f2937" rx="8" stroke="#22c55e" strokeWidth="2" />
+        <text x="325" y="80" textAnchor="middle" fill="#94a3b8" fontSize="11">
+          OUTPUT
+        </text>
+        <text x="325" y="105" textAnchor="middle" fill={boostActive ? '#22c55e' : '#94a3b8'} fontSize="24" fontWeight="bold">
+          {boostOutput}V
+        </text>
+
+        {/* Energy flow arrow */}
+        {boostActive && (
+          <path
+            d="M 100 55 L 130 55 L 125 50 M 130 55 L 125 60"
+            fill="none"
+            stroke="#22C55E"
+            strokeWidth="2"
+          >
+            <animate attributeName="opacity" values="0.3;1;0.3" dur="0.5s" repeatCount="indefinite" />
+          </path>
+        )}
+
+        {/* Labels */}
+        <text x="110" y="120" textAnchor="middle" fill="#a5b4fc" fontSize="10">
+          Inductor
+        </text>
+        <text x="245" y="120" textAnchor="middle" fill="#94a3b8" fontSize="10">
+          Cap
+        </text>
+
+        {/* Explanation */}
+        <text x="200" y="160" textAnchor="middle" fill="#94a3b8" fontSize="11">
+          {boostActive ? 'Inductor kickback boosts voltage!' : 'Activate to see boost effect'}
+        </text>
+      </svg>
+    </div>
   );
 
   // ──────────────────────────────────────────────────────────────────────────
@@ -444,198 +935,235 @@ export default function InductiveKickbackRenderer({
   // ──────────────────────────────────────────────────────────────────────────
 
   const renderHook = () => (
-    <div className="text-center">
-      <div className="text-6xl mb-6">⚡🔌</div>
-      <h2 className="text-2xl font-bold text-gray-800 mb-4">
+    <div className="text-center py-8">
+      <div className="mb-8">
+        <div className="inline-flex items-center justify-center w-24 h-24 rounded-full bg-gradient-to-br from-amber-500 to-orange-600 shadow-xl shadow-amber-500/30 mb-6">
+          <span className="text-5xl">⚡</span>
+        </div>
+      </div>
+
+      <h1 className="text-3xl font-bold text-slate-800 mb-4 tracking-tight">
         The Mysterious Voltage Spike
-      </h2>
-      <p className="text-lg text-gray-600 mb-6">
+      </h1>
+
+      <p className="text-lg text-slate-600 mb-8 leading-relaxed max-w-md mx-auto">
         Ever unplugged something with a motor and seen a spark? Or wondered why
         some circuits need special protection diodes?
       </p>
-      <div className="bg-indigo-50 border border-indigo-200 rounded-xl p-5 mb-6">
-        <p className="text-indigo-800">
-          🧲 When current through a coil suddenly stops, something dramatic happens.
-          The collapsing magnetic field fights back with a massive voltage spike!
-        </p>
+
+      <div className="bg-gradient-to-br from-amber-50 to-orange-50 border border-amber-200 rounded-2xl p-6 mb-8">
+        <div className="flex items-start gap-4">
+          <div className="flex-shrink-0 w-12 h-12 rounded-xl bg-amber-500 flex items-center justify-center">
+            <span className="text-2xl">🧲</span>
+          </div>
+          <div className="text-left">
+            <h3 className="font-semibold text-amber-900 mb-1">The Hidden Danger</h3>
+            <p className="text-amber-800 text-sm leading-relaxed">
+              When current through a coil suddenly stops, the collapsing magnetic
+              field fights back with a massive voltage spike—often 10-100× the supply voltage!
+            </p>
+          </div>
+        </div>
       </div>
-      <p className="text-gray-600 mb-6">
-        Let&apos;s explore <strong>inductive kickback</strong> and learn why it can
-        destroy electronics—and how to harness it.
-      </p>
-      <button
-        onMouseDown={() => goToPhase('predict')}
-        className="px-8 py-4 bg-indigo-500 text-white rounded-xl font-bold text-lg shadow-lg hover:bg-indigo-600 transition-colors"
-      >
+
+      <div className="grid grid-cols-3 gap-3 mb-8">
+        {[
+          { icon: '🔌', label: 'Relays' },
+          { icon: '🚗', label: 'Ignition' },
+          { icon: '🔋', label: 'Converters' },
+        ].map((item, i) => (
+          <div key={i} className="bg-slate-50 rounded-xl p-3">
+            <div className="text-2xl mb-1">{item.icon}</div>
+            <div className="text-xs text-slate-600">{item.label}</div>
+          </div>
+        ))}
+      </div>
+
+      <PrimaryButton onMouseDown={() => goToPhase('predict')}>
         Investigate the Spike →
-      </button>
+      </PrimaryButton>
     </div>
   );
 
   const renderPredict = () => (
-    <div>
-      <h2 className="text-xl font-bold text-gray-800 mb-4">Make Your Prediction</h2>
-      <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-6">
-        <p className="text-blue-800">
-          A relay coil is powered by 12V. When you flip the switch OFF,
+    <div className="py-6">
+      <div className="flex items-center gap-3 mb-6">
+        <div className="w-10 h-10 rounded-xl bg-blue-100 flex items-center justify-center">
+          <span className="text-xl">🤔</span>
+        </div>
+        <h2 className="text-xl font-bold text-slate-800">Make Your Prediction</h2>
+      </div>
+
+      <div className="bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-200 rounded-2xl p-5 mb-6">
+        <p className="text-blue-800 leading-relaxed">
+          A relay coil is powered by <strong>12V</strong>. When you flip the switch OFF,
           what happens to the voltage across the coil?
         </p>
       </div>
 
       <div className="space-y-3 mb-6">
         {[
-          { id: 'zero', label: 'Drops to 0V immediately' },
-          { id: 'gradual', label: 'Gradually decreases from 12V to 0V' },
-          { id: 'spike', label: 'Spikes to hundreds of volts briefly' },
+          { id: 'zero', label: 'Drops to 0V immediately', icon: '📉' },
+          { id: 'gradual', label: 'Gradually decreases from 12V to 0V', icon: '📊' },
+          { id: 'spike', label: 'Spikes to hundreds of volts briefly', icon: '⚡' },
         ].map(option => (
           <button
             key={option.id}
-            onMouseDown={() => handlePrediction(option.id)}
+            onMouseDown={(e) => { e.preventDefault(); handlePrediction(option.id); }}
             disabled={showPredictionFeedback}
-            className={`w-full p-4 rounded-xl border-2 text-left transition-all ${
+            className={`w-full p-4 rounded-2xl border-2 text-left transition-all duration-200 flex items-center gap-4 ${
               prediction === option.id
                 ? option.id === 'spike'
-                  ? 'border-green-500 bg-green-50'
+                  ? 'border-emerald-500 bg-emerald-50'
                   : 'border-red-300 bg-red-50'
-                : 'border-gray-200 hover:border-indigo-300 hover:bg-indigo-50'
+                : 'border-slate-200 hover:border-blue-300 hover:bg-blue-50'
             } ${showPredictionFeedback ? 'cursor-default' : 'cursor-pointer'}`}
           >
-            <span className="font-medium text-gray-700">{option.label}</span>
+            <span className="text-2xl">{option.icon}</span>
+            <span className="font-medium text-slate-700">{option.label}</span>
           </button>
         ))}
       </div>
 
       {showPredictionFeedback && (
-        <div className={`p-4 rounded-xl mb-4 ${
-          prediction === 'spike' ? 'bg-green-100 border border-green-300' : 'bg-amber-100 border border-amber-300'
+        <div className={`p-5 rounded-2xl mb-6 ${
+          prediction === 'spike' ? 'bg-emerald-100 border border-emerald-300' : 'bg-amber-100 border border-amber-300'
         }`}>
-          <p className={prediction === 'spike' ? 'text-green-800' : 'text-amber-800'}>
+          <p className={`leading-relaxed ${prediction === 'spike' ? 'text-emerald-800' : 'text-amber-800'}`}>
             {prediction === 'spike' ? (
-              <><strong>Exactly!</strong> The collapsing magnetic field induces a huge voltage spike—often 10-100× the supply voltage!</>
+              <><strong>Exactly right!</strong> The collapsing magnetic field induces a huge voltage spike—often 10-100× the supply voltage. This is inductive kickback!</>
             ) : (
-              <><strong>Surprising result:</strong> The voltage actually spikes to hundreds of volts! The inductor &quot;kicks back&quot; when current is interrupted.</>
+              <><strong>Surprising result:</strong> The voltage actually spikes to hundreds of volts! The inductor &quot;kicks back&quot; when current is interrupted suddenly.</>
             )}
           </p>
         </div>
       )}
 
       {showPredictionFeedback && (
-        <button
-          onMouseDown={nextPhase}
-          className="w-full py-3 bg-indigo-500 text-white rounded-xl font-bold hover:bg-indigo-600 transition-colors"
-        >
+        <PrimaryButton onMouseDown={nextPhase}>
           See It Happen →
-        </button>
+        </PrimaryButton>
       )}
     </div>
   );
 
   const renderPlay = () => (
-    <div>
-      <h2 className="text-xl font-bold text-gray-800 mb-2">Relay Circuit Simulator</h2>
-      <p className="text-gray-600 mb-4">
-        Click the switch to see inductive kickback. Then add a flyback diode to protect the circuit.
-      </p>
+    <div className="py-6">
+      <div className="flex items-center gap-3 mb-4">
+        <div className="w-10 h-10 rounded-xl bg-indigo-100 flex items-center justify-center">
+          <span className="text-xl">🔬</span>
+        </div>
+        <div>
+          <h2 className="text-xl font-bold text-slate-800">Relay Circuit Simulator</h2>
+          <p className="text-sm text-slate-500">Toggle switch and observe kickback</p>
+        </div>
+      </div>
 
       {renderRelayCircuit()}
 
-      <div className="flex gap-3 mb-4">
+      <div className="grid grid-cols-2 gap-3 mb-4">
         <button
-          onMouseDown={handleSwitchToggle}
-          className={`flex-1 py-3 px-4 rounded-xl font-bold transition-all ${
+          onMouseDown={(e) => { e.preventDefault(); handleSwitchToggle(); }}
+          className={`py-4 px-4 rounded-2xl font-semibold transition-all duration-200 ${
             switchOn
-              ? 'bg-green-500 text-white'
-              : 'bg-gray-300 text-gray-700'
+              ? 'bg-gradient-to-r from-emerald-500 to-green-500 text-white shadow-lg shadow-emerald-500/30'
+              : 'bg-slate-200 text-slate-700'
           }`}
         >
           {switchOn ? '🔌 Switch ON' : '🔌 Switch OFF'}
         </button>
         <button
-          onMouseDown={() => setHasFlybackDiode(!hasFlybackDiode)}
-          className={`flex-1 py-3 px-4 rounded-xl font-bold transition-all ${
+          onMouseDown={(e) => { e.preventDefault(); handleToggleDiode(); }}
+          className={`py-4 px-4 rounded-2xl font-semibold transition-all duration-200 ${
             hasFlybackDiode
-              ? 'bg-green-500 text-white'
-              : 'bg-amber-100 text-amber-700'
+              ? 'bg-gradient-to-r from-emerald-500 to-green-500 text-white shadow-lg shadow-emerald-500/30'
+              : 'bg-amber-100 text-amber-700 border-2 border-amber-300'
           }`}
         >
           {hasFlybackDiode ? '✓ Diode Added' : '+ Add Diode'}
         </button>
       </div>
 
-      <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-4 mb-4">
-        <p className="text-yellow-800 text-sm">
+      <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4 mb-6">
+        <p className="text-amber-800 text-sm leading-relaxed">
           <strong>Try this:</strong> Toggle the switch OFF without the diode to see the spark.
           Then add the diode and notice how it clamps the voltage spike!
         </p>
       </div>
 
-      <button
+      <PrimaryButton
         onMouseDown={nextPhase}
         disabled={!hasExperimented}
-        className={`w-full py-3 rounded-xl font-bold transition-colors ${
-          hasExperimented
-            ? 'bg-indigo-500 text-white hover:bg-indigo-600'
-            : 'bg-gray-200 text-gray-400 cursor-not-allowed'
-        }`}
       >
-        {hasExperimented ? 'Continue to Review →' : 'Toggle the switch a few times...'}
-      </button>
+        {hasExperimented ? 'Continue to Review →' : `Toggle switch ${Math.max(0, 3 - experimentCount)} more times...`}
+      </PrimaryButton>
     </div>
   );
 
   const renderReview = () => (
-    <div>
-      <h2 className="text-xl font-bold text-gray-800 mb-4">Understanding Inductive Kickback</h2>
-
-      <div className="bg-gradient-to-br from-indigo-100 to-purple-100 rounded-xl p-5 mb-6">
-        <div className="text-center mb-4">
-          <span className="text-2xl font-bold text-indigo-700">V = -L × (di/dt)</span>
+    <div className="py-6">
+      <div className="flex items-center gap-3 mb-6">
+        <div className="w-10 h-10 rounded-xl bg-purple-100 flex items-center justify-center">
+          <span className="text-xl">📖</span>
         </div>
-        <p className="text-indigo-800 text-center text-sm">
-          Induced voltage = inductance × rate of current change
+        <h2 className="text-xl font-bold text-slate-800">Understanding Inductive Kickback</h2>
+      </div>
+
+      <div className="bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl p-6 mb-6 text-center text-white">
+        <p className="text-indigo-200 text-sm mb-2">The Inductor Equation</p>
+        <div className="text-3xl font-bold mb-2">V = -L × (di/dt)</div>
+        <p className="text-indigo-200 text-sm">
+          Induced voltage = Inductance × Rate of current change
         </p>
       </div>
 
       <div className="space-y-4 mb-6">
-        <div className="bg-white border border-gray-200 rounded-xl p-4">
-          <h3 className="font-bold text-gray-800 mb-2">🧲 Magnetic Field Energy</h3>
-          <p className="text-gray-600 text-sm">
-            Current through a coil creates a magnetic field that stores energy.
-            This energy can&apos;t disappear instantly!
-          </p>
-        </div>
-
-        <div className="bg-white border border-gray-200 rounded-xl p-4">
-          <h3 className="font-bold text-gray-800 mb-2">⚡ Rapid Change = High Voltage</h3>
-          <p className="text-gray-600 text-sm">
-            When current is cut suddenly, di/dt is huge, producing a massive
-            voltage spike in the opposite direction.
-          </p>
-        </div>
-
-        <div className="bg-white border border-gray-200 rounded-xl p-4">
-          <h3 className="font-bold text-gray-800 mb-2">🛡️ Flyback Diode</h3>
-          <p className="text-gray-600 text-sm">
-            A diode across the coil provides a path for the current to continue flowing,
-            clamping the voltage and protecting circuits.
-          </p>
-        </div>
+        {[
+          {
+            icon: '🧲',
+            title: 'Magnetic Field Energy',
+            desc: 'Current through a coil creates a magnetic field that stores energy. This energy cannot disappear instantly!',
+          },
+          {
+            icon: '⚡',
+            title: 'Rapid Change = High Voltage',
+            desc: 'When current is cut suddenly, di/dt is huge, producing a massive voltage spike in the opposite direction.',
+          },
+          {
+            icon: '🛡️',
+            title: 'Flyback Diode Protection',
+            desc: 'A diode across the coil provides a path for the current to continue flowing, safely clamping the voltage spike.',
+          },
+        ].map((item, i) => (
+          <div key={i} className="bg-white border border-slate-200 rounded-2xl p-4">
+            <div className="flex items-start gap-3">
+              <span className="text-2xl">{item.icon}</span>
+              <div>
+                <h3 className="font-bold text-slate-800 mb-1">{item.title}</h3>
+                <p className="text-slate-600 text-sm leading-relaxed">{item.desc}</p>
+              </div>
+            </div>
+          </div>
+        ))}
       </div>
 
-      <button
-        onMouseDown={nextPhase}
-        className="w-full py-3 bg-indigo-500 text-white rounded-xl font-bold hover:bg-indigo-600 transition-colors"
-      >
+      <PrimaryButton onMouseDown={nextPhase}>
         Now for a Twist... →
-      </button>
+      </PrimaryButton>
     </div>
   );
 
   const renderTwistPredict = () => (
-    <div>
-      <h2 className="text-xl font-bold text-gray-800 mb-4">The Useful Side of Kickback</h2>
-      <div className="bg-purple-50 border border-purple-200 rounded-xl p-4 mb-6">
-        <p className="text-purple-800">
+    <div className="py-6">
+      <div className="flex items-center gap-3 mb-6">
+        <div className="w-10 h-10 rounded-xl bg-purple-100 flex items-center justify-center">
+          <span className="text-xl">🔄</span>
+        </div>
+        <h2 className="text-xl font-bold text-slate-800">The Useful Side of Kickback</h2>
+      </div>
+
+      <div className="bg-gradient-to-br from-purple-50 to-pink-50 border border-purple-200 rounded-2xl p-5 mb-6">
+        <p className="text-purple-800 leading-relaxed">
           Inductive kickback seems destructive. But engineers have found ways to
           <strong> harness it constructively</strong>. How might they use it?
         </p>
@@ -643,256 +1171,311 @@ export default function InductiveKickbackRenderer({
 
       <div className="space-y-3 mb-6">
         {[
-          { id: 'nothing', label: 'It\'s only a problem to be prevented' },
-          { id: 'spark', label: 'To create sparks in spark plugs' },
-          { id: 'both', label: 'Both spark plugs AND voltage boosting circuits' },
+          { id: 'nothing', label: "It's only a problem to be prevented", icon: '🚫' },
+          { id: 'spark', label: 'To create sparks in spark plugs', icon: '🔥' },
+          { id: 'both', label: 'Both spark plugs AND voltage boosting circuits', icon: '⚡' },
         ].map(option => (
           <button
             key={option.id}
-            onMouseDown={() => handleTwistPrediction(option.id)}
+            onMouseDown={(e) => { e.preventDefault(); handleTwistPrediction(option.id); }}
             disabled={showTwistFeedback}
-            className={`w-full p-4 rounded-xl border-2 text-left transition-all ${
+            className={`w-full p-4 rounded-2xl border-2 text-left transition-all duration-200 flex items-center gap-4 ${
               twistPrediction === option.id
                 ? option.id === 'both'
-                  ? 'border-green-500 bg-green-50'
+                  ? 'border-emerald-500 bg-emerald-50'
                   : 'border-amber-300 bg-amber-50'
-                : 'border-gray-200 hover:border-purple-300 hover:bg-purple-50'
+                : 'border-slate-200 hover:border-purple-300 hover:bg-purple-50'
             } ${showTwistFeedback ? 'cursor-default' : 'cursor-pointer'}`}
           >
-            <span className="font-medium text-gray-700">{option.label}</span>
+            <span className="text-2xl">{option.icon}</span>
+            <span className="font-medium text-slate-700">{option.label}</span>
           </button>
         ))}
       </div>
 
       {showTwistFeedback && (
-        <div className={`p-4 rounded-xl mb-4 ${
-          twistPrediction === 'both' ? 'bg-green-100 border border-green-300' : 'bg-amber-100 border border-amber-300'
+        <div className={`p-5 rounded-2xl mb-6 ${
+          twistPrediction === 'both' ? 'bg-emerald-100 border border-emerald-300' : 'bg-amber-100 border border-amber-300'
         }`}>
-          <p className={twistPrediction === 'both' ? 'text-green-800' : 'text-amber-800'}>
+          <p className={`leading-relaxed ${twistPrediction === 'both' ? 'text-emerald-800' : 'text-amber-800'}`}>
             {twistPrediction === 'both' ? (
-              <><strong>Perfect!</strong> Ignition coils use it for spark plugs, and boost converters use controlled kickback to increase voltage!</>
+              <><strong>Perfect!</strong> Ignition coils use it for spark plugs (40,000V from 12V!), and boost converters use controlled kickback to increase voltage efficiently.</>
             ) : (
-              <><strong>There&apos;s more!</strong> Inductive kickback powers spark plugs (40,000V from 12V!) and boost converters that increase voltage.</>
+              <><strong>There&apos;s more!</strong> Inductive kickback powers spark plugs (40,000V from 12V!) and boost converters that efficiently increase voltage.</>
             )}
           </p>
         </div>
       )}
 
       {showTwistFeedback && (
-        <button
-          onMouseDown={nextPhase}
-          className="w-full py-3 bg-indigo-500 text-white rounded-xl font-bold hover:bg-indigo-600 transition-colors"
-        >
+        <PrimaryButton onMouseDown={nextPhase}>
           Explore Boost Converters →
-        </button>
+        </PrimaryButton>
       )}
     </div>
   );
 
   const renderTwistPlay = () => (
-    <div>
-      <h2 className="text-xl font-bold text-gray-800 mb-2">Boost Converter Demo</h2>
-      <p className="text-gray-600 mb-4">
-        See how controlled inductive kickback can step up 5V to 12V!
-      </p>
+    <div className="py-6">
+      <div className="flex items-center gap-3 mb-4">
+        <div className="w-10 h-10 rounded-xl bg-green-100 flex items-center justify-center">
+          <span className="text-xl">🔋</span>
+        </div>
+        <div>
+          <h2 className="text-xl font-bold text-slate-800">Boost Converter Demo</h2>
+          <p className="text-sm text-slate-500">See how kickback steps up voltage</p>
+        </div>
+      </div>
 
       {renderBoostConverter()}
 
       <button
-        onMouseDown={handleBoostToggle}
-        className={`w-full py-3 rounded-xl font-bold mb-4 transition-all ${
+        onMouseDown={(e) => { e.preventDefault(); handleBoostToggle(); }}
+        className={`w-full py-4 rounded-2xl font-semibold mb-4 transition-all duration-200 ${
           boostActive
-            ? 'bg-green-500 text-white'
-            : 'bg-indigo-500 text-white hover:bg-indigo-600'
+            ? 'bg-gradient-to-r from-emerald-500 to-green-500 text-white shadow-lg shadow-emerald-500/30'
+            : 'bg-gradient-to-r from-indigo-500 to-purple-500 text-white shadow-lg shadow-indigo-500/30'
         }`}
       >
         {boostActive ? '⚡ Boost Active - Click to Stop' : '▶ Activate Boost Converter'}
       </button>
 
-      <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-4">
-        <p className="text-blue-800 text-sm">
+      <div className="bg-blue-50 border border-blue-200 rounded-2xl p-4 mb-6">
+        <p className="text-blue-800 text-sm leading-relaxed">
           <strong>How it works:</strong> A switch rapidly turns on/off (100kHz).
           Each time it opens, the inductor&apos;s kickback adds to the input voltage,
           charging a capacitor to a higher level!
         </p>
       </div>
 
-      <button
+      <PrimaryButton
         onMouseDown={nextPhase}
         disabled={!hasExploredTwist}
-        className={`w-full py-3 rounded-xl font-bold transition-colors ${
-          hasExploredTwist
-            ? 'bg-indigo-500 text-white hover:bg-indigo-600'
-            : 'bg-gray-200 text-gray-400 cursor-not-allowed'
-        }`}
       >
         {hasExploredTwist ? 'Continue →' : 'Try the boost converter...'}
-      </button>
+      </PrimaryButton>
     </div>
   );
 
   const renderTwistReview = () => (
-    <div>
-      <h2 className="text-xl font-bold text-gray-800 mb-4">Harnessing the Kickback</h2>
+    <div className="py-6">
+      <div className="flex items-center gap-3 mb-6">
+        <div className="w-10 h-10 rounded-xl bg-teal-100 flex items-center justify-center">
+          <span className="text-xl">💡</span>
+        </div>
+        <h2 className="text-xl font-bold text-slate-800">Harnessing the Kickback</h2>
+      </div>
 
-      <div className="bg-gradient-to-br from-green-100 to-blue-100 rounded-xl p-5 mb-6">
-        <h3 className="font-bold text-gray-800 mb-3 text-center">Controlled Kickback Applications</h3>
+      <div className="bg-gradient-to-br from-emerald-50 to-teal-50 border border-emerald-200 rounded-2xl p-6 mb-6">
+        <h3 className="font-bold text-slate-800 mb-4 text-center">Controlled Kickback Applications</h3>
         <div className="grid grid-cols-2 gap-4">
-          <div className="text-center">
+          <div className="text-center bg-white rounded-xl p-4">
             <div className="text-3xl mb-2">🚗</div>
-            <div className="text-sm text-gray-700 font-medium">Ignition Coils</div>
-            <div className="text-xs text-gray-500">12V → 40,000V!</div>
+            <div className="text-sm text-slate-700 font-medium">Ignition Coils</div>
+            <div className="text-xs text-emerald-600 font-semibold">12V → 40,000V!</div>
           </div>
-          <div className="text-center">
+          <div className="text-center bg-white rounded-xl p-4">
             <div className="text-3xl mb-2">🔋</div>
-            <div className="text-sm text-gray-700 font-medium">Boost Converters</div>
-            <div className="text-xs text-gray-500">Step up DC voltage</div>
+            <div className="text-sm text-slate-700 font-medium">Boost Converters</div>
+            <div className="text-xs text-emerald-600 font-semibold">Step up DC voltage</div>
           </div>
         </div>
       </div>
 
       <div className="space-y-3 mb-6">
-        <div className="bg-white border border-gray-200 rounded-xl p-4">
-          <h4 className="font-bold text-gray-800 mb-1">🎯 Key Insight</h4>
-          <p className="text-gray-600 text-sm">
+        <div className="bg-white border border-slate-200 rounded-2xl p-4">
+          <h4 className="font-bold text-slate-800 mb-1">🎯 Key Insight</h4>
+          <p className="text-slate-600 text-sm leading-relaxed">
             The same physics that can destroy circuits is harnessed to generate high voltages and
             efficient power conversion—it&apos;s all about control!
           </p>
         </div>
-        <div className="bg-white border border-gray-200 rounded-xl p-4">
-          <h4 className="font-bold text-gray-800 mb-1">📊 Switching Frequency</h4>
-          <p className="text-gray-600 text-sm">
+        <div className="bg-white border border-slate-200 rounded-2xl p-4">
+          <h4 className="font-bold text-slate-800 mb-1">📊 Switching Frequency</h4>
+          <p className="text-slate-600 text-sm leading-relaxed">
             Boost converters switch at 10kHz-1MHz. Each cycle captures a bit of kickback energy,
             accumulating it in a capacitor.
           </p>
         </div>
       </div>
 
-      <button
-        onMouseDown={nextPhase}
-        className="w-full py-3 bg-indigo-500 text-white rounded-xl font-bold hover:bg-indigo-600 transition-colors"
-      >
+      <PrimaryButton onMouseDown={nextPhase}>
         Apply This Knowledge →
-      </button>
+      </PrimaryButton>
     </div>
   );
 
-  const renderTransfer = () => (
-    <div>
-      <h2 className="text-xl font-bold text-gray-800 mb-4">Real-World Applications</h2>
-      <p className="text-gray-600 mb-6">
-        Discover where inductive kickback matters in everyday technology.
-      </p>
-
-      <div className="space-y-4">
-        {[
-          {
-            title: 'Car Ignition Systems',
-            icon: '🚗',
-            description: 'Ignition coils boost 12V battery to 40,000V spark using controlled kickback',
-          },
-          {
-            title: 'USB Power Banks',
-            icon: '🔋',
-            description: 'Boost converters step up battery voltage to charge your devices',
-          },
-          {
-            title: 'Relay Protection',
-            icon: '🛡️',
-            description: 'Arduino and microcontrollers use flyback diodes when controlling motors/relays',
-          },
-        ].map((app, index) => (
-          <div
-            key={index}
-            className={`p-4 rounded-xl border-2 transition-all ${
-              completedApps.has(index)
-                ? 'border-green-500 bg-green-50'
-                : 'border-gray-200 bg-white'
-            }`}
-          >
-            <div className="flex items-start gap-3">
-              <span className="text-2xl">{app.icon}</span>
-              <div className="flex-1">
-                <h3 className="font-bold text-gray-800">{app.title}</h3>
-                <p className="text-gray-600 text-sm mt-1">{app.description}</p>
-              </div>
-              {!completedApps.has(index) && (
-                <button
-                  onMouseDown={() => handleCompleteApp(index)}
-                  className="px-3 py-1 bg-indigo-100 text-indigo-600 rounded-lg text-sm font-medium hover:bg-indigo-200 transition-colors"
-                >
-                  Got it
-                </button>
-              )}
-              {completedApps.has(index) && (
-                <span className="text-green-500 text-xl">✓</span>
-              )}
-            </div>
-          </div>
-        ))}
-      </div>
-
-      <button
-        onMouseDown={nextPhase}
-        disabled={completedApps.size < 3}
-        className={`w-full py-3 mt-6 rounded-xl font-bold transition-colors ${
-          completedApps.size >= 3
-            ? 'bg-indigo-500 text-white hover:bg-indigo-600'
-            : 'bg-gray-200 text-gray-400 cursor-not-allowed'
-        }`}
-      >
-        {completedApps.size >= 3 ? 'Take the Test →' : `Review all applications (${completedApps.size}/3)`}
-      </button>
-    </div>
-  );
-
-  const renderTest = () => {
-    const questions = [
+  const renderTransfer = () => {
+    const applications = [
       {
-        question: 'What causes inductive kickback?',
-        options: [
-          'Capacitor discharge',
-          'Resistance heating',
-          'Collapsing magnetic field inducing voltage',
-        ],
+        title: 'Automotive Ignition Systems',
+        description: 'Ignition coils boost 12V battery voltage to 40,000V spark using controlled kickback from transformer windings.',
+        graphic: <IgnitionCoilGraphic />,
       },
       {
-        question: 'What does a flyback diode do?',
-        options: [
-          'Increases the kickback voltage',
-          'Provides a path for current to safely dissipate',
-          'Converts AC to DC',
-        ],
+        title: 'DC-DC Boost Converters',
+        description: 'Switch-mode power supplies use rapid switching and kickback to efficiently step up voltage for USB chargers and LED drivers.',
+        graphic: <BoostConverterGraphic />,
       },
       {
-        question: 'How do boost converters use inductive kickback?',
-        options: [
-          'Controlled switching captures kickback to raise voltage',
-          'They eliminate kickback completely',
-          'They only work with AC power',
-        ],
+        title: 'Microcontroller Protection',
+        description: 'Arduino and Raspberry Pi projects use flyback diodes when controlling motors, relays, and solenoids to protect sensitive electronics.',
+        graphic: <FlybackProtectionGraphic />,
+      },
+      {
+        title: 'Switch Mode Power Supplies',
+        description: 'High-frequency switching enables compact, efficient power supplies in phones, laptops, and virtually all modern electronics.',
+        graphic: <SwitchModeSupplyGraphic />,
       },
     ];
 
+    const allAppsCompleted = completedApps.size >= 4;
+
     return (
-      <div>
-        <h2 className="text-xl font-bold text-gray-800 mb-4">Knowledge Check</h2>
+      <div className="py-6">
+        <div className="flex items-center gap-3 mb-6">
+          <div className="w-10 h-10 rounded-xl bg-orange-100 flex items-center justify-center">
+            <span className="text-xl">🌍</span>
+          </div>
+          <div>
+            <h2 className="text-xl font-bold text-slate-800">Real-World Applications</h2>
+            <p className="text-sm text-slate-500">
+              Complete all 4 to unlock the assessment
+            </p>
+          </div>
+        </div>
+
+        {/* App Tabs */}
+        <div className="flex gap-2 mb-6 overflow-x-auto pb-2">
+          {applications.map((app, index) => (
+            <button
+              key={index}
+              onMouseDown={(e) => {
+                e.preventDefault();
+                setActiveAppTab(index);
+              }}
+              className={`flex-shrink-0 px-4 py-2 rounded-xl font-medium text-sm transition-all duration-200 flex items-center gap-2 ${
+                activeAppTab === index
+                  ? 'bg-amber-500 text-white shadow-lg shadow-amber-500/30'
+                  : completedApps.has(index)
+                  ? 'bg-emerald-100 text-emerald-700 border border-emerald-300'
+                  : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+              }`}
+            >
+              {completedApps.has(index) && <span>✓</span>}
+              App {index + 1}
+            </button>
+          ))}
+        </div>
+
+        {/* Active Application Content */}
+        <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden mb-6">
+          {applications[activeAppTab].graphic}
+          <div className="p-5">
+            <h3 className="font-bold text-slate-800 text-lg mb-2">
+              {applications[activeAppTab].title}
+            </h3>
+            <p className="text-slate-600 text-sm leading-relaxed mb-4">
+              {applications[activeAppTab].description}
+            </p>
+            {!completedApps.has(activeAppTab) ? (
+              <button
+                onMouseDown={(e) => {
+                  e.preventDefault();
+                  handleCompleteApp(activeAppTab);
+                }}
+                className="w-full py-3 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-xl font-semibold shadow-lg shadow-amber-500/30 hover:shadow-xl transition-all duration-200"
+              >
+                Mark as Complete ✓
+              </button>
+            ) : (
+              <div className="w-full py-3 bg-emerald-100 text-emerald-700 rounded-xl font-semibold text-center">
+                ✓ Completed
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Progress indicator */}
+        <div className="bg-slate-50 rounded-2xl p-4 mb-6">
+          <div className="flex justify-between items-center mb-2">
+            <span className="text-sm font-medium text-slate-700">Progress</span>
+            <span className="text-sm font-bold text-amber-600">{completedApps.size}/4 Complete</span>
+          </div>
+          <div className="h-2 bg-slate-200 rounded-full overflow-hidden">
+            <div
+              className="h-full bg-gradient-to-r from-amber-500 to-orange-500 rounded-full transition-all duration-500"
+              style={{ width: `${(completedApps.size / 4) * 100}%` }}
+            />
+          </div>
+        </div>
+
+        <PrimaryButton
+          onMouseDown={nextPhase}
+          disabled={!allAppsCompleted}
+        >
+          {allAppsCompleted ? 'Take the Assessment →' : `Complete ${4 - completedApps.size} more application${4 - completedApps.size !== 1 ? 's' : ''}`}
+        </PrimaryButton>
+      </div>
+    );
+  };
+
+  const renderTest = () => {
+    const answeredCount = testAnswers.filter(a => a !== -1).length;
+    const allAnswered = answeredCount === 10;
+
+    return (
+      <div className="py-6">
+        <div className="flex items-center gap-3 mb-6">
+          <div className="w-10 h-10 rounded-xl bg-violet-100 flex items-center justify-center">
+            <span className="text-xl">📝</span>
+          </div>
+          <div>
+            <h2 className="text-xl font-bold text-slate-800">Knowledge Assessment</h2>
+            <p className="text-sm text-slate-500">10 questions · 70% to pass</p>
+          </div>
+        </div>
 
         {testScore === null ? (
           <>
+            <div className="bg-slate-50 rounded-2xl p-4 mb-6">
+              <div className="flex justify-between items-center mb-2">
+                <span className="text-sm font-medium text-slate-700">Progress</span>
+                <span className="text-sm font-bold text-violet-600">{answeredCount}/10</span>
+              </div>
+              <div className="h-2 bg-slate-200 rounded-full overflow-hidden">
+                <div
+                  className="h-full bg-gradient-to-r from-violet-500 to-purple-500 rounded-full transition-all duration-300"
+                  style={{ width: `${(answeredCount / 10) * 100}%` }}
+                />
+              </div>
+            </div>
+
             <div className="space-y-6 mb-6">
-              {questions.map((q, qIndex) => (
-                <div key={qIndex} className="bg-white border border-gray-200 rounded-xl p-4">
-                  <p className="font-medium text-gray-800 mb-3">{q.question}</p>
-                  <div className="space-y-2">
+              {TEST_QUESTIONS.map((q, qIndex) => (
+                <div key={qIndex} className="bg-white border border-slate-200 rounded-2xl p-5">
+                  <div className="flex items-start gap-3 mb-4">
+                    <span className={`flex-shrink-0 w-7 h-7 rounded-lg flex items-center justify-center text-sm font-bold ${
+                      testAnswers[qIndex] !== -1
+                        ? 'bg-violet-500 text-white'
+                        : 'bg-slate-200 text-slate-600'
+                    }`}>
+                      {qIndex + 1}
+                    </span>
+                    <p className="font-medium text-slate-800 leading-relaxed">{q.question}</p>
+                  </div>
+                  <div className="space-y-2 ml-10">
                     {q.options.map((option, oIndex) => (
                       <button
                         key={oIndex}
-                        onMouseDown={() => handleTestAnswer(qIndex, oIndex)}
-                        className={`w-full p-3 rounded-lg text-left text-sm transition-all ${
+                        onMouseDown={(e) => {
+                          e.preventDefault();
+                          handleTestAnswer(qIndex, oIndex);
+                        }}
+                        className={`w-full p-3 rounded-xl text-left text-sm transition-all duration-200 ${
                           testAnswers[qIndex] === oIndex
-                            ? 'bg-indigo-500 text-white'
-                            : 'bg-gray-50 text-gray-700 hover:bg-indigo-50'
+                            ? 'bg-violet-500 text-white shadow-lg shadow-violet-500/30'
+                            : 'bg-slate-50 text-slate-700 hover:bg-violet-50 border border-slate-200'
                         }`}
                       >
                         {option}
@@ -903,37 +1486,50 @@ export default function InductiveKickbackRenderer({
               ))}
             </div>
 
-            <button
+            <PrimaryButton
               onMouseDown={handleSubmitTest}
-              disabled={testAnswers.includes(-1)}
-              className={`w-full py-3 rounded-xl font-bold transition-colors ${
-                !testAnswers.includes(-1)
-                  ? 'bg-indigo-500 text-white hover:bg-indigo-600'
-                  : 'bg-gray-200 text-gray-400 cursor-not-allowed'
-              }`}
+              disabled={!allAnswered}
+              variant="success"
             >
-              Submit Answers
-            </button>
+              {allAnswered ? 'Submit Assessment' : `Answer ${10 - answeredCount} more question${10 - answeredCount !== 1 ? 's' : ''}`}
+            </PrimaryButton>
           </>
         ) : (
-          <div className="text-center">
-            <div className={`text-6xl mb-4 ${testScore >= 2 ? 'animate-bounce' : ''}`}>
-              {testScore >= 2 ? '⚡' : '📚'}
+          <div className="text-center py-8">
+            <div className={`inline-flex items-center justify-center w-24 h-24 rounded-full mb-6 ${
+              testScore >= 7
+                ? 'bg-gradient-to-br from-emerald-500 to-teal-500 shadow-xl shadow-emerald-500/30'
+                : 'bg-gradient-to-br from-amber-500 to-orange-500 shadow-xl shadow-amber-500/30'
+            }`}>
+              <span className="text-5xl">{testScore >= 7 ? '⚡' : '📚'}</span>
             </div>
-            <p className="text-2xl font-bold text-gray-800 mb-2">
-              {testScore} / 3 Correct
+
+            <h3 className="text-2xl font-bold text-slate-800 mb-2">
+              {testScore}/10 Correct
+            </h3>
+            <p className="text-slate-600 mb-8">
+              {testScore >= 7
+                ? 'Excellent! You understand inductive kickback!'
+                : 'Review the concepts and try again to improve your score.'}
             </p>
-            <p className="text-gray-600 mb-6">
-              {testScore >= 2
-                ? 'You understand inductive kickback!'
-                : 'Review the concepts and try again.'}
-            </p>
-            <button
-              onMouseDown={nextPhase}
-              className="px-8 py-3 bg-indigo-500 text-white rounded-xl font-bold hover:bg-indigo-600 transition-colors"
-            >
-              {testScore >= 2 ? 'Complete Lesson →' : 'See Summary →'}
-            </button>
+
+            {testScore >= 7 ? (
+              <PrimaryButton onMouseDown={nextPhase} variant="success">
+                Complete Lesson →
+              </PrimaryButton>
+            ) : (
+              <div className="space-y-3">
+                <PrimaryButton onMouseDown={() => {
+                  setTestScore(null);
+                  setTestAnswers(Array(10).fill(-1));
+                }} variant="secondary">
+                  Try Again
+                </PrimaryButton>
+                <PrimaryButton onMouseDown={nextPhase}>
+                  Continue Anyway →
+                </PrimaryButton>
+              </div>
+            )}
           </div>
         )}
       </div>
@@ -941,43 +1537,50 @@ export default function InductiveKickbackRenderer({
   };
 
   const renderMastery = () => (
-    <div className="text-center">
-      <div className="text-6xl mb-6">⚡🏆</div>
-      <h2 className="text-2xl font-bold text-gray-800 mb-4">
+    <div className="text-center py-8">
+      <div className="mb-8">
+        <div className="inline-flex items-center justify-center w-24 h-24 rounded-full bg-gradient-to-br from-amber-500 to-orange-600 shadow-xl shadow-amber-500/30 mb-6 animate-pulse">
+          <span className="text-5xl">🏆</span>
+        </div>
+      </div>
+
+      <h1 className="text-3xl font-bold text-slate-800 mb-4 tracking-tight">
         Inductive Kickback Master!
-      </h2>
-      <p className="text-lg text-gray-600 mb-6">
-        You now understand one of the most important phenomena in power electronics.
+      </h1>
+
+      <p className="text-lg text-slate-600 mb-8 max-w-md mx-auto">
+        You now understand one of the most important phenomena in power electronics and circuit protection.
       </p>
 
-      <div className="bg-gradient-to-br from-indigo-100 to-purple-100 rounded-xl p-6 mb-6 text-left">
-        <h3 className="font-bold text-gray-800 mb-4">Key Takeaways:</h3>
-        <ul className="space-y-3 text-gray-700">
-          <li className="flex items-start gap-2">
-            <span className="text-indigo-500">✓</span>
-            <span>V = -L(di/dt): Rapid current change creates voltage spikes</span>
-          </li>
-          <li className="flex items-start gap-2">
-            <span className="text-indigo-500">✓</span>
-            <span>Flyback diodes protect circuits from destructive spikes</span>
-          </li>
-          <li className="flex items-start gap-2">
-            <span className="text-indigo-500">✓</span>
-            <span>Ignition coils use kickback for 40,000V sparks</span>
-          </li>
-          <li className="flex items-start gap-2">
-            <span className="text-indigo-500">✓</span>
-            <span>Boost converters harness kickback for voltage step-up</span>
-          </li>
+      <div className="bg-gradient-to-br from-amber-50 to-orange-50 border border-amber-200 rounded-2xl p-6 mb-8 text-left">
+        <h3 className="font-bold text-slate-800 mb-4 text-center">Key Takeaways</h3>
+        <ul className="space-y-3 text-slate-700">
+          {[
+            'V = -L(di/dt): Rapid current change creates voltage spikes',
+            'Flyback diodes protect circuits from destructive spikes',
+            'Ignition coils use kickback for 40,000V spark generation',
+            'Boost converters harness controlled kickback for voltage step-up',
+            'Understanding kickback is essential for working with inductive loads',
+          ].map((item, i) => (
+            <li key={i} className="flex items-start gap-3">
+              <span className="flex-shrink-0 w-6 h-6 rounded-full bg-amber-500 text-white flex items-center justify-center text-sm">✓</span>
+              <span className="text-sm leading-relaxed">{item}</span>
+            </li>
+          ))}
         </ul>
       </div>
 
-      <button
-        onMouseDown={() => goToPhase('hook')}
-        className="px-8 py-3 bg-gray-200 text-gray-700 rounded-xl font-bold hover:bg-gray-300 transition-colors"
-      >
+      {testScore !== null && (
+        <div className="bg-slate-100 rounded-2xl p-4 mb-8">
+          <p className="text-slate-600">
+            Assessment Score: <strong className="text-amber-600">{testScore}/10</strong>
+          </p>
+        </div>
+      )}
+
+      <PrimaryButton onMouseDown={() => goToPhase('hook')} variant="secondary">
         Review Again
-      </button>
+      </PrimaryButton>
     </div>
   );
 
@@ -1002,10 +1605,14 @@ export default function InductiveKickbackRenderer({
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50 p-4">
+    <div className="min-h-screen bg-gradient-to-br from-amber-50 via-white to-orange-50 p-4">
       <div className="max-w-lg mx-auto">
-        {renderPhaseIndicator()}
-        <div className="bg-white rounded-2xl shadow-lg p-6">
+        <ProgressIndicator
+          current={PHASES.indexOf(phase) + 1}
+          total={PHASES.length}
+          phase={phase}
+        />
+        <div className="bg-white rounded-3xl shadow-xl shadow-slate-200/50 p-6 border border-slate-100">
           {renderContent()}
         </div>
       </div>
