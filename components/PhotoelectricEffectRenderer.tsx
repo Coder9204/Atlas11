@@ -3,22 +3,23 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 
 // ============================================================================
-// P-WAVES VS S-WAVES RENDERER - Premium Apple/Airbnb Design
+// PHOTOELECTRIC EFFECT RENDERER - Premium Apple/Airbnb Design
 // Gold Standard: Sequential transfer navigation with completedApps tracking
+// Einstein's Nobel Prize discovery - light as quantized photons
 // ============================================================================
 
 export interface GameEvent {
    eventType: 'phase_changed' | 'prediction_made' | 'experiment_action' | 'parameter_changed' |
               'answer_submitted' | 'hint_requested' | 'milestone_reached' | 'game_completed' |
               'game_started' | 'visual_state_update' | 'test_completed' | 'lesson_completed' |
-              'twist_prediction_made' | 'wave_type_changed' | 'medium_changed' | 'wave_sent';
+              'twist_prediction_made' | 'wavelength_changed' | 'intensity_changed' | 'metal_changed';
    gameType: string;
    gameTitle: string;
    details: Record<string, unknown>;
    timestamp: number;
 }
 
-interface PWavesSWavesRendererProps {
+interface PhotoelectricEffectRendererProps {
    onGameEvent?: (event: GameEvent) => void;
    gamePhase?: string;
 }
@@ -36,9 +37,9 @@ const design = {
       textSecondary: '#a1a1aa',
       textTertiary: '#71717a',
       textMuted: '#52525b',
-      primary: '#f97316',
-      primaryHover: '#ea580c',
-      primaryMuted: '#431407',
+      primary: '#f59e0b',
+      primaryHover: '#d97706',
+      primaryMuted: '#451a03',
       secondary: '#8b5cf6',
       secondaryMuted: '#2e1065',
       success: '#22c55e',
@@ -47,10 +48,9 @@ const design = {
       warningMuted: '#422006',
       danger: '#ef4444',
       dangerMuted: '#450a0a',
-      pWave: '#fb923c',
-      sWave: '#a78bfa',
-      liquid: '#38bdf8',
-      solid: '#a1a1aa',
+      electron: '#38bdf8',
+      photon: '#fbbf24',
+      uvLight: '#a78bfa',
       border: '#3f3f46',
       borderLight: '#52525b',
    },
@@ -64,7 +64,7 @@ const design = {
    font: { sans: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif' }
 };
 
-const PWavesSWavesRenderer: React.FC<PWavesSWavesRendererProps> = ({ onGameEvent, gamePhase }) => {
+const PhotoelectricEffectRenderer: React.FC<PhotoelectricEffectRendererProps> = ({ onGameEvent, gamePhase }) => {
    const validPhases: Phase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
 
    // Core state
@@ -74,12 +74,11 @@ const PWavesSWavesRenderer: React.FC<PWavesSWavesRendererProps> = ({ onGameEvent
    });
    const [prediction, setPrediction] = useState<string | null>(null);
    const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
-   const [waveType, setWaveType] = useState<'p' | 's'>('p');
-   const [medium, setMedium] = useState<'solid' | 'liquid'>('solid');
-   const [isWaveActive, setIsWaveActive] = useState(false);
-   const [waveProgress, setWaveProgress] = useState(0);
+   const [wavelength, setWavelength] = useState(400); // nm
+   const [intensity, setIntensity] = useState(70); // %
+   const [workFunction, setWorkFunction] = useState(2.3); // eV (Sodium)
    const [hasExperimented, setHasExperimented] = useState(false);
-   const [hasSentSWaveInLiquid, setHasSentSWaveInLiquid] = useState(false);
+   const [hasTestedIntensity, setHasTestedIntensity] = useState(false);
    const [guidedMode, setGuidedMode] = useState(true);
    const [isMobile, setIsMobile] = useState(false);
 
@@ -100,6 +99,16 @@ const PWavesSWavesRenderer: React.FC<PWavesSWavesRendererProps> = ({ onGameEvent
    // Navigation lock - prevents double-clicks
    const navigationLockRef = useRef(false);
 
+   // Physics constants
+   const h = 4.136e-15; // Planck's constant in eV·s
+   const c = 3e8; // Speed of light in m/s
+
+   // Calculated values
+   const photonEnergy = (h * c) / (wavelength * 1e-9);
+   const maxKE = Math.max(0, photonEnergy - workFunction);
+   const emissionOccurs = photonEnergy >= workFunction;
+   const thresholdWavelength = (h * c) / (workFunction * 1e-9);
+
    // Mobile detection
    useEffect(() => {
       const checkMobile = () => setIsMobile(window.innerWidth < 768);
@@ -119,33 +128,24 @@ const PWavesSWavesRenderer: React.FC<PWavesSWavesRendererProps> = ({ onGameEvent
    useEffect(() => {
       const animate = () => {
          timeRef.current += 0.05;
-         if (isWaveActive) {
-            setWaveProgress(prev => {
-               if (prev >= 1) {
-                  setIsWaveActive(false);
-                  return 0;
-               }
-               return prev + 0.02;
-            });
-         }
          animationRef.current = requestAnimationFrame(animate);
       };
       animationRef.current = requestAnimationFrame(animate);
       return () => {
          if (animationRef.current) cancelAnimationFrame(animationRef.current);
       };
-   }, [isWaveActive]);
+   }, []);
 
    // Event emitter
    const emit = useCallback((eventType: GameEvent['eventType'], details: Record<string, unknown> = {}) => {
       onGameEvent?.({
          eventType,
-         gameType: 'p_waves_s_waves',
-         gameTitle: 'P-Waves vs S-Waves',
-         details: { phase, guidedMode, ...details },
+         gameType: 'photoelectric_effect',
+         gameTitle: 'Photoelectric Effect',
+         details: { phase, guidedMode, wavelength, intensity, photonEnergy, maxKE, emissionOccurs, ...details },
          timestamp: Date.now()
       });
-   }, [onGameEvent, phase, guidedMode]);
+   }, [onGameEvent, phase, guidedMode, wavelength, intensity, photonEnergy, maxKE, emissionOccurs]);
 
    // Debounced navigation
    const goToPhase = useCallback((newPhase: Phase) => {
@@ -156,86 +156,94 @@ const PWavesSWavesRenderer: React.FC<PWavesSWavesRendererProps> = ({ onGameEvent
       setTimeout(() => { navigationLockRef.current = false; }, 400);
    }, [emit]);
 
-   // Send wave
-   const sendWave = useCallback(() => {
-      if (isWaveActive) return;
-      setIsWaveActive(true);
-      setWaveProgress(0);
-      setHasExperimented(true);
-      if (waveType === 's' && medium === 'liquid') {
-         setHasSentSWaveInLiquid(true);
-      }
-      emit('wave_sent', { waveType, medium });
-   }, [isWaveActive, waveType, medium, emit]);
+   // Wavelength to visible color
+   const wavelengthToColor = (wl: number): string => {
+      if (wl < 380) return design.colors.uvLight; // UV
+      if (wl < 450) return '#3b82f6'; // Blue
+      if (wl < 495) return '#06b6d4'; // Cyan
+      if (wl < 570) return '#22c55e'; // Green
+      if (wl < 590) return '#eab308'; // Yellow
+      if (wl < 620) return '#f97316'; // Orange
+      return '#ef4444'; // Red
+   };
 
    // Test questions - 10 comprehensive questions
    const testQuestions = [
-      { q: 'Which seismic wave arrives first at a monitoring station?', opts: ['S-wave (Secondary)', 'P-wave (Primary)', 'Surface wave', 'Both arrive together'], correct: 1, explain: 'P-waves (Primary waves) travel about 1.7x faster than S-waves through rock, so they always arrive first—hence the name "Primary."' },
-      { q: 'How did scientists discover Earth\'s outer core is liquid?', opts: ['Temperature measurements', 'S-wave shadow zone', 'Drilling experiments', 'Satellite imagery'], correct: 1, explain: 'S-waves cannot travel through liquids. Scientists found that S-waves disappear on the opposite side of Earth after an earthquake, creating a "shadow zone" that proves the outer core is liquid.' },
-      { q: 'How do particles move in a P-wave?', opts: ['Perpendicular to wave direction', 'Parallel to wave direction (compression)', 'In circular orbits', 'They don\'t move'], correct: 1, explain: 'P-waves are compression waves—particles push and pull back and forth parallel to the direction the wave travels, like a slinky being pushed from one end.' },
-      { q: 'Why can\'t S-waves travel through liquids?', opts: ['Liquids are too dense', 'Liquids move too fast', 'Liquids cannot support shear stress', 'S-waves are always slower'], correct: 2, explain: 'S-waves require the material to "spring back" when displaced sideways (shear). Liquids flow instead of springing back—there\'s no restoring force to propagate the wave.' },
-      { q: 'In an earthquake, what causes the first sharp jolt you feel?', opts: ['S-wave arrival', 'P-wave arrival', 'Surface wave', 'Aftershock'], correct: 1, explain: 'The faster P-wave arrives first as a sharp, quick jolt. The more damaging S-wave arrives seconds later with stronger shaking.' },
-      { q: 'Medical ultrasound uses which type of wave principle?', opts: ['S-waves (shear)', 'P-waves (compression)', 'Surface waves', 'Electromagnetic waves'], correct: 1, explain: 'Ultrasound uses compression waves (same principle as P-waves) because they can travel through fluids like blood and amniotic fluid.' },
-      { q: 'How do oil companies use P and S waves together?', opts: ['Only P-waves are used', 'S-waves reflect differently off fluid reservoirs', 'For legal compliance', 'They cannot be used together'], correct: 1, explain: 'S-waves are blocked by fluid-filled reservoirs while P-waves pass through. This difference helps locate underground oil and gas deposits.' },
-      { q: 'If you wanted to detect a liquid layer inside another planet, what would you look for?', opts: ['Higher temperatures', 'S-wave shadow zone', 'Magnetic field changes', 'Visual light reflection'], correct: 1, explain: 'Just like on Earth, an S-wave shadow zone would indicate liquid layers—this is how planetary scientists study the interiors of planets and moons.' },
-      { q: 'What happens when P-waves enter the liquid outer core?', opts: ['They stop completely', 'They speed up dramatically', 'They slow down and bend', 'They convert to S-waves'], correct: 2, explain: 'P-waves slow down in liquid (from ~14 km/s to ~8 km/s) and bend (refract) at the boundary. This creates a P-wave shadow zone between 104° and 140° from the epicenter.' },
-      { q: 'Why do buildings often shake more during S-wave passage than P-wave?', opts: ['S-waves are always larger', 'S-wave shear motion causes more horizontal movement', 'P-waves are absorbed by ground', 'S-waves last longer'], correct: 1, explain: 'S-waves cause side-to-side (shear) motion which is more damaging to buildings than the back-and-forth compression of P-waves. Buildings are better at resisting vertical loads than horizontal shaking.' }
+      { q: 'Red light shines on a metal surface but no electrons escape. You switch to blue light of the same intensity. What happens?', opts: ['Still no electrons - color doesn\'t matter', 'Electrons are emitted because blue has higher frequency', 'Same number of electrons, but slower', 'Cannot determine without knowing the metal'], correct: 1, explain: 'Blue light has higher frequency, meaning each photon carries more energy (E = hf). If blue photon energy exceeds the work function, electrons will be emitted even though red couldn\'t do it.' },
+      { q: 'You double the intensity of UV light hitting a metal surface. How does this affect the ejected electrons?', opts: ['Electrons move twice as fast', 'Twice as many electrons are emitted at the same speed', 'No change at all', 'Electrons have more kinetic energy'], correct: 1, explain: 'Doubling intensity means twice as many photons per second. Each photon can eject one electron, so you get twice as many electrons. But each photon has the same energy (E = hf), so electron speed is unchanged.' },
+      { q: 'Einstein won the 1921 Nobel Prize for explaining the photoelectric effect. What was his key insight?', opts: ['Light travels in waves like water', 'Light consists of discrete packets called photons', 'Electrons have wave properties', 'Energy is continuously distributed'], correct: 1, explain: 'Einstein proposed that light energy comes in discrete quanta (photons), each with energy E = hf. This explained why only frequency (not intensity) determines whether electrons can escape.' },
+      { q: 'Metal A has work function 2.0 eV. Metal B has work function 4.5 eV. You shine 3.0 eV photons on both. What happens?', opts: ['Both metals emit electrons', 'Neither metal emits electrons', 'Only Metal A emits electrons', 'Only Metal B emits electrons'], correct: 2, explain: 'Electrons escape only when photon energy exceeds work function. For Metal A: 3.0 > 2.0 eV (emission). For Metal B: 3.0 < 4.5 eV (no emission). Metal A emits electrons with 1.0 eV kinetic energy.' },
+      { q: 'Classical physics predicted that brighter light should eject faster electrons. Why was this prediction wrong?', opts: ['Light doesn\'t interact with electrons', 'Energy comes in discrete packets, not continuous waves', 'Metals absorb all light energy as heat', 'Electrons are too heavy to accelerate'], correct: 1, explain: 'Classical wave theory assumed energy accumulates continuously, so brighter = more total energy = faster electrons. But light comes in photons with fixed energy E = hf. More photons (brighter) gives more electrons, but each photon\'s energy depends only on frequency.' },
+      { q: 'The maximum kinetic energy of ejected electrons is measured as 1.5 eV. The metal\'s work function is 2.3 eV. What was the photon energy?', opts: ['0.8 eV', '2.3 eV', '3.8 eV', '1.5 eV'], correct: 2, explain: 'Using Einstein\'s equation: E_photon = Work Function + KE_max. So E_photon = 2.3 + 1.5 = 3.8 eV. The photon energy minus work function equals the leftover kinetic energy.' },
+      { q: 'Why do solar cells need photons with energy greater than the semiconductor\'s band gap?', opts: ['To heat up the material', 'To free electrons from bound states', 'To make the cell vibrate', 'To change the cell\'s color'], correct: 1, explain: 'Just like the photoelectric effect, electrons in solar cells need enough energy to escape their bound states. The band gap is analogous to the work function - photons with less energy cannot free electrons.' },
+      { q: 'Night vision devices amplify starlight using the photoelectric effect. How do they work?', opts: ['They heat up the light', 'One photon triggers a cascade of electrons', 'They slow down light', 'They change infrared to visible'], correct: 1, explain: 'Photomultiplier tubes use the photoelectric effect: one photon releases one electron, which is accelerated and releases more electrons on impact, creating a cascade that amplifies the original signal millions of times.' },
+      { q: 'The threshold frequency for a certain metal is 5 x 10^14 Hz. What happens if you shine light at 6 x 10^14 Hz?', opts: ['No emission - frequency too high', 'Electrons are emitted with kinetic energy', 'Light passes through the metal', 'Electrons are absorbed'], correct: 1, explain: 'Since 6 x 10^14 Hz > threshold of 5 x 10^14 Hz, each photon has enough energy to exceed the work function. Electrons will be emitted, and the excess energy (E_photon - Work Function) becomes kinetic energy.' },
+      { q: 'In a digital camera sensor, what determines how bright each pixel appears?', opts: ['The color of light hitting it', 'The number of photons hitting that pixel', 'The temperature of the sensor', 'The size of the camera'], correct: 1, explain: 'Each photon hitting a pixel can free one electron (if it has enough energy). More photons = more freed electrons = stronger electrical signal = brighter pixel in the final image.' }
    ];
 
    // Real-world applications - 4 detailed applications
    const applications = [
       {
-         icon: '🌍',
-         title: 'Earthquake Early Warning',
-         description: 'Modern seismometers detect P-waves within seconds of an earthquake. Since P-waves travel faster but cause less damage than S-waves, this gives precious seconds of warning before the destructive S-waves arrive.',
+         icon: '☀️',
+         title: 'Solar Cells',
+         description: 'Photovoltaic cells convert sunlight directly into electricity using the photoelectric effect. When photons with energy greater than the semiconductor\'s band gap hit the cell, they free electrons that flow as electrical current.',
          details: [
-            'Japan\'s system gives 5-40 seconds warning',
-            'Trains automatically slow down',
-            'Factories can shut off gas lines',
-            'Elevators stop at nearest floor'
+            'Silicon band gap: 1.1 eV (requires wavelength < 1100nm)',
+            'Photons with less energy pass through without absorption',
+            'Multi-junction cells use different band gaps to capture more spectrum',
+            'Global solar capacity exceeded 1 terawatt in 2022'
          ],
-         stat: '500,000+ earthquakes detected yearly',
+         stat: '1+ Terawatt global capacity',
          color: design.colors.primary
       },
       {
-         icon: '🛢️',
-         title: 'Oil & Gas Exploration',
-         description: 'Seismic surveys send controlled waves into the ground. Since S-waves don\'t travel through fluids but P-waves do, comparing their reflections reveals underground oil and gas reservoirs worth billions.',
+         icon: '📷',
+         title: 'Digital Camera Sensors',
+         description: 'CCD and CMOS sensors are arrays of photoelectric cells. Each pixel converts incoming photons into electrons, measuring light intensity across millions of points to create digital images.',
          details: [
-            'Artificial seismic sources create waves',
-            'Thousands of sensors record reflections',
-            'S-wave shadows indicate fluid pockets',
-            'Computer models create 3D reservoir maps'
+            'Each pixel is a tiny photodiode (photoelectric cell)',
+            'More photons = more electrons = brighter pixel',
+            'Color filters (Bayer pattern) separate R, G, B channels',
+            'Low-light performance depends on quantum efficiency'
          ],
-         stat: '$30 billion industry worldwide',
-         color: design.colors.success
-      },
-      {
-         icon: '🏥',
-         title: 'Medical Ultrasound Imaging',
-         description: 'Ultrasound uses compression waves (like P-waves) that can travel through body fluids. Echoes from different tissues create real-time images of babies, organs, and blood flow without radiation.',
-         details: [
-            'Frequencies: 2-18 MHz (vs 0.1 Hz for earthquakes)',
-            'Works through amniotic fluid and blood',
-            'Doppler effect measures blood flow speed',
-            'Safe enough for routine pregnancy monitoring'
-         ],
-         stat: '3+ billion scans performed yearly',
+         stat: '200+ Megapixel sensors',
          color: design.colors.secondary
       },
       {
-         icon: '🏗️',
-         title: 'Structural Integrity Testing',
-         description: 'Non-destructive testing sends ultrasonic waves through bridges, pipelines, and aircraft. Waves reflect off hidden cracks and defects, revealing dangerous flaws before they cause failures.',
+         icon: '🌙',
+         title: 'Night Vision',
+         description: 'Photomultiplier tubes amplify tiny amounts of starlight by cascading the photoelectric effect. One photon releases one electron, which triggers more electrons in a chain reaction, amplifying light up to 50,000x.',
          details: [
-            'Tests welds in nuclear reactors',
-            'Inspects aircraft wings for fatigue cracks',
-            'Monitors bridge supports for corrosion',
-            'Checks pipelines for wall thinning'
+            'Photocathode converts photons to electrons',
+            'Microchannel plate multiplies electrons exponentially',
+            'Each stage multiplies electron count 10-100x',
+            'Gen 3+ devices can see in starlight only'
          ],
-         stat: '99.9% defect detection accuracy',
+         stat: '50,000x light amplification',
+         color: design.colors.success
+      },
+      {
+         icon: '🚪',
+         title: 'Light Sensors',
+         description: 'Automatic doors, elevator safety systems, and industrial automation use photoelectric sensors. When you break a light beam, fewer photons reach the detector, triggering the response.',
+         details: [
+            'Emitter sends infrared or visible light beam',
+            'Receiver detects beam using photoelectric effect',
+            'Broken beam = fewer photons = signal change',
+            'Response time: milliseconds or faster'
+         ],
+         stat: 'Used in 5M+ automatic doors',
          color: design.colors.warning
       }
+   ];
+
+   // Metal options for experiments
+   const metals = [
+      { name: 'Sodium', workFunction: 2.3 },
+      { name: 'Calcium', workFunction: 3.0 },
+      { name: 'Zinc', workFunction: 4.3 },
+      { name: 'Copper', workFunction: 4.7 },
+      { name: 'Platinum', workFunction: 5.6 }
    ];
 
    // ============ HELPER FUNCTIONS (not React components) ============
@@ -340,24 +348,31 @@ const PWavesSWavesRenderer: React.FC<PWavesSWavesRendererProps> = ({ onGameEvent
       </div>
    );
 
-   // Wave visualization component
-   const renderWaveVisualization = () => {
-      const sWaveBlocked = waveType === 's' && medium === 'liquid';
-      const numParticles = 14;
+   // Photoelectric lab visualization
+   const renderPhotoelectricLab = () => {
+      const lightColor = wavelengthToColor(wavelength);
+      const numPhotons = Math.floor(intensity / 12);
+      const numElectrons = emissionOccurs ? numPhotons : 0;
 
       return (
-         <svg viewBox="0 0 600 280" style={{ width: '100%', height: '100%', maxHeight: '280px' }}>
+         <svg viewBox="0 0 600 320" style={{ width: '100%', height: '100%', maxHeight: '320px' }}>
             <defs>
-               <linearGradient id="solidMedium" x1="0%" y1="0%" x2="0%" y2="100%">
-                  <stop offset="0%" stopColor="#3f3f46" />
-                  <stop offset="100%" stopColor="#27272a" />
+               <linearGradient id="metalPlate" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor="#78716c" />
+                  <stop offset="30%" stopColor="#a8a29e" />
+                  <stop offset="60%" stopColor="#78716c" />
+                  <stop offset="100%" stopColor="#57534e" />
                </linearGradient>
-               <linearGradient id="liquidMedium" x1="0%" y1="0%" x2="0%" y2="100%">
-                  <stop offset="0%" stopColor="#0c4a6e" />
-                  <stop offset="100%" stopColor="#082f49" />
-               </linearGradient>
-               <filter id="particleGlow">
-                  <feGaussianBlur stdDeviation="2" result="blur" />
+               <radialGradient id="photonGlow" cx="50%" cy="50%" r="50%">
+                  <stop offset="0%" stopColor={lightColor} stopOpacity="1" />
+                  <stop offset="100%" stopColor={lightColor} stopOpacity="0" />
+               </radialGradient>
+               <radialGradient id="electronGlow" cx="50%" cy="50%" r="50%">
+                  <stop offset="0%" stopColor={design.colors.electron} stopOpacity="1" />
+                  <stop offset="100%" stopColor={design.colors.electron} stopOpacity="0" />
+               </radialGradient>
+               <filter id="glow">
+                  <feGaussianBlur stdDeviation="3" result="blur" />
                   <feMerge>
                      <feMergeNode in="blur" />
                      <feMergeNode in="SourceGraphic" />
@@ -365,132 +380,148 @@ const PWavesSWavesRenderer: React.FC<PWavesSWavesRendererProps> = ({ onGameEvent
                </filter>
             </defs>
 
+            {/* Background */}
+            <rect width="600" height="320" fill="#0a0a12" />
+
             {/* Title */}
-            <text x="300" y="24" textAnchor="middle" style={{ fontSize: '14px', fontWeight: 700, fill: design.colors.textPrimary }}>
-               Wave Propagation Simulator
+            <text x="300" y="28" textAnchor="middle" style={{ fontSize: '14px', fontWeight: 700, fill: design.colors.textPrimary }}>
+               Photoelectric Effect Simulator
             </text>
 
-            {/* Medium container */}
-            <rect x="40" y="50" width="520" height="170" rx="12"
-               fill={medium === 'solid' ? 'url(#solidMedium)' : 'url(#liquidMedium)'}
-               stroke={design.colors.border} strokeWidth="2" />
-
-            {/* Medium label */}
-            <text x="300" y="72" textAnchor="middle"
-               style={{ fontSize: '11px', fontWeight: 700, fill: design.colors.textTertiary, textTransform: 'uppercase', letterSpacing: '0.1em' }}>
-               {medium === 'solid' ? '🪨 Solid Medium (Rock)' : '💧 Liquid Medium (Water/Molten Iron)'}
+            {/* Vacuum chamber */}
+            <rect x="60" y="50" width="480" height="220" rx="16"
+               fill="#0f172a" stroke={design.colors.border} strokeWidth="2" />
+            <text x="300" y="68" textAnchor="middle"
+               style={{ fontSize: '10px', fontWeight: 600, fill: design.colors.textTertiary, textTransform: 'uppercase', letterSpacing: '0.1em' }}>
+               Vacuum Chamber
             </text>
 
-            {/* Wave source indicator */}
-            <circle cx="65" cy="135" r="16"
-               fill={waveType === 'p' ? design.colors.pWave : design.colors.sWave}
-               filter="url(#particleGlow)"
-               opacity={isWaveActive ? 1 : 0.6} />
-            <text x="65" y="139" textAnchor="middle" style={{ fontSize: '10px', fontWeight: 700, fill: design.colors.bgPrimary }}>
-               SRC
-            </text>
+            {/* Light source */}
+            <g transform="translate(100, 160)">
+               <rect x="-20" y="-50" width="40" height="100" rx="6" fill="#374151" stroke="#4b5563" strokeWidth="2" />
+               <circle cx="0" cy="0" r="18" fill={lightColor} filter="url(#glow)" opacity="0.9">
+                  <animate attributeName="r" values="16;20;16" dur="1.5s" repeatCount="indefinite" />
+               </circle>
+               <circle cx="0" cy="0" r="8" fill="white" />
+               <text x="0" y="70" textAnchor="middle" style={{ fontSize: '10px', fontWeight: 600, fill: design.colors.textSecondary }}>
+                  Light Source
+               </text>
+               <text x="0" y="85" textAnchor="middle" style={{ fontSize: '12px', fontWeight: 700, fill: lightColor }}>
+                  {wavelength} nm
+               </text>
+            </g>
 
-            {/* Particle chain */}
-            {Array.from({ length: numParticles }).map((_, i) => {
-               const baseX = 110 + i * 32;
-               const waveReached = waveProgress * numParticles > i;
-               const intensity = waveReached ? Math.max(0, 1 - Math.abs(waveProgress * numParticles - i) / 3) : 0;
-
-               let offsetX = 0, offsetY = 0;
-               if (waveType === 'p') {
-                  // P-wave: compression (parallel motion)
-                  offsetX = intensity * Math.sin(timeRef.current * 12 + i * 0.8) * 14;
-               } else if (medium === 'solid') {
-                  // S-wave in solid: shear (perpendicular motion)
-                  offsetY = intensity * Math.sin(timeRef.current * 12 + i * 0.8) * 18;
-               } else {
-                  // S-wave in liquid: rapidly decays
-                  offsetY = intensity * Math.sin(timeRef.current * 12 + i * 0.8) * 18 * Math.exp(-i * 0.5);
-               }
-
-               const particleColor = waveReached
-                  ? (waveType === 'p' ? design.colors.pWave : design.colors.sWave)
-                  : design.colors.textMuted;
-
-               return (
-                  <g key={i}>
-                     {/* Connection line */}
-                     {i < numParticles - 1 && (
-                        <line
-                           x1={baseX + offsetX}
-                           y1={135 + offsetY}
-                           x2={110 + (i + 1) * 32}
-                           y2={135}
-                           stroke={design.colors.textMuted}
-                           strokeWidth="2"
-                           opacity={sWaveBlocked && i > 2 ? 0.15 : 0.35}
+            {/* Photon beam */}
+            <g opacity={intensity / 100}>
+               {Array.from({ length: numPhotons }).map((_, i) => {
+                  const progress = ((timeRef.current * 50 + i * 30) % 240) / 240;
+                  const x = 140 + progress * 240;
+                  const y = 130 + i * 10 + Math.sin(progress * Math.PI * 3) * 5;
+                  return (
+                     <g key={i}>
+                        <circle cx={x} cy={y} r="6" fill="url(#photonGlow)" />
+                        <circle cx={x} cy={y} r="3" fill={lightColor} />
+                        {/* Wave visualization */}
+                        <path
+                           d={`M ${x-20},${y} Q ${x-10},${y-6} ${x},${y} Q ${x+10},${y+6} ${x+20},${y}`}
+                           fill="none" stroke={lightColor} strokeWidth="1.5" opacity="0.5"
                         />
-                     )}
-                     {/* Particle */}
-                     <circle
-                        cx={baseX + offsetX}
-                        cy={135 + offsetY}
-                        r="8"
-                        fill={particleColor}
-                        opacity={sWaveBlocked && i > 2 ? 0.2 : 0.9}
-                        filter={waveReached ? 'url(#particleGlow)' : undefined}
-                     />
-                  </g>
-               );
-            })}
+                     </g>
+                  );
+               })}
+            </g>
 
-            {/* S-wave blocked indicator */}
-            {sWaveBlocked && isWaveActive && waveProgress > 0.2 && (
-               <g>
-                  <rect x="220" y="100" width="160" height="70" rx="10"
-                     fill={design.colors.dangerMuted} fillOpacity="0.95"
-                     stroke={design.colors.danger} strokeWidth="2" />
-                  <text x="300" y="128" textAnchor="middle"
-                     style={{ fontSize: '14px', fontWeight: 800, fill: design.colors.danger }}>
-                     ⚠️ S-WAVE BLOCKED
+            {/* Metal plate */}
+            <g transform="translate(390, 90)">
+               <rect x="0" y="0" width="30" height="140" rx="4" fill="url(#metalPlate)" stroke="#a8a29e" strokeWidth="1" />
+               {/* Atomic structure hint */}
+               {Array.from({ length: 10 }).map((_, i) => (
+                  <circle key={i} cx="15" cy={10 + i * 13} r="4" fill="#57534e" opacity="0.5" />
+               ))}
+               <text x="15" y="160" textAnchor="middle" style={{ fontSize: '10px', fontWeight: 600, fill: design.colors.textSecondary }}>
+                  {metals.find(m => m.workFunction === workFunction)?.name || 'Metal'}
+               </text>
+               <text x="15" y="175" textAnchor="middle" style={{ fontSize: '10px', fill: design.colors.primary }}>
+                  Φ = {workFunction} eV
+               </text>
+            </g>
+
+            {/* Ejected electrons */}
+            {emissionOccurs && (
+               <g filter="url(#glow)">
+                  {Array.from({ length: numElectrons }).map((_, i) => {
+                     const baseProgress = ((timeRef.current * 40 + i * 25) % 180) / 180;
+                     const delay = 0.55;
+                     if (baseProgress < delay) return null;
+                     const progress = (baseProgress - delay) / (1 - delay);
+                     const speed = Math.sqrt(maxKE) * 0.7 + 0.3;
+                     const x = 430 + progress * speed * 100;
+                     const y = 130 + i * 10 + Math.sin(progress * Math.PI * 2) * 8;
+                     if (x > 530) return null;
+                     return (
+                        <g key={`e-${i}`}>
+                           <circle cx={x} cy={y} r="7" fill="url(#electronGlow)" />
+                           <circle cx={x} cy={y} r="3" fill={design.colors.electron} />
+                           <text x={x} y={y + 2} textAnchor="middle" style={{ fontSize: '6px', fontWeight: 700, fill: '#0a0a12' }}>
+                              e⁻
+                           </text>
+                        </g>
+                     );
+                  })}
+               </g>
+            )}
+
+            {/* No emission indicator */}
+            {!emissionOccurs && (
+               <g transform="translate(480, 160)">
+                  <rect x="-45" y="-25" width="90" height="50" rx="8"
+                     fill={design.colors.dangerMuted} stroke={design.colors.danger} strokeWidth="1" />
+                  <text x="0" y="-5" textAnchor="middle"
+                     style={{ fontSize: '11px', fontWeight: 700, fill: design.colors.danger }}>
+                     NO EMISSION
                   </text>
-                  <text x="300" y="150" textAnchor="middle"
-                     style={{ fontSize: '11px', fill: '#fca5a5' }}>
-                     Liquids can't support shear
+                  <text x="0" y="12" textAnchor="middle"
+                     style={{ fontSize: '9px', fill: '#fca5a5' }}>
+                     E_photon &lt; Φ
                   </text>
                </g>
             )}
 
-            {/* Wave type indicator */}
-            <rect x="480" y="85" width="70" height="100" rx="8"
-               fill={design.colors.bgSecondary} stroke={design.colors.border} />
-            <text x="515" y="108" textAnchor="middle"
-               style={{ fontSize: '10px', fontWeight: 600, fill: design.colors.textTertiary }}>
-               WAVE TYPE
-            </text>
-            <text x="515" y="135" textAnchor="middle"
-               style={{ fontSize: '16px', fontWeight: 800, fill: waveType === 'p' ? design.colors.pWave : design.colors.sWave }}>
-               {waveType === 'p' ? 'P-Wave' : 'S-Wave'}
-            </text>
-            <text x="515" y="155" textAnchor="middle"
-               style={{ fontSize: '9px', fill: design.colors.textTertiary }}>
-               {waveType === 'p' ? 'Compression' : 'Shear'}
-            </text>
-            <text x="515" y="175" textAnchor="middle"
-               style={{ fontSize: '20px' }}>
-               {waveType === 'p' ? '← →' : '↑ ↓'}
-            </text>
+            {/* Energy comparison panel */}
+            <g transform="translate(80, 280)">
+               <rect x="-15" y="-15" width="240" height="50" rx="8"
+                  fill={design.colors.bgSecondary} stroke={design.colors.border} strokeWidth="1" />
 
-            {/* Motion explanation */}
-            <text x="300" y="245" textAnchor="middle"
-               style={{ fontSize: '12px', fill: design.colors.textSecondary }}>
-               {waveType === 'p'
-                  ? 'P-Wave: Particles compress & expand parallel to wave direction'
-                  : 'S-Wave: Particles move perpendicular to wave direction (shear)'}
-            </text>
+               {/* Photon energy bar */}
+               <rect x="0" y="0" width={Math.min(photonEnergy * 20, 100)} height="12" rx="2"
+                  fill={design.colors.primary} />
+               <text x="105" y="10" style={{ fontSize: '10px', fill: design.colors.primary, fontWeight: 600 }}>
+                  E_photon = {photonEnergy.toFixed(2)} eV
+               </text>
 
-            {/* Speed comparison */}
-            <text x="300" y="265" textAnchor="middle"
-               style={{ fontSize: '11px', fill: design.colors.textTertiary }}>
-               {waveType === 'p'
-                  ? 'Speed: ~6-8 km/s in rock • Arrives FIRST (Primary)'
-                  : 'Speed: ~3.5-4.5 km/s in rock • Arrives SECOND (Secondary)'}
-            </text>
+               {/* Work function marker */}
+               <line x1={workFunction * 20} y1="-5" x2={workFunction * 20} y2="20"
+                  stroke={design.colors.danger} strokeWidth="2" strokeDasharray="3,2" />
+               <text x={workFunction * 20 + 3} y="26" style={{ fontSize: '8px', fill: design.colors.danger }}>
+                  Φ = {workFunction} eV
+               </text>
+            </g>
+
+            {/* KE indicator */}
+            {emissionOccurs && (
+               <g transform="translate(480, 280)">
+                  <rect x="-50" y="-15" width="100" height="50" rx="8"
+                     fill={design.colors.successMuted} stroke={design.colors.success} strokeWidth="1" />
+                  <text x="0" y="2" textAnchor="middle"
+                     style={{ fontSize: '10px', fontWeight: 700, fill: design.colors.success }}>
+                     KE_max
+                  </text>
+                  <text x="0" y="18" textAnchor="middle"
+                     style={{ fontSize: '14px', fontWeight: 800, fill: design.colors.success }}>
+                     {maxKE.toFixed(2)} eV
+                  </text>
+               </g>
+            )}
          </svg>
       );
    };
@@ -521,17 +552,17 @@ const PWavesSWavesRenderer: React.FC<PWavesSWavesRendererProps> = ({ onGameEvent
                   width: isMobile ? '80px' : '96px',
                   height: isMobile ? '80px' : '96px',
                   borderRadius: '50%',
-                  background: `linear-gradient(135deg, ${design.colors.primary} 0%, #c2410c 100%)`,
+                  background: `linear-gradient(135deg, ${design.colors.primary} 0%, ${design.colors.secondary} 100%)`,
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                   marginBottom: '28px',
                   boxShadow: design.shadow.glow(design.colors.primary),
                }}>
-                  <span style={{ fontSize: isMobile ? '36px' : '44px' }}>🌍</span>
+                  <span style={{ fontSize: isMobile ? '36px' : '44px' }}>💡</span>
                </div>
 
-               {/* Mystery intro */}
+               {/* Nobel badge */}
                <div style={{
                   padding: '12px 24px',
                   borderRadius: design.radius.full,
@@ -540,7 +571,7 @@ const PWavesSWavesRenderer: React.FC<PWavesSWavesRendererProps> = ({ onGameEvent
                   marginBottom: '20px',
                }}>
                   <span style={{ fontSize: '13px', fontWeight: 600, color: design.colors.primary }}>
-                     🔬 A Scientific Mystery
+                     🏆 Nobel Prize in Physics 1921
                   </span>
                </div>
 
@@ -552,7 +583,7 @@ const PWavesSWavesRenderer: React.FC<PWavesSWavesRendererProps> = ({ onGameEvent
                   letterSpacing: '-0.02em',
                   lineHeight: 1.1,
                }}>
-                  P-Waves vs S-Waves
+                  The Photoelectric Effect
                </h1>
 
                <p style={{
@@ -562,9 +593,8 @@ const PWavesSWavesRenderer: React.FC<PWavesSWavesRendererProps> = ({ onGameEvent
                   maxWidth: '440px',
                   lineHeight: 1.6,
                }}>
-                  How did scientists prove Earth's outer core is{' '}
-                  <span style={{ color: design.colors.liquid, fontWeight: 700 }}>liquid</span>
-                  {' '}without ever drilling there?
+                  Einstein called it{' '}
+                  <span style={{ color: design.colors.primary, fontWeight: 700 }}>"the most revolutionary discovery in physics"</span>
                </p>
 
                <p style={{
@@ -573,7 +603,7 @@ const PWavesSWavesRenderer: React.FC<PWavesSWavesRendererProps> = ({ onGameEvent
                   marginBottom: '36px',
                   maxWidth: '400px',
                }}>
-                  The answer lies in two types of seismic waves with very different properties...
+                  Discover why light knocking electrons off metal proved that light is made of particles...
                </p>
 
                {/* Feature grid */}
@@ -586,9 +616,9 @@ const PWavesSWavesRenderer: React.FC<PWavesSWavesRendererProps> = ({ onGameEvent
                   marginBottom: '36px',
                }}>
                   {[
-                     { icon: '🌊', label: 'Two Wave Types' },
-                     { icon: '💧', label: 'Liquid Mystery' },
-                     { icon: '🔬', label: 'Virtual Lab' },
+                     { icon: '🔬', label: 'Light Lab' },
+                     { icon: '⚡', label: 'Photon Energy' },
+                     { icon: '🏆', label: 'Nobel Discovery' },
                   ].map((item, i) => (
                      <div key={i} style={{
                         padding: '18px 12px',
@@ -648,14 +678,14 @@ const PWavesSWavesRenderer: React.FC<PWavesSWavesRendererProps> = ({ onGameEvent
                   </span>
                </div>
 
-               {renderButton('Begin Exploration →', () => goToPhase('predict'))}
+               {renderButton('Begin Experiment →', () => goToPhase('predict'))}
 
                <p style={{
                   fontSize: '13px',
                   color: design.colors.textMuted,
                   marginTop: '20px',
                }}>
-                  ~5 minutes • Interactive seismic simulation
+                  ~5 minutes • Interactive quantum physics lab
                </p>
             </div>
          </div>
@@ -665,10 +695,10 @@ const PWavesSWavesRenderer: React.FC<PWavesSWavesRendererProps> = ({ onGameEvent
    // PREDICT PHASE
    if (phase === 'predict') {
       const options = [
-         { id: 'p_only', label: 'Only P-waves (compression)', desc: 'Push-pull compression works everywhere', icon: '← →' },
-         { id: 's_only', label: 'Only S-waves (shear)', desc: 'Side-to-side shearing works everywhere', icon: '↑ ↓' },
-         { id: 'both', label: 'Both wave types', desc: 'All seismic waves travel through all materials', icon: '◈' },
-         { id: 'neither', label: 'Neither wave type', desc: 'Liquids block all seismic waves completely', icon: '✕' },
+         { id: 'brighter', label: 'Brighter light ejects faster electrons', desc: 'More light energy = more electron energy', icon: '☀️' },
+         { id: 'color', label: 'Light color determines electron speed', desc: 'Frequency matters more than brightness', icon: '🌈' },
+         { id: 'both', label: 'Both brightness and color matter', desc: 'Energy accumulates from both factors', icon: '⚖️' },
+         { id: 'neither', label: 'Light cannot eject electrons', desc: 'Not enough energy in visible light', icon: '❌' },
       ];
 
       return (
@@ -698,7 +728,7 @@ const PWavesSWavesRenderer: React.FC<PWavesSWavesRendererProps> = ({ onGameEvent
                   marginBottom: '12px',
                   letterSpacing: '-0.02em',
                }}>
-                  Which wave type can travel through liquids?
+                  What makes electrons fly out faster?
                </h2>
                <p style={{
                   fontSize: '15px',
@@ -707,7 +737,7 @@ const PWavesSWavesRenderer: React.FC<PWavesSWavesRendererProps> = ({ onGameEvent
                   lineHeight: 1.6,
                   maxWidth: '520px',
                }}>
-                  Seismologists detect two distinct wave types after earthquakes. One arrives first (Primary), one arrives second (Secondary). But something strange happens when they hit Earth's liquid outer core...
+                  When light hits a metal surface, electrons can be knocked free. What do you think determines how fast they fly out?
                </p>
 
                <div style={{ display: 'grid', gap: '12px', maxWidth: '520px' }}>
@@ -739,9 +769,7 @@ const PWavesSWavesRenderer: React.FC<PWavesSWavesRendererProps> = ({ onGameEvent
                            display: 'flex',
                            alignItems: 'center',
                            justifyContent: 'center',
-                           fontSize: '18px',
-                           fontWeight: 700,
-                           color: prediction === opt.id ? 'white' : design.colors.textTertiary,
+                           fontSize: '20px',
                         }}>
                            {opt.icon}
                         </div>
@@ -776,7 +804,7 @@ const PWavesSWavesRenderer: React.FC<PWavesSWavesRendererProps> = ({ onGameEvent
             fontFamily: design.font.sans,
          }}>
             {renderProgressBar()}
-            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+            <div style={{ flex: 1, display: 'flex', flexDirection: isMobile ? 'column' : 'row', overflow: 'hidden' }}>
                {/* Visualization */}
                <div style={{
                   flex: 1,
@@ -784,98 +812,160 @@ const PWavesSWavesRenderer: React.FC<PWavesSWavesRendererProps> = ({ onGameEvent
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  minHeight: '280px',
+                  minHeight: isMobile ? '300px' : 'auto',
                }}>
-                  {renderWaveVisualization()}
+                  {renderPhotoelectricLab()}
                </div>
 
                {/* Controls */}
                <div style={{
-                  padding: '20px 24px',
+                  width: isMobile ? '100%' : '280px',
+                  padding: '20px',
                   background: design.colors.bgSecondary,
-                  borderTop: `1px solid ${design.colors.border}`,
+                  borderLeft: isMobile ? 'none' : `1px solid ${design.colors.border}`,
+                  borderTop: isMobile ? `1px solid ${design.colors.border}` : 'none',
+                  overflow: 'auto',
                }}>
-                  <p style={{
-                     fontSize: '12px',
-                     fontWeight: 700,
-                     color: design.colors.textTertiary,
-                     marginBottom: '12px',
-                     textTransform: 'uppercase',
-                     letterSpacing: '0.05em',
-                  }}>
-                     Select Wave Type
-                  </p>
-                  <div style={{ display: 'flex', gap: '12px', marginBottom: '16px' }}>
-                     <button
-                        onMouseDown={() => setWaveType('p')}
-                        style={{
-                           flex: 1,
-                           padding: '16px',
-                           borderRadius: design.radius.md,
-                           border: `2px solid ${waveType === 'p' ? design.colors.pWave : design.colors.border}`,
-                           background: waveType === 'p' ? `${design.colors.pWave}20` : design.colors.bgTertiary,
-                           cursor: 'pointer',
-                           transition: 'all 0.2s',
+                  {/* Wavelength slider */}
+                  <div style={{ marginBottom: '24px' }}>
+                     <label style={{
+                        display: 'block',
+                        fontSize: '11px',
+                        fontWeight: 700,
+                        color: design.colors.primary,
+                        marginBottom: '8px',
+                        textTransform: 'uppercase',
+                        letterSpacing: '0.05em',
+                     }}>
+                        Wavelength (λ)
+                     </label>
+                     <input
+                        type="range"
+                        min="200"
+                        max="700"
+                        value={wavelength}
+                        onChange={(e) => {
+                           const val = parseInt(e.target.value);
+                           setWavelength(val);
+                           setHasExperimented(true);
+                           emit('wavelength_changed', { wavelength: val });
                         }}
-                     >
-                        <div style={{ fontSize: '24px', marginBottom: '4px' }}>← →</div>
-                        <div style={{
-                           color: waveType === 'p' ? design.colors.pWave : design.colors.textSecondary,
-                           fontWeight: 700,
-                           fontSize: '14px',
-                        }}>
-                           P-Wave
-                        </div>
-                        <div style={{ fontSize: '11px', color: design.colors.textTertiary }}>Compression</div>
-                     </button>
-                     <button
-                        onMouseDown={() => setWaveType('s')}
                         style={{
-                           flex: 1,
-                           padding: '16px',
-                           borderRadius: design.radius.md,
-                           border: `2px solid ${waveType === 's' ? design.colors.sWave : design.colors.border}`,
-                           background: waveType === 's' ? `${design.colors.sWave}20` : design.colors.bgTertiary,
-                           cursor: 'pointer',
-                           transition: 'all 0.2s',
+                           width: '100%',
+                           accentColor: design.colors.primary,
                         }}
-                     >
-                        <div style={{ fontSize: '24px', marginBottom: '4px' }}>↑ ↓</div>
-                        <div style={{
-                           color: waveType === 's' ? design.colors.sWave : design.colors.textSecondary,
-                           fontWeight: 700,
-                           fontSize: '14px',
-                        }}>
-                           S-Wave
-                        </div>
-                        <div style={{ fontSize: '11px', color: design.colors.textTertiary }}>Shear</div>
-                     </button>
+                     />
+                     <div style={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        fontSize: '10px',
+                        color: design.colors.textTertiary,
+                        marginTop: '4px',
+                     }}>
+                        <span>UV (200nm)</span>
+                        <span style={{ color: wavelengthToColor(wavelength), fontWeight: 700 }}>{wavelength} nm</span>
+                        <span>Red (700nm)</span>
+                     </div>
                   </div>
 
-                  {renderButton(
-                     isWaveActive ? '🌊 Wave Propagating...' : '🌊 Send Wave',
-                     sendWave,
-                     'primary',
-                     isWaveActive,
-                     true
-                  )}
+                  {/* Metal selector */}
+                  <div style={{ marginBottom: '24px' }}>
+                     <label style={{
+                        display: 'block',
+                        fontSize: '11px',
+                        fontWeight: 700,
+                        color: design.colors.textTertiary,
+                        marginBottom: '8px',
+                        textTransform: 'uppercase',
+                        letterSpacing: '0.05em',
+                     }}>
+                        Metal Type
+                     </label>
+                     <select
+                        value={workFunction}
+                        onChange={(e) => {
+                           const val = parseFloat(e.target.value);
+                           setWorkFunction(val);
+                           emit('metal_changed', { workFunction: val });
+                        }}
+                        style={{
+                           width: '100%',
+                           padding: '12px',
+                           borderRadius: design.radius.md,
+                           border: `1px solid ${design.colors.border}`,
+                           background: design.colors.bgTertiary,
+                           color: design.colors.textPrimary,
+                           fontSize: '14px',
+                        }}
+                     >
+                        {metals.map(m => (
+                           <option key={m.name} value={m.workFunction}>
+                              {m.name} (Φ = {m.workFunction} eV)
+                           </option>
+                        ))}
+                     </select>
+                  </div>
+
+                  {/* Results panel */}
+                  <div style={{
+                     padding: '16px',
+                     borderRadius: design.radius.lg,
+                     background: design.colors.bgTertiary,
+                     border: `1px solid ${design.colors.border}`,
+                  }}>
+                     <p style={{
+                        fontSize: '11px',
+                        fontWeight: 700,
+                        color: design.colors.textTertiary,
+                        marginBottom: '12px',
+                        textTransform: 'uppercase',
+                     }}>
+                        Results
+                     </p>
+                     <div style={{ display: 'grid', gap: '8px' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                           <span style={{ fontSize: '12px', color: design.colors.textSecondary }}>Photon Energy:</span>
+                           <span style={{ fontSize: '12px', fontWeight: 700, color: design.colors.primary }}>{photonEnergy.toFixed(2)} eV</span>
+                        </div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                           <span style={{ fontSize: '12px', color: design.colors.textSecondary }}>Work Function:</span>
+                           <span style={{ fontSize: '12px', fontWeight: 700, color: design.colors.danger }}>{workFunction} eV</span>
+                        </div>
+                        <div style={{
+                           marginTop: '8px',
+                           paddingTop: '8px',
+                           borderTop: `1px solid ${design.colors.border}`,
+                           display: 'flex',
+                           justifyContent: 'space-between',
+                        }}>
+                           <span style={{ fontSize: '12px', color: design.colors.textSecondary }}>Electron KE:</span>
+                           <span style={{
+                              fontSize: '14px',
+                              fontWeight: 700,
+                              color: emissionOccurs ? design.colors.success : design.colors.danger,
+                           }}>
+                              {emissionOccurs ? `${maxKE.toFixed(2)} eV` : 'No emission'}
+                           </span>
+                        </div>
+                     </div>
+                  </div>
 
                   {guidedMode && (
                      <div style={{
-                        marginTop: '12px',
-                        padding: '12px 16px',
+                        marginTop: '16px',
+                        padding: '12px',
                         borderRadius: design.radius.md,
-                        background: design.colors.bgTertiary,
-                        border: `1px solid ${design.colors.border}`,
+                        background: design.colors.primaryMuted,
+                        border: `1px solid ${design.colors.primary}30`,
                      }}>
-                        <p style={{ fontSize: '13px', color: design.colors.textSecondary }}>
-                           💡 Try both wave types and watch how particles move differently!
+                        <p style={{ fontSize: '12px', color: design.colors.textSecondary }}>
+                           💡 Try adjusting wavelength to find the threshold where electrons start/stop being emitted!
                         </p>
                      </div>
                   )}
                </div>
             </div>
-            {renderBottomNav('predict', 'review', 'See What You Learned →', !hasExperimented)}
+            {renderBottomNav('predict', 'review', 'See What Happened →', !hasExperimented)}
          </div>
       );
    }
@@ -884,27 +974,27 @@ const PWavesSWavesRenderer: React.FC<PWavesSWavesRendererProps> = ({ onGameEvent
    if (phase === 'review') {
       const concepts = [
          {
-            icon: '← →',
-            title: 'P-Waves: Compression Waves',
-            desc: 'Particles push and pull back-and-forth, parallel to the wave direction. Like pushing a slinky from one end.',
-            color: design.colors.pWave,
-         },
-         {
-            icon: '↑ ↓',
-            title: 'S-Waves: Shear Waves',
-            desc: 'Particles move side-to-side, perpendicular to the wave direction. Like shaking a slinky sideways.',
-            color: design.colors.sWave,
-         },
-         {
             icon: '⚡',
-            title: 'P = Primary (Faster)',
-            desc: 'P-waves travel ~1.7x faster through rock (~6-8 km/s). They always arrive first at seismometers!',
+            title: 'Photon Energy = hf',
+            desc: 'Each photon carries energy proportional to its frequency. Higher frequency (bluer light) = more energy per photon.',
             color: design.colors.primary,
          },
          {
-            icon: '🐌',
-            title: 'S = Secondary (Slower)',
-            desc: 'S-waves travel slower (~3.5-4.5 km/s). They arrive after P-waves—the time gap helps locate earthquakes.',
+            icon: '🚧',
+            title: 'Work Function Barrier',
+            desc: 'Electrons are bound to the metal with minimum energy Φ. Photons must have energy ≥ Φ to free electrons.',
+            color: design.colors.danger,
+         },
+         {
+            icon: '🏃',
+            title: 'Kinetic Energy = E - Φ',
+            desc: 'Extra energy beyond the work function becomes kinetic energy of the ejected electron.',
+            color: design.colors.success,
+         },
+         {
+            icon: '📊',
+            title: 'Threshold Frequency',
+            desc: 'Below a certain frequency, NO electrons escape—regardless of how bright the light is!',
             color: design.colors.secondary,
          },
       ];
@@ -936,7 +1026,7 @@ const PWavesSWavesRenderer: React.FC<PWavesSWavesRendererProps> = ({ onGameEvent
                   marginBottom: '24px',
                   letterSpacing: '-0.02em',
                }}>
-                  Two Types of Seismic Motion
+                  Einstein's Key Insight
                </h2>
 
                <div style={{ display: 'grid', gap: '16px', maxWidth: '560px' }}>
@@ -957,9 +1047,7 @@ const PWavesSWavesRenderer: React.FC<PWavesSWavesRendererProps> = ({ onGameEvent
                            display: 'flex',
                            alignItems: 'center',
                            justifyContent: 'center',
-                           fontSize: '22px',
-                           fontWeight: 700,
-                           color: c.color,
+                           fontSize: '24px',
                            flexShrink: 0,
                         }}>
                            {c.icon}
@@ -985,33 +1073,43 @@ const PWavesSWavesRenderer: React.FC<PWavesSWavesRendererProps> = ({ onGameEvent
                   ))}
                </div>
 
-               {/* Key insight box */}
+               {/* Einstein's equation */}
                <div style={{
                   marginTop: '24px',
-                  padding: '20px',
+                  padding: '24px',
                   borderRadius: design.radius.lg,
-                  background: design.colors.primaryMuted,
+                  background: `linear-gradient(135deg, ${design.colors.primaryMuted} 0%, ${design.colors.secondaryMuted} 100%)`,
                   border: `1px solid ${design.colors.primary}40`,
                   maxWidth: '560px',
+                  textAlign: 'center',
                }}>
                   <p style={{
-                     fontSize: '14px',
+                     fontSize: '12px',
                      fontWeight: 700,
                      color: design.colors.primary,
-                     marginBottom: '8px',
+                     marginBottom: '12px',
+                     textTransform: 'uppercase',
                   }}>
-                     🎯 Key Question
+                     Einstein's Photoelectric Equation
                   </p>
                   <p style={{
-                     fontSize: '14px',
-                     color: design.colors.textSecondary,
-                     lineHeight: 1.6,
+                     fontSize: '28px',
+                     fontWeight: 800,
+                     color: design.colors.textPrimary,
+                     fontFamily: 'serif',
                   }}>
-                     Both waves travel through solid rock. But what happens when they hit <strong style={{ color: design.colors.liquid }}>liquid</strong>? This is where the real discovery begins...
+                     KE<sub>max</sub> = hf - Φ
+                  </p>
+                  <p style={{
+                     fontSize: '12px',
+                     color: design.colors.textSecondary,
+                     marginTop: '12px',
+                  }}>
+                     h = Planck's constant • f = frequency • Φ = work function
                   </p>
                </div>
             </div>
-            {renderBottomNav('play', 'twist_predict', 'The Liquid Puzzle →')}
+            {renderBottomNav('play', 'twist_predict', 'The Paradox →')}
          </div>
       );
    }
@@ -1019,9 +1117,9 @@ const PWavesSWavesRenderer: React.FC<PWavesSWavesRendererProps> = ({ onGameEvent
    // TWIST_PREDICT PHASE
    if (phase === 'twist_predict') {
       const options = [
-         { id: 'travels', label: 'Travels normally', desc: 'Waves work the same way in all materials', icon: '✓' },
-         { id: 'slows', label: 'Slows down but continues', desc: 'Liquids just resist motion more than solids', icon: '🐌' },
-         { id: 'blocked', label: 'Cannot travel through', desc: 'Something fundamental prevents propagation', icon: '🚫' },
+         { id: 'brighter_faster', label: 'Brighter light = faster electrons', desc: 'More photons = more total energy delivered', icon: '⬆️' },
+         { id: 'same_speed', label: 'Brightness doesn\'t change speed', desc: 'Each photon has fixed energy E = hf', icon: '➡️' },
+         { id: 'slower', label: 'Brighter light = slower electrons', desc: 'Energy gets divided among more electrons', icon: '⬇️' },
       ];
 
       return (
@@ -1042,7 +1140,7 @@ const PWavesSWavesRenderer: React.FC<PWavesSWavesRendererProps> = ({ onGameEvent
                   letterSpacing: '0.1em',
                   marginBottom: '8px',
                }}>
-                  Step 5 • The Twist
+                  Step 5 • The Paradox
                </p>
                <h2 style={{
                   fontSize: isMobile ? '24px' : '28px',
@@ -1051,7 +1149,7 @@ const PWavesSWavesRenderer: React.FC<PWavesSWavesRendererProps> = ({ onGameEvent
                   marginBottom: '12px',
                   letterSpacing: '-0.02em',
                }}>
-                  What happens to S-waves in liquid?
+                  Classical Physics Got It Wrong!
                </h2>
                <p style={{
                   fontSize: '15px',
@@ -1060,7 +1158,7 @@ const PWavesSWavesRenderer: React.FC<PWavesSWavesRendererProps> = ({ onGameEvent
                   lineHeight: 1.6,
                   maxWidth: '520px',
                }}>
-                  Scientists in the early 1900s noticed something strange: S-waves from earthquakes <em>never arrived</em> on the opposite side of Earth.
+                  Before Einstein, physicists expected brighter light (more total energy) would make electrons fly faster.
                </p>
                <p style={{
                   fontSize: '14px',
@@ -1068,7 +1166,7 @@ const PWavesSWavesRenderer: React.FC<PWavesSWavesRendererProps> = ({ onGameEvent
                   marginBottom: '28px',
                   maxWidth: '520px',
                }}>
-                  This "S-wave shadow zone" was the key to discovering what's hidden 2,900 km beneath your feet...
+                  What do YOU predict happens if we increase brightness while keeping wavelength constant?
                </p>
 
                <div style={{ display: 'grid', gap: '12px', maxWidth: '520px' }}>
@@ -1120,7 +1218,7 @@ const PWavesSWavesRenderer: React.FC<PWavesSWavesRendererProps> = ({ onGameEvent
                   ))}
                </div>
             </div>
-            {renderBottomNav('review', 'twist_play', 'Test in Liquid →', !twistPrediction)}
+            {renderBottomNav('review', 'twist_play', 'Test It! →', !twistPrediction)}
          </div>
       );
    }
@@ -1136,7 +1234,7 @@ const PWavesSWavesRenderer: React.FC<PWavesSWavesRendererProps> = ({ onGameEvent
             fontFamily: design.font.sans,
          }}>
             {renderProgressBar()}
-            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+            <div style={{ flex: 1, display: 'flex', flexDirection: isMobile ? 'column' : 'row', overflow: 'hidden' }}>
                {/* Visualization */}
                <div style={{
                   flex: 1,
@@ -1144,148 +1242,123 @@ const PWavesSWavesRenderer: React.FC<PWavesSWavesRendererProps> = ({ onGameEvent
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  minHeight: '280px',
+                  minHeight: isMobile ? '280px' : 'auto',
                }}>
-                  {renderWaveVisualization()}
+                  {renderPhotoelectricLab()}
                </div>
 
                {/* Controls */}
                <div style={{
-                  padding: '20px 24px',
+                  width: isMobile ? '100%' : '300px',
+                  padding: '20px',
                   background: design.colors.bgSecondary,
-                  borderTop: `1px solid ${design.colors.border}`,
+                  borderLeft: isMobile ? 'none' : `1px solid ${design.colors.border}`,
+                  overflow: 'auto',
                }}>
-                  {/* Medium selector */}
                   <p style={{
-                     fontSize: '12px',
+                     fontSize: '14px',
                      fontWeight: 700,
-                     color: design.colors.textTertiary,
-                     marginBottom: '8px',
-                     textTransform: 'uppercase',
-                     letterSpacing: '0.05em',
+                     color: design.colors.secondary,
+                     marginBottom: '20px',
                   }}>
-                     Select Medium
+                     Intensity vs Frequency Test
                   </p>
-                  <div style={{ display: 'flex', gap: '12px', marginBottom: '12px' }}>
-                     <button
-                        onMouseDown={() => setMedium('solid')}
-                        style={{
-                           flex: 1,
-                           padding: '14px',
-                           borderRadius: design.radius.md,
-                           border: `2px solid ${medium === 'solid' ? design.colors.solid : design.colors.border}`,
-                           background: medium === 'solid' ? `${design.colors.solid}15` : design.colors.bgTertiary,
-                           color: medium === 'solid' ? design.colors.textPrimary : design.colors.textSecondary,
-                           fontWeight: 600,
-                           fontSize: '14px',
-                           cursor: 'pointer',
+
+                  {/* Intensity slider */}
+                  <div style={{ marginBottom: '24px' }}>
+                     <label style={{
+                        display: 'block',
+                        fontSize: '11px',
+                        fontWeight: 700,
+                        color: design.colors.textTertiary,
+                        marginBottom: '8px',
+                        textTransform: 'uppercase',
+                     }}>
+                        Intensity (# of photons)
+                     </label>
+                     <input
+                        type="range"
+                        min="20"
+                        max="100"
+                        value={intensity}
+                        onChange={(e) => {
+                           const val = parseInt(e.target.value);
+                           setIntensity(val);
+                           setHasTestedIntensity(true);
+                           emit('intensity_changed', { intensity: val });
                         }}
-                     >
-                        🪨 Solid Rock
-                     </button>
-                     <button
-                        onMouseDown={() => setMedium('liquid')}
-                        style={{
-                           flex: 1,
-                           padding: '14px',
-                           borderRadius: design.radius.md,
-                           border: `2px solid ${medium === 'liquid' ? design.colors.liquid : design.colors.border}`,
-                           background: medium === 'liquid' ? `${design.colors.liquid}15` : design.colors.bgTertiary,
-                           color: medium === 'liquid' ? design.colors.liquid : design.colors.textSecondary,
-                           fontWeight: 600,
-                           fontSize: '14px',
-                           cursor: 'pointer',
-                        }}
-                     >
-                        💧 Liquid
-                     </button>
+                        style={{ width: '100%' }}
+                     />
+                     <p style={{ fontSize: '11px', color: design.colors.textTertiary, marginTop: '4px' }}>
+                        {intensity}% → {emissionOccurs ? Math.floor(intensity / 12) : 0} electrons/cycle
+                     </p>
                   </div>
 
-                  {/* Wave type selector */}
-                  <p style={{
-                     fontSize: '12px',
-                     fontWeight: 700,
-                     color: design.colors.textTertiary,
-                     marginBottom: '8px',
-                     textTransform: 'uppercase',
-                     letterSpacing: '0.05em',
-                  }}>
-                     Wave Type
-                  </p>
-                  <div style={{ display: 'flex', gap: '12px', marginBottom: '16px' }}>
-                     <button
-                        onMouseDown={() => setWaveType('p')}
-                        style={{
-                           flex: 1,
-                           padding: '12px',
-                           borderRadius: design.radius.md,
-                           border: `2px solid ${waveType === 'p' ? design.colors.pWave : design.colors.border}`,
-                           background: waveType === 'p' ? `${design.colors.pWave}20` : design.colors.bgTertiary,
-                           color: waveType === 'p' ? design.colors.pWave : design.colors.textSecondary,
-                           fontWeight: 600,
-                           fontSize: '14px',
-                           cursor: 'pointer',
+                  {/* Wavelength slider */}
+                  <div style={{ marginBottom: '24px' }}>
+                     <label style={{
+                        display: 'block',
+                        fontSize: '11px',
+                        fontWeight: 700,
+                        color: design.colors.primary,
+                        marginBottom: '8px',
+                        textTransform: 'uppercase',
+                     }}>
+                        Wavelength (photon energy)
+                     </label>
+                     <input
+                        type="range"
+                        min="200"
+                        max="700"
+                        value={wavelength}
+                        onChange={(e) => {
+                           const val = parseInt(e.target.value);
+                           setWavelength(val);
+                           setHasTestedIntensity(true);
                         }}
-                     >
-                        ← → P-Wave
-                     </button>
-                     <button
-                        onMouseDown={() => setWaveType('s')}
-                        style={{
-                           flex: 1,
-                           padding: '12px',
-                           borderRadius: design.radius.md,
-                           border: `2px solid ${waveType === 's' ? design.colors.sWave : design.colors.border}`,
-                           background: waveType === 's' ? `${design.colors.sWave}20` : design.colors.bgTertiary,
-                           color: waveType === 's' ? design.colors.sWave : design.colors.textSecondary,
-                           fontWeight: 600,
-                           fontSize: '14px',
-                           cursor: 'pointer',
-                        }}
-                     >
-                        ↑ ↓ S-Wave
-                     </button>
+                        style={{ width: '100%', accentColor: design.colors.primary }}
+                     />
+                     <p style={{ fontSize: '11px', color: design.colors.textTertiary, marginTop: '4px' }}>
+                        {wavelength}nm → {photonEnergy.toFixed(2)} eV/photon
+                     </p>
                   </div>
 
-                  {renderButton(
-                     isWaveActive ? '🌊 Wave Propagating...' : '🌊 Send Wave',
-                     sendWave,
-                     'primary',
-                     isWaveActive,
-                     true
-                  )}
-
-                  {/* S-wave in liquid warning */}
-                  {waveType === 's' && medium === 'liquid' && (
+                  {/* Results comparison */}
+                  <div style={{
+                     padding: '16px',
+                     borderRadius: design.radius.lg,
+                     background: design.colors.bgTertiary,
+                     border: `1px solid ${design.colors.border}`,
+                  }}>
+                     <p style={{
+                        fontSize: '11px',
+                        fontWeight: 700,
+                        color: design.colors.textPrimary,
+                        marginBottom: '12px',
+                     }}>
+                        Key Observation:
+                     </p>
+                     <p style={{ fontSize: '12px', color: design.colors.textSecondary, marginBottom: '8px' }}>
+                        • Electron count: <span style={{ color: design.colors.secondary, fontWeight: 700 }}>{emissionOccurs ? Math.floor(intensity / 12) : 0}</span> (from intensity)
+                     </p>
+                     <p style={{ fontSize: '12px', color: design.colors.textSecondary }}>
+                        • Electron speed: <span style={{ color: design.colors.primary, fontWeight: 700 }}>{maxKE.toFixed(2)} eV</span> (from wavelength)
+                     </p>
                      <div style={{
                         marginTop: '12px',
-                        padding: '12px 16px',
+                        padding: '10px',
                         borderRadius: design.radius.md,
-                        background: design.colors.dangerMuted,
-                        border: `1px solid ${design.colors.danger}40`,
+                        background: design.colors.successMuted,
+                        border: `1px solid ${design.colors.success}30`,
                      }}>
-                        <p style={{ fontSize: '13px', color: design.colors.danger, fontWeight: 600 }}>
-                           ⚠️ S-waves cannot propagate through liquids!
+                        <p style={{ fontSize: '11px', color: design.colors.success, fontWeight: 600 }}>
+                           ✓ Speed only depends on wavelength—not intensity!
                         </p>
                      </div>
-                  )}
-
-                  {guidedMode && !hasSentSWaveInLiquid && (
-                     <div style={{
-                        marginTop: '12px',
-                        padding: '12px 16px',
-                        borderRadius: design.radius.md,
-                        background: design.colors.bgTertiary,
-                        border: `1px solid ${design.colors.border}`,
-                     }}>
-                        <p style={{ fontSize: '13px', color: design.colors.textSecondary }}>
-                           💡 Try sending an S-wave through liquid to see what happens!
-                        </p>
-                     </div>
-                  )}
+                  </div>
                </div>
             </div>
-            {renderBottomNav('twist_predict', 'twist_review', 'Understand Why →', !hasSentSWaveInLiquid)}
+            {renderBottomNav('twist_predict', 'twist_review', 'Understand Why →', !hasTestedIntensity)}
          </div>
       );
    }
@@ -1310,7 +1383,7 @@ const PWavesSWavesRenderer: React.FC<PWavesSWavesRendererProps> = ({ onGameEvent
                   letterSpacing: '0.1em',
                   marginBottom: '8px',
                }}>
-                  Step 7 • The Key Insight
+                  Step 7 • The Quantum Truth
                </p>
                <h2 style={{
                   fontSize: isMobile ? '24px' : '28px',
@@ -1319,59 +1392,37 @@ const PWavesSWavesRenderer: React.FC<PWavesSWavesRendererProps> = ({ onGameEvent
                   marginBottom: '24px',
                   letterSpacing: '-0.02em',
                }}>
-                  Why Liquids Block S-Waves
+                  Light Comes in Packets!
                </h2>
 
                <div style={{ display: 'grid', gap: '16px', maxWidth: '560px' }}>
-                  {/* Main insight */}
+                  {/* Classical wrong */}
                   <div style={{
                      padding: '24px',
                      borderRadius: design.radius.lg,
-                     background: design.colors.secondaryMuted,
-                     border: `1px solid ${design.colors.secondary}40`,
+                     background: design.colors.dangerMuted,
+                     border: `1px solid ${design.colors.danger}40`,
                   }}>
                      <p style={{
                         fontWeight: 700,
                         fontSize: '16px',
-                        color: design.colors.secondary,
+                        color: design.colors.danger,
                         marginBottom: '12px',
                      }}>
-                        🔬 The Fundamental Difference
+                        ❌ Classical Prediction (WRONG)
                      </p>
                      <p style={{
                         fontSize: '14px',
                         color: design.colors.textSecondary,
                         lineHeight: 1.7,
                      }}>
-                        S-waves need materials that <strong style={{ color: design.colors.textPrimary }}>"spring back"</strong> when pushed sideways. This is called <em>shear stress resistance</em>. When you push water sideways, it just <strong style={{ color: design.colors.liquid }}>flows</strong>—there's no restoring force to create a wave!
+                        "Brighter light delivers more total energy, so electrons should fly faster."
+                        <br /><br />
+                        This assumes light energy accumulates continuously like a water wave.
                      </p>
                   </div>
 
-                  {/* P-wave explanation */}
-                  <div style={{
-                     padding: '24px',
-                     borderRadius: design.radius.lg,
-                     background: design.colors.primaryMuted,
-                     border: `1px solid ${design.colors.primary}40`,
-                  }}>
-                     <p style={{
-                        fontWeight: 700,
-                        fontSize: '16px',
-                        color: design.colors.pWave,
-                        marginBottom: '12px',
-                     }}>
-                        ✓ Why P-Waves Work Everywhere
-                     </p>
-                     <p style={{
-                        fontSize: '14px',
-                        color: design.colors.textSecondary,
-                        lineHeight: 1.7,
-                     }}>
-                        P-waves use <strong style={{ color: design.colors.textPrimary }}>compression</strong>—pushing particles together and apart. Both solids AND liquids resist being compressed. That's why P-waves travel through Earth's liquid outer core!
-                     </p>
-                  </div>
-
-                  {/* Earth discovery */}
+                  {/* Quantum correct */}
                   <div style={{
                      padding: '24px',
                      borderRadius: design.radius.lg,
@@ -1384,48 +1435,42 @@ const PWavesSWavesRenderer: React.FC<PWavesSWavesRendererProps> = ({ onGameEvent
                         color: design.colors.success,
                         marginBottom: '12px',
                      }}>
-                        🌍 How We Discovered Earth's Liquid Core
+                        ✓ Quantum Reality (CORRECT)
                      </p>
                      <p style={{
                         fontSize: '14px',
                         color: design.colors.textSecondary,
                         lineHeight: 1.7,
                      }}>
-                        In 1906, geologist Richard Oldham noticed that S-waves <strong style={{ color: design.colors.textPrimary }}>never arrived</strong> at stations on the opposite side of Earth from an earthquake. This "S-wave shadow zone" proved the outer core is liquid—without anyone ever seeing it!
+                        Light comes in <strong style={{ color: design.colors.textPrimary }}>discrete packets (photons)</strong>, each with energy E = hf.
+                        <br /><br />
+                        More photons = more electrons, but each electron's energy depends only on the photon's frequency!
                      </p>
                   </div>
 
-                  {/* Formula box */}
+                  {/* Nobel Prize */}
                   <div style={{
-                     padding: '20px',
+                     padding: '24px',
                      borderRadius: design.radius.lg,
-                     background: design.colors.bgSecondary,
-                     border: `1px solid ${design.colors.border}`,
-                     textAlign: 'center',
+                     background: `linear-gradient(135deg, ${design.colors.primaryMuted} 0%, ${design.colors.secondaryMuted} 100%)`,
+                     border: `1px solid ${design.colors.primary}40`,
                   }}>
                      <p style={{
-                        fontSize: '12px',
                         fontWeight: 700,
-                        color: design.colors.textTertiary,
-                        marginBottom: '8px',
-                        textTransform: 'uppercase',
-                     }}>
-                        Key Physics
-                     </p>
-                     <p style={{
                         fontSize: '16px',
-                        fontWeight: 600,
-                        color: design.colors.textPrimary,
-                        fontFamily: 'monospace',
+                        color: design.colors.primary,
+                        marginBottom: '12px',
                      }}>
-                        Shear Wave Speed = √(Shear Modulus / Density)
+                        🏆 Einstein's Nobel Prize (1921)
                      </p>
                      <p style={{
-                        fontSize: '13px',
+                        fontSize: '14px',
                         color: design.colors.textSecondary,
-                        marginTop: '8px',
+                        lineHeight: 1.7,
                      }}>
-                        Liquids have shear modulus ≈ 0, so S-wave speed → 0
+                        This explanation proved that light has <strong style={{ color: design.colors.textPrimary }}>particle-like properties</strong>. Light isn't just a wave—it's also made of discrete quanta called photons.
+                        <br /><br />
+                        This launched the quantum revolution!
                      </p>
                   </div>
                </div>
@@ -1862,7 +1907,7 @@ const PWavesSWavesRenderer: React.FC<PWavesSWavesRendererProps> = ({ onGameEvent
                      top: '-20px',
                      width: `${8 + Math.random() * 8}px`,
                      height: `${8 + Math.random() * 8}px`,
-                     background: [design.colors.primary, design.colors.secondary, design.colors.success, design.colors.warning, design.colors.pWave, design.colors.sWave][i % 6],
+                     background: [design.colors.primary, design.colors.secondary, design.colors.success, design.colors.warning, design.colors.electron, design.colors.photon][i % 6],
                      borderRadius: Math.random() > 0.5 ? '50%' : '2px',
                      animation: `confetti ${2 + Math.random() * 2}s ease-out ${Math.random() * 2}s infinite`,
                   }}
@@ -1891,7 +1936,7 @@ const PWavesSWavesRenderer: React.FC<PWavesSWavesRendererProps> = ({ onGameEvent
                   height: '100px',
                   borderRadius: '50%',
                   background: isPassing
-                     ? `linear-gradient(135deg, ${design.colors.primary} 0%, #c2410c 100%)`
+                     ? `linear-gradient(135deg, ${design.colors.primary} 0%, ${design.colors.secondary} 100%)`
                      : design.colors.bgTertiary,
                   display: 'flex',
                   alignItems: 'center',
@@ -1908,7 +1953,7 @@ const PWavesSWavesRenderer: React.FC<PWavesSWavesRendererProps> = ({ onGameEvent
                   color: design.colors.textPrimary,
                   marginBottom: '8px',
                }}>
-                  {isPassing ? 'Seismic Master!' : 'Keep Learning!'}
+                  {isPassing ? 'Quantum Master!' : 'Keep Learning!'}
                </h1>
 
                <p style={{
@@ -1933,10 +1978,10 @@ const PWavesSWavesRenderer: React.FC<PWavesSWavesRendererProps> = ({ onGameEvent
                   marginBottom: '32px',
                }}>
                   {[
-                     { icon: '← →', label: 'P = Compression' },
-                     { icon: '↑ ↓', label: 'S = Shear' },
-                     { icon: '💧', label: 'No S in liquids' },
-                     { icon: '🌍', label: 'Liquid outer core' },
+                     { icon: '💡', label: 'Light = Photons' },
+                     { icon: '⚡', label: 'E = hf' },
+                     { icon: '🚧', label: 'Work Function Φ' },
+                     { icon: '🏆', label: 'Nobel Prize 1921' },
                   ].map((item, i) => (
                      <div key={i} style={{
                         padding: '16px',
@@ -1972,4 +2017,4 @@ const PWavesSWavesRenderer: React.FC<PWavesSWavesRendererProps> = ({ onGameEvent
    return null;
 };
 
-export default PWavesSWavesRenderer;
+export default PhotoelectricEffectRenderer;

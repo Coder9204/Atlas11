@@ -1,765 +1,1835 @@
 'use client';
 
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 
 // ============================================================================
-// INERTIA (COIN-CARD-CUP) RENDERER - Premium Design System
+// INERTIA RENDERER - Premium 10-Phase Learning Experience
+// ============================================================================
+// Teaches Newton's First Law: Objects at rest stay at rest, objects in motion
+// stay in motion, unless acted upon by an external force.
+// Classic demo: Coin-Card-Cup trick
 // ============================================================================
 
-export interface GameEvent {
-  type: 'phase_change' | 'interaction' | 'prediction' | 'result' | 'hint_request' | 'visual_state_update';
-  phase: string;
-  data: Record<string, unknown>;
-  timestamp: number;
-  eventType?: 'card_flick' | 'speed_change' | 'coin_stack' | 'tablecloth_pull' | 'reset' | 'answer_submit';
-}
-
-interface InertiaRendererProps {
-  width?: number;
-  height?: number;
-  onGameEvent?: (event: GameEvent) => void;
-  gamePhase?: string;
-}
-
-type Phase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
-
-// ============================================================================
-// PREMIUM DESIGN SYSTEM
-// ============================================================================
-const design = {
+// Premium Design System
+const premiumDesign = {
   colors: {
-    bgPrimary: '#0c0a09',
-    bgSecondary: '#1c1917',
-    bgTertiary: '#292524',
-    bgElevated: '#44403c',
-    textPrimary: '#fafaf9',
-    textSecondary: '#a8a29e',
-    textTertiary: '#78716c',
     primary: '#f59e0b',
-    primaryHover: '#d97706',
-    primaryMuted: '#451a03',
+    primaryDark: '#d97706',
     secondary: '#6366f1',
-    secondaryMuted: '#312e81',
+    accent: '#10b981',
+    success: '#10B981',
+    warning: '#F59E0B',
+    error: '#EF4444',
     coin: '#fcd34d',
     coinEdge: '#b45309',
     card: '#ef4444',
     cup: '#6366f1',
-    cupInner: '#312e81',
-    success: '#22c55e',
-    successMuted: '#052e16',
-    danger: '#ef4444',
-    dangerMuted: '#450a0a',
-    border: '#44403c',
+    background: {
+      primary: '#0c0a09',
+      secondary: '#1c1917',
+      tertiary: '#292524',
+      card: 'rgba(255, 255, 255, 0.03)',
+    },
+    text: {
+      primary: '#fafaf9',
+      secondary: 'rgba(255, 255, 255, 0.7)',
+      muted: 'rgba(255, 255, 255, 0.4)',
+    },
+    gradient: {
+      primary: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
+      secondary: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
+      warm: 'linear-gradient(135deg, #f97316 0%, #ef4444 100%)',
+    },
   },
-  radius: { sm: '8px', md: '12px', lg: '16px', xl: '24px', full: '9999px' },
-  shadow: { sm: '0 1px 2px rgba(0,0,0,0.3)', md: '0 4px 12px rgba(0,0,0,0.4)', glow: (c: string) => `0 0 40px ${c}40` },
-  font: { sans: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' }
+  typography: {
+    fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+  },
+  spacing: { xs: 4, sm: 8, md: 16, lg: 24, xl: 32 },
+  radius: { sm: 8, md: 12, lg: 16, xl: 24, full: 9999 },
+  shadows: {
+    sm: '0 2px 8px rgba(0, 0, 0, 0.2)',
+    md: '0 4px 16px rgba(0, 0, 0, 0.3)',
+    lg: '0 8px 32px rgba(0, 0, 0, 0.4)',
+    glow: (color: string) => `0 0 20px ${color}40`,
+  },
 };
 
-const Button: React.FC<{
-  children: React.ReactNode;
-  onClick: () => void;
-  variant?: 'primary' | 'secondary' | 'ghost';
-  disabled?: boolean;
-  fullWidth?: boolean;
-}> = ({ children, onClick, variant = 'primary', disabled = false, fullWidth = false }) => {
-  const baseStyle: React.CSSProperties = {
-    padding: '14px 28px',
-    borderRadius: design.radius.md,
-    fontWeight: 600,
-    fontSize: '15px',
-    fontFamily: design.font.sans,
-    border: 'none',
-    cursor: disabled ? 'not-allowed' : 'pointer',
-    opacity: disabled ? 0.4 : 1,
-    transition: 'all 0.2s ease',
-    width: fullWidth ? '100%' : 'auto',
-    display: 'inline-flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: '8px',
-  };
+type Phase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
+const phaseOrder: Phase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
 
-  const variants: Record<string, React.CSSProperties> = {
-    primary: {
-      background: `linear-gradient(135deg, ${design.colors.primary} 0%, ${design.colors.primaryHover} 100%)`,
-      color: '#000',
-      boxShadow: design.shadow.md,
-    },
-    secondary: {
-      background: design.colors.bgTertiary,
-      color: design.colors.textPrimary,
-      border: `1px solid ${design.colors.border}`,
-    },
-    ghost: {
-      background: 'transparent',
-      color: design.colors.textSecondary,
-    }
-  };
+interface InertiaRendererProps {
+  onBack?: () => void;
+  onNext?: () => void;
+}
 
-  return (
-    <button onClick={() => !disabled && onClick()} style={{ ...baseStyle, ...variants[variant] }}>
-      {children}
-    </button>
-  );
-};
-
-const InertiaRenderer: React.FC<InertiaRendererProps> = ({
-  width = 400,
-  height = 500,
-  onGameEvent,
-  gamePhase
-}) => {
+export default function InertiaRenderer({ onBack, onNext }: InertiaRendererProps) {
+  // Core State
   const [phase, setPhase] = useState<Phase>('hook');
+  const [isMobile, setIsMobile] = useState(false);
+
+  // Debounce refs
+  const navigationLockRef = useRef(false);
+  const lastNavigationTime = useRef(0);
+
+  // Hook phase
+  const [hookStep, setHookStep] = useState(0);
+
+  // Predict phase
   const [prediction, setPrediction] = useState<string | null>(null);
-  const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
+
+  // Play phase - Coin-Card-Cup simulation
   const [flickSpeed, setFlickSpeed] = useState<'slow' | 'fast'>('fast');
-  const [coinCount, setCoinCount] = useState(1);
-  const [isFlicking, setIsFlicking] = useState(false);
-  const [cardPosition, setCardPosition] = useState(0);
-  const [coinFalling, setCoinFalling] = useState(false);
-  const [coinInCup, setCoinInCup] = useState(false);
-  const [coinWithCard, setCoinWithCard] = useState(false);
-  const [experimentCount, setExperimentCount] = useState(0);
-  const [showResult, setShowResult] = useState(false);
+  const [hasFlicked, setHasFlicked] = useState(false);
+  const [cardX, setCardX] = useState(0);
+  const [coinY, setCoinY] = useState(0);
+  const [coinFell, setCoinFell] = useState(false);
+  const [coinMissed, setCoinMissed] = useState(false);
+  const animationRef = useRef<number | null>(null);
+
+  // Review phase
+  const [reviewStep, setReviewStep] = useState(0);
+
+  // Twist predict
+  const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
+
+  // Twist play - Tablecloth trick
+  const [clothX, setClothX] = useState(0);
+  const [dishesStayed, setDishesStayed] = useState(true);
+  const [twistFlicked, setTwistFlicked] = useState(false);
+  const [twistSpeed, setTwistSpeed] = useState<'slow' | 'fast'>('fast');
+  const twistRef = useRef<number | null>(null);
+
+  // Twist review
+  const [twistReviewStep, setTwistReviewStep] = useState(0);
+
+  // Transfer phase
+  const [activeApp, setActiveApp] = useState(0);
+  const [completedApps, setCompletedApps] = useState<Set<number>>(new Set());
+
+  // Test phase
+  const [testQuestions] = useState([
+    {
+      question: "According to Newton's First Law, what happens to an object at rest with no forces acting on it?",
+      options: ["It starts moving slowly", "It stays at rest", "It floats upward", "It shrinks"],
+      correct: 1,
+      explanation: "Newton's First Law (Law of Inertia) states that an object at rest stays at rest unless acted upon by an external force. No force = no change in motion."
+    },
+    {
+      question: "In the coin-card-cup trick, why does the coin fall straight down into the cup?",
+      options: ["The coin is magnetic", "The coin has inertia and resists horizontal motion", "Gravity is stronger on coins", "The cup pulls the coin"],
+      correct: 1,
+      explanation: "The coin has inertia - it resists changes to its state of motion. When the card is flicked away quickly, the coin 'wants' to stay still, so it drops straight down."
+    },
+    {
+      question: "Why does a fast flick work better than a slow push for the coin trick?",
+      options: ["Fast is more fun", "Less time for friction to act on the coin", "The coin likes speed", "Gravity works faster"],
+      correct: 1,
+      explanation: "A fast flick minimizes the time friction has to transfer horizontal motion to the coin. The quicker the card leaves, the less force is transferred to the coin."
+    },
+    {
+      question: "When a bus suddenly stops, passengers lurch forward. This is because:",
+      options: ["The bus pushes them forward", "Their bodies have inertia and continue moving", "Gravity changed direction", "The seats push them"],
+      correct: 1,
+      explanation: "Passengers' bodies were moving with the bus. When the bus stops, their bodies continue moving forward due to inertia until a force (seatbelt, seat, friction) stops them."
+    },
+    {
+      question: "A tablecloth can be pulled from under dishes if pulled:",
+      options: ["Slowly and carefully", "Quickly and sharply", "Upward at an angle", "While dishes are wet"],
+      correct: 1,
+      explanation: "Quick motion minimizes the time friction acts on the dishes. The dishes' inertia keeps them in place if the tablecloth is pulled fast enough."
+    },
+    {
+      question: "Why do cars have seatbelts?",
+      options: ["To look cool", "To stop inertia from throwing passengers forward in a crash", "To keep seats clean", "Legal requirement only"],
+      correct: 1,
+      explanation: "In a crash, the car stops but passengers continue moving forward due to inertia. Seatbelts provide the external force needed to stop the passenger safely."
+    },
+    {
+      question: "A hockey puck on ice keeps sliding because:",
+      options: ["Ice is magical", "Very little friction = little force to change its motion", "The puck is afraid to stop", "Cold temperatures speed things up"],
+      correct: 1,
+      explanation: "Ice has very low friction. With almost no external force acting on the puck, it continues moving in a straight line - demonstrating Newton's First Law perfectly."
+    },
+    {
+      question: "If you're in a car making a sharp right turn, you feel pushed to the left. This is because:",
+      options: ["The door pushes you", "Your body's inertia resists the change in direction", "Gravity shifts", "Wind from outside"],
+      correct: 1,
+      explanation: "Your body has inertia and 'wants' to continue in a straight line. The car turns right, but your body initially continues straight, making you feel 'pushed' left."
+    },
+    {
+      question: "The coin-card trick works best when the card is:",
+      options: ["Heavy and rough", "Light and smooth", "Wet", "Made of metal"],
+      correct: 1,
+      explanation: "A smooth card has less friction with the coin. A light card requires less force to accelerate quickly. Both factors help the coin stay in place."
+    },
+    {
+      question: "An astronaut in space throws a ball. What happens to it?",
+      options: ["It stops immediately", "It returns to the astronaut", "It keeps moving forever (in the same direction)", "It falls to Earth"],
+      correct: 2,
+      explanation: "In space, there's no air resistance or friction. With no external force to slow it down, the ball continues moving in a straight line forever - pure inertia!"
+    }
+  ]);
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
   const [showExplanation, setShowExplanation] = useState(false);
-  const [correctAnswers, setCorrectAnswers] = useState(0);
-  const [answeredQuestions, setAnsweredQuestions] = useState<Set<number>>(new Set());
-  const [currentApplication, setCurrentApplication] = useState(0);
+  const [testScore, setTestScore] = useState(0);
+  const [testComplete, setTestComplete] = useState(false);
 
-  const isNavigating = useRef(false);
-
-  const testQuestions = [
-    { question: "Why does the coin fall into the cup when the card is flicked fast?", options: ["The coin is too heavy to move", "The coin's inertia keeps it in place while the card moves", "The card pushes the coin down", "Gravity pulls the coin sideways"], correct: 1, explanation: "The coin has inertia - it resists changes to its state of rest. When the card is removed quickly, the coin doesn't have time to accelerate with it." },
-    { question: "What is inertia?", options: ["A type of friction", "The tendency of objects to resist changes in motion", "The force of gravity on an object", "The speed of an object"], correct: 1, explanation: "Inertia is the property of matter that causes objects at rest to stay at rest and objects in motion to stay in motion, unless acted upon by a force." },
-    { question: "Why does a slow pull move the coin with the card?", options: ["Gravity is stronger during slow motion", "Friction has time to accelerate the coin", "The coin becomes lighter", "Inertia disappears when moving slowly"], correct: 1, explanation: "A slow pull gives friction time to act on the coin, gradually accelerating it to match the card's velocity." },
-    { question: "If you double the number of coins, how does inertia change?", options: ["It stays the same", "It doubles (more mass = more inertia)", "It halves", "It becomes zero"], correct: 1, explanation: "Inertia is directly proportional to mass. Doubling the mass doubles the inertia, making the stack even more resistant to change." },
-    { question: "Which Newton's Law describes inertia?", options: ["Newton's Second Law (F=ma)", "Newton's Third Law (action-reaction)", "Newton's First Law (Law of Inertia)", "Newton's Law of Gravity"], correct: 2, explanation: "Newton's First Law, also called the Law of Inertia, states that objects maintain their state of motion unless acted upon by a net force." },
-    { question: "A magician pulls a tablecloth from under dishes. Why don't they fall?", options: ["Magic makes them float", "The tablecloth is very slippery", "The dishes' inertia keeps them in place during the quick pull", "The dishes are glued down"], correct: 2, explanation: "The quick pull doesn't give friction enough time to accelerate the dishes. Their inertia keeps them approximately stationary." },
-    { question: "Why do you lurch forward when a car stops suddenly?", options: ["The car pushes you forward", "Your inertia keeps you moving while the car stops", "Air pushes you forward", "The seat pushes you"], correct: 1, explanation: "Your body has inertia and wants to continue moving at the car's original speed. When the car stops, you keep moving forward." },
-    { question: "Which has more inertia: a bowling ball or a tennis ball?", options: ["Tennis ball (it's faster)", "They have equal inertia", "Bowling ball (more mass = more inertia)", "Neither has inertia"], correct: 2, explanation: "The bowling ball has much more mass, therefore it has much more inertia and is harder to start or stop moving." },
-    { question: "If there was no friction, what would happen with a slow card pull?", options: ["The coin would still move with the card", "The coin would stay in place even with slow pull", "The coin would fly away", "The coin would sink into the card"], correct: 1, explanation: "Without friction, there's no force to accelerate the coin. It would stay in place regardless of how slowly you pulled the card." },
-    { question: "Astronauts in space struggle to stop spinning. Why?", options: ["There's no gravity", "Space is cold", "Without friction or air resistance, their inertia keeps them spinning", "They're too dizzy"], correct: 2, explanation: "In space, there's almost nothing to push against to stop rotating. Their rotational inertia keeps them spinning until they can push against something." }
-  ];
-
-  const applications = [
-    { title: "Tablecloth Magic Trick", description: "Magicians whip tablecloths from under dishes using the same principle - quick pulls don't give inertia time to be overcome by friction.", icon: "🎩", stats: "Quick pull: <0.1s contact time" },
-    { title: "Seatbelt Safety", description: "In a crash, your body's inertia keeps you moving at the original speed. Seatbelts provide the force to stop you with the car.", icon: "🚗", stats: "At 50 km/h, body has ~15,000 J of kinetic energy" },
-    { title: "Spacecraft Maneuvers", description: "Satellites and spacecraft must account for inertia - once rotating, they continue without friction to stop them.", icon: "🛰️", stats: "ISS rotation rate: 4°/minute" },
-    { title: "Hammer Throw", description: "Athletes spin and release the hammer - its inertia carries it forward while the athlete stops spinning.", icon: "🏋️", stats: "Release speed: ~29 m/s (105 km/h)" }
-  ];
-
+  // Mobile detection
   useEffect(() => {
-    if (gamePhase && gamePhase !== phase) setPhase(gamePhase as Phase);
-  }, [gamePhase, phase]);
+    const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
-  const emit = useCallback((type: GameEvent['type'], data: Record<string, unknown>, eventType?: GameEvent['eventType']) => {
-    onGameEvent?.({ type, phase, data, timestamp: Date.now(), eventType });
-  }, [onGameEvent, phase]);
+  // Debounced navigation
+  const safeNavigate = useCallback((action: () => void) => {
+    const now = Date.now();
+    if (navigationLockRef.current || now - lastNavigationTime.current < 400) {
+      return;
+    }
+    navigationLockRef.current = true;
+    lastNavigationTime.current = now;
+    action();
+    setTimeout(() => {
+      navigationLockRef.current = false;
+    }, 400);
+  }, []);
 
   const goToPhase = useCallback((newPhase: Phase) => {
-    if (isNavigating.current) return;
-    isNavigating.current = true;
-    setPhase(newPhase);
-    emit('phase_change', { from: phase, to: newPhase });
-    setTimeout(() => { isNavigating.current = false; }, 300);
-  }, [emit, phase]);
+    safeNavigate(() => {
+      setPhase(newPhase);
+      if (newPhase === 'play') {
+        setCardX(0);
+        setCoinY(0);
+        setHasFlicked(false);
+        setCoinFell(false);
+        setCoinMissed(false);
+      }
+      if (newPhase === 'twist_play') {
+        setClothX(0);
+        setTwistFlicked(false);
+        setDishesStayed(true);
+      }
+    });
+  }, [safeNavigate]);
 
-  const performFlick = useCallback(() => {
-    if (isFlicking) return;
-    setIsFlicking(true);
-    setShowResult(false);
-    setCoinFalling(false);
-    setCoinInCup(false);
-    setCoinWithCard(false);
-    setCardPosition(0);
+  const nextPhase = useCallback(() => {
+    const currentIndex = phaseOrder.indexOf(phase);
+    if (currentIndex < phaseOrder.length - 1) {
+      goToPhase(phaseOrder[currentIndex + 1]);
+    }
+  }, [phase, goToPhase]);
 
-    const flickDuration = flickSpeed === 'fast' ? 100 : 800;
-    const isFast = flickSpeed === 'fast';
-    emit('interaction', { flickSpeed, coinCount, isFast }, 'card_flick');
+  // Coin-Card animation
+  const flickCard = useCallback(() => {
+    if (hasFlicked) return;
+    setHasFlicked(true);
 
+    const cardSpeed = flickSpeed === 'fast' ? 30 : 3;
     const startTime = Date.now();
-    const animateCard = () => {
-      const elapsed = Date.now() - startTime;
-      const progress = Math.min(elapsed / flickDuration, 1);
-      const eased = isFast ? progress : Math.pow(progress, 0.5);
-      setCardPosition(eased * 200);
 
-      if (progress < 1) {
-        requestAnimationFrame(animateCard);
-      } else {
-        if (isFast) {
-          setCoinFalling(true);
-          setTimeout(() => {
-            setCoinInCup(true);
-            setCoinFalling(false);
-            setShowResult(true);
-            setExperimentCount(prev => prev + 1);
-            emit('visual_state_update', { coinInCup: true, flickSpeed: 'fast', coinCount, success: true });
-          }, 300);
+    const animate = () => {
+      const elapsed = (Date.now() - startTime) / 1000;
+
+      // Card moves to the right
+      const newCardX = Math.min(elapsed * cardSpeed * 50, 300);
+      setCardX(newCardX);
+
+      // After card is gone, coin falls
+      if (newCardX > 100) {
+        if (flickSpeed === 'fast') {
+          // Fast flick - coin falls straight down
+          const fallTime = elapsed - (100 / (cardSpeed * 50));
+          const newCoinY = Math.min(fallTime * 300, 80);
+          setCoinY(newCoinY);
+          if (newCoinY >= 80) {
+            setCoinFell(true);
+          }
         } else {
-          setCoinWithCard(true);
-          setShowResult(true);
-          setExperimentCount(prev => prev + 1);
-          emit('visual_state_update', { coinWithCard: true, flickSpeed: 'slow', coinCount, success: false });
+          // Slow flick - coin moves with card and misses
+          const fallTime = elapsed - (100 / (cardSpeed * 50));
+          const newCoinY = Math.min(fallTime * 300, 80);
+          setCoinY(newCoinY);
+          if (newCoinY >= 80) {
+            setCoinMissed(true);
+          }
         }
-        setIsFlicking(false);
+      }
+
+      if (newCardX < 300) {
+        animationRef.current = requestAnimationFrame(animate);
       }
     };
-    requestAnimationFrame(animateCard);
-  }, [isFlicking, flickSpeed, coinCount, emit]);
 
-  const resetExperiment = useCallback(() => {
-    setCardPosition(0);
-    setCoinFalling(false);
-    setCoinInCup(false);
-    setCoinWithCard(false);
-    setShowResult(false);
-    emit('interaction', { action: 'reset' }, 'reset');
-  }, [emit]);
+    animationRef.current = requestAnimationFrame(animate);
+  }, [hasFlicked, flickSpeed]);
 
-  const handleTestAnswer = useCallback((answerIndex: number) => {
-    if (answeredQuestions.has(currentQuestion)) return;
-    setSelectedAnswer(answerIndex);
-    setShowExplanation(true);
-    const isCorrect = answerIndex === testQuestions[currentQuestion].correct;
-    if (isCorrect) setCorrectAnswers(prev => prev + 1);
-    setAnsweredQuestions(prev => new Set([...prev, currentQuestion]));
-    emit('interaction', { question: currentQuestion, answer: answerIndex, correct: isCorrect }, 'answer_submit');
-  }, [currentQuestion, answeredQuestions, emit, testQuestions]);
+  // Tablecloth animation
+  const pullCloth = useCallback(() => {
+    if (twistFlicked) return;
+    setTwistFlicked(true);
 
-  const renderVisualization = () => {
-    const centerX = width / 2;
-    const tableY = height * 0.55;
-    const cupX = centerX;
-    const cupY = tableY - 20;
-    const cardY = cupY - 60;
-    const actualCardX = centerX - 60 + cardPosition;
-    const coinX = coinWithCard ? actualCardX + 60 : centerX;
+    const clothSpeed = twistSpeed === 'fast' ? 40 : 4;
+    const startTime = Date.now();
 
-    const renderCoins = (x: number, y: number, count: number) => {
-      const coins = [];
-      for (let i = 0; i < count; i++) {
-        const yOffset = i * -8;
-        coins.push(
-          <g key={i} transform={`translate(0, ${yOffset})`}>
-            <ellipse cx={x} cy={y + 3} rx={22} ry={7} fill={design.colors.coinEdge} />
-            <ellipse cx={x} cy={y} rx={22} ry={7} fill={`url(#coinGrad)`} stroke={design.colors.coinEdge} strokeWidth={1} />
-            <ellipse cx={x - 7} cy={y - 2} rx={6} ry={2} fill="rgba(255,255,255,0.5)" />
-          </g>
-        );
+    const animate = () => {
+      const elapsed = (Date.now() - startTime) / 1000;
+      const newClothX = Math.min(elapsed * clothSpeed * 50, 400);
+      setClothX(newClothX);
+
+      if (twistSpeed === 'slow' && newClothX > 50) {
+        setDishesStayed(false);
       }
-      return <g>{coins}</g>;
+
+      if (newClothX < 400) {
+        twistRef.current = requestAnimationFrame(animate);
+      }
+    };
+
+    twistRef.current = requestAnimationFrame(animate);
+  }, [twistFlicked, twistSpeed]);
+
+  // Cleanup
+  useEffect(() => {
+    return () => {
+      if (animationRef.current) cancelAnimationFrame(animationRef.current);
+      if (twistRef.current) cancelAnimationFrame(twistRef.current);
+    };
+  }, []);
+
+  // Helper functions for UI elements
+  function renderButton(
+    text: string,
+    onClick: () => void,
+    variant: 'primary' | 'secondary' | 'success' = 'primary',
+    disabled = false
+  ) {
+    const baseStyle: React.CSSProperties = {
+      padding: isMobile ? '14px 24px' : '16px 32px',
+      borderRadius: premiumDesign.radius.lg,
+      border: 'none',
+      fontSize: isMobile ? '15px' : '16px',
+      fontWeight: 600,
+      cursor: disabled ? 'not-allowed' : 'pointer',
+      transition: 'all 0.3s ease',
+      fontFamily: premiumDesign.typography.fontFamily,
+      opacity: disabled ? 0.5 : 1,
+    };
+
+    const variants = {
+      primary: {
+        background: premiumDesign.colors.gradient.primary,
+        color: 'white',
+        boxShadow: premiumDesign.shadows.glow(premiumDesign.colors.primary),
+      },
+      secondary: {
+        background: premiumDesign.colors.background.tertiary,
+        color: premiumDesign.colors.text.primary,
+        border: `1px solid rgba(255,255,255,0.1)`,
+      },
+      success: {
+        background: `linear-gradient(135deg, ${premiumDesign.colors.success} 0%, #059669 100%)`,
+        color: 'white',
+        boxShadow: premiumDesign.shadows.glow(premiumDesign.colors.success),
+      },
     };
 
     return (
-      <svg width={width} height={height * 0.5} viewBox={`0 0 ${width} ${height * 0.5}`} style={{ display: 'block' }}>
-        <defs>
-          <radialGradient id="coinGrad" cx="30%" cy="30%">
-            <stop offset="0%" stopColor="#fef08a" />
-            <stop offset="70%" stopColor={design.colors.coin} />
-            <stop offset="100%" stopColor="#eab308" />
-          </radialGradient>
-          <linearGradient id="cupGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-            <stop offset="0%" stopColor="#818cf8" />
-            <stop offset="50%" stopColor={design.colors.cup} />
-            <stop offset="100%" stopColor="#4f46e5" />
-          </linearGradient>
-          <filter id="glow"><feGaussianBlur stdDeviation="3" result="coloredBlur" /><feMerge><feMergeNode in="coloredBlur" /><feMergeNode in="SourceGraphic" /></feMerge></filter>
-        </defs>
-
-        <rect width={width} height={height * 0.5} fill={design.colors.bgPrimary} />
-        <rect x={0} y={tableY - 10} width={width} height={height * 0.5 - tableY + 10} fill="#57534e" />
-        <rect x={0} y={tableY - 10} width={width} height={4} fill="#78716c" />
-
-        {/* Cup */}
-        <g filter="url(#glow)">
-          <path d={`M${cupX - 32} ${cupY - 45} Q${cupX - 36} ${cupY + 25} ${cupX - 26} ${cupY + 35} L${cupX + 26} ${cupY + 35} Q${cupX + 36} ${cupY + 25} ${cupX + 32} ${cupY - 45} Z`} fill="url(#cupGrad)" />
-          <ellipse cx={cupX} cy={cupY - 45} rx={32} ry={9} fill={design.colors.cupInner} />
-          <ellipse cx={cupX} cy={cupY - 45} rx={32} ry={9} fill="none" stroke="#a5b4fc" strokeWidth={2} />
-        </g>
-
-        {coinInCup && renderCoins(cupX, cupY - 25, coinCount)}
-
-        {cardPosition < 200 && !coinInCup && (
-          <g>
-            <rect x={actualCardX} y={cardY - 4} width={120} height={12} rx={2} fill={design.colors.card} stroke="#b91c1c" strokeWidth={1} />
-            <text x={actualCardX + 15} y={cardY + 5} fontSize="8" fill="white">♠</text>
-            <text x={actualCardX + 60} y={cardY + 5} fontSize="8" fill="white">♥</text>
-            <text x={actualCardX + 105} y={cardY + 5} fontSize="8" fill="white">♣</text>
-          </g>
-        )}
-
-        {!coinInCup && !coinWithCard && (
-          <g style={{ transform: coinFalling ? 'translateY(50px)' : 'none', transition: coinFalling ? 'transform 0.3s ease-in' : 'none' }}>
-            {renderCoins(coinX, cardY - 10 - (coinCount - 1) * 4, coinCount)}
-          </g>
-        )}
-
-        {coinWithCard && (
-          <g>
-            <rect x={actualCardX} y={cardY - 4} width={120} height={12} rx={2} fill={design.colors.card} opacity={0.6} />
-            {renderCoins(coinX, cardY - 10, coinCount)}
-          </g>
-        )}
-
-        {showResult && (
-          <g>
-            <rect x={width/2 - 90} y={height * 0.5 - 45} width={180} height={36} rx={8} fill={coinInCup ? design.colors.success : design.colors.danger} />
-            <text x={width/2} y={height * 0.5 - 22} textAnchor="middle" fill="white" fontSize="13" fontWeight="bold" fontFamily={design.font.sans}>
-              {coinInCup ? "✓ Coin fell into cup!" : "✗ Coin went with card!"}
-            </text>
-          </g>
-        )}
-      </svg>
+      <button
+        style={{ ...baseStyle, ...variants[variant] }}
+        onMouseDown={(e) => {
+          e.preventDefault();
+          if (!disabled) onClick();
+        }}
+        disabled={disabled}
+      >
+        {text}
+      </button>
     );
-  };
+  }
+
+  function renderProgressBar() {
+    const currentIndex = phaseOrder.indexOf(phase);
+    const progress = ((currentIndex + 1) / phaseOrder.length) * 100;
+
+    return (
+      <div style={{ marginBottom: premiumDesign.spacing.lg }}>
+        <div style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          marginBottom: premiumDesign.spacing.xs,
+          fontSize: '12px',
+          color: premiumDesign.colors.text.muted,
+        }}>
+          <span>Phase {currentIndex + 1} of {phaseOrder.length}</span>
+          <span>{phase.replace('_', ' ').toUpperCase()}</span>
+        </div>
+        <div style={{
+          height: 6,
+          background: premiumDesign.colors.background.tertiary,
+          borderRadius: premiumDesign.radius.full,
+          overflow: 'hidden',
+        }}>
+          <div style={{
+            width: `${progress}%`,
+            height: '100%',
+            background: premiumDesign.colors.gradient.primary,
+            borderRadius: premiumDesign.radius.full,
+            transition: 'width 0.5s ease',
+          }} />
+        </div>
+      </div>
+    );
+  }
+
+  function renderBottomBar(
+    leftButton?: { text: string; onClick: () => void },
+    rightButton?: { text: string; onClick: () => void; variant?: 'primary' | 'secondary' | 'success'; disabled?: boolean }
+  ) {
+    return (
+      <div style={{
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginTop: premiumDesign.spacing.xl,
+        paddingTop: premiumDesign.spacing.lg,
+        borderTop: '1px solid rgba(255,255,255,0.1)',
+      }}>
+        {leftButton ? renderButton(leftButton.text, leftButton.onClick, 'secondary') : <div />}
+        {rightButton && renderButton(rightButton.text, rightButton.onClick, rightButton.variant || 'primary', rightButton.disabled)}
+      </div>
+    );
+  }
 
   // ==================== PHASE RENDERERS ====================
-  const renderHook = () => (
-    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', padding: '32px', background: `linear-gradient(180deg, ${design.colors.bgPrimary} 0%, ${design.colors.bgSecondary} 100%)` }}>
-      <div style={{ fontSize: '72px', marginBottom: '24px', filter: 'drop-shadow(0 4px 12px rgba(245, 158, 11, 0.3))' }}>🪙</div>
-      <h1 style={{ fontSize: '28px', fontWeight: 700, color: design.colors.textPrimary, marginBottom: '8px', fontFamily: design.font.sans, textAlign: 'center' }}>
-        The Coin-Card-Cup Trick
-      </h1>
-      <p style={{ fontSize: '16px', color: design.colors.textSecondary, marginBottom: '32px', fontFamily: design.font.sans, textAlign: 'center', maxWidth: '320px', lineHeight: 1.6 }}>
-        A coin sits on a card balanced over a cup. What happens when you flick the card really fast?
-      </p>
-      <div style={{ background: design.colors.primaryMuted, border: `1px solid ${design.colors.primary}40`, borderRadius: design.radius.lg, padding: '20px 28px', marginBottom: '32px', maxWidth: '340px' }}>
-        <p style={{ fontSize: '18px', color: design.colors.primary, fontFamily: design.font.sans, textAlign: 'center', fontWeight: 600, lineHeight: 1.5 }}>
-          "Where does the coin go?"
-        </p>
-      </div>
-      <Button onClick={() => goToPhase('predict')}>Let's Find Out →</Button>
-      <p style={{ fontSize: '13px', color: design.colors.textTertiary, marginTop: '24px', fontFamily: design.font.sans }}>
-        Newton's First Law • Inertia
-      </p>
-    </div>
-  );
 
-  const renderPredict = () => (
-    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '32px', height: '100%', background: design.colors.bgPrimary }}>
-      <div style={{ fontSize: '48px', marginBottom: '16px' }}>🤔</div>
-      <h2 style={{ fontSize: '22px', fontWeight: 700, color: design.colors.textPrimary, marginBottom: '8px', fontFamily: design.font.sans }}>Make Your Prediction</h2>
-      <p style={{ fontSize: '15px', color: design.colors.textSecondary, marginBottom: '24px', fontFamily: design.font.sans, textAlign: 'center' }}>
-        When I flick the card fast, the coin will...
-      </p>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', width: '100%', maxWidth: '340px' }}>
-        {[
-          { id: 'with_card', label: 'Fly away with the card', icon: '🃏' },
-          { id: 'drop_cup', label: 'Drop straight into the cup', icon: '🥛' },
-          { id: 'flip', label: 'Flip and land on the table', icon: '🔄' }
-        ].map((option) => (
-          <button
-            key={option.id}
-            onClick={() => { setPrediction(option.id); emit('prediction', { prediction: option.id }); }}
-            style={{
-              padding: '16px 20px',
-              borderRadius: design.radius.md,
-              border: prediction === option.id ? `2px solid ${design.colors.primary}` : `1px solid ${design.colors.border}`,
-              background: prediction === option.id ? design.colors.primaryMuted : design.colors.bgSecondary,
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '12px',
-              transition: 'all 0.2s ease',
-            }}
-          >
-            <span style={{ fontSize: '24px' }}>{option.icon}</span>
-            <span style={{ fontSize: '15px', color: design.colors.textPrimary, fontFamily: design.font.sans, fontWeight: 500 }}>{option.label}</span>
-          </button>
-        ))}
-      </div>
-      {prediction && (
-        <div style={{ marginTop: '24px' }}>
-          <Button onClick={() => goToPhase('play')}>Test It! →</Button>
-        </div>
-      )}
-    </div>
-  );
+  function renderHookPhase() {
+    const hookContent = [
+      {
+        title: "🪙 The Magic Coin Trick",
+        content: "There's a classic magic trick: Place a coin on a card on top of a cup. Flick the card away, and the coin drops perfectly into the cup! How is this possible?",
+        visual: "🪙",
+      },
+      {
+        title: "🚗 The Sudden Stop",
+        content: "Have you ever lurched forward when a car suddenly brakes? Or felt pushed back when it accelerates? Your body seems to have a mind of its own!",
+        visual: "🚗",
+      },
+      {
+        title: "⚖️ Newton's First Secret",
+        content: "Isaac Newton discovered why these things happen. He called it INERTIA - the tendency of objects to resist changes in their motion. Today you'll master this principle!",
+        visual: "⚖️",
+      },
+    ];
 
-  const renderPlay = () => (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', background: design.colors.bgPrimary }}>
-      {renderVisualization()}
-      <div style={{ flex: 1, padding: '20px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px', background: design.colors.bgSecondary }}>
-        <div style={{ display: 'flex', gap: '12px' }}>
-          {(['slow', 'fast'] as const).map((speed) => (
-            <button
-              key={speed}
-              onClick={() => { setFlickSpeed(speed); emit('interaction', { speed }, 'speed_change'); }}
-              disabled={isFlicking}
-              style={{
-                padding: '10px 20px',
-                borderRadius: design.radius.md,
-                border: 'none',
-                background: flickSpeed === speed ? (speed === 'fast' ? design.colors.success : design.colors.primary) : design.colors.bgTertiary,
-                color: flickSpeed === speed ? '#fff' : design.colors.textSecondary,
-                fontWeight: 600,
-                fontSize: '14px',
-                fontFamily: design.font.sans,
-                cursor: isFlicking ? 'not-allowed' : 'pointer',
-                opacity: isFlicking ? 0.5 : 1,
-              }}
-            >
-              {speed === 'slow' ? '🐢 Slow Pull' : '⚡ Fast Flick'}
-            </button>
-          ))}
-        </div>
-        <div style={{ display: 'flex', gap: '12px' }}>
-          <Button onClick={performFlick} disabled={isFlicking}>{isFlicking ? 'Flicking...' : '🖐️ Flick Card!'}</Button>
-          {showResult && <Button onClick={resetExperiment} variant="secondary">🔄 Reset</Button>}
-        </div>
-        <p style={{ fontSize: '13px', color: design.colors.textTertiary, fontFamily: design.font.sans }}>
-          Experiments: {experimentCount} • Try both speeds!
-        </p>
-        {experimentCount >= 2 && (
-          <Button onClick={() => goToPhase('review')}>I understand! Continue →</Button>
-        )}
-      </div>
-    </div>
-  );
-
-  const renderReview = () => (
-    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '32px', height: '100%', background: design.colors.bgPrimary, overflowY: 'auto' }}>
-      <div style={{ fontSize: '48px', marginBottom: '16px' }}>💡</div>
-      <h2 style={{ fontSize: '22px', fontWeight: 700, color: design.colors.textPrimary, marginBottom: '16px', fontFamily: design.font.sans }}>The Science of Inertia</h2>
-      <div style={{ background: design.colors.bgSecondary, borderRadius: design.radius.lg, padding: '20px', marginBottom: '20px', maxWidth: '340px', width: '100%' }}>
-        <p style={{ fontSize: '18px', color: design.colors.primary, fontFamily: design.font.sans, textAlign: 'center', fontWeight: 600, marginBottom: '8px' }}>Newton's First Law:</p>
-        <p style={{ fontSize: '15px', color: design.colors.textPrimary, fontFamily: design.font.sans, textAlign: 'center', lineHeight: 1.5 }}>
-          "Objects at rest stay at rest unless acted upon by a force"
-        </p>
-      </div>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', maxWidth: '340px', width: '100%', marginBottom: '20px' }}>
-        <div style={{ background: design.colors.successMuted, border: `1px solid ${design.colors.success}40`, borderRadius: design.radius.md, padding: '16px', display: 'flex', gap: '12px' }}>
-          <span style={{ fontSize: '24px' }}>⚡</span>
-          <div>
-            <p style={{ fontSize: '14px', fontWeight: 600, color: design.colors.success, fontFamily: design.font.sans, marginBottom: '4px' }}>Fast Flick:</p>
-            <p style={{ fontSize: '13px', color: design.colors.textPrimary, fontFamily: design.font.sans, lineHeight: 1.4 }}>Card removed before friction can accelerate the coin. Inertia keeps coin in place → falls into cup!</p>
-          </div>
-        </div>
-        <div style={{ background: design.colors.dangerMuted, border: `1px solid ${design.colors.danger}40`, borderRadius: design.radius.md, padding: '16px', display: 'flex', gap: '12px' }}>
-          <span style={{ fontSize: '24px' }}>🐢</span>
-          <div>
-            <p style={{ fontSize: '14px', fontWeight: 600, color: design.colors.danger, fontFamily: design.font.sans, marginBottom: '4px' }}>Slow Pull:</p>
-            <p style={{ fontSize: '13px', color: design.colors.textPrimary, fontFamily: design.font.sans, lineHeight: 1.4 }}>Friction has time to act on coin, gradually accelerating it. Coin moves with card!</p>
-          </div>
-        </div>
-      </div>
-      <p style={{ fontSize: '14px', color: prediction === 'drop_cup' ? design.colors.success : design.colors.textSecondary, fontFamily: design.font.sans, marginBottom: '20px' }}>
-        Your prediction: {prediction === 'drop_cup' ? '✅ Correct!' : '🤔 Now you know!'}
-      </p>
-      <Button onClick={() => goToPhase('twist_predict')}>Let's Make it Harder! →</Button>
-    </div>
-  );
-
-  const renderTwistPredict = () => (
-    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '32px', height: '100%', background: design.colors.bgPrimary }}>
-      <div style={{ fontSize: '48px', marginBottom: '16px' }}>🪙🪙🪙</div>
-      <h2 style={{ fontSize: '22px', fontWeight: 700, color: design.colors.textPrimary, marginBottom: '8px', fontFamily: design.font.sans }}>Plot Twist: Stack 'Em Up!</h2>
-      <p style={{ fontSize: '15px', color: design.colors.textSecondary, marginBottom: '24px', fontFamily: design.font.sans, textAlign: 'center' }}>
-        What if we stack 3 coins instead of 1?
-      </p>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', width: '100%', maxWidth: '340px' }}>
-        {[
-          { id: 'harder', label: "Harder to make them drop - they're heavier" },
-          { id: 'easier', label: "Easier - more mass, more inertia!" },
-          { id: 'same', label: "Same result - doesn't matter" }
-        ].map((option) => (
-          <button
-            key={option.id}
-            onClick={() => { setTwistPrediction(option.id); emit('prediction', { twistPrediction: option.id }); }}
-            style={{
-              padding: '16px 20px',
-              borderRadius: design.radius.md,
-              border: twistPrediction === option.id ? `2px solid ${design.colors.primary}` : `1px solid ${design.colors.border}`,
-              background: twistPrediction === option.id ? design.colors.primaryMuted : design.colors.bgSecondary,
-              cursor: 'pointer',
-              textAlign: 'left',
-              transition: 'all 0.2s ease',
-            }}
-          >
-            <span style={{ fontSize: '14px', color: design.colors.textPrimary, fontFamily: design.font.sans }}>{option.label}</span>
-          </button>
-        ))}
-      </div>
-      {twistPrediction && (
-        <div style={{ marginTop: '24px' }}>
-          <Button onClick={() => { setCoinCount(3); goToPhase('twist_play'); }}>Stack & Test! →</Button>
-        </div>
-      )}
-    </div>
-  );
-
-  const renderTwistPlay = () => (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', background: design.colors.bgPrimary }}>
-      {renderVisualization()}
-      <div style={{ flex: 1, padding: '20px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px', background: design.colors.bgSecondary }}>
-        <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-          <span style={{ fontSize: '13px', color: design.colors.textSecondary, fontFamily: design.font.sans }}>Coins:</span>
-          {[1, 2, 3, 5].map((count) => (
-            <button
-              key={count}
-              onClick={() => { setCoinCount(count); resetExperiment(); emit('interaction', { coinCount: count }, 'coin_stack'); }}
-              disabled={isFlicking}
-              style={{
-                width: '36px',
-                height: '36px',
-                borderRadius: design.radius.full,
-                border: 'none',
-                background: coinCount === count ? design.colors.primary : design.colors.bgTertiary,
-                color: coinCount === count ? '#000' : design.colors.textSecondary,
-                fontWeight: 700,
-                fontSize: '14px',
-                fontFamily: design.font.sans,
-                cursor: isFlicking ? 'not-allowed' : 'pointer',
-              }}
-            >
-              {count}
-            </button>
-          ))}
-        </div>
-        <div style={{ display: 'flex', gap: '12px' }}>
-          {(['slow', 'fast'] as const).map((speed) => (
-            <button
-              key={speed}
-              onClick={() => setFlickSpeed(speed)}
-              disabled={isFlicking}
-              style={{
-                padding: '10px 20px',
-                borderRadius: design.radius.md,
-                border: 'none',
-                background: flickSpeed === speed ? (speed === 'fast' ? design.colors.success : design.colors.primary) : design.colors.bgTertiary,
-                color: flickSpeed === speed ? '#fff' : design.colors.textSecondary,
-                fontWeight: 600,
-                fontSize: '14px',
-                fontFamily: design.font.sans,
-                cursor: isFlicking ? 'not-allowed' : 'pointer',
-                opacity: isFlicking ? 0.5 : 1,
-              }}
-            >
-              {speed === 'slow' ? '🐢 Slow' : '⚡ Fast'}
-            </button>
-          ))}
-        </div>
-        <div style={{ display: 'flex', gap: '12px' }}>
-          <Button onClick={performFlick} disabled={isFlicking}>{isFlicking ? '...' : '🖐️ Flick!'}</Button>
-          {showResult && <Button onClick={resetExperiment} variant="secondary">🔄 Reset</Button>}
-        </div>
-        {experimentCount >= 3 && (
-          <Button onClick={() => goToPhase('twist_review')}>I get it! Continue →</Button>
-        )}
-      </div>
-    </div>
-  );
-
-  const renderTwistReview = () => (
-    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '32px', height: '100%', background: design.colors.bgPrimary }}>
-      <div style={{ fontSize: '48px', marginBottom: '16px' }}>🧠</div>
-      <h2 style={{ fontSize: '22px', fontWeight: 700, color: design.colors.textPrimary, marginBottom: '16px', fontFamily: design.font.sans }}>Mass & Inertia</h2>
-      <div style={{ background: design.colors.bgSecondary, borderRadius: design.radius.lg, padding: '20px', marginBottom: '20px', maxWidth: '340px', width: '100%' }}>
-        <p style={{ fontSize: '18px', color: design.colors.primary, fontFamily: design.font.sans, textAlign: 'center', fontWeight: 600, marginBottom: '8px' }}>More mass = More inertia!</p>
-        <p style={{ fontSize: '14px', color: design.colors.textPrimary, fontFamily: design.font.sans, textAlign: 'center', lineHeight: 1.5 }}>
-          The stack of coins has more mass, so it has MORE inertia and resists motion even more strongly!
-        </p>
-      </div>
-      <div style={{ background: design.colors.primaryMuted, border: `1px solid ${design.colors.primary}40`, borderRadius: design.radius.lg, padding: '20px', marginBottom: '20px', maxWidth: '340px', width: '100%' }}>
-        <p style={{ fontSize: '20px', color: design.colors.primary, fontFamily: 'monospace', textAlign: 'center', fontWeight: 700, marginBottom: '8px' }}>F = ma</p>
-        <p style={{ fontSize: '13px', color: design.colors.textSecondary, fontFamily: design.font.sans, textAlign: 'center' }}>
-          More mass (m) means you need more force (F) to create the same acceleration (a).
-        </p>
-      </div>
-      <p style={{ fontSize: '14px', color: twistPrediction === 'easier' ? design.colors.success : design.colors.textSecondary, fontFamily: design.font.sans, marginBottom: '20px' }}>
-        Your prediction: {twistPrediction === 'easier' ? '✅ Correct!' : '🤔 Interesting thinking!'}
-      </p>
-      <Button onClick={() => goToPhase('transfer')}>See Real Examples →</Button>
-    </div>
-  );
-
-  const renderTransfer = () => {
-    const app = applications[currentApplication];
     return (
-      <div style={{ display: 'flex', flexDirection: 'column', height: '100%', padding: '24px', background: design.colors.bgPrimary }}>
-        <h2 style={{ fontSize: '20px', fontWeight: 700, color: design.colors.textPrimary, marginBottom: '20px', fontFamily: design.font.sans, textAlign: 'center' }}>
-          Inertia in the Real World
-        </h2>
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
-          <div style={{ background: design.colors.bgSecondary, borderRadius: design.radius.lg, padding: '24px', marginBottom: '16px' }}>
-            <div style={{ fontSize: '48px', textAlign: 'center', marginBottom: '16px' }}>{app.icon}</div>
-            <h3 style={{ fontSize: '18px', fontWeight: 700, color: design.colors.primary, fontFamily: design.font.sans, textAlign: 'center', marginBottom: '12px' }}>{app.title}</h3>
-            <p style={{ fontSize: '14px', color: design.colors.textPrimary, fontFamily: design.font.sans, textAlign: 'center', lineHeight: 1.6, marginBottom: '16px' }}>{app.description}</p>
-            <div style={{ background: design.colors.bgTertiary, borderRadius: design.radius.md, padding: '12px', textAlign: 'center' }}>
-              <span style={{ fontSize: '13px', color: design.colors.textSecondary, fontFamily: design.font.sans }}>📊 {app.stats}</span>
-            </div>
+      <div style={{ minHeight: '60vh', display: 'flex', flexDirection: 'column' }}>
+        {renderProgressBar()}
+
+        <div style={{
+          flex: 1,
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          textAlign: 'center',
+          padding: premiumDesign.spacing.xl,
+        }}>
+          <div style={{ fontSize: '64px', marginBottom: premiumDesign.spacing.lg }}>
+            {hookContent[hookStep].visual}
           </div>
-          <div style={{ display: 'flex', justifyContent: 'center', gap: '8px', marginBottom: '16px' }}>
-            {applications.map((_, idx) => (
+
+          <h2 style={{
+            fontSize: isMobile ? '24px' : '32px',
+            fontWeight: 700,
+            color: premiumDesign.colors.text.primary,
+            marginBottom: premiumDesign.spacing.md,
+          }}>
+            {hookContent[hookStep].title}
+          </h2>
+
+          <p style={{
+            fontSize: isMobile ? '16px' : '18px',
+            color: premiumDesign.colors.text.secondary,
+            maxWidth: '500px',
+            lineHeight: 1.7,
+          }}>
+            {hookContent[hookStep].content}
+          </p>
+
+          <div style={{
+            display: 'flex',
+            gap: premiumDesign.spacing.sm,
+            marginTop: premiumDesign.spacing.xl,
+          }}>
+            {hookContent.map((_, i) => (
               <button
-                key={idx}
-                onClick={() => setCurrentApplication(idx)}
+                key={i}
                 style={{
-                  width: '10px',
-                  height: '10px',
-                  borderRadius: design.radius.full,
+                  width: 40,
+                  height: 8,
+                  borderRadius: premiumDesign.radius.full,
                   border: 'none',
-                  background: idx === currentApplication ? design.colors.primary : design.colors.bgElevated,
+                  background: i === hookStep
+                    ? premiumDesign.colors.primary
+                    : premiumDesign.colors.background.tertiary,
                   cursor: 'pointer',
+                  transition: 'all 0.3s ease',
+                }}
+                onMouseDown={(e) => {
+                  e.preventDefault();
+                  safeNavigate(() => setHookStep(i));
                 }}
               />
             ))}
           </div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '16px' }}>
-            <Button onClick={() => setCurrentApplication(prev => Math.max(0, prev - 1))} variant="secondary" disabled={currentApplication === 0}>← Previous</Button>
-            <Button onClick={() => setCurrentApplication(prev => Math.min(applications.length - 1, prev + 1))} variant="secondary" disabled={currentApplication === applications.length - 1}>Next →</Button>
-          </div>
         </div>
-        <Button onClick={() => goToPhase('test')} fullWidth>Take the Quiz! →</Button>
+
+        {renderBottomBar(
+          undefined,
+          {
+            text: hookStep < hookContent.length - 1 ? 'Continue →' : 'Make a Prediction →',
+            onClick: () => {
+              if (hookStep < hookContent.length - 1) {
+                safeNavigate(() => setHookStep(h => h + 1));
+              } else {
+                nextPhase();
+              }
+            },
+          }
+        )}
       </div>
     );
-  };
+  }
 
-  const renderTest = () => {
-    const q = testQuestions[currentQuestion];
-    const isAnswered = answeredQuestions.has(currentQuestion);
+  function renderPredictPhase() {
+    const predictions = [
+      { id: 'coin_falls', label: 'The coin will drop straight down into the cup', icon: '⬇️' },
+      { id: 'coin_flies', label: 'The coin will fly away with the card', icon: '➡️' },
+      { id: 'coin_stays', label: 'The coin will hover in the air momentarily', icon: '🪙' },
+      { id: 'coin_spins', label: 'The coin will spin and land randomly', icon: '🌀' },
+    ];
+
     return (
-      <div style={{ display: 'flex', flexDirection: 'column', height: '100%', padding: '24px', background: design.colors.bgPrimary }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-          <span style={{ fontSize: '13px', color: design.colors.textSecondary, fontFamily: design.font.sans }}>Question {currentQuestion + 1}/{testQuestions.length}</span>
-          <span style={{ fontSize: '13px', fontWeight: 700, color: design.colors.success, fontFamily: design.font.sans }}>Score: {correctAnswers}/{answeredQuestions.size}</span>
+      <div style={{ minHeight: '60vh', display: 'flex', flexDirection: 'column' }}>
+        {renderProgressBar()}
+
+        <div style={{ textAlign: 'center', marginBottom: premiumDesign.spacing.xl }}>
+          <h2 style={{
+            fontSize: isMobile ? '22px' : '28px',
+            fontWeight: 700,
+            color: premiumDesign.colors.text.primary,
+            marginBottom: premiumDesign.spacing.sm,
+          }}>
+            🤔 Make Your Prediction
+          </h2>
+          <p style={{ color: premiumDesign.colors.text.secondary }}>
+            When you flick the card away quickly, what happens to the coin?
+          </p>
         </div>
-        <div style={{ flex: 1, overflowY: 'auto' }}>
-          <h3 style={{ fontSize: '16px', fontWeight: 600, color: design.colors.textPrimary, fontFamily: design.font.sans, marginBottom: '20px', lineHeight: 1.5 }}>{q.question}</h3>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-            {q.options.map((option, idx) => {
-              let bg = design.colors.bgSecondary;
-              let border = design.colors.border;
-              if (isAnswered) {
-                if (idx === q.correct) { bg = design.colors.successMuted; border = design.colors.success; }
-                else if (idx === selectedAnswer && idx !== q.correct) { bg = design.colors.dangerMuted; border = design.colors.danger; }
+
+        <div style={{
+          display: 'grid',
+          gap: premiumDesign.spacing.md,
+          maxWidth: '600px',
+          margin: '0 auto',
+          width: '100%',
+        }}>
+          {predictions.map((pred) => (
+            <button
+              key={pred.id}
+              style={{
+                padding: premiumDesign.spacing.lg,
+                borderRadius: premiumDesign.radius.lg,
+                border: prediction === pred.id
+                  ? `2px solid ${premiumDesign.colors.primary}`
+                  : '2px solid rgba(255,255,255,0.1)',
+                background: prediction === pred.id
+                  ? 'rgba(245, 158, 11, 0.2)'
+                  : premiumDesign.colors.background.secondary,
+                cursor: 'pointer',
+                textAlign: 'left',
+                transition: 'all 0.3s ease',
+              }}
+              onMouseDown={(e) => {
+                e.preventDefault();
+                safeNavigate(() => setPrediction(pred.id));
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: premiumDesign.spacing.md }}>
+                <span style={{ fontSize: '24px' }}>{pred.icon}</span>
+                <span style={{
+                  color: premiumDesign.colors.text.primary,
+                  fontSize: '15px',
+                }}>
+                  {pred.label}
+                </span>
+              </div>
+            </button>
+          ))}
+        </div>
+
+        {renderBottomBar(
+          { text: '← Back', onClick: () => goToPhase('hook') },
+          {
+            text: 'Test My Prediction →',
+            onClick: nextPhase,
+            disabled: !prediction,
+          }
+        )}
+      </div>
+    );
+  }
+
+  function renderPlayPhase() {
+    return (
+      <div style={{ minHeight: '60vh', display: 'flex', flexDirection: 'column' }}>
+        {renderProgressBar()}
+
+        <div style={{ textAlign: 'center', marginBottom: premiumDesign.spacing.lg }}>
+          <h2 style={{
+            fontSize: isMobile ? '22px' : '28px',
+            fontWeight: 700,
+            color: premiumDesign.colors.text.primary,
+          }}>
+            🪙 Coin-Card-Cup Experiment
+          </h2>
+          <p style={{ color: premiumDesign.colors.text.secondary }}>
+            Flick the card and watch what happens to the coin!
+          </p>
+        </div>
+
+        <div style={{
+          display: 'flex',
+          flexDirection: isMobile ? 'column' : 'row',
+          gap: premiumDesign.spacing.xl,
+          flex: 1,
+        }}>
+          {/* Simulation */}
+          <div style={{
+            flex: 2,
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+          }}>
+            <svg
+              width="300"
+              height="250"
+              style={{
+                background: premiumDesign.colors.background.secondary,
+                borderRadius: premiumDesign.radius.xl,
+                border: '1px solid rgba(255,255,255,0.1)',
+              }}
+            >
+              {/* Table */}
+              <rect x="0" y="200" width="300" height="50" fill="#8B4513" />
+
+              {/* Cup */}
+              <g transform="translate(130, 120)">
+                <path
+                  d="M0 0 L10 80 L50 80 L60 0 Z"
+                  fill={premiumDesign.colors.cup}
+                  opacity={0.9}
+                />
+                <ellipse cx="30" cy="0" rx="30" ry="8" fill={premiumDesign.colors.cup} />
+                <ellipse cx="30" cy="80" rx="20" ry="6" fill="#4f46e5" />
+                {/* Inner cup */}
+                <ellipse cx="30" cy="5" rx="22" ry="5" fill="#312e81" opacity={0.6} />
+              </g>
+
+              {/* Card (moving) */}
+              {!coinFell && !coinMissed && (
+                <g transform={`translate(${100 + cardX}, 80)`}>
+                  <rect
+                    x="0" y="0"
+                    width="80" height="10"
+                    fill={premiumDesign.colors.card}
+                    rx="2"
+                  />
+                </g>
+              )}
+
+              {/* Coin */}
+              <g transform={`translate(${flickSpeed === 'slow' && hasFlicked && cardX > 50 ? 145 + cardX * 0.3 : 145}, ${70 + coinY})`}>
+                <ellipse cx="15" cy="0" rx="15" ry="4" fill={premiumDesign.colors.coinEdge} />
+                <ellipse cx="15" cy="-3" rx="15" ry="4" fill={premiumDesign.colors.coin} />
+                <text x="15" y="0" textAnchor="middle" fill={premiumDesign.colors.coinEdge} fontSize="10" fontWeight="bold">
+                  $
+                </text>
+              </g>
+
+              {/* Result messages */}
+              {coinFell && (
+                <g>
+                  <text x="150" y="30" textAnchor="middle" fill={premiumDesign.colors.success} fontSize="16" fontWeight="bold">
+                    ✓ SUCCESS!
+                  </text>
+                  <text x="150" y="50" textAnchor="middle" fill={premiumDesign.colors.text.secondary} fontSize="12">
+                    Coin dropped into cup!
+                  </text>
+                </g>
+              )}
+              {coinMissed && (
+                <g>
+                  <text x="150" y="30" textAnchor="middle" fill={premiumDesign.colors.error} fontSize="16" fontWeight="bold">
+                    ✗ MISSED!
+                  </text>
+                  <text x="150" y="50" textAnchor="middle" fill={premiumDesign.colors.text.secondary} fontSize="12">
+                    Card dragged the coin!
+                  </text>
+                </g>
+              )}
+
+              {/* Finger indicator */}
+              {!hasFlicked && (
+                <g transform="translate(90, 70)">
+                  <text fontSize="20">👆</text>
+                  <text x="-10" y="50" fill={premiumDesign.colors.text.muted} fontSize="10">
+                    Flick here!
+                  </text>
+                </g>
+              )}
+            </svg>
+          </div>
+
+          {/* Controls */}
+          <div style={{
+            flex: 1,
+            display: 'flex',
+            flexDirection: 'column',
+            gap: premiumDesign.spacing.md,
+          }}>
+            <div style={{
+              background: premiumDesign.colors.background.card,
+              borderRadius: premiumDesign.radius.lg,
+              padding: premiumDesign.spacing.lg,
+              border: '1px solid rgba(255,255,255,0.1)',
+            }}>
+              <h4 style={{ color: premiumDesign.colors.text.primary, marginBottom: premiumDesign.spacing.md }}>
+                Flick Speed
+              </h4>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: premiumDesign.spacing.sm }}>
+                {(['fast', 'slow'] as const).map(speed => (
+                  <button
+                    key={speed}
+                    style={{
+                      padding: premiumDesign.spacing.md,
+                      borderRadius: premiumDesign.radius.md,
+                      border: flickSpeed === speed ? `2px solid ${premiumDesign.colors.primary}` : '1px solid rgba(255,255,255,0.1)',
+                      background: flickSpeed === speed ? 'rgba(245, 158, 11, 0.2)' : 'transparent',
+                      color: premiumDesign.colors.text.primary,
+                      cursor: 'pointer',
+                      textTransform: 'capitalize',
+                    }}
+                    onMouseDown={(e) => {
+                      e.preventDefault();
+                      if (!hasFlicked) setFlickSpeed(speed);
+                    }}
+                  >
+                    {speed === 'fast' ? '⚡ Fast Flick' : '🐢 Slow Push'}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <button
+              style={{
+                padding: premiumDesign.spacing.lg,
+                borderRadius: premiumDesign.radius.lg,
+                border: 'none',
+                background: hasFlicked ? premiumDesign.colors.background.tertiary : premiumDesign.colors.gradient.primary,
+                color: 'white',
+                fontSize: '16px',
+                fontWeight: 600,
+                cursor: hasFlicked ? 'not-allowed' : 'pointer',
+              }}
+              onMouseDown={(e) => {
+                e.preventDefault();
+                if (!hasFlicked) flickCard();
+              }}
+            >
+              {hasFlicked ? '✓ Flicked!' : '👆 Flick the Card!'}
+            </button>
+
+            {(coinFell || coinMissed) && (
+              <button
+                style={{
+                  padding: premiumDesign.spacing.md,
+                  borderRadius: premiumDesign.radius.md,
+                  border: '1px solid rgba(255,255,255,0.1)',
+                  background: 'transparent',
+                  color: premiumDesign.colors.text.secondary,
+                  cursor: 'pointer',
+                }}
+                onMouseDown={(e) => {
+                  e.preventDefault();
+                  setCardX(0);
+                  setCoinY(0);
+                  setHasFlicked(false);
+                  setCoinFell(false);
+                  setCoinMissed(false);
+                }}
+              >
+                🔄 Try Again
+              </button>
+            )}
+
+            <div style={{
+              background: 'rgba(245, 158, 11, 0.1)',
+              borderRadius: premiumDesign.radius.lg,
+              padding: premiumDesign.spacing.md,
+              border: '1px solid rgba(245, 158, 11, 0.3)',
+            }}>
+              <p style={{ color: premiumDesign.colors.text.secondary, fontSize: '14px', margin: 0 }}>
+                💡 Try both speeds to see the difference! Fast flick = inertia wins!
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {renderBottomBar(
+          { text: '← Back', onClick: () => goToPhase('predict') },
+          { text: 'See Results →', onClick: nextPhase }
+        )}
+      </div>
+    );
+  }
+
+  function renderReviewPhase() {
+    const wasCorrect = prediction === 'coin_falls';
+
+    const reviewContent = [
+      {
+        title: "Newton's First Law of Motion",
+        content: `${wasCorrect ? "You predicted correctly! " : ""}The coin drops straight down because of INERTIA.\n\nNewton's First Law states: An object at rest stays at rest, and an object in motion stays in motion, unless acted upon by an external force.`,
+        highlight: wasCorrect,
+      },
+      {
+        title: "Why the Fast Flick Works",
+        content: "When you flick the card FAST:\n\n• The card leaves before friction can accelerate the coin\n• The coin's inertia keeps it in place\n• Gravity then pulls it straight down into the cup\n\nWhen you push SLOWLY, friction has time to drag the coin along!",
+      },
+      {
+        title: "The Coin 'Wants' to Stay Still",
+        content: "Inertia is the resistance to change.\n\n• The coin was at rest\n• It 'wants' to stay at rest\n• The fast-moving card doesn't give friction enough time\n• So the coin stays still horizontally and falls vertically!",
+      },
+    ];
+
+    return (
+      <div style={{ minHeight: '60vh', display: 'flex', flexDirection: 'column' }}>
+        {renderProgressBar()}
+
+        <div style={{ textAlign: 'center', marginBottom: premiumDesign.spacing.xl }}>
+          <h2 style={{
+            fontSize: isMobile ? '22px' : '28px',
+            fontWeight: 700,
+            color: premiumDesign.colors.text.primary,
+          }}>
+            🔍 Understanding Inertia
+          </h2>
+        </div>
+
+        <div style={{
+          background: premiumDesign.colors.background.card,
+          borderRadius: premiumDesign.radius.xl,
+          padding: premiumDesign.spacing.xl,
+          border: '1px solid rgba(255,255,255,0.1)',
+          flex: 1,
+        }}>
+          <h3 style={{
+            color: premiumDesign.colors.primary,
+            fontSize: '20px',
+            marginBottom: premiumDesign.spacing.md,
+          }}>
+            {reviewContent[reviewStep].title}
+          </h3>
+
+          <p style={{
+            color: premiumDesign.colors.text.secondary,
+            fontSize: '16px',
+            lineHeight: 1.8,
+            whiteSpace: 'pre-line',
+          }}>
+            {reviewContent[reviewStep].content}
+          </p>
+
+          {reviewContent[reviewStep].highlight && (
+            <div style={{
+              background: 'rgba(16, 185, 129, 0.2)',
+              borderRadius: premiumDesign.radius.md,
+              padding: premiumDesign.spacing.md,
+              marginTop: premiumDesign.spacing.md,
+              border: '1px solid rgba(16, 185, 129, 0.5)',
+            }}>
+              <p style={{ color: premiumDesign.colors.success, margin: 0 }}>
+                ✓ Great prediction! You correctly anticipated the coin would fall straight down.
+              </p>
+            </div>
+          )}
+
+          <div style={{
+            display: 'flex',
+            justifyContent: 'center',
+            gap: premiumDesign.spacing.sm,
+            marginTop: premiumDesign.spacing.xl,
+          }}>
+            {reviewContent.map((_, i) => (
+              <button
+                key={i}
+                style={{
+                  width: 40,
+                  height: 8,
+                  borderRadius: premiumDesign.radius.full,
+                  border: 'none',
+                  background: i === reviewStep
+                    ? premiumDesign.colors.primary
+                    : premiumDesign.colors.background.tertiary,
+                  cursor: 'pointer',
+                  transition: 'all 0.3s ease',
+                }}
+                onMouseDown={(e) => {
+                  e.preventDefault();
+                  safeNavigate(() => setReviewStep(i));
+                }}
+              />
+            ))}
+          </div>
+        </div>
+
+        {renderBottomBar(
+          { text: '← Back', onClick: () => goToPhase('play') },
+          {
+            text: reviewStep < reviewContent.length - 1 ? 'Continue →' : 'New Experiment →',
+            onClick: () => {
+              if (reviewStep < reviewContent.length - 1) {
+                safeNavigate(() => setReviewStep(r => r + 1));
+              } else {
+                nextPhase();
               }
+            },
+          }
+        )}
+      </div>
+    );
+  }
+
+  function renderTwistPredictPhase() {
+    const predictions = [
+      { id: 'dishes_stay', label: 'The dishes will stay in place (inertia!)', icon: '🍽️' },
+      { id: 'dishes_fly', label: 'The dishes will fly off the table', icon: '💨' },
+      { id: 'dishes_crash', label: 'Everything will crash to the floor', icon: '💥' },
+      { id: 'cloth_tears', label: 'The tablecloth will tear', icon: '📜' },
+    ];
+
+    return (
+      <div style={{ minHeight: '60vh', display: 'flex', flexDirection: 'column' }}>
+        {renderProgressBar()}
+
+        <div style={{ textAlign: 'center', marginBottom: premiumDesign.spacing.xl }}>
+          <h2 style={{
+            fontSize: isMobile ? '22px' : '28px',
+            fontWeight: 700,
+            color: premiumDesign.colors.text.primary,
+            marginBottom: premiumDesign.spacing.sm,
+          }}>
+            🎪 The Twist: Tablecloth Trick
+          </h2>
+          <p style={{ color: premiumDesign.colors.text.secondary }}>
+            If you quickly pull a tablecloth from under dishes, what happens?
+          </p>
+        </div>
+
+        <div style={{
+          display: 'grid',
+          gap: premiumDesign.spacing.md,
+          maxWidth: '600px',
+          margin: '0 auto',
+          width: '100%',
+        }}>
+          {predictions.map((pred) => (
+            <button
+              key={pred.id}
+              style={{
+                padding: premiumDesign.spacing.lg,
+                borderRadius: premiumDesign.radius.lg,
+                border: twistPrediction === pred.id
+                  ? `2px solid ${premiumDesign.colors.secondary}`
+                  : '2px solid rgba(255,255,255,0.1)',
+                background: twistPrediction === pred.id
+                  ? 'rgba(99, 102, 241, 0.2)'
+                  : premiumDesign.colors.background.secondary,
+                cursor: 'pointer',
+                textAlign: 'left',
+                transition: 'all 0.3s ease',
+              }}
+              onMouseDown={(e) => {
+                e.preventDefault();
+                safeNavigate(() => setTwistPrediction(pred.id));
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: premiumDesign.spacing.md }}>
+                <span style={{ fontSize: '24px' }}>{pred.icon}</span>
+                <span style={{ color: premiumDesign.colors.text.primary, fontSize: '15px' }}>
+                  {pred.label}
+                </span>
+              </div>
+            </button>
+          ))}
+        </div>
+
+        {renderBottomBar(
+          { text: '← Back', onClick: () => goToPhase('review') },
+          {
+            text: 'Test It →',
+            onClick: nextPhase,
+            disabled: !twistPrediction,
+          }
+        )}
+      </div>
+    );
+  }
+
+  function renderTwistPlayPhase() {
+    return (
+      <div style={{ minHeight: '60vh', display: 'flex', flexDirection: 'column' }}>
+        {renderProgressBar()}
+
+        <div style={{ textAlign: 'center', marginBottom: premiumDesign.spacing.lg }}>
+          <h2 style={{
+            fontSize: isMobile ? '22px' : '28px',
+            fontWeight: 700,
+            color: premiumDesign.colors.text.primary,
+          }}>
+            🎪 Tablecloth Trick
+          </h2>
+          <p style={{ color: premiumDesign.colors.text.secondary }}>
+            Pull the tablecloth and see what happens to the dishes!
+          </p>
+        </div>
+
+        <div style={{
+          display: 'flex',
+          flexDirection: isMobile ? 'column' : 'row',
+          gap: premiumDesign.spacing.xl,
+          flex: 1,
+        }}>
+          {/* Simulation */}
+          <div style={{
+            flex: 2,
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+          }}>
+            <svg
+              width="350"
+              height="220"
+              style={{
+                background: premiumDesign.colors.background.secondary,
+                borderRadius: premiumDesign.radius.xl,
+                border: '1px solid rgba(255,255,255,0.1)',
+              }}
+            >
+              {/* Table */}
+              <rect x="20" y="150" width="310" height="20" fill="#8B4513" />
+              <rect x="30" y="170" width="20" height="50" fill="#654321" />
+              <rect x="280" y="170" width="20" height="50" fill="#654321" />
+
+              {/* Tablecloth */}
+              <g transform={`translate(${-clothX}, 0)`}>
+                <rect x="20" y="140" width="310" height="15" fill="#dc2626" rx="2" />
+                <rect x="0" y="140" width="25" height="15" fill="#b91c1c" rx="2" />
+                {/* Cloth draping */}
+                <path d="M20 155 L20 180 Q25 190 30 180 L30 155" fill="#dc2626" />
+              </g>
+
+              {/* Dishes - move if slow pull */}
+              <g transform={`translate(${!dishesStayed ? clothX * 0.7 : 0}, ${!dishesStayed ? 20 : 0})`}>
+                {/* Plate 1 */}
+                <ellipse cx="80" cy="130" rx="30" ry="8" fill="#f5f5f5" />
+                <ellipse cx="80" cy="128" rx="25" ry="6" fill="#e5e5e5" />
+
+                {/* Glass */}
+                <rect x="140" y="100" width="20" height="35" fill="rgba(200,200,255,0.5)" rx="3" />
+                <ellipse cx="150" cy="100" rx="10" ry="4" fill="rgba(200,200,255,0.6)" />
+
+                {/* Plate 2 */}
+                <ellipse cx="220" cy="130" rx="30" ry="8" fill="#f5f5f5" />
+                <ellipse cx="220" cy="128" rx="25" ry="6" fill="#e5e5e5" />
+
+                {/* Candle */}
+                <rect x="270" y="105" width="8" height="30" fill="#fff7ed" />
+                <ellipse cx="274" cy="105" rx="5" ry="2" fill="#fcd34d" />
+                {dishesStayed && <ellipse cx="274" cy="100" rx="3" ry="5" fill="#f97316" opacity={0.9} />}
+              </g>
+
+              {/* Result messages */}
+              {twistFlicked && clothX > 350 && (
+                <g>
+                  {dishesStayed ? (
+                    <>
+                      <text x="175" y="40" textAnchor="middle" fill={premiumDesign.colors.success} fontSize="16" fontWeight="bold">
+                        ✓ INERTIA WINS!
+                      </text>
+                      <text x="175" y="60" textAnchor="middle" fill={premiumDesign.colors.text.secondary} fontSize="12">
+                        Dishes stayed in place!
+                      </text>
+                    </>
+                  ) : (
+                    <>
+                      <text x="175" y="40" textAnchor="middle" fill={premiumDesign.colors.error} fontSize="16" fontWeight="bold">
+                        ✗ TOO SLOW!
+                      </text>
+                      <text x="175" y="60" textAnchor="middle" fill={premiumDesign.colors.text.secondary} fontSize="12">
+                        Friction dragged the dishes!
+                      </text>
+                    </>
+                  )}
+                </g>
+              )}
+
+              {/* Pull indicator */}
+              {!twistFlicked && (
+                <g transform="translate(10, 145)">
+                  <text fontSize="16">👈</text>
+                  <text x="25" y="5" fill={premiumDesign.colors.text.muted} fontSize="10">
+                    Pull!
+                  </text>
+                </g>
+              )}
+            </svg>
+          </div>
+
+          {/* Controls */}
+          <div style={{
+            flex: 1,
+            display: 'flex',
+            flexDirection: 'column',
+            gap: premiumDesign.spacing.md,
+          }}>
+            <div style={{
+              background: premiumDesign.colors.background.card,
+              borderRadius: premiumDesign.radius.lg,
+              padding: premiumDesign.spacing.lg,
+              border: '1px solid rgba(255,255,255,0.1)',
+            }}>
+              <h4 style={{ color: premiumDesign.colors.text.primary, marginBottom: premiumDesign.spacing.md }}>
+                Pull Speed
+              </h4>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: premiumDesign.spacing.sm }}>
+                {(['fast', 'slow'] as const).map(speed => (
+                  <button
+                    key={speed}
+                    style={{
+                      padding: premiumDesign.spacing.md,
+                      borderRadius: premiumDesign.radius.md,
+                      border: twistSpeed === speed ? `2px solid ${premiumDesign.colors.secondary}` : '1px solid rgba(255,255,255,0.1)',
+                      background: twistSpeed === speed ? 'rgba(99, 102, 241, 0.2)' : 'transparent',
+                      color: premiumDesign.colors.text.primary,
+                      cursor: 'pointer',
+                    }}
+                    onMouseDown={(e) => {
+                      e.preventDefault();
+                      if (!twistFlicked) setTwistSpeed(speed);
+                    }}
+                  >
+                    {speed === 'fast' ? '⚡ Quick Pull' : '🐢 Slow Pull'}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <button
+              style={{
+                padding: premiumDesign.spacing.lg,
+                borderRadius: premiumDesign.radius.lg,
+                border: 'none',
+                background: twistFlicked ? premiumDesign.colors.background.tertiary : premiumDesign.colors.gradient.secondary,
+                color: 'white',
+                fontSize: '16px',
+                fontWeight: 600,
+                cursor: twistFlicked ? 'not-allowed' : 'pointer',
+              }}
+              onMouseDown={(e) => {
+                e.preventDefault();
+                if (!twistFlicked) pullCloth();
+              }}
+            >
+              {twistFlicked ? '✓ Pulled!' : '👈 Pull Tablecloth!'}
+            </button>
+
+            {twistFlicked && clothX > 350 && (
+              <button
+                style={{
+                  padding: premiumDesign.spacing.md,
+                  borderRadius: premiumDesign.radius.md,
+                  border: '1px solid rgba(255,255,255,0.1)',
+                  background: 'transparent',
+                  color: premiumDesign.colors.text.secondary,
+                  cursor: 'pointer',
+                }}
+                onMouseDown={(e) => {
+                  e.preventDefault();
+                  setClothX(0);
+                  setTwistFlicked(false);
+                  setDishesStayed(true);
+                }}
+              >
+                🔄 Try Again
+              </button>
+            )}
+          </div>
+        </div>
+
+        {renderBottomBar(
+          { text: '← Back', onClick: () => goToPhase('twist_predict') },
+          { text: 'Understand Results →', onClick: nextPhase }
+        )}
+      </div>
+    );
+  }
+
+  function renderTwistReviewPhase() {
+    const wasCorrect = twistPrediction === 'dishes_stay';
+
+    const twistReviewContent = [
+      {
+        title: "Same Principle, Bigger Scale",
+        content: `${wasCorrect ? "You predicted correctly! " : ""}The tablecloth trick works exactly like the coin trick!\n\nThe dishes have inertia - they resist changes to their motion. If you pull FAST enough, friction doesn't have time to accelerate them.`,
+        highlight: wasCorrect,
+      },
+      {
+        title: "Speed is the Key",
+        content: "The faster you pull, the less time friction has to act.\n\nFriction force × Time = Impulse (change in momentum)\n\nShort time = Small impulse = Dishes barely move!",
+      },
+      {
+        title: "Mass Helps Too",
+        content: "Heavier objects have MORE inertia.\n\nThat's why professional magicians use heavy plates and silverware - they resist motion changes even more!\n\nF = ma → More mass = less acceleration for same force",
+      },
+    ];
+
+    return (
+      <div style={{ minHeight: '60vh', display: 'flex', flexDirection: 'column' }}>
+        {renderProgressBar()}
+
+        <div style={{ textAlign: 'center', marginBottom: premiumDesign.spacing.xl }}>
+          <h2 style={{
+            fontSize: isMobile ? '22px' : '28px',
+            fontWeight: 700,
+            color: premiumDesign.colors.text.primary,
+          }}>
+            🔍 The Physics Behind the Magic
+          </h2>
+        </div>
+
+        <div style={{
+          background: premiumDesign.colors.background.card,
+          borderRadius: premiumDesign.radius.xl,
+          padding: premiumDesign.spacing.xl,
+          border: '1px solid rgba(255,255,255,0.1)',
+          flex: 1,
+        }}>
+          <h3 style={{
+            color: premiumDesign.colors.secondary,
+            fontSize: '20px',
+            marginBottom: premiumDesign.spacing.md,
+          }}>
+            {twistReviewContent[twistReviewStep].title}
+          </h3>
+
+          <p style={{
+            color: premiumDesign.colors.text.secondary,
+            fontSize: '16px',
+            lineHeight: 1.8,
+            whiteSpace: 'pre-line',
+          }}>
+            {twistReviewContent[twistReviewStep].content}
+          </p>
+
+          {twistReviewContent[twistReviewStep].highlight && (
+            <div style={{
+              background: 'rgba(16, 185, 129, 0.2)',
+              borderRadius: premiumDesign.radius.md,
+              padding: premiumDesign.spacing.md,
+              marginTop: premiumDesign.spacing.md,
+              border: '1px solid rgba(16, 185, 129, 0.5)',
+            }}>
+              <p style={{ color: premiumDesign.colors.success, margin: 0 }}>
+                ✓ Excellent! You correctly applied inertia to the tablecloth scenario.
+              </p>
+            </div>
+          )}
+
+          <div style={{
+            display: 'flex',
+            justifyContent: 'center',
+            gap: premiumDesign.spacing.sm,
+            marginTop: premiumDesign.spacing.xl,
+          }}>
+            {twistReviewContent.map((_, i) => (
+              <button
+                key={i}
+                style={{
+                  width: 40,
+                  height: 8,
+                  borderRadius: premiumDesign.radius.full,
+                  border: 'none',
+                  background: i === twistReviewStep
+                    ? premiumDesign.colors.secondary
+                    : premiumDesign.colors.background.tertiary,
+                  cursor: 'pointer',
+                  transition: 'all 0.3s ease',
+                }}
+                onMouseDown={(e) => {
+                  e.preventDefault();
+                  safeNavigate(() => setTwistReviewStep(i));
+                }}
+              />
+            ))}
+          </div>
+        </div>
+
+        {renderBottomBar(
+          { text: '← Back', onClick: () => goToPhase('twist_play') },
+          {
+            text: twistReviewStep < twistReviewContent.length - 1 ? 'Continue →' : 'Real-World Examples →',
+            onClick: () => {
+              if (twistReviewStep < twistReviewContent.length - 1) {
+                safeNavigate(() => setTwistReviewStep(t => t + 1));
+              } else {
+                nextPhase();
+              }
+            },
+          }
+        )}
+      </div>
+    );
+  }
+
+  function renderTransferPhase() {
+    const applications = [
+      {
+        title: "🚗 Car Safety Systems",
+        description: "Seatbelts and airbags are designed to counteract inertia. In a crash, your body continues moving forward while the car stops. Seatbelts provide the force to slow you down gradually, preventing injury.",
+        fact: "Modern seatbelts have 'pretensioners' that tighten in milliseconds during a crash, reducing the distance your body travels before being restrained!",
+      },
+      {
+        title: "🎢 Roller Coasters",
+        description: "That feeling of being 'pushed back' during acceleration or 'thrown forward' during braking is your inertia at work! Coaster designers use inertia to create thrilling sensations while keeping riders safe.",
+        fact: "The fastest roller coaster accelerates from 0-150 mph in under 5 seconds - passengers feel 1.7G of force due to their inertia!",
+      },
+      {
+        title: "🚀 Space Travel",
+        description: "In space, there's almost no friction. Once a spacecraft reaches its velocity, it keeps moving without using fuel - pure inertia! This is how we can send probes to distant planets using minimal fuel.",
+        fact: "The Voyager 1 probe, launched in 1977, is still traveling at 38,000 mph due to inertia - it hasn't used its engines in decades!",
+      },
+      {
+        title: "⚽ Sports Physics",
+        description: "Athletes use inertia constantly! A baseball pitcher's follow-through, a golfer's swing, a football player's tackle - all rely on understanding how objects (and bodies) resist changes in motion.",
+        fact: "A professional pitcher's arm decelerates from 7,000°/second to 0 in just 0.05 seconds - requiring massive force to overcome the arm's inertia!",
+      },
+    ];
+
+    return (
+      <div style={{ minHeight: '60vh', display: 'flex', flexDirection: 'column' }}>
+        {renderProgressBar()}
+
+        <div style={{ textAlign: 'center', marginBottom: premiumDesign.spacing.xl }}>
+          <h2 style={{
+            fontSize: isMobile ? '22px' : '28px',
+            fontWeight: 700,
+            color: premiumDesign.colors.text.primary,
+            marginBottom: premiumDesign.spacing.sm,
+          }}>
+            🌍 Inertia in Daily Life
+          </h2>
+          <p style={{ color: premiumDesign.colors.text.secondary }}>
+            Explore all {applications.length} applications to unlock the quiz
+          </p>
+        </div>
+
+        {/* Tab Navigation */}
+        <div style={{
+          display: 'flex',
+          gap: premiumDesign.spacing.sm,
+          marginBottom: premiumDesign.spacing.lg,
+          flexWrap: 'wrap',
+          justifyContent: 'center',
+        }}>
+          {applications.map((app, index) => (
+            <button
+              key={index}
+              style={{
+                padding: `${premiumDesign.spacing.sm}px ${premiumDesign.spacing.md}px`,
+                borderRadius: premiumDesign.radius.full,
+                border: activeApp === index
+                  ? `2px solid ${premiumDesign.colors.primary}`
+                  : '2px solid rgba(255,255,255,0.1)',
+                background: activeApp === index
+                  ? 'rgba(245, 158, 11, 0.2)'
+                  : completedApps.has(index)
+                    ? 'rgba(16, 185, 129, 0.2)'
+                    : premiumDesign.colors.background.tertiary,
+                color: premiumDesign.colors.text.primary,
+                cursor: 'pointer',
+                fontSize: '14px',
+                transition: 'all 0.3s ease',
+              }}
+              onMouseDown={(e) => {
+                e.preventDefault();
+                safeNavigate(() => setActiveApp(index));
+              }}
+            >
+              {completedApps.has(index) && '✓ '}{app.title.split(' ')[0]}
+            </button>
+          ))}
+        </div>
+
+        {/* Application Content */}
+        <div style={{
+          background: premiumDesign.colors.background.card,
+          borderRadius: premiumDesign.radius.xl,
+          padding: premiumDesign.spacing.xl,
+          border: '1px solid rgba(255,255,255,0.1)',
+          flex: 1,
+        }}>
+          <h3 style={{
+            fontSize: '22px',
+            color: premiumDesign.colors.text.primary,
+            marginBottom: premiumDesign.spacing.md,
+          }}>
+            {applications[activeApp].title}
+          </h3>
+
+          <p style={{
+            color: premiumDesign.colors.text.secondary,
+            fontSize: '16px',
+            lineHeight: 1.7,
+            marginBottom: premiumDesign.spacing.lg,
+          }}>
+            {applications[activeApp].description}
+          </p>
+
+          <div style={{
+            background: 'rgba(245, 158, 11, 0.1)',
+            borderRadius: premiumDesign.radius.lg,
+            padding: premiumDesign.spacing.lg,
+            border: '1px solid rgba(245, 158, 11, 0.3)',
+          }}>
+            <p style={{ margin: 0, color: premiumDesign.colors.primary, fontWeight: 600 }}>
+              💡 Fun Fact
+            </p>
+            <p style={{ margin: `${premiumDesign.spacing.sm}px 0 0`, color: premiumDesign.colors.text.secondary }}>
+              {applications[activeApp].fact}
+            </p>
+          </div>
+
+          {!completedApps.has(activeApp) && (
+            <button
+              style={{
+                display: 'block',
+                width: '100%',
+                marginTop: premiumDesign.spacing.lg,
+                padding: premiumDesign.spacing.md,
+                borderRadius: premiumDesign.radius.md,
+                border: 'none',
+                background: premiumDesign.colors.gradient.primary,
+                color: 'white',
+                fontSize: '16px',
+                fontWeight: 600,
+                cursor: 'pointer',
+              }}
+              onMouseDown={(e) => {
+                e.preventDefault();
+                safeNavigate(() => {
+                  const newCompleted = new Set(completedApps);
+                  newCompleted.add(activeApp);
+                  setCompletedApps(newCompleted);
+                  if (activeApp < applications.length - 1) {
+                    setActiveApp(activeApp + 1);
+                  }
+                });
+              }}
+            >
+              ✓ Mark as Read
+            </button>
+          )}
+        </div>
+
+        <div style={{
+          textAlign: 'center',
+          marginTop: premiumDesign.spacing.lg,
+          color: premiumDesign.colors.text.muted,
+        }}>
+          {completedApps.size} of {applications.length} applications explored
+        </div>
+
+        {renderBottomBar(
+          { text: '← Back', onClick: () => goToPhase('twist_review') },
+          {
+            text: completedApps.size === applications.length ? 'Take the Quiz →' : `Explore ${applications.length - completedApps.size} More →`,
+            onClick: nextPhase,
+            disabled: completedApps.size < applications.length,
+          }
+        )}
+      </div>
+    );
+  }
+
+  function renderTestPhase() {
+    const question = testQuestions[currentQuestion];
+
+    if (testComplete) {
+      const percentage = Math.round((testScore / testQuestions.length) * 100);
+      const passed = percentage >= 70;
+
+      return (
+        <div style={{ minHeight: '60vh', display: 'flex', flexDirection: 'column' }}>
+          {renderProgressBar()}
+
+          <div style={{
+            flex: 1,
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            textAlign: 'center',
+          }}>
+            <div style={{ fontSize: '72px', marginBottom: premiumDesign.spacing.lg }}>
+              {passed ? '🎉' : '📚'}
+            </div>
+
+            <h2 style={{
+              fontSize: isMobile ? '28px' : '36px',
+              fontWeight: 700,
+              color: premiumDesign.colors.text.primary,
+              marginBottom: premiumDesign.spacing.md,
+            }}>
+              {passed ? 'Excellent Work!' : 'Keep Learning!'}
+            </h2>
+
+            <div style={{
+              fontSize: '48px',
+              fontWeight: 700,
+              background: passed ? `linear-gradient(135deg, ${premiumDesign.colors.success} 0%, #059669 100%)` : premiumDesign.colors.gradient.warm,
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+              marginBottom: premiumDesign.spacing.md,
+            }}>
+              {testScore}/{testQuestions.length}
+            </div>
+
+            <p style={{
+              color: premiumDesign.colors.text.secondary,
+              fontSize: '18px',
+              marginBottom: premiumDesign.spacing.xl,
+            }}>
+              {passed
+                ? 'You have mastered the Law of Inertia!'
+                : 'Review the material and try again.'}
+            </p>
+
+            {renderButton(
+              passed ? 'Continue to Mastery →' : 'Review Material',
+              () => {
+                if (passed) {
+                  nextPhase();
+                } else {
+                  setTestComplete(false);
+                  setCurrentQuestion(0);
+                  setTestScore(0);
+                  goToPhase('review');
+                }
+              },
+              passed ? 'success' : 'primary'
+            )}
+          </div>
+        </div>
+      );
+    }
+
+    return (
+      <div style={{ minHeight: '60vh', display: 'flex', flexDirection: 'column' }}>
+        {renderProgressBar()}
+
+        <div style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          marginBottom: premiumDesign.spacing.lg,
+        }}>
+          <span style={{ color: premiumDesign.colors.text.muted }}>
+            Question {currentQuestion + 1} of {testQuestions.length}
+          </span>
+          <span style={{ color: premiumDesign.colors.success, fontWeight: 600 }}>
+            Score: {testScore}
+          </span>
+        </div>
+
+        <div style={{
+          background: premiumDesign.colors.background.card,
+          borderRadius: premiumDesign.radius.xl,
+          padding: premiumDesign.spacing.xl,
+          border: '1px solid rgba(255,255,255,0.1)',
+          marginBottom: premiumDesign.spacing.lg,
+        }}>
+          <h3 style={{
+            fontSize: isMobile ? '18px' : '20px',
+            color: premiumDesign.colors.text.primary,
+            marginBottom: premiumDesign.spacing.xl,
+            lineHeight: 1.5,
+          }}>
+            {question.question}
+          </h3>
+
+          <div style={{ display: 'grid', gap: premiumDesign.spacing.md }}>
+            {question.options.map((option, index) => {
+              const isSelected = selectedAnswer === index;
+              const isCorrect = index === question.correct;
+              const showResult = showExplanation;
+
+              let bgColor = premiumDesign.colors.background.secondary;
+              let borderColor = 'rgba(255,255,255,0.1)';
+
+              if (showResult) {
+                if (isCorrect) {
+                  bgColor = 'rgba(16, 185, 129, 0.2)';
+                  borderColor = premiumDesign.colors.success;
+                } else if (isSelected) {
+                  bgColor = 'rgba(239, 68, 68, 0.2)';
+                  borderColor = premiumDesign.colors.error;
+                }
+              } else if (isSelected) {
+                bgColor = 'rgba(245, 158, 11, 0.2)';
+                borderColor = premiumDesign.colors.primary;
+              }
+
               return (
                 <button
-                  key={idx}
-                  onClick={() => handleTestAnswer(idx)}
-                  disabled={isAnswered}
+                  key={index}
                   style={{
-                    padding: '14px 16px',
-                    borderRadius: design.radius.md,
-                    border: `1px solid ${border}`,
-                    background: bg,
-                    cursor: isAnswered ? 'default' : 'pointer',
+                    padding: premiumDesign.spacing.lg,
+                    borderRadius: premiumDesign.radius.lg,
+                    border: `2px solid ${borderColor}`,
+                    background: bgColor,
+                    cursor: showExplanation ? 'default' : 'pointer',
                     textAlign: 'left',
-                    transition: 'all 0.2s ease',
+                    transition: 'all 0.3s ease',
+                  }}
+                  onMouseDown={(e) => {
+                    e.preventDefault();
+                    if (!showExplanation) {
+                      setSelectedAnswer(index);
+                    }
                   }}
                 >
-                  <span style={{ fontSize: '14px', color: design.colors.textPrimary, fontFamily: design.font.sans }}>{option}</span>
+                  <span style={{
+                    color: premiumDesign.colors.text.primary,
+                    fontSize: '15px',
+                  }}>
+                    {option}
+                  </span>
                 </button>
               );
             })}
           </div>
-          {showExplanation && (
-            <div style={{ marginTop: '20px', background: design.colors.primaryMuted, border: `1px solid ${design.colors.primary}40`, borderRadius: design.radius.md, padding: '16px' }}>
-              <p style={{ fontSize: '13px', color: design.colors.primary, fontFamily: design.font.sans, lineHeight: 1.5 }}>💡 {q.explanation}</p>
-            </div>
-          )}
         </div>
-        <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '20px' }}>
-          <Button
-            onClick={() => { setCurrentQuestion(prev => Math.max(0, prev - 1)); setSelectedAnswer(null); setShowExplanation(answeredQuestions.has(currentQuestion - 1)); }}
-            variant="secondary"
-            disabled={currentQuestion === 0}
-          >
-            ← Back
-          </Button>
-          {currentQuestion < testQuestions.length - 1 ? (
-            <Button onClick={() => { setCurrentQuestion(prev => prev + 1); setSelectedAnswer(null); setShowExplanation(answeredQuestions.has(currentQuestion + 1)); }} variant="secondary">Next →</Button>
-          ) : answeredQuestions.size === testQuestions.length ? (
-            <Button onClick={() => goToPhase('mastery')}>Complete! →</Button>
-          ) : (
-            <span style={{ fontSize: '13px', color: design.colors.textTertiary, fontFamily: design.font.sans, alignSelf: 'center' }}>Answer all questions</span>
-          )}
-        </div>
-      </div>
-    );
-  };
 
-  const renderMastery = () => {
-    const percentage = Math.round((correctAnswers / testQuestions.length) * 100);
-    return (
-      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', padding: '32px', background: `linear-gradient(180deg, ${design.colors.bgPrimary} 0%, ${design.colors.primaryMuted} 100%)`, position: 'relative', overflow: 'hidden' }}>
-        <div style={{ fontSize: '72px', marginBottom: '16px' }}>🏆</div>
-        <h2 style={{ fontSize: '28px', fontWeight: 700, color: design.colors.textPrimary, marginBottom: '8px', fontFamily: design.font.sans }}>Inertia Master!</h2>
-        <div style={{ fontSize: '56px', fontWeight: 700, color: design.colors.success, marginBottom: '8px', fontFamily: design.font.sans }}>{percentage}%</div>
-        <p style={{ fontSize: '15px', color: design.colors.textSecondary, marginBottom: '24px', fontFamily: design.font.sans }}>{correctAnswers}/{testQuestions.length} correct answers</p>
-        <div style={{ background: design.colors.bgSecondary, borderRadius: design.radius.lg, padding: '20px', marginBottom: '24px', maxWidth: '320px', width: '100%' }}>
-          <h3 style={{ fontSize: '15px', fontWeight: 700, color: design.colors.primary, fontFamily: design.font.sans, marginBottom: '12px', textAlign: 'center' }}>Key Takeaways:</h3>
-          <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
-            {['Inertia = resistance to changes in motion', 'Fast actions beat friction', 'More mass = more inertia', "Newton's First Law explains it all!"].map((item, idx) => (
-              <li key={idx} style={{ fontSize: '13px', color: design.colors.textPrimary, fontFamily: design.font.sans, marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <span style={{ color: design.colors.success }}>✓</span> {item}
-              </li>
-            ))}
-          </ul>
-        </div>
-        <Button onClick={() => {
-          setPhase('hook');
-          setExperimentCount(0);
-          setCurrentQuestion(0);
-          setCorrectAnswers(0);
-          setAnsweredQuestions(new Set());
-          setPrediction(null);
-          setTwistPrediction(null);
-          setCoinCount(1);
-        }}>
-          Play Again 🔄
-        </Button>
-        <style>{`
-          @keyframes confettiFall { 0% { transform: translateY(-20px) rotate(0deg); opacity: 1; } 100% { transform: translateY(600px) rotate(720deg); opacity: 0; } }
-        `}</style>
-        {[...Array(15)].map((_, i) => (
-          <div key={i} style={{ position: 'absolute', left: `${Math.random() * 100}%`, top: '-20px', animation: `confettiFall ${2 + Math.random() * 2}s linear ${Math.random() * 2}s forwards`, pointerEvents: 'none', fontSize: '20px' }}>
-            {['🪙', '⭐', '🎉', '✨'][Math.floor(Math.random() * 4)]}
+        {showExplanation && (
+          <div style={{
+            background: selectedAnswer === question.correct
+              ? 'rgba(16, 185, 129, 0.1)'
+              : 'rgba(239, 68, 68, 0.1)',
+            borderRadius: premiumDesign.radius.lg,
+            padding: premiumDesign.spacing.lg,
+            border: `1px solid ${selectedAnswer === question.correct
+              ? 'rgba(16, 185, 129, 0.3)'
+              : 'rgba(239, 68, 68, 0.3)'}`,
+            marginBottom: premiumDesign.spacing.lg,
+          }}>
+            <p style={{
+              color: selectedAnswer === question.correct
+                ? premiumDesign.colors.success
+                : premiumDesign.colors.error,
+              fontWeight: 600,
+              marginBottom: premiumDesign.spacing.sm,
+            }}>
+              {selectedAnswer === question.correct ? '✓ Correct!' : '✗ Not quite'}
+            </p>
+            <p style={{ color: premiumDesign.colors.text.secondary, margin: 0 }}>
+              {question.explanation}
+            </p>
           </div>
-        ))}
+        )}
+
+        {renderBottomBar(
+          undefined,
+          {
+            text: showExplanation
+              ? (currentQuestion < testQuestions.length - 1 ? 'Next Question →' : 'See Results →')
+              : 'Check Answer',
+            onClick: () => {
+              if (showExplanation) {
+                if (currentQuestion < testQuestions.length - 1) {
+                  setCurrentQuestion(c => c + 1);
+                  setSelectedAnswer(null);
+                  setShowExplanation(false);
+                } else {
+                  setTestComplete(true);
+                }
+              } else {
+                if (selectedAnswer === question.correct) {
+                  setTestScore(s => s + 1);
+                }
+                setShowExplanation(true);
+              }
+            },
+            disabled: selectedAnswer === null && !showExplanation,
+          }
+        )}
       </div>
     );
-  };
+  }
 
-  const phases: Record<Phase, () => JSX.Element> = {
-    hook: renderHook,
-    predict: renderPredict,
-    play: renderPlay,
-    review: renderReview,
-    twist_predict: renderTwistPredict,
-    twist_play: renderTwistPlay,
-    twist_review: renderTwistReview,
-    transfer: renderTransfer,
-    test: renderTest,
-    mastery: renderMastery
-  };
+  function renderMasteryPhase() {
+    const percentage = Math.round((testScore / testQuestions.length) * 100);
 
-  const phaseList: Phase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
-
-  return (
-    <div style={{ width, height, borderRadius: design.radius.lg, overflow: 'hidden', position: 'relative', background: design.colors.bgPrimary, fontFamily: design.font.sans }}>
-      {phases[phase]()}
-      <div style={{ position: 'absolute', top: '12px', left: '12px', display: 'flex', gap: '4px' }}>
-        {phaseList.map((p, idx) => (
+    return (
+      <div style={{
+        minHeight: '60vh',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        textAlign: 'center',
+        position: 'relative',
+        overflow: 'hidden',
+      }}>
+        {/* Confetti */}
+        {Array.from({ length: 50 }).map((_, i) => (
           <div
-            key={p}
+            key={i}
             style={{
-              width: '8px',
-              height: '8px',
-              borderRadius: design.radius.full,
-              background: phase === p ? design.colors.primary : idx < phaseList.indexOf(phase) ? design.colors.primaryHover : design.colors.bgElevated,
-              transition: 'all 0.3s ease',
+              position: 'absolute',
+              left: `${Math.random() * 100}%`,
+              top: '-20px',
+              width: '10px',
+              height: '10px',
+              background: [
+                premiumDesign.colors.primary,
+                premiumDesign.colors.secondary,
+                premiumDesign.colors.success,
+                premiumDesign.colors.accent,
+              ][i % 4],
+              borderRadius: '2px',
+              animation: `confetti 3s ease-out ${Math.random() * 2}s infinite`,
             }}
           />
         ))}
+        <style>{`
+          @keyframes confetti {
+            0% { transform: translateY(0) rotate(0); opacity: 1; }
+            100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
+          }
+        `}</style>
+
+        {renderProgressBar()}
+
+        <div style={{
+          width: '120px',
+          height: '120px',
+          borderRadius: '50%',
+          background: premiumDesign.colors.gradient.primary,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          marginBottom: premiumDesign.spacing.xl,
+          boxShadow: premiumDesign.shadows.glow(premiumDesign.colors.primary),
+        }}>
+          <span style={{ fontSize: '56px' }}>🏆</span>
+        </div>
+
+        <h1 style={{
+          fontSize: isMobile ? '28px' : '36px',
+          fontWeight: 800,
+          color: premiumDesign.colors.text.primary,
+          marginBottom: premiumDesign.spacing.sm,
+        }}>
+          Inertia Master!
+        </h1>
+
+        <p style={{
+          fontSize: '20px',
+          color: premiumDesign.colors.text.secondary,
+          marginBottom: premiumDesign.spacing.xl,
+        }}>
+          Final Score: <span style={{ color: premiumDesign.colors.success, fontWeight: 700 }}>{testScore}/{testQuestions.length}</span> ({percentage}%)
+        </p>
+
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(2, 1fr)',
+          gap: premiumDesign.spacing.md,
+          maxWidth: '400px',
+          width: '100%',
+          marginBottom: premiumDesign.spacing.xl,
+        }}>
+          {[
+            { icon: '⚖️', label: 'Objects Resist Change' },
+            { icon: '⚡', label: 'Speed Beats Friction' },
+            { icon: '🪙', label: 'Coin Trick Mastered' },
+            { icon: '🚗', label: 'Inertia in Motion' },
+          ].map((item, i) => (
+            <div
+              key={i}
+              style={{
+                padding: premiumDesign.spacing.lg,
+                borderRadius: premiumDesign.radius.lg,
+                background: premiumDesign.colors.background.secondary,
+                border: '1px solid rgba(255,255,255,0.1)',
+              }}
+            >
+              <div style={{ fontSize: '28px', marginBottom: premiumDesign.spacing.xs }}>{item.icon}</div>
+              <div style={{ fontSize: '13px', color: premiumDesign.colors.text.secondary }}>{item.label}</div>
+            </div>
+          ))}
+        </div>
+
+        {renderButton(
+          'Complete Lesson ✓',
+          () => {
+            if (onNext) onNext();
+          },
+          'success'
+        )}
+      </div>
+    );
+  }
+
+  // ==================== MAIN RENDER ====================
+
+  const containerStyle: React.CSSProperties = {
+    minHeight: '100vh',
+    background: premiumDesign.colors.background.primary,
+    color: premiumDesign.colors.text.primary,
+    fontFamily: premiumDesign.typography.fontFamily,
+    padding: isMobile ? premiumDesign.spacing.md : premiumDesign.spacing.xl,
+  };
+
+  return (
+    <div style={containerStyle}>
+      <div style={{ maxWidth: '900px', margin: '0 auto' }}>
+        {phase === 'hook' && renderHookPhase()}
+        {phase === 'predict' && renderPredictPhase()}
+        {phase === 'play' && renderPlayPhase()}
+        {phase === 'review' && renderReviewPhase()}
+        {phase === 'twist_predict' && renderTwistPredictPhase()}
+        {phase === 'twist_play' && renderTwistPlayPhase()}
+        {phase === 'twist_review' && renderTwistReviewPhase()}
+        {phase === 'transfer' && renderTransferPhase()}
+        {phase === 'test' && renderTestPhase()}
+        {phase === 'mastery' && renderMasteryPhase()}
       </div>
     </div>
   );
-};
-
-export default InertiaRenderer;
+}

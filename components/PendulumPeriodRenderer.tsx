@@ -261,7 +261,8 @@ const PendulumPeriodRenderer: React.FC<PendulumPeriodRendererProps> = ({
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
   const [showResult, setShowResult] = useState(false);
   const [showTwistResult, setShowTwistResult] = useState(false);
-  const [activeAppTab, setActiveAppTab] = useState(0);
+  const [activeApp, setActiveApp] = useState(0);
+  const [completedApps, setCompletedApps] = useState<Set<number>>(new Set());
   const [testAnswers, setTestAnswers] = useState<(number | null)[]>(new Array(testQuestions.length).fill(null));
   const [showTestResults, setShowTestResults] = useState(false);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
@@ -276,22 +277,13 @@ const PendulumPeriodRenderer: React.FC<PendulumPeriodRendererProps> = ({
   const [lastCrossing, setLastCrossing] = useState<number | null>(null);
   const [measuredPeriod, setMeasuredPeriod] = useState<number | null>(null);
 
-  // Separate lock refs for different button contexts
-  const navigationLock = useRef(false);
-  const tabLock = useRef(false);
-  const buttonLock = useRef(false);
+  // Button debounce lock
+  const navigationLockRef = useRef(false);
   const animationRef = useRef<number | null>(null);
 
   const isMobile = width < 600;
   const { colors, space, radius, shadows } = design;
 
-  // Safe button handler with debouncing
-  const handleButtonClick = useCallback((action: () => void, lockRef: React.MutableRefObject<boolean> = buttonLock) => {
-    if (lockRef.current) return;
-    lockRef.current = true;
-    action();
-    setTimeout(() => { lockRef.current = false; }, 400);
-  }, []);
 
   // Pendulum physics simulation
   useEffect(() => {
@@ -376,17 +368,12 @@ const PendulumPeriodRenderer: React.FC<PendulumPeriodRendererProps> = ({
   }, [measuredPeriod, pendulumLength, bobMass]);
 
   const goToPhase = useCallback((newPhase: Phase) => {
-    handleButtonClick(() => {
-      setPhase(newPhase);
-      emitGameEvent('phase_change', { from: phase, to: newPhase });
-    }, navigationLock);
-  }, [phase, emitGameEvent, handleButtonClick]);
-
-  const handleTabClick = useCallback((index: number) => {
-    handleButtonClick(() => {
-      setActiveAppTab(index);
-    }, tabLock);
-  }, [handleButtonClick]);
+    if (navigationLockRef.current) return;
+    navigationLockRef.current = true;
+    setPhase(newPhase);
+    emitGameEvent('phase_change', { from: phase, to: newPhase });
+    setTimeout(() => { navigationLockRef.current = false; }, 400);
+  }, [phase, emitGameEvent]);
 
   // Calculate theoretical period
   const theoreticalPeriod = useCallback((lengthPx: number) => {
@@ -711,7 +698,7 @@ const PendulumPeriodRenderer: React.FC<PendulumPeriodRendererProps> = ({
             {/* Action buttons */}
             <div style={{ display: 'flex', gap: space.sm, marginTop: space.xs }}>
               <button
-                onMouseDown={() => handleButtonClick(isSwinging ? stopSwing : startSwing)}
+                onMouseDown={() => isSwinging ? stopSwing() : startSwing()}
                 style={{
                   flex: 1,
                   padding: `${space.md} ${space.md}`,
@@ -731,7 +718,7 @@ const PendulumPeriodRenderer: React.FC<PendulumPeriodRendererProps> = ({
               </button>
               {measuredPeriod !== null && (
                 <button
-                  onMouseDown={() => handleButtonClick(recordMeasurement)}
+                  onMouseDown={() => recordMeasurement()}
                   style={{
                     padding: `${space.md} ${space.lg}`,
                     fontSize: '14px',
@@ -802,7 +789,7 @@ const PendulumPeriodRenderer: React.FC<PendulumPeriodRendererProps> = ({
           ))}
         </div>
         <button
-          onMouseDown={() => handleButtonClick(() => setRecordedPeriods([]))}
+          onMouseDown={() => setRecordedPeriods([])}
           style={{
             width: '100%',
             padding: space.md,
@@ -993,7 +980,7 @@ const PendulumPeriodRenderer: React.FC<PendulumPeriodRendererProps> = ({
           ].map(option => (
             <button
               key={option.id}
-              onMouseDown={() => handleButtonClick(() => setPrediction(option.id))}
+              onMouseDown={() => setPrediction(option.id)}
               style={{
                 padding: `${space.lg} ${space.lg}`,
                 fontSize: '15px',
@@ -1296,7 +1283,7 @@ const PendulumPeriodRenderer: React.FC<PendulumPeriodRendererProps> = ({
           ].map(option => (
             <button
               key={option.id}
-              onMouseDown={() => handleButtonClick(() => setTwistPrediction(option.id))}
+              onMouseDown={() => setTwistPrediction(option.id)}
               style={{
                 padding: `${space.lg} ${space.lg}`,
                 fontSize: '15px',
@@ -1537,7 +1524,8 @@ const PendulumPeriodRenderer: React.FC<PendulumPeriodRendererProps> = ({
 
   // Transfer phase - Real-world applications
   const renderTransfer = () => {
-    const app = realWorldApps[activeAppTab];
+    const app = realWorldApps[activeApp];
+    const canTakeQuiz = completedApps.size >= realWorldApps.length;
 
     return (
       <div style={{
@@ -1550,6 +1538,33 @@ const PendulumPeriodRenderer: React.FC<PendulumPeriodRendererProps> = ({
         <div style={{ flex: 1, padding: isMobile ? space.md : space.lg, overflowY: 'auto' }}>
           {renderSectionHeader('🌍', 'Real-World Applications', 'How pendulum physics shapes our world')}
 
+          {/* Progress indicator */}
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: space.sm,
+            marginBottom: space.md
+          }}>
+            <span style={{ fontSize: '13px', color: colors.textSecondary }}>
+              {completedApps.size} of {realWorldApps.length} completed
+            </span>
+            <div style={{ display: 'flex', gap: '6px' }}>
+              {realWorldApps.map((_, idx) => (
+                <div
+                  key={idx}
+                  style={{
+                    width: '8px',
+                    height: '8px',
+                    borderRadius: '50%',
+                    background: completedApps.has(idx) ? colors.success : idx === activeApp ? colors.primary : colors.bgTertiary,
+                    transition: 'background 0.3s ease'
+                  }}
+                />
+              ))}
+            </div>
+          </div>
+
           {/* Tab navigation */}
           <div style={{
             display: 'flex',
@@ -1558,29 +1573,40 @@ const PendulumPeriodRenderer: React.FC<PendulumPeriodRendererProps> = ({
             overflowX: 'auto',
             paddingBottom: space.sm
           }}>
-            {realWorldApps.map((a, idx) => (
-              <button
-                key={idx}
-                onMouseDown={() => handleTabClick(idx)}
-                style={{
-                  padding: `${space.md} ${space.lg}`,
-                  fontSize: '14px',
-                  fontWeight: activeAppTab === idx ? 700 : 500,
-                  color: activeAppTab === idx ? colors.textInverse : colors.textSecondary,
-                  background: activeAppTab === idx
-                    ? `linear-gradient(135deg, ${a.color}, ${a.color}dd)`
-                    : colors.bgSecondary,
-                  border: `1px solid ${activeAppTab === idx ? a.color : colors.border}`,
-                  borderRadius: radius.sm,
-                  cursor: 'pointer',
-                  whiteSpace: 'nowrap',
-                  transition: 'all 0.2s ease',
-                  boxShadow: activeAppTab === idx ? shadows.sm : 'none'
-                }}
-              >
-                {a.icon} {a.title}
-              </button>
-            ))}
+            {realWorldApps.map((a, idx) => {
+              const isCompleted = completedApps.has(idx);
+              const isUnlocked = idx === 0 || completedApps.has(idx - 1);
+              const isCurrent = idx === activeApp;
+              return (
+                <button
+                  key={idx}
+                  onMouseDown={() => {
+                    if (!isUnlocked || navigationLockRef.current) return;
+                    navigationLockRef.current = true;
+                    setActiveApp(idx);
+                    setTimeout(() => { navigationLockRef.current = false; }, 300);
+                  }}
+                  style={{
+                    padding: `${space.md} ${space.lg}`,
+                    fontSize: '14px',
+                    fontWeight: isCurrent ? 700 : 500,
+                    color: isCurrent ? colors.textInverse : isCompleted ? colors.success : colors.textSecondary,
+                    background: isCurrent
+                      ? `linear-gradient(135deg, ${a.color}, ${a.color}dd)`
+                      : isCompleted ? `${colors.success}15` : colors.bgSecondary,
+                    border: `1px solid ${isCurrent ? a.color : isCompleted ? colors.success : colors.border}`,
+                    borderRadius: radius.sm,
+                    cursor: isUnlocked ? 'pointer' : 'not-allowed',
+                    whiteSpace: 'nowrap',
+                    transition: 'all 0.2s ease',
+                    boxShadow: isCurrent ? shadows.sm : 'none',
+                    opacity: isUnlocked ? 1 : 0.5
+                  }}
+                >
+                  {isCompleted ? '✓ ' : ''}{a.icon} {a.title}
+                </button>
+              );
+            })}
           </div>
 
           {/* Application content card */}
@@ -1696,9 +1722,104 @@ const PendulumPeriodRenderer: React.FC<PendulumPeriodRendererProps> = ({
                 </span>
               ))}
             </div>
+
+            {/* Mark as Read Button */}
+            <div style={{ padding: space.lg, borderTop: `1px solid ${colors.border}` }}>
+              {!completedApps.has(activeApp) ? (
+                <button
+                  onMouseDown={() => {
+                    if (navigationLockRef.current) return;
+                    navigationLockRef.current = true;
+                    const newCompleted = new Set(completedApps);
+                    newCompleted.add(activeApp);
+                    setCompletedApps(newCompleted);
+                    if (activeApp < realWorldApps.length - 1) {
+                      setTimeout(() => setActiveApp(activeApp + 1), 300);
+                    }
+                    setTimeout(() => { navigationLockRef.current = false; }, 400);
+                  }}
+                  style={{
+                    width: '100%',
+                    padding: space.lg,
+                    fontSize: '15px',
+                    fontWeight: 600,
+                    color: colors.textInverse,
+                    background: colors.success,
+                    border: 'none',
+                    borderRadius: radius.md,
+                    cursor: 'pointer'
+                  }}
+                >
+                  ✓ Mark "{app.title}" as Read
+                </button>
+              ) : (
+                <div style={{
+                  padding: space.lg,
+                  background: `${colors.success}15`,
+                  borderRadius: radius.md,
+                  border: `1px solid ${colors.success}40`,
+                  textAlign: 'center'
+                }}>
+                  <span style={{ fontSize: '15px', color: colors.success, fontWeight: 600 }}>
+                    ✓ Completed
+                  </span>
+                </div>
+              )}
+            </div>
           </div>
         </div>
-        {renderBottomBar(() => goToPhase('test'), 'Take the Quiz')}
+        {/* Bottom bar */}
+        <div style={{
+          padding: `${space.lg} ${space.xl}`,
+          background: colors.bgSecondary,
+          borderTop: `1px solid ${colors.border}`,
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center'
+        }}>
+          <button
+            onMouseDown={() => goToPhase('twist_review')}
+            style={{
+              padding: `${space.md} ${space.xl}`,
+              fontSize: '14px',
+              color: colors.textSecondary,
+              background: 'transparent',
+              border: 'none',
+              borderRadius: radius.md,
+              cursor: 'pointer'
+            }}
+          >
+            ← Back
+          </button>
+          {canTakeQuiz ? (
+            <button
+              onMouseDown={() => goToPhase('test')}
+              style={{
+                padding: `${space.md} ${space.xxl}`,
+                fontSize: '15px',
+                fontWeight: 600,
+                color: colors.textInverse,
+                background: colors.success,
+                border: 'none',
+                borderRadius: radius.md,
+                cursor: 'pointer',
+                boxShadow: shadows.sm
+              }}
+            >
+              Take the Quiz →
+            </button>
+          ) : (
+            <div style={{
+              padding: `${space.md} ${space.xl}`,
+              fontSize: '14px',
+              color: colors.textTertiary,
+              background: colors.bgTertiary,
+              borderRadius: radius.md
+            }}>
+              Complete all applications to unlock quiz
+            </div>
+          )}
+        </div>
       </div>
     );
   };
@@ -1750,7 +1871,7 @@ const PendulumPeriodRenderer: React.FC<PendulumPeriodRendererProps> = ({
                 {testQuestions.map((_, idx) => (
                   <button
                     key={idx}
-                    onMouseDown={() => handleButtonClick(() => setCurrentQuestionIndex(idx))}
+                    onMouseDown={() => setCurrentQuestionIndex(idx)}
                     style={{
                       width: '12px',
                       height: '12px',
@@ -1802,11 +1923,11 @@ const PendulumPeriodRenderer: React.FC<PendulumPeriodRendererProps> = ({
                   return (
                     <button
                       key={idx}
-                      onMouseDown={() => handleButtonClick(() => {
+                      onMouseDown={() => {
                         const newAnswers = [...testAnswers];
                         newAnswers[currentQuestionIndex] = idx;
                         setTestAnswers(newAnswers);
-                      })}
+                      }}
                       style={{
                         padding: `${space.md} ${space.lg}`,
                         fontSize: '14px',
@@ -1854,7 +1975,7 @@ const PendulumPeriodRenderer: React.FC<PendulumPeriodRendererProps> = ({
                 gap: space.md
               }}>
                 <button
-                  onMouseDown={() => handleButtonClick(() => setCurrentQuestionIndex(Math.max(0, currentQuestionIndex - 1)))}
+                  onMouseDown={() => setCurrentQuestionIndex(Math.max(0, currentQuestionIndex - 1))}
                   disabled={currentQuestionIndex === 0}
                   style={{
                     padding: `${space.md} ${space.lg}`,
@@ -1873,7 +1994,7 @@ const PendulumPeriodRenderer: React.FC<PendulumPeriodRendererProps> = ({
 
                 {currentQuestionIndex < testQuestions.length - 1 ? (
                   <button
-                    onMouseDown={() => handleButtonClick(() => setCurrentQuestionIndex(currentQuestionIndex + 1))}
+                    onMouseDown={() => setCurrentQuestionIndex(currentQuestionIndex + 1)}
                     style={{
                       padding: `${space.md} ${space.lg}`,
                       fontSize: '14px',
@@ -1889,7 +2010,7 @@ const PendulumPeriodRenderer: React.FC<PendulumPeriodRendererProps> = ({
                   </button>
                 ) : (
                   <button
-                    onMouseDown={() => handleButtonClick(() => setShowTestResults(true))}
+                    onMouseDown={() => setShowTestResults(true)}
                     disabled={answeredCount < testQuestions.length}
                     style={{
                       padding: `${space.md} ${space.xl}`,
@@ -2140,7 +2261,12 @@ const PendulumPeriodRenderer: React.FC<PendulumPeriodRendererProps> = ({
         }}>
           {onBack && (
             <button
-              onMouseDown={() => handleButtonClick(onBack)}
+              onMouseDown={() => {
+                if (navigationLockRef.current) return;
+                navigationLockRef.current = true;
+                onBack?.();
+                setTimeout(() => { navigationLockRef.current = false; }, 400);
+              }}
               style={{
                 padding: `${space.md} ${space.xxl}`,
                 fontSize: '16px',

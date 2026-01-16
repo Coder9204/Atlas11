@@ -260,7 +260,8 @@ const ProjectileIndependenceRenderer: React.FC<ProjectileIndependenceRendererPro
   const [phase, setPhase] = useState<Phase>('hook');
   const [prediction, setPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
-  const [activeAppTab, setActiveAppTab] = useState(0);
+  const [activeApp, setActiveApp] = useState(0);
+  const [completedApps, setCompletedApps] = useState<Set<number>>(new Set());
   const [testAnswers, setTestAnswers] = useState<(number | null)[]>(new Array(testQuestions.length).fill(null));
   const [showTestResults, setShowTestResults] = useState(false);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
@@ -280,38 +281,21 @@ const ProjectileIndependenceRenderer: React.FC<ProjectileIndependenceRendererPro
   // Twist: air resistance mode
   const [airResistance, setAirResistance] = useState(false);
 
-  // Debounce refs for safe button handling
-  const navigationLock = useRef(false);
-  const tabLock = useRef(false);
-  const buttonLock = useRef(false);
+  // Debounce ref for safe button handling
+  const navigationLockRef = useRef(false);
   const animationRef = useRef<number | null>(null);
 
   const isMobile = width < 600;
 
-  // Safe button click handler with debouncing
-  const handleButtonClick = useCallback((action: () => void, lockRef: React.MutableRefObject<boolean> = buttonLock) => {
-    if (lockRef.current) return;
-    lockRef.current = true;
-    action();
-    setTimeout(() => { lockRef.current = false; }, 400);
-  }, []);
-
   // Safe navigation with dedicated lock
   const goToPhase = useCallback((newPhase: Phase) => {
-    if (navigationLock.current) return;
-    navigationLock.current = true;
+    if (navigationLockRef.current) return;
+    navigationLockRef.current = true;
     setPhase(newPhase);
     emitGameEvent('phase_change', { from: phase, to: newPhase });
-    setTimeout(() => { navigationLock.current = false; }, 400);
+    setTimeout(() => { navigationLockRef.current = false; }, 400);
   }, [phase, emitGameEvent]);
 
-  // Safe tab switching
-  const handleTabClick = useCallback((index: number) => {
-    if (tabLock.current) return;
-    tabLock.current = true;
-    setActiveAppTab(index);
-    setTimeout(() => { tabLock.current = false; }, 300);
-  }, []);
 
   // Physics simulation
   useEffect(() => {
@@ -449,6 +433,55 @@ const ProjectileIndependenceRenderer: React.FC<ProjectileIndependenceRendererPro
     );
   };
 
+  // Helper function: renderButton with debouncing
+  const renderButton = (
+    label: string,
+    onClick: () => void,
+    variant: 'primary' | 'secondary' | 'ghost' | 'success' = 'primary',
+    options?: { disabled?: boolean; size?: 'sm' | 'md' | 'lg' }
+  ) => {
+    const { disabled = false, size = 'md' } = options || {};
+
+    const variants: Record<string, React.CSSProperties> = {
+      primary: { background: design.colors.primary, color: design.colors.textInverse },
+      secondary: { background: design.colors.bgTertiary, color: design.colors.textPrimary, border: `1px solid ${design.colors.border}` },
+      ghost: { background: 'transparent', color: design.colors.textSecondary },
+      success: { background: design.colors.success, color: '#FFFFFF' },
+    };
+
+    const sizes: Record<string, React.CSSProperties> = {
+      sm: { padding: `${design.space.sm}px ${design.space.lg}px`, fontSize: '13px' },
+      md: { padding: `${design.space.md}px ${design.space.xl}px`, fontSize: '15px' },
+      lg: { padding: `${design.space.lg}px ${design.space.xxl}px`, fontSize: '17px' },
+    };
+
+    return (
+      <button
+        onMouseDown={(e) => {
+          e.preventDefault();
+          if (disabled || navigationLockRef.current) return;
+          navigationLockRef.current = true;
+          onClick();
+          setTimeout(() => { navigationLockRef.current = false; }, 400);
+        }}
+        disabled={disabled}
+        style={{
+          fontWeight: 600,
+          borderRadius: `${design.radius.md}px`,
+          border: 'none',
+          cursor: disabled ? 'not-allowed' : 'pointer',
+          transition: 'all 0.2s ease',
+          opacity: disabled ? 0.5 : 1,
+          boxShadow: disabled ? 'none' : design.shadows.sm,
+          ...variants[variant],
+          ...sizes[size],
+        }}
+      >
+        {label}
+      </button>
+    );
+  };
+
   // Helper function: Bottom bar
   const renderBottomBar = (onNext: () => void, nextLabel: string = 'Continue', disabled: boolean = false) => {
     return (
@@ -459,24 +492,7 @@ const ProjectileIndependenceRenderer: React.FC<ProjectileIndependenceRendererPro
         display: 'flex',
         justifyContent: 'flex-end'
       }}>
-        <button
-          onMouseDown={() => !disabled && handleButtonClick(onNext, navigationLock)}
-          style={{
-            padding: `${design.space.md}px ${design.space.xxl}px`,
-            fontSize: '15px',
-            fontWeight: 600,
-            color: disabled ? design.colors.textTertiary : design.colors.textInverse,
-            background: disabled ? design.colors.bgTertiary : design.colors.primary,
-            border: 'none',
-            borderRadius: `${design.radius.md}px`,
-            cursor: disabled ? 'not-allowed' : 'pointer',
-            transition: 'all 0.2s ease',
-            opacity: disabled ? 0.5 : 1,
-            boxShadow: disabled ? 'none' : design.shadows.sm
-          }}
-        >
-          {nextLabel}
-        </button>
+        {renderButton(nextLabel, onNext, 'primary', { disabled })}
       </div>
     );
   };
@@ -1400,7 +1416,8 @@ const ProjectileIndependenceRenderer: React.FC<ProjectileIndependenceRendererPro
 
   // Phase: Transfer
   const renderTransfer = () => {
-    const app = realWorldApps[activeAppTab];
+    const app = realWorldApps[activeApp];
+    const allRead = completedApps.size >= realWorldApps.length;
 
     return (
       <div style={{
@@ -1413,7 +1430,34 @@ const ProjectileIndependenceRenderer: React.FC<ProjectileIndependenceRendererPro
         <div style={{ flex: 1, padding: isMobile ? `${design.space.lg}px` : `${design.space.xl}px`, overflowY: 'auto' }}>
           {renderSectionHeader('🌍', 'Real-World Applications', 'Projectile independence in sports, aviation, and space')}
 
-          {/* Tab navigation */}
+          {/* Progress indicator */}
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: `${design.space.sm}px`,
+            marginBottom: `${design.space.lg}px`
+          }}>
+            <span style={{ fontSize: '13px', color: design.colors.textSecondary }}>
+              {completedApps.size} of {realWorldApps.length} applications read
+            </span>
+            <div style={{ display: 'flex', gap: '6px' }}>
+              {realWorldApps.map((_, idx) => (
+                <div
+                  key={idx}
+                  style={{
+                    width: '8px',
+                    height: '8px',
+                    borderRadius: '50%',
+                    background: completedApps.has(idx) ? design.colors.success : idx === activeApp ? design.colors.primary : design.colors.bgTertiary,
+                    transition: 'background 0.3s ease'
+                  }}
+                />
+              ))}
+            </div>
+          </div>
+
+          {/* Tab navigation with sequential unlock */}
           <div style={{
             display: 'flex',
             gap: `${design.space.sm}px`,
@@ -1421,27 +1465,37 @@ const ProjectileIndependenceRenderer: React.FC<ProjectileIndependenceRendererPro
             overflowX: 'auto',
             paddingBottom: `${design.space.sm}px`
           }}>
-            {realWorldApps.map((a, idx) => (
-              <button
-                key={idx}
-                onMouseDown={() => handleTabClick(idx)}
-                style={{
-                  padding: `${design.space.md}px ${design.space.lg}px`,
-                  fontSize: '14px',
-                  fontWeight: 500,
-                  color: activeAppTab === idx ? design.colors.textInverse : design.colors.textSecondary,
-                  background: activeAppTab === idx ? a.color : design.colors.bgSecondary,
-                  border: `1px solid ${activeAppTab === idx ? a.color : design.colors.border}`,
-                  borderRadius: `${design.radius.md}px`,
-                  cursor: 'pointer',
-                  whiteSpace: 'nowrap',
-                  transition: 'all 0.2s ease',
-                  boxShadow: activeAppTab === idx ? design.shadows.sm : 'none'
-                }}
-              >
-                {a.icon} {a.title}
-              </button>
-            ))}
+            {realWorldApps.map((a, i) => {
+              const isUnlocked = i === 0 || completedApps.has(i - 1);
+              const isCompleted = completedApps.has(i);
+              return (
+                <button
+                  key={i}
+                  onMouseDown={() => {
+                    if (navigationLockRef.current || !isUnlocked) return;
+                    navigationLockRef.current = true;
+                    setActiveApp(i);
+                    setTimeout(() => { navigationLockRef.current = false; }, 300);
+                  }}
+                  style={{
+                    padding: `${design.space.md}px ${design.space.lg}px`,
+                    fontSize: '14px',
+                    fontWeight: 500,
+                    color: activeApp === i ? design.colors.textInverse : isCompleted ? design.colors.success : design.colors.textSecondary,
+                    background: activeApp === i ? a.color : isCompleted ? `${design.colors.success}20` : design.colors.bgSecondary,
+                    border: `1px solid ${activeApp === i ? a.color : design.colors.border}`,
+                    borderRadius: `${design.radius.md}px`,
+                    cursor: isUnlocked ? 'pointer' : 'not-allowed',
+                    whiteSpace: 'nowrap',
+                    transition: 'all 0.2s ease',
+                    boxShadow: activeApp === i ? design.shadows.sm : 'none',
+                    opacity: isUnlocked ? 1 : 0.5
+                  }}
+                >
+                  {isCompleted ? '✓' : a.icon} {a.title}
+                </button>
+              );
+            })}
           </div>
 
           {/* Application content */}
@@ -1557,9 +1611,66 @@ const ProjectileIndependenceRenderer: React.FC<ProjectileIndependenceRendererPro
                 </span>
               ))}
             </div>
+
+            {/* Mark as Read Button */}
+            <div style={{ padding: `${design.space.xl}px`, borderTop: `1px solid ${design.colors.border}` }}>
+              {!completedApps.has(activeApp) ? (
+                <button
+                  onMouseDown={() => {
+                    if (navigationLockRef.current) return;
+                    navigationLockRef.current = true;
+                    const newCompleted = new Set(completedApps);
+                    newCompleted.add(activeApp);
+                    setCompletedApps(newCompleted);
+                    if (activeApp < realWorldApps.length - 1) {
+                      setTimeout(() => setActiveApp(activeApp + 1), 300);
+                    }
+                    setTimeout(() => { navigationLockRef.current = false; }, 400);
+                  }}
+                  style={{
+                    width: '100%',
+                    padding: `${design.space.md}px ${design.space.xl}px`,
+                    fontSize: '15px',
+                    fontWeight: 600,
+                    color: '#FFFFFF',
+                    background: design.colors.success,
+                    border: 'none',
+                    borderRadius: `${design.radius.md}px`,
+                    cursor: 'pointer',
+                    boxShadow: design.shadows.sm
+                  }}
+                >
+                  ✓ Mark "{app.title}" as Read
+                </button>
+              ) : (
+                <div style={{
+                  padding: `${design.space.md}px ${design.space.xl}px`,
+                  borderRadius: `${design.radius.md}px`,
+                  background: `${design.colors.success}15`,
+                  border: `1px solid ${design.colors.success}30`,
+                  color: design.colors.success,
+                  fontSize: '15px',
+                  fontWeight: 600,
+                  textAlign: 'center'
+                }}>
+                  ✓ Completed
+                </div>
+              )}
+            </div>
           </div>
         </div>
-        {renderBottomBar(() => goToPhase('test'), 'Take the Quiz')}
+        {/* Bottom bar */}
+        <div style={{
+          padding: `${design.space.lg}px ${design.space.xl}px`,
+          background: design.colors.bgSecondary,
+          borderTop: `1px solid ${design.colors.border}`,
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center'
+        }}>
+          {renderButton('← Back', () => goToPhase('twist_review'), 'ghost')}
+          {renderButton('Take the Quiz →', () => goToPhase('test'), 'success', { disabled: !allRead })}
+        </div>
       </div>
     );
   };
