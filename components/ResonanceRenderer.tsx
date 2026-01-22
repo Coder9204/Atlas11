@@ -6,22 +6,43 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 // RESONANCE - Premium Apple/Airbnb Design System
 // ============================================================================
 
-export interface GameEvent {
-  type: 'phase_change' | 'interaction' | 'prediction' | 'result' | 'hint_request' | 'visual_state_update';
-  phase: string;
-  data: Record<string, unknown>;
-  timestamp: number;
-  eventType?: string;
+type GameEventType =
+  | 'phase_change'
+  | 'prediction_made'
+  | 'simulation_started'
+  | 'parameter_changed'
+  | 'twist_prediction_made'
+  | 'app_explored'
+  | 'test_answered'
+  | 'test_completed'
+  | 'mastery_achieved';
+
+interface GameEvent {
+  type: GameEventType;
+  data?: Record<string, unknown>;
 }
+
+const PHASES: number[] = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
+const phaseLabels: Record<number, string> = {
+  0: 'Hook',
+  1: 'Predict',
+  2: 'Lab',
+  3: 'Review',
+  4: 'Twist Predict',
+  5: 'Twist Lab',
+  6: 'Twist Review',
+  7: 'Transfer',
+  8: 'Test',
+  9: 'Mastery'
+};
 
 interface ResonanceRendererProps {
   width?: number;
   height?: number;
   onGameEvent?: (event: GameEvent) => void;
-  gamePhase?: string;
+  currentPhase?: number;
+  onPhaseComplete?: (phase: number) => void;
 }
-
-type Phase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
 
 // ============================================================================
 // PREMIUM DESIGN TOKENS - Apple/Airbnb Quality
@@ -72,16 +93,22 @@ const design = {
 // ============================================================================
 // MAIN COMPONENT
 // ============================================================================
-const ResonanceRenderer: React.FC<ResonanceRendererProps> = ({ onGameEvent, gamePhase }) => {
+const ResonanceRenderer: React.FC<ResonanceRendererProps> = ({ onGameEvent, currentPhase, onPhaseComplete }) => {
   // Navigation debouncing
   const navigationLockRef = useRef(false);
 
   // Phase state
-  const [phase, setPhase] = useState<Phase>(() => {
-    const validPhases: Phase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
-    if (gamePhase && validPhases.includes(gamePhase as Phase)) return gamePhase as Phase;
-    return 'hook';
+  const [phase, setPhase] = useState<number>(() => {
+    if (currentPhase !== undefined && PHASES.includes(currentPhase)) return currentPhase;
+    return 0;
   });
+
+  // Sync phase with external prop
+  useEffect(() => {
+    if (currentPhase !== undefined && PHASES.includes(currentPhase)) {
+      setPhase(currentPhase);
+    }
+  }, [currentPhase]);
 
   // Game state
   const [prediction, setPrediction] = useState<string | null>(null);
@@ -111,25 +138,59 @@ const ResonanceRenderer: React.FC<ResonanceRendererProps> = ({ onGameEvent, game
     return () => { if (animationRef.current) cancelAnimationFrame(animationRef.current); };
   }, []);
 
-  // Emit events
-  const emit = useCallback((eventType: string, data: Record<string, unknown> = {}) => {
-    onGameEvent?.({
-      type: 'interaction',
-      phase,
-      data: { eventType, ...data },
-      timestamp: Date.now(),
-      eventType
-    });
-  }, [onGameEvent, phase]);
+  // Type-based sound feedback
+  const playSound = useCallback((type: 'click' | 'success' | 'failure' | 'transition' | 'complete') => {
+    try {
+      const audioContext = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
+      const oscillator = audioContext.createOscillator();
+      const gainNode = audioContext.createGain();
+      oscillator.connect(gainNode);
+      gainNode.connect(audioContext.destination);
+
+      const soundConfig = {
+        click: { frequency: 440, duration: 0.1, oscType: 'sine' as OscillatorType },
+        success: { frequency: 600, duration: 0.15, oscType: 'sine' as OscillatorType },
+        failure: { frequency: 200, duration: 0.2, oscType: 'sawtooth' as OscillatorType },
+        transition: { frequency: 520, duration: 0.15, oscType: 'sine' as OscillatorType },
+        complete: { frequency: 800, duration: 0.3, oscType: 'sine' as OscillatorType },
+      };
+
+      const config = soundConfig[type];
+      oscillator.frequency.value = config.frequency;
+      oscillator.type = config.oscType;
+      gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + config.duration);
+      oscillator.start();
+      oscillator.stop(audioContext.currentTime + config.duration);
+    } catch (e) { /* Audio not supported */ }
+  }, []);
+
+  // Emit game events
+  const emitEvent = useCallback((type: GameEventType, data?: Record<string, unknown>) => {
+    onGameEvent?.({ type, data });
+  }, [onGameEvent]);
 
   // Navigation with debouncing
-  const goToPhase = useCallback((newPhase: Phase) => {
+  const goToPhase = useCallback((newPhase: number) => {
     if (navigationLockRef.current) return;
+    if (!PHASES.includes(newPhase)) return;
     navigationLockRef.current = true;
     setPhase(newPhase);
-    emit('phase_change', { from: phase, to: newPhase });
+    playSound('transition');
+    emitEvent('phase_change', { from: phase, to: newPhase, phaseLabel: phaseLabels[newPhase] });
+    onPhaseComplete?.(newPhase);
     setTimeout(() => { navigationLockRef.current = false; }, 400);
-  }, [emit, phase]);
+  }, [phase, playSound, emitEvent, onPhaseComplete]);
+
+  const goNext = useCallback(() => {
+    const currentIndex = PHASES.indexOf(phase);
+    if (currentIndex < PHASES.length - 1) goToPhase(PHASES[currentIndex + 1]);
+  }, [phase, goToPhase]);
+
+  const goBack = useCallback(() => {
+    const currentIndex = PHASES.indexOf(phase);
+    if (currentIndex > 0) goToPhase(PHASES[currentIndex - 1]);
+  }, [phase, goToPhase]);
 
   // Render button helper function
   const renderButton = (
@@ -208,11 +269,11 @@ const ResonanceRenderer: React.FC<ResonanceRendererProps> = ({ onGameEvent, game
 
   // Track resonance discovery
   useEffect(() => {
-    if ((phase === 'play' || phase === 'twist_play') && isAtResonance && !foundResonance) {
+    if ((phase === 2 || phase === 5) && isAtResonance && !foundResonance) {
       setFoundResonance(true);
-      emit('resonance_found', { frequency: drivingFrequency });
+      emitEvent('simulation_started', { frequency: drivingFrequency, resonanceFound: true });
     }
-  }, [isAtResonance, phase, foundResonance, drivingFrequency, emit]);
+  }, [isAtResonance, phase, foundResonance, drivingFrequency, emitEvent]);
 
   // Test questions
   const questions = [
@@ -265,54 +326,41 @@ const ResonanceRenderer: React.FC<ResonanceRendererProps> = ({ onGameEvent, game
     }
   ];
 
-  // Phase list for navigation
-  const phaseList: Phase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
-
   // Common styles
   const containerStyle: React.CSSProperties = {
     display: 'flex',
     flexDirection: 'column',
     height: '100%',
-    background: `linear-gradient(145deg, ${design.colors.bgDeep} 0%, ${design.colors.bgPrimary} 50%, ${design.colors.bgSecondary} 100%)`,
+    background: '#0a0f1a',
     fontFamily: design.font.sans,
     color: design.colors.textPrimary,
-    overflow: 'hidden'
+    overflow: 'hidden',
+    position: 'relative'
   };
 
-  // Progress bar
+  // Progress bar (Premium Design)
   const renderProgressBar = () => {
-    const currentIndex = phaseList.indexOf(phase);
     return (
-      <div style={{
-        padding: '16px 24px',
-        background: design.colors.bgCard,
-        borderBottom: `1px solid ${design.colors.border}`,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between'
-      }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <span style={{ fontSize: '13px', fontWeight: 600, color: design.colors.accentPrimary }}>
-            Resonance
-          </span>
-          <div style={{ display: 'flex', gap: '4px' }}>
-            {phaseList.map((_, i) => (
-              <div
-                key={i}
-                style={{
-                  width: i === currentIndex ? '24px' : '8px',
-                  height: '8px',
-                  borderRadius: '4px',
-                  background: i < currentIndex ? design.colors.success : i === currentIndex ? design.colors.accentPrimary : design.colors.bgElevated,
-                  transition: 'all 0.3s ease'
-                }}
+      <div className="fixed top-0 left-0 right-0 z-50 bg-slate-900/80 backdrop-blur-xl border-b border-slate-800/50">
+        <div className="flex items-center justify-between px-6 py-3 max-w-4xl mx-auto">
+          <span className="text-sm font-semibold text-white/80 tracking-wide">Resonance</span>
+          <div className="flex items-center gap-1.5">
+            {PHASES.map((p) => (
+              <button
+                key={p}
+                onMouseDown={(e) => { e.preventDefault(); goToPhase(p); }}
+                className={`h-2 rounded-full transition-all duration-300 ${
+                  phase === p
+                    ? 'bg-violet-400 w-6 shadow-lg shadow-violet-400/30'
+                    : phase > p
+                      ? 'bg-emerald-500 w-2'
+                      : 'bg-slate-700 w-2 hover:bg-slate-600'
+                }`}
               />
             ))}
           </div>
+          <span className="text-sm font-medium text-violet-400">{phase + 1} / {PHASES.length}</span>
         </div>
-        <span style={{ fontSize: '12px', color: design.colors.textMuted }}>
-          {currentIndex + 1} / {phaseList.length}
-        </span>
       </div>
     );
   };
@@ -683,148 +731,91 @@ const ResonanceRenderer: React.FC<ResonanceRendererProps> = ({ onGameEvent, game
   // ==================== PHASE RENDERS ====================
 
   // HOOK - Premium welcome screen
-  if (phase === 'hook') {
+  if (phase === 0) {
     return (
-      <div style={containerStyle}>
-        <div style={{
-          flex: 1,
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          justifyContent: 'center',
-          padding: design.spacing.xl,
-          textAlign: 'center',
-          position: 'relative',
-          overflow: 'hidden'
-        }}>
-          {/* Floating background elements */}
-          <div style={{
-            position: 'absolute',
-            top: '10%',
-            left: '10%',
-            width: '300px',
-            height: '300px',
-            background: `radial-gradient(circle, ${design.colors.accentGlow} 0%, transparent 70%)`,
-            borderRadius: '50%',
-            animation: 'float 6s ease-in-out infinite',
-            pointerEvents: 'none'
-          }} />
-          <div style={{
-            position: 'absolute',
-            bottom: '10%',
-            right: '10%',
-            width: '200px',
-            height: '200px',
-            background: `radial-gradient(circle, ${design.colors.violetMuted} 0%, transparent 70%)`,
-            borderRadius: '50%',
-            animation: 'float 8s ease-in-out infinite reverse',
-            pointerEvents: 'none'
-          }} />
+      <div className="min-h-screen bg-[#0a0f1a] text-white relative overflow-hidden">
+        {/* Premium background gradient */}
+        <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-[#0a1628] to-slate-900" />
+        <div className="absolute top-0 left-1/4 w-96 h-96 bg-violet-500/5 rounded-full blur-3xl" />
+        <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-purple-500/5 rounded-full blur-3xl" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-violet-500/3 rounded-full blur-3xl" />
 
-          <style>{`
-            @keyframes float {
-              0%, 100% { transform: translateY(0) scale(1); }
-              50% { transform: translateY(-20px) scale(1.05); }
-            }
-            @keyframes pulse {
-              0%, 100% { transform: scale(1); }
-              50% { transform: scale(1.1); }
-            }
-          `}</style>
+        {renderProgressBar()}
 
-          {/* Icon */}
-          <div style={{
-            width: '120px',
-            height: '120px',
-            borderRadius: '32px',
-            background: `linear-gradient(135deg, ${design.colors.accentMuted} 0%, ${design.colors.bgElevated} 100%)`,
-            border: `2px solid ${design.colors.accentPrimary}40`,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            marginBottom: design.spacing.lg,
-            boxShadow: design.shadow.glow(design.colors.accentPrimary),
-            animation: 'pulse 2s ease-in-out infinite'
-          }}>
-            <svg viewBox="0 0 60 60" style={{ width: '60%', height: '60%' }}>
-              {/* Spring */}
-              <path
-                d="M 30 5 L 25 12 L 35 18 L 25 24 L 35 30 L 25 36 L 30 42"
-                fill="none"
-                stroke={design.colors.accentPrimary}
-                strokeWidth="3"
-                strokeLinecap="round"
-              />
-              {/* Mass */}
-              <circle
-                cx="30"
-                cy={48 + 4 * Math.sin(time * 3)}
-                r="8"
-                fill={design.colors.accentSecondary}
-              />
-            </svg>
-          </div>
+        <div className="relative pt-16 pb-12">
+          <div className="flex flex-col items-center justify-center min-h-[600px] px-6 py-12 text-center">
+            {/* Premium badge */}
+            <div className="inline-flex items-center gap-2 px-4 py-2 bg-violet-500/10 border border-violet-500/20 rounded-full mb-8">
+              <span className="w-2 h-2 bg-violet-400 rounded-full animate-pulse" />
+              <span className="text-sm font-medium text-violet-400 tracking-wide">PHYSICS EXPLORATION</span>
+            </div>
 
-          <h1 style={{
-            fontSize: '42px',
-            fontWeight: 800,
-            color: design.colors.textPrimary,
-            marginBottom: design.spacing.md,
-            letterSpacing: '-0.02em'
-          }}>
-            Resonance
-          </h1>
+            {/* Main title with gradient */}
+            <h1 className="text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-white via-violet-100 to-purple-200 bg-clip-text text-transparent">
+              Resonance
+            </h1>
 
-          <p style={{
-            fontSize: '18px',
-            color: design.colors.textSecondary,
-            marginBottom: design.spacing.sm,
-            maxWidth: '500px',
-            lineHeight: 1.6
-          }}>
-            Ever pushed someone on a swing? <span style={{ color: design.colors.accentPrimary, fontWeight: 600 }}>Timing is everything!</span>
-          </p>
+            <p className="text-lg text-slate-400 max-w-md mb-10">
+              Discover why matching frequencies creates powerful effects
+            </p>
 
-          <p style={{
-            fontSize: '15px',
-            color: design.colors.textMuted,
-            marginBottom: design.spacing.xl,
-            maxWidth: '400px'
-          }}>
-            Discover why matching frequencies creates powerful effects
-          </p>
+            {/* Premium card with graphic */}
+            <div className="relative bg-gradient-to-br from-slate-800/80 to-slate-900/80 rounded-3xl p-8 max-w-xl w-full border border-slate-700/50 shadow-2xl shadow-black/20 backdrop-blur-xl">
+              <div className="absolute inset-0 bg-gradient-to-br from-violet-500/5 via-transparent to-purple-500/5 rounded-3xl" />
 
-          {/* Feature cards */}
-          <div style={{ display: 'flex', gap: design.spacing.md, marginBottom: design.spacing.xl }}>
-            {[
-              { icon: '🔊', label: 'Frequency' },
-              { icon: '📈', label: 'Amplitude' },
-              { icon: '⚡', label: 'Energy' }
-            ].map((item, i) => (
-              <div key={i} style={{
-                padding: '16px 24px',
-                borderRadius: design.radius.lg,
-                background: design.colors.bgCard,
-                border: `1px solid ${design.colors.border}`
-              }}>
-                <div style={{ fontSize: '24px', marginBottom: '6px' }}>{item.icon}</div>
-                <div style={{ fontSize: '11px', fontWeight: 600, color: design.colors.textMuted, textTransform: 'uppercase', letterSpacing: '0.5px' }}>{item.label}</div>
+              <div className="relative">
+                <p className="text-xl text-white/90 font-medium leading-relaxed mb-6">
+                  Ever pushed someone on a swing? <span className="text-violet-400 font-semibold">Timing is everything!</span>
+                </p>
+
+                {/* Feature cards */}
+                <div className="flex gap-4 justify-center mb-4">
+                  {[
+                    { icon: '🔊', label: 'Frequency' },
+                    { icon: '📈', label: 'Amplitude' },
+                    { icon: '⚡', label: 'Energy' }
+                  ].map((item, i) => (
+                    <div key={i} className="px-4 py-3 bg-slate-800/60 rounded-xl border border-slate-700/50">
+                      <div className="text-2xl mb-1">{item.icon}</div>
+                      <div className="text-xs font-semibold text-slate-400 uppercase tracking-wide">{item.label}</div>
+                    </div>
+                  ))}
+                </div>
               </div>
-            ))}
+            </div>
+
+            {/* Premium CTA button */}
+            <button
+              onMouseDown={(e) => { e.preventDefault(); goToPhase(1); }}
+              className="mt-10 group relative px-10 py-5 bg-gradient-to-r from-violet-500 to-purple-600 text-white text-lg font-semibold rounded-2xl transition-all duration-300 hover:shadow-lg hover:shadow-violet-500/25 hover:scale-[1.02] active:scale-[0.98]"
+            >
+              <span className="relative z-10 flex items-center gap-3">
+                Start Learning
+                <svg className="w-5 h-5 transition-transform group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                </svg>
+              </span>
+            </button>
+
+            {/* Feature hints */}
+            <div className="mt-12 flex items-center gap-8 text-sm text-slate-500">
+              <div className="flex items-center gap-2">
+                <span className="text-violet-400">✦</span>
+                Interactive Lab
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-purple-400">✦</span>
+                10 Phases
+              </div>
+            </div>
           </div>
-
-          {renderButton('Start Learning', () => goToPhase('predict'), 'primary', false, 'lg')}
-
-          <p style={{ fontSize: '12px', color: design.colors.textMuted, marginTop: design.spacing.lg }}>
-            ~5 minutes · Interactive simulation
-          </p>
         </div>
       </div>
     );
   }
 
   // PREDICT
-  if (phase === 'predict') {
+  if (phase === 1) {
     const options = [
       { id: 'nothing', text: 'Nothing special happens at any particular frequency' },
       { id: 'resonance', text: 'At one specific frequency, amplitude becomes maximum' },
@@ -857,7 +848,7 @@ const ResonanceRenderer: React.FC<ResonanceRendererProps> = ({ onGameEvent, game
                     if (navigationLockRef.current) return;
                     navigationLockRef.current = true;
                     setPrediction(opt.id);
-                    emit('prediction', { value: opt.id });
+                    emitEvent('prediction_made', { value: opt.id });
                     setTimeout(() => { navigationLockRef.current = false; }, 400);
                   }}
                   style={{
@@ -879,7 +870,7 @@ const ResonanceRenderer: React.FC<ResonanceRendererProps> = ({ onGameEvent, game
             </div>
 
             <div style={{ marginTop: design.spacing.xl, display: 'flex', justifyContent: 'flex-end' }}>
-              {renderButton('Test Your Prediction', () => goToPhase('play'), 'primary', !prediction)}
+              {renderButton('Test Your Prediction', () => goToPhase(2), 'primary', !prediction)}
             </div>
           </div>
         </div>
@@ -888,7 +879,7 @@ const ResonanceRenderer: React.FC<ResonanceRendererProps> = ({ onGameEvent, game
   }
 
   // PLAY - Interactive experiment
-  if (phase === 'play') {
+  if (phase === 2) {
     return (
       <div style={containerStyle}>
         {renderProgressBar()}
@@ -932,7 +923,7 @@ const ResonanceRenderer: React.FC<ResonanceRendererProps> = ({ onGameEvent, game
                     {isAtResonance ? '🎉 You found resonance!' : `Target: ${resonantFreq} Hz`}
                   </span>
                 </div>
-                {renderButton(foundResonance ? 'Continue' : 'Find Resonance First', () => goToPhase('review'), 'primary', !foundResonance)}
+                {renderButton(foundResonance ? 'Continue' : 'Find Resonance First', () => goToPhase(3), 'primary', !foundResonance)}
               </div>
             </div>
           </div>
@@ -942,7 +933,7 @@ const ResonanceRenderer: React.FC<ResonanceRendererProps> = ({ onGameEvent, game
   }
 
   // REVIEW
-  if (phase === 'review') {
+  if (phase === 3) {
     return (
       <div style={containerStyle}>
         {renderProgressBar()}
@@ -996,7 +987,7 @@ const ResonanceRenderer: React.FC<ResonanceRendererProps> = ({ onGameEvent, game
             </div>
 
             <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-              {renderButton('Continue', () => goToPhase('twist_predict'))}
+              {renderButton('Continue', () => goToPhase(4))}
             </div>
           </div>
         </div>
@@ -1005,7 +996,7 @@ const ResonanceRenderer: React.FC<ResonanceRendererProps> = ({ onGameEvent, game
   }
 
   // TWIST PREDICT
-  if (phase === 'twist_predict') {
+  if (phase === 4) {
     const options = [
       { id: 'increase', text: 'Resonant frequency increases' },
       { id: 'decrease', text: 'Resonant frequency decreases' },
@@ -1038,7 +1029,7 @@ const ResonanceRenderer: React.FC<ResonanceRendererProps> = ({ onGameEvent, game
                     if (navigationLockRef.current) return;
                     navigationLockRef.current = true;
                     setTwistPrediction(opt.id);
-                    emit('prediction', { value: opt.id, phase: 'twist_predict' });
+                    emitEvent('twist_prediction_made', { value: opt.id });
                     setTimeout(() => { navigationLockRef.current = false; }, 400);
                   }}
                   style={{
@@ -1060,7 +1051,7 @@ const ResonanceRenderer: React.FC<ResonanceRendererProps> = ({ onGameEvent, game
             </div>
 
             <div style={{ marginTop: design.spacing.xl, display: 'flex', justifyContent: 'flex-end' }}>
-              {renderButton('Test It', () => goToPhase('twist_play'), 'primary', !twistPrediction)}
+              {renderButton('Test It', () => goToPhase(5), 'primary', !twistPrediction)}
             </div>
           </div>
         </div>
@@ -1069,7 +1060,7 @@ const ResonanceRenderer: React.FC<ResonanceRendererProps> = ({ onGameEvent, game
   }
 
   // TWIST PLAY
-  if (phase === 'twist_play') {
+  if (phase === 5) {
     return (
       <div style={containerStyle}>
         {renderProgressBar()}
@@ -1123,7 +1114,7 @@ const ResonanceRenderer: React.FC<ResonanceRendererProps> = ({ onGameEvent, game
                   <span style={{ fontSize: '12px', color: design.colors.textMuted }}>Natural Freq: </span>
                   <span style={{ fontSize: '18px', fontWeight: 800, color: design.colors.accentPrimary }}>{resonantFreq} Hz</span>
                 </div>
-                {renderButton('Continue', () => goToPhase('twist_review'))}
+                {renderButton('Continue', () => goToPhase(6))}
               </div>
             </div>
           </div>
@@ -1133,7 +1124,7 @@ const ResonanceRenderer: React.FC<ResonanceRendererProps> = ({ onGameEvent, game
   }
 
   // TWIST REVIEW
-  if (phase === 'twist_review') {
+  if (phase === 6) {
     return (
       <div style={containerStyle}>
         {renderProgressBar()}
@@ -1175,7 +1166,7 @@ const ResonanceRenderer: React.FC<ResonanceRendererProps> = ({ onGameEvent, game
             </div>
 
             <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-              {renderButton('See Real Applications', () => goToPhase('transfer'))}
+              {renderButton('See Real Applications', () => goToPhase(7))}
             </div>
           </div>
         </div>
@@ -1184,7 +1175,7 @@ const ResonanceRenderer: React.FC<ResonanceRendererProps> = ({ onGameEvent, game
   }
 
   // TRANSFER - Tabbed applications with sequential navigation
-  if (phase === 'transfer') {
+  if (phase === 7) {
     const app = applications[activeApp];
     const allAppsCompleted = completedApps.size >= applications.length;
 
@@ -1297,7 +1288,7 @@ const ResonanceRenderer: React.FC<ResonanceRendererProps> = ({ onGameEvent, game
                       const newCompleted = new Set(completedApps);
                       newCompleted.add(activeApp);
                       setCompletedApps(newCompleted);
-                      emit('interaction', { app: app.id, action: 'marked_read' });
+                      emitEvent('app_explored', { app: app.id });
                       if (activeApp < applications.length - 1) {
                         setTimeout(() => setActiveApp(activeApp + 1), 300);
                       }
@@ -1332,7 +1323,7 @@ const ResonanceRenderer: React.FC<ResonanceRendererProps> = ({ onGameEvent, game
                 )}
 
                 {allAppsCompleted ? (
-                  renderButton('Take Quiz', () => goToPhase('test'), 'success')
+                  renderButton('Take Quiz', () => goToPhase(8), 'success')
                 ) : (
                   <div style={{
                     padding: '14px 24px',
@@ -1354,7 +1345,7 @@ const ResonanceRenderer: React.FC<ResonanceRendererProps> = ({ onGameEvent, game
   }
 
   // TEST
-  if (phase === 'test') {
+  if (phase === 8) {
     const q = questions[testIndex];
     const answered = answers[testIndex] !== null;
 
@@ -1374,7 +1365,7 @@ const ResonanceRenderer: React.FC<ResonanceRendererProps> = ({ onGameEvent, game
                score >= 6 ? "Good job! Review the concepts you missed." :
                "Keep practicing! Review the material and try again."}
             </p>
-            {renderButton('Complete Lesson', () => goToPhase('mastery'), 'success', false, 'lg')}
+            {renderButton('Complete Lesson', () => goToPhase(9), 'success', false, 'lg')}
           </div>
         </div>
       );
@@ -1422,7 +1413,7 @@ const ResonanceRenderer: React.FC<ResonanceRendererProps> = ({ onGameEvent, game
                       const newAnswers = [...answers];
                       newAnswers[testIndex] = i;
                       setAnswers(newAnswers);
-                      emit(i === q.correct ? 'correct_answer' : 'incorrect_answer', { questionIndex: testIndex });
+                      emitEvent('test_answered', { questionIndex: testIndex, correct: i === q.correct });
                       setTimeout(() => { navigationLockRef.current = false; }, 400);
                     }}
                     disabled={answered}
@@ -1486,7 +1477,7 @@ const ResonanceRenderer: React.FC<ResonanceRendererProps> = ({ onGameEvent, game
   }
 
   // MASTERY
-  if (phase === 'mastery') {
+  if (phase === 9) {
     return (
       <div style={{
         ...containerStyle,
@@ -1591,7 +1582,7 @@ const ResonanceRenderer: React.FC<ResonanceRendererProps> = ({ onGameEvent, game
 
           <div style={{ display: 'flex', gap: design.spacing.md }}>
             {renderButton('Replay Lesson', () => {
-              setPhase('hook');
+              setPhase(0);
               setTestIndex(0);
               setAnswers(Array(10).fill(null));
               setShowResult(false);
@@ -1600,7 +1591,7 @@ const ResonanceRenderer: React.FC<ResonanceRendererProps> = ({ onGameEvent, game
               setDrivingFrequency(100);
               setCompletedApps(new Set());
             }, 'ghost')}
-            {renderButton('Free Exploration', () => goToPhase('play'))}
+            {renderButton('Free Exploration', () => goToPhase(2))}
           </div>
         </div>
       </div>

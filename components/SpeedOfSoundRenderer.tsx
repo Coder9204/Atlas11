@@ -53,19 +53,29 @@ function isValidPhase(p: string): p is Phase {
   return phaseOrder.includes(p as Phase);
 }
 
-const playSound = (frequency: number, duration: number, type: OscillatorType = 'sine', volume = 0.3) => {
+const playSound = (type: 'click' | 'success' | 'failure' | 'transition' | 'complete') => {
   try {
     const audioContext = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
     const oscillator = audioContext.createOscillator();
     const gainNode = audioContext.createGain();
     oscillator.connect(gainNode);
     gainNode.connect(audioContext.destination);
-    oscillator.frequency.value = frequency;
-    oscillator.type = type;
-    gainNode.gain.setValueAtTime(volume, audioContext.currentTime);
-    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + duration);
+
+    const soundConfig = {
+      click: { frequency: 440, duration: 0.1, oscType: 'sine' as OscillatorType, volume: 0.2 },
+      success: { frequency: 600, duration: 0.15, oscType: 'sine' as OscillatorType, volume: 0.3 },
+      failure: { frequency: 200, duration: 0.2, oscType: 'sawtooth' as OscillatorType, volume: 0.3 },
+      transition: { frequency: 520, duration: 0.15, oscType: 'sine' as OscillatorType, volume: 0.2 },
+      complete: { frequency: 800, duration: 0.3, oscType: 'sine' as OscillatorType, volume: 0.3 },
+    };
+
+    const config = soundConfig[type];
+    oscillator.frequency.value = config.frequency;
+    oscillator.type = config.oscType;
+    gainNode.gain.setValueAtTime(config.volume, audioContext.currentTime);
+    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + config.duration);
     oscillator.start();
-    oscillator.stop(audioContext.currentTime + duration);
+    oscillator.stop(audioContext.currentTime + config.duration);
   } catch {}
 };
 
@@ -115,7 +125,7 @@ export default function SpeedOfSoundRenderer({ onGameEvent }: SpeedOfSoundRender
       onGameEvent({ type: 'phase_change', from: phase, to: newPhase });
     }
     setPhase(newPhase);
-    playSound(440, 0.15, 'sine', 0.2);
+    playSound('transition');
   };
 
   // Speed of sound at temperature (simplified formula)
@@ -130,7 +140,7 @@ export default function SpeedOfSoundRenderer({ onGameEvent }: SpeedOfSoundRender
     setEchoWavePos(-1);
     setElapsedTime(0);
 
-    playSound(400, 0.1, 'square', 0.4);
+    playSound('click');
 
     const actualSpeed = speedAtTemp(20); // 343 m/s at 20°C
     const roundTripDistance = distance * 2;
@@ -157,7 +167,7 @@ export default function SpeedOfSoundRenderer({ onGameEvent }: SpeedOfSoundRender
         setElapsedTime(totalTime);
         setCalculatedSpeed(roundTripDistance / totalTime);
         setMeasuring(false);
-        playSound(500, 0.1, 'square', 0.3);
+        playSound('success');
       }
     }, 30);
   };
@@ -178,7 +188,7 @@ export default function SpeedOfSoundRenderer({ onGameEvent }: SpeedOfSoundRender
     setTwistTime(0);
     setTwistSpeed(0);
 
-    playSound(400, 0.1, 'square', 0.4);
+    playSound('click');
 
     const actualSpeed = speedAtTemp(temperature);
     const roundTripDistance = 340; // Fixed distance
@@ -194,7 +204,7 @@ export default function SpeedOfSoundRenderer({ onGameEvent }: SpeedOfSoundRender
         setTwistTime(totalTime);
         setTwistSpeed(roundTripDistance / totalTime);
         setTwistMeasuring(false);
-        playSound(500, 0.1, 'square', 0.3);
+        playSound('success');
       }
     }, 30);
   };
@@ -204,7 +214,7 @@ export default function SpeedOfSoundRenderer({ onGameEvent }: SpeedOfSoundRender
     if (onGameEvent) {
       onGameEvent({ type: 'prediction', phase: 'predict', prediction: choice });
     }
-    playSound(330, 0.1, 'sine', 0.2);
+    playSound('click');
   };
 
   const handleTwistPrediction = (choice: string) => {
@@ -212,13 +222,13 @@ export default function SpeedOfSoundRenderer({ onGameEvent }: SpeedOfSoundRender
     if (onGameEvent) {
       onGameEvent({ type: 'prediction', phase: 'twist_predict', prediction: choice });
     }
-    playSound(330, 0.1, 'sine', 0.2);
+    playSound('click');
   };
 
   const handleTestAnswer = (q: number, a: number) => {
     if (!testSubmitted) {
       setTestAnswers(prev => ({ ...prev, [q]: a }));
-      playSound(330, 0.1, 'sine', 0.2);
+      playSound('click');
     }
   };
 
@@ -234,7 +244,7 @@ export default function SpeedOfSoundRenderer({ onGameEvent }: SpeedOfSoundRender
         percentage: Math.round((score / testQuestions.length) * 100),
       });
     }
-    playSound(score >= 7 ? 523 : 330, 0.3, 'sine', 0.3);
+    playSound(score >= 7 ? 'complete' : 'failure');
   };
 
   const testQuestions = [
@@ -1260,7 +1270,7 @@ export default function SpeedOfSoundRenderer({ onGameEvent }: SpeedOfSoundRender
                   key={index}
                   onMouseDown={() => {
                     setCompletedApps(prev => new Set([...prev, index]));
-                    playSound(500 + index * 100, 0.15, 'sine', 0.2);
+                    playSound('click');
                   }}
                   style={{
                     background: completedApps.has(index)
@@ -1573,71 +1583,51 @@ export default function SpeedOfSoundRenderer({ onGameEvent }: SpeedOfSoundRender
   };
 
   const currentIndex = phaseOrder.indexOf(phase);
+  const phaseLabels: Record<Phase, string> = {
+    hook: 'Hook', predict: 'Predict', play: 'Lab', review: 'Review',
+    twist_predict: 'Twist Predict', twist_play: 'Twist Lab', twist_review: 'Twist Review',
+    transfer: 'Transfer', test: 'Test', mastery: 'Mastery'
+  };
 
   return (
-    <div style={{
-      minHeight: '100vh',
-      background: 'linear-gradient(135deg, #f8fafc, #e0f2fe)',
-      padding: isMobile ? '1rem' : '2rem',
-      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
-    }}>
-      {/* Progress bar */}
-      <div style={{
-        maxWidth: 700,
-        margin: '0 auto 1.5rem auto'
-      }}>
-        <div style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          marginBottom: '0.5rem'
-        }}>
-          {phaseOrder.map((p, i) => (
-            <div
-              key={p}
-              style={{
-                width: 28,
-                height: 28,
-                borderRadius: '50%',
-                background: i <= currentIndex
-                  ? 'linear-gradient(135deg, #3b82f6, #1d4ed8)'
-                  : '#e2e8f0',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                color: i <= currentIndex ? 'white' : '#94a3b8',
-                fontSize: '0.7rem',
-                fontWeight: 600
-              }}
-            >
-              {i < currentIndex ? '✓' : i + 1}
-            </div>
-          ))}
-        </div>
-        <div style={{
-          height: 4,
-          background: '#e2e8f0',
-          borderRadius: 2,
-          overflow: 'hidden'
-        }}>
-          <div style={{
-            width: `${(currentIndex / (phaseOrder.length - 1)) * 100}%`,
-            height: '100%',
-            background: 'linear-gradient(90deg, #3b82f6, #1d4ed8)',
-            transition: 'width 0.3s ease'
-          }} />
+    <div className="min-h-screen bg-[#0a0f1a] text-white relative overflow-hidden">
+      {/* Premium background gradient */}
+      <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-[#0a1628] to-slate-900" />
+      <div className="absolute top-0 left-1/4 w-96 h-96 bg-blue-500/5 rounded-full blur-3xl" />
+      <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-cyan-500/5 rounded-full blur-3xl" />
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-blue-500/3 rounded-full blur-3xl" />
+
+      {/* Header */}
+      <div className="fixed top-0 left-0 right-0 z-50 bg-slate-900/80 backdrop-blur-xl border-b border-slate-800/50">
+        <div className="flex items-center justify-between px-6 py-3 max-w-4xl mx-auto">
+          <span className="text-sm font-semibold text-white/80 tracking-wide">Speed of Sound</span>
+          <div className="flex items-center gap-1.5">
+            {phaseOrder.map((p, i) => (
+              <button
+                key={p}
+                onMouseDown={() => goToPhase(p)}
+                className={`h-2 rounded-full transition-all duration-300 ${
+                  phase === p
+                    ? 'bg-blue-400 w-6 shadow-lg shadow-blue-400/30'
+                    : i < currentIndex
+                      ? 'bg-emerald-500 w-2'
+                      : 'bg-slate-700 w-2 hover:bg-slate-600'
+                }`}
+                title={phaseLabels[p]}
+              />
+            ))}
+          </div>
+          <span className="text-sm font-medium text-blue-400">{phaseLabels[phase]}</span>
         </div>
       </div>
 
       {/* Main content */}
-      <div style={{
-        maxWidth: 700,
-        margin: '0 auto',
-        background: 'white',
-        borderRadius: 20,
-        padding: isMobile ? '1.5rem' : '2rem',
-        boxShadow: '0 10px 40px rgba(0, 0, 0, 0.08)'
-      }}>
-        {renderPhase()}
+      <div className="relative pt-16 pb-12">
+        <div className="max-w-3xl mx-auto px-4">
+          <div className="bg-slate-800/50 backdrop-blur-sm rounded-2xl p-6 border border-slate-700/50">
+            {renderPhase()}
+          </div>
+        </div>
       </div>
     </div>
   );

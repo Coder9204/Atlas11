@@ -1,16 +1,37 @@
+'use client';
 import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 
-// --- GAME EVENT INTERFACE FOR AI COACH INTEGRATION ---
-export interface GameEvent {
-  eventType: 'phase_change' | 'prediction' | 'answer' | 'interaction' | 'milestone';
-  gameId: string;
-  data: Record<string, unknown>;
-  timestamp: number;
+// ═══════════════════════════════════════════════════════════════════════════
+// TYPES & INTERFACES
+// ═══════════════════════════════════════════════════════════════════════════
+type GameEventType =
+  | 'phase_change'
+  | 'prediction_made'
+  | 'simulation_started'
+  | 'parameter_changed'
+  | 'twist_prediction_made'
+  | 'app_explored'
+  | 'test_answered'
+  | 'test_completed'
+  | 'mastery_achieved';
+
+interface GameEvent {
+  type: GameEventType;
+  data?: Record<string, unknown>;
 }
 
+// Numeric phases: 0=hook, 1=predict, 2=play, 3=review, 4=twist_predict, 5=twist_play, 6=twist_review, 7=transfer, 8=test, 9=mastery
+const PHASES: number[] = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
+const phaseLabels: Record<number, string> = {
+  0: 'Hook', 1: 'Predict', 2: 'Lab', 3: 'Review', 4: 'Twist Predict',
+  5: 'Twist Lab', 6: 'Twist Review', 7: 'Transfer', 8: 'Test', 9: 'Mastery'
+};
+
 interface DopplerEffectRendererProps {
+  onComplete?: () => void;
   onGameEvent?: (event: GameEvent) => void;
-  gamePhase?: string;
+  currentPhase?: number;
+  onPhaseComplete?: (phase: number) => void;
 }
 
 // --- PREMIUM DESIGN TOKENS ---
@@ -60,39 +81,46 @@ const design = {
 
 
 // --- MAIN COMPONENT ---
-const DopplerEffectRenderer: React.FC<DopplerEffectRendererProps> = ({ onGameEvent, gamePhase }) => {
+const DopplerEffectRenderer: React.FC<DopplerEffectRendererProps> = ({ onComplete, onGameEvent, currentPhase, onPhaseComplete }) => {
   // --- PHASE MANAGEMENT ---
-  type Phase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
-  const phases: Phase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
-
-  const phaseLabels: Record<Phase, string> = {
-    hook: 'Introduction',
-    predict: 'Predict',
-    play: 'Experiment',
-    review: 'Understanding',
-    twist_predict: 'New Variable',
-    twist_play: 'Observer Motion',
-    twist_review: 'Deep Insight',
-    transfer: 'Real World',
-    test: 'Knowledge Test',
-    mastery: 'Mastery',
-  };
-
-  const getInitialPhase = (): Phase => {
-    if (gamePhase && phases.includes(gamePhase as Phase)) return gamePhase as Phase;
-    return 'hook';
-  };
-
-  const [phase, setPhase] = useState<Phase>(getInitialPhase);
+  const [phase, setPhase] = useState<number>(currentPhase ?? 0);
   const navigationLockRef = useRef(false);
+  const lastClickRef = useRef(0);
   const [activeApp, setActiveApp] = useState(0);
   const [completedApps, setCompletedApps] = useState<Set<number>>(new Set());
 
+  // Sync with external phase control
   useEffect(() => {
-    if (gamePhase && phases.includes(gamePhase as Phase) && gamePhase !== phase) {
-      setPhase(gamePhase as Phase);
+    if (currentPhase !== undefined && currentPhase !== phase) {
+      setPhase(currentPhase);
     }
-  }, [gamePhase]);
+  }, [currentPhase]);
+
+  // Web Audio API sound
+  const playSound = useCallback((type: 'click' | 'success' | 'failure' | 'transition' | 'complete') => {
+    if (typeof window === 'undefined') return;
+    try {
+      const audioContext = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
+      const oscillator = audioContext.createOscillator();
+      const gainNode = audioContext.createGain();
+      oscillator.connect(gainNode);
+      gainNode.connect(audioContext.destination);
+      const sounds = {
+        click: { freq: 600, duration: 0.1, type: 'sine' as OscillatorType },
+        success: { freq: 800, duration: 0.2, type: 'sine' as OscillatorType },
+        failure: { freq: 300, duration: 0.3, type: 'sine' as OscillatorType },
+        transition: { freq: 500, duration: 0.15, type: 'sine' as OscillatorType },
+        complete: { freq: 900, duration: 0.4, type: 'sine' as OscillatorType }
+      };
+      const sound = sounds[type];
+      oscillator.frequency.value = sound.freq;
+      oscillator.type = sound.type;
+      gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + sound.duration);
+      oscillator.start();
+      oscillator.stop(audioContext.currentTime + sound.duration);
+    } catch { /* Audio not supported */ }
+  }, []);
 
   // --- GAME STATE ---
   const [prediction, setPrediction] = useState<string | null>(null);
@@ -123,35 +151,48 @@ const DopplerEffectRenderer: React.FC<DopplerEffectRendererProps> = ({ onGameEve
   }, []);
 
   // --- EVENT EMITTER ---
-  const emit = useCallback((eventType: GameEvent['eventType'], data: Record<string, unknown>) => {
-    onGameEvent?.({
-      eventType,
-      gameId: 'doppler_effect',
-      data,
-      timestamp: Date.now(),
-    });
+  const emitEvent = useCallback((type: GameEventType, data?: Record<string, unknown>) => {
+    if (onGameEvent) {
+      onGameEvent({ type, data });
+    }
   }, [onGameEvent]);
 
   // --- NAVIGATION ---
-  const goToPhase = useCallback((newPhase: Phase) => {
+  const goToPhase = useCallback((newPhase: number) => {
     if (navigationLockRef.current) return;
     navigationLockRef.current = true;
+    playSound('transition');
     setPhase(newPhase);
-    emit('phase_change', { from: phase, to: newPhase });
+    emitEvent('phase_change', { from: phase, to: newPhase });
+    if (onPhaseComplete) onPhaseComplete(newPhase);
 
-    if (newPhase === 'play' || newPhase === 'twist_play') {
+    if (newPhase === 2 || newPhase === 5) {
       setSourcePosition(0);
       setWaveHistory([]);
       setPassCount(0);
       setIsAnimating(true);
-      if (newPhase === 'play') {
+      if (newPhase === 2) {
         setSourceSpeed(30);
         setObserverSpeed(0);
       }
     }
 
     setTimeout(() => { navigationLockRef.current = false; }, 400);
-  }, [emit, phase]);
+  }, [emitEvent, phase, playSound, onPhaseComplete]);
+
+  const goNext = useCallback(() => {
+    if (phase < PHASES.length - 1) {
+      goToPhase(phase + 1);
+    } else if (onComplete) {
+      onComplete();
+    }
+  }, [phase, goToPhase, onComplete]);
+
+  const goBack = useCallback(() => {
+    if (phase > 0) {
+      goToPhase(phase - 1);
+    }
+  }, [phase, goToPhase]);
 
   // --- BUTTON HELPER ---
   const renderButton = (
@@ -227,7 +268,7 @@ const DopplerEffectRenderer: React.FC<DopplerEffectRendererProps> = ({ onGameEve
   }, []);
 
   useEffect(() => {
-    if ((phase === 'play' || phase === 'twist_play') && isAnimating) {
+    if ((phase === 2 || phase === 5) && isAnimating) {
       const interval = setInterval(() => {
         setSourcePosition(prev => {
           const newPos = prev + sourceSpeed * 0.02;
@@ -243,7 +284,7 @@ const DopplerEffectRenderer: React.FC<DopplerEffectRendererProps> = ({ onGameEve
   }, [phase, isAnimating, sourceSpeed]);
 
   useEffect(() => {
-    if ((phase === 'play' || phase === 'twist_play') && isAnimating) {
+    if ((phase === 2 || phase === 5) && isAnimating) {
       const interval = setInterval(() => {
         setWaveHistory(prev => {
           const newWaves = [...prev, { x: sourcePosition, t: time, id: Date.now() + Math.random() }];
@@ -255,7 +296,7 @@ const DopplerEffectRenderer: React.FC<DopplerEffectRendererProps> = ({ onGameEve
   }, [phase, isAnimating, sourcePosition, time]);
 
   useEffect(() => {
-    if (phase === 'play' || phase === 'twist_play') {
+    if (phase === 2 || phase === 5) {
       const normalizedPos = sourcePosition / 100;
       if (normalizedPos < 0.3) setTeachingMilestone('approaching');
       else if (normalizedPos < 0.55) setTeachingMilestone('passing');
@@ -396,7 +437,6 @@ const DopplerEffectRenderer: React.FC<DopplerEffectRendererProps> = ({ onGameEve
 
   // --- RENDER HELPERS ---
   const renderProgressBar = () => {
-    const currentIdx = phases.indexOf(phase);
     return (
       <div style={{
         display: 'flex',
@@ -408,23 +448,23 @@ const DopplerEffectRenderer: React.FC<DopplerEffectRendererProps> = ({ onGameEve
         gap: design.spacing.md,
       }}>
         <div style={{ display: 'flex', gap: design.spacing.xs }}>
-          {phases.map((p, i) => (
+          {PHASES.map((p) => (
             <div
               key={p}
-              onClick={() => i < currentIdx && goToPhase(p)}
+              onClick={() => p < phase && goToPhase(p)}
               style={{
-                width: i === currentIdx ? 24 : 10,
+                width: p === phase ? 24 : 10,
                 height: 10,
                 borderRadius: design.radius.full,
-                background: i < currentIdx ? design.colors.success : i === currentIdx ? design.colors.accentPrimary : design.colors.bgGlow,
-                cursor: i < currentIdx ? 'pointer' : 'default',
+                background: p < phase ? design.colors.success : p === phase ? design.colors.accentPrimary : design.colors.bgGlow,
+                cursor: p < phase ? 'pointer' : 'default',
                 transition: 'all 0.3s ease',
               }}
             />
           ))}
         </div>
         <span style={{ fontSize: design.typography.caption.size, fontWeight: 700, color: design.colors.textMuted }}>
-          {currentIdx + 1}/{phases.length}
+          {phase + 1}/{PHASES.length}
         </span>
         <div style={{
           padding: `${design.spacing.xs}px ${design.spacing.md}px`,
@@ -441,7 +481,6 @@ const DopplerEffectRenderer: React.FC<DopplerEffectRendererProps> = ({ onGameEve
   };
 
   const renderBottomNav = (canBack: boolean, canNext: boolean, nextLabel: string, onNext?: () => void) => {
-    const currentIdx = phases.indexOf(phase);
     return (
       <div style={{
         display: 'flex',
@@ -451,10 +490,10 @@ const DopplerEffectRenderer: React.FC<DopplerEffectRendererProps> = ({ onGameEve
         background: design.colors.bgCard,
         borderTop: `1px solid ${design.colors.bgGlow}`,
       }}>
-        {renderButton('← Back', () => currentIdx > 0 && goToPhase(phases[currentIdx - 1]), 'ghost', { disabled: !canBack || currentIdx === 0 })}
+        {renderButton('← Back', () => phase > 0 && goToPhase(phase - 1), 'ghost', { disabled: !canBack || phase === 0 })}
         {renderButton(`${nextLabel} →`, () => {
           if (onNext) onNext();
-          else if (currentIdx < phases.length - 1) goToPhase(phases[currentIdx + 1]);
+          else if (phase < PHASES.length - 1) goToPhase(phase + 1);
         }, 'primary', { disabled: !canNext })}
       </div>
     );
@@ -823,108 +862,125 @@ const DopplerEffectRenderer: React.FC<DopplerEffectRendererProps> = ({ onGameEve
 
   // --- PHASE RENDERS ---
 
-  // HOOK PHASE
-  if (phase === 'hook') {
-    return (
-      <div style={{
-        display: 'flex',
-        flexDirection: 'column',
-        height: '100%',
-        background: design.colors.gradientBg,
-      }}>
-        {renderProgressBar()}
+  // Wrapper component for premium design
+  const PremiumWrapper = ({ children }: { children: React.ReactNode }) => (
+    <div className="min-h-screen bg-[#0a0f1a] text-white relative overflow-hidden">
+      {/* Premium background gradient */}
+      <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-[#0a1628] to-slate-900" />
+      <div className="absolute top-0 left-1/4 w-96 h-96 bg-red-500/5 rounded-full blur-3xl" />
+      <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-blue-500/5 rounded-full blur-3xl" />
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-purple-500/3 rounded-full blur-3xl" />
 
-        <div style={{
-          flex: 1,
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          justifyContent: 'center',
-          padding: design.spacing.xl,
-          textAlign: 'center',
-          overflow: 'auto',
-        }}>
-          <div style={{
-            width: isMobile ? 100 : 120,
-            height: isMobile ? 100 : 120,
-            borderRadius: design.radius.xl,
-            background: design.colors.gradientPrimary,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            marginBottom: design.spacing.lg,
-            boxShadow: design.shadows.glow,
-            animation: 'float 3s ease-in-out infinite',
-          }}>
-            <span style={{ fontSize: isMobile ? 50 : 60 }}>🚑</span>
+      {/* Header */}
+      <div className="fixed top-0 left-0 right-0 z-50 bg-slate-900/80 backdrop-blur-xl border-b border-slate-800/50">
+        <div className="flex items-center justify-between px-6 py-3 max-w-4xl mx-auto">
+          <span className="text-sm font-semibold text-white/80 tracking-wide">Doppler Effect</span>
+          <div className="flex items-center gap-1.5">
+            {PHASES.map((p) => (
+              <button
+                key={p}
+                onMouseDown={(e) => { e.preventDefault(); goToPhase(p); }}
+                className={`h-2 rounded-full transition-all duration-300 ${
+                  phase === p
+                    ? 'bg-red-400 w-6 shadow-lg shadow-red-400/30'
+                    : phase > p
+                      ? 'bg-emerald-500 w-2'
+                      : 'bg-slate-700 w-2 hover:bg-slate-600'
+                }`}
+                title={phaseLabels[p]}
+              />
+            ))}
+          </div>
+          <span className="text-sm font-medium text-red-400">{phaseLabels[phase]}</span>
+        </div>
+      </div>
+
+      {/* Main content */}
+      <div className="relative pt-16 pb-12">
+        {children}
+      </div>
+    </div>
+  );
+
+  // HOOK PHASE
+  if (phase === 0) {
+    return (
+      <PremiumWrapper>
+        <div className="flex flex-col items-center justify-center min-h-[600px] px-6 py-12 text-center">
+          {/* Premium badge */}
+          <div className="inline-flex items-center gap-2 px-4 py-2 bg-red-500/10 border border-red-500/20 rounded-full mb-8">
+            <span className="w-2 h-2 bg-red-400 rounded-full animate-pulse" />
+            <span className="text-sm font-medium text-red-400 tracking-wide">PHYSICS EXPLORATION</span>
           </div>
 
-          <h1 style={{
-            fontSize: isMobile ? 32 : design.typography.hero.size,
-            fontWeight: design.typography.hero.weight,
-            marginBottom: design.spacing.md,
-            background: design.colors.gradientPrimary,
-            WebkitBackgroundClip: 'text',
-            WebkitTextFillColor: 'transparent',
-            backgroundClip: 'text',
-          }}>
+          {/* Main title with gradient */}
+          <h1 className="text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-white via-red-100 to-blue-200 bg-clip-text text-transparent">
             The Doppler Effect
           </h1>
 
-          <p style={{
-            fontSize: design.typography.subtitle.size,
-            color: design.colors.textSecondary,
-            maxWidth: 520,
-            lineHeight: design.typography.subtitle.lineHeight,
-            marginBottom: design.spacing.xl,
-          }}>
-            Why does an ambulance siren sound <span style={{ color: design.colors.accentPrimary, fontWeight: 700 }}>higher</span> when approaching and <span style={{ color: design.colors.accentSecondary, fontWeight: 700 }}>lower</span> when leaving? Discover the physics behind radar guns, bat echolocation, and the expanding universe!
+          <p className="text-lg text-slate-400 max-w-md mb-10">
+            Why does an ambulance siren change pitch as it passes?
           </p>
 
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(4, 1fr)',
-            gap: design.spacing.md,
-            maxWidth: 600,
-            marginBottom: design.spacing.xl,
-          }}>
-            {[
-              { icon: '🌊', label: 'Wave Physics' },
-              { icon: '📡', label: 'Radar Tech' },
-              { icon: '🌌', label: 'Cosmology' },
-              { icon: '🦇', label: 'Biosonar' },
-            ].map((item, i) => (
-              <div key={i} style={{
-                padding: design.spacing.lg,
-                borderRadius: design.radius.lg,
-                background: design.colors.bgCard,
-                border: `1px solid ${design.colors.bgGlow}`,
-              }}>
-                <div style={{ fontSize: 28, marginBottom: design.spacing.sm }}>{item.icon}</div>
-                <div style={{ fontSize: design.typography.caption.size, fontWeight: 700, color: design.colors.textMuted }}>{item.label}</div>
+          {/* Premium card with content */}
+          <div className="relative bg-gradient-to-br from-slate-800/80 to-slate-900/80 rounded-3xl p-8 max-w-xl w-full border border-slate-700/50 shadow-2xl shadow-black/20 backdrop-blur-xl">
+            {/* Subtle glow effect */}
+            <div className="absolute inset-0 bg-gradient-to-br from-red-500/5 via-transparent to-blue-500/5 rounded-3xl" />
+
+            <div className="relative">
+              <div className="text-6xl mb-6">🚑</div>
+
+              <div className="space-y-4">
+                <p className="text-xl text-white/90 font-medium leading-relaxed">
+                  Sound waves compressed when approaching, stretched when leaving.
+                </p>
+                <p className="text-lg text-slate-400 leading-relaxed">
+                  Discover the physics behind radar guns, bat echolocation, and the expanding universe!
+                </p>
+                <div className="pt-2">
+                  <p className="text-base text-red-400 font-semibold">
+                    Master one of physics' most powerful principles!
+                  </p>
+                </div>
               </div>
-            ))}
+            </div>
           </div>
 
-          {renderButton('Start Learning', () => goToPhase('predict'), 'primary', { size: 'lg' })}
+          {/* Premium CTA button */}
+          <button
+            onMouseDown={(e) => { e.preventDefault(); goToPhase(1); }}
+            className="mt-10 group relative px-10 py-5 bg-gradient-to-r from-red-500 to-rose-600 text-white text-lg font-semibold rounded-2xl transition-all duration-300 hover:shadow-lg hover:shadow-red-500/25 hover:scale-[1.02] active:scale-[0.98]"
+          >
+            <span className="relative z-10 flex items-center gap-3">
+              Start Learning
+              <svg className="w-5 h-5 transition-transform group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+              </svg>
+            </span>
+          </button>
 
-          <p style={{ marginTop: design.spacing.lg, fontSize: design.typography.caption.size, color: design.colors.textDim }}>
-            ~8 minutes • Interactive simulation • 11 mastery questions
-          </p>
+          {/* Feature hints */}
+          <div className="mt-12 flex items-center gap-8 text-sm text-slate-500">
+            <div className="flex items-center gap-2">
+              <span className="text-red-400">✦</span>
+              Interactive Lab
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-red-400">✦</span>
+              Real-World Examples
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-red-400">✦</span>
+              Knowledge Test
+            </div>
+          </div>
         </div>
-
-        <style>{`
-          @keyframes float {
-            0%, 100% { transform: translateY(0px); }
-            50% { transform: translateY(-10px); }
-          }
-        `}</style>
-      </div>
+      </PremiumWrapper>
     );
   }
 
   // PREDICT PHASE
-  if (phase === 'predict') {
+  if (phase === 1) {
     return (
       <div style={{ display: 'flex', flexDirection: 'column', height: '100%', background: design.colors.bgDeep }}>
         {renderProgressBar()}
@@ -951,7 +1007,7 @@ const DopplerEffectRenderer: React.FC<DopplerEffectRendererProps> = ({ onGameEve
                   key={opt.id}
                   onMouseDown={() => {
                     setPrediction(opt.id);
-                    emit('prediction', { prediction: opt.id, label: opt.label });
+                    emitEvent('prediction_made', { prediction: opt.id, label: opt.label });
                   }}
                   style={{
                     display: 'flex',
@@ -997,7 +1053,7 @@ const DopplerEffectRenderer: React.FC<DopplerEffectRendererProps> = ({ onGameEve
   }
 
   // PLAY PHASE
-  if (phase === 'play') {
+  if (phase === 2) {
     return (
       <div style={{ display: 'flex', flexDirection: 'column', height: '100%', background: design.colors.bgDeep }}>
         {renderProgressBar()}
@@ -1062,7 +1118,7 @@ const DopplerEffectRenderer: React.FC<DopplerEffectRendererProps> = ({ onGameEve
   }
 
   // REVIEW PHASE
-  if (phase === 'review') {
+  if (phase === 3) {
     return (
       <div style={{ display: 'flex', flexDirection: 'column', height: '100%', background: design.colors.bgDeep }}>
         {renderProgressBar()}
@@ -1159,7 +1215,7 @@ const DopplerEffectRenderer: React.FC<DopplerEffectRendererProps> = ({ onGameEve
   }
 
   // TWIST_PREDICT PHASE
-  if (phase === 'twist_predict') {
+  if (phase === 4) {
     return (
       <div style={{ display: 'flex', flexDirection: 'column', height: '100%', background: design.colors.bgDeep }}>
         {renderProgressBar()}
@@ -1212,7 +1268,7 @@ const DopplerEffectRenderer: React.FC<DopplerEffectRendererProps> = ({ onGameEve
                   key={opt.id}
                   onMouseDown={() => {
                     setTwistPrediction(opt.id);
-                    emit('prediction', { prediction: opt.id, phase: 'twist' });
+                    emitEvent('twist_prediction_made', { prediction: opt.id });
                   }}
                   style={{
                     display: 'flex',
@@ -1245,7 +1301,7 @@ const DopplerEffectRenderer: React.FC<DopplerEffectRendererProps> = ({ onGameEve
   }
 
   // TWIST_PLAY PHASE
-  if (phase === 'twist_play') {
+  if (phase === 5) {
     return (
       <div style={{ display: 'flex', flexDirection: 'column', height: '100%', background: design.colors.bgDeep }}>
         {renderProgressBar()}
@@ -1317,7 +1373,7 @@ const DopplerEffectRenderer: React.FC<DopplerEffectRendererProps> = ({ onGameEve
   }
 
   // TWIST_REVIEW PHASE
-  if (phase === 'twist_review') {
+  if (phase === 6) {
     return (
       <div style={{ display: 'flex', flexDirection: 'column', height: '100%', background: design.colors.bgDeep }}>
         {renderProgressBar()}
@@ -1386,7 +1442,7 @@ const DopplerEffectRenderer: React.FC<DopplerEffectRendererProps> = ({ onGameEve
   }
 
   // TRANSFER PHASE
-  if (phase === 'transfer') {
+  if (phase === 7) {
     const app = applications[activeApp];
 
     return (
@@ -1554,7 +1610,7 @@ const DopplerEffectRenderer: React.FC<DopplerEffectRendererProps> = ({ onGameEve
   }
 
   // TEST PHASE
-  if (phase === 'test') {
+  if (phase === 8) {
     if (testSubmitted) {
       const score = testAnswers.reduce((acc, ans, i) => acc + (ans === testQuestions[i].correct ? 1 : 0), 0);
       const percentage = Math.round((score / testQuestions.length) * 100);
@@ -1605,7 +1661,7 @@ const DopplerEffectRenderer: React.FC<DopplerEffectRendererProps> = ({ onGameEve
 
             {renderButton(passed ? 'Complete Lesson' : 'Try Again', () => {
               if (passed) {
-                goToPhase('mastery');
+                goToPhase(9);
               } else {
                 setTestSubmitted(false);
                 setTestIndex(0);
@@ -1711,7 +1767,7 @@ const DopplerEffectRenderer: React.FC<DopplerEffectRendererProps> = ({ onGameEve
             renderButton('Submit Test', () => {
               if (testAnswers.every(a => a !== null)) {
                 setTestSubmitted(true);
-                emit('answer', {
+                emitEvent('test_answered', {
                   score: testAnswers.reduce((acc, ans, i) => acc + (ans === testQuestions[i].correct ? 1 : 0), 0),
                   total: testQuestions.length
                 });
@@ -1724,7 +1780,7 @@ const DopplerEffectRenderer: React.FC<DopplerEffectRendererProps> = ({ onGameEve
   }
 
   // MASTERY PHASE
-  if (phase === 'mastery') {
+  if (phase === 9) {
     return (
       <div style={{
         display: 'flex',
@@ -1823,7 +1879,7 @@ const DopplerEffectRenderer: React.FC<DopplerEffectRendererProps> = ({ onGameEve
             ))}
           </div>
 
-          {renderButton('Complete Lesson 🎉', () => emit('milestone', { type: 'completed', game: 'doppler_effect' }), 'primary', { size: 'lg' })}
+          {renderButton('Complete Lesson 🎉', () => emitEvent('mastery_achieved', { game: 'doppler_effect' }), 'primary', { size: 'lg' })}
         </div>
 
         <style>{`

@@ -985,35 +985,74 @@ export default function PoissonRatioRenderer({ onEvent, savedState }: PoissonRat
 
   // ─── Phase Renderers ─────────────────────────────────────────────────────────
   const renderHook = () => (
-    <div className="text-center space-y-8">
-      <div className="relative">
-        <div className="text-8xl mb-6 animate-pulse">🔗↔️</div>
-        <div className="absolute inset-0 bg-gradient-to-t from-slate-900 to-transparent pointer-events-none" />
+    <div className="flex flex-col items-center justify-center min-h-[600px] px-6 py-12 text-center">
+      {/* Premium badge */}
+      <div className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-500/10 border border-indigo-500/20 rounded-full mb-8">
+        <span className="w-2 h-2 bg-indigo-400 rounded-full animate-pulse" />
+        <span className="text-sm font-medium text-indigo-400 tracking-wide">PHYSICS EXPLORATION</span>
       </div>
 
-      <div className="space-y-4">
-        <h1 className="text-4xl font-bold bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">
-          The Rubber Band Mystery
-        </h1>
-        <p className="text-xl text-gray-300 max-w-xl mx-auto leading-relaxed">
-          Stretch a rubber band and watch closely - it gets <span className="text-blue-400 font-semibold">longer</span>
-          but also gets <span className="text-pink-400 font-semibold">thinner</span>!
-          All materials do this (to varying degrees). Why?
-        </p>
+      {/* Main title with gradient */}
+      <h1 className="text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-white via-indigo-100 to-purple-200 bg-clip-text text-transparent">
+        The Rubber Band Mystery
+      </h1>
+
+      <p className="text-lg text-slate-400 max-w-md mb-10">
+        Discover why materials change shape when stretched
+      </p>
+
+      {/* Premium card with graphic */}
+      <div className="relative bg-gradient-to-br from-slate-800/80 to-slate-900/80 rounded-3xl p-8 max-w-xl w-full border border-slate-700/50 shadow-2xl shadow-black/20 backdrop-blur-xl">
+        {/* Subtle glow effect */}
+        <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/5 via-transparent to-purple-500/5 rounded-3xl" />
+
+        <div className="relative">
+          <div className="text-6xl mb-6">🔗↔️</div>
+
+          <div className="space-y-4">
+            <p className="text-xl text-white/90 font-medium leading-relaxed">
+              Stretch a rubber band and watch closely
+            </p>
+            <p className="text-lg text-slate-400 leading-relaxed">
+              It gets <span className="text-blue-400 font-semibold">longer</span> but also gets <span className="text-pink-400 font-semibold">thinner</span>! All materials do this (to varying degrees). Why?
+            </p>
+            <div className="pt-2">
+              <p className="text-base text-indigo-400 font-semibold">
+                Why do materials get thinner when you stretch them?
+              </p>
+            </div>
+          </div>
+        </div>
       </div>
 
-      <div className="bg-gradient-to-r from-indigo-900/40 to-purple-900/40 rounded-2xl p-8 max-w-md mx-auto border border-indigo-500/20">
-        <p className="text-indigo-300 font-medium text-lg">
-          Why do materials get thinner when you stretch them? 🤔
-        </p>
-      </div>
-
-      <PrimaryButton
+      {/* Premium CTA button */}
+      <button
         onMouseDown={() => { playSound('click'); nextPhase(); }}
-        variant="indigo"
+        className="mt-10 group relative px-10 py-5 bg-gradient-to-r from-indigo-500 to-purple-600 text-white text-lg font-semibold rounded-2xl transition-all duration-300 hover:shadow-lg hover:shadow-indigo-500/25 hover:scale-[1.02] active:scale-[0.98]"
       >
-        Investigate! →
-      </PrimaryButton>
+        <span className="relative z-10 flex items-center gap-3">
+          Investigate!
+          <svg className="w-5 h-5 transition-transform group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+          </svg>
+        </span>
+      </button>
+
+      {/* Feature hints */}
+      <div className="mt-12 flex items-center gap-8 text-sm text-slate-500">
+        <div className="flex items-center gap-2">
+          <span className="text-indigo-400">✦</span>
+          Interactive Lab
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="text-indigo-400">✦</span>
+          Real-World Examples
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="text-indigo-400">✦</span>
+          Knowledge Test
+        </div>
+      </div>
     </div>
   );
 
@@ -1505,10 +1544,42 @@ export default function PoissonRatioRenderer({ onEvent, savedState }: PoissonRat
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900 p-6">
-      <div className="max-w-2xl mx-auto">
-        <ProgressIndicator phases={PHASES} currentPhase={phase} />
-        {renderPhase()}
+    <div className="min-h-screen bg-[#0a0f1a] text-white relative overflow-hidden">
+      {/* Premium background gradient */}
+      <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-[#0a1628] to-slate-900" />
+      <div className="absolute top-0 left-1/4 w-96 h-96 bg-indigo-500/5 rounded-full blur-3xl" />
+      <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-purple-500/5 rounded-full blur-3xl" />
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-pink-500/3 rounded-full blur-3xl" />
+
+      {/* Header */}
+      <div className="fixed top-0 left-0 right-0 z-50 bg-slate-900/80 backdrop-blur-xl border-b border-slate-800/50">
+        <div className="flex items-center justify-between px-6 py-3 max-w-4xl mx-auto">
+          <span className="text-sm font-semibold text-white/80 tracking-wide">Poisson&apos;s Ratio</span>
+          <div className="flex items-center gap-1.5">
+            {PHASES.map((p, i) => (
+              <button
+                key={p}
+                onMouseDown={(e) => { e.preventDefault(); goToPhase(p); }}
+                className={`h-2 rounded-full transition-all duration-300 ${
+                  PHASES.indexOf(phase) === i
+                    ? 'bg-indigo-400 w-6 shadow-lg shadow-indigo-400/30'
+                    : PHASES.indexOf(phase) > i
+                      ? 'bg-emerald-500 w-2'
+                      : 'bg-slate-700 w-2 hover:bg-slate-600'
+                }`}
+                title={p}
+              />
+            ))}
+          </div>
+          <span className="text-sm font-medium text-indigo-400">{phase.replace('_', ' ')}</span>
+        </div>
+      </div>
+
+      {/* Main content */}
+      <div className="relative pt-16 pb-12 px-6">
+        <div className="max-w-2xl mx-auto">
+          {renderPhase()}
+        </div>
       </div>
     </div>
   );

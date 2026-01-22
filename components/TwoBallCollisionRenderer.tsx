@@ -24,7 +24,15 @@ interface GameEvent {
 // SOUND UTILITY
 // ─────────────────────────────────────────────────────────────────────────────
 
-const playSound = (frequency: number, type: OscillatorType = 'sine', duration: number = 0.15) => {
+const playSound = (soundType: 'click' | 'success' | 'failure' | 'transition' | 'complete') => {
+  const soundConfig = {
+    click: { frequency: 400, type: 'sine' as OscillatorType, duration: 0.1 },
+    success: { frequency: 600, type: 'sine' as OscillatorType, duration: 0.15 },
+    failure: { frequency: 200, type: 'square' as OscillatorType, duration: 0.2 },
+    transition: { frequency: 500, type: 'sine' as OscillatorType, duration: 0.1 },
+    complete: { frequency: 800, type: 'sine' as OscillatorType, duration: 0.3 }
+  };
+  const { frequency, type, duration } = soundConfig[soundType];
   try {
     const audioContext = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
     const oscillator = audioContext.createOscillator();
@@ -95,6 +103,7 @@ const TwoBallCollisionRenderer: React.FC<TwoBallCollisionRendererProps> = ({
   const [showCoachMessage, setShowCoachMessage] = useState(true);
   const [isMobile, setIsMobile] = useState(false);
   const navigationLockRef = useRef(false);
+  const lastClickRef = useRef(0);
 
   // Game state
   const [prediction, setPrediction] = useState<string | null>(null);
@@ -154,10 +163,14 @@ const TwoBallCollisionRenderer: React.FC<TwoBallCollisionRendererProps> = ({
   // ─────────────────────────────────────────────────────────────────────────
 
   const goToPhase = useCallback((newPhase: Phase) => {
+    const now = Date.now();
+    if (now - lastClickRef.current < 200) return;
     if (navigationLockRef.current) return;
+
+    lastClickRef.current = now;
     navigationLockRef.current = true;
 
-    playSound(500, 'sine', 0.1);
+    playSound('transition');
     setPhase(newPhase);
     setShowCoachMessage(true);
     emitEvent('phase_change', { action: `Moved to ${newPhase}` });
@@ -215,7 +228,7 @@ const TwoBallCollisionRenderer: React.FC<TwoBallCollisionRendererProps> = ({
       } else {
         // Collision!
         setAnimationPhase('collision');
-        playSound(type === 'elastic' ? 800 : 400, type === 'elastic' ? 'triangle' : 'square', 0.2);
+        playSound(type === 'elastic' ? 'success' : 'click');
 
         setTimeout(() => {
           setAnimationPhase('after');
@@ -451,60 +464,102 @@ const TwoBallCollisionRenderer: React.FC<TwoBallCollisionRendererProps> = ({
   // ─────────────────────────────────────────────────────────────────────────
 
   const renderHook = () => (
-    <div className="text-center">
-      {renderSectionHeader('The Collision Mystery', 'Why do some balls bounce and others stick?')}
-
-      <div className="bg-gradient-to-br from-blue-100 to-indigo-100 rounded-2xl p-6 mb-6 shadow-lg">
-        <svg viewBox="0 0 300 180" className="w-full h-44 mb-4">
-          {/* Two scenarios */}
-          <rect x="0" y="0" width="300" height="180" fill="white" rx="10" />
-
-          {/* Elastic scenario (top) */}
-          <g transform="translate(0, 20)">
-            <text x="150" y="10" textAnchor="middle" fill={colors.elastic} fontSize="11" fontWeight="bold">SUPER BALL</text>
-            <rect x="20" y="45" width="260" height="8" fill={colors.track} rx="4" />
-
-            <circle cx="80" cy="40" r="18" fill={colors.ball1} />
-            <text x="80" y="45" textAnchor="middle" fill="white" fontSize="10">→</text>
-
-            <circle cx="180" cy="40" r="18" fill={colors.ball2} />
-
-            <text x="250" y="45" textAnchor="middle" fill={colors.neutral} fontSize="10">After:</text>
-            <circle cx="50" cy="40" r="10" fill={colors.ball1} opacity="0.5" />
-            <text x="50" y="43" textAnchor="middle" fill="white" fontSize="8">←</text>
-            <circle cx="250" cy="40" r="10" fill={colors.ball2} opacity="0.5" />
-            <text x="250" y="43" textAnchor="middle" fill="white" fontSize="8">→</text>
-          </g>
-
-          {/* Inelastic scenario (bottom) */}
-          <g transform="translate(0, 100)">
-            <text x="150" y="10" textAnchor="middle" fill={colors.inelastic} fontSize="11" fontWeight="bold">CLAY BALL</text>
-            <rect x="20" y="45" width="260" height="8" fill={colors.track} rx="4" />
-
-            <circle cx="80" cy="40" r="18" fill={colors.ball1} />
-            <text x="80" y="45" textAnchor="middle" fill="white" fontSize="10">→</text>
-
-            <circle cx="180" cy="40" r="18" fill={colors.inelastic} />
-
-            <text x="250" y="45" textAnchor="middle" fill={colors.neutral} fontSize="10">After:</text>
-            <ellipse cx="200" cy="40" rx="25" ry="15" fill={colors.inelastic} opacity="0.7" />
-            <text x="200" y="45" textAnchor="middle" fill="white" fontSize="8">→ (stuck)</text>
-          </g>
-        </svg>
-
-        <p className="text-lg text-indigo-800">
-          A super ball bounces back. Clay sticks.
-          <br />
-          <span className="font-bold">Both conserve momentum, but something's different...</span>
-        </p>
+    <div className="flex flex-col items-center justify-center min-h-[600px] px-6 py-12 text-center">
+      {/* Premium badge */}
+      <div className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-500/10 border border-indigo-500/20 rounded-full mb-8">
+        <span className="w-2 h-2 bg-indigo-400 rounded-full animate-pulse" />
+        <span className="text-sm font-medium text-indigo-400 tracking-wide">PHYSICS EXPLORATION</span>
       </div>
 
-      {renderKeyTakeaway(
-        "The Mystery",
-        "In both collisions, total momentum before = total momentum after. But the super ball also conserves kinetic energy—the clay doesn't. Where does the energy go?"
-      )}
+      {/* Main title with gradient */}
+      <h1 className="text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-white via-indigo-100 to-purple-200 bg-clip-text text-transparent">
+        The Collision Mystery
+      </h1>
 
-      {renderBottomBar(() => goToPhase('predict'), true, 'Make Your Prediction')}
+      <p className="text-lg text-slate-400 max-w-md mb-10">
+        Why do some balls bounce and others stick together?
+      </p>
+
+      {/* Premium card with graphic */}
+      <div className="relative bg-gradient-to-br from-slate-800/80 to-slate-900/80 rounded-3xl p-8 max-w-xl w-full border border-slate-700/50 shadow-2xl shadow-black/20">
+        {/* Subtle glow effect */}
+        <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/5 via-transparent to-purple-500/5 rounded-3xl" />
+
+        <div className="relative">
+          <svg viewBox="0 0 300 180" className="w-full h-44 mb-4">
+            <rect x="0" y="0" width="300" height="180" fill="transparent" rx="10" />
+
+            {/* Elastic scenario (top) */}
+            <g transform="translate(0, 20)">
+              <text x="150" y="10" textAnchor="middle" fill={colors.elastic} fontSize="11" fontWeight="bold">SUPER BALL</text>
+              <rect x="20" y="45" width="260" height="8" fill="#334155" rx="4" />
+              <circle cx="80" cy="40" r="18" fill={colors.ball1} />
+              <text x="80" y="45" textAnchor="middle" fill="white" fontSize="10">→</text>
+              <circle cx="180" cy="40" r="18" fill={colors.ball2} />
+              <text x="250" y="45" textAnchor="middle" fill="#94a3b8" fontSize="10">After:</text>
+              <circle cx="50" cy="40" r="10" fill={colors.ball1} opacity="0.5" />
+              <text x="50" y="43" textAnchor="middle" fill="white" fontSize="8">←</text>
+              <circle cx="250" cy="40" r="10" fill={colors.ball2} opacity="0.5" />
+              <text x="250" y="43" textAnchor="middle" fill="white" fontSize="8">→</text>
+            </g>
+
+            {/* Inelastic scenario (bottom) */}
+            <g transform="translate(0, 100)">
+              <text x="150" y="10" textAnchor="middle" fill={colors.inelastic} fontSize="11" fontWeight="bold">CLAY BALL</text>
+              <rect x="20" y="45" width="260" height="8" fill="#334155" rx="4" />
+              <circle cx="80" cy="40" r="18" fill={colors.ball1} />
+              <text x="80" y="45" textAnchor="middle" fill="white" fontSize="10">→</text>
+              <circle cx="180" cy="40" r="18" fill={colors.inelastic} />
+              <text x="250" y="45" textAnchor="middle" fill="#94a3b8" fontSize="10">After:</text>
+              <ellipse cx="200" cy="40" rx="25" ry="15" fill={colors.inelastic} opacity="0.7" />
+              <text x="200" y="45" textAnchor="middle" fill="white" fontSize="8">→ (stuck)</text>
+            </g>
+          </svg>
+
+          <div className="mt-4 space-y-4">
+            <p className="text-xl text-white/90 font-medium leading-relaxed">
+              A super ball bounces back. Clay sticks together.
+            </p>
+            <p className="text-lg text-slate-400 leading-relaxed">
+              Both conserve momentum, but something is different...
+            </p>
+            <div className="pt-2">
+              <p className="text-base text-indigo-400 font-semibold">
+                Where does the missing energy go?
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Premium CTA button */}
+      <button
+        onMouseDown={(e) => { e.preventDefault(); goToPhase('predict'); }}
+        className="mt-10 group relative px-10 py-5 bg-gradient-to-r from-indigo-500 to-purple-600 text-white text-lg font-semibold rounded-2xl transition-all duration-300 hover:shadow-lg hover:shadow-indigo-500/25 hover:scale-[1.02] active:scale-[0.98]"
+      >
+        <span className="relative z-10 flex items-center gap-3">
+          Make Your Prediction
+          <svg className="w-5 h-5 transition-transform group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+          </svg>
+        </span>
+      </button>
+
+      {/* Feature hints */}
+      <div className="mt-12 flex items-center gap-8 text-sm text-slate-500">
+        <div className="flex items-center gap-2">
+          <span className="text-indigo-400">✦</span>
+          Interactive Lab
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="text-indigo-400">✦</span>
+          Real-World Examples
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="text-indigo-400">✦</span>
+          Knowledge Test
+        </div>
+      </div>
     </div>
   );
 
@@ -527,7 +582,7 @@ const TwoBallCollisionRenderer: React.FC<TwoBallCollisionRendererProps> = ({
               onMouseDown={(e) => {
                 e.preventDefault();
                 setPrediction(option.id);
-                playSound(400, 'sine', 0.1);
+                playSound('click');
                 emitEvent('prediction', { prediction: option.id });
               }}
               className={`p-4 rounded-xl border-2 transition-all text-left flex items-center gap-3 ${
@@ -760,7 +815,7 @@ const TwoBallCollisionRenderer: React.FC<TwoBallCollisionRendererProps> = ({
               onMouseDown={(e) => {
                 e.preventDefault();
                 setTwistPrediction(option.id);
-                playSound(400, 'sine', 0.1);
+                playSound('click');
                 emitEvent('prediction', { prediction: option.id });
               }}
               className={`p-4 rounded-xl border-2 transition-all text-left flex items-center gap-3 ${
@@ -1067,7 +1122,7 @@ const TwoBallCollisionRenderer: React.FC<TwoBallCollisionRendererProps> = ({
             <button
               onMouseDown={(e) => {
                 e.preventDefault();
-                playSound(600, 'sine', 0.1);
+                playSound('click');
                 setCompletedApps(prev => prev + 1);
               }}
               className="w-full py-3 rounded-xl font-semibold text-white shadow-lg hover:shadow-xl transition-all"
@@ -1227,7 +1282,7 @@ const TwoBallCollisionRenderer: React.FC<TwoBallCollisionRendererProps> = ({
     const newAnswers = [...testAnswers];
     newAnswers[questionIndex] = optionIndex;
     setTestAnswers(newAnswers);
-    playSound(optionIndex === testQuestions[questionIndex].options.findIndex(o => o.correct) ? 600 : 300, 'sine', 0.15);
+    playSound(optionIndex === testQuestions[questionIndex].options.findIndex(o => o.correct) ? 'success' : 'failure');
   };
 
   const calculateTestScore = () => {
@@ -1401,7 +1456,7 @@ const TwoBallCollisionRenderer: React.FC<TwoBallCollisionRendererProps> = ({
         <button
           onMouseDown={(e) => {
             e.preventDefault();
-            playSound(800, 'sine', 0.3);
+            playSound('complete');
             if (onComplete) onComplete(testScore * 10);
             emitEvent('completion', { score: testScore * 10 });
           }}
@@ -1414,32 +1469,72 @@ const TwoBallCollisionRenderer: React.FC<TwoBallCollisionRendererProps> = ({
   };
 
   // ─────────────────────────────────────────────────────────────────────────
+  // PHASE LABELS
+  // ─────────────────────────────────────────────────────────────────────────
+
+  const phaseLabels: Record<Phase, string> = {
+    hook: 'Hook',
+    predict: 'Predict',
+    play: 'Lab',
+    review: 'Review',
+    twist_predict: 'Twist Predict',
+    twist_play: 'Twist Lab',
+    twist_review: 'Twist Review',
+    transfer: 'Transfer',
+    test: 'Test',
+    mastery: 'Mastery'
+  };
+
+  const PHASES: Phase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
+
+  // ─────────────────────────────────────────────────────────────────────────
   // MAIN RENDER
   // ─────────────────────────────────────────────────────────────────────────
 
   return (
-    <div className={`min-h-screen bg-gradient-to-br from-slate-50 to-indigo-50 ${isMobile ? 'p-3' : 'p-6'}`}>
-      <div className="max-w-2xl mx-auto">
-        <div className="text-center mb-4">
-          <h1 className="text-2xl md:text-3xl font-bold text-gray-800 flex items-center justify-center gap-2">
-            ⚽ Collision Physics
-          </h1>
-          <p className="text-gray-600 text-sm">Energy vs Momentum</p>
+    <div className="min-h-screen bg-[#0a0f1a] text-white relative overflow-hidden">
+      {/* Premium background gradient */}
+      <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-[#0a1628] to-slate-900" />
+      <div className="absolute top-0 left-1/4 w-96 h-96 bg-indigo-500/5 rounded-full blur-3xl" />
+      <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-purple-500/5 rounded-full blur-3xl" />
+
+      {/* Header */}
+      <div className="fixed top-0 left-0 right-0 z-50 bg-slate-900/80 backdrop-blur-xl border-b border-slate-800/50">
+        <div className="flex items-center justify-between px-6 py-3 max-w-4xl mx-auto">
+          <span className="text-sm font-semibold text-white/80 tracking-wide">Collision Physics</span>
+          <div className="flex items-center gap-1.5">
+            {PHASES.map((p, i) => (
+              <button
+                key={p}
+                onMouseDown={(e) => { e.preventDefault(); goToPhase(p); }}
+                className={`h-2 rounded-full transition-all duration-300 ${
+                  phase === p
+                    ? 'bg-indigo-400 w-6 shadow-lg shadow-indigo-400/30'
+                    : PHASES.indexOf(phase) > i
+                      ? 'bg-emerald-500 w-2'
+                      : 'bg-slate-700 w-2 hover:bg-slate-600'
+                }`}
+                title={phaseLabels[p]}
+              />
+            ))}
+          </div>
+          <span className="text-sm font-medium text-indigo-400">{phaseLabels[phase]}</span>
         </div>
+      </div>
 
-        {renderProgressBar()}
-
-        {showCoachMessage && (
-          <div className="bg-gradient-to-r from-indigo-500 to-purple-500 text-white rounded-xl p-4 mb-4 shadow-lg">
+      {/* Main content */}
+      <div className="relative pt-16 pb-12 max-w-4xl mx-auto">
+        {showCoachMessage && phase !== 'hook' && (
+          <div className="mx-6 mb-4 bg-gradient-to-r from-indigo-500/20 to-purple-500/20 border border-indigo-500/30 text-white rounded-xl p-4">
             <div className="flex items-start gap-3">
               <span className="text-2xl">🧑‍🏫</span>
-              <p className="flex-1">{coachMessages[phase]}</p>
+              <p className="flex-1 text-slate-300">{coachMessages[phase]}</p>
               <button
                 onMouseDown={(e) => {
                   e.preventDefault();
                   setShowCoachMessage(false);
                 }}
-                className="text-white/80 hover:text-white"
+                className="text-white/60 hover:text-white"
               >
                 ✕
               </button>
@@ -1447,7 +1542,7 @@ const TwoBallCollisionRenderer: React.FC<TwoBallCollisionRendererProps> = ({
           </div>
         )}
 
-        <div className="bg-white/80 backdrop-blur rounded-2xl shadow-xl p-4 md:p-6">
+        <div className={phase === 'hook' ? '' : 'px-6'}>
           {phase === 'hook' && renderHook()}
           {phase === 'predict' && renderPredict()}
           {phase === 'play' && renderPlay()}

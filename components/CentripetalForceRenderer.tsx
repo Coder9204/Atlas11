@@ -2,1560 +2,808 @@
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 
-// ============================================================================
-// CENTRIPETAL FORCE - Premium Apple/Airbnb Design System
-// ============================================================================
+// ═══════════════════════════════════════════════════════════════════════════
+// TYPES & INTERFACES
+// ═══════════════════════════════════════════════════════════════════════════
+type GameEventType =
+  | 'phase_change'
+  | 'prediction_made'
+  | 'simulation_started'
+  | 'parameter_changed'
+  | 'twist_prediction_made'
+  | 'app_explored'
+  | 'test_answered'
+  | 'test_completed'
+  | 'mastery_achieved';
 
-export interface GameEvent {
-  type: 'phase_change' | 'interaction' | 'prediction' | 'result' | 'hint_request' | 'visual_state_update';
-  phase: string;
-  data: Record<string, unknown>;
-  timestamp: number;
-  eventType?: 'speed_change' | 'radius_change' | 'spin_toggle' | 'answer_submit' | 'app_completed';
+interface GameEvent {
+  type: GameEventType;
+  data?: Record<string, unknown>;
 }
 
-interface CentripetalForceRendererProps {
-  width?: number;
-  height?: number;
-  onGameEvent?: (event: GameEvent) => void;
-  gamePhase?: string;
-}
-
-type Phase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
-
-// ============================================================================
-// PREMIUM DESIGN TOKENS - Apple/Airbnb Quality
-// ============================================================================
-const design = {
-  colors: {
-    // Refined dark theme with depth
-    bgDeep: '#000000',
-    bgPrimary: '#0D0D0D',
-    bgSecondary: '#141414',
-    bgTertiary: '#1A1A1A',
-    bgCard: '#141414',
-    bgElevated: '#222222',
-    bgHover: '#1A1A1A',
-
-    // High contrast text
-    textPrimary: '#FFFFFF',
-    textSecondary: '#A3A3A3',
-    textMuted: '#737373',
-    textDisabled: '#525252',
-
-    // Brand colors
-    accentBlue: '#0066FF',
-    accentBlueHover: '#0052CC',
-    accentBlueMuted: 'rgba(0, 102, 255, 0.15)',
-
-    // Functional
-    success: '#00C853',
-    successMuted: 'rgba(0, 200, 83, 0.1)',
-    warning: '#FF9500',
-    warningMuted: 'rgba(255, 149, 0, 0.1)',
-    error: '#FF3B30',
-    errorMuted: 'rgba(255, 59, 48, 0.1)',
-
-    // Borders
-    border: '#262626',
-    borderLight: '#333333',
-    borderFocus: '#0066FF',
-
-    // Gradients
-    gradientBlue: 'linear-gradient(135deg, #0066FF 0%, #0099FF 100%)',
-    gradientGreen: 'linear-gradient(135deg, #00C853 0%, #00E676 100%)',
-  },
-  spacing: { xs: 4, sm: 8, md: 16, lg: 24, xl: 32, xxl: 48 },
-  radius: { sm: 8, md: 12, lg: 16, xl: 24, full: 9999 },
-  font: {
-    sans: '-apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif',
-    mono: '"SF Mono", "Fira Code", monospace'
-  },
-  shadow: {
-    sm: '0 2px 8px rgba(0,0,0,0.3)',
-    md: '0 4px 14px rgba(0, 102, 255, 0.4)',
-    lg: '0 8px 32px rgba(0,0,0,0.5)',
-    glow: (color: string) => `0 0 24px ${color}40`,
-  }
+// Numeric phases: 0=hook, 1=predict, 2=play, 3=review, 4=twist_predict, 5=twist_play, 6=twist_review, 7=transfer, 8=test, 9=mastery
+const PHASES: number[] = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
+const phaseLabels: Record<number, string> = {
+  0: 'Hook', 1: 'Predict', 2: 'Lab', 3: 'Review', 4: 'Twist Predict',
+  5: 'Twist Lab', 6: 'Twist Review', 7: 'Transfer', 8: 'Test', 9: 'Mastery'
 };
 
-// ============================================================================
-// MAIN COMPONENT
-// ============================================================================
-const CentripetalForceRenderer: React.FC<CentripetalForceRendererProps> = ({
-  width = 400,
-  height = 500,
-  onGameEvent,
-  gamePhase
-}) => {
-  // State
-  const [phase, setPhase] = useState<Phase>('hook');
-  const [prediction, setPrediction] = useState<string | null>(null);
+interface Props {
+  onGameEvent?: (event: GameEvent) => void;
+  currentPhase?: number;
+  onPhaseComplete?: (phase: number) => void;
+}
+
+const CentripetalForceRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onPhaseComplete }) => {
+  const [phase, setPhase] = useState<number>(currentPhase ?? 0);
+  const [showPredictionFeedback, setShowPredictionFeedback] = useState(false);
+  const [selectedPrediction, setSelectedPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
-  const [angle, setAngle] = useState(0);
-  const [speed, setSpeed] = useState(4);
-  const [radius_, setRadius_] = useState(1.5);
-  const [isSpinning, setIsSpinning] = useState(false);
-  const [waterSpilled, setWaterSpilled] = useState(false);
-  const [experimentCount, setExperimentCount] = useState(0);
-  const [activeApp, setActiveApp] = useState(0);
+  const [showTwistFeedback, setShowTwistFeedback] = useState(false);
+  const [testAnswers, setTestAnswers] = useState<number[]>(Array(10).fill(-1));
+  const [showTestResults, setShowTestResults] = useState(false);
   const [completedApps, setCompletedApps] = useState<Set<number>>(new Set());
-  const [currentQuestion, setCurrentQuestion] = useState(0);
-  const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
-  const [showExplanation, setShowExplanation] = useState(false);
-  const [correctAnswers, setCorrectAnswers] = useState(0);
-  const [answeredQuestions, setAnsweredQuestions] = useState<Set<number>>(new Set());
+  const [activeAppTab, setActiveAppTab] = useState(0);
   const [isMobile, setIsMobile] = useState(false);
 
-  // Refs
+  const [carAngle, setCarAngle] = useState(0);
+  const [speed, setSpeed] = useState(5);
+  const [radius, setRadius] = useState(70);
+  const [showVectors, setShowVectors] = useState(true);
+  const [isAnimating, setIsAnimating] = useState(true);
+  const [isSliding, setIsSliding] = useState(false);
+  const [bankAngle, setBankAngle] = useState(0);
+
   const navigationLockRef = useRef(false);
-  const animationRef = useRef<number>();
+  const lastClickRef = useRef(0);
 
   // Mobile detection
   useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 640);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
+    setIsMobile(/iPhone|iPad|iPod|Android/i.test(navigator.userAgent));
   }, []);
 
-  // Physics constants
-  const g = 9.8;
-  const minSpeedAtTop = Math.sqrt(g * radius_);
-  const centripetalAccel = (speed * speed) / radius_;
-
-  // Test questions
-  const testQuestions = [
-    { question: "At the top of a vertical circle, what keeps water in the cup?", options: ["Gravity pushes water into the cup", "Air pressure holds it in", "The cup pushes the water toward the center", "Centrifugal force pushes water outward"], correct: 2, explanation: "At the top, both gravity and the cup's normal force point toward the center. The cup actively pushes the water inward, providing the centripetal force needed for circular motion." },
-    { question: "Why does water spill if you swing too slowly?", options: ["Air resistance blows it out", "Gravity exceeds the centripetal force needed", "The cup becomes unstable", "Water pressure increases"], correct: 1, explanation: "At slow speeds, the required centripetal force (mv²/r) is less than gravity (mg). The excess gravitational force pulls water out of the cup." },
-    { question: "The minimum speed at the top to keep water in is:", options: ["v = gr", "v = √(gr)", "v = 2πr", "v = g/r"], correct: 1, explanation: "At minimum speed, gravity alone provides centripetal force: mg = mv²/r. Solving: v² = gr, so v = √(gr)." },
-    { question: "Doubling the radius while keeping speed constant makes centripetal acceleration:", options: ["Double", "Half", "Quadruple", "Stay the same"], correct: 1, explanation: "Centripetal acceleration a = v²/r. With constant v, doubling r cuts acceleration in half. Larger circles need less acceleration for the same speed." },
-    { question: "At the bottom of a roller coaster loop, you feel heavier because:", options: ["Gravity increases there", "The track must push up harder to provide centripetal force", "Your mass increases temporarily", "Air pressure is higher"], correct: 1, explanation: "At the bottom, centripetal force points upward. The track's normal force must exceed your weight by mv²/r to provide this upward force, making you feel heavier." },
-    { question: "On a flat road curve, what provides centripetal force for a car?", options: ["Engine thrust", "Friction between tires and road", "Wind resistance", "Gravity"], correct: 1, explanation: "On flat roads, static friction between tires and pavement provides the inward centripetal force. This is why cars slip on icy curves—reduced friction." },
-    { question: "In a centrifuge, heavy blood cells collect:", options: ["At the center", "At the outside edge", "Evenly distributed", "At the top"], correct: 1, explanation: "Heavy particles need more centripetal force. Without enough at a given radius, they move outward. Lighter plasma stays closer to the center." },
-    { question: "Race tracks are banked to:", options: ["Look impressive", "Provide a horizontal force component toward the center", "Drain rainwater", "Reduce speed"], correct: 1, explanation: "Banking tilts the normal force so it has a horizontal component pointing toward the center, reducing reliance on friction and allowing higher speeds." },
-    { question: "In a rotating space station, 'gravity' comes from:", options: ["Earth's gravitational pull", "The floor pushing inward as centripetal force", "Air pressure differences", "Magnetic fields"], correct: 1, explanation: "The floor provides centripetal force inward. By Newton's 3rd law, you push outward on the floor—this feels like standing on Earth." },
-    { question: "Rope tension is greatest when swinging a bucket:", options: ["At the top", "At the bottom", "At the sides", "Tension is constant"], correct: 1, explanation: "At the bottom, tension must overcome gravity AND provide centripetal force: T = mg + mv²/r. At the top, gravity helps: T = mv²/r - mg." }
-  ];
-
-  // Real-world applications
-  const applications = [
-    {
-      id: 'rollercoaster',
-      icon: '🎢',
-      title: 'Roller Coasters',
-      subtitle: 'Engineering thrills safely',
-      description: 'Modern roller coasters use precisely calculated speeds and loop designs to keep riders safe while maximizing excitement.',
-      physics: 'Engineers ensure the car\'s speed at the top of each loop exceeds √(gr) so centripetal force keeps riders in their seats.',
-      insight: 'Clothoid loops (teardrop shape) have tighter radius at top, reducing the minimum speed needed and the g-forces on riders.',
-      stats: [
-        { label: 'Loop Speed', value: '60+ mph' },
-        { label: 'G-Forces', value: '3-4 Gs' },
-        { label: 'Design', value: 'Clothoid' },
-      ],
-      color: '#0066FF',
-    },
-    {
-      id: 'centrifuge',
-      icon: '🧬',
-      title: 'Medical Centrifuges',
-      subtitle: 'Separating blood components',
-      description: 'Centrifuges spin samples at thousands of RPM, using centripetal acceleration to separate substances by density.',
-      physics: 'Heavy particles (red blood cells) need more centripetal force. Without enough, they migrate outward, separating from lighter plasma.',
-      insight: 'A centrifuge at 3000 RPM creates about 1000g of acceleration—1000 times stronger than gravity!',
-      stats: [
-        { label: 'Speed', value: '3-15K RPM' },
-        { label: 'Force', value: '500-20K g' },
-        { label: 'Use', value: 'Blood analysis' },
-      ],
-      color: '#00C853',
-    },
-    {
-      id: 'banking',
-      icon: '🏎️',
-      title: 'Banked Tracks',
-      subtitle: 'NASCAR physics',
-      description: 'High-speed race tracks bank curves up to 33°, allowing cars to turn at extreme speeds without sliding outward.',
-      physics: 'Banking tilts the normal force, adding a horizontal component that helps provide centripetal force without relying solely on friction.',
-      insight: 'At the "ideal" banking angle, a car could navigate the curve with zero friction. Real tracks exceed this for safety.',
-      stats: [
-        { label: 'Bank Angle', value: 'Up to 33°' },
-        { label: 'Top Speed', value: '200+ mph' },
-        { label: 'Example', value: 'Daytona' },
-      ],
-      color: '#FF9500',
-    },
-    {
-      id: 'space',
-      icon: '🛸',
-      title: 'Space Stations',
-      subtitle: 'Artificial gravity',
-      description: 'Future rotating space stations will create artificial gravity through centripetal acceleration—no Earth required.',
-      physics: 'Standing on the outer rim of a rotating station, the floor pushes you inward. Your body interprets this as "weight."',
-      insight: 'To feel Earth-like gravity (9.8 m/s²), a 100m radius station would spin at ~3 RPM. Larger stations can spin slower.',
-      stats: [
-        { label: 'Rotation', value: '1-2 RPM' },
-        { label: 'Min Radius', value: '500+ m' },
-        { label: 'Target', value: '0.5-1.0 g' },
-      ],
-      color: '#8B5CF6',
-    },
-  ];
-
-  // Effects
+  // Phase sync
   useEffect(() => {
-    if (gamePhase && gamePhase !== phase) setPhase(gamePhase as Phase);
-  }, [gamePhase, phase]);
-
-  // Animation
-  useEffect(() => {
-    if (isSpinning && (phase === 'play' || phase === 'twist_play')) {
-      const animate = () => {
-        setAngle(prev => {
-          const newAngle = (prev + speed * 0.04) % (2 * Math.PI);
-          if (Math.abs(newAngle - Math.PI / 2) < 0.15 && speed < minSpeedAtTop && !waterSpilled) {
-            setWaterSpilled(true);
-            emit('result', { event: 'water_spilled', speed, minRequired: minSpeedAtTop });
-          }
-          return newAngle;
-        });
-        animationRef.current = requestAnimationFrame(animate);
-      };
-      animationRef.current = requestAnimationFrame(animate);
-      return () => { if (animationRef.current) cancelAnimationFrame(animationRef.current); };
+    if (currentPhase !== undefined && currentPhase !== phase) {
+      setPhase(currentPhase);
     }
-  }, [isSpinning, speed, phase, minSpeedAtTop, waterSpilled]);
+  }, [currentPhase, phase]);
 
-  useEffect(() => {
-    return () => { if (animationRef.current) cancelAnimationFrame(animationRef.current); };
+  const playSound = useCallback((type: 'click' | 'success' | 'failure' | 'transition' | 'complete') => {
+    if (typeof window === 'undefined') return;
+    try {
+      const audioContext = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
+      const oscillator = audioContext.createOscillator();
+      const gainNode = audioContext.createGain();
+      oscillator.connect(gainNode);
+      gainNode.connect(audioContext.destination);
+      const sounds = {
+        click: { freq: 600, duration: 0.1, type: 'sine' as OscillatorType },
+        success: { freq: 800, duration: 0.2, type: 'sine' as OscillatorType },
+        failure: { freq: 300, duration: 0.3, type: 'sine' as OscillatorType },
+        transition: { freq: 500, duration: 0.15, type: 'sine' as OscillatorType },
+        complete: { freq: 900, duration: 0.4, type: 'sine' as OscillatorType }
+      };
+      const sound = sounds[type];
+      oscillator.frequency.value = sound.freq;
+      oscillator.type = sound.type;
+      gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + sound.duration);
+      oscillator.start();
+      oscillator.stop(audioContext.currentTime + sound.duration);
+    } catch { /* Audio not available */ }
   }, []);
 
-  // Event emitter
-  const emit = useCallback((type: GameEvent['type'], data: Record<string, unknown>, eventType?: GameEvent['eventType']) => {
-    onGameEvent?.({ type, phase, data, timestamp: Date.now(), eventType });
-  }, [onGameEvent, phase]);
-
-  // Navigation with strong debouncing
-  const goToPhase = useCallback((newPhase: Phase) => {
+  const goToPhase = useCallback((newPhase: number) => {
     if (navigationLockRef.current) return;
     navigationLockRef.current = true;
+    playSound('transition');
     setPhase(newPhase);
-    emit('phase_change', { from: phase, to: newPhase });
+    onPhaseComplete?.(newPhase);
+    onGameEvent?.({ type: 'phase_change', data: { phase: newPhase, phaseLabel: phaseLabels[newPhase] } });
     setTimeout(() => { navigationLockRef.current = false; }, 400);
-  }, [emit, phase]);
+  }, [playSound, onPhaseComplete, onGameEvent]);
 
-  const handleTestAnswer = useCallback((answerIndex: number) => {
-    if (answeredQuestions.has(currentQuestion)) return;
-    setSelectedAnswer(answerIndex);
-    setShowExplanation(true);
-    const isCorrect = answerIndex === testQuestions[currentQuestion].correct;
-    if (isCorrect) setCorrectAnswers(prev => prev + 1);
-    setAnsweredQuestions(prev => new Set([...prev, currentQuestion]));
-    emit('interaction', { question: currentQuestion, answer: answerIndex, correct: isCorrect }, 'answer_submit');
-  }, [currentQuestion, answeredQuestions, emit, testQuestions]);
+  const centripetalForce = (speed * speed) / radius;
+  const maxFriction = 0.8;
 
-  // ============================================================================
-  // HELPER FUNCTIONS - Premium Button & Progress
-  // ============================================================================
-  const renderButton = (
-    label: string,
-    onClick: () => void,
-    variant: 'primary' | 'secondary' | 'ghost' | 'success' = 'primary',
-    disabled = false,
-    fullWidth = false,
-    size: 'sm' | 'md' | 'lg' = 'md'
-  ) => {
-    const sizeStyles = {
-      sm: { padding: '10px 18px', fontSize: 13 },
-      md: { padding: '14px 28px', fontSize: 15 },
-      lg: { padding: '18px 36px', fontSize: 17 }
-    };
+  useEffect(() => {
+    setIsSliding(centripetalForce > maxFriction * 10);
+  }, [centripetalForce]);
 
-    const variants: Record<string, React.CSSProperties> = {
-      primary: {
-        background: design.colors.gradientBlue,
-        color: '#fff',
-        boxShadow: design.shadow.md,
-      },
-      secondary: {
-        background: design.colors.bgCard,
-        color: design.colors.textSecondary,
-        border: `1px solid ${design.colors.border}`,
-      },
-      ghost: {
-        background: 'transparent',
-        color: design.colors.textSecondary,
-      },
-      success: {
-        background: design.colors.gradientGreen,
-        color: '#fff',
-        boxShadow: '0 4px 14px rgba(0, 200, 83, 0.4)',
-      }
-    };
+  useEffect(() => {
+    if (!isAnimating) return;
+    const interval = setInterval(() => {
+      setCarAngle(prev => (prev + speed * 0.5) % 360);
+    }, 50);
+    return () => clearInterval(interval);
+  }, [isAnimating, speed]);
+
+  useEffect(() => {
+    if (onGameEvent) {
+      onGameEvent({ type: 'phase_change', data: { phase } });
+    }
+  }, [phase, onGameEvent]);
+
+  const handlePrediction = useCallback((prediction: string) => {
+    const now = Date.now();
+    if (now - lastClickRef.current < 200) return;
+    lastClickRef.current = now;
+    setSelectedPrediction(prediction);
+    setShowPredictionFeedback(true);
+    playSound(prediction === 'B' ? 'success' : 'failure');
+  }, [playSound]);
+
+  const handleTwistPrediction = useCallback((prediction: string) => {
+    const now = Date.now();
+    if (now - lastClickRef.current < 200) return;
+    lastClickRef.current = now;
+    setTwistPrediction(prediction);
+    setShowTwistFeedback(true);
+    playSound(prediction === 'C' ? 'success' : 'failure');
+  }, [playSound]);
+
+  const handleTestAnswer = useCallback((questionIndex: number, answerIndex: number) => {
+    const now = Date.now();
+    if (now - lastClickRef.current < 200) return;
+    lastClickRef.current = now;
+    setTestAnswers(prev => {
+      const newAnswers = [...prev];
+      newAnswers[questionIndex] = answerIndex;
+      return newAnswers;
+    });
+  }, []);
+
+  const handleAppComplete = useCallback((appIndex: number) => {
+    const now = Date.now();
+    if (now - lastClickRef.current < 200) return;
+    lastClickRef.current = now;
+    setCompletedApps(prev => new Set([...prev, appIndex]));
+    playSound('complete');
+  }, [playSound]);
+
+  const testQuestions = [
+    { question: "Centripetal force always points:", options: ["Tangent to the circle", "Outward from center", "Toward the center", "In direction of motion"], correct: 2 },
+    { question: "The formula for centripetal force is:", options: ["F = ma", "F = mv²/r", "F = mg", "F = kx"], correct: 1 },
+    { question: "If you double the speed on a curve, the required centripetal force:", options: ["Doubles", "Quadruples", "Halves", "Stays the same"], correct: 1 },
+    { question: "'Centrifugal force' is:", options: ["A real force pushing outward", "An apparent force in rotating frames", "Same as centripetal force", "A gravitational effect"], correct: 1 },
+    { question: "What provides centripetal force for a car on a flat road?", options: ["Engine power", "Air resistance", "Friction between tires and road", "Steering wheel"], correct: 2 },
+    { question: "A banked curve works by using:", options: ["Air lift", "A component of normal force", "Engine braking", "Magnetic rails"], correct: 1 },
+    { question: "If curve radius decreases at constant speed:", options: ["F_c decreases", "F_c increases", "F_c stays same", "Car stops"], correct: 1 },
+    { question: "In a centrifuge, objects move outward because:", options: ["Real outward force", "They continue straight while container curves", "Gravity pulls them", "Electric fields"], correct: 1 },
+    { question: "At top of roller coaster loop, centripetal force is from:", options: ["Friction only", "Normal force and gravity together", "Air resistance", "Motor"], correct: 1 },
+    { question: "Ideal banking angle depends on:", options: ["Only speed", "Only radius", "Both speed and radius", "Always 45°"], correct: 2 }
+  ];
+
+  const calculateScore = () => testAnswers.reduce((score, answer, index) => score + (answer === testQuestions[index].correct ? 1 : 0), 0);
+
+  const renderCircularMotion = (showVec: boolean, size: number = 280) => {
+    const centerX = size / 2;
+    const centerY = size / 2;
+    const carX = centerX + Math.cos(carAngle * Math.PI / 180) * radius;
+    const carY = centerY + Math.sin(carAngle * Math.PI / 180) * radius;
+    const velAngle = carAngle + 90;
+    const velX = Math.cos(velAngle * Math.PI / 180) * 35;
+    const velY = Math.sin(velAngle * Math.PI / 180) * 35;
+    const centX = (centerX - carX) / radius * 35 * Math.min(centripetalForce / 5, 2);
+    const centY = (centerY - carY) / radius * 35 * Math.min(centripetalForce / 5, 2);
 
     return (
-      <button
-        onMouseDown={() => {
-          if (disabled || navigationLockRef.current) return;
-          navigationLockRef.current = true;
-          onClick();
-          setTimeout(() => { navigationLockRef.current = false; }, 400);
-        }}
-        disabled={disabled}
-        style={{
-          ...sizeStyles[size],
-          ...variants[variant],
-          borderRadius: design.radius.md,
-          fontWeight: 600,
-          fontFamily: design.font.sans,
-          border: variants[variant].border || 'none',
-          cursor: disabled ? 'not-allowed' : 'pointer',
-          opacity: disabled ? 0.4 : 1,
-          transition: 'all 0.2s ease',
-          width: fullWidth ? '100%' : 'auto',
-          display: 'inline-flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          gap: 8,
-          outline: 'none',
-          WebkitTapHighlightColor: 'transparent',
-          userSelect: 'none',
-        }}
-      >
-        {label}
-      </button>
-    );
-  };
-
-  const renderProgressBar = () => {
-    const phaseList: Phase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
-    const currentIdx = phaseList.indexOf(phase);
-    return (
-      <div style={{
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        padding: `${design.spacing.md}px ${design.spacing.lg}px`,
-        borderBottom: `1px solid ${design.colors.border}`,
-        background: design.colors.bgPrimary,
-      }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: design.spacing.md }}>
-          <div style={{ display: 'flex', gap: 6 }}>
-            {phaseList.map((_, i) => (
-              <div
-                key={i}
-                style={{
-                  width: i === currentIdx ? 24 : 8,
-                  height: 8,
-                  borderRadius: design.radius.full,
-                  background: i < currentIdx ? design.colors.success : i === currentIdx ? design.colors.accentBlue : design.colors.border,
-                  transition: 'all 0.3s ease',
-                }}
-              />
+      <svg width={size} height={size} className="overflow-visible">
+        <circle cx={centerX} cy={centerY} r={radius + 20} fill="#374151" />
+        <circle cx={centerX} cy={centerY} r={radius - 20} fill="#1e293b" />
+        <circle cx={centerX} cy={centerY} r={radius} fill="none" stroke="#fbbf24" strokeWidth="2" strokeDasharray="10 5" />
+        {[0, 45, 90, 135, 180, 225, 270, 315].map(angle => (
+          <line key={angle}
+            x1={centerX + Math.cos(angle * Math.PI / 180) * (radius - 15)}
+            y1={centerY + Math.sin(angle * Math.PI / 180) * (radius - 15)}
+            x2={centerX + Math.cos(angle * Math.PI / 180) * (radius + 15)}
+            y2={centerY + Math.sin(angle * Math.PI / 180) * (radius + 15)}
+            stroke="white" strokeWidth="2" />
+        ))}
+        {isSliding && (
+          <g>
+            {[1, 2, 3].map(i => (
+              <circle key={i} cx={carX - centX * 0.2 * i} cy={carY - centY * 0.2 * i} r={4 - i} fill="#ef4444" opacity={0.8 - i * 0.2} />
             ))}
-          </div>
-          <span style={{ fontSize: 12, color: design.colors.textMuted }}>
-            {currentIdx + 1} of {phaseList.length}
-          </span>
-        </div>
-        <div style={{
-          padding: '6px 14px',
-          borderRadius: design.radius.full,
-          background: design.colors.accentBlueMuted,
-          color: design.colors.accentBlue,
-          fontSize: 11,
-          fontWeight: 600,
-          letterSpacing: '0.06em',
-          textTransform: 'uppercase',
-        }}>
-          {['Discover', 'Predict', 'Experiment', 'Learn', 'Challenge', 'Explore', 'Understand', 'Apply', 'Quiz', 'Complete'][currentIdx]}
-        </div>
-      </div>
-    );
-  };
-
-  // ============================================================================
-  // VISUALIZATION - Circular Motion
-  // ============================================================================
-  const renderVisualization = (showControls = true) => {
-    const cx = 180, cy = 160, r = 100;
-    const cupX = cx + r * Math.cos(angle - Math.PI / 2);
-    const cupY = cy + r * Math.sin(angle - Math.PI / 2);
-    const isSafe = speed >= minSpeedAtTop;
-
-    return (
-      <div style={{
-        background: `linear-gradient(180deg, #0A1628 0%, #000814 100%)`,
-        borderRadius: design.radius.lg,
-        padding: design.spacing.lg,
-        border: `1px solid ${design.colors.border}`,
-      }}>
-        <svg viewBox="0 0 360 320" style={{ width: '100%', maxWidth: 360, display: 'block', margin: '0 auto' }}>
-          <defs>
-            <radialGradient id="cf-glow" cx="50%" cy="50%" r="50%">
-              <stop offset="0%" stopColor={isSafe ? '#00C853' : '#FF3B30'} stopOpacity="0.3" />
-              <stop offset="100%" stopColor={isSafe ? '#00C853' : '#FF3B30'} stopOpacity="0" />
-            </radialGradient>
-            <filter id="cf-blur" x="-50%" y="-50%" width="200%" height="200%">
-              <feGaussianBlur stdDeviation="3" />
-            </filter>
-          </defs>
-
-          {/* Glow effect when spinning */}
-          {isSpinning && (
-            <circle cx={cx} cy={cy} r={r + 30} fill="url(#cf-glow)" filter="url(#cf-blur)" />
-          )}
-
-          {/* Pivot point (hand) */}
-          <circle cx={cx} cy={cy} r={14} fill="#1E293B" stroke="#475569" strokeWidth="3" />
-          <circle cx={cx} cy={cy} r={6} fill="#64748B" />
-
-          {/* Circular path */}
-          <circle cx={cx} cy={cy} r={r} fill="none" stroke="#334155" strokeWidth="2" strokeDasharray="8 8" opacity="0.6" />
-
-          {/* String/rope */}
-          <line x1={cx} y1={cy} x2={cupX} y2={cupY} stroke="#CBD5E1" strokeWidth="3" strokeLinecap="round" />
-
-          {/* Cup and water */}
-          <g transform={`translate(${cupX}, ${cupY}) rotate(${angle * 180 / Math.PI})`}>
-            {/* Cup body */}
-            <path d="M-14,0 L-11,-24 L11,-24 L14,0 Z" fill="#475569" stroke="#64748B" strokeWidth="2" />
-
-            {/* Water */}
-            {!waterSpilled && (
-              <ellipse cx="0" cy="-10" rx="9" ry="5" fill="#3B82F6" opacity="0.9">
-                <animate attributeName="ry" values="5;6;5" dur="1s" repeatCount="indefinite" />
-              </ellipse>
-            )}
-
-            {/* Spill droplets */}
-            {waterSpilled && (
-              <>
-                <circle cx="0" cy="18" r="5" fill="#3B82F6" opacity="0.8">
-                  <animate attributeName="cy" values="18;40;60" dur="0.8s" repeatCount="indefinite" />
-                  <animate attributeName="opacity" values="0.8;0.4;0" dur="0.8s" repeatCount="indefinite" />
-                </circle>
-                <circle cx="-8" cy="24" r="3" fill="#3B82F6" opacity="0.6">
-                  <animate attributeName="cy" values="24;50;70" dur="0.9s" repeatCount="indefinite" />
-                </circle>
-                <circle cx="8" cy="28" r="4" fill="#3B82F6" opacity="0.5">
-                  <animate attributeName="cy" values="28;55;75" dur="0.85s" repeatCount="indefinite" />
-                </circle>
-              </>
-            )}
+            <text x={carX} y={carY - 35} fill="#ef4444" fontSize="11" fontWeight="bold" textAnchor="middle">SLIDING!</text>
           </g>
-
-          {/* Speed direction indicator */}
-          {isSpinning && (
-            <path
-              d={`M ${cx + r + 15} ${cy - 20} A ${r + 15} ${r + 15} 0 0 1 ${cx + r + 15} ${cy + 20}`}
-              fill="none"
-              stroke={design.colors.accentBlue}
-              strokeWidth="2"
-              strokeDasharray="6 4"
-              opacity="0.6"
-            />
-          )}
-        </svg>
-
-        {/* Status Panel */}
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(3, 1fr)',
-          gap: design.spacing.sm,
-          marginTop: design.spacing.md,
-        }}>
-          <div style={{
-            background: design.colors.bgCard,
-            borderRadius: design.radius.sm,
-            padding: design.spacing.sm,
-            textAlign: 'center',
-          }}>
-            <div style={{ fontSize: 11, color: design.colors.textMuted, marginBottom: 2, textTransform: 'uppercase' }}>SPEED</div>
-            <div style={{ fontSize: 18, fontWeight: 600, color: design.colors.textPrimary }}>{speed.toFixed(1)} m/s</div>
-          </div>
-          <div style={{
-            background: design.colors.bgCard,
-            borderRadius: design.radius.sm,
-            padding: design.spacing.sm,
-            textAlign: 'center',
-          }}>
-            <div style={{ fontSize: 11, color: design.colors.textMuted, marginBottom: 2, textTransform: 'uppercase' }}>MIN NEEDED</div>
-            <div style={{ fontSize: 18, fontWeight: 600, color: design.colors.warning }}>{minSpeedAtTop.toFixed(1)} m/s</div>
-          </div>
-          <div style={{
-            background: isSafe ? design.colors.successMuted : design.colors.errorMuted,
-            borderRadius: design.radius.sm,
-            padding: design.spacing.sm,
-            textAlign: 'center',
-            border: `1px solid ${isSafe ? design.colors.success : design.colors.error}40`,
-          }}>
-            <div style={{ fontSize: 11, color: design.colors.textMuted, marginBottom: 2, textTransform: 'uppercase' }}>STATUS</div>
-            <div style={{ fontSize: 18, fontWeight: 600, color: isSafe ? design.colors.success : design.colors.error }}>
-              {isSafe ? '✓ Safe' : '✗ Spill'}
-            </div>
-          </div>
-        </div>
-
-        {/* Controls */}
-        {showControls && (
-          <div style={{ marginTop: design.spacing.lg }}>
-            <div style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: design.spacing.md,
-              padding: design.spacing.md,
-              background: design.colors.bgCard,
-              borderRadius: design.radius.md,
-              marginBottom: design.spacing.md,
-            }}>
-              <span style={{ fontSize: 14, color: design.colors.textSecondary, minWidth: 80 }}>Speed</span>
-              <input
-                type="range"
-                min="1"
-                max="8"
-                step="0.5"
-                value={speed}
-                onChange={(e) => { setSpeed(parseFloat(e.target.value)); setWaterSpilled(false); }}
-                style={{ flex: 1, accentColor: design.colors.accentBlue, height: 6 }}
-              />
-              <span style={{ fontSize: 16, color: design.colors.textPrimary, minWidth: 60, textAlign: 'right' }}>
-                {speed.toFixed(1)} m/s
-              </span>
-            </div>
-
-            {renderButton(
-              isSpinning ? '⏹ Stop Spinning' : '▶ Start Spinning',
-              () => { setIsSpinning(!isSpinning); setWaterSpilled(false); setExperimentCount(c => c + 1); },
-              isSpinning ? 'secondary' : 'primary',
-              false,
-              true
-            )}
-          </div>
         )}
-      </div>
+        <g transform={`translate(${carX}, ${carY}) rotate(${carAngle + 90})`}>
+          <rect x="-10" y="-16" width="20" height="32" rx="4" fill={isSliding ? '#ef4444' : '#3b82f6'} />
+          <rect x="-8" y="-12" width="16" height="10" rx="2" fill="#93c5fd" />
+          <rect x="-11" y="-14" width="5" height="7" rx="1" fill="#1f2937" />
+          <rect x="6" y="-14" width="5" height="7" rx="1" fill="#1f2937" />
+          <rect x="-11" y="6" width="5" height="7" rx="1" fill="#1f2937" />
+          <rect x="6" y="6" width="5" height="7" rx="1" fill="#1f2937" />
+        </g>
+        {showVec && (
+          <g>
+            <line x1={carX} y1={carY} x2={carX + velX} y2={carY + velY} stroke="#22c55e" strokeWidth="3" markerEnd="url(#arrowGreen)" />
+            <text x={carX + velX * 1.2} y={carY + velY * 1.2} fill="#22c55e" fontSize="12" fontWeight="bold">v</text>
+            <line x1={carX} y1={carY} x2={carX + centX} y2={carY + centY} stroke="#ef4444" strokeWidth="3" markerEnd="url(#arrowRed)" />
+            <text x={(carX + centerX) / 2 - 15} y={(carY + centerY) / 2} fill="#ef4444" fontSize="11" fontWeight="bold">F_c</text>
+            <circle cx={centerX} cy={centerY} r="5" fill="#fbbf24" />
+          </g>
+        )}
+        <defs>
+          <marker id="arrowGreen" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 z" fill="#22c55e" /></marker>
+          <marker id="arrowRed" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 z" fill="#ef4444" /></marker>
+        </defs>
+      </svg>
     );
   };
 
-  // ============================================================================
-  // PHASE RENDERERS - Premium Design
-  // ============================================================================
+  const renderBankedCurve = () => {
+    const bankRad = bankAngle * Math.PI / 180;
+    return (
+      <svg width="220" height="160" className="mx-auto">
+        <polygon points="20,140 200,100 200,120 20,160" fill="#4b5563" />
+        <g transform={`translate(110, 110) rotate(${-bankAngle})`}>
+          <rect x="-15" y="-10" width="30" height="20" rx="3" fill="#f59e0b" />
+          <line x1="0" y1="-10" x2={-Math.sin(bankRad) * 40} y2={-10 - Math.cos(bankRad) * 40} stroke="#a855f7" strokeWidth="2" markerEnd="url(#arrowPurple)" />
+          <text x={-Math.sin(bankRad) * 45 - 5} y={-15 - Math.cos(bankRad) * 40} fill="#a855f7" fontSize="10">N</text>
+        </g>
+        <line x1="110" y1="110" x2="110" y2="150" stroke="#22c55e" strokeWidth="2" markerEnd="url(#arrowGreenDown)" />
+        <text x="118" y="145" fill="#22c55e" fontSize="10">mg</text>
+        {bankAngle > 5 && (
+          <g>
+            <line x1="110" y1="110" x2="70" y2="110" stroke="#ef4444" strokeWidth="2" strokeDasharray="4 2" markerEnd="url(#arrowRedLeft)" />
+            <text x="55" y="108" fill="#ef4444" fontSize="9">N sinθ</text>
+          </g>
+        )}
+        <text x="110" y="155" textAnchor="middle" fill="#94a3b8" fontSize="10">Bank angle: {bankAngle}°</text>
+        <defs>
+          <marker id="arrowPurple" markerWidth="8" markerHeight="8" refX="7" refY="3" orient="auto"><path d="M0,0 L0,6 L8,3 z" fill="#a855f7" /></marker>
+          <marker id="arrowGreenDown" markerWidth="8" markerHeight="8" refX="3" refY="7" orient="auto"><path d="M0,0 L6,0 L3,8 z" fill="#22c55e" /></marker>
+          <marker id="arrowRedLeft" markerWidth="8" markerHeight="8" refX="0" refY="3" orient="auto"><path d="M8,0 L8,6 L0,3 z" fill="#ef4444" /></marker>
+        </defs>
+      </svg>
+    );
+  };
+
+  const applications = [
+    {
+      title: "Highway Engineering",
+      icon: "🛣️",
+      description: "Highway curves are banked to allow cars to turn safely at higher speeds without relying solely on friction.",
+      details: "Engineers use θ = arctan(v²/rg) to calculate the ideal banking angle. Exit ramps have speed warnings because the banking is designed for a specific velocity.",
+      animation: (
+        <svg width="200" height="120" className="mx-auto">
+          <path d="M10,100 Q100,20 190,100" fill="none" stroke="#4b5563" strokeWidth="35" />
+          <path d="M10,100 Q100,20 190,100" fill="none" stroke="#fbbf24" strokeWidth="2" strokeDasharray="8 4" />
+          <g transform={`translate(${100 + Math.cos(carAngle * 0.02 - 1) * 60}, ${60 + Math.sin(carAngle * 0.02 - 1) * 30}) rotate(${carAngle * 0.3})`}>
+            <rect x="-8" y="-5" width="16" height="10" rx="2" fill="#3b82f6" />
+          </g>
+          <text x="100" y="115" textAnchor="middle" fill="#94a3b8" fontSize="10">Superelevated curve</text>
+        </svg>
+      )
+    },
+    {
+      title: "Roller Coaster Loops",
+      icon: "🎢",
+      description: "At the top of a loop, gravity and the track's normal force both point toward the center, providing centripetal force.",
+      details: "Clothoid loops (teardrop shaped) keep g-forces manageable. At the top: N + mg = mv²/r, so you feel lighter but stay on track!",
+      animation: (
+        <svg width="200" height="120" className="mx-auto">
+          <circle cx="100" cy="70" r="40" fill="none" stroke="#64748b" strokeWidth="5" />
+          <g transform={`translate(${100 + Math.cos((carAngle * 2 + 90) * Math.PI / 180) * 40}, ${70 + Math.sin((carAngle * 2 + 90) * Math.PI / 180) * 40}) rotate(${carAngle * 2})`}>
+            <rect x="-6" y="-4" width="12" height="8" rx="2" fill="#ef4444" />
+          </g>
+          <line x1="100" y1="30" x2="100" y2="45" stroke="#22c55e" strokeWidth="2" markerEnd="url(#arrowGreenDown)" />
+          <line x1="100" y1="30" x2="100" y2="50" stroke="#a855f7" strokeWidth="2" />
+          <text x="100" y="115" textAnchor="middle" fill="#94a3b8" fontSize="10">Both forces toward center</text>
+        </svg>
+      )
+    },
+    {
+      title: "Centrifuges",
+      icon: "🔬",
+      description: "Lab centrifuges spin samples at high speeds to separate substances by density using 'centrifugal' effects.",
+      details: "In the rotating frame, denser particles experience more 'outward push' and collect at the bottom. Speeds can exceed 100,000 RPM!",
+      animation: (
+        <svg width="200" height="120" className="mx-auto">
+          <circle cx="100" cy="60" r="40" fill="#1e293b" stroke="#64748b" strokeWidth="2" />
+          <g transform={`rotate(${carAngle * 3}, 100, 60)`}>
+            <rect x="55" y="55" width="90" height="10" rx="2" fill="#94a3b8" />
+            <rect x="50" y="52" width="15" height="16" rx="2" fill="#3b82f6" />
+            <rect x="135" y="52" width="15" height="16" rx="2" fill="#3b82f6" />
+            <rect x="52" y="60" width="11" height="6" fill="#60a5fa" />
+            <rect x="137" y="60" width="11" height="6" fill="#60a5fa" />
+          </g>
+          <text x="100" y="115" textAnchor="middle" fill="#94a3b8" fontSize="10">High-speed separation</text>
+        </svg>
+      )
+    },
+    {
+      title: "Washing Machine Spin",
+      icon: "🫧",
+      description: "The spin cycle uses circular motion to force water out of clothes through holes in the drum.",
+      details: "Clothes press against the drum wall while water escapes through perforations. Typical spin speeds: 800-1400 RPM.",
+      animation: (
+        <svg width="200" height="120" className="mx-auto">
+          <circle cx="100" cy="60" r="40" fill="#1e293b" stroke="#64748b" strokeWidth="2" />
+          {[0, 30, 60, 90, 120, 150, 180, 210, 240, 270, 300, 330].map(a => (
+            <circle key={a} cx={100 + Math.cos(a * Math.PI / 180) * 35} cy={60 + Math.sin(a * Math.PI / 180) * 35} r="2" fill="#475569" />
+          ))}
+          <g transform={`rotate(${carAngle * 4}, 100, 60)`}>
+            <ellipse cx="85" cy="60" rx="10" ry="8" fill="#ec4899" />
+            <ellipse cx="115" cy="55" rx="8" ry="10" fill="#3b82f6" />
+            <ellipse cx="105" cy="70" rx="9" ry="7" fill="#22c55e" />
+          </g>
+          {[0, 90, 180, 270].map(a => (
+            <circle key={a} cx={100 + Math.cos((a + carAngle * 2) * Math.PI / 180) * 48} cy={60 + Math.sin((a + carAngle * 2) * Math.PI / 180) * 48} r="2" fill="#60a5fa" opacity="0.6" />
+          ))}
+          <text x="100" y="115" textAnchor="middle" fill="#94a3b8" fontSize="10">Water escapes outward</text>
+        </svg>
+      )
+    }
+  ];
 
   const renderHook = () => (
-    <div style={{
-      display: 'flex', flexDirection: 'column', height: '100%',
-      background: design.colors.bgDeep, fontFamily: design.font.sans,
-    }}>
-      {renderProgressBar()}
-      <div style={{ flex: 1, overflow: 'auto' }}>
-        {/* Hero Section */}
-        <div style={{
-          background: 'linear-gradient(180deg, #001233 0%, #000814 50%, #000000 100%)',
-          padding: isMobile ? design.spacing.lg : design.spacing.xxl,
-          textAlign: 'center',
-        }}>
-          {/* Animated Hero Visual */}
-          <div style={{ maxWidth: 400, margin: '0 auto', marginBottom: design.spacing.xl }}>
-            <svg viewBox="0 0 400 280" style={{ width: '100%' }}>
-              <defs>
-                <radialGradient id="heroGlow" cx="50%" cy="50%" r="50%">
-                  <stop offset="0%" stopColor="#0066FF" stopOpacity="0.4" />
-                  <stop offset="100%" stopColor="#0066FF" stopOpacity="0" />
-                </radialGradient>
-                <linearGradient id="waterGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-                  <stop offset="0%" stopColor="#60A5FA" />
-                  <stop offset="100%" stopColor="#3B82F6" />
-                </linearGradient>
-              </defs>
+    <div className="flex flex-col items-center justify-center min-h-[600px] px-6 py-12 text-center">
+      {/* Premium badge */}
+      <div className="inline-flex items-center gap-2 px-4 py-2 bg-cyan-500/10 border border-cyan-500/20 rounded-full mb-8">
+        <span className="w-2 h-2 bg-cyan-400 rounded-full animate-pulse" />
+        <span className="text-sm font-medium text-cyan-400 tracking-wide">PHYSICS EXPLORATION</span>
+      </div>
 
-              {/* Background glow */}
-              <ellipse cx="200" cy="140" rx="180" ry="120" fill="url(#heroGlow)" />
+      {/* Main title with gradient */}
+      <h1 className="text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-white via-cyan-100 to-blue-200 bg-clip-text text-transparent">
+        The Force That Curves
+      </h1>
 
-              {/* Circular path */}
-              <circle cx="200" cy="140" r="90" fill="none" stroke="#1E3A5F" strokeWidth="2" strokeDasharray="6 6" opacity="0.5" />
+      <p className="text-lg text-slate-400 max-w-md mb-10">
+        Discover what really happens when objects move in circles
+      </p>
 
-              {/* Hand/pivot */}
-              <circle cx="200" cy="140" r="16" fill="#1E293B" stroke="#3B82F6" strokeWidth="3">
-                <animate attributeName="stroke-opacity" values="1;0.5;1" dur="2s" repeatCount="indefinite" />
-              </circle>
+      {/* Premium card with graphic */}
+      <div className="relative bg-gradient-to-br from-slate-800/80 to-slate-900/80 rounded-3xl p-8 max-w-xl w-full border border-slate-700/50 shadow-2xl shadow-black/20">
+        {/* Subtle glow effect */}
+        <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/5 via-transparent to-blue-500/5 rounded-3xl" />
 
-              {/* Rope and cup at top */}
-              <g>
-                <line x1="200" y1="140" x2="200" y2="50" stroke="#94A3B8" strokeWidth="3" />
-                {/* Cup - upside down at top */}
-                <g transform="translate(200, 50) rotate(180)">
-                  <path d="M-16,0 L-13,-28 L13,-28 L16,0 Z" fill="#475569" stroke="#64748B" strokeWidth="2" />
-                  <ellipse cx="0" cy="-12" rx="10" ry="6" fill="url(#waterGrad)">
-                    <animate attributeName="ry" values="6;7;6" dur="1.5s" repeatCount="indefinite" />
-                  </ellipse>
-                </g>
-              </g>
+        <div className="relative">
+          {renderCircularMotion(true, 280)}
 
-              {/* Question mark */}
-              <text x="200" y="255" textAnchor="middle" fill="#3B82F6" fontSize="36" fontWeight="bold">❓</text>
-
-              {/* Motion arrows */}
-              <path d="M120 80 Q 80 140 120 200" fill="none" stroke="#0066FF" strokeWidth="2" strokeDasharray="4 4" opacity="0.6">
-                <animate attributeName="stroke-dashoffset" values="0;-20" dur="1s" repeatCount="indefinite" />
-              </path>
-              <path d="M280 80 Q 320 140 280 200" fill="none" stroke="#0066FF" strokeWidth="2" strokeDasharray="4 4" opacity="0.6">
-                <animate attributeName="stroke-dashoffset" values="0;20" dur="1s" repeatCount="indefinite" />
-              </path>
-            </svg>
+          <div className="mt-8 space-y-4">
+            <p className="text-xl text-white/90 font-medium leading-relaxed">
+              When a car turns, you feel pushed toward the outside.
+            </p>
+            <p className="text-lg text-slate-400 leading-relaxed">
+              Is there really an outward force, or is something else going on?
+            </p>
+            <div className="pt-2">
+              <p className="text-base text-cyan-400 font-semibold">
+                What force keeps the car moving in a circle?
+              </p>
+            </div>
           </div>
-
-          {/* Topic Badge */}
-          <div style={{
-            display: 'inline-block',
-            padding: '8px 16px',
-            borderRadius: design.radius.full,
-            background: design.colors.accentBlueMuted,
-            marginBottom: design.spacing.md,
-          }}>
-            <span style={{ fontSize: 11, fontWeight: 600, letterSpacing: '0.06em', textTransform: 'uppercase', color: design.colors.accentBlue }}>
-              PHYSICS • CIRCULAR MOTION
-            </span>
-          </div>
-
-          {/* Main Headline */}
-          <h1 style={{
-            fontSize: isMobile ? 28 : 42,
-            fontWeight: 700,
-            lineHeight: 1.1,
-            letterSpacing: '-0.02em',
-            color: design.colors.textPrimary,
-            marginBottom: design.spacing.md,
-            maxWidth: 500,
-            marginLeft: 'auto',
-            marginRight: 'auto',
-          }}>
-            Why Doesn't the Water Fall Out?
-          </h1>
-
-          {/* Subheadline */}
-          <p style={{
-            fontSize: isMobile ? 16 : 18,
-            lineHeight: 1.6,
-            color: design.colors.textSecondary,
-            maxWidth: 480,
-            margin: '0 auto',
-            marginBottom: design.spacing.xl,
-          }}>
-            Swing a cup of water in a vertical circle. At the top, it's upside down—yet the water stays in. How is this possible?
-          </p>
-
-          {/* CTA Button */}
-          {renderButton('Discover the Physics →', () => goToPhase('predict'), 'primary', false, false, 'lg')}
         </div>
+      </div>
 
-        {/* Feature Cards */}
-        <div style={{
-          padding: isMobile ? design.spacing.lg : design.spacing.xxl,
-          maxWidth: 600,
-          margin: '0 auto',
-        }}>
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: isMobile ? '1fr' : 'repeat(2, 1fr)',
-            gap: design.spacing.md,
-          }}>
-            {[
-              { icon: '🔬', title: 'Interactive Simulation', desc: 'Control speed and radius to explore' },
-              { icon: '📐', title: 'Real Physics', desc: 'Learn v = √(gr) and F = mv²/r' },
-              { icon: '🎢', title: 'Real Applications', desc: 'From roller coasters to space stations' },
-              { icon: '✅', title: 'Knowledge Quiz', desc: '10 questions to test mastery' },
-            ].map((item, i) => (
-              <div key={i} style={{
-                padding: design.spacing.lg,
-                background: design.colors.bgCard,
-                borderRadius: design.radius.lg,
-                border: `1px solid ${design.colors.border}`,
-              }}>
-                <span style={{ fontSize: 28, display: 'block', marginBottom: design.spacing.sm }}>{item.icon}</span>
-                <h3 style={{ fontSize: 18, fontWeight: 600, color: design.colors.textPrimary, marginBottom: design.spacing.xs }}>{item.title}</h3>
-                <p style={{ fontSize: 14, color: design.colors.textMuted, margin: 0 }}>{item.desc}</p>
-              </div>
-            ))}
-          </div>
+      {/* Premium CTA button */}
+      <button
+        onMouseDown={(e) => { e.preventDefault(); goToPhase(1); }}
+        className="mt-10 group relative px-10 py-5 bg-gradient-to-r from-cyan-500 to-blue-600 text-white text-lg font-semibold rounded-2xl transition-all duration-300 hover:shadow-lg hover:shadow-cyan-500/25 hover:scale-[1.02] active:scale-[0.98]"
+      >
+        <span className="relative z-10 flex items-center gap-3">
+          Discover the Truth
+          <svg className="w-5 h-5 transition-transform group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+          </svg>
+        </span>
+      </button>
+
+      {/* Feature hints */}
+      <div className="mt-12 flex items-center gap-8 text-sm text-slate-500">
+        <div className="flex items-center gap-2">
+          <span className="text-cyan-400">✦</span>
+          Interactive Lab
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="text-cyan-400">✦</span>
+          Real-World Examples
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="text-cyan-400">✦</span>
+          Knowledge Test
         </div>
       </div>
     </div>
   );
 
   const renderPredict = () => (
-    <div style={{
-      display: 'flex', flexDirection: 'column', height: '100%',
-      background: design.colors.bgDeep, fontFamily: design.font.sans,
-    }}>
-      {renderProgressBar()}
-      <div style={{ flex: 1, overflow: 'auto', padding: isMobile ? design.spacing.lg : design.spacing.xl }}>
-        <div style={{ maxWidth: 560, margin: '0 auto' }}>
-          <div style={{ fontSize: 11, fontWeight: 600, letterSpacing: '0.06em', textTransform: 'uppercase', color: design.colors.warning, marginBottom: design.spacing.sm }}>
-            MAKE YOUR PREDICTION
-          </div>
-          <h2 style={{ fontSize: 28, fontWeight: 700, color: design.colors.textPrimary, marginBottom: design.spacing.lg }}>
-            What keeps the water from falling at the top?
-          </h2>
-
-          <div style={{ display: 'flex', flexDirection: 'column', gap: design.spacing.md, marginBottom: design.spacing.xl }}>
-            {[
-              { id: 'A', text: 'The cup pushes water upward (centrifugal force)' },
-              { id: 'B', text: 'Gravity is cancelled at the top of the circle' },
-              { id: 'C', text: 'The water\'s inertia keeps it moving in a circle' },
-              { id: 'D', text: 'Air pressure holds the water in the cup' },
-            ].map(opt => (
-              <button
-                key={opt.id}
-                onMouseDown={() => { setPrediction(opt.id); emit('prediction', { prediction: opt.id }); }}
-                style={{
-                  padding: design.spacing.lg,
-                  borderRadius: design.radius.md,
-                  textAlign: 'left',
-                  background: prediction === opt.id ? design.colors.accentBlueMuted : design.colors.bgCard,
-                  border: `2px solid ${prediction === opt.id ? design.colors.accentBlue : design.colors.border}`,
-                  color: design.colors.textPrimary,
-                  cursor: 'pointer',
-                  transition: 'all 0.2s',
-                  fontFamily: design.font.sans,
-                }}
-              >
-                <span style={{ fontWeight: 700, color: design.colors.accentBlue, marginRight: design.spacing.md }}>{opt.id}</span>
-                <span style={{ fontSize: 16 }}>{opt.text}</span>
-              </button>
-            ))}
-          </div>
-
-          <div style={{ display: 'flex', gap: design.spacing.md }}>
-            {renderButton('← Back', () => goToPhase('hook'), 'ghost')}
-            {renderButton('Test Your Prediction →', () => goToPhase('play'), 'primary', !prediction)}
-          </div>
-        </div>
+    <div className="flex flex-col items-center justify-center min-h-[500px] p-6">
+      <h2 className="text-2xl font-bold text-white mb-6">Make Your Prediction</h2>
+      <div className="bg-slate-800/50 rounded-2xl p-6 max-w-2xl mb-6">
+        <p className="text-lg text-slate-300 mb-4">
+          A car travels around a circular track at constant speed. In which direction is the NET force on the car?
+        </p>
+        {renderCircularMotion(false, 200)}
       </div>
+      <div className="grid gap-3 w-full max-w-xl">
+        {[
+          { id: 'A', text: 'Forward, in the direction of motion' },
+          { id: 'B', text: 'Toward the center of the circle' },
+          { id: 'C', text: 'Outward, away from the center' },
+          { id: 'D', text: 'No net force—it\'s moving at constant speed' }
+        ].map(option => (
+          <button
+            key={option.id}
+            onMouseDown={(e) => { e.preventDefault(); handlePrediction(option.id); }}
+            disabled={showPredictionFeedback}
+            className={`p-4 rounded-xl text-left transition-all duration-300 ${
+              showPredictionFeedback && selectedPrediction === option.id
+                ? option.id === 'B' ? 'bg-emerald-600/40 border-2 border-emerald-400' : 'bg-red-600/40 border-2 border-red-400'
+                : showPredictionFeedback && option.id === 'B' ? 'bg-emerald-600/40 border-2 border-emerald-400'
+                : 'bg-slate-700/50 hover:bg-slate-600/50 border-2 border-transparent'
+            }`}
+          >
+            <span className="font-bold text-white">{option.id}.</span>
+            <span className="text-slate-200 ml-2">{option.text}</span>
+          </button>
+        ))}
+      </div>
+      {showPredictionFeedback && (
+        <div className="mt-6 p-4 bg-slate-800/70 rounded-xl max-w-xl">
+          <p className="text-emerald-400 font-semibold">
+            ✓ Correct! This inward force is called <span className="text-cyan-400">centripetal force</span>—"center-seeking"!
+          </p>
+          <button
+            onMouseDown={(e) => { e.preventDefault(); goToPhase(2); }}
+            className="mt-4 px-6 py-3 bg-gradient-to-r from-blue-600 to-cyan-600 text-white font-semibold rounded-xl"
+          >
+            Explore the Physics →
+          </button>
+        </div>
+      )}
     </div>
   );
 
   const renderPlay = () => (
-    <div style={{
-      display: 'flex', flexDirection: 'column', height: '100%',
-      background: design.colors.bgDeep, fontFamily: design.font.sans,
-    }}>
-      {renderProgressBar()}
-      <div style={{ flex: 1, overflow: 'auto', padding: isMobile ? design.spacing.md : design.spacing.lg }}>
-        <div style={{ maxWidth: 500, margin: '0 auto' }}>
-          <div style={{ fontSize: 11, fontWeight: 600, letterSpacing: '0.06em', textTransform: 'uppercase', color: design.colors.success, marginBottom: design.spacing.sm }}>
-            INTERACTIVE EXPERIMENT
+    <div className="flex flex-col items-center p-6">
+      <h2 className="text-2xl font-bold text-white mb-4">Centripetal Force Lab</h2>
+      <div className="bg-slate-800/50 rounded-2xl p-6 mb-4">
+        {renderCircularMotion(showVectors, 280)}
+      </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full max-w-2xl mb-6">
+        <div className="bg-slate-700/50 rounded-xl p-4">
+          <label className="text-slate-300 text-sm block mb-2">Speed: {speed.toFixed(1)}</label>
+          <input type="range" min="2" max="15" step="0.5" value={speed} onChange={(e) => setSpeed(parseFloat(e.target.value))} className="w-full accent-blue-500" />
+          <p className="text-xs text-slate-400 mt-1">Higher speed = more force needed</p>
+        </div>
+        <div className="bg-slate-700/50 rounded-xl p-4">
+          <label className="text-slate-300 text-sm block mb-2">Curve Radius: {radius}px</label>
+          <input type="range" min="40" max="100" value={radius} onChange={(e) => setRadius(parseInt(e.target.value))} className="w-full accent-blue-500" />
+          <p className="text-xs text-slate-400 mt-1">Tighter curve = more force needed</p>
+        </div>
+      </div>
+      <div className="bg-gradient-to-r from-blue-900/40 to-cyan-900/40 rounded-xl p-4 max-w-2xl w-full mb-6">
+        <div className="grid grid-cols-3 gap-4 text-center">
+          <div>
+            <div className={`text-2xl font-bold ${isSliding ? 'text-red-400' : 'text-cyan-400'}`}>{centripetalForce.toFixed(2)}</div>
+            <div className="text-sm text-slate-300">Required F_c</div>
           </div>
-          <h2 style={{ fontSize: 22, fontWeight: 600, color: design.colors.textPrimary, marginBottom: design.spacing.lg }}>
-            Swing the Cup in a Vertical Circle
-          </h2>
-
-          {renderVisualization(true)}
-
-          {experimentCount > 0 && (
-            <div style={{
-              marginTop: design.spacing.lg,
-              padding: design.spacing.lg,
-              borderRadius: design.radius.md,
-              background: waterSpilled ? design.colors.errorMuted : design.colors.successMuted,
-              border: `1px solid ${waterSpilled ? design.colors.error : design.colors.success}40`,
-            }}>
-              <p style={{ fontSize: 16, color: waterSpilled ? design.colors.error : design.colors.success, fontWeight: 600, marginBottom: design.spacing.xs }}>
-                {waterSpilled ? '💧 Water spilled!' : '✓ Water stays in!'}
-              </p>
-              <p style={{ fontSize: 14, color: design.colors.textSecondary, margin: 0 }}>
-                {waterSpilled
-                  ? `Speed (${speed.toFixed(1)} m/s) was below minimum (${minSpeedAtTop.toFixed(1)} m/s)`
-                  : `Speed provides ${centripetalAccel.toFixed(1)} m/s² centripetal acceleration`
-                }
-              </p>
-            </div>
-          )}
-
-          <div style={{
-            display: 'flex',
-            gap: design.spacing.md,
-            marginTop: design.spacing.xl,
-            paddingTop: design.spacing.lg,
-            borderTop: `1px solid ${design.colors.border}`,
-          }}>
-            {renderButton('← Back', () => goToPhase('predict'), 'ghost')}
-            {renderButton('Understand Why →', () => goToPhase('review'), 'primary', experimentCount < 2)}
+          <div>
+            <div className="text-2xl font-bold text-amber-400">{(maxFriction * 10).toFixed(1)}</div>
+            <div className="text-sm text-slate-300">Max Friction</div>
+          </div>
+          <div>
+            <div className={`text-2xl font-bold ${isSliding ? 'text-red-400' : 'text-emerald-400'}`}>{isSliding ? 'SLIDING' : 'GRIPPING'}</div>
+            <div className="text-sm text-slate-300">Status</div>
           </div>
         </div>
       </div>
+      <div className="flex gap-4 mb-6">
+        <button onMouseDown={(e) => { e.preventDefault(); setIsAnimating(!isAnimating); }} className={`px-4 py-2 rounded-lg font-medium ${isAnimating ? 'bg-red-600 hover:bg-red-500' : 'bg-emerald-600 hover:bg-emerald-500'} text-white`}>
+          {isAnimating ? '⏸ Pause' : '▶ Play'}
+        </button>
+        <button onMouseDown={(e) => { e.preventDefault(); setShowVectors(!showVectors); }} className={`px-4 py-2 rounded-lg font-medium ${showVectors ? 'bg-blue-600' : 'bg-slate-600'} text-white`}>
+          {showVectors ? '👁 Vectors ON' : '👁 Vectors OFF'}
+        </button>
+      </div>
+      <div className="bg-slate-800/70 rounded-xl p-4 max-w-2xl">
+        <h3 className="text-lg font-semibold text-cyan-400 mb-2">Key Formula: F = mv²/r</h3>
+        <p className="text-slate-300 text-sm">
+          <span className="text-green-400">v</span> (velocity) is tangent. <span className="text-red-400">F_c</span> points to center.
+          Friction provides this force—if F_c exceeds max friction, the car slides!
+        </p>
+      </div>
+      <button onMouseDown={(e) => { e.preventDefault(); goToPhase(3); }} className="mt-6 px-6 py-3 bg-gradient-to-r from-blue-600 to-cyan-600 text-white font-semibold rounded-xl">
+        Review the Concepts →
+      </button>
     </div>
   );
 
   const renderReview = () => (
-    <div style={{
-      display: 'flex', flexDirection: 'column', height: '100%',
-      background: design.colors.bgDeep, fontFamily: design.font.sans,
-    }}>
-      {renderProgressBar()}
-      <div style={{ flex: 1, overflow: 'auto', padding: isMobile ? design.spacing.lg : design.spacing.xl }}>
-        <div style={{ maxWidth: 560, margin: '0 auto' }}>
-          <div style={{ fontSize: 11, fontWeight: 600, letterSpacing: '0.06em', textTransform: 'uppercase', color: design.colors.accentBlue, marginBottom: design.spacing.sm }}>
-            THE PHYSICS EXPLAINED
-          </div>
-          <h2 style={{ fontSize: 28, fontWeight: 700, color: design.colors.textPrimary, marginBottom: design.spacing.xl }}>
-            Understanding Centripetal Force
-          </h2>
-
-          <div style={{ display: 'flex', flexDirection: 'column', gap: design.spacing.md, marginBottom: design.spacing.xl }}>
-            {[
-              { icon: '🎯', title: 'Centripetal = "Center-Seeking"', desc: 'Any object moving in a circle needs a constant inward force. This is centripetal force: F = mv²/r.' },
-              { icon: '⬇️', title: 'At the Top of the Circle', desc: 'BOTH gravity AND the cup\'s normal force point toward the center (downward). They work together to provide centripetal force.' },
-              { icon: '📐', title: 'Minimum Speed Formula', desc: 'When gravity alone provides all centripetal force: mg = mv²/r → v = √(gr). Faster speeds are safer!' },
-              { icon: '⚖️', title: 'Why Water Feels "Pressed In"', desc: 'When centripetal acceleration exceeds g, the cup must push the water inward. The water "feels" pressed into the cup bottom.' },
-            ].map((item, i) => (
-              <div key={i} style={{
-                display: 'flex',
-                gap: design.spacing.md,
-                padding: design.spacing.lg,
-                borderRadius: design.radius.md,
-                background: design.colors.bgCard,
-                border: `1px solid ${design.colors.border}`,
-              }}>
-                <span style={{ fontSize: 28, flexShrink: 0 }}>{item.icon}</span>
-                <div>
-                  <h3 style={{ fontSize: 18, fontWeight: 600, color: design.colors.textPrimary, marginBottom: design.spacing.xs }}>{item.title}</h3>
-                  <p style={{ fontSize: 14, color: design.colors.textSecondary, margin: 0 }}>{item.desc}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          <div style={{
-            padding: design.spacing.lg,
-            borderRadius: design.radius.lg,
-            background: design.colors.accentBlueMuted,
-            border: `1px solid ${design.colors.accentBlue}40`,
-            marginBottom: design.spacing.xl,
-          }}>
-            <p style={{ fontSize: 16, color: design.colors.accentBlue, fontWeight: 600, marginBottom: design.spacing.xs }}>💡 Key Insight</p>
-            <p style={{ fontSize: 14, color: design.colors.textSecondary, margin: 0 }}>
-              The water doesn't "know" it's upside down. It's accelerating toward the center so fast that the cup must push it inward—from the water's perspective, it's being pressed into the cup!
-            </p>
-          </div>
-
-          <div style={{ display: 'flex', gap: design.spacing.md }}>
-            {renderButton('← Back', () => goToPhase('play'), 'ghost')}
-            {renderButton('Try a Challenge →', () => goToPhase('twist_predict'))}
-          </div>
+    <div className="flex flex-col items-center p-6">
+      <h2 className="text-2xl font-bold text-white mb-6">Understanding Centripetal Force</h2>
+      <div className="grid md:grid-cols-2 gap-6 max-w-4xl">
+        <div className="bg-gradient-to-br from-blue-900/50 to-cyan-900/50 rounded-2xl p-6">
+          <h3 className="text-xl font-bold text-cyan-400 mb-3">↪️ Centripetal Force</h3>
+          <ul className="space-y-2 text-slate-300 text-sm">
+            <li>• "Center-seeking"—always toward the center</li>
+            <li>• F = mv²/r (mass × velocity² / radius)</li>
+            <li>• Changes direction, not speed</li>
+            <li>• Not a new force—provided by friction, tension, gravity, etc.</li>
+          </ul>
+        </div>
+        <div className="bg-gradient-to-br from-red-900/50 to-orange-900/50 rounded-2xl p-6">
+          <h3 className="text-xl font-bold text-red-400 mb-3">↩️ "Centrifugal Force"</h3>
+          <ul className="space-y-2 text-slate-300 text-sm">
+            <li>• NOT a real force—it's fictitious</li>
+            <li>• Only appears in rotating reference frames</li>
+            <li>• You feel "pushed out" because you want to go straight</li>
+            <li>• Newton's 1st Law: objects resist direction changes</li>
+          </ul>
+        </div>
+        <div className="bg-gradient-to-br from-emerald-900/50 to-teal-900/50 rounded-2xl p-6 md:col-span-2">
+          <h3 className="text-xl font-bold text-emerald-400 mb-3">🧮 The Physics</h3>
+          <p className="text-slate-300 text-sm">
+            <strong>Centripetal acceleration:</strong> a = v²/r always toward center<br />
+            <strong>Newton's 2nd Law:</strong> F = ma = mv²/r<br />
+            <strong>Double the speed?</strong> Requires 4× the force! (v² relationship)
+          </p>
         </div>
       </div>
+      <button onMouseDown={(e) => { e.preventDefault(); goToPhase(4); }} className="mt-8 px-6 py-3 bg-gradient-to-r from-amber-600 to-orange-600 text-white font-semibold rounded-xl">
+        Discover a Surprising Twist →
+      </button>
     </div>
   );
 
   const renderTwistPredict = () => (
-    <div style={{
-      display: 'flex', flexDirection: 'column', height: '100%',
-      background: design.colors.bgDeep, fontFamily: design.font.sans,
-    }}>
-      {renderProgressBar()}
-      <div style={{ flex: 1, overflow: 'auto', padding: isMobile ? design.spacing.lg : design.spacing.xl }}>
-        <div style={{ maxWidth: 560, margin: '0 auto' }}>
-          <div style={{ fontSize: 11, fontWeight: 600, letterSpacing: '0.06em', textTransform: 'uppercase', color: design.colors.warning, marginBottom: design.spacing.sm }}>
-            NEW CHALLENGE
-          </div>
-          <h2 style={{ fontSize: 28, fontWeight: 700, color: design.colors.textPrimary, marginBottom: design.spacing.md }}>
-            What if we change the radius?
-          </h2>
-          <p style={{ fontSize: 16, color: design.colors.textSecondary, marginBottom: design.spacing.xl }}>
-            Using a <strong style={{ color: design.colors.textPrimary }}>longer string</strong> (bigger radius) at the same speed—will the water be more or less likely to stay in?
-          </p>
-
-          <div style={{ display: 'flex', flexDirection: 'column', gap: design.spacing.md, marginBottom: design.spacing.xl }}>
-            {[
-              { id: 'A', text: 'More likely to stay in (bigger circle is easier)' },
-              { id: 'B', text: 'Less likely to stay in (bigger circle needs more speed)' },
-              { id: 'C', text: 'No difference (radius doesn\'t matter)' },
-              { id: 'D', text: 'Depends on the mass of water' },
-            ].map(opt => (
-              <button
-                key={opt.id}
-                onMouseDown={() => { setTwistPrediction(opt.id); emit('prediction', { twistPrediction: opt.id }); }}
-                style={{
-                  padding: design.spacing.lg,
-                  borderRadius: design.radius.md,
-                  textAlign: 'left',
-                  background: twistPrediction === opt.id ? design.colors.warningMuted : design.colors.bgCard,
-                  border: `2px solid ${twistPrediction === opt.id ? design.colors.warning : design.colors.border}`,
-                  color: design.colors.textPrimary,
-                  cursor: 'pointer',
-                  transition: 'all 0.2s',
-                  fontFamily: design.font.sans,
-                }}
-              >
-                <span style={{ fontWeight: 700, color: design.colors.warning, marginRight: design.spacing.md }}>{opt.id}</span>
-                <span style={{ fontSize: 16 }}>{opt.text}</span>
-              </button>
-            ))}
-          </div>
-
-          <div style={{ display: 'flex', gap: design.spacing.md }}>
-            {renderButton('← Back', () => goToPhase('review'), 'ghost')}
-            {renderButton('Test It →', () => goToPhase('twist_play'), 'primary', !twistPrediction)}
-          </div>
-        </div>
+    <div className="flex flex-col items-center justify-center min-h-[500px] p-6">
+      <h2 className="text-2xl font-bold text-amber-400 mb-6">🌟 The Twist Challenge</h2>
+      <div className="bg-slate-800/50 rounded-2xl p-6 max-w-2xl mb-6">
+        <p className="text-lg text-slate-300 mb-4">
+          Race tracks and highway ramps have banked (tilted) curves. At the right speed, a car can navigate the turn with zero friction.
+        </p>
+        <p className="text-lg text-cyan-400 font-medium">
+          How does banking eliminate the need for friction?
+        </p>
       </div>
+      <div className="grid gap-3 w-full max-w-xl">
+        {[
+          { id: 'A', text: 'Banking creates an outward centrifugal push' },
+          { id: 'B', text: 'The car naturally goes faster on a bank' },
+          { id: 'C', text: 'A component of the normal force provides centripetal force' },
+          { id: 'D', text: 'Gravity is stronger on banked curves' }
+        ].map(option => (
+          <button
+            key={option.id}
+            onMouseDown={(e) => { e.preventDefault(); handleTwistPrediction(option.id); }}
+            disabled={showTwistFeedback}
+            className={`p-4 rounded-xl text-left transition-all duration-300 ${
+              showTwistFeedback && twistPrediction === option.id
+                ? option.id === 'C' ? 'bg-emerald-600/40 border-2 border-emerald-400' : 'bg-red-600/40 border-2 border-red-400'
+                : showTwistFeedback && option.id === 'C' ? 'bg-emerald-600/40 border-2 border-emerald-400'
+                : 'bg-slate-700/50 hover:bg-slate-600/50 border-2 border-transparent'
+            }`}
+          >
+            <span className="font-bold text-white">{option.id}.</span>
+            <span className="text-slate-200 ml-2">{option.text}</span>
+          </button>
+        ))}
+      </div>
+      {showTwistFeedback && (
+        <div className="mt-6 p-4 bg-slate-800/70 rounded-xl max-w-xl">
+          <p className="text-emerald-400 font-semibold">
+            ✓ Exactly! The tilted surface redirects the normal force to have an inward component!
+          </p>
+          <button onMouseDown={(e) => { e.preventDefault(); goToPhase(5); }} className="mt-4 px-6 py-3 bg-gradient-to-r from-amber-600 to-orange-600 text-white font-semibold rounded-xl">
+            See How Banked Curves Work →
+          </button>
+        </div>
+      )}
     </div>
   );
 
   const renderTwistPlay = () => (
-    <div style={{
-      display: 'flex', flexDirection: 'column', height: '100%',
-      background: design.colors.bgDeep, fontFamily: design.font.sans,
-    }}>
-      {renderProgressBar()}
-      <div style={{ flex: 1, overflow: 'auto', padding: isMobile ? design.spacing.md : design.spacing.lg }}>
-        <div style={{ maxWidth: 500, margin: '0 auto' }}>
-          <div style={{ fontSize: 11, fontWeight: 600, letterSpacing: '0.06em', textTransform: 'uppercase', color: design.colors.accentBlue, marginBottom: design.spacing.sm }}>
-            EXPLORE RADIUS EFFECTS
-          </div>
-          <h2 style={{ fontSize: 22, fontWeight: 600, color: design.colors.textPrimary, marginBottom: design.spacing.lg }}>
-            Adjust the String Length
-          </h2>
-
-          <div style={{
-            background: `linear-gradient(180deg, #0A1628 0%, #000814 100%)`,
-            borderRadius: design.radius.lg,
-            padding: design.spacing.lg,
-            border: `1px solid ${design.colors.border}`,
-            marginBottom: design.spacing.lg,
-          }}>
-            {/* Simple radius visualization */}
-            <svg viewBox="0 0 360 200" style={{ width: '100%', maxWidth: 360, display: 'block', margin: '0 auto' }}>
-              <circle cx="180" cy="100" r={40 + radius_ * 40} fill="none" stroke="#1E3A5F" strokeWidth="2" strokeDasharray="6 6" />
-              <circle cx="180" cy="100" r="12" fill="#1E293B" stroke="#3B82F6" strokeWidth="2" />
-              <line x1="180" y1="100" x2={180 + 40 + radius_ * 40} y2="100" stroke="#CBD5E1" strokeWidth="2" />
-              <circle cx={180 + 40 + radius_ * 40} cy="100" r="14" fill="#475569" stroke="#64748B" strokeWidth="2" />
-              <text x="180" y="180" textAnchor="middle" fill={design.colors.textSecondary} fontSize="14">
-                Radius: {radius_.toFixed(1)} m
-              </text>
-            </svg>
-
-            {/* Controls */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: design.spacing.md, marginTop: design.spacing.lg }}>
-              <div style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: design.spacing.md,
-                padding: design.spacing.md,
-                background: design.colors.bgCard,
-                borderRadius: design.radius.md,
-              }}>
-                <span style={{ fontSize: 14, color: design.colors.textSecondary, minWidth: 70 }}>Radius</span>
-                <input
-                  type="range" min="0.5" max="3" step="0.5" value={radius_}
-                  onChange={(e) => { setRadius_(parseFloat(e.target.value)); setWaterSpilled(false); }}
-                  style={{ flex: 1, accentColor: design.colors.accentBlue }}
-                />
-                <span style={{ fontSize: 16, color: design.colors.textPrimary, minWidth: 50 }}>{radius_.toFixed(1)} m</span>
-              </div>
-
-              <div style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: design.spacing.md,
-                padding: design.spacing.md,
-                background: design.colors.bgCard,
-                borderRadius: design.radius.md,
-              }}>
-                <span style={{ fontSize: 14, color: design.colors.textSecondary, minWidth: 70 }}>Speed</span>
-                <input
-                  type="range" min="1" max="8" step="0.5" value={speed}
-                  onChange={(e) => { setSpeed(parseFloat(e.target.value)); setWaterSpilled(false); }}
-                  style={{ flex: 1, accentColor: design.colors.success }}
-                />
-                <span style={{ fontSize: 16, color: design.colors.textPrimary, minWidth: 50 }}>{speed.toFixed(1)} m/s</span>
-              </div>
-            </div>
-          </div>
-
-          {/* Calculation Box */}
-          <div style={{
-            padding: design.spacing.lg,
-            background: design.colors.bgCard,
-            borderRadius: design.radius.md,
-            marginBottom: design.spacing.lg,
-          }}>
-            <p style={{ fontSize: 14, color: design.colors.textSecondary, marginBottom: design.spacing.xs }}>
-              <strong style={{ color: design.colors.textPrimary }}>Min speed at top:</strong> v = √(g × r) = √(9.8 × {radius_.toFixed(1)}) = <strong style={{ color: design.colors.warning }}>{minSpeedAtTop.toFixed(2)} m/s</strong>
-            </p>
-            <p style={{ fontSize: 14, color: design.colors.textSecondary, margin: 0 }}>
-              <strong style={{ color: design.colors.textPrimary }}>Your speed:</strong> <span style={{ color: speed >= minSpeedAtTop ? design.colors.success : design.colors.error }}>{speed.toFixed(1)} m/s {speed >= minSpeedAtTop ? '✓ Safe' : '✗ Too slow!'}</span>
-            </p>
-          </div>
-
-          <div style={{ display: 'flex', gap: design.spacing.md, justifyContent: 'space-between' }}>
-            {renderButton('← Back', () => goToPhase('twist_predict'), 'ghost')}
-            {renderButton('See Why →', () => goToPhase('twist_review'))}
-          </div>
-        </div>
+    <div className="flex flex-col items-center p-6">
+      <h2 className="text-2xl font-bold text-amber-400 mb-4">Banked Curve Physics</h2>
+      <div className="bg-slate-800/50 rounded-2xl p-6 mb-6">
+        {renderBankedCurve()}
       </div>
+      <div className="bg-slate-700/50 rounded-xl p-4 w-full max-w-2xl mb-6">
+        <label className="text-slate-300 text-sm block mb-2">Bank Angle: {bankAngle}°</label>
+        <input type="range" min="0" max="45" value={bankAngle} onChange={(e) => setBankAngle(parseInt(e.target.value))} className="w-full accent-amber-500" />
+      </div>
+      <div className="bg-gradient-to-br from-amber-900/40 to-orange-900/40 rounded-2xl p-6 max-w-2xl">
+        <h3 className="text-lg font-bold text-amber-400 mb-3">Why Banking Works:</h3>
+        <ul className="space-y-2 text-slate-300 text-sm">
+          <li>• Normal force N is perpendicular to the tilted road</li>
+          <li>• N has a horizontal component: <span className="text-cyan-400">N sin(θ)</span> toward center</li>
+          <li>• This horizontal component provides centripetal force!</li>
+          <li>• At the "design speed," friction isn't needed at all</li>
+        </ul>
+        <p className="text-cyan-400 mt-4 text-sm">NASCAR tracks are banked up to 33°—allowing cars to turn at 200+ mph!</p>
+      </div>
+      <button onMouseDown={(e) => { e.preventDefault(); goToPhase(6); }} className="mt-6 px-6 py-3 bg-gradient-to-r from-amber-600 to-orange-600 text-white font-semibold rounded-xl">
+        Review the Discovery →
+      </button>
     </div>
   );
 
   const renderTwistReview = () => (
-    <div style={{
-      display: 'flex', flexDirection: 'column', height: '100%',
-      background: design.colors.bgDeep, fontFamily: design.font.sans,
-    }}>
-      {renderProgressBar()}
-      <div style={{ flex: 1, overflow: 'auto', padding: isMobile ? design.spacing.lg : design.spacing.xl }}>
-        <div style={{ maxWidth: 560, margin: '0 auto' }}>
-          <div style={{ fontSize: 11, fontWeight: 600, letterSpacing: '0.06em', textTransform: 'uppercase', color: design.colors.accentBlue, marginBottom: design.spacing.sm }}>
-            DEEPER UNDERSTANDING
-          </div>
-          <h2 style={{ fontSize: 28, fontWeight: 700, color: design.colors.textPrimary, marginBottom: design.spacing.xl }}>
-            Bigger Radius = Higher Minimum Speed
-          </h2>
+    <div className="flex flex-col items-center p-6">
+      <h2 className="text-2xl font-bold text-amber-400 mb-6">🌟 Key Discovery</h2>
+      <div className="bg-gradient-to-br from-amber-900/40 to-orange-900/40 rounded-2xl p-6 max-w-2xl mb-6">
+        <h3 className="text-xl font-bold text-amber-400 mb-4">Centripetal Force Has Many Sources!</h3>
+        <ul className="space-y-2 text-slate-300 text-sm">
+          <li>• <strong>Flat road:</strong> Friction</li>
+          <li>• <strong>Banked road:</strong> Component of normal force</li>
+          <li>• <strong>Planets orbiting:</strong> Gravity</li>
+          <li>• <strong>Ball on string:</strong> Tension</li>
+          <li>• <strong>Roller coaster loop:</strong> Normal force ± gravity</li>
+        </ul>
+        <p className="text-emerald-400 font-medium mt-4">The physics is the same—F = mv²/r—but the SOURCE varies!</p>
+      </div>
+      <button onMouseDown={(e) => { e.preventDefault(); goToPhase(7); }} className="mt-6 px-6 py-3 bg-gradient-to-r from-blue-600 to-cyan-600 text-white font-semibold rounded-xl">
+        Explore Real-World Applications →
+      </button>
+    </div>
+  );
 
-          <div style={{
-            padding: design.spacing.xl,
-            background: design.colors.bgCard,
-            borderRadius: design.radius.lg,
-            border: `1px solid ${design.colors.border}`,
-            marginBottom: design.spacing.xl,
-          }}>
-            <p style={{ fontSize: 16, color: design.colors.textSecondary, marginBottom: design.spacing.lg }}>
-              The formula <strong style={{ color: design.colors.accentBlue }}>v = √(gr)</strong> shows that larger radius requires MORE speed:
-            </p>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: design.spacing.md }}>
-              {[
-                { r: '1m', v: '3.1 m/s', color: design.colors.success },
-                { r: '2m', v: '4.4 m/s', color: design.colors.warning },
-                { r: '3m', v: '5.4 m/s', color: design.colors.error },
-              ].map((item, i) => (
-                <div key={i} style={{
-                  padding: design.spacing.md,
-                  background: design.colors.bgElevated,
-                  borderRadius: design.radius.md,
-                  textAlign: 'center',
-                }}>
-                  <div style={{ fontSize: 22, fontWeight: 600, color: item.color, marginBottom: design.spacing.xs }}>r = {item.r}</div>
-                  <div style={{ fontSize: 12, color: design.colors.textSecondary }}>v<sub>min</sub> = {item.v}</div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div style={{
-            padding: design.spacing.lg,
-            background: design.colors.warningMuted,
-            borderRadius: design.radius.lg,
-            border: `1px solid ${design.colors.warning}40`,
-            marginBottom: design.spacing.xl,
-          }}>
-            <p style={{ fontSize: 16, color: design.colors.warning, fontWeight: 600, marginBottom: design.spacing.xs }}>🎢 Real World Design</p>
-            <p style={{ fontSize: 14, color: design.colors.textSecondary, margin: 0 }}>
-              This is why roller coaster loops are <strong style={{ color: design.colors.textPrimary }}>clothoid (teardrop) shapes</strong> instead of perfect circles. The tighter radius at the top reduces the required speed!
-            </p>
-          </div>
-
-          <div style={{ display: 'flex', gap: design.spacing.md }}>
-            {renderButton('← Back', () => goToPhase('twist_play'), 'ghost')}
-            {renderButton('Real World Applications →', () => goToPhase('transfer'))}
-          </div>
+  const renderTransfer = () => (
+    <div className="flex flex-col items-center p-6">
+      <h2 className="text-2xl font-bold text-white mb-6">Real-World Applications</h2>
+      <div className="flex gap-2 mb-6 flex-wrap justify-center">
+        {applications.map((app, index) => (
+          <button
+            key={index}
+            onMouseDown={(e) => { e.preventDefault(); setActiveAppTab(index); }}
+            className={`px-4 py-2 rounded-lg font-medium transition-all ${
+              activeAppTab === index ? 'bg-blue-600 text-white'
+              : completedApps.has(index) ? 'bg-emerald-600/30 text-emerald-400 border border-emerald-500'
+              : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
+            }`}
+          >
+            {app.icon} {app.title.split(' ')[0]}
+          </button>
+        ))}
+      </div>
+      <div className="bg-slate-800/50 rounded-2xl p-6 max-w-2xl w-full">
+        <div className="flex items-center gap-3 mb-4">
+          <span className="text-3xl">{applications[activeAppTab].icon}</span>
+          <h3 className="text-xl font-bold text-white">{applications[activeAppTab].title}</h3>
         </div>
+        {applications[activeAppTab].animation}
+        <p className="text-lg text-slate-300 mt-4 mb-3">{applications[activeAppTab].description}</p>
+        <p className="text-sm text-slate-400">{applications[activeAppTab].details}</p>
+        {!completedApps.has(activeAppTab) && (
+          <button onMouseDown={(e) => { e.preventDefault(); handleAppComplete(activeAppTab); }} className="mt-4 px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg font-medium">
+            ✓ Mark as Understood
+          </button>
+        )}
+      </div>
+      <div className="mt-6 flex items-center gap-2">
+        <span className="text-slate-400">Progress:</span>
+        <div className="flex gap-1">{applications.map((_, i) => (<div key={i} className={`w-3 h-3 rounded-full ${completedApps.has(i) ? 'bg-emerald-500' : 'bg-slate-600'}`} />))}</div>
+        <span className="text-slate-400">{completedApps.size}/4</span>
+      </div>
+      {completedApps.size >= 4 && (
+        <button onMouseDown={(e) => { e.preventDefault(); goToPhase(8); }} className="mt-6 px-6 py-3 bg-gradient-to-r from-blue-600 to-cyan-600 text-white font-semibold rounded-xl">
+          Take the Knowledge Test →
+        </button>
+      )}
+    </div>
+  );
+
+  const renderTest = () => (
+    <div className="flex flex-col items-center p-6">
+      <h2 className="text-2xl font-bold text-white mb-6">Knowledge Assessment</h2>
+      {!showTestResults ? (
+        <div className="space-y-6 max-w-2xl w-full">
+          {testQuestions.map((q, qIndex) => (
+            <div key={qIndex} className="bg-slate-800/50 rounded-xl p-4">
+              <p className="text-white font-medium mb-3">{qIndex + 1}. {q.question}</p>
+              <div className="grid gap-2">
+                {q.options.map((option, oIndex) => (
+                  <button
+                    key={oIndex}
+                    onMouseDown={(e) => { e.preventDefault(); handleTestAnswer(qIndex, oIndex); }}
+                    className={`p-3 rounded-lg text-left text-sm transition-all ${testAnswers[qIndex] === oIndex ? 'bg-blue-600 text-white' : 'bg-slate-700/50 text-slate-300 hover:bg-slate-600/50'}`}
+                  >
+                    {option}
+                  </button>
+                ))}
+              </div>
+            </div>
+          ))}
+          <button
+            onMouseDown={(e) => { e.preventDefault(); setShowTestResults(true); }}
+            disabled={testAnswers.includes(-1)}
+            className={`w-full py-4 rounded-xl font-semibold text-lg ${testAnswers.includes(-1) ? 'bg-slate-700 text-slate-500 cursor-not-allowed' : 'bg-gradient-to-r from-blue-600 to-cyan-600 text-white'}`}
+          >
+            Submit Answers
+          </button>
+        </div>
+      ) : (
+        <div className="bg-slate-800/50 rounded-2xl p-6 max-w-2xl w-full text-center">
+          <div className="text-6xl mb-4">{calculateScore() >= 7 ? '🎉' : '📚'}</div>
+          <h3 className="text-2xl font-bold text-white mb-2">Score: {calculateScore()}/10</h3>
+          <p className="text-slate-300 mb-6">{calculateScore() >= 7 ? 'Excellent! You\'ve mastered centripetal force!' : 'Keep studying! Review and try again.'}</p>
+          {calculateScore() >= 7 ? (
+            <button onMouseDown={(e) => { e.preventDefault(); goToPhase(9); }} className="px-8 py-4 bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-semibold rounded-xl">
+              Claim Your Mastery Badge →
+            </button>
+          ) : (
+            <button onMouseDown={(e) => { e.preventDefault(); setShowTestResults(false); setTestAnswers(Array(10).fill(-1)); goToPhase(3); }} className="px-8 py-4 bg-gradient-to-r from-blue-600 to-cyan-600 text-white font-semibold rounded-xl">
+              Review & Try Again
+            </button>
+          )}
+        </div>
+      )}
+    </div>
+  );
+
+  const renderMastery = () => (
+    <div className="flex flex-col items-center justify-center min-h-[500px] p-6 text-center">
+      <div className="bg-gradient-to-br from-blue-900/50 via-cyan-900/50 to-teal-900/50 rounded-3xl p-8 max-w-2xl">
+        <div className="text-8xl mb-6">🚗</div>
+        <h1 className="text-3xl font-bold text-white mb-4">Circular Motion Master!</h1>
+        <p className="text-xl text-slate-300 mb-6">You've mastered centripetal force and circular motion!</p>
+        <div className="grid grid-cols-2 gap-4 mb-6">
+          <div className="bg-slate-800/50 rounded-xl p-4"><div className="text-2xl mb-2">↪️</div><p className="text-sm text-slate-300">Centripetal Force</p></div>
+          <div className="bg-slate-800/50 rounded-xl p-4"><div className="text-2xl mb-2">🛣️</div><p className="text-sm text-slate-300">Banked Curves</p></div>
+          <div className="bg-slate-800/50 rounded-xl p-4"><div className="text-2xl mb-2">🎢</div><p className="text-sm text-slate-300">Vertical Loops</p></div>
+          <div className="bg-slate-800/50 rounded-xl p-4"><div className="text-2xl mb-2">🔬</div><p className="text-sm text-slate-300">Centrifuges</p></div>
+        </div>
+        <button onMouseDown={(e) => { e.preventDefault(); goToPhase(0); }} className="px-6 py-3 bg-slate-700 hover:bg-slate-600 text-white font-medium rounded-xl">↺ Explore Again</button>
       </div>
     </div>
   );
 
-  // ============================================================================
-  // TRANSFER - Real World Applications with Sequential Navigation
-  // ============================================================================
-  const renderTransfer = () => {
-    const app = applications[activeApp];
-    const allAppsCompleted = completedApps.size === applications.length;
-
-    return (
-      <div style={{
-        display: 'flex', flexDirection: 'column', height: '100%',
-        background: design.colors.bgDeep, fontFamily: design.font.sans,
-      }}>
-        {renderProgressBar()}
-
-        {/* Progress indicator */}
-        <div style={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          gap: design.spacing.sm,
-          padding: design.spacing.md,
-          background: design.colors.bgPrimary,
-          borderBottom: `1px solid ${design.colors.border}`,
-        }}>
-          {applications.map((_, idx) => (
-            <div key={idx} style={{
-              width: 10, height: 10, borderRadius: design.radius.full,
-              background: completedApps.has(idx)
-                ? design.colors.success
-                : idx === activeApp
-                  ? design.colors.accentBlue
-                  : design.colors.bgElevated,
-              transition: 'all 0.3s ease',
-            }} />
-          ))}
-        </div>
-
-        {/* Tab Navigation */}
-        <div style={{
-          display: 'flex',
-          gap: design.spacing.sm,
-          padding: design.spacing.md,
-          borderBottom: `1px solid ${design.colors.border}`,
-          overflowX: 'auto',
-          background: design.colors.bgPrimary,
-        }}>
-          {applications.map((a, idx) => {
-            const isAccessible = idx === 0 || completedApps.has(idx - 1);
-            const isCurrent = idx === activeApp;
-            return (
-              <button
-                key={a.id}
-                onMouseDown={() => {
-                  if (!isAccessible || navigationLockRef.current) return;
-                  navigationLockRef.current = true;
-                  setActiveApp(idx);
-                  setTimeout(() => { navigationLockRef.current = false; }, 300);
-                }}
-                disabled={!isAccessible}
-                style={{
-                  padding: '10px 16px',
-                  borderRadius: design.radius.md,
-                  border: 'none',
-                  background: isCurrent ? a.color : design.colors.bgCard,
-                  color: isCurrent ? '#FFFFFF' : isAccessible ? design.colors.textSecondary : design.colors.textMuted,
-                  fontSize: 13,
-                  fontWeight: 600,
-                  cursor: isAccessible ? 'pointer' : 'not-allowed',
-                  whiteSpace: 'nowrap',
-                  fontFamily: design.font.sans,
-                  transition: 'all 0.2s',
-                  opacity: isAccessible ? 1 : 0.5,
-                  position: 'relative',
-                }}
-              >
-                {completedApps.has(idx) && (
-                  <span style={{ position: 'absolute', top: 2, right: 2, color: design.colors.success, fontSize: 8 }}>✓</span>
-                )}
-                {a.icon} {a.title.split(' ')[0]}
-              </button>
-            );
-          })}
-        </div>
-
-        {/* Content */}
-        <div style={{ flex: 1, overflow: 'auto', padding: isMobile ? design.spacing.lg : design.spacing.xl }}>
-          <div style={{ maxWidth: 560, margin: '0 auto' }}>
-            {/* Header */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: design.spacing.lg, marginBottom: design.spacing.xl }}>
-              <div style={{
-                width: 72, height: 72,
-                borderRadius: design.radius.lg,
-                background: `${app.color}20`,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                fontSize: 36,
-              }}>
-                {app.icon}
-              </div>
-              <div>
-                <h2 style={{ fontSize: 28, fontWeight: 700, color: design.colors.textPrimary, marginBottom: design.spacing.xs }}>{app.title}</h2>
-                <p style={{ fontSize: 14, color: app.color, margin: 0, fontWeight: 500 }}>{app.subtitle}</p>
-              </div>
-            </div>
-
-            {/* Description */}
-            <p style={{ fontSize: 16, color: design.colors.textSecondary, marginBottom: design.spacing.lg, lineHeight: 1.7 }}>
-              {app.description}
-            </p>
-
-            {/* Physics Connection */}
-            <div style={{
-              padding: design.spacing.lg,
-              background: `${app.color}10`,
-              borderRadius: design.radius.md,
-              border: `1px solid ${app.color}30`,
-              marginBottom: design.spacing.lg,
-            }}>
-              <p style={{ fontSize: 16, color: app.color, fontWeight: 600, marginBottom: design.spacing.xs }}>🔗 Physics Connection</p>
-              <p style={{ fontSize: 14, color: design.colors.textSecondary, margin: 0 }}>{app.physics}</p>
-            </div>
-
-            {/* Insight */}
-            <div style={{
-              padding: design.spacing.lg,
-              background: design.colors.bgCard,
-              borderRadius: design.radius.md,
-              border: `1px solid ${design.colors.border}`,
-              marginBottom: design.spacing.lg,
-            }}>
-              <p style={{ fontSize: 16, color: design.colors.textPrimary, fontWeight: 600, marginBottom: design.spacing.xs }}>💡 Key Insight</p>
-              <p style={{ fontSize: 14, color: design.colors.textSecondary, margin: 0 }}>{app.insight}</p>
-            </div>
-
-            {/* Stats */}
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(3, 1fr)',
-              gap: design.spacing.md,
-              marginBottom: design.spacing.xl,
-            }}>
-              {app.stats.map((stat, i) => (
-                <div key={i} style={{
-                  padding: design.spacing.md,
-                  background: design.colors.bgCard,
-                  borderRadius: design.radius.md,
-                  textAlign: 'center',
-                }}>
-                  <div style={{ fontSize: 18, fontWeight: 600, color: app.color, marginBottom: 2 }}>{stat.value}</div>
-                  <div style={{ fontSize: 12, color: design.colors.textMuted }}>{stat.label}</div>
-                </div>
-              ))}
-            </div>
-
-            {/* Mark as read button */}
-            {!completedApps.has(activeApp) && (
-              <button
-                onMouseDown={() => {
-                  if (navigationLockRef.current) return;
-                  navigationLockRef.current = true;
-                  const newCompleted = new Set(completedApps);
-                  newCompleted.add(activeApp);
-                  setCompletedApps(newCompleted);
-                  emit('interaction', { app: app.id, action: 'marked_read' }, 'app_completed');
-                  if (activeApp < applications.length - 1) {
-                    setTimeout(() => setActiveApp(activeApp + 1), 300);
-                  }
-                  setTimeout(() => { navigationLockRef.current = false; }, 400);
-                }}
-                style={{
-                  width: '100%',
-                  padding: '14px 20px',
-                  background: design.colors.successMuted,
-                  border: `1px solid ${design.colors.success}50`,
-                  borderRadius: design.radius.md,
-                  cursor: 'pointer',
-                  color: design.colors.success,
-                  fontWeight: 600,
-                  fontSize: 15,
-                  fontFamily: design.font.sans,
-                  transition: 'all 0.2s ease',
-                  marginBottom: design.spacing.md,
-                }}
-              >
-                ✓ Mark "{app.title}" as Read
-              </button>
-            )}
-
-            {completedApps.has(activeApp) && activeApp < applications.length - 1 && (
-              <button
-                onMouseDown={() => {
-                  if (navigationLockRef.current) return;
-                  navigationLockRef.current = true;
-                  setActiveApp(activeApp + 1);
-                  setTimeout(() => { navigationLockRef.current = false; }, 300);
-                }}
-                style={{
-                  width: '100%',
-                  padding: '14px 20px',
-                  background: design.colors.bgCard,
-                  border: `1px solid ${design.colors.border}`,
-                  borderRadius: design.radius.md,
-                  cursor: 'pointer',
-                  color: design.colors.textPrimary,
-                  fontWeight: 600,
-                  fontSize: 15,
-                  fontFamily: design.font.sans,
-                  transition: 'all 0.2s ease',
-                  marginBottom: design.spacing.md,
-                }}
-              >
-                Next Application →
-              </button>
-            )}
-          </div>
-        </div>
-
-        {/* Bottom Navigation */}
-        <div style={{
-          padding: design.spacing.lg,
-          borderTop: `1px solid ${design.colors.border}`,
-          background: design.colors.bgPrimary,
-        }}>
-          {allAppsCompleted ? (
-            renderButton('Take the Quiz →', () => goToPhase('test'), 'primary', false, true)
-          ) : (
-            <div style={{
-              padding: '14px 20px',
-              background: design.colors.bgSecondary,
-              borderRadius: design.radius.md,
-              textAlign: 'center',
-              border: `1px solid ${design.colors.border}`,
-            }}>
-              <p style={{ fontSize: 13, color: design.colors.textMuted, fontFamily: design.font.sans, margin: 0 }}>
-                Read all {applications.length} applications to unlock the quiz ({completedApps.size}/{applications.length} completed)
-              </p>
-            </div>
-          )}
-        </div>
-      </div>
-    );
-  };
-
-  // ============================================================================
-  // TEST - Knowledge Assessment
-  // ============================================================================
-  const renderTest = () => {
-    const q = testQuestions[currentQuestion];
-    const isAnswered = answeredQuestions.has(currentQuestion);
-
-    return (
-      <div style={{
-        display: 'flex', flexDirection: 'column', height: '100%',
-        background: design.colors.bgDeep, fontFamily: design.font.sans,
-      }}>
-        {renderProgressBar()}
-        <div style={{ flex: 1, overflow: 'auto', padding: isMobile ? design.spacing.lg : design.spacing.xl }}>
-          <div style={{ maxWidth: 560, margin: '0 auto' }}>
-            {/* Question Header */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: design.spacing.lg, flexWrap: 'wrap', gap: design.spacing.sm }}>
-              <span style={{ fontSize: 11, fontWeight: 600, letterSpacing: '0.06em', textTransform: 'uppercase', color: design.colors.accentBlue }}>
-                QUESTION {currentQuestion + 1} OF {testQuestions.length}
-              </span>
-              <span style={{
-                fontSize: 13, fontWeight: 700, color: design.colors.success, fontFamily: design.font.sans,
-                background: design.colors.successMuted, padding: '6px 12px', borderRadius: design.radius.full,
-              }}>
-                Score: {correctAnswers}/{answeredQuestions.size}
-              </span>
-            </div>
-
-            {/* Progress bar */}
-            <div style={{
-              height: 4, background: design.colors.bgTertiary, borderRadius: design.radius.full,
-              marginBottom: design.spacing.md, overflow: 'hidden',
-            }}>
-              <div style={{
-                height: '100%', width: `${((currentQuestion + 1) / testQuestions.length) * 100}%`,
-                background: design.colors.accentBlue, borderRadius: design.radius.full,
-                transition: 'width 0.3s ease',
-              }} />
-            </div>
-
-            {/* Question */}
-            <h2 style={{ fontSize: 22, fontWeight: 600, color: design.colors.textPrimary, marginBottom: design.spacing.xl, lineHeight: 1.4 }}>
-              {q.question}
-            </h2>
-
-            {/* Options */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: design.spacing.md, marginBottom: design.spacing.xl }}>
-              {q.options.map((opt, i) => {
-                const isSelected = selectedAnswer === i && currentQuestion === answeredQuestions.size - 1 || (isAnswered && i === selectedAnswer);
-                const isCorrect = i === q.correct;
-                const showResult = isAnswered;
-
-                let bg = design.colors.bgCard;
-                let borderColor = design.colors.border;
-                let textColor = design.colors.textPrimary;
-
-                if (showResult) {
-                  if (isCorrect) {
-                    bg = design.colors.successMuted;
-                    borderColor = design.colors.success;
-                    textColor = design.colors.success;
-                  } else if (isSelected) {
-                    bg = design.colors.errorMuted;
-                    borderColor = design.colors.error;
-                    textColor = design.colors.error;
-                  }
-                }
-
-                return (
-                  <button
-                    key={i}
-                    onMouseDown={() => handleTestAnswer(i)}
-                    disabled={isAnswered}
-                    style={{
-                      padding: design.spacing.lg,
-                      borderRadius: design.radius.md,
-                      textAlign: 'left',
-                      background: bg,
-                      border: `2px solid ${borderColor}`,
-                      color: textColor,
-                      cursor: isAnswered ? 'default' : 'pointer',
-                      transition: 'all 0.2s',
-                      fontFamily: design.font.sans,
-                    }}
-                  >
-                    <span style={{ fontWeight: 700, marginRight: design.spacing.md, color: showResult ? (isCorrect ? design.colors.success : isSelected ? design.colors.error : design.colors.textSecondary) : design.colors.accentBlue }}>
-                      {String.fromCharCode(65 + i)}
-                    </span>
-                    <span style={{ fontSize: 16 }}>{opt}</span>
-                    {showResult && isCorrect && <span style={{ marginLeft: design.spacing.sm }}>✓</span>}
-                    {showResult && isSelected && !isCorrect && <span style={{ marginLeft: design.spacing.sm }}>✗</span>}
-                  </button>
-                );
-              })}
-            </div>
-
-            {/* Explanation */}
-            {showExplanation && isAnswered && (
-              <div style={{
-                padding: design.spacing.lg,
-                borderRadius: design.radius.md,
-                background: design.colors.accentBlueMuted,
-                border: `1px solid ${design.colors.accentBlue}40`,
-                marginBottom: design.spacing.xl,
-              }}>
-                <p style={{ fontSize: 16, color: design.colors.accentBlue, fontWeight: 600, marginBottom: design.spacing.xs }}>💡 Explanation</p>
-                <p style={{ fontSize: 14, color: design.colors.textSecondary, margin: 0, lineHeight: 1.6 }}>{q.explanation}</p>
-              </div>
-            )}
-
-            {/* Navigation */}
-            <div style={{ display: 'flex', gap: design.spacing.md, justifyContent: 'space-between' }}>
-              {renderButton(
-                '← Previous',
-                () => {
-                  setCurrentQuestion(prev => Math.max(0, prev - 1));
-                  setSelectedAnswer(null);
-                  setShowExplanation(answeredQuestions.has(currentQuestion - 1));
-                },
-                'ghost',
-                currentQuestion === 0
-              )}
-              {currentQuestion < testQuestions.length - 1 ? (
-                renderButton(
-                  'Next →',
-                  () => {
-                    setCurrentQuestion(prev => prev + 1);
-                    setSelectedAnswer(null);
-                    setShowExplanation(answeredQuestions.has(currentQuestion + 1));
-                  },
-                  'secondary',
-                  !isAnswered
-                )
-              ) : answeredQuestions.size === testQuestions.length ? (
-                renderButton('Complete →', () => goToPhase('mastery'), 'success')
-              ) : (
-                <span style={{ fontSize: 12, color: design.colors.textMuted, alignSelf: 'center' }}>
-                  Answer all to continue
-                </span>
-              )}
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  };
-
-  // ============================================================================
-  // MASTERY - Completion Screen
-  // ============================================================================
-  const renderMastery = () => {
-    const percentage = Math.round((correctAnswers / testQuestions.length) * 100);
-
-    return (
-      <div style={{
-        display: 'flex', flexDirection: 'column', height: '100%',
-        background: design.colors.bgDeep, fontFamily: design.font.sans,
-      }}>
-        {renderProgressBar()}
-        <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: design.spacing.xl, position: 'relative', overflow: 'hidden' }}>
-          <div style={{ textAlign: 'center', maxWidth: 480 }}>
-            <div style={{ fontSize: isMobile ? 64 : 80, marginBottom: design.spacing.xl }}>🏆</div>
-            <h1 style={{ fontSize: isMobile ? 28 : 36, fontWeight: 700, color: design.colors.textPrimary, marginBottom: design.spacing.md }}>
-              Mastery Achieved!
-            </h1>
-            <div style={{
-              fontSize: isMobile ? 44 : 56, fontWeight: 700, color: design.colors.success,
-              marginBottom: design.spacing.xs,
-            }}>
-              {percentage}%
-            </div>
-            <p style={{ fontSize: 16, color: design.colors.textSecondary, marginBottom: design.spacing.lg }}>
-              {correctAnswers}/{testQuestions.length} correct answers
-            </p>
-            <p style={{ fontSize: 16, color: design.colors.textSecondary, marginBottom: design.spacing.xl, lineHeight: 1.7 }}>
-              You now understand centripetal force—the invisible force that keeps objects moving in circles, from swinging water cups to orbiting satellites!
-            </p>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: design.spacing.sm, justifyContent: 'center', marginBottom: design.spacing.xl }}>
-              {['F = mv²/r', 'v = √(gr)', 'Centripetal → Center', 'Inertia → Tangent'].map((concept, i) => (
-                <div key={i} style={{
-                  padding: '10px 18px',
-                  borderRadius: design.radius.full,
-                  background: design.colors.bgCard,
-                  border: `1px solid ${design.colors.border}`,
-                }}>
-                  <span style={{ fontSize: 14, color: design.colors.accentBlue, fontWeight: 600 }}>{concept}</span>
-                </div>
-              ))}
-            </div>
-            {renderButton('🔄 Play Again', () => {
-              setPhase('hook');
-              setExperimentCount(0);
-              setCurrentQuestion(0);
-              setCorrectAnswers(0);
-              setAnsweredQuestions(new Set());
-              setPrediction(null);
-              setTwistPrediction(null);
-              setActiveApp(0);
-              setCompletedApps(new Set());
-              setSpeed(4);
-              setRadius_(1.5);
-              setAngle(0);
-              setIsSpinning(false);
-              setWaterSpilled(false);
-            }, 'success', false, false, 'lg')}
-          </div>
-
-          {/* Confetti */}
-          <style>{`
-            @keyframes confettiFall {
-              0% { transform: translateY(-20px) rotate(0deg); opacity: 1; }
-              100% { transform: translateY(600px) rotate(720deg); opacity: 0; }
-            }
-          `}</style>
-          {[...Array(20)].map((_, i) => (
-            <div key={i} style={{
-              position: 'absolute', left: `${Math.random() * 100}%`, top: '-20px',
-              animation: `confettiFall ${2 + Math.random() * 2}s linear ${Math.random() * 2}s forwards`,
-              pointerEvents: 'none', fontSize: 18,
-            }}>
-              {['🎢', '⚡', '⭐', '✨', '🎉'][Math.floor(Math.random() * 5)]}
-            </div>
-          ))}
-        </div>
-      </div>
-    );
-  };
-
-  // Phase mapping
-  const phases: Record<Phase, () => JSX.Element> = {
-    hook: renderHook,
-    predict: renderPredict,
-    play: renderPlay,
-    review: renderReview,
-    twist_predict: renderTwistPredict,
-    twist_play: renderTwistPlay,
-    twist_review: renderTwistReview,
-    transfer: renderTransfer,
-    test: renderTest,
-    mastery: renderMastery,
+  const renderPhase = () => {
+    switch (phase) {
+      case 0: return renderHook();
+      case 1: return renderPredict();
+      case 2: return renderPlay();
+      case 3: return renderReview();
+      case 4: return renderTwistPredict();
+      case 5: return renderTwistPlay();
+      case 6: return renderTwistReview();
+      case 7: return renderTransfer();
+      case 8: return renderTest();
+      case 9: return renderMastery();
+      default: return renderHook();
+    }
   };
 
   return (
-    <div style={{
-      width, height, borderRadius: design.radius.lg, overflow: 'hidden',
-      position: 'relative', background: design.colors.bgDeep, fontFamily: design.font.sans,
-      boxShadow: design.shadow.lg,
-    }}>
-      {phases[phase]()}
+    <div className="min-h-screen bg-[#0a0f1a] text-white relative overflow-hidden">
+      {/* Premium background gradient */}
+      <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-[#0a1628] to-slate-900" />
+      <div className="absolute top-0 left-1/4 w-96 h-96 bg-cyan-500/5 rounded-full blur-3xl" />
+      <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-blue-500/5 rounded-full blur-3xl" />
+
+      {/* Header */}
+      <div className="fixed top-0 left-0 right-0 z-50 bg-slate-900/80 backdrop-blur-xl border-b border-slate-800/50">
+        <div className="flex items-center justify-between px-6 py-3 max-w-4xl mx-auto">
+          <span className="text-sm font-semibold text-white/80 tracking-wide">Centripetal Force</span>
+          <div className="flex items-center gap-1.5">
+            {PHASES.map((p) => (
+              <button
+                key={p}
+                onMouseDown={(e) => { e.preventDefault(); goToPhase(p); }}
+                className={`h-2 rounded-full transition-all duration-300 ${
+                  phase === p
+                    ? 'bg-cyan-400 w-6 shadow-lg shadow-cyan-400/30'
+                    : phase > p
+                      ? 'bg-emerald-500 w-2'
+                      : 'bg-slate-700 w-2 hover:bg-slate-600'
+                }`}
+                title={phaseLabels[p]}
+              />
+            ))}
+          </div>
+          <span className="text-sm font-medium text-cyan-400">{phaseLabels[phase]}</span>
+        </div>
+      </div>
+
+      {/* Main content */}
+      <div className="relative pt-16 pb-12">{renderPhase()}</div>
     </div>
   );
 };

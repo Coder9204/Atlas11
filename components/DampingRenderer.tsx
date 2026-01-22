@@ -1,3 +1,5 @@
+'use client';
+
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 
 // Premium Design System - Apple/Airbnb inspired
@@ -47,16 +49,41 @@ const design = {
   },
 };
 
-type Phase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
-type DampingType = 'underdamped' | 'critical' | 'overdamped';
+// ═══════════════════════════════════════════════════════════════════════════
+// TYPES & INTERFACES
+// ═══════════════════════════════════════════════════════════════════════════
+type GameEventType =
+  | 'phase_change'
+  | 'prediction_made'
+  | 'simulation_started'
+  | 'parameter_changed'
+  | 'twist_prediction_made'
+  | 'app_explored'
+  | 'test_answered'
+  | 'test_completed'
+  | 'mastery_achieved';
 
-const phases: Phase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
+interface GameEvent {
+  type: GameEventType;
+  data?: Record<string, unknown>;
+}
+
+// Numeric phases: 0=hook, 1=predict, 2=play, 3=review, 4=twist_predict, 5=twist_play, 6=twist_review, 7=transfer, 8=test, 9=mastery
+const PHASES: number[] = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
+const phaseLabels: Record<number, string> = {
+  0: 'Hook', 1: 'Predict', 2: 'Lab', 3: 'Review', 4: 'Twist Predict',
+  5: 'Twist Lab', 6: 'Twist Review', 7: 'Transfer', 8: 'Test', 9: 'Mastery'
+};
+
+type DampingType = 'underdamped' | 'critical' | 'overdamped';
 
 interface DampingRendererProps {
   width?: number;
   height?: number;
   onBack?: () => void;
-  emitGameEvent?: (event: string, data?: Record<string, unknown>) => void;
+  onGameEvent?: (event: GameEvent) => void;
+  currentPhase?: number;
+  onPhaseComplete?: (phase: number) => void;
 }
 
 // Real-world applications data
@@ -255,9 +282,62 @@ const DampingRenderer: React.FC<DampingRendererProps> = ({
   width = 800,
   height = 600,
   onBack,
-  emitGameEvent = () => {}
+  onGameEvent,
+  currentPhase,
+  onPhaseComplete
 }) => {
-  const [phase, setPhase] = useState<Phase>('hook');
+  const [phase, setPhase] = useState<number>(currentPhase ?? 0);
+
+  // Sync with external phase control
+  useEffect(() => {
+    if (currentPhase !== undefined && currentPhase !== phase) {
+      setPhase(currentPhase);
+    }
+  }, [currentPhase]);
+
+  // Web Audio API sound
+  const playSound = useCallback((type: 'click' | 'success' | 'failure' | 'transition' | 'complete') => {
+    if (typeof window === 'undefined') return;
+    try {
+      const audioContext = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
+      const oscillator = audioContext.createOscillator();
+      const gainNode = audioContext.createGain();
+      oscillator.connect(gainNode);
+      gainNode.connect(audioContext.destination);
+      const sounds = {
+        click: { freq: 600, duration: 0.1, type: 'sine' as OscillatorType },
+        success: { freq: 800, duration: 0.2, type: 'sine' as OscillatorType },
+        failure: { freq: 300, duration: 0.3, type: 'sine' as OscillatorType },
+        transition: { freq: 500, duration: 0.15, type: 'sine' as OscillatorType },
+        complete: { freq: 900, duration: 0.4, type: 'sine' as OscillatorType }
+      };
+      const sound = sounds[type];
+      oscillator.frequency.value = sound.freq;
+      oscillator.type = sound.type;
+      gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + sound.duration);
+      oscillator.start();
+      oscillator.stop(audioContext.currentTime + sound.duration);
+    } catch { /* Audio not supported */ }
+  }, []);
+
+  // Emit events
+  const emitEvent = (type: GameEventType, data?: Record<string, unknown>) => {
+    if (onGameEvent) {
+      onGameEvent({ type, data });
+    }
+  };
+
+  // Phase navigation with 400ms debouncing
+  const goToPhase = (newPhase: number) => {
+    if (navigationLockRef.current) return;
+    navigationLockRef.current = true;
+    playSound('transition');
+    setPhase(newPhase);
+    emitEvent('phase_change', { from: phase, to: newPhase });
+    if (onPhaseComplete) onPhaseComplete(newPhase);
+    setTimeout(() => { navigationLockRef.current = false; }, 400);
+  };
   const [prediction, setPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
   const [showResult, setShowResult] = useState(false);
@@ -279,6 +359,7 @@ const DampingRenderer: React.FC<DampingRendererProps> = ({
 
   // Button debounce lock
   const navigationLockRef = useRef(false);
+  const lastClickRef = useRef(0);
   const animationRef = useRef<number | null>(null);
 
   const isMobile = width < 600;
@@ -365,19 +446,10 @@ const DampingRenderer: React.FC<DampingRendererProps> = ({
     setVelocity(0);
   }, []);
 
-  const goToPhase = useCallback((newPhase: Phase) => {
-    if (navigationLockRef.current) return;
-    navigationLockRef.current = true;
-    setPhase(newPhase);
-    emitGameEvent('phase_change', { from: phase, to: newPhase });
-    setTimeout(() => { navigationLockRef.current = false; }, 400);
-  }, [phase, emitGameEvent]);
-
   // ============ HELPER FUNCTIONS ============
 
   // Progress bar
   const renderProgressBar = () => {
-    const currentIdx = phases.indexOf(phase);
     return (
       <div style={{
         display: 'flex',
@@ -387,18 +459,18 @@ const DampingRenderer: React.FC<DampingRendererProps> = ({
         background: colors.bgSecondary,
         borderBottom: `1px solid ${colors.border}`
       }}>
-        {phases.map((p, idx) => (
+        {PHASES.map((p, idx) => (
           <div
             key={p}
             style={{
               flex: 1,
               height: '4px',
               borderRadius: radius.full,
-              background: idx <= currentIdx
+              background: idx <= phase
                 ? `linear-gradient(90deg, ${colors.primary}, ${colors.primaryLight})`
                 : colors.bgTertiary,
               transition: 'all 0.4s ease',
-              boxShadow: idx <= currentIdx ? shadows.glow(colors.primary) : 'none'
+              boxShadow: idx <= phase ? shadows.glow(colors.primary) : 'none'
             }}
           />
         ))}
@@ -409,7 +481,7 @@ const DampingRenderer: React.FC<DampingRendererProps> = ({
           fontWeight: 600,
           minWidth: '48px'
         }}>
-          {currentIdx + 1}/{phases.length}
+          {phase + 1}/{PHASES.length}
         </span>
       </div>
     );
@@ -790,136 +862,73 @@ const DampingRenderer: React.FC<DampingRendererProps> = ({
 
   // Hook phase - Premium welcome screen
   const renderHook = () => (
-    <div style={{
-      display: 'flex',
-      flexDirection: 'column',
-      minHeight: '100%',
-      background: `radial-gradient(ellipse at top, ${colors.bgSecondary} 0%, ${colors.bgPrimary} 70%)`
-    }}>
-      {renderProgressBar()}
-      <div style={{
-        flex: 1,
-        padding: isMobile ? space.lg : space.xxl,
-        display: 'flex',
-        flexDirection: 'column',
-        justifyContent: 'center',
-        alignItems: 'center'
-      }}>
-        <div style={{ maxWidth: '600px', textAlign: 'center' }}>
-          {/* Animated icon with glow */}
-          <div style={{
-            width: '120px',
-            height: '120px',
-            margin: '0 auto 32px',
-            borderRadius: radius.full,
-            background: `linear-gradient(135deg, ${colors.primary}20, ${colors.accent}20)`,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            boxShadow: shadows.glow(colors.primary),
-            border: `2px solid ${colors.primary}30`
-          }}>
-            <span style={{ fontSize: '56px' }}>〰️</span>
-          </div>
+    <div className="flex flex-col items-center justify-center min-h-[600px] px-6 py-12 text-center">
+      {/* Premium badge */}
+      <div className="inline-flex items-center gap-2 px-4 py-2 bg-pink-500/10 border border-pink-500/20 rounded-full mb-8">
+        <span className="w-2 h-2 bg-pink-400 rounded-full animate-pulse" />
+        <span className="text-sm font-medium text-pink-400 tracking-wide">PHYSICS EXPLORATION</span>
+      </div>
 
-          {/* Title */}
-          <h1 style={{
-            fontSize: isMobile ? '32px' : '42px',
-            fontWeight: 800,
-            color: colors.textPrimary,
-            marginBottom: space.md,
-            lineHeight: 1.1,
-            letterSpacing: '-1px'
-          }}>
-            Why Do Swings Stop?
-          </h1>
+      {/* Main title with gradient */}
+      <h1 className="text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-white via-pink-100 to-fuchsia-200 bg-clip-text text-transparent">
+        Damped Oscillations
+      </h1>
 
-          {/* Subtitle */}
-          <p style={{
-            fontSize: '18px',
-            color: colors.textSecondary,
-            marginBottom: space.xl,
-            lineHeight: 1.7
-          }}>
-            You push a child on a swing once and walk away. What happens next?
-          </p>
+      <p className="text-lg text-slate-400 max-w-md mb-10">
+        Discover why swings stop and how engineers control vibrations
+      </p>
 
-          {/* Question card */}
-          <div style={{
-            background: `linear-gradient(135deg, ${colors.bgTertiary}, ${colors.bgSecondary})`,
-            borderRadius: radius.xl,
-            padding: space.xl,
-            marginBottom: space.xl,
-            border: `1px solid ${colors.border}`,
-            boxShadow: shadows.lg
-          }}>
-            <p style={{
-              fontSize: '22px',
-              color: colors.primary,
-              fontWeight: 700,
-              margin: 0,
-              lineHeight: 1.4
-            }}>
-              Will the swing keep going forever?
+      {/* Premium card with content */}
+      <div className="relative bg-gradient-to-br from-slate-800/80 to-slate-900/80 rounded-3xl p-8 max-w-xl w-full border border-slate-700/50 shadow-2xl shadow-black/20 backdrop-blur-xl">
+        {/* Subtle glow effect */}
+        <div className="absolute inset-0 bg-gradient-to-br from-pink-500/5 via-transparent to-fuchsia-500/5 rounded-3xl" />
+
+        <div className="relative">
+          <div className="text-6xl mb-6">〰️</div>
+
+          <div className="space-y-4">
+            <p className="text-xl text-white/90 font-medium leading-relaxed">
+              You push a child on a swing once and walk away.
             </p>
-            <p style={{
-              fontSize: '16px',
-              color: colors.textSecondary,
-              marginTop: space.md
-            }}>
-              Or is there something that steals its energy?
+            <p className="text-lg text-slate-400 leading-relaxed">
+              Will it swing forever? Or is there something that steals its energy?
             </p>
-          </div>
-
-          {/* Examples */}
-          <div style={{
-            display: 'flex',
-            gap: space.md,
-            justifyContent: 'center',
-            flexWrap: 'wrap'
-          }}>
-            {['🎢 Swings', '🎸 Guitar strings', '🔔 Bells', '🚗 Car bumps'].map((item, idx) => (
-              <div key={idx} style={{
-                padding: `${space.md} ${space.lg}`,
-                background: colors.bgSecondary,
-                borderRadius: radius.md,
-                border: `1px solid ${colors.border}`,
-                fontSize: '14px',
-                color: colors.textSecondary,
-                fontWeight: 500
-              }}>
-                {item}
-              </div>
-            ))}
+            <div className="pt-2">
+              <p className="text-base text-pink-400 font-semibold">
+                Uncover the science of damping and how it shapes our world!
+              </p>
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Premium CTA */}
-      <div style={{
-        padding: `${space.lg} ${space.xl}`,
-        background: colors.bgSecondary,
-        borderTop: `1px solid ${colors.border}`,
-        display: 'flex',
-        justifyContent: 'center'
-      }}>
-        <button
-          onMouseDown={() => goToPhase('predict')}
-          style={{
-            padding: `${space.md} ${space.xxl}`,
-            fontSize: '16px',
-            fontWeight: 700,
-            color: colors.textInverse,
-            background: `linear-gradient(135deg, ${colors.primary}, ${colors.primaryDark})`,
-            border: 'none',
-            borderRadius: radius.md,
-            cursor: 'pointer',
-            boxShadow: `${shadows.md}, ${shadows.glow(colors.primary)}`,
-            letterSpacing: '0.5px'
-          }}
-        >
-          Explore Damping →
-        </button>
+      {/* Premium CTA button */}
+      <button
+        onMouseDown={(e) => { e.preventDefault(); goToPhase(1); }}
+        className="mt-10 group relative px-10 py-5 bg-gradient-to-r from-pink-500 to-fuchsia-600 text-white text-lg font-semibold rounded-2xl transition-all duration-300 hover:shadow-lg hover:shadow-pink-500/25 hover:scale-[1.02] active:scale-[0.98]"
+      >
+        <span className="relative z-10 flex items-center gap-3">
+          Explore Damping
+          <svg className="w-5 h-5 transition-transform group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+          </svg>
+        </span>
+      </button>
+
+      {/* Feature hints */}
+      <div className="mt-12 flex items-center gap-8 text-sm text-slate-500">
+        <div className="flex items-center gap-2">
+          <span className="text-pink-400">✦</span>
+          Interactive Lab
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="text-pink-400">✦</span>
+          Real-World Examples
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="text-pink-400">✦</span>
+          Knowledge Test
+        </div>
       </div>
     </div>
   );
@@ -989,7 +998,7 @@ const DampingRenderer: React.FC<DampingRendererProps> = ({
           </p>
         </div>
       </div>
-      {renderBottomBar(() => goToPhase('play'), 'Test It!', !prediction)}
+      {renderBottomBar(() => goToPhase(2), 'Test It!', !prediction)}
     </div>
   );
 
@@ -1093,7 +1102,7 @@ const DampingRenderer: React.FC<DampingRendererProps> = ({
       </div>
       {renderBottomBar(() => {
         setShowResult(true);
-        goToPhase('review');
+        goToPhase(3);
       }, 'See Analysis')}
     </div>
   );
@@ -1248,7 +1257,7 @@ const DampingRenderer: React.FC<DampingRendererProps> = ({
 
           {renderKeyTakeaway('Damping is nature\'s way of dissipating energy. The damping ratio ζ determines whether the system oscillates (underdamped), returns fastest (critical), or creeps back slowly (overdamped). Most real systems are slightly underdamped for quick response with acceptable overshoot.')}
         </div>
-        {renderBottomBar(() => goToPhase('twist_predict'), 'Explore the Twist')}
+        {renderBottomBar(() => goToPhase(4), 'Explore the Twist')}
       </div>
     );
   };
@@ -1318,7 +1327,7 @@ const DampingRenderer: React.FC<DampingRendererProps> = ({
           ))}
         </div>
       </div>
-      {renderBottomBar(() => goToPhase('twist_play'), 'Try Different Media', !twistPrediction)}
+      {renderBottomBar(() => goToPhase(5), 'Try Different Media', !twistPrediction)}
     </div>
   );
 
@@ -1435,7 +1444,7 @@ const DampingRenderer: React.FC<DampingRendererProps> = ({
       </div>
       {renderBottomBar(() => {
         setShowTwistResult(true);
-        goToPhase('twist_review');
+        goToPhase(6);
       }, 'See Analysis')}
     </div>
   );
@@ -1529,7 +1538,7 @@ const DampingRenderer: React.FC<DampingRendererProps> = ({
 
           {renderKeyTakeaway('The same oscillator can be underdamped, critically damped, or overdamped depending on the surrounding medium. This is why car shock absorbers use oil with specific viscosity - change the oil and you change the ride quality!')}
         </div>
-        {renderBottomBar(() => goToPhase('transfer'), 'See Real Applications')}
+        {renderBottomBar(() => goToPhase(7), 'See Real Applications')}
       </div>
     );
   };
@@ -1790,7 +1799,7 @@ const DampingRenderer: React.FC<DampingRendererProps> = ({
           alignItems: 'center'
         }}>
           <button
-            onMouseDown={() => goToPhase('twist_review')}
+            onMouseDown={() => goToPhase(6)}
             style={{
               padding: `${space.md} ${space.xl}`,
               fontSize: '14px',
@@ -1805,7 +1814,7 @@ const DampingRenderer: React.FC<DampingRendererProps> = ({
           </button>
           {canTakeQuiz ? (
             <button
-              onMouseDown={() => goToPhase('test')}
+              onMouseDown={() => goToPhase(8)}
               style={{
                 padding: `${space.md} ${space.xxl}`,
                 fontSize: '15px',
@@ -2130,7 +2139,7 @@ const DampingRenderer: React.FC<DampingRendererProps> = ({
             </>
           )}
         </div>
-        {showTestResults && renderBottomBar(() => goToPhase('mastery'), 'Complete Module')}
+        {showTestResults && renderBottomBar(() => goToPhase(9), 'Complete Module')}
       </div>
     );
   };
@@ -2302,33 +2311,56 @@ const DampingRenderer: React.FC<DampingRendererProps> = ({
   // Main render switch
   const renderPhase = () => {
     switch (phase) {
-      case 'hook': return renderHook();
-      case 'predict': return renderPredict();
-      case 'play': return renderPlay();
-      case 'review': return renderReview();
-      case 'twist_predict': return renderTwistPredict();
-      case 'twist_play': return renderTwistPlay();
-      case 'twist_review': return renderTwistReview();
-      case 'transfer': return renderTransfer();
-      case 'test': return renderTest();
-      case 'mastery': return renderMastery();
+      case 0: return renderHook();
+      case 1: return renderPredict();
+      case 2: return renderPlay();
+      case 3: return renderReview();
+      case 4: return renderTwistPredict();
+      case 5: return renderTwistPlay();
+      case 6: return renderTwistReview();
+      case 7: return renderTransfer();
+      case 8: return renderTest();
+      case 9: return renderMastery();
       default: return renderHook();
     }
   };
 
   return (
-    <div style={{
-      width: '100%',
-      height: '100%',
-      minHeight: '100vh',
-      background: colors.bgPrimary,
-      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
-      color: colors.textPrimary,
-      overflow: 'hidden',
-      WebkitFontSmoothing: 'antialiased',
-      MozOsxFontSmoothing: 'grayscale'
-    }}>
-      {renderPhase()}
+    <div className="min-h-screen bg-[#0a0f1a] text-white relative overflow-hidden">
+      {/* Premium background gradient */}
+      <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-[#0a1628] to-slate-900" />
+      <div className="absolute top-0 left-1/4 w-96 h-96 bg-pink-500/5 rounded-full blur-3xl" />
+      <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-fuchsia-500/5 rounded-full blur-3xl" />
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-purple-500/3 rounded-full blur-3xl" />
+
+      {/* Header */}
+      <div className="fixed top-0 left-0 right-0 z-50 bg-slate-900/80 backdrop-blur-xl border-b border-slate-800/50">
+        <div className="flex items-center justify-between px-6 py-3 max-w-4xl mx-auto">
+          <span className="text-sm font-semibold text-white/80 tracking-wide">Damped Oscillations</span>
+          <div className="flex items-center gap-1.5">
+            {PHASES.map((p) => (
+              <button
+                key={p}
+                onMouseDown={(e) => { e.preventDefault(); goToPhase(p); }}
+                className={`h-2 rounded-full transition-all duration-300 ${
+                  phase === p
+                    ? 'bg-pink-400 w-6 shadow-lg shadow-pink-400/30'
+                    : phase > p
+                      ? 'bg-emerald-500 w-2'
+                      : 'bg-slate-700 w-2 hover:bg-slate-600'
+                }`}
+                title={phaseLabels[p]}
+              />
+            ))}
+          </div>
+          <span className="text-sm font-medium text-pink-400">{phaseLabels[phase]}</span>
+        </div>
+      </div>
+
+      {/* Main content */}
+      <div className="relative pt-16 pb-12 max-w-4xl mx-auto px-4">
+        {renderPhase()}
+      </div>
     </div>
   );
 };

@@ -83,6 +83,7 @@ export default function WaterHammerRenderer({ onGameEvent }: WaterHammerRenderer
   const [completedApps, setCompletedApps] = useState<Set<number>>(new Set());
   const [isMobile, setIsMobile] = useState(false);
   const navigationLockRef = useRef(false);
+  const lastClickRef = useRef(0);
 
   // Simulation state
   const [valveOpen, setValveOpen] = useState(true);
@@ -107,7 +108,11 @@ export default function WaterHammerRenderer({ onGameEvent }: WaterHammerRenderer
   }, []);
 
   const goToPhase = (newPhase: Phase) => {
+    const now = Date.now();
+    if (now - lastClickRef.current < 200) return;
     if (navigationLockRef.current) return;
+
+    lastClickRef.current = now;
     navigationLockRef.current = true;
     setTimeout(() => { navigationLockRef.current = false; }, 400);
 
@@ -115,7 +120,20 @@ export default function WaterHammerRenderer({ onGameEvent }: WaterHammerRenderer
       onGameEvent({ type: 'phase_change', from: phase, to: newPhase });
     }
     setPhase(newPhase);
-    playSound(440, 0.15, 'sine', 0.2);
+    playSound('transition');
+  };
+
+  const phaseLabels: Record<Phase, string> = {
+    hook: 'Hook',
+    predict: 'Predict',
+    play: 'Lab',
+    review: 'Review',
+    twist_predict: 'Twist Predict',
+    twist_play: 'Twist Lab',
+    twist_review: 'Twist Review',
+    transfer: 'Transfer',
+    test: 'Test',
+    mastery: 'Mastery'
   };
 
   // Constants for water
@@ -167,8 +185,8 @@ export default function WaterHammerRenderer({ onGameEvent }: WaterHammerRenderer
     }, 50);
 
     // Sound effect - loud bang!
-    playSound(80, 0.3, 'square', 0.5);
-    setTimeout(() => playSound(60, 0.2, 'square', 0.3), 100);
+    playSound('click');
+    setTimeout(() => playSound('click'), 100);
   };
 
   const resetSimulation = () => {
@@ -228,7 +246,7 @@ export default function WaterHammerRenderer({ onGameEvent }: WaterHammerRenderer
     if (onGameEvent) {
       onGameEvent({ type: 'prediction', phase: 'predict', prediction: choice });
     }
-    playSound(330, 0.1, 'sine', 0.2);
+    playSound('click');
   };
 
   const handleTwistPrediction = (choice: string) => {
@@ -236,13 +254,13 @@ export default function WaterHammerRenderer({ onGameEvent }: WaterHammerRenderer
     if (onGameEvent) {
       onGameEvent({ type: 'prediction', phase: 'twist_predict', prediction: choice });
     }
-    playSound(330, 0.1, 'sine', 0.2);
+    playSound('click');
   };
 
   const handleTestAnswer = (q: number, a: number) => {
     if (!testSubmitted) {
       setTestAnswers(prev => ({ ...prev, [q]: a }));
-      playSound(330, 0.1, 'sine', 0.2);
+      playSound('click');
     }
   };
 
@@ -404,78 +422,88 @@ export default function WaterHammerRenderer({ onGameEvent }: WaterHammerRenderer
   const renderPhase = () => {
     switch (phase) {
       // ───────────────────────────────────────────────────
-      // HOOK
+      // HOOK - Premium Design
       // ───────────────────────────────────────────────────
       case 'hook':
         return (
-          <div className="flex flex-col items-center">
-            <h2 style={{ fontSize: '1.8rem', marginBottom: '0.5rem', color: '#1e293b' }}>
+          <div className="flex flex-col items-center justify-center min-h-[600px] px-6 py-12 text-center">
+            {/* Premium badge */}
+            <div className="inline-flex items-center gap-2 px-4 py-2 bg-blue-500/10 border border-blue-500/20 rounded-full mb-8">
+              <span className="w-2 h-2 bg-blue-400 rounded-full animate-pulse" />
+              <span className="text-sm font-medium text-blue-400 tracking-wide">PHYSICS EXPLORATION</span>
+            </div>
+
+            {/* Main title with gradient */}
+            <h1 className="text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-white via-blue-100 to-cyan-200 bg-clip-text text-transparent">
               The Pipe Destroyer
-            </h2>
-            <p style={{ color: '#64748b', marginBottom: '1.5rem', textAlign: 'center', maxWidth: 500 }}>
+            </h1>
+
+            <p className="text-lg text-slate-400 max-w-md mb-10">
               Have you heard pipes BANG when someone quickly shuts off a faucet?
             </p>
 
-            <svg viewBox="0 0 400 300" style={{ width: '100%', maxWidth: 400, marginBottom: '1.5rem' }}>
-              {/* Pipe */}
-              <rect x="50" y="120" width="300" height="60" fill="#475569" stroke="#1e293b" strokeWidth="3" rx="5" />
-              <rect x="50" y="130" width="300" height="40" fill="#64748b" />
+            {/* Premium card with graphic */}
+            <div className="relative bg-gradient-to-br from-slate-800/80 to-slate-900/80 rounded-3xl p-8 max-w-xl w-full border border-slate-700/50 shadow-2xl shadow-black/20">
+              {/* Subtle glow effect */}
+              <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 via-transparent to-cyan-500/5 rounded-3xl" />
 
-              {/* Water flowing */}
-              <g>
-                {[0, 1, 2, 3, 4, 5].map(i => (
-                  <circle
-                    key={i}
-                    cx={80 + i * 45}
-                    cy="150"
-                    r="10"
-                    fill="#3b82f6"
-                    opacity="0.8"
-                  >
-                    <animate
-                      attributeName="cx"
-                      values={`${80 + i * 45};${125 + i * 45}`}
-                      dur="0.5s"
-                      repeatCount="indefinite"
-                    />
-                  </circle>
-                ))}
-              </g>
+              <div className="relative">
+                <svg viewBox="0 0 400 200" style={{ width: '100%', maxWidth: 400, margin: '0 auto', display: 'block' }}>
+                  <rect x="50" y="70" width="300" height="60" fill="#334155" stroke="#475569" strokeWidth="3" rx="5" />
+                  <rect x="50" y="80" width="300" height="40" fill="#475569" />
+                  <g>
+                    {[0, 1, 2, 3, 4, 5].map(i => (
+                      <circle key={i} cx={80 + i * 45} cy="100" r="10" fill="#3b82f6" opacity="0.8">
+                        <animate attributeName="cx" values={`${80 + i * 45};${125 + i * 45}`} dur="0.5s" repeatCount="indefinite" />
+                      </circle>
+                    ))}
+                  </g>
+                  <rect x="330" y="50" width="20" height="100" fill="#ef4444" stroke="#b91c1c" strokeWidth="2" rx="3" />
+                  <rect x="320" y="40" width="40" height="15" fill="#ef4444" stroke="#b91c1c" strokeWidth="2" rx="3" />
+                  <text x="200" y="170" textAnchor="middle" fill="#f87171" fontSize="14" fontWeight="bold">💥 BANG! 💥</text>
+                </svg>
 
-              {/* Valve handle */}
-              <rect x="330" y="100" width="20" height="100" fill="#ef4444" stroke="#b91c1c" strokeWidth="2" rx="3" />
-              <rect x="320" y="90" width="40" height="15" fill="#ef4444" stroke="#b91c1c" strokeWidth="2" rx="3" />
+                <div className="mt-6 space-y-4">
+                  <p className="text-xl text-white/90 font-medium leading-relaxed">
+                    This &quot;water hammer&quot; can generate pressures over 40 bar!
+                  </p>
+                  <div className="pt-2">
+                    <p className="text-base text-blue-400 font-semibold">
+                      Enough to burst pipes and damage equipment.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
 
-              {/* Pressure spike indicator */}
-              <text x="200" y="220" textAnchor="middle" fill="#dc2626" fontSize="14" fontWeight="bold">
-                💥 BANG! 💥
-              </text>
-
-              {/* Explanation */}
-              <text x="200" y="260" textAnchor="middle" fill="#64748b" fontSize="12">
-                This "water hammer" can generate pressures over 40 bar!
-              </text>
-              <text x="200" y="280" textAnchor="middle" fill="#64748b" fontSize="12">
-                That's enough to burst pipes and damage equipment.
-              </text>
-            </svg>
-
+            {/* Premium CTA button */}
             <button
-              onMouseDown={() => goToPhase('predict')}
-              style={{
-                padding: '1rem 2.5rem',
-                fontSize: '1.1rem',
-                background: 'linear-gradient(135deg, #3b82f6, #1d4ed8)',
-                color: 'white',
-                border: 'none',
-                borderRadius: 12,
-                cursor: 'pointer',
-                fontWeight: 600,
-                boxShadow: '0 4px 14px rgba(59, 130, 246, 0.4)'
-              }}
+              onMouseDown={(e) => { e.preventDefault(); goToPhase('predict'); }}
+              className="mt-10 group relative px-10 py-5 bg-gradient-to-r from-blue-500 to-cyan-600 text-white text-lg font-semibold rounded-2xl transition-all duration-300 hover:shadow-lg hover:shadow-blue-500/25 hover:scale-[1.02] active:scale-[0.98]"
             >
-              Investigate the Pressure Wave
+              <span className="relative z-10 flex items-center gap-3">
+                Investigate the Pressure Wave
+                <svg className="w-5 h-5 transition-transform group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                </svg>
+              </span>
             </button>
+
+            {/* Feature hints */}
+            <div className="mt-12 flex items-center gap-8 text-sm text-slate-500">
+              <div className="flex items-center gap-2">
+                <span className="text-blue-400">✦</span>
+                Interactive Lab
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-blue-400">✦</span>
+                Real-World Examples
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-blue-400">✦</span>
+                Knowledge Test
+              </div>
+            </div>
           </div>
         );
 
@@ -1330,7 +1358,7 @@ export default function WaterHammerRenderer({ onGameEvent }: WaterHammerRenderer
                   key={index}
                   onMouseDown={() => {
                     setCompletedApps(prev => new Set([...prev, index]));
-                    playSound(500 + index * 100, 0.15, 'sine', 0.2);
+                    playSound('click');
                   }}
                   style={{
                     background: completedApps.has(index)
@@ -1645,70 +1673,38 @@ export default function WaterHammerRenderer({ onGameEvent }: WaterHammerRenderer
   const currentIndex = phaseOrder.indexOf(phase);
 
   return (
-    <div style={{
-      minHeight: '100vh',
-      background: 'linear-gradient(135deg, #f8fafc, #e0f2fe)',
-      padding: isMobile ? '1rem' : '2rem',
-      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
-    }}>
-      {/* Progress bar */}
-      <div style={{
-        maxWidth: 700,
-        margin: '0 auto 1.5rem auto'
-      }}>
-        <div style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          marginBottom: '0.5rem'
-        }}>
-          {phaseOrder.map((p, i) => (
-            <div
-              key={p}
-              style={{
-                width: 28,
-                height: 28,
-                borderRadius: '50%',
-                background: i <= currentIndex
-                  ? 'linear-gradient(135deg, #3b82f6, #1d4ed8)'
-                  : '#e2e8f0',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                color: i <= currentIndex ? 'white' : '#94a3b8',
-                fontSize: '0.7rem',
-                fontWeight: 600
-              }}
-            >
-              {i < currentIndex ? '✓' : i + 1}
-            </div>
-          ))}
-        </div>
-        <div style={{
-          height: 4,
-          background: '#e2e8f0',
-          borderRadius: 2,
-          overflow: 'hidden'
-        }}>
-          <div style={{
-            width: `${(currentIndex / (phaseOrder.length - 1)) * 100}%`,
-            height: '100%',
-            background: 'linear-gradient(90deg, #3b82f6, #1d4ed8)',
-            transition: 'width 0.3s ease'
-          }} />
+    <div className="min-h-screen bg-[#0a0f1a] text-white relative overflow-hidden" style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' }}>
+      {/* Premium background gradient */}
+      <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-[#0a1628] to-slate-900" />
+      <div className="absolute top-0 left-1/4 w-96 h-96 bg-blue-500/5 rounded-full blur-3xl" />
+      <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-cyan-500/5 rounded-full blur-3xl" />
+
+      {/* Header */}
+      <div className="fixed top-0 left-0 right-0 z-50 bg-slate-900/80 backdrop-blur-xl border-b border-slate-800/50">
+        <div className="flex items-center justify-between px-6 py-3 max-w-4xl mx-auto">
+          <span className="text-sm font-semibold text-white/80 tracking-wide">Water Hammer</span>
+          <div className="flex items-center gap-1.5">
+            {phaseOrder.map((p, i) => (
+              <button
+                key={p}
+                onMouseDown={(e) => { e.preventDefault(); goToPhase(p); }}
+                className={`h-2 rounded-full transition-all duration-300 ${
+                  phase === p
+                    ? 'bg-blue-400 w-6 shadow-lg shadow-blue-400/30'
+                    : currentIndex > i
+                      ? 'bg-emerald-500 w-2'
+                      : 'bg-slate-700 w-2 hover:bg-slate-600'
+                }`}
+                title={phaseLabels[p]}
+              />
+            ))}
+          </div>
+          <span className="text-sm font-medium text-blue-400">{phaseLabels[phase]}</span>
         </div>
       </div>
 
       {/* Main content */}
-      <div style={{
-        maxWidth: 700,
-        margin: '0 auto',
-        background: 'white',
-        borderRadius: 20,
-        padding: isMobile ? '1.5rem' : '2rem',
-        boxShadow: '0 10px 40px rgba(0, 0, 0, 0.08)'
-      }}>
-        {renderPhase()}
-      </div>
+      <div className="relative pt-16 pb-12 max-w-4xl mx-auto">{renderPhase()}</div>
     </div>
   );
 }

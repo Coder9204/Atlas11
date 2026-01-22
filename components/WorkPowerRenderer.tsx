@@ -6,27 +6,38 @@ import React, { useState, useRef, useEffect, useCallback } from 'react';
 // The Human Engine: Calculate the power you generate climbing stairs
 // ============================================================================
 
-interface WorkPowerRendererProps {
-  onComplete?: () => void;
-  emit?: (event: string, data?: Record<string, unknown>) => void;
+// ═══════════════════════════════════════════════════════════════════════════
+// TYPES & INTERFACES
+// ═══════════════════════════════════════════════════════════════════════════
+type GameEventType =
+  | 'phase_change'
+  | 'prediction_made'
+  | 'simulation_started'
+  | 'parameter_changed'
+  | 'twist_prediction_made'
+  | 'app_explored'
+  | 'test_answered'
+  | 'test_completed'
+  | 'mastery_achieved';
+
+interface GameEvent {
+  type: GameEventType;
+  data?: Record<string, unknown>;
 }
 
-type Phase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
-
-const phases: Phase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
-
-const phaseLabels: Record<Phase, string> = {
-  hook: 'Hook',
-  predict: 'Predict',
-  play: 'Experiment',
-  review: 'Review',
-  twist_predict: 'Twist',
-  twist_play: 'Explore',
-  twist_review: 'Insight',
-  transfer: 'Apply',
-  test: 'Quiz',
-  mastery: 'Complete',
+// Numeric phases: 0=hook, 1=predict, 2=play, 3=review, 4=twist_predict, 5=twist_play, 6=twist_review, 7=transfer, 8=test, 9=mastery
+const PHASES: number[] = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
+const phaseLabels: Record<number, string> = {
+  0: 'Hook', 1: 'Predict', 2: 'Lab', 3: 'Review', 4: 'Twist Predict',
+  5: 'Twist Lab', 6: 'Twist Review', 7: 'Transfer', 8: 'Test', 9: 'Mastery'
 };
+
+interface WorkPowerRendererProps {
+  onComplete?: () => void;
+  onGameEvent?: (event: GameEvent) => void;
+  currentPhase?: number;
+  onPhaseComplete?: (phase: number) => void;
+}
 
 // Premium Design System
 const colors = {
@@ -209,9 +220,9 @@ const testQuestions = [
   },
 ];
 
-export default function WorkPowerRenderer({ onComplete, emit = () => {} }: WorkPowerRendererProps) {
+export default function WorkPowerRenderer({ onComplete, onGameEvent, currentPhase, onPhaseComplete }: WorkPowerRendererProps) {
   // Core state
-  const [phase, setPhase] = useState<Phase>('hook');
+  const [phase, setPhase] = useState<number>(currentPhase ?? 0);
   const [prediction, setPrediction] = useState<number | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<number | null>(null);
   const [activeApp, setActiveApp] = useState(0);
@@ -234,6 +245,7 @@ export default function WorkPowerRenderer({ onComplete, emit = () => {} }: WorkP
 
   // Button debounce lock
   const navigationLockRef = useRef(false);
+  const lastClickRef = useRef(0);
 
   // Responsive detection
   const [isMobile, setIsMobile] = useState(false);
@@ -244,25 +256,72 @@ export default function WorkPowerRenderer({ onComplete, emit = () => {} }: WorkP
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
-  // Navigation helpers
-  const goToPhase = useCallback((p: Phase) => {
-    setPhase(p);
-    emit('phase_change', { phase: p });
-  }, [emit]);
+  // Sync with external phase control
+  useEffect(() => {
+    if (currentPhase !== undefined && currentPhase !== phase) {
+      setPhase(currentPhase);
+    }
+  }, [currentPhase]);
+
+  // Web Audio API sound
+  const playSound = useCallback((type: 'click' | 'success' | 'failure' | 'transition' | 'complete') => {
+    if (typeof window === 'undefined') return;
+    try {
+      const audioContext = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
+      const oscillator = audioContext.createOscillator();
+      const gainNode = audioContext.createGain();
+      oscillator.connect(gainNode);
+      gainNode.connect(audioContext.destination);
+      const sounds = {
+        click: { freq: 600, duration: 0.1, type: 'sine' as OscillatorType },
+        success: { freq: 800, duration: 0.2, type: 'sine' as OscillatorType },
+        failure: { freq: 300, duration: 0.3, type: 'sine' as OscillatorType },
+        transition: { freq: 500, duration: 0.15, type: 'sine' as OscillatorType },
+        complete: { freq: 900, duration: 0.4, type: 'sine' as OscillatorType }
+      };
+      const sound = sounds[type];
+      oscillator.frequency.value = sound.freq;
+      oscillator.type = sound.type;
+      gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + sound.duration);
+      oscillator.start();
+      oscillator.stop(audioContext.currentTime + sound.duration);
+    } catch { /* Audio not available */ }
+  }, []);
+
+  // Emit events
+  const emitEvent = (type: GameEventType, data?: Record<string, unknown>) => {
+    if (onGameEvent) {
+      onGameEvent({ type, data });
+    }
+  };
+
+  // Phase navigation with 400ms debouncing
+  const goToPhase = useCallback((newPhase: number) => {
+    const now = Date.now();
+    if (now - lastClickRef.current < 200) return;
+    if (navigationLockRef.current) return;
+
+    lastClickRef.current = now;
+    navigationLockRef.current = true;
+    playSound('transition');
+    setPhase(newPhase);
+    emitEvent('phase_change', { from: phase, to: newPhase });
+    if (onPhaseComplete) onPhaseComplete(newPhase);
+    setTimeout(() => { navigationLockRef.current = false; }, 400);
+  }, [phase, playSound, onPhaseComplete]);
 
   const goNext = useCallback(() => {
-    const currentIndex = phases.indexOf(phase);
-    if (currentIndex < phases.length - 1) {
-      goToPhase(phases[currentIndex + 1]);
+    if (phase < PHASES.length - 1) {
+      goToPhase(phase + 1);
     } else if (onComplete) {
       onComplete();
     }
   }, [phase, goToPhase, onComplete]);
 
   const goBack = useCallback(() => {
-    const currentIndex = phases.indexOf(phase);
-    if (currentIndex > 0) {
-      goToPhase(phases[currentIndex - 1]);
+    if (phase > 0) {
+      goToPhase(phase - 1);
     }
   }, [phase, goToPhase]);
 
@@ -371,46 +430,9 @@ export default function WorkPowerRenderer({ onComplete, emit = () => {} }: WorkP
     );
   };
 
-  // Helper function: Progress bar
+  // Helper function: Progress bar (now only used for inline progress display)
   function ProgressBar() {
-    const currentIndex = phases.indexOf(phase);
-    const progress = ((currentIndex + 1) / phases.length) * 100;
-
-    return (
-      <div style={{
-        background: colors.bgElevated,
-        padding: `${spacing.sm}px ${spacing.lg}px`,
-        borderBottom: `1px solid ${colors.border}`,
-      }}>
-        <div style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          marginBottom: spacing.xs,
-        }}>
-          <span style={{ ...typography.label, color: colors.textTertiary }}>
-            {phaseLabels[phase]}
-          </span>
-          <span style={{ ...typography.caption, color: colors.textTertiary }}>
-            {currentIndex + 1}/{phases.length}
-          </span>
-        </div>
-        <div style={{
-          height: 4,
-          background: colors.bgHover,
-          borderRadius: radius.full,
-          overflow: 'hidden',
-        }}>
-          <div style={{
-            height: '100%',
-            width: `${progress}%`,
-            background: `linear-gradient(90deg, ${colors.brand}, ${colors.success})`,
-            borderRadius: radius.full,
-            transition: 'width 0.3s ease',
-          }} />
-        </div>
-      </div>
-    );
+    return null; // Replaced by fixed header in main return
   }
 
   // Helper function: Staircase visualization
@@ -518,126 +540,160 @@ export default function WorkPowerRenderer({ onComplete, emit = () => {} }: WorkP
   }
 
   // ============================================================================
-  // PHASE: HOOK
+  // PHASE RENDER FUNCTIONS
   // ============================================================================
-  if (phase === 'hook') {
-    return (
-      <div style={{
-        display: 'flex',
-        flexDirection: 'column',
-        height: '100%',
-        background: colors.bg,
-        fontFamily: typography.fontFamily
-      }}>
-        <ProgressBar />
 
+  const renderHook = () => (
+    <div style={{
+      flex: 1,
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      padding: spacing.xl,
+    }}>
+      <div style={{ maxWidth: 480, textAlign: 'center' }}>
+        {/* Icon */}
         <div style={{
-          flex: 1,
+          width: 100,
+          height: 100,
+          borderRadius: radius.full,
+          background: `linear-gradient(135deg, ${colors.work}30, ${colors.power}30)`,
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          padding: spacing.xl,
+          margin: '0 auto',
+          marginBottom: spacing.xl,
+          fontSize: 48,
         }}>
-          <div style={{ maxWidth: 480, textAlign: 'center' }}>
-            {/* Icon */}
-            <div style={{
-              width: 100,
-              height: 100,
-              borderRadius: radius.full,
-              background: `linear-gradient(135deg, ${colors.work}30, ${colors.power}30)`,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              margin: '0 auto',
-              marginBottom: spacing.xl,
-              fontSize: 48,
-            }}>
-              🏃
+          🏃
+        </div>
+
+        {/* Title */}
+        <h1 style={{
+          ...typography.hero,
+          color: colors.textPrimary,
+          marginBottom: spacing.lg
+        }}>
+          The Human Engine
+        </h1>
+
+        {/* Subtitle */}
+        <p style={{
+          ...typography.h3,
+          color: colors.textSecondary,
+          marginBottom: spacing.xxl,
+          lineHeight: 1.6,
+        }}>
+          How much power do YOU generate when climbing stairs? Let's find out if you could power a light bulb!
+        </p>
+
+        {/* Visual Preview */}
+        <div style={{
+          background: colors.bgCard,
+          borderRadius: radius.lg,
+          padding: spacing.xl,
+          marginBottom: spacing.xxl,
+          border: `1px solid ${colors.border}`,
+        }}>
+          <div style={{
+            display: 'flex',
+            justifyContent: 'space-around',
+            alignItems: 'center',
+          }}>
+            <div style={{ textAlign: 'center' }}>
+              <div style={{ fontSize: 36, marginBottom: spacing.sm }}>🏃</div>
+              <div style={{ ...typography.caption, color: colors.textSecondary }}>You (70kg)</div>
             </div>
-
-            {/* Title */}
-            <h1 style={{
-              ...typography.hero,
-              color: colors.textPrimary,
-              marginBottom: spacing.lg
-            }}>
-              The Human Engine
-            </h1>
-
-            {/* Subtitle */}
-            <p style={{
-              ...typography.h3,
-              color: colors.textSecondary,
-              marginBottom: spacing.xxl,
-              lineHeight: 1.6,
-            }}>
-              How much power do YOU generate when climbing stairs? Let's find out if you could power a light bulb!
-            </p>
-
-            {/* Visual Preview */}
-            <div style={{
-              background: colors.bgCard,
-              borderRadius: radius.lg,
-              padding: spacing.xl,
-              marginBottom: spacing.xxl,
-              border: `1px solid ${colors.border}`,
-            }}>
-              <div style={{
-                display: 'flex',
-                justifyContent: 'space-around',
-                alignItems: 'center',
-              }}>
-                <div style={{ textAlign: 'center' }}>
-                  <div style={{ fontSize: 36, marginBottom: spacing.sm }}>🏃</div>
-                  <div style={{ ...typography.caption, color: colors.textSecondary }}>You (70kg)</div>
-                </div>
-                <div style={{ fontSize: 24, color: colors.textTertiary }}>→</div>
-                <div style={{ textAlign: 'center' }}>
-                  <div style={{ fontSize: 36, marginBottom: spacing.sm }}>📶</div>
-                  <div style={{ ...typography.caption, color: colors.textSecondary }}>3m stairs</div>
-                </div>
-                <div style={{ fontSize: 24, color: colors.textTertiary }}>→</div>
-                <div style={{ textAlign: 'center' }}>
-                  <div style={{ fontSize: 36, marginBottom: spacing.sm }}>⚡</div>
-                  <div style={{ ...typography.caption, color: colors.power }}>??? Watts</div>
-                </div>
-              </div>
+            <div style={{ fontSize: 24, color: colors.textTertiary }}>→</div>
+            <div style={{ textAlign: 'center' }}>
+              <div style={{ fontSize: 36, marginBottom: spacing.sm }}>📶</div>
+              <div style={{ ...typography.caption, color: colors.textSecondary }}>3m stairs</div>
             </div>
-
-            {/* CTA */}
-            <button
-              onMouseDown={(e) => {
-                e.preventDefault();
-                if (navigationLockRef.current) return;
-                navigationLockRef.current = true;
-                goToPhase('predict');
-                setTimeout(() => { navigationLockRef.current = false; }, 400);
-              }}
-              style={{
-                padding: '16px 48px',
-                borderRadius: radius.lg,
-                border: 'none',
-                background: `linear-gradient(135deg, ${colors.brand}, #8B5CF6)`,
-                color: '#FFFFFF',
-                fontSize: 17,
-                fontWeight: 600,
-                cursor: 'pointer',
-                fontFamily: typography.fontFamily,
-                boxShadow: `0 4px 20px ${colors.brandGlow}`,
-              }}
-            >
-              Make a Prediction →
-            </button>
+            <div style={{ fontSize: 24, color: colors.textTertiary }}>→</div>
+            <div style={{ textAlign: 'center' }}>
+              <div style={{ fontSize: 36, marginBottom: spacing.sm }}>⚡</div>
+              <div style={{ ...typography.caption, color: colors.power }}>??? Watts</div>
+            </div>
           </div>
         </div>
+
+        {/* CTA */}
+        <button
+          onMouseDown={(e) => {
+            e.preventDefault();
+            if (navigationLockRef.current) return;
+            navigationLockRef.current = true;
+            goToPhase(1);
+            setTimeout(() => { navigationLockRef.current = false; }, 400);
+          }}
+          style={{
+            padding: '16px 48px',
+            borderRadius: radius.lg,
+            border: 'none',
+            background: `linear-gradient(135deg, ${colors.brand}, #8B5CF6)`,
+            color: '#FFFFFF',
+            fontSize: 17,
+            fontWeight: 600,
+            cursor: 'pointer',
+            fontFamily: typography.fontFamily,
+            boxShadow: `0 4px 20px ${colors.brandGlow}`,
+          }}
+        >
+          Make a Prediction →
+        </button>
       </div>
-    );
+    </div>
+  );
+
+  // Premium wrapper for all phase renders
+  const PremiumWrapper = ({ children }: { children: React.ReactNode }) => (
+    <div className="min-h-screen bg-[#0a0f1a] text-white relative overflow-hidden">
+      {/* Premium background gradient */}
+      <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-[#0a1628] to-slate-900" />
+      <div className="absolute top-0 left-1/4 w-96 h-96 bg-indigo-500/5 rounded-full blur-3xl" />
+      <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-amber-500/5 rounded-full blur-3xl" />
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-indigo-500/3 rounded-full blur-3xl" />
+
+      {/* Fixed Header */}
+      <div className="fixed top-0 left-0 right-0 z-50 bg-slate-900/80 backdrop-blur-xl border-b border-slate-800/50">
+        <div className="flex items-center justify-between px-6 py-3 max-w-4xl mx-auto">
+          <span className="text-sm font-semibold text-white/80 tracking-wide">Work & Power</span>
+          <div className="flex items-center gap-1.5">
+            {PHASES.map((p) => (
+              <button
+                key={p}
+                onMouseDown={(e) => { e.preventDefault(); goToPhase(p); }}
+                className={`h-2 rounded-full transition-all duration-300 ${
+                  phase === p
+                    ? 'bg-indigo-400 w-6 shadow-lg shadow-indigo-400/30'
+                    : phase > p
+                      ? 'bg-emerald-500 w-2'
+                      : 'bg-slate-700 w-2 hover:bg-slate-600'
+                }`}
+                title={phaseLabels[p]}
+              />
+            ))}
+          </div>
+          <span className="text-sm font-medium text-indigo-400">{phaseLabels[phase]}</span>
+        </div>
+      </div>
+
+      {/* Main content */}
+      <div className="relative pt-16 pb-12" style={{ fontFamily: typography.fontFamily }}>
+        {children}
+      </div>
+    </div>
+  );
+
+  // Phase 0: Hook
+  if (phase === 0) {
+    return <PremiumWrapper>{renderHook()}</PremiumWrapper>;
   }
 
   // ============================================================================
   // PHASE: PREDICT
   // ============================================================================
-  if (phase === 'predict') {
+  if (phase === 1) {
     const predictions = [
       { id: 0, label: 'About 10 Watts', icon: '💡', description: 'Like a dim LED bulb' },
       { id: 1, label: 'About 100 Watts', icon: '🔆', description: 'Like a bright incandescent bulb' },
@@ -646,14 +702,13 @@ export default function WorkPowerRenderer({ onComplete, emit = () => {} }: WorkP
     ];
 
     return (
-      <div style={{
-        display: 'flex',
-        flexDirection: 'column',
-        height: '100%',
-        background: colors.bg,
-        fontFamily: typography.fontFamily
-      }}>
-        <ProgressBar />
+      <PremiumWrapper>
+        <div style={{
+          display: 'flex',
+          flexDirection: 'column',
+          height: '100%',
+          fontFamily: typography.fontFamily
+        }}>
 
         <div style={{
           flex: 1,
@@ -737,29 +792,29 @@ export default function WorkPowerRenderer({ onComplete, emit = () => {} }: WorkP
             {/* Navigation */}
             <div style={{ display: 'flex', gap: spacing.md }}>
               {renderButton('← Back', goBack, 'ghost')}
-              {renderButton('Calculate Your Power →', () => goToPhase('play'), 'primary', { disabled: prediction === null })}
+              {renderButton('Calculate Your Power →', () => goToPhase(2), 'primary', { disabled: prediction === null })}
             </div>
           </div>
         </div>
       </div>
+      </PremiumWrapper>
     );
   }
 
   // ============================================================================
   // PHASE: PLAY
   // ============================================================================
-  if (phase === 'play') {
+  if (phase === 2) {
     const values = calculateValues();
 
     return (
+      <PremiumWrapper>
       <div style={{
         display: 'flex',
         flexDirection: 'column',
         height: '100%',
-        background: colors.bg,
         fontFamily: typography.fontFamily
       }}>
-        <ProgressBar />
 
         <div style={{
           flex: 1,
@@ -963,25 +1018,25 @@ export default function WorkPowerRenderer({ onComplete, emit = () => {} }: WorkP
           </div>
         </div>
       </div>
+      </PremiumWrapper>
     );
   }
 
   // ============================================================================
   // PHASE: REVIEW
   // ============================================================================
-  if (phase === 'review') {
+  if (phase === 3) {
     const correctAnswer = 2; // ~420W is closest to 500W
     const userWasClose = prediction === 2 || prediction === 1;
 
     return (
+      <PremiumWrapper>
       <div style={{
         display: 'flex',
         flexDirection: 'column',
         height: '100%',
-        background: colors.bg,
         fontFamily: typography.fontFamily
       }}>
-        <ProgressBar />
 
         <div style={{
           flex: 1,
@@ -1127,13 +1182,14 @@ export default function WorkPowerRenderer({ onComplete, emit = () => {} }: WorkP
           </div>
         </div>
       </div>
+      </PremiumWrapper>
     );
   }
 
   // ============================================================================
   // PHASE: TWIST PREDICT
   // ============================================================================
-  if (phase === 'twist_predict') {
+  if (phase === 4) {
     const twistOptions = [
       { id: 0, label: 'Twice the power', icon: '⚡', description: 'Double the weight = double the power' },
       { id: 1, label: 'Same power', icon: '⚖️', description: 'Power doesn\'t depend on weight' },
@@ -1142,14 +1198,13 @@ export default function WorkPowerRenderer({ onComplete, emit = () => {} }: WorkP
     ];
 
     return (
+      <PremiumWrapper>
       <div style={{
         display: 'flex',
         flexDirection: 'column',
         height: '100%',
-        background: colors.bg,
         fontFamily: typography.fontFamily
       }}>
-        <ProgressBar />
 
         <div style={{
           flex: 1,
@@ -1235,27 +1290,27 @@ export default function WorkPowerRenderer({ onComplete, emit = () => {} }: WorkP
           </div>
         </div>
       </div>
+      </PremiumWrapper>
     );
   }
 
   // ============================================================================
   // PHASE: TWIST PLAY
   // ============================================================================
-  if (phase === 'twist_play') {
+  if (phase === 5) {
     const [backpackWeight, setBackpackWeight] = useState(0);
     const totalMass = personMass + backpackWeight;
     const basePower = (70 * 10 * 3) / 5; // Base case: 70kg, 3m, 5s
     const currentPower = (totalMass * 10 * stairHeight) / climbTime;
 
     return (
+      <PremiumWrapper>
       <div style={{
         display: 'flex',
         flexDirection: 'column',
         height: '100%',
-        background: colors.bg,
         fontFamily: typography.fontFamily
       }}>
-        <ProgressBar />
 
         <div style={{
           flex: 1,
@@ -1424,24 +1479,24 @@ export default function WorkPowerRenderer({ onComplete, emit = () => {} }: WorkP
           </div>
         </div>
       </div>
+      </PremiumWrapper>
     );
   }
 
   // ============================================================================
   // PHASE: TWIST REVIEW
   // ============================================================================
-  if (phase === 'twist_review') {
+  if (phase === 6) {
     const userWasRight = twistPrediction === 0;
 
     return (
+      <PremiumWrapper>
       <div style={{
         display: 'flex',
         flexDirection: 'column',
         height: '100%',
-        background: colors.bg,
         fontFamily: typography.fontFamily
       }}>
-        <ProgressBar />
 
         <div style={{
           flex: 1,
@@ -1565,25 +1620,25 @@ export default function WorkPowerRenderer({ onComplete, emit = () => {} }: WorkP
           </div>
         </div>
       </div>
+      </PremiumWrapper>
     );
   }
 
   // ============================================================================
   // PHASE: TRANSFER (Real World Applications)
   // ============================================================================
-  if (phase === 'transfer') {
+  if (phase === 7) {
     const app = applications[activeApp];
     const allRead = completedApps.size >= applications.length;
 
     return (
+      <PremiumWrapper>
       <div style={{
         display: 'flex',
         flexDirection: 'column',
         height: '100%',
-        background: colors.bg,
         fontFamily: typography.fontFamily
       }}>
-        <ProgressBar />
 
         {/* Progress indicator */}
         <div style={{
@@ -1785,24 +1840,25 @@ export default function WorkPowerRenderer({ onComplete, emit = () => {} }: WorkP
           background: colors.bgElevated,
         }}>
           {renderButton('← Back', goBack, 'ghost')}
-          {renderButton('Take the Quiz →', () => goToPhase('test'), 'primary', { disabled: !allRead })}
+          {renderButton('Take the Quiz →', () => goToPhase(8), 'primary', { disabled: !allRead })}
         </div>
       </div>
+      </PremiumWrapper>
     );
   }
 
   // ============================================================================
   // PHASE: TEST
   // ============================================================================
-  if (phase === 'test') {
+  if (phase === 8) {
     const q = testQuestions[testIndex];
     const totalCorrect = testAnswers.reduce((sum, ans, i) => sum + (ans === testQuestions[i].correct ? 1 : 0), 0);
 
     if (testSubmitted) {
       const passed = totalCorrect >= 7;
       return (
-        <div style={{ display: 'flex', flexDirection: 'column', height: '100%', background: colors.bg, fontFamily: typography.fontFamily }}>
-          <ProgressBar />
+        <PremiumWrapper>
+        <div style={{ display: 'flex', flexDirection: 'column', height: '100%', fontFamily: typography.fontFamily }}>
           <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: spacing.xl }}>
             <div style={{ textAlign: 'center', maxWidth: 400 }}>
               <div style={{ fontSize: 72, marginBottom: spacing.lg }}>{passed ? '🎉' : '📚'}</div>
@@ -1815,16 +1871,17 @@ export default function WorkPowerRenderer({ onComplete, emit = () => {} }: WorkP
               <p style={{ ...typography.body, color: colors.textSecondary, marginBottom: spacing.xl }}>
                 {passed ? 'You\'ve mastered work and power!' : 'Review the concepts and try again.'}
               </p>
-              {renderButton(passed ? 'Complete! →' : 'Review Material', () => passed ? goNext() : goToPhase('review'), passed ? 'success' : 'primary', { size: 'lg' })}
+              {renderButton(passed ? 'Complete! →' : 'Review Material', () => passed ? goNext() : goToPhase(3), passed ? 'success' : 'primary', { size: 'lg' })}
             </div>
           </div>
         </div>
+        </PremiumWrapper>
       );
     }
 
     return (
-      <div style={{ display: 'flex', flexDirection: 'column', height: '100%', background: colors.bg, fontFamily: typography.fontFamily }}>
-        <ProgressBar />
+      <PremiumWrapper>
+      <div style={{ display: 'flex', flexDirection: 'column', height: '100%', fontFamily: typography.fontFamily }}>
         <div style={{ flex: 1, overflow: 'auto', padding: isMobile ? spacing.lg : spacing.xl }}>
           <div style={{ maxWidth: 560, margin: '0 auto' }}>
             {/* Question Header */}
@@ -1862,7 +1919,7 @@ export default function WorkPowerRenderer({ onComplete, emit = () => {} }: WorkP
                         const newAnswers = [...testAnswers];
                         newAnswers[testIndex] = i;
                         setTestAnswers(newAnswers);
-                        emit(i === q.correct ? 'correct_answer' : 'incorrect_answer', { questionIndex: testIndex });
+                        emitEvent('test_answered', { questionIndex: testIndex, correct: i === q.correct });
                       }
                     }}
                     style={{
@@ -1924,22 +1981,22 @@ export default function WorkPowerRenderer({ onComplete, emit = () => {} }: WorkP
           </div>
         </div>
       </div>
+      </PremiumWrapper>
     );
   }
 
   // ============================================================================
   // PHASE: MASTERY
   // ============================================================================
-  if (phase === 'mastery') {
+  if (phase === 9) {
     return (
+      <PremiumWrapper>
       <div style={{
         display: 'flex',
         flexDirection: 'column',
         height: '100%',
-        background: colors.bg,
         fontFamily: typography.fontFamily
       }}>
-        <ProgressBar />
 
         <div style={{
           flex: 1,
@@ -2025,24 +2082,20 @@ export default function WorkPowerRenderer({ onComplete, emit = () => {} }: WorkP
             </div>
 
             {/* CTA */}
-            {renderButton('Complete Lesson 🎉', () => emit('milestone', { type: 'completed', game: 'work_power' }), 'success', { size: 'lg' })}
+            {renderButton('Complete Lesson 🎉', () => emitEvent('mastery_achieved', { game: 'work_power' }), 'success', { size: 'lg' })}
           </div>
         </div>
       </div>
+      </PremiumWrapper>
     );
   }
 
-  // Fallback
+  // Fallback - should never reach here
   return (
-    <div style={{
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      height: '100%',
-      background: colors.bg,
-      fontFamily: typography.fontFamily,
-    }}>
-      <p style={{ color: colors.textSecondary }}>Loading...</p>
-    </div>
+    <PremiumWrapper>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%' }}>
+        <p style={{ color: colors.textSecondary }}>Loading...</p>
+      </div>
+    </PremiumWrapper>
   );
 }

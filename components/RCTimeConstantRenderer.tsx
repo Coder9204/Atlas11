@@ -2,6 +2,36 @@
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 
+type GameEventType =
+  | 'phase_change'
+  | 'prediction_made'
+  | 'simulation_started'
+  | 'parameter_changed'
+  | 'twist_prediction_made'
+  | 'app_explored'
+  | 'test_answered'
+  | 'test_completed'
+  | 'mastery_achieved';
+
+interface GameEvent {
+  type: GameEventType;
+  data?: Record<string, unknown>;
+}
+
+const PHASES: number[] = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
+const phaseLabels: Record<number, string> = {
+  0: 'Hook',
+  1: 'Predict',
+  2: 'Lab',
+  3: 'Review',
+  4: 'Twist Predict',
+  5: 'Twist Lab',
+  6: 'Twist Review',
+  7: 'Transfer',
+  8: 'Test',
+  9: 'Mastery'
+};
+
 // Premium Design System
 const premiumDesign = {
   colors: {
@@ -47,22 +77,21 @@ const premiumDesign = {
   },
 };
 
-type Phase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
-const phaseOrder: Phase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
-
 interface RCTimeConstantRendererProps {
-  onBack?: () => void;
-  onNext?: () => void;
+  onGameEvent?: (event: GameEvent) => void;
+  currentPhase?: number;
+  onPhaseComplete?: (phase: number) => void;
 }
 
-export default function RCTimeConstantRenderer({ onBack, onNext }: RCTimeConstantRendererProps) {
-  // Core State
-  const [phase, setPhase] = useState<Phase>('hook');
-  const [isMobile, setIsMobile] = useState(false);
-
-  // Debounce refs
+export default function RCTimeConstantRenderer({ onGameEvent, currentPhase, onPhaseComplete }: RCTimeConstantRendererProps) {
   const navigationLockRef = useRef(false);
-  const lastNavigationTime = useRef(0);
+
+  // Core State
+  const [phase, setPhase] = useState<number>(() => {
+    if (currentPhase !== undefined && PHASES.includes(currentPhase)) return currentPhase;
+    return 0;
+  });
+  const [isMobile, setIsMobile] = useState(false);
 
   // Hook phase
   const [hookStep, setHookStep] = useState(0);
@@ -177,37 +206,81 @@ export default function RCTimeConstantRenderer({ onBack, onNext }: RCTimeConstan
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
-  // Debounced navigation
-  const safeNavigate = useCallback((action: () => void) => {
-    const now = Date.now();
-    if (navigationLockRef.current || now - lastNavigationTime.current < 400) {
-      return;
+  // Phase sync
+  useEffect(() => {
+    if (currentPhase !== undefined && PHASES.includes(currentPhase)) {
+      setPhase(currentPhase);
     }
-    navigationLockRef.current = true;
-    lastNavigationTime.current = now;
-    action();
-    setTimeout(() => {
-      navigationLockRef.current = false;
-    }, 400);
+  }, [currentPhase]);
+
+  // Type-based sound feedback
+  const playSound = useCallback((type: 'click' | 'success' | 'failure' | 'transition' | 'complete') => {
+    try {
+      const audioContext = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
+      const oscillator = audioContext.createOscillator();
+      const gainNode = audioContext.createGain();
+      oscillator.connect(gainNode);
+      gainNode.connect(audioContext.destination);
+
+      const soundConfig = {
+        click: { frequency: 440, duration: 0.1, oscType: 'sine' as OscillatorType },
+        success: { frequency: 600, duration: 0.15, oscType: 'sine' as OscillatorType },
+        failure: { frequency: 200, duration: 0.2, oscType: 'sawtooth' as OscillatorType },
+        transition: { frequency: 520, duration: 0.15, oscType: 'sine' as OscillatorType },
+        complete: { frequency: 800, duration: 0.3, oscType: 'sine' as OscillatorType },
+      };
+
+      const config = soundConfig[type];
+      oscillator.frequency.value = config.frequency;
+      oscillator.type = config.oscType;
+      gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + config.duration);
+      oscillator.start();
+      oscillator.stop(audioContext.currentTime + config.duration);
+    } catch (e) { /* Audio not supported */ }
   }, []);
 
-  const goToPhase = useCallback((newPhase: Phase) => {
-    safeNavigate(() => setPhase(newPhase));
-  }, [safeNavigate]);
+  // Event emission
+  const emitEvent = useCallback((type: GameEventType, data?: Record<string, unknown>) => {
+    onGameEvent?.({ type, data });
+  }, [onGameEvent]);
 
-  const nextPhase = useCallback(() => {
-    const currentIndex = phaseOrder.indexOf(phase);
-    if (currentIndex < phaseOrder.length - 1) {
-      goToPhase(phaseOrder[currentIndex + 1]);
-    }
+  // Navigation with debouncing
+  const goToPhase = useCallback((newPhase: number) => {
+    if (navigationLockRef.current) return;
+    if (!PHASES.includes(newPhase)) return;
+    navigationLockRef.current = true;
+    setPhase(newPhase);
+    playSound('transition');
+    emitEvent('phase_change', { from: phase, to: newPhase, phaseLabel: phaseLabels[newPhase] });
+    onPhaseComplete?.(newPhase);
+    setTimeout(() => { navigationLockRef.current = false; }, 400);
+  }, [phase, playSound, emitEvent, onPhaseComplete]);
+
+  const goNext = useCallback(() => {
+    const currentIndex = PHASES.indexOf(phase);
+    if (currentIndex < PHASES.length - 1) goToPhase(PHASES[currentIndex + 1]);
   }, [phase, goToPhase]);
+
+  const goBack = useCallback(() => {
+    const currentIndex = PHASES.indexOf(phase);
+    if (currentIndex > 0) goToPhase(PHASES[currentIndex - 1]);
+  }, [phase, goToPhase]);
+
+  // Debounced state update helper
+  const safeNavigate = useCallback((action: () => void) => {
+    if (navigationLockRef.current) return;
+    navigationLockRef.current = true;
+    action();
+    setTimeout(() => { navigationLockRef.current = false; }, 400);
+  }, []);
 
   // Calculate time constant (in seconds)
   const timeConstant = (resistance * 1000) * (capacitance / 1000000); // R in Ω, C in F
 
   // Charging animation
   useEffect(() => {
-    if (phase === 'play' && isCharging) {
+    if (phase === 2 && isCharging) {
       startTimeRef.current = Date.now() - elapsedTime * 1000;
 
       const animate = () => {
@@ -247,7 +320,7 @@ export default function RCTimeConstantRenderer({ onBack, onNext }: RCTimeConstan
 
   // Discharging animation
   useEffect(() => {
-    if (phase === 'twist_play' && isDischarging) {
+    if (phase === 5 && isDischarging) {
       const startTime = Date.now() - dischargeTime * 1000;
       const initialVoltage = dischargeVoltage;
 
@@ -358,8 +431,8 @@ export default function RCTimeConstantRenderer({ onBack, onNext }: RCTimeConstan
   }
 
   function renderProgressBar() {
-    const currentIndex = phaseOrder.indexOf(phase);
-    const progress = ((currentIndex + 1) / phaseOrder.length) * 100;
+    const currentIndex = PHASES.indexOf(phase);
+    const progress = ((currentIndex + 1) / PHASES.length) * 100;
 
     return (
       <div style={{ marginBottom: premiumDesign.spacing.lg }}>
@@ -370,8 +443,8 @@ export default function RCTimeConstantRenderer({ onBack, onNext }: RCTimeConstan
           fontSize: '12px',
           color: premiumDesign.colors.text.muted,
         }}>
-          <span>Phase {currentIndex + 1} of {phaseOrder.length}</span>
-          <span>{phase.replace('_', ' ').toUpperCase()}</span>
+          <span>Phase {currentIndex + 1} of {PHASES.length}</span>
+          <span>{phaseLabels[phase]}</span>
         </div>
         <div style={{
           height: 6,
@@ -489,92 +562,110 @@ export default function RCTimeConstantRenderer({ onBack, onNext }: RCTimeConstan
   function renderHookPhase() {
     const hookContent = [
       {
-        title: "📸 The Camera Flash Mystery",
+        title: "The Camera Flash Mystery",
+        emoji: "📸",
         text: "Have you ever noticed how a camera flash takes a few seconds to 'charge up' before it's ready? And then releases all that energy in a blinding instant? Something is storing that energy - but what, and how?",
       },
       {
-        title: "🔋 Energy Reservoirs",
+        title: "Energy Reservoirs",
+        emoji: "🔋",
         text: "Capacitors are like tiny rechargeable energy tanks. They can slowly fill up with charge, then release it all at once - or slowly. The speed depends on a magical number called the 'time constant'!",
       },
       {
-        title: "⏱️ Discover RC Circuits",
+        title: "Discover RC Circuits",
+        emoji: "⏱️",
         text: "Today we'll explore how capacitors charge and discharge through resistors, and discover the exponential curves that govern timing circuits everywhere!",
       },
     ];
 
     return (
-      <div style={{ minHeight: '60vh', display: 'flex', flexDirection: 'column' }}>
-        {renderProgressBar()}
+      <div className="flex flex-col items-center justify-center min-h-[600px] px-6 py-12 text-center">
+        {/* Premium badge */}
+        <div className="inline-flex items-center gap-2 px-4 py-2 bg-cyan-500/10 border border-cyan-500/20 rounded-full mb-8">
+          <span className="w-2 h-2 bg-cyan-400 rounded-full animate-pulse" />
+          <span className="text-sm font-medium text-cyan-400 tracking-wide">PHYSICS EXPLORATION</span>
+        </div>
 
-        <div style={{
-          flex: 1,
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          justifyContent: 'center',
-          textAlign: 'center',
-          padding: premiumDesign.spacing.xl,
-        }}>
-          <div style={{
-            fontSize: isMobile ? '48px' : '72px',
-            marginBottom: premiumDesign.spacing.lg,
-          }}>
-            {hookContent[hookStep].title.split(' ')[0]}
-          </div>
+        {/* Main title with gradient */}
+        <h1 className="text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-white via-cyan-100 to-purple-200 bg-clip-text text-transparent">
+          RC Time Constant
+        </h1>
 
-          <h2 style={{
-            fontSize: isMobile ? '24px' : '32px',
-            fontWeight: 700,
-            color: premiumDesign.colors.text.primary,
-            marginBottom: premiumDesign.spacing.md,
-          }}>
-            {hookContent[hookStep].title.split(' ').slice(1).join(' ')}
-          </h2>
+        <p className="text-lg text-slate-400 max-w-md mb-10">
+          Master the exponential curves of charging and discharging
+        </p>
 
-          <p style={{
-            fontSize: isMobile ? '16px' : '18px',
-            color: premiumDesign.colors.text.secondary,
-            maxWidth: 600,
-            lineHeight: 1.7,
-          }}>
-            {hookContent[hookStep].text}
-          </p>
+        {/* Premium card with content */}
+        <div className="relative bg-gradient-to-br from-slate-800/80 to-slate-900/80 rounded-3xl p-8 max-w-xl w-full border border-slate-700/50 shadow-2xl shadow-black/20 backdrop-blur-xl">
+          <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/5 via-transparent to-purple-500/5 rounded-3xl" />
 
-          <div style={{
-            display: 'flex',
-            gap: premiumDesign.spacing.sm,
-            marginTop: premiumDesign.spacing.xl,
-          }}>
-            {hookContent.map((_, i) => (
-              <div
-                key={i}
-                style={{
-                  width: 10,
-                  height: 10,
-                  borderRadius: '50%',
-                  background: i === hookStep
-                    ? premiumDesign.colors.capacitor
-                    : premiumDesign.colors.background.tertiary,
-                  transition: 'all 0.3s ease',
-                }}
-              />
-            ))}
+          <div className="relative">
+            <div className="text-6xl mb-6">{hookContent[hookStep].emoji}</div>
+
+            <h2 className="text-2xl md:text-3xl font-bold text-white mb-4">
+              {hookContent[hookStep].title}
+            </h2>
+
+            <p className="text-lg text-slate-300 leading-relaxed">
+              {hookContent[hookStep].text}
+            </p>
+
+            <div className="flex justify-center gap-2 mt-8">
+              {hookContent.map((_, i) => (
+                <div
+                  key={i}
+                  className={`h-2 rounded-full transition-all duration-300 ${
+                    i === hookStep
+                      ? 'w-6 bg-cyan-400'
+                      : 'w-2 bg-slate-700'
+                  }`}
+                />
+              ))}
+            </div>
           </div>
         </div>
 
-        {renderBottomBar(
-          hookStep > 0 ? { text: '← Back', onClick: () => safeNavigate(() => setHookStep(h => h - 1)) } : undefined,
-          {
-            text: hookStep < hookContent.length - 1 ? 'Continue →' : 'Make a Prediction →',
-            onClick: () => {
+        {/* Navigation buttons */}
+        <div className="flex gap-4 mt-10">
+          {hookStep > 0 && (
+            <button
+              onMouseDown={(e) => { e.preventDefault(); safeNavigate(() => setHookStep(h => h - 1)); }}
+              className="px-6 py-3 bg-slate-700 hover:bg-slate-600 text-white font-medium rounded-xl transition-all"
+            >
+              Back
+            </button>
+          )}
+          <button
+            onMouseDown={(e) => {
+              e.preventDefault();
               if (hookStep < hookContent.length - 1) {
                 safeNavigate(() => setHookStep(h => h + 1));
               } else {
-                nextPhase();
+                goNext();
               }
-            },
-          }
-        )}
+            }}
+            className="group px-10 py-4 bg-gradient-to-r from-cyan-500 to-purple-600 text-white text-lg font-semibold rounded-2xl transition-all duration-300 hover:shadow-lg hover:shadow-cyan-500/25 hover:scale-[1.02] active:scale-[0.98]"
+          >
+            <span className="flex items-center gap-3">
+              {hookStep < hookContent.length - 1 ? 'Continue' : 'Make a Prediction'}
+              <svg className="w-5 h-5 transition-transform group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+              </svg>
+            </span>
+          </button>
+        </div>
+
+        {/* Feature hints */}
+        <div className="mt-12 flex items-center gap-8 text-sm text-slate-500">
+          <div className="flex items-center gap-2">
+            <span className="text-cyan-400">✦</span>
+            Interactive Lab
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-purple-400">✦</span>
+            10 Phases
+          </div>
+        </div>
       </div>
     );
   }
@@ -645,7 +736,7 @@ export default function RCTimeConstantRenderer({ onBack, onNext }: RCTimeConstan
         </div>
 
         {renderBottomBar(
-          { text: '← Back', onClick: () => goToPhase('hook') },
+          { text: '← Back', onClick: () => goToPhase(0) },
           {
             text: 'Test My Prediction →',
             onClick: nextPhase,
@@ -866,7 +957,7 @@ export default function RCTimeConstantRenderer({ onBack, onNext }: RCTimeConstan
         </div>
 
         {renderBottomBar(
-          { text: '← Back', onClick: () => goToPhase('predict') },
+          { text: '← Back', onClick: () => goToPhase(1) },
           { text: 'Review Results →', onClick: nextPhase }
         )}
       </div>
@@ -978,14 +1069,14 @@ export default function RCTimeConstantRenderer({ onBack, onNext }: RCTimeConstan
         </div>
 
         {renderBottomBar(
-          { text: '← Back', onClick: () => goToPhase('play') },
+          { text: '← Back', onClick: () => goToPhase(2) },
           {
             text: reviewStep < reviewContent.length - 1 ? 'Continue →' : 'Try a Twist →',
             onClick: () => {
               if (reviewStep < reviewContent.length - 1) {
                 safeNavigate(() => setReviewStep(r => r + 1));
               } else {
-                nextPhase();
+                goNext();
               }
             },
           }
@@ -1060,12 +1151,12 @@ export default function RCTimeConstantRenderer({ onBack, onNext }: RCTimeConstan
         </div>
 
         {renderBottomBar(
-          { text: '← Back', onClick: () => goToPhase('review') },
+          { text: '← Back', onClick: () => goToPhase(3) },
           {
             text: 'Test My Prediction →',
             onClick: () => {
               resetDischarging();
-              nextPhase();
+              goNext();
             },
             disabled: !twistPrediction,
           }
@@ -1259,7 +1350,7 @@ export default function RCTimeConstantRenderer({ onBack, onNext }: RCTimeConstan
         </div>
 
         {renderBottomBar(
-          { text: '← Back', onClick: () => goToPhase('twist_predict') },
+          { text: '← Back', onClick: () => goToPhase(4) },
           { text: 'Review Results →', onClick: nextPhase }
         )}
       </div>
@@ -1372,14 +1463,14 @@ export default function RCTimeConstantRenderer({ onBack, onNext }: RCTimeConstan
         </div>
 
         {renderBottomBar(
-          { text: '← Back', onClick: () => goToPhase('twist_play') },
+          { text: '← Back', onClick: () => goToPhase(5) },
           {
             text: twistReviewStep < twistReviewContent.length - 1 ? 'Continue →' : 'Real-World Examples →',
             onClick: () => {
               if (twistReviewStep < twistReviewContent.length - 1) {
                 safeNavigate(() => setTwistReviewStep(t => t + 1));
               } else {
-                nextPhase();
+                goNext();
               }
             },
           }
@@ -1547,7 +1638,7 @@ export default function RCTimeConstantRenderer({ onBack, onNext }: RCTimeConstan
         </div>
 
         {renderBottomBar(
-          { text: '← Back', onClick: () => goToPhase('twist_review') },
+          { text: '← Back', onClick: () => goToPhase(6) },
           {
             text: completedApps.size === applications.length ? 'Take the Quiz →' : `Explore ${applications.length - completedApps.size} More →`,
             onClick: nextPhase,
@@ -1615,12 +1706,12 @@ export default function RCTimeConstantRenderer({ onBack, onNext }: RCTimeConstan
               passed ? 'Continue to Mastery →' : 'Review Material',
               () => {
                 if (passed) {
-                  nextPhase();
+                  goNext();
                 } else {
                   setTestComplete(false);
                   setCurrentQuestion(0);
                   setTestScore(0);
-                  goToPhase('review');
+                  goToPhase(3);
                 }
               },
               passed ? 'success' : 'primary'
@@ -1833,8 +1924,7 @@ export default function RCTimeConstantRenderer({ onBack, onNext }: RCTimeConstan
         </div>
 
         <div style={{ display: 'flex', gap: premiumDesign.spacing.md, flexWrap: 'wrap', justifyContent: 'center' }}>
-          {renderButton('← Review Again', () => goToPhase('hook'), 'secondary')}
-          {onNext && renderButton('Next Topic →', onNext, 'success')}
+          {renderButton('← Review Again', () => goToPhase(0), 'secondary')}
         </div>
       </div>
     );
@@ -1842,64 +1932,49 @@ export default function RCTimeConstantRenderer({ onBack, onNext }: RCTimeConstan
 
   // Main render
   return (
-    <div style={{
-      minHeight: '100vh',
-      background: premiumDesign.colors.background.primary,
-      color: premiumDesign.colors.text.primary,
-      fontFamily: premiumDesign.typography.fontFamily,
-      padding: isMobile ? premiumDesign.spacing.md : premiumDesign.spacing.xl,
-    }}>
-      <div style={{ maxWidth: 900, margin: '0 auto' }}>
-        {/* Header */}
-        <div style={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          marginBottom: premiumDesign.spacing.xl,
-        }}>
-          {onBack && (
-            <button
-              style={{
-                background: 'transparent',
-                border: 'none',
-                color: premiumDesign.colors.text.secondary,
-                cursor: 'pointer',
-                fontSize: '16px',
-                display: 'flex',
-                alignItems: 'center',
-                gap: premiumDesign.spacing.xs,
-              }}
-              onMouseDown={(e) => {
-                e.preventDefault();
-                onBack();
-              }}
-            >
-              ← Back
-            </button>
-          )}
-          <h1 style={{
-            fontSize: isMobile ? '20px' : '24px',
-            fontWeight: 700,
-            background: premiumDesign.colors.gradient.rc,
-            WebkitBackgroundClip: 'text',
-            WebkitTextFillColor: 'transparent',
-          }}>
-            ⏱️ RC Time Constant
-          </h1>
-          <div style={{ width: 60 }} />
-        </div>
+    <div className="min-h-screen bg-[#0a0f1a] text-white relative overflow-hidden">
+      {/* Premium background gradient */}
+      <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-[#0a1628] to-slate-900" />
+      <div className="absolute top-0 left-1/4 w-96 h-96 bg-cyan-500/5 rounded-full blur-3xl" />
+      <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-purple-500/5 rounded-full blur-3xl" />
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-cyan-500/3 rounded-full blur-3xl" />
 
-        {/* Phase Content */}
-        {phase === 'hook' && renderHookPhase()}
-        {phase === 'predict' && renderPredictPhase()}
-        {phase === 'play' && renderPlayPhase()}
-        {phase === 'review' && renderReviewPhase()}
-        {phase === 'twist_predict' && renderTwistPredictPhase()}
-        {phase === 'twist_play' && renderTwistPlayPhase()}
-        {phase === 'twist_review' && renderTwistReviewPhase()}
-        {phase === 'transfer' && renderTransferPhase()}
-        {phase === 'test' && renderTestPhase()}
-        {phase === 'mastery' && renderMasteryPhase()}
+      {/* Header */}
+      <div className="fixed top-0 left-0 right-0 z-50 bg-slate-900/80 backdrop-blur-xl border-b border-slate-800/50">
+        <div className="flex items-center justify-between px-6 py-3 max-w-4xl mx-auto">
+          <span className="text-sm font-semibold text-white/80 tracking-wide">RC Time Constant</span>
+          <div className="flex items-center gap-1.5">
+            {PHASES.map((p) => (
+              <button
+                key={p}
+                onMouseDown={(e) => { e.preventDefault(); goToPhase(p); }}
+                className={`h-2 rounded-full transition-all duration-300 ${
+                  phase === p
+                    ? 'bg-cyan-400 w-6 shadow-lg shadow-cyan-400/30'
+                    : phase > p
+                      ? 'bg-emerald-500 w-2'
+                      : 'bg-slate-700 w-2 hover:bg-slate-600'
+                }`}
+                title={phaseLabels[p]}
+              />
+            ))}
+          </div>
+          <span className="text-sm font-medium text-cyan-400">{phaseLabels[phase]}</span>
+        </div>
+      </div>
+
+      {/* Main content */}
+      <div className="relative pt-16 pb-12" style={{ maxWidth: 900, margin: '0 auto', padding: isMobile ? '64px 16px 48px' : '64px 32px 48px' }}>
+        {phase === 0 && renderHookPhase()}
+        {phase === 1 && renderPredictPhase()}
+        {phase === 2 && renderPlayPhase()}
+        {phase === 3 && renderReviewPhase()}
+        {phase === 4 && renderTwistPredictPhase()}
+        {phase === 5 && renderTwistPlayPhase()}
+        {phase === 6 && renderTwistReviewPhase()}
+        {phase === 7 && renderTransferPhase()}
+        {phase === 8 && renderTestPhase()}
+        {phase === 9 && renderMasteryPhase()}
       </div>
     </div>
   );

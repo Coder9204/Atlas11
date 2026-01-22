@@ -1,45 +1,37 @@
-import React, { useState, useRef, useEffect } from 'react';
+'use client';
 
-// GameEvent interface for AI coach integration
+import React, { useState, useRef, useEffect, useCallback } from 'react';
+
+// ═══════════════════════════════════════════════════════════════════════════
+// TYPES & INTERFACES
+// ═══════════════════════════════════════════════════════════════════════════
+type GameEventType =
+  | 'phase_change'
+  | 'prediction_made'
+  | 'simulation_started'
+  | 'parameter_changed'
+  | 'twist_prediction_made'
+  | 'app_explored'
+  | 'test_answered'
+  | 'test_completed'
+  | 'mastery_achieved';
+
 interface GameEvent {
-  type: 'prediction' | 'observation' | 'phase_complete' | 'misconception' | 'mastery';
-  phase: string;
-  data: Record<string, unknown>;
-  timestamp: number;
+  type: GameEventType;
+  data?: Record<string, unknown>;
 }
 
-// Sound utility function
-const playSound = (frequency: number, duration: number, type: OscillatorType = 'sine', volume: number = 0.3) => {
-  try {
-    const audioContext = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
-    const oscillator = audioContext.createOscillator();
-    const gainNode = audioContext.createGain();
-
-    oscillator.type = type;
-    oscillator.frequency.setValueAtTime(frequency, audioContext.currentTime);
-    oscillator.connect(gainNode);
-    gainNode.connect(audioContext.destination);
-
-    gainNode.gain.setValueAtTime(volume, audioContext.currentTime);
-    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + duration);
-
-    oscillator.start();
-    oscillator.stop(audioContext.currentTime + duration);
-  } catch (e) {
-    console.log('Audio not available');
-  }
-};
-
-// Phase types
-type Phase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
-
-const isValidPhase = (phase: string): phase is Phase => {
-  return ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'].includes(phase);
+// Numeric phases: 0=hook, 1=predict, 2=play, 3=review, 4=twist_predict, 5=twist_play, 6=twist_review, 7=transfer, 8=test, 9=mastery
+const PHASES: number[] = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
+const phaseLabels: Record<number, string> = {
+  0: 'Hook', 1: 'Predict', 2: 'Lab', 3: 'Review', 4: 'Twist Predict',
+  5: 'Twist Lab', 6: 'Twist Review', 7: 'Transfer', 8: 'Test', 9: 'Mastery'
 };
 
 interface VortexRingsRendererProps {
-  onEvent?: (event: GameEvent) => void;
-  gamePhase?: string;
+  onGameEvent?: (event: GameEvent) => void;
+  currentPhase?: number;
+  onPhaseComplete?: (phase: number) => void;
 }
 
 // Vortex ring type
@@ -54,9 +46,9 @@ interface VortexRing {
   opacity: number;
 }
 
-const VortexRingsRenderer: React.FC<VortexRingsRendererProps> = ({ onEvent, gamePhase }) => {
+const VortexRingsRenderer: React.FC<VortexRingsRendererProps> = ({ onGameEvent, currentPhase, onPhaseComplete }) => {
   // Phase management
-  const [phase, setPhase] = useState<Phase>('hook');
+  const [phase, setPhase] = useState<number>(currentPhase ?? 0);
 
   // Hook phase
   const [hookStep, setHookStep] = useState(0);
@@ -92,6 +84,7 @@ const VortexRingsRenderer: React.FC<VortexRingsRendererProps> = ({ onEvent, game
   // UI state
   const [isMobile, setIsMobile] = useState(false);
   const navigationLockRef = useRef(false);
+  const lastClickRef = useRef(0);
 
   // Responsive detection
   useEffect(() => {
@@ -101,12 +94,31 @@ const VortexRingsRenderer: React.FC<VortexRingsRendererProps> = ({ onEvent, game
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
-  // Initialize from gamePhase prop
+  // Sync with external phase control
   useEffect(() => {
-    if (gamePhase && isValidPhase(gamePhase)) {
-      setPhase(gamePhase);
+    if (currentPhase !== undefined && currentPhase !== phase) {
+      setPhase(currentPhase);
     }
-  }, [gamePhase]);
+  }, [currentPhase]);
+
+  // Web Audio API sound
+  const playSound = useCallback((type: 'click' | 'success' | 'failure' | 'transition' = 'click') => {
+    try {
+      const audioContext = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
+      const oscillator = audioContext.createOscillator();
+      const gainNode = audioContext.createGain();
+      oscillator.connect(gainNode);
+      gainNode.connect(audioContext.destination);
+
+      const freqMap = { click: 440, success: 600, failure: 300, transition: 520 };
+      oscillator.frequency.value = freqMap[type];
+      oscillator.type = 'sine';
+      gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.1);
+      oscillator.start(audioContext.currentTime);
+      oscillator.stop(audioContext.currentTime + 0.1);
+    } catch {}
+  }, []);
 
   // Animation loop for vortex rings
   useEffect(() => {
@@ -186,19 +198,24 @@ const VortexRingsRenderer: React.FC<VortexRingsRendererProps> = ({ onEvent, game
   }, [collisionRings.length, collisionMode]);
 
   // Emit events
-  const emitEvent = (type: GameEvent['type'], data: Record<string, unknown>) => {
-    if (onEvent) {
-      onEvent({ type, phase, data, timestamp: Date.now() });
+  const emitEvent = (type: GameEventType, data?: Record<string, unknown>) => {
+    if (onGameEvent) {
+      onGameEvent({ type, data });
     }
   };
 
-  // Phase navigation
-  const goToPhase = (newPhase: Phase) => {
+  // Phase navigation with 400ms debouncing
+  const goToPhase = (newPhase: number) => {
+    const now = Date.now();
+    if (now - lastClickRef.current < 200) return;
     if (navigationLockRef.current) return;
+
+    lastClickRef.current = now;
     navigationLockRef.current = true;
-    playSound(440, 0.15, 'sine', 0.2);
+    playSound('transition');
     setPhase(newPhase);
-    emitEvent('phase_complete', { from: phase, to: newPhase });
+    emitEvent('phase_change', { from: phase, to: newPhase });
+    if (onPhaseComplete) onPhaseComplete(newPhase);
     setTimeout(() => { navigationLockRef.current = false; }, 400);
   };
 
@@ -214,7 +231,7 @@ const VortexRingsRenderer: React.FC<VortexRingsRendererProps> = ({ onEvent, game
   const launchRing = () => {
     if (launching) return;
     setLaunching(true);
-    playSound(200, 0.3, 'sine', 0.3);
+    playSound('click');
 
     const radius = pulseSize === 'small' ? 15 : pulseSize === 'medium' ? 25 : 40;
     const speed = calculateRingSpeed(radius);
@@ -264,7 +281,7 @@ const VortexRingsRenderer: React.FC<VortexRingsRendererProps> = ({ onEvent, game
     };
 
     setCollisionRings([ring1, ring2]);
-    playSound(180, 0.4, 'sine', 0.3);
+    playSound('click');
   };
 
   // Test questions
@@ -383,7 +400,7 @@ const VortexRingsRenderer: React.FC<VortexRingsRendererProps> = ({ onEvent, game
 
   // Handle test answer
   const handleTestAnswer = (answer: number) => {
-    playSound(300, 0.1, 'sine', 0.2);
+    playSound('click');
     setTestAnswers(prev => [...prev, answer]);
   };
 
@@ -410,19 +427,16 @@ const VortexRingsRenderer: React.FC<VortexRingsRendererProps> = ({ onEvent, game
 
   // Helper render functions
   const renderProgressBar = () => {
-    const phases: Phase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
-    const currentIndex = phases.indexOf(phase);
-
     return (
       <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginBottom: '20px' }}>
-        {phases.map((p, i) => (
+        {PHASES.map((p, i) => (
           <div
             key={p}
             style={{
               height: '4px',
               flex: 1,
               borderRadius: '2px',
-              background: i <= currentIndex ? `linear-gradient(90deg, ${colors.primary}, ${colors.secondary})` : '#333',
+              background: i <= phase ? `linear-gradient(90deg, ${colors.primary}, ${colors.secondary})` : '#333',
               transition: 'all 0.3s ease'
             }}
           />
@@ -544,119 +558,134 @@ const VortexRingsRenderer: React.FC<VortexRingsRendererProps> = ({ onEvent, game
 
   // PHASE RENDERS
 
-  // Hook Phase
+  // Hook Phase - Premium Design
   const renderHook = () => (
-    <div style={{ padding: isMobile ? '16px' : '24px' }}>
-      {renderProgressBar()}
-      {renderSectionHeader("💨", "Air Donuts", "The physics of smoke rings")}
-
-      <div style={{
-        background: colors.card,
-        borderRadius: '16px',
-        padding: '24px',
-        marginBottom: '20px',
-        textAlign: 'center'
-      }}>
-        {hookStep === 0 && (
-          <>
-            <p style={{ color: colors.text, fontSize: '18px', lineHeight: 1.6, marginBottom: '24px' }}>
-              Blow a smoke ring, and it doesn't just disperse like breath.<br/>
-              It <span style={{ color: colors.primary }}>holds its shape</span> and <span style={{ color: colors.accent }}>travels across the room</span>.
-            </p>
-
-            <svg width="300" height="200" viewBox="0 0 300 200" style={{ margin: '0 auto', display: 'block' }}>
-              <defs>
-                <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
-                  <polygon points="0 0, 10 3.5, 0 7" fill={colors.success} />
-                </marker>
-              </defs>
-
-              {/* Person's head outline */}
-              <circle cx="40" cy="100" r="25" fill="#444" />
-              <circle cx="55" cy="100" r="5" fill="#666" /> {/* Mouth */}
-
-              {/* Smoke ring traveling */}
-              {showSmokeRing ? (
-                <>
-                  <ellipse cx="180" cy="100" rx="40" ry="15" fill="none" stroke={colors.ring} strokeWidth="8" opacity="0.7" />
-                  <ellipse cx="180" cy="100" rx="40" ry="15" fill="none" stroke={colors.primary} strokeWidth="2" opacity="0.9" />
-                  {/* Direction arrow */}
-                  <line x1="230" y1="100" x2="270" y2="100" stroke={colors.success} strokeWidth="2" markerEnd="url(#arrowhead)" />
-                  <text x="250" y="130" fill={colors.textSecondary} fontSize="12">traveling</text>
-                </>
-              ) : (
-                <>
-                  <ellipse cx="80" cy="100" rx="15" ry="6" fill="none" stroke={colors.ring} strokeWidth="4" opacity="0.5" />
-                  <text x="150" y="100" fill={colors.textSecondary} fontSize="14" textAnchor="middle">Click to blow a ring</text>
-                </>
-              )}
-            </svg>
-
-            <button
-              onMouseDown={() => {
-                setShowSmokeRing(true);
-                playSound(180, 0.5, 'sine', 0.3);
-              }}
-              style={{
-                marginTop: '16px',
-                padding: '12px 28px',
-                fontSize: '16px',
-                background: `linear-gradient(135deg, ${colors.ring}, ${colors.secondary})`,
-                color: colors.text,
-                border: 'none',
-                borderRadius: '10px',
-                cursor: 'pointer'
-              }}
-            >
-              💨 Blow Ring
-            </button>
-
-            {showSmokeRing && (
-              <button
-                onMouseDown={() => setHookStep(1)}
-                style={{
-                  marginTop: '16px',
-                  marginLeft: '12px',
-                  padding: '12px 24px',
-                  background: colors.primary,
-                  color: colors.background,
-                  border: 'none',
-                  borderRadius: '10px',
-                  cursor: 'pointer',
-                  fontWeight: '600'
-                }}
-              >
-                Continue →
-              </button>
-            )}
-          </>
-        )}
-
-        {hookStep === 1 && (
-          <>
-            <p style={{ color: colors.text, fontSize: '20px', lineHeight: 1.6, marginBottom: '20px' }}>
-              🤔 How does a ring of air <span style={{ color: colors.primary }}>push itself forward</span>?
-            </p>
-            <p style={{ color: colors.textSecondary, fontSize: '16px', lineHeight: 1.6, marginBottom: '20px' }}>
-              There's no fan behind it. No wind. Yet it glides steadily through still air.
-            </p>
-            <div style={{
-              background: colors.background,
-              padding: '16px',
-              borderRadius: '12px',
-              marginBottom: '16px'
-            }}>
-              <p style={{ color: colors.accent, fontSize: '18px', margin: 0 }}>
-                The secret: it's a <strong>self-propelling vortex</strong> — air rotating around a donut shape.
-              </p>
-            </div>
-
-            {renderKeyTakeaway("Vortex rings are nature's self-driving vehicles — their rotation creates their own forward motion!")}
-          </>
-        )}
+    <div className="flex flex-col items-center justify-center min-h-[600px] px-6 py-12 text-center">
+      {/* Premium badge */}
+      <div className="inline-flex items-center gap-2 px-4 py-2 bg-cyan-500/10 border border-cyan-500/20 rounded-full mb-8">
+        <span className="w-2 h-2 bg-cyan-400 rounded-full animate-pulse" />
+        <span className="text-sm font-medium text-cyan-400 tracking-wide">PHYSICS EXPLORATION</span>
       </div>
 
-      {hookStep === 1 && renderBottomBar(() => goToPhase('predict'))}
+      {/* Main title with gradient */}
+      <h1 className="text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-white via-cyan-100 to-indigo-200 bg-clip-text text-transparent">
+        Air Donuts
+      </h1>
+
+      <p className="text-lg text-slate-400 max-w-md mb-10">
+        Discover the physics of self-propelling smoke rings
+      </p>
+
+      {/* Premium card with graphic */}
+      <div className="relative bg-gradient-to-br from-slate-800/80 to-slate-900/80 rounded-3xl p-8 max-w-xl w-full border border-slate-700/50 shadow-2xl shadow-black/20">
+        {/* Subtle glow effect */}
+        <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/5 via-transparent to-indigo-500/5 rounded-3xl" />
+
+        <div className="relative">
+          {hookStep === 0 && (
+            <>
+              <svg width="300" height="180" viewBox="0 0 300 180" style={{ margin: '0 auto', display: 'block' }}>
+                <defs>
+                  <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+                    <polygon points="0 0, 10 3.5, 0 7" fill={colors.success} />
+                  </marker>
+                </defs>
+                <circle cx="40" cy="90" r="25" fill="#444" />
+                <circle cx="55" cy="90" r="5" fill="#666" />
+                {showSmokeRing ? (
+                  <>
+                    <ellipse cx="180" cy="90" rx="40" ry="15" fill="none" stroke={colors.ring} strokeWidth="8" opacity="0.7" />
+                    <ellipse cx="180" cy="90" rx="40" ry="15" fill="none" stroke={colors.primary} strokeWidth="2" opacity="0.9" />
+                    <line x1="230" y1="90" x2="270" y2="90" stroke={colors.success} strokeWidth="2" markerEnd="url(#arrowhead)" />
+                    <text x="250" y="120" fill={colors.textSecondary} fontSize="12">traveling</text>
+                  </>
+                ) : (
+                  <>
+                    <ellipse cx="80" cy="90" rx="15" ry="6" fill="none" stroke={colors.ring} strokeWidth="4" opacity="0.5" />
+                    <text x="170" y="95" fill={colors.textSecondary} fontSize="14" textAnchor="middle">Click to blow a ring</text>
+                  </>
+                )}
+              </svg>
+
+              <div className="mt-6 space-y-4">
+                <p className="text-xl text-white/90 font-medium leading-relaxed">
+                  Blow a smoke ring, and it doesn&apos;t just disperse.
+                </p>
+                <p className="text-lg text-slate-400 leading-relaxed">
+                  It <span style={{ color: colors.primary }}>holds its shape</span> and <span style={{ color: colors.accent }}>travels across the room</span>.
+                </p>
+              </div>
+
+              <div className="mt-6 flex justify-center gap-4">
+                <button
+                  onMouseDown={() => { setShowSmokeRing(true); playSound('click'); }}
+                  className="px-6 py-3 bg-gradient-to-r from-indigo-500 to-purple-500 text-white rounded-xl font-semibold"
+                >
+                  💨 Blow Ring
+                </button>
+                {showSmokeRing && (
+                  <button
+                    onMouseDown={() => setHookStep(1)}
+                    className="px-6 py-3 bg-cyan-500 text-slate-900 rounded-xl font-semibold"
+                  >
+                    Continue →
+                  </button>
+                )}
+              </div>
+            </>
+          )}
+
+          {hookStep === 1 && (
+            <>
+              <div className="text-6xl mb-6">💨🔄</div>
+              <div className="space-y-4">
+                <p className="text-xl text-white/90 font-medium leading-relaxed">
+                  How does a ring of air push itself forward?
+                </p>
+                <p className="text-lg text-slate-400 leading-relaxed">
+                  No fan. No wind. Yet it glides steadily through still air.
+                </p>
+                <div className="pt-2">
+                  <p className="text-base text-cyan-400 font-semibold">
+                    The secret: it&apos;s a self-propelling vortex!
+                  </p>
+                </div>
+              </div>
+            </>
+          )}
+        </div>
+      </div>
+
+      {/* Premium CTA button */}
+      {hookStep === 1 && (
+        <button
+          onMouseDown={(e) => { e.preventDefault(); goToPhase(1); }}
+          className="mt-10 group relative px-10 py-5 bg-gradient-to-r from-cyan-500 to-indigo-600 text-white text-lg font-semibold rounded-2xl transition-all duration-300 hover:shadow-lg hover:shadow-cyan-500/25 hover:scale-[1.02] active:scale-[0.98]"
+        >
+          <span className="relative z-10 flex items-center gap-3">
+            Explore the Physics
+            <svg className="w-5 h-5 transition-transform group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+            </svg>
+          </span>
+        </button>
+      )}
+
+      {/* Feature hints */}
+      <div className="mt-12 flex items-center gap-8 text-sm text-slate-500">
+        <div className="flex items-center gap-2">
+          <span className="text-cyan-400">✦</span>
+          Interactive Lab
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="text-cyan-400">✦</span>
+          Real-World Examples
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="text-cyan-400">✦</span>
+          Knowledge Test
+        </div>
+      </div>
     </div>
   );
 
@@ -705,7 +734,7 @@ const VortexRingsRenderer: React.FC<VortexRingsRendererProps> = ({ onEvent, game
               key={option.value}
               onMouseDown={() => {
                 setPrediction(option.value);
-                playSound(330, 0.1, 'sine', 0.2);
+                playSound('click');
                 emitEvent('prediction', { predicted: option.value, question: 'ring_speed' });
               }}
               style={{
@@ -729,7 +758,7 @@ const VortexRingsRenderer: React.FC<VortexRingsRendererProps> = ({ onEvent, game
           <button
             onMouseDown={() => {
               setShowPredictResult(true);
-              playSound(prediction === 'small' ? 600 : 300, 0.3, 'sine', 0.3);
+              playSound(prediction === 'small' ? 'success' : 'failure');
             }}
             style={{
               marginTop: '20px',
@@ -779,7 +808,7 @@ const VortexRingsRenderer: React.FC<VortexRingsRendererProps> = ({ onEvent, game
         )}
       </div>
 
-      {showPredictResult && renderBottomBar(() => goToPhase('play'))}
+      {showPredictResult && renderBottomBar(() => goToPhase(2))}
     </div>
   );
 
@@ -939,7 +968,7 @@ const VortexRingsRenderer: React.FC<VortexRingsRendererProps> = ({ onEvent, game
 
       {renderKeyTakeaway("Small, tight vortex rings travel faster because the induced velocity from rotation scales inversely with ring radius.")}
 
-      {trialResults.length >= 3 && renderBottomBar(() => goToPhase('review'))}
+      {trialResults.length >= 3 && renderBottomBar(() => goToPhase(3))}
     </div>
   );
 
@@ -1014,7 +1043,7 @@ const VortexRingsRenderer: React.FC<VortexRingsRendererProps> = ({ onEvent, game
         {renderKeyTakeaway("Vortex rings are self-propelled by their own rotation — the spinning core induces forward airflow, creating motion without external force.")}
       </div>
 
-      {renderBottomBar(() => goToPhase('twist_predict'))}
+      {renderBottomBar(() => goToPhase(4))}
     </div>
   );
 
@@ -1064,7 +1093,7 @@ const VortexRingsRenderer: React.FC<VortexRingsRendererProps> = ({ onEvent, game
               key={option.value}
               onMouseDown={() => {
                 setTwistPrediction(option.value);
-                playSound(330, 0.1, 'sine', 0.2);
+                playSound('click');
               }}
               style={{
                 padding: '14px 18px',
@@ -1086,7 +1115,7 @@ const VortexRingsRenderer: React.FC<VortexRingsRendererProps> = ({ onEvent, game
           <button
             onMouseDown={() => {
               setShowTwistResult(true);
-              playSound(twistPrediction === 'leapfrog' ? 600 : 300, 0.3, 'sine', 0.3);
+              playSound(twistPrediction === 'leapfrog' ? 'success' : 'error');
             }}
             style={{
               marginTop: '20px',
@@ -1126,7 +1155,7 @@ const VortexRingsRenderer: React.FC<VortexRingsRendererProps> = ({ onEvent, game
         )}
       </div>
 
-      {showTwistResult && renderBottomBar(() => goToPhase('twist_play'))}
+      {showTwistResult && renderBottomBar(() => goToPhase(5))}
     </div>
   );
 
@@ -1278,7 +1307,7 @@ const VortexRingsRenderer: React.FC<VortexRingsRendererProps> = ({ onEvent, game
 
       {renderKeyTakeaway("Vortex rings can pass through each other! The 'leapfrog' effect shows how they exchange size and speed without breaking apart.")}
 
-      {renderBottomBar(() => goToPhase('twist_review'))}
+      {renderBottomBar(() => goToPhase(6))}
     </div>
   );
 
@@ -1354,7 +1383,7 @@ const VortexRingsRenderer: React.FC<VortexRingsRendererProps> = ({ onEvent, game
         {renderKeyTakeaway("Vortex rings exchange properties through mutual induction — demonstrating how rotational flows interact without colliding like solid objects.")}
       </div>
 
-      {renderBottomBar(() => goToPhase('transfer'))}
+      {renderBottomBar(() => goToPhase(7))}
     </div>
   );
 
@@ -1384,7 +1413,7 @@ const VortexRingsRenderer: React.FC<VortexRingsRendererProps> = ({ onEvent, game
               onMouseDown={() => {
                 if (completedApps.has(i)) {
                   setActiveApp(i);
-                  playSound(400 + i * 50, 0.1, 'sine', 0.2);
+                  playSound('click');
                 }
               }}
               style={{
@@ -1490,7 +1519,7 @@ const VortexRingsRenderer: React.FC<VortexRingsRendererProps> = ({ onEvent, game
               const next = activeApp + 1;
               setCompletedApps(prev => new Set([...prev, next]));
               setActiveApp(next);
-              playSound(500, 0.15, 'sine', 0.2);
+              playSound('success');
             }}
             style={{
               marginTop: '20px',
@@ -1510,7 +1539,7 @@ const VortexRingsRenderer: React.FC<VortexRingsRendererProps> = ({ onEvent, game
         )}
       </div>
 
-      {completedApps.size === applications.length && renderBottomBar(() => goToPhase('test'))}
+      {completedApps.size === applications.length && renderBottomBar(() => goToPhase(8))}
     </div>
   );
 
@@ -1598,7 +1627,7 @@ const VortexRingsRenderer: React.FC<VortexRingsRendererProps> = ({ onEvent, game
               <button
                 onMouseDown={() => {
                   setShowTestResults(true);
-                  playSound(600, 0.3, 'sine', 0.3);
+                  playSound('success');
                 }}
                 style={{
                   padding: '14px 32px',
@@ -1660,7 +1689,7 @@ const VortexRingsRenderer: React.FC<VortexRingsRendererProps> = ({ onEvent, game
           )}
         </div>
 
-        {showTestResults && renderBottomBar(() => goToPhase('mastery'), false, "Complete Journey")}
+        {showTestResults && renderBottomBar(() => goToPhase(9), false, "Complete Journey")}
       </div>
     );
   };
@@ -1776,33 +1805,53 @@ const VortexRingsRenderer: React.FC<VortexRingsRendererProps> = ({ onEvent, game
   // Main render
   const renderPhase = () => {
     switch (phase) {
-      case 'hook': return renderHook();
-      case 'predict': return renderPredict();
-      case 'play': return renderPlay();
-      case 'review': return renderReview();
-      case 'twist_predict': return renderTwistPredict();
-      case 'twist_play': return renderTwistPlay();
-      case 'twist_review': return renderTwistReview();
-      case 'transfer': return renderTransfer();
-      case 'test': return renderTest();
-      case 'mastery': return renderMastery();
+      case 0: return renderHook();
+      case 1: return renderPredict();
+      case 2: return renderPlay();
+      case 3: return renderReview();
+      case 4: return renderTwistPredict();
+      case 5: return renderTwistPlay();
+      case 6: return renderTwistReview();
+      case 7: return renderTransfer();
+      case 8: return renderTest();
+      case 9: return renderMastery();
       default: return renderHook();
     }
   };
 
   return (
-    <div style={{
-      minHeight: '100vh',
-      background: colors.background,
-      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
-    }}>
-      <div style={{
-        maxWidth: '800px',
-        margin: '0 auto',
-        padding: isMobile ? '8px' : '16px'
-      }}>
-        {renderPhase()}
+    <div className="min-h-screen bg-[#0a0f1a] text-white relative overflow-hidden" style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' }}>
+      {/* Premium background gradient */}
+      <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-[#0a1628] to-slate-900" />
+      <div className="absolute top-0 left-1/4 w-96 h-96 bg-cyan-500/5 rounded-full blur-3xl" />
+      <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-indigo-500/5 rounded-full blur-3xl" />
+
+      {/* Header */}
+      <div className="fixed top-0 left-0 right-0 z-50 bg-slate-900/80 backdrop-blur-xl border-b border-slate-800/50">
+        <div className="flex items-center justify-between px-6 py-3 max-w-4xl mx-auto">
+          <span className="text-sm font-semibold text-white/80 tracking-wide">Vortex Rings</span>
+          <div className="flex items-center gap-1.5">
+            {PHASES.map((p, i) => (
+              <button
+                key={p}
+                onMouseDown={(e) => { e.preventDefault(); goToPhase(p); }}
+                className={`h-2 rounded-full transition-all duration-300 ${
+                  phase === p
+                    ? 'bg-cyan-400 w-6 shadow-lg shadow-cyan-400/30'
+                    : phase > p
+                      ? 'bg-emerald-500 w-2'
+                      : 'bg-slate-700 w-2 hover:bg-slate-600'
+                }`}
+                title={phaseLabels[p]}
+              />
+            ))}
+          </div>
+          <span className="text-sm font-medium text-cyan-400">{phaseLabels[phase]}</span>
+        </div>
       </div>
+
+      {/* Main content */}
+      <div className="relative pt-16 pb-12 max-w-4xl mx-auto">{renderPhase()}</div>
     </div>
   );
 };

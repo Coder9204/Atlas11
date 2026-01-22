@@ -24,7 +24,7 @@ interface GameEvent {
 // SOUND UTILITY
 // ─────────────────────────────────────────────────────────────────────────────
 
-const playSound = (frequency: number, type: OscillatorType = 'sine', duration: number = 0.15) => {
+const playSound = (type: 'click' | 'success' | 'failure' | 'transition' | 'complete') => {
   try {
     const audioContext = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
     const oscillator = audioContext.createOscillator();
@@ -33,14 +33,23 @@ const playSound = (frequency: number, type: OscillatorType = 'sine', duration: n
     oscillator.connect(gainNode);
     gainNode.connect(audioContext.destination);
 
-    oscillator.frequency.value = frequency;
-    oscillator.type = type;
+    const soundConfig = {
+      click: { frequency: 440, duration: 0.1, oscType: 'sine' as OscillatorType },
+      success: { frequency: 600, duration: 0.15, oscType: 'sine' as OscillatorType },
+      failure: { frequency: 200, duration: 0.2, oscType: 'sawtooth' as OscillatorType },
+      transition: { frequency: 520, duration: 0.15, oscType: 'sine' as OscillatorType },
+      complete: { frequency: 800, duration: 0.3, oscType: 'sine' as OscillatorType },
+    };
+
+    const config = soundConfig[type];
+    oscillator.frequency.value = config.frequency;
+    oscillator.type = config.oscType;
 
     gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
-    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + duration);
+    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + config.duration);
 
     oscillator.start(audioContext.currentTime);
-    oscillator.stop(audioContext.currentTime + duration);
+    oscillator.stop(audioContext.currentTime + config.duration);
   } catch {
     // Audio not available
   }
@@ -158,7 +167,7 @@ const ReactionTimeRenderer: React.FC<ReactionTimeRendererProps> = ({
     if (navigationLockRef.current) return;
     navigationLockRef.current = true;
 
-    playSound(500, 'sine', 0.1);
+    playSound('transition');
     setPhase(newPhase);
     setShowCoachMessage(true);
     emitEvent('phase_change', { action: `Moved to ${newPhase}` });
@@ -215,7 +224,7 @@ const ReactionTimeRenderer: React.FC<ReactionTimeRendererProps> = ({
           // Missed!
           setRulerState('missed');
           setRulerPosition(30);
-          playSound(200, 'sawtooth', 0.3);
+          playSound('failure');
           return;
         }
 
@@ -231,7 +240,7 @@ const ReactionTimeRenderer: React.FC<ReactionTimeRendererProps> = ({
     if (rulerState === 'waiting') {
       // Jumped the gun!
       setRulerState('ready');
-      playSound(200, 'square', 0.2);
+      playSound('failure');
       return;
     }
 
@@ -248,7 +257,7 @@ const ReactionTimeRenderer: React.FC<ReactionTimeRendererProps> = ({
     setReactionTime(reaction);
     setRulerState('caught');
 
-    playSound(600, 'sine', 0.15);
+    playSound('success');
 
     setAttempts(prev => [...prev, reaction]);
     emitEvent('observation', {
@@ -479,60 +488,97 @@ const ReactionTimeRenderer: React.FC<ReactionTimeRendererProps> = ({
   // ─────────────────────────────────────────────────────────────────────────
 
   const renderHook = () => (
-    <div className="text-center">
-      {renderSectionHeader('The Reaction Time Test', 'Measure your brain\'s speed limit')}
-
-      <div className="bg-gradient-to-br from-amber-100 to-orange-100 rounded-2xl p-6 mb-6 shadow-lg">
-        <svg viewBox="0 0 300 160" className="w-full h-40 mb-4">
-          <rect x="0" y="0" width="300" height="160" fill="white" rx="10" />
-
-          {/* Brain to hand pathway */}
-          <g transform="translate(50, 80)">
-            <circle cx="0" cy="0" r="25" fill="#F9A8D4" />
-            <text x="0" y="5" textAnchor="middle" fill="#9D174D" fontSize="8" fontWeight="bold">BRAIN</text>
-          </g>
-
-          <g transform="translate(150, 80)">
-            <circle cx="0" cy="0" r="20" fill="#93C5FD" />
-            <text x="0" y="5" textAnchor="middle" fill="#1E40AF" fontSize="7">NERVES</text>
-          </g>
-
-          <g transform="translate(250, 80)">
-            <ellipse cx="0" cy="0" rx="25" ry="15" fill={colors.hand} />
-            <text x="0" y="5" textAnchor="middle" fill="#92400E" fontSize="8" fontWeight="bold">HAND</text>
-          </g>
-
-          {/* Arrows */}
-          <line x1="75" y1="80" x2="125" y2="80" stroke={colors.primary} strokeWidth="3" markerEnd="url(#arrow)" />
-          <line x1="175" y1="80" x2="220" y2="80" stroke={colors.primary} strokeWidth="3" markerEnd="url(#arrow)" />
-
-          {/* Time labels */}
-          <text x="100" y="60" textAnchor="middle" fill={colors.neutral} fontSize="9">~50ms</text>
-          <text x="197" y="60" textAnchor="middle" fill={colors.neutral} fontSize="9">~100ms</text>
-
-          {/* Total */}
-          <text x="150" y="140" textAnchor="middle" fill={colors.primary} fontSize="12" fontWeight="bold">
-            Total: ~150-300ms
-          </text>
-
-          <text x="150" y="25" textAnchor="middle" fill={colors.accent} fontSize="11" fontWeight="bold">
-            THE NEURAL PATHWAY
-          </text>
-        </svg>
-
-        <p className="text-lg text-amber-800">
-          Your brain can't react instantly—there's a physical limit!
-          <br />
-          <span className="font-bold">We can measure it using a falling ruler and physics.</span>
-        </p>
+    <div className="flex flex-col items-center justify-center min-h-[600px] px-6 py-12 text-center">
+      {/* Premium badge */}
+      <div className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-500/10 border border-indigo-500/20 rounded-full mb-8">
+        <span className="w-2 h-2 bg-indigo-400 rounded-full animate-pulse" />
+        <span className="text-sm font-medium text-indigo-400 tracking-wide">PHYSICS EXPLORATION</span>
       </div>
 
-      {renderKeyTakeaway(
-        "The Idea",
-        "A ruler falls with known acceleration (g = 9.8 m/s²). By measuring how far it drops before you catch it, we can calculate your reaction time!"
-      )}
+      {/* Main title with gradient */}
+      <h1 className="text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-white via-indigo-100 to-purple-200 bg-clip-text text-transparent">
+        The Reaction Time Test
+      </h1>
 
-      {renderBottomBar(() => goToPhase('predict'), true, 'Make Your Prediction')}
+      <p className="text-lg text-slate-400 max-w-md mb-10">
+        Measure your brain's speed limit
+      </p>
+
+      {/* Premium card with graphic */}
+      <div className="relative bg-gradient-to-br from-slate-800/80 to-slate-900/80 rounded-3xl p-8 max-w-xl w-full border border-slate-700/50 shadow-2xl shadow-black/20 backdrop-blur-xl">
+        <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/5 via-transparent to-purple-500/5 rounded-3xl" />
+
+        <div className="relative">
+          <svg viewBox="0 0 300 160" className="w-full h-40 mb-6">
+            <rect x="0" y="0" width="300" height="160" fill="#1e293b" rx="10" />
+
+            {/* Brain to hand pathway */}
+            <g transform="translate(50, 80)">
+              <circle cx="0" cy="0" r="25" fill="#818cf8" />
+              <text x="0" y="5" textAnchor="middle" fill="#1e1b4b" fontSize="8" fontWeight="bold">BRAIN</text>
+            </g>
+
+            <g transform="translate(150, 80)">
+              <circle cx="0" cy="0" r="20" fill="#60a5fa" />
+              <text x="0" y="5" textAnchor="middle" fill="#1e3a8a" fontSize="7">NERVES</text>
+            </g>
+
+            <g transform="translate(250, 80)">
+              <ellipse cx="0" cy="0" rx="25" ry="15" fill="#fbbf24" />
+              <text x="0" y="5" textAnchor="middle" fill="#78350f" fontSize="8" fontWeight="bold">HAND</text>
+            </g>
+
+            {/* Arrows */}
+            <line x1="75" y1="80" x2="125" y2="80" stroke="#818cf8" strokeWidth="3" />
+            <line x1="175" y1="80" x2="220" y2="80" stroke="#818cf8" strokeWidth="3" />
+
+            {/* Time labels */}
+            <text x="100" y="60" textAnchor="middle" fill="#94a3b8" fontSize="9">~50ms</text>
+            <text x="197" y="60" textAnchor="middle" fill="#94a3b8" fontSize="9">~100ms</text>
+
+            {/* Total */}
+            <text x="150" y="140" textAnchor="middle" fill="#818cf8" fontSize="12" fontWeight="bold">
+              Total: ~150-300ms
+            </text>
+
+            <text x="150" y="25" textAnchor="middle" fill="#a78bfa" fontSize="11" fontWeight="bold">
+              THE NEURAL PATHWAY
+            </text>
+          </svg>
+
+          <p className="text-xl text-white/90 font-medium leading-relaxed mb-4">
+            Your brain can't react instantly—there's a physical limit!
+          </p>
+          <p className="text-lg text-indigo-400 font-semibold">
+            We can measure it using a falling ruler and physics.
+          </p>
+        </div>
+      </div>
+
+      {/* Premium CTA button */}
+      <button
+        onMouseDown={(e) => { e.preventDefault(); goToPhase('predict'); }}
+        className="mt-10 group relative px-10 py-5 bg-gradient-to-r from-indigo-500 to-purple-600 text-white text-lg font-semibold rounded-2xl transition-all duration-300 hover:shadow-lg hover:shadow-indigo-500/25 hover:scale-[1.02] active:scale-[0.98]"
+      >
+        <span className="relative z-10 flex items-center gap-3">
+          Make Your Prediction
+          <svg className="w-5 h-5 transition-transform group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+          </svg>
+        </span>
+      </button>
+
+      {/* Feature hints */}
+      <div className="mt-12 flex items-center gap-8 text-sm text-slate-500">
+        <div className="flex items-center gap-2">
+          <span className="text-indigo-400">✦</span>
+          Interactive Lab
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="text-purple-400">✦</span>
+          10 Phases
+        </div>
+      </div>
     </div>
   );
 
@@ -562,7 +608,7 @@ const ReactionTimeRenderer: React.FC<ReactionTimeRendererProps> = ({
               onMouseDown={(e) => {
                 e.preventDefault();
                 setPrediction(option.id);
-                playSound(400, 'sine', 0.1);
+                playSound('click');
                 emitEvent('prediction', { prediction: option.id });
               }}
               className={`p-4 rounded-xl border-2 transition-all text-left flex items-center gap-3 ${
@@ -773,7 +819,7 @@ const ReactionTimeRenderer: React.FC<ReactionTimeRendererProps> = ({
               onMouseDown={(e) => {
                 e.preventDefault();
                 setTwistPrediction(option.id);
-                playSound(400, 'sine', 0.1);
+                playSound('click');
                 emitEvent('prediction', { prediction: option.id });
               }}
               className={`p-4 rounded-xl border-2 transition-all text-left flex items-center gap-3 ${
@@ -1085,7 +1131,7 @@ const ReactionTimeRenderer: React.FC<ReactionTimeRendererProps> = ({
             <button
               onMouseDown={(e) => {
                 e.preventDefault();
-                playSound(600, 'sine', 0.1);
+                playSound('success');
                 setCompletedApps(prev => prev + 1);
               }}
               className="w-full py-3 rounded-xl font-semibold text-white shadow-lg hover:shadow-xl transition-all"
@@ -1245,7 +1291,8 @@ const ReactionTimeRenderer: React.FC<ReactionTimeRendererProps> = ({
     const newAnswers = [...testAnswers];
     newAnswers[questionIndex] = optionIndex;
     setTestAnswers(newAnswers);
-    playSound(optionIndex === testQuestions[questionIndex].options.findIndex(o => o.correct) ? 600 : 300, 'sine', 0.15);
+    const isCorrect = optionIndex === testQuestions[questionIndex].options.findIndex(o => o.correct);
+    playSound(isCorrect ? 'success' : 'failure');
   };
 
   const calculateTestScore = () => {
@@ -1433,7 +1480,7 @@ const ReactionTimeRenderer: React.FC<ReactionTimeRendererProps> = ({
         <button
           onMouseDown={(e) => {
             e.preventDefault();
-            playSound(800, 'sine', 0.3);
+            playSound('complete');
             if (onComplete) onComplete(testScore * 10);
             emitEvent('completion', { score: testScore * 10 });
           }}
@@ -1450,46 +1497,70 @@ const ReactionTimeRenderer: React.FC<ReactionTimeRendererProps> = ({
   // ─────────────────────────────────────────────────────────────────────────
 
   return (
-    <div className={`min-h-screen bg-gradient-to-br from-slate-50 to-indigo-50 ${isMobile ? 'p-3' : 'p-6'}`}>
-      <div className="max-w-2xl mx-auto">
-        <div className="text-center mb-4">
-          <h1 className="text-2xl md:text-3xl font-bold text-gray-800 flex items-center justify-center gap-2">
-            ⏱️ Reaction Time Test
-          </h1>
-          <p className="text-gray-600 text-sm">Measure Your Brain's Speed</p>
-        </div>
+    <div className="min-h-screen bg-[#0a0f1a] text-white relative overflow-hidden">
+      {/* Premium background gradient */}
+      <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-[#0a1628] to-slate-900" />
+      <div className="absolute top-0 left-1/4 w-96 h-96 bg-indigo-500/5 rounded-full blur-3xl" />
+      <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-purple-500/5 rounded-full blur-3xl" />
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-indigo-500/3 rounded-full blur-3xl" />
 
-        {renderProgressBar()}
-
-        {showCoachMessage && (
-          <div className="bg-gradient-to-r from-indigo-500 to-purple-500 text-white rounded-xl p-4 mb-4 shadow-lg">
-            <div className="flex items-start gap-3">
-              <span className="text-2xl">🧑‍🏫</span>
-              <p className="flex-1">{coachMessages[phase]}</p>
+      {/* Header */}
+      <div className="fixed top-0 left-0 right-0 z-50 bg-slate-900/80 backdrop-blur-xl border-b border-slate-800/50">
+        <div className="flex items-center justify-between px-6 py-3 max-w-4xl mx-auto">
+          <span className="text-sm font-semibold text-white/80 tracking-wide">Reaction Time</span>
+          <div className="flex items-center gap-1.5">
+            {PHASES.map((p) => (
               <button
-                onMouseDown={(e) => {
-                  e.preventDefault();
-                  setShowCoachMessage(false);
-                }}
-                className="text-white/80 hover:text-white"
-              >
-                ✕
-              </button>
-            </div>
+                key={p}
+                onMouseDown={(e) => { e.preventDefault(); goToPhase(p); }}
+                className={`h-2 rounded-full transition-all duration-300 ${
+                  phase === p
+                    ? 'bg-indigo-400 w-6 shadow-lg shadow-indigo-400/30'
+                    : PHASES.indexOf(phase) > PHASES.indexOf(p)
+                      ? 'bg-emerald-500 w-2'
+                      : 'bg-slate-700 w-2 hover:bg-slate-600'
+                }`}
+                title={p}
+              />
+            ))}
           </div>
-        )}
+          <span className="text-sm font-medium text-indigo-400 capitalize">{phase.replace('_', ' ')}</span>
+        </div>
+      </div>
 
-        <div className="bg-white/80 backdrop-blur rounded-2xl shadow-xl p-4 md:p-6">
-          {phase === 'hook' && renderHook()}
-          {phase === 'predict' && renderPredict()}
-          {phase === 'play' && renderPlay()}
-          {phase === 'review' && renderReview()}
-          {phase === 'twist_predict' && renderTwistPredict()}
-          {phase === 'twist_play' && renderTwistPlay()}
-          {phase === 'twist_review' && renderTwistReview()}
-          {phase === 'transfer' && renderTransfer()}
-          {phase === 'test' && renderTest()}
-          {phase === 'mastery' && renderMastery()}
+      {/* Main content */}
+      <div className="relative pt-16 pb-12">
+        <div className="max-w-2xl mx-auto px-4">
+          {showCoachMessage && (
+            <div className="bg-gradient-to-r from-indigo-500/20 to-purple-500/20 border border-indigo-500/30 text-white rounded-xl p-4 mb-4 backdrop-blur-xl">
+              <div className="flex items-start gap-3">
+                <span className="text-2xl">🧑‍🏫</span>
+                <p className="flex-1 text-slate-200">{coachMessages[phase]}</p>
+                <button
+                  onMouseDown={(e) => {
+                    e.preventDefault();
+                    setShowCoachMessage(false);
+                  }}
+                  className="text-white/60 hover:text-white"
+                >
+                  ✕
+                </button>
+              </div>
+            </div>
+          )}
+
+          <div className="relative">
+            {phase === 'hook' && renderHook()}
+            {phase === 'predict' && renderPredict()}
+            {phase === 'play' && renderPlay()}
+            {phase === 'review' && renderReview()}
+            {phase === 'twist_predict' && renderTwistPredict()}
+            {phase === 'twist_play' && renderTwistPlay()}
+            {phase === 'twist_review' && renderTwistReview()}
+            {phase === 'transfer' && renderTransfer()}
+            {phase === 'test' && renderTest()}
+            {phase === 'mastery' && renderMastery()}
+          </div>
         </div>
       </div>
     </div>

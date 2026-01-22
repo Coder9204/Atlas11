@@ -807,27 +807,74 @@ export default function SolarHeatingRenderer({
 
   // Render hook phase
   const renderHook = () => (
-    <div className="p-6 text-center max-w-2xl mx-auto">
-      <div className="text-5xl mb-4">☀️ ⬛ ⬜ 🌡️</div>
-      <h2 className="text-2xl font-bold text-gray-800 mb-4">
-        Why Do Black Cars Get So Hot?
-      </h2>
-      <p className="text-gray-600 mb-6">
-        On a sunny day, a black car's interior can reach 70°C while a white
-        car stays much cooler. Both cars are in the same sunlight—what makes
-        the difference? It all comes down to how surfaces interact with light.
-      </p>
-      <div className="bg-gradient-to-r from-yellow-50 to-orange-50 p-4 rounded-lg mb-6">
-        <p className="text-orange-800 font-medium">
-          🔥 Can you predict which color heats up fastest in the sun?
-        </p>
+    <div className="flex flex-col items-center justify-center min-h-[600px] px-6 py-12 text-center">
+      {/* Premium badge */}
+      <div className="inline-flex items-center gap-2 px-4 py-2 bg-orange-500/10 border border-orange-500/20 rounded-full mb-8">
+        <span className="w-2 h-2 bg-orange-400 rounded-full animate-pulse" />
+        <span className="text-sm font-medium text-orange-400 tracking-wide">PHYSICS EXPLORATION</span>
       </div>
+
+      {/* Main title with gradient */}
+      <h1 className="text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-white via-orange-100 to-yellow-200 bg-clip-text text-transparent">
+        Why Do Black Cars Get So Hot?
+      </h1>
+
+      <p className="text-lg text-slate-400 max-w-md mb-10">
+        Discover why color matters for temperature in sunlight
+      </p>
+
+      {/* Premium card with graphic */}
+      <div className="relative bg-gradient-to-br from-slate-800/80 to-slate-900/80 rounded-3xl p-8 max-w-xl w-full border border-slate-700/50 shadow-2xl shadow-black/20 backdrop-blur-xl">
+        {/* Subtle glow effect */}
+        <div className="absolute inset-0 bg-gradient-to-br from-orange-500/5 via-transparent to-yellow-500/5 rounded-3xl" />
+
+        <div className="relative">
+          <div className="text-6xl mb-6">☀️ ⬛ ⬜ 🌡️</div>
+
+          <div className="space-y-4">
+            <p className="text-xl text-white/90 font-medium leading-relaxed">
+              On a sunny day, a black car's interior can reach 70°C
+            </p>
+            <p className="text-lg text-slate-400 leading-relaxed">
+              while a white car stays much cooler
+            </p>
+            <div className="pt-2">
+              <p className="text-base text-orange-400 font-semibold">
+                Can you predict which color heats up fastest?
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Premium CTA button */}
       <button
         onMouseDown={() => goToPhase("predict")}
-        className="px-8 py-4 bg-gradient-to-r from-yellow-500 to-orange-500 text-white rounded-xl font-semibold text-lg shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1"
+        className="mt-10 group relative px-10 py-5 bg-gradient-to-r from-orange-500 to-yellow-600 text-white text-lg font-semibold rounded-2xl transition-all duration-300 hover:shadow-lg hover:shadow-orange-500/25 hover:scale-[1.02] active:scale-[0.98]"
       >
-        Test Your Intuition →
+        <span className="relative z-10 flex items-center gap-3">
+          Test Your Intuition
+          <svg className="w-5 h-5 transition-transform group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+          </svg>
+        </span>
       </button>
+
+      {/* Feature hints */}
+      <div className="mt-12 flex items-center gap-8 text-sm text-slate-500">
+        <div className="flex items-center gap-2">
+          <span className="text-orange-400">✦</span>
+          Solar Absorption
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="text-orange-400">✦</span>
+          Kirchhoff's Law
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="text-orange-400">✦</span>
+          Cool Roofs
+        </div>
+      </div>
     </div>
   );
 
@@ -1555,50 +1602,46 @@ export default function SolarHeatingRenderer({
     "transfer", "test", "mastery"
   ];
   const currentPhaseIndex = phases.indexOf(phase);
+  const phaseLabels: Record<Phase, string> = {
+    hook: 'Hook', predict: 'Predict', play: 'Lab', review: 'Review',
+    twist_predict: 'Twist Predict', twist_play: 'Twist Lab', twist_review: 'Twist Review',
+    transfer: 'Transfer', test: 'Test', mastery: 'Mastery'
+  };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-50 to-orange-50">
-      {/* Header */}
-      <div className="bg-white shadow-sm p-4">
-        <div className="max-w-2xl mx-auto flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <span className="text-2xl">☀️</span>
-            <div>
-              <h1 className="font-bold text-gray-800">Solar Heating</h1>
-              <p className="text-xs text-gray-500">Black vs white surfaces</p>
-            </div>
-          </div>
-          {onBack && (
-            <button
-              onMouseDown={onBack}
-              className="p-2 hover:bg-gray-100 rounded-lg text-gray-600"
-            >
-              ✕
-            </button>
-          )}
-        </div>
+    <div className="min-h-screen bg-[#0a0f1a] text-white relative overflow-hidden">
+      {/* Premium background gradient */}
+      <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-[#0a1628] to-slate-900" />
+      <div className="absolute top-0 left-1/4 w-96 h-96 bg-orange-500/5 rounded-full blur-3xl" />
+      <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-yellow-500/5 rounded-full blur-3xl" />
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-orange-500/3 rounded-full blur-3xl" />
 
-        {/* Progress bar */}
-        <div className="max-w-2xl mx-auto mt-3">
-          <div className="flex gap-1">
+      {/* Header */}
+      <div className="fixed top-0 left-0 right-0 z-50 bg-slate-900/80 backdrop-blur-xl border-b border-slate-800/50">
+        <div className="flex items-center justify-between px-6 py-3 max-w-4xl mx-auto">
+          <span className="text-sm font-semibold text-white/80 tracking-wide">Solar Heating</span>
+          <div className="flex items-center gap-1.5">
             {phases.map((p, i) => (
-              <div
+              <button
                 key={p}
-                className={`h-1.5 flex-1 rounded-full transition-all ${
-                  i <= currentPhaseIndex ? "bg-orange-500" : "bg-gray-200"
+                onMouseDown={() => goToPhase(p)}
+                className={`h-2 rounded-full transition-all duration-300 ${
+                  phase === p
+                    ? 'bg-orange-400 w-6 shadow-lg shadow-orange-400/30'
+                    : i < currentPhaseIndex
+                      ? 'bg-emerald-500 w-2'
+                      : 'bg-slate-700 w-2 hover:bg-slate-600'
                 }`}
+                title={phaseLabels[p]}
               />
             ))}
           </div>
-          <p className="text-xs text-gray-500 mt-1 text-center">
-            {currentPhaseIndex + 1} / {phases.length}:{" "}
-            {phase.replace("_", " ").replace(/\b\w/g, (l) => l.toUpperCase())}
-          </p>
+          <span className="text-sm font-medium text-orange-400">{phaseLabels[phase]}</span>
         </div>
       </div>
 
       {/* Main content */}
-      <div className="pb-8">{renderPhase()}</div>
+      <div className="relative pt-16 pb-12">{renderPhase()}</div>
     </div>
   );
 }

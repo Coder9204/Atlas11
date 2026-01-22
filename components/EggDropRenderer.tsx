@@ -24,7 +24,15 @@ interface GameEvent {
 // SOUND UTILITY
 // ─────────────────────────────────────────────────────────────────────────────
 
-const playSound = (frequency: number, type: OscillatorType = 'sine', duration: number = 0.15) => {
+const playSound = (soundType: 'click' | 'success' | 'failure' | 'transition' | 'complete') => {
+  const soundConfig = {
+    click: { frequency: 400, type: 'sine' as OscillatorType, duration: 0.1 },
+    success: { frequency: 800, type: 'triangle' as OscillatorType, duration: 0.3 },
+    failure: { frequency: 200, type: 'triangle' as OscillatorType, duration: 0.3 },
+    transition: { frequency: 500, type: 'sine' as OscillatorType, duration: 0.1 },
+    complete: { frequency: 800, type: 'sine' as OscillatorType, duration: 0.3 }
+  };
+  const { frequency, type, duration } = soundConfig[soundType];
   try {
     const audioContext = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
     const oscillator = audioContext.createOscillator();
@@ -153,7 +161,7 @@ const EggDropRenderer: React.FC<EggDropRendererProps> = ({
     if (navigationLockRef.current) return;
     navigationLockRef.current = true;
 
-    playSound(500, 'sine', 0.1);
+    playSound('transition');
     setPhase(newPhase);
     setShowCoachMessage(true);
     emitEvent('phase_change', { action: `Moved to ${newPhase}` });
@@ -193,7 +201,7 @@ const EggDropRenderer: React.FC<EggDropRendererProps> = ({
           setIsDropping(false);
           const survived = calculateSurvival(selectedPadding);
           setEggSurvived(survived);
-          playSound(survived ? 800 : 200, 'triangle', 0.3);
+          playSound(survived ? 'success' : 'failure');
           emitEvent('observation', {
             details: `Dropped with ${selectedPadding} padding - ${survived ? 'survived' : 'broke'}`
           });
@@ -222,7 +230,7 @@ const EggDropRenderer: React.FC<EggDropRendererProps> = ({
           setIsDropping(false);
           const survived = calculateSurvival('foam', twistHeight);
           setTwistEggSurvived(survived);
-          playSound(survived ? 800 : 200, 'triangle', 0.3);
+          playSound(survived ? 'success' : 'failure');
           emitEvent('observation', {
             details: `Dropped from ${twistHeight} height with foam - ${survived ? 'survived' : 'broke'}`
           });
@@ -522,7 +530,7 @@ const EggDropRenderer: React.FC<EggDropRendererProps> = ({
               onMouseDown={(e) => {
                 e.preventDefault();
                 setPrediction(option.id);
-                playSound(400, 'sine', 0.1);
+                playSound('click');
                 emitEvent('prediction', { prediction: option.id });
               }}
               className={`p-4 rounded-xl border-2 transition-all text-left flex items-center gap-3 ${
@@ -578,7 +586,7 @@ const EggDropRenderer: React.FC<EggDropRendererProps> = ({
                 if (!isDropping) {
                   setSelectedPadding(pad.id);
                   resetDrop();
-                  playSound(300, 'sine', 0.1);
+                  playSound('click');
                 }
               }}
               disabled={isDropping}
@@ -731,7 +739,7 @@ const EggDropRenderer: React.FC<EggDropRendererProps> = ({
               onMouseDown={(e) => {
                 e.preventDefault();
                 setTwistPrediction(option.id);
-                playSound(400, 'sine', 0.1);
+                playSound('click');
                 emitEvent('prediction', { prediction: option.id });
               }}
               className={`p-4 rounded-xl border-2 transition-all text-left flex items-center gap-3 ${
@@ -776,7 +784,7 @@ const EggDropRenderer: React.FC<EggDropRendererProps> = ({
                 if (!isDropping) {
                   setTwistHeight(h.id);
                   resetTwistDrop();
-                  playSound(300, 'sine', 0.1);
+                  playSound('click');
                 }
               }}
               disabled={isDropping}
@@ -1029,7 +1037,7 @@ const EggDropRenderer: React.FC<EggDropRendererProps> = ({
             <button
               onMouseDown={(e) => {
                 e.preventDefault();
-                playSound(600, 'sine', 0.1);
+                playSound('click');
                 setCompletedApps(prev => prev + 1);
               }}
               className="w-full py-3 rounded-xl font-semibold text-white shadow-lg hover:shadow-xl transition-all"
@@ -1189,7 +1197,7 @@ const EggDropRenderer: React.FC<EggDropRendererProps> = ({
     const newAnswers = [...testAnswers];
     newAnswers[questionIndex] = optionIndex;
     setTestAnswers(newAnswers);
-    playSound(optionIndex === testQuestions[questionIndex].options.findIndex(o => o.correct) ? 600 : 300, 'sine', 0.15);
+    playSound(optionIndex === testQuestions[questionIndex].options.findIndex(o => o.correct) ? 'success' : 'failure');
   };
 
   const calculateTestScore = () => {
@@ -1368,7 +1376,7 @@ const EggDropRenderer: React.FC<EggDropRendererProps> = ({
         <button
           onMouseDown={(e) => {
             e.preventDefault();
-            playSound(800, 'sine', 0.3);
+            playSound('complete');
             if (onComplete) onComplete(testScore * 10);
             emitEvent('completion', { score: testScore * 10 });
           }}

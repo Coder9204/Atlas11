@@ -1,0 +1,1221 @@
+# Master Prompt for Physics Simulation Games
+
+## CRITICAL: First-Shot Success Requirements
+
+This document ensures games work PERFECTLY on the first generation. Every requirement below was extracted from the WaveParticleDualityRenderer gold standard. Missing ANY of these caused early games to need multiple revisions.
+
+---
+
+## Why First-Generation Games Failed (Root Cause Analysis)
+
+### 1. **Navigation Reliability Issues**
+- **Problem**: Double-clicks, button jamming, flashing between phases
+- **Root Cause**: Missing navigation debouncing, using `onClick` instead of `onMouseDown`
+- **Fix**: Use BOTH `isNavigating.current` ref (400ms timeout) AND `lastClickRef` (200ms check) + `onMouseDown` with `e.preventDefault()`
+
+### 2. **Sound System Wrong Pattern**
+- **Problem**: Inconsistent sounds, type errors with OscillatorType
+- **Root Cause**: Using raw frequencies instead of semantic types
+- **Fix**: Use typed `playSound('click' | 'success' | 'failure' | 'transition' | 'complete')` pattern
+
+### 3. **Test Question Structure**
+- **Problem**: Only 3-4 questions, inconsistent format, no learning value
+- **Root Cause**: Simplified question template without scenarios/explanations
+- **Fix**: ALWAYS 10 questions with `{scenario, question, options: [{id, label, correct?}], explanation}` structure
+
+### 4. **Transfer Phase Severely Underspecified**
+- **Problem**: Applications too shallow, no real educational value
+- **Root Cause**: Template only specified title/description/icon
+- **Fix**: Each app needs: title, short, tagline, description, connection, howItWorks, stats[], examples[], companies[], futureImpact, color + DETAILED SVG DIAGRAM (100+ lines)
+
+### 5. **Render Helpers Defined as Components**
+- **Problem**: React reconciliation issues causing UI glitches
+- **Root Cause**: Helper components re-render incorrectly
+- **Fix**: Use FUNCTIONS that return JSX (e.g., `renderProgressBar()`) NOT separate components
+
+### 6. **Missing Premium Wrapper**
+- **Problem**: Inconsistent styling, missing ambient effects
+- **Root Cause**: No standardized wrapper component
+- **Fix**: Use PremiumWrapper component with gradient background + 3 blur-3xl ambient glow circles
+
+### 7. **Graphics Too Basic**
+- **Problem**: Simple shapes with no depth or animation
+- **Root Cause**: No detailed SVG specification
+- **Fix**: Premium gradients, filters, animations, educational labels, multi-layer depth
+
+### 8. **Missing Teaching Milestones**
+- **Problem**: No contextual feedback during interactive phases
+- **Root Cause**: Not specified in template
+- **Fix**: Track progress (few/pattern/clear/many) with milestone-appropriate messages
+
+---
+
+## GOLD STANDARD TEMPLATE
+
+Use this EXACT structure for every game. Copy this template verbatim and fill in the specifics.
+
+```typescript
+'use client';
+
+import React, { useState, useEffect, useCallback, useRef } from 'react';
+
+// ═══════════════════════════════════════════════════════════════════════════
+// GAME EVENT INTERFACE FOR AI COACH INTEGRATION (REQUIRED)
+// ═══════════════════════════════════════════════════════════════════════════
+export interface GameEvent {
+  eventType: 'screen_change' | 'prediction_made' | 'answer_submitted' | 'slider_changed' |
+             'button_clicked' | 'game_started' | 'game_completed' | 'hint_requested' |
+             'correct_answer' | 'incorrect_answer' | 'phase_changed' | 'value_changed' |
+             'selection_made' | 'timer_expired' | 'achievement_unlocked' | 'struggle_detected' |
+             'coach_prompt' | 'guide_paused' | 'guide_resumed' | 'app_completed' | 'app_changed' |
+             'question_changed' | 'visual_state_update';
+  gameType: string;
+  gameTitle: string;
+  details: {
+    currentScreen?: number;
+    totalScreens?: number;
+    phase?: string;
+    phaseLabel?: string;
+    prediction?: string;
+    answer?: string;
+    isCorrect?: boolean;
+    score?: number;
+    maxScore?: number;
+    message?: string;
+    coachMessage?: string;
+    needsHelp?: boolean;
+    [key: string]: any;
+  };
+  timestamp: number;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// TYPES & INTERFACES
+// ═══════════════════════════════════════════════════════════════════════════
+type Phase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' |
+            'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
+
+interface [GameName]RendererProps {
+  onGameEvent?: (event: GameEvent) => void;
+  gamePhase?: string;  // For resume functionality
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// CONSTANTS - MUST BE DEFINED BEFORE COMPONENT
+// ═══════════════════════════════════════════════════════════════════════════
+const PHASES: Phase[] = [
+  'hook', 'predict', 'play', 'review',
+  'twist_predict', 'twist_play', 'twist_review',
+  'transfer', 'test', 'mastery'
+];
+
+const phaseLabels: Record<Phase, string> = {
+  hook: 'Introduction',
+  predict: 'Predict',
+  play: 'Experiment',
+  review: 'Understanding',
+  twist_predict: 'New Variable',
+  twist_play: 'Observer Effect',  // Customize per game
+  twist_review: 'Deep Insight',
+  transfer: 'Real World',
+  test: 'Knowledge Test',
+  mastery: 'Mastery'
+};
+
+// PREMIUM COLOR PALETTE (REQUIRED - customize primary/accent per game theme)
+const colors = {
+  primary: '#06b6d4',      // cyan-500 (adjust per game theme)
+  primaryDark: '#0891b2',  // cyan-600
+  accent: '#a855f7',       // purple-500
+  accentDark: '#9333ea',   // purple-600
+  warning: '#f59e0b',      // amber-500
+  success: '#10b981',      // emerald-500
+  danger: '#ef4444',       // red-500
+  bgDark: '#020617',       // slate-950
+  bgCard: '#0f172a',       // slate-900
+  bgCardLight: '#1e293b',  // slate-800
+  border: '#334155',       // slate-700
+  textPrimary: '#f8fafc',  // slate-50
+  textSecondary: '#94a3b8', // slate-400
+  textMuted: '#64748b',    // slate-500
+};
+
+// ═══════════════════════════════════════════════════════════════════════════
+// SOUND SYSTEM - REQUIRED PATTERN (Must use types, not frequencies!)
+// ═══════════════════════════════════════════════════════════════════════════
+const playSound = (type: 'click' | 'success' | 'failure' | 'transition' | 'complete') => {
+  if (typeof window === 'undefined') return;
+  try {
+    const audioContext = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
+    const oscillator = audioContext.createOscillator();
+    const gainNode = audioContext.createGain();
+    oscillator.connect(gainNode);
+    gainNode.connect(audioContext.destination);
+    const sounds: Record<string, { freq: number; duration: number; type: OscillatorType }> = {
+      click: { freq: 600, duration: 0.1, type: 'sine' as OscillatorType },
+      success: { freq: 800, duration: 0.2, type: 'sine' as OscillatorType },
+      failure: { freq: 300, duration: 0.3, type: 'sine' as OscillatorType },
+      transition: { freq: 500, duration: 0.15, type: 'sine' as OscillatorType },
+      complete: { freq: 900, duration: 0.4, type: 'sine' as OscillatorType }
+    };
+    const sound = sounds[type];
+    oscillator.frequency.value = sound.freq;
+    oscillator.type = sound.type;
+    gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + sound.duration);
+    oscillator.start();
+    oscillator.stop(audioContext.currentTime + sound.duration);
+  } catch { /* Audio not available */ }
+};
+
+// ═══════════════════════════════════════════════════════════════════════════
+// 10 QUESTIONS REQUIRED - Use this EXACT structure with scenario + explanation
+// ═══════════════════════════════════════════════════════════════════════════
+const testQuestions = [
+  // Q1: Core Concept - Easy
+  {
+    scenario: "Real-world context that sets up the question. Include specific details, numbers, or situations that make the question feel grounded in reality.",
+    question: "Clear, specific question about the concept?",
+    options: [
+      { id: 'a', label: "Plausible wrong answer (common misconception)" },
+      { id: 'b', label: "Another plausible wrong answer" },
+      { id: 'c', label: "The correct answer that demonstrates understanding", correct: true },
+      { id: 'd', label: "Fourth option testing different aspect" },
+    ],
+    explanation: "Detailed explanation of WHY the answer is correct. Connect it back to what they learned in the experiment. Reinforce the key concept."
+  },
+  // Q2-3: Basic concept understanding
+  // Q4-6: Application and deeper understanding
+  // Q7-8: Real-world connections to the 4 applications
+  // Q9-10: Synthesis and advanced understanding (hardest - often with twist scenarios)
+  // ... repeat for all 10 questions with increasing difficulty
+];
+
+// ═══════════════════════════════════════════════════════════════════════════
+// 4 APPLICATIONS REQUIRED - Use this EXACT comprehensive structure
+// Each application MUST have a detailed SVG diagram (100+ lines)
+// ═══════════════════════════════════════════════════════════════════════════
+const realWorldApps = [
+  {
+    icon: '💻',
+    title: 'Application Name',
+    short: 'Brief 3-word summary',
+    tagline: 'Compelling subtitle that hooks attention',
+    description: '2-3 sentences explaining how the physics concept enables this technology. Be specific about the mechanism.',
+    connection: 'Explicit link to the experiment: "The [concept] you learned demonstrates X. This application uses the same principle to achieve Y..."',
+    howItWorks: 'Technical explanation of the mechanism in 1-2 sentences. Use accessible language.',
+    stats: [
+      { value: '1,000+', label: 'Metric label', icon: '⚡' },
+      { value: '$65B', label: 'Market by 2030', icon: '📈' },
+      { value: '100M×', label: 'Faster/better metric', icon: '🚀' }
+    ],
+    examples: [
+      'Industry: Specific example with brief description',
+      'Healthcare: Specific example with brief description',
+      'Research: Specific example with brief description',
+      'Everyday: Specific example with brief description'
+    ],
+    companies: ['Company1', 'Company2', 'Company3', 'Company4', 'Company5'],
+    futureImpact: 'One compelling sentence about future implications that makes the reader excited.',
+    color: colors.primary  // Use colors.primary, colors.success, colors.accent, colors.warning
+  },
+  // App 2: A high-tech/industrial application (use colors.success)
+  // App 3: A natural phenomenon or scientific tool (use colors.accent)
+  // App 4: A future/cutting-edge application or medical use (use colors.warning)
+];
+
+// ═══════════════════════════════════════════════════════════════════════════
+// COACH MESSAGES - For AI integration
+// ═══════════════════════════════════════════════════════════════════════════
+const coachMessages: Record<Phase, string> = {
+  hook: "Welcome! 🌟 [Brief engaging intro]. Ready to discover something amazing?",
+  predict: "Time to make a prediction! What do YOU think will happen? There's no wrong answer here!",
+  play: "Now let's run the experiment! Watch carefully and notice what happens.",
+  review: "Interesting! Did you expect that? Let's understand why this happens...",
+  twist_predict: "Here's where it gets interesting! What happens when we change [variable]?",
+  twist_play: "Try it out! See how [variable] affects the outcome.",
+  twist_review: "You've discovered [key insight]! This is why it matters...",
+  transfer: "Now let's see how this powers amazing real-world technology! 🚀",
+  test: "Time to test your understanding! Take your time with each question.",
+  mastery: "Congratulations! 🎉 You've mastered [concept]!"
+};
+
+// ═══════════════════════════════════════════════════════════════════════════
+// MAIN COMPONENT
+// ═══════════════════════════════════════════════════════════════════════════
+const [GameName]Renderer: React.FC<[GameName]RendererProps> = ({ onGameEvent, gamePhase }) => {
+  const validPhases: Phase[] = PHASES;
+
+  // Use gamePhase from props if valid, otherwise default to 'hook'
+  const getInitialPhase = (): Phase => {
+    if (gamePhase && validPhases.includes(gamePhase as Phase)) {
+      return gamePhase as Phase;
+    }
+    return 'hook';
+  };
+
+  // ─── State ─────────────────────────────────────────────────────────────────
+  const [phase, setPhase] = useState<Phase>(getInitialPhase);
+  const [prediction, setPrediction] = useState<string | null>(null);
+  const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
+  const [time, setTime] = useState(0);  // For animations
+  const [testQuestion, setTestQuestion] = useState(0);
+  const [testAnswers, setTestAnswers] = useState<(string | null)[]>(Array(10).fill(null));
+  const [testSubmitted, setTestSubmitted] = useState(false);
+  const [selectedApp, setSelectedApp] = useState(0);
+  const [completedApps, setCompletedApps] = useState<boolean[]>([false, false, false, false]);
+  const [confetti, setConfetti] = useState<Array<{x: number, y: number, color: string, delay: number}>>([]);
+
+  // Game-specific state (customize)
+  // const [specificValue, setSpecificValue] = useState(50);
+  // const [teachingMilestone, setTeachingMilestone] = useState<'none' | 'few' | 'pattern' | 'clear' | 'many'>('none');
+
+  // ─── RESPONSIVE DESIGN (CRITICAL) ──────────────────────────────────────────
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
+  // ─── AI Coach Integration ──────────────────────────────────────────────────
+  const [guidedMode, setGuidedMode] = useState(true);
+  const [lastCoachMessage, setLastCoachMessage] = useState<string>('');
+
+  const emitGameEvent = useCallback((
+    eventType: GameEvent['eventType'],
+    details: GameEvent['details']
+  ) => {
+    if (onGameEvent) {
+      onGameEvent({
+        eventType,
+        gameType: 'game_type_snake_case',  // CUSTOMIZE
+        gameTitle: 'Game Title Here',       // CUSTOMIZE
+        details,
+        timestamp: Date.now()
+      });
+    }
+  }, [onGameEvent]);
+
+  // ─── Navigation (CRITICAL DUAL DEBOUNCING PATTERN) ─────────────────────────
+  const isNavigating = useRef(false);
+  const lastClickRef = useRef(0);  // REQUIRED: Second layer of protection
+
+  const goToPhase = useCallback((p: Phase) => {
+    // DUAL DEBOUNCE: Both time check AND flag check
+    const now = Date.now();
+    if (now - lastClickRef.current < 200) return;  // Time-based debounce
+    if (isNavigating.current) return;               // Flag-based debounce
+
+    lastClickRef.current = now;
+    isNavigating.current = true;
+
+    setPhase(p);
+    playSound('transition');
+
+    // Emit phase change event
+    const idx = PHASES.indexOf(p);
+    emitGameEvent('phase_changed', {
+      phase: p,
+      phaseLabel: phaseLabels[p],
+      currentScreen: idx + 1,
+      totalScreens: PHASES.length,
+      coachMessage: guidedMode ? coachMessages[p] : undefined,
+      message: `Entered phase: ${phaseLabels[p]}`
+    });
+
+    if (guidedMode) {
+      setLastCoachMessage(coachMessages[p]);
+    }
+
+    setTimeout(() => { isNavigating.current = false; }, 400);
+  }, [emitGameEvent, guidedMode]);
+
+  const goNext = useCallback(() => {
+    const idx = PHASES.indexOf(phase);
+    if (idx < PHASES.length - 1) {
+      goToPhase(PHASES[idx + 1]);
+    }
+  }, [phase, goToPhase]);
+
+  const goBack = useCallback(() => {
+    const idx = PHASES.indexOf(phase);
+    if (idx > 0) goToPhase(PHASES[idx - 1]);
+  }, [phase, goToPhase]);
+
+  // ─── Animation Loop ────────────────────────────────────────────────────────
+  useEffect(() => {
+    const interval = setInterval(() => setTime(t => t + 0.02), 30);
+    return () => clearInterval(interval);
+  }, []);
+
+  // ─── Emit game_started on mount ────────────────────────────────────────────
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      emitGameEvent('game_started', {
+        phase: 'hook',
+        phaseLabel: 'Introduction',
+        currentScreen: 1,
+        totalScreens: PHASES.length,
+        coachMessage: guidedMode ? coachMessages.hook : '',
+        message: 'Game started'
+      });
+      if (guidedMode) {
+        setLastCoachMessage(coachMessages.hook);
+      }
+    }, 100);
+    return () => clearTimeout(timer);
+  }, []);
+
+  // ─── Confetti on mastery ───────────────────────────────────────────────────
+  useEffect(() => {
+    if (phase === 'mastery') {
+      const confettiColors = ['#06b6d4', '#a855f7', '#ec4899', '#10b981', '#f59e0b', '#3b82f6'];
+      setConfetti(Array.from({ length: 60 }, (_, i) => ({
+        x: Math.random() * 100,
+        y: Math.random() * 100,
+        color: confettiColors[i % confettiColors.length],
+        delay: Math.random() * 2
+      })));
+    }
+  }, [phase]);
+
+  // ─── Test score calculation ────────────────────────────────────────────────
+  const calculateTestScore = () => {
+    return testAnswers.reduce((score, ans, i) => {
+      const correct = testQuestions[i].options.find(o => o.correct)?.id;
+      return score + (ans === correct ? 1 : 0);
+    }, 0);
+  };
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // PREMIUM WRAPPER COMPONENT (REQUIRED)
+  // ═══════════════════════════════════════════════════════════════════════════
+  const PremiumWrapper = ({ children }: { children: React.ReactNode }) => (
+    <div className="min-h-screen bg-[#0a0f1a] text-white relative overflow-hidden">
+      {/* Premium background gradient */}
+      <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-[#0a1628] to-slate-900" />
+      {/* Three ambient glow circles - customize colors per game theme */}
+      <div className="absolute top-0 left-1/4 w-96 h-96 bg-cyan-500/5 rounded-full blur-3xl" />
+      <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-purple-500/5 rounded-full blur-3xl" />
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-cyan-500/3 rounded-full blur-3xl" />
+
+      {/* Fixed Header with phase dots */}
+      <div className="fixed top-0 left-0 right-0 z-50 bg-slate-900/80 backdrop-blur-xl border-b border-slate-800/50">
+        <div className="flex items-center justify-between px-6 py-3 max-w-4xl mx-auto">
+          <span className="text-sm font-semibold text-white/80 tracking-wide">[Game Title]</span>
+          <div className="flex items-center gap-1.5">
+            {PHASES.map((p, i) => {
+              const currentIdx = PHASES.indexOf(phase);
+              return (
+                <button
+                  key={p}
+                  onMouseDown={(e) => { e.preventDefault(); if (i <= currentIdx) goToPhase(p); }}
+                  className={`h-2 rounded-full transition-all duration-300 ${
+                    i === currentIdx
+                      ? 'bg-cyan-400 w-6 shadow-lg shadow-cyan-400/30'
+                      : i < currentIdx
+                        ? 'bg-emerald-500 w-2'
+                        : 'bg-slate-700 w-2 hover:bg-slate-600'
+                  }`}
+                  title={phaseLabels[p]}
+                />
+              );
+            })}
+          </div>
+          <span className="text-sm font-medium text-cyan-400">{phaseLabels[phase]}</span>
+        </div>
+      </div>
+
+      {/* Main content with padding for fixed header */}
+      <div className="relative pt-16 pb-12">
+        {children}
+      </div>
+    </div>
+  );
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // RENDER HELPER FUNCTIONS (NOT COMPONENTS - returns JSX directly)
+  // This avoids React reconciliation issues
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  const renderBottomBar = (canGoBack: boolean, canGoNext: boolean, nextLabel: string, onNext?: () => void, accentColor?: string) => {
+    const currentIdx = PHASES.indexOf(phase);
+    const buttonColor = accentColor || colors.primary;
+
+    return (
+      <div style={{
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        padding: '16px',
+        borderTop: `1px solid ${colors.border}`,
+        backgroundColor: colors.bgCard
+      }}>
+        <button
+          style={{
+            padding: '12px 20px',
+            borderRadius: '12px',
+            fontWeight: 600,
+            fontSize: '14px',
+            backgroundColor: colors.bgCardLight,
+            color: colors.textSecondary,
+            border: 'none',
+            cursor: canGoBack && currentIdx > 0 ? 'pointer' : 'not-allowed',
+            opacity: canGoBack && currentIdx > 0 ? 1 : 0.3,
+            minHeight: '44px'  // Touch-friendly
+          }}
+          onMouseDown={() => {
+            if (canGoBack && currentIdx > 0) {
+              goToPhase(PHASES[currentIdx - 1]);
+            }
+          }}
+        >
+          ← Back
+        </button>
+        <button
+          style={{
+            padding: '12px 32px',
+            borderRadius: '12px',
+            fontWeight: 700,
+            fontSize: '14px',
+            background: canGoNext ? `linear-gradient(135deg, ${buttonColor} 0%, ${colors.accent} 100%)` : colors.bgCardLight,
+            color: colors.textPrimary,
+            border: 'none',
+            cursor: canGoNext ? 'pointer' : 'not-allowed',
+            opacity: canGoNext ? 1 : 0.3,
+            boxShadow: canGoNext ? `0 4px 20px ${buttonColor}40` : 'none',
+            minHeight: '44px'  // Touch-friendly
+          }}
+          onMouseDown={() => {
+            if (!canGoNext) return;
+            if (onNext) {
+              onNext();
+            } else if (currentIdx < PHASES.length - 1) {
+              goToPhase(PHASES[currentIdx + 1]);
+            }
+          }}
+        >
+          {nextLabel} →
+        </button>
+      </div>
+    );
+  };
+
+  const renderKeyTakeaway = (icon: string, title: string, description: string, key?: number) => (
+    <div key={key} style={{
+      display: 'flex',
+      gap: '16px',
+      padding: '16px',
+      borderRadius: '16px',
+      background: `linear-gradient(135deg, ${colors.bgCard} 0%, ${colors.bgCardLight}40 100%)`,
+      border: `1px solid ${colors.border}`
+    }}>
+      <div style={{ fontSize: '24px', flexShrink: 0 }}>{icon}</div>
+      <div>
+        <p style={{ fontWeight: 700, fontSize: '14px', marginBottom: '4px', color: colors.textPrimary }}>{title}</p>
+        <p style={{ fontSize: '12px', lineHeight: 1.6, color: colors.textSecondary }}>{description}</p>
+      </div>
+    </div>
+  );
+
+  const renderSectionHeader = (phaseName: string, title: string, subtitle?: string) => (
+    <div style={{ marginBottom: '24px' }}>
+      <p style={{ fontSize: '12px', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '8px', color: colors.primary }}>{phaseName}</p>
+      <h2 style={{ fontSize: isMobile ? '24px' : '28px', fontWeight: 900, color: colors.textPrimary }}>{title}</h2>
+      {subtitle && <p style={{ fontSize: '14px', marginTop: '8px', color: colors.textSecondary }}>{subtitle}</p>}
+    </div>
+  );
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // PHASE RENDERS - Each phase returns JSX wrapped in PremiumWrapper
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  // HOOK Screen - Clean intro with icon, title, features, CTA
+  if (phase === 'hook') {
+    return (
+      <PremiumWrapper>
+        <div style={{
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: isMobile ? '24px 16px' : '40px 24px',
+          textAlign: 'center',
+          minHeight: '70vh'
+        }}>
+          {/* Elegant icon */}
+          <div style={{
+            width: isMobile ? '60px' : '80px',
+            height: isMobile ? '60px' : '80px',
+            borderRadius: '50%',
+            background: `linear-gradient(135deg, ${colors.primary} 0%, ${colors.accent} 100%)`,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            marginBottom: isMobile ? '20px' : '32px',
+            boxShadow: `0 20px 60px ${colors.primary}30`
+          }}>
+            <span style={{ fontSize: isMobile ? '28px' : '36px' }}>⚛️</span>  {/* CUSTOMIZE */}
+          </div>
+
+          {/* Title */}
+          <h1 style={{
+            fontSize: isMobile ? '24px' : '32px',
+            fontWeight: 800,
+            color: colors.textPrimary,
+            marginBottom: isMobile ? '12px' : '16px',
+            lineHeight: 1.2
+          }}>
+            [Game Title]  {/* CUSTOMIZE */}
+          </h1>
+
+          {/* Subtitle with highlighted text */}
+          <p style={{
+            fontSize: isMobile ? '15px' : '18px',
+            color: colors.textSecondary,
+            marginBottom: isMobile ? '24px' : '32px',
+            maxWidth: '480px',
+            lineHeight: 1.6
+          }}>
+            [Engaging hook sentence] <span style={{ color: colors.textPrimary, fontWeight: 600 }}>"[Quoted highlight]"</span>
+          </p>
+
+          {/* Feature cards - 3 columns */}
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(3, 1fr)',
+            gap: isMobile ? '8px' : '12px',
+            width: '100%',
+            maxWidth: '400px',
+            marginBottom: isMobile ? '24px' : '40px'
+          }}>
+            {[
+              { icon: '🔬', text: 'Interactive Lab' },
+              { icon: '🎯', text: 'Predictions' },
+              { icon: '💡', text: 'Real Apps' }
+            ].map((item, i) => (
+              <div key={i} style={{
+                padding: isMobile ? '12px 8px' : '16px',
+                borderRadius: '12px',
+                backgroundColor: 'rgba(30, 41, 59, 0.5)',
+                border: '1px solid rgba(51, 65, 85, 0.5)'
+              }}>
+                <div style={{ fontSize: isMobile ? '20px' : '24px', marginBottom: '6px' }}>{item.icon}</div>
+                <div style={{ fontSize: isMobile ? '10px' : '12px', fontWeight: 600, color: colors.textSecondary }}>{item.text}</div>
+              </div>
+            ))}
+          </div>
+
+          {/* CTA Button - touch-friendly */}
+          <button
+            style={{
+              width: '100%',
+              maxWidth: '320px',
+              padding: isMobile ? '16px 24px' : '18px 32px',
+              fontSize: isMobile ? '15px' : '16px',
+              fontWeight: 700,
+              background: `linear-gradient(135deg, ${colors.primary} 0%, ${colors.accent} 100%)`,
+              color: 'white',
+              border: 'none',
+              borderRadius: '12px',
+              cursor: 'pointer',
+              boxShadow: `0 8px 32px ${colors.primary}40`,
+              minHeight: '48px'
+            }}
+            onMouseDown={() => goToPhase('predict')}
+          >
+            Start Experiment →
+          </button>
+
+          {/* Duration hint */}
+          <p style={{
+            fontSize: isMobile ? '11px' : '12px',
+            color: colors.textMuted,
+            marginTop: isMobile ? '12px' : '16px'
+          }}>
+            ~5 minutes • Interactive • Test your intuition
+          </p>
+        </div>
+      </PremiumWrapper>
+    );
+  }
+
+  // PREDICT Screen
+  if (phase === 'predict') {
+    return (
+      <PremiumWrapper>
+        <div className="flex flex-col h-full overflow-hidden">
+          <div className="flex-1 flex flex-col items-center p-4 sm:p-6 overflow-y-auto">
+            <div className="w-full max-w-2xl">
+              {renderSectionHeader("Step 1 • Make Your Prediction", "[Prediction Question]", "Think carefully — your intuition from everyday experience may not apply here.")}
+
+              {/* Setup diagram SVG - CUSTOMIZE with physics concept */}
+              <div className="w-full p-4 rounded-2xl mb-6" style={{ background: colors.bgCard, border: `1px solid ${colors.border}` }}>
+                <svg viewBox="0 0 400 130" className="w-full h-32">
+                  {/* Premium diagram showing setup */}
+                  {/* CUSTOMIZE THIS SVG */}
+                </svg>
+              </div>
+
+              {/* Question context */}
+              <div className="p-4 rounded-xl mb-6" style={{ background: `${colors.primary}15`, border: `1px solid ${colors.primary}30` }}>
+                <p className="text-sm leading-relaxed" style={{ color: colors.textSecondary }}>
+                  <strong style={{ color: colors.textPrimary }}>The Setup:</strong> [Describe the experimental setup]
+                  <strong style={{ color: colors.primary }}> What do you predict will happen?</strong>
+                </p>
+              </div>
+
+              {/* Prediction Options */}
+              <div className="grid gap-4 mb-6">
+                {[
+                  { id: 'option_a', label: 'Option A', desc: 'Description of what this means', icon: '▮▮' },
+                  { id: 'option_b', label: 'Option B', desc: 'Description of what this means', icon: '▮▯▮' },
+                  { id: 'option_c', label: 'Option C', desc: 'Description of what this means', icon: '▓▓▓' },
+                ].map(opt => (
+                  <button
+                    key={opt.id}
+                    onMouseDown={() => {
+                      setPrediction(opt.id);
+                      playSound('click');
+                      emitGameEvent('prediction_made', {
+                        phase: 'predict',
+                        prediction: opt.id,
+                        predictionLabel: opt.label,
+                        message: `User predicted: ${opt.label}`
+                      });
+                    }}
+                    className="flex items-center gap-4 p-5 rounded-2xl text-left transition-all"
+                    style={{
+                      background: prediction === opt.id ? `${colors.primary}20` : colors.bgCard,
+                      border: `2px solid ${prediction === opt.id ? colors.primary : colors.border}`,
+                      boxShadow: prediction === opt.id ? `0 4px 20px ${colors.primary}20` : 'none'
+                    }}
+                  >
+                    <div className="text-2xl font-mono" style={{ color: prediction === opt.id ? colors.primary : colors.textMuted }}>
+                      {opt.icon}
+                    </div>
+                    <div className="flex-1">
+                      <p className="font-bold mb-1" style={{ color: prediction === opt.id ? colors.textPrimary : colors.textSecondary }}>{opt.label}</p>
+                      <p className="text-sm" style={{ color: colors.textMuted }}>{opt.desc}</p>
+                    </div>
+                    {prediction === opt.id && (
+                      <div className="w-6 h-6 rounded-full flex items-center justify-center" style={{ background: colors.primary }}>
+                        <span className="text-white text-sm">✓</span>
+                      </div>
+                    )}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+          {renderBottomBar(true, !!prediction, "Run the Experiment")}
+        </div>
+      </PremiumWrapper>
+    );
+  }
+
+  // PLAY Screen - Interactive Simulation (CUSTOMIZE HEAVILY)
+  if (phase === 'play') {
+    return (
+      <PremiumWrapper>
+        <div className="flex flex-col h-full overflow-hidden">
+          <div className="flex-1 flex flex-col lg:flex-row overflow-hidden">
+            {/* Main visualization area */}
+            <div className="flex-1 min-h-[45vh] lg:min-h-0 relative p-2 sm:p-3" style={{ background: colors.bgDark }}>
+              <div className="h-full rounded-xl sm:rounded-2xl overflow-hidden" style={{ background: '#030712', border: `1px solid ${colors.border}` }}>
+                {/* CUSTOMIZE: Main physics simulation SVG */}
+                <svg viewBox="0 0 700 350" className="w-full h-full">
+                  {/* Detailed animated physics visualization */}
+                </svg>
+              </div>
+            </div>
+
+            {/* Control panel */}
+            <div className="w-full lg:w-80 p-3 sm:p-5 flex flex-col gap-3 sm:gap-5 overflow-y-auto" style={{
+              background: colors.bgCard,
+              borderLeft: `1px solid ${colors.border}`
+            }}>
+              <div>
+                <p className="text-xs font-bold uppercase tracking-widest mb-1" style={{ color: colors.primary }}>Step 2 • Run the Experiment</p>
+                <h3 className="text-lg font-black" style={{ color: colors.textPrimary }}>[Experiment Lab Name]</h3>
+              </div>
+
+              {/* Controls - sliders, buttons, etc. */}
+              {/* CUSTOMIZE */}
+            </div>
+          </div>
+          {renderBottomBar(true, true, "Understanding")}
+        </div>
+      </PremiumWrapper>
+    );
+  }
+
+  // REVIEW Screen
+  if (phase === 'review') {
+    return (
+      <PremiumWrapper>
+        <div className="flex flex-col h-full overflow-hidden">
+          <div className="flex-1 flex flex-col items-center p-6 overflow-y-auto">
+            <div className="w-full max-w-2xl">
+              {renderSectionHeader("Step 3 • Understanding", "[What We Learned]", "[Subtitle about the key insight]")}
+
+              {/* Result comparison */}
+              <div className="grid md:grid-cols-2 gap-4 mb-6">
+                {/* Two comparison cards showing before/after or different states */}
+              </div>
+
+              {/* Key takeaways */}
+              <div className="space-y-3 mb-6">
+                <p className="text-xs font-bold uppercase tracking-widest" style={{ color: colors.success }}>Key Takeaways</p>
+                {renderKeyTakeaway("💥", "Takeaway 1", "Description of what this means")}
+                {renderKeyTakeaway("📊", "Takeaway 2", "Description of what this means")}
+                {renderKeyTakeaway("🔮", "Takeaway 3", "Description of what this means")}
+              </div>
+            </div>
+          </div>
+          {renderBottomBar(true, true, "The Twist")}
+        </div>
+      </PremiumWrapper>
+    );
+  }
+
+  // TWIST_PREDICT, TWIST_PLAY, TWIST_REVIEW - Similar structure, different content
+  // ... (follow same patterns)
+
+  // TRANSFER Screen - 4 Real-World Applications with completion tracking
+  if (phase === 'transfer') {
+    const currentApp = realWorldApps[selectedApp];
+    const allCompleted = completedApps.every(c => c);
+    const isCurrentCompleted = completedApps[selectedApp];
+    const completedCount = completedApps.filter(c => c).length;
+
+    const handleCompleteApp = () => {
+      const newCompleted = [...completedApps];
+      newCompleted[selectedApp] = true;
+      setCompletedApps(newCompleted);
+      playSound('success');
+
+      emitGameEvent('app_completed', {
+        phase: 'transfer',
+        appNumber: selectedApp + 1,
+        appTitle: currentApp.title,
+        message: `Completed application ${selectedApp + 1}: ${currentApp.title}`
+      });
+
+      if (selectedApp < 3) {
+        setSelectedApp(selectedApp + 1);
+      }
+    };
+
+    return (
+      <PremiumWrapper>
+        <div className="flex flex-col h-full overflow-hidden">
+          {/* Compact header with tabs */}
+          <div className="px-4 pt-4 pb-2" style={{ background: colors.bgCard, borderBottom: `1px solid ${colors.border}` }}>
+            <div className="flex items-center justify-between mb-3">
+              <div>
+                <p className="text-xs font-bold uppercase tracking-widest" style={{ color: colors.success }}>Step 7 • Real World Applications</p>
+                <p className="text-xs mt-1" style={{ color: colors.textMuted }}>{completedCount}/4 completed — {allCompleted ? 'Ready for test!' : 'Complete all to unlock test'}</p>
+              </div>
+              <div className="flex gap-1.5">
+                {completedApps.map((completed, i) => (
+                  <div key={i} className="w-3 h-3 rounded-full transition-all" style={{
+                    background: completed ? colors.success : i === selectedApp ? realWorldApps[i].color : colors.bgCardLight,
+                    boxShadow: i === selectedApp ? `0 0 8px ${realWorldApps[i].color}` : 'none'
+                  }} />
+                ))}
+              </div>
+            </div>
+
+            {/* Tab buttons */}
+            <div className="flex gap-2">
+              {realWorldApps.map((app, i) => {
+                const isCompleted = completedApps[i];
+                const isCurrent = selectedApp === i;
+                const isLocked = i > 0 && !completedApps[i - 1] && !isCompleted;
+
+                return (
+                  <button
+                    key={i}
+                    onMouseDown={() => {
+                      if (!isLocked && i !== selectedApp) {
+                        setSelectedApp(i);
+                        playSound('click');
+                      }
+                    }}
+                    className="flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-lg text-center transition-all"
+                    style={{
+                      background: isCurrent ? `${app.color}20` : 'transparent',
+                      border: `2px solid ${isCurrent ? app.color : isCompleted ? colors.success : colors.border}`,
+                      opacity: isLocked ? 0.4 : 1,
+                      cursor: isLocked ? 'not-allowed' : 'pointer'
+                    }}
+                  >
+                    <span className="text-lg">{app.icon}</span>
+                    <span className="text-xs font-bold hidden sm:inline" style={{ color: isCurrent ? colors.textPrimary : colors.textSecondary }}>
+                      {app.title.split(' ')[0]}
+                    </span>
+                    {isCompleted && <span className="text-xs" style={{ color: colors.success }}>✓</span>}
+                    {isLocked && <span className="text-xs">🔒</span>}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Main content - CUSTOMIZE with detailed SVG for each app */}
+          <div className="flex-1 overflow-y-auto p-4">
+            {/* Rich application content with:
+                - Hero header with icon, title, tagline
+                - Description and stats
+                - LARGE DETAILED SVG DIAGRAM (100+ lines showing the physics principle in action)
+                - Examples and companies
+                - Complete button
+            */}
+          </div>
+
+          {renderBottomBar(true, allCompleted, "Knowledge Test", undefined, colors.success)}
+        </div>
+      </PremiumWrapper>
+    );
+  }
+
+  // TEST Screen - 10 Questions with scenario/explanation structure
+  if (phase === 'test') {
+    const currentQ = testQuestions[testQuestion];
+    const score = calculateTestScore();
+    const passed = score >= 7;
+
+    if (testSubmitted) {
+      return (
+        <PremiumWrapper>
+          {/* Results screen with score, pass/fail, retry option */}
+        </PremiumWrapper>
+      );
+    }
+
+    return (
+      <PremiumWrapper>
+        <div className="flex flex-col h-full overflow-hidden">
+          <div className="flex-1 flex flex-col items-center p-4 sm:p-6 overflow-y-auto">
+            <div className="w-full max-w-2xl">
+              {/* Question counter */}
+              <div className="flex items-center justify-between mb-4">
+                <p className="text-xs font-bold uppercase tracking-widest" style={{ color: colors.primary }}>
+                  Question {testQuestion + 1} of 10
+                </p>
+                <div className="flex gap-1">
+                  {testQuestions.map((_, i) => (
+                    <div key={i} className="w-2 h-2 rounded-full" style={{
+                      background: testAnswers[i] !== null
+                        ? testQuestions[i].options.find(o => o.correct)?.id === testAnswers[i]
+                          ? colors.success
+                          : colors.danger
+                        : i === testQuestion
+                          ? colors.primary
+                          : colors.border
+                    }} />
+                  ))}
+                </div>
+              </div>
+
+              {/* Scenario */}
+              <div className="p-4 rounded-xl mb-4" style={{ background: colors.bgCard, border: `1px solid ${colors.border}` }}>
+                <p className="text-sm leading-relaxed" style={{ color: colors.textSecondary }}>
+                  <strong style={{ color: colors.primary }}>Scenario:</strong> {currentQ.scenario}
+                </p>
+              </div>
+
+              {/* Question */}
+              <h3 className="text-lg font-bold mb-4" style={{ color: colors.textPrimary }}>{currentQ.question}</h3>
+
+              {/* Options */}
+              <div className="space-y-3 mb-6">
+                {currentQ.options.map((opt, i) => (
+                  <button
+                    key={opt.id}
+                    onMouseDown={() => {
+                      const newAnswers = [...testAnswers];
+                      newAnswers[testQuestion] = opt.id;
+                      setTestAnswers(newAnswers);
+                      playSound('click');
+                    }}
+                    className="w-full flex items-center gap-3 p-4 rounded-xl text-left transition-all"
+                    style={{
+                      background: testAnswers[testQuestion] === opt.id ? `${colors.primary}20` : colors.bgCard,
+                      border: `2px solid ${testAnswers[testQuestion] === opt.id ? colors.primary : colors.border}`
+                    }}
+                  >
+                    <span className="w-8 h-8 rounded-lg flex items-center justify-center font-bold text-sm" style={{
+                      background: testAnswers[testQuestion] === opt.id ? colors.primary : colors.bgCardLight,
+                      color: testAnswers[testQuestion] === opt.id ? 'white' : colors.textSecondary
+                    }}>
+                      {String.fromCharCode(65 + i)}
+                    </span>
+                    <span className="flex-1 text-sm" style={{ color: colors.textPrimary }}>{opt.label}</span>
+                  </button>
+                ))}
+              </div>
+
+              {/* Navigation */}
+              <div className="flex gap-3">
+                {testQuestion > 0 && (
+                  <button
+                    onMouseDown={() => setTestQuestion(testQuestion - 1)}
+                    className="px-4 py-2 rounded-lg text-sm font-bold"
+                    style={{ background: colors.bgCardLight, color: colors.textSecondary }}
+                  >
+                    ← Previous
+                  </button>
+                )}
+                <button
+                  onMouseDown={() => {
+                    if (testQuestion < 9) {
+                      setTestQuestion(testQuestion + 1);
+                    } else {
+                      setTestSubmitted(true);
+                      playSound(passed ? 'complete' : 'failure');
+                    }
+                  }}
+                  className="flex-1 px-4 py-3 rounded-lg text-sm font-bold"
+                  style={{
+                    background: testAnswers[testQuestion] !== null
+                      ? `linear-gradient(135deg, ${colors.primary} 0%, ${colors.accent} 100%)`
+                      : colors.bgCardLight,
+                    color: testAnswers[testQuestion] !== null ? 'white' : colors.textMuted,
+                    cursor: testAnswers[testQuestion] !== null ? 'pointer' : 'not-allowed'
+                  }}
+                  disabled={testAnswers[testQuestion] === null}
+                >
+                  {testQuestion < 9 ? 'Next Question →' : 'Submit Test'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </PremiumWrapper>
+    );
+  }
+
+  // MASTERY Screen
+  if (phase === 'mastery') {
+    const score = calculateTestScore();
+    return (
+      <PremiumWrapper>
+        <div className="flex flex-col items-center justify-center min-h-[70vh] p-6 text-center relative">
+          {/* Confetti animation */}
+          {confetti.map((c, i) => (
+            <div
+              key={i}
+              className="absolute w-3 h-3 rounded-sm animate-bounce"
+              style={{
+                left: `${c.x}%`,
+                top: `${c.y}%`,
+                backgroundColor: c.color,
+                animationDelay: `${c.delay}s`,
+                animationDuration: '2s'
+              }}
+            />
+          ))}
+
+          {/* Trophy */}
+          <div className="text-6xl mb-6">🏆</div>
+
+          <h1 className="text-3xl font-black mb-4" style={{ color: colors.textPrimary }}>
+            Congratulations!
+          </h1>
+
+          <p className="text-lg mb-2" style={{ color: colors.textSecondary }}>
+            You scored <strong style={{ color: colors.success }}>{score}/10</strong> and mastered
+          </p>
+
+          <p className="text-2xl font-bold mb-8" style={{ color: colors.primary }}>
+            [Game Topic]!
+          </p>
+
+          {/* Summary of what they learned */}
+          <div className="w-full max-w-md space-y-3">
+            {[
+              { icon: '🔬', text: 'Learned core concept' },
+              { icon: '🎯', text: 'Made predictions and tested them' },
+              { icon: '💡', text: 'Discovered 4 real-world applications' },
+              { icon: '📚', text: 'Passed the knowledge test' }
+            ].map((item, i) => (
+              <div key={i} className="flex items-center gap-3 p-3 rounded-lg" style={{ background: colors.bgCard, border: `1px solid ${colors.border}` }}>
+                <span className="text-xl">{item.icon}</span>
+                <span className="text-sm font-medium" style={{ color: colors.textSecondary }}>{item.text}</span>
+                <span className="ml-auto" style={{ color: colors.success }}>✓</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </PremiumWrapper>
+    );
+  }
+
+  return null;
+};
+
+export default [GameName]Renderer;
+```
+
+---
+
+## CRITICAL REQUIREMENTS CHECKLIST
+
+### Navigation (MUST HAVE - PREVENTS DOUBLE-CLICK BUGS)
+- [ ] `isNavigating = useRef(false)` for flag-based debouncing
+- [ ] `lastClickRef = useRef(0)` for time-based debouncing (200ms check)
+- [ ] DUAL CHECK in goToPhase: `if (now - lastClickRef.current < 200) return;` AND `if (isNavigating.current) return;`
+- [ ] All buttons use `onMouseDown` (NOT onClick)
+- [ ] `useCallback` wrapper on all event handlers
+- [ ] 400ms timeout to reset `isNavigating.current`
+
+### Sound System (MUST HAVE - TYPE-BASED, NOT FREQUENCY)
+- [ ] Use `playSound('click' | 'success' | 'failure' | 'transition' | 'complete')`
+- [ ] Cast OscillatorType correctly: `'sine' as OscillatorType`
+- [ ] Wrap in try/catch for audio context errors
+
+### Test Phase (MUST HAVE)
+- [ ] Exactly 10 questions with SCENARIO + QUESTION + OPTIONS + EXPLANATION
+- [ ] Each option has `{ id: string, label: string, correct?: boolean }`
+- [ ] `testAnswers` initialized as `Array(10).fill(null)`
+- [ ] 70% passing threshold (7/10)
+- [ ] Show explanation after test completion
+- [ ] Visual progress dots showing answered/current/unanswered
+
+### Transfer Phase (MUST HAVE)
+- [ ] Exactly 4 applications with FULL structure (title, short, tagline, description, connection, howItWorks, stats[], examples[], companies[], futureImpact, color)
+- [ ] Tabbed interface with completion tracking
+- [ ] `completedApps` as `boolean[]` with useState
+- [ ] Sequential unlock: Must complete app N before seeing N+1
+- [ ] Must complete ALL 4 to unlock test
+- [ ] EACH APP HAS DETAILED SVG DIAGRAM (100+ lines showing the physics in action)
+
+### Graphics (MUST HAVE)
+- [ ] All graphics use SVG with viewBox
+- [ ] Dark backgrounds (`#030712`, `#0a0f1a`, `#0f172a`)
+- [ ] Premium gradients (linearGradient, radialGradient)
+- [ ] Animations via `<animate>` elements or time-based state
+- [ ] Educational labels and annotations
+- [ ] Filters for glow effects (`<filter>`, `blur`, `feGaussianBlur`)
+
+### Premium Wrapper (MUST HAVE)
+- [ ] `min-h-screen bg-[#0a0f1a] text-white relative overflow-hidden`
+- [ ] Gradient background: `from-slate-900 via-[#0a1628] to-slate-900`
+- [ ] THREE ambient glow circles with `blur-3xl` (top-left, bottom-right, center)
+- [ ] Fixed header with `backdrop-blur-xl` and phase dots (w-6 active, w-2 inactive)
+- [ ] Phase navigation dots with emerald for completed, cyan for current, slate for future
+
+### Responsive Design (MUST HAVE)
+- [ ] `isMobile` state with `window.innerWidth < 768` check
+- [ ] Touch-friendly buttons: `minHeight: '44px'`
+- [ ] `onTouchEnd` handlers where needed
+- [ ] Responsive padding: `p-4 sm:p-6`
+- [ ] Mobile-first layout with `flex-col lg:flex-row`
+
+---
+
+## SVG DIAGRAM REQUIREMENTS FOR TRANSFER APPS
+
+Each of the 4 applications MUST have a detailed SVG diagram (viewBox="0 0 600 320") that:
+
+1. **Shows the physics principle in action** for that specific application
+2. **Uses the gold standard patterns**:
+   - Premium gradients (`linearGradient`, `radialGradient`)
+   - Dark backgrounds with subtle grid patterns
+   - Animated elements using `<animate>`
+   - Clear educational labels (text elements with className for Tailwind)
+   - Multi-layer depth with overlapping elements
+   - Glow effects using filters
+
+3. **Follows this structure**:
+```tsx
+<svg viewBox="0 0 600 320" className="w-full" style={{ maxHeight: '340px' }}>
+  <defs>
+    {/* Define gradients, filters, patterns */}
+    <linearGradient id="appGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stopColor={currentApp.color} />
+      <stop offset="100%" stopColor={colors.accent} />
+    </linearGradient>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="3" result="blur" />
+      <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
+    </filter>
+  </defs>
+
+  {/* Dark background with grid */}
+  <rect width="600" height="320" fill="#030712" />
+  <pattern id="grid" width="25" height="25" patternUnits="userSpaceOnUse">
+    <rect width="25" height="25" fill="none" stroke="#1e293b" strokeWidth="0.5" strokeOpacity="0.3" />
+  </pattern>
+  <rect width="600" height="320" fill="url(#grid)" />
+
+  {/* Main visualization - CUSTOMIZE for each app */}
+  {/* ... detailed physics visualization ... */}
+
+  {/* Labels with good contrast */}
+  <text x="300" y="300" textAnchor="middle" className="text-sm fill-slate-400 font-bold">
+    Educational Label
+  </text>
+</svg>
+```
+
+---
+
+## TEST QUESTION TEMPLATE (10 REQUIRED)
+
+```typescript
+const testQuestions = [
+  // Q1: Core Concept - Easy
+  {
+    scenario: "You're [real-world situation]. [Specific details about the setup].",
+    question: "Based on [concept], what happens when [action]?",
+    options: [
+      { id: 'a', label: "Wrong but plausible answer (common misconception)" },
+      { id: 'b', label: "Another wrong but plausible answer" },
+      { id: 'c', label: "The correct answer", correct: true },
+      { id: 'd', label: "Fourth option testing different aspect" },
+    ],
+    explanation: "The answer is [correct] because [detailed explanation connecting to the experiment]. This demonstrates [key concept]."
+  },
+  // Q2: Core Concept - Easy
+  // Q3: Basic Understanding - Medium
+  // Q4: Application - Medium
+  // Q5: Application - Medium
+  // Q6: Real-world Connection (tie to one of the 4 apps) - Medium-Hard
+  // Q7: Real-world Connection (tie to another app) - Hard
+  // Q8: Synthesis - Hard
+  // Q9: Advanced/Twist Scenario - Expert
+  // Q10: Critical Thinking - Expert
+];
+```
+
+Key principles for questions:
+- **Scenarios** should be concrete and relatable
+- **Wrong answers** should represent common misconceptions
+- **Correct answer** position should vary (not always C)
+- **Explanations** should reinforce learning, not just say "A is wrong because..."
+- **Difficulty** should increase progressively
+- **Q6-7** should directly reference the 4 real-world applications
+- **Q9-10** can include "twist" scenarios that test deeper understanding
+
+---
+
+## FINAL NOTES
+
+1. **ALWAYS test the build** after generating: `npm run build`
+2. **Check for TypeScript errors** before submitting
+3. **Verify navigation** works without double-clicks (test rapidly clicking)
+4. **Test all 4 applications** unlock properly (must complete in order)
+5. **Ensure 70% threshold** (7/10) for test passing
+6. **Mobile test** - verify on narrow viewport (375px width)
+
+This template ensures games work correctly on the first try by:
+- Standardizing ALL critical patterns from the gold standard
+- Providing EXACT code to copy (not vague descriptions)
+- Including working TypeScript with proper types
+- Defining clear success criteria with checklist
+- Requiring detailed SVG diagrams (not placeholders)

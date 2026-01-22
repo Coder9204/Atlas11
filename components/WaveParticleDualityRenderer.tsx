@@ -33,22 +33,29 @@ interface WaveParticleDualityRendererProps {
 }
 
 // --- GLOBAL SOUND UTILITY ---
-const playSound = (freq: number, duration: number = 0.15) => {
+const playSound = (type: 'click' | 'success' | 'failure' | 'transition' | 'complete') => {
+   if (typeof window === 'undefined') return;
    try {
-      const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+      const audioContext = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
       const oscillator = audioContext.createOscillator();
       const gainNode = audioContext.createGain();
       oscillator.connect(gainNode);
       gainNode.connect(audioContext.destination);
-      oscillator.frequency.value = freq;
-      oscillator.type = 'sine';
+      const sounds: Record<string, { freq: number; duration: number; type: OscillatorType }> = {
+         click: { freq: 600, duration: 0.1, type: 'sine' },
+         success: { freq: 800, duration: 0.2, type: 'sine' },
+         failure: { freq: 300, duration: 0.3, type: 'sine' },
+         transition: { freq: 500, duration: 0.15, type: 'sine' },
+         complete: { freq: 900, duration: 0.4, type: 'sine' }
+      };
+      const sound = sounds[type];
+      oscillator.frequency.value = sound.freq;
+      oscillator.type = sound.type;
       gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
-      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + duration);
-      oscillator.start(audioContext.currentTime);
-      oscillator.stop(audioContext.currentTime + duration);
-   } catch (e) {
-      // Silent fail if audio not available
-   }
+      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + sound.duration);
+      oscillator.start();
+      oscillator.stop(audioContext.currentTime + sound.duration);
+   } catch { /* Audio not available */ }
 };
 
 // --- WAVE-PARTICLE DUALITY RENDERER ---
@@ -171,9 +178,14 @@ const WaveParticleDualityRenderer: React.FC<WaveParticleDualityRendererProps> = 
 
    // Navigation debouncing to prevent double-clicks
    const isNavigating = useRef(false);
+   const lastClickRef = useRef(0);
 
    const goToPhase = useCallback((p: WPDPhase) => {
+      const now = Date.now();
+      if (now - lastClickRef.current < 200) return;
       if (isNavigating.current) return;
+
+      lastClickRef.current = now;
       isNavigating.current = true;
 
       setPhase(p);
@@ -183,7 +195,7 @@ const WaveParticleDualityRenderer: React.FC<WaveParticleDualityRendererProps> = 
       }
       if (p === 'twist_play') setDetectorOn(true); // Default ON when entering observer phase
       if (p === 'play') setDetectorOn(false);
-      playSound(400 + Math.random() * 200, 0.1);
+      playSound('transition');
 
       // Emit phase change to AI coach
       const idx = phaseOrder.indexOf(p);
@@ -467,6 +479,49 @@ const WaveParticleDualityRenderer: React.FC<WaveParticleDualityRendererProps> = 
          <div>
             <p style={{ fontWeight: 700, fontSize: '14px', marginBottom: '4px', color: colors.textPrimary }}>{title}</p>
             <p style={{ fontSize: '12px', lineHeight: 1.6, color: colors.textSecondary }}>{description}</p>
+         </div>
+      </div>
+   );
+
+   // Premium wrapper component for consistent design
+   const PremiumWrapper = ({ children }: { children: React.ReactNode }) => (
+      <div className="min-h-screen bg-[#0a0f1a] text-white relative overflow-hidden">
+         {/* Premium background gradient */}
+         <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-[#0a1628] to-slate-900" />
+         <div className="absolute top-0 left-1/4 w-96 h-96 bg-cyan-500/5 rounded-full blur-3xl" />
+         <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-purple-500/5 rounded-full blur-3xl" />
+         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-cyan-500/3 rounded-full blur-3xl" />
+
+         {/* Fixed Header */}
+         <div className="fixed top-0 left-0 right-0 z-50 bg-slate-900/80 backdrop-blur-xl border-b border-slate-800/50">
+            <div className="flex items-center justify-between px-6 py-3 max-w-4xl mx-auto">
+               <span className="text-sm font-semibold text-white/80 tracking-wide">Wave-Particle Duality</span>
+               <div className="flex items-center gap-1.5">
+                  {phaseOrder.map((p, i) => {
+                     const currentIdx = phaseOrder.indexOf(phase);
+                     return (
+                        <button
+                           key={p}
+                           onMouseDown={(e) => { e.preventDefault(); if (i <= currentIdx) goToPhase(p); }}
+                           className={`h-2 rounded-full transition-all duration-300 ${
+                              i === currentIdx
+                                 ? 'bg-cyan-400 w-6 shadow-lg shadow-cyan-400/30'
+                                 : i < currentIdx
+                                    ? 'bg-emerald-500 w-2'
+                                    : 'bg-slate-700 w-2 hover:bg-slate-600'
+                           }`}
+                           title={phaseLabels[p]}
+                        />
+                     );
+                  })}
+               </div>
+               <span className="text-sm font-medium text-cyan-400">{phaseLabels[phase]}</span>
+            </div>
+         </div>
+
+         {/* Main content */}
+         <div className="relative pt-16 pb-12">
+            {children}
          </div>
       </div>
    );
@@ -1119,14 +1174,13 @@ const WaveParticleDualityRenderer: React.FC<WaveParticleDualityRendererProps> = 
    // HOOK Screen - Airbnb-inspired clean design (RESPONSIVE)
    if (phase === 'hook') {
       return (
+         <PremiumWrapper>
          <div style={{
             display: 'flex',
             flexDirection: 'column',
             height: '100%',
-            width: '100%',
-            background: 'linear-gradient(180deg, #0f172a 0%, #020617 100%)'
+            width: '100%'
          }}>
-            {renderProgressBar()}
 
             <div style={{
                flex: 1,
@@ -1237,14 +1291,15 @@ const WaveParticleDualityRenderer: React.FC<WaveParticleDualityRendererProps> = 
                </p>
             </div>
          </div>
+         </PremiumWrapper>
       );
    }
 
    // PREDICT Screen - Premium redesign (RESPONSIVE)
    if (phase === 'predict') {
       return (
-         <div className="flex flex-col h-full overflow-hidden" style={{ background: colors.bgDark }}>
-            {renderProgressBar()}
+         <PremiumWrapper>
+         <div className="flex flex-col h-full overflow-hidden">
 
             <div className="flex-1 flex flex-col items-center p-4 sm:p-6 overflow-y-auto">
                <div className="w-full max-w-2xl">
@@ -1336,6 +1391,7 @@ const WaveParticleDualityRenderer: React.FC<WaveParticleDualityRendererProps> = 
 
             {renderBottomBar(true, !!prediction, "Run the Experiment")}
          </div>
+         </PremiumWrapper>
       );
    }
 
@@ -1366,8 +1422,8 @@ const WaveParticleDualityRenderer: React.FC<WaveParticleDualityRendererProps> = 
       };
 
       return (
-         <div className="flex flex-col h-full overflow-hidden" style={{ background: colors.bgDark }}>
-            {renderProgressBar()}
+         <PremiumWrapper>
+         <div className="flex flex-col h-full overflow-hidden">
 
             <div className="flex-1 flex flex-col lg:flex-row overflow-hidden">
                {/* Main visualization area - min height on mobile for visibility */}
@@ -1464,14 +1520,15 @@ const WaveParticleDualityRenderer: React.FC<WaveParticleDualityRendererProps> = 
 
             {renderBottomBar(true, particleCount >= 30, "Understand Why")}
          </div>
+         </PremiumWrapper>
       );
    }
 
    // REVIEW Screen - Premium redesign
    if (phase === 'review') {
       return (
-         <div className="flex flex-col h-full overflow-hidden" style={{ background: colors.bgDark }}>
-            {renderProgressBar()}
+         <PremiumWrapper>
+         <div className="flex flex-col h-full overflow-hidden">
 
             <div className="flex-1 flex flex-col items-center p-6 overflow-y-auto">
                <div className="w-full max-w-2xl">
@@ -1535,14 +1592,15 @@ const WaveParticleDualityRenderer: React.FC<WaveParticleDualityRendererProps> = 
 
             {renderBottomBar(true, true, "The Observer Effect")}
          </div>
+         </PremiumWrapper>
       );
    }
 
    // TWIST-PREDICT Screen - Premium redesign
    if (phase === 'twist_predict') {
       return (
-         <div className="flex flex-col h-full overflow-hidden" style={{ background: colors.bgDark }}>
-            {renderProgressBar()}
+         <PremiumWrapper>
+         <div className="flex flex-col h-full overflow-hidden">
 
             <div className="flex-1 flex flex-col items-center p-6 overflow-y-auto">
                <div className="w-full max-w-2xl">
@@ -1639,14 +1697,15 @@ const WaveParticleDualityRenderer: React.FC<WaveParticleDualityRendererProps> = 
 
             {renderBottomBar(true, !!twistPrediction, "Turn On Detector", undefined, colors.danger)}
          </div>
+         </PremiumWrapper>
       );
    }
 
    // TWIST-PLAY Screen - Premium redesign
    if (phase === 'twist_play') {
       return (
-         <div className="flex flex-col h-full overflow-hidden" style={{ background: colors.bgDark }}>
-            {renderProgressBar()}
+         <PremiumWrapper>
+         <div className="flex flex-col h-full overflow-hidden">
 
             <div className="flex-1 flex flex-col lg:flex-row overflow-hidden">
                {/* Main visualization area */}
@@ -1806,14 +1865,15 @@ const WaveParticleDualityRenderer: React.FC<WaveParticleDualityRendererProps> = 
 
             {renderBottomBar(true, particleCount >= 30, "Deep Understanding", undefined, colors.danger)}
          </div>
+         </PremiumWrapper>
       );
    }
 
    // TWIST-REVIEW Screen
    if (phase === 'twist_review') {
       return (
-         <div className="flex flex-col h-full overflow-hidden" style={{ background: colors.bgDark }}>
-            {renderProgressBar()}
+         <PremiumWrapper>
+         <div className="flex flex-col h-full overflow-hidden">
 
             <div className="flex-1 flex flex-col items-center p-6 overflow-y-auto">
                <div className="w-full max-w-2xl">
@@ -1889,6 +1949,7 @@ const WaveParticleDualityRenderer: React.FC<WaveParticleDualityRendererProps> = 
 
             {renderBottomBar(true, true, "Real World Applications", undefined, colors.success)}
          </div>
+         </PremiumWrapper>
       );
    }
 
@@ -2011,8 +2072,8 @@ const WaveParticleDualityRenderer: React.FC<WaveParticleDualityRendererProps> = 
       };
 
       return (
-         <div className="flex flex-col h-full overflow-hidden" style={{ background: colors.bgDark }}>
-            {renderProgressBar()}
+         <PremiumWrapper>
+         <div className="flex flex-col h-full overflow-hidden">
 
             {/* Compact header with tabs */}
             <div className="px-4 pt-4 pb-2" style={{ background: colors.bgCard, borderBottom: `1px solid ${colors.border}` }}>
@@ -2591,6 +2652,7 @@ const WaveParticleDualityRenderer: React.FC<WaveParticleDualityRendererProps> = 
                </button>
             </div>
          </div>
+         </PremiumWrapper>
       );
    }
 
@@ -2604,8 +2666,8 @@ const WaveParticleDualityRenderer: React.FC<WaveParticleDualityRendererProps> = 
          const passed = score >= Math.ceil(totalQuestions * 0.7); // 70% to pass
 
          return (
-            <div className="flex flex-col h-full overflow-hidden" style={{ background: colors.bgDark }}>
-               {renderProgressBar()}
+            <PremiumWrapper>
+            <div className="flex flex-col h-full overflow-hidden">
                <div className="flex-1 flex flex-col items-center p-6 overflow-y-auto">
                   <div className="w-full max-w-2xl">
                      {/* Score Summary */}
@@ -2721,13 +2783,14 @@ const WaveParticleDualityRenderer: React.FC<WaveParticleDualityRendererProps> = 
                   </div>
                </div>
             </div>
+            </PremiumWrapper>
          );
       }
 
       const totalQuestions = testQuestions.length;
       return (
-         <div className="flex flex-col h-full overflow-hidden" style={{ background: colors.bgDark }}>
-            {renderProgressBar()}
+         <PremiumWrapper>
+         <div className="flex flex-col h-full overflow-hidden">
             <div className="flex-1 flex flex-col items-center p-6 overflow-y-auto">
                <div className="w-full max-w-2xl">
                   <div className="mb-6">
@@ -2798,6 +2861,7 @@ const WaveParticleDualityRenderer: React.FC<WaveParticleDualityRendererProps> = 
                }
             }, colors.warning)}
          </div>
+         </PremiumWrapper>
       );
    }
 
@@ -2812,9 +2876,9 @@ const WaveParticleDualityRenderer: React.FC<WaveParticleDualityRendererProps> = 
       ];
 
       return (
-         <div className="flex flex-col h-full overflow-hidden relative" style={{ background: `linear-gradient(135deg, ${colors.bgDark} 0%, #0c1929 30%, #1a0a2e 70%, ${colors.bgDark} 100%)` }}>
+         <PremiumWrapper>
+         <div className="flex flex-col h-full overflow-hidden relative">
             {confetti.map((c, i) => (<div key={i} className="absolute w-3 h-3 rounded-full" style={{ left: `${c.x}%`, top: `${c.y}%`, backgroundColor: c.color, animation: `bounce ${1.5 + c.delay}s infinite` }} />))}
-            {renderProgressBar()}
             <div className="flex-1 flex flex-col items-center p-6 overflow-y-auto z-10">
                <div className="w-full max-w-2xl text-center">
                   <div className="w-28 h-28 rounded-full mx-auto mb-6 flex items-center justify-center text-6xl" style={{ background: `linear-gradient(135deg, ${colors.primary}30 0%, ${colors.accent}30 100%)`, border: `3px solid ${colors.primary}`, boxShadow: `0 0 60px ${colors.primary}40` }}>⚛️</div>
@@ -2837,6 +2901,7 @@ const WaveParticleDualityRenderer: React.FC<WaveParticleDualityRendererProps> = 
             </div>
             {renderBottomBar(true, false, "Complete!", undefined, colors.success)}
          </div>
+         </PremiumWrapper>
       );
    }
 

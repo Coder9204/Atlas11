@@ -574,24 +574,74 @@ export default function OrbitalMechanicsRenderer({ onEvent, savedState }: Orbita
 
   // ─── Phase Renderers ─────────────────────────────────────────────────────────
   const renderHook = () => (
-    <div className="text-center space-y-6">
-      <div className="text-6xl mb-4">🛰️🌍</div>
-      <h2 className="text-2xl font-bold text-white">The Falling Satellite Paradox</h2>
-      <p className="text-gray-300 text-lg max-w-lg mx-auto">
-        The International Space Station is <span className="text-blue-400 font-semibold">falling toward Earth</span> at
-        28,000 km/h! So why doesn&apos;t it crash? And if it&apos;s falling, why do astronauts float?
-      </p>
-      <div className="bg-gradient-to-r from-blue-900/50 to-purple-900/50 rounded-xl p-6 max-w-md mx-auto">
-        <p className="text-blue-300 font-medium">
-          How can something fall forever without hitting the ground? 🤔
-        </p>
+    <div className="flex flex-col items-center justify-center min-h-[600px] px-6 py-12 text-center">
+      {/* Premium badge */}
+      <div className="inline-flex items-center gap-2 px-4 py-2 bg-blue-500/10 border border-blue-500/20 rounded-full mb-8">
+        <span className="w-2 h-2 bg-blue-400 rounded-full animate-pulse" />
+        <span className="text-sm font-medium text-blue-400 tracking-wide">PHYSICS EXPLORATION</span>
       </div>
+
+      {/* Main title with gradient */}
+      <h1 className="text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-white via-blue-100 to-purple-200 bg-clip-text text-transparent">
+        The Falling Satellite Paradox
+      </h1>
+
+      <p className="text-lg text-slate-400 max-w-md mb-10">
+        Discover how satellites orbit by perpetually falling
+      </p>
+
+      {/* Premium card with graphic */}
+      <div className="relative bg-gradient-to-br from-slate-800/80 to-slate-900/80 rounded-3xl p-8 max-w-xl w-full border border-slate-700/50 shadow-2xl shadow-black/20 backdrop-blur-xl">
+        {/* Subtle glow effect */}
+        <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 via-transparent to-purple-500/5 rounded-3xl" />
+
+        <div className="relative">
+          <div className="text-6xl mb-6">🛰️🌍</div>
+
+          <div className="space-y-4">
+            <p className="text-xl text-white/90 font-medium leading-relaxed">
+              The International Space Station is <span className="text-blue-400 font-semibold">falling toward Earth</span> at 28,000 km/h!
+            </p>
+            <p className="text-lg text-slate-400 leading-relaxed">
+              So why doesn&apos;t it crash? And if it&apos;s falling, why do astronauts float?
+            </p>
+            <div className="pt-2">
+              <p className="text-base text-blue-400 font-semibold">
+                How can something fall forever without hitting the ground?
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Premium CTA button */}
       <button
         onMouseDown={() => { playSound('click'); nextPhase(); }}
-        className="px-8 py-3 bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl text-white font-semibold hover:from-blue-500 hover:to-purple-500 transition-all"
+        className="mt-10 group relative px-10 py-5 bg-gradient-to-r from-blue-500 to-purple-600 text-white text-lg font-semibold rounded-2xl transition-all duration-300 hover:shadow-lg hover:shadow-blue-500/25 hover:scale-[1.02] active:scale-[0.98]"
       >
-        Investigate! →
+        <span className="relative z-10 flex items-center gap-3">
+          Investigate!
+          <svg className="w-5 h-5 transition-transform group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+          </svg>
+        </span>
       </button>
+
+      {/* Feature hints */}
+      <div className="mt-12 flex items-center gap-8 text-sm text-slate-500">
+        <div className="flex items-center gap-2">
+          <span className="text-blue-400">✦</span>
+          Interactive Lab
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="text-blue-400">✦</span>
+          Real-World Examples
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="text-blue-400">✦</span>
+          Knowledge Test
+        </div>
+      </div>
     </div>
   );
 
@@ -1000,10 +1050,42 @@ export default function OrbitalMechanicsRenderer({ onEvent, savedState }: Orbita
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-blue-950 to-gray-900 p-6">
-      <div className="max-w-2xl mx-auto">
-        {renderProgressBar()}
-        {renderPhase()}
+    <div className="min-h-screen bg-[#0a0f1a] text-white relative overflow-hidden">
+      {/* Premium background gradient */}
+      <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-[#0a1628] to-slate-900" />
+      <div className="absolute top-0 left-1/4 w-96 h-96 bg-blue-500/5 rounded-full blur-3xl" />
+      <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-purple-500/5 rounded-full blur-3xl" />
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-cyan-500/3 rounded-full blur-3xl" />
+
+      {/* Header */}
+      <div className="fixed top-0 left-0 right-0 z-50 bg-slate-900/80 backdrop-blur-xl border-b border-slate-800/50">
+        <div className="flex items-center justify-between px-6 py-3 max-w-4xl mx-auto">
+          <span className="text-sm font-semibold text-white/80 tracking-wide">Orbital Mechanics</span>
+          <div className="flex items-center gap-1.5">
+            {PHASES.map((p, i) => (
+              <button
+                key={p}
+                onMouseDown={(e) => { e.preventDefault(); goToPhase(p); }}
+                className={`h-2 rounded-full transition-all duration-300 ${
+                  PHASES.indexOf(phase) === i
+                    ? 'bg-blue-400 w-6 shadow-lg shadow-blue-400/30'
+                    : PHASES.indexOf(phase) > i
+                      ? 'bg-emerald-500 w-2'
+                      : 'bg-slate-700 w-2 hover:bg-slate-600'
+                }`}
+                title={p}
+              />
+            ))}
+          </div>
+          <span className="text-sm font-medium text-blue-400">{phase.replace('_', ' ')}</span>
+        </div>
+      </div>
+
+      {/* Main content */}
+      <div className="relative pt-16 pb-12 px-6">
+        <div className="max-w-2xl mx-auto">
+          {renderPhase()}
+        </div>
       </div>
     </div>
   );

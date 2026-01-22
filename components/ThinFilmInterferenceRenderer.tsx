@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useEffect, useCallback } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 
 // =============================================================================
 // THIN FILM INTERFERENCE RENDERER - SOAP BUBBLE COLORS
@@ -9,6 +9,13 @@ import { useState, useRef, useEffect, useCallback } from 'react';
 // behind soap bubble rainbows, oil slicks, and anti-reflective coatings.
 // Students discover how nanometer-thin films create spectacular colors.
 // =============================================================================
+
+// Numeric phases: 0=hook, 1=predict, 2=play, 3=review, 4=twist_predict, 5=twist_play, 6=twist_review, 7=transfer, 8=test, 9=mastery
+const PHASES: number[] = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
+const phaseLabels: Record<number, string> = {
+  0: 'Hook', 1: 'Predict', 2: 'Lab', 3: 'Review', 4: 'Twist Predict',
+  5: 'Twist Lab', 6: 'Twist Review', 7: 'Transfer', 8: 'Test', 9: 'Mastery'
+};
 
 // Premium Design System
 const defined = {
@@ -101,18 +108,6 @@ const FILM_MATERIALS: Record<string, { name: string; n: number }> = {
 // =============================================================================
 // TYPE DEFINITIONS
 // =============================================================================
-type Phase =
-  | 'hook'
-  | 'predict'
-  | 'play'
-  | 'review'
-  | 'twist_predict'
-  | 'twist_play'
-  | 'twist_review'
-  | 'transfer'
-  | 'test'
-  | 'mastery';
-
 interface Question {
   id: number;
   question: string;
@@ -323,8 +318,8 @@ const applications: Application[] = [
 // MAIN COMPONENT
 // =============================================================================
 export default function ThinFilmInterferenceRenderer() {
-  // State management
-  const [phase, setPhase] = useState<Phase>('hook');
+  // State management - using numeric phases
+  const [phase, setPhase] = useState<number>(0);
   const [prediction, setPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
   const [selectedApp, setSelectedApp] = useState(0);
@@ -343,9 +338,36 @@ export default function ThinFilmInterferenceRenderer() {
   const [animationPhase, setAnimationPhase] = useState(0);
 
   // Navigation debouncing
-  const isNavigating = useRef(false);
+  const navigationLockRef = useRef(false);
+  const lastClickRef = useRef(0);
   const navigationTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const animationRef = useRef<number | null>(null);
+
+  // Sound function
+  const playSound = useCallback((type: 'click' | 'success' | 'failure' | 'transition' | 'complete') => {
+    if (typeof window === 'undefined') return;
+    try {
+      const audioContext = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
+      const oscillator = audioContext.createOscillator();
+      const gainNode = audioContext.createGain();
+      oscillator.connect(gainNode);
+      gainNode.connect(audioContext.destination);
+      const sounds = {
+        click: { freq: 600, duration: 0.1, type: 'sine' as OscillatorType },
+        success: { freq: 800, duration: 0.2, type: 'sine' as OscillatorType },
+        failure: { freq: 300, duration: 0.3, type: 'sine' as OscillatorType },
+        transition: { freq: 500, duration: 0.15, type: 'sine' as OscillatorType },
+        complete: { freq: 900, duration: 0.4, type: 'sine' as OscillatorType }
+      };
+      const sound = sounds[type];
+      oscillator.frequency.value = sound.freq;
+      oscillator.type = sound.type;
+      gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + sound.duration);
+      oscillator.start();
+      oscillator.stop(audioContext.currentTime + sound.duration);
+    } catch { /* Audio not available */ }
+  }, []);
 
   // Responsive detection
   useEffect(() => {
@@ -424,20 +446,23 @@ export default function ThinFilmInterferenceRenderer() {
   // =============================================================================
   // NAVIGATION HANDLERS
   // =============================================================================
-  const handleNavigation = useCallback((nextPhase: Phase) => {
-    if (isNavigating.current) return;
-    isNavigating.current = true;
-
-    setPhase(nextPhase);
+  const goToPhase = useCallback((newPhase: number) => {
+    if (navigationLockRef.current) return;
+    const now = Date.now();
+    if (now - lastClickRef.current < 200) return;
+    lastClickRef.current = now;
+    navigationLockRef.current = true;
+    playSound('transition');
+    setPhase(newPhase);
 
     if (navigationTimeoutRef.current) {
       clearTimeout(navigationTimeoutRef.current);
     }
 
     navigationTimeoutRef.current = setTimeout(() => {
-      isNavigating.current = false;
+      navigationLockRef.current = false;
     }, 400);
-  }, []);
+  }, [playSound]);
 
   const handleCompleteApp = useCallback(() => {
     const newCompleted = [...completedApps];
@@ -468,9 +493,9 @@ export default function ThinFilmInterferenceRenderer() {
       setSelectedAnswer(null);
       setShowResult(false);
     } else {
-      handleNavigation('mastery');
+      goToPhase(9);
     }
-  }, [currentQuestion, handleNavigation]);
+  }, [currentQuestion, goToPhase]);
 
   const allAppsCompleted = completedApps.every(Boolean);
 
@@ -1021,98 +1046,85 @@ export default function ThinFilmInterferenceRenderer() {
 
   // HOOK PHASE
   const renderHook = () => (
-    <div
-      style={{
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        gap: defined.spacing.xl,
-        padding: defined.spacing.xl,
-        textAlign: 'center',
-      }}
-    >
-      <div
-        style={{
-          fontSize: isMobile ? defined.typography.sizes['3xl'] : defined.typography.sizes['4xl'],
-          marginBottom: defined.spacing.md,
-        }}
-      >
-        🫧🌈
+    <div className="flex flex-col items-center justify-center min-h-[600px] px-6 py-12 text-center">
+      {/* Premium badge */}
+      <div className="inline-flex items-center gap-2 px-4 py-2 bg-cyan-500/10 border border-cyan-500/20 rounded-full mb-8">
+        <span className="w-2 h-2 bg-cyan-400 rounded-full animate-pulse" />
+        <span className="text-sm font-medium text-cyan-400 tracking-wide">PHYSICS EXPLORATION</span>
       </div>
-      <h1
-        style={{
-          fontSize: isMobile ? defined.typography.sizes['2xl'] : defined.typography.sizes['3xl'],
-          fontWeight: defined.typography.weights.bold,
-          color: defined.colors.text.primary,
-          margin: 0,
-        }}
-      >
+
+      {/* Main title with gradient */}
+      <h1 className="text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-white via-cyan-100 to-blue-200 bg-clip-text text-transparent">
         The Physics of Bubbles
       </h1>
-      <p
-        style={{
-          fontSize: defined.typography.sizes.lg,
-          color: defined.colors.text.secondary,
-          maxWidth: '500px',
-          lineHeight: 1.6,
-        }}
-      >
-        Soap bubbles shimmer with
-        <span style={{ color: defined.colors.accent, fontWeight: defined.typography.weights.semibold }}>
-          {' '}
-          swirling rainbow colors
-        </span>{' '}
-        - yet soap is colorless! The secret lies in a film thinner than the wavelength of light
-        itself.
+
+      <p className="text-lg text-slate-400 max-w-md mb-10">
+        Discover why soap bubbles shimmer with <span className="text-amber-400 font-semibold">swirling rainbow colors</span>
       </p>
 
-      <div
-        style={{
-          background: defined.colors.background.card,
-          borderRadius: defined.radius.xl,
-          padding: defined.spacing.xl,
-          maxWidth: '400px',
-          backdropFilter: 'blur(10px)',
-          border: '1px solid rgba(255,255,255,0.1)',
-        }}
-      >
-        <div
-          style={{
-            fontSize: defined.typography.sizes.sm,
-            color: defined.colors.text.muted,
-            marginBottom: defined.spacing.md,
-          }}
-        >
-          NANOSCALE MAGIC
+      {/* Premium card with graphic */}
+      <div className="relative bg-gradient-to-br from-slate-800/80 to-slate-900/80 rounded-3xl p-8 max-w-xl w-full border border-slate-700/50 shadow-2xl shadow-black/20">
+        {/* Subtle glow effect */}
+        <div className="absolute inset-0 bg-gradient-to-br from-purple-500/5 via-transparent to-cyan-500/5 rounded-3xl" />
+
+        <div className="relative">
+          {/* Bubble illustration */}
+          <div
+            className="mx-auto mb-6"
+            style={{
+              width: '150px',
+              height: '150px',
+              borderRadius: '50%',
+              background:
+                'radial-gradient(circle at 30% 30%, rgba(255,255,255,0.8) 0%, rgba(139,92,246,0.5) 30%, rgba(34,197,94,0.4) 60%, rgba(234,179,8,0.3) 100%)',
+              boxShadow: '0 0 40px rgba(139, 92, 246, 0.3)',
+            }}
+          />
+
+          <div className="mt-8 space-y-4">
+            <p className="text-xl text-white/90 font-medium leading-relaxed">
+              Soap is colorless - yet bubbles shimmer with rainbows!
+            </p>
+            <p className="text-lg text-slate-400 leading-relaxed">
+              The secret lies in a film thinner than the wavelength of light itself.
+            </p>
+            <div className="pt-2">
+              <p className="text-base text-cyan-400 font-semibold">
+                Film thickness: 100-1000 nanometers (1000x thinner than a hair!)
+              </p>
+            </div>
+          </div>
         </div>
-        {/* Bubble illustration */}
-        <div
-          style={{
-            width: '120px',
-            height: '120px',
-            borderRadius: '50%',
-            margin: '0 auto',
-            background:
-              'radial-gradient(circle at 30% 30%, rgba(255,255,255,0.8) 0%, rgba(139,92,246,0.5) 30%, rgba(34,197,94,0.4) 60%, rgba(234,179,8,0.3) 100%)',
-            boxShadow: '0 0 30px rgba(139, 92, 246, 0.3)',
-          }}
-        />
-        <p
-          style={{
-            fontSize: defined.typography.sizes.sm,
-            color: defined.colors.text.secondary,
-            marginTop: defined.spacing.md,
-          }}
-        >
-          Film thickness: 100-1000 nanometers (1000× thinner than a hair!)
-        </p>
       </div>
 
-      {Button({
-        children: 'Discover Thin Film Interference →',
-        onClick: () => handleNavigation('predict'),
-        size: 'lg',
-      })}
+      {/* Premium CTA button */}
+      <button
+        onMouseDown={(e) => { e.preventDefault(); goToPhase(1); }}
+        className="mt-10 group relative px-10 py-5 bg-gradient-to-r from-cyan-500 to-blue-600 text-white text-lg font-semibold rounded-2xl transition-all duration-300 hover:shadow-lg hover:shadow-cyan-500/25 hover:scale-[1.02] active:scale-[0.98]"
+      >
+        <span className="relative z-10 flex items-center gap-3">
+          Discover Thin Film Interference
+          <svg className="w-5 h-5 transition-transform group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+          </svg>
+        </span>
+      </button>
+
+      {/* Feature hints */}
+      <div className="mt-12 flex items-center gap-8 text-sm text-slate-500">
+        <div className="flex items-center gap-2">
+          <span className="text-cyan-400">✦</span>
+          Wave Interference
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="text-cyan-400">✦</span>
+          Anti-Reflective Coatings
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="text-cyan-400">✦</span>
+          Oil Slick Colors
+        </div>
+      </div>
     </div>
   );
 
@@ -1198,7 +1210,7 @@ export default function ThinFilmInterferenceRenderer() {
 
       {Button({
         children: 'Test My Prediction →',
-        onClick: () => handleNavigation('play'),
+        onClick: () => goToPhase(2),
         disabled: !prediction,
         size: 'lg',
       })}
@@ -1255,7 +1267,7 @@ export default function ThinFilmInterferenceRenderer() {
 
       {Button({
         children: 'I Understand → Review',
-        onClick: () => handleNavigation('review'),
+        onClick: () => goToPhase(3),
         size: 'lg',
       })}
     </div>
@@ -1422,7 +1434,7 @@ export default function ThinFilmInterferenceRenderer() {
 
       {Button({
         children: 'See Anti-Reflective Coatings →',
-        onClick: () => handleNavigation('twist_predict'),
+        onClick: () => goToPhase(4),
         size: 'lg',
       })}
     </div>
@@ -1523,7 +1535,7 @@ export default function ThinFilmInterferenceRenderer() {
         onClick: () => {
           setFilmMaterial('coating');
           setFilmThickness(100);
-          handleNavigation('twist_play');
+          goToPhase(5);
         },
         disabled: !twistPrediction,
         size: 'lg',
@@ -1615,7 +1627,7 @@ export default function ThinFilmInterferenceRenderer() {
 
       {Button({
         children: 'See How It Works →',
-        onClick: () => handleNavigation('twist_review'),
+        onClick: () => goToPhase(6),
         size: 'lg',
       })}
     </div>
@@ -1807,7 +1819,7 @@ export default function ThinFilmInterferenceRenderer() {
 
       {Button({
         children: 'See Real-World Applications →',
-        onClick: () => handleNavigation('transfer'),
+        onClick: () => goToPhase(7),
         size: 'lg',
       })}
     </div>
@@ -2017,7 +2029,7 @@ export default function ThinFilmInterferenceRenderer() {
           ) : allAppsCompleted ? (
             Button({
               children: 'Take the Quiz →',
-              onClick: () => handleNavigation('test'),
+              onClick: () => goToPhase(8),
               variant: 'success',
             })
           ) : (
@@ -2310,7 +2322,7 @@ export default function ThinFilmInterferenceRenderer() {
           {Button({
             children: 'Start Over',
             onClick: () => {
-              setPhase('hook');
+              setPhase(0);
               setPrediction(null);
               setTwistPrediction(null);
               setCurrentQuestion(0);
@@ -2333,30 +2345,51 @@ export default function ThinFilmInterferenceRenderer() {
   // RENDER
   // =============================================================================
   return (
-    <div
-      style={{
-        minHeight: '100vh',
-        background: `linear-gradient(135deg, ${defined.colors.background.primary} 0%, ${defined.colors.background.secondary} 100%)`,
-        fontFamily: defined.typography.fontFamily,
-        padding: defined.spacing.lg,
-      }}
-    >
-      <div
-        style={{
-          maxWidth: '900px',
-          margin: '0 auto',
-        }}
-      >
-        {phase === 'hook' && renderHook()}
-        {phase === 'predict' && renderPredict()}
-        {phase === 'play' && renderPlay()}
-        {phase === 'review' && renderReview()}
-        {phase === 'twist_predict' && renderTwistPredict()}
-        {phase === 'twist_play' && renderTwistPlay()}
-        {phase === 'twist_review' && renderTwistReview()}
-        {phase === 'transfer' && renderTransfer()}
-        {phase === 'test' && renderTest()}
-        {phase === 'mastery' && renderMastery()}
+    <div className="min-h-screen bg-[#0a0f1a] text-white relative overflow-hidden">
+      {/* Premium background gradient */}
+      <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-[#0a1628] to-slate-900" />
+      <div className="absolute top-0 left-1/4 w-96 h-96 bg-cyan-500/5 rounded-full blur-3xl" />
+      <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-blue-500/5 rounded-full blur-3xl" />
+      <div className="absolute top-1/2 right-0 w-96 h-96 bg-purple-500/5 rounded-full blur-3xl" />
+
+      {/* Header */}
+      <div className="fixed top-0 left-0 right-0 z-50 bg-slate-900/80 backdrop-blur-xl border-b border-slate-800/50">
+        <div className="flex items-center justify-between px-6 py-3 max-w-4xl mx-auto">
+          <span className="text-sm font-semibold text-white/80 tracking-wide">Thin Film Interference</span>
+          <div className="flex items-center gap-1.5">
+            {PHASES.map((p) => (
+              <button
+                key={p}
+                onMouseDown={(e) => { e.preventDefault(); goToPhase(p); }}
+                className={`h-2 rounded-full transition-all duration-300 ${
+                  phase === p
+                    ? 'bg-cyan-400 w-6 shadow-lg shadow-cyan-400/30'
+                    : phase > p
+                      ? 'bg-emerald-500 w-2'
+                      : 'bg-slate-700 w-2 hover:bg-slate-600'
+                }`}
+                title={phaseLabels[p]}
+              />
+            ))}
+          </div>
+          <span className="text-sm font-medium text-cyan-400">{phaseLabels[phase]}</span>
+        </div>
+      </div>
+
+      {/* Main content */}
+      <div className="relative pt-16 pb-12" style={{ fontFamily: defined.typography.fontFamily }}>
+        <div className="max-w-4xl mx-auto px-4">
+          {phase === 0 && renderHook()}
+          {phase === 1 && renderPredict()}
+          {phase === 2 && renderPlay()}
+          {phase === 3 && renderReview()}
+          {phase === 4 && renderTwistPredict()}
+          {phase === 5 && renderTwistPlay()}
+          {phase === 6 && renderTwistReview()}
+          {phase === 7 && renderTransfer()}
+          {phase === 8 && renderTest()}
+          {phase === 9 && renderMastery()}
+        </div>
       </div>
     </div>
   );

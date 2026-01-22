@@ -1570,60 +1570,57 @@ const StableLevitationRenderer: React.FC<StableLevitationRendererProps> = ({
     }
   };
 
+  const phaseLabels: Record<Phase, string> = {
+    hook: 'Hook', predict: 'Predict', play: 'Lab', review: 'Review',
+    twist_predict: 'Twist Predict', twist_play: 'Twist Lab', twist_review: 'Twist Review',
+    transfer: 'Transfer', test: 'Test', mastery: 'Mastery'
+  };
+  const currentPhaseIndex = phases.indexOf(phase);
+
   return (
-    <div style={{
-      width: '100%',
-      minHeight: height,
-      background: colors.background,
-      color: colors.text,
-      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
-      padding: isMobile ? spacing.md : spacing.xl,
-      boxSizing: 'border-box',
-    }}>
-      <div style={{ maxWidth: 800, margin: '0 auto' }}>
-        <div style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          marginBottom: spacing.lg,
-        }}>
-          {onBack && (
-            <button
-              onClick={onBack}
-              style={{
-                background: 'transparent',
-                border: 'none',
-                color: colors.textSecondary,
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                gap: spacing.xs,
-                fontSize: typography.body.fontSize,
-              }}
-            >
-              ← Back
-            </button>
-          )}
-          <div style={{
-            padding: `${spacing.xs}px ${spacing.md}px`,
-            background: colors.cardBg,
-            borderRadius: radius.sm,
-            fontSize: typography.small.fontSize,
-            color: colors.textSecondary,
-          }}>
-            🎈 Stable Levitation
+    <div className="min-h-screen bg-[#0a0f1a] text-white relative overflow-hidden">
+      {/* Premium background gradient */}
+      <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-[#0a1628] to-slate-900" />
+      <div className="absolute top-0 left-1/4 w-96 h-96 bg-blue-500/5 rounded-full blur-3xl" />
+      <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-purple-500/5 rounded-full blur-3xl" />
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-blue-500/3 rounded-full blur-3xl" />
+
+      {/* Header */}
+      <div className="fixed top-0 left-0 right-0 z-50 bg-slate-900/80 backdrop-blur-xl border-b border-slate-800/50">
+        <div className="flex items-center justify-between px-6 py-3 max-w-4xl mx-auto">
+          <span className="text-sm font-semibold text-white/80 tracking-wide">Stable Levitation</span>
+          <div className="flex items-center gap-1.5">
+            {phases.map((p, i) => (
+              <button
+                key={p}
+                onClick={() => goToPhase(p)}
+                className={`h-2 rounded-full transition-all duration-300 ${
+                  phase === p
+                    ? 'bg-blue-400 w-6 shadow-lg shadow-blue-400/30'
+                    : i < currentPhaseIndex
+                      ? 'bg-emerald-500 w-2'
+                      : 'bg-slate-700 w-2 hover:bg-slate-600'
+                }`}
+                title={phaseLabels[p]}
+              />
+            ))}
           </div>
+          <span className="text-sm font-medium text-blue-400">{phaseLabels[phase]}</span>
         </div>
+      </div>
 
-        {renderProgressBar()}
-        {renderPhaseContent()}
+      {/* Main content */}
+      <div className="relative pt-16 pb-12" style={{ padding: isMobile ? spacing.md : spacing.xl, paddingTop: '64px' }}>
+        <div style={{ maxWidth: 800, margin: '0 auto' }}>
+          {renderPhaseContent()}
 
-        <style>{`
-          @keyframes pulse {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.05); }
-          }
-        `}</style>
+          <style>{`
+            @keyframes pulse {
+              0%, 100% { transform: scale(1); }
+              50% { transform: scale(1.05); }
+            }
+          `}</style>
+        </div>
       </div>
     </div>
   );

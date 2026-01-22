@@ -1,76 +1,95 @@
+'use client';
+
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 
-// --- GAME EVENT INTERFACE FOR AI COACH INTEGRATION ---
-export interface GameEvent {
-   eventType: 'screen_change' | 'prediction_made' | 'answer_submitted' | 'slider_changed' |
-              'button_clicked' | 'game_started' | 'game_completed' | 'hint_requested' |
-              'correct_answer' | 'incorrect_answer' | 'phase_changed' | 'value_changed' |
-              'selection_made' | 'timer_expired' | 'achievement_unlocked' | 'struggle_detected' |
-              'coach_prompt' | 'guide_paused' | 'guide_resumed';
-   gameType: string;
-   gameTitle: string;
-   details: {
-      currentScreen?: number;
-      totalScreens?: number;
-      phase?: string;
-      phaseLabel?: string;
-      prediction?: string;
-      answer?: string;
-      isCorrect?: boolean;
-      score?: number;
-      maxScore?: number;
-      message?: string;
-      coachMessage?: string;
-      needsHelp?: boolean;
-      [key: string]: any;
-   };
-   timestamp: number;
+// ═══════════════════════════════════════════════════════════════════════════
+// ROLLING RACE RENDERER - Premium 10-Phase Learning Experience
+// ═══════════════════════════════════════════════════════════════════════════
+// Teaches rotational inertia and moment of inertia through rolling cylinder race
+// ═══════════════════════════════════════════════════════════════════════════
+
+type GameEventType =
+  | 'phase_change'
+  | 'prediction_made'
+  | 'simulation_started'
+  | 'parameter_changed'
+  | 'twist_prediction_made'
+  | 'app_explored'
+  | 'test_answered'
+  | 'test_completed'
+  | 'mastery_achieved';
+
+interface GameEvent {
+  type: GameEventType;
+  data?: Record<string, unknown>;
 }
+
+// Numeric phases: 0=hook, 1=predict, 2=play, 3=review, 4=twist_predict, 5=twist_play, 6=twist_review, 7=transfer, 8=test, 9=mastery
+const PHASES: number[] = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
+const phaseLabels: Record<number, string> = {
+  0: 'Hook', 1: 'Predict', 2: 'Lab', 3: 'Review', 4: 'Twist Predict',
+  5: 'Twist Lab', 6: 'Twist Review', 7: 'Transfer', 8: 'Test', 9: 'Mastery'
+};
 
 interface RollingRaceRendererProps {
    onGameEvent?: (event: GameEvent) => void;
-   gamePhase?: string;
+   currentPhase?: number;
+   onPhaseComplete?: (phase: number) => void;
    onBack?: () => void;
 }
 
-// --- GLOBAL SOUND UTILITY ---
-const playSound = (freq: number, duration: number = 0.15) => {
-   try {
-      const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
-      const oscillator = audioContext.createOscillator();
-      const gainNode = audioContext.createGain();
-      oscillator.connect(gainNode);
-      gainNode.connect(audioContext.destination);
-      oscillator.frequency.value = freq;
-      oscillator.type = 'sine';
-      gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
-      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + duration);
-      oscillator.start(audioContext.currentTime);
-      oscillator.stop(audioContext.currentTime + duration);
-   } catch (e) {
-      // Silent fail if audio not available
-   }
-};
-
 // --- ROLLING RACE RENDERER ---
-const RollingRaceRenderer: React.FC<RollingRaceRendererProps> = ({ onGameEvent, gamePhase, onBack }) => {
-   type Phase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
-   const validPhases: Phase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
+const RollingRaceRenderer: React.FC<RollingRaceRendererProps> = ({ onGameEvent, currentPhase, onPhaseComplete, onBack }) => {
+   const [phase, setPhase] = useState<number>(currentPhase ?? 0);
+   const navigationLockRef = useRef(false);
+   const lastClickRef = useRef(0);
 
-   const getInitialPhase = (): Phase => {
-      if (gamePhase && validPhases.includes(gamePhase as Phase)) {
-         return gamePhase as Phase;
+   // Sync with external phase control
+   useEffect(() => {
+      if (currentPhase !== undefined && currentPhase !== phase) {
+         setPhase(currentPhase);
       }
-      return 'hook';
+   }, [currentPhase, phase]);
+
+   // Web Audio API sound
+   const playSound = useCallback((type: 'click' | 'success' | 'failure' | 'transition' | 'complete' = 'click') => {
+      try {
+         const audioContext = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
+         const oscillator = audioContext.createOscillator();
+         const gainNode = audioContext.createGain();
+         oscillator.connect(gainNode);
+         gainNode.connect(audioContext.destination);
+
+         const freqMap = { click: 440, success: 600, failure: 300, transition: 520, complete: 800 };
+         oscillator.frequency.value = freqMap[type];
+         oscillator.type = 'sine';
+         gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+         gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.1);
+         oscillator.start(audioContext.currentTime);
+         oscillator.stop(audioContext.currentTime + 0.1);
+      } catch { /* Audio not available */ }
+   }, []);
+
+   // Emit events
+   const emitEvent = (type: GameEventType, data?: Record<string, unknown>) => {
+      if (onGameEvent) {
+         onGameEvent({ type, data });
+      }
    };
 
-   const [phase, setPhase] = useState<Phase>(getInitialPhase);
-
-   useEffect(() => {
-      if (gamePhase && validPhases.includes(gamePhase as Phase) && gamePhase !== phase) {
-         setPhase(gamePhase as Phase);
-      }
-   }, [gamePhase]);
+   // Phase navigation with 200ms debouncing
+   const goToPhase = (newPhase: number) => {
+      const now = Date.now();
+      if (now - lastClickRef.current < 200) return;
+      lastClickRef.current = now;
+      if (navigationLockRef.current) return;
+      navigationLockRef.current = true;
+      playSound('transition');
+      setPhase(newPhase);
+      emitEvent('phase_change', { from: phase, to: newPhase, phaseLabel: phaseLabels[newPhase] });
+      if (onPhaseComplete) onPhaseComplete(newPhase);
+      setTimeout(() => { navigationLockRef.current = false; }, 400);
+   };
 
    // Core state
    const [prediction, setPrediction] = useState<string | null>(null);
@@ -117,65 +136,18 @@ const RollingRaceRenderer: React.FC<RollingRaceRendererProps> = ({ onGameEvent, 
       }
    }, [onGameEvent]);
 
-   const coachMessages: Record<Phase, string> = {
-      hook: "Which wins down a ramp - a solid cylinder or a hollow one? The answer reveals a hidden law of physics!",
-      predict: "Time to make your prediction! Think about where the mass is located in each cylinder.",
-      play: "Watch the race! Notice which cylinder accelerates faster. Can you see the difference?",
-      review: "The solid cylinder wins! But why? The secret lies in how energy is divided between rolling and spinning.",
-      twist_predict: "What if we could change where the mass is located? How would that affect the race?",
-      twist_play: "Adjust the mass distribution and see how it changes the speed. More mass at the edge means...?",
-      twist_review: "You've discovered the moment of inertia principle! This is why wheels are designed the way they are.",
-      transfer: "From racing wheels to figure skating spins - rotational inertia is everywhere!",
-      test: "Time to test your understanding of rotational dynamics!",
-      mastery: "Congratulations! You've mastered rotational inertia and its real-world applications!"
+   const coachMessages: Record<number, string> = {
+      0: "Which wins down a ramp - a solid cylinder or a hollow one? The answer reveals a hidden law of physics!",
+      1: "Time to make your prediction! Think about where the mass is located in each cylinder.",
+      2: "Watch the race! Notice which cylinder accelerates faster. Can you see the difference?",
+      3: "The solid cylinder wins! But why? The secret lies in how energy is divided between rolling and spinning.",
+      4: "What if we could change where the mass is located? How would that affect the race?",
+      5: "Adjust the mass distribution and see how it changes the speed. More mass at the edge means...?",
+      6: "You've discovered the moment of inertia principle! This is why wheels are designed the way they are.",
+      7: "From racing wheels to figure skating spins - rotational inertia is everywhere!",
+      8: "Time to test your understanding of rotational dynamics!",
+      9: "Congratulations! You've mastered rotational inertia and its real-world applications!"
    };
-
-   // Navigation debouncing
-   const navigationLockRef = useRef(false);
-
-   const phaseOrder: Phase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
-   const phaseLabels: Record<Phase, string> = {
-      hook: 'Introduction',
-      predict: 'Predict',
-      play: 'Race',
-      review: 'Understanding',
-      twist_predict: 'New Variable',
-      twist_play: 'Mass Distribution',
-      twist_review: 'Deep Insight',
-      transfer: 'Real World',
-      test: 'Knowledge Test',
-      mastery: 'Mastery'
-   };
-
-   const goToPhase = useCallback((p: Phase) => {
-      if (navigationLockRef.current) return;
-      navigationLockRef.current = true;
-
-      setPhase(p);
-      if (p === 'play' || p === 'twist_play') {
-         setIsRacing(false);
-         setSolidPosition(0);
-         setHollowPosition(0);
-         setRaceComplete(false);
-         setRaceTime(0);
-      }
-      playSound(400 + Math.random() * 200, 0.1);
-
-      const idx = phaseOrder.indexOf(p);
-      emitGameEvent('phase_changed', {
-         phase: p,
-         phaseLabel: phaseLabels[p],
-         currentScreen: idx + 1,
-         totalScreens: phaseOrder.length,
-         coachMessage: guidedMode ? coachMessages[p] : undefined,
-         message: `Entered phase: ${phaseLabels[p]}`
-      });
-      if (guidedMode) {
-         setLastCoachMessage(coachMessages[p]);
-      }
-
-      setTimeout(() => { navigationLockRef.current = false; }, 400);
-   }, [emitGameEvent, guidedMode, coachMessages, phaseLabels, phaseOrder]);
 
    // Premium color palette
    const colors = {
@@ -255,7 +227,7 @@ const RollingRaceRenderer: React.FC<RollingRaceRendererProps> = ({ onGameEvent, 
 
    // Confetti for mastery
    useEffect(() => {
-      if (phase === 'mastery') {
+      if (phase === 9) {
          const confettiColors = ['#f97316', '#8b5cf6', '#ec4899', '#22c55e', '#eab308', '#3b82f6'];
          setConfetti(Array.from({ length: 60 }, (_, i) => ({
             x: Math.random() * 100, y: Math.random() * 100,
@@ -264,38 +236,42 @@ const RollingRaceRenderer: React.FC<RollingRaceRendererProps> = ({ onGameEvent, 
       }
    }, [phase]);
 
-   // Helper: render progress bar
+   // Helper: render progress bar - Premium design with phase dots
    const renderProgressBar = () => {
-      const currentIdx = phaseOrder.indexOf(phase);
       return (
          <div style={{
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            padding: isMobile ? '10px 12px' : '12px 16px',
-            borderBottom: `1px solid ${colors.border}`,
-            backgroundColor: colors.bgCard,
+            padding: isMobile ? '12px 16px' : '14px 20px',
+            borderBottom: `1px solid rgba(255,255,255,0.1)`,
+            backgroundColor: 'rgba(15,15,26,0.8)',
+            backdropFilter: 'blur(12px)',
             gap: isMobile ? '12px' : '16px'
          }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: isMobile ? '8px' : '12px' }}>
-               <div style={{ display: 'flex', gap: isMobile ? '4px' : '6px' }}>
-                  {phaseOrder.map((p, i) => (
-                     <div
+               {/* Premium phase dots */}
+               <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  {PHASES.map((p, i) => (
+                     <button
                         key={p}
-                        onMouseDown={() => i < currentIdx && goToPhase(p)}
+                        onMouseDown={() => i < phase && goToPhase(p)}
                         style={{
-                           height: isMobile ? '10px' : '8px',
-                           width: i === currentIdx ? (isMobile ? '20px' : '24px') : (isMobile ? '10px' : '8px'),
-                           borderRadius: '5px',
-                           backgroundColor: i < currentIdx ? colors.success : i === currentIdx ? colors.primary : colors.border,
-                           cursor: i < currentIdx ? 'pointer' : 'default',
-                           transition: 'all 0.3s'
+                           height: '8px',
+                           width: i === phase ? '24px' : '8px',
+                           borderRadius: '4px',
+                           backgroundColor: i < phase ? colors.success : i === phase ? colors.primary : colors.border,
+                           boxShadow: i === phase ? `0 0 12px ${colors.primary}50` : 'none',
+                           cursor: i < phase ? 'pointer' : 'default',
+                           transition: 'all 0.3s ease',
+                           border: 'none',
+                           padding: 0
                         }}
                      />
                   ))}
                </div>
                <span style={{ fontSize: '12px', fontWeight: 'bold', color: colors.textMuted }}>
-                  {currentIdx + 1} / {phaseOrder.length}
+                  {phase + 1} / {PHASES.length}
                </span>
             </div>
             <div style={{
@@ -314,7 +290,6 @@ const RollingRaceRenderer: React.FC<RollingRaceRendererProps> = ({ onGameEvent, 
 
    // Helper: render bottom navigation bar
    const renderBottomBar = (canGoBack: boolean, canGoNext: boolean, nextLabel: string, onNext?: () => void, accentColor?: string) => {
-      const currentIdx = phaseOrder.indexOf(phase);
       const buttonColor = accentColor || colors.primary;
 
       return (
@@ -335,12 +310,12 @@ const RollingRaceRenderer: React.FC<RollingRaceRendererProps> = ({ onGameEvent, 
                   backgroundColor: colors.bgCardLight,
                   color: colors.textSecondary,
                   border: 'none',
-                  cursor: canGoBack && currentIdx > 0 ? 'pointer' : 'not-allowed',
-                  opacity: canGoBack && currentIdx > 0 ? 1 : 0.3
+                  cursor: canGoBack && phase > 0 ? 'pointer' : 'not-allowed',
+                  opacity: canGoBack && phase > 0 ? 1 : 0.3
                }}
                onMouseDown={() => {
-                  if (canGoBack && currentIdx > 0) {
-                     goToPhase(phaseOrder[currentIdx - 1]);
+                  if (canGoBack && phase > 0) {
+                     goToPhase(phase - 1);
                   }
                }}
             >
@@ -364,8 +339,8 @@ const RollingRaceRenderer: React.FC<RollingRaceRendererProps> = ({ onGameEvent, 
                   if (!canGoNext) return;
                   if (onNext) {
                      onNext();
-                  } else if (currentIdx < phaseOrder.length - 1) {
-                     goToPhase(phaseOrder[currentIdx + 1]);
+                  } else if (phase < PHASES.length - 1) {
+                     goToPhase(phase + 1);
                   }
                }}
             >
@@ -706,14 +681,48 @@ const RollingRaceRenderer: React.FC<RollingRaceRendererProps> = ({ onGameEvent, 
    // --- RENDER PHASES ---
 
    // HOOK Phase
-   if (phase === 'hook') {
+   if (phase === 0) {
       return (
-         <div style={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden', background: colors.bgDark }}>
-            {renderProgressBar()}
+         <div style={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden', background: colors.bgDark, position: 'relative' }}>
+            {/* Ambient glow effects */}
+            <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom right, rgba(15,23,42,1), rgba(10,22,40,1), rgba(15,23,42,1))' }} />
+            <div style={{ position: 'absolute', top: 0, left: '25%', width: '384px', height: '384px', background: `${colors.primary}08`, borderRadius: '50%', filter: 'blur(48px)' }} />
+            <div style={{ position: 'absolute', bottom: 0, right: '25%', width: '384px', height: '384px', background: `${colors.accent}08`, borderRadius: '50%', filter: 'blur(48px)' }} />
+            <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', width: '600px', height: '600px', background: `${colors.primary}05`, borderRadius: '50%', filter: 'blur(48px)' }} />
 
-            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', padding: space.xl, overflowY: 'auto' }}>
+            <div style={{ position: 'relative', zIndex: 10 }}>
+               {renderProgressBar()}
+            </div>
+
+            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', padding: space.xl, overflowY: 'auto', position: 'relative', zIndex: 10 }}>
                <div style={{ width: '100%', maxWidth: '800px' }}>
-                  {renderSectionHeader("Step 1 • The Mystery", "Which Wins the Race?", "A simple question with a surprising answer that reveals hidden physics.")}
+                  {/* Premium Badge */}
+                  <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
+                     <div style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '8px',
+                        padding: '8px 16px',
+                        background: `${colors.primary}15`,
+                        border: `1px solid ${colors.primary}30`,
+                        borderRadius: '9999px'
+                     }}>
+                        <span style={{ width: '8px', height: '8px', background: colors.primary, borderRadius: '50%', animation: 'pulse 2s infinite' }} />
+                        <span style={{ fontSize: '12px', fontWeight: 600, color: colors.primary, letterSpacing: '0.05em' }}>PHYSICS EXPLORATION</span>
+                     </div>
+                  </div>
+                  {/* Gradient Title */}
+                  <div style={{ textAlign: 'center', marginBottom: '24px' }}>
+                     <h1 style={{
+                        fontSize: isMobile ? '28px' : '36px',
+                        fontWeight: 900,
+                        background: `linear-gradient(to right, ${colors.textPrimary}, ${colors.primary}, ${colors.accent})`,
+                        WebkitBackgroundClip: 'text',
+                        WebkitTextFillColor: 'transparent',
+                        margin: 0
+                     }}>Which Wins the Race?</h1>
+                     <p style={{ fontSize: '14px', color: colors.textSecondary, marginTop: '8px' }}>A simple question with a surprising answer that reveals hidden physics.</p>
+                  </div>
 
                   {/* Visual */}
                   <div style={{
@@ -774,7 +783,7 @@ const RollingRaceRenderer: React.FC<RollingRaceRendererProps> = ({ onGameEvent, 
    }
 
    // PREDICT Phase
-   if (phase === 'predict') {
+   if (phase === 1) {
       const options = [
          { id: 'solid', label: 'Solid cylinder wins', desc: 'The solid one has more "stuff" pushing it forward', icon: '🔴' },
          { id: 'hollow', label: 'Hollow cylinder wins', desc: 'The hollow one is easier to roll', icon: '🟣' },
@@ -857,7 +866,7 @@ const RollingRaceRenderer: React.FC<RollingRaceRendererProps> = ({ onGameEvent, 
    }
 
    // PLAY Phase
-   if (phase === 'play') {
+   if (phase === 2) {
       return (
          <div style={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden', background: colors.bgDark }}>
             {renderProgressBar()}
@@ -897,7 +906,7 @@ const RollingRaceRenderer: React.FC<RollingRaceRendererProps> = ({ onGameEvent, 
                      onMouseDown={() => {
                         if (!isRacing && !raceComplete) {
                            setIsRacing(true);
-                           playSound(600, 0.2);
+                           playSound('success');
                         } else if (raceComplete) {
                            setSolidPosition(0);
                            setHollowPosition(0);
@@ -978,7 +987,7 @@ const RollingRaceRenderer: React.FC<RollingRaceRendererProps> = ({ onGameEvent, 
    }
 
    // REVIEW Phase
-   if (phase === 'review') {
+   if (phase === 3) {
       return (
          <div style={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden', background: colors.bgDark }}>
             {renderProgressBar()}
@@ -1036,7 +1045,7 @@ const RollingRaceRenderer: React.FC<RollingRaceRendererProps> = ({ onGameEvent, 
    }
 
    // TWIST PREDICT Phase
-   if (phase === 'twist_predict') {
+   if (phase === 4) {
       const options = [
          { id: 'faster', label: 'It rolls faster', desc: 'Spreading mass out helps somehow', icon: '⬆️' },
          { id: 'slower', label: 'It rolls slower', desc: 'More edge mass means more rotational energy wasted', icon: '⬇️' },
@@ -1105,7 +1114,7 @@ const RollingRaceRenderer: React.FC<RollingRaceRendererProps> = ({ onGameEvent, 
    }
 
    // TWIST PLAY Phase
-   if (phase === 'twist_play') {
+   if (phase === 5) {
       // Calculate effective I based on mass distribution
       const effectiveI = 0.5 + massDistribution * 0.5; // Ranges from 0.5 (solid) to 1.0 (hollow)
       const rollSpeed = 1 / (1 + effectiveI); // Fraction of energy that's translational
@@ -1241,7 +1250,7 @@ const RollingRaceRenderer: React.FC<RollingRaceRendererProps> = ({ onGameEvent, 
    }
 
    // TWIST REVIEW Phase
-   if (phase === 'twist_review') {
+   if (phase === 6) {
       return (
          <div style={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden', background: colors.bgDark }}>
             {renderProgressBar()}
@@ -1306,7 +1315,7 @@ const RollingRaceRenderer: React.FC<RollingRaceRendererProps> = ({ onGameEvent, 
    }
 
    // TRANSFER Phase
-   if (phase === 'transfer') {
+   if (phase === 7) {
       const currentApp = realWorldApps[selectedApp];
       const allCompleted = completedApps.every(c => c);
       const isCurrentCompleted = completedApps[selectedApp];
@@ -1519,7 +1528,7 @@ const RollingRaceRenderer: React.FC<RollingRaceRendererProps> = ({ onGameEvent, 
                gap: space.md
             }}>
                <button
-                  onMouseDown={() => goToPhase('twist_review')}
+                  onMouseDown={() => goToPhase(6)}
                   style={{
                      padding: `${space.md} ${space.lg}`,
                      borderRadius: radius.md,
@@ -1560,7 +1569,7 @@ const RollingRaceRenderer: React.FC<RollingRaceRendererProps> = ({ onGameEvent, 
                )}
 
                <button
-                  onMouseDown={() => allCompleted && goToPhase('test')}
+                  onMouseDown={() => allCompleted && goToPhase(8)}
                   style={{
                      padding: `${space.md} ${space.xl}`,
                      borderRadius: radius.md,
@@ -1581,7 +1590,7 @@ const RollingRaceRenderer: React.FC<RollingRaceRendererProps> = ({ onGameEvent, 
    }
 
    // TEST Phase
-   if (phase === 'test') {
+   if (phase === 8) {
       const currentQ = testQuestions[testQuestion];
 
       if (testSubmitted) {
@@ -1629,7 +1638,7 @@ const RollingRaceRenderer: React.FC<RollingRaceRendererProps> = ({ onGameEvent, 
                            🔄 Retake
                         </button>
                         <button
-                           onMouseDown={() => goToPhase('mastery')}
+                           onMouseDown={() => goToPhase(9)}
                            style={{
                               padding: `${space.md} ${space.xl}`,
                               borderRadius: radius.md,
@@ -1783,7 +1792,7 @@ const RollingRaceRenderer: React.FC<RollingRaceRendererProps> = ({ onGameEvent, 
    }
 
    // MASTERY Phase
-   if (phase === 'mastery') {
+   if (phase === 9) {
       const masteryItems = [
          { icon: '🏎️', title: 'Rotational Inertia', desc: 'Mass distribution determines resistance to spinning' },
          { icon: '⚖️', title: 'Energy Division', desc: 'Rolling objects split energy between translation and rotation' },
@@ -1898,7 +1907,7 @@ const RollingRaceRenderer: React.FC<RollingRaceRendererProps> = ({ onGameEvent, 
                            setPrediction(null);
                            setTwistPrediction(null);
                            setCompletedApps([false, false, false, false]);
-                           goToPhase('hook');
+                           goToPhase(0);
                         }}
                         style={{
                            padding: `${space.lg} ${space.xxl}`,
@@ -1918,7 +1927,7 @@ const RollingRaceRenderer: React.FC<RollingRaceRendererProps> = ({ onGameEvent, 
                            setSolidPosition(0);
                            setHollowPosition(0);
                            setRaceComplete(false);
-                           goToPhase('play');
+                           goToPhase(2);
                         }}
                         style={{
                            padding: `${space.lg} ${space.xxl}`,

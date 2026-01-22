@@ -1,50 +1,42 @@
-import React, { useState, useRef, useEffect } from 'react';
+'use client';
 
-// GameEvent interface for AI coach integration
+import React, { useState, useRef, useEffect, useCallback } from 'react';
+
+// ═══════════════════════════════════════════════════════════════════════════
+// TYPES & INTERFACES
+// ═══════════════════════════════════════════════════════════════════════════
+type GameEventType =
+  | 'phase_change'
+  | 'prediction_made'
+  | 'simulation_started'
+  | 'parameter_changed'
+  | 'twist_prediction_made'
+  | 'app_explored'
+  | 'test_answered'
+  | 'test_completed'
+  | 'mastery_achieved';
+
 interface GameEvent {
-  type: 'prediction' | 'observation' | 'phase_complete' | 'misconception' | 'mastery';
-  phase: string;
-  data: Record<string, unknown>;
-  timestamp: number;
+  type: GameEventType;
+  data?: Record<string, unknown>;
 }
 
-// Sound utility function
-const playSound = (frequency: number, duration: number, type: OscillatorType = 'sine', volume: number = 0.3) => {
-  try {
-    const audioContext = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
-    const oscillator = audioContext.createOscillator();
-    const gainNode = audioContext.createGain();
-
-    oscillator.type = type;
-    oscillator.frequency.setValueAtTime(frequency, audioContext.currentTime);
-    oscillator.connect(gainNode);
-    gainNode.connect(audioContext.destination);
-
-    gainNode.gain.setValueAtTime(volume, audioContext.currentTime);
-    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + duration);
-
-    oscillator.start();
-    oscillator.stop(audioContext.currentTime + duration);
-  } catch (e) {
-    console.log('Audio not available');
-  }
-};
-
-// Phase types
-type Phase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
-
-const isValidPhase = (phase: string): phase is Phase => {
-  return ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'].includes(phase);
+// Numeric phases: 0=hook, 1=predict, 2=play, 3=review, 4=twist_predict, 5=twist_play, 6=twist_review, 7=transfer, 8=test, 9=mastery
+const PHASES: number[] = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
+const phaseLabels: Record<number, string> = {
+  0: 'Hook', 1: 'Predict', 2: 'Lab', 3: 'Review', 4: 'Twist Predict',
+  5: 'Twist Lab', 6: 'Twist Review', 7: 'Transfer', 8: 'Test', 9: 'Mastery'
 };
 
 interface ShowerCurtainRendererProps {
-  onEvent?: (event: GameEvent) => void;
-  gamePhase?: string;
+  onGameEvent?: (event: GameEvent) => void;
+  currentPhase?: number;
+  onPhaseComplete?: (phase: number) => void;
 }
 
-const ShowerCurtainRenderer: React.FC<ShowerCurtainRendererProps> = ({ onEvent, gamePhase }) => {
+const ShowerCurtainRenderer: React.FC<ShowerCurtainRendererProps> = ({ onGameEvent, currentPhase, onPhaseComplete }) => {
   // Phase management
-  const [phase, setPhase] = useState<Phase>('hook');
+  const [phase, setPhase] = useState<number>(currentPhase ?? 0);
 
   // Hook phase
   const [hookStep, setHookStep] = useState(0);
@@ -77,6 +69,7 @@ const ShowerCurtainRenderer: React.FC<ShowerCurtainRendererProps> = ({ onEvent, 
   // UI state
   const [isMobile, setIsMobile] = useState(false);
   const navigationLockRef = useRef(false);
+  const lastClickRef = useRef(0);
   const animationRef = useRef<number>();
 
   // Responsive detection
@@ -87,12 +80,12 @@ const ShowerCurtainRenderer: React.FC<ShowerCurtainRendererProps> = ({ onEvent, 
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
-  // Initialize from gamePhase prop
+  // Phase sync
   useEffect(() => {
-    if (gamePhase && isValidPhase(gamePhase)) {
-      setPhase(gamePhase);
+    if (currentPhase !== undefined && currentPhase !== phase) {
+      setPhase(currentPhase);
     }
-  }, [gamePhase]);
+  }, [currentPhase, phase]);
 
   // Hook phase curtain animation
   useEffect(() => {
@@ -123,22 +116,45 @@ const ShowerCurtainRenderer: React.FC<ShowerCurtainRendererProps> = ({ onEvent, 
     return flowEffect + tempEffect + Math.sin(Date.now() / 500) * 2;
   };
 
-  // Emit events
-  const emitEvent = (type: GameEvent['type'], data: Record<string, unknown>) => {
-    if (onEvent) {
-      onEvent({ type, phase, data, timestamp: Date.now() });
-    }
-  };
+  // Sound utility
+  const playSound = useCallback((type: 'click' | 'success' | 'failure' | 'transition' | 'complete') => {
+    if (typeof window === 'undefined') return;
+    try {
+      const audioContext = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
+      const oscillator = audioContext.createOscillator();
+      const gainNode = audioContext.createGain();
+      oscillator.connect(gainNode);
+      gainNode.connect(audioContext.destination);
+      const sounds = {
+        click: { freq: 600, duration: 0.1, type: 'sine' as OscillatorType },
+        success: { freq: 800, duration: 0.2, type: 'sine' as OscillatorType },
+        failure: { freq: 300, duration: 0.3, type: 'sine' as OscillatorType },
+        transition: { freq: 500, duration: 0.15, type: 'sine' as OscillatorType },
+        complete: { freq: 900, duration: 0.4, type: 'sine' as OscillatorType }
+      };
+      const sound = sounds[type];
+      oscillator.frequency.value = sound.freq;
+      oscillator.type = sound.type;
+      gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + sound.duration);
+      oscillator.start();
+      oscillator.stop(audioContext.currentTime + sound.duration);
+    } catch { /* Audio not available */ }
+  }, []);
 
   // Phase navigation
-  const goToPhase = (newPhase: Phase) => {
+  const goToPhase = useCallback((newPhase: number) => {
+    const now = Date.now();
+    if (now - lastClickRef.current < 200) return;
+    lastClickRef.current = now;
     if (navigationLockRef.current) return;
     navigationLockRef.current = true;
-    playSound(440, 0.15, 'sine', 0.2);
+    playSound('transition');
     setPhase(newPhase);
-    emitEvent('phase_complete', { from: phase, to: newPhase });
+    onPhaseComplete?.(newPhase);
+    onGameEvent?.({ type: 'phase_change', data: { phase: newPhase, phaseLabel: phaseLabels[newPhase] } });
     setTimeout(() => { navigationLockRef.current = false; }, 400);
-  };
+  }, [playSound, onPhaseComplete, onGameEvent]);
 
   // Test questions
   const testQuestions = [
@@ -256,7 +272,7 @@ const ShowerCurtainRenderer: React.FC<ShowerCurtainRendererProps> = ({ onEvent, 
 
   // Handle test answer
   const handleTestAnswer = (answer: number) => {
-    playSound(300, 0.1, 'sine', 0.2);
+    playSound('click');
     setTestAnswers(prev => [...prev, answer]);
   };
 
@@ -285,23 +301,35 @@ const ShowerCurtainRenderer: React.FC<ShowerCurtainRendererProps> = ({ onEvent, 
 
   // Helper render functions
   const renderProgressBar = () => {
-    const phases: Phase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
-    const currentIndex = phases.indexOf(phase);
-
     return (
-      <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginBottom: '20px' }}>
-        {phases.map((p, i) => (
-          <div
-            key={p}
-            style={{
-              height: '4px',
-              flex: 1,
-              borderRadius: '2px',
-              background: i <= currentIndex ? `linear-gradient(90deg, ${colors.primary}, ${colors.secondary})` : '#333',
-              transition: 'all 0.3s ease'
-            }}
-          />
-        ))}
+      <div style={{
+        background: 'rgba(15, 23, 42, 0.8)',
+        backdropFilter: 'blur(12px)',
+        borderRadius: '12px',
+        border: '1px solid rgba(255, 255, 255, 0.1)',
+        padding: '12px 16px',
+        marginBottom: '20px'
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+          <span style={{ fontSize: '14px', fontWeight: 500, color: '#94a3b8' }}>Shower Curtain</span>
+          <span style={{ fontSize: '14px', color: '#64748b' }}>{phaseLabels[phase]}</span>
+        </div>
+        {/* Premium phase dots */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
+          {PHASES.map((p, i) => (
+            <div
+              key={p}
+              style={{
+                height: '8px',
+                width: i === phase ? '24px' : '8px',
+                borderRadius: '4px',
+                background: i < phase ? '#10B981' : i === phase ? colors.primary : '#334155',
+                boxShadow: i === phase ? `0 0 12px ${colors.primary}50` : 'none',
+                transition: 'all 0.3s ease'
+              }}
+            />
+          ))}
+        </div>
       </div>
     );
   };
@@ -375,7 +403,39 @@ const ShowerCurtainRenderer: React.FC<ShowerCurtainRendererProps> = ({ onEvent, 
   const renderHook = () => (
     <div style={{ padding: isMobile ? '16px' : '24px' }}>
       {renderProgressBar()}
-      {renderSectionHeader("🚿", "The Clingy Curtain", "Why shower curtains attack you")}
+      {/* Premium Badge */}
+      <div style={{ textAlign: 'center', marginBottom: '16px' }}>
+        <div style={{
+          display: 'inline-flex',
+          alignItems: 'center',
+          gap: '8px',
+          padding: '8px 16px',
+          background: `${colors.primary}15`,
+          border: `1px solid ${colors.primary}30`,
+          borderRadius: '9999px'
+        }}>
+          <span style={{
+            width: '8px',
+            height: '8px',
+            background: colors.primary,
+            borderRadius: '50%',
+            animation: 'pulse 2s infinite'
+          }} />
+          <span style={{ fontSize: '12px', fontWeight: 600, color: colors.primary, letterSpacing: '0.05em' }}>PHYSICS EXPLORATION</span>
+        </div>
+      </div>
+      {/* Gradient Title */}
+      <div style={{ textAlign: 'center', marginBottom: '20px' }}>
+        <h1 style={{
+          fontSize: isMobile ? '28px' : '36px',
+          fontWeight: 900,
+          background: `linear-gradient(to right, ${colors.text}, ${colors.primary}, ${colors.secondary})`,
+          WebkitBackgroundClip: 'text',
+          WebkitTextFillColor: 'transparent',
+          margin: '0 0 8px 0'
+        }}>The Clingy Curtain</h1>
+        <p style={{ margin: 0, color: colors.textSecondary, fontSize: '14px' }}>Why shower curtains attack you</p>
+      </div>
 
       <div style={{
         background: colors.card,
@@ -455,7 +515,7 @@ const ShowerCurtainRenderer: React.FC<ShowerCurtainRendererProps> = ({ onEvent, 
             <button
               onMouseDown={() => {
                 setShowerOn(true);
-                playSound(200, 0.5, 'sine', 0.2);
+                playSound('transition');
               }}
               disabled={showerOn}
               style={{
@@ -519,7 +579,7 @@ const ShowerCurtainRenderer: React.FC<ShowerCurtainRendererProps> = ({ onEvent, 
         )}
       </div>
 
-      {hookStep === 1 && renderBottomBar(() => goToPhase('predict'))}
+      {hookStep === 1 && renderBottomBar(() => goToPhase(1))}
     </div>
   );
 
@@ -587,8 +647,8 @@ const ShowerCurtainRenderer: React.FC<ShowerCurtainRendererProps> = ({ onEvent, 
               key={option.value}
               onMouseDown={() => {
                 setPrediction(option.value);
-                playSound(330, 0.1, 'sine', 0.2);
-                emitEvent('prediction', { predicted: option.value, question: 'cause' });
+                playSound('click');
+                onGameEvent?.({ type: 'prediction_made', data: { predicted: option.value, question: 'cause' } });
               }}
               style={{
                 padding: '16px 20px',
@@ -611,7 +671,7 @@ const ShowerCurtainRenderer: React.FC<ShowerCurtainRendererProps> = ({ onEvent, 
           <button
             onMouseDown={() => {
               setShowPredictResult(true);
-              playSound(prediction === 'entrainment' ? 600 : 300, 0.3, 'sine', 0.3);
+              playSound(prediction === 'entrainment' ? 'success' : 'failure');
             }}
             style={{
               marginTop: '20px',
@@ -663,7 +723,7 @@ const ShowerCurtainRenderer: React.FC<ShowerCurtainRendererProps> = ({ onEvent, 
         )}
       </div>
 
-      {showPredictResult && renderBottomBar(() => goToPhase('play'))}
+      {showPredictResult && renderBottomBar(() => goToPhase(2))}
     </div>
   );
 
@@ -883,7 +943,7 @@ const ShowerCurtainRenderer: React.FC<ShowerCurtainRendererProps> = ({ onEvent, 
 
         {renderKeyTakeaway("Higher flow = more entrainment. Higher temperature = more convection. Both effects combine to create the pressure difference that pulls the curtain inward!")}
 
-        {waterFlow > 50 && renderBottomBar(() => goToPhase('review'))}
+        {waterFlow > 50 && renderBottomBar(() => goToPhase(3))}
       </div>
     );
   };
@@ -965,7 +1025,7 @@ const ShowerCurtainRenderer: React.FC<ShowerCurtainRendererProps> = ({ onEvent, 
         {renderKeyTakeaway("The shower curtain effect demonstrates entrainment — moving fluids drag surrounding fluids, creating pressure differences. This same principle is used in spray bottles, jet mixers, and more!")}
       </div>
 
-      {renderBottomBar(() => goToPhase('twist_predict'))}
+      {renderBottomBar(() => goToPhase(4))}
     </div>
   );
 
@@ -1015,7 +1075,7 @@ const ShowerCurtainRenderer: React.FC<ShowerCurtainRendererProps> = ({ onEvent, 
               key={option.value}
               onMouseDown={() => {
                 setTwistPrediction(option.value);
-                playSound(330, 0.1, 'sine', 0.2);
+                playSound('click');
               }}
               style={{
                 padding: '14px 18px',
@@ -1077,7 +1137,7 @@ const ShowerCurtainRenderer: React.FC<ShowerCurtainRendererProps> = ({ onEvent, 
         )}
       </div>
 
-      {showTwistResult && renderBottomBar(() => goToPhase('twist_play'))}
+      {showTwistResult && renderBottomBar(() => goToPhase(5))}
     </div>
   );
 
@@ -1222,7 +1282,7 @@ const ShowerCurtainRenderer: React.FC<ShowerCurtainRendererProps> = ({ onEvent, 
 
       {renderKeyTakeaway("Hot showers create stronger curtain effects because thermal convection adds to mechanical entrainment — two pressure-lowering mechanisms instead of one!")}
 
-      {renderBottomBar(() => goToPhase('twist_review'))}
+      {renderBottomBar(() => goToPhase(6))}
     </div>
   );
 
@@ -1299,7 +1359,7 @@ const ShowerCurtainRenderer: React.FC<ShowerCurtainRendererProps> = ({ onEvent, 
         {renderKeyTakeaway("Understanding the physics helps design solutions: add weight, increase clearance, reduce temperature, or use rigid materials to counter the pressure differential.")}
       </div>
 
-      {renderBottomBar(() => goToPhase('transfer'))}
+      {renderBottomBar(() => goToPhase(7))}
     </div>
   );
 
@@ -1329,7 +1389,7 @@ const ShowerCurtainRenderer: React.FC<ShowerCurtainRendererProps> = ({ onEvent, 
               onMouseDown={() => {
                 if (completedApps.has(i)) {
                   setActiveApp(i);
-                  playSound(400 + i * 50, 0.1, 'sine', 0.2);
+                  playSound('click');
                 }
               }}
               style={{
@@ -1435,7 +1495,7 @@ const ShowerCurtainRenderer: React.FC<ShowerCurtainRendererProps> = ({ onEvent, 
               const next = activeApp + 1;
               setCompletedApps(prev => new Set([...prev, next]));
               setActiveApp(next);
-              playSound(500, 0.15, 'sine', 0.2);
+              playSound('transition');
             }}
             style={{
               marginTop: '20px',
@@ -1455,7 +1515,7 @@ const ShowerCurtainRenderer: React.FC<ShowerCurtainRendererProps> = ({ onEvent, 
         )}
       </div>
 
-      {completedApps.size === applications.length && renderBottomBar(() => goToPhase('test'))}
+      {completedApps.size === applications.length && renderBottomBar(() => goToPhase(8))}
     </div>
   );
 
@@ -1543,7 +1603,7 @@ const ShowerCurtainRenderer: React.FC<ShowerCurtainRendererProps> = ({ onEvent, 
               <button
                 onMouseDown={() => {
                   setShowTestResults(true);
-                  playSound(600, 0.3, 'sine', 0.3);
+                  playSound('success');
                 }}
                 style={{
                   padding: '14px 32px',
@@ -1605,7 +1665,7 @@ const ShowerCurtainRenderer: React.FC<ShowerCurtainRendererProps> = ({ onEvent, 
           )}
         </div>
 
-        {showTestResults && renderBottomBar(() => goToPhase('mastery'), false, "Complete Journey")}
+        {showTestResults && renderBottomBar(() => goToPhase(9), false, "Complete Journey")}
       </div>
     );
   };
@@ -1721,32 +1781,61 @@ const ShowerCurtainRenderer: React.FC<ShowerCurtainRendererProps> = ({ onEvent, 
   // Main render
   const renderPhase = () => {
     switch (phase) {
-      case 'hook': return renderHook();
-      case 'predict': return renderPredict();
-      case 'play': return renderPlay();
-      case 'review': return renderReview();
-      case 'twist_predict': return renderTwistPredict();
-      case 'twist_play': return renderTwistPlay();
-      case 'twist_review': return renderTwistReview();
-      case 'transfer': return renderTransfer();
-      case 'test': return renderTest();
-      case 'mastery': return renderMastery();
+      case 0: return renderHook();
+      case 1: return renderPredict();
+      case 2: return renderPlay();
+      case 3: return renderReview();
+      case 4: return renderTwistPredict();
+      case 5: return renderTwistPlay();
+      case 6: return renderTwistReview();
+      case 7: return renderTransfer();
+      case 8: return renderTest();
+      case 9: return renderMastery();
       default: return renderHook();
     }
   };
 
   return (
-    <div style={{
-      minHeight: '100vh',
-      background: colors.background,
-      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
-    }}>
-      <div style={{
-        maxWidth: '800px',
-        margin: '0 auto',
-        padding: isMobile ? '8px' : '16px'
-      }}>
-        {renderPhase()}
+    <div className="min-h-screen bg-[#0a0f1a] text-white relative overflow-hidden">
+      {/* Premium background gradient */}
+      <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-[#0a1628] to-slate-900" />
+      <div className="absolute top-0 left-1/4 w-96 h-96 bg-cyan-500/5 rounded-full blur-3xl" />
+      <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-blue-500/5 rounded-full blur-3xl" />
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-cyan-500/3 rounded-full blur-3xl" />
+
+      {/* Fixed Header */}
+      <div className="fixed top-0 left-0 right-0 z-50 bg-slate-900/80 backdrop-blur-xl border-b border-slate-800/50">
+        <div className="flex items-center justify-between px-6 py-3 max-w-4xl mx-auto">
+          <span className="text-sm font-semibold text-white/80 tracking-wide">Shower Curtain Effect</span>
+          <div className="flex items-center gap-1.5">
+            {PHASES.map((p) => (
+              <button
+                key={p}
+                onMouseDown={(e) => { e.preventDefault(); goToPhase(p); }}
+                className={`h-2 rounded-full transition-all duration-300 ${
+                  phase === p
+                    ? 'bg-cyan-400 w-6 shadow-lg shadow-cyan-400/30'
+                    : phase > p
+                      ? 'bg-emerald-500 w-2'
+                      : 'bg-slate-700 w-2 hover:bg-slate-600'
+                }`}
+                title={phaseLabels[p]}
+              />
+            ))}
+          </div>
+          <span className="text-sm font-medium text-cyan-400">{phaseLabels[phase]}</span>
+        </div>
+      </div>
+
+      {/* Main content */}
+      <div className="relative pt-16 pb-12">
+        <div style={{
+          maxWidth: '800px',
+          margin: '0 auto',
+          padding: isMobile ? '8px' : '16px'
+        }}>
+          {renderPhase()}
+        </div>
       </div>
     </div>
   );

@@ -10,66 +10,52 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 // Classic demo: Coin-Card-Cup trick
 // ============================================================================
 
-// Premium Design System
-const premiumDesign = {
-  colors: {
-    primary: '#f59e0b',
-    primaryDark: '#d97706',
-    secondary: '#6366f1',
-    accent: '#10b981',
-    success: '#10B981',
-    warning: '#F59E0B',
-    error: '#EF4444',
-    coin: '#fcd34d',
-    coinEdge: '#b45309',
-    card: '#ef4444',
-    cup: '#6366f1',
-    background: {
-      primary: '#0c0a09',
-      secondary: '#1c1917',
-      tertiary: '#292524',
-      card: 'rgba(255, 255, 255, 0.03)',
-    },
-    text: {
-      primary: '#fafaf9',
-      secondary: 'rgba(255, 255, 255, 0.7)',
-      muted: 'rgba(255, 255, 255, 0.4)',
-    },
-    gradient: {
-      primary: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
-      secondary: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
-      warm: 'linear-gradient(135deg, #f97316 0%, #ef4444 100%)',
-    },
-  },
-  typography: {
-    fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
-  },
-  spacing: { xs: 4, sm: 8, md: 16, lg: 24, xl: 32 },
-  radius: { sm: 8, md: 12, lg: 16, xl: 24, full: 9999 },
-  shadows: {
-    sm: '0 2px 8px rgba(0, 0, 0, 0.2)',
-    md: '0 4px 16px rgba(0, 0, 0, 0.3)',
-    lg: '0 8px 32px rgba(0, 0, 0, 0.4)',
-    glow: (color: string) => `0 0 20px ${color}40`,
-  },
-};
+type GameEventType =
+  | 'phase_change'
+  | 'prediction_made'
+  | 'simulation_started'
+  | 'parameter_changed'
+  | 'twist_prediction_made'
+  | 'app_explored'
+  | 'test_answered'
+  | 'test_completed'
+  | 'mastery_achieved';
 
-type Phase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
-const phaseOrder: Phase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
-
-interface InertiaRendererProps {
-  onBack?: () => void;
-  onNext?: () => void;
+interface GameEvent {
+  type: GameEventType;
+  data?: Record<string, unknown>;
 }
 
-export default function InertiaRenderer({ onBack, onNext }: InertiaRendererProps) {
-  // Core State
-  const [phase, setPhase] = useState<Phase>('hook');
-  const [isMobile, setIsMobile] = useState(false);
+const PHASES: number[] = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
+const phaseLabels: Record<number, string> = {
+  0: 'Hook',
+  1: 'Predict',
+  2: 'Lab',
+  3: 'Review',
+  4: 'Twist Predict',
+  5: 'Twist Lab',
+  6: 'Twist Review',
+  7: 'Transfer',
+  8: 'Test',
+  9: 'Mastery'
+};
 
-  // Debounce refs
+interface InertiaRendererProps {
+  onGameEvent?: (event: GameEvent) => void;
+  currentPhase?: number;
+  onPhaseComplete?: (phase: number) => void;
+}
+
+export default function InertiaRenderer({ onGameEvent, currentPhase, onPhaseComplete }: InertiaRendererProps) {
   const navigationLockRef = useRef(false);
-  const lastNavigationTime = useRef(0);
+  const lastClickRef = useRef(0);
+
+  // Core State
+  const [phase, setPhase] = useState<number>(() => {
+    if (currentPhase !== undefined && PHASES.includes(currentPhase)) return currentPhase;
+    return 0;
+  });
+  const [isMobile, setIsMobile] = useState(false);
 
   // Hook phase
   const [hookStep, setHookStep] = useState(0);
@@ -183,49 +169,77 @@ export default function InertiaRenderer({ onBack, onNext }: InertiaRendererProps
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
-  // Debounced navigation
-  const safeNavigate = useCallback((action: () => void) => {
-    const now = Date.now();
-    if (navigationLockRef.current || now - lastNavigationTime.current < 400) {
-      return;
+  // Sync with external phase
+  useEffect(() => {
+    if (currentPhase !== undefined && PHASES.includes(currentPhase) && currentPhase !== phase) {
+      setPhase(currentPhase);
     }
-    navigationLockRef.current = true;
-    lastNavigationTime.current = now;
-    action();
-    setTimeout(() => {
-      navigationLockRef.current = false;
-    }, 400);
+  }, [currentPhase, phase]);
+
+  // Sound effect with typed categories
+  const playSound = useCallback((type: 'click' | 'success' | 'failure' | 'transition' | 'complete') => {
+    if (typeof window === 'undefined') return;
+    try {
+      const audioContext = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
+      const oscillator = audioContext.createOscillator();
+      const gainNode = audioContext.createGain();
+      oscillator.connect(gainNode);
+      gainNode.connect(audioContext.destination);
+      const sounds = {
+        click: { freq: 600, duration: 0.1, type: 'sine' as OscillatorType },
+        success: { freq: 800, duration: 0.2, type: 'sine' as OscillatorType },
+        failure: { freq: 300, duration: 0.3, type: 'sine' as OscillatorType },
+        transition: { freq: 500, duration: 0.15, type: 'sine' as OscillatorType },
+        complete: { freq: 900, duration: 0.4, type: 'sine' as OscillatorType }
+      };
+      const sound = sounds[type];
+      oscillator.frequency.value = sound.freq;
+      oscillator.type = sound.type;
+      gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + sound.duration);
+      oscillator.start();
+      oscillator.stop(audioContext.currentTime + sound.duration);
+    } catch { /* Audio not available */ }
   }, []);
 
-  const goToPhase = useCallback((newPhase: Phase) => {
-    safeNavigate(() => {
-      setPhase(newPhase);
-      if (newPhase === 'play') {
-        setCardX(0);
-        setCoinY(0);
-        setHasFlicked(false);
-        setCoinFell(false);
-        setCoinMissed(false);
-      }
-      if (newPhase === 'twist_play') {
-        setClothX(0);
-        setTwistFlicked(false);
-        setDishesStayed(true);
-      }
-    });
-  }, [safeNavigate]);
+  // Event emitter
+  const emitEvent = useCallback((type: GameEventType, data?: Record<string, unknown>) => {
+    onGameEvent?.({ type, data });
+  }, [onGameEvent]);
 
-  const nextPhase = useCallback(() => {
-    const currentIndex = phaseOrder.indexOf(phase);
-    if (currentIndex < phaseOrder.length - 1) {
-      goToPhase(phaseOrder[currentIndex + 1]);
+  // Debounced navigation
+  const goToPhase = useCallback((newPhase: number) => {
+    if (navigationLockRef.current) return;
+    const now = Date.now();
+    if (now - lastClickRef.current < 200) return;
+    lastClickRef.current = now;
+    if (!PHASES.includes(newPhase)) return;
+    navigationLockRef.current = true;
+    setPhase(newPhase);
+    playSound('transition');
+    emitEvent('phase_change', { from: phase, to: newPhase, phaseLabel: phaseLabels[newPhase] });
+    onPhaseComplete?.(newPhase);
+    // Reset state for play phases
+    if (newPhase === 2) {
+      setCardX(0);
+      setCoinY(0);
+      setHasFlicked(false);
+      setCoinFell(false);
+      setCoinMissed(false);
     }
-  }, [phase, goToPhase]);
+    if (newPhase === 5) {
+      setClothX(0);
+      setTwistFlicked(false);
+      setDishesStayed(true);
+    }
+    setTimeout(() => { navigationLockRef.current = false; }, 400);
+  }, [phase, playSound, emitEvent, onPhaseComplete]);
 
   // Coin-Card animation
   const flickCard = useCallback(() => {
     if (hasFlicked) return;
     setHasFlicked(true);
+    playSound('click');
 
     const cardSpeed = flickSpeed === 'fast' ? 30 : 3;
     const startTime = Date.now();
@@ -246,6 +260,7 @@ export default function InertiaRenderer({ onBack, onNext }: InertiaRendererProps
           setCoinY(newCoinY);
           if (newCoinY >= 80) {
             setCoinFell(true);
+            playSound('success');
           }
         } else {
           // Slow flick - coin moves with card and misses
@@ -254,6 +269,7 @@ export default function InertiaRenderer({ onBack, onNext }: InertiaRendererProps
           setCoinY(newCoinY);
           if (newCoinY >= 80) {
             setCoinMissed(true);
+            playSound('failure');
           }
         }
       }
@@ -264,12 +280,13 @@ export default function InertiaRenderer({ onBack, onNext }: InertiaRendererProps
     };
 
     animationRef.current = requestAnimationFrame(animate);
-  }, [hasFlicked, flickSpeed]);
+  }, [hasFlicked, flickSpeed, playSound]);
 
   // Tablecloth animation
   const pullCloth = useCallback(() => {
     if (twistFlicked) return;
     setTwistFlicked(true);
+    playSound('click');
 
     const clothSpeed = twistSpeed === 'fast' ? 40 : 4;
     const startTime = Date.now();
@@ -283,13 +300,21 @@ export default function InertiaRenderer({ onBack, onNext }: InertiaRendererProps
         setDishesStayed(false);
       }
 
+      if (newClothX >= 400) {
+        if (twistSpeed === 'fast') {
+          playSound('success');
+        } else {
+          playSound('failure');
+        }
+      }
+
       if (newClothX < 400) {
         twistRef.current = requestAnimationFrame(animate);
       }
     };
 
     twistRef.current = requestAnimationFrame(animate);
-  }, [twistFlicked, twistSpeed]);
+  }, [twistFlicked, twistSpeed, playSound]);
 
   // Cleanup
   useEffect(() => {
@@ -299,507 +324,335 @@ export default function InertiaRenderer({ onBack, onNext }: InertiaRendererProps
     };
   }, []);
 
-  // Helper functions for UI elements
-  function renderButton(
-    text: string,
-    onClick: () => void,
-    variant: 'primary' | 'secondary' | 'success' = 'primary',
-    disabled = false
-  ) {
-    const baseStyle: React.CSSProperties = {
-      padding: isMobile ? '14px 24px' : '16px 32px',
-      borderRadius: premiumDesign.radius.lg,
-      border: 'none',
-      fontSize: isMobile ? '15px' : '16px',
-      fontWeight: 600,
-      cursor: disabled ? 'not-allowed' : 'pointer',
-      transition: 'all 0.3s ease',
-      fontFamily: premiumDesign.typography.fontFamily,
-      opacity: disabled ? 0.5 : 1,
-    };
+  // Handle test answer
+  const handleTestAnswer = useCallback((answerIndex: number) => {
+    const now = Date.now();
+    if (now - lastClickRef.current < 200) return;
+    lastClickRef.current = now;
+    if (showExplanation) return;
 
-    const variants = {
-      primary: {
-        background: premiumDesign.colors.gradient.primary,
-        color: 'white',
-        boxShadow: premiumDesign.shadows.glow(premiumDesign.colors.primary),
-      },
-      secondary: {
-        background: premiumDesign.colors.background.tertiary,
-        color: premiumDesign.colors.text.primary,
-        border: `1px solid rgba(255,255,255,0.1)`,
-      },
-      success: {
-        background: `linear-gradient(135deg, ${premiumDesign.colors.success} 0%, #059669 100%)`,
-        color: 'white',
-        boxShadow: premiumDesign.shadows.glow(premiumDesign.colors.success),
-      },
-    };
+    setSelectedAnswer(answerIndex);
+    setShowExplanation(true);
 
-    return (
-      <button
-        style={{ ...baseStyle, ...variants[variant] }}
-        onMouseDown={(e) => {
-          e.preventDefault();
-          if (!disabled) onClick();
-        }}
-        disabled={disabled}
-      >
-        {text}
-      </button>
-    );
-  }
+    if (answerIndex === testQuestions[currentQuestion].correct) {
+      setTestScore(s => s + 1);
+      playSound('success');
+    } else {
+      playSound('failure');
+    }
+  }, [currentQuestion, showExplanation, testQuestions, playSound]);
 
-  function renderProgressBar() {
-    const currentIndex = phaseOrder.indexOf(phase);
-    const progress = ((currentIndex + 1) / phaseOrder.length) * 100;
-
-    return (
-      <div style={{ marginBottom: premiumDesign.spacing.lg }}>
-        <div style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          marginBottom: premiumDesign.spacing.xs,
-          fontSize: '12px',
-          color: premiumDesign.colors.text.muted,
-        }}>
-          <span>Phase {currentIndex + 1} of {phaseOrder.length}</span>
-          <span>{phase.replace('_', ' ').toUpperCase()}</span>
-        </div>
-        <div style={{
-          height: 6,
-          background: premiumDesign.colors.background.tertiary,
-          borderRadius: premiumDesign.radius.full,
-          overflow: 'hidden',
-        }}>
-          <div style={{
-            width: `${progress}%`,
-            height: '100%',
-            background: premiumDesign.colors.gradient.primary,
-            borderRadius: premiumDesign.radius.full,
-            transition: 'width 0.5s ease',
-          }} />
-        </div>
-      </div>
-    );
-  }
-
-  function renderBottomBar(
-    leftButton?: { text: string; onClick: () => void },
-    rightButton?: { text: string; onClick: () => void; variant?: 'primary' | 'secondary' | 'success'; disabled?: boolean }
-  ) {
-    return (
-      <div style={{
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        marginTop: premiumDesign.spacing.xl,
-        paddingTop: premiumDesign.spacing.lg,
-        borderTop: '1px solid rgba(255,255,255,0.1)',
-      }}>
-        {leftButton ? renderButton(leftButton.text, leftButton.onClick, 'secondary') : <div />}
-        {rightButton && renderButton(rightButton.text, rightButton.onClick, rightButton.variant || 'primary', rightButton.disabled)}
-      </div>
-    );
-  }
+  // Applications for transfer phase
+  const applications = [
+    {
+      title: "Car Safety Systems",
+      icon: "\uD83D\uDE97",
+      description: "Seatbelts and airbags are designed to counteract inertia. In a crash, your body continues moving forward while the car stops. Seatbelts provide the force to slow you down gradually, preventing injury.",
+      fact: "Modern seatbelts have 'pretensioners' that tighten in milliseconds during a crash, reducing the distance your body travels before being restrained!",
+    },
+    {
+      title: "Roller Coasters",
+      icon: "\uD83C\uDFA2",
+      description: "That feeling of being 'pushed back' during acceleration or 'thrown forward' during braking is your inertia at work! Coaster designers use inertia to create thrilling sensations while keeping riders safe.",
+      fact: "The fastest roller coaster accelerates from 0-150 mph in under 5 seconds - passengers feel 1.7G of force due to their inertia!",
+    },
+    {
+      title: "Space Travel",
+      icon: "\uD83D\uDE80",
+      description: "In space, there's almost no friction. Once a spacecraft reaches its velocity, it keeps moving without using fuel - pure inertia! This is how we can send probes to distant planets using minimal fuel.",
+      fact: "The Voyager 1 probe, launched in 1977, is still traveling at 38,000 mph due to inertia - it hasn't used its engines in decades!",
+    },
+    {
+      title: "Sports Physics",
+      icon: "\u26BD",
+      description: "Athletes use inertia constantly! A baseball pitcher's follow-through, a golfer's swing, a football player's tackle - all rely on understanding how objects (and bodies) resist changes in motion.",
+      fact: "A professional pitcher's arm decelerates from 7,000 deg/second to 0 in just 0.05 seconds - requiring massive force to overcome the arm's inertia!",
+    },
+  ];
 
   // ==================== PHASE RENDERERS ====================
 
-  function renderHookPhase() {
+  const renderHook = () => {
     const hookContent = [
       {
-        title: "🪙 The Magic Coin Trick",
+        title: "The Magic Coin Trick",
         content: "There's a classic magic trick: Place a coin on a card on top of a cup. Flick the card away, and the coin drops perfectly into the cup! How is this possible?",
-        visual: "🪙",
+        visual: "\uD83E\uDE99",
       },
       {
-        title: "🚗 The Sudden Stop",
+        title: "The Sudden Stop",
         content: "Have you ever lurched forward when a car suddenly brakes? Or felt pushed back when it accelerates? Your body seems to have a mind of its own!",
-        visual: "🚗",
+        visual: "\uD83D\uDE97",
       },
       {
-        title: "⚖️ Newton's First Secret",
+        title: "Newton's First Secret",
         content: "Isaac Newton discovered why these things happen. He called it INERTIA - the tendency of objects to resist changes in their motion. Today you'll master this principle!",
-        visual: "⚖️",
+        visual: "\u2696\uFE0F",
       },
     ];
 
     return (
-      <div style={{ minHeight: '60vh', display: 'flex', flexDirection: 'column' }}>
-        {renderProgressBar()}
-
-        <div style={{
-          flex: 1,
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          justifyContent: 'center',
-          textAlign: 'center',
-          padding: premiumDesign.spacing.xl,
-        }}>
-          <div style={{ fontSize: '64px', marginBottom: premiumDesign.spacing.lg }}>
-            {hookContent[hookStep].visual}
-          </div>
-
-          <h2 style={{
-            fontSize: isMobile ? '24px' : '32px',
-            fontWeight: 700,
-            color: premiumDesign.colors.text.primary,
-            marginBottom: premiumDesign.spacing.md,
-          }}>
-            {hookContent[hookStep].title}
-          </h2>
-
-          <p style={{
-            fontSize: isMobile ? '16px' : '18px',
-            color: premiumDesign.colors.text.secondary,
-            maxWidth: '500px',
-            lineHeight: 1.7,
-          }}>
-            {hookContent[hookStep].content}
-          </p>
-
-          <div style={{
-            display: 'flex',
-            gap: premiumDesign.spacing.sm,
-            marginTop: premiumDesign.spacing.xl,
-          }}>
-            {hookContent.map((_, i) => (
-              <button
-                key={i}
-                style={{
-                  width: 40,
-                  height: 8,
-                  borderRadius: premiumDesign.radius.full,
-                  border: 'none',
-                  background: i === hookStep
-                    ? premiumDesign.colors.primary
-                    : premiumDesign.colors.background.tertiary,
-                  cursor: 'pointer',
-                  transition: 'all 0.3s ease',
-                }}
-                onMouseDown={(e) => {
-                  e.preventDefault();
-                  safeNavigate(() => setHookStep(i));
-                }}
-              />
-            ))}
-          </div>
+      <div className="flex flex-col items-center justify-center min-h-[600px] px-6 py-12 text-center">
+        {/* Premium badge */}
+        <div className="inline-flex items-center gap-2 px-4 py-2 bg-amber-500/10 border border-amber-500/20 rounded-full mb-8">
+          <span className="w-2 h-2 bg-amber-400 rounded-full animate-pulse" />
+          <span className="text-sm font-medium text-amber-400 tracking-wide">PHYSICS EXPLORATION</span>
         </div>
 
-        {renderBottomBar(
-          undefined,
-          {
-            text: hookStep < hookContent.length - 1 ? 'Continue →' : 'Make a Prediction →',
-            onClick: () => {
-              if (hookStep < hookContent.length - 1) {
-                safeNavigate(() => setHookStep(h => h + 1));
-              } else {
-                nextPhase();
-              }
-            },
-          }
-        )}
+        {/* Main visual */}
+        <div className="text-7xl mb-6" style={{ filter: 'drop-shadow(0 8px 24px rgba(245, 158, 11, 0.4))' }}>
+          {hookContent[hookStep].visual}
+        </div>
+
+        {/* Title */}
+        <h1 className="text-3xl md:text-4xl font-bold text-white mb-4">
+          {hookContent[hookStep].title}
+        </h1>
+
+        {/* Content */}
+        <p className="text-lg text-slate-400 max-w-md mb-8 leading-relaxed">
+          {hookContent[hookStep].content}
+        </p>
+
+        {/* Step indicators */}
+        <div className="flex gap-2 mb-8">
+          {hookContent.map((_, i) => (
+            <button
+              key={i}
+              onMouseDown={(e) => {
+                e.preventDefault();
+                const now = Date.now();
+                if (now - lastClickRef.current < 200) return;
+                lastClickRef.current = now;
+                setHookStep(i);
+              }}
+              className={`h-2 rounded-full transition-all duration-300 ${
+                i === hookStep ? 'w-8 bg-amber-400' : 'w-2 bg-slate-700 hover:bg-slate-600'
+              }`}
+            />
+          ))}
+        </div>
+
+        {/* CTA Button */}
+        <button
+          onMouseDown={(e) => {
+            e.preventDefault();
+            if (hookStep < hookContent.length - 1) {
+              const now = Date.now();
+              if (now - lastClickRef.current < 200) return;
+              lastClickRef.current = now;
+              setHookStep(h => h + 1);
+            } else {
+              goToPhase(1);
+            }
+          }}
+          className="group relative px-10 py-5 bg-gradient-to-r from-amber-500 to-orange-500 text-white text-lg font-semibold rounded-2xl transition-all duration-300 hover:shadow-lg hover:shadow-amber-500/25 hover:scale-[1.02] active:scale-[0.98]"
+        >
+          <span className="relative z-10 flex items-center gap-3">
+            {hookStep < hookContent.length - 1 ? 'Continue' : 'Make a Prediction'}
+            <svg className="w-5 h-5 transition-transform group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+            </svg>
+          </span>
+        </button>
+
+        {/* Feature hints */}
+        <div className="mt-12 flex items-center gap-8 text-sm text-slate-500">
+          <div className="flex items-center gap-2">
+            <span className="text-amber-400">{'\u2726'}</span>
+            Interactive Lab
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-amber-400">{'\u2726'}</span>
+            Real-World Examples
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-amber-400">{'\u2726'}</span>
+            Knowledge Test
+          </div>
+        </div>
       </div>
     );
-  }
+  };
 
-  function renderPredictPhase() {
+  const renderPredict = () => {
     const predictions = [
-      { id: 'coin_falls', label: 'The coin will drop straight down into the cup', icon: '⬇️' },
-      { id: 'coin_flies', label: 'The coin will fly away with the card', icon: '➡️' },
-      { id: 'coin_stays', label: 'The coin will hover in the air momentarily', icon: '🪙' },
-      { id: 'coin_spins', label: 'The coin will spin and land randomly', icon: '🌀' },
+      { id: 'coin_falls', label: 'The coin will drop straight down into the cup', icon: '\u2B07\uFE0F' },
+      { id: 'coin_flies', label: 'The coin will fly away with the card', icon: '\u27A1\uFE0F' },
+      { id: 'coin_stays', label: 'The coin will hover in the air momentarily', icon: '\uD83E\uDE99' },
+      { id: 'coin_spins', label: 'The coin will spin and land randomly', icon: '\uD83C\uDF00' },
     ];
 
     return (
-      <div style={{ minHeight: '60vh', display: 'flex', flexDirection: 'column' }}>
-        {renderProgressBar()}
+      <div className="flex flex-col items-center px-6 py-8">
+        <h2 className="text-2xl md:text-3xl font-bold text-white mb-2">Make Your Prediction</h2>
+        <p className="text-slate-400 mb-8">When you flick the card away quickly, what happens to the coin?</p>
 
-        <div style={{ textAlign: 'center', marginBottom: premiumDesign.spacing.xl }}>
-          <h2 style={{
-            fontSize: isMobile ? '22px' : '28px',
-            fontWeight: 700,
-            color: premiumDesign.colors.text.primary,
-            marginBottom: premiumDesign.spacing.sm,
-          }}>
-            🤔 Make Your Prediction
-          </h2>
-          <p style={{ color: premiumDesign.colors.text.secondary }}>
-            When you flick the card away quickly, what happens to the coin?
-          </p>
-        </div>
-
-        <div style={{
-          display: 'grid',
-          gap: premiumDesign.spacing.md,
-          maxWidth: '600px',
-          margin: '0 auto',
-          width: '100%',
-        }}>
+        <div className="flex flex-col gap-3 w-full max-w-md mb-8">
           {predictions.map((pred) => (
             <button
               key={pred.id}
-              style={{
-                padding: premiumDesign.spacing.lg,
-                borderRadius: premiumDesign.radius.lg,
-                border: prediction === pred.id
-                  ? `2px solid ${premiumDesign.colors.primary}`
-                  : '2px solid rgba(255,255,255,0.1)',
-                background: prediction === pred.id
-                  ? 'rgba(245, 158, 11, 0.2)'
-                  : premiumDesign.colors.background.secondary,
-                cursor: 'pointer',
-                textAlign: 'left',
-                transition: 'all 0.3s ease',
-              }}
               onMouseDown={(e) => {
                 e.preventDefault();
-                safeNavigate(() => setPrediction(pred.id));
+                const now = Date.now();
+                if (now - lastClickRef.current < 200) return;
+                lastClickRef.current = now;
+                setPrediction(pred.id);
+                playSound(pred.id === 'coin_falls' ? 'success' : 'click');
+                emitEvent('prediction_made', { prediction: pred.id });
               }}
+              className={`p-4 rounded-xl border-2 transition-all duration-300 flex items-center gap-4 ${
+                prediction === pred.id
+                  ? 'border-amber-500 bg-amber-500/20'
+                  : 'border-slate-700 bg-slate-800/50 hover:bg-slate-700/50'
+              }`}
             >
-              <div style={{ display: 'flex', alignItems: 'center', gap: premiumDesign.spacing.md }}>
-                <span style={{ fontSize: '24px' }}>{pred.icon}</span>
-                <span style={{
-                  color: premiumDesign.colors.text.primary,
-                  fontSize: '15px',
-                }}>
-                  {pred.label}
-                </span>
-              </div>
+              <span className="text-2xl">{pred.icon}</span>
+              <span className="text-white font-medium text-left">{pred.label}</span>
             </button>
           ))}
         </div>
 
-        {renderBottomBar(
-          { text: '← Back', onClick: () => goToPhase('hook') },
-          {
-            text: 'Test My Prediction →',
-            onClick: nextPhase,
-            disabled: !prediction,
-          }
+        {prediction && (
+          <button
+            onMouseDown={(e) => { e.preventDefault(); goToPhase(2); }}
+            className="px-8 py-4 bg-gradient-to-r from-amber-500 to-orange-500 text-white font-semibold rounded-xl hover:shadow-lg hover:shadow-amber-500/25 transition-all"
+          >
+            Test My Prediction {'\u2192'}
+          </button>
         )}
       </div>
     );
-  }
+  };
 
-  function renderPlayPhase() {
-    return (
-      <div style={{ minHeight: '60vh', display: 'flex', flexDirection: 'column' }}>
-        {renderProgressBar()}
+  const renderPlay = () => (
+    <div className="flex flex-col items-center px-6 py-8">
+      <h2 className="text-2xl font-bold text-white mb-2">Coin-Card-Cup Experiment</h2>
+      <p className="text-slate-400 mb-6">Flick the card and watch what happens to the coin!</p>
 
-        <div style={{ textAlign: 'center', marginBottom: premiumDesign.spacing.lg }}>
-          <h2 style={{
-            fontSize: isMobile ? '22px' : '28px',
-            fontWeight: 700,
-            color: premiumDesign.colors.text.primary,
-          }}>
-            🪙 Coin-Card-Cup Experiment
-          </h2>
-          <p style={{ color: premiumDesign.colors.text.secondary }}>
-            Flick the card and watch what happens to the coin!
-          </p>
-        </div>
+      {/* Simulation */}
+      <div className="bg-slate-800/50 rounded-2xl p-4 mb-6 border border-slate-700/50">
+        <svg width="300" height="220" className="mx-auto">
+          {/* Background */}
+          <rect width="300" height="220" fill="#1e293b" rx="12" />
 
-        <div style={{
-          display: 'flex',
-          flexDirection: isMobile ? 'column' : 'row',
-          gap: premiumDesign.spacing.xl,
-          flex: 1,
-        }}>
-          {/* Simulation */}
-          <div style={{
-            flex: 2,
-            display: 'flex',
-            justifyContent: 'center',
-            alignItems: 'center',
-          }}>
-            <svg
-              width="300"
-              height="250"
-              style={{
-                background: premiumDesign.colors.background.secondary,
-                borderRadius: premiumDesign.radius.xl,
-                border: '1px solid rgba(255,255,255,0.1)',
-              }}
-            >
-              {/* Table */}
-              <rect x="0" y="200" width="300" height="50" fill="#8B4513" />
+          {/* Table */}
+          <rect x="0" y="180" width="300" height="40" fill="#8B4513" />
 
-              {/* Cup */}
-              <g transform="translate(130, 120)">
-                <path
-                  d="M0 0 L10 80 L50 80 L60 0 Z"
-                  fill={premiumDesign.colors.cup}
-                  opacity={0.9}
-                />
-                <ellipse cx="30" cy="0" rx="30" ry="8" fill={premiumDesign.colors.cup} />
-                <ellipse cx="30" cy="80" rx="20" ry="6" fill="#4f46e5" />
-                {/* Inner cup */}
-                <ellipse cx="30" cy="5" rx="22" ry="5" fill="#312e81" opacity={0.6} />
-              </g>
+          {/* Cup */}
+          <g transform="translate(130, 105)">
+            <path d="M0 0 L10 75 L50 75 L60 0 Z" fill="#6366f1" opacity={0.9} />
+            <ellipse cx="30" cy="0" rx="30" ry="8" fill="#6366f1" />
+            <ellipse cx="30" cy="75" rx="20" ry="6" fill="#4f46e5" />
+            <ellipse cx="30" cy="5" rx="22" ry="5" fill="#312e81" opacity={0.6} />
+          </g>
 
-              {/* Card (moving) */}
-              {!coinFell && !coinMissed && (
-                <g transform={`translate(${100 + cardX}, 80)`}>
-                  <rect
-                    x="0" y="0"
-                    width="80" height="10"
-                    fill={premiumDesign.colors.card}
-                    rx="2"
-                  />
-                </g>
-              )}
+          {/* Card (moving) */}
+          {!coinFell && !coinMissed && (
+            <g transform={`translate(${100 + cardX}, 70)`}>
+              <rect x="0" y="0" width="80" height="10" fill="#ef4444" rx="2" />
+            </g>
+          )}
 
-              {/* Coin */}
-              <g transform={`translate(${flickSpeed === 'slow' && hasFlicked && cardX > 50 ? 145 + cardX * 0.3 : 145}, ${70 + coinY})`}>
-                <ellipse cx="15" cy="0" rx="15" ry="4" fill={premiumDesign.colors.coinEdge} />
-                <ellipse cx="15" cy="-3" rx="15" ry="4" fill={premiumDesign.colors.coin} />
-                <text x="15" y="0" textAnchor="middle" fill={premiumDesign.colors.coinEdge} fontSize="10" fontWeight="bold">
-                  $
-                </text>
-              </g>
+          {/* Coin */}
+          <g transform={`translate(${flickSpeed === 'slow' && hasFlicked && cardX > 50 ? 145 + cardX * 0.3 : 145}, ${60 + coinY})`}>
+            <ellipse cx="15" cy="0" rx="15" ry="4" fill="#b45309" />
+            <ellipse cx="15" cy="-3" rx="15" ry="4" fill="#fcd34d" />
+            <text x="15" y="0" textAnchor="middle" fill="#b45309" fontSize="10" fontWeight="bold">$</text>
+          </g>
 
-              {/* Result messages */}
-              {coinFell && (
-                <g>
-                  <text x="150" y="30" textAnchor="middle" fill={premiumDesign.colors.success} fontSize="16" fontWeight="bold">
-                    ✓ SUCCESS!
-                  </text>
-                  <text x="150" y="50" textAnchor="middle" fill={premiumDesign.colors.text.secondary} fontSize="12">
-                    Coin dropped into cup!
-                  </text>
-                </g>
-              )}
-              {coinMissed && (
-                <g>
-                  <text x="150" y="30" textAnchor="middle" fill={premiumDesign.colors.error} fontSize="16" fontWeight="bold">
-                    ✗ MISSED!
-                  </text>
-                  <text x="150" y="50" textAnchor="middle" fill={premiumDesign.colors.text.secondary} fontSize="12">
-                    Card dragged the coin!
-                  </text>
-                </g>
-              )}
+          {/* Result messages */}
+          {coinFell && (
+            <g>
+              <text x="150" y="25" textAnchor="middle" fill="#22c55e" fontSize="16" fontWeight="bold">SUCCESS!</text>
+              <text x="150" y="45" textAnchor="middle" fill="#94a3b8" fontSize="12">Coin dropped into cup!</text>
+            </g>
+          )}
+          {coinMissed && (
+            <g>
+              <text x="150" y="25" textAnchor="middle" fill="#ef4444" fontSize="16" fontWeight="bold">MISSED!</text>
+              <text x="150" y="45" textAnchor="middle" fill="#94a3b8" fontSize="12">Card dragged the coin!</text>
+            </g>
+          )}
 
-              {/* Finger indicator */}
-              {!hasFlicked && (
-                <g transform="translate(90, 70)">
-                  <text fontSize="20">👆</text>
-                  <text x="-10" y="50" fill={premiumDesign.colors.text.muted} fontSize="10">
-                    Flick here!
-                  </text>
-                </g>
-              )}
-            </svg>
-          </div>
+          {/* Finger indicator */}
+          {!hasFlicked && (
+            <g transform="translate(90, 60)">
+              <text fontSize="20">{'\uD83D\uDC46'}</text>
+              <text x="-10" y="45" fill="#64748b" fontSize="10">Flick here!</text>
+            </g>
+          )}
+        </svg>
+      </div>
 
-          {/* Controls */}
-          <div style={{
-            flex: 1,
-            display: 'flex',
-            flexDirection: 'column',
-            gap: premiumDesign.spacing.md,
-          }}>
-            <div style={{
-              background: premiumDesign.colors.background.card,
-              borderRadius: premiumDesign.radius.lg,
-              padding: premiumDesign.spacing.lg,
-              border: '1px solid rgba(255,255,255,0.1)',
-            }}>
-              <h4 style={{ color: premiumDesign.colors.text.primary, marginBottom: premiumDesign.spacing.md }}>
-                Flick Speed
-              </h4>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: premiumDesign.spacing.sm }}>
-                {(['fast', 'slow'] as const).map(speed => (
-                  <button
-                    key={speed}
-                    style={{
-                      padding: premiumDesign.spacing.md,
-                      borderRadius: premiumDesign.radius.md,
-                      border: flickSpeed === speed ? `2px solid ${premiumDesign.colors.primary}` : '1px solid rgba(255,255,255,0.1)',
-                      background: flickSpeed === speed ? 'rgba(245, 158, 11, 0.2)' : 'transparent',
-                      color: premiumDesign.colors.text.primary,
-                      cursor: 'pointer',
-                      textTransform: 'capitalize',
-                    }}
-                    onMouseDown={(e) => {
-                      e.preventDefault();
-                      if (!hasFlicked) setFlickSpeed(speed);
-                    }}
-                  >
-                    {speed === 'fast' ? '⚡ Fast Flick' : '🐢 Slow Push'}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            <button
-              style={{
-                padding: premiumDesign.spacing.lg,
-                borderRadius: premiumDesign.radius.lg,
-                border: 'none',
-                background: hasFlicked ? premiumDesign.colors.background.tertiary : premiumDesign.colors.gradient.primary,
-                color: 'white',
-                fontSize: '16px',
-                fontWeight: 600,
-                cursor: hasFlicked ? 'not-allowed' : 'pointer',
-              }}
-              onMouseDown={(e) => {
-                e.preventDefault();
-                if (!hasFlicked) flickCard();
-              }}
-            >
-              {hasFlicked ? '✓ Flicked!' : '👆 Flick the Card!'}
-            </button>
-
-            {(coinFell || coinMissed) && (
+      {/* Controls */}
+      <div className="w-full max-w-sm">
+        <div className="bg-slate-800/50 rounded-xl p-4 mb-4 border border-slate-700/50">
+          <h4 className="text-white font-medium mb-3">Flick Speed</h4>
+          <div className="flex gap-2">
+            {(['fast', 'slow'] as const).map(speed => (
               <button
-                style={{
-                  padding: premiumDesign.spacing.md,
-                  borderRadius: premiumDesign.radius.md,
-                  border: '1px solid rgba(255,255,255,0.1)',
-                  background: 'transparent',
-                  color: premiumDesign.colors.text.secondary,
-                  cursor: 'pointer',
-                }}
+                key={speed}
                 onMouseDown={(e) => {
                   e.preventDefault();
-                  setCardX(0);
-                  setCoinY(0);
-                  setHasFlicked(false);
-                  setCoinFell(false);
-                  setCoinMissed(false);
+                  if (!hasFlicked) setFlickSpeed(speed);
                 }}
+                className={`flex-1 py-3 rounded-lg font-medium transition-all ${
+                  flickSpeed === speed
+                    ? 'bg-amber-500 text-white'
+                    : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
+                }`}
               >
-                🔄 Try Again
+                {speed === 'fast' ? '\u26A1 Fast Flick' : '\uD83D\uDC22 Slow Push'}
               </button>
-            )}
-
-            <div style={{
-              background: 'rgba(245, 158, 11, 0.1)',
-              borderRadius: premiumDesign.radius.lg,
-              padding: premiumDesign.spacing.md,
-              border: '1px solid rgba(245, 158, 11, 0.3)',
-            }}>
-              <p style={{ color: premiumDesign.colors.text.secondary, fontSize: '14px', margin: 0 }}>
-                💡 Try both speeds to see the difference! Fast flick = inertia wins!
-              </p>
-            </div>
+            ))}
           </div>
         </div>
 
-        {renderBottomBar(
-          { text: '← Back', onClick: () => goToPhase('predict') },
-          { text: 'See Results →', onClick: nextPhase }
+        <button
+          onMouseDown={(e) => { e.preventDefault(); if (!hasFlicked) flickCard(); }}
+          disabled={hasFlicked && !coinFell && !coinMissed}
+          className={`w-full py-4 rounded-xl font-semibold text-lg transition-all ${
+            hasFlicked
+              ? 'bg-slate-700 text-slate-400'
+              : 'bg-gradient-to-r from-amber-500 to-orange-500 text-white hover:shadow-lg hover:shadow-amber-500/25'
+          }`}
+        >
+          {hasFlicked ? '\u2713 Flicked!' : '\uD83D\uDC46 Flick the Card!'}
+        </button>
+
+        {(coinFell || coinMissed) && (
+          <button
+            onMouseDown={(e) => {
+              e.preventDefault();
+              setCardX(0);
+              setCoinY(0);
+              setHasFlicked(false);
+              setCoinFell(false);
+              setCoinMissed(false);
+            }}
+            className="w-full mt-3 py-3 bg-slate-700 text-slate-300 rounded-lg font-medium hover:bg-slate-600"
+          >
+            {'\uD83D\uDD04'} Try Again
+          </button>
         )}
+
+        <div className="mt-4 p-3 bg-amber-500/10 border border-amber-500/30 rounded-xl">
+          <p className="text-amber-400 text-sm">{'\uD83D\uDCA1'} Try both speeds to see the difference! Fast flick = inertia wins!</p>
+        </div>
       </div>
-    );
-  }
 
-  function renderReviewPhase() {
+      <button
+        onMouseDown={(e) => { e.preventDefault(); goToPhase(3); }}
+        className="mt-6 px-8 py-4 bg-gradient-to-r from-amber-500 to-orange-500 text-white font-semibold rounded-xl"
+      >
+        See Results {'\u2192'}
+      </button>
+    </div>
+  );
+
+  const renderReview = () => {
     const wasCorrect = prediction === 'coin_falls';
-
     const reviewContent = [
       {
         title: "Newton's First Law of Motion",
@@ -808,390 +661,251 @@ export default function InertiaRenderer({ onBack, onNext }: InertiaRendererProps
       },
       {
         title: "Why the Fast Flick Works",
-        content: "When you flick the card FAST:\n\n• The card leaves before friction can accelerate the coin\n• The coin's inertia keeps it in place\n• Gravity then pulls it straight down into the cup\n\nWhen you push SLOWLY, friction has time to drag the coin along!",
+        content: "When you flick the card FAST:\n\n- The card leaves before friction can accelerate the coin\n- The coin's inertia keeps it in place\n- Gravity then pulls it straight down into the cup\n\nWhen you push SLOWLY, friction has time to drag the coin along!",
       },
       {
         title: "The Coin 'Wants' to Stay Still",
-        content: "Inertia is the resistance to change.\n\n• The coin was at rest\n• It 'wants' to stay at rest\n• The fast-moving card doesn't give friction enough time\n• So the coin stays still horizontally and falls vertically!",
+        content: "Inertia is the resistance to change.\n\n- The coin was at rest\n- It 'wants' to stay at rest\n- The fast-moving card doesn't give friction enough time\n- So the coin stays still horizontally and falls vertically!",
       },
     ];
 
     return (
-      <div style={{ minHeight: '60vh', display: 'flex', flexDirection: 'column' }}>
-        {renderProgressBar()}
+      <div className="flex flex-col items-center px-6 py-8">
+        <h2 className="text-2xl md:text-3xl font-bold text-white mb-6">Understanding Inertia</h2>
 
-        <div style={{ textAlign: 'center', marginBottom: premiumDesign.spacing.xl }}>
-          <h2 style={{
-            fontSize: isMobile ? '22px' : '28px',
-            fontWeight: 700,
-            color: premiumDesign.colors.text.primary,
-          }}>
-            🔍 Understanding Inertia
-          </h2>
-        </div>
-
-        <div style={{
-          background: premiumDesign.colors.background.card,
-          borderRadius: premiumDesign.radius.xl,
-          padding: premiumDesign.spacing.xl,
-          border: '1px solid rgba(255,255,255,0.1)',
-          flex: 1,
-        }}>
-          <h3 style={{
-            color: premiumDesign.colors.primary,
-            fontSize: '20px',
-            marginBottom: premiumDesign.spacing.md,
-          }}>
-            {reviewContent[reviewStep].title}
-          </h3>
-
-          <p style={{
-            color: premiumDesign.colors.text.secondary,
-            fontSize: '16px',
-            lineHeight: 1.8,
-            whiteSpace: 'pre-line',
-          }}>
-            {reviewContent[reviewStep].content}
-          </p>
+        <div className="bg-slate-800/50 rounded-2xl p-6 max-w-lg w-full border border-slate-700/50 mb-6">
+          <h3 className="text-xl font-bold text-amber-400 mb-4">{reviewContent[reviewStep].title}</h3>
+          <p className="text-slate-300 whitespace-pre-line leading-relaxed">{reviewContent[reviewStep].content}</p>
 
           {reviewContent[reviewStep].highlight && (
-            <div style={{
-              background: 'rgba(16, 185, 129, 0.2)',
-              borderRadius: premiumDesign.radius.md,
-              padding: premiumDesign.spacing.md,
-              marginTop: premiumDesign.spacing.md,
-              border: '1px solid rgba(16, 185, 129, 0.5)',
-            }}>
-              <p style={{ color: premiumDesign.colors.success, margin: 0 }}>
-                ✓ Great prediction! You correctly anticipated the coin would fall straight down.
-              </p>
+            <div className="mt-4 p-3 bg-emerald-500/20 border border-emerald-500/30 rounded-xl">
+              <p className="text-emerald-400">{'\u2713'} Great prediction! You correctly anticipated the coin would fall straight down.</p>
             </div>
           )}
-
-          <div style={{
-            display: 'flex',
-            justifyContent: 'center',
-            gap: premiumDesign.spacing.sm,
-            marginTop: premiumDesign.spacing.xl,
-          }}>
-            {reviewContent.map((_, i) => (
-              <button
-                key={i}
-                style={{
-                  width: 40,
-                  height: 8,
-                  borderRadius: premiumDesign.radius.full,
-                  border: 'none',
-                  background: i === reviewStep
-                    ? premiumDesign.colors.primary
-                    : premiumDesign.colors.background.tertiary,
-                  cursor: 'pointer',
-                  transition: 'all 0.3s ease',
-                }}
-                onMouseDown={(e) => {
-                  e.preventDefault();
-                  safeNavigate(() => setReviewStep(i));
-                }}
-              />
-            ))}
-          </div>
         </div>
 
-        {renderBottomBar(
-          { text: '← Back', onClick: () => goToPhase('play') },
-          {
-            text: reviewStep < reviewContent.length - 1 ? 'Continue →' : 'New Experiment →',
-            onClick: () => {
-              if (reviewStep < reviewContent.length - 1) {
-                safeNavigate(() => setReviewStep(r => r + 1));
-              } else {
-                nextPhase();
-              }
-            },
-          }
-        )}
+        {/* Step indicators */}
+        <div className="flex gap-2 mb-6">
+          {reviewContent.map((_, i) => (
+            <button
+              key={i}
+              onMouseDown={(e) => {
+                e.preventDefault();
+                const now = Date.now();
+                if (now - lastClickRef.current < 200) return;
+                lastClickRef.current = now;
+                setReviewStep(i);
+              }}
+              className={`h-2 rounded-full transition-all duration-300 ${
+                i === reviewStep ? 'w-8 bg-amber-400' : 'w-2 bg-slate-700 hover:bg-slate-600'
+              }`}
+            />
+          ))}
+        </div>
+
+        <button
+          onMouseDown={(e) => {
+            e.preventDefault();
+            if (reviewStep < reviewContent.length - 1) {
+              const now = Date.now();
+              if (now - lastClickRef.current < 200) return;
+              lastClickRef.current = now;
+              setReviewStep(r => r + 1);
+            } else {
+              goToPhase(4);
+            }
+          }}
+          className="px-8 py-4 bg-gradient-to-r from-amber-500 to-orange-500 text-white font-semibold rounded-xl"
+        >
+          {reviewStep < reviewContent.length - 1 ? 'Continue \u2192' : 'New Experiment \u2192'}
+        </button>
       </div>
     );
-  }
+  };
 
-  function renderTwistPredictPhase() {
+  const renderTwistPredict = () => {
     const predictions = [
-      { id: 'dishes_stay', label: 'The dishes will stay in place (inertia!)', icon: '🍽️' },
-      { id: 'dishes_fly', label: 'The dishes will fly off the table', icon: '💨' },
-      { id: 'dishes_crash', label: 'Everything will crash to the floor', icon: '💥' },
-      { id: 'cloth_tears', label: 'The tablecloth will tear', icon: '📜' },
+      { id: 'dishes_stay', label: 'The dishes will stay in place (inertia!)', icon: '\uD83C\uDF7D\uFE0F' },
+      { id: 'dishes_fly', label: 'The dishes will fly off the table', icon: '\uD83D\uDCA8' },
+      { id: 'dishes_crash', label: 'Everything will crash to the floor', icon: '\uD83D\uDCA5' },
+      { id: 'cloth_tears', label: 'The tablecloth will tear', icon: '\uD83D\uDCDC' },
     ];
 
     return (
-      <div style={{ minHeight: '60vh', display: 'flex', flexDirection: 'column' }}>
-        {renderProgressBar()}
+      <div className="flex flex-col items-center px-6 py-8">
+        <div className="text-5xl mb-4">{'\uD83C\uDFAA'}</div>
+        <h2 className="text-2xl md:text-3xl font-bold text-indigo-400 mb-2">The Twist: Tablecloth Trick</h2>
+        <p className="text-slate-400 mb-8">If you quickly pull a tablecloth from under dishes, what happens?</p>
 
-        <div style={{ textAlign: 'center', marginBottom: premiumDesign.spacing.xl }}>
-          <h2 style={{
-            fontSize: isMobile ? '22px' : '28px',
-            fontWeight: 700,
-            color: premiumDesign.colors.text.primary,
-            marginBottom: premiumDesign.spacing.sm,
-          }}>
-            🎪 The Twist: Tablecloth Trick
-          </h2>
-          <p style={{ color: premiumDesign.colors.text.secondary }}>
-            If you quickly pull a tablecloth from under dishes, what happens?
-          </p>
-        </div>
-
-        <div style={{
-          display: 'grid',
-          gap: premiumDesign.spacing.md,
-          maxWidth: '600px',
-          margin: '0 auto',
-          width: '100%',
-        }}>
+        <div className="flex flex-col gap-3 w-full max-w-md mb-8">
           {predictions.map((pred) => (
             <button
               key={pred.id}
-              style={{
-                padding: premiumDesign.spacing.lg,
-                borderRadius: premiumDesign.radius.lg,
-                border: twistPrediction === pred.id
-                  ? `2px solid ${premiumDesign.colors.secondary}`
-                  : '2px solid rgba(255,255,255,0.1)',
-                background: twistPrediction === pred.id
-                  ? 'rgba(99, 102, 241, 0.2)'
-                  : premiumDesign.colors.background.secondary,
-                cursor: 'pointer',
-                textAlign: 'left',
-                transition: 'all 0.3s ease',
-              }}
               onMouseDown={(e) => {
                 e.preventDefault();
-                safeNavigate(() => setTwistPrediction(pred.id));
+                const now = Date.now();
+                if (now - lastClickRef.current < 200) return;
+                lastClickRef.current = now;
+                setTwistPrediction(pred.id);
+                playSound(pred.id === 'dishes_stay' ? 'success' : 'click');
+                emitEvent('twist_prediction_made', { twistPrediction: pred.id });
               }}
+              className={`p-4 rounded-xl border-2 transition-all duration-300 flex items-center gap-4 ${
+                twistPrediction === pred.id
+                  ? 'border-indigo-500 bg-indigo-500/20'
+                  : 'border-slate-700 bg-slate-800/50 hover:bg-slate-700/50'
+              }`}
             >
-              <div style={{ display: 'flex', alignItems: 'center', gap: premiumDesign.spacing.md }}>
-                <span style={{ fontSize: '24px' }}>{pred.icon}</span>
-                <span style={{ color: premiumDesign.colors.text.primary, fontSize: '15px' }}>
-                  {pred.label}
-                </span>
-              </div>
+              <span className="text-2xl">{pred.icon}</span>
+              <span className="text-white font-medium text-left">{pred.label}</span>
             </button>
           ))}
         </div>
 
-        {renderBottomBar(
-          { text: '← Back', onClick: () => goToPhase('review') },
-          {
-            text: 'Test It →',
-            onClick: nextPhase,
-            disabled: !twistPrediction,
-          }
+        {twistPrediction && (
+          <button
+            onMouseDown={(e) => { e.preventDefault(); goToPhase(5); }}
+            className="px-8 py-4 bg-gradient-to-r from-indigo-500 to-purple-500 text-white font-semibold rounded-xl hover:shadow-lg hover:shadow-indigo-500/25 transition-all"
+          >
+            Test It {'\u2192'}
+          </button>
         )}
       </div>
     );
-  }
+  };
 
-  function renderTwistPlayPhase() {
-    return (
-      <div style={{ minHeight: '60vh', display: 'flex', flexDirection: 'column' }}>
-        {renderProgressBar()}
+  const renderTwistPlay = () => (
+    <div className="flex flex-col items-center px-6 py-8">
+      <h2 className="text-2xl font-bold text-indigo-400 mb-2">Tablecloth Trick</h2>
+      <p className="text-slate-400 mb-6">Pull the tablecloth and see what happens to the dishes!</p>
 
-        <div style={{ textAlign: 'center', marginBottom: premiumDesign.spacing.lg }}>
-          <h2 style={{
-            fontSize: isMobile ? '22px' : '28px',
-            fontWeight: 700,
-            color: premiumDesign.colors.text.primary,
-          }}>
-            🎪 Tablecloth Trick
-          </h2>
-          <p style={{ color: premiumDesign.colors.text.secondary }}>
-            Pull the tablecloth and see what happens to the dishes!
-          </p>
-        </div>
+      {/* Simulation */}
+      <div className="bg-slate-800/50 rounded-2xl p-4 mb-6 border border-slate-700/50">
+        <svg width="350" height="200" className="mx-auto">
+          {/* Background */}
+          <rect width="350" height="200" fill="#1e293b" rx="12" />
 
-        <div style={{
-          display: 'flex',
-          flexDirection: isMobile ? 'column' : 'row',
-          gap: premiumDesign.spacing.xl,
-          flex: 1,
-        }}>
-          {/* Simulation */}
-          <div style={{
-            flex: 2,
-            display: 'flex',
-            justifyContent: 'center',
-            alignItems: 'center',
-          }}>
-            <svg
-              width="350"
-              height="220"
-              style={{
-                background: premiumDesign.colors.background.secondary,
-                borderRadius: premiumDesign.radius.xl,
-                border: '1px solid rgba(255,255,255,0.1)',
-              }}
-            >
-              {/* Table */}
-              <rect x="20" y="150" width="310" height="20" fill="#8B4513" />
-              <rect x="30" y="170" width="20" height="50" fill="#654321" />
-              <rect x="280" y="170" width="20" height="50" fill="#654321" />
+          {/* Table */}
+          <rect x="20" y="135" width="310" height="20" fill="#8B4513" />
+          <rect x="30" y="155" width="20" height="45" fill="#654321" />
+          <rect x="280" y="155" width="20" height="45" fill="#654321" />
 
-              {/* Tablecloth */}
-              <g transform={`translate(${-clothX}, 0)`}>
-                <rect x="20" y="140" width="310" height="15" fill="#dc2626" rx="2" />
-                <rect x="0" y="140" width="25" height="15" fill="#b91c1c" rx="2" />
-                {/* Cloth draping */}
-                <path d="M20 155 L20 180 Q25 190 30 180 L30 155" fill="#dc2626" />
-              </g>
+          {/* Tablecloth */}
+          <g transform={`translate(${-clothX}, 0)`}>
+            <rect x="20" y="125" width="310" height="15" fill="#dc2626" rx="2" />
+            <rect x="0" y="125" width="25" height="15" fill="#b91c1c" rx="2" />
+            <path d="M20 140 L20 165 Q25 175 30 165 L30 140" fill="#dc2626" />
+          </g>
 
-              {/* Dishes - move if slow pull */}
-              <g transform={`translate(${!dishesStayed ? clothX * 0.7 : 0}, ${!dishesStayed ? 20 : 0})`}>
-                {/* Plate 1 */}
-                <ellipse cx="80" cy="130" rx="30" ry="8" fill="#f5f5f5" />
-                <ellipse cx="80" cy="128" rx="25" ry="6" fill="#e5e5e5" />
+          {/* Dishes - move if slow pull */}
+          <g transform={`translate(${!dishesStayed ? clothX * 0.7 : 0}, ${!dishesStayed ? 15 : 0})`}>
+            {/* Plate 1 */}
+            <ellipse cx="80" cy="115" rx="28" ry="7" fill="#f5f5f5" />
+            <ellipse cx="80" cy="113" rx="23" ry="5" fill="#e5e5e5" />
 
-                {/* Glass */}
-                <rect x="140" y="100" width="20" height="35" fill="rgba(200,200,255,0.5)" rx="3" />
-                <ellipse cx="150" cy="100" rx="10" ry="4" fill="rgba(200,200,255,0.6)" />
+            {/* Glass */}
+            <rect x="140" y="85" width="18" height="32" fill="rgba(200,200,255,0.5)" rx="3" />
+            <ellipse cx="149" cy="85" rx="9" ry="4" fill="rgba(200,200,255,0.6)" />
 
-                {/* Plate 2 */}
-                <ellipse cx="220" cy="130" rx="30" ry="8" fill="#f5f5f5" />
-                <ellipse cx="220" cy="128" rx="25" ry="6" fill="#e5e5e5" />
+            {/* Plate 2 */}
+            <ellipse cx="220" cy="115" rx="28" ry="7" fill="#f5f5f5" />
+            <ellipse cx="220" cy="113" rx="23" ry="5" fill="#e5e5e5" />
 
-                {/* Candle */}
-                <rect x="270" y="105" width="8" height="30" fill="#fff7ed" />
-                <ellipse cx="274" cy="105" rx="5" ry="2" fill="#fcd34d" />
-                {dishesStayed && <ellipse cx="274" cy="100" rx="3" ry="5" fill="#f97316" opacity={0.9} />}
-              </g>
+            {/* Candle */}
+            <rect x="270" y="90" width="7" height="27" fill="#fff7ed" />
+            <ellipse cx="273" cy="90" rx="4" ry="2" fill="#fcd34d" />
+            {dishesStayed && <ellipse cx="273" cy="85" rx="3" ry="5" fill="#f97316" opacity={0.9} />}
+          </g>
 
-              {/* Result messages */}
-              {twistFlicked && clothX > 350 && (
-                <g>
-                  {dishesStayed ? (
-                    <>
-                      <text x="175" y="40" textAnchor="middle" fill={premiumDesign.colors.success} fontSize="16" fontWeight="bold">
-                        ✓ INERTIA WINS!
-                      </text>
-                      <text x="175" y="60" textAnchor="middle" fill={premiumDesign.colors.text.secondary} fontSize="12">
-                        Dishes stayed in place!
-                      </text>
-                    </>
-                  ) : (
-                    <>
-                      <text x="175" y="40" textAnchor="middle" fill={premiumDesign.colors.error} fontSize="16" fontWeight="bold">
-                        ✗ TOO SLOW!
-                      </text>
-                      <text x="175" y="60" textAnchor="middle" fill={premiumDesign.colors.text.secondary} fontSize="12">
-                        Friction dragged the dishes!
-                      </text>
-                    </>
-                  )}
-                </g>
+          {/* Result messages */}
+          {twistFlicked && clothX > 350 && (
+            <g>
+              {dishesStayed ? (
+                <>
+                  <text x="175" y="35" textAnchor="middle" fill="#22c55e" fontSize="16" fontWeight="bold">INERTIA WINS!</text>
+                  <text x="175" y="55" textAnchor="middle" fill="#94a3b8" fontSize="12">Dishes stayed in place!</text>
+                </>
+              ) : (
+                <>
+                  <text x="175" y="35" textAnchor="middle" fill="#ef4444" fontSize="16" fontWeight="bold">TOO SLOW!</text>
+                  <text x="175" y="55" textAnchor="middle" fill="#94a3b8" fontSize="12">Friction dragged the dishes!</text>
+                </>
               )}
+            </g>
+          )}
 
-              {/* Pull indicator */}
-              {!twistFlicked && (
-                <g transform="translate(10, 145)">
-                  <text fontSize="16">👈</text>
-                  <text x="25" y="5" fill={premiumDesign.colors.text.muted} fontSize="10">
-                    Pull!
-                  </text>
-                </g>
-              )}
-            </svg>
-          </div>
+          {/* Pull indicator */}
+          {!twistFlicked && (
+            <g transform="translate(10, 130)">
+              <text fontSize="16">{'\uD83D\uDC48'}</text>
+              <text x="25" y="5" fill="#64748b" fontSize="10">Pull!</text>
+            </g>
+          )}
+        </svg>
+      </div>
 
-          {/* Controls */}
-          <div style={{
-            flex: 1,
-            display: 'flex',
-            flexDirection: 'column',
-            gap: premiumDesign.spacing.md,
-          }}>
-            <div style={{
-              background: premiumDesign.colors.background.card,
-              borderRadius: premiumDesign.radius.lg,
-              padding: premiumDesign.spacing.lg,
-              border: '1px solid rgba(255,255,255,0.1)',
-            }}>
-              <h4 style={{ color: premiumDesign.colors.text.primary, marginBottom: premiumDesign.spacing.md }}>
-                Pull Speed
-              </h4>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: premiumDesign.spacing.sm }}>
-                {(['fast', 'slow'] as const).map(speed => (
-                  <button
-                    key={speed}
-                    style={{
-                      padding: premiumDesign.spacing.md,
-                      borderRadius: premiumDesign.radius.md,
-                      border: twistSpeed === speed ? `2px solid ${premiumDesign.colors.secondary}` : '1px solid rgba(255,255,255,0.1)',
-                      background: twistSpeed === speed ? 'rgba(99, 102, 241, 0.2)' : 'transparent',
-                      color: premiumDesign.colors.text.primary,
-                      cursor: 'pointer',
-                    }}
-                    onMouseDown={(e) => {
-                      e.preventDefault();
-                      if (!twistFlicked) setTwistSpeed(speed);
-                    }}
-                  >
-                    {speed === 'fast' ? '⚡ Quick Pull' : '🐢 Slow Pull'}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            <button
-              style={{
-                padding: premiumDesign.spacing.lg,
-                borderRadius: premiumDesign.radius.lg,
-                border: 'none',
-                background: twistFlicked ? premiumDesign.colors.background.tertiary : premiumDesign.colors.gradient.secondary,
-                color: 'white',
-                fontSize: '16px',
-                fontWeight: 600,
-                cursor: twistFlicked ? 'not-allowed' : 'pointer',
-              }}
-              onMouseDown={(e) => {
-                e.preventDefault();
-                if (!twistFlicked) pullCloth();
-              }}
-            >
-              {twistFlicked ? '✓ Pulled!' : '👈 Pull Tablecloth!'}
-            </button>
-
-            {twistFlicked && clothX > 350 && (
+      {/* Controls */}
+      <div className="w-full max-w-sm">
+        <div className="bg-slate-800/50 rounded-xl p-4 mb-4 border border-slate-700/50">
+          <h4 className="text-white font-medium mb-3">Pull Speed</h4>
+          <div className="flex gap-2">
+            {(['fast', 'slow'] as const).map(speed => (
               <button
-                style={{
-                  padding: premiumDesign.spacing.md,
-                  borderRadius: premiumDesign.radius.md,
-                  border: '1px solid rgba(255,255,255,0.1)',
-                  background: 'transparent',
-                  color: premiumDesign.colors.text.secondary,
-                  cursor: 'pointer',
-                }}
+                key={speed}
                 onMouseDown={(e) => {
                   e.preventDefault();
-                  setClothX(0);
-                  setTwistFlicked(false);
-                  setDishesStayed(true);
+                  if (!twistFlicked) setTwistSpeed(speed);
                 }}
+                className={`flex-1 py-3 rounded-lg font-medium transition-all ${
+                  twistSpeed === speed
+                    ? 'bg-indigo-500 text-white'
+                    : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
+                }`}
               >
-                🔄 Try Again
+                {speed === 'fast' ? '\u26A1 Quick Pull' : '\uD83D\uDC22 Slow Pull'}
               </button>
-            )}
+            ))}
           </div>
         </div>
 
-        {renderBottomBar(
-          { text: '← Back', onClick: () => goToPhase('twist_predict') },
-          { text: 'Understand Results →', onClick: nextPhase }
+        <button
+          onMouseDown={(e) => { e.preventDefault(); if (!twistFlicked) pullCloth(); }}
+          disabled={twistFlicked && clothX < 400}
+          className={`w-full py-4 rounded-xl font-semibold text-lg transition-all ${
+            twistFlicked
+              ? 'bg-slate-700 text-slate-400'
+              : 'bg-gradient-to-r from-indigo-500 to-purple-500 text-white hover:shadow-lg hover:shadow-indigo-500/25'
+          }`}
+        >
+          {twistFlicked ? '\u2713 Pulled!' : '\uD83D\uDC48 Pull Tablecloth!'}
+        </button>
+
+        {twistFlicked && clothX > 350 && (
+          <button
+            onMouseDown={(e) => {
+              e.preventDefault();
+              setClothX(0);
+              setTwistFlicked(false);
+              setDishesStayed(true);
+            }}
+            className="w-full mt-3 py-3 bg-slate-700 text-slate-300 rounded-lg font-medium hover:bg-slate-600"
+          >
+            {'\uD83D\uDD04'} Try Again
+          </button>
         )}
       </div>
-    );
-  }
 
-  function renderTwistReviewPhase() {
+      <button
+        onMouseDown={(e) => { e.preventDefault(); goToPhase(6); }}
+        className="mt-6 px-8 py-4 bg-gradient-to-r from-indigo-500 to-purple-500 text-white font-semibold rounded-xl"
+      >
+        Understand Results {'\u2192'}
+      </button>
+    </div>
+  );
+
+  const renderTwistReview = () => {
     const wasCorrect = twistPrediction === 'dishes_stay';
-
     const twistReviewContent = [
       {
         title: "Same Principle, Bigger Scale",
@@ -1200,283 +914,165 @@ export default function InertiaRenderer({ onBack, onNext }: InertiaRendererProps
       },
       {
         title: "Speed is the Key",
-        content: "The faster you pull, the less time friction has to act.\n\nFriction force × Time = Impulse (change in momentum)\n\nShort time = Small impulse = Dishes barely move!",
+        content: "The faster you pull, the less time friction has to act.\n\nFriction force x Time = Impulse (change in momentum)\n\nShort time = Small impulse = Dishes barely move!",
       },
       {
         title: "Mass Helps Too",
-        content: "Heavier objects have MORE inertia.\n\nThat's why professional magicians use heavy plates and silverware - they resist motion changes even more!\n\nF = ma → More mass = less acceleration for same force",
+        content: "Heavier objects have MORE inertia.\n\nThat's why professional magicians use heavy plates and silverware - they resist motion changes even more!\n\nF = ma means More mass = less acceleration for same force",
       },
     ];
 
     return (
-      <div style={{ minHeight: '60vh', display: 'flex', flexDirection: 'column' }}>
-        {renderProgressBar()}
+      <div className="flex flex-col items-center px-6 py-8">
+        <h2 className="text-2xl md:text-3xl font-bold text-indigo-400 mb-6">The Physics Behind the Magic</h2>
 
-        <div style={{ textAlign: 'center', marginBottom: premiumDesign.spacing.xl }}>
-          <h2 style={{
-            fontSize: isMobile ? '22px' : '28px',
-            fontWeight: 700,
-            color: premiumDesign.colors.text.primary,
-          }}>
-            🔍 The Physics Behind the Magic
-          </h2>
-        </div>
-
-        <div style={{
-          background: premiumDesign.colors.background.card,
-          borderRadius: premiumDesign.radius.xl,
-          padding: premiumDesign.spacing.xl,
-          border: '1px solid rgba(255,255,255,0.1)',
-          flex: 1,
-        }}>
-          <h3 style={{
-            color: premiumDesign.colors.secondary,
-            fontSize: '20px',
-            marginBottom: premiumDesign.spacing.md,
-          }}>
-            {twistReviewContent[twistReviewStep].title}
-          </h3>
-
-          <p style={{
-            color: premiumDesign.colors.text.secondary,
-            fontSize: '16px',
-            lineHeight: 1.8,
-            whiteSpace: 'pre-line',
-          }}>
-            {twistReviewContent[twistReviewStep].content}
-          </p>
+        <div className="bg-slate-800/50 rounded-2xl p-6 max-w-lg w-full border border-slate-700/50 mb-6">
+          <h3 className="text-xl font-bold text-indigo-400 mb-4">{twistReviewContent[twistReviewStep].title}</h3>
+          <p className="text-slate-300 whitespace-pre-line leading-relaxed">{twistReviewContent[twistReviewStep].content}</p>
 
           {twistReviewContent[twistReviewStep].highlight && (
-            <div style={{
-              background: 'rgba(16, 185, 129, 0.2)',
-              borderRadius: premiumDesign.radius.md,
-              padding: premiumDesign.spacing.md,
-              marginTop: premiumDesign.spacing.md,
-              border: '1px solid rgba(16, 185, 129, 0.5)',
-            }}>
-              <p style={{ color: premiumDesign.colors.success, margin: 0 }}>
-                ✓ Excellent! You correctly applied inertia to the tablecloth scenario.
-              </p>
+            <div className="mt-4 p-3 bg-emerald-500/20 border border-emerald-500/30 rounded-xl">
+              <p className="text-emerald-400">{'\u2713'} Excellent! You correctly applied inertia to the tablecloth scenario.</p>
             </div>
           )}
-
-          <div style={{
-            display: 'flex',
-            justifyContent: 'center',
-            gap: premiumDesign.spacing.sm,
-            marginTop: premiumDesign.spacing.xl,
-          }}>
-            {twistReviewContent.map((_, i) => (
-              <button
-                key={i}
-                style={{
-                  width: 40,
-                  height: 8,
-                  borderRadius: premiumDesign.radius.full,
-                  border: 'none',
-                  background: i === twistReviewStep
-                    ? premiumDesign.colors.secondary
-                    : premiumDesign.colors.background.tertiary,
-                  cursor: 'pointer',
-                  transition: 'all 0.3s ease',
-                }}
-                onMouseDown={(e) => {
-                  e.preventDefault();
-                  safeNavigate(() => setTwistReviewStep(i));
-                }}
-              />
-            ))}
-          </div>
         </div>
 
-        {renderBottomBar(
-          { text: '← Back', onClick: () => goToPhase('twist_play') },
-          {
-            text: twistReviewStep < twistReviewContent.length - 1 ? 'Continue →' : 'Real-World Examples →',
-            onClick: () => {
-              if (twistReviewStep < twistReviewContent.length - 1) {
-                safeNavigate(() => setTwistReviewStep(t => t + 1));
-              } else {
-                nextPhase();
-              }
-            },
-          }
-        )}
+        {/* Step indicators */}
+        <div className="flex gap-2 mb-6">
+          {twistReviewContent.map((_, i) => (
+            <button
+              key={i}
+              onMouseDown={(e) => {
+                e.preventDefault();
+                const now = Date.now();
+                if (now - lastClickRef.current < 200) return;
+                lastClickRef.current = now;
+                setTwistReviewStep(i);
+              }}
+              className={`h-2 rounded-full transition-all duration-300 ${
+                i === twistReviewStep ? 'w-8 bg-indigo-400' : 'w-2 bg-slate-700 hover:bg-slate-600'
+              }`}
+            />
+          ))}
+        </div>
+
+        <button
+          onMouseDown={(e) => {
+            e.preventDefault();
+            if (twistReviewStep < twistReviewContent.length - 1) {
+              const now = Date.now();
+              if (now - lastClickRef.current < 200) return;
+              lastClickRef.current = now;
+              setTwistReviewStep(t => t + 1);
+            } else {
+              goToPhase(7);
+            }
+          }}
+          className="px-8 py-4 bg-gradient-to-r from-indigo-500 to-purple-500 text-white font-semibold rounded-xl"
+        >
+          {twistReviewStep < twistReviewContent.length - 1 ? 'Continue \u2192' : 'Real-World Examples \u2192'}
+        </button>
       </div>
     );
-  }
+  };
 
-  function renderTransferPhase() {
-    const applications = [
-      {
-        title: "🚗 Car Safety Systems",
-        description: "Seatbelts and airbags are designed to counteract inertia. In a crash, your body continues moving forward while the car stops. Seatbelts provide the force to slow you down gradually, preventing injury.",
-        fact: "Modern seatbelts have 'pretensioners' that tighten in milliseconds during a crash, reducing the distance your body travels before being restrained!",
-      },
-      {
-        title: "🎢 Roller Coasters",
-        description: "That feeling of being 'pushed back' during acceleration or 'thrown forward' during braking is your inertia at work! Coaster designers use inertia to create thrilling sensations while keeping riders safe.",
-        fact: "The fastest roller coaster accelerates from 0-150 mph in under 5 seconds - passengers feel 1.7G of force due to their inertia!",
-      },
-      {
-        title: "🚀 Space Travel",
-        description: "In space, there's almost no friction. Once a spacecraft reaches its velocity, it keeps moving without using fuel - pure inertia! This is how we can send probes to distant planets using minimal fuel.",
-        fact: "The Voyager 1 probe, launched in 1977, is still traveling at 38,000 mph due to inertia - it hasn't used its engines in decades!",
-      },
-      {
-        title: "⚽ Sports Physics",
-        description: "Athletes use inertia constantly! A baseball pitcher's follow-through, a golfer's swing, a football player's tackle - all rely on understanding how objects (and bodies) resist changes in motion.",
-        fact: "A professional pitcher's arm decelerates from 7,000°/second to 0 in just 0.05 seconds - requiring massive force to overcome the arm's inertia!",
-      },
-    ];
+  const renderTransfer = () => {
+    const allAppsCompleted = completedApps.size >= applications.length;
 
     return (
-      <div style={{ minHeight: '60vh', display: 'flex', flexDirection: 'column' }}>
-        {renderProgressBar()}
-
-        <div style={{ textAlign: 'center', marginBottom: premiumDesign.spacing.xl }}>
-          <h2 style={{
-            fontSize: isMobile ? '22px' : '28px',
-            fontWeight: 700,
-            color: premiumDesign.colors.text.primary,
-            marginBottom: premiumDesign.spacing.sm,
-          }}>
-            🌍 Inertia in Daily Life
-          </h2>
-          <p style={{ color: premiumDesign.colors.text.secondary }}>
-            Explore all {applications.length} applications to unlock the quiz
-          </p>
-        </div>
+      <div className="flex flex-col items-center px-6 py-8">
+        <h2 className="text-2xl font-bold text-white mb-2">Inertia in Daily Life</h2>
+        <p className="text-slate-400 text-sm mb-6">
+          Explore all {applications.length} applications to unlock the quiz
+        </p>
 
         {/* Tab Navigation */}
-        <div style={{
-          display: 'flex',
-          gap: premiumDesign.spacing.sm,
-          marginBottom: premiumDesign.spacing.lg,
-          flexWrap: 'wrap',
-          justifyContent: 'center',
-        }}>
+        <div className="flex gap-2 mb-6 flex-wrap justify-center">
           {applications.map((app, index) => (
             <button
               key={index}
-              style={{
-                padding: `${premiumDesign.spacing.sm}px ${premiumDesign.spacing.md}px`,
-                borderRadius: premiumDesign.radius.full,
-                border: activeApp === index
-                  ? `2px solid ${premiumDesign.colors.primary}`
-                  : '2px solid rgba(255,255,255,0.1)',
-                background: activeApp === index
-                  ? 'rgba(245, 158, 11, 0.2)'
-                  : completedApps.has(index)
-                    ? 'rgba(16, 185, 129, 0.2)'
-                    : premiumDesign.colors.background.tertiary,
-                color: premiumDesign.colors.text.primary,
-                cursor: 'pointer',
-                fontSize: '14px',
-                transition: 'all 0.3s ease',
-              }}
               onMouseDown={(e) => {
                 e.preventDefault();
-                safeNavigate(() => setActiveApp(index));
+                const now = Date.now();
+                if (now - lastClickRef.current < 200) return;
+                lastClickRef.current = now;
+                setActiveApp(index);
               }}
+              className={`px-4 py-2 rounded-full font-medium text-sm transition-all ${
+                activeApp === index
+                  ? 'bg-amber-500 text-white'
+                  : completedApps.has(index)
+                    ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/50'
+                    : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
+              }`}
             >
-              {completedApps.has(index) && '✓ '}{app.title.split(' ')[0]}
+              {completedApps.has(index) && '\u2713 '}{app.icon}
             </button>
           ))}
         </div>
 
         {/* Application Content */}
-        <div style={{
-          background: premiumDesign.colors.background.card,
-          borderRadius: premiumDesign.radius.xl,
-          padding: premiumDesign.spacing.xl,
-          border: '1px solid rgba(255,255,255,0.1)',
-          flex: 1,
-        }}>
-          <h3 style={{
-            fontSize: '22px',
-            color: premiumDesign.colors.text.primary,
-            marginBottom: premiumDesign.spacing.md,
-          }}>
-            {applications[activeApp].title}
-          </h3>
+        <div className="bg-slate-800/50 rounded-2xl p-6 max-w-lg w-full border border-slate-700/50 mb-6">
+          <div className="flex items-center gap-3 mb-4">
+            <span className="text-4xl">{applications[activeApp].icon}</span>
+            <h3 className="text-xl font-bold text-white">{applications[activeApp].title}</h3>
+          </div>
 
-          <p style={{
-            color: premiumDesign.colors.text.secondary,
-            fontSize: '16px',
-            lineHeight: 1.7,
-            marginBottom: premiumDesign.spacing.lg,
-          }}>
-            {applications[activeApp].description}
-          </p>
+          <p className="text-slate-300 leading-relaxed mb-4">{applications[activeApp].description}</p>
 
-          <div style={{
-            background: 'rgba(245, 158, 11, 0.1)',
-            borderRadius: premiumDesign.radius.lg,
-            padding: premiumDesign.spacing.lg,
-            border: '1px solid rgba(245, 158, 11, 0.3)',
-          }}>
-            <p style={{ margin: 0, color: premiumDesign.colors.primary, fontWeight: 600 }}>
-              💡 Fun Fact
-            </p>
-            <p style={{ margin: `${premiumDesign.spacing.sm}px 0 0`, color: premiumDesign.colors.text.secondary }}>
-              {applications[activeApp].fact}
-            </p>
+          <div className="bg-amber-500/10 border border-amber-500/30 rounded-xl p-4">
+            <p className="text-amber-400 font-semibold mb-1">{'\uD83D\uDCA1'} Fun Fact</p>
+            <p className="text-slate-300 text-sm">{applications[activeApp].fact}</p>
           </div>
 
           {!completedApps.has(activeApp) && (
             <button
-              style={{
-                display: 'block',
-                width: '100%',
-                marginTop: premiumDesign.spacing.lg,
-                padding: premiumDesign.spacing.md,
-                borderRadius: premiumDesign.radius.md,
-                border: 'none',
-                background: premiumDesign.colors.gradient.primary,
-                color: 'white',
-                fontSize: '16px',
-                fontWeight: 600,
-                cursor: 'pointer',
-              }}
               onMouseDown={(e) => {
                 e.preventDefault();
-                safeNavigate(() => {
-                  const newCompleted = new Set(completedApps);
-                  newCompleted.add(activeApp);
-                  setCompletedApps(newCompleted);
-                  if (activeApp < applications.length - 1) {
-                    setActiveApp(activeApp + 1);
-                  }
-                });
+                const now = Date.now();
+                if (now - lastClickRef.current < 200) return;
+                lastClickRef.current = now;
+                const newCompleted = new Set(completedApps);
+                newCompleted.add(activeApp);
+                setCompletedApps(newCompleted);
+                playSound('complete');
+                emitEvent('app_explored', { app: applications[activeApp].title });
+                if (activeApp < applications.length - 1) {
+                  setTimeout(() => setActiveApp(activeApp + 1), 300);
+                }
               }}
+              className="w-full mt-4 py-3 bg-gradient-to-r from-amber-500 to-orange-500 text-white font-semibold rounded-xl"
             >
-              ✓ Mark as Read
+              {'\u2713'} Mark as Read
             </button>
+          )}
+
+          {completedApps.has(activeApp) && (
+            <div className="mt-4 py-3 bg-emerald-500/10 rounded-xl text-center">
+              <span className="text-emerald-400 text-sm">{'\u2713'} Completed</span>
+            </div>
           )}
         </div>
 
-        <div style={{
-          textAlign: 'center',
-          marginTop: premiumDesign.spacing.lg,
-          color: premiumDesign.colors.text.muted,
-        }}>
+        <p className="text-slate-500 text-sm mb-4">
           {completedApps.size} of {applications.length} applications explored
-        </div>
+        </p>
 
-        {renderBottomBar(
-          { text: '← Back', onClick: () => goToPhase('twist_review') },
-          {
-            text: completedApps.size === applications.length ? 'Take the Quiz →' : `Explore ${applications.length - completedApps.size} More →`,
-            onClick: nextPhase,
-            disabled: completedApps.size < applications.length,
-          }
+        {allAppsCompleted ? (
+          <button
+            onMouseDown={(e) => { e.preventDefault(); goToPhase(8); }}
+            className="px-8 py-4 bg-gradient-to-r from-amber-500 to-orange-500 text-white font-semibold rounded-xl"
+          >
+            Take the Quiz {'\u2192'}
+          </button>
+        ) : (
+          <span className="text-slate-500 text-sm">Explore {applications.length - completedApps.size} more to continue</span>
         )}
       </div>
     );
-  }
+  };
 
-  function renderTestPhase() {
+  const renderTest = () => {
     const question = testQuestions[currentQuestion];
 
     if (testComplete) {
@@ -1484,151 +1080,92 @@ export default function InertiaRenderer({ onBack, onNext }: InertiaRendererProps
       const passed = percentage >= 70;
 
       return (
-        <div style={{ minHeight: '60vh', display: 'flex', flexDirection: 'column' }}>
-          {renderProgressBar()}
+        <div className="flex flex-col items-center justify-center min-h-[500px] px-6 py-8 text-center">
+          <div className="text-7xl mb-6">{passed ? '\uD83C\uDF89' : '\uD83D\uDCDA'}</div>
 
-          <div style={{
-            flex: 1,
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            justifyContent: 'center',
-            textAlign: 'center',
-          }}>
-            <div style={{ fontSize: '72px', marginBottom: premiumDesign.spacing.lg }}>
-              {passed ? '🎉' : '📚'}
-            </div>
+          <h2 className="text-3xl font-bold text-white mb-4">
+            {passed ? 'Excellent Work!' : 'Keep Learning!'}
+          </h2>
 
-            <h2 style={{
-              fontSize: isMobile ? '28px' : '36px',
-              fontWeight: 700,
-              color: premiumDesign.colors.text.primary,
-              marginBottom: premiumDesign.spacing.md,
-            }}>
-              {passed ? 'Excellent Work!' : 'Keep Learning!'}
-            </h2>
-
-            <div style={{
-              fontSize: '48px',
-              fontWeight: 700,
-              background: passed ? `linear-gradient(135deg, ${premiumDesign.colors.success} 0%, #059669 100%)` : premiumDesign.colors.gradient.warm,
-              WebkitBackgroundClip: 'text',
-              WebkitTextFillColor: 'transparent',
-              marginBottom: premiumDesign.spacing.md,
-            }}>
-              {testScore}/{testQuestions.length}
-            </div>
-
-            <p style={{
-              color: premiumDesign.colors.text.secondary,
-              fontSize: '18px',
-              marginBottom: premiumDesign.spacing.xl,
-            }}>
-              {passed
-                ? 'You have mastered the Law of Inertia!'
-                : 'Review the material and try again.'}
-            </p>
-
-            {renderButton(
-              passed ? 'Continue to Mastery →' : 'Review Material',
-              () => {
-                if (passed) {
-                  nextPhase();
-                } else {
-                  setTestComplete(false);
-                  setCurrentQuestion(0);
-                  setTestScore(0);
-                  goToPhase('review');
-                }
-              },
-              passed ? 'success' : 'primary'
-            )}
+          <div className="text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-amber-400 to-orange-400 mb-4">
+            {testScore}/{testQuestions.length}
           </div>
+
+          <p className="text-slate-400 text-lg mb-8">
+            {passed ? 'You have mastered the Law of Inertia!' : 'Review the material and try again.'}
+          </p>
+
+          <button
+            onMouseDown={(e) => {
+              e.preventDefault();
+              if (passed) {
+                goToPhase(9);
+              } else {
+                setTestComplete(false);
+                setCurrentQuestion(0);
+                setTestScore(0);
+                setSelectedAnswer(null);
+                setShowExplanation(false);
+                goToPhase(3);
+              }
+            }}
+            className={`px-8 py-4 font-semibold rounded-xl ${
+              passed
+                ? 'bg-gradient-to-r from-emerald-500 to-teal-500 text-white'
+                : 'bg-gradient-to-r from-amber-500 to-orange-500 text-white'
+            }`}
+          >
+            {passed ? 'Continue to Mastery \u2192' : 'Review Material'}
+          </button>
         </div>
       );
     }
 
     return (
-      <div style={{ minHeight: '60vh', display: 'flex', flexDirection: 'column' }}>
-        {renderProgressBar()}
-
-        <div style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          marginBottom: premiumDesign.spacing.lg,
-        }}>
-          <span style={{ color: premiumDesign.colors.text.muted }}>
+      <div className="flex flex-col items-center px-6 py-8">
+        <div className="flex justify-between items-center w-full max-w-lg mb-4">
+          <span className="text-sm text-slate-400 bg-slate-800 px-3 py-1 rounded-full">
             Question {currentQuestion + 1} of {testQuestions.length}
           </span>
-          <span style={{ color: premiumDesign.colors.success, fontWeight: 600 }}>
+          <span className="text-sm font-bold text-emerald-400 bg-emerald-500/20 px-3 py-1 rounded-full">
             Score: {testScore}
           </span>
         </div>
 
-        <div style={{
-          background: premiumDesign.colors.background.card,
-          borderRadius: premiumDesign.radius.xl,
-          padding: premiumDesign.spacing.xl,
-          border: '1px solid rgba(255,255,255,0.1)',
-          marginBottom: premiumDesign.spacing.lg,
-        }}>
-          <h3 style={{
-            fontSize: isMobile ? '18px' : '20px',
-            color: premiumDesign.colors.text.primary,
-            marginBottom: premiumDesign.spacing.xl,
-            lineHeight: 1.5,
-          }}>
-            {question.question}
-          </h3>
+        {/* Progress bar */}
+        <div className="w-full max-w-lg h-1 bg-slate-700 rounded-full mb-6 overflow-hidden">
+          <div
+            className="h-full bg-amber-500 rounded-full transition-all duration-300"
+            style={{ width: `${((currentQuestion + 1) / testQuestions.length) * 100}%` }}
+          />
+        </div>
 
-          <div style={{ display: 'grid', gap: premiumDesign.spacing.md }}>
+        <div className="bg-slate-800/50 rounded-2xl p-6 max-w-lg w-full border border-slate-700/50 mb-6">
+          <h3 className="text-white font-semibold mb-4 leading-relaxed">{question.question}</h3>
+
+          <div className="flex flex-col gap-3">
             {question.options.map((option, index) => {
-              const isSelected = selectedAnswer === index;
-              const isCorrect = index === question.correct;
-              const showResult = showExplanation;
+              let bgClass = 'bg-slate-700/50 border-slate-600 hover:bg-slate-600/50';
+              let textClass = 'text-white';
 
-              let bgColor = premiumDesign.colors.background.secondary;
-              let borderColor = 'rgba(255,255,255,0.1)';
-
-              if (showResult) {
-                if (isCorrect) {
-                  bgColor = 'rgba(16, 185, 129, 0.2)';
-                  borderColor = premiumDesign.colors.success;
-                } else if (isSelected) {
-                  bgColor = 'rgba(239, 68, 68, 0.2)';
-                  borderColor = premiumDesign.colors.error;
+              if (showExplanation) {
+                if (index === question.correct) {
+                  bgClass = 'bg-emerald-500/20 border-emerald-500';
+                  textClass = 'text-emerald-400';
+                } else if (index === selectedAnswer) {
+                  bgClass = 'bg-red-500/20 border-red-500';
+                  textClass = 'text-red-400';
                 }
-              } else if (isSelected) {
-                bgColor = 'rgba(245, 158, 11, 0.2)';
-                borderColor = premiumDesign.colors.primary;
               }
 
               return (
                 <button
                   key={index}
-                  style={{
-                    padding: premiumDesign.spacing.lg,
-                    borderRadius: premiumDesign.radius.lg,
-                    border: `2px solid ${borderColor}`,
-                    background: bgColor,
-                    cursor: showExplanation ? 'default' : 'pointer',
-                    textAlign: 'left',
-                    transition: 'all 0.3s ease',
-                  }}
-                  onMouseDown={(e) => {
-                    e.preventDefault();
-                    if (!showExplanation) {
-                      setSelectedAnswer(index);
-                    }
-                  }}
+                  onMouseDown={(e) => { e.preventDefault(); handleTestAnswer(index); }}
+                  disabled={showExplanation}
+                  className={`p-4 rounded-xl border-2 text-left transition-all ${bgClass}`}
                 >
-                  <span style={{
-                    color: premiumDesign.colors.text.primary,
-                    fontSize: '15px',
-                  }}>
-                    {option}
-                  </span>
+                  <span className={`text-sm ${textClass}`}>{option}</span>
                 </button>
               );
             })}
@@ -1636,76 +1173,56 @@ export default function InertiaRenderer({ onBack, onNext }: InertiaRendererProps
         </div>
 
         {showExplanation && (
-          <div style={{
-            background: selectedAnswer === question.correct
-              ? 'rgba(16, 185, 129, 0.1)'
-              : 'rgba(239, 68, 68, 0.1)',
-            borderRadius: premiumDesign.radius.lg,
-            padding: premiumDesign.spacing.lg,
-            border: `1px solid ${selectedAnswer === question.correct
-              ? 'rgba(16, 185, 129, 0.3)'
-              : 'rgba(239, 68, 68, 0.3)'}`,
-            marginBottom: premiumDesign.spacing.lg,
-          }}>
-            <p style={{
-              color: selectedAnswer === question.correct
-                ? premiumDesign.colors.success
-                : premiumDesign.colors.error,
-              fontWeight: 600,
-              marginBottom: premiumDesign.spacing.sm,
-            }}>
-              {selectedAnswer === question.correct ? '✓ Correct!' : '✗ Not quite'}
+          <div className={`p-4 rounded-xl max-w-lg w-full mb-6 ${
+            selectedAnswer === question.correct
+              ? 'bg-emerald-500/10 border border-emerald-500/30'
+              : 'bg-red-500/10 border border-red-500/30'
+          }`}>
+            <p className={`font-semibold mb-2 ${
+              selectedAnswer === question.correct ? 'text-emerald-400' : 'text-red-400'
+            }`}>
+              {selectedAnswer === question.correct ? '\u2713 Correct!' : '\u2717 Not quite'}
             </p>
-            <p style={{ color: premiumDesign.colors.text.secondary, margin: 0 }}>
-              {question.explanation}
-            </p>
+            <p className="text-slate-300 text-sm">{question.explanation}</p>
           </div>
         )}
 
-        {renderBottomBar(
-          undefined,
-          {
-            text: showExplanation
-              ? (currentQuestion < testQuestions.length - 1 ? 'Next Question →' : 'See Results →')
-              : 'Check Answer',
-            onClick: () => {
-              if (showExplanation) {
-                if (currentQuestion < testQuestions.length - 1) {
-                  setCurrentQuestion(c => c + 1);
-                  setSelectedAnswer(null);
-                  setShowExplanation(false);
-                } else {
-                  setTestComplete(true);
-                }
+        {showExplanation && (
+          <button
+            onMouseDown={(e) => {
+              e.preventDefault();
+              const now = Date.now();
+              if (now - lastClickRef.current < 200) return;
+              lastClickRef.current = now;
+              if (currentQuestion < testQuestions.length - 1) {
+                setCurrentQuestion(c => c + 1);
+                setSelectedAnswer(null);
+                setShowExplanation(false);
               } else {
-                if (selectedAnswer === question.correct) {
-                  setTestScore(s => s + 1);
-                }
-                setShowExplanation(true);
+                setTestComplete(true);
               }
-            },
-            disabled: selectedAnswer === null && !showExplanation,
-          }
+            }}
+            className="px-8 py-4 bg-gradient-to-r from-amber-500 to-orange-500 text-white font-semibold rounded-xl"
+          >
+            {currentQuestion < testQuestions.length - 1 ? 'Next Question \u2192' : 'See Results \u2192'}
+          </button>
         )}
       </div>
     );
-  }
+  };
 
-  function renderMasteryPhase() {
+  const renderMastery = () => {
     const percentage = Math.round((testScore / testQuestions.length) * 100);
 
     return (
-      <div style={{
-        minHeight: '60vh',
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        textAlign: 'center',
-        position: 'relative',
-        overflow: 'hidden',
-      }}>
-        {/* Confetti */}
+      <div className="flex flex-col items-center justify-center min-h-[600px] px-6 py-12 text-center relative overflow-hidden">
+        {/* Confetti effect */}
+        <style>{`
+          @keyframes confetti {
+            0% { transform: translateY(0) rotate(0); opacity: 1; }
+            100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
+          }
+        `}</style>
         {Array.from({ length: 50 }).map((_, i) => (
           <div
             key={i}
@@ -1715,121 +1232,126 @@ export default function InertiaRenderer({ onBack, onNext }: InertiaRendererProps
               top: '-20px',
               width: '10px',
               height: '10px',
-              background: [
-                premiumDesign.colors.primary,
-                premiumDesign.colors.secondary,
-                premiumDesign.colors.success,
-                premiumDesign.colors.accent,
-              ][i % 4],
+              background: ['#f59e0b', '#6366f1', '#22c55e', '#10b981'][i % 4],
               borderRadius: '2px',
               animation: `confetti 3s ease-out ${Math.random() * 2}s infinite`,
             }}
           />
         ))}
-        <style>{`
-          @keyframes confetti {
-            0% { transform: translateY(0) rotate(0); opacity: 1; }
-            100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
-          }
-        `}</style>
 
-        {renderProgressBar()}
-
-        <div style={{
-          width: '120px',
-          height: '120px',
-          borderRadius: '50%',
-          background: premiumDesign.colors.gradient.primary,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          marginBottom: premiumDesign.spacing.xl,
-          boxShadow: premiumDesign.shadows.glow(premiumDesign.colors.primary),
-        }}>
-          <span style={{ fontSize: '56px' }}>🏆</span>
+        {/* Trophy */}
+        <div className="w-32 h-32 rounded-full bg-gradient-to-r from-amber-500 to-orange-500 flex items-center justify-center mb-8 shadow-lg shadow-amber-500/30">
+          <span className="text-6xl">{'\uD83C\uDFC6'}</span>
         </div>
 
-        <h1 style={{
-          fontSize: isMobile ? '28px' : '36px',
-          fontWeight: 800,
-          color: premiumDesign.colors.text.primary,
-          marginBottom: premiumDesign.spacing.sm,
-        }}>
-          Inertia Master!
-        </h1>
+        <h1 className="text-3xl md:text-4xl font-bold text-white mb-2">Inertia Master!</h1>
 
-        <p style={{
-          fontSize: '20px',
-          color: premiumDesign.colors.text.secondary,
-          marginBottom: premiumDesign.spacing.xl,
-        }}>
-          Final Score: <span style={{ color: premiumDesign.colors.success, fontWeight: 700 }}>{testScore}/{testQuestions.length}</span> ({percentage}%)
+        <p className="text-xl text-slate-400 mb-8">
+          Final Score: <span className="text-emerald-400 font-bold">{testScore}/{testQuestions.length}</span> ({percentage}%)
         </p>
 
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(2, 1fr)',
-          gap: premiumDesign.spacing.md,
-          maxWidth: '400px',
-          width: '100%',
-          marginBottom: premiumDesign.spacing.xl,
-        }}>
+        {/* Key concepts */}
+        <div className="grid grid-cols-2 gap-4 max-w-md w-full mb-8">
           {[
-            { icon: '⚖️', label: 'Objects Resist Change' },
-            { icon: '⚡', label: 'Speed Beats Friction' },
-            { icon: '🪙', label: 'Coin Trick Mastered' },
-            { icon: '🚗', label: 'Inertia in Motion' },
+            { icon: '\u2696\uFE0F', label: 'Objects Resist Change' },
+            { icon: '\u26A1', label: 'Speed Beats Friction' },
+            { icon: '\uD83E\uDE99', label: 'Coin Trick Mastered' },
+            { icon: '\uD83D\uDE97', label: 'Inertia in Motion' },
           ].map((item, i) => (
-            <div
-              key={i}
-              style={{
-                padding: premiumDesign.spacing.lg,
-                borderRadius: premiumDesign.radius.lg,
-                background: premiumDesign.colors.background.secondary,
-                border: '1px solid rgba(255,255,255,0.1)',
-              }}
-            >
-              <div style={{ fontSize: '28px', marginBottom: premiumDesign.spacing.xs }}>{item.icon}</div>
-              <div style={{ fontSize: '13px', color: premiumDesign.colors.text.secondary }}>{item.label}</div>
+            <div key={i} className="bg-slate-800/50 rounded-xl p-4 border border-slate-700/50">
+              <div className="text-3xl mb-2">{item.icon}</div>
+              <div className="text-sm text-slate-400">{item.label}</div>
             </div>
           ))}
         </div>
 
-        {renderButton(
-          'Complete Lesson ✓',
-          () => {
-            if (onNext) onNext();
-          },
-          'success'
-        )}
+        <button
+          onMouseDown={(e) => {
+            e.preventDefault();
+            // Reset all state for replay
+            setPhase(0);
+            setHookStep(0);
+            setPrediction(null);
+            setFlickSpeed('fast');
+            setHasFlicked(false);
+            setCardX(0);
+            setCoinY(0);
+            setCoinFell(false);
+            setCoinMissed(false);
+            setReviewStep(0);
+            setTwistPrediction(null);
+            setClothX(0);
+            setDishesStayed(true);
+            setTwistFlicked(false);
+            setTwistSpeed('fast');
+            setTwistReviewStep(0);
+            setActiveApp(0);
+            setCompletedApps(new Set());
+            setCurrentQuestion(0);
+            setSelectedAnswer(null);
+            setShowExplanation(false);
+            setTestScore(0);
+            setTestComplete(false);
+          }}
+          className="px-8 py-4 bg-gradient-to-r from-amber-500 to-orange-500 text-white font-semibold rounded-xl"
+        >
+          Complete Lesson {'\u2713'}
+        </button>
       </div>
     );
-  }
+  };
 
   // ==================== MAIN RENDER ====================
-
-  const containerStyle: React.CSSProperties = {
-    minHeight: '100vh',
-    background: premiumDesign.colors.background.primary,
-    color: premiumDesign.colors.text.primary,
-    fontFamily: premiumDesign.typography.fontFamily,
-    padding: isMobile ? premiumDesign.spacing.md : premiumDesign.spacing.xl,
+  const renderPhase = () => {
+    switch (phase) {
+      case 0: return renderHook();
+      case 1: return renderPredict();
+      case 2: return renderPlay();
+      case 3: return renderReview();
+      case 4: return renderTwistPredict();
+      case 5: return renderTwistPlay();
+      case 6: return renderTwistReview();
+      case 7: return renderTransfer();
+      case 8: return renderTest();
+      case 9: return renderMastery();
+      default: return renderHook();
+    }
   };
 
   return (
-    <div style={containerStyle}>
-      <div style={{ maxWidth: '900px', margin: '0 auto' }}>
-        {phase === 'hook' && renderHookPhase()}
-        {phase === 'predict' && renderPredictPhase()}
-        {phase === 'play' && renderPlayPhase()}
-        {phase === 'review' && renderReviewPhase()}
-        {phase === 'twist_predict' && renderTwistPredictPhase()}
-        {phase === 'twist_play' && renderTwistPlayPhase()}
-        {phase === 'twist_review' && renderTwistReviewPhase()}
-        {phase === 'transfer' && renderTransferPhase()}
-        {phase === 'test' && renderTestPhase()}
-        {phase === 'mastery' && renderMasteryPhase()}
+    <div className="min-h-screen bg-[#0a0f1a] text-white relative overflow-hidden">
+      {/* Premium background gradient */}
+      <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-[#0a1628] to-slate-900" />
+      <div className="absolute top-0 left-1/4 w-96 h-96 bg-amber-500/5 rounded-full blur-3xl" />
+      <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-indigo-500/5 rounded-full blur-3xl" />
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-cyan-500/3 rounded-full blur-3xl" />
+
+      {/* Header */}
+      <div className="fixed top-0 left-0 right-0 z-50 bg-slate-900/80 backdrop-blur-xl border-b border-slate-800/50">
+        <div className="flex items-center justify-between px-6 py-3 max-w-4xl mx-auto">
+          <span className="text-sm font-semibold text-white/80 tracking-wide">Inertia</span>
+          <div className="flex items-center gap-1.5">
+            {PHASES.map((p) => (
+              <button
+                key={p}
+                onMouseDown={(e) => { e.preventDefault(); goToPhase(p); }}
+                className={`h-2 rounded-full transition-all duration-300 ${
+                  phase === p
+                    ? 'bg-amber-400 w-6 shadow-lg shadow-amber-400/30'
+                    : phase > p
+                      ? 'bg-emerald-500 w-2'
+                      : 'bg-slate-700 w-2 hover:bg-slate-600'
+                }`}
+                title={phaseLabels[p]}
+              />
+            ))}
+          </div>
+          <span className="text-sm font-medium text-amber-400">{phaseLabels[phase]}</span>
+        </div>
       </div>
+
+      {/* Main content */}
+      <div className="relative pt-16 pb-12">{renderPhase()}</div>
     </div>
   );
 }

@@ -54,6 +54,33 @@ function isValidPhase(p: string): p is Phase {
   return phaseOrder.includes(p as Phase);
 }
 
+// Premium sound system
+const playGameSound = (type: 'click' | 'success' | 'failure' | 'transition' | 'complete') => {
+  try {
+    const audioContext = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
+    const oscillator = audioContext.createOscillator();
+    const gainNode = audioContext.createGain();
+    oscillator.connect(gainNode);
+    gainNode.connect(audioContext.destination);
+
+    const sounds = {
+      click: { freq: 600, duration: 0.08, type: 'sine' as OscillatorType, vol: 0.15 },
+      success: { freq: 880, duration: 0.15, type: 'sine' as OscillatorType, vol: 0.2 },
+      failure: { freq: 220, duration: 0.2, type: 'triangle' as OscillatorType, vol: 0.15 },
+      transition: { freq: 440, duration: 0.12, type: 'sine' as OscillatorType, vol: 0.15 },
+      complete: { freq: 660, duration: 0.25, type: 'sine' as OscillatorType, vol: 0.2 },
+    };
+
+    const s = sounds[type];
+    oscillator.frequency.value = s.freq;
+    oscillator.type = s.type;
+    gainNode.gain.setValueAtTime(s.vol, audioContext.currentTime);
+    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + s.duration);
+    oscillator.start();
+    oscillator.stop(audioContext.currentTime + s.duration);
+  } catch {}
+};
+
 const playSound = (frequency: number, duration: number, type: OscillatorType = 'sine', volume = 0.3) => {
   try {
     const audioContext = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
@@ -84,6 +111,7 @@ export default function HeliumBalloonCarRenderer({ onGameEvent }: HeliumBalloonC
   const [completedApps, setCompletedApps] = useState<Set<number>>(new Set());
   const [isMobile, setIsMobile] = useState(false);
   const navigationLockRef = useRef(false);
+  const lastClickRef = useRef(0);
 
   // Simulation state
   const [carState, setCarState] = useState<'stopped' | 'accelerating' | 'braking' | 'constant'>('stopped');
@@ -105,6 +133,10 @@ export default function HeliumBalloonCarRenderer({ onGameEvent }: HeliumBalloonC
   }, []);
 
   const goToPhase = (newPhase: Phase) => {
+    const now = Date.now();
+    if (now - lastClickRef.current < 200) return;
+    lastClickRef.current = now;
+
     if (navigationLockRef.current) return;
     navigationLockRef.current = true;
     setTimeout(() => { navigationLockRef.current = false; }, 400);
@@ -113,7 +145,7 @@ export default function HeliumBalloonCarRenderer({ onGameEvent }: HeliumBalloonC
       onGameEvent({ type: 'phase_change', from: phase, to: newPhase });
     }
     setPhase(newPhase);
-    playSound(440, 0.15, 'sine', 0.2);
+    playGameSound('transition');
   };
 
   // Accelerate the car
@@ -122,7 +154,7 @@ export default function HeliumBalloonCarRenderer({ onGameEvent }: HeliumBalloonC
     setCarState('accelerating');
     setHasAccelerated(true);
 
-    playSound(150, 0.5, 'sawtooth', 0.15);
+    playGameSound('transition');
 
     let angle = 0;
     let pos = carPosition;
@@ -164,7 +196,7 @@ export default function HeliumBalloonCarRenderer({ onGameEvent }: HeliumBalloonC
     if (carState !== 'constant') return;
     setCarState('braking');
 
-    playSound(100, 0.3, 'square', 0.15);
+    playGameSound('click');
 
     let angle = 0;
     const interval = setInterval(() => {
@@ -206,7 +238,7 @@ export default function HeliumBalloonCarRenderer({ onGameEvent }: HeliumBalloonC
     if (twistCarState !== 'stopped') return;
     setTwistCarState('accelerating');
 
-    playSound(150, 0.5, 'sawtooth', 0.15);
+    playGameSound('transition');
 
     let angle = 0;
     const interval = setInterval(() => {
@@ -231,7 +263,7 @@ export default function HeliumBalloonCarRenderer({ onGameEvent }: HeliumBalloonC
     if (onGameEvent) {
       onGameEvent({ type: 'prediction', phase: 'predict', prediction: choice });
     }
-    playSound(330, 0.1, 'sine', 0.2);
+    playGameSound('click');
   };
 
   const handleTwistPrediction = (choice: string) => {
@@ -239,13 +271,13 @@ export default function HeliumBalloonCarRenderer({ onGameEvent }: HeliumBalloonC
     if (onGameEvent) {
       onGameEvent({ type: 'prediction', phase: 'twist_predict', prediction: choice });
     }
-    playSound(330, 0.1, 'sine', 0.2);
+    playGameSound('click');
   };
 
   const handleTestAnswer = (q: number, a: number) => {
     if (!testSubmitted) {
       setTestAnswers(prev => ({ ...prev, [q]: a }));
-      playSound(330, 0.1, 'sine', 0.2);
+      playGameSound('click');
     }
   };
 
@@ -261,7 +293,7 @@ export default function HeliumBalloonCarRenderer({ onGameEvent }: HeliumBalloonC
         percentage: Math.round((score / testQuestions.length) * 100),
       });
     }
-    playSound(score >= 7 ? 523 : 330, 0.3, 'sine', 0.3);
+    playGameSound(score >= 7 ? 'success' : 'failure');
   };
 
   const testQuestions = [
@@ -1261,7 +1293,7 @@ export default function HeliumBalloonCarRenderer({ onGameEvent }: HeliumBalloonC
                   key={index}
                   onMouseDown={() => {
                     setCompletedApps(prev => new Set([...prev, index]));
-                    playSound(500 + index * 100, 0.15, 'sine', 0.2);
+                    playGameSound('click');
                   }}
                   style={{
                     background: completedApps.has(index)
@@ -1577,69 +1609,53 @@ export default function HeliumBalloonCarRenderer({ onGameEvent }: HeliumBalloonC
   const currentIndex = phaseOrder.indexOf(phase);
 
   return (
-    <div style={{
-      minHeight: '100vh',
-      background: 'linear-gradient(135deg, #f8fafc, #e0f2fe)',
-      padding: isMobile ? '1rem' : '2rem',
-      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
-    }}>
-      {/* Progress bar */}
-      <div style={{
-        maxWidth: 700,
-        margin: '0 auto 1.5rem auto'
-      }}>
-        <div style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          marginBottom: '0.5rem'
-        }}>
-          {phaseOrder.map((p, i) => (
-            <div
-              key={p}
-              style={{
-                width: 28,
-                height: 28,
-                borderRadius: '50%',
-                background: i <= currentIndex
-                  ? 'linear-gradient(135deg, #3b82f6, #1d4ed8)'
-                  : '#e2e8f0',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                color: i <= currentIndex ? 'white' : '#94a3b8',
-                fontSize: '0.7rem',
-                fontWeight: 600
-              }}
-            >
-              {i < currentIndex ? '✓' : i + 1}
+    <div className="min-h-screen bg-[#0a0f1a] text-white relative overflow-hidden">
+      {/* Premium gradient background */}
+      <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-[#0a1628] to-slate-900" />
+
+      {/* Ambient glow effects */}
+      <div className="absolute top-0 left-1/4 w-96 h-96 bg-purple-500/5 rounded-full blur-3xl" />
+      <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-blue-500/5 rounded-full blur-3xl" />
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-cyan-500/3 rounded-full blur-3xl" />
+
+      {/* Fixed header with phase navigation */}
+      <div className="fixed top-0 left-0 right-0 z-50 bg-slate-900/80 backdrop-blur-xl border-b border-slate-800/50">
+        <div className="max-w-4xl mx-auto px-4 py-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500 to-blue-600 flex items-center justify-center">
+                <span className="text-lg">🎈</span>
+              </div>
+              <div>
+                <h1 className="text-sm font-semibold text-white">Helium Balloon Car</h1>
+                <p className="text-xs text-slate-400">Acceleration Buoyancy</p>
+              </div>
             </div>
-          ))}
-        </div>
-        <div style={{
-          height: 4,
-          background: '#e2e8f0',
-          borderRadius: 2,
-          overflow: 'hidden'
-        }}>
-          <div style={{
-            width: `${(currentIndex / (phaseOrder.length - 1)) * 100}%`,
-            height: '100%',
-            background: 'linear-gradient(90deg, #3b82f6, #1d4ed8)',
-            transition: 'width 0.3s ease'
-          }} />
+            <div className="flex items-center gap-1.5">
+              {phaseOrder.map((p, i) => (
+                <div
+                  key={p}
+                  className={`h-2 rounded-full transition-all duration-300 ${
+                    i === currentIndex
+                      ? 'w-6 bg-gradient-to-r from-purple-400 to-blue-400'
+                      : i < currentIndex
+                      ? 'w-2 bg-purple-500'
+                      : 'w-2 bg-slate-700'
+                  }`}
+                />
+              ))}
+            </div>
+          </div>
         </div>
       </div>
 
-      {/* Main content */}
-      <div style={{
-        maxWidth: 700,
-        margin: '0 auto',
-        background: 'white',
-        borderRadius: 20,
-        padding: isMobile ? '1.5rem' : '2rem',
-        boxShadow: '0 10px 40px rgba(0, 0, 0, 0.08)'
-      }}>
-        {renderPhase()}
+      {/* Main content area */}
+      <div className="relative z-10 pt-20 pb-8 px-4">
+        <div className="max-w-4xl mx-auto">
+          <div className="bg-slate-800/40 backdrop-blur-sm rounded-2xl border border-slate-700/50 p-6 md:p-8">
+            {renderPhase()}
+          </div>
+        </div>
       </div>
     </div>
   );

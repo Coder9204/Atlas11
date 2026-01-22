@@ -6,22 +6,41 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 // STATIC VS KINETIC FRICTION RENDERER - Premium Design System
 // ============================================================================
 
-export interface GameEvent {
-  type: 'phase_change' | 'interaction' | 'prediction' | 'result' | 'hint_request' | 'visual_state_update';
-  phase: string;
-  data: Record<string, unknown>;
-  timestamp: number;
-  eventType?: 'pull_start' | 'surface_change' | 'reset' | 'answer_submit';
+// ═══════════════════════════════════════════════════════════════════════════
+// TYPES & INTERFACES
+// ═══════════════════════════════════════════════════════════════════════════
+type GameEventType =
+  | 'phase_change'
+  | 'prediction_made'
+  | 'simulation_started'
+  | 'parameter_changed'
+  | 'twist_prediction_made'
+  | 'app_explored'
+  | 'test_answered'
+  | 'test_completed'
+  | 'mastery_achieved';
+
+interface GameEvent {
+  type: GameEventType;
+  data?: Record<string, unknown>;
 }
+
+// Numeric phases: 0=hook, 1=predict, 2=play, 3=review, 4=twist_predict, 5=twist_play, 6=twist_review, 7=transfer, 8=test, 9=mastery
+const PHASES: number[] = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
+const phaseLabels: Record<number, string> = {
+  0: 'Hook', 1: 'Predict', 2: 'Lab', 3: 'Review', 4: 'Twist Predict',
+  5: 'Twist Lab', 6: 'Twist Review', 7: 'Transfer', 8: 'Test', 9: 'Mastery'
+};
 
 interface StaticKineticFrictionRendererProps {
   width?: number;
   height?: number;
+  onComplete?: () => void;
   onGameEvent?: (event: GameEvent) => void;
-  gamePhase?: string;
+  currentPhase?: number;
+  onPhaseComplete?: (phase: number) => void;
 }
 
-type Phase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
 type Surface = 'wood' | 'rubber' | 'ice';
 
 // ============================================================================
@@ -340,10 +359,12 @@ const ClimbingSVG: React.FC = () => (
 const StaticKineticFrictionRenderer: React.FC<StaticKineticFrictionRendererProps> = ({
   width = 400,
   height = 500,
+  onComplete,
   onGameEvent,
-  gamePhase
+  currentPhase,
+  onPhaseComplete
 }) => {
-  const [phase, setPhase] = useState<Phase>('hook');
+  const [phase, setPhase] = useState<number>(currentPhase ?? 0);
   const [prediction, setPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
   const [surface, setSurface] = useState<Surface>('wood');
@@ -376,6 +397,32 @@ const StaticKineticFrictionRenderer: React.FC<StaticKineticFrictionRendererProps
   const staticFrictionMax = weight * surfaceProperties[surface].staticCoef;
   const kineticFriction = weight * surfaceProperties[surface].kineticCoef;
 
+  // Sync with external phase control
+  useEffect(() => {
+    if (currentPhase !== undefined && currentPhase !== phase) {
+      setPhase(currentPhase);
+    }
+  }, [currentPhase]);
+
+  // Web Audio API sound
+  const playSound = useCallback((type: 'click' | 'success' | 'error' | 'transition' = 'click') => {
+    try {
+      const audioContext = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
+      const oscillator = audioContext.createOscillator();
+      const gainNode = audioContext.createGain();
+      oscillator.connect(gainNode);
+      gainNode.connect(audioContext.destination);
+
+      const freqMap = { click: 440, success: 600, error: 300, transition: 520 };
+      oscillator.frequency.value = freqMap[type];
+      oscillator.type = 'sine';
+      gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.1);
+      oscillator.start(audioContext.currentTime);
+      oscillator.stop(audioContext.currentTime + 0.1);
+    } catch {}
+  }, []);
+
   const testQuestions = [
     { question: "Why does the force needed to START moving a block exceed the force to KEEP it moving?", options: ["The block gets lighter once moving", "Static friction > kinetic friction due to surface interlocking", "Air resistance helps once moving", "Gravity changes direction"], correct: 1, explanation: "At rest, surfaces interlock more completely. Once sliding, the microscopic bonds keep breaking before they fully form, resulting in lower kinetic friction." },
     { question: "Static friction is:", options: ["Always equal to applied force up to a maximum", "Always at its maximum value", "Zero until the object moves", "Greater than kinetic friction always"], correct: 0, explanation: "Static friction matches the applied force exactly (preventing motion) until the maximum static friction is reached - then the object slips." },
@@ -397,24 +444,40 @@ const StaticKineticFrictionRenderer: React.FC<StaticKineticFrictionRendererProps
   ];
 
   useEffect(() => {
-    if (gamePhase && gamePhase !== phase) setPhase(gamePhase as Phase);
-  }, [gamePhase, phase]);
-
-  useEffect(() => {
     return () => { if (animationRef.current) cancelAnimationFrame(animationRef.current); };
   }, []);
 
-  const emit = useCallback((type: GameEvent['type'], data: Record<string, unknown>, eventType?: GameEvent['eventType']) => {
-    onGameEvent?.({ type, phase, data, timestamp: Date.now(), eventType });
-  }, [onGameEvent, phase]);
+  // Emit events
+  const emitEvent = useCallback((type: GameEventType, data?: Record<string, unknown>) => {
+    if (onGameEvent) {
+      onGameEvent({ type, data });
+    }
+  }, [onGameEvent]);
 
-  const goToPhase = useCallback((newPhase: Phase) => {
+  // Phase navigation with 400ms debouncing
+  const goToPhase = useCallback((newPhase: number) => {
     if (navigationLockRef.current) return;
     navigationLockRef.current = true;
+    playSound('transition');
     setPhase(newPhase);
-    emit('phase_change', { from: phase, to: newPhase });
+    emitEvent('phase_change', { from: phase, to: newPhase });
+    if (onPhaseComplete) onPhaseComplete(newPhase);
     setTimeout(() => { navigationLockRef.current = false; }, 400);
-  }, [emit, phase]);
+  }, [emitEvent, phase, playSound, onPhaseComplete]);
+
+  const goNext = useCallback(() => {
+    if (phase < PHASES.length - 1) {
+      goToPhase(phase + 1);
+    } else if (onComplete) {
+      onComplete();
+    }
+  }, [phase, goToPhase, onComplete]);
+
+  const goBack = useCallback(() => {
+    if (phase > 0) {
+      goToPhase(phase - 1);
+    }
+  }, [phase, goToPhase]);
 
   // Render button helper function
   const renderButton = (
@@ -790,7 +853,7 @@ const StaticKineticFrictionRenderer: React.FC<StaticKineticFrictionRendererProps
         </p>
       </div>
 
-      {renderButton("Let's Find Out", () => goToPhase('predict'), 'primary', { size: 'lg' })}
+      {renderButton("Let's Find Out", () => goToPhase(1), 'primary', { size: 'lg' })}
 
       <p style={{
         fontSize: 13,
@@ -881,7 +944,7 @@ const StaticKineticFrictionRenderer: React.FC<StaticKineticFrictionRendererProps
 
       {prediction && (
         <div style={{ marginTop: design.spacing.xl }}>
-          {renderButton('Test It!', () => goToPhase('play'))}
+          {renderButton('Test It!', () => goToPhase(2))}
         </div>
       )}
     </div>
@@ -920,7 +983,7 @@ const StaticKineticFrictionRenderer: React.FC<StaticKineticFrictionRendererProps
           Watch the force graph! Notice the peak then drop.
         </p>
 
-        {experimentCount >= 2 && renderButton('I see the pattern!', () => goToPhase('review'))}
+        {experimentCount >= 2 && renderButton('I see the pattern!', () => goToPhase(3))}
       </div>
     </div>
   );
@@ -1012,7 +1075,7 @@ const StaticKineticFrictionRenderer: React.FC<StaticKineticFrictionRendererProps
         Your prediction: {prediction === 'start_harder' ? '\u2705 Correct!' : '\ud83e\udd14 Now you understand!'}
       </p>
 
-      {renderButton('What About Different Surfaces?', () => goToPhase('twist_predict'))}
+      {renderButton('What About Different Surfaces?', () => goToPhase(4))}
     </div>
   );
 
@@ -1075,7 +1138,7 @@ const StaticKineticFrictionRenderer: React.FC<StaticKineticFrictionRendererProps
 
       {twistPrediction && (
         <div style={{ marginTop: design.spacing.xl }}>
-          {renderButton('Compare Surfaces!', () => goToPhase('twist_play'))}
+          {renderButton('Compare Surfaces!', () => goToPhase(5))}
         </div>
       )}
     </div>
@@ -1168,7 +1231,7 @@ const StaticKineticFrictionRenderer: React.FC<StaticKineticFrictionRendererProps
           {(isPulling || blockPosition > 0) && renderButton('Reset', resetExperiment, 'secondary')}
         </div>
 
-        {experimentCount >= 4 && renderButton('I understand!', () => goToPhase('twist_review'))}
+        {experimentCount >= 4 && renderButton('I understand!', () => goToPhase(6))}
       </div>
     </div>
   );
@@ -1233,7 +1296,7 @@ const StaticKineticFrictionRenderer: React.FC<StaticKineticFrictionRendererProps
         Your prediction: {twistPrediction === 'different' || twistPrediction === 'ice_no_jump' ? '\u2705 Good thinking!' : '\ud83e\udd14 Now you see the pattern!'}
       </p>
 
-      {renderButton('See Real Examples', () => goToPhase('transfer'))}
+      {renderButton('See Real Examples', () => goToPhase(7))}
     </div>
   );
 
@@ -1408,7 +1471,7 @@ const StaticKineticFrictionRenderer: React.FC<StaticKineticFrictionRendererProps
 
         <div style={{ marginTop: design.spacing.md }}>
           {completedApps.size >= applications.length ? (
-            renderButton('Take the Quiz!', () => goToPhase('test'), 'primary', { fullWidth: true })
+            renderButton('Take the Quiz!', () => goToPhase(8), 'primary', { fullWidth: true })
           ) : (
             <div style={{
               textAlign: 'center',
@@ -1544,7 +1607,7 @@ const StaticKineticFrictionRenderer: React.FC<StaticKineticFrictionRendererProps
               setShowExplanation(answeredQuestions.has(currentQuestion + 1));
             }, 'secondary')
           ) : answeredQuestions.size === testQuestions.length ? (
-            renderButton('Complete!', () => goToPhase('mastery'))
+            renderButton('Complete!', () => goToPhase(9))
           ) : (
             <span style={{ fontSize: 13, color: design.colors.textTertiary, fontFamily: design.font.sans, alignSelf: 'center' }}>
               Answer all questions
@@ -1692,58 +1755,54 @@ const StaticKineticFrictionRenderer: React.FC<StaticKineticFrictionRendererProps
   // ============================================================================
   // RENDER
   // ============================================================================
-  const phases: Record<Phase, () => JSX.Element> = {
-    hook: renderHook,
-    predict: renderPredict,
-    play: renderPlay,
-    review: renderReview,
-    twist_predict: renderTwistPredict,
-    twist_play: renderTwistPlay,
-    twist_review: renderTwistReview,
-    transfer: renderTransfer,
-    test: renderTest,
-    mastery: renderMastery
+  const phaseRenderers: Record<number, () => JSX.Element> = {
+    0: renderHook,
+    1: renderPredict,
+    2: renderPlay,
+    3: renderReview,
+    4: renderTwistPredict,
+    5: renderTwistPlay,
+    6: renderTwistReview,
+    7: renderTransfer,
+    8: renderTest,
+    9: renderMastery
   };
 
-  const phaseList: Phase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
-
   return (
-    <div style={{
-      width,
-      height,
-      borderRadius: design.radius.lg,
-      overflow: 'hidden',
-      position: 'relative',
-      background: design.colors.bgPrimary,
-      fontFamily: design.font.sans
-    }}>
-      {phases[phase]()}
+    <div className="min-h-screen bg-[#0a0f1a] text-white relative overflow-hidden" style={{ fontFamily: design.font.sans }}>
+      {/* Premium background gradient */}
+      <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-[#0a1628] to-slate-900" />
+      <div className="absolute top-0 left-1/4 w-96 h-96 bg-amber-500/5 rounded-full blur-3xl" />
+      <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-cyan-500/5 rounded-full blur-3xl" />
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-amber-500/3 rounded-full blur-3xl" />
 
-      {/* Progress dots */}
-      <div style={{
-        position: 'absolute',
-        top: design.spacing.md,
-        left: design.spacing.md,
-        display: 'flex',
-        gap: design.spacing.xs
-      }}>
-        {phaseList.map((p, idx) => (
-          <div
-            key={p}
-            style={{
-              width: 8,
-              height: 8,
-              borderRadius: design.radius.full,
-              background: phase === p
-                ? design.colors.accentPrimary
-                : idx < phaseList.indexOf(phase)
-                  ? design.colors.accentSecondary
-                  : design.colors.bgElevated,
-              boxShadow: phase === p ? design.shadow.glow(design.colors.accentPrimary) : 'none',
-              transition: 'all 0.3s ease'
-            }}
-          />
-        ))}
+      {/* Premium Header */}
+      <div className="fixed top-0 left-0 right-0 z-50 bg-slate-900/80 backdrop-blur-xl border-b border-slate-800/50">
+        <div className="flex items-center justify-between px-6 py-3 max-w-4xl mx-auto">
+          <span className="text-sm font-semibold text-white/80 tracking-wide">Static vs Kinetic Friction</span>
+          <div className="flex items-center gap-1.5">
+            {PHASES.map((p) => (
+              <button
+                key={p}
+                onMouseDown={() => goToPhase(p)}
+                className={`h-2 rounded-full transition-all duration-300 ${
+                  phase === p
+                    ? 'bg-amber-400 w-6 shadow-lg shadow-amber-400/30'
+                    : p < phase
+                      ? 'bg-emerald-500 w-2'
+                      : 'bg-slate-700 w-2 hover:bg-slate-600'
+                }`}
+                title={phaseLabels[p]}
+              />
+            ))}
+          </div>
+          <span className="text-sm font-medium text-amber-400">{phaseLabels[phase]}</span>
+        </div>
+      </div>
+
+      {/* Main content */}
+      <div className="relative pt-16 pb-8">
+        {phaseRenderers[phase]()}
       </div>
     </div>
   );

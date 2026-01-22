@@ -2291,31 +2291,55 @@ export default function RefractionRenderer() {
   // =============================================================================
   // RENDER
   // =============================================================================
+  const allPhases = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
+  const currentPhaseIndex = allPhases.indexOf(phase);
+
   return (
-    <div
-      style={{
-        minHeight: '100vh',
-        background: `linear-gradient(135deg, ${defined.colors.background.primary} 0%, ${defined.colors.background.secondary} 100%)`,
-        fontFamily: defined.typography.fontFamily,
-        padding: defined.spacing.lg,
-      }}
-    >
-      <div
-        style={{
-          maxWidth: '900px',
-          margin: '0 auto',
-        }}
-      >
-        {phase === 'hook' && renderHook()}
-        {phase === 'predict' && renderPredict()}
-        {phase === 'play' && renderPlay()}
-        {phase === 'review' && renderReview()}
-        {phase === 'twist_predict' && renderTwistPredict()}
-        {phase === 'twist_play' && renderTwistPlay()}
-        {phase === 'twist_review' && renderTwistReview()}
-        {phase === 'transfer' && renderTransfer()}
-        {phase === 'test' && renderTest()}
-        {phase === 'mastery' && renderMastery()}
+    <div className="min-h-screen bg-[#0a0f1a] text-white relative overflow-hidden">
+      {/* Premium background gradient */}
+      <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-[#0a1628] to-slate-900" />
+      <div className="absolute top-0 left-1/4 w-96 h-96 bg-indigo-500/5 rounded-full blur-3xl" />
+      <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-cyan-500/5 rounded-full blur-3xl" />
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-indigo-500/3 rounded-full blur-3xl" />
+
+      {/* Header */}
+      <div className="fixed top-0 left-0 right-0 z-50 bg-slate-900/80 backdrop-blur-xl border-b border-slate-800/50">
+        <div className="flex items-center justify-between px-6 py-3 max-w-4xl mx-auto">
+          <span className="text-sm font-semibold text-white/80 tracking-wide">Light Refraction</span>
+          <div className="flex items-center gap-1.5">
+            {allPhases.map((p, i) => (
+              <button
+                key={p}
+                onMouseDown={(e) => { e.preventDefault(); goToPhase(p); }}
+                className={`h-2 rounded-full transition-all duration-300 ${
+                  phase === p
+                    ? 'bg-indigo-400 w-6 shadow-lg shadow-indigo-400/30'
+                    : currentPhaseIndex > i
+                      ? 'bg-emerald-500 w-2'
+                      : 'bg-slate-700 w-2 hover:bg-slate-600'
+                }`}
+                title={p.replace('_', ' ')}
+              />
+            ))}
+          </div>
+          <span className="text-sm font-medium text-indigo-400 capitalize">{phase.replace('_', ' ')}</span>
+        </div>
+      </div>
+
+      {/* Main content */}
+      <div className="relative pt-16 pb-12">
+        <div style={{ maxWidth: '900px', margin: '0 auto', padding: defined.spacing.lg }}>
+          {phase === 'hook' && renderHook()}
+          {phase === 'predict' && renderPredict()}
+          {phase === 'play' && renderPlay()}
+          {phase === 'review' && renderReview()}
+          {phase === 'twist_predict' && renderTwistPredict()}
+          {phase === 'twist_play' && renderTwistPlay()}
+          {phase === 'twist_review' && renderTwistReview()}
+          {phase === 'transfer' && renderTransfer()}
+          {phase === 'test' && renderTest()}
+          {phase === 'mastery' && renderMastery()}
+        </div>
       </div>
     </div>
   );

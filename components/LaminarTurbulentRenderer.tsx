@@ -1,50 +1,42 @@
-import React, { useState, useRef, useEffect } from 'react';
+'use client';
 
-// GameEvent interface for AI coach integration
+import React, { useState, useRef, useEffect, useCallback } from 'react';
+
+// ═══════════════════════════════════════════════════════════════════════════
+// TYPES & INTERFACES
+// ═══════════════════════════════════════════════════════════════════════════
+type GameEventType =
+  | 'phase_change'
+  | 'prediction_made'
+  | 'simulation_started'
+  | 'parameter_changed'
+  | 'twist_prediction_made'
+  | 'app_explored'
+  | 'test_answered'
+  | 'test_completed'
+  | 'mastery_achieved';
+
 interface GameEvent {
-  type: 'prediction' | 'observation' | 'phase_complete' | 'misconception' | 'mastery';
-  phase: string;
-  data: Record<string, unknown>;
-  timestamp: number;
+  type: GameEventType;
+  data?: Record<string, unknown>;
 }
 
-// Sound utility function
-const playSound = (frequency: number, duration: number, type: OscillatorType = 'sine', volume: number = 0.3) => {
-  try {
-    const audioContext = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
-    const oscillator = audioContext.createOscillator();
-    const gainNode = audioContext.createGain();
-
-    oscillator.type = type;
-    oscillator.frequency.setValueAtTime(frequency, audioContext.currentTime);
-    oscillator.connect(gainNode);
-    gainNode.connect(audioContext.destination);
-
-    gainNode.gain.setValueAtTime(volume, audioContext.currentTime);
-    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + duration);
-
-    oscillator.start();
-    oscillator.stop(audioContext.currentTime + duration);
-  } catch (e) {
-    console.log('Audio not available');
-  }
-};
-
-// Phase types
-type Phase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
-
-const isValidPhase = (phase: string): phase is Phase => {
-  return ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'].includes(phase);
+// Numeric phases: 0=hook, 1=predict, 2=play, 3=review, 4=twist_predict, 5=twist_play, 6=twist_review, 7=transfer, 8=test, 9=mastery
+const PHASES: number[] = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
+const phaseLabels: Record<number, string> = {
+  0: 'Hook', 1: 'Predict', 2: 'Lab', 3: 'Review', 4: 'Twist Predict',
+  5: 'Twist Lab', 6: 'Twist Review', 7: 'Transfer', 8: 'Test', 9: 'Mastery'
 };
 
 interface LaminarTurbulentRendererProps {
-  onEvent?: (event: GameEvent) => void;
-  gamePhase?: string;
+  onGameEvent?: (event: GameEvent) => void;
+  currentPhase?: number;
+  onPhaseComplete?: (phase: number) => void;
 }
 
-const LaminarTurbulentRenderer: React.FC<LaminarTurbulentRendererProps> = ({ onEvent, gamePhase }) => {
+const LaminarTurbulentRenderer: React.FC<LaminarTurbulentRendererProps> = ({ onGameEvent, currentPhase, onPhaseComplete }) => {
   // Phase management
-  const [phase, setPhase] = useState<Phase>('hook');
+  const [phase, setPhase] = useState<number>(currentPhase ?? 0);
 
   // Hook phase
   const [hookStep, setHookStep] = useState(0);
@@ -88,12 +80,31 @@ const LaminarTurbulentRenderer: React.FC<LaminarTurbulentRendererProps> = ({ onE
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
-  // Initialize from gamePhase prop
+  // Sync with external phase control
   useEffect(() => {
-    if (gamePhase && isValidPhase(gamePhase)) {
-      setPhase(gamePhase);
+    if (currentPhase !== undefined && currentPhase !== phase) {
+      setPhase(currentPhase);
     }
-  }, [gamePhase]);
+  }, [currentPhase]);
+
+  // Web Audio API sound
+  const playSound = useCallback((type: 'click' | 'success' | 'failure' | 'transition' | 'complete' = 'click') => {
+    try {
+      const audioContext = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
+      const oscillator = audioContext.createOscillator();
+      const gainNode = audioContext.createGain();
+      oscillator.connect(gainNode);
+      gainNode.connect(audioContext.destination);
+
+      const freqMap = { click: 440, success: 600, failure: 300, transition: 520, complete: 700 };
+      oscillator.frequency.value = freqMap[type];
+      oscillator.type = 'sine';
+      gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.1);
+      oscillator.start(audioContext.currentTime);
+      oscillator.stop(audioContext.currentTime + 0.1);
+    } catch {}
+  }, []);
 
   // Calculate Reynolds number
   const calculateReynolds = (velocity: number, diameter: number, viscosity: number): number => {
@@ -157,19 +168,20 @@ const LaminarTurbulentRenderer: React.FC<LaminarTurbulentRendererProps> = ({ onE
   }, [flowVelocity, pipeDiameter, fluidViscosity, showDyeInjection]);
 
   // Emit events
-  const emitEvent = (type: GameEvent['type'], data: Record<string, unknown>) => {
-    if (onEvent) {
-      onEvent({ type, phase, data, timestamp: Date.now() });
+  const emitEvent = (type: GameEventType, data?: Record<string, unknown>) => {
+    if (onGameEvent) {
+      onGameEvent({ type, data });
     }
   };
 
-  // Phase navigation
-  const goToPhase = (newPhase: Phase) => {
+  // Phase navigation with 400ms debouncing
+  const goToPhase = (newPhase: number) => {
     if (navigationLockRef.current) return;
     navigationLockRef.current = true;
-    playSound(440, 0.15, 'sine', 0.2);
+    playSound('transition');
     setPhase(newPhase);
-    emitEvent('phase_complete', { from: phase, to: newPhase });
+    emitEvent('phase_change', { from: phase, to: newPhase });
+    if (onPhaseComplete) onPhaseComplete(newPhase);
     setTimeout(() => { navigationLockRef.current = false; }, 400);
   };
 
@@ -289,7 +301,7 @@ const LaminarTurbulentRenderer: React.FC<LaminarTurbulentRendererProps> = ({ onE
 
   // Handle test answer
   const handleTestAnswer = (answer: number) => {
-    playSound(300, 0.1, 'sine', 0.2);
+    playSound('click');
     setTestAnswers(prev => [...prev, answer]);
   };
 
@@ -317,19 +329,16 @@ const LaminarTurbulentRenderer: React.FC<LaminarTurbulentRendererProps> = ({ onE
 
   // Helper render functions
   const renderProgressBar = () => {
-    const phases: Phase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
-    const currentIndex = phases.indexOf(phase);
-
     return (
       <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginBottom: '20px' }}>
-        {phases.map((p, i) => (
+        {PHASES.map((p, i) => (
           <div
             key={p}
             style={{
               height: '4px',
               flex: 1,
               borderRadius: '2px',
-              background: i <= currentIndex ? `linear-gradient(90deg, ${colors.primary}, ${colors.secondary})` : '#333',
+              background: i <= phase ? `linear-gradient(90deg, ${colors.primary}, ${colors.secondary})` : '#333',
               transition: 'all 0.3s ease'
             }}
           />
@@ -483,7 +492,7 @@ const LaminarTurbulentRenderer: React.FC<LaminarTurbulentRendererProps> = ({ onE
                 value={faucetFlow}
                 onChange={(e) => {
                   setFaucetFlow(Number(e.target.value));
-                  playSound(200 + Number(e.target.value) * 3, 0.05, 'sine', 0.1);
+                  playSound('click');
                 }}
                 style={{ width: '150px', accentColor: faucetFlow < 50 ? colors.laminar : colors.turbulent }}
               />
@@ -555,7 +564,7 @@ const LaminarTurbulentRenderer: React.FC<LaminarTurbulentRendererProps> = ({ onE
         )}
       </div>
 
-      {hookStep === 1 && renderBottomBar(() => goToPhase('predict'))}
+      {hookStep === 1 && renderBottomBar(() => goToPhase(1))}
     </div>
   );
 
@@ -606,7 +615,7 @@ const LaminarTurbulentRenderer: React.FC<LaminarTurbulentRendererProps> = ({ onE
               key={option.value}
               onMouseDown={() => {
                 setPrediction(option.value);
-                playSound(330, 0.1, 'sine', 0.2);
+                playSound('click');
                 emitEvent('prediction', { predicted: option.value, question: 'viscosity_effect' });
               }}
               style={{
@@ -630,7 +639,7 @@ const LaminarTurbulentRenderer: React.FC<LaminarTurbulentRendererProps> = ({ onE
           <button
             onMouseDown={() => {
               setShowPredictResult(true);
-              playSound(prediction === 'water' ? 600 : 300, 0.3, 'sine', 0.3);
+              playSound(prediction === 'water' ? 'success' : 'failure');
             }}
             style={{
               marginTop: '20px',
@@ -681,7 +690,7 @@ const LaminarTurbulentRenderer: React.FC<LaminarTurbulentRendererProps> = ({ onE
         )}
       </div>
 
-      {showPredictResult && renderBottomBar(() => goToPhase('play'))}
+      {showPredictResult && renderBottomBar(() => goToPhase(2))}
     </div>
   );
 
@@ -898,7 +907,7 @@ const LaminarTurbulentRenderer: React.FC<LaminarTurbulentRendererProps> = ({ onE
 
         {renderKeyTakeaway("Reynolds number predicts flow regime: higher velocity or larger pipes → higher Re → turbulence. Higher viscosity → lower Re → laminar.")}
 
-        {renderBottomBar(() => goToPhase('review'))}
+        {renderBottomBar(() => goToPhase(3))}
       </div>
     );
   };
@@ -997,7 +1006,7 @@ const LaminarTurbulentRenderer: React.FC<LaminarTurbulentRendererProps> = ({ onE
         {renderKeyTakeaway("The Reynolds number determines flow character by comparing how hard fluid pushes (inertia) vs how much it resists (viscosity).")}
       </div>
 
-      {renderBottomBar(() => goToPhase('twist_predict'))}
+      {renderBottomBar(() => goToPhase(4))}
     </div>
   );
 
@@ -1059,7 +1068,7 @@ const LaminarTurbulentRenderer: React.FC<LaminarTurbulentRendererProps> = ({ onE
               key={option.value}
               onMouseDown={() => {
                 setTwistPrediction(option.value);
-                playSound(330, 0.1, 'sine', 0.2);
+                playSound('click');
               }}
               style={{
                 padding: '14px 18px',
@@ -1081,7 +1090,7 @@ const LaminarTurbulentRenderer: React.FC<LaminarTurbulentRendererProps> = ({ onE
           <button
             onMouseDown={() => {
               setShowTwistResult(true);
-              playSound(twistPrediction === 'dimpled' ? 600 : 300, 0.3, 'sine', 0.3);
+              playSound(twistPrediction === 'dimpled' ? 'success' : 'failure');
             }}
             style={{
               marginTop: '20px',
@@ -1121,7 +1130,7 @@ const LaminarTurbulentRenderer: React.FC<LaminarTurbulentRendererProps> = ({ onE
         )}
       </div>
 
-      {showTwistResult && renderBottomBar(() => goToPhase('twist_play'))}
+      {showTwistResult && renderBottomBar(() => goToPhase(5))}
     </div>
   );
 
@@ -1271,7 +1280,7 @@ const LaminarTurbulentRenderer: React.FC<LaminarTurbulentRendererProps> = ({ onE
 
       {renderKeyTakeaway("For blunt objects, turbulent boundary layers stay attached longer, reducing wake size and drag — that's why golf balls have dimples!")}
 
-      {renderBottomBar(() => goToPhase('twist_review'))}
+      {renderBottomBar(() => goToPhase(6))}
     </div>
   );
 
@@ -1333,7 +1342,7 @@ const LaminarTurbulentRenderer: React.FC<LaminarTurbulentRendererProps> = ({ onE
         {renderKeyTakeaway("The relationship between turbulence and drag depends on shape. For blunt objects, turbulence reduces total drag. For streamlined shapes, laminar flow wins.")}
       </div>
 
-      {renderBottomBar(() => goToPhase('transfer'))}
+      {renderBottomBar(() => goToPhase(7))}
     </div>
   );
 
@@ -1363,7 +1372,7 @@ const LaminarTurbulentRenderer: React.FC<LaminarTurbulentRendererProps> = ({ onE
               onMouseDown={() => {
                 if (completedApps.has(i)) {
                   setActiveApp(i);
-                  playSound(400 + i * 50, 0.1, 'sine', 0.2);
+                  playSound('click');
                 }
               }}
               style={{
@@ -1469,7 +1478,7 @@ const LaminarTurbulentRenderer: React.FC<LaminarTurbulentRendererProps> = ({ onE
               const next = activeApp + 1;
               setCompletedApps(prev => new Set([...prev, next]));
               setActiveApp(next);
-              playSound(500, 0.15, 'sine', 0.2);
+              playSound('success');
             }}
             style={{
               marginTop: '20px',
@@ -1489,7 +1498,7 @@ const LaminarTurbulentRenderer: React.FC<LaminarTurbulentRendererProps> = ({ onE
         )}
       </div>
 
-      {completedApps.size === applications.length && renderBottomBar(() => goToPhase('test'))}
+      {completedApps.size === applications.length && renderBottomBar(() => goToPhase(8))}
     </div>
   );
 
@@ -1577,7 +1586,7 @@ const LaminarTurbulentRenderer: React.FC<LaminarTurbulentRendererProps> = ({ onE
               <button
                 onMouseDown={() => {
                   setShowTestResults(true);
-                  playSound(600, 0.3, 'sine', 0.3);
+                  playSound('success');
                 }}
                 style={{
                   padding: '14px 32px',
@@ -1639,7 +1648,7 @@ const LaminarTurbulentRenderer: React.FC<LaminarTurbulentRendererProps> = ({ onE
           )}
         </div>
 
-        {showTestResults && renderBottomBar(() => goToPhase('mastery'), false, "Complete Journey")}
+        {showTestResults && renderBottomBar(() => goToPhase(9), false, "Complete Journey")}
       </div>
     );
   };
@@ -1755,32 +1764,60 @@ const LaminarTurbulentRenderer: React.FC<LaminarTurbulentRendererProps> = ({ onE
   // Main render
   const renderPhase = () => {
     switch (phase) {
-      case 'hook': return renderHook();
-      case 'predict': return renderPredict();
-      case 'play': return renderPlay();
-      case 'review': return renderReview();
-      case 'twist_predict': return renderTwistPredict();
-      case 'twist_play': return renderTwistPlay();
-      case 'twist_review': return renderTwistReview();
-      case 'transfer': return renderTransfer();
-      case 'test': return renderTest();
-      case 'mastery': return renderMastery();
+      case 0: return renderHook();
+      case 1: return renderPredict();
+      case 2: return renderPlay();
+      case 3: return renderReview();
+      case 4: return renderTwistPredict();
+      case 5: return renderTwistPlay();
+      case 6: return renderTwistReview();
+      case 7: return renderTransfer();
+      case 8: return renderTest();
+      case 9: return renderMastery();
       default: return renderHook();
     }
   };
 
   return (
-    <div style={{
-      minHeight: '100vh',
-      background: colors.background,
-      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
-    }}>
-      <div style={{
-        maxWidth: '800px',
-        margin: '0 auto',
-        padding: isMobile ? '8px' : '16px'
-      }}>
-        {renderPhase()}
+    <div className="min-h-screen bg-[#0a0f1a] text-white relative overflow-hidden">
+      {/* Premium background gradient */}
+      <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-[#0a1628] to-slate-900" />
+      <div className="absolute top-0 left-1/4 w-96 h-96 bg-blue-500/5 rounded-full blur-3xl" />
+      <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-cyan-500/5 rounded-full blur-3xl" />
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-indigo-500/3 rounded-full blur-3xl" />
+
+      {/* Header */}
+      <div className="fixed top-0 left-0 right-0 z-50 bg-slate-900/80 backdrop-blur-xl border-b border-slate-800/50">
+        <div className="flex items-center justify-between px-6 py-3 max-w-4xl mx-auto">
+          <span className="text-sm font-semibold text-white/80 tracking-wide">Laminar vs Turbulent Flow</span>
+          <div className="flex items-center gap-1.5">
+            {PHASES.map((p, i) => (
+              <button
+                key={p}
+                onMouseDown={(e) => { e.preventDefault(); goToPhase(p); }}
+                className={`h-2 rounded-full transition-all duration-300 ${
+                  phase === p
+                    ? 'bg-blue-400 w-6 shadow-lg shadow-blue-400/30'
+                    : phase > p
+                      ? 'bg-emerald-500 w-2'
+                      : 'bg-slate-700 w-2 hover:bg-slate-600'
+                }`}
+              />
+            ))}
+          </div>
+          <span className="text-sm font-medium text-blue-400">{phaseLabels[phase]}</span>
+        </div>
+      </div>
+
+      {/* Main content */}
+      <div className="relative pt-16 pb-12">
+        <div style={{
+          maxWidth: '800px',
+          margin: '0 auto',
+          padding: isMobile ? '8px' : '16px'
+        }}>
+          {renderPhase()}
+        </div>
       </div>
     </div>
   );

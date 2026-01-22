@@ -503,25 +503,74 @@ export default function PhoneSeismometerRenderer({ onEvent, savedState }: PhoneS
 
   // ─── Phase Renderers ─────────────────────────────────────────────────────────
   const renderHook = () => (
-    <div className="text-center space-y-6">
-      <div className="text-6xl mb-4">📱🌋</div>
-      <h2 className="text-2xl font-bold text-white">Your Phone is a Seismometer!</h2>
-      <p className="text-gray-300 text-lg max-w-lg mx-auto">
-        That little chip that rotates your screen? It&apos;s actually a
-        <span className="text-emerald-400 font-semibold"> vibration sensor</span> sensitive enough to detect earthquakes,
-        footsteps, even your heartbeat through the table!
-      </p>
-      <div className="bg-gradient-to-r from-emerald-900/50 to-teal-900/50 rounded-xl p-6 max-w-md mx-auto">
-        <p className="text-emerald-300 font-medium">
-          How does a tiny silicon chip detect motion and vibration? 🤔
-        </p>
+    <div className="flex flex-col items-center justify-center min-h-[600px] px-6 py-12 text-center">
+      {/* Premium badge */}
+      <div className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-500/10 border border-emerald-500/20 rounded-full mb-8">
+        <span className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse" />
+        <span className="text-sm font-medium text-emerald-400 tracking-wide">PHYSICS EXPLORATION</span>
       </div>
+
+      {/* Main title with gradient */}
+      <h1 className="text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-white via-emerald-100 to-teal-200 bg-clip-text text-transparent">
+        Your Phone is a Seismometer!
+      </h1>
+
+      <p className="text-lg text-slate-400 max-w-md mb-10">
+        Discover the sensitive motion sensors hidden in your pocket
+      </p>
+
+      {/* Premium card with graphic */}
+      <div className="relative bg-gradient-to-br from-slate-800/80 to-slate-900/80 rounded-3xl p-8 max-w-xl w-full border border-slate-700/50 shadow-2xl shadow-black/20 backdrop-blur-xl">
+        {/* Subtle glow effect */}
+        <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/5 via-transparent to-teal-500/5 rounded-3xl" />
+
+        <div className="relative">
+          <div className="text-6xl mb-6">📱🌋</div>
+
+          <div className="space-y-4">
+            <p className="text-xl text-white/90 font-medium leading-relaxed">
+              That little chip that rotates your screen?
+            </p>
+            <p className="text-lg text-slate-400 leading-relaxed">
+              It&apos;s actually a <span className="text-emerald-400 font-semibold">vibration sensor</span> sensitive enough to detect earthquakes, footsteps, even your heartbeat through the table!
+            </p>
+            <div className="pt-2">
+              <p className="text-base text-emerald-400 font-semibold">
+                How does a tiny silicon chip detect motion and vibration?
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Premium CTA button */}
       <button
         onMouseDown={() => { playSound('click'); nextPhase(); }}
-        className="px-8 py-3 bg-gradient-to-r from-emerald-600 to-teal-600 rounded-xl text-white font-semibold hover:from-emerald-500 hover:to-teal-500 transition-all"
+        className="mt-10 group relative px-10 py-5 bg-gradient-to-r from-emerald-500 to-teal-600 text-white text-lg font-semibold rounded-2xl transition-all duration-300 hover:shadow-lg hover:shadow-emerald-500/25 hover:scale-[1.02] active:scale-[0.98]"
       >
-        Investigate! →
+        <span className="relative z-10 flex items-center gap-3">
+          Investigate!
+          <svg className="w-5 h-5 transition-transform group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+          </svg>
+        </span>
       </button>
+
+      {/* Feature hints */}
+      <div className="mt-12 flex items-center gap-8 text-sm text-slate-500">
+        <div className="flex items-center gap-2">
+          <span className="text-emerald-400">✦</span>
+          Interactive Lab
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="text-emerald-400">✦</span>
+          Real-World Examples
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="text-emerald-400">✦</span>
+          Knowledge Test
+        </div>
+      </div>
     </div>
   );
 
@@ -958,10 +1007,42 @@ export default function PhoneSeismometerRenderer({ onEvent, savedState }: PhoneS
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-emerald-950 to-gray-900 p-6">
-      <div className="max-w-2xl mx-auto">
-        {renderProgressBar()}
-        {renderPhase()}
+    <div className="min-h-screen bg-[#0a0f1a] text-white relative overflow-hidden">
+      {/* Premium background gradient */}
+      <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-[#0a1628] to-slate-900" />
+      <div className="absolute top-0 left-1/4 w-96 h-96 bg-emerald-500/5 rounded-full blur-3xl" />
+      <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-teal-500/5 rounded-full blur-3xl" />
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-cyan-500/3 rounded-full blur-3xl" />
+
+      {/* Header */}
+      <div className="fixed top-0 left-0 right-0 z-50 bg-slate-900/80 backdrop-blur-xl border-b border-slate-800/50">
+        <div className="flex items-center justify-between px-6 py-3 max-w-4xl mx-auto">
+          <span className="text-sm font-semibold text-white/80 tracking-wide">Phone Seismometer</span>
+          <div className="flex items-center gap-1.5">
+            {PHASES.map((p, i) => (
+              <button
+                key={p}
+                onMouseDown={(e) => { e.preventDefault(); goToPhase(p); }}
+                className={`h-2 rounded-full transition-all duration-300 ${
+                  PHASES.indexOf(phase) === i
+                    ? 'bg-emerald-400 w-6 shadow-lg shadow-emerald-400/30'
+                    : PHASES.indexOf(phase) > i
+                      ? 'bg-emerald-500 w-2'
+                      : 'bg-slate-700 w-2 hover:bg-slate-600'
+                }`}
+                title={p}
+              />
+            ))}
+          </div>
+          <span className="text-sm font-medium text-emerald-400">{phase.replace('_', ' ')}</span>
+        </div>
+      </div>
+
+      {/* Main content */}
+      <div className="relative pt-16 pb-12 px-6">
+        <div className="max-w-2xl mx-auto">
+          {renderPhase()}
+        </div>
       </div>
     </div>
   );

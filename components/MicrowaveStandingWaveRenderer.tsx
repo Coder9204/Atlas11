@@ -1,50 +1,50 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 
-// ─────────────────────────────────────────────────────────────────────────────
+// ═══════════════════════════════════════════════════════════════════════════
 // TYPES & INTERFACES
-// ─────────────────────────────────────────────────────────────────────────────
-type Phase =
-  | 'hook'
-  | 'predict'
-  | 'play'
-  | 'review'
-  | 'twist_predict'
-  | 'twist_play'
-  | 'twist_review'
-  | 'transfer'
-  | 'test'
-  | 'mastery';
+// ═══════════════════════════════════════════════════════════════════════════
+type GameEventType =
+  | 'phase_change'
+  | 'prediction_made'
+  | 'simulation_started'
+  | 'parameter_changed'
+  | 'twist_prediction_made'
+  | 'app_explored'
+  | 'test_answered'
+  | 'test_completed'
+  | 'mastery_achieved';
 
 interface GameEvent {
-  type: 'prediction' | 'observation' | 'interaction' | 'completion';
-  phase: Phase;
-  data: Record<string, unknown>;
+  type: GameEventType;
+  data?: Record<string, unknown>;
 }
 
-interface MicrowaveStandingWaveRendererProps {
-  onEvent?: (event: GameEvent) => void;
-  savedState?: GameState | null;
+// Numeric phases: 0=hook, 1=predict, 2=play, 3=review, 4=twist_predict, 5=twist_play, 6=twist_review, 7=transfer, 8=test, 9=mastery
+const PHASES: number[] = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
+const phaseLabels: Record<number, string> = {
+  0: 'Hook', 1: 'Predict', 2: 'Lab', 3: 'Review', 4: 'Twist Predict',
+  5: 'Twist Lab', 6: 'Twist Review', 7: 'Transfer', 8: 'Test', 9: 'Mastery'
+};
+
+interface Props {
+  onGameEvent?: (event: GameEvent) => void;
+  currentPhase?: number;
+  onPhaseComplete?: (phase: number) => void;
 }
 
 interface GameState {
-  phase: Phase;
+  phase: number;
   prediction: string | null;
   twistPrediction: string | null;
   testAnswers: number[];
   completedApps: number[];
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
+// ═══════════════════════════════════════════════════════════════════════════
 // CONSTANTS
-// ─────────────────────────────────────────────────────────────────────────────
-const PHASES: Phase[] = [
-  'hook', 'predict', 'play', 'review',
-  'twist_predict', 'twist_play', 'twist_review',
-  'transfer', 'test', 'mastery'
-];
-
+// ═══════════════════════════════════════════════════════════════════════════
 const TEST_QUESTIONS = [
   {
     question: 'Why does a microwave oven have hot spots and cold spots?',
@@ -111,58 +111,21 @@ const TRANSFER_APPS = [
   }
 ];
 
-// ─────────────────────────────────────────────────────────────────────────────
-// HELPER FUNCTIONS
-// ─────────────────────────────────────────────────────────────────────────────
-function playSound(type: 'click' | 'success' | 'failure' | 'transition' | 'complete'): void {
-  if (typeof window === 'undefined') return;
-  try {
-    const audioContext = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
-    const oscillator = audioContext.createOscillator();
-    const gainNode = audioContext.createGain();
-
-    oscillator.connect(gainNode);
-    gainNode.connect(audioContext.destination);
-
-    const sounds: Record<string, { freq: number; type: OscillatorType; duration: number }> = {
-      click: { freq: 600, type: 'sine', duration: 0.08 },
-      success: { freq: 880, type: 'sine', duration: 0.15 },
-      failure: { freq: 220, type: 'sine', duration: 0.25 },
-      transition: { freq: 440, type: 'triangle', duration: 0.12 },
-      complete: { freq: 660, type: 'sine', duration: 0.2 }
-    };
-
-    const sound = sounds[type];
-    oscillator.frequency.setValueAtTime(sound.freq, audioContext.currentTime);
-    oscillator.type = sound.type;
-    gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
-    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + sound.duration);
-
-    oscillator.start(audioContext.currentTime);
-    oscillator.stop(audioContext.currentTime + sound.duration);
-  } catch {
-    // Audio not available
-  }
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
+// ═══════════════════════════════════════════════════════════════════════════
 // MAIN COMPONENT
-// ─────────────────────────────────────────────────────────────────────────────
-export default function MicrowaveStandingWaveRenderer({ onEvent, savedState }: MicrowaveStandingWaveRendererProps) {
-  // ─── State ───────────────────────────────────────────────────────────────────
-  const [phase, setPhase] = useState<Phase>(savedState?.phase || 'hook');
-  const [prediction, setPrediction] = useState<string | null>(savedState?.prediction || null);
-  const [twistPrediction, setTwistPrediction] = useState<string | null>(savedState?.twistPrediction || null);
-  const [testAnswers, setTestAnswers] = useState<number[]>(savedState?.testAnswers || []);
-  const [completedApps, setCompletedApps] = useState<Set<number>>(
-    new Set(savedState?.completedApps || [])
-  );
+// ═══════════════════════════════════════════════════════════════════════════
+const MicrowaveStandingWaveRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onPhaseComplete }) => {
+  const [phase, setPhase] = useState<number>(currentPhase ?? 0);
+  const [prediction, setPrediction] = useState<string | null>(null);
+  const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
+  const [testAnswers, setTestAnswers] = useState<number[]>([]);
+  const [completedApps, setCompletedApps] = useState<Set<number>>(new Set());
 
   // Simulation state
   const [isCooking, setIsCooking] = useState(false);
   const [turntableOn, setTurntableOn] = useState(false);
   const [cookTime, setCookTime] = useState(0);
-  const [foodTemp, setFoodTemp] = useState<number[]>(Array(25).fill(20)); // 5x5 grid
+  const [foodTemp, setFoodTemp] = useState<number[]>(Array(25).fill(20));
   const [animPhase, setAnimPhase] = useState(0);
   const [turntableAngle, setTurntableAngle] = useState(0);
 
@@ -172,46 +135,68 @@ export default function MicrowaveStandingWaveRenderer({ onEvent, savedState }: M
   const [twistFoodTemp, setTwistFoodTemp] = useState<number[]>(Array(25).fill(20));
 
   const navigationLockRef = useRef(false);
+  const lastClickRef = useRef(0);
 
-  // Standing wave intensity pattern (simplified 2D)
-  const getIntensityAt = (x: number, y: number, angle: number) => {
-    // Rotate position by turntable angle
-    const cos = Math.cos(angle);
-    const sin = Math.sin(angle);
-    const rx = x * cos - y * sin;
-    const ry = x * sin + y * cos;
+  // Phase sync
+  useEffect(() => {
+    if (currentPhase !== undefined && currentPhase !== phase) {
+      setPhase(currentPhase);
+    }
+  }, [currentPhase, phase]);
 
-    // Standing wave pattern (nodes at certain positions)
-    const intensity = Math.abs(Math.sin(rx * Math.PI * 2) * Math.sin(ry * Math.PI * 2));
-    return intensity;
-  };
+  const playSound = useCallback((type: 'click' | 'success' | 'failure' | 'transition' | 'complete') => {
+    if (typeof window === 'undefined') return;
+    try {
+      const audioContext = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
+      const oscillator = audioContext.createOscillator();
+      const gainNode = audioContext.createGain();
+      oscillator.connect(gainNode);
+      gainNode.connect(audioContext.destination);
+      const sounds = {
+        click: { freq: 600, duration: 0.1, type: 'sine' as OscillatorType },
+        success: { freq: 800, duration: 0.2, type: 'sine' as OscillatorType },
+        failure: { freq: 300, duration: 0.3, type: 'sine' as OscillatorType },
+        transition: { freq: 500, duration: 0.15, type: 'sine' as OscillatorType },
+        complete: { freq: 900, duration: 0.4, type: 'sine' as OscillatorType }
+      };
+      const sound = sounds[type];
+      oscillator.frequency.value = sound.freq;
+      oscillator.type = sound.type;
+      gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + sound.duration);
+      oscillator.start();
+      oscillator.stop(audioContext.currentTime + sound.duration);
+    } catch { /* Audio not available */ }
+  }, []);
 
-  // ─── Helpers ─────────────────────────────────────────────────────────────────
-  const emitEvent = (type: GameEvent['type'], data: Record<string, unknown> = {}) => {
-    onEvent?.({ type, phase, data });
-  };
-
-  const goToPhase = (newPhase: Phase) => {
+  const goToPhase = useCallback((newPhase: number) => {
     if (navigationLockRef.current) return;
     navigationLockRef.current = true;
-
     playSound('transition');
     setPhase(newPhase);
-    emitEvent('interaction', { action: 'phase_change', from: phase, to: newPhase });
+    onPhaseComplete?.(newPhase);
+    onGameEvent?.({ type: 'phase_change', data: { phase: newPhase, phaseLabel: phaseLabels[newPhase] } });
+    setTimeout(() => { navigationLockRef.current = false; }, 400);
+  }, [playSound, onPhaseComplete, onGameEvent]);
 
-    setTimeout(() => {
-      navigationLockRef.current = false;
-    }, 400);
-  };
-
-  const nextPhase = () => {
+  const nextPhase = useCallback(() => {
     const currentIndex = PHASES.indexOf(phase);
     if (currentIndex < PHASES.length - 1) {
       goToPhase(PHASES[currentIndex + 1]);
     }
+  }, [phase, goToPhase]);
+
+  // Standing wave intensity pattern (simplified 2D)
+  const getIntensityAt = (x: number, y: number, angle: number) => {
+    const cos = Math.cos(angle);
+    const sin = Math.sin(angle);
+    const rx = x * cos - y * sin;
+    const ry = x * sin + y * cos;
+    const intensity = Math.abs(Math.sin(rx * Math.PI * 2) * Math.sin(ry * Math.PI * 2));
+    return intensity;
   };
 
-  // ─── Animation Effect ────────────────────────────────────────────────────────
+  // Animation Effect
   useEffect(() => {
     const interval = setInterval(() => {
       setAnimPhase(p => (p + 0.15) % (Math.PI * 2));
@@ -243,7 +228,7 @@ export default function MicrowaveStandingWaveRenderer({ onEvent, savedState }: M
 
   // Twist cooking simulation
   useEffect(() => {
-    if (phase !== 'twist_play') return;
+    if (phase !== 5) return; // twist_play
     if (twistCookTime <= 0) return;
 
     const cookInterval = setInterval(() => {
@@ -269,45 +254,68 @@ export default function MicrowaveStandingWaveRenderer({ onEvent, savedState }: M
 
   // Reset when returning to play phase
   useEffect(() => {
-    if (phase === 'play') {
+    if (phase === 2) { // play
       setIsCooking(false);
       setTurntableOn(false);
       setCookTime(0);
       setFoodTemp(Array(25).fill(20));
       setTurntableAngle(0);
     }
-    if (phase === 'twist_play') {
+    if (phase === 5) { // twist_play
       setTwistTurntable(false);
       setTwistCookTime(0);
       setTwistFoodTemp(Array(25).fill(20));
     }
   }, [phase]);
 
-  // ─── Render Helpers ──────────────────────────────────────────────────────────
-  const renderProgressBar = () => (
-    <div className="flex items-center gap-1 mb-6">
-      {PHASES.map((p, i) => (
-        <div
-          key={p}
-          className={`h-2 flex-1 rounded-full transition-all duration-300 ${
-            i <= PHASES.indexOf(phase)
-              ? 'bg-gradient-to-r from-yellow-500 to-orange-500'
-              : 'bg-gray-700'
-          }`}
-        />
-      ))}
-    </div>
-  );
-
   // Temperature to color
   const tempToColor = (temp: number) => {
-    const normalized = (temp - 20) / 80; // 20°C to 100°C
-    if (normalized < 0.25) return '#3b82f6'; // cold blue
-    if (normalized < 0.5) return '#22c55e'; // warm green
-    if (normalized < 0.75) return '#eab308'; // hot yellow
-    return '#ef4444'; // very hot red
+    const normalized = (temp - 20) / 80;
+    if (normalized < 0.25) return '#3b82f6';
+    if (normalized < 0.5) return '#22c55e';
+    if (normalized < 0.75) return '#eab308';
+    return '#ef4444';
   };
 
+  const handlePrediction = useCallback((id: string) => {
+    const now = Date.now();
+    if (now - lastClickRef.current < 200) return;
+    lastClickRef.current = now;
+    setPrediction(id);
+    playSound('click');
+    onGameEvent?.({ type: 'prediction_made', data: { prediction: id } });
+  }, [playSound, onGameEvent]);
+
+  const handleTwistPrediction = useCallback((id: string) => {
+    const now = Date.now();
+    if (now - lastClickRef.current < 200) return;
+    lastClickRef.current = now;
+    setTwistPrediction(id);
+    playSound('click');
+    onGameEvent?.({ type: 'twist_prediction_made', data: { prediction: id } });
+  }, [playSound, onGameEvent]);
+
+  const handleAppComplete = useCallback((index: number) => {
+    const now = Date.now();
+    if (now - lastClickRef.current < 200) return;
+    lastClickRef.current = now;
+    setCompletedApps(prev => new Set([...prev, index]));
+    playSound('complete');
+    onGameEvent?.({ type: 'app_explored', data: { app: TRANSFER_APPS[index].title } });
+  }, [playSound, onGameEvent]);
+
+  const handleTestAnswer = useCallback((answerIndex: number, correct: boolean) => {
+    const now = Date.now();
+    if (now - lastClickRef.current < 200) return;
+    lastClickRef.current = now;
+    setTestAnswers(prev => [...prev, answerIndex]);
+    playSound(correct ? 'success' : 'failure');
+    onGameEvent?.({ type: 'test_answered', data: { answer: answerIndex, correct } });
+  }, [playSound, onGameEvent]);
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // RENDER HELPERS
+  // ═══════════════════════════════════════════════════════════════════════════
   const renderMicrowaveScene = (temps: number[], cooking: boolean, turntable: boolean, angle: number) => {
     return (
       <svg viewBox="0 0 400 280" className="w-full h-56">
@@ -356,7 +364,6 @@ export default function MicrowaveStandingWaveRenderer({ onEvent, savedState }: M
         {/* Turntable */}
         <g transform={`translate(170, 180)`}>
           <ellipse cx="0" cy="0" rx="60" ry="15" fill="#4b5563" />
-          {/* Rotation indicator */}
           {turntable && cooking && (
             <line
               x1="0"
@@ -427,7 +434,6 @@ export default function MicrowaveStandingWaveRenderer({ onEvent, savedState }: M
       <svg viewBox="0 0 400 250" className="w-full h-48">
         <rect width="400" height="250" fill="#111827" />
 
-        {/* Two side-by-side results */}
         <text x="200" y="25" textAnchor="middle" className="fill-gray-300 text-sm font-semibold">
           After 10 seconds of cooking:
         </text>
@@ -455,10 +461,10 @@ export default function MicrowaveStandingWaveRenderer({ onEvent, savedState }: M
             );
           })}
           <text x="50" y="130" textAnchor="middle" className="fill-gray-400 text-xs">
-            Avg: {avgTemp.toFixed(0)}°C
+            Avg: {avgTemp.toFixed(0)}C
           </text>
           <text x="50" y="145" textAnchor="middle" className="fill-gray-400 text-xs">
-            Variation: ±{tempVariance.toFixed(0)}°C
+            Variation: +/-{tempVariance.toFixed(0)}C
           </text>
         </g>
 
@@ -482,45 +488,96 @@ export default function MicrowaveStandingWaveRenderer({ onEvent, savedState }: M
         {/* Explanation */}
         <text x="200" y="220" textAnchor="middle" className="fill-gray-400 text-sm">
           {turntable
-            ? '✓ Turntable moves food through hot spots → even heating!'
-            : '✗ Food sits in fixed positions → hot and cold spots!'}
+            ? 'Turntable moves food through hot spots - even heating!'
+            : 'Food sits in fixed positions - hot and cold spots!'}
         </text>
       </svg>
     );
   };
 
-  // ─── Phase Renderers ─────────────────────────────────────────────────────────
+  // ═══════════════════════════════════════════════════════════════════════════
+  // PHASE RENDERERS
+  // ═══════════════════════════════════════════════════════════════════════════
   const renderHook = () => (
-    <div className="text-center space-y-6">
-      <div className="text-6xl mb-4">🍲❄️🔥</div>
-      <h2 className="text-2xl font-bold text-white">The Microwave Mystery</h2>
-      <p className="text-gray-300 text-lg max-w-lg mx-auto">
-        You heat leftovers in the microwave. One bite is <span className="text-blue-400 font-semibold">ice cold</span>,
-        the next is <span className="text-red-400 font-semibold">scalding hot</span>!
-        But the microwave filled the whole cavity with energy...
-      </p>
-      <div className="bg-gradient-to-r from-yellow-900/50 to-orange-900/50 rounded-xl p-6 max-w-md mx-auto">
-        <p className="text-yellow-300 font-medium">
-          Why does a microwave have hot spots and cold spots? 🤔
-        </p>
+    <div className="flex flex-col items-center justify-center min-h-[600px] px-6 py-12 text-center">
+      {/* Premium badge */}
+      <div className="inline-flex items-center gap-2 px-4 py-2 bg-amber-500/10 border border-amber-500/20 rounded-full mb-8">
+        <span className="w-2 h-2 bg-amber-400 rounded-full animate-pulse" />
+        <span className="text-sm font-medium text-amber-400 tracking-wide">PHYSICS EXPLORATION</span>
       </div>
+
+      {/* Main title with gradient */}
+      <h1 className="text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-white via-amber-100 to-orange-200 bg-clip-text text-transparent">
+        The Microwave Mystery
+      </h1>
+
+      <p className="text-lg text-slate-400 max-w-md mb-10">
+        Discover why microwaves create hot spots and cold spots
+      </p>
+
+      {/* Premium card with graphic */}
+      <div className="relative bg-gradient-to-br from-slate-800/80 to-slate-900/80 rounded-3xl p-8 max-w-xl w-full border border-slate-700/50 shadow-2xl shadow-black/20">
+        <div className="absolute inset-0 bg-gradient-to-br from-amber-500/5 via-transparent to-orange-500/5 rounded-3xl" />
+
+        <div className="relative">
+          <div className="text-6xl mb-4">🍲</div>
+
+          <div className="mt-8 space-y-4">
+            <p className="text-xl text-white/90 font-medium leading-relaxed">
+              You heat leftovers in the microwave.
+            </p>
+            <p className="text-lg text-slate-400 leading-relaxed">
+              One bite is <span className="text-blue-400 font-semibold">ice cold</span>, the next is <span className="text-red-400 font-semibold">scalding hot</span>!
+            </p>
+            <div className="pt-2">
+              <p className="text-base text-amber-400 font-semibold">
+                Why does this happen?
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Premium CTA button */}
       <button
-        onMouseDown={() => { playSound('click'); nextPhase(); }}
-        className="px-8 py-3 bg-gradient-to-r from-yellow-600 to-orange-600 rounded-xl text-white font-semibold hover:from-yellow-500 hover:to-orange-500 transition-all"
+        onMouseDown={(e) => { e.preventDefault(); goToPhase(1); }}
+        className="mt-10 group relative px-10 py-5 bg-gradient-to-r from-amber-500 to-orange-600 text-white text-lg font-semibold rounded-2xl transition-all duration-300 hover:shadow-lg hover:shadow-amber-500/25 hover:scale-[1.02] active:scale-[0.98]"
       >
-        Investigate! →
+        <span className="relative z-10 flex items-center gap-3">
+          Investigate!
+          <svg className="w-5 h-5 transition-transform group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+          </svg>
+        </span>
       </button>
+
+      {/* Feature hints */}
+      <div className="mt-12 flex items-center gap-8 text-sm text-slate-500">
+        <div className="flex items-center gap-2">
+          <span className="text-amber-400">*</span>
+          Standing Waves
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="text-amber-400">*</span>
+          Interactive Lab
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="text-amber-400">*</span>
+          Real Experiments
+        </div>
+      </div>
     </div>
   );
 
   const renderPredict = () => (
-    <div className="space-y-6">
-      <h2 className="text-xl font-bold text-white text-center">Make Your Prediction</h2>
-      <p className="text-gray-300 text-center">
-        Microwaves bounce back and forth inside the oven. What happens when waves reflect off the walls?
-      </p>
-
-      <div className="grid grid-cols-1 gap-3 max-w-lg mx-auto">
+    <div className="flex flex-col items-center justify-center min-h-[500px] p-6">
+      <h2 className="text-2xl font-bold text-white mb-6">Make Your Prediction</h2>
+      <div className="bg-slate-800/50 rounded-2xl p-6 max-w-2xl mb-6">
+        <p className="text-lg text-slate-300 mb-4">
+          Microwaves bounce back and forth inside the oven. What happens when waves reflect off the walls?
+        </p>
+      </div>
+      <div className="grid gap-3 w-full max-w-xl">
         {[
           { id: 'random', text: 'Random chaos - energy scatters everywhere equally', icon: '🎲' },
           { id: 'standing', text: 'Standing waves form with fixed hot spots and cold spots', icon: '〰️' },
@@ -529,30 +586,30 @@ export default function MicrowaveStandingWaveRenderer({ onEvent, savedState }: M
         ].map((option) => (
           <button
             key={option.id}
-            onMouseDown={() => {
-              playSound('click');
-              setPrediction(option.id);
-              emitEvent('prediction', { prediction: option.id });
-            }}
-            className={`p-4 rounded-xl border-2 transition-all text-left ${
+            onMouseDown={(e) => { e.preventDefault(); handlePrediction(option.id); }}
+            disabled={prediction !== null}
+            className={`p-4 rounded-xl text-left transition-all duration-300 ${
               prediction === option.id
-                ? 'border-yellow-500 bg-yellow-900/30'
-                : 'border-gray-700 bg-gray-800/50 hover:border-gray-600'
+                ? option.id === 'standing' ? 'bg-emerald-600/40 border-2 border-emerald-400' : 'bg-red-600/40 border-2 border-red-400'
+                : prediction !== null && option.id === 'standing' ? 'bg-emerald-600/40 border-2 border-emerald-400'
+                : 'bg-slate-700/50 hover:bg-slate-600/50 border-2 border-transparent'
             }`}
           >
             <span className="mr-2">{option.icon}</span>
-            <span className="text-gray-200">{option.text}</span>
+            <span className="text-slate-200">{option.text}</span>
           </button>
         ))}
       </div>
-
       {prediction && (
-        <div className="text-center">
+        <div className="mt-6 p-4 bg-slate-800/70 rounded-xl max-w-xl">
+          <p className="text-emerald-400 font-semibold">
+            {prediction === 'standing' ? '✓ Correct!' : 'Not quite!'} Standing waves create fixed patterns of high and low energy!
+          </p>
           <button
-            onMouseDown={() => { playSound('click'); nextPhase(); }}
-            className="px-8 py-3 bg-gradient-to-r from-yellow-600 to-orange-600 rounded-xl text-white font-semibold hover:from-yellow-500 hover:to-orange-500 transition-all"
+            onMouseDown={(e) => { e.preventDefault(); goToPhase(2); }}
+            className="mt-4 px-6 py-3 bg-gradient-to-r from-amber-600 to-orange-600 text-white font-semibold rounded-xl"
           >
-            Test It! →
+            See It in Action
           </button>
         </div>
       )}
@@ -560,158 +617,153 @@ export default function MicrowaveStandingWaveRenderer({ onEvent, savedState }: M
   );
 
   const renderPlay = () => (
-    <div className="space-y-4">
-      <h2 className="text-xl font-bold text-white text-center">Experiment: Standing Waves</h2>
+    <div className="flex flex-col items-center p-6">
+      <h2 className="text-2xl font-bold text-white mb-4">Standing Wave Lab</h2>
+      <div className="bg-slate-800/50 rounded-2xl p-6 mb-4">
+        {renderMicrowaveScene(foodTemp, isCooking, turntableOn, turntableAngle)}
+      </div>
 
-      {renderMicrowaveScene(foodTemp, isCooking, turntableOn, turntableAngle)}
-
-      <div className="flex justify-center gap-4">
+      <div className="flex justify-center gap-4 mb-6">
         <button
-          onMouseDown={() => {
-            playSound('click');
+          onMouseDown={(e) => {
+            e.preventDefault();
+            const now = Date.now();
+            if (now - lastClickRef.current < 200) return;
+            lastClickRef.current = now;
             setIsCooking(!isCooking);
+            playSound('click');
           }}
           className={`px-6 py-2 rounded-lg font-medium transition-all ${
-            isCooking
-              ? 'bg-red-600 text-white'
-              : 'bg-green-600 text-white'
+            isCooking ? 'bg-red-600 text-white' : 'bg-emerald-600 text-white'
           }`}
         >
-          {isCooking ? '⏹️ Stop' : '▶️ Start Cooking'}
+          {isCooking ? 'Stop' : 'Start Cooking'}
         </button>
         <button
-          onMouseDown={() => {
-            playSound('click');
+          onMouseDown={(e) => {
+            e.preventDefault();
+            const now = Date.now();
+            if (now - lastClickRef.current < 200) return;
+            lastClickRef.current = now;
             setTurntableOn(!turntableOn);
+            playSound('click');
           }}
           className={`px-6 py-2 rounded-lg font-medium transition-all ${
-            turntableOn
-              ? 'bg-blue-600 text-white'
-              : 'bg-gray-700 text-gray-300'
+            turntableOn ? 'bg-blue-600 text-white' : 'bg-slate-700 text-slate-300'
           }`}
         >
           Turntable: {turntableOn ? 'ON' : 'OFF'}
         </button>
         <button
-          onMouseDown={() => {
-            playSound('click');
+          onMouseDown={(e) => {
+            e.preventDefault();
+            const now = Date.now();
+            if (now - lastClickRef.current < 200) return;
+            lastClickRef.current = now;
             setFoodTemp(Array(25).fill(20));
             setCookTime(0);
+            playSound('click');
           }}
-          className="px-6 py-2 rounded-lg font-medium bg-gray-700 text-gray-300 hover:bg-gray-600"
+          className="px-6 py-2 rounded-lg font-medium bg-slate-700 text-slate-300 hover:bg-slate-600"
         >
-          🔄 Reset
+          Reset
         </button>
       </div>
 
-      <div className="bg-gradient-to-r from-yellow-900/30 to-orange-900/30 rounded-xl p-4 max-w-lg mx-auto">
-        <p className="text-yellow-300 text-sm text-center">
+      <div className="bg-gradient-to-r from-amber-900/40 to-orange-900/40 rounded-xl p-4 max-w-2xl w-full mb-6">
+        <p className="text-amber-300 text-sm text-center">
           <strong>Standing waves:</strong> When microwaves bounce back and forth, they interfere to create
           fixed patterns of high energy (antinodes) and low energy (nodes).
         </p>
       </div>
 
-      <div className="text-center">
-        <button
-          onMouseDown={() => { playSound('click'); nextPhase(); }}
-          className="px-8 py-3 bg-gradient-to-r from-yellow-600 to-orange-600 rounded-xl text-white font-semibold hover:from-yellow-500 hover:to-orange-500 transition-all"
-        >
-          Continue →
-        </button>
-      </div>
+      <button
+        onMouseDown={(e) => { e.preventDefault(); goToPhase(3); }}
+        className="px-6 py-3 bg-gradient-to-r from-amber-600 to-orange-600 text-white font-semibold rounded-xl"
+      >
+        Review the Science
+      </button>
     </div>
   );
 
   const renderReview = () => (
-    <div className="space-y-6">
-      <h2 className="text-xl font-bold text-white text-center">Standing Wave Physics</h2>
-
-      <div className="bg-gradient-to-br from-gray-800 to-gray-900 rounded-2xl p-6 max-w-lg mx-auto">
-        <div className="space-y-4">
-          <div className="flex items-start gap-3">
-            <div className="w-8 h-8 rounded-full bg-yellow-600 flex items-center justify-center text-white font-bold">1</div>
-            <div>
-              <h3 className="text-white font-semibold">Wave Reflection</h3>
-              <p className="text-gray-400 text-sm">Microwaves bounce off metal walls back into the cavity</p>
-            </div>
-          </div>
-          <div className="flex items-start gap-3">
-            <div className="w-8 h-8 rounded-full bg-orange-600 flex items-center justify-center text-white font-bold">2</div>
-            <div>
-              <h3 className="text-white font-semibold">Interference Pattern</h3>
-              <p className="text-gray-400 text-sm">Outgoing + reflected waves create standing waves</p>
-            </div>
-          </div>
-          <div className="flex items-start gap-3">
-            <div className="w-8 h-8 rounded-full bg-red-600 flex items-center justify-center text-white font-bold">3</div>
-            <div>
-              <h3 className="text-white font-semibold">Fixed Hot/Cold Spots</h3>
-              <p className="text-gray-400 text-sm">Antinodes (hot) are λ/2 = 6cm apart for 2.45 GHz microwaves</p>
-            </div>
-          </div>
+    <div className="flex flex-col items-center p-6">
+      <h2 className="text-2xl font-bold text-white mb-6">Standing Wave Physics</h2>
+      <div className="grid md:grid-cols-2 gap-6 max-w-4xl">
+        <div className="bg-gradient-to-br from-amber-900/50 to-orange-900/50 rounded-2xl p-6">
+          <h3 className="text-xl font-bold text-amber-400 mb-3">Wave Reflection</h3>
+          <ul className="space-y-2 text-slate-300 text-sm">
+            <li>* Microwaves bounce off metal walls</li>
+            <li>* Outgoing + reflected waves interfere</li>
+            <li>* Creates stable standing wave pattern</li>
+          </ul>
+        </div>
+        <div className="bg-gradient-to-br from-red-900/50 to-orange-900/50 rounded-2xl p-6">
+          <h3 className="text-xl font-bold text-red-400 mb-3">Hot Spots & Cold Spots</h3>
+          <ul className="space-y-2 text-slate-300 text-sm">
+            <li>* Antinodes = maximum energy (HOT)</li>
+            <li>* Nodes = minimum energy (COLD)</li>
+            <li>* Spacing = wavelength/2 = 6cm</li>
+          </ul>
+        </div>
+        <div className="bg-gradient-to-br from-blue-900/50 to-cyan-900/50 rounded-2xl p-6 md:col-span-2">
+          <h3 className="text-xl font-bold text-blue-400 mb-3">The Math</h3>
+          <p className="text-slate-300 text-sm">
+            <strong>Wavelength:</strong> lambda = c / f = 3x10^8 / 2.45x10^9 = 12.2 cm<br />
+            <strong>Hot spot spacing:</strong> lambda/2 = 6.1 cm apart!
+          </p>
         </div>
       </div>
-
-      <div className="bg-yellow-900/30 rounded-xl p-4 max-w-lg mx-auto text-center">
-        <p className="text-yellow-300 font-semibold">The Math</p>
-        <p className="text-gray-400 text-sm mt-1">
-          λ = c / f = 3×10⁸ / 2.45×10⁹ ≈ 12.2 cm<br />
-          Hot spots separated by λ/2 ≈ 6 cm!
-        </p>
-      </div>
-
-      <div className="text-center">
-        <p className="text-gray-400 mb-2">Your prediction: <span className="text-yellow-400 font-semibold">{prediction === 'standing' ? '✓ Correct!' : '✗ Not quite'}</span></p>
-        <button
-          onMouseDown={() => { playSound('click'); nextPhase(); }}
-          className="px-8 py-3 bg-gradient-to-r from-yellow-600 to-orange-600 rounded-xl text-white font-semibold hover:from-yellow-500 hover:to-orange-500 transition-all"
-        >
-          But wait... →
-        </button>
-      </div>
+      <button
+        onMouseDown={(e) => { e.preventDefault(); goToPhase(4); }}
+        className="mt-8 px-6 py-3 bg-gradient-to-r from-amber-600 to-orange-600 text-white font-semibold rounded-xl"
+      >
+        Discover the Twist
+      </button>
     </div>
   );
 
   const renderTwistPredict = () => (
-    <div className="space-y-6">
-      <h2 className="text-xl font-bold text-white text-center">🔄 The Twist!</h2>
-      <p className="text-gray-300 text-center max-w-lg mx-auto">
-        If standing waves create fixed hot spots, why do microwave ovens have a <span className="text-blue-400 font-semibold">turntable</span>?
-      </p>
-
-      <div className="grid grid-cols-1 gap-3 max-w-lg mx-auto">
+    <div className="flex flex-col items-center justify-center min-h-[500px] p-6">
+      <h2 className="text-2xl font-bold text-amber-400 mb-6">The Twist Challenge</h2>
+      <div className="bg-slate-800/50 rounded-2xl p-6 max-w-2xl mb-6">
+        <p className="text-lg text-slate-300 mb-4">
+          If standing waves create fixed hot spots, why do microwave ovens have a <span className="text-blue-400 font-semibold">turntable</span>?
+        </p>
+      </div>
+      <div className="grid gap-3 w-full max-w-xl">
         {[
           { id: 'even', text: 'Turntable moves food through hot spots for even heating', icon: '🔄' },
           { id: 'stir', text: 'It just stirs the food like a mixer', icon: '🥄' },
           { id: 'waves', text: 'Turntable creates additional microwaves', icon: '📡' },
-          { id: 'nothing', text: 'It\'s decorative - doesn\'t really help', icon: '✨' }
+          { id: 'nothing', text: 'It\'s decorative - doesn\'t really help', icon: '*' }
         ].map((option) => (
           <button
             key={option.id}
-            onMouseDown={() => {
-              playSound('click');
-              setTwistPrediction(option.id);
-              emitEvent('prediction', { twistPrediction: option.id });
-            }}
-            className={`p-4 rounded-xl border-2 transition-all text-left ${
+            onMouseDown={(e) => { e.preventDefault(); handleTwistPrediction(option.id); }}
+            disabled={twistPrediction !== null}
+            className={`p-4 rounded-xl text-left transition-all duration-300 ${
               twistPrediction === option.id
-                ? 'border-orange-500 bg-orange-900/30'
-                : 'border-gray-700 bg-gray-800/50 hover:border-gray-600'
+                ? option.id === 'even' ? 'bg-emerald-600/40 border-2 border-emerald-400' : 'bg-red-600/40 border-2 border-red-400'
+                : twistPrediction !== null && option.id === 'even' ? 'bg-emerald-600/40 border-2 border-emerald-400'
+                : 'bg-slate-700/50 hover:bg-slate-600/50 border-2 border-transparent'
             }`}
           >
             <span className="mr-2">{option.icon}</span>
-            <span className="text-gray-200">{option.text}</span>
+            <span className="text-slate-200">{option.text}</span>
           </button>
         ))}
       </div>
-
       {twistPrediction && (
-        <div className="text-center">
+        <div className="mt-6 p-4 bg-slate-800/70 rounded-xl max-w-xl">
+          <p className="text-emerald-400 font-semibold">
+            {twistPrediction === 'even' ? '✓ Exactly!' : 'Not quite!'} The turntable moves food through the pattern for even heating!
+          </p>
           <button
-            onMouseDown={() => { playSound('click'); nextPhase(); }}
-            className="px-8 py-3 bg-gradient-to-r from-orange-600 to-red-600 rounded-xl text-white font-semibold hover:from-orange-500 hover:to-red-500 transition-all"
+            onMouseDown={(e) => { e.preventDefault(); goToPhase(5); }}
+            className="mt-4 px-6 py-3 bg-gradient-to-r from-amber-600 to-orange-600 text-white font-semibold rounded-xl"
           >
-            Test It! →
+            See How It Works
           </button>
         </div>
       )}
@@ -720,36 +772,41 @@ export default function MicrowaveStandingWaveRenderer({ onEvent, savedState }: M
 
   const renderTwistPlay = () => {
     const startCooking = (withTurntable: boolean) => {
+      const now = Date.now();
+      if (now - lastClickRef.current < 200) return;
+      lastClickRef.current = now;
       setTwistTurntable(withTurntable);
       setTwistFoodTemp(Array(25).fill(20));
       setTwistCookTime(10);
+      playSound('click');
     };
 
     return (
-      <div className="space-y-4">
-        <h2 className="text-xl font-bold text-white text-center">Turntable vs No Turntable</h2>
+      <div className="flex flex-col items-center p-6">
+        <h2 className="text-2xl font-bold text-amber-400 mb-4">Turntable vs No Turntable</h2>
+        <div className="bg-slate-800/50 rounded-2xl p-6 mb-6">
+          {renderTwistScene(twistFoodTemp, twistTurntable)}
+        </div>
 
-        {renderTwistScene(twistFoodTemp, twistTurntable)}
-
-        <div className="flex justify-center gap-4">
+        <div className="flex justify-center gap-4 mb-6">
           <button
-            onMouseDown={() => { playSound('click'); startCooking(false); }}
+            onMouseDown={(e) => { e.preventDefault(); startCooking(false); }}
             disabled={twistCookTime > 0}
             className={`px-6 py-2 rounded-lg font-medium transition-all ${
               twistCookTime > 0 && !twistTurntable
-                ? 'bg-yellow-700 text-white'
-                : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                ? 'bg-amber-700 text-white'
+                : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
             }`}
           >
             Cook WITHOUT turntable
           </button>
           <button
-            onMouseDown={() => { playSound('click'); startCooking(true); }}
+            onMouseDown={(e) => { e.preventDefault(); startCooking(true); }}
             disabled={twistCookTime > 0}
             className={`px-6 py-2 rounded-lg font-medium transition-all ${
               twistCookTime > 0 && twistTurntable
                 ? 'bg-blue-700 text-white'
-                : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
             }`}
           >
             Cook WITH turntable
@@ -757,93 +814,83 @@ export default function MicrowaveStandingWaveRenderer({ onEvent, savedState }: M
         </div>
 
         {twistCookTime > 0 && (
-          <p className="text-center text-yellow-400">Cooking... {twistCookTime.toFixed(1)}s remaining</p>
+          <p className="text-center text-amber-400 mb-4">Cooking... {twistCookTime.toFixed(1)}s remaining</p>
         )}
 
-        <div className="text-center">
-          <button
-            onMouseDown={() => { playSound('click'); nextPhase(); }}
-            className="px-8 py-3 bg-gradient-to-r from-orange-600 to-red-600 rounded-xl text-white font-semibold hover:from-orange-500 hover:to-red-500 transition-all"
-          >
-            Continue →
-          </button>
-        </div>
+        <button
+          onMouseDown={(e) => { e.preventDefault(); goToPhase(6); }}
+          className="px-6 py-3 bg-gradient-to-r from-amber-600 to-orange-600 text-white font-semibold rounded-xl"
+        >
+          Review Discovery
+        </button>
       </div>
     );
   };
 
   const renderTwistReview = () => (
-    <div className="space-y-6">
-      <h2 className="text-xl font-bold text-white text-center">The Turntable Solution</h2>
-
-      <div className="bg-gradient-to-br from-gray-800 to-gray-900 rounded-2xl p-6 max-w-lg mx-auto">
-        <p className="text-gray-300 text-center mb-4">
-          The turntable <span className="text-blue-400 font-semibold">doesn&apos;t change the standing wave pattern</span>,
+    <div className="flex flex-col items-center p-6">
+      <h2 className="text-2xl font-bold text-amber-400 mb-6">The Turntable Solution</h2>
+      <div className="bg-gradient-to-br from-amber-900/40 to-orange-900/40 rounded-2xl p-6 max-w-2xl mb-6">
+        <p className="text-slate-300 text-center mb-4">
+          The turntable <span className="text-blue-400 font-semibold">doesn't change the standing wave pattern</span>,
           it moves the food through the pattern!
         </p>
-
         <div className="grid grid-cols-2 gap-4 text-sm">
           <div className="bg-red-900/30 rounded-lg p-3">
             <div className="text-red-400 font-semibold">Without Turntable</div>
-            <div className="text-gray-500">Food in hot spots: scalding</div>
-            <div className="text-gray-500">Food in cold spots: cold</div>
+            <div className="text-slate-500">Food in hot spots: scalding</div>
+            <div className="text-slate-500">Food in cold spots: cold</div>
           </div>
-          <div className="bg-green-900/30 rounded-lg p-3">
-            <div className="text-green-400 font-semibold">With Turntable</div>
-            <div className="text-gray-500">Each part visits hot spots</div>
-            <div className="text-gray-500">Average heating is even!</div>
+          <div className="bg-emerald-900/30 rounded-lg p-3">
+            <div className="text-emerald-400 font-semibold">With Turntable</div>
+            <div className="text-slate-500">Each part visits hot spots</div>
+            <div className="text-slate-500">Average heating is even!</div>
           </div>
         </div>
       </div>
-
-      <div className="text-center">
-        <p className="text-gray-400 mb-2">Your prediction: <span className="text-orange-400 font-semibold">{twistPrediction === 'even' ? '✓ Correct!' : '✗ Not quite'}</span></p>
-        <button
-          onMouseDown={() => { playSound('click'); nextPhase(); }}
-          className="px-8 py-3 bg-gradient-to-r from-orange-600 to-red-600 rounded-xl text-white font-semibold hover:from-orange-500 hover:to-red-500 transition-all"
-        >
-          See Applications →
-        </button>
-      </div>
+      <button
+        onMouseDown={(e) => { e.preventDefault(); goToPhase(7); }}
+        className="px-6 py-3 bg-gradient-to-r from-blue-600 to-cyan-600 text-white font-semibold rounded-xl"
+      >
+        Explore Real-World Applications
+      </button>
     </div>
   );
 
   const renderTransfer = () => (
-    <div className="space-y-6">
-      <h2 className="text-xl font-bold text-white text-center">Real-World Applications</h2>
-      <p className="text-gray-400 text-center">Tap each application to explore</p>
-
-      <div className="grid grid-cols-2 gap-4 max-w-lg mx-auto">
+    <div className="flex flex-col items-center p-6">
+      <h2 className="text-2xl font-bold text-white mb-6">Real-World Applications</h2>
+      <p className="text-slate-400 mb-4">Explore each application</p>
+      <div className="grid grid-cols-2 gap-4 max-w-lg mx-auto mb-6">
         {TRANSFER_APPS.map((app, index) => (
           <button
             key={index}
-            onMouseDown={() => {
-              playSound('click');
-              setCompletedApps(prev => new Set([...prev, index]));
-              emitEvent('interaction', { app: app.title });
-            }}
+            onMouseDown={(e) => { e.preventDefault(); handleAppComplete(index); }}
             className={`p-4 rounded-xl border-2 transition-all text-left ${
               completedApps.has(index)
-                ? 'border-yellow-500 bg-yellow-900/30'
-                : 'border-gray-700 bg-gray-800/50 hover:border-gray-600'
+                ? 'border-emerald-500 bg-emerald-900/30'
+                : 'border-slate-700 bg-slate-800/50 hover:border-slate-600'
             }`}
           >
             <div className="text-3xl mb-2">{app.icon}</div>
             <h3 className="text-white font-semibold text-sm">{app.title}</h3>
-            <p className="text-gray-400 text-xs mt-1">{app.description}</p>
+            <p className="text-slate-400 text-xs mt-1">{app.description}</p>
+            {completedApps.has(index) && <span className="text-emerald-400 text-xs">Explored!</span>}
           </button>
         ))}
       </div>
-
+      <div className="flex items-center gap-2 mb-6">
+        <span className="text-slate-400">Progress:</span>
+        <div className="flex gap-1">{TRANSFER_APPS.map((_, i) => (<div key={i} className={`w-3 h-3 rounded-full ${completedApps.has(i) ? 'bg-emerald-500' : 'bg-slate-600'}`} />))}</div>
+        <span className="text-slate-400">{completedApps.size}/4</span>
+      </div>
       {completedApps.size >= 4 && (
-        <div className="text-center">
-          <button
-            onMouseDown={() => { playSound('click'); nextPhase(); }}
-            className="px-8 py-3 bg-gradient-to-r from-yellow-600 to-orange-600 rounded-xl text-white font-semibold hover:from-yellow-500 hover:to-orange-500 transition-all"
-          >
-            Take the Quiz →
-          </button>
-        </div>
+        <button
+          onMouseDown={(e) => { e.preventDefault(); goToPhase(8); }}
+          className="px-6 py-3 bg-gradient-to-r from-amber-600 to-orange-600 text-white font-semibold rounded-xl"
+        >
+          Take the Knowledge Test
+        </button>
       )}
     </div>
   );
@@ -855,38 +902,41 @@ export default function MicrowaveStandingWaveRenderer({ onEvent, savedState }: M
     if (!question) {
       const score = testAnswers.filter((a, i) => a === TEST_QUESTIONS[i].correct).length;
       return (
-        <div className="text-center space-y-6">
-          <div className="text-6xl">{score >= 3 ? '🎉' : '📚'}</div>
-          <h2 className="text-2xl font-bold text-white">Quiz Complete!</h2>
-          <p className="text-gray-300">You got {score} out of {TEST_QUESTIONS.length} correct!</p>
-          <button
-            onMouseDown={() => {
-              playSound(score >= 3 ? 'complete' : 'click');
-              nextPhase();
-            }}
-            className="px-8 py-3 bg-gradient-to-r from-yellow-600 to-orange-600 rounded-xl text-white font-semibold hover:from-yellow-500 hover:to-orange-500 transition-all"
-          >
-            {score >= 3 ? 'Complete! 🎊' : 'Continue →'}
-          </button>
+        <div className="flex flex-col items-center justify-center min-h-[500px] p-6 text-center">
+          <div className="text-6xl mb-4">{score >= 3 ? '🎉' : '📚'}</div>
+          <h2 className="text-2xl font-bold text-white mb-2">Score: {score}/{TEST_QUESTIONS.length}</h2>
+          <p className="text-slate-300 mb-6">{score >= 3 ? 'Excellent! You\'ve mastered standing waves!' : 'Keep studying! Review and try again.'}</p>
+          {score >= 3 ? (
+            <button
+              onMouseDown={(e) => { e.preventDefault(); playSound('complete'); goToPhase(9); }}
+              className="px-8 py-4 bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-semibold rounded-xl"
+            >
+              Claim Your Mastery Badge
+            </button>
+          ) : (
+            <button
+              onMouseDown={(e) => { e.preventDefault(); setTestAnswers([]); goToPhase(3); }}
+              className="px-8 py-4 bg-gradient-to-r from-blue-600 to-cyan-600 text-white font-semibold rounded-xl"
+            >
+              Review & Try Again
+            </button>
+          )}
         </div>
       );
     }
 
     return (
-      <div className="space-y-6">
-        <h2 className="text-xl font-bold text-white text-center">Quiz: Question {currentQuestion + 1}/{TEST_QUESTIONS.length}</h2>
-        <p className="text-gray-300 text-center max-w-lg mx-auto">{question.question}</p>
-
-        <div className="grid grid-cols-1 gap-3 max-w-lg mx-auto">
+      <div className="flex flex-col items-center p-6">
+        <h2 className="text-xl font-bold text-white text-center mb-6">Quiz: Question {currentQuestion + 1}/{TEST_QUESTIONS.length}</h2>
+        <div className="bg-slate-800/50 rounded-2xl p-6 max-w-2xl mb-6">
+          <p className="text-lg text-slate-300">{question.question}</p>
+        </div>
+        <div className="grid gap-3 w-full max-w-xl">
           {question.options.map((option, i) => (
             <button
               key={i}
-              onMouseDown={() => {
-                playSound(i === question.correct ? 'success' : 'failure');
-                setTestAnswers([...testAnswers, i]);
-                emitEvent('interaction', { question: currentQuestion, answer: i, correct: i === question.correct });
-              }}
-              className="p-4 rounded-xl border-2 border-gray-700 bg-gray-800/50 hover:border-yellow-500 transition-all text-left text-gray-200"
+              onMouseDown={(e) => { e.preventDefault(); handleTestAnswer(i, i === question.correct); }}
+              className="p-4 rounded-xl bg-slate-700/50 hover:bg-slate-600/50 border-2 border-transparent text-left text-slate-200"
             >
               {option}
             </button>
@@ -897,56 +947,74 @@ export default function MicrowaveStandingWaveRenderer({ onEvent, savedState }: M
   };
 
   const renderMastery = () => (
-    <div className="text-center space-y-6">
-      <div className="text-6xl">🏆</div>
-      <h2 className="text-2xl font-bold text-white">Standing Wave Master!</h2>
-      <div className="bg-gradient-to-r from-yellow-900/50 to-orange-900/50 rounded-xl p-6 max-w-md mx-auto">
-        <p className="text-yellow-300 font-medium mb-4">You now understand:</p>
-        <ul className="text-gray-300 text-sm space-y-2 text-left">
-          <li>✓ Standing waves form from wave interference</li>
-          <li>✓ Nodes (cold) and antinodes (hot) at fixed positions</li>
-          <li>✓ Turntables move food through the pattern for even heating</li>
-          <li>✓ Hot spots are λ/2 ≈ 6cm apart for microwaves</li>
-        </ul>
+    <div className="flex flex-col items-center justify-center min-h-[500px] p-6 text-center">
+      <div className="bg-gradient-to-br from-amber-900/50 via-orange-900/50 to-red-900/50 rounded-3xl p-8 max-w-2xl">
+        <div className="text-8xl mb-6">🏆</div>
+        <h1 className="text-3xl font-bold text-white mb-4">Standing Wave Master!</h1>
+        <p className="text-xl text-slate-300 mb-6">You've mastered microwave standing wave physics!</p>
+        <div className="grid grid-cols-2 gap-4 mb-6">
+          <div className="bg-slate-800/50 rounded-xl p-4"><div className="text-2xl mb-2">〰️</div><p className="text-sm text-slate-300">Standing Waves</p></div>
+          <div className="bg-slate-800/50 rounded-xl p-4"><div className="text-2xl mb-2">🔥</div><p className="text-sm text-slate-300">Hot Spots</p></div>
+          <div className="bg-slate-800/50 rounded-xl p-4"><div className="text-2xl mb-2">🔄</div><p className="text-sm text-slate-300">Turntable Solution</p></div>
+          <div className="bg-slate-800/50 rounded-xl p-4"><div className="text-2xl mb-2">🍡</div><p className="text-sm text-slate-300">Marshmallow Test</p></div>
+        </div>
+        <button onMouseDown={(e) => { e.preventDefault(); goToPhase(0); }} className="px-6 py-3 bg-slate-700 hover:bg-slate-600 text-white font-medium rounded-xl">Explore Again</button>
       </div>
-      <p className="text-gray-400 text-sm">
-        Try the marshmallow experiment at home to measure microwave wavelength! 🍡
-      </p>
-      <button
-        onMouseDown={() => {
-          playSound('complete');
-          emitEvent('completion', { mastered: true });
-        }}
-        className="px-8 py-3 bg-gradient-to-r from-yellow-600 to-orange-600 rounded-xl text-white font-semibold hover:from-yellow-500 hover:to-orange-500 transition-all"
-      >
-        Complete! 🎊
-      </button>
     </div>
   );
 
-  // ─── Main Render ─────────────────────────────────────────────────────────────
   const renderPhase = () => {
     switch (phase) {
-      case 'hook': return renderHook();
-      case 'predict': return renderPredict();
-      case 'play': return renderPlay();
-      case 'review': return renderReview();
-      case 'twist_predict': return renderTwistPredict();
-      case 'twist_play': return renderTwistPlay();
-      case 'twist_review': return renderTwistReview();
-      case 'transfer': return renderTransfer();
-      case 'test': return renderTest();
-      case 'mastery': return renderMastery();
-      default: return null;
+      case 0: return renderHook();
+      case 1: return renderPredict();
+      case 2: return renderPlay();
+      case 3: return renderReview();
+      case 4: return renderTwistPredict();
+      case 5: return renderTwistPlay();
+      case 6: return renderTwistReview();
+      case 7: return renderTransfer();
+      case 8: return renderTest();
+      case 9: return renderMastery();
+      default: return renderHook();
     }
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-yellow-950 to-gray-900 p-6">
-      <div className="max-w-2xl mx-auto">
-        {renderProgressBar()}
-        {renderPhase()}
+    <div className="min-h-screen bg-[#0a0f1a] text-white relative overflow-hidden">
+      {/* Premium background gradient */}
+      <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-[#0a1628] to-slate-900" />
+      <div className="absolute top-0 left-1/4 w-96 h-96 bg-amber-500/5 rounded-full blur-3xl" />
+      <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-orange-500/5 rounded-full blur-3xl" />
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-yellow-500/3 rounded-full blur-3xl" />
+
+      {/* Header */}
+      <div className="fixed top-0 left-0 right-0 z-50 bg-slate-900/80 backdrop-blur-xl border-b border-slate-800/50">
+        <div className="flex items-center justify-between px-6 py-3 max-w-4xl mx-auto">
+          <span className="text-sm font-semibold text-white/80 tracking-wide">Standing Waves</span>
+          <div className="flex items-center gap-1.5">
+            {PHASES.map((p) => (
+              <button
+                key={p}
+                onMouseDown={(e) => { e.preventDefault(); goToPhase(p); }}
+                className={`h-2 rounded-full transition-all duration-300 ${
+                  phase === p
+                    ? 'bg-amber-400 w-6 shadow-lg shadow-amber-400/30'
+                    : phase > p
+                      ? 'bg-emerald-500 w-2'
+                      : 'bg-slate-700 w-2 hover:bg-slate-600'
+                }`}
+                title={phaseLabels[p]}
+              />
+            ))}
+          </div>
+          <span className="text-sm font-medium text-amber-400">{phaseLabels[phase]}</span>
+        </div>
       </div>
+
+      {/* Main content */}
+      <div className="relative pt-16 pb-12">{renderPhase()}</div>
     </div>
   );
-}
+};
+
+export default MicrowaveStandingWaveRenderer;

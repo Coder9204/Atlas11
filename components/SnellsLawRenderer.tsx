@@ -394,13 +394,45 @@ export default function SnellsLawRenderer() {
 
   const refractedResult = calculateRefractedAngle(incidentAngle, getN1(), getN2());
 
+  // Audio feedback
+  const playSound = useCallback((type: 'click' | 'success' | 'failure' | 'transition' | 'complete') => {
+    if (typeof window === 'undefined') return;
+    try {
+      const audioContext = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
+      const oscillator = audioContext.createOscillator();
+      const gainNode = audioContext.createGain();
+      oscillator.connect(gainNode);
+      gainNode.connect(audioContext.destination);
+      const sounds: Record<string, { freq: number; duration: number; type: OscillatorType }> = {
+        click: { freq: 600, duration: 0.1, type: 'sine' },
+        success: { freq: 800, duration: 0.2, type: 'sine' },
+        failure: { freq: 300, duration: 0.3, type: 'sine' },
+        transition: { freq: 500, duration: 0.15, type: 'sine' },
+        complete: { freq: 900, duration: 0.4, type: 'sine' }
+      };
+      const sound = sounds[type];
+      oscillator.frequency.value = sound.freq;
+      oscillator.type = sound.type;
+      gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + sound.duration);
+      oscillator.start();
+      oscillator.stop(audioContext.currentTime + sound.duration);
+    } catch { /* Audio not available */ }
+  }, []);
+
+  const lastClickRef = useRef(0);
+
   // =============================================================================
   // NAVIGATION HANDLERS
   // =============================================================================
   const handleNavigation = useCallback((nextPhase: Phase) => {
+    const now = Date.now();
+    if (now - lastClickRef.current < 200) return;
+    lastClickRef.current = now;
     if (isNavigating.current) return;
     isNavigating.current = true;
 
+    playSound('transition');
     setPhase(nextPhase);
 
     if (navigationTimeoutRef.current) {
@@ -410,7 +442,7 @@ export default function SnellsLawRenderer() {
     navigationTimeoutRef.current = setTimeout(() => {
       isNavigating.current = false;
     }, 400);
-  }, []);
+  }, [playSound]);
 
   const handleCompleteApp = useCallback(() => {
     const newCompleted = [...completedApps];
@@ -1264,6 +1296,31 @@ export default function SnellsLawRenderer() {
         textAlign: 'center',
       }}
     >
+      {/* Premium Badge */}
+      <div
+        style={{
+          display: 'inline-flex',
+          alignItems: 'center',
+          gap: '8px',
+          padding: '8px 16px',
+          background: `${defined.colors.primary}15`,
+          border: `1px solid ${defined.colors.primary}30`,
+          borderRadius: '9999px',
+        }}
+      >
+        <span
+          style={{
+            width: '8px',
+            height: '8px',
+            background: defined.colors.primary,
+            borderRadius: '50%',
+            animation: 'pulse 2s infinite',
+          }}
+        />
+        <span style={{ fontSize: '12px', fontWeight: 600, color: defined.colors.primary, letterSpacing: '0.05em' }}>
+          PHYSICS EXPLORATION
+        </span>
+      </div>
       <div
         style={{
           fontSize: isMobile ? defined.typography.sizes['3xl'] : defined.typography.sizes['4xl'],
@@ -1272,11 +1329,14 @@ export default function SnellsLawRenderer() {
       >
         📐
       </div>
+      {/* Gradient Title */}
       <h1
         style={{
           fontSize: isMobile ? defined.typography.sizes['2xl'] : defined.typography.sizes['3xl'],
           fontWeight: defined.typography.weights.bold,
-          color: defined.colors.text.primary,
+          background: `linear-gradient(to right, ${defined.colors.text.primary}, ${defined.colors.primary}, ${defined.colors.secondary})`,
+          WebkitBackgroundClip: 'text',
+          WebkitTextFillColor: 'transparent',
           margin: 0,
         }}
       >
@@ -2586,31 +2646,60 @@ export default function SnellsLawRenderer() {
   // =============================================================================
   // RENDER
   // =============================================================================
+  const phaseOrder: Phase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
+  const phaseLabels: Record<Phase, string> = {
+    hook: 'Hook', predict: 'Predict', play: 'Lab', review: 'Review',
+    twist_predict: 'Twist Predict', twist_play: 'Twist Lab', twist_review: 'Twist Review',
+    transfer: 'Transfer', test: 'Test', mastery: 'Mastery'
+  };
+  const currentPhaseIndex = phaseOrder.indexOf(phase);
+
   return (
-    <div
-      style={{
-        minHeight: '100vh',
-        background: `linear-gradient(135deg, ${defined.colors.background.primary} 0%, ${defined.colors.background.secondary} 100%)`,
-        fontFamily: defined.typography.fontFamily,
-        padding: defined.spacing.lg,
-      }}
-    >
-      <div
-        style={{
-          maxWidth: '900px',
-          margin: '0 auto',
-        }}
-      >
-        {phase === 'hook' && renderHook()}
-        {phase === 'predict' && renderPredict()}
-        {phase === 'play' && renderPlay()}
-        {phase === 'review' && renderReview()}
-        {phase === 'twist_predict' && renderTwistPredict()}
-        {phase === 'twist_play' && renderTwistPlay()}
-        {phase === 'twist_review' && renderTwistReview()}
-        {phase === 'transfer' && renderTransfer()}
-        {phase === 'test' && renderTest()}
-        {phase === 'mastery' && renderMastery()}
+    <div className="min-h-screen bg-[#0a0f1a] text-white relative overflow-hidden">
+      {/* Premium background gradient */}
+      <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-[#0a1628] to-slate-900" />
+      <div className="absolute top-0 left-1/4 w-96 h-96 bg-indigo-500/5 rounded-full blur-3xl" />
+      <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-purple-500/5 rounded-full blur-3xl" />
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-violet-500/5 rounded-full blur-3xl" />
+
+      {/* Header */}
+      <div className="fixed top-0 left-0 right-0 z-50 bg-slate-900/80 backdrop-blur-xl border-b border-slate-800/50">
+        <div className="flex items-center justify-between px-6 py-3 max-w-4xl mx-auto">
+          <span className="text-sm font-semibold text-white/80 tracking-wide">Snell's Law</span>
+          <div className="flex items-center gap-1.5">
+            {phaseOrder.map((p, i) => (
+              <button
+                key={p}
+                onMouseDown={(e) => { e.preventDefault(); handleNavigation(p); }}
+                className={`h-2 rounded-full transition-all duration-300 ${
+                  phase === p
+                    ? 'bg-indigo-400 w-6 shadow-lg shadow-indigo-400/30'
+                    : currentPhaseIndex > i
+                      ? 'bg-emerald-500 w-2'
+                      : 'bg-slate-700 w-2 hover:bg-slate-600'
+                }`}
+                title={phaseLabels[p]}
+              />
+            ))}
+          </div>
+          <span className="text-sm font-medium text-indigo-400">{phaseLabels[phase]}</span>
+        </div>
+      </div>
+
+      {/* Main content */}
+      <div className="relative pt-16 pb-12" style={{ padding: defined.spacing.lg, paddingTop: '5rem' }}>
+        <div style={{ position: 'relative', zIndex: 10, maxWidth: '900px', margin: '0 auto' }}>
+          {phase === 'hook' && renderHook()}
+          {phase === 'predict' && renderPredict()}
+          {phase === 'play' && renderPlay()}
+          {phase === 'review' && renderReview()}
+          {phase === 'twist_predict' && renderTwistPredict()}
+          {phase === 'twist_play' && renderTwistPlay()}
+          {phase === 'twist_review' && renderTwistReview()}
+          {phase === 'transfer' && renderTransfer()}
+          {phase === 'test' && renderTest()}
+          {phase === 'mastery' && renderMastery()}
+        </div>
       </div>
     </div>
   );

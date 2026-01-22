@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useEffect, useCallback } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 
 // =============================================================================
 // TOTAL INTERNAL REFLECTION RENDERER - LIGHT TRAPPED IN WATER
@@ -9,6 +9,13 @@ import { useState, useRef, useEffect, useCallback } from 'react';
 // the classic "light in a water stream" experiment. Students discover how
 // light can be trapped and guided through curved paths.
 // =============================================================================
+
+// Numeric phases: 0=hook, 1=predict, 2=play, 3=review, 4=twist_predict, 5=twist_play, 6=twist_review, 7=transfer, 8=test, 9=mastery
+const PHASES: number[] = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
+const phaseLabels: Record<number, string> = {
+  0: 'Hook', 1: 'Predict', 2: 'Lab', 3: 'Review', 4: 'Twist Predict',
+  5: 'Twist Lab', 6: 'Twist Review', 7: 'Transfer', 8: 'Test', 9: 'Mastery'
+};
 
 // Premium Design System
 const defined = {
@@ -101,18 +108,6 @@ const MATERIALS: Record<string, { name: string; n: number; criticalAngle: number
 // =============================================================================
 // TYPE DEFINITIONS
 // =============================================================================
-type Phase =
-  | 'hook'
-  | 'predict'
-  | 'play'
-  | 'review'
-  | 'twist_predict'
-  | 'twist_play'
-  | 'twist_review'
-  | 'transfer'
-  | 'test'
-  | 'mastery';
-
 interface Question {
   id: number;
   question: string;
@@ -313,8 +308,8 @@ const applications: Application[] = [
 // MAIN COMPONENT
 // =============================================================================
 export default function TotalInternalReflectionRenderer() {
-  // State management
-  const [phase, setPhase] = useState<Phase>('hook');
+  // State management - using numeric phases
+  const [phase, setPhase] = useState<number>(0);
   const [prediction, setPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
   const [selectedApp, setSelectedApp] = useState(0);
@@ -333,9 +328,36 @@ export default function TotalInternalReflectionRenderer() {
   const [animationFrame, setAnimationFrame] = useState(0);
 
   // Navigation debouncing
-  const isNavigating = useRef(false);
+  const navigationLockRef = useRef(false);
+  const lastClickRef = useRef(0);
   const navigationTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const animationRef = useRef<number | null>(null);
+
+  // Sound function
+  const playSound = useCallback((type: 'click' | 'success' | 'failure' | 'transition' | 'complete') => {
+    if (typeof window === 'undefined') return;
+    try {
+      const audioContext = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
+      const oscillator = audioContext.createOscillator();
+      const gainNode = audioContext.createGain();
+      oscillator.connect(gainNode);
+      gainNode.connect(audioContext.destination);
+      const sounds = {
+        click: { freq: 600, duration: 0.1, type: 'sine' as OscillatorType },
+        success: { freq: 800, duration: 0.2, type: 'sine' as OscillatorType },
+        failure: { freq: 300, duration: 0.3, type: 'sine' as OscillatorType },
+        transition: { freq: 500, duration: 0.15, type: 'sine' as OscillatorType },
+        complete: { freq: 900, duration: 0.4, type: 'sine' as OscillatorType }
+      };
+      const sound = sounds[type];
+      oscillator.frequency.value = sound.freq;
+      oscillator.type = sound.type;
+      gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + sound.duration);
+      oscillator.start();
+      oscillator.stop(audioContext.currentTime + sound.duration);
+    } catch { /* Audio not available */ }
+  }, []);
 
   // Responsive detection
   useEffect(() => {
@@ -384,20 +406,23 @@ export default function TotalInternalReflectionRenderer() {
   // =============================================================================
   // NAVIGATION HANDLERS
   // =============================================================================
-  const handleNavigation = useCallback((nextPhase: Phase) => {
-    if (isNavigating.current) return;
-    isNavigating.current = true;
-
-    setPhase(nextPhase);
+  const goToPhase = useCallback((newPhase: number) => {
+    if (navigationLockRef.current) return;
+    const now = Date.now();
+    if (now - lastClickRef.current < 200) return;
+    lastClickRef.current = now;
+    navigationLockRef.current = true;
+    playSound('transition');
+    setPhase(newPhase);
 
     if (navigationTimeoutRef.current) {
       clearTimeout(navigationTimeoutRef.current);
     }
 
     navigationTimeoutRef.current = setTimeout(() => {
-      isNavigating.current = false;
+      navigationLockRef.current = false;
     }, 400);
-  }, []);
+  }, [playSound]);
 
   const handleCompleteApp = useCallback(() => {
     const newCompleted = [...completedApps];
@@ -428,9 +453,9 @@ export default function TotalInternalReflectionRenderer() {
       setSelectedAnswer(null);
       setShowResult(false);
     } else {
-      handleNavigation('mastery');
+      goToPhase(9);
     }
-  }, [currentQuestion, handleNavigation]);
+  }, [currentQuestion, goToPhase]);
 
   const allAppsCompleted = completedApps.every(Boolean);
 
@@ -1229,115 +1254,98 @@ export default function TotalInternalReflectionRenderer() {
 
   // HOOK PHASE
   const renderHook = () => (
-    <div
-      style={{
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        gap: defined.spacing.xl,
-        padding: defined.spacing.xl,
-        textAlign: 'center',
-      }}
-    >
-      <div
-        style={{
-          fontSize: isMobile ? defined.typography.sizes['3xl'] : defined.typography.sizes['4xl'],
-          marginBottom: defined.spacing.md,
-        }}
-      >
-        💧✨
+    <div className="flex flex-col items-center justify-center min-h-[600px] px-6 py-12 text-center">
+      {/* Premium badge */}
+      <div className="inline-flex items-center gap-2 px-4 py-2 bg-cyan-500/10 border border-cyan-500/20 rounded-full mb-8">
+        <span className="w-2 h-2 bg-cyan-400 rounded-full animate-pulse" />
+        <span className="text-sm font-medium text-cyan-400 tracking-wide">PHYSICS EXPLORATION</span>
       </div>
-      <h1
-        style={{
-          fontSize: isMobile ? defined.typography.sizes['2xl'] : defined.typography.sizes['3xl'],
-          fontWeight: defined.typography.weights.bold,
-          color: defined.colors.text.primary,
-          margin: 0,
-        }}
-      >
+
+      {/* Main title with gradient */}
+      <h1 className="text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-white via-cyan-100 to-blue-200 bg-clip-text text-transparent">
         Light Trapped in Water
       </h1>
-      <p
-        style={{
-          fontSize: defined.typography.sizes.lg,
-          color: defined.colors.text.secondary,
-          maxWidth: '500px',
-          lineHeight: 1.6,
-        }}
-      >
-        Shine a laser into a curved stream of water. The light doesn't escape -
-        it
-        <span style={{ color: defined.colors.light.trapped, fontWeight: defined.typography.weights.semibold }}>
-          {' '}
-          follows the curve
-        </span>
-        ! This "light fountain" reveals a phenomenon called total internal reflection.
+
+      <p className="text-lg text-slate-400 max-w-md mb-10">
+        Discover how light can follow curved paths through total internal reflection
       </p>
 
-      <div
-        style={{
-          background: defined.colors.background.card,
-          borderRadius: defined.radius.xl,
-          padding: defined.spacing.xl,
-          maxWidth: '400px',
-          backdropFilter: 'blur(10px)',
-          border: '1px solid rgba(255,255,255,0.1)',
-        }}
-      >
-        <div
-          style={{
-            fontSize: defined.typography.sizes.sm,
-            color: defined.colors.text.muted,
-            marginBottom: defined.spacing.md,
-          }}
-        >
-          THE MAGIC
+      {/* Premium card with graphic */}
+      <div className="relative bg-gradient-to-br from-slate-800/80 to-slate-900/80 rounded-3xl p-8 max-w-xl w-full border border-slate-700/50 shadow-2xl shadow-black/20">
+        {/* Subtle glow effect */}
+        <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/5 via-transparent to-purple-500/5 rounded-3xl" />
+
+        <div className="relative">
+          {/* Illustration */}
+          <svg width="280" height="160" className="mx-auto mb-6" style={{ display: 'block' }}>
+            {/* Water stream */}
+            <path
+              d="M 40 30 Q 140 80, 240 130"
+              fill="none"
+              stroke="rgba(56, 189, 248, 0.5)"
+              strokeWidth="24"
+              strokeLinecap="round"
+            />
+            {/* Light path inside */}
+            <path
+              d="M 45 30 L 65 50 L 85 35 L 105 55 L 125 40 L 145 60 L 165 45 L 185 65 L 205 50 L 225 70"
+              fill="none"
+              stroke="#F472B6"
+              strokeWidth="3"
+              strokeLinecap="round"
+            />
+            {/* Glow at end */}
+            <circle cx="240" cy="130" r="20" fill="rgba(244, 114, 182, 0.3)" />
+            <circle cx="240" cy="130" r="10" fill="#F472B6" />
+            {/* Labels */}
+            <text x="20" y="25" fill="#22D3EE" fontSize="12" fontWeight="bold">Light in</text>
+            <text x="200" y="125" fill="#F472B6" fontSize="12" fontWeight="bold">Light out!</text>
+          </svg>
+
+          <div className="mt-8 space-y-4">
+            <p className="text-xl text-white/90 font-medium leading-relaxed">
+              Shine a laser into a curved water stream
+            </p>
+            <p className="text-lg text-slate-400 leading-relaxed">
+              The light doesn't escape - it <span className="text-pink-400 font-semibold">follows the curve</span>!
+            </p>
+            <div className="pt-2">
+              <p className="text-base text-cyan-400 font-semibold">
+                How does light get trapped inside water?
+              </p>
+            </div>
+          </div>
         </div>
-        {/* Simple illustration */}
-        <svg width="200" height="120" style={{ margin: '0 auto', display: 'block' }}>
-          {/* Water stream */}
-          <path
-            d="M 30 20 Q 100 60, 170 100"
-            fill="none"
-            stroke="rgba(56, 189, 248, 0.5)"
-            strokeWidth="20"
-            strokeLinecap="round"
-          />
-          {/* Light path inside */}
-          <path
-            d="M 35 20 L 50 35 L 65 25 L 80 40 L 95 30 L 110 45 L 125 35 L 140 50 L 155 40 L 170 55"
-            fill="none"
-            stroke="#F472B6"
-            strokeWidth="2"
-            strokeLinecap="round"
-          />
-          {/* Glow at end */}
-          <circle cx="170" cy="100" r="15" fill="rgba(244, 114, 182, 0.3)" />
-          <circle cx="170" cy="100" r="8" fill="#F472B6" />
-          {/* Labels */}
-          <text x="15" y="15" fill="#22D3EE" fontSize="10">
-            Light in
-          </text>
-          <text x="160" y="90" fill="#F472B6" fontSize="10">
-            Light out!
-          </text>
-        </svg>
-        <p
-          style={{
-            fontSize: defined.typography.sizes.sm,
-            color: defined.colors.text.secondary,
-            marginTop: defined.spacing.md,
-          }}
-        >
-          Light bounces inside the water, unable to escape into air!
-        </p>
       </div>
 
-      {Button({
-        children: 'Discover Why Light Gets Trapped →',
-        onClick: () => handleNavigation('predict'),
-        size: 'lg',
-      })}
+      {/* Premium CTA button */}
+      <button
+        onMouseDown={(e) => { e.preventDefault(); goToPhase(1); }}
+        className="mt-10 group relative px-10 py-5 bg-gradient-to-r from-cyan-500 to-blue-600 text-white text-lg font-semibold rounded-2xl transition-all duration-300 hover:shadow-lg hover:shadow-cyan-500/25 hover:scale-[1.02] active:scale-[0.98]"
+      >
+        <span className="relative z-10 flex items-center gap-3">
+          Discover the Secret
+          <svg className="w-5 h-5 transition-transform group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+          </svg>
+        </span>
+      </button>
+
+      {/* Feature hints */}
+      <div className="mt-12 flex items-center gap-8 text-sm text-slate-500">
+        <div className="flex items-center gap-2">
+          <span className="text-cyan-400">✦</span>
+          Critical Angles
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="text-cyan-400">✦</span>
+          Fiber Optics
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="text-cyan-400">✦</span>
+          Diamond Brilliance
+        </div>
+      </div>
     </div>
   );
 
@@ -1423,7 +1431,7 @@ export default function TotalInternalReflectionRenderer() {
 
       {Button({
         children: 'Test My Prediction →',
-        onClick: () => handleNavigation('play'),
+        onClick: () => goToPhase(2),
         disabled: !prediction,
         size: 'lg',
       })}
@@ -1480,7 +1488,7 @@ export default function TotalInternalReflectionRenderer() {
 
       {Button({
         children: isTIR ? 'I Trapped the Light! → Review' : 'Increase angle to trap light first',
-        onClick: () => handleNavigation('review'),
+        onClick: () => goToPhase(3),
         disabled: !isTIR,
         size: 'lg',
       })}
@@ -1660,7 +1668,7 @@ export default function TotalInternalReflectionRenderer() {
 
       {Button({
         children: 'Try Fiber Optics →',
-        onClick: () => handleNavigation('twist_predict'),
+        onClick: () => goToPhase(4),
         size: 'lg',
       })}
     </div>
@@ -1761,7 +1769,7 @@ export default function TotalInternalReflectionRenderer() {
         onClick: () => {
           setMaterial('diamond');
           setIncidentAngle(30);
-          handleNavigation('twist_play');
+          goToPhase(5);
         },
         disabled: !twistPrediction,
         size: 'lg',
@@ -1832,7 +1840,7 @@ export default function TotalInternalReflectionRenderer() {
 
       {Button({
         children: 'See Why This Matters →',
-        onClick: () => handleNavigation('twist_review'),
+        onClick: () => goToPhase(6),
         size: 'lg',
       })}
     </div>
@@ -2038,7 +2046,7 @@ export default function TotalInternalReflectionRenderer() {
 
       {Button({
         children: 'See Real-World Applications →',
-        onClick: () => handleNavigation('transfer'),
+        onClick: () => goToPhase(7),
         size: 'lg',
       })}
     </div>
@@ -2248,7 +2256,7 @@ export default function TotalInternalReflectionRenderer() {
           ) : allAppsCompleted ? (
             Button({
               children: 'Take the Quiz →',
-              onClick: () => handleNavigation('test'),
+              onClick: () => goToPhase(8),
               variant: 'success',
             })
           ) : (
@@ -2541,7 +2549,7 @@ export default function TotalInternalReflectionRenderer() {
           {Button({
             children: 'Start Over',
             onClick: () => {
-              setPhase('hook');
+              setPhase(0);
               setPrediction(null);
               setTwistPrediction(null);
               setCurrentQuestion(0);
@@ -2564,30 +2572,51 @@ export default function TotalInternalReflectionRenderer() {
   // RENDER
   // =============================================================================
   return (
-    <div
-      style={{
-        minHeight: '100vh',
-        background: `linear-gradient(135deg, ${defined.colors.background.primary} 0%, ${defined.colors.background.secondary} 100%)`,
-        fontFamily: defined.typography.fontFamily,
-        padding: defined.spacing.lg,
-      }}
-    >
-      <div
-        style={{
-          maxWidth: '900px',
-          margin: '0 auto',
-        }}
-      >
-        {phase === 'hook' && renderHook()}
-        {phase === 'predict' && renderPredict()}
-        {phase === 'play' && renderPlay()}
-        {phase === 'review' && renderReview()}
-        {phase === 'twist_predict' && renderTwistPredict()}
-        {phase === 'twist_play' && renderTwistPlay()}
-        {phase === 'twist_review' && renderTwistReview()}
-        {phase === 'transfer' && renderTransfer()}
-        {phase === 'test' && renderTest()}
-        {phase === 'mastery' && renderMastery()}
+    <div className="min-h-screen bg-[#0a0f1a] text-white relative overflow-hidden">
+      {/* Premium background gradient */}
+      <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-[#0a1628] to-slate-900" />
+      <div className="absolute top-0 left-1/4 w-96 h-96 bg-cyan-500/5 rounded-full blur-3xl" />
+      <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-blue-500/5 rounded-full blur-3xl" />
+      <div className="absolute top-1/2 right-0 w-96 h-96 bg-purple-500/5 rounded-full blur-3xl" />
+
+      {/* Header */}
+      <div className="fixed top-0 left-0 right-0 z-50 bg-slate-900/80 backdrop-blur-xl border-b border-slate-800/50">
+        <div className="flex items-center justify-between px-6 py-3 max-w-4xl mx-auto">
+          <span className="text-sm font-semibold text-white/80 tracking-wide">Total Internal Reflection</span>
+          <div className="flex items-center gap-1.5">
+            {PHASES.map((p) => (
+              <button
+                key={p}
+                onMouseDown={(e) => { e.preventDefault(); goToPhase(p); }}
+                className={`h-2 rounded-full transition-all duration-300 ${
+                  phase === p
+                    ? 'bg-cyan-400 w-6 shadow-lg shadow-cyan-400/30'
+                    : phase > p
+                      ? 'bg-emerald-500 w-2'
+                      : 'bg-slate-700 w-2 hover:bg-slate-600'
+                }`}
+                title={phaseLabels[p]}
+              />
+            ))}
+          </div>
+          <span className="text-sm font-medium text-cyan-400">{phaseLabels[phase]}</span>
+        </div>
+      </div>
+
+      {/* Main content */}
+      <div className="relative pt-16 pb-12" style={{ fontFamily: defined.typography.fontFamily }}>
+        <div className="max-w-4xl mx-auto px-4">
+          {phase === 0 && renderHook()}
+          {phase === 1 && renderPredict()}
+          {phase === 2 && renderPlay()}
+          {phase === 3 && renderReview()}
+          {phase === 4 && renderTwistPredict()}
+          {phase === 5 && renderTwistPlay()}
+          {phase === 6 && renderTwistReview()}
+          {phase === 7 && renderTransfer()}
+          {phase === 8 && renderTest()}
+          {phase === 9 && renderMastery()}
+        </div>
       </div>
     </div>
   );

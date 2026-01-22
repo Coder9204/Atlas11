@@ -49,8 +49,12 @@ const radius = { sm: 8, md: 12, lg: 16, xl: 24 };
 // GAME CONTENT DATA
 // ============================================================================
 
-const phases = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'] as const;
-type Phase = typeof phases[number];
+// Numeric phases: 0=hook, 1=predict, 2=play, 3=review, 4=twist_predict, 5=twist_play, 6=twist_review, 7=transfer, 8=test, 9=mastery
+const PHASES: number[] = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
+const phaseLabels: Record<number, string> = {
+  0: 'Hook', 1: 'Predict', 2: 'Lab', 3: 'Review', 4: 'Twist Predict',
+  5: 'Twist Lab', 6: 'Twist Review', 7: 'Transfer', 8: 'Test', 9: 'Mastery'
+};
 
 const predictions = {
   initial: {
@@ -219,8 +223,39 @@ const LawOfReflectionRenderer: React.FC<LawOfReflectionRendererProps> = ({
   onBack,
   metadata
 }) => {
-  // Core state
-  const [phase, setPhase] = useState<Phase>('hook');
+  // Core state - using numeric phases
+  const [phase, setPhase] = useState<number>(0);
+
+  // Navigation refs
+  const navigationLockRef = useRef(false);
+  const lastClickRef = useRef(0);
+
+  // Sound function
+  const playSound = useCallback((type: 'click' | 'success' | 'failure' | 'transition' | 'complete') => {
+    if (typeof window === 'undefined') return;
+    try {
+      const audioContext = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
+      const oscillator = audioContext.createOscillator();
+      const gainNode = audioContext.createGain();
+      oscillator.connect(gainNode);
+      gainNode.connect(audioContext.destination);
+      const sounds = {
+        click: { freq: 600, duration: 0.1, type: 'sine' as OscillatorType },
+        success: { freq: 800, duration: 0.2, type: 'sine' as OscillatorType },
+        failure: { freq: 300, duration: 0.3, type: 'sine' as OscillatorType },
+        transition: { freq: 500, duration: 0.15, type: 'sine' as OscillatorType },
+        complete: { freq: 900, duration: 0.4, type: 'sine' as OscillatorType }
+      };
+      const sound = sounds[type];
+      oscillator.frequency.value = sound.freq;
+      oscillator.type = sound.type;
+      gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + sound.duration);
+      oscillator.start();
+      oscillator.stop(audioContext.currentTime + sound.duration);
+    } catch { /* Audio not available */ }
+  }, []);
+
   const [selectedPrediction, setSelectedPrediction] = useState<string | null>(null);
   const [showPredictionFeedback, setShowPredictionFeedback] = useState(false);
   const [score, setScore] = useState(0);
@@ -267,28 +302,32 @@ const LawOfReflectionRenderer: React.FC<LawOfReflectionRendererProps> = ({
   }, []);
 
   // Phase navigation with debouncing
-  const goToPhase = useCallback((newPhase: Phase) => {
-    if (isTransitioningRef.current) return;
-    isTransitioningRef.current = true;
+  const goToPhase = useCallback((newPhase: number) => {
+    if (navigationLockRef.current) return;
+    const now = Date.now();
+    if (now - lastClickRef.current < 200) return;
+    lastClickRef.current = now;
+    navigationLockRef.current = true;
+    playSound('transition');
 
     setPhase(newPhase);
     setSelectedPrediction(null);
     setShowPredictionFeedback(false);
 
     // Reset simulation for certain phases
-    if (newPhase === 'play') {
+    if (newPhase === 2) { // play
       setIncidentAngle(45);
       setShowVirtualImage(false);
       setMirrorAngle(90);
-    } else if (newPhase === 'twist_play') {
+    } else if (newPhase === 5) { // twist_play
       setIncidentAngle(30);
       setMirrorAngle(90);
     }
 
     setTimeout(() => {
-      isTransitioningRef.current = false;
+      navigationLockRef.current = false;
     }, 400);
-  }, []);
+  }, [playSound]);
 
   // Prediction handling
   const handlePredictionSelect = useCallback((optionId: string) => {
@@ -324,7 +363,7 @@ const LawOfReflectionRenderer: React.FC<LawOfReflectionRendererProps> = ({
       setSelectedAnswer(null);
       setShowQuizFeedback(false);
     } else {
-      goToPhase('mastery');
+      goToPhase(9);
     }
 
     setTimeout(() => {
@@ -1014,36 +1053,74 @@ const LawOfReflectionRenderer: React.FC<LawOfReflectionRendererProps> = ({
   // ============================================================================
 
   const renderHook = () => (
-    <div style={{ textAlign: 'center' }}>
-      <div style={{
-        fontSize: '72px',
-        marginBottom: spacing.lg,
-        animation: 'pulse 2s ease-in-out infinite',
-      }}>
-        🪞
+    <div className="flex flex-col items-center justify-center min-h-[600px] px-6 py-12 text-center">
+      {/* Premium badge */}
+      <div className="inline-flex items-center gap-2 px-4 py-2 bg-cyan-500/10 border border-cyan-500/20 rounded-full mb-8">
+        <span className="w-2 h-2 bg-cyan-400 rounded-full animate-pulse" />
+        <span className="text-sm font-medium text-cyan-400 tracking-wide">PHYSICS EXPLORATION</span>
       </div>
-      <h1 style={{ ...typography.h1, color: colors.text, marginBottom: spacing.md }}>
+
+      {/* Main title with gradient */}
+      <h1 className="text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-white via-cyan-100 to-blue-200 bg-clip-text text-transparent">
         The Mirror's Secret
       </h1>
-      <p style={{ ...typography.body, color: colors.textSecondary, marginBottom: spacing.lg, maxWidth: 500, margin: '0 auto' }}>
-        Every time you look in a mirror, millions of light rays are following one elegant rule.
-        This same rule lets submarines see above water, makes road signs glow at night, and
-        even helps scientists measure the distance to the Moon!
+
+      <p className="text-lg text-slate-400 max-w-md mb-10">
+        Discover the elegant rule that makes mirrors work
       </p>
-      <div style={{
-        background: `linear-gradient(135deg, ${colors.gradientStart}, ${colors.gradientEnd})`,
-        padding: spacing.lg,
-        borderRadius: radius.lg,
-        marginBottom: spacing.xl,
-        maxWidth: 400,
-        margin: '0 auto',
-      }}>
-        <div style={{ fontSize: '48px', marginBottom: spacing.sm }}>📐 = 📐</div>
-        <p style={{ color: colors.text, margin: 0 }}>
-          The simplest law with the biggest impact!
-        </p>
+
+      {/* Premium card with graphic */}
+      <div className="relative bg-gradient-to-br from-slate-800/80 to-slate-900/80 rounded-3xl p-8 max-w-xl w-full border border-slate-700/50 shadow-2xl shadow-black/20">
+        {/* Subtle glow effect */}
+        <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 via-transparent to-purple-500/5 rounded-3xl" />
+
+        <div className="relative">
+          <div className="text-6xl mb-6">📐 = 📐</div>
+
+          <div className="mt-8 space-y-4">
+            <p className="text-xl text-white/90 font-medium leading-relaxed">
+              Every ray of light follows one simple rule
+            </p>
+            <p className="text-lg text-slate-400 leading-relaxed">
+              The same rule lets submarines see above water, makes road signs glow, and helps measure the Moon!
+            </p>
+            <div className="pt-2">
+              <p className="text-base text-cyan-400 font-semibold">
+                The simplest law with the biggest impact
+              </p>
+            </div>
+          </div>
+        </div>
       </div>
-      {renderButton('Discover the Law', () => goToPhase('predict'))}
+
+      {/* Premium CTA button */}
+      <button
+        onMouseDown={(e) => { e.preventDefault(); goToPhase(1); }}
+        className="mt-10 group relative px-10 py-5 bg-gradient-to-r from-cyan-500 to-blue-600 text-white text-lg font-semibold rounded-2xl transition-all duration-300 hover:shadow-lg hover:shadow-cyan-500/25 hover:scale-[1.02] active:scale-[0.98]"
+      >
+        <span className="relative z-10 flex items-center gap-3">
+          Discover the Law
+          <svg className="w-5 h-5 transition-transform group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+          </svg>
+        </span>
+      </button>
+
+      {/* Feature hints */}
+      <div className="mt-12 flex items-center gap-8 text-sm text-slate-500">
+        <div className="flex items-center gap-2">
+          <span className="text-cyan-400">✦</span>
+          Periscopes
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="text-cyan-400">✦</span>
+          Retroreflectors
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="text-cyan-400">✦</span>
+          Lunar Ranging
+        </div>
+      </div>
     </div>
   );
 
@@ -1408,7 +1485,7 @@ const LawOfReflectionRenderer: React.FC<LawOfReflectionRendererProps> = ({
               setSelectedAnswer(null);
               setShowQuizFeedback(false);
               setScore(0);
-              goToPhase('test');
+              goToPhase(8);
             }, 'success')
           )}
         </div>
@@ -1599,12 +1676,12 @@ const LawOfReflectionRenderer: React.FC<LawOfReflectionRendererProps> = ({
             setSelectedAnswer(null);
             setShowQuizFeedback(false);
             setScore(0);
-            goToPhase('test');
+            goToPhase(8);
           })}
           {renderButton('Restart Journey', () => {
             setCompletedApps([]);
             setCurrentAppIndex(0);
-            goToPhase('hook');
+            goToPhase(0);
           }, 'secondary')}
           {onBack && renderButton('Back to Menu', onBack, 'secondary')}
         </div>
@@ -1618,77 +1695,66 @@ const LawOfReflectionRenderer: React.FC<LawOfReflectionRendererProps> = ({
 
   const renderPhaseContent = () => {
     switch (phase) {
-      case 'hook': return renderHook();
-      case 'predict': return renderPrediction(false);
-      case 'play': return renderPlay(false);
-      case 'review': return renderReview(false);
-      case 'twist_predict': return renderPrediction(true);
-      case 'twist_play': return renderPlay(true);
-      case 'twist_review': return renderReview(true);
-      case 'transfer': return renderTransfer();
-      case 'test': return renderTest();
-      case 'mastery': return renderMastery();
+      case 0: return renderHook();
+      case 1: return renderPrediction(false);
+      case 2: return renderPlay(false);
+      case 3: return renderReview(false);
+      case 4: return renderPrediction(true);
+      case 5: return renderPlay(true);
+      case 6: return renderReview(true);
+      case 7: return renderTransfer();
+      case 8: return renderTest();
+      case 9: return renderMastery();
       default: return renderHook();
     }
   };
 
   return (
-    <div style={{
-      width: '100%',
-      minHeight: height,
-      background: colors.background,
-      color: colors.text,
-      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
-      padding: isMobile ? spacing.md : spacing.xl,
-      boxSizing: 'border-box',
-    }}>
-      <div style={{ maxWidth: 800, margin: '0 auto' }}>
-        {/* Header */}
-        <div style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          marginBottom: spacing.lg,
-        }}>
-          {onBack && (
-            <button
-              onClick={onBack}
-              style={{
-                background: 'transparent',
-                border: 'none',
-                color: colors.textSecondary,
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                gap: spacing.xs,
-                fontSize: typography.body.fontSize,
-              }}
-            >
-              ← Back
-            </button>
-          )}
-          <div style={{
-            padding: `${spacing.xs}px ${spacing.md}px`,
-            background: colors.cardBg,
-            borderRadius: radius.sm,
-            fontSize: typography.small.fontSize,
-            color: colors.textSecondary,
-          }}>
-            🪞 Law of Reflection
+    <div className="min-h-screen bg-[#0a0f1a] text-white relative overflow-hidden">
+      {/* Premium background gradient */}
+      <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-[#0a1628] to-slate-900" />
+      <div className="absolute top-0 left-1/4 w-96 h-96 bg-cyan-500/5 rounded-full blur-3xl" />
+      <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-blue-500/5 rounded-full blur-3xl" />
+      <div className="absolute top-1/2 right-0 w-96 h-96 bg-purple-500/5 rounded-full blur-3xl" />
+
+      {/* Header */}
+      <div className="fixed top-0 left-0 right-0 z-50 bg-slate-900/80 backdrop-blur-xl border-b border-slate-800/50">
+        <div className="flex items-center justify-between px-6 py-3 max-w-4xl mx-auto">
+          <span className="text-sm font-semibold text-white/80 tracking-wide">Law of Reflection</span>
+          <div className="flex items-center gap-1.5">
+            {PHASES.map((p) => (
+              <button
+                key={p}
+                onMouseDown={(e) => { e.preventDefault(); goToPhase(p); }}
+                className={`h-2 rounded-full transition-all duration-300 ${
+                  phase === p
+                    ? 'bg-cyan-400 w-6 shadow-lg shadow-cyan-400/30'
+                    : phase > p
+                      ? 'bg-emerald-500 w-2'
+                      : 'bg-slate-700 w-2 hover:bg-slate-600'
+                }`}
+                title={phaseLabels[p]}
+              />
+            ))}
           </div>
+          <span className="text-sm font-medium text-cyan-400">{phaseLabels[phase]}</span>
         </div>
-
-        {renderProgressBar()}
-        {renderPhaseContent()}
-
-        {/* CSS Animation */}
-        <style>{`
-          @keyframes pulse {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.05); }
-          }
-        `}</style>
       </div>
+
+      {/* Main content */}
+      <div className="relative pt-16 pb-12" style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' }}>
+        <div className="max-w-4xl mx-auto px-4">
+          {renderPhaseContent()}
+        </div>
+      </div>
+
+      {/* CSS Animation */}
+      <style>{`
+        @keyframes pulse {
+          0%, 100% { transform: scale(1); }
+          50% { transform: scale(1.05); }
+        }
+      `}</style>
     </div>
   );
 };

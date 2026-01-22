@@ -32,19 +32,29 @@ interface PhaseChangeEnergyRendererProps {
    gamePhase?: string;
 }
 
-const playSound = (freq: number, duration: number = 0.15) => {
+const playSound = (type: 'click' | 'success' | 'failure' | 'transition' | 'complete') => {
    try {
       const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
       const oscillator = audioContext.createOscillator();
       const gainNode = audioContext.createGain();
       oscillator.connect(gainNode);
       gainNode.connect(audioContext.destination);
-      oscillator.frequency.value = freq;
-      oscillator.type = 'sine';
-      gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
-      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + duration);
+
+      const sounds = {
+         click: { freq: 600, duration: 0.08, type: 'sine' as OscillatorType, vol: 0.15 },
+         success: { freq: 880, duration: 0.15, type: 'sine' as OscillatorType, vol: 0.2 },
+         failure: { freq: 220, duration: 0.2, type: 'triangle' as OscillatorType, vol: 0.15 },
+         transition: { freq: 440, duration: 0.12, type: 'sine' as OscillatorType, vol: 0.15 },
+         complete: { freq: 660, duration: 0.25, type: 'sine' as OscillatorType, vol: 0.2 },
+      };
+
+      const s = sounds[type];
+      oscillator.frequency.value = s.freq;
+      oscillator.type = s.type;
+      gainNode.gain.setValueAtTime(s.vol, audioContext.currentTime);
+      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + s.duration);
       oscillator.start(audioContext.currentTime);
-      oscillator.stop(audioContext.currentTime + duration);
+      oscillator.stop(audioContext.currentTime + s.duration);
    } catch (e) {}
 };
 
@@ -128,8 +138,12 @@ const PhaseChangeEnergyRenderer: React.FC<PhaseChangeEnergyRendererProps> = ({ o
    };
 
    const isNavigating = useRef(false);
+   const lastClickRef = useRef(0);
 
    const goToPhase = useCallback((p: PCPhase) => {
+      const now = Date.now();
+      if (now - lastClickRef.current < 200) return;
+      lastClickRef.current = now;
       if (isNavigating.current) return;
       isNavigating.current = true;
 
@@ -145,7 +159,7 @@ const PhaseChangeEnergyRenderer: React.FC<PhaseChangeEnergyRendererProps> = ({ o
          setCoolingPhase('gas');
          setIsCooling(false);
       }
-      playSound(400 + Math.random() * 200, 0.1);
+      playSound('transition');
 
       const idx = phaseOrder.indexOf(p);
       emitGameEvent('phase_changed', {
@@ -345,43 +359,40 @@ const PhaseChangeEnergyRenderer: React.FC<PhaseChangeEnergyRendererProps> = ({ o
          <div style={{
             display: 'flex',
             alignItems: 'center',
-            justifyContent: 'center',
-            padding: isMobile ? '10px 12px' : '12px 16px',
-            borderBottom: `1px solid ${colors.border}`,
-            backgroundColor: colors.bgCard,
-            gap: isMobile ? '12px' : '16px'
+            justifyContent: 'space-between',
+            padding: '12px 24px',
+            background: 'rgba(15, 23, 42, 0.8)',
+            backdropFilter: 'blur(16px)',
+            borderBottom: '1px solid rgba(51, 65, 85, 0.5)'
          }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: isMobile ? '8px' : '12px' }}>
-               <div style={{ display: 'flex', gap: isMobile ? '4px' : '6px' }}>
-                  {phaseOrder.map((p, i) => (
-                     <div
-                        key={p}
-                        onMouseDown={() => i < currentIdx && goToPhase(p)}
-                        style={{
-                           height: isMobile ? '10px' : '8px',
-                           width: i === currentIdx ? (isMobile ? '20px' : '24px') : (isMobile ? '10px' : '8px'),
-                           borderRadius: '5px',
-                           backgroundColor: i < currentIdx ? colors.success : i === currentIdx ? colors.primary : colors.border,
-                           cursor: i < currentIdx ? 'pointer' : 'default',
-                           transition: 'all 0.3s'
-                        }}
-                     />
-                  ))}
-               </div>
-               <span style={{ fontSize: '12px', fontWeight: 'bold', color: colors.textMuted }}>
-                  {currentIdx + 1} / {phaseOrder.length}
-               </span>
+            <span style={{ fontSize: 14, fontWeight: 600, color: 'rgba(255,255,255,0.8)', letterSpacing: '0.025em' }}>
+               Phase Changes
+            </span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+               {phaseOrder.map((p, i) => (
+                  <button
+                     key={p}
+                     onMouseDown={() => goToPhase(p)}
+                     style={{
+                        height: 8,
+                        width: i === currentIdx ? 24 : 8,
+                        borderRadius: 9999,
+                        border: 'none',
+                        cursor: 'pointer',
+                        background: i === currentIdx
+                           ? colors.primary
+                           : i < currentIdx
+                              ? colors.success
+                              : colors.border,
+                        boxShadow: i === currentIdx ? `0 0 12px ${colors.primary}40` : 'none',
+                        transition: 'all 0.3s ease'
+                     }}
+                  />
+               ))}
             </div>
-            <div style={{
-               padding: '4px 12px',
-               borderRadius: '12px',
-               background: `${colors.primary}20`,
-               color: colors.primary,
-               fontSize: '11px',
-               fontWeight: 700
-            }}>
+            <span style={{ fontSize: 14, fontWeight: 500, color: colors.primary }}>
                {phaseLabels[phase]}
-            </div>
+            </span>
          </div>
       );
    };
@@ -822,11 +833,23 @@ const PhaseChangeEnergyRenderer: React.FC<PhaseChangeEnergyRendererProps> = ({ o
             flexDirection: 'column',
             height: '100%',
             width: '100%',
-            background: 'linear-gradient(180deg, #0f172a 0%, #020617 100%)'
+            background: '#0a0f1a',
+            position: 'relative',
+            overflow: 'hidden'
          }}>
-            {renderProgressBar()}
+            {/* Premium background glow circles */}
+            <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom right, #0f172a, #0a1628, #0f172a)' }} />
+            <div style={{ position: 'absolute', top: 0, left: '25%', width: 384, height: 384, background: 'rgba(59, 130, 246, 0.05)', borderRadius: '50%', filter: 'blur(64px)' }} />
+            <div style={{ position: 'absolute', bottom: 0, right: '25%', width: 384, height: 384, background: 'rgba(139, 92, 246, 0.05)', borderRadius: '50%', filter: 'blur(64px)' }} />
+            <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', width: 384, height: 384, background: 'rgba(6, 182, 212, 0.03)', borderRadius: '50%', filter: 'blur(64px)' }} />
+
+            <div style={{ position: 'relative', zIndex: 1 }}>
+               {renderProgressBar()}
+            </div>
 
             <div style={{
+               position: 'relative',
+               zIndex: 1,
                flex: 1,
                display: 'flex',
                flexDirection: 'column',
@@ -836,6 +859,21 @@ const PhaseChangeEnergyRenderer: React.FC<PhaseChangeEnergyRendererProps> = ({ o
                textAlign: 'center',
                overflow: 'auto'
             }}>
+               {/* Premium badge */}
+               <div style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 8,
+                  padding: '8px 16px',
+                  background: 'rgba(59, 130, 246, 0.1)',
+                  border: '1px solid rgba(59, 130, 246, 0.2)',
+                  borderRadius: 9999,
+                  marginBottom: 32
+               }}>
+                  <span style={{ width: 8, height: 8, background: '#60a5fa', borderRadius: '50%', animation: 'pulse 2s infinite' }} />
+                  <span style={{ fontSize: 14, fontWeight: 500, color: '#60a5fa', letterSpacing: '0.05em' }}>PHYSICS EXPLORATION</span>
+               </div>
+
                <div style={{
                   width: isMobile ? '60px' : '80px',
                   height: isMobile ? '60px' : '80px',
@@ -850,10 +888,13 @@ const PhaseChangeEnergyRenderer: React.FC<PhaseChangeEnergyRendererProps> = ({ o
                   <span style={{ fontSize: isMobile ? '28px' : '36px' }}>🧊</span>
                </div>
 
+               {/* Gradient title */}
                <h1 style={{
-                  fontSize: isMobile ? '24px' : '32px',
+                  fontSize: isMobile ? '28px' : '40px',
                   fontWeight: 800,
-                  color: '#f8fafc',
+                  background: 'linear-gradient(to right, #ffffff, #93c5fd, #c4b5fd)',
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent',
                   marginBottom: isMobile ? '12px' : '16px',
                   lineHeight: 1.2
                }}>

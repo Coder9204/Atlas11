@@ -1,3 +1,5 @@
+'use client';
+
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 
 // Premium Design System - Apple/Airbnb inspired
@@ -47,15 +49,39 @@ const design = {
   },
 };
 
-type Phase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
+// ═══════════════════════════════════════════════════════════════════════════
+// TYPES & INTERFACES
+// ═══════════════════════════════════════════════════════════════════════════
+type GameEventType =
+  | 'phase_change'
+  | 'prediction_made'
+  | 'simulation_started'
+  | 'parameter_changed'
+  | 'twist_prediction_made'
+  | 'app_explored'
+  | 'test_answered'
+  | 'test_completed'
+  | 'mastery_achieved';
 
-const phases: Phase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
+interface GameEvent {
+  type: GameEventType;
+  data?: Record<string, unknown>;
+}
+
+// Numeric phases: 0=hook, 1=predict, 2=play, 3=review, 4=twist_predict, 5=twist_play, 6=twist_review, 7=transfer, 8=test, 9=mastery
+const PHASES: number[] = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
+const phaseLabels: Record<number, string> = {
+  0: 'Hook', 1: 'Predict', 2: 'Lab', 3: 'Review', 4: 'Twist Predict',
+  5: 'Twist Lab', 6: 'Twist Review', 7: 'Transfer', 8: 'Test', 9: 'Mastery'
+};
 
 interface PendulumPeriodRendererProps {
   width?: number;
   height?: number;
   onBack?: () => void;
-  emitGameEvent?: (event: string, data?: Record<string, unknown>) => void;
+  onGameEvent?: (event: GameEvent) => void;
+  currentPhase?: number;
+  onPhaseComplete?: (phase: number) => void;
 }
 
 // Real-world applications data
@@ -254,9 +280,55 @@ const PendulumPeriodRenderer: React.FC<PendulumPeriodRendererProps> = ({
   width = 800,
   height = 600,
   onBack,
-  emitGameEvent = () => {}
+  onGameEvent,
+  currentPhase,
+  onPhaseComplete
 }) => {
-  const [phase, setPhase] = useState<Phase>('hook');
+  const [phase, setPhase] = useState<number>(currentPhase ?? 0);
+
+  // Sync with external phase control
+  useEffect(() => {
+    if (currentPhase !== undefined && currentPhase !== phase) {
+      setPhase(currentPhase);
+    }
+  }, [currentPhase]);
+
+  // Web Audio API sound
+  const playSound = useCallback((type: 'click' | 'success' | 'error' | 'transition' = 'click') => {
+    try {
+      const audioContext = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
+      const oscillator = audioContext.createOscillator();
+      const gainNode = audioContext.createGain();
+      oscillator.connect(gainNode);
+      gainNode.connect(audioContext.destination);
+
+      const freqMap = { click: 440, success: 600, error: 300, transition: 520 };
+      oscillator.frequency.value = freqMap[type];
+      oscillator.type = 'sine';
+      gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.1);
+      oscillator.start(audioContext.currentTime);
+      oscillator.stop(audioContext.currentTime + 0.1);
+    } catch {}
+  }, []);
+
+  // Emit events
+  const emitEvent = (type: GameEventType, data?: Record<string, unknown>) => {
+    if (onGameEvent) {
+      onGameEvent({ type, data });
+    }
+  };
+
+  // Phase navigation with 400ms debouncing
+  const goToPhase = (newPhase: number) => {
+    if (navigationLockRef.current) return;
+    navigationLockRef.current = true;
+    playSound('transition');
+    setPhase(newPhase);
+    emitEvent('phase_change', { from: phase, to: newPhase });
+    if (onPhaseComplete) onPhaseComplete(newPhase);
+    setTimeout(() => { navigationLockRef.current = false; }, 400);
+  };
   const [prediction, setPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
   const [showResult, setShowResult] = useState(false);
@@ -367,14 +439,6 @@ const PendulumPeriodRenderer: React.FC<PendulumPeriodRendererProps> = ({
     }
   }, [measuredPeriod, pendulumLength, bobMass]);
 
-  const goToPhase = useCallback((newPhase: Phase) => {
-    if (navigationLockRef.current) return;
-    navigationLockRef.current = true;
-    setPhase(newPhase);
-    emitGameEvent('phase_change', { from: phase, to: newPhase });
-    setTimeout(() => { navigationLockRef.current = false; }, 400);
-  }, [phase, emitGameEvent]);
-
   // Calculate theoretical period
   const theoreticalPeriod = useCallback((lengthPx: number) => {
     const lengthMeters = lengthPx / 200;
@@ -383,41 +447,45 @@ const PendulumPeriodRenderer: React.FC<PendulumPeriodRendererProps> = ({
 
   // ============ HELPER FUNCTIONS ============
 
-  // Progress bar
+  // Progress bar - premium phase dots pattern
   const renderProgressBar = () => {
-    const currentIdx = phases.indexOf(phase);
     return (
       <div style={{
         display: 'flex',
         alignItems: 'center',
-        gap: space.xs,
-        padding: `${space.md} ${space.lg}`,
-        background: colors.bgSecondary,
-        borderBottom: `1px solid ${colors.border}`
+        justifyContent: 'space-between',
+        padding: `12px ${space.lg}`,
+        background: 'rgba(15, 23, 42, 0.8)',
+        backdropFilter: 'blur(16px)',
+        borderBottom: '1px solid rgba(51, 65, 85, 0.5)'
       }}>
-        {phases.map((p, idx) => (
-          <div
-            key={p}
-            style={{
-              flex: 1,
-              height: '4px',
-              borderRadius: radius.full,
-              background: idx <= currentIdx
-                ? `linear-gradient(90deg, ${colors.primary}, ${colors.primaryLight})`
-                : colors.bgTertiary,
-              transition: 'all 0.4s ease',
-              boxShadow: idx <= currentIdx ? shadows.glow(colors.primary) : 'none'
-            }}
-          />
-        ))}
-        <span style={{
-          marginLeft: space.md,
-          fontSize: '13px',
-          color: colors.textSecondary,
-          fontWeight: 600,
-          minWidth: '48px'
-        }}>
-          {currentIdx + 1}/{phases.length}
+        <span style={{ fontSize: '14px', fontWeight: 600, color: 'rgba(255,255,255,0.8)', letterSpacing: '0.025em' }}>
+          Pendulum Period
+        </span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+          {PHASES.map((p, idx) => (
+            <button
+              key={p}
+              onMouseDown={() => goToPhase(idx)}
+              style={{
+                height: '8px',
+                width: idx === phase ? '24px' : '8px',
+                borderRadius: '9999px',
+                border: 'none',
+                cursor: 'pointer',
+                background: idx === phase
+                  ? colors.primary
+                  : idx < phase
+                    ? colors.success
+                    : colors.bgTertiary,
+                boxShadow: idx === phase ? `0 0 12px ${colors.primary}40` : 'none',
+                transition: 'all 0.3s ease',
+              }}
+            />
+          ))}
+        </div>
+        <span style={{ fontSize: '14px', fontWeight: 500, color: colors.primary }}>
+          {phaseLabels[phase]}
         </span>
       </div>
     );
@@ -933,7 +1001,7 @@ const PendulumPeriodRenderer: React.FC<PendulumPeriodRendererProps> = ({
         justifyContent: 'center'
       }}>
         <button
-          onMouseDown={() => goToPhase('predict')}
+          onMouseDown={() => goToPhase(1)}
           style={{
             padding: `${space.md} ${space.xxl}`,
             fontSize: '16px',
@@ -1018,7 +1086,7 @@ const PendulumPeriodRenderer: React.FC<PendulumPeriodRendererProps> = ({
           </p>
         </div>
       </div>
-      {renderBottomBar(() => goToPhase('play'), 'Test It!', !prediction)}
+      {renderBottomBar(() => goToPhase(2), 'Test It!', !prediction)}
     </div>
   );
 
@@ -1095,7 +1163,7 @@ const PendulumPeriodRenderer: React.FC<PendulumPeriodRendererProps> = ({
       </div>
       {renderBottomBar(() => {
         setShowResult(true);
-        goToPhase('review');
+        goToPhase(3);
       }, 'See Results')}
     </div>
   );
@@ -1239,7 +1307,7 @@ const PendulumPeriodRenderer: React.FC<PendulumPeriodRendererProps> = ({
 
           {renderKeyTakeaway('This is the same principle as Galileo\'s falling objects - all masses accelerate equally under gravity. In a pendulum, the greater gravitational pull on heavy objects is exactly balanced by their greater inertia.')}
         </div>
-        {renderBottomBar(() => goToPhase('twist_predict'), 'Explore the Twist')}
+        {renderBottomBar(() => goToPhase(4), 'Explore the Twist')}
       </div>
     );
   };
@@ -1321,7 +1389,7 @@ const PendulumPeriodRenderer: React.FC<PendulumPeriodRendererProps> = ({
           </p>
         </div>
       </div>
-      {renderBottomBar(() => goToPhase('twist_play'), 'Test Large Amplitudes', !twistPrediction)}
+      {renderBottomBar(() => goToPhase(5), 'Test Large Amplitudes', !twistPrediction)}
     </div>
   );
 
@@ -1399,7 +1467,7 @@ const PendulumPeriodRenderer: React.FC<PendulumPeriodRendererProps> = ({
       </div>
       {renderBottomBar(() => {
         setShowTwistResult(true);
-        goToPhase('twist_review');
+        goToPhase(6);
       }, 'See Analysis')}
     </div>
   );
@@ -1517,7 +1585,7 @@ const PendulumPeriodRenderer: React.FC<PendulumPeriodRendererProps> = ({
 
           {renderKeyTakeaway('Pendulum "isochronism" - constant period regardless of amplitude - is an approximation valid for small swings. Real clocks use small amplitudes (2-4°) to maintain accuracy. Large swings would gain time as amplitude naturally decreases due to friction.')}
         </div>
-        {renderBottomBar(() => goToPhase('transfer'), 'See Real Applications')}
+        {renderBottomBar(() => goToPhase(7), 'See Real Applications')}
       </div>
     );
   };
@@ -1778,7 +1846,7 @@ const PendulumPeriodRenderer: React.FC<PendulumPeriodRendererProps> = ({
           alignItems: 'center'
         }}>
           <button
-            onMouseDown={() => goToPhase('twist_review')}
+            onMouseDown={() => goToPhase(6)}
             style={{
               padding: `${space.md} ${space.xl}`,
               fontSize: '14px',
@@ -1793,7 +1861,7 @@ const PendulumPeriodRenderer: React.FC<PendulumPeriodRendererProps> = ({
           </button>
           {canTakeQuiz ? (
             <button
-              onMouseDown={() => goToPhase('test')}
+              onMouseDown={() => goToPhase(8)}
               style={{
                 padding: `${space.md} ${space.xxl}`,
                 fontSize: '15px',
@@ -2118,7 +2186,7 @@ const PendulumPeriodRenderer: React.FC<PendulumPeriodRendererProps> = ({
             </>
           )}
         </div>
-        {showTestResults && renderBottomBar(() => goToPhase('mastery'), 'Complete Module')}
+        {showTestResults && renderBottomBar(() => goToPhase(9), 'Complete Module')}
       </div>
     );
   };
@@ -2290,33 +2358,62 @@ const PendulumPeriodRenderer: React.FC<PendulumPeriodRendererProps> = ({
   // Main render switch
   const renderPhase = () => {
     switch (phase) {
-      case 'hook': return renderHook();
-      case 'predict': return renderPredict();
-      case 'play': return renderPlay();
-      case 'review': return renderReview();
-      case 'twist_predict': return renderTwistPredict();
-      case 'twist_play': return renderTwistPlay();
-      case 'twist_review': return renderTwistReview();
-      case 'transfer': return renderTransfer();
-      case 'test': return renderTest();
-      case 'mastery': return renderMastery();
+      case 0: return renderHook();
+      case 1: return renderPredict();
+      case 2: return renderPlay();
+      case 3: return renderReview();
+      case 4: return renderTwistPredict();
+      case 5: return renderTwistPlay();
+      case 6: return renderTwistReview();
+      case 7: return renderTransfer();
+      case 8: return renderTest();
+      case 9: return renderMastery();
       default: return renderHook();
     }
   };
 
   return (
-    <div style={{
-      width: '100%',
-      height: '100%',
-      minHeight: '100vh',
-      background: colors.bgPrimary,
-      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
-      color: colors.textPrimary,
-      overflow: 'hidden',
-      WebkitFontSmoothing: 'antialiased',
-      MozOsxFontSmoothing: 'grayscale'
-    }}>
-      {renderPhase()}
+    <div className="min-h-screen bg-[#0a0f1a] text-white relative overflow-hidden">
+      {/* Premium background gradient */}
+      <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-[#0a1628] to-slate-900" />
+      <div className="absolute top-0 left-1/4 w-96 h-96 bg-emerald-500/5 rounded-full blur-3xl" />
+      <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-amber-500/5 rounded-full blur-3xl" />
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-green-500/3 rounded-full blur-3xl" />
+
+      {/* Header */}
+      <div className="fixed top-0 left-0 right-0 z-50 bg-slate-900/80 backdrop-blur-xl border-b border-slate-800/50">
+        <div className="flex items-center justify-between px-6 py-3 max-w-4xl mx-auto">
+          <span className="text-sm font-semibold text-white/80 tracking-wide">Pendulum Period</span>
+          <div className="flex items-center gap-1.5">
+            {PHASES.map((p, i) => (
+              <button
+                key={p}
+                onMouseDown={(e) => { e.preventDefault(); goToPhase(p); }}
+                className={`h-2 rounded-full transition-all duration-300 ${
+                  phase === p
+                    ? 'bg-emerald-400 w-6 shadow-lg shadow-emerald-400/30'
+                    : phase > p
+                      ? 'bg-emerald-500 w-2'
+                      : 'bg-slate-700 w-2 hover:bg-slate-600'
+                }`}
+              />
+            ))}
+          </div>
+          <span className="text-sm font-medium text-emerald-400">{phaseLabels[phase]}</span>
+        </div>
+      </div>
+
+      {/* Main content */}
+      <div className="relative pt-16 pb-12">
+        <div style={{
+          maxWidth: '800px',
+          margin: '0 auto',
+          padding: '16px',
+          fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
+        }}>
+          {renderPhase()}
+        </div>
+      </div>
     </div>
   );
 };

@@ -1,3 +1,5 @@
+'use client';
+
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 
 // Premium design system - Apple/Airbnb quality
@@ -48,15 +50,39 @@ const design = {
   }
 };
 
-type Phase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
+// ═══════════════════════════════════════════════════════════════════════════
+// TYPES & INTERFACES
+// ═══════════════════════════════════════════════════════════════════════════
+type GameEventType =
+  | 'phase_change'
+  | 'prediction_made'
+  | 'simulation_started'
+  | 'parameter_changed'
+  | 'twist_prediction_made'
+  | 'app_explored'
+  | 'test_answered'
+  | 'test_completed'
+  | 'mastery_achieved';
 
-const phases: Phase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
+interface GameEvent {
+  type: GameEventType;
+  data?: Record<string, unknown>;
+}
+
+// Numeric phases: 0=hook, 1=predict, 2=play, 3=review, 4=twist_predict, 5=twist_play, 6=twist_review, 7=transfer, 8=test, 9=mastery
+const PHASES: number[] = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
+const phaseLabels: Record<number, string> = {
+  0: 'Hook', 1: 'Predict', 2: 'Lab', 3: 'Review', 4: 'Twist Predict',
+  5: 'Twist Lab', 6: 'Twist Review', 7: 'Transfer', 8: 'Test', 9: 'Mastery'
+};
 
 interface ProjectileIndependenceRendererProps {
   width?: number;
   height?: number;
   onBack?: () => void;
-  emitGameEvent?: (event: string, data?: Record<string, unknown>) => void;
+  onGameEvent?: (event: GameEvent) => void;
+  currentPhase?: number;
+  onPhaseComplete?: (phase: number) => void;
 }
 
 // Real-world applications data
@@ -255,9 +281,11 @@ const ProjectileIndependenceRenderer: React.FC<ProjectileIndependenceRendererPro
   width = 800,
   height = 600,
   onBack,
-  emitGameEvent = () => {}
+  onGameEvent,
+  currentPhase,
+  onPhaseComplete
 }) => {
-  const [phase, setPhase] = useState<Phase>('hook');
+  const [phase, setPhase] = useState<number>(currentPhase ?? 0);
   const [prediction, setPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
   const [activeApp, setActiveApp] = useState(0);
@@ -287,14 +315,49 @@ const ProjectileIndependenceRenderer: React.FC<ProjectileIndependenceRendererPro
 
   const isMobile = width < 600;
 
-  // Safe navigation with dedicated lock
-  const goToPhase = useCallback((newPhase: Phase) => {
+  // Sync with external phase control
+  useEffect(() => {
+    if (currentPhase !== undefined && currentPhase !== phase) {
+      setPhase(currentPhase);
+    }
+  }, [currentPhase]);
+
+  // Web Audio API sound
+  const playSound = useCallback((type: 'click' | 'success' | 'error' | 'transition' = 'click') => {
+    try {
+      const audioContext = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
+      const oscillator = audioContext.createOscillator();
+      const gainNode = audioContext.createGain();
+      oscillator.connect(gainNode);
+      gainNode.connect(audioContext.destination);
+
+      const freqMap = { click: 440, success: 600, error: 300, transition: 520 };
+      oscillator.frequency.value = freqMap[type];
+      oscillator.type = 'sine';
+      gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.1);
+      oscillator.start(audioContext.currentTime);
+      oscillator.stop(audioContext.currentTime + 0.1);
+    } catch {}
+  }, []);
+
+  // Emit events
+  const emitEvent = (type: GameEventType, data?: Record<string, unknown>) => {
+    if (onGameEvent) {
+      onGameEvent({ type, data });
+    }
+  };
+
+  // Phase navigation with 400ms debouncing
+  const goToPhase = useCallback((newPhase: number) => {
     if (navigationLockRef.current) return;
     navigationLockRef.current = true;
+    playSound('transition');
     setPhase(newPhase);
-    emitGameEvent('phase_change', { from: phase, to: newPhase });
+    emitEvent('phase_change', { from: phase, to: newPhase });
+    if (onPhaseComplete) onPhaseComplete(newPhase);
     setTimeout(() => { navigationLockRef.current = false; }, 400);
-  }, [phase, emitGameEvent]);
+  }, [phase, playSound, onPhaseComplete]);
 
 
   // Physics simulation
@@ -399,7 +462,6 @@ const ProjectileIndependenceRenderer: React.FC<ProjectileIndependenceRendererPro
 
   // Helper function: Progress bar
   const renderProgressBar = () => {
-    const currentIdx = phases.indexOf(phase);
     return (
       <div style={{
         display: 'flex',
@@ -409,14 +471,14 @@ const ProjectileIndependenceRenderer: React.FC<ProjectileIndependenceRendererPro
         background: design.colors.bgSecondary,
         borderBottom: `1px solid ${design.colors.border}`
       }}>
-        {phases.map((p, idx) => (
+        {PHASES.map((p, idx) => (
           <div
             key={p}
             style={{
               flex: 1,
               height: '4px',
               borderRadius: '2px',
-              background: idx <= currentIdx ? design.colors.primary : design.colors.bgTertiary,
+              background: idx <= phase ? design.colors.primary : design.colors.bgTertiary,
               transition: 'background 0.3s ease'
             }}
           />
@@ -427,7 +489,7 @@ const ProjectileIndependenceRenderer: React.FC<ProjectileIndependenceRendererPro
           color: design.colors.textSecondary,
           fontWeight: 500
         }}>
-          {currentIdx + 1}/{phases.length}
+          {phase + 1}/{PHASES.length}
         </span>
       </div>
     );
@@ -755,110 +817,77 @@ const ProjectileIndependenceRenderer: React.FC<ProjectileIndependenceRendererPro
 
   // Phase: Hook - Premium welcome screen
   const renderHook = () => (
-    <div style={{
-      display: 'flex',
-      flexDirection: 'column',
-      minHeight: '100%',
-      background: `linear-gradient(180deg, ${design.colors.bgPrimary} 0%, ${design.colors.bgSecondary} 100%)`
-    }}>
-      {renderProgressBar()}
-      <div style={{
-        flex: 1,
-        padding: isMobile ? `${design.space.xl}px` : `${design.space.xxxl}px`,
-        display: 'flex',
-        flexDirection: 'column',
-        justifyContent: 'center',
-        alignItems: 'center'
-      }}>
-        <div style={{ maxWidth: '600px', textAlign: 'center' }}>
-          {/* Animated icon with glow */}
-          <div style={{
-            width: '120px',
-            height: '120px',
-            margin: '0 auto 32px',
-            background: `linear-gradient(135deg, ${design.colors.primary}30, ${design.colors.accent}20)`,
-            borderRadius: '50%',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            boxShadow: design.shadows.glow(design.colors.primary),
-            border: `2px solid ${design.colors.primary}40`
-          }}>
-            <span style={{ fontSize: '56px' }}>🎯</span>
-          </div>
+    <div className="flex flex-col items-center justify-center min-h-[600px] px-6 py-12 text-center">
+      {/* Premium badge */}
+      <div className="inline-flex items-center gap-2 px-4 py-2 bg-orange-500/10 border border-orange-500/20 rounded-full mb-8">
+        <span className="w-2 h-2 bg-orange-400 rounded-full animate-pulse" />
+        <span className="text-sm font-medium text-orange-400 tracking-wide">PHYSICS EXPLORATION</span>
+      </div>
 
-          <h1 style={{
-            fontSize: isMobile ? '32px' : '42px',
-            fontWeight: 800,
-            color: design.colors.textPrimary,
-            marginBottom: `${design.space.lg}px`,
-            lineHeight: 1.1,
-            letterSpacing: '-0.02em'
-          }}>
-            The Falling Race
-          </h1>
+      {/* Main title with gradient */}
+      <h1 className="text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-white via-orange-100 to-green-200 bg-clip-text text-transparent">
+        The Falling Race
+      </h1>
 
-          <p style={{
-            fontSize: '18px',
-            color: design.colors.textSecondary,
-            marginBottom: `${design.space.xxl}px`,
-            lineHeight: 1.6
-          }}>
-            You're at the edge of a table with two identical balls. At the exact same moment, you <strong style={{ color: design.colors.error }}>drop</strong> one straight down and <strong style={{ color: design.colors.accent }}>throw</strong> the other horizontally.
+      <p className="text-lg text-slate-400 max-w-md mb-10">
+        Discover the surprising truth about projectile motion
+      </p>
+
+      {/* Premium card with graphic */}
+      <div className="relative bg-gradient-to-br from-slate-800/80 to-slate-900/80 rounded-3xl p-8 max-w-xl w-full border border-slate-700/50 shadow-2xl shadow-black/20 backdrop-blur-xl">
+        {/* Subtle glow effect */}
+        <div className="absolute inset-0 bg-gradient-to-br from-orange-500/5 via-transparent to-green-500/5 rounded-3xl" />
+
+        <div className="relative">
+          <p className="text-xl text-white/90 font-medium leading-relaxed mb-6">
+            You're at the edge of a table with two identical balls. At the exact same moment, you <span className="text-red-400 font-semibold">drop</span> one straight down and <span className="text-green-400 font-semibold">throw</span> the other horizontally.
           </p>
 
-          <div style={{
-            background: design.colors.bgTertiary,
-            borderRadius: `${design.radius.xl}px`,
-            padding: `${design.space.xl}px`,
-            marginBottom: `${design.space.xl}px`,
-            border: `1px solid ${design.colors.border}`,
-            boxShadow: design.shadows.md
-          }}>
-            <p style={{
-              fontSize: '22px',
-              color: design.colors.primary,
-              fontWeight: 700,
-              margin: 0
-            }}>
+          <div className="flex gap-6 justify-center mb-6">
+            <div className="bg-slate-800/60 rounded-xl p-4 border-2 border-red-500/50">
+              <span className="text-4xl">⬇️</span>
+              <p className="text-sm text-red-400 mt-2 font-semibold">Dropped</p>
+              <p className="text-xs text-slate-500">Straight down</p>
+            </div>
+            <div className="bg-slate-800/60 rounded-xl p-4 border-2 border-green-500/50">
+              <span className="text-4xl">↗️</span>
+              <p className="text-sm text-green-400 mt-2 font-semibold">Thrown</p>
+              <p className="text-xs text-slate-500">Horizontally</p>
+            </div>
+          </div>
+
+          <div className="pt-2">
+            <p className="text-lg text-orange-400 font-semibold">
               Which ball hits the ground first?
             </p>
           </div>
-
-          <div style={{
-            display: 'flex',
-            gap: `${design.space.xl}px`,
-            justifyContent: 'center',
-            flexWrap: 'wrap'
-          }}>
-            <div style={{
-              padding: `${design.space.xl}px`,
-              background: design.colors.bgSecondary,
-              borderRadius: `${design.radius.lg}px`,
-              border: `2px solid ${design.colors.error}`,
-              minWidth: '130px',
-              boxShadow: design.shadows.sm
-            }}>
-              <span style={{ fontSize: '40px' }}>⬇️</span>
-              <p style={{ fontSize: '15px', color: design.colors.error, margin: `${design.space.sm}px 0 0`, fontWeight: 600 }}>Dropped</p>
-              <p style={{ fontSize: '12px', color: design.colors.textTertiary, margin: `${design.space.xs}px 0 0` }}>Straight down</p>
-            </div>
-            <div style={{
-              padding: `${design.space.xl}px`,
-              background: design.colors.bgSecondary,
-              borderRadius: `${design.radius.lg}px`,
-              border: `2px solid ${design.colors.accent}`,
-              minWidth: '130px',
-              boxShadow: design.shadows.sm
-            }}>
-              <span style={{ fontSize: '40px' }}>↗️</span>
-              <p style={{ fontSize: '15px', color: design.colors.accent, margin: `${design.space.sm}px 0 0`, fontWeight: 600 }}>Thrown</p>
-              <p style={{ fontSize: '12px', color: design.colors.textTertiary, margin: `${design.space.xs}px 0 0` }}>Horizontally</p>
-            </div>
-          </div>
         </div>
       </div>
-      {renderBottomBar(() => goToPhase('predict'), 'Make Your Prediction')}
+
+      {/* Premium CTA button */}
+      <button
+        onMouseDown={(e) => { e.preventDefault(); goToPhase(1); }}
+        className="mt-10 group relative px-10 py-5 bg-gradient-to-r from-orange-500 to-green-600 text-white text-lg font-semibold rounded-2xl transition-all duration-300 hover:shadow-lg hover:shadow-orange-500/25 hover:scale-[1.02] active:scale-[0.98]"
+      >
+        <span className="relative z-10 flex items-center gap-3">
+          Make Your Prediction
+          <svg className="w-5 h-5 transition-transform group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+          </svg>
+        </span>
+      </button>
+
+      {/* Feature hints */}
+      <div className="mt-12 flex items-center gap-8 text-sm text-slate-500">
+        <div className="flex items-center gap-2">
+          <span className="text-orange-400">✦</span>
+          Interactive Lab
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="text-green-400">✦</span>
+          10 Phases
+        </div>
+      </div>
     </div>
   );
 
@@ -924,7 +953,7 @@ const ProjectileIndependenceRenderer: React.FC<ProjectileIndependenceRendererPro
           </p>
         </div>
       </div>
-      {renderBottomBar(() => goToPhase('play'), 'Test It!', !prediction)}
+      {renderBottomBar(() => goToPhase(2), 'Test It!', !prediction)}
     </div>
   );
 
@@ -986,7 +1015,7 @@ const ProjectileIndependenceRenderer: React.FC<ProjectileIndependenceRendererPro
           </div>
         </div>
       </div>
-      {renderBottomBar(() => goToPhase('review'), 'See Why')}
+      {renderBottomBar(() => goToPhase(3), 'See Why')}
     </div>
   );
 
@@ -1112,7 +1141,7 @@ const ProjectileIndependenceRenderer: React.FC<ProjectileIndependenceRendererPro
 
           {renderKeyTakeaway('The horizontal and vertical components of motion are completely independent. Gravity only affects vertical motion. No matter how fast something moves horizontally, it falls at exactly the same rate as if it were dropped.')}
         </div>
-        {renderBottomBar(() => goToPhase('twist_predict'), 'Explore the Twist')}
+        {renderBottomBar(() => goToPhase(4), 'Explore the Twist')}
       </div>
     );
   };
@@ -1191,7 +1220,7 @@ const ProjectileIndependenceRenderer: React.FC<ProjectileIndependenceRendererPro
           </p>
         </div>
       </div>
-      {renderBottomBar(() => goToPhase('twist_play'), 'Test with Air Resistance', !twistPrediction)}
+      {renderBottomBar(() => goToPhase(5), 'Test with Air Resistance', !twistPrediction)}
     </div>
   );
 
@@ -1294,7 +1323,7 @@ const ProjectileIndependenceRenderer: React.FC<ProjectileIndependenceRendererPro
             </div>
           </div>
         </div>
-        {renderBottomBar(() => goToPhase('twist_review'), 'See Analysis')}
+        {renderBottomBar(() => goToPhase(6), 'See Analysis')}
       </div>
     );
   };
@@ -1409,7 +1438,7 @@ const ProjectileIndependenceRenderer: React.FC<ProjectileIndependenceRendererPro
 
           {renderKeyTakeaway('In a vacuum, horizontal and vertical motions are truly independent. But air resistance depends on total speed and opposes the velocity direction, coupling the motions together. High-speed projectiles experience this strongly - bullets don\'t follow simple parabolas in air!')}
         </div>
-        {renderBottomBar(() => goToPhase('transfer'), 'See Real Applications')}
+        {renderBottomBar(() => goToPhase(7), 'See Real Applications')}
       </div>
     );
   };
@@ -1668,8 +1697,8 @@ const ProjectileIndependenceRenderer: React.FC<ProjectileIndependenceRendererPro
           justifyContent: 'space-between',
           alignItems: 'center'
         }}>
-          {renderButton('← Back', () => goToPhase('twist_review'), 'ghost')}
-          {renderButton('Take the Quiz →', () => goToPhase('test'), 'success', { disabled: !allRead })}
+          {renderButton('← Back', () => goToPhase(6), 'ghost')}
+          {renderButton('Take the Quiz →', () => goToPhase(8), 'success', { disabled: !allRead })}
         </div>
       </div>
     );
@@ -1954,7 +1983,7 @@ const ProjectileIndependenceRenderer: React.FC<ProjectileIndependenceRendererPro
             </>
           )}
         </div>
-        {showTestResults && renderBottomBar(() => goToPhase('mastery'), 'Complete Module')}
+        {showTestResults && renderBottomBar(() => goToPhase(9), 'Complete Module')}
       </div>
     );
   };
@@ -2120,31 +2149,54 @@ const ProjectileIndependenceRenderer: React.FC<ProjectileIndependenceRendererPro
   // Main render
   const renderPhase = () => {
     switch (phase) {
-      case 'hook': return renderHook();
-      case 'predict': return renderPredict();
-      case 'play': return renderPlay();
-      case 'review': return renderReview();
-      case 'twist_predict': return renderTwistPredict();
-      case 'twist_play': return renderTwistPlay();
-      case 'twist_review': return renderTwistReview();
-      case 'transfer': return renderTransfer();
-      case 'test': return renderTest();
-      case 'mastery': return renderMastery();
+      case 0: return renderHook();
+      case 1: return renderPredict();
+      case 2: return renderPlay();
+      case 3: return renderReview();
+      case 4: return renderTwistPredict();
+      case 5: return renderTwistPlay();
+      case 6: return renderTwistReview();
+      case 7: return renderTransfer();
+      case 8: return renderTest();
+      case 9: return renderMastery();
       default: return renderHook();
     }
   };
 
   return (
-    <div style={{
-      width: '100%',
-      height: '100%',
-      minHeight: '100vh',
-      background: design.colors.bgPrimary,
-      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
-      color: design.colors.textPrimary,
-      overflow: 'hidden'
-    }}>
-      {renderPhase()}
+    <div className="min-h-screen bg-[#0a0f1a] text-white relative overflow-hidden">
+      {/* Premium background gradient */}
+      <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-[#0a1628] to-slate-900" />
+      <div className="absolute top-0 left-1/4 w-96 h-96 bg-orange-500/5 rounded-full blur-3xl" />
+      <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-green-500/5 rounded-full blur-3xl" />
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-orange-500/3 rounded-full blur-3xl" />
+
+      {/* Header */}
+      <div className="fixed top-0 left-0 right-0 z-50 bg-slate-900/80 backdrop-blur-xl border-b border-slate-800/50">
+        <div className="flex items-center justify-between px-6 py-3 max-w-4xl mx-auto">
+          <span className="text-sm font-semibold text-white/80 tracking-wide">Projectile Independence</span>
+          <div className="flex items-center gap-1.5">
+            {PHASES.map((p) => (
+              <button
+                key={p}
+                onMouseDown={(e) => { e.preventDefault(); goToPhase(p); }}
+                className={`h-2 rounded-full transition-all duration-300 ${
+                  phase === p
+                    ? 'bg-orange-400 w-6 shadow-lg shadow-orange-400/30'
+                    : phase > p
+                      ? 'bg-emerald-500 w-2'
+                      : 'bg-slate-700 w-2 hover:bg-slate-600'
+                }`}
+                title={phaseLabels[p]}
+              />
+            ))}
+          </div>
+          <span className="text-sm font-medium text-orange-400">{phaseLabels[phase]}</span>
+        </div>
+      </div>
+
+      {/* Main content */}
+      <div className="relative pt-16 pb-12">{renderPhase()}</div>
     </div>
   );
 };

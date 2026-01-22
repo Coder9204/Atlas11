@@ -4,97 +4,69 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 
 // ============================================================================
 // TORQUE - Premium 10-Phase Educational Game
-// Gold Standard Implementation with Sequential Transfer Navigation
 // ============================================================================
 
-export interface GameEvent {
-  type: 'phase_change' | 'interaction' | 'prediction' | 'result' | 'hint_request' | 'visual_state_update';
-  phase: string;
-  data: Record<string, unknown>;
-  timestamp: number;
-  eventType?: 'push_position' | 'friction_toggle' | 'door_push' | 'reset' | 'answer_submit';
+type GameEventType =
+  | 'phase_change'
+  | 'prediction_made'
+  | 'simulation_started'
+  | 'parameter_changed'
+  | 'twist_prediction_made'
+  | 'app_explored'
+  | 'test_answered'
+  | 'test_completed'
+  | 'mastery_achieved';
+
+interface GameEvent {
+  type: GameEventType;
+  data?: Record<string, unknown>;
 }
+
+const PHASES: number[] = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
+const phaseLabels: Record<number, string> = {
+  0: 'Hook',
+  1: 'Predict',
+  2: 'Lab',
+  3: 'Review',
+  4: 'Twist Predict',
+  5: 'Twist Lab',
+  6: 'Twist Review',
+  7: 'Transfer',
+  8: 'Test',
+  9: 'Mastery'
+};
 
 interface TorqueRendererProps {
-  width?: number;
-  height?: number;
   onGameEvent?: (event: GameEvent) => void;
-  gamePhase?: string;
+  currentPhase?: number;
+  onPhaseComplete?: (phase: number) => void;
 }
-
-type Phase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
-
-// ============================================================================
-// PREMIUM DESIGN TOKENS - Apple/Airbnb Quality
-// ============================================================================
-const design = {
-  colors: {
-    // Refined dark theme with purple accent
-    bgDeep: '#08050c',
-    bgPrimary: '#0f0a14',
-    bgSecondary: '#181220',
-    bgTertiary: '#221a2d',
-    bgCard: '#1e1628',
-    bgElevated: '#2d2240',
-    bgHover: '#382a4d',
-
-    // High contrast text
-    textPrimary: '#ffffff',
-    textSecondary: '#b8a8c8',
-    textMuted: '#7a6890',
-    textDisabled: '#4a4058',
-
-    // Brand colors - Purple theme
-    accentPrimary: '#a855f7',
-    accentPrimaryHover: '#9333ea',
-    accentPrimaryMuted: 'rgba(168, 85, 247, 0.15)',
-    accentSecondary: '#f97316',
-    accentSecondaryMuted: 'rgba(249, 115, 22, 0.15)',
-
-    // Physics elements
-    door: '#a08060',
-    doorDark: '#6b5344',
-    doorLight: '#c4a882',
-    hinge: '#5a5a6a',
-    hingeHighlight: '#7a7a8a',
-    force: '#22c55e',
-    leverArm: '#3b82f6',
-
-    // Functional
-    success: '#22c55e',
-    successMuted: 'rgba(34, 197, 94, 0.15)',
-    error: '#ef4444',
-    errorMuted: 'rgba(239, 68, 68, 0.15)',
-
-    // Borders
-    border: '#3a2850',
-    borderLight: '#4a3860',
-  },
-  spacing: { xs: 4, sm: 8, md: 16, lg: 24, xl: 32, xxl: 48 },
-  radius: { sm: 8, md: 12, lg: 16, xl: 20, full: 9999 },
-  font: {
-    sans: '-apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif',
-    mono: '"SF Mono", "Fira Code", monospace'
-  },
-  shadow: {
-    sm: '0 2px 8px rgba(0,0,0,0.3)',
-    md: '0 4px 16px rgba(0,0,0,0.4)',
-    lg: '0 8px 32px rgba(0,0,0,0.5)',
-    glow: (color: string) => `0 0 24px ${color}40`,
-  }
-};
 
 // ============================================================================
 // MAIN COMPONENT
 // ============================================================================
 const TorqueRenderer: React.FC<TorqueRendererProps> = ({
-  width = 400,
-  height = 500,
   onGameEvent,
-  gamePhase
+  currentPhase,
+  onPhaseComplete
 }) => {
-  // Core state
-  const [phase, setPhase] = useState<Phase>('hook');
+  // Navigation debouncing refs
+  const navigationLockRef = useRef(false);
+  const lastClickRef = useRef(0);
+
+  // Phase state
+  const [phase, setPhase] = useState<number>(() => {
+    if (currentPhase !== undefined && PHASES.includes(currentPhase)) return currentPhase;
+    return 0;
+  });
+
+  // Sync phase with external prop
+  useEffect(() => {
+    if (currentPhase !== undefined && PHASES.includes(currentPhase)) {
+      setPhase(currentPhase);
+    }
+  }, [currentPhase]);
+
   const [prediction, setPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
   const [isMobile, setIsMobile] = useState(false);
@@ -118,8 +90,6 @@ const TorqueRenderer: React.FC<TorqueRendererProps> = ({
   const [correctAnswers, setCorrectAnswers] = useState(0);
   const [answeredQuestions, setAnsweredQuestions] = useState<Set<number>>(new Set());
 
-  // Navigation debouncing ref
-  const navigationLockRef = useRef(false);
   const animationRef = useRef<number>();
 
   // Physics calculations
@@ -135,37 +105,65 @@ const TorqueRenderer: React.FC<TorqueRendererProps> = ({
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
-  // Sync with external phase
-  useEffect(() => {
-    if (gamePhase && gamePhase !== phase) setPhase(gamePhase as Phase);
-  }, [gamePhase, phase]);
-
   // Cleanup animation
   useEffect(() => {
     return () => { if (animationRef.current) cancelAnimationFrame(animationRef.current); };
   }, []);
 
-  // Event emitter
-  const emit = useCallback((type: GameEvent['type'], data: Record<string, unknown>, eventType?: GameEvent['eventType']) => {
-    onGameEvent?.({ type, phase, data, timestamp: Date.now(), eventType });
-  }, [onGameEvent, phase]);
+  // Web Audio API sound with typed categories
+  const playSound = useCallback((type: 'click' | 'success' | 'failure' | 'transition' | 'complete') => {
+    if (typeof window === 'undefined') return;
+    try {
+      const audioContext = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
+      const oscillator = audioContext.createOscillator();
+      const gainNode = audioContext.createGain();
+      oscillator.connect(gainNode);
+      gainNode.connect(audioContext.destination);
+      const sounds = {
+        click: { freq: 600, duration: 0.1, type: 'sine' as OscillatorType },
+        success: { freq: 800, duration: 0.2, type: 'sine' as OscillatorType },
+        failure: { freq: 300, duration: 0.3, type: 'sine' as OscillatorType },
+        transition: { freq: 500, duration: 0.15, type: 'sine' as OscillatorType },
+        complete: { freq: 900, duration: 0.4, type: 'sine' as OscillatorType }
+      };
+      const sound = sounds[type];
+      oscillator.frequency.value = sound.freq;
+      oscillator.type = sound.type;
+      gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + sound.duration);
+      oscillator.start();
+      oscillator.stop(audioContext.currentTime + sound.duration);
+    } catch { /* Audio not available */ }
+  }, []);
+
+  // Emit game events
+  const emitEvent = useCallback((type: GameEventType, data?: Record<string, unknown>) => {
+    onGameEvent?.({ type, data });
+  }, [onGameEvent]);
 
   // Navigation with debouncing
-  const goToPhase = useCallback((newPhase: Phase) => {
+  const goToPhase = useCallback((newPhase: number) => {
     if (navigationLockRef.current) return;
+    const now = Date.now();
+    if (now - lastClickRef.current < 200) return;
+    lastClickRef.current = now;
+    if (!PHASES.includes(newPhase)) return;
     navigationLockRef.current = true;
     setPhase(newPhase);
-    emit('phase_change', { from: phase, to: newPhase });
+    playSound('transition');
+    emitEvent('phase_change', { from: phase, to: newPhase, phaseLabel: phaseLabels[newPhase] });
+    onPhaseComplete?.(newPhase);
     setTimeout(() => { navigationLockRef.current = false; }, 400);
-  }, [emit, phase]);
+  }, [phase, playSound, emitEvent, onPhaseComplete]);
 
   // Door physics
   const pushDoor = useCallback(() => {
     if (isPushing) return;
     setIsPushing(true);
     setDoorAngle(0);
+    playSound('click');
 
-    emit('interaction', { pushPosition, requiredForce, hasFriction }, 'door_push');
+    emitEvent('simulation_started', { pushPosition, requiredForce, hasFriction });
 
     const targetAngle = 60;
     const speed = 150 / requiredForce;
@@ -180,42 +178,51 @@ const TorqueRenderer: React.FC<TorqueRendererProps> = ({
       } else {
         setIsPushing(false);
         setExperimentCount(prev => prev + 1);
-        emit('result', { finalAngle: targetAngle, pushPosition, force: requiredForce });
+        playSound('success');
+        emitEvent('simulation_started', { finalAngle: targetAngle, pushPosition, force: requiredForce });
       }
     };
 
     animationRef.current = requestAnimationFrame(animate);
-  }, [isPushing, pushPosition, requiredForce, hasFriction, emit]);
+  }, [isPushing, pushPosition, requiredForce, hasFriction, emitEvent, playSound]);
 
   const resetDoor = useCallback(() => {
     if (animationRef.current) cancelAnimationFrame(animationRef.current);
     setIsPushing(false);
     setDoorAngle(0);
-    emit('interaction', { action: 'reset' }, 'reset');
-  }, [emit]);
+    emitEvent('parameter_changed', { action: 'reset' });
+  }, [emitEvent]);
 
   const handleTestAnswer = useCallback((answerIndex: number) => {
+    const now = Date.now();
+    if (now - lastClickRef.current < 200) return;
+    lastClickRef.current = now;
     if (answeredQuestions.has(currentQuestion)) return;
     setSelectedAnswer(answerIndex);
     setShowExplanation(true);
     const isCorrect = answerIndex === testQuestions[currentQuestion].correct;
-    if (isCorrect) setCorrectAnswers(prev => prev + 1);
+    if (isCorrect) {
+      setCorrectAnswers(prev => prev + 1);
+      playSound('success');
+    } else {
+      playSound('failure');
+    }
     setAnsweredQuestions(prev => new Set([...prev, currentQuestion]));
-    emit('interaction', { question: currentQuestion, answer: answerIndex, correct: isCorrect }, 'answer_submit');
-  }, [currentQuestion, answeredQuestions, emit]);
+    emitEvent('test_answered', { question: currentQuestion, answer: answerIndex, correct: isCorrect });
+  }, [currentQuestion, answeredQuestions, emitEvent, playSound]);
 
   // Test questions
   const testQuestions = [
-    { question: "Why is it easier to open a door by pushing at the handle (far from hinge)?", options: ["The handle is smoother", "Larger lever arm = less force needed", "The door is lighter there", "It's not actually easier"], correct: 1, explanation: "Torque = Force × Lever arm. With a larger lever arm (distance from hinge), you need less force to create the same torque." },
-    { question: "What is the correct formula for torque?", options: ["τ = F + r", "τ = F × r", "τ = F / r", "τ = F - r"], correct: 1, explanation: "Torque (τ) equals force (F) times the perpendicular distance (r) from the pivot point: τ = F × r" },
-    { question: "If you push a door at half the distance from the hinge, you need:", options: ["Half the force", "The same force", "Twice the force", "Four times the force"], correct: 2, explanation: "Since τ = F × r, halving r means you need to double F to maintain the same torque." },
+    { question: "Why is it easier to open a door by pushing at the handle (far from hinge)?", options: ["The handle is smoother", "Larger lever arm = less force needed", "The door is lighter there", "It's not actually easier"], correct: 1, explanation: "Torque = Force x Lever arm. With a larger lever arm (distance from hinge), you need less force to create the same torque." },
+    { question: "What is the correct formula for torque?", options: ["t = F + r", "t = F x r", "t = F / r", "t = F - r"], correct: 1, explanation: "Torque (t) equals force (F) times the perpendicular distance (r) from the pivot point: t = F x r" },
+    { question: "If you push a door at half the distance from the hinge, you need:", options: ["Half the force", "The same force", "Twice the force", "Four times the force"], correct: 2, explanation: "Since t = F x r, halving r means you need to double F to maintain the same torque." },
     { question: "Door handles are placed far from hinges because:", options: ["It looks better aesthetically", "Maximizes lever arm, minimizing force needed", "It's where the door is strongest", "There's no particular reason"], correct: 1, explanation: "Engineers place handles far from hinges to maximize the lever arm, making doors easy to open with minimal force." },
     { question: "A sticky hinge increases the force needed because:", options: ["It adds friction resistance to overcome", "It makes the door heavier", "It changes the lever arm length", "It doesn't affect the force needed"], correct: 0, explanation: "Friction at the hinge creates a resisting torque that must be overcome in addition to the torque needed to accelerate the door." },
     { question: "A wrench with a longer handle:", options: ["Is always heavier to use", "Provides more torque for the same force", "Provides less torque overall", "Doesn't affect the torque"], correct: 1, explanation: "A longer wrench handle increases the lever arm, so the same force produces more torque." },
-    { question: "To balance a seesaw with unequal weights:", options: ["Put the heavier weight in the middle", "Put the heavier weight closer to pivot", "Put the lighter weight closer to pivot", "It cannot be balanced"], correct: 1, explanation: "For balance, torques must be equal: W₁ × r₁ = W₂ × r₂. The heavier weight needs a shorter lever arm." },
+    { question: "To balance a seesaw with unequal weights:", options: ["Put the heavier weight in the middle", "Put the heavier weight closer to pivot", "Put the lighter weight closer to pivot", "It cannot be balanced"], correct: 1, explanation: "For balance, torques must be equal: W1 x r1 = W2 x r2. The heavier weight needs a shorter lever arm." },
     { question: "Why do doorstops work best when placed far from the hinge?", options: ["They're easier to see there", "Maximum leverage prevents door motion", "The door is thinner there", "Position doesn't matter"], correct: 1, explanation: "Placing a doorstop far from the hinge maximizes the resisting moment arm, making it harder to push the door open." },
     { question: "A torque wrench is designed to measure:", options: ["The weight of the wrench", "Rotational force being applied", "The length of the wrench", "The turning speed"], correct: 1, explanation: "A torque wrench measures the rotational force (torque) being applied to a fastener, ensuring proper tightening." },
-    { question: "If torque = 20 N·m and lever arm = 0.5 m, what force is applied?", options: ["10 N", "40 N", "20 N", "0.025 N"], correct: 1, explanation: "Using τ = F × r: 20 = F × 0.5, solving for F gives F = 40 N." }
+    { question: "If torque = 20 N-m and lever arm = 0.5 m, what force is applied?", options: ["10 N", "40 N", "20 N", "0.025 N"], correct: 1, explanation: "Using t = F x r: 20 = F x 0.5, solving for F gives F = 40 N." }
   ];
 
   // Real-world applications
@@ -223,180 +230,58 @@ const TorqueRenderer: React.FC<TorqueRendererProps> = ({
     {
       id: 'wrench',
       title: "Wrench & Bolts",
-      description: "Longer wrenches provide more torque with less effort. Mechanics use breaker bars for stubborn bolts—maximum leverage from extended handles!",
-      formula: "τ = F × r",
-      insight: "2× handle length = 2× torque",
-      color: design.colors.accentPrimary,
+      description: "Longer wrenches provide more torque with less effort. Mechanics use breaker bars for stubborn bolts - maximum leverage from extended handles!",
+      formula: "t = F x r",
+      insight: "2x handle length = 2x torque",
     },
     {
       id: 'steering',
       title: "Steering Wheels",
       description: "Large steering wheels require less force to turn. Power steering reduces the torque needed at your hands, making driving effortless.",
-      formula: "F = τ / r",
+      formula: "F = t / r",
       insight: "Larger radius = less effort",
-      color: design.colors.leverArm,
     },
     {
       id: 'seesaw',
       title: "Seesaw Balance",
       description: "Torque balance determines equilibrium. A heavier child sits closer to the pivot to balance a lighter child sitting farther away.",
-      formula: "m₁r₁ = m₂r₂",
+      formula: "m1r1 = m2r2",
       insight: "Balance point shifts with mass",
-      color: design.colors.success,
     },
     {
       id: 'bicycle',
       title: "Bicycle Pedals",
       description: "The crank arm length affects your torque output. Longer cranks provide more leverage but require greater leg movement per rotation.",
-      formula: "τ = F × crank length",
+      formula: "t = F x crank length",
       insight: "Typical crank: 170-175mm",
-      color: design.colors.accentSecondary,
     }
   ];
-
-  // ============================================================================
-  // HELPER FUNCTIONS (Not React Components)
-  // ============================================================================
-  const renderButton = (
-    text: string,
-    onClick: () => void,
-    variant: 'primary' | 'secondary' | 'ghost' | 'success' = 'primary',
-    disabled: boolean = false,
-    fullWidth: boolean = false
-  ) => {
-    const baseStyle: React.CSSProperties = {
-      padding: isMobile ? '14px 24px' : '16px 32px',
-      fontSize: isMobile ? 14 : 15,
-      fontWeight: 600,
-      fontFamily: design.font.sans,
-      border: 'none',
-      borderRadius: design.radius.md,
-      cursor: disabled ? 'not-allowed' : 'pointer',
-      opacity: disabled ? 0.5 : 1,
-      transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
-      width: fullWidth ? '100%' : 'auto',
-      display: 'inline-flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      gap: 8,
-      outline: 'none',
-      WebkitTapHighlightColor: 'transparent',
-      userSelect: 'none',
-    };
-
-    const variants: Record<string, React.CSSProperties> = {
-      primary: {
-        background: `linear-gradient(135deg, ${design.colors.accentPrimary} 0%, ${design.colors.accentPrimaryHover} 100%)`,
-        color: '#fff',
-        boxShadow: design.shadow.md,
-      },
-      secondary: {
-        background: design.colors.bgTertiary,
-        color: design.colors.textPrimary,
-        border: `1px solid ${design.colors.border}`,
-      },
-      ghost: {
-        background: 'transparent',
-        color: design.colors.textSecondary,
-      },
-      success: {
-        background: `linear-gradient(135deg, ${design.colors.success} 0%, #16a34a 100%)`,
-        color: '#fff',
-        boxShadow: design.shadow.md,
-      }
-    };
-
-    return (
-      <button
-        onMouseDown={(e) => {
-          e.preventDefault();
-          if (!disabled && !navigationLockRef.current) {
-            navigationLockRef.current = true;
-            onClick();
-            setTimeout(() => { navigationLockRef.current = false; }, 400);
-          }
-        }}
-        disabled={disabled}
-        style={{ ...baseStyle, ...variants[variant] }}
-      >
-        {text}
-      </button>
-    );
-  };
-
-  const renderProgressBar = () => {
-    const phaseList: Phase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
-    const currentIndex = phaseList.indexOf(phase);
-
-    return (
-      <div style={{
-        position: 'absolute',
-        top: 12,
-        left: 12,
-        display: 'flex',
-        gap: 4,
-        zIndex: 10,
-      }}>
-        {phaseList.map((p, idx) => (
-          <div key={p} style={{
-            width: isMobile ? 6 : 8,
-            height: isMobile ? 6 : 8,
-            borderRadius: design.radius.full,
-            background: idx === currentIndex
-              ? design.colors.accentPrimary
-              : idx < currentIndex
-                ? design.colors.success
-                : design.colors.bgElevated,
-            transition: 'all 0.3s ease',
-            boxShadow: idx === currentIndex ? design.shadow.glow(design.colors.accentPrimary) : 'none',
-          }} />
-        ))}
-      </div>
-    );
-  };
-
-  const renderBottomNav = (
-    backPhase: Phase | null,
-    nextPhase: Phase | null,
-    nextDisabled: boolean = false,
-    nextText: string = 'Continue →'
-  ) => (
-    <div style={{
-      display: 'flex',
-      justifyContent: backPhase ? 'space-between' : 'center',
-      marginTop: design.spacing.lg,
-      gap: design.spacing.md,
-    }}>
-      {backPhase && renderButton('← Back', () => goToPhase(backPhase), 'ghost')}
-      {nextPhase && renderButton(nextText, () => goToPhase(nextPhase), 'primary', nextDisabled)}
-    </div>
-  );
 
   // ============================================================================
   // VISUALIZATION - Premium Door Animation
   // ============================================================================
   const renderVisualization = () => {
-    const svgWidth = Math.min(width, 400);
-    const hingeX = 65;
-    const hingeY = 130;
-    const doorLength = svgWidth - 130;
-    const doorWidth = 22;
+    const svgWidth = Math.min(360, isMobile ? 320 : 360);
+    const hingeX = 60;
+    const hingeY = 120;
+    const doorLength = svgWidth - 120;
+    const doorWidth = 20;
     const pushX = pushPosition * doorLength;
 
     return (
-      <svg width="100%" height={260} viewBox={`0 0 ${svgWidth} 260`} style={{ display: 'block', background: design.colors.bgDeep }}>
+      <svg width="100%" height={240} viewBox={`0 0 ${svgWidth} 240`} className="block mx-auto">
         <defs>
           <linearGradient id="torque-door-grad" x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" stopColor={design.colors.doorLight} />
-            <stop offset="50%" stopColor={design.colors.door} />
-            <stop offset="100%" stopColor={design.colors.doorDark} />
+            <stop offset="0%" stopColor="#c4a882" />
+            <stop offset="50%" stopColor="#a08060" />
+            <stop offset="100%" stopColor="#6b5344" />
           </linearGradient>
           <filter id="torque-shadow" x="-20%" y="-20%" width="140%" height="140%">
             <feDropShadow dx="3" dy="4" stdDeviation="4" floodColor="#000" floodOpacity="0.5" />
           </filter>
           <filter id="torque-force-glow">
             <feGaussianBlur stdDeviation="3" result="blur" />
-            <feFlood floodColor={design.colors.force} floodOpacity="0.5" />
+            <feFlood floodColor="#22c55e" floodOpacity="0.5" />
             <feComposite in2="blur" operator="in" />
             <feMerge><feMergeNode /><feMergeNode in="SourceGraphic" /></feMerge>
           </filter>
@@ -404,16 +289,17 @@ const TorqueRenderer: React.FC<TorqueRendererProps> = ({
 
         {/* Background grid */}
         <pattern id="torque-grid" width="30" height="30" patternUnits="userSpaceOnUse">
-          <path d="M 30 0 L 0 0 0 30" fill="none" stroke={design.colors.border} strokeWidth="0.5" opacity="0.3" />
+          <path d="M 30 0 L 0 0 0 30" fill="none" stroke="#3a2850" strokeWidth="0.5" opacity="0.3" />
         </pattern>
-        <rect width={svgWidth} height={260} fill="url(#torque-grid)" />
+        <rect width={svgWidth} height={240} fill="#08050c" />
+        <rect width={svgWidth} height={240} fill="url(#torque-grid)" />
 
         {/* Wall */}
-        <rect x={0} y={hingeY - 90} width={55} height={180} fill="#3a3a4a" />
-        <rect x={50} y={hingeY - 90} width={5} height={180} fill="#4a4a5a" />
+        <rect x={0} y={hingeY - 80} width={50} height={160} fill="#3a3a4a" />
+        <rect x={45} y={hingeY - 80} width={5} height={160} fill="#4a4a5a" />
 
         {/* Title */}
-        <text x={svgWidth / 2} y={24} textAnchor="middle" fill={design.colors.textPrimary} fontSize={13} fontWeight="600" fontFamily={design.font.sans}>
+        <text x={svgWidth / 2} y={22} textAnchor="middle" fill="#fafaf9" fontSize={12} fontWeight="600" fontFamily="system-ui">
           Top-Down View (looking down at door)
         </text>
 
@@ -425,39 +311,39 @@ const TorqueRenderer: React.FC<TorqueRendererProps> = ({
           {/* Wood grain lines */}
           {[0.2, 0.4, 0.6, 0.8].map((pos, i) => (
             <line key={i} x1={doorLength * pos} y1={-doorWidth / 2 + 3} x2={doorLength * pos} y2={doorWidth / 2 - 3}
-                  stroke={design.colors.doorDark} strokeWidth={0.5} opacity={0.3} />
+                  stroke="#6b5344" strokeWidth={0.5} opacity={0.3} />
           ))}
 
           {/* Door handle */}
-          <circle cx={doorLength - 35} cy={0} r={10} fill="#c9a97c" stroke={design.colors.door} strokeWidth={2} />
-          <circle cx={doorLength - 35} cy={0} r={4} fill={design.colors.doorDark} />
+          <circle cx={doorLength - 30} cy={0} r={9} fill="#c9a97c" stroke="#a08060" strokeWidth={2} />
+          <circle cx={doorLength - 30} cy={0} r={4} fill="#6b5344" />
 
           {/* Lever arm visualization */}
           {showForceVector && (
             <g>
-              <line x1={0} y1={35} x2={pushX} y2={35}
-                    stroke={design.colors.leverArm} strokeWidth={3} strokeDasharray="6,3" />
-              <circle cx={0} cy={35} r={4} fill={design.colors.leverArm} />
-              <circle cx={pushX} cy={35} r={4} fill={design.colors.leverArm} />
-              <text x={pushX / 2} y={55} textAnchor="middle" fill={design.colors.leverArm} fontSize={11} fontWeight="600" fontFamily={design.font.sans}>
+              <line x1={0} y1={32} x2={pushX} y2={32}
+                    stroke="#3b82f6" strokeWidth={3} strokeDasharray="6,3" />
+              <circle cx={0} cy={32} r={4} fill="#3b82f6" />
+              <circle cx={pushX} cy={32} r={4} fill="#3b82f6" />
+              <text x={pushX / 2} y={50} textAnchor="middle" fill="#3b82f6" fontSize={10} fontWeight="600" fontFamily="system-ui">
                 r = {(pushPosition * 100).toFixed(0)}%
               </text>
             </g>
           )}
 
           {/* Push point indicator */}
-          <circle cx={pushX} cy={0} r={12} fill={design.colors.force} stroke="#fff" strokeWidth={2}>
-            <animate attributeName="r" values="10;12;10" dur="1s" repeatCount="indefinite" />
+          <circle cx={pushX} cy={0} r={10} fill="#22c55e" stroke="#fff" strokeWidth={2}>
+            <animate attributeName="r" values="9;11;9" dur="1s" repeatCount="indefinite" />
           </circle>
 
           {/* Force arrow */}
           {showForceVector && (
             <g transform={`translate(${pushX}, 0)`} filter="url(#torque-force-glow)">
-              <line x1={0} y1={-18} x2={0} y2={-18 - requiredForce * 1.2}
-                    stroke={design.colors.force} strokeWidth={3} strokeLinecap="round" />
-              <polygon points={`0,${-18 - requiredForce * 1.2 - 8} -6,${-18 - requiredForce * 1.2} 6,${-18 - requiredForce * 1.2}`}
-                       fill={design.colors.force} />
-              <text x={18} y={-25 - requiredForce * 0.6} fill={design.colors.force} fontSize={12} fontWeight="700" fontFamily={design.font.sans}>
+              <line x1={0} y1={-16} x2={0} y2={-16 - requiredForce * 1.2}
+                    stroke="#22c55e" strokeWidth={3} strokeLinecap="round" />
+              <polygon points={`0,${-16 - requiredForce * 1.2 - 8} -5,${-16 - requiredForce * 1.2} 5,${-16 - requiredForce * 1.2}`}
+                       fill="#22c55e" />
+              <text x={16} y={-22 - requiredForce * 0.6} fill="#22c55e" fontSize={11} fontWeight="700" fontFamily="system-ui">
                 F = {requiredForce.toFixed(1)}N
               </text>
             </g>
@@ -466,38 +352,38 @@ const TorqueRenderer: React.FC<TorqueRendererProps> = ({
 
         {/* Hinge */}
         <g transform={`translate(${hingeX}, ${hingeY})`}>
-          <circle r={16} fill={hasFriction ? '#8b4513' : design.colors.hinge} stroke={design.colors.hingeHighlight} strokeWidth={3} />
-          <circle r={6} fill={design.colors.hingeHighlight} />
+          <circle r={14} fill={hasFriction ? '#8b4513' : '#5a5a6a'} stroke="#7a7a8a" strokeWidth={3} />
+          <circle r={5} fill="#7a7a8a" />
           {hasFriction && (
-            <text x={0} y={38} textAnchor="middle" fill={design.colors.accentSecondary} fontSize={11} fontWeight="600" fontFamily={design.font.sans}>
+            <text x={0} y={35} textAnchor="middle" fill="#f97316" fontSize={10} fontWeight="600" fontFamily="system-ui">
               Sticky!
             </text>
           )}
         </g>
 
         {/* Force meter */}
-        <g transform={`translate(${svgWidth - 105}, 180)`}>
-          <rect x={0} y={0} width={90} height={65} rx={10} fill={design.colors.bgSecondary}
-                stroke={design.colors.border} strokeWidth={1} />
-          <text x={45} y={18} textAnchor="middle" fill={design.colors.textMuted} fontSize={10} fontFamily={design.font.sans}>
+        <g transform={`translate(${svgWidth - 95}, 165)`}>
+          <rect x={0} y={0} width={85} height={60} rx={10} fill="#181220"
+                stroke="#3a2850" strokeWidth={1} />
+          <text x={42} y={16} textAnchor="middle" fill="#7a6890" fontSize={9} fontFamily="system-ui">
             Required Force
           </text>
-          <text x={45} y={45} textAnchor="middle"
-                fill={requiredForce > 100 ? design.colors.error : design.colors.force}
-                fontSize={22} fontWeight="700" fontFamily={design.font.sans}>
+          <text x={42} y={42} textAnchor="middle"
+                fill={requiredForce > 100 ? '#ef4444' : '#22c55e'}
+                fontSize={20} fontWeight="700" fontFamily="system-ui">
             {requiredForce.toFixed(1)}N
           </text>
         </g>
 
         {/* Torque display */}
-        <g transform="translate(15, 180)">
-          <rect x={0} y={0} width={105} height={65} rx={10} fill={design.colors.bgSecondary}
-                stroke={design.colors.border} strokeWidth={1} />
-          <text x={52} y={18} textAnchor="middle" fill={design.colors.textMuted} fontSize={10} fontFamily={design.font.sans}>
-            Torque (τ = F×r)
+        <g transform="translate(10, 165)">
+          <rect x={0} y={0} width={100} height={60} rx={10} fill="#181220"
+                stroke="#3a2850" strokeWidth={1} />
+          <text x={50} y={16} textAnchor="middle" fill="#7a6890" fontSize={9} fontFamily="system-ui">
+            Torque (t = F x r)
           </text>
-          <text x={52} y={45} textAnchor="middle" fill={design.colors.accentPrimary} fontSize={20} fontWeight="700" fontFamily={design.font.sans}>
-            {requiredTorque} N·m
+          <text x={50} y={42} textAnchor="middle" fill="#a855f7" fontSize={18} fontWeight="700" fontFamily="system-ui">
+            {requiredTorque} N-m
           </text>
         </g>
       </svg>
@@ -506,113 +392,105 @@ const TorqueRenderer: React.FC<TorqueRendererProps> = ({
 
   // Application graphics for transfer phase
   const renderApplicationGraphic = (appId: string) => {
-    const svgWidth = Math.min(width - 60, 340);
+    const svgWidth = isMobile ? 280 : 320;
 
     return (
-      <svg width="100%" height={140} viewBox={`0 0 ${svgWidth} 140`} style={{ display: 'block' }}>
-        <rect width={svgWidth} height={140} fill={design.colors.bgDeep} rx={12} />
+      <svg width="100%" height={130} viewBox={`0 0 ${svgWidth} 130`} className="block mx-auto">
+        <rect width={svgWidth} height={130} fill="#0f0a14" rx={12} />
 
         {appId === 'wrench' && (
           <g>
             {/* Wrench body */}
-            <rect x={80} y={60} width={180} height={20} rx={4} fill="#6b7280" />
-            <rect x={80} y={65} width={180} height={4} fill="#9ca3af" />
+            <rect x={70} y={55} width={160} height={18} rx={4} fill="#6b7280" />
+            <rect x={70} y={60} width={160} height={4} fill="#9ca3af" />
             {/* Wrench head */}
-            <circle cx={80} cy={70} r={22} fill="#4b5563" stroke="#6b7280" strokeWidth={2} />
-            <circle cx={80} cy={70} r={8} fill="#1f2937" />
+            <circle cx={70} cy={64} r={20} fill="#4b5563" stroke="#6b7280" strokeWidth={2} />
+            <circle cx={70} cy={64} r={7} fill="#1f2937" />
             {/* Bolt */}
-            <polygon points="80,70 88,66 88,62 80,58 72,62 72,66" fill="#374151" stroke="#4b5563" strokeWidth={1} />
+            <polygon points="70,64 77,60 77,56 70,52 63,56 63,60" fill="#374151" stroke="#4b5563" strokeWidth={1} />
             {/* Force arrow */}
-            <line x1={260} y1={70} x2={260} y2={25} stroke={design.colors.force} strokeWidth={4} />
-            <polygon points="260,20 253,32 267,32" fill={design.colors.force} />
-            <text x={278} y={45} fill={design.colors.force} fontSize={12} fontWeight="600">F</text>
+            <line x1={230} y1={64} x2={230} y2={25} stroke="#22c55e" strokeWidth={3} />
+            <polygon points="230,20 224,30 236,30" fill="#22c55e" />
+            <text x={246} y={42} fill="#22c55e" fontSize={11} fontWeight="600">F</text>
             {/* Lever arm */}
-            <line x1={80} y1={100} x2={260} y2={100} stroke={design.colors.leverArm} strokeWidth={2} strokeDasharray="4,4" />
-            <text x={170} y={118} textAnchor="middle" fill={design.colors.leverArm} fontSize={11} fontWeight="600">Lever arm (r)</text>
+            <line x1={70} y1={92} x2={230} y2={92} stroke="#3b82f6" strokeWidth={2} strokeDasharray="4,4" />
+            <text x={150} y={110} textAnchor="middle" fill="#3b82f6" fontSize={10} fontWeight="600">Lever arm (r)</text>
             {/* Rotation indicator */}
-            <path d="M 60 50 A 30 30 0 0 0 60 90" stroke={design.colors.accentPrimary} strokeWidth={2} fill="none" markerEnd="url(#arrow)" />
-            <text x={35} y={75} fill={design.colors.accentPrimary} fontSize={14} fontWeight="700">τ</text>
+            <path d="M 52 45 A 28 28 0 0 0 52 83" stroke="#a855f7" strokeWidth={2} fill="none" />
+            <text x={32} y={68} fill="#a855f7" fontSize={13} fontWeight="700">t</text>
           </g>
         )}
 
         {appId === 'steering' && (
           <g>
             {/* Steering wheel */}
-            <circle cx={svgWidth/2} cy={70} r={50} fill="none" stroke="#374151" strokeWidth={10} />
-            <circle cx={svgWidth/2} cy={70} r={50} fill="none" stroke="#4b5563" strokeWidth={5} />
-            <circle cx={svgWidth/2} cy={70} r={15} fill="#1f2937" stroke="#4b5563" strokeWidth={2} />
+            <circle cx={svgWidth/2} cy={65} r={45} fill="none" stroke="#374151" strokeWidth={9} />
+            <circle cx={svgWidth/2} cy={65} r={45} fill="none" stroke="#4b5563" strokeWidth={5} />
+            <circle cx={svgWidth/2} cy={65} r={14} fill="#1f2937" stroke="#4b5563" strokeWidth={2} />
             {/* Spokes */}
-            <line x1={svgWidth/2} y1={70} x2={svgWidth/2} y2={25} stroke="#4b5563" strokeWidth={6} />
-            <line x1={svgWidth/2} y1={70} x2={svgWidth/2 - 40} y2={100} stroke="#4b5563" strokeWidth={6} />
-            <line x1={svgWidth/2} y1={70} x2={svgWidth/2 + 40} y2={100} stroke="#4b5563" strokeWidth={6} />
+            <line x1={svgWidth/2} y1={65} x2={svgWidth/2} y2={24} stroke="#4b5563" strokeWidth={5} />
+            <line x1={svgWidth/2} y1={65} x2={svgWidth/2 - 36} y2={92} stroke="#4b5563" strokeWidth={5} />
+            <line x1={svgWidth/2} y1={65} x2={svgWidth/2 + 36} y2={92} stroke="#4b5563" strokeWidth={5} />
             {/* Hands and force arrows */}
-            <circle cx={svgWidth/2 - 50} cy={70} r={8} fill={design.colors.accentSecondary} />
-            <line x1={svgWidth/2 - 50} y1={58} x2={svgWidth/2 - 50} y2={40} stroke={design.colors.force} strokeWidth={3} />
-            <polygon points={`${svgWidth/2 - 50},36 ${svgWidth/2 - 55},44 ${svgWidth/2 - 45},44`} fill={design.colors.force} />
-            <circle cx={svgWidth/2 + 50} cy={70} r={8} fill={design.colors.accentSecondary} />
-            <line x1={svgWidth/2 + 50} y1={82} x2={svgWidth/2 + 50} y2={100} stroke={design.colors.force} strokeWidth={3} />
-            <polygon points={`${svgWidth/2 + 50},104 ${svgWidth/2 - 45 + 100},96 ${svgWidth/2 + 55},96`} fill={design.colors.force} />
-            {/* Rotation arrow */}
-            <path d="M ${svgWidth/2 + 70} 45 A 60 60 0 0 1 ${svgWidth/2 + 70} 95" stroke={design.colors.accentPrimary} strokeWidth={2} fill="none" />
-            <text x={svgWidth/2 + 85} y={75} fill={design.colors.accentPrimary} fontSize={14} fontWeight="700">τ</text>
+            <circle cx={svgWidth/2 - 45} cy={65} r={7} fill="#f97316" />
+            <line x1={svgWidth/2 - 45} y1={55} x2={svgWidth/2 - 45} y2={38} stroke="#22c55e" strokeWidth={3} />
+            <polygon points={`${svgWidth/2 - 45},34 ${svgWidth/2 - 50},42 ${svgWidth/2 - 40},42`} fill="#22c55e" />
+            <circle cx={svgWidth/2 + 45} cy={65} r={7} fill="#f97316" />
+            <line x1={svgWidth/2 + 45} y1={75} x2={svgWidth/2 + 45} y2={92} stroke="#22c55e" strokeWidth={3} />
+            <polygon points={`${svgWidth/2 + 45},96 ${svgWidth/2 + 40},88 ${svgWidth/2 + 50},88`} fill="#22c55e" />
+            {/* Rotation indicator */}
+            <text x={svgWidth/2 + 68} y={68} fill="#a855f7" fontSize={13} fontWeight="700">t</text>
           </g>
         )}
 
         {appId === 'seesaw' && (
           <g>
             {/* Fulcrum */}
-            <polygon points={`${svgWidth/2},95 ${svgWidth/2 - 25},125 ${svgWidth/2 + 25},125`} fill="#4b5563" />
+            <polygon points={`${svgWidth/2},88 ${svgWidth/2 - 22},115 ${svgWidth/2 + 22},115`} fill="#4b5563" />
             {/* Board */}
-            <rect x={40} y={85} width={svgWidth - 80} height={10} rx={3} fill="#8b7355" transform={`rotate(-6, ${svgWidth/2}, 90)`} />
+            <rect x={35} y={78} width={svgWidth - 70} height={10} rx={3} fill="#8b7355" transform={`rotate(-5, ${svgWidth/2}, 83)`} />
             {/* Heavy weight (left, closer to center) */}
-            <g transform="rotate(-6, ${svgWidth/2}, 90)">
-              <circle cx={100} cy={70} r={25} fill={design.colors.error}>
-                <animate attributeName="cy" values="68;72;68" dur="2.5s" repeatCount="indefinite" />
-              </circle>
-              <text x={100} y={76} textAnchor="middle" fill="#fff" fontSize={14} fontWeight="700">5kg</text>
-              {/* Arrow down */}
-              <line x1={100} y1={100} x2={100} y2={115} stroke={design.colors.error} strokeWidth={2} />
-              <polygon points="100,120 95,112 105,112" fill={design.colors.error} />
-            </g>
+            <circle cx={90} cy={65} r={22} fill="#ef4444">
+              <animate attributeName="cy" values="63;67;63" dur="2.5s" repeatCount="indefinite" />
+            </circle>
+            <text x={90} y={71} textAnchor="middle" fill="#fff" fontSize={13} fontWeight="700">5kg</text>
             {/* Light weight (right, farther from center) */}
-            <g transform="rotate(-6, ${svgWidth/2}, 90)">
-              <circle cx={svgWidth - 80} cy={105} r={18} fill={design.colors.success}>
-                <animate attributeName="cy" values="107;103;107" dur="2.5s" repeatCount="indefinite" />
-              </circle>
-              <text x={svgWidth - 80} y={110} textAnchor="middle" fill="#fff" fontSize={12} fontWeight="700">2kg</text>
-            </g>
+            <circle cx={svgWidth - 75} cy={98} r={16} fill="#22c55e">
+              <animate attributeName="cy" values="100;96;100" dur="2.5s" repeatCount="indefinite" />
+            </circle>
+            <text x={svgWidth - 75} y={103} textAnchor="middle" fill="#fff" fontSize={11} fontWeight="700">2kg</text>
             {/* Labels */}
-            <text x={100} y={40} textAnchor="middle" fill={design.colors.textMuted} fontSize={10}>short r₁</text>
-            <text x={svgWidth - 80} y={40} textAnchor="middle" fill={design.colors.textMuted} fontSize={10}>long r₂</text>
+            <text x={90} y={35} textAnchor="middle" fill="#7a6890" fontSize={9}>short r1</text>
+            <text x={svgWidth - 75} y={35} textAnchor="middle" fill="#7a6890" fontSize={9}>long r2</text>
           </g>
         )}
 
         {appId === 'bicycle' && (
           <g>
             {/* Chainring */}
-            <circle cx={svgWidth/2} cy={70} r={40} fill="none" stroke="#4b5563" strokeWidth={5} />
-            <circle cx={svgWidth/2} cy={70} r={40} fill="none" stroke="#374151" strokeWidth={2} strokeDasharray="8,4" />
-            <circle cx={svgWidth/2} cy={70} r={10} fill="#1f2937" stroke="#4b5563" strokeWidth={2} />
+            <circle cx={svgWidth/2} cy={65} r={36} fill="none" stroke="#4b5563" strokeWidth={5} />
+            <circle cx={svgWidth/2} cy={65} r={36} fill="none" stroke="#374151" strokeWidth={2} strokeDasharray="7,3" />
+            <circle cx={svgWidth/2} cy={65} r={9} fill="#1f2937" stroke="#4b5563" strokeWidth={2} />
             {/* Chain teeth */}
-            {[...Array(16)].map((_, i) => (
+            {[...Array(14)].map((_, i) => (
               <circle key={i}
-                cx={svgWidth/2 + 38 * Math.cos(i * Math.PI / 8)}
-                cy={70 + 38 * Math.sin(i * Math.PI / 8)}
-                r={3} fill="#4b5563" />
+                cx={svgWidth/2 + 34 * Math.cos(i * Math.PI / 7)}
+                cy={65 + 34 * Math.sin(i * Math.PI / 7)}
+                r={2.5} fill="#4b5563" />
             ))}
             {/* Crank arm */}
-            <line x1={svgWidth/2} y1={70} x2={svgWidth/2} y2={120} stroke="#6b7280" strokeWidth={8} strokeLinecap="round" />
+            <line x1={svgWidth/2} y1={65} x2={svgWidth/2} y2={110} stroke="#6b7280" strokeWidth={7} strokeLinecap="round" />
             {/* Pedal */}
-            <rect x={svgWidth/2 - 18} y={115} width={36} height={12} rx={3} fill="#374151" stroke="#4b5563" strokeWidth={1} />
+            <rect x={svgWidth/2 - 16} y={107} width={32} height={11} rx={3} fill="#374151" stroke="#4b5563" strokeWidth={1} />
             {/* Foot */}
-            <ellipse cx={svgWidth/2} cy={112} rx={15} ry={8} fill={design.colors.accentSecondary} opacity={0.8} />
+            <ellipse cx={svgWidth/2} cy={104} rx={13} ry={7} fill="#f97316" opacity={0.8} />
             {/* Force arrow */}
-            <line x1={svgWidth/2} y1={132} x2={svgWidth/2} y2={138} stroke={design.colors.force} strokeWidth={4} />
-            <polygon points={`${svgWidth/2},142 ${svgWidth/2 - 6},134 ${svgWidth/2 + 6},134`} fill={design.colors.force} />
-            <text x={svgWidth/2 + 20} y={140} fill={design.colors.force} fontSize={12} fontWeight="600">F</text>
+            <line x1={svgWidth/2} y1={122} x2={svgWidth/2} y2={127} stroke="#22c55e" strokeWidth={3} />
+            <polygon points={`${svgWidth/2},130 ${svgWidth/2 - 5},123 ${svgWidth/2 + 5},123`} fill="#22c55e" />
+            <text x={svgWidth/2 + 18} y={128} fill="#22c55e" fontSize={11} fontWeight="600">F</text>
             {/* Crank length label */}
-            <line x1={svgWidth/2 + 12} y1={70} x2={svgWidth/2 + 12} y2={120} stroke={design.colors.accentSecondary} strokeWidth={1} strokeDasharray="3,3" />
-            <text x={svgWidth/2 + 28} y={100} fill={design.colors.accentSecondary} fontSize={10}>crank (r)</text>
+            <line x1={svgWidth/2 + 10} y1={65} x2={svgWidth/2 + 10} y2={110} stroke="#f97316" strokeWidth={1} strokeDasharray="3,3" />
+            <text x={svgWidth/2 + 26} y={92} fill="#f97316" fontSize={9}>crank (r)</text>
           </g>
         )}
       </svg>
@@ -624,251 +502,239 @@ const TorqueRenderer: React.FC<TorqueRendererProps> = ({
   // ============================================================================
 
   const renderHook = () => (
-    <div style={{
-      display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-      height: '100%', padding: design.spacing.xl,
-      background: `linear-gradient(180deg, ${design.colors.bgDeep} 0%, ${design.colors.bgPrimary} 50%, ${design.colors.bgSecondary} 100%)`,
-    }}>
-      <div style={{
-        fontSize: isMobile ? 56 : 64, marginBottom: design.spacing.lg,
-        filter: `drop-shadow(0 8px 24px ${design.colors.accentPrimary}40)`,
-        animation: 'float 3s ease-in-out infinite',
-      }}>
-        🚪
+    <div className="flex flex-col items-center justify-center min-h-[600px] px-6 py-12 text-center">
+      {/* Premium badge */}
+      <div className="inline-flex items-center gap-2 px-4 py-2 bg-purple-500/10 border border-purple-500/20 rounded-full mb-8">
+        <span className="w-2 h-2 bg-purple-400 rounded-full animate-pulse" />
+        <span className="text-sm font-medium text-purple-400 tracking-wide">PHYSICS EXPLORATION</span>
       </div>
 
-      <h1 style={{
-        fontSize: isMobile ? 22 : 26, fontWeight: 700, color: design.colors.textPrimary,
-        fontFamily: design.font.sans, textAlign: 'center', margin: 0, marginBottom: design.spacing.sm,
-        letterSpacing: '-0.5px',
-      }}>
+      {/* Main title with gradient */}
+      <h1 className="text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-white via-purple-100 to-orange-200 bg-clip-text text-transparent">
         The Door Handle Mystery
       </h1>
 
-      <p style={{
-        fontSize: isMobile ? 14 : 15, color: design.colors.textSecondary, fontFamily: design.font.sans,
-        textAlign: 'center', maxWidth: 300, lineHeight: 1.6, margin: 0, marginBottom: design.spacing.xl,
-      }}>
+      <p className="text-lg text-slate-400 max-w-md mb-10">
         Have you ever tried to push a door near its hinges? It's surprisingly hard!
       </p>
 
-      <div style={{
-        background: design.colors.accentPrimaryMuted,
-        border: `1px solid ${design.colors.accentPrimary}50`,
-        borderRadius: design.radius.lg, padding: '20px 24px',
-        maxWidth: 320, marginBottom: design.spacing.xl,
-      }}>
-        <p style={{
-          fontSize: isMobile ? 15 : 17, color: design.colors.accentPrimary, fontFamily: design.font.sans,
-          textAlign: 'center', fontWeight: 600, lineHeight: 1.5, margin: 0,
-        }}>
-          "Where should you push to need the <em>least</em> force?"
-        </p>
+      {/* Premium card */}
+      <div className="relative bg-gradient-to-br from-slate-800/80 to-slate-900/80 rounded-3xl p-8 max-w-xl w-full border border-slate-700/50 shadow-2xl shadow-black/20">
+        <div className="absolute inset-0 bg-gradient-to-br from-purple-500/5 via-transparent to-orange-500/5 rounded-3xl" />
+
+        <div className="relative">
+          <div className="text-7xl mb-6">
+            <span className="drop-shadow-lg" style={{ filter: 'drop-shadow(0 8px 24px rgba(168, 85, 247, 0.4))' }}>
+              {'\uD83D\uDEAA'}
+            </span>
+          </div>
+
+          <div className="space-y-4">
+            <p className="text-xl text-white/90 font-medium leading-relaxed">
+              Where should you push to need the <em className="text-purple-400">least</em> force?
+            </p>
+            <p className="text-lg text-slate-400 leading-relaxed">
+              Discover the physics behind every door handle placement!
+            </p>
+          </div>
+        </div>
       </div>
 
-      {renderButton("Let's Investigate →", () => goToPhase('predict'))}
+      {/* Premium CTA button */}
+      <button
+        onMouseDown={(e) => { e.preventDefault(); goToPhase(1); }}
+        className="mt-10 group relative px-10 py-5 bg-gradient-to-r from-purple-500 to-orange-500 text-white text-lg font-semibold rounded-2xl transition-all duration-300 hover:shadow-lg hover:shadow-purple-500/25 hover:scale-[1.02] active:scale-[0.98]"
+      >
+        <span className="relative z-10 flex items-center gap-3">
+          Let's Investigate
+          <svg className="w-5 h-5 transition-transform group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+          </svg>
+        </span>
+      </button>
 
-      <p style={{
-        fontSize: 12, color: design.colors.textMuted, fontFamily: design.font.sans,
-        marginTop: design.spacing.xl, letterSpacing: '0.5px',
-      }}>
-        TORQUE • LEVER ARMS • τ = F × r
-      </p>
-
-      <style>{`
-        @keyframes float {
-          0%, 100% { transform: translateY(0px); }
-          50% { transform: translateY(-8px); }
-        }
-      `}</style>
+      {/* Feature hints */}
+      <div className="mt-12 flex items-center gap-8 text-sm text-slate-500">
+        <div className="flex items-center gap-2">
+          <span className="text-purple-400">{'\u2726'}</span>
+          Interactive Lab
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="text-purple-400">{'\u2726'}</span>
+          Real-World Examples
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="text-purple-400">{'\u2726'}</span>
+          Knowledge Test
+        </div>
+      </div>
     </div>
   );
 
   const renderPredict = () => (
-    <div style={{
-      display: 'flex', flexDirection: 'column', alignItems: 'center',
-      padding: design.spacing.xl, height: '100%', background: design.colors.bgPrimary,
-    }}>
-      <div style={{ fontSize: 48, marginBottom: design.spacing.md }}>🤔</div>
-      <h2 style={{
-        fontSize: isMobile ? 20 : 22, fontWeight: 700, color: design.colors.textPrimary,
-        fontFamily: design.font.sans, margin: 0, marginBottom: design.spacing.sm,
-      }}>
-        Make Your Prediction
-      </h2>
-      <p style={{
-        fontSize: isMobile ? 14 : 15, color: design.colors.textSecondary, fontFamily: design.font.sans,
-        textAlign: 'center', margin: 0, marginBottom: design.spacing.lg,
-      }}>
-        To open a door with the least effort, where should you push?
-      </p>
+    <div className="flex flex-col items-center px-6 py-8">
+      <h2 className="text-2xl md:text-3xl font-bold text-white mb-2">Make Your Prediction</h2>
+      <p className="text-slate-400 mb-8">To open a door with the least effort, where should you push?</p>
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: design.spacing.sm, width: '100%', maxWidth: 340 }}>
+      <div className="flex flex-col gap-3 w-full max-w-md mb-8">
         {[
-          { id: 'near_hinge', label: 'Near the hinge (close to pivot)', icon: '📍' },
-          { id: 'middle', label: 'In the middle of the door', icon: '🎯' },
-          { id: 'far_edge', label: 'Far from hinge (at the handle)', icon: '🚪' }
+          { id: 'near_hinge', label: 'Near the hinge (close to pivot)', icon: '\uD83D\uDCCD' },
+          { id: 'middle', label: 'In the middle of the door', icon: '\uD83C\uDFAF' },
+          { id: 'far_edge', label: 'Far from hinge (at the handle)', icon: '\uD83D\uDEAA' }
         ].map((option) => (
           <button
             key={option.id}
-            onMouseDown={() => { setPrediction(option.id); emit('prediction', { prediction: option.id }); }}
-            style={{
-              padding: '16px 20px', borderRadius: design.radius.md,
-              border: prediction === option.id ? `2px solid ${design.colors.accentPrimary}` : `1px solid ${design.colors.border}`,
-              background: prediction === option.id ? design.colors.accentPrimaryMuted : design.colors.bgSecondary,
-              cursor: 'pointer', display: 'flex', alignItems: 'center', gap: design.spacing.md,
-              transition: 'all 0.2s ease', outline: 'none',
+            onMouseDown={(e) => {
+              e.preventDefault();
+              const now = Date.now();
+              if (now - lastClickRef.current < 200) return;
+              lastClickRef.current = now;
+              setPrediction(option.id);
+              playSound(option.id === 'far_edge' ? 'success' : 'click');
+              emitEvent('prediction_made', { prediction: option.id });
             }}
+            className={`p-4 rounded-xl border-2 transition-all duration-300 flex items-center gap-4 ${
+              prediction === option.id
+                ? 'border-purple-500 bg-purple-500/20'
+                : 'border-slate-700 bg-slate-800/50 hover:bg-slate-700/50'
+            }`}
           >
-            <span style={{ fontSize: 24 }}>{option.icon}</span>
-            <span style={{ fontSize: 14, color: design.colors.textPrimary, fontFamily: design.font.sans, fontWeight: 500, textAlign: 'left' }}>
-              {option.label}
-            </span>
+            <span className="text-2xl">{option.icon}</span>
+            <span className="text-white font-medium text-left">{option.label}</span>
           </button>
         ))}
       </div>
 
       {prediction && (
-        <div style={{ marginTop: design.spacing.xl }}>
-          {renderButton('Test It! →', () => goToPhase('play'))}
-        </div>
+        <button
+          onMouseDown={(e) => { e.preventDefault(); goToPhase(2); }}
+          className="px-8 py-4 bg-gradient-to-r from-purple-600 to-orange-600 text-white font-semibold rounded-xl hover:shadow-lg hover:shadow-purple-500/25 transition-all"
+        >
+          Test It! {'\u2192'}
+        </button>
       )}
     </div>
   );
 
   const renderPlay = () => (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', background: design.colors.bgPrimary }}>
-      {renderVisualization()}
+    <div className="flex flex-col items-center px-6 py-8">
+      <h2 className="text-2xl font-bold text-white mb-4">Torque Laboratory</h2>
 
-      <div style={{
-        flex: 1, padding: design.spacing.lg, display: 'flex', flexDirection: 'column',
-        alignItems: 'center', gap: design.spacing.md, background: design.colors.bgSecondary,
-      }}>
-        {/* Slider control */}
-        <div style={{ width: '100%', maxWidth: 300 }}>
-          <p style={{ fontSize: 13, color: design.colors.textSecondary, marginBottom: design.spacing.sm, fontFamily: design.font.sans }}>
-            Push position: <strong style={{ color: design.colors.accentPrimary }}>{(pushPosition * 100).toFixed(0)}%</strong> from hinge
-          </p>
-          <input
-            type="range"
-            min="0.1"
-            max="1"
-            step="0.05"
-            value={pushPosition}
-            onChange={(e) => { setPushPosition(parseFloat(e.target.value)); resetDoor(); emit('interaction', { position: e.target.value }, 'push_position'); }}
-            disabled={isPushing}
-            style={{ width: '100%', accentColor: design.colors.accentPrimary, height: 6 }}
-          />
-          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, color: design.colors.textMuted, fontFamily: design.font.sans, marginTop: 4 }}>
-            <span>Near hinge</span>
-            <span>At handle</span>
-          </div>
-        </div>
-
-        <div style={{ display: 'flex', gap: design.spacing.sm }}>
-          {doorAngle === 0 && renderButton('👆 Push Door!', pushDoor, 'success', isPushing)}
-          {doorAngle > 0 && renderButton('↺ Reset', resetDoor, 'secondary')}
-        </div>
-
-        <p style={{ fontSize: 13, color: design.colors.textMuted, fontFamily: design.font.sans, margin: 0 }}>
-          Experiments: {experimentCount} • Try different positions!
-        </p>
-
-        {experimentCount >= 3 && renderButton('I see the pattern! →', () => goToPhase('review'))}
+      <div className="bg-slate-800/50 rounded-2xl p-4 mb-6 max-w-md w-full border border-slate-700/50">
+        {renderVisualization()}
       </div>
+
+      {/* Slider control */}
+      <div className="w-full max-w-md mb-6">
+        <label className="text-sm text-slate-300 mb-2 block">
+          Push position: <span className="text-purple-400 font-semibold">{(pushPosition * 100).toFixed(0)}%</span> from hinge
+        </label>
+        <input
+          type="range"
+          min="0.1"
+          max="1"
+          step="0.05"
+          value={pushPosition}
+          onChange={(e) => {
+            setPushPosition(parseFloat(e.target.value));
+            resetDoor();
+            emitEvent('parameter_changed', { position: e.target.value });
+          }}
+          disabled={isPushing}
+          className="w-full accent-purple-500 h-2"
+        />
+        <div className="flex justify-between text-xs text-slate-500 mt-1">
+          <span>Near hinge</span>
+          <span>At handle</span>
+        </div>
+      </div>
+
+      <div className="flex gap-3 mb-6">
+        {doorAngle === 0 ? (
+          <button
+            onMouseDown={(e) => { e.preventDefault(); pushDoor(); }}
+            disabled={isPushing}
+            className="px-6 py-3 bg-gradient-to-r from-green-500 to-emerald-600 text-white font-semibold rounded-xl disabled:opacity-50"
+          >
+            {'\uD83D\uDC46'} Push Door!
+          </button>
+        ) : (
+          <button
+            onMouseDown={(e) => { e.preventDefault(); resetDoor(); }}
+            className="px-6 py-3 bg-slate-700 text-white font-semibold rounded-xl hover:bg-slate-600"
+          >
+            {'\u21BA'} Reset
+          </button>
+        )}
+        <button
+          onMouseDown={(e) => { e.preventDefault(); setShowForceVector(!showForceVector); }}
+          className={`px-4 py-3 rounded-xl font-medium ${showForceVector ? 'bg-blue-600' : 'bg-slate-700'} text-white`}
+        >
+          {showForceVector ? '\uD83D\uDC41 Vectors ON' : '\uD83D\uDC41 Vectors OFF'}
+        </button>
+      </div>
+
+      <p className="text-slate-400 text-sm mb-6">
+        Experiments: {experimentCount} - Try different positions!
+      </p>
+
+      {experimentCount >= 3 && (
+        <button
+          onMouseDown={(e) => { e.preventDefault(); goToPhase(3); }}
+          className="px-8 py-4 bg-gradient-to-r from-purple-600 to-orange-600 text-white font-semibold rounded-xl"
+        >
+          I see the pattern! {'\u2192'}
+        </button>
+      )}
     </div>
   );
 
   const renderReview = () => (
-    <div style={{
-      display: 'flex', flexDirection: 'column', alignItems: 'center',
-      padding: design.spacing.xl, height: '100%', background: design.colors.bgPrimary, overflowY: 'auto',
-    }}>
-      <div style={{ fontSize: 48, marginBottom: design.spacing.md }}>💡</div>
-      <h2 style={{
-        fontSize: isMobile ? 20 : 22, fontWeight: 700, color: design.colors.textPrimary,
-        fontFamily: design.font.sans, margin: 0, marginBottom: design.spacing.md,
-      }}>
-        Torque = Force × Lever Arm
-      </h2>
+    <div className="flex flex-col items-center px-6 py-8">
+      <div className="text-5xl mb-4">{'\uD83D\uDCA1'}</div>
+      <h2 className="text-2xl md:text-3xl font-bold text-white mb-6">Torque = Force x Lever Arm</h2>
 
-      <div style={{
-        background: design.colors.bgSecondary, borderRadius: design.radius.lg,
-        padding: design.spacing.lg, marginBottom: design.spacing.lg, maxWidth: 340, width: '100%',
-        border: `1px solid ${design.colors.border}`,
-      }}>
-        <p style={{
-          fontSize: 24, color: design.colors.accentPrimary, fontFamily: design.font.mono,
-          textAlign: 'center', fontWeight: 700, margin: 0, marginBottom: design.spacing.sm,
-        }}>
-          τ = F × r
+      <div className="bg-gradient-to-br from-purple-900/40 to-slate-900/60 rounded-2xl p-6 max-w-lg w-full border border-purple-500/30 mb-6">
+        <p className="text-3xl text-purple-400 font-mono font-bold text-center mb-4">
+          {'\u03C4'} = F {'\u00D7'} r
         </p>
-        <p style={{
-          fontSize: 14, color: design.colors.textPrimary, fontFamily: design.font.sans,
-          textAlign: 'center', lineHeight: 1.5, margin: 0,
-        }}>
-          To rotate something, you need <em style={{ color: design.colors.accentPrimary }}>torque</em>.
+        <p className="text-slate-300 text-center leading-relaxed">
+          To rotate something, you need <em className="text-purple-400">torque</em>.
           Same torque can come from big force + small distance, or small force + big distance!
         </p>
       </div>
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: design.spacing.sm, maxWidth: 340, width: '100%', marginBottom: design.spacing.md }}>
-        <div style={{
-          background: design.colors.successMuted, border: `1px solid ${design.colors.success}40`,
-          borderRadius: design.radius.md, padding: design.spacing.md,
-        }}>
-          <p style={{ fontSize: 14, fontWeight: 600, color: design.colors.success, fontFamily: design.font.sans, margin: 0, marginBottom: 4 }}>
-            Far from hinge (large r)
-          </p>
-          <p style={{ fontSize: 13, color: design.colors.textPrimary, fontFamily: design.font.sans, lineHeight: 1.5, margin: 0 }}>
-            Small force gives enough torque → Easy!
-          </p>
+      <div className="grid gap-4 max-w-lg w-full mb-6">
+        <div className="bg-emerald-500/10 border border-emerald-500/30 rounded-xl p-4">
+          <p className="font-semibold text-emerald-400 mb-1">Far from hinge (large r)</p>
+          <p className="text-slate-300 text-sm">Small force gives enough torque {'\u2192'} Easy!</p>
         </div>
-
-        <div style={{
-          background: design.colors.errorMuted, border: `1px solid ${design.colors.error}40`,
-          borderRadius: design.radius.md, padding: design.spacing.md,
-        }}>
-          <p style={{ fontSize: 14, fontWeight: 600, color: design.colors.error, fontFamily: design.font.sans, margin: 0, marginBottom: 4 }}>
-            Near hinge (small r)
-          </p>
-          <p style={{ fontSize: 13, color: design.colors.textPrimary, fontFamily: design.font.sans, lineHeight: 1.5, margin: 0 }}>
-            Need huge force for same torque → Hard!
-          </p>
+        <div className="bg-red-500/10 border border-red-500/30 rounded-xl p-4">
+          <p className="font-semibold text-red-400 mb-1">Near hinge (small r)</p>
+          <p className="text-slate-300 text-sm">Need huge force for same torque {'\u2192'} Hard!</p>
         </div>
       </div>
 
-      <p style={{
-        fontSize: 14, color: prediction === 'far_edge' ? design.colors.success : design.colors.textSecondary,
-        fontFamily: design.font.sans, margin: 0, marginBottom: design.spacing.lg,
-      }}>
-        Your prediction: {prediction === 'far_edge' ? '✓ Correct!' : 'Now you understand!'}
+      <p className={`text-sm mb-6 ${prediction === 'far_edge' ? 'text-emerald-400' : 'text-slate-400'}`}>
+        Your prediction: {prediction === 'far_edge' ? '\u2713 Correct!' : 'Now you understand!'}
       </p>
 
-      {renderButton('What About a Sticky Hinge? →', () => goToPhase('twist_predict'))}
+      <button
+        onMouseDown={(e) => { e.preventDefault(); goToPhase(4); }}
+        className="px-8 py-4 bg-gradient-to-r from-amber-500 to-orange-600 text-white font-semibold rounded-xl"
+      >
+        What About a Sticky Hinge? {'\u2192'}
+      </button>
     </div>
   );
 
   const renderTwistPredict = () => (
-    <div style={{
-      display: 'flex', flexDirection: 'column', alignItems: 'center',
-      padding: design.spacing.xl, height: '100%', background: design.colors.bgPrimary,
-    }}>
-      <div style={{ fontSize: 48, marginBottom: design.spacing.md }}>🔥</div>
-      <h2 style={{
-        fontSize: isMobile ? 20 : 22, fontWeight: 700, color: design.colors.textPrimary,
-        fontFamily: design.font.sans, margin: 0, marginBottom: design.spacing.sm,
-      }}>
-        Plot Twist: Sticky Hinge!
-      </h2>
-      <p style={{
-        fontSize: isMobile ? 14 : 15, color: design.colors.textSecondary, fontFamily: design.font.sans,
-        textAlign: 'center', margin: 0, marginBottom: design.spacing.lg,
-      }}>
-        What if the hinge is rusty and sticky?
-      </p>
+    <div className="flex flex-col items-center px-6 py-8">
+      <div className="text-5xl mb-4">{'\uD83D\uDD25'}</div>
+      <h2 className="text-2xl md:text-3xl font-bold text-amber-400 mb-2">Plot Twist: Sticky Hinge!</h2>
+      <p className="text-slate-400 mb-8">What if the hinge is rusty and sticky?</p>
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: design.spacing.sm, width: '100%', maxWidth: 340 }}>
+      <div className="flex flex-col gap-3 w-full max-w-md mb-8">
         {[
           { id: 'same', label: "Same force - friction doesn't matter" },
           { id: 'more', label: "More force needed - must overcome friction" },
@@ -876,540 +742,368 @@ const TorqueRenderer: React.FC<TorqueRendererProps> = ({
         ].map((option) => (
           <button
             key={option.id}
-            onMouseDown={() => { setTwistPrediction(option.id); emit('prediction', { twistPrediction: option.id }); }}
-            style={{
-              padding: '16px 20px', borderRadius: design.radius.md,
-              border: twistPrediction === option.id ? `2px solid ${design.colors.accentPrimary}` : `1px solid ${design.colors.border}`,
-              background: twistPrediction === option.id ? design.colors.accentPrimaryMuted : design.colors.bgSecondary,
-              cursor: 'pointer', textAlign: 'left', transition: 'all 0.2s ease', outline: 'none',
+            onMouseDown={(e) => {
+              e.preventDefault();
+              const now = Date.now();
+              if (now - lastClickRef.current < 200) return;
+              lastClickRef.current = now;
+              setTwistPrediction(option.id);
+              playSound(option.id === 'more' ? 'success' : 'click');
+              emitEvent('twist_prediction_made', { twistPrediction: option.id });
             }}
+            className={`p-4 rounded-xl border-2 transition-all duration-300 text-left ${
+              twistPrediction === option.id
+                ? 'border-amber-500 bg-amber-500/20'
+                : 'border-slate-700 bg-slate-800/50 hover:bg-slate-700/50'
+            }`}
           >
-            <span style={{ fontSize: 14, color: design.colors.textPrimary, fontFamily: design.font.sans }}>
-              {option.label}
-            </span>
+            <span className="text-white">{option.label}</span>
           </button>
         ))}
       </div>
 
       {twistPrediction && (
-        <div style={{ marginTop: design.spacing.xl }}>
-          {renderButton('Test Sticky Hinge! →', () => { setHasFriction(true); resetDoor(); goToPhase('twist_play'); })}
-        </div>
+        <button
+          onMouseDown={(e) => {
+            e.preventDefault();
+            setHasFriction(true);
+            resetDoor();
+            goToPhase(5);
+          }}
+          className="px-8 py-4 bg-gradient-to-r from-amber-500 to-orange-600 text-white font-semibold rounded-xl"
+        >
+          Test Sticky Hinge! {'\u2192'}
+        </button>
       )}
     </div>
   );
 
   const renderTwistPlay = () => (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', background: design.colors.bgPrimary }}>
-      {renderVisualization()}
+    <div className="flex flex-col items-center px-6 py-8">
+      <h2 className="text-2xl font-bold text-amber-400 mb-4">Friction Experiment</h2>
 
-      <div style={{
-        flex: 1, padding: design.spacing.lg, display: 'flex', flexDirection: 'column',
-        alignItems: 'center', gap: design.spacing.md, background: design.colors.bgSecondary,
-      }}>
-        {/* Hinge toggle */}
-        <div style={{ display: 'flex', gap: design.spacing.sm, alignItems: 'center' }}>
-          <span style={{ fontSize: 13, color: design.colors.textSecondary, fontFamily: design.font.sans }}>Hinge:</span>
-          <button onMouseDown={() => { setHasFriction(false); resetDoor(); }} disabled={isPushing}
-            style={{
-              padding: '8px 16px', borderRadius: design.radius.md, border: 'none',
-              background: !hasFriction ? design.colors.success : design.colors.bgTertiary,
-              color: !hasFriction ? '#fff' : design.colors.textSecondary,
-              fontWeight: 600, fontSize: 13, cursor: isPushing ? 'not-allowed' : 'pointer',
-            }}>
-            Smooth
-          </button>
-          <button onMouseDown={() => { setHasFriction(true); resetDoor(); }} disabled={isPushing}
-            style={{
-              padding: '8px 16px', borderRadius: design.radius.md, border: 'none',
-              background: hasFriction ? design.colors.accentSecondary : design.colors.bgTertiary,
-              color: hasFriction ? '#fff' : design.colors.textSecondary,
-              fontWeight: 600, fontSize: 13, cursor: isPushing ? 'not-allowed' : 'pointer',
-            }}>
-            🔥 Sticky
-          </button>
-        </div>
-
-        {/* Slider */}
-        <div style={{ width: '100%', maxWidth: 300 }}>
-          <p style={{ fontSize: 13, color: design.colors.textSecondary, marginBottom: design.spacing.sm, fontFamily: design.font.sans }}>
-            Push position: <strong style={{ color: design.colors.accentPrimary }}>{(pushPosition * 100).toFixed(0)}%</strong>
-          </p>
-          <input type="range" min="0.1" max="1" step="0.05" value={pushPosition}
-            onChange={(e) => { setPushPosition(parseFloat(e.target.value)); resetDoor(); }}
-            disabled={isPushing} style={{ width: '100%', accentColor: design.colors.accentPrimary }} />
-        </div>
-
-        <div style={{ display: 'flex', gap: design.spacing.sm }}>
-          {doorAngle === 0 && renderButton('👆 Push!', pushDoor, 'success', isPushing)}
-          {doorAngle > 0 && renderButton('↺ Reset', resetDoor, 'secondary')}
-        </div>
-
-        <p style={{ fontSize: 13, color: design.colors.textMuted, fontFamily: design.font.sans, margin: 0 }}>
-          Compare smooth vs sticky hinge forces!
-        </p>
-
-        {experimentCount >= 5 && renderButton('I understand! →', () => goToPhase('twist_review'))}
+      <div className="bg-slate-800/50 rounded-2xl p-4 mb-6 max-w-md w-full border border-slate-700/50">
+        {renderVisualization()}
       </div>
+
+      {/* Hinge toggle */}
+      <div className="flex gap-3 items-center mb-6">
+        <span className="text-slate-300 text-sm">Hinge:</span>
+        <button
+          onMouseDown={(e) => { e.preventDefault(); setHasFriction(false); resetDoor(); }}
+          disabled={isPushing}
+          className={`px-4 py-2 rounded-lg font-semibold text-sm ${!hasFriction ? 'bg-emerald-600 text-white' : 'bg-slate-700 text-slate-400'}`}
+        >
+          Smooth
+        </button>
+        <button
+          onMouseDown={(e) => { e.preventDefault(); setHasFriction(true); resetDoor(); }}
+          disabled={isPushing}
+          className={`px-4 py-2 rounded-lg font-semibold text-sm ${hasFriction ? 'bg-orange-600 text-white' : 'bg-slate-700 text-slate-400'}`}
+        >
+          {'\uD83D\uDD25'} Sticky
+        </button>
+      </div>
+
+      {/* Slider */}
+      <div className="w-full max-w-md mb-6">
+        <label className="text-sm text-slate-300 mb-2 block">
+          Push position: <span className="text-purple-400 font-semibold">{(pushPosition * 100).toFixed(0)}%</span>
+        </label>
+        <input
+          type="range"
+          min="0.1"
+          max="1"
+          step="0.05"
+          value={pushPosition}
+          onChange={(e) => { setPushPosition(parseFloat(e.target.value)); resetDoor(); }}
+          disabled={isPushing}
+          className="w-full accent-purple-500"
+        />
+      </div>
+
+      <div className="flex gap-3 mb-6">
+        {doorAngle === 0 ? (
+          <button
+            onMouseDown={(e) => { e.preventDefault(); pushDoor(); }}
+            disabled={isPushing}
+            className="px-6 py-3 bg-gradient-to-r from-green-500 to-emerald-600 text-white font-semibold rounded-xl disabled:opacity-50"
+          >
+            {'\uD83D\uDC46'} Push!
+          </button>
+        ) : (
+          <button
+            onMouseDown={(e) => { e.preventDefault(); resetDoor(); }}
+            className="px-6 py-3 bg-slate-700 text-white font-semibold rounded-xl hover:bg-slate-600"
+          >
+            {'\u21BA'} Reset
+          </button>
+        )}
+      </div>
+
+      <p className="text-slate-400 text-sm mb-6">Compare smooth vs sticky hinge forces!</p>
+
+      {experimentCount >= 5 && (
+        <button
+          onMouseDown={(e) => { e.preventDefault(); goToPhase(6); }}
+          className="px-8 py-4 bg-gradient-to-r from-amber-500 to-orange-600 text-white font-semibold rounded-xl"
+        >
+          I understand! {'\u2192'}
+        </button>
+      )}
     </div>
   );
 
   const renderTwistReview = () => (
-    <div style={{
-      display: 'flex', flexDirection: 'column', alignItems: 'center',
-      padding: design.spacing.xl, height: '100%', background: design.colors.bgPrimary,
-    }}>
-      <div style={{ fontSize: 48, marginBottom: design.spacing.md }}>⚙️</div>
-      <h2 style={{
-        fontSize: isMobile ? 20 : 22, fontWeight: 700, color: design.colors.textPrimary,
-        fontFamily: design.font.sans, margin: 0, marginBottom: design.spacing.md,
-      }}>
-        Friction Adds Resistance
-      </h2>
+    <div className="flex flex-col items-center px-6 py-8">
+      <div className="text-5xl mb-4">{'\u2699\uFE0F'}</div>
+      <h2 className="text-2xl md:text-3xl font-bold text-amber-400 mb-6">Friction Adds Resistance</h2>
 
-      <div style={{
-        background: design.colors.bgSecondary, borderRadius: design.radius.lg,
-        padding: design.spacing.lg, marginBottom: design.spacing.md, maxWidth: 340, width: '100%',
-        border: `1px solid ${design.colors.border}`,
-      }}>
-        <p style={{
-          fontSize: 16, color: design.colors.accentSecondary, fontFamily: design.font.sans,
-          textAlign: 'center', fontWeight: 600, margin: 0, marginBottom: design.spacing.sm,
-        }}>
+      <div className="bg-gradient-to-br from-amber-900/40 to-slate-900/60 rounded-2xl p-6 max-w-lg w-full border border-amber-500/30 mb-6">
+        <p className="text-orange-400 font-semibold text-center text-lg mb-3">
           Friction creates a resisting torque!
         </p>
-        <p style={{
-          fontSize: 14, color: design.colors.textPrimary, fontFamily: design.font.sans,
-          textAlign: 'center', lineHeight: 1.5, margin: 0,
-        }}>
+        <p className="text-slate-300 text-center leading-relaxed">
           You need extra torque to overcome the friction at the hinge. This means more force at any position!
         </p>
       </div>
 
-      <div style={{
-        background: design.colors.accentPrimaryMuted, border: `1px solid ${design.colors.accentPrimary}40`,
-        borderRadius: design.radius.lg, padding: design.spacing.md, marginBottom: design.spacing.lg,
-        maxWidth: 340, width: '100%',
-      }}>
-        <p style={{
-          fontSize: 14, color: design.colors.textPrimary, fontFamily: design.font.sans,
-          textAlign: 'center', margin: 0,
-        }}>
-          <strong style={{ color: design.colors.success }}>Smooth:</strong> τ needed = 15 N·m<br />
-          <strong style={{ color: design.colors.accentSecondary }}>Sticky:</strong> τ needed = 30 N·m (2× more!)
+      <div className="bg-purple-500/10 border border-purple-500/30 rounded-xl p-4 max-w-lg w-full mb-6">
+        <p className="text-white text-center">
+          <span className="text-emerald-400 font-semibold">Smooth:</span> {'\u03C4'} needed = 15 N-m<br />
+          <span className="text-orange-400 font-semibold">Sticky:</span> {'\u03C4'} needed = 30 N-m (2x more!)
         </p>
       </div>
 
-      <p style={{
-        fontSize: 14, color: twistPrediction === 'more' ? design.colors.success : design.colors.textSecondary,
-        fontFamily: design.font.sans, margin: 0, marginBottom: design.spacing.lg,
-      }}>
-        Your prediction: {twistPrediction === 'more' ? '✓ Correct!' : 'Now you understand!'}
+      <p className={`text-sm mb-6 ${twistPrediction === 'more' ? 'text-emerald-400' : 'text-slate-400'}`}>
+        Your prediction: {twistPrediction === 'more' ? '\u2713 Correct!' : 'Now you understand!'}
       </p>
 
-      {renderButton('See Real-World Examples →', () => goToPhase('transfer'))}
+      <button
+        onMouseDown={(e) => { e.preventDefault(); goToPhase(7); }}
+        className="px-8 py-4 bg-gradient-to-r from-blue-600 to-cyan-600 text-white font-semibold rounded-xl"
+      >
+        See Real-World Examples {'\u2192'}
+      </button>
     </div>
   );
 
-  // ============================================================================
-  // TRANSFER - Sequential Application Navigation
-  // ============================================================================
   const renderTransfer = () => {
     const app = applications[activeApp];
     const allAppsCompleted = completedApps.size >= applications.length;
 
     return (
-      <div style={{
-        display: 'flex', flexDirection: 'column', height: '100%',
-        padding: design.spacing.lg, background: design.colors.bgPrimary,
-      }}>
-        <h2 style={{
-          fontSize: isMobile ? 18 : 20, fontWeight: 700, color: design.colors.textPrimary,
-          fontFamily: design.font.sans, textAlign: 'center', margin: 0, marginBottom: design.spacing.md,
-        }}>
-          Torque in the Real World
-        </h2>
+      <div className="flex flex-col items-center px-6 py-8">
+        <h2 className="text-2xl font-bold text-white mb-2">Torque in the Real World</h2>
+        <p className="text-slate-400 text-sm mb-6">
+          Application {activeApp + 1} of {applications.length} - {completedApps.size} completed
+        </p>
 
-        {/* Progress indicator */}
-        <div style={{
-          display: 'flex', justifyContent: 'center', gap: design.spacing.xs,
-          marginBottom: design.spacing.md,
-        }}>
+        {/* Progress dots */}
+        <div className="flex gap-2 mb-6">
           {applications.map((_, idx) => (
-            <div key={idx} style={{
-              width: 10, height: 10, borderRadius: design.radius.full,
-              background: completedApps.has(idx)
-                ? design.colors.success
-                : idx === activeApp
-                  ? design.colors.accentPrimary
-                  : design.colors.bgTertiary,
-              transition: 'all 0.3s ease',
-            }} />
+            <div key={idx} className={`w-3 h-3 rounded-full transition-all ${
+              completedApps.has(idx) ? 'bg-emerald-500' : idx === activeApp ? 'bg-purple-500' : 'bg-slate-700'
+            }`} />
           ))}
         </div>
 
-        <p style={{
-          fontSize: 12, color: design.colors.textMuted, fontFamily: design.font.sans,
-          textAlign: 'center', margin: 0, marginBottom: design.spacing.md,
-        }}>
-          Application {activeApp + 1} of {applications.length} • {completedApps.size} completed
-        </p>
-
         {/* Application card */}
-        <div style={{
-          flex: 1, background: design.colors.bgSecondary, borderRadius: design.radius.lg,
-          padding: design.spacing.lg, display: 'flex', flexDirection: 'column',
-          border: `1px solid ${design.colors.border}`, overflow: 'auto',
-        }}>
-          {/* Graphic */}
-          <div style={{ marginBottom: design.spacing.md }}>
-            {renderApplicationGraphic(app.id)}
-          </div>
+        <div className="bg-slate-800/50 rounded-2xl p-6 max-w-md w-full border border-slate-700/50 mb-6">
+          {renderApplicationGraphic(app.id)}
 
-          <h3 style={{
-            fontSize: isMobile ? 16 : 18, fontWeight: 700, color: app.color,
-            fontFamily: design.font.sans, margin: 0, marginBottom: design.spacing.sm, textAlign: 'center',
-          }}>
-            {app.title}
-          </h3>
+          <h3 className="text-xl font-bold text-purple-400 text-center mt-4 mb-2">{app.title}</h3>
+          <p className="text-slate-300 text-center text-sm mb-4">{app.description}</p>
 
-          <p style={{
-            fontSize: 14, color: design.colors.textPrimary, fontFamily: design.font.sans,
-            lineHeight: 1.6, margin: 0, marginBottom: design.spacing.md, textAlign: 'center',
-          }}>
-            {app.description}
-          </p>
-
-          <div style={{ display: 'flex', gap: design.spacing.sm }}>
-            <div style={{
-              flex: 1, background: design.colors.bgTertiary, borderRadius: design.radius.md,
-              padding: design.spacing.sm, textAlign: 'center',
-            }}>
-              <p style={{ fontSize: 10, color: design.colors.textMuted, margin: 0, marginBottom: 2 }}>Formula</p>
-              <p style={{ fontSize: 12, color: design.colors.textPrimary, fontFamily: design.font.mono, margin: 0 }}>
-                {app.formula}
-              </p>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="bg-slate-700/50 rounded-lg p-3 text-center">
+              <p className="text-xs text-slate-500 mb-1">Formula</p>
+              <p className="text-white font-mono text-sm">{app.formula}</p>
             </div>
-            <div style={{
-              flex: 1, background: design.colors.bgTertiary, borderRadius: design.radius.md,
-              padding: design.spacing.sm, textAlign: 'center',
-            }}>
-              <p style={{ fontSize: 10, color: design.colors.textMuted, margin: 0, marginBottom: 2 }}>Key Insight</p>
-              <p style={{ fontSize: 11, color: design.colors.textPrimary, fontFamily: design.font.sans, margin: 0 }}>
-                {app.insight}
-              </p>
+            <div className="bg-slate-700/50 rounded-lg p-3 text-center">
+              <p className="text-xs text-slate-500 mb-1">Key Insight</p>
+              <p className="text-white text-xs">{app.insight}</p>
             </div>
           </div>
 
-          {/* Mark as read button */}
           {!completedApps.has(activeApp) && (
-            <div style={{ marginTop: design.spacing.md }}>
-              <button
-                onMouseDown={() => {
-                  if (navigationLockRef.current) return;
-                  navigationLockRef.current = true;
-                  const newCompleted = new Set(completedApps);
-                  newCompleted.add(activeApp);
-                  setCompletedApps(newCompleted);
-                  emit('interaction', { app: app.id, action: 'marked_read' });
-                  // Auto-advance to next if not last
-                  if (activeApp < applications.length - 1) {
-                    setTimeout(() => setActiveApp(activeApp + 1), 300);
-                  }
-                  setTimeout(() => { navigationLockRef.current = false; }, 400);
-                }}
-                style={{
-                  width: '100%',
-                  padding: '12px 20px',
-                  borderRadius: design.radius.md,
-                  border: `1px solid ${design.colors.success}50`,
-                  background: design.colors.successMuted,
-                  color: design.colors.success,
-                  fontWeight: 600,
-                  fontSize: 14,
-                  fontFamily: design.font.sans,
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: 8,
-                }}
-              >
-                ✓ Mark "{app.title}" as Read
-              </button>
-            </div>
+            <button
+              onMouseDown={(e) => {
+                e.preventDefault();
+                const now = Date.now();
+                if (now - lastClickRef.current < 200) return;
+                lastClickRef.current = now;
+                const newCompleted = new Set(completedApps);
+                newCompleted.add(activeApp);
+                setCompletedApps(newCompleted);
+                playSound('complete');
+                emitEvent('app_explored', { app: app.id });
+                if (activeApp < applications.length - 1) {
+                  setTimeout(() => setActiveApp(activeApp + 1), 300);
+                }
+              }}
+              className="w-full mt-4 py-3 bg-emerald-500/20 border border-emerald-500/50 text-emerald-400 font-semibold rounded-xl"
+            >
+              {'\u2713'} Mark "{app.title}" as Read
+            </button>
           )}
 
-          {/* Already read indicator */}
           {completedApps.has(activeApp) && (
-            <div style={{
-              marginTop: design.spacing.md,
-              padding: '10px',
-              background: design.colors.successMuted,
-              borderRadius: design.radius.md,
-              textAlign: 'center',
-            }}>
-              <span style={{ color: design.colors.success, fontSize: 13, fontFamily: design.font.sans }}>
-                ✓ Completed
-              </span>
+            <div className="mt-4 py-3 bg-emerald-500/10 rounded-xl text-center">
+              <span className="text-emerald-400 text-sm">{'\u2713'} Completed</span>
             </div>
           )}
         </div>
 
         {/* Navigation */}
-        <div style={{
-          display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-          marginTop: design.spacing.md, gap: design.spacing.sm,
-        }}>
-          {renderButton(
-            '← Previous',
-            () => setActiveApp(Math.max(0, activeApp - 1)),
-            'ghost',
-            activeApp === 0
-          )}
+        <div className="flex gap-4">
+          <button
+            onMouseDown={(e) => { e.preventDefault(); setActiveApp(Math.max(0, activeApp - 1)); }}
+            disabled={activeApp === 0}
+            className="px-4 py-2 bg-slate-700 text-slate-300 rounded-lg disabled:opacity-50"
+          >
+            {'\u2190'} Previous
+          </button>
 
           {activeApp < applications.length - 1 ? (
-            renderButton(
-              'Next →',
-              () => setActiveApp(activeApp + 1),
-              'secondary',
-              !completedApps.has(activeApp)
-            )
+            <button
+              onMouseDown={(e) => { e.preventDefault(); setActiveApp(activeApp + 1); }}
+              disabled={!completedApps.has(activeApp)}
+              className="px-4 py-2 bg-slate-700 text-slate-300 rounded-lg disabled:opacity-50"
+            >
+              Next {'\u2192'}
+            </button>
           ) : allAppsCompleted ? (
-            renderButton('Take the Quiz →', () => goToPhase('test'))
+            <button
+              onMouseDown={(e) => { e.preventDefault(); goToPhase(8); }}
+              className="px-6 py-2 bg-gradient-to-r from-blue-600 to-cyan-600 text-white font-semibold rounded-lg"
+            >
+              Take the Quiz {'\u2192'}
+            </button>
           ) : (
-            <span style={{
-              fontSize: 12, color: design.colors.textMuted, fontFamily: design.font.sans,
-              textAlign: 'center',
-            }}>
-              Complete all to continue
-            </span>
+            <span className="text-slate-500 text-sm self-center">Complete all to continue</span>
           )}
         </div>
       </div>
     );
   };
 
-  // ============================================================================
-  // TEST - Knowledge Assessment
-  // ============================================================================
   const renderTest = () => {
     const q = testQuestions[currentQuestion];
     const isAnswered = answeredQuestions.has(currentQuestion);
 
     return (
-      <div style={{
-        display: 'flex', flexDirection: 'column', height: '100%',
-        padding: design.spacing.lg, background: design.colors.bgPrimary,
-      }}>
-        <div style={{
-          display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-          marginBottom: design.spacing.md,
-        }}>
-          <span style={{
-            fontSize: 13, color: design.colors.textSecondary, fontFamily: design.font.sans,
-            background: design.colors.bgSecondary, padding: '6px 12px', borderRadius: design.radius.full,
-          }}>
+      <div className="flex flex-col items-center px-6 py-8">
+        <div className="flex justify-between items-center w-full max-w-lg mb-4">
+          <span className="text-sm text-slate-400 bg-slate-800 px-3 py-1 rounded-full">
             Question {currentQuestion + 1} of {testQuestions.length}
           </span>
-          <span style={{
-            fontSize: 13, fontWeight: 700, color: design.colors.success, fontFamily: design.font.sans,
-            background: design.colors.successMuted, padding: '6px 12px', borderRadius: design.radius.full,
-          }}>
+          <span className="text-sm font-bold text-emerald-400 bg-emerald-500/20 px-3 py-1 rounded-full">
             Score: {correctAnswers}/{answeredQuestions.size}
           </span>
         </div>
 
         {/* Progress bar */}
-        <div style={{
-          height: 4, background: design.colors.bgTertiary, borderRadius: design.radius.full,
-          marginBottom: design.spacing.md, overflow: 'hidden',
-        }}>
-          <div style={{
-            height: '100%', width: `${((currentQuestion + 1) / testQuestions.length) * 100}%`,
-            background: design.colors.accentPrimary, borderRadius: design.radius.full,
-            transition: 'width 0.3s ease',
-          }} />
+        <div className="w-full max-w-lg h-1 bg-slate-700 rounded-full mb-6 overflow-hidden">
+          <div
+            className="h-full bg-purple-500 rounded-full transition-all duration-300"
+            style={{ width: `${((currentQuestion + 1) / testQuestions.length) * 100}%` }}
+          />
         </div>
 
-        <div style={{ flex: 1, overflowY: 'auto' }}>
-          <h3 style={{
-            fontSize: isMobile ? 15 : 16, fontWeight: 600, color: design.colors.textPrimary,
-            fontFamily: design.font.sans, lineHeight: 1.5, margin: 0, marginBottom: design.spacing.md,
-          }}>
-            {q.question}
-          </h3>
+        <div className="bg-slate-800/50 rounded-2xl p-6 max-w-lg w-full border border-slate-700/50 mb-6">
+          <h3 className="text-white font-semibold mb-4 leading-relaxed">{q.question}</h3>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: design.spacing.sm }}>
+          <div className="flex flex-col gap-3">
             {q.options.map((option, idx) => {
-              let bg = design.colors.bgSecondary;
-              let borderColor = design.colors.border;
-              let textColor = design.colors.textPrimary;
+              let bgClass = 'bg-slate-700/50 border-slate-600 hover:bg-slate-600/50';
+              let textClass = 'text-white';
 
               if (isAnswered) {
                 if (idx === q.correct) {
-                  bg = design.colors.successMuted;
-                  borderColor = design.colors.success;
-                  textColor = design.colors.success;
+                  bgClass = 'bg-emerald-500/20 border-emerald-500';
+                  textClass = 'text-emerald-400';
                 } else if (idx === selectedAnswer && idx !== q.correct) {
-                  bg = design.colors.errorMuted;
-                  borderColor = design.colors.error;
-                  textColor = design.colors.error;
+                  bgClass = 'bg-red-500/20 border-red-500';
+                  textClass = 'text-red-400';
                 }
               }
 
               return (
                 <button
                   key={idx}
-                  onMouseDown={() => handleTestAnswer(idx)}
+                  onMouseDown={(e) => { e.preventDefault(); handleTestAnswer(idx); }}
                   disabled={isAnswered}
-                  style={{
-                    padding: '14px 16px', borderRadius: design.radius.md,
-                    border: `1px solid ${borderColor}`, background: bg,
-                    cursor: isAnswered ? 'default' : 'pointer', textAlign: 'left',
-                    transition: 'all 0.2s ease', outline: 'none',
-                  }}
+                  className={`p-4 rounded-xl border-2 text-left transition-all ${bgClass}`}
                 >
-                  <span style={{ fontSize: 14, color: textColor, fontFamily: design.font.sans }}>
-                    {option}
-                  </span>
+                  <span className={`text-sm ${textClass}`}>{option}</span>
                 </button>
               );
             })}
           </div>
-
-          {showExplanation && (
-            <div style={{
-              marginTop: design.spacing.md, background: design.colors.accentPrimaryMuted,
-              border: `1px solid ${design.colors.accentPrimary}40`,
-              borderRadius: design.radius.md, padding: design.spacing.md,
-            }}>
-              <p style={{
-                fontSize: 13, color: design.colors.textPrimary, fontFamily: design.font.sans,
-                lineHeight: 1.5, margin: 0,
-              }}>
-                💡 {q.explanation}
-              </p>
-            </div>
-          )}
         </div>
 
-        <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: design.spacing.md }}>
-          {renderButton(
-            '← Back',
-            () => {
+        {showExplanation && (
+          <div className="bg-purple-500/10 border border-purple-500/30 rounded-xl p-4 max-w-lg w-full mb-6">
+            <p className="text-slate-300 text-sm">
+              {'\uD83D\uDCA1'} {q.explanation}
+            </p>
+          </div>
+        )}
+
+        <div className="flex gap-4">
+          <button
+            onMouseDown={(e) => {
+              e.preventDefault();
+              const now = Date.now();
+              if (now - lastClickRef.current < 200) return;
+              lastClickRef.current = now;
               setCurrentQuestion(prev => Math.max(0, prev - 1));
               setSelectedAnswer(null);
               setShowExplanation(answeredQuestions.has(currentQuestion - 1));
-            },
-            'secondary',
-            currentQuestion === 0
-          )}
+            }}
+            disabled={currentQuestion === 0}
+            className="px-4 py-2 bg-slate-700 text-slate-300 rounded-lg disabled:opacity-50"
+          >
+            {'\u2190'} Back
+          </button>
 
           {currentQuestion < testQuestions.length - 1 ? (
-            renderButton(
-              'Next →',
-              () => {
+            <button
+              onMouseDown={(e) => {
+                e.preventDefault();
+                const now = Date.now();
+                if (now - lastClickRef.current < 200) return;
+                lastClickRef.current = now;
                 setCurrentQuestion(prev => prev + 1);
                 setSelectedAnswer(null);
                 setShowExplanation(answeredQuestions.has(currentQuestion + 1));
-              },
-              'secondary'
-            )
+              }}
+              className="px-4 py-2 bg-slate-700 text-slate-300 rounded-lg"
+            >
+              Next {'\u2192'}
+            </button>
           ) : answeredQuestions.size === testQuestions.length ? (
-            renderButton('Complete →', () => goToPhase('mastery'))
+            <button
+              onMouseDown={(e) => { e.preventDefault(); goToPhase(9); }}
+              className="px-6 py-2 bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-semibold rounded-lg"
+            >
+              Complete {'\u2192'}
+            </button>
           ) : (
-            <span style={{
-              fontSize: 12, color: design.colors.textMuted, fontFamily: design.font.sans,
-              alignSelf: 'center',
-            }}>
-              Answer all to continue
-            </span>
+            <span className="text-slate-500 text-sm self-center">Answer all to continue</span>
           )}
         </div>
       </div>
     );
   };
 
-  // ============================================================================
-  // MASTERY - Completion Screen
-  // ============================================================================
   const renderMastery = () => {
     const percentage = Math.round((correctAnswers / testQuestions.length) * 100);
 
     return (
-      <div style={{
-        display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-        height: '100%', padding: design.spacing.xl, position: 'relative', overflow: 'hidden',
-        background: `linear-gradient(180deg, ${design.colors.bgDeep} 0%, ${design.colors.accentPrimaryMuted} 100%)`,
-      }}>
-        <div style={{ fontSize: isMobile ? 64 : 72, marginBottom: design.spacing.md }}>🏆</div>
-
-        <h2 style={{
-          fontSize: isMobile ? 22 : 26, fontWeight: 700, color: design.colors.textPrimary,
-          fontFamily: design.font.sans, margin: 0, marginBottom: design.spacing.sm, textAlign: 'center',
-        }}>
-          Torque Master!
-        </h2>
-
-        <div style={{
-          fontSize: isMobile ? 48 : 56, fontWeight: 700, color: design.colors.success,
-          fontFamily: design.font.sans, marginBottom: design.spacing.xs,
-        }}>
-          {percentage}%
-        </div>
-
-        <p style={{
-          fontSize: 15, color: design.colors.textSecondary, fontFamily: design.font.sans,
-          margin: 0, marginBottom: design.spacing.lg,
-        }}>
-          {correctAnswers}/{testQuestions.length} correct answers
-        </p>
-
-        <div style={{
-          background: design.colors.bgSecondary, borderRadius: design.radius.lg,
-          padding: design.spacing.lg, marginBottom: design.spacing.lg, maxWidth: 300, width: '100%',
-          border: `1px solid ${design.colors.border}`,
-        }}>
-          <h3 style={{
-            fontSize: 15, fontWeight: 700, color: design.colors.accentPrimary,
-            fontFamily: design.font.sans, margin: 0, marginBottom: design.spacing.sm, textAlign: 'center',
-          }}>
-            Key Takeaways
-          </h3>
-          <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
-            {[
-              'τ = Force × Lever arm',
-              'Longer lever arm = less force needed',
-              'Door handles maximize leverage',
-              'Friction requires extra torque'
-            ].map((item, idx) => (
-              <li key={idx} style={{
-                fontSize: 13, color: design.colors.textPrimary, fontFamily: design.font.sans,
-                marginBottom: design.spacing.xs, display: 'flex', alignItems: 'center', gap: design.spacing.sm,
-              }}>
-                <span style={{ color: design.colors.success }}>✓</span> {item}
-              </li>
-            ))}
-          </ul>
-        </div>
-
-        {renderButton('Play Again ↺', () => {
-          setPhase('hook');
-          setExperimentCount(0);
-          setCurrentQuestion(0);
-          setCorrectAnswers(0);
-          setAnsweredQuestions(new Set());
-          setCompletedApps(new Set());
-          setActiveApp(0);
-          setPrediction(null);
-          setTwistPrediction(null);
-          setPushPosition(0.8);
-          setHasFriction(false);
-          resetDoor();
-        }, 'primary')}
-
-        {/* Confetti */}
+      <div className="flex flex-col items-center justify-center min-h-[600px] px-6 py-12 text-center relative overflow-hidden">
+        {/* Confetti effect */}
         <style>{`
           @keyframes confettiFall {
             0% { transform: translateY(-20px) rotate(0deg); opacity: 1; }
@@ -1422,9 +1116,53 @@ const TorqueRenderer: React.FC<TorqueRendererProps> = ({
             animation: `confettiFall ${2 + Math.random() * 2}s linear ${Math.random() * 2}s forwards`,
             pointerEvents: 'none', fontSize: 18,
           }}>
-            {['🚪', '🔧', '⭐', '✨', '🎉'][Math.floor(Math.random() * 5)]}
+            {['\uD83D\uDEAA', '\uD83D\uDD27', '\u2B50', '\u2728', '\uD83C\uDF89'][Math.floor(Math.random() * 5)]}
           </div>
         ))}
+
+        <div className="text-7xl mb-6">{'\uD83C\uDFC6'}</div>
+
+        <h2 className="text-3xl md:text-4xl font-bold text-white mb-2">Torque Master!</h2>
+
+        <div className="text-5xl font-bold text-emerald-400 mb-2">{percentage}%</div>
+        <p className="text-slate-400 mb-8">{correctAnswers}/{testQuestions.length} correct answers</p>
+
+        <div className="bg-slate-800/50 rounded-2xl p-6 max-w-md w-full border border-slate-700/50 mb-8">
+          <h3 className="text-purple-400 font-semibold mb-4">Key Takeaways</h3>
+          <ul className="text-left space-y-2">
+            {[
+              '{\\u03C4} = Force x Lever arm',
+              'Longer lever arm = less force needed',
+              'Door handles maximize leverage',
+              'Friction requires extra torque'
+            ].map((item, idx) => (
+              <li key={idx} className="text-slate-300 text-sm flex items-center gap-2">
+                <span className="text-emerald-400">{'\u2713'}</span> {item.replace('{\\u03C4}', '\u03C4')}
+              </li>
+            ))}
+          </ul>
+        </div>
+
+        <button
+          onMouseDown={(e) => {
+            e.preventDefault();
+            setPhase(0);
+            setExperimentCount(0);
+            setCurrentQuestion(0);
+            setCorrectAnswers(0);
+            setAnsweredQuestions(new Set());
+            setCompletedApps(new Set());
+            setActiveApp(0);
+            setPrediction(null);
+            setTwistPrediction(null);
+            setPushPosition(0.8);
+            setHasFriction(false);
+            resetDoor();
+          }}
+          className="px-8 py-4 bg-gradient-to-r from-purple-600 to-orange-600 text-white font-semibold rounded-xl"
+        >
+          Play Again {'\u21BA'}
+        </button>
       </div>
     );
   };
@@ -1432,27 +1170,56 @@ const TorqueRenderer: React.FC<TorqueRendererProps> = ({
   // ============================================================================
   // RENDER
   // ============================================================================
-  const phaseRenderers: Record<Phase, () => JSX.Element> = {
-    hook: renderHook,
-    predict: renderPredict,
-    play: renderPlay,
-    review: renderReview,
-    twist_predict: renderTwistPredict,
-    twist_play: renderTwistPlay,
-    twist_review: renderTwistReview,
-    transfer: renderTransfer,
-    test: renderTest,
-    mastery: renderMastery,
+  const renderPhase = () => {
+    switch (phase) {
+      case 0: return renderHook();
+      case 1: return renderPredict();
+      case 2: return renderPlay();
+      case 3: return renderReview();
+      case 4: return renderTwistPredict();
+      case 5: return renderTwistPlay();
+      case 6: return renderTwistReview();
+      case 7: return renderTransfer();
+      case 8: return renderTest();
+      case 9: return renderMastery();
+      default: return renderHook();
+    }
   };
 
   return (
-    <div style={{
-      width, height, borderRadius: design.radius.lg, overflow: 'hidden',
-      position: 'relative', background: design.colors.bgPrimary, fontFamily: design.font.sans,
-      boxShadow: design.shadow.lg,
-    }}>
-      {renderProgressBar()}
-      {phaseRenderers[phase]()}
+    <div className="min-h-screen bg-[#0a0f1a] text-white relative overflow-hidden">
+      {/* Premium background gradient */}
+      <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-[#0a1628] to-slate-900" />
+      <div className="absolute top-0 left-1/4 w-96 h-96 bg-purple-500/5 rounded-full blur-3xl" />
+      <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-orange-500/5 rounded-full blur-3xl" />
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-cyan-500/3 rounded-full blur-3xl" />
+
+      {/* Header */}
+      <div className="fixed top-0 left-0 right-0 z-50 bg-slate-900/80 backdrop-blur-xl border-b border-slate-800/50">
+        <div className="flex items-center justify-between px-6 py-3 max-w-4xl mx-auto">
+          <span className="text-sm font-semibold text-white/80 tracking-wide">Torque</span>
+          <div className="flex items-center gap-1.5">
+            {PHASES.map((p) => (
+              <button
+                key={p}
+                onMouseDown={(e) => { e.preventDefault(); goToPhase(p); }}
+                className={`h-2 rounded-full transition-all duration-300 ${
+                  phase === p
+                    ? 'bg-purple-400 w-6 shadow-lg shadow-purple-400/30'
+                    : phase > p
+                      ? 'bg-emerald-500 w-2'
+                      : 'bg-slate-700 w-2 hover:bg-slate-600'
+                }`}
+                title={phaseLabels[p]}
+              />
+            ))}
+          </div>
+          <span className="text-sm font-medium text-purple-400">{phaseLabels[phase]}</span>
+        </div>
+      </div>
+
+      {/* Main content */}
+      <div className="relative pt-16 pb-12">{renderPhase()}</div>
     </div>
   );
 };

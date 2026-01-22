@@ -290,25 +290,34 @@ export default function SolarCellDetectorRenderer({
   // PREMIUM COMPONENTS
   // ──────────────────────────────────────────────────────────────────────────
 
+  const phaseLabels: Record<Phase, string> = {
+    hook: 'Hook', predict: 'Predict', play: 'Lab', review: 'Review',
+    twist_predict: 'Twist Predict', twist_play: 'Twist Lab', twist_review: 'Twist Review',
+    transfer: 'Transfer', test: 'Test', mastery: 'Mastery'
+  };
+
   const ProgressIndicator = () => (
-    <div className="flex items-center justify-between mb-8">
-      <div className="flex items-center gap-1.5">
-        {PHASES.map((p, i) => (
-          <div
-            key={p}
-            className={`h-1.5 rounded-full transition-all duration-500 ${
-              i < PHASES.indexOf(phase)
-                ? 'bg-amber-500 w-8'
-                : i === PHASES.indexOf(phase)
-                ? 'bg-amber-400 w-10'
-                : 'bg-gray-200 w-6'
-            }`}
-          />
-        ))}
+    <div className="fixed top-0 left-0 right-0 z-50 bg-slate-900/80 backdrop-blur-xl border-b border-slate-800/50">
+      <div className="flex items-center justify-between px-6 py-3 max-w-4xl mx-auto">
+        <span className="text-sm font-semibold text-white/80 tracking-wide">Solar Cell Detector</span>
+        <div className="flex items-center gap-1.5">
+          {PHASES.map((p, i) => (
+            <button
+              key={p}
+              onMouseDown={(e) => { e.preventDefault(); goToPhase(p); }}
+              className={`h-2 rounded-full transition-all duration-300 ${
+                phase === p
+                  ? 'bg-amber-400 w-6 shadow-lg shadow-amber-400/30'
+                  : i < PHASES.indexOf(phase)
+                    ? 'bg-emerald-500 w-2'
+                    : 'bg-slate-700 w-2 hover:bg-slate-600'
+              }`}
+              title={phaseLabels[p]}
+            />
+          ))}
+        </div>
+        <span className="text-sm font-medium text-amber-400">{phaseLabels[phase]}</span>
       </div>
-      <span className="text-sm font-semibold text-gray-400 tabular-nums">
-        {PHASES.indexOf(phase) + 1}/{PHASES.length}
-      </span>
     </div>
   );
 
@@ -627,82 +636,95 @@ export default function SolarCellDetectorRenderer({
   // ──────────────────────────────────────────────────────────────────────────
 
   const renderHook = () => (
-    <div className="text-center py-4">
-      {/* Hero Icon */}
-      <div className="relative w-32 h-32 mx-auto mb-8">
-        <div className="absolute inset-0 bg-gradient-to-br from-amber-400 to-orange-500 rounded-3xl transform rotate-6 opacity-20" />
-        <div className="absolute inset-0 bg-gradient-to-br from-amber-400 to-orange-500 rounded-3xl flex items-center justify-center">
-          <svg viewBox="0 0 64 64" className="w-16 h-16">
-            <circle cx="32" cy="20" r="12" fill="#fef3c7" />
-            <path d="M32 35 L20 55 L44 55 Z" fill="#1e3a5f" />
-            <rect x="26" y="45" width="12" height="8" fill="#3b82f6" />
-          </svg>
-        </div>
+    <div className="flex flex-col items-center justify-center min-h-[600px] px-6 py-12 text-center">
+      {/* Premium badge */}
+      <div className="inline-flex items-center gap-2 px-4 py-2 bg-amber-500/10 border border-amber-500/20 rounded-full mb-8">
+        <span className="w-2 h-2 bg-amber-400 rounded-full animate-pulse" />
+        <span className="text-sm font-medium text-amber-400 tracking-wide">PHYSICS EXPLORATION</span>
       </div>
 
-      {/* Title */}
-      <h1 className="text-3xl font-bold text-gray-900 mb-4 tracking-tight">
+      {/* Main title with gradient */}
+      <h1 className="text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-white via-amber-100 to-orange-200 bg-clip-text text-transparent">
         Solar Cells as Light Detectors
       </h1>
 
-      {/* Subtitle */}
-      <p className="text-lg text-gray-500 mb-8 leading-relaxed max-w-sm mx-auto">
-        Discover how the same physics that powers solar panels enables
-        digital cameras to capture images.
+      <p className="text-lg text-slate-400 max-w-md mb-10">
+        Discover how the same physics that powers solar panels enables digital cameras to capture images
       </p>
 
-      {/* Key insight card */}
-      <div className="bg-gradient-to-r from-amber-50 to-orange-50 rounded-2xl p-6 mb-8 text-left border border-amber-100">
-        <div className="flex items-start gap-4">
-          <div className="w-12 h-12 bg-amber-100 rounded-xl flex items-center justify-center flex-shrink-0">
-            <span className="text-2xl">💡</span>
+      {/* Premium card with graphic */}
+      <div className="relative bg-gradient-to-br from-slate-800/80 to-slate-900/80 rounded-3xl p-8 max-w-xl w-full border border-slate-700/50 shadow-2xl shadow-black/20 backdrop-blur-xl">
+        {/* Subtle glow effect */}
+        <div className="absolute inset-0 bg-gradient-to-br from-amber-500/5 via-transparent to-orange-500/5 rounded-3xl" />
+
+        <div className="relative">
+          <div className="flex justify-center mb-6">
+            <div className="w-24 h-24 bg-gradient-to-br from-amber-400 to-orange-500 rounded-2xl flex items-center justify-center">
+              <svg viewBox="0 0 64 64" className="w-14 h-14">
+                <circle cx="32" cy="20" r="12" fill="#fef3c7" />
+                <path d="M32 35 L20 55 L44 55 Z" fill="#1e3a5f" />
+                <rect x="26" y="45" width="12" height="8" fill="#3b82f6" />
+              </svg>
+            </div>
           </div>
-          <div>
-            <h3 className="font-semibold text-gray-900 mb-1">The Big Idea</h3>
-            <p className="text-gray-600 text-sm leading-relaxed">
-              Every pixel in your phone camera is a tiny solar cell,
-              measuring light intensity millions of times per second.
+
+          <div className="space-y-4">
+            <p className="text-xl text-white/90 font-medium leading-relaxed">
+              Every pixel in your phone camera is a tiny solar cell
             </p>
+            <p className="text-lg text-slate-400 leading-relaxed">
+              measuring light intensity millions of times per second
+            </p>
+            <div className="pt-2">
+              <p className="text-base text-amber-400 font-semibold">
+                How does light become electricity?
+              </p>
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Learning objectives */}
-      <div className="flex justify-center gap-6 mb-10">
-        {[
-          { icon: '☀️', label: 'Photovoltaic Effect' },
-          { icon: '📷', label: 'Camera Sensors' },
-          { icon: '📊', label: 'Light Detection' },
-        ].map((item, i) => (
-          <div key={i} className="text-center">
-            <div className="text-2xl mb-2">{item.icon}</div>
-            <div className="text-xs text-gray-500 font-medium">{item.label}</div>
-          </div>
-        ))}
-      </div>
+      {/* Premium CTA button */}
+      <button
+        onMouseDown={(e) => { e.preventDefault(); goToPhase('predict'); }}
+        className="mt-10 group relative px-10 py-5 bg-gradient-to-r from-amber-500 to-orange-600 text-white text-lg font-semibold rounded-2xl transition-all duration-300 hover:shadow-lg hover:shadow-amber-500/25 hover:scale-[1.02] active:scale-[0.98]"
+      >
+        <span className="relative z-10 flex items-center gap-3">
+          Start Learning
+          <svg className="w-5 h-5 transition-transform group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+          </svg>
+        </span>
+      </button>
 
-      <PrimaryButton onClick={() => goToPhase('predict')}>
-        Start Learning
-      </PrimaryButton>
+      {/* Feature hints */}
+      <div className="mt-12 flex items-center gap-8 text-sm text-slate-500">
+        <div className="flex items-center gap-2">
+          <span className="text-amber-400">✦</span>
+          Photovoltaic Effect
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="text-amber-400">✦</span>
+          Camera Sensors
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="text-amber-400">✦</span>
+          Light Detection
+        </div>
+      </div>
     </div>
   );
 
   const renderPredict = () => (
-    <div>
-      <div className="mb-6">
-        <span className="inline-block px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm font-medium mb-4">
-          Prediction
-        </span>
-        <h2 className="text-2xl font-bold text-gray-900 mb-3">
-          What do you think?
-        </h2>
-        <p className="text-gray-600">
-          A solar cell is in sunlight. If light intensity <strong>doubles</strong>,
+    <div className="flex flex-col items-center justify-center min-h-[500px] p-6">
+      <h2 className="text-2xl font-bold text-white mb-6">Make Your Prediction</h2>
+      <div className="bg-slate-800/50 rounded-2xl p-6 max-w-2xl mb-6">
+        <p className="text-lg text-slate-300 mb-4">
+          A solar cell is in sunlight. If light intensity <strong className="text-amber-400">doubles</strong>,
           what happens to the electrical current?
         </p>
       </div>
-
-      <div className="space-y-3 mb-6">
+      <div className="grid gap-3 w-full max-w-xl">
         {[
           { id: 'same', label: 'Stays the same', desc: 'Limited by material properties' },
           { id: 'double', label: 'Approximately doubles', desc: 'Proportional increase' },
@@ -715,191 +737,122 @@ export default function SolarCellDetectorRenderer({
               handlePrediction(option.id);
             }}
             disabled={showPredictionFeedback}
-            className={`w-full p-4 rounded-2xl border-2 text-left transition-all duration-200 ${
-              prediction === option.id
-                ? option.id === 'double'
-                  ? 'border-green-500 bg-green-50'
-                  : 'border-red-300 bg-red-50'
-                : showPredictionFeedback
-                ? 'border-gray-100 bg-gray-50 opacity-50'
-                : 'border-gray-200 hover:border-amber-300 hover:bg-amber-50 cursor-pointer'
+            className={`p-4 rounded-xl text-left transition-all duration-300 ${
+              showPredictionFeedback && prediction === option.id
+                ? option.id === 'double' ? 'bg-emerald-600/40 border-2 border-emerald-400' : 'bg-red-600/40 border-2 border-red-400'
+                : showPredictionFeedback && option.id === 'double' ? 'bg-emerald-600/40 border-2 border-emerald-400'
+                : 'bg-slate-700/50 hover:bg-slate-600/50 border-2 border-transparent'
             }`}
           >
-            <div className="font-semibold text-gray-900">{option.label}</div>
-            <div className="text-sm text-gray-500">{option.desc}</div>
+            <span className="font-bold text-white">{option.label}</span>
+            <span className="text-slate-400 ml-2 text-sm">- {option.desc}</span>
           </button>
         ))}
       </div>
-
       {showPredictionFeedback && (
-        <div className={`p-5 rounded-2xl mb-6 ${
-          prediction === 'double'
-            ? 'bg-green-50 border border-green-200'
-            : 'bg-amber-50 border border-amber-200'
-        }`}>
-          <div className="flex items-start gap-3">
-            <span className="text-2xl">{prediction === 'double' ? '✓' : '→'}</span>
-            <p className={prediction === 'double' ? 'text-green-800' : 'text-amber-800'}>
-              {prediction === 'double'
-                ? 'Correct! Photocurrent is directly proportional to light intensity. Each photon creates one electron-hole pair.'
-                : 'Actually, current scales linearly with intensity. Double the photons means double the current!'}
-            </p>
-          </div>
+        <div className="mt-6 p-4 bg-slate-800/70 rounded-xl max-w-xl">
+          <p className="text-emerald-400 font-semibold">
+            {prediction === 'double'
+              ? '✓ Correct! Photocurrent is directly proportional to light intensity. Each photon creates one electron-hole pair.'
+              : '→ Actually, current scales linearly with intensity. Double the photons means double the current!'}
+          </p>
+          <button
+            onMouseDown={(e) => { e.preventDefault(); nextPhase(); }}
+            className="mt-4 px-6 py-3 bg-gradient-to-r from-amber-600 to-orange-600 text-white font-semibold rounded-xl"
+          >
+            Continue to Experiment →
+          </button>
         </div>
-      )}
-
-      {showPredictionFeedback && (
-        <PrimaryButton onClick={nextPhase}>
-          Continue to Experiment
-        </PrimaryButton>
       )}
     </div>
   );
 
   const renderPlay = () => (
-    <div>
-      <div className="mb-4">
-        <span className="inline-block px-3 py-1 bg-amber-100 text-amber-700 rounded-full text-sm font-medium mb-3">
-          Interactive Lab
-        </span>
-        <h2 className="text-xl font-bold text-gray-900 mb-2">
-          Solar Cell Light Meter
-        </h2>
-        <p className="text-gray-500 text-sm">
-          Adjust the controls and observe how output changes.
+    <div className="flex flex-col items-center p-6">
+      <h2 className="text-2xl font-bold text-white mb-4">Solar Cell Light Meter</h2>
+      <div className="bg-slate-800/50 rounded-2xl p-6 mb-4 w-full max-w-2xl">
+        <SolarCellGraphic />
+      </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full max-w-2xl mb-6">
+        <div className="bg-slate-700/50 rounded-xl p-4">
+          <label className="text-slate-300 text-sm block mb-2">Light Intensity: {lightIntensity}%</label>
+          <input type="range" min="10" max="100" value={lightIntensity} onChange={e => { setLightIntensity(Number(e.target.value)); setHasExperimented(true); }} className="w-full accent-amber-500" />
+          <p className="text-xs text-slate-400 mt-1">More light = more current</p>
+        </div>
+        <div className="bg-slate-700/50 rounded-xl p-4">
+          <label className="text-slate-300 text-sm block mb-2">Panel Angle: {cellAngle}°</label>
+          <input type="range" min="0" max="80" value={cellAngle} onChange={e => { setCellAngle(Number(e.target.value)); setHasExperimented(true); }} className="w-full accent-amber-500" />
+          <p className="text-xs text-slate-400 mt-1">Cosine law reduces output</p>
+        </div>
+      </div>
+      <div className="bg-slate-700/50 rounded-xl p-4 w-full max-w-2xl mb-6">
+        <label className="text-slate-300 text-sm block mb-2">Light Wavelength</label>
+        <div className="flex gap-2">
+          {[
+            { id: 'visible' as const, label: 'Visible', color: '#f59e0b' },
+            { id: 'infrared' as const, label: 'Infrared', color: '#ef4444' },
+            { id: 'uv' as const, label: 'UV', color: '#8b5cf6' },
+          ].map(w => (
+            <button
+              key={w.id}
+              onMouseDown={(e) => { e.preventDefault(); setWavelength(w.id); setHasExperimented(true); }}
+              className={`flex-1 py-2.5 rounded-lg font-medium text-sm transition-all ${wavelength === w.id ? 'text-white shadow-lg' : 'bg-slate-600 text-slate-300 hover:bg-slate-500'}`}
+              style={wavelength === w.id ? { backgroundColor: w.color } : {}}
+            >
+              {w.label}
+            </button>
+          ))}
+        </div>
+      </div>
+      <div className="bg-slate-800/70 rounded-xl p-4 max-w-2xl mb-6">
+        <h3 className="text-lg font-semibold text-amber-400 mb-2">Key Insight</h3>
+        <p className="text-slate-300 text-sm">
+          Current is proportional to intensity. The cosine law reduces output at angles. Silicon works best with visible light.
         </p>
       </div>
-
-      <SolarCellGraphic />
-
-      <div className="space-y-5 mb-6">
-        <div>
-          <div className="flex justify-between mb-2">
-            <label className="text-sm font-medium text-gray-700">Light Intensity</label>
-            <span className="text-sm font-semibold text-amber-600">{lightIntensity}%</span>
-          </div>
-          <input
-            type="range"
-            min="10"
-            max="100"
-            value={lightIntensity}
-            onChange={e => { setLightIntensity(Number(e.target.value)); setHasExperimented(true); }}
-            className="w-full h-2 bg-gray-200 rounded-full appearance-none cursor-pointer accent-amber-500"
-          />
-        </div>
-
-        <div>
-          <div className="flex justify-between mb-2">
-            <label className="text-sm font-medium text-gray-700">Panel Angle</label>
-            <span className="text-sm font-semibold text-amber-600">{cellAngle}°</span>
-          </div>
-          <input
-            type="range"
-            min="0"
-            max="80"
-            value={cellAngle}
-            onChange={e => { setCellAngle(Number(e.target.value)); setHasExperimented(true); }}
-            className="w-full h-2 bg-gray-200 rounded-full appearance-none cursor-pointer accent-amber-500"
-          />
-        </div>
-
-        <div>
-          <label className="text-sm font-medium text-gray-700 mb-2 block">Light Wavelength</label>
-          <div className="flex gap-2">
-            {[
-              { id: 'visible' as const, label: 'Visible', color: 'amber' },
-              { id: 'infrared' as const, label: 'Infrared', color: 'red' },
-              { id: 'uv' as const, label: 'UV', color: 'purple' },
-            ].map(w => (
-              <button
-                key={w.id}
-                onMouseDown={(e) => {
-                  e.preventDefault();
-                  setWavelength(w.id);
-                  setHasExperimented(true);
-                }}
-                className={`flex-1 py-2.5 rounded-xl font-medium text-sm transition-all ${
-                  wavelength === w.id
-                    ? `bg-${w.color}-500 text-white shadow-lg`
-                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                }`}
-                style={wavelength === w.id ? {
-                  backgroundColor: w.color === 'amber' ? '#f59e0b' : w.color === 'red' ? '#ef4444' : '#8b5cf6'
-                } : {}}
-              >
-                {w.label}
-              </button>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      <div className="bg-blue-50 border border-blue-100 rounded-2xl p-4 mb-6">
-        <p className="text-blue-800 text-sm">
-          <strong>Key insight:</strong> Current is proportional to intensity.
-          The cosine law reduces output at angles. Silicon works best with visible light.
-        </p>
-      </div>
-
-      <PrimaryButton onClick={nextPhase} disabled={!hasExperimented}>
-        {hasExperimented ? 'Continue' : 'Try the controls first...'}
-      </PrimaryButton>
+      <button onMouseDown={(e) => { e.preventDefault(); if (hasExperimented) nextPhase(); }} className={`px-6 py-3 font-semibold rounded-xl ${hasExperimented ? 'bg-gradient-to-r from-amber-600 to-orange-600 text-white' : 'bg-slate-700 text-slate-500 cursor-not-allowed'}`}>
+        {hasExperimented ? 'Review the Concepts →' : 'Try the controls first...'}
+      </button>
     </div>
   );
 
   const renderReview = () => (
-    <div>
-      <span className="inline-block px-3 py-1 bg-green-100 text-green-700 rounded-full text-sm font-medium mb-4">
-        Key Concepts
-      </span>
-      <h2 className="text-2xl font-bold text-gray-900 mb-6">
-        The Photovoltaic Effect
-      </h2>
-
-      <div className="bg-gradient-to-br from-amber-100 to-orange-100 rounded-2xl p-6 mb-6 text-center">
-        <div className="text-xl font-semibold text-gray-800 mb-2">
-          Photon → Electron-Hole Pair → Current
+    <div className="flex flex-col items-center p-6">
+      <h2 className="text-2xl font-bold text-white mb-6">Understanding the Photovoltaic Effect</h2>
+      <div className="grid md:grid-cols-2 gap-6 max-w-4xl">
+        <div className="bg-gradient-to-br from-amber-900/50 to-orange-900/50 rounded-2xl p-6">
+          <h3 className="text-xl font-bold text-amber-400 mb-3">☀️ How It Works</h3>
+          <div className="text-lg font-semibold text-white mb-2">Photon → Electron-Hole Pair → Current</div>
+          <p className="text-slate-300 text-sm">Each photon with sufficient energy frees one electron</p>
         </div>
-        <p className="text-amber-700 text-sm">
-          Each photon with sufficient energy frees one electron
-        </p>
+        <div className="bg-gradient-to-br from-blue-900/50 to-cyan-900/50 rounded-2xl p-6">
+          <h3 className="text-xl font-bold text-cyan-400 mb-3">📊 Linear Response</h3>
+          <p className="text-slate-300 text-sm">Photocurrent is proportional to light intensity—ideal for measurement</p>
+        </div>
+        <div className="bg-gradient-to-br from-purple-900/50 to-pink-900/50 rounded-2xl p-6">
+          <h3 className="text-xl font-bold text-purple-400 mb-3">📐 Cosine Law</h3>
+          <p className="text-slate-300 text-sm">Tilting reduces effective capture area. At 60°, output halves.</p>
+        </div>
+        <div className="bg-gradient-to-br from-emerald-900/50 to-teal-900/50 rounded-2xl p-6">
+          <h3 className="text-xl font-bold text-emerald-400 mb-3">🌈 Spectral Sensitivity</h3>
+          <p className="text-slate-300 text-sm">Silicon peaks near 900nm (red/near-IR). Different materials vary.</p>
+        </div>
       </div>
-
-      <div className="space-y-4 mb-6">
-        {[
-          { icon: '📊', title: 'Linear Response', desc: 'Photocurrent is proportional to light intensity—ideal for measurement' },
-          { icon: '📐', title: 'Cosine Law', desc: 'Tilting reduces effective capture area. At 60°, output halves.' },
-          { icon: '🌈', title: 'Spectral Sensitivity', desc: 'Silicon peaks near 900nm (red/near-IR). Different materials vary.' },
-        ].map((item, i) => (
-          <div key={i} className="flex items-start gap-4 p-4 bg-white rounded-xl border border-gray-100">
-            <span className="text-2xl">{item.icon}</span>
-            <div>
-              <h3 className="font-semibold text-gray-900">{item.title}</h3>
-              <p className="text-gray-600 text-sm">{item.desc}</p>
-            </div>
-          </div>
-        ))}
-      </div>
-
-      <PrimaryButton onClick={nextPhase}>
-        Discover the Twist
-      </PrimaryButton>
+      <button onMouseDown={(e) => { e.preventDefault(); nextPhase(); }} className="mt-8 px-6 py-3 bg-gradient-to-r from-amber-600 to-orange-600 text-white font-semibold rounded-xl">
+        Discover a Surprising Twist →
+      </button>
     </div>
   );
 
   const renderTwistPredict = () => (
-    <div>
-      <span className="inline-block px-3 py-1 bg-purple-100 text-purple-700 rounded-full text-sm font-medium mb-4">
-        Plot Twist
-      </span>
-      <h2 className="text-2xl font-bold text-gray-900 mb-3">
-        The Camera Connection
-      </h2>
-      <p className="text-gray-600 mb-6">
-        A digital camera has millions of pixels. What is each pixel fundamentally doing?
-      </p>
-
-      <div className="space-y-3 mb-6">
+    <div className="flex flex-col items-center justify-center min-h-[500px] p-6">
+      <h2 className="text-2xl font-bold text-purple-400 mb-6">The Camera Connection</h2>
+      <div className="bg-slate-800/50 rounded-2xl p-6 max-w-2xl mb-6">
+        <p className="text-lg text-slate-300 mb-4">
+          A digital camera has millions of pixels. What is each pixel fundamentally doing?
+        </p>
+      </div>
+      <div className="grid gap-3 w-full max-w-xl">
         {[
           { id: 'color', label: 'Detecting colors', desc: 'Sensing different wavelengths' },
           { id: 'memory', label: 'Storing data', desc: 'Recording image information' },
@@ -907,97 +860,70 @@ export default function SolarCellDetectorRenderer({
         ].map(option => (
           <button
             key={option.id}
-            onMouseDown={(e) => {
-              e.preventDefault();
-              handleTwistPrediction(option.id);
-            }}
+            onMouseDown={(e) => { e.preventDefault(); handleTwistPrediction(option.id); }}
             disabled={showTwistFeedback}
-            className={`w-full p-4 rounded-2xl border-2 text-left transition-all ${
-              twistPrediction === option.id
-                ? option.id === 'photodetector'
-                  ? 'border-green-500 bg-green-50'
-                  : 'border-amber-300 bg-amber-50'
-                : showTwistFeedback
-                ? 'border-gray-100 bg-gray-50 opacity-50'
-                : 'border-gray-200 hover:border-purple-300 hover:bg-purple-50 cursor-pointer'
+            className={`p-4 rounded-xl text-left transition-all duration-300 ${
+              showTwistFeedback && twistPrediction === option.id
+                ? option.id === 'photodetector' ? 'bg-emerald-600/40 border-2 border-emerald-400' : 'bg-red-600/40 border-2 border-red-400'
+                : showTwistFeedback && option.id === 'photodetector' ? 'bg-emerald-600/40 border-2 border-emerald-400'
+                : 'bg-slate-700/50 hover:bg-slate-600/50 border-2 border-transparent'
             }`}
           >
-            <div className="font-semibold text-gray-900">{option.label}</div>
-            <div className="text-sm text-gray-500">{option.desc}</div>
+            <span className="font-bold text-white">{option.label}</span>
+            <span className="text-slate-400 ml-2 text-sm">- {option.desc}</span>
           </button>
         ))}
       </div>
-
       {showTwistFeedback && (
-        <div className={`p-5 rounded-2xl mb-6 ${
-          twistPrediction === 'photodetector'
-            ? 'bg-green-50 border border-green-200'
-            : 'bg-amber-50 border border-amber-200'
-        }`}>
-          <p className={twistPrediction === 'photodetector' ? 'text-green-800' : 'text-amber-800'}>
+        <div className="mt-6 p-4 bg-slate-800/70 rounded-xl max-w-xl">
+          <p className="text-emerald-400 font-semibold">
             {twistPrediction === 'photodetector'
-              ? 'Exactly! Each pixel is a tiny photodiode measuring light intensity. Color comes from filters (Bayer pattern)!'
-              : 'Each pixel is fundamentally a light detector—a tiny photodiode. Color filters are added separately!'}
+              ? '✓ Exactly! Each pixel is a tiny photodiode measuring light intensity. Color comes from filters (Bayer pattern)!'
+              : '→ Each pixel is fundamentally a light detector—a tiny photodiode. Color filters are added separately!'}
           </p>
+          <button onMouseDown={(e) => { e.preventDefault(); nextPhase(); }} className="mt-4 px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-semibold rounded-xl">
+            Explore Camera Sensors →
+          </button>
         </div>
-      )}
-
-      {showTwistFeedback && (
-        <PrimaryButton onClick={nextPhase}>
-          Explore Camera Sensors
-        </PrimaryButton>
       )}
     </div>
   );
 
   const renderTwistPlay = () => (
-    <div>
-      <span className="inline-block px-3 py-1 bg-purple-100 text-purple-700 rounded-full text-sm font-medium mb-3">
-        Interactive Demo
-      </span>
-      <h2 className="text-xl font-bold text-gray-900 mb-2">
-        Camera Sensor Pixels
-      </h2>
-      <p className="text-gray-500 text-sm mb-4">
-        Each square is a photodetector measuring light intensity.
-      </p>
-
-      <CameraSensorGraphic />
-
-      <div className="grid grid-cols-2 gap-3 mb-6">
-        <div className="bg-gray-50 rounded-xl p-4 text-center">
+    <div className="flex flex-col items-center p-6">
+      <h2 className="text-2xl font-bold text-purple-400 mb-4">Camera Sensor Pixels</h2>
+      <p className="text-slate-400 mb-4">Each square is a photodetector measuring light intensity.</p>
+      <div className="bg-slate-800/50 rounded-2xl p-6 mb-6 w-full max-w-2xl">
+        <CameraSensorGraphic />
+      </div>
+      <div className="grid grid-cols-2 gap-4 w-full max-w-2xl mb-6">
+        <div className="bg-slate-700/50 rounded-xl p-4 text-center">
           <div className="text-3xl mb-2">📷</div>
-          <div className="font-semibold text-gray-900 text-sm">CCD/CMOS</div>
-          <div className="text-gray-500 text-xs">Photodiode arrays</div>
+          <div className="font-semibold text-white text-sm">CCD/CMOS</div>
+          <div className="text-slate-400 text-xs">Photodiode arrays</div>
         </div>
-        <div className="bg-gray-50 rounded-xl p-4 text-center">
+        <div className="bg-slate-700/50 rounded-xl p-4 text-center">
           <div className="text-3xl mb-2">🎨</div>
-          <div className="font-semibold text-gray-900 text-sm">Bayer Filter</div>
-          <div className="text-gray-500 text-xs">RGGB color pattern</div>
+          <div className="font-semibold text-white text-sm">Bayer Filter</div>
+          <div className="text-slate-400 text-xs">RGGB color pattern</div>
         </div>
       </div>
-
-      <div className="bg-blue-50 border border-blue-100 rounded-2xl p-4 mb-6">
-        <p className="text-blue-800 text-sm">
-          <strong>Fun fact:</strong> Your phone camera has 12+ megapixels—12 million
-          photodetectors measuring light 30-60 times per second for video!
+      <div className="bg-slate-800/70 rounded-xl p-4 max-w-2xl mb-6">
+        <p className="text-cyan-400 text-sm">
+          <strong>Fun fact:</strong> Your phone camera has 12+ megapixels—12 million photodetectors measuring light 30-60 times per second for video!
         </p>
       </div>
-
-      <PrimaryButton onClick={nextPhase} disabled={!hasExploredTwist}>
-        {hasExploredTwist ? 'Continue' : 'Interact with the sensor...'}
-      </PrimaryButton>
+      <button onMouseDown={(e) => { e.preventDefault(); if (hasExploredTwist) nextPhase(); }} className={`px-6 py-3 font-semibold rounded-xl ${hasExploredTwist ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white' : 'bg-slate-700 text-slate-500 cursor-not-allowed'}`}>
+        {hasExploredTwist ? 'Review the Discovery →' : 'Interact with the sensor...'}
+      </button>
     </div>
   );
 
   const renderTwistReview = () => (
-    <div>
-      <h2 className="text-2xl font-bold text-gray-900 mb-6">
-        Photodetectors Everywhere
-      </h2>
-
-      <div className="bg-gradient-to-r from-purple-100 to-pink-100 rounded-2xl p-6 mb-6">
-        <h3 className="font-semibold text-gray-800 text-center mb-4">The Photoelectric Family</h3>
+    <div className="flex flex-col items-center p-6">
+      <h2 className="text-2xl font-bold text-purple-400 mb-6">Photodetectors Everywhere</h2>
+      <div className="bg-gradient-to-br from-purple-900/40 to-pink-900/40 rounded-2xl p-6 max-w-2xl mb-6">
+        <h3 className="text-xl font-bold text-purple-400 mb-4 text-center">The Photoelectric Family</h3>
         <div className="flex justify-around">
           {[
             { icon: '☀️', label: 'Solar Cells' },
@@ -1006,31 +932,25 @@ export default function SolarCellDetectorRenderer({
             { icon: '🩺', label: 'Medical' },
           ].map((item, i) => (
             <div key={i} className="text-center">
-              <div className="text-2xl mb-1">{item.icon}</div>
-              <div className="text-xs text-gray-600">{item.label}</div>
+              <div className="text-2xl mb-2">{item.icon}</div>
+              <div className="text-xs text-slate-300">{item.label}</div>
             </div>
           ))}
         </div>
       </div>
-
-      <div className="space-y-3 mb-6">
-        <div className="p-4 bg-white rounded-xl border border-gray-100">
-          <h4 className="font-semibold text-gray-900 mb-1">Same Physics, Different Uses</h4>
-          <p className="text-gray-600 text-sm">
-            Power generation and light detection both use the photovoltaic effect.
-          </p>
+      <div className="grid md:grid-cols-2 gap-4 max-w-4xl mb-6">
+        <div className="bg-slate-800/50 rounded-xl p-4">
+          <h4 className="font-semibold text-white mb-1">Same Physics, Different Uses</h4>
+          <p className="text-slate-400 text-sm">Power generation and light detection both use the photovoltaic effect.</p>
         </div>
-        <div className="p-4 bg-white rounded-xl border border-gray-100">
-          <h4 className="font-semibold text-gray-900 mb-1">Analog to Digital</h4>
-          <p className="text-gray-600 text-sm">
-            Continuous light becomes discrete values (0-255 for 8-bit images).
-          </p>
+        <div className="bg-slate-800/50 rounded-xl p-4">
+          <h4 className="font-semibold text-white mb-1">Analog to Digital</h4>
+          <p className="text-slate-400 text-sm">Continuous light becomes discrete values (0-255 for 8-bit images).</p>
         </div>
       </div>
-
-      <PrimaryButton onClick={nextPhase}>
-        Real-World Applications
-      </PrimaryButton>
+      <button onMouseDown={(e) => { e.preventDefault(); nextPhase(); }} className="px-6 py-3 bg-gradient-to-r from-blue-600 to-cyan-600 text-white font-semibold rounded-xl">
+        Explore Real-World Applications →
+      </button>
     </div>
   );
 
@@ -1063,77 +983,43 @@ export default function SolarCellDetectorRenderer({
     ];
 
     return (
-      <div>
-        <span className="inline-block px-3 py-1 bg-emerald-100 text-emerald-700 rounded-full text-sm font-medium mb-4">
-          Applications
-        </span>
-        <h2 className="text-2xl font-bold text-gray-900 mb-2">
-          Real-World Uses
-        </h2>
-        <p className="text-gray-500 text-sm mb-6">
-          Explore all 4 applications to unlock the knowledge test.
-        </p>
-
-        {/* Tab navigation */}
-        <div className="flex gap-2 mb-4 overflow-x-auto pb-2">
-          {apps.map((app, i) => (
+      <div className="flex flex-col items-center p-6">
+        <h2 className="text-2xl font-bold text-white mb-6">Real-World Applications</h2>
+        <div className="flex gap-2 mb-6 flex-wrap justify-center">
+          {apps.map((app, index) => (
             <button
-              key={i}
-              onMouseDown={(e) => {
-                e.preventDefault();
-                setActiveAppTab(i);
-                if (!completedApps.has(i)) {
-                  handleCompleteApp(i);
-                }
-              }}
-              className={`flex items-center gap-2 px-4 py-2 rounded-xl font-medium text-sm whitespace-nowrap transition-all ${
-                activeAppTab === i
-                  ? 'bg-amber-500 text-white shadow-lg'
-                  : completedApps.has(i)
-                  ? 'bg-green-100 text-green-700'
-                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+              key={index}
+              onMouseDown={(e) => { e.preventDefault(); setActiveAppTab(index); if (!completedApps.has(index)) handleCompleteApp(index); }}
+              className={`px-4 py-2 rounded-lg font-medium transition-all ${
+                activeAppTab === index ? 'bg-amber-600 text-white'
+                : completedApps.has(index) ? 'bg-emerald-600/30 text-emerald-400 border border-emerald-500'
+                : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
               }`}
             >
-              <span>{app.icon}</span>
-              <span>{app.title}</span>
-              {completedApps.has(i) && activeAppTab !== i && <span>✓</span>}
+              {app.icon} {app.title}
             </button>
           ))}
         </div>
-
-        {/* Active tab content */}
-        <div className="bg-gray-50 rounded-2xl p-5 mb-6">
-          <div className="bg-white rounded-xl mb-4 overflow-hidden">
+        <div className="bg-slate-800/50 rounded-2xl p-6 max-w-2xl w-full">
+          <div className="flex items-center gap-3 mb-4">
+            <span className="text-3xl">{apps[activeAppTab].icon}</span>
+            <h3 className="text-xl font-bold text-white">{apps[activeAppTab].title}</h3>
+          </div>
+          <div className="bg-slate-900/50 rounded-xl p-4 mb-4">
             {apps[activeAppTab].graphic}
           </div>
-          <h3 className="font-bold text-gray-900 text-lg mb-2">
-            {apps[activeAppTab].title}
-          </h3>
-          <p className="text-gray-600">
-            {apps[activeAppTab].desc}
-          </p>
+          <p className="text-lg text-slate-300">{apps[activeAppTab].desc}</p>
         </div>
-
-        {/* Progress */}
-        <div className="flex items-center justify-between mb-6">
-          <span className="text-sm text-gray-500">
-            {completedApps.size}/4 applications reviewed
-          </span>
-          <div className="flex gap-1">
-            {[0, 1, 2, 3].map(i => (
-              <div
-                key={i}
-                className={`w-3 h-3 rounded-full ${
-                  completedApps.has(i) ? 'bg-green-500' : 'bg-gray-200'
-                }`}
-              />
-            ))}
-          </div>
+        <div className="mt-6 flex items-center gap-2">
+          <span className="text-slate-400">Progress:</span>
+          <div className="flex gap-1">{apps.map((_, i) => (<div key={i} className={`w-3 h-3 rounded-full ${completedApps.has(i) ? 'bg-emerald-500' : 'bg-slate-600'}`} />))}</div>
+          <span className="text-slate-400">{completedApps.size}/4</span>
         </div>
-
-        <PrimaryButton onClick={nextPhase} disabled={completedApps.size < 4}>
-          {completedApps.size >= 4 ? 'Take Knowledge Test' : `Review all 4 applications first`}
-        </PrimaryButton>
+        {completedApps.size >= 4 && (
+          <button onMouseDown={(e) => { e.preventDefault(); nextPhase(); }} className="mt-6 px-6 py-3 bg-gradient-to-r from-blue-600 to-cyan-600 text-white font-semibold rounded-xl">
+            Take the Knowledge Test →
+          </button>
+        )}
       </div>
     );
   };
@@ -1144,56 +1030,38 @@ export default function SolarCellDetectorRenderer({
     if (testScore !== null) {
       const passed = testScore >= 7;
       return (
-        <div className="text-center py-6">
-          <div className={`text-7xl mb-6 ${passed ? 'animate-bounce' : ''}`}>
-            {passed ? '🎉' : '📚'}
+        <div className="flex flex-col items-center justify-center min-h-[500px] p-6 text-center">
+          <div className="bg-slate-800/50 rounded-2xl p-6 max-w-2xl">
+            <div className="text-6xl mb-4">{passed ? '🎉' : '📚'}</div>
+            <h3 className="text-2xl font-bold text-white mb-2">Score: {testScore}/10</h3>
+            <p className="text-slate-300 mb-6">{passed ? 'Excellent! You\'ve mastered photodetection concepts!' : 'Keep studying! Review and try again.'}</p>
+            {passed ? (
+              <button onMouseDown={(e) => { e.preventDefault(); nextPhase(); }} className="px-8 py-4 bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-semibold rounded-xl">
+                Claim Your Mastery Badge →
+              </button>
+            ) : (
+              <button onMouseDown={(e) => { e.preventDefault(); setTestScore(null); setTestAnswers(Array(10).fill(-1)); goToPhase('review'); }} className="px-8 py-4 bg-gradient-to-r from-blue-600 to-cyan-600 text-white font-semibold rounded-xl">
+                Review & Try Again
+              </button>
+            )}
           </div>
-          <h2 className="text-3xl font-bold text-gray-900 mb-2">
-            {testScore}/10 Correct
-          </h2>
-          <p className="text-gray-600 mb-8">
-            {passed
-              ? 'Excellent! You\'ve mastered photodetection concepts!'
-              : 'Review the material and try again to improve your score.'}
-          </p>
-          <PrimaryButton onClick={nextPhase}>
-            {passed ? 'Complete Lesson' : 'See Summary'}
-          </PrimaryButton>
         </div>
       );
     }
 
     return (
-      <div>
-        <span className="inline-block px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm font-medium mb-4">
-          Knowledge Test
-        </span>
-        <h2 className="text-2xl font-bold text-gray-900 mb-2">
-          Test Your Understanding
-        </h2>
-        <p className="text-gray-500 text-sm mb-6">
-          Answer all 10 questions. You need 7 correct to pass.
-        </p>
-
-        <div className="space-y-6 mb-6">
+      <div className="flex flex-col items-center p-6">
+        <h2 className="text-2xl font-bold text-white mb-6">Knowledge Assessment</h2>
+        <div className="space-y-6 max-w-2xl w-full">
           {TEST_QUESTIONS.map((q, qIndex) => (
-            <div key={qIndex} className="bg-gray-50 rounded-2xl p-4">
-              <p className="font-medium text-gray-900 mb-3 text-sm">
-                {qIndex + 1}. {q.question}
-              </p>
-              <div className="grid grid-cols-2 gap-2">
+            <div key={qIndex} className="bg-slate-800/50 rounded-xl p-4">
+              <p className="text-white font-medium mb-3">{qIndex + 1}. {q.question}</p>
+              <div className="grid gap-2">
                 {q.options.map((option, oIndex) => (
                   <button
                     key={oIndex}
-                    onMouseDown={(e) => {
-                      e.preventDefault();
-                      handleTestAnswer(qIndex, oIndex);
-                    }}
-                    className={`p-3 rounded-xl text-left text-sm transition-all ${
-                      testAnswers[qIndex] === oIndex
-                        ? 'bg-amber-500 text-white'
-                        : 'bg-white text-gray-700 hover:bg-amber-50 border border-gray-200'
-                    }`}
+                    onMouseDown={(e) => { e.preventDefault(); handleTestAnswer(qIndex, oIndex); }}
+                    className={`p-3 rounded-lg text-left text-sm transition-all ${testAnswers[qIndex] === oIndex ? 'bg-amber-600 text-white' : 'bg-slate-700/50 text-slate-300 hover:bg-slate-600/50'}`}
                   >
                     {option}
                   </button>
@@ -1201,45 +1069,31 @@ export default function SolarCellDetectorRenderer({
               </div>
             </div>
           ))}
+          <button
+            onMouseDown={(e) => { e.preventDefault(); if (allAnswered) handleSubmitTest(); }}
+            className={`w-full py-4 rounded-xl font-semibold text-lg ${!allAnswered ? 'bg-slate-700 text-slate-500 cursor-not-allowed' : 'bg-gradient-to-r from-amber-600 to-orange-600 text-white'}`}
+          >
+            {allAnswered ? 'Submit Answers' : `Answer all questions (${testAnswers.filter(a => a !== -1).length}/10)`}
+          </button>
         </div>
-
-        <PrimaryButton onClick={handleSubmitTest} disabled={!allAnswered}>
-          {allAnswered ? 'Submit Answers' : `Answer all questions (${testAnswers.filter(a => a !== -1).length}/10)`}
-        </PrimaryButton>
       </div>
     );
   };
 
   const renderMastery = () => (
-    <div className="text-center py-6">
-      <div className="text-7xl mb-6">🏆</div>
-      <h2 className="text-3xl font-bold text-gray-900 mb-4">
-        Congratulations!
-      </h2>
-      <p className="text-gray-600 mb-8">
-        You&apos;ve mastered Solar Cell Light Detection.
-      </p>
-
-      <div className="bg-gradient-to-br from-amber-50 to-orange-50 rounded-2xl p-6 mb-8 text-left">
-        <h3 className="font-bold text-gray-900 mb-4">Key Takeaways</h3>
-        <ul className="space-y-3">
-          {[
-            'Photocurrent is proportional to light intensity',
-            'Solar cells and camera pixels use the same physics',
-            'The cosine law affects light capture at angles',
-            'Photodetectors enable countless modern technologies',
-          ].map((item, i) => (
-            <li key={i} className="flex items-start gap-3">
-              <span className="text-amber-500 font-bold">✓</span>
-              <span className="text-gray-700">{item}</span>
-            </li>
-          ))}
-        </ul>
+    <div className="flex flex-col items-center justify-center min-h-[500px] p-6 text-center">
+      <div className="bg-gradient-to-br from-amber-900/50 via-orange-900/50 to-amber-900/50 rounded-3xl p-8 max-w-2xl">
+        <div className="text-8xl mb-6">☀️</div>
+        <h1 className="text-3xl font-bold text-white mb-4">Solar Cell Light Detection Master!</h1>
+        <p className="text-xl text-slate-300 mb-6">You&apos;ve mastered the physics of photodetection!</p>
+        <div className="grid grid-cols-2 gap-4 mb-6">
+          <div className="bg-slate-800/50 rounded-xl p-4"><div className="text-2xl mb-2">☀️</div><p className="text-sm text-slate-300">Photovoltaic Effect</p></div>
+          <div className="bg-slate-800/50 rounded-xl p-4"><div className="text-2xl mb-2">📷</div><p className="text-sm text-slate-300">Camera Sensors</p></div>
+          <div className="bg-slate-800/50 rounded-xl p-4"><div className="text-2xl mb-2">📐</div><p className="text-sm text-slate-300">Cosine Law</p></div>
+          <div className="bg-slate-800/50 rounded-xl p-4"><div className="text-2xl mb-2">🩺</div><p className="text-sm text-slate-300">Medical Devices</p></div>
+        </div>
+        <button onMouseDown={(e) => { e.preventDefault(); goToPhase('hook'); }} className="px-6 py-3 bg-slate-700 hover:bg-slate-600 text-white font-medium rounded-xl">↺ Explore Again</button>
       </div>
-
-      <PrimaryButton onClick={() => goToPhase('hook')} variant="secondary">
-        Review Again
-      </PrimaryButton>
     </div>
   );
 
@@ -1264,12 +1118,19 @@ export default function SolarCellDetectorRenderer({
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-amber-50 via-white to-orange-50">
-      <div className="max-w-md mx-auto px-5 py-8">
-        <ProgressIndicator />
-        <div className="bg-white rounded-3xl shadow-xl shadow-gray-200/50 p-6">
-          {renderContent()}
-        </div>
+    <div className="min-h-screen bg-[#0a0f1a] text-white relative overflow-hidden">
+      {/* Premium background gradient */}
+      <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-[#0a1628] to-slate-900" />
+      <div className="absolute top-0 left-1/4 w-96 h-96 bg-amber-500/5 rounded-full blur-3xl" />
+      <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-orange-500/5 rounded-full blur-3xl" />
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-amber-500/3 rounded-full blur-3xl" />
+
+      {/* Header */}
+      <ProgressIndicator />
+
+      {/* Main content */}
+      <div className="relative pt-16 pb-12">
+        {renderContent()}
       </div>
     </div>
   );

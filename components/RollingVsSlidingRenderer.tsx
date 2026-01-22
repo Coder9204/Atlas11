@@ -24,7 +24,15 @@ interface GameEvent {
 // SOUND UTILITY
 // ─────────────────────────────────────────────────────────────────────────────
 
-const playSound = (frequency: number, type: OscillatorType = 'sine', duration: number = 0.15) => {
+const playSound = (soundType: 'click' | 'success' | 'failure' | 'transition' | 'complete') => {
+  const soundConfig = {
+    click: { frequency: 400, type: 'sine' as OscillatorType, duration: 0.1 },
+    success: { frequency: 600, type: 'triangle' as OscillatorType, duration: 0.2 },
+    failure: { frequency: 200, type: 'square' as OscillatorType, duration: 0.2 },
+    transition: { frequency: 500, type: 'sine' as OscillatorType, duration: 0.1 },
+    complete: { frequency: 800, type: 'sine' as OscillatorType, duration: 0.3 }
+  };
+  const { frequency, type, duration } = soundConfig[soundType];
   try {
     const audioContext = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
     const oscillator = audioContext.createOscillator();
@@ -160,7 +168,7 @@ const RollingVsSlidingRenderer: React.FC<RollingVsSlidingRendererProps> = ({
     if (navigationLockRef.current) return;
     navigationLockRef.current = true;
 
-    playSound(500, 'sine', 0.1);
+    playSound('transition');
     setPhase(newPhase);
     setShowCoachMessage(true);
     emitEvent('phase_change', { action: `Moved to ${newPhase}` });
@@ -199,13 +207,13 @@ const RollingVsSlidingRenderer: React.FC<RollingVsSlidingRendererProps> = ({
 
     if (force <= frictionForce && motionType === 'sliding') {
       // Not enough force to overcome static friction
-      playSound(200, 'square', 0.2);
+      playSound('failure');
       return;
     }
 
     setIsMoving(true);
     setHasStarted(true);
-    playSound(400, 'sine', 0.1);
+    playSound('click');
 
     const netAccel = (force - frictionForce) / 1; // mass = 1kg
 
@@ -243,13 +251,13 @@ const RollingVsSlidingRenderer: React.FC<RollingVsSlidingRendererProps> = ({
 
     if (twistForce < staticForce && !hasBrokenFree) {
       // Not enough to break static friction
-      playSound(200, 'square', 0.2);
+      playSound('failure');
       return;
     }
 
     if (!hasBrokenFree) {
       setHasBrokenFree(true);
-      playSound(600, 'triangle', 0.2);
+      playSound('success');
     }
 
     // Once moving, kinetic friction is lower
@@ -344,17 +352,26 @@ const RollingVsSlidingRenderer: React.FC<RollingVsSlidingRendererProps> = ({
   const renderProgressBar = () => {
     const phases: Phase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
     const currentIndex = phases.indexOf(phase);
-    const progress = ((currentIndex + 1) / phases.length) * 100;
 
     return (
-      <div className="w-full bg-gray-200 rounded-full h-2 mb-4 overflow-hidden">
-        <div
-          className="h-full rounded-full transition-all duration-500"
-          style={{
-            width: `${progress}%`,
-            background: `linear-gradient(90deg, ${colors.primary}, ${colors.secondary})`
-          }}
-        />
+      <div className="flex items-center justify-center gap-1.5 mb-4">
+        {phases.map((p, i) => (
+          <button
+            key={p}
+            onMouseDown={(e) => {
+              e.preventDefault();
+              if (i < currentIndex) goToPhase(p);
+            }}
+            className={`h-2 rounded-full transition-all duration-300 ${
+              i === currentIndex
+                ? 'bg-indigo-400 w-6 shadow-lg shadow-indigo-400/30'
+                : i < currentIndex
+                  ? 'bg-emerald-500 w-2'
+                  : 'bg-slate-600 w-2 hover:bg-slate-500'
+            }`}
+            style={{ cursor: i < currentIndex ? 'pointer' : 'default' }}
+          />
+        ))}
       </div>
     );
   };
@@ -509,9 +526,16 @@ const RollingVsSlidingRenderer: React.FC<RollingVsSlidingRendererProps> = ({
 
   const renderHook = () => (
     <div className="text-center">
-      {renderSectionHeader('The Wheel Revolution', 'Why wheels changed everything')}
+      {/* Premium Badge */}
+      <div className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-500/10 border border-indigo-500/20 rounded-full mb-6">
+        <span className="w-2 h-2 bg-indigo-400 rounded-full animate-pulse" />
+        <span className="text-sm font-medium text-indigo-400 tracking-wide">PHYSICS EXPLORATION</span>
+      </div>
+      {/* Gradient Title */}
+      <h1 className="text-3xl md:text-4xl font-bold mb-2 bg-gradient-to-r from-white via-indigo-100 to-purple-200 bg-clip-text text-transparent">The Wheel Revolution</h1>
+      <p className="text-slate-400 mb-6">Why wheels changed everything</p>
 
-      <div className="bg-gradient-to-br from-amber-100 to-orange-100 rounded-2xl p-6 mb-6 shadow-lg">
+      <div className="bg-slate-800/30 backdrop-blur-xl rounded-2xl p-6 mb-6 shadow-lg border border-white/10">
         <svg viewBox="0 0 300 180" className="w-full h-44 mb-4">
           <rect x="0" y="0" width="300" height="180" fill="white" rx="10" />
 
@@ -587,7 +611,7 @@ const RollingVsSlidingRenderer: React.FC<RollingVsSlidingRendererProps> = ({
               onMouseDown={(e) => {
                 e.preventDefault();
                 setPrediction(option.id);
-                playSound(400, 'sine', 0.1);
+                playSound('click');
                 emitEvent('prediction', { prediction: option.id });
               }}
               className={`p-4 rounded-xl border-2 transition-all text-left flex items-center gap-3 ${
@@ -824,7 +848,7 @@ const RollingVsSlidingRenderer: React.FC<RollingVsSlidingRendererProps> = ({
               onMouseDown={(e) => {
                 e.preventDefault();
                 setTwistPrediction(option.id);
-                playSound(400, 'sine', 0.1);
+                playSound('click');
                 emitEvent('prediction', { prediction: option.id });
               }}
               className={`p-4 rounded-xl border-2 transition-all text-left flex items-center gap-3 ${
@@ -1154,7 +1178,7 @@ const RollingVsSlidingRenderer: React.FC<RollingVsSlidingRendererProps> = ({
             <button
               onMouseDown={(e) => {
                 e.preventDefault();
-                playSound(600, 'sine', 0.1);
+                playSound('click');
                 setCompletedApps(prev => prev + 1);
               }}
               className="w-full py-3 rounded-xl font-semibold text-white shadow-lg hover:shadow-xl transition-all"
@@ -1314,7 +1338,7 @@ const RollingVsSlidingRenderer: React.FC<RollingVsSlidingRendererProps> = ({
     const newAnswers = [...testAnswers];
     newAnswers[questionIndex] = optionIndex;
     setTestAnswers(newAnswers);
-    playSound(optionIndex === testQuestions[questionIndex].options.findIndex(o => o.correct) ? 600 : 300, 'sine', 0.15);
+    playSound(optionIndex === testQuestions[questionIndex].options.findIndex(o => o.correct) ? 'success' : 'failure');
   };
 
   const calculateTestScore = () => {
@@ -1488,7 +1512,7 @@ const RollingVsSlidingRenderer: React.FC<RollingVsSlidingRendererProps> = ({
         <button
           onMouseDown={(e) => {
             e.preventDefault();
-            playSound(800, 'sine', 0.3);
+            playSound('complete');
             if (onComplete) onComplete(testScore * 10);
             emitEvent('completion', { score: testScore * 10 });
           }}
@@ -1505,46 +1529,54 @@ const RollingVsSlidingRenderer: React.FC<RollingVsSlidingRendererProps> = ({
   // ─────────────────────────────────────────────────────────────────────────
 
   return (
-    <div className={`min-h-screen bg-gradient-to-br from-slate-50 to-indigo-50 ${isMobile ? 'p-3' : 'p-6'}`}>
-      <div className="max-w-2xl mx-auto">
-        <div className="text-center mb-4">
-          <h1 className="text-2xl md:text-3xl font-bold text-gray-800 flex items-center justify-center gap-2">
-            🛞 Rolling vs Sliding
-          </h1>
-          <p className="text-gray-600 text-sm">Friction Types Explained</p>
-        </div>
+    <div className="min-h-screen bg-[#0a0f1a] text-white relative overflow-hidden">
+      {/* Ambient glow effects */}
+      <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-[#0a1628] to-slate-900" />
+      <div className="absolute top-0 left-1/4 w-96 h-96 bg-indigo-500/5 rounded-full blur-3xl" />
+      <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-purple-500/5 rounded-full blur-3xl" />
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-indigo-500/3 rounded-full blur-3xl" />
 
-        {renderProgressBar()}
-
-        {showCoachMessage && (
-          <div className="bg-gradient-to-r from-indigo-500 to-purple-500 text-white rounded-xl p-4 mb-4 shadow-lg">
-            <div className="flex items-start gap-3">
-              <span className="text-2xl">🧑‍🏫</span>
-              <p className="flex-1">{coachMessages[phase]}</p>
-              <button
-                onMouseDown={(e) => {
-                  e.preventDefault();
-                  setShowCoachMessage(false);
-                }}
-                className="text-white/80 hover:text-white"
-              >
-                ✕
-              </button>
+      <div className={`relative z-10 ${isMobile ? 'p-3' : 'p-6'}`}>
+        <div className="max-w-2xl mx-auto">
+          {/* Progress bar header */}
+          <div className="bg-slate-900/80 backdrop-blur-xl rounded-xl border border-white/10 p-3 mb-4">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-sm font-medium text-slate-400">Rolling vs Sliding</span>
+              <span className="text-sm text-slate-500">{phase.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}</span>
             </div>
+            {renderProgressBar()}
           </div>
-        )}
 
-        <div className="bg-white/80 backdrop-blur rounded-2xl shadow-xl p-4 md:p-6">
-          {phase === 'hook' && renderHook()}
-          {phase === 'predict' && renderPredict()}
-          {phase === 'play' && renderPlay()}
-          {phase === 'review' && renderReview()}
-          {phase === 'twist_predict' && renderTwistPredict()}
-          {phase === 'twist_play' && renderTwistPlay()}
-          {phase === 'twist_review' && renderTwistReview()}
-          {phase === 'transfer' && renderTransfer()}
-          {phase === 'test' && renderTest()}
-          {phase === 'mastery' && renderMastery()}
+          {showCoachMessage && (
+            <div className="bg-gradient-to-r from-indigo-600/80 to-purple-600/80 backdrop-blur-xl text-white rounded-xl p-4 mb-4 shadow-lg border border-white/10">
+              <div className="flex items-start gap-3">
+                <span className="text-2xl">🧑‍🏫</span>
+                <p className="flex-1">{coachMessages[phase]}</p>
+                <button
+                  onMouseDown={(e) => {
+                    e.preventDefault();
+                    setShowCoachMessage(false);
+                  }}
+                  className="text-white/80 hover:text-white"
+                >
+                  ✕
+                </button>
+              </div>
+            </div>
+          )}
+
+          <div className="bg-slate-800/30 backdrop-blur-xl rounded-2xl shadow-xl p-4 md:p-6 border border-white/10">
+            {phase === 'hook' && renderHook()}
+            {phase === 'predict' && renderPredict()}
+            {phase === 'play' && renderPlay()}
+            {phase === 'review' && renderReview()}
+            {phase === 'twist_predict' && renderTwistPredict()}
+            {phase === 'twist_play' && renderTwistPlay()}
+            {phase === 'twist_review' && renderTwistReview()}
+            {phase === 'transfer' && renderTransfer()}
+            {phase === 'test' && renderTest()}
+            {phase === 'mastery' && renderMastery()}
+          </div>
         </div>
       </div>
     </div>

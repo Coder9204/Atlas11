@@ -177,6 +177,7 @@ export default function TransformerRenderer({ onEvent, savedState }: Transformer
   const [twistMode, setTwistMode] = useState<'ac' | 'dc'>('ac');
 
   const navigationLockRef = useRef(false);
+  const lastClickRef = useRef(0);
 
   // Calculated values
   const turnsRatio = secondaryTurns / primaryTurns;
@@ -235,20 +236,20 @@ export default function TransformerRenderer({ onEvent, savedState }: Transformer
   }, [phase]);
 
   // ─── Render Helpers ──────────────────────────────────────────────────────────
-  const renderProgressBar = () => (
-    <div className="flex items-center gap-1 mb-6">
-      {PHASES.map((p, i) => (
-        <div
-          key={p}
-          className={`h-2 flex-1 rounded-full transition-all duration-300 ${
-            i <= PHASES.indexOf(phase)
-              ? 'bg-gradient-to-r from-yellow-500 to-orange-500'
-              : 'bg-gray-700'
-          }`}
-        />
-      ))}
-    </div>
-  );
+  const phaseLabels: Record<Phase, string> = {
+    hook: 'Hook',
+    predict: 'Predict',
+    play: 'Lab',
+    review: 'Review',
+    twist_predict: 'Twist Predict',
+    twist_play: 'Twist Lab',
+    twist_review: 'Twist Review',
+    transfer: 'Transfer',
+    test: 'Test',
+    mastery: 'Mastery'
+  };
+
+  const renderProgressBar = () => null; // Replaced by header progress dots
 
   const renderTransformer = (pTurns: number, sTurns: number, vIn: number, ac: boolean, animPhase: number) => {
     const ratio = sTurns / pTurns;
@@ -456,28 +457,73 @@ export default function TransformerRenderer({ onEvent, savedState }: Transformer
 
   // ─── Phase Renderers ─────────────────────────────────────────────────────────
   const renderHook = () => (
-    <div className="text-center space-y-6">
-      <h2 className="text-2xl font-bold text-white">Why Don&apos;t Power Lines Melt?</h2>
-      <div className="bg-gray-800 rounded-xl p-6 max-w-lg mx-auto">
-        <p className="text-gray-300 text-lg leading-relaxed">
-          Homes use 120-240 volts. But power lines carry <span className="text-yellow-400">400,000 volts</span>!
-          If you tried to send household current through those long wires, they&apos;d glow red hot.
-        </p>
-        <div className="mt-6 p-4 bg-gray-700 rounded-lg">
-          <p className="text-green-300 font-medium">
-            ⚡ A simple device called a &quot;transformer&quot; makes our power grid possible!
-          </p>
-        </div>
-        <p className="text-gray-400 mt-4">
-          Discover how changing voltage saves energy and why AC won the &quot;War of Currents.&quot;
-        </p>
+    <div className="flex flex-col items-center justify-center min-h-[600px] px-6 py-12 text-center">
+      {/* Premium badge */}
+      <div className="inline-flex items-center gap-2 px-4 py-2 bg-yellow-500/10 border border-yellow-500/20 rounded-full mb-8">
+        <span className="w-2 h-2 bg-yellow-400 rounded-full animate-pulse" />
+        <span className="text-sm font-medium text-yellow-400 tracking-wide">PHYSICS EXPLORATION</span>
       </div>
+
+      {/* Main title with gradient */}
+      <h1 className="text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-white via-yellow-100 to-orange-200 bg-clip-text text-transparent">
+        The Power Grid Mystery
+      </h1>
+
+      <p className="text-lg text-slate-400 max-w-md mb-10">
+        Discover why 400,000 volts flow through power lines—yet your home only uses 120V
+      </p>
+
+      {/* Premium card with graphic */}
+      <div className="relative bg-gradient-to-br from-slate-800/80 to-slate-900/80 rounded-3xl p-8 max-w-xl w-full border border-slate-700/50 shadow-2xl shadow-black/20">
+        {/* Subtle glow effect */}
+        <div className="absolute inset-0 bg-gradient-to-br from-yellow-500/5 via-transparent to-orange-500/5 rounded-3xl" />
+
+        <div className="relative">
+          <div className="text-6xl mb-6">⚡</div>
+          <div className="space-y-4">
+            <p className="text-xl text-white/90 font-medium leading-relaxed">
+              If you tried to send household current through long wires, they&apos;d glow red hot!
+            </p>
+            <p className="text-lg text-slate-400 leading-relaxed">
+              A simple device called a &quot;transformer&quot; makes our power grid possible.
+            </p>
+            <div className="pt-2">
+              <p className="text-base text-yellow-400 font-semibold">
+                Why did AC win the &quot;War of Currents&quot;?
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Premium CTA button */}
       <button
-        onMouseDown={() => { playSound('click'); nextPhase(); }}
-        className="px-8 py-4 bg-gradient-to-r from-yellow-600 to-orange-600 text-white rounded-xl font-bold text-lg hover:from-yellow-500 hover:to-orange-500 transition-all"
+        onMouseDown={(e) => { e.preventDefault(); nextPhase(); }}
+        className="mt-10 group relative px-10 py-5 bg-gradient-to-r from-yellow-500 to-orange-600 text-white text-lg font-semibold rounded-2xl transition-all duration-300 hover:shadow-lg hover:shadow-yellow-500/25 hover:scale-[1.02] active:scale-[0.98]"
       >
-        Discover the Secret →
+        <span className="relative z-10 flex items-center gap-3">
+          Discover the Secret
+          <svg className="w-5 h-5 transition-transform group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+          </svg>
+        </span>
       </button>
+
+      {/* Feature hints */}
+      <div className="mt-12 flex items-center gap-8 text-sm text-slate-500">
+        <div className="flex items-center gap-2">
+          <span className="text-yellow-400">✦</span>
+          Interactive Lab
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="text-yellow-400">✦</span>
+          Real-World Examples
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="text-yellow-400">✦</span>
+          Knowledge Test
+        </div>
+      </div>
     </div>
   );
 
@@ -1009,39 +1055,38 @@ export default function TransformerRenderer({ onEvent, savedState }: Transformer
   };
 
   return (
-    <div className="min-h-screen bg-gray-900 p-4">
-      <div className="max-w-2xl mx-auto">
-        {renderProgressBar()}
+    <div className="min-h-screen bg-[#0a0f1a] text-white relative overflow-hidden">
+      {/* Premium background gradient */}
+      <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-[#0a1628] to-slate-900" />
+      <div className="absolute top-0 left-1/4 w-96 h-96 bg-yellow-500/5 rounded-full blur-3xl" />
+      <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-orange-500/5 rounded-full blur-3xl" />
 
-        {/* Phase indicator */}
-        <div className="text-center mb-6">
-          <span className="px-3 py-1 bg-yellow-900/50 text-yellow-300 rounded-full text-sm">
-            {phase.replace('_', ' ').toUpperCase()}
-          </span>
-        </div>
-
-        {renderPhase()}
-
-        {/* Navigation */}
-        {phase !== 'hook' && phase !== 'mastery' && (
-          <div className="mt-8 flex justify-between">
-            <button
-              onMouseDown={() => {
-                const currentIndex = PHASES.indexOf(phase);
-                if (currentIndex > 0) {
-                  goToPhase(PHASES[currentIndex - 1]);
-                }
-              }}
-              className="px-4 py-2 bg-gray-700 text-gray-300 rounded-lg hover:bg-gray-600 transition-all"
-            >
-              ← Back
-            </button>
-            <div className="text-gray-500 text-sm">
-              {PHASES.indexOf(phase) + 1} / {PHASES.length}
-            </div>
+      {/* Header */}
+      <div className="fixed top-0 left-0 right-0 z-50 bg-slate-900/80 backdrop-blur-xl border-b border-slate-800/50">
+        <div className="flex items-center justify-between px-6 py-3 max-w-4xl mx-auto">
+          <span className="text-sm font-semibold text-white/80 tracking-wide">Transformers</span>
+          <div className="flex items-center gap-1.5">
+            {PHASES.map((p, i) => (
+              <button
+                key={p}
+                onMouseDown={(e) => { e.preventDefault(); goToPhase(p); }}
+                className={`h-2 rounded-full transition-all duration-300 ${
+                  phase === p
+                    ? 'bg-yellow-400 w-6 shadow-lg shadow-yellow-400/30'
+                    : PHASES.indexOf(phase) > i
+                      ? 'bg-emerald-500 w-2'
+                      : 'bg-slate-700 w-2 hover:bg-slate-600'
+                }`}
+                title={phaseLabels[p]}
+              />
+            ))}
           </div>
-        )}
+          <span className="text-sm font-medium text-yellow-400">{phaseLabels[phase]}</span>
+        </div>
       </div>
+
+      {/* Main content */}
+      <div className="relative pt-16 pb-12 max-w-4xl mx-auto">{renderPhase()}</div>
     </div>
   );
 }

@@ -254,17 +254,31 @@ export default function SimpleGeneratorRenderer({ onEvent, savedState }: SimpleG
 
   // ─── Render Helpers ──────────────────────────────────────────────────────────
   const renderProgressBar = () => (
-    <div className="flex items-center gap-1 mb-6">
-      {PHASES.map((p, i) => (
-        <div
-          key={p}
-          className={`h-2 flex-1 rounded-full transition-all duration-300 ${
-            i <= PHASES.indexOf(phase)
-              ? 'bg-gradient-to-r from-green-500 to-emerald-500'
-              : 'bg-gray-700'
-          }`}
-        />
-      ))}
+    <div className="bg-slate-900/80 backdrop-blur-xl rounded-xl border border-white/10 p-3 mb-6">
+      <div className="flex items-center justify-between mb-2">
+        <span className="text-sm font-medium text-slate-400">Simple Generator</span>
+        <span className="text-sm text-slate-500">{phase.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}</span>
+      </div>
+      {/* Premium phase dots */}
+      <div className="flex items-center justify-center gap-1.5">
+        {PHASES.map((p, i) => (
+          <button
+            key={p}
+            onMouseDown={(e) => {
+              e.preventDefault();
+              if (i < PHASES.indexOf(phase)) goToPhase(p);
+            }}
+            className={`h-2 rounded-full transition-all duration-300 ${
+              i === PHASES.indexOf(phase)
+                ? 'bg-emerald-400 w-6 shadow-lg shadow-emerald-400/30'
+                : i < PHASES.indexOf(phase)
+                  ? 'bg-emerald-500 w-2'
+                  : 'bg-slate-700 w-2 hover:bg-slate-600'
+            }`}
+            style={{ cursor: i < PHASES.indexOf(phase) ? 'pointer' : 'default' }}
+          />
+        ))}
+      </div>
     </div>
   );
 
@@ -478,8 +492,14 @@ export default function SimpleGeneratorRenderer({ onEvent, savedState }: SimpleG
   // ─── Phase Renderers ─────────────────────────────────────────────────────────
   const renderHook = () => (
     <div className="text-center space-y-6">
-      <h2 className="text-2xl font-bold text-white">Where Does Electricity Come From?</h2>
-      <div className="bg-gray-800 rounded-xl p-6 max-w-lg mx-auto">
+      {/* Premium Badge */}
+      <div className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-500/10 border border-emerald-500/20 rounded-full mb-4">
+        <span className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse" />
+        <span className="text-sm font-medium text-emerald-400 tracking-wide">PHYSICS EXPLORATION</span>
+      </div>
+      {/* Gradient Title */}
+      <h2 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-white via-emerald-100 to-green-200 bg-clip-text text-transparent">Where Does Electricity Come From?</h2>
+      <div className="bg-slate-800/30 backdrop-blur-xl rounded-xl p-6 max-w-lg mx-auto border border-white/10">
         <p className="text-gray-300 text-lg leading-relaxed">
           Power plants, wind turbines, and hydroelectric dams all generate electricity.
           But how do you turn <span className="text-cyan-400">spinning motion</span> into
@@ -1036,38 +1056,39 @@ export default function SimpleGeneratorRenderer({ onEvent, savedState }: SimpleG
   };
 
   return (
-    <div className="min-h-screen bg-gray-900 p-4">
-      <div className="max-w-2xl mx-auto">
-        {renderProgressBar()}
+    <div className="min-h-screen bg-[#0a0f1a] text-white relative overflow-hidden">
+      {/* Ambient glow effects */}
+      <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-[#0a1628] to-slate-900" />
+      <div className="absolute top-0 left-1/4 w-96 h-96 bg-emerald-500/5 rounded-full blur-3xl" />
+      <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-green-500/5 rounded-full blur-3xl" />
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-emerald-500/3 rounded-full blur-3xl" />
 
-        {/* Phase indicator */}
-        <div className="text-center mb-6">
-          <span className="px-3 py-1 bg-green-900/50 text-green-300 rounded-full text-sm">
-            {phase.replace('_', ' ').toUpperCase()}
-          </span>
-        </div>
+      <div className="relative z-10 p-4">
+        <div className="max-w-2xl mx-auto">
+          {renderProgressBar()}
 
-        {renderPhase()}
+          {renderPhase()}
 
-        {/* Navigation */}
-        {phase !== 'hook' && phase !== 'mastery' && (
-          <div className="mt-8 flex justify-between">
-            <button
-              onMouseDown={() => {
-                const currentIndex = PHASES.indexOf(phase);
-                if (currentIndex > 0) {
-                  goToPhase(PHASES[currentIndex - 1]);
-                }
-              }}
-              className="px-4 py-2 bg-gray-700 text-gray-300 rounded-lg hover:bg-gray-600 transition-all"
-            >
-              ← Back
-            </button>
-            <div className="text-gray-500 text-sm">
-              {PHASES.indexOf(phase) + 1} / {PHASES.length}
+          {/* Navigation */}
+          {phase !== 'hook' && phase !== 'mastery' && (
+            <div className="mt-8 flex justify-between">
+              <button
+                onMouseDown={() => {
+                  const currentIndex = PHASES.indexOf(phase);
+                  if (currentIndex > 0) {
+                    goToPhase(PHASES[currentIndex - 1]);
+                  }
+                }}
+                className="px-4 py-2 bg-slate-700/50 backdrop-blur-xl text-gray-300 rounded-lg hover:bg-slate-600/50 transition-all border border-white/10"
+              >
+                ← Back
+              </button>
+              <div className="text-gray-500 text-sm">
+                {PHASES.indexOf(phase) + 1} / {PHASES.length}
+              </div>
             </div>
-          </div>
-        )}
+          )}
+        </div>
       </div>
     </div>
   );

@@ -3,100 +3,67 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 
 // ============================================================================
-// CENTER OF MASS - Premium 10-Phase Educational Game
-// Gold Standard Implementation with Sequential Transfer Navigation
+// CENTER OF MASS - Premium 10-Screen Design
 // ============================================================================
 
-export interface GameEvent {
-  type: 'phase_change' | 'interaction' | 'prediction' | 'result' | 'hint_request' | 'visual_state_update';
-  phase: string;
-  data: Record<string, unknown>;
-  timestamp: number;
-  eventType?: 'weight_add' | 'weight_move' | 'balance_check' | 'reset' | 'answer_submit';
+type GameEventType =
+  | 'phase_change'
+  | 'prediction_made'
+  | 'simulation_started'
+  | 'parameter_changed'
+  | 'twist_prediction_made'
+  | 'app_explored'
+  | 'test_answered'
+  | 'test_completed'
+  | 'mastery_achieved';
+
+interface GameEvent {
+  type: GameEventType;
+  data?: Record<string, unknown>;
 }
 
-interface CenterOfMassRendererProps {
-  width?: number;
-  height?: number;
-  onGameEvent?: (event: GameEvent) => void;
-  gamePhase?: string;
-}
-
-type Phase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
-
-// ============================================================================
-// PREMIUM DESIGN TOKENS - Apple/Airbnb Quality
-// ============================================================================
-const design = {
-  colors: {
-    // Refined dark theme with emerald accent
-    bgDeep: '#040a08',
-    bgPrimary: '#0a100e',
-    bgSecondary: '#121a18',
-    bgTertiary: '#1a2422',
-    bgCard: '#182220',
-    bgElevated: '#223330',
-    bgHover: '#2a3d38',
-
-    // High contrast text
-    textPrimary: '#ffffff',
-    textSecondary: '#a8c4bc',
-    textMuted: '#6a8580',
-    textDisabled: '#405550',
-
-    // Brand colors - Emerald theme
-    accentPrimary: '#10b981',
-    accentPrimaryHover: '#059669',
-    accentPrimaryMuted: 'rgba(16, 185, 129, 0.15)',
-    accentSecondary: '#f59e0b',
-    accentSecondaryMuted: 'rgba(245, 158, 11, 0.15)',
-
-    // Physics elements
-    fork: '#b8c4c0',
-    forkHighlight: '#d4dcd8',
-    forkDark: '#8a9a94',
-    toothpick: '#d4a574',
-    toothpickDark: '#a67c4a',
-    glass: '#7dd3fc',
-    glassDark: '#0284c7',
-    clay: '#d97706',
-    com: '#ef4444',
-
-    // Functional
-    success: '#10b981',
-    successMuted: 'rgba(16, 185, 129, 0.15)',
-    error: '#ef4444',
-    errorMuted: 'rgba(239, 68, 68, 0.15)',
-
-    // Borders
-    border: '#2a3d38',
-    borderLight: '#3a4d48',
-  },
-  spacing: { xs: 4, sm: 8, md: 16, lg: 24, xl: 32, xxl: 48 },
-  radius: { sm: 8, md: 12, lg: 16, xl: 20, full: 9999 },
-  font: {
-    sans: '-apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif',
-    mono: '"SF Mono", "Fira Code", monospace'
-  },
-  shadow: {
-    sm: '0 2px 8px rgba(0,0,0,0.3)',
-    md: '0 4px 16px rgba(0,0,0,0.4)',
-    lg: '0 8px 32px rgba(0,0,0,0.5)',
-    glow: (color: string) => `0 0 24px ${color}40`,
-  }
+const PHASES: number[] = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
+const phaseLabels: Record<number, string> = {
+  0: 'Hook',
+  1: 'Predict',
+  2: 'Lab',
+  3: 'Review',
+  4: 'Twist Predict',
+  5: 'Twist Lab',
+  6: 'Twist Review',
+  7: 'Transfer',
+  8: 'Test',
+  9: 'Mastery'
 };
 
-// ============================================================================
-// MAIN COMPONENT
-// ============================================================================
+interface CenterOfMassRendererProps {
+  onGameEvent?: (event: GameEvent) => void;
+  currentPhase?: number;
+  onPhaseComplete?: (phase: number) => void;
+}
+
 const CenterOfMassRenderer: React.FC<CenterOfMassRendererProps> = ({
-  width = 400,
-  height = 500,
   onGameEvent,
-  gamePhase
+  currentPhase,
+  onPhaseComplete
 }) => {
-  // Core state
-  const [phase, setPhase] = useState<Phase>('hook');
+  // Navigation debouncing ref
+  const navigationLockRef = useRef(false);
+  const lastClickRef = useRef(0);
+
+  // Phase state
+  const [phase, setPhase] = useState<number>(() => {
+    if (currentPhase !== undefined && PHASES.includes(currentPhase)) return currentPhase;
+    return 0;
+  });
+
+  // Sync phase with external prop
+  useEffect(() => {
+    if (currentPhase !== undefined && PHASES.includes(currentPhase)) {
+      setPhase(currentPhase);
+    }
+  }, [currentPhase]);
+
   const [prediction, setPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
   const [isMobile, setIsMobile] = useState(false);
@@ -110,7 +77,7 @@ const CenterOfMassRenderer: React.FC<CenterOfMassRendererProps> = ({
   const [experimentCount, setExperimentCount] = useState(0);
   const [isAnimating, setIsAnimating] = useState(false);
 
-  // Transfer state with sequential navigation
+  // Transfer state
   const [activeApp, setActiveApp] = useState(0);
   const [completedApps, setCompletedApps] = useState<Set<number>>(new Set());
 
@@ -121,8 +88,6 @@ const CenterOfMassRenderer: React.FC<CenterOfMassRendererProps> = ({
   const [correctAnswers, setCorrectAnswers] = useState(0);
   const [answeredQuestions, setAnsweredQuestions] = useState<Set<number>>(new Set());
 
-  // Navigation debouncing ref
-  const navigationLockRef = useRef(false);
   const animationRef = useRef<number>();
 
   // Responsive detection
@@ -133,29 +98,56 @@ const CenterOfMassRenderer: React.FC<CenterOfMassRendererProps> = ({
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
-  // Sync with external phase
-  useEffect(() => {
-    if (gamePhase && gamePhase !== phase) setPhase(gamePhase as Phase);
-  }, [gamePhase, phase]);
-
   // Cleanup animation
   useEffect(() => {
     return () => { if (animationRef.current) cancelAnimationFrame(animationRef.current); };
   }, []);
 
-  // Event emitter
-  const emit = useCallback((type: GameEvent['type'], data: Record<string, unknown>, eventType?: GameEvent['eventType']) => {
-    onGameEvent?.({ type, phase, data, timestamp: Date.now(), eventType });
-  }, [onGameEvent, phase]);
+  // Web Audio API sound
+  const playSound = useCallback((type: 'click' | 'success' | 'failure' | 'transition' | 'complete') => {
+    if (typeof window === 'undefined') return;
+    try {
+      const audioContext = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
+      const oscillator = audioContext.createOscillator();
+      const gainNode = audioContext.createGain();
+      oscillator.connect(gainNode);
+      gainNode.connect(audioContext.destination);
+      const sounds = {
+        click: { freq: 600, duration: 0.1, type: 'sine' as OscillatorType },
+        success: { freq: 800, duration: 0.2, type: 'sine' as OscillatorType },
+        failure: { freq: 300, duration: 0.3, type: 'sine' as OscillatorType },
+        transition: { freq: 500, duration: 0.15, type: 'sine' as OscillatorType },
+        complete: { freq: 900, duration: 0.4, type: 'sine' as OscillatorType }
+      };
+      const sound = sounds[type];
+      oscillator.frequency.value = sound.freq;
+      oscillator.type = sound.type;
+      gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + sound.duration);
+      oscillator.start();
+      oscillator.stop(audioContext.currentTime + sound.duration);
+    } catch { /* Audio not available */ }
+  }, []);
+
+  // Emit game events
+  const emitEvent = useCallback((type: GameEventType, data?: Record<string, unknown>) => {
+    onGameEvent?.({ type, data });
+  }, [onGameEvent]);
 
   // Navigation with debouncing
-  const goToPhase = useCallback((newPhase: Phase) => {
+  const goToPhase = useCallback((newPhase: number) => {
+    const now = Date.now();
+    if (now - lastClickRef.current < 200) return;
+    lastClickRef.current = now;
     if (navigationLockRef.current) return;
+    if (!PHASES.includes(newPhase)) return;
     navigationLockRef.current = true;
+    playSound('transition');
     setPhase(newPhase);
-    emit('phase_change', { from: phase, to: newPhase });
+    emitEvent('phase_change', { from: phase, to: newPhase, phaseLabel: phaseLabels[newPhase] });
+    onPhaseComplete?.(newPhase);
     setTimeout(() => { navigationLockRef.current = false; }, 400);
-  }, [emit, phase]);
+  }, [phase, playSound, emitEvent, onPhaseComplete]);
 
   // Physics calculations
   const calculateBalance = useCallback((clay: number) => {
@@ -183,15 +175,17 @@ const CenterOfMassRenderer: React.FC<CenterOfMassRendererProps> = ({
         } else {
           setIsAnimating(false);
           setExperimentCount(prev => prev + 1);
+          playSound('failure');
         }
       };
       animationRef.current = requestAnimationFrame(animate);
     } else {
       setTiltAngle(0);
       setExperimentCount(prev => prev + 1);
+      playSound('success');
     }
-    emit('interaction', { clayPosition: position, stable, comY }, 'weight_add');
-  }, [calculateBalance, emit, isAnimating, hasClayAdded]);
+    emitEvent('simulation_started', { clayPosition: position, stable, comY });
+  }, [calculateBalance, emitEvent, isAnimating, hasClayAdded, playSound]);
 
   const resetExperiment = useCallback(() => {
     if (animationRef.current) cancelAnimationFrame(animationRef.current);
@@ -200,18 +194,26 @@ const CenterOfMassRenderer: React.FC<CenterOfMassRendererProps> = ({
     setIsBalanced(true);
     setTiltAngle(0);
     setIsAnimating(false);
-    emit('interaction', { action: 'reset' }, 'reset');
-  }, [emit]);
+    emitEvent('parameter_changed', { action: 'reset' });
+  }, [emitEvent]);
 
   const handleTestAnswer = useCallback((answerIndex: number) => {
+    const now = Date.now();
+    if (now - lastClickRef.current < 200) return;
+    lastClickRef.current = now;
     if (answeredQuestions.has(currentQuestion)) return;
     setSelectedAnswer(answerIndex);
     setShowExplanation(true);
     const isCorrect = answerIndex === testQuestions[currentQuestion].correct;
-    if (isCorrect) setCorrectAnswers(prev => prev + 1);
+    if (isCorrect) {
+      setCorrectAnswers(prev => prev + 1);
+      playSound('success');
+    } else {
+      playSound('failure');
+    }
     setAnsweredQuestions(prev => new Set([...prev, currentQuestion]));
-    emit('interaction', { question: currentQuestion, answer: answerIndex, correct: isCorrect }, 'answer_submit');
-  }, [currentQuestion, answeredQuestions, emit]);
+    emitEvent('test_answered', { question: currentQuestion, answer: answerIndex, correct: isCorrect });
+  }, [currentQuestion, answeredQuestions, emitEvent, playSound]);
 
   // Test questions
   const testQuestions = [
@@ -235,7 +237,7 @@ const CenterOfMassRenderer: React.FC<CenterOfMassRendererProps> = ({
       description: "Performers use long, curved poles that dip below the rope. This lowers their overall center of mass below the rope, creating remarkable stability.",
       formula: "Stable when COM < pivot height",
       insight: "Poles: 10-12m, 10-15kg",
-      color: design.colors.accentPrimary,
+      color: '#10b981',
     },
     {
       id: 'ship',
@@ -243,7 +245,7 @@ const CenterOfMassRenderer: React.FC<CenterOfMassRendererProps> = ({
       description: "Ships have heavy ballast at the bottom to keep the center of mass low. This prevents capsizing even in rough seas and high waves.",
       formula: "Metacentric height = GM",
       insight: "GM: 0.5-2m for stability",
-      color: design.colors.glass,
+      color: '#0ea5e9',
     },
     {
       id: 'wine',
@@ -259,157 +261,37 @@ const CenterOfMassRenderer: React.FC<CenterOfMassRendererProps> = ({
       description: "We constantly adjust our body position to keep our center of mass over our feet. That's why it's hard to stand still with eyes closed!",
       formula: "COM must stay over base of support",
       insight: "COM: ~55% of standing height",
-      color: design.colors.accentSecondary,
+      color: '#f59e0b',
     }
   ];
 
-  // ============================================================================
-  // HELPER FUNCTIONS (Not React Components)
-  // ============================================================================
-  const renderButton = (
-    text: string,
-    onClick: () => void,
-    variant: 'primary' | 'secondary' | 'ghost' | 'success' = 'primary',
-    disabled: boolean = false,
-    fullWidth: boolean = false
-  ) => {
-    const baseStyle: React.CSSProperties = {
-      padding: isMobile ? '14px 24px' : '16px 32px',
-      fontSize: isMobile ? 14 : 15,
-      fontWeight: 600,
-      fontFamily: design.font.sans,
-      border: 'none',
-      borderRadius: design.radius.md,
-      cursor: disabled ? 'not-allowed' : 'pointer',
-      opacity: disabled ? 0.5 : 1,
-      transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
-      width: fullWidth ? '100%' : 'auto',
-      display: 'inline-flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      gap: 8,
-      outline: 'none',
-      WebkitTapHighlightColor: 'transparent',
-      userSelect: 'none',
-    };
-
-    const variants: Record<string, React.CSSProperties> = {
-      primary: {
-        background: `linear-gradient(135deg, ${design.colors.accentPrimary} 0%, ${design.colors.accentPrimaryHover} 100%)`,
-        color: '#fff',
-        boxShadow: design.shadow.md,
-      },
-      secondary: {
-        background: design.colors.bgTertiary,
-        color: design.colors.textPrimary,
-        border: `1px solid ${design.colors.border}`,
-      },
-      ghost: {
-        background: 'transparent',
-        color: design.colors.textSecondary,
-      },
-      success: {
-        background: `linear-gradient(135deg, ${design.colors.success} 0%, #059669 100%)`,
-        color: '#fff',
-        boxShadow: design.shadow.md,
-      }
-    };
-
-    return (
-      <button
-        onMouseDown={(e) => {
-          e.preventDefault();
-          if (!disabled && !navigationLockRef.current) {
-            navigationLockRef.current = true;
-            onClick();
-            setTimeout(() => { navigationLockRef.current = false; }, 400);
-          }
-        }}
-        disabled={disabled}
-        style={{ ...baseStyle, ...variants[variant] }}
-      >
-        {text}
-      </button>
-    );
-  };
-
-  const renderProgressBar = () => {
-    const phaseList: Phase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
-    const currentIndex = phaseList.indexOf(phase);
-
-    return (
-      <div style={{
-        position: 'absolute',
-        top: 12,
-        left: 12,
-        display: 'flex',
-        gap: 4,
-        zIndex: 10,
-      }}>
-        {phaseList.map((p, idx) => (
-          <div key={p} style={{
-            width: isMobile ? 6 : 8,
-            height: isMobile ? 6 : 8,
-            borderRadius: design.radius.full,
-            background: idx === currentIndex
-              ? design.colors.accentPrimary
-              : idx < currentIndex
-                ? design.colors.success
-                : design.colors.bgElevated,
-            transition: 'all 0.3s ease',
-            boxShadow: idx === currentIndex ? design.shadow.glow(design.colors.accentPrimary) : 'none',
-          }} />
-        ))}
-      </div>
-    );
-  };
-
-  // ============================================================================
-  // VISUALIZATION - Premium Fork Balance Animation
-  // ============================================================================
+  // Visualization
   const renderVisualization = () => {
-    const svgWidth = Math.min(width, 400);
+    const svgWidth = 400;
     const glassX = svgWidth / 2;
     const glassY = 180;
     const pivotY = glassY - 60;
     const { comY } = calculateBalance(clayPosition);
 
     return (
-      <svg width="100%" height={260} viewBox={`0 0 ${svgWidth} 260`} style={{ display: 'block', background: design.colors.bgDeep }}>
+      <svg width="100%" height={260} viewBox={`0 0 ${svgWidth} 260`} className="block">
         <defs>
           <linearGradient id="com-glass-grad" x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" stopColor={design.colors.glass} stopOpacity="0.9" />
-            <stop offset="100%" stopColor={design.colors.glassDark} stopOpacity="0.95" />
+            <stop offset="0%" stopColor="#7dd3fc" stopOpacity="0.9" />
+            <stop offset="100%" stopColor="#0284c7" stopOpacity="0.95" />
           </linearGradient>
           <linearGradient id="com-fork-grad" x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" stopColor={design.colors.forkHighlight} />
-            <stop offset="100%" stopColor={design.colors.forkDark} />
+            <stop offset="0%" stopColor="#d4dcd8" />
+            <stop offset="100%" stopColor="#8a9a94" />
           </linearGradient>
-          <linearGradient id="com-toothpick-grad" x1="0%" y1="0%" x2="100%" y2="0%">
-            <stop offset="0%" stopColor={design.colors.toothpick} />
-            <stop offset="50%" stopColor={design.colors.toothpickDark} />
-            <stop offset="100%" stopColor={design.colors.toothpick} />
-          </linearGradient>
-          <filter id="com-glass-glow" x="-50%" y="-50%" width="200%" height="200%">
-            <feGaussianBlur stdDeviation="4" result="blur" />
-            <feFlood floodColor={design.colors.glass} floodOpacity="0.4" />
-            <feComposite in2="blur" operator="in" />
-            <feMerge><feMergeNode /><feMergeNode in="SourceGraphic" /></feMerge>
-          </filter>
-          <filter id="com-shadow" x="-20%" y="-20%" width="140%" height="140%">
-            <feDropShadow dx="0" dy="4" stdDeviation="4" floodColor="#000" floodOpacity="0.5" />
-          </filter>
-          <filter id="com-glow">
-            <feGaussianBlur stdDeviation="4" result="blur" />
-            <feFlood floodColor={design.colors.com} floodOpacity="0.6" />
-            <feComposite in2="blur" operator="in" />
-            <feMerge><feMergeNode /><feMergeNode in="SourceGraphic" /></feMerge>
-          </filter>
         </defs>
 
-        {/* Background grid */}
+        {/* Background */}
+        <rect width={svgWidth} height={260} fill="#0f172a" />
+
+        {/* Grid */}
         <pattern id="com-grid" width="30" height="30" patternUnits="userSpaceOnUse">
-          <path d="M 30 0 L 0 0 0 30" fill="none" stroke={design.colors.border} strokeWidth="0.5" opacity="0.3" />
+          <path d="M 30 0 L 0 0 0 30" fill="none" stroke="#1e293b" strokeWidth="0.5" />
         </pattern>
         <rect width={svgWidth} height={260} fill="url(#com-grid)" />
 
@@ -418,99 +300,91 @@ const CenterOfMassRenderer: React.FC<CenterOfMassRendererProps> = ({
         <rect x={0} y={glassY + 55} width={svgWidth} height={4} fill="#4a3525" />
 
         {/* Glass */}
-        <g filter="url(#com-glass-glow)">
+        <g>
           <path
             d={`M${glassX - 28} ${glassY + 55} L${glassX - 22} ${glassY - 55} Q${glassX} ${glassY - 60} ${glassX + 22} ${glassY - 55} L${glassX + 28} ${glassY + 55} Z`}
             fill="url(#com-glass-grad)"
-            stroke={design.colors.glass}
+            stroke="#7dd3fc"
             strokeWidth={2}
           />
-          <ellipse cx={glassX} cy={glassY + 55} rx={28} ry={7} fill={design.colors.glassDark} opacity={0.5} />
-          {/* Glass shine */}
-          <path
-            d={`M${glassX - 18} ${glassY - 45} Q${glassX - 10} ${glassY - 50} ${glassX - 12} ${glassY}`}
-            stroke="rgba(255,255,255,0.3)"
-            strokeWidth={3}
-            fill="none"
-            strokeLinecap="round"
-          />
+          <ellipse cx={glassX} cy={glassY + 55} rx={28} ry={7} fill="#0284c7" opacity={0.5} />
         </g>
 
         {/* Pivot reference line */}
         <line x1={glassX - 100} y1={pivotY} x2={glassX + 100} y2={pivotY}
-              stroke={design.colors.textMuted} strokeWidth={1} strokeDasharray="5,5" opacity={0.5} />
-        <text x={glassX + 108} y={pivotY + 4} fill={design.colors.textMuted} fontSize={10} fontFamily={design.font.sans}>
+              stroke="#64748b" strokeWidth={1} strokeDasharray="5,5" opacity={0.5} />
+        <text x={glassX + 108} y={pivotY + 4} fill="#64748b" fontSize={10} fontFamily="system-ui">
           Pivot
         </text>
 
         {/* Fork-toothpick system with rotation */}
-        <g transform={`translate(${glassX}, ${pivotY}) rotate(${tiltAngle})`} filter="url(#com-shadow)">
+        <g transform={`translate(${glassX}, ${pivotY}) rotate(${tiltAngle})`}>
           {/* Toothpick */}
-          <rect x={-85} y={-4} width={170} height={8} rx={4} fill="url(#com-toothpick-grad)" />
+          <rect x={-85} y={-4} width={170} height={8} rx={4} fill="#d4a574" />
 
           {/* Left Fork */}
           <g transform="translate(-70, 0) rotate(35)">
             <rect x={-6} y={0} width={12} height={55} rx={3} fill="url(#com-fork-grad)" />
-            <ellipse cx={0} cy={60} rx={16} ry={7} fill={design.colors.fork} />
+            <ellipse cx={0} cy={60} rx={16} ry={7} fill="#b8c4c0" />
             {[-10, -3.5, 3.5, 10].map((x, i) => (
-              <rect key={i} x={x - 2.5} y={60} width={5} height={22} rx={1} fill={design.colors.forkHighlight} />
+              <rect key={i} x={x - 2.5} y={60} width={5} height={22} rx={1} fill="#d4dcd8" />
             ))}
           </g>
 
           {/* Right Fork (mirrored) */}
           <g transform="translate(-70, 0) rotate(-35) scale(-1, 1)">
             <rect x={-6} y={0} width={12} height={55} rx={3} fill="url(#com-fork-grad)" />
-            <ellipse cx={0} cy={60} rx={16} ry={7} fill={design.colors.fork} />
+            <ellipse cx={0} cy={60} rx={16} ry={7} fill="#b8c4c0" />
             {[-10, -3.5, 3.5, 10].map((x, i) => (
-              <rect key={i} x={x - 2.5} y={60} width={5} height={22} rx={1} fill={design.colors.forkHighlight} />
+              <rect key={i} x={x - 2.5} y={60} width={5} height={22} rx={1} fill="#d4dcd8" />
             ))}
           </g>
 
           {/* Clay ball if added */}
           {hasClayAdded && (
             <g transform={`translate(${clayPosition * 65}, 0)`}>
-              <circle cx={0} cy={0} r={14} fill={design.colors.clay} stroke="#92400e" strokeWidth={2} />
+              <circle cx={0} cy={0} r={14} fill="#d97706" stroke="#92400e" strokeWidth={2} />
               <ellipse cx={-4} cy={-4} rx={4} ry={3} fill="rgba(255,255,255,0.2)" />
             </g>
           )}
 
           {/* Center of mass indicator */}
           {showCOM && (
-            <g filter="url(#com-glow)" transform={`translate(0, ${comY * 80})`}>
-              <circle cx={0} cy={0} r={10} fill={design.colors.com} />
+            <g transform={`translate(0, ${comY * 80})`}>
+              <circle cx={0} cy={0} r={10} fill="#ef4444" />
               <circle cx={0} cy={0} r={5} fill="#fff" opacity={0.4} />
-              <text x={18} y={4} fill={design.colors.com} fontSize={11} fontWeight="700" fontFamily={design.font.sans}>
+              <text x={18} y={4} fill="#ef4444" fontSize={11} fontWeight="700" fontFamily="system-ui">
                 COM
               </text>
             </g>
           )}
 
           {/* Pivot point */}
-          <circle cx={0} cy={0} r={5} fill="#fff" stroke={design.colors.accentPrimary} strokeWidth={2} />
+          <circle cx={0} cy={0} r={5} fill="#fff" stroke="#10b981" strokeWidth={2} />
         </g>
 
         {/* Status badges */}
         <g transform="translate(16, 16)">
           <rect x={0} y={0} width={95} height={34} rx={8}
-                fill={isBalanced ? design.colors.successMuted : design.colors.errorMuted}
-                stroke={isBalanced ? design.colors.success : design.colors.error} strokeWidth={1} />
+                fill={isBalanced ? 'rgba(34,197,94,0.15)' : 'rgba(239,68,68,0.15)'}
+                stroke={isBalanced ? '#22c55e' : '#ef4444'} strokeWidth={1} />
           <text x={47} y={22} textAnchor="middle"
-                fill={isBalanced ? design.colors.success : design.colors.error}
-                fontSize={12} fontWeight="700" fontFamily={design.font.sans}>
+                fill={isBalanced ? '#22c55e' : '#ef4444'}
+                fontSize={12} fontWeight="700" fontFamily="system-ui">
             {isBalanced ? '✓ Balanced' : '✗ Falling!'}
           </text>
         </g>
 
         {showCOM && (
           <g transform={`translate(${svgWidth - 110}, 16)`}>
-            <rect x={0} y={0} width={95} height={34} rx={8} fill={design.colors.bgTertiary}
-                  stroke={design.colors.border} strokeWidth={1} />
-            <text x={47} y={14} textAnchor="middle" fill={design.colors.textMuted} fontSize={9} fontFamily={design.font.sans}>
+            <rect x={0} y={0} width={95} height={34} rx={8} fill="#1e293b"
+                  stroke="#334155" strokeWidth={1} />
+            <text x={47} y={14} textAnchor="middle" fill="#64748b" fontSize={9} fontFamily="system-ui">
               COM Position
             </text>
             <text x={47} y={28} textAnchor="middle"
-                  fill={comY < 0 ? design.colors.success : design.colors.error}
-                  fontSize={12} fontWeight="600" fontFamily={design.font.sans}>
+                  fill={comY < 0 ? '#22c55e' : '#ef4444'}
+                  fontSize={12} fontWeight="600" fontFamily="system-ui">
               {comY < 0 ? '↓ Below pivot' : '↑ Above pivot'}
             </text>
           </g>
@@ -519,193 +393,54 @@ const CenterOfMassRenderer: React.FC<CenterOfMassRendererProps> = ({
     );
   };
 
-  // Application graphics for transfer phase
-  const renderApplicationGraphic = (appId: string) => {
-    const svgWidth = Math.min(width - 60, 340);
-
-    return (
-      <svg width="100%" height={120} viewBox={`0 0 ${svgWidth} 120`} style={{ display: 'block' }}>
-        <rect width={svgWidth} height={120} fill={design.colors.bgDeep} rx={12} />
-
-        {appId === 'tightrope' && (
-          <g>
-            <line x1={40} y1={85} x2={svgWidth - 40} y2={85} stroke="#6b7280" strokeWidth={3} />
-            {/* Support posts */}
-            <rect x={35} y={85} width={10} height={25} fill="#374151" />
-            <rect x={svgWidth - 45} y={85} width={10} height={25} fill="#374151" />
-            {/* Walker */}
-            <circle cx={svgWidth / 2} cy={55} r={12} fill="#fcd5ce" />
-            <rect x={svgWidth / 2 - 7} y={67} width={14} height={20} rx={3} fill={design.colors.accentPrimary} />
-            {/* Pole - curved downward */}
-            <path d={`M ${svgWidth / 2 - 100} 75 Q ${svgWidth / 2} 100 ${svgWidth / 2 + 100} 75`} stroke="#9ca3af" strokeWidth={4} fill="none" />
-            {/* COM marker */}
-            <circle cx={svgWidth / 2} cy={88} r={6} fill={design.colors.com}>
-              <animate attributeName="cy" values="86;90;86" dur="2s" repeatCount="indefinite" />
-            </circle>
-            <text x={svgWidth / 2 + 15} y={92} fill={design.colors.com} fontSize={8}>COM</text>
-          </g>
-        )}
-
-        {appId === 'ship' && (
-          <g>
-            {/* Water */}
-            <rect x={20} y={80} width={svgWidth - 40} height={30} fill="#0ea5e9" opacity={0.3} rx={4} />
-            <path d={`M 20 80 Q ${svgWidth * 0.25} 75 ${svgWidth * 0.5} 80 T ${svgWidth - 20} 80`} stroke="#0ea5e9" strokeWidth={2} fill="none">
-              <animate attributeName="d"
-                values={`M 20 80 Q ${svgWidth * 0.25} 75 ${svgWidth * 0.5} 80 T ${svgWidth - 20} 80;M 20 80 Q ${svgWidth * 0.25} 85 ${svgWidth * 0.5} 80 T ${svgWidth - 20} 80;M 20 80 Q ${svgWidth * 0.25} 75 ${svgWidth * 0.5} 80 T ${svgWidth - 20} 80`}
-                dur="2s" repeatCount="indefinite" />
-            </path>
-            {/* Ship hull */}
-            <path d={`M ${svgWidth / 2 - 70} 80 L ${svgWidth / 2 - 50} 50 L ${svgWidth / 2 + 50} 50 L ${svgWidth / 2 + 70} 80 Z`} fill="#374151" />
-            <rect x={svgWidth / 2 - 30} y={30} width={60} height={20} rx={2} fill="#4b5563" />
-            {/* Ballast */}
-            <rect x={svgWidth / 2 - 40} y={60} width={80} height={15} rx={2} fill="#1f2937" />
-            <text x={svgWidth / 2} y={72} textAnchor="middle" fill="#9ca3af" fontSize={8}>Ballast</text>
-            {/* COM */}
-            <circle cx={svgWidth / 2} cy={68} r={5} fill={design.colors.com} />
-          </g>
-        )}
-
-        {appId === 'wine' && (
-          <g>
-            {/* Table */}
-            <rect x={20} y={100} width={svgWidth - 40} height={10} fill="#4a3520" rx={2} />
-            {/* Empty glass */}
-            <g transform="translate(80, 30)">
-              <path d="M 0 70 L 10 0 L 50 0 L 60 70 Z" fill="none" stroke={design.colors.glass} strokeWidth={2} />
-              <ellipse cx={30} cy={70} rx={25} ry={6} fill={design.colors.glassDark} opacity={0.5} />
-              <circle cx={30} cy={35} r={4} fill={design.colors.com} />
-              <text x={30} y={20} textAnchor="middle" fill={design.colors.textMuted} fontSize={9}>Empty</text>
-            </g>
-            {/* Filled glass */}
-            <g transform={`translate(${svgWidth - 140}, 30)`}>
-              <path d="M 0 70 L 10 0 L 50 0 L 60 70 Z" fill="none" stroke={design.colors.glass} strokeWidth={2} />
-              <path d="M 8 50 L 15 10 L 45 10 L 52 50 Z" fill="#7c3aed" opacity={0.4} />
-              <ellipse cx={30} cy={70} rx={25} ry={6} fill={design.colors.glassDark} opacity={0.5} />
-              <circle cx={30} cy={55} r={4} fill={design.colors.com} />
-              <text x={30} y={20} textAnchor="middle" fill={design.colors.textMuted} fontSize={9}>Filled</text>
-            </g>
-            <text x={svgWidth / 2} y={115} textAnchor="middle" fill={design.colors.textMuted} fontSize={9}>COM lowers with liquid</text>
-          </g>
-        )}
-
-        {appId === 'standing' && (
-          <g>
-            {/* Ground */}
-            <rect x={20} y={100} width={svgWidth - 40} height={10} fill="#374151" rx={2} />
-            {/* Standing person (stable) */}
-            <g transform="translate(100, 20)">
-              <circle cx={15} cy={10} r={10} fill="#fcd5ce" />
-              <rect x={8} y={20} width={14} height={35} rx={3} fill={design.colors.accentSecondary} />
-              <rect x={5} y={55} width={8} height={25} rx={2} fill="#374151" />
-              <rect x={17} y={55} width={8} height={25} rx={2} fill="#374151" />
-              {/* COM */}
-              <circle cx={15} cy={35} r={5} fill={design.colors.com} />
-              {/* Base of support */}
-              <line x1={3} y1={82} x2={27} y2={82} stroke={design.colors.success} strokeWidth={2} />
-            </g>
-            {/* Leaning person (unstable) */}
-            <g transform={`translate(${svgWidth - 130}, 20) rotate(15)`}>
-              <circle cx={15} cy={10} r={10} fill="#fcd5ce" />
-              <rect x={8} y={20} width={14} height={35} rx={3} fill={design.colors.error} />
-              <rect x={5} y={55} width={8} height={25} rx={2} fill="#374151" />
-              <rect x={17} y={55} width={8} height={25} rx={2} fill="#374151" />
-              {/* COM outside base */}
-              <circle cx={15} cy={35} r={5} fill={design.colors.com} />
-            </g>
-            <text x={115} y={115} textAnchor="middle" fill={design.colors.success} fontSize={9}>Stable</text>
-            <text x={svgWidth - 100} y={115} textAnchor="middle" fill={design.colors.error} fontSize={9}>Falling!</text>
-          </g>
-        )}
-      </svg>
-    );
-  };
-
-  // ============================================================================
-  // PHASE RENDERERS
-  // ============================================================================
-
+  // Phase renderers
   const renderHook = () => (
-    <div style={{
-      display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-      height: '100%', padding: design.spacing.xl,
-      background: `linear-gradient(180deg, ${design.colors.bgDeep} 0%, ${design.colors.bgPrimary} 50%, ${design.colors.bgSecondary} 100%)`,
-    }}>
-      <div style={{
-        fontSize: isMobile ? 56 : 64, marginBottom: design.spacing.lg,
-        filter: `drop-shadow(0 8px 24px ${design.colors.accentPrimary}40)`,
-        animation: 'float 3s ease-in-out infinite',
-      }}>
-        ⚖️
+    <div className="flex flex-col items-center justify-center min-h-[600px] px-6 py-12 text-center">
+      <div className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-500/10 border border-emerald-500/20 rounded-full mb-8">
+        <span className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse" />
+        <span className="text-sm font-medium text-emerald-400 tracking-wide">PHYSICS EXPLORATION</span>
       </div>
 
-      <h1 style={{
-        fontSize: isMobile ? 22 : 26, fontWeight: 700, color: design.colors.textPrimary,
-        fontFamily: design.font.sans, textAlign: 'center', margin: 0, marginBottom: design.spacing.sm,
-        letterSpacing: '-0.5px',
-      }}>
+      <h1 className="text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-white via-emerald-100 to-cyan-200 bg-clip-text text-transparent">
         The Impossible Balance
       </h1>
 
-      <p style={{
-        fontSize: isMobile ? 14 : 15, color: design.colors.textSecondary, fontFamily: design.font.sans,
-        textAlign: 'center', maxWidth: 300, lineHeight: 1.6, margin: 0, marginBottom: design.spacing.xl,
-      }}>
+      <p className="text-lg text-slate-400 max-w-md mb-10">
         A toothpick with forks attached balances on the rim of a glass. Most of it hangs off the edge!
       </p>
 
-      <div style={{
-        background: design.colors.accentPrimaryMuted,
-        border: `1px solid ${design.colors.accentPrimary}50`,
-        borderRadius: design.radius.lg, padding: '20px 24px',
-        maxWidth: 320, marginBottom: design.spacing.xl,
-      }}>
-        <p style={{
-          fontSize: isMobile ? 15 : 17, color: design.colors.accentPrimary, fontFamily: design.font.sans,
-          textAlign: 'center', fontWeight: 600, lineHeight: 1.5, margin: 0,
-        }}>
-          "How can something hang off a table without falling?"
-        </p>
+      <div className="relative bg-gradient-to-br from-slate-800/80 to-slate-900/80 rounded-3xl p-8 max-w-xl w-full border border-slate-700/50 shadow-2xl shadow-black/20">
+        <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/5 via-transparent to-cyan-500/5 rounded-3xl" />
+        <div className="relative">
+          <div className="text-7xl mb-6">⚖️</div>
+          <p className="text-xl text-white/90 font-medium leading-relaxed">
+            "How can something hang off a table without falling?"
+          </p>
+        </div>
       </div>
 
-      {renderButton('Discover the Secret →', () => goToPhase('predict'))}
+      <button
+        onMouseDown={(e) => { e.preventDefault(); goToPhase(1); }}
+        className="mt-10 group relative px-10 py-5 bg-gradient-to-r from-emerald-500 to-cyan-500 text-white text-lg font-semibold rounded-2xl transition-all duration-300 hover:shadow-lg hover:shadow-emerald-500/25 hover:scale-[1.02] active:scale-[0.98]"
+      >
+        <span className="relative z-10 flex items-center gap-3">
+          Discover the Secret
+          <svg className="w-5 h-5 transition-transform group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+          </svg>
+        </span>
+      </button>
 
-      <p style={{
-        fontSize: 12, color: design.colors.textMuted, fontFamily: design.font.sans,
-        marginTop: design.spacing.xl, letterSpacing: '0.5px',
-      }}>
-        CENTER OF MASS • STABILITY
-      </p>
-
-      <style>{`
-        @keyframes float {
-          0%, 100% { transform: translateY(0px); }
-          50% { transform: translateY(-8px); }
-        }
-      `}</style>
+      <p className="mt-8 text-sm text-slate-500 tracking-wide">CENTER OF MASS • STABILITY</p>
     </div>
   );
 
   const renderPredict = () => (
-    <div style={{
-      display: 'flex', flexDirection: 'column', alignItems: 'center',
-      padding: design.spacing.xl, height: '100%', background: design.colors.bgPrimary,
-    }}>
-      <div style={{ fontSize: 48, marginBottom: design.spacing.md }}>🤔</div>
-      <h2 style={{
-        fontSize: isMobile ? 20 : 22, fontWeight: 700, color: design.colors.textPrimary,
-        fontFamily: design.font.sans, margin: 0, marginBottom: design.spacing.sm,
-      }}>
-        Make Your Prediction
-      </h2>
-      <p style={{
-        fontSize: isMobile ? 14 : 15, color: design.colors.textSecondary, fontFamily: design.font.sans,
-        textAlign: 'center', margin: 0, marginBottom: design.spacing.lg,
-      }}>
-        Why doesn't the fork-toothpick system fall off the glass?
-      </p>
+    <div className="flex flex-col items-center justify-center min-h-[500px] p-6">
+      <h2 className="text-2xl font-bold text-white mb-2">Make Your Prediction</h2>
+      <p className="text-slate-400 mb-8">Why doesn't the fork-toothpick system fall off the glass?</p>
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: design.spacing.sm, width: '100%', maxWidth: 340 }}>
+      <div className="grid gap-3 w-full max-w-md">
         {[
           { id: 'light', label: 'The toothpick is very light', icon: '🪶' },
           { id: 'com_below', label: 'The center of mass is below the pivot', icon: '⬇️' },
@@ -713,164 +448,96 @@ const CenterOfMassRenderer: React.FC<CenterOfMassRendererProps> = ({
         ].map((option) => (
           <button
             key={option.id}
-            onMouseDown={() => { setPrediction(option.id); emit('prediction', { prediction: option.id }); }}
-            style={{
-              padding: '16px 20px', borderRadius: design.radius.md,
-              border: prediction === option.id ? `2px solid ${design.colors.accentPrimary}` : `1px solid ${design.colors.border}`,
-              background: prediction === option.id ? design.colors.accentPrimaryMuted : design.colors.bgSecondary,
-              cursor: 'pointer', display: 'flex', alignItems: 'center', gap: design.spacing.md,
-              transition: 'all 0.2s ease', outline: 'none',
-            }}
+            onMouseDown={(e) => { e.preventDefault(); setPrediction(option.id); playSound('click'); emitEvent('prediction_made', { prediction: option.id }); }}
+            className={`p-4 rounded-xl text-left transition-all duration-300 flex items-center gap-4 ${
+              prediction === option.id
+                ? 'bg-emerald-600/30 border-2 border-emerald-400'
+                : 'bg-slate-800/50 border-2 border-transparent hover:bg-slate-700/50'
+            }`}
           >
-            <span style={{ fontSize: 24 }}>{option.icon}</span>
-            <span style={{ fontSize: 14, color: design.colors.textPrimary, fontFamily: design.font.sans, fontWeight: 500, textAlign: 'left' }}>
-              {option.label}
-            </span>
+            <span className="text-2xl">{option.icon}</span>
+            <span className="text-white">{option.label}</span>
           </button>
         ))}
       </div>
 
       {prediction && (
-        <div style={{ marginTop: design.spacing.xl }}>
-          {renderButton('See It In Action! →', () => goToPhase('play'))}
-        </div>
+        <button
+          onMouseDown={(e) => { e.preventDefault(); goToPhase(2); }}
+          className="mt-8 px-8 py-4 bg-gradient-to-r from-emerald-600 to-cyan-600 text-white font-semibold rounded-xl"
+        >
+          See It In Action! →
+        </button>
       )}
     </div>
   );
 
   const renderPlay = () => (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', background: design.colors.bgPrimary }}>
-      {renderVisualization()}
+    <div className="flex flex-col items-center p-6">
+      <h2 className="text-2xl font-bold text-white mb-4">Balance Demonstration</h2>
 
-      <div style={{
-        flex: 1, padding: design.spacing.lg, display: 'flex', flexDirection: 'column',
-        alignItems: 'center', gap: design.spacing.md, background: design.colors.bgSecondary,
-      }}>
-        {/* Show COM toggle */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: design.spacing.sm }}>
-          <span style={{ fontSize: 13, color: design.colors.textSecondary, fontFamily: design.font.sans }}>
-            Show COM:
-          </span>
-          <button
-            onMouseDown={() => setShowCOM(!showCOM)}
-            style={{
-              padding: '8px 16px', borderRadius: design.radius.md, border: 'none',
-              background: showCOM ? design.colors.com : design.colors.bgTertiary,
-              color: showCOM ? '#fff' : design.colors.textSecondary,
-              fontWeight: 600, fontSize: 13, cursor: 'pointer', transition: 'all 0.2s ease',
-            }}
-          >
-            {showCOM ? 'ON' : 'OFF'}
-          </button>
-        </div>
-
-        <p style={{
-          fontSize: 14, color: design.colors.textPrimary, fontFamily: design.font.sans,
-          textAlign: 'center', maxWidth: 320, lineHeight: 1.6, margin: 0,
-        }}>
-          Notice how the <span style={{ color: design.colors.com, fontWeight: 600 }}>center of mass</span> (red dot) is{' '}
-          <strong>below</strong> the pivot point. This creates stability!
-        </p>
-
-        <p style={{ fontSize: 13, color: design.colors.textMuted, fontFamily: design.font.sans, margin: 0 }}>
-          The forks hang down, pulling the COM below the glass rim.
-        </p>
-
-        {renderButton('I understand! →', () => goToPhase('review'))}
+      <div className="bg-slate-800/50 rounded-2xl p-4 mb-4 w-full max-w-lg">
+        {renderVisualization()}
       </div>
+
+      <div className="flex items-center gap-3 mb-4">
+        <span className="text-sm text-slate-400">Show COM:</span>
+        <button
+          onMouseDown={(e) => { e.preventDefault(); setShowCOM(!showCOM); }}
+          className={`px-4 py-2 rounded-lg font-medium transition-all ${showCOM ? 'bg-red-500 text-white' : 'bg-slate-700 text-slate-400'}`}
+        >
+          {showCOM ? 'ON' : 'OFF'}
+        </button>
+      </div>
+
+      <p className="text-slate-300 text-center max-w-md mb-4">
+        Notice how the <span className="text-red-400 font-semibold">center of mass</span> (red dot) is <strong>below</strong> the pivot point. This creates stability!
+      </p>
+
+      <button onMouseDown={(e) => { e.preventDefault(); goToPhase(3); }}
+        className="px-6 py-3 bg-gradient-to-r from-emerald-600 to-cyan-600 text-white font-semibold rounded-xl">
+        I understand! →
+      </button>
     </div>
   );
 
   const renderReview = () => (
-    <div style={{
-      display: 'flex', flexDirection: 'column', alignItems: 'center',
-      padding: design.spacing.xl, height: '100%', background: design.colors.bgPrimary, overflowY: 'auto',
-    }}>
-      <div style={{ fontSize: 48, marginBottom: design.spacing.md }}>💡</div>
-      <h2 style={{
-        fontSize: isMobile ? 20 : 22, fontWeight: 700, color: design.colors.textPrimary,
-        fontFamily: design.font.sans, margin: 0, marginBottom: design.spacing.md,
-      }}>
-        The Secret: Center of Mass
-      </h2>
+    <div className="flex flex-col items-center p-6">
+      <h2 className="text-2xl font-bold text-white mb-6">The Secret: Center of Mass</h2>
 
-      <div style={{
-        background: design.colors.bgSecondary, borderRadius: design.radius.lg,
-        padding: design.spacing.lg, marginBottom: design.spacing.lg, maxWidth: 340, width: '100%',
-        border: `1px solid ${design.colors.border}`,
-      }}>
-        <p style={{
-          fontSize: 16, color: design.colors.accentPrimary, fontFamily: design.font.sans,
-          textAlign: 'center', fontWeight: 600, margin: 0, marginBottom: design.spacing.sm,
-        }}>
-          COM below pivot = Stable equilibrium
-        </p>
-        <p style={{
-          fontSize: 14, color: design.colors.textPrimary, fontFamily: design.font.sans,
-          textAlign: 'center', lineHeight: 1.5, margin: 0,
-        }}>
-          When the center of mass is below the support point, gravity creates a{' '}
-          <em style={{ color: design.colors.accentPrimary }}>restoring torque</em> that pulls it back to balance.
-        </p>
+      <div className="bg-gradient-to-br from-emerald-900/50 to-cyan-900/50 rounded-2xl p-6 max-w-lg mb-6">
+        <p className="text-lg text-emerald-400 font-semibold text-center mb-2">COM below pivot = Stable equilibrium</p>
+        <p className="text-slate-300 text-center">When the center of mass is below the support point, gravity creates a restoring torque that pulls it back to balance.</p>
       </div>
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: design.spacing.sm, maxWidth: 340, width: '100%', marginBottom: design.spacing.md }}>
-        <div style={{
-          background: design.colors.successMuted, border: `1px solid ${design.colors.success}40`,
-          borderRadius: design.radius.md, padding: design.spacing.md,
-        }}>
-          <p style={{ fontSize: 14, fontWeight: 600, color: design.colors.success, fontFamily: design.font.sans, margin: 0, marginBottom: 4 }}>
-            Stable (COM below)
-          </p>
-          <p style={{ fontSize: 13, color: design.colors.textPrimary, fontFamily: design.font.sans, lineHeight: 1.5, margin: 0 }}>
-            Tilt it, and gravity pulls it back. Like a pendulum!
-          </p>
+      <div className="grid gap-4 max-w-lg w-full">
+        <div className="bg-emerald-600/20 border border-emerald-500/30 rounded-xl p-4">
+          <p className="text-emerald-400 font-semibold mb-1">Stable (COM below)</p>
+          <p className="text-slate-300 text-sm">Tilt it, and gravity pulls it back. Like a pendulum!</p>
         </div>
-
-        <div style={{
-          background: design.colors.errorMuted, border: `1px solid ${design.colors.error}40`,
-          borderRadius: design.radius.md, padding: design.spacing.md,
-        }}>
-          <p style={{ fontSize: 14, fontWeight: 600, color: design.colors.error, fontFamily: design.font.sans, margin: 0, marginBottom: 4 }}>
-            Unstable (COM above)
-          </p>
-          <p style={{ fontSize: 13, color: design.colors.textPrimary, fontFamily: design.font.sans, lineHeight: 1.5, margin: 0 }}>
-            Tilt it, and gravity tips it further. Falls over!
-          </p>
+        <div className="bg-red-600/20 border border-red-500/30 rounded-xl p-4">
+          <p className="text-red-400 font-semibold mb-1">Unstable (COM above)</p>
+          <p className="text-slate-300 text-sm">Tilt it, and gravity tips it further. Falls over!</p>
         </div>
       </div>
 
-      <p style={{
-        fontSize: 14, color: prediction === 'com_below' ? design.colors.success : design.colors.textSecondary,
-        fontFamily: design.font.sans, margin: 0, marginBottom: design.spacing.lg,
-      }}>
-        Your prediction: {prediction === 'com_below' ? '✓ Correct!' : 'Now you understand!'}
+      <p className="mt-6 text-sm text-slate-400">
+        Your prediction: {prediction === 'com_below' ? '✅ Correct!' : '🤔 Now you understand!'}
       </p>
 
-      {renderButton('Can We Break It? →', () => goToPhase('twist_predict'))}
+      <button onMouseDown={(e) => { e.preventDefault(); goToPhase(4); }}
+        className="mt-6 px-6 py-3 bg-gradient-to-r from-amber-600 to-orange-600 text-white font-semibold rounded-xl">
+        Can We Break It? →
+      </button>
     </div>
   );
 
   const renderTwistPredict = () => (
-    <div style={{
-      display: 'flex', flexDirection: 'column', alignItems: 'center',
-      padding: design.spacing.xl, height: '100%', background: design.colors.bgPrimary,
-    }}>
-      <div style={{ fontSize: 48, marginBottom: design.spacing.md }}>🟤</div>
-      <h2 style={{
-        fontSize: isMobile ? 20 : 22, fontWeight: 700, color: design.colors.textPrimary,
-        fontFamily: design.font.sans, margin: 0, marginBottom: design.spacing.sm,
-      }}>
-        Plot Twist: Add Clay!
-      </h2>
-      <p style={{
-        fontSize: isMobile ? 14 : 15, color: design.colors.textSecondary, fontFamily: design.font.sans,
-        textAlign: 'center', margin: 0, marginBottom: design.spacing.lg,
-      }}>
-        What if we stick a ball of clay on the toothpick? Where should we put it?
-      </p>
+    <div className="flex flex-col items-center justify-center min-h-[500px] p-6">
+      <h2 className="text-2xl font-bold text-amber-400 mb-2">Plot Twist: Add Clay!</h2>
+      <p className="text-slate-400 mb-8">What if we stick a ball of clay on the toothpick? Where should we put it?</p>
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: design.spacing.sm, width: '100%', maxWidth: 340 }}>
+      <div className="grid gap-3 w-full max-w-md">
         {[
           { id: 'fork_side', label: 'Near the forks (left) - more stable' },
           { id: 'middle', label: 'In the middle - no change' },
@@ -878,570 +545,352 @@ const CenterOfMassRenderer: React.FC<CenterOfMassRendererProps> = ({
         ].map((option) => (
           <button
             key={option.id}
-            onMouseDown={() => { setTwistPrediction(option.id); emit('prediction', { twistPrediction: option.id }); }}
-            style={{
-              padding: '16px 20px', borderRadius: design.radius.md,
-              border: twistPrediction === option.id ? `2px solid ${design.colors.accentPrimary}` : `1px solid ${design.colors.border}`,
-              background: twistPrediction === option.id ? design.colors.accentPrimaryMuted : design.colors.bgSecondary,
-              cursor: 'pointer', textAlign: 'left', transition: 'all 0.2s ease', outline: 'none',
-            }}
+            onMouseDown={(e) => { e.preventDefault(); setTwistPrediction(option.id); playSound('click'); emitEvent('twist_prediction_made', { twistPrediction: option.id }); }}
+            className={`p-4 rounded-xl text-left transition-all duration-300 ${
+              twistPrediction === option.id
+                ? 'bg-amber-600/30 border-2 border-amber-400'
+                : 'bg-slate-800/50 border-2 border-transparent hover:bg-slate-700/50'
+            }`}
           >
-            <span style={{ fontSize: 14, color: design.colors.textPrimary, fontFamily: design.font.sans }}>
-              {option.label}
-            </span>
+            <span className="text-white">{option.label}</span>
           </button>
         ))}
       </div>
 
       {twistPrediction && (
-        <div style={{ marginTop: design.spacing.xl }}>
-          {renderButton('Experiment! →', () => goToPhase('twist_play'))}
-        </div>
+        <button
+          onMouseDown={(e) => { e.preventDefault(); goToPhase(5); }}
+          className="mt-8 px-8 py-4 bg-gradient-to-r from-amber-600 to-orange-600 text-white font-semibold rounded-xl"
+        >
+          Experiment! →
+        </button>
       )}
     </div>
   );
 
   const renderTwistPlay = () => (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', background: design.colors.bgPrimary }}>
-      {renderVisualization()}
+    <div className="flex flex-col items-center p-6">
+      <h2 className="text-2xl font-bold text-amber-400 mb-4">Clay Experiment</h2>
 
-      <div style={{
-        flex: 1, padding: design.spacing.lg, display: 'flex', flexDirection: 'column',
-        alignItems: 'center', gap: design.spacing.md, background: design.colors.bgSecondary,
-      }}>
-        <p style={{ fontSize: 14, color: design.colors.textPrimary, fontFamily: design.font.sans, margin: 0 }}>
-          Where do you want to add clay?
-        </p>
-
-        <div style={{ display: 'flex', gap: design.spacing.sm, flexWrap: 'wrap', justifyContent: 'center' }}>
-          {[
-            { pos: -0.8, label: '← Fork side' },
-            { pos: 0, label: 'Middle' },
-            { pos: 0.8, label: 'Other side →' }
-          ].map((opt) => (
-            <button
-              key={opt.pos}
-              onMouseDown={() => addClay(opt.pos)}
-              disabled={isAnimating || hasClayAdded}
-              style={{
-                padding: '10px 14px', borderRadius: design.radius.md, border: 'none',
-                background: design.colors.clay, color: '#fff',
-                fontWeight: 600, fontSize: 12, cursor: (isAnimating || hasClayAdded) ? 'not-allowed' : 'pointer',
-                opacity: (isAnimating || hasClayAdded) ? 0.5 : 1, transition: 'all 0.2s ease',
-              }}
-            >
-              {opt.label}
-            </button>
-          ))}
-        </div>
-
-        {hasClayAdded && renderButton('↺ Reset & Try Again', resetExperiment, 'secondary')}
-
-        <p style={{ fontSize: 13, color: design.colors.textMuted, fontFamily: design.font.sans, margin: 0 }}>
-          Experiments: {experimentCount}
-        </p>
-
-        {experimentCount >= 2 && renderButton('I see the pattern! →', () => goToPhase('twist_review'))}
+      <div className="bg-slate-800/50 rounded-2xl p-4 mb-4 w-full max-w-lg">
+        {renderVisualization()}
       </div>
+
+      <p className="text-slate-300 mb-4">Where do you want to add clay?</p>
+
+      <div className="flex gap-3 mb-4 flex-wrap justify-center">
+        {[
+          { pos: -0.8, label: '← Fork side' },
+          { pos: 0, label: 'Middle' },
+          { pos: 0.8, label: 'Other side →' }
+        ].map((opt) => (
+          <button
+            key={opt.pos}
+            onMouseDown={(e) => { e.preventDefault(); addClay(opt.pos); }}
+            disabled={isAnimating || hasClayAdded}
+            className={`px-4 py-2 rounded-lg font-medium bg-amber-600 hover:bg-amber-500 text-white ${(isAnimating || hasClayAdded) ? 'opacity-50 cursor-not-allowed' : ''}`}
+          >
+            {opt.label}
+          </button>
+        ))}
+      </div>
+
+      {hasClayAdded && (
+        <button onMouseDown={(e) => { e.preventDefault(); resetExperiment(); }}
+          className="px-6 py-3 bg-slate-600 hover:bg-slate-500 text-white font-semibold rounded-xl mb-4">
+          ↺ Reset & Try Again
+        </button>
+      )}
+
+      <p className="text-sm text-slate-500 mb-4">Experiments: {experimentCount}</p>
+
+      {experimentCount >= 2 && (
+        <button onMouseDown={(e) => { e.preventDefault(); goToPhase(6); }}
+          className="px-6 py-3 bg-gradient-to-r from-amber-600 to-orange-600 text-white font-semibold rounded-xl">
+          I see the pattern! →
+        </button>
+      )}
     </div>
   );
 
   const renderTwistReview = () => (
-    <div style={{
-      display: 'flex', flexDirection: 'column', alignItems: 'center',
-      padding: design.spacing.xl, height: '100%', background: design.colors.bgPrimary,
-    }}>
-      <div style={{ fontSize: 48, marginBottom: design.spacing.md }}>🎯</div>
-      <h2 style={{
-        fontSize: isMobile ? 20 : 22, fontWeight: 700, color: design.colors.textPrimary,
-        fontFamily: design.font.sans, margin: 0, marginBottom: design.spacing.md,
-      }}>
-        Shifting the Center of Mass
-      </h2>
+    <div className="flex flex-col items-center p-6">
+      <h2 className="text-2xl font-bold text-amber-400 mb-6">Shifting the Center of Mass</h2>
 
-      <div style={{
-        background: design.colors.bgSecondary, borderRadius: design.radius.lg,
-        padding: design.spacing.lg, marginBottom: design.spacing.md, maxWidth: 340, width: '100%',
-        border: `1px solid ${design.colors.border}`,
-      }}>
-        <p style={{
-          fontSize: 15, color: design.colors.textPrimary, fontFamily: design.font.sans,
-          textAlign: 'center', lineHeight: 1.6, margin: 0, marginBottom: design.spacing.sm,
-        }}>
-          Adding weight <span style={{ color: design.colors.success, fontWeight: 600 }}>on the fork side</span> lowers the COM further → <strong>more stable</strong>
+      <div className="bg-gradient-to-br from-amber-900/40 to-orange-900/40 rounded-2xl p-6 max-w-lg mb-6">
+        <p className="text-slate-300 text-center mb-2">
+          Adding weight <span className="text-emerald-400 font-semibold">on the fork side</span> lowers the COM further → <strong>more stable</strong>
         </p>
-        <p style={{
-          fontSize: 15, color: design.colors.textPrimary, fontFamily: design.font.sans,
-          textAlign: 'center', lineHeight: 1.6, margin: 0,
-        }}>
-          Adding weight <span style={{ color: design.colors.error, fontWeight: 600 }}>on the other side</span> raises the COM → <strong>unstable, falls!</strong>
+        <p className="text-slate-300 text-center">
+          Adding weight <span className="text-red-400 font-semibold">on the other side</span> raises the COM → <strong>unstable, falls!</strong>
         </p>
       </div>
 
-      <div style={{
-        background: design.colors.accentPrimaryMuted, border: `1px solid ${design.colors.accentPrimary}40`,
-        borderRadius: design.radius.lg, padding: design.spacing.md, marginBottom: design.spacing.lg,
-        maxWidth: 340, width: '100%',
-      }}>
-        <p style={{
-          fontSize: 14, color: design.colors.accentPrimary, fontFamily: design.font.sans,
-          textAlign: 'center', fontWeight: 600, margin: 0,
-        }}>
+      <div className="bg-emerald-600/20 border border-emerald-500/30 rounded-xl p-4 max-w-lg w-full mb-6">
+        <p className="text-emerald-400 font-semibold text-center">
           The Rule: Keep your center of mass over (or below) your support point!
         </p>
       </div>
 
-      <p style={{
-        fontSize: 14, color: twistPrediction === 'other_side' ? design.colors.success : design.colors.textSecondary,
-        fontFamily: design.font.sans, margin: 0, marginBottom: design.spacing.lg,
-      }}>
-        Your prediction: {twistPrediction === 'other_side' ? '✓ Correct!' : 'Now you see why!'}
+      <p className="text-sm text-slate-400 mb-6">
+        Your prediction: {twistPrediction === 'other_side' ? '✅ Correct!' : '🤔 Now you see why!'}
       </p>
 
-      {renderButton('See Real-World Examples →', () => goToPhase('transfer'))}
+      <button onMouseDown={(e) => { e.preventDefault(); goToPhase(7); }}
+        className="px-6 py-3 bg-gradient-to-r from-emerald-600 to-cyan-600 text-white font-semibold rounded-xl">
+        See Real-World Examples →
+      </button>
     </div>
   );
 
-  // ============================================================================
-  // TRANSFER - Sequential Application Navigation
-  // ============================================================================
   const renderTransfer = () => {
     const app = applications[activeApp];
     const allAppsCompleted = completedApps.size >= applications.length;
 
     return (
-      <div style={{
-        display: 'flex', flexDirection: 'column', height: '100%',
-        padding: design.spacing.lg, background: design.colors.bgPrimary,
-      }}>
-        <h2 style={{
-          fontSize: isMobile ? 18 : 20, fontWeight: 700, color: design.colors.textPrimary,
-          fontFamily: design.font.sans, textAlign: 'center', margin: 0, marginBottom: design.spacing.md,
-        }}>
-          Center of Mass in Action
-        </h2>
+      <div className="flex flex-col items-center p-6">
+        <h2 className="text-2xl font-bold text-white mb-4">Center of Mass in Action</h2>
 
-        {/* Progress indicator */}
-        <div style={{
-          display: 'flex', justifyContent: 'center', gap: design.spacing.xs,
-          marginBottom: design.spacing.md,
-        }}>
+        <div className="flex gap-2 mb-4 flex-wrap justify-center">
           {applications.map((_, idx) => (
-            <div key={idx} style={{
-              width: 10, height: 10, borderRadius: design.radius.full,
-              background: completedApps.has(idx)
-                ? design.colors.success
-                : idx === activeApp
-                  ? design.colors.accentPrimary
-                  : design.colors.bgTertiary,
-              transition: 'all 0.3s ease',
-            }} />
+            <div key={idx} className={`w-3 h-3 rounded-full ${completedApps.has(idx) ? 'bg-emerald-500' : idx === activeApp ? 'bg-emerald-500' : 'bg-slate-700'}`} />
           ))}
         </div>
 
-        <p style={{
-          fontSize: 12, color: design.colors.textMuted, fontFamily: design.font.sans,
-          textAlign: 'center', margin: 0, marginBottom: design.spacing.md,
-        }}>
-          Application {activeApp + 1} of {applications.length} • {completedApps.size} completed
-        </p>
+        <div className="flex gap-2 mb-4 flex-wrap justify-center">
+          {applications.map((a, idx) => (
+            <button
+              key={a.id}
+              onMouseDown={(e) => { e.preventDefault(); setActiveApp(idx); }}
+              disabled={idx > 0 && !completedApps.has(idx - 1)}
+              className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${
+                activeApp === idx ? 'bg-emerald-600 text-white'
+                : completedApps.has(idx) ? 'bg-emerald-600/30 text-emerald-400'
+                : idx > 0 && !completedApps.has(idx - 1) ? 'bg-slate-800 text-slate-600 cursor-not-allowed'
+                : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
+              }`}
+            >
+              {a.title.split(' ')[0]}
+            </button>
+          ))}
+        </div>
 
-        {/* Application card */}
-        <div style={{
-          flex: 1, background: design.colors.bgSecondary, borderRadius: design.radius.lg,
-          padding: design.spacing.lg, display: 'flex', flexDirection: 'column',
-          border: `1px solid ${design.colors.border}`, overflow: 'auto',
-        }}>
-          {/* Graphic */}
-          <div style={{ marginBottom: design.spacing.md }}>
-            {renderApplicationGraphic(app.id)}
-          </div>
-
-          <h3 style={{
-            fontSize: isMobile ? 16 : 18, fontWeight: 700, color: app.color,
-            fontFamily: design.font.sans, margin: 0, marginBottom: design.spacing.sm, textAlign: 'center',
-          }}>
-            {app.title}
-          </h3>
-
-          <p style={{
-            fontSize: 14, color: design.colors.textPrimary, fontFamily: design.font.sans,
-            lineHeight: 1.6, margin: 0, marginBottom: design.spacing.md, textAlign: 'center',
-          }}>
-            {app.description}
-          </p>
-
-          <div style={{ display: 'flex', gap: design.spacing.sm }}>
-            <div style={{
-              flex: 1, background: design.colors.bgTertiary, borderRadius: design.radius.md,
-              padding: design.spacing.sm, textAlign: 'center',
-            }}>
-              <p style={{ fontSize: 10, color: design.colors.textMuted, margin: 0, marginBottom: 2 }}>Principle</p>
-              <p style={{ fontSize: 11, color: design.colors.textPrimary, fontFamily: design.font.mono, margin: 0 }}>
-                {app.formula}
-              </p>
+        <div className="bg-slate-800/50 rounded-2xl p-6 max-w-lg w-full">
+          <h3 className="text-xl font-bold mb-3" style={{ color: app.color }}>{app.title}</h3>
+          <p className="text-slate-300 mb-4">{app.description}</p>
+          <div className="flex gap-3 mb-4">
+            <div className="bg-slate-700/50 rounded-lg p-3 flex-1 text-center">
+              <p className="text-xs text-slate-500">Principle</p>
+              <p className="text-sm text-white font-mono">{app.formula}</p>
             </div>
-            <div style={{
-              flex: 1, background: design.colors.bgTertiary, borderRadius: design.radius.md,
-              padding: design.spacing.sm, textAlign: 'center',
-            }}>
-              <p style={{ fontSize: 10, color: design.colors.textMuted, margin: 0, marginBottom: 2 }}>Real Data</p>
-              <p style={{ fontSize: 11, color: design.colors.textPrimary, fontFamily: design.font.sans, margin: 0 }}>
-                {app.insight}
-              </p>
+            <div className="bg-slate-700/50 rounded-lg p-3 flex-1 text-center">
+              <p className="text-xs text-slate-500">Real Data</p>
+              <p className="text-sm text-white">{app.insight}</p>
             </div>
           </div>
 
-          {/* Mark as read button */}
           {!completedApps.has(activeApp) && (
-            <div style={{ marginTop: design.spacing.md }}>
-              <button
-                onMouseDown={() => {
-                  if (navigationLockRef.current) return;
-                  navigationLockRef.current = true;
-                  const newCompleted = new Set(completedApps);
-                  newCompleted.add(activeApp);
-                  setCompletedApps(newCompleted);
-                  emit('interaction', { app: app.id, action: 'marked_read' });
-                  // Auto-advance to next if not last
-                  if (activeApp < applications.length - 1) {
-                    setTimeout(() => setActiveApp(activeApp + 1), 300);
-                  }
-                  setTimeout(() => { navigationLockRef.current = false; }, 400);
-                }}
-                style={{
-                  width: '100%',
-                  padding: '12px 20px',
-                  borderRadius: design.radius.md,
-                  border: `1px solid ${design.colors.success}50`,
-                  background: design.colors.successMuted,
-                  color: design.colors.success,
-                  fontWeight: 600,
-                  fontSize: 14,
-                  fontFamily: design.font.sans,
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: 8,
-                }}
-              >
-                ✓ Mark "{app.title}" as Read
-              </button>
-            </div>
-          )}
-
-          {/* Already read indicator */}
-          {completedApps.has(activeApp) && (
-            <div style={{
-              marginTop: design.spacing.md,
-              padding: '10px',
-              background: design.colors.successMuted,
-              borderRadius: design.radius.md,
-              textAlign: 'center',
-            }}>
-              <span style={{ color: design.colors.success, fontSize: 13, fontFamily: design.font.sans }}>
-                ✓ Completed
-              </span>
-            </div>
+            <button
+              onMouseDown={(e) => {
+                e.preventDefault();
+                const newCompleted = new Set(completedApps);
+                newCompleted.add(activeApp);
+                setCompletedApps(newCompleted);
+                playSound('complete');
+                emitEvent('app_explored', { app: app.id });
+                if (activeApp < applications.length - 1) {
+                  setTimeout(() => setActiveApp(activeApp + 1), 300);
+                }
+              }}
+              className="w-full py-3 bg-emerald-600/20 border border-emerald-500/50 text-emerald-400 font-medium rounded-xl"
+            >
+              ✓ Mark as Read
+            </button>
           )}
         </div>
 
-        {/* Navigation */}
-        <div style={{
-          display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-          marginTop: design.spacing.md, gap: design.spacing.sm,
-        }}>
-          {renderButton(
-            '← Previous',
-            () => setActiveApp(Math.max(0, activeApp - 1)),
-            'ghost',
-            activeApp === 0
-          )}
-
-          {activeApp < applications.length - 1 ? (
-            renderButton(
-              'Next →',
-              () => setActiveApp(activeApp + 1),
-              'secondary',
-              !completedApps.has(activeApp)
-            )
-          ) : allAppsCompleted ? (
-            renderButton('Take the Quiz →', () => goToPhase('test'))
-          ) : (
-            <span style={{
-              fontSize: 12, color: design.colors.textMuted, fontFamily: design.font.sans,
-              textAlign: 'center',
-            }}>
-              Complete all to continue
-            </span>
-          )}
-        </div>
+        {allAppsCompleted && (
+          <button onMouseDown={(e) => { e.preventDefault(); goToPhase(8); }}
+            className="mt-6 px-6 py-3 bg-gradient-to-r from-emerald-600 to-cyan-600 text-white font-semibold rounded-xl">
+            Take the Quiz →
+          </button>
+        )}
       </div>
     );
   };
 
-  // ============================================================================
-  // TEST - Knowledge Assessment
-  // ============================================================================
   const renderTest = () => {
     const q = testQuestions[currentQuestion];
     const isAnswered = answeredQuestions.has(currentQuestion);
 
     return (
-      <div style={{
-        display: 'flex', flexDirection: 'column', height: '100%',
-        padding: design.spacing.lg, background: design.colors.bgPrimary,
-      }}>
-        <div style={{
-          display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-          marginBottom: design.spacing.md,
-        }}>
-          <span style={{
-            fontSize: 13, color: design.colors.textSecondary, fontFamily: design.font.sans,
-            background: design.colors.bgSecondary, padding: '6px 12px', borderRadius: design.radius.full,
-          }}>
+      <div className="flex flex-col items-center p-6">
+        <div className="flex justify-between items-center w-full max-w-lg mb-4">
+          <span className="text-sm text-slate-400 bg-slate-800 px-3 py-1 rounded-full">
             Question {currentQuestion + 1} of {testQuestions.length}
           </span>
-          <span style={{
-            fontSize: 13, fontWeight: 700, color: design.colors.success, fontFamily: design.font.sans,
-            background: design.colors.successMuted, padding: '6px 12px', borderRadius: design.radius.full,
-          }}>
+          <span className="text-sm text-emerald-400 bg-emerald-600/20 px-3 py-1 rounded-full font-medium">
             Score: {correctAnswers}/{answeredQuestions.size}
           </span>
         </div>
 
-        {/* Progress bar */}
-        <div style={{
-          height: 4, background: design.colors.bgTertiary, borderRadius: design.radius.full,
-          marginBottom: design.spacing.md, overflow: 'hidden',
-        }}>
-          <div style={{
-            height: '100%', width: `${((currentQuestion + 1) / testQuestions.length) * 100}%`,
-            background: design.colors.accentPrimary, borderRadius: design.radius.full,
-            transition: 'width 0.3s ease',
-          }} />
+        <div className="h-1 bg-slate-800 rounded-full w-full max-w-lg mb-6 overflow-hidden">
+          <div className="h-full bg-emerald-500 rounded-full transition-all" style={{ width: `${((currentQuestion + 1) / testQuestions.length) * 100}%` }} />
         </div>
 
-        <div style={{ flex: 1, overflowY: 'auto' }}>
-          <h3 style={{
-            fontSize: isMobile ? 15 : 16, fontWeight: 600, color: design.colors.textPrimary,
-            fontFamily: design.font.sans, lineHeight: 1.5, margin: 0, marginBottom: design.spacing.md,
-          }}>
-            {q.question}
-          </h3>
+        <div className="bg-slate-800/50 rounded-2xl p-6 max-w-lg w-full">
+          <h3 className="text-lg text-white font-medium mb-4">{q.question}</h3>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: design.spacing.sm }}>
+          <div className="grid gap-3">
             {q.options.map((option, idx) => {
-              let bg = design.colors.bgSecondary;
-              let borderColor = design.colors.border;
-              let textColor = design.colors.textPrimary;
-
+              let bgClass = 'bg-slate-700/50 hover:bg-slate-600/50';
               if (isAnswered) {
-                if (idx === q.correct) {
-                  bg = design.colors.successMuted;
-                  borderColor = design.colors.success;
-                  textColor = design.colors.success;
-                } else if (idx === selectedAnswer && idx !== q.correct) {
-                  bg = design.colors.errorMuted;
-                  borderColor = design.colors.error;
-                  textColor = design.colors.error;
-                }
+                if (idx === q.correct) bgClass = 'bg-emerald-600/30 border-emerald-500';
+                else if (idx === selectedAnswer) bgClass = 'bg-red-600/30 border-red-500';
               }
-
               return (
                 <button
                   key={idx}
-                  onMouseDown={() => handleTestAnswer(idx)}
+                  onMouseDown={(e) => { e.preventDefault(); handleTestAnswer(idx); }}
                   disabled={isAnswered}
-                  style={{
-                    padding: '14px 16px', borderRadius: design.radius.md,
-                    border: `1px solid ${borderColor}`, background: bg,
-                    cursor: isAnswered ? 'default' : 'pointer', textAlign: 'left',
-                    transition: 'all 0.2s ease', outline: 'none',
-                  }}
+                  className={`p-4 rounded-xl text-left border-2 transition-all ${bgClass} ${isAnswered ? 'cursor-default' : ''}`}
                 >
-                  <span style={{ fontSize: 14, color: textColor, fontFamily: design.font.sans }}>
-                    {option}
-                  </span>
+                  <span className="text-slate-200">{option}</span>
                 </button>
               );
             })}
           </div>
 
           {showExplanation && (
-            <div style={{
-              marginTop: design.spacing.md, background: design.colors.accentPrimaryMuted,
-              border: `1px solid ${design.colors.accentPrimary}40`,
-              borderRadius: design.radius.md, padding: design.spacing.md,
-            }}>
-              <p style={{
-                fontSize: 13, color: design.colors.textPrimary, fontFamily: design.font.sans,
-                lineHeight: 1.5, margin: 0,
-              }}>
-                💡 {q.explanation}
-              </p>
+            <div className="mt-4 p-4 bg-emerald-600/20 border border-emerald-500/30 rounded-xl">
+              <p className="text-slate-300 text-sm">💡 {q.explanation}</p>
             </div>
           )}
         </div>
 
-        <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: design.spacing.md }}>
-          {renderButton(
-            '← Back',
-            () => {
-              setCurrentQuestion(prev => Math.max(0, prev - 1));
-              setSelectedAnswer(null);
-              setShowExplanation(answeredQuestions.has(currentQuestion - 1));
-            },
-            'secondary',
-            currentQuestion === 0
-          )}
+        <div className="flex justify-between w-full max-w-lg mt-6">
+          <button
+            onMouseDown={(e) => { e.preventDefault(); setCurrentQuestion(prev => Math.max(0, prev - 1)); setSelectedAnswer(null); setShowExplanation(answeredQuestions.has(currentQuestion - 1)); }}
+            disabled={currentQuestion === 0}
+            className="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-lg disabled:opacity-50"
+          >
+            ← Back
+          </button>
 
           {currentQuestion < testQuestions.length - 1 ? (
-            renderButton(
-              'Next →',
-              () => {
-                setCurrentQuestion(prev => prev + 1);
-                setSelectedAnswer(null);
-                setShowExplanation(answeredQuestions.has(currentQuestion + 1));
-              },
-              'secondary'
-            )
+            <button
+              onMouseDown={(e) => { e.preventDefault(); setCurrentQuestion(prev => prev + 1); setSelectedAnswer(null); setShowExplanation(answeredQuestions.has(currentQuestion + 1)); }}
+              className="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-lg"
+            >
+              Next →
+            </button>
           ) : answeredQuestions.size === testQuestions.length ? (
-            renderButton('Complete →', () => goToPhase('mastery'))
+            <button onMouseDown={(e) => { e.preventDefault(); goToPhase(9); }}
+              className="px-4 py-2 bg-gradient-to-r from-emerald-600 to-cyan-600 text-white font-medium rounded-lg"
+            >
+              Complete →
+            </button>
           ) : (
-            <span style={{
-              fontSize: 12, color: design.colors.textMuted, fontFamily: design.font.sans,
-              alignSelf: 'center',
-            }}>
-              Answer all to continue
-            </span>
+            <span className="text-sm text-slate-500 self-center">Answer all to continue</span>
           )}
         </div>
       </div>
     );
   };
 
-  // ============================================================================
-  // MASTERY - Completion Screen
-  // ============================================================================
   const renderMastery = () => {
     const percentage = Math.round((correctAnswers / testQuestions.length) * 100);
 
     return (
-      <div style={{
-        display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-        height: '100%', padding: design.spacing.xl, position: 'relative', overflow: 'hidden',
-        background: `linear-gradient(180deg, ${design.colors.bgDeep} 0%, ${design.colors.accentPrimaryMuted} 100%)`,
-      }}>
-        <div style={{ fontSize: isMobile ? 64 : 72, marginBottom: design.spacing.md }}>🏆</div>
+      <div className="flex flex-col items-center justify-center min-h-[500px] p-6 text-center">
+        <div className="text-8xl mb-6">🏆</div>
+        <h1 className="text-3xl font-bold text-white mb-2">Balance Master!</h1>
+        <div className="text-5xl font-bold text-emerald-400 mb-2">{percentage}%</div>
+        <p className="text-slate-400 mb-8">{correctAnswers}/{testQuestions.length} correct answers</p>
 
-        <h2 style={{
-          fontSize: isMobile ? 22 : 26, fontWeight: 700, color: design.colors.textPrimary,
-          fontFamily: design.font.sans, margin: 0, marginBottom: design.spacing.sm, textAlign: 'center',
-        }}>
-          Balance Master!
-        </h2>
-
-        <div style={{
-          fontSize: isMobile ? 48 : 56, fontWeight: 700, color: design.colors.success,
-          fontFamily: design.font.sans, marginBottom: design.spacing.xs,
-        }}>
-          {percentage}%
-        </div>
-
-        <p style={{
-          fontSize: 15, color: design.colors.textSecondary, fontFamily: design.font.sans,
-          margin: 0, marginBottom: design.spacing.lg,
-        }}>
-          {correctAnswers}/{testQuestions.length} correct answers
-        </p>
-
-        <div style={{
-          background: design.colors.bgSecondary, borderRadius: design.radius.lg,
-          padding: design.spacing.lg, marginBottom: design.spacing.lg, maxWidth: 300, width: '100%',
-          border: `1px solid ${design.colors.border}`,
-        }}>
-          <h3 style={{
-            fontSize: 15, fontWeight: 700, color: design.colors.accentPrimary,
-            fontFamily: design.font.sans, margin: 0, marginBottom: design.spacing.sm, textAlign: 'center',
-          }}>
-            Key Takeaways
-          </h3>
-          <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
-            {[
-              'COM below pivot = stable equilibrium',
-              'COM above pivot = unstable, falls',
-              'Adding weight shifts the COM',
-              'Keep COM over support to balance'
-            ].map((item, idx) => (
-              <li key={idx} style={{
-                fontSize: 13, color: design.colors.textPrimary, fontFamily: design.font.sans,
-                marginBottom: design.spacing.xs, display: 'flex', alignItems: 'center', gap: design.spacing.sm,
-              }}>
-                <span style={{ color: design.colors.success }}>✓</span> {item}
+        <div className="bg-slate-800/50 rounded-2xl p-6 max-w-md w-full mb-8">
+          <h3 className="text-lg font-bold text-emerald-400 mb-4">Key Takeaways</h3>
+          <ul className="text-left space-y-2">
+            {['COM below pivot = stable equilibrium', 'COM above pivot = unstable, falls', 'Adding weight shifts the COM', 'Keep COM over support to balance'].map((item, idx) => (
+              <li key={idx} className="flex items-center gap-2 text-slate-300">
+                <span className="text-emerald-400">✓</span> {item}
               </li>
             ))}
           </ul>
         </div>
 
-        {renderButton('Play Again ↺', () => {
-          setPhase('hook');
-          setExperimentCount(0);
-          setCurrentQuestion(0);
-          setCorrectAnswers(0);
-          setAnsweredQuestions(new Set());
-          setCompletedApps(new Set());
-          setActiveApp(0);
-          setPrediction(null);
-          setTwistPrediction(null);
-          resetExperiment();
-        }, 'primary')}
-
-        {/* Confetti */}
-        <style>{`
-          @keyframes confettiFall {
-            0% { transform: translateY(-20px) rotate(0deg); opacity: 1; }
-            100% { transform: translateY(600px) rotate(720deg); opacity: 0; }
-          }
-        `}</style>
-        {[...Array(20)].map((_, i) => (
-          <div key={i} style={{
-            position: 'absolute', left: `${Math.random() * 100}%`, top: '-20px',
-            animation: `confettiFall ${2 + Math.random() * 2}s linear ${Math.random() * 2}s forwards`,
-            pointerEvents: 'none', fontSize: 18,
-          }}>
-            {['⚖️', '🎯', '⭐', '✨', '🎉'][Math.floor(Math.random() * 5)]}
-          </div>
-        ))}
+        <button
+          onMouseDown={(e) => {
+            e.preventDefault();
+            setPhase(0);
+            setExperimentCount(0);
+            setCurrentQuestion(0);
+            setCorrectAnswers(0);
+            setAnsweredQuestions(new Set());
+            setCompletedApps(new Set());
+            setActiveApp(0);
+            setPrediction(null);
+            setTwistPrediction(null);
+            resetExperiment();
+          }}
+          className="px-6 py-3 bg-slate-700 hover:bg-slate-600 text-white font-medium rounded-xl"
+        >
+          ↺ Play Again
+        </button>
       </div>
     );
   };
 
-  // ============================================================================
-  // RENDER
-  // ============================================================================
-  const phaseRenderers: Record<Phase, () => JSX.Element> = {
-    hook: renderHook,
-    predict: renderPredict,
-    play: renderPlay,
-    review: renderReview,
-    twist_predict: renderTwistPredict,
-    twist_play: renderTwistPlay,
-    twist_review: renderTwistReview,
-    transfer: renderTransfer,
-    test: renderTest,
-    mastery: renderMastery,
+  const renderPhase = () => {
+    switch (phase) {
+      case 0: return renderHook();
+      case 1: return renderPredict();
+      case 2: return renderPlay();
+      case 3: return renderReview();
+      case 4: return renderTwistPredict();
+      case 5: return renderTwistPlay();
+      case 6: return renderTwistReview();
+      case 7: return renderTransfer();
+      case 8: return renderTest();
+      case 9: return renderMastery();
+      default: return renderHook();
+    }
   };
 
   return (
-    <div style={{
-      width, height, borderRadius: design.radius.lg, overflow: 'hidden',
-      position: 'relative', background: design.colors.bgPrimary, fontFamily: design.font.sans,
-      boxShadow: design.shadow.lg,
-    }}>
-      {renderProgressBar()}
-      {phaseRenderers[phase]()}
+    <div className="min-h-screen bg-[#0a0f1a] text-white relative overflow-hidden">
+      {/* Premium background gradient */}
+      <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-[#0a1628] to-slate-900" />
+      <div className="absolute top-0 left-1/4 w-96 h-96 bg-emerald-500/5 rounded-full blur-3xl" />
+      <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-cyan-500/5 rounded-full blur-3xl" />
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-teal-500/3 rounded-full blur-3xl" />
+
+      {/* Header */}
+      <div className="fixed top-0 left-0 right-0 z-50 bg-slate-900/80 backdrop-blur-xl border-b border-slate-800/50">
+        <div className="flex items-center justify-between px-6 py-3 max-w-4xl mx-auto">
+          <span className="text-sm font-semibold text-white/80 tracking-wide">Center of Mass</span>
+          <div className="flex items-center gap-1.5">
+            {PHASES.map((p) => (
+              <button
+                key={p}
+                onMouseDown={(e) => { e.preventDefault(); goToPhase(p); }}
+                className={`h-2 rounded-full transition-all duration-300 ${
+                  phase === p
+                    ? 'bg-emerald-400 w-6 shadow-lg shadow-emerald-400/30'
+                    : phase > p
+                      ? 'bg-emerald-500 w-2'
+                      : 'bg-slate-700 w-2 hover:bg-slate-600'
+                }`}
+                title={phaseLabels[p]}
+              />
+            ))}
+          </div>
+          <span className="text-sm font-medium text-emerald-400">{phaseLabels[phase]}</span>
+        </div>
+      </div>
+
+      {/* Main content */}
+      <div className="relative pt-16 pb-12">{renderPhase()}</div>
     </div>
   );
 };

@@ -6,27 +6,41 @@ import React, { useState, useRef, useEffect, useCallback } from 'react';
 // Why is the sky blue but clouds white?
 // ============================================================================
 
-interface RayleighMieScatteringRendererProps {
-  onComplete?: () => void;
-  emit?: (event: string, data?: Record<string, unknown>) => void;
+type GameEventType =
+  | 'phase_change'
+  | 'prediction_made'
+  | 'simulation_started'
+  | 'parameter_changed'
+  | 'twist_prediction_made'
+  | 'app_explored'
+  | 'test_answered'
+  | 'test_completed'
+  | 'mastery_achieved';
+
+interface GameEvent {
+  type: GameEventType;
+  data?: Record<string, unknown>;
 }
 
-type Phase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
-
-const phases: Phase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
-
-const phaseLabels: Record<Phase, string> = {
-  hook: 'Hook',
-  predict: 'Predict',
-  play: 'Experiment',
-  review: 'Review',
-  twist_predict: 'Twist',
-  twist_play: 'Explore',
-  twist_review: 'Insight',
-  transfer: 'Apply',
-  test: 'Quiz',
-  mastery: 'Complete',
+const PHASES: number[] = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
+const phaseLabels: Record<number, string> = {
+  0: 'Hook',
+  1: 'Predict',
+  2: 'Lab',
+  3: 'Review',
+  4: 'Twist Predict',
+  5: 'Twist Lab',
+  6: 'Twist Review',
+  7: 'Transfer',
+  8: 'Test',
+  9: 'Mastery'
 };
+
+interface RayleighMieScatteringRendererProps {
+  onGameEvent?: (event: GameEvent) => void;
+  currentPhase?: number;
+  onPhaseComplete?: (phase: number) => void;
+}
 
 // Premium Design System
 const colors = {
@@ -212,9 +226,14 @@ const testQuestions = [
   },
 ];
 
-export default function RayleighMieScatteringRenderer({ onComplete, emit = () => {} }: RayleighMieScatteringRendererProps) {
+export default function RayleighMieScatteringRenderer({ onGameEvent, currentPhase, onPhaseComplete }: RayleighMieScatteringRendererProps) {
+  const navigationLockRef = useRef(false);
+
   // Core state
-  const [phase, setPhase] = useState<Phase>('hook');
+  const [phase, setPhase] = useState<number>(() => {
+    if (currentPhase !== undefined && PHASES.includes(currentPhase)) return currentPhase;
+    return 0;
+  });
   const [prediction, setPrediction] = useState<number | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<number | null>(null);
   const [selectedApp, setSelectedApp] = useState(0);
@@ -247,6 +266,45 @@ export default function RayleighMieScatteringRenderer({ onComplete, emit = () =>
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
+  // Phase sync
+  useEffect(() => {
+    if (currentPhase !== undefined && PHASES.includes(currentPhase)) {
+      setPhase(currentPhase);
+    }
+  }, [currentPhase]);
+
+  // Type-based sound feedback
+  const playSound = useCallback((type: 'click' | 'success' | 'failure' | 'transition' | 'complete') => {
+    try {
+      const audioContext = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
+      const oscillator = audioContext.createOscillator();
+      const gainNode = audioContext.createGain();
+      oscillator.connect(gainNode);
+      gainNode.connect(audioContext.destination);
+
+      const soundConfig = {
+        click: { frequency: 440, duration: 0.1, oscType: 'sine' as OscillatorType },
+        success: { frequency: 600, duration: 0.15, oscType: 'sine' as OscillatorType },
+        failure: { frequency: 200, duration: 0.2, oscType: 'sawtooth' as OscillatorType },
+        transition: { frequency: 520, duration: 0.15, oscType: 'sine' as OscillatorType },
+        complete: { frequency: 800, duration: 0.3, oscType: 'sine' as OscillatorType },
+      };
+
+      const config = soundConfig[type];
+      oscillator.frequency.value = config.frequency;
+      oscillator.type = config.oscType;
+      gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + config.duration);
+      oscillator.start();
+      oscillator.stop(audioContext.currentTime + config.duration);
+    } catch (e) { /* Audio not supported */ }
+  }, []);
+
+  // Event emission
+  const emitEvent = useCallback((type: GameEventType, data?: Record<string, unknown>) => {
+    onGameEvent?.({ type, data });
+  }, [onGameEvent]);
+
   // Handle button click with debounce
   const handleButtonClick = useCallback((action: () => void, lock: React.MutableRefObject<boolean>) => {
     if (lock.current) return;
@@ -255,31 +313,31 @@ export default function RayleighMieScatteringRenderer({ onComplete, emit = () =>
     setTimeout(() => { lock.current = false; }, 400);
   }, []);
 
-  // Navigation helpers
-  const goToPhase = useCallback((p: Phase) => {
-    setPhase(p);
-    emit('phase_change', { phase: p });
-  }, [emit]);
+  // Navigation with debouncing
+  const goToPhase = useCallback((newPhase: number) => {
+    if (navigationLockRef.current) return;
+    if (!PHASES.includes(newPhase)) return;
+    navigationLockRef.current = true;
+    setPhase(newPhase);
+    playSound('transition');
+    emitEvent('phase_change', { from: phase, to: newPhase, phaseLabel: phaseLabels[newPhase] });
+    onPhaseComplete?.(newPhase);
+    setTimeout(() => { navigationLockRef.current = false; }, 400);
+  }, [phase, playSound, emitEvent, onPhaseComplete]);
 
   const goNext = useCallback(() => {
-    const currentIndex = phases.indexOf(phase);
-    if (currentIndex < phases.length - 1) {
-      goToPhase(phases[currentIndex + 1]);
-    } else if (onComplete) {
-      onComplete();
-    }
-  }, [phase, goToPhase, onComplete]);
+    const currentIndex = PHASES.indexOf(phase);
+    if (currentIndex < PHASES.length - 1) goToPhase(PHASES[currentIndex + 1]);
+  }, [phase, goToPhase]);
 
   const goBack = useCallback(() => {
-    const currentIndex = phases.indexOf(phase);
-    if (currentIndex > 0) {
-      goToPhase(phases[currentIndex - 1]);
-    }
+    const currentIndex = PHASES.indexOf(phase);
+    if (currentIndex > 0) goToPhase(PHASES[currentIndex - 1]);
   }, [phase, goToPhase]);
 
   // Light ray animation
   useEffect(() => {
-    if (phase !== 'play' && phase !== 'twist_play') return;
+    if (phase !== 2 && phase !== 5) return;
 
     const addRay = () => {
       const rayColors = ['#3B82F6', '#22C55E', '#EAB308', '#F97316', '#EF4444']; // Blue, Green, Yellow, Orange, Red
@@ -415,43 +473,29 @@ export default function RayleighMieScatteringRenderer({ onComplete, emit = () =>
     );
   }
 
-  // Helper function: Progress bar
+  // Helper function: Progress bar (Premium Design)
   function ProgressBar() {
-    const currentIndex = phases.indexOf(phase);
-    const progress = ((currentIndex + 1) / phases.length) * 100;
-
     return (
-      <div style={{
-        background: colors.bgElevated,
-        padding: `${spacing.sm}px ${spacing.lg}px`,
-        borderBottom: `1px solid ${colors.border}`,
-      }}>
-        <div style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          marginBottom: spacing.xs,
-        }}>
-          <span style={{ ...typography.label, color: colors.textTertiary }}>
-            {phaseLabels[phase]}
-          </span>
-          <span style={{ ...typography.caption, color: colors.textTertiary }}>
-            {currentIndex + 1}/{phases.length}
-          </span>
-        </div>
-        <div style={{
-          height: 4,
-          background: colors.bgHover,
-          borderRadius: radius.full,
-          overflow: 'hidden',
-        }}>
-          <div style={{
-            height: '100%',
-            width: `${progress}%`,
-            background: `linear-gradient(90deg, ${colors.brand}, ${colors.success})`,
-            borderRadius: radius.full,
-            transition: 'width 0.3s ease',
-          }} />
+      <div className="fixed top-0 left-0 right-0 z-50 bg-slate-900/80 backdrop-blur-xl border-b border-slate-800/50">
+        <div className="flex items-center justify-between px-6 py-3 max-w-4xl mx-auto">
+          <span className="text-sm font-semibold text-white/80 tracking-wide">Rayleigh vs Mie Scattering</span>
+          <div className="flex items-center gap-1.5">
+            {PHASES.map((p) => (
+              <button
+                key={p}
+                onMouseDown={(e) => { e.preventDefault(); goToPhase(p); }}
+                className={`h-2 rounded-full transition-all duration-300 ${
+                  phase === p
+                    ? 'bg-sky-400 w-6 shadow-lg shadow-sky-400/30'
+                    : phase > p
+                      ? 'bg-emerald-500 w-2'
+                      : 'bg-slate-700 w-2 hover:bg-slate-600'
+                }`}
+                title={phaseLabels[p]}
+              />
+            ))}
+          </div>
+          <span className="text-sm font-medium text-sky-400">{phaseLabels[phase]}</span>
         </div>
       </div>
     );
@@ -636,138 +680,90 @@ export default function RayleighMieScatteringRenderer({ onComplete, emit = () =>
   // ============================================================================
   // PHASE: HOOK
   // ============================================================================
-  if (phase === 'hook') {
+  if (phase === 0) {
     return (
-      <div style={{
-        display: 'flex',
-        flexDirection: 'column',
-        height: '100%',
-        background: colors.bg,
-        fontFamily: typography.fontFamily
-      }}>
+      <div className="min-h-screen bg-[#0a0f1a] text-white relative overflow-hidden">
+        {/* Premium background gradient */}
+        <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-[#0a1628] to-slate-900" />
+        <div className="absolute top-0 left-1/4 w-96 h-96 bg-sky-500/5 rounded-full blur-3xl" />
+        <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-orange-500/5 rounded-full blur-3xl" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-sky-500/3 rounded-full blur-3xl" />
+
         <ProgressBar />
 
-        <div style={{
-          flex: 1,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          padding: spacing.xl,
-        }}>
-          <div style={{ maxWidth: 480, textAlign: 'center' }}>
-            {/* Sky/Cloud Illustration */}
-            <div style={{
-              width: '100%',
-              height: 150,
-              borderRadius: radius.lg,
-              background: 'linear-gradient(180deg, #7DD3FC 0%, #38BDF8 50%, #0EA5E9 100%)',
-              marginBottom: spacing.xl,
-              position: 'relative',
-              overflow: 'hidden',
-            }}>
-              {/* Sun */}
-              <div style={{
-                position: 'absolute',
-                top: 20,
-                right: 30,
-                width: 50,
-                height: 50,
-                borderRadius: radius.full,
-                background: 'radial-gradient(circle, #FEF08A 0%, #FBBF24 100%)',
-                boxShadow: '0 0 40px #FBBF24',
-              }} />
-              {/* Clouds */}
-              <div style={{
-                position: 'absolute',
-                top: 40,
-                left: 30,
-                width: 80,
-                height: 40,
-                borderRadius: radius.full,
-                background: '#FFFFFF',
-                boxShadow: '30px 10px 0 #FFFFFF, 60px 0 0 #F8FAFC',
-              }} />
-              <div style={{
-                position: 'absolute',
-                top: 80,
-                left: 150,
-                width: 60,
-                height: 30,
-                borderRadius: radius.full,
-                background: '#FFFFFF',
-                boxShadow: '25px 5px 0 #FFFFFF',
-              }} />
+        <div className="relative pt-16 pb-12">
+          <div className="flex flex-col items-center justify-center min-h-[600px] px-6 py-12 text-center">
+            {/* Premium badge */}
+            <div className="inline-flex items-center gap-2 px-4 py-2 bg-sky-500/10 border border-sky-500/20 rounded-full mb-8">
+              <span className="w-2 h-2 bg-sky-400 rounded-full animate-pulse" />
+              <span className="text-sm font-medium text-sky-400 tracking-wide">PHYSICS EXPLORATION</span>
             </div>
 
-            {/* Title */}
-            <h1 style={{
-              ...typography.hero,
-              color: colors.textPrimary,
-              marginBottom: spacing.lg
-            }}>
+            {/* Main title with gradient */}
+            <h1 className="text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-white via-sky-100 to-orange-200 bg-clip-text text-transparent">
               Why is the Sky Blue?
             </h1>
 
-            {/* Subtitle */}
-            <p style={{
-              ...typography.h3,
-              color: colors.textSecondary,
-              marginBottom: spacing.lg,
-              lineHeight: 1.6,
-            }}>
-              And why are clouds white? The answer involves how light interacts with particles of different sizes.
+            <p className="text-lg text-slate-400 max-w-md mb-10">
+              Discover the physics of light scattering
             </p>
 
-            {/* Visual comparison */}
-            <div style={{
-              display: 'flex',
-              justifyContent: 'center',
-              gap: spacing.xl,
-              marginBottom: spacing.xxl,
-            }}>
-              <div style={{ textAlign: 'center' }}>
-                <div style={{
-                  width: 60,
-                  height: 60,
-                  borderRadius: radius.full,
-                  background: 'linear-gradient(135deg, #7DD3FC 0%, #38BDF8 100%)',
-                  margin: '0 auto',
-                  marginBottom: spacing.sm,
-                }} />
-                <div style={{ ...typography.caption, color: colors.sky }}>Sky = Blue</div>
-              </div>
-              <div style={{ textAlign: 'center' }}>
-                <div style={{
-                  width: 60,
-                  height: 60,
-                  borderRadius: radius.full,
-                  background: 'linear-gradient(135deg, #FFFFFF 0%, #E5E7EB 100%)',
-                  margin: '0 auto',
-                  marginBottom: spacing.sm,
-                  border: `2px solid ${colors.border}`,
-                }} />
-                <div style={{ ...typography.caption, color: colors.textSecondary }}>Clouds = White</div>
+            {/* Premium card with graphic */}
+            <div className="relative bg-gradient-to-br from-slate-800/80 to-slate-900/80 rounded-3xl p-8 max-w-xl w-full border border-slate-700/50 shadow-2xl shadow-black/20 backdrop-blur-xl">
+              <div className="absolute inset-0 bg-gradient-to-br from-sky-500/5 via-transparent to-orange-500/5 rounded-3xl" />
+
+              <div className="relative">
+                {/* Sky/Cloud Illustration */}
+                <div className="w-full h-36 rounded-xl bg-gradient-to-b from-sky-300 via-sky-400 to-sky-500 mb-6 relative overflow-hidden">
+                  {/* Sun */}
+                  <div className="absolute top-4 right-8 w-12 h-12 rounded-full bg-gradient-radial from-yellow-200 to-amber-400" style={{ boxShadow: '0 0 40px #FBBF24' }} />
+                  {/* Clouds */}
+                  <div className="absolute top-8 left-6 w-20 h-10 rounded-full bg-white" style={{ boxShadow: '30px 10px 0 #FFFFFF, 60px 0 0 #F8FAFC' }} />
+                  <div className="absolute top-20 left-36 w-16 h-8 rounded-full bg-white" style={{ boxShadow: '25px 5px 0 #FFFFFF' }} />
+                </div>
+
+                <p className="text-xl text-white/90 font-medium leading-relaxed mb-6">
+                  And why are clouds white? The answer involves how light interacts with particles of different sizes.
+                </p>
+
+                {/* Visual comparison */}
+                <div className="flex justify-center gap-8 mb-4">
+                  <div className="text-center">
+                    <div className="w-14 h-14 rounded-full bg-gradient-to-br from-sky-300 to-sky-500 mx-auto mb-2" />
+                    <div className="text-sm text-sky-400">Sky = Blue</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="w-14 h-14 rounded-full bg-gradient-to-br from-white to-gray-200 mx-auto mb-2 border-2 border-slate-600" />
+                    <div className="text-sm text-slate-400">Clouds = White</div>
+                  </div>
+                </div>
               </div>
             </div>
 
-            {/* CTA */}
+            {/* Premium CTA button */}
             <button
-              onMouseDown={() => handleButtonClick(() => goToPhase('predict'), navigationLock)}
-              style={{
-                padding: '16px 48px',
-                borderRadius: radius.lg,
-                border: 'none',
-                background: `linear-gradient(135deg, ${colors.brand}, #8B5CF6)`,
-                color: '#FFFFFF',
-                fontSize: 17,
-                fontWeight: 600,
-                cursor: 'pointer',
-                fontFamily: typography.fontFamily,
-                boxShadow: `0 4px 20px ${colors.brandGlow}`,
-              }}
+              onMouseDown={() => handleButtonClick(() => goToPhase(1), navigationLock)}
+              className="mt-10 group relative px-10 py-5 bg-gradient-to-r from-sky-500 to-indigo-600 text-white text-lg font-semibold rounded-2xl transition-all duration-300 hover:shadow-lg hover:shadow-sky-500/25 hover:scale-[1.02] active:scale-[0.98]"
             >
-              Discover Why →
+              <span className="relative z-10 flex items-center gap-3">
+                Discover Why
+                <svg className="w-5 h-5 transition-transform group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                </svg>
+              </span>
             </button>
+
+            {/* Feature hints */}
+            <div className="mt-12 flex items-center gap-8 text-sm text-slate-500">
+              <div className="flex items-center gap-2">
+                <span className="text-sky-400">✦</span>
+                Interactive Lab
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-orange-400">✦</span>
+                10 Phases
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -777,7 +773,7 @@ export default function RayleighMieScatteringRenderer({ onComplete, emit = () =>
   // ============================================================================
   // PHASE: PREDICT
   // ============================================================================
-  if (phase === 'predict') {
+  if (phase === 1) {
     const predictions = [
       { id: 0, label: 'Blue light is absorbed least', icon: '🔵', description: 'Atmosphere lets blue through more' },
       { id: 1, label: 'Blue light is scattered most', icon: '💫', description: 'Small particles bounce blue around' },
@@ -878,7 +874,7 @@ export default function RayleighMieScatteringRenderer({ onComplete, emit = () =>
             <div style={{ display: 'flex', gap: spacing.md }}>
               <Button onClick={goBack} variant="ghost">← Back</Button>
               <Button
-                onClick={() => handleButtonClick(() => goToPhase('play'), navigationLock)}
+                onClick={() => handleButtonClick(() => goToPhase(2), navigationLock)}
                 disabled={prediction === null}
               >
                 Test It Out →
@@ -893,7 +889,7 @@ export default function RayleighMieScatteringRenderer({ onComplete, emit = () =>
   // ============================================================================
   // PHASE: PLAY
   // ============================================================================
-  if (phase === 'play') {
+  if (phase === 2) {
     return (
       <div style={{
         display: 'flex',
@@ -1051,7 +1047,7 @@ export default function RayleighMieScatteringRenderer({ onComplete, emit = () =>
   // ============================================================================
   // PHASE: REVIEW
   // ============================================================================
-  if (phase === 'review') {
+  if (phase === 3) {
     const userWasRight = prediction === 1;
 
     return (
@@ -1212,7 +1208,7 @@ export default function RayleighMieScatteringRenderer({ onComplete, emit = () =>
   // ============================================================================
   // PHASE: TWIST PREDICT
   // ============================================================================
-  if (phase === 'twist_predict') {
+  if (phase === 4) {
     const twistOptions = [
       { id: 0, label: 'More vivid (brighter red)', icon: '🔴', description: 'Longer path = more red light' },
       { id: 1, label: 'Less vivid (dimmer)', icon: '⚫', description: 'All light gets scattered away' },
@@ -1371,7 +1367,7 @@ export default function RayleighMieScatteringRenderer({ onComplete, emit = () =>
   // ============================================================================
   // PHASE: TWIST PLAY
   // ============================================================================
-  if (phase === 'twist_play') {
+  if (phase === 5) {
     return (
       <div style={{
         display: 'flex',
@@ -1507,7 +1503,7 @@ export default function RayleighMieScatteringRenderer({ onComplete, emit = () =>
   // ============================================================================
   // PHASE: TWIST REVIEW
   // ============================================================================
-  if (phase === 'twist_review') {
+  if (phase === 6) {
     const userWasRight = twistPrediction === 0;
 
     return (
@@ -1641,7 +1637,7 @@ export default function RayleighMieScatteringRenderer({ onComplete, emit = () =>
   // ============================================================================
   // PHASE: TRANSFER (Real World Applications) - SEQUENTIAL NAVIGATION
   // ============================================================================
-  if (phase === 'transfer') {
+  if (phase === 7) {
     const app = applications[selectedApp];
     const allCompleted = completedApps.every(c => c);
     const completedCount = completedApps.filter(c => c).length;
@@ -1853,7 +1849,7 @@ export default function RayleighMieScatteringRenderer({ onComplete, emit = () =>
 
           {allCompleted ? (
             <button
-              onMouseDown={() => handleButtonClick(() => goToPhase('test'), navigationLock)}
+              onMouseDown={() => handleButtonClick(() => goToPhase(8), navigationLock)}
               style={{
                 padding: '12px 24px',
                 borderRadius: radius.md,
@@ -1894,7 +1890,7 @@ export default function RayleighMieScatteringRenderer({ onComplete, emit = () =>
   // ============================================================================
   // PHASE: TEST
   // ============================================================================
-  if (phase === 'test') {
+  if (phase === 8) {
     const q = testQuestions[testIndex];
     const totalCorrect = testAnswers.reduce((sum, ans, i) => sum + (ans === testQuestions[i].correct ? 1 : 0), 0);
 
@@ -1915,7 +1911,7 @@ export default function RayleighMieScatteringRenderer({ onComplete, emit = () =>
               <p style={{ ...typography.body, color: colors.textSecondary, marginBottom: spacing.xl }}>
                 {passed ? 'You\'ve mastered light scattering!' : 'Review the concepts and try again.'}
               </p>
-              <Button onClick={() => passed ? goNext() : goToPhase('review')} variant={passed ? 'success' : 'primary'} size="lg">
+              <Button onClick={() => passed ? goNext() : goToPhase(3)} variant={passed ? 'success' : 'primary'} size="lg">
                 {passed ? 'Complete! →' : 'Review Material'}
               </Button>
             </div>
@@ -1964,7 +1960,7 @@ export default function RayleighMieScatteringRenderer({ onComplete, emit = () =>
                         const newAnswers = [...testAnswers];
                         newAnswers[testIndex] = i;
                         setTestAnswers(newAnswers);
-                        emit(i === q.correct ? 'correct_answer' : 'incorrect_answer', { questionIndex: testIndex });
+                        emitEvent('test_answered', { questionIndex: testIndex, correct: i === q.correct });
                       }
                     }}
                     style={{
@@ -2036,7 +2032,7 @@ export default function RayleighMieScatteringRenderer({ onComplete, emit = () =>
   // ============================================================================
   // PHASE: MASTERY
   // ============================================================================
-  if (phase === 'mastery') {
+  if (phase === 9) {
     return (
       <div style={{
         display: 'flex',
@@ -2134,7 +2130,7 @@ export default function RayleighMieScatteringRenderer({ onComplete, emit = () =>
 
             {/* CTA */}
             <button
-              onMouseDown={() => handleButtonClick(() => onComplete?.(), navigationLock)}
+              onMouseDown={() => handleButtonClick(() => { emitEvent('mastery_achieved'); }, navigationLock)}
               style={{
                 padding: '16px 48px',
                 borderRadius: radius.lg,

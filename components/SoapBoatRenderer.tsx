@@ -53,19 +53,27 @@ function isValidPhase(p: string): p is Phase {
   return phaseOrder.includes(p as Phase);
 }
 
-const playSound = (frequency: number, duration: number, type: OscillatorType = 'sine', volume = 0.3) => {
+const playSound = (soundType: 'click' | 'success' | 'failure' | 'transition' | 'complete' = 'click') => {
   try {
     const audioContext = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
     const oscillator = audioContext.createOscillator();
     const gainNode = audioContext.createGain();
     oscillator.connect(gainNode);
     gainNode.connect(audioContext.destination);
-    oscillator.frequency.value = frequency;
-    oscillator.type = type;
-    gainNode.gain.setValueAtTime(volume, audioContext.currentTime);
-    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + duration);
+    const sounds: Record<string, { freq: number; dur: number; type: OscillatorType; vol: number }> = {
+      click: { freq: 330, dur: 0.1, type: 'sine', vol: 0.2 },
+      success: { freq: 523, dur: 0.3, type: 'sine', vol: 0.3 },
+      failure: { freq: 220, dur: 0.3, type: 'sine', vol: 0.3 },
+      transition: { freq: 440, dur: 0.15, type: 'sine', vol: 0.2 },
+      complete: { freq: 660, dur: 0.4, type: 'sine', vol: 0.3 }
+    };
+    const sound = sounds[soundType];
+    oscillator.frequency.value = sound.freq;
+    oscillator.type = sound.type;
+    gainNode.gain.setValueAtTime(sound.vol, audioContext.currentTime);
+    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + sound.dur);
     oscillator.start();
-    oscillator.stop(audioContext.currentTime + duration);
+    oscillator.stop(audioContext.currentTime + sound.dur);
   } catch {}
 };
 
@@ -83,6 +91,7 @@ export default function SoapBoatRenderer({ onGameEvent }: SoapBoatRendererProps)
   const [completedApps, setCompletedApps] = useState<Set<number>>(new Set());
   const [isMobile, setIsMobile] = useState(false);
   const navigationLockRef = useRef(false);
+  const lastClickRef = useRef(0);
 
   // Simulation state
   const [boatPosition, setBoatPosition] = useState(50); // x position
@@ -106,6 +115,9 @@ export default function SoapBoatRenderer({ onGameEvent }: SoapBoatRendererProps)
   }, []);
 
   const goToPhase = (newPhase: Phase) => {
+    const now = Date.now();
+    if (now - lastClickRef.current < 200) return;
+    lastClickRef.current = now;
     if (navigationLockRef.current) return;
     navigationLockRef.current = true;
     setTimeout(() => { navigationLockRef.current = false; }, 400);
@@ -113,8 +125,8 @@ export default function SoapBoatRenderer({ onGameEvent }: SoapBoatRendererProps)
     if (onGameEvent) {
       onGameEvent({ type: 'phase_change', from: phase, to: newPhase });
     }
+    playSound('transition');
     setPhase(newPhase);
-    playSound(440, 0.15, 'sine', 0.2);
   };
 
   // Surface tension values (N/m)
@@ -130,7 +142,7 @@ export default function SoapBoatRenderer({ onGameEvent }: SoapBoatRendererProps)
     setSoapAdded(true);
     setAnimating(true);
 
-    playSound(200, 0.3, 'sine', 0.2);
+    playSound('transition');
 
     // Soap spreads and boat accelerates
     let spread = 0;
@@ -179,7 +191,7 @@ export default function SoapBoatRenderer({ onGameEvent }: SoapBoatRendererProps)
     setTwistSoapAdded(true);
     setTwistAnimating(true);
 
-    playSound(200, 0.3, 'sine', 0.2);
+    playSound('transition');
 
     let pos = twistBoatPosition;
     let vel = 0;
@@ -225,7 +237,7 @@ export default function SoapBoatRenderer({ onGameEvent }: SoapBoatRendererProps)
     if (onGameEvent) {
       onGameEvent({ type: 'prediction', phase: 'predict', prediction: choice });
     }
-    playSound(330, 0.1, 'sine', 0.2);
+    playSound('click');
   };
 
   const handleTwistPrediction = (choice: string) => {
@@ -233,13 +245,13 @@ export default function SoapBoatRenderer({ onGameEvent }: SoapBoatRendererProps)
     if (onGameEvent) {
       onGameEvent({ type: 'prediction', phase: 'twist_predict', prediction: choice });
     }
-    playSound(330, 0.1, 'sine', 0.2);
+    playSound('click');
   };
 
   const handleTestAnswer = (q: number, a: number) => {
     if (!testSubmitted) {
       setTestAnswers(prev => ({ ...prev, [q]: a }));
-      playSound(330, 0.1, 'sine', 0.2);
+      playSound('click');
     }
   };
 
@@ -255,7 +267,7 @@ export default function SoapBoatRenderer({ onGameEvent }: SoapBoatRendererProps)
         percentage: Math.round((score / testQuestions.length) * 100),
       });
     }
-    playSound(score >= 7 ? 523 : 330, 0.3, 'sine', 0.3);
+    playSound(score >= 7 ? 'success' : 'failure');
   };
 
   const testQuestions = [
@@ -406,10 +418,38 @@ export default function SoapBoatRenderer({ onGameEvent }: SoapBoatRendererProps)
       case 'hook':
         return (
           <div className="flex flex-col items-center">
-            <h2 style={{ fontSize: '1.8rem', marginBottom: '0.5rem', color: '#1e293b' }}>
+            {/* Premium Badge */}
+            <div style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '8px',
+              padding: '8px 16px',
+              background: 'rgba(59, 130, 246, 0.15)',
+              border: '1px solid rgba(59, 130, 246, 0.3)',
+              borderRadius: '9999px',
+              marginBottom: '16px'
+            }}>
+              <span style={{
+                width: '8px',
+                height: '8px',
+                background: '#3b82f6',
+                borderRadius: '50%',
+                animation: 'pulse 2s infinite'
+              }} />
+              <span style={{ fontSize: '12px', fontWeight: 600, color: '#3b82f6', letterSpacing: '0.05em' }}>PHYSICS EXPLORATION</span>
+            </div>
+            {/* Gradient Title */}
+            <h2 style={{
+              fontSize: '2rem',
+              marginBottom: '0.5rem',
+              background: 'linear-gradient(to right, #f8fafc, #60a5fa, #3b82f6)',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+              fontWeight: 800
+            }}>
               The Soap-Powered Boat
             </h2>
-            <p style={{ color: '#64748b', marginBottom: '1.5rem', textAlign: 'center', maxWidth: 500 }}>
+            <p style={{ color: '#94a3b8', marginBottom: '1.5rem', textAlign: 'center', maxWidth: 500 }}>
               Can you power a boat with nothing but a tiny drop of soap?
             </p>
 
@@ -1362,7 +1402,7 @@ export default function SoapBoatRenderer({ onGameEvent }: SoapBoatRendererProps)
                   key={index}
                   onMouseDown={() => {
                     setCompletedApps(prev => new Set([...prev, index]));
-                    playSound(500 + index * 100, 0.15, 'sine', 0.2);
+                    playSound('click');
                   }}
                   style={{
                     background: completedApps.has(index)
@@ -1678,69 +1718,53 @@ export default function SoapBoatRenderer({ onGameEvent }: SoapBoatRendererProps)
   const currentIndex = phaseOrder.indexOf(phase);
 
   return (
-    <div style={{
-      minHeight: '100vh',
-      background: 'linear-gradient(135deg, #f8fafc, #e0f2fe)',
-      padding: isMobile ? '1rem' : '2rem',
-      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
-    }}>
-      {/* Progress bar */}
-      <div style={{
-        maxWidth: 700,
-        margin: '0 auto 1.5rem auto'
-      }}>
-        <div style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          marginBottom: '0.5rem'
-        }}>
-          {phaseOrder.map((p, i) => (
-            <div
-              key={p}
-              style={{
-                width: 28,
-                height: 28,
-                borderRadius: '50%',
-                background: i <= currentIndex
-                  ? 'linear-gradient(135deg, #3b82f6, #1d4ed8)'
-                  : '#e2e8f0',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                color: i <= currentIndex ? 'white' : '#94a3b8',
-                fontSize: '0.7rem',
-                fontWeight: 600
-              }}
-            >
-              {i < currentIndex ? '✓' : i + 1}
-            </div>
-          ))}
-        </div>
-        <div style={{
-          height: 4,
-          background: '#e2e8f0',
-          borderRadius: 2,
-          overflow: 'hidden'
-        }}>
-          <div style={{
-            width: `${(currentIndex / (phaseOrder.length - 1)) * 100}%`,
-            height: '100%',
-            background: 'linear-gradient(90deg, #3b82f6, #1d4ed8)',
-            transition: 'width 0.3s ease'
-          }} />
+    <div className="min-h-screen bg-[#0a0f1a] text-white relative overflow-hidden">
+      {/* Premium background gradient */}
+      <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-[#0a1628] to-slate-900" />
+      <div className="absolute top-0 left-1/4 w-96 h-96 bg-blue-500/5 rounded-full blur-3xl" />
+      <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-indigo-500/5 rounded-full blur-3xl" />
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-cyan-500/5 rounded-full blur-3xl" />
+
+      {/* Header */}
+      <div className="fixed top-0 left-0 right-0 z-50 bg-slate-900/80 backdrop-blur-xl border-b border-slate-800/50">
+        <div className="flex items-center justify-between px-6 py-3 max-w-4xl mx-auto">
+          <span className="text-sm font-semibold text-white/80 tracking-wide">Soap Boat</span>
+          <div className="flex items-center gap-1.5">
+            {phaseOrder.map((p, i) => (
+              <button
+                key={p}
+                onMouseDown={(e) => { e.preventDefault(); goToPhase(p); }}
+                className={`h-2 rounded-full transition-all duration-300 ${
+                  phase === p
+                    ? 'bg-blue-400 w-6 shadow-lg shadow-blue-400/30'
+                    : currentIndex > i
+                      ? 'bg-emerald-500 w-2'
+                      : 'bg-slate-700 w-2 hover:bg-slate-600'
+                }`}
+                title={p}
+              />
+            ))}
+          </div>
+          <span className="text-sm font-medium text-blue-400">{phase.replace('_', ' ')}</span>
         </div>
       </div>
 
       {/* Main content */}
-      <div style={{
-        maxWidth: 700,
-        margin: '0 auto',
-        background: 'white',
-        borderRadius: 20,
-        padding: isMobile ? '1.5rem' : '2rem',
-        boxShadow: '0 10px 40px rgba(0, 0, 0, 0.08)'
-      }}>
-        {renderPhase()}
+      <div className="relative pt-16 pb-12" style={{ padding: isMobile ? '1rem' : '2rem', paddingTop: '5rem' }}>
+        <div style={{
+          position: 'relative',
+          zIndex: 10,
+          maxWidth: 700,
+          margin: '0 auto',
+          background: 'rgba(30, 41, 59, 0.3)',
+          backdropFilter: 'blur(12px)',
+          borderRadius: 20,
+          padding: isMobile ? '1.5rem' : '2rem',
+          border: '1px solid rgba(255, 255, 255, 0.1)',
+          boxShadow: '0 10px 40px rgba(0, 0, 0, 0.3)'
+        }}>
+          {renderPhase()}
+        </div>
       </div>
     </div>
   );

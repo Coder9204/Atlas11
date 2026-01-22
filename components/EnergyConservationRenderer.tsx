@@ -1,85 +1,38 @@
 'use client';
+
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 
-// ============================================================================
-// ENERGY CONSERVATION RENDERER - PREMIUM PHYSICS GAME
-// Marble Coaster Experience: Discover how potential energy converts to kinetic
-// ============================================================================
+// ═══════════════════════════════════════════════════════════════════════════
+// TYPES & INTERFACES
+// ═══════════════════════════════════════════════════════════════════════════
+type GameEventType =
+  | 'phase_change'
+  | 'prediction_made'
+  | 'simulation_started'
+  | 'parameter_changed'
+  | 'twist_prediction_made'
+  | 'app_explored'
+  | 'test_answered'
+  | 'test_completed'
+  | 'mastery_achieved';
 
-interface EnergyConservationRendererProps {
-  onComplete?: () => void;
-  emit?: (event: string, data?: Record<string, unknown>) => void;
+interface GameEvent {
+  type: GameEventType;
+  data?: Record<string, unknown>;
 }
 
-type Phase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
-
-const phases: Phase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
-
-const phaseLabels: Record<Phase, string> = {
-  hook: 'Hook',
-  predict: 'Predict',
-  play: 'Experiment',
-  review: 'Review',
-  twist_predict: 'Twist',
-  twist_play: 'Explore',
-  twist_review: 'Insight',
-  transfer: 'Apply',
-  test: 'Quiz',
-  mastery: 'Complete',
+// Numeric phases: 0=hook, 1=predict, 2=play, 3=review, 4=twist_predict, 5=twist_play, 6=twist_review, 7=transfer, 8=test, 9=mastery
+const PHASES: number[] = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
+const phaseLabels: Record<number, string> = {
+  0: 'Hook', 1: 'Predict', 2: 'Lab', 3: 'Review', 4: 'Twist Predict',
+  5: 'Twist Lab', 6: 'Twist Review', 7: 'Transfer', 8: 'Test', 9: 'Mastery'
 };
 
-// Premium Design System
-const colors = {
-  brand: '#6366F1',
-  brandGlow: 'rgba(99, 102, 241, 0.15)',
-  success: '#10B981',
-  successBg: 'rgba(16, 185, 129, 0.1)',
-  warning: '#F59E0B',
-  warningBg: 'rgba(245, 158, 11, 0.1)',
-  error: '#EF4444',
-  errorBg: 'rgba(239, 68, 68, 0.1)',
-  bg: '#0F0F13',
-  bgCard: '#18181B',
-  bgElevated: '#1F1F23',
-  bgHover: '#27272A',
-  border: '#2E2E33',
-  textPrimary: '#FAFAFA',
-  textSecondary: '#A1A1AA',
-  textTertiary: '#71717A',
-  potential: '#F59E0B',
-  kinetic: '#10B981',
-  thermal: '#EF4444',
-};
-
-const typography = {
-  fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif',
-  hero: { fontSize: 40, fontWeight: 700, letterSpacing: '-0.02em', lineHeight: 1.1 },
-  h1: { fontSize: 28, fontWeight: 700, letterSpacing: '-0.01em', lineHeight: 1.2 },
-  h2: { fontSize: 22, fontWeight: 600, letterSpacing: '-0.01em', lineHeight: 1.3 },
-  h3: { fontSize: 18, fontWeight: 600, lineHeight: 1.4 },
-  body: { fontSize: 16, fontWeight: 400, lineHeight: 1.6 },
-  bodySmall: { fontSize: 14, fontWeight: 400, lineHeight: 1.5 },
-  caption: { fontSize: 12, fontWeight: 500, lineHeight: 1.4 },
-  label: { fontSize: 11, fontWeight: 600, letterSpacing: '0.05em', textTransform: 'uppercase' as const },
-};
-
-const spacing = {
-  xs: 4,
-  sm: 8,
-  md: 12,
-  lg: 16,
-  xl: 24,
-  xxl: 32,
-  xxxl: 48,
-};
-
-const radius = {
-  sm: 6,
-  md: 10,
-  lg: 14,
-  xl: 20,
-  full: 9999,
-};
+interface Props {
+  onGameEvent?: (event: GameEvent) => void;
+  currentPhase?: number;
+  onPhaseComplete?: (phase: number) => void;
+}
 
 // Real-World Applications Data
 const applications = [
@@ -88,60 +41,32 @@ const applications = [
     icon: '🎢',
     title: 'Roller Coasters',
     subtitle: 'Theme Park Engineering',
-    color: '#F59E0B',
-    description: 'The first hill of a roller coaster is always the highest because all subsequent motion relies on that initial potential energy. No motors push the cars after the initial climb.',
-    physics: 'PE at top of first hill → KE throughout the ride. The total mechanical energy (minus friction losses) determines maximum heights of subsequent hills.',
-    insight: 'Engineers use clothoid loops (teardrop shaped) to reduce g-forces while maximizing the energy efficiency of the ride.',
-    stats: [
-      { value: '456ft', label: 'Tallest Drop' },
-      { value: '149mph', label: 'Top Speed' },
-      { value: '6.2g', label: 'Max G-Force' },
-    ],
+    description: 'The first hill of a roller coaster is always the highest because all subsequent motion relies on that initial potential energy.',
+    physics: 'PE at top of first hill converts to KE throughout the ride. No motors push the cars after the initial climb.',
   },
   {
     id: 'hydropower',
     icon: '💧',
     title: 'Hydroelectric Dams',
     subtitle: 'Clean Energy Generation',
-    color: '#3B82F6',
-    description: 'Dams store water at height, converting gravitational potential energy into kinetic energy as water falls, then into electrical energy via turbines.',
-    physics: 'Water PE = mgh converts to KE = ½mv² as it falls through penstocks. Turbines convert this to rotational energy, then generators to electricity.',
-    insight: 'Pumped-storage facilities can store excess grid energy by pumping water uphill, achieving 70-85% round-trip efficiency.',
-    stats: [
-      { value: '22.5GW', label: 'Three Gorges' },
-      { value: '726ft', label: 'Hoover Height' },
-      { value: '40%', label: 'US Renewable' },
-    ],
+    description: 'Dams store water at height, converting gravitational PE into KE as water falls, then into electrical energy.',
+    physics: 'Water PE = mgh converts to KE as it falls through penstocks. Turbines convert this to electricity.',
   },
   {
     id: 'pendulum',
     icon: '🕰️',
     title: 'Pendulum Clocks',
     subtitle: 'Timekeeping Precision',
-    color: '#10B981',
-    description: 'A pendulum continuously exchanges potential and kinetic energy. At the extremes: maximum PE, zero KE. At the bottom: maximum KE, minimum PE.',
-    physics: 'The period depends only on length and gravity (T = 2π√(L/g)), not on mass or amplitude for small swings, making pendulums ideal timekeepers.',
-    insight: 'Temperature changes affect pendulum length. Precision clocks use invar alloys or compensating mechanisms to maintain accuracy.',
-    stats: [
-      { value: '1656', label: 'Year Invented' },
-      { value: '0.5s/day', label: 'Accuracy' },
-      { value: '99.39m', label: 'Longest (OR)' },
-    ],
+    description: 'A pendulum continuously exchanges PE and KE. At extremes: max PE, zero KE. At bottom: max KE, min PE.',
+    physics: 'The period depends only on length and gravity, not on mass or amplitude for small swings.',
   },
   {
     id: 'skateboard',
     icon: '🛹',
     title: 'Skateboard Half-Pipes',
     subtitle: 'Action Sports Physics',
-    color: '#EC4899',
-    description: 'Skaters pump by extending legs at the bottom and crouching at the top, adding energy to the system to go higher than their starting point.',
-    physics: 'Without pumping, max height equals starting height (energy conservation). Pumping adds work (W = Fd) to increase total energy.',
-    insight: 'Professional skaters instinctively time their pumps to maximize energy transfer, reaching heights 2-3× their initial drop.',
-    stats: [
-      { value: '27ft', label: 'Mega Ramp' },
-      { value: '65mph', label: 'Speed Record' },
-      { value: '1080°', label: 'Most Rotations' },
-    ],
+    description: 'Skaters pump by extending legs at the bottom and crouching at the top, adding energy to go higher.',
+    physics: 'Without pumping, max height equals starting height. Pumping adds work to increase total energy.',
   },
 ];
 
@@ -151,67 +76,59 @@ const testQuestions = [
     question: 'A marble is released from rest at height h. At what height will it have half kinetic and half potential energy?',
     options: ['h/4', 'h/2', 'h/3', '3h/4'],
     correct: 1,
-    explanation: 'At h/2, PE = mgh/2 and KE = mgh/2. Total energy is still mgh.',
   },
   {
-    question: 'Why can\'t a roller coaster\'s second hill be higher than the first (without additional motors)?',
-    options: ['It would be too scary', 'Not enough potential energy', 'The cars would derail', 'Air resistance would stop it'],
+    question: 'Why can\'t a roller coaster\'s second hill be higher than the first (without motors)?',
+    options: ['Too scary', 'Not enough potential energy', 'Cars would derail', 'Air resistance'],
     correct: 1,
-    explanation: 'The first hill sets the maximum total energy. Subsequent hills cannot exceed this without adding energy.',
   },
   {
-    question: 'A ball rolls down a frictionless track. At the bottom, its speed is v. If dropped from twice the height, its speed would be:',
-    options: ['v', '2v', 'v√2', '4v'],
+    question: 'A ball rolls down. At the bottom, speed is v. From twice the height, speed would be:',
+    options: ['v', '2v', 'v*sqrt(2)', '4v'],
     correct: 2,
-    explanation: 'KE = mgh, so v = √(2gh). Doubling h gives v√2.',
   },
   {
     question: 'What happens to mechanical energy when friction is present?',
-    options: ['It disappears', 'It converts to thermal energy', 'It increases', 'It stays the same'],
+    options: ['Disappears', 'Converts to thermal energy', 'Increases', 'Stays the same'],
     correct: 1,
-    explanation: 'Energy is conserved but converts to thermal energy (heat), which is not recoverable as mechanical energy.',
   },
   {
-    question: 'A pendulum swings from point A to point B. At which point is kinetic energy maximum?',
-    options: ['At point A (highest)', 'At point B (other highest)', 'At the lowest point', 'Halfway between A and lowest'],
+    question: 'A pendulum swings from A to B. At which point is kinetic energy maximum?',
+    options: ['At A (highest)', 'At B (other highest)', 'At the lowest point', 'Halfway'],
     correct: 2,
-    explanation: 'At the lowest point, all potential energy has converted to kinetic energy.',
   },
   {
-    question: 'Two marbles with masses m and 2m are released from the same height on identical frictionless tracks. Their speeds at the bottom are:',
-    options: ['The heavier is faster', 'The lighter is faster', 'Both have the same speed', 'Cannot determine'],
+    question: 'Two marbles (m and 2m) released from same height. Their speeds at bottom are:',
+    options: ['Heavier is faster', 'Lighter is faster', 'Same speed', 'Cannot determine'],
     correct: 2,
-    explanation: 'v = √(2gh) is independent of mass. Both marbles reach the same speed.',
   },
   {
-    question: 'A skater at the top of a half-pipe has 100J of potential energy. At the bottom (ignoring friction), their kinetic energy is:',
+    question: 'Skater at top with 100J of PE. At bottom (ignoring friction), KE is:',
     options: ['50J', '100J', '200J', '0J'],
     correct: 1,
-    explanation: 'Energy conservation: all 100J of PE converts to 100J of KE at the bottom.',
   },
   {
-    question: 'Which scenario has the MOST mechanical energy?',
-    options: ['Ball at 10m height, at rest', 'Ball at 5m, moving at 10m/s', 'Ball at 0m, moving at 14m/s', 'All have equal energy'],
+    question: 'Which has MOST mechanical energy? Ball at 10m at rest, at 5m moving 10m/s, or at 0m moving 14m/s?',
+    options: ['10m at rest', '5m moving', '0m moving fast', 'All similar'],
     correct: 3,
-    explanation: 'Using E = mgh + ½mv², calculate each: Option A ≈ 98J, B ≈ 99J, C ≈ 98J per kg. Very similar.',
   },
   {
-    question: 'A hydroelectric dam converts water\'s potential energy into electricity. What is the intermediate form of energy?',
-    options: ['Chemical energy', 'Nuclear energy', 'Kinetic energy of water', 'Thermal energy'],
+    question: 'Hydroelectric dam: what is the intermediate form of energy?',
+    options: ['Chemical', 'Nuclear', 'Kinetic energy of water', 'Thermal'],
     correct: 2,
-    explanation: 'PE → KE (falling water) → Rotational KE (turbine) → Electrical energy.',
   },
   {
-    question: 'If you could eliminate ALL friction and air resistance, a marble would:',
-    options: ['Eventually stop', 'Return to exactly its starting height', 'Go higher than its starting height', 'Accelerate indefinitely'],
+    question: 'If ALL friction eliminated, a marble would:',
+    options: ['Eventually stop', 'Return to exactly starting height', 'Go higher', 'Accelerate forever'],
     correct: 1,
-    explanation: 'With perfect energy conservation, the marble returns to its initial height each time.',
   },
 ];
 
-export default function EnergyConservationRenderer({ onComplete, emit = () => {} }: EnergyConservationRendererProps) {
-  // Core state
-  const [phase, setPhase] = useState<Phase>('hook');
+// ═══════════════════════════════════════════════════════════════════════════
+// MAIN COMPONENT
+// ═══════════════════════════════════════════════════════════════════════════
+const EnergyConservationRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onPhaseComplete }) => {
+  const [phase, setPhase] = useState<number>(currentPhase ?? 0);
   const [prediction, setPrediction] = useState<number | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<number | null>(null);
   const [activeApp, setActiveApp] = useState(0);
@@ -222,73 +139,70 @@ export default function EnergyConservationRenderer({ onComplete, emit = () => {}
 
   // Simulation state
   const [isRunning, setIsRunning] = useState(false);
-  const [marblePos, setMarblePos] = useState({ x: 50, y: 20 }); // Start at top-left of track
+  const [marblePos, setMarblePos] = useState({ x: 50, y: 20 });
   const [marbleVel, setMarbleVel] = useState({ x: 0, y: 0 });
-  const [startHeight, setStartHeight] = useState(80);
-  const [showEnergyBars, setShowEnergyBars] = useState(true);
   const [friction, setFriction] = useState(0);
   const [trackType, setTrackType] = useState<'hill' | 'loop' | 'bowl'>('hill');
-  const [twistTrackType, setTwistTrackType] = useState<'friction' | 'loop'>('friction');
 
-  // Animation frame ref
   const animationRef = useRef<number | null>(null);
   const timeRef = useRef(0);
-
-  // Button debounce lock
   const navigationLockRef = useRef(false);
+  const lastClickRef = useRef(0);
 
-  // Responsive detection
-  const [isMobile, setIsMobile] = useState(false);
+  // Phase sync
   useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 640);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
+    if (currentPhase !== undefined && currentPhase !== phase) {
+      setPhase(currentPhase);
+    }
+  }, [currentPhase, phase]);
+
+  const playSound = useCallback((type: 'click' | 'success' | 'failure' | 'transition' | 'complete') => {
+    if (typeof window === 'undefined') return;
+    try {
+      const audioContext = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
+      const oscillator = audioContext.createOscillator();
+      const gainNode = audioContext.createGain();
+      oscillator.connect(gainNode);
+      gainNode.connect(audioContext.destination);
+      const sounds = {
+        click: { freq: 600, duration: 0.1, type: 'sine' as OscillatorType },
+        success: { freq: 800, duration: 0.2, type: 'sine' as OscillatorType },
+        failure: { freq: 300, duration: 0.3, type: 'sine' as OscillatorType },
+        transition: { freq: 500, duration: 0.15, type: 'sine' as OscillatorType },
+        complete: { freq: 900, duration: 0.4, type: 'sine' as OscillatorType }
+      };
+      const sound = sounds[type];
+      oscillator.frequency.value = sound.freq;
+      oscillator.type = sound.type;
+      gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + sound.duration);
+      oscillator.start();
+      oscillator.stop(audioContext.currentTime + sound.duration);
+    } catch { /* Audio not available */ }
   }, []);
 
-  // Navigation helpers
-  const goToPhase = useCallback((p: Phase) => {
-    setPhase(p);
-    emit('phase_change', { phase: p });
-  }, [emit]);
-
-  const goNext = useCallback(() => {
-    const currentIndex = phases.indexOf(phase);
-    if (currentIndex < phases.length - 1) {
-      goToPhase(phases[currentIndex + 1]);
-    } else if (onComplete) {
-      onComplete();
-    }
-  }, [phase, goToPhase, onComplete]);
-
-  const goBack = useCallback(() => {
-    const currentIndex = phases.indexOf(phase);
-    if (currentIndex > 0) {
-      goToPhase(phases[currentIndex - 1]);
-    }
-  }, [phase, goToPhase]);
+  const goToPhase = useCallback((newPhase: number) => {
+    if (navigationLockRef.current) return;
+    navigationLockRef.current = true;
+    playSound('transition');
+    setPhase(newPhase);
+    onPhaseComplete?.(newPhase);
+    onGameEvent?.({ type: 'phase_change', data: { phase: newPhase, phaseLabel: phaseLabels[newPhase] } });
+    setTimeout(() => { navigationLockRef.current = false; }, 400);
+  }, [playSound, onPhaseComplete, onGameEvent]);
 
   // Track path calculations
   const getTrackY = useCallback((x: number, type: string): number => {
-    // Returns y position (0 = top, 100 = bottom) for a given x position
     if (type === 'hill') {
-      // Simple valley: high at edges, low in middle
-      const normalizedX = (x - 50) / 50; // -1 to 1
-      return 20 + 60 * (1 - normalizedX * normalizedX); // Parabola
+      const normalizedX = (x - 50) / 50;
+      return 20 + 60 * (1 - normalizedX * normalizedX);
     } else if (type === 'loop') {
-      // Valley with loop in middle
-      if (x < 30) {
-        return 20 + (x / 30) * 50;
-      } else if (x > 70) {
-        return 20 + ((100 - x) / 30) * 50;
-      } else {
-        // Loop section
-        const loopX = (x - 50) / 20;
-        const loopY = Math.sqrt(Math.max(0, 1 - loopX * loopX));
-        return 50 - loopY * 25;
-      }
+      if (x < 30) return 20 + (x / 30) * 50;
+      if (x > 70) return 20 + ((100 - x) / 30) * 50;
+      const loopX = (x - 50) / 20;
+      const loopY = Math.sqrt(Math.max(0, 1 - loopX * loopX));
+      return 50 - loopY * 25;
     } else if (type === 'bowl') {
-      // U-shaped bowl
       const normalizedX = (x - 50) / 50;
       return 20 + 60 * normalizedX * normalizedX;
     }
@@ -298,39 +212,30 @@ export default function EnergyConservationRenderer({ onComplete, emit = () => {}
   // Physics simulation
   const runSimulation = useCallback(() => {
     if (!isRunning) return;
-
-    const dt = 0.016; // ~60fps
-    const g = 500; // Gravity strength
+    const dt = 0.016;
+    const g = 500;
     const frictionCoeff = friction * 0.01;
 
     setMarblePos(prev => {
       let newX = prev.x + marbleVel.x * dt;
       let newY = prev.y + marbleVel.y * dt;
-
-      // Get track position
       const trackY = getTrackY(newX, trackType);
 
-      // Simple collision with track
       if (newY > trackY) {
         newY = trackY;
-        // Bounce/roll along track
         const slope = (getTrackY(newX + 1, trackType) - getTrackY(newX - 1, trackType)) / 2;
         const normalAngle = Math.atan2(-1, slope);
-
-        // Apply friction
         const speed = Math.sqrt(marbleVel.x ** 2 + marbleVel.y ** 2);
         const newSpeed = speed * (1 - frictionCoeff);
 
         setMarbleVel({
           x: newSpeed * Math.cos(normalAngle + Math.PI/2) * (marbleVel.x > 0 ? 1 : -1),
-          y: Math.max(0, marbleVel.y * -0.3), // Some bounce
+          y: Math.max(0, marbleVel.y * -0.3),
         });
       } else {
-        // Apply gravity
         setMarbleVel(v => ({ ...v, y: v.y + g * dt }));
       }
 
-      // Boundary checks
       if (newX < 5) { newX = 5; setMarbleVel(v => ({ ...v, x: -v.x * 0.5 })); }
       if (newX > 95) { newX = 95; setMarbleVel(v => ({ ...v, x: -v.x * 0.5 })); }
 
@@ -346,42 +251,32 @@ export default function EnergyConservationRenderer({ onComplete, emit = () => {}
       animationRef.current = requestAnimationFrame(runSimulation);
     }
     return () => {
-      if (animationRef.current) {
-        cancelAnimationFrame(animationRef.current);
-      }
+      if (animationRef.current) cancelAnimationFrame(animationRef.current);
     };
   }, [isRunning, runSimulation]);
 
-  // Reset simulation
   const resetSimulation = useCallback(() => {
     setIsRunning(false);
     setMarblePos({ x: 10, y: 20 });
     setMarbleVel({ x: 0, y: 0 });
     timeRef.current = 0;
-    if (animationRef.current) {
-      cancelAnimationFrame(animationRef.current);
-    }
+    if (animationRef.current) cancelAnimationFrame(animationRef.current);
   }, []);
 
-  // Start simulation
   const startSimulation = useCallback(() => {
     resetSimulation();
     setMarblePos({ x: 10, y: 20 });
-    setMarbleVel({ x: 50, y: 0 }); // Initial push
+    setMarbleVel({ x: 50, y: 0 });
     setIsRunning(true);
   }, [resetSimulation]);
 
-  // Calculate energy values
   const calculateEnergy = useCallback(() => {
-    const mass = 1; // kg
-    const maxHeight = 80; // reference height
+    const maxHeight = 80;
     const currentHeight = maxHeight - marblePos.y;
     const speed = Math.sqrt(marbleVel.x ** 2 + marbleVel.y ** 2);
-
-    const pe = mass * 10 * Math.max(0, currentHeight); // PE = mgh
-    const ke = 0.5 * mass * speed ** 2 / 100; // KE = 0.5mv²
+    const pe = 10 * Math.max(0, currentHeight);
+    const ke = 0.5 * speed ** 2 / 100;
     const total = pe + ke;
-
     return {
       potential: Math.min(100, (pe / 800) * 100),
       kinetic: Math.min(100, (ke / 800) * 100),
@@ -389,1798 +284,706 @@ export default function EnergyConservationRenderer({ onComplete, emit = () => {}
     };
   }, [marblePos, marbleVel]);
 
-  // Helper function: renderButton with onMouseDown and debounce
-  const renderButton = (
-    label: string,
-    onClick: () => void,
-    variant: 'primary' | 'secondary' | 'ghost' | 'success' = 'primary',
-    options?: { disabled?: boolean; size?: 'sm' | 'md' | 'lg' }
-  ) => {
-    const { disabled = false, size = 'md' } = options || {};
+  const handlePrediction = useCallback((id: number) => {
+    const now = Date.now();
+    if (now - lastClickRef.current < 200) return;
+    lastClickRef.current = now;
+    setPrediction(id);
+    playSound('click');
+    onGameEvent?.({ type: 'prediction_made', data: { prediction: id } });
+  }, [playSound, onGameEvent]);
 
-    const variants: Record<string, React.CSSProperties> = {
-      primary: { background: colors.brand, color: '#FFFFFF' },
-      secondary: { background: colors.bgCard, color: colors.textPrimary, border: `1px solid ${colors.border}` },
-      ghost: { background: 'transparent', color: colors.textSecondary },
-      success: { background: colors.success, color: '#FFFFFF' },
-    };
+  const handleTwistPrediction = useCallback((id: number) => {
+    const now = Date.now();
+    if (now - lastClickRef.current < 200) return;
+    lastClickRef.current = now;
+    setTwistPrediction(id);
+    playSound('click');
+    onGameEvent?.({ type: 'twist_prediction_made', data: { prediction: id } });
+  }, [playSound, onGameEvent]);
 
-    const sizes: Record<string, React.CSSProperties> = {
-      sm: { padding: '8px 16px', fontSize: 13 },
-      md: { padding: '12px 24px', fontSize: 15 },
-      lg: { padding: '16px 32px', fontSize: 17 },
-    };
+  const handleAppComplete = useCallback((index: number) => {
+    const now = Date.now();
+    if (now - lastClickRef.current < 200) return;
+    lastClickRef.current = now;
+    setCompletedApps(prev => new Set([...prev, index]));
+    playSound('complete');
+    onGameEvent?.({ type: 'app_explored', data: { app: applications[index].title } });
+  }, [playSound, onGameEvent]);
 
-    return (
-      <button
-        onMouseDown={(e) => {
-          e.preventDefault();
-          if (disabled || navigationLockRef.current) return;
-          navigationLockRef.current = true;
-          onClick();
-          setTimeout(() => { navigationLockRef.current = false; }, 400);
-        }}
-        disabled={disabled}
-        style={{
-          fontFamily: typography.fontFamily,
-          fontWeight: 600,
-          borderRadius: radius.md,
-          border: 'none',
-          cursor: disabled ? 'not-allowed' : 'pointer',
-          transition: 'all 0.2s',
-          opacity: disabled ? 0.5 : 1,
-          ...variants[variant],
-          ...sizes[size],
-        }}
-      >
-        {label}
-      </button>
-    );
-  };
+  const handleTestAnswer = useCallback((answerIndex: number) => {
+    const now = Date.now();
+    if (now - lastClickRef.current < 200) return;
+    lastClickRef.current = now;
+    if (testAnswers[testIndex] !== null) return;
+    const newAnswers = [...testAnswers];
+    newAnswers[testIndex] = answerIndex;
+    setTestAnswers(newAnswers);
+    const correct = answerIndex === testQuestions[testIndex].correct;
+    playSound(correct ? 'success' : 'failure');
+    onGameEvent?.({ type: 'test_answered', data: { answer: answerIndex, correct } });
+  }, [testAnswers, testIndex, playSound, onGameEvent]);
 
-  // Helper function: Progress bar
-  function ProgressBar() {
-    const currentIndex = phases.indexOf(phase);
-    const progress = ((currentIndex + 1) / phases.length) * 100;
-
-    return (
-      <div style={{
-        background: colors.bgElevated,
-        padding: `${spacing.sm}px ${spacing.lg}px`,
-        borderBottom: `1px solid ${colors.border}`,
-      }}>
-        <div style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          marginBottom: spacing.xs,
-        }}>
-          <span style={{ ...typography.label, color: colors.textTertiary }}>
-            {phaseLabels[phase]}
-          </span>
-          <span style={{ ...typography.caption, color: colors.textTertiary }}>
-            {currentIndex + 1}/{phases.length}
-          </span>
-        </div>
-        <div style={{
-          height: 4,
-          background: colors.bgHover,
-          borderRadius: radius.full,
-          overflow: 'hidden',
-        }}>
-          <div style={{
-            height: '100%',
-            width: `${progress}%`,
-            background: `linear-gradient(90deg, ${colors.brand}, ${colors.success})`,
-            borderRadius: radius.full,
-            transition: 'width 0.3s ease',
-          }} />
-        </div>
-      </div>
-    );
-  }
-
-  // Helper function: Track visualization
-  function TrackVisualization({ type, showMarble = true }: { type: string; showMarble?: boolean }) {
+  // Track visualization component
+  const TrackVisualization = ({ type }: { type: string }) => {
     const energy = calculateEnergy();
-
-    // Generate track path
     const trackPoints = [];
     for (let x = 0; x <= 100; x += 2) {
       trackPoints.push({ x, y: getTrackY(x, type) });
     }
-
-    const pathD = trackPoints.map((p, i) =>
-      `${i === 0 ? 'M' : 'L'} ${p.x * 3} ${p.y * 2}`
-    ).join(' ');
+    const pathD = trackPoints.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x * 3} ${p.y * 2}`).join(' ');
 
     return (
-      <div style={{
-        background: colors.bgCard,
-        borderRadius: radius.lg,
-        padding: spacing.lg,
-        border: `1px solid ${colors.border}`,
-      }}>
-        {/* Track Canvas */}
-        <svg
-          viewBox="0 0 300 200"
-          style={{
-            width: '100%',
-            height: isMobile ? 200 : 250,
-            background: `linear-gradient(180deg, #1a1a2e 0%, #0f0f13 100%)`,
-            borderRadius: radius.md,
-          }}
-        >
-          {/* Grid lines */}
+      <div className="bg-slate-800/50 rounded-2xl p-4 border border-slate-700/50">
+        <svg viewBox="0 0 300 200" className="w-full h-48 bg-gradient-to-b from-slate-900 to-slate-800 rounded-xl">
           {[20, 40, 60, 80].map(y => (
-            <line
-              key={y}
-              x1="0" y1={y * 2} x2="300" y2={y * 2}
-              stroke={colors.border}
-              strokeWidth="0.5"
-              strokeDasharray="4,4"
-            />
+            <line key={y} x1="0" y1={y * 2} x2="300" y2={y * 2} stroke="#334155" strokeWidth="0.5" strokeDasharray="4,4" />
           ))}
-
-          {/* Track */}
-          <path
-            d={pathD}
-            fill="none"
-            stroke={colors.textSecondary}
-            strokeWidth="4"
-            strokeLinecap="round"
-          />
-
-          {/* Marble */}
-          {showMarble && (
-            <g>
-              <circle
-                cx={marblePos.x * 3}
-                cy={marblePos.y * 2}
-                r="12"
-                fill={`url(#marbleGradient)`}
-              />
-              <defs>
-                <radialGradient id="marbleGradient" cx="30%" cy="30%">
-                  <stop offset="0%" stopColor="#6366F1" />
-                  <stop offset="100%" stopColor="#4338CA" />
-                </radialGradient>
-              </defs>
-            </g>
-          )}
-
-          {/* Height reference */}
-          <text x="10" y="25" fill={colors.textTertiary} fontSize="10">High PE</text>
-          <text x="10" y="175" fill={colors.textTertiary} fontSize="10">Low PE</text>
+          <path d={pathD} fill="none" stroke="#94a3b8" strokeWidth="4" strokeLinecap="round" />
+          <circle cx={marblePos.x * 3} cy={marblePos.y * 2} r="12" fill="url(#marbleGradient)" />
+          <defs>
+            <radialGradient id="marbleGradient" cx="30%" cy="30%">
+              <stop offset="0%" stopColor="#a855f7" />
+              <stop offset="100%" stopColor="#7c3aed" />
+            </radialGradient>
+          </defs>
+          <text x="10" y="25" fill="#64748b" fontSize="10">High PE</text>
+          <text x="10" y="175" fill="#64748b" fontSize="10">Low PE</text>
         </svg>
 
-        {/* Energy Bars */}
-        {showEnergyBars && (
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(3, 1fr)',
-            gap: spacing.md,
-            marginTop: spacing.lg,
-          }}>
-            <div>
-              <div style={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                marginBottom: spacing.xs
-              }}>
-                <span style={{ ...typography.caption, color: colors.potential }}>Potential</span>
-                <span style={{ ...typography.caption, color: colors.potential }}>
-                  {Math.round(energy.potential)}%
-                </span>
-              </div>
-              <div style={{
-                height: 8,
-                background: colors.bgHover,
-                borderRadius: radius.full,
-                overflow: 'hidden',
-              }}>
-                <div style={{
-                  height: '100%',
-                  width: `${energy.potential}%`,
-                  background: colors.potential,
-                  transition: 'width 0.1s',
-                }} />
-              </div>
+        <div className="grid grid-cols-3 gap-4 mt-4">
+          <div>
+            <div className="flex justify-between mb-1">
+              <span className="text-xs text-amber-400">Potential</span>
+              <span className="text-xs text-amber-400">{Math.round(energy.potential)}%</span>
             </div>
-            <div>
-              <div style={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                marginBottom: spacing.xs
-              }}>
-                <span style={{ ...typography.caption, color: colors.kinetic }}>Kinetic</span>
-                <span style={{ ...typography.caption, color: colors.kinetic }}>
-                  {Math.round(energy.kinetic)}%
-                </span>
-              </div>
-              <div style={{
-                height: 8,
-                background: colors.bgHover,
-                borderRadius: radius.full,
-                overflow: 'hidden',
-              }}>
-                <div style={{
-                  height: '100%',
-                  width: `${energy.kinetic}%`,
-                  background: colors.kinetic,
-                  transition: 'width 0.1s',
-                }} />
-              </div>
-            </div>
-            <div>
-              <div style={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                marginBottom: spacing.xs
-              }}>
-                <span style={{ ...typography.caption, color: colors.brand }}>Total</span>
-                <span style={{ ...typography.caption, color: colors.brand }}>
-                  {Math.round(energy.total)}%
-                </span>
-              </div>
-              <div style={{
-                height: 8,
-                background: colors.bgHover,
-                borderRadius: radius.full,
-                overflow: 'hidden',
-              }}>
-                <div style={{
-                  height: '100%',
-                  width: `${energy.total}%`,
-                  background: colors.brand,
-                  transition: 'width 0.1s',
-                }} />
-              </div>
+            <div className="h-2 bg-slate-700 rounded-full overflow-hidden">
+              <div className="h-full bg-amber-400 transition-all" style={{ width: `${energy.potential}%` }} />
             </div>
           </div>
-        )}
+          <div>
+            <div className="flex justify-between mb-1">
+              <span className="text-xs text-emerald-400">Kinetic</span>
+              <span className="text-xs text-emerald-400">{Math.round(energy.kinetic)}%</span>
+            </div>
+            <div className="h-2 bg-slate-700 rounded-full overflow-hidden">
+              <div className="h-full bg-emerald-400 transition-all" style={{ width: `${energy.kinetic}%` }} />
+            </div>
+          </div>
+          <div>
+            <div className="flex justify-between mb-1">
+              <span className="text-xs text-purple-400">Total</span>
+              <span className="text-xs text-purple-400">{Math.round(energy.total)}%</span>
+            </div>
+            <div className="h-2 bg-slate-700 rounded-full overflow-hidden">
+              <div className="h-full bg-purple-400 transition-all" style={{ width: `${energy.total}%` }} />
+            </div>
+          </div>
+        </div>
       </div>
     );
-  }
+  };
 
-  // ============================================================================
-  // PHASE: HOOK
-  // ============================================================================
-  if (phase === 'hook') {
-    return (
-      <div style={{
-        display: 'flex',
-        flexDirection: 'column',
-        height: '100%',
-        background: colors.bg,
-        fontFamily: typography.fontFamily
-      }}>
-        <ProgressBar />
+  // ═══════════════════════════════════════════════════════════════════════════
+  // PHASE RENDERERS
+  // ═══════════════════════════════════════════════════════════════════════════
+  const renderHook = () => (
+    <div className="flex flex-col items-center justify-center min-h-[600px] px-6 py-12 text-center">
+      <div className="inline-flex items-center gap-2 px-4 py-2 bg-purple-500/10 border border-purple-500/20 rounded-full mb-8">
+        <span className="w-2 h-2 bg-purple-400 rounded-full animate-pulse" />
+        <span className="text-sm font-medium text-purple-400 tracking-wide">PHYSICS EXPLORATION</span>
+      </div>
 
-        <div style={{
-          flex: 1,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          padding: spacing.xl,
-        }}>
-          <div style={{ maxWidth: 480, textAlign: 'center' }}>
-            {/* Icon */}
-            <div style={{
-              width: 100,
-              height: 100,
-              borderRadius: radius.full,
-              background: `linear-gradient(135deg, ${colors.potential}30, ${colors.kinetic}30)`,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              margin: '0 auto',
-              marginBottom: spacing.xl,
-              fontSize: 48,
-            }}>
-              🎢
-            </div>
+      <h1 className="text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-white via-purple-100 to-amber-200 bg-clip-text text-transparent">
+        The Marble Coaster
+      </h1>
 
-            {/* Title */}
-            <h1 style={{
-              ...typography.hero,
-              color: colors.textPrimary,
-              marginBottom: spacing.lg
-            }}>
-              The Marble Coaster
-            </h1>
+      <p className="text-lg text-slate-400 max-w-md mb-10">
+        Watch a marble roll down a track. Why can't it go higher than where it started?
+      </p>
 
-            {/* Subtitle */}
-            <p style={{
-              ...typography.h3,
-              color: colors.textSecondary,
-              marginBottom: spacing.xxl,
-              lineHeight: 1.6,
-            }}>
-              Watch a marble roll down a track. Why can't it go higher than where it started?
+      <div className="relative bg-gradient-to-br from-slate-800/80 to-slate-900/80 rounded-3xl p-8 max-w-xl w-full border border-slate-700/50 shadow-2xl shadow-black/20">
+        <div className="absolute inset-0 bg-gradient-to-br from-purple-500/5 via-transparent to-amber-500/5 rounded-3xl" />
+        <div className="relative">
+          <div className="text-6xl mb-4">🎢</div>
+          <div className="mt-8 space-y-4">
+            <p className="text-xl text-white/90 font-medium leading-relaxed">
+              Energy flows between potential and kinetic forms
             </p>
-
-            {/* Visual Preview */}
-            <div style={{
-              background: colors.bgCard,
-              borderRadius: radius.lg,
-              padding: spacing.xl,
-              marginBottom: spacing.xxl,
-              border: `1px solid ${colors.border}`,
-            }}>
-              <div style={{
-                display: 'flex',
-                justifyContent: 'space-around',
-                alignItems: 'flex-end',
-                height: 100,
-              }}>
-                <div style={{ textAlign: 'center' }}>
-                  <div style={{
-                    width: 24,
-                    height: 24,
-                    borderRadius: radius.full,
-                    background: colors.brand,
-                    margin: '0 auto',
-                    marginBottom: spacing.sm,
-                  }} />
-                  <div style={{
-                    width: 4,
-                    height: 80,
-                    background: colors.bgHover,
-                    margin: '0 auto',
-                  }} />
-                  <span style={{ ...typography.caption, color: colors.potential }}>Start Height</span>
-                </div>
-                <div style={{
-                  width: 100,
-                  height: 60,
-                  borderRadius: '0 0 50% 50%',
-                  border: `3px solid ${colors.textTertiary}`,
-                  borderTop: 'none',
-                }} />
-                <div style={{ textAlign: 'center' }}>
-                  <div style={{
-                    width: 24,
-                    height: 24,
-                    borderRadius: radius.full,
-                    background: colors.brand,
-                    margin: '0 auto',
-                    marginBottom: spacing.sm,
-                    opacity: 0.5,
-                  }} />
-                  <div style={{
-                    width: 4,
-                    height: 80,
-                    background: colors.bgHover,
-                    margin: '0 auto',
-                  }} />
-                  <span style={{ ...typography.caption, color: colors.kinetic }}>Max Height?</span>
-                </div>
-              </div>
+            <p className="text-lg text-slate-400 leading-relaxed">
+              But the total energy stays constant!
+            </p>
+            <div className="pt-2">
+              <p className="text-base text-purple-400 font-semibold">
+                Discover the Law of Energy Conservation
+              </p>
             </div>
+          </div>
+        </div>
+      </div>
 
-            {/* CTA */}
+      <button
+        onMouseDown={(e) => { e.preventDefault(); goToPhase(1); }}
+        className="mt-10 group relative px-10 py-5 bg-gradient-to-r from-purple-500 to-violet-600 text-white text-lg font-semibold rounded-2xl transition-all duration-300 hover:shadow-lg hover:shadow-purple-500/25 hover:scale-[1.02] active:scale-[0.98]"
+      >
+        <span className="relative z-10 flex items-center gap-3">
+          Make a Prediction
+          <svg className="w-5 h-5 transition-transform group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+          </svg>
+        </span>
+      </button>
+
+      <div className="mt-12 flex items-center gap-8 text-sm text-slate-500">
+        <div className="flex items-center gap-2"><span className="text-purple-400">*</span>PE = mgh</div>
+        <div className="flex items-center gap-2"><span className="text-purple-400">*</span>KE = 1/2mv^2</div>
+        <div className="flex items-center gap-2"><span className="text-purple-400">*</span>Conservation</div>
+      </div>
+    </div>
+  );
+
+  const renderPredict = () => (
+    <div className="flex flex-col items-center justify-center min-h-[500px] p-6">
+      <h2 className="text-2xl font-bold text-white mb-6">Make Your Prediction</h2>
+      <div className="bg-slate-800/50 rounded-2xl p-6 max-w-2xl mb-6">
+        <p className="text-lg text-slate-300">
+          If you release a marble from a certain height, how high can it roll on the other side?
+        </p>
+        <p className="text-sm text-slate-400 mt-2">Assume a smooth track with minimal friction.</p>
+      </div>
+      <div className="grid gap-3 w-full max-w-xl">
+        {[
+          { id: 0, label: 'Much lower than start', icon: '📉', description: 'It loses energy while rolling' },
+          { id: 1, label: 'Exactly same height', icon: '=', description: 'Energy is perfectly conserved' },
+          { id: 2, label: 'Slightly lower', icon: '📊', description: 'Some energy lost to friction' },
+          { id: 3, label: 'Higher than start', icon: '📈', description: 'It gains energy going down' },
+        ].map((option) => (
+          <button
+            key={option.id}
+            onMouseDown={(e) => { e.preventDefault(); handlePrediction(option.id); }}
+            disabled={prediction !== null}
+            className={`p-4 rounded-xl text-left transition-all duration-300 ${
+              prediction === option.id
+                ? (option.id === 1 || option.id === 2) ? 'bg-emerald-600/40 border-2 border-emerald-400' : 'bg-red-600/40 border-2 border-red-400'
+                : prediction !== null && (option.id === 1 || option.id === 2) ? 'bg-emerald-600/40 border-2 border-emerald-400'
+                : 'bg-slate-700/50 hover:bg-slate-600/50 border-2 border-transparent'
+            }`}
+          >
+            <span className="mr-3 text-xl">{option.icon}</span>
+            <span className="text-white font-medium">{option.label}</span>
+            <span className="text-slate-400 text-sm block mt-1 ml-9">{option.description}</span>
+          </button>
+        ))}
+      </div>
+      {prediction !== null && (
+        <div className="mt-6 p-4 bg-slate-800/70 rounded-xl max-w-xl">
+          <p className="text-emerald-400 font-semibold">
+            In a frictionless system: exactly same height. In reality: slightly lower due to friction!
+          </p>
+          <button
+            onMouseDown={(e) => { e.preventDefault(); goToPhase(2); }}
+            className="mt-4 px-6 py-3 bg-gradient-to-r from-purple-600 to-violet-600 text-white font-semibold rounded-xl"
+          >
+            See It in Action
+          </button>
+        </div>
+      )}
+    </div>
+  );
+
+  const renderPlay = () => (
+    <div className="flex flex-col items-center p-6">
+      <h2 className="text-2xl font-bold text-white mb-4">Energy Transformation Lab</h2>
+      <TrackVisualization type={trackType} />
+
+      <div className="flex justify-center gap-4 mt-4 mb-4">
+        <button
+          onMouseDown={(e) => {
+            e.preventDefault();
+            const now = Date.now();
+            if (now - lastClickRef.current < 200) return;
+            lastClickRef.current = now;
+            startSimulation();
+            playSound('click');
+          }}
+          className={`px-6 py-2 rounded-lg font-medium transition-all ${isRunning ? 'bg-slate-600 text-white' : 'bg-emerald-600 text-white'}`}
+        >
+          {isRunning ? 'Running...' : 'Release Marble'}
+        </button>
+        <button
+          onMouseDown={(e) => {
+            e.preventDefault();
+            const now = Date.now();
+            if (now - lastClickRef.current < 200) return;
+            lastClickRef.current = now;
+            resetSimulation();
+            playSound('click');
+          }}
+          className="px-6 py-2 rounded-lg font-medium bg-slate-700 text-slate-300 hover:bg-slate-600"
+        >
+          Reset
+        </button>
+      </div>
+
+      <div className="bg-slate-800/50 rounded-xl p-4 max-w-2xl w-full mb-4">
+        <p className="text-slate-400 text-sm mb-3">Track Shape:</p>
+        <div className="flex gap-2">
+          {[
+            { id: 'hill', label: 'Valley', icon: '=' },
+            { id: 'bowl', label: 'Bowl', icon: 'U' },
+            { id: 'loop', label: 'Loop', icon: 'O' },
+          ].map((t) => (
             <button
+              key={t.id}
               onMouseDown={(e) => {
                 e.preventDefault();
-                if (navigationLockRef.current) return;
-                navigationLockRef.current = true;
-                goToPhase('predict');
-                setTimeout(() => { navigationLockRef.current = false; }, 400);
+                const now = Date.now();
+                if (now - lastClickRef.current < 200) return;
+                lastClickRef.current = now;
+                setTrackType(t.id as 'hill' | 'loop' | 'bowl');
+                resetSimulation();
+                playSound('click');
               }}
-              style={{
-                padding: '16px 48px',
-                borderRadius: radius.lg,
-                border: 'none',
-                background: `linear-gradient(135deg, ${colors.brand}, #8B5CF6)`,
-                color: '#FFFFFF',
-                fontSize: 17,
-                fontWeight: 600,
-                cursor: 'pointer',
-                fontFamily: typography.fontFamily,
-                boxShadow: `0 4px 20px ${colors.brandGlow}`,
-              }}
+              className={`flex-1 py-2 rounded-lg text-center ${trackType === t.id ? 'bg-purple-600 text-white' : 'bg-slate-700 text-slate-300'}`}
             >
-              Make a Prediction →
+              {t.icon} {t.label}
             </button>
-          </div>
+          ))}
         </div>
       </div>
-    );
-  }
 
-  // ============================================================================
-  // PHASE: PREDICT
-  // ============================================================================
-  if (phase === 'predict') {
-    const predictions = [
-      { id: 0, label: 'Much lower than start', icon: '📉', description: 'It loses energy while rolling' },
-      { id: 1, label: 'Exactly same height', icon: '⚖️', description: 'Energy is perfectly conserved' },
-      { id: 2, label: 'Slightly lower', icon: '📊', description: 'Some energy is lost to friction' },
-      { id: 3, label: 'Higher than start', icon: '📈', description: 'It gains energy going down' },
-    ];
+      <div className="bg-gradient-to-r from-purple-900/40 to-violet-900/40 rounded-xl p-4 max-w-2xl w-full mb-6">
+        <p className="text-purple-300 text-sm text-center">
+          <strong>Key Observation:</strong> Watch how PE and KE bars trade off while Total stays constant!
+        </p>
+      </div>
 
-    return (
-      <div style={{
-        display: 'flex',
-        flexDirection: 'column',
-        height: '100%',
-        background: colors.bg,
-        fontFamily: typography.fontFamily
-      }}>
-        <ProgressBar />
+      <button
+        onMouseDown={(e) => { e.preventDefault(); goToPhase(3); }}
+        className="px-6 py-3 bg-gradient-to-r from-purple-600 to-violet-600 text-white font-semibold rounded-xl"
+      >
+        Review the Science
+      </button>
+    </div>
+  );
 
-        <div style={{
-          flex: 1,
-          overflow: 'auto',
-          padding: isMobile ? spacing.lg : spacing.xl,
-        }}>
-          <div style={{ maxWidth: 560, margin: '0 auto' }}>
-            {/* Question */}
-            <div style={{
-              textAlign: 'center',
-              marginBottom: spacing.xxl
-            }}>
-              <span style={{
-                ...typography.label,
-                color: colors.brand,
-                display: 'block',
-                marginBottom: spacing.sm,
-              }}>
-                YOUR PREDICTION
-              </span>
-              <h2 style={{
-                ...typography.h1,
-                color: colors.textPrimary,
-                marginBottom: spacing.md,
-              }}>
-                If you release a marble from a certain height, how high can it roll on the other side?
-              </h2>
-              <p style={{
-                ...typography.body,
-                color: colors.textSecondary
-              }}>
-                Assume a smooth track with minimal friction.
-              </p>
-            </div>
-
-            {/* Options */}
-            <div style={{
-              display: 'flex',
-              flexDirection: 'column',
-              gap: spacing.md,
-              marginBottom: spacing.xxl,
-            }}>
-              {predictions.map((p) => (
-                <button
-                  key={p.id}
-                  onClick={() => setPrediction(p.id)}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: spacing.lg,
-                    padding: spacing.lg,
-                    borderRadius: radius.lg,
-                    border: `2px solid ${prediction === p.id ? colors.brand : colors.border}`,
-                    background: prediction === p.id ? colors.brandGlow : colors.bgCard,
-                    cursor: 'pointer',
-                    textAlign: 'left',
-                    transition: 'all 0.2s',
-                    fontFamily: typography.fontFamily,
-                  }}
-                >
-                  <span style={{ fontSize: 28 }}>{p.icon}</span>
-                  <div>
-                    <div style={{
-                      ...typography.h3,
-                      color: prediction === p.id ? colors.brand : colors.textPrimary,
-                      marginBottom: 2,
-                    }}>
-                      {p.label}
-                    </div>
-                    <div style={{
-                      ...typography.bodySmall,
-                      color: colors.textSecondary
-                    }}>
-                      {p.description}
-                    </div>
-                  </div>
-                </button>
-              ))}
-            </div>
-
-            {/* Navigation */}
-            <div style={{ display: 'flex', gap: spacing.md }}>
-              {renderButton('← Back', goBack, 'ghost')}
-              {renderButton('Test Your Prediction →', () => goToPhase('play'), 'primary', { disabled: prediction === null })}
-            </div>
-          </div>
+  const renderReview = () => (
+    <div className="flex flex-col items-center p-6">
+      <h2 className="text-2xl font-bold text-white mb-6">Conservation of Mechanical Energy</h2>
+      <div className="grid md:grid-cols-2 gap-6 max-w-4xl">
+        <div className="bg-gradient-to-br from-amber-900/50 to-orange-900/50 rounded-2xl p-6">
+          <h3 className="text-xl font-bold text-amber-400 mb-3">Potential Energy</h3>
+          <p className="text-2xl text-white mb-2">PE = mgh</p>
+          <ul className="space-y-2 text-slate-300 text-sm">
+            <li>* Energy stored due to height</li>
+            <li>* Maximum at top, zero at bottom</li>
+            <li>* Depends on mass, gravity, height</li>
+          </ul>
+        </div>
+        <div className="bg-gradient-to-br from-emerald-900/50 to-teal-900/50 rounded-2xl p-6">
+          <h3 className="text-xl font-bold text-emerald-400 mb-3">Kinetic Energy</h3>
+          <p className="text-2xl text-white mb-2">KE = 1/2 mv^2</p>
+          <ul className="space-y-2 text-slate-300 text-sm">
+            <li>* Energy of motion</li>
+            <li>* Maximum at bottom, zero at top</li>
+            <li>* Depends on mass and velocity</li>
+          </ul>
+        </div>
+        <div className="bg-gradient-to-br from-purple-900/50 to-violet-900/50 rounded-2xl p-6 md:col-span-2">
+          <h3 className="text-xl font-bold text-purple-400 mb-3">The Conservation Law</h3>
+          <p className="text-2xl text-white text-center mb-4">PE + KE = Constant</p>
+          <p className="text-slate-300 text-sm">
+            In the absence of friction, the total mechanical energy remains constant. Energy transforms between potential and kinetic forms, but the total never changes.
+          </p>
         </div>
       </div>
-    );
-  }
+      <button
+        onMouseDown={(e) => { e.preventDefault(); goToPhase(4); }}
+        className="mt-8 px-6 py-3 bg-gradient-to-r from-amber-600 to-orange-600 text-white font-semibold rounded-xl"
+      >
+        Discover the Twist
+      </button>
+    </div>
+  );
 
-  // ============================================================================
-  // PHASE: PLAY
-  // ============================================================================
-  if (phase === 'play') {
-    return (
-      <div style={{
-        display: 'flex',
-        flexDirection: 'column',
-        height: '100%',
-        background: colors.bg,
-        fontFamily: typography.fontFamily
-      }}>
-        <ProgressBar />
-
-        <div style={{
-          flex: 1,
-          overflow: 'auto',
-          padding: isMobile ? spacing.lg : spacing.xl,
-        }}>
-          <div style={{ maxWidth: 640, margin: '0 auto' }}>
-            {/* Header */}
-            <div style={{ textAlign: 'center', marginBottom: spacing.xl }}>
-              <span style={{
-                ...typography.label,
-                color: colors.brand,
-                display: 'block',
-                marginBottom: spacing.sm,
-              }}>
-                EXPERIMENT
-              </span>
-              <h2 style={{
-                ...typography.h1,
-                color: colors.textPrimary,
-                marginBottom: spacing.sm,
-              }}>
-                Watch Energy Transform
-              </h2>
-              <p style={{
-                ...typography.body,
-                color: colors.textSecondary
-              }}>
-                Release the marble and observe how potential energy converts to kinetic energy
-              </p>
-            </div>
-
-            {/* Track Visualization */}
-            <TrackVisualization type={trackType} />
-
-            {/* Controls */}
-            <div style={{
-              display: 'flex',
-              gap: spacing.md,
-              marginTop: spacing.lg,
-              marginBottom: spacing.lg,
-              justifyContent: 'center',
-            }}>
-              <button
-                onClick={startSimulation}
-                style={{
-                  padding: '12px 32px',
-                  borderRadius: radius.md,
-                  border: 'none',
-                  background: colors.success,
-                  color: '#FFFFFF',
-                  fontSize: 15,
-                  fontWeight: 600,
-                  cursor: 'pointer',
-                  fontFamily: typography.fontFamily,
-                }}
-              >
-                {isRunning ? '▶ Running...' : '▶ Release Marble'}
-              </button>
-              <button
-                onClick={resetSimulation}
-                style={{
-                  padding: '12px 24px',
-                  borderRadius: radius.md,
-                  border: `1px solid ${colors.border}`,
-                  background: colors.bgCard,
-                  color: colors.textSecondary,
-                  fontSize: 15,
-                  fontWeight: 500,
-                  cursor: 'pointer',
-                  fontFamily: typography.fontFamily,
-                }}
-              >
-                ↺ Reset
-              </button>
-            </div>
-
-            {/* Track Type Selector */}
-            <div style={{
-              background: colors.bgCard,
-              borderRadius: radius.lg,
-              padding: spacing.lg,
-              border: `1px solid ${colors.border}`,
-              marginBottom: spacing.xl,
-            }}>
-              <p style={{
-                ...typography.label,
-                color: colors.textTertiary,
-                marginBottom: spacing.md
-              }}>
-                TRACK SHAPE
-              </p>
-              <div style={{ display: 'flex', gap: spacing.sm }}>
-                {[
-                  { id: 'hill', label: 'Valley', icon: '⛰️' },
-                  { id: 'bowl', label: 'Bowl', icon: '🥣' },
-                  { id: 'loop', label: 'Loop', icon: '🔄' },
-                ].map((t) => (
-                  <button
-                    key={t.id}
-                    onClick={() => { setTrackType(t.id as any); resetSimulation(); }}
-                    style={{
-                      flex: 1,
-                      padding: spacing.md,
-                      borderRadius: radius.md,
-                      border: `2px solid ${trackType === t.id ? colors.brand : colors.border}`,
-                      background: trackType === t.id ? colors.brandGlow : 'transparent',
-                      cursor: 'pointer',
-                      fontFamily: typography.fontFamily,
-                    }}
-                  >
-                    <div style={{ fontSize: 24, marginBottom: spacing.xs }}>{t.icon}</div>
-                    <div style={{
-                      ...typography.caption,
-                      color: trackType === t.id ? colors.brand : colors.textSecondary
-                    }}>
-                      {t.label}
-                    </div>
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Key Observation */}
-            <div style={{
-              padding: spacing.lg,
-              background: colors.successBg,
-              borderRadius: radius.lg,
-              border: `1px solid ${colors.success}40`,
-              marginBottom: spacing.xl,
-            }}>
-              <p style={{
-                ...typography.body,
-                color: colors.success,
-                fontWeight: 600,
-                marginBottom: spacing.xs
-              }}>
-                🔍 Key Observation
-              </p>
-              <p style={{
-                ...typography.bodySmall,
-                color: colors.textSecondary,
-                margin: 0
-              }}>
-                Notice how the total energy bar stays nearly constant! When potential energy decreases, kinetic energy increases by the same amount.
-              </p>
-            </div>
-
-            {/* Navigation */}
-            <div style={{ display: 'flex', gap: spacing.md }}>
-              {renderButton('← Back', goBack, 'ghost')}
-              {renderButton('Continue to Review →', goNext, 'primary')}
-            </div>
-          </div>
-        </div>
+  const renderTwistPredict = () => (
+    <div className="flex flex-col items-center justify-center min-h-[500px] p-6">
+      <h2 className="text-2xl font-bold text-amber-400 mb-6">The Twist: What About Friction?</h2>
+      <div className="bg-slate-800/50 rounded-2xl p-6 max-w-2xl mb-6">
+        <p className="text-lg text-slate-300">
+          How does friction affect the marble's maximum height?
+        </p>
       </div>
-    );
-  }
-
-  // ============================================================================
-  // PHASE: REVIEW
-  // ============================================================================
-  if (phase === 'review') {
-    const userWasRight = prediction === 1 || prediction === 2;
-
-    return (
-      <div style={{
-        display: 'flex',
-        flexDirection: 'column',
-        height: '100%',
-        background: colors.bg,
-        fontFamily: typography.fontFamily
-      }}>
-        <ProgressBar />
-
-        <div style={{
-          flex: 1,
-          overflow: 'auto',
-          padding: isMobile ? spacing.lg : spacing.xl,
-        }}>
-          <div style={{ maxWidth: 560, margin: '0 auto' }}>
-            {/* Result */}
-            <div style={{ textAlign: 'center', marginBottom: spacing.xxl }}>
-              <div style={{
-                fontSize: 64,
-                marginBottom: spacing.lg
-              }}>
-                {userWasRight ? '🎯' : '💡'}
-              </div>
-              <h2 style={{
-                ...typography.h1,
-                color: userWasRight ? colors.success : colors.brand,
-                marginBottom: spacing.md,
-              }}>
-                {userWasRight ? 'Excellent Intuition!' : 'Here\'s What Happens'}
-              </h2>
-              <p style={{
-                ...typography.body,
-                color: colors.textSecondary
-              }}>
-                {userWasRight
-                  ? 'You correctly predicted the energy behavior!'
-                  : 'Let\'s understand the physics behind energy conservation'}
-              </p>
-            </div>
-
-            {/* Core Concept */}
-            <div style={{
-              padding: spacing.xl,
-              background: colors.bgCard,
-              borderRadius: radius.lg,
-              border: `1px solid ${colors.border}`,
-              marginBottom: spacing.xl,
-            }}>
-              <h3 style={{
-                ...typography.h2,
-                color: colors.textPrimary,
-                marginBottom: spacing.lg
-              }}>
-                Conservation of Mechanical Energy
-              </h3>
-
-              <div style={{
-                padding: spacing.lg,
-                background: colors.bgElevated,
-                borderRadius: radius.md,
-                textAlign: 'center',
-                marginBottom: spacing.lg,
-              }}>
-                <p style={{
-                  ...typography.h2,
-                  color: colors.brand,
-                  marginBottom: spacing.xs
-                }}>
-                  PE + KE = Constant
-                </p>
-                <p style={{ ...typography.bodySmall, color: colors.textTertiary }}>
-                  (In the absence of friction)
-                </p>
-              </div>
-
-              <div style={{
-                display: 'grid',
-                gridTemplateColumns: '1fr 1fr',
-                gap: spacing.md
-              }}>
-                <div style={{
-                  padding: spacing.lg,
-                  background: `${colors.potential}10`,
-                  borderRadius: radius.md,
-                  border: `1px solid ${colors.potential}30`,
-                }}>
-                  <div style={{
-                    ...typography.h3,
-                    color: colors.potential,
-                    marginBottom: spacing.xs
-                  }}>
-                    Potential Energy
-                  </div>
-                  <div style={{ ...typography.bodySmall, color: colors.textSecondary }}>
-                    PE = mgh
-                  </div>
-                  <div style={{ ...typography.caption, color: colors.textTertiary, marginTop: spacing.sm }}>
-                    Stored energy from height
-                  </div>
-                </div>
-                <div style={{
-                  padding: spacing.lg,
-                  background: `${colors.kinetic}10`,
-                  borderRadius: radius.md,
-                  border: `1px solid ${colors.kinetic}30`,
-                }}>
-                  <div style={{
-                    ...typography.h3,
-                    color: colors.kinetic,
-                    marginBottom: spacing.xs
-                  }}>
-                    Kinetic Energy
-                  </div>
-                  <div style={{ ...typography.bodySmall, color: colors.textSecondary }}>
-                    KE = ½mv²
-                  </div>
-                  <div style={{ ...typography.caption, color: colors.textTertiary, marginTop: spacing.sm }}>
-                    Energy of motion
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Answer to Initial Question */}
-            <div style={{
-              padding: spacing.lg,
-              background: colors.brandGlow,
-              borderRadius: radius.lg,
-              border: `1px solid ${colors.brand}40`,
-              marginBottom: spacing.xl,
-            }}>
-              <p style={{
-                ...typography.body,
-                color: colors.brand,
-                fontWeight: 600,
-                marginBottom: spacing.sm
-              }}>
-                📌 Answer to Our Question
-              </p>
-              <p style={{
-                ...typography.body,
-                color: colors.textSecondary,
-                margin: 0
-              }}>
-                In a <strong style={{ color: colors.textPrimary }}>frictionless</strong> system, the marble would return to <strong style={{ color: colors.textPrimary }}>exactly its starting height</strong>. In reality, some energy is lost to friction and air resistance, so it reaches <strong style={{ color: colors.textPrimary }}>slightly lower</strong>.
-              </p>
-            </div>
-
-            {/* Navigation */}
-            <div style={{ display: 'flex', gap: spacing.md }}>
-              {renderButton('← Back', goBack, 'ghost')}
-              {renderButton('Try a Twist →', goNext, 'primary')}
-            </div>
-          </div>
-        </div>
+      <div className="grid gap-3 w-full max-w-xl">
+        {[
+          { id: 0, label: 'Height depends on friction', icon: '🔥', description: 'More friction = lower final height' },
+          { id: 1, label: 'Friction doesn\'t matter', icon: '🧊', description: 'Height is always the same' },
+          { id: 2, label: 'Speed at bottom changes', icon: '*', description: 'Friction changes speed but not max height' },
+          { id: 3, label: 'Energy disappears', icon: '?', description: 'Friction destroys energy completely' },
+        ].map((option) => (
+          <button
+            key={option.id}
+            onMouseDown={(e) => { e.preventDefault(); handleTwistPrediction(option.id); }}
+            disabled={twistPrediction !== null}
+            className={`p-4 rounded-xl text-left transition-all duration-300 ${
+              twistPrediction === option.id
+                ? option.id === 0 ? 'bg-emerald-600/40 border-2 border-emerald-400' : 'bg-red-600/40 border-2 border-red-400'
+                : twistPrediction !== null && option.id === 0 ? 'bg-emerald-600/40 border-2 border-emerald-400'
+                : 'bg-slate-700/50 hover:bg-slate-600/50 border-2 border-transparent'
+            }`}
+          >
+            <span className="mr-3 text-xl">{option.icon}</span>
+            <span className="text-white font-medium">{option.label}</span>
+            <span className="text-slate-400 text-sm block mt-1 ml-9">{option.description}</span>
+          </button>
+        ))}
       </div>
-    );
-  }
-
-  // ============================================================================
-  // PHASE: TWIST PREDICT
-  // ============================================================================
-  if (phase === 'twist_predict') {
-    const twistOptions = [
-      { id: 0, label: 'Height depends on friction', icon: '🔥', description: 'More friction = lower final height' },
-      { id: 1, label: 'Friction doesn\'t matter', icon: '🧊', description: 'Height is always the same regardless' },
-      { id: 2, label: 'Speed at bottom changes', icon: '⚡', description: 'Friction changes speed but not max height' },
-      { id: 3, label: 'Energy disappears', icon: '🕳️', description: 'Friction destroys energy completely' },
-    ];
-
-    return (
-      <div style={{
-        display: 'flex',
-        flexDirection: 'column',
-        height: '100%',
-        background: colors.bg,
-        fontFamily: typography.fontFamily
-      }}>
-        <ProgressBar />
-
-        <div style={{
-          flex: 1,
-          overflow: 'auto',
-          padding: isMobile ? spacing.lg : spacing.xl,
-        }}>
-          <div style={{ maxWidth: 560, margin: '0 auto' }}>
-            {/* Twist Introduction */}
-            <div style={{ textAlign: 'center', marginBottom: spacing.xxl }}>
-              <span style={{
-                ...typography.label,
-                color: colors.warning,
-                display: 'block',
-                marginBottom: spacing.sm,
-              }}>
-                🔄 TWIST SCENARIO
-              </span>
-              <h2 style={{
-                ...typography.h1,
-                color: colors.textPrimary,
-                marginBottom: spacing.md,
-              }}>
-                What if we add friction?
-              </h2>
-              <p style={{
-                ...typography.body,
-                color: colors.textSecondary
-              }}>
-                How does friction affect the marble's maximum height?
-              </p>
-            </div>
-
-            {/* Options */}
-            <div style={{
-              display: 'flex',
-              flexDirection: 'column',
-              gap: spacing.md,
-              marginBottom: spacing.xxl,
-            }}>
-              {twistOptions.map((opt) => (
-                <button
-                  key={opt.id}
-                  onClick={() => setTwistPrediction(opt.id)}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: spacing.lg,
-                    padding: spacing.lg,
-                    borderRadius: radius.lg,
-                    border: `2px solid ${twistPrediction === opt.id ? colors.warning : colors.border}`,
-                    background: twistPrediction === opt.id ? colors.warningBg : colors.bgCard,
-                    cursor: 'pointer',
-                    textAlign: 'left',
-                    transition: 'all 0.2s',
-                    fontFamily: typography.fontFamily,
-                  }}
-                >
-                  <span style={{ fontSize: 28 }}>{opt.icon}</span>
-                  <div>
-                    <div style={{
-                      ...typography.h3,
-                      color: twistPrediction === opt.id ? colors.warning : colors.textPrimary,
-                      marginBottom: 2,
-                    }}>
-                      {opt.label}
-                    </div>
-                    <div style={{
-                      ...typography.bodySmall,
-                      color: colors.textSecondary
-                    }}>
-                      {opt.description}
-                    </div>
-                  </div>
-                </button>
-              ))}
-            </div>
-
-            {/* Navigation */}
-            <div style={{ display: 'flex', gap: spacing.md }}>
-              {renderButton('← Back', goBack, 'ghost')}
-              {renderButton('Test With Friction →', goNext, 'primary', { disabled: twistPrediction === null })}
-            </div>
-          </div>
+      {twistPrediction !== null && (
+        <div className="mt-6 p-4 bg-slate-800/70 rounded-xl max-w-xl">
+          <p className="text-emerald-400 font-semibold">
+            {twistPrediction === 0 ? 'Correct!' : 'Actually:'} More friction means more energy converted to heat, so lower final height!
+          </p>
+          <button
+            onMouseDown={(e) => { e.preventDefault(); goToPhase(5); }}
+            className="mt-4 px-6 py-3 bg-gradient-to-r from-amber-600 to-orange-600 text-white font-semibold rounded-xl"
+          >
+            Test With Friction
+          </button>
         </div>
-      </div>
-    );
-  }
+      )}
+    </div>
+  );
 
-  // ============================================================================
-  // PHASE: TWIST PLAY
-  // ============================================================================
-  if (phase === 'twist_play') {
-    return (
-      <div style={{
-        display: 'flex',
-        flexDirection: 'column',
-        height: '100%',
-        background: colors.bg,
-        fontFamily: typography.fontFamily
-      }}>
-        <ProgressBar />
+  const renderTwistPlay = () => (
+    <div className="flex flex-col items-center p-6">
+      <h2 className="text-2xl font-bold text-amber-400 mb-4">Friction's Effect on Energy</h2>
+      <TrackVisualization type="hill" />
 
-        <div style={{
-          flex: 1,
-          overflow: 'auto',
-          padding: isMobile ? spacing.lg : spacing.xl,
-        }}>
-          <div style={{ maxWidth: 640, margin: '0 auto' }}>
-            {/* Header */}
-            <div style={{ textAlign: 'center', marginBottom: spacing.xl }}>
-              <span style={{
-                ...typography.label,
-                color: colors.warning,
-                display: 'block',
-                marginBottom: spacing.sm,
-              }}>
-                TWIST EXPERIMENT
-              </span>
-              <h2 style={{
-                ...typography.h1,
-                color: colors.textPrimary,
-                marginBottom: spacing.sm,
-              }}>
-                Friction's Effect on Energy
-              </h2>
-              <p style={{
-                ...typography.body,
-                color: colors.textSecondary
-              }}>
-                Adjust the friction slider and observe what happens to the total energy
-              </p>
-            </div>
-
-            {/* Track Visualization */}
-            <TrackVisualization type="hill" />
-
-            {/* Friction Slider */}
-            <div style={{
-              background: colors.bgCard,
-              borderRadius: radius.lg,
-              padding: spacing.lg,
-              border: `1px solid ${colors.border}`,
-              marginTop: spacing.lg,
-              marginBottom: spacing.lg,
-            }}>
-              <div style={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                marginBottom: spacing.md,
-              }}>
-                <span style={{ ...typography.body, color: colors.textPrimary, fontWeight: 600 }}>
-                  🔥 Friction Level
-                </span>
-                <span style={{
-                  ...typography.h3,
-                  color: friction > 50 ? colors.error : friction > 20 ? colors.warning : colors.success
-                }}>
-                  {friction}%
-                </span>
-              </div>
-              <input
-                type="range"
-                min="0"
-                max="80"
-                value={friction}
-                onChange={(e) => setFriction(Number(e.target.value))}
-                style={{
-                  width: '100%',
-                  height: 8,
-                  borderRadius: radius.full,
-                  background: `linear-gradient(90deg, ${colors.success}, ${colors.warning}, ${colors.error})`,
-                  cursor: 'pointer',
-                }}
-              />
-              <div style={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                marginTop: spacing.sm
-              }}>
-                <span style={{ ...typography.caption, color: colors.success }}>Ice (0%)</span>
-                <span style={{ ...typography.caption, color: colors.warning }}>Wood</span>
-                <span style={{ ...typography.caption, color: colors.error }}>Carpet (80%)</span>
-              </div>
-            </div>
-
-            {/* Controls */}
-            <div style={{
-              display: 'flex',
-              gap: spacing.md,
-              marginBottom: spacing.lg,
-              justifyContent: 'center',
-            }}>
-              <button
-                onClick={startSimulation}
-                style={{
-                  padding: '12px 32px',
-                  borderRadius: radius.md,
-                  border: 'none',
-                  background: colors.success,
-                  color: '#FFFFFF',
-                  fontSize: 15,
-                  fontWeight: 600,
-                  cursor: 'pointer',
-                  fontFamily: typography.fontFamily,
-                }}
-              >
-                {isRunning ? '▶ Running...' : '▶ Release Marble'}
-              </button>
-              <button
-                onClick={resetSimulation}
-                style={{
-                  padding: '12px 24px',
-                  borderRadius: radius.md,
-                  border: `1px solid ${colors.border}`,
-                  background: colors.bgCard,
-                  color: colors.textSecondary,
-                  fontSize: 15,
-                  fontWeight: 500,
-                  cursor: 'pointer',
-                  fontFamily: typography.fontFamily,
-                }}
-              >
-                ↺ Reset
-              </button>
-            </div>
-
-            {/* Observation */}
-            <div style={{
-              padding: spacing.lg,
-              background: colors.warningBg,
-              borderRadius: radius.lg,
-              border: `1px solid ${colors.warning}40`,
-              marginBottom: spacing.xl,
-            }}>
-              <p style={{
-                ...typography.body,
-                color: colors.warning,
-                fontWeight: 600,
-                marginBottom: spacing.xs
-              }}>
-                🔍 What to Watch
-              </p>
-              <p style={{
-                ...typography.bodySmall,
-                color: colors.textSecondary,
-                margin: 0
-              }}>
-                Notice how the <strong style={{ color: colors.textPrimary }}>total energy bar decreases</strong> with friction! The "lost" energy becomes heat - you'd feel the track warming up.
-              </p>
-            </div>
-
-            {/* Navigation */}
-            <div style={{ display: 'flex', gap: spacing.md }}>
-              {renderButton('← Back', goBack, 'ghost')}
-              {renderButton('See the Insight →', goNext, 'primary')}
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // ============================================================================
-  // PHASE: TWIST REVIEW
-  // ============================================================================
-  if (phase === 'twist_review') {
-    const userWasRight = twistPrediction === 0;
-
-    return (
-      <div style={{
-        display: 'flex',
-        flexDirection: 'column',
-        height: '100%',
-        background: colors.bg,
-        fontFamily: typography.fontFamily
-      }}>
-        <ProgressBar />
-
-        <div style={{
-          flex: 1,
-          overflow: 'auto',
-          padding: isMobile ? spacing.lg : spacing.xl,
-        }}>
-          <div style={{ maxWidth: 560, margin: '0 auto' }}>
-            {/* Result */}
-            <div style={{ textAlign: 'center', marginBottom: spacing.xxl }}>
-              <div style={{ fontSize: 64, marginBottom: spacing.lg }}>
-                {userWasRight ? '🎯' : '🔥'}
-              </div>
-              <h2 style={{
-                ...typography.h1,
-                color: userWasRight ? colors.success : colors.warning,
-                marginBottom: spacing.md,
-              }}>
-                {userWasRight ? 'You Got It!' : 'Energy Transforms, Never Disappears'}
-              </h2>
-            </div>
-
-            {/* Core Insight */}
-            <div style={{
-              padding: spacing.xl,
-              background: colors.bgCard,
-              borderRadius: radius.lg,
-              border: `1px solid ${colors.border}`,
-              marginBottom: spacing.xl,
-            }}>
-              <h3 style={{
-                ...typography.h2,
-                color: colors.textPrimary,
-                marginBottom: spacing.lg
-              }}>
-                The First Law of Thermodynamics
-              </h3>
-
-              <div style={{
-                padding: spacing.lg,
-                background: colors.bgElevated,
-                borderRadius: radius.md,
-                textAlign: 'center',
-                marginBottom: spacing.lg,
-              }}>
-                <p style={{
-                  ...typography.h3,
-                  color: colors.brand,
-                  margin: 0
-                }}>
-                  Energy cannot be created or destroyed, only transformed
-                </p>
-              </div>
-
-              <p style={{
-                ...typography.body,
-                color: colors.textSecondary,
-                marginBottom: spacing.lg
-              }}>
-                When friction is present:
-              </p>
-
-              <div style={{
-                padding: spacing.lg,
-                background: `${colors.thermal}10`,
-                borderRadius: radius.md,
-                border: `1px solid ${colors.thermal}30`,
-              }}>
-                <div style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: spacing.lg,
-                  flexWrap: 'wrap',
-                }}>
-                  <div style={{ textAlign: 'center' }}>
-                    <div style={{ ...typography.h3, color: colors.potential }}>PE + KE</div>
-                    <div style={{ ...typography.caption, color: colors.textTertiary }}>Mechanical</div>
-                  </div>
-                  <div style={{ fontSize: 24, color: colors.textTertiary }}>→</div>
-                  <div style={{ textAlign: 'center' }}>
-                    <div style={{ ...typography.h3, color: colors.kinetic }}>Less PE + KE</div>
-                    <div style={{ ...typography.caption, color: colors.textTertiary }}>Mechanical</div>
-                  </div>
-                  <div style={{ fontSize: 24, color: colors.textTertiary }}>+</div>
-                  <div style={{ textAlign: 'center' }}>
-                    <div style={{ ...typography.h3, color: colors.thermal }}>Heat</div>
-                    <div style={{ ...typography.caption, color: colors.textTertiary }}>Thermal</div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Real Example */}
-            <div style={{
-              padding: spacing.lg,
-              background: colors.warningBg,
-              borderRadius: radius.lg,
-              border: `1px solid ${colors.warning}40`,
-              marginBottom: spacing.xl,
-            }}>
-              <p style={{
-                ...typography.body,
-                color: colors.warning,
-                fontWeight: 600,
-                marginBottom: spacing.sm
-              }}>
-                🚗 Real World Example
-              </p>
-              <p style={{
-                ...typography.bodySmall,
-                color: colors.textSecondary,
-                margin: 0
-              }}>
-                When you brake a car, the kinetic energy becomes heat in the brake pads. That's why brakes get hot! Hybrid cars recover some of this energy using regenerative braking.
-              </p>
-            </div>
-
-            {/* Navigation */}
-            <div style={{ display: 'flex', gap: spacing.md }}>
-              {renderButton('← Back', goBack, 'ghost')}
-              {renderButton('Real World Applications →', goNext, 'primary')}
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // ============================================================================
-  // PHASE: TRANSFER (Real World Applications)
-  // ============================================================================
-  if (phase === 'transfer') {
-    const app = applications[activeApp];
-    const canTakeQuiz = completedApps.size >= applications.length;
-
-    return (
-      <div style={{
-        display: 'flex',
-        flexDirection: 'column',
-        height: '100%',
-        background: colors.bg,
-        fontFamily: typography.fontFamily
-      }}>
-        <ProgressBar />
-
-        {/* Progress indicator */}
-        <div style={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          gap: spacing.sm,
-          padding: spacing.md,
-          background: colors.bgElevated,
-          borderBottom: `1px solid ${colors.border}`,
-        }}>
-          <span style={{ fontSize: 13, color: colors.textSecondary }}>
-            {completedApps.size} of {applications.length} completed
+      <div className="bg-slate-800/50 rounded-xl p-4 max-w-2xl w-full mt-4 mb-4">
+        <div className="flex justify-between items-center mb-2">
+          <span className="text-white font-medium">Friction Level</span>
+          <span className={`font-bold ${friction > 50 ? 'text-red-400' : friction > 20 ? 'text-amber-400' : 'text-emerald-400'}`}>
+            {friction}%
           </span>
-          <div style={{ display: 'flex', gap: 6 }}>
-            {applications.map((_, idx) => (
-              <div
-                key={idx}
-                style={{
-                  width: 8,
-                  height: 8,
-                  borderRadius: '50%',
-                  background: completedApps.has(idx) ? colors.success : idx === activeApp ? colors.brand : colors.bgHover,
-                  transition: 'background 0.3s ease'
-                }}
-              />
-            ))}
-          </div>
         </div>
-
-        {/* Tab Navigation */}
-        <div style={{
-          display: 'flex',
-          gap: spacing.sm,
-          padding: spacing.md,
-          borderBottom: `1px solid ${colors.border}`,
-          overflowX: 'auto',
-          background: colors.bgElevated,
-        }}>
-          {applications.map((a, idx) => {
-            const isCompleted = completedApps.has(idx);
-            const isUnlocked = idx === 0 || completedApps.has(idx - 1);
-            const isCurrent = idx === activeApp;
-            return (
-              <button
-                key={a.id}
-                onMouseDown={() => {
-                  if (!isUnlocked || navigationLockRef.current) return;
-                  navigationLockRef.current = true;
-                  setActiveApp(idx);
-                  setTimeout(() => { navigationLockRef.current = false; }, 300);
-                }}
-                style={{
-                  padding: '10px 16px',
-                  borderRadius: radius.md,
-                  border: 'none',
-                  background: isCurrent ? a.color : isCompleted ? colors.successBg : colors.bgCard,
-                  color: isCurrent ? '#FFFFFF' : isCompleted ? colors.success : colors.textSecondary,
-                  fontSize: 13,
-                  fontWeight: 600,
-                  cursor: isUnlocked ? 'pointer' : 'not-allowed',
-                  opacity: isUnlocked ? 1 : 0.5,
-                  whiteSpace: 'nowrap',
-                  fontFamily: typography.fontFamily,
-                  transition: 'all 0.2s',
-                }}
-              >
-                {isCompleted ? '✓' : a.icon} {a.title}
-              </button>
-            );
-          })}
-        </div>
-
-        {/* Content */}
-        <div style={{ flex: 1, overflow: 'auto', padding: isMobile ? spacing.lg : spacing.xl }}>
-          <div style={{ maxWidth: 560, margin: '0 auto' }}>
-            {/* Header */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: spacing.lg, marginBottom: spacing.xl }}>
-              <div style={{
-                width: 72,
-                height: 72,
-                borderRadius: radius.lg,
-                background: `${app.color}20`,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                fontSize: 36,
-              }}>
-                {app.icon}
-              </div>
-              <div>
-                <h2 style={{ ...typography.h1, color: colors.textPrimary, marginBottom: spacing.xs }}>{app.title}</h2>
-                <p style={{ ...typography.bodySmall, color: app.color, margin: 0, fontWeight: 500 }}>{app.subtitle}</p>
-              </div>
-            </div>
-
-            {/* Description */}
-            <p style={{ ...typography.body, color: colors.textSecondary, marginBottom: spacing.lg, lineHeight: 1.7 }}>
-              {app.description}
-            </p>
-
-            {/* Physics Connection */}
-            <div style={{
-              padding: spacing.lg,
-              background: `${app.color}10`,
-              borderRadius: radius.md,
-              border: `1px solid ${app.color}30`,
-              marginBottom: spacing.lg,
-            }}>
-              <p style={{ ...typography.body, color: app.color, fontWeight: 600, marginBottom: spacing.xs }}>🔗 Physics Connection</p>
-              <p style={{ ...typography.bodySmall, color: colors.textSecondary, margin: 0 }}>{app.physics}</p>
-            </div>
-
-            {/* Insight */}
-            <div style={{
-              padding: spacing.lg,
-              background: colors.bgCard,
-              borderRadius: radius.md,
-              border: `1px solid ${colors.border}`,
-              marginBottom: spacing.lg,
-            }}>
-              <p style={{ ...typography.body, color: colors.textPrimary, fontWeight: 600, marginBottom: spacing.xs }}>💡 Key Insight</p>
-              <p style={{ ...typography.bodySmall, color: colors.textSecondary, margin: 0 }}>{app.insight}</p>
-            </div>
-
-            {/* Stats */}
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(3, 1fr)',
-              gap: spacing.md,
-              marginBottom: spacing.xl,
-            }}>
-              {app.stats.map((stat, i) => (
-                <div key={i} style={{
-                  padding: spacing.md,
-                  background: colors.bgCard,
-                  borderRadius: radius.md,
-                  textAlign: 'center',
-                }}>
-                  <div style={{ ...typography.h3, color: app.color, marginBottom: 2 }}>{stat.value}</div>
-                  <div style={{ ...typography.caption, color: colors.textTertiary }}>{stat.label}</div>
-                </div>
-              ))}
-            </div>
-
-            {/* Mark as Read Button */}
-            {!completedApps.has(activeApp) ? (
-              <button
-                onMouseDown={() => {
-                  if (navigationLockRef.current) return;
-                  navigationLockRef.current = true;
-                  const newCompleted = new Set(completedApps);
-                  newCompleted.add(activeApp);
-                  setCompletedApps(newCompleted);
-                  if (activeApp < applications.length - 1) {
-                    setTimeout(() => setActiveApp(activeApp + 1), 300);
-                  }
-                  setTimeout(() => { navigationLockRef.current = false; }, 400);
-                }}
-                style={{
-                  width: '100%',
-                  padding: spacing.lg,
-                  borderRadius: radius.md,
-                  border: 'none',
-                  background: colors.success,
-                  color: '#FFFFFF',
-                  fontSize: 15,
-                  fontWeight: 600,
-                  cursor: 'pointer',
-                  fontFamily: typography.fontFamily,
-                }}
-              >
-                ✓ Mark "{app.title}" as Read
-              </button>
-            ) : (
-              <div style={{
-                padding: spacing.lg,
-                background: colors.successBg,
-                borderRadius: radius.md,
-                border: `1px solid ${colors.success}40`,
-                textAlign: 'center',
-              }}>
-                <span style={{ ...typography.body, color: colors.success, fontWeight: 600 }}>
-                  ✓ Completed
-                </span>
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Bottom Navigation */}
-        <div style={{
-          padding: spacing.lg,
-          borderTop: `1px solid ${colors.border}`,
-          display: 'flex',
-          justifyContent: 'space-between',
-          background: colors.bgElevated,
-        }}>
-          {renderButton('← Back', goBack, 'ghost')}
-          {canTakeQuiz ? (
-            renderButton('Take the Quiz →', () => goToPhase('test'), 'primary')
-          ) : (
-            <div style={{
-              padding: '12px 24px',
-              borderRadius: radius.md,
-              background: colors.bgCard,
-              color: colors.textTertiary,
-              fontSize: 15,
-              fontWeight: 500,
-              fontFamily: typography.fontFamily,
-            }}>
-              Complete all applications to unlock quiz
-            </div>
-          )}
+        <input
+          type="range"
+          min="0"
+          max="80"
+          value={friction}
+          onChange={(e) => setFriction(Number(e.target.value))}
+          className="w-full h-2 bg-gradient-to-r from-emerald-500 via-amber-500 to-red-500 rounded-full cursor-pointer"
+        />
+        <div className="flex justify-between mt-1 text-xs text-slate-400">
+          <span>Ice (0%)</span>
+          <span>Wood</span>
+          <span>Carpet (80%)</span>
         </div>
       </div>
-    );
-  }
 
-  // ============================================================================
-  // PHASE: TEST
-  // ============================================================================
-  if (phase === 'test') {
-    const q = testQuestions[testIndex];
-    const totalCorrect = testAnswers.reduce((sum, ans, i) => sum + (ans === testQuestions[i].correct ? 1 : 0), 0);
+      <div className="flex justify-center gap-4 mb-4">
+        <button
+          onMouseDown={(e) => {
+            e.preventDefault();
+            const now = Date.now();
+            if (now - lastClickRef.current < 200) return;
+            lastClickRef.current = now;
+            startSimulation();
+            playSound('click');
+          }}
+          className="px-6 py-2 rounded-lg font-medium bg-emerald-600 text-white"
+        >
+          {isRunning ? 'Running...' : 'Release Marble'}
+        </button>
+        <button
+          onMouseDown={(e) => {
+            e.preventDefault();
+            const now = Date.now();
+            if (now - lastClickRef.current < 200) return;
+            lastClickRef.current = now;
+            resetSimulation();
+            playSound('click');
+          }}
+          className="px-6 py-2 rounded-lg font-medium bg-slate-700 text-slate-300"
+        >
+          Reset
+        </button>
+      </div>
 
+      <div className="bg-gradient-to-r from-amber-900/40 to-red-900/40 rounded-xl p-4 max-w-2xl w-full mb-6">
+        <p className="text-amber-300 text-sm text-center">
+          <strong>Watch:</strong> The total energy bar decreases with friction! Energy becomes heat.
+        </p>
+      </div>
+
+      <button
+        onMouseDown={(e) => { e.preventDefault(); goToPhase(6); }}
+        className="px-6 py-3 bg-gradient-to-r from-amber-600 to-orange-600 text-white font-semibold rounded-xl"
+      >
+        Review Discovery
+      </button>
+    </div>
+  );
+
+  const renderTwistReview = () => (
+    <div className="flex flex-col items-center p-6">
+      <h2 className="text-2xl font-bold text-amber-400 mb-6">Energy Transforms, Never Disappears</h2>
+      <div className="bg-gradient-to-br from-amber-900/40 to-red-900/40 rounded-2xl p-6 max-w-2xl mb-6">
+        <h3 className="text-xl font-bold text-white mb-4 text-center">First Law of Thermodynamics</h3>
+        <p className="text-lg text-purple-400 text-center mb-4">
+          Energy cannot be created or destroyed, only transformed
+        </p>
+        <div className="flex items-center justify-center gap-4 flex-wrap text-center">
+          <div className="bg-slate-800/50 rounded-lg p-3">
+            <div className="text-amber-400 font-bold">PE + KE</div>
+            <div className="text-xs text-slate-400">Mechanical</div>
+          </div>
+          <span className="text-2xl text-slate-400">-&gt;</span>
+          <div className="bg-slate-800/50 rounded-lg p-3">
+            <div className="text-emerald-400 font-bold">Less PE + KE</div>
+            <div className="text-xs text-slate-400">Mechanical</div>
+          </div>
+          <span className="text-2xl text-slate-400">+</span>
+          <div className="bg-slate-800/50 rounded-lg p-3">
+            <div className="text-red-400 font-bold">Heat</div>
+            <div className="text-xs text-slate-400">Thermal</div>
+          </div>
+        </div>
+      </div>
+      <div className="bg-slate-800/50 rounded-xl p-4 max-w-2xl mb-6">
+        <p className="text-amber-400 font-semibold mb-2">Real World Example: Car Brakes</p>
+        <p className="text-slate-300 text-sm">
+          When you brake, kinetic energy becomes heat in the brake pads. That's why brakes get hot!
+          Hybrid cars recover some energy using regenerative braking.
+        </p>
+      </div>
+      <button
+        onMouseDown={(e) => { e.preventDefault(); goToPhase(7); }}
+        className="px-6 py-3 bg-gradient-to-r from-blue-600 to-cyan-600 text-white font-semibold rounded-xl"
+      >
+        Explore Real-World Applications
+      </button>
+    </div>
+  );
+
+  const renderTransfer = () => (
+    <div className="flex flex-col items-center p-6">
+      <h2 className="text-2xl font-bold text-white mb-6">Real-World Applications</h2>
+      <p className="text-slate-400 mb-4">Explore each application</p>
+      <div className="grid grid-cols-2 gap-4 max-w-lg mx-auto mb-6">
+        {applications.map((app, index) => (
+          <button
+            key={index}
+            onMouseDown={(e) => { e.preventDefault(); setActiveApp(index); handleAppComplete(index); }}
+            className={`p-4 rounded-xl border-2 transition-all text-left ${
+              completedApps.has(index)
+                ? 'border-emerald-500 bg-emerald-900/30'
+                : 'border-slate-700 bg-slate-800/50 hover:border-slate-600'
+            }`}
+          >
+            <div className="text-3xl mb-2">{app.icon}</div>
+            <h3 className="text-white font-semibold text-sm">{app.title}</h3>
+            <p className="text-slate-400 text-xs mt-1">{app.subtitle}</p>
+            {completedApps.has(index) && <span className="text-emerald-400 text-xs">Explored!</span>}
+          </button>
+        ))}
+      </div>
+
+      {completedApps.size > 0 && (
+        <div className="bg-slate-800/50 rounded-xl p-4 max-w-lg w-full mb-6">
+          <h4 className="text-white font-semibold mb-2">{applications[activeApp].title}</h4>
+          <p className="text-slate-300 text-sm mb-2">{applications[activeApp].description}</p>
+          <p className="text-purple-400 text-sm">{applications[activeApp].physics}</p>
+        </div>
+      )}
+
+      <div className="flex items-center gap-2 mb-6">
+        <span className="text-slate-400">Progress:</span>
+        <div className="flex gap-1">{applications.map((_, i) => (<div key={i} className={`w-3 h-3 rounded-full ${completedApps.has(i) ? 'bg-emerald-500' : 'bg-slate-600'}`} />))}</div>
+        <span className="text-slate-400">{completedApps.size}/4</span>
+      </div>
+      {completedApps.size >= 4 && (
+        <button
+          onMouseDown={(e) => { e.preventDefault(); goToPhase(8); }}
+          className="px-6 py-3 bg-gradient-to-r from-purple-600 to-violet-600 text-white font-semibold rounded-xl"
+        >
+          Take the Knowledge Test
+        </button>
+      )}
+    </div>
+  );
+
+  const renderTest = () => {
     if (testSubmitted) {
+      const totalCorrect = testAnswers.reduce((sum, ans, i) => sum + (ans === testQuestions[i].correct ? 1 : 0), 0);
       const passed = totalCorrect >= 7;
       return (
-        <div style={{ display: 'flex', flexDirection: 'column', height: '100%', background: colors.bg, fontFamily: typography.fontFamily }}>
-          <ProgressBar />
-          <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: spacing.xl }}>
-            <div style={{ textAlign: 'center', maxWidth: 400 }}>
-              <div style={{ fontSize: 72, marginBottom: spacing.lg }}>{passed ? '🎉' : '📚'}</div>
-              <h2 style={{ ...typography.h1, color: colors.textPrimary, marginBottom: spacing.sm }}>
-                {passed ? 'Excellent Work!' : 'Keep Learning!'}
-              </h2>
-              <div style={{ ...typography.hero, fontSize: 56, color: passed ? colors.success : colors.warning, marginBottom: spacing.md }}>
-                {totalCorrect}/10
-              </div>
-              <p style={{ ...typography.body, color: colors.textSecondary, marginBottom: spacing.xl }}>
-                {passed ? 'You\'ve mastered energy conservation!' : 'Review the concepts and try again.'}
-              </p>
-              {renderButton(
-                passed ? 'Complete! →' : 'Review Material',
-                () => passed ? goNext() : goToPhase('review'),
-                passed ? 'success' : 'primary',
-                { size: 'lg' }
-              )}
-            </div>
-          </div>
+        <div className="flex flex-col items-center justify-center min-h-[500px] p-6 text-center">
+          <div className="text-6xl mb-4">{passed ? '🎉' : '📚'}</div>
+          <h2 className="text-2xl font-bold text-white mb-2">Score: {totalCorrect}/10</h2>
+          <p className="text-slate-300 mb-6">{passed ? 'Excellent! You\'ve mastered energy conservation!' : 'Keep studying! Review and try again.'}</p>
+          {passed ? (
+            <button
+              onMouseDown={(e) => { e.preventDefault(); playSound('complete'); goToPhase(9); }}
+              className="px-8 py-4 bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-semibold rounded-xl"
+            >
+              Claim Your Mastery Badge
+            </button>
+          ) : (
+            <button
+              onMouseDown={(e) => { e.preventDefault(); setTestAnswers(Array(10).fill(null)); setTestIndex(0); setTestSubmitted(false); goToPhase(3); }}
+              className="px-8 py-4 bg-gradient-to-r from-blue-600 to-cyan-600 text-white font-semibold rounded-xl"
+            >
+              Review & Try Again
+            </button>
+          )}
         </div>
       );
     }
 
+    const q = testQuestions[testIndex];
     return (
-      <div style={{ display: 'flex', flexDirection: 'column', height: '100%', background: colors.bg, fontFamily: typography.fontFamily }}>
-        <ProgressBar />
-        <div style={{ flex: 1, overflow: 'auto', padding: isMobile ? spacing.lg : spacing.xl }}>
-          <div style={{ maxWidth: 560, margin: '0 auto' }}>
-            {/* Question Header */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: spacing.lg }}>
-              <span style={{ ...typography.label, color: colors.brand }}>QUESTION {testIndex + 1} OF 10</span>
-              <div style={{ display: 'flex', gap: 4 }}>
-                {testQuestions.map((_, i) => (
-                  <div key={i} style={{
-                    width: 8, height: 8, borderRadius: radius.full,
-                    background: testAnswers[i] !== null
-                      ? (testAnswers[i] === testQuestions[i].correct ? colors.success : colors.error)
-                      : i === testIndex ? colors.brand : colors.border,
-                  }} />
-                ))}
-              </div>
-            </div>
-
-            {/* Question */}
-            <h2 style={{ ...typography.h2, color: colors.textPrimary, marginBottom: spacing.xl, lineHeight: 1.4 }}>
-              {q.question}
-            </h2>
-
-            {/* Options */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: spacing.md, marginBottom: spacing.xl }}>
-              {q.options.map((opt, i) => {
-                const isSelected = testAnswers[testIndex] === i;
-                const isCorrect = i === q.correct;
-                const showResult = testAnswers[testIndex] !== null;
-
-                return (
-                  <button
-                    key={i}
-                    onClick={() => {
-                      if (testAnswers[testIndex] === null) {
-                        const newAnswers = [...testAnswers];
-                        newAnswers[testIndex] = i;
-                        setTestAnswers(newAnswers);
-                        emit(i === q.correct ? 'correct_answer' : 'incorrect_answer', { questionIndex: testIndex });
-                      }
-                    }}
-                    style={{
-                      padding: spacing.lg,
-                      borderRadius: radius.md,
-                      textAlign: 'left',
-                      background: showResult
-                        ? (isCorrect ? colors.successBg : isSelected ? colors.errorBg : colors.bgCard)
-                        : isSelected ? colors.brandGlow : colors.bgCard,
-                      border: `2px solid ${showResult
-                        ? (isCorrect ? colors.success : isSelected ? colors.error : colors.border)
-                        : isSelected ? colors.brand : colors.border}`,
-                      color: colors.textPrimary,
-                      cursor: showResult ? 'default' : 'pointer',
-                      transition: 'all 0.2s',
-                      fontFamily: typography.fontFamily,
-                    }}
-                  >
-                    <span style={{
-                      fontWeight: 700,
-                      marginRight: spacing.md,
-                      color: showResult ? (isCorrect ? colors.success : isSelected ? colors.error : colors.textSecondary) : colors.brand
-                    }}>
-                      {String.fromCharCode(65 + i)}
-                    </span>
-                    {opt}
-                  </button>
-                );
-              })}
-            </div>
-
-            {/* Explanation (after answer) */}
-            {testAnswers[testIndex] !== null && (
-              <div style={{
-                padding: spacing.lg,
-                background: colors.bgCard,
-                borderRadius: radius.md,
-                border: `1px solid ${colors.border}`,
-                marginBottom: spacing.xl,
-              }}>
-                <p style={{ ...typography.body, color: colors.textPrimary, fontWeight: 600, marginBottom: spacing.xs }}>
-                  💡 Explanation
-                </p>
-                <p style={{ ...typography.bodySmall, color: colors.textSecondary, margin: 0 }}>
-                  {q.explanation}
-                </p>
-              </div>
+      <div className="flex flex-col items-center p-6">
+        <h2 className="text-xl font-bold text-white text-center mb-6">Quiz: Question {testIndex + 1}/{testQuestions.length}</h2>
+        <div className="flex gap-1 mb-4">
+          {testQuestions.map((_, i) => (
+            <div key={i} className={`w-2 h-2 rounded-full ${
+              testAnswers[i] !== null
+                ? testAnswers[i] === testQuestions[i].correct ? 'bg-emerald-500' : 'bg-red-500'
+                : i === testIndex ? 'bg-purple-400' : 'bg-slate-600'
+            }`} />
+          ))}
+        </div>
+        <div className="bg-slate-800/50 rounded-2xl p-6 max-w-2xl mb-6">
+          <p className="text-lg text-slate-300">{q.question}</p>
+        </div>
+        <div className="grid gap-3 w-full max-w-xl">
+          {q.options.map((option, i) => {
+            const isSelected = testAnswers[testIndex] === i;
+            const isCorrect = i === q.correct;
+            const showResult = testAnswers[testIndex] !== null;
+            return (
+              <button
+                key={i}
+                onMouseDown={(e) => { e.preventDefault(); handleTestAnswer(i); }}
+                disabled={showResult}
+                className={`p-4 rounded-xl text-left transition-all duration-300 ${
+                  showResult
+                    ? isCorrect ? 'bg-emerald-600/40 border-2 border-emerald-400'
+                    : isSelected ? 'bg-red-600/40 border-2 border-red-400'
+                    : 'bg-slate-700/50 border-2 border-transparent'
+                    : 'bg-slate-700/50 hover:bg-slate-600/50 border-2 border-transparent'
+                }`}
+              >
+                <span className="font-bold text-white mr-2">{String.fromCharCode(65 + i)}.</span>
+                <span className="text-slate-200">{option}</span>
+              </button>
+            );
+          })}
+        </div>
+        {testAnswers[testIndex] !== null && (
+          <div className="mt-6 flex gap-4">
+            {testIndex > 0 && (
+              <button
+                onMouseDown={(e) => { e.preventDefault(); setTestIndex(testIndex - 1); }}
+                className="px-6 py-3 bg-slate-700 text-white rounded-xl"
+              >
+                Previous
+              </button>
             )}
-
-            {/* Navigation */}
-            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-              {testIndex > 0 ? (
-                renderButton('← Previous', () => setTestIndex(testIndex - 1), 'ghost')
-              ) : <div />}
-              {testAnswers[testIndex] !== null && (
-                testIndex < testQuestions.length - 1 ? (
-                  renderButton('Next Question →', () => setTestIndex(testIndex + 1), 'primary')
-                ) : (
-                  renderButton('See Results →', () => setTestSubmitted(true), 'success')
-                )
-              )}
-            </div>
+            {testIndex < testQuestions.length - 1 ? (
+              <button
+                onMouseDown={(e) => { e.preventDefault(); setTestIndex(testIndex + 1); }}
+                className="px-6 py-3 bg-gradient-to-r from-purple-600 to-violet-600 text-white font-semibold rounded-xl"
+              >
+                Next Question
+              </button>
+            ) : (
+              <button
+                onMouseDown={(e) => { e.preventDefault(); setTestSubmitted(true); }}
+                className="px-6 py-3 bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-semibold rounded-xl"
+              >
+                See Results
+              </button>
+            )}
           </div>
-        </div>
+        )}
       </div>
     );
-  }
+  };
 
-  // ============================================================================
-  // PHASE: MASTERY
-  // ============================================================================
-  if (phase === 'mastery') {
-    return (
-      <div style={{
-        display: 'flex',
-        flexDirection: 'column',
-        height: '100%',
-        background: colors.bg,
-        fontFamily: typography.fontFamily
-      }}>
-        <ProgressBar />
-
-        <div style={{
-          flex: 1,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          padding: spacing.xl,
-        }}>
-          <div style={{ textAlign: 'center', maxWidth: 480 }}>
-            {/* Trophy */}
-            <div style={{
-              width: 120,
-              height: 120,
-              borderRadius: radius.full,
-              background: `linear-gradient(135deg, ${colors.success}30, ${colors.brand}30)`,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              margin: '0 auto',
-              marginBottom: spacing.xl,
-              fontSize: 56,
-            }}>
-              🏆
-            </div>
-
-            {/* Title */}
-            <h1 style={{
-              ...typography.hero,
-              color: colors.textPrimary,
-              marginBottom: spacing.md
-            }}>
-              Energy Master!
-            </h1>
-
-            <p style={{
-              ...typography.h3,
-              color: colors.textSecondary,
-              marginBottom: spacing.xxl,
-              lineHeight: 1.6,
-            }}>
-              You've mastered the law of energy conservation - one of the most fundamental principles in physics!
-            </p>
-
-            {/* Achievements */}
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(3, 1fr)',
-              gap: spacing.md,
-              marginBottom: spacing.xxl,
-            }}>
-              {[
-                { icon: '🎢', label: 'PE ↔ KE' },
-                { icon: '🔥', label: 'Energy Loss' },
-                { icon: '⚡', label: 'Applications' },
-              ].map((achievement, i) => (
-                <div key={i} style={{
-                  padding: spacing.lg,
-                  background: colors.bgCard,
-                  borderRadius: radius.lg,
-                  border: `1px solid ${colors.border}`,
-                }}>
-                  <div style={{ fontSize: 32, marginBottom: spacing.sm }}>{achievement.icon}</div>
-                  <div style={{ ...typography.caption, color: colors.textSecondary }}>{achievement.label}</div>
-                </div>
-              ))}
-            </div>
-
-            {/* Key Formula */}
-            <div style={{
-              padding: spacing.xl,
-              background: colors.bgCard,
-              borderRadius: radius.lg,
-              border: `1px solid ${colors.border}`,
-              marginBottom: spacing.xxl,
-            }}>
-              <p style={{ ...typography.label, color: colors.brand, marginBottom: spacing.md }}>
-                KEY FORMULA MASTERED
-              </p>
-              <p style={{ ...typography.h1, color: colors.textPrimary, margin: 0 }}>
-                E<sub>total</sub> = PE + KE = mgh + ½mv² = constant
-              </p>
-            </div>
-
-            {/* CTA */}
-            <button
-              onMouseDown={(e) => {
-                e.preventDefault();
-                if (navigationLockRef.current) return;
-                navigationLockRef.current = true;
-                onComplete?.();
-                setTimeout(() => { navigationLockRef.current = false; }, 400);
-              }}
-              style={{
-                padding: '16px 48px',
-                borderRadius: radius.lg,
-                border: 'none',
-                background: `linear-gradient(135deg, ${colors.success}, #059669)`,
-                color: '#FFFFFF',
-                fontSize: 17,
-                fontWeight: 600,
-                cursor: 'pointer',
-                fontFamily: typography.fontFamily,
-                boxShadow: `0 4px 20px ${colors.successBg}`,
-              }}
-            >
-              Complete Lesson ✓
-            </button>
-          </div>
+  const renderMastery = () => (
+    <div className="flex flex-col items-center justify-center min-h-[500px] p-6 text-center">
+      <div className="bg-gradient-to-br from-purple-900/50 via-violet-900/50 to-indigo-900/50 rounded-3xl p-8 max-w-2xl">
+        <div className="text-8xl mb-6">🏆</div>
+        <h1 className="text-3xl font-bold text-white mb-4">Energy Master!</h1>
+        <p className="text-xl text-slate-300 mb-6">You've mastered the law of energy conservation!</p>
+        <div className="grid grid-cols-3 gap-4 mb-6">
+          <div className="bg-slate-800/50 rounded-xl p-4"><div className="text-2xl mb-2">🎢</div><p className="text-sm text-slate-300">PE <-> KE</p></div>
+          <div className="bg-slate-800/50 rounded-xl p-4"><div className="text-2xl mb-2">🔥</div><p className="text-sm text-slate-300">Energy Loss</p></div>
+          <div className="bg-slate-800/50 rounded-xl p-4"><div className="text-2xl mb-2">*</div><p className="text-sm text-slate-300">Applications</p></div>
         </div>
+        <div className="bg-slate-800/50 rounded-xl p-4 mb-6">
+          <p className="text-purple-400 text-sm mb-1">Key Formula Mastered</p>
+          <p className="text-xl text-white">E = PE + KE = mgh + 1/2 mv^2 = constant</p>
+        </div>
+        <button onMouseDown={(e) => { e.preventDefault(); goToPhase(0); }} className="px-6 py-3 bg-slate-700 hover:bg-slate-600 text-white font-medium rounded-xl">Explore Again</button>
       </div>
-    );
-  }
-
-  // Fallback
-  return (
-    <div style={{
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      height: '100%',
-      background: colors.bg,
-      fontFamily: typography.fontFamily,
-    }}>
-      <p style={{ color: colors.textSecondary }}>Loading...</p>
     </div>
   );
-}
+
+  const renderPhase = () => {
+    switch (phase) {
+      case 0: return renderHook();
+      case 1: return renderPredict();
+      case 2: return renderPlay();
+      case 3: return renderReview();
+      case 4: return renderTwistPredict();
+      case 5: return renderTwistPlay();
+      case 6: return renderTwistReview();
+      case 7: return renderTransfer();
+      case 8: return renderTest();
+      case 9: return renderMastery();
+      default: return renderHook();
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-[#0a0f1a] text-white relative overflow-hidden">
+      {/* Premium background gradient */}
+      <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-[#0a1628] to-slate-900" />
+      <div className="absolute top-0 left-1/4 w-96 h-96 bg-purple-500/5 rounded-full blur-3xl" />
+      <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-violet-500/5 rounded-full blur-3xl" />
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-amber-500/3 rounded-full blur-3xl" />
+
+      {/* Header */}
+      <div className="fixed top-0 left-0 right-0 z-50 bg-slate-900/80 backdrop-blur-xl border-b border-slate-800/50">
+        <div className="flex items-center justify-between px-6 py-3 max-w-4xl mx-auto">
+          <span className="text-sm font-semibold text-white/80 tracking-wide">Energy Conservation</span>
+          <div className="flex items-center gap-1.5">
+            {PHASES.map((p) => (
+              <button
+                key={p}
+                onMouseDown={(e) => { e.preventDefault(); goToPhase(p); }}
+                className={`h-2 rounded-full transition-all duration-300 ${
+                  phase === p
+                    ? 'bg-purple-400 w-6 shadow-lg shadow-purple-400/30'
+                    : phase > p
+                      ? 'bg-emerald-500 w-2'
+                      : 'bg-slate-700 w-2 hover:bg-slate-600'
+                }`}
+                title={phaseLabels[p]}
+              />
+            ))}
+          </div>
+          <span className="text-sm font-medium text-purple-400">{phaseLabels[phase]}</span>
+        </div>
+      </div>
+
+      {/* Main content */}
+      <div className="relative pt-16 pb-12">{renderPhase()}</div>
+    </div>
+  );
+};
+
+export default EnergyConservationRenderer;

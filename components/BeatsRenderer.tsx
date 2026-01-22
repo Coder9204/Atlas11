@@ -6,22 +6,43 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 // BEATS - Premium Apple/Airbnb Design System
 // ============================================================================
 
-export interface GameEvent {
-  type: 'phase_change' | 'interaction' | 'prediction' | 'result' | 'hint_request' | 'visual_state_update';
-  phase: string;
-  data: Record<string, unknown>;
-  timestamp: number;
-  eventType?: string;
+type GameEventType =
+  | 'phase_change'
+  | 'prediction_made'
+  | 'simulation_started'
+  | 'parameter_changed'
+  | 'twist_prediction_made'
+  | 'app_explored'
+  | 'test_answered'
+  | 'test_completed'
+  | 'mastery_achieved';
+
+interface GameEvent {
+  type: GameEventType;
+  data?: Record<string, unknown>;
 }
+
+const PHASES: number[] = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
+const phaseLabels: Record<number, string> = {
+  0: 'Hook',
+  1: 'Predict',
+  2: 'Lab',
+  3: 'Review',
+  4: 'Twist Predict',
+  5: 'Twist Lab',
+  6: 'Twist Review',
+  7: 'Transfer',
+  8: 'Test',
+  9: 'Mastery'
+};
 
 interface BeatsRendererProps {
   width?: number;
   height?: number;
   onGameEvent?: (event: GameEvent) => void;
-  gamePhase?: string;
+  currentPhase?: number;
+  onPhaseComplete?: (phase: number) => void;
 }
-
-type Phase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
 
 // ============================================================================
 // PREMIUM DESIGN TOKENS - Apple/Airbnb Quality
@@ -72,16 +93,22 @@ const design = {
 // ============================================================================
 // MAIN COMPONENT
 // ============================================================================
-const BeatsRenderer: React.FC<BeatsRendererProps> = ({ onGameEvent, gamePhase }) => {
+const BeatsRenderer: React.FC<BeatsRendererProps> = ({ onGameEvent, currentPhase, onPhaseComplete }) => {
   // Navigation debouncing
   const navigationLockRef = useRef(false);
 
   // Phase state
-  const [phase, setPhase] = useState<Phase>(() => {
-    const validPhases: Phase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
-    if (gamePhase && validPhases.includes(gamePhase as Phase)) return gamePhase as Phase;
-    return 'hook';
+  const [phase, setPhase] = useState<number>(() => {
+    if (currentPhase !== undefined && PHASES.includes(currentPhase)) return currentPhase;
+    return 0;
   });
+
+  // Sync phase with external prop
+  useEffect(() => {
+    if (currentPhase !== undefined && PHASES.includes(currentPhase)) {
+      setPhase(currentPhase);
+    }
+  }, [currentPhase]);
 
   // Game state
   const [prediction, setPrediction] = useState<string | null>(null);
@@ -111,25 +138,57 @@ const BeatsRenderer: React.FC<BeatsRendererProps> = ({ onGameEvent, gamePhase })
     return () => { if (animationRef.current) cancelAnimationFrame(animationRef.current); };
   }, []);
 
-  // Emit events
-  const emit = useCallback((eventType: string, data: Record<string, unknown> = {}) => {
-    onGameEvent?.({
-      type: 'interaction',
-      phase,
-      data: { eventType, ...data },
-      timestamp: Date.now(),
-      eventType
-    });
-  }, [onGameEvent, phase]);
+  // Web Audio API sound
+  const playSound = useCallback((soundType: 'click' | 'success' | 'failure' | 'transition' | 'complete') => {
+    const soundConfig = {
+      click: { frequency: 400, type: 'sine' as OscillatorType, duration: 0.1 },
+      success: { frequency: 600, type: 'sine' as OscillatorType, duration: 0.15 },
+      failure: { frequency: 200, type: 'square' as OscillatorType, duration: 0.2 },
+      transition: { frequency: 480, type: 'sine' as OscillatorType, duration: 0.15 },
+      complete: { frequency: 800, type: 'sine' as OscillatorType, duration: 0.3 }
+    };
+    const { frequency, type, duration } = soundConfig[soundType];
+    try {
+      const audioContext = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
+      const oscillator = audioContext.createOscillator();
+      const gainNode = audioContext.createGain();
+      oscillator.connect(gainNode);
+      gainNode.connect(audioContext.destination);
+      oscillator.frequency.value = frequency;
+      oscillator.type = type;
+      gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + duration);
+      oscillator.start();
+      oscillator.stop(audioContext.currentTime + duration);
+    } catch (e) { /* Audio not supported */ }
+  }, []);
+
+  // Emit game events
+  const emitEvent = useCallback((type: GameEventType, data?: Record<string, unknown>) => {
+    onGameEvent?.({ type, data });
+  }, [onGameEvent]);
 
   // Navigation with debouncing
-  const goToPhase = useCallback((newPhase: Phase) => {
+  const goToPhase = useCallback((newPhase: number) => {
     if (navigationLockRef.current) return;
+    if (!PHASES.includes(newPhase)) return;
     navigationLockRef.current = true;
     setPhase(newPhase);
-    emit('phase_change', { from: phase, to: newPhase });
+    playSound('transition');
+    emitEvent('phase_change', { from: phase, to: newPhase, phaseLabel: phaseLabels[newPhase] });
+    onPhaseComplete?.(newPhase);
     setTimeout(() => { navigationLockRef.current = false; }, 400);
-  }, [emit, phase]);
+  }, [phase, playSound, emitEvent, onPhaseComplete]);
+
+  const goNext = useCallback(() => {
+    const currentIndex = PHASES.indexOf(phase);
+    if (currentIndex < PHASES.length - 1) goToPhase(PHASES[currentIndex + 1]);
+  }, [phase, goToPhase]);
+
+  const goBack = useCallback(() => {
+    const currentIndex = PHASES.indexOf(phase);
+    if (currentIndex > 0) goToPhase(PHASES[currentIndex - 1]);
+  }, [phase, goToPhase]);
 
   // Render button helper function
   const renderButton = (
@@ -205,7 +264,7 @@ const BeatsRenderer: React.FC<BeatsRendererProps> = ({ onGameEvent, gamePhase })
 
   // Track experimentation
   useEffect(() => {
-    if ((phase === 'play' || phase === 'twist_play') && !hasExperimented && beatFrequency > 0) {
+    if ((phase === 2 || phase === 5) && !hasExperimented && beatFrequency > 0) {
       setTimeout(() => setHasExperimented(true), 2000);
     }
   }, [phase, hasExperimented, beatFrequency]);
@@ -261,9 +320,6 @@ const BeatsRenderer: React.FC<BeatsRendererProps> = ({ onGameEvent, gamePhase })
     }
   ];
 
-  // Phase list for navigation
-  const phaseList: Phase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
-
   // Common styles
   const containerStyle: React.CSSProperties = {
     display: 'flex',
@@ -277,7 +333,6 @@ const BeatsRenderer: React.FC<BeatsRendererProps> = ({ onGameEvent, gamePhase })
 
   // Progress bar
   const renderProgressBar = () => {
-    const currentIndex = phaseList.indexOf(phase);
     return (
       <div style={{
         padding: '16px 24px',
@@ -292,14 +347,14 @@ const BeatsRenderer: React.FC<BeatsRendererProps> = ({ onGameEvent, gamePhase })
             Beats
           </span>
           <div style={{ display: 'flex', gap: '4px' }}>
-            {phaseList.map((_, i) => (
+            {PHASES.map((p) => (
               <div
-                key={i}
+                key={p}
                 style={{
-                  width: i === currentIndex ? '24px' : '8px',
+                  width: p === phase ? '24px' : '8px',
                   height: '8px',
                   borderRadius: '4px',
-                  background: i < currentIndex ? design.colors.success : i === currentIndex ? design.colors.accentPrimary : design.colors.bgElevated,
+                  background: p < phase ? design.colors.success : p === phase ? design.colors.accentPrimary : design.colors.bgElevated,
                   transition: 'all 0.3s ease'
                 }}
               />
@@ -307,7 +362,7 @@ const BeatsRenderer: React.FC<BeatsRendererProps> = ({ onGameEvent, gamePhase })
           </div>
         </div>
         <span style={{ fontSize: '12px', color: design.colors.textMuted }}>
-          {currentIndex + 1} / {phaseList.length}
+          {phase + 1} / {PHASES.length}
         </span>
       </div>
     );
@@ -654,7 +709,7 @@ const BeatsRenderer: React.FC<BeatsRendererProps> = ({ onGameEvent, gamePhase })
   // ==================== PHASE RENDERS ====================
 
   // HOOK - Premium welcome screen
-  if (phase === 'hook') {
+  if (phase === 0) {
     return (
       <div style={containerStyle}>
         <div style={{
@@ -783,7 +838,7 @@ const BeatsRenderer: React.FC<BeatsRendererProps> = ({ onGameEvent, gamePhase })
             ))}
           </div>
 
-          {renderButton('Start Learning', () => goToPhase('predict'), 'primary', false, 'lg')}
+          {renderButton('Start Learning', () => goToPhase(1), 'primary', false, 'lg')}
 
           <p style={{ fontSize: '12px', color: design.colors.textMuted, marginTop: design.spacing.lg }}>
             ~5 minutes · Interactive simulation
@@ -794,7 +849,7 @@ const BeatsRenderer: React.FC<BeatsRendererProps> = ({ onGameEvent, gamePhase })
   }
 
   // PREDICT
-  if (phase === 'predict') {
+  if (phase === 1) {
     const options = [
       { id: 'louder', text: 'Just sounds louder - amplitudes add' },
       { id: 'beats', text: 'Creates pulsating "wah-wah" sound' },
@@ -827,7 +882,7 @@ const BeatsRenderer: React.FC<BeatsRendererProps> = ({ onGameEvent, gamePhase })
                     if (navigationLockRef.current) return;
                     navigationLockRef.current = true;
                     setPrediction(opt.id);
-                    emit('prediction', { value: opt.id });
+                    emitEvent('prediction_made', { value: opt.id });
                     setTimeout(() => { navigationLockRef.current = false; }, 400);
                   }}
                   style={{
@@ -849,7 +904,7 @@ const BeatsRenderer: React.FC<BeatsRendererProps> = ({ onGameEvent, gamePhase })
             </div>
 
             <div style={{ marginTop: design.spacing.xl, display: 'flex', justifyContent: 'flex-end' }}>
-              {renderButton('Test Your Prediction', () => goToPhase('play'), 'primary', !prediction)}
+              {renderButton('Test Your Prediction', () => goToPhase(2), 'primary', !prediction)}
             </div>
           </div>
         </div>
@@ -858,7 +913,7 @@ const BeatsRenderer: React.FC<BeatsRendererProps> = ({ onGameEvent, gamePhase })
   }
 
   // PLAY - Interactive experiment
-  if (phase === 'play') {
+  if (phase === 2) {
     return (
       <div style={containerStyle}>
         {renderProgressBar()}
@@ -914,7 +969,7 @@ const BeatsRenderer: React.FC<BeatsRendererProps> = ({ onGameEvent, gamePhase })
                     ({beatFrequency} pulses/sec)
                   </span>
                 </div>
-                {renderButton(hasExperimented ? 'Continue' : 'Experiment more...', () => goToPhase('review'), 'primary', !hasExperimented)}
+                {renderButton(hasExperimented ? 'Continue' : 'Experiment more...', () => goToPhase(3), 'primary', !hasExperimented)}
               </div>
             </div>
           </div>
@@ -924,7 +979,7 @@ const BeatsRenderer: React.FC<BeatsRendererProps> = ({ onGameEvent, gamePhase })
   }
 
   // REVIEW
-  if (phase === 'review') {
+  if (phase === 3) {
     return (
       <div style={containerStyle}>
         {renderProgressBar()}
@@ -978,7 +1033,7 @@ const BeatsRenderer: React.FC<BeatsRendererProps> = ({ onGameEvent, gamePhase })
             </div>
 
             <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-              {renderButton('Continue', () => goToPhase('twist_predict'))}
+              {renderButton('Continue', () => goToPhase(4))}
             </div>
           </div>
         </div>
@@ -987,7 +1042,7 @@ const BeatsRenderer: React.FC<BeatsRendererProps> = ({ onGameEvent, gamePhase })
   }
 
   // TWIST PREDICT
-  if (phase === 'twist_predict') {
+  if (phase === 4) {
     const options = [
       { id: 'faster', text: 'Beats get faster (higher beat frequency)' },
       { id: 'slower', text: 'Beats get slower (lower beat frequency)' },
@@ -1020,7 +1075,7 @@ const BeatsRenderer: React.FC<BeatsRendererProps> = ({ onGameEvent, gamePhase })
                     if (navigationLockRef.current) return;
                     navigationLockRef.current = true;
                     setTwistPrediction(opt.id);
-                    emit('prediction', { value: opt.id, phase: 'twist_predict' });
+                    emitEvent('twist_prediction_made', { value: opt.id });
                     setTimeout(() => { navigationLockRef.current = false; }, 400);
                   }}
                   style={{
@@ -1042,7 +1097,7 @@ const BeatsRenderer: React.FC<BeatsRendererProps> = ({ onGameEvent, gamePhase })
             </div>
 
             <div style={{ marginTop: design.spacing.xl, display: 'flex', justifyContent: 'flex-end' }}>
-              {renderButton('Test It', () => goToPhase('twist_play'), 'primary', !twistPrediction)}
+              {renderButton('Test It', () => goToPhase(5), 'primary', !twistPrediction)}
             </div>
           </div>
         </div>
@@ -1051,7 +1106,7 @@ const BeatsRenderer: React.FC<BeatsRendererProps> = ({ onGameEvent, gamePhase })
   }
 
   // TWIST PLAY - Continue with same visualization but focus on matching frequencies
-  if (phase === 'twist_play') {
+  if (phase === 5) {
     const isMatched = beatFrequency === 0;
 
     return (
@@ -1098,7 +1153,7 @@ const BeatsRenderer: React.FC<BeatsRendererProps> = ({ onGameEvent, gamePhase })
                     {isMatched ? '🎉 No beats - perfectly tuned!' : `${beatFrequency} beats/second`}
                   </span>
                 </div>
-                {renderButton('Continue', () => goToPhase('twist_review'))}
+                {renderButton('Continue', () => goToPhase(6))}
               </div>
             </div>
           </div>
@@ -1108,7 +1163,7 @@ const BeatsRenderer: React.FC<BeatsRendererProps> = ({ onGameEvent, gamePhase })
   }
 
   // TWIST REVIEW
-  if (phase === 'twist_review') {
+  if (phase === 6) {
     return (
       <div style={containerStyle}>
         {renderProgressBar()}
@@ -1150,7 +1205,7 @@ const BeatsRenderer: React.FC<BeatsRendererProps> = ({ onGameEvent, gamePhase })
             </div>
 
             <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-              {renderButton('See Real Applications', () => goToPhase('transfer'))}
+              {renderButton('See Real Applications', () => goToPhase(7))}
             </div>
           </div>
         </div>
@@ -1159,7 +1214,7 @@ const BeatsRenderer: React.FC<BeatsRendererProps> = ({ onGameEvent, gamePhase })
   }
 
   // TRANSFER - Tabbed applications with sequential navigation
-  if (phase === 'transfer') {
+  if (phase === 7) {
     const app = applications[activeApp];
     const allAppsCompleted = completedApps.size >= applications.length;
 
@@ -1272,7 +1327,7 @@ const BeatsRenderer: React.FC<BeatsRendererProps> = ({ onGameEvent, gamePhase })
                       const newCompleted = new Set(completedApps);
                       newCompleted.add(activeApp);
                       setCompletedApps(newCompleted);
-                      emit('interaction', { app: app.id, action: 'marked_read' });
+                      emitEvent('app_explored', { app: app.id });
                       if (activeApp < applications.length - 1) {
                         setTimeout(() => setActiveApp(activeApp + 1), 300);
                       }
@@ -1307,7 +1362,7 @@ const BeatsRenderer: React.FC<BeatsRendererProps> = ({ onGameEvent, gamePhase })
                 )}
 
                 {allAppsCompleted ? (
-                  renderButton('Take Quiz', () => goToPhase('test'), 'success')
+                  renderButton('Take Quiz', () => goToPhase(8), 'success')
                 ) : (
                   <div style={{
                     padding: '14px 24px',
@@ -1329,7 +1384,7 @@ const BeatsRenderer: React.FC<BeatsRendererProps> = ({ onGameEvent, gamePhase })
   }
 
   // TEST
-  if (phase === 'test') {
+  if (phase === 8) {
     const q = questions[testIndex];
     const answered = answers[testIndex] !== null;
 
@@ -1349,7 +1404,7 @@ const BeatsRenderer: React.FC<BeatsRendererProps> = ({ onGameEvent, gamePhase })
                score >= 6 ? "Good job! Review the concepts you missed." :
                "Keep practicing! Review the material and try again."}
             </p>
-            {renderButton('Complete Lesson', () => goToPhase('mastery'), 'success', false, 'lg')}
+            {renderButton('Complete Lesson', () => goToPhase(9), 'success', false, 'lg')}
           </div>
         </div>
       );
@@ -1397,7 +1452,7 @@ const BeatsRenderer: React.FC<BeatsRendererProps> = ({ onGameEvent, gamePhase })
                       const newAnswers = [...answers];
                       newAnswers[testIndex] = i;
                       setAnswers(newAnswers);
-                      emit(i === q.correct ? 'correct_answer' : 'incorrect_answer', { questionIndex: testIndex });
+                      emitEvent('test_answered', { questionIndex: testIndex, correct: i === q.correct });
                       setTimeout(() => { navigationLockRef.current = false; }, 400);
                     }}
                     disabled={answered}
@@ -1461,7 +1516,7 @@ const BeatsRenderer: React.FC<BeatsRendererProps> = ({ onGameEvent, gamePhase })
   }
 
   // MASTERY
-  if (phase === 'mastery') {
+  if (phase === 9) {
     return (
       <div style={{
         ...containerStyle,
@@ -1566,7 +1621,7 @@ const BeatsRenderer: React.FC<BeatsRendererProps> = ({ onGameEvent, gamePhase })
 
           <div style={{ display: 'flex', gap: design.spacing.md }}>
             {renderButton('Replay Lesson', () => {
-              setPhase('hook');
+              setPhase(0);
               setTestIndex(0);
               setAnswers(Array(10).fill(null));
               setShowResult(false);
@@ -1575,7 +1630,7 @@ const BeatsRenderer: React.FC<BeatsRendererProps> = ({ onGameEvent, gamePhase })
               setFreq2(444);
               setCompletedApps(new Set());
             }, 'ghost')}
-            {renderButton('Free Exploration', () => goToPhase('play'))}
+            {renderButton('Free Exploration', () => goToPhase(2))}
           </div>
         </div>
       </div>

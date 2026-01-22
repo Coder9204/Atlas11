@@ -247,6 +247,7 @@ const PolarizationRenderer: React.FC<PolarizationRendererProps> = ({
   // Animation ref
   const animationRef = useRef<number>();
   const isTransitioningRef = useRef(false);
+  const lastClickRef = useRef(0);
 
   // Mobile detection
   useEffect(() => {
@@ -293,8 +294,11 @@ const PolarizationRenderer: React.FC<PolarizationRendererProps> = ({
     ? calculateIntensity(polarizer1Angle, polarizer2Angle, polarizer3Angle)
     : calculateIntensity(polarizer1Angle, polarizer2Angle);
 
-  // Phase navigation with debouncing
+  // Phase navigation with 200ms debouncing
   const goToPhase = useCallback((newPhase: Phase) => {
+    const now = Date.now();
+    if (now - lastClickRef.current < 200) return;
+    lastClickRef.current = now;
     if (isTransitioningRef.current) return;
     isTransitioningRef.current = true;
 
@@ -423,34 +427,33 @@ const PolarizationRenderer: React.FC<PolarizationRendererProps> = ({
 
   const renderProgressBar = () => {
     const currentIndex = phases.indexOf(phase);
-    const progress = ((currentIndex + 1) / phases.length) * 100;
 
     return (
-      <div style={{ marginBottom: spacing.lg }}>
-        <div style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          marginBottom: spacing.xs,
-          fontSize: typography.small.fontSize,
-          color: colors.textSecondary,
-        }}>
-          <span>Progress</span>
-          <span>{Math.round(progress)}%</span>
-        </div>
-        <div style={{
-          height: 8,
-          background: colors.border,
-          borderRadius: radius.sm,
-          overflow: 'hidden',
-        }}>
-          <div style={{
-            height: '100%',
-            width: `${progress}%`,
-            background: `linear-gradient(90deg, ${colors.primary}, ${colors.secondary})`,
-            borderRadius: radius.sm,
-            transition: 'width 0.5s ease',
-          }} />
-        </div>
+      <div style={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: 6,
+      }}>
+        {phases.map((p, i) => (
+          <button
+            key={p}
+            onClick={() => setPhase(p)}
+            style={{
+              height: 8,
+              width: currentIndex === i ? 24 : 8,
+              borderRadius: 9999,
+              border: 'none',
+              cursor: 'pointer',
+              background: currentIndex === i
+                ? colors.primary
+                : i < currentIndex
+                  ? colors.success
+                  : colors.border,
+              boxShadow: currentIndex === i ? `0 0 12px ${colors.primary}40` : 'none',
+              transition: 'all 0.3s ease',
+            }}
+          />
+        ))}
       </div>
     );
   };
@@ -1500,49 +1503,73 @@ const PolarizationRenderer: React.FC<PolarizationRendererProps> = ({
     <div style={{
       width: '100%',
       minHeight: height,
-      background: colors.background,
+      background: '#0a0f1a',
       color: colors.text,
       fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
-      padding: isMobile ? spacing.md : spacing.xl,
-      boxSizing: 'border-box',
+      position: 'relative',
+      overflow: 'hidden',
     }}>
-      <div style={{ maxWidth: 800, margin: '0 auto' }}>
-        {/* Header */}
-        <div style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          marginBottom: spacing.lg,
-        }}>
-          {onBack && (
-            <button
-              onClick={onBack}
-              style={{
-                background: 'transparent',
-                border: 'none',
-                color: colors.textSecondary,
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                gap: spacing.xs,
-                fontSize: typography.body.fontSize,
-              }}
-            >
-              ← Back
-            </button>
-          )}
-          <div style={{
-            padding: `${spacing.xs}px ${spacing.md}px`,
-            background: colors.cardBg,
-            borderRadius: radius.sm,
-            fontSize: typography.small.fontSize,
-            color: colors.textSecondary,
-          }}>
-            🕶️ Polarization
-          </div>
-        </div>
+      {/* Premium background gradient */}
+      <div style={{
+        position: 'absolute',
+        inset: 0,
+        background: 'linear-gradient(to bottom right, #0f172a, #0a1628, #0f172a)',
+      }} />
+      <div style={{
+        position: 'absolute',
+        top: 0,
+        left: '25%',
+        width: 384,
+        height: 384,
+        background: 'rgba(96, 165, 250, 0.05)',
+        borderRadius: '50%',
+        filter: 'blur(64px)',
+      }} />
+      <div style={{
+        position: 'absolute',
+        bottom: 0,
+        right: '25%',
+        width: 384,
+        height: 384,
+        background: 'rgba(129, 140, 248, 0.05)',
+        borderRadius: '50%',
+        filter: 'blur(64px)',
+      }} />
+      <div style={{
+        position: 'absolute',
+        top: '50%',
+        left: '50%',
+        transform: 'translate(-50%, -50%)',
+        width: 384,
+        height: 384,
+        background: 'rgba(244, 114, 182, 0.03)',
+        borderRadius: '50%',
+        filter: 'blur(64px)',
+      }} />
 
-        {renderProgressBar()}
+      {/* Header */}
+      <div style={{
+        position: 'sticky',
+        top: 0,
+        zIndex: 50,
+        background: 'rgba(15, 23, 42, 0.8)',
+        backdropFilter: 'blur(16px)',
+        borderBottom: '1px solid rgba(51, 65, 85, 0.5)',
+        padding: '12px 24px',
+      }}>
+        <div style={{ maxWidth: 800, margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <span style={{ fontSize: 14, fontWeight: 600, color: 'rgba(255,255,255,0.8)', letterSpacing: '0.025em' }}>Polarization</span>
+          {renderProgressBar()}
+          <span style={{ fontSize: 14, fontWeight: 500, color: colors.primary }}>{phase.replace('_', ' ')}</span>
+        </div>
+      </div>
+
+      <div style={{
+        position: 'relative',
+        maxWidth: 800,
+        margin: '0 auto',
+        padding: isMobile ? spacing.md : spacing.xl,
+      }}>
         {renderPhaseContent()}
 
         {/* CSS Animation */}
