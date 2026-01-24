@@ -1,0 +1,29 @@
+# Dependencies
+node_modules/
+
+# Source files (we copy these explicitly)
+# src/
+
+# Build output (rebuilt in container)
+dist/
+
+# Development files
+*.log
+.env
+.env.*
+.git
+.gitignore
+
+# Test files
+*.test.ts
+*.spec.ts
+__tests__/
+coverage/
+
+# IDE
+.vscode/
+.idea/
+
+# OS files
+.DS_Store
+Thumbs.db
