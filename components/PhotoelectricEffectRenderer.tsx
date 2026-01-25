@@ -296,9 +296,16 @@ const PhotoelectricEffectRenderer: React.FC<PhotoelectricEffectRendererProps> = 
     }}>
       {canGoBack ? (
         <button
-          onMouseDown={(e) => { e.preventDefault(); goBack(); }}
-          onTouchEnd={(e) => { e.preventDefault(); goBack(); }}
-          style={{ color: colors.textSecondary, fontSize: typo.body, fontWeight: 600, background: 'none', border: 'none', cursor: 'pointer' }}
+          onClick={() => goBack()}
+          style={{
+            color: colors.textSecondary,
+            fontSize: typo.body,
+            fontWeight: 600,
+            background: 'none',
+            border: 'none',
+            cursor: 'pointer',
+            WebkitTapHighlightColor: 'transparent'
+          }}
         >
           ← Back
         </button>
@@ -309,8 +316,7 @@ const PhotoelectricEffectRenderer: React.FC<PhotoelectricEffectRendererProps> = 
       </span>
 
       <button
-        onMouseDown={(e) => { e.preventDefault(); if (canGoNext) { onNext ? onNext() : goNext(); } }}
-        onTouchEnd={(e) => { e.preventDefault(); if (canGoNext) { onNext ? onNext() : goNext(); } }}
+        onClick={() => { if (canGoNext) { onNext ? onNext() : goNext(); } }}
         disabled={!canGoNext}
         style={{
           padding: '10px 20px',
@@ -322,6 +328,7 @@ const PhotoelectricEffectRenderer: React.FC<PhotoelectricEffectRendererProps> = 
           background: canGoNext ? `linear-gradient(135deg, ${accentColor || colors.primary} 0%, ${colors.accent} 100%)` : colors.bgCardLight,
           color: canGoNext ? 'white' : colors.textMuted,
           boxShadow: canGoNext ? `0 4px 20px ${accentColor || colors.primary}40` : 'none',
+          WebkitTapHighlightColor: 'transparent'
         }}
       >
         {nextLabel} →
@@ -1098,8 +1105,15 @@ const PhotoelectricEffectRenderer: React.FC<PhotoelectricEffectRendererProps> = 
           </div>
         </div>
       </div>,
-      // Only show "Take the Test" button after ALL apps are complete
-      allComplete ? renderBottomBar(true, true, 'Take the Test') : renderBottomBar(true, false, `Complete all 4 apps first`)
+      // Bottom bar logic:
+      // - If all complete: Show "Take the Test"
+      // - If current app complete but not last: Show "Continue to Next App"
+      // - If current app not complete: Show disabled "Mark Complete First"
+      allComplete
+        ? renderBottomBar(true, true, 'Take the Test')
+        : currentAppComplete && !isLastApp
+          ? renderBottomBar(true, true, `Continue to ${applications[activeApp + 1].title}`, handleContinueToNextApp)
+          : renderBottomBar(true, false, 'Mark Complete First')
     );
   }
 
