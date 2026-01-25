@@ -1743,30 +1743,14 @@ const WaveParticleDualityRenderer: React.FC<WaveParticleDualityRendererProps> = 
       );
    }
 
-   // PLAY Screen - Premium redesign
+   // PLAY Screen - Optimized for minimal scrolling
    if (phase === 'play') {
       const teachingMessages: Record<string, { title: string; message: string; color: string }> = {
          none: { title: '', message: '', color: colors.primary },
-         few: {
-            title: 'Observing Individual Hits',
-            message: 'Each electron lands as a single dot — like a tiny particle. With few hits, it looks random. Keep watching as more accumulate...',
-            color: colors.textMuted
-         },
-         pattern: {
-            title: 'A Pattern Is Emerging',
-            message: 'Wait — bands are starting to form! But electrons are fired ONE at a time. How can a single electron "know" about the slits?',
-            color: colors.warning
-         },
-         clear: {
-            title: 'Interference Pattern Confirmed!',
-            message: 'This is unmistakably an INTERFERENCE pattern — the same pattern WAVES make! But we\'re firing individual particles. Each electron must be going through BOTH slits as a wave!',
-            color: colors.primary
-         },
-         many: {
-            title: 'The Quantum Reality',
-            message: 'Single particles, fired one at a time, create a wave interference pattern. Each electron interferes with ITSELF. This is wave-particle duality — the heart of quantum mechanics.',
-            color: colors.success
-         },
+         few: { title: 'Observing', message: 'Each electron lands as a dot. With few hits, looks random...', color: colors.textMuted },
+         pattern: { title: 'Pattern Emerging!', message: 'Bands forming! But electrons are fired ONE at a time...', color: colors.warning },
+         clear: { title: 'Interference!', message: 'Wave pattern confirmed! Each electron goes through BOTH slits!', color: colors.primary },
+         many: { title: 'Quantum Reality', message: 'Single particles create wave interference. Wave-particle duality!', color: colors.success },
       };
 
       return (
@@ -1775,92 +1759,85 @@ const WaveParticleDualityRenderer: React.FC<WaveParticleDualityRendererProps> = 
 
             <div style={{ flex: 1, display: 'flex', flexDirection: isMobile ? 'column' : 'row', minHeight: 0, overflow: 'hidden' }}>
                {/* Main visualization area */}
-               <div style={{ flex: 1, position: 'relative', padding: isMobile ? '8px' : '12px', background: colors.bgDark, minHeight: isMobile ? '45vh' : 'auto' }}>
-                  <div className="h-full rounded-xl sm:rounded-2xl overflow-hidden" style={{ background: '#030712', border: `1px solid ${colors.border}` }}>
+               <div style={{ flex: 1, position: 'relative', padding: '8px', background: colors.bgDark, minHeight: isMobile ? '40vh' : 'auto' }}>
+                  <div style={{ height: '100%', borderRadius: '12px', overflow: 'hidden', background: '#030712', border: `1px solid ${colors.border}` }}>
                      {renderQuantumLabVisualizer(true, false)}
                   </div>
 
-                  {/* Teaching milestone overlay - responsive positioning */}
+                  {/* Compact teaching milestone overlay */}
                   {teachingMilestone !== 'none' && (
-                     <div className="absolute bottom-3 sm:bottom-6 left-2 sm:left-6 right-2 sm:right-6 p-3 sm:p-5 rounded-xl sm:rounded-2xl backdrop-blur-md" style={{
-                        background: `linear-gradient(135deg, ${colors.bgCard}ee 0%, ${colors.bgCardLight}dd 100%)`,
-                        border: `1px solid ${teachingMessages[teachingMilestone].color}50`,
-                        boxShadow: `0 8px 32px ${colors.bgDark}80`
+                     <div style={{
+                        position: 'absolute',
+                        bottom: isMobile ? '8px' : '12px',
+                        left: isMobile ? '8px' : '12px',
+                        right: isMobile ? '8px' : '12px',
+                        padding: isMobile ? '10px' : '12px',
+                        borderRadius: '10px',
+                        background: `${colors.bgCard}ee`,
+                        border: `1px solid ${teachingMessages[teachingMilestone].color}40`
                      }}>
-                        <p className="text-xs sm:text-sm font-black mb-1 sm:mb-2" style={{ color: teachingMessages[teachingMilestone].color }}>
+                        <p style={{ fontSize: typo.body, fontWeight: 700, marginBottom: '2px', color: teachingMessages[teachingMilestone].color }}>
                            {teachingMessages[teachingMilestone].title}
                         </p>
-                        <p className="text-xs sm:text-sm leading-relaxed" style={{ color: colors.textSecondary }}>
+                        <p style={{ fontSize: typo.small, lineHeight: 1.4, margin: 0, color: colors.textSecondary }}>
                            {teachingMessages[teachingMilestone].message}
                         </p>
                      </div>
                   )}
                </div>
 
-               {/* Control panel - responsive padding and max height on mobile */}
-               <div className="w-full lg:w-80 p-3 sm:p-5 flex flex-col gap-3 sm:gap-5 overflow-y-auto max-h-[45vh] lg:max-h-none" style={{
+               {/* Compact control panel */}
+               <div style={{
+                  width: isMobile ? '100%' : '280px',
+                  padding: isMobile ? '10px' : '12px',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: isMobile ? '8px' : '10px',
+                  overflow: 'auto',
+                  maxHeight: isMobile ? '50vh' : 'none',
                   background: colors.bgCard,
                   borderTop: isMobile ? `1px solid ${colors.border}` : 'none',
                   borderLeft: isMobile ? 'none' : `1px solid ${colors.border}`
                }}>
                   <div>
-                     <p className="text-[10px] sm:text-xs font-bold uppercase tracking-widest mb-1" style={{ color: colors.primary }}>Step 2 • Run the Experiment</p>
-                     <h3 className="text-base sm:text-lg font-black" style={{ color: colors.textPrimary }}>Double-Slit Lab</h3>
+                     <p style={{ fontSize: typo.label, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', color: colors.primary }}>Step 2 • Experiment</p>
+                     <h3 style={{ fontSize: typo.heading, fontWeight: 800, margin: 0, color: colors.textPrimary }}>Double-Slit Lab</h3>
                   </div>
 
-                  {/* Particle counter - compact on mobile */}
-                  <div className="p-3 sm:p-4 rounded-xl text-center" style={{ background: colors.bgCardLight, border: `1px solid ${colors.border}` }}>
-                     <p className="text-[10px] sm:text-xs font-bold uppercase tracking-widest mb-1 sm:mb-2" style={{ color: colors.textMuted }}>Electrons Fired</p>
-                     <p className="text-3xl sm:text-4xl font-black font-mono" style={{ color: colors.primary }}>{particleCount}</p>
+                  {/* Particle counter */}
+                  <div style={{ padding: '10px', borderRadius: '10px', textAlign: 'center', background: colors.bgCardLight, border: `1px solid ${colors.border}` }}>
+                     <p style={{ fontSize: typo.label, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '4px', color: colors.textMuted }}>Electrons</p>
+                     <p style={{ fontSize: '28px', fontWeight: 900, fontFamily: 'monospace', margin: 0, color: colors.primary }}>{particleCount}</p>
                   </div>
 
-                  {/* Firing rate control - touch-friendly slider */}
+                  {/* Firing rate control */}
                   <div>
-                     <div className="flex justify-between items-center mb-2">
-                        <label className="text-[10px] sm:text-xs font-bold uppercase tracking-widest" style={{ color: colors.textMuted }}>Firing Rate</label>
-                        <span className="text-xs sm:text-sm font-bold font-mono" style={{ color: colors.primary }}>{firingRate}/sec</span>
+                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+                        <label style={{ fontSize: typo.label, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', color: colors.textMuted }}>Rate</label>
+                        <span style={{ fontSize: typo.body, fontWeight: 700, fontFamily: 'monospace', color: colors.primary }}>{firingRate}/sec</span>
                      </div>
                      <input
                         type="range" min="1" max="20" value={firingRate}
                         onChange={(e) => setFiringRate(parseInt(e.target.value))}
-                        className="w-full h-3 sm:h-2 rounded-full appearance-none cursor-pointer"
-                        style={{ background: colors.bgCardLight, accentColor: colors.primary, touchAction: 'manipulation' }}
+                        style={{ width: '100%', height: '8px', borderRadius: '4px', background: colors.bgCardLight, accentColor: colors.primary, cursor: 'pointer' }}
                      />
                   </div>
 
-                  {/* Reset button - touch-friendly */}
+                  {/* Reset button */}
                   <button
                      onMouseDown={() => { setParticleHits([]); setParticleCount(0); setTeachingMilestone('none'); }}
                      style={{
-                        width: '100%',
-                        padding: isMobile ? '14px' : '12px',
-                        borderRadius: '12px',
-                        fontWeight: 700,
-                        fontSize: isMobile ? '13px' : '14px',
-                        background: colors.bgCardLight,
-                        color: colors.textSecondary,
-                        border: `1px solid ${colors.border}`,
-                        cursor: 'pointer',
-                        minHeight: '44px'
+                        width: '100%', padding: '10px', borderRadius: '10px', fontWeight: 700, fontSize: typo.body,
+                        background: colors.bgCardLight, color: colors.textSecondary, border: `1px solid ${colors.border}`, cursor: 'pointer', minHeight: '44px'
                      }}
                   >
-                     🔄 Reset Experiment
+                     🔄 Reset
                   </button>
 
-                  {/* Key insight - hide on very small screens to save space */}
-                  <div className="hidden sm:block p-3 sm:p-4 rounded-xl" style={{ background: `${colors.primary}15`, border: `1px solid ${colors.primary}30` }}>
-                     <p className="text-xs sm:text-sm font-bold mb-1 sm:mb-2" style={{ color: colors.primary }}>What's Happening?</p>
-                     <p className="text-[11px] sm:text-xs leading-relaxed" style={{ color: colors.textSecondary }}>
-                        Each electron is fired <strong style={{ color: colors.textPrimary }}>individually</strong>. There's no way for electrons
-                        to interact with each other — yet they build up an interference pattern that can only come from <strong style={{ color: colors.primary }}>wave behavior</strong>.
-                     </p>
-                  </div>
-
-                  {/* Key takeaway - simplified on mobile */}
-                  <div className="p-3 sm:p-4 rounded-xl" style={{ background: colors.bgCardLight, border: `1px solid ${colors.border}` }}>
-                     <p className="text-[10px] sm:text-xs font-bold uppercase tracking-widest mb-1 sm:mb-2" style={{ color: colors.warning }}>Key Insight</p>
-                     <p className="text-xs sm:text-sm" style={{ color: colors.textSecondary }}>
-                        Each electron passes through <strong style={{ color: colors.textPrimary }}>both slits at once</strong> as a wave!
+                  {/* Key insight - compact, always visible */}
+                  <div style={{ padding: '10px', borderRadius: '10px', background: `${colors.warning}10`, border: `1px solid ${colors.warning}25` }}>
+                     <p style={{ fontSize: typo.small, lineHeight: 1.5, color: colors.textSecondary, margin: 0 }}>
+                        <strong style={{ color: colors.warning }}>Key:</strong> Each electron goes through <strong style={{ color: colors.textPrimary }}>BOTH slits</strong> as a wave!
                      </p>
                   </div>
                </div>
@@ -1870,185 +1847,196 @@ const WaveParticleDualityRenderer: React.FC<WaveParticleDualityRendererProps> = 
       );
    }
 
-   // REVIEW Screen - Premium redesign
+   // REVIEW Screen - Optimized for minimal scrolling
    if (phase === 'review') {
       return (
          <PremiumWrapper footer={renderBottomBar(true, true, "The Observer Effect")}>
-         <div style={{ padding: isMobile ? '12px' : '24px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-               <div className="w-full max-w-2xl">
-                  {renderSectionHeader("Step 3 • Understand the Result", "Wave-Particle Duality", "The electron isn't simply a particle OR a wave — it's something entirely new.")}
+         <div style={{ padding: typo.pagePadding, maxWidth: '600px', margin: '0 auto' }}>
+            {renderSectionHeader("Step 3 • Understand the Result", "Wave-Particle Duality", "The electron isn't simply a particle OR a wave.")}
 
-                  {/* Dual nature cards */}
-                  <div className="grid md:grid-cols-2 gap-4 mb-6">
-                     <div className="p-5 rounded-2xl" style={{
-                        background: `linear-gradient(135deg, ${colors.primary}20 0%, ${colors.primary}05 100%)`,
-                        border: `1px solid ${colors.primary}40`
-                     }}>
-                        <div className="w-12 h-12 rounded-xl flex items-center justify-center mb-3" style={{ background: `${colors.primary}30` }}>
-                           <span className="text-2xl">⚫</span>
-                        </div>
-                        <p className="font-bold mb-2" style={{ color: colors.primary }}>Detected as Particles</p>
-                        <p className="text-sm leading-relaxed" style={{ color: colors.textSecondary }}>
-                           When an electron hits the screen, it appears at <strong style={{ color: colors.textPrimary }}>one specific point</strong> — like a tiny bullet striking a target.
-                        </p>
-                     </div>
-                     <div className="p-5 rounded-2xl" style={{
-                        background: `linear-gradient(135deg, ${colors.accent}20 0%, ${colors.accent}05 100%)`,
-                        border: `1px solid ${colors.accent}40`
-                     }}>
-                        <div className="w-12 h-12 rounded-xl flex items-center justify-center mb-3" style={{ background: `${colors.accent}30` }}>
-                           <span className="text-2xl">〰️</span>
-                        </div>
-                        <p className="font-bold mb-2" style={{ color: colors.accent }}>Travels as Waves</p>
-                        <p className="text-sm leading-relaxed" style={{ color: colors.textSecondary }}>
-                           Between source and screen, electrons exist as <strong style={{ color: colors.textPrimary }}>probability waves</strong> that pass through BOTH slits simultaneously.
-                        </p>
-                     </div>
+            {/* Dual nature cards - compact inline grid */}
+            <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: typo.elementGap, marginBottom: typo.sectionGap }}>
+               <div style={{ padding: typo.cardPadding, borderRadius: '12px', background: `linear-gradient(135deg, ${colors.primary}15 0%, ${colors.primary}05 100%)`, border: `1px solid ${colors.primary}30` }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
+                     <span style={{ fontSize: '18px' }}>⚫</span>
+                     <p style={{ fontWeight: 700, fontSize: typo.body, color: colors.primary, margin: 0 }}>Detected as Particles</p>
                   </div>
-
-                  {/* Quote */}
-                  <div className="p-6 rounded-2xl text-center mb-6" style={{ background: colors.bgCard, border: `1px solid ${colors.border}` }}>
-                     <p className="text-xs font-bold uppercase tracking-widest mb-3" style={{ color: colors.textMuted }}>The Quantum Truth</p>
-                     <p className="text-lg font-bold leading-relaxed mb-3" style={{ color: colors.textPrimary }}>
-                        "The electron is not a wave OR a particle. It's something that has no classical analog."
-                     </p>
-                     <p className="text-sm" style={{ color: colors.textMuted }}>— Richard Feynman, Nobel Prize in Physics</p>
+                  <p style={{ fontSize: typo.small, lineHeight: 1.5, color: colors.textSecondary, margin: 0 }}>
+                     Electrons hit at <strong style={{ color: colors.textPrimary }}>one specific point</strong> — like tiny bullets.
+                  </p>
+               </div>
+               <div style={{ padding: typo.cardPadding, borderRadius: '12px', background: `linear-gradient(135deg, ${colors.accent}15 0%, ${colors.accent}05 100%)`, border: `1px solid ${colors.accent}30` }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
+                     <span style={{ fontSize: '18px' }}>〰️</span>
+                     <p style={{ fontWeight: 700, fontSize: typo.body, color: colors.accent, margin: 0 }}>Travels as Waves</p>
                   </div>
-
-                  {/* Key takeaways */}
-                  <div className="space-y-3 mb-6">
-                     <p className="text-xs font-bold uppercase tracking-widest" style={{ color: colors.warning }}>Key Takeaways</p>
-                     {renderKeyTakeaway("🌊", "The Wave Function ψ", "|ψ|² gives the probability of finding the particle at each location. The wave passes through both slits and interferes with itself!")}
-                     {renderKeyTakeaway("🎯", "Probability, Not Certainty", "We can never predict exactly where any single electron will land — only the probability distribution over many electrons.")}
-                     {renderKeyTakeaway("🔀", "Superposition", "Until measured, the electron exists in a 'superposition' of going through both slits — it doesn't choose until we look.")}
-                  </div>
-
-                  {/* Why this matters */}
-                  <div className="p-5 rounded-2xl" style={{ background: `${colors.success}15`, border: `1px solid ${colors.success}30` }}>
-                     <p className="text-xs font-bold uppercase tracking-widest mb-2" style={{ color: colors.success }}>Why This Matters</p>
-                     <p className="text-sm leading-relaxed" style={{ color: colors.textSecondary }}>
-                        This isn't just a curiosity — it's the foundation of <strong style={{ color: colors.textPrimary }}>quantum computing</strong>.
-                        Quantum computers exploit superposition to explore many solutions simultaneously, solving problems that would take classical computers billions of years.
-                     </p>
-                  </div>
+                  <p style={{ fontSize: typo.small, lineHeight: 1.5, color: colors.textSecondary, margin: 0 }}>
+                     Electrons pass through <strong style={{ color: colors.textPrimary }}>BOTH slits</strong> as probability waves.
+                  </p>
                </div>
             </div>
+
+            {/* Compact quote */}
+            <div style={{ padding: typo.cardPadding, borderRadius: '10px', textAlign: 'center', marginBottom: typo.sectionGap, background: colors.bgCard, border: `1px solid ${colors.border}` }}>
+               <p style={{ fontSize: typo.bodyLarge, fontWeight: 600, lineHeight: 1.4, color: colors.textPrimary, margin: 0, fontStyle: 'italic' }}>
+                  "The electron is not a wave OR a particle — it has no classical analog."
+               </p>
+               <p style={{ fontSize: typo.small, marginTop: '4px', color: colors.textMuted }}>— Feynman</p>
+            </div>
+
+            {/* Key takeaways - condensed */}
+            <div style={{ marginBottom: typo.sectionGap }}>
+               <p style={{ fontSize: typo.label, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '8px', color: colors.warning }}>Key Insights</p>
+               <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  {[
+                     { icon: '🌊', title: 'Wave Function', desc: '|ψ|² = probability at each location' },
+                     { icon: '🎯', title: 'Probability Only', desc: "Can't predict single electron, only distribution" },
+                     { icon: '🔀', title: 'Superposition', desc: 'Both paths until measured' }
+                  ].map((item, i) => (
+                     <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '8px 10px', borderRadius: '8px', background: colors.bgCard, border: `1px solid ${colors.border}` }}>
+                        <span style={{ fontSize: '16px' }}>{item.icon}</span>
+                        <div>
+                           <span style={{ fontWeight: 700, fontSize: typo.body, color: colors.textPrimary }}>{item.title}: </span>
+                           <span style={{ fontSize: typo.small, color: colors.textSecondary }}>{item.desc}</span>
+                        </div>
+                     </div>
+                  ))}
+               </div>
+            </div>
+
+            {/* Why this matters - compact */}
+            <div style={{ padding: typo.cardPadding, borderRadius: '10px', background: `${colors.success}10`, border: `1px solid ${colors.success}25` }}>
+               <p style={{ fontSize: typo.small, lineHeight: 1.5, color: colors.textSecondary, margin: 0 }}>
+                  <span style={{ fontWeight: 700, color: colors.success }}>Why it matters:</span> This is the foundation of <strong style={{ color: colors.textPrimary }}>quantum computing</strong> — exploring many solutions simultaneously.
+               </p>
+            </div>
+         </div>
          </PremiumWrapper>
       );
    }
 
-   // TWIST-PREDICT Screen - Premium redesign
+   // TWIST-PREDICT Screen - Optimized for minimal scrolling
    if (phase === 'twist_predict') {
       return (
          <PremiumWrapper footer={renderBottomBar(true, !!twistPrediction, "Turn On Detector", undefined, colors.danger)}>
-         <div style={{ padding: isMobile ? '12px' : '24px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-               <div className="w-full max-w-2xl">
-                  {renderSectionHeader("Step 4 • The Observer Effect", "What If We Watch?", "This is where quantum mechanics gets truly mind-bending.")}
+         <div style={{ padding: typo.pagePadding, maxWidth: '600px', margin: '0 auto' }}>
+            {renderSectionHeader("Step 4 • The Observer Effect", "What If We Watch?", "Add a detector to see which slit each electron uses.")}
 
-                  {/* Context */}
-                  <div className="p-5 rounded-2xl mb-6" style={{ background: `${colors.danger}15`, border: `1px solid ${colors.danger}30` }}>
-                     <p className="text-sm leading-relaxed" style={{ color: colors.textSecondary }}>
-                        <strong style={{ color: colors.textPrimary }}>The New Question:</strong> We've seen that electrons create an interference pattern.
-                        But what if we add a <strong style={{ color: colors.danger }}>detector at the slits</strong> to see which slit each electron passes through?
-                        Will the pattern change when we're "watching"?
-                     </p>
-                  </div>
+            {/* Compact diagram with detector */}
+            <div style={{ padding: typo.cardPadding, borderRadius: '12px', marginBottom: typo.sectionGap, background: colors.bgCard, border: `1px solid ${colors.border}` }}>
+               <svg viewBox="0 0 350 90" style={{ width: '100%', height: isMobile ? '70px' : '80px' }}>
+                  <rect x="30" y="25" width="45" height="40" rx="5" fill={colors.bgCardLight} stroke={colors.border} />
+                  <circle cx="52" cy="45" r="7" fill={colors.primary} opacity="0.5" />
+                  <text x="52" y="75" textAnchor="middle" style={{ fontSize: '8px', fill: colors.textMuted, fontWeight: 600 }}>Source</text>
 
-                  {/* Diagram with detector */}
-                  <div className="w-full p-4 rounded-2xl mb-6" style={{ background: colors.bgCard, border: `1px solid ${colors.border}` }}>
-                     <svg viewBox="0 0 350 110" className="w-full h-28">
-                        <rect x="30" y="35" width="50" height="45" rx="6" fill={colors.bgCardLight} stroke={colors.border} />
-                        <circle cx="55" cy="57" r="8" fill={colors.primary} opacity="0.5" />
-                        <text x="55" y="92" textAnchor="middle" className="text-[8px] fill-slate-400 font-bold">Source</text>
+                  <line x1="80" y1="45" x2="115" y2="45" stroke={colors.primary} strokeWidth="1.5" strokeDasharray="4" opacity="0.3" />
 
-                        <line x1="85" y1="57" x2="130" y2="57" stroke={colors.primary} strokeWidth="1.5" strokeDasharray="4" opacity="0.3" />
+                  <rect x="120" y="10" width="12" height="30" fill={colors.bgCardLight} />
+                  <rect x="120" y="42" width="12" height="8" fill="#000" />
+                  <rect x="120" y="52" width="12" height="30" fill={colors.bgCardLight} />
 
-                        <rect x="130" y="10" width="15" height="40" fill={colors.bgCardLight} />
-                        <rect x="130" y="54" width="15" height="10" fill="#000" />
-                        <rect x="130" y="68" width="15" height="40" fill={colors.bgCardLight} />
+                  {/* Detector */}
+                  <rect x="95" y="32" width="22" height="26" rx="3" fill="#7f1d1d" stroke={colors.danger} />
+                  <circle cx="106" cy="45" r="5" fill={colors.danger}>
+                     <animate attributeName="opacity" values="0.4;1;0.4" dur="0.4s" repeatCount="indefinite" />
+                  </circle>
+                  <text x="106" y="22" textAnchor="middle" style={{ fontSize: '7px', fill: colors.danger, fontWeight: 700 }}>DETECTOR</text>
 
-                        {/* Detector */}
-                        <rect x="100" y="42" width="25" height="30" rx="4" fill="#7f1d1d" stroke={colors.danger} />
-                        <circle cx="112" cy="57" r="6" fill={colors.danger}>
-                           <animate attributeName="opacity" values="0.4;1;0.4" dur="0.4s" repeatCount="indefinite" />
-                        </circle>
-                        <line x1="125" y1="52" x2="145" y2="52" stroke={colors.danger} strokeWidth="2" opacity="0.7" />
-                        <line x1="125" y1="62" x2="145" y2="68" stroke={colors.danger} strokeWidth="2" opacity="0.7" />
-                        <text x="112" y="32" textAnchor="middle" className="text-[7px] fill-red-400 font-bold">DETECTOR</text>
+                  <text x="200" y="52" style={{ fontSize: '28px', fontWeight: 900, fill: colors.textMuted }}>?</text>
 
-                        <text x="220" y="62" className="text-[32px] font-black" style={{ fill: colors.textMuted }}>?</text>
-
-                        <rect x="290" y="10" width="30" height="90" rx="4" fill="#064e3b" stroke={colors.border} />
-                        <text x="305" y="108" textAnchor="middle" className="text-[8px] fill-slate-400 font-bold">Screen</text>
-                     </svg>
-                  </div>
-
-                  {/* Options */}
-                  <p className="text-sm font-bold mb-4" style={{ color: colors.textSecondary }}>
-                     When we measure which slit each electron passes through, what happens to the interference pattern?
-                  </p>
-
-                  <div className="grid gap-4 mb-6">
-                     {[
-                        { id: 'disappear', label: 'The interference pattern disappears', desc: 'We see two bands (one per slit) instead of the wave pattern', icon: '▮ ▮' },
-                        { id: 'same', label: 'The pattern stays the same', desc: 'Simply watching shouldn\'t change the physics', icon: '▮▯▮▯▮' },
-                        { id: 'stronger', label: 'The pattern becomes stronger', desc: 'More information should give a clearer result', icon: '▮▮▮▮▮' },
-                     ].map(opt => (
-                        <button
-                           key={opt.id}
-                           onMouseDown={() => {
-                              setTwistPrediction(opt.id);
-                              emitGameEvent('prediction_made', {
-                                 phase: 'twist_predict',
-                                 phaseLabel: 'Twist Prediction',
-                                 prediction: opt.id,
-                                 predictionLabel: opt.label,
-                                 message: `User predicted observer effect: ${opt.label}`
-                              });
-                           }}
-                           onTouchEnd={(e) => {
-                              e.preventDefault();
-                              setTwistPrediction(opt.id);
-                              emitGameEvent('prediction_made', {
-                                 phase: 'twist_predict',
-                                 phaseLabel: 'Twist Prediction',
-                                 prediction: opt.id,
-                                 predictionLabel: opt.label,
-                                 message: `User predicted observer effect: ${opt.label}`
-                              });
-                           }}
-                           className="flex items-center gap-4 p-5 rounded-2xl text-left transition-all"
-                           style={{
-                              background: twistPrediction === opt.id ? `${colors.danger}20` : colors.bgCard,
-                              border: `2px solid ${twistPrediction === opt.id ? colors.danger : colors.border}`,
-                              boxShadow: twistPrediction === opt.id ? `0 4px 20px ${colors.danger}20` : 'none'
-                           }}
-                        >
-                           <div className="text-xl font-mono" style={{ color: twistPrediction === opt.id ? colors.danger : colors.textMuted }}>
-                              {opt.icon}
-                           </div>
-                           <div className="flex-1">
-                              <p className="font-bold mb-1" style={{ color: twistPrediction === opt.id ? colors.textPrimary : colors.textSecondary }}>{opt.label}</p>
-                              <p className="text-sm" style={{ color: colors.textMuted }}>{opt.desc}</p>
-                           </div>
-                        </button>
-                     ))}
-                  </div>
-
-                  {/* Think about it */}
-                  <div className="p-4 rounded-xl" style={{ background: colors.bgCardLight, border: `1px solid ${colors.border}` }}>
-                     <p className="text-xs font-bold uppercase tracking-widest mb-2" style={{ color: colors.warning }}>Think About It</p>
-                     <p className="text-sm" style={{ color: colors.textMuted }}>
-                        If the electron goes through BOTH slits as a wave to create interference, what happens when we force it to "reveal" which slit it actually used?
-                     </p>
-                  </div>
-               </div>
+                  <rect x="270" y="10" width="25" height="70" rx="4" fill="#064e3b" stroke={colors.border} />
+                  <text x="282" y="88" textAnchor="middle" style={{ fontSize: '8px', fill: colors.textMuted, fontWeight: 600 }}>Screen</text>
+               </svg>
             </div>
+
+            {/* Question */}
+            <p style={{ fontSize: typo.bodyLarge, fontWeight: 600, marginBottom: typo.sectionGap, color: colors.textPrimary, textAlign: 'center' }}>
+               When we <span style={{ color: colors.danger }}>observe which slit</span> electrons pass through, what happens?
+            </p>
+
+            {/* Compact options */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: typo.elementGap, marginBottom: typo.sectionGap }}>
+               {[
+                  { id: 'disappear', label: 'Pattern disappears', desc: 'Two bands instead of wave pattern', icon: '▮ ▮' },
+                  { id: 'same', label: 'Pattern stays same', desc: "Watching shouldn't change physics", icon: '▮▯▮▯▮' },
+                  { id: 'stronger', label: 'Pattern stronger', desc: 'More info = clearer result', icon: '▮▮▮▮▮' },
+               ].map(opt => (
+                  <button
+                     key={opt.id}
+                     onMouseDown={() => {
+                        setTwistPrediction(opt.id);
+                        emitGameEvent('prediction_made', {
+                           phase: 'twist_predict',
+                           phaseLabel: 'Twist Prediction',
+                           prediction: opt.id,
+                           predictionLabel: opt.label,
+                           message: `User predicted observer effect: ${opt.label}`
+                        });
+                     }}
+                     onTouchEnd={(e) => {
+                        e.preventDefault();
+                        setTwistPrediction(opt.id);
+                        emitGameEvent('prediction_made', {
+                           phase: 'twist_predict',
+                           phaseLabel: 'Twist Prediction',
+                           prediction: opt.id,
+                           predictionLabel: opt.label,
+                           message: `User predicted observer effect: ${opt.label}`
+                        });
+                     }}
+                     style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '10px',
+                        padding: isMobile ? '10px' : '12px',
+                        borderRadius: '10px',
+                        textAlign: 'left',
+                        background: twistPrediction === opt.id ? `${colors.danger}15` : colors.bgCard,
+                        border: `2px solid ${twistPrediction === opt.id ? colors.danger : colors.border}`,
+                        cursor: 'pointer'
+                     }}
+                  >
+                     <div style={{
+                        width: '40px',
+                        height: '40px',
+                        borderRadius: '8px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        fontSize: '12px',
+                        fontFamily: 'monospace',
+                        background: twistPrediction === opt.id ? `${colors.danger}20` : colors.bgCardLight,
+                        color: twistPrediction === opt.id ? colors.danger : colors.textMuted,
+                        flexShrink: 0,
+                        fontWeight: 700
+                     }}>
+                        {opt.icon}
+                     </div>
+                     <div style={{ flex: 1 }}>
+                        <p style={{ fontWeight: 700, fontSize: typo.body, margin: 0, color: twistPrediction === opt.id ? colors.textPrimary : colors.textSecondary }}>{opt.label}</p>
+                        <p style={{ fontSize: typo.small, color: colors.textMuted, margin: 0 }}>{opt.desc}</p>
+                     </div>
+                     {twistPrediction === opt.id && (
+                        <div style={{ width: '20px', height: '20px', borderRadius: '50%', background: colors.danger, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                           <span style={{ color: 'white', fontSize: '11px' }}>✓</span>
+                        </div>
+                     )}
+                  </button>
+               ))}
+            </div>
+
+            {/* Compact hint */}
+            <div style={{ padding: typo.cardPadding, borderRadius: '10px', background: `${colors.warning}08`, border: `1px solid ${colors.warning}25` }}>
+               <p style={{ fontSize: typo.small, color: colors.textSecondary, margin: 0, lineHeight: 1.5 }}>
+                  <span style={{ color: colors.warning, fontWeight: 700 }}>💡 Think:</span> If the electron goes through BOTH slits as a wave, what happens when we force it to reveal which slit it used?
+               </p>
+            </div>
+         </div>
          </PremiumWrapper>
       );
    }
 
-   // TWIST-PLAY Screen - Premium redesign
+   // TWIST-PLAY Screen - Optimized for minimal scrolling
    if (phase === 'twist_play') {
       return (
          <PremiumWrapper footer={renderBottomBar(true, particleCount >= 30, "Deep Understanding", undefined, colors.danger)}>
@@ -2056,114 +2044,88 @@ const WaveParticleDualityRenderer: React.FC<WaveParticleDualityRendererProps> = 
 
             <div style={{ flex: 1, display: 'flex', flexDirection: isMobile ? 'column' : 'row', minHeight: 0, overflow: 'hidden' }}>
                {/* Main visualization area */}
-               <div style={{ flex: 1, position: 'relative', padding: '12px', background: colors.bgDark }}>
-                  <div className="h-full rounded-2xl overflow-hidden" style={{ background: '#030712', border: `1px solid ${colors.border}` }}>
+               <div style={{ flex: 1, position: 'relative', padding: '8px', background: colors.bgDark, minHeight: isMobile ? '40vh' : 'auto' }}>
+                  <div style={{ height: '100%', borderRadius: '12px', overflow: 'hidden', background: '#030712', border: `1px solid ${colors.border}` }}>
                      {renderQuantumLabVisualizer(true, true)}
                   </div>
 
-                  {/* Result overlay */}
-                  <div className="absolute bottom-6 left-6 right-6 p-5 rounded-2xl backdrop-blur-md" style={{
-                     background: `linear-gradient(135deg, ${colors.bgCard}ee 0%, ${colors.bgCardLight}dd 100%)`,
-                     border: `1px solid ${detectorOn ? colors.danger : colors.success}50`,
-                     boxShadow: `0 8px 32px ${colors.bgDark}80`
+                  {/* Compact result overlay */}
+                  <div style={{
+                     position: 'absolute',
+                     bottom: isMobile ? '8px' : '12px',
+                     left: isMobile ? '8px' : '12px',
+                     right: isMobile ? '8px' : '12px',
+                     padding: isMobile ? '10px' : '12px',
+                     borderRadius: '10px',
+                     background: `${colors.bgCard}ee`,
+                     border: `1px solid ${detectorOn ? colors.danger : colors.success}40`
                   }}>
-                     <div className="flex items-center gap-3 mb-2">
-                        <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{
-                           background: detectorOn ? `${colors.danger}30` : `${colors.success}30`
-                        }}>
-                           <span className="text-xl">{detectorOn ? '👁️' : '🌊'}</span>
-                        </div>
-                        <div>
-                           <p className="text-sm font-black" style={{ color: detectorOn ? colors.danger : colors.success }}>
-                              {detectorOn ? '🔴 PARTICLE BEHAVIOR — 2 Bands' : '🔵 WAVE BEHAVIOR — Interference'}
+                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <span style={{ fontSize: '18px' }}>{detectorOn ? '👁️' : '🌊'}</span>
+                        <div style={{ flex: 1 }}>
+                           <p style={{ fontSize: typo.body, fontWeight: 700, margin: 0, color: detectorOn ? colors.danger : colors.success }}>
+                              {detectorOn ? '🔴 PARTICLE — 2 Bands' : '🔵 WAVE — Interference'}
                            </p>
-                           <p className="text-xs font-bold" style={{ color: colors.textMuted }}>
-                              {detectorOn ? 'Red dots = observed particles' : 'Cyan dots = wave interference'}
+                           <p style={{ fontSize: typo.small, margin: 0, color: colors.textMuted }}>
+                              {detectorOn ? 'Observation → electrons choose ONE slit' : 'No observation → electrons use BOTH slits'}
                            </p>
                         </div>
                      </div>
-                     <p className="text-sm leading-relaxed" style={{ color: colors.textSecondary }}>
-                        {detectorOn
-                           ? '👁️ Observation forces electrons to "choose" ONE slit → TWO distinct bands appear (look at the histogram!)'
-                           : '🔒 No observation → electrons pass through BOTH slits as waves → MANY interference bands appear'}
-                     </p>
                   </div>
                </div>
 
-               {/* Control panel */}
-               <div className="w-full lg:w-80 p-5 flex flex-col gap-5 overflow-y-auto" style={{
+               {/* Compact control panel */}
+               <div style={{
+                  width: isMobile ? '100%' : '280px',
+                  padding: isMobile ? '10px' : '12px',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: isMobile ? '8px' : '10px',
+                  overflow: 'auto',
+                  maxHeight: isMobile ? '50vh' : 'none',
                   background: colors.bgCard,
-                  borderLeft: `1px solid ${colors.border}`
+                  borderTop: isMobile ? `1px solid ${colors.border}` : 'none',
+                  borderLeft: isMobile ? 'none' : `1px solid ${colors.border}`
                }}>
                   <div>
-                     <p className="text-xs font-bold uppercase tracking-widest mb-1" style={{ color: colors.danger }}>Step 5 • The Observer Effect</p>
-                     <h3 className="text-lg font-black" style={{ color: colors.textPrimary }}>Measurement Matters</h3>
+                     <p style={{ fontSize: typo.label, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', color: colors.danger }}>Step 5 • Observer Effect</p>
+                     <h3 style={{ fontSize: typo.heading, fontWeight: 800, margin: 0, color: colors.textPrimary }}>Measurement Matters</h3>
                   </div>
 
                   {/* Particle counter */}
-                  <div className="p-4 rounded-xl text-center" style={{ background: colors.bgCardLight, border: `1px solid ${colors.border}` }}>
-                     <p className="text-xs font-bold uppercase tracking-widest mb-2" style={{ color: colors.textMuted }}>Electrons Fired</p>
-                     <p className="text-4xl font-black font-mono" style={{ color: detectorOn ? colors.danger : colors.primary }}>{particleCount}</p>
+                  <div style={{ padding: '10px', borderRadius: '10px', textAlign: 'center', background: colors.bgCardLight, border: `1px solid ${colors.border}` }}>
+                     <p style={{ fontSize: typo.label, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '4px', color: colors.textMuted }}>Electrons</p>
+                     <p style={{ fontSize: '28px', fontWeight: 900, fontFamily: 'monospace', margin: 0, color: detectorOn ? colors.danger : colors.primary }}>{particleCount}</p>
                   </div>
 
-                  {/* Observer Mode Toggle - Clear switch UI */}
-                  <div style={{ padding: '16px', borderRadius: '12px', background: colors.bgCardLight, border: `2px solid ${detectorOn ? colors.danger : colors.primary}40` }}>
-                     <p style={{ fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '12px', color: colors.textMuted }}>
-                        👁️ Toggle Observer — Watch What Happens!
+                  {/* Observer Mode Toggle */}
+                  <div style={{ padding: '10px', borderRadius: '10px', background: colors.bgCardLight, border: `1px solid ${detectorOn ? colors.danger : colors.primary}30` }}>
+                     <p style={{ fontSize: typo.label, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '8px', color: colors.textMuted }}>
+                        👁️ Toggle Observer
                      </p>
-
-                     {/* Toggle Switch */}
-                     <div style={{ display: 'flex', gap: '8px', marginBottom: '12px' }}>
+                     <div style={{ display: 'flex', gap: '6px' }}>
                         <button
                            onMouseDown={() => { setDetectorOn(true); setParticleHits([]); setParticleCount(0); setTeachingMilestone('none'); }}
                            style={{
-                              flex: 1,
-                              padding: '14px',
-                              borderRadius: '10px',
-                              fontWeight: 700,
-                              fontSize: '12px',
-                              border: 'none',
-                              cursor: 'pointer',
-                              background: detectorOn ? `linear-gradient(135deg, ${colors.danger} 0%, #b91c1c 100%)` : 'transparent',
+                              flex: 1, padding: '10px 8px', borderRadius: '8px', fontWeight: 700, fontSize: typo.small, border: 'none', cursor: 'pointer',
+                              background: detectorOn ? colors.danger : 'transparent',
                               color: detectorOn ? 'white' : colors.textMuted,
-                              outline: detectorOn ? 'none' : `2px solid ${colors.border}`,
-                              boxShadow: detectorOn ? `0 4px 20px ${colors.danger}50` : 'none'
+                              outline: detectorOn ? 'none' : `1px solid ${colors.border}`
                            }}
                         >
                            👁️ WATCHING
-                           <br/><span style={{ fontSize: '10px', opacity: 0.8 }}>🔴 2 Bands</span>
                         </button>
                         <button
                            onMouseDown={() => { setDetectorOn(false); setParticleHits([]); setParticleCount(0); setTeachingMilestone('none'); }}
                            style={{
-                              flex: 1,
-                              padding: '14px',
-                              borderRadius: '10px',
-                              fontWeight: 700,
-                              fontSize: '12px',
-                              border: 'none',
-                              cursor: 'pointer',
-                              background: !detectorOn ? `linear-gradient(135deg, ${colors.primary} 0%, #0891b2 100%)` : 'transparent',
+                              flex: 1, padding: '10px 8px', borderRadius: '8px', fontWeight: 700, fontSize: typo.small, border: 'none', cursor: 'pointer',
+                              background: !detectorOn ? colors.primary : 'transparent',
                               color: !detectorOn ? 'white' : colors.textMuted,
-                              outline: !detectorOn ? 'none' : `2px solid ${colors.border}`,
-                              boxShadow: !detectorOn ? `0 4px 20px ${colors.primary}50` : 'none'
+                              outline: !detectorOn ? 'none' : `1px solid ${colors.border}`
                            }}
                         >
                            🔒 NOT WATCHING
-                           <br/><span style={{ fontSize: '10px', opacity: 0.8 }}>🔵 Interference</span>
                         </button>
-                     </div>
-
-                     {/* Expected result hint */}
-                     <div style={{ padding: '10px', borderRadius: '8px', background: detectorOn ? `${colors.danger}15` : `${colors.primary}15`, textAlign: 'center' }}>
-                        <p style={{ fontSize: '11px', fontWeight: 700, color: detectorOn ? colors.danger : colors.primary }}>
-                           {detectorOn
-                              ? '🔴 EXPECT: 2 separated bands (particle behavior)'
-                              : '🔵 EXPECT: Multiple bands (wave interference)'}
-                        </p>
-                        <p style={{ fontSize: '10px', color: colors.textMuted, marginTop: '4px' }}>
-                           Toggle to see the dramatic difference!
-                        </p>
                      </div>
                   </div>
 
@@ -2171,40 +2133,29 @@ const WaveParticleDualityRenderer: React.FC<WaveParticleDualityRendererProps> = 
                   <button
                      onMouseDown={() => { setParticleHits([]); setParticleCount(0); setTeachingMilestone('none'); }}
                      style={{
-                        width: '100%',
-                        padding: '12px',
-                        borderRadius: '12px',
-                        fontWeight: 700,
-                        fontSize: '14px',
-                        background: colors.bgCardLight,
-                        color: colors.textSecondary,
-                        border: `1px solid ${colors.border}`,
-                        cursor: 'pointer'
+                        width: '100%', padding: '10px', borderRadius: '10px', fontWeight: 700, fontSize: typo.body,
+                        background: colors.bgCardLight, color: colors.textSecondary, border: `1px solid ${colors.border}`, cursor: 'pointer', minHeight: '44px'
                      }}
                   >
-                     🔄 Reset Experiment
+                     🔄 Reset
                   </button>
 
-                  {/* Key insight */}
-                  <div className="p-4 rounded-xl" style={{ background: `${colors.danger}15`, border: `1px solid ${colors.danger}30` }}>
-                     <p className="text-sm font-bold mb-2" style={{ color: colors.danger }}>The Shocking Truth</p>
-                     <p className="text-xs leading-relaxed" style={{ color: colors.textSecondary }}>
-                        The mere act of <strong style={{ color: colors.textPrimary }}>gaining information</strong> about which path
-                        the electron took destroys the interference. It's not about disturbing the electron — it's about <strong style={{ color: colors.danger }}>knowledge itself</strong>.
+                  {/* Key insight - compact */}
+                  <div style={{ padding: '10px', borderRadius: '10px', background: `${colors.danger}10`, border: `1px solid ${colors.danger}25` }}>
+                     <p style={{ fontSize: typo.small, lineHeight: 1.5, color: colors.textSecondary, margin: 0 }}>
+                        <strong style={{ color: colors.danger }}>Key:</strong> The act of <strong style={{ color: colors.textPrimary }}>knowing which path</strong> destroys interference.
                      </p>
                   </div>
 
-                  {/* Comparison */}
-                  <div className="grid grid-cols-2 gap-3">
-                     <div className="p-3 rounded-xl text-center" style={{ background: `${colors.success}15`, border: `1px solid ${colors.success}30` }}>
-                        <p className="text-lg mb-1">〰️〰️〰️</p>
-                        <p className="text-[10px] font-bold" style={{ color: colors.success }}>Not Watching</p>
-                        <p className="text-[10px]" style={{ color: colors.textMuted }}>Wave → Interference</p>
+                  {/* Comparison - inline */}
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px' }}>
+                     <div style={{ padding: '8px', borderRadius: '8px', textAlign: 'center', background: `${colors.primary}10`, border: `1px solid ${colors.primary}25` }}>
+                        <p style={{ fontSize: '14px', margin: 0 }}>〰️〰️〰️</p>
+                        <p style={{ fontSize: typo.label, fontWeight: 700, margin: 0, color: colors.primary }}>Not Watching</p>
                      </div>
-                     <div className="p-3 rounded-xl text-center" style={{ background: `${colors.danger}15`, border: `1px solid ${colors.danger}30` }}>
-                        <p className="text-lg mb-1">● ●</p>
-                        <p className="text-[10px] font-bold" style={{ color: colors.danger }}>Watching</p>
-                        <p className="text-[10px]" style={{ color: colors.textMuted }}>Particle → Two Bands</p>
+                     <div style={{ padding: '8px', borderRadius: '8px', textAlign: 'center', background: `${colors.danger}10`, border: `1px solid ${colors.danger}25` }}>
+                        <p style={{ fontSize: '14px', margin: 0 }}>● ●</p>
+                        <p style={{ fontSize: typo.label, fontWeight: 700, margin: 0, color: colors.danger }}>Watching</p>
                      </div>
                   </div>
                </div>
