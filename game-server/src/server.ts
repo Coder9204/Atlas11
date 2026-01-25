@@ -65,10 +65,27 @@ import { createWingLiftGame } from './games/physics/WingLiftGame.js';
 import { createWirePowerLossGame } from './games/physics/WirePowerLossGame.js';
 import { createSpecificHeatGame } from './games/physics/SpecificHeatGame.js';
 import { createRollingFrictionGame } from './games/physics/RollingFrictionGame.js';
-// import { createCapillaryActionGame } from './games/physics/CapillaryActionGame.js'; // TODO: Fix API issues
+import { createCapillaryActionGame } from './games/physics/CapillaryActionGame.js';
 // import { createTotalInternalReflectionGame } from './games/physics/TotalInternalReflectionGame.js'; // TODO: Fix API signatures
 import { createStableLevitationGame } from './games/physics/StableLevitationGame.js';
 import { createRollingRaceGame } from './games/physics/RollingRaceGame.js';
+import { createBeatsGame } from './games/physics/BeatsGame.js';
+import { createDopplerEffectGame } from './games/physics/DopplerEffectGame.js';
+import { createEntropyGame } from './games/physics/EntropyGame.js';
+import { createConvectionGame } from './games/physics/ConvectionGame.js';
+import { createCoriolisEffectGame } from './games/physics/CoriolisEffectGame.js';
+import { createDampedOscillationsGame } from './games/physics/DampedOscillationsGame.js';
+import { createDragForceGame } from './games/physics/DragForceGame.js';
+import { createHookesLawGame } from './games/physics/HookesLawGame.js';
+import { createInelasticCollisionsGame } from './games/physics/InelasticCollisionsGame.js';
+import { createLatentHeatGame } from './games/physics/LatentHeatGame.js';
+import { createKineticTheoryGasesGame } from './games/physics/KineticTheoryGasesGame.js';
+import { createElectricPotentialGame } from './games/physics/ElectricPotentialGame.js';
+import { createGyroscopeStabilityGame } from './games/physics/GyroscopeStabilityGame.js';
+import { createForcedOscillationsGame } from './games/physics/ForcedOscillationsGame.js';
+import { createElasticPotentialEnergyGame } from './games/physics/ElasticPotentialEnergyGame.js';
+import { createHydrostaticPressureGame } from './games/physics/HydrostaticPressureGame.js';
+import { createElectromagneticInductionGame } from './games/physics/ElectromagneticInductionGame.js';
 // import { createTransformerGame } from './games/physics/TransformerGame.js'; // TODO: Fix API signatures
 // import { createOrbitalMechanicsGame } from './games/physics/OrbitalMechanicsGame.js'; // TODO: Fix API signatures
 // import { createPascalLawGame } from './games/physics/PascalLawGame.js'; // TODO: Fix API signatures
@@ -94,6 +111,23 @@ registry.register('simple_harmonic_motion', createSimpleHarmonicMotionGame);
 registry.register('heat_engine', createHeatEngineGame);
 registry.register('ohms_law', createOhmsLawGame);
 registry.register('elastic_collisions', createElasticCollisionsGame);
+registry.register('beats', createBeatsGame);
+registry.register('doppler_effect', createDopplerEffectGame);
+registry.register('entropy', createEntropyGame);
+registry.register('convection', createConvectionGame);
+registry.register('coriolis_effect', createCoriolisEffectGame);
+registry.register('damped_oscillations', createDampedOscillationsGame);
+registry.register('drag_force', createDragForceGame);
+registry.register('hookes_law', createHookesLawGame);
+registry.register('inelastic_collisions', createInelasticCollisionsGame);
+registry.register('latent_heat', createLatentHeatGame);
+registry.register('kinetic_theory_gases', createKineticTheoryGasesGame);
+registry.register('electric_potential', createElectricPotentialGame);
+registry.register('gyroscope_stability', createGyroscopeStabilityGame);
+registry.register('forced_oscillations', createForcedOscillationsGame);
+registry.register('elastic_potential_energy', createElasticPotentialEnergyGame);
+registry.register('hydrostatic_pressure', createHydrostaticPressureGame);
+registry.register('electromagnetic_induction', createElectromagneticInductionGame);
 registry.register('terminal_velocity', createTerminalVelocityGame);
 registry.register('ideal_gas_law', createIdealGasLawGame);
 // registry.register('electric_field', createElectricFieldGame);
@@ -143,7 +177,7 @@ registry.register('wing_lift', createWingLiftGame);
 registry.register('wire_power_loss', createWirePowerLossGame);
 registry.register('specific_heat', createSpecificHeatGame);
 registry.register('rolling_friction', createRollingFrictionGame);
-// registry.register('capillary_action', createCapillaryActionGame); // TODO: Fix API issues
+registry.register('capillary_action', createCapillaryActionGame);
 // registry.register('total_internal_reflection', createTotalInternalReflectionGame);
 registry.register('stable_levitation', createStableLevitationGame);
 registry.register('rolling_race', createRollingRaceGame);

@@ -6,10 +6,10 @@ import { CommandRenderer } from '../../renderer/CommandRenderer.js';
 // ============================================================================
 // CAPILLARY ACTION GAME - SERVER-SIDE PHYSICS SIMULATION
 // ============================================================================
-// Physics: h = 2*gamma*cos(theta)/(rho*g*r) - Jurin's Law
-// Surface tension (gamma) and adhesion drive liquid up narrow tubes
+// Physics: h = 2γcosθ/(ρgr) - Jurin's Law
+// Surface tension (γ) and adhesion drive liquid up narrow tubes
 // Height inversely proportional to radius (narrower = higher)
-// Contact angle (theta) determines rise (hydrophilic) or depression (hydrophobic)
+// Contact angle (θ) determines rise (hydrophilic) or depression (hydrophobic)
 // ============================================================================
 
 type GamePhase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
@@ -32,8 +32,8 @@ interface TransferApp {
 
 // Physics constants (PROTECTED - never sent to client)
 const WATER_SURFACE_TENSION = 0.073; // N/m
-const WATER_DENSITY = 1000; // kg/m^3
-const GRAVITY = 9.81; // m/s^2
+const WATER_DENSITY = 1000; // kg/m³
+const GRAVITY = 9.81; // m/s²
 const WATER_CONTACT_ANGLE = 0; // degrees (perfectly wetting)
 const MERCURY_CONTACT_ANGLE = 140; // degrees (non-wetting)
 const MERCURY_SURFACE_TENSION = 0.486; // N/m
@@ -52,10 +52,10 @@ export class CapillaryActionGame extends BaseGame {
   // Simulation parameters
   private tubeRadius = 2; // mm
   private animationTime = 0;
-  private showMercury = false;
 
   // Test and transfer state
   private testAnswers: number[] = Array(10).fill(-1);
+  private currentQuestionIndex = 0;
   private showTestResults = false;
   private activeAppIndex = 0;
   private completedApps: Set<number> = new Set();
@@ -72,147 +72,147 @@ export class CapillaryActionGame extends BaseGame {
         "Gravity pulls water down from rain on the leaves"
       ],
       correctIndex: 1,
-      explanation: "Trees use capillary action in their narrow xylem vessels (10-200 um) plus transpiration-driven negative pressure. The cohesion of water molecules creates a continuous column pulled up as water evaporates from leaves."
+      explanation: "Trees use capillary action in their narrow xylem vessels (10-200 μm) plus transpiration-driven negative pressure."
     },
     {
-      scenario: "A materials scientist is testing paper towels by dipping strips into water and measuring how high the water climbs in 30 seconds.",
-      question: "Why does water rise higher in paper towels with finer (smaller) fiber structures?",
+      scenario: "A materials scientist is testing paper towels by dipping strips into water and measuring how high the water climbs.",
+      question: "Why does water rise higher in paper towels with finer fiber structures?",
       options: [
         "Finer fibers absorb more water chemically",
-        "Smaller gaps between fibers create narrower capillary channels where h is proportional to 1/r",
+        "Smaller gaps create narrower capillary channels where h ∝ 1/r",
         "Finer fibers are more hydrophobic, pushing water up",
         "Air pressure is higher in smaller spaces"
       ],
       correctIndex: 1,
-      explanation: "Jurin's Law states h = 2*gamma*cos(theta)/(rho*g*r). Height is inversely proportional to radius. Finer fibers create smaller channels (lower r), resulting in greater capillary rise."
+      explanation: "Jurin's Law: h = 2γcosθ/(ρgr). Height is inversely proportional to radius."
     },
     {
-      scenario: "A microfluidics engineer is designing a lab-on-a-chip device for blood testing that must move samples through channels without any pumps.",
+      scenario: "A microfluidics engineer is designing a lab-on-a-chip device for blood testing that must move samples without pumps.",
       question: "What channel width would maximize capillary-driven flow rate?",
       options: [
         "1 mm - larger channels flow faster",
-        "100 um - balance between height and flow resistance",
-        "1 um - smallest possible for maximum rise",
+        "100 μm - balance between height and flow resistance",
+        "1 μm - smallest possible for maximum rise",
         "Channel width doesn't affect capillary flow"
       ],
       correctIndex: 1,
-      explanation: "While narrower channels have higher capillary rise, extremely narrow channels have high flow resistance. Microfluidic devices typically use 10-200 um channels to balance capillary pressure with practical flow rates."
+      explanation: "Microfluidic devices typically use 10-200 μm channels to balance capillary pressure with practical flow rates."
     },
     {
-      scenario: "A chemist observes that when a glass capillary tube is dipped into liquid mercury, the mercury level inside the tube drops below the surrounding mercury level.",
+      scenario: "A chemist observes that when a glass capillary tube is dipped into liquid mercury, the mercury level drops below the surrounding level.",
       question: "What causes mercury to be depressed rather than elevated in glass tubes?",
       options: [
         "Mercury is too heavy for surface tension to lift",
         "Glass absorbs mercury preventing it from rising",
-        "Mercury's contact angle with glass is >90 degrees, making cos(theta) negative",
+        "Mercury's contact angle with glass is >90°, making cos(θ) negative",
         "Mercury is a metal and metals don't experience capillary action"
       ],
       correctIndex: 2,
-      explanation: "Mercury has a contact angle of ~140 degrees with glass (hydrophobic interaction). Since cos(140 degrees) is approximately -0.77, the capillary rise equation gives a negative height, meaning depression rather than elevation."
+      explanation: "Mercury has a contact angle of ~140° with glass. Since cos(140°) ≈ -0.77, the height is negative (depression)."
     },
     {
-      scenario: "An athlete chooses between a cotton t-shirt and a polyester wicking shirt for a marathon. The polyester shirt keeps them drier during the race.",
-      question: "How does the wicking fabric move sweat away from skin more effectively than cotton?",
+      scenario: "An athlete chooses between a cotton t-shirt and a polyester wicking shirt for a marathon.",
+      question: "How does the wicking fabric move sweat away from skin more effectively?",
       options: [
         "Polyester is waterproof and doesn't absorb any sweat",
-        "Engineered fiber structures create capillary channels that transport sweat to the outer surface",
+        "Engineered fiber structures create capillary channels that transport sweat outward",
         "Cotton is naturally hydrophobic and repels sweat",
         "Polyester is chemically attracted to salt in sweat"
       ],
       correctIndex: 1,
-      explanation: "Wicking fabrics use specially engineered hydrophilic fibers with micro-channels that draw sweat outward via capillary action. Once at the outer surface, sweat evaporates. Cotton absorbs and holds water, staying wet."
+      explanation: "Wicking fabrics use specially engineered hydrophilic fibers with micro-channels for capillary transport."
     },
     {
-      scenario: "A paint manufacturer is developing a new primer that must penetrate deeply into porous concrete. They test different viscosity formulations.",
-      question: "How does reducing the primer's viscosity affect its capillary penetration into concrete?",
+      scenario: "A paint manufacturer is developing a primer that must penetrate deeply into porous concrete.",
+      question: "How does reducing the primer's viscosity affect capillary penetration?",
       options: [
         "Lower viscosity reduces surface tension, decreasing penetration",
         "Viscosity has no effect on capillary rise height",
-        "Lower viscosity increases flow speed but doesn't change final penetration depth (determined by surface tension and pore size)",
+        "Lower viscosity increases flow speed but not final depth",
         "Higher viscosity always means deeper penetration"
       ],
       correctIndex: 2,
-      explanation: "Viscosity affects the rate of capillary rise, not the final height. The equilibrium height h = 2*gamma*cos(theta)/(rho*g*r) doesn't include viscosity. Lower viscosity primers penetrate faster but reach the same final depth."
+      explanation: "Viscosity affects rate of rise, not final height. The equilibrium h = 2γcosθ/(ρgr) doesn't include viscosity."
     },
     {
-      scenario: "A candle maker notices that wax rises up the wick even when the candle isn't lit. When lit, molten wax continuously feeds the flame.",
-      question: "What principle allows the solid wick to continuously draw liquid wax upward to the flame?",
+      scenario: "A candle maker notices that wax rises up the wick even when the candle isn't lit.",
+      question: "What principle allows the wick to continuously draw liquid wax upward?",
       options: [
         "Heat from the flame creates suction that pulls wax up",
-        "Capillary action in the fibrous wick structure lifts molten wax against gravity",
+        "Capillary action in the fibrous wick structure lifts molten wax",
         "Wax vapor condenses at the top of the wick",
         "The wick acts as a pump powered by the flame"
       ],
       correctIndex: 1,
-      explanation: "Candle wicks are made of braided cotton fibers creating many tiny capillary channels. These continuously draw molten wax upward to the flame, where it vaporizes and combusts. The same principle makes oil lamps work."
+      explanation: "Candle wicks are braided fibers creating capillary channels that draw molten wax to the flame."
     },
     {
-      scenario: "A soil scientist studies water movement in different soil types. Clay soil has much smaller pore spaces than sandy soil.",
-      question: "How does pore size affect water movement and retention in soil?",
+      scenario: "A soil scientist studies water movement in different soil types. Clay has much smaller pores than sandy soil.",
+      question: "How does pore size affect water retention in soil?",
       options: [
         "Sandy soil retains more water due to larger pores",
-        "Clay's smaller pores create stronger capillary forces, holding water more tightly against gravity",
-        "Pore size only affects drainage speed, not water retention",
+        "Clay's smaller pores create stronger capillary forces, holding water tightly",
+        "Pore size only affects drainage speed, not retention",
         "Both soil types retain equal amounts of water"
       ],
       correctIndex: 1,
-      explanation: "Clay soil's tiny pores (< 2 um) create strong capillary forces that hold water tightly. Sandy soil's large pores (50-2000 um) have weak capillary forces, so water drains quickly. This is why clay soils stay moist longer but may become waterlogged."
+      explanation: "Clay's tiny pores (<2 μm) create strong capillary forces. Sandy soil's large pores drain quickly."
     },
     {
-      scenario: "An astronaut on the ISS notices that water behaves differently in microgravity. When dipping a tube into water, the water doesn't stop rising at any particular height.",
+      scenario: "An astronaut on the ISS notices water behaves differently in microgravity when dipping a tube into water.",
       question: "Why does water fill an entire capillary tube in microgravity?",
       options: [
         "Surface tension is stronger in space",
-        "Without gravity opposing capillary forces, surface tension pulls water until the tube is full",
+        "Without gravity opposing, surface tension pulls water until the tube is full",
         "Air pressure is different in spacecraft",
         "Water molecules move faster in microgravity"
       ],
       correctIndex: 1,
-      explanation: "On Earth, capillary rise stops when surface tension force balances gravitational weight (h = 2*gamma*cos(theta)/(rho*g*r)). In microgravity, g is approximately 0, so there's no opposing force. Surface tension pulls water to fill any wetting container completely."
+      explanation: "On Earth, rise stops when surface tension balances gravity. In microgravity (g≈0), no opposing force exists."
     },
     {
-      scenario: "A forensic scientist is analyzing a blood spatter pattern on a cotton fabric. The blood has spread outward from the point of impact in an irregular pattern.",
+      scenario: "A forensic scientist analyzes a blood spatter pattern on cotton fabric.",
       question: "What determines the final spread pattern of blood on fabric?",
       options: [
         "Only the velocity of blood impact",
-        "Capillary wicking through fabric fibers, affected by fiber orientation and fabric structure",
+        "Capillary wicking through fibers, affected by fabric structure",
         "Blood always spreads in circular patterns on fabric",
         "The color of the fabric determines spread"
       ],
       correctIndex: 1,
-      explanation: "Blood spreads through fabric via capillary action along fiber pathways. The pattern depends on fabric weave, fiber orientation, thread count, and fabric treatments. Forensic analysts use these patterns to determine impact angle and blood source."
+      explanation: "Blood spreads via capillary action along fiber pathways. Pattern depends on weave and fiber orientation."
     }
   ];
 
   // Transfer applications
   private readonly transferApps: TransferApp[] = [
     {
-      icon: "tree",
+      icon: "🌳",
       title: "Plant Vascular Systems",
-      tagline: "Nature's water delivery system reaches 100+ meters",
-      description: "Trees and plants use capillary action in narrow xylem vessels, combined with transpiration pull, to transport water and dissolved nutrients from roots to leaves.",
-      connection: "Xylem vessels are typically 10-200 micrometers in diameter. At this scale, capillary forces are strong enough to initiate water rise, while transpiration creates additional pulling force."
+      tagline: "Nature's water delivery reaches 100+ meters",
+      description: "Trees use capillary action in narrow xylem vessels, combined with transpiration pull, to transport water and nutrients from roots to leaves.",
+      connection: "Xylem vessels are 10-200 μm in diameter. At this scale, capillary forces initiate water rise."
     },
     {
-      icon: "paper",
+      icon: "📄",
       title: "Absorbent Materials",
       tagline: "Millions of micro-channels working in parallel",
-      description: "Paper towels, tissues, diapers, and sponges all rely on capillary action to rapidly absorb and hold liquids through countless tiny channels.",
-      connection: "Cellulose fibers in paper are naturally hydrophilic with contact angles near 0 degrees. The spaces between fibers act as capillary channels."
+      description: "Paper towels, tissues, diapers, and sponges rely on capillary action to rapidly absorb liquids through tiny channels.",
+      connection: "Cellulose fibers are hydrophilic with contact angles near 0°. Spaces between fibers act as capillaries."
     },
     {
-      icon: "shirt",
+      icon: "👕",
       title: "Performance Athletic Fabrics",
-      tagline: "Engineered to keep athletes dry and comfortable",
-      description: "Modern athletic wear uses specially designed fiber structures to transport sweat away from skin to the outer fabric surface for evaporation.",
-      connection: "Moisture-wicking fabrics have hydrophilic inner surfaces and channels that create capillary pathways to pull sweat outward."
+      tagline: "Engineered to keep athletes dry",
+      description: "Modern athletic wear uses specially designed fiber structures to transport sweat away from skin for evaporation.",
+      connection: "Moisture-wicking fabrics have hydrophilic surfaces and channels that pull sweat outward via capillary action."
     },
     {
-      icon: "chip",
+      icon: "🔬",
       title: "Microfluidic Lab-on-a-Chip",
       tagline: "Capillary-powered diagnostics in your pocket",
-      description: "Lab-on-a-chip devices use capillary action to move tiny fluid samples through micro-scale channels for medical diagnostics without pumps.",
-      connection: "At the micro-scale (10-200 um channels), capillary forces dominate over gravity, enabling precise fluid control using only surface tension."
+      description: "Lab-on-a-chip devices use capillary action to move tiny fluid samples through micro-scale channels without pumps.",
+      connection: "At 10-200 μm channels, capillary forces dominate over gravity, enabling pump-free fluid control."
     }
   ];
 
@@ -226,7 +226,7 @@ export class CapillaryActionGame extends BaseGame {
     surfaceTension: number = WATER_SURFACE_TENSION,
     contactAngle: number = WATER_CONTACT_ANGLE
   ): number {
-    // h = 2*gamma*cos(theta)/(rho*g*r)
+    // h = 2γcosθ/(ρgr)
     // For water at room temperature: h (mm) ≈ 14.9 / r (mm)
     const cosTheta = Math.cos((contactAngle * Math.PI) / 180);
     return ((14.9 * surfaceTension) / WATER_SURFACE_TENSION) * cosTheta / radiusMm;
@@ -244,133 +244,106 @@ export class CapillaryActionGame extends BaseGame {
     }, 0);
   }
 
-  processInput(input: UserInput, config: SessionConfig): void {
-    if (input.type === 'tap') {
-      this.handleTap(input.x, input.y);
-    } else if (input.type === 'slider') {
+  getCurrentPhase(): string {
+    return this.phase;
+  }
+
+  handleInput(input: UserInput): void {
+    if (input.type === 'button_click') {
+      this.handleButtonClick(input.id);
+    } else if (input.type === 'slider_change') {
       if (input.id === 'tube_radius') {
         this.tubeRadius = Math.max(0.5, Math.min(5, input.value));
       }
     }
   }
 
-  private handleTap(x: number, y: number): void {
-    const width = 400;
-    const height = 700;
-
+  private handleButtonClick(buttonId: string): void {
     switch (this.phase) {
       case 'hook':
-        // Check for "Discover" button
-        if (y > 550 && y < 620) {
+        if (buttonId === 'discover') {
           this.phase = 'predict';
         }
         break;
 
       case 'predict':
         if (!this.showPredictionFeedback) {
-          // Check prediction options
-          const optionStartY = 280;
-          const optionHeight = 60;
-          for (let i = 0; i < 4; i++) {
-            if (y >= optionStartY + i * optionHeight && y < optionStartY + (i + 1) * optionHeight) {
-              this.prediction = i;
-              this.showPredictionFeedback = true;
-              break;
-            }
+          if (buttonId.startsWith('option_')) {
+            this.prediction = parseInt(buttonId.split('_')[1]);
+            this.showPredictionFeedback = true;
           }
-        } else {
-          // Continue button
-          if (y > 580 && y < 640) {
-            this.phase = 'play';
-            this.showPredictionFeedback = false;
-          }
+        } else if (buttonId === 'continue') {
+          this.phase = 'play';
+          this.showPredictionFeedback = false;
         }
         break;
 
       case 'play':
-        // Continue button
-        if (y > 620 && y < 680) {
+        if (buttonId === 'continue') {
           this.phase = 'review';
         }
         break;
 
       case 'review':
-        // Continue button
-        if (y > 620 && y < 680) {
+        if (buttonId === 'continue') {
           this.phase = 'twist_predict';
         }
         break;
 
       case 'twist_predict':
         if (!this.showTwistFeedback) {
-          // Check twist prediction options
-          const optionStartY = 280;
-          const optionHeight = 60;
-          for (let i = 0; i < 4; i++) {
-            if (y >= optionStartY + i * optionHeight && y < optionStartY + (i + 1) * optionHeight) {
-              this.twistPrediction = i;
-              this.showTwistFeedback = true;
-              break;
-            }
+          if (buttonId.startsWith('option_')) {
+            this.twistPrediction = parseInt(buttonId.split('_')[1]);
+            this.showTwistFeedback = true;
           }
-        } else {
-          // Continue button
-          if (y > 580 && y < 640) {
-            this.phase = 'twist_play';
-            this.showTwistFeedback = false;
-          }
+        } else if (buttonId === 'continue') {
+          this.phase = 'twist_play';
+          this.showTwistFeedback = false;
         }
         break;
 
       case 'twist_play':
-        // Continue button
-        if (y > 620 && y < 680) {
+        if (buttonId === 'continue') {
           this.phase = 'twist_review';
         }
         break;
 
       case 'twist_review':
-        // Continue button
-        if (y > 620 && y < 680) {
+        if (buttonId === 'continue') {
           this.phase = 'transfer';
         }
         break;
 
       case 'transfer':
-        // App tabs
-        if (y >= 120 && y < 170) {
-          const tabWidth = 90;
-          const tabIndex = Math.floor(x / tabWidth);
-          if (tabIndex >= 0 && tabIndex < 4) {
-            this.activeAppIndex = tabIndex;
-          }
-        }
-        // Mark as understood button
-        if (y >= 480 && y < 530) {
+        if (buttonId.startsWith('app_')) {
+          this.activeAppIndex = parseInt(buttonId.split('_')[1]);
+        } else if (buttonId === 'mark_understood') {
           this.completedApps.add(this.activeAppIndex);
-        }
-        // Continue to test
-        if (this.completedApps.size >= 4 && y >= 580 && y < 640) {
+        } else if (buttonId === 'continue' && this.completedApps.size >= 4) {
           this.phase = 'test';
         }
         break;
 
       case 'test':
         if (!this.showTestResults) {
-          // Answer options or submit button
-          // This would require more complex hit detection for scrolled content
-          // Simplified: check for submit button
-          if (y > 620 && y < 680 && !this.testAnswers.includes(-1)) {
+          if (buttonId.startsWith('answer_')) {
+            const answerIndex = parseInt(buttonId.split('_')[1]);
+            this.testAnswers[this.currentQuestionIndex] = answerIndex;
+          } else if (buttonId === 'next_question' && this.currentQuestionIndex < 9) {
+            this.currentQuestionIndex++;
+          } else if (buttonId === 'prev_question' && this.currentQuestionIndex > 0) {
+            this.currentQuestionIndex--;
+          } else if (buttonId === 'submit' && !this.testAnswers.includes(-1)) {
             this.showTestResults = true;
           }
         } else {
-          // Continue to mastery or review
-          if (y > 620 && y < 680) {
+          if (buttonId === 'continue') {
             if (this.calculateScore() >= 7) {
               this.phase = 'mastery';
             } else {
               this.showTestResults = false;
               this.testAnswers = Array(10).fill(-1);
+              this.currentQuestionIndex = 0;
               this.phase = 'review';
             }
           }
@@ -378,22 +351,26 @@ export class CapillaryActionGame extends BaseGame {
         break;
 
       case 'mastery':
-        // Restart button
-        if (y > 580 && y < 640) {
-          this.phase = 'hook';
+        if (buttonId === 'restart') {
           this.resetGame();
         }
         break;
     }
   }
 
+  processInput(input: UserInput, config: SessionConfig): void {
+    this.handleInput(input);
+  }
+
   private resetGame(): void {
+    this.phase = 'hook';
     this.prediction = null;
     this.twistPrediction = null;
     this.showPredictionFeedback = false;
     this.showTwistFeedback = false;
     this.tubeRadius = 2;
     this.testAnswers = Array(10).fill(-1);
+    this.currentQuestionIndex = 0;
     this.showTestResults = false;
     this.activeAppIndex = 0;
     this.completedApps.clear();
@@ -404,125 +381,112 @@ export class CapillaryActionGame extends BaseGame {
   }
 
   render(): GameFrame {
-    const renderer = new CommandRenderer(400, 700);
+    const r = new CommandRenderer(400, 700);
 
-    // Background
-    renderer.rect(0, 0, 400, 700, '#0a0f1a');
+    // Dark gradient background
+    r.clear('#0a0f1a');
 
-    // Background gradients
-    renderer.circle(100, 100, 150, 'rgba(6, 182, 212, 0.05)');
-    renderer.circle(300, 600, 150, 'rgba(20, 184, 166, 0.05)');
+    // Subtle background orbs
+    r.circle(100, 100, 150, { fill: 'rgba(6, 182, 212, 0.05)' });
+    r.circle(300, 600, 150, { fill: 'rgba(20, 184, 166, 0.05)' });
 
     // Render phase-specific content
     switch (this.phase) {
       case 'hook':
-        this.renderHook(renderer);
+        this.renderHook(r);
         break;
       case 'predict':
-        this.renderPredict(renderer);
+        this.renderPredict(r);
         break;
       case 'play':
-        this.renderPlay(renderer);
+        this.renderPlay(r);
         break;
       case 'review':
-        this.renderReview(renderer);
+        this.renderReview(r);
         break;
       case 'twist_predict':
-        this.renderTwistPredict(renderer);
+        this.renderTwistPredict(r);
         break;
       case 'twist_play':
-        this.renderTwistPlay(renderer);
+        this.renderTwistPlay(r);
         break;
       case 'twist_review':
-        this.renderTwistReview(renderer);
+        this.renderTwistReview(r);
         break;
       case 'transfer':
-        this.renderTransfer(renderer);
+        this.renderTransfer(r);
         break;
       case 'test':
-        this.renderTest(renderer);
+        this.renderTest(r);
         break;
       case 'mastery':
-        this.renderMastery(renderer);
+        this.renderMastery(r);
         break;
     }
 
-    // Progress bar
-    this.renderProgressBar(renderer);
+    // Progress indicator
+    this.renderProgress(r);
 
-    return renderer.toFrame(this.animationTime);
+    return r.toFrame(Math.floor(this.animationTime * 60));
   }
 
-  private renderProgressBar(renderer: CommandRenderer): void {
+  private renderProgress(r: CommandRenderer): void {
     const phases: GamePhase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
     const currentIndex = phases.indexOf(this.phase);
 
-    // Background bar
-    renderer.rect(0, 0, 400, 40, 'rgba(15, 23, 42, 0.9)');
-
-    // Phase indicators
-    const startX = 120;
-    phases.forEach((_, i) => {
-      const dotX = startX + i * 18;
-      const color = i === currentIndex ? '#22d3ee' : i < currentIndex ? '#10b981' : '#475569';
-      renderer.circle(dotX, 20, i === currentIndex ? 6 : 4, color);
+    r.setProgress({
+      id: 'phase_progress',
+      current: currentIndex + 1,
+      total: phases.length,
+      labels: phases
     });
-
-    // Phase name
-    const phaseNames: Record<GamePhase, string> = {
-      hook: 'Hook', predict: 'Predict', play: 'Explore', review: 'Review',
-      twist_predict: 'Twist', twist_play: 'Twist Explore', twist_review: 'Twist Review',
-      transfer: 'Transfer', test: 'Test', mastery: 'Mastery'
-    };
-    renderer.text(350, 25, phaseNames[this.phase], '#94a3b8', 12);
-    renderer.text(50, 25, 'Capillary Action', '#22d3ee', 12);
   }
 
-  private renderHook(renderer: CommandRenderer): void {
+  private renderHook(r: CommandRenderer): void {
     // Badge
-    renderer.roundRect(130, 60, 140, 30, 8, 'rgba(6, 182, 212, 0.1)');
-    renderer.text(200, 80, 'PHYSICS EXPLORATION', '#22d3ee', 10, 'center');
+    r.roundRect(130, 60, 140, 30, 8, { fill: 'rgba(6, 182, 212, 0.1)' });
+    r.text(200, 80, 'PHYSICS EXPLORATION', { fill: '#22d3ee', fontSize: 10, textAnchor: 'middle' });
 
     // Title
-    renderer.text(200, 130, 'The Giant Redwood Mystery', '#ffffff', 28, 'center', 'bold');
-    renderer.text(200, 160, 'How does water defy gravity in towering trees?', '#94a3b8', 14, 'center');
+    r.text(200, 130, 'The Giant Redwood Mystery', { fill: '#ffffff', fontSize: 26, fontWeight: 'bold', textAnchor: 'middle' });
+    r.text(200, 160, 'How does water defy gravity in towering trees?', { fill: '#94a3b8', fontSize: 14, textAnchor: 'middle' });
 
     // Tree illustration
-    renderer.text(200, 240, '[TREE ICON]', '#22c55e', 48, 'center');
+    r.text(200, 250, '🌲', { fill: '#22c55e', fontSize: 64, textAnchor: 'middle' });
 
     // Fact card
-    renderer.roundRect(40, 290, 320, 150, 16, 'rgba(30, 41, 59, 0.8)');
-    renderer.text(200, 320, 'A Coast Redwood tree can grow over', '#cbd5e1', 14, 'center');
-    renderer.text(200, 345, '100 meters tall', '#22d3ee', 20, 'center', 'bold');
-    renderer.text(200, 380, 'How does water travel from roots to top', '#94a3b8', 13, 'center');
-    renderer.text(200, 400, 'without any mechanical pump?', '#94a3b8', 13, 'center');
-    renderer.text(200, 430, 'What invisible force defies gravity?', '#fbbf24', 14, 'center', 'bold');
+    r.roundRect(40, 300, 320, 160, 16, { fill: 'rgba(30, 41, 59, 0.8)' });
+    r.text(200, 335, 'A Coast Redwood tree can grow over', { fill: '#cbd5e1', fontSize: 14, textAnchor: 'middle' });
+    r.text(200, 365, '100 meters tall', { fill: '#22d3ee', fontSize: 22, fontWeight: 'bold', textAnchor: 'middle' });
+    r.text(200, 400, 'How does water travel from roots to top', { fill: '#94a3b8', fontSize: 13, textAnchor: 'middle' });
+    r.text(200, 420, 'without any mechanical pump?', { fill: '#94a3b8', fontSize: 13, textAnchor: 'middle' });
+    r.text(200, 450, 'What invisible force defies gravity?', { fill: '#fbbf24', fontSize: 14, fontWeight: 'bold', textAnchor: 'middle' });
 
     // CTA button
-    renderer.roundRect(100, 550, 200, 50, 25, '#0891b2');
-    renderer.text(200, 580, 'Discover the Secret', '#ffffff', 16, 'center', 'bold');
-    renderer.text(200, 620, 'Explore capillary action and surface tension', '#64748b', 11, 'center');
+    r.addButton({ id: 'discover', label: 'Discover the Secret', variant: 'primary' });
+
+    r.setCoachMessage('Explore how capillary action and surface tension work together!');
   }
 
-  private renderPredict(renderer: CommandRenderer): void {
-    renderer.text(200, 80, 'Make Your Prediction', '#ffffff', 24, 'center', 'bold');
+  private renderPredict(r: CommandRenderer): void {
+    r.text(200, 70, 'Make Your Prediction', { fill: '#ffffff', fontSize: 24, fontWeight: 'bold', textAnchor: 'middle' });
 
-    // Scenario
-    renderer.roundRect(30, 110, 340, 100, 12, 'rgba(30, 41, 59, 0.5)');
-    renderer.text(200, 140, 'You dip three glass tubes of', '#cbd5e1', 14, 'center');
-    renderer.text(200, 165, 'different widths into water.', '#cbd5e1', 14, 'center');
-    renderer.text(200, 195, 'What do you predict will happen?', '#22d3ee', 15, 'center', 'bold');
+    // Scenario card
+    r.roundRect(30, 100, 340, 100, 12, { fill: 'rgba(30, 41, 59, 0.5)' });
+    r.text(200, 130, 'You dip three glass tubes of', { fill: '#cbd5e1', fontSize: 14, textAnchor: 'middle' });
+    r.text(200, 155, 'different widths into water.', { fill: '#cbd5e1', fontSize: 14, textAnchor: 'middle' });
+    r.text(200, 185, 'What do you predict will happen?', { fill: '#22d3ee', fontSize: 15, fontWeight: 'bold', textAnchor: 'middle' });
 
     // Options
     const options = [
-      'A. Water rises highest in the widest tube',
-      'B. Water rises highest in the narrowest tube',
-      'C. Water rises to the same height in all tubes',
-      'D. Water drops below the surface in all tubes'
+      'Water rises highest in the widest tube',
+      'Water rises highest in the narrowest tube',
+      'Water rises to the same height in all tubes',
+      'Water drops below the surface in all tubes'
     ];
 
     options.forEach((option, i) => {
-      const y = 240 + i * 65;
+      const y = 220 + i * 65;
       let bgColor = 'rgba(51, 65, 85, 0.5)';
       let textColor = '#e2e8f0';
 
@@ -538,33 +502,36 @@ export class CapillaryActionGame extends BaseGame {
         bgColor = 'rgba(6, 182, 212, 0.3)';
       }
 
-      renderer.roundRect(30, y, 340, 55, 10, bgColor);
-      renderer.text(200, y + 32, option, textColor, 13, 'center');
+      r.roundRect(30, y, 340, 55, 10, { fill: bgColor });
+      r.text(50, y + 32, `${String.fromCharCode(65 + i)}. ${option}`, { fill: textColor, fontSize: 12 });
+
+      if (!this.showPredictionFeedback) {
+        r.addButton({ id: `option_${i}`, label: '', variant: 'secondary', disabled: false });
+      }
     });
 
     if (this.showPredictionFeedback) {
-      renderer.roundRect(30, 510, 340, 80, 12, 'rgba(30, 41, 59, 0.7)');
+      r.roundRect(30, 500, 340, 90, 12, { fill: 'rgba(30, 41, 59, 0.7)' });
       const message = this.prediction === 1 ? 'Excellent prediction!' : 'The answer: Water rises highest in the narrowest tube!';
-      renderer.text(200, 540, message, '#34d399', 14, 'center', 'bold');
-      renderer.text(200, 565, 'This is capillary action - let\'s see it!', '#94a3b8', 12, 'center');
+      r.text(200, 530, message, { fill: '#34d399', fontSize: 14, fontWeight: 'bold', textAnchor: 'middle' });
+      r.text(200, 560, "This is capillary action - let's see it!", { fill: '#94a3b8', fontSize: 12, textAnchor: 'middle' });
 
-      renderer.roundRect(120, 595, 160, 40, 20, '#0891b2');
-      renderer.text(200, 620, 'See Experiment', '#ffffff', 14, 'center', 'bold');
+      r.addButton({ id: 'continue', label: 'See Experiment', variant: 'primary' });
     }
   }
 
-  private renderPlay(renderer: CommandRenderer): void {
-    renderer.text(200, 70, 'Capillary Tubes Experiment', '#ffffff', 22, 'center', 'bold');
+  private renderPlay(r: CommandRenderer): void {
+    r.text(200, 60, 'Capillary Tubes Experiment', { fill: '#ffffff', fontSize: 22, fontWeight: 'bold', textAnchor: 'middle' });
 
     // Visualization area
-    renderer.roundRect(30, 100, 340, 280, 16, 'rgba(30, 41, 59, 0.5)');
+    r.roundRect(20, 90, 360, 320, 16, { fill: 'rgba(30, 41, 59, 0.5)' });
 
     // Title
-    renderer.text(200, 125, 'Narrower = Higher!', '#22d3ee', 14, 'center', 'bold');
+    r.text(200, 115, 'Narrower = Higher!', { fill: '#22d3ee', fontSize: 14, fontWeight: 'bold', textAnchor: 'middle' });
 
     // Water reservoir
-    renderer.rect(50, 300, 300, 60, 'rgba(3, 105, 161, 0.4)');
-    renderer.rect(50, 295, 300, 8, '#0ea5e9');
+    r.rect(50, 330, 300, 60, { fill: 'rgba(3, 105, 161, 0.4)' });
+    r.rect(50, 325, 300, 8, { fill: '#0ea5e9' });
 
     // Tubes with different radii
     const tubes = [
@@ -576,100 +543,102 @@ export class CapillaryActionGame extends BaseGame {
 
     tubes.forEach(tube => {
       const height = this.calculateCapillaryHeight(tube.radius);
-      const displayHeight = Math.min(height * 4, 150);
-      const tubeWidth = tube.radius * 8;
+      const displayHeight = Math.min(height * 4, 160);
+      const tubeWidth = Math.max(tube.radius * 8, 4);
       const animProgress = Math.min((this.animationTime * 50) % 100, 100);
       const animatedHeight = Math.min(animProgress * 2, displayHeight);
 
       // Tube outline
-      renderer.rect(tube.x - tubeWidth / 2, 150, tubeWidth, 155, 'transparent');
-      renderer.roundRect(tube.x - tubeWidth / 2, 150, tubeWidth, 155, 2, 'transparent');
-      renderer.rect(tube.x - tubeWidth / 2, 150, 2, 155, '#94a3b8');
-      renderer.rect(tube.x + tubeWidth / 2 - 2, 150, 2, 155, '#94a3b8');
+      r.rect(tube.x - tubeWidth / 2, 160, 2, 170, { fill: '#94a3b8' });
+      r.rect(tube.x + tubeWidth / 2 - 2, 160, 2, 170, { fill: '#94a3b8' });
 
-      // Water column
-      renderer.rect(tube.x - tubeWidth / 2 + 2, 303 - animatedHeight, tubeWidth - 4, animatedHeight, '#0ea5e9');
+      // Water column (animated rise)
+      r.rect(tube.x - tubeWidth / 2 + 2, 328 - animatedHeight, tubeWidth - 4, animatedHeight, { fill: '#0ea5e9' });
+
+      // Meniscus curve at top (using arc)
+      if (animatedHeight > 5) {
+        r.arc(tube.x, 328 - animatedHeight, tubeWidth / 2 - 2, Math.PI, 0, { fill: '#0ea5e9' });
+      }
 
       // Labels
-      renderer.text(tube.x, 145, `r=${tube.radius}mm`, '#94a3b8', 9, 'center');
-      renderer.text(tube.x, 375, `h=${height.toFixed(1)}mm`, '#22d3ee', 10, 'center', 'bold');
+      r.text(tube.x, 150, `r=${tube.radius}mm`, { fill: '#94a3b8', fontSize: 9, textAnchor: 'middle' });
+      r.text(tube.x, 400, `h=${height.toFixed(1)}mm`, { fill: '#22d3ee', fontSize: 10, fontWeight: 'bold', textAnchor: 'middle' });
     });
 
     // Key insight
-    renderer.roundRect(40, 400, 320, 60, 12, 'rgba(8, 145, 178, 0.2)');
-    renderer.text(200, 425, 'The 0.5mm tube rises ~8x higher than the 4mm tube!', '#22d3ee', 12, 'center', 'bold');
-    renderer.text(200, 448, 'Surface tension pulls water up narrow tubes', '#94a3b8', 11, 'center');
+    r.roundRect(40, 420, 320, 60, 12, { fill: 'rgba(8, 145, 178, 0.2)' });
+    r.text(200, 445, 'The 0.5mm tube rises 8× higher than the 4mm tube!', { fill: '#22d3ee', fontSize: 12, fontWeight: 'bold', textAnchor: 'middle' });
+    r.text(200, 468, 'Surface tension pulls water up narrow tubes', { fill: '#94a3b8', fontSize: 11, textAnchor: 'middle' });
 
     // Explanation cards
-    renderer.roundRect(40, 480, 150, 70, 10, 'rgba(51, 65, 85, 0.5)');
-    renderer.text(115, 505, 'Adhesion', '#22d3ee', 13, 'center', 'bold');
-    renderer.text(115, 525, 'Water sticks to glass', '#cbd5e1', 10, 'center');
-    renderer.text(115, 540, 'walls, climbing up', '#cbd5e1', 10, 'center');
+    r.roundRect(40, 495, 150, 70, 10, { fill: 'rgba(51, 65, 85, 0.5)' });
+    r.text(115, 520, 'Adhesion', { fill: '#22d3ee', fontSize: 13, fontWeight: 'bold', textAnchor: 'middle' });
+    r.text(115, 540, 'Water sticks to glass', { fill: '#cbd5e1', fontSize: 10, textAnchor: 'middle' });
+    r.text(115, 555, 'walls, climbing up', { fill: '#cbd5e1', fontSize: 10, textAnchor: 'middle' });
 
-    renderer.roundRect(210, 480, 150, 70, 10, 'rgba(51, 65, 85, 0.5)');
-    renderer.text(285, 505, 'Surface Tension', '#3b82f6', 13, 'center', 'bold');
-    renderer.text(285, 525, 'Water molecules pull', '#cbd5e1', 10, 'center');
-    renderer.text(285, 540, 'each other up', '#cbd5e1', 10, 'center');
+    r.roundRect(210, 495, 150, 70, 10, { fill: 'rgba(51, 65, 85, 0.5)' });
+    r.text(285, 520, 'Surface Tension', { fill: '#3b82f6', fontSize: 13, fontWeight: 'bold', textAnchor: 'middle' });
+    r.text(285, 540, 'Water molecules pull', { fill: '#cbd5e1', fontSize: 10, textAnchor: 'middle' });
+    r.text(285, 555, 'each other up', { fill: '#cbd5e1', fontSize: 10, textAnchor: 'middle' });
 
-    // Continue button
-    renderer.roundRect(100, 570, 200, 45, 22, '#0891b2');
-    renderer.text(200, 598, 'Understand Physics', '#ffffff', 14, 'center', 'bold');
+    r.addButton({ id: 'continue', label: 'Understand the Physics', variant: 'primary' });
   }
 
-  private renderReview(renderer: CommandRenderer): void {
-    renderer.text(200, 70, 'The Science of Capillary Action', '#ffffff', 20, 'center', 'bold');
+  private renderReview(r: CommandRenderer): void {
+    r.text(200, 60, 'The Science of Capillary Action', { fill: '#ffffff', fontSize: 20, fontWeight: 'bold', textAnchor: 'middle' });
 
     // Jurin's Law card
-    renderer.roundRect(30, 100, 340, 150, 16, 'rgba(8, 145, 178, 0.2)');
-    renderer.text(200, 130, 'Jurin\'s Law', '#22d3ee', 18, 'center', 'bold');
-    renderer.roundRect(80, 145, 240, 40, 8, 'rgba(15, 23, 42, 0.5)');
-    renderer.text(200, 172, 'h = 2*gamma*cos(theta)/(rho*g*r)', '#ffffff', 14, 'center');
+    r.roundRect(30, 90, 340, 160, 16, { fill: 'rgba(8, 145, 178, 0.2)' });
+    r.text(200, 120, "Jurin's Law", { fill: '#22d3ee', fontSize: 18, fontWeight: 'bold', textAnchor: 'middle' });
+
+    // Formula box
+    r.roundRect(70, 140, 260, 45, 8, { fill: 'rgba(15, 23, 42, 0.6)' });
+    r.text(200, 170, 'h = 2γcosθ / (ρgr)', { fill: '#ffffff', fontSize: 16, textAnchor: 'middle' });
 
     // Variables
-    renderer.text(100, 210, 'gamma = surface tension', '#cbd5e1', 11, 'left');
-    renderer.text(250, 210, 'theta = contact angle', '#cbd5e1', 11, 'left');
-    renderer.text(100, 228, 'rho = liquid density', '#cbd5e1', 11, 'left');
-    renderer.text(250, 228, 'r = tube radius', '#cbd5e1', 11, 'left');
+    r.text(80, 210, 'γ = surface tension', { fill: '#cbd5e1', fontSize: 11 });
+    r.text(230, 210, 'θ = contact angle', { fill: '#cbd5e1', fontSize: 11 });
+    r.text(80, 228, 'ρ = liquid density', { fill: '#cbd5e1', fontSize: 11 });
+    r.text(230, 228, 'r = tube radius', { fill: '#cbd5e1', fontSize: 11 });
 
     // Key insight card
-    renderer.roundRect(30, 260, 340, 100, 16, 'rgba(16, 185, 129, 0.2)');
-    renderer.text(200, 290, 'Key Insight', '#34d399', 18, 'center', 'bold');
-    renderer.text(200, 320, 'h is proportional to 1/r', '#ffffff', 16, 'center');
-    renderer.text(200, 345, 'Half the radius = Double the height!', '#34d399', 14, 'center', 'bold');
+    r.roundRect(30, 260, 340, 100, 16, { fill: 'rgba(16, 185, 129, 0.2)' });
+    r.text(200, 290, 'Key Insight', { fill: '#34d399', fontSize: 18, fontWeight: 'bold', textAnchor: 'middle' });
+    r.text(200, 320, 'h ∝ 1/r', { fill: '#ffffff', fontSize: 18, textAnchor: 'middle' });
+    r.text(200, 345, 'Half the radius = Double the height!', { fill: '#34d399', fontSize: 14, fontWeight: 'bold', textAnchor: 'middle' });
 
     // Tree application
-    renderer.roundRect(30, 380, 340, 130, 16, 'rgba(251, 191, 36, 0.2)');
-    renderer.text(200, 410, 'Why Trees Need Narrow Tubes', '#fbbf24', 16, 'center', 'bold');
-    renderer.text(200, 440, 'Tree xylem vessels are incredibly narrow', '#cbd5e1', 12, 'center');
-    renderer.text(200, 460, '(10-200 micrometers). At this scale,', '#cbd5e1', 12, 'center');
-    renderer.text(200, 480, 'capillary forces help lift water over', '#cbd5e1', 12, 'center');
-    renderer.text(200, 500, '100 meters against gravity!', '#fbbf24', 13, 'center', 'bold');
+    r.roundRect(30, 375, 340, 140, 16, { fill: 'rgba(251, 191, 36, 0.2)' });
+    r.text(200, 405, 'Why Trees Need Narrow Tubes', { fill: '#fbbf24', fontSize: 16, fontWeight: 'bold', textAnchor: 'middle' });
+    r.text(200, 435, 'Tree xylem vessels are incredibly narrow', { fill: '#cbd5e1', fontSize: 12, textAnchor: 'middle' });
+    r.text(200, 455, '(10-200 micrometers). At this scale,', { fill: '#cbd5e1', fontSize: 12, textAnchor: 'middle' });
+    r.text(200, 475, 'capillary forces help lift water over', { fill: '#cbd5e1', fontSize: 12, textAnchor: 'middle' });
+    r.text(200, 495, '100 meters against gravity!', { fill: '#fbbf24', fontSize: 13, fontWeight: 'bold', textAnchor: 'middle' });
 
-    // Continue button
-    renderer.roundRect(100, 530, 200, 45, 22, 'linear-gradient(to right, #9333ea, #ec4899)');
-    renderer.roundRect(100, 530, 200, 45, 22, '#9333ea');
-    renderer.text(200, 558, 'Explore a Twist', '#ffffff', 14, 'center', 'bold');
+    r.addButton({ id: 'continue', label: 'Explore a Twist', variant: 'secondary' });
+
+    r.setCoachMessage("Now let's see what happens with a different liquid...");
   }
 
-  private renderTwistPredict(renderer: CommandRenderer): void {
-    renderer.text(200, 70, 'The Twist: Mercury', '#a855f7', 24, 'center', 'bold');
+  private renderTwistPredict(r: CommandRenderer): void {
+    r.text(200, 60, 'The Twist: Mercury', { fill: '#a855f7', fontSize: 24, fontWeight: 'bold', textAnchor: 'middle' });
 
     // Scenario
-    renderer.roundRect(30, 100, 340, 100, 12, 'rgba(30, 41, 59, 0.5)');
-    renderer.text(200, 130, 'What if we use mercury instead of water?', '#cbd5e1', 14, 'center');
-    renderer.text(200, 155, 'Mercury doesn\'t "wet" glass like water does...', '#94a3b8', 13, 'center');
-    renderer.text(200, 185, 'What do you predict will happen?', '#a855f7', 15, 'center', 'bold');
+    r.roundRect(30, 95, 340, 100, 12, { fill: 'rgba(30, 41, 59, 0.5)' });
+    r.text(200, 125, 'What if we use mercury instead of water?', { fill: '#cbd5e1', fontSize: 14, textAnchor: 'middle' });
+    r.text(200, 150, "Mercury doesn't 'wet' glass like water does...", { fill: '#94a3b8', fontSize: 13, textAnchor: 'middle' });
+    r.text(200, 180, 'What do you predict will happen?', { fill: '#a855f7', fontSize: 15, fontWeight: 'bold', textAnchor: 'middle' });
 
     // Options
     const options = [
-      'A. Mercury rises even higher than water',
-      'B. Mercury rises to the same height as water',
-      'C. Mercury rises, but less than water',
-      'D. Mercury drops BELOW the surrounding level!'
+      'Mercury rises even higher than water',
+      'Mercury rises to the same height as water',
+      'Mercury rises, but less than water',
+      'Mercury drops BELOW the surrounding level!'
     ];
 
     options.forEach((option, i) => {
-      const y = 220 + i * 60;
+      const y = 210 + i * 60;
       let bgColor = 'rgba(51, 65, 85, 0.5)';
       let textColor = '#e2e8f0';
 
@@ -685,127 +654,132 @@ export class CapillaryActionGame extends BaseGame {
         bgColor = 'rgba(168, 85, 247, 0.3)';
       }
 
-      renderer.roundRect(30, y, 340, 50, 10, bgColor);
-      renderer.text(200, y + 30, option, textColor, 12, 'center');
+      r.roundRect(30, y, 340, 50, 10, { fill: bgColor });
+      r.text(50, y + 30, `${String.fromCharCode(65 + i)}. ${option}`, { fill: textColor, fontSize: 12 });
+
+      if (!this.showTwistFeedback) {
+        r.addButton({ id: `option_${i}`, label: '', variant: 'secondary', disabled: false });
+      }
     });
 
     if (this.showTwistFeedback) {
-      renderer.roundRect(30, 480, 340, 90, 12, 'rgba(30, 41, 59, 0.7)');
+      r.roundRect(30, 470, 340, 100, 12, { fill: 'rgba(30, 41, 59, 0.7)' });
       const message = this.twistPrediction === 3 ? 'Exactly right!' : 'Mercury drops BELOW the surface!';
-      renderer.text(200, 510, message, '#34d399', 14, 'center', 'bold');
-      renderer.text(200, 535, 'Mercury atoms bond strongly to each other', '#94a3b8', 12, 'center');
-      renderer.text(200, 555, 'but barely interact with glass.', '#94a3b8', 12, 'center');
+      r.text(200, 500, message, { fill: '#34d399', fontSize: 14, fontWeight: 'bold', textAnchor: 'middle' });
+      r.text(200, 530, 'Mercury atoms bond strongly to each other', { fill: '#94a3b8', fontSize: 12, textAnchor: 'middle' });
+      r.text(200, 550, 'but barely interact with glass.', { fill: '#94a3b8', fontSize: 12, textAnchor: 'middle' });
 
-      renderer.roundRect(120, 580, 160, 40, 20, '#9333ea');
-      renderer.text(200, 605, 'See Comparison', '#ffffff', 14, 'center', 'bold');
+      r.addButton({ id: 'continue', label: 'See Comparison', variant: 'primary' });
     }
   }
 
-  private renderTwistPlay(renderer: CommandRenderer): void {
-    renderer.text(200, 70, 'Water vs Mercury', '#a855f7', 22, 'center', 'bold');
+  private renderTwistPlay(r: CommandRenderer): void {
+    r.text(200, 55, 'Water vs Mercury', { fill: '#a855f7', fontSize: 22, fontWeight: 'bold', textAnchor: 'middle' });
 
     const waterHeight = this.calculateCapillaryHeight(this.tubeRadius);
     const mercuryHeight = this.calculateCapillaryHeight(this.tubeRadius, MERCURY_SURFACE_TENSION, MERCURY_CONTACT_ANGLE);
 
     // Water side
-    renderer.roundRect(30, 100, 165, 250, 12, 'rgba(8, 145, 178, 0.2)');
-    renderer.text(112, 125, 'Water (theta < 90)', '#22d3ee', 12, 'center', 'bold');
+    r.roundRect(25, 85, 170, 260, 12, { fill: 'rgba(8, 145, 178, 0.2)' });
+    r.text(110, 110, 'Water (θ < 90°)', { fill: '#22d3ee', fontSize: 12, fontWeight: 'bold', textAnchor: 'middle' });
 
     // Water container
-    renderer.rect(60, 250, 100, 60, 'rgba(3, 105, 161, 0.3)');
-    renderer.rect(60, 245, 100, 8, '#0ea5e9');
+    r.rect(55, 250, 110, 70, { fill: 'rgba(3, 105, 161, 0.3)' });
+    r.rect(55, 245, 110, 8, { fill: '#0ea5e9' });
 
     // Water tube and column
-    renderer.rect(100, 150, 20, 105, 'transparent');
-    renderer.rect(100, 150, 2, 105, '#94a3b8');
-    renderer.rect(118, 150, 2, 105, '#94a3b8');
-    const waterDisplayHeight = Math.min(waterHeight * 3, 90);
-    renderer.rect(102, 253 - waterDisplayHeight, 16, waterDisplayHeight, '#0ea5e9');
+    r.rect(98, 135, 2, 115, { fill: '#94a3b8' });
+    r.rect(120, 135, 2, 115, { fill: '#94a3b8' });
+    const waterDisplayHeight = Math.min(waterHeight * 3, 100);
+    r.rect(100, 248 - waterDisplayHeight, 20, waterDisplayHeight, { fill: '#0ea5e9' });
 
-    renderer.text(112, 320, 'RISES', '#22d3ee', 12, 'center', 'bold');
-    renderer.text(112, 338, '(adhesion wins)', '#94a3b8', 10, 'center');
+    r.text(110, 330, 'RISES', { fill: '#22d3ee', fontSize: 14, fontWeight: 'bold', textAnchor: 'middle' });
+    r.text(110, 348, '(adhesion wins)', { fill: '#94a3b8', fontSize: 10, textAnchor: 'middle' });
 
     // Mercury side
-    renderer.roundRect(205, 100, 165, 250, 12, 'rgba(71, 85, 105, 0.2)');
-    renderer.text(287, 125, 'Mercury (theta > 90)', '#94a3b8', 12, 'center', 'bold');
+    r.roundRect(205, 85, 170, 260, 12, { fill: 'rgba(71, 85, 105, 0.2)' });
+    r.text(290, 110, 'Mercury (θ > 90°)', { fill: '#94a3b8', fontSize: 12, fontWeight: 'bold', textAnchor: 'middle' });
 
     // Mercury container
-    renderer.rect(235, 250, 100, 60, 'rgba(71, 85, 105, 0.3)');
-    renderer.rect(235, 245, 100, 8, '#64748b');
+    r.rect(235, 250, 110, 70, { fill: 'rgba(71, 85, 105, 0.3)' });
+    r.rect(235, 245, 110, 8, { fill: '#64748b' });
 
     // Mercury tube and depression
-    renderer.rect(275, 150, 20, 105, 'transparent');
-    renderer.rect(275, 150, 2, 105, '#94a3b8');
-    renderer.rect(293, 150, 2, 105, '#94a3b8');
-    const mercuryDisplayDrop = Math.min(Math.abs(mercuryHeight) * 2, 35);
-    renderer.rect(277, 253, 16, mercuryDisplayDrop, '#64748b');
+    r.rect(278, 135, 2, 115, { fill: '#94a3b8' });
+    r.rect(300, 135, 2, 115, { fill: '#94a3b8' });
+    const mercuryDisplayDrop = Math.min(Math.abs(mercuryHeight) * 2, 40);
+    r.rect(280, 253, 20, mercuryDisplayDrop, { fill: '#64748b' });
 
-    renderer.text(287, 320, 'DROPS', '#f87171', 12, 'center', 'bold');
-    renderer.text(287, 338, '(cohesion wins)', '#94a3b8', 10, 'center');
+    r.text(290, 330, 'DROPS', { fill: '#f87171', fontSize: 14, fontWeight: 'bold', textAnchor: 'middle' });
+    r.text(290, 348, '(cohesion wins)', { fill: '#94a3b8', fontSize: 10, textAnchor: 'middle' });
 
-    // Slider
-    renderer.text(200, 380, `Tube Radius: ${this.tubeRadius} mm`, '#cbd5e1', 13, 'center');
-    renderer.roundRect(80, 395, 240, 8, 4, '#334155');
-    const sliderPos = 80 + ((this.tubeRadius - 0.5) / 4.5) * 240;
-    renderer.circle(sliderPos, 399, 10, '#a855f7');
+    // Slider for tube radius
+    r.addSlider({
+      id: 'tube_radius',
+      label: 'Tube Radius (mm)',
+      min: 0.5,
+      max: 5,
+      step: 0.5,
+      value: this.tubeRadius
+    });
 
     // Results
-    renderer.roundRect(50, 430, 140, 60, 10, 'rgba(6, 182, 212, 0.1)');
-    renderer.text(120, 455, 'Water Rise', '#22d3ee', 12, 'center', 'bold');
-    renderer.text(120, 478, `+${waterHeight.toFixed(1)} mm`, '#22d3ee', 16, 'center', 'bold');
+    r.roundRect(40, 420, 150, 65, 10, { fill: 'rgba(6, 182, 212, 0.1)' });
+    r.text(115, 445, 'Water Rise', { fill: '#22d3ee', fontSize: 12, fontWeight: 'bold', textAnchor: 'middle' });
+    r.text(115, 472, `+${waterHeight.toFixed(1)} mm`, { fill: '#22d3ee', fontSize: 18, fontWeight: 'bold', textAnchor: 'middle' });
 
-    renderer.roundRect(210, 430, 140, 60, 10, 'rgba(71, 85, 105, 0.1)');
-    renderer.text(280, 455, 'Mercury Drop', '#94a3b8', 12, 'center', 'bold');
-    renderer.text(280, 478, `${mercuryHeight.toFixed(1)} mm`, '#94a3b8', 16, 'center', 'bold');
+    r.roundRect(210, 420, 150, 65, 10, { fill: 'rgba(71, 85, 105, 0.1)' });
+    r.text(285, 445, 'Mercury Drop', { fill: '#94a3b8', fontSize: 12, fontWeight: 'bold', textAnchor: 'middle' });
+    r.text(285, 472, `${mercuryHeight.toFixed(1)} mm`, { fill: '#f87171', fontSize: 18, fontWeight: 'bold', textAnchor: 'middle' });
 
-    // Continue button
-    renderer.roundRect(100, 510, 200, 45, 22, '#9333ea');
-    renderer.text(200, 538, 'Understand Difference', '#ffffff', 14, 'center', 'bold');
+    r.addButton({ id: 'continue', label: 'Understand the Difference', variant: 'primary' });
   }
 
-  private renderTwistReview(renderer: CommandRenderer): void {
-    renderer.text(200, 70, 'Contact Angle: The Key Factor', '#a855f7', 18, 'center', 'bold');
+  private renderTwistReview(r: CommandRenderer): void {
+    r.text(200, 55, 'Contact Angle: The Key Factor', { fill: '#a855f7', fontSize: 18, fontWeight: 'bold', textAnchor: 'middle' });
 
     // Hydrophilic card
-    renderer.roundRect(30, 100, 165, 130, 12, 'rgba(8, 145, 178, 0.2)');
-    renderer.text(112, 125, 'Hydrophilic (theta<90)', '#22d3ee', 11, 'center', 'bold');
-    renderer.text(112, 150, 'Adhesion stronger', '#cbd5e1', 10, 'center');
-    renderer.text(112, 168, 'than cohesion', '#cbd5e1', 10, 'center');
-    renderer.text(112, 200, 'Liquid RISES', '#22d3ee', 13, 'center', 'bold');
+    r.roundRect(25, 85, 170, 140, 12, { fill: 'rgba(8, 145, 178, 0.2)' });
+    r.text(110, 110, 'Hydrophilic (θ<90°)', { fill: '#22d3ee', fontSize: 12, fontWeight: 'bold', textAnchor: 'middle' });
+    r.text(110, 140, 'Adhesion stronger', { fill: '#cbd5e1', fontSize: 11, textAnchor: 'middle' });
+    r.text(110, 158, 'than cohesion', { fill: '#cbd5e1', fontSize: 11, textAnchor: 'middle' });
+    r.text(110, 195, 'Liquid RISES', { fill: '#22d3ee', fontSize: 14, fontWeight: 'bold', textAnchor: 'middle' });
 
     // Hydrophobic card
-    renderer.roundRect(205, 100, 165, 130, 12, 'rgba(71, 85, 105, 0.2)');
-    renderer.text(287, 125, 'Hydrophobic (theta>90)', '#94a3b8', 11, 'center', 'bold');
-    renderer.text(287, 150, 'Cohesion stronger', '#cbd5e1', 10, 'center');
-    renderer.text(287, 168, 'than adhesion', '#cbd5e1', 10, 'center');
-    renderer.text(287, 200, 'Liquid DROPS', '#f87171', 13, 'center', 'bold');
+    r.roundRect(205, 85, 170, 140, 12, { fill: 'rgba(71, 85, 105, 0.2)' });
+    r.text(290, 110, 'Hydrophobic (θ>90°)', { fill: '#94a3b8', fontSize: 12, fontWeight: 'bold', textAnchor: 'middle' });
+    r.text(290, 140, 'Cohesion stronger', { fill: '#cbd5e1', fontSize: 11, textAnchor: 'middle' });
+    r.text(290, 158, 'than adhesion', { fill: '#cbd5e1', fontSize: 11, textAnchor: 'middle' });
+    r.text(290, 195, 'Liquid DROPS', { fill: '#f87171', fontSize: 14, fontWeight: 'bold', textAnchor: 'middle' });
 
     // The math
-    renderer.roundRect(30, 250, 340, 140, 16, 'rgba(251, 191, 36, 0.2)');
-    renderer.text(200, 280, 'The Math: cos(theta) Makes the Difference', '#fbbf24', 14, 'center', 'bold');
+    r.roundRect(25, 240, 350, 150, 16, { fill: 'rgba(251, 191, 36, 0.2)' });
+    r.text(200, 270, 'The Math: cos(θ) Makes the Difference', { fill: '#fbbf24', fontSize: 14, fontWeight: 'bold', textAnchor: 'middle' });
 
     // Water column
-    renderer.text(120, 315, 'Water: theta = 0', '#94a3b8', 11, 'center');
-    renderer.text(120, 335, 'cos(0) = +1', '#22d3ee', 13, 'center');
-    renderer.text(120, 355, 'Positive height = rise', '#22d3ee', 10, 'center');
+    r.text(110, 305, 'Water: θ = 0°', { fill: '#94a3b8', fontSize: 11, textAnchor: 'middle' });
+    r.text(110, 328, 'cos(0°) = +1', { fill: '#22d3ee', fontSize: 14, fontWeight: 'bold', textAnchor: 'middle' });
+    r.text(110, 350, 'Positive height = rise', { fill: '#22d3ee', fontSize: 10, textAnchor: 'middle' });
 
     // Mercury column
-    renderer.text(280, 315, 'Mercury: theta = 140', '#94a3b8', 11, 'center');
-    renderer.text(280, 335, 'cos(140) = -0.77', '#94a3b8', 13, 'center');
-    renderer.text(280, 355, 'Negative height = drop', '#f87171', 10, 'center');
+    r.text(290, 305, 'Mercury: θ = 140°', { fill: '#94a3b8', fontSize: 11, textAnchor: 'middle' });
+    r.text(290, 328, 'cos(140°) = -0.77', { fill: '#94a3b8', fontSize: 14, fontWeight: 'bold', textAnchor: 'middle' });
+    r.text(290, 350, 'Negative height = drop', { fill: '#f87171', fontSize: 10, textAnchor: 'middle' });
 
-    // Continue button
-    renderer.roundRect(100, 420, 200, 45, 22, '#0891b2');
-    renderer.text(200, 448, 'Real-World Applications', '#ffffff', 14, 'center', 'bold');
+    // Key takeaway
+    r.roundRect(40, 410, 320, 70, 12, { fill: 'rgba(30, 41, 59, 0.5)' });
+    r.text(200, 438, 'The sign of cos(θ) determines rise or fall!', { fill: '#ffffff', fontSize: 13, fontWeight: 'bold', textAnchor: 'middle' });
+    r.text(200, 462, 'θ < 90° → rise | θ > 90° → depression', { fill: '#94a3b8', fontSize: 12, textAnchor: 'middle' });
+
+    r.addButton({ id: 'continue', label: 'Real-World Applications', variant: 'primary' });
   }
 
-  private renderTransfer(renderer: CommandRenderer): void {
-    renderer.text(200, 70, 'Real-World Applications', '#ffffff', 20, 'center', 'bold');
+  private renderTransfer(r: CommandRenderer): void {
+    r.text(200, 55, 'Real-World Applications', { fill: '#ffffff', fontSize: 20, fontWeight: 'bold', textAnchor: 'middle' });
 
     // App tabs
-    const tabIcons = ['[Tree]', '[Paper]', '[Shirt]', '[Chip]'];
     this.transferApps.forEach((app, i) => {
-      const x = 50 + i * 85;
+      const x = 35 + i * 88;
       const isActive = i === this.activeAppIndex;
       const isCompleted = this.completedApps.has(i);
 
@@ -813,140 +787,173 @@ export class CapillaryActionGame extends BaseGame {
       if (isActive) bgColor = '#0891b2';
       else if (isCompleted) bgColor = 'rgba(16, 185, 129, 0.3)';
 
-      renderer.roundRect(x, 100, 75, 40, 8, bgColor);
-      renderer.text(x + 37, 125, tabIcons[i], isActive ? '#ffffff' : '#94a3b8', 11, 'center');
+      r.roundRect(x, 80, 80, 45, 8, { fill: bgColor });
+      r.text(x + 40, 108, app.icon, { fontSize: 20, textAnchor: 'middle' });
+
+      r.addButton({ id: `app_${i}`, label: '', variant: 'secondary' });
     });
 
     // Active app content
     const app = this.transferApps[this.activeAppIndex];
-    renderer.roundRect(30, 160, 340, 280, 16, 'rgba(30, 41, 59, 0.5)');
+    r.roundRect(25, 140, 350, 300, 16, { fill: 'rgba(30, 41, 59, 0.5)' });
 
-    renderer.text(200, 190, app.title, '#ffffff', 16, 'center', 'bold');
-    renderer.text(200, 215, app.tagline, '#22d3ee', 11, 'center');
+    r.text(200, 175, app.title, { fill: '#ffffff', fontSize: 16, fontWeight: 'bold', textAnchor: 'middle' });
+    r.text(200, 200, app.tagline, { fill: '#22d3ee', fontSize: 11, textAnchor: 'middle' });
 
-    // Description (wrapped)
+    // Description (multi-line)
     const words = app.description.split(' ');
     let line = '';
-    let lineY = 245;
+    let lineY = 230;
     words.forEach(word => {
       const testLine = line + word + ' ';
-      if (testLine.length > 45) {
-        renderer.text(200, lineY, line.trim(), '#cbd5e1', 11, 'center');
+      if (testLine.length > 48) {
+        r.text(200, lineY, line.trim(), { fill: '#cbd5e1', fontSize: 11, textAnchor: 'middle' });
         line = word + ' ';
         lineY += 18;
       } else {
         line = testLine;
       }
     });
-    if (line) renderer.text(200, lineY, line.trim(), '#cbd5e1', 11, 'center');
+    if (line) r.text(200, lineY, line.trim(), { fill: '#cbd5e1', fontSize: 11, textAnchor: 'middle' });
 
     // Physics connection
-    renderer.roundRect(45, 340, 310, 60, 10, 'rgba(8, 145, 178, 0.2)');
-    renderer.text(200, 360, 'Physics Connection', '#22d3ee', 12, 'center', 'bold');
-    renderer.text(200, 382, app.connection.substring(0, 50) + '...', '#cbd5e1', 10, 'center');
+    r.roundRect(40, 320, 320, 70, 10, { fill: 'rgba(8, 145, 178, 0.2)' });
+    r.text(200, 345, 'Physics Connection', { fill: '#22d3ee', fontSize: 12, fontWeight: 'bold', textAnchor: 'middle' });
+    r.text(200, 370, app.connection.substring(0, 55) + '...', { fill: '#cbd5e1', fontSize: 10, textAnchor: 'middle' });
 
     // Mark understood button
     if (!this.completedApps.has(this.activeAppIndex)) {
-      renderer.roundRect(100, 420, 200, 40, 20, '#10b981');
-      renderer.text(200, 445, 'Mark as Understood', '#ffffff', 13, 'center', 'bold');
+      r.addButton({ id: 'mark_understood', label: '✓ Mark as Understood', variant: 'secondary' });
     } else {
-      renderer.text(200, 445, 'Completed!', '#10b981', 14, 'center', 'bold');
+      r.text(200, 420, '✓ Completed!', { fill: '#10b981', fontSize: 14, fontWeight: 'bold', textAnchor: 'middle' });
     }
 
     // Progress
-    renderer.text(200, 500, `Progress: ${this.completedApps.size}/4`, '#94a3b8', 12, 'center');
+    r.text(200, 460, `Progress: ${this.completedApps.size}/4 applications`, { fill: '#94a3b8', fontSize: 12, textAnchor: 'middle' });
 
     // Continue button
     if (this.completedApps.size >= 4) {
-      renderer.roundRect(100, 530, 200, 45, 22, '#0891b2');
-      renderer.text(200, 558, 'Take Knowledge Test', '#ffffff', 14, 'center', 'bold');
+      r.addButton({ id: 'continue', label: 'Take Knowledge Test', variant: 'primary' });
     }
   }
 
-  private renderTest(renderer: CommandRenderer): void {
-    renderer.text(200, 70, 'Knowledge Assessment', '#ffffff', 20, 'center', 'bold');
-
+  private renderTest(r: CommandRenderer): void {
     if (!this.showTestResults) {
-      // Show question count
-      const answered = this.testAnswers.filter(a => a !== -1).length;
-      renderer.text(200, 100, `Questions answered: ${answered}/10`, '#94a3b8', 12, 'center');
+      r.text(200, 55, 'Knowledge Assessment', { fill: '#ffffff', fontSize: 20, fontWeight: 'bold', textAnchor: 'middle' });
+      r.text(200, 82, `Question ${this.currentQuestionIndex + 1} of 10`, { fill: '#94a3b8', fontSize: 12, textAnchor: 'middle' });
 
-      // Instructions
-      renderer.roundRect(30, 120, 340, 80, 12, 'rgba(30, 41, 59, 0.5)');
-      renderer.text(200, 150, 'Answer all 10 scenario-based questions', '#cbd5e1', 13, 'center');
-      renderer.text(200, 175, 'to test your understanding of capillary action.', '#94a3b8', 11, 'center');
+      const question = this.testQuestions[this.currentQuestionIndex];
+
+      // Scenario
+      r.roundRect(25, 100, 350, 90, 12, { fill: 'rgba(30, 41, 59, 0.5)' });
+      const scenarioWords = question.scenario.split(' ');
+      let scenarioLine = '';
+      let scenarioY = 120;
+      scenarioWords.forEach(word => {
+        if ((scenarioLine + word).length > 50) {
+          r.text(200, scenarioY, scenarioLine.trim(), { fill: '#cbd5e1', fontSize: 11, textAnchor: 'middle' });
+          scenarioLine = word + ' ';
+          scenarioY += 16;
+        } else {
+          scenarioLine += word + ' ';
+        }
+      });
+      if (scenarioLine) r.text(200, scenarioY, scenarioLine.trim(), { fill: '#cbd5e1', fontSize: 11, textAnchor: 'middle' });
+
+      // Question
+      r.text(200, 210, question.question, { fill: '#22d3ee', fontSize: 13, fontWeight: 'bold', textAnchor: 'middle' });
+
+      // Options
+      question.options.forEach((option, i) => {
+        const y = 240 + i * 55;
+        const isSelected = this.testAnswers[this.currentQuestionIndex] === i;
+        const bgColor = isSelected ? 'rgba(6, 182, 212, 0.3)' : 'rgba(51, 65, 85, 0.5)';
+
+        r.roundRect(25, y, 350, 48, 8, { fill: bgColor });
+        r.text(40, y + 28, `${String.fromCharCode(65 + i)}. ${option.substring(0, 45)}${option.length > 45 ? '...' : ''}`, { fill: isSelected ? '#22d3ee' : '#e2e8f0', fontSize: 11 });
+
+        r.addButton({ id: `answer_${i}`, label: '', variant: 'secondary' });
+      });
+
+      // Navigation
+      if (this.currentQuestionIndex > 0) {
+        r.addButton({ id: 'prev_question', label: '← Previous', variant: 'secondary' });
+      }
+      if (this.currentQuestionIndex < 9) {
+        r.addButton({ id: 'next_question', label: 'Next →', variant: 'secondary' });
+      }
 
       // Submit button
-      const canSubmit = !this.testAnswers.includes(-1);
-      renderer.roundRect(100, 550, 200, 50, 25, canSubmit ? '#0891b2' : '#475569');
-      renderer.text(200, 580, 'Submit Answers', canSubmit ? '#ffffff' : '#94a3b8', 15, 'center', 'bold');
+      const answered = this.testAnswers.filter(a => a !== -1).length;
+      if (answered === 10) {
+        r.addButton({ id: 'submit', label: 'Submit Answers', variant: 'primary' });
+      } else {
+        r.text(200, 485, `${answered}/10 questions answered`, { fill: '#94a3b8', fontSize: 11, textAnchor: 'middle' });
+      }
     } else {
+      // Show results
       const score = this.calculateScore();
 
-      // Score display
-      renderer.roundRect(80, 100, 240, 150, 20, 'rgba(30, 41, 59, 0.8)');
-      renderer.text(200, 140, score >= 7 ? '[Trophy]' : '[Book]', score >= 7 ? '#fbbf24' : '#60a5fa', 48, 'center');
-      renderer.text(200, 200, `Score: ${score}/10`, '#ffffff', 24, 'center', 'bold');
-      renderer.text(200, 230, score >= 7 ? 'Excellent! You\'ve mastered capillary action!' : 'Keep studying! Review and try again.', '#94a3b8', 11, 'center');
+      r.roundRect(60, 80, 280, 180, 20, { fill: 'rgba(30, 41, 59, 0.8)' });
+      r.text(200, 130, score >= 7 ? '🏆' : '📚', { fontSize: 48, textAnchor: 'middle' });
+      r.text(200, 190, `Score: ${score}/10`, { fill: '#ffffff', fontSize: 28, fontWeight: 'bold', textAnchor: 'middle' });
+      r.text(200, 225, score >= 7 ? "Excellent! You've mastered capillary action!" : 'Keep studying! Review and try again.', { fill: '#94a3b8', fontSize: 12, textAnchor: 'middle' });
 
-      // Result summary
-      renderer.roundRect(30, 270, 340, 200, 12, 'rgba(30, 41, 59, 0.5)');
-      renderer.text(200, 300, 'Key Concepts Tested:', '#22d3ee', 14, 'center', 'bold');
+      // Key concepts
+      r.roundRect(30, 280, 340, 160, 12, { fill: 'rgba(30, 41, 59, 0.5)' });
+      r.text(200, 310, 'Key Concepts Tested:', { fill: '#22d3ee', fontSize: 14, fontWeight: 'bold', textAnchor: 'middle' });
 
       const concepts = [
-        'Jurin\'s Law: h = 2*gamma*cos(theta)/(rho*g*r)',
+        "Jurin's Law: h = 2γcosθ/(ρgr)",
         'Contact angles and wetting behavior',
         'Real-world applications',
         'Effect of tube radius on height'
       ];
       concepts.forEach((concept, i) => {
-        renderer.text(200, 330 + i * 25, concept, '#cbd5e1', 11, 'center');
+        r.text(200, 340 + i * 22, concept, { fill: '#cbd5e1', fontSize: 11, textAnchor: 'middle' });
       });
 
-      // Continue button
       if (score >= 7) {
-        renderer.roundRect(100, 500, 200, 50, 25, '#10b981');
-        renderer.text(200, 530, 'Claim Mastery Badge', '#ffffff', 14, 'center', 'bold');
+        r.addButton({ id: 'continue', label: 'Claim Mastery Badge', variant: 'primary' });
       } else {
-        renderer.roundRect(100, 500, 200, 50, 25, '#0891b2');
-        renderer.text(200, 530, 'Review & Try Again', '#ffffff', 14, 'center', 'bold');
+        r.addButton({ id: 'continue', label: 'Review & Try Again', variant: 'secondary' });
       }
     }
   }
 
-  private renderMastery(renderer: CommandRenderer): void {
+  private renderMastery(r: CommandRenderer): void {
     // Trophy
-    renderer.text(200, 120, '[Trophy]', '#fbbf24', 72, 'center');
+    r.text(200, 120, '🏆', { fontSize: 72, textAnchor: 'middle' });
 
     // Title
-    renderer.text(200, 200, 'Capillary Action Master!', '#ffffff', 24, 'center', 'bold');
-    renderer.text(200, 235, 'You understand how liquids defy gravity', '#cbd5e1', 14, 'center');
-    renderer.text(200, 258, 'through surface tension and adhesion!', '#cbd5e1', 14, 'center');
+    r.text(200, 200, 'Capillary Action Master!', { fill: '#ffffff', fontSize: 24, fontWeight: 'bold', textAnchor: 'middle' });
+    r.text(200, 235, 'You understand how liquids defy gravity', { fill: '#cbd5e1', fontSize: 14, textAnchor: 'middle' });
+    r.text(200, 258, 'through surface tension and adhesion!', { fill: '#cbd5e1', fontSize: 14, textAnchor: 'middle' });
 
     // Concept badges
     const concepts = [
-      { icon: '[Formula]', label: 'Jurin\'s Law: h ~ 1/r' },
-      { icon: '[Drop]', label: 'Surface Tension' },
-      { icon: '[Angle]', label: 'Contact Angles' },
-      { icon: '[Tree]', label: 'Nature\'s Plumbing' }
+      { icon: '📐', label: "Jurin's Law: h ∝ 1/r" },
+      { icon: '💧', label: 'Surface Tension' },
+      { icon: '📏', label: 'Contact Angles' },
+      { icon: '🌳', label: "Nature's Plumbing" }
     ];
 
     concepts.forEach((concept, i) => {
-      const x = 55 + (i % 2) * 150;
-      const y = 300 + Math.floor(i / 2) * 70;
-      renderer.roundRect(x, y, 140, 55, 10, 'rgba(30, 41, 59, 0.5)');
-      renderer.text(x + 70, y + 25, concept.icon, '#22d3ee', 18, 'center');
-      renderer.text(x + 70, y + 45, concept.label, '#cbd5e1', 10, 'center');
+      const x = 55 + (i % 2) * 155;
+      const y = 295 + Math.floor(i / 2) * 75;
+      r.roundRect(x, y, 140, 60, 10, { fill: 'rgba(30, 41, 59, 0.5)' });
+      r.text(x + 70, y + 25, concept.icon, { fontSize: 20, textAnchor: 'middle' });
+      r.text(x + 70, y + 48, concept.label, { fill: '#cbd5e1', fontSize: 10, textAnchor: 'middle' });
     });
 
     // Key formula
-    renderer.roundRect(60, 460, 280, 70, 12, 'rgba(30, 41, 59, 0.3)');
-    renderer.text(200, 485, 'Key Formula', '#22d3ee', 14, 'center', 'bold');
-    renderer.text(200, 510, 'h = 2*gamma*cos(theta)/(rho*g*r)', '#ffffff', 14, 'center');
+    r.roundRect(50, 460, 300, 70, 12, { fill: 'rgba(8, 145, 178, 0.2)' });
+    r.text(200, 488, 'Key Formula', { fill: '#22d3ee', fontSize: 14, fontWeight: 'bold', textAnchor: 'middle' });
+    r.text(200, 515, 'h = 2γcosθ / (ρgr)', { fill: '#ffffff', fontSize: 16, textAnchor: 'middle' });
 
-    // Restart button
-    renderer.roundRect(120, 560, 160, 45, 22, '#475569');
-    renderer.text(200, 588, 'Explore Again', '#ffffff', 14, 'center', 'bold');
+    r.addButton({ id: 'restart', label: 'Explore Again', variant: 'secondary' });
+
+    r.setCoachMessage('Congratulations on mastering capillary action!');
   }
 
   getState(): Record<string, unknown> {
@@ -959,6 +966,7 @@ export class CapillaryActionGame extends BaseGame {
       tubeRadius: this.tubeRadius,
       animationTime: this.animationTime,
       testAnswers: this.testAnswers,
+      currentQuestionIndex: this.currentQuestionIndex,
       showTestResults: this.showTestResults,
       activeAppIndex: this.activeAppIndex,
       completedApps: Array.from(this.completedApps)
@@ -974,6 +982,7 @@ export class CapillaryActionGame extends BaseGame {
     if (state.tubeRadius !== undefined) this.tubeRadius = state.tubeRadius as number;
     if (state.animationTime !== undefined) this.animationTime = state.animationTime as number;
     if (state.testAnswers) this.testAnswers = state.testAnswers as number[];
+    if (state.currentQuestionIndex !== undefined) this.currentQuestionIndex = state.currentQuestionIndex as number;
     if (state.showTestResults !== undefined) this.showTestResults = state.showTestResults as boolean;
     if (state.activeAppIndex !== undefined) this.activeAppIndex = state.activeAppIndex as number;
     if (state.completedApps) this.completedApps = new Set(state.completedApps as number[]);
