@@ -262,6 +262,22 @@ const WaveParticleDualityRenderer: React.FC<WaveParticleDualityRendererProps> = 
       textMuted: '#64748b', // slate-500
    };
 
+   // Typography & Spacing - optimized to minimize scrolling while maintaining readability
+   const typo = {
+      // Font sizes - compact but readable
+      label: isMobile ? '9px' : '10px',        // Phase labels, section tags
+      small: isMobile ? '11px' : '12px',       // Hints, descriptions
+      body: isMobile ? '12px' : '13px',        // Main body text
+      bodyLarge: isMobile ? '13px' : '14px',   // Important paragraphs
+      heading: isMobile ? '18px' : '22px',     // Section headings
+      title: isMobile ? '24px' : '32px',       // Main titles (hook page)
+      // Spacing - tighter to fit more content
+      pagePadding: isMobile ? '12px' : '16px',
+      sectionGap: isMobile ? '12px' : '14px',
+      cardPadding: isMobile ? '10px' : '14px',
+      elementGap: isMobile ? '8px' : '10px',
+   };
+
    // Button component with debouncing to prevent double-clicks
    const Button: React.FC<{
       children: React.ReactNode;
@@ -667,10 +683,10 @@ const WaveParticleDualityRenderer: React.FC<WaveParticleDualityRendererProps> = 
 
    // Helper function for section header - NOT a component
    const renderSectionHeader = (phaseName: string, title: string, subtitle?: string) => (
-      <div style={{ marginBottom: isMobile ? '12px' : '16px' }}>
-         <p style={{ fontSize: '11px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '4px', color: colors.primary }}>{phaseName}</p>
-         <h2 style={{ fontSize: isMobile ? '20px' : '24px', fontWeight: 800, color: colors.textPrimary, lineHeight: 1.2 }}>{title}</h2>
-         {subtitle && <p style={{ fontSize: isMobile ? '12px' : '13px', marginTop: '6px', color: colors.textSecondary, lineHeight: 1.4 }}>{subtitle}</p>}
+      <div style={{ marginBottom: typo.sectionGap }}>
+         <p style={{ fontSize: typo.label, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '3px', color: colors.primary }}>{phaseName}</p>
+         <h2 style={{ fontSize: typo.heading, fontWeight: 800, color: colors.textPrimary, lineHeight: 1.2, margin: 0 }}>{title}</h2>
+         {subtitle && <p style={{ fontSize: typo.small, marginTop: '4px', color: colors.textSecondary, lineHeight: 1.4, margin: 0 }}>{subtitle}</p>}
       </div>
    );
 
@@ -1361,12 +1377,12 @@ const WaveParticleDualityRenderer: React.FC<WaveParticleDualityRendererProps> = 
                position: 'relative',
                zIndex: 1
             }}>
-               {/* Animated atom visualization */}
+               {/* Animated atom visualization - more compact */}
                <div style={{
                   position: 'relative',
-                  width: isMobile ? '100px' : '140px',
-                  height: isMobile ? '100px' : '140px',
-                  marginBottom: isMobile ? '24px' : '32px'
+                  width: isMobile ? '80px' : '110px',
+                  height: isMobile ? '80px' : '110px',
+                  marginBottom: isMobile ? '16px' : '24px'
                }}>
                   {/* Orbit rings */}
                   <svg viewBox="0 0 140 140" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%' }}>
@@ -1411,33 +1427,32 @@ const WaveParticleDualityRenderer: React.FC<WaveParticleDualityRendererProps> = 
                   }} />
                </div>
 
-               {/* Category tag */}
+               {/* Category tag - compact */}
                <div style={{
                   display: 'inline-flex',
                   alignItems: 'center',
-                  gap: '6px',
-                  padding: '6px 14px',
-                  borderRadius: '20px',
+                  gap: '5px',
+                  padding: '4px 10px',
+                  borderRadius: '12px',
                   background: 'rgba(6,182,212,0.1)',
                   border: '1px solid rgba(6,182,212,0.2)',
-                  marginBottom: isMobile ? '12px' : '16px'
+                  marginBottom: isMobile ? '10px' : '12px'
                }}>
-                  <span style={{ fontSize: '10px', color: colors.primary }}>●</span>
-                  <span style={{ fontSize: '11px', fontWeight: 600, color: colors.primary, letterSpacing: '0.5px', textTransform: 'uppercase' }}>Quantum Physics</span>
+                  <span style={{ fontSize: typo.label, color: colors.primary }}>●</span>
+                  <span style={{ fontSize: typo.label, fontWeight: 600, color: colors.primary, letterSpacing: '0.5px', textTransform: 'uppercase' }}>Quantum Physics</span>
                </div>
 
-               {/* Main title - elegant typography */}
+               {/* Main title - compact but impactful */}
                <h1 style={{
-                  fontSize: isMobile ? '28px' : '42px',
+                  fontSize: typo.title,
                   fontWeight: 700,
                   color: colors.textPrimary,
-                  marginBottom: isMobile ? '12px' : '16px',
+                  marginBottom: isMobile ? '8px' : '12px',
                   lineHeight: 1.1,
                   letterSpacing: '-0.02em',
-                  maxWidth: '500px'
+                  margin: 0
                }}>
-                  The Double-Slit
-                  <br />
+                  The Double-Slit{' '}
                   <span style={{
                      background: 'linear-gradient(135deg, #06b6d4 0%, #a855f7 50%, #ec4899 100%)',
                      WebkitBackgroundClip: 'text',
@@ -1446,99 +1461,89 @@ const WaveParticleDualityRenderer: React.FC<WaveParticleDualityRendererProps> = 
                   }}>Experiment</span>
                </h1>
 
-               {/* Description paragraph */}
+               {/* Description - condensed */}
                <p style={{
-                  fontSize: isMobile ? '14px' : '16px',
+                  fontSize: typo.body,
                   color: colors.textSecondary,
-                  lineHeight: 1.7,
+                  lineHeight: 1.6,
                   textAlign: 'center',
-                  maxWidth: '420px',
-                  marginBottom: isMobile ? '16px' : '20px'
+                  maxWidth: '380px',
+                  margin: 0,
+                  marginBottom: isMobile ? '12px' : '16px'
                }}>
-                  Discover the experiment that shattered our understanding of reality.
-                  Fire electrons one at a time and witness the impossible — particles
-                  that behave like waves.
+                  The experiment that shattered our understanding of reality.
+                  Watch particles behave like waves.
                </p>
 
-               {/* Quote with elegant styling */}
+               {/* Quote - compact */}
                <div style={{
-                  maxWidth: '400px',
-                  marginBottom: isMobile ? '20px' : '28px',
-                  position: 'relative',
-                  padding: isMobile ? '12px 16px' : '16px 24px',
-                  background: 'rgba(6,182,212,0.08)',
-                  borderRadius: '12px',
-                  borderLeft: `3px solid ${colors.primary}`
+                  maxWidth: '360px',
+                  marginBottom: isMobile ? '14px' : '18px',
+                  padding: isMobile ? '10px 12px' : '12px 16px',
+                  background: 'rgba(6,182,212,0.06)',
+                  borderRadius: '10px',
+                  borderLeft: `2px solid ${colors.primary}`
                }}>
                   <p style={{
-                     fontSize: isMobile ? '13px' : '15px',
-                     color: colors.textPrimary,
-                     lineHeight: 1.6,
+                     fontSize: typo.small,
+                     color: colors.textSecondary,
+                     lineHeight: 1.5,
                      fontStyle: 'italic',
                      margin: 0
                   }}>
-                     "I think I can safely say that nobody understands quantum mechanics...
-                     The double-slit experiment contains the only mystery."
-                  </p>
-                  <p style={{
-                     fontSize: '11px',
-                     color: colors.textMuted,
-                     marginTop: '8px',
-                     fontWeight: 600,
-                     marginBottom: 0
-                  }}>
-                     — Richard Feynman, Nobel Prize in Physics
+                     "The double-slit experiment contains the only mystery of quantum mechanics."
+                     <span style={{ color: colors.textMuted, fontWeight: 600, marginLeft: '6px' }}>— Feynman</span>
                   </p>
                </div>
 
-               {/* Feature pills - horizontal */}
+               {/* Feature pills - compact horizontal */}
                <div style={{
                   display: 'flex',
                   flexWrap: 'wrap',
                   justifyContent: 'center',
-                  gap: '8px',
-                  marginBottom: isMobile ? '24px' : '32px'
+                  gap: '6px',
+                  marginBottom: isMobile ? '16px' : '20px'
                }}>
                   {[
-                     { icon: '⚡', text: '5 min', color: '#f59e0b' },
-                     { icon: '🧪', text: 'Interactive Lab', color: '#06b6d4' },
-                     { icon: '🧠', text: 'Test Your Intuition', color: '#a855f7' }
+                     { icon: '⚡', text: '5 min' },
+                     { icon: '🧪', text: 'Lab' },
+                     { icon: '🧠', text: 'Quiz' }
                   ].map((item, i) => (
                      <div key={i} style={{
                         display: 'flex',
                         alignItems: 'center',
-                        gap: '6px',
-                        padding: '8px 14px',
-                        borderRadius: '24px',
-                        background: `${item.color}10`,
-                        border: `1px solid ${item.color}25`
+                        gap: '4px',
+                        padding: '5px 10px',
+                        borderRadius: '16px',
+                        background: colors.bgCardLight,
+                        border: `1px solid ${colors.border}`
                      }}>
-                        <span style={{ fontSize: '12px' }}>{item.icon}</span>
-                        <span style={{ fontSize: '12px', fontWeight: 600, color: item.color }}>{item.text}</span>
+                        <span style={{ fontSize: '10px' }}>{item.icon}</span>
+                        <span style={{ fontSize: typo.label, fontWeight: 600, color: colors.textSecondary }}>{item.text}</span>
                      </div>
                   ))}
                </div>
 
-               {/* Premium CTA Button */}
+               {/* CTA Button - compact */}
                <button
                   style={{
                      display: 'flex',
                      alignItems: 'center',
                      justifyContent: 'center',
-                     gap: '10px',
+                     gap: '8px',
                      width: '100%',
-                     maxWidth: '300px',
-                     padding: isMobile ? '16px 28px' : '18px 36px',
-                     fontSize: isMobile ? '15px' : '16px',
+                     maxWidth: '240px',
+                     padding: isMobile ? '12px 20px' : '14px 28px',
+                     fontSize: typo.bodyLarge,
                      fontWeight: 600,
                      background: 'linear-gradient(135deg, #06b6d4 0%, #0891b2 50%, #a855f7 100%)',
                      backgroundSize: '200% 200%',
                      color: 'white',
                      border: 'none',
-                     borderRadius: '16px',
+                     borderRadius: '12px',
                      cursor: 'pointer',
-                     boxShadow: '0 8px 32px rgba(6,182,212,0.35), 0 2px 8px rgba(0,0,0,0.2)',
-                     minHeight: '56px',
+                     boxShadow: '0 6px 24px rgba(6,182,212,0.3)',
+                     minHeight: '44px',
                      transition: 'all 0.3s ease',
                      animation: 'gradientShift 3s ease infinite'
                   }}
@@ -1594,151 +1599,146 @@ const WaveParticleDualityRenderer: React.FC<WaveParticleDualityRendererProps> = 
    if (phase === 'predict') {
       return (
          <PremiumWrapper footer={renderBottomBar(true, !!prediction, "Run Experiment")}>
-         {/* Content wrapper - uses flex from PremiumWrapper */}
-         <div style={{
-            display: 'flex',
-            flexDirection: 'column',
-            padding: isMobile ? '12px' : '16px',
-            paddingBottom: '0',
-            alignItems: 'center',
-            width: '100%'
-         }}>
-            <div style={{ width: '100%', maxWidth: '600px' }}>
-                  {renderSectionHeader("Step 1 • Make Your Prediction", "What Will Electrons Do?", "Think carefully — your intuition may not apply here.")}
+         <div style={{ padding: typo.pagePadding, maxWidth: '600px', margin: '0 auto' }}>
+            {renderSectionHeader("Step 1 • Make Your Prediction", "What Will Electrons Do?", "Think about what pattern you expect before we run the experiment.")}
 
-                  {/* Setup diagram - compact */}
-                  <div style={{
-                     width: '100%',
-                     padding: isMobile ? '8px' : '12px',
-                     borderRadius: '12px',
-                     marginBottom: '12px',
-                     background: colors.bgCard,
-                     border: `1px solid ${colors.border}`
-                  }}>
-                     <svg viewBox="0 0 400 100" style={{ width: '100%', height: isMobile ? '70px' : '80px' }}>
-                        <rect x="25" y="25" width="50" height="40" rx="6" fill={colors.bgCardLight} stroke={colors.border} />
-                        <circle cx="50" cy="45" r="8" fill={colors.primary} opacity="0.6">
-                           <animate attributeName="opacity" values="0.4;0.8;0.4" dur="1s" repeatCount="indefinite" />
-                        </circle>
-                        <text x="50" y="80" textAnchor="middle" style={{ fontSize: '8px', fill: colors.textMuted, fontWeight: 600 }}>e⁻ Gun</text>
-                        <line x1="80" y1="45" x2="135" y2="45" stroke={colors.primary} strokeWidth="2" strokeDasharray="4 2" strokeOpacity="0.4" />
-                        <rect x="135" y="10" width="14" height="30" fill={colors.bgCardLight} />
-                        <rect x="135" y="43" width="14" height="8" fill="#000" />
-                        <rect x="135" y="54" width="14" height="30" fill={colors.bgCardLight} />
-                        <text x="142" y="95" textAnchor="middle" style={{ fontSize: '8px', fill: colors.textMuted, fontWeight: 600 }}>Slits</text>
-                        <text x="230" y="55" style={{ fontSize: '28px', fill: colors.textMuted, fontWeight: 900 }}>?</text>
-                        <rect x="320" y="10" width="30" height="74" rx="4" fill="#064e3b" stroke={colors.border} />
-                        <text x="335" y="95" textAnchor="middle" style={{ fontSize: '8px', fill: colors.textMuted, fontWeight: 600 }}>Screen</text>
-                     </svg>
-                  </div>
+            {/* Compact setup explanation + diagram combined */}
+            <div style={{
+               padding: typo.cardPadding,
+               borderRadius: '12px',
+               marginBottom: typo.sectionGap,
+               background: colors.bgCard,
+               border: `1px solid ${colors.border}`
+            }}>
+               <p style={{ fontSize: typo.body, lineHeight: 1.5, color: colors.textSecondary, margin: 0, marginBottom: typo.elementGap }}>
+                  An <strong style={{ color: colors.primary }}>electron gun</strong> fires electrons one at a time through <strong style={{ color: colors.primary }}>two slits</strong> onto a <strong style={{ color: colors.primary }}>detection screen</strong>.
+               </p>
+               <svg viewBox="0 0 500 110" style={{ width: '100%', height: isMobile ? '75px' : '90px' }}>
+                  {/* Electron gun */}
+                  <rect x="20" y="40" width="70" height="50" rx="8" fill={colors.bgCardLight} stroke={colors.border} strokeWidth="2" />
+                  <circle cx="55" cy="65" r="12" fill={colors.primary} opacity="0.3">
+                     <animate attributeName="r" values="10;14;10" dur="1.5s" repeatCount="indefinite" />
+                  </circle>
+                  <circle cx="55" cy="65" r="6" fill={colors.primary}>
+                     <animate attributeName="opacity" values="0.6;1;0.6" dur="1s" repeatCount="indefinite" />
+                  </circle>
+                  <text x="55" y="110" textAnchor="middle" style={{ fontSize: '10px', fill: colors.textSecondary, fontWeight: 600 }}>Electron Gun</text>
+                  <text x="55" y="122" textAnchor="middle" style={{ fontSize: '8px', fill: colors.textMuted }}>fires one at a time</text>
 
-                  {/* Question context - compact */}
-                  <div style={{
-                     padding: isMobile ? '10px' : '12px',
-                     borderRadius: '10px',
-                     marginBottom: '12px',
-                     background: `${colors.primary}12`,
-                     border: `1px solid ${colors.primary}25`
-                  }}>
-                     <p style={{ fontSize: isMobile ? '12px' : '13px', lineHeight: 1.5, color: colors.textSecondary, margin: 0 }}>
-                        <strong style={{ color: colors.textPrimary }}>Setup:</strong> We fire electrons one at a time through two slits.
-                        <strong style={{ color: colors.primary }}> What pattern forms on the screen?</strong>
-                     </p>
-                  </div>
+                  {/* Electron path with animated dot */}
+                  <line x1="95" y1="65" x2="175" y2="65" stroke={colors.primary} strokeWidth="2" strokeDasharray="6 4" strokeOpacity="0.4" />
+                  <circle cx="135" cy="65" r="4" fill={colors.primary}>
+                     <animate attributeName="cx" values="100;170;100" dur="2s" repeatCount="indefinite" />
+                     <animate attributeName="opacity" values="1;0.3;1" dur="2s" repeatCount="indefinite" />
+                  </circle>
 
-                  {/* Options - more compact */}
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '12px' }}>
-                     {[
-                        { id: 'two', label: 'Two separate bands', desc: 'Particles choose one slit', icon: '▮ ▮' },
-                        { id: 'interference', label: 'Multiple bands', desc: 'Wave-like interference pattern', icon: '▮▯▮▯▮' },
-                        { id: 'one', label: 'One blob', desc: 'Random scatter', icon: '▓▓▓' },
-                     ].map(opt => (
-                        <button
-                           key={opt.id}
-                           onMouseDown={() => {
-                              setPrediction(opt.id);
-                              emitGameEvent('prediction_made', {
-                                 phase: 'predict',
-                                 phaseLabel: 'Making Prediction',
-                                 prediction: opt.id,
-                                 predictionLabel: opt.label,
-                                 message: `User predicted: ${opt.label}`
-                              });
-                           }}
-                           onTouchEnd={(e) => {
-                              e.preventDefault();
-                              setPrediction(opt.id);
-                              emitGameEvent('prediction_made', {
-                                 phase: 'predict',
-                                 phaseLabel: 'Making Prediction',
-                                 prediction: opt.id,
-                                 predictionLabel: opt.label,
-                                 message: `User predicted: ${opt.label}`
-                              });
-                           }}
-                           style={{
-                              display: 'flex',
-                              alignItems: 'center',
-                              gap: '12px',
-                              padding: isMobile ? '12px' : '14px',
-                              borderRadius: '12px',
-                              textAlign: 'left',
-                              background: prediction === opt.id ? `${colors.primary}18` : colors.bgCard,
-                              border: `2px solid ${prediction === opt.id ? colors.primary : colors.border}`,
-                              cursor: 'pointer',
-                              transition: 'all 0.15s'
-                           }}
-                        >
-                           <div style={{
-                              fontSize: '16px',
-                              fontFamily: 'monospace',
-                              color: prediction === opt.id ? colors.primary : colors.textMuted,
-                              letterSpacing: '1px',
-                              flexShrink: 0
-                           }}>
-                              {opt.icon}
-                           </div>
-                           <div style={{ flex: 1, minWidth: 0 }}>
-                              <p style={{
-                                 fontWeight: 700,
-                                 fontSize: isMobile ? '13px' : '14px',
-                                 marginBottom: '2px',
-                                 color: prediction === opt.id ? colors.textPrimary : colors.textSecondary
-                              }}>{opt.label}</p>
-                              <p style={{ fontSize: '11px', color: colors.textMuted, margin: 0 }}>{opt.desc}</p>
-                           </div>
-                           {prediction === opt.id && (
-                              <div style={{
-                                 width: '22px',
-                                 height: '22px',
-                                 borderRadius: '50%',
-                                 background: colors.primary,
-                                 display: 'flex',
-                                 alignItems: 'center',
-                                 justifyContent: 'center',
-                                 flexShrink: 0
-                              }}>
-                                 <span style={{ color: 'white', fontSize: '12px' }}>✓</span>
-                              </div>
-                           )}
-                        </button>
-                     ))}
-                  </div>
+                  {/* Barrier with slits */}
+                  <rect x="175" y="20" width="16" height="35" rx="2" fill={colors.textMuted} />
+                  <rect x="175" y="52" width="16" height="16" fill="black" />
+                  <rect x="183" y="52" width="2" height="16" fill={colors.primary} opacity="0.3" />
+                  <rect x="175" y="85" width="16" height="35" rx="2" fill={colors.textMuted} />
+                  <text x="183" y="45" textAnchor="middle" style={{ fontSize: '7px', fill: colors.bgDark, fontWeight: 700 }}>A</text>
+                  <text x="183" y="115" textAnchor="middle" style={{ fontSize: '7px', fill: colors.bgDark, fontWeight: 700 }}>B</text>
+                  <text x="183" y="135" textAnchor="middle" style={{ fontSize: '10px', fill: colors.textSecondary, fontWeight: 600 }}>Two Slits</text>
 
-                  {/* Hint - compact */}
-                  <div style={{
-                     padding: '10px',
-                     borderRadius: '10px',
-                     background: colors.bgCardLight,
-                     border: `1px solid ${colors.border}`
-                  }}>
-                     <p style={{ fontSize: '10px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '4px', color: colors.warning }}>💡 Hint</p>
-                     <p style={{ fontSize: '12px', color: colors.textMuted, margin: 0, lineHeight: 1.4 }}>
-                        Particles → two bands. Waves → interference pattern.
-                     </p>
-                  </div>
-               </div>
+                  {/* Question mark area */}
+                  <rect x="220" y="30" width="120" height="80" rx="12" fill={`${colors.warning}10`} stroke={colors.warning} strokeWidth="2" strokeDasharray="8 4" />
+                  <text x="280" y="75" textAnchor="middle" style={{ fontSize: '36px', fill: colors.warning, fontWeight: 900 }}>?</text>
+                  <text x="280" y="95" textAnchor="middle" style={{ fontSize: '9px', fill: colors.warning, fontWeight: 600 }}>What happens here?</text>
+
+                  {/* Detection screen */}
+                  <rect x="370" y="20" width="25" height="100" rx="4" fill="#064e3b" stroke={colors.success} strokeWidth="2" />
+                  <text x="382" y="135" textAnchor="middle" style={{ fontSize: '10px', fill: colors.textSecondary, fontWeight: 600 }}>Screen</text>
+
+                  {/* Arrow showing direction */}
+                  <path d="M 400 70 L 420 70 L 415 65 M 420 70 L 415 75" stroke={colors.textMuted} strokeWidth="2" fill="none" />
+               </svg>
             </div>
+
+            {/* The key question - inline */}
+            <p style={{ fontSize: typo.bodyLarge, fontWeight: 600, color: colors.textPrimary, margin: 0, marginBottom: typo.sectionGap, textAlign: 'center' }}>
+               What pattern will form after firing <span style={{ color: colors.primary }}>thousands of electrons</span>?
+            </p>
+
+            {/* Compact options */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: typo.elementGap, marginBottom: typo.sectionGap }}>
+               {[
+                  { id: 'two', label: 'Two bands', desc: 'Particles go through one slit each', icon: '▮ ▮', tag: 'Particle' },
+                  { id: 'interference', label: 'Multiple bands', desc: 'Wave interference pattern', icon: '▮▯▮▯▮', tag: 'Wave' },
+                  { id: 'one', label: 'One blob', desc: 'Random scatter pattern', icon: '░▓░', tag: 'Random' },
+               ].map(opt => (
+                  <button
+                     key={opt.id}
+                     onMouseDown={() => {
+                        setPrediction(opt.id);
+                        emitGameEvent('prediction_made', {
+                           phase: 'predict',
+                           phaseLabel: 'Making Prediction',
+                           prediction: opt.id,
+                           predictionLabel: opt.label,
+                           message: `User predicted: ${opt.label}`
+                        });
+                     }}
+                     onTouchEnd={(e) => {
+                        e.preventDefault();
+                        setPrediction(opt.id);
+                        emitGameEvent('prediction_made', {
+                           phase: 'predict',
+                           phaseLabel: 'Making Prediction',
+                           prediction: opt.id,
+                           predictionLabel: opt.label,
+                           message: `User predicted: ${opt.label}`
+                        });
+                     }}
+                     style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '10px',
+                        padding: isMobile ? '10px' : '12px',
+                        borderRadius: '10px',
+                        textAlign: 'left',
+                        background: prediction === opt.id ? `${colors.primary}15` : colors.bgCard,
+                        border: `2px solid ${prediction === opt.id ? colors.primary : colors.border}`,
+                        cursor: 'pointer'
+                     }}
+                  >
+                     <div style={{
+                        width: '40px',
+                        height: '40px',
+                        borderRadius: '8px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        fontSize: '12px',
+                        fontFamily: 'monospace',
+                        background: prediction === opt.id ? `${colors.primary}25` : colors.bgCardLight,
+                        color: prediction === opt.id ? colors.primary : colors.textMuted,
+                        flexShrink: 0,
+                        fontWeight: 700
+                     }}>
+                        {opt.icon}
+                     </div>
+                     <div style={{ flex: 1 }}>
+                        <p style={{ fontWeight: 700, fontSize: typo.body, margin: 0, color: prediction === opt.id ? colors.textPrimary : colors.textSecondary }}>{opt.label}</p>
+                        <p style={{ fontSize: typo.small, color: colors.textMuted, margin: 0 }}>{opt.desc}</p>
+                     </div>
+                     <span style={{ fontSize: typo.label, padding: '2px 6px', borderRadius: '6px', background: colors.bgCardLight, color: colors.textMuted }}>{opt.tag}</span>
+                     {prediction === opt.id && (
+                        <div style={{ width: '20px', height: '20px', borderRadius: '50%', background: colors.primary, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                           <span style={{ color: 'white', fontSize: '11px' }}>✓</span>
+                        </div>
+                     )}
+                  </button>
+               ))}
+            </div>
+
+            {/* Compact hint */}
+            <div style={{ padding: typo.cardPadding, borderRadius: '10px', background: `${colors.warning}08`, border: `1px solid ${colors.warning}25` }}>
+               <p style={{ fontSize: typo.small, color: colors.textSecondary, margin: 0, lineHeight: 1.5 }}>
+                  <span style={{ color: colors.warning, fontWeight: 700 }}>💡 Hint:</span> Particles → two bands. Waves → interference. <em style={{ color: colors.textMuted }}>But electrons are fired one at a time...</em>
+               </p>
+            </div>
+         </div>
          </PremiumWrapper>
       );
    }
@@ -2404,114 +2404,183 @@ const WaveParticleDualityRenderer: React.FC<WaveParticleDualityRendererProps> = 
          }
       };
 
-      return (
-         <PremiumWrapper>
-         <div className="flex flex-col h-full overflow-hidden">
+      // Transfer phase footer
+      const transferFooter = (
+         <div style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            padding: '12px 16px',
+            borderTop: `1px solid ${colors.border}`,
+            backgroundColor: colors.bgCard,
+            gap: '12px'
+         }}>
+            <button
+               style={{
+                  padding: '10px 16px',
+                  borderRadius: '10px',
+                  fontWeight: 600,
+                  fontSize: '13px',
+                  backgroundColor: colors.bgCardLight,
+                  color: colors.textSecondary,
+                  border: 'none',
+                  cursor: 'pointer',
+                  flexShrink: 0
+               }}
+               onMouseDown={() => goToPhase('twist_review')}
+            >
+               ← Back
+            </button>
 
-            {/* Compact header with tabs */}
-            <div className="px-4 pt-4 pb-2" style={{ background: colors.bgCard, borderBottom: `1px solid ${colors.border}` }}>
-               <div className="flex items-center justify-between mb-3">
-                  <div>
-                     <p className="text-xs font-bold uppercase tracking-widest" style={{ color: colors.success }}>Step 7 • Real World Applications</p>
-                     <p className="text-xs mt-1" style={{ color: colors.textMuted }}>{completedCount}/4 completed — {allCompleted ? 'Ready for test!' : 'Complete all to unlock test'}</p>
+            {!isCurrentCompleted ? (
+               <button
+                  onMouseDown={handleCompleteApp}
+                  style={{
+                     flex: 1,
+                     maxWidth: '28rem',
+                     padding: '12px 20px',
+                     borderRadius: '10px',
+                     fontWeight: 700,
+                     fontSize: '14px',
+                     background: `linear-gradient(135deg, ${currentApp.color} 0%, ${colors.accent} 100%)`,
+                     color: 'white',
+                     border: 'none',
+                     cursor: 'pointer',
+                     boxShadow: `0 4px 20px ${currentApp.color}40`
+                  }}
+               >
+                  {selectedApp < 3 ? `✓ Complete & Continue →` : '✓ Complete Final Topic'}
+               </button>
+            ) : (
+               <div style={{ flex: 1, maxWidth: '28rem', textAlign: 'center' }}>
+                  <span style={{ fontSize: '14px', fontWeight: 700, color: colors.success }}>✓ {currentApp.title} completed!</span>
+               </div>
+            )}
+
+            <button
+               style={{
+                  padding: '12px 24px',
+                  borderRadius: '10px',
+                  fontWeight: 700,
+                  fontSize: '14px',
+                  background: allCompleted ? `linear-gradient(135deg, ${colors.warning} 0%, ${colors.accent} 100%)` : colors.bgCardLight,
+                  color: allCompleted ? colors.textPrimary : colors.textMuted,
+                  border: 'none',
+                  cursor: allCompleted ? 'pointer' : 'not-allowed',
+                  opacity: allCompleted ? 1 : 0.5,
+                  boxShadow: allCompleted ? `0 4px 20px ${colors.warning}40` : 'none',
+                  flexShrink: 0
+               }}
+               onMouseDown={() => allCompleted && goToPhase('test')}
+            >
+               {allCompleted ? 'Take Test →' : `${completedCount}/4`}
+            </button>
+         </div>
+      );
+
+      return (
+         <PremiumWrapper footer={transferFooter}>
+         <div style={{ padding: '16px 16px 8px', background: colors.bgCard, borderBottom: `1px solid ${colors.border}` }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
+               <div>
+                  <p style={{ fontSize: '10px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', color: colors.success }}>Step 7 • Real World Applications</p>
+                  <p style={{ fontSize: '12px', marginTop: '4px', color: colors.textMuted }}>{completedCount}/4 completed — {allCompleted ? 'Ready for test!' : 'Complete all to unlock test'}</p>
+               </div>
+               <div style={{ display: 'flex', gap: '6px' }}>
+                  {completedApps.map((completed, i) => (
+                     <div key={i} style={{
+                        width: '12px',
+                        height: '12px',
+                        borderRadius: '50%',
+                        background: completed ? colors.success : i === selectedApp ? realWorldApps[i].color : colors.bgCardLight,
+                        boxShadow: i === selectedApp ? `0 0 8px ${realWorldApps[i].color}` : 'none'
+                     }} />
+                  ))}
+               </div>
+            </div>
+
+            <div style={{ display: 'flex', gap: '8px' }}>
+               {realWorldApps.map((app, i) => {
+                  const isCompleted = completedApps[i];
+                  const isCurrent = selectedApp === i;
+                  const isLocked = i > 0 && !completedApps[i - 1] && !isCompleted;
+
+                  return (
+                     <button
+                        key={i}
+                        onMouseDown={() => {
+                           if (!isLocked && i !== selectedApp) {
+                              setSelectedApp(i);
+                              emitGameEvent('app_changed', {
+                                 phase: 'transfer',
+                                 phaseLabel: 'Real World Applications',
+                                 appNumber: i + 1,
+                                 totalApps: 4,
+                                 appTitle: app.title,
+                                 appTagline: app.tagline,
+                                 appDescription: app.description,
+                                 appConnection: app.connection,
+                                 message: `Switched to application ${i + 1}/4: ${app.title} - ${app.tagline}`
+                              });
+                           }
+                        }}
+                        style={{
+                           flex: 1,
+                           display: 'flex',
+                           alignItems: 'center',
+                           justifyContent: 'center',
+                           gap: '8px',
+                           padding: '8px 12px',
+                           borderRadius: '8px',
+                           textAlign: 'center',
+                           background: isCurrent ? `${app.color}20` : 'transparent',
+                           border: `2px solid ${isCurrent ? app.color : isCompleted ? colors.success : colors.border}`,
+                           opacity: isLocked ? 0.4 : 1,
+                           cursor: isLocked ? 'not-allowed' : 'pointer'
+                        }}
+                     >
+                        <span style={{ fontSize: '18px' }}>{app.icon}</span>
+                        {isCompleted && <span style={{ fontSize: '12px', color: colors.success }}>✓</span>}
+                        {isLocked && <span style={{ fontSize: '12px' }}>🔒</span>}
+                     </button>
+                  );
+               })}
+            </div>
+         </div>
+
+         <div style={{ padding: '16px', maxWidth: '72rem', margin: '0 auto' }}>
+            <div style={{ borderRadius: '16px', overflow: 'hidden', marginBottom: '16px', background: `linear-gradient(135deg, ${currentApp.color}20 0%, ${currentApp.color}05 100%)`, border: `1px solid ${currentApp.color}30` }}>
+               <div style={{ padding: '24px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '16px' }}>
+                     <div style={{ width: '80px', height: '80px', borderRadius: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '48px', background: `${currentApp.color}30`, border: `3px solid ${currentApp.color}` }}>
+                        {currentApp.icon}
+                     </div>
+                     <div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                           <h2 style={{ fontSize: '28px', fontWeight: 900, color: colors.textPrimary, margin: 0 }}>{currentApp.title}</h2>
+                           {isCurrentCompleted && <span style={{ padding: '4px 12px', borderRadius: '8px', fontSize: '14px', fontWeight: 700, background: colors.success, color: 'white' }}>✓ Completed</span>}
+                        </div>
+                        <p style={{ fontSize: '18px', fontWeight: 700, marginTop: '4px', color: currentApp.color }}>{currentApp.tagline}</p>
+                     </div>
                   </div>
-                  {/* Progress dots */}
-                  <div className="flex gap-1.5">
-                     {completedApps.map((completed, i) => (
-                        <div key={i} className="w-3 h-3 rounded-full transition-all" style={{
-                           background: completed ? colors.success : i === selectedApp ? realWorldApps[i].color : colors.bgCardLight,
-                           boxShadow: i === selectedApp ? `0 0 8px ${realWorldApps[i].color}` : 'none'
-                        }} />
+                  <p style={{ fontSize: '16px', lineHeight: 1.6, marginBottom: '20px', color: colors.textSecondary }}>{currentApp.description}</p>
+
+                  <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+                     {currentApp.stats.map((stat, i) => (
+                        <div key={i} style={{ flex: 1, minWidth: '120px', padding: '16px', borderRadius: '12px', textAlign: 'center', background: colors.bgCard, border: `1px solid ${colors.border}` }}>
+                           <p style={{ fontSize: '24px', marginBottom: '4px' }}>{stat.icon}</p>
+                           <p style={{ fontSize: '24px', fontWeight: 900, color: currentApp.color }}>{stat.value}</p>
+                           <p style={{ fontSize: '14px', fontWeight: 700, textTransform: 'uppercase', color: colors.textMuted }}>{stat.label}</p>
+                        </div>
                      ))}
                   </div>
                </div>
 
-               {/* Horizontal tab buttons */}
-               <div className="flex gap-2">
-                  {realWorldApps.map((app, i) => {
-                     const isCompleted = completedApps[i];
-                     const isCurrent = selectedApp === i;
-                     const isLocked = i > 0 && !completedApps[i - 1] && !isCompleted;
-
-                     return (
-                        <button
-                           key={i}
-                           onMouseDown={() => {
-                              if (!isLocked && i !== selectedApp) {
-                                 setSelectedApp(i);
-                                 // Emit event with full app details
-                                 emitGameEvent('app_changed', {
-                                    phase: 'transfer',
-                                    phaseLabel: 'Real World Applications',
-                                    appNumber: i + 1,
-                                    totalApps: 4,
-                                    appTitle: app.title,
-                                    appTagline: app.tagline,
-                                    appDescription: app.description,
-                                    appConnection: app.connection,
-                                    message: `Switched to application ${i + 1}/4: ${app.title} - ${app.tagline}`
-                                 });
-                              }
-                           }}
-                           className="flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-lg text-center transition-all"
-                           style={{
-                              background: isCurrent ? `${app.color}20` : 'transparent',
-                              border: `2px solid ${isCurrent ? app.color : isCompleted ? colors.success : colors.border}`,
-                              opacity: isLocked ? 0.4 : 1,
-                              cursor: isLocked ? 'not-allowed' : 'pointer'
-                           }}
-                        >
-                           <span className="text-lg">{app.icon}</span>
-                           <span className="text-xs font-bold hidden sm:inline" style={{ color: isCurrent ? colors.textPrimary : colors.textSecondary }}>
-                              {app.title.split(' ')[0]}
-                           </span>
-                           {isCompleted && <span className="text-xs" style={{ color: colors.success }}>✓</span>}
-                           {isLocked && <span className="text-xs">🔒</span>}
-                        </button>
-                     );
-                  })}
-               </div>
-            </div>
-
-            {/* Main content - rich visual layout */}
-            <div className="flex-1 overflow-y-auto">
-               <div className="p-4 max-w-6xl mx-auto">
-                  {/* Hero header */}
-                  <div className="rounded-2xl overflow-hidden mb-4" style={{ background: `linear-gradient(135deg, ${currentApp.color}20 0%, ${currentApp.color}05 100%)`, border: `1px solid ${currentApp.color}30` }}>
-                     {/* Top: Info */}
-                     <div className="p-6">
-                        <div className="flex items-center gap-4 mb-4">
-                           <div className="w-20 h-20 rounded-2xl flex items-center justify-center text-5xl" style={{ background: `${currentApp.color}30`, border: `3px solid ${currentApp.color}` }}>
-                              {currentApp.icon}
-                           </div>
-                           <div>
-                              <div className="flex items-center gap-3">
-                                 <h2 className="text-3xl font-black" style={{ color: colors.textPrimary }}>{currentApp.title}</h2>
-                                 {isCurrentCompleted && <span className="px-3 py-1 rounded-lg text-sm font-bold" style={{ background: colors.success, color: 'white' }}>✓ Completed</span>}
-                              </div>
-                              <p className="text-lg font-bold mt-1" style={{ color: currentApp.color }}>{currentApp.tagline}</p>
-                           </div>
-                        </div>
-                        <p className="text-base leading-relaxed mb-5" style={{ color: colors.textSecondary }}>{currentApp.description}</p>
-
-                        {/* Stats row */}
-                        <div className="flex gap-3 flex-wrap">
-                           {currentApp.stats.map((stat, i) => (
-                              <div key={i} className="flex-1 min-w-[120px] p-4 rounded-xl text-center" style={{ background: colors.bgCard, border: `1px solid ${colors.border}` }}>
-                                 <p className="text-2xl mb-1">{stat.icon}</p>
-                                 <p className="text-2xl font-black" style={{ color: currentApp.color }}>{stat.value}</p>
-                                 <p className="text-sm font-bold uppercase" style={{ color: colors.textMuted }}>{stat.label}</p>
-                              </div>
-                           ))}
-                        </div>
-                     </div>
-
-                     {/* Large Visual Diagram - Full width, much larger */}
-                     <div className="p-4 mx-4 mb-4 rounded-xl" style={{ background: colors.bgDark }}>
-                        <p className="text-center text-sm font-bold uppercase tracking-wider mb-3" style={{ color: currentApp.color }}>
-                           🔬 How {currentApp.title} Uses Quantum Mechanics
-                        </p>
-                        <svg viewBox="0 0 600 320" className="w-full" style={{ maxHeight: '340px' }}>
+               <div style={{ padding: '16px', margin: '0 16px 16px', borderRadius: '12px', background: colors.bgDark }}>
+                  <p style={{ textAlign: 'center', fontSize: '14px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '12px', color: currentApp.color }}>
+                     🔬 How {currentApp.title} Uses Quantum Mechanics
+                  </p>
+                  <svg viewBox="0 0 600 320" style={{ width: '100%', maxHeight: '340px' }}>
                               {selectedApp === 0 && (
                                  /* Quantum Computing - Shows superposition like double-slit */
                                  <g>
@@ -2850,139 +2919,57 @@ const WaveParticleDualityRenderer: React.FC<WaveParticleDualityRendererProps> = 
                         </div>
                      </div>
 
-                  {/* Content grid */}
-                  <div className="grid md:grid-cols-2 gap-4 mb-4">
-                     {/* Connection to Double-Slit */}
-                     <div className="p-4 rounded-xl" style={{ background: `${colors.primary}10`, border: `1px solid ${colors.primary}30` }}>
-                        <div className="flex items-center gap-2 mb-2">
-                           <span className="text-lg">🔗</span>
-                           <p className="text-xs font-bold uppercase tracking-wider" style={{ color: colors.primary }}>Double-Slit Connection</p>
-                        </div>
-                        <p className="text-sm leading-relaxed" style={{ color: colors.textSecondary }}>{currentApp.connection}</p>
-                     </div>
-
-                     {/* How it works */}
-                     <div className="p-4 rounded-xl" style={{ background: colors.bgCard, border: `1px solid ${colors.border}` }}>
-                        <div className="flex items-center gap-2 mb-2">
-                           <span className="text-lg">⚙️</span>
-                           <p className="text-xs font-bold uppercase tracking-wider" style={{ color: colors.textMuted }}>How It Works</p>
-                        </div>
-                        <p className="text-sm leading-relaxed" style={{ color: colors.textSecondary }}>{currentApp.howItWorks}</p>
-                     </div>
+            <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: '16px', marginBottom: '16px' }}>
+               <div style={{ padding: '16px', borderRadius: '12px', background: `${colors.primary}10`, border: `1px solid ${colors.primary}30` }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+                     <span style={{ fontSize: '18px' }}>🔗</span>
+                     <p style={{ fontSize: '10px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', color: colors.primary, margin: 0 }}>Double-Slit Connection</p>
                   </div>
+                  <p style={{ fontSize: '14px', lineHeight: 1.6, color: colors.textSecondary, margin: 0 }}>{currentApp.connection}</p>
+               </div>
 
-                  {/* Real-world applications */}
-                  <div className="p-4 rounded-xl mb-4" style={{ background: colors.bgCard, border: `1px solid ${colors.border}` }}>
-                     <p className="text-xs font-bold uppercase tracking-wider mb-3" style={{ color: colors.textMuted }}>Real-World Applications</p>
-                     <div className="grid sm:grid-cols-2 gap-2">
-                        {currentApp.examples.map((ex, i) => (
-                           <div key={i} className="flex items-start gap-2 p-3 rounded-lg" style={{ background: colors.bgCardLight }}>
-                              <div className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: `${currentApp.color}30` }}>
-                                 <span className="text-xs font-bold" style={{ color: currentApp.color }}>{i + 1}</span>
-                              </div>
-                              <p className="text-xs leading-relaxed" style={{ color: colors.textSecondary }}>{ex}</p>
-                           </div>
-                        ))}
-                     </div>
+               <div style={{ padding: '16px', borderRadius: '12px', background: colors.bgCard, border: `1px solid ${colors.border}` }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+                     <span style={{ fontSize: '18px' }}>⚙️</span>
+                     <p style={{ fontSize: '10px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', color: colors.textMuted, margin: 0 }}>How It Works</p>
                   </div>
-
-                  {/* Bottom row: Companies + Future */}
-                  <div className="grid md:grid-cols-2 gap-4">
-                     {/* Industry leaders */}
-                     <div className="p-4 rounded-xl" style={{ background: colors.bgCard, border: `1px solid ${colors.border}` }}>
-                        <p className="text-xs font-bold uppercase tracking-wider mb-3" style={{ color: colors.textMuted }}>Industry Leaders</p>
-                        <div className="flex flex-wrap gap-2">
-                           {currentApp.companies.map((company, i) => (
-                              <span key={i} className="px-3 py-1.5 rounded-lg text-sm font-bold" style={{ background: `${currentApp.color}15`, color: currentApp.color, border: `1px solid ${currentApp.color}30` }}>
-                                 {company}
-                              </span>
-                           ))}
-                        </div>
-                     </div>
-
-                     {/* Future impact */}
-                     <div className="p-4 rounded-xl" style={{ background: `linear-gradient(135deg, ${currentApp.color}15 0%, ${colors.accent}10 100%)`, border: `1px solid ${currentApp.color}30` }}>
-                        <div className="flex items-center gap-2 mb-2">
-                           <span className="text-lg">🚀</span>
-                           <p className="text-xs font-bold uppercase tracking-wider" style={{ color: currentApp.color }}>Future Impact</p>
-                        </div>
-                        <p className="text-sm leading-relaxed font-medium" style={{ color: colors.textPrimary }}>{currentApp.futureImpact}</p>
-                     </div>
-                  </div>
+                  <p style={{ fontSize: '14px', lineHeight: 1.6, color: colors.textSecondary, margin: 0 }}>{currentApp.howItWorks}</p>
                </div>
             </div>
 
-            {/* Fixed bottom action bar with CTA */}
-            <div style={{
-               display: 'flex',
-               justifyContent: 'space-between',
-               alignItems: 'center',
-               padding: '12px 16px',
-               borderTop: `1px solid ${colors.border}`,
-               backgroundColor: colors.bgCard,
-               gap: '12px'
-            }}>
-               <button
-                  style={{
-                     padding: '10px 16px',
-                     borderRadius: '10px',
-                     fontWeight: 600,
-                     fontSize: '13px',
-                     backgroundColor: colors.bgCardLight,
-                     color: colors.textSecondary,
-                     border: 'none',
-                     cursor: 'pointer',
-                     flexShrink: 0
-                  }}
-                  onMouseDown={() => goToPhase('twist_review')}
-               >
-                  ← Back
-               </button>
+            <div style={{ padding: '16px', borderRadius: '12px', marginBottom: '16px', background: colors.bgCard, border: `1px solid ${colors.border}` }}>
+               <p style={{ fontSize: '10px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '12px', color: colors.textMuted }}>Real-World Applications</p>
+               <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: '8px' }}>
+                  {currentApp.examples.map((ex, i) => (
+                     <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', padding: '12px', borderRadius: '8px', background: colors.bgCardLight }}>
+                        <div style={{ width: '24px', height: '24px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, background: `${currentApp.color}30` }}>
+                           <span style={{ fontSize: '12px', fontWeight: 700, color: currentApp.color }}>{i + 1}</span>
+                        </div>
+                        <p style={{ fontSize: '12px', lineHeight: 1.5, color: colors.textSecondary, margin: 0 }}>{ex}</p>
+                     </div>
+                  ))}
+               </div>
+            </div>
 
-               {/* Center: Current app action */}
-               {!isCurrentCompleted ? (
-                  <button
-                     onMouseDown={handleCompleteApp}
-                     className="flex-1 max-w-md transition-all hover:scale-[1.02]"
-                     style={{
-                        padding: '12px 20px',
-                        borderRadius: '10px',
-                        fontWeight: 700,
-                        fontSize: '14px',
-                        background: `linear-gradient(135deg, ${currentApp.color} 0%, ${colors.accent} 100%)`,
-                        color: 'white',
-                        border: 'none',
-                        cursor: 'pointer',
-                        boxShadow: `0 4px 20px ${currentApp.color}40`
-                     }}
-                  >
-                     {selectedApp < 3 ? `✓ Complete & Continue →` : '✓ Complete Final Topic'}
-                  </button>
-               ) : (
-                  <div className="flex-1 max-w-md text-center">
-                     <span className="text-sm font-bold" style={{ color: colors.success }}>✓ {currentApp.title} completed!</span>
+            <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: '16px' }}>
+               <div style={{ padding: '16px', borderRadius: '12px', background: colors.bgCard, border: `1px solid ${colors.border}` }}>
+                  <p style={{ fontSize: '10px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '12px', color: colors.textMuted }}>Industry Leaders</p>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                     {currentApp.companies.map((company, i) => (
+                        <span key={i} style={{ padding: '6px 12px', borderRadius: '8px', fontSize: '14px', fontWeight: 700, background: `${currentApp.color}15`, color: currentApp.color, border: `1px solid ${currentApp.color}30` }}>
+                           {company}
+                        </span>
+                     ))}
                   </div>
-               )}
+               </div>
 
-               {/* Right: Test button */}
-               <button
-                  style={{
-                     padding: '12px 24px',
-                     borderRadius: '10px',
-                     fontWeight: 700,
-                     fontSize: '14px',
-                     background: allCompleted ? `linear-gradient(135deg, ${colors.warning} 0%, ${colors.accent} 100%)` : colors.bgCardLight,
-                     color: allCompleted ? colors.textPrimary : colors.textMuted,
-                     border: 'none',
-                     cursor: allCompleted ? 'pointer' : 'not-allowed',
-                     opacity: allCompleted ? 1 : 0.5,
-                     boxShadow: allCompleted ? `0 4px 20px ${colors.warning}40` : 'none',
-                     flexShrink: 0
-                  }}
-                  onMouseDown={() => allCompleted && goToPhase('test')}
-               >
-                  {allCompleted ? 'Take Test →' : `${completedCount}/4`}
-               </button>
+               <div style={{ padding: '16px', borderRadius: '12px', background: `linear-gradient(135deg, ${currentApp.color}15 0%, ${colors.accent}10 100%)`, border: `1px solid ${currentApp.color}30` }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+                     <span style={{ fontSize: '18px' }}>🚀</span>
+                     <p style={{ fontSize: '10px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', color: currentApp.color, margin: 0 }}>Future Impact</p>
+                  </div>
+                  <p style={{ fontSize: '14px', lineHeight: 1.6, fontWeight: 500, color: colors.textPrimary, margin: 0 }}>{currentApp.futureImpact}</p>
+               </div>
             </div>
          </div>
          </PremiumWrapper>
@@ -2992,207 +2979,189 @@ const WaveParticleDualityRenderer: React.FC<WaveParticleDualityRendererProps> = 
    // TEST Screen
    if (phase === 'test') {
       const currentQ = testQuestions[testQuestion];
+      const totalQuestions = testQuestions.length;
 
       if (testSubmitted) {
          const score = calculateTestScore();
-         const totalQuestions = testQuestions.length;
-         const passed = score >= Math.ceil(totalQuestions * 0.7); // 70% to pass
+         const passed = score >= Math.ceil(totalQuestions * 0.7);
 
          return (
             <PremiumWrapper>
-            <div className="flex flex-col h-full overflow-hidden">
-               <div className="flex-1 flex flex-col items-center p-6 overflow-y-auto">
-                  <div className="w-full max-w-2xl">
-                     {/* Score Summary */}
-                     <div className="text-center mb-6">
-                        <div className="w-20 h-20 rounded-full mx-auto mb-3 flex items-center justify-center text-4xl" style={{ background: passed ? `${colors.success}20` : `${colors.warning}20`, border: `3px solid ${passed ? colors.success : colors.warning}` }}>
-                           {score === totalQuestions ? '🏆' : score >= Math.ceil(totalQuestions * 0.9) ? '🌟' : score >= Math.ceil(totalQuestions * 0.7) ? '👍' : '📚'}
-                        </div>
-                        <h2 className="text-2xl font-black mb-1" style={{ color: colors.textPrimary }}>{score}/{totalQuestions} Correct</h2>
-                        <p className="text-sm mb-4" style={{ color: passed ? colors.success : colors.warning }}>
-                           {score === totalQuestions ? "Perfect! You've mastered quantum duality!" : score >= Math.ceil(totalQuestions * 0.9) ? 'Excellent! You deeply understand quantum concepts.' : score >= Math.ceil(totalQuestions * 0.7) ? 'Great job! You understand the key concepts.' : 'Keep exploring — quantum mechanics takes time!'}
-                        </p>
+            <div style={{ padding: isMobile ? '16px' : '24px', maxWidth: '672px', margin: '0 auto' }}>
+               <div style={{ textAlign: 'center', marginBottom: '24px' }}>
+                  <div style={{ width: '80px', height: '80px', borderRadius: '50%', margin: '0 auto 12px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '36px', background: passed ? `${colors.success}20` : `${colors.warning}20`, border: `3px solid ${passed ? colors.success : colors.warning}` }}>
+                     {score === totalQuestions ? '🏆' : score >= Math.ceil(totalQuestions * 0.9) ? '🌟' : score >= Math.ceil(totalQuestions * 0.7) ? '👍' : '📚'}
+                  </div>
+                  <h2 style={{ fontSize: '24px', fontWeight: 900, marginBottom: '4px', color: colors.textPrimary }}>{score}/{totalQuestions} Correct</h2>
+                  <p style={{ fontSize: '14px', marginBottom: '16px', color: passed ? colors.success : colors.warning }}>
+                     {score === totalQuestions ? "Perfect! You've mastered quantum duality!" : score >= Math.ceil(totalQuestions * 0.9) ? 'Excellent! You deeply understand quantum concepts.' : score >= Math.ceil(totalQuestions * 0.7) ? 'Great job! You understand the key concepts.' : 'Keep exploring — quantum mechanics takes time!'}
+                  </p>
 
-                        {/* Action Buttons */}
-                        <div className="flex gap-3 justify-center mb-6">
-                           <button
-                              onMouseDown={() => { setTestQuestion(0); setTestAnswers(Array(10).fill(null)); setTestSubmitted(false); }}
-                              className="px-5 py-2.5 rounded-xl font-bold text-sm flex items-center gap-2"
-                              style={{ background: colors.bgCard, color: colors.textSecondary, border: `1px solid ${colors.border}` }}
-                           >
-                              <span>🔄</span> Retake Test
-                           </button>
-                           <button
-                              onMouseDown={() => goToPhase('mastery')}
-                              className="px-5 py-2.5 rounded-xl font-bold text-sm flex items-center gap-2"
-                              style={{ background: passed ? colors.success : colors.warning, color: 'white' }}
-                           >
-                              <span>{passed ? '🎓' : '📖'}</span> {passed ? 'Claim Mastery' : 'Review Lesson'}
-                           </button>
-                        </div>
-                     </div>
+                  <div style={{ display: 'flex', gap: '12px', justifyContent: 'center', marginBottom: '24px' }}>
+                     <button
+                        onMouseDown={() => { setTestQuestion(0); setTestAnswers(Array(10).fill(null)); setTestSubmitted(false); }}
+                        style={{ padding: '10px 20px', borderRadius: '12px', fontWeight: 700, fontSize: '14px', display: 'flex', alignItems: 'center', gap: '8px', background: colors.bgCard, color: colors.textSecondary, border: `1px solid ${colors.border}`, cursor: 'pointer' }}
+                     >
+                        <span>🔄</span> Retake Test
+                     </button>
+                     <button
+                        onMouseDown={() => goToPhase('mastery')}
+                        style={{ padding: '10px 20px', borderRadius: '12px', fontWeight: 700, fontSize: '14px', display: 'flex', alignItems: 'center', gap: '8px', background: passed ? colors.success : colors.warning, color: 'white', border: 'none', cursor: 'pointer' }}
+                     >
+                        <span>{passed ? '🎓' : '📖'}</span> {passed ? 'Claim Mastery' : 'Review Lesson'}
+                     </button>
+                  </div>
+               </div>
 
-                     {/* Question-by-Question Review */}
-                     <div className="mb-4">
-                        <p className="text-xs font-bold uppercase tracking-widest mb-3" style={{ color: colors.textMuted }}>📋 Question-by-Question Review</p>
-                     </div>
+               <div style={{ marginBottom: '16px' }}>
+                  <p style={{ fontSize: '10px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '12px', color: colors.textMuted }}>📋 Question-by-Question Review</p>
+               </div>
 
-                     <div className="space-y-4">
-                        {testQuestions.map((q, i) => {
-                           const correctOption = q.options.find(o => o.correct);
-                           const correctId = correctOption?.id;
-                           const userAnswer = testAnswers[i];
-                           const userOption = q.options.find(o => o.id === userAnswer);
-                           const isCorrect = userAnswer === correctId;
+               <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                  {testQuestions.map((q, i) => {
+                     const correctOption = q.options.find(o => o.correct);
+                     const correctId = correctOption?.id;
+                     const userAnswer = testAnswers[i];
+                     const userOption = q.options.find(o => o.id === userAnswer);
+                     const isCorrect = userAnswer === correctId;
 
-                           return (
-                              <div key={i} className="rounded-2xl overflow-hidden" style={{ background: colors.bgCard, border: `2px solid ${isCorrect ? colors.success : colors.danger}40` }}>
-                                 {/* Question Header */}
-                                 <div className="p-4" style={{ background: isCorrect ? `${colors.success}15` : `${colors.danger}15` }}>
-                                    <div className="flex items-center gap-3">
-                                       <div className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold" style={{ background: isCorrect ? colors.success : colors.danger, color: 'white' }}>
-                                          {isCorrect ? '✓' : '✗'}
-                                       </div>
-                                       <div className="flex-1">
-                                          <p className="text-sm font-bold" style={{ color: colors.textPrimary }}>Question {i + 1}</p>
-                                          <p className="text-xs" style={{ color: colors.textMuted }}>{q.question}</p>
-                                       </div>
-                                    </div>
+                     return (
+                        <div key={i} style={{ borderRadius: '16px', overflow: 'hidden', background: colors.bgCard, border: `2px solid ${isCorrect ? colors.success : colors.danger}40` }}>
+                           <div style={{ padding: '16px', background: isCorrect ? `${colors.success}15` : `${colors.danger}15` }}>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                 <div style={{ width: '32px', height: '32px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '14px', fontWeight: 700, background: isCorrect ? colors.success : colors.danger, color: 'white' }}>
+                                    {isCorrect ? '✓' : '✗'}
                                  </div>
-
-                                 {/* Your Answer vs Correct Answer */}
-                                 <div className="p-4 space-y-3">
-                                    {/* Your Answer */}
-                                    <div className="p-3 rounded-xl" style={{ background: isCorrect ? `${colors.success}10` : `${colors.danger}10`, border: `1px solid ${isCorrect ? colors.success : colors.danger}30` }}>
-                                       <p className="text-[10px] font-bold uppercase tracking-widest mb-1" style={{ color: isCorrect ? colors.success : colors.danger }}>
-                                          {isCorrect ? '✓ Your Answer (Correct!)' : '✗ Your Answer'}
-                                       </p>
-                                       <p className="text-sm" style={{ color: colors.textPrimary }}>{userOption?.label || 'No answer selected'}</p>
-                                    </div>
-
-                                    {/* Correct Answer - only show if wrong */}
-                                    {!isCorrect && (
-                                       <div className="p-3 rounded-xl" style={{ background: `${colors.success}10`, border: `1px solid ${colors.success}30` }}>
-                                          <p className="text-[10px] font-bold uppercase tracking-widest mb-1" style={{ color: colors.success }}>✓ Correct Answer</p>
-                                          <p className="text-sm" style={{ color: colors.textPrimary }}>{correctOption?.label}</p>
-                                       </div>
-                                    )}
-
-                                    {/* Explanation - Why */}
-                                    <div className="p-3 rounded-xl" style={{ background: colors.bgCardLight }}>
-                                       <p className="text-[10px] font-bold uppercase tracking-widest mb-1" style={{ color: colors.accent }}>💡 Why?</p>
-                                       <p className="text-xs leading-relaxed" style={{ color: colors.textSecondary }}>{q.explanation}</p>
-
-                                       {/* Gap Analysis - only show if wrong */}
-                                       {!isCorrect && (
-                                          <div className="mt-3 pt-3" style={{ borderTop: `1px solid ${colors.border}` }}>
-                                             <p className="text-[10px] font-bold uppercase tracking-widest mb-1" style={{ color: colors.warning }}>🎯 Understanding Gap</p>
-                                             <p className="text-xs" style={{ color: colors.textMuted }}>
-                                                {userAnswer === null ? 'You skipped this question. Take time to read each scenario carefully.' :
-                                                 'Your answer focused on a different aspect. The key insight is understanding how observation/measurement fundamentally changes quantum behavior.'}
-                                             </p>
-                                          </div>
-                                       )}
-                                    </div>
+                                 <div style={{ flex: 1 }}>
+                                    <p style={{ fontSize: '14px', fontWeight: 700, color: colors.textPrimary, margin: 0 }}>Question {i + 1}</p>
+                                    <p style={{ fontSize: '12px', color: colors.textMuted, margin: 0 }}>{q.question}</p>
                                  </div>
                               </div>
-                           );
-                        })}
-                     </div>
+                           </div>
 
-                     {/* Bottom Retake Button */}
-                     <div className="mt-6 p-4 rounded-2xl text-center" style={{ background: colors.bgCard, border: `1px solid ${colors.border}` }}>
-                        <p className="text-sm mb-3" style={{ color: colors.textSecondary }}>
-                           {passed ? 'Want to improve your score?' : 'Review the explanations above and try again!'}
-                        </p>
-                        <button
-                           onMouseDown={() => { setTestQuestion(0); setTestAnswers(Array(10).fill(null)); setTestSubmitted(false); }}
-                           className="px-6 py-3 rounded-xl font-bold text-sm"
-                           style={{ background: colors.primary, color: 'white' }}
-                        >
-                           🔄 Retake Test
-                        </button>
-                     </div>
-                  </div>
+                           <div style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                              <div style={{ padding: '12px', borderRadius: '12px', background: isCorrect ? `${colors.success}10` : `${colors.danger}10`, border: `1px solid ${isCorrect ? colors.success : colors.danger}30` }}>
+                                 <p style={{ fontSize: '10px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '4px', color: isCorrect ? colors.success : colors.danger }}>
+                                    {isCorrect ? '✓ Your Answer (Correct!)' : '✗ Your Answer'}
+                                 </p>
+                                 <p style={{ fontSize: '14px', color: colors.textPrimary, margin: 0 }}>{userOption?.label || 'No answer selected'}</p>
+                              </div>
+
+                              {!isCorrect && (
+                                 <div style={{ padding: '12px', borderRadius: '12px', background: `${colors.success}10`, border: `1px solid ${colors.success}30` }}>
+                                    <p style={{ fontSize: '10px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '4px', color: colors.success }}>✓ Correct Answer</p>
+                                    <p style={{ fontSize: '14px', color: colors.textPrimary, margin: 0 }}>{correctOption?.label}</p>
+                                 </div>
+                              )}
+
+                              <div style={{ padding: '12px', borderRadius: '12px', background: colors.bgCardLight }}>
+                                 <p style={{ fontSize: '10px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '4px', color: colors.accent }}>💡 Why?</p>
+                                 <p style={{ fontSize: '12px', lineHeight: 1.5, color: colors.textSecondary, margin: 0 }}>{q.explanation}</p>
+
+                                 {!isCorrect && (
+                                    <div style={{ marginTop: '12px', paddingTop: '12px', borderTop: `1px solid ${colors.border}` }}>
+                                       <p style={{ fontSize: '10px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '4px', color: colors.warning }}>🎯 Understanding Gap</p>
+                                       <p style={{ fontSize: '12px', color: colors.textMuted, margin: 0 }}>
+                                          {userAnswer === null ? 'You skipped this question. Take time to read each scenario carefully.' :
+                                           'Your answer focused on a different aspect. The key insight is understanding how observation/measurement fundamentally changes quantum behavior.'}
+                                       </p>
+                                    </div>
+                                 )}
+                              </div>
+                           </div>
+                        </div>
+                     );
+                  })}
+               </div>
+
+               <div style={{ marginTop: '24px', padding: '16px', borderRadius: '16px', textAlign: 'center', background: colors.bgCard, border: `1px solid ${colors.border}` }}>
+                  <p style={{ fontSize: '14px', marginBottom: '12px', color: colors.textSecondary }}>
+                     {passed ? 'Want to improve your score?' : 'Review the explanations above and try again!'}
+                  </p>
+                  <button
+                     onMouseDown={() => { setTestQuestion(0); setTestAnswers(Array(10).fill(null)); setTestSubmitted(false); }}
+                     style={{ padding: '12px 24px', borderRadius: '12px', fontWeight: 700, fontSize: '14px', background: colors.primary, color: 'white', border: 'none', cursor: 'pointer' }}
+                  >
+                     🔄 Retake Test
+                  </button>
                </div>
             </div>
             </PremiumWrapper>
          );
       }
 
-      const totalQuestions = testQuestions.length;
+      const testFooter = renderBottomBar(true, !!testAnswers[testQuestion], testQuestion < totalQuestions - 1 ? `Question ${testQuestion + 2}` : 'Submit Test', () => {
+         if (testQuestion < totalQuestions - 1) {
+            const nextQ = testQuestion + 1;
+            setTestQuestion(nextQ);
+            const nextQuestion = testQuestions[nextQ];
+            emitGameEvent('question_changed', {
+               phase: 'test',
+               phaseLabel: 'Knowledge Test',
+               questionNumber: nextQ + 1,
+               totalQuestions: totalQuestions,
+               questionScenario: nextQuestion.scenario,
+               questionText: nextQuestion.question,
+               allOptions: nextQuestion.options.map((o, idx) => `${String.fromCharCode(65 + idx)}: ${o.label}`).join(' | '),
+               message: `Now on Q${nextQ + 1}: Scenario: "${nextQuestion.scenario.substring(0, 100)}..." Question: "${nextQuestion.question}"`
+            });
+         } else {
+            setTestSubmitted(true);
+            const finalScore = calculateTestScore();
+            emitGameEvent('game_completed', {
+               phase: 'test',
+               phaseLabel: 'Knowledge Test',
+               score: finalScore,
+               totalQuestions: totalQuestions,
+               percentage: Math.round((finalScore / totalQuestions) * 100),
+               passed: finalScore >= Math.ceil(totalQuestions * 0.7),
+               message: `User completed test with ${finalScore}/${totalQuestions} correct (${Math.round((finalScore / totalQuestions) * 100)}%)`
+            });
+         }
+      }, colors.warning);
+
       return (
-         <PremiumWrapper>
-         <div className="flex flex-col h-full overflow-hidden">
-            <div className="flex-1 flex flex-col items-center p-6 overflow-y-auto">
-               <div className="w-full max-w-2xl">
-                  <div className="mb-6">
-                     <p className="text-xs font-bold uppercase tracking-widest mb-2" style={{ color: colors.warning }}>Step 8 • Knowledge Test</p>
-                     <h2 className="text-2xl font-black mb-4" style={{ color: colors.textPrimary }}>Question {testQuestion + 1} of {totalQuestions}</h2>
-                     <div className="flex gap-1">{Array.from({ length: totalQuestions }, (_, i) => (<div key={i} className="h-2 flex-1 rounded-full" style={{ background: i === testQuestion ? colors.warning : i < testQuestion ? colors.success : colors.bgCardLight }} />))}</div>
-                  </div>
-                  <div className="p-5 rounded-2xl mb-6" style={{ background: `${colors.primary}15`, border: `1px solid ${colors.primary}30` }}>
-                     <p className="text-xs font-bold uppercase tracking-widest mb-2" style={{ color: colors.primary }}>Scenario</p>
-                     <p className="text-sm" style={{ color: colors.textSecondary }}>{currentQ.scenario}</p>
-                  </div>
-                  <p className="text-lg font-bold mb-6" style={{ color: colors.textPrimary }}>{currentQ.question}</p>
-                  <div className="grid gap-3 mb-6">
-                     {currentQ.options.map((opt, i) => (
-                        <button key={opt.id} onMouseDown={() => {
-                           const newAnswers = [...testAnswers];
-                           newAnswers[testQuestion] = opt.id;
-                           setTestAnswers(newAnswers);
-                           // Emit event for AI coach to track progress - include actual question content
-                           emitGameEvent('answer_selected', {
-                              phase: 'test',
-                              phaseLabel: 'Knowledge Test',
-                              questionNumber: testQuestion + 1,
-                              totalQuestions: totalQuestions,
-                              questionScenario: currentQ.scenario,
-                              questionText: currentQ.question,
-                              selectedAnswer: opt.label,
-                              allOptions: currentQ.options.map((o, idx) => `${String.fromCharCode(65 + idx)}: ${o.label}`).join(' | '),
-                              message: `Q${testQuestion + 1}: "${currentQ.question}" - User selected: "${opt.label}"`
-                           });
-                        }} className="flex items-center gap-4 p-5 rounded-2xl text-left" style={{ background: testAnswers[testQuestion] === opt.id ? `${colors.warning}20` : colors.bgCard, border: `2px solid ${testAnswers[testQuestion] === opt.id ? colors.warning : colors.border}` }}>
-                           <div className="w-8 h-8 rounded-full flex items-center justify-center" style={{ background: testAnswers[testQuestion] === opt.id ? colors.warning : colors.bgCardLight }}><span className="text-sm font-bold" style={{ color: testAnswers[testQuestion] === opt.id ? colors.textPrimary : colors.textMuted }}>{String.fromCharCode(65 + i)}</span></div>
-                           <p className="text-sm" style={{ color: testAnswers[testQuestion] === opt.id ? colors.textPrimary : colors.textSecondary }}>{opt.label}</p>
-                        </button>
-                     ))}
-                  </div>
+         <PremiumWrapper footer={testFooter}>
+         <div style={{ padding: isMobile ? '16px' : '24px', maxWidth: '672px', margin: '0 auto' }}>
+            <div style={{ marginBottom: '24px' }}>
+               <p style={{ fontSize: '10px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '8px', color: colors.warning }}>Step 8 • Knowledge Test</p>
+               <h2 style={{ fontSize: '24px', fontWeight: 900, marginBottom: '16px', color: colors.textPrimary }}>Question {testQuestion + 1} of {totalQuestions}</h2>
+               <div style={{ display: 'flex', gap: '4px' }}>
+                  {Array.from({ length: totalQuestions }, (_, i) => (
+                     <div key={i} style={{ height: '8px', flex: 1, borderRadius: '9999px', background: i === testQuestion ? colors.warning : i < testQuestion ? colors.success : colors.bgCardLight }} />
+                  ))}
                </div>
             </div>
-            {renderBottomBar(true, !!testAnswers[testQuestion], testQuestion < totalQuestions - 1 ? `Question ${testQuestion + 2}` : 'Submit Test', () => {
-               if (testQuestion < totalQuestions - 1) {
-                  const nextQ = testQuestion + 1;
-                  setTestQuestion(nextQ);
-                  // Emit event with FULL question content so AI coach knows exactly what's on screen
-                  const nextQuestion = testQuestions[nextQ];
-                  emitGameEvent('question_changed', {
-                     phase: 'test',
-                     phaseLabel: 'Knowledge Test',
-                     questionNumber: nextQ + 1,
-                     totalQuestions: totalQuestions,
-                     questionScenario: nextQuestion.scenario,
-                     questionText: nextQuestion.question,
-                     allOptions: nextQuestion.options.map((o, idx) => `${String.fromCharCode(65 + idx)}: ${o.label}`).join(' | '),
-                     message: `Now on Q${nextQ + 1}: Scenario: "${nextQuestion.scenario.substring(0, 100)}..." Question: "${nextQuestion.question}"`
-                  });
-               } else {
-                  setTestSubmitted(true);
-                  // Calculate score and emit game_completed event
-                  const finalScore = calculateTestScore();
-                  emitGameEvent('game_completed', {
-                     phase: 'test',
-                     phaseLabel: 'Knowledge Test',
-                     score: finalScore,
-                     totalQuestions: totalQuestions,
-                     percentage: Math.round((finalScore / totalQuestions) * 100),
-                     passed: finalScore >= Math.ceil(totalQuestions * 0.7),
-                     message: `User completed test with ${finalScore}/${totalQuestions} correct (${Math.round((finalScore / totalQuestions) * 100)}%)`
-                  });
-               }
-            }, colors.warning)}
+            <div style={{ padding: '20px', borderRadius: '16px', marginBottom: '24px', background: `${colors.primary}15`, border: `1px solid ${colors.primary}30` }}>
+               <p style={{ fontSize: '10px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '8px', color: colors.primary }}>Scenario</p>
+               <p style={{ fontSize: '14px', color: colors.textSecondary, margin: 0 }}>{currentQ.scenario}</p>
+            </div>
+            <p style={{ fontSize: '18px', fontWeight: 700, marginBottom: '24px', color: colors.textPrimary }}>{currentQ.question}</p>
+            <div style={{ display: 'grid', gap: '12px', marginBottom: '24px' }}>
+               {currentQ.options.map((opt, i) => (
+                  <button key={opt.id} onMouseDown={() => {
+                     const newAnswers = [...testAnswers];
+                     newAnswers[testQuestion] = opt.id;
+                     setTestAnswers(newAnswers);
+                     emitGameEvent('answer_selected', {
+                        phase: 'test',
+                        phaseLabel: 'Knowledge Test',
+                        questionNumber: testQuestion + 1,
+                        totalQuestions: totalQuestions,
+                        questionScenario: currentQ.scenario,
+                        questionText: currentQ.question,
+                        selectedAnswer: opt.label,
+                        allOptions: currentQ.options.map((o, idx) => `${String.fromCharCode(65 + idx)}: ${o.label}`).join(' | '),
+                        message: `Q${testQuestion + 1}: "${currentQ.question}" - User selected: "${opt.label}"`
+                     });
+                  }} style={{ display: 'flex', alignItems: 'center', gap: '16px', padding: '20px', borderRadius: '16px', textAlign: 'left', background: testAnswers[testQuestion] === opt.id ? `${colors.warning}20` : colors.bgCard, border: `2px solid ${testAnswers[testQuestion] === opt.id ? colors.warning : colors.border}`, cursor: 'pointer' }}>
+                     <div style={{ width: '32px', height: '32px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: testAnswers[testQuestion] === opt.id ? colors.warning : colors.bgCardLight }}>
+                        <span style={{ fontSize: '14px', fontWeight: 700, color: testAnswers[testQuestion] === opt.id ? colors.textPrimary : colors.textMuted }}>{String.fromCharCode(65 + i)}</span>
+                     </div>
+                     <p style={{ fontSize: '14px', color: testAnswers[testQuestion] === opt.id ? colors.textPrimary : colors.textSecondary, margin: 0 }}>{opt.label}</p>
+                  </button>
+               ))}
+            </div>
          </div>
          </PremiumWrapper>
       );
@@ -3208,31 +3177,37 @@ const WaveParticleDualityRenderer: React.FC<WaveParticleDualityRendererProps> = 
          { icon: '🎲', title: 'Probabilistic Reality', desc: 'At the quantum level, we can only predict probabilities' },
       ];
 
+      const masteryFooter = renderBottomBar(true, false, "Complete!", undefined, colors.success);
+
       return (
-         <PremiumWrapper>
-         <div className="flex flex-col h-full overflow-hidden relative">
-            {confetti.map((c, i) => (<div key={i} className="absolute w-3 h-3 rounded-full" style={{ left: `${c.x}%`, top: `${c.y}%`, backgroundColor: c.color, animation: `bounce ${1.5 + c.delay}s infinite` }} />))}
-            <div className="flex-1 flex flex-col items-center p-6 overflow-y-auto z-10">
-               <div className="w-full max-w-2xl text-center">
-                  <div className="w-28 h-28 rounded-full mx-auto mb-6 flex items-center justify-center text-6xl" style={{ background: `linear-gradient(135deg, ${colors.primary}30 0%, ${colors.accent}30 100%)`, border: `3px solid ${colors.primary}`, boxShadow: `0 0 60px ${colors.primary}40` }}>⚛️</div>
-                  <h1 className="text-4xl md:text-5xl font-black mb-4" style={{ background: `linear-gradient(135deg, ${colors.primary} 0%, ${colors.accent} 50%, #ec4899 100%)`, WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Quantum Explorer!</h1>
-                  <p className="text-lg mb-8" style={{ color: colors.textSecondary }}>You've glimpsed the strange heart of reality. Here's what you've mastered:</p>
-                  <div className="space-y-3 mb-8 text-left">
-                     {masteryItems.map((item, i) => (
-                        <div key={i} className="flex items-center gap-4 p-4 rounded-2xl" style={{ background: `linear-gradient(135deg, ${colors.bgCard}80 0%, ${colors.bgCardLight}40 100%)`, border: `1px solid ${colors.border}` }}>
-                           <div className="w-12 h-12 rounded-xl flex items-center justify-center text-2xl" style={{ background: `${colors.success}20` }}>{item.icon}</div>
-                           <div className="flex-1"><p className="font-bold text-sm" style={{ color: colors.textPrimary }}>{item.title}</p><p className="text-xs" style={{ color: colors.textMuted }}>{item.desc}</p></div>
-                           <div className="w-8 h-8 rounded-full flex items-center justify-center" style={{ background: colors.success }}><span className="text-white text-sm">✓</span></div>
+         <PremiumWrapper footer={masteryFooter}>
+         <div style={{ position: 'relative' }}>
+            {confetti.map((c, i) => (
+               <div key={i} style={{ position: 'absolute', width: '12px', height: '12px', borderRadius: '50%', left: `${c.x}%`, top: `${c.y}%`, backgroundColor: c.color, animation: `bounce ${1.5 + c.delay}s infinite`, pointerEvents: 'none' }} />
+            ))}
+            <div style={{ padding: isMobile ? '24px 16px' : '24px', maxWidth: '672px', margin: '0 auto', textAlign: 'center', position: 'relative', zIndex: 10 }}>
+               <div style={{ width: '112px', height: '112px', borderRadius: '50%', margin: '0 auto 24px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '60px', background: `linear-gradient(135deg, ${colors.primary}30 0%, ${colors.accent}30 100%)`, border: `3px solid ${colors.primary}`, boxShadow: `0 0 60px ${colors.primary}40` }}>⚛️</div>
+               <h1 style={{ fontSize: isMobile ? '36px' : '48px', fontWeight: 900, marginBottom: '16px', background: `linear-gradient(135deg, ${colors.primary} 0%, ${colors.accent} 50%, #ec4899 100%)`, WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Quantum Explorer!</h1>
+               <p style={{ fontSize: '18px', marginBottom: '32px', color: colors.textSecondary }}>You've glimpsed the strange heart of reality. Here's what you've mastered:</p>
+               <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '32px', textAlign: 'left' }}>
+                  {masteryItems.map((item, i) => (
+                     <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '16px', padding: '16px', borderRadius: '16px', background: `linear-gradient(135deg, ${colors.bgCard}80 0%, ${colors.bgCardLight}40 100%)`, border: `1px solid ${colors.border}` }}>
+                        <div style={{ width: '48px', height: '48px', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '24px', background: `${colors.success}20` }}>{item.icon}</div>
+                        <div style={{ flex: 1 }}>
+                           <p style={{ fontWeight: 700, fontSize: '14px', color: colors.textPrimary, margin: 0 }}>{item.title}</p>
+                           <p style={{ fontSize: '12px', color: colors.textMuted, margin: 0 }}>{item.desc}</p>
                         </div>
-                     ))}
-                  </div>
-                  <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                     <button onMouseDown={() => { setTestQuestion(0); setTestAnswers(Array(10).fill(null)); setTestSubmitted(false); setPrediction(null); setTwistPrediction(null); goToPhase('hook'); }} className="px-8 py-4 rounded-2xl font-bold" style={{ background: colors.bgCardLight, color: colors.textSecondary, border: `1px solid ${colors.border}` }}>Start Over</button>
-                     <button onMouseDown={() => { setParticleHits([]); setParticleCount(0); setDetectorOn(false); goToPhase('play'); }} className="px-8 py-4 rounded-2xl font-bold" style={{ background: `linear-gradient(135deg, ${colors.primary} 0%, ${colors.accent} 100%)`, color: colors.textPrimary, boxShadow: `0 8px 32px ${colors.primary}40` }}>Free Exploration Mode</button>
-                  </div>
+                        <div style={{ width: '32px', height: '32px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: colors.success }}>
+                           <span style={{ color: 'white', fontSize: '14px' }}>✓</span>
+                        </div>
+                     </div>
+                  ))}
+               </div>
+               <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', gap: '16px', justifyContent: 'center' }}>
+                  <button onMouseDown={() => { setTestQuestion(0); setTestAnswers(Array(10).fill(null)); setTestSubmitted(false); setPrediction(null); setTwistPrediction(null); goToPhase('hook'); }} style={{ padding: '16px 32px', borderRadius: '16px', fontWeight: 700, background: colors.bgCardLight, color: colors.textSecondary, border: `1px solid ${colors.border}`, cursor: 'pointer' }}>Start Over</button>
+                  <button onMouseDown={() => { setParticleHits([]); setParticleCount(0); setDetectorOn(false); goToPhase('play'); }} style={{ padding: '16px 32px', borderRadius: '16px', fontWeight: 700, background: `linear-gradient(135deg, ${colors.primary} 0%, ${colors.accent} 100%)`, color: colors.textPrimary, border: 'none', cursor: 'pointer', boxShadow: `0 8px 32px ${colors.primary}40` }}>Free Exploration Mode</button>
                </div>
             </div>
-            {renderBottomBar(true, false, "Complete!", undefined, colors.success)}
          </div>
          </PremiumWrapper>
       );

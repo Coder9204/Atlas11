@@ -379,8 +379,33 @@ const App: React.FC = () => {
     setIsSpeaking(false);
   }, []);
 
+  // Full-screen games that should NOT be interrupted by other content
+  const fullScreenGames = [
+    'wave_particle_duality', 'dispersion', 'thin_film', 'ray_tracing', 'diffraction',
+    'polarization', 'scattering', 'spectroscopy', 'photoelectric_effect'
+  ];
+
+  // Check if a full-screen game is currently active
+  const isFullScreenGameActive = () => {
+    return visualContext.type === 'diagram' &&
+           visualContext.data?.type &&
+           fullScreenGames.includes(visualContext.data.type);
+  };
+
   const handleFunctionCall = async (fc: any) => {
     let result: any = { status: "success" };
+
+    // Block context-changing calls when full-screen game is active
+    const contextChangingCalls = [
+      'triggerAssessment', 'generateEducationalPoster', 'playVideo', 'playPodcast',
+      'showBriefing', 'openWhiteboard', 'generateDocument'
+    ];
+
+    if (contextChangingCalls.includes(fc.name) && isFullScreenGameActive()) {
+      console.log(`[App] Blocking ${fc.name} - full-screen game active:`, visualContext.data.type);
+      return { status: "blocked", reason: "Full-screen game is active. Action not performed." };
+    }
+
     switch (fc.name) {
       case 'startCourse':
         setActiveTopic(fc.args.topic);
@@ -407,7 +432,14 @@ const App: React.FC = () => {
         break;
       case 'playPodcast': setVisualContext({ type: 'podcast', data: fc.args }); break;
       case 'showBriefing': setVisualContext({ type: 'briefing', data: fc.args }); break;
-      case 'showDiagram': setVisualContext({ type: 'diagram', data: fc.args }); break;
+      case 'showDiagram':
+        // Allow showDiagram only if it's showing the same game or not a full-screen game
+        if (isFullScreenGameActive() && fc.args.type !== visualContext.data.type) {
+          console.log('[App] Blocking showDiagram - different full-screen game active');
+          return { status: "blocked", reason: "Full-screen game is active." };
+        }
+        setVisualContext({ type: 'diagram', data: fc.args });
+        break;
       case 'openWhiteboard': setVisualContext({ type: 'whiteboard', data: fc.args }); break;
       case 'generateDocument': setVisualContext({ type: 'document', data: fc.args }); break;
       case 'switchContent':
