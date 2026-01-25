@@ -1737,12 +1737,19 @@ const CoulombsLawRenderer: React.FC<CoulombsLawRendererProps> = ({ onGameEvent }
 
       setActiveAppIndex(index);
       const targetApp = transferApps[index];
+
+      // Override screenDescription and coachMessage with app-specific info
+      const appScreenDescription = `REAL WORLD APPLICATION ${index + 1}/4: "${targetApp.title}" - ${targetApp.tagline}. ${targetApp.description}`;
+      const appCoachMessage = `Now let's explore ${targetApp.title}! ${targetApp.tagline}. ${targetApp.connection}`;
+
       emitGameEvent('app_changed', {
         appNumber: index + 1,
         totalApps: 4,
         appTitle: targetApp.title,
         appTagline: targetApp.tagline,
         appConnection: targetApp.connection,
+        screenDescription: appScreenDescription,
+        coachMessage: appCoachMessage,
         message: `NOW viewing Real-World Application ${index + 1}/4: ${targetApp.title}. ${targetApp.tagline}. Physics connection: ${targetApp.connection}`
       });
     };
@@ -1753,12 +1760,19 @@ const CoulombsLawRenderer: React.FC<CoulombsLawRendererProps> = ({ onGameEvent }
         const nextIndex = activeAppIndex + 1;
         setActiveAppIndex(nextIndex);
         const targetApp = transferApps[nextIndex];
+
+        // Override screenDescription and coachMessage with app-specific info
+        const appScreenDescription = `REAL WORLD APPLICATION ${nextIndex + 1}/4: "${targetApp.title}" - ${targetApp.tagline}. ${targetApp.description}`;
+        const appCoachMessage = `Now let's explore ${targetApp.title}! ${targetApp.tagline}. ${targetApp.connection}`;
+
         emitGameEvent('app_changed', {
           appNumber: nextIndex + 1,
           totalApps: 4,
           appTitle: targetApp.title,
           appTagline: targetApp.tagline,
           appConnection: targetApp.connection,
+          screenDescription: appScreenDescription,
+          coachMessage: appCoachMessage,
           message: `NOW viewing Real-World Application ${nextIndex + 1}/4: ${targetApp.title}. ${targetApp.tagline}. Physics connection: ${targetApp.connection}`
         });
       }

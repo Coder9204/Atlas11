@@ -938,12 +938,19 @@ const PhotoelectricEffectRenderer: React.FC<PhotoelectricEffectRendererProps> = 
 
       setActiveApp(index);
       const targetApp = applications[index];
+
+      // Override screenDescription and coachMessage with app-specific info
+      const appScreenDescription = `REAL WORLD APPLICATION ${index + 1}/4: "${targetApp.title}" - ${targetApp.tagline}. ${targetApp.description}`;
+      const appCoachMessage = `Now let's explore ${targetApp.title}! ${targetApp.tagline}. ${targetApp.connection}`;
+
       emitGameEvent('app_changed', {
         appNumber: index + 1,
         totalApps: 4,
         appTitle: targetApp.title,
         appTagline: targetApp.tagline,
         appConnection: targetApp.connection,
+        screenDescription: appScreenDescription,
+        coachMessage: appCoachMessage,
         message: `NOW viewing Real-World Application ${index + 1}/4: ${targetApp.title}. ${targetApp.tagline}. Physics connection: ${targetApp.connection}`
       });
     };
@@ -954,12 +961,19 @@ const PhotoelectricEffectRenderer: React.FC<PhotoelectricEffectRendererProps> = 
         const nextIndex = activeApp + 1;
         setActiveApp(nextIndex);
         const targetApp = applications[nextIndex];
+
+        // Override screenDescription and coachMessage with app-specific info
+        const appScreenDescription = `REAL WORLD APPLICATION ${nextIndex + 1}/4: "${targetApp.title}" - ${targetApp.tagline}. ${targetApp.description}`;
+        const appCoachMessage = `Now let's explore ${targetApp.title}! ${targetApp.tagline}. ${targetApp.connection}`;
+
         emitGameEvent('app_changed', {
           appNumber: nextIndex + 1,
           totalApps: 4,
           appTitle: targetApp.title,
           appTagline: targetApp.tagline,
           appConnection: targetApp.connection,
+          screenDescription: appScreenDescription,
+          coachMessage: appCoachMessage,
           message: `NOW viewing Real-World Application ${nextIndex + 1}/4: ${targetApp.title}. ${targetApp.tagline}. Physics connection: ${targetApp.connection}`
         });
       }
