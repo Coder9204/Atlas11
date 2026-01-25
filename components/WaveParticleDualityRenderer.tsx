@@ -551,90 +551,25 @@ const WaveParticleDualityRenderer: React.FC<WaveParticleDualityRendererProps> = 
       const currentIdx = phaseOrder.indexOf(phase);
       const scrollContainerRef = useRef<HTMLDivElement>(null);
 
-      // SCROLL DEBUGGING - will log to console
+      // Minimal scroll debug
       useEffect(() => {
          const scrollEl = scrollContainerRef.current;
          if (!scrollEl) return;
 
-         const logScrollInfo = (eventType: string, e?: Event) => {
-            const computed = window.getComputedStyle(scrollEl);
-            console.log(`[SCROLL DEBUG] ${eventType}:`, {
-               scrollTop: scrollEl.scrollTop,
-               scrollHeight: scrollEl.scrollHeight,
-               clientHeight: scrollEl.clientHeight,
-               canScroll: scrollEl.scrollHeight > scrollEl.clientHeight,
-               overflowY: computed.overflowY,
-               overflowX: computed.overflowX,
-               touchAction: computed.touchAction,
-               position: computed.position,
-               height: computed.height,
-               minHeight: computed.minHeight,
-               flex: computed.flex,
-               eventDefaultPrevented: e?.defaultPrevented,
-            });
-         };
-
-         const handleTouchStart = (e: TouchEvent) => {
-            console.log('[SCROLL DEBUG] touchstart', {
-               target: (e.target as HTMLElement)?.tagName,
-               targetClass: (e.target as HTMLElement)?.className,
-               touches: e.touches.length,
-               clientY: e.touches[0]?.clientY,
-            });
-            logScrollInfo('touchstart', e);
-         };
-
-         const handleTouchMove = (e: TouchEvent) => {
-            console.log('[SCROLL DEBUG] touchmove', {
-               target: (e.target as HTMLElement)?.tagName,
-               defaultPrevented: e.defaultPrevented,
-               cancelable: e.cancelable,
-               clientY: e.touches[0]?.clientY,
-            });
-         };
-
-         const handleScroll = (e: Event) => {
-            console.log('[SCROLL DEBUG] scroll event fired!', {
-               scrollTop: scrollEl.scrollTop,
-            });
-         };
-
-         // Log initial state
-         console.log('[SCROLL DEBUG] === SCROLL CONTAINER MOUNTED ===');
-         logScrollInfo('initial');
-
-         // Check parent chain for overflow:hidden
-         let parent = scrollEl.parentElement;
-         let depth = 0;
-         while (parent && depth < 10) {
-            const parentComputed = window.getComputedStyle(parent);
-            if (parentComputed.overflow === 'hidden' || parentComputed.overflowY === 'hidden') {
-               console.log(`[SCROLL DEBUG] Parent ${depth} has overflow hidden:`, {
-                  tagName: parent.tagName,
-                  className: parent.className,
-                  overflow: parentComputed.overflow,
-                  overflowY: parentComputed.overflowY,
-               });
-            }
-            parent = parent.parentElement;
-            depth++;
-         }
-
-         scrollEl.addEventListener('touchstart', handleTouchStart, { passive: true });
-         scrollEl.addEventListener('touchmove', handleTouchMove, { passive: true });
+         const handleScroll = () => console.log('[SCROLL] scrollTop:', scrollEl.scrollTop);
          scrollEl.addEventListener('scroll', handleScroll, { passive: true });
 
-         return () => {
-            scrollEl.removeEventListener('touchstart', handleTouchStart);
-            scrollEl.removeEventListener('touchmove', handleTouchMove);
-            scrollEl.removeEventListener('scroll', handleScroll);
-         };
+         // Log if scroll is possible
+         const canScroll = scrollEl.scrollHeight > scrollEl.clientHeight;
+         console.log('[SCROLL] canScroll:', canScroll, 'height:', scrollEl.scrollHeight, 'viewport:', scrollEl.clientHeight);
+
+         return () => scrollEl.removeEventListener('scroll', handleScroll);
       }, [phase]);
 
       return (
          <div
-            className="absolute inset-0 flex flex-col overflow-hidden"
-            style={{ backgroundColor: colors.bgDark, color: colors.textPrimary, touchAction: 'pan-y' }}
+            className="absolute inset-0 flex flex-col"
+            style={{ backgroundColor: colors.bgDark, color: colors.textPrimary }}
          >
             {/* Subtle background gradient - purely decorative */}
             <div style={{

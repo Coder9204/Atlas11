@@ -1669,7 +1669,7 @@ Please SPEAK a helpful hint that:
         </div>
 
         {/* Visual Panel: Full screen on mobile */}
-        <div className="flex-1 relative flex flex-col overflow-hidden" style={{ touchAction: 'pan-y' }}>
+        <div className="flex-1 relative flex flex-col">
           <VisualPanel
             context={visualContext}
             activeTopic={activeTopic}
