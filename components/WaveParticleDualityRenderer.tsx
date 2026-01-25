@@ -403,61 +403,80 @@ const WaveParticleDualityRenderer: React.FC<WaveParticleDualityRendererProps> = 
    const renderBottomBar = (canGoBack: boolean, canGoNext: boolean, nextLabel: string, onNext?: () => void, accentColor?: string) => {
       const currentIdx = phaseOrder.indexOf(phase);
       const buttonColor = accentColor || colors.primary;
+      const canBack = canGoBack && currentIdx > 0;
+
+      const handleBack = () => {
+         if (canBack) {
+            goToPhase(phaseOrder[currentIdx - 1]);
+         }
+      };
+
+      const handleNext = () => {
+         if (!canGoNext) return;
+         if (onNext) {
+            onNext();
+         } else if (currentIdx < phaseOrder.length - 1) {
+            goToPhase(phaseOrder[currentIdx + 1]);
+         }
+      };
 
       return (
          <div style={{
             display: 'flex',
             justifyContent: 'space-between',
             alignItems: 'center',
-            padding: '16px',
+            padding: isMobile ? '12px' : '12px 16px',
             borderTop: `1px solid ${colors.border}`,
-            backgroundColor: colors.bgCard
+            backgroundColor: colors.bgCard,
+            gap: '12px',
+            flexShrink: 0
          }}>
             {/* Back button */}
             <button
                style={{
-                  padding: '12px 20px',
-                  borderRadius: '12px',
+                  padding: isMobile ? '10px 16px' : '10px 20px',
+                  borderRadius: '10px',
                   fontWeight: 600,
-                  fontSize: '14px',
+                  fontSize: isMobile ? '13px' : '14px',
                   backgroundColor: colors.bgCardLight,
                   color: colors.textSecondary,
-                  border: 'none',
-                  cursor: canGoBack && currentIdx > 0 ? 'pointer' : 'not-allowed',
-                  opacity: canGoBack && currentIdx > 0 ? 1 : 0.3
+                  border: `1px solid ${colors.border}`,
+                  cursor: canBack ? 'pointer' : 'not-allowed',
+                  opacity: canBack ? 1 : 0.3,
+                  minHeight: '44px'
                }}
-               onMouseDown={() => {
-                  if (canGoBack && currentIdx > 0) {
-                     goToPhase(phaseOrder[currentIdx - 1]);
-                  }
-               }}
+               onMouseDown={handleBack}
+               onTouchEnd={(e) => { e.preventDefault(); handleBack(); }}
             >
                ← Back
             </button>
 
+            {/* Phase indicator */}
+            <span style={{
+               fontSize: '12px',
+               color: colors.textMuted,
+               fontWeight: 600
+            }}>
+               {phaseLabels[phase]}
+            </span>
+
             {/* Next button */}
             <button
                style={{
-                  padding: '12px 32px',
-                  borderRadius: '12px',
+                  padding: isMobile ? '10px 20px' : '10px 24px',
+                  borderRadius: '10px',
                   fontWeight: 700,
-                  fontSize: '14px',
+                  fontSize: isMobile ? '13px' : '14px',
                   background: canGoNext ? `linear-gradient(135deg, ${buttonColor} 0%, ${colors.accent} 100%)` : colors.bgCardLight,
-                  color: colors.textPrimary,
+                  color: canGoNext ? colors.textPrimary : colors.textMuted,
                   border: 'none',
                   cursor: canGoNext ? 'pointer' : 'not-allowed',
-                  opacity: canGoNext ? 1 : 0.3,
-                  boxShadow: canGoNext ? `0 4px 20px ${buttonColor}40` : 'none'
+                  opacity: canGoNext ? 1 : 0.4,
+                  boxShadow: canGoNext ? `0 2px 12px ${buttonColor}30` : 'none',
+                  minHeight: '44px'
                }}
-               onMouseDown={() => {
-                  if (!canGoNext) return;
-                  if (onNext) {
-                     onNext();
-                  } else if (currentIdx < phaseOrder.length - 1) {
-                     const nextPhase = phaseOrder[currentIdx + 1];
-                     goToPhase(nextPhase);
-                  }
-               }}
+               onMouseDown={handleNext}
+               onTouchEnd={(e) => { e.preventDefault(); handleNext(); }}
             >
                {nextLabel} →
             </button>
@@ -483,55 +502,148 @@ const WaveParticleDualityRenderer: React.FC<WaveParticleDualityRendererProps> = 
       </div>
    );
 
-   // Premium wrapper component for consistent design
-   const PremiumWrapper = ({ children }: { children: React.ReactNode }) => (
-      <div className="min-h-screen bg-[#0a0f1a] text-white relative overflow-hidden">
-         {/* Premium background gradient - pointer-events-none to prevent click interception */}
-         <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-[#0a1628] to-slate-900 pointer-events-none" />
-         <div className="absolute top-0 left-1/4 w-96 h-96 bg-cyan-500/5 rounded-full blur-3xl pointer-events-none" />
-         <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-purple-500/5 rounded-full blur-3xl pointer-events-none" />
-         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-cyan-500/3 rounded-full blur-3xl pointer-events-none" />
+   // Request to go home/close game
+   const requestGoHome = useCallback(() => {
+      emitGameEvent('button_clicked', {
+         phase,
+         phaseLabel: phaseLabels[phase],
+         action: 'go_home',
+         message: 'User requested to exit game and return home'
+      });
+   }, [phase, emitGameEvent, phaseLabels]);
 
-         {/* Fixed Header */}
-         <div className="fixed top-0 left-0 right-0 z-50 bg-slate-900/80 backdrop-blur-xl border-b border-slate-800/50">
-            <div className="flex items-center justify-between px-6 py-3 max-w-4xl mx-auto">
-               <span className="text-sm font-semibold text-white/80 tracking-wide">Wave-Particle Duality</span>
-               <div className="flex items-center gap-1.5">
-                  {phaseOrder.map((p, i) => {
-                     const currentIdx = phaseOrder.indexOf(phase);
-                     return (
-                        <button
-                           key={p}
-                           onMouseDown={(e) => { e.preventDefault(); if (i <= currentIdx) goToPhase(p); }}
-                           className={`h-2 rounded-full transition-all duration-300 ${
-                              i === currentIdx
-                                 ? 'bg-cyan-400 w-6 shadow-lg shadow-cyan-400/30'
-                                 : i < currentIdx
-                                    ? 'bg-emerald-500 w-2'
-                                    : 'bg-slate-700 w-2 hover:bg-slate-600'
-                           }`}
-                           title={phaseLabels[p]}
-                        />
-                     );
-                  })}
+   // Premium wrapper component - REDESIGNED for proper viewport layout
+   // Uses absolute positioning to fill parent container from GeneratedDiagram
+   const PremiumWrapper = ({ children }: { children: React.ReactNode }) => {
+      const currentIdx = phaseOrder.indexOf(phase);
+
+      return (
+         <div style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            display: 'flex',
+            flexDirection: 'column',
+            backgroundColor: colors.bgDark,
+            color: colors.textPrimary,
+            overflow: 'hidden'
+         }}>
+            {/* Subtle background gradient - purely decorative */}
+            <div style={{
+               position: 'absolute',
+               inset: 0,
+               background: 'linear-gradient(135deg, #0f172a 0%, #020617 50%, #0f172a 100%)',
+               pointerEvents: 'none'
+            }} />
+
+            {/* HEADER - Part of flow, not fixed */}
+            <div style={{
+               flexShrink: 0,
+               display: 'flex',
+               alignItems: 'center',
+               justifyContent: 'space-between',
+               padding: isMobile ? '8px 12px' : '10px 16px',
+               backgroundColor: colors.bgCard,
+               borderBottom: `1px solid ${colors.border}`,
+               position: 'relative',
+               zIndex: 10,
+               gap: '8px'
+            }}>
+               {/* Home button */}
+               <button
+                  onMouseDown={requestGoHome}
+                  onTouchEnd={(e) => { e.preventDefault(); requestGoHome(); }}
+                  style={{
+                     display: 'flex',
+                     alignItems: 'center',
+                     justifyContent: 'center',
+                     width: '36px',
+                     height: '36px',
+                     borderRadius: '8px',
+                     backgroundColor: colors.bgCardLight,
+                     border: `1px solid ${colors.border}`,
+                     color: colors.textSecondary,
+                     cursor: 'pointer',
+                     flexShrink: 0
+                  }}
+                  title="Go Home"
+               >
+                  <span style={{ fontSize: '16px' }}>🏠</span>
+               </button>
+
+               {/* Progress bar - centered */}
+               <div style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  flex: 1,
+                  justifyContent: 'center'
+               }}>
+                  {phaseOrder.map((p, i) => (
+                     <button
+                        key={p}
+                        onMouseDown={(e) => { e.preventDefault(); if (i <= currentIdx) goToPhase(p); }}
+                        onTouchEnd={(e) => { e.preventDefault(); if (i <= currentIdx) goToPhase(p); }}
+                        style={{
+                           width: i === currentIdx ? '20px' : '10px',
+                           height: '10px',
+                           borderRadius: '5px',
+                           border: 'none',
+                           backgroundColor: i < currentIdx
+                              ? colors.success
+                              : i === currentIdx
+                                 ? colors.primary
+                                 : colors.border,
+                           cursor: i <= currentIdx ? 'pointer' : 'default',
+                           transition: 'all 0.2s',
+                           opacity: i > currentIdx ? 0.5 : 1
+                        }}
+                        title={`${phaseLabels[p]} (${i + 1}/${phaseOrder.length})`}
+                     />
+                  ))}
                </div>
-               <span className="text-sm font-medium text-cyan-400">{phaseLabels[phase]}</span>
+
+               {/* Phase label and count */}
+               <div style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  flexShrink: 0
+               }}>
+                  <span style={{
+                     fontSize: '11px',
+                     fontWeight: 700,
+                     color: colors.primary,
+                     padding: '4px 8px',
+                     borderRadius: '6px',
+                     backgroundColor: `${colors.primary}15`
+                  }}>
+                     {currentIdx + 1}/{phaseOrder.length}
+                  </span>
+               </div>
+            </div>
+
+            {/* MAIN CONTENT - Fills remaining space, scrolls if needed */}
+            <div style={{
+               flex: 1,
+               overflow: 'auto',
+               position: 'relative',
+               zIndex: 5
+            }}>
+               {children}
             </div>
          </div>
-
-         {/* Main content - z-10 ensures it's above background elements */}
-         <div className="relative pt-16 pb-12 z-10">
-            {children}
-         </div>
-      </div>
-   );
+      );
+   };
 
    // Helper function for section header - NOT a component
    const renderSectionHeader = (phaseName: string, title: string, subtitle?: string) => (
-      <div style={{ marginBottom: '24px' }}>
-         <p style={{ fontSize: '12px', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '8px', color: colors.primary }}>{phaseName}</p>
-         <h2 style={{ fontSize: '28px', fontWeight: 900, color: colors.textPrimary }}>{title}</h2>
-         {subtitle && <p style={{ fontSize: '14px', marginTop: '8px', color: colors.textSecondary }}>{subtitle}</p>}
+      <div style={{ marginBottom: isMobile ? '12px' : '16px' }}>
+         <p style={{ fontSize: '11px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '4px', color: colors.primary }}>{phaseName}</p>
+         <h2 style={{ fontSize: isMobile ? '20px' : '24px', fontWeight: 800, color: colors.textPrimary, lineHeight: 1.2 }}>{title}</h2>
+         {subtitle && <p style={{ fontSize: isMobile ? '12px' : '13px', marginTop: '6px', color: colors.textSecondary, lineHeight: 1.4 }}>{subtitle}</p>}
       </div>
    );
 
@@ -1171,7 +1283,7 @@ const WaveParticleDualityRenderer: React.FC<WaveParticleDualityRendererProps> = 
       prevPhaseRef.current = phase;
    }, [phase, emitGameEvent]);
 
-   // HOOK Screen - Airbnb-inspired clean design (RESPONSIVE)
+   // HOOK Screen - Clean, compact design
    if (phase === 'hook') {
       return (
          <PremiumWrapper>
@@ -1179,115 +1291,108 @@ const WaveParticleDualityRenderer: React.FC<WaveParticleDualityRendererProps> = 
             display: 'flex',
             flexDirection: 'column',
             height: '100%',
-            width: '100%'
+            minHeight: 0
          }}>
-
+            {/* Content area - centered */}
             <div style={{
                flex: 1,
                display: 'flex',
                flexDirection: 'column',
                alignItems: 'center',
                justifyContent: 'center',
-               padding: isMobile ? '24px 16px' : '40px 24px',
+               padding: isMobile ? '16px' : '24px',
                textAlign: 'center',
                overflow: 'auto'
             }}>
-               {/* Elegant icon - smaller on mobile */}
+               {/* Icon */}
                <div style={{
-                  width: isMobile ? '60px' : '80px',
-                  height: isMobile ? '60px' : '80px',
+                  width: isMobile ? '56px' : '70px',
+                  height: isMobile ? '56px' : '70px',
                   borderRadius: '50%',
                   background: 'linear-gradient(135deg, #06b6d4 0%, #a855f7 100%)',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  marginBottom: isMobile ? '20px' : '32px',
-                  boxShadow: '0 20px 60px rgba(6, 182, 212, 0.3)'
+                  marginBottom: isMobile ? '16px' : '20px',
+                  boxShadow: '0 12px 40px rgba(6, 182, 212, 0.25)'
                }}>
-                  <span style={{ fontSize: isMobile ? '28px' : '36px' }}>⚛️</span>
+                  <span style={{ fontSize: isMobile ? '24px' : '32px' }}>⚛️</span>
                </div>
 
-               {/* Title - responsive font size */}
+               {/* Title */}
                <h1 style={{
-                  fontSize: isMobile ? '24px' : '32px',
+                  fontSize: isMobile ? '22px' : '28px',
                   fontWeight: 800,
-                  color: '#f8fafc',
-                  marginBottom: isMobile ? '12px' : '16px',
+                  color: colors.textPrimary,
+                  marginBottom: isMobile ? '8px' : '12px',
                   lineHeight: 1.2
                }}>
                   The Double-Slit Experiment
                </h1>
 
-               {/* Subtitle - responsive */}
+               {/* Subtitle */}
                <p style={{
-                  fontSize: isMobile ? '15px' : '18px',
-                  color: '#94a3b8',
-                  marginBottom: isMobile ? '24px' : '32px',
-                  maxWidth: '480px',
-                  lineHeight: 1.6,
-                  padding: isMobile ? '0 8px' : 0
+                  fontSize: isMobile ? '13px' : '15px',
+                  color: colors.textSecondary,
+                  marginBottom: isMobile ? '20px' : '24px',
+                  maxWidth: '400px',
+                  lineHeight: 1.5
                }}>
-                  Richard Feynman called this <span style={{ color: '#f8fafc', fontWeight: 600 }}>"the only mystery"</span> of quantum mechanics
+                  Feynman called this <span style={{ color: colors.textPrimary, fontWeight: 600 }}>"the only mystery"</span> of quantum mechanics
                </p>
 
-               {/* Feature cards - 3 columns always, smaller on mobile */}
+               {/* Feature cards */}
                <div style={{
-                  display: 'grid',
-                  gridTemplateColumns: 'repeat(3, 1fr)',
+                  display: 'flex',
                   gap: isMobile ? '8px' : '12px',
-                  width: '100%',
-                  maxWidth: '400px',
-                  marginBottom: isMobile ? '24px' : '40px'
+                  marginBottom: isMobile ? '20px' : '28px'
                }}>
                   {[
-                     { icon: '🔬', text: 'Interactive Lab' },
-                     { icon: '🎯', text: 'Predictions' },
-                     { icon: '💡', text: 'Real Apps' }
+                     { icon: '🔬', text: 'Interactive' },
+                     { icon: '🎯', text: 'Predict' },
+                     { icon: '💡', text: 'Apply' }
                   ].map((item, i) => (
                      <div key={i} style={{
-                        padding: isMobile ? '12px 8px' : '16px',
-                        borderRadius: '12px',
-                        backgroundColor: 'rgba(30, 41, 59, 0.5)',
-                        border: '1px solid rgba(51, 65, 85, 0.5)'
+                        padding: isMobile ? '10px 14px' : '12px 18px',
+                        borderRadius: '10px',
+                        backgroundColor: colors.bgCardLight,
+                        border: `1px solid ${colors.border}`
                      }}>
-                        <div style={{ fontSize: isMobile ? '20px' : '24px', marginBottom: '6px' }}>{item.icon}</div>
-                        <div style={{ fontSize: isMobile ? '10px' : '12px', fontWeight: 600, color: '#94a3b8' }}>{item.text}</div>
+                        <div style={{ fontSize: isMobile ? '16px' : '20px', marginBottom: '4px' }}>{item.icon}</div>
+                        <div style={{ fontSize: isMobile ? '10px' : '11px', fontWeight: 600, color: colors.textMuted }}>{item.text}</div>
                      </div>
                   ))}
                </div>
 
-               {/* CTA Button - touch-friendly (min 44px height) */}
+               {/* CTA Button */}
                <button
                   style={{
                      width: '100%',
-                     maxWidth: '320px',
-                     padding: isMobile ? '16px 24px' : '18px 32px',
-                     fontSize: isMobile ? '15px' : '16px',
+                     maxWidth: '280px',
+                     padding: isMobile ? '14px 20px' : '16px 28px',
+                     fontSize: isMobile ? '14px' : '15px',
                      fontWeight: 700,
                      background: 'linear-gradient(135deg, #06b6d4 0%, #a855f7 100%)',
                      color: 'white',
                      border: 'none',
                      borderRadius: '12px',
                      cursor: 'pointer',
-                     boxShadow: '0 8px 32px rgba(6, 182, 212, 0.4)',
-                     transition: 'transform 0.2s',
+                     boxShadow: '0 6px 24px rgba(6, 182, 212, 0.3)',
                      minHeight: '48px'
                   }}
                   onMouseDown={() => goToPhase('predict')}
-                  onTouchEnd={() => goToPhase('predict')}
-                  onMouseOver={(e) => e.currentTarget.style.transform = 'scale(1.02)'}
-                  onMouseOut={(e) => e.currentTarget.style.transform = 'scale(1)'}
+                  onTouchEnd={(e) => { e.preventDefault(); goToPhase('predict'); }}
                >
                   Start Experiment →
                </button>
 
                {/* Duration hint */}
                <p style={{
-                  fontSize: isMobile ? '11px' : '12px',
-                  color: '#64748b',
-                  marginTop: isMobile ? '12px' : '16px'
+                  fontSize: '11px',
+                  color: colors.textMuted,
+                  marginTop: '12px'
                }}>
-                  ~5 minutes • Interactive • Test your intuition
+                  ~5 min • Interactive
                </p>
             </div>
          </div>
@@ -1299,50 +1404,70 @@ const WaveParticleDualityRenderer: React.FC<WaveParticleDualityRendererProps> = 
    if (phase === 'predict') {
       return (
          <PremiumWrapper>
-         <div className="flex flex-col h-full overflow-hidden">
+         <div style={{
+            display: 'flex',
+            flexDirection: 'column',
+            height: '100%',
+            minHeight: 0
+         }}>
+            {/* Scrollable content area */}
+            <div style={{
+               flex: 1,
+               overflowY: 'auto',
+               padding: isMobile ? '12px' : '16px',
+               display: 'flex',
+               flexDirection: 'column',
+               alignItems: 'center'
+            }}>
+               <div style={{ width: '100%', maxWidth: '600px' }}>
+                  {renderSectionHeader("Step 1 • Make Your Prediction", "What Will Electrons Do?", "Think carefully — your intuition may not apply here.")}
 
-            <div className="flex-1 flex flex-col items-center p-4 sm:p-6 overflow-y-auto">
-               <div className="w-full max-w-2xl">
-                  {renderSectionHeader("Step 1 • Make Your Prediction", "What Will Electrons Do?", "Think carefully — your intuition from everyday experience may not apply here.")}
-
-                  {/* Setup diagram */}
-                  <div className="w-full p-4 rounded-2xl mb-6" style={{ background: colors.bgCard, border: `1px solid ${colors.border}` }}>
-                     <svg viewBox="0 0 400 130" className="w-full h-32">
-                        <rect x="25" y="40" width="55" height="50" rx="8" fill={colors.bgCardLight} stroke={colors.border} />
-                        <circle cx="52" cy="65" r="10" fill={colors.primary} opacity="0.6">
+                  {/* Setup diagram - compact */}
+                  <div style={{
+                     width: '100%',
+                     padding: isMobile ? '8px' : '12px',
+                     borderRadius: '12px',
+                     marginBottom: '12px',
+                     background: colors.bgCard,
+                     border: `1px solid ${colors.border}`
+                  }}>
+                     <svg viewBox="0 0 400 100" style={{ width: '100%', height: isMobile ? '70px' : '80px' }}>
+                        <rect x="25" y="25" width="50" height="40" rx="6" fill={colors.bgCardLight} stroke={colors.border} />
+                        <circle cx="50" cy="45" r="8" fill={colors.primary} opacity="0.6">
                            <animate attributeName="opacity" values="0.4;0.8;0.4" dur="1s" repeatCount="indefinite" />
                         </circle>
-                        <text x="52" y="105" textAnchor="middle" className="text-[9px] fill-slate-400 font-bold">Electron Gun</text>
-
-                        <line x1="85" y1="65" x2="140" y2="65" stroke={colors.primary} strokeWidth="2" strokeDasharray="5 3" strokeOpacity="0.4" />
-
-                        <rect x="140" y="15" width="18" height="45" fill={colors.bgCardLight} />
-                        <rect x="140" y="65" width="18" height="10" fill="#000" stroke={colors.border} strokeWidth="0.5" />
-                        <rect x="140" y="80" width="18" height="45" fill={colors.bgCardLight} />
-                        <text x="149" y="135" textAnchor="middle" className="text-[9px] fill-slate-400 font-bold">Double Slit</text>
-
-                        <text x="230" y="72" className="text-[36px] font-black" style={{ fill: colors.textMuted }}>?</text>
-
-                        <rect x="320" y="15" width="35" height="100" rx="5" fill="#064e3b" stroke={colors.border} />
-                        <text x="337" y="130" textAnchor="middle" className="text-[9px] fill-slate-400 font-bold">Screen</text>
+                        <text x="50" y="80" textAnchor="middle" style={{ fontSize: '8px', fill: colors.textMuted, fontWeight: 600 }}>e⁻ Gun</text>
+                        <line x1="80" y1="45" x2="135" y2="45" stroke={colors.primary} strokeWidth="2" strokeDasharray="4 2" strokeOpacity="0.4" />
+                        <rect x="135" y="10" width="14" height="30" fill={colors.bgCardLight} />
+                        <rect x="135" y="43" width="14" height="8" fill="#000" />
+                        <rect x="135" y="54" width="14" height="30" fill={colors.bgCardLight} />
+                        <text x="142" y="95" textAnchor="middle" style={{ fontSize: '8px', fill: colors.textMuted, fontWeight: 600 }}>Slits</text>
+                        <text x="230" y="55" style={{ fontSize: '28px', fill: colors.textMuted, fontWeight: 900 }}>?</text>
+                        <rect x="320" y="10" width="30" height="74" rx="4" fill="#064e3b" stroke={colors.border} />
+                        <text x="335" y="95" textAnchor="middle" style={{ fontSize: '8px', fill: colors.textMuted, fontWeight: 600 }}>Screen</text>
                      </svg>
                   </div>
 
-                  {/* Question context */}
-                  <div className="p-4 rounded-xl mb-6" style={{ background: `${colors.primary}15`, border: `1px solid ${colors.primary}30` }}>
-                     <p className="text-sm leading-relaxed" style={{ color: colors.textSecondary }}>
-                        <strong style={{ color: colors.textPrimary }}>The Setup:</strong> We fire individual electrons — one at a time — toward a barrier with two narrow slits.
-                        After each electron passes through, it hits a detector screen and leaves a tiny dot.
-                        <strong style={{ color: colors.primary }}> What pattern will form after hundreds of electrons?</strong>
+                  {/* Question context - compact */}
+                  <div style={{
+                     padding: isMobile ? '10px' : '12px',
+                     borderRadius: '10px',
+                     marginBottom: '12px',
+                     background: `${colors.primary}12`,
+                     border: `1px solid ${colors.primary}25`
+                  }}>
+                     <p style={{ fontSize: isMobile ? '12px' : '13px', lineHeight: 1.5, color: colors.textSecondary, margin: 0 }}>
+                        <strong style={{ color: colors.textPrimary }}>Setup:</strong> We fire electrons one at a time through two slits.
+                        <strong style={{ color: colors.primary }}> What pattern forms on the screen?</strong>
                      </p>
                   </div>
 
-                  {/* Options */}
-                  <div className="grid gap-4 mb-6">
+                  {/* Options - more compact */}
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '12px' }}>
                      {[
-                        { id: 'two', label: 'Two separate bands', desc: 'One band behind each slit — particles choose one path', icon: '▮ ▮' },
-                        { id: 'interference', label: 'Multiple alternating bands', desc: 'A wave-like pattern with bright and dark stripes', icon: '▮▯▮▯▮' },
-                        { id: 'one', label: 'One spread-out blob', desc: 'Particles scatter randomly across the screen', icon: '▓▓▓' },
+                        { id: 'two', label: 'Two separate bands', desc: 'Particles choose one slit', icon: '▮ ▮' },
+                        { id: 'interference', label: 'Multiple bands', desc: 'Wave-like interference pattern', icon: '▮▯▮▯▮' },
+                        { id: 'one', label: 'One blob', desc: 'Random scatter', icon: '▓▓▓' },
                      ].map(opt => (
                         <button
                            key={opt.id}
@@ -1367,40 +1492,72 @@ const WaveParticleDualityRenderer: React.FC<WaveParticleDualityRendererProps> = 
                                  message: `User predicted: ${opt.label}`
                               });
                            }}
-                           className="flex items-center gap-4 p-5 rounded-2xl text-left transition-all"
                            style={{
-                              background: prediction === opt.id ? `${colors.primary}20` : colors.bgCard,
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: '12px',
+                              padding: isMobile ? '12px' : '14px',
+                              borderRadius: '12px',
+                              textAlign: 'left',
+                              background: prediction === opt.id ? `${colors.primary}18` : colors.bgCard,
                               border: `2px solid ${prediction === opt.id ? colors.primary : colors.border}`,
-                              boxShadow: prediction === opt.id ? `0 4px 20px ${colors.primary}20` : 'none'
+                              cursor: 'pointer',
+                              transition: 'all 0.15s'
                            }}
                         >
-                           <div className="text-2xl font-mono" style={{ color: prediction === opt.id ? colors.primary : colors.textMuted, letterSpacing: '2px' }}>
+                           <div style={{
+                              fontSize: '16px',
+                              fontFamily: 'monospace',
+                              color: prediction === opt.id ? colors.primary : colors.textMuted,
+                              letterSpacing: '1px',
+                              flexShrink: 0
+                           }}>
                               {opt.icon}
                            </div>
-                           <div className="flex-1">
-                              <p className="font-bold mb-1" style={{ color: prediction === opt.id ? colors.textPrimary : colors.textSecondary }}>{opt.label}</p>
-                              <p className="text-sm" style={{ color: colors.textMuted }}>{opt.desc}</p>
+                           <div style={{ flex: 1, minWidth: 0 }}>
+                              <p style={{
+                                 fontWeight: 700,
+                                 fontSize: isMobile ? '13px' : '14px',
+                                 marginBottom: '2px',
+                                 color: prediction === opt.id ? colors.textPrimary : colors.textSecondary
+                              }}>{opt.label}</p>
+                              <p style={{ fontSize: '11px', color: colors.textMuted, margin: 0 }}>{opt.desc}</p>
                            </div>
                            {prediction === opt.id && (
-                              <div className="w-6 h-6 rounded-full flex items-center justify-center" style={{ background: colors.primary }}>
-                                 <span className="text-white text-sm">✓</span>
+                              <div style={{
+                                 width: '22px',
+                                 height: '22px',
+                                 borderRadius: '50%',
+                                 background: colors.primary,
+                                 display: 'flex',
+                                 alignItems: 'center',
+                                 justifyContent: 'center',
+                                 flexShrink: 0
+                              }}>
+                                 <span style={{ color: 'white', fontSize: '12px' }}>✓</span>
                               </div>
                            )}
                         </button>
                      ))}
                   </div>
 
-                  {/* Hint */}
-                  <div className="p-4 rounded-xl" style={{ background: colors.bgCardLight, border: `1px solid ${colors.border}` }}>
-                     <p className="text-xs font-bold uppercase tracking-widest mb-2" style={{ color: colors.warning }}>Think About It</p>
-                     <p className="text-sm" style={{ color: colors.textMuted }}>
-                        If electrons are particles (like tiny bullets), what would you expect? If they're waves (like water), what would you expect?
+                  {/* Hint - compact */}
+                  <div style={{
+                     padding: '10px',
+                     borderRadius: '10px',
+                     background: colors.bgCardLight,
+                     border: `1px solid ${colors.border}`
+                  }}>
+                     <p style={{ fontSize: '10px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '4px', color: colors.warning }}>💡 Hint</p>
+                     <p style={{ fontSize: '12px', color: colors.textMuted, margin: 0, lineHeight: 1.4 }}>
+                        Particles → two bands. Waves → interference pattern.
                      </p>
                   </div>
                </div>
             </div>
 
-            {renderBottomBar(true, !!prediction, "Run the Experiment")}
+            {/* Bottom bar - always visible */}
+            {renderBottomBar(true, !!prediction, "Run Experiment")}
          </div>
          </PremiumWrapper>
       );
