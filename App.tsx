@@ -266,20 +266,38 @@ const App: React.FC = () => {
   // Session message throttling to prevent spam
   const lastSessionSendRef = useRef<number>(0);
   const lastSentMessageRef = useRef<string>('');
-  const SESSION_SEND_THROTTLE_MS = 500; // Minimum time between sends
+  const SESSION_SEND_THROTTLE_MS = 400; // Minimum time between normal sends
+  const PRIORITY_THROTTLE_MS = 100; // Minimum time for priority messages (phase changes)
+
+  // Current location tracking - ensures AI always knows where user is
+  const currentLocationRef = useRef<{ phase: string; screen: number; timestamp: number }>({
+    phase: '', screen: 0, timestamp: 0
+  });
+  const pendingLocationUpdateRef = useRef<NodeJS.Timeout | null>(null);
 
   // Safe session send helper - prevents sending to closed/invalid sessions
-  const safeSend = useCallback((text: string, isSilent: boolean = true) => {
+  // priority: 'high' = phase changes (bypass most throttling, interrupt audio)
+  //           'normal' = regular events
+  //           'low' = background updates (can be dropped if throttled)
+  const safeSend = useCallback((text: string, isSilent: boolean = true, priority: 'high' | 'normal' | 'low' = 'normal') => {
     const now = Date.now();
     const timeSinceLast = now - lastSessionSendRef.current;
 
-    // Throttle sends to prevent flooding
-    if (timeSinceLast < SESSION_SEND_THROTTLE_MS) {
+    // Determine throttle based on priority
+    const throttleMs = priority === 'high' ? PRIORITY_THROTTLE_MS : SESSION_SEND_THROTTLE_MS;
+
+    // Low priority messages get dropped if throttled
+    if (priority === 'low' && timeSinceLast < SESSION_SEND_THROTTLE_MS) {
       return false;
     }
 
-    // Prevent duplicate messages
-    if (text === lastSentMessageRef.current && timeSinceLast < 5000) {
+    // Throttle sends to prevent flooding (but high priority has lower threshold)
+    if (timeSinceLast < throttleMs) {
+      return false;
+    }
+
+    // Prevent duplicate messages (but allow if priority is high)
+    if (priority !== 'high' && text === lastSentMessageRef.current && timeSinceLast < 5000) {
       return false;
     }
 
@@ -310,6 +328,32 @@ const App: React.FC = () => {
     }
     return false;
   }, []);
+
+  // Immediately sync current location with AI - used after rapid navigation
+  const syncCurrentLocation = useCallback((phase: string, screen: number, forceInterrupt: boolean = false) => {
+    const now = Date.now();
+    currentLocationRef.current = { phase, screen, timestamp: now };
+
+    // Clear any pending location update
+    if (pendingLocationUpdateRef.current) {
+      clearTimeout(pendingLocationUpdateRef.current);
+      pendingLocationUpdateRef.current = null;
+    }
+
+    // If force interrupt, stop all audio and send immediate update
+    if (forceInterrupt) {
+      stopAllAudio();
+    }
+
+    // Debounce the location sync (wait 150ms for rapid navigation to settle)
+    pendingLocationUpdateRef.current = setTimeout(() => {
+      // Only send if this is still the current location
+      if (currentLocationRef.current.timestamp === now && isSessionActiveRef.current) {
+        const locationUpdate = `[LOCATION SYNC] User is NOW on: Phase="${phase}", Screen ${screen}/10. Any previous guidance about other phases is STALE - focus ONLY on current phase.`;
+        safeSend(locationUpdate, true, 'high');
+      }
+    }, 150);
+  }, [safeSend, stopAllAudio]);
 
   useEffect(() => {
     isSessionActiveRef.current = isSessionActive;
@@ -862,7 +906,8 @@ const App: React.FC = () => {
   // Helper to make AI SPEAK a message (triggers voice output via Gemini)
   // Auto-starts session if not active and voice is enabled
   // Interrupts any current speech and debounces rapid calls
-  const speakGuidance = useCallback(async (prompt: string, immediate: boolean = false) => {
+  // priority: 'high' for phase changes (faster, bypasses more throttling), 'normal' for other speech
+  const speakGuidance = useCallback(async (prompt: string, immediate: boolean = false, priority: 'high' | 'normal' = 'normal') => {
     // If voice output is disabled, don't speak
     if (!isVoiceOutputEnabled) {
       return;
@@ -877,8 +922,8 @@ const App: React.FC = () => {
     // ALWAYS interrupt current audio when new speech is requested
     stopAllAudio();
 
-    // Debounce rapid phase changes (300ms) unless immediate flag is set
-    const delay = immediate ? 0 : 300;
+    // Debounce rapid phase changes - high priority gets faster response
+    const delay = immediate ? 0 : (priority === 'high' ? 150 : 300);
 
     speechDebounceRef.current = setTimeout(async () => {
       // Auto-start session if not active
@@ -889,13 +934,16 @@ const App: React.FC = () => {
 
       isSpeakingRef.current = true;
 
-      // Send the voice prompt using safeSend to prevent duplicate/closed socket errors
-      safeSend(prompt, true);
+      // Send the voice prompt using safeSend with priority
+      safeSend(prompt, true, priority);
     }, delay);
   }, [isSessionActive, isVoiceOutputEnabled, stopAllAudio, safeSend]);
 
   // Handler for game events from interactive graphics - enables AI voice coach to see and respond to gameplay
   const handleGameEvent = useCallback(async (event: GameEvent) => {
+    // Phase order for screen number calculation
+    const phaseOrder = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
+
     // Update visual state tracking for accurate AI context
     if (event.eventType === 'visual_state_update') {
       gameVisualStateRef.current = {
@@ -969,13 +1017,18 @@ const App: React.FC = () => {
             await new Promise(resolve => setTimeout(resolve, 500));
           }
           // Speak welcome - single, clear message (no duplication)
-          speakGuidance(`[SAY EXACTLY THIS in a warm, friendly voice]: "Welcome to Wave-Particle Duality! This is going to be fascinating. Take a moment to read the intro, then click Make a Prediction when you're ready!"`, true);
+          speakGuidance(`[SAY EXACTLY THIS in a warm, friendly voice]: "Welcome to Wave-Particle Duality! This is going to be fascinating. Take a moment to read the intro, then click Make a Prediction when you're ready!"`, true, 'high');
         }
       }
 
     } else if (event.eventType === 'phase_changed') {
       const newPhase = event.details.phase || '';
+      const screenNum = event.details.currentScreen || (phaseOrder.indexOf(newPhase) + 1);
       setCurrentGamePhase(newPhase);
+
+      // CRITICAL: Immediately sync location with AI and interrupt any stale audio
+      // This ensures AI always knows CURRENT page even during rapid navigation
+      syncCurrentLocation(newPhase, screenNum, true);
 
       // Save progress to localStorage
       if (currentGameId) {
@@ -996,7 +1049,8 @@ const App: React.FC = () => {
         setShownHalfwayMessage(false);
       }
 
-      // Skip if this phase was already announced (prevents duplicate on rapid navigation)
+      // Skip voice if this phase was already announced (prevents duplicate on rapid navigation)
+      // But still allow location sync above to keep AI in sync
       if (lastSpokenPhaseRef.current === newPhase) {
         return;
       }
@@ -1047,10 +1101,10 @@ const App: React.FC = () => {
         const msg = phaseMessages[newPhase];
         if (msg) {
           addAtlasMessage(msg);
-          // Speak the exact script
+          // Speak the exact script with HIGH priority for phase changes
           const voiceScript = getVoiceScript(newPhase);
           if (voiceScript && isVoiceOutputEnabled) {
-            speakGuidance(voiceScript);
+            speakGuidance(voiceScript, false, 'high');
           }
         }
       }
@@ -1143,10 +1197,10 @@ const App: React.FC = () => {
 
       if (guidedModeEnabled && appNum < 4) {
         addAtlasMessage(`✅ Great job exploring ${appTitle}! ${4 - appNum} more application${4 - appNum > 1 ? 's' : ''} to go. Each one shows quantum physics in a different real-world context.`);
-        speakGuidance(`[VOICE] The learner completed application ${appNum} (${appTitle})! Celebrate briefly and encourage them - ${4 - appNum} more applications to explore. Keep the momentum! 6-8 seconds.`);
+        speakGuidance(`[VOICE] The learner completed application ${appNum} (${appTitle})! Celebrate briefly and encourage them - ${4 - appNum} more applications to explore. Keep the momentum! 6-8 seconds.`, false, 'normal');
       } else if (guidedModeEnabled && appNum === 4) {
         addAtlasMessage(`🎉 You've explored all 4 real-world applications! Now you can see how quantum weirdness powers actual technology. Ready to test your knowledge? Click 'Take Test' when you're ready!`);
-        speakGuidance(`[VOICE] The learner completed ALL 4 applications! Big celebration! They've seen quantum physics in computing, encryption, microscopy, and medicine. Encourage them to take the test - they're ready! Be excited and proud! 10-12 seconds.`);
+        speakGuidance(`[VOICE] The learner completed ALL 4 applications! Big celebration! They've seen quantum physics in computing, encryption, microscopy, and medicine. Encourage them to take the test - they're ready! Be excited and proud! 10-12 seconds.`, false, 'high');
       }
     } else if (event.eventType === 'game_completed') {
       setIsGameActive(false);
@@ -1158,11 +1212,11 @@ const App: React.FC = () => {
         : `📚 You scored ${score}/${total}. Review the explanations and try again - quantum mechanics takes time to sink in!`;
       addAtlasMessage(congrats);
 
-      // Voice celebration/encouragement based on score
+      // Voice celebration/encouragement based on score - HIGH priority for completion
       if (score >= 7) {
-        speakGuidance(`[VOICE] CELEBRATION! The learner scored ${score} out of ${total}! They've mastered wave-particle duality! Be genuinely excited and proud. Mention Einstein would be impressed. Encourage them to explore more or try free mode. 12-15 seconds.`);
+        speakGuidance(`[VOICE] CELEBRATION! The learner scored ${score} out of ${total}! They've mastered wave-particle duality! Be genuinely excited and proud. Mention Einstein would be impressed. Encourage them to explore more or try free mode. 12-15 seconds.`, false, 'high');
       } else {
-        speakGuidance(`[VOICE] The learner scored ${score} out of ${total}. Be encouraging - quantum mechanics is hard! Suggest reviewing the explanations and trying again. The concepts will click with more practice. Be supportive and positive. 10-12 seconds.`);
+        speakGuidance(`[VOICE] The learner scored ${score} out of ${total}. Be encouraging - quantum mechanics is hard! Suggest reviewing the explanations and trying again. The concepts will click with more practice. Be supportive and positive. 10-12 seconds.`, false, 'high');
       }
     } else if (event.eventType === 'answer_selected') {
       // Track current test question with full content for hints
@@ -1211,7 +1265,7 @@ Please SPEAK a brief (15-25 seconds) coaching message that:
 
 DO NOT say the answer. Guide them to think through it themselves.`;
 
-        safeSend(proactiveGuidance, true);
+        safeSend(proactiveGuidance, true, 'normal');
       }
     }
 
@@ -1225,12 +1279,17 @@ DO NOT say the answer. Guide them to think through it themselves.`;
       ? ' [GUIDED MODE ON: Proactively offer brief encouragement, questions, and guidance as the learner progresses. Be positive and enthusiastic but not overwhelming.]'
       : ' [GUIDED MODE OFF: Only respond when directly asked. Let the learner explore independently.]';
 
-    // Event logged for debugging only when needed
-    // console.log('[GameEvent]', event.eventType, event.details);
+    // Determine priority based on event type
+    // High priority: phase changes, game start/complete (need immediate AI awareness)
+    // Normal priority: predictions, selections
+    // Low priority: slider changes, value updates (can be dropped if too frequent)
+    const eventPriority: 'high' | 'normal' | 'low' =
+      ['phase_changed', 'game_started', 'game_completed'].includes(event.eventType) ? 'high' :
+      ['slider_changed', 'value_changed', 'visual_state_update'].includes(event.eventType) ? 'low' : 'normal';
 
-    // Use safeSend to prevent duplicate/closed socket errors
-    safeSend(eventMessage + guidedContext, true);
-  }, [isSessionActive, isVoiceOutputEnabled, guidedModeEnabled, currentGameId, currentGamePhase, lastPrediction, currentTestQuestion, currentTransferApp, addAtlasMessage, shownHalfwayMessage, speakGuidance, saveGameProgress, loadGameProgress, safeSend]);
+    // Use safeSend with appropriate priority to ensure AI stays in sync
+    safeSend(eventMessage + guidedContext, true, eventPriority);
+  }, [isSessionActive, isVoiceOutputEnabled, guidedModeEnabled, currentGameId, currentGamePhase, lastPrediction, currentTestQuestion, currentTransferApp, addAtlasMessage, shownHalfwayMessage, speakGuidance, saveGameProgress, loadGameProgress, safeSend, syncCurrentLocation]);
 
   // Resume game from saved progress
   const handleResumeGame = useCallback((gameId: string, phase: string) => {
@@ -1240,10 +1299,10 @@ DO NOT say the answer. Guide them to think through it themselves.`;
     setCurrentGamePhase(phase);
     lastSpokenPhaseRef.current = ''; // Allow phase to be announced
 
-    // Announce resumption
+    // Announce resumption with high priority
     addAtlasMessage(`▶️ Resuming from "${phase}" phase...`);
     if (isVoiceOutputEnabled) {
-      speakGuidance(`[SAY EXACTLY THIS]: "Welcome back! Let's pick up right where you left off."`, true);
+      speakGuidance(`[SAY EXACTLY THIS]: "Welcome back! Let's pick up right where you left off."`, true, 'high');
     }
   }, [isVoiceOutputEnabled, addAtlasMessage, speakGuidance]);
 
@@ -1269,7 +1328,7 @@ DO NOT say the answer. Guide them to think through it themselves.`;
 
     addAtlasMessage(`🔄 Starting fresh! Let's begin from the introduction.`);
     if (isVoiceOutputEnabled) {
-      speakGuidance(`[SAY EXACTLY THIS]: "Starting fresh! Take your time reading the intro and click Make a Prediction when ready."`, true);
+      speakGuidance(`[SAY EXACTLY THIS]: "Starting fresh! Take your time reading the intro and click Make a Prediction when ready."`, true, 'high');
     }
   }, [isVoiceOutputEnabled, addAtlasMessage, speakGuidance, clearGameProgress, saveGameProgress]);
 

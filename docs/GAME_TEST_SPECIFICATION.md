@@ -1,417 +1,704 @@
 # Game Test Specification
 
-Based on the Wave Particle Duality game structure, this document outlines the tests, structure, and design patterns that should be validated for all interactive games.
+Based on the **Wave Particle Duality** game implementation, this document provides the definitive specification for all interactive physics games in Project Atlas.
 
 ---
 
-## 1. Phase Structure Tests
+## 1. Phase Structure
 
-### 1.1 Required Phases
-Every game should have these core phases in sequence:
+### 1.1 Required Phases (10 Total)
 
-| Phase | Purpose | Required Elements |
-|-------|---------|-------------------|
-| `hook` | Engage & introduce | Title, compelling intro text, visual element, "Begin" button |
-| `predict` | Activate prior knowledge | Clear question, 2-4 options, guidance text |
-| `play` | Interactive exploration | Simulation/interaction, real-time feedback, controls |
-| `review` | Explain first concept | Key takeaways, visual comparison, quotes/facts |
-| `twist_predict` | Challenge assumptions | New scenario, prediction options |
-| `twist_play` | Reveal the twist | Interactive demonstration of twist |
-| `twist_review` | Deep understanding | Explanation, key insights, connection to real world |
-| `transfer` | Real-world applications | 3-4 applications with details, sequential unlock |
-| `test` | Knowledge assessment | 5-10 questions with scenarios |
-| `mastery` | Completion & celebration | Summary of learned concepts, next steps |
+Every game must implement these phases in exact sequence:
 
-### 1.2 Phase Flow Tests
-```
-[ ] Phase sequence is correct (no skipping)
-[ ] Back button returns to previous phase
-[ ] Next button only enabled when requirements met
-[ ] Phase state persists during session
-[ ] gamePhase prop can resume to any phase
-```
+| Phase | Step | Purpose | Required Elements |
+|-------|------|---------|-------------------|
+| `hook` | 1 | Engage & introduce | Title, compelling intro, animated visual, Feynman quote, "Begin Experiment" CTA, trust indicators |
+| `predict` | 2 | Activate prior knowledge | Experiment setup diagram, clear question, 3 prediction options with icons/tags |
+| `play` | 3 | Interactive exploration | Live simulation, real-time feedback, controls panel, teaching milestones |
+| `review` | 4 | Explain first concept | Dual-nature cards, key takeaways (3 items), "Why it matters" box |
+| `twist_predict` | 5 | Challenge assumptions | New variable diagram, prediction question, 3 options |
+| `twist_play` | 6 | Reveal the twist | Interactive toggle (observer ON/OFF), comparative visualization |
+| `twist_review` | 7 | Deep understanding | Comparison cards, measurement problem, key insights (3 items) |
+| `transfer` | 8 | Real-world applications | 4 applications with sequential unlock, detailed info for each |
+| `test` | 9 | Knowledge assessment | 10 scenario-based questions, results review |
+| `mastery` | 10 | Completion & celebration | Achievement badge, 5 mastered concepts, inspirational quote, action buttons |
 
----
+### 1.2 Phase Order & Labels
 
-## 2. Component Structure Tests
-
-### 2.1 PremiumWrapper Usage
 ```typescript
-// CORRECT: Using footer prop
-<PremiumWrapper footer={renderBottomBar(...)}>
-  <div style={{ padding: '16px', maxWidth: '650px', margin: '0 auto' }}>
-    {/* Content */}
-  </div>
-</PremiumWrapper>
+const phaseOrder: Phase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
 
-// INCORRECT: Footer inside wrapper
-<PremiumWrapper>
-  <div>
-    {/* Content */}
-    {renderBottomBar(...)} // WRONG - causes scroll issues
-  </div>
-</PremiumWrapper>
-```
-
-**Tests:**
-```
-[ ] All phases use PremiumWrapper
-[ ] Footer/navigation uses footer prop (not inside children)
-[ ] Home button visible and functional
-[ ] Progress indicator shows current phase
-```
-
-### 2.2 Styling Requirements
-```
-[ ] NO Tailwind className on scroll containers
-[ ] Inline styles for layout (flex, overflow, minHeight)
-[ ] Tailwind OK for SVG text and non-scroll elements
-[ ] colors object used for consistent theming
-[ ] isMobile checks for responsive sizing
-```
-
-**Required inline styles for scroll containers:**
-```typescript
-style={{
-  flex: 1,
-  minHeight: 0,
-  overflow: 'auto',
-  WebkitOverflowScrolling: 'touch'
-}}
+const phaseLabels: Record<Phase, string> = {
+   hook: 'Introduction',
+   predict: 'Predict',
+   play: 'Experiment',
+   review: 'Understanding',
+   twist_predict: 'New Variable',
+   twist_play: 'Observer Effect',
+   twist_review: 'Deep Insight',
+   transfer: 'Real World',
+   test: 'Knowledge Test',
+   mastery: 'Mastery'
+};
 ```
 
 ---
 
-## 3. UI/UX Pattern Tests
+## 2. Design System
 
-### 3.1 Section Headers
+### 2.1 Color Palette
+
 ```typescript
-renderSectionHeader(
-  "Step N • Phase Name",     // Step indicator
-  "Main Title",              // Clear, engaging title
-  "Subtitle explanation"     // Context/guidance
-)
+const colors = {
+   // Primary colors
+   primary: '#06b6d4',      // cyan-500 - main actions, primary elements
+   primaryDark: '#0891b2',  // cyan-600
+   accent: '#a855f7',       // purple-500 - secondary accents
+   accentDark: '#9333ea',   // purple-600
+
+   // Semantic colors
+   warning: '#f59e0b',      // amber-500 - hints, warnings, test phase
+   success: '#10b981',      // emerald-500 - correct, completed, mastery
+   danger: '#ef4444',       // red-500 - observer effect, errors, wrong answers
+
+   // Background colors
+   bgDark: '#020617',       // slate-950 - main background
+   bgCard: '#0f172a',       // slate-900 - card backgrounds
+   bgCardLight: '#1e293b',  // slate-800 - lighter cards, inputs
+
+   // Border & text
+   border: '#334155',       // slate-700 - borders
+   textPrimary: '#f8fafc',  // slate-50 - main text
+   textSecondary: '#94a3b8', // slate-400 - secondary text
+   textMuted: '#64748b',    // slate-500 - muted text, labels
+};
 ```
 
-**Tests:**
-```
-[ ] Each phase has section header
-[ ] Step numbers are sequential
-[ ] Titles are clear and descriptive
-[ ] Subtitles provide context
-```
+### 2.2 Typography System
 
-### 3.2 Bottom Navigation Bar
 ```typescript
-renderBottomBar(
-  showBack: boolean,      // Show back button?
-  canProceed: boolean,    // Enable next button?
-  nextLabel: string,      // "Next Phase Name"
-  onNext?: () => void,    // Custom handler (optional)
-  accentColor?: string    // Phase-specific color
-)
+const typo = {
+   // Font sizes - responsive (mobile | desktop)
+   label: isMobile ? '9px' : '10px',       // Phase labels, section tags, uppercase
+   small: isMobile ? '11px' : '12px',      // Hints, descriptions, explanations
+   body: isMobile ? '12px' : '13px',       // Main body text
+   bodyLarge: isMobile ? '13px' : '14px',  // Important paragraphs, CTAs
+   heading: isMobile ? '18px' : '22px',    // Section headings (h2)
+   title: isMobile ? '24px' : '32px',      // Main titles (hook page h1)
+
+   // Spacing - responsive
+   pagePadding: isMobile ? '12px' : '16px',
+   sectionGap: isMobile ? '12px' : '14px',
+   cardPadding: isMobile ? '10px' : '14px',
+   elementGap: isMobile ? '8px' : '10px',
+};
 ```
 
-**Tests:**
-```
-[ ] Back button visible except on first phase
-[ ] Next button disabled until requirements met
-[ ] Next button label indicates destination
-[ ] Buttons use onMouseDown (not onClick) for mobile
-[ ] Visual feedback on button states
-```
+### 2.3 Gradient Patterns
 
-### 3.3 Interactive Elements
-```
-[ ] All buttons use onMouseDown + onTouchEnd
-[ ] Selection states clearly visible
-[ ] Hover states on desktop
-[ ] Touch targets minimum 44x44px
-[ ] No pointer-events issues with overlays
+```typescript
+// Primary gradient (CTAs, primary buttons)
+background: `linear-gradient(135deg, ${colors.primary} 0%, ${colors.accent} 100%)`;
+boxShadow: `0 4px 20px ${colors.primary}40`;
+
+// Card gradients (phase-specific)
+background: `linear-gradient(135deg, ${phaseColor}15 0%, ${phaseColor}05 100%)`;
+border: `1px solid ${phaseColor}30`;
+
+// Background gradients
+background: `linear-gradient(135deg, #0f172a 0%, #020617 50%, #0f172a 100%)`;
 ```
 
 ---
 
-## 4. Content Quality Tests
+## 3. Component Architecture
+
+### 3.1 renderPremiumWrapper (CRITICAL)
+
+**MUST be a render function, NOT a React component** to prevent remounting and scroll reset issues.
+
+```typescript
+const renderPremiumWrapper = (children: React.ReactNode, footer?: React.ReactNode) => (
+   <div className="absolute inset-0 flex flex-col" style={{ backgroundColor: colors.bgDark, color: colors.textPrimary }}>
+      {/* Background gradient - decorative */}
+      <div style={{ position: 'absolute', inset: 0, background: '...', pointerEvents: 'none' }} />
+
+      {/* HEADER - contains back button, home button, progress dots, phase indicator */}
+      <div style={{ flexShrink: 0, ... }}>
+         {/* Back button (← to previous phase) */}
+         {/* Home button (🏠) */}
+         {/* Progress dots - clickable for completed phases */}
+         {/* Current phase indicator (X/10) */}
+      </div>
+
+      {/* MAIN CONTENT - scrollable */}
+      <div style={{
+         flex: '1 1 0%',
+         minHeight: 0,
+         overflowY: 'auto',
+         overflowX: 'hidden',
+         WebkitOverflowScrolling: 'touch'
+      }}>
+         {children}
+      </div>
+
+      {/* FOOTER - fixed at bottom */}
+      {footer && <div style={{ flexShrink: 0 }}>{footer}</div>}
+   </div>
+);
+```
+
+### 3.2 renderBottomBar
+
+```typescript
+const renderBottomBar = (
+   canGoBack: boolean,      // Show back button? (always true except hook)
+   canGoNext: boolean,      // Enable next button?
+   nextLabel: string,       // "Run Experiment", "Understand Why", etc.
+   onNext?: () => void,     // Custom handler (optional)
+   accentColor?: string     // Phase-specific color (optional)
+) => (
+   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 16px', borderTop: `1px solid ${colors.border}`, backgroundColor: colors.bgCard }}>
+      {/* Back button - "← Back" */}
+      {/* Phase indicator - current phase label */}
+      {/* Next button - "[nextLabel] →" */}
+   </div>
+);
+```
+
+### 3.3 renderSectionHeader
+
+```typescript
+const renderSectionHeader = (phaseName: string, title: string, subtitle?: string) => (
+   <div style={{ marginBottom: typo.sectionGap }}>
+      <p style={{ fontSize: typo.label, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.08em', color: colors.primary }}>
+         {phaseName}  // e.g., "Step 1 • Make Your Prediction"
+      </p>
+      <h2 style={{ fontSize: typo.heading, fontWeight: 800, color: colors.textPrimary, lineHeight: 1.2 }}>
+         {title}      // e.g., "What Will Electrons Do?"
+      </h2>
+      {subtitle && <p style={{ fontSize: typo.small, color: colors.textSecondary, lineHeight: 1.4 }}>
+         {subtitle}   // e.g., "Think about what pattern you expect..."
+      </p>}
+   </div>
+);
+```
+
+---
+
+## 4. Phase Content Specifications
 
 ### 4.1 Hook Phase
-```
-[ ] Compelling title that sparks curiosity
-[ ] Brief, engaging introduction (2-3 sentences)
-[ ] Visual element (animation, diagram, or icon)
-[ ] Famous quote or intriguing fact
-[ ] Clear "Begin" call-to-action
-[ ] Estimated time or step count
+
+**Visual Elements:**
+- Animated atom/molecule visualization with orbiting electrons
+- Animated background orbs (subtle, blurred)
+- Category tag (e.g., "● Quantum Physics")
+- Gradient text effect on title
+
+**Content Structure:**
+```typescript
+{
+   categoryTag: "Quantum Physics",
+   title: "The Double-Slit Experiment",  // Gradient text on second word
+   description: "The experiment that shattered our understanding of reality. Watch particles behave like waves.",
+   quote: {
+      text: "The double-slit experiment contains the only mystery of quantum mechanics.",
+      author: "Feynman"
+   },
+   features: [
+      { icon: '⚡', text: '5 min' },
+      { icon: '🧪', text: 'Lab' },
+      { icon: '🧠', text: 'Quiz' }
+   ],
+   ctaButton: "Begin Experiment →",
+   trustIndicator: "★★★★★ Loved by 10,000+ learners"
+}
 ```
 
 ### 4.2 Predict Phase
+
+**Prediction Options Format:**
+```typescript
+const predictions = [
+   { id: 'two', label: 'Two bands', desc: 'Particles go through one slit each', icon: '▮ ▮', tag: 'Particle' },
+   { id: 'interference', label: 'Multiple bands', desc: 'Wave interference pattern', icon: '▮▯▮▯▮', tag: 'Wave' },
+   { id: 'one', label: 'One blob', desc: 'Random scatter pattern', icon: '░▓░', tag: 'Random' },
+];
 ```
-[ ] Clear experiment/scenario setup
-[ ] Visual diagram of setup
-[ ] Explicit question being asked
-[ ] 2-4 distinct prediction options
-[ ] Each option has label + description
-[ ] Reasoning hint without giving answer
-[ ] "Think About It" guidance section
-```
+
+**Required Elements:**
+- Setup explanation with inline diagram (SVG)
+- Clear question (bold, centered)
+- 3 selectable options with visual feedback
+- Hint box at bottom
+
+**Bottom Bar:** `renderBottomBar(true, !!prediction, "Run Experiment")`
 
 ### 4.3 Play Phase (Simulation)
-```
-[ ] Interactive controls clearly labeled
-[ ] Real-time visual feedback
-[ ] Progress indicator (count, percentage)
-[ ] Teaching milestones at key moments
-[ ] Explanation panel with context
-[ ] Clear indication when ready to proceed
+
+**Layout:** Split view (mobile: stacked, desktop: side-by-side)
+- Main visualization area (SVG simulation)
+- Control panel (right/bottom)
+
+**Teaching Milestones:**
+```typescript
+const milestones = {
+   none: { title: '', message: '', color: colors.primary },
+   few: { title: 'Observing', message: 'Each electron lands as a dot...', color: colors.textMuted },
+   pattern: { title: 'Pattern Emerging!', message: 'Bands forming!...', color: colors.warning },
+   clear: { title: 'Interference!', message: 'Wave pattern confirmed!...', color: colors.primary },
+   many: { title: 'Quantum Reality', message: 'Single particles create wave interference...', color: colors.success },
+};
 ```
 
-### 4.4 Review Phases
-```
-[ ] Comparison cards (before/after, option A/B)
-[ ] Key takeaways list (3-5 items)
-[ ] Visual diagrams supporting explanation
-[ ] Expert quote or scientific fact
-[ ] Connection to broader concept
+**Control Panel Elements:**
+- Particle counter (large monospace number)
+- Firing rate slider (1-20/sec)
+- Reset button
+- Key insight box
+
+**Bottom Bar:** `renderBottomBar(true, particleCount >= 30, "Understand Why")`
+
+### 4.4 Review Phase
+
+**Key Takeaways Format:**
+```typescript
+const takeaways = [
+   { icon: '🌊', title: 'Wave Function', desc: '|ψ|² = probability at each location' },
+   { icon: '🎯', title: 'Probability Only', desc: "Can't predict single electron, only distribution" },
+   { icon: '🔀', title: 'Superposition', desc: 'Both paths until measured' }
+];
 ```
 
-### 4.5 Transfer Phase
-```
-[ ] 3-4 real-world applications
-[ ] Sequential unlock (complete one to see next)
-[ ] Each application has:
-    [ ] Icon and title
-    [ ] Tagline
-    [ ] Full description
-    [ ] Connection to learned concept
-    [ ] How it works explanation
-    [ ] Statistics (3 data points)
-    [ ] Real-world examples (4 items)
-    [ ] Industry leaders
-    [ ] Future impact
-[ ] Visual diagram for each application
-[ ] Progress tracking (X/4 completed)
+**Structure:**
+1. Section header
+2. Dual-nature comparison cards (2 columns: Particles / Waves)
+3. Quote card (centered, italic)
+4. Key takeaways list (icon + inline title/desc)
+5. "Why it matters" hint box
+
+### 4.5 Twist Predict Phase
+
+**Twist Prediction Options:**
+```typescript
+const twistPredictions = [
+   { id: 'disappear', label: 'Pattern disappears', desc: 'Two bands instead of wave pattern', icon: '▮ ▮' },
+   { id: 'same', label: 'Pattern stays same', desc: "Watching shouldn't change physics", icon: '▮▯▮▯▮' },
+   { id: 'stronger', label: 'Pattern stronger', desc: 'More info = clearer result', icon: '▮▮▮▮▮' },
+];
 ```
 
-### 4.6 Test Phase
-```
-[ ] 5-10 scenario-based questions
-[ ] Each question has:
-    [ ] Scenario context
-    [ ] Clear question
-    [ ] 3-4 answer options
-    [ ] Correct answer marked
-    [ ] Explanation for review
-[ ] Progress bar showing question count
-[ ] Answer selection clearly visible
-[ ] Submit only after answering all
-[ ] Results screen with:
-    [ ] Score and percentage
-    [ ] Pass/fail indication (70% threshold)
-    [ ] Question-by-question review
-    [ ] Correct answer shown for wrong answers
-    [ ] Explanation for each question
-    [ ] Retake option
+**Bottom Bar:** `renderBottomBar(true, !!twistPrediction, "Turn On Detector", undefined, colors.danger)`
+
+### 4.6 Twist Play Phase
+
+**Observer Toggle:**
+```typescript
+// Two button toggle
+<button>👁️ WATCHING</button>     // detectorOn = true, color: danger
+<button>🔒 NOT WATCHING</button>  // detectorOn = false, color: primary
 ```
 
-### 4.7 Mastery Phase
+**Result Overlay:**
+- Shows current mode icon and label
+- Describes pattern being shown
+- Color-coded (red for observing, cyan for not observing)
+
+### 4.7 Twist Review Phase
+
+**Comparison Cards Format:**
+```typescript
+// Two columns
+{ mode: 'Not Observed', icon: '🌊', effect: 'Wave through both slits', result: '→ Interference', color: colors.accent },
+{ mode: 'Observed', icon: '👁️', effect: 'Collapses to one slit', result: '→ Two Bands', color: colors.danger },
 ```
-[ ] Celebration visual (confetti, badge)
-[ ] Congratulatory title
-[ ] Summary of concepts mastered (5 items)
-[ ] Each concept has icon, title, description
-[ ] Checkmarks for completed items
-[ ] "Start Over" option
-[ ] "Free Exploration" option (if applicable)
+
+**Key Insights:**
+```typescript
+[
+   { icon: '💥', title: 'Wave Collapse', desc: 'Observation forces one path' },
+   { icon: '📊', title: 'Info Is Physical', desc: 'Knowing destroys interference' },
+   { icon: '🔮', title: 'Quantum Eraser', desc: 'Erase info → restore pattern' }
+]
 ```
+
+### 4.8 Transfer Phase
+
+**Application Data Structure:**
+```typescript
+interface Application {
+   icon: string;           // Emoji: '💻', '🔒', '🔬', '🏥'
+   title: string;          // "Quantum Computing"
+   short: string;          // "Qubits in superposition"
+   tagline: string;        // "The Next Computing Revolution"
+   description: string;    // Full paragraph
+   connection: string;     // How it connects to double-slit
+   howItWorks: string;     // Technical explanation
+   stats: Array<{
+      value: string;       // "1,000+"
+      label: string;       // "Qubits achieved"
+      icon: string;        // "⚡"
+   }>;                     // Always 3 stats
+   examples: string[];     // Always 4 real-world examples
+   companies: string[];    // 4-5 industry leaders
+   futureImpact: string;   // Future prediction
+   color: string;          // Phase accent color
+}
+```
+
+**4 Required Applications:**
+1. **Quantum Computing** (color: primary)
+2. **Quantum Encryption** (color: success)
+3. **Electron Microscopy** (color: accent)
+4. **Medical Imaging (MRI)** (color: warning)
+
+**Sequential Unlock Pattern:**
+- Start with first app unlocked
+- Complete current to unlock next
+- Show 🔒 on locked apps
+- Show ✓ on completed apps
+- Track progress: `X/4 completed`
+
+**Custom Footer for Transfer:**
+- Back button (← to twist_review)
+- "Complete & Continue →" or "Complete Final Topic"
+- "Take Test →" (only enabled when all 4 complete)
+
+### 4.9 Test Phase
+
+**Question Data Structure:**
+```typescript
+interface TestQuestion {
+   scenario: string;        // Context/situation description
+   question: string;        // The actual question
+   options: Array<{
+      id: string;           // 'two', 'interference', etc.
+      label: string;        // Answer text
+      correct?: boolean;    // Only one per question
+   }>;
+   explanation: string;     // Why correct answer is correct
+}
+```
+
+**10 Questions with Topics:**
+1. Core Concept - Interference (Easy)
+2. Core Concept - Observer Effect (Medium)
+3. Deep Concept - Superposition (Medium)
+4. Quantum Computing Application (Medium-Hard)
+5. Quantum Encryption Application (Hard)
+6. Electron Microscopy Application (Medium)
+7. MRI Application (Hard)
+8. Synthesis Question (Expert)
+9. Delayed Choice Experiment (Expert)
+10. Practical Quantum Engineering (Hard)
+
+**Test UI:**
+- Progress bar (10 segments)
+- Scenario box (primary color background)
+- Question text (large, bold)
+- 4 option buttons (A, B, C, D)
+- Bottom bar with question navigation
+
+**Results Screen:**
+- Score display with emoji badge (🏆/🌟/👍/📚)
+- Pass threshold: 70% (7/10)
+- Question-by-question review
+- For wrong answers: show correct answer + explanation
+- Retake button
+
+### 4.10 Mastery Phase
+
+**Mastery Items:**
+```typescript
+const masteryItems = [
+   { icon: '🌊', title: 'Wave-Particle Duality', desc: 'Particles travel as probability waves but are detected as particles', color: colors.primary },
+   { icon: '🔀', title: 'Superposition', desc: 'Quantum objects exist in multiple states simultaneously until measured', color: colors.accent },
+   { icon: '👁️', title: 'Observer Effect', desc: 'The act of measurement collapses the wave function into a definite state', color: colors.danger },
+   { icon: '💻', title: 'Quantum Computing', desc: 'Exploits superposition to process exponentially more information in parallel', color: colors.success },
+   { icon: '🎲', title: 'Probabilistic Reality', desc: 'At the quantum level, we can only predict probabilities, not certainties', color: colors.warning },
+];
+```
+
+**Structure:**
+1. Animated background orbs (same as hook)
+2. Section header ("Step 10 • Mastery Achieved")
+3. Achievement badge with atom emoji
+4. 5 mastered concepts list (gradient cards with checkmarks)
+5. Inspirational quote
+6. Action buttons:
+   - "🔬 Free Exploration Mode" (primary gradient)
+   - "↺ Start Over from Beginning" (secondary)
 
 ---
 
-## 5. AI Coach Integration Tests
+## 5. AI Coach Integration
 
-### 5.1 Event Emission
-Every significant action should emit a game event:
+### 5.1 GameEvent Interface
 
 ```typescript
-emitGameEvent('event_type', {
-  phase: 'current_phase',
-  phaseLabel: 'Human Readable Phase Name',
-  // Event-specific details
-  message: 'Human readable summary'
-});
+interface GameEvent {
+   eventType: 'screen_change' | 'prediction_made' | 'answer_submitted' | 'slider_changed' |
+              'button_clicked' | 'game_started' | 'game_completed' | 'hint_requested' |
+              'correct_answer' | 'incorrect_answer' | 'phase_changed' | 'value_changed' |
+              'selection_made' | 'timer_expired' | 'achievement_unlocked' | 'struggle_detected' |
+              'coach_prompt' | 'guide_paused' | 'guide_resumed' | 'question_changed' | 'app_completed' | 'app_changed';
+   gameType: string;        // 'wave_particle_duality'
+   gameTitle: string;       // 'Wave-Particle Duality'
+   details: {
+      phase?: string;
+      phaseLabel?: string;
+      currentScreen?: number;
+      totalScreens?: number;
+      screenDescription?: string;
+      prediction?: string;
+      predictionLabel?: string;
+      answer?: string;
+      isCorrect?: boolean;
+      score?: number;
+      maxScore?: number;
+      message?: string;      // Human-readable summary for AI
+      coachMessage?: string;
+      [key: string]: any;
+   };
+   timestamp: number;
+}
 ```
 
-**Required Events:**
-```
-[ ] game_started - When game begins
-[ ] phase_changed - On every phase transition
-[ ] prediction_made - When user makes prediction
-[ ] answer_selected - When user selects answer
-[ ] app_completed - When transfer app completed
-[ ] game_completed - When test finished
-[ ] screen_change - For sub-screens within phase
-```
+### 5.2 Required Events
 
-### 5.2 Screen Descriptions
+| Event | When to Emit | Required Details |
+|-------|--------------|------------------|
+| `game_started` | On mount | phase, phaseLabel, screenDescription, coachMessage |
+| `phase_changed` | Every phase transition | phase, phaseLabel, currentScreen, totalScreens, screenDescription |
+| `prediction_made` | User selects prediction | phase, prediction, predictionLabel |
+| `answer_selected` | User selects test answer | questionNumber, questionText, selectedAnswer, allOptions |
+| `question_changed` | Move to next question | questionNumber, questionScenario, questionText, allOptions |
+| `app_completed` | Complete transfer app | appNumber, appTitle, appDescription |
+| `app_changed` | Switch to different app | appNumber, totalApps, appTitle, appTagline, appConnection |
+| `game_completed` | Test submitted | score, totalQuestions, percentage, passed |
+| `hint_requested` | User requests hint | phase, coachMessage |
+
+### 5.3 Screen Descriptions
+
 ```typescript
 const screenDescriptions: Record<Phase, string> = {
-  hook: 'INTRO SCREEN: [Full description of what user sees]',
-  predict: 'PREDICTION SCREEN: [What user must do, options available]',
-  // ... for each phase
+   hook: 'INTRO SCREEN: Title "The Double-Slit Experiment", Feynman quote, Start button.',
+   predict: 'PREDICTION SCREEN: User must select what pattern electrons will make: (A) Two bands, (B) Multiple bands (interference), or (C) One blob.',
+   play: 'EXPERIMENT SCREEN: Live simulation firing electrons one at a time. User watches dots accumulate.',
+   review: 'REVIEW SCREEN: Explains why interference pattern formed - each electron goes through BOTH slits.',
+   twist_predict: 'TWIST PREDICTION: What happens if we ADD A DETECTOR to watch which slit?',
+   twist_play: 'OBSERVER EXPERIMENT: Toggle detector ON/OFF. Compare patterns.',
+   twist_review: 'OBSERVER EFFECT REVIEW: Explains measurement collapses wave function.',
+   transfer: 'REAL WORLD APPLICATIONS: 4 cards showing quantum tech.',
+   test: 'KNOWLEDGE TEST: Multiple choice questions with scenarios.',
+   mastery: 'COMPLETION SCREEN: Summary of concepts mastered.'
 };
 ```
 
-**Tests:**
-```
-[ ] Every phase has screen description
-[ ] Descriptions are detailed (what user sees, can do)
-[ ] Descriptions included in phase_changed events
-[ ] AI coach receives full context
-```
+### 5.4 Coach Messages
 
----
-
-## 6. Responsive Design Tests
-
-### 6.1 Mobile (< 768px)
-```
-[ ] All content visible without horizontal scroll
-[ ] Touch targets adequate size (44px+)
-[ ] Font sizes readable (min 12px body)
-[ ] Padding/margins reduced appropriately
-[ ] Diagrams scale down clearly
-[ ] Bottom bar accessible (not hidden)
-```
-
-### 6.2 Desktop (>= 768px)
-```
-[ ] Content centered with max-width
-[ ] Larger fonts and spacing
-[ ] Grid layouts for cards (2 columns)
-[ ] Hover states on interactive elements
-```
-
-### 6.3 Scroll Behavior
-```
-[ ] Vertical scroll works on all phases
-[ ] Content not cut off at bottom
-[ ] Bottom bar always visible
-[ ] No double-scroll containers
-[ ] WebkitOverflowScrolling: 'touch' applied
-```
-
----
-
-## 7. Visual Design Tests
-
-### 7.1 Color Usage
 ```typescript
-const colors = {
-  bgDark: '#030712',      // Main background
-  bgCard: '#111827',      // Card backgrounds
-  bgCardLight: '#1f2937', // Lighter cards
-  textPrimary: '#f9fafb', // Main text
-  textSecondary: '#9ca3af', // Secondary text
-  textMuted: '#6b7280',   // Muted text
-  primary: '#06b6d4',     // Cyan - primary actions
-  accent: '#8b5cf6',      // Purple - accents
-  success: '#10b981',     // Green - success/correct
-  warning: '#f59e0b',     // Amber - warnings/hints
-  danger: '#ef4444',      // Red - errors/wrong
-  border: '#374151',      // Borders
+const coachMessages: Record<Phase, string> = {
+   hook: "Welcome to the quantum world! 🌟 This experiment changed physics forever.",
+   predict: "Time to make a prediction! What do YOU think will happen?",
+   play: "Now let's run the experiment! Watch carefully as electrons hit the screen.",
+   review: "Wow! Did you expect THAT? Let's understand why this happens.",
+   twist_predict: "Here's where it gets REALLY interesting! What happens when we try to catch the electrons?",
+   twist_play: "Toggle the observer on and off. Watch how the pattern changes!",
+   twist_review: "You've discovered the Observer Effect! The act of looking changes what happens.",
+   transfer: "Now let's see how this quantum weirdness powers amazing real-world technology! 🚀",
+   test: "Time to test your understanding! Take your time with each question.",
+   mastery: "Congratulations! You've mastered wave-particle duality! 🎉"
 };
 ```
 
-**Tests:**
-```
-[ ] Consistent color usage across phases
-[ ] Sufficient contrast for readability
-[ ] Status colors used correctly (success/warning/danger)
-[ ] Gradients subtle and consistent
+---
+
+## 6. Responsive Design
+
+### 6.1 Mobile Breakpoint
+
+```typescript
+const [isMobile, setIsMobile] = useState(false);
+useEffect(() => {
+   const checkMobile = () => setIsMobile(window.innerWidth < 768);
+   checkMobile();
+   window.addEventListener('resize', checkMobile);
+   return () => window.removeEventListener('resize', checkMobile);
+}, []);
 ```
 
-### 7.2 Typography
-```
-[ ] Headers use fontWeight 700-900
-[ ] Body text 14-16px
-[ ] Labels uppercase with letter-spacing
-[ ] Line height 1.5-1.7 for paragraphs
-[ ] Monospace for data/counts
-```
+### 6.2 Mobile Adaptations
 
-### 7.3 Spacing
-```
-[ ] Consistent padding (12-24px based on screen)
-[ ] Card border-radius (12-16px)
-[ ] Gap between elements (12-16px)
-[ ] Margins between sections (16-24px)
+| Element | Desktop | Mobile |
+|---------|---------|--------|
+| Page padding | 16px | 12px |
+| Card padding | 14px | 10px |
+| Title font | 32px | 24px |
+| Heading font | 22px | 18px |
+| Body font | 13px | 12px |
+| Button min-height | 44px | 44px (same) |
+| Grid columns | 2 | 1 |
+| Simulation layout | Side-by-side | Stacked |
+
+### 6.3 Touch Interaction
+
+```typescript
+// Use BOTH onMouseDown AND onTouchEnd for buttons
+<button
+   onMouseDown={handleAction}
+   onTouchEnd={(e) => { e.preventDefault(); handleAction(); }}
+>
 ```
 
 ---
 
-## 8. Accessibility Tests
+## 7. Animation & CSS
 
+### 7.1 Required Keyframes
+
+```css
+@keyframes pulse {
+   0%, 100% { transform: scale(1); opacity: 0.5; }
+   50% { transform: scale(1.1); opacity: 0.8; }
+}
+
+@keyframes glow {
+   0% { box-shadow: 0 0 20px rgba(6,182,212,0.4); }
+   100% { box-shadow: 0 0 30px rgba(6,182,212,0.6); }
+}
+
+@keyframes spin {
+   from { transform: rotate(0deg); }
+   to { transform: rotate(360deg); }
+}
+
+@keyframes gradientShift {
+   0%, 100% { background-position: 0% 50%; }
+   50% { background-position: 100% 50%; }
+}
 ```
-[ ] Color not sole indicator of state
-[ ] Icons paired with text labels
-[ ] Touch targets 44x44px minimum
-[ ] Focus states visible (if keyboard nav)
-[ ] Text content readable by screen readers
-[ ] No auto-playing audio without control
+
+### 7.2 Sound Effects
+
+```typescript
+const playSound = (type: 'click' | 'success' | 'failure' | 'transition' | 'complete') => {
+   const sounds = {
+      click: { freq: 600, duration: 0.1, type: 'sine' },
+      success: { freq: 800, duration: 0.2, type: 'sine' },
+      failure: { freq: 300, duration: 0.3, type: 'sine' },
+      transition: { freq: 500, duration: 0.15, type: 'sine' },
+      complete: { freq: 900, duration: 0.4, type: 'sine' }
+   };
+   // Web Audio API implementation
+};
 ```
 
 ---
 
-## 9. Performance Tests
+## 8. Navigation Logic
 
+### 8.1 Phase Navigation
+
+```typescript
+const goToPhase = useCallback((p: Phase) => {
+   const now = Date.now();
+   if (now - lastClickRef.current < 200) return;  // Debounce
+   if (isNavigating.current) return;
+
+   lastClickRef.current = now;
+   isNavigating.current = true;
+
+   setPhase(p);
+
+   // Reset simulation state when entering play phases
+   if (p === 'play' || p === 'twist_play') {
+      setParticleHits([]);
+      setParticleCount(0);
+   }
+   if (p === 'twist_play') setDetectorOn(true);
+   if (p === 'play') setDetectorOn(false);
+
+   playSound('transition');
+   emitGameEvent('phase_changed', { ... });
+
+   setTimeout(() => { isNavigating.current = false; }, 400);
+}, []);
 ```
-[ ] SVG animations smooth (no jank)
-[ ] State updates don't cause full re-renders
-[ ] Large lists virtualized if needed
-[ ] Images/assets optimized
-[ ] No memory leaks on phase transitions
-```
+
+### 8.2 Progress Requirements
+
+| Phase | Can Proceed When |
+|-------|------------------|
+| hook | Always (click Begin) |
+| predict | `prediction !== null` |
+| play | `particleCount >= 30` |
+| review | Always |
+| twist_predict | `twistPrediction !== null` |
+| twist_play | `particleCount >= 30` |
+| twist_review | Always |
+| transfer | `completedApps.every(c => c)` (all 4) |
+| test | `testAnswers[currentQuestion] !== null` |
+| mastery | Always |
 
 ---
 
-## 10. Test Checklist Template
+## 9. Quick Reference: Common Issues
 
-Use this checklist when reviewing a new game:
+| Issue | Cause | Fix |
+|-------|-------|-----|
+| Scroll not working | Component remounts | Use render function, not component |
+| Bottom bar hidden | Footer inside wrapper | Use footer prop in renderPremiumWrapper |
+| Buttons not clicking | Overlay blocking | Add `pointerEvents: 'none'` to decorative elements |
+| Mobile tap issues | Using only onClick | Add both `onMouseDown` and `onTouchEnd` |
+| AI out of sync | Missing events | Emit `phase_changed` on every transition |
+| Phase skipping | Wrong conditions | Check `canGoNext` logic |
+| Double transitions | No debounce | Add `isNavigating` ref with 400ms timeout |
+
+---
+
+## 10. Test Checklist
 
 ```markdown
-## Game: [Game Name]
-## Reviewer: [Name]
+## Game: [Name]
 ## Date: [Date]
 
 ### Structure
 - [ ] All 10 phases implemented
-- [ ] Phase flow correct
-- [ ] PremiumWrapper + footer pattern used
+- [ ] Phase sequence correct
+- [ ] renderPremiumWrapper used (NOT a component)
+- [ ] Footer prop pattern used
 
-### Styling
-- [ ] Inline styles for layout
-- [ ] No Tailwind on scroll containers
-- [ ] Responsive (mobile + desktop)
-- [ ] Scroll works on all phases
+### Design
+- [ ] Colors object matches spec
+- [ ] Typography system matches spec
+- [ ] Responsive design (mobile + desktop)
+- [ ] Scroll works on all phases (especially steps 7, 8)
 
 ### Content
-- [ ] Hook is engaging
-- [ ] Predict has clear question + options
-- [ ] Play is interactive with feedback
-- [ ] Review explains key concepts
-- [ ] Transfer has 4 applications
-- [ ] Test has 5-10 questions
-- [ ] Mastery celebrates completion
+- [ ] Hook has animated visual, quote, CTA
+- [ ] Predict has 3 options with icons
+- [ ] Play has interactive simulation + milestones
+- [ ] Review has 3 key takeaways
+- [ ] Twist has observer toggle
+- [ ] Transfer has 4 apps with sequential unlock
+- [ ] Test has 10 scenario-based questions
+- [ ] Mastery has 5 concepts + action buttons
 
 ### AI Integration
-- [ ] All events emitted
-- [ ] Screen descriptions complete
-- [ ] Events have detailed payloads
+- [ ] game_started emitted on mount
+- [ ] phase_changed emitted on every transition
+- [ ] prediction_made emitted when user predicts
+- [ ] All test events emitted (answer_selected, question_changed, game_completed)
+- [ ] Screen descriptions complete for all phases
 
 ### Polish
-- [ ] Colors consistent
-- [ ] Typography correct
-- [ ] Spacing uniform
+- [ ] Sound effects on transitions
+- [ ] Debounced navigation (no double-clicks)
+- [ ] Touch events work on mobile
 - [ ] Animations smooth
+- [ ] Loading states if needed
 
 ### Issues Found
 1.
@@ -423,54 +710,27 @@ Use this checklist when reviewing a new game:
 
 ---
 
-## 11. Code Structure Reference
+## 11. File Structure
 
-### File Organization
 ```
 components/
   [GameName]Renderer.tsx    # Main game component
 
-# Inside the renderer:
+# Inside the renderer (in order):
 1. Imports
-2. GameEvent interface (if custom)
+2. GameEvent interface export
 3. Props interface
-4. Main component function
-5. State declarations
-6. useEffect hooks
-7. Helper functions (emitGameEvent, playSound)
-8. Render helper functions
-9. Phase render blocks (if/return for each phase)
-10. Export default
+4. playSound utility function
+5. Main component function
+6. Type definitions (Phase type, etc.)
+7. State declarations (useState)
+8. useEffect hooks (responsive, animation, simulation)
+9. emitGameEvent callback
+10. Phase data (phaseOrder, phaseLabels, coachMessages, screenDescriptions)
+11. Navigation functions (goToPhase, goNext, goBack)
+12. Design system (colors, typo)
+13. Helper render functions (renderBottomBar, renderPremiumWrapper, renderSectionHeader, etc.)
+14. Content data (predictions, testQuestions, transferApps, masteryItems)
+15. Phase render blocks (if/return for each phase)
+16. Export default
 ```
-
-### Phase Block Pattern
-```typescript
-if (phase === 'phase_name') {
-  // Optional: define footer separately for complex footers
-  const phaseFooter = renderBottomBar(...);
-
-  return (
-    <PremiumWrapper footer={phaseFooter}>
-      <div style={{ padding: '16px', maxWidth: '650px', margin: '0 auto' }}>
-        {renderSectionHeader(...)}
-
-        {/* Phase-specific content */}
-
-      </div>
-    </PremiumWrapper>
-  );
-}
-```
-
----
-
-## Quick Reference: Common Issues
-
-| Issue | Cause | Fix |
-|-------|-------|-----|
-| Scroll not working | Tailwind on container | Convert to inline styles |
-| Bottom bar hidden | Footer inside wrapper | Use footer prop |
-| Buttons not clicking | Background overlay | Add pointer-events: none |
-| Mobile tap issues | Using onClick | Use onMouseDown + onTouchEnd |
-| AI out of sync | Missing events | Add emitGameEvent calls |
-| Phase skipping | Wrong conditions | Check canProceed logic |
