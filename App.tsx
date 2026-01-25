@@ -73,6 +73,7 @@ interface ChatTurn {
 
 const App: React.FC = () => {
   const [visualContext, setVisualContext] = useState<VisualContext>({ type: 'none', data: null });
+  const visualContextRef = useRef<VisualContext>(visualContext); // Ref to track current context for callbacks
   const [isSessionActive, setIsSessionActive] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [isVoiceOutputEnabled, setIsVoiceOutputEnabled] = useState(true);
@@ -385,11 +386,17 @@ const App: React.FC = () => {
     'polarization', 'scattering', 'spectroscopy', 'photoelectric_effect'
   ];
 
-  // Check if a full-screen game is currently active
+  // Keep ref in sync with state (for use in callbacks that might have stale closures)
+  useEffect(() => {
+    visualContextRef.current = visualContext;
+  }, [visualContext]);
+
+  // Check if a full-screen game is currently active - uses ref to avoid stale closure
   const isFullScreenGameActive = () => {
-    return visualContext.type === 'diagram' &&
-           visualContext.data?.type &&
-           fullScreenGames.includes(visualContext.data.type);
+    const ctx = visualContextRef.current;
+    return ctx.type === 'diagram' &&
+           ctx.data?.type &&
+           fullScreenGames.includes(ctx.data.type);
   };
 
   const handleFunctionCall = async (fc: any) => {
@@ -402,7 +409,7 @@ const App: React.FC = () => {
     ];
 
     if (contextChangingCalls.includes(fc.name) && isFullScreenGameActive()) {
-      console.log(`[App] Blocking ${fc.name} - full-screen game active:`, visualContext.data.type);
+      console.log(`[App] Blocking ${fc.name} - full-screen game active:`, visualContextRef.current.data?.type);
       return { status: "blocked", reason: "Full-screen game is active. Action not performed." };
     }
 
