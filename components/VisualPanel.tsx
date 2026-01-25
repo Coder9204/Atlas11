@@ -212,8 +212,8 @@ const VisualPanel: React.FC<VisualPanelProps> = ({
         </div>
       )}
 
-      {/* Main Content Area - use overflow-hidden for diagrams/games, auto for others */}
-      <div className={`flex-1 relative bg-[#FBFBFB] ${context.type === 'diagram' || context.type === 'assessment' ? 'overflow-hidden' : 'overflow-auto'}`}>
+      {/* Main Content Area - diagrams handle their own overflow via absolute positioning */}
+      <div className={`flex-1 relative bg-[#FBFBFB] ${context.type === 'assessment' ? 'overflow-hidden' : context.type === 'diagram' ? '' : 'overflow-auto'}`}>
         {renderContent()}
 
         {/* Floating Tooltip/Toast */}
