@@ -1219,3 +1219,347 @@ This template ensures games work correctly on the first try by:
 - Including working TypeScript with proper types
 - Defining clear success criteria with checklist
 - Requiring detailed SVG diagrams (not placeholders)
+
+---
+
+## ADDITIONAL CRITICAL PATTERNS (v2.0 - First-Shot Success)
+
+### 1. TEACHING MILESTONES SYSTEM (Required for interactive phases)
+
+Track user progress through interactive phases and provide contextual feedback:
+
+```typescript
+// Required state
+const [teachingMilestone, setTeachingMilestone] = useState<'none' | 'few' | 'pattern' | 'clear' | 'many'>('none');
+
+// Update based on progress (e.g., particle count, interactions, time)
+useEffect(() => {
+  if (phase === 'play' || phase === 'twist_play') {
+    if (progressValue < 15) setTeachingMilestone('few');
+    else if (progressValue < 60) setTeachingMilestone('pattern');
+    else if (progressValue < 150) setTeachingMilestone('clear');
+    else setTeachingMilestone('many');
+  }
+}, [progressValue, phase]);
+
+// Teaching messages for each milestone
+const teachingMessages: Record<string, { title: string; message: string; color: string }> = {
+  none: { title: '', message: '', color: colors.primary },
+  few: {
+    title: 'Observing Initial Results',
+    message: 'Watch what happens with each interaction. Notice the patterns starting to form...',
+    color: colors.textMuted
+  },
+  pattern: {
+    title: 'A Pattern Is Emerging',
+    message: 'Something interesting is happening! Keep watching to see the full effect.',
+    color: colors.warning
+  },
+  clear: {
+    title: 'Pattern Confirmed!',
+    message: 'The physics principle is now clearly visible. This is [key insight]!',
+    color: colors.primary
+  },
+  many: {
+    title: 'Complete Understanding',
+    message: 'You\'ve observed the full phenomenon. [Summary of what they learned].',
+    color: colors.success
+  }
+};
+```
+
+### 2. HINT SYSTEM (Required for AI Coach integration)
+
+```typescript
+const requestHint = useCallback(() => {
+  const hintMessages: Record<Phase, string> = {
+    hook: "Take a moment to read the introduction. What question are we trying to answer?",
+    predict: "Think about what you'd expect from everyday experience. Does [physics] behave like familiar objects?",
+    play: "Keep observing! The pattern takes time to emerge. What do you notice?",
+    review: "Key insight: [Core concept]. Why is this surprising?",
+    twist_predict: "If we change [variable], how might the outcome change?",
+    twist_play: "Compare results with [variable] on vs off. What's different?",
+    twist_review: "The key is understanding WHY [variable] matters. It's about [deeper insight].",
+    transfer: "Each application uses [concept] differently. Look for the connection to the experiment.",
+    test: "Think back to what you observed. The key is understanding the WHY, not just the WHAT.",
+    mastery: "You've mastered this! Review any section you'd like to revisit."
+  };
+
+  emitGameEvent('hint_requested', {
+    phase,
+    coachMessage: hintMessages[phase],
+    message: 'User requested a hint'
+  });
+  setLastCoachMessage(hintMessages[phase]);
+}, [phase, emitGameEvent]);
+```
+
+### 3. COLOR CONTRAST REQUIREMENTS (Apple/Airbnb Quality)
+
+**NEVER use same color for background and text. Always ensure:**
+- Text on dark backgrounds: Use `colors.textPrimary` (#f8fafc) or `colors.textSecondary` (#94a3b8)
+- Highlighted text: Use `colors.primary` or accent color with `fontWeight: 600`
+- Muted text: Use `colors.textMuted` (#64748b) only on dark backgrounds
+- Card backgrounds: `colors.bgCard` (#0f172a) or `colors.bgCardLight` (#1e293b)
+- Active state: Add `20` (20% opacity) to color hex for subtle highlight (e.g., `${colors.primary}20`)
+
+**Contrast ratios for accessibility:**
+```typescript
+// Good - high contrast
+<p style={{ color: colors.textPrimary }}>...</p>  // #f8fafc on #0f172a = 15.4:1
+
+// Bad - low contrast (DO NOT USE)
+<p style={{ color: colors.textMuted }}>...</p>  // #64748b on #64748b = 1:1 (WRONG!)
+```
+
+### 4. SPACING & SIZING GUIDELINES (Premium Design)
+
+```typescript
+// Consistent spacing scale (use these values)
+const spacing = {
+  xs: '4px',
+  sm: '8px',
+  md: '16px',
+  lg: '24px',
+  xl: '32px',
+  '2xl': '48px'
+};
+
+// Touch-friendly minimums
+const minTouchTarget = '44px';  // REQUIRED for all interactive elements
+
+// Font sizes (responsive)
+const fontSizes = {
+  xs: isMobile ? '10px' : '12px',
+  sm: isMobile ? '12px' : '14px',
+  base: isMobile ? '14px' : '16px',
+  lg: isMobile ? '16px' : '18px',
+  xl: isMobile ? '20px' : '24px',
+  '2xl': isMobile ? '24px' : '32px',
+  '3xl': isMobile ? '28px' : '36px'
+};
+
+// Card padding
+const cardPadding = isMobile ? '16px' : '24px';
+
+// Gap between elements
+const gap = isMobile ? '12px' : '16px';
+```
+
+### 5. COMPLETE TWIST PHASES TEMPLATE
+
+**TWIST_PREDICT** - Introduce the new variable:
+```typescript
+if (phase === 'twist_predict') {
+  return (
+    <PremiumWrapper>
+      <div className="flex flex-col h-full overflow-hidden">
+        <div className="flex-1 flex flex-col items-center p-6 overflow-y-auto">
+          <div className="w-full max-w-2xl">
+            {renderSectionHeader("Step 4 • The [Variable Name]", "What If We [Change]?", "This is where [concept] gets truly interesting.")}
+
+            {/* Context explaining the new variable */}
+            <div className="p-5 rounded-2xl mb-6" style={{ background: `${colors.danger}15`, border: `1px solid ${colors.danger}30` }}>
+              <p className="text-sm leading-relaxed" style={{ color: colors.textSecondary }}>
+                <strong style={{ color: colors.textPrimary }}>The New Question:</strong> We've seen [initial result].
+                But what if we <strong style={{ color: colors.danger }}>[introduce variable]</strong>?
+                Will the result change when we [action]?
+              </p>
+            </div>
+
+            {/* Diagram showing the change - REQUIRED SVG */}
+            <div className="w-full p-4 rounded-2xl mb-6" style={{ background: colors.bgCard, border: `1px solid ${colors.border}` }}>
+              <svg viewBox="0 0 350 110" className="w-full h-28">
+                {/* Show setup WITH the new variable highlighted */}
+              </svg>
+            </div>
+
+            {/* Prediction options */}
+            <div className="grid gap-4 mb-6">
+              {[
+                { id: 'change_a', label: 'Result A happens', desc: 'Description', icon: '▮▮' },
+                { id: 'change_b', label: 'Result B happens', desc: 'Description', icon: '▮▯▮' },
+                { id: 'no_change', label: 'No change occurs', desc: 'Description', icon: '───' },
+              ].map(opt => (
+                <button
+                  key={opt.id}
+                  onMouseDown={() => {
+                    setTwistPrediction(opt.id);
+                    playSound('click');
+                    emitGameEvent('prediction_made', {
+                      phase: 'twist_predict',
+                      prediction: opt.id,
+                      predictionLabel: opt.label,
+                      message: `User predicted: ${opt.label}`
+                    });
+                  }}
+                  className="flex items-center gap-4 p-5 rounded-2xl text-left"
+                  style={{
+                    background: twistPrediction === opt.id ? `${colors.danger}20` : colors.bgCard,
+                    border: `2px solid ${twistPrediction === opt.id ? colors.danger : colors.border}`
+                  }}
+                >
+                  {/* ... button content ... */}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+        {renderBottomBar(true, !!twistPrediction, "Test Your Prediction", undefined, colors.danger)}
+      </div>
+    </PremiumWrapper>
+  );
+}
+```
+
+### 6. PREVENTING AI CHAT FROM BLOCKING BUTTONS
+
+The AI chat should ASSIST, not BLOCK user interactions. Critical patterns:
+
+```typescript
+// 1. Use onMouseDown instead of onClick (fires before chat can intercept)
+<button onMouseDown={() => action()} />
+
+// 2. Add e.preventDefault() for touch events
+<button
+  onMouseDown={(e) => { e.preventDefault(); action(); }}
+  onTouchEnd={(e) => { e.preventDefault(); action(); }}
+/>
+
+// 3. Use pointer-events-none on overlays that shouldn't capture clicks
+<div className="pointer-events-none">
+  {/* Decorative/informational content */}
+</div>
+
+// 4. Z-index hierarchy (buttons above chat suggestions)
+const zIndexes = {
+  background: 0,
+  content: 10,
+  buttons: 20,
+  modal: 30,
+  header: 50
+};
+```
+
+### 7. COMPLETE REAL-WORLD APPLICATION SVG TEMPLATE
+
+Each of the 4 applications MUST have a detailed educational diagram:
+
+```tsx
+{selectedApp === 0 && (
+  <g>
+    {/* Left side: Connection to experiment */}
+    <g transform="translate(20, 10)">
+      <rect x="0" y="0" width="240" height="160" rx="10" fill={colors.bgCard} stroke={colors.border} />
+      <text x="120" y="22" textAnchor="middle" fontSize="14" fontWeight="bold" fill={colors.textMuted}>
+        YOUR EXPERIMENT
+      </text>
+      {/* Show the physics principle from the experiment */}
+      {/* ... SVG elements ... */}
+      <text x="120" y="145" textAnchor="middle" fontSize="10" fill={colors.textSecondary}>
+        [Experiment label]
+      </text>
+    </g>
+
+    {/* Equals sign showing connection */}
+    <text x="300" y="80" textAnchor="middle" fontSize="32" fontWeight="bold" fill={colors.accent}>=</text>
+    <text x="300" y="105" textAnchor="middle" fontSize="12" fill={colors.textMuted}>Same Principle!</text>
+
+    {/* Right side: Real-world application */}
+    <g transform="translate(340, 10)">
+      <rect x="0" y="0" width="240" height="160" rx="10" fill={colors.bgCard} stroke={currentApp.color} strokeWidth="2" />
+      <text x="120" y="18" textAnchor="middle" fontSize="12" fontWeight="bold" fill={currentApp.color}>
+        {currentApp.title.toUpperCase()}
+      </text>
+      {/* Show how the principle applies to this application */}
+      {/* ... detailed SVG with animations ... */}
+    </g>
+
+    {/* Key insight box */}
+    <rect x="20" y="185" width="560" height="55" rx="8" fill={`${currentApp.color}20`} stroke={currentApp.color} strokeWidth="2" />
+    <text x="300" y="208" textAnchor="middle" fontSize="14" fontWeight="bold" fill={currentApp.color}>💡 KEY INSIGHT</text>
+    <text x="300" y="228" textAnchor="middle" fontSize="12" fill={colors.textPrimary}>
+      [Concise explanation of how physics principle enables application]
+    </text>
+
+    {/* Bottom impact statement */}
+    <rect x="20" y="250" width="560" height="55" rx="8" fill={colors.bgCard} stroke={colors.border} />
+    <text x="300" y="273" textAnchor="middle" fontSize="13" fontWeight="bold" fill={colors.textPrimary}>
+      ⚡ {currentApp.futureImpact}
+    </text>
+    <text x="300" y="293" textAnchor="middle" fontSize="11" fill={colors.textMuted}>
+      Companies: {currentApp.companies.join(' • ')}
+    </text>
+  </g>
+)}
+```
+
+### 8. EVENT EMISSION FOR AI COACH ACCURACY
+
+Emit detailed events so AI coach knows exactly what's on screen:
+
+```typescript
+// When showing test question, include FULL question content
+emitGameEvent('question_changed', {
+  phase: 'test',
+  questionNumber: nextQ + 1,
+  totalQuestions: 10,
+  questionScenario: currentQuestion.scenario,  // FULL scenario text
+  questionText: currentQuestion.question,       // FULL question text
+  allOptions: currentQuestion.options.map((o, idx) =>
+    `${String.fromCharCode(65 + idx)}: ${o.label}`
+  ).join(' | '),
+  message: `Now on Q${nextQ + 1}: "${currentQuestion.question}"`
+});
+
+// When showing application, include full details
+emitGameEvent('app_changed', {
+  phase: 'transfer',
+  appNumber: i + 1,
+  totalApps: 4,
+  appTitle: app.title,
+  appTagline: app.tagline,
+  appDescription: app.description,
+  appConnection: app.connection,  // How it connects to experiment
+  message: `Viewing application: ${app.title} - ${app.tagline}`
+});
+```
+
+---
+
+## CHECKLIST BEFORE SUBMITTING
+
+Run through this checklist for EVERY new game:
+
+### Navigation & Interaction
+- [ ] All buttons use `onMouseDown` (not onClick)
+- [ ] Navigation debouncing: BOTH `lastClickRef` (200ms) AND `isNavigating.current` (400ms)
+- [ ] Touch targets at least 44px height
+- [ ] No z-index conflicts with AI chat overlay
+
+### Visual Design
+- [ ] Premium gradients on key elements (buttons, headers, cards)
+- [ ] Dark backgrounds (#030712, #0a0f1a, #0f172a)
+- [ ] Three ambient glow circles in PremiumWrapper
+- [ ] Good color contrast (text visible on all backgrounds)
+- [ ] Consistent spacing using the scale (8px, 16px, 24px, 32px)
+
+### Content Completeness
+- [ ] 10 test questions with scenario + explanation (difficulty increasing)
+- [ ] 4 applications with FULL structure (all 10 fields populated)
+- [ ] Each application has detailed SVG diagram (100+ lines)
+- [ ] Teaching milestones for interactive phases
+- [ ] Hint messages for every phase
+
+### AI Coach Integration
+- [ ] `emitGameEvent` called for ALL user actions
+- [ ] Events include FULL context (question text, app details, etc.)
+- [ ] Game started event on mount
+- [ ] Game completed event with score
+
+### Testing
+- [ ] `npm run build` passes with no errors
+- [ ] Rapid-click navigation doesn't cause glitches
+- [ ] All 4 apps complete before test unlocks
+- [ ] Mobile viewport (375px) displays correctly
+- [ ] Test score calculates correctly (7/10 to pass)
