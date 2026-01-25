@@ -530,7 +530,8 @@ const WaveParticleDualityRenderer: React.FC<WaveParticleDualityRendererProps> = 
 
    // Premium wrapper component - REDESIGNED for proper viewport layout
    // Uses absolute positioning to fill parent container from GeneratedDiagram
-   const PremiumWrapper = ({ children }: { children: React.ReactNode }) => {
+   // Accepts optional footer prop for bottom navigation bar
+   const PremiumWrapper = ({ children, footer }: { children: React.ReactNode; footer?: React.ReactNode }) => {
       const currentIdx = phaseOrder.indexOf(phase);
 
       return (
@@ -653,6 +654,13 @@ const WaveParticleDualityRenderer: React.FC<WaveParticleDualityRendererProps> = 
             }}>
                {children}
             </div>
+
+            {/* FOOTER - Bottom navigation bar, stays fixed at bottom */}
+            {footer && (
+               <div style={{ flexShrink: 0, position: 'relative', zIndex: 10 }}>
+                  {footer}
+               </div>
+            )}
          </div>
       );
    };
@@ -1574,23 +1582,17 @@ const WaveParticleDualityRenderer: React.FC<WaveParticleDualityRendererProps> = 
    // PREDICT Screen - Premium redesign (RESPONSIVE)
    if (phase === 'predict') {
       return (
-         <PremiumWrapper>
+         <PremiumWrapper footer={renderBottomBar(true, !!prediction, "Run Experiment")}>
+         {/* Content wrapper - uses flex from PremiumWrapper */}
          <div style={{
             display: 'flex',
             flexDirection: 'column',
-            height: '100%',
-            minHeight: 0
+            padding: isMobile ? '12px' : '16px',
+            paddingBottom: '0',
+            alignItems: 'center',
+            width: '100%'
          }}>
-            {/* Scrollable content area */}
-            <div style={{
-               flex: 1,
-               overflowY: 'auto',
-               padding: isMobile ? '12px' : '16px',
-               display: 'flex',
-               flexDirection: 'column',
-               alignItems: 'center'
-            }}>
-               <div style={{ width: '100%', maxWidth: '600px' }}>
+            <div style={{ width: '100%', maxWidth: '600px' }}>
                   {renderSectionHeader("Step 1 • Make Your Prediction", "What Will Electrons Do?", "Think carefully — your intuition may not apply here.")}
 
                   {/* Setup diagram - compact */}
@@ -1726,10 +1728,6 @@ const WaveParticleDualityRenderer: React.FC<WaveParticleDualityRendererProps> = 
                   </div>
                </div>
             </div>
-
-            {/* Bottom bar - always visible */}
-            {renderBottomBar(true, !!prediction, "Run Experiment")}
-         </div>
          </PremiumWrapper>
       );
    }
@@ -1761,12 +1759,12 @@ const WaveParticleDualityRenderer: React.FC<WaveParticleDualityRendererProps> = 
       };
 
       return (
-         <PremiumWrapper>
-         <div className="flex flex-col h-full overflow-hidden">
+         <PremiumWrapper footer={renderBottomBar(true, particleCount >= 30, "Understand Why")}>
+         <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
 
-            <div className="flex-1 flex flex-col lg:flex-row overflow-hidden">
-               {/* Main visualization area - min height on mobile for visibility */}
-               <div className="flex-1 min-h-[45vh] lg:min-h-0 relative p-2 sm:p-3" style={{ background: colors.bgDark }}>
+            <div style={{ flex: 1, display: 'flex', flexDirection: isMobile ? 'column' : 'row', minHeight: 0, overflow: 'hidden' }}>
+               {/* Main visualization area */}
+               <div style={{ flex: 1, position: 'relative', padding: isMobile ? '8px' : '12px', background: colors.bgDark, minHeight: isMobile ? '45vh' : 'auto' }}>
                   <div className="h-full rounded-xl sm:rounded-2xl overflow-hidden" style={{ background: '#030712', border: `1px solid ${colors.border}` }}>
                      {renderQuantumLabVisualizer(true, false)}
                   </div>
@@ -1856,8 +1854,6 @@ const WaveParticleDualityRenderer: React.FC<WaveParticleDualityRendererProps> = 
                   </div>
                </div>
             </div>
-
-            {renderBottomBar(true, particleCount >= 30, "Understand Why")}
          </div>
          </PremiumWrapper>
       );
@@ -1866,10 +1862,8 @@ const WaveParticleDualityRenderer: React.FC<WaveParticleDualityRendererProps> = 
    // REVIEW Screen - Premium redesign
    if (phase === 'review') {
       return (
-         <PremiumWrapper>
-         <div className="flex flex-col h-full overflow-hidden">
-
-            <div className="flex-1 flex flex-col items-center p-6 overflow-y-auto">
+         <PremiumWrapper footer={renderBottomBar(true, true, "The Observer Effect")}>
+         <div style={{ padding: isMobile ? '12px' : '24px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                <div className="w-full max-w-2xl">
                   {renderSectionHeader("Step 3 • Understand the Result", "Wave-Particle Duality", "The electron isn't simply a particle OR a wave — it's something entirely new.")}
 
@@ -1928,9 +1922,6 @@ const WaveParticleDualityRenderer: React.FC<WaveParticleDualityRendererProps> = 
                   </div>
                </div>
             </div>
-
-            {renderBottomBar(true, true, "The Observer Effect")}
-         </div>
          </PremiumWrapper>
       );
    }
@@ -1938,10 +1929,8 @@ const WaveParticleDualityRenderer: React.FC<WaveParticleDualityRendererProps> = 
    // TWIST-PREDICT Screen - Premium redesign
    if (phase === 'twist_predict') {
       return (
-         <PremiumWrapper>
-         <div className="flex flex-col h-full overflow-hidden">
-
-            <div className="flex-1 flex flex-col items-center p-6 overflow-y-auto">
+         <PremiumWrapper footer={renderBottomBar(true, !!twistPrediction, "Turn On Detector", undefined, colors.danger)}>
+         <div style={{ padding: isMobile ? '12px' : '24px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                <div className="w-full max-w-2xl">
                   {renderSectionHeader("Step 4 • The Observer Effect", "What If We Watch?", "This is where quantum mechanics gets truly mind-bending.")}
 
@@ -2044,9 +2033,6 @@ const WaveParticleDualityRenderer: React.FC<WaveParticleDualityRendererProps> = 
                   </div>
                </div>
             </div>
-
-            {renderBottomBar(true, !!twistPrediction, "Turn On Detector", undefined, colors.danger)}
-         </div>
          </PremiumWrapper>
       );
    }
@@ -2054,12 +2040,12 @@ const WaveParticleDualityRenderer: React.FC<WaveParticleDualityRendererProps> = 
    // TWIST-PLAY Screen - Premium redesign
    if (phase === 'twist_play') {
       return (
-         <PremiumWrapper>
-         <div className="flex flex-col h-full overflow-hidden">
+         <PremiumWrapper footer={renderBottomBar(true, particleCount >= 30, "Deep Understanding", undefined, colors.danger)}>
+         <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
 
-            <div className="flex-1 flex flex-col lg:flex-row overflow-hidden">
+            <div style={{ flex: 1, display: 'flex', flexDirection: isMobile ? 'column' : 'row', minHeight: 0, overflow: 'hidden' }}>
                {/* Main visualization area */}
-               <div className="flex-1 relative p-3" style={{ background: colors.bgDark }}>
+               <div style={{ flex: 1, position: 'relative', padding: '12px', background: colors.bgDark }}>
                   <div className="h-full rounded-2xl overflow-hidden" style={{ background: '#030712', border: `1px solid ${colors.border}` }}>
                      {renderQuantumLabVisualizer(true, true)}
                   </div>
@@ -2212,8 +2198,6 @@ const WaveParticleDualityRenderer: React.FC<WaveParticleDualityRendererProps> = 
                   </div>
                </div>
             </div>
-
-            {renderBottomBar(true, particleCount >= 30, "Deep Understanding", undefined, colors.danger)}
          </div>
          </PremiumWrapper>
       );
@@ -2222,10 +2206,8 @@ const WaveParticleDualityRenderer: React.FC<WaveParticleDualityRendererProps> = 
    // TWIST-REVIEW Screen
    if (phase === 'twist_review') {
       return (
-         <PremiumWrapper>
-         <div className="flex flex-col h-full overflow-hidden">
-
-            <div className="flex-1 flex flex-col items-center p-6 overflow-y-auto">
+         <PremiumWrapper footer={renderBottomBar(true, true, "Real World Applications", undefined, colors.success)}>
+         <div style={{ padding: isMobile ? '12px' : '24px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                <div className="w-full max-w-2xl">
                   {renderSectionHeader("Step 6 • Deep Understanding", "The Measurement Problem", "One of the deepest unsolved mysteries in physics.")}
 
@@ -2296,9 +2278,6 @@ const WaveParticleDualityRenderer: React.FC<WaveParticleDualityRendererProps> = 
                   </div>
                </div>
             </div>
-
-            {renderBottomBar(true, true, "Real World Applications", undefined, colors.success)}
-         </div>
          </PremiumWrapper>
       );
    }
