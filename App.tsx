@@ -402,15 +402,16 @@ const App: React.FC = () => {
   const handleFunctionCall = async (fc: any) => {
     let result: any = { status: "success" };
 
-    // Block context-changing calls when full-screen game is active
+    // Block ALL context-changing calls when full-screen game is active
     const contextChangingCalls = [
       'triggerAssessment', 'generateEducationalPoster', 'playVideo', 'playPodcast',
-      'showBriefing', 'openWhiteboard', 'generateDocument'
+      'showBriefing', 'openWhiteboard', 'generateDocument', 'switchContent',
+      'navigateBack', 'navigateForward'
     ];
 
     if (contextChangingCalls.includes(fc.name) && isFullScreenGameActive()) {
       console.log(`[App] Blocking ${fc.name} - full-screen game active:`, visualContextRef.current.data?.type);
-      return { status: "blocked", reason: "Full-screen game is active. Action not performed." };
+      return { status: "blocked", reason: "Full-screen game is active. Use the game's navigation instead." };
     }
 
     switch (fc.name) {
@@ -441,7 +442,7 @@ const App: React.FC = () => {
       case 'showBriefing': setVisualContext({ type: 'briefing', data: fc.args }); break;
       case 'showDiagram':
         // Allow showDiagram only if it's showing the same game or not a full-screen game
-        if (isFullScreenGameActive() && fc.args.type !== visualContext.data.type) {
+        if (isFullScreenGameActive() && fc.args.type !== visualContextRef.current.data?.type) {
           console.log('[App] Blocking showDiagram - different full-screen game active');
           return { status: "blocked", reason: "Full-screen game is active." };
         }
