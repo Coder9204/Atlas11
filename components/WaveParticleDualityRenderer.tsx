@@ -180,6 +180,20 @@ const WaveParticleDualityRenderer: React.FC<WaveParticleDualityRendererProps> = 
    const isNavigating = useRef(false);
    const lastClickRef = useRef(0);
 
+   // Detailed screen descriptions for AI context
+   const screenDescriptions: Record<WPDPhase, string> = {
+      hook: 'INTRO SCREEN: Title "The Double-Slit Experiment", Feynman quote, Start button. User has not started yet.',
+      predict: 'PREDICTION SCREEN: User must select what pattern electrons will make: (A) Two bands, (B) Multiple bands (interference), or (C) One blob. Shows diagram of electron gun → double slit → screen with "?" mark.',
+      play: 'EXPERIMENT SCREEN: Live simulation firing electrons one at a time. User watches dots accumulate on detector screen. Pattern emerges over time. Controls: firing rate slider, reset button.',
+      review: 'REVIEW SCREEN: Explains why interference pattern formed - each electron goes through BOTH slits as a wave. Key concept: wave-particle duality.',
+      twist_predict: 'TWIST PREDICTION: New question - what happens if we ADD A DETECTOR to watch which slit electron goes through? Options: (A) Pattern disappears, (B) Same pattern, (C) Stronger pattern.',
+      twist_play: 'OBSERVER EXPERIMENT: Toggle detector ON/OFF. When ON (observing): 2 distinct bands. When OFF (not observing): interference pattern. User can compare both modes.',
+      twist_review: 'OBSERVER EFFECT REVIEW: Explains measurement collapses wave function. The act of knowing which path destroys interference. This is the heart of quantum weirdness.',
+      transfer: 'REAL WORLD APPLICATIONS: 4 cards showing quantum tech - (1) Quantum Computing, (2) Quantum Cryptography, (3) Electron Microscopy, (4) Quantum Sensors.',
+      test: 'KNOWLEDGE TEST: Multiple choice questions testing understanding of wave-particle duality and observer effect. Shows question number and progress.',
+      mastery: 'COMPLETION SCREEN: Congratulations! Summary of concepts mastered. Options to restart or explore freely.'
+   };
+
    const goToPhase = useCallback((p: WPDPhase) => {
       const now = Date.now();
       if (now - lastClickRef.current < 200) return;
@@ -193,26 +207,28 @@ const WaveParticleDualityRenderer: React.FC<WaveParticleDualityRendererProps> = 
          setParticleHits([]);
          setParticleCount(0);
       }
-      if (p === 'twist_play') setDetectorOn(true); // Default ON when entering observer phase
+      if (p === 'twist_play') setDetectorOn(true);
       if (p === 'play') setDetectorOn(false);
       playSound('transition');
 
-      // Emit phase change to AI coach
+      // Emit detailed phase change to AI coach - includes full screen description
       const idx = phaseOrder.indexOf(p);
       emitGameEvent('phase_changed', {
          phase: p,
          phaseLabel: phaseLabels[p],
          currentScreen: idx + 1,
          totalScreens: phaseOrder.length,
+         screenDescription: screenDescriptions[p], // Detailed description of what's on screen NOW
+         userAction: `User navigated to screen ${idx + 1}: ${phaseLabels[p]}`,
          coachMessage: guidedMode ? coachMessages[p] : undefined,
-         message: `Entered phase: ${phaseLabels[p]}`
+         message: `NOW ON SCREEN ${idx + 1}/${phaseOrder.length}: ${phaseLabels[p]}. ${screenDescriptions[p]}`
       });
       if (guidedMode) {
          setLastCoachMessage(coachMessages[p]);
       }
 
       setTimeout(() => { isNavigating.current = false; }, 400);
-   }, [emitGameEvent, guidedMode, coachMessages, phaseLabels, phaseOrder]);
+   }, [emitGameEvent, guidedMode, coachMessages, phaseLabels, phaseOrder, screenDescriptions]);
 
    const goNext = useCallback(() => {
       const idx = phaseOrder.indexOf(phase);
@@ -324,7 +340,6 @@ const WaveParticleDualityRenderer: React.FC<WaveParticleDualityRendererProps> = 
       );
    };
 
-   // Helper function to render progress bar - NOT a component
    // Emit initial game_started event on mount (always, for chat controls to appear)
    useEffect(() => {
       // Small delay to ensure parent component is ready to receive events
@@ -334,8 +349,9 @@ const WaveParticleDualityRenderer: React.FC<WaveParticleDualityRendererProps> = 
             phaseLabel: 'Introduction',
             currentScreen: 1,
             totalScreens: phaseOrder.length,
+            screenDescription: screenDescriptions.hook,
             coachMessage: guidedMode ? coachMessages.hook : '',
-            message: 'Wave-Particle Duality lesson started'
+            message: `GAME STARTED - NOW ON SCREEN 1/${phaseOrder.length}: Introduction. ${screenDescriptions.hook}`
          });
          if (guidedMode) {
             setLastCoachMessage(coachMessages.hook);
@@ -628,7 +644,10 @@ const WaveParticleDualityRenderer: React.FC<WaveParticleDualityRendererProps> = 
             {/* MAIN CONTENT - Fills remaining space, scrolls if needed */}
             <div style={{
                flex: 1,
+               minHeight: 0, // Critical for flex overflow to work
                overflow: 'auto',
+               overflowX: 'hidden',
+               WebkitOverflowScrolling: 'touch', // Smooth scrolling on iOS
                position: 'relative',
                zIndex: 5
             }}>
