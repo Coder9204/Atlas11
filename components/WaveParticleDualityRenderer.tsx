@@ -2190,70 +2190,70 @@ const WaveParticleDualityRenderer: React.FC<WaveParticleDualityRendererProps> = 
          <PremiumWrapper footer={renderBottomBar(true, true, "Real World Applications", undefined, colors.success)}>
          <div style={{
             padding: typo.pagePadding,
-            paddingBottom: '24px', // Extra bottom padding for scroll
+            paddingBottom: '32px', // Extra bottom padding for scroll
             maxWidth: '600px',
             margin: '0 auto'
          }}>
             {renderSectionHeader("Step 6 • Deep Understanding", "The Measurement Problem", "One of the deepest unsolved mysteries in physics.")}
 
-            {/* Comparison cards */}
-            <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: '12px', marginBottom: '16px' }}>
-               <div style={{ padding: '16px', borderRadius: '16px', background: `linear-gradient(135deg, ${colors.accent}20 0%, ${colors.accent}05 100%)`, border: `1px solid ${colors.accent}40` }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '10px' }}>
-                     <div style={{ width: '36px', height: '36px', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: `${colors.accent}30` }}>
-                        <span style={{ fontSize: '18px' }}>🌊</span>
-                     </div>
-                     <p style={{ fontWeight: 700, color: colors.accent, margin: 0, fontSize: '14px' }}>Not Observed</p>
+            {/* Compact comparison cards */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: typo.elementGap, marginBottom: typo.sectionGap }}>
+               <div style={{ padding: typo.cardPadding, borderRadius: '10px', background: `${colors.accent}10`, border: `1px solid ${colors.accent}25` }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '4px' }}>
+                     <span style={{ fontSize: '14px' }}>🌊</span>
+                     <p style={{ fontWeight: 700, color: colors.accent, margin: 0, fontSize: typo.body }}>Not Observed</p>
                   </div>
-                  <p style={{ fontSize: '12px', lineHeight: 1.5, marginBottom: '10px', color: colors.textSecondary }}>
-                     Electron exists as a probability wave, passing through <strong style={{ color: colors.textPrimary }}>both slits</strong> and interfering with itself.
+                  <p style={{ fontSize: typo.small, lineHeight: 1.4, color: colors.textSecondary, margin: 0 }}>
+                     Wave through <strong style={{ color: colors.textPrimary }}>both slits</strong>
                   </p>
-                  <div style={{ padding: '6px', borderRadius: '8px', textAlign: 'center', background: `${colors.accent}20` }}>
-                     <p style={{ fontSize: '11px', fontWeight: 700, color: colors.accent, margin: 0 }}>Result: Interference Pattern</p>
-                  </div>
+                  <p style={{ fontSize: typo.label, fontWeight: 700, color: colors.accent, margin: 0, marginTop: '4px' }}>→ Interference</p>
                </div>
-               <div style={{ padding: '16px', borderRadius: '16px', background: `linear-gradient(135deg, ${colors.danger}20 0%, ${colors.danger}05 100%)`, border: `1px solid ${colors.danger}40` }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '10px' }}>
-                     <div style={{ width: '36px', height: '36px', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: `${colors.danger}30` }}>
-                        <span style={{ fontSize: '18px' }}>👁️</span>
-                     </div>
-                     <p style={{ fontWeight: 700, color: colors.danger, margin: 0, fontSize: '14px' }}>Observed</p>
+               <div style={{ padding: typo.cardPadding, borderRadius: '10px', background: `${colors.danger}10`, border: `1px solid ${colors.danger}25` }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '4px' }}>
+                     <span style={{ fontSize: '14px' }}>👁️</span>
+                     <p style={{ fontWeight: 700, color: colors.danger, margin: 0, fontSize: typo.body }}>Observed</p>
                   </div>
-                  <p style={{ fontSize: '12px', lineHeight: 1.5, marginBottom: '10px', color: colors.textSecondary }}>
-                     Wave function collapses — electron "chooses" and goes through <strong style={{ color: colors.textPrimary }}>one slit only</strong>.
+                  <p style={{ fontSize: typo.small, lineHeight: 1.4, color: colors.textSecondary, margin: 0 }}>
+                     Collapses to <strong style={{ color: colors.textPrimary }}>one slit</strong>
                   </p>
-                  <div style={{ padding: '6px', borderRadius: '8px', textAlign: 'center', background: `${colors.danger}20` }}>
-                     <p style={{ fontSize: '11px', fontWeight: 700, color: colors.danger, margin: 0 }}>Result: Two Bands</p>
-                  </div>
+                  <p style={{ fontSize: typo.label, fontWeight: 700, color: colors.danger, margin: 0, marginTop: '4px' }}>→ Two Bands</p>
                </div>
             </div>
 
-            {/* The deep question */}
-            <div style={{ padding: '16px', borderRadius: '16px', textAlign: 'center', marginBottom: '16px', background: colors.bgCard, border: `1px solid ${colors.border}` }}>
-               <p style={{ fontSize: '10px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '8px', color: colors.warning }}>The Unsolved Mystery</p>
-               <p style={{ fontSize: '16px', fontWeight: 700, lineHeight: 1.4, marginBottom: '8px', color: colors.textPrimary }}>
-                  What causes the wave function to "collapse"?
+            {/* Compact deep question */}
+            <div style={{ padding: typo.cardPadding, borderRadius: '10px', textAlign: 'center', marginBottom: typo.sectionGap, background: colors.bgCard, border: `1px solid ${colors.border}` }}>
+               <p style={{ fontSize: typo.bodyLarge, fontWeight: 700, color: colors.textPrimary, margin: 0 }}>
+                  What causes wave function <span style={{ color: colors.warning }}>"collapse"</span>?
                </p>
-               <p style={{ fontSize: '12px', color: colors.textSecondary, margin: 0 }}>
-                  Is it consciousness? Measurement? Information transfer? <strong style={{ color: colors.warning }}>Physicists still debate this.</strong>
+               <p style={{ fontSize: typo.small, color: colors.textMuted, margin: 0, marginTop: '4px' }}>
+                  Consciousness? Measurement? <strong style={{ color: colors.warning }}>Still debated!</strong>
                </p>
             </div>
 
-            {/* Key takeaways */}
-            <div style={{ marginBottom: '16px' }}>
-               <p style={{ fontSize: '10px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '10px', color: colors.success }}>Key Takeaways</p>
-               <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                  {renderKeyTakeaway("💥", "Wave Function Collapse", "Superposition of 'both paths' collapses to 'one path' when observed.")}
-                  {renderKeyTakeaway("📊", "Information Is Physical", "Gaining which-path info destroys interference — even if never viewed.")}
-                  {renderKeyTakeaway("🔮", "Quantum Eraser", "Erasing which-path info before detection restores interference!")}
+            {/* Compact key takeaways - inline style like review phase */}
+            <div style={{ marginBottom: typo.sectionGap }}>
+               <p style={{ fontSize: typo.label, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '8px', color: colors.success }}>Key Insights</p>
+               <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                  {[
+                     { icon: '💥', title: 'Wave Collapse', desc: 'Observation forces one path' },
+                     { icon: '📊', title: 'Info Is Physical', desc: 'Knowing destroys interference' },
+                     { icon: '🔮', title: 'Quantum Eraser', desc: 'Erase info → restore pattern' }
+                  ].map((item, i) => (
+                     <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '8px 10px', borderRadius: '8px', background: colors.bgCard, border: `1px solid ${colors.border}` }}>
+                        <span style={{ fontSize: '16px' }}>{item.icon}</span>
+                        <div>
+                           <span style={{ fontWeight: 700, fontSize: typo.body, color: colors.textPrimary }}>{item.title}: </span>
+                           <span style={{ fontSize: typo.small, color: colors.textSecondary }}>{item.desc}</span>
+                        </div>
+                     </div>
+                  ))}
                </div>
             </div>
 
-            {/* Why this matters */}
-            <div style={{ padding: '14px', borderRadius: '14px', background: `${colors.primary}15`, border: `1px solid ${colors.primary}30` }}>
-               <p style={{ fontSize: '10px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '6px', color: colors.primary }}>The Big Picture</p>
-               <p style={{ fontSize: '12px', lineHeight: 1.5, color: colors.textSecondary, margin: 0 }}>
-                  This has <strong style={{ color: colors.textPrimary }}>practical consequences</strong> — quantum computers must avoid "observing" qubits during computation.
+            {/* Compact why this matters */}
+            <div style={{ padding: typo.cardPadding, borderRadius: '10px', background: `${colors.primary}10`, border: `1px solid ${colors.primary}25` }}>
+               <p style={{ fontSize: typo.small, lineHeight: 1.5, color: colors.textSecondary, margin: 0 }}>
+                  <span style={{ fontWeight: 700, color: colors.primary }}>Why it matters:</span> Quantum computers must avoid "observing" qubits during computation.
                </p>
             </div>
          </div>
