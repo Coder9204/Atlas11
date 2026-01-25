@@ -1055,10 +1055,11 @@ const PhotoelectricEffectRenderer: React.FC<PhotoelectricEffectRendererProps> = 
             <p style={{ fontSize: typo.small, color: colors.textSecondary, lineHeight: 1.5 }}>{app.connection}</p>
           </div>
 
-          {/* Mark complete button - only show if not completed */}
-          {!currentAppComplete && (
-            <button
-              onClick={() => {
+          {/* Continue button at end of content - handles app progression */}
+          <button
+            onClick={() => {
+              // Mark current app as complete
+              if (!currentAppComplete) {
                 const newCompleted = [...completedApps];
                 newCompleted[activeApp] = true;
                 setCompletedApps(newCompleted);
@@ -1068,54 +1069,40 @@ const PhotoelectricEffectRenderer: React.FC<PhotoelectricEffectRendererProps> = 
                   appTitle: app.title,
                   message: `Completed application ${activeApp + 1}/4: ${app.title}`
                 });
-              }}
-              style={{ width: '100%', padding: '14px', borderRadius: '12px', border: `2px solid ${app.color}`, background: `${app.color}15`, color: app.color, fontWeight: 700, fontSize: typo.body, cursor: 'pointer', marginBottom: '12px' }}
-            >
-              ✓ Mark as Complete
-            </button>
-          )}
-
-          {/* Continue button - show after completing current app, if not last app */}
-          {currentAppComplete && !isLastApp && (
-            <button
-              onClick={handleContinueToNextApp}
-              style={{
-                width: '100%',
-                padding: '14px',
-                borderRadius: '12px',
-                border: 'none',
-                background: `linear-gradient(135deg, ${colors.primary} 0%, ${colors.accent} 100%)`,
-                color: 'white',
-                fontWeight: 700,
-                fontSize: typo.body,
-                cursor: 'pointer',
-                boxShadow: `0 4px 20px ${colors.primary}40`,
-                marginBottom: '12px'
-              }}
-            >
-              Continue to {applications[activeApp + 1].title} →
-            </button>
-          )}
-
-          {/* Progress */}
-          <div style={{ marginTop: '8px', padding: '12px', borderRadius: '12px', background: colors.bgCardLight, textAlign: 'center' }}>
-            <p style={{ fontSize: typo.small, fontWeight: 600, color: allComplete ? colors.success : colors.textSecondary }}>
-              {allComplete ? '✓ All applications complete! Ready for test.' : `Progress: ${completedApps.filter(c => c).length}/4 applications`}
-            </p>
-          </div>
+              }
+              // If not last app, continue to next; otherwise go to test
+              if (!isLastApp) {
+                handleContinueToNextApp();
+              } else {
+                goToPhase('test');
+              }
+            }}
+            style={{
+              width: '100%',
+              padding: '14px',
+              borderRadius: '12px',
+              border: 'none',
+              background: `linear-gradient(135deg, ${colors.primary} 0%, ${colors.accent} 100%)`,
+              color: 'white',
+              fontWeight: 700,
+              fontSize: typo.body,
+              cursor: 'pointer',
+              boxShadow: `0 4px 20px ${colors.primary}40`,
+              marginTop: '16px'
+            }}
+          >
+            {isLastApp ? 'Take the Test →' : `Continue to ${applications[activeApp + 1]?.title.split(' ')[0]} →`}
+          </button>
         </div>
       </div>,
-      // Bottom bar logic:
-      // - If all complete: Show "Take the Test"
-      // - If current app complete but not last: Show "Continue to Next App"
-      // - If current app not complete: Show disabled "Mark Complete First"
-      allComplete
-        ? renderBottomBar(true, true, 'Take the Test')
-        : currentAppComplete && !isLastApp
-          ? renderBottomBar(true, true, `Continue to ${applications[activeApp + 1].title}`, handleContinueToNextApp)
-          : renderBottomBar(true, false, 'Mark Complete First')
+      'Step 8 of 10 • Transfer',
+      'Real-World Applications',
+      `See how the photoelectric effect powers modern technology`,
+      null,
+      renderBottomBar(true, false, 'Scroll to Continue')
     );
   }
+
 
   // TEST PHASE
   if (phase === 'test') {

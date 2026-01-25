@@ -29,7 +29,7 @@ Before considering any game "complete", verify:
 - [ ] **onClick handlers** (NOT onMouseDown/onTouchEnd) for all buttons
 - [ ] **WebkitTapHighlightColor: 'transparent'** on all interactive elements
 - [ ] **Sliders use onInput + onChange** for smooth updates
-- [ ] **Transfer phase has 3-state bottom bar** (Take Test / Continue / Mark Complete First)
+- [ ] **Transfer phase has "Continue" at end of each app** (scrolls to bottom, then Continue → next app or Take Test)
 - [ ] **AI coach receives app-specific screenDescription/coachMessage** for tab clicks
 - [ ] **Mastery phase has pass/fail logic** (70% threshold)
 - [ ] **Mastery shows Return to Dashboard** option
@@ -457,27 +457,35 @@ const handleContinueToNextApp = () => {
 };
 ```
 
-**Custom Footer for Transfer (3-State Bottom Bar - CRITICAL):**
+**Transfer Phase Pattern - "Continue" at End of Content:**
 
-The bottom bar must have THREE states, not two:
+Each real-world application should have a "Continue" button at the **end of its content** (after scrolling through). This is simpler and more intuitive than a "Mark Complete" pattern.
 
 ```typescript
-// Bottom bar logic - THREE states:
-allComplete
-  ? renderBottomBar(true, true, 'Take the Test')
-  : currentAppComplete && !isLastApp
-    ? renderBottomBar(true, true, `Continue to ${applications[activeApp + 1].title}`, handleContinueToNextApp)
-    : renderBottomBar(true, false, 'Mark Complete First')
+// At the end of each app's content:
+<div style={{ padding: '16px', marginTop: '16px' }}>
+  {!isLastApp ? (
+    <button onClick={handleContinueToNextApp} style={{ /* Primary CTA styling */ }}>
+      Continue to {applications[activeApp + 1].title} →
+    </button>
+  ) : (
+    <button onClick={() => goToPhase('test')} style={{ /* Primary CTA styling */ }}>
+      Take the Test →
+    </button>
+  )}
+</div>
 ```
 
-| State | Condition | Button Text | Enabled |
-|-------|-----------|-------------|---------|
-| 1 | All 4 apps complete | "Take the Test" | Yes |
-| 2 | Current app complete, more apps remain | "Continue to [Next App]" | Yes |
-| 3 | Current app not complete | "Mark Complete First" | No (disabled) |
+| Current App | Button Text | Action |
+|-------------|-------------|--------|
+| App 1, 2, or 3 | "Continue to [Next App] →" | Unlock next app, scroll to top, switch tab |
+| App 4 (last) | "Take the Test →" | Go to test phase |
 
-**WRONG:** Only having two states (Take Test / Complete all 4 apps first)
-**CORRECT:** Three states with functional "Continue" button after each app
+**Key Points:**
+- **NO "Mark Complete" button** - just "Continue" at the end
+- Apps unlock sequentially as user scrolls to Continue and clicks
+- User must scroll through content to find Continue button (engagement)
+- Previously visited apps remain accessible via tabs
 
 ### 4.9 Test Phase
 
@@ -1084,6 +1092,59 @@ const handleReturnToDashboard = () => {
 ---
 
 ## 14. Interactive Graphics Design Philosophy
+
+### 14.0 CRITICAL: Simulations, Not Static Images
+
+**Every "interactive graphic" MUST be an ANIMATED SIMULATION, not a static image.**
+
+| Wrong ❌ | Right ✓ |
+|----------|---------|
+| Static diagram that changes when slider moves | Continuously animated simulation with moving particles/waves |
+| Image that swaps out based on settings | Real-time physics rendering with smooth transitions |
+| Screenshot of a simulation | Live SVG/Canvas with `requestAnimationFrame` loop |
+| Diagram with labels that update | Particles flowing, waves propagating, electrons ejecting |
+
+**Required Animation Loop:**
+```typescript
+// Animation ref for cleanup
+const animationRef = useRef<number>();
+const timeRef = useRef(0);
+
+// Continuous animation loop
+useEffect(() => {
+  const animate = () => {
+    timeRef.current += 0.05; // Increment time
+    animationRef.current = requestAnimationFrame(animate);
+  };
+  animationRef.current = requestAnimationFrame(animate);
+  return () => {
+    if (animationRef.current) cancelAnimationFrame(animationRef.current);
+  };
+}, []);
+```
+
+**Simulation Elements Must:**
+1. **Move continuously** - particles flow, waves propagate, electrons orbit
+2. **Respond to sliders in real-time** - change speed, color, count instantly
+3. **Show cause and effect** - adjusting wavelength → photon color changes → electron ejection changes
+4. **Feel "game-like"** - dynamic, engaging, something to watch
+
+**Example - Photoelectric Effect:**
+```typescript
+// Photon beam - particles moving from light source to metal
+{Array.from({ length: numPhotons }).map((_, i) => {
+  const progress = ((timeRef.current * 50 + i * 30) % 240) / 240;
+  const x = 140 + progress * 240; // Photons move across screen
+  return <circle cx={x} cy={y} r="6" fill={photonColor} />;
+})}
+
+// Electrons ejecting when emission occurs
+{emissionOccurs && Array.from({ length: numElectrons }).map((_, i) => {
+  const progress = ((timeRef.current * 40 + i * 25) % 180) / 180;
+  const x = 430 + progress * speed * 100; // Electrons fly away
+  return <circle cx={x} cy={y} r="3" fill="#38bdf8" />;
+})}
+```
 
 ### 14.1 Core Principle: SHOW, Don't Tell
 
