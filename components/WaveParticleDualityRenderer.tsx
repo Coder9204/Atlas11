@@ -666,6 +666,7 @@ const WaveParticleDualityRenderer: React.FC<WaveParticleDualityRendererProps> = 
             <div style={{
                flex: 1,
                minHeight: 0,
+               position: 'relative',
                overflowY: 'auto',
                overflowX: 'hidden',
                WebkitOverflowScrolling: 'touch'

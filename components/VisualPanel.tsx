@@ -213,11 +213,7 @@ const VisualPanel: React.FC<VisualPanelProps> = ({
       )}
 
       {/* Main Content Area - use overflow-hidden for diagrams/games, auto for others */}
-      {/* Added touch-action: pan-y to allow child scroll on mobile */}
-      <div
-        className={`flex-1 relative bg-[#FBFBFB] ${context.type === 'diagram' || context.type === 'assessment' ? 'overflow-hidden' : 'overflow-auto'}`}
-        style={{ touchAction: context.type === 'diagram' ? 'pan-y' : undefined }}
-      >
+      <div className={`flex-1 relative bg-[#FBFBFB] ${context.type === 'diagram' || context.type === 'assessment' ? 'overflow-hidden' : 'overflow-auto'}`}>
         {renderContent()}
 
         {/* Floating Tooltip/Toast */}
