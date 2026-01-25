@@ -360,10 +360,38 @@ interface Application {
 - Show ✓ on completed apps
 - Track progress: `X/4 completed`
 
+**App Navigation (CRITICAL):**
+- After marking an app complete, show "Continue to [Next App] →" button
+- "Take Test" button ONLY appears in bottom bar after ALL 4 apps are completed
+- Tab clicks must emit `app_changed` event with full details for AI coach sync
+- Tab clicks should only work for: current app, completed apps, and next unlockable app
+
+**Tab Click Handler:**
+```typescript
+const handleAppTabClick = (index: number) => {
+   if (index === activeApp) return; // Already on this app
+
+   // Only allow clicking on completed apps or the next unlocked one
+   const canAccess = index === 0 || completedApps[index - 1] || completedApps[index];
+   if (!canAccess) return;
+
+   setActiveApp(index);
+   const targetApp = applications[index];
+   emitGameEvent('app_changed', {
+      appNumber: index + 1,
+      totalApps: 4,
+      appTitle: targetApp.title,
+      appTagline: targetApp.tagline,
+      appConnection: targetApp.connection,
+      message: `NOW viewing Real-World Application ${index + 1}/4: ${targetApp.title}.`
+   });
+};
+```
+
 **Custom Footer for Transfer:**
 - Back button (← to twist_review)
-- "Complete & Continue →" or "Complete Final Topic"
-- "Take Test →" (only enabled when all 4 complete)
+- "Take Test →" button ONLY when `allComplete === true`
+- When not all complete: show disabled "Complete all 4 apps first"
 
 ### 4.9 Test Phase
 
@@ -420,15 +448,49 @@ const masteryItems = [
 ];
 ```
 
+**Pass/Fail Logic (CRITICAL):**
+```typescript
+const percentage = Math.round((testScore / 10) * 100);
+const isPassing = testScore >= 7; // 70% threshold
+
+// Title changes based on pass/fail
+isPassing ? "Topic Master!" : "Keep Practicing!"
+
+// Badge changes
+isPassing ? '🏆' : '📚'
+
+// Checkmarks only shown on mastery items if passing
+{isPassing && <span>✓</span>}
+```
+
 **Structure:**
 1. Animated background orbs (same as hook)
-2. Section header ("Step 10 • Mastery Achieved")
-3. Achievement badge with atom emoji
-4. 5 mastered concepts list (gradient cards with checkmarks)
-5. Inspirational quote
-6. Action buttons:
-   - "🔬 Free Exploration Mode" (primary gradient)
-   - "↺ Start Over from Beginning" (secondary)
+2. Section header - dynamic based on pass/fail
+3. Achievement badge (🏆 if passing, 📚 if not)
+4. Score display with percentage
+5. 5 mastered concepts list (checkmarks ONLY if passing)
+6. Inspirational quote
+7. Action buttons (different based on pass/fail):
+
+**If PASSING (≥70%):**
+   - Primary: "🏠 Return to Dashboard" (gradient, dispatches `returnToDashboard` event)
+   - Secondary: "🔬 Review Lesson" (outline style)
+
+**If NOT PASSING (<70%):**
+   - Primary: "↺ Retake Test" (gradient)
+   - Secondary: "🔬 Review Lesson" (outline style)
+   - Tertiary: "Return to Dashboard" (text link, underlined)
+
+**Return to Dashboard Implementation:**
+```typescript
+const handleReturnToDashboard = () => {
+   emitGameEvent('button_clicked', {
+      action: 'return_to_dashboard',
+      message: 'User requested to return to dashboard'
+   });
+   window.dispatchEvent(new CustomEvent('returnToDashboard'));
+};
+```
 
 ---
 
@@ -542,14 +604,34 @@ useEffect(() => {
 | Grid columns | 2 | 1 |
 | Simulation layout | Side-by-side | Stacked |
 
-### 6.3 Touch Interaction
+### 6.3 Click Handling (UPDATED)
+
+**IMPORTANT:** Use `onClick` for most buttons to avoid double-firing issues on mobile.
 
 ```typescript
-// Use BOTH onMouseDown AND onTouchEnd for buttons
+// RECOMMENDED: Use onClick for selection buttons (predictions, answers, tabs)
 <button
-   onMouseDown={handleAction}
-   onTouchEnd={(e) => { e.preventDefault(); handleAction(); }}
+   onClick={() => handleAction()}
+   style={{ WebkitTapHighlightColor: 'transparent' }}
 >
+
+// For selections, prevent re-selection:
+const handlePredictionSelect = (id: string) => {
+   if (prediction === id) return; // Already selected
+   playSound('click');
+   setPrediction(id);
+   emitGameEvent('prediction_made', { prediction: id });
+};
+```
+
+**Slider smoothness:** Use `onInput` for real-time updates in addition to `onChange`:
+```typescript
+<input
+   type="range"
+   onInput={(e) => setValue(Number((e.target as HTMLInputElement).value))}
+   onChange={(e) => setValue(Number(e.target.value))}
+   style={{ cursor: 'pointer' }}
+/>
 ```
 
 ---

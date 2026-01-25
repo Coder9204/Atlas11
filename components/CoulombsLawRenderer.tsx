@@ -955,13 +955,8 @@ const CoulombsLawRenderer: React.FC<CoulombsLawRendererProps> = ({ onGameEvent }
           {predictions.map((p) => (
             <button
               key={p.id}
-              onMouseDown={() => {
-                playSound('click');
-                setPrediction(p.id);
-                emitGameEvent('prediction_made', { prediction: p.id, predictionLabel: p.label });
-              }}
-              onTouchEnd={(e) => {
-                e.preventDefault();
+              onClick={() => {
+                if (prediction === p.id) return;
                 playSound('click');
                 setPrediction(p.id);
                 emitGameEvent('prediction_made', { prediction: p.id, predictionLabel: p.label });
@@ -975,7 +970,8 @@ const CoulombsLawRenderer: React.FC<CoulombsLawRendererProps> = ({ onGameEvent }
                 border: prediction === p.id ? `2px solid ${colors.primary}` : `1px solid ${colors.border}`,
                 backgroundColor: prediction === p.id ? `${colors.primary}15` : colors.bgCard,
                 cursor: 'pointer',
-                textAlign: 'left'
+                textAlign: 'left',
+                WebkitTapHighlightColor: 'transparent'
               }}
             >
               <span style={{
@@ -1479,13 +1475,8 @@ const CoulombsLawRenderer: React.FC<CoulombsLawRendererProps> = ({ onGameEvent }
           {twistPredictions.map((p) => (
             <button
               key={p.id}
-              onMouseDown={() => {
-                playSound('click');
-                setTwistPrediction(p.id);
-                emitGameEvent('prediction_made', { prediction: p.id, predictionLabel: p.label, twist: true });
-              }}
-              onTouchEnd={(e) => {
-                e.preventDefault();
+              onClick={() => {
+                if (twistPrediction === p.id) return;
                 playSound('click');
                 setTwistPrediction(p.id);
                 emitGameEvent('prediction_made', { prediction: p.id, predictionLabel: p.label, twist: true });
@@ -1499,7 +1490,8 @@ const CoulombsLawRenderer: React.FC<CoulombsLawRendererProps> = ({ onGameEvent }
                 border: twistPrediction === p.id ? `2px solid ${colors.danger}` : `1px solid ${colors.border}`,
                 backgroundColor: twistPrediction === p.id ? `${colors.danger}15` : colors.bgCard,
                 cursor: 'pointer',
-                textAlign: 'left'
+                textAlign: 'left',
+                WebkitTapHighlightColor: 'transparent'
               }}
             >
               <span style={{ fontSize: '20px', width: '40px', textAlign: 'center', fontFamily: 'monospace' }}>{p.icon}</span>
@@ -1511,6 +1503,7 @@ const CoulombsLawRenderer: React.FC<CoulombsLawRendererProps> = ({ onGameEvent }
                   {p.desc}
                 </p>
               </div>
+              {twistPrediction === p.id && <span style={{ color: colors.danger, fontSize: '18px' }}>✓</span>}
             </button>
           ))}
         </div>
@@ -1731,6 +1724,45 @@ const CoulombsLawRenderer: React.FC<CoulombsLawRendererProps> = ({ onGameEvent }
   if (phase === 'transfer') {
     const app = transferApps[activeAppIndex];
     const allComplete = completedApps.every(c => c);
+    const currentAppComplete = completedApps[activeAppIndex];
+    const isLastApp = activeAppIndex === transferApps.length - 1;
+
+    // Handle app tab click with proper event emission
+    const handleAppTabClick = (index: number) => {
+      if (index === activeAppIndex) return; // Already on this app
+
+      // Only allow clicking on completed apps or the next unlocked one
+      const canAccess = index === 0 || completedApps[index - 1] || completedApps[index];
+      if (!canAccess) return;
+
+      setActiveAppIndex(index);
+      const targetApp = transferApps[index];
+      emitGameEvent('app_changed', {
+        appNumber: index + 1,
+        totalApps: 4,
+        appTitle: targetApp.title,
+        appTagline: targetApp.tagline,
+        appConnection: targetApp.connection,
+        message: `NOW viewing Real-World Application ${index + 1}/4: ${targetApp.title}. ${targetApp.tagline}. Physics connection: ${targetApp.connection}`
+      });
+    };
+
+    // Handle continue to next app
+    const handleContinueToNextApp = () => {
+      if (activeAppIndex < transferApps.length - 1) {
+        const nextIndex = activeAppIndex + 1;
+        setActiveAppIndex(nextIndex);
+        const targetApp = transferApps[nextIndex];
+        emitGameEvent('app_changed', {
+          appNumber: nextIndex + 1,
+          totalApps: 4,
+          appTitle: targetApp.title,
+          appTagline: targetApp.tagline,
+          appConnection: targetApp.connection,
+          message: `NOW viewing Real-World Application ${nextIndex + 1}/4: ${targetApp.title}. ${targetApp.tagline}. Physics connection: ${targetApp.connection}`
+        });
+      }
+    };
 
     return renderPremiumWrapper(
       <div style={{ padding: typo.pagePadding }}>
@@ -1739,18 +1771,18 @@ const CoulombsLawRenderer: React.FC<CoulombsLawRendererProps> = ({ onGameEvent }
         {/* App tabs */}
         <div style={{ display: 'flex', gap: '6px', marginBottom: typo.sectionGap, flexWrap: 'wrap' }}>
           {transferApps.map((a, i) => {
-            const isLocked = i > 0 && !completedApps[i - 1];
+            const isLocked = i > 0 && !completedApps[i - 1] && !completedApps[i];
+            const isActive = i === activeAppIndex;
             return (
               <button
                 key={i}
-                onMouseDown={() => !isLocked && setActiveAppIndex(i)}
-                onTouchEnd={(e) => { e.preventDefault(); !isLocked && setActiveAppIndex(i); }}
+                onClick={() => !isLocked && handleAppTabClick(i)}
                 disabled={isLocked}
                 style={{
                   padding: '8px 12px',
                   borderRadius: '8px',
-                  border: activeAppIndex === i ? `2px solid ${colors.primary}` : `1px solid ${colors.border}`,
-                  backgroundColor: activeAppIndex === i ? `${colors.primary}20` : completedApps[i] ? `${colors.success}20` : colors.bgCard,
+                  border: isActive ? `2px solid ${colors.primary}` : `1px solid ${colors.border}`,
+                  backgroundColor: isActive ? `${colors.primary}20` : completedApps[i] ? `${colors.success}20` : colors.bgCard,
                   color: isLocked ? colors.textMuted : colors.textPrimary,
                   fontSize: typo.small,
                   fontWeight: 600,
@@ -1761,7 +1793,7 @@ const CoulombsLawRenderer: React.FC<CoulombsLawRendererProps> = ({ onGameEvent }
                   gap: '4px'
                 }}
               >
-                {isLocked ? '🔒' : completedApps[i] ? '✓' : a.icon}
+                {isLocked ? '🔒' : completedApps[i] && !isActive ? '✓' : a.icon}
                 {!isMobile && a.short}
               </button>
             );
@@ -1829,20 +1861,19 @@ const CoulombsLawRenderer: React.FC<CoulombsLawRendererProps> = ({ onGameEvent }
             </div>
           </div>
 
-          {/* Complete button */}
-          {!completedApps[activeAppIndex] && (
+          {/* Complete button - only show if not completed */}
+          {!currentAppComplete && (
             <button
-              onMouseDown={() => {
+              onClick={() => {
                 playSound('success');
                 const newCompleted = [...completedApps];
                 newCompleted[activeAppIndex] = true;
                 setCompletedApps(newCompleted);
-                emitGameEvent('app_completed', { appNumber: activeAppIndex + 1, appTitle: app.title });
-
-                // Auto-advance to next app
-                if (activeAppIndex < 3 && !completedApps[activeAppIndex + 1]) {
-                  setTimeout(() => setActiveAppIndex(activeAppIndex + 1), 500);
-                }
+                emitGameEvent('app_completed', {
+                  appNumber: activeAppIndex + 1,
+                  appTitle: app.title,
+                  message: `Completed application ${activeAppIndex + 1}/4: ${app.title}`
+                });
               }}
               style={{
                 width: '100%',
@@ -1853,10 +1884,33 @@ const CoulombsLawRenderer: React.FC<CoulombsLawRendererProps> = ({ onGameEvent }
                 color: '#fff',
                 fontSize: typo.body,
                 fontWeight: 700,
-                cursor: 'pointer'
+                cursor: 'pointer',
+                marginBottom: '12px'
               }}
             >
               ✓ Mark as Complete
+            </button>
+          )}
+
+          {/* Continue button - show after completing current app, if not last app */}
+          {currentAppComplete && !isLastApp && (
+            <button
+              onClick={handleContinueToNextApp}
+              style={{
+                width: '100%',
+                padding: '12px',
+                borderRadius: '10px',
+                border: 'none',
+                background: `linear-gradient(135deg, ${colors.primary} 0%, ${colors.accent} 100%)`,
+                color: '#fff',
+                fontSize: typo.body,
+                fontWeight: 700,
+                cursor: 'pointer',
+                boxShadow: `0 4px 20px ${colors.primary}40`,
+                marginBottom: '12px'
+              }}
+            >
+              Continue to {transferApps[activeAppIndex + 1].title} →
             </button>
           )}
         </div>
@@ -1879,7 +1933,8 @@ const CoulombsLawRenderer: React.FC<CoulombsLawRendererProps> = ({ onGameEvent }
           </span>
         </div>
       </div>,
-      renderBottomBar(true, allComplete, 'Take the Test', undefined, colors.warning)
+      // Only show "Take the Test" button after ALL apps are complete
+      allComplete ? renderBottomBar(true, true, 'Take the Test', undefined, colors.warning) : renderBottomBar(true, false, 'Complete all 4 apps first')
     );
   }
 
@@ -2157,26 +2212,52 @@ const CoulombsLawRenderer: React.FC<CoulombsLawRendererProps> = ({ onGameEvent }
 
   // MASTERY
   if (phase === 'mastery') {
+    const percentage = Math.round((testScore / 10) * 100);
+    const isPassing = testScore >= 7;
+
+    // Handle return to dashboard
+    const handleReturnToDashboard = () => {
+      emitGameEvent('button_clicked', {
+        action: 'return_to_dashboard',
+        message: 'User requested to return to dashboard'
+      });
+      window.dispatchEvent(new CustomEvent('returnToDashboard'));
+    };
+
     return renderPremiumWrapper(
       <div style={{ padding: typo.pagePadding, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-        {renderSectionHeader('Step 10 • Mastery Achieved', "Coulomb's Law Master!")}
+        {renderSectionHeader(
+          'Step 10 • Results',
+          isPassing ? "Coulomb's Law Master!" : 'Keep Practicing!'
+        )}
 
         {/* Badge */}
         <div style={{
           width: '120px',
           height: '120px',
           borderRadius: '50%',
-          background: `linear-gradient(135deg, ${colors.positive} 0%, ${colors.negative} 100%)`,
+          background: isPassing
+            ? `linear-gradient(135deg, ${colors.positive} 0%, ${colors.negative} 100%)`
+            : colors.bgCardLight,
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          marginBottom: '24px',
-          boxShadow: `0 0 40px ${colors.primary}40`
+          marginBottom: '16px',
+          boxShadow: isPassing ? `0 0 40px ${colors.primary}40` : 'none'
         }}>
-          <span style={{ fontSize: '56px' }}>⚡</span>
+          <span style={{ fontSize: '56px' }}>{isPassing ? '⚡' : '📚'}</span>
         </div>
 
-        {/* Mastered concepts */}
+        {/* Score */}
+        <p style={{ fontSize: typo.bodyLarge, color: colors.textSecondary, marginBottom: '8px' }}>
+          You scored <span style={{ fontWeight: 700, color: isPassing ? colors.success : colors.danger }}>{testScore}/10</span> ({percentage}%)
+        </p>
+
+        <p style={{ fontSize: typo.small, color: colors.textMuted, marginBottom: '24px', textAlign: 'center' }}>
+          {isPassing ? "Congratulations! You've mastered Coulomb's Law!" : 'You need 70% to pass. Review and try again!'}
+        </p>
+
+        {/* Mastered concepts - only show checkmarks if passing */}
         <div style={{ width: '100%', maxWidth: '400px', marginBottom: '24px' }}>
           {masteryItems.map((item, i) => (
             <div key={i} style={{
@@ -2189,17 +2270,19 @@ const CoulombsLawRenderer: React.FC<CoulombsLawRendererProps> = ({ onGameEvent }
               borderRadius: '10px',
               marginBottom: '8px'
             }}>
-              <span style={{
-                width: '24px',
-                height: '24px',
-                borderRadius: '50%',
-                backgroundColor: colors.success,
-                color: '#fff',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                fontSize: '12px'
-              }}>✓</span>
+              {isPassing && (
+                <span style={{
+                  width: '24px',
+                  height: '24px',
+                  borderRadius: '50%',
+                  backgroundColor: colors.success,
+                  color: '#fff',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: '12px'
+                }}>✓</span>
+              )}
               <span style={{ fontSize: '20px' }}>{item.icon}</span>
               <div>
                 <p style={{ fontSize: typo.body, fontWeight: 700, color: colors.textPrimary, margin: 0 }}>{item.title}</p>
@@ -2228,39 +2311,86 @@ const CoulombsLawRenderer: React.FC<CoulombsLawRendererProps> = ({ onGameEvent }
         </div>
 
         {/* Action buttons */}
-        <button
-          onMouseDown={() => goToPhase('play')}
-          style={{
-            padding: '14px 28px',
-            borderRadius: '12px',
-            border: 'none',
-            background: `linear-gradient(135deg, ${colors.primary} 0%, ${colors.accent} 100%)`,
-            color: '#fff',
-            fontSize: typo.bodyLarge,
-            fontWeight: 700,
-            cursor: 'pointer',
-            marginBottom: '12px',
-            boxShadow: `0 4px 20px ${colors.primary}40`
-          }}
-        >
-          🔬 Free Exploration Mode
-        </button>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', width: '100%', maxWidth: '300px' }}>
+          {/* Primary action */}
+          {isPassing ? (
+            <button
+              onClick={handleReturnToDashboard}
+              style={{
+                padding: '14px 28px',
+                borderRadius: '12px',
+                border: 'none',
+                background: `linear-gradient(135deg, ${colors.primary} 0%, ${colors.accent} 100%)`,
+                color: '#fff',
+                fontSize: typo.bodyLarge,
+                fontWeight: 700,
+                cursor: 'pointer',
+                boxShadow: `0 4px 20px ${colors.primary}40`
+              }}
+            >
+              🏠 Return to Dashboard
+            </button>
+          ) : (
+            <button
+              onClick={() => {
+                setShowResults(false);
+                setTestAnswers(Array(10).fill(null));
+                setCurrentQuestion(0);
+                goToPhase('test');
+              }}
+              style={{
+                padding: '14px 28px',
+                borderRadius: '12px',
+                border: 'none',
+                background: `linear-gradient(135deg, ${colors.primary} 0%, ${colors.accent} 100%)`,
+                color: '#fff',
+                fontSize: typo.bodyLarge,
+                fontWeight: 700,
+                cursor: 'pointer',
+                boxShadow: `0 4px 20px ${colors.primary}40`
+              }}
+            >
+              ↺ Retake Test
+            </button>
+          )}
 
-        <button
-          onMouseDown={() => goToPhase('hook')}
-          style={{
-            padding: '12px 24px',
-            borderRadius: '10px',
-            border: `1px solid ${colors.border}`,
-            backgroundColor: 'transparent',
-            color: colors.textSecondary,
-            fontSize: typo.body,
-            fontWeight: 600,
-            cursor: 'pointer'
-          }}
-        >
-          ↺ Start Over from Beginning
-        </button>
+          {/* Secondary action - Review Lesson */}
+          <button
+            onClick={() => goToPhase('hook')}
+            style={{
+              padding: '12px 24px',
+              borderRadius: '10px',
+              border: `1px solid ${colors.border}`,
+              backgroundColor: 'transparent',
+              color: colors.textSecondary,
+              fontSize: typo.body,
+              fontWeight: 600,
+              cursor: 'pointer'
+            }}
+          >
+            🔬 Review Lesson
+          </button>
+
+          {/* Tertiary action - Return to Dashboard (if not passing) */}
+          {!isPassing && (
+            <button
+              onClick={handleReturnToDashboard}
+              style={{
+                padding: '12px 24px',
+                borderRadius: '10px',
+                border: 'none',
+                background: 'transparent',
+                color: colors.textMuted,
+                fontWeight: 600,
+                fontSize: typo.small,
+                cursor: 'pointer',
+                textDecoration: 'underline'
+              }}
+            >
+              Return to Dashboard
+            </button>
+          )}
+        </div>
       </div>
     );
   }

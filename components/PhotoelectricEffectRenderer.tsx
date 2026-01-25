@@ -624,6 +624,13 @@ const PhotoelectricEffectRenderer: React.FC<PhotoelectricEffectRendererProps> = 
       { id: 'both', label: 'Both brightness and color', desc: 'Energy accumulates from both factors', icon: '⚖️', tag: 'Combined' },
     ];
 
+    const handlePredictionSelect = (optId: string, optLabel: string) => {
+      if (prediction === optId) return; // Already selected
+      playSound('click');
+      setPrediction(optId);
+      emitGameEvent('prediction_made', { prediction: optId, predictionLabel: optLabel });
+    };
+
     return renderPremiumWrapper(
       <div style={{ padding: typo.pagePadding }}>
         {renderSectionHeader('Step 2 • Make Your Prediction', 'What makes electrons fly out faster?', 'When light hits a metal surface, electrons can be knocked free. What determines how fast they fly out?')}
@@ -632,21 +639,13 @@ const PhotoelectricEffectRenderer: React.FC<PhotoelectricEffectRendererProps> = 
           {options.map(opt => (
             <button
               key={opt.id}
-              onMouseDown={(e) => {
-                e.preventDefault();
-                setPrediction(opt.id);
-                emitGameEvent('prediction_made', { prediction: opt.id, predictionLabel: opt.label });
-              }}
-              onTouchEnd={(e) => {
-                e.preventDefault();
-                setPrediction(opt.id);
-                emitGameEvent('prediction_made', { prediction: opt.id, predictionLabel: opt.label });
-              }}
+              onClick={() => handlePredictionSelect(opt.id, opt.label)}
               style={{
                 display: 'flex', alignItems: 'center', gap: '12px', width: '100%', padding: typo.cardPadding, borderRadius: '16px',
                 border: `2px solid ${prediction === opt.id ? colors.primary : colors.border}`,
                 background: prediction === opt.id ? `${colors.primary}15` : colors.bgCard,
-                textAlign: 'left', cursor: 'pointer', transition: 'all 0.2s'
+                textAlign: 'left', cursor: 'pointer', transition: 'all 0.2s',
+                WebkitTapHighlightColor: 'transparent'
               }}
             >
               <div style={{ width: '44px', height: '44px', borderRadius: '12px', background: prediction === opt.id ? colors.primary : colors.bgCardLight, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '20px', flexShrink: 0 }}>
@@ -689,9 +688,20 @@ const PhotoelectricEffectRenderer: React.FC<PhotoelectricEffectRendererProps> = 
           <div style={{ marginBottom: '20px' }}>
             <label style={{ display: 'block', fontSize: typo.label, fontWeight: 700, color: colors.primary, marginBottom: '8px', textTransform: 'uppercase' }}>Wavelength (λ)</label>
             <input
-              type="range" min="200" max="700" value={wavelength}
+              type="range" min="200" max="700" step="1" value={wavelength}
+              onInput={(e) => { setWavelength(parseInt((e.target as HTMLInputElement).value)); setHasExperimented(true); }}
               onChange={(e) => { setWavelength(parseInt(e.target.value)); setHasExperimented(true); }}
-              style={{ width: '100%', accentColor: colors.primary }}
+              style={{
+                width: '100%',
+                accentColor: colors.primary,
+                cursor: 'pointer',
+                height: '8px',
+                WebkitAppearance: 'none',
+                appearance: 'none',
+                background: `linear-gradient(to right, ${colors.accent}, ${colors.primary}, ${colors.warning}, ${colors.danger})`,
+                borderRadius: '4px',
+                outline: 'none'
+              }}
             />
             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: typo.small, color: colors.textMuted, marginTop: '4px' }}>
               <span>UV</span>
@@ -787,6 +797,13 @@ const PhotoelectricEffectRenderer: React.FC<PhotoelectricEffectRendererProps> = 
       { id: 'slower', label: 'Brighter light = slower electrons', desc: 'Energy gets divided among more electrons', icon: '⬇️' },
     ];
 
+    const handleTwistPredictionSelect = (optId: string, optLabel: string) => {
+      if (twistPrediction === optId) return; // Already selected
+      playSound('click');
+      setTwistPrediction(optId);
+      emitGameEvent('prediction_made', { prediction: optId, predictionLabel: optLabel, twist: true });
+    };
+
     return renderPremiumWrapper(
       <div style={{ padding: typo.pagePadding }}>
         {renderSectionHeader('Step 5 • The Paradox', 'Classical Physics Got It Wrong!', 'Before Einstein, physicists expected brighter light would make electrons fly faster. What do YOU predict?')}
@@ -795,13 +812,13 @@ const PhotoelectricEffectRenderer: React.FC<PhotoelectricEffectRendererProps> = 
           {options.map(opt => (
             <button
               key={opt.id}
-              onMouseDown={(e) => { e.preventDefault(); setTwistPrediction(opt.id); }}
-              onTouchEnd={(e) => { e.preventDefault(); setTwistPrediction(opt.id); }}
+              onClick={() => handleTwistPredictionSelect(opt.id, opt.label)}
               style={{
                 display: 'flex', alignItems: 'center', gap: '12px', width: '100%', padding: typo.cardPadding, borderRadius: '16px',
                 border: `2px solid ${twistPrediction === opt.id ? colors.accent : colors.border}`,
                 background: twistPrediction === opt.id ? `${colors.accent}15` : colors.bgCard,
-                textAlign: 'left', cursor: 'pointer'
+                textAlign: 'left', cursor: 'pointer',
+                WebkitTapHighlightColor: 'transparent'
               }}
             >
               <div style={{ width: '44px', height: '44px', borderRadius: '12px', background: twistPrediction === opt.id ? colors.accent : colors.bgCardLight, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '20px' }}>{opt.icon}</div>
@@ -809,6 +826,7 @@ const PhotoelectricEffectRenderer: React.FC<PhotoelectricEffectRendererProps> = 
                 <span style={{ fontSize: typo.body, fontWeight: 700, color: twistPrediction === opt.id ? colors.accent : colors.textPrimary }}>{opt.label}</span>
                 <p style={{ fontSize: typo.small, color: colors.textSecondary }}>{opt.desc}</p>
               </div>
+              {twistPrediction === opt.id && <span style={{ color: colors.accent, fontSize: '18px' }}>✓</span>}
             </button>
           ))}
         </div>
@@ -907,26 +925,73 @@ const PhotoelectricEffectRenderer: React.FC<PhotoelectricEffectRendererProps> = 
   if (phase === 'transfer') {
     const app = applications[activeApp];
     const allComplete = completedApps.every(c => c);
+    const currentAppComplete = completedApps[activeApp];
+    const isLastApp = activeApp === applications.length - 1;
+
+    // Handle app tab click with proper event emission
+    const handleAppTabClick = (index: number) => {
+      if (index === activeApp) return; // Already on this app
+
+      // Only allow clicking on completed apps or the next unlocked one
+      const canAccess = index === 0 || completedApps[index - 1] || completedApps[index];
+      if (!canAccess) return;
+
+      setActiveApp(index);
+      const targetApp = applications[index];
+      emitGameEvent('app_changed', {
+        appNumber: index + 1,
+        totalApps: 4,
+        appTitle: targetApp.title,
+        appTagline: targetApp.tagline,
+        appConnection: targetApp.connection,
+        message: `NOW viewing Real-World Application ${index + 1}/4: ${targetApp.title}. ${targetApp.tagline}. Physics connection: ${targetApp.connection}`
+      });
+    };
+
+    // Handle continue to next app
+    const handleContinueToNextApp = () => {
+      if (activeApp < applications.length - 1) {
+        const nextIndex = activeApp + 1;
+        setActiveApp(nextIndex);
+        const targetApp = applications[nextIndex];
+        emitGameEvent('app_changed', {
+          appNumber: nextIndex + 1,
+          totalApps: 4,
+          appTitle: targetApp.title,
+          appTagline: targetApp.tagline,
+          appConnection: targetApp.connection,
+          message: `NOW viewing Real-World Application ${nextIndex + 1}/4: ${targetApp.title}. ${targetApp.tagline}. Physics connection: ${targetApp.connection}`
+        });
+      }
+    };
 
     return renderPremiumWrapper(
       <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
         {/* Tab bar */}
         <div style={{ display: 'flex', gap: '8px', padding: '12px', overflowX: 'auto', background: `${colors.bgCard}80`, borderBottom: `1px solid ${colors.border}` }}>
-          {applications.map((a, i) => (
-            <button
-              key={i}
-              onMouseDown={(e) => { e.preventDefault(); setActiveApp(i); emitGameEvent('app_changed', { appNumber: i + 1, appTitle: a.title }); }}
-              style={{
-                display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 16px', borderRadius: '12px', border: 'none',
-                background: i === activeApp ? app.color : colors.bgCardLight,
-                color: i === activeApp ? 'white' : colors.textSecondary,
-                fontWeight: 600, fontSize: typo.small, cursor: 'pointer', whiteSpace: 'nowrap'
-              }}
-            >
-              {a.icon} {a.title.split(' ')[0]}
-              {completedApps[i] && <span style={{ marginLeft: '4px' }}>✓</span>}
-            </button>
-          ))}
+          {applications.map((a, i) => {
+            const isLocked = i > 0 && !completedApps[i - 1] && !completedApps[i];
+            const isActive = i === activeApp;
+            return (
+              <button
+                key={i}
+                onClick={() => !isLocked && handleAppTabClick(i)}
+                disabled={isLocked}
+                style={{
+                  display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 16px', borderRadius: '12px', border: 'none',
+                  background: isActive ? app.color : completedApps[i] ? `${colors.success}20` : colors.bgCardLight,
+                  color: isActive ? 'white' : isLocked ? colors.textMuted : colors.textSecondary,
+                  fontWeight: 600, fontSize: typo.small,
+                  cursor: isLocked ? 'not-allowed' : 'pointer',
+                  whiteSpace: 'nowrap',
+                  opacity: isLocked ? 0.5 : 1
+                }}
+              >
+                {isLocked ? '🔒' : a.icon} {a.title.split(' ')[0]}
+                {completedApps[i] && !isActive && <span style={{ marginLeft: '4px', color: colors.success }}>✓</span>}
+              </button>
+            );
+          })}
         </div>
 
         {/* Content */}
@@ -958,33 +1023,58 @@ const PhotoelectricEffectRenderer: React.FC<PhotoelectricEffectRendererProps> = 
             <p style={{ fontSize: typo.small, color: colors.textSecondary, lineHeight: 1.5 }}>{app.connection}</p>
           </div>
 
-          {/* Mark complete button */}
-          {!completedApps[activeApp] && (
+          {/* Mark complete button - only show if not completed */}
+          {!currentAppComplete && (
             <button
-              onMouseDown={(e) => {
-                e.preventDefault();
+              onClick={() => {
                 const newCompleted = [...completedApps];
                 newCompleted[activeApp] = true;
                 setCompletedApps(newCompleted);
-                emitGameEvent('app_completed', { appNumber: activeApp + 1, appTitle: app.title });
-                if (activeApp < applications.length - 1) setActiveApp(activeApp + 1);
+                playSound('success');
+                emitGameEvent('app_completed', {
+                  appNumber: activeApp + 1,
+                  appTitle: app.title,
+                  message: `Completed application ${activeApp + 1}/4: ${app.title}`
+                });
               }}
-              style={{ width: '100%', padding: '14px', borderRadius: '12px', border: `2px solid ${app.color}`, background: `${app.color}15`, color: app.color, fontWeight: 700, fontSize: typo.body, cursor: 'pointer' }}
+              style={{ width: '100%', padding: '14px', borderRadius: '12px', border: `2px solid ${app.color}`, background: `${app.color}15`, color: app.color, fontWeight: 700, fontSize: typo.body, cursor: 'pointer', marginBottom: '12px' }}
             >
-              ✓ Complete "{app.title}"
+              ✓ Mark as Complete
+            </button>
+          )}
+
+          {/* Continue button - show after completing current app, if not last app */}
+          {currentAppComplete && !isLastApp && (
+            <button
+              onClick={handleContinueToNextApp}
+              style={{
+                width: '100%',
+                padding: '14px',
+                borderRadius: '12px',
+                border: 'none',
+                background: `linear-gradient(135deg, ${colors.primary} 0%, ${colors.accent} 100%)`,
+                color: 'white',
+                fontWeight: 700,
+                fontSize: typo.body,
+                cursor: 'pointer',
+                boxShadow: `0 4px 20px ${colors.primary}40`,
+                marginBottom: '12px'
+              }}
+            >
+              Continue to {applications[activeApp + 1].title} →
             </button>
           )}
 
           {/* Progress */}
-          <div style={{ marginTop: '16px', padding: '12px', borderRadius: '12px', background: colors.bgCardLight, textAlign: 'center' }}>
+          <div style={{ marginTop: '8px', padding: '12px', borderRadius: '12px', background: colors.bgCardLight, textAlign: 'center' }}>
             <p style={{ fontSize: typo.small, fontWeight: 600, color: allComplete ? colors.success : colors.textSecondary }}>
               {allComplete ? '✓ All applications complete! Ready for test.' : `Progress: ${completedApps.filter(c => c).length}/4 applications`}
             </p>
           </div>
         </div>
       </div>,
-      renderBottomBar(true, allComplete, 'Take the Test')
-    );
+      // Only show "Take the Test" button after ALL apps are complete
+      allComplete ? renderBottomBar(true, true, 'Take the Test') : renderBottomBar(true, false, `Complete all 4 apps first`)
   }
 
   // TEST PHASE
@@ -1030,23 +1120,27 @@ const PhotoelectricEffectRenderer: React.FC<PhotoelectricEffectRendererProps> = 
               else if (isSelected) { bg = `${colors.danger}15`; border = colors.danger; }
             }
 
+            const handleAnswerSelect = () => {
+              if (answered) return;
+              playSound('click');
+              setSelectedAnswer(i);
+              setShowExplanation(true);
+              if (isCorrect) setTestScore(s => s + 1);
+              const newAnswers = [...testAnswers];
+              newAnswers[currentQuestion] = i;
+              setTestAnswers(newAnswers);
+              emitGameEvent(isCorrect ? 'correct_answer' : 'incorrect_answer', { questionNumber: currentQuestion + 1, answer: opt.label, isCorrect });
+            };
+
             return (
               <button
                 key={i}
-                onMouseDown={(e) => {
-                  e.preventDefault();
-                  if (answered) return;
-                  setSelectedAnswer(i);
-                  setShowExplanation(true);
-                  if (isCorrect) setTestScore(s => s + 1);
-                  const newAnswers = [...testAnswers];
-                  newAnswers[currentQuestion] = i;
-                  setTestAnswers(newAnswers);
-                  emitGameEvent(isCorrect ? 'correct_answer' : 'incorrect_answer', { questionNumber: currentQuestion + 1, answer: opt.label, isCorrect });
-                }}
+                onClick={handleAnswerSelect}
                 style={{
                   display: 'flex', alignItems: 'center', gap: '12px', width: '100%', padding: '14px', borderRadius: '12px',
-                  border: `2px solid ${border}`, background: bg, textAlign: 'left', cursor: answered ? 'default' : 'pointer'
+                  border: `2px solid ${border}`, background: bg, textAlign: 'left',
+                  cursor: answered ? 'default' : 'pointer',
+                  WebkitTapHighlightColor: 'transparent'
                 }}
               >
                 <div style={{ width: '28px', height: '28px', borderRadius: '50%', background: answered && isCorrect ? colors.success : colors.bgCardLight, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: typo.small, fontWeight: 700, color: answered && isCorrect ? 'white' : colors.textSecondary, flexShrink: 0 }}>
@@ -1069,8 +1163,8 @@ const PhotoelectricEffectRenderer: React.FC<PhotoelectricEffectRendererProps> = 
         {/* Next button */}
         {showExplanation && (
           <button
-            onMouseDown={(e) => {
-              e.preventDefault();
+            onClick={() => {
+              playSound('transition');
               if (currentQuestion === testQuestions.length - 1) {
                 emitGameEvent('game_completed', { score: testScore, maxScore: testQuestions.length, percentage: Math.round((testScore / testQuestions.length) * 100) });
                 goToPhase('mastery');
@@ -1096,6 +1190,16 @@ const PhotoelectricEffectRenderer: React.FC<PhotoelectricEffectRendererProps> = 
     const percentage = Math.round((testScore / testQuestions.length) * 100);
     const isPassing = percentage >= 70;
 
+    // Handle return to dashboard - emit event for parent to handle
+    const handleReturnToDashboard = () => {
+      emitGameEvent('button_clicked', {
+        action: 'return_to_dashboard',
+        message: 'User requested to return to dashboard'
+      });
+      // Dispatch custom event for App.tsx to handle
+      window.dispatchEvent(new CustomEvent('returnToDashboard'));
+    };
+
     return renderPremiumWrapper(
       <div style={{ padding: typo.pagePadding, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '80vh', textAlign: 'center' }}>
         {/* Trophy */}
@@ -1103,13 +1207,19 @@ const PhotoelectricEffectRenderer: React.FC<PhotoelectricEffectRendererProps> = 
           <span style={{ fontSize: '50px' }}>{isPassing ? '🏆' : '📚'}</span>
         </div>
 
-        <h1 style={{ fontSize: typo.title, fontWeight: 800, marginBottom: '8px' }}>{isPassing ? 'Quantum Master!' : 'Keep Learning!'}</h1>
+        <h1 style={{ fontSize: typo.title, fontWeight: 800, marginBottom: '8px' }}>
+          {isPassing ? 'Photoelectric Master!' : 'Keep Practicing!'}
+        </h1>
 
-        <p style={{ fontSize: typo.bodyLarge, color: colors.textSecondary, marginBottom: '24px' }}>
-          You scored <span style={{ fontWeight: 700, color: isPassing ? colors.success : colors.warning }}>{testScore}/{testQuestions.length}</span> ({percentage}%)
+        <p style={{ fontSize: typo.bodyLarge, color: colors.textSecondary, marginBottom: '8px' }}>
+          You scored <span style={{ fontWeight: 700, color: isPassing ? colors.success : colors.danger }}>{testScore}/{testQuestions.length}</span> ({percentage}%)
         </p>
 
-        {/* Key learnings */}
+        <p style={{ fontSize: typo.small, color: colors.textMuted, marginBottom: '24px' }}>
+          {isPassing ? 'Congratulations! You\'ve mastered the photoelectric effect!' : 'You need 70% to pass. Review and try again!'}
+        </p>
+
+        {/* Key learnings - only show with checkmarks if passing */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', width: '100%', maxWidth: '400px', marginBottom: '32px' }}>
           {masteryItems.map((item, i) => (
             <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px', borderRadius: '12px', background: `${item.color}10`, border: `1px solid ${item.color}30` }}>
@@ -1118,17 +1228,34 @@ const PhotoelectricEffectRenderer: React.FC<PhotoelectricEffectRendererProps> = 
                 <p style={{ fontWeight: 700, color: colors.textPrimary, fontSize: typo.body }}>{item.title}</p>
                 <p style={{ fontSize: typo.small, color: colors.textSecondary }}>{item.desc}</p>
               </div>
-              <span style={{ color: colors.success }}>✓</span>
+              {isPassing && <span style={{ color: colors.success }}>✓</span>}
             </div>
           ))}
         </div>
 
         {/* Action buttons */}
-        <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', justifyContent: 'center' }}>
-          {!isPassing && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', width: '100%', maxWidth: '300px' }}>
+          {/* Primary action */}
+          {isPassing ? (
             <button
-              onMouseDown={(e) => {
-                e.preventDefault();
+              onClick={handleReturnToDashboard}
+              style={{
+                padding: '14px 24px',
+                borderRadius: '12px',
+                border: 'none',
+                background: `linear-gradient(135deg, ${colors.primary} 0%, ${colors.accent} 100%)`,
+                color: 'white',
+                fontWeight: 700,
+                fontSize: typo.body,
+                cursor: 'pointer',
+                boxShadow: `0 4px 20px ${colors.primary}40`
+              }}
+            >
+              🏠 Return to Dashboard
+            </button>
+          ) : (
+            <button
+              onClick={() => {
                 setCurrentQuestion(0);
                 setTestScore(0);
                 setSelectedAnswer(null);
@@ -1136,20 +1263,58 @@ const PhotoelectricEffectRenderer: React.FC<PhotoelectricEffectRendererProps> = 
                 setTestAnswers(Array(10).fill(null));
                 goToPhase('test');
               }}
-              style={{ padding: '14px 24px', borderRadius: '12px', border: 'none', background: colors.bgCardLight, color: colors.textSecondary, fontWeight: 700, fontSize: typo.body, cursor: 'pointer' }}
+              style={{
+                padding: '14px 24px',
+                borderRadius: '12px',
+                border: 'none',
+                background: `linear-gradient(135deg, ${colors.primary} 0%, ${colors.accent} 100%)`,
+                color: 'white',
+                fontWeight: 700,
+                fontSize: typo.body,
+                cursor: 'pointer',
+                boxShadow: `0 4px 20px ${colors.primary}40`
+              }}
             >
-              ↺ Try Again
+              ↺ Retake Test
             </button>
           )}
+
+          {/* Secondary action - Review Lesson */}
           <button
-            onMouseDown={(e) => {
-              e.preventDefault();
-              goToPhase('hook');
+            onClick={() => goToPhase('hook')}
+            style={{
+              padding: '14px 24px',
+              borderRadius: '12px',
+              border: `1px solid ${colors.border}`,
+              background: colors.bgCardLight,
+              color: colors.textSecondary,
+              fontWeight: 700,
+              fontSize: typo.body,
+              cursor: 'pointer'
             }}
-            style={{ padding: '14px 24px', borderRadius: '12px', border: 'none', background: `linear-gradient(135deg, ${colors.primary} 0%, ${colors.accent} 100%)`, color: 'white', fontWeight: 700, fontSize: typo.body, cursor: 'pointer' }}
           >
-            🔬 Explore Again
+            🔬 Review Lesson
           </button>
+
+          {/* Tertiary action - Return to Dashboard (if passing, it's primary; if not, show it here) */}
+          {!isPassing && (
+            <button
+              onClick={handleReturnToDashboard}
+              style={{
+                padding: '12px 24px',
+                borderRadius: '12px',
+                border: 'none',
+                background: 'transparent',
+                color: colors.textMuted,
+                fontWeight: 600,
+                fontSize: typo.small,
+                cursor: 'pointer',
+                textDecoration: 'underline'
+              }}
+            >
+              Return to Dashboard
+            </button>
+          )}
         </div>
 
         {/* Quote */}
