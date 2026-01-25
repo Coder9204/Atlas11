@@ -225,6 +225,17 @@ const PhotoelectricEffectRenderer: React.FC<PhotoelectricEffectRendererProps> = 
     });
   }, []);
 
+  // Reset test state when entering test phase
+  useEffect(() => {
+    if (phase === 'test') {
+      setCurrentQuestion(0);
+      setTestScore(0);
+      setSelectedAnswer(null);
+      setShowExplanation(false);
+      setTestAnswers(Array(10).fill(null));
+    }
+  }, [phase]);
+
   // ============ NAVIGATION ============
   const goToPhase = useCallback((p: PEPhase) => {
     const now = Date.now();
@@ -1089,6 +1100,7 @@ const PhotoelectricEffectRenderer: React.FC<PhotoelectricEffectRendererProps> = 
       </div>,
       // Only show "Take the Test" button after ALL apps are complete
       allComplete ? renderBottomBar(true, true, 'Take the Test') : renderBottomBar(true, false, `Complete all 4 apps first`)
+    );
   }
 
   // TEST PHASE

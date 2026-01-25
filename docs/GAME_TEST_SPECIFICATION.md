@@ -361,12 +361,13 @@ interface Application {
 - Track progress: `X/4 completed`
 
 **App Navigation (CRITICAL):**
-- After marking an app complete, show "Continue to [Next App] →" button
-- "Take Test" button ONLY appears in bottom bar after ALL 4 apps are completed
-- Tab clicks must emit `app_changed` event with full details for AI coach sync
+- After marking an app complete, show **"Continue to [Next App] →"** button (PRIMARY action)
+- **"Take Test" button ONLY appears in bottom bar after ALL 4 apps are completed** - NOT on first app!
+- Tab clicks must emit `app_changed` event with **full details including screenDescription and coachMessage** for AI coach sync
 - Tab clicks should only work for: current app, completed apps, and next unlockable app
+- **AI Coach must receive app-specific content** - override generic phase descriptions with app-specific ones
 
-**Tab Click Handler:**
+**Tab Click Handler (CRITICAL for AI Coach sync):**
 ```typescript
 const handleAppTabClick = (index: number) => {
    if (index === activeApp) return; // Already on this app
@@ -377,23 +378,74 @@ const handleAppTabClick = (index: number) => {
 
    setActiveApp(index);
    const targetApp = applications[index];
+
+   // CRITICAL: Override screenDescription and coachMessage with app-specific content
+   // This ensures the AI coach talks about the CORRECT app, not generic phase info
+   const appScreenDescription = `REAL WORLD APPLICATION ${index + 1}/4: "${targetApp.title}" - ${targetApp.tagline}. ${targetApp.description}`;
+   const appCoachMessage = `Now let's explore ${targetApp.title}! ${targetApp.tagline}. ${targetApp.connection}`;
+
    emitGameEvent('app_changed', {
       appNumber: index + 1,
       totalApps: 4,
       appTitle: targetApp.title,
       appTagline: targetApp.tagline,
       appConnection: targetApp.connection,
-      message: `NOW viewing Real-World Application ${index + 1}/4: ${targetApp.title}.`
+      screenDescription: appScreenDescription,  // Override for AI coach
+      coachMessage: appCoachMessage,            // Override for AI coach
+      message: `NOW viewing Real-World Application ${index + 1}/4: ${targetApp.title}. ${targetApp.tagline}. Physics connection: ${targetApp.connection}`
    });
+};
+```
+
+**Continue Button Handler:**
+```typescript
+const handleContinueToNextApp = () => {
+   if (activeApp < applications.length - 1) {
+      const nextIndex = activeApp + 1;
+      setActiveApp(nextIndex);
+      const targetApp = applications[nextIndex];
+
+      // Same pattern - override with app-specific content
+      const appScreenDescription = `REAL WORLD APPLICATION ${nextIndex + 1}/4: "${targetApp.title}" - ${targetApp.tagline}. ${targetApp.description}`;
+      const appCoachMessage = `Now let's explore ${targetApp.title}! ${targetApp.tagline}. ${targetApp.connection}`;
+
+      emitGameEvent('app_changed', {
+         appNumber: nextIndex + 1,
+         totalApps: 4,
+         appTitle: targetApp.title,
+         appTagline: targetApp.tagline,
+         appConnection: targetApp.connection,
+         screenDescription: appScreenDescription,
+         coachMessage: appCoachMessage,
+         message: `NOW viewing Real-World Application ${nextIndex + 1}/4: ${targetApp.title}.`
+      });
+   }
 };
 ```
 
 **Custom Footer for Transfer:**
 - Back button (← to twist_review)
-- "Take Test →" button ONLY when `allComplete === true`
+- **"Take Test →" button ONLY when `allComplete === true`**
 - When not all complete: show disabled "Complete all 4 apps first"
+- **WRONG:** Showing "Take Test" on first application
+- **CORRECT:** User must complete all 4 apps before seeing "Take Test"
 
 ### 4.9 Test Phase
+
+**Test State Reset (CRITICAL):**
+Always reset test state when entering the test phase to ensure a clean start:
+```typescript
+// Reset test state when entering test phase
+useEffect(() => {
+   if (phase === 'test') {
+      setCurrentQuestion(0);
+      setTestScore(0);
+      setSelectedAnswer(null);
+      setShowExplanation(false);
+      setTestAnswers(Array(10).fill(null));
+   }
+}, [phase]);
+```
 
 **Question Data Structure:**
 ```typescript
@@ -733,7 +785,13 @@ const goToPhase = useCallback((p: Phase) => {
 | Scroll not working | Component remounts | Use render function, not component |
 | Bottom bar hidden | Footer inside wrapper | Use footer prop in renderPremiumWrapper |
 | Buttons not clicking | Overlay blocking | Add `pointerEvents: 'none'` to decorative elements |
-| Mobile tap issues | Using only onClick | Add both `onMouseDown` and `onTouchEnd` |
+| Multiple clicks needed for selection | Using onMouseDown/onTouchEnd | Use `onClick` with early return if already selected |
+| Sliders not smooth | Missing onInput handler | Add both `onInput` and `onChange` handlers |
+| AI coach talks about wrong app | Generic phase info sent | Override `screenDescription` and `coachMessage` in app events |
+| "Take Test" shown too early | Wrong condition check | Only show when `allComplete === true` (all 4 apps done) |
+| Says "Mastered" with 0/10 | Missing pass/fail logic | Check `isPassing = testScore >= 7` (70% threshold) |
+| Test has wrong question count | Stale state / syntax error | Reset test state in useEffect when entering test phase |
+| No Return to Dashboard option | Missing button on mastery | Add both "Return to Dashboard" AND "Review Lesson" buttons |
 | AI out of sync | Missing events | Emit `phase_changed` on every transition |
 | Phase skipping | Wrong conditions | Check `canGoNext` logic |
 | Double transitions | No debounce | Add `isNavigating` ref with 400ms timeout |
@@ -751,6 +809,7 @@ const goToPhase = useCallback((p: Phase) => {
 - [ ] Phase sequence correct
 - [ ] renderPremiumWrapper used (NOT a component)
 - [ ] Footer prop pattern used
+- [ ] **Quick Link added to dashboard page**
 
 ### Design
 - [ ] Colors object matches spec
@@ -760,13 +819,19 @@ const goToPhase = useCallback((p: Phase) => {
 
 ### Content
 - [ ] Hook has animated visual, quote, CTA
-- [ ] Predict has 3 options with icons
-- [ ] Play has interactive simulation + milestones
+- [ ] Predict has 3 options with icons - **single click selection works**
+- [ ] Play has interactive simulation + milestones - **sliders are smooth**
 - [ ] Review has 3 key takeaways
 - [ ] Twist has observer toggle
 - [ ] Transfer has 4 apps with sequential unlock
-- [ ] Test has 10 scenario-based questions
+- [ ] Transfer: "Continue" button shows after each app completion
+- [ ] Transfer: "Take Test" ONLY visible after ALL 4 apps complete
+- [ ] Transfer: Tab clicks show correct app AND AI talks about correct app
+- [ ] Test has 10 scenario-based questions - **state resets on entry**
 - [ ] Mastery has 5 concepts + action buttons
+- [ ] Mastery: Pass/fail logic correct (70% threshold)
+- [ ] Mastery: "Return to Dashboard" option available
+- [ ] Mastery: "Review Lesson" option available
 
 ### AI Integration
 - [ ] game_started emitted on mount
@@ -778,6 +843,8 @@ const goToPhase = useCallback((p: Phase) => {
 ### Polish
 - [ ] Sound effects on transitions
 - [ ] Debounced navigation (no double-clicks)
+- [ ] **Single-click selection works** (use onClick, not onMouseDown/onTouchEnd)
+- [ ] **Sliders smooth** (use onInput + onChange)
 - [ ] Touch events work on mobile
 - [ ] Animations smooth
 - [ ] Loading states if needed
@@ -815,4 +882,152 @@ components/
 14. Content data (predictions, testQuestions, transferApps, masteryItems)
 15. Phase render blocks (if/return for each phase)
 16. Export default
+```
+
+---
+
+## 12. Adding New Games
+
+### 12.1 Quick Links Registration
+
+**CRITICAL:** When adding a new game, it MUST be registered as a Quick Link on the dashboard/landing page.
+
+**Steps to add a new game:**
+1. Create the game renderer file: `components/[GameName]Renderer.tsx`
+2. Register the game in `GeneratedDiagram.tsx` switch statement
+3. **Add Quick Link entry** in the dashboard/landing page component
+4. Test the Quick Link navigation works
+
+**Quick Link Data Structure:**
+```typescript
+interface QuickLink {
+   id: string;              // 'photoelectric_effect', 'coulombs_law', etc.
+   title: string;           // "The Photoelectric Effect"
+   description: string;     // Short description for the card
+   icon: string;            // Emoji or icon component
+   category: string;        // "Quantum Physics", "Electromagnetism", etc.
+   duration: string;        // "~5 min"
+   difficulty: string;      // "Beginner", "Intermediate", "Advanced"
+}
+```
+
+### 12.2 Game Registration Checklist
+
+When adding a new game:
+- [ ] Game renderer created and follows this specification
+- [ ] Game added to GeneratedDiagram.tsx switch statement
+- [ ] **Quick Link added to dashboard** so users can access the game
+- [ ] Game tested on both mobile and desktop
+- [ ] AI coach events working correctly
+- [ ] All 10 phases implemented and tested
+
+---
+
+## 13. Critical Implementation Rules
+
+### 13.1 Selection Buttons (Predictions, Answers, Tabs)
+
+**ALWAYS use `onClick` for selection buttons** to ensure single-click selection:
+
+```typescript
+// CORRECT - Single click works
+<button
+   onClick={() => handleSelect(id)}
+   style={{ WebkitTapHighlightColor: 'transparent' }}
+>
+
+// WRONG - Can cause multiple clicks needed
+<button
+   onMouseDown={(e) => { e.preventDefault(); handleSelect(id); }}
+   onTouchEnd={(e) => { e.preventDefault(); handleSelect(id); }}
+>
+```
+
+**Always include early return for already-selected items:**
+```typescript
+const handleSelect = (id: string) => {
+   if (selected === id) return;  // Already selected - prevent re-processing
+   playSound('click');
+   setSelected(id);
+   emitGameEvent('selection_made', { ... });
+};
+```
+
+### 13.2 Slider Smoothness
+
+**Use both `onInput` and `onChange`** for smooth, real-time slider updates:
+
+```typescript
+<input
+   type="range"
+   min="200" max="700" step="1"
+   value={wavelength}
+   onInput={(e) => setWavelength(Number((e.target as HTMLInputElement).value))}
+   onChange={(e) => setWavelength(Number(e.target.value))}
+   style={{
+      width: '100%',
+      cursor: 'pointer',
+      height: '8px',
+      WebkitAppearance: 'none',
+      appearance: 'none',
+      background: 'linear-gradient(...)',
+      borderRadius: '4px'
+   }}
+/>
+```
+
+### 13.3 AI Coach Sync for Real-World Applications
+
+**CRITICAL:** When user clicks on application tabs (2, 3, 4), the AI coach MUST receive app-specific content, not generic phase info.
+
+**Problem:** AI says "Quantum Computing" when user clicks "Digital Cameras"
+**Solution:** Override `screenDescription` and `coachMessage` in the event:
+
+```typescript
+emitGameEvent('app_changed', {
+   // App-specific overrides - AI will use THESE, not generic phase info
+   screenDescription: `REAL WORLD APPLICATION ${index + 1}/4: "${targetApp.title}" - ${targetApp.description}`,
+   coachMessage: `Now let's explore ${targetApp.title}! ${targetApp.connection}`,
+   // Other details...
+});
+```
+
+### 13.4 Mastery Phase Action Buttons
+
+**Both passing AND failing users need clear navigation options:**
+
+**If PASSING (≥70%):**
+```typescript
+// Primary CTA
+<button onClick={handleReturnToDashboard} style={{ /* gradient */ }}>
+   🏠 Return to Dashboard
+</button>
+// Secondary
+<button onClick={() => goToPhase('hook')} style={{ /* outline */ }}>
+   🔬 Review Lesson
+</button>
+```
+
+**If NOT PASSING (<70%):**
+```typescript
+// Primary CTA
+<button onClick={handleRetakeTest} style={{ /* gradient */ }}>
+   ↺ Retake Test
+</button>
+// Secondary
+<button onClick={() => goToPhase('hook')} style={{ /* outline */ }}>
+   🔬 Review Lesson
+</button>
+// Tertiary (text link)
+<button onClick={handleReturnToDashboard} style={{ /* text, underlined */ }}>
+   Return to Dashboard
+</button>
+```
+
+**Return to Dashboard implementation:**
+```typescript
+const handleReturnToDashboard = () => {
+   emitGameEvent('button_clicked', { action: 'return_to_dashboard' });
+   window.dispatchEvent(new CustomEvent('returnToDashboard'));
+};
 ```

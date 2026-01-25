@@ -229,6 +229,17 @@ const CoulombsLawRenderer: React.FC<CoulombsLawRendererProps> = ({ onGameEvent }
     }
   }, [emitGameEvent]);
 
+  // Reset test state when entering test phase
+  useEffect(() => {
+    if (phase === 'test') {
+      setCurrentQuestion(0);
+      setTestScore(0);
+      setSelectedAnswer(null);
+      setShowExplanation(false);
+      setTestAnswers(Array(10).fill(null));
+    }
+  }, [phase]);
+
   // Navigation
   const goToPhase = useCallback((p: CLPhase) => {
     const now = Date.now();
@@ -2014,7 +2025,7 @@ const CoulombsLawRenderer: React.FC<CoulombsLawRendererProps> = ({ onGameEvent }
 
           {passed ? (
             <button
-              onMouseDown={() => goToPhase('mastery')}
+              onClick={() => goToPhase('mastery')}
               style={{
                 width: '100%',
                 padding: '14px',
@@ -2031,7 +2042,7 @@ const CoulombsLawRenderer: React.FC<CoulombsLawRendererProps> = ({ onGameEvent }
             </button>
           ) : (
             <button
-              onMouseDown={() => {
+              onClick={() => {
                 setShowResults(false);
                 setTestAnswers(Array(10).fill(null));
                 setCurrentQuestion(0);
@@ -2097,7 +2108,8 @@ const CoulombsLawRenderer: React.FC<CoulombsLawRendererProps> = ({ onGameEvent }
           {q.options.map((opt, i) => (
             <button
               key={i}
-              onMouseDown={() => {
+              onClick={() => {
+                if (testAnswers[currentQuestion] === i) return; // Already selected
                 playSound('click');
                 const newAnswers = [...testAnswers];
                 newAnswers[currentQuestion] = i;
@@ -2117,7 +2129,8 @@ const CoulombsLawRenderer: React.FC<CoulombsLawRendererProps> = ({ onGameEvent }
                 border: testAnswers[currentQuestion] === i ? `2px solid ${colors.primary}` : `1px solid ${colors.border}`,
                 backgroundColor: testAnswers[currentQuestion] === i ? `${colors.primary}15` : colors.bgCard,
                 cursor: 'pointer',
-                textAlign: 'left'
+                textAlign: 'left',
+                WebkitTapHighlightColor: 'transparent'
               }}
             >
               <span style={{
@@ -2148,7 +2161,7 @@ const CoulombsLawRenderer: React.FC<CoulombsLawRendererProps> = ({ onGameEvent }
         backgroundColor: colors.bgCard
       }}>
         <button
-          onMouseDown={() => currentQuestion > 0 && setCurrentQuestion(currentQuestion - 1)}
+          onClick={() => currentQuestion > 0 && setCurrentQuestion(currentQuestion - 1)}
           disabled={currentQuestion === 0}
           style={{
             padding: '10px 16px',
@@ -2171,7 +2184,7 @@ const CoulombsLawRenderer: React.FC<CoulombsLawRendererProps> = ({ onGameEvent }
 
         {currentQuestion < 9 ? (
           <button
-            onMouseDown={() => testAnswers[currentQuestion] !== null && setCurrentQuestion(currentQuestion + 1)}
+            onClick={() => testAnswers[currentQuestion] !== null && setCurrentQuestion(currentQuestion + 1)}
             disabled={testAnswers[currentQuestion] === null}
             style={{
               padding: '10px 20px',
@@ -2191,7 +2204,7 @@ const CoulombsLawRenderer: React.FC<CoulombsLawRendererProps> = ({ onGameEvent }
           </button>
         ) : (
           <button
-            onMouseDown={() => {
+            onClick={() => {
               if (!testAnswers.includes(null)) {
                 playSound('complete');
                 setShowResults(true);

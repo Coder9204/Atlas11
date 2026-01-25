@@ -110,6 +110,12 @@ const SmartDashboard: React.FC<SmartDashboardProps> = ({ topic, keyPoints, level
                    Photoelectric Effect
                  </button>
                  <button
+                   onClick={() => onTestDiagram('coulombs_law')}
+                   className="px-4 py-2 bg-yellow-500 hover:bg-yellow-600 text-white rounded-lg text-sm font-bold transition-all"
+                 >
+                   ⚡ Coulomb's Law
+                 </button>
+                 <button
                    onClick={() => onTestDiagram('thin_film')}
                    className="px-4 py-2 bg-indigo-500 hover:bg-indigo-600 text-white rounded-lg text-sm font-bold transition-all"
                  >
