@@ -512,7 +512,7 @@ const CoulombsLawRenderer: React.FC<CoulombsLawRendererProps> = ({ onGameEvent }
     return score + (answer === correct ? 1 : 0);
   }, 0);
 
-  // renderBottomBar
+  // renderBottomBar - uses onClick for single-click behavior
   const renderBottomBar = (canGoBack: boolean, canGoNext: boolean, nextLabel: string, onNext?: () => void, accentColor?: string) => (
     <div style={{
       display: 'flex',
@@ -525,8 +525,7 @@ const CoulombsLawRenderer: React.FC<CoulombsLawRendererProps> = ({ onGameEvent }
     }}>
       {canGoBack ? (
         <button
-          onMouseDown={goBack}
-          onTouchEnd={(e) => { e.preventDefault(); goBack(); }}
+          onClick={() => goBack()}
           style={{
             padding: '10px 16px',
             borderRadius: '10px',
@@ -535,7 +534,8 @@ const CoulombsLawRenderer: React.FC<CoulombsLawRendererProps> = ({ onGameEvent }
             color: colors.textSecondary,
             fontSize: typo.body,
             fontWeight: 600,
-            cursor: 'pointer'
+            cursor: 'pointer',
+            WebkitTapHighlightColor: 'transparent'
           }}
         >
           ← Back
@@ -547,8 +547,7 @@ const CoulombsLawRenderer: React.FC<CoulombsLawRendererProps> = ({ onGameEvent }
       </span>
 
       <button
-        onMouseDown={() => onNext ? onNext() : goNext()}
-        onTouchEnd={(e) => { e.preventDefault(); onNext ? onNext() : goNext(); }}
+        onClick={() => { if (canGoNext) { onNext ? onNext() : goNext(); } }}
         disabled={!canGoNext}
         style={{
           padding: '10px 20px',
@@ -562,7 +561,8 @@ const CoulombsLawRenderer: React.FC<CoulombsLawRendererProps> = ({ onGameEvent }
           fontWeight: 700,
           cursor: canGoNext ? 'pointer' : 'not-allowed',
           opacity: canGoNext ? 1 : 0.5,
-          boxShadow: canGoNext ? `0 4px 20px ${(accentColor || colors.primary)}40` : 'none'
+          boxShadow: canGoNext ? `0 4px 20px ${(accentColor || colors.primary)}40` : 'none',
+          WebkitTapHighlightColor: 'transparent'
         }}
       >
         {nextLabel} →
@@ -666,8 +666,7 @@ const CoulombsLawRenderer: React.FC<CoulombsLawRendererProps> = ({ onGameEvent }
           {/* Back button */}
           {phaseIndex > 0 ? (
             <button
-              onMouseDown={goBack}
-              onTouchEnd={(e) => { e.preventDefault(); goBack(); }}
+              onClick={() => goBack()}
               style={{
                 width: '36px',
                 height: '36px',
@@ -679,7 +678,8 @@ const CoulombsLawRenderer: React.FC<CoulombsLawRendererProps> = ({ onGameEvent }
                 cursor: 'pointer',
                 display: 'flex',
                 alignItems: 'center',
-                justifyContent: 'center'
+                justifyContent: 'center',
+                WebkitTapHighlightColor: 'transparent'
               }}
             >
               ←
@@ -693,8 +693,7 @@ const CoulombsLawRenderer: React.FC<CoulombsLawRendererProps> = ({ onGameEvent }
             {phaseOrder.map((p, i) => (
               <button
                 key={p}
-                onMouseDown={() => i <= phaseIndex && goToPhase(p)}
-                onTouchEnd={(e) => { e.preventDefault(); i <= phaseIndex && goToPhase(p); }}
+                onClick={() => i <= phaseIndex && goToPhase(p)}
                 disabled={i > phaseIndex}
                 style={{
                   width: phase === p ? '20px' : '8px',
@@ -703,7 +702,8 @@ const CoulombsLawRenderer: React.FC<CoulombsLawRendererProps> = ({ onGameEvent }
                   border: 'none',
                   backgroundColor: i < phaseIndex ? colors.success : phase === p ? colors.primary : colors.border,
                   cursor: i <= phaseIndex ? 'pointer' : 'default',
-                  transition: 'all 0.3s ease'
+                  transition: 'all 0.3s ease',
+                  WebkitTapHighlightColor: 'transparent'
                 }}
               />
             ))}
@@ -901,8 +901,7 @@ const CoulombsLawRenderer: React.FC<CoulombsLawRendererProps> = ({ onGameEvent }
 
         {/* CTA */}
         <button
-          onMouseDown={() => goToPhase('predict')}
-          onTouchEnd={(e) => { e.preventDefault(); goToPhase('predict'); }}
+          onClick={() => goToPhase('predict')}
           style={{
             padding: '16px 32px',
             borderRadius: '14px',
@@ -913,7 +912,8 @@ const CoulombsLawRenderer: React.FC<CoulombsLawRendererProps> = ({ onGameEvent }
             fontWeight: 700,
             cursor: 'pointer',
             boxShadow: `0 4px 20px ${colors.primary}40`,
-            marginBottom: '12px'
+            marginBottom: '12px',
+            WebkitTapHighlightColor: 'transparent'
           }}
         >
           Begin Experiment →
@@ -1270,7 +1270,7 @@ const CoulombsLawRenderer: React.FC<CoulombsLawRendererProps> = ({ onGameEvent }
         {/* Toggles */}
         <div style={{ display: 'flex', gap: typo.elementGap, marginBottom: typo.sectionGap }}>
           <button
-            onMouseDown={() => setShowFieldLines(!showFieldLines)}
+            onClick={() => setShowFieldLines(!showFieldLines)}
             style={{
               flex: 1,
               padding: '10px',
@@ -1280,13 +1280,14 @@ const CoulombsLawRenderer: React.FC<CoulombsLawRendererProps> = ({ onGameEvent }
               color: colors.textPrimary,
               fontSize: typo.small,
               fontWeight: 600,
-              cursor: 'pointer'
+              cursor: 'pointer',
+              WebkitTapHighlightColor: 'transparent'
             }}
           >
             🔮 Field Lines {showFieldLines ? 'ON' : 'OFF'}
           </button>
           <button
-            onMouseDown={() => setShowForceVectors(!showForceVectors)}
+            onClick={() => setShowForceVectors(!showForceVectors)}
             style={{
               flex: 1,
               padding: '10px',
@@ -1296,7 +1297,8 @@ const CoulombsLawRenderer: React.FC<CoulombsLawRendererProps> = ({ onGameEvent }
               color: colors.textPrimary,
               fontSize: typo.small,
               fontWeight: 600,
-              cursor: 'pointer'
+              cursor: 'pointer',
+              WebkitTapHighlightColor: 'transparent'
             }}
           >
             ➡️ Force Vectors {showForceVectors ? 'ON' : 'OFF'}
@@ -1958,8 +1960,15 @@ const CoulombsLawRenderer: React.FC<CoulombsLawRendererProps> = ({ onGameEvent }
           </span>
         </div>
       </div>,
-      // Only show "Take the Test" button after ALL apps are complete
-      allComplete ? renderBottomBar(true, true, 'Take the Test', undefined, colors.warning) : renderBottomBar(true, false, 'Complete all 4 apps first')
+      // Bottom bar logic:
+      // - If all complete: Show "Take the Test"
+      // - If current app complete but not last: Show "Continue to Next App"
+      // - If current app not complete: Show disabled "Mark Complete First"
+      allComplete
+        ? renderBottomBar(true, true, 'Take the Test', undefined, colors.warning)
+        : currentAppComplete && !isLastApp
+          ? renderBottomBar(true, true, `Continue to ${transferApps[activeAppIndex + 1].title}`, handleContinueToNextApp)
+          : renderBottomBar(true, false, 'Mark Complete First')
     );
   }
 

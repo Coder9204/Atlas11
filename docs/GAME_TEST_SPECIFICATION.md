@@ -4,6 +4,40 @@ Based on the **Wave Particle Duality** game implementation, this document provid
 
 ---
 
+## CRITICAL: Before You Start
+
+### Architecture Rule: NO INLINE RENDERERS
+**NEVER define a game renderer inline in GeneratedDiagram.tsx if it's imported from a standalone file.**
+
+This causes the inline version to **SHADOW** the imported version, meaning your standalone file changes are IGNORED.
+
+**Check before adding a game:**
+```bash
+# Check if imported
+grep -n "import.*YourGameRenderer" components/GeneratedDiagram.tsx
+
+# Check if also defined inline (BAD!)
+grep -n "const YourGameRenderer = " components/GeneratedDiagram.tsx
+```
+
+**If you find both: DELETE the inline version.**
+
+### Critical Implementation Checklist
+Before considering any game "complete", verify:
+
+- [ ] **No inline version** in GeneratedDiagram.tsx shadowing the import
+- [ ] **onClick handlers** (NOT onMouseDown/onTouchEnd) for all buttons
+- [ ] **WebkitTapHighlightColor: 'transparent'** on all interactive elements
+- [ ] **Sliders use onInput + onChange** for smooth updates
+- [ ] **Transfer phase has 3-state bottom bar** (Take Test / Continue / Mark Complete First)
+- [ ] **AI coach receives app-specific screenDescription/coachMessage** for tab clicks
+- [ ] **Mastery phase has pass/fail logic** (70% threshold)
+- [ ] **Mastery shows Return to Dashboard** option
+- [ ] **Quick launch link added** to SmartDashboard.tsx
+- [ ] **10 test questions** with proper state reset on entry
+
+---
+
 ## 1. Phase Structure
 
 ### 1.1 Required Phases (10 Total)
@@ -423,12 +457,27 @@ const handleContinueToNextApp = () => {
 };
 ```
 
-**Custom Footer for Transfer:**
-- Back button (← to twist_review)
-- **"Take Test →" button ONLY when `allComplete === true`**
-- When not all complete: show disabled "Complete all 4 apps first"
-- **WRONG:** Showing "Take Test" on first application
-- **CORRECT:** User must complete all 4 apps before seeing "Take Test"
+**Custom Footer for Transfer (3-State Bottom Bar - CRITICAL):**
+
+The bottom bar must have THREE states, not two:
+
+```typescript
+// Bottom bar logic - THREE states:
+allComplete
+  ? renderBottomBar(true, true, 'Take the Test')
+  : currentAppComplete && !isLastApp
+    ? renderBottomBar(true, true, `Continue to ${applications[activeApp + 1].title}`, handleContinueToNextApp)
+    : renderBottomBar(true, false, 'Mark Complete First')
+```
+
+| State | Condition | Button Text | Enabled |
+|-------|-----------|-------------|---------|
+| 1 | All 4 apps complete | "Take the Test" | Yes |
+| 2 | Current app complete, more apps remain | "Continue to [Next App]" | Yes |
+| 3 | Current app not complete | "Mark Complete First" | No (disabled) |
+
+**WRONG:** Only having two states (Take Test / Complete all 4 apps first)
+**CORRECT:** Three states with functional "Continue" button after each app
 
 ### 4.9 Test Phase
 
