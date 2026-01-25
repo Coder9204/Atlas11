@@ -1302,7 +1302,7 @@ const WaveParticleDualityRenderer: React.FC<WaveParticleDualityRendererProps> = 
       prevPhaseRef.current = phase;
    }, [phase, emitGameEvent]);
 
-   // HOOK Screen - Clean, compact design
+   // HOOK Screen - Apple meets Airbnb premium design
    if (phase === 'hook') {
       return (
          <PremiumWrapper>
@@ -1310,110 +1310,262 @@ const WaveParticleDualityRenderer: React.FC<WaveParticleDualityRendererProps> = 
             display: 'flex',
             flexDirection: 'column',
             height: '100%',
-            minHeight: 0
+            minHeight: 0,
+            position: 'relative',
+            overflow: 'hidden'
          }}>
-            {/* Content area - centered */}
+            {/* Animated background orbs */}
+            <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', overflow: 'hidden' }}>
+               <div style={{
+                  position: 'absolute',
+                  top: '10%',
+                  left: '20%',
+                  width: isMobile ? '150px' : '250px',
+                  height: isMobile ? '150px' : '250px',
+                  borderRadius: '50%',
+                  background: 'radial-gradient(circle, rgba(6,182,212,0.15) 0%, transparent 70%)',
+                  animation: 'pulse 4s ease-in-out infinite',
+                  filter: 'blur(40px)'
+               }} />
+               <div style={{
+                  position: 'absolute',
+                  bottom: '20%',
+                  right: '15%',
+                  width: isMobile ? '120px' : '200px',
+                  height: isMobile ? '120px' : '200px',
+                  borderRadius: '50%',
+                  background: 'radial-gradient(circle, rgba(168,85,247,0.12) 0%, transparent 70%)',
+                  animation: 'pulse 5s ease-in-out infinite 1s',
+                  filter: 'blur(40px)'
+               }} />
+            </div>
+
+            {/* Content area */}
             <div style={{
                flex: 1,
                display: 'flex',
                flexDirection: 'column',
                alignItems: 'center',
                justifyContent: 'center',
-               padding: isMobile ? '16px' : '24px',
+               padding: isMobile ? '20px 16px' : '32px',
                textAlign: 'center',
-               overflow: 'auto'
+               overflow: 'auto',
+               position: 'relative',
+               zIndex: 1
             }}>
-               {/* Icon */}
+               {/* Animated atom visualization */}
                <div style={{
-                  width: isMobile ? '56px' : '70px',
-                  height: isMobile ? '56px' : '70px',
-                  borderRadius: '50%',
-                  background: 'linear-gradient(135deg, #06b6d4 0%, #a855f7 100%)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  marginBottom: isMobile ? '16px' : '20px',
-                  boxShadow: '0 12px 40px rgba(6, 182, 212, 0.25)'
+                  position: 'relative',
+                  width: isMobile ? '100px' : '140px',
+                  height: isMobile ? '100px' : '140px',
+                  marginBottom: isMobile ? '24px' : '32px'
                }}>
-                  <span style={{ fontSize: isMobile ? '24px' : '32px' }}>⚛️</span>
+                  {/* Orbit rings */}
+                  <svg viewBox="0 0 140 140" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%' }}>
+                     <ellipse cx="70" cy="70" rx="65" ry="25" fill="none" stroke="url(#orbitGrad1)" strokeWidth="1.5" opacity="0.6" style={{ transformOrigin: 'center', animation: 'spin 8s linear infinite' }} />
+                     <ellipse cx="70" cy="70" rx="65" ry="25" fill="none" stroke="url(#orbitGrad2)" strokeWidth="1.5" opacity="0.6" style={{ transformOrigin: 'center', transform: 'rotate(60deg)', animation: 'spin 10s linear infinite reverse' }} />
+                     <ellipse cx="70" cy="70" rx="65" ry="25" fill="none" stroke="url(#orbitGrad3)" strokeWidth="1.5" opacity="0.6" style={{ transformOrigin: 'center', transform: 'rotate(120deg)', animation: 'spin 12s linear infinite' }} />
+                     {/* Electrons */}
+                     <circle r="4" fill="#22d3ee" style={{ animation: 'orbit1 8s linear infinite' }}>
+                        <animateMotion dur="8s" repeatCount="indefinite" path="M70,45 A25,25 0 1,1 70,95 A25,25 0 1,1 70,45" />
+                     </circle>
+                     <circle r="4" fill="#a855f7" style={{ animation: 'orbit2 10s linear infinite' }}>
+                        <animateMotion dur="10s" repeatCount="indefinite" path="M95,70 A25,25 0 1,1 45,70 A25,25 0 1,1 95,70" />
+                     </circle>
+                     {/* Gradient definitions */}
+                     <defs>
+                        <linearGradient id="orbitGrad1" x1="0%" y1="0%" x2="100%" y2="0%">
+                           <stop offset="0%" stopColor="#06b6d4" stopOpacity="0.8" />
+                           <stop offset="100%" stopColor="#06b6d4" stopOpacity="0.1" />
+                        </linearGradient>
+                        <linearGradient id="orbitGrad2" x1="0%" y1="0%" x2="100%" y2="0%">
+                           <stop offset="0%" stopColor="#a855f7" stopOpacity="0.8" />
+                           <stop offset="100%" stopColor="#a855f7" stopOpacity="0.1" />
+                        </linearGradient>
+                        <linearGradient id="orbitGrad3" x1="0%" y1="0%" x2="100%" y2="0%">
+                           <stop offset="0%" stopColor="#ec4899" stopOpacity="0.6" />
+                           <stop offset="100%" stopColor="#ec4899" stopOpacity="0.1" />
+                        </linearGradient>
+                     </defs>
+                  </svg>
+                  {/* Center nucleus glow */}
+                  <div style={{
+                     position: 'absolute',
+                     top: '50%',
+                     left: '50%',
+                     transform: 'translate(-50%, -50%)',
+                     width: isMobile ? '28px' : '36px',
+                     height: isMobile ? '28px' : '36px',
+                     borderRadius: '50%',
+                     background: 'linear-gradient(135deg, #06b6d4 0%, #a855f7 100%)',
+                     boxShadow: '0 0 30px rgba(6,182,212,0.5), 0 0 60px rgba(168,85,247,0.3)',
+                     animation: 'glow 2s ease-in-out infinite alternate'
+                  }} />
                </div>
 
-               {/* Title */}
-               <h1 style={{
-                  fontSize: isMobile ? '22px' : '28px',
-                  fontWeight: 800,
-                  color: colors.textPrimary,
-                  marginBottom: isMobile ? '8px' : '12px',
-                  lineHeight: 1.2
+               {/* Category tag */}
+               <div style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  padding: '6px 14px',
+                  borderRadius: '20px',
+                  background: 'rgba(6,182,212,0.1)',
+                  border: '1px solid rgba(6,182,212,0.2)',
+                  marginBottom: isMobile ? '12px' : '16px'
                }}>
-                  The Double-Slit Experiment
+                  <span style={{ fontSize: '10px', color: colors.primary }}>●</span>
+                  <span style={{ fontSize: '11px', fontWeight: 600, color: colors.primary, letterSpacing: '0.5px', textTransform: 'uppercase' }}>Quantum Physics</span>
+               </div>
+
+               {/* Main title - elegant typography */}
+               <h1 style={{
+                  fontSize: isMobile ? '28px' : '42px',
+                  fontWeight: 700,
+                  color: colors.textPrimary,
+                  marginBottom: isMobile ? '12px' : '16px',
+                  lineHeight: 1.1,
+                  letterSpacing: '-0.02em',
+                  maxWidth: '500px'
+               }}>
+                  The Double-Slit
+                  <br />
+                  <span style={{
+                     background: 'linear-gradient(135deg, #06b6d4 0%, #a855f7 50%, #ec4899 100%)',
+                     WebkitBackgroundClip: 'text',
+                     WebkitTextFillColor: 'transparent',
+                     backgroundClip: 'text'
+                  }}>Experiment</span>
                </h1>
 
-               {/* Subtitle */}
-               <p style={{
-                  fontSize: isMobile ? '13px' : '15px',
-                  color: colors.textSecondary,
-                  marginBottom: isMobile ? '20px' : '24px',
-                  maxWidth: '400px',
-                  lineHeight: 1.5
+               {/* Quote with elegant styling */}
+               <div style={{
+                  maxWidth: '380px',
+                  marginBottom: isMobile ? '24px' : '32px',
+                  position: 'relative',
+                  padding: '0 20px'
                }}>
-                  Feynman called this <span style={{ color: colors.textPrimary, fontWeight: 600 }}>"the only mystery"</span> of quantum mechanics
-               </p>
+                  <span style={{
+                     position: 'absolute',
+                     left: 0,
+                     top: '-5px',
+                     fontSize: '32px',
+                     color: colors.primary,
+                     opacity: 0.3,
+                     fontFamily: 'Georgia, serif'
+                  }}>"</span>
+                  <p style={{
+                     fontSize: isMobile ? '14px' : '16px',
+                     color: colors.textSecondary,
+                     lineHeight: 1.6,
+                     fontStyle: 'italic'
+                  }}>
+                     The only mystery of quantum mechanics
+                  </p>
+                  <p style={{
+                     fontSize: '12px',
+                     color: colors.textMuted,
+                     marginTop: '8px',
+                     fontWeight: 500
+                  }}>
+                     — Richard Feynman, Nobel Laureate
+                  </p>
+               </div>
 
-               {/* Feature cards */}
+               {/* Feature pills - horizontal */}
                <div style={{
                   display: 'flex',
-                  gap: isMobile ? '8px' : '12px',
-                  marginBottom: isMobile ? '20px' : '28px'
+                  flexWrap: 'wrap',
+                  justifyContent: 'center',
+                  gap: '8px',
+                  marginBottom: isMobile ? '24px' : '32px'
                }}>
                   {[
-                     { icon: '🔬', text: 'Interactive' },
-                     { icon: '🎯', text: 'Predict' },
-                     { icon: '💡', text: 'Apply' }
+                     { icon: '⚡', text: '5 min', color: '#f59e0b' },
+                     { icon: '🧪', text: 'Interactive Lab', color: '#06b6d4' },
+                     { icon: '🧠', text: 'Test Your Intuition', color: '#a855f7' }
                   ].map((item, i) => (
                      <div key={i} style={{
-                        padding: isMobile ? '10px 14px' : '12px 18px',
-                        borderRadius: '10px',
-                        backgroundColor: colors.bgCardLight,
-                        border: `1px solid ${colors.border}`
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '6px',
+                        padding: '8px 14px',
+                        borderRadius: '24px',
+                        background: `${item.color}10`,
+                        border: `1px solid ${item.color}25`
                      }}>
-                        <div style={{ fontSize: isMobile ? '16px' : '20px', marginBottom: '4px' }}>{item.icon}</div>
-                        <div style={{ fontSize: isMobile ? '10px' : '11px', fontWeight: 600, color: colors.textMuted }}>{item.text}</div>
+                        <span style={{ fontSize: '12px' }}>{item.icon}</span>
+                        <span style={{ fontSize: '12px', fontWeight: 600, color: item.color }}>{item.text}</span>
                      </div>
                   ))}
                </div>
 
-               {/* CTA Button */}
+               {/* Premium CTA Button */}
                <button
                   style={{
+                     display: 'flex',
+                     alignItems: 'center',
+                     justifyContent: 'center',
+                     gap: '10px',
                      width: '100%',
-                     maxWidth: '280px',
-                     padding: isMobile ? '14px 20px' : '16px 28px',
-                     fontSize: isMobile ? '14px' : '15px',
-                     fontWeight: 700,
-                     background: 'linear-gradient(135deg, #06b6d4 0%, #a855f7 100%)',
+                     maxWidth: '300px',
+                     padding: isMobile ? '16px 28px' : '18px 36px',
+                     fontSize: isMobile ? '15px' : '16px',
+                     fontWeight: 600,
+                     background: 'linear-gradient(135deg, #06b6d4 0%, #0891b2 50%, #a855f7 100%)',
+                     backgroundSize: '200% 200%',
                      color: 'white',
                      border: 'none',
-                     borderRadius: '12px',
+                     borderRadius: '16px',
                      cursor: 'pointer',
-                     boxShadow: '0 6px 24px rgba(6, 182, 212, 0.3)',
-                     minHeight: '48px'
+                     boxShadow: '0 8px 32px rgba(6,182,212,0.35), 0 2px 8px rgba(0,0,0,0.2)',
+                     minHeight: '56px',
+                     transition: 'all 0.3s ease',
+                     animation: 'gradientShift 3s ease infinite'
                   }}
                   onMouseDown={() => goToPhase('predict')}
                   onTouchEnd={(e) => { e.preventDefault(); goToPhase('predict'); }}
                >
-                  Start Experiment →
+                  <span>Begin Experiment</span>
+                  <span style={{ fontSize: '18px' }}>→</span>
                </button>
 
-               {/* Duration hint */}
-               <p style={{
-                  fontSize: '11px',
-                  color: colors.textMuted,
-                  marginTop: '12px'
+               {/* Trust indicator */}
+               <div style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '12px',
+                  marginTop: isMobile ? '16px' : '24px',
+                  color: colors.textMuted
                }}>
-                  ~5 min • Interactive
-               </p>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                     {[1,2,3,4,5].map(i => (
+                        <span key={i} style={{ fontSize: '10px', color: '#fbbf24' }}>★</span>
+                     ))}
+                  </div>
+                  <span style={{ fontSize: '11px', fontWeight: 500 }}>Loved by 10,000+ learners</span>
+               </div>
             </div>
+
+            {/* CSS Animations */}
+            <style>{`
+               @keyframes pulse {
+                  0%, 100% { transform: scale(1); opacity: 0.5; }
+                  50% { transform: scale(1.1); opacity: 0.8; }
+               }
+               @keyframes glow {
+                  0% { box-shadow: 0 0 20px rgba(6,182,212,0.4), 0 0 40px rgba(168,85,247,0.2); }
+                  100% { box-shadow: 0 0 30px rgba(6,182,212,0.6), 0 0 60px rgba(168,85,247,0.4); }
+               }
+               @keyframes spin {
+                  from { transform: rotate(0deg); }
+                  to { transform: rotate(360deg); }
+               }
+               @keyframes gradientShift {
+                  0%, 100% { background-position: 0% 50%; }
+                  50% { background-position: 100% 50%; }
+               }
+            `}</style>
          </div>
          </PremiumWrapper>
       );
