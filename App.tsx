@@ -329,32 +329,6 @@ const App: React.FC = () => {
     return false;
   }, []);
 
-  // Immediately sync current location with AI - used after rapid navigation
-  const syncCurrentLocation = useCallback((phase: string, screen: number, forceInterrupt: boolean = false) => {
-    const now = Date.now();
-    currentLocationRef.current = { phase, screen, timestamp: now };
-
-    // Clear any pending location update
-    if (pendingLocationUpdateRef.current) {
-      clearTimeout(pendingLocationUpdateRef.current);
-      pendingLocationUpdateRef.current = null;
-    }
-
-    // If force interrupt, stop all audio and send immediate update
-    if (forceInterrupt) {
-      stopAllAudio();
-    }
-
-    // Debounce the location sync (wait 150ms for rapid navigation to settle)
-    pendingLocationUpdateRef.current = setTimeout(() => {
-      // Only send if this is still the current location
-      if (currentLocationRef.current.timestamp === now && isSessionActiveRef.current) {
-        const locationUpdate = `[LOCATION SYNC] User is NOW on: Phase="${phase}", Screen ${screen}/10. Any previous guidance about other phases is STALE - focus ONLY on current phase.`;
-        safeSend(locationUpdate, true, 'high');
-      }
-    }, 150);
-  }, [safeSend, stopAllAudio]);
-
   useEffect(() => {
     isSessionActiveRef.current = isSessionActive;
   }, [isSessionActive]);
@@ -423,6 +397,32 @@ const App: React.FC = () => {
     nextStartTimeRef.current = 0;
     setIsSpeaking(false);
   }, []);
+
+  // Immediately sync current location with AI - used after rapid navigation
+  const syncCurrentLocation = useCallback((phase: string, screen: number, forceInterrupt: boolean = false) => {
+    const now = Date.now();
+    currentLocationRef.current = { phase, screen, timestamp: now };
+
+    // Clear any pending location update
+    if (pendingLocationUpdateRef.current) {
+      clearTimeout(pendingLocationUpdateRef.current);
+      pendingLocationUpdateRef.current = null;
+    }
+
+    // If force interrupt, stop all audio and send immediate update
+    if (forceInterrupt) {
+      stopAllAudio();
+    }
+
+    // Debounce the location sync (wait 150ms for rapid navigation to settle)
+    pendingLocationUpdateRef.current = setTimeout(() => {
+      // Only send if this is still the current location
+      if (currentLocationRef.current.timestamp === now && isSessionActiveRef.current) {
+        const locationUpdate = `[LOCATION SYNC] User is NOW on: Phase="${phase}", Screen ${screen}/10. Any previous guidance about other phases is STALE - focus ONLY on current phase.`;
+        safeSend(locationUpdate, true, 'high');
+      }
+    }, 150);
+  }, [safeSend, stopAllAudio]);
 
   // Full-screen games that should NOT be interrupted by other content
   const fullScreenGames = [
