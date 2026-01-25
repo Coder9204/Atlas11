@@ -664,7 +664,9 @@ const WaveParticleDualityRenderer: React.FC<WaveParticleDualityRendererProps> = 
                minHeight: 0, // Critical for flex overflow to work
                overflow: 'auto',
                overflowX: 'hidden',
+               overflowY: 'auto', // Explicit vertical scroll
                WebkitOverflowScrolling: 'touch', // Smooth scrolling on iOS
+               touchAction: 'pan-y', // Allow vertical touch scrolling
                position: 'relative',
                zIndex: 5
             }}>
@@ -1599,7 +1601,12 @@ const WaveParticleDualityRenderer: React.FC<WaveParticleDualityRendererProps> = 
    if (phase === 'predict') {
       return (
          <PremiumWrapper footer={renderBottomBar(true, !!prediction, "Run Experiment")}>
-         <div style={{ padding: typo.pagePadding, maxWidth: '600px', margin: '0 auto' }}>
+         <div style={{
+            padding: typo.pagePadding,
+            paddingBottom: '24px', // Extra bottom padding for scroll
+            maxWidth: '600px',
+            margin: '0 auto'
+         }}>
             {renderSectionHeader("Step 1 • Make Your Prediction", "What Will Electrons Do?", "Think about what pattern you expect before we run the experiment.")}
 
             {/* Compact setup explanation + diagram combined */}
@@ -1851,7 +1858,13 @@ const WaveParticleDualityRenderer: React.FC<WaveParticleDualityRendererProps> = 
    if (phase === 'review') {
       return (
          <PremiumWrapper footer={renderBottomBar(true, true, "The Observer Effect")}>
-         <div style={{ padding: typo.pagePadding, maxWidth: '600px', margin: '0 auto' }}>
+         <div style={{
+            padding: typo.pagePadding,
+            paddingBottom: '24px', // Extra bottom padding for scroll
+            maxWidth: '600px',
+            margin: '0 auto',
+            minHeight: 'min-content' // Ensure content height is respected
+         }}>
             {renderSectionHeader("Step 3 • Understand the Result", "Wave-Particle Duality", "The electron isn't simply a particle OR a wave.")}
 
             {/* Dual nature cards - compact inline grid */}
@@ -1919,7 +1932,13 @@ const WaveParticleDualityRenderer: React.FC<WaveParticleDualityRendererProps> = 
    if (phase === 'twist_predict') {
       return (
          <PremiumWrapper footer={renderBottomBar(true, !!twistPrediction, "Turn On Detector", undefined, colors.danger)}>
-         <div style={{ padding: typo.pagePadding, maxWidth: '600px', margin: '0 auto' }}>
+         <div style={{
+            padding: typo.pagePadding,
+            paddingBottom: '24px', // Extra bottom padding for scroll
+            maxWidth: '600px',
+            margin: '0 auto',
+            minHeight: 'min-content' // Ensure content height is respected
+         }}>
             {renderSectionHeader("Step 4 • The Observer Effect", "What If We Watch?", "Add a detector to see which slit each electron uses.")}
 
             {/* Compact diagram with detector */}
@@ -2169,7 +2188,12 @@ const WaveParticleDualityRenderer: React.FC<WaveParticleDualityRendererProps> = 
    if (phase === 'twist_review') {
       return (
          <PremiumWrapper footer={renderBottomBar(true, true, "Real World Applications", undefined, colors.success)}>
-         <div style={{ padding: isMobile ? '12px' : '16px', width: '100%', maxWidth: '650px', margin: '0 auto' }}>
+         <div style={{
+            padding: typo.pagePadding,
+            paddingBottom: '24px', // Extra bottom padding for scroll
+            maxWidth: '600px',
+            margin: '0 auto'
+         }}>
             {renderSectionHeader("Step 6 • Deep Understanding", "The Measurement Problem", "One of the deepest unsolved mysteries in physics.")}
 
             {/* Comparison cards */}
