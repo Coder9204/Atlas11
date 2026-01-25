@@ -1446,37 +1446,48 @@ const WaveParticleDualityRenderer: React.FC<WaveParticleDualityRendererProps> = 
                   }}>Experiment</span>
                </h1>
 
+               {/* Description paragraph */}
+               <p style={{
+                  fontSize: isMobile ? '14px' : '16px',
+                  color: colors.textSecondary,
+                  lineHeight: 1.7,
+                  textAlign: 'center',
+                  maxWidth: '420px',
+                  marginBottom: isMobile ? '16px' : '20px'
+               }}>
+                  Discover the experiment that shattered our understanding of reality.
+                  Fire electrons one at a time and witness the impossible — particles
+                  that behave like waves.
+               </p>
+
                {/* Quote with elegant styling */}
                <div style={{
-                  maxWidth: '380px',
-                  marginBottom: isMobile ? '24px' : '32px',
+                  maxWidth: '400px',
+                  marginBottom: isMobile ? '20px' : '28px',
                   position: 'relative',
-                  padding: '0 20px'
+                  padding: isMobile ? '12px 16px' : '16px 24px',
+                  background: 'rgba(6,182,212,0.08)',
+                  borderRadius: '12px',
+                  borderLeft: `3px solid ${colors.primary}`
                }}>
-                  <span style={{
-                     position: 'absolute',
-                     left: 0,
-                     top: '-5px',
-                     fontSize: '32px',
-                     color: colors.primary,
-                     opacity: 0.3,
-                     fontFamily: 'Georgia, serif'
-                  }}>"</span>
                   <p style={{
-                     fontSize: isMobile ? '14px' : '16px',
-                     color: colors.textSecondary,
+                     fontSize: isMobile ? '13px' : '15px',
+                     color: colors.textPrimary,
                      lineHeight: 1.6,
-                     fontStyle: 'italic'
+                     fontStyle: 'italic',
+                     margin: 0
                   }}>
-                     The only mystery of quantum mechanics
+                     "I think I can safely say that nobody understands quantum mechanics...
+                     The double-slit experiment contains the only mystery."
                   </p>
                   <p style={{
-                     fontSize: '12px',
+                     fontSize: '11px',
                      color: colors.textMuted,
                      marginTop: '8px',
-                     fontWeight: 500
+                     fontWeight: 600,
+                     marginBottom: 0
                   }}>
-                     — Richard Feynman, Nobel Laureate
+                     — Richard Feynman, Nobel Prize in Physics
                   </p>
                </div>
 
@@ -2207,77 +2218,70 @@ const WaveParticleDualityRenderer: React.FC<WaveParticleDualityRendererProps> = 
    if (phase === 'twist_review') {
       return (
          <PremiumWrapper footer={renderBottomBar(true, true, "Real World Applications", undefined, colors.success)}>
-         <div style={{ padding: isMobile ? '12px' : '24px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-               <div className="w-full max-w-2xl">
-                  {renderSectionHeader("Step 6 • Deep Understanding", "The Measurement Problem", "One of the deepest unsolved mysteries in physics.")}
+         <div style={{ padding: isMobile ? '12px' : '16px', width: '100%', maxWidth: '650px', margin: '0 auto' }}>
+            {renderSectionHeader("Step 6 • Deep Understanding", "The Measurement Problem", "One of the deepest unsolved mysteries in physics.")}
 
-                  {/* Comparison cards */}
-                  <div className="grid md:grid-cols-2 gap-4 mb-6">
-                     <div className="p-5 rounded-2xl" style={{
-                        background: `linear-gradient(135deg, ${colors.accent}20 0%, ${colors.accent}05 100%)`,
-                        border: `1px solid ${colors.accent}40`
-                     }}>
-                        <div className="flex items-center gap-3 mb-3">
-                           <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: `${colors.accent}30` }}>
-                              <span className="text-xl">🌊</span>
-                           </div>
-                           <p className="font-bold" style={{ color: colors.accent }}>Not Observed</p>
-                        </div>
-                        <p className="text-sm leading-relaxed mb-3" style={{ color: colors.textSecondary }}>
-                           Electron exists as a probability wave, passing through <strong style={{ color: colors.textPrimary }}>both slits simultaneously</strong> and interfering with itself.
-                        </p>
-                        <div className="p-2 rounded-lg text-center" style={{ background: `${colors.accent}20` }}>
-                           <p className="text-xs font-bold" style={{ color: colors.accent }}>Result: Interference Pattern</p>
-                        </div>
+            {/* Comparison cards */}
+            <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: '12px', marginBottom: '16px' }}>
+               <div style={{ padding: '16px', borderRadius: '16px', background: `linear-gradient(135deg, ${colors.accent}20 0%, ${colors.accent}05 100%)`, border: `1px solid ${colors.accent}40` }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '10px' }}>
+                     <div style={{ width: '36px', height: '36px', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: `${colors.accent}30` }}>
+                        <span style={{ fontSize: '18px' }}>🌊</span>
                      </div>
-                     <div className="p-5 rounded-2xl" style={{
-                        background: `linear-gradient(135deg, ${colors.danger}20 0%, ${colors.danger}05 100%)`,
-                        border: `1px solid ${colors.danger}40`
-                     }}>
-                        <div className="flex items-center gap-3 mb-3">
-                           <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: `${colors.danger}30` }}>
-                              <span className="text-xl">👁️</span>
-                           </div>
-                           <p className="font-bold" style={{ color: colors.danger }}>Observed</p>
-                        </div>
-                        <p className="text-sm leading-relaxed mb-3" style={{ color: colors.textSecondary }}>
-                           Wave function collapses — electron is forced to "choose" and goes through <strong style={{ color: colors.textPrimary }}>one slit only</strong>.
-                        </p>
-                        <div className="p-2 rounded-lg text-center" style={{ background: `${colors.danger}20` }}>
-                           <p className="text-xs font-bold" style={{ color: colors.danger }}>Result: Two Bands</p>
-                        </div>
+                     <p style={{ fontWeight: 700, color: colors.accent, margin: 0, fontSize: '14px' }}>Not Observed</p>
+                  </div>
+                  <p style={{ fontSize: '12px', lineHeight: 1.5, marginBottom: '10px', color: colors.textSecondary }}>
+                     Electron exists as a probability wave, passing through <strong style={{ color: colors.textPrimary }}>both slits</strong> and interfering with itself.
+                  </p>
+                  <div style={{ padding: '6px', borderRadius: '8px', textAlign: 'center', background: `${colors.accent}20` }}>
+                     <p style={{ fontSize: '11px', fontWeight: 700, color: colors.accent, margin: 0 }}>Result: Interference Pattern</p>
+                  </div>
+               </div>
+               <div style={{ padding: '16px', borderRadius: '16px', background: `linear-gradient(135deg, ${colors.danger}20 0%, ${colors.danger}05 100%)`, border: `1px solid ${colors.danger}40` }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '10px' }}>
+                     <div style={{ width: '36px', height: '36px', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: `${colors.danger}30` }}>
+                        <span style={{ fontSize: '18px' }}>👁️</span>
                      </div>
+                     <p style={{ fontWeight: 700, color: colors.danger, margin: 0, fontSize: '14px' }}>Observed</p>
                   </div>
-
-                  {/* The deep question */}
-                  <div className="p-6 rounded-2xl text-center mb-6" style={{ background: colors.bgCard, border: `1px solid ${colors.border}` }}>
-                     <p className="text-xs font-bold uppercase tracking-widest mb-3" style={{ color: colors.warning }}>The Unsolved Mystery</p>
-                     <p className="text-lg font-bold leading-relaxed mb-3" style={{ color: colors.textPrimary }}>
-                        What exactly causes the wave function to "collapse"?
-                     </p>
-                     <p className="text-sm" style={{ color: colors.textSecondary }}>
-                        Is it consciousness? Any measurement device? The transfer of information? <strong style={{ color: colors.warning }}>Physicists still debate this today.</strong>
-                     </p>
-                  </div>
-
-                  {/* Key takeaways */}
-                  <div className="space-y-3 mb-6">
-                     <p className="text-xs font-bold uppercase tracking-widest" style={{ color: colors.success }}>Key Takeaways</p>
-                     {renderKeyTakeaway("💥", "Wave Function Collapse", "ψ(both slits) → measurement → ψ(one slit). The superposition of 'both paths' collapses to 'one path' when observed.")}
-                     {renderKeyTakeaway("📊", "Information Is Physical", "The act of gaining which-path information — even if we never look at it — is enough to destroy interference.")}
-                     {renderKeyTakeaway("🔮", "Quantum Eraser", "Amazingly, if we 'erase' the which-path information before the particle hits the screen, interference returns!")}
-                  </div>
-
-                  {/* Why this matters */}
-                  <div className="p-5 rounded-2xl" style={{ background: `${colors.primary}15`, border: `1px solid ${colors.primary}30` }}>
-                     <p className="text-xs font-bold uppercase tracking-widest mb-2" style={{ color: colors.primary }}>The Big Picture</p>
-                     <p className="text-sm leading-relaxed" style={{ color: colors.textSecondary }}>
-                        This isn't just philosophy — it has <strong style={{ color: colors.textPrimary }}>practical consequences</strong>.
-                        Quantum computers must carefully avoid "observing" their qubits during computation, or the superposition collapses.
-                     </p>
+                  <p style={{ fontSize: '12px', lineHeight: 1.5, marginBottom: '10px', color: colors.textSecondary }}>
+                     Wave function collapses — electron "chooses" and goes through <strong style={{ color: colors.textPrimary }}>one slit only</strong>.
+                  </p>
+                  <div style={{ padding: '6px', borderRadius: '8px', textAlign: 'center', background: `${colors.danger}20` }}>
+                     <p style={{ fontSize: '11px', fontWeight: 700, color: colors.danger, margin: 0 }}>Result: Two Bands</p>
                   </div>
                </div>
             </div>
+
+            {/* The deep question */}
+            <div style={{ padding: '16px', borderRadius: '16px', textAlign: 'center', marginBottom: '16px', background: colors.bgCard, border: `1px solid ${colors.border}` }}>
+               <p style={{ fontSize: '10px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '8px', color: colors.warning }}>The Unsolved Mystery</p>
+               <p style={{ fontSize: '16px', fontWeight: 700, lineHeight: 1.4, marginBottom: '8px', color: colors.textPrimary }}>
+                  What causes the wave function to "collapse"?
+               </p>
+               <p style={{ fontSize: '12px', color: colors.textSecondary, margin: 0 }}>
+                  Is it consciousness? Measurement? Information transfer? <strong style={{ color: colors.warning }}>Physicists still debate this.</strong>
+               </p>
+            </div>
+
+            {/* Key takeaways */}
+            <div style={{ marginBottom: '16px' }}>
+               <p style={{ fontSize: '10px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '10px', color: colors.success }}>Key Takeaways</p>
+               <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                  {renderKeyTakeaway("💥", "Wave Function Collapse", "Superposition of 'both paths' collapses to 'one path' when observed.")}
+                  {renderKeyTakeaway("📊", "Information Is Physical", "Gaining which-path info destroys interference — even if never viewed.")}
+                  {renderKeyTakeaway("🔮", "Quantum Eraser", "Erasing which-path info before detection restores interference!")}
+               </div>
+            </div>
+
+            {/* Why this matters */}
+            <div style={{ padding: '14px', borderRadius: '14px', background: `${colors.primary}15`, border: `1px solid ${colors.primary}30` }}>
+               <p style={{ fontSize: '10px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '6px', color: colors.primary }}>The Big Picture</p>
+               <p style={{ fontSize: '12px', lineHeight: 1.5, color: colors.textSecondary, margin: 0 }}>
+                  This has <strong style={{ color: colors.textPrimary }}>practical consequences</strong> — quantum computers must avoid "observing" qubits during computation.
+               </p>
+            </div>
+         </div>
          </PremiumWrapper>
       );
    }
