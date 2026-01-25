@@ -634,7 +634,7 @@ const WaveParticleDualityRenderer: React.FC<WaveParticleDualityRendererProps> = 
       return (
          <div
             className="absolute inset-0 flex flex-col overflow-hidden"
-            style={{ backgroundColor: colors.bgDark, color: colors.textPrimary }}
+            style={{ backgroundColor: colors.bgDark, color: colors.textPrimary, touchAction: 'pan-y' }}
          >
             {/* Subtle background gradient - purely decorative */}
             <div style={{
@@ -737,7 +737,15 @@ const WaveParticleDualityRenderer: React.FC<WaveParticleDualityRendererProps> = 
             {/* MAIN CONTENT - Fills remaining space, scrolls if needed */}
             <div
                ref={scrollContainerRef}
-               className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden relative"
+               style={{
+                  flex: 1,
+                  minHeight: 0,
+                  overflowY: 'auto',
+                  overflowX: 'hidden',
+                  position: 'relative',
+                  WebkitOverflowScrolling: 'touch',
+                  touchAction: 'pan-y'
+               }}
             >
                {children}
             </div>

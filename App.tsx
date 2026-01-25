@@ -1602,13 +1602,13 @@ Please SPEAK a helpful hint that:
   }, [isSessionActive]);
 
   return (
-    <div className="flex h-screen bg-[#FDFDFD] overflow-hidden">
+    <div className="flex h-screen bg-[#FDFDFD] overflow-hidden" style={{ touchAction: 'pan-y' }}>
       {/* Sidebar: Hidden on mobile, visible on lg+ */}
       <div className="hidden lg:block w-20 min-w-[80px] h-full shrink-0">
         <Sidebar userState={userState} activeTopic={activeTopic} notesCount={notes.length} />
       </div>
 
-      <main className="flex-1 flex flex-col lg:flex-row overflow-hidden">
+      <main className="flex-1 flex flex-col lg:flex-row overflow-hidden" style={{ touchAction: 'pan-y' }}>
         {/* Chat Panel: Modal on mobile, side panel on lg+ */}
         <div className={`
           ${isChatOpen ? 'fixed inset-0 z-50' : 'hidden'}
@@ -1669,7 +1669,7 @@ Please SPEAK a helpful hint that:
         </div>
 
         {/* Visual Panel: Full screen on mobile */}
-        <div className="flex-1 relative flex flex-col overflow-hidden">
+        <div className="flex-1 relative flex flex-col overflow-hidden" style={{ touchAction: 'pan-y' }}>
           <VisualPanel
             context={visualContext}
             activeTopic={activeTopic}
