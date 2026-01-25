@@ -3155,195 +3155,208 @@ const WaveParticleDualityRenderer: React.FC<WaveParticleDualityRendererProps> = 
       );
    }
 
-   // MASTERY Screen - Clean, minimal celebration
+   // MASTERY Screen - Consistent with game design system
    if (phase === 'mastery') {
       const masteryItems = [
-         { icon: '🌊', title: 'Wave-Particle Duality', desc: 'Particles behave as waves until observed' },
-         { icon: '🔀', title: 'Superposition', desc: 'Multiple states exist simultaneously' },
-         { icon: '👁️', title: 'Observer Effect', desc: 'Measurement collapses the wave function' },
-         { icon: '💻', title: 'Quantum Computing', desc: 'Harnesses superposition for parallel processing' },
-         { icon: '🎲', title: 'Probabilistic Reality', desc: 'Quantum mechanics predicts probabilities' },
+         { icon: '🌊', title: 'Wave-Particle Duality', desc: 'Particles travel as probability waves but are detected as particles', color: colors.primary },
+         { icon: '🔀', title: 'Superposition', desc: 'Quantum objects exist in multiple states simultaneously until measured', color: colors.accent },
+         { icon: '👁️', title: 'Observer Effect', desc: 'The act of measurement collapses the wave function into a definite state', color: colors.danger },
+         { icon: '💻', title: 'Quantum Computing', desc: 'Exploits superposition to process exponentially more information in parallel', color: colors.success },
+         { icon: '🎲', title: 'Probabilistic Reality', desc: 'At the quantum level, we can only predict probabilities, not certainties', color: colors.warning },
       ];
 
-      // Footer with back and home options
-      const masteryFooter = (
-         <div style={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            padding: '12px 16px',
-            borderTop: `1px solid ${colors.border}`,
-            backgroundColor: colors.bgCard,
-            gap: '12px'
-         }}>
-            <button
-               onMouseDown={() => goToPhase('test')}
-               style={{
-                  padding: '10px 16px',
-                  borderRadius: '10px',
-                  fontWeight: 600,
-                  fontSize: '13px',
-                  backgroundColor: colors.bgCardLight,
-                  color: colors.textSecondary,
-                  border: 'none',
-                  cursor: 'pointer'
-               }}
-            >
-               ← Back to Test
-            </button>
-            <div style={{
-               display: 'flex',
-               alignItems: 'center',
-               gap: '8px',
-               padding: '8px 16px',
-               borderRadius: '10px',
-               background: `${colors.success}15`
-            }}>
-               <span style={{ fontSize: '16px' }}>🎉</span>
-               <span style={{ fontSize: '13px', fontWeight: 700, color: colors.success }}>Lesson Complete!</span>
-            </div>
-            <button
-               onMouseDown={requestGoHome}
-               style={{
-                  padding: '10px 16px',
-                  borderRadius: '10px',
-                  fontWeight: 600,
-                  fontSize: '13px',
-                  backgroundColor: colors.bgCardLight,
-                  color: colors.textSecondary,
-                  border: 'none',
-                  cursor: 'pointer'
-               }}
-            >
-               Exit →
-            </button>
-         </div>
-      );
+      const masteryFooter = renderBottomBar(true, true, "Complete!", () => {
+         setTestQuestion(0);
+         setTestAnswers(Array(10).fill(null));
+         setTestSubmitted(false);
+         setPrediction(null);
+         setTwistPrediction(null);
+         goToPhase('hook');
+      }, colors.success);
 
       return renderPremiumWrapper(
-         <div style={{
-            padding: isMobile ? '20px 16px' : '32px 24px',
-            maxWidth: '600px',
-            margin: '0 auto'
-         }}>
-            {/* Header celebration */}
-            <div style={{ textAlign: 'center', marginBottom: '28px' }}>
+         <div style={{ position: 'relative' }}>
+            {/* Animated background orbs - same as hook page */}
+            <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', overflow: 'hidden' }}>
                <div style={{
-                  width: '80px',
-                  height: '80px',
+                  position: 'absolute',
+                  top: '5%',
+                  left: '10%',
+                  width: isMobile ? '120px' : '180px',
+                  height: isMobile ? '120px' : '180px',
                   borderRadius: '50%',
-                  margin: '0 auto 16px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  fontSize: '40px',
-                  background: `linear-gradient(135deg, ${colors.success}20 0%, ${colors.primary}20 100%)`,
-                  border: `2px solid ${colors.success}`
-               }}>
-                  ⚛️
-               </div>
-               <h1 style={{
-                  fontSize: isMobile ? '28px' : '32px',
-                  fontWeight: 800,
-                  marginBottom: '8px',
-                  color: colors.textPrimary
-               }}>
-                  Quantum Explorer!
-               </h1>
-               <p style={{
-                  fontSize: '14px',
-                  color: colors.textSecondary,
-                  margin: 0
-               }}>
-                  You've mastered the fundamentals of quantum mechanics
-               </p>
+                  background: `radial-gradient(circle, ${colors.success}20 0%, transparent 70%)`,
+                  animation: 'pulse 4s ease-in-out infinite',
+                  filter: 'blur(30px)'
+               }} />
+               <div style={{
+                  position: 'absolute',
+                  bottom: '15%',
+                  right: '10%',
+                  width: isMobile ? '100px' : '150px',
+                  height: isMobile ? '100px' : '150px',
+                  borderRadius: '50%',
+                  background: `radial-gradient(circle, ${colors.primary}15 0%, transparent 70%)`,
+                  animation: 'pulse 5s ease-in-out infinite 1s',
+                  filter: 'blur(30px)'
+               }} />
             </div>
 
-            {/* Concepts mastered - compact cards */}
-            <div style={{ marginBottom: '24px' }}>
-               <p style={{
-                  fontSize: '10px',
-                  fontWeight: 700,
-                  textTransform: 'uppercase',
-                  letterSpacing: '0.1em',
-                  color: colors.success,
-                  marginBottom: '12px'
-               }}>
-                  Concepts Mastered
-               </p>
-               <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                  {masteryItems.map((item, i) => (
-                     <div key={i} style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '12px',
-                        padding: '12px',
-                        borderRadius: '10px',
-                        background: colors.bgCard,
-                        border: `1px solid ${colors.border}`
-                     }}>
-                        <span style={{ fontSize: '20px' }}>{item.icon}</span>
-                        <div style={{ flex: 1 }}>
-                           <p style={{ fontWeight: 600, fontSize: '13px', color: colors.textPrimary, margin: 0 }}>{item.title}</p>
-                           <p style={{ fontSize: '11px', color: colors.textMuted, margin: 0 }}>{item.desc}</p>
-                        </div>
-                        <span style={{ color: colors.success, fontSize: '14px' }}>✓</span>
-                     </div>
-                  ))}
-               </div>
-            </div>
-
-            {/* Action buttons */}
             <div style={{
-               display: 'flex',
-               flexDirection: 'column',
-               gap: '10px'
+               padding: typo.pagePadding,
+               paddingBottom: '24px',
+               maxWidth: '600px',
+               margin: '0 auto',
+               position: 'relative',
+               zIndex: 1
             }}>
-               <button
-                  onMouseDown={() => {
-                     setParticleHits([]);
-                     setParticleCount(0);
-                     setDetectorOn(false);
-                     goToPhase('play');
-                  }}
-                  style={{
-                     width: '100%',
-                     padding: '14px 24px',
-                     borderRadius: '12px',
-                     fontWeight: 700,
-                     fontSize: '14px',
-                     background: `linear-gradient(135deg, ${colors.primary} 0%, ${colors.accent} 100%)`,
-                     color: 'white',
-                     border: 'none',
-                     cursor: 'pointer',
-                     boxShadow: `0 4px 20px ${colors.primary}30`
-                  }}
-               >
-                  🔬 Free Exploration Mode
-               </button>
-               <button
-                  onMouseDown={() => {
-                     setTestQuestion(0);
-                     setTestAnswers(Array(10).fill(null));
-                     setTestSubmitted(false);
-                     setPrediction(null);
-                     setTwistPrediction(null);
-                     goToPhase('hook');
-                  }}
-                  style={{
-                     width: '100%',
-                     padding: '12px 24px',
-                     borderRadius: '12px',
-                     fontWeight: 600,
-                     fontSize: '13px',
-                     background: 'transparent',
-                     color: colors.textSecondary,
-                     border: `1px solid ${colors.border}`,
-                     cursor: 'pointer'
-                  }}
-               >
-                  Start Over from Beginning
-               </button>
+               {renderSectionHeader("Step 10 • Mastery Achieved", "Quantum Explorer!", "You've glimpsed the strange heart of reality.")}
+
+               {/* Achievement badge */}
+               <div style={{
+                  padding: typo.cardPadding,
+                  borderRadius: '12px',
+                  marginBottom: typo.sectionGap,
+                  background: `linear-gradient(135deg, ${colors.success}15 0%, ${colors.primary}10 100%)`,
+                  border: `1px solid ${colors.success}30`,
+                  textAlign: 'center'
+               }}>
+                  <div style={{
+                     width: '64px',
+                     height: '64px',
+                     borderRadius: '50%',
+                     margin: '0 auto 12px',
+                     display: 'flex',
+                     alignItems: 'center',
+                     justifyContent: 'center',
+                     fontSize: '32px',
+                     background: `linear-gradient(135deg, ${colors.success}25 0%, ${colors.primary}25 100%)`,
+                     border: `2px solid ${colors.success}`,
+                     boxShadow: `0 0 30px ${colors.success}30`
+                  }}>
+                     ⚛️
+                  </div>
+                  <p style={{ fontSize: typo.bodyLarge, fontWeight: 700, color: colors.success, margin: 0 }}>
+                     Wave-Particle Duality Mastered
+                  </p>
+                  <p style={{ fontSize: typo.small, color: colors.textMuted, margin: 0, marginTop: '4px' }}>
+                     You understand one of nature's deepest mysteries
+                  </p>
+               </div>
+
+               {/* Concepts mastered - gradient cards like review phase */}
+               <div style={{ marginBottom: typo.sectionGap }}>
+                  <p style={{ fontSize: typo.label, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '10px', color: colors.success }}>
+                     Concepts Mastered
+                  </p>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: typo.elementGap }}>
+                     {masteryItems.map((item, i) => (
+                        <div key={i} style={{
+                           display: 'flex',
+                           alignItems: 'center',
+                           gap: '12px',
+                           padding: typo.cardPadding,
+                           borderRadius: '10px',
+                           background: `linear-gradient(135deg, ${item.color}12 0%, ${item.color}05 100%)`,
+                           border: `1px solid ${item.color}25`
+                        }}>
+                           <div style={{
+                              width: '36px',
+                              height: '36px',
+                              borderRadius: '8px',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              fontSize: '18px',
+                              background: `${item.color}20`,
+                              flexShrink: 0
+                           }}>
+                              {item.icon}
+                           </div>
+                           <div style={{ flex: 1, minWidth: 0 }}>
+                              <p style={{ fontWeight: 700, fontSize: typo.body, color: item.color, margin: 0 }}>{item.title}</p>
+                              <p style={{ fontSize: typo.small, color: colors.textSecondary, margin: 0, lineHeight: 1.4 }}>{item.desc}</p>
+                           </div>
+                           <div style={{
+                              width: '24px',
+                              height: '24px',
+                              borderRadius: '50%',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              background: colors.success,
+                              flexShrink: 0
+                           }}>
+                              <span style={{ color: 'white', fontSize: '12px', fontWeight: 700 }}>✓</span>
+                           </div>
+                        </div>
+                     ))}
+                  </div>
+               </div>
+
+               {/* Inspirational quote - like review phase */}
+               <div style={{
+                  padding: typo.cardPadding,
+                  borderRadius: '10px',
+                  textAlign: 'center',
+                  marginBottom: typo.sectionGap,
+                  background: colors.bgCard,
+                  border: `1px solid ${colors.border}`
+               }}>
+                  <p style={{ fontSize: typo.bodyLarge, fontWeight: 600, lineHeight: 1.4, color: colors.textPrimary, margin: 0, fontStyle: 'italic' }}>
+                     "If you think you understand quantum mechanics, you don't understand quantum mechanics."
+                  </p>
+                  <p style={{ fontSize: typo.small, marginTop: '6px', color: colors.textMuted, margin: 0 }}>— Richard Feynman</p>
+               </div>
+
+               {/* Action buttons - consistent with other phases */}
+               <div style={{ display: 'flex', flexDirection: 'column', gap: typo.elementGap }}>
+                  <button
+                     onMouseDown={() => {
+                        setParticleHits([]);
+                        setParticleCount(0);
+                        setDetectorOn(false);
+                        goToPhase('play');
+                     }}
+                     style={{
+                        width: '100%',
+                        padding: '14px 20px',
+                        borderRadius: '12px',
+                        fontWeight: 700,
+                        fontSize: typo.bodyLarge,
+                        background: `linear-gradient(135deg, ${colors.primary} 0%, ${colors.accent} 100%)`,
+                        color: 'white',
+                        border: 'none',
+                        cursor: 'pointer',
+                        boxShadow: `0 4px 20px ${colors.primary}30`
+                     }}
+                  >
+                     🔬 Free Exploration Mode
+                  </button>
+                  <button
+                     onMouseDown={() => {
+                        setTestQuestion(0);
+                        setTestAnswers(Array(10).fill(null));
+                        setTestSubmitted(false);
+                        setPrediction(null);
+                        setTwistPrediction(null);
+                        goToPhase('hook');
+                     }}
+                     style={{
+                        width: '100%',
+                        padding: '12px 20px',
+                        borderRadius: '10px',
+                        fontWeight: 600,
+                        fontSize: typo.body,
+                        background: colors.bgCardLight,
+                        color: colors.textSecondary,
+                        border: `1px solid ${colors.border}`,
+                        cursor: 'pointer'
+                     }}
+                  >
+                     ↺ Start Over from Beginning
+                  </button>
+               </div>
             </div>
          </div>,
          masteryFooter
