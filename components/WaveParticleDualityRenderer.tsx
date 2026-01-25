@@ -544,57 +544,72 @@ const WaveParticleDualityRenderer: React.FC<WaveParticleDualityRendererProps> = 
       });
    }, [phase, emitGameEvent, phaseLabels]);
 
-   // Premium wrapper component - fills parent container from GeneratedDiagram
-   // Parent is: <div className="absolute inset-0 flex flex-col">
-   // Accepts optional footer prop for bottom navigation bar
-   const PremiumWrapper = ({ children, footer }: { children: React.ReactNode; footer?: React.ReactNode }) => {
-      const currentIdx = phaseOrder.indexOf(phase);
-      const scrollContainerRef = useRef<HTMLDivElement>(null);
+   // Premium wrapper - NOW A RENDER FUNCTION (not a component) to prevent remounting
+   // This fixes the scroll reset issue caused by React treating inner components as new types
+   const currentIdx = phaseOrder.indexOf(phase);
 
-      // Minimal scroll debug
-      useEffect(() => {
-         const scrollEl = scrollContainerRef.current;
-         if (!scrollEl) return;
+   const renderPremiumWrapper = (children: React.ReactNode, footer?: React.ReactNode) => (
+      <div
+         className="absolute inset-0 flex flex-col"
+         style={{ backgroundColor: colors.bgDark, color: colors.textPrimary }}
+      >
+         {/* Subtle background gradient - purely decorative */}
+         <div style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: 'linear-gradient(135deg, #0f172a 0%, #020617 50%, #0f172a 100%)',
+            pointerEvents: 'none'
+         }} />
 
-         const handleScroll = () => console.log('[SCROLL] scrollTop:', scrollEl.scrollTop);
-         scrollEl.addEventListener('scroll', handleScroll, { passive: true });
-
-         // Log if scroll is possible
-         const canScroll = scrollEl.scrollHeight > scrollEl.clientHeight;
-         console.log('[SCROLL] canScroll:', canScroll, 'height:', scrollEl.scrollHeight, 'viewport:', scrollEl.clientHeight);
-
-         return () => scrollEl.removeEventListener('scroll', handleScroll);
-      }, [phase]);
-
-      return (
-         <div
-            className="absolute inset-0 flex flex-col"
-            style={{ backgroundColor: colors.bgDark, color: colors.textPrimary }}
-         >
-            {/* Subtle background gradient - purely decorative */}
-            <div style={{
-               position: 'absolute',
-               top: 0,
-               left: 0,
-               right: 0,
-               bottom: 0,
-               background: 'linear-gradient(135deg, #0f172a 0%, #020617 50%, #0f172a 100%)',
-               pointerEvents: 'none'
-            }} />
-
-            {/* HEADER - Part of flow, not fixed */}
-            <div style={{
-               flexShrink: 0,
-               display: 'flex',
-               alignItems: 'center',
-               justifyContent: 'space-between',
-               padding: isMobile ? '8px 12px' : '10px 16px',
-               backgroundColor: colors.bgCard,
-               borderBottom: `1px solid ${colors.border}`,
-               position: 'relative',
-               zIndex: 10,
-               gap: '8px'
-            }}>
+         {/* HEADER - Part of flow, not fixed */}
+         <div style={{
+            flexShrink: 0,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            padding: isMobile ? '8px 12px' : '10px 16px',
+            backgroundColor: colors.bgCard,
+            borderBottom: `1px solid ${colors.border}`,
+            position: 'relative',
+            zIndex: 10,
+            gap: '8px'
+         }}>
+            {/* Left buttons: Back + Home */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
+               {/* Back button - goes to previous phase */}
+               <button
+                  onMouseDown={() => {
+                     if (currentIdx > 0) {
+                        goToPhase(phaseOrder[currentIdx - 1]);
+                     }
+                  }}
+                  onTouchEnd={(e) => {
+                     e.preventDefault();
+                     if (currentIdx > 0) {
+                        goToPhase(phaseOrder[currentIdx - 1]);
+                     }
+                  }}
+                  style={{
+                     display: 'flex',
+                     alignItems: 'center',
+                     justifyContent: 'center',
+                     width: '36px',
+                     height: '36px',
+                     borderRadius: '8px',
+                     backgroundColor: currentIdx > 0 ? colors.bgCardLight : 'transparent',
+                     border: currentIdx > 0 ? `1px solid ${colors.border}` : '1px solid transparent',
+                     color: currentIdx > 0 ? colors.textSecondary : colors.textMuted,
+                     cursor: currentIdx > 0 ? 'pointer' : 'default',
+                     opacity: currentIdx > 0 ? 1 : 0.4,
+                     flexShrink: 0
+                  }}
+                  title={currentIdx > 0 ? `Back to ${phaseLabels[phaseOrder[currentIdx - 1]]}` : 'No previous step'}
+               >
+                  <span style={{ fontSize: '14px' }}>←</span>
+               </button>
                {/* Home button */}
                <button
                   onMouseDown={requestGoHome}
@@ -612,88 +627,86 @@ const WaveParticleDualityRenderer: React.FC<WaveParticleDualityRendererProps> = 
                      cursor: 'pointer',
                      flexShrink: 0
                   }}
-                  title="Go Home"
+                  title="Exit to Home"
                >
-                  <span style={{ fontSize: '16px' }}>🏠</span>
+                  <span style={{ fontSize: '14px' }}>🏠</span>
                </button>
-
-               {/* Progress bar - centered */}
-               <div style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '6px',
-                  flex: 1,
-                  justifyContent: 'center'
-               }}>
-                  {phaseOrder.map((p, i) => (
-                     <button
-                        key={p}
-                        onMouseDown={(e) => { e.preventDefault(); if (i <= currentIdx) goToPhase(p); }}
-                        onTouchEnd={(e) => { e.preventDefault(); if (i <= currentIdx) goToPhase(p); }}
-                        style={{
-                           width: i === currentIdx ? '20px' : '10px',
-                           height: '10px',
-                           borderRadius: '5px',
-                           border: 'none',
-                           backgroundColor: i < currentIdx
-                              ? colors.success
-                              : i === currentIdx
-                                 ? colors.primary
-                                 : colors.border,
-                           cursor: i <= currentIdx ? 'pointer' : 'default',
-                           transition: 'all 0.2s',
-                           opacity: i > currentIdx ? 0.5 : 1
-                        }}
-                        title={`${phaseLabels[p]} (${i + 1}/${phaseOrder.length})`}
-                     />
-                  ))}
-               </div>
-
-               {/* Phase label and count */}
-               <div style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '8px',
-                  flexShrink: 0
-               }}>
-                  <span style={{
-                     fontSize: '11px',
-                     fontWeight: 700,
-                     color: colors.primary,
-                     padding: '4px 8px',
-                     borderRadius: '6px',
-                     backgroundColor: `${colors.primary}15`
-                  }}>
-                     {currentIdx + 1}/{phaseOrder.length}
-                  </span>
-               </div>
             </div>
 
-            {/* MAIN CONTENT - Fills remaining space, scrolls if needed */}
-            <div
-               ref={scrollContainerRef}
-               style={{
-                  flex: 1,
-                  minHeight: 0,
-                  overflowY: 'auto',
-                  overflowX: 'hidden',
-                  position: 'relative',
-                  WebkitOverflowScrolling: 'touch',
-                  touchAction: 'pan-y'
-               }}
-            >
-               {children}
+            {/* Progress bar - centered */}
+            <div style={{
+               display: 'flex',
+               alignItems: 'center',
+               gap: '6px',
+               flex: 1,
+               justifyContent: 'center'
+            }}>
+               {phaseOrder.map((p, i) => (
+                  <button
+                     key={p}
+                     onMouseDown={(e) => { e.preventDefault(); if (i <= currentIdx) goToPhase(p); }}
+                     onTouchEnd={(e) => { e.preventDefault(); if (i <= currentIdx) goToPhase(p); }}
+                     style={{
+                        width: i === currentIdx ? '20px' : '10px',
+                        height: '10px',
+                        borderRadius: '5px',
+                        border: 'none',
+                        backgroundColor: i < currentIdx
+                           ? colors.success
+                           : i === currentIdx
+                              ? colors.primary
+                              : colors.border,
+                        cursor: i <= currentIdx ? 'pointer' : 'default',
+                        transition: 'all 0.2s',
+                        opacity: i > currentIdx ? 0.5 : 1
+                     }}
+                     title={`${phaseLabels[p]} (${i + 1}/${phaseOrder.length})`}
+                  />
+               ))}
             </div>
 
-            {/* FOOTER - Bottom navigation bar, stays fixed at bottom */}
-            {footer && (
-               <div style={{ flexShrink: 0, position: 'relative', zIndex: 10 }}>
-                  {footer}
-               </div>
-            )}
+            {/* Phase label and count */}
+            <div style={{
+               display: 'flex',
+               alignItems: 'center',
+               gap: '8px',
+               flexShrink: 0
+            }}>
+               <span style={{
+                  fontSize: '11px',
+                  fontWeight: 700,
+                  color: colors.primary,
+                  padding: '4px 8px',
+                  borderRadius: '6px',
+                  backgroundColor: `${colors.primary}15`
+               }}>
+                  {currentIdx + 1}/{phaseOrder.length}
+               </span>
+            </div>
          </div>
-      );
-   };
+
+         {/* MAIN CONTENT - Fills remaining space, scrolls if needed */}
+         <div
+            style={{
+               flex: '1 1 0%',
+               minHeight: 0,
+               overflowY: 'auto',
+               overflowX: 'hidden',
+               position: 'relative',
+               WebkitOverflowScrolling: 'touch'
+            }}
+         >
+            {children}
+         </div>
+
+         {/* FOOTER - Bottom navigation bar, stays fixed at bottom */}
+         {footer && (
+            <div style={{ flexShrink: 0, position: 'relative', zIndex: 10 }}>
+               {footer}
+            </div>
+         )}
+      </div>
+   );
 
    // Helper function for section header - NOT a component
    const renderSectionHeader = (phaseName: string, title: string, subtitle?: string) => (
@@ -1342,8 +1355,7 @@ const WaveParticleDualityRenderer: React.FC<WaveParticleDualityRendererProps> = 
 
    // HOOK Screen - Apple meets Airbnb premium design
    if (phase === 'hook') {
-      return (
-         <PremiumWrapper>
+      return renderPremiumWrapper(
          <div style={{
             display: 'flex',
             flexDirection: 'column',
@@ -1605,14 +1617,12 @@ const WaveParticleDualityRenderer: React.FC<WaveParticleDualityRendererProps> = 
                }
             `}</style>
          </div>
-         </PremiumWrapper>
       );
    }
 
    // PREDICT Screen - Premium redesign (RESPONSIVE)
    if (phase === 'predict') {
-      return (
-         <PremiumWrapper footer={renderBottomBar(true, !!prediction, "Run Experiment")}>
+      return renderPremiumWrapper(
          <div style={{
             padding: typo.pagePadding,
             paddingBottom: '24px', // Extra bottom padding for scroll
@@ -1757,8 +1767,8 @@ const WaveParticleDualityRenderer: React.FC<WaveParticleDualityRendererProps> = 
                   <span style={{ color: colors.warning, fontWeight: 700 }}>💡 Hint:</span> Particles → two bands. Waves → interference. <em style={{ color: colors.textMuted }}>But electrons are fired one at a time...</em>
                </p>
             </div>
-         </div>
-         </PremiumWrapper>
+         </div>,
+         renderBottomBar(true, !!prediction, "Run Experiment")
       );
    }
 
@@ -1772,8 +1782,7 @@ const WaveParticleDualityRenderer: React.FC<WaveParticleDualityRendererProps> = 
          many: { title: 'Quantum Reality', message: 'Single particles create wave interference. Wave-particle duality!', color: colors.success },
       };
 
-      return (
-         <PremiumWrapper footer={renderBottomBar(true, particleCount >= 30, "Understand Why")}>
+      return renderPremiumWrapper(
          <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
 
             <div style={{ flex: 1, display: 'flex', flexDirection: isMobile ? 'column' : 'row', minHeight: 0, overflow: 'hidden' }}>
@@ -1861,15 +1870,14 @@ const WaveParticleDualityRenderer: React.FC<WaveParticleDualityRendererProps> = 
                   </div>
                </div>
             </div>
-         </div>
-         </PremiumWrapper>
+         </div>,
+         renderBottomBar(true, particleCount >= 30, "Understand Why")
       );
    }
 
    // REVIEW Screen - Optimized for minimal scrolling
    if (phase === 'review') {
-      return (
-         <PremiumWrapper footer={renderBottomBar(true, true, "The Observer Effect")}>
+      return renderPremiumWrapper(
          <div style={{
             padding: typo.pagePadding,
             paddingBottom: '24px', // Extra bottom padding for scroll
@@ -1935,15 +1943,14 @@ const WaveParticleDualityRenderer: React.FC<WaveParticleDualityRendererProps> = 
                   <span style={{ fontWeight: 700, color: colors.success }}>Why it matters:</span> This is the foundation of <strong style={{ color: colors.textPrimary }}>quantum computing</strong> — exploring many solutions simultaneously.
                </p>
             </div>
-         </div>
-         </PremiumWrapper>
+         </div>,
+         renderBottomBar(true, true, "The Observer Effect")
       );
    }
 
    // TWIST-PREDICT Screen - Optimized for minimal scrolling
    if (phase === 'twist_predict') {
-      return (
-         <PremiumWrapper footer={renderBottomBar(true, !!twistPrediction, "Turn On Detector", undefined, colors.danger)}>
+      return renderPremiumWrapper(
          <div style={{
             padding: typo.pagePadding,
             paddingBottom: '24px', // Extra bottom padding for scroll
@@ -2062,15 +2069,14 @@ const WaveParticleDualityRenderer: React.FC<WaveParticleDualityRendererProps> = 
                   <span style={{ color: colors.warning, fontWeight: 700 }}>💡 Think:</span> If the electron goes through BOTH slits as a wave, what happens when we force it to reveal which slit it used?
                </p>
             </div>
-         </div>
-         </PremiumWrapper>
+         </div>,
+         renderBottomBar(true, !!twistPrediction, "Turn On Detector", undefined, colors.danger)
       );
    }
 
    // TWIST-PLAY Screen - Optimized for minimal scrolling
    if (phase === 'twist_play') {
-      return (
-         <PremiumWrapper footer={renderBottomBar(true, particleCount >= 30, "Deep Understanding", undefined, colors.danger)}>
+      return renderPremiumWrapper(
          <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
 
             <div style={{ flex: 1, display: 'flex', flexDirection: isMobile ? 'column' : 'row', minHeight: 0, overflow: 'hidden' }}>
@@ -2191,15 +2197,14 @@ const WaveParticleDualityRenderer: React.FC<WaveParticleDualityRendererProps> = 
                   </div>
                </div>
             </div>
-         </div>
-         </PremiumWrapper>
+         </div>,
+         renderBottomBar(true, particleCount >= 30, "Deep Understanding", undefined, colors.danger)
       );
    }
 
    // TWIST-REVIEW Screen
    if (phase === 'twist_review') {
-      return (
-         <PremiumWrapper footer={renderBottomBar(true, true, "Real World Applications", undefined, colors.success)}>
+      return renderPremiumWrapper(
          <div style={{
             padding: typo.pagePadding,
             paddingBottom: '32px', // Extra bottom padding for scroll
@@ -2268,8 +2273,8 @@ const WaveParticleDualityRenderer: React.FC<WaveParticleDualityRendererProps> = 
                   <span style={{ fontWeight: 700, color: colors.primary }}>Why it matters:</span> Quantum computers must avoid "observing" qubits during computation.
                </p>
             </div>
-         </div>
-         </PremiumWrapper>
+         </div>,
+         renderBottomBar(true, true, "Real World Applications", undefined, colors.success)
       );
    }
 
@@ -2465,9 +2470,8 @@ const WaveParticleDualityRenderer: React.FC<WaveParticleDualityRendererProps> = 
          </div>
       );
 
-      return (
-         <PremiumWrapper footer={transferFooter}>
-         <div style={{ padding: '16px 16px 8px', background: colors.bgCard, borderBottom: `1px solid ${colors.border}` }}>
+      return renderPremiumWrapper(
+         <><div style={{ padding: '16px 16px 8px', background: colors.bgCard, borderBottom: `1px solid ${colors.border}` }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
                <div>
                   <p style={{ fontSize: '10px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', color: colors.success }}>Step 7 • Real World Applications</p>
@@ -2958,8 +2962,8 @@ const WaveParticleDualityRenderer: React.FC<WaveParticleDualityRendererProps> = 
                   <p style={{ fontSize: '14px', lineHeight: 1.6, fontWeight: 500, color: colors.textPrimary, margin: 0 }}>{currentApp.futureImpact}</p>
                </div>
             </div>
-         </div>
-         </PremiumWrapper>
+         </div></>,
+         transferFooter
       );
    }
 
@@ -2972,8 +2976,7 @@ const WaveParticleDualityRenderer: React.FC<WaveParticleDualityRendererProps> = 
          const score = calculateTestScore();
          const passed = score >= Math.ceil(totalQuestions * 0.7);
 
-         return (
-            <PremiumWrapper>
+         return renderPremiumWrapper(
             <div style={{ padding: isMobile ? '16px' : '24px', maxWidth: '672px', margin: '0 auto' }}>
                <div style={{ textAlign: 'center', marginBottom: '24px' }}>
                   <div style={{ width: '80px', height: '80px', borderRadius: '50%', margin: '0 auto 12px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '36px', background: passed ? `${colors.success}20` : `${colors.warning}20`, border: `3px solid ${passed ? colors.success : colors.warning}` }}>
@@ -3073,7 +3076,6 @@ const WaveParticleDualityRenderer: React.FC<WaveParticleDualityRendererProps> = 
                   </button>
                </div>
             </div>
-            </PremiumWrapper>
          );
       }
 
@@ -3107,8 +3109,7 @@ const WaveParticleDualityRenderer: React.FC<WaveParticleDualityRendererProps> = 
          }
       }, colors.warning);
 
-      return (
-         <PremiumWrapper footer={testFooter}>
+      return renderPremiumWrapper(
          <div style={{ padding: isMobile ? '16px' : '24px', maxWidth: '672px', margin: '0 auto' }}>
             <div style={{ marginBottom: '24px' }}>
                <p style={{ fontSize: '10px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '8px', color: colors.warning }}>Step 8 • Knowledge Test</p>
@@ -3149,54 +3150,203 @@ const WaveParticleDualityRenderer: React.FC<WaveParticleDualityRendererProps> = 
                   </button>
                ))}
             </div>
-         </div>
-         </PremiumWrapper>
+         </div>,
+         testFooter
       );
    }
 
-   // MASTERY Screen
+   // MASTERY Screen - Clean, minimal celebration
    if (phase === 'mastery') {
       const masteryItems = [
-         { icon: '🌊', title: 'Wave-Particle Duality', desc: 'Particles travel as probability waves but are detected as particles' },
-         { icon: '🔀', title: 'Superposition', desc: 'Quantum objects exist in multiple states simultaneously until measured' },
-         { icon: '👁️', title: 'Observer Effect', desc: 'The act of measurement collapses the wave function' },
-         { icon: '💻', title: 'Quantum Computing', desc: 'Exploits superposition to process information in parallel' },
-         { icon: '🎲', title: 'Probabilistic Reality', desc: 'At the quantum level, we can only predict probabilities' },
+         { icon: '🌊', title: 'Wave-Particle Duality', desc: 'Particles behave as waves until observed' },
+         { icon: '🔀', title: 'Superposition', desc: 'Multiple states exist simultaneously' },
+         { icon: '👁️', title: 'Observer Effect', desc: 'Measurement collapses the wave function' },
+         { icon: '💻', title: 'Quantum Computing', desc: 'Harnesses superposition for parallel processing' },
+         { icon: '🎲', title: 'Probabilistic Reality', desc: 'Quantum mechanics predicts probabilities' },
       ];
 
-      const masteryFooter = renderBottomBar(true, false, "Complete!", undefined, colors.success);
+      // Footer with back and home options
+      const masteryFooter = (
+         <div style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            padding: '12px 16px',
+            borderTop: `1px solid ${colors.border}`,
+            backgroundColor: colors.bgCard,
+            gap: '12px'
+         }}>
+            <button
+               onMouseDown={() => goToPhase('test')}
+               style={{
+                  padding: '10px 16px',
+                  borderRadius: '10px',
+                  fontWeight: 600,
+                  fontSize: '13px',
+                  backgroundColor: colors.bgCardLight,
+                  color: colors.textSecondary,
+                  border: 'none',
+                  cursor: 'pointer'
+               }}
+            >
+               ← Back to Test
+            </button>
+            <div style={{
+               display: 'flex',
+               alignItems: 'center',
+               gap: '8px',
+               padding: '8px 16px',
+               borderRadius: '10px',
+               background: `${colors.success}15`
+            }}>
+               <span style={{ fontSize: '16px' }}>🎉</span>
+               <span style={{ fontSize: '13px', fontWeight: 700, color: colors.success }}>Lesson Complete!</span>
+            </div>
+            <button
+               onMouseDown={requestGoHome}
+               style={{
+                  padding: '10px 16px',
+                  borderRadius: '10px',
+                  fontWeight: 600,
+                  fontSize: '13px',
+                  backgroundColor: colors.bgCardLight,
+                  color: colors.textSecondary,
+                  border: 'none',
+                  cursor: 'pointer'
+               }}
+            >
+               Exit →
+            </button>
+         </div>
+      );
 
-      return (
-         <PremiumWrapper footer={masteryFooter}>
-         <div style={{ position: 'relative' }}>
-            {confetti.map((c, i) => (
-               <div key={i} style={{ position: 'absolute', width: '12px', height: '12px', borderRadius: '50%', left: `${c.x}%`, top: `${c.y}%`, backgroundColor: c.color, animation: `bounce ${1.5 + c.delay}s infinite`, pointerEvents: 'none' }} />
-            ))}
-            <div style={{ padding: isMobile ? '24px 16px' : '24px', maxWidth: '672px', margin: '0 auto', textAlign: 'center', position: 'relative', zIndex: 10 }}>
-               <div style={{ width: '112px', height: '112px', borderRadius: '50%', margin: '0 auto 24px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '60px', background: `linear-gradient(135deg, ${colors.primary}30 0%, ${colors.accent}30 100%)`, border: `3px solid ${colors.primary}`, boxShadow: `0 0 60px ${colors.primary}40` }}>⚛️</div>
-               <h1 style={{ fontSize: isMobile ? '36px' : '48px', fontWeight: 900, marginBottom: '16px', background: `linear-gradient(135deg, ${colors.primary} 0%, ${colors.accent} 50%, #ec4899 100%)`, WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Quantum Explorer!</h1>
-               <p style={{ fontSize: '18px', marginBottom: '32px', color: colors.textSecondary }}>You've glimpsed the strange heart of reality. Here's what you've mastered:</p>
-               <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '32px', textAlign: 'left' }}>
+      return renderPremiumWrapper(
+         <div style={{
+            padding: isMobile ? '20px 16px' : '32px 24px',
+            maxWidth: '600px',
+            margin: '0 auto'
+         }}>
+            {/* Header celebration */}
+            <div style={{ textAlign: 'center', marginBottom: '28px' }}>
+               <div style={{
+                  width: '80px',
+                  height: '80px',
+                  borderRadius: '50%',
+                  margin: '0 auto 16px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: '40px',
+                  background: `linear-gradient(135deg, ${colors.success}20 0%, ${colors.primary}20 100%)`,
+                  border: `2px solid ${colors.success}`
+               }}>
+                  ⚛️
+               </div>
+               <h1 style={{
+                  fontSize: isMobile ? '28px' : '32px',
+                  fontWeight: 800,
+                  marginBottom: '8px',
+                  color: colors.textPrimary
+               }}>
+                  Quantum Explorer!
+               </h1>
+               <p style={{
+                  fontSize: '14px',
+                  color: colors.textSecondary,
+                  margin: 0
+               }}>
+                  You've mastered the fundamentals of quantum mechanics
+               </p>
+            </div>
+
+            {/* Concepts mastered - compact cards */}
+            <div style={{ marginBottom: '24px' }}>
+               <p style={{
+                  fontSize: '10px',
+                  fontWeight: 700,
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.1em',
+                  color: colors.success,
+                  marginBottom: '12px'
+               }}>
+                  Concepts Mastered
+               </p>
+               <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                   {masteryItems.map((item, i) => (
-                     <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '16px', padding: '16px', borderRadius: '16px', background: `linear-gradient(135deg, ${colors.bgCard}80 0%, ${colors.bgCardLight}40 100%)`, border: `1px solid ${colors.border}` }}>
-                        <div style={{ width: '48px', height: '48px', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '24px', background: `${colors.success}20` }}>{item.icon}</div>
+                     <div key={i} style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '12px',
+                        padding: '12px',
+                        borderRadius: '10px',
+                        background: colors.bgCard,
+                        border: `1px solid ${colors.border}`
+                     }}>
+                        <span style={{ fontSize: '20px' }}>{item.icon}</span>
                         <div style={{ flex: 1 }}>
-                           <p style={{ fontWeight: 700, fontSize: '14px', color: colors.textPrimary, margin: 0 }}>{item.title}</p>
-                           <p style={{ fontSize: '12px', color: colors.textMuted, margin: 0 }}>{item.desc}</p>
+                           <p style={{ fontWeight: 600, fontSize: '13px', color: colors.textPrimary, margin: 0 }}>{item.title}</p>
+                           <p style={{ fontSize: '11px', color: colors.textMuted, margin: 0 }}>{item.desc}</p>
                         </div>
-                        <div style={{ width: '32px', height: '32px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: colors.success }}>
-                           <span style={{ color: 'white', fontSize: '14px' }}>✓</span>
-                        </div>
+                        <span style={{ color: colors.success, fontSize: '14px' }}>✓</span>
                      </div>
                   ))}
                </div>
-               <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', gap: '16px', justifyContent: 'center' }}>
-                  <button onMouseDown={() => { setTestQuestion(0); setTestAnswers(Array(10).fill(null)); setTestSubmitted(false); setPrediction(null); setTwistPrediction(null); goToPhase('hook'); }} style={{ padding: '16px 32px', borderRadius: '16px', fontWeight: 700, background: colors.bgCardLight, color: colors.textSecondary, border: `1px solid ${colors.border}`, cursor: 'pointer' }}>Start Over</button>
-                  <button onMouseDown={() => { setParticleHits([]); setParticleCount(0); setDetectorOn(false); goToPhase('play'); }} style={{ padding: '16px 32px', borderRadius: '16px', fontWeight: 700, background: `linear-gradient(135deg, ${colors.primary} 0%, ${colors.accent} 100%)`, color: colors.textPrimary, border: 'none', cursor: 'pointer', boxShadow: `0 8px 32px ${colors.primary}40` }}>Free Exploration Mode</button>
-               </div>
             </div>
-         </div>
-         </PremiumWrapper>
+
+            {/* Action buttons */}
+            <div style={{
+               display: 'flex',
+               flexDirection: 'column',
+               gap: '10px'
+            }}>
+               <button
+                  onMouseDown={() => {
+                     setParticleHits([]);
+                     setParticleCount(0);
+                     setDetectorOn(false);
+                     goToPhase('play');
+                  }}
+                  style={{
+                     width: '100%',
+                     padding: '14px 24px',
+                     borderRadius: '12px',
+                     fontWeight: 700,
+                     fontSize: '14px',
+                     background: `linear-gradient(135deg, ${colors.primary} 0%, ${colors.accent} 100%)`,
+                     color: 'white',
+                     border: 'none',
+                     cursor: 'pointer',
+                     boxShadow: `0 4px 20px ${colors.primary}30`
+                  }}
+               >
+                  🔬 Free Exploration Mode
+               </button>
+               <button
+                  onMouseDown={() => {
+                     setTestQuestion(0);
+                     setTestAnswers(Array(10).fill(null));
+                     setTestSubmitted(false);
+                     setPrediction(null);
+                     setTwistPrediction(null);
+                     goToPhase('hook');
+                  }}
+                  style={{
+                     width: '100%',
+                     padding: '12px 24px',
+                     borderRadius: '12px',
+                     fontWeight: 600,
+                     fontSize: '13px',
+                     background: 'transparent',
+                     color: colors.textSecondary,
+                     border: `1px solid ${colors.border}`,
+                     cursor: 'pointer'
+                  }}
+               >
+                  Start Over from Beginning
+               </button>
+            </div>
+         </div>,
+         masteryFooter
       );
    }
 
