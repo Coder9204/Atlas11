@@ -561,7 +561,8 @@ const WaveParticleDualityRenderer: React.FC<WaveParticleDualityRendererProps> = 
             flexDirection: 'column',
             backgroundColor: colors.bgDark,
             color: colors.textPrimary,
-            overflow: 'hidden'
+            overflow: 'hidden',
+            touchAction: 'pan-y'
          }}>
             {/* Subtle background gradient - purely decorative */}
             <div style={{
@@ -665,12 +666,9 @@ const WaveParticleDualityRenderer: React.FC<WaveParticleDualityRendererProps> = 
             <div style={{
                flex: 1,
                minHeight: 0,
-               overflowY: 'scroll',
+               overflowY: 'auto',
                overflowX: 'hidden',
-               WebkitOverflowScrolling: 'touch',
-               touchAction: 'pan-y',
-               overscrollBehavior: 'contain',
-               position: 'relative'
+               WebkitOverflowScrolling: 'touch'
             }}>
                {children}
             </div>
