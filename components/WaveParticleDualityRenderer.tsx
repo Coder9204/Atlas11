@@ -545,43 +545,26 @@ const WaveParticleDualityRenderer: React.FC<WaveParticleDualityRendererProps> = 
    }, [phase, emitGameEvent, phaseLabels]);
 
    // Premium wrapper component - REDESIGNED for proper viewport layout
-   // Uses absolute positioning to fill parent container from GeneratedDiagram
+   // Uses height 100% to fill parent container from GeneratedDiagram
    // Accepts optional footer prop for bottom navigation bar
    const PremiumWrapper = ({ children, footer }: { children: React.ReactNode; footer?: React.ReactNode }) => {
       const currentIdx = phaseOrder.indexOf(phase);
 
       return (
-         <div style={{
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            display: 'flex',
-            flexDirection: 'column',
+         <div className="h-full w-full flex flex-col" style={{
             backgroundColor: colors.bgDark,
             color: colors.textPrimary,
-            overflow: 'hidden'
          }}>
             {/* Subtle background gradient - purely decorative */}
-            <div style={{
-               position: 'absolute',
-               inset: 0,
+            <div className="absolute inset-0 pointer-events-none" style={{
                background: 'linear-gradient(135deg, #0f172a 0%, #020617 50%, #0f172a 100%)',
-               pointerEvents: 'none'
             }} />
 
             {/* HEADER - Part of flow, not fixed */}
-            <div style={{
-               flexShrink: 0,
-               display: 'flex',
-               alignItems: 'center',
-               justifyContent: 'space-between',
+            <div className="shrink-0 flex items-center justify-between relative z-10" style={{
                padding: isMobile ? '8px 12px' : '10px 16px',
                backgroundColor: colors.bgCard,
                borderBottom: `1px solid ${colors.border}`,
-               position: 'relative',
-               zIndex: 10,
                gap: '8px'
             }}>
                {/* Home button */}
@@ -659,23 +642,18 @@ const WaveParticleDualityRenderer: React.FC<WaveParticleDualityRendererProps> = 
             </div>
 
             {/* MAIN CONTENT - Fills remaining space, scrolls if needed */}
-            <div style={{
-               flex: 1,
-               minHeight: 0, // Critical for flex overflow to work
-               overflow: 'auto',
-               overflowX: 'hidden',
-               overflowY: 'auto', // Explicit vertical scroll
-               WebkitOverflowScrolling: 'touch', // Smooth scrolling on iOS
-               touchAction: 'pan-y', // Allow vertical touch scrolling
-               position: 'relative',
-               zIndex: 5
-            }}>
+            <div
+               className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden"
+               style={{
+                  WebkitOverflowScrolling: 'touch', // Smooth scrolling on iOS
+               }}
+            >
                {children}
             </div>
 
             {/* FOOTER - Bottom navigation bar, stays fixed at bottom */}
             {footer && (
-               <div style={{ flexShrink: 0, position: 'relative', zIndex: 10 }}>
+               <div className="shrink-0 relative z-10">
                   {footer}
                </div>
             )}
