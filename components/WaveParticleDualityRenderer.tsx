@@ -551,19 +551,10 @@ const WaveParticleDualityRenderer: React.FC<WaveParticleDualityRendererProps> = 
       const currentIdx = phaseOrder.indexOf(phase);
 
       return (
-         <div style={{
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            display: 'flex',
-            flexDirection: 'column',
-            backgroundColor: colors.bgDark,
-            color: colors.textPrimary,
-            overflow: 'hidden',
-            touchAction: 'pan-y'
-         }}>
+         <div
+            className="absolute inset-0 flex flex-col overflow-hidden"
+            style={{ backgroundColor: colors.bgDark, color: colors.textPrimary }}
+         >
             {/* Subtle background gradient - purely decorative */}
             <div style={{
                position: 'absolute',
@@ -663,14 +654,7 @@ const WaveParticleDualityRenderer: React.FC<WaveParticleDualityRendererProps> = 
             </div>
 
             {/* MAIN CONTENT - Fills remaining space, scrolls if needed */}
-            <div style={{
-               flex: 1,
-               minHeight: 0,
-               position: 'relative',
-               overflowY: 'auto',
-               overflowX: 'hidden',
-               WebkitOverflowScrolling: 'touch'
-            }}>
+            <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden relative">
                {children}
             </div>
 
