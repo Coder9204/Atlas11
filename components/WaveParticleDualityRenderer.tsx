@@ -549,6 +549,87 @@ const WaveParticleDualityRenderer: React.FC<WaveParticleDualityRendererProps> = 
    // Accepts optional footer prop for bottom navigation bar
    const PremiumWrapper = ({ children, footer }: { children: React.ReactNode; footer?: React.ReactNode }) => {
       const currentIdx = phaseOrder.indexOf(phase);
+      const scrollContainerRef = useRef<HTMLDivElement>(null);
+
+      // SCROLL DEBUGGING - will log to console
+      useEffect(() => {
+         const scrollEl = scrollContainerRef.current;
+         if (!scrollEl) return;
+
+         const logScrollInfo = (eventType: string, e?: Event) => {
+            const computed = window.getComputedStyle(scrollEl);
+            console.log(`[SCROLL DEBUG] ${eventType}:`, {
+               scrollTop: scrollEl.scrollTop,
+               scrollHeight: scrollEl.scrollHeight,
+               clientHeight: scrollEl.clientHeight,
+               canScroll: scrollEl.scrollHeight > scrollEl.clientHeight,
+               overflowY: computed.overflowY,
+               overflowX: computed.overflowX,
+               touchAction: computed.touchAction,
+               position: computed.position,
+               height: computed.height,
+               minHeight: computed.minHeight,
+               flex: computed.flex,
+               eventDefaultPrevented: e?.defaultPrevented,
+            });
+         };
+
+         const handleTouchStart = (e: TouchEvent) => {
+            console.log('[SCROLL DEBUG] touchstart', {
+               target: (e.target as HTMLElement)?.tagName,
+               targetClass: (e.target as HTMLElement)?.className,
+               touches: e.touches.length,
+               clientY: e.touches[0]?.clientY,
+            });
+            logScrollInfo('touchstart', e);
+         };
+
+         const handleTouchMove = (e: TouchEvent) => {
+            console.log('[SCROLL DEBUG] touchmove', {
+               target: (e.target as HTMLElement)?.tagName,
+               defaultPrevented: e.defaultPrevented,
+               cancelable: e.cancelable,
+               clientY: e.touches[0]?.clientY,
+            });
+         };
+
+         const handleScroll = (e: Event) => {
+            console.log('[SCROLL DEBUG] scroll event fired!', {
+               scrollTop: scrollEl.scrollTop,
+            });
+         };
+
+         // Log initial state
+         console.log('[SCROLL DEBUG] === SCROLL CONTAINER MOUNTED ===');
+         logScrollInfo('initial');
+
+         // Check parent chain for overflow:hidden
+         let parent = scrollEl.parentElement;
+         let depth = 0;
+         while (parent && depth < 10) {
+            const parentComputed = window.getComputedStyle(parent);
+            if (parentComputed.overflow === 'hidden' || parentComputed.overflowY === 'hidden') {
+               console.log(`[SCROLL DEBUG] Parent ${depth} has overflow hidden:`, {
+                  tagName: parent.tagName,
+                  className: parent.className,
+                  overflow: parentComputed.overflow,
+                  overflowY: parentComputed.overflowY,
+               });
+            }
+            parent = parent.parentElement;
+            depth++;
+         }
+
+         scrollEl.addEventListener('touchstart', handleTouchStart, { passive: true });
+         scrollEl.addEventListener('touchmove', handleTouchMove, { passive: true });
+         scrollEl.addEventListener('scroll', handleScroll, { passive: true });
+
+         return () => {
+            scrollEl.removeEventListener('touchstart', handleTouchStart);
+            scrollEl.removeEventListener('touchmove', handleTouchMove);
+            scrollEl.removeEventListener('scroll', handleScroll);
+         };
+      }, [phase]);
 
       return (
          <div
@@ -654,7 +735,10 @@ const WaveParticleDualityRenderer: React.FC<WaveParticleDualityRendererProps> = 
             </div>
 
             {/* MAIN CONTENT - Fills remaining space, scrolls if needed */}
-            <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden relative">
+            <div
+               ref={scrollContainerRef}
+               className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden relative"
+            >
                {children}
             </div>
 
