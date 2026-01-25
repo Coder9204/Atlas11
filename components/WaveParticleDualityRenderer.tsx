@@ -3165,6 +3165,28 @@ const WaveParticleDualityRenderer: React.FC<WaveParticleDualityRendererProps> = 
          { icon: '🎲', title: 'Probabilistic Reality', desc: 'At the quantum level, we can only predict probabilities, not certainties', color: colors.warning },
       ];
 
+      // Calculate pass/fail based on test score
+      const testScore = calculateTestScore();
+      const percentage = Math.round((testScore / 10) * 100);
+      const isPassing = testScore >= 7; // 70% threshold
+
+      // Handle return to dashboard
+      const handleReturnToDashboard = () => {
+         emitGameEvent('button_clicked', {
+            action: 'return_to_dashboard',
+            message: 'User requested to return to dashboard'
+         });
+         window.dispatchEvent(new CustomEvent('returnToDashboard'));
+      };
+
+      // Handle retake test
+      const handleRetakeTest = () => {
+         setTestQuestion(0);
+         setTestAnswers(Array(10).fill(null));
+         setTestSubmitted(false);
+         goToPhase('test');
+      };
+
       const masteryFooter = renderBottomBar(true, true, "Complete!", () => {
          setTestQuestion(0);
          setTestAnswers(Array(10).fill(null));
@@ -3210,15 +3232,19 @@ const WaveParticleDualityRenderer: React.FC<WaveParticleDualityRendererProps> = 
                position: 'relative',
                zIndex: 1
             }}>
-               {renderSectionHeader("Step 10 • Mastery Achieved", "Quantum Explorer!", "You've glimpsed the strange heart of reality.")}
+               {renderSectionHeader(
+                  "Step 10 • " + (isPassing ? "Mastery Achieved" : "Keep Practicing"),
+                  isPassing ? "Quantum Explorer!" : "Almost There!",
+                  isPassing ? "You've glimpsed the strange heart of reality." : "Review the concepts and try again."
+               )}
 
                {/* Achievement badge */}
                <div style={{
                   padding: typo.cardPadding,
                   borderRadius: '12px',
                   marginBottom: typo.sectionGap,
-                  background: `linear-gradient(135deg, ${colors.success}15 0%, ${colors.primary}10 100%)`,
-                  border: `1px solid ${colors.success}30`,
+                  background: `linear-gradient(135deg, ${isPassing ? colors.success : colors.warning}15 0%, ${colors.primary}10 100%)`,
+                  border: `1px solid ${isPassing ? colors.success : colors.warning}30`,
                   textAlign: 'center'
                }}>
                   <div style={{
@@ -3230,17 +3256,17 @@ const WaveParticleDualityRenderer: React.FC<WaveParticleDualityRendererProps> = 
                      alignItems: 'center',
                      justifyContent: 'center',
                      fontSize: '32px',
-                     background: `linear-gradient(135deg, ${colors.success}25 0%, ${colors.primary}25 100%)`,
-                     border: `2px solid ${colors.success}`,
-                     boxShadow: `0 0 30px ${colors.success}30`
+                     background: `linear-gradient(135deg, ${isPassing ? colors.success : colors.warning}25 0%, ${colors.primary}25 100%)`,
+                     border: `2px solid ${isPassing ? colors.success : colors.warning}`,
+                     boxShadow: `0 0 30px ${isPassing ? colors.success : colors.warning}30`
                   }}>
-                     ⚛️
+                     {isPassing ? '🏆' : '📚'}
                   </div>
-                  <p style={{ fontSize: typo.bodyLarge, fontWeight: 700, color: colors.success, margin: 0 }}>
-                     Wave-Particle Duality Mastered
+                  <p style={{ fontSize: typo.bodyLarge, fontWeight: 700, color: isPassing ? colors.success : colors.warning, margin: 0 }}>
+                     {isPassing ? 'Wave-Particle Duality Mastered' : 'Keep Practicing'}
                   </p>
                   <p style={{ fontSize: typo.small, color: colors.textMuted, margin: 0, marginTop: '4px' }}>
-                     You understand one of nature's deepest mysteries
+                     Score: {testScore}/10 ({percentage}%)
                   </p>
                </div>
 
@@ -3277,6 +3303,7 @@ const WaveParticleDualityRenderer: React.FC<WaveParticleDualityRendererProps> = 
                               <p style={{ fontWeight: 700, fontSize: typo.body, color: item.color, margin: 0 }}>{item.title}</p>
                               <p style={{ fontSize: typo.small, color: colors.textSecondary, margin: 0, lineHeight: 1.4 }}>{item.desc}</p>
                            </div>
+                           {isPassing && (
                            <div style={{
                               width: '24px',
                               height: '24px',
@@ -3289,6 +3316,7 @@ const WaveParticleDualityRenderer: React.FC<WaveParticleDualityRendererProps> = 
                            }}>
                               <span style={{ color: 'white', fontSize: '12px', fontWeight: 700 }}>✓</span>
                            </div>
+                        )}
                         </div>
                      ))}
                   </div>
@@ -3309,32 +3337,52 @@ const WaveParticleDualityRenderer: React.FC<WaveParticleDualityRendererProps> = 
                   <p style={{ fontSize: typo.small, marginTop: '6px', color: colors.textMuted, margin: 0 }}>— Richard Feynman</p>
                </div>
 
-               {/* Action buttons - consistent with other phases */}
+               {/* Action buttons - pass/fail conditional */}
                <div style={{ display: 'flex', flexDirection: 'column', gap: typo.elementGap }}>
+                  {/* Primary action - Return to Dashboard (if passing) or Retake Test (if not passing) */}
+                  {isPassing ? (
+                     <button
+                        onClick={handleReturnToDashboard}
+                        style={{
+                           width: '100%',
+                           padding: '14px 20px',
+                           borderRadius: '12px',
+                           fontWeight: 700,
+                           fontSize: typo.bodyLarge,
+                           background: `linear-gradient(135deg, ${colors.success} 0%, ${colors.primary} 100%)`,
+                           color: 'white',
+                           border: 'none',
+                           cursor: 'pointer',
+                           boxShadow: `0 4px 20px ${colors.success}30`,
+                           WebkitTapHighlightColor: 'transparent'
+                        }}
+                     >
+                        🏠 Return to Dashboard
+                     </button>
+                  ) : (
+                     <button
+                        onClick={handleRetakeTest}
+                        style={{
+                           width: '100%',
+                           padding: '14px 20px',
+                           borderRadius: '12px',
+                           fontWeight: 700,
+                           fontSize: typo.bodyLarge,
+                           background: `linear-gradient(135deg, ${colors.warning} 0%, ${colors.primary} 100%)`,
+                           color: 'white',
+                           border: 'none',
+                           cursor: 'pointer',
+                           boxShadow: `0 4px 20px ${colors.warning}30`,
+                           WebkitTapHighlightColor: 'transparent'
+                        }}
+                     >
+                        ↺ Retake Test
+                     </button>
+                  )}
+
+                  {/* Secondary action - Review Lesson */}
                   <button
-                     onMouseDown={() => {
-                        setParticleHits([]);
-                        setParticleCount(0);
-                        setDetectorOn(false);
-                        goToPhase('play');
-                     }}
-                     style={{
-                        width: '100%',
-                        padding: '14px 20px',
-                        borderRadius: '12px',
-                        fontWeight: 700,
-                        fontSize: typo.bodyLarge,
-                        background: `linear-gradient(135deg, ${colors.primary} 0%, ${colors.accent} 100%)`,
-                        color: 'white',
-                        border: 'none',
-                        cursor: 'pointer',
-                        boxShadow: `0 4px 20px ${colors.primary}30`
-                     }}
-                  >
-                     🔬 Free Exploration Mode
-                  </button>
-                  <button
-                     onMouseDown={() => {
+                     onClick={() => {
                         setTestQuestion(0);
                         setTestAnswers(Array(10).fill(null));
                         setTestSubmitted(false);
@@ -3351,11 +3399,34 @@ const WaveParticleDualityRenderer: React.FC<WaveParticleDualityRendererProps> = 
                         background: colors.bgCardLight,
                         color: colors.textSecondary,
                         border: `1px solid ${colors.border}`,
-                        cursor: 'pointer'
+                        cursor: 'pointer',
+                        WebkitTapHighlightColor: 'transparent'
                      }}
                   >
-                     ↺ Start Over from Beginning
+                     🔬 Review Lesson
                   </button>
+
+                  {/* Tertiary action - Return to Dashboard (only if not passing) */}
+                  {!isPassing && (
+                     <button
+                        onClick={handleReturnToDashboard}
+                        style={{
+                           width: '100%',
+                           padding: '12px 20px',
+                           borderRadius: '10px',
+                           fontWeight: 600,
+                           fontSize: typo.body,
+                           background: 'transparent',
+                           color: colors.textMuted,
+                           border: 'none',
+                           cursor: 'pointer',
+                           textDecoration: 'underline',
+                           WebkitTapHighlightColor: 'transparent'
+                        }}
+                     >
+                        Return to Dashboard
+                     </button>
+                  )}
                </div>
             </div>
          </div>,

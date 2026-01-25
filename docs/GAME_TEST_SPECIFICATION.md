@@ -1080,3 +1080,266 @@ const handleReturnToDashboard = () => {
    window.dispatchEvent(new CustomEvent('returnToDashboard'));
 };
 ```
+
+---
+
+## 14. Interactive Graphics Design Philosophy
+
+### 14.1 Core Principle: SHOW, Don't Tell
+
+**The goal of every interactive graphic is to make the abstract VISIBLE and TANGIBLE.**
+
+Every simulation and interactive element must answer three questions:
+
+| Question | Purpose | Example (Photoelectric Effect) |
+|----------|---------|--------------------------------|
+| **WHAT is being shown?** | Clear visual identification | Light beam hitting metal surface, electrons being ejected |
+| **HOW does it teach?** | Direct cause → effect relationship | Slider changes wavelength → see color change → see electron ejection threshold |
+| **WHY does it matter?** | Connect to real-world significance | "This is how solar panels work" |
+
+### 14.2 Visual Clarity Rules
+
+**Rule 1: One concept per visualization**
+- Don't cram multiple physics concepts into a single graphic
+- Each slider/control should demonstrate ONE relationship
+- If showing multiple variables, show them side-by-side or in sequence, not overlapping
+
+**Rule 2: Immediate visual feedback**
+```typescript
+// GOOD - Change is immediately visible
+const handleWavelengthChange = (value: number) => {
+   setWavelength(value);
+   // Light beam color updates instantly
+   // Electron ejection state updates instantly
+   // Energy display updates instantly
+};
+
+// BAD - User has to click "Apply" to see changes
+const handleWavelengthChange = (value: number) => {
+   setPendingWavelength(value);
+   // Nothing visual happens until user clicks "Apply"
+};
+```
+
+**Rule 3: Clear cause and effect labeling**
+- Label the INPUT clearly: "Light Wavelength (nm)" with value display
+- Label the OUTPUT clearly: "Electrons Ejected: YES/NO" or "Force: 2.5 N"
+- Use visual connectors (arrows, highlighting) to show relationship
+
+**Rule 4: Use color semantically**
+```typescript
+// Color communicates meaning
+const semanticColors = {
+   active: '#10b981',      // Green = working, ejecting, moving
+   inactive: '#64748b',    // Gray = threshold not met, stationary
+   warning: '#f59e0b',     // Amber = approaching threshold
+   danger: '#ef4444',      // Red = observer on, blocking, error
+   highlight: '#06b6d4',   // Cyan = current focus, selected
+};
+```
+
+### 14.3 Text Minimization Strategy
+
+**Keep text to absolute minimum. Let the visual do the teaching.**
+
+| Phase | Maximum Text | What to Include |
+|-------|--------------|-----------------|
+| Hook | 50 words | Title, one-sentence hook, quote |
+| Play | 30 words | Control labels, milestone hints only |
+| Review | 100 words | 3 key takeaways (3 sentences each max) |
+
+**Text placement hierarchy:**
+1. **Labels** - What is this element? (e.g., "Wavelength")
+2. **Values** - What is the current state? (e.g., "400 nm")
+3. **Hints** - What should user notice? (e.g., "Approaching threshold!")
+4. **Explanations** - Why does this happen? (ONLY in review phases, not in play phases)
+
+**Example - Good vs Bad:**
+```typescript
+// BAD - Too much text in simulation
+<div>
+   <p>The photoelectric effect demonstrates that light behaves as particles
+      called photons. When a photon with sufficient energy strikes a metal
+      surface, it can transfer its energy to an electron...</p>
+   <Simulation />
+</div>
+
+// GOOD - Visual teaches, text labels only
+<div>
+   <Simulation />
+   <div className="controls">
+      <label>Light Wavelength</label>
+      <input type="range" />
+      <span className="value">{wavelength} nm</span>
+      {belowThreshold && <span className="hint">⚡ Threshold reached!</span>}
+   </div>
+</div>
+```
+
+### 14.4 Slider Best Practices
+
+**Sliders are the primary teaching tool. They must be perfect.**
+
+**Technical requirements:**
+```typescript
+<input
+   type="range"
+   min={minValue}
+   max={maxValue}
+   step={appropriateStep}  // Fine enough for smooth animation
+   value={currentValue}
+   // BOTH handlers for smooth, real-time updates
+   onInput={(e) => setValue(Number((e.target as HTMLInputElement).value))}
+   onChange={(e) => setValue(Number(e.target.value))}
+   style={{
+      width: '100%',
+      height: '8px',
+      WebkitAppearance: 'none',
+      appearance: 'none',
+      background: `linear-gradient(to right,
+         ${activeColor} 0%,
+         ${activeColor} ${percentage}%,
+         ${inactiveColor} ${percentage}%,
+         ${inactiveColor} 100%)`,
+      borderRadius: '4px',
+      cursor: 'pointer'
+   }}
+/>
+```
+
+**Visual feedback requirements:**
+1. **Track fill** - Show progress visually (filled portion vs unfilled)
+2. **Value display** - Always show current numeric value
+3. **Unit labels** - Include units (nm, N, Hz, etc.)
+4. **Range indicators** - Show min/max values at track ends
+5. **Semantic coloring** - Track color can indicate meaning (e.g., spectrum for wavelength)
+
+**Slider-to-simulation sync:**
+```typescript
+// The simulation MUST update in real-time as slider moves
+useEffect(() => {
+   // Recalculate physics based on slider value
+   const newEnergy = calculatePhotonEnergy(wavelength);
+   const willEject = newEnergy >= workFunction;
+   setElectronsEjecting(willEject);
+   setPhotonEnergy(newEnergy);
+}, [wavelength]);
+```
+
+### 14.5 Animation for Understanding
+
+**Animations should reveal physics, not just look pretty.**
+
+**Good animation examples:**
+- Electrons accelerating as they leave the metal (shows kinetic energy)
+- Wave amplitude decreasing with distance (shows inverse square law)
+- Particles spreading from point source (shows probability distribution)
+- Color gradient on light beam (shows wavelength → frequency relationship)
+
+**Bad animation examples:**
+- Spinning logos (decorative, doesn't teach)
+- Pulsing buttons (distracting)
+- Random particle motion (no physics meaning)
+
+**Animation timing:**
+```typescript
+// Use appropriate durations
+const animationDurations = {
+   instant: '0ms',        // Slider track fill
+   quick: '150ms',        // Button state changes
+   smooth: '300ms',       // Element transitions
+   visible: '500ms',      // Particle motion (needs to be trackable)
+   slow: '1000ms+',       // Wave propagation (needs to be observable)
+};
+```
+
+### 14.6 Interactive Element Checklist
+
+For each interactive element in your simulation, verify:
+
+```markdown
+## Interactive Element: [Name]
+
+### Visibility
+- [ ] User can immediately see what this control affects
+- [ ] Current value is displayed numerically
+- [ ] Range limits are visible (min/max labels)
+- [ ] Visual feedback is instantaneous (no lag)
+
+### Teaching Value
+- [ ] Control demonstrates ONE clear physics relationship
+- [ ] Cause → effect is visually obvious
+- [ ] No text explanation needed to understand the effect
+- [ ] A student could discover the physics principle by playing
+
+### Technical Implementation
+- [ ] Uses both onInput and onChange handlers
+- [ ] Has WebkitTapHighlightColor: 'transparent' for mobile
+- [ ] Touch target is at least 44px
+- [ ] Smooth animation (no janky updates)
+- [ ] Proper units displayed
+
+### Edge Cases
+- [ ] Works at minimum value
+- [ ] Works at maximum value
+- [ ] Works with rapid slider movement
+- [ ] Works on mobile touch
+- [ ] Doesn't break simulation when spammed
+```
+
+### 14.7 Real-World Application Visuals
+
+**Each of the 4 transfer applications MUST have a visual component.**
+
+**Required visual elements per application:**
+1. **Icon/Image** - Recognizable representation of the technology
+2. **Connection diagram** - How the physics connects to the application
+3. **Key stats** - 3 numerical facts with icons
+4. **Examples list** - 4 real products/uses
+
+**Visual hierarchy for app cards:**
+```
+┌─────────────────────────────────────┐
+│ 💻 [ICON]                           │
+│                                     │
+│ Quantum Computing                   │  ← Title (large, bold)
+│ The Next Computing Revolution       │  ← Tagline (medium, accent)
+│                                     │
+│ [Connection to physics principle]   │  ← 1 sentence max
+│                                     │
+│ ⚡ 1,000+ qubits achieved          │  ← Stats with icons
+│ 🚀 10x processing speed             │
+│ 💰 $2B+ invested                    │
+│                                     │
+│ Examples: IBM, Google, Intel, ...   │  ← Real companies
+└─────────────────────────────────────┘
+```
+
+### 14.8 Common Visual Mistakes
+
+| Mistake | Why It's Bad | Fix |
+|---------|--------------|-----|
+| Text explaining what animation shows | Redundant, clutters screen | Remove text, let visual teach |
+| Static diagram with text description | Not interactive, passive learning | Make it draggable/adjustable |
+| Multiple physics concepts in one view | Confusing, overwhelming | Split into sequential steps |
+| Tiny sliders/buttons | Hard to use, especially mobile | Min 44px touch targets |
+| No value display on sliders | User doesn't know exact state | Always show current value |
+| Animations too fast to track | Can't observe the physics | Slow down to ~500ms minimum |
+| Decorative animations | Distracting from content | Remove or make them teach something |
+| Inconsistent colors | Meaning unclear | Use semantic color system |
+
+### 14.9 Testing Interactive Graphics
+
+**Manual test protocol for each interactive element:**
+
+1. **Initial state** - Is it clear what to do?
+2. **First interaction** - Does something visually change?
+3. **Continuous interaction** - Is feedback smooth and continuous?
+4. **Extreme values** - Does it handle min/max gracefully?
+5. **Mobile test** - Does touch work as well as mouse?
+6. **Teaching test** - Could a student discover the physics concept without reading?
+
+**The "Mute Test":**
+> If you muted all the text and just watched the visuals, would a student still learn the core concept?
+
+If the answer is "no", the interactive graphic needs more visual teaching power.
