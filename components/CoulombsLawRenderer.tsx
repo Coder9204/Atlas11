@@ -2,104 +2,149 @@
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 
-// ============================================================
-// COULOMB'S LAW RENDERER - GOLD STANDARD
-// The fundamental law governing electrostatic force between charges
+// ============================================================================
+// COULOMB'S LAW RENDERER - SPEC-COMPLIANT IMPLEMENTATION
+// Follows GAME_TEST_SPECIFICATION.md exactly
 // F = k × q₁ × q₂ / r² where k = 8.99 × 10⁹ N·m²/C²
-// ============================================================
+// ============================================================================
 
-type GameEventType =
-  | 'phase_change'
-  | 'prediction_made'
-  | 'simulation_started'
-  | 'parameter_changed'
-  | 'discovery_made'
-  | 'transfer_app_viewed'
-  | 'transfer_app_completed'
-  | 'test_answered'
-  | 'test_completed'
-  | 'force_calculated'
-  | 'field_visualized'
-  | 'charge_placed'
-  | 'charge_moved'
-  | 'equilibrium_found';
-
-interface GameEvent {
-  type: GameEventType;
-  data?: Record<string, unknown>;
+// GameEvent interface - matches spec exactly
+export interface GameEvent {
+  eventType: 'screen_change' | 'prediction_made' | 'answer_submitted' | 'slider_changed' |
+             'button_clicked' | 'game_started' | 'game_completed' | 'hint_requested' |
+             'correct_answer' | 'incorrect_answer' | 'phase_changed' | 'value_changed' |
+             'selection_made' | 'timer_expired' | 'achievement_unlocked' | 'struggle_detected' |
+             'coach_prompt' | 'guide_paused' | 'guide_resumed' | 'question_changed' | 'app_completed' | 'app_changed';
+  gameType: string;
+  gameTitle: string;
+  details: {
+    phase?: string;
+    phaseLabel?: string;
+    currentScreen?: number;
+    totalScreens?: number;
+    screenDescription?: string;
+    prediction?: string;
+    predictionLabel?: string;
+    answer?: string;
+    isCorrect?: boolean;
+    score?: number;
+    maxScore?: number;
+    message?: string;
+    coachMessage?: string;
+    [key: string]: unknown;
+  };
+  timestamp: number;
 }
 
-interface Props {
+interface CoulombsLawRendererProps {
   onGameEvent?: (event: GameEvent) => void;
-  currentPhase?: number;
-  onPhaseComplete?: (phase: number) => void;
+  gamePhase?: string;
 }
 
-interface TestQuestion {
-  scenario: string;
-  question: string;
-  options: { text: string; correct: boolean }[];
-  explanation: string;
-}
-
-interface TransferApp {
-  icon: string;
-  title: string;
-  short: string;
-  tagline: string;
-  description: string;
-  connection: string;
-  howItWorks: string;
-  stats: string[];
-  examples: string[];
-  companies: string[];
-  futureImpact: string;
-  color: string;
-}
-
-interface Charge {
-  id: number;
-  x: number;
-  y: number;
-  q: number; // charge in microcoulombs
-  color: string;
-}
+// Sound utility - matches spec
+const playSound = (type: 'click' | 'success' | 'failure' | 'transition' | 'complete') => {
+  if (typeof window === 'undefined') return;
+  try {
+    const audioContext = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
+    const oscillator = audioContext.createOscillator();
+    const gainNode = audioContext.createGain();
+    oscillator.connect(gainNode);
+    gainNode.connect(audioContext.destination);
+    const sounds = {
+      click: { freq: 600, duration: 0.1, type: 'sine' as OscillatorType },
+      success: { freq: 800, duration: 0.2, type: 'sine' as OscillatorType },
+      failure: { freq: 300, duration: 0.3, type: 'sine' as OscillatorType },
+      transition: { freq: 500, duration: 0.15, type: 'sine' as OscillatorType },
+      complete: { freq: 900, duration: 0.4, type: 'sine' as OscillatorType }
+    };
+    const sound = sounds[type];
+    oscillator.type = sound.type;
+    oscillator.frequency.setValueAtTime(sound.freq, audioContext.currentTime);
+    gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + sound.duration);
+    oscillator.start(audioContext.currentTime);
+    oscillator.stop(audioContext.currentTime + sound.duration);
+  } catch {
+    // Audio not available
+  }
+};
 
 // Coulomb's constant
 const k = 8.99e9; // N·m²/C²
 
-const CoulombsLawRenderer: React.FC<Props> = ({
-  onGameEvent,
-  currentPhase = 0,
-  onPhaseComplete
-}) => {
-  const [phase, setPhase] = useState(currentPhase);
-  const [showPredictionFeedback, setShowPredictionFeedback] = useState(false);
-  const [selectedPrediction, setSelectedPrediction] = useState<string | null>(null);
-  const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
-  const [showTwistFeedback, setShowTwistFeedback] = useState(false);
-  const [testAnswers, setTestAnswers] = useState<number[]>(Array(10).fill(-1));
-  const [showTestResults, setShowTestResults] = useState(false);
-  const [completedApps, setCompletedApps] = useState<Set<number>>(new Set());
-  const [activeAppIndex, setActiveAppIndex] = useState(0);
-  const [isMobile, setIsMobile] = useState(false);
+const CoulombsLawRenderer: React.FC<CoulombsLawRendererProps> = ({ onGameEvent }) => {
+  // Phase type - string-based per spec
+  type CLPhase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
 
-  // Simulation states
-  const [charges, setCharges] = useState<Charge[]>([
-    { id: 1, x: 150, y: 200, q: 5, color: '#ef4444' },
-    { id: 2, x: 350, y: 200, q: -5, color: '#3b82f6' }
-  ]);
-  const [selectedChargeId, setSelectedChargeId] = useState<number | null>(null);
+  const phaseOrder: CLPhase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
+
+  const phaseLabels: Record<CLPhase, string> = {
+    hook: 'Introduction',
+    predict: 'Predict',
+    play: 'Experiment',
+    review: 'Understanding',
+    twist_predict: 'New Variable',
+    twist_play: 'Polarization',
+    twist_review: 'Deep Insight',
+    transfer: 'Real World',
+    test: 'Knowledge Test',
+    mastery: 'Mastery'
+  };
+
+  const screenDescriptions: Record<CLPhase, string> = {
+    hook: 'INTRO SCREEN: Title "Coulomb\'s Law", animated charge visualization, Start button.',
+    predict: 'PREDICTION SCREEN: User predicts what happens between +4μC and -2μC charges 10cm apart.',
+    play: 'EXPERIMENT SCREEN: Interactive simulation with adjustable charges and distance. Force calculation shown.',
+    review: 'REVIEW SCREEN: Explains inverse-square law, charge interactions, Coulomb\'s constant.',
+    twist_predict: 'TWIST PREDICTION: What happens when a charged balloon approaches a NEUTRAL wall?',
+    twist_play: 'POLARIZATION EXPERIMENT: See how charges redistribute in neutral objects.',
+    twist_review: 'POLARIZATION REVIEW: Explains electrostatic induction and why neutral objects attract.',
+    transfer: 'REAL WORLD APPLICATIONS: 4 cards showing electrostatic technology.',
+    test: 'KNOWLEDGE TEST: 10 scenario-based questions about Coulomb\'s Law.',
+    mastery: 'COMPLETION SCREEN: Summary of 5 electrostatics concepts mastered.'
+  };
+
+  const coachMessages: Record<CLPhase, string> = {
+    hook: "Welcome to electrostatics! ⚡ Coulomb's Law governs the invisible force between charges.",
+    predict: "Time to make a prediction! What forces will opposite charges experience?",
+    play: "Now let's experiment! Adjust charges and distance to see how force changes.",
+    review: "The inverse-square law is powerful! Let's understand why it matters.",
+    twist_predict: "Here's the twist! What happens with a NEUTRAL object?",
+    twist_play: "Watch polarization in action! See how charges redistribute.",
+    twist_review: "You've discovered electrostatic induction! Even neutral objects can be attracted.",
+    transfer: "Coulomb's Law powers amazing technology! Let's explore real-world applications. 🚀",
+    test: "Time to test your understanding! Take your time with each question.",
+    mastery: "Congratulations! You've mastered Coulomb's Law! ⚡"
+  };
+
+  // State
+  const [phase, setPhase] = useState<CLPhase>('hook');
+  const [isMobile, setIsMobile] = useState(false);
+  const [prediction, setPrediction] = useState<string | null>(null);
+  const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
+  const [animationTime, setAnimationTime] = useState(0);
+
+  // Simulation state
+  const [charge1, setCharge1] = useState(5);
+  const [charge2, setCharge2] = useState(-5);
+  const [separation, setSeparation] = useState(200);
   const [showFieldLines, setShowFieldLines] = useState(true);
   const [showForceVectors, setShowForceVectors] = useState(true);
-  const [animationTime, setAnimationTime] = useState(0);
-  const [charge1Magnitude, setCharge1Magnitude] = useState(5);
-  const [charge2Magnitude, setCharge2Magnitude] = useState(-5);
-  const [separation, setSeparation] = useState(200);
+  const [hasExperimented, setHasExperimented] = useState(false);
 
-  const navigationLockRef = useRef(false);
-  const lastInteractionRef = useRef(0);
-  const audioContextRef = useRef<AudioContext | null>(null);
+  // Transfer state
+  const [completedApps, setCompletedApps] = useState<boolean[]>([false, false, false, false]);
+  const [activeAppIndex, setActiveAppIndex] = useState(0);
+
+  // Test state
+  const [currentQuestion, setCurrentQuestion] = useState(0);
+  const [testAnswers, setTestAnswers] = useState<(number | null)[]>(Array(10).fill(null));
+  const [showResults, setShowResults] = useState(false);
+
+  // Navigation
+  const isNavigating = useRef(false);
+  const lastClickRef = useRef(0);
+  const hasEmittedStart = useRef(false);
 
   // Responsive detection
   useEffect(() => {
@@ -112,1126 +157,1406 @@ const CoulombsLawRenderer: React.FC<Props> = ({
   // Animation loop
   useEffect(() => {
     const interval = setInterval(() => {
-      setAnimationTime(prev => prev + 0.05);
+      setAnimationTime(t => t + 0.05);
     }, 50);
     return () => clearInterval(interval);
   }, []);
 
-  // Update charges when magnitudes change
-  useEffect(() => {
-    setCharges(prev => prev.map((c, i) => ({
-      ...c,
-      q: i === 0 ? charge1Magnitude : charge2Magnitude,
-      color: (i === 0 ? charge1Magnitude : charge2Magnitude) > 0 ? '#ef4444' : '#3b82f6'
-    })));
-  }, [charge1Magnitude, charge2Magnitude]);
+  // Design system - matches spec
+  const colors = {
+    primary: '#f59e0b',      // amber-500 for electrostatics
+    primaryDark: '#d97706',  // amber-600
+    accent: '#8b5cf6',       // violet-500
+    accentDark: '#7c3aed',   // violet-600
+    warning: '#f59e0b',      // amber-500
+    success: '#10b981',      // emerald-500
+    danger: '#ef4444',       // red-500
+    bgDark: '#020617',       // slate-950
+    bgCard: '#0f172a',       // slate-900
+    bgCardLight: '#1e293b',  // slate-800
+    border: '#334155',       // slate-700
+    textPrimary: '#f8fafc',  // slate-50
+    textSecondary: '#94a3b8', // slate-400
+    textMuted: '#64748b',    // slate-500
+    positive: '#ef4444',     // red for positive charges
+    negative: '#3b82f6',     // blue for negative charges
+  };
 
-  // Update separation
-  useEffect(() => {
-    setCharges(prev => {
-      const centerX = 250;
-      return prev.map((c, i) => ({
-        ...c,
-        x: i === 0 ? centerX - separation / 2 : centerX + separation / 2
-      }));
+  const typo = {
+    label: isMobile ? '9px' : '10px',
+    small: isMobile ? '11px' : '12px',
+    body: isMobile ? '12px' : '13px',
+    bodyLarge: isMobile ? '13px' : '14px',
+    heading: isMobile ? '18px' : '22px',
+    title: isMobile ? '24px' : '32px',
+    pagePadding: isMobile ? '12px' : '16px',
+    sectionGap: isMobile ? '12px' : '14px',
+    cardPadding: isMobile ? '10px' : '14px',
+    elementGap: isMobile ? '8px' : '10px',
+  };
+
+  // Emit game event
+  const emitGameEvent = useCallback((
+    eventType: GameEvent['eventType'],
+    details: Partial<GameEvent['details']> = {}
+  ) => {
+    if (!onGameEvent) return;
+    const phaseIndex = phaseOrder.indexOf(phase);
+    onGameEvent({
+      eventType,
+      gameType: 'coulombs_law',
+      gameTitle: "Coulomb's Law",
+      details: {
+        phase,
+        phaseLabel: phaseLabels[phase],
+        currentScreen: phaseIndex + 1,
+        totalScreens: 10,
+        screenDescription: screenDescriptions[phase],
+        coachMessage: coachMessages[phase],
+        ...details
+      },
+      timestamp: Date.now()
     });
-  }, [separation]);
+  }, [onGameEvent, phase, phaseLabels, phaseOrder, screenDescriptions, coachMessages]);
 
-  const playSound = useCallback((soundType: 'click' | 'correct' | 'incorrect' | 'complete' | 'transition' | 'zap') => {
-    try {
-      if (!audioContextRef.current) {
-        audioContextRef.current = new (window.AudioContext || (window as typeof window & { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
-      }
-      const ctx = audioContextRef.current;
-      const oscillator = ctx.createOscillator();
-      const gainNode = ctx.createGain();
-
-      oscillator.connect(gainNode);
-      gainNode.connect(ctx.destination);
-
-      switch (soundType) {
-        case 'click':
-          oscillator.frequency.value = 600;
-          gainNode.gain.setValueAtTime(0.1, ctx.currentTime);
-          gainNode.gain.exponentialDecayToValueAtTime?.(0.01, ctx.currentTime + 0.1) ||
-            gainNode.gain.setValueAtTime(0.01, ctx.currentTime + 0.1);
-          oscillator.start(ctx.currentTime);
-          oscillator.stop(ctx.currentTime + 0.1);
-          break;
-        case 'correct':
-          oscillator.frequency.value = 523;
-          gainNode.gain.setValueAtTime(0.1, ctx.currentTime);
-          oscillator.start(ctx.currentTime);
-          oscillator.frequency.setValueAtTime(659, ctx.currentTime + 0.1);
-          oscillator.frequency.setValueAtTime(784, ctx.currentTime + 0.2);
-          gainNode.gain.setValueAtTime(0.01, ctx.currentTime + 0.3);
-          oscillator.stop(ctx.currentTime + 0.3);
-          break;
-        case 'incorrect':
-          oscillator.frequency.value = 200;
-          oscillator.type = 'sawtooth';
-          gainNode.gain.setValueAtTime(0.1, ctx.currentTime);
-          gainNode.gain.setValueAtTime(0.01, ctx.currentTime + 0.3);
-          oscillator.start(ctx.currentTime);
-          oscillator.stop(ctx.currentTime + 0.3);
-          break;
-        case 'complete':
-          oscillator.frequency.value = 440;
-          gainNode.gain.setValueAtTime(0.1, ctx.currentTime);
-          oscillator.start(ctx.currentTime);
-          oscillator.frequency.setValueAtTime(554, ctx.currentTime + 0.15);
-          oscillator.frequency.setValueAtTime(659, ctx.currentTime + 0.3);
-          oscillator.frequency.setValueAtTime(880, ctx.currentTime + 0.45);
-          gainNode.gain.setValueAtTime(0.01, ctx.currentTime + 0.6);
-          oscillator.stop(ctx.currentTime + 0.6);
-          break;
-        case 'transition':
-          oscillator.frequency.value = 400;
-          oscillator.type = 'sine';
-          gainNode.gain.setValueAtTime(0.08, ctx.currentTime);
-          oscillator.frequency.setValueAtTime(600, ctx.currentTime + 0.1);
-          gainNode.gain.setValueAtTime(0.01, ctx.currentTime + 0.15);
-          oscillator.start(ctx.currentTime);
-          oscillator.stop(ctx.currentTime + 0.15);
-          break;
-        case 'zap':
-          oscillator.frequency.value = 1000;
-          oscillator.type = 'square';
-          gainNode.gain.setValueAtTime(0.1, ctx.currentTime);
-          oscillator.frequency.setValueAtTime(100, ctx.currentTime + 0.1);
-          gainNode.gain.setValueAtTime(0.01, ctx.currentTime + 0.2);
-          oscillator.start(ctx.currentTime);
-          oscillator.stop(ctx.currentTime + 0.2);
-          break;
-      }
-    } catch {
-      // Audio not available
+  // Emit game_started on mount
+  useEffect(() => {
+    if (!hasEmittedStart.current) {
+      hasEmittedStart.current = true;
+      emitGameEvent('game_started', {
+        message: "Starting Coulomb's Law exploration"
+      });
     }
-  }, []);
+  }, [emitGameEvent]);
 
-  const emitEvent = useCallback((type: GameEventType, data?: Record<string, unknown>) => {
-    onGameEvent?.({ type, data });
-  }, [onGameEvent]);
-
-  const goToPhase = useCallback((newPhase: number) => {
+  // Navigation
+  const goToPhase = useCallback((p: CLPhase) => {
     const now = Date.now();
-    if (now - lastInteractionRef.current < 400) return;
-    if (navigationLockRef.current) return;
+    if (now - lastClickRef.current < 200) return;
+    if (isNavigating.current) return;
 
-    lastInteractionRef.current = now;
-    navigationLockRef.current = true;
+    lastClickRef.current = now;
+    isNavigating.current = true;
 
     playSound('transition');
-    setPhase(newPhase);
-    emitEvent('phase_change', { from: phase, to: newPhase });
+    setPhase(p);
 
-    if (newPhase > phase) {
-      onPhaseComplete?.(phase);
+    // Reset simulation when entering play phases
+    if (p === 'play') {
+      setHasExperimented(false);
     }
 
-    setTimeout(() => {
-      navigationLockRef.current = false;
-    }, 400);
-  }, [phase, playSound, emitEvent, onPhaseComplete]);
+    const phaseIndex = phaseOrder.indexOf(p);
+    emitGameEvent('phase_changed', {
+      phase: p,
+      phaseLabel: phaseLabels[p],
+      currentScreen: phaseIndex + 1,
+      totalScreens: 10,
+      screenDescription: screenDescriptions[p],
+      coachMessage: coachMessages[p]
+    });
 
-  // Calculate force between two charges
+    setTimeout(() => { isNavigating.current = false; }, 400);
+  }, [emitGameEvent, phaseLabels, phaseOrder, screenDescriptions, coachMessages]);
+
+  const goNext = useCallback(() => {
+    const idx = phaseOrder.indexOf(phase);
+    if (idx < phaseOrder.length - 1) {
+      goToPhase(phaseOrder[idx + 1]);
+    }
+  }, [phase, phaseOrder, goToPhase]);
+
+  const goBack = useCallback(() => {
+    const idx = phaseOrder.indexOf(phase);
+    if (idx > 0) {
+      goToPhase(phaseOrder[idx - 1]);
+    }
+  }, [phase, phaseOrder, goToPhase]);
+
+  // Calculate force
   const calculateForce = useCallback((q1: number, q2: number, r: number): number => {
-    // q in microcoulombs, r in pixels (scale: 1px = 1mm)
     const q1_C = q1 * 1e-6;
     const q2_C = q2 * 1e-6;
-    const r_m = r * 0.001; // 1 pixel = 1mm
+    const r_m = r * 0.001; // pixels to meters (1px = 1mm)
     if (r_m === 0) return 0;
     return k * q1_C * q2_C / (r_m * r_m);
   }, []);
 
-  const handlePrediction = useCallback((prediction: string) => {
-    const now = Date.now();
-    if (now - lastInteractionRef.current < 400) return;
-    lastInteractionRef.current = now;
+  // Predictions
+  const predictions = [
+    { id: 'repel', label: 'Push apart', desc: 'Both charges repel each other', icon: '← →', tag: 'Repel' },
+    { id: 'attract', label: 'Pull together', desc: 'Opposite charges attract', icon: '→ ←', tag: 'Attract' },
+    { id: 'nothing', label: 'No force', desc: 'Only one charge feels a force', icon: '○ ○', tag: 'None' },
+  ];
 
-    setSelectedPrediction(prediction);
-    setShowPredictionFeedback(true);
+  const twistPredictions = [
+    { id: 'nothing', label: 'Nothing happens', desc: "Neutral objects don't interact", icon: '○' },
+    { id: 'repel', label: 'Wall repels balloon', desc: 'Like charges would repel', icon: '← →' },
+    { id: 'attract', label: 'Balloon sticks to wall', desc: 'Some kind of attraction', icon: '→ ←' },
+  ];
 
-    const isCorrect = prediction === 'B';
-    playSound(isCorrect ? 'correct' : 'incorrect');
-    emitEvent('prediction_made', { prediction, correct: isCorrect });
-  }, [playSound, emitEvent]);
-
-  const handleTwistPrediction = useCallback((prediction: string) => {
-    const now = Date.now();
-    if (now - lastInteractionRef.current < 400) return;
-    lastInteractionRef.current = now;
-
-    setTwistPrediction(prediction);
-    setShowTwistFeedback(true);
-
-    const isCorrect = prediction === 'C';
-    playSound(isCorrect ? 'correct' : 'incorrect');
-    emitEvent('prediction_made', { prediction, correct: isCorrect, twist: true });
-  }, [playSound, emitEvent]);
-
-  const handleTestAnswer = useCallback((questionIndex: number, answerIndex: number) => {
-    const now = Date.now();
-    if (now - lastInteractionRef.current < 400) return;
-    lastInteractionRef.current = now;
-
-    playSound('click');
-    setTestAnswers(prev => {
-      const newAnswers = [...prev];
-      newAnswers[questionIndex] = answerIndex;
-      return newAnswers;
-    });
-    emitEvent('test_answered', { questionIndex, answerIndex });
-  }, [playSound, emitEvent]);
-
-  const handleAppComplete = useCallback((appIndex: number) => {
-    const now = Date.now();
-    if (now - lastInteractionRef.current < 400) return;
-    lastInteractionRef.current = now;
-
-    setCompletedApps(prev => new Set([...prev, appIndex]));
-    playSound('complete');
-    emitEvent('transfer_app_completed', { appIndex });
-  }, [playSound, emitEvent]);
-
-  // Test questions with scenarios
-  const testQuestions: TestQuestion[] = [
+  // Transfer apps
+  const transferApps = [
     {
-      scenario: "A physics student places two identical metal spheres, each with +3 μC charge, 10 cm apart on an insulating surface.",
-      question: "What happens when the student releases the spheres?",
-      options: [
-        { text: "They move toward each other", correct: false },
-        { text: "They move away from each other", correct: true },
-        { text: "They remain stationary", correct: false },
-        { text: "They orbit around each other", correct: false }
+      icon: '🏭',
+      title: 'Electrostatic Precipitators',
+      short: 'Clean Air',
+      tagline: 'Removing pollution with electric fields',
+      description: "Industrial plants use Coulomb's Law to remove 99%+ of particulate matter from exhaust.",
+      connection: 'Charged particles experience Coulomb force toward collection plates.',
+      howItWorks: 'Corona wires ionize air molecules which charge passing particles. The electric field drives particles to grounded plates.',
+      stats: [
+        { value: '99.9%', label: 'Particle removal', icon: '✓' },
+        { value: '450°C', label: 'Max temperature', icon: '🔥' },
+        { value: '0.01μm', label: 'Smallest captured', icon: '🔬' }
       ],
-      explanation: "Like charges repel. Both spheres have positive charge, so they experience a repulsive force pushing them apart. The force magnitude is F = kq₁q₂/r² = (8.99×10⁹)(3×10⁻⁶)²/(0.1)² ≈ 8.1 N."
+      examples: ['Coal power plants', 'Cement kilns', 'Steel mills', 'Paper mills'],
+      companies: ['GE Power', 'Mitsubishi', 'Siemens', 'Babcock & Wilcox'],
+      futureImpact: 'Next-gen precipitators with pulsed power will achieve higher efficiency with less energy.',
+      color: colors.textMuted
     },
     {
-      scenario: "An engineer doubles the distance between two charged particles from 1m to 2m while keeping the charges constant.",
+      icon: '🖨️',
+      title: 'Laser Printing',
+      short: 'Xerography',
+      tagline: 'Printing with charged particles',
+      description: 'Every laser printer uses Coulomb forces to place toner particles precisely.',
+      connection: 'Charged toner is attracted to oppositely charged areas on the drum.',
+      howItWorks: 'A laser discharges specific areas on a charged drum. Toner sticks only to discharged areas. Paper receives stronger charge to pull toner off.',
+      stats: [
+        { value: '4800', label: 'DPI resolution', icon: '📊' },
+        { value: '~5μm', label: 'Toner particle size', icon: '⚫' },
+        { value: '1000V', label: 'Drum voltage', icon: '⚡' }
+      ],
+      examples: ['Office printers', 'Commercial printing', 'Photocopiers', 'Digital press'],
+      companies: ['Xerox', 'HP', 'Canon', 'Ricoh'],
+      futureImpact: 'Electrostatic 3D printing enables precise microstructures for electronics and biomedical devices.',
+      color: colors.primary
+    },
+    {
+      icon: '🎨',
+      title: 'Electrostatic Coating',
+      short: 'Spray Painting',
+      tagline: 'Perfect finishes with charge attraction',
+      description: 'Charged paint particles wrap around objects for 95%+ coverage efficiency.',
+      connection: 'Coulomb attraction pulls paint to grounded objects, even reaching hidden surfaces.',
+      howItWorks: 'Paint is charged at 60-100kV as it leaves the spray gun. Grounded workpieces attract particles along field lines.',
+      stats: [
+        { value: '95%', label: 'Transfer efficiency', icon: '✓' },
+        { value: '90%', label: 'Less overspray', icon: '🎯' },
+        { value: '80%', label: 'VOC reduction', icon: '🌿' }
+      ],
+      examples: ['Car painting', 'Appliance coating', 'Furniture finishing', 'Aerospace parts'],
+      companies: ['Graco', 'Nordson', 'Wagner', 'SAMES KREMLIN'],
+      futureImpact: 'Smart systems will create gradient coatings—harder outside, flexible inside—in single passes.',
+      color: colors.accent
+    },
+    {
+      icon: '⚡',
+      title: 'Lightning Protection',
+      short: 'Lightning Rods',
+      tagline: 'Taming nature\'s electricity',
+      description: 'Lightning rods use charge concentration at sharp points to protect buildings.',
+      connection: 'Sharp points create intense local fields that ionize air and provide safe discharge paths.',
+      howItWorks: 'Pointed rods concentrate charge, creating corona discharge that bleeds charge gradually. If lightning strikes, the rod provides a low-resistance path to ground.',
+      stats: [
+        { value: '200kA', label: 'Peak current', icon: '⚡' },
+        { value: '5C', label: 'Charge per strike', icon: '🔋' },
+        { value: '45°', label: 'Protection cone', icon: '📐' }
+      ],
+      examples: ['Building rods', 'Aircraft dischargers', 'Wind turbines', 'Launch pads'],
+      companies: ['ERICO', 'Pentair', 'Lightning Protection Intl', 'East Coast Lightning'],
+      futureImpact: 'Laser-triggered lightning may enable precise control of strike locations for sensitive facilities.',
+      color: colors.warning
+    }
+  ];
+
+  // Test questions
+  const testQuestions = [
+    {
+      scenario: "Two metal spheres, each with +3μC charge, are placed 10cm apart on an insulating surface.",
+      question: "What happens when released?",
+      options: [
+        { id: 'a', label: 'They move toward each other' },
+        { id: 'b', label: 'They move away from each other', correct: true },
+        { id: 'c', label: 'They remain stationary' },
+        { id: 'd', label: 'They orbit each other' }
+      ],
+      explanation: "Like charges repel. Both positive spheres push apart with F = kq₁q₂/r² ≈ 8.1 N."
+    },
+    {
+      scenario: "An engineer doubles the distance between two charges from 1m to 2m.",
       question: "How does the electrostatic force change?",
       options: [
-        { text: "It doubles", correct: false },
-        { text: "It halves", correct: false },
-        { text: "It becomes one-fourth as strong", correct: true },
-        { text: "It quadruples", correct: false }
+        { id: 'a', label: 'It doubles' },
+        { id: 'b', label: 'It halves' },
+        { id: 'c', label: 'It becomes one-fourth', correct: true },
+        { id: 'd', label: 'It quadruples' }
       ],
-      explanation: "Coulomb's Law has an inverse-square relationship with distance: F ∝ 1/r². When distance doubles (2×), force becomes (1/2)² = 1/4 of the original. This is why electrostatic forces are so strong at atomic scales but weak at macroscopic distances."
+      explanation: "F ∝ 1/r². Double distance → (1/2)² = 1/4 the force."
     },
     {
-      scenario: "A charged balloon sticks to a neutral wall. The balloon has a negative charge of -2 μC.",
+      scenario: "A charged balloon (-2μC) sticks to a neutral wall.",
       question: "How can a charged object attract a neutral object?",
       options: [
-        { text: "The wall becomes permanently charged", correct: false },
-        { text: "Gravity assists the attraction", correct: false },
-        { text: "The balloon induces polarization in the wall surface", correct: true },
-        { text: "Neutral objects are always attracted to charges", correct: false }
+        { id: 'a', label: 'The wall becomes permanently charged' },
+        { id: 'b', label: 'Gravity assists the attraction' },
+        { id: 'c', label: 'The balloon induces polarization', correct: true },
+        { id: 'd', label: 'Neutral objects are always attracted' }
       ],
-      explanation: "The negative balloon repels electrons in the wall's surface, leaving positive charges closer to the balloon. Since Coulomb force is stronger at shorter distances, the attraction to nearby positive charges exceeds the repulsion from farther negative charges. This is called polarization or induction."
+      explanation: "The balloon repels electrons in the wall, leaving positive charges closer. Since F ∝ 1/r², closer positive charges create stronger attraction."
     },
     {
-      scenario: "In a hydrogen atom, the electron (q = -1.6×10⁻¹⁹ C) orbits the proton (q = +1.6×10⁻¹⁹ C) at approximately 5.3×10⁻¹¹ m.",
-      question: "What is the approximate Coulomb force between them?",
+      scenario: "In hydrogen, an electron orbits a proton at 5.3×10⁻¹¹ m. Both have charge ±1.6×10⁻¹⁹ C.",
+      question: "What is the Coulomb force?",
       options: [
-        { text: "About 8.2 × 10⁻⁸ N", correct: true },
-        { text: "About 8.2 × 10⁻¹⁵ N", correct: false },
-        { text: "About 9.0 × 10⁹ N", correct: false },
-        { text: "About 1.6 × 10⁻¹⁹ N", correct: false }
+        { id: 'a', label: '8.2 × 10⁻⁸ N', correct: true },
+        { id: 'b', label: '8.2 × 10⁻¹⁵ N' },
+        { id: 'c', label: '9.0 × 10⁹ N' },
+        { id: 'd', label: '1.6 × 10⁻¹⁹ N' }
       ],
-      explanation: "F = kq₁q₂/r² = (8.99×10⁹)(1.6×10⁻¹⁹)²/(5.3×10⁻¹¹)² ≈ 8.2×10⁻⁸ N. This seems tiny, but for the electron's mass (~10⁻³⁰ kg), this produces enormous acceleration—about 10²² m/s²! This is why atoms hold together."
+      explanation: "F = kq²/r² = (8.99×10⁹)(1.6×10⁻¹⁹)²/(5.3×10⁻¹¹)² ≈ 8.2×10⁻⁸ N."
     },
     {
-      scenario: "A technician compares two setups: Setup A has charges +4μC and -2μC at 5cm apart. Setup B has charges +2μC and -1μC at 5cm apart.",
-      question: "How do the forces in Setup A and Setup B compare?",
+      scenario: "Setup A: +4μC and -2μC at 5cm. Setup B: +2μC and -1μC at 5cm.",
+      question: "How do forces compare?",
       options: [
-        { text: "Force A = Force B", correct: false },
-        { text: "Force A = 2 × Force B", correct: false },
-        { text: "Force A = 4 × Force B", correct: true },
-        { text: "Force A = 8 × Force B", correct: false }
+        { id: 'a', label: 'Force A = Force B' },
+        { id: 'b', label: 'Force A = 2 × Force B' },
+        { id: 'c', label: 'Force A = 4 × Force B', correct: true },
+        { id: 'd', label: 'Force A = 8 × Force B' }
       ],
-      explanation: "Force ∝ q₁q₂. Setup A: |4×(-2)| = 8 μC². Setup B: |2×(-1)| = 2 μC². The ratio is 8/2 = 4, so Force A is 4 times greater than Force B. Since both are opposite charges, both forces are attractive."
+      explanation: "F ∝ q₁q₂. Setup A: |4×2| = 8. Setup B: |2×1| = 2. Ratio: 8/2 = 4."
     },
     {
-      scenario: "Three charges are placed in a line: +Q at x=0, +Q at x=d, and a test charge +q at x=d/2.",
-      question: "What is the net force on the test charge?",
+      scenario: "Three charges in a line: +Q at x=0, +Q at x=d, and +q at x=d/2.",
+      question: "What is the net force on +q?",
       options: [
-        { text: "Net force points left", correct: false },
-        { text: "Net force points right", correct: false },
-        { text: "Net force is zero", correct: true },
-        { text: "Net force points up", correct: false }
+        { id: 'a', label: 'Net force points left' },
+        { id: 'b', label: 'Net force points right' },
+        { id: 'c', label: 'Net force is zero', correct: true },
+        { id: 'd', label: 'Net force points up' }
       ],
-      explanation: "By symmetry, the test charge +q is equidistant from both +Q charges. Each +Q exerts an equal-magnitude repulsive force on +q, but in opposite directions (left and right). The forces cancel, resulting in zero net force—but this is unstable equilibrium!"
+      explanation: "By symmetry, +q is equidistant from both +Q charges. Equal repulsive forces cancel."
     },
     {
-      scenario: "A lightning rod has a sharp pointed tip rather than a rounded end.",
-      question: "Why does the sharp point help with lightning protection?",
+      scenario: "Lightning rods have sharp pointed tips rather than rounded ends.",
+      question: "Why does the sharp point help?",
       options: [
-        { text: "Sharp points are cheaper to manufacture", correct: false },
-        { text: "Points create stronger electric fields that ionize air more easily", correct: true },
-        { text: "Points attract lightning directly by being taller", correct: false },
-        { text: "The shape doesn't matter, only the material", correct: false }
+        { id: 'a', label: 'Sharp points are cheaper' },
+        { id: 'b', label: 'Points create stronger fields that ionize air', correct: true },
+        { id: 'c', label: 'Points attract lightning by being taller' },
+        { id: 'd', label: 'Shape doesn\'t matter' }
       ],
-      explanation: "Charge concentrates at sharp points, creating intense local electric fields. This ionizes air molecules, creating a conductive path that allows gradual charge dissipation. The rod prevents sudden, destructive lightning strikes by continuously bleeding charge through corona discharge."
+      explanation: "Charge concentrates at sharp points, creating intense fields that ionize air for corona discharge."
     },
     {
-      scenario: "In a Van de Graaff generator, a rubber belt carries positive charges from the base to a metal dome.",
-      question: "Why do the charges spread over the dome's outer surface?",
+      scenario: "In a Van de Graaff generator, charges spread over a metal dome's surface.",
+      question: "Why do charges spread to the outer surface?",
       options: [
-        { text: "The charges are attracted to the air outside", correct: false },
-        { text: "Gravity pulls them to the bottom", correct: false },
-        { text: "Like charges repel, maximizing distance by spreading to the surface", correct: true },
-        { text: "Metal conducts charges to the outside automatically", correct: false }
+        { id: 'a', label: 'Air attracts charges outside' },
+        { id: 'b', label: 'Gravity pulls them down' },
+        { id: 'c', label: 'Like charges repel, maximizing distance', correct: true },
+        { id: 'd', label: 'Metal conducts automatically' }
       ],
-      explanation: "Like charges repel each other. In a conductor, charges can move freely and arrange themselves to minimize potential energy. This happens when they spread as far apart as possible—on the outer surface of the conductor. Inside a charged conductor at equilibrium, the electric field is zero."
+      explanation: "Like charges repel and spread as far apart as possible—on the outer surface."
     },
     {
-      scenario: "An inkjet printer uses charged ink droplets that pass between deflection plates with voltages of ±1500V.",
-      question: "How does this system direct ink to the correct position on paper?",
+      scenario: "An inkjet printer uses charged droplets passing between ±1500V deflection plates.",
+      question: "How does this direct ink?",
       options: [
-        { text: "Magnetic fields guide the droplets", correct: false },
-        { text: "The electric field between plates exerts Coulomb force on charged droplets", correct: true },
-        { text: "Air pressure pushes the droplets", correct: false },
-        { text: "Gravity curves the droplet paths", correct: false }
+        { id: 'a', label: 'Magnetic fields guide droplets' },
+        { id: 'b', label: 'Electric field exerts Coulomb force', correct: true },
+        { id: 'c', label: 'Air pressure pushes droplets' },
+        { id: 'd', label: 'Gravity curves the paths' }
       ],
-      explanation: "Charged droplets experience Coulomb force F = qE in the electric field between the plates. The field E = V/d creates a force perpendicular to the droplet's motion, deflecting it. By varying the droplet charge, the printer controls exactly where each droplet lands."
+      explanation: "F = qE. The electric field deflects charged droplets. Varying charge controls landing position."
     },
     {
-      scenario: "Electrostatic precipitators in power plants use high-voltage wires (-50,000V) to charge smoke particles, which then stick to grounded collection plates.",
-      question: "Why do the charged particles move toward the grounded plates?",
+      scenario: "Electrostatic precipitators use -50,000V wires to charge smoke particles.",
+      question: "Why do particles move toward grounded plates?",
       options: [
-        { text: "The particles become magnetic when charged", correct: false },
-        { text: "Wind blows them toward the plates", correct: false },
-        { text: "Negatively charged particles are attracted to the relatively positive plates", correct: true },
-        { text: "The particles become heavier when charged", correct: false }
+        { id: 'a', label: 'Particles become magnetic' },
+        { id: 'b', label: 'Wind blows them' },
+        { id: 'c', label: 'Negative particles attracted to positive plates', correct: true },
+        { id: 'd', label: 'Particles become heavier' }
       ],
-      explanation: "The corona discharge gives smoke particles a negative charge. The grounded plates (at 0V potential) are more positive than the -50,000V wires, creating an electric field pointing toward the plates. Negatively charged particles experience force F = qE in the opposite direction of E, moving them toward the plates."
+      explanation: "Negatively charged particles experience Coulomb force toward the relatively positive ground plates."
     }
   ];
 
-  // Transfer applications
-  const transferApps: TransferApp[] = [
-    {
-      icon: "🏭",
-      title: "Electrostatic Precipitators",
-      short: "Clean Air Technology",
-      tagline: "Capturing particles with electric fields",
-      description: "Coulomb's Law enables the removal of 99%+ of particulate matter from industrial exhaust, preventing air pollution.",
-      connection: "Charged particles experience Coulomb force in electric fields, moving toward collection plates where they accumulate and are removed.",
-      howItWorks: "High-voltage corona wires ionize air molecules, which transfer charge to passing particles. The charged particles then migrate to grounded collection plates under the influence of the strong electric field, where they stick and are periodically cleaned off.",
-      stats: [
-        "Remove 99.9% of particles",
-        "Handle temperatures up to 450°C",
-        "Process millions of m³/hour",
-        "Capture particles down to 0.01 μm"
-      ],
-      examples: [
-        "Coal power plant fly ash removal",
-        "Cement kiln dust collection",
-        "Steel mill emission control",
-        "Paper mill recovery boilers"
-      ],
-      companies: ["GE Power", "Babcock & Wilcox", "Mitsubishi Power", "Siemens"],
-      futureImpact: "Next-generation precipitators with pulsed power systems will achieve even higher efficiency while reducing energy consumption, critical for meeting stricter air quality standards worldwide.",
-      color: "from-gray-700 to-gray-900"
-    },
-    {
-      icon: "🖨️",
-      title: "Xerography & Laser Printing",
-      short: "Electrostatic Imaging",
-      tagline: "Printing with charged particles",
-      description: "Every laser printer and photocopier uses Coulomb's Law to precisely place toner particles and create sharp images.",
-      connection: "Toner particles with specific charges are attracted or repelled by charged regions on a photoconductor drum, creating images through controlled electrostatic forces.",
-      howItWorks: "A laser discharges specific areas on a charged photoconductor drum. Oppositely charged toner particles stick only to the remaining charged areas. Paper receives a stronger charge that pulls toner off the drum, then heat fuses the toner permanently.",
-      stats: [
-        "Resolution up to 4800 DPI",
-        "Toner particles ~5-10 μm",
-        "Drum voltage ~1000V",
-        "Millions of pages per drum"
-      ],
-      examples: [
-        "Office laser printers",
-        "High-speed commercial printing",
-        "Photocopiers",
-        "Digital press systems"
-      ],
-      companies: ["Xerox", "HP", "Canon", "Ricoh"],
-      futureImpact: "Electrostatic printing is enabling 3D printing of complex materials, with charged particle deposition creating precise microstructures for electronics, biomedical devices, and aerospace components.",
-      color: "from-blue-700 to-indigo-900"
-    },
-    {
-      icon: "🎨",
-      title: "Electrostatic Coating",
-      short: "Efficient Painting",
-      tagline: "Coulomb force for perfect finishes",
-      description: "Electrostatic spray systems use charge attraction to achieve 95%+ transfer efficiency, reducing waste and creating uniform coatings.",
-      connection: "Charged paint or powder particles are attracted to grounded objects by Coulomb force, wrapping around edges and reaching recessed areas that conventional spraying misses.",
-      howItWorks: "Paint particles are charged at 60-100 kV as they leave the spray gun. The grounded workpiece attracts the charged particles, which follow electric field lines to coat all surfaces uniformly—even the back sides—through electrostatic wraparound.",
-      stats: [
-        "95% transfer efficiency (vs 30% conventional)",
-        "Coating thickness: 25-75 μm",
-        "Reduces overspray by 90%",
-        "VOC reduction up to 80%"
-      ],
-      examples: [
-        "Automotive body painting",
-        "Appliance powder coating",
-        "Furniture finishing",
-        "Aerospace component coating"
-      ],
-      companies: ["Graco", "Nordson", "Wagner", "SAMES KREMLIN"],
-      futureImpact: "Smart electrostatic systems with real-time charge control will enable single-coat finishes with gradient properties—harder outer surfaces transitioning to flexible inner layers—reducing manufacturing steps.",
-      color: "from-orange-600 to-red-800"
-    },
-    {
-      icon: "⚡",
-      title: "Lightning Protection Systems",
-      short: "Charge Management",
-      tagline: "Taming nature's electricity",
-      description: "Lightning rods and protection systems use principles of charge distribution and Coulomb's Law to safely channel massive electrical discharges.",
-      connection: "Sharp points concentrate charge and create strong local electric fields, enabling controlled corona discharge that prevents destructive lightning strikes.",
-      howItWorks: "Lightning rods create a region of ionized air through corona discharge, providing a low-resistance path for lightning. The rod system safely conducts the strike current (up to 200,000 A) to ground, protecting structures from the thermal and electromagnetic effects.",
-      stats: [
-        "Lightning carries ~1-5 coulombs",
-        "Peak current up to 200 kA",
-        "Strike duration ~0.5 ms",
-        "Protection zone ~45° cone"
-      ],
-      examples: [
-        "Building lightning rods",
-        "Aircraft static dischargers",
-        "Wind turbine protection",
-        "Rocket launch pads"
-      ],
-      companies: ["Lightning Protection International", "ERICO", "Pentair", "East Coast Lightning Equipment"],
-      futureImpact: "Laser-triggered lightning protection may enable precise control of lightning strike locations, protecting sensitive installations like data centers and space launch facilities with near-perfect reliability.",
-      color: "from-yellow-500 to-amber-700"
-    }
+  // Mastery items
+  const masteryItems = [
+    { icon: '⚡', title: "Coulomb's Law", desc: 'F = kq₁q₂/r² governs electrostatic force', color: colors.primary },
+    { icon: '📐', title: 'Inverse Square', desc: 'Force decreases with square of distance', color: colors.accent },
+    { icon: '🧲', title: 'Polarization', desc: 'Charged objects can attract neutral objects through induction', color: colors.danger },
+    { icon: '🏭', title: 'Applications', desc: 'From precipitators to printers, electrostatics powers technology', color: colors.success },
+    { icon: '🔢', title: "Coulomb's Constant", desc: 'k = 8.99×10⁹ N·m²/C² makes atomic forces immense', color: colors.warning },
   ];
 
-  const calculateTestScore = useCallback(() => {
-    return testAnswers.reduce((score, answer, index) => {
-      if (answer === -1) return score;
-      return score + (testQuestions[index].options[answer]?.correct ? 1 : 0);
-    }, 0);
-  }, [testAnswers, testQuestions]);
+  // Calculate test score
+  const testScore = testAnswers.reduce((score, answer, idx) => {
+    if (answer === null) return score;
+    const correct = testQuestions[idx].options.findIndex(o => o.correct);
+    return score + (answer === correct ? 1 : 0);
+  }, 0);
 
-  // Render electric field lines
-  const renderFieldLines = useCallback((charges: Charge[], width: number, height: number) => {
-    if (!showFieldLines) return null;
+  // renderBottomBar
+  const renderBottomBar = (canGoBack: boolean, canGoNext: boolean, nextLabel: string, onNext?: () => void, accentColor?: string) => (
+    <div style={{
+      display: 'flex',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      padding: '12px 16px',
+      borderTop: `1px solid ${colors.border}`,
+      backgroundColor: colors.bgCard,
+      gap: '8px'
+    }}>
+      {canGoBack ? (
+        <button
+          onMouseDown={goBack}
+          onTouchEnd={(e) => { e.preventDefault(); goBack(); }}
+          style={{
+            padding: '10px 16px',
+            borderRadius: '10px',
+            border: `1px solid ${colors.border}`,
+            backgroundColor: 'transparent',
+            color: colors.textSecondary,
+            fontSize: typo.body,
+            fontWeight: 600,
+            cursor: 'pointer'
+          }}
+        >
+          ← Back
+        </button>
+      ) : <div />}
 
-    const lines: JSX.Element[] = [];
-    const numLines = 8;
+      <span style={{ fontSize: typo.small, color: colors.textMuted, fontWeight: 500 }}>
+        {phaseLabels[phase]}
+      </span>
 
-    charges.forEach((charge, chargeIndex) => {
-      if (charge.q === 0) return;
-
-      for (let i = 0; i < numLines; i++) {
-        const angle = (2 * Math.PI * i) / numLines;
-        const points: { x: number; y: number }[] = [];
-
-        let x = charge.x + Math.cos(angle) * 20;
-        let y = charge.y + Math.sin(angle) * 20;
-
-        const direction = charge.q > 0 ? 1 : -1;
-
-        for (let step = 0; step < 50; step++) {
-          if (x < 0 || x > width || y < 0 || y > height) break;
-
-          points.push({ x, y });
-
-          // Calculate field at this point
-          let Ex = 0, Ey = 0;
-          charges.forEach(c => {
-            const dx = x - c.x;
-            const dy = y - c.y;
-            const r = Math.sqrt(dx * dx + dy * dy);
-            if (r < 10) return;
-            const E = (c.q > 0 ? 1 : -1) / (r * r);
-            Ex += E * dx / r;
-            Ey += E * dy / r;
-          });
-
-          const Emag = Math.sqrt(Ex * Ex + Ey * Ey);
-          if (Emag < 0.0001) break;
-
-          x += direction * (Ex / Emag) * 5;
-          y += direction * (Ey / Emag) * 5;
-        }
-
-        if (points.length > 2) {
-          const pathD = points.map((p, idx) =>
-            `${idx === 0 ? 'M' : 'L'} ${p.x} ${p.y}`
-          ).join(' ');
-
-          lines.push(
-            <path
-              key={`field-${chargeIndex}-${i}`}
-              d={pathD}
-              fill="none"
-              stroke={charge.q > 0 ? '#fca5a5' : '#93c5fd'}
-              strokeWidth="1"
-              opacity="0.5"
-            />
-          );
-        }
-      }
-    });
-
-    return <g>{lines}</g>;
-  }, [showFieldLines]);
-
-  // Render force vectors
-  const renderForceVectors = useCallback(() => {
-    if (!showForceVectors || charges.length < 2) return null;
-
-    const vectors: JSX.Element[] = [];
-
-    for (let i = 0; i < charges.length; i++) {
-      let Fx = 0, Fy = 0;
-
-      for (let j = 0; j < charges.length; j++) {
-        if (i === j) continue;
-
-        const dx = charges[j].x - charges[i].x;
-        const dy = charges[j].y - charges[i].y;
-        const r = Math.sqrt(dx * dx + dy * dy);
-        if (r < 1) continue;
-
-        // Force direction (attraction/repulsion)
-        const forceMag = charges[i].q * charges[j].q;
-        const direction = forceMag < 0 ? 1 : -1; // Opposite charges attract
-
-        Fx += direction * Math.abs(forceMag) * dx / (r * r * r) * 1000;
-        Fy += direction * Math.abs(forceMag) * dy / (r * r * r) * 1000;
-      }
-
-      const Fmag = Math.sqrt(Fx * Fx + Fy * Fy);
-      if (Fmag > 1) {
-        const scale = Math.min(50, Fmag * 5);
-        const endX = charges[i].x + (Fx / Fmag) * scale;
-        const endY = charges[i].y + (Fy / Fmag) * scale;
-
-        vectors.push(
-          <g key={`force-${i}`}>
-            <line
-              x1={charges[i].x}
-              y1={charges[i].y}
-              x2={endX}
-              y2={endY}
-              stroke="#22c55e"
-              strokeWidth="3"
-              markerEnd="url(#forceArrow)"
-            />
-          </g>
-        );
-      }
-    }
-
-    return <g>{vectors}</g>;
-  }, [showForceVectors, charges]);
-
-  // Phase renderers
-  const renderHook = () => (
-    <div className="flex flex-col items-center justify-center min-h-[600px] px-6 py-12 text-center">
-      {/* Premium badge */}
-      <div className="inline-flex items-center gap-2 px-4 py-2 bg-purple-500/10 border border-purple-500/20 rounded-full mb-8">
-        <span className="w-2 h-2 bg-purple-400 rounded-full animate-pulse" />
-        <span className="text-sm font-medium text-purple-400 tracking-wide">ELECTROSTATICS</span>
-      </div>
-
-      {/* Main title with gradient */}
-      <h1 className="text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-red-300 via-white to-blue-300 bg-clip-text text-transparent">
-        Coulomb's Law
-      </h1>
-      <p className="text-lg md:text-xl text-slate-400 max-w-xl mb-8 leading-relaxed">
-        The invisible force between electric charges
-      </p>
-
-      {/* Premium card */}
-      <div className="bg-gradient-to-br from-slate-800/80 to-slate-900/80 backdrop-blur-xl rounded-3xl p-6 md:p-8 max-w-2xl border border-slate-700/50 shadow-2xl shadow-purple-500/5 mb-8">
-        <svg viewBox="0 0 500 300" className="w-full max-w-md mx-auto mb-6">
-          <defs>
-            <radialGradient id="positiveGlow" cx="50%" cy="50%" r="50%">
-              <stop offset="0%" stopColor="#ef4444" stopOpacity="0.6" />
-              <stop offset="100%" stopColor="#ef4444" stopOpacity="0" />
-            </radialGradient>
-            <radialGradient id="negativeGlow" cx="50%" cy="50%" r="50%">
-              <stop offset="0%" stopColor="#3b82f6" stopOpacity="0.6" />
-              <stop offset="100%" stopColor="#3b82f6" stopOpacity="0" />
-            </radialGradient>
-          </defs>
-
-          {/* Background */}
-          <rect x="0" y="0" width="500" height="300" fill="#0f172a" rx="12" />
-
-          {/* Electric field lines (animated) */}
-          {[0, 1, 2, 3, 4, 5].map(i => {
-            const startAngle = (i * 60) * Math.PI / 180;
-            const offset = Math.sin(animationTime * 2 + i) * 5;
-            return (
-              <path
-                key={`line-${i}`}
-                d={`M ${150 + Math.cos(startAngle) * 40} ${150 + Math.sin(startAngle) * 40}
-                    Q 250 ${150 + offset}
-                    ${350 + Math.cos(startAngle + Math.PI) * 40} ${150 + Math.sin(startAngle + Math.PI) * 40}`}
-                stroke="#4ade80"
-                strokeWidth="2"
-                fill="none"
-                opacity="0.4"
-              />
-            );
-          })}
-
-          {/* Positive charge glow */}
-          <circle cx="150" cy="150" r="60" fill="url(#positiveGlow)">
-            <animate attributeName="r" values="50;60;50" dur="2s" repeatCount="indefinite" />
-          </circle>
-
-          {/* Negative charge glow */}
-          <circle cx="350" cy="150" r="60" fill="url(#negativeGlow)">
-            <animate attributeName="r" values="50;60;50" dur="2s" repeatCount="indefinite" />
-          </circle>
-
-          {/* Positive charge */}
-          <circle cx="150" cy="150" r="35" fill="#ef4444" stroke="#fca5a5" strokeWidth="3" />
-          <text x="150" y="160" textAnchor="middle" fill="white" fontSize="32" fontWeight="bold">+</text>
-
-          {/* Negative charge */}
-          <circle cx="350" cy="150" r="35" fill="#3b82f6" stroke="#93c5fd" strokeWidth="3" />
-          <text x="350" y="160" textAnchor="middle" fill="white" fontSize="32" fontWeight="bold">−</text>
-
-          {/* Force arrows */}
-          <g>
-            <path d="M190,150 L250,150" stroke="#22c55e" strokeWidth="4" markerEnd="url(#greenArrow)" />
-            <path d="M310,150 L250,150" stroke="#22c55e" strokeWidth="4" markerEnd="url(#greenArrow)" />
-          </g>
-
-          {/* Equation */}
-          <text x="250" y="260" textAnchor="middle" fill="#94a3b8" fontSize="20">
-            F = k × q₁ × q₂ / r²
-          </text>
-
-          <defs>
-            <marker id="greenArrow" markerWidth="10" markerHeight="10" refX="9" refY="5" orient="auto">
-              <path d="M0,0 L10,5 L0,10 Z" fill="#22c55e" />
-            </marker>
-          </defs>
-        </svg>
-
-        <p className="text-xl text-slate-300 mb-4">
-          Two invisible forces reach across empty space...
-        </p>
-        <p className="text-lg text-cyan-400 font-medium">
-          Why do opposite charges attract while like charges repel?
-        </p>
-        <p className="text-sm text-slate-500 mt-2">
-          k = 8.99 x 10^9 N.m^2/C^2 (Coulomb's constant)
-        </p>
-      </div>
-
-      {/* Premium CTA button */}
       <button
-        onMouseDown={(e) => { e.preventDefault(); goToPhase(1); }}
-        className="group relative px-8 py-4 bg-gradient-to-r from-red-600 to-blue-600 text-white text-lg font-semibold rounded-2xl transition-all duration-300 shadow-lg shadow-purple-500/25 hover:shadow-purple-500/40 hover:scale-[1.02] active:scale-[0.98]"
+        onMouseDown={() => onNext ? onNext() : goNext()}
+        onTouchEnd={(e) => { e.preventDefault(); onNext ? onNext() : goNext(); }}
+        disabled={!canGoNext}
+        style={{
+          padding: '10px 20px',
+          borderRadius: '10px',
+          border: 'none',
+          background: canGoNext
+            ? `linear-gradient(135deg, ${accentColor || colors.primary} 0%, ${colors.accent} 100%)`
+            : colors.bgCardLight,
+          color: canGoNext ? '#fff' : colors.textMuted,
+          fontSize: typo.body,
+          fontWeight: 700,
+          cursor: canGoNext ? 'pointer' : 'not-allowed',
+          opacity: canGoNext ? 1 : 0.5,
+          boxShadow: canGoNext ? `0 4px 20px ${(accentColor || colors.primary)}40` : 'none'
+        }}
       >
-        <span className="relative z-10 flex items-center gap-2">
-          Discover the Electric Force
-          <svg className="w-5 h-5 transition-transform group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-          </svg>
-        </span>
+        {nextLabel} →
       </button>
-      <p className="mt-6 text-sm text-slate-500">Explore attraction and repulsion between charges</p>
     </div>
   );
 
-  const renderPredict = () => (
-    <div className="flex flex-col items-center justify-center min-h-[500px] p-6">
-      <h2 className="text-2xl font-bold text-white mb-6">Make Your Prediction</h2>
-      <div className="bg-slate-800/50 rounded-2xl p-6 max-w-2xl mb-6">
-        <p className="text-lg text-slate-300 mb-4">
-          Two charged particles are placed near each other. One has charge +4 μC,
-          the other has charge -2 μC, separated by 10 cm.
+  // renderSectionHeader
+  const renderSectionHeader = (phaseName: string, title: string, subtitle?: string) => (
+    <div style={{ marginBottom: typo.sectionGap }}>
+      <p style={{
+        fontSize: typo.label,
+        fontWeight: 800,
+        textTransform: 'uppercase',
+        letterSpacing: '0.08em',
+        color: colors.primary,
+        marginBottom: '4px'
+      }}>
+        {phaseName}
+      </p>
+      <h2 style={{
+        fontSize: typo.heading,
+        fontWeight: 800,
+        color: colors.textPrimary,
+        lineHeight: 1.2,
+        margin: 0
+      }}>
+        {title}
+      </h2>
+      {subtitle && (
+        <p style={{
+          fontSize: typo.small,
+          color: colors.textSecondary,
+          lineHeight: 1.4,
+          marginTop: '6px'
+        }}>
+          {subtitle}
         </p>
-        <svg viewBox="0 0 400 150" className="w-full max-w-sm mx-auto my-4">
-          <rect x="0" y="0" width="400" height="150" fill="#1e293b" rx="8" />
-
-          {/* Positive charge */}
-          <circle cx="100" cy="75" r="25" fill="#ef4444" stroke="#fca5a5" strokeWidth="2" />
-          <text x="100" y="83" textAnchor="middle" fill="white" fontSize="24" fontWeight="bold">+</text>
-          <text x="100" y="120" textAnchor="middle" fill="#fca5a5" fontSize="12">+4 μC</text>
-
-          {/* Negative charge */}
-          <circle cx="300" cy="75" r="25" fill="#3b82f6" stroke="#93c5fd" strokeWidth="2" />
-          <text x="300" y="83" textAnchor="middle" fill="white" fontSize="24" fontWeight="bold">−</text>
-          <text x="300" y="120" textAnchor="middle" fill="#93c5fd" fontSize="12">-2 μC</text>
-
-          {/* Distance marker */}
-          <line x1="125" y1="35" x2="275" y2="35" stroke="#94a3b8" strokeWidth="2" />
-          <line x1="125" y1="30" x2="125" y2="40" stroke="#94a3b8" strokeWidth="2" />
-          <line x1="275" y1="30" x2="275" y2="40" stroke="#94a3b8" strokeWidth="2" />
-          <text x="200" y="28" textAnchor="middle" fill="#94a3b8" fontSize="12">10 cm</text>
-
-          {/* Question marks for force */}
-          <text x="160" y="80" fill="#22c55e" fontSize="20">?</text>
-          <text x="240" y="80" fill="#22c55e" fontSize="20">?</text>
-        </svg>
-        <p className="text-cyan-400 font-medium">
-          What forces will these charges experience?
-        </p>
-      </div>
-
-      <div className="grid gap-3 w-full max-w-xl">
-        {[
-          { id: 'A', text: 'Both charges repel each other (push apart)' },
-          { id: 'B', text: 'Both charges attract each other (pull together)' },
-          { id: 'C', text: 'Only the positive charge experiences a force' },
-          { id: 'D', text: 'The forces depend on which charge is larger' }
-        ].map(option => (
-          <button
-            key={option.id}
-            onMouseDown={(e) => { e.preventDefault(); handlePrediction(option.id); }}
-            disabled={showPredictionFeedback}
-            className={`p-4 rounded-xl text-left transition-all duration-300 ${
-              showPredictionFeedback && selectedPrediction === option.id
-                ? option.id === 'B'
-                  ? 'bg-emerald-600/40 border-2 border-emerald-400'
-                  : 'bg-red-600/40 border-2 border-red-400'
-                : showPredictionFeedback && option.id === 'B'
-                ? 'bg-emerald-600/40 border-2 border-emerald-400'
-                : 'bg-slate-700/50 hover:bg-slate-600/50 border-2 border-transparent'
-            }`}
-          >
-            <span className="font-bold text-white">{option.id}.</span>
-            <span className="text-slate-200 ml-2">{option.text}</span>
-          </button>
-        ))}
-      </div>
-
-      {showPredictionFeedback && (
-        <div className="mt-6 p-4 bg-slate-800/70 rounded-xl max-w-xl">
-          <p className="text-emerald-400 font-semibold">
-            ✓ Correct! Opposite charges attract each other!
-          </p>
-          <p className="text-slate-400 text-sm mt-2">
-            F = k × |q₁| × |q₂| / r² = 8.99×10⁹ × 4×10⁻⁶ × 2×10⁻⁶ / (0.1)² ≈ 7.2 N
-          </p>
-          <button
-            onMouseDown={(e) => { e.preventDefault(); goToPhase(2); }}
-            className="mt-4 px-6 py-3 bg-gradient-to-r from-red-600 to-blue-600 text-white font-semibold rounded-xl hover:from-red-500 hover:to-blue-500 transition-all duration-300"
-          >
-            Explore the Simulation →
-          </button>
-        </div>
       )}
     </div>
   );
 
-  const renderPlay = () => {
-    const distance = Math.sqrt(
-      Math.pow(charges[1].x - charges[0].x, 2) +
-      Math.pow(charges[1].y - charges[0].y, 2)
-    );
-    const force = calculateForce(charges[0].q, charges[1].q, distance);
-    const isAttractive = charges[0].q * charges[1].q < 0;
+  // renderPremiumWrapper - MUST be a render function, NOT a component
+  const renderPremiumWrapper = (children: React.ReactNode, footer?: React.ReactNode) => {
+    const phaseIndex = phaseOrder.indexOf(phase);
 
     return (
-      <div className="flex flex-col items-center p-4 md:p-6">
-        <h2 className="text-2xl font-bold text-white mb-4">Coulomb's Law Lab</h2>
+      <div style={{
+        position: 'absolute',
+        inset: 0,
+        display: 'flex',
+        flexDirection: 'column',
+        backgroundColor: colors.bgDark,
+        color: colors.textPrimary
+      }}>
+        {/* Background gradient */}
+        <div style={{
+          position: 'absolute',
+          inset: 0,
+          background: `linear-gradient(135deg, ${colors.bgCard} 0%, ${colors.bgDark} 50%, ${colors.bgCard} 100%)`,
+          pointerEvents: 'none'
+        }} />
 
-        <div className="bg-slate-800/50 rounded-2xl p-4 mb-4 w-full max-w-2xl">
-          <svg viewBox="0 0 500 400" className="w-full bg-slate-900 rounded-xl">
+        {/* Decorative orbs */}
+        <div style={{
+          position: 'absolute',
+          top: '10%',
+          left: '10%',
+          width: '300px',
+          height: '300px',
+          background: `radial-gradient(circle, ${colors.positive}15 0%, transparent 70%)`,
+          borderRadius: '50%',
+          filter: 'blur(40px)',
+          pointerEvents: 'none'
+        }} />
+        <div style={{
+          position: 'absolute',
+          bottom: '10%',
+          right: '10%',
+          width: '300px',
+          height: '300px',
+          background: `radial-gradient(circle, ${colors.negative}15 0%, transparent 70%)`,
+          borderRadius: '50%',
+          filter: 'blur(40px)',
+          pointerEvents: 'none'
+        }} />
+
+        {/* Header */}
+        <div style={{
+          flexShrink: 0,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          padding: '12px 16px',
+          borderBottom: `1px solid ${colors.border}`,
+          backgroundColor: `${colors.bgCard}ee`,
+          backdropFilter: 'blur(10px)',
+          position: 'relative',
+          zIndex: 10
+        }}>
+          {/* Back button */}
+          {phaseIndex > 0 ? (
+            <button
+              onMouseDown={goBack}
+              onTouchEnd={(e) => { e.preventDefault(); goBack(); }}
+              style={{
+                width: '36px',
+                height: '36px',
+                borderRadius: '10px',
+                border: `1px solid ${colors.border}`,
+                backgroundColor: 'transparent',
+                color: colors.textSecondary,
+                fontSize: '16px',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center'
+              }}
+            >
+              ←
+            </button>
+          ) : (
+            <div style={{ width: '36px' }} />
+          )}
+
+          {/* Progress dots */}
+          <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+            {phaseOrder.map((p, i) => (
+              <button
+                key={p}
+                onMouseDown={() => i <= phaseIndex && goToPhase(p)}
+                onTouchEnd={(e) => { e.preventDefault(); i <= phaseIndex && goToPhase(p); }}
+                disabled={i > phaseIndex}
+                style={{
+                  width: phase === p ? '20px' : '8px',
+                  height: '8px',
+                  borderRadius: '4px',
+                  border: 'none',
+                  backgroundColor: i < phaseIndex ? colors.success : phase === p ? colors.primary : colors.border,
+                  cursor: i <= phaseIndex ? 'pointer' : 'default',
+                  transition: 'all 0.3s ease'
+                }}
+              />
+            ))}
+          </div>
+
+          {/* Phase indicator */}
+          <span style={{
+            fontSize: typo.small,
+            color: colors.textMuted,
+            fontWeight: 600,
+            minWidth: '36px',
+            textAlign: 'right'
+          }}>
+            {phaseIndex + 1}/10
+          </span>
+        </div>
+
+        {/* Main scrollable content */}
+        <div style={{
+          flex: '1 1 0%',
+          minHeight: 0,
+          overflowY: 'auto',
+          overflowX: 'hidden',
+          WebkitOverflowScrolling: 'touch',
+          position: 'relative',
+          zIndex: 1
+        }}>
+          {children}
+        </div>
+
+        {/* Footer */}
+        {footer && (
+          <div style={{ flexShrink: 0, position: 'relative', zIndex: 10 }}>
+            {footer}
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  // ========== PHASE RENDERS ==========
+
+  // HOOK
+  if (phase === 'hook') {
+    return renderPremiumWrapper(
+      <div style={{ padding: typo.pagePadding, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '100%' }}>
+        {/* Category tag */}
+        <div style={{
+          display: 'inline-flex',
+          alignItems: 'center',
+          gap: '8px',
+          padding: '6px 14px',
+          backgroundColor: `${colors.primary}15`,
+          border: `1px solid ${colors.primary}30`,
+          borderRadius: '20px',
+          marginBottom: '24px'
+        }}>
+          <span style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: colors.primary }} />
+          <span style={{ fontSize: typo.small, fontWeight: 700, color: colors.primary, letterSpacing: '0.05em' }}>
+            ELECTROSTATICS
+          </span>
+        </div>
+
+        {/* Title */}
+        <h1 style={{
+          fontSize: typo.title,
+          fontWeight: 800,
+          textAlign: 'center',
+          marginBottom: '12px',
+          background: `linear-gradient(135deg, ${colors.positive} 0%, ${colors.textPrimary} 50%, ${colors.negative} 100%)`,
+          WebkitBackgroundClip: 'text',
+          WebkitTextFillColor: 'transparent',
+          backgroundClip: 'text'
+        }}>
+          Coulomb's Law
+        </h1>
+
+        <p style={{
+          fontSize: typo.bodyLarge,
+          color: colors.textSecondary,
+          textAlign: 'center',
+          maxWidth: '400px',
+          lineHeight: 1.5,
+          marginBottom: '24px'
+        }}>
+          The invisible force between electric charges that holds atoms together and powers lightning
+        </p>
+
+        {/* Animated visualization */}
+        <div style={{
+          width: '100%',
+          maxWidth: '400px',
+          aspectRatio: '4/3',
+          backgroundColor: colors.bgCard,
+          borderRadius: '16px',
+          border: `1px solid ${colors.border}`,
+          marginBottom: '24px',
+          overflow: 'hidden',
+          position: 'relative'
+        }}>
+          <svg viewBox="0 0 400 300" style={{ width: '100%', height: '100%' }}>
             <defs>
-              <marker id="forceArrow" markerWidth="10" markerHeight="10" refX="9" refY="5" orient="auto">
-                <path d="M0,0 L10,5 L0,10 Z" fill="#22c55e" />
+              <radialGradient id="posGlow" cx="50%" cy="50%" r="50%">
+                <stop offset="0%" stopColor={colors.positive} stopOpacity="0.6" />
+                <stop offset="100%" stopColor={colors.positive} stopOpacity="0" />
+              </radialGradient>
+              <radialGradient id="negGlow" cx="50%" cy="50%" r="50%">
+                <stop offset="0%" stopColor={colors.negative} stopOpacity="0.6" />
+                <stop offset="100%" stopColor={colors.negative} stopOpacity="0" />
+              </radialGradient>
+              <marker id="arrowGreen" markerWidth="10" markerHeight="10" refX="9" refY="5" orient="auto">
+                <path d="M0,0 L10,5 L0,10 Z" fill={colors.success} />
               </marker>
-              <radialGradient id="posGrad" cx="50%" cy="50%" r="50%">
-                <stop offset="0%" stopColor="#fca5a5" />
-                <stop offset="100%" stopColor="#ef4444" />
+            </defs>
+
+            {/* Field lines */}
+            {[0, 1, 2, 3, 4, 5].map(i => {
+              const angle = (i * 60) * Math.PI / 180;
+              const offset = Math.sin(animationTime * 2 + i) * 5;
+              return (
+                <path
+                  key={`line-${i}`}
+                  d={`M ${130 + Math.cos(angle) * 35} ${150 + Math.sin(angle) * 35}
+                      Q 200 ${150 + offset}
+                      ${270 + Math.cos(angle + Math.PI) * 35} ${150 + Math.sin(angle + Math.PI) * 35}`}
+                  stroke={colors.success}
+                  strokeWidth="2"
+                  fill="none"
+                  opacity="0.4"
+                />
+              );
+            })}
+
+            {/* Positive charge glow */}
+            <circle cx="130" cy="150" r={50 + Math.sin(animationTime * 3) * 5} fill="url(#posGlow)" />
+            {/* Negative charge glow */}
+            <circle cx="270" cy="150" r={50 + Math.sin(animationTime * 3 + 1) * 5} fill="url(#negGlow)" />
+
+            {/* Positive charge */}
+            <circle cx="130" cy="150" r="30" fill={colors.positive} />
+            <text x="130" y="160" textAnchor="middle" fill="white" fontSize="28" fontWeight="bold">+</text>
+
+            {/* Negative charge */}
+            <circle cx="270" cy="150" r="30" fill={colors.negative} />
+            <text x="270" y="160" textAnchor="middle" fill="white" fontSize="28" fontWeight="bold">−</text>
+
+            {/* Force arrows */}
+            <line x1="165" y1="150" x2="195" y2="150" stroke={colors.success} strokeWidth="4" markerEnd="url(#arrowGreen)" />
+            <line x1="235" y1="150" x2="205" y2="150" stroke={colors.success} strokeWidth="4" markerEnd="url(#arrowGreen)" />
+
+            {/* Equation */}
+            <text x="200" y="260" textAnchor="middle" fill={colors.textSecondary} fontSize="18" fontFamily="monospace">
+              F = k × q₁ × q₂ / r²
+            </text>
+          </svg>
+        </div>
+
+        {/* Quote */}
+        <div style={{
+          backgroundColor: `${colors.accent}10`,
+          border: `1px solid ${colors.accent}30`,
+          borderRadius: '12px',
+          padding: '16px',
+          marginBottom: '24px',
+          maxWidth: '400px'
+        }}>
+          <p style={{ fontSize: typo.body, color: colors.textSecondary, fontStyle: 'italic', textAlign: 'center', margin: 0 }}>
+            "Nature uses only the longest threads to weave her patterns, so each small piece of her fabric reveals the organization of the entire tapestry."
+          </p>
+          <p style={{ fontSize: typo.small, color: colors.textMuted, textAlign: 'center', marginTop: '8px' }}>
+            — Richard Feynman
+          </p>
+        </div>
+
+        {/* Features */}
+        <div style={{ display: 'flex', gap: '16px', marginBottom: '24px', flexWrap: 'wrap', justifyContent: 'center' }}>
+          {[
+            { icon: '⚡', text: '5 min' },
+            { icon: '🧪', text: 'Lab' },
+            { icon: '🧠', text: 'Quiz' }
+          ].map((f, i) => (
+            <div key={i} style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+              padding: '6px 12px',
+              backgroundColor: colors.bgCardLight,
+              borderRadius: '8px'
+            }}>
+              <span>{f.icon}</span>
+              <span style={{ fontSize: typo.small, color: colors.textSecondary }}>{f.text}</span>
+            </div>
+          ))}
+        </div>
+
+        {/* CTA */}
+        <button
+          onMouseDown={() => goToPhase('predict')}
+          onTouchEnd={(e) => { e.preventDefault(); goToPhase('predict'); }}
+          style={{
+            padding: '16px 32px',
+            borderRadius: '14px',
+            border: 'none',
+            background: `linear-gradient(135deg, ${colors.positive} 0%, ${colors.negative} 100%)`,
+            color: '#fff',
+            fontSize: typo.bodyLarge,
+            fontWeight: 700,
+            cursor: 'pointer',
+            boxShadow: `0 4px 20px ${colors.primary}40`,
+            marginBottom: '12px'
+          }}
+        >
+          Begin Experiment →
+        </button>
+
+        <p style={{ fontSize: typo.small, color: colors.textMuted }}>
+          ★★★★★ Loved by 10,000+ learners
+        </p>
+      </div>
+    );
+  }
+
+  // PREDICT
+  if (phase === 'predict') {
+    return renderPremiumWrapper(
+      <div style={{ padding: typo.pagePadding }}>
+        {renderSectionHeader('Step 1 • Make Your Prediction', 'What Forces Will They Feel?', 'Two charges are placed near each other. What happens?')}
+
+        {/* Setup diagram */}
+        <div style={{
+          backgroundColor: colors.bgCard,
+          borderRadius: '12px',
+          padding: '16px',
+          marginBottom: typo.sectionGap,
+          border: `1px solid ${colors.border}`
+        }}>
+          <svg viewBox="0 0 400 150" style={{ width: '100%' }}>
+            <rect x="0" y="0" width="400" height="150" fill={colors.bgCardLight} rx="8" />
+
+            {/* Positive charge */}
+            <circle cx="120" cy="75" r="25" fill={colors.positive} />
+            <text x="120" y="83" textAnchor="middle" fill="white" fontSize="24" fontWeight="bold">+</text>
+            <text x="120" y="115" textAnchor="middle" fill={colors.positive} fontSize="12">+4 μC</text>
+
+            {/* Negative charge */}
+            <circle cx="280" cy="75" r="25" fill={colors.negative} />
+            <text x="280" y="83" textAnchor="middle" fill="white" fontSize="24" fontWeight="bold">−</text>
+            <text x="280" y="115" textAnchor="middle" fill={colors.negative} fontSize="12">-2 μC</text>
+
+            {/* Distance */}
+            <line x1="145" y1="35" x2="255" y2="35" stroke={colors.textMuted} strokeWidth="2" />
+            <line x1="145" y1="30" x2="145" y2="40" stroke={colors.textMuted} strokeWidth="2" />
+            <line x1="255" y1="30" x2="255" y2="40" stroke={colors.textMuted} strokeWidth="2" />
+            <text x="200" y="28" textAnchor="middle" fill={colors.textMuted} fontSize="12">10 cm</text>
+          </svg>
+        </div>
+
+        {/* Prediction options */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: typo.elementGap }}>
+          {predictions.map((p) => (
+            <button
+              key={p.id}
+              onMouseDown={() => {
+                playSound('click');
+                setPrediction(p.id);
+                emitGameEvent('prediction_made', { prediction: p.id, predictionLabel: p.label });
+              }}
+              onTouchEnd={(e) => {
+                e.preventDefault();
+                playSound('click');
+                setPrediction(p.id);
+                emitGameEvent('prediction_made', { prediction: p.id, predictionLabel: p.label });
+              }}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '12px',
+                padding: '14px',
+                borderRadius: '12px',
+                border: prediction === p.id ? `2px solid ${colors.primary}` : `1px solid ${colors.border}`,
+                backgroundColor: prediction === p.id ? `${colors.primary}15` : colors.bgCard,
+                cursor: 'pointer',
+                textAlign: 'left'
+              }}
+            >
+              <span style={{
+                fontSize: '20px',
+                width: '50px',
+                textAlign: 'center',
+                fontFamily: 'monospace'
+              }}>{p.icon}</span>
+              <div style={{ flex: 1 }}>
+                <p style={{ fontSize: typo.bodyLarge, fontWeight: 700, color: colors.textPrimary, margin: 0 }}>
+                  {p.label}
+                </p>
+                <p style={{ fontSize: typo.small, color: colors.textSecondary, margin: 0 }}>
+                  {p.desc}
+                </p>
+              </div>
+              <span style={{
+                padding: '4px 8px',
+                backgroundColor: prediction === p.id ? colors.primary : colors.bgCardLight,
+                color: prediction === p.id ? '#fff' : colors.textMuted,
+                borderRadius: '6px',
+                fontSize: typo.label,
+                fontWeight: 600
+              }}>{p.tag}</span>
+            </button>
+          ))}
+        </div>
+
+        {/* Hint */}
+        <div style={{
+          marginTop: typo.sectionGap,
+          padding: '12px',
+          backgroundColor: `${colors.warning}10`,
+          border: `1px solid ${colors.warning}30`,
+          borderRadius: '10px'
+        }}>
+          <p style={{ fontSize: typo.small, color: colors.warning, margin: 0 }}>
+            💡 Hint: Think about what happens when you rub a balloon on your hair!
+          </p>
+        </div>
+      </div>,
+      renderBottomBar(true, !!prediction, 'Run Experiment')
+    );
+  }
+
+  // PLAY
+  if (phase === 'play') {
+    const force = calculateForce(charge1, charge2, separation);
+    const isAttractive = charge1 * charge2 < 0;
+
+    return renderPremiumWrapper(
+      <div style={{ padding: typo.pagePadding }}>
+        {renderSectionHeader('Step 2 • Experiment', "Coulomb's Law Lab", 'Adjust charges and distance to see how force changes')}
+
+        {/* Simulation */}
+        <div style={{
+          backgroundColor: colors.bgCard,
+          borderRadius: '12px',
+          padding: '12px',
+          marginBottom: typo.sectionGap,
+          border: `1px solid ${colors.border}`
+        }}>
+          <svg viewBox="0 0 400 300" style={{ width: '100%', backgroundColor: colors.bgCardLight, borderRadius: '8px' }}>
+            <defs>
+              <radialGradient id="pglow" cx="50%" cy="50%" r="50%">
+                <stop offset="0%" stopColor={colors.positive} stopOpacity="0.4" />
+                <stop offset="100%" stopColor={colors.positive} stopOpacity="0" />
               </radialGradient>
-              <radialGradient id="negGrad" cx="50%" cy="50%" r="50%">
-                <stop offset="0%" stopColor="#93c5fd" />
-                <stop offset="100%" stopColor="#3b82f6" />
+              <radialGradient id="nglow" cx="50%" cy="50%" r="50%">
+                <stop offset="0%" stopColor={colors.negative} stopOpacity="0.4" />
+                <stop offset="100%" stopColor={colors.negative} stopOpacity="0" />
               </radialGradient>
+              <marker id="forceArrow" markerWidth="10" markerHeight="10" refX="9" refY="5" orient="auto">
+                <path d="M0,0 L10,5 L0,10 Z" fill={colors.success} />
+              </marker>
             </defs>
 
             {/* Grid */}
-            {[...Array(10)].map((_, i) => (
-              <g key={`grid-${i}`}>
-                <line x1={i * 50} y1="0" x2={i * 50} y2="400" stroke="#334155" strokeWidth="0.5" />
-                <line x1="0" y1={i * 50} x2="500" y2={i * 50} stroke="#334155" strokeWidth="0.5" />
+            {[1,2,3,4,5,6,7].map(i => (
+              <g key={i}>
+                <line x1={i*50} y1="0" x2={i*50} y2="300" stroke={colors.border} strokeWidth="0.5" opacity="0.3" />
+                <line x1="0" y1={i*50} x2="400" y2={i*50} stroke={colors.border} strokeWidth="0.5" opacity="0.3" />
               </g>
             ))}
 
             {/* Field lines */}
-            {renderFieldLines(charges, 500, 400)}
+            {showFieldLines && [0,1,2,3,4,5].map(i => {
+              const angle = (i * 60) * Math.PI / 180;
+              const c1x = 200 - separation/2;
+              const c2x = 200 + separation/2;
+              const isOppSigns = charge1 * charge2 < 0;
+
+              if (isOppSigns) {
+                return (
+                  <path
+                    key={`fl-${i}`}
+                    d={`M ${c1x + Math.cos(angle) * 25} ${150 + Math.sin(angle) * 25}
+                        Q 200 ${150 + Math.sin(animationTime + i) * 10}
+                        ${c2x + Math.cos(angle + Math.PI) * 25} ${150 + Math.sin(angle + Math.PI) * 25}`}
+                    stroke={colors.success}
+                    strokeWidth="1.5"
+                    fill="none"
+                    opacity="0.4"
+                  />
+                );
+              } else {
+                return (
+                  <g key={`fl-${i}`}>
+                    <line
+                      x1={c1x + Math.cos(angle) * 25}
+                      y1={150 + Math.sin(angle) * 25}
+                      x2={c1x + Math.cos(angle) * 60}
+                      y2={150 + Math.sin(angle) * 60}
+                      stroke={charge1 > 0 ? colors.positive : colors.negative}
+                      strokeWidth="1.5"
+                      opacity="0.4"
+                    />
+                    <line
+                      x1={c2x + Math.cos(angle) * 25}
+                      y1={150 + Math.sin(angle) * 25}
+                      x2={c2x + Math.cos(angle) * 60}
+                      y2={150 + Math.sin(angle) * 60}
+                      stroke={charge2 > 0 ? colors.positive : colors.negative}
+                      strokeWidth="1.5"
+                      opacity="0.4"
+                    />
+                  </g>
+                );
+              }
+            })}
+
+            {/* Charge 1 glow */}
+            <circle cx={200 - separation/2} cy="150" r={40 + Math.sin(animationTime * 3) * 3} fill="url(#pglow)" />
+            {/* Charge 1 */}
+            <circle
+              cx={200 - separation/2}
+              cy="150"
+              r={20 + Math.abs(charge1) * 1.5}
+              fill={charge1 > 0 ? colors.positive : colors.negative}
+            />
+            <text
+              x={200 - separation/2}
+              y="158"
+              textAnchor="middle"
+              fill="white"
+              fontSize="24"
+              fontWeight="bold"
+            >{charge1 > 0 ? '+' : '−'}</text>
+            <text
+              x={200 - separation/2}
+              y="200"
+              textAnchor="middle"
+              fill={charge1 > 0 ? colors.positive : colors.negative}
+              fontSize="11"
+            >q₁ = {charge1 > 0 ? '+' : ''}{charge1} μC</text>
+
+            {/* Charge 2 glow */}
+            <circle cx={200 + separation/2} cy="150" r={40 + Math.sin(animationTime * 3 + 1) * 3} fill="url(#nglow)" />
+            {/* Charge 2 */}
+            <circle
+              cx={200 + separation/2}
+              cy="150"
+              r={20 + Math.abs(charge2) * 1.5}
+              fill={charge2 > 0 ? colors.positive : colors.negative}
+            />
+            <text
+              x={200 + separation/2}
+              y="158"
+              textAnchor="middle"
+              fill="white"
+              fontSize="24"
+              fontWeight="bold"
+            >{charge2 > 0 ? '+' : '−'}</text>
+            <text
+              x={200 + separation/2}
+              y="200"
+              textAnchor="middle"
+              fill={charge2 > 0 ? colors.positive : colors.negative}
+              fontSize="11"
+            >q₂ = {charge2 > 0 ? '+' : ''}{charge2} μC</text>
 
             {/* Force vectors */}
-            {renderForceVectors()}
-
-            {/* Charges */}
-            {charges.map((charge, index) => (
-              <g key={charge.id}>
-                {/* Glow effect */}
-                <circle
-                  cx={charge.x}
-                  cy={charge.y}
-                  r={35 + Math.sin(animationTime * 3) * 3}
-                  fill={charge.q > 0 ? 'url(#positiveGlow)' : 'url(#negativeGlow)'}
-                  opacity="0.5"
+            {showForceVectors && Math.abs(force) > 0.001 && (
+              <>
+                <line
+                  x1={200 - separation/2 + (isAttractive ? 30 : -30)}
+                  y1="150"
+                  x2={200 - separation/2 + (isAttractive ? 60 : -60)}
+                  y2="150"
+                  stroke={colors.success}
+                  strokeWidth="4"
+                  markerEnd="url(#forceArrow)"
                 />
-
-                {/* Charge circle */}
-                <circle
-                  cx={charge.x}
-                  cy={charge.y}
-                  r={25 + Math.abs(charge.q) * 2}
-                  fill={charge.q > 0 ? 'url(#posGrad)' : 'url(#negGrad)'}
-                  stroke={selectedChargeId === charge.id ? '#fbbf24' : (charge.q > 0 ? '#fca5a5' : '#93c5fd')}
-                  strokeWidth={selectedChargeId === charge.id ? 4 : 2}
-                  className="cursor-pointer"
-                  onMouseDown={() => setSelectedChargeId(charge.id)}
+                <line
+                  x1={200 + separation/2 + (isAttractive ? -30 : 30)}
+                  y1="150"
+                  x2={200 + separation/2 + (isAttractive ? -60 : 60)}
+                  y2="150"
+                  stroke={colors.success}
+                  strokeWidth="4"
+                  markerEnd="url(#forceArrow)"
                 />
-
-                {/* Charge symbol */}
-                <text
-                  x={charge.x}
-                  y={charge.y + 8}
-                  textAnchor="middle"
-                  fill="white"
-                  fontSize="28"
-                  fontWeight="bold"
-                  className="pointer-events-none"
-                >
-                  {charge.q > 0 ? '+' : '−'}
-                </text>
-
-                {/* Charge label */}
-                <text
-                  x={charge.x}
-                  y={charge.y + 50}
-                  textAnchor="middle"
-                  fill={charge.q > 0 ? '#fca5a5' : '#93c5fd'}
-                  fontSize="12"
-                >
-                  q{index + 1} = {charge.q > 0 ? '+' : ''}{charge.q} μC
-                </text>
-              </g>
-            ))}
+              </>
+            )}
 
             {/* Distance line */}
             <line
-              x1={charges[0].x}
-              y1={charges[0].y}
-              x2={charges[1].x}
-              y2={charges[1].y}
-              stroke="#94a3b8"
-              strokeWidth="1"
-              strokeDasharray="5,5"
+              x1={200 - separation/2}
+              y1="230"
+              x2={200 + separation/2}
+              y2="230"
+              stroke={colors.textMuted}
+              strokeWidth="2"
+              strokeDasharray="4,4"
             />
-            <text
-              x={(charges[0].x + charges[1].x) / 2}
-              y={(charges[0].y + charges[1].y) / 2 - 10}
-              textAnchor="middle"
-              fill="#94a3b8"
-              fontSize="12"
-            >
-              r = {(distance * 0.001).toFixed(3)} m
+            <text x="200" y="255" textAnchor="middle" fill={colors.textMuted} fontSize="12">
+              r = {(separation * 0.001).toFixed(3)} m
             </text>
           </svg>
         </div>
 
         {/* Controls */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 w-full max-w-2xl mb-4">
-          <div className="bg-slate-800/50 rounded-xl p-4">
-            <label className="text-red-400 font-medium text-sm">Charge 1 (μC)</label>
+        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr 1fr', gap: typo.elementGap, marginBottom: typo.sectionGap }}>
+          <div style={{ backgroundColor: colors.bgCard, borderRadius: '10px', padding: '12px', border: `1px solid ${colors.border}` }}>
+            <label style={{ fontSize: typo.small, color: colors.positive, fontWeight: 600 }}>Charge 1 (μC)</label>
             <input
               type="range"
               min="-10"
               max="10"
               step="1"
-              value={charge1Magnitude}
+              value={charge1}
               onChange={(e) => {
-                setCharge1Magnitude(Number(e.target.value));
-                emitEvent('parameter_changed', { param: 'charge1', value: Number(e.target.value) });
+                setCharge1(Number(e.target.value));
+                setHasExperimented(true);
+                emitGameEvent('slider_changed', { param: 'charge1', value: Number(e.target.value) });
               }}
-              className="w-full mt-2 accent-red-500"
+              style={{ width: '100%', marginTop: '8px', accentColor: colors.positive }}
             />
-            <div className="text-center text-white font-bold">{charge1Magnitude > 0 ? '+' : ''}{charge1Magnitude}</div>
+            <p style={{ fontSize: typo.bodyLarge, fontWeight: 700, color: colors.textPrimary, textAlign: 'center', margin: '4px 0 0' }}>
+              {charge1 > 0 ? '+' : ''}{charge1}
+            </p>
           </div>
 
-          <div className="bg-slate-800/50 rounded-xl p-4">
-            <label className="text-blue-400 font-medium text-sm">Charge 2 (μC)</label>
+          <div style={{ backgroundColor: colors.bgCard, borderRadius: '10px', padding: '12px', border: `1px solid ${colors.border}` }}>
+            <label style={{ fontSize: typo.small, color: colors.negative, fontWeight: 600 }}>Charge 2 (μC)</label>
             <input
               type="range"
               min="-10"
               max="10"
               step="1"
-              value={charge2Magnitude}
+              value={charge2}
               onChange={(e) => {
-                setCharge2Magnitude(Number(e.target.value));
-                emitEvent('parameter_changed', { param: 'charge2', value: Number(e.target.value) });
+                setCharge2(Number(e.target.value));
+                setHasExperimented(true);
+                emitGameEvent('slider_changed', { param: 'charge2', value: Number(e.target.value) });
               }}
-              className="w-full mt-2 accent-blue-500"
+              style={{ width: '100%', marginTop: '8px', accentColor: colors.negative }}
             />
-            <div className="text-center text-white font-bold">{charge2Magnitude > 0 ? '+' : ''}{charge2Magnitude}</div>
+            <p style={{ fontSize: typo.bodyLarge, fontWeight: 700, color: colors.textPrimary, textAlign: 'center', margin: '4px 0 0' }}>
+              {charge2 > 0 ? '+' : ''}{charge2}
+            </p>
           </div>
 
-          <div className="bg-slate-800/50 rounded-xl p-4">
-            <label className="text-green-400 font-medium text-sm">Separation (mm)</label>
+          <div style={{ backgroundColor: colors.bgCard, borderRadius: '10px', padding: '12px', border: `1px solid ${colors.border}` }}>
+            <label style={{ fontSize: typo.small, color: colors.success, fontWeight: 600 }}>Distance (mm)</label>
             <input
               type="range"
               min="50"
-              max="350"
+              max="300"
               step="10"
               value={separation}
               onChange={(e) => {
                 setSeparation(Number(e.target.value));
-                emitEvent('parameter_changed', { param: 'separation', value: Number(e.target.value) });
+                setHasExperimented(true);
+                emitGameEvent('slider_changed', { param: 'separation', value: Number(e.target.value) });
               }}
-              className="w-full mt-2 accent-green-500"
+              style={{ width: '100%', marginTop: '8px', accentColor: colors.success }}
             />
-            <div className="text-center text-white font-bold">{separation}</div>
+            <p style={{ fontSize: typo.bodyLarge, fontWeight: 700, color: colors.textPrimary, textAlign: 'center', margin: '4px 0 0' }}>
+              {separation}
+            </p>
           </div>
         </div>
 
-        {/* Display toggles and result */}
-        <div className="grid grid-cols-2 gap-4 w-full max-w-2xl mb-4">
+        {/* Toggles */}
+        <div style={{ display: 'flex', gap: typo.elementGap, marginBottom: typo.sectionGap }}>
           <button
             onMouseDown={() => setShowFieldLines(!showFieldLines)}
-            className={`p-3 rounded-xl transition-colors ${
-              showFieldLines ? 'bg-purple-600' : 'bg-slate-700'
-            } text-white font-medium`}
+            style={{
+              flex: 1,
+              padding: '10px',
+              borderRadius: '10px',
+              border: 'none',
+              backgroundColor: showFieldLines ? colors.accent : colors.bgCardLight,
+              color: colors.textPrimary,
+              fontSize: typo.small,
+              fontWeight: 600,
+              cursor: 'pointer'
+            }}
           >
-            {showFieldLines ? '🔮 Field Lines: ON' : '🔮 Field Lines: OFF'}
+            🔮 Field Lines {showFieldLines ? 'ON' : 'OFF'}
           </button>
           <button
             onMouseDown={() => setShowForceVectors(!showForceVectors)}
-            className={`p-3 rounded-xl transition-colors ${
-              showForceVectors ? 'bg-green-600' : 'bg-slate-700'
-            } text-white font-medium`}
+            style={{
+              flex: 1,
+              padding: '10px',
+              borderRadius: '10px',
+              border: 'none',
+              backgroundColor: showForceVectors ? colors.success : colors.bgCardLight,
+              color: colors.textPrimary,
+              fontSize: typo.small,
+              fontWeight: 600,
+              cursor: 'pointer'
+            }}
           >
-            {showForceVectors ? '➡️ Force Vectors: ON' : '➡️ Force Vectors: OFF'}
+            ➡️ Force Vectors {showForceVectors ? 'ON' : 'OFF'}
           </button>
         </div>
 
-        {/* Force calculation result */}
-        <div className="bg-gradient-to-r from-slate-800/70 to-slate-700/70 rounded-xl p-4 w-full max-w-2xl">
-          <div className="flex items-center justify-between flex-wrap gap-4">
+        {/* Force result */}
+        <div style={{
+          background: `linear-gradient(135deg, ${colors.bgCard} 0%, ${colors.bgCardLight} 100%)`,
+          borderRadius: '12px',
+          padding: '16px',
+          border: `1px solid ${colors.border}`
+        }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
             <div>
-              <p className="text-slate-400 text-sm">Electrostatic Force:</p>
-              <p className="text-2xl font-bold text-cyan-400">
+              <p style={{ fontSize: typo.small, color: colors.textMuted, margin: 0 }}>Electrostatic Force:</p>
+              <p style={{ fontSize: '24px', fontWeight: 800, color: colors.primary, margin: 0, fontFamily: 'monospace' }}>
                 {Math.abs(force).toExponential(2)} N
               </p>
             </div>
-            <div className={`px-4 py-2 rounded-lg ${isAttractive ? 'bg-green-600/30' : 'bg-red-600/30'}`}>
-              <p className={`font-semibold ${isAttractive ? 'text-green-400' : 'text-red-400'}`}>
+            <div style={{
+              padding: '8px 16px',
+              borderRadius: '8px',
+              backgroundColor: isAttractive ? `${colors.success}20` : `${colors.danger}20`
+            }}>
+              <p style={{ fontSize: typo.body, fontWeight: 700, color: isAttractive ? colors.success : colors.danger, margin: 0 }}>
                 {isAttractive ? '← ATTRACTIVE →' : '→ REPULSIVE ←'}
               </p>
             </div>
           </div>
-          <p className="text-slate-500 text-sm mt-2">
-            F = k × |q₁| × |q₂| / r² = 8.99×10⁹ × |{charge1Magnitude}×10⁻⁶| × |{charge2Magnitude}×10⁻⁶| / ({(separation * 0.001).toFixed(3)})²
+          <p style={{ fontSize: typo.small, color: colors.textMuted, marginTop: '8px', fontFamily: 'monospace' }}>
+            F = (8.99×10⁹) × |{charge1}×10⁻⁶| × |{charge2}×10⁻⁶| / ({(separation * 0.001).toFixed(3)})²
           </p>
         </div>
-
-        <button
-          onMouseDown={(e) => { e.preventDefault(); goToPhase(3); }}
-          className="mt-6 px-6 py-3 bg-gradient-to-r from-red-600 to-blue-600 text-white font-semibold rounded-xl hover:from-red-500 hover:to-blue-500 transition-all duration-300"
-        >
-          Review Key Concepts →
-        </button>
-      </div>
+      </div>,
+      renderBottomBar(true, hasExperimented, 'Understand Why')
     );
-  };
+  }
 
-  const renderReview = () => (
-    <div className="flex flex-col items-center p-6">
-      <h2 className="text-2xl font-bold text-white mb-6">Coulomb's Law Fundamentals</h2>
+  // REVIEW
+  if (phase === 'review') {
+    const takeaways = [
+      { icon: '📐', title: 'Inverse Square Law', desc: 'Double distance → 1/4 force' },
+      { icon: '🔄', title: 'Newton\'s Third Law', desc: 'Both charges feel equal & opposite forces' },
+      { icon: '⚡', title: 'k = 8.99×10⁹', desc: 'Makes atomic forces immense!' }
+    ];
 
-      <div className="grid md:grid-cols-2 gap-6 max-w-4xl">
-        <div className="bg-gradient-to-br from-red-900/50 to-red-800/30 rounded-2xl p-6">
-          <h3 className="text-xl font-bold text-red-400 mb-3">📐 The Inverse Square Law</h3>
-          <div className="space-y-3 text-slate-300 text-sm">
-            <p className="text-lg text-center font-mono bg-slate-900/50 rounded-lg p-3">
-              F = k × q₁ × q₂ / r²
+    return renderPremiumWrapper(
+      <div style={{ padding: typo.pagePadding }}>
+        {renderSectionHeader('Step 3 • Understanding', "Coulomb's Law Explained")}
+
+        {/* Dual cards */}
+        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: typo.elementGap, marginBottom: typo.sectionGap }}>
+          <div style={{
+            background: `linear-gradient(135deg, ${colors.positive}15 0%, ${colors.positive}05 100%)`,
+            border: `1px solid ${colors.positive}30`,
+            borderRadius: '12px',
+            padding: typo.cardPadding
+          }}>
+            <h3 style={{ fontSize: typo.bodyLarge, fontWeight: 700, color: colors.positive, margin: '0 0 8px' }}>
+              Like Charges
+            </h3>
+            <p style={{ fontSize: typo.small, color: colors.textSecondary, margin: 0 }}>
+              + + or − − → Repel
             </p>
-            <ul className="space-y-2">
-              <li>• Double the distance → 1/4 the force</li>
-              <li>• Triple the distance → 1/9 the force</li>
-              <li>• Halve the distance → 4× the force</li>
-              <li>• Same form as Newton's gravity law!</li>
-            </ul>
-          </div>
-        </div>
-
-        <div className="bg-gradient-to-br from-blue-900/50 to-blue-800/30 rounded-2xl p-6">
-          <h3 className="text-xl font-bold text-blue-400 mb-3">⚡ Charge Interactions</h3>
-          <div className="space-y-3 text-slate-300 text-sm">
-            <div className="flex items-center gap-4 justify-center mb-4">
-              <span className="text-2xl">+ +</span>
-              <span className="text-yellow-400">→ Repel ←</span>
-            </div>
-            <div className="flex items-center gap-4 justify-center mb-4">
-              <span className="text-2xl">− −</span>
-              <span className="text-yellow-400">→ Repel ←</span>
-            </div>
-            <div className="flex items-center gap-4 justify-center">
-              <span className="text-2xl">+ −</span>
-              <span className="text-green-400">← Attract →</span>
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-gradient-to-br from-purple-900/50 to-purple-800/30 rounded-2xl p-6">
-          <h3 className="text-xl font-bold text-purple-400 mb-3">🔢 Coulomb's Constant</h3>
-          <div className="space-y-3 text-slate-300 text-sm">
-            <p className="text-center font-mono bg-slate-900/50 rounded-lg p-2">
-              k = 8.99 × 10⁹ N·m²/C²
+            <p style={{ fontSize: typo.small, color: colors.textMuted, marginTop: '6px' }}>
+              Force pushes them apart
             </p>
-            <ul className="space-y-2">
-              <li>• Also written as k = 1/(4πε₀)</li>
-              <li>• ε₀ = 8.85 × 10⁻¹² F/m (permittivity)</li>
-              <li>• Enormous value → strong atomic forces</li>
-              <li>• ~10⁴⁰ times stronger than gravity!</li>
-            </ul>
           </div>
-        </div>
-
-        <div className="bg-gradient-to-br from-cyan-900/50 to-cyan-800/30 rounded-2xl p-6">
-          <h3 className="text-xl font-bold text-cyan-400 mb-3">🎯 Superposition Principle</h3>
-          <div className="space-y-3 text-slate-300 text-sm">
-            <p>With multiple charges, forces add as vectors:</p>
-            <p className="text-center font-mono bg-slate-900/50 rounded-lg p-2">
-              F_net = F₁ + F₂ + F₃ + ...
+          <div style={{
+            background: `linear-gradient(135deg, ${colors.negative}15 0%, ${colors.negative}05 100%)`,
+            border: `1px solid ${colors.negative}30`,
+            borderRadius: '12px',
+            padding: typo.cardPadding
+          }}>
+            <h3 style={{ fontSize: typo.bodyLarge, fontWeight: 700, color: colors.negative, margin: '0 0 8px' }}>
+              Opposite Charges
+            </h3>
+            <p style={{ fontSize: typo.small, color: colors.textSecondary, margin: 0 }}>
+              + − → Attract
             </p>
-            <ul className="space-y-2">
-              <li>• Calculate each pair separately</li>
-              <li>• Add x and y components</li>
-              <li>• Find resultant magnitude and direction</li>
-            </ul>
+            <p style={{ fontSize: typo.small, color: colors.textMuted, marginTop: '6px' }}>
+              Force pulls them together
+            </p>
           </div>
         </div>
-      </div>
 
-      <button
-        onMouseDown={(e) => { e.preventDefault(); goToPhase(4); }}
-        className="mt-8 px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-semibold rounded-xl hover:from-purple-500 hover:to-pink-500 transition-all duration-300"
-      >
-        Discover a Surprising Twist →
-      </button>
-    </div>
-  );
-
-  const renderTwistPredict = () => (
-    <div className="flex flex-col items-center justify-center min-h-[500px] p-6">
-      <h2 className="text-2xl font-bold text-purple-400 mb-6">🌟 The Twist Challenge</h2>
-      <div className="bg-slate-800/50 rounded-2xl p-6 max-w-2xl mb-6">
-        <svg viewBox="0 0 400 200" className="w-full max-w-md mx-auto mb-4">
-          <rect x="0" y="0" width="400" height="200" fill="#1e293b" rx="8" />
-
-          {/* Balloon */}
-          <ellipse cx="100" cy="80" rx="40" ry="50" fill="#3b82f6" />
-          <path d="M100,130 L95,150 L105,150 Z" fill="#3b82f6" />
-          <text x="100" y="70" textAnchor="middle" fill="white" fontSize="20">−−</text>
-          <text x="100" y="95" textAnchor="middle" fill="white" fontSize="12">−2 μC</text>
-
-          {/* Wall */}
-          <rect x="250" y="30" width="20" height="140" fill="#64748b" />
-          <text x="320" y="100" textAnchor="middle" fill="#94a3b8" fontSize="14">Neutral</text>
-          <text x="320" y="118" textAnchor="middle" fill="#94a3b8" fontSize="14">Wall</text>
-
-          {/* Question */}
-          <text x="175" y="100" textAnchor="middle" fill="#22c55e" fontSize="24">?</text>
-        </svg>
-
-        <p className="text-lg text-slate-300 mb-4">
-          A negatively charged balloon is brought near a neutral wall (uncharged).
-          The wall has no net electric charge.
-        </p>
-        <p className="text-lg text-cyan-400 font-medium">
-          What will happen when the balloon gets close to the wall?
-        </p>
-      </div>
-
-      <div className="grid gap-3 w-full max-w-xl">
-        {[
-          { id: 'A', text: 'Nothing—neutral objects don\'t interact with charges' },
-          { id: 'B', text: 'The balloon will be repelled by the wall' },
-          { id: 'C', text: 'The balloon will be attracted to and stick to the wall' },
-          { id: 'D', text: 'The wall will become permanently charged' }
-        ].map(option => (
-          <button
-            key={option.id}
-            onMouseDown={(e) => { e.preventDefault(); handleTwistPrediction(option.id); }}
-            disabled={showTwistFeedback}
-            className={`p-4 rounded-xl text-left transition-all duration-300 ${
-              showTwistFeedback && twistPrediction === option.id
-                ? option.id === 'C'
-                  ? 'bg-emerald-600/40 border-2 border-emerald-400'
-                  : 'bg-red-600/40 border-2 border-red-400'
-                : showTwistFeedback && option.id === 'C'
-                ? 'bg-emerald-600/40 border-2 border-emerald-400'
-                : 'bg-slate-700/50 hover:bg-slate-600/50 border-2 border-transparent'
-            }`}
-          >
-            <span className="font-bold text-white">{option.id}.</span>
-            <span className="text-slate-200 ml-2">{option.text}</span>
-          </button>
-        ))}
-      </div>
-
-      {showTwistFeedback && (
-        <div className="mt-6 p-4 bg-slate-800/70 rounded-xl max-w-xl">
-          <p className="text-emerald-400 font-semibold">
-            ✓ Correct! The balloon sticks to the wall through polarization!
+        {/* Formula card */}
+        <div style={{
+          backgroundColor: colors.bgCard,
+          borderRadius: '12px',
+          padding: '20px',
+          marginBottom: typo.sectionGap,
+          border: `1px solid ${colors.border}`,
+          textAlign: 'center'
+        }}>
+          <p style={{ fontSize: '28px', fontWeight: 800, color: colors.primary, fontFamily: 'monospace', margin: 0 }}>
+            F = k × q₁ × q₂ / r²
           </p>
-          <p className="text-slate-400 text-sm mt-2">
-            Even though the wall is neutral, the balloon's charge causes the wall's electrons to shift,
-            creating an attractive force. This is called "electrostatic induction."
+          <p style={{ fontSize: typo.small, color: colors.textMuted, marginTop: '8px' }}>
+            k = 8.99 × 10⁹ N·m²/C² (Coulomb's constant)
           </p>
-          <button
-            onMouseDown={(e) => { e.preventDefault(); goToPhase(5); }}
-            className="mt-4 px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-semibold rounded-xl hover:from-purple-500 hover:to-pink-500 transition-all duration-300"
-          >
-            See How Polarization Works →
-          </button>
         </div>
-      )}
-    </div>
-  );
 
-  const renderTwistPlay = () => (
-    <div className="flex flex-col items-center p-6">
-      <h2 className="text-2xl font-bold text-purple-400 mb-4">Electrostatic Induction</h2>
+        {/* Key takeaways */}
+        <div style={{ marginBottom: typo.sectionGap }}>
+          <p style={{ fontSize: typo.label, fontWeight: 700, color: colors.textMuted, marginBottom: '8px', textTransform: 'uppercase' }}>
+            Key Takeaways
+          </p>
+          {takeaways.map((t, i) => (
+            <div key={i} style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '12px',
+              padding: '10px',
+              backgroundColor: colors.bgCard,
+              borderRadius: '10px',
+              marginBottom: '6px',
+              border: `1px solid ${colors.border}`
+            }}>
+              <span style={{ fontSize: '20px' }}>{t.icon}</span>
+              <div>
+                <span style={{ fontSize: typo.body, fontWeight: 700, color: colors.textPrimary }}>{t.title}: </span>
+                <span style={{ fontSize: typo.body, color: colors.textSecondary }}>{t.desc}</span>
+              </div>
+            </div>
+          ))}
+        </div>
 
-      <div className="bg-slate-800/50 rounded-2xl p-6 max-w-2xl mb-6">
-        <svg viewBox="0 0 500 300" className="w-full">
-          <rect x="0" y="0" width="500" height="300" fill="#0f172a" rx="12" />
+        {/* Why it matters */}
+        <div style={{
+          backgroundColor: `${colors.accent}10`,
+          border: `1px solid ${colors.accent}30`,
+          borderRadius: '12px',
+          padding: '14px'
+        }}>
+          <p style={{ fontSize: typo.small, color: colors.accent, margin: 0, fontWeight: 600 }}>
+            💡 Why It Matters
+          </p>
+          <p style={{ fontSize: typo.small, color: colors.textSecondary, margin: '6px 0 0' }}>
+            Coulomb's Law is ~10⁴⁰ times stronger than gravity! This is why atoms hold together despite the tiny masses of electrons and protons.
+          </p>
+        </div>
+      </div>,
+      renderBottomBar(true, true, 'Discover the Twist', undefined, colors.accent)
+    );
+  }
 
-          {/* Animated balloon approaching wall */}
-          <g transform={`translate(${100 + Math.sin(animationTime) * 30}, 0)`}>
+  // TWIST_PREDICT
+  if (phase === 'twist_predict') {
+    return renderPremiumWrapper(
+      <div style={{ padding: typo.pagePadding }}>
+        {renderSectionHeader('Step 4 • New Variable', 'The Polarization Puzzle', 'What happens with a NEUTRAL object?')}
+
+        {/* Setup diagram */}
+        <div style={{
+          backgroundColor: colors.bgCard,
+          borderRadius: '12px',
+          padding: '16px',
+          marginBottom: typo.sectionGap,
+          border: `1px solid ${colors.border}`
+        }}>
+          <svg viewBox="0 0 400 200" style={{ width: '100%' }}>
+            <rect x="0" y="0" width="400" height="200" fill={colors.bgCardLight} rx="8" />
+
             {/* Balloon */}
-            <ellipse cx="100" cy="150" rx="50" ry="60" fill="#3b82f6" />
-            <path d="M100,210 L90,240 L110,240 Z" fill="#3b82f6" />
-            <text x="100" y="140" textAnchor="middle" fill="white" fontSize="18">− − −</text>
-            <text x="100" y="165" textAnchor="middle" fill="white" fontSize="18">− − −</text>
-          </g>
+            <ellipse cx="100" cy="90" rx="45" ry="55" fill={colors.negative} />
+            <path d="M100,145 L90,175 L110,175 Z" fill={colors.negative} />
+            <text x="100" y="80" textAnchor="middle" fill="white" fontSize="18">− − −</text>
+            <text x="100" y="105" textAnchor="middle" fill="white" fontSize="12">-2 μC</text>
 
-          {/* Wall with polarization */}
-          <rect x="280" y="50" width="100" height="200" fill="#475569" rx="4" />
+            {/* Wall */}
+            <rect x="260" y="40" width="25" height="120" fill={colors.textMuted} rx="4" />
+            <text x="330" y="95" textAnchor="middle" fill={colors.textSecondary} fontSize="14">Neutral</text>
+            <text x="330" y="115" textAnchor="middle" fill={colors.textSecondary} fontSize="14">Wall</text>
 
-          {/* Polarized charges in wall */}
-          <g>
-            {/* Positive charges (attracted to balloon) - left side */}
+            {/* Question */}
+            <text x="190" y="100" textAnchor="middle" fill={colors.success} fontSize="32">?</text>
+          </svg>
+          <p style={{ fontSize: typo.body, color: colors.textSecondary, textAlign: 'center', margin: '12px 0 0' }}>
+            A charged balloon approaches a wall with NO net charge
+          </p>
+        </div>
+
+        {/* Prediction options */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: typo.elementGap }}>
+          {twistPredictions.map((p) => (
+            <button
+              key={p.id}
+              onMouseDown={() => {
+                playSound('click');
+                setTwistPrediction(p.id);
+                emitGameEvent('prediction_made', { prediction: p.id, predictionLabel: p.label, twist: true });
+              }}
+              onTouchEnd={(e) => {
+                e.preventDefault();
+                playSound('click');
+                setTwistPrediction(p.id);
+                emitGameEvent('prediction_made', { prediction: p.id, predictionLabel: p.label, twist: true });
+              }}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '12px',
+                padding: '14px',
+                borderRadius: '12px',
+                border: twistPrediction === p.id ? `2px solid ${colors.danger}` : `1px solid ${colors.border}`,
+                backgroundColor: twistPrediction === p.id ? `${colors.danger}15` : colors.bgCard,
+                cursor: 'pointer',
+                textAlign: 'left'
+              }}
+            >
+              <span style={{ fontSize: '20px', width: '40px', textAlign: 'center', fontFamily: 'monospace' }}>{p.icon}</span>
+              <div>
+                <p style={{ fontSize: typo.bodyLarge, fontWeight: 700, color: colors.textPrimary, margin: 0 }}>
+                  {p.label}
+                </p>
+                <p style={{ fontSize: typo.small, color: colors.textSecondary, margin: 0 }}>
+                  {p.desc}
+                </p>
+              </div>
+            </button>
+          ))}
+        </div>
+      </div>,
+      renderBottomBar(true, !!twistPrediction, 'See What Happens', undefined, colors.danger)
+    );
+  }
+
+  // TWIST_PLAY
+  if (phase === 'twist_play') {
+    return renderPremiumWrapper(
+      <div style={{ padding: typo.pagePadding }}>
+        {renderSectionHeader('Step 5 • Polarization', 'Electrostatic Induction', 'See how charges redistribute in neutral objects')}
+
+        {/* Animation */}
+        <div style={{
+          backgroundColor: colors.bgCard,
+          borderRadius: '12px',
+          padding: '16px',
+          marginBottom: typo.sectionGap,
+          border: `1px solid ${colors.border}`
+        }}>
+          <svg viewBox="0 0 500 300" style={{ width: '100%' }}>
+            <rect x="0" y="0" width="500" height="300" fill={colors.bgCardLight} rx="8" />
+
+            {/* Balloon approaching */}
+            <g transform={`translate(${80 + Math.sin(animationTime) * 20}, 0)`}>
+              <ellipse cx="100" cy="150" rx="50" ry="60" fill={colors.negative} />
+              <path d="M100,210 L85,250 L115,250 Z" fill={colors.negative} />
+              <text x="100" y="140" textAnchor="middle" fill="white" fontSize="18">− − −</text>
+              <text x="100" y="165" textAnchor="middle" fill="white" fontSize="18">− − −</text>
+            </g>
+
+            {/* Wall */}
+            <rect x="280" y="50" width="100" height="200" fill={colors.textMuted} rx="4" />
+
+            {/* Polarized charges */}
             {[0, 1, 2, 3, 4].map(i => (
-              <g key={`pos-${i}`}>
+              <g key={i}>
+                {/* Positive (attracted to balloon) */}
                 <circle
                   cx={295 + Math.sin(animationTime * 2) * 5}
                   cy={80 + i * 40}
                   r="10"
-                  fill="#ef4444"
-                  opacity="0.8"
+                  fill={colors.positive}
+                  opacity="0.9"
                 />
                 <text
                   x={295 + Math.sin(animationTime * 2) * 5}
@@ -1240,18 +1565,14 @@ const CoulombsLawRenderer: React.FC<Props> = ({
                   fill="white"
                   fontSize="14"
                 >+</text>
-              </g>
-            ))}
 
-            {/* Negative charges (repelled from balloon) - right side */}
-            {[0, 1, 2, 3, 4].map(i => (
-              <g key={`neg-${i}`}>
+                {/* Negative (repelled from balloon) */}
                 <circle
                   cx={365 - Math.sin(animationTime * 2) * 5}
                   cy={80 + i * 40}
                   r="10"
-                  fill="#3b82f6"
-                  opacity="0.8"
+                  fill={colors.negative}
+                  opacity="0.9"
                 />
                 <text
                   x={365 - Math.sin(animationTime * 2) * 5}
@@ -1262,435 +1583,692 @@ const CoulombsLawRenderer: React.FC<Props> = ({
                 >−</text>
               </g>
             ))}
-          </g>
 
-          {/* Force arrow */}
-          <path
-            d="M200,150 L260,150"
-            stroke="#22c55e"
-            strokeWidth="4"
-            markerEnd="url(#greenArrow)"
-          />
-          <text x="230" y="140" textAnchor="middle" fill="#22c55e" fontSize="14">F_attraction</text>
+            {/* Force arrow */}
+            <path d="M180,150 L250,150" stroke={colors.success} strokeWidth="4" markerEnd="url(#arrowGreen)" />
+            <text x="215" y="140" textAnchor="middle" fill={colors.success} fontSize="12">Attraction!</text>
 
-          {/* Labels */}
-          <text x="100" y="280" textAnchor="middle" fill="#94a3b8" fontSize="12">Charged Balloon</text>
-          <text x="330" y="280" textAnchor="middle" fill="#94a3b8" fontSize="12">Neutral Wall (Polarized)</text>
-        </svg>
+            <defs>
+              <marker id="arrowGreen" markerWidth="10" markerHeight="10" refX="9" refY="5" orient="auto">
+                <path d="M0,0 L10,5 L0,10 Z" fill={colors.success} />
+              </marker>
+            </defs>
 
-        <div className="mt-4 space-y-3 text-slate-300">
-          <div className="flex items-start gap-3">
-            <div className="bg-blue-600 text-white px-2 py-1 rounded text-xs font-bold">1</div>
-            <p>Balloon's negative charge repels electrons in the wall surface</p>
-          </div>
-          <div className="flex items-start gap-3">
-            <div className="bg-red-600 text-white px-2 py-1 rounded text-xs font-bold">2</div>
-            <p>Positive charges (protons in atoms) are left closer to the balloon</p>
-          </div>
-          <div className="flex items-start gap-3">
-            <div className="bg-green-600 text-white px-2 py-1 rounded text-xs font-bold">3</div>
-            <p>Since F ∝ 1/r², the closer positive charges create stronger attraction than the farther negative charges create repulsion</p>
-          </div>
-          <div className="flex items-start gap-3">
-            <div className="bg-purple-600 text-white px-2 py-1 rounded text-xs font-bold">4</div>
-            <p>Net result: The balloon is attracted to and sticks to the wall!</p>
-          </div>
+            {/* Labels */}
+            <text x="100" y="280" textAnchor="middle" fill={colors.textMuted} fontSize="11">Charged Balloon</text>
+            <text x="330" y="280" textAnchor="middle" fill={colors.textMuted} fontSize="11">Neutral Wall (Polarized)</text>
+          </svg>
         </div>
-      </div>
 
-      <button
-        onMouseDown={(e) => { e.preventDefault(); goToPhase(6); }}
-        className="mt-6 px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-semibold rounded-xl hover:from-purple-500 hover:to-pink-500 transition-all duration-300"
-      >
-        Review the Discovery →
-      </button>
-    </div>
-  );
+        {/* Explanation steps */}
+        <div style={{ marginBottom: typo.sectionGap }}>
+          {[
+            { step: 1, color: colors.negative, text: "Balloon's negative charge repels electrons in wall surface" },
+            { step: 2, color: colors.positive, text: "Positive charges (protons) are left closer to balloon" },
+            { step: 3, color: colors.success, text: "F ∝ 1/r² means closer + charges create stronger attraction" },
+            { step: 4, color: colors.accent, text: "Net result: Balloon sticks to the wall!" }
+          ].map((s) => (
+            <div key={s.step} style={{
+              display: 'flex',
+              alignItems: 'flex-start',
+              gap: '12px',
+              marginBottom: '10px'
+            }}>
+              <div style={{
+                width: '24px',
+                height: '24px',
+                borderRadius: '6px',
+                backgroundColor: s.color,
+                color: '#fff',
+                fontSize: typo.small,
+                fontWeight: 700,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                flexShrink: 0
+              }}>{s.step}</div>
+              <p style={{ fontSize: typo.body, color: colors.textSecondary, margin: 0 }}>{s.text}</p>
+            </div>
+          ))}
+        </div>
 
-  const renderTwistReview = () => (
-    <div className="flex flex-col items-center p-6">
-      <h2 className="text-2xl font-bold text-purple-400 mb-6">🌟 Key Discovery: Polarization</h2>
-
-      <div className="bg-gradient-to-br from-purple-900/40 to-pink-900/40 rounded-2xl p-6 max-w-2xl mb-6">
-        <h3 className="text-xl font-bold text-purple-400 mb-4">Coulomb's Law Reveals Hidden Attractions!</h3>
-        <div className="space-y-4 text-slate-300">
-          <p>
-            The inverse-square nature of Coulomb's Law means:
+        {/* Key insight */}
+        <div style={{
+          backgroundColor: `${colors.success}15`,
+          border: `1px solid ${colors.success}30`,
+          borderRadius: '12px',
+          padding: '14px'
+        }}>
+          <p style={{ fontSize: typo.body, color: colors.success, fontWeight: 700, margin: 0 }}>
+            🎈 This is why a balloon sticks to walls after rubbing on your hair!
           </p>
-          <ul className="list-disc list-inside space-y-2 text-sm">
-            <li>Nearby charges always dominate over distant ones</li>
-            <li>Polarization creates unequal distances → net force</li>
-            <li>Even neutral objects can be attracted to charges</li>
-            <li>This is why static cling, dust attraction, and many everyday phenomena occur</li>
-          </ul>
-          <div className="bg-slate-900/50 rounded-xl p-4 mt-4">
-            <p className="text-cyan-400 font-medium">
-              "The strength of electrostatic attraction to a polarized neutral object
-              is proportional to 1/r⁴—it falls off even faster than Coulomb's Law!"
-            </p>
+        </div>
+      </div>,
+      renderBottomBar(true, true, 'Understand Why')
+    );
+  }
+
+  // TWIST_REVIEW
+  if (phase === 'twist_review') {
+    const insights = [
+      { icon: '🎈', title: 'Polarization', desc: 'Charges shift within neutral objects near charges' },
+      { icon: '📐', title: '1/r² Asymmetry', desc: 'Closer charges dominate due to inverse square' },
+      { icon: '⚡', title: 'Static Cling', desc: 'Explains clothes, dust attraction, water bending' }
+    ];
+
+    return renderPremiumWrapper(
+      <div style={{ padding: typo.pagePadding }}>
+        {renderSectionHeader('Step 6 • Deep Insight', 'Electrostatic Induction Revealed')}
+
+        {/* Comparison cards */}
+        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: typo.elementGap, marginBottom: typo.sectionGap }}>
+          <div style={{
+            background: `linear-gradient(135deg, ${colors.accent}15 0%, ${colors.accent}05 100%)`,
+            border: `1px solid ${colors.accent}30`,
+            borderRadius: '12px',
+            padding: typo.cardPadding
+          }}>
+            <span style={{ fontSize: '24px' }}>🔵</span>
+            <h3 style={{ fontSize: typo.body, fontWeight: 700, color: colors.accent, margin: '8px 0 4px' }}>Charged Object</h3>
+            <p style={{ fontSize: typo.small, color: colors.textSecondary, margin: 0 }}>Attracts opposites, repels likes</p>
           </div>
-        </div>
-      </div>
-
-      <div className="grid md:grid-cols-3 gap-4 max-w-3xl mb-6">
-        <div className="bg-slate-800/50 rounded-xl p-4 text-center">
-          <div className="text-3xl mb-2">🎈</div>
-          <p className="text-sm text-slate-300">Balloon on Wall</p>
-        </div>
-        <div className="bg-slate-800/50 rounded-xl p-4 text-center">
-          <div className="text-3xl mb-2">🧦</div>
-          <p className="text-sm text-slate-300">Static Cling</p>
-        </div>
-        <div className="bg-slate-800/50 rounded-xl p-4 text-center">
-          <div className="text-3xl mb-2">🌊</div>
-          <p className="text-sm text-slate-300">Water Bending</p>
-        </div>
-      </div>
-
-      <button
-        onMouseDown={(e) => { e.preventDefault(); goToPhase(7); }}
-        className="mt-6 px-6 py-3 bg-gradient-to-r from-red-600 to-blue-600 text-white font-semibold rounded-xl hover:from-red-500 hover:to-blue-500 transition-all duration-300"
-      >
-        Explore Real-World Applications →
-      </button>
-    </div>
-  );
-
-  const renderTransfer = () => (
-    <div className="flex flex-col items-center p-4 md:p-6">
-      <h2 className="text-2xl font-bold text-white mb-6">Real-World Applications</h2>
-
-      <div className="flex gap-2 mb-6 flex-wrap justify-center">
-        {transferApps.map((app, index) => (
-          <button
-            key={index}
-            onMouseDown={(e) => {
-              e.preventDefault();
-              setActiveAppIndex(index);
-              emitEvent('transfer_app_viewed', { appIndex: index, appTitle: app.title });
-            }}
-            className={`px-4 py-2 rounded-lg font-medium transition-all ${
-              activeAppIndex === index
-                ? 'bg-cyan-600 text-white'
-                : completedApps.has(index)
-                ? 'bg-emerald-600/30 text-emerald-400 border border-emerald-500'
-                : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
-            }`}
-          >
-            {app.icon} {isMobile ? '' : app.short}
-          </button>
-        ))}
-      </div>
-
-      <div className={`bg-gradient-to-br ${transferApps[activeAppIndex].color} rounded-2xl p-6 max-w-2xl w-full`}>
-        <div className="flex items-center gap-3 mb-4">
-          <span className="text-4xl">{transferApps[activeAppIndex].icon}</span>
-          <div>
-            <h3 className="text-xl font-bold text-white">{transferApps[activeAppIndex].title}</h3>
-            <p className="text-slate-300 text-sm">{transferApps[activeAppIndex].tagline}</p>
+          <div style={{
+            background: `linear-gradient(135deg, ${colors.warning}15 0%, ${colors.warning}05 100%)`,
+            border: `1px solid ${colors.warning}30`,
+            borderRadius: '12px',
+            padding: typo.cardPadding
+          }}>
+            <span style={{ fontSize: '24px' }}>⚪</span>
+            <h3 style={{ fontSize: typo.body, fontWeight: 700, color: colors.warning, margin: '8px 0 4px' }}>Neutral Object</h3>
+            <p style={{ fontSize: typo.small, color: colors.textSecondary, margin: 0 }}>Becomes polarized → attracted!</p>
           </div>
         </div>
 
-        <p className="text-slate-200 mb-4">{transferApps[activeAppIndex].description}</p>
-
-        <div className="bg-black/20 rounded-xl p-4 mb-4">
-          <h4 className="text-cyan-400 font-semibold mb-2">🔗 Physics Connection</h4>
-          <p className="text-slate-300 text-sm">{transferApps[activeAppIndex].connection}</p>
+        {/* Quote */}
+        <div style={{
+          backgroundColor: colors.bgCard,
+          borderRadius: '12px',
+          padding: '16px',
+          marginBottom: typo.sectionGap,
+          border: `1px solid ${colors.border}`,
+          textAlign: 'center'
+        }}>
+          <p style={{ fontSize: typo.body, color: colors.textSecondary, fontStyle: 'italic', margin: 0 }}>
+            "The attraction to a polarized neutral object falls off as 1/r⁴—even faster than Coulomb's Law!"
+          </p>
         </div>
 
-        <div className="bg-black/20 rounded-xl p-4 mb-4">
-          <h4 className="text-yellow-400 font-semibold mb-2">⚙️ How It Works</h4>
-          <p className="text-slate-300 text-sm">{transferApps[activeAppIndex].howItWorks}</p>
-        </div>
-
-        <div className="grid md:grid-cols-2 gap-4 mb-4">
-          <div className="bg-black/20 rounded-xl p-4">
-            <h4 className="text-green-400 font-semibold mb-2">📊 Key Stats</h4>
-            <ul className="text-slate-300 text-sm space-y-1">
-              {transferApps[activeAppIndex].stats.map((stat, i) => (
-                <li key={i}>• {stat}</li>
-              ))}
-            </ul>
-          </div>
-
-          <div className="bg-black/20 rounded-xl p-4">
-            <h4 className="text-orange-400 font-semibold mb-2">💡 Examples</h4>
-            <ul className="text-slate-300 text-sm space-y-1">
-              {transferApps[activeAppIndex].examples.map((ex, i) => (
-                <li key={i}>• {ex}</li>
-              ))}
-            </ul>
-          </div>
-        </div>
-
-        <div className="bg-black/20 rounded-xl p-4 mb-4">
-          <h4 className="text-purple-400 font-semibold mb-2">🚀 Future Impact</h4>
-          <p className="text-slate-300 text-sm">{transferApps[activeAppIndex].futureImpact}</p>
-        </div>
-
-        <div className="flex flex-wrap gap-2 mb-4">
-          {transferApps[activeAppIndex].companies.map((company, i) => (
-            <span key={i} className="px-2 py-1 bg-slate-600/50 rounded text-xs text-slate-300">
-              {company}
-            </span>
-          ))}
-        </div>
-
-        {!completedApps.has(activeAppIndex) && (
-          <button
-            onMouseDown={(e) => { e.preventDefault(); handleAppComplete(activeAppIndex); }}
-            className="w-full py-3 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl font-semibold transition-colors"
-          >
-            ✓ Mark as Understood
-          </button>
-        )}
-      </div>
-
-      <div className="mt-6 flex items-center gap-2">
-        <span className="text-slate-400">Progress:</span>
-        <div className="flex gap-1">
-          {transferApps.map((_, i) => (
-            <div
-              key={i}
-              className={`w-3 h-3 rounded-full ${completedApps.has(i) ? 'bg-emerald-500' : 'bg-slate-600'}`}
-            />
-          ))}
-        </div>
-        <span className="text-slate-400">{completedApps.size}/4</span>
-      </div>
-
-      {completedApps.size >= 4 && (
-        <button
-          onMouseDown={(e) => { e.preventDefault(); goToPhase(8); }}
-          className="mt-6 px-6 py-3 bg-gradient-to-r from-red-600 to-blue-600 text-white font-semibold rounded-xl hover:from-red-500 hover:to-blue-500 transition-all duration-300"
-        >
-          Take the Knowledge Test →
-        </button>
-      )}
-    </div>
-  );
-
-  const renderTest = () => (
-    <div className="flex flex-col items-center p-4 md:p-6">
-      <h2 className="text-2xl font-bold text-white mb-6">Knowledge Assessment</h2>
-
-      {!showTestResults ? (
-        <div className="space-y-6 max-w-2xl w-full">
-          {testQuestions.map((q, qIndex) => (
-            <div key={qIndex} className="bg-slate-800/50 rounded-xl p-4">
-              <div className="bg-slate-900/50 rounded-lg p-3 mb-3">
-                <p className="text-cyan-400 text-sm italic">{q.scenario}</p>
-              </div>
-              <p className="text-white font-medium mb-3">
-                {qIndex + 1}. {q.question}
-              </p>
-              <div className="grid gap-2">
-                {q.options.map((option, oIndex) => (
-                  <button
-                    key={oIndex}
-                    onMouseDown={(e) => { e.preventDefault(); handleTestAnswer(qIndex, oIndex); }}
-                    className={`p-3 rounded-lg text-left text-sm transition-all ${
-                      testAnswers[qIndex] === oIndex
-                        ? 'bg-cyan-600 text-white'
-                        : 'bg-slate-700/50 text-slate-300 hover:bg-slate-600/50'
-                    }`}
-                  >
-                    {option.text}
-                  </button>
-                ))}
+        {/* Key insights */}
+        <div>
+          <p style={{ fontSize: typo.label, fontWeight: 700, color: colors.textMuted, marginBottom: '8px', textTransform: 'uppercase' }}>
+            Key Insights
+          </p>
+          {insights.map((t, i) => (
+            <div key={i} style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '12px',
+              padding: '10px',
+              backgroundColor: colors.bgCard,
+              borderRadius: '10px',
+              marginBottom: '6px',
+              border: `1px solid ${colors.border}`
+            }}>
+              <span style={{ fontSize: '20px' }}>{t.icon}</span>
+              <div>
+                <span style={{ fontSize: typo.body, fontWeight: 700, color: colors.textPrimary }}>{t.title}: </span>
+                <span style={{ fontSize: typo.body, color: colors.textSecondary }}>{t.desc}</span>
               </div>
             </div>
           ))}
-
-          <button
-            onMouseDown={(e) => {
-              e.preventDefault();
-              setShowTestResults(true);
-              emitEvent('test_completed', { score: calculateTestScore() });
-            }}
-            disabled={testAnswers.includes(-1)}
-            className={`w-full py-4 rounded-xl font-semibold text-lg transition-all ${
-              testAnswers.includes(-1)
-                ? 'bg-slate-700 text-slate-500 cursor-not-allowed'
-                : 'bg-gradient-to-r from-red-600 to-blue-600 text-white hover:from-red-500 hover:to-blue-500'
-            }`}
-          >
-            Submit Answers
-          </button>
         </div>
-      ) : (
-        <div className="max-w-2xl w-full">
-          <div className="bg-slate-800/50 rounded-2xl p-6 text-center mb-6">
-            <div className="text-6xl mb-4">{calculateTestScore() >= 7 ? '⚡' : '📚'}</div>
-            <h3 className="text-2xl font-bold text-white mb-2">
-              Score: {calculateTestScore()}/10
-            </h3>
-            <p className="text-slate-300 mb-6">
-              {calculateTestScore() >= 7
-                ? 'Excellent! You\'ve mastered Coulomb\'s Law!'
-                : 'Keep studying! Review the concepts and try again.'}
-            </p>
+      </div>,
+      renderBottomBar(true, true, 'Real-World Applications')
+    );
+  }
 
-            {calculateTestScore() >= 7 ? (
+  // TRANSFER
+  if (phase === 'transfer') {
+    const app = transferApps[activeAppIndex];
+    const allComplete = completedApps.every(c => c);
+
+    return renderPremiumWrapper(
+      <div style={{ padding: typo.pagePadding }}>
+        {renderSectionHeader('Step 7 • Real World', 'Electrostatics in Technology')}
+
+        {/* App tabs */}
+        <div style={{ display: 'flex', gap: '6px', marginBottom: typo.sectionGap, flexWrap: 'wrap' }}>
+          {transferApps.map((a, i) => {
+            const isLocked = i > 0 && !completedApps[i - 1];
+            return (
               <button
-                onMouseDown={(e) => { e.preventDefault(); goToPhase(9); }}
-                className="px-8 py-4 bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-semibold rounded-xl hover:from-emerald-500 hover:to-teal-500 transition-all duration-300"
-              >
-                Claim Your Mastery Badge →
-              </button>
-            ) : (
-              <button
-                onMouseDown={(e) => {
-                  e.preventDefault();
-                  setShowTestResults(false);
-                  setTestAnswers(Array(10).fill(-1));
-                  goToPhase(3);
+                key={i}
+                onMouseDown={() => !isLocked && setActiveAppIndex(i)}
+                onTouchEnd={(e) => { e.preventDefault(); !isLocked && setActiveAppIndex(i); }}
+                disabled={isLocked}
+                style={{
+                  padding: '8px 12px',
+                  borderRadius: '8px',
+                  border: activeAppIndex === i ? `2px solid ${colors.primary}` : `1px solid ${colors.border}`,
+                  backgroundColor: activeAppIndex === i ? `${colors.primary}20` : completedApps[i] ? `${colors.success}20` : colors.bgCard,
+                  color: isLocked ? colors.textMuted : colors.textPrimary,
+                  fontSize: typo.small,
+                  fontWeight: 600,
+                  cursor: isLocked ? 'not-allowed' : 'pointer',
+                  opacity: isLocked ? 0.5 : 1,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '4px'
                 }}
-                className="px-8 py-4 bg-gradient-to-r from-red-600 to-blue-600 text-white font-semibold rounded-xl hover:from-red-500 hover:to-blue-500 transition-all duration-300"
               >
-                Review & Try Again
+                {isLocked ? '🔒' : completedApps[i] ? '✓' : a.icon}
+                {!isMobile && a.short}
               </button>
-            )}
+            );
+          })}
+        </div>
+
+        {/* App content */}
+        <div style={{
+          backgroundColor: colors.bgCard,
+          borderRadius: '12px',
+          padding: typo.cardPadding,
+          border: `1px solid ${colors.border}`,
+          marginBottom: typo.sectionGap
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
+            <span style={{ fontSize: '32px' }}>{app.icon}</span>
+            <div>
+              <h3 style={{ fontSize: typo.bodyLarge, fontWeight: 700, color: colors.textPrimary, margin: 0 }}>{app.title}</h3>
+              <p style={{ fontSize: typo.small, color: colors.textMuted, margin: 0 }}>{app.tagline}</p>
+            </div>
           </div>
 
-          {/* Show explanations */}
-          <div className="space-y-4">
-            <h4 className="text-lg font-semibold text-white">Review Answers:</h4>
-            {testQuestions.map((q, qIndex) => {
-              const userAnswer = testAnswers[qIndex];
-              const isCorrect = userAnswer !== -1 && q.options[userAnswer]?.correct;
+          <p style={{ fontSize: typo.body, color: colors.textSecondary, marginBottom: '12px' }}>{app.description}</p>
+
+          <div style={{ backgroundColor: colors.bgCardLight, borderRadius: '8px', padding: '10px', marginBottom: '12px' }}>
+            <p style={{ fontSize: typo.small, color: colors.primary, fontWeight: 600, margin: '0 0 4px' }}>🔗 Physics Connection</p>
+            <p style={{ fontSize: typo.small, color: colors.textSecondary, margin: 0 }}>{app.connection}</p>
+          </div>
+
+          <div style={{ backgroundColor: colors.bgCardLight, borderRadius: '8px', padding: '10px', marginBottom: '12px' }}>
+            <p style={{ fontSize: typo.small, color: colors.warning, fontWeight: 600, margin: '0 0 4px' }}>⚙️ How It Works</p>
+            <p style={{ fontSize: typo.small, color: colors.textSecondary, margin: 0 }}>{app.howItWorks}</p>
+          </div>
+
+          {/* Stats */}
+          <div style={{ display: 'flex', gap: '8px', marginBottom: '12px', flexWrap: 'wrap' }}>
+            {app.stats.map((s, i) => (
+              <div key={i} style={{
+                flex: 1,
+                minWidth: '80px',
+                backgroundColor: colors.bgCardLight,
+                borderRadius: '8px',
+                padding: '8px',
+                textAlign: 'center'
+              }}>
+                <p style={{ fontSize: typo.bodyLarge, fontWeight: 800, color: colors.primary, margin: 0 }}>{s.value}</p>
+                <p style={{ fontSize: '9px', color: colors.textMuted, margin: 0 }}>{s.label}</p>
+              </div>
+            ))}
+          </div>
+
+          {/* Examples */}
+          <div style={{ marginBottom: '12px' }}>
+            <p style={{ fontSize: typo.small, color: colors.textMuted, fontWeight: 600, marginBottom: '4px' }}>Examples:</p>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
+              {app.examples.map((ex, i) => (
+                <span key={i} style={{
+                  padding: '4px 8px',
+                  backgroundColor: colors.bgCardLight,
+                  borderRadius: '4px',
+                  fontSize: '10px',
+                  color: colors.textSecondary
+                }}>{ex}</span>
+              ))}
+            </div>
+          </div>
+
+          {/* Complete button */}
+          {!completedApps[activeAppIndex] && (
+            <button
+              onMouseDown={() => {
+                playSound('success');
+                const newCompleted = [...completedApps];
+                newCompleted[activeAppIndex] = true;
+                setCompletedApps(newCompleted);
+                emitGameEvent('app_completed', { appNumber: activeAppIndex + 1, appTitle: app.title });
+
+                // Auto-advance to next app
+                if (activeAppIndex < 3 && !completedApps[activeAppIndex + 1]) {
+                  setTimeout(() => setActiveAppIndex(activeAppIndex + 1), 500);
+                }
+              }}
+              style={{
+                width: '100%',
+                padding: '12px',
+                borderRadius: '10px',
+                border: 'none',
+                backgroundColor: colors.success,
+                color: '#fff',
+                fontSize: typo.body,
+                fontWeight: 700,
+                cursor: 'pointer'
+              }}
+            >
+              ✓ Mark as Complete
+            </button>
+          )}
+        </div>
+
+        {/* Progress */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+          <span style={{ fontSize: typo.small, color: colors.textMuted }}>Progress:</span>
+          <div style={{ display: 'flex', gap: '4px' }}>
+            {completedApps.map((c, i) => (
+              <div key={i} style={{
+                width: '12px',
+                height: '12px',
+                borderRadius: '50%',
+                backgroundColor: c ? colors.success : colors.bgCardLight
+              }} />
+            ))}
+          </div>
+          <span style={{ fontSize: typo.small, color: colors.textMuted }}>
+            {completedApps.filter(c => c).length}/4
+          </span>
+        </div>
+      </div>,
+      renderBottomBar(true, allComplete, 'Take the Test', undefined, colors.warning)
+    );
+  }
+
+  // TEST
+  if (phase === 'test') {
+    if (showResults) {
+      const passed = testScore >= 7;
+
+      return renderPremiumWrapper(
+        <div style={{ padding: typo.pagePadding }}>
+          {renderSectionHeader('Step 8 • Results', passed ? 'Excellent Work!' : 'Keep Learning')}
+
+          {/* Score display */}
+          <div style={{
+            backgroundColor: colors.bgCard,
+            borderRadius: '16px',
+            padding: '24px',
+            textAlign: 'center',
+            marginBottom: typo.sectionGap,
+            border: `1px solid ${colors.border}`
+          }}>
+            <div style={{ fontSize: '48px', marginBottom: '8px' }}>
+              {passed ? '⚡' : '📚'}
+            </div>
+            <p style={{ fontSize: '32px', fontWeight: 800, color: passed ? colors.success : colors.warning, margin: '0 0 8px' }}>
+              {testScore}/10
+            </p>
+            <p style={{ fontSize: typo.body, color: colors.textSecondary, margin: 0 }}>
+              {passed ? "You've mastered Coulomb's Law!" : 'Review the concepts and try again'}
+            </p>
+          </div>
+
+          {/* Review answers */}
+          <div style={{ marginBottom: typo.sectionGap }}>
+            {testQuestions.map((q, idx) => {
+              const userAnswer = testAnswers[idx];
+              const correctIdx = q.options.findIndex(o => o.correct);
+              const isCorrect = userAnswer === correctIdx;
+
               return (
-                <div
-                  key={qIndex}
-                  className={`p-4 rounded-xl ${isCorrect ? 'bg-emerald-900/30' : 'bg-red-900/30'}`}
-                >
-                  <p className="text-white font-medium mb-2">
-                    {qIndex + 1}. {q.question}
+                <div key={idx} style={{
+                  backgroundColor: isCorrect ? `${colors.success}10` : `${colors.danger}10`,
+                  borderRadius: '10px',
+                  padding: '12px',
+                  marginBottom: '8px',
+                  border: `1px solid ${isCorrect ? colors.success : colors.danger}30`
+                }}>
+                  <p style={{ fontSize: typo.small, color: colors.textPrimary, fontWeight: 600, margin: '0 0 4px' }}>
+                    {idx + 1}. {q.question}
                   </p>
-                  <p className={`text-sm ${isCorrect ? 'text-emerald-400' : 'text-red-400'}`}>
-                    Your answer: {userAnswer !== -1 ? q.options[userAnswer].text : 'Not answered'}
+                  <p style={{ fontSize: typo.small, color: isCorrect ? colors.success : colors.danger, margin: 0 }}>
+                    Your answer: {userAnswer !== null ? q.options[userAnswer].label : 'Not answered'}
                   </p>
                   {!isCorrect && (
-                    <p className="text-emerald-400 text-sm mt-1">
-                      Correct: {q.options.find(o => o.correct)?.text}
+                    <p style={{ fontSize: typo.small, color: colors.success, margin: '4px 0 0' }}>
+                      Correct: {q.options[correctIdx].label}
                     </p>
                   )}
-                  <p className="text-slate-400 text-sm mt-2">{q.explanation}</p>
                 </div>
               );
             })}
           </div>
-        </div>
-      )}
-    </div>
-  );
 
-  const renderMastery = () => (
-    <div className="flex flex-col items-center justify-center min-h-[500px] p-6 text-center">
-      <div className="bg-gradient-to-br from-red-900/50 via-purple-900/50 to-blue-900/50 rounded-3xl p-8 max-w-2xl">
-        <div className="text-8xl mb-6">⚡</div>
-        <h1 className="text-3xl font-bold text-white mb-4">Coulomb's Law Master!</h1>
-        <p className="text-xl text-slate-300 mb-6">
-          You've mastered the fundamental law of electrostatic force!
+          {passed ? (
+            <button
+              onMouseDown={() => goToPhase('mastery')}
+              style={{
+                width: '100%',
+                padding: '14px',
+                borderRadius: '12px',
+                border: 'none',
+                background: `linear-gradient(135deg, ${colors.success} 0%, ${colors.primary} 100%)`,
+                color: '#fff',
+                fontSize: typo.bodyLarge,
+                fontWeight: 700,
+                cursor: 'pointer'
+              }}
+            >
+              Claim Your Mastery Badge →
+            </button>
+          ) : (
+            <button
+              onMouseDown={() => {
+                setShowResults(false);
+                setTestAnswers(Array(10).fill(null));
+                setCurrentQuestion(0);
+                goToPhase('review');
+              }}
+              style={{
+                width: '100%',
+                padding: '14px',
+                borderRadius: '12px',
+                border: 'none',
+                background: `linear-gradient(135deg, ${colors.primary} 0%, ${colors.accent} 100%)`,
+                color: '#fff',
+                fontSize: typo.bodyLarge,
+                fontWeight: 700,
+                cursor: 'pointer'
+              }}
+            >
+              Review & Try Again
+            </button>
+          )}
+        </div>
+      );
+    }
+
+    const q = testQuestions[currentQuestion];
+
+    return renderPremiumWrapper(
+      <div style={{ padding: typo.pagePadding }}>
+        {renderSectionHeader('Step 8 • Knowledge Test', `Question ${currentQuestion + 1} of 10`)}
+
+        {/* Progress bar */}
+        <div style={{ display: 'flex', gap: '3px', marginBottom: typo.sectionGap }}>
+          {Array(10).fill(0).map((_, i) => (
+            <div key={i} style={{
+              flex: 1,
+              height: '4px',
+              borderRadius: '2px',
+              backgroundColor: i < currentQuestion ? colors.success : i === currentQuestion ? colors.primary : colors.bgCardLight
+            }} />
+          ))}
+        </div>
+
+        {/* Scenario */}
+        <div style={{
+          backgroundColor: `${colors.primary}15`,
+          border: `1px solid ${colors.primary}30`,
+          borderRadius: '10px',
+          padding: '12px',
+          marginBottom: typo.sectionGap
+        }}>
+          <p style={{ fontSize: typo.small, color: colors.primary, fontStyle: 'italic', margin: 0 }}>
+            {q.scenario}
+          </p>
+        </div>
+
+        {/* Question */}
+        <p style={{ fontSize: typo.bodyLarge, fontWeight: 700, color: colors.textPrimary, marginBottom: typo.sectionGap }}>
+          {q.question}
         </p>
 
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-          <div className="bg-slate-800/50 rounded-xl p-4">
-            <div className="text-2xl mb-2">🔴🔵</div>
-            <p className="text-sm text-slate-300">Charge Interactions</p>
-          </div>
-          <div className="bg-slate-800/50 rounded-xl p-4">
-            <div className="text-2xl mb-2">📐</div>
-            <p className="text-sm text-slate-300">Inverse Square Law</p>
-          </div>
-          <div className="bg-slate-800/50 rounded-xl p-4">
-            <div className="text-2xl mb-2">🎈</div>
-            <p className="text-sm text-slate-300">Polarization</p>
-          </div>
-          <div className="bg-slate-800/50 rounded-xl p-4">
-            <div className="text-2xl mb-2">🏭</div>
-            <p className="text-sm text-slate-300">Applications</p>
-          </div>
+        {/* Options */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: typo.elementGap, marginBottom: typo.sectionGap }}>
+          {q.options.map((opt, i) => (
+            <button
+              key={i}
+              onMouseDown={() => {
+                playSound('click');
+                const newAnswers = [...testAnswers];
+                newAnswers[currentQuestion] = i;
+                setTestAnswers(newAnswers);
+                emitGameEvent('answer_submitted', {
+                  questionNumber: currentQuestion + 1,
+                  answer: opt.label,
+                  isCorrect: opt.correct || false
+                });
+              }}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '12px',
+                padding: '12px',
+                borderRadius: '10px',
+                border: testAnswers[currentQuestion] === i ? `2px solid ${colors.primary}` : `1px solid ${colors.border}`,
+                backgroundColor: testAnswers[currentQuestion] === i ? `${colors.primary}15` : colors.bgCard,
+                cursor: 'pointer',
+                textAlign: 'left'
+              }}
+            >
+              <span style={{
+                width: '28px',
+                height: '28px',
+                borderRadius: '8px',
+                backgroundColor: testAnswers[currentQuestion] === i ? colors.primary : colors.bgCardLight,
+                color: testAnswers[currentQuestion] === i ? '#fff' : colors.textMuted,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: typo.small,
+                fontWeight: 700
+              }}>
+                {String.fromCharCode(65 + i)}
+              </span>
+              <span style={{ fontSize: typo.body, color: colors.textPrimary }}>{opt.label}</span>
+            </button>
+          ))}
         </div>
+      </div>,
+      <div style={{
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        padding: '12px 16px',
+        borderTop: `1px solid ${colors.border}`,
+        backgroundColor: colors.bgCard
+      }}>
+        <button
+          onMouseDown={() => currentQuestion > 0 && setCurrentQuestion(currentQuestion - 1)}
+          disabled={currentQuestion === 0}
+          style={{
+            padding: '10px 16px',
+            borderRadius: '10px',
+            border: `1px solid ${colors.border}`,
+            backgroundColor: 'transparent',
+            color: currentQuestion === 0 ? colors.textMuted : colors.textSecondary,
+            fontSize: typo.body,
+            fontWeight: 600,
+            cursor: currentQuestion === 0 ? 'not-allowed' : 'pointer',
+            opacity: currentQuestion === 0 ? 0.5 : 1
+          }}
+        >
+          ← Previous
+        </button>
 
-        <div className="bg-slate-900/50 rounded-xl p-4 mb-6">
-          <p className="text-cyan-400 font-mono text-lg">
-            F = k × q₁ × q₂ / r²
-          </p>
-          <p className="text-slate-400 text-sm mt-2">
-            k = 8.99 × 10⁹ N·m²/C²
-          </p>
-        </div>
+        <span style={{ fontSize: typo.small, color: colors.textMuted }}>
+          {currentQuestion + 1}/10
+        </span>
 
-        <div className="flex gap-4 justify-center">
+        {currentQuestion < 9 ? (
           <button
-            onMouseDown={(e) => { e.preventDefault(); goToPhase(0); }}
-            className="px-6 py-3 bg-slate-700 hover:bg-slate-600 text-white font-medium rounded-xl transition-colors"
+            onMouseDown={() => testAnswers[currentQuestion] !== null && setCurrentQuestion(currentQuestion + 1)}
+            disabled={testAnswers[currentQuestion] === null}
+            style={{
+              padding: '10px 20px',
+              borderRadius: '10px',
+              border: 'none',
+              background: testAnswers[currentQuestion] !== null
+                ? `linear-gradient(135deg, ${colors.primary} 0%, ${colors.accent} 100%)`
+                : colors.bgCardLight,
+              color: testAnswers[currentQuestion] !== null ? '#fff' : colors.textMuted,
+              fontSize: typo.body,
+              fontWeight: 700,
+              cursor: testAnswers[currentQuestion] !== null ? 'pointer' : 'not-allowed',
+              opacity: testAnswers[currentQuestion] !== null ? 1 : 0.5
+            }}
           >
-            ↺ Explore Again
+            Next →
           </button>
+        ) : (
+          <button
+            onMouseDown={() => {
+              if (!testAnswers.includes(null)) {
+                playSound('complete');
+                setShowResults(true);
+                emitGameEvent('game_completed', {
+                  score: testScore,
+                  maxScore: 10,
+                  passed: testScore >= 7
+                });
+              }
+            }}
+            disabled={testAnswers.includes(null)}
+            style={{
+              padding: '10px 20px',
+              borderRadius: '10px',
+              border: 'none',
+              background: !testAnswers.includes(null)
+                ? `linear-gradient(135deg, ${colors.success} 0%, ${colors.primary} 100%)`
+                : colors.bgCardLight,
+              color: !testAnswers.includes(null) ? '#fff' : colors.textMuted,
+              fontSize: typo.body,
+              fontWeight: 700,
+              cursor: !testAnswers.includes(null) ? 'pointer' : 'not-allowed',
+              opacity: !testAnswers.includes(null) ? 1 : 0.5
+            }}
+          >
+            Submit →
+          </button>
+        )}
+      </div>
+    );
+  }
+
+  // MASTERY
+  if (phase === 'mastery') {
+    return renderPremiumWrapper(
+      <div style={{ padding: typo.pagePadding, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+        {renderSectionHeader('Step 10 • Mastery Achieved', "Coulomb's Law Master!")}
+
+        {/* Badge */}
+        <div style={{
+          width: '120px',
+          height: '120px',
+          borderRadius: '50%',
+          background: `linear-gradient(135deg, ${colors.positive} 0%, ${colors.negative} 100%)`,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          marginBottom: '24px',
+          boxShadow: `0 0 40px ${colors.primary}40`
+        }}>
+          <span style={{ fontSize: '56px' }}>⚡</span>
         </div>
-      </div>
-    </div>
-  );
 
-  const renderPhase = () => {
-    switch (phase) {
-      case 0: return renderHook();
-      case 1: return renderPredict();
-      case 2: return renderPlay();
-      case 3: return renderReview();
-      case 4: return renderTwistPredict();
-      case 5: return renderTwistPlay();
-      case 6: return renderTwistReview();
-      case 7: return renderTransfer();
-      case 8: return renderTest();
-      case 9: return renderMastery();
-      default: return renderHook();
-    }
-  };
-
-  const phaseLabels = [
-    'Hook', 'Predict', 'Explore', 'Review',
-    'Twist Predict', 'Twist Explore', 'Twist Review',
-    'Apply', 'Test', 'Mastery'
-  ];
-
-  return (
-    <div className="min-h-screen bg-[#0a0f1a] text-white relative overflow-hidden">
-      {/* Premium background gradients */}
-      <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-[#0a1628] to-slate-900" />
-      <div className="absolute top-0 left-1/4 w-96 h-96 bg-red-500/5 rounded-full blur-3xl" />
-      <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-blue-500/5 rounded-full blur-3xl" />
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-purple-600/3 rounded-full blur-3xl" />
-
-      {/* Premium progress bar */}
-      <div className="fixed top-0 left-0 right-0 z-50 bg-slate-900/90 backdrop-blur-xl border-b border-slate-700/50">
-        <div className="flex items-center justify-between px-4 py-3 max-w-4xl mx-auto">
-          <span className="text-sm font-medium text-purple-400">Coulomb's Law</span>
-          <div className="flex gap-1.5">
-            {phaseLabels.map((_, i) => (
-              <button
-                key={i}
-                onMouseDown={(e) => { e.preventDefault(); goToPhase(i); }}
-                className={`h-2 rounded-full transition-all duration-300 ${
-                  phase === i
-                    ? 'bg-gradient-to-r from-red-400 to-blue-400 w-6 shadow-lg shadow-purple-500/50'
-                    : phase > i
-                    ? 'bg-emerald-500 w-2'
-                    : 'bg-slate-600 w-2 hover:bg-slate-500'
-                }`}
-                title={phaseLabels[i]}
-              />
-            ))}
-          </div>
-          <span className="text-sm text-slate-400 font-medium">{phaseLabels[phase]}</span>
+        {/* Mastered concepts */}
+        <div style={{ width: '100%', maxWidth: '400px', marginBottom: '24px' }}>
+          {masteryItems.map((item, i) => (
+            <div key={i} style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '12px',
+              padding: '12px',
+              background: `linear-gradient(135deg, ${item.color}15 0%, ${item.color}05 100%)`,
+              border: `1px solid ${item.color}30`,
+              borderRadius: '10px',
+              marginBottom: '8px'
+            }}>
+              <span style={{
+                width: '24px',
+                height: '24px',
+                borderRadius: '50%',
+                backgroundColor: colors.success,
+                color: '#fff',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: '12px'
+              }}>✓</span>
+              <span style={{ fontSize: '20px' }}>{item.icon}</span>
+              <div>
+                <p style={{ fontSize: typo.body, fontWeight: 700, color: colors.textPrimary, margin: 0 }}>{item.title}</p>
+                <p style={{ fontSize: typo.small, color: colors.textSecondary, margin: 0 }}>{item.desc}</p>
+              </div>
+            </div>
+          ))}
         </div>
-      </div>
 
-      <div className="relative z-10 pt-16 pb-8">
-        {renderPhase()}
+        {/* Quote */}
+        <div style={{
+          backgroundColor: colors.bgCard,
+          borderRadius: '12px',
+          padding: '16px',
+          marginBottom: '24px',
+          maxWidth: '400px',
+          textAlign: 'center',
+          border: `1px solid ${colors.border}`
+        }}>
+          <p style={{ fontSize: typo.body, color: colors.textSecondary, fontStyle: 'italic', margin: 0 }}>
+            "The universe is not only queerer than we suppose, but queerer than we can suppose."
+          </p>
+          <p style={{ fontSize: typo.small, color: colors.textMuted, marginTop: '8px' }}>
+            — J.B.S. Haldane
+          </p>
+        </div>
+
+        {/* Action buttons */}
+        <button
+          onMouseDown={() => goToPhase('play')}
+          style={{
+            padding: '14px 28px',
+            borderRadius: '12px',
+            border: 'none',
+            background: `linear-gradient(135deg, ${colors.primary} 0%, ${colors.accent} 100%)`,
+            color: '#fff',
+            fontSize: typo.bodyLarge,
+            fontWeight: 700,
+            cursor: 'pointer',
+            marginBottom: '12px',
+            boxShadow: `0 4px 20px ${colors.primary}40`
+          }}
+        >
+          🔬 Free Exploration Mode
+        </button>
+
+        <button
+          onMouseDown={() => goToPhase('hook')}
+          style={{
+            padding: '12px 24px',
+            borderRadius: '10px',
+            border: `1px solid ${colors.border}`,
+            backgroundColor: 'transparent',
+            color: colors.textSecondary,
+            fontSize: typo.body,
+            fontWeight: 600,
+            cursor: 'pointer'
+          }}
+        >
+          ↺ Start Over from Beginning
+        </button>
       </div>
+    );
+  }
+
+  // Default fallback
+  return renderPremiumWrapper(
+    <div style={{ padding: typo.pagePadding, textAlign: 'center' }}>
+      <p>Loading...</p>
     </div>
   );
 };
