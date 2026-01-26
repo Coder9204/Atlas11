@@ -233,9 +233,6 @@ const CoulombsLawRenderer: React.FC<CoulombsLawRendererProps> = ({ onGameEvent }
   useEffect(() => {
     if (phase === 'test') {
       setCurrentQuestion(0);
-      setTestScore(0);
-      setSelectedAnswer(null);
-      setShowExplanation(false);
       setTestAnswers(Array(10).fill(null));
     }
   }, [phase]);
