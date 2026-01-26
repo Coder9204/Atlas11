@@ -261,160 +261,560 @@ const CenterOfMassRenderer: React.FC<CenterOfMassRendererProps> = ({ onGameEvent
   }, [emit]);
 
   // ============================================================================
-  // VISUALIZATION - Realistic Fork-Toothpick System
+  // VISUALIZATION - Clear Educational Fork-Toothpick System
   // ============================================================================
   const renderVisualization = (size: 'large' | 'medium' = 'large') => {
-    const w = size === 'large' ? 400 : 320;
-    const h = size === 'large' ? 300 : 240;
+    const w = size === 'large' ? 420 : 340;
+    const h = size === 'large' ? 340 : 280;
     const scale = size === 'large' ? 1 : 0.8;
     const { comY } = calculateBalance(clayPosition);
-    const wobble = isBalanced ? Math.sin(timeRef.current * 2) * 0.3 : 0;
+    const wobble = isBalanced ? Math.sin(timeRef.current * 2) * 0.5 : 0;
+
+    // Pivot is at glass rim level
+    const pivotX = w / 2;
+    const pivotY = h * 0.38;
+    const glassTop = h * 0.38;
+    const glassBottom = h * 0.82;
 
     return (
       <svg width="100%" viewBox={`0 0 ${w} ${h}`} style={{ display: 'block', maxWidth: `${w}px`, margin: '0 auto' }}>
         <defs>
-          {/* Realistic glass gradient */}
-          <linearGradient id="glassGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor="#87ceeb" stopOpacity="0.2"/>
-            <stop offset="50%" stopColor="#4facfe" stopOpacity="0.3"/>
-            <stop offset="100%" stopColor="#87ceeb" stopOpacity="0.15"/>
+          {/* Glass gradient - more visible */}
+          <linearGradient id="glassBody" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="#e0f7fa" stopOpacity="0.4"/>
+            <stop offset="50%" stopColor="#b2ebf2" stopOpacity="0.25"/>
+            <stop offset="100%" stopColor="#e0f7fa" stopOpacity="0.4"/>
           </linearGradient>
 
-          {/* Brushed metal for forks */}
-          <linearGradient id="metalGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" stopColor="#e8e8e8"/>
-            <stop offset="20%" stopColor="#c8c8c8"/>
-            <stop offset="40%" stopColor="#f0f0f0"/>
-            <stop offset="60%" stopColor="#d0d0d0"/>
-            <stop offset="100%" stopColor="#a0a0a0"/>
+          {/* Glass rim highlight */}
+          <linearGradient id="glassRim" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor="#ffffff"/>
+            <stop offset="50%" stopColor="#b2ebf2"/>
+            <stop offset="100%" stopColor="#80deea"/>
           </linearGradient>
 
-          {/* Wood grain for toothpick */}
-          <linearGradient id="woodGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" stopColor="#deb887"/>
-            <stop offset="50%" stopColor="#d4a574"/>
-            <stop offset="100%" stopColor="#c49a6c"/>
+          {/* Polished silver fork */}
+          <linearGradient id="forkMetal" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#f5f5f5"/>
+            <stop offset="25%" stopColor="#e0e0e0"/>
+            <stop offset="50%" stopColor="#fafafa"/>
+            <stop offset="75%" stopColor="#bdbdbd"/>
+            <stop offset="100%" stopColor="#9e9e9e"/>
           </linearGradient>
 
-          {/* Clay texture */}
-          <radialGradient id="clayGrad" cx="30%" cy="30%">
-            <stop offset="0%" stopColor="#fbbf24"/>
-            <stop offset="70%" stopColor="#d97706"/>
-            <stop offset="100%" stopColor="#92400e"/>
+          {/* Fork shadow */}
+          <linearGradient id="forkShadow" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="#757575"/>
+            <stop offset="100%" stopColor="#9e9e9e"/>
+          </linearGradient>
+
+          {/* Toothpick wood */}
+          <linearGradient id="toothpick" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="#d7ccc8"/>
+            <stop offset="20%" stopColor="#efebe9"/>
+            <stop offset="50%" stopColor="#d7ccc8"/>
+            <stop offset="80%" stopColor="#efebe9"/>
+            <stop offset="100%" stopColor="#bcaaa4"/>
+          </linearGradient>
+
+          {/* Clay/weight */}
+          <radialGradient id="clayBall" cx="35%" cy="35%">
+            <stop offset="0%" stopColor="#ffca28"/>
+            <stop offset="60%" stopColor="#ff8f00"/>
+            <stop offset="100%" stopColor="#e65100"/>
           </radialGradient>
 
-          {/* COM glow */}
-          <filter id="comGlow">
-            <feGaussianBlur stdDeviation="3" result="blur"/>
-            <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+          {/* Pivot glow */}
+          <filter id="pivotGlow" x="-100%" y="-100%" width="300%" height="300%">
+            <feGaussianBlur stdDeviation="4" result="blur"/>
+            <feMerge>
+              <feMergeNode in="blur"/>
+              <feMergeNode in="SourceGraphic"/>
+            </feMerge>
           </filter>
 
-          {/* Table wood */}
-          <linearGradient id="tableGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+          {/* COM glow */}
+          <filter id="comGlow" x="-100%" y="-100%" width="300%" height="300%">
+            <feGaussianBlur stdDeviation="3" result="blur"/>
+            <feMerge>
+              <feMergeNode in="blur"/>
+              <feMergeNode in="SourceGraphic"/>
+            </feMerge>
+          </filter>
+
+          {/* Table surface */}
+          <linearGradient id="tableTop" x1="0%" y1="0%" x2="0%" y2="100%">
             <stop offset="0%" stopColor="#5d4037"/>
             <stop offset="100%" stopColor="#3e2723"/>
           </linearGradient>
         </defs>
 
-        {/* Dark lab background */}
-        <rect width={w} height={h} fill="#0a0a12"/>
+        {/* Background */}
+        <rect width={w} height={h} fill="#0c1220"/>
 
-        {/* Subtle grid */}
-        <pattern id="grid" width="25" height="25" patternUnits="userSpaceOnUse">
-          <path d="M25 0L0 0 0 25" fill="none" stroke="#1a1a2a" strokeWidth="0.5"/>
-        </pattern>
-        <rect width={w} height={h} fill="url(#grid)" opacity="0.4"/>
+        {/* Subtle radial glow behind setup */}
+        <ellipse cx={pivotX} cy={pivotY + 40} rx={120*scale} ry={80*scale} fill="#1a237e" opacity="0.08"/>
 
-        {/* Ambient glow */}
-        <ellipse cx={w/2} cy={h*0.4} rx={100*scale} ry={60*scale} fill={colors.secondary} opacity="0.03"/>
+        {/* Table surface */}
+        <rect x="0" y={glassBottom - 5} width={w} height={h - glassBottom + 10} fill="url(#tableTop)"/>
+        <rect x="0" y={glassBottom - 5} width={w} height="4" fill="#6d4c41"/>
 
-        {/* Table */}
-        <rect x="0" y={h*0.78} width={w} height={h*0.25} fill="url(#tableGrad)"/>
-        <rect x="0" y={h*0.78} width={w} height="3" fill="#795548"/>
-
-        {/* Glass */}
-        <g transform={`translate(${w/2}, ${h*0.5})`}>
+        {/* ==================== GLASS ==================== */}
+        <g>
+          {/* Glass body - tapered tumbler shape */}
           <path
-            d={`M${-28*scale} ${70*scale} L${-22*scale} ${-45*scale} Q0 ${-52*scale} ${22*scale} ${-45*scale} L${28*scale} ${70*scale} Z`}
-            fill="url(#glassGrad)"
-            stroke="#87ceeb"
-            strokeWidth="1.5"
+            d={`M ${pivotX - 32*scale} ${glassBottom - 8}
+                L ${pivotX - 26*scale} ${glassTop + 8}
+                Q ${pivotX} ${glassTop - 2} ${pivotX + 26*scale} ${glassTop + 8}
+                L ${pivotX + 32*scale} ${glassBottom - 8}
+                Q ${pivotX} ${glassBottom + 2} ${pivotX - 32*scale} ${glassBottom - 8}
+                Z`}
+            fill="url(#glassBody)"
+            stroke="#4dd0e1"
+            strokeWidth="2"
           />
-          {/* Glass rim */}
-          <ellipse cy={-45*scale} rx={22*scale} ry={5*scale} fill="none" stroke="#b3e5fc" strokeWidth="2"/>
+
+          {/* Glass rim - where toothpick rests */}
+          <ellipse
+            cx={pivotX}
+            cy={glassTop + 6}
+            rx={26*scale}
+            ry={6*scale}
+            fill="url(#glassRim)"
+            stroke="#00bcd4"
+            strokeWidth="2.5"
+          />
+
+          {/* Rim edge highlight */}
+          <ellipse
+            cx={pivotX}
+            cy={glassTop + 4}
+            rx={24*scale}
+            ry={4*scale}
+            fill="none"
+            stroke="#ffffff"
+            strokeWidth="1"
+            opacity="0.6"
+          />
+
           {/* Glass reflection */}
-          <path d={`M${-16*scale} ${-35*scale} L${-12*scale} ${50*scale}`} stroke="rgba(255,255,255,0.12)" strokeWidth="3" strokeLinecap="round"/>
-        </g>
+          <path
+            d={`M ${pivotX - 18*scale} ${glassTop + 20} L ${pivotX - 14*scale} ${glassBottom - 20}`}
+            stroke="rgba(255,255,255,0.15)"
+            strokeWidth="4"
+            strokeLinecap="round"
+          />
 
-        {/* Pivot reference line */}
-        <line x1={w*0.15} y1={h*0.35} x2={w*0.85} y2={h*0.35} stroke="#475569" strokeWidth="1" strokeDasharray="4,4" opacity="0.5"/>
-        <text x={w*0.88} y={h*0.36} fill="#64748b" fontSize="10" fontFamily="system-ui">Pivot</text>
-
-        {/* Fork-toothpick system */}
-        <g transform={`translate(${w/2}, ${h*0.35}) rotate(${tiltAngle + wobble})`}>
-          {/* Toothpick */}
-          <rect x={-75*scale} y={-4*scale} width={150*scale} height={8*scale} rx={4*scale} fill="url(#woodGrad)"/>
-
-          {/* Left fork */}
-          <g transform={`translate(${-60*scale}, 0) rotate(30)`}>
-            <rect x={-5*scale} y="0" width={10*scale} height={50*scale} rx={3*scale} fill="url(#metalGrad)"/>
-            <rect x={-3*scale} y={4*scale} width={1.5*scale} height={42*scale} fill="rgba(255,255,255,0.15)"/>
-            <ellipse cy={52*scale} rx={15*scale} ry={6*scale} fill="url(#metalGrad)"/>
-            {[-10, -3.5, 3.5, 10].map((x, i) => (
-              <rect key={i} x={(x-2)*scale} y={52*scale} width={4*scale} height={22*scale} rx={1*scale} fill="url(#metalGrad)"/>
-            ))}
-          </g>
-
-          {/* Right fork (mirrored) */}
-          <g transform={`translate(${60*scale}, 0) rotate(-30) scale(-1,1)`}>
-            <rect x={-5*scale} y="0" width={10*scale} height={50*scale} rx={3*scale} fill="url(#metalGrad)"/>
-            <rect x={-3*scale} y={4*scale} width={1.5*scale} height={42*scale} fill="rgba(255,255,255,0.15)"/>
-            <ellipse cy={52*scale} rx={15*scale} ry={6*scale} fill="url(#metalGrad)"/>
-            {[-10, -3.5, 3.5, 10].map((x, i) => (
-              <rect key={i} x={(x-2)*scale} y={52*scale} width={4*scale} height={22*scale} rx={1*scale} fill="url(#metalGrad)"/>
-            ))}
-          </g>
-
-          {/* Clay */}
-          {hasClayAdded && (
-            <g transform={`translate(${clayPosition * 60 * scale}, 0)`}>
-              <circle r={14*scale} fill="url(#clayGrad)"/>
-              <ellipse cx={-4*scale} cy={-4*scale} rx={4*scale} ry={3*scale} fill="rgba(255,255,255,0.2)"/>
-            </g>
-          )}
-
-          {/* Center of Mass indicator */}
-          {showCOM && (
-            <g transform={`translate(0, ${comY * 70 * scale})`} filter="url(#comGlow)">
-              <circle r={10*scale} fill={colors.error} opacity="0.3"/>
-              <circle r={7*scale} fill={colors.error}/>
-              <circle cx={-2*scale} cy={-2*scale} r={2.5*scale} fill="#fca5a5" opacity="0.6"/>
-              <text x={14*scale} y={4*scale} fill={colors.error} fontSize={10*scale} fontWeight="700" fontFamily="system-ui">COM</text>
-            </g>
-          )}
-
-          {/* Pivot point */}
-          <circle r={5*scale} fill="#fff" stroke={colors.secondary} strokeWidth="2"/>
-        </g>
-
-        {/* Status badge */}
-        <g transform={`translate(12, 12)`}>
-          <rect width={90*scale} height={28*scale} rx={8*scale} fill={isBalanced ? colors.successBg : colors.errorBg} stroke={isBalanced ? colors.success : colors.error} strokeWidth="1"/>
-          <text x={45*scale} y={18*scale} textAnchor="middle" fill={isBalanced ? colors.success : colors.error} fontSize={11*scale} fontWeight="600" fontFamily="system-ui">
-            {isBalanced ? '✓ Balanced' : '✗ Falling'}
+          {/* Glass label */}
+          <text
+            x={pivotX}
+            y={glassBottom + 22}
+            textAnchor="middle"
+            fill="#78909c"
+            fontSize={11*scale}
+            fontFamily="system-ui"
+            fontWeight="500"
+          >
+            GLASS
           </text>
         </g>
 
-        {/* COM position badge */}
+        {/* ==================== PIVOT POINT INDICATOR ==================== */}
+        <g filter="url(#pivotGlow)">
+          {/* Pivot highlight ring */}
+          <circle
+            cx={pivotX + 24*scale}
+            cy={pivotY + 6}
+            r={18*scale}
+            fill="none"
+            stroke="#00e676"
+            strokeWidth="2"
+            strokeDasharray="4,3"
+            opacity="0.8"
+          >
+            <animateTransform
+              attributeName="transform"
+              type="rotate"
+              from={`0 ${pivotX + 24*scale} ${pivotY + 6}`}
+              to={`360 ${pivotX + 24*scale} ${pivotY + 6}`}
+              dur="8s"
+              repeatCount="indefinite"
+            />
+          </circle>
+
+          {/* Pivot label with arrow */}
+          <g transform={`translate(${pivotX + 50*scale}, ${pivotY - 20})`}>
+            <rect x="-4" y="-14" width={75*scale} height={22*scale} rx="4" fill="#00e676" opacity="0.15"/>
+            <text
+              x={34*scale}
+              y="0"
+              textAnchor="middle"
+              fill="#00e676"
+              fontSize={12*scale}
+              fontFamily="system-ui"
+              fontWeight="700"
+            >
+              ⬤ PIVOT
+            </text>
+            {/* Arrow pointing to pivot */}
+            <path
+              d={`M -8 8 L -25 20`}
+              stroke="#00e676"
+              strokeWidth="2"
+              markerEnd="url(#arrowhead)"
+            />
+          </g>
+        </g>
+
+        {/* Arrow marker definition */}
+        <defs>
+          <marker id="arrowhead" markerWidth="6" markerHeight="6" refX="3" refY="3" orient="auto">
+            <polygon points="0 0, 6 3, 0 6" fill="#00e676"/>
+          </marker>
+        </defs>
+
+        {/* ==================== FORK-TOOTHPICK SYSTEM ==================== */}
+        <g transform={`translate(${pivotX}, ${pivotY}) rotate(${tiltAngle + wobble})`}>
+
+          {/* TOOTHPICK - horizontal wooden stick */}
+          <g>
+            {/* Toothpick body */}
+            <rect
+              x={-85*scale}
+              y={-3.5*scale}
+              width={170*scale}
+              height={7*scale}
+              rx={3.5*scale}
+              fill="url(#toothpick)"
+              stroke="#a1887f"
+              strokeWidth="0.5"
+            />
+            {/* Toothpick pointed ends */}
+            <ellipse cx={-85*scale} cy={0} rx={4*scale} ry={3*scale} fill="#bcaaa4"/>
+            <ellipse cx={85*scale} cy={0} rx={4*scale} ry={3*scale} fill="#bcaaa4"/>
+
+            {/* Toothpick label */}
+            <text
+              x={0}
+              y={-12*scale}
+              textAnchor="middle"
+              fill="#a1887f"
+              fontSize={9*scale}
+              fontFamily="system-ui"
+              fontWeight="500"
+            >
+              TOOTHPICK
+            </text>
+          </g>
+
+          {/* LEFT FORK - realistic fork shape */}
+          <g transform={`translate(${-65*scale}, ${5*scale}) rotate(35)`}>
+            {/* Fork handle */}
+            <rect
+              x={-4*scale}
+              y={0}
+              width={8*scale}
+              height={55*scale}
+              rx={3*scale}
+              fill="url(#forkMetal)"
+              stroke="#9e9e9e"
+              strokeWidth="0.5"
+            />
+            {/* Handle highlight */}
+            <rect
+              x={-2*scale}
+              y={5*scale}
+              width={2*scale}
+              height={45*scale}
+              rx={1*scale}
+              fill="rgba(255,255,255,0.3)"
+            />
+
+            {/* Fork neck (transition to tines) */}
+            <path
+              d={`M ${-4*scale} ${55*scale}
+                  Q ${-6*scale} ${62*scale} ${-12*scale} ${68*scale}
+                  L ${12*scale} ${68*scale}
+                  Q ${6*scale} ${62*scale} ${4*scale} ${55*scale}
+                  Z`}
+              fill="url(#forkMetal)"
+              stroke="#9e9e9e"
+              strokeWidth="0.5"
+            />
+
+            {/* Fork tines - 4 prongs */}
+            {[-9, -3, 3, 9].map((x, i) => (
+              <g key={i}>
+                <rect
+                  x={(x - 2)*scale}
+                  y={68*scale}
+                  width={4*scale}
+                  height={28*scale}
+                  rx={1.5*scale}
+                  fill="url(#forkMetal)"
+                  stroke="#9e9e9e"
+                  strokeWidth="0.5"
+                />
+                {/* Tine tip */}
+                <ellipse
+                  cx={x*scale}
+                  cy={96*scale}
+                  rx={2*scale}
+                  ry={3*scale}
+                  fill="#bdbdbd"
+                />
+              </g>
+            ))}
+
+            {/* Fork label */}
+            <text
+              x={0}
+              y={110*scale}
+              textAnchor="middle"
+              fill="#90a4ae"
+              fontSize={9*scale}
+              fontFamily="system-ui"
+              fontWeight="600"
+              transform={`rotate(-35)`}
+            >
+              FORK
+            </text>
+          </g>
+
+          {/* RIGHT FORK - mirror of left */}
+          <g transform={`translate(${65*scale}, ${5*scale}) rotate(-35) scale(-1, 1)`}>
+            {/* Fork handle */}
+            <rect
+              x={-4*scale}
+              y={0}
+              width={8*scale}
+              height={55*scale}
+              rx={3*scale}
+              fill="url(#forkMetal)"
+              stroke="#9e9e9e"
+              strokeWidth="0.5"
+            />
+            <rect
+              x={-2*scale}
+              y={5*scale}
+              width={2*scale}
+              height={45*scale}
+              rx={1*scale}
+              fill="rgba(255,255,255,0.3)"
+            />
+
+            {/* Fork neck */}
+            <path
+              d={`M ${-4*scale} ${55*scale}
+                  Q ${-6*scale} ${62*scale} ${-12*scale} ${68*scale}
+                  L ${12*scale} ${68*scale}
+                  Q ${6*scale} ${62*scale} ${4*scale} ${55*scale}
+                  Z`}
+              fill="url(#forkMetal)"
+              stroke="#9e9e9e"
+              strokeWidth="0.5"
+            />
+
+            {/* Fork tines */}
+            {[-9, -3, 3, 9].map((x, i) => (
+              <g key={i}>
+                <rect
+                  x={(x - 2)*scale}
+                  y={68*scale}
+                  width={4*scale}
+                  height={28*scale}
+                  rx={1.5*scale}
+                  fill="url(#forkMetal)"
+                  stroke="#9e9e9e"
+                  strokeWidth="0.5"
+                />
+                <ellipse
+                  cx={x*scale}
+                  cy={96*scale}
+                  rx={2*scale}
+                  ry={3*scale}
+                  fill="#bdbdbd"
+                />
+              </g>
+            ))}
+
+            <text
+              x={0}
+              y={110*scale}
+              textAnchor="middle"
+              fill="#90a4ae"
+              fontSize={9*scale}
+              fontFamily="system-ui"
+              fontWeight="600"
+              transform={`rotate(35) scale(-1, 1)`}
+            >
+              FORK
+            </text>
+          </g>
+
+          {/* CLAY/WEIGHT (when added) */}
+          {hasClayAdded && (
+            <g transform={`translate(${clayPosition * 70 * scale}, 0)`}>
+              <circle
+                r={16*scale}
+                fill="url(#clayBall)"
+                stroke="#e65100"
+                strokeWidth="1"
+              />
+              {/* Clay highlight */}
+              <ellipse
+                cx={-5*scale}
+                cy={-5*scale}
+                rx={5*scale}
+                ry={4*scale}
+                fill="rgba(255,255,255,0.3)"
+              />
+              {/* Clay label */}
+              <text
+                x={0}
+                y={28*scale}
+                textAnchor="middle"
+                fill="#ff8f00"
+                fontSize={8*scale}
+                fontFamily="system-ui"
+                fontWeight="600"
+              >
+                WEIGHT
+              </text>
+            </g>
+          )}
+
+          {/* CENTER OF MASS indicator */}
+          {showCOM && (
+            <g transform={`translate(0, ${comY * 80 * scale})`} filter="url(#comGlow)">
+              {/* COM outer ring */}
+              <circle r={14*scale} fill="none" stroke="#ef5350" strokeWidth="2" strokeDasharray="3,2">
+                <animateTransform
+                  attributeName="transform"
+                  type="rotate"
+                  from="0 0 0"
+                  to="-360 0 0"
+                  dur="4s"
+                  repeatCount="indefinite"
+                />
+              </circle>
+              {/* COM core */}
+              <circle r={10*scale} fill="#ef5350" opacity="0.3"/>
+              <circle r={7*scale} fill="#ef5350"/>
+              {/* COM crosshair */}
+              <line x1={-12*scale} y1="0" x2={12*scale} y2="0" stroke="#fff" strokeWidth="1.5" opacity="0.6"/>
+              <line x1="0" y1={-12*scale} x2="0" y2={12*scale} stroke="#fff" strokeWidth="1.5" opacity="0.6"/>
+              {/* COM label */}
+              <g transform={`translate(${22*scale}, 4)`}>
+                <rect x="-2" y="-12" width={55*scale} height={18*scale} rx="3" fill="rgba(239,83,80,0.2)"/>
+                <text
+                  fill="#ef5350"
+                  fontSize={11*scale}
+                  fontWeight="700"
+                  fontFamily="system-ui"
+                >
+                  CENTER
+                </text>
+                <text
+                  y="10"
+                  fill="#ef5350"
+                  fontSize={9*scale}
+                  fontWeight="600"
+                  fontFamily="system-ui"
+                >
+                  OF MASS
+                </text>
+              </g>
+            </g>
+          )}
+
+          {/* ACTUAL PIVOT POINT on toothpick */}
+          <circle
+            r={6*scale}
+            fill="#00e676"
+            stroke="#ffffff"
+            strokeWidth="2"
+          />
+          <circle
+            r={3*scale}
+            fill="#ffffff"
+          />
+        </g>
+
+        {/* ==================== STATUS INDICATORS ==================== */}
+
+        {/* Balance status badge */}
+        <g transform="translate(12, 12)">
+          <rect
+            width={100*scale}
+            height={32*scale}
+            rx={8*scale}
+            fill={isBalanced ? 'rgba(0,230,118,0.15)' : 'rgba(239,83,80,0.15)'}
+            stroke={isBalanced ? '#00e676' : '#ef5350'}
+            strokeWidth="1.5"
+          />
+          <text
+            x={50*scale}
+            y={21*scale}
+            textAnchor="middle"
+            fill={isBalanced ? '#00e676' : '#ef5350'}
+            fontSize={13*scale}
+            fontWeight="700"
+            fontFamily="system-ui"
+          >
+            {isBalanced ? '✓ BALANCED' : '✗ FALLING'}
+          </text>
+        </g>
+
+        {/* COM position indicator */}
         {showCOM && (
-          <g transform={`translate(${w - 100*scale}, 12)`}>
-            <rect width={88*scale} height={28*scale} rx={8*scale} fill={colors.bgElevated} stroke={colors.bgHover} strokeWidth="1"/>
-            <text x={44*scale} y={11*scale} textAnchor="middle" fill={colors.textMuted} fontSize={8*scale} fontFamily="system-ui">COM</text>
-            <text x={44*scale} y={22*scale} textAnchor="middle" fill={comY < 0 ? colors.success : colors.error} fontSize={10*scale} fontWeight="600" fontFamily="system-ui">
-              {comY < 0 ? '↓ Below' : '↑ Above'}
+          <g transform={`translate(${w - 115*scale}, 12)`}>
+            <rect
+              width={103*scale}
+              height={32*scale}
+              rx={8*scale}
+              fill={colors.bgElevated}
+              stroke={colors.bgHover}
+              strokeWidth="1"
+            />
+            <text
+              x={52*scale}
+              y={13*scale}
+              textAnchor="middle"
+              fill={colors.textMuted}
+              fontSize={9*scale}
+              fontFamily="system-ui"
+            >
+              COM POSITION
+            </text>
+            <text
+              x={52*scale}
+              y={26*scale}
+              textAnchor="middle"
+              fill={comY < 0 ? '#00e676' : '#ef5350'}
+              fontSize={11*scale}
+              fontWeight="700"
+              fontFamily="system-ui"
+            >
+              {comY < 0 ? '↓ BELOW PIVOT' : '↑ ABOVE PIVOT'}
             </text>
           </g>
         )}
+
+        {/* Physics explanation text */}
+        <text
+          x={w/2}
+          y={h - 8}
+          textAnchor="middle"
+          fill="#546e7a"
+          fontSize={10*scale}
+          fontFamily="system-ui"
+        >
+          {isBalanced
+            ? "Center of mass is below the pivot → Stable equilibrium!"
+            : "Center of mass is above the pivot → System tips over"
+          }
+        </text>
       </svg>
     );
   };
