@@ -1,40 +1,21 @@
 'use client';
 
-import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useRef, Suspense } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
-import { OrbitControls, Text, Environment, Float, Html } from '@react-three/drei';
+import { OrbitControls, Html, Text, Billboard } from '@react-three/drei';
 import * as THREE from 'three';
 
 // ============================================================================
-// MOLECULAR ORBITALS - 3D Interactive Simulation
-// Built with Three.js + React Three Fiber
-// Follows GAME_TEST_SPECIFICATION.md
+// MOLECULAR ORBITALS - EDUCATIONAL 3D Simulation
+// Design principle: The visualization TEACHES, not just displays
+// Every element answers: WHAT is it? WHY that shape? WHAT to notice?
 // ============================================================================
 
-// GameEvent interface - matches spec
-export interface GameEvent {
-  eventType: 'screen_change' | 'prediction_made' | 'answer_submitted' | 'slider_changed' |
-             'button_clicked' | 'game_started' | 'game_completed' | 'hint_requested' |
-             'correct_answer' | 'incorrect_answer' | 'phase_changed' | 'value_changed' |
-             'selection_made' | 'timer_expired' | 'achievement_unlocked' | 'struggle_detected' |
-             'coach_prompt' | 'guide_paused' | 'guide_resumed' | 'question_changed' | 'app_completed' | 'app_changed';
+interface GameEvent {
+  eventType: string;
   gameType: string;
   gameTitle: string;
-  details: {
-    phase?: string;
-    phaseLabel?: string;
-    currentScreen?: number;
-    totalScreens?: number;
-    screenDescription?: string;
-    prediction?: string;
-    answer?: string;
-    isCorrect?: boolean;
-    score?: number;
-    maxScore?: number;
-    message?: string;
-    coachMessage?: string;
-    [key: string]: unknown;
-  };
+  details: Record<string, unknown>;
   timestamp: number;
 }
 
@@ -52,347 +33,582 @@ const playSound = (type: 'click' | 'success' | 'failure' | 'transition' | 'compl
     const gainNode = audioContext.createGain();
     oscillator.connect(gainNode);
     gainNode.connect(audioContext.destination);
-    const sounds = {
-      click: { freq: 600, duration: 0.1, type: 'sine' as OscillatorType },
-      success: { freq: 800, duration: 0.2, type: 'sine' as OscillatorType },
-      failure: { freq: 300, duration: 0.3, type: 'sine' as OscillatorType },
-      transition: { freq: 500, duration: 0.15, type: 'sine' as OscillatorType },
-      complete: { freq: 900, duration: 0.4, type: 'sine' as OscillatorType }
+    const sounds: Record<string, { freq: number; duration: number }> = {
+      click: { freq: 600, duration: 0.1 },
+      success: { freq: 800, duration: 0.2 },
+      failure: { freq: 300, duration: 0.3 },
+      transition: { freq: 500, duration: 0.15 },
+      complete: { freq: 900, duration: 0.4 }
     };
     const sound = sounds[type];
-    oscillator.type = sound.type;
     oscillator.frequency.setValueAtTime(sound.freq, audioContext.currentTime);
     gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
     gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + sound.duration);
     oscillator.start(audioContext.currentTime);
     oscillator.stop(audioContext.currentTime + sound.duration);
-  } catch {
-    // Audio not available
-  }
+  } catch { /* Audio not available */ }
 };
 
 // ============================================================================
-// 3D ORBITAL COMPONENTS
+// EDUCATIONAL 3D COMPONENTS - Every element teaches something
 // ============================================================================
 
-// S Orbital - Spherical probability cloud
-const SOrbital: React.FC<{ color?: string; opacity?: number; size?: number }> = ({
-  color = '#3b82f6',
-  opacity = 0.6,
-  size = 1
-}) => {
+// Electron particle that moves within the orbital cloud
+const ElectronParticle: React.FC<{
+  orbitalType: 's' | 'p' | 'd';
+  color: string;
+  speed?: number;
+}> = ({ orbitalType, color, speed = 1 }) => {
   const meshRef = useRef<THREE.Mesh>(null);
+  const timeOffset = useRef(Math.random() * Math.PI * 2);
 
   useFrame((state) => {
-    if (meshRef.current) {
-      // Gentle pulsing animation
-      const scale = 1 + Math.sin(state.clock.elapsedTime * 2) * 0.05;
-      meshRef.current.scale.setScalar(size * scale);
+    if (!meshRef.current) return;
+    const t = state.clock.elapsedTime * speed + timeOffset.current;
+
+    if (orbitalType === 's') {
+      // Electron wanders randomly within sphere - shows PROBABILITY
+      const r = 0.8 + Math.sin(t * 2) * 0.3;
+      const theta = t * 0.7;
+      const phi = t * 0.5;
+      meshRef.current.position.set(
+        r * Math.sin(phi) * Math.cos(theta),
+        r * Math.sin(phi) * Math.sin(theta),
+        r * Math.cos(phi)
+      );
+    } else if (orbitalType === 'p') {
+      // Electron moves in figure-8 pattern through both lobes
+      const lobe = Math.sin(t) > 0 ? 1 : -1;
+      const r = 0.5 + Math.abs(Math.sin(t * 2)) * 0.4;
+      meshRef.current.position.set(
+        Math.sin(t * 3) * 0.2,
+        lobe * r,
+        Math.cos(t * 3) * 0.2
+      );
+    } else {
+      // D orbital - cloverleaf motion
+      const angle = t * 0.8;
+      const r = 0.6 + Math.sin(t * 2) * 0.2;
+      meshRef.current.position.set(
+        r * Math.cos(angle * 2) * Math.cos(angle),
+        Math.sin(t * 1.5) * 0.3,
+        r * Math.cos(angle * 2) * Math.sin(angle)
+      );
     }
   });
 
   return (
     <mesh ref={meshRef}>
-      <sphereGeometry args={[1, 64, 64]} />
-      <meshPhysicalMaterial
-        color={color}
-        transparent
-        opacity={opacity}
-        roughness={0.1}
-        metalness={0.1}
-        clearcoat={1}
-        clearcoatRoughness={0.1}
-      />
+      <sphereGeometry args={[0.08, 16, 16]} />
+      <meshBasicMaterial color={color} />
+      {/* Glow effect */}
+      <pointLight color={color} intensity={0.5} distance={1} />
     </mesh>
   );
 };
 
-// P Orbital - Dumbbell shape (two lobes)
-const POrbital: React.FC<{
-  axis: 'x' | 'y' | 'z';
-  color?: string;
-  opacity?: number;
-  size?: number;
-}> = ({ axis, color = '#ef4444', opacity = 0.6, size = 1 }) => {
-  const groupRef = useRef<THREE.Group>(null);
-
-  const rotation = useMemo(() => {
-    switch (axis) {
-      case 'x': return [0, 0, Math.PI / 2];
-      case 'y': return [0, 0, 0];
-      case 'z': return [Math.PI / 2, 0, 0];
-      default: return [0, 0, 0];
-    }
-  }, [axis]);
+// S Orbital with educational annotations
+const EducationalSOrbital: React.FC<{
+  showLabels: boolean;
+  showElectron: boolean;
+  highlightFeature: 'none' | 'shape' | 'probability' | 'node';
+}> = ({ showLabels, showElectron, highlightFeature }) => {
+  const meshRef = useRef<THREE.Mesh>(null);
+  const [hovered, setHovered] = useState(false);
 
   useFrame((state) => {
-    if (groupRef.current) {
-      // Gentle rotation
-      groupRef.current.rotation.y = Math.sin(state.clock.elapsedTime * 0.5) * 0.1;
+    if (meshRef.current) {
+      // Gentle breathing animation to show it's a "cloud"
+      const scale = 1 + Math.sin(state.clock.elapsedTime * 1.5) * 0.03;
+      meshRef.current.scale.setScalar(scale);
     }
   });
 
-  const lobeGeometry = useMemo(() => {
-    const shape = new THREE.Shape();
-    // Create teardrop/lobe shape
-    shape.moveTo(0, 0);
-    shape.bezierCurveTo(0.8, 0.5, 0.8, 1.5, 0, 2);
-    shape.bezierCurveTo(-0.8, 1.5, -0.8, 0.5, 0, 0);
-
-    const extrudeSettings = {
-      steps: 1,
-      depth: 0.01,
-      bevelEnabled: true,
-      bevelThickness: 0.4,
-      bevelSize: 0.4,
-      bevelSegments: 32
-    };
-
-    return new THREE.ExtrudeGeometry(shape, extrudeSettings);
-  }, []);
-
   return (
-    <group ref={groupRef} rotation={rotation as [number, number, number]} scale={size}>
-      {/* Positive lobe */}
-      <mesh position={[0, 0.8, 0]} rotation={[0, 0, 0]}>
-        <sphereGeometry args={[0.7, 32, 32]} />
+    <group>
+      {/* Main orbital shell - outer boundary */}
+      <mesh
+        ref={meshRef}
+        onPointerOver={() => setHovered(true)}
+        onPointerOut={() => setHovered(false)}
+      >
+        <sphereGeometry args={[1.2, 64, 64]} />
         <meshPhysicalMaterial
-          color={color}
+          color={highlightFeature === 'shape' ? '#60a5fa' : '#3b82f6'}
           transparent
-          opacity={opacity}
-          roughness={0.2}
-          clearcoat={0.5}
+          opacity={highlightFeature === 'probability' ? 0.15 : 0.25}
+          roughness={0.3}
+          side={THREE.DoubleSide}
+          depthWrite={false}
         />
       </mesh>
-      {/* Negative lobe */}
-      <mesh position={[0, -0.8, 0]} rotation={[Math.PI, 0, 0]}>
-        <sphereGeometry args={[0.7, 32, 32]} />
-        <meshPhysicalMaterial
-          color={color}
-          transparent
-          opacity={opacity * 0.7}
-          roughness={0.2}
-          clearcoat={0.5}
-        />
-      </mesh>
-      {/* Node at center */}
+
+      {/* Inner probability density - darker = more likely */}
       <mesh>
-        <sphereGeometry args={[0.1, 16, 16]} />
-        <meshBasicMaterial color="#1e293b" />
+        <sphereGeometry args={[0.7, 32, 32]} />
+        <meshBasicMaterial
+          color="#3b82f6"
+          transparent
+          opacity={0.35}
+        />
       </mesh>
+
+      {/* Core - highest probability */}
+      <mesh>
+        <sphereGeometry args={[0.3, 32, 32]} />
+        <meshBasicMaterial
+          color="#1d4ed8"
+          transparent
+          opacity={0.5}
+        />
+      </mesh>
+
+      {/* Nucleus at center */}
+      <mesh>
+        <sphereGeometry args={[0.12, 16, 16]} />
+        <meshStandardMaterial color="#fbbf24" emissive="#f59e0b" emissiveIntensity={0.5} />
+      </mesh>
+
+      {/* Animated electron */}
+      {showElectron && (
+        <>
+          <ElectronParticle orbitalType="s" color="#22d3ee" speed={1.2} />
+          <ElectronParticle orbitalType="s" color="#22d3ee" speed={0.8} />
+        </>
+      )}
+
+      {/* Educational Labels - IN the 3D scene */}
+      {showLabels && (
+        <>
+          {/* What it is */}
+          <Billboard position={[0, 2, 0]}>
+            <Html center>
+              <div style={{
+                background: 'rgba(0,0,0,0.85)',
+                padding: '8px 16px',
+                borderRadius: '8px',
+                border: '2px solid #3b82f6',
+                whiteSpace: 'nowrap'
+              }}>
+                <div style={{ color: '#60a5fa', fontWeight: 700, fontSize: '14px' }}>S ORBITAL</div>
+                <div style={{ color: '#94a3b8', fontSize: '11px' }}>Spherical shape</div>
+              </div>
+            </Html>
+          </Billboard>
+
+          {/* Why spherical - with arrow */}
+          <Billboard position={[1.8, 0.5, 0]}>
+            <Html center>
+              <div style={{
+                background: 'rgba(34, 197, 94, 0.9)',
+                padding: '6px 12px',
+                borderRadius: '6px',
+                maxWidth: '140px'
+              }}>
+                <div style={{ color: 'white', fontSize: '11px', fontWeight: 600 }}>
+                  ↙ WHY SPHERICAL?
+                </div>
+                <div style={{ color: '#dcfce7', fontSize: '10px', marginTop: '4px' }}>
+                  Equal probability in ALL directions from nucleus
+                </div>
+              </div>
+            </Html>
+          </Billboard>
+
+          {/* What to notice */}
+          <Billboard position={[-1.5, -0.8, 0]}>
+            <Html center>
+              <div style={{
+                background: 'rgba(249, 115, 22, 0.9)',
+                padding: '6px 12px',
+                borderRadius: '6px',
+                maxWidth: '130px'
+              }}>
+                <div style={{ color: 'white', fontSize: '11px', fontWeight: 600 }}>
+                  👁 NOTICE:
+                </div>
+                <div style={{ color: '#fed7aa', fontSize: '10px', marginTop: '4px' }}>
+                  Darker center = electron more likely to be there
+                </div>
+              </div>
+            </Html>
+          </Billboard>
+        </>
+      )}
     </group>
   );
 };
 
-// D Orbital - Cloverleaf pattern
-const DOrbital: React.FC<{
-  type: 'xy' | 'xz' | 'yz' | 'x2y2' | 'z2';
-  color?: string;
-  opacity?: number;
-  size?: number;
-}> = ({ type, color = '#8b5cf6', opacity = 0.5, size = 1 }) => {
+// P Orbital with educational annotations
+const EducationalPOrbital: React.FC<{
+  showLabels: boolean;
+  showElectron: boolean;
+  highlightFeature: 'none' | 'lobes' | 'node' | 'direction';
+}> = ({ showLabels, showElectron, highlightFeature }) => {
   const groupRef = useRef<THREE.Group>(null);
 
   useFrame((state) => {
     if (groupRef.current) {
-      groupRef.current.rotation.y = state.clock.elapsedTime * 0.2;
+      // Subtle breathing
+      const scale = 1 + Math.sin(state.clock.elapsedTime * 1.5) * 0.02;
+      groupRef.current.scale.setScalar(scale);
     }
   });
 
-  const renderLobes = () => {
-    const lobes = [];
-    const positions = type === 'z2'
-      ? [[0, 1.2, 0], [0, -1.2, 0]]
-      : [[0.8, 0, 0.8], [-0.8, 0, -0.8], [0.8, 0, -0.8], [-0.8, 0, 0.8]];
-
-    positions.forEach((pos, i) => {
-      lobes.push(
-        <mesh key={i} position={pos as [number, number, number]}>
-          <sphereGeometry args={[0.5, 32, 32]} />
-          <meshPhysicalMaterial
-            color={color}
-            transparent
-            opacity={opacity}
-            roughness={0.2}
-            clearcoat={0.5}
-          />
-        </mesh>
-      );
-    });
-
-    // Add torus for z2 orbital
-    if (type === 'z2') {
-      lobes.push(
-        <mesh key="torus" rotation={[Math.PI / 2, 0, 0]}>
-          <torusGeometry args={[0.6, 0.2, 16, 32]} />
-          <meshPhysicalMaterial
-            color={color}
-            transparent
-            opacity={opacity * 0.5}
-            roughness={0.2}
-          />
-        </mesh>
-      );
-    }
-
-    return lobes;
-  };
-
-  return (
-    <group ref={groupRef} scale={size}>
-      {renderLobes()}
-      {/* Central nucleus indicator */}
-      <mesh>
-        <sphereGeometry args={[0.08, 16, 16]} />
-        <meshBasicMaterial color="#fbbf24" />
-      </mesh>
-    </group>
-  );
-};
-
-// Nucleus visualization
-const Nucleus: React.FC<{ protons: number; neutrons: number }> = ({ protons, neutrons }) => {
-  const groupRef = useRef<THREE.Group>(null);
-
-  useFrame((state) => {
-    if (groupRef.current) {
-      groupRef.current.rotation.y = state.clock.elapsedTime * 0.3;
-      groupRef.current.rotation.x = Math.sin(state.clock.elapsedTime * 0.2) * 0.1;
-    }
-  });
-
-  const particles = useMemo(() => {
-    const result = [];
-    const total = Math.min(protons + neutrons, 20); // Cap for performance
-
-    for (let i = 0; i < total; i++) {
-      const isProton = i < protons;
-      const theta = (i / total) * Math.PI * 2;
-      const phi = Math.acos(1 - 2 * (i + 0.5) / total);
-      const r = 0.15;
-
-      result.push({
-        position: [
-          r * Math.sin(phi) * Math.cos(theta),
-          r * Math.sin(phi) * Math.sin(theta),
-          r * Math.cos(phi)
-        ] as [number, number, number],
-        color: isProton ? '#ef4444' : '#64748b',
-        key: i
-      });
-    }
-    return result;
-  }, [protons, neutrons]);
+  const lobeOpacity = highlightFeature === 'lobes' ? 0.6 : 0.4;
+  const nodeHighlight = highlightFeature === 'node';
 
   return (
     <group ref={groupRef}>
-      {particles.map(p => (
-        <mesh key={p.key} position={p.position}>
-          <sphereGeometry args={[0.05, 16, 16]} />
-          <meshStandardMaterial color={p.color} />
-        </mesh>
-      ))}
-      {/* Glow effect */}
-      <mesh>
-        <sphereGeometry args={[0.2, 32, 32]} />
-        <meshBasicMaterial color="#fbbf24" transparent opacity={0.3} />
+      {/* Positive lobe (top) */}
+      <mesh position={[0, 0.9, 0]}>
+        <sphereGeometry args={[0.65, 32, 32]} />
+        <meshPhysicalMaterial
+          color="#ef4444"
+          transparent
+          opacity={lobeOpacity}
+          roughness={0.3}
+        />
       </mesh>
-    </group>
-  );
-};
 
-// Axis labels
-const AxisLabels: React.FC = () => {
-  return (
-    <group>
-      <Text position={[2.5, 0, 0]} fontSize={0.3} color="#ef4444">X</Text>
-      <Text position={[0, 2.5, 0]} fontSize={0.3} color="#22c55e">Y</Text>
-      <Text position={[0, 0, 2.5]} fontSize={0.3} color="#3b82f6">Z</Text>
+      {/* Inner density - positive lobe */}
+      <mesh position={[0, 0.85, 0]}>
+        <sphereGeometry args={[0.35, 24, 24]} />
+        <meshBasicMaterial color="#dc2626" transparent opacity={0.5} />
+      </mesh>
 
-      {/* Axis lines */}
-      <line>
-        <bufferGeometry>
-          <bufferAttribute
-            attach="attributes-position"
-            count={2}
-            array={new Float32Array([-2, 0, 0, 2, 0, 0])}
-            itemSize={3}
-          />
-        </bufferGeometry>
-        <lineBasicMaterial color="#ef4444" opacity={0.5} transparent />
-      </line>
-      <line>
-        <bufferGeometry>
-          <bufferAttribute
-            attach="attributes-position"
-            count={2}
-            array={new Float32Array([0, -2, 0, 0, 2, 0])}
-            itemSize={3}
-          />
-        </bufferGeometry>
-        <lineBasicMaterial color="#22c55e" opacity={0.5} transparent />
-      </line>
-      <line>
-        <bufferGeometry>
-          <bufferAttribute
-            attach="attributes-position"
-            count={2}
-            array={new Float32Array([0, 0, -2, 0, 0, 2])}
-            itemSize={3}
-          />
-        </bufferGeometry>
-        <lineBasicMaterial color="#3b82f6" opacity={0.5} transparent />
-      </line>
-    </group>
-  );
-};
+      {/* Negative lobe (bottom) */}
+      <mesh position={[0, -0.9, 0]}>
+        <sphereGeometry args={[0.65, 32, 32]} />
+        <meshPhysicalMaterial
+          color="#3b82f6"
+          transparent
+          opacity={lobeOpacity}
+          roughness={0.3}
+        />
+      </mesh>
 
-// Interactive 3D Scene
-const OrbitalScene: React.FC<{
-  orbitalType: 's' | 'p' | 'd';
-  showNucleus: boolean;
-  showAxes: boolean;
-  pAxis?: 'x' | 'y' | 'z';
-  dType?: 'xy' | 'xz' | 'yz' | 'x2y2' | 'z2';
-  element: { symbol: string; protons: number; neutrons: number };
-}> = ({ orbitalType, showNucleus, showAxes, pAxis = 'z', dType = 'xy', element }) => {
-  return (
-    <>
-      {/* Lighting */}
-      <ambientLight intensity={0.4} />
-      <pointLight position={[10, 10, 10]} intensity={1} />
-      <pointLight position={[-10, -10, -10]} intensity={0.5} />
+      {/* Inner density - negative lobe */}
+      <mesh position={[0, -0.85, 0]}>
+        <sphereGeometry args={[0.35, 24, 24]} />
+        <meshBasicMaterial color="#1d4ed8" transparent opacity={0.5} />
+      </mesh>
 
-      {/* Environment for reflections */}
-      <Environment preset="city" />
+      {/* NODAL PLANE - where probability = 0 */}
+      <mesh rotation={[Math.PI / 2, 0, 0]}>
+        <ringGeometry args={[0.05, nodeHighlight ? 1.2 : 0.8, 32]} />
+        <meshBasicMaterial
+          color={nodeHighlight ? '#fbbf24' : '#475569'}
+          transparent
+          opacity={nodeHighlight ? 0.8 : 0.3}
+          side={THREE.DoubleSide}
+        />
+      </mesh>
 
       {/* Nucleus */}
-      {showNucleus && <Nucleus protons={element.protons} neutrons={element.neutrons} />}
+      <mesh>
+        <sphereGeometry args={[0.1, 16, 16]} />
+        <meshStandardMaterial color="#fbbf24" emissive="#f59e0b" emissiveIntensity={0.5} />
+      </mesh>
 
-      {/* Orbitals */}
-      <Float speed={1} rotationIntensity={0.2} floatIntensity={0.3}>
-        {orbitalType === 's' && <SOrbital color="#3b82f6" size={1.5} />}
-        {orbitalType === 'p' && <POrbital axis={pAxis} color="#ef4444" size={1.2} />}
-        {orbitalType === 'd' && <DOrbital type={dType} color="#8b5cf6" size={1.2} />}
-      </Float>
+      {/* Animated electron */}
+      {showElectron && (
+        <ElectronParticle orbitalType="p" color="#22d3ee" speed={1} />
+      )}
 
-      {/* Axes */}
-      {showAxes && <AxisLabels />}
+      {/* Educational Labels */}
+      {showLabels && (
+        <>
+          {/* Main label */}
+          <Billboard position={[0, 2.2, 0]}>
+            <Html center>
+              <div style={{
+                background: 'rgba(0,0,0,0.85)',
+                padding: '8px 16px',
+                borderRadius: '8px',
+                border: '2px solid #ef4444'
+              }}>
+                <div style={{ color: '#fca5a5', fontWeight: 700, fontSize: '14px' }}>P ORBITAL</div>
+                <div style={{ color: '#94a3b8', fontSize: '11px' }}>Dumbbell shape (2 lobes)</div>
+              </div>
+            </Html>
+          </Billboard>
 
-      {/* Camera controls */}
-      <OrbitControls
-        enablePan={false}
-        minDistance={3}
-        maxDistance={10}
-        autoRotate
-        autoRotateSpeed={0.5}
-      />
-    </>
+          {/* Lobe labels */}
+          <Billboard position={[1.2, 1, 0]}>
+            <Html center>
+              <div style={{
+                background: 'rgba(239, 68, 68, 0.9)',
+                padding: '4px 10px',
+                borderRadius: '4px'
+              }}>
+                <div style={{ color: 'white', fontSize: '11px', fontWeight: 600 }}>
+                  + Phase
+                </div>
+              </div>
+            </Html>
+          </Billboard>
+
+          <Billboard position={[1.2, -1, 0]}>
+            <Html center>
+              <div style={{
+                background: 'rgba(59, 130, 246, 0.9)',
+                padding: '4px 10px',
+                borderRadius: '4px'
+              }}>
+                <div style={{ color: 'white', fontSize: '11px', fontWeight: 600 }}>
+                  - Phase
+                </div>
+              </div>
+            </Html>
+          </Billboard>
+
+          {/* Node explanation */}
+          <Billboard position={[-1.8, 0, 0]}>
+            <Html center>
+              <div style={{
+                background: 'rgba(251, 191, 36, 0.95)',
+                padding: '8px 12px',
+                borderRadius: '6px',
+                maxWidth: '150px'
+              }}>
+                <div style={{ color: '#1e293b', fontSize: '11px', fontWeight: 700 }}>
+                  ⚠️ NODAL PLANE
+                </div>
+                <div style={{ color: '#44403c', fontSize: '10px', marginTop: '4px' }}>
+                  Electron has ZERO probability here. It "jumps" between lobes!
+                </div>
+              </div>
+            </Html>
+          </Billboard>
+
+          {/* Direction arrow */}
+          <Billboard position={[0, 0, 1.5]}>
+            <Html center>
+              <div style={{
+                background: 'rgba(34, 197, 94, 0.9)',
+                padding: '6px 10px',
+                borderRadius: '6px'
+              }}>
+                <div style={{ color: 'white', fontSize: '11px', fontWeight: 600 }}>
+                  ↕ Oriented along Y-axis
+                </div>
+                <div style={{ color: '#dcfce7', fontSize: '10px' }}>
+                  (px, py, pz point different ways)
+                </div>
+              </div>
+            </Html>
+          </Billboard>
+        </>
+      )}
+    </group>
   );
+};
+
+// Comparison view - S vs P side by side
+const ComparisonView: React.FC<{ showLabels: boolean }> = ({ showLabels }) => {
+  return (
+    <group>
+      {/* S Orbital on left */}
+      <group position={[-2, 0, 0]} scale={0.7}>
+        <EducationalSOrbital showLabels={false} showElectron={true} highlightFeature="none" />
+        <Billboard position={[0, 1.8, 0]}>
+          <Html center>
+            <div style={{
+              background: '#3b82f6',
+              padding: '6px 14px',
+              borderRadius: '6px',
+              fontWeight: 700,
+              color: 'white',
+              fontSize: '14px'
+            }}>
+              S ORBITAL
+            </div>
+          </Html>
+        </Billboard>
+      </group>
+
+      {/* P Orbital on right */}
+      <group position={[2, 0, 0]} scale={0.7}>
+        <EducationalPOrbital showLabels={false} showElectron={true} highlightFeature="none" />
+        <Billboard position={[0, 2, 0]}>
+          <Html center>
+            <div style={{
+              background: '#ef4444',
+              padding: '6px 14px',
+              borderRadius: '6px',
+              fontWeight: 700,
+              color: 'white',
+              fontSize: '14px'
+            }}>
+              P ORBITAL
+            </div>
+          </Html>
+        </Billboard>
+      </group>
+
+      {/* VS in center */}
+      <Billboard position={[0, 0, 0]}>
+        <Html center>
+          <div style={{
+            background: 'rgba(0,0,0,0.8)',
+            padding: '8px 16px',
+            borderRadius: '50%',
+            border: '2px solid #64748b'
+          }}>
+            <div style={{ color: '#94a3b8', fontWeight: 700, fontSize: '16px' }}>VS</div>
+          </div>
+        </Html>
+      </Billboard>
+
+      {/* Key difference callout */}
+      {showLabels && (
+        <Billboard position={[0, -2, 0]}>
+          <Html center>
+            <div style={{
+              background: 'rgba(0,0,0,0.9)',
+              padding: '12px 20px',
+              borderRadius: '10px',
+              border: '2px solid #8b5cf6',
+              maxWidth: '300px',
+              textAlign: 'center'
+            }}>
+              <div style={{ color: '#c4b5fd', fontWeight: 700, fontSize: '13px', marginBottom: '6px' }}>
+                🔑 KEY DIFFERENCE
+              </div>
+              <div style={{ color: '#e2e8f0', fontSize: '12px', lineHeight: 1.5 }}>
+                <strong style={{ color: '#60a5fa' }}>S:</strong> Spherical, no direction preference<br/>
+                <strong style={{ color: '#f87171' }}>P:</strong> Directional, determines bond angles
+              </div>
+            </div>
+          </Html>
+        </Billboard>
+      )}
+    </group>
+  );
+};
+
+// Why It Matters visualization
+const BondingDemo: React.FC<{ showLabels: boolean }> = ({ showLabels }) => {
+  const groupRef = useRef<THREE.Group>(null);
+
+  useFrame((state) => {
+    if (groupRef.current) {
+      groupRef.current.rotation.y = Math.sin(state.clock.elapsedTime * 0.3) * 0.2;
+    }
+  });
+
+  return (
+    <group ref={groupRef}>
+      {/* Two P orbitals overlapping to form bond */}
+      <group position={[-1, 0, 0]}>
+        <mesh position={[0.5, 0, 0]} rotation={[0, 0, Math.PI / 2]}>
+          <sphereGeometry args={[0.5, 32, 32]} />
+          <meshPhysicalMaterial color="#ef4444" transparent opacity={0.5} />
+        </mesh>
+        <mesh position={[-0.5, 0, 0]} rotation={[0, 0, Math.PI / 2]}>
+          <sphereGeometry args={[0.5, 32, 32]} />
+          <meshPhysicalMaterial color="#3b82f6" transparent opacity={0.5} />
+        </mesh>
+        {/* Nucleus */}
+        <mesh>
+          <sphereGeometry args={[0.12, 16, 16]} />
+          <meshStandardMaterial color="#fbbf24" />
+        </mesh>
+        <Billboard position={[0, -1.2, 0]}>
+          <Html center>
+            <div style={{ color: '#94a3b8', fontSize: '12px', fontWeight: 600 }}>
+              Atom 1
+            </div>
+          </Html>
+        </Billboard>
+      </group>
+
+      <group position={[1, 0, 0]}>
+        <mesh position={[-0.5, 0, 0]} rotation={[0, 0, Math.PI / 2]}>
+          <sphereGeometry args={[0.5, 32, 32]} />
+          <meshPhysicalMaterial color="#ef4444" transparent opacity={0.5} />
+        </mesh>
+        <mesh position={[0.5, 0, 0]} rotation={[0, 0, Math.PI / 2]}>
+          <sphereGeometry args={[0.5, 32, 32]} />
+          <meshPhysicalMaterial color="#3b82f6" transparent opacity={0.5} />
+        </mesh>
+        <mesh>
+          <sphereGeometry args={[0.12, 16, 16]} />
+          <meshStandardMaterial color="#fbbf24" />
+        </mesh>
+        <Billboard position={[0, -1.2, 0]}>
+          <Html center>
+            <div style={{ color: '#94a3b8', fontSize: '12px', fontWeight: 600 }}>
+              Atom 2
+            </div>
+          </Html>
+        </Billboard>
+      </group>
+
+      {/* Overlap region - the BOND */}
+      <mesh position={[0, 0, 0]}>
+        <sphereGeometry args={[0.4, 32, 32]} />
+        <meshBasicMaterial color="#22c55e" transparent opacity={0.6} />
+      </mesh>
+
+      {showLabels && (
+        <>
+          <Billboard position={[0, 1, 0]}>
+            <Html center>
+              <div style={{
+                background: 'rgba(34, 197, 94, 0.95)',
+                padding: '8px 14px',
+                borderRadius: '8px'
+              }}>
+                <div style={{ color: 'white', fontWeight: 700, fontSize: '13px' }}>
+                  🔗 COVALENT BOND
+                </div>
+                <div style={{ color: '#dcfce7', fontSize: '11px', marginTop: '4px' }}>
+                  Orbitals overlap → electrons shared
+                </div>
+              </div>
+            </Html>
+          </Billboard>
+
+          <Billboard position={[0, -2, 0]}>
+            <Html center>
+              <div style={{
+                background: 'rgba(0,0,0,0.9)',
+                padding: '10px 16px',
+                borderRadius: '8px',
+                border: '2px solid #22c55e',
+                maxWidth: '280px'
+              }}>
+                <div style={{ color: '#4ade80', fontWeight: 700, fontSize: '12px' }}>
+                  💡 THIS IS WHY SHAPES MATTER
+                </div>
+                <div style={{ color: '#e2e8f0', fontSize: '11px', marginTop: '6px', lineHeight: 1.5 }}>
+                  P orbitals can only overlap in specific directions.<br/>
+                  This determines molecular geometry!
+                </div>
+              </div>
+            </Html>
+          </Billboard>
+        </>
+      )}
+    </group>
+  );
+};
+
+// Camera auto-focus
+const CameraController: React.FC<{ target: [number, number, number] }> = ({ target }) => {
+  const { camera } = useThree();
+
+  useEffect(() => {
+    camera.lookAt(new THREE.Vector3(...target));
+  }, [camera, target]);
+
+  return null;
 };
 
 // ============================================================================
-// MAIN RENDERER COMPONENT
+// MAIN RENDERER
 // ============================================================================
 
 const MolecularOrbitalsRenderer: React.FC<MolecularOrbitalsRendererProps> = ({ onGameEvent }) => {
@@ -400,45 +616,27 @@ const MolecularOrbitalsRenderer: React.FC<MolecularOrbitalsRendererProps> = ({ o
 
   const phaseOrder: Phase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
 
-  const phaseLabels: Record<Phase, string> = {
-    hook: 'Introduction',
-    predict: 'Predict',
-    play: 'Explore Orbitals',
-    review: 'Understanding',
-    twist_predict: 'New Challenge',
-    twist_play: 'Hybridization',
-    twist_review: 'Deep Insight',
-    transfer: 'Real World',
-    test: 'Knowledge Test',
-    mastery: 'Mastery'
-  };
-
-  // State
   const [phase, setPhase] = useState<Phase>('hook');
   const [isMobile, setIsMobile] = useState(false);
   const [prediction, setPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
 
-  // 3D Visualization state
-  const [orbitalType, setOrbitalType] = useState<'s' | 'p' | 'd'>('s');
-  const [pAxis, setPAxis] = useState<'x' | 'y' | 'z'>('z');
-  const [dType, setDType] = useState<'xy' | 'xz' | 'yz' | 'x2y2' | 'z2'>('xy');
-  const [showNucleus, setShowNucleus] = useState(true);
-  const [showAxes, setShowAxes] = useState(true);
-  const [currentElement, setCurrentElement] = useState({ symbol: 'H', protons: 1, neutrons: 0 });
+  // Visualization controls
+  const [viewMode, setViewMode] = useState<'s' | 'p' | 'compare' | 'bonding'>('s');
+  const [showLabels, setShowLabels] = useState(true);
+  const [showElectron, setShowElectron] = useState(true);
+  const [highlightFeature, setHighlightFeature] = useState<string>('none');
 
   // Transfer/Test state
-  const [completedApps, setCompletedApps] = useState<boolean[]>([false, false, false, false]);
+  const [completedApps, setCompletedApps] = useState([false, false, false, false]);
   const [activeApp, setActiveApp] = useState(0);
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [testAnswers, setTestAnswers] = useState<(number | null)[]>(Array(10).fill(null));
   const [testScore, setTestScore] = useState(0);
 
-  // Navigation refs
   const isNavigating = useRef(false);
   const hasEmittedStart = useRef(false);
 
-  // Responsive
   useEffect(() => {
     const check = () => setIsMobile(window.innerWidth < 768);
     check();
@@ -446,7 +644,6 @@ const MolecularOrbitalsRenderer: React.FC<MolecularOrbitalsRendererProps> = ({ o
     return () => window.removeEventListener('resize', check);
   }, []);
 
-  // Design system
   const colors = {
     bgDeep: '#030712',
     bgSurface: '#0f172a',
@@ -455,622 +652,597 @@ const MolecularOrbitalsRenderer: React.FC<MolecularOrbitalsRendererProps> = ({ o
     textSecondary: '#cbd5e1',
     textMuted: '#64748b',
     primary: '#8b5cf6',
-    primaryDark: '#7c3aed',
-    secondary: '#3b82f6',
     success: '#22c55e',
     warning: '#f59e0b',
     error: '#ef4444',
   };
 
-  // Emit game event
-  const emitGameEvent = useCallback((
-    eventType: GameEvent['eventType'],
-    details: Partial<GameEvent['details']> = {}
-  ) => {
-    if (!onGameEvent) return;
-    onGameEvent({
+  const emitGameEvent = useCallback((eventType: string, details: Record<string, unknown> = {}) => {
+    onGameEvent?.({
       eventType,
       gameType: 'molecular_orbitals',
       gameTitle: 'Molecular Orbitals',
-      details: {
-        phase,
-        phaseLabel: phaseLabels[phase],
-        currentScreen: phaseOrder.indexOf(phase) + 1,
-        totalScreens: 10,
-        ...details
-      },
+      details: { phase, ...details },
       timestamp: Date.now()
     });
-  }, [onGameEvent, phase, phaseLabels, phaseOrder]);
+  }, [onGameEvent, phase]);
 
-  // Emit start
   useEffect(() => {
     if (!hasEmittedStart.current) {
       hasEmittedStart.current = true;
-      emitGameEvent('game_started', { message: 'Starting Molecular Orbitals exploration' });
+      emitGameEvent('game_started');
     }
   }, [emitGameEvent]);
 
-  // Navigation
   const goToPhase = useCallback((p: Phase) => {
     if (isNavigating.current) return;
     isNavigating.current = true;
     playSound('transition');
     setPhase(p);
-    emitGameEvent('phase_changed', { phase: p, phaseLabel: phaseLabels[p] });
+    emitGameEvent('phase_changed', { newPhase: p });
     setTimeout(() => { isNavigating.current = false; }, 300);
-  }, [emitGameEvent, phaseLabels]);
+  }, [emitGameEvent]);
 
   const goNext = useCallback(() => {
     const idx = phaseOrder.indexOf(phase);
     if (idx < phaseOrder.length - 1) goToPhase(phaseOrder[idx + 1]);
   }, [phase, phaseOrder, goToPhase]);
 
-  const goBack = useCallback(() => {
-    const idx = phaseOrder.indexOf(phase);
-    if (idx > 0) goToPhase(phaseOrder[idx - 1]);
-  }, [phase, phaseOrder, goToPhase]);
-
-  // Elements for exploration
-  const elements = [
-    { symbol: 'H', name: 'Hydrogen', protons: 1, neutrons: 0, config: '1s¹' },
-    { symbol: 'He', name: 'Helium', protons: 2, neutrons: 2, config: '1s²' },
-    { symbol: 'C', name: 'Carbon', protons: 6, neutrons: 6, config: '1s² 2s² 2p²' },
-    { symbol: 'N', name: 'Nitrogen', protons: 7, neutrons: 7, config: '1s² 2s² 2p³' },
-    { symbol: 'O', name: 'Oxygen', protons: 8, neutrons: 8, config: '1s² 2s² 2p⁴' },
-    { symbol: 'Fe', name: 'Iron', protons: 26, neutrons: 30, config: '[Ar] 3d⁶ 4s²' },
-  ];
+  // Button component
+  const Button: React.FC<{
+    onClick: () => void;
+    variant?: 'primary' | 'secondary' | 'ghost';
+    disabled?: boolean;
+    children: React.ReactNode;
+    style?: React.CSSProperties;
+  }> = ({ onClick, variant = 'primary', disabled, children, style }) => (
+    <button
+      onClick={onClick}
+      disabled={disabled}
+      style={{
+        padding: isMobile ? '14px 24px' : '16px 32px',
+        background: variant === 'primary'
+          ? `linear-gradient(135deg, ${colors.primary} 0%, #7c3aed 100%)`
+          : variant === 'secondary' ? colors.bgElevated : 'transparent',
+        color: colors.textPrimary,
+        border: variant === 'ghost' ? `1px solid ${colors.bgElevated}` : 'none',
+        borderRadius: '12px',
+        fontSize: isMobile ? '14px' : '16px',
+        fontWeight: 600,
+        cursor: disabled ? 'not-allowed' : 'pointer',
+        opacity: disabled ? 0.5 : 1,
+        transition: 'all 0.2s',
+        touchAction: 'manipulation',
+        WebkitTapHighlightColor: 'transparent',
+        userSelect: 'none',
+        ...style
+      }}
+    >
+      {children}
+    </button>
+  );
 
   // Test questions
   const testQuestions = [
     {
-      question: "What shape is an s orbital?",
-      options: ["Spherical", "Dumbbell", "Cloverleaf", "Ring"],
-      correct: 0,
-      explanation: "S orbitals are spherically symmetric around the nucleus."
+      question: "What does an orbital represent?",
+      options: ["The path an electron takes", "Where an electron is most likely to be found", "The speed of an electron", "The charge of an electron"],
+      correct: 1,
+      explanation: "Orbitals show probability density - where you're most likely to find the electron if you looked."
     },
     {
-      question: "How many p orbitals exist in a given energy level (n ≥ 2)?",
-      options: ["1", "2", "3", "5"],
+      question: "Why is an S orbital spherical?",
+      options: ["Electrons move in circles", "Equal probability in all directions", "It's the smallest orbital", "Electrons are round"],
+      correct: 1,
+      explanation: "In an S orbital, the electron has equal probability of being in any direction from the nucleus."
+    },
+    {
+      question: "What is the nodal plane in a P orbital?",
+      options: ["Where electrons move fastest", "Where there's zero probability of finding the electron", "The center of the lobe", "The boundary of the orbital"],
+      correct: 1,
+      explanation: "At the nodal plane, the probability of finding an electron is exactly zero - it 'jumps' between lobes."
+    },
+    {
+      question: "Why do P orbitals have two lobes?",
+      options: ["They hold two electrons", "The wave function has opposite phases", "They're bigger than S orbitals", "One lobe per electron"],
+      correct: 1,
+      explanation: "The two lobes represent regions where the wave function has opposite signs (phases)."
+    },
+    {
+      question: "How do orbital shapes affect bonding?",
+      options: ["They don't", "They determine bond angles", "They change electron mass", "They affect nuclear charge"],
+      correct: 1,
+      explanation: "Orbital shapes determine how atoms can overlap, which directly controls molecular geometry."
+    },
+    {
+      question: "What happens where two orbitals overlap?",
+      options: ["Electrons repel", "A covalent bond can form", "Atoms explode", "Nothing"],
+      correct: 1,
+      explanation: "When orbitals overlap, electrons can be shared between atoms, forming a covalent bond."
+    },
+    {
+      question: "Why does water have a bent shape (not linear)?",
+      options: ["Gravity pulls it down", "P orbital geometry", "It's random", "Temperature effects"],
+      correct: 1,
+      explanation: "Oxygen's P orbitals overlap with hydrogen at specific angles, creating the bent 104.5° shape."
+    },
+    {
+      question: "What color represents higher probability in our visualization?",
+      options: ["Lighter/transparent", "Darker/more opaque", "It's all the same", "Red only"],
+      correct: 1,
+      explanation: "Darker regions = higher probability. The electron spends more time in the dense inner region."
+    },
+    {
+      question: "How many P orbitals are there per energy level?",
+      options: ["1", "2", "3", "4"],
       correct: 2,
-      explanation: "There are 3 p orbitals: px, py, and pz, oriented along the three axes."
+      explanation: "There are 3 P orbitals: px, py, and pz - one pointing along each axis."
     },
     {
-      question: "What does the orbital shape represent?",
-      options: ["Electron's path", "Probability density", "Electric field", "Magnetic field"],
+      question: "What would happen if orbitals were not directional?",
+      options: ["Stronger bonds", "No specific molecular shapes", "Faster electrons", "Heavier atoms"],
       correct: 1,
-      explanation: "Orbitals show where an electron is most likely to be found - the probability density."
-    },
-    {
-      question: "Which orbital has the lowest energy?",
-      options: ["2s", "2p", "1s", "3s"],
-      correct: 2,
-      explanation: "1s is closest to the nucleus and has the lowest energy."
-    },
-    {
-      question: "What is the maximum number of electrons in a d subshell?",
-      options: ["2", "6", "10", "14"],
-      correct: 2,
-      explanation: "A d subshell has 5 orbitals, each holding 2 electrons: 5 × 2 = 10."
-    },
-    {
-      question: "P orbitals have a node at the:",
-      options: ["Edges", "Nucleus", "Lobes", "No nodes"],
-      correct: 1,
-      explanation: "P orbitals have a nodal plane passing through the nucleus where probability is zero."
-    },
-    {
-      question: "In sp³ hybridization, what is the bond angle?",
-      options: ["90°", "109.5°", "120°", "180°"],
-      correct: 1,
-      explanation: "sp³ hybrid orbitals point toward corners of a tetrahedron with 109.5° angles."
-    },
-    {
-      question: "Which element's ground state has partially filled d orbitals?",
-      options: ["Carbon", "Oxygen", "Iron", "Neon"],
-      correct: 2,
-      explanation: "Iron (Fe) has configuration [Ar] 3d⁶ 4s² with 6 electrons in 5 d orbitals."
-    },
-    {
-      question: "What quantum number describes orbital shape?",
-      options: ["n (principal)", "l (angular)", "m (magnetic)", "s (spin)"],
-      correct: 1,
-      explanation: "The angular momentum quantum number l determines shape: l=0 (s), l=1 (p), l=2 (d)."
-    },
-    {
-      question: "Electrons in the same orbital must have:",
-      options: ["Same spin", "Opposite spins", "No spin", "Parallel spins"],
-      correct: 1,
-      explanation: "The Pauli Exclusion Principle: two electrons in the same orbital must have opposite spins."
+      explanation: "Without directional orbitals, molecules couldn't have specific 3D shapes - chemistry as we know it wouldn't exist!"
     }
   ];
 
   // Transfer apps
   const transferApps = [
-    {
-      title: 'Chemical Bonding',
-      icon: '🔗',
-      description: 'Orbitals overlap to form molecular bonds. The shapes determine bond angles and molecular geometry.',
-      application: 'Understanding why water is bent (104.5°) and CO₂ is linear (180°).'
-    },
-    {
-      title: 'Spectroscopy',
-      icon: '🌈',
-      description: 'Electrons transition between orbitals, absorbing or emitting photons at specific wavelengths.',
-      application: 'How we identify elements in distant stars and analyze chemical compounds.'
-    },
-    {
-      title: 'Semiconductor Physics',
-      icon: '💻',
-      description: 'Orbital overlap creates energy bands. The band gap determines electrical properties.',
-      application: 'Why silicon works in computer chips and how LEDs produce light.'
-    },
-    {
-      title: 'Drug Design',
-      icon: '💊',
-      description: 'Molecular orbitals determine how drugs bind to proteins through shape complementarity.',
-      application: 'Designing medicines that fit perfectly into target receptor sites.'
-    }
+    { title: 'Molecular Geometry', icon: '🔷', desc: 'Orbital shapes determine bond angles. Water is bent (104.5°) because of P orbital geometry.' },
+    { title: 'Chemical Reactions', icon: '⚗️', desc: 'Reactions happen when orbitals overlap in the right orientation. Shape controls reactivity.' },
+    { title: 'Material Properties', icon: '💎', desc: 'Diamond vs graphite: same atoms, different orbital arrangements = different properties.' },
+    { title: 'Drug Design', icon: '💊', desc: 'Drugs work by fitting into protein pockets. Orbital shapes determine if they fit.' }
   ];
 
-  // Button styles
-  const buttonStyle = (variant: 'primary' | 'secondary' | 'ghost' = 'primary') => ({
-    padding: isMobile ? '14px 24px' : '16px 32px',
-    background: variant === 'primary'
-      ? `linear-gradient(135deg, ${colors.primary} 0%, ${colors.primaryDark} 100%)`
-      : variant === 'secondary'
-        ? colors.bgElevated
-        : 'transparent',
-    color: colors.textPrimary,
-    border: variant === 'ghost' ? `1px solid ${colors.bgElevated}` : 'none',
-    borderRadius: '12px',
-    fontSize: isMobile ? '14px' : '16px',
-    fontWeight: 600,
-    cursor: 'pointer',
-    transition: 'all 0.2s',
-    touchAction: 'manipulation' as const,
-    WebkitTapHighlightColor: 'transparent',
-    userSelect: 'none' as const,
-  });
+  // ============================================================================
+  // PHASE RENDERS
+  // ============================================================================
 
-  // ============================================================================
-  // RENDER PHASES
-  // ============================================================================
+  const render3DViewer = (mode: typeof viewMode, height: string = '350px') => (
+    <div style={{
+      width: '100%',
+      height,
+      borderRadius: '16px',
+      overflow: 'hidden',
+      border: `2px solid ${colors.bgElevated}`,
+      background: '#0a0a0f'
+    }}>
+      <Canvas camera={{ position: [0, 0, 5], fov: 50 }}>
+        <ambientLight intensity={0.3} />
+        <pointLight position={[10, 10, 10]} intensity={0.8} />
+        <pointLight position={[-10, -10, -10]} intensity={0.3} />
+
+        <Suspense fallback={null}>
+          {mode === 's' && (
+            <EducationalSOrbital
+              showLabels={showLabels}
+              showElectron={showElectron}
+              highlightFeature={highlightFeature as 'none' | 'shape' | 'probability' | 'node'}
+            />
+          )}
+          {mode === 'p' && (
+            <EducationalPOrbital
+              showLabels={showLabels}
+              showElectron={showElectron}
+              highlightFeature={highlightFeature as 'none' | 'lobes' | 'node' | 'direction'}
+            />
+          )}
+          {mode === 'compare' && <ComparisonView showLabels={showLabels} />}
+          {mode === 'bonding' && <BondingDemo showLabels={showLabels} />}
+        </Suspense>
+
+        <OrbitControls
+          enablePan={false}
+          minDistance={3}
+          maxDistance={12}
+          autoRotate={!showLabels}
+          autoRotateSpeed={0.5}
+        />
+      </Canvas>
+
+      {/* Instructions overlay */}
+      <div style={{
+        position: 'absolute',
+        bottom: '10px',
+        left: '50%',
+        transform: 'translateX(-50%)',
+        background: 'rgba(0,0,0,0.7)',
+        padding: '6px 12px',
+        borderRadius: '20px',
+        fontSize: '11px',
+        color: '#94a3b8'
+      }}>
+        🖱️ Drag to rotate • Scroll to zoom
+      </div>
+    </div>
+  );
 
   const renderHook = () => (
-    <div style={{
-      minHeight: '100%',
-      display: 'flex',
-      flexDirection: 'column',
-      alignItems: 'center',
-      justifyContent: 'center',
-      padding: isMobile ? '20px' : '40px',
-      textAlign: 'center'
-    }}>
-      {/* Category */}
+    <div style={{ padding: isMobile ? '20px' : '40px', textAlign: 'center' }}>
       <div style={{
         padding: '6px 16px',
         background: `${colors.primary}20`,
         border: `1px solid ${colors.primary}40`,
         borderRadius: '100px',
+        display: 'inline-block',
         marginBottom: '24px'
       }}>
-        <span style={{ fontSize: '11px', fontWeight: 600, color: colors.primary, textTransform: 'uppercase', letterSpacing: '0.1em' }}>
+        <span style={{ fontSize: '11px', fontWeight: 600, color: colors.primary, textTransform: 'uppercase' }}>
           🔬 3D Quantum Chemistry
         </span>
       </div>
 
-      {/* Title */}
       <h1 style={{
-        fontSize: isMobile ? '32px' : '48px',
+        fontSize: isMobile ? '28px' : '42px',
         fontWeight: 700,
-        background: `linear-gradient(135deg, ${colors.textPrimary} 0%, ${colors.primary} 50%, ${colors.secondary} 100%)`,
-        WebkitBackgroundClip: 'text',
-        WebkitTextFillColor: 'transparent',
+        color: colors.textPrimary,
         marginBottom: '16px'
       }}>
-        Molecular Orbitals
+        Where Do Electrons<br/>Actually Live?
       </h1>
 
-      <p style={{ fontSize: isMobile ? '16px' : '18px', color: colors.textSecondary, maxWidth: '500px', marginBottom: '32px', lineHeight: 1.6 }}>
-        Explore the 3D probability clouds where electrons live.<br/>
-        <strong>Rotate, zoom, and discover</strong> the quantum shapes that build our universe.
+      <p style={{ fontSize: '16px', color: colors.textSecondary, maxWidth: '500px', margin: '0 auto 24px', lineHeight: 1.6 }}>
+        Electrons don't orbit like planets. They exist in <strong>probability clouds</strong> with specific shapes.
+        These shapes determine everything from water's bent structure to why diamonds sparkle.
       </p>
 
-      {/* 3D Preview */}
-      <div style={{
-        width: '100%',
-        maxWidth: '400px',
-        height: '300px',
-        borderRadius: '16px',
-        overflow: 'hidden',
-        border: `1px solid ${colors.bgElevated}`,
-        marginBottom: '32px'
-      }}>
-        <Canvas camera={{ position: [0, 0, 5], fov: 50 }}>
-          <OrbitalScene
-            orbitalType="p"
-            showNucleus={true}
-            showAxes={false}
-            pAxis="z"
-            dType="xy"
-            element={{ symbol: 'C', protons: 6, neutrons: 6 }}
-          />
-        </Canvas>
+      {/* Preview with labels */}
+      <div style={{ position: 'relative', maxWidth: '500px', margin: '0 auto 32px' }}>
+        {render3DViewer('p', '300px')}
       </div>
 
-      <button onClick={() => goToPhase('predict')} style={buttonStyle('primary')}>
-        Begin Exploration →
-      </button>
+      <Button onClick={() => goToPhase('predict')}>
+        Explore the Shapes →
+      </Button>
     </div>
   );
 
   const renderPredict = () => (
     <div style={{ padding: isMobile ? '20px' : '40px', maxWidth: '600px', margin: '0 auto' }}>
-      <div style={{ marginBottom: '24px' }}>
-        <span style={{ fontSize: '12px', color: colors.primary, fontWeight: 600 }}>Step 2 • Predict</span>
-        <h2 style={{ fontSize: isMobile ? '24px' : '32px', color: colors.textPrimary, marginTop: '8px' }}>
-          What Shape is an Electron Cloud?
-        </h2>
-      </div>
+      <span style={{ fontSize: '12px', color: colors.primary, fontWeight: 600 }}>Step 2 • Predict</span>
+      <h2 style={{ fontSize: '24px', color: colors.textPrimary, margin: '8px 0 16px' }}>
+        What shape is the simplest electron cloud?
+      </h2>
 
-      <p style={{ color: colors.textSecondary, marginBottom: '24px', lineHeight: 1.6 }}>
-        Electrons don't orbit like planets. They exist in <strong>probability clouds</strong> called orbitals.
-        What shape do you think the simplest orbital (1s) has?
+      <p style={{ color: colors.textSecondary, marginBottom: '24px' }}>
+        The 1s orbital holds hydrogen's single electron. What shape do you think this probability cloud has?
       </p>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '24px' }}>
         {[
-          { id: 'sphere', label: 'Spherical', desc: 'Like a fuzzy ball around the nucleus' },
-          { id: 'ring', label: 'Ring/Orbit', desc: 'Like a planet\'s path' },
-          { id: 'dumbbell', label: 'Dumbbell', desc: 'Two lobes on opposite sides' },
+          { id: 'sphere', label: '🔵 Spherical', desc: 'Like a fuzzy ball - equal probability in all directions' },
+          { id: 'ring', label: '⭕ Ring/Orbit', desc: 'Like a planet path around the sun' },
+          { id: 'dumbbell', label: '🏋️ Dumbbell', desc: 'Two blobs on opposite sides' },
         ].map(opt => (
           <button
             key={opt.id}
-            onClick={() => {
-              setPrediction(opt.id);
-              playSound('click');
-              emitGameEvent('prediction_made', { prediction: opt.id });
-            }}
+            onClick={() => { setPrediction(opt.id); playSound('click'); }}
             style={{
-              ...buttonStyle('ghost'),
-              textAlign: 'left',
               padding: '16px 20px',
               background: prediction === opt.id ? `${colors.success}20` : colors.bgElevated,
               border: prediction === opt.id ? `2px solid ${colors.success}` : `1px solid ${colors.bgElevated}`,
+              borderRadius: '12px',
+              textAlign: 'left',
+              cursor: 'pointer',
+              transition: 'all 0.2s'
             }}
           >
-            <div style={{ fontWeight: 600, marginBottom: '4px' }}>{opt.label}</div>
+            <div style={{ fontWeight: 600, color: colors.textPrimary, marginBottom: '4px' }}>{opt.label}</div>
             <div style={{ fontSize: '13px', color: colors.textMuted }}>{opt.desc}</div>
           </button>
         ))}
       </div>
 
-      {prediction && (
-        <button onClick={goNext} style={buttonStyle('primary')}>
-          See What Happens →
-        </button>
-      )}
+      {prediction && <Button onClick={goNext}>See the Answer →</Button>}
     </div>
   );
 
   const renderPlay = () => (
     <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-      <div style={{ padding: '16px 20px', borderBottom: `1px solid ${colors.bgElevated}` }}>
+      <div style={{ padding: '12px 20px', borderBottom: `1px solid ${colors.bgElevated}` }}>
         <span style={{ fontSize: '12px', color: colors.primary, fontWeight: 600 }}>Step 3 • Explore</span>
-        <h2 style={{ fontSize: '20px', color: colors.textPrimary, marginTop: '4px' }}>
-          Interactive 3D Orbitals
+        <h2 style={{ fontSize: '18px', color: colors.textPrimary, margin: '4px 0 0' }}>
+          Interactive Orbital Explorer
         </h2>
       </div>
 
+      {/* View mode selector */}
+      <div style={{ padding: '12px 20px', display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+        {[
+          { id: 's', label: 'S Orbital', color: '#3b82f6' },
+          { id: 'p', label: 'P Orbital', color: '#ef4444' },
+          { id: 'compare', label: 'Compare S vs P', color: '#8b5cf6' },
+          { id: 'bonding', label: 'How Bonds Form', color: '#22c55e' },
+        ].map(v => (
+          <button
+            key={v.id}
+            onClick={() => setViewMode(v.id as typeof viewMode)}
+            style={{
+              padding: '8px 16px',
+              background: viewMode === v.id ? v.color : colors.bgElevated,
+              border: 'none',
+              borderRadius: '8px',
+              color: 'white',
+              fontWeight: 600,
+              fontSize: '13px',
+              cursor: 'pointer',
+              opacity: viewMode === v.id ? 1 : 0.7
+            }}
+          >
+            {v.label}
+          </button>
+        ))}
+      </div>
+
       {/* 3D Viewer */}
-      <div style={{ flex: 1, minHeight: '300px' }}>
-        <Canvas camera={{ position: [0, 0, 5], fov: 50 }}>
-          <OrbitalScene
-            orbitalType={orbitalType}
-            showNucleus={showNucleus}
-            showAxes={showAxes}
-            pAxis={pAxis}
-            dType={dType}
-            element={currentElement}
-          />
-        </Canvas>
+      <div style={{ flex: 1, padding: '0 20px', minHeight: '300px', position: 'relative' }}>
+        {render3DViewer(viewMode, '100%')}
       </div>
 
       {/* Controls */}
-      <div style={{ padding: '16px', background: colors.bgElevated, borderTop: `1px solid ${colors.bgSurface}` }}>
-        {/* Orbital Type */}
-        <div style={{ marginBottom: '16px' }}>
-          <label style={{ fontSize: '12px', color: colors.textMuted, display: 'block', marginBottom: '8px' }}>
-            Orbital Type
-          </label>
-          <div style={{ display: 'flex', gap: '8px' }}>
-            {(['s', 'p', 'd'] as const).map(type => (
-              <button
-                key={type}
-                onClick={() => setOrbitalType(type)}
-                style={{
-                  ...buttonStyle('ghost'),
-                  padding: '10px 20px',
-                  background: orbitalType === type ? colors.primary : colors.bgSurface,
-                  border: 'none'
-                }}
-              >
-                {type.toUpperCase()} Orbital
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* P orbital axis selector */}
-        {orbitalType === 'p' && (
-          <div style={{ marginBottom: '16px' }}>
-            <label style={{ fontSize: '12px', color: colors.textMuted, display: 'block', marginBottom: '8px' }}>
-              P Orbital Axis
-            </label>
-            <div style={{ display: 'flex', gap: '8px' }}>
-              {(['x', 'y', 'z'] as const).map(axis => (
-                <button
-                  key={axis}
-                  onClick={() => setPAxis(axis)}
-                  style={{
-                    ...buttonStyle('ghost'),
-                    padding: '8px 16px',
-                    background: pAxis === axis ? colors.secondary : colors.bgSurface,
-                    border: 'none',
-                    fontSize: '14px'
-                  }}
-                >
-                  p<sub>{axis}</sub>
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Toggle options */}
-        <div style={{ display: 'flex', gap: '16px', marginBottom: '16px' }}>
+      <div style={{ padding: '16px 20px', background: colors.bgElevated, borderTop: `1px solid ${colors.bgSurface}` }}>
+        <div style={{ display: 'flex', gap: '20px', marginBottom: '16px', flexWrap: 'wrap' }}>
           <label style={{ display: 'flex', alignItems: 'center', gap: '8px', color: colors.textSecondary, cursor: 'pointer' }}>
-            <input
-              type="checkbox"
-              checked={showNucleus}
-              onChange={() => setShowNucleus(!showNucleus)}
-              style={{ width: '18px', height: '18px' }}
-            />
-            Show Nucleus
+            <input type="checkbox" checked={showLabels} onChange={() => setShowLabels(!showLabels)} />
+            Show Labels
           </label>
           <label style={{ display: 'flex', alignItems: 'center', gap: '8px', color: colors.textSecondary, cursor: 'pointer' }}>
-            <input
-              type="checkbox"
-              checked={showAxes}
-              onChange={() => setShowAxes(!showAxes)}
-              style={{ width: '18px', height: '18px' }}
-            />
-            Show Axes
+            <input type="checkbox" checked={showElectron} onChange={() => setShowElectron(!showElectron)} />
+            Show Electron
           </label>
         </div>
 
-        <button onClick={goNext} style={{ ...buttonStyle('primary'), width: '100%' }}>
-          I Understand → Review
-        </button>
+        <Button onClick={goNext} style={{ width: '100%' }}>
+          I Understand the Shapes →
+        </Button>
       </div>
     </div>
   );
 
   const renderReview = () => (
     <div style={{ padding: isMobile ? '20px' : '40px', maxWidth: '700px', margin: '0 auto' }}>
-      <div style={{ marginBottom: '24px' }}>
-        <span style={{ fontSize: '12px', color: colors.success, fontWeight: 600 }}>Step 4 • Understanding</span>
-        <h2 style={{ fontSize: isMobile ? '24px' : '32px', color: colors.textPrimary, marginTop: '8px' }}>
-          {prediction === 'sphere' ? '✓ Correct!' : 'The S Orbital is Spherical'}
-        </h2>
-      </div>
-
       <div style={{
-        padding: '20px',
-        background: `${colors.success}10`,
+        padding: '16px 20px',
+        background: prediction === 'sphere' ? `${colors.success}15` : `${colors.warning}15`,
         borderRadius: '12px',
         marginBottom: '24px',
-        border: `1px solid ${colors.success}30`
+        border: `1px solid ${prediction === 'sphere' ? colors.success : colors.warning}40`
       }}>
-        <h3 style={{ color: colors.success, marginBottom: '12px' }}>Key Insights:</h3>
-        <ul style={{ color: colors.textSecondary, lineHeight: 1.8, paddingLeft: '20px' }}>
-          <li><strong>S orbitals</strong> are spherical - equal probability in all directions</li>
-          <li><strong>P orbitals</strong> are dumbbell-shaped - two lobes along an axis</li>
-          <li><strong>D orbitals</strong> are cloverleaf or complex shapes</li>
-          <li>The <strong>shape</strong> determines how atoms bond together</li>
-        </ul>
-      </div>
-
-      <div style={{
-        padding: '20px',
-        background: colors.bgElevated,
-        borderRadius: '12px',
-        marginBottom: '24px'
-      }}>
-        <h3 style={{ color: colors.textPrimary, marginBottom: '12px' }}>Why It Matters:</h3>
-        <p style={{ color: colors.textSecondary, lineHeight: 1.6 }}>
-          Orbital shapes determine molecular geometry. When atoms bond, their orbitals overlap.
-          The shape of water (bent) vs CO₂ (linear) comes directly from orbital geometry.
+        <h2 style={{ color: prediction === 'sphere' ? colors.success : colors.warning, marginBottom: '8px' }}>
+          {prediction === 'sphere' ? '✓ Correct!' : 'The Answer: Spherical'}
+        </h2>
+        <p style={{ color: colors.textSecondary, margin: 0 }}>
+          The S orbital is spherical because the electron has <strong>equal probability</strong> of being found in any direction from the nucleus.
         </p>
       </div>
 
-      <button onClick={goNext} style={buttonStyle('primary')}>
-        Next: Hybridization Challenge →
-      </button>
+      <h3 style={{ color: colors.textPrimary, marginBottom: '16px' }}>Key Takeaways:</h3>
+
+      <div style={{ display: 'grid', gap: '12px', marginBottom: '24px' }}>
+        {[
+          { emoji: '🔵', title: 'S = Spherical', desc: 'No preferred direction. Electron equally likely anywhere at same distance.' },
+          { emoji: '🏋️', title: 'P = Dumbbell', desc: 'Two lobes with a nodal plane. Electron never at the center!' },
+          { emoji: '🎯', title: 'Darker = More Likely', desc: 'Denser regions show where electron spends most time.' },
+          { emoji: '🔗', title: 'Shapes → Bonds', desc: 'Orbital geometry determines how atoms connect.' },
+        ].map((item, i) => (
+          <div key={i} style={{ padding: '14px 16px', background: colors.bgElevated, borderRadius: '10px', display: 'flex', gap: '12px' }}>
+            <span style={{ fontSize: '24px' }}>{item.emoji}</span>
+            <div>
+              <div style={{ fontWeight: 600, color: colors.textPrimary, marginBottom: '2px' }}>{item.title}</div>
+              <div style={{ fontSize: '13px', color: colors.textMuted }}>{item.desc}</div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <Button onClick={goNext}>Next: The Twist →</Button>
     </div>
   );
 
   const renderTwistPredict = () => (
     <div style={{ padding: isMobile ? '20px' : '40px', maxWidth: '600px', margin: '0 auto' }}>
-      <div style={{ marginBottom: '24px' }}>
-        <span style={{ fontSize: '12px', color: colors.warning, fontWeight: 600 }}>Step 5 • New Challenge</span>
-        <h2 style={{ fontSize: isMobile ? '24px' : '32px', color: colors.textPrimary, marginTop: '8px' }}>
-          The Hybridization Puzzle
-        </h2>
-      </div>
+      <span style={{ fontSize: '12px', color: colors.warning, fontWeight: 600 }}>Step 5 • New Challenge</span>
+      <h2 style={{ fontSize: '24px', color: colors.textPrimary, margin: '8px 0 16px' }}>
+        The Bonding Puzzle
+      </h2>
 
-      <p style={{ color: colors.textSecondary, marginBottom: '24px', lineHeight: 1.6 }}>
-        Carbon has one 2s and three 2p orbitals. But in methane (CH₄), carbon forms
-        <strong> four identical bonds</strong> at 109.5° angles. How?
+      <p style={{ color: colors.textSecondary, marginBottom: '24px' }}>
+        Carbon in methane (CH₄) forms <strong>4 identical bonds</strong> at 109.5° angles.
+        But carbon has different orbital shapes (s and p). How can it make 4 identical bonds?
       </p>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '24px' }}>
         {[
-          { id: 'use_p_only', label: 'Use only p orbitals', desc: 'Ignore the s orbital' },
-          { id: 'mix', label: 'Mix s and p together', desc: 'Create new "hybrid" orbitals' },
-          { id: 'alternate', label: 'Alternate s and p', desc: 'Some bonds use s, others use p' },
+          { id: 'ignore', label: 'Use only P orbitals', desc: 'Ignore the S orbital entirely' },
+          { id: 'mix', label: 'Mix S and P together', desc: 'Create new hybrid shapes' },
+          { id: 'alternate', label: 'Alternate between them', desc: 'Some bonds use S, others use P' },
         ].map(opt => (
           <button
             key={opt.id}
-            onClick={() => {
-              setTwistPrediction(opt.id);
-              playSound('click');
-            }}
+            onClick={() => { setTwistPrediction(opt.id); playSound('click'); }}
             style={{
-              ...buttonStyle('ghost'),
-              textAlign: 'left',
               padding: '16px 20px',
               background: twistPrediction === opt.id ? `${colors.warning}20` : colors.bgElevated,
               border: twistPrediction === opt.id ? `2px solid ${colors.warning}` : `1px solid ${colors.bgElevated}`,
+              borderRadius: '12px',
+              textAlign: 'left',
+              cursor: 'pointer'
             }}
           >
-            <div style={{ fontWeight: 600, marginBottom: '4px' }}>{opt.label}</div>
+            <div style={{ fontWeight: 600, color: colors.textPrimary, marginBottom: '4px' }}>{opt.label}</div>
             <div style={{ fontSize: '13px', color: colors.textMuted }}>{opt.desc}</div>
           </button>
         ))}
       </div>
 
-      {twistPrediction && (
-        <button onClick={goNext} style={buttonStyle('primary')}>
-          See Hybridization →
-        </button>
-      )}
+      {twistPrediction && <Button onClick={goNext}>See Hybridization →</Button>}
     </div>
   );
 
   const renderTwistPlay = () => (
     <div style={{ padding: isMobile ? '20px' : '40px', maxWidth: '600px', margin: '0 auto' }}>
-      <h2 style={{ fontSize: '24px', color: colors.textPrimary, marginBottom: '16px' }}>
-        sp³ Hybridization
-      </h2>
+      <div style={{
+        padding: '16px',
+        background: twistPrediction === 'mix' ? `${colors.success}15` : `${colors.primary}15`,
+        borderRadius: '12px',
+        marginBottom: '24px'
+      }}>
+        <h3 style={{ color: twistPrediction === 'mix' ? colors.success : colors.primary, marginBottom: '8px' }}>
+          {twistPrediction === 'mix' ? '✓ Correct!' : 'Answer:'} Hybridization!
+        </h3>
+        <p style={{ color: colors.textSecondary, margin: 0 }}>
+          The S and P orbitals <strong>mix together</strong> to create 4 identical sp³ hybrid orbitals pointing toward the corners of a tetrahedron.
+        </p>
+      </div>
 
       <div style={{
-        height: '250px',
+        height: '280px',
         borderRadius: '12px',
         overflow: 'hidden',
         marginBottom: '24px',
-        border: `1px solid ${colors.bgElevated}`
+        border: `2px solid ${colors.bgElevated}`,
+        background: '#0a0a0f'
       }}>
-        <Canvas camera={{ position: [0, 0, 6], fov: 50 }}>
-          <ambientLight intensity={0.5} />
+        <Canvas camera={{ position: [0, 0, 5], fov: 50 }}>
+          <ambientLight intensity={0.4} />
           <pointLight position={[10, 10, 10]} />
-          <Environment preset="city" />
 
-          {/* Show 4 sp3 hybrid orbitals pointing to tetrahedron vertices */}
+          {/* 4 sp3 orbitals pointing to tetrahedron corners */}
           {[
-            [1, 1, 1],
-            [-1, -1, 1],
-            [-1, 1, -1],
-            [1, -1, -1]
-          ].map((dir, i) => {
-            const len = Math.sqrt(dir[0]**2 + dir[1]**2 + dir[2]**2);
+            { pos: [1, 1, 1], color: '#ef4444' },
+            { pos: [-1, -1, 1], color: '#3b82f6' },
+            { pos: [-1, 1, -1], color: '#22c55e' },
+            { pos: [1, -1, -1], color: '#f59e0b' },
+          ].map((lobe, i) => {
+            const len = Math.sqrt(lobe.pos[0]**2 + lobe.pos[1]**2 + lobe.pos[2]**2);
+            const norm = lobe.pos.map(p => p / len * 1.3) as [number, number, number];
             return (
-              <mesh key={i} position={[dir[0]/len * 1.2, dir[1]/len * 1.2, dir[2]/len * 1.2]}>
-                <sphereGeometry args={[0.5, 32, 32]} />
-                <meshPhysicalMaterial color={colors.primary} transparent opacity={0.6} clearcoat={0.5} />
-              </mesh>
+              <group key={i}>
+                <mesh position={norm}>
+                  <sphereGeometry args={[0.5, 32, 32]} />
+                  <meshPhysicalMaterial color={lobe.color} transparent opacity={0.6} />
+                </mesh>
+                <Billboard position={[norm[0] * 1.4, norm[1] * 1.4, norm[2] * 1.4]}>
+                  <Html center>
+                    <div style={{
+                      background: lobe.color,
+                      padding: '2px 6px',
+                      borderRadius: '4px',
+                      fontSize: '10px',
+                      color: 'white',
+                      fontWeight: 600
+                    }}>
+                      sp³
+                    </div>
+                  </Html>
+                </Billboard>
+              </group>
             );
           })}
 
           {/* Central nucleus */}
           <mesh>
-            <sphereGeometry args={[0.2, 32, 32]} />
-            <meshStandardMaterial color="#fbbf24" />
+            <sphereGeometry args={[0.15, 16, 16]} />
+            <meshStandardMaterial color="#fbbf24" emissive="#f59e0b" emissiveIntensity={0.5} />
           </mesh>
 
-          <OrbitControls autoRotate autoRotateSpeed={1} />
+          {/* Labels */}
+          <Billboard position={[0, 2.2, 0]}>
+            <Html center>
+              <div style={{
+                background: 'rgba(0,0,0,0.9)',
+                padding: '8px 14px',
+                borderRadius: '8px',
+                border: '2px solid #8b5cf6'
+              }}>
+                <div style={{ color: '#c4b5fd', fontWeight: 700, fontSize: '13px' }}>sp³ HYBRIDIZATION</div>
+                <div style={{ color: '#94a3b8', fontSize: '11px' }}>4 identical orbitals • 109.5° apart</div>
+              </div>
+            </Html>
+          </Billboard>
+
+          <OrbitControls autoRotate autoRotateSpeed={1} enablePan={false} />
         </Canvas>
       </div>
 
-      <div style={{
-        padding: '16px',
-        background: `${colors.warning}15`,
-        borderRadius: '12px',
-        marginBottom: '24px'
-      }}>
-        <p style={{ color: colors.textSecondary, lineHeight: 1.6 }}>
-          {twistPrediction === 'mix' ? '✓ Correct! ' : ''}
-          The s and three p orbitals <strong>mix (hybridize)</strong> to create four identical
-          sp³ orbitals pointing toward the corners of a tetrahedron at 109.5° angles.
-        </p>
-      </div>
-
-      <button onClick={goNext} style={buttonStyle('primary')}>
-        Deep Insight →
-      </button>
+      <Button onClick={goNext}>Continue →</Button>
     </div>
   );
 
   const renderTwistReview = () => (
-    <div style={{ padding: isMobile ? '20px' : '40px', maxWidth: '700px', margin: '0 auto' }}>
-      <h2 style={{ fontSize: '24px', color: colors.textPrimary, marginBottom: '24px' }}>
-        Why Hybridization Matters
-      </h2>
+    <div style={{ padding: isMobile ? '20px' : '40px', maxWidth: '600px', margin: '0 auto' }}>
+      <h2 style={{ color: colors.textPrimary, marginBottom: '16px' }}>Hybridization Summary</h2>
 
-      <div style={{ display: 'grid', gap: '16px', marginBottom: '24px' }}>
+      <div style={{ display: 'grid', gap: '12px', marginBottom: '24px' }}>
         {[
-          { type: 'sp³', angle: '109.5°', shape: 'Tetrahedral', example: 'Methane (CH₄)' },
-          { type: 'sp²', angle: '120°', shape: 'Trigonal planar', example: 'Ethene (C₂H₄)' },
-          { type: 'sp', angle: '180°', shape: 'Linear', example: 'Ethyne (C₂H₂)' },
+          { type: 'sp³', angle: '109.5°', shape: 'Tetrahedral', example: 'Methane CH₄', color: '#8b5cf6' },
+          { type: 'sp²', angle: '120°', shape: 'Trigonal planar', example: 'Ethene C₂H₄', color: '#3b82f6' },
+          { type: 'sp', angle: '180°', shape: 'Linear', example: 'CO₂', color: '#22c55e' },
         ].map(h => (
-          <div key={h.type} style={{ padding: '16px', background: colors.bgElevated, borderRadius: '12px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-              <span style={{ fontWeight: 700, color: colors.primary }}>{h.type}</span>
+          <div key={h.type} style={{
+            padding: '16px',
+            background: colors.bgElevated,
+            borderRadius: '12px',
+            borderLeft: `4px solid ${h.color}`
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
+              <span style={{ fontWeight: 700, color: h.color, fontSize: '16px' }}>{h.type}</span>
               <span style={{ color: colors.textMuted }}>{h.angle}</span>
             </div>
-            <div style={{ color: colors.textSecondary }}>
+            <div style={{ color: colors.textSecondary, fontSize: '14px' }}>
               {h.shape} • <em>{h.example}</em>
             </div>
           </div>
         ))}
       </div>
 
-      <button onClick={goNext} style={buttonStyle('primary')}>
-        Real-World Applications →
-      </button>
+      <div style={{
+        padding: '16px',
+        background: `${colors.success}15`,
+        borderRadius: '12px',
+        marginBottom: '24px'
+      }}>
+        <div style={{ fontWeight: 600, color: colors.success, marginBottom: '8px' }}>💡 The Big Picture</div>
+        <p style={{ color: colors.textSecondary, margin: 0, lineHeight: 1.6 }}>
+          Orbital shapes → Hybridization → Bond angles → Molecular geometry → Chemical properties.
+          <strong> Understanding orbitals lets you predict how molecules behave!</strong>
+        </p>
+      </div>
+
+      <Button onClick={goNext}>Real-World Applications →</Button>
     </div>
   );
 
   const renderTransfer = () => (
     <div style={{ padding: isMobile ? '20px' : '40px' }}>
-      <div style={{ marginBottom: '24px' }}>
-        <span style={{ fontSize: '12px', color: colors.secondary, fontWeight: 600 }}>Step 8 • Real World</span>
-        <h2 style={{ fontSize: '24px', color: colors.textPrimary, marginTop: '8px' }}>
-          Orbitals in Action
-        </h2>
-      </div>
+      <span style={{ fontSize: '12px', color: colors.success, fontWeight: 600 }}>Step 8 • Real World</span>
+      <h2 style={{ fontSize: '22px', color: colors.textPrimary, margin: '8px 0 20px' }}>Why Orbital Shapes Matter</h2>
 
-      <div style={{ display: 'flex', gap: '8px', marginBottom: '24px', overflowX: 'auto' }}>
+      <div style={{ display: 'flex', gap: '8px', marginBottom: '20px', overflowX: 'auto', paddingBottom: '8px' }}>
         {transferApps.map((app, i) => (
           <button
             key={i}
             onClick={() => {
-              setActiveApp(i);
-              if (!completedApps[i]) {
-                const newCompleted = [...completedApps];
-                newCompleted[i] = true;
-                setCompletedApps(newCompleted);
+              if (i === 0 || completedApps[i - 1]) {
+                setActiveApp(i);
+                if (!completedApps[i]) {
+                  const newCompleted = [...completedApps];
+                  newCompleted[i] = true;
+                  setCompletedApps(newCompleted);
+                }
               }
             }}
             style={{
-              ...buttonStyle('ghost'),
-              padding: '12px 16px',
-              background: activeApp === i ? colors.primary : colors.bgElevated,
+              padding: '10px 16px',
+              background: activeApp === i ? colors.success : colors.bgElevated,
               border: 'none',
+              borderRadius: '8px',
+              color: 'white',
+              fontWeight: 600,
+              cursor: i === 0 || completedApps[i - 1] ? 'pointer' : 'not-allowed',
+              opacity: i === 0 || completedApps[i - 1] ? 1 : 0.4,
               whiteSpace: 'nowrap',
-              opacity: i === 0 || completedApps[i - 1] ? 1 : 0.5,
-              pointerEvents: i === 0 || completedApps[i - 1] ? 'auto' : 'none'
+              fontSize: '13px'
             }}
           >
             {app.icon} {completedApps[i] && '✓'}
@@ -1078,28 +1250,25 @@ const MolecularOrbitalsRenderer: React.FC<MolecularOrbitalsRendererProps> = ({ o
         ))}
       </div>
 
-      <div style={{ padding: '24px', background: colors.bgElevated, borderRadius: '16px', marginBottom: '24px' }}>
-        <h3 style={{ fontSize: '20px', color: colors.textPrimary, marginBottom: '8px' }}>
+      <div style={{
+        padding: '24px',
+        background: colors.bgElevated,
+        borderRadius: '16px',
+        marginBottom: '24px'
+      }}>
+        <h3 style={{ color: colors.textPrimary, marginBottom: '8px', fontSize: '20px' }}>
           {transferApps[activeApp].icon} {transferApps[activeApp].title}
         </h3>
-        <p style={{ color: colors.textSecondary, marginBottom: '16px', lineHeight: 1.6 }}>
-          {transferApps[activeApp].description}
+        <p style={{ color: colors.textSecondary, lineHeight: 1.7, margin: 0 }}>
+          {transferApps[activeApp].desc}
         </p>
-        <div style={{ padding: '12px', background: `${colors.success}15`, borderRadius: '8px' }}>
-          <strong style={{ color: colors.success }}>Application:</strong>
-          <p style={{ color: colors.textSecondary, marginTop: '4px' }}>
-            {transferApps[activeApp].application}
-          </p>
-        </div>
       </div>
 
       {completedApps.every(Boolean) ? (
-        <button onClick={goNext} style={buttonStyle('primary')}>
-          Take the Test →
-        </button>
+        <Button onClick={goNext}>Take the Test →</Button>
       ) : (
         <p style={{ color: colors.textMuted, textAlign: 'center' }}>
-          Complete all 4 applications to unlock the test
+          Explore all 4 applications to unlock the test ({completedApps.filter(Boolean).length}/4)
         </p>
       )}
     </div>
@@ -1111,16 +1280,16 @@ const MolecularOrbitalsRenderer: React.FC<MolecularOrbitalsRendererProps> = ({ o
 
     return (
       <div style={{ padding: isMobile ? '20px' : '40px', maxWidth: '600px', margin: '0 auto' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '24px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '20px' }}>
           <span style={{ color: colors.textMuted }}>Question {currentQuestion + 1}/10</span>
-          <span style={{ color: colors.success }}>Score: {testScore}/10</span>
+          <span style={{ color: colors.success, fontWeight: 600 }}>Score: {testScore}</span>
         </div>
 
-        <h2 style={{ fontSize: '20px', color: colors.textPrimary, marginBottom: '24px' }}>
+        <h2 style={{ fontSize: '18px', color: colors.textPrimary, marginBottom: '20px', lineHeight: 1.4 }}>
           {q.question}
         </h2>
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '24px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '20px' }}>
           {q.options.map((opt, i) => {
             const isSelected = testAnswers[currentQuestion] === i;
             const isCorrect = i === q.correct;
@@ -1143,20 +1312,19 @@ const MolecularOrbitalsRenderer: React.FC<MolecularOrbitalsRendererProps> = ({ o
                 }}
                 disabled={answered}
                 style={{
-                  ...buttonStyle('ghost'),
-                  textAlign: 'left',
+                  padding: '14px 18px',
                   background: showResult
                     ? isCorrect ? `${colors.success}20` : isSelected ? `${colors.error}20` : colors.bgElevated
                     : isSelected ? colors.primary : colors.bgElevated,
-                  border: showResult
-                    ? isCorrect ? `2px solid ${colors.success}` : isSelected ? `2px solid ${colors.error}` : 'none'
-                    : 'none',
-                  opacity: answered ? 0.8 : 1
+                  border: showResult && isCorrect ? `2px solid ${colors.success}` : showResult && isSelected && !isCorrect ? `2px solid ${colors.error}` : 'none',
+                  borderRadius: '10px',
+                  textAlign: 'left',
+                  color: colors.textPrimary,
+                  cursor: answered ? 'default' : 'pointer',
+                  fontSize: '14px'
                 }}
               >
-                {opt}
-                {showResult && isCorrect && ' ✓'}
-                {showResult && isSelected && !isCorrect && ' ✗'}
+                {opt} {showResult && isCorrect && '✓'} {showResult && isSelected && !isCorrect && '✗'}
               </button>
             );
           })}
@@ -1164,37 +1332,27 @@ const MolecularOrbitalsRenderer: React.FC<MolecularOrbitalsRendererProps> = ({ o
 
         {answered && (
           <div style={{
-            padding: '16px',
-            background: `${colors.secondary}15`,
-            borderRadius: '12px',
-            marginBottom: '24px'
+            padding: '14px',
+            background: `${colors.primary}15`,
+            borderRadius: '10px',
+            marginBottom: '20px'
           }}>
-            <p style={{ color: colors.textSecondary }}>{q.explanation}</p>
+            <p style={{ color: colors.textSecondary, margin: 0, fontSize: '14px' }}>{q.explanation}</p>
           </div>
         )}
 
         <div style={{ display: 'flex', gap: '12px' }}>
           {currentQuestion > 0 && (
-            <button onClick={() => setCurrentQuestion(c => c - 1)} style={buttonStyle('ghost')}>
-              ← Previous
-            </button>
+            <Button variant="ghost" onClick={() => setCurrentQuestion(c => c - 1)}>← Back</Button>
           )}
           {currentQuestion < 9 ? (
-            <button
-              onClick={() => setCurrentQuestion(c => c + 1)}
-              disabled={!answered}
-              style={{ ...buttonStyle('primary'), flex: 1, opacity: answered ? 1 : 0.5 }}
-            >
+            <Button onClick={() => setCurrentQuestion(c => c + 1)} disabled={!answered} style={{ flex: 1 }}>
               Next →
-            </button>
+            </Button>
           ) : (
-            <button
-              onClick={goNext}
-              disabled={!answered}
-              style={{ ...buttonStyle('primary'), flex: 1, opacity: answered ? 1 : 0.5 }}
-            >
-              Complete →
-            </button>
+            <Button onClick={goNext} disabled={!answered} style={{ flex: 1 }}>
+              Finish →
+            </Button>
           )}
         </div>
       </div>
@@ -1204,23 +1362,8 @@ const MolecularOrbitalsRenderer: React.FC<MolecularOrbitalsRendererProps> = ({ o
   const renderMastery = () => {
     const passed = testScore >= 7;
 
-    useEffect(() => {
-      if (phase === 'mastery') {
-        emitGameEvent('game_completed', { score: testScore, maxScore: 10, passed });
-        playSound(passed ? 'complete' : 'failure');
-      }
-    }, [phase]);
-
     return (
-      <div style={{
-        minHeight: '100%',
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: '40px',
-        textAlign: 'center'
-      }}>
+      <div style={{ padding: '40px', textAlign: 'center' }}>
         <div style={{
           width: '100px',
           height: '100px',
@@ -1229,17 +1372,18 @@ const MolecularOrbitalsRenderer: React.FC<MolecularOrbitalsRendererProps> = ({ o
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          marginBottom: '24px'
+          margin: '0 auto 24px',
+          fontSize: '48px'
         }}>
-          <span style={{ fontSize: '48px' }}>{passed ? '🎓' : '📚'}</span>
+          {passed ? '🎓' : '📚'}
         </div>
 
-        <h1 style={{ fontSize: '32px', color: colors.textPrimary, marginBottom: '16px' }}>
-          {passed ? 'Mastery Achieved!' : 'Keep Learning!'}
+        <h1 style={{ fontSize: '28px', color: colors.textPrimary, marginBottom: '12px' }}>
+          {passed ? 'Mastery Achieved!' : 'Keep Practicing!'}
         </h1>
 
-        <p style={{ fontSize: '24px', color: passed ? colors.success : colors.error, marginBottom: '24px' }}>
-          Score: {testScore}/10 ({Math.round(testScore * 10)}%)
+        <p style={{ fontSize: '22px', color: passed ? colors.success : colors.error, marginBottom: '24px' }}>
+          {testScore}/10 ({testScore * 10}%)
         </p>
 
         <div style={{
@@ -1247,30 +1391,25 @@ const MolecularOrbitalsRenderer: React.FC<MolecularOrbitalsRendererProps> = ({ o
           background: colors.bgElevated,
           borderRadius: '12px',
           maxWidth: '400px',
-          marginBottom: '24px'
+          margin: '0 auto 24px',
+          textAlign: 'left'
         }}>
-          <h3 style={{ color: colors.textPrimary, marginBottom: '12px' }}>You mastered:</h3>
-          <ul style={{ color: colors.textSecondary, textAlign: 'left', lineHeight: 1.8 }}>
-            <li>S, P, and D orbital shapes</li>
-            <li>Probability density visualization</li>
-            <li>Orbital hybridization (sp, sp², sp³)</li>
-            <li>Real-world applications</li>
+          <h3 style={{ color: colors.textPrimary, marginBottom: '12px' }}>You learned:</h3>
+          <ul style={{ color: colors.textSecondary, lineHeight: 1.8, paddingLeft: '20px', margin: 0 }}>
+            <li>Orbitals are probability clouds, not paths</li>
+            <li>S = spherical, P = dumbbell shapes</li>
+            <li>Nodal planes have zero probability</li>
+            <li>Shapes determine molecular geometry</li>
+            <li>Hybridization creates new orbital types</li>
           </ul>
         </div>
 
-        <button
-          onClick={() => window.location.reload()}
-          style={buttonStyle('primary')}
-        >
+        <Button onClick={() => window.location.reload()}>
           Return to Dashboard
-        </button>
+        </Button>
       </div>
     );
   };
-
-  // ============================================================================
-  // MAIN RENDER
-  // ============================================================================
 
   const renderContent = () => {
     switch (phase) {
@@ -1288,36 +1427,46 @@ const MolecularOrbitalsRenderer: React.FC<MolecularOrbitalsRendererProps> = ({ o
     }
   };
 
+  const phaseLabels: Record<Phase, string> = {
+    hook: 'Introduction',
+    predict: 'Predict',
+    play: 'Explore',
+    review: 'Review',
+    twist_predict: 'Challenge',
+    twist_play: 'Hybridization',
+    twist_review: 'Summary',
+    transfer: 'Applications',
+    test: 'Test',
+    mastery: 'Complete'
+  };
+
   return (
     <div style={{
       height: '100%',
       background: colors.bgDeep,
       color: colors.textPrimary,
-      fontFamily: 'system-ui, -apple-system, sans-serif',
+      fontFamily: 'system-ui, sans-serif',
       overflow: 'auto'
     }}>
-      {/* Progress bar */}
+      {/* Progress */}
       <div style={{
         position: 'sticky',
         top: 0,
         background: colors.bgSurface,
-        padding: '12px 20px',
+        padding: '10px 20px',
         borderBottom: `1px solid ${colors.bgElevated}`,
         zIndex: 100
       }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
-          <span style={{ fontSize: '12px', color: colors.textMuted }}>
-            {phaseLabels[phase]}
-          </span>
-          <span style={{ fontSize: '12px', color: colors.textMuted }}>
-            {phaseOrder.indexOf(phase) + 1}/10
-          </span>
+        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
+          <span style={{ fontSize: '12px', color: colors.textMuted }}>{phaseLabels[phase]}</span>
+          <span style={{ fontSize: '12px', color: colors.textMuted }}>{phaseOrder.indexOf(phase) + 1}/10</span>
         </div>
-        <div style={{ height: '4px', background: colors.bgElevated, borderRadius: '2px', overflow: 'hidden' }}>
+        <div style={{ height: '4px', background: colors.bgElevated, borderRadius: '2px' }}>
           <div style={{
             height: '100%',
             width: `${((phaseOrder.indexOf(phase) + 1) / 10) * 100}%`,
-            background: `linear-gradient(90deg, ${colors.primary}, ${colors.secondary})`,
+            background: `linear-gradient(90deg, ${colors.primary}, #3b82f6)`,
+            borderRadius: '2px',
             transition: 'width 0.3s'
           }} />
         </div>
