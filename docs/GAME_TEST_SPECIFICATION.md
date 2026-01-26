@@ -2044,33 +2044,1290 @@ Before shipping any game, verify:
 
 ---
 
-## 16. FINAL QUALITY CHECKLIST
+## 16. SIMULATION REALISM REQUIREMENTS
 
-Before marking any game as complete:
+### 16.1 The "Live Physics" Standard
 
-### Design Quality
-- [ ] Hook page looks like Apple/Airbnb designed it
+Every play/twist_play phase must have a **CONTINUOUSLY RUNNING physics simulation**, not a static diagram that updates on interaction.
+
+**Non-Negotiable Requirements:**
+
+| Requirement | Wrong ❌ | Right ✓ |
+|-------------|----------|---------|
+| Animation | Static image that changes on slider move | Continuously animated particles/waves/objects |
+| Slider response | "Apply" button to see changes | Instant visual update (< 16ms) |
+| Physics teaching | Text explains what happened | User SEES the physics relationship |
+| Interactivity | Click to trigger preset animation | Manipulate parameters, observe continuous effect |
+
+### 16.2 Required Animation Loop
+
+**Every simulation MUST have this structure:**
+
+```typescript
+// Animation refs
+const animationRef = useRef<number>();
+const timeRef = useRef(0);
+
+// Physics state that drives the visualization
+const [particles, setParticles] = useState<Particle[]>([]);
+
+// Continuous animation loop - REQUIRED
+useEffect(() => {
+  const animate = () => {
+    timeRef.current += 0.016; // ~60fps
+
+    // Update physics every frame
+    setParticles(prev => prev.map(p => ({
+      ...p,
+      x: p.x + p.vx * 0.016,
+      y: p.y + p.vy * 0.016,
+    })));
+
+    animationRef.current = requestAnimationFrame(animate);
+  };
+
+  animationRef.current = requestAnimationFrame(animate);
+  return () => {
+    if (animationRef.current) cancelAnimationFrame(animationRef.current);
+  };
+}, [/* physics parameters that affect simulation */]);
+```
+
+### 16.3 Simulation Types by Physics Concept
+
+| Concept Type | What Must Animate | User Controls |
+|--------------|-------------------|---------------|
+| **Mechanics** | Objects move, rotate, collide continuously | Force, mass, angle, friction |
+| **Waves** | Wave fronts propagate across screen | Frequency, amplitude, wavelength |
+| **Electrostatics** | Field lines animate, charges move under forces | Charge magnitude, separation |
+| **Thermal** | Particles move with speed proportional to temperature | Temperature, pressure, volume |
+| **Optics** | Light rays trace paths, interference patterns form | Angle, wavelength, slit width |
+| **Quantum** | Probability waves evolve, particles accumulate | Detector on/off, firing rate |
+
+### 16.4 Visual Quality Standards
+
+**Materials must look realistic, not like clipart:**
+
+```typescript
+// WRONG - Flat, lifeless shapes
+<rect fill="#808080" /> // Gray rectangle for "metal"
+<circle fill="#ffff00" /> // Yellow circle for "light"
+
+// RIGHT - Realistic materials with depth
+<defs>
+  {/* Brushed metal with highlights */}
+  <linearGradient id="metal" x1="0%" y1="0%" x2="0%" y2="100%">
+    <stop offset="0%" stopColor="#e8e8e8"/>
+    <stop offset="20%" stopColor="#d0d0d0"/>
+    <stop offset="40%" stopColor="#f0f0f0"/>  {/* highlight band */}
+    <stop offset="60%" stopColor="#c8c8c8"/>
+    <stop offset="100%" stopColor="#a0a0a0"/>
+  </linearGradient>
+
+  {/* Glowing light source */}
+  <radialGradient id="lightGlow" cx="50%" cy="50%" r="50%">
+    <stop offset="0%" stopColor="#fff" stopOpacity="1"/>
+    <stop offset="40%" stopColor="#fef08a" stopOpacity="0.8"/>
+    <stop offset="100%" stopColor="#fef08a" stopOpacity="0"/>
+  </radialGradient>
+
+  {/* Soft glow filter */}
+  <filter id="glow">
+    <feGaussianBlur stdDeviation="3" result="blur"/>
+    <feMerge>
+      <feMergeNode in="blur"/>
+      <feMergeNode in="SourceGraphic"/>
+    </feMerge>
+  </filter>
+</defs>
+```
+
+### 16.5 Physics Accuracy Checklist
+
+Before finalizing any simulation:
+
+- [ ] **Colors are physically accurate** - 400nm = violet, 550nm = green, 700nm = red
+- [ ] **Proportions make sense** - Forces scale with actual equations
+- [ ] **Motion follows physics** - Acceleration, not teleportation; smooth curves
+- [ ] **Labels use proper notation** - F = kq₁q₂/r², not "force = k times charges over distance squared"
+- [ ] **Units are correct** - nm for wavelength, μC for charge, N for force
+- [ ] **Scale indicators present** - Grid, ruler, or reference object for size context
+
+---
+
+## 17. SLIDER-DRIVEN DISCOVERY LEARNING
+
+### 17.1 The Discovery Learning Pattern
+
+Students must discover physics relationships **BY MANIPULATING sliders**, not by reading explanations.
+
+**The Learning Loop:**
+```
+┌─────────────────────────────────────────────────────────────┐
+│  1. User moves slider                                       │
+│         ↓                                                   │
+│  2. Simulation responds INSTANTLY (< 16ms)                  │
+│         ↓                                                   │
+│  3. User observes VISUAL CHANGE in the graphic              │
+│         ↓                                                   │
+│  4. User forms hypothesis ("bigger charge = stronger force")│
+│         ↓                                                   │
+│  5. User tests hypothesis with more slider moves            │
+│         ↓                                                   │
+│  6. User discovers the physics principle themselves         │
+│         ↓                                                   │
+│  7. Review phase CONFIRMS what they discovered              │
+└─────────────────────────────────────────────────────────────┘
+```
+
+### 17.2 Required Slider Implementation
+
+**CRITICAL: Use BOTH onInput AND onChange for smooth response:**
+
+```typescript
+<input
+  type="range"
+  min={min}
+  max={max}
+  step={step}
+  value={value}
+  // BOTH handlers required - onInput for real-time, onChange for final
+  onInput={(e) => {
+    const newValue = Number((e.target as HTMLInputElement).value);
+    setValue(newValue);
+    // Simulation updates IMMEDIATELY - no delay, no debounce
+  }}
+  onChange={(e) => setValue(Number(e.target.value))}
+  style={{
+    width: '100%',
+    height: '8px',
+    WebkitAppearance: 'none',
+    appearance: 'none',
+    cursor: 'pointer',
+    borderRadius: '4px',
+    // Visual progress indicator
+    background: `linear-gradient(to right,
+      ${activeColor} 0%,
+      ${activeColor} ${percentage}%,
+      ${inactiveColor} ${percentage}%,
+      ${inactiveColor} 100%)`,
+  }}
+/>
+```
+
+### 17.3 Slider Visual Requirements
+
+Every slider MUST have:
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│  Wavelength                              ← LABEL (what)     │
+│                                                             │
+│  400nm ═══════════●══════════════════ 700nm  ← MIN/MAX     │
+│         ▓▓▓▓▓▓▓▓▓▓░░░░░░░░░░░░░░░░░░░        ← TRACK FILL  │
+│                                                             │
+│              ┌─────────┐                                    │
+│              │  523 nm │  ← VALUE DISPLAY (large, monospace)│
+│              │  Green  │  ← MEANING (what this value means) │
+│              └─────────┘                                    │
+└─────────────────────────────────────────────────────────────┘
+```
+
+| Element | Requirement |
+|---------|-------------|
+| **Label** | Clear name of what's being controlled |
+| **Value display** | Large, monospace font, updates in real-time |
+| **Units** | ALWAYS show units (nm, μC, N, m/s, etc.) |
+| **Track fill** | Visual progress from min to current |
+| **Min/Max labels** | Values at both ends of track |
+| **Thumb size** | Minimum 20px diameter for touch |
+
+### 17.4 Slider → Simulation Binding Examples
+
+**Coulomb's Law:**
+```
+Slider: Separation distance (1-50 cm)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+INSTANT Visual Response:
+  • Charges physically move apart/together in the graphic
+  • Force arrow lengths scale with 1/r² (visibly shorter at distance)
+  • Field line density changes (sparser at greater distance)
+  • Numeric display updates: "F = 2.3 N → F = 0.6 N"
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+USER DISCOVERS: "When I double the distance, force becomes 1/4!"
+```
+
+**Photoelectric Effect:**
+```
+Slider: Light wavelength (200-800 nm)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+INSTANT Visual Response:
+  • Light beam color changes through spectrum
+  • Below threshold: electrons stay in metal (grayed out)
+  • At threshold: electrons start ejecting (animated!)
+  • Above threshold: electrons eject faster (longer trails)
+  • Energy meter fills/empties based on photon energy
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+USER DISCOVERS: "Color matters! Blue light ejects electrons, red doesn't!"
+```
+
+---
+
+## 18. SELF-EXPLANATORY GRAPHICS (CRITICAL)
+
+### 18.1 The "Mute Test"
+
+> **If you removed ALL text outside the graphic and just watched the visualization,
+> could a student understand the core physics concept?**
+
+If the answer is NO → the graphic needs more visual teaching power.
+
+**The graphic itself must communicate:**
+1. **WHAT** is being shown (labeled components)
+2. **WHAT TO LOOK FOR** (highlighted areas of interest)
+3. **WHAT YOU SEE** (clear visual representation)
+4. **WHY YOU SEE IT** (cause-effect visual connection)
+
+### 18.2 The Four Questions Every Graphic Must Answer
+
+For EVERY simulation graphic, ensure these are visually clear:
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│  ❶ WHAT IS IN THIS GRAPHIC?                                 │
+│     • Every component is labeled IN the SVG                 │
+│     • Labels use proper physics terminology                 │
+│     • User knows what each element represents               │
+│                                                             │
+│  ❷ WHAT SHOULD I LOOK AT / LOOK FOR?                        │
+│     • Key areas are highlighted or animated                 │
+│     • Attention is drawn to where physics happens           │
+│     • Visual hierarchy guides the eye                       │
+│                                                             │
+│  ❸ WHAT AM I SEEING HAPPEN?                                 │
+│     • The physics phenomenon is clearly visible             │
+│     • Changes are obvious, not subtle                       │
+│     • State changes are unmistakable                        │
+│                                                             │
+│  ❹ WHY IS THIS HAPPENING?                                   │
+│     • Cause → effect is visually connected                  │
+│     • Arrows/lines show relationships                       │
+│     • Before/after or comparison views available            │
+└─────────────────────────────────────────────────────────────┘
+```
+
+### 18.3 Required In-Graphic Labels
+
+**These labels must be INSIDE the SVG, not in surrounding text:**
+
+| Label Type | Purpose | Example |
+|------------|---------|---------|
+| **Component labels** | What is this thing? | "CATHODE", "LENS", "WAVE SOURCE", "PIVOT" |
+| **Value indicators** | Current state | "v = 2.5 m/s", "+3 μC", "F = 4.2 N" |
+| **State indicators** | What's happening | "✓ BALANCED", "⚡ EJECTING", "BLOCKED" |
+| **Relationship arrows** | What causes what | Arrow from light → electron with "E = hf" |
+| **Threshold markers** | Critical points | Dashed line labeled "threshold λ = 540nm" |
+| **Region labels** | Areas of interest | "INTERFERENCE ZONE", "SHADOW REGION" |
+
+### 18.4 Visual Labeling Examples
+
+**Example: Photoelectric Effect**
+```
+┌─────────────────────────────────────────────────────────────┐
+│                                                             │
+│   ┌─────────┐         LIGHT BEAM                           │
+│   │  LIGHT  │    ════════════════►    ┌──────────────┐     │
+│   │ SOURCE  │      λ = 420nm          │              │     │
+│   │         │      (violet)           │    METAL     │     │
+│   └─────────┘                         │    PLATE     │     │
+│                         ↓             │              │     │
+│              ┌─────────────────┐      │   ● ● ●     │     │
+│              │ PHOTON ENERGY   │      │  electrons  │     │
+│              │   E = 2.95 eV   │      │              │     │
+│              │ ✓ > threshold   │      └──────┬───────┘     │
+│              └─────────────────┘             │              │
+│                                              ↓              │
+│                              ┌──────────────────────────┐  │
+│                              │  ⚡ ELECTRONS EJECTING   │  │
+│                              │     KE = 0.65 eV         │  │
+│                              └──────────────────────────┘  │
+│                                                             │
+│   [STATUS: EMISSION ACTIVE]                                 │
+│                                                             │
+└─────────────────────────────────────────────────────────────┘
+```
+
+### 18.5 Color-Meaning Standard (Consistent Across ALL Games)
+
+```typescript
+const physicsColors = {
+  // === CHARGES ===
+  positiveCharge: '#ef4444',    // red - ALWAYS red for positive
+  negativeCharge: '#3b82f6',    // blue - ALWAYS blue for negative
+  neutralObject: '#6b7280',     // gray - neutral/uncharged
+
+  // === FORCES & VECTORS ===
+  forceVector: '#f59e0b',       // amber - force arrows
+  velocityVector: '#10b981',    // green - velocity arrows
+  accelerationVector: '#8b5cf6', // purple - acceleration arrows
+  momentumVector: '#ec4899',    // pink - momentum arrows
+
+  // === STATES ===
+  active: '#22c55e',            // green - threshold met, working
+  inactive: '#64748b',          // gray - below threshold, off
+  transitioning: '#f59e0b',     // amber - approaching threshold
+  warning: '#ef4444',           // red - danger, observer on
+
+  // === PHYSICS-SPECIFIC ===
+  waveConstructive: '#22c55e',  // green - constructive interference
+  waveDestructive: '#ef4444',   // red - destructive interference
+  electricField: '#f59e0b',     // amber - E-field lines
+  magneticField: '#8b5cf6',     // purple - B-field lines
+
+  // === LIGHT SPECTRUM (accurate to physics) ===
+  getWavelengthColor: (nm: number): string => {
+    if (nm < 380) return '#7c3aed';      // UV - violet
+    if (nm < 450) return '#6366f1';      // violet
+    if (nm < 495) return '#3b82f6';      // blue
+    if (nm < 570) return '#22c55e';      // green
+    if (nm < 590) return '#eab308';      // yellow
+    if (nm < 620) return '#f97316';      // orange
+    if (nm < 750) return '#ef4444';      // red
+    return '#7f1d1d';                     // IR - dark red
+  }
+};
+```
+
+### 18.6 The "What Am I Seeing?" Overlay Pattern
+
+For complex simulations, include an optional overlay that explains what's visible:
+
+```typescript
+// Toggle-able explanation overlay
+{showExplanation && (
+  <g className="explanation-overlay">
+    {/* Arrow pointing to phenomenon */}
+    <line x1={100} y1={50} x2={150} y2={100} stroke="#fff" strokeWidth="2" markerEnd="url(#arrow)"/>
+
+    {/* Explanation box */}
+    <rect x={20} y={20} width={180} height={60} rx={8} fill="rgba(0,0,0,0.8)"/>
+    <text x={30} y={45} fill="#fff" fontSize="12">
+      These bands form because waves
+    </text>
+    <text x={30} y={62} fill="#fff" fontSize="12">
+      from both slits interfere
+    </text>
+  </g>
+)}
+```
+
+### 18.7 Before/After Comparison Pattern
+
+When demonstrating a change, show both states:
+
+```
+┌────────────────────────┐    ┌────────────────────────┐
+│   OBSERVER OFF         │    │   OBSERVER ON          │
+│                        │    │                        │
+│   ▓░▓░▓░▓░▓░▓░▓░▓     │    │      ▓▓    ▓▓         │
+│   Wave Pattern         │    │    Two Bands          │
+│                        │    │                        │
+│   Electrons go         │    │   Electrons go        │
+│   through BOTH slits   │    │   through ONE slit    │
+└────────────────────────┘    └────────────────────────┘
+         ↑                              ↑
+    "Superposition"              "Wave Collapse"
+```
+
+---
+
+## 19. BUTTON RELIABILITY (ZERO TOLERANCE)
+
+### 19.1 The Single-Click Guarantee
+
+**EVERY button in EVERY game MUST work on the FIRST click, EVERY time.**
+
+There is ZERO tolerance for:
+- Buttons requiring multiple clicks
+- Buttons that don't respond on mobile
+- Buttons blocked by overlays
+- Buttons with delayed response
+
+### 19.2 Required Button Implementation
+
+**CRITICAL: Use this EXACT pattern for ALL interactive buttons:**
+
+```typescript
+<button
+  onClick={(e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    handleAction();
+  }}
+  style={{
+    // === TOUCH TARGET ===
+    minHeight: '48px',           // Minimum touch target
+    minWidth: '48px',            // Minimum touch target
+    padding: '14px 24px',        // Comfortable padding
+
+    // === PREVENT MOBILE ISSUES ===
+    touchAction: 'manipulation', // Prevents 300ms delay on mobile
+    WebkitTapHighlightColor: 'transparent', // No tap highlight flash
+    WebkitTouchCallout: 'none',  // Prevents callout on long-press
+
+    // === PREVENT ACCIDENTAL TEXT SELECTION ===
+    userSelect: 'none',
+    WebkitUserSelect: 'none',
+    MozUserSelect: 'none',
+    msUserSelect: 'none',
+
+    // === VISUAL FEEDBACK ===
+    cursor: 'pointer',
+    transition: 'transform 0.1s, opacity 0.1s',
+
+    // === ENSURE CLICKABLE ===
+    position: 'relative',        // Establish stacking context
+    zIndex: 1,                   // Above any background elements
+  }}
+  // Active state feedback
+  onMouseDown={(e) => {
+    (e.target as HTMLElement).style.transform = 'scale(0.98)';
+  }}
+  onMouseUp={(e) => {
+    (e.target as HTMLElement).style.transform = 'scale(1)';
+  }}
+  onMouseLeave={(e) => {
+    (e.target as HTMLElement).style.transform = 'scale(1)';
+  }}
+>
+  Button Text
+</button>
+```
+
+### 19.3 Selection Buttons (Predictions, Answers, Options)
+
+For buttons where user selects one option:
+
+```typescript
+const handleSelect = useCallback((id: string) => {
+  // CRITICAL: Early return if already selected - prevents re-processing
+  if (selected === id) return;
+
+  playSound('click');
+  setSelected(id);
+  emitGameEvent('selection_made', { selected: id });
+}, [selected, playSound, emitGameEvent]);
+
+// In render:
+<button
+  onClick={() => handleSelect(option.id)}
+  style={{
+    ...baseButtonStyles,
+    // Visual feedback for selected state
+    background: selected === option.id ? colors.successBg : colors.bgSurface,
+    border: `2px solid ${selected === option.id ? colors.success : 'transparent'}`,
+  }}
+>
+  {option.label}
+  {selected === option.id && <span>✓</span>}
+</button>
+```
+
+### 19.4 Navigation Buttons
+
+```typescript
+// Debounced navigation to prevent double-transitions
+const isNavigating = useRef(false);
+const lastClickRef = useRef(0);
+
+const goToPhase = useCallback((targetPhase: Phase) => {
+  const now = Date.now();
+
+  // Debounce: ignore clicks within 300ms
+  if (now - lastClickRef.current < 300) return;
+
+  // Prevent concurrent navigation
+  if (isNavigating.current) return;
+
+  lastClickRef.current = now;
+  isNavigating.current = true;
+
+  // Perform navigation
+  playSound('transition');
+  setPhase(targetPhase);
+  emitGameEvent('phase_changed', { phase: targetPhase });
+
+  // Reset navigation lock after animation
+  setTimeout(() => {
+    isNavigating.current = false;
+  }, 400);
+}, [playSound, emitGameEvent]);
+```
+
+### 19.5 Button Reliability Checklist
+
+**Before shipping, test EVERY button:**
+
+- [ ] **Desktop mouse** - Single click works
+- [ ] **Desktop trackpad** - Single tap works
+- [ ] **Mobile touch** - Single tap works (test on REAL device)
+- [ ] **Rapid clicks** - Doesn't break or double-fire
+- [ ] **During animation** - Still responsive
+- [ ] **After scroll** - Still responsive
+- [ ] **With keyboard** - Enter/Space works when focused
+
+### 19.6 Common Button Bugs and Fixes
+
+| Bug | Cause | Fix |
+|-----|-------|-----|
+| Requires 2 clicks | Using onMouseDown + onTouchEnd | Use onClick only |
+| 300ms delay on mobile | Missing touchAction | Add `touchAction: 'manipulation'` |
+| Tap causes highlight flash | iOS default behavior | Add `WebkitTapHighlightColor: 'transparent'` |
+| Click blocked by overlay | Decorative element above button | Add `pointerEvents: 'none'` to overlay |
+| Double navigation | No debounce | Add isNavigating ref with timeout |
+| Text selection on rapid click | Browser default | Add `userSelect: 'none'` |
+
+### 19.7 Disabled Button States
+
+Disabled buttons must be OBVIOUSLY disabled:
+
+```typescript
+<button
+  onClick={handleAction}
+  disabled={!canProceed}
+  style={{
+    ...baseStyles,
+    // Clear visual distinction
+    opacity: canProceed ? 1 : 0.4,
+    cursor: canProceed ? 'pointer' : 'not-allowed',
+    // Prevent any interaction
+    pointerEvents: canProceed ? 'auto' : 'none',
+  }}
+>
+  {canProceed ? 'Continue →' : 'Complete above first'}
+</button>
+```
+
+---
+
+## 20. PREMIUM DESIGN STANDARDS (Apple/Airbnb Level)
+
+### 20.1 The 60-Second Quality Test
+
+A new user should be able to:
+
+| Time | User Should... |
+|------|----------------|
+| < 5 sec | Know what topic this game covers |
+| < 10 sec | Understand what they'll learn |
+| < 15 sec | Find and click "Begin" |
+| < 30 sec | Successfully interact with simulation |
+| < 60 sec | Discover a physics relationship through manipulation |
+
+### 20.2 Visual Hierarchy
+
+```
+HOOK PAGE HIERARCHY:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  ┌─────────────┐
+  │ ● CATEGORY  │  ← Small colored pill (least prominent)
+  └─────────────┘
+
+  THE IMPOSSIBLE     ← Hero title (MOST prominent)
+  BALANCE               Gradient text, largest font
+
+  How does a fork     ← Subtitle question
+  balance on a glass?    Medium size, secondary color
+
+  ┌─────────────────┐
+  │                 │  ← Animated visualization
+  │  [SIMULATION]   │     Second most prominent
+  │                 │     Draws attention
+  └─────────────────┘
+
+  "Quote about        ← Quote (subtle)
+   physics concept"      Italic, muted color
+
+  ┌─────────────────┐
+  │ Begin Experiment│  ← Primary CTA (prominent)
+  └─────────────────┘     Gradient, large
+
+  ⏱ 5 min • 🧪 Lab   ← Feature pills (least prominent)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+
+PLAY PAGE HIERARCHY:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  Step 3 • Experiment  ← Section label (small)
+
+  Explore the Force    ← Section heading (medium)
+
+  ┌─────────────────────────────────┐
+  │                                 │
+  │                                 │
+  │      [SIMULATION - 70%]         │  ← MOST PROMINENT
+  │      Continuously animated      │     Takes majority of screen
+  │                                 │
+  │                                 │
+  └─────────────────────────────────┘
+
+  ┌─────────────────────────────────┐
+  │  Charge: ═══●═══════  +5 μC    │  ← Controls (clear, usable)
+  │  Distance: ══════●══   20 cm   │
+  └─────────────────────────────────┘
+
+  ┌─────────────────────────────────┐
+  │ 💡 Notice: Force quadruples    │  ← Insight hint (appears when
+  │    when distance halves!       │     user discovers something)
+  └─────────────────────────────────┘
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+```
+
+### 20.3 Animation Timing Standards
+
+| Animation Type | Duration | Easing | Purpose |
+|----------------|----------|--------|---------|
+| Button hover | 150ms | ease-out | Immediate feedback |
+| Button press | 100ms | ease-in | Tactile feel |
+| Slider track fill | 0ms | none | Instant response |
+| Phase transition | 300ms | ease-in-out | Smooth navigation |
+| Simulation physics | 16ms | linear | 60fps rendering |
+| Milestone popup | 400ms | spring | Celebration |
+| Error shake | 300ms | ease-out | Attention |
+
+### 20.4 Spacing System (4px Grid)
+
+```typescript
+const spacing = {
+  xs: '4px',
+  sm: '8px',
+  md: '12px',
+  lg: '16px',
+  xl: '24px',
+  xxl: '32px',
+
+  // Semantic
+  pagePadding: { mobile: '16px', desktop: '24px' },
+  cardPadding: { mobile: '16px', desktop: '20px' },
+  sectionGap: { mobile: '24px', desktop: '32px' },
+  elementGap: { mobile: '12px', desktop: '16px' },
+
+  // Touch targets
+  minTouchTarget: '48px',
+  buttonPadding: '14px 24px',
+};
+```
+
+---
+
+## 21. PRE-FLIGHT CHECKLIST (Required Before Merge)
+
+**NO GAME may be merged without passing ALL checks:**
+
+### 21.1 Realism Check
+
+- [ ] Simulation runs CONTINUOUSLY (not just on interaction)
+- [ ] Materials look realistic (proper gradients, shadows, depth)
+- [ ] Physics is accurate (colors match wavelengths, forces scale correctly)
+- [ ] Animation is smooth (60fps, no jank)
+- [ ] A physics teacher would use this in their classroom
+
+### 21.2 Interactivity Check
+
+- [ ] EVERY slider updates simulation in real-time (< 16ms)
+- [ ] User can discover the physics relationship by experimenting
+- [ ] No "apply" or "run" buttons - changes are instant
+- [ ] Slider has: label, value display, units, min/max labels
+- [ ] Moving slider causes VISIBLE change in simulation
+
+### 21.3 Clarity Check (The Four Questions)
+
+- [ ] **WHAT** is shown: All components labeled in the graphic
+- [ ] **WHAT TO LOOK FOR**: Key areas highlighted/animated
+- [ ] **WHAT YOU SEE**: Physics phenomenon clearly visible
+- [ ] **WHY**: Cause-effect relationship visually obvious
+- [ ] Passes the "Mute Test" - understandable without text
+
+### 21.4 Button Reliability Check
+
+- [ ] EVERY button works on FIRST click
+- [ ] Tested on real mobile device (not just simulator)
+- [ ] No double-click required anywhere
+- [ ] No UI flashing or jumping when clicking
+- [ ] Disabled buttons clearly look disabled
+- [ ] Touch targets are minimum 48px
+- [ ] Has `touchAction: 'manipulation'`
+- [ ] Has `WebkitTapHighlightColor: 'transparent'`
+- [ ] Has `userSelect: 'none'`
+
+### 21.5 Design Check
+
+- [ ] Hook page looks premium (Apple/Airbnb quality)
 - [ ] Colors have proper contrast ratios
 - [ ] Typography follows the scale system
 - [ ] Spacing is consistent (4px grid)
-- [ ] Simulations look realistic, not cartoonish
+- [ ] Visual hierarchy is clear
 
-### Interaction Quality
-- [ ] Every button works with ONE click
-- [ ] No UI flashing or jumping
-- [ ] Sliders are smooth and responsive
-- [ ] Touch targets are 48px minimum
-- [ ] AI chat does NOT block game interactions
+### 21.6 Flow Check
 
-### Content Quality
-- [ ] Hook page has compelling title and subtitle
+- [ ] All 10 phases implemented and accessible
+- [ ] Transfer apps unlock sequentially (1 → 2 → 3 → 4)
+- [ ] Test is LOCKED until all 4 transfer apps complete
+- [ ] Test state resets when entering test phase
+- [ ] Mastery shows correct pass/fail (70% threshold)
+- [ ] Return to Dashboard works correctly
+
+### 21.7 AI Coach Check
+
+- [ ] `game_started` emitted on mount
+- [ ] `phase_changed` emitted on every transition
+- [ ] `prediction_made` emitted when user predicts
+- [ ] `app_changed` includes app-specific screenDescription and coachMessage
+- [ ] `game_completed` emitted with score and pass/fail
+
+---
+
+## 22. FINAL QUALITY CHECKLIST
+
+Before marking any game as complete:
+
+### A. Simulation Quality
+- [ ] Animation runs CONTINUOUSLY (not static until interaction)
+- [ ] Sliders update simulation in real-time (< 16ms response)
+- [ ] Materials look realistic (gradients, shadows, depth)
+- [ ] Physics is accurate (correct colors, proportions, equations)
+- [ ] 60fps smooth animation (no jank or stuttering)
+
+### B. Visual Clarity (The Four Questions)
+- [ ] **WHAT IS IN THE GRAPHIC** - Every component is labeled IN the SVG
+- [ ] **WHAT TO LOOK FOR** - Key areas are highlighted or animated
+- [ ] **WHAT YOU SEE** - The physics phenomenon is clearly visible
+- [ ] **WHY YOU SEE IT** - Cause-effect relationship is visually obvious
+- [ ] Passes the "Mute Test" - understandable without any text
+
+### C. Button Reliability (ZERO TOLERANCE)
+- [ ] EVERY button works on FIRST click - no exceptions
+- [ ] Tested on REAL mobile device (not simulator)
+- [ ] Has `touchAction: 'manipulation'` on all buttons
+- [ ] Has `WebkitTapHighlightColor: 'transparent'` on all buttons
+- [ ] Has `userSelect: 'none'` on all buttons
+- [ ] Minimum 48px touch targets
+- [ ] No overlays blocking button clicks
+- [ ] Disabled states are clearly visible
+
+### D. Slider Implementation
+- [ ] Uses BOTH `onInput` AND `onChange` handlers
+- [ ] Shows current value with units (nm, μC, N, etc.)
+- [ ] Has min/max labels at track ends
+- [ ] Track fill shows visual progress
+- [ ] Moving slider causes IMMEDIATE visible change in simulation
+
+### E. Design Quality
+- [ ] Hook page looks premium (Apple/Airbnb quality)
+- [ ] Colors have proper contrast ratios (4.5:1 minimum)
+- [ ] Typography follows the scale system
+- [ ] Spacing is consistent (4px grid)
+- [ ] Visual hierarchy guides the eye correctly
+
+### F. Content Quality
+- [ ] Hook has compelling title, subtitle, animated preview
 - [ ] Predictions have 3 clear, distinct options
-- [ ] Simulation teaches visually (minimal text needed)
+- [ ] Play phase teaches through manipulation, not reading
+- [ ] Review CONFIRMS what user discovered (not explains from scratch)
 - [ ] 4 transfer apps with real-world relevance
 - [ ] 10 test questions with explanations
 
-### Progressive Flow
+### G. Progressive Flow
 - [ ] Transfer apps unlock sequentially (1 → 2 → 3 → 4)
-- [ ] Test is LOCKED until all 4 apps complete
+- [ ] Test is LOCKED until ALL 4 transfer apps complete
+- [ ] Test state resets when entering test phase
 - [ ] Mastery shows different UI for pass (≥70%) vs fail
-- [ ] Return to Dashboard works correctly
+- [ ] Return to Dashboard button works correctly
+- [ ] AI coach receives app-specific content on tab changes
+
+---
+
+## 23. QUICK REFERENCE: The Non-Negotiables
+
+**If a game fails ANY of these, it cannot ship:**
+
+| # | Requirement | Test |
+|---|-------------|------|
+| 1 | Buttons work on first click | Test every button on real mobile device |
+| 2 | Simulation animates continuously | Watch it - does it move without interaction? |
+| 3 | Sliders respond instantly | Drag slider - does visual change immediately? |
+| 4 | Graphics are self-explanatory | Remove all text - can you understand it? |
+| 5 | Components are labeled in SVG | Are labels part of the graphic, not outside it? |
+| 6 | Test is locked until transfer complete | Try to access test early - is it blocked? |
+| 7 | Pass/fail shows correctly | Get 60% and 80% - do you see different screens? |
+
+---
+
+## 24. COMMON MISTAKES TO AVOID
+
+| Mistake | Why It's Bad | How to Fix |
+|---------|--------------|------------|
+| Static diagram that updates on click | User reads, doesn't discover | Animate continuously |
+| Text block explaining the simulation | Passive learning | Let visual teach |
+| Using `onMouseDown`/`onTouchEnd` | Causes multi-click issues | Use `onClick` only |
+| Slider without `onInput` handler | Jerky, delayed updates | Add both `onInput` + `onChange` |
+| Labels outside the graphic | User has to match text to visual | Label components IN the SVG |
+| 300ms button delay on mobile | Feels broken | Add `touchAction: 'manipulation'` |
+| "Apply" button for simulation changes | Breaks discovery flow | Update simulation instantly |
+| Subtle visual changes | User misses the physics | Make changes OBVIOUS |
+| Generic AI coach messages on tab change | Coach talks about wrong app | Override screenDescription/coachMessage |
+| Test accessible before transfer complete | User skips learning content | Lock test until all 4 apps done |
+
+---
+
+## 25. AI VOICE COACH SYNCHRONIZATION
+
+### 25.1 The Core Problem
+
+When users progress quickly through screens, the AI voice must NOT:
+- Talk about a screen the user has already left
+- Queue up outdated messages
+- Interrupt with stale information
+- Feel "laggy" or disconnected from what's on screen
+
+**The AI voice must feel like it's watching the SAME screen as the user, in real-time.**
+
+### 25.2 The Dwell-Time Pattern
+
+**Only speak when the user has "settled" on a screen.**
+
+```typescript
+// Track when user entered current phase
+const phaseEnteredAt = useRef<number>(Date.now());
+const speechTimeoutRef = useRef<NodeJS.Timeout>();
+
+// When phase changes
+const handlePhaseChange = (newPhase: Phase) => {
+  // Cancel any pending speech from previous phase
+  if (speechTimeoutRef.current) {
+    clearTimeout(speechTimeoutRef.current);
+  }
+  cancelCurrentSpeech(); // Stop any in-progress audio
+
+  // Record when we entered this phase
+  phaseEnteredAt.current = Date.now();
+
+  // Wait for user to "settle" before speaking (2 seconds)
+  speechTimeoutRef.current = setTimeout(() => {
+    // Only speak if still on the same phase
+    if (currentPhase === newPhase) {
+      speakPhaseIntroduction(newPhase);
+    }
+  }, 2000); // 2 second dwell time
+};
+```
+
+**Dwell Time Guidelines:**
+
+| Scenario | Dwell Time | Rationale |
+|----------|------------|-----------|
+| Phase introduction | 2 seconds | User needs time to see the screen |
+| Slider hint | 3 seconds of inactivity | User hasn't interacted yet |
+| Milestone celebration | 0 seconds (immediate) | Reward is time-sensitive |
+| Error/struggle help | 5 seconds | Give user chance to self-correct |
+| Transfer app intro | 2 seconds | New content to absorb |
+
+### 25.3 Speech Queue Management
+
+**Every new screen CLEARS the speech queue and stops current speech.**
+
+```typescript
+interface SpeechManager {
+  queue: SpeechItem[];
+  currentSpeech: SpeechSynthesisUtterance | null;
+  currentPhase: string;
+
+  // Called on ANY phase/screen change
+  handleScreenChange(newPhase: string, newScreen: string): void;
+
+  // Add speech to queue (only if still relevant)
+  queueSpeech(item: SpeechItem): void;
+
+  // Check if speech is still relevant before playing
+  validateAndSpeak(): void;
+}
+
+const speechManager: SpeechManager = {
+  queue: [],
+  currentSpeech: null,
+  currentPhase: '',
+
+  handleScreenChange(newPhase, newScreen) {
+    // CRITICAL: Clear everything from previous context
+    this.queue = [];
+
+    // Stop any in-progress speech immediately
+    if (this.currentSpeech) {
+      window.speechSynthesis.cancel();
+      this.currentSpeech = null;
+    }
+
+    this.currentPhase = newPhase;
+  },
+
+  queueSpeech(item) {
+    // Tag every speech item with its intended phase
+    item.forPhase = this.currentPhase;
+    this.queue.push(item);
+  },
+
+  validateAndSpeak() {
+    const item = this.queue[0];
+    if (!item) return;
+
+    // CRITICAL: Check if speech is still relevant
+    if (item.forPhase !== this.currentPhase) {
+      // User has moved on - discard this speech
+      this.queue.shift();
+      this.validateAndSpeak(); // Try next item
+      return;
+    }
+
+    // Speech is relevant - play it
+    this.speak(item);
+  }
+};
+```
+
+### 25.4 Rapid Progression Detection
+
+**Detect when user is "browsing" vs "learning" and adjust AI behavior.**
+
+```typescript
+interface ProgressionTracker {
+  phaseHistory: { phase: string; timestamp: number }[];
+
+  recordPhaseEntry(phase: string): void;
+  isRapidProgression(): boolean;
+  getAveragePhaseTime(): number;
+}
+
+const progressionTracker: ProgressionTracker = {
+  phaseHistory: [],
+
+  recordPhaseEntry(phase) {
+    this.phaseHistory.push({ phase, timestamp: Date.now() });
+
+    // Keep only last 5 transitions
+    if (this.phaseHistory.length > 5) {
+      this.phaseHistory.shift();
+    }
+  },
+
+  isRapidProgression() {
+    if (this.phaseHistory.length < 2) return false;
+
+    // Check if last 3 transitions were all under 3 seconds
+    const recent = this.phaseHistory.slice(-3);
+    for (let i = 1; i < recent.length; i++) {
+      const timeDiff = recent[i].timestamp - recent[i-1].timestamp;
+      if (timeDiff > 3000) return false; // More than 3 seconds = not rapid
+    }
+    return true;
+  },
+
+  getAveragePhaseTime() {
+    if (this.phaseHistory.length < 2) return Infinity;
+
+    let total = 0;
+    for (let i = 1; i < this.phaseHistory.length; i++) {
+      total += this.phaseHistory[i].timestamp - this.phaseHistory[i-1].timestamp;
+    }
+    return total / (this.phaseHistory.length - 1);
+  }
+};
+
+// AI Voice Decision Logic
+const shouldAISpeak = (context: SpeechContext): boolean => {
+  // If user is rapidly clicking through, stay quiet
+  if (progressionTracker.isRapidProgression()) {
+    return false;
+  }
+
+  // If average time per phase is under 5 seconds, reduce speech
+  if (progressionTracker.getAveragePhaseTime() < 5000) {
+    // Only speak for major milestones, not introductions
+    return context.priority === 'high';
+  }
+
+  return true;
+};
+```
+
+### 25.5 Speech Priority Levels
+
+**Not all speech is equal. Prioritize what matters.**
+
+```typescript
+type SpeechPriority = 'critical' | 'high' | 'medium' | 'low';
+
+interface SpeechItem {
+  text: string;
+  priority: SpeechPriority;
+  forPhase: string;
+  maxAge: number; // milliseconds before this speech becomes stale
+}
+
+const speechPriorities: Record<string, SpeechPriority> = {
+  // CRITICAL - Always play (unless screen changes)
+  'correct_answer': 'critical',
+  'wrong_answer': 'critical',
+  'test_complete': 'critical',
+  'mastery_achieved': 'critical',
+
+  // HIGH - Play unless rapid progression
+  'milestone_reached': 'high',
+  'discovery_made': 'high',
+  'hint_after_struggle': 'high',
+
+  // MEDIUM - Play only if user is taking their time
+  'phase_introduction': 'medium',
+  'app_introduction': 'medium',
+
+  // LOW - Only play if specifically requested or very long dwell
+  'detailed_explanation': 'low',
+  'fun_fact': 'low',
+  'encouragement': 'low',
+};
+```
+
+### 25.6 Context-Aware Message Selection
+
+**AI should have SHORT and LONG versions of every message.**
+
+```typescript
+const phaseMessages = {
+  play: {
+    short: "Try the sliders!", // 2 seconds
+    medium: "Adjust the sliders to see how force changes.", // 4 seconds
+    long: "Welcome to the experiment phase. Use the sliders on the right to adjust the charge and distance. Watch how the force changes in real-time as you explore.", // 10 seconds
+  },
+  twist_play: {
+    short: "Toggle the observer!", // 2 seconds
+    medium: "Turn the observer on and off to see the difference.", // 4 seconds
+    long: "Now for the twist! Toggle the observer button to see how measurement affects the outcome. This is one of the strangest results in all of physics.", // 12 seconds
+  }
+};
+
+// Select message length based on user behavior
+const selectMessageLength = (): 'short' | 'medium' | 'long' => {
+  const avgTime = progressionTracker.getAveragePhaseTime();
+
+  if (avgTime < 5000) return 'short';      // Speed reader
+  if (avgTime < 15000) return 'medium';    // Normal pace
+  return 'long';                            // Taking time to learn
+};
+```
+
+### 25.7 Real-Time Screen State Sync
+
+**The AI must receive screen state updates, not just phase changes.**
+
+```typescript
+interface ScreenState {
+  phase: string;
+  subScreen?: string;          // e.g., which transfer app
+  interactionState: {
+    sliderValues: Record<string, number>;
+    selectedPrediction: string | null;
+    currentQuestion: number;
+    hasInteracted: boolean;
+  };
+  timestamp: number;
+}
+
+// Emit on EVERY meaningful change
+const emitScreenState = (state: Partial<ScreenState>) => {
+  const fullState: ScreenState = {
+    phase: currentPhase,
+    subScreen: activeApp ? `app_${activeApp}` : undefined,
+    interactionState: {
+      sliderValues: { charge1, charge2, distance },
+      selectedPrediction: prediction,
+      currentQuestion,
+      hasInteracted,
+    },
+    timestamp: Date.now(),
+    ...state
+  };
+
+  // Send to AI voice system
+  window.dispatchEvent(new CustomEvent('screenStateUpdate', {
+    detail: fullState
+  }));
+};
+
+// Call this on:
+// - Phase changes
+// - Transfer app tab changes
+// - Slider movements (debounced)
+// - Prediction selections
+// - Question navigation
+```
+
+### 25.8 The "What's On Screen Now" Protocol
+
+**AI should be able to answer: "What is the user looking at RIGHT NOW?"**
+
+```typescript
+const getCurrentScreenDescription = (): string => {
+  const base = screenDescriptions[phase];
+
+  // Add specific context
+  switch (phase) {
+    case 'transfer':
+      const app = transferApps[activeApp];
+      return `Transfer phase, viewing "${app.title}" - ${app.tagline}. ` +
+             `Progress: ${completedApps.filter(Boolean).length}/4 apps completed.`;
+
+    case 'play':
+      return `Experiment phase. Current values: ` +
+             `Charge 1 = ${charge1}μC, Distance = ${distance}cm. ` +
+             `Force = ${calculateForce()}N. ` +
+             `User has ${hasInteracted ? 'interacted' : 'not yet interacted'}.`;
+
+    case 'test':
+      return `Test phase, question ${currentQuestion + 1}/10. ` +
+             `Current score: ${testScore}/${currentQuestion}. ` +
+             `User has ${testAnswers[currentQuestion] !== null ? 'answered' : 'not answered'} this question.`;
+
+    default:
+      return base;
+  }
+};
+```
+
+### 25.9 Interruption Hierarchy
+
+**When should new information interrupt current speech?**
+
+```
+ALWAYS INTERRUPT for:
+├── Screen/phase changed (user navigated away)
+├── User asked a question
+├── Critical error occurred
+└── User clicked "skip" or "stop talking"
+
+INTERRUPT if higher priority:
+├── Correct answer celebration interrupts explanation
+├── Discovery milestone interrupts generic encouragement
+└── Struggle detection interrupts scheduled hint
+
+NEVER INTERRUPT for:
+├── Lower priority messages
+├── Same-priority messages (queue instead)
+└── Messages for a different screen
+```
+
+### 25.10 Implementation Checklist for AI Voice Sync
+
+- [ ] **Speech cancelled on screen change** - Any in-progress speech stops immediately
+- [ ] **Queue cleared on navigation** - Pending messages discarded when user moves
+- [ ] **Dwell time respected** - AI waits 2+ seconds before speaking on new screen
+- [ ] **Rapid progression detected** - AI stays quiet when user is clicking through
+- [ ] **Message length adapts** - Short messages for fast users, long for slow
+- [ ] **Priority system implemented** - Critical messages always play, low-priority may skip
+- [ ] **Screen state always current** - AI can describe exactly what's on screen NOW
+- [ ] **Transfer app context sent** - AI knows which specific app user is viewing
+
+### 25.11 Event Flow Example
+
+```
+USER ACTION                    AI VOICE BEHAVIOR
+─────────────────────────────────────────────────────────────
+Enters "play" phase         → Start 2-second dwell timer
+                            → Clear any previous speech
+
+User waits 2 seconds        → Timer fires
+                            → Check: still on "play"? Yes
+                            → Speak: "Try the sliders!"
+
+User immediately moves      → CANCEL current speech mid-word
+slider                      → Don't queue anything new yet
+
+User pauses on slider       → After 3 sec inactivity:
+                            → "Notice how force increases
+                               when charges get closer?"
+
+User clicks "Next" rapidly  → CANCEL speech
+3 times in 2 seconds        → Detect rapid progression
+                            → AI goes SILENT (watching mode)
+
+User stays on "review"      → After 3 seconds: still silent
+for 5 seconds               → After 5 seconds: rapid mode ends
+                            → "This is the key insight..."
+
+User gets question wrong    → IMMEDIATE (critical priority)
+                            → "Not quite. The correct answer..."
+                            → (No dwell time for feedback)
+```
+
+### 25.12 Testing AI Voice Sync
+
+**Test these scenarios before shipping:**
+
+| Test | Expected Behavior |
+|------|-------------------|
+| Click through 5 phases in 3 seconds | AI stays completely silent |
+| Stay on play phase for 10 seconds | AI speaks introduction |
+| Navigate away mid-sentence | Speech stops immediately |
+| Switch transfer app tabs rapidly | AI only speaks about final tab |
+| Return to earlier phase | AI speaks about THAT phase, not the one you left |
+| Get question wrong | Immediate feedback, no delay |
+| Idle on experiment for 30 seconds | AI offers help/hint |
+
+### 25.13 Implementation: useAIVoiceSync Hook
+
+**A ready-to-use hook is provided at `hooks/useAIVoiceSync.ts`**
+
+```typescript
+import {
+  useAIVoiceSync,
+  useDwellSpeech,
+  useStruggleDetection,
+  COMMON_MESSAGES,
+} from '@/hooks/useAIVoiceSync';
+
+// In your game renderer:
+const voiceSync = useAIVoiceSync('coulombs_law', "Coulomb's Law");
+
+// Update screen state on every change
+useEffect(() => {
+  voiceSync.updateScreenState({
+    phase,
+    phaseLabel: phaseLabels[phase],
+    description: `Experiment phase with charge ${charge}μC`,
+    interactionState: { hasInteracted, sliderValues: { charge } },
+  });
+}, [phase, charge, hasInteracted]);
+
+// Auto-speak introductions after dwell time
+useDwellSpeech(voiceSync, {
+  phase: 'play',
+  messages: COMMON_MESSAGES.experiment.intro,
+});
+
+// Detect struggling and offer help
+useStruggleDetection(voiceSync, hasInteracted, {
+  phase: 'play',
+  helpMessage: "Try adjusting the sliders!",
+});
+
+// Queue important speech
+voiceSync.queueSpeech("Correct!", 'critical');
+```
+
+**Hook Features:**
+- ✅ Automatic speech cancellation on navigation
+- ✅ Rapid progression detection (goes silent)
+- ✅ Dwell time enforcement (waits before speaking)
+- ✅ Priority-based speech queue
+- ✅ Message length adaptation
+- ✅ Screen state validation (won't speak about old screens)
+
+**See full example:** `hooks/useAIVoiceSync.example.tsx`
