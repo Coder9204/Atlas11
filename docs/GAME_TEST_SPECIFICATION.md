@@ -1608,3 +1608,469 @@ For each interactive element in your simulation, verify:
 > If you muted all the text and just watched the visuals, would a student still learn the core concept?
 
 If the answer is "no", the interactive graphic needs more visual teaching power.
+
+---
+
+## 15. PREMIUM DESIGN STANDARDS (Apple/Airbnb Level)
+
+### 15.0 Design Philosophy
+
+**Every game should feel like it was designed by a team from Apple, Airbnb, Nike, and Figma.**
+
+The user experience must be:
+- **Effortless** - One click does one thing, every time
+- **Beautiful** - Colors, typography, and spacing are intentional and harmonious
+- **Clear** - Users always know what to do and what's happening
+- **Reliable** - No flashing, no double-clicks required, no jammed interactions
+
+### 15.1 Premium Color System
+
+**CRITICAL: Color contrast and harmony are non-negotiable.**
+
+```typescript
+const premiumColors = {
+  // Background Hierarchy (darkest to lightest)
+  bgDeep: '#030712',        // gray-950 - main page background
+  bgSurface: '#0f172a',     // slate-900 - card backgrounds
+  bgElevated: '#1e293b',    // slate-800 - elevated cards, inputs
+  bgHover: '#334155',       // slate-700 - hover states
+
+  // Text Hierarchy (must contrast with backgrounds)
+  textPrimary: '#f8fafc',   // slate-50 - headings, primary text (contrast 16:1 on bgDeep)
+  textSecondary: '#cbd5e1', // slate-300 - body text (contrast 10:1 on bgDeep)
+  textTertiary: '#94a3b8',  // slate-400 - labels, hints (contrast 6:1 on bgDeep)
+  textMuted: '#64748b',     // slate-500 - disabled, metadata (contrast 4:1 on bgDeep)
+
+  // Brand Colors
+  brand: {
+    primary: '#3b82f6',     // blue-500 - main CTA, links
+    primaryHover: '#2563eb', // blue-600 - hover state
+    secondary: '#10b981',   // emerald-500 - success, completion
+    accent: '#8b5cf6',      // violet-500 - highlights, special elements
+  },
+
+  // Semantic Colors
+  semantic: {
+    success: '#22c55e',     // green-500
+    successBg: 'rgba(34, 197, 94, 0.1)',
+    warning: '#f59e0b',     // amber-500
+    warningBg: 'rgba(245, 158, 11, 0.1)',
+    error: '#ef4444',       // red-500
+    errorBg: 'rgba(239, 68, 68, 0.1)',
+    info: '#06b6d4',        // cyan-500
+    infoBg: 'rgba(6, 182, 212, 0.1)',
+  },
+
+  // Interactive States
+  interactive: {
+    default: '#3b82f6',
+    hover: '#2563eb',
+    active: '#1d4ed8',
+    disabled: '#475569',
+  }
+};
+```
+
+**Color Pairing Rules:**
+
+| Background | Allowed Text Colors | Min Contrast |
+|------------|---------------------|--------------|
+| `bgDeep` (#030712) | textPrimary, textSecondary, textTertiary | 4.5:1 minimum |
+| `bgSurface` (#0f172a) | textPrimary, textSecondary | 4.5:1 minimum |
+| `bgElevated` (#1e293b) | textPrimary, textSecondary | 4.5:1 minimum |
+| Any dark bg | NEVER use textMuted for important info | - |
+
+**FORBIDDEN combinations:**
+- Dark text on dark background
+- Low-contrast text for interactive elements
+- Pure white (#fff) on dark backgrounds (too harsh - use slate-50)
+
+### 15.2 Premium Typography System
+
+```typescript
+const typography = {
+  // Font Stack
+  fontFamily: {
+    display: '"SF Pro Display", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
+    body: '"SF Pro Text", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
+    mono: '"SF Mono", Menlo, Monaco, "Courier New", monospace',
+  },
+
+  // Type Scale (mobile / desktop)
+  scale: {
+    // Display - Hero titles only
+    hero: { mobile: '32px', desktop: '48px', weight: 700, lineHeight: 1.1, letterSpacing: '-0.02em' },
+
+    // Headings
+    h1: { mobile: '28px', desktop: '36px', weight: 700, lineHeight: 1.2, letterSpacing: '-0.01em' },
+    h2: { mobile: '22px', desktop: '28px', weight: 600, lineHeight: 1.3, letterSpacing: '-0.01em' },
+    h3: { mobile: '18px', desktop: '22px', weight: 600, lineHeight: 1.4 },
+
+    // Body
+    bodyLarge: { mobile: '16px', desktop: '18px', weight: 400, lineHeight: 1.6 },
+    body: { mobile: '14px', desktop: '16px', weight: 400, lineHeight: 1.6 },
+    bodySmall: { mobile: '13px', desktop: '14px', weight: 400, lineHeight: 1.5 },
+
+    // UI Elements
+    label: { mobile: '11px', desktop: '12px', weight: 600, lineHeight: 1.4, letterSpacing: '0.04em', textTransform: 'uppercase' },
+    caption: { mobile: '12px', desktop: '13px', weight: 400, lineHeight: 1.4 },
+    button: { mobile: '14px', desktop: '15px', weight: 600, lineHeight: 1 },
+  }
+};
+```
+
+### 15.3 Premium Spacing System
+
+**Use consistent spacing based on 4px grid:**
+
+```typescript
+const spacing = {
+  // Base unit: 4px
+  '0': '0px',
+  '1': '4px',
+  '2': '8px',
+  '3': '12px',
+  '4': '16px',
+  '5': '20px',
+  '6': '24px',
+  '8': '32px',
+  '10': '40px',
+  '12': '48px',
+  '16': '64px',
+  '20': '80px',
+
+  // Semantic spacing
+  page: {
+    paddingX: { mobile: '16px', desktop: '24px' },
+    paddingY: { mobile: '24px', desktop: '32px' },
+    maxWidth: '640px',  // Content max width for readability
+  },
+
+  card: {
+    padding: { mobile: '16px', desktop: '24px' },
+    gap: { mobile: '12px', desktop: '16px' },
+    borderRadius: '16px',
+  },
+
+  button: {
+    paddingX: { mobile: '20px', desktop: '24px' },
+    paddingY: { mobile: '14px', desktop: '16px' },
+    minHeight: '48px',  // Touch target
+    borderRadius: '12px',
+  },
+
+  section: {
+    gap: { mobile: '32px', desktop: '48px' },
+  }
+};
+```
+
+### 15.4 Button Reliability Requirements
+
+**CRITICAL: Buttons MUST work with a single click, every time.**
+
+```typescript
+// REQUIRED button implementation pattern
+const PremiumButton = ({ onClick, children, disabled }) => {
+  const handleClick = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (disabled) return;
+    onClick?.();
+  }, [onClick, disabled]);
+
+  return (
+    <button
+      onClick={handleClick}
+      disabled={disabled}
+      style={{
+        // Minimum touch target
+        minHeight: '48px',
+        minWidth: '48px',
+
+        // Prevent double-tap zoom on mobile
+        touchAction: 'manipulation',
+
+        // Prevent highlight flash
+        WebkitTapHighlightColor: 'transparent',
+
+        // Clear focus states
+        outline: 'none',
+
+        // Prevent text selection on rapid clicks
+        userSelect: 'none',
+        WebkitUserSelect: 'none',
+
+        // Smooth transitions (not too fast)
+        transition: 'all 0.2s ease',
+
+        // Cursor feedback
+        cursor: disabled ? 'not-allowed' : 'pointer',
+      }}
+    >
+      {children}
+    </button>
+  );
+};
+```
+
+**Button Reliability Checklist:**
+- [ ] Uses `onClick` (NOT onMouseDown, onTouchEnd, or onPointerDown)
+- [ ] Has `touchAction: 'manipulation'` to prevent zoom delay
+- [ ] Has `WebkitTapHighlightColor: 'transparent'`
+- [ ] Has `userSelect: 'none'` to prevent text selection
+- [ ] Minimum 48px touch target
+- [ ] Clear visual feedback on hover/active states
+- [ ] Disabled state is visually distinct
+- [ ] No event propagation issues (stopPropagation if needed)
+
+**AI Chat Integration:**
+The AI chat sidebar must NEVER block or intercept game button clicks. The chat is a helper, not a controller. Game buttons must always respond to user input regardless of chat state.
+
+### 15.5 Premium Hook Page Design
+
+**The hook page is the first impression. It must be stunning.**
+
+```
+┌─────────────────────────────────────────────────────────┐
+│                                                         │
+│              [Progress dots in header]                  │
+│                                                         │
+├─────────────────────────────────────────────────────────┤
+│                                                         │
+│                    ┌─────────────┐                      │
+│                    │ ● PHYSICS   │  ← Category pill     │
+│                    └─────────────┘                      │
+│                                                         │
+│                 The Impossible                          │
+│                   Balance                               │  ← Hero title
+│                                                         │      (gradient text)
+│      A fork hangs off a glass and doesn't fall.        │  ← Subtitle
+│           How is this even possible?                    │      (secondary text)
+│                                                         │
+│         ┌─────────────────────────────────┐            │
+│         │                                 │            │
+│         │    [Premium Visualization]      │            │  ← Animated preview
+│         │    Realistic, high-quality      │            │      (not cartoon)
+│         │    simulation preview           │            │
+│         │                                 │            │
+│         └─────────────────────────────────┘            │
+│                                                         │
+│           "The center of mass is the key               │  ← Quote box
+│            to understanding balance."                   │      (subtle bg)
+│                     — Physics                           │
+│                                                         │
+│         ┌─────────────────────────────────┐            │
+│         │     Begin Experiment  →         │            │  ← Primary CTA
+│         └─────────────────────────────────┘            │      (gradient, large)
+│                                                         │
+│              ⏱ 5 min  •  🧪 Lab  •  📝 Quiz            │  ← Feature pills
+│                                                         │
+└─────────────────────────────────────────────────────────┘
+```
+
+**Hook Page Requirements:**
+1. **Category pill** - Small, colored badge indicating topic area
+2. **Hero title** - Large, gradient text, memorable phrasing
+3. **Subtitle** - Intriguing question or statement in secondary color
+4. **Visualization** - Animated preview of the simulation (realistic, not cartoon)
+5. **Quote** - Relevant physics quote with attribution
+6. **Primary CTA** - Large, gradient button with clear action
+7. **Feature pills** - Time estimate, format indicators
+
+### 15.6 Realistic Simulation Design
+
+**Simulations must look like real physics equipment, not educational clipart.**
+
+**Visual Quality Standards:**
+
+| Element | Wrong ❌ | Right ✓ |
+|---------|----------|---------|
+| Metal | Flat gray | Multi-stop gradient with highlights and shadows |
+| Glass | Solid color with stroke | Transparent gradient with reflections and refractions |
+| Wood | Brown rectangle | Grain texture with subtle color variations |
+| Shadow | Hard drop shadow | Soft, realistic ambient occlusion |
+| Glow | Flat color | Multi-layer radial gradient with blur |
+| Animation | Jerky frame changes | Smooth easing with 60fps rendering |
+
+**Required SVG Techniques:**
+```xml
+<!-- Realistic metal gradient -->
+<linearGradient id="metal" x1="0%" y1="0%" x2="0%" y2="100%">
+  <stop offset="0%" stop-color="#e8e8e8"/>
+  <stop offset="20%" stop-color="#d0d0d0"/>
+  <stop offset="40%" stop-color="#f0f0f0"/>  <!-- highlight -->
+  <stop offset="60%" stop-color="#c8c8c8"/>
+  <stop offset="100%" stop-color="#a0a0a0"/>
+</linearGradient>
+
+<!-- Realistic glass -->
+<linearGradient id="glass" x1="0%" y1="0%" x2="100%" y2="100%">
+  <stop offset="0%" stop-color="#ffffff" stop-opacity="0.15"/>
+  <stop offset="50%" stop-color="#87ceeb" stop-opacity="0.25"/>
+  <stop offset="100%" stop-color="#ffffff" stop-opacity="0.1"/>
+</linearGradient>
+
+<!-- Soft glow effect -->
+<filter id="glow">
+  <feGaussianBlur stdDeviation="4" result="blur"/>
+  <feComposite in="SourceGraphic" in2="blur" operator="over"/>
+</filter>
+```
+
+### 15.7 Transfer Phase Tab Design
+
+**4 applications with strict sequential unlock:**
+
+```
+┌─────────────────────────────────────────────────────────┐
+│  Real-World Applications                    3/4 done    │
+├─────────────────────────────────────────────────────────┤
+│                                                         │
+│  ┌──────┐  ┌──────┐  ┌──────┐  ┌──────┐               │
+│  │ ✓ 1  │  │ ✓ 2  │  │ ● 3  │  │ 🔒 4  │  ← Tab bar   │
+│  └──────┘  └──────┘  └──────┘  └──────┘               │
+│                                                         │
+│  ┌─────────────────────────────────────────────────┐   │
+│  │  🎪  Tightrope Walking                          │   │
+│  │                                                 │   │
+│  │  [Realistic illustration of concept]           │   │  ← Each app has
+│  │                                                 │   │    its own graphic
+│  │  Professional tightrope walkers use long,      │   │
+│  │  curved poles to lower their center of mass    │   │
+│  │  below the rope...                             │   │
+│  │                                                 │   │
+│  │  ┌─────────┐ ┌─────────┐ ┌─────────┐          │   │
+│  │  │ 10-12m  │ │ 10-15kg │ │  45°    │          │   │  ← Stats grid
+│  │  │ Length  │ │ Weight  │ │ Max tilt│          │   │
+│  │  └─────────┘ └─────────┘ └─────────┘          │   │
+│  │                                                 │   │
+│  │  Examples: Nik Wallenda, Philippe Petit...     │   │
+│  │                                                 │   │
+│  │  ┌─────────────────────────────────────────┐  │   │
+│  │  │    Continue to Ship Stability →         │  │   │  ← Continue CTA
+│  │  └─────────────────────────────────────────┘  │   │
+│  └─────────────────────────────────────────────────┘   │
+│                                                         │
+└─────────────────────────────────────────────────────────┘
+```
+
+**Tab Unlock Rules:**
+1. Tab 1 is always unlocked
+2. Tab N is unlocked ONLY when Tab N-1 is completed
+3. Completed tabs show ✓ checkmark
+4. Current tab shows ● filled dot
+5. Locked tabs show 🔒 and are NOT clickable
+6. "Take the Test" button ONLY appears after ALL 4 tabs are completed
+
+### 15.8 Test Phase Requirements
+
+**10 questions with clear progress tracking:**
+
+```
+┌─────────────────────────────────────────────────────────┐
+│  Knowledge Test                          Score: 6/8     │
+├─────────────────────────────────────────────────────────┤
+│                                                         │
+│  ████████████████░░░░░░░░░░░░░░░░  Question 8 of 10    │  ← Progress bar
+│                                                         │
+│  ┌─────────────────────────────────────────────────┐   │
+│  │                                                 │   │
+│  │  Why does a tightrope walker hold a long pole? │   │  ← Question
+│  │                                                 │   │
+│  └─────────────────────────────────────────────────┘   │
+│                                                         │
+│  ┌─────────────────────────────────────────────────┐   │
+│  │  A. For exercise during the walk               │   │  ← Options
+│  └─────────────────────────────────────────────────┘   │     (clear, tappable)
+│  ┌─────────────────────────────────────────────────┐   │
+│  │  B. To lower their overall center of mass  ✓   │   │  ← Correct answer
+│  └─────────────────────────────────────────────────┘   │     highlighted
+│  ┌─────────────────────────────────────────────────┐   │
+│  │  C. To wave at the crowd                       │   │
+│  └─────────────────────────────────────────────────┘   │
+│  ┌─────────────────────────────────────────────────┐   │
+│  │  D. The pole has no purpose                    │   │
+│  └─────────────────────────────────────────────────┘   │
+│                                                         │
+│  ┌─────────────────────────────────────────────────┐   │
+│  │ 💡 The heavy pole bends downward, lowering the │   │  ← Explanation
+│  │    walker's center of mass below the rope.     │   │     (after answer)
+│  └─────────────────────────────────────────────────┘   │
+│                                                         │
+│           ← Back                    Next →              │  ← Navigation
+│                                                         │
+└─────────────────────────────────────────────────────────┘
+```
+
+**Test Requirements:**
+1. User CANNOT reach test without completing all 4 transfer apps
+2. Questions are shown one at a time
+3. Clear progress indicator (X of 10)
+4. Running score display
+5. Explanation shown AFTER answering (not before)
+6. Navigation between questions (can review answered ones)
+7. "Complete" button only after all 10 answered
+
+### 15.9 Stability & Reliability Checklist
+
+Before shipping any game, verify:
+
+**Button Reliability:**
+- [ ] Every button works on first click (test on real device)
+- [ ] No double-click required anywhere
+- [ ] No flashing or UI jumping when clicking
+- [ ] Disabled buttons are clearly disabled
+- [ ] Touch targets are minimum 48px
+
+**Visual Stability:**
+- [ ] No layout shifts when content loads
+- [ ] Animations are smooth (60fps)
+- [ ] Colors have proper contrast (test with contrast checker)
+- [ ] Text is readable at all sizes
+- [ ] No overlapping elements
+
+**Interaction Stability:**
+- [ ] Sliders respond immediately to input
+- [ ] Graphics update in real-time as controls change
+- [ ] State is preserved when navigating between phases
+- [ ] "Back" button returns to correct previous state
+
+**Progressive Lock:**
+- [ ] Test phase is locked until all 4 transfer apps complete
+- [ ] Transfer apps unlock sequentially
+- [ ] Progress is tracked accurately
+- [ ] User cannot skip required content
+
+---
+
+## 16. FINAL QUALITY CHECKLIST
+
+Before marking any game as complete:
+
+### Design Quality
+- [ ] Hook page looks like Apple/Airbnb designed it
+- [ ] Colors have proper contrast ratios
+- [ ] Typography follows the scale system
+- [ ] Spacing is consistent (4px grid)
+- [ ] Simulations look realistic, not cartoonish
+
+### Interaction Quality
+- [ ] Every button works with ONE click
+- [ ] No UI flashing or jumping
+- [ ] Sliders are smooth and responsive
+- [ ] Touch targets are 48px minimum
+- [ ] AI chat does NOT block game interactions
+
+### Content Quality
+- [ ] Hook page has compelling title and subtitle
+- [ ] Predictions have 3 clear, distinct options
+- [ ] Simulation teaches visually (minimal text needed)
+- [ ] 4 transfer apps with real-world relevance
+- [ ] 10 test questions with explanations
+
+### Progressive Flow
+- [ ] Transfer apps unlock sequentially (1 → 2 → 3 → 4)
+- [ ] Test is LOCKED until all 4 apps complete
+- [ ] Mastery shows different UI for pass (≥70%) vs fail
+- [ ] Return to Dashboard works correctly

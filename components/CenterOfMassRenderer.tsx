@@ -3,67 +3,57 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 
 // ============================================================================
-// CENTER OF MASS - Premium 10-Screen Design
+// CENTER OF MASS - Premium Design (Apple/Airbnb Quality)
 // ============================================================================
 
-type GameEventType =
-  | 'phase_change'
-  | 'prediction_made'
-  | 'simulation_started'
-  | 'parameter_changed'
-  | 'twist_prediction_made'
-  | 'app_explored'
-  | 'test_answered'
-  | 'test_completed'
-  | 'mastery_achieved';
+type Phase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
 
 interface GameEvent {
-  type: GameEventType;
-  data?: Record<string, unknown>;
+  type: string;
+  gameType: string;
+  gameTitle: string;
+  details: Record<string, unknown>;
+  timestamp: number;
 }
-
-const PHASES: number[] = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
-const phaseLabels: Record<number, string> = {
-  0: 'Hook',
-  1: 'Predict',
-  2: 'Lab',
-  3: 'Review',
-  4: 'Twist Predict',
-  5: 'Twist Lab',
-  6: 'Twist Review',
-  7: 'Transfer',
-  8: 'Test',
-  9: 'Mastery'
-};
 
 interface CenterOfMassRendererProps {
   onGameEvent?: (event: GameEvent) => void;
-  currentPhase?: number;
-  onPhaseComplete?: (phase: number) => void;
 }
 
-const CenterOfMassRenderer: React.FC<CenterOfMassRendererProps> = ({
-  onGameEvent,
-  currentPhase,
-  onPhaseComplete
-}) => {
-  // Navigation debouncing ref
-  const navigationLockRef = useRef(false);
-  const lastClickRef = useRef(0);
+// Premium Color System (proper contrast ratios)
+const colors = {
+  // Backgrounds
+  bgDeep: '#030712',
+  bgSurface: '#0f172a',
+  bgElevated: '#1e293b',
+  bgHover: '#334155',
 
-  // Phase state
-  const [phase, setPhase] = useState<number>(() => {
-    if (currentPhase !== undefined && PHASES.includes(currentPhase)) return currentPhase;
-    return 0;
-  });
+  // Text (high contrast on dark backgrounds)
+  textPrimary: '#f8fafc',
+  textSecondary: '#e2e8f0',
+  textTertiary: '#94a3b8',
+  textMuted: '#64748b',
 
-  // Sync phase with external prop
-  useEffect(() => {
-    if (currentPhase !== undefined && PHASES.includes(currentPhase)) {
-      setPhase(currentPhase);
-    }
-  }, [currentPhase]);
+  // Brand
+  primary: '#3b82f6',
+  primaryHover: '#2563eb',
+  secondary: '#10b981',
+  accent: '#8b5cf6',
 
+  // Semantic
+  success: '#22c55e',
+  successBg: 'rgba(34, 197, 94, 0.15)',
+  warning: '#f59e0b',
+  warningBg: 'rgba(245, 158, 11, 0.15)',
+  error: '#ef4444',
+  errorBg: 'rgba(239, 68, 68, 0.15)',
+};
+
+const phaseOrder: Phase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
+
+const CenterOfMassRenderer: React.FC<CenterOfMassRendererProps> = ({ onGameEvent }) => {
+  // State
+  const [phase, setPhase] = useState<Phase>('hook');
   const [prediction, setPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
   const [isMobile, setIsMobile] = useState(false);
@@ -79,313 +69,349 @@ const CenterOfMassRenderer: React.FC<CenterOfMassRendererProps> = ({
 
   // Transfer state
   const [activeApp, setActiveApp] = useState(0);
-  const [completedApps, setCompletedApps] = useState<Set<number>>(new Set());
+  const [completedApps, setCompletedApps] = useState<boolean[]>([false, false, false, false]);
 
   // Test state
   const [currentQuestion, setCurrentQuestion] = useState(0);
-  const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
+  const [testAnswers, setTestAnswers] = useState<(number | null)[]>(Array(10).fill(null));
+  const [testScore, setTestScore] = useState(0);
   const [showExplanation, setShowExplanation] = useState(false);
-  const [correctAnswers, setCorrectAnswers] = useState(0);
-  const [answeredQuestions, setAnsweredQuestions] = useState<Set<number>>(new Set());
 
+  // Animation
+  const timeRef = useRef(0);
   const animationRef = useRef<number>();
 
-  // Responsive detection
+  // Responsive
   useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
+    const check = () => setIsMobile(window.innerWidth < 768);
+    check();
+    window.addEventListener('resize', check);
+    return () => window.removeEventListener('resize', check);
   }, []);
 
-  // Cleanup animation
+  // Animation loop
   useEffect(() => {
+    const animate = () => {
+      timeRef.current += 0.016;
+      animationRef.current = requestAnimationFrame(animate);
+    };
+    animationRef.current = requestAnimationFrame(animate);
     return () => { if (animationRef.current) cancelAnimationFrame(animationRef.current); };
   }, []);
 
-  // Web Audio API sound
-  const playSound = useCallback((type: 'click' | 'success' | 'failure' | 'transition' | 'complete') => {
-    if (typeof window === 'undefined') return;
+  // Reset test on entry
+  useEffect(() => {
+    if (phase === 'test') {
+      setCurrentQuestion(0);
+      setTestAnswers(Array(10).fill(null));
+      setTestScore(0);
+      setShowExplanation(false);
+    }
+  }, [phase]);
+
+  // Event emitter
+  const emit = useCallback((type: string, details: Record<string, unknown> = {}) => {
+    onGameEvent?.({
+      type,
+      gameType: 'center_of_mass',
+      gameTitle: 'Center of Mass',
+      details: { phase, ...details },
+      timestamp: Date.now()
+    });
+  }, [onGameEvent, phase]);
+
+  // Sound
+  const playSound = useCallback((type: 'click' | 'success' | 'error') => {
     try {
-      const audioContext = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
-      const oscillator = audioContext.createOscillator();
-      const gainNode = audioContext.createGain();
-      oscillator.connect(gainNode);
-      gainNode.connect(audioContext.destination);
-      const sounds = {
-        click: { freq: 600, duration: 0.1, type: 'sine' as OscillatorType },
-        success: { freq: 800, duration: 0.2, type: 'sine' as OscillatorType },
-        failure: { freq: 300, duration: 0.3, type: 'sine' as OscillatorType },
-        transition: { freq: 500, duration: 0.15, type: 'sine' as OscillatorType },
-        complete: { freq: 900, duration: 0.4, type: 'sine' as OscillatorType }
-      };
-      const sound = sounds[type];
-      oscillator.frequency.value = sound.freq;
-      oscillator.type = sound.type;
-      gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
-      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + sound.duration);
-      oscillator.start();
-      oscillator.stop(audioContext.currentTime + sound.duration);
-    } catch { /* Audio not available */ }
+      const ctx = new AudioContext();
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      const freq = type === 'success' ? 800 : type === 'error' ? 300 : 500;
+      osc.frequency.value = freq;
+      gain.gain.setValueAtTime(0.1, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.15);
+      osc.start();
+      osc.stop(ctx.currentTime + 0.15);
+    } catch {}
   }, []);
 
-  // Emit game events
-  const emitEvent = useCallback((type: GameEventType, data?: Record<string, unknown>) => {
-    onGameEvent?.({ type, data });
-  }, [onGameEvent]);
+  // Navigation
+  const goToPhase = useCallback((p: Phase) => {
+    playSound('click');
+    setPhase(p);
+    emit('phase_changed', { to: p });
+  }, [playSound, emit]);
 
-  // Navigation with debouncing
-  const goToPhase = useCallback((newPhase: number) => {
-    const now = Date.now();
-    if (now - lastClickRef.current < 200) return;
-    lastClickRef.current = now;
-    if (navigationLockRef.current) return;
-    if (!PHASES.includes(newPhase)) return;
-    navigationLockRef.current = true;
-    playSound('transition');
-    setPhase(newPhase);
-    emitEvent('phase_change', { from: phase, to: newPhase, phaseLabel: phaseLabels[newPhase] });
-    onPhaseComplete?.(newPhase);
-    setTimeout(() => { navigationLockRef.current = false; }, 400);
-  }, [phase, playSound, emitEvent, onPhaseComplete]);
-
-  // Physics calculations
+  // Physics
   const calculateBalance = useCallback((clay: number) => {
     const baseCOM = -0.3;
-    const clayEffect = clay * 0.5;
-    const finalCOM = baseCOM + clayEffect;
+    const finalCOM = baseCOM + clay * 0.5;
     return { comY: finalCOM, stable: finalCOM < 0.1 };
   }, []);
 
-  const addClay = useCallback((position: number) => {
+  const addClay = useCallback((pos: number) => {
     if (isAnimating || hasClayAdded) return;
     setHasClayAdded(true);
-    setClayPosition(position);
-    const { stable, comY } = calculateBalance(position);
+    setClayPosition(pos);
+    const { stable } = calculateBalance(pos);
     setIsBalanced(stable);
 
     if (!stable) {
       setIsAnimating(true);
       let angle = 0;
       const animate = () => {
-        angle += (position > 0 ? 2 : -2);
+        angle += pos > 0 ? 2 : -2;
         setTiltAngle(angle);
         if (Math.abs(angle) < 45) {
-          animationRef.current = requestAnimationFrame(animate);
+          requestAnimationFrame(animate);
         } else {
           setIsAnimating(false);
-          setExperimentCount(prev => prev + 1);
-          playSound('failure');
+          setExperimentCount(c => c + 1);
+          playSound('error');
         }
       };
-      animationRef.current = requestAnimationFrame(animate);
+      requestAnimationFrame(animate);
     } else {
-      setTiltAngle(0);
-      setExperimentCount(prev => prev + 1);
+      setExperimentCount(c => c + 1);
       playSound('success');
     }
-    emitEvent('simulation_started', { clayPosition: position, stable, comY });
-  }, [calculateBalance, emitEvent, isAnimating, hasClayAdded, playSound]);
+  }, [calculateBalance, hasClayAdded, isAnimating, playSound]);
 
   const resetExperiment = useCallback(() => {
-    if (animationRef.current) cancelAnimationFrame(animationRef.current);
     setHasClayAdded(false);
     setClayPosition(0);
     setIsBalanced(true);
     setTiltAngle(0);
     setIsAnimating(false);
-    emitEvent('parameter_changed', { action: 'reset' });
-  }, [emitEvent]);
-
-  const handleTestAnswer = useCallback((answerIndex: number) => {
-    const now = Date.now();
-    if (now - lastClickRef.current < 200) return;
-    lastClickRef.current = now;
-    if (answeredQuestions.has(currentQuestion)) return;
-    setSelectedAnswer(answerIndex);
-    setShowExplanation(true);
-    const isCorrect = answerIndex === testQuestions[currentQuestion].correct;
-    if (isCorrect) {
-      setCorrectAnswers(prev => prev + 1);
-      playSound('success');
-    } else {
-      playSound('failure');
-    }
-    setAnsweredQuestions(prev => new Set([...prev, currentQuestion]));
-    emitEvent('test_answered', { question: currentQuestion, answer: answerIndex, correct: isCorrect });
-  }, [currentQuestion, answeredQuestions, emitEvent, playSound]);
+  }, []);
 
   // Test questions
-  const testQuestions = [
-    { question: "Why does the fork-toothpick system balance on the glass rim?", options: ["The fork is very light", "Center of mass is below the pivot point", "Magic holds it in place", "The glass surface is sticky"], correct: 1, explanation: "The system balances because its center of mass lies below the pivot point. This creates stable equilibrium where gravity provides a restoring torque." },
-    { question: "What happens if you move the center of mass above the pivot?", options: ["System becomes more stable", "System becomes unstable and falls", "Nothing changes at all", "It starts to float"], correct: 1, explanation: "When COM is above the pivot, any small disturbance causes gravity to tip it further (unstable equilibrium). It will fall over." },
-    { question: "Adding clay to the fork end (lower side) would:", options: ["Make it more stable", "Make it less stable", "Have no effect on stability", "Make it lighter"], correct: 0, explanation: "Adding weight to the fork end (which hangs low) shifts the COM even lower, making the system more stable." },
-    { question: "A tightrope walker holds a long pole because:", options: ["For exercise during the walk", "To lower their overall center of mass", "To wave at the crowd below", "The pole has no purpose"], correct: 1, explanation: "The heavy pole bends downward, lowering the walker's overall center of mass below the rope, creating stability." },
-    { question: "Where is the center of mass of a donut shape?", options: ["In the dough material", "In the empty hole at center", "Nowhere specific", "At the outer edge"], correct: 1, explanation: "A donut's center of mass is in the hole—the geometric center—even though there's no material there!" },
-    { question: "To balance a ruler on your finger, where should you place it?", options: ["At one end of the ruler", "At its center of mass", "Anywhere works the same", "At both ends simultaneously"], correct: 1, explanation: "You must place your finger under the center of mass. For a uniform ruler, that's the geometric center." },
-    { question: "Why do racing cars have low centers of mass?", options: ["To go faster in a straight line", "To be more stable in turns", "Only for aerodynamics", "To use less fuel"], correct: 1, explanation: "A low COM means the car is less likely to tip over during sharp turns. The lower the COM, the more it can lean before tipping." },
-    { question: "A bird perches on a branch by:", options: ["Gripping with claws only", "Keeping its COM over the branch", "Birds cannot balance well", "The branch helps them"], correct: 1, explanation: "Birds constantly adjust their body position to keep their center of mass directly over the branch (support point)." },
-    { question: "If you lean too far forward while standing, you fall because:", options: ["Your legs are too weak", "Your COM moves outside your base of support", "Gravity suddenly increases", "Wind pushes you over"], correct: 1, explanation: "When your COM moves outside the area between your feet (base of support), gravity creates an unbalanced torque and you fall." },
-    { question: "A Weeble toy always rights itself because:", options: ["It contains magnets", "Its center of mass is very low", "It is filled with water", "It is perfectly round"], correct: 1, explanation: "Weebles have a heavy, rounded bottom that keeps the COM very low. Any tilt creates a restoring torque from gravity." }
+  const questions = [
+    { q: "Why does the fork-toothpick system balance on the glass rim?", opts: ["The fork is very light", "Center of mass is below the pivot point", "Friction holds it in place", "The glass surface is sticky"], correct: 1, exp: "The system balances because its center of mass lies below the pivot point, creating stable equilibrium." },
+    { q: "What happens if you move the center of mass above the pivot?", opts: ["More stable", "Unstable - falls", "No change", "Floats"], correct: 1, exp: "When COM is above the pivot, any disturbance causes gravity to tip it further. It falls." },
+    { q: "Adding clay to the fork end (lower side) would:", opts: ["Make it more stable", "Make it less stable", "Have no effect", "Make it lighter"], correct: 0, exp: "Adding weight to the fork end shifts the COM lower, making the system more stable." },
+    { q: "A tightrope walker holds a long pole because:", opts: ["For exercise", "To lower their overall center of mass", "To wave at the crowd", "No purpose"], correct: 1, exp: "The heavy pole bends downward, lowering the walker's COM below the rope." },
+    { q: "Where is the center of mass of a donut shape?", opts: ["In the dough", "In the empty hole at center", "Nowhere specific", "At the outer edge"], correct: 1, exp: "A donut's center of mass is in the hole—the geometric center—even with no material there!" },
+    { q: "To balance a ruler on your finger, place it:", opts: ["At one end", "At its center of mass", "Anywhere", "At both ends"], correct: 1, exp: "You must place your finger under the center of mass." },
+    { q: "Why do racing cars have low centers of mass?", opts: ["To go faster straight", "To be more stable in turns", "For aerodynamics only", "To use less fuel"], correct: 1, exp: "A low COM means the car is less likely to tip during sharp turns." },
+    { q: "A bird perches on a branch by:", opts: ["Gripping with claws only", "Keeping its COM over the branch", "Birds can't balance well", "The branch helps"], correct: 1, exp: "Birds constantly adjust to keep their COM directly over the branch." },
+    { q: "Leaning too far forward makes you fall because:", opts: ["Weak legs", "COM moves outside base of support", "Gravity increases", "Wind pushes you"], correct: 1, exp: "When COM moves outside your feet, gravity creates unbalanced torque." },
+    { q: "A Weeble toy always rights itself because:", opts: ["Magnets", "Its center of mass is very low", "Filled with water", "Perfectly round"], correct: 1, exp: "Weebles have a heavy bottom keeping the COM very low." }
   ];
 
-  // Real-world applications
-  const applications = [
+  // Applications
+  const apps = [
     {
-      id: 'tightrope',
       title: "Tightrope Walking",
-      description: "Performers use long, curved poles that dip below the rope. This lowers their overall center of mass below the rope, creating remarkable stability.",
-      formula: "Stable when COM < pivot height",
-      insight: "Poles: 10-12m, 10-15kg",
-      color: '#10b981',
+      subtitle: "Defying Gravity with Physics",
+      desc: "Professional tightrope walkers use long, heavy poles that curve downward. This lowers their overall center of mass below the rope itself, creating remarkable stability.",
+      connection: "The pole acts like the fork in our experiment—shifting the COM below the support point.",
+      stats: [{ val: "10-12m", label: "Pole length" }, { val: "10-15kg", label: "Pole weight" }, { val: "45°", label: "Max tilt" }],
+      examples: "Nik Wallenda, Philippe Petit, Circus performers",
+      color: colors.secondary
     },
     {
-      id: 'ship',
       title: "Ship Stability",
-      description: "Ships have heavy ballast at the bottom to keep the center of mass low. This prevents capsizing even in rough seas and high waves.",
-      formula: "Metacentric height = GM",
-      insight: "GM: 0.5-2m for stability",
-      color: '#0ea5e9',
+      subtitle: "Engineering Safe Vessels",
+      desc: "Ships carry heavy ballast at the bottom to keep the center of mass low. This prevents capsizing even in rough seas. Naval architects carefully calculate the 'metacentric height'.",
+      connection: "Like keeping weight on the fork side, ballast keeps the ship's COM low.",
+      stats: [{ val: "0.5-2m", label: "Metacentric height" }, { val: "1000+ tons", label: "Ballast" }, { val: "30°", label: "Max heel" }],
+      examples: "Cargo ships, Aircraft carriers, Sailboats",
+      color: colors.primary
     },
     {
-      id: 'wine',
       title: "Wine Glass Balance",
-      description: "A wine glass with liquid is more stable than when empty because the liquid lowers the center of mass closer to the wide base.",
-      formula: "Lower COM = wider stability zone",
-      insight: "COM drops ~2cm when filled",
-      color: '#a855f7',
+      subtitle: "Everyday Physics",
+      desc: "A wine glass with liquid is more stable than empty. The liquid lowers the center of mass closer to the wide base, making it harder to tip over.",
+      connection: "The liquid acts like clay on the fork side—lowering the COM.",
+      stats: [{ val: "~2cm", label: "COM drop" }, { val: "40%", label: "More stable" }, { val: "200g", label: "Base weight" }],
+      examples: "Wine glasses, Beer steins, Laboratory beakers",
+      color: colors.accent
     },
     {
-      id: 'standing',
       title: "Human Balance",
-      description: "We constantly adjust our body position to keep our center of mass over our feet. That's why it's hard to stand still with eyes closed!",
-      formula: "COM must stay over base of support",
-      insight: "COM: ~55% of standing height",
-      color: '#f59e0b',
+      subtitle: "Your Built-in Balancing Act",
+      desc: "We constantly adjust our body position to keep our center of mass over our feet. This happens automatically through our vestibular system.",
+      connection: "Just like the fork system, we must keep COM over our support point.",
+      stats: [{ val: "55%", label: "COM height" }, { val: "100+", label: "Adjustments/min" }, { val: "3cm", label: "Normal sway" }],
+      examples: "Standing, Walking, Martial arts, Yoga poses",
+      color: colors.warning
     }
   ];
 
-  // Visualization
-  const renderVisualization = () => {
-    const svgWidth = 400;
-    const glassX = svgWidth / 2;
-    const glassY = 180;
-    const pivotY = glassY - 60;
+  const handleAnswer = useCallback((idx: number) => {
+    if (testAnswers[currentQuestion] !== null) return;
+    const newAnswers = [...testAnswers];
+    newAnswers[currentQuestion] = idx;
+    setTestAnswers(newAnswers);
+    setShowExplanation(true);
+    if (idx === questions[currentQuestion].correct) {
+      setTestScore(s => s + 1);
+      playSound('success');
+    } else {
+      playSound('error');
+    }
+  }, [currentQuestion, testAnswers, questions, playSound]);
+
+  const handleReturnToDashboard = useCallback(() => {
+    emit('button_clicked', { action: 'return_to_dashboard' });
+    window.dispatchEvent(new CustomEvent('returnToDashboard'));
+  }, [emit]);
+
+  // ============================================================================
+  // VISUALIZATION - Realistic Fork-Toothpick System
+  // ============================================================================
+  const renderVisualization = (size: 'large' | 'medium' = 'large') => {
+    const w = size === 'large' ? 400 : 320;
+    const h = size === 'large' ? 300 : 240;
+    const scale = size === 'large' ? 1 : 0.8;
     const { comY } = calculateBalance(clayPosition);
+    const wobble = isBalanced ? Math.sin(timeRef.current * 2) * 0.3 : 0;
 
     return (
-      <svg width="100%" height={260} viewBox={`0 0 ${svgWidth} 260`} className="block">
+      <svg width="100%" viewBox={`0 0 ${w} ${h}`} style={{ display: 'block', maxWidth: `${w}px`, margin: '0 auto' }}>
         <defs>
-          <linearGradient id="com-glass-grad" x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" stopColor="#7dd3fc" stopOpacity="0.9" />
-            <stop offset="100%" stopColor="#0284c7" stopOpacity="0.95" />
+          {/* Realistic glass gradient */}
+          <linearGradient id="glassGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#87ceeb" stopOpacity="0.2"/>
+            <stop offset="50%" stopColor="#4facfe" stopOpacity="0.3"/>
+            <stop offset="100%" stopColor="#87ceeb" stopOpacity="0.15"/>
           </linearGradient>
-          <linearGradient id="com-fork-grad" x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" stopColor="#d4dcd8" />
-            <stop offset="100%" stopColor="#8a9a94" />
+
+          {/* Brushed metal for forks */}
+          <linearGradient id="metalGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor="#e8e8e8"/>
+            <stop offset="20%" stopColor="#c8c8c8"/>
+            <stop offset="40%" stopColor="#f0f0f0"/>
+            <stop offset="60%" stopColor="#d0d0d0"/>
+            <stop offset="100%" stopColor="#a0a0a0"/>
+          </linearGradient>
+
+          {/* Wood grain for toothpick */}
+          <linearGradient id="woodGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor="#deb887"/>
+            <stop offset="50%" stopColor="#d4a574"/>
+            <stop offset="100%" stopColor="#c49a6c"/>
+          </linearGradient>
+
+          {/* Clay texture */}
+          <radialGradient id="clayGrad" cx="30%" cy="30%">
+            <stop offset="0%" stopColor="#fbbf24"/>
+            <stop offset="70%" stopColor="#d97706"/>
+            <stop offset="100%" stopColor="#92400e"/>
+          </radialGradient>
+
+          {/* COM glow */}
+          <filter id="comGlow">
+            <feGaussianBlur stdDeviation="3" result="blur"/>
+            <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+          </filter>
+
+          {/* Table wood */}
+          <linearGradient id="tableGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor="#5d4037"/>
+            <stop offset="100%" stopColor="#3e2723"/>
           </linearGradient>
         </defs>
 
-        {/* Background */}
-        <rect width={svgWidth} height={260} fill="#0f172a" />
+        {/* Dark lab background */}
+        <rect width={w} height={h} fill="#0a0a12"/>
 
-        {/* Grid */}
-        <pattern id="com-grid" width="30" height="30" patternUnits="userSpaceOnUse">
-          <path d="M 30 0 L 0 0 0 30" fill="none" stroke="#1e293b" strokeWidth="0.5" />
+        {/* Subtle grid */}
+        <pattern id="grid" width="25" height="25" patternUnits="userSpaceOnUse">
+          <path d="M25 0L0 0 0 25" fill="none" stroke="#1a1a2a" strokeWidth="0.5"/>
         </pattern>
-        <rect width={svgWidth} height={260} fill="url(#com-grid)" />
+        <rect width={w} height={h} fill="url(#grid)" opacity="0.4"/>
 
-        {/* Table surface */}
-        <rect x={0} y={glassY + 55} width={svgWidth} height={60} fill="#2d1f14" />
-        <rect x={0} y={glassY + 55} width={svgWidth} height={4} fill="#4a3525" />
+        {/* Ambient glow */}
+        <ellipse cx={w/2} cy={h*0.4} rx={100*scale} ry={60*scale} fill={colors.secondary} opacity="0.03"/>
+
+        {/* Table */}
+        <rect x="0" y={h*0.78} width={w} height={h*0.25} fill="url(#tableGrad)"/>
+        <rect x="0" y={h*0.78} width={w} height="3" fill="#795548"/>
 
         {/* Glass */}
-        <g>
+        <g transform={`translate(${w/2}, ${h*0.5})`}>
           <path
-            d={`M${glassX - 28} ${glassY + 55} L${glassX - 22} ${glassY - 55} Q${glassX} ${glassY - 60} ${glassX + 22} ${glassY - 55} L${glassX + 28} ${glassY + 55} Z`}
-            fill="url(#com-glass-grad)"
-            stroke="#7dd3fc"
-            strokeWidth={2}
+            d={`M${-28*scale} ${70*scale} L${-22*scale} ${-45*scale} Q0 ${-52*scale} ${22*scale} ${-45*scale} L${28*scale} ${70*scale} Z`}
+            fill="url(#glassGrad)"
+            stroke="#87ceeb"
+            strokeWidth="1.5"
           />
-          <ellipse cx={glassX} cy={glassY + 55} rx={28} ry={7} fill="#0284c7" opacity={0.5} />
+          {/* Glass rim */}
+          <ellipse cy={-45*scale} rx={22*scale} ry={5*scale} fill="none" stroke="#b3e5fc" strokeWidth="2"/>
+          {/* Glass reflection */}
+          <path d={`M${-16*scale} ${-35*scale} L${-12*scale} ${50*scale}`} stroke="rgba(255,255,255,0.12)" strokeWidth="3" strokeLinecap="round"/>
         </g>
 
         {/* Pivot reference line */}
-        <line x1={glassX - 100} y1={pivotY} x2={glassX + 100} y2={pivotY}
-              stroke="#64748b" strokeWidth={1} strokeDasharray="5,5" opacity={0.5} />
-        <text x={glassX + 108} y={pivotY + 4} fill="#64748b" fontSize={10} fontFamily="system-ui">
-          Pivot
-        </text>
+        <line x1={w*0.15} y1={h*0.35} x2={w*0.85} y2={h*0.35} stroke="#475569" strokeWidth="1" strokeDasharray="4,4" opacity="0.5"/>
+        <text x={w*0.88} y={h*0.36} fill="#64748b" fontSize="10" fontFamily="system-ui">Pivot</text>
 
-        {/* Fork-toothpick system with rotation */}
-        <g transform={`translate(${glassX}, ${pivotY}) rotate(${tiltAngle})`}>
+        {/* Fork-toothpick system */}
+        <g transform={`translate(${w/2}, ${h*0.35}) rotate(${tiltAngle + wobble})`}>
           {/* Toothpick */}
-          <rect x={-85} y={-4} width={170} height={8} rx={4} fill="#d4a574" />
+          <rect x={-75*scale} y={-4*scale} width={150*scale} height={8*scale} rx={4*scale} fill="url(#woodGrad)"/>
 
-          {/* Left Fork */}
-          <g transform="translate(-70, 0) rotate(35)">
-            <rect x={-6} y={0} width={12} height={55} rx={3} fill="url(#com-fork-grad)" />
-            <ellipse cx={0} cy={60} rx={16} ry={7} fill="#b8c4c0" />
+          {/* Left fork */}
+          <g transform={`translate(${-60*scale}, 0) rotate(30)`}>
+            <rect x={-5*scale} y="0" width={10*scale} height={50*scale} rx={3*scale} fill="url(#metalGrad)"/>
+            <rect x={-3*scale} y={4*scale} width={1.5*scale} height={42*scale} fill="rgba(255,255,255,0.15)"/>
+            <ellipse cy={52*scale} rx={15*scale} ry={6*scale} fill="url(#metalGrad)"/>
             {[-10, -3.5, 3.5, 10].map((x, i) => (
-              <rect key={i} x={x - 2.5} y={60} width={5} height={22} rx={1} fill="#d4dcd8" />
+              <rect key={i} x={(x-2)*scale} y={52*scale} width={4*scale} height={22*scale} rx={1*scale} fill="url(#metalGrad)"/>
             ))}
           </g>
 
-          {/* Right Fork (mirrored) */}
-          <g transform="translate(-70, 0) rotate(-35) scale(-1, 1)">
-            <rect x={-6} y={0} width={12} height={55} rx={3} fill="url(#com-fork-grad)" />
-            <ellipse cx={0} cy={60} rx={16} ry={7} fill="#b8c4c0" />
+          {/* Right fork (mirrored) */}
+          <g transform={`translate(${60*scale}, 0) rotate(-30) scale(-1,1)`}>
+            <rect x={-5*scale} y="0" width={10*scale} height={50*scale} rx={3*scale} fill="url(#metalGrad)"/>
+            <rect x={-3*scale} y={4*scale} width={1.5*scale} height={42*scale} fill="rgba(255,255,255,0.15)"/>
+            <ellipse cy={52*scale} rx={15*scale} ry={6*scale} fill="url(#metalGrad)"/>
             {[-10, -3.5, 3.5, 10].map((x, i) => (
-              <rect key={i} x={x - 2.5} y={60} width={5} height={22} rx={1} fill="#d4dcd8" />
+              <rect key={i} x={(x-2)*scale} y={52*scale} width={4*scale} height={22*scale} rx={1*scale} fill="url(#metalGrad)"/>
             ))}
           </g>
 
-          {/* Clay ball if added */}
+          {/* Clay */}
           {hasClayAdded && (
-            <g transform={`translate(${clayPosition * 65}, 0)`}>
-              <circle cx={0} cy={0} r={14} fill="#d97706" stroke="#92400e" strokeWidth={2} />
-              <ellipse cx={-4} cy={-4} rx={4} ry={3} fill="rgba(255,255,255,0.2)" />
+            <g transform={`translate(${clayPosition * 60 * scale}, 0)`}>
+              <circle r={14*scale} fill="url(#clayGrad)"/>
+              <ellipse cx={-4*scale} cy={-4*scale} rx={4*scale} ry={3*scale} fill="rgba(255,255,255,0.2)"/>
             </g>
           )}
 
-          {/* Center of mass indicator */}
+          {/* Center of Mass indicator */}
           {showCOM && (
-            <g transform={`translate(0, ${comY * 80})`}>
-              <circle cx={0} cy={0} r={10} fill="#ef4444" />
-              <circle cx={0} cy={0} r={5} fill="#fff" opacity={0.4} />
-              <text x={18} y={4} fill="#ef4444" fontSize={11} fontWeight="700" fontFamily="system-ui">
-                COM
-              </text>
+            <g transform={`translate(0, ${comY * 70 * scale})`} filter="url(#comGlow)">
+              <circle r={10*scale} fill={colors.error} opacity="0.3"/>
+              <circle r={7*scale} fill={colors.error}/>
+              <circle cx={-2*scale} cy={-2*scale} r={2.5*scale} fill="#fca5a5" opacity="0.6"/>
+              <text x={14*scale} y={4*scale} fill={colors.error} fontSize={10*scale} fontWeight="700" fontFamily="system-ui">COM</text>
             </g>
           )}
 
           {/* Pivot point */}
-          <circle cx={0} cy={0} r={5} fill="#fff" stroke="#10b981" strokeWidth={2} />
+          <circle r={5*scale} fill="#fff" stroke={colors.secondary} strokeWidth="2"/>
         </g>
 
-        {/* Status badges */}
-        <g transform="translate(16, 16)">
-          <rect x={0} y={0} width={95} height={34} rx={8}
-                fill={isBalanced ? 'rgba(34,197,94,0.15)' : 'rgba(239,68,68,0.15)'}
-                stroke={isBalanced ? '#22c55e' : '#ef4444'} strokeWidth={1} />
-          <text x={47} y={22} textAnchor="middle"
-                fill={isBalanced ? '#22c55e' : '#ef4444'}
-                fontSize={12} fontWeight="700" fontFamily="system-ui">
-            {isBalanced ? '✓ Balanced' : '✗ Falling!'}
+        {/* Status badge */}
+        <g transform={`translate(12, 12)`}>
+          <rect width={90*scale} height={28*scale} rx={8*scale} fill={isBalanced ? colors.successBg : colors.errorBg} stroke={isBalanced ? colors.success : colors.error} strokeWidth="1"/>
+          <text x={45*scale} y={18*scale} textAnchor="middle" fill={isBalanced ? colors.success : colors.error} fontSize={11*scale} fontWeight="600" fontFamily="system-ui">
+            {isBalanced ? '✓ Balanced' : '✗ Falling'}
           </text>
         </g>
 
+        {/* COM position badge */}
         {showCOM && (
-          <g transform={`translate(${svgWidth - 110}, 16)`}>
-            <rect x={0} y={0} width={95} height={34} rx={8} fill="#1e293b"
-                  stroke="#334155" strokeWidth={1} />
-            <text x={47} y={14} textAnchor="middle" fill="#64748b" fontSize={9} fontFamily="system-ui">
-              COM Position
-            </text>
-            <text x={47} y={28} textAnchor="middle"
-                  fill={comY < 0 ? '#22c55e' : '#ef4444'}
-                  fontSize={12} fontWeight="600" fontFamily="system-ui">
-              {comY < 0 ? '↓ Below pivot' : '↑ Above pivot'}
+          <g transform={`translate(${w - 100*scale}, 12)`}>
+            <rect width={88*scale} height={28*scale} rx={8*scale} fill={colors.bgElevated} stroke={colors.bgHover} strokeWidth="1"/>
+            <text x={44*scale} y={11*scale} textAnchor="middle" fill={colors.textMuted} fontSize={8*scale} fontFamily="system-ui">COM</text>
+            <text x={44*scale} y={22*scale} textAnchor="middle" fill={comY < 0 ? colors.success : colors.error} fontSize={10*scale} fontWeight="600" fontFamily="system-ui">
+              {comY < 0 ? '↓ Below' : '↑ Above'}
             </text>
           </g>
         )}
@@ -393,202 +419,260 @@ const CenterOfMassRenderer: React.FC<CenterOfMassRendererProps> = ({
     );
   };
 
-  // Phase renderers
+  // ============================================================================
+  // PHASE RENDERERS
+  // ============================================================================
+
+  // Premium Hook Page
   const renderHook = () => (
-    <div className="flex flex-col items-center justify-center min-h-[600px] px-6 py-12 text-center">
-      <div className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-500/10 border border-emerald-500/20 rounded-full mb-8">
-        <span className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse" />
-        <span className="text-sm font-medium text-emerald-400 tracking-wide">PHYSICS EXPLORATION</span>
+    <div style={{ minHeight: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: isMobile ? '24px 16px' : '48px 24px', textAlign: 'center' }}>
+      {/* Category pill */}
+      <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '6px 14px', background: colors.successBg, border: `1px solid ${colors.success}30`, borderRadius: '100px', marginBottom: '24px' }}>
+        <div style={{ width: '6px', height: '6px', background: colors.success, borderRadius: '50%' }}/>
+        <span style={{ fontSize: '11px', fontWeight: 600, color: colors.success, letterSpacing: '0.05em', textTransform: 'uppercase' }}>Classical Mechanics</span>
       </div>
 
-      <h1 className="text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-white via-emerald-100 to-cyan-200 bg-clip-text text-transparent">
-        The Impossible Balance
+      {/* Hero title */}
+      <h1 style={{ fontSize: isMobile ? '32px' : '48px', fontWeight: 700, lineHeight: 1.1, marginBottom: '16px', background: `linear-gradient(135deg, ${colors.textPrimary} 0%, ${colors.secondary} 50%, ${colors.primary} 100%)`, WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
+        The Impossible<br/>Balance
       </h1>
 
-      <p className="text-lg text-slate-400 max-w-md mb-10">
-        A toothpick with forks attached balances on the rim of a glass. Most of it hangs off the edge!
+      {/* Subtitle */}
+      <p style={{ fontSize: isMobile ? '16px' : '18px', color: colors.textSecondary, maxWidth: '420px', lineHeight: 1.6, marginBottom: '32px' }}>
+        A fork hangs off a glass and doesn't fall.<br/>How is this even possible?
       </p>
 
-      <div className="relative bg-gradient-to-br from-slate-800/80 to-slate-900/80 rounded-3xl p-8 max-w-xl w-full border border-slate-700/50 shadow-2xl shadow-black/20">
-        <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/5 via-transparent to-cyan-500/5 rounded-3xl" />
-        <div className="relative">
-          <div className="text-7xl mb-6">⚖️</div>
-          <p className="text-xl text-white/90 font-medium leading-relaxed">
-            "How can something hang off a table without falling?"
-          </p>
-        </div>
+      {/* Visualization */}
+      <div style={{ width: '100%', maxWidth: '420px', background: `linear-gradient(135deg, ${colors.bgSurface} 0%, ${colors.bgDeep} 100%)`, borderRadius: '20px', padding: '20px', border: `1px solid ${colors.bgHover}`, marginBottom: '32px' }}>
+        {renderVisualization('large')}
       </div>
 
+      {/* Quote */}
+      <div style={{ maxWidth: '380px', padding: '16px 20px', background: colors.bgSurface, borderRadius: '12px', borderLeft: `3px solid ${colors.secondary}`, marginBottom: '32px' }}>
+        <p style={{ fontSize: '14px', color: colors.textTertiary, fontStyle: 'italic', margin: 0, lineHeight: 1.5 }}>
+          "The center of mass is the key to understanding balance and stability."
+        </p>
+        <p style={{ fontSize: '12px', color: colors.textMuted, marginTop: '8px', marginBottom: 0 }}>— Classical Mechanics</p>
+      </div>
+
+      {/* CTA Button */}
       <button
-        onMouseDown={(e) => { e.preventDefault(); goToPhase(1); }}
-        className="mt-10 group relative px-10 py-5 bg-gradient-to-r from-emerald-500 to-cyan-500 text-white text-lg font-semibold rounded-2xl transition-all duration-300 hover:shadow-lg hover:shadow-emerald-500/25 hover:scale-[1.02] active:scale-[0.98]"
+        onClick={() => goToPhase('predict')}
+        style={{
+          padding: '16px 40px',
+          fontSize: '16px',
+          fontWeight: 600,
+          color: '#fff',
+          background: `linear-gradient(135deg, ${colors.primary} 0%, ${colors.accent} 100%)`,
+          border: 'none',
+          borderRadius: '14px',
+          cursor: 'pointer',
+          boxShadow: `0 8px 32px ${colors.primary}40`,
+          touchAction: 'manipulation',
+          WebkitTapHighlightColor: 'transparent',
+          userSelect: 'none',
+        }}
       >
-        <span className="relative z-10 flex items-center gap-3">
-          Discover the Secret
-          <svg className="w-5 h-5 transition-transform group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-          </svg>
-        </span>
+        Begin Experiment →
       </button>
 
-      <p className="mt-8 text-sm text-slate-500 tracking-wide">CENTER OF MASS • STABILITY</p>
-    </div>
-  );
-
-  const renderPredict = () => (
-    <div className="flex flex-col items-center justify-center min-h-[500px] p-6">
-      <h2 className="text-2xl font-bold text-white mb-2">Make Your Prediction</h2>
-      <p className="text-slate-400 mb-8">Why doesn't the fork-toothpick system fall off the glass?</p>
-
-      <div className="grid gap-3 w-full max-w-md">
-        {[
-          { id: 'light', label: 'The toothpick is very light', icon: '🪶' },
-          { id: 'com_below', label: 'The center of mass is below the pivot', icon: '⬇️' },
-          { id: 'friction', label: 'Friction holds it in place', icon: '🤝' }
-        ].map((option) => (
-          <button
-            key={option.id}
-            onMouseDown={(e) => { e.preventDefault(); setPrediction(option.id); playSound('click'); emitEvent('prediction_made', { prediction: option.id }); }}
-            className={`p-4 rounded-xl text-left transition-all duration-300 flex items-center gap-4 ${
-              prediction === option.id
-                ? 'bg-emerald-600/30 border-2 border-emerald-400'
-                : 'bg-slate-800/50 border-2 border-transparent hover:bg-slate-700/50'
-            }`}
-          >
-            <span className="text-2xl">{option.icon}</span>
-            <span className="text-white">{option.label}</span>
-          </button>
+      {/* Features */}
+      <div style={{ display: 'flex', gap: '16px', marginTop: '24px' }}>
+        {[{ icon: '⏱', text: '5 min' }, { icon: '🧪', text: 'Lab' }, { icon: '📝', text: 'Quiz' }].map((f, i) => (
+          <span key={i} style={{ fontSize: '12px', color: colors.textMuted }}>{f.icon} {f.text}</span>
         ))}
       </div>
-
-      {prediction && (
-        <button
-          onMouseDown={(e) => { e.preventDefault(); goToPhase(2); }}
-          className="mt-8 px-8 py-4 bg-gradient-to-r from-emerald-600 to-cyan-600 text-white font-semibold rounded-xl"
-        >
-          See It In Action! →
-        </button>
-      )}
     </div>
   );
 
-  const renderPlay = () => (
-    <div className="flex flex-col items-center p-6">
-      <h2 className="text-2xl font-bold text-white mb-4">Balance Demonstration</h2>
+  // Predict Phase
+  const renderPredict = () => {
+    const options = [
+      { id: 'light', label: 'The toothpick is very light', desc: 'Light objects balance easier', icon: '🪶' },
+      { id: 'com', label: 'Center of mass is below pivot', desc: 'Gravity creates stability', icon: '⬇️' },
+      { id: 'friction', label: 'Friction holds it in place', desc: 'The surfaces grip together', icon: '🤝' }
+    ];
 
-      <div className="bg-slate-800/50 rounded-2xl p-4 mb-4 w-full max-w-lg">
-        {renderVisualization()}
+    return (
+      <div style={{ padding: isMobile ? '24px 16px' : '32px 24px', maxWidth: '560px', margin: '0 auto' }}>
+        <p style={{ fontSize: '11px', fontWeight: 600, color: colors.primary, letterSpacing: '0.05em', textTransform: 'uppercase', marginBottom: '8px' }}>Step 2 • Make Your Prediction</p>
+        <h2 style={{ fontSize: isMobile ? '24px' : '28px', fontWeight: 700, color: colors.textPrimary, marginBottom: '8px', lineHeight: 1.2 }}>Why Doesn't It Fall?</h2>
+        <p style={{ fontSize: '15px', color: colors.textSecondary, marginBottom: '28px', lineHeight: 1.5 }}>Most of the fork hangs off the edge. What keeps it balanced?</p>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '28px' }}>
+          {options.map(opt => (
+            <button
+              key={opt.id}
+              onClick={() => { if (prediction !== opt.id) { playSound('click'); setPrediction(opt.id); emit('prediction_made', { prediction: opt.id }); } }}
+              style={{
+                display: 'flex', alignItems: 'center', gap: '16px', padding: '16px 20px', textAlign: 'left',
+                background: prediction === opt.id ? colors.successBg : colors.bgSurface,
+                border: `2px solid ${prediction === opt.id ? colors.success : 'transparent'}`,
+                borderRadius: '14px', cursor: 'pointer', touchAction: 'manipulation', WebkitTapHighlightColor: 'transparent', userSelect: 'none',
+              }}
+            >
+              <span style={{ fontSize: '28px' }}>{opt.icon}</span>
+              <div style={{ flex: 1 }}>
+                <p style={{ color: colors.textPrimary, fontWeight: 600, fontSize: '15px', margin: 0 }}>{opt.label}</p>
+                <p style={{ color: colors.textTertiary, fontSize: '13px', margin: '4px 0 0' }}>{opt.desc}</p>
+              </div>
+              {prediction === opt.id && <span style={{ color: colors.success, fontSize: '20px' }}>✓</span>}
+            </button>
+          ))}
+        </div>
+
+        {prediction && (
+          <button
+            onClick={() => goToPhase('play')}
+            style={{ width: '100%', padding: '16px', fontSize: '16px', fontWeight: 600, color: '#fff', background: `linear-gradient(135deg, ${colors.primary} 0%, ${colors.accent} 100%)`, border: 'none', borderRadius: '14px', cursor: 'pointer', touchAction: 'manipulation', WebkitTapHighlightColor: 'transparent', userSelect: 'none' }}
+          >
+            See It In Action →
+          </button>
+        )}
+      </div>
+    );
+  };
+
+  // Play Phase
+  const renderPlay = () => (
+    <div style={{ padding: isMobile ? '24px 16px' : '32px 24px', maxWidth: '560px', margin: '0 auto' }}>
+      <p style={{ fontSize: '11px', fontWeight: 600, color: colors.primary, letterSpacing: '0.05em', textTransform: 'uppercase', marginBottom: '8px' }}>Step 3 • Observe</p>
+      <h2 style={{ fontSize: isMobile ? '22px' : '26px', fontWeight: 700, color: colors.textPrimary, marginBottom: '20px' }}>Balance Demonstration</h2>
+
+      <div style={{ background: colors.bgSurface, borderRadius: '16px', padding: '16px', marginBottom: '20px', border: `1px solid ${colors.bgHover}` }}>
+        {renderVisualization('large')}
       </div>
 
-      <div className="flex items-center gap-3 mb-4">
-        <span className="text-sm text-slate-400">Show COM:</span>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '12px', marginBottom: '20px' }}>
+        <span style={{ fontSize: '14px', color: colors.textSecondary }}>Show COM:</span>
         <button
-          onMouseDown={(e) => { e.preventDefault(); setShowCOM(!showCOM); }}
-          className={`px-4 py-2 rounded-lg font-medium transition-all ${showCOM ? 'bg-red-500 text-white' : 'bg-slate-700 text-slate-400'}`}
+          onClick={() => setShowCOM(!showCOM)}
+          style={{ padding: '8px 20px', fontSize: '14px', fontWeight: 600, background: showCOM ? colors.error : colors.bgElevated, color: showCOM ? '#fff' : colors.textTertiary, border: 'none', borderRadius: '8px', cursor: 'pointer', touchAction: 'manipulation', WebkitTapHighlightColor: 'transparent' }}
         >
           {showCOM ? 'ON' : 'OFF'}
         </button>
       </div>
 
-      <p className="text-slate-300 text-center max-w-md mb-4">
-        Notice how the <span className="text-red-400 font-semibold">center of mass</span> (red dot) is <strong>below</strong> the pivot point. This creates stability!
-      </p>
+      <div style={{ background: colors.successBg, border: `1px solid ${colors.success}30`, borderRadius: '12px', padding: '16px', marginBottom: '24px' }}>
+        <p style={{ color: colors.textSecondary, fontSize: '14px', margin: 0, textAlign: 'center' }}>
+          Notice: The <span style={{ color: colors.error, fontWeight: 700 }}>center of mass</span> (red dot) is <strong>below</strong> the pivot point!
+        </p>
+      </div>
 
-      <button onMouseDown={(e) => { e.preventDefault(); goToPhase(3); }}
-        className="px-6 py-3 bg-gradient-to-r from-emerald-600 to-cyan-600 text-white font-semibold rounded-xl">
-        I understand! →
+      <button
+        onClick={() => goToPhase('review')}
+        style={{ width: '100%', padding: '16px', fontSize: '16px', fontWeight: 600, color: '#fff', background: `linear-gradient(135deg, ${colors.primary} 0%, ${colors.accent} 100%)`, border: 'none', borderRadius: '14px', cursor: 'pointer', touchAction: 'manipulation', WebkitTapHighlightColor: 'transparent', userSelect: 'none' }}
+      >
+        I Understand →
       </button>
     </div>
   );
 
+  // Review Phase
   const renderReview = () => (
-    <div className="flex flex-col items-center p-6">
-      <h2 className="text-2xl font-bold text-white mb-6">The Secret: Center of Mass</h2>
+    <div style={{ padding: isMobile ? '24px 16px' : '32px 24px', maxWidth: '560px', margin: '0 auto' }}>
+      <p style={{ fontSize: '11px', fontWeight: 600, color: colors.primary, letterSpacing: '0.05em', textTransform: 'uppercase', marginBottom: '8px' }}>Step 4 • Understanding</p>
+      <h2 style={{ fontSize: isMobile ? '22px' : '26px', fontWeight: 700, color: colors.textPrimary, marginBottom: '20px' }}>The Secret: Center of Mass</h2>
 
-      <div className="bg-gradient-to-br from-emerald-900/50 to-cyan-900/50 rounded-2xl p-6 max-w-lg mb-6">
-        <p className="text-lg text-emerald-400 font-semibold text-center mb-2">COM below pivot = Stable equilibrium</p>
-        <p className="text-slate-300 text-center">When the center of mass is below the support point, gravity creates a restoring torque that pulls it back to balance.</p>
+      <div style={{ background: `linear-gradient(135deg, ${colors.successBg} 0%, rgba(59, 130, 246, 0.1) 100%)`, borderRadius: '16px', padding: '24px', marginBottom: '24px', textAlign: 'center' }}>
+        <p style={{ fontSize: '20px', fontWeight: 700, color: colors.success, margin: '0 0 8px' }}>COM below pivot = Stable</p>
+        <p style={{ fontSize: '14px', color: colors.textSecondary, margin: 0, lineHeight: 1.5 }}>When the center of mass is below the support point, gravity creates a restoring torque that pulls it back to balance.</p>
       </div>
 
-      <div className="grid gap-4 max-w-lg w-full">
-        <div className="bg-emerald-600/20 border border-emerald-500/30 rounded-xl p-4">
-          <p className="text-emerald-400 font-semibold mb-1">Stable (COM below)</p>
-          <p className="text-slate-300 text-sm">Tilt it, and gravity pulls it back. Like a pendulum!</p>
+      <div style={{ display: 'grid', gap: '12px', marginBottom: '24px' }}>
+        <div style={{ background: colors.successBg, border: `1px solid ${colors.success}30`, borderRadius: '12px', padding: '16px' }}>
+          <p style={{ color: colors.success, fontWeight: 700, margin: '0 0 4px' }}>✓ Stable (COM below)</p>
+          <p style={{ color: colors.textTertiary, fontSize: '13px', margin: 0 }}>Tilt it, and gravity pulls it back. Like a pendulum!</p>
         </div>
-        <div className="bg-red-600/20 border border-red-500/30 rounded-xl p-4">
-          <p className="text-red-400 font-semibold mb-1">Unstable (COM above)</p>
-          <p className="text-slate-300 text-sm">Tilt it, and gravity tips it further. Falls over!</p>
+        <div style={{ background: colors.errorBg, border: `1px solid ${colors.error}30`, borderRadius: '12px', padding: '16px' }}>
+          <p style={{ color: colors.error, fontWeight: 700, margin: '0 0 4px' }}>✗ Unstable (COM above)</p>
+          <p style={{ color: colors.textTertiary, fontSize: '13px', margin: 0 }}>Tilt it, and gravity tips it further. Falls over!</p>
         </div>
       </div>
 
-      <p className="mt-6 text-sm text-slate-400">
-        Your prediction: {prediction === 'com_below' ? '✅ Correct!' : '🤔 Now you understand!'}
+      <p style={{ textAlign: 'center', fontSize: '14px', color: colors.textMuted, marginBottom: '24px' }}>
+        Your prediction: {prediction === 'com' ? '✅ Correct!' : '🤔 Now you understand!'}
       </p>
 
-      <button onMouseDown={(e) => { e.preventDefault(); goToPhase(4); }}
-        className="mt-6 px-6 py-3 bg-gradient-to-r from-amber-600 to-orange-600 text-white font-semibold rounded-xl">
+      <button
+        onClick={() => goToPhase('twist_predict')}
+        style={{ width: '100%', padding: '16px', fontSize: '16px', fontWeight: 600, color: '#fff', background: `linear-gradient(135deg, ${colors.warning} 0%, #ea580c 100%)`, border: 'none', borderRadius: '14px', cursor: 'pointer', touchAction: 'manipulation', WebkitTapHighlightColor: 'transparent', userSelect: 'none' }}
+      >
         Can We Break It? →
       </button>
     </div>
   );
 
-  const renderTwistPredict = () => (
-    <div className="flex flex-col items-center justify-center min-h-[500px] p-6">
-      <h2 className="text-2xl font-bold text-amber-400 mb-2">Plot Twist: Add Clay!</h2>
-      <p className="text-slate-400 mb-8">What if we stick a ball of clay on the toothpick? Where should we put it?</p>
+  // Twist Predict
+  const renderTwistPredict = () => {
+    const options = [
+      { id: 'fork', label: 'Near the forks (left)', desc: 'More stable – COM goes lower' },
+      { id: 'middle', label: 'In the middle', desc: 'No change – balanced' },
+      { id: 'other', label: 'Away from forks (right)', desc: 'Less stable – might fall!' }
+    ];
 
-      <div className="grid gap-3 w-full max-w-md">
-        {[
-          { id: 'fork_side', label: 'Near the forks (left) - more stable' },
-          { id: 'middle', label: 'In the middle - no change' },
-          { id: 'other_side', label: 'Away from forks (right) - might fall!' }
-        ].map((option) => (
+    return (
+      <div style={{ padding: isMobile ? '24px 16px' : '32px 24px', maxWidth: '560px', margin: '0 auto' }}>
+        <p style={{ fontSize: '11px', fontWeight: 600, color: colors.warning, letterSpacing: '0.05em', textTransform: 'uppercase', marginBottom: '8px' }}>Step 5 • Plot Twist</p>
+        <h2 style={{ fontSize: isMobile ? '22px' : '26px', fontWeight: 700, color: colors.warning, marginBottom: '8px' }}>Add Clay! Where Should It Go?</h2>
+        <p style={{ fontSize: '15px', color: colors.textSecondary, marginBottom: '24px' }}>What if we stick a ball of clay on the toothpick?</p>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '24px' }}>
+          {options.map(opt => (
+            <button
+              key={opt.id}
+              onClick={() => { if (twistPrediction !== opt.id) { playSound('click'); setTwistPrediction(opt.id); } }}
+              style={{
+                padding: '16px 20px', textAlign: 'left',
+                background: twistPrediction === opt.id ? colors.warningBg : colors.bgSurface,
+                border: `2px solid ${twistPrediction === opt.id ? colors.warning : 'transparent'}`,
+                borderRadius: '14px', cursor: 'pointer', touchAction: 'manipulation', WebkitTapHighlightColor: 'transparent', userSelect: 'none',
+              }}
+            >
+              <p style={{ color: colors.textPrimary, fontWeight: 600, fontSize: '15px', margin: 0 }}>{opt.label}</p>
+              <p style={{ color: colors.textTertiary, fontSize: '13px', margin: '4px 0 0' }}>{opt.desc}</p>
+            </button>
+          ))}
+        </div>
+
+        {twistPrediction && (
           <button
-            key={option.id}
-            onMouseDown={(e) => { e.preventDefault(); setTwistPrediction(option.id); playSound('click'); emitEvent('twist_prediction_made', { twistPrediction: option.id }); }}
-            className={`p-4 rounded-xl text-left transition-all duration-300 ${
-              twistPrediction === option.id
-                ? 'bg-amber-600/30 border-2 border-amber-400'
-                : 'bg-slate-800/50 border-2 border-transparent hover:bg-slate-700/50'
-            }`}
+            onClick={() => goToPhase('twist_play')}
+            style={{ width: '100%', padding: '16px', fontSize: '16px', fontWeight: 600, color: '#fff', background: `linear-gradient(135deg, ${colors.warning} 0%, #ea580c 100%)`, border: 'none', borderRadius: '14px', cursor: 'pointer', touchAction: 'manipulation', WebkitTapHighlightColor: 'transparent', userSelect: 'none' }}
           >
-            <span className="text-white">{option.label}</span>
+            Experiment →
           </button>
-        ))}
+        )}
       </div>
+    );
+  };
 
-      {twistPrediction && (
-        <button
-          onMouseDown={(e) => { e.preventDefault(); goToPhase(5); }}
-          className="mt-8 px-8 py-4 bg-gradient-to-r from-amber-600 to-orange-600 text-white font-semibold rounded-xl"
-        >
-          Experiment! →
-        </button>
-      )}
-    </div>
-  );
-
+  // Twist Play
   const renderTwistPlay = () => (
-    <div className="flex flex-col items-center p-6">
-      <h2 className="text-2xl font-bold text-amber-400 mb-4">Clay Experiment</h2>
+    <div style={{ padding: isMobile ? '24px 16px' : '32px 24px', maxWidth: '560px', margin: '0 auto' }}>
+      <p style={{ fontSize: '11px', fontWeight: 600, color: colors.warning, letterSpacing: '0.05em', textTransform: 'uppercase', marginBottom: '8px' }}>Step 6 • Clay Experiment</p>
+      <h2 style={{ fontSize: isMobile ? '22px' : '26px', fontWeight: 700, color: colors.warning, marginBottom: '20px' }}>Where Will You Add Clay?</h2>
 
-      <div className="bg-slate-800/50 rounded-2xl p-4 mb-4 w-full max-w-lg">
-        {renderVisualization()}
+      <div style={{ background: colors.bgSurface, borderRadius: '16px', padding: '16px', marginBottom: '20px', border: `1px solid ${colors.bgHover}` }}>
+        {renderVisualization('large')}
       </div>
 
-      <p className="text-slate-300 mb-4">Where do you want to add clay?</p>
+      <p style={{ color: colors.textSecondary, textAlign: 'center', marginBottom: '16px', fontSize: '14px' }}>Click a button to add clay:</p>
 
-      <div className="flex gap-3 mb-4 flex-wrap justify-center">
-        {[
-          { pos: -0.8, label: '← Fork side' },
-          { pos: 0, label: 'Middle' },
-          { pos: 0.8, label: 'Other side →' }
-        ].map((opt) => (
+      <div style={{ display: 'flex', gap: '12px', justifyContent: 'center', flexWrap: 'wrap', marginBottom: '20px' }}>
+        {[{ pos: -0.8, label: '← Fork side' }, { pos: 0, label: 'Middle' }, { pos: 0.8, label: 'Other side →' }].map(opt => (
           <button
             key={opt.pos}
-            onMouseDown={(e) => { e.preventDefault(); addClay(opt.pos); }}
+            onClick={() => addClay(opt.pos)}
             disabled={isAnimating || hasClayAdded}
-            className={`px-4 py-2 rounded-lg font-medium bg-amber-600 hover:bg-amber-500 text-white ${(isAnimating || hasClayAdded) ? 'opacity-50 cursor-not-allowed' : ''}`}
+            style={{
+              padding: '12px 20px', fontSize: '14px', fontWeight: 600,
+              background: (isAnimating || hasClayAdded) ? colors.bgElevated : colors.warning,
+              color: '#fff', border: 'none', borderRadius: '10px',
+              cursor: (isAnimating || hasClayAdded) ? 'not-allowed' : 'pointer',
+              opacity: (isAnimating || hasClayAdded) ? 0.5 : 1,
+              touchAction: 'manipulation', WebkitTapHighlightColor: 'transparent', userSelect: 'none',
+            }}
           >
             {opt.label}
           </button>
@@ -596,301 +680,406 @@ const CenterOfMassRenderer: React.FC<CenterOfMassRendererProps> = ({
       </div>
 
       {hasClayAdded && (
-        <button onMouseDown={(e) => { e.preventDefault(); resetExperiment(); }}
-          className="px-6 py-3 bg-slate-600 hover:bg-slate-500 text-white font-semibold rounded-xl mb-4">
+        <button
+          onClick={resetExperiment}
+          style={{ display: 'block', margin: '0 auto 16px', padding: '12px 24px', fontSize: '14px', fontWeight: 600, background: colors.bgElevated, color: colors.textSecondary, border: 'none', borderRadius: '10px', cursor: 'pointer', touchAction: 'manipulation', WebkitTapHighlightColor: 'transparent' }}
+        >
           ↺ Reset & Try Again
         </button>
       )}
 
-      <p className="text-sm text-slate-500 mb-4">Experiments: {experimentCount}</p>
+      <p style={{ textAlign: 'center', fontSize: '13px', color: colors.textMuted, marginBottom: '20px' }}>Experiments: {experimentCount}</p>
 
       {experimentCount >= 2 && (
-        <button onMouseDown={(e) => { e.preventDefault(); goToPhase(6); }}
-          className="px-6 py-3 bg-gradient-to-r from-amber-600 to-orange-600 text-white font-semibold rounded-xl">
-          I see the pattern! →
+        <button
+          onClick={() => goToPhase('twist_review')}
+          style={{ width: '100%', padding: '16px', fontSize: '16px', fontWeight: 600, color: '#fff', background: `linear-gradient(135deg, ${colors.warning} 0%, #ea580c 100%)`, border: 'none', borderRadius: '14px', cursor: 'pointer', touchAction: 'manipulation', WebkitTapHighlightColor: 'transparent', userSelect: 'none' }}
+        >
+          I See the Pattern →
         </button>
       )}
     </div>
   );
 
+  // Twist Review
   const renderTwistReview = () => (
-    <div className="flex flex-col items-center p-6">
-      <h2 className="text-2xl font-bold text-amber-400 mb-6">Shifting the Center of Mass</h2>
+    <div style={{ padding: isMobile ? '24px 16px' : '32px 24px', maxWidth: '560px', margin: '0 auto' }}>
+      <p style={{ fontSize: '11px', fontWeight: 600, color: colors.warning, letterSpacing: '0.05em', textTransform: 'uppercase', marginBottom: '8px' }}>Step 7 • Deep Insight</p>
+      <h2 style={{ fontSize: isMobile ? '22px' : '26px', fontWeight: 700, color: colors.warning, marginBottom: '20px' }}>Shifting the Center of Mass</h2>
 
-      <div className="bg-gradient-to-br from-amber-900/40 to-orange-900/40 rounded-2xl p-6 max-w-lg mb-6">
-        <p className="text-slate-300 text-center mb-2">
-          Adding weight <span className="text-emerald-400 font-semibold">on the fork side</span> lowers the COM further → <strong>more stable</strong>
+      <div style={{ background: colors.warningBg, borderRadius: '16px', padding: '24px', marginBottom: '24px', textAlign: 'center' }}>
+        <p style={{ color: colors.textSecondary, margin: '0 0 12px', fontSize: '15px' }}>
+          Adding weight <span style={{ color: colors.success, fontWeight: 700 }}>on the fork side</span> lowers the COM → <strong>more stable</strong>
         </p>
-        <p className="text-slate-300 text-center">
-          Adding weight <span className="text-red-400 font-semibold">on the other side</span> raises the COM → <strong>unstable, falls!</strong>
+        <p style={{ color: colors.textSecondary, margin: 0, fontSize: '15px' }}>
+          Adding weight <span style={{ color: colors.error, fontWeight: 700 }}>on the other side</span> raises the COM → <strong>falls!</strong>
         </p>
       </div>
 
-      <div className="bg-emerald-600/20 border border-emerald-500/30 rounded-xl p-4 max-w-lg w-full mb-6">
-        <p className="text-emerald-400 font-semibold text-center">
+      <div style={{ background: colors.successBg, border: `1px solid ${colors.success}30`, borderRadius: '12px', padding: '16px', marginBottom: '24px', textAlign: 'center' }}>
+        <p style={{ color: colors.success, fontWeight: 700, margin: 0, fontSize: '15px' }}>
           The Rule: Keep your center of mass over (or below) your support point!
         </p>
       </div>
 
-      <p className="text-sm text-slate-400 mb-6">
-        Your prediction: {twistPrediction === 'other_side' ? '✅ Correct!' : '🤔 Now you see why!'}
-      </p>
-
-      <button onMouseDown={(e) => { e.preventDefault(); goToPhase(7); }}
-        className="px-6 py-3 bg-gradient-to-r from-emerald-600 to-cyan-600 text-white font-semibold rounded-xl">
+      <button
+        onClick={() => goToPhase('transfer')}
+        style={{ width: '100%', padding: '16px', fontSize: '16px', fontWeight: 600, color: '#fff', background: `linear-gradient(135deg, ${colors.primary} 0%, ${colors.accent} 100%)`, border: 'none', borderRadius: '14px', cursor: 'pointer', touchAction: 'manipulation', WebkitTapHighlightColor: 'transparent', userSelect: 'none' }}
+      >
         See Real-World Examples →
       </button>
     </div>
   );
 
+  // Transfer Phase with Tabs
   const renderTransfer = () => {
-    const app = applications[activeApp];
-    const allAppsCompleted = completedApps.size >= applications.length;
+    const app = apps[activeApp];
+    const allDone = completedApps.every(Boolean);
+    const isLast = activeApp === apps.length - 1;
+
+    const handleContinue = () => {
+      const newCompleted = [...completedApps];
+      newCompleted[activeApp] = true;
+      setCompletedApps(newCompleted);
+      playSound('success');
+      emit('app_completed', { appNumber: activeApp + 1, appTitle: app.title });
+
+      if (!isLast) {
+        setActiveApp(activeApp + 1);
+      }
+    };
 
     return (
-      <div className="flex flex-col items-center p-6">
-        <h2 className="text-2xl font-bold text-white mb-4">Center of Mass in Action</h2>
-
-        <div className="flex gap-2 mb-4 flex-wrap justify-center">
-          {applications.map((_, idx) => (
-            <div key={idx} className={`w-3 h-3 rounded-full ${completedApps.has(idx) ? 'bg-emerald-500' : idx === activeApp ? 'bg-emerald-500' : 'bg-slate-700'}`} />
-          ))}
+      <div style={{ padding: isMobile ? '24px 16px' : '32px 24px', maxWidth: '600px', margin: '0 auto' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+          <div>
+            <p style={{ fontSize: '11px', fontWeight: 600, color: colors.primary, letterSpacing: '0.05em', textTransform: 'uppercase', margin: '0 0 4px' }}>Step 8 • Real World</p>
+            <h2 style={{ fontSize: isMobile ? '20px' : '24px', fontWeight: 700, color: colors.textPrimary, margin: 0 }}>Applications</h2>
+          </div>
+          <span style={{ fontSize: '13px', color: colors.textMuted, background: colors.bgElevated, padding: '6px 12px', borderRadius: '20px' }}>
+            {completedApps.filter(Boolean).length}/4 done
+          </span>
         </div>
 
-        <div className="flex gap-2 mb-4 flex-wrap justify-center">
-          {applications.map((a, idx) => (
-            <button
-              key={a.id}
-              onMouseDown={(e) => { e.preventDefault(); setActiveApp(idx); }}
-              disabled={idx > 0 && !completedApps.has(idx - 1)}
-              className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${
-                activeApp === idx ? 'bg-emerald-600 text-white'
-                : completedApps.has(idx) ? 'bg-emerald-600/30 text-emerald-400'
-                : idx > 0 && !completedApps.has(idx - 1) ? 'bg-slate-800 text-slate-600 cursor-not-allowed'
-                : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
-              }`}
-            >
-              {a.title.split(' ')[0]}
-            </button>
-          ))}
+        {/* Tabs */}
+        <div style={{ display: 'flex', gap: '8px', marginBottom: '24px', overflowX: 'auto', paddingBottom: '4px' }}>
+          {apps.map((a, i) => {
+            const isCompleted = completedApps[i];
+            const isCurrent = activeApp === i;
+            const isLocked = i > 0 && !completedApps[i - 1] && !completedApps[i];
+
+            return (
+              <button
+                key={i}
+                onClick={() => { if (!isLocked) setActiveApp(i); }}
+                disabled={isLocked}
+                style={{
+                  display: 'flex', alignItems: 'center', gap: '6px',
+                  padding: '10px 16px', fontSize: '13px', fontWeight: 600, whiteSpace: 'nowrap',
+                  background: isCurrent ? colors.primary : isCompleted ? colors.successBg : colors.bgSurface,
+                  color: isCurrent ? '#fff' : isCompleted ? colors.success : isLocked ? colors.textMuted : colors.textSecondary,
+                  border: `1px solid ${isCurrent ? colors.primary : isCompleted ? colors.success + '30' : colors.bgHover}`,
+                  borderRadius: '10px', cursor: isLocked ? 'not-allowed' : 'pointer',
+                  opacity: isLocked ? 0.5 : 1,
+                  touchAction: 'manipulation', WebkitTapHighlightColor: 'transparent', userSelect: 'none',
+                }}
+              >
+                {isCompleted ? '✓' : isLocked ? '🔒' : isCurrent ? '●' : (i + 1)}
+                <span>{a.title.split(' ')[0]}</span>
+              </button>
+            );
+          })}
         </div>
 
-        <div className="bg-slate-800/50 rounded-2xl p-6 max-w-lg w-full">
-          <h3 className="text-xl font-bold mb-3" style={{ color: app.color }}>{app.title}</h3>
-          <p className="text-slate-300 mb-4">{app.description}</p>
-          <div className="flex gap-3 mb-4">
-            <div className="bg-slate-700/50 rounded-lg p-3 flex-1 text-center">
-              <p className="text-xs text-slate-500">Principle</p>
-              <p className="text-sm text-white font-mono">{app.formula}</p>
+        {/* App Content */}
+        <div style={{ background: colors.bgSurface, borderRadius: '20px', padding: '24px', border: `1px solid ${colors.bgHover}` }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '16px' }}>
+            <div style={{ width: '56px', height: '56px', borderRadius: '14px', background: `${app.color}20`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '28px' }}>
+              {activeApp === 0 ? '🎪' : activeApp === 1 ? '🚢' : activeApp === 2 ? '🍷' : '🧍'}
             </div>
-            <div className="bg-slate-700/50 rounded-lg p-3 flex-1 text-center">
-              <p className="text-xs text-slate-500">Real Data</p>
-              <p className="text-sm text-white">{app.insight}</p>
+            <div>
+              <h3 style={{ fontSize: '20px', fontWeight: 700, color: app.color, margin: 0 }}>{app.title}</h3>
+              <p style={{ fontSize: '13px', color: colors.textMuted, margin: '2px 0 0' }}>{app.subtitle}</p>
             </div>
           </div>
 
-          {!completedApps.has(activeApp) && (
+          <p style={{ color: colors.textSecondary, fontSize: '15px', lineHeight: 1.6, marginBottom: '20px' }}>{app.desc}</p>
+
+          <div style={{ background: `${app.color}15`, borderRadius: '12px', padding: '14px', marginBottom: '20px' }}>
+            <p style={{ color: app.color, fontSize: '14px', margin: 0 }}><strong>Connection:</strong> {app.connection}</p>
+          </div>
+
+          {/* Stats */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px', marginBottom: '20px' }}>
+            {app.stats.map((s, i) => (
+              <div key={i} style={{ background: colors.bgDeep, borderRadius: '10px', padding: '12px', textAlign: 'center' }}>
+                <p style={{ color: colors.textPrimary, fontWeight: 700, fontSize: '16px', margin: '0 0 4px' }}>{s.val}</p>
+                <p style={{ color: colors.textMuted, fontSize: '11px', margin: 0 }}>{s.label}</p>
+              </div>
+            ))}
+          </div>
+
+          <p style={{ color: colors.textMuted, fontSize: '13px', marginBottom: '24px' }}><strong>Examples:</strong> {app.examples}</p>
+
+          {/* Continue / Complete button */}
+          {!completedApps[activeApp] && (
             <button
-              onMouseDown={(e) => {
-                e.preventDefault();
-                const newCompleted = new Set(completedApps);
-                newCompleted.add(activeApp);
-                setCompletedApps(newCompleted);
-                playSound('complete');
-                emitEvent('app_explored', { app: app.id });
-                if (activeApp < applications.length - 1) {
-                  setTimeout(() => setActiveApp(activeApp + 1), 300);
-                }
+              onClick={isLast && completedApps.slice(0, -1).every(Boolean) ? () => { handleContinue(); goToPhase('test'); } : handleContinue}
+              style={{
+                width: '100%', padding: '16px', fontSize: '16px', fontWeight: 600, color: '#fff',
+                background: `linear-gradient(135deg, ${app.color} 0%, ${app.color}cc 100%)`,
+                border: 'none', borderRadius: '12px', cursor: 'pointer',
+                touchAction: 'manipulation', WebkitTapHighlightColor: 'transparent', userSelect: 'none',
               }}
-              className="w-full py-3 bg-emerald-600/20 border border-emerald-500/50 text-emerald-400 font-medium rounded-xl"
             >
-              ✓ Mark as Read
+              {isLast ? 'Complete & Take Test →' : `Continue to ${apps[activeApp + 1].title} →`}
             </button>
+          )}
+
+          {completedApps[activeApp] && !allDone && (
+            <p style={{ textAlign: 'center', color: colors.success, fontSize: '14px', margin: 0 }}>✓ Completed! Select another tab above.</p>
           )}
         </div>
 
-        {allAppsCompleted && (
-          <button onMouseDown={(e) => { e.preventDefault(); goToPhase(8); }}
-            className="mt-6 px-6 py-3 bg-gradient-to-r from-emerald-600 to-cyan-600 text-white font-semibold rounded-xl">
-            Take the Quiz →
+        {/* Take Test button - only when all done */}
+        {allDone && (
+          <button
+            onClick={() => goToPhase('test')}
+            style={{ width: '100%', marginTop: '24px', padding: '16px', fontSize: '16px', fontWeight: 600, color: '#fff', background: `linear-gradient(135deg, ${colors.primary} 0%, ${colors.accent} 100%)`, border: 'none', borderRadius: '14px', cursor: 'pointer', boxShadow: `0 8px 32px ${colors.primary}40`, touchAction: 'manipulation', WebkitTapHighlightColor: 'transparent', userSelect: 'none' }}
+          >
+            Take the Knowledge Test →
           </button>
         )}
       </div>
     );
   };
 
+  // Test Phase
   const renderTest = () => {
-    const q = testQuestions[currentQuestion];
-    const isAnswered = answeredQuestions.has(currentQuestion);
+    const q = questions[currentQuestion];
+    const answered = testAnswers[currentQuestion] !== null;
+    const allAnswered = testAnswers.every(a => a !== null);
 
     return (
-      <div className="flex flex-col items-center p-6">
-        <div className="flex justify-between items-center w-full max-w-lg mb-4">
-          <span className="text-sm text-slate-400 bg-slate-800 px-3 py-1 rounded-full">
-            Question {currentQuestion + 1} of {testQuestions.length}
+      <div style={{ padding: isMobile ? '24px 16px' : '32px 24px', maxWidth: '600px', margin: '0 auto' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+          <span style={{ fontSize: '13px', color: colors.textMuted, background: colors.bgElevated, padding: '6px 12px', borderRadius: '20px' }}>
+            Question {currentQuestion + 1} of 10
           </span>
-          <span className="text-sm text-emerald-400 bg-emerald-600/20 px-3 py-1 rounded-full font-medium">
-            Score: {correctAnswers}/{answeredQuestions.size}
+          <span style={{ fontSize: '13px', color: colors.success, background: colors.successBg, padding: '6px 12px', borderRadius: '20px', fontWeight: 600 }}>
+            Score: {testScore}/{testAnswers.filter(a => a !== null).length}
           </span>
         </div>
 
-        <div className="h-1 bg-slate-800 rounded-full w-full max-w-lg mb-6 overflow-hidden">
-          <div className="h-full bg-emerald-500 rounded-full transition-all" style={{ width: `${((currentQuestion + 1) / testQuestions.length) * 100}%` }} />
+        {/* Progress */}
+        <div style={{ height: '6px', background: colors.bgElevated, borderRadius: '3px', marginBottom: '24px', overflow: 'hidden' }}>
+          <div style={{ height: '100%', background: colors.primary, borderRadius: '3px', width: `${((currentQuestion + 1) / 10) * 100}%`, transition: 'width 0.3s' }}/>
         </div>
 
-        <div className="bg-slate-800/50 rounded-2xl p-6 max-w-lg w-full">
-          <h3 className="text-lg text-white font-medium mb-4">{q.question}</h3>
+        <div style={{ background: colors.bgSurface, borderRadius: '20px', padding: '24px', border: `1px solid ${colors.bgHover}` }}>
+          <h3 style={{ color: colors.textPrimary, fontSize: '17px', fontWeight: 600, marginBottom: '20px', lineHeight: 1.5 }}>{q.q}</h3>
 
-          <div className="grid gap-3">
-            {q.options.map((option, idx) => {
-              let bgClass = 'bg-slate-700/50 hover:bg-slate-600/50';
-              if (isAnswered) {
-                if (idx === q.correct) bgClass = 'bg-emerald-600/30 border-emerald-500';
-                else if (idx === selectedAnswer) bgClass = 'bg-red-600/30 border-red-500';
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+            {q.opts.map((opt, i) => {
+              let bg = colors.bgElevated;
+              let border = 'transparent';
+              if (answered) {
+                if (i === q.correct) { bg = colors.successBg; border = colors.success; }
+                else if (i === testAnswers[currentQuestion]) { bg = colors.errorBg; border = colors.error; }
               }
               return (
                 <button
-                  key={idx}
-                  onMouseDown={(e) => { e.preventDefault(); handleTestAnswer(idx); }}
-                  disabled={isAnswered}
-                  className={`p-4 rounded-xl text-left border-2 transition-all ${bgClass} ${isAnswered ? 'cursor-default' : ''}`}
+                  key={i}
+                  onClick={() => handleAnswer(i)}
+                  disabled={answered}
+                  style={{
+                    padding: '14px 18px', textAlign: 'left', fontSize: '15px',
+                    background: bg, color: colors.textPrimary,
+                    border: `2px solid ${border}`, borderRadius: '12px',
+                    cursor: answered ? 'default' : 'pointer',
+                    touchAction: 'manipulation', WebkitTapHighlightColor: 'transparent', userSelect: 'none',
+                  }}
                 >
-                  <span className="text-slate-200">{option}</span>
+                  <span style={{ fontWeight: 600, marginRight: '10px', color: colors.textMuted }}>{String.fromCharCode(65 + i)}.</span>
+                  {opt}
                 </button>
               );
             })}
           </div>
 
           {showExplanation && (
-            <div className="mt-4 p-4 bg-emerald-600/20 border border-emerald-500/30 rounded-xl">
-              <p className="text-slate-300 text-sm">💡 {q.explanation}</p>
+            <div style={{ marginTop: '20px', padding: '16px', background: colors.successBg, border: `1px solid ${colors.success}30`, borderRadius: '12px' }}>
+              <p style={{ color: colors.textSecondary, fontSize: '14px', margin: 0 }}>💡 {q.exp}</p>
             </div>
           )}
         </div>
 
-        <div className="flex justify-between w-full max-w-lg mt-6">
+        {/* Navigation */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '24px' }}>
           <button
-            onMouseDown={(e) => { e.preventDefault(); setCurrentQuestion(prev => Math.max(0, prev - 1)); setSelectedAnswer(null); setShowExplanation(answeredQuestions.has(currentQuestion - 1)); }}
+            onClick={() => { if (currentQuestion > 0) { setCurrentQuestion(currentQuestion - 1); setShowExplanation(testAnswers[currentQuestion - 1] !== null); } }}
             disabled={currentQuestion === 0}
-            className="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-lg disabled:opacity-50"
+            style={{ padding: '12px 24px', fontSize: '14px', fontWeight: 600, background: colors.bgElevated, color: currentQuestion === 0 ? colors.textMuted : colors.textSecondary, border: 'none', borderRadius: '10px', cursor: currentQuestion === 0 ? 'not-allowed' : 'pointer', opacity: currentQuestion === 0 ? 0.5 : 1, touchAction: 'manipulation', WebkitTapHighlightColor: 'transparent' }}
           >
             ← Back
           </button>
 
-          {currentQuestion < testQuestions.length - 1 ? (
+          {currentQuestion < 9 ? (
             <button
-              onMouseDown={(e) => { e.preventDefault(); setCurrentQuestion(prev => prev + 1); setSelectedAnswer(null); setShowExplanation(answeredQuestions.has(currentQuestion + 1)); }}
-              className="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-lg"
+              onClick={() => { setCurrentQuestion(currentQuestion + 1); setShowExplanation(testAnswers[currentQuestion + 1] !== null); }}
+              style={{ padding: '12px 24px', fontSize: '14px', fontWeight: 600, background: colors.bgElevated, color: colors.textSecondary, border: 'none', borderRadius: '10px', cursor: 'pointer', touchAction: 'manipulation', WebkitTapHighlightColor: 'transparent' }}
             >
               Next →
             </button>
-          ) : answeredQuestions.size === testQuestions.length ? (
-            <button onMouseDown={(e) => { e.preventDefault(); goToPhase(9); }}
-              className="px-4 py-2 bg-gradient-to-r from-emerald-600 to-cyan-600 text-white font-medium rounded-lg"
+          ) : allAnswered ? (
+            <button
+              onClick={() => { emit('game_completed', { score: testScore, total: 10, passed: testScore >= 7 }); goToPhase('mastery'); }}
+              style={{ padding: '12px 24px', fontSize: '14px', fontWeight: 600, background: `linear-gradient(135deg, ${colors.primary} 0%, ${colors.accent} 100%)`, color: '#fff', border: 'none', borderRadius: '10px', cursor: 'pointer', touchAction: 'manipulation', WebkitTapHighlightColor: 'transparent' }}
             >
               Complete →
             </button>
           ) : (
-            <span className="text-sm text-slate-500 self-center">Answer all to continue</span>
+            <span style={{ fontSize: '13px', color: colors.textMuted, alignSelf: 'center' }}>Answer all to continue</span>
           )}
         </div>
       </div>
     );
   };
 
+  // Mastery Phase
   const renderMastery = () => {
-    const percentage = Math.round((correctAnswers / testQuestions.length) * 100);
+    const pct = Math.round((testScore / 10) * 100);
+    const passed = testScore >= 7;
+
+    const concepts = [
+      { icon: '⬇️', title: 'COM Below Pivot = Stable' },
+      { icon: '⬆️', title: 'COM Above Pivot = Unstable' },
+      { icon: '⚖️', title: 'Adding Weight Shifts COM' },
+      { icon: '🎯', title: 'Base of Support Matters' },
+      { icon: '🔄', title: 'Gravity Provides Restoring Force' }
+    ];
 
     return (
-      <div className="flex flex-col items-center justify-center min-h-[500px] p-6 text-center">
-        <div className="text-8xl mb-6">🏆</div>
-        <h1 className="text-3xl font-bold text-white mb-2">Balance Master!</h1>
-        <div className="text-5xl font-bold text-emerald-400 mb-2">{percentage}%</div>
-        <p className="text-slate-400 mb-8">{correctAnswers}/{testQuestions.length} correct answers</p>
+      <div style={{ padding: isMobile ? '24px 16px' : '48px 24px', maxWidth: '500px', margin: '0 auto', textAlign: 'center' }}>
+        <div style={{ fontSize: '80px', marginBottom: '16px' }}>{passed ? '🏆' : '📚'}</div>
+        <h1 style={{ fontSize: isMobile ? '28px' : '36px', fontWeight: 700, color: colors.textPrimary, marginBottom: '8px' }}>
+          {passed ? 'Balance Master!' : 'Keep Practicing!'}
+        </h1>
 
-        <div className="bg-slate-800/50 rounded-2xl p-6 max-w-md w-full mb-8">
-          <h3 className="text-lg font-bold text-emerald-400 mb-4">Key Takeaways</h3>
-          <ul className="text-left space-y-2">
-            {['COM below pivot = stable equilibrium', 'COM above pivot = unstable, falls', 'Adding weight shifts the COM', 'Keep COM over support to balance'].map((item, idx) => (
-              <li key={idx} className="flex items-center gap-2 text-slate-300">
-                <span className="text-emerald-400">✓</span> {item}
-              </li>
+        <div style={{ fontSize: '48px', fontWeight: 700, color: passed ? colors.success : colors.warning, marginBottom: '8px' }}>{pct}%</div>
+        <p style={{ color: colors.textSecondary, marginBottom: '32px' }}>{testScore}/10 correct</p>
+
+        <div style={{ background: colors.bgSurface, borderRadius: '20px', padding: '24px', marginBottom: '32px', textAlign: 'left' }}>
+          <h3 style={{ fontSize: '16px', fontWeight: 700, color: colors.primary, marginBottom: '16px', textAlign: 'center' }}>
+            {passed ? 'Concepts Mastered' : 'Key Concepts'}
+          </h3>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            {concepts.map((c, i) => (
+              <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <span style={{ fontSize: '20px' }}>{c.icon}</span>
+                <span style={{ color: colors.textSecondary, fontSize: '14px' }}>
+                  {passed && <span style={{ color: colors.success, marginRight: '6px' }}>✓</span>}
+                  {c.title}
+                </span>
+              </div>
             ))}
-          </ul>
+          </div>
         </div>
 
-        <button
-          onMouseDown={(e) => {
-            e.preventDefault();
-            setPhase(0);
-            setExperimentCount(0);
-            setCurrentQuestion(0);
-            setCorrectAnswers(0);
-            setAnsweredQuestions(new Set());
-            setCompletedApps(new Set());
-            setActiveApp(0);
-            setPrediction(null);
-            setTwistPrediction(null);
-            resetExperiment();
-          }}
-          className="px-6 py-3 bg-slate-700 hover:bg-slate-600 text-white font-medium rounded-xl"
-        >
-          ↺ Play Again
-        </button>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+          {passed ? (
+            <>
+              <button
+                onClick={handleReturnToDashboard}
+                style={{ padding: '16px', fontSize: '16px', fontWeight: 600, color: '#fff', background: `linear-gradient(135deg, ${colors.primary} 0%, ${colors.accent} 100%)`, border: 'none', borderRadius: '14px', cursor: 'pointer', touchAction: 'manipulation', WebkitTapHighlightColor: 'transparent', userSelect: 'none' }}
+              >
+                🏠 Return to Dashboard
+              </button>
+              <button
+                onClick={() => goToPhase('hook')}
+                style={{ padding: '16px', fontSize: '14px', fontWeight: 600, color: colors.textSecondary, background: 'transparent', border: `1px solid ${colors.bgHover}`, borderRadius: '14px', cursor: 'pointer', touchAction: 'manipulation', WebkitTapHighlightColor: 'transparent' }}
+              >
+                🔬 Review Lesson
+              </button>
+            </>
+          ) : (
+            <>
+              <button
+                onClick={() => goToPhase('test')}
+                style={{ padding: '16px', fontSize: '16px', fontWeight: 600, color: '#fff', background: `linear-gradient(135deg, ${colors.warning} 0%, #ea580c 100%)`, border: 'none', borderRadius: '14px', cursor: 'pointer', touchAction: 'manipulation', WebkitTapHighlightColor: 'transparent', userSelect: 'none' }}
+              >
+                ↺ Retake Test
+              </button>
+              <button
+                onClick={() => goToPhase('hook')}
+                style={{ padding: '16px', fontSize: '14px', fontWeight: 600, color: colors.textSecondary, background: 'transparent', border: `1px solid ${colors.bgHover}`, borderRadius: '14px', cursor: 'pointer', touchAction: 'manipulation', WebkitTapHighlightColor: 'transparent' }}
+              >
+                🔬 Review Lesson
+              </button>
+              <button
+                onClick={handleReturnToDashboard}
+                style={{ padding: '12px', fontSize: '13px', color: colors.textMuted, background: 'transparent', border: 'none', textDecoration: 'underline', cursor: 'pointer', touchAction: 'manipulation', WebkitTapHighlightColor: 'transparent' }}
+              >
+                Return to Dashboard
+              </button>
+            </>
+          )}
+        </div>
       </div>
     );
   };
 
+  // Phase router
   const renderPhase = () => {
     switch (phase) {
-      case 0: return renderHook();
-      case 1: return renderPredict();
-      case 2: return renderPlay();
-      case 3: return renderReview();
-      case 4: return renderTwistPredict();
-      case 5: return renderTwistPlay();
-      case 6: return renderTwistReview();
-      case 7: return renderTransfer();
-      case 8: return renderTest();
-      case 9: return renderMastery();
+      case 'hook': return renderHook();
+      case 'predict': return renderPredict();
+      case 'play': return renderPlay();
+      case 'review': return renderReview();
+      case 'twist_predict': return renderTwistPredict();
+      case 'twist_play': return renderTwistPlay();
+      case 'twist_review': return renderTwistReview();
+      case 'transfer': return renderTransfer();
+      case 'test': return renderTest();
+      case 'mastery': return renderMastery();
       default: return renderHook();
     }
   };
 
+  const currentIdx = phaseOrder.indexOf(phase);
+
   return (
-    <div className="min-h-screen bg-[#0a0f1a] text-white relative overflow-hidden">
-      {/* Premium background gradient */}
-      <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-[#0a1628] to-slate-900" />
-      <div className="absolute top-0 left-1/4 w-96 h-96 bg-emerald-500/5 rounded-full blur-3xl" />
-      <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-cyan-500/5 rounded-full blur-3xl" />
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-teal-500/3 rounded-full blur-3xl" />
+    <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', background: colors.bgDeep, color: colors.textPrimary, fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif' }}>
+      {/* Background effects */}
+      <div style={{ position: 'absolute', inset: 0, background: `radial-gradient(ellipse at 30% 20%, ${colors.primary}08 0%, transparent 50%), radial-gradient(ellipse at 70% 80%, ${colors.accent}05 0%, transparent 50%)`, pointerEvents: 'none' }}/>
 
       {/* Header */}
-      <div className="fixed top-0 left-0 right-0 z-50 bg-slate-900/80 backdrop-blur-xl border-b border-slate-800/50">
-        <div className="flex items-center justify-between px-6 py-3 max-w-4xl mx-auto">
-          <span className="text-sm font-semibold text-white/80 tracking-wide">Center of Mass</span>
-          <div className="flex items-center gap-1.5">
-            {PHASES.map((p) => (
-              <button
-                key={p}
-                onMouseDown={(e) => { e.preventDefault(); goToPhase(p); }}
-                className={`h-2 rounded-full transition-all duration-300 ${
-                  phase === p
-                    ? 'bg-emerald-400 w-6 shadow-lg shadow-emerald-400/30'
-                    : phase > p
-                      ? 'bg-emerald-500 w-2'
-                      : 'bg-slate-700 w-2 hover:bg-slate-600'
-                }`}
-                title={phaseLabels[p]}
-              />
-            ))}
-          </div>
-          <span className="text-sm font-medium text-emerald-400">{phaseLabels[phase]}</span>
+      <div style={{ flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px', background: `${colors.bgSurface}e6`, backdropFilter: 'blur(12px)', borderBottom: `1px solid ${colors.bgHover}`, position: 'relative', zIndex: 50 }}>
+        <span style={{ fontSize: '15px', fontWeight: 600, color: colors.textPrimary }}>Center of Mass</span>
+
+        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+          {phaseOrder.map((p, i) => (
+            <button
+              key={p}
+              onClick={() => { if (i <= currentIdx) goToPhase(p); }}
+              style={{
+                width: phase === p ? '24px' : '8px', height: '8px', borderRadius: '4px', border: 'none',
+                background: phase === p ? colors.primary : i < currentIdx ? colors.secondary : colors.bgElevated,
+                cursor: i <= currentIdx ? 'pointer' : 'default',
+                transition: 'all 0.2s', touchAction: 'manipulation', WebkitTapHighlightColor: 'transparent',
+              }}
+              title={p}
+            />
+          ))}
         </div>
+
+        <span style={{ fontSize: '13px', fontWeight: 500, color: colors.primary }}>{currentIdx + 1}/10</span>
       </div>
 
-      {/* Main content */}
-      <div className="relative pt-16 pb-12">{renderPhase()}</div>
+      {/* Content */}
+      <div style={{ flex: '1 1 0%', minHeight: 0, overflowY: 'auto', overflowX: 'hidden', WebkitOverflowScrolling: 'touch' }}>
+        {renderPhase()}
+      </div>
     </div>
   );
 };

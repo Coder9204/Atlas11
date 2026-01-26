@@ -141,6 +141,12 @@ const TorqueRenderer: React.FC<TorqueRendererProps> = ({
     onGameEvent?.({ type, data });
   }, [onGameEvent]);
 
+  // Return to dashboard handler
+  const handleReturnToDashboard = useCallback(() => {
+    emitEvent('mastery_achieved', { action: 'return_to_dashboard' });
+    window.dispatchEvent(new CustomEvent('returnToDashboard'));
+  }, [emitEvent]);
+
   // Navigation with debouncing
   const goToPhase = useCallback((newPhase: number) => {
     if (navigationLockRef.current) return;
@@ -1100,6 +1106,22 @@ const TorqueRenderer: React.FC<TorqueRendererProps> = ({
 
   const renderMastery = () => {
     const percentage = Math.round((correctAnswers / testQuestions.length) * 100);
+    const passed = correctAnswers >= 7;
+
+    const resetGame = () => {
+      setPhase(0);
+      setExperimentCount(0);
+      setCurrentQuestion(0);
+      setCorrectAnswers(0);
+      setAnsweredQuestions(new Set());
+      setCompletedApps(new Set());
+      setActiveApp(0);
+      setPrediction(null);
+      setTwistPrediction(null);
+      setPushPosition(0.8);
+      setHasFriction(false);
+      resetDoor();
+    };
 
     return (
       <div className="flex flex-col items-center justify-center min-h-[600px] px-6 py-12 text-center relative overflow-hidden">
@@ -1110,7 +1132,7 @@ const TorqueRenderer: React.FC<TorqueRendererProps> = ({
             100% { transform: translateY(600px) rotate(720deg); opacity: 0; }
           }
         `}</style>
-        {[...Array(20)].map((_, i) => (
+        {passed && [...Array(20)].map((_, i) => (
           <div key={i} style={{
             position: 'absolute', left: `${Math.random() * 100}%`, top: '-20px',
             animation: `confettiFall ${2 + Math.random() * 2}s linear ${Math.random() * 2}s forwards`,
@@ -1120,15 +1142,17 @@ const TorqueRenderer: React.FC<TorqueRendererProps> = ({
           </div>
         ))}
 
-        <div className="text-7xl mb-6">{'\uD83C\uDFC6'}</div>
+        <div className="text-7xl mb-6">{passed ? '\uD83C\uDFC6' : '\uD83D\uDCDA'}</div>
 
-        <h2 className="text-3xl md:text-4xl font-bold text-white mb-2">Torque Master!</h2>
+        <h2 className="text-3xl md:text-4xl font-bold text-white mb-2">
+          {passed ? 'Torque Master!' : 'Keep Practicing!'}
+        </h2>
 
-        <div className="text-5xl font-bold text-emerald-400 mb-2">{percentage}%</div>
+        <div className={`text-5xl font-bold mb-2 ${passed ? 'text-emerald-400' : 'text-amber-400'}`}>{percentage}%</div>
         <p className="text-slate-400 mb-8">{correctAnswers}/{testQuestions.length} correct answers</p>
 
         <div className="bg-slate-800/50 rounded-2xl p-6 max-w-md w-full border border-slate-700/50 mb-8">
-          <h3 className="text-purple-400 font-semibold mb-4">Key Takeaways</h3>
+          <h3 className="text-purple-400 font-semibold mb-4">{passed ? 'Concepts Mastered' : 'Key Concepts'}</h3>
           <ul className="text-left space-y-2">
             {[
               '{\\u03C4} = Force x Lever arm',
@@ -1137,32 +1161,51 @@ const TorqueRenderer: React.FC<TorqueRendererProps> = ({
               'Friction requires extra torque'
             ].map((item, idx) => (
               <li key={idx} className="text-slate-300 text-sm flex items-center gap-2">
-                <span className="text-emerald-400">{'\u2713'}</span> {item.replace('{\\u03C4}', '\u03C4')}
+                <span className="text-emerald-400">{passed ? '\u2713' : '\u25CB'}</span> {item.replace('{\\u03C4}', '\u03C4')}
               </li>
             ))}
           </ul>
         </div>
 
-        <button
-          onMouseDown={(e) => {
-            e.preventDefault();
-            setPhase(0);
-            setExperimentCount(0);
-            setCurrentQuestion(0);
-            setCorrectAnswers(0);
-            setAnsweredQuestions(new Set());
-            setCompletedApps(new Set());
-            setActiveApp(0);
-            setPrediction(null);
-            setTwistPrediction(null);
-            setPushPosition(0.8);
-            setHasFriction(false);
-            resetDoor();
-          }}
-          className="px-8 py-4 bg-gradient-to-r from-purple-600 to-orange-600 text-white font-semibold rounded-xl"
-        >
-          Play Again {'\u21BA'}
-        </button>
+        <div className="flex flex-col gap-3 w-full max-w-md">
+          {passed ? (
+            <>
+              <button
+                onMouseDown={(e) => { e.preventDefault(); handleReturnToDashboard(); }}
+                className="w-full px-8 py-4 bg-gradient-to-r from-purple-600 to-orange-600 text-white font-semibold rounded-xl"
+              >
+                {'\uD83C\uDFE0'} Return to Dashboard
+              </button>
+              <button
+                onMouseDown={(e) => { e.preventDefault(); resetGame(); }}
+                className="w-full px-8 py-4 bg-slate-700 hover:bg-slate-600 text-white font-semibold rounded-xl border border-slate-600"
+              >
+                {'\uD83D\uDD2C'} Review Lesson
+              </button>
+            </>
+          ) : (
+            <>
+              <button
+                onMouseDown={(e) => { e.preventDefault(); goToPhase(8); }}
+                className="w-full px-8 py-4 bg-gradient-to-r from-amber-500 to-orange-600 text-white font-semibold rounded-xl"
+              >
+                {'\u21BA'} Retake Test
+              </button>
+              <button
+                onMouseDown={(e) => { e.preventDefault(); resetGame(); }}
+                className="w-full px-8 py-4 bg-slate-700 hover:bg-slate-600 text-white font-semibold rounded-xl border border-slate-600"
+              >
+                {'\uD83D\uDD2C'} Review Lesson
+              </button>
+              <button
+                onMouseDown={(e) => { e.preventDefault(); handleReturnToDashboard(); }}
+                className="text-slate-500 underline text-sm mt-2"
+              >
+                Return to Dashboard
+              </button>
+            </>
+          )}
+        </div>
       </div>
     );
   };

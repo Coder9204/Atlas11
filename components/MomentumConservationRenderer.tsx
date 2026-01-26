@@ -181,6 +181,12 @@ const MomentumConservationRenderer: React.FC<MomentumConservationRendererProps> 
     onGameEvent?.({ type, data });
   }, [onGameEvent]);
 
+  // Return to dashboard handler
+  const handleReturnToDashboard = useCallback(() => {
+    emitEvent('mastery_achieved', { action: 'return_to_dashboard' });
+    window.dispatchEvent(new CustomEvent('returnToDashboard'));
+  }, [emitEvent]);
+
   // Navigation with debouncing
   const goToPhase = useCallback((newPhase: number) => {
     const now = Date.now();
@@ -843,46 +849,102 @@ const MomentumConservationRenderer: React.FC<MomentumConservationRendererProps> 
 
   const renderMastery = () => {
     const percentage = Math.round((correctAnswers / testQuestions.length) * 100);
+    const passed = correctAnswers >= 7;
+
+    const resetGame = () => {
+      setPhase(0);
+      setExperimentCount(0);
+      setCurrentQuestion(0);
+      setCorrectAnswers(0);
+      setAnsweredQuestions(new Set());
+      setPrediction(null);
+      setTwistPrediction(null);
+      setMassLeft(1);
+      setMassRight(2);
+      setHasFriction(false);
+      setActiveApp(0);
+      setCompletedApps(new Set());
+      resetExperiment();
+    };
 
     return (
-      <div className="flex flex-col items-center justify-center min-h-[500px] p-6 text-center">
-        <div className="text-8xl mb-6">🏆</div>
-        <h1 className="text-3xl font-bold text-white mb-2">Momentum Master!</h1>
-        <div className="text-5xl font-bold text-emerald-400 mb-2">{percentage}%</div>
+      <div className="flex flex-col items-center justify-center min-h-[600px] p-6 text-center relative overflow-hidden">
+        {/* Confetti effect for passing */}
+        {passed && (
+          <>
+            <style>{`
+              @keyframes confettiFall {
+                0% { transform: translateY(-20px) rotate(0deg); opacity: 1; }
+                100% { transform: translateY(600px) rotate(720deg); opacity: 0; }
+              }
+            `}</style>
+            {[...Array(20)].map((_, i) => (
+              <div key={i} style={{
+                position: 'absolute', left: `${Math.random() * 100}%`, top: '-20px',
+                animation: `confettiFall ${2 + Math.random() * 2}s linear ${Math.random() * 2}s forwards`,
+                pointerEvents: 'none', fontSize: 18,
+              }}>
+                {['\uD83D\uDE80', '\u2B50', '\u2728', '\uD83C\uDF89', '\uD83D\uDED2'][Math.floor(Math.random() * 5)]}
+              </div>
+            ))}
+          </>
+        )}
+
+        <div className="text-7xl mb-6">{passed ? '\uD83C\uDFC6' : '\uD83D\uDCDA'}</div>
+        <h1 className="text-3xl font-bold text-white mb-2">{passed ? 'Momentum Master!' : 'Keep Practicing!'}</h1>
+        <div className={`text-5xl font-bold mb-2 ${passed ? 'text-emerald-400' : 'text-amber-400'}`}>{percentage}%</div>
         <p className="text-slate-400 mb-8">{correctAnswers}/{testQuestions.length} correct answers</p>
 
-        <div className="bg-slate-800/50 rounded-2xl p-6 max-w-md w-full mb-8">
-          <h3 className="text-lg font-bold text-blue-400 mb-4">Key Takeaways</h3>
+        <div className="bg-slate-800/50 rounded-2xl p-6 max-w-md w-full mb-8 border border-slate-700/50">
+          <h3 className="text-lg font-bold text-blue-400 mb-4">{passed ? 'Concepts Mastered' : 'Key Concepts'}</h3>
           <ul className="text-left space-y-2">
             {['Momentum p = mass × velocity', 'Total momentum is always conserved', 'Lighter objects move faster in push-offs', 'Friction transfers momentum to Earth'].map((item, idx) => (
               <li key={idx} className="flex items-center gap-2 text-slate-300">
-                <span className="text-emerald-400">✓</span> {item}
+                <span className="text-emerald-400">{passed ? '\u2713' : '\u25CB'}</span> {item}
               </li>
             ))}
           </ul>
         </div>
 
-        <button
-          onMouseDown={(e) => {
-            e.preventDefault();
-            setPhase(0);
-            setExperimentCount(0);
-            setCurrentQuestion(0);
-            setCorrectAnswers(0);
-            setAnsweredQuestions(new Set());
-            setPrediction(null);
-            setTwistPrediction(null);
-            setMassLeft(1);
-            setMassRight(2);
-            setHasFriction(false);
-            setActiveApp(0);
-            setCompletedApps(new Set());
-            resetExperiment();
-          }}
-          className="px-6 py-3 bg-slate-700 hover:bg-slate-600 text-white font-medium rounded-xl"
-        >
-          ↺ Play Again
-        </button>
+        <div className="flex flex-col gap-3 w-full max-w-md">
+          {passed ? (
+            <>
+              <button
+                onMouseDown={(e) => { e.preventDefault(); handleReturnToDashboard(); }}
+                className="w-full px-8 py-4 bg-gradient-to-r from-blue-600 to-cyan-600 text-white font-semibold rounded-xl"
+              >
+                {'\uD83C\uDFE0'} Return to Dashboard
+              </button>
+              <button
+                onMouseDown={(e) => { e.preventDefault(); resetGame(); }}
+                className="w-full px-8 py-4 bg-slate-700 hover:bg-slate-600 text-white font-semibold rounded-xl border border-slate-600"
+              >
+                {'\uD83D\uDD2C'} Review Lesson
+              </button>
+            </>
+          ) : (
+            <>
+              <button
+                onMouseDown={(e) => { e.preventDefault(); goToPhase(8); }}
+                className="w-full px-8 py-4 bg-gradient-to-r from-amber-500 to-orange-600 text-white font-semibold rounded-xl"
+              >
+                {'\u21BA'} Retake Test
+              </button>
+              <button
+                onMouseDown={(e) => { e.preventDefault(); resetGame(); }}
+                className="w-full px-8 py-4 bg-slate-700 hover:bg-slate-600 text-white font-semibold rounded-xl border border-slate-600"
+              >
+                {'\uD83D\uDD2C'} Review Lesson
+              </button>
+              <button
+                onMouseDown={(e) => { e.preventDefault(); handleReturnToDashboard(); }}
+                className="text-slate-500 underline text-sm mt-2"
+              >
+                Return to Dashboard
+              </button>
+            </>
+          )}
+        </div>
       </div>
     );
   };

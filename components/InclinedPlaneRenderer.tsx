@@ -429,6 +429,17 @@ const InclinedPlaneRenderer: React.FC<InclinedPlaneRendererProps> = ({
     }
   }, [onGameEvent]);
 
+  // Alias for emit
+  const emit = useCallback((category: string, data?: Record<string, unknown>, action?: string) => {
+    emitEvent('parameter_changed', { category, action, ...data });
+  }, [emitEvent]);
+
+  // Return to dashboard handler
+  const handleReturnToDashboard = useCallback(() => {
+    emitEvent('mastery_achieved', { action: 'return_to_dashboard' });
+    window.dispatchEvent(new CustomEvent('returnToDashboard'));
+  }, [emitEvent]);
+
   // Phase navigation with 400ms debouncing
   const goToPhase = useCallback((newPhase: number) => {
     if (navigationLockRef.current) return;
@@ -1604,6 +1615,22 @@ const InclinedPlaneRenderer: React.FC<InclinedPlaneRendererProps> = ({
 
   const renderMastery = () => {
     const percentage = Math.round((correctAnswers / testQuestions.length) * 100);
+    const passed = correctAnswers >= 7;
+
+    const resetGame = () => {
+      setPhase(0);
+      setExperimentCount(0);
+      setCurrentQuestion(0);
+      setCorrectAnswers(0);
+      setAnsweredQuestions(new Set());
+      setPrediction(null);
+      setTwistPrediction(null);
+      setAngle(30);
+      setHasFriction(false);
+      setActiveApp(0);
+      setCompletedApps(new Set());
+      resetExperiment();
+    };
 
     return (
       <div style={{
@@ -1617,12 +1644,39 @@ const InclinedPlaneRenderer: React.FC<InclinedPlaneRendererProps> = ({
         position: 'relative',
         overflow: 'hidden'
       }}>
+        {/* Confetti only for passing */}
+        {passed && (
+          <>
+            <style>{`
+              @keyframes confettiFall {
+                0% { transform: translateY(-20px) rotate(0deg); opacity: 1; }
+                100% { transform: translateY(600px) rotate(720deg); opacity: 0; }
+              }
+            `}</style>
+            {[...Array(18)].map((_, i) => (
+              <div
+                key={i}
+                style={{
+                  position: 'absolute',
+                  left: `${Math.random() * 100}%`,
+                  top: '-20px',
+                  animation: `confettiFall ${2 + Math.random() * 2}s linear ${Math.random() * 2}s forwards`,
+                  pointerEvents: 'none',
+                  fontSize: '20px'
+                }}
+              >
+                {['\ud83c\udfa2', '\u26f7\ufe0f', '\u2b50', '\u2728', '\ud83c\udfc6'][Math.floor(Math.random() * 5)]}
+              </div>
+            ))}
+          </>
+        )}
+
         <div style={{
           fontSize: 80,
           marginBottom: design.spacing.md,
           filter: `drop-shadow(0 8px 24px ${design.colors.accentGlow})`
         }}>
-          \ud83c\udfc6
+          {passed ? '\ud83c\udfc6' : '\ud83d\udcda'}
         </div>
 
         <h2 style={{
@@ -1633,13 +1687,13 @@ const InclinedPlaneRenderer: React.FC<InclinedPlaneRendererProps> = ({
           fontFamily: design.font.sans,
           textAlign: 'center'
         }}>
-          Inclined Plane Master!
+          {passed ? 'Inclined Plane Master!' : 'Keep Practicing!'}
         </h2>
 
         <div style={{
           fontSize: 64,
           fontWeight: 700,
-          color: design.colors.success,
+          color: passed ? design.colors.success : '#f59e0b',
           marginBottom: design.spacing.sm,
           fontFamily: design.font.sans
         }}>
@@ -1672,7 +1726,7 @@ const InclinedPlaneRenderer: React.FC<InclinedPlaneRendererProps> = ({
             marginBottom: design.spacing.md,
             textAlign: 'center'
           }}>
-            Key Takeaways:
+            {passed ? 'Concepts Mastered:' : 'Key Concepts:'}
           </h3>
           <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
             {[
@@ -1690,49 +1744,39 @@ const InclinedPlaneRenderer: React.FC<InclinedPlaneRendererProps> = ({
                 alignItems: 'center',
                 gap: design.spacing.sm
               }}>
-                <span style={{ color: design.colors.success }}>\u2713</span> {item}
+                <span style={{ color: design.colors.success }}>{passed ? '\u2713' : '\u25CB'}</span> {item}
               </li>
             ))}
           </ul>
         </div>
 
-        {renderButton('Play Again', () => {
-          setPhase('hook');
-          setExperimentCount(0);
-          setCurrentQuestion(0);
-          setCorrectAnswers(0);
-          setAnsweredQuestions(new Set());
-          setPrediction(null);
-          setTwistPrediction(null);
-          setAngle(30);
-          setHasFriction(false);
-          setActiveApp(0);
-          setCompletedApps(new Set());
-          resetExperiment();
-        })}
-
-        {/* Confetti */}
-        <style>{`
-          @keyframes confettiFall {
-            0% { transform: translateY(-20px) rotate(0deg); opacity: 1; }
-            100% { transform: translateY(600px) rotate(720deg); opacity: 0; }
-          }
-        `}</style>
-        {[...Array(18)].map((_, i) => (
-          <div
-            key={i}
-            style={{
-              position: 'absolute',
-              left: `${Math.random() * 100}%`,
-              top: '-20px',
-              animation: `confettiFall ${2 + Math.random() * 2}s linear ${Math.random() * 2}s forwards`,
-              pointerEvents: 'none',
-              fontSize: '20px'
-            }}
-          >
-            {['\ud83c\udfa2', '\u26f7\ufe0f', '\u2b50', '\u2728', '\ud83c\udfc6'][Math.floor(Math.random() * 5)]}
-          </div>
-        ))}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: design.spacing.md, width: '100%', maxWidth: 340 }}>
+          {passed ? (
+            <>
+              {renderButton('\ud83c\udfe0 Return to Dashboard', handleReturnToDashboard, true)}
+              {renderButton('\ud83d\udd2c Review Lesson', resetGame)}
+            </>
+          ) : (
+            <>
+              {renderButton('\u21ba Retake Test', () => goToPhase(8), true)}
+              {renderButton('\ud83d\udd2c Review Lesson', resetGame)}
+              <button
+                onClick={handleReturnToDashboard}
+                style={{
+                  background: 'transparent',
+                  border: 'none',
+                  color: design.colors.textTertiary,
+                  fontSize: 14,
+                  cursor: 'pointer',
+                  textDecoration: 'underline',
+                  marginTop: design.spacing.sm
+                }}
+              >
+                Return to Dashboard
+              </button>
+            </>
+          )}
+        </div>
       </div>
     );
   };
