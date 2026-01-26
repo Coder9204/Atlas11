@@ -184,6 +184,20 @@ const SmartDashboard: React.FC<SmartDashboardProps> = ({ topic, keyPoints, level
                    ⭐ Inclined Plane
                  </button>
                </div>
+
+               {/* 3D Interactive Simulations - Three.js */}
+               <h3 className="text-sm font-bold text-slate-700 mt-6 mb-3 flex items-center gap-2">
+                 <i className="fa-solid fa-cube text-purple-500"></i>
+                 3D Interactive Simulations (Three.js)
+               </h3>
+               <div className="flex flex-wrap gap-2">
+                 <button
+                   onClick={() => onTestDiagram('molecular_orbitals')}
+                   className="px-4 py-2 bg-gradient-to-r from-purple-600 to-violet-600 hover:from-purple-700 hover:to-violet-700 text-white rounded-lg text-sm font-bold transition-all ring-2 ring-purple-400 ring-offset-2 ring-offset-slate-50 shadow-lg shadow-purple-500/25"
+                 >
+                   🔬 Molecular Orbitals (3D)
+                 </button>
+               </div>
              </div>
            )}
         </div>
