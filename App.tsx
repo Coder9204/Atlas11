@@ -161,6 +161,23 @@ const App: React.FC = () => {
     }
   }, []);
 
+  // Listen for returnToDashboard event from games
+  useEffect(() => {
+    const handleReturnToDashboard = () => {
+      console.log('[App] Return to dashboard requested');
+      // Archive current visual if not none
+      setVisualContext(prev => {
+        if (prev.type !== 'none') {
+          setArchive(oldArchive => [...oldArchive, prev]);
+        }
+        return { type: 'none', data: null };
+      });
+    };
+
+    window.addEventListener('returnToDashboard', handleReturnToDashboard);
+    return () => window.removeEventListener('returnToDashboard', handleReturnToDashboard);
+  }, []);
+
   type GameProgress = {
     gameId: string;
     phase: string;
