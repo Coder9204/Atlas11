@@ -14,6 +14,13 @@ import {
   ToggleState,
   ProgressState,
 } from '../types/DrawCommand.js';
+import {
+  LabelingEngine,
+  GraphicElement,
+  PositionedLabel,
+  BoundingBox,
+  GraphicElementType,
+} from '../labeling/index.js';
 
 export class CommandRenderer {
   private commands: DrawCommand[] = [];
@@ -489,6 +496,147 @@ export class CommandRenderer {
     const d = `M ${normalized[0][0]} ${normalized[0][1]} ` +
       normalized.slice(1).map(p => `L ${p[0]} ${p[1]}`).join(' ');
     return this.path(d, { fill: 'none', ...options });
+  }
+
+  // === LABELING INTEGRATION ===
+
+  /**
+   * Register a graphic element for spatial awareness in the labeling engine.
+   * Call this after drawing each element that labels may need to avoid or reference.
+   */
+  registerElement(
+    labelEngine: LabelingEngine,
+    element: GraphicElement
+  ): this {
+    labelEngine.registerElement(element);
+    return this;
+  }
+
+  /**
+   * Register a circle element for labeling
+   * Convenience method that calculates bounds automatically
+   */
+  registerCircleElement(
+    labelEngine: LabelingEngine,
+    id: string,
+    cx: number,
+    cy: number,
+    r: number,
+    options: { isBackground?: boolean; isInteractive?: boolean } = {}
+  ): this {
+    labelEngine.registerElement({
+      id,
+      type: 'circle',
+      bounds: { x: cx - r, y: cy - r, width: r * 2, height: r * 2 },
+      center: { x: cx, y: cy },
+      isBackground: options.isBackground,
+      isInteractive: options.isInteractive,
+    });
+    return this;
+  }
+
+  /**
+   * Register a rectangle element for labeling
+   * Convenience method that calculates bounds automatically
+   */
+  registerRectElement(
+    labelEngine: LabelingEngine,
+    id: string,
+    x: number,
+    y: number,
+    width: number,
+    height: number,
+    options: { isBackground?: boolean; isInteractive?: boolean } = {}
+  ): this {
+    labelEngine.registerElement({
+      id,
+      type: 'rect',
+      bounds: { x, y, width, height },
+      center: { x: x + width / 2, y: y + height / 2 },
+      isBackground: options.isBackground,
+      isInteractive: options.isInteractive,
+    });
+    return this;
+  }
+
+  /**
+   * Render positioned labels from the labeling engine
+   */
+  renderLabels(labels: PositionedLabel[]): this {
+    for (const label of labels) {
+      const { x, y, text, style, bounds } = label;
+
+      // Draw background if specified
+      if (style.background) {
+        const bg = style.background;
+        this.rect(
+          bounds.x,
+          bounds.y,
+          bounds.width,
+          bounds.height,
+          {
+            fill: bg.fill,
+            rx: bg.borderRadius,
+            ry: bg.borderRadius,
+            stroke: bg.stroke,
+            strokeWidth: bg.strokeWidth,
+            id: `${label.id}_bg`,
+          }
+        );
+      }
+
+      // Draw text
+      this.text(x, y, text, {
+        fill: style.fill,
+        fontSize: style.fontSize,
+        fontWeight: style.fontWeight,
+        fontFamily: style.fontFamily,
+        textAnchor: style.textAnchor ?? 'start',
+        id: label.id,
+      });
+    }
+    return this;
+  }
+
+  /**
+   * Build final game frame with intelligent label positioning.
+   * This is the main entry point for rendering with labels.
+   *
+   * Usage:
+   * ```typescript
+   * const r = new CommandRenderer(700, 350);
+   * r.reset().clear('#020617');
+   *
+   * // Draw graphics
+   * r.circle(100, 100, 20, { fill: '#06b6d4' });
+   * r.registerCircleElement(labelEngine, 'ball', 100, 100, 20);
+   *
+   * // Register labels (engine handles positioning)
+   * labelEngine.registerLabel({
+   *   id: 'ball_label',
+   *   targetId: 'ball',
+   *   fullText: 'Ball',
+   *   anchor: 'top',
+   *   priority: 'high',
+   *   style: { fill: '#ffffff', fontSize: 12 }
+   * });
+   *
+   * // Render with labels
+   * return r.toFrameWithLabels(frameNumber, labelEngine);
+   * ```
+   */
+  toFrameWithLabels(frameNumber: number, labelEngine: LabelingEngine): GameFrame {
+    // Compute label positions
+    const positionedLabels = labelEngine.computePositions(
+      this.viewport.width,
+      this.viewport.height
+    );
+
+    // Render the positioned labels
+    this.renderLabels(positionedLabels);
+
+    // Return the frame
+    return this.toFrame(frameNumber);
   }
 }
 

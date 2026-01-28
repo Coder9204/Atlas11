@@ -183,21 +183,39 @@ const SmartDashboard: React.FC<SmartDashboardProps> = ({ topic, keyPoints, level
                  >
                    ⭐ Inclined Plane
                  </button>
-               </div>
-
-               {/* 3D Interactive Simulations - Three.js */}
-               <h3 className="text-sm font-bold text-slate-700 mt-6 mb-3 flex items-center gap-2">
-                 <i className="fa-solid fa-cube text-purple-500"></i>
-                 3D Interactive Simulations (Three.js)
-               </h3>
-               <div className="flex flex-wrap gap-2">
                  <button
-                   onClick={() => onTestDiagram('molecular_orbitals')}
-                   className="px-4 py-2 bg-gradient-to-r from-purple-600 to-violet-600 hover:from-purple-700 hover:to-violet-700 text-white rounded-lg text-sm font-bold transition-all ring-2 ring-purple-400 ring-offset-2 ring-offset-slate-50 shadow-lg shadow-purple-500/25"
+                   onClick={() => onTestDiagram('antenna_polarization')}
+                   className="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-lg text-sm font-bold transition-all ring-2 ring-rose-400 ring-offset-2 ring-offset-slate-50"
                  >
-                   🔬 Molecular Orbitals (3D)
+                   📡 Antenna Polarization
+                 </button>
+                 <button
+                   onClick={() => onTestDiagram('wireless_charging')}
+                   className="px-4 py-2 bg-cyan-500 hover:bg-cyan-600 text-white rounded-lg text-sm font-bold transition-all ring-2 ring-cyan-400 ring-offset-2 ring-offset-slate-50"
+                 >
+                   🔋 Wireless Charging
+                 </button>
+                 {/* Electromagnetism & Motors Games */}
+                 <button
+                   onClick={() => onTestDiagram('homopolar_motor')}
+                   className="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white rounded-lg text-sm font-bold transition-all ring-2 ring-amber-400 ring-offset-2 ring-offset-slate-50"
+                 >
+                   🔋 Homopolar Motor
+                 </button>
+                 <button
+                   onClick={() => onTestDiagram('classic_dc_motor')}
+                   className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-sm font-bold transition-all ring-2 ring-emerald-400 ring-offset-2 ring-offset-slate-50"
+                 >
+                   ⚙️ DC Motor
+                 </button>
+                 <button
+                   onClick={() => onTestDiagram('oersted_experiment')}
+                   className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-bold transition-all ring-2 ring-blue-400 ring-offset-2 ring-offset-slate-50"
+                 >
+                   🧭 Oersted Experiment
                  </button>
                </div>
+
              </div>
            )}
         </div>

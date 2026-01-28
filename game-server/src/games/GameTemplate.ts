@@ -18,6 +18,36 @@ import { CommandRenderer } from '../renderer/CommandRenderer.js';
 // Utility functions available if needed:
 // import { clamp, lerp } from '../renderer/CommandRenderer.js';
 
+// === INTELLIGENT LABELING SYSTEM ===
+// Import these for smart label positioning that avoids overlaps
+import {
+  LabelingEngine,
+  createLabelingEngine,
+  LabelDefinition,
+  ViewportType,
+} from '../labeling/index.js';
+
+// === SMART DESIGN SYSTEM ===
+// Import these for realistic, clear graphics with proper spacing
+import {
+  // Object styles
+  BALL_STYLES,
+  ARROW_STYLES,
+  MARKER_STYLES,
+  COLORS,
+  SHADOWS,
+  createCustomBallStyle,
+  // Layout
+  LayoutEngine,
+  createLayoutEngine,
+  // Interaction design
+  COMMON_SLIDERS,
+  slider,
+  // 3D visualization (if needed)
+  getRecommendedVisualization,
+  projectIsometric,
+} from '../design/index.js';
+
 // === GAME PHASES ===
 // Customize these for your game
 type GamePhase =
@@ -103,6 +133,16 @@ export class TemplateGame extends BaseGame {
   private isNavigating = false;
   private guidedMode = true;
 
+  // === LABELING ENGINE ===
+  // The labeling engine handles intelligent label positioning
+  // to avoid overlaps and maintain clarity across viewports
+  private labelEngine = createLabelingEngine();
+  private currentViewport: ViewportType = 'desktop';
+
+  // === LAYOUT ENGINE ===
+  // The layout engine handles smart spacing and safe zones
+  private layoutEngine = createLayoutEngine(700, 350);
+
   // Phase configuration
   private readonly phaseOrder: GamePhase[] = [
     'hook', 'predict', 'play', 'review',
@@ -147,6 +187,20 @@ export class TemplateGame extends BaseGame {
 
     if (config.resumePhase && this.phaseOrder.includes(config.resumePhase as GamePhase)) {
       this.phase = config.resumePhase as GamePhase;
+    }
+
+    // === VIEWPORT DETECTION FOR LABELING ===
+    // Detect viewport type from session config for intelligent label positioning
+    if (config.viewport) {
+      const width = config.viewport.width;
+      if (width < 768) {
+        this.currentViewport = 'mobile';
+      } else if (width < 1024) {
+        this.currentViewport = 'tablet';
+      } else {
+        this.currentViewport = 'desktop';
+      }
+      this.labelEngine.setViewport(this.currentViewport);
     }
 
     this.emitCoachEvent('game_started', {
@@ -332,6 +386,10 @@ export class TemplateGame extends BaseGame {
     const r = new CommandRenderer(700, 350);
     r.reset();
 
+    // === LABELING WORKFLOW ===
+    // Step 1: Clear label engine for new frame
+    this.labelEngine.clear();
+
     // Background
     r.clear(colors.bgDark);
 
@@ -368,6 +426,14 @@ export class TemplateGame extends BaseGame {
     // UI state
     this.renderUI(r);
 
+    // === LABELING OUTPUT ===
+    // Step 4: Use toFrameWithLabels() for phases with registered labels
+    // This computes optimal positions and renders labels automatically
+    if (this.phase === 'play' || this.phase === 'twist_play') {
+      return r.toFrameWithLabels(this.nextFrame(), this.labelEngine);
+    }
+
+    // For phases without labels, use standard toFrame()
     return r.toFrame(this.nextFrame());
   }
 
@@ -411,8 +477,128 @@ export class TemplateGame extends BaseGame {
       textAnchor: 'middle',
     });
 
-    // Example: Draw a simple object
-    // r.circle(this.position.x, this.position.y, 20, { fill: colors.primary });
+    // === SMART DESIGN SYSTEM EXAMPLE ===
+    // Here's how to create realistic, clear graphics with proper spacing
+
+    // --- STEP 1: Configure layout engine ---
+    this.layoutEngine.setViewport(this.currentViewport);
+    this.layoutEngine.clear();
+
+    // Get available space (respects safe zones)
+    const available = this.layoutEngine.getAvailableSpace();
+    const center = this.layoutEngine.getGraphicCenter();
+
+    // --- STEP 2: Use realistic object styles ---
+    // The BALL_STYLES provide pre-configured realistic appearances
+    const ballStyle = BALL_STYLES.standard;
+    const targetStyle = MARKER_STYLES.target;
+
+    // Get optimal positions with proper spacing
+    const positions = this.layoutEngine.getHorizontalPositions(60, 2, center.y);
+    const ballPos = positions[0];
+    const targetPos = positions[1];
+
+    // --- STEP 3: Draw with realistic styles ---
+    // Ball with gradient for 3D effect
+    const ballRadius = 30;
+
+    // Add gradient definition for realistic metallic look
+    r.radialGradient('ball_gradient', [
+      { offset: '0%', color: COLORS.primary.light },
+      { offset: '50%', color: COLORS.primary.base },
+      { offset: '100%', color: COLORS.primary.dark },
+    ], { cx: '30%', cy: '30%', r: '70%' });
+
+    // Draw shadow first (for depth)
+    r.ellipse(ballPos.x + 4, ballPos.y + ballRadius + 8, ballRadius * 0.8, ballRadius * 0.3, {
+      fill: 'rgba(0,0,0,0.2)',
+      id: 'ball_shadow',
+    });
+
+    // Draw ball with realistic gradient
+    r.circle(ballPos.x, ballPos.y, ballRadius, {
+      fill: 'url(#ball_gradient)',
+      stroke: COLORS.primary.dark,
+      strokeWidth: 1,
+      id: 'ball',
+    });
+
+    // Add specular highlight for 3D effect
+    r.ellipse(ballPos.x - 8, ballPos.y - 8, 6, 4, {
+      fill: 'rgba(255,255,255,0.6)',
+      id: 'ball_highlight',
+    });
+
+    // Draw target with realistic style
+    r.circle(targetPos.x, targetPos.y, 25, {
+      fill: COLORS.success.base,
+      stroke: COLORS.success.dark,
+      strokeWidth: 2,
+      id: 'target',
+    });
+
+    // --- STEP 4: Register elements for labeling ---
+    this.layoutEngine.placeObject('ball', {
+      x: ballPos.x - ballRadius,
+      y: ballPos.y - ballRadius,
+      width: ballRadius * 2,
+      height: ballRadius * 2,
+    });
+
+    r.registerCircleElement(this.labelEngine, 'ball', ballPos.x, ballPos.y, ballRadius, {
+      isInteractive: true,
+    });
+
+    this.layoutEngine.placeObject('target', {
+      x: targetPos.x - 25,
+      y: targetPos.y - 25,
+      width: 50,
+      height: 50,
+    });
+
+    r.registerCircleElement(this.labelEngine, 'target', targetPos.x, targetPos.y, 25);
+
+    // --- STEP 5: Register labels with educational context ---
+    this.labelEngine.registerLabel({
+      id: 'ball_label',
+      targetId: 'ball',
+      fullText: 'Projectile',
+      abbreviation: 'P',
+      useAbbreviationAfter: 2,
+      anchor: 'top',
+      offset: { x: 0, y: -10 },
+      priority: 'high',
+      style: {
+        fill: colors.textPrimary,
+        fontSize: 12,
+        background: { fill: 'rgba(0,0,0,0.7)', padding: 4, borderRadius: 4 },
+      },
+      viewportOverrides: {
+        mobile: { anchor: 'right', fontSize: 10 },
+      },
+    });
+
+    this.labelEngine.registerLabel({
+      id: 'target_label',
+      targetId: 'target',
+      fullText: 'Target',
+      anchor: 'bottom',
+      offset: { x: 0, y: 10 },
+      priority: 'medium',
+      style: {
+        fill: colors.textPrimary,
+        fontSize: 12,
+        background: { fill: 'rgba(0,0,0,0.7)', padding: 4, borderRadius: 4 },
+      },
+    });
+
+    // --- STEP 6: Verify layout (optional, for debugging) ---
+    // const layoutResult = this.layoutEngine.analyze();
+    // if (layoutResult.issues.length > 0) {
+    //   console.warn('Layout issues:', layoutResult.issues);
+    // }
+
+    // Note: Labels are rendered automatically in toFrameWithLabels()
   }
 
   private renderReview(r: CommandRenderer): void {

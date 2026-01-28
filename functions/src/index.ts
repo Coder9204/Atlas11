@@ -278,3 +278,223 @@ export const healthCheck = functions.https.onRequest((req, res) => {
     version: '1.0.0'
   });
 });
+
+// =============================================================
+// SECURE TEST ANSWER VALIDATION
+// =============================================================
+
+import { validateAnswer, getConfiguredGames } from './gameAnswers';
+
+/**
+ * Validate a test answer without revealing the correct answer.
+ *
+ * This is the CRITICAL security function that keeps test answers on the server.
+ * The client NEVER receives the correct answer - only whether their answer was correct.
+ *
+ * Request: { gameId: string, questionIndex: number, selectedIndex: number }
+ * Response: { correct: boolean, explanation: string }
+ */
+export const validateTestAnswer = functions.https.onCall(async (data, context) => {
+  // Authentication is optional for test answers (allows guest users)
+  // But we log authenticated users for analytics
+  const userId = context.auth?.uid || 'anonymous';
+
+  // Rate limiting (stricter for anonymous users)
+  const rateLimit = context.auth ? RATE_LIMIT : { ...RATE_LIMIT, maxRequests: 30 };
+  const userLimit = rateLimitStore.get(userId);
+  const now = Date.now();
+
+  if (userLimit && now < userLimit.resetTime && userLimit.count >= rateLimit.maxRequests) {
+    throw new functions.https.HttpsError(
+      'resource-exhausted',
+      'Rate limit exceeded. Please wait before submitting more answers.'
+    );
+  }
+
+  if (!userLimit || now > userLimit.resetTime) {
+    rateLimitStore.set(userId, { count: 1, resetTime: now + rateLimit.windowMs });
+  } else {
+    userLimit.count++;
+  }
+
+  // Validate input
+  const { gameId, questionIndex, selectedIndex } = data;
+
+  if (typeof gameId !== 'string' || !gameId.trim()) {
+    throw new functions.https.HttpsError(
+      'invalid-argument',
+      'gameId is required and must be a string.'
+    );
+  }
+
+  if (typeof questionIndex !== 'number' || questionIndex < 0 || questionIndex > 9) {
+    throw new functions.https.HttpsError(
+      'invalid-argument',
+      'questionIndex must be a number between 0 and 9.'
+    );
+  }
+
+  if (typeof selectedIndex !== 'number' || selectedIndex < 0 || selectedIndex > 3) {
+    throw new functions.https.HttpsError(
+      'invalid-argument',
+      'selectedIndex must be a number between 0 and 3.'
+    );
+  }
+
+  // Sanitize gameId (remove special characters, convert to lowercase)
+  const sanitizedGameId = gameId.toLowerCase().replace(/[^a-z0-9_]/g, '_');
+
+  // Validate the answer
+  const result = validateAnswer(sanitizedGameId, questionIndex, selectedIndex);
+
+  if (!result) {
+    // Game or question not found - don't reveal which
+    throw new functions.https.HttpsError(
+      'not-found',
+      'Question not found. Please ensure the game is properly configured.'
+    );
+  }
+
+  // Log the attempt for analytics (no correct answer logged)
+  try {
+    await admin.firestore().collection('test_attempts').add({
+      userId,
+      gameId: sanitizedGameId,
+      questionIndex,
+      correct: result.correct,
+      timestamp: admin.firestore.FieldValue.serverTimestamp()
+    });
+  } catch (error) {
+    // Don't fail the request if analytics logging fails
+    console.error('Failed to log test attempt:', error);
+  }
+
+  // Return result WITHOUT revealing the correct answer
+  return {
+    correct: result.correct,
+    explanation: result.explanation
+  };
+});
+
+/**
+ * Submit complete test and get final score.
+ *
+ * This validates all answers at once and returns the overall score.
+ * Useful for batch validation and preventing tampering with individual results.
+ *
+ * Request: { gameId: string, answers: number[] }
+ * Response: { score: number, total: number, passed: boolean, results: boolean[] }
+ */
+export const submitTest = functions.https.onCall(async (data, context) => {
+  const userId = context.auth?.uid || 'anonymous';
+
+  // Rate limiting
+  checkRateLimit(userId);
+
+  // Validate input
+  const { gameId, answers } = data;
+
+  if (typeof gameId !== 'string' || !gameId.trim()) {
+    throw new functions.https.HttpsError(
+      'invalid-argument',
+      'gameId is required.'
+    );
+  }
+
+  if (!Array.isArray(answers) || answers.length !== 10) {
+    throw new functions.https.HttpsError(
+      'invalid-argument',
+      'answers must be an array of exactly 10 numbers.'
+    );
+  }
+
+  // Validate each answer is a valid number
+  for (let i = 0; i < answers.length; i++) {
+    if (typeof answers[i] !== 'number' || answers[i] < 0 || answers[i] > 3) {
+      throw new functions.https.HttpsError(
+        'invalid-argument',
+        `Answer at index ${i} must be a number between 0 and 3.`
+      );
+    }
+  }
+
+  const sanitizedGameId = gameId.toLowerCase().replace(/[^a-z0-9_]/g, '_');
+
+  // Validate all answers
+  const results: boolean[] = [];
+  let score = 0;
+
+  for (let i = 0; i < 10; i++) {
+    const result = validateAnswer(sanitizedGameId, i, answers[i]);
+    if (!result) {
+      throw new functions.https.HttpsError(
+        'not-found',
+        'Game not properly configured for test validation.'
+      );
+    }
+    results.push(result.correct);
+    if (result.correct) score++;
+  }
+
+  const passed = score >= 7; // 70% pass threshold
+
+  // Log complete test submission
+  try {
+    await admin.firestore().collection('test_submissions').add({
+      userId,
+      gameId: sanitizedGameId,
+      score,
+      passed,
+      timestamp: admin.firestore.FieldValue.serverTimestamp()
+    });
+
+    // Update user progress if authenticated
+    if (context.auth) {
+      await admin.firestore()
+        .collection('users')
+        .doc(userId)
+        .collection('game_progress')
+        .doc(sanitizedGameId)
+        .set({
+          lastAttempt: admin.firestore.FieldValue.serverTimestamp(),
+          bestScore: admin.firestore.FieldValue.increment(0), // Will be updated below
+          passed,
+        }, { merge: true });
+
+      // Update best score if this is higher
+      const progressDoc = await admin.firestore()
+        .collection('users')
+        .doc(userId)
+        .collection('game_progress')
+        .doc(sanitizedGameId)
+        .get();
+
+      const currentBest = progressDoc.data()?.bestScore || 0;
+      if (score > currentBest) {
+        await progressDoc.ref.update({ bestScore: score });
+      }
+    }
+  } catch (error) {
+    console.error('Failed to log test submission:', error);
+  }
+
+  return {
+    score,
+    total: 10,
+    passed,
+    results, // Array of true/false for each question
+    // Note: We don't return explanations here to encourage reviewing in the game
+  };
+});
+
+/**
+ * Get list of games with configured answers.
+ * Useful for admin dashboard to see coverage.
+ */
+export const getConfiguredGamesList = functions.https.onCall(async (data, context) => {
+  // This endpoint is public (no auth required)
+  return {
+    games: getConfiguredGames(),
+    count: getConfiguredGames().length
+  };
+});
