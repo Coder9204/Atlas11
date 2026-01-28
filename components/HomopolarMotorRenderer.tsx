@@ -772,9 +772,8 @@ const HomopolarMotorRenderer: React.FC<HomopolarMotorRendererProps> = ({
       padding: '16px 20px',
       borderTop: `1px solid ${colors.border}`,
       backgroundColor: colors.bgCard,
-      boxShadow: '0 -8px 30px rgba(0,0,0,0.5)',
-      minHeight: '72px',
-      boxShadow: '0 -4px 20px rgba(0,0,0,0.3)'
+      boxShadow: '0 -4px 20px rgba(0,0,0,0.3)',
+      minHeight: '72px'
     }}>
       {showBack ? (
         <button

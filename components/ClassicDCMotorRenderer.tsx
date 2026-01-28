@@ -883,11 +883,9 @@ const ClassicDCMotorRenderer: React.FC<ClassicDCMotorRendererProps> = ({
       alignItems: 'center',
       padding: '16px 20px',
       borderTop: `1px solid ${colors.border}`,
-      boxShadow: '0 -8px 30px rgba(0,0,0,0.5)',
+      boxShadow: '0 -4px 20px rgba(0,0,0,0.3)',
       backgroundColor: colors.bgCard,
-      zIndex: 100,
-      minHeight: '72px',
-      boxShadow: '0 -4px 20px rgba(0,0,0,0.3)'
+      minHeight: '72px'
     }}>
       {showBack ? (
         <button
