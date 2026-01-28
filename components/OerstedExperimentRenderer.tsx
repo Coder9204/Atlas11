@@ -452,10 +452,11 @@ const OerstedExperimentRenderer: React.FC<OerstedExperimentRendererProps> = ({
 
   // LEGEND ITEMS - explain what each element represents
   const legendItems = [
-    { color: colors.wire, label: 'Wire (carries current)' },
-    { color: colors.field, label: 'Magnetic field lines' },
+    { color: colors.wire, label: 'Wire (current direction)' },
     { color: colors.compass, label: 'Compass needle' },
-    { color: colors.current, label: 'Current direction' },
+    { color: colors.field, label: 'Magnetic field lines' },
+    { color: colors.current, label: 'Current direction arrows' },
+    { color: colors.warning, label: 'Power source' },
   ];
 
   const renderLegend = () => (
@@ -469,7 +470,7 @@ const OerstedExperimentRenderer: React.FC<OerstedExperimentRendererProps> = ({
       border: `1px solid ${colors.border}`,
       zIndex: 10
     }}>
-      <p style={{ fontSize: '10px', fontWeight: 700, color: colors.textMuted, marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+      <p style={{ fontSize: '10px', fontWeight: 700, color: '#e2e8f0', marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
         Legend
       </p>
       {legendItems.map((item, i) => (
@@ -537,7 +538,7 @@ const OerstedExperimentRenderer: React.FC<OerstedExperimentRendererProps> = ({
         <text x={cx} y="28" textAnchor="middle" fill={colors.textPrimary} fontSize={isMobile ? 16 : 20} fontWeight="bold">
           How Current Creates Magnetism
         </text>
-        <text x={cx} y="48" textAnchor="middle" fill={colors.textMuted} fontSize={isMobile ? 11 : 13}>
+        <text x={cx} y="48" textAnchor="middle" fill="#e2e8f0" fontSize={isMobile ? 11 : 13}>
           Current creates magnetic fields
         </text>
 
@@ -684,9 +685,9 @@ const OerstedExperimentRenderer: React.FC<OerstedExperimentRendererProps> = ({
 
           {/* Cardinal directions */}
           <text x="0" y={isMobile ? -20 : -28} textAnchor="middle" fill={colors.bgDark} fontSize="12" fontWeight="bold">N</text>
-          <text x="0" y={isMobile ? 25 : 34} textAnchor="middle" fill={colors.textMuted} fontSize="10">S</text>
-          <text x={isMobile ? 23 : 32} y="4" textAnchor="middle" fill={colors.textMuted} fontSize="10">E</text>
-          <text x={isMobile ? -23 : -32} y="4" textAnchor="middle" fill={colors.textMuted} fontSize="10">W</text>
+          <text x="0" y={isMobile ? 25 : 34} textAnchor="middle" fill="#f8fafc" fontSize="10">S</text>
+          <text x={isMobile ? 23 : 32} y="4" textAnchor="middle" fill="#f8fafc" fontSize="10">E</text>
+          <text x={isMobile ? -23 : -32} y="4" textAnchor="middle" fill="#f8fafc" fontSize="10">W</text>
 
           {/* Compass needle */}
           <g transform={`rotate(${compassAngle})`}>
@@ -722,7 +723,7 @@ const OerstedExperimentRenderer: React.FC<OerstedExperimentRendererProps> = ({
         {currentOn && wireMode === 'straight' && (
           <g transform={`translate(${isMobile ? 35 : 70}, ${isMobile ? 65 : 85})`}>
             <rect x="-28" y="-22" width="76" height="56" fill={colors.bgCard} rx="6" stroke={colors.border} />
-            <text x="10" y="-6" textAnchor="middle" fill={colors.textMuted} fontSize="9">Right-Hand Rule</text>
+            <text x="10" y="-6" textAnchor="middle" fill="#f8fafc" fontSize="9">Right-Hand Rule</text>
             <text x="10" y="10" textAnchor="middle" fill={colors.current} fontSize="9">👍 Thumb = I</text>
             <text x="10" y="24" textAnchor="middle" fill={colors.field} fontSize="9">👋 Fingers = B</text>
           </g>
@@ -790,23 +791,23 @@ const OerstedExperimentRenderer: React.FC<OerstedExperimentRendererProps> = ({
         {wireMode === 'straight' ? 'B = μ₀I / (2πr)' : 'B = μ₀nI'}
       </div>
       <div style={{ display: 'grid', gridTemplateColumns: 'auto 1fr', gap: '6px 12px', fontSize: '12px' }}>
-        <span style={{ color: colors.field, fontWeight: 700 }}>B</span>
-        <span style={{ color: colors.textSecondary }}>Magnetic field strength (what we measure)</span>
-        <span style={{ color: colors.current, fontWeight: 700 }}>I</span>
-        <span style={{ color: colors.textSecondary }}>Current strength (what YOU control with slider)</span>
+        <span style={{ color: '#60a5fa', fontWeight: 700 }}>B</span>
+        <span style={{ color: '#e2e8f0' }}>Magnetic field strength (what we measure)</span>
+        <span style={{ color: '#fbbf24', fontWeight: 700 }}>I</span>
+        <span style={{ color: '#e2e8f0' }}>Current strength (what YOU control with slider)</span>
         {wireMode === 'straight' ? (
           <>
-            <span style={{ color: colors.success, fontWeight: 700 }}>r</span>
-            <span style={{ color: colors.textSecondary }}>Distance from wire (closer = stronger)</span>
+            <span style={{ color: '#4ade80', fontWeight: 700 }}>r</span>
+            <span style={{ color: '#e2e8f0' }}>Distance from wire (closer = stronger)</span>
           </>
         ) : (
           <>
-            <span style={{ color: colors.success, fontWeight: 700 }}>n</span>
-            <span style={{ color: colors.textSecondary }}>Number of coil turns (more = stronger)</span>
+            <span style={{ color: '#4ade80', fontWeight: 700 }}>n</span>
+            <span style={{ color: '#e2e8f0' }}>Number of coil turns (more = stronger)</span>
           </>
         )}
-        <span style={{ color: colors.textMuted, fontWeight: 700 }}>μ₀</span>
-        <span style={{ color: colors.textSecondary }}>A physics constant (don't worry about it)</span>
+        <span style={{ color: '#e2e8f0', fontWeight: 700 }}>μ₀</span>
+        <span style={{ color: '#e2e8f0' }}>A physics constant (don't worry about it)</span>
       </div>
     </div>
   );
@@ -880,7 +881,7 @@ const OerstedExperimentRenderer: React.FC<OerstedExperimentRendererProps> = ({
       ) : (
         <div style={{
           padding: '16px 32px',
-          color: colors.textMuted,
+          color: '#e2e8f0',
           fontSize: '14px',
           fontStyle: 'italic'
         }}>
@@ -913,7 +914,7 @@ const OerstedExperimentRenderer: React.FC<OerstedExperimentRendererProps> = ({
             border: `1px solid ${colors.border}`,
             textAlign: 'left'
           }}>
-            <p style={{ color: colors.textMuted, fontSize: '14px', fontStyle: 'italic', marginBottom: '12px' }}>
+            <p style={{ color: '#e2e8f0', fontSize: '14px', fontStyle: 'italic', marginBottom: '12px' }}>
               "I finally found that the magnetic needle was moved by the galvanic current."
             </p>
             <p style={{ color: colors.textSecondary, fontSize: '13px' }}>
@@ -1066,7 +1067,7 @@ const OerstedExperimentRenderer: React.FC<OerstedExperimentRendererProps> = ({
                 onChange={(e) => setCurrentStrength(Number(e.target.value))}
                 style={{ width: '100%', accentColor: colors.current, height: '8px' }}
               />
-              <p style={{ color: colors.textMuted, fontSize: '11px', marginTop: '8px', textAlign: 'center' }}>
+              <p style={{ color: '#e2e8f0', fontSize: '11px', marginTop: '8px', textAlign: 'center' }}>
                 ↑ Higher current = ↑ Stronger magnetic field = ↑ More compass deflection
               </p>
             </div>
@@ -1198,9 +1199,9 @@ const OerstedExperimentRenderer: React.FC<OerstedExperimentRendererProps> = ({
                 <div style={{ fontSize: '28px', fontFamily: 'monospace', color: colors.textPrimary, fontWeight: 700 }}>
                   B = μ₀I / (2πr)
                 </div>
-                <div style={{ color: colors.textMuted, fontSize: '14px' }}>
-                  <div>B = magnetic field strength</div>
-                  <div>I = current | r = distance</div>
+                <div style={{ color: '#e2e8f0', fontSize: '14px' }}>
+                  <div><span style={{ color: '#60a5fa', fontWeight: 700 }}>B</span> = magnetic field strength</div>
+                  <div><span style={{ color: '#fbbf24', fontWeight: 700 }}>I</span> = current | <span style={{ color: '#4ade80', fontWeight: 700 }}>r</span> = distance</div>
                   <div>μ₀ = permeability of free space</div>
                 </div>
               </div>
@@ -1433,7 +1434,7 @@ const OerstedExperimentRenderer: React.FC<OerstedExperimentRendererProps> = ({
               <p style={{ fontSize: '10px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', color: colors.success }}>
                 Step 7 • Real World Applications
               </p>
-              <p style={{ fontSize: '12px', marginTop: '4px', color: colors.textMuted }}>
+              <p style={{ fontSize: '12px', marginTop: '4px', color: '#e2e8f0' }}>
                 {completedCount}/4 completed — {allCompleted ? 'Ready for test!' : 'Complete all to proceed'}
               </p>
             </div>
@@ -1470,7 +1471,7 @@ const OerstedExperimentRenderer: React.FC<OerstedExperimentRendererProps> = ({
                     borderRadius: '8px',
                     border: isCurrent ? `2px solid ${app.color}` : `1px solid ${colors.border}`,
                     backgroundColor: isCurrent ? `${app.color}20` : isCompleted ? `${colors.success}15` : colors.bgCardLight,
-                    color: isLocked ? colors.textMuted : colors.textPrimary,
+                    color: isLocked ? '#94a3b8' : colors.textPrimary,
                     fontSize: '13px',
                     fontWeight: 600,
                     cursor: isLocked ? 'not-allowed' : 'pointer',
@@ -1492,7 +1493,7 @@ const OerstedExperimentRenderer: React.FC<OerstedExperimentRendererProps> = ({
         </div>
 
         {/* App content */}
-        <div style={{ flex: 1, overflow: 'auto', padding: '20px' }}>
+        <div style={{ flex: 1, overflow: 'auto', padding: '20px', paddingBottom: '100px' }}>
           <div style={{ maxWidth: '800px', margin: '0 auto' }}>
             <div style={{ textAlign: 'center', marginBottom: '24px' }}>
               <span style={{ fontSize: '56px' }}>{currentApp.icon}</span>
@@ -1537,7 +1538,7 @@ const OerstedExperimentRenderer: React.FC<OerstedExperimentRendererProps> = ({
                 }}>
                   <div style={{ fontSize: '24px', marginBottom: '4px' }}>{stat.icon}</div>
                   <div style={{ color: currentApp.color, fontSize: '18px', fontWeight: 800 }}>{stat.value}</div>
-                  <div style={{ color: colors.textMuted, fontSize: '11px' }}>{stat.label}</div>
+                  <div style={{ color: '#e2e8f0', fontSize: '11px' }}>{stat.label}</div>
                 </div>
               ))}
             </div>
@@ -1566,13 +1567,19 @@ const OerstedExperimentRenderer: React.FC<OerstedExperimentRendererProps> = ({
 
         {/* Footer */}
         <div style={{
+          position: 'fixed',
+          bottom: 0,
+          left: 0,
+          right: 0,
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
           padding: '16px 20px',
           borderTop: `1px solid ${colors.border}`,
           backgroundColor: colors.bgCard,
-          gap: '12px'
+          gap: '12px',
+          zIndex: 1000,
+          boxShadow: '0 -4px 20px rgba(0,0,0,0.3)'
         }}>
           <button
             onMouseDown={() => goToPhase('twist_review')}
@@ -1599,7 +1606,8 @@ const OerstedExperimentRenderer: React.FC<OerstedExperimentRendererProps> = ({
                 padding: '14px 24px',
                 borderRadius: '10px',
                 fontWeight: 700,
-                fontSize: '15px',
+                fontSize: '16px',
+                minHeight: '52px',
                 background: `linear-gradient(135deg, ${currentApp.color} 0%, ${colors.accent} 100%)`,
                 color: 'white',
                 border: 'none',
@@ -1607,7 +1615,7 @@ const OerstedExperimentRenderer: React.FC<OerstedExperimentRendererProps> = ({
                 boxShadow: `0 4px 20px ${currentApp.color}40`
               }}
             >
-              {selectedApp < 3 ? '✓ Complete & Continue →' : '✓ Complete Final Topic'}
+              Got It! Continue →
             </button>
           ) : allCompleted ? (
             <button
@@ -1618,7 +1626,8 @@ const OerstedExperimentRenderer: React.FC<OerstedExperimentRendererProps> = ({
                 padding: '14px 24px',
                 borderRadius: '10px',
                 fontWeight: 700,
-                fontSize: '15px',
+                fontSize: '16px',
+                minHeight: '52px',
                 background: `linear-gradient(135deg, ${colors.success} 0%, ${colors.primary} 100%)`,
                 color: 'white',
                 border: 'none',
@@ -1725,7 +1734,7 @@ const OerstedExperimentRenderer: React.FC<OerstedExperimentRendererProps> = ({
                 <span style={{ color: colors.primary, fontSize: '12px', fontWeight: 700, textTransform: 'uppercase' }}>
                   Knowledge Test
                 </span>
-                <span style={{ color: colors.textMuted, fontSize: '14px' }}>
+                <span style={{ color: '#e2e8f0', fontSize: '14px' }}>
                   Question {testQuestion + 1} of 10
                 </span>
               </div>
@@ -1798,7 +1807,7 @@ const OerstedExperimentRenderer: React.FC<OerstedExperimentRendererProps> = ({
                       cursor: isAnswered ? 'default' : 'pointer',
                       textAlign: 'left',
                       opacity: userWasWrong ? 0.4 : 1,
-                      boxShadow: showAsCorrect ? `0 0 20px ${colors.success}40` : 'none',
+                      boxShadow: showAsCorrect ? '0 0 20px rgba(34, 197, 94, 0.3)' : 'none',
                       position: 'relative'
                     }}
                   >
@@ -1817,19 +1826,19 @@ const OerstedExperimentRenderer: React.FC<OerstedExperimentRendererProps> = ({
                       {/* CLEAR correct/wrong indicators */}
                       {showAsCorrect && (
                         <span style={{
-                          fontSize: '20px',
+                          fontSize: '24px',
                           fontWeight: 700,
                           color: colors.success,
                           display: 'flex',
                           alignItems: 'center',
-                          gap: '4px'
+                          gap: '6px'
                         }}>
-                          ✓ {isSelected ? 'Correct!' : 'Correct Answer'}
+                          ✓ Correct!
                         </span>
                       )}
                       {showAsWrong && (
                         <span style={{
-                          fontSize: '16px',
+                          fontSize: '20px',
                           fontWeight: 700,
                           color: colors.error
                         }}>
@@ -1885,7 +1894,7 @@ const OerstedExperimentRenderer: React.FC<OerstedExperimentRendererProps> = ({
               borderRadius: '10px',
               fontWeight: 600,
               backgroundColor: colors.bgCardLight,
-              color: testQuestion === 0 ? colors.textMuted : colors.textSecondary,
+              color: testQuestion === 0 ? '#94a3b8' : colors.textSecondary,
               border: 'none',
               cursor: testQuestion === 0 ? 'not-allowed' : 'pointer',
               opacity: testQuestion === 0 ? 0.5 : 1

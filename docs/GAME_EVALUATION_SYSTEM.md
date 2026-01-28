@@ -19,9 +19,14 @@
 | E. Button & Control Reliability | 5% | 100% | YES |
 | F. Design Quality | 5% | 85% | NO |
 | G. Educational Effectiveness | 5% | 85% | NO |
-| H. **Transfer Phase Richness** | 15% | 100% | **YES** |
-| L. **Intelligent Labeling** | 5% | 100% | **YES** |
-| M. **Smart Design System** | 10% | 85% | **YES** |
+| H. **Transfer Phase Richness** | 10% | 100% | **YES** |
+| K. **Educational Clarity** | 5% | 100% | **YES** |
+| L. **Responsive Layout** | 5% | 100% | **YES** |
+| M. **Text Contrast & Visibility** | 5% | 100% | **YES** |
+| N. **Above-The-Fold Content** | 5% | 100% | **YES** |
+| O. **Legend Completeness** | 5% | 100% | **YES** |
+| P. **Transfer Phase Progress** | 5% | 100% | **YES** |
+| Q. **Test Phase Clarity** | 5% | 100% | **YES** |
 
 ### New Critical Categories (Added)
 
@@ -35,6 +40,11 @@
 | **J. Navigation Accessibility** | EVERY phase MUST have a clearly visible, always-accessible navigation button. FIXED footer (not sticky). Users must NEVER be stuck without a way to proceed. |
 | **K. Educational Clarity** | EVERY graphic must have a legend, labeled objects, explained formulas, and "What to Watch" guidance. Users must instantly understand what they're looking at. |
 | **L. Responsive Layout** | Content must scroll properly, bottom bar always visible, graphics scale to screen size. Works on mobile (375px), tablet (768px), desktop (1280px). |
+| **M. Text Contrast & Visibility** | ALL text must be immediately readable. No faint gray text. Formula variables must be BRIGHT and BOLD. Primary text = white (#f8fafc), secondary = light (#e2e8f0). |
+| **N. Above-The-Fold Content** | ALL educational content (What to Watch, formula breakdowns, explanations) MUST appear ABOVE the continue button. Users should never miss important info. |
+| **O. Legend Completeness** | EVERY element in graphic (battery, magnets, wires, field lines) MUST be in legend. Legend must NOT overlap graphic elements. |
+| **P. Transfer Phase Progress** | Each Real World Application MUST have a prominent "Got It! Continue →" button. Full-width, gradient, 52px height, visible without scrolling. |
+| **Q. Test Phase Clarity** | Test must show question number, progress dots, clear selection state. After answer: show explanation, green ✓ for correct, red ✗ for wrong. Navigation buttons must be prominent. |
 
 ---
 
@@ -53,23 +63,165 @@
 | K.7 | **Current value** prominently displayed next to slider | | |
 | K.8 | **Test correct answer** clearly highlighted with green + checkmark | | |
 
+---
+
+### M. Text Contrast & Visibility (CRITICAL - 100% Required)
+
+> **If users can't read it without squinting, it FAILS.** All text must be immediately readable.
+
+| # | Criteria | Pass/Fail | Notes |
+|---|----------|-----------|-------|
+| M.1 | **Primary text** uses `#f8fafc` or brighter on dark backgrounds | | |
+| M.2 | **Secondary text** uses `#e2e8f0` minimum (NOT `#94a3b8` or darker) | | |
+| M.3 | **Taglines/subtitles** are clearly visible (not faint gray) | | |
+| M.4 | **Formula variables** use BRIGHT colors (`#60a5fa`, `#4ade80`, `#fbbf24`) | | |
+| M.5 | **Formula variables** are bold (`fontWeight: 700`) | | |
+| M.6 | **SVG labels** use `fontSize: 12` minimum, white or bright fill | | |
+| M.7 | **Battery/component values** (1.5V, 10A) are clearly readable | | |
+| M.8 | **No squint test**: All text readable at arm's length | | |
+
+#### Contrast Check Protocol:
+```bash
+# TEST: Open game on mobile (375px), check each text element:
+#
+# 1. Tagline/subtitle under title - readable without effort?
+# 2. Formula in graphic - each variable clearly visible?
+# 3. Legend items - all text readable against dark bg?
+# 4. Slider labels - what it controls is obvious?
+# 5. Explanatory text - no faint gray paragraphs?
+#
+# If ANY text requires effort to read → FAIL
+```
+
+---
+
+### N. Above-The-Fold Content (CRITICAL - 100% Required)
+
+> **Users should NEVER need to scroll past the button to find important information.**
+
+| # | Criteria | Pass/Fail | Notes |
+|---|----------|-----------|-------|
+| N.1 | **"What to Watch"** appears ABOVE the continue button | | |
+| N.2 | **Formula breakdown** appears ABOVE the continue button | | |
+| N.3 | **Key explanations** appear ABOVE the continue button | | |
+| N.4 | **Legend** is visible without scrolling (within viewport) | | |
+| N.5 | **No educational content** below the continue button | | |
+| N.6 | **Continue button** is the LAST interactive element on page | | |
+
+#### Test Protocol:
+```bash
+# For each phase with educational content:
+# 1. Open on mobile (375px)
+# 2. Scroll to the continue button
+# 3. Check: Is there ANY important text BELOW the button?
+# 4. If YES → FAIL
+```
+
+---
+
+### O. Legend Completeness (CRITICAL - 100% Required)
+
+> **Every single element in the graphic MUST be explained in the legend.**
+
+| # | Criteria | Pass/Fail | Notes |
+|---|----------|-----------|-------|
+| O.1 | **Battery** included with voltage value (e.g., "AA Battery (1.5V)") | | |
+| O.2 | **Magnets** included with pole labels (N/S) | | |
+| O.3 | **Wires** included with material if relevant | | |
+| O.4 | **Field lines** included (magnetic/electric) | | |
+| O.5 | **Arrows/direction indicators** explained | | |
+| O.6 | **All colors** in graphic have matching legend entry | | |
+| O.7 | **Legend does NOT overlap** any graphic element | | |
+| O.8 | **Legend position** is in corner with most empty space | | |
+
+#### Completeness Check:
+```bash
+# 1. List every distinct visual element in the SVG
+# 2. Check each one against legend entries
+# 3. Missing ANY element → FAIL
+#
+# Common misses:
+# - Battery (often shown but not in legend)
+# - Voltage/current values
+# - Direction arrows
+# - Background elements (if educational)
+```
+
+---
+
+### P. Transfer Phase Progress (CRITICAL - 100% Required)
+
+> **Each Real World Application MUST have a clear, prominent continue button.**
+
+| # | Criteria | Pass/Fail | Notes |
+|---|----------|-----------|-------|
+| P.1 | **"Got It! Continue →"** button at bottom of each app | | |
+| P.2 | **Button is full-width** or nearly full-width | | |
+| P.3 | **Button height** minimum 52px | | |
+| P.4 | **Button font** minimum 16px, bold | | |
+| P.5 | **Button uses gradient** background (not flat color) | | |
+| P.6 | **Progress shown** ("App 1 of 4", "App 2 of 4") | | |
+| P.7 | **Completed apps** show green checkmark on tab | | |
+| P.8 | **"Take the Test →"** button appears after all 4 complete | | |
+| P.9 | **Button visible** without scrolling on mobile | | |
+
+---
+
+### Q. Test Phase Clarity (CRITICAL - 100% Required)
+
+> **Test navigation and feedback must be crystal clear. Users should never be confused.**
+
+| # | Criteria | Pass/Fail | Notes |
+|---|----------|-----------|-------|
+| Q.1 | **Question number** prominently shown ("Question 3 of 10") | | |
+| Q.2 | **Progress dots** show answered/current/unanswered | | |
+| Q.3 | **Options clearly selectable** with visible selection state | | |
+| Q.4 | **"Next Question →"** button is full-width, gradient, 52px height | | |
+| Q.5 | **After answering - Correct**: Green glow + large ✓ + "Correct!" | | |
+| Q.6 | **After answering - Wrong**: Red on wrong + green on correct + explanation | | |
+| Q.7 | **Explanation shown** after each question (not just at end) | | |
+| Q.8 | **Results screen**: Large score, pass/fail color, "Continue" button | | |
+| Q.9 | **Button always visible** without scrolling | | |
+
+#### Test Phase Visual Requirements:
+```typescript
+// Correct answer styling (REQUIRED):
+{
+  background: 'rgba(34, 197, 94, 0.15)',  // Green tint
+  border: '2px solid #22c55e',
+  boxShadow: '0 0 20px rgba(34, 197, 94, 0.3)'  // Green glow
+}
+// With large checkmark (24px+) and "✓ Correct!" label
+
+// Wrong answer styling (REQUIRED):
+{
+  border: '2px solid #ef4444',  // Red border
+}
+// Show "✗" on wrong choice, highlight correct with green
+// Display explanation below: "The correct answer: [option text]"
+```
+
+---
+
 #### Required Legend Pattern:
 ```typescript
 const legendItems = [
-  { id: 'wire', color: '#ef4444', label: 'Wire (carrying current)' },
-  { id: 'field', color: '#3b82f6', label: 'Magnetic field lines' },
-  { id: 'compass', color: '#fbbf24', label: 'Compass needle' },
-  { id: 'current', color: '#22c55e', label: 'Current direction' },
+  { id: 'battery', color: '#fbbf24', label: 'AA Battery (1.5V)' },  // Include voltage!
+  { id: 'wire', color: '#22c55e', label: 'Copper wire' },
+  { id: 'magnet_n', color: '#ef4444', label: 'Magnet (N pole)' },
+  { id: 'magnet_s', color: '#3b82f6', label: 'Magnet (S pole)' },
+  { id: 'field', color: '#a855f7', label: 'Magnetic field lines' },
+  { id: 'current', color: '#f97316', label: 'Current direction →' },
 ];
 ```
 
 #### Required Formula Breakdown Pattern:
 ```
-B = μ₀ × I / (2πr)
-├── B (blue)  = Magnetic field strength
-├── I (yellow) = Current (controlled by slider)
-├── r (green) = Distance from wire
-└── μ₀ (gray) = Constant (don't worry about this)
+F = B × I × L   (Lorentz Force)
+├── F (red, bold)    = Force on wire (what makes it spin)
+├── B (blue, bold)   = Magnetic field strength
+├── I (yellow, bold) = Current (from battery)
+└── L (green, bold)  = Wire length in field
 ```
 
 ---

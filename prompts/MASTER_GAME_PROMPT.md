@@ -91,10 +91,78 @@ This document ensures games work PERFECTLY on the first generation. Every requir
 - **Problem**: After answering, users can't clearly see which was correct
 - **Root Cause**: Subtle styling differences
 - **Fix**: Correct answer MUST have:
-  - Bright green border AND background
-  - Large ✓ checkmark icon
-  - "Correct!" label if user got it right, or "The correct answer was:" label
-  - Wrong answer shows red X if selected
+  - Bright green border AND background (`#22c55e` with 20% opacity bg)
+  - Large ✓ checkmark icon (24px minimum)
+  - "✓ Correct!" label if user got it right
+  - "The correct answer:" label pointing to correct option if wrong
+  - Wrong answer shows red border + "✗" if selected
+  - **Full explanation shown** after each answer (not just at end)
+
+### 13. **Critical Information Below The Fold (CRITICAL)**
+- **Problem**: Important explanatory text appears BELOW the continue button, users don't see it
+- **Root Cause**: Content layout doesn't prioritize what users see first
+- **Fix**: The "ABOVE THE FOLD" rule:
+  - **ALL educational content MUST appear ABOVE the continue/next button**
+  - "What to Watch", formulas, explanations = ABOVE button
+  - NOTHING important should require scrolling past the button
+  - Button should be the LAST thing on the page (except back button)
+  - If content is long, use collapsible sections ABOVE the button
+
+### 14. **Text Contrast & Visibility (CRITICAL)**
+- **Problem**: Text is faint, hard to read ("the simplest electric motor", formula variables)
+- **Root Cause**: Low contrast colors used without checking visibility
+- **Fix**: Strict contrast requirements:
+  - **Primary text**: `#f8fafc` (white) on dark backgrounds - REQUIRED
+  - **Secondary text**: `#cbd5e1` (light gray) - minimum for readable content
+  - **NEVER use**: `#64748b` or darker for important text on dark backgrounds
+  - **Formula variables**: Use BRIGHT colors (`#3b82f6`, `#22c55e`, `#fbbf24`) with `fontWeight: 700`
+  - **Labels in SVG**: Minimum `fontSize: 12` with white or bright color
+  - **Taglines/subtitles**: Use `#e2e8f0` minimum (not muted gray)
+  - **Test**: If you squint to read it, it's too faint
+
+### 15. **Legend Completeness & Placement (CRITICAL)**
+- **Problem**: Legend missing elements (e.g., AA battery), legend overlaps graphics (covers S magnet)
+- **Root Cause**: Incomplete legend, no placement rules
+- **Fix**: Legend requirements:
+  - **EVERY visible element** in the graphic MUST be in the legend
+  - Battery, magnet, wire, field lines, arrows, labels - ALL must be listed
+  - **Legend position**: Check it doesn't overlap ANY graphic element
+  - Place legend in corner that has MOST empty space
+  - If graphic is full, place legend OUTSIDE SVG as HTML overlay
+  - Legend items use SAME colors as graphic elements (exact match)
+  - Include voltage/current values in legend if shown in graphic
+
+### 16. **Transfer Phase Progress Buttons (CRITICAL)**
+- **Problem**: Real World Applications don't have clear "Continue" buttons, users get stuck
+- **Root Cause**: Transfer phase uses tabs but no per-app completion flow
+- **Fix**: Each application MUST have:
+  - Large "Got It! Continue →" button at bottom of each app (AFTER reading content)
+  - Button style: Full-width, gradient background, 16px font, minimum 52px height
+  - Progress indicator: "App 1 of 4", "App 2 of 4", etc.
+  - When app is complete: Show green checkmark on tab
+  - After ALL 4 apps complete: Show prominent "Take the Test →" button
+  - **The continue button MUST be visible without scrolling on mobile**
+
+### 17. **Test Phase Navigation & Feedback (CRITICAL)**
+- **Problem**: Test navigation unclear, can't proceed, correct answer not obvious
+- **Root Cause**: Test phase doesn't follow same button patterns as other phases
+- **Fix**: Test phase requirements:
+  - **Per-question layout**:
+    - Question number prominently shown ("Question 3 of 10")
+    - Progress dots showing answered/current/unanswered
+    - Options clearly selectable with radio-button style
+  - **After selecting an answer**:
+    - Show "Check Answer" or "Next Question" button prominently
+    - Button: Full-width, gradient, minimum 52px height, 16px font
+  - **After checking answer**:
+    - Correct: Green glow, large ✓, "Correct!" text, brief explanation
+    - Wrong: Red border on wrong choice, green highlight on correct, "The answer was:" + explanation
+    - "Next Question →" button appears (or "See Results" on Q10)
+  - **Results screen**:
+    - Large score display (e.g., "8/10")
+    - Pass/fail indicator with color (green if ≥7, amber if 5-6, red if <5)
+    - "Review Answers" option
+    - "Continue to Mastery →" button if passed
 
 ---
 
@@ -103,19 +171,47 @@ This document ensures games work PERFECTLY on the first generation. Every requir
 Every game MUST include these educational elements:
 
 ### A. Legend Panel (Required for all graphics)
+
+**LEGEND COMPLETENESS CHECKLIST:**
+Before finalizing any graphic, verify these items are in the legend:
+- [ ] Every distinct colored element
+- [ ] Every labeled component (battery, magnet, wire, etc.)
+- [ ] Power sources with their values (e.g., "AA Battery (1.5V)")
+- [ ] Field representations (magnetic field, electric field)
+- [ ] Direction indicators (current flow, force direction)
+- [ ] Any text annotations in the SVG
+
+**LEGEND PLACEMENT RULES:**
+1. Check all 4 corners - place in corner with MOST empty space
+2. If legend would overlap ANY graphic element, move it or place OUTSIDE SVG
+3. Legend should never cover: magnets, batteries, wires, field lines, labels
+4. Use semi-transparent background so slight overlap is still readable
+
 ```typescript
+// FIRST: Identify all elements to include
+const legendItems = [
+  { color: '#ef4444', label: 'Magnet (N pole)' },
+  { color: '#3b82f6', label: 'Magnet (S pole)' },
+  { color: '#fbbf24', label: 'AA Battery (1.5V)' },  // Include voltage!
+  { color: '#22c55e', label: 'Wire (copper)' },
+  { color: '#a855f7', label: 'Magnetic field lines' },
+  { color: '#f97316', label: 'Current direction' },
+];
+
+// THEN: Render with proper positioning
 const renderLegend = () => (
   <div style={{
     position: 'absolute',
     top: '10px',
-    right: '10px',
-    background: 'rgba(0,0,0,0.8)',
+    right: '10px',  // CHECK: Does this overlap anything? If yes, try left: '10px'
+    background: 'rgba(0,0,0,0.9)',  // More opaque for readability
     borderRadius: '8px',
     padding: '12px',
-    border: '1px solid #334155',
-    zIndex: 10
+    border: '1px solid #475569',  // Brighter border
+    zIndex: 10,
+    maxWidth: '160px'  // Prevent legend from getting too wide
   }}>
-    <p style={{ fontSize: '11px', fontWeight: 700, color: '#94a3b8', marginBottom: '8px' }}>
+    <p style={{ fontSize: '11px', fontWeight: 700, color: '#e2e8f0', marginBottom: '8px' }}>
       LEGEND
     </p>
     {legendItems.map(item => (
@@ -129,37 +225,58 @@ const renderLegend = () => (
 ```
 
 ### B. Formula Breakdown Panel (Required when formulas shown)
+
+**FORMULA VISIBILITY REQUIREMENTS:**
+1. **Formula text**: Use `fontSize: 24px` minimum, `fontWeight: 700`, `color: #f8fafc` (white)
+2. **Variable letters**: Use BRIGHT, SATURATED colors:
+   - Blue: `#60a5fa` (NOT `#3b82f6` - too dark on dark bg)
+   - Yellow: `#fbbf24` (good)
+   - Green: `#4ade80` (NOT `#22c55e` - too dark)
+   - Red: `#f87171` (NOT `#ef4444`)
+3. **Variable font**: `fontSize: 18px`, `fontWeight: 700` (bold is REQUIRED)
+4. **Explanation text**: Use `#e2e8f0` (NOT `#cbd5e1` which is too faint)
+5. **Position**: Formula breakdown MUST appear ABOVE the continue button
+6. **In SVG formulas**: Use `fontSize: 14` minimum, `fill: #f8fafc` for formula, bright colors for variables
+
 ```typescript
 const renderFormulaBreakdown = () => (
-  <div style={{ background: colors.bgCard, borderRadius: '12px', padding: '16px', marginTop: '16px' }}>
-    <div style={{ fontSize: '24px', fontFamily: 'monospace', color: colors.textPrimary, textAlign: 'center', marginBottom: '16px' }}>
-      B = μ₀ × I / (2πr)
+  <div style={{ background: colors.bgCard, borderRadius: '12px', padding: '16px', marginTop: '16px', marginBottom: '16px' }}>
+    {/* Formula - large and white */}
+    <div style={{ fontSize: '24px', fontFamily: 'monospace', color: '#f8fafc', textAlign: 'center', marginBottom: '16px', fontWeight: 700 }}>
+      F = B × I × L
     </div>
-    <div style={{ display: 'grid', gridTemplateColumns: 'auto 1fr', gap: '8px 16px' }}>
-      <span style={{ color: '#3b82f6', fontWeight: 700 }}>B</span>
-      <span style={{ color: colors.textSecondary }}>Magnetic field strength (what we're measuring)</span>
-      <span style={{ color: '#fbbf24', fontWeight: 700 }}>I</span>
-      <span style={{ color: colors.textSecondary }}>Current in the wire (what you control with the slider)</span>
-      <span style={{ color: '#22c55e', fontWeight: 700 }}>r</span>
-      <span style={{ color: colors.textSecondary }}>Distance from the wire (how far the compass is)</span>
-      <span style={{ color: '#94a3b8', fontWeight: 700 }}>μ₀</span>
-      <span style={{ color: colors.textSecondary }}>A constant (you don't need to worry about this)</span>
+    {/* Variable breakdown with BRIGHT colors */}
+    <div style={{ display: 'grid', gridTemplateColumns: 'auto 1fr', gap: '8px 16px', alignItems: 'center' }}>
+      <span style={{ color: '#f87171', fontWeight: 700, fontSize: '18px' }}>F</span>
+      <span style={{ color: '#e2e8f0', fontSize: '14px' }}>Force on the wire (what makes it spin)</span>
+      <span style={{ color: '#60a5fa', fontWeight: 700, fontSize: '18px' }}>B</span>
+      <span style={{ color: '#e2e8f0', fontSize: '14px' }}>Magnetic field strength (from the magnet)</span>
+      <span style={{ color: '#fbbf24', fontWeight: 700, fontSize: '18px' }}>I</span>
+      <span style={{ color: '#e2e8f0', fontSize: '14px' }}>Current (controlled by battery voltage)</span>
+      <span style={{ color: '#4ade80', fontWeight: 700, fontSize: '18px' }}>L</span>
+      <span style={{ color: '#e2e8f0', fontSize: '14px' }}>Length of wire in the field</span>
     </div>
   </div>
 );
 ```
 
 ### C. "What to Watch" Callout (Required for play phases)
+
+**CRITICAL POSITIONING RULE:**
+- "What to Watch" MUST appear ABOVE the graphic OR in a clearly visible panel
+- It must NEVER appear below the continue button
+- If content is long, place it in a collapsible section above the button
+
 ```typescript
 const renderWhatToWatch = () => (
   <div style={{
     background: `linear-gradient(135deg, ${colors.primary}20 0%, ${colors.accent}20 100%)`,
-    border: `1px solid ${colors.primary}40`,
+    border: `1px solid ${colors.primary}50`,  // Brighter border
     borderRadius: '12px',
     padding: '16px',
-    marginBottom: '16px'
+    marginBottom: '16px'  // Ensures it's ABOVE other content
   }}>
-    <p style={{ fontSize: '13px', fontWeight: 700, color: colors.primary, marginBottom: '8px' }}>
+    <p style={{ fontSize: '14px', fontWeight: 700, color: '#818cf8', marginBottom: '8px' }}>  {/* Brighter purple */}
       👀 WHAT TO WATCH FOR:
     </p>
     <ul style={{ margin: 0, paddingLeft: '20px', color: colors.textSecondary, fontSize: '14px', lineHeight: 1.6 }}>

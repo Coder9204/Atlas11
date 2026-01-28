@@ -451,11 +451,14 @@ const ClassicDCMotorRenderer: React.FC<ClassicDCMotorRendererProps> = ({
 
   // LEGEND ITEMS - explain what each element represents
   const legendItems = [
+    { color: colors.copper, label: 'Armature coil' },
     { color: colors.magnetNorth, label: 'North magnet (N)' },
     { color: colors.magnetSouth, label: 'South magnet (S)' },
-    { color: colors.copper, label: 'Coil (carries current)' },
-    { color: colors.force, label: 'Lorentz force' },
+    { color: '#4b5563', label: 'Brushes' },
     { color: colors.commutator, label: 'Commutator' },
+    { color: colors.error, label: 'DC Power (+)' },
+    { color: colors.magnetSouth, label: 'DC Power (−)' },
+    { color: colors.force, label: 'Lorentz force (F)' },
   ];
 
   const renderLegend = () => (
@@ -469,7 +472,7 @@ const ClassicDCMotorRenderer: React.FC<ClassicDCMotorRendererProps> = ({
       border: `1px solid ${colors.border}`,
       zIndex: 10
     }}>
-      <p style={{ fontSize: '10px', fontWeight: 700, color: colors.textMuted, marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+      <p style={{ fontSize: '10px', fontWeight: 700, color: '#e2e8f0', marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
         Legend
       </p>
       {legendItems.map((item, i) => (
@@ -514,17 +517,17 @@ const ClassicDCMotorRenderer: React.FC<ClassicDCMotorRendererProps> = ({
       border: `1px solid ${colors.border}`
     }}>
       <div style={{ fontSize: isMobile ? '18px' : '22px', fontFamily: 'monospace', color: colors.textPrimary, textAlign: 'center', marginBottom: '12px' }}>
-        τ = nBIA sin(θ)
+        <span style={{ color: '#f87171', fontWeight: 700 }}>F</span> = <span style={{ color: '#60a5fa', fontWeight: 700 }}>B</span><span style={{ color: '#fbbf24', fontWeight: 700 }}>I</span><span style={{ color: '#a855f7', fontWeight: 700 }}>L</span>
       </div>
       <div style={{ display: 'grid', gridTemplateColumns: 'auto 1fr', gap: '6px 12px', fontSize: '12px' }}>
-        <span style={{ color: colors.force, fontWeight: 700 }}>τ</span>
-        <span style={{ color: colors.textSecondary }}>Torque (rotational force)</span>
-        <span style={{ color: colors.magnetNorth, fontWeight: 700 }}>B</span>
-        <span style={{ color: colors.textSecondary }}>Magnetic field strength</span>
-        <span style={{ color: colors.current, fontWeight: 700 }}>I</span>
-        <span style={{ color: colors.textSecondary }}>Current (what YOU control)</span>
-        <span style={{ color: colors.textMuted, fontWeight: 700 }}>θ</span>
-        <span style={{ color: colors.textSecondary }}>Coil angle (changes as it rotates)</span>
+        <span style={{ color: '#f87171', fontWeight: 700 }}>F</span>
+        <span style={{ color: '#e2e8f0' }}>Force on conductor (Newtons)</span>
+        <span style={{ color: '#60a5fa', fontWeight: 700 }}>B</span>
+        <span style={{ color: '#e2e8f0' }}>Magnetic field strength (Tesla)</span>
+        <span style={{ color: '#fbbf24', fontWeight: 700 }}>I</span>
+        <span style={{ color: '#e2e8f0' }}>Current (Amps - what YOU control)</span>
+        <span style={{ color: '#a855f7', fontWeight: 700 }}>L</span>
+        <span style={{ color: '#e2e8f0' }}>Length of conductor in field (meters)</span>
       </div>
     </div>
   );
@@ -610,7 +613,7 @@ const ClassicDCMotorRenderer: React.FC<ClassicDCMotorRendererProps> = ({
         <text x={cx} y="28" textAnchor="middle" fill={colors.textPrimary} fontSize={isMobile ? 16 : 20} fontWeight="bold">
           Classic DC Motor
         </text>
-        <text x={cx} y="48" textAnchor="middle" fill={colors.textMuted} fontSize={isMobile ? 11 : 13}>
+        <text x={cx} y="48" textAnchor="middle" fill="#e2e8f0" fontSize={isMobile ? 11 : 13}>
           Commutation keeps the rotation going
         </text>
 
@@ -800,7 +803,7 @@ const ClassicDCMotorRenderer: React.FC<ClassicDCMotorRendererProps> = ({
         {/* Torque vs Angle Graph */}
         <g transform={`translate(${isMobile ? 18 : 35}, ${height - (isMobile ? 75 : 95)})`}>
           <rect x="0" y="0" width={isMobile ? 75 : 115} height={isMobile ? 48 : 68} fill={colors.bgCard} rx="4" stroke={colors.border} />
-          <text x={isMobile ? 37 : 57} y="12" textAnchor="middle" fill={colors.textMuted} fontSize="9">Torque vs Angle</text>
+          <text x={isMobile ? 37 : 57} y="12" textAnchor="middle" fill="#f8fafc" fontSize="9">Torque vs Angle</text>
 
           <path
             d={`M 5,${isMobile ? 28 : 38} ${[...Array(isMobile ? 65 : 105)].map((_, i) => {
@@ -825,7 +828,7 @@ const ClassicDCMotorRenderer: React.FC<ClassicDCMotorRendererProps> = ({
         {/* Current direction indicator */}
         <g transform={`translate(${width - (isMobile ? 95 : 155)}, ${height - (isMobile ? 75 : 95)})`}>
           <rect x="0" y="0" width={isMobile ? 77 : 120} height={isMobile ? 48 : 68} fill={colors.bgCard} rx="4" stroke={colors.border} />
-          <text x={isMobile ? 38 : 60} y="12" textAnchor="middle" fill={colors.textMuted} fontSize="9">Current Direction</text>
+          <text x={isMobile ? 38 : 60} y="12" textAnchor="middle" fill="#f8fafc" fontSize="9">Current Direction</text>
 
           <rect
             x="8"
@@ -850,14 +853,14 @@ const ClassicDCMotorRenderer: React.FC<ClassicDCMotorRendererProps> = ({
 
         {/* Status */}
         {isRunning && (
-          <text x={cx} y={height - 12} textAnchor="middle" fill={colors.textMuted} fontSize="11">
+          <text x={cx} y={height - 12} textAnchor="middle" fill="#e2e8f0" fontSize="11">
             Angle: {Math.round(coilAngle % 360)}° | Torque: {torque.toFixed(2)} | {magnetCount} magnet{magnetCount > 1 ? 's' : ''}
           </text>
         )}
 
         {/* Formula */}
         {!isRunning && (
-          <text x={cx} y={height - 12} textAnchor="middle" fill={colors.textMuted} fontSize="11">
+          <text x={cx} y={height - 12} textAnchor="middle" fill="#e2e8f0" fontSize="11">
             τ = nBIA sin(θ)
           </text>
         )}
@@ -967,7 +970,7 @@ const ClassicDCMotorRenderer: React.FC<ClassicDCMotorRendererProps> = ({
             border: `1px solid ${colors.border}`,
             textAlign: 'left'
           }}>
-            <p style={{ color: colors.textMuted, fontSize: '14px', fontStyle: 'italic', marginBottom: '12px' }}>
+            <p style={{ color: '#e2e8f0', fontSize: '14px', fontStyle: 'italic', marginBottom: '12px' }}>
               "The commutator is the heart of the DC motor - it's what transforms oscillation into continuous rotation."
             </p>
             <p style={{ color: colors.textSecondary, fontSize: '13px' }}>
@@ -1182,7 +1185,7 @@ const ClassicDCMotorRenderer: React.FC<ClassicDCMotorRendererProps> = ({
                 <div style={{ fontSize: '28px', fontFamily: 'monospace', color: colors.textPrimary, fontWeight: 700 }}>
                   τ = nBIA sin(θ)
                 </div>
-                <div style={{ color: colors.textMuted, fontSize: '14px' }}>
+                <div style={{ color: '#e2e8f0', fontSize: '14px' }}>
                   <div>n = number of coil turns</div>
                   <div>B = magnetic field strength</div>
                   <div>I = current | A = coil area</div>
@@ -1426,7 +1429,7 @@ const ClassicDCMotorRenderer: React.FC<ClassicDCMotorRendererProps> = ({
               <p style={{ fontSize: '10px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', color: colors.success }}>
                 Step 7 • Real World Applications
               </p>
-              <p style={{ fontSize: '12px', marginTop: '4px', color: colors.textMuted }}>
+              <p style={{ fontSize: '12px', marginTop: '4px', color: '#e2e8f0' }}>
                 {completedCount}/4 completed — {allCompleted ? 'Ready for test!' : 'Complete all to proceed'}
               </p>
             </div>
@@ -1485,7 +1488,7 @@ const ClassicDCMotorRenderer: React.FC<ClassicDCMotorRendererProps> = ({
         </div>
 
         {/* App content */}
-        <div style={{ flex: 1, overflow: 'auto', padding: '20px' }}>
+        <div style={{ flex: 1, overflow: 'auto', padding: '20px', paddingBottom: '100px' }}>
           <div style={{ maxWidth: '800px', margin: '0 auto' }}>
             <div style={{ textAlign: 'center', marginBottom: '24px' }}>
               <span style={{ fontSize: '56px' }}>{currentApp.icon}</span>
@@ -1530,7 +1533,7 @@ const ClassicDCMotorRenderer: React.FC<ClassicDCMotorRendererProps> = ({
                 }}>
                   <div style={{ fontSize: '24px', marginBottom: '4px' }}>{stat.icon}</div>
                   <div style={{ color: currentApp.color, fontSize: '18px', fontWeight: 800 }}>{stat.value}</div>
-                  <div style={{ color: colors.textMuted, fontSize: '11px' }}>{stat.label}</div>
+                  <div style={{ color: '#e2e8f0', fontSize: '11px' }}>{stat.label}</div>
                 </div>
               ))}
             </div>
@@ -1559,12 +1562,18 @@ const ClassicDCMotorRenderer: React.FC<ClassicDCMotorRendererProps> = ({
 
         {/* Footer */}
         <div style={{
+          position: 'fixed',
+          bottom: 0,
+          left: 0,
+          right: 0,
+          zIndex: 1000,
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
           padding: '16px 20px',
           borderTop: `1px solid ${colors.border}`,
           backgroundColor: colors.bgCard,
+          boxShadow: '0 -4px 20px rgba(0,0,0,0.3)',
           gap: '12px'
         }}>
           <button
@@ -1592,7 +1601,8 @@ const ClassicDCMotorRenderer: React.FC<ClassicDCMotorRendererProps> = ({
                 padding: '14px 24px',
                 borderRadius: '10px',
                 fontWeight: 700,
-                fontSize: '15px',
+                fontSize: '16px',
+                minHeight: '52px',
                 background: `linear-gradient(135deg, ${currentApp.color} 0%, ${colors.accent} 100%)`,
                 color: 'white',
                 border: 'none',
@@ -1600,7 +1610,7 @@ const ClassicDCMotorRenderer: React.FC<ClassicDCMotorRendererProps> = ({
                 boxShadow: `0 4px 20px ${currentApp.color}40`
               }}
             >
-              {selectedApp < 3 ? '✓ Complete & Continue →' : '✓ Complete Final Topic'}
+              Got It! Continue →
             </button>
           ) : allCompleted ? (
             <button
@@ -1611,7 +1621,8 @@ const ClassicDCMotorRenderer: React.FC<ClassicDCMotorRendererProps> = ({
                 padding: '14px 24px',
                 borderRadius: '10px',
                 fontWeight: 700,
-                fontSize: '15px',
+                fontSize: '16px',
+                minHeight: '52px',
                 background: `linear-gradient(135deg, ${colors.success} 0%, ${colors.primary} 100%)`,
                 color: 'white',
                 border: 'none',
@@ -1697,14 +1708,14 @@ const ClassicDCMotorRenderer: React.FC<ClassicDCMotorRendererProps> = ({
 
     return (
       <div style={{ minHeight: '100vh', background: `linear-gradient(180deg, ${colors.bgGradientStart} 0%, ${colors.bgGradientEnd} 100%)`, display: 'flex', flexDirection: 'column' }}>
-        <div style={{ flex: 1, maxWidth: '800px', margin: '0 auto', padding: '30px 20px' }}>
+        <div style={{ flex: 1, maxWidth: '800px', margin: '0 auto', padding: '30px 20px', paddingBottom: '100px' }}>
           {/* Progress */}
           <div style={{ marginBottom: '24px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
               <span style={{ color: colors.primary, fontSize: '12px', fontWeight: 700, textTransform: 'uppercase' }}>
                 Knowledge Test
               </span>
-              <span style={{ color: colors.textMuted, fontSize: '14px' }}>
+              <span style={{ color: '#e2e8f0', fontSize: '14px' }}>
                 Question {testQuestion + 1} of 10
               </span>
             </div>
@@ -1763,12 +1774,19 @@ const ClassicDCMotorRenderer: React.FC<ClassicDCMotorRendererProps> = ({
                     borderRadius: '12px',
                     border: isSelected
                       ? `2px solid ${isCorrect ? colors.success : colors.error}`
-                      : `2px solid ${colors.border}`,
+                      : isAnswered && isCorrect
+                        ? `2px solid ${colors.success}`
+                        : `2px solid ${colors.border}`,
                     backgroundColor: isSelected
                       ? isCorrect ? `${colors.success}20` : `${colors.error}20`
                       : isAnswered && isCorrect
                         ? `${colors.success}10`
                         : colors.bgCard,
+                    boxShadow: isAnswered && isCorrect
+                      ? '0 0 20px rgba(34, 197, 94, 0.3)'
+                      : isSelected && !isCorrect
+                        ? '0 0 20px rgba(239, 68, 68, 0.3)'
+                        : 'none',
                     cursor: isAnswered ? 'default' : 'pointer',
                     textAlign: 'left',
                     opacity: isAnswered && !isSelected && !isCorrect ? 0.5 : 1
@@ -1784,11 +1802,35 @@ const ClassicDCMotorRenderer: React.FC<ClassicDCMotorRendererProps> = ({
                     {String.fromCharCode(65 + i)}.
                   </span>
                   <span style={{ color: colors.textPrimary }}>{opt.label}</span>
-                  {isAnswered && isCorrect && <span style={{ marginLeft: '8px' }}>✓</span>}
+                  {isAnswered && isCorrect && <span style={{ marginLeft: '8px', color: colors.success }}>✓</span>}
+                  {isSelected && !isCorrect && <span style={{ marginLeft: '8px', color: colors.error }}>✗</span>}
                 </button>
               );
             })}
           </div>
+
+          {/* Correct/Wrong feedback */}
+          {testAnswers[testQuestion] !== null && (
+            <div style={{
+              textAlign: 'center',
+              marginTop: '20px',
+              padding: '16px',
+              borderRadius: '12px',
+              backgroundColor: testAnswers[testQuestion] === currentQ.options.find(o => o.correct)?.id
+                ? `${colors.success}15`
+                : `${colors.error}15`
+            }}>
+              {testAnswers[testQuestion] === currentQ.options.find(o => o.correct)?.id ? (
+                <div style={{ color: colors.success, fontSize: '24px', fontWeight: 700 }}>
+                  ✓ Correct!
+                </div>
+              ) : (
+                <div style={{ color: colors.error, fontSize: '24px', fontWeight: 700 }}>
+                  ✗ Incorrect
+                </div>
+              )}
+            </div>
+          )}
 
           {/* Explanation */}
           {testAnswers[testQuestion] !== null && (
@@ -1801,12 +1843,18 @@ const ClassicDCMotorRenderer: React.FC<ClassicDCMotorRendererProps> = ({
 
         {/* Navigation */}
         <div style={{
+          position: 'fixed',
+          bottom: 0,
+          left: 0,
+          right: 0,
+          zIndex: 1000,
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
           padding: '16px 20px',
           borderTop: `1px solid ${colors.border}`,
-          backgroundColor: colors.bgCard
+          backgroundColor: colors.bgCard,
+          boxShadow: '0 -4px 20px rgba(0,0,0,0.3)'
         }}>
           <button
             onMouseDown={() => testQuestion > 0 && setTestQuestion(testQuestion - 1)}

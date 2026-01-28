@@ -453,10 +453,12 @@ const HomopolarMotorRenderer: React.FC<HomopolarMotorRendererProps> = ({
 
     // LEGEND ITEMS
     const legendItems = [
-      { color: colors.error, label: 'North pole (N)' },
-      { color: colors.primary, label: 'South pole (S)' },
-      { color: colors.warning, label: 'Wire (carries current)' },
-      { color: colors.success, label: 'Lorentz force (F)' },
+      { color: '#fbbf24', label: 'AA Battery (1.5V)' },
+      { color: colors.error, label: 'Magnet N pole (red)' },
+      { color: colors.primary, label: 'Magnet S pole (blue)' },
+      { color: colors.warning, label: 'Copper wire' },
+      { color: colors.success, label: 'Force direction (F)' },
+      { color: '#a855f7', label: 'Magnetic field (B)' },
     ];
 
     return (
@@ -545,7 +547,7 @@ const HomopolarMotorRenderer: React.FC<HomopolarMotorRendererProps> = ({
         <text x={cx} y="28" textAnchor="middle" fill={colors.textPrimary} fontSize={isMobile ? 16 : 20} fontWeight="bold">
           Homopolar Motor
         </text>
-        <text x={cx} y="48" textAnchor="middle" fill={colors.textMuted} fontSize={isMobile ? 11 : 13}>
+        <text x={cx} y="48" textAnchor="middle" fill="#e2e8f0" fontSize={isMobile ? 12 : 14} fontWeight="500">
           The simplest electric motor on Earth
         </text>
 
@@ -581,11 +583,11 @@ const HomopolarMotorRenderer: React.FC<HomopolarMotorRendererProps> = ({
 
           {/* Battery label */}
           <text x="0" y={isMobile ? 32 : 42} textAnchor="middle" fill={colors.textSecondary} fontSize="10" fontWeight="bold">AA</text>
-          <text x="0" y={isMobile ? 44 : 54} textAnchor="middle" fill={colors.textMuted} fontSize="8">1.5V</text>
+          <text x="0" y={isMobile ? 44 : 54} textAnchor="middle" fill="#fbbf24" fontSize="10" fontWeight="600">1.5V</text>
 
           {/* Negative terminal */}
           <rect x="-14" y={isMobile ? 50 : 70} width="28" height="5" rx="2" fill={colors.bgCardLight} />
-          <text x="0" y={isMobile ? 65 : 90} textAnchor="middle" fill={colors.textMuted} fontSize="10">−</text>
+          <text x="0" y={isMobile ? 65 : 90} textAnchor="middle" fill="#f8fafc" fontSize="12" fontWeight="700">−</text>
         </g>
 
         {/* Neodymium Magnet (disk) */}
@@ -667,7 +669,7 @@ const HomopolarMotorRenderer: React.FC<HomopolarMotorRendererProps> = ({
         {isRunning && (
           <g transform={`translate(${width - (isMobile ? 75 : 100)}, ${isMobile ? 70 : 85})`}>
             <rect x="-35" y="-25" width="70" height="50" fill={colors.bgCard} rx="6" stroke={colors.border} />
-            <text x="0" y="-8" textAnchor="middle" fill={colors.textMuted} fontSize="9">Current</text>
+            <text x="0" y="-8" textAnchor="middle" fill="#fbbf24" fontSize="10" fontWeight="600">Current</text>
             <path
               d="M -15,10 L 15,10"
               stroke={colors.current}
@@ -748,7 +750,7 @@ const HomopolarMotorRenderer: React.FC<HomopolarMotorRendererProps> = ({
         <span style={{ color: colors.textSecondary }}>Magnetic field strength (from the magnet)</span>
         <span style={{ color: colors.warning, fontWeight: 700 }}>I</span>
         <span style={{ color: colors.textSecondary }}>Current (what YOU control with slider)</span>
-        <span style={{ color: colors.textMuted, fontWeight: 700 }}>L</span>
+        <span style={{ color: '#a855f7', fontWeight: 700 }}>L</span>
         <span style={{ color: colors.textSecondary }}>Length of wire in the field</span>
       </div>
     </div>
@@ -1047,10 +1049,10 @@ const HomopolarMotorRenderer: React.FC<HomopolarMotorRendererProps> = ({
                 <div style={{ fontSize: '32px', fontFamily: 'monospace', color: colors.textPrimary, fontWeight: 700 }}>
                   F = B × I × L
                 </div>
-                <div style={{ color: colors.textMuted, fontSize: '14px' }}>
-                  <div>B = Magnetic field strength</div>
-                  <div>I = Current through wire</div>
-                  <div>L = Length of wire in field</div>
+                <div style={{ fontSize: '14px' }}>
+                  <div><span style={{ color: '#60a5fa', fontWeight: 700 }}>B</span> <span style={{ color: '#e2e8f0' }}>= Magnetic field strength</span></div>
+                  <div><span style={{ color: '#fbbf24', fontWeight: 700 }}>I</span> <span style={{ color: '#e2e8f0' }}>= Current through wire</span></div>
+                  <div><span style={{ color: '#a855f7', fontWeight: 700 }}>L</span> <span style={{ color: '#e2e8f0' }}>= Length of wire in field</span></div>
                 </div>
               </div>
             </div>
@@ -1350,7 +1352,7 @@ const HomopolarMotorRenderer: React.FC<HomopolarMotorRendererProps> = ({
         </div>
 
         {/* App content */}
-        <div style={{ flex: 1, overflow: 'auto', padding: '20px' }}>
+        <div style={{ flex: 1, overflow: 'auto', padding: '20px', paddingBottom: '100px' }}>
           <div style={{ maxWidth: '800px', margin: '0 auto' }}>
             {/* App header */}
             <div style={{ textAlign: 'center', marginBottom: '24px' }}>
@@ -1429,14 +1431,20 @@ const HomopolarMotorRenderer: React.FC<HomopolarMotorRendererProps> = ({
           </div>
         </div>
 
-        {/* Footer */}
+        {/* Footer - Fixed at bottom */}
         <div style={{
+          position: 'fixed',
+          bottom: 0,
+          left: 0,
+          right: 0,
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
           padding: '16px 20px',
           borderTop: `1px solid ${colors.border}`,
           backgroundColor: colors.bgCard,
+          zIndex: 1000,
+          boxShadow: '0 -4px 20px rgba(0,0,0,0.3)',
           gap: '12px'
         }}>
           <button
@@ -1460,11 +1468,12 @@ const HomopolarMotorRenderer: React.FC<HomopolarMotorRendererProps> = ({
               onMouseDown={handleCompleteApp}
               style={{
                 flex: 1,
-                maxWidth: '300px',
-                padding: '14px 24px',
-                borderRadius: '10px',
+                maxWidth: '400px',
+                padding: '16px 24px',
+                minHeight: '52px',
+                borderRadius: '12px',
                 fontWeight: 700,
-                fontSize: '15px',
+                fontSize: '16px',
                 background: `linear-gradient(135deg, ${currentApp.color} 0%, ${colors.accent} 100%)`,
                 color: 'white',
                 border: 'none',
@@ -1472,18 +1481,19 @@ const HomopolarMotorRenderer: React.FC<HomopolarMotorRendererProps> = ({
                 boxShadow: `0 4px 20px ${currentApp.color}40`
               }}
             >
-              {selectedApp < 3 ? '✓ Complete & Continue →' : '✓ Complete Final Topic'}
+              {selectedApp < 3 ? 'Got It! Continue →' : '✓ Complete All Topics'}
             </button>
           ) : allCompleted ? (
             <button
               onMouseDown={() => goToPhase('test')}
               style={{
                 flex: 1,
-                maxWidth: '300px',
-                padding: '14px 24px',
-                borderRadius: '10px',
+                maxWidth: '400px',
+                padding: '16px 24px',
+                minHeight: '52px',
+                borderRadius: '12px',
                 fontWeight: 700,
-                fontSize: '15px',
+                fontSize: '16px',
                 background: `linear-gradient(135deg, ${colors.success} 0%, ${colors.primary} 100%)`,
                 color: 'white',
                 border: 'none',
@@ -1491,7 +1501,7 @@ const HomopolarMotorRenderer: React.FC<HomopolarMotorRendererProps> = ({
                 boxShadow: `0 4px 20px ${colors.success}40`
               }}
             >
-              Take the Knowledge Test →
+              🎯 Take the Knowledge Test →
             </button>
           ) : (
             <div style={{ flex: 1, maxWidth: '300px', textAlign: 'center' }}>
@@ -1569,7 +1579,7 @@ const HomopolarMotorRenderer: React.FC<HomopolarMotorRendererProps> = ({
 
     return (
       <div style={{ minHeight: '100vh', background: `linear-gradient(180deg, ${colors.bgGradientStart} 0%, ${colors.bgGradientEnd} 100%)`, display: 'flex', flexDirection: 'column' }}>
-        <div style={{ flex: 1, maxWidth: '800px', margin: '0 auto', padding: '30px 20px' }}>
+        <div style={{ flex: 1, maxWidth: '800px', margin: '0 auto', padding: '30px 20px', paddingBottom: '100px' }}>
           {/* Progress */}
           <div style={{ marginBottom: '24px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
@@ -1633,30 +1643,57 @@ const HomopolarMotorRenderer: React.FC<HomopolarMotorRendererProps> = ({
                   style={{
                     padding: '18px 20px',
                     borderRadius: '12px',
-                    border: isSelected
-                      ? `2px solid ${isCorrect ? colors.success : colors.error}`
-                      : `2px solid ${colors.border}`,
-                    backgroundColor: isSelected
-                      ? isCorrect ? `${colors.success}20` : `${colors.error}20`
-                      : isAnswered && isCorrect
-                        ? `${colors.success}10`
+                    border: isAnswered && isCorrect
+                      ? `3px solid ${colors.success}`
+                      : isSelected && !isCorrect
+                        ? `2px solid ${colors.error}`
+                        : isSelected
+                          ? `2px solid ${colors.success}`
+                          : `2px solid ${colors.border}`,
+                    backgroundColor: isAnswered && isCorrect
+                      ? 'rgba(34, 197, 94, 0.15)'
+                      : isSelected && !isCorrect
+                        ? 'rgba(239, 68, 68, 0.15)'
                         : colors.bgCard,
+                    boxShadow: isAnswered && isCorrect
+                      ? '0 0 20px rgba(34, 197, 94, 0.3)'
+                      : 'none',
                     cursor: isAnswered ? 'default' : 'pointer',
                     textAlign: 'left',
-                    opacity: isAnswered && !isSelected && !isCorrect ? 0.5 : 1
+                    opacity: isAnswered && !isSelected && !isCorrect ? 0.5 : 1,
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '12px'
                   }}
                 >
                   <span style={{
                     fontWeight: 700,
-                    color: isSelected
-                      ? isCorrect ? colors.success : colors.error
-                      : colors.primary,
-                    marginRight: '12px'
+                    fontSize: '16px',
+                    color: isAnswered && isCorrect
+                      ? colors.success
+                      : isSelected && !isCorrect
+                        ? colors.error
+                        : colors.primary,
+                    minWidth: '24px'
                   }}>
                     {String.fromCharCode(65 + i)}.
                   </span>
-                  <span style={{ color: colors.textPrimary }}>{opt.label}</span>
-                  {isAnswered && isCorrect && <span style={{ marginLeft: '8px' }}>✓</span>}
+                  <span style={{ color: colors.textPrimary, flex: 1 }}>{opt.label}</span>
+                  {isAnswered && isCorrect && (
+                    <span style={{
+                      color: colors.success,
+                      fontSize: '24px',
+                      fontWeight: 700,
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '4px'
+                    }}>
+                      ✓ {isSelected ? 'Correct!' : ''}
+                    </span>
+                  )}
+                  {isAnswered && isSelected && !isCorrect && (
+                    <span style={{ color: colors.error, fontSize: '20px', fontWeight: 700 }}>✗</span>
+                  )}
                 </button>
               );
             })}
@@ -1671,14 +1708,20 @@ const HomopolarMotorRenderer: React.FC<HomopolarMotorRendererProps> = ({
           )}
         </div>
 
-        {/* Navigation */}
+        {/* Navigation - Fixed at bottom */}
         <div style={{
+          position: 'fixed',
+          bottom: 0,
+          left: 0,
+          right: 0,
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
           padding: '16px 20px',
           borderTop: `1px solid ${colors.border}`,
-          backgroundColor: colors.bgCard
+          backgroundColor: colors.bgCard,
+          zIndex: 1000,
+          boxShadow: '0 -4px 20px rgba(0,0,0,0.3)'
         }}>
           <button
             onMouseDown={() => testQuestion > 0 && setTestQuestion(testQuestion - 1)}
