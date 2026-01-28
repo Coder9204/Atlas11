@@ -449,9 +449,89 @@ const ClassicDCMotorRenderer: React.FC<ClassicDCMotorRendererProps> = ({
   // MOTOR VISUALIZATION (Enhanced with dark theme)
   // ============================================================
 
+  // LEGEND ITEMS - explain what each element represents
+  const legendItems = [
+    { color: colors.magnetNorth, label: 'North magnet (N)' },
+    { color: colors.magnetSouth, label: 'South magnet (S)' },
+    { color: colors.copper, label: 'Coil (carries current)' },
+    { color: colors.force, label: 'Lorentz force' },
+    { color: colors.commutator, label: 'Commutator' },
+  ];
+
+  const renderLegend = () => (
+    <div style={{
+      position: 'absolute',
+      top: isMobile ? '8px' : '12px',
+      right: isMobile ? '8px' : '12px',
+      background: 'rgba(15, 23, 42, 0.95)',
+      borderRadius: '8px',
+      padding: isMobile ? '8px' : '12px',
+      border: `1px solid ${colors.border}`,
+      zIndex: 10
+    }}>
+      <p style={{ fontSize: '10px', fontWeight: 700, color: colors.textMuted, marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+        Legend
+      </p>
+      {legendItems.map((item, i) => (
+        <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '3px' }}>
+          <div style={{ width: '10px', height: '10px', borderRadius: '2px', background: item.color, flexShrink: 0 }} />
+          <span style={{ fontSize: '11px', color: colors.textSecondary }}>{item.label}</span>
+        </div>
+      ))}
+    </div>
+  );
+
+  // "What to Watch" callout
+  const renderWhatToWatch = () => (
+    <div style={{
+      background: `linear-gradient(135deg, ${colors.primary}15 0%, ${colors.accent}15 100%)`,
+      border: `1px solid ${colors.primary}30`,
+      borderRadius: '12px',
+      padding: isMobile ? '12px' : '16px',
+      marginBottom: '16px',
+      maxWidth: '600px',
+      margin: '0 auto 16px'
+    }}>
+      <p style={{ fontSize: '12px', fontWeight: 700, color: colors.primary, marginBottom: '8px' }}>
+        👀 WHAT TO WATCH FOR:
+      </p>
+      <ul style={{ margin: 0, paddingLeft: '16px', color: colors.textSecondary, fontSize: '13px', lineHeight: 1.6 }}>
+        <li>Watch the <strong style={{ color: colors.copper }}>coil</strong> rotate in the magnetic field</li>
+        <li>Notice when the <strong style={{ color: colors.commutator }}>commutator</strong> switches current direction</li>
+        <li>The <strong style={{ color: colors.force }}>green arrows</strong> show the force (F = BIL)</li>
+      </ul>
+    </div>
+  );
+
+  // Formula breakdown
+  const renderFormulaBreakdown = () => (
+    <div style={{
+      background: colors.bgCard,
+      borderRadius: '12px',
+      padding: isMobile ? '12px' : '16px',
+      maxWidth: '500px',
+      margin: '16px auto',
+      border: `1px solid ${colors.border}`
+    }}>
+      <div style={{ fontSize: isMobile ? '18px' : '22px', fontFamily: 'monospace', color: colors.textPrimary, textAlign: 'center', marginBottom: '12px' }}>
+        τ = nBIA sin(θ)
+      </div>
+      <div style={{ display: 'grid', gridTemplateColumns: 'auto 1fr', gap: '6px 12px', fontSize: '12px' }}>
+        <span style={{ color: colors.force, fontWeight: 700 }}>τ</span>
+        <span style={{ color: colors.textSecondary }}>Torque (rotational force)</span>
+        <span style={{ color: colors.magnetNorth, fontWeight: 700 }}>B</span>
+        <span style={{ color: colors.textSecondary }}>Magnetic field strength</span>
+        <span style={{ color: colors.current, fontWeight: 700 }}>I</span>
+        <span style={{ color: colors.textSecondary }}>Current (what YOU control)</span>
+        <span style={{ color: colors.textMuted, fontWeight: 700 }}>θ</span>
+        <span style={{ color: colors.textSecondary }}>Coil angle (changes as it rotates)</span>
+      </div>
+    </div>
+  );
+
   const renderMotorVisualization = () => {
-    const width = isMobile ? 340 : 680;
-    const height = isMobile ? 320 : 400;
+    const width = isMobile ? 340 : 600;
+    const height = isMobile ? 280 : 350;
     const cx = width / 2;
     const cy = height / 2;
 
@@ -461,7 +541,13 @@ const ClassicDCMotorRenderer: React.FC<ClassicDCMotorRendererProps> = ({
     const torqueAbs = Math.abs(torque);
 
     return (
-      <svg width={width} height={height} style={{ display: 'block', margin: '0 auto' }}>
+      <div style={{ position: 'relative', width: '100%', maxWidth: '620px', margin: '0 auto' }}>
+        {renderLegend()}
+        <svg
+          viewBox={`0 0 ${width} ${height}`}
+          preserveAspectRatio="xMidYMid meet"
+          style={{ width: '100%', height: 'auto', display: 'block' }}
+        >
         <defs>
           {/* Magnet gradients */}
           <linearGradient id="dcMagnetNorth" x1="0%" y1="0%" x2="100%" y2="0%">
@@ -776,6 +862,7 @@ const ClassicDCMotorRenderer: React.FC<ClassicDCMotorRendererProps> = ({
           </text>
         )}
       </svg>
+      </div>
     );
   };
 
@@ -783,19 +870,20 @@ const ClassicDCMotorRenderer: React.FC<ClassicDCMotorRendererProps> = ({
   // RENDER FUNCTIONS (Phases)
   // ============================================================
 
-  // CRITICAL: Bottom bar must ALWAYS be visible and accessible
-  // This is a sticky footer that stays at the bottom of the viewport
+  // CRITICAL: Bottom bar MUST use position: fixed to ALWAYS be visible
   const renderBottomBar = (showBack: boolean, showNext: boolean, nextLabel: string, nextAction?: () => void, nextColor?: string) => (
     <div style={{
-      position: 'sticky',
+      position: 'fixed',
       bottom: 0,
       left: 0,
       right: 0,
+      zIndex: 1000,
       display: 'flex',
       justifyContent: 'space-between',
       alignItems: 'center',
       padding: '16px 20px',
       borderTop: `1px solid ${colors.border}`,
+      boxShadow: '0 -8px 30px rgba(0,0,0,0.5)',
       backgroundColor: colors.bgCard,
       zIndex: 100,
       minHeight: '72px',

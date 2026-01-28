@@ -451,8 +451,42 @@ const HomopolarMotorRenderer: React.FC<HomopolarMotorRendererProps> = ({
     const forceStrength = isRunning ? magnetStrength / 100 : 0;
     const forceDir = magnetPolarity === 'north' ? 1 : -1;
 
+    // LEGEND ITEMS
+    const legendItems = [
+      { color: colors.error, label: 'North pole (N)' },
+      { color: colors.primary, label: 'South pole (S)' },
+      { color: colors.warning, label: 'Wire (carries current)' },
+      { color: colors.success, label: 'Lorentz force (F)' },
+    ];
+
     return (
-      <svg width={width} height={height} style={{ display: 'block', margin: '0 auto' }}>
+      <div style={{ position: 'relative', width: '100%', maxWidth: '620px', margin: '0 auto' }}>
+        {/* Legend */}
+        <div style={{
+          position: 'absolute',
+          top: isMobile ? '8px' : '12px',
+          right: isMobile ? '8px' : '12px',
+          background: 'rgba(15, 23, 42, 0.95)',
+          borderRadius: '8px',
+          padding: isMobile ? '8px' : '12px',
+          border: `1px solid ${colors.border}`,
+          zIndex: 10
+        }}>
+          <p style={{ fontSize: '10px', fontWeight: 700, color: colors.textMuted, marginBottom: '6px', textTransform: 'uppercase' }}>
+            Legend
+          </p>
+          {legendItems.map((item, i) => (
+            <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '3px' }}>
+              <div style={{ width: '10px', height: '10px', borderRadius: '2px', background: item.color, flexShrink: 0 }} />
+              <span style={{ fontSize: '11px', color: colors.textSecondary }}>{item.label}</span>
+            </div>
+          ))}
+        </div>
+        <svg
+          viewBox={`0 0 ${width} ${height}`}
+          preserveAspectRatio="xMidYMid meet"
+          style={{ width: '100%', height: 'auto', display: 'block' }}
+        >
         <defs>
           {/* Battery gradient */}
           <linearGradient id="batteryBody" x1="0%" y1="0%" x2="0%" y2="100%">
@@ -668,29 +702,77 @@ const HomopolarMotorRenderer: React.FC<HomopolarMotorRendererProps> = ({
           </g>
         )}
       </svg>
+      </div>
     );
   };
+
+  // "What to Watch" callout
+  const renderWhatToWatch = () => (
+    <div style={{
+      background: `linear-gradient(135deg, ${colors.primary}15 0%, ${colors.accent}15 100%)`,
+      border: `1px solid ${colors.primary}30`,
+      borderRadius: '12px',
+      padding: isMobile ? '12px' : '16px',
+      marginBottom: '16px',
+      maxWidth: '600px',
+      margin: '0 auto 16px'
+    }}>
+      <p style={{ fontSize: '12px', fontWeight: 700, color: colors.primary, marginBottom: '8px' }}>
+        👀 WHAT TO WATCH FOR:
+      </p>
+      <ul style={{ margin: 0, paddingLeft: '16px', color: colors.textSecondary, fontSize: '13px', lineHeight: 1.6 }}>
+        <li>Watch the <strong style={{ color: colors.warning }}>wire</strong> spin when current flows</li>
+        <li>The <strong style={{ color: colors.success }}>green arrow</strong> shows the Lorentz force (F = BIL)</li>
+        <li>Try flipping the <strong style={{ color: colors.error }}>magnet polarity</strong> — the wire spins the opposite way!</li>
+      </ul>
+    </div>
+  );
+
+  // Formula breakdown
+  const renderFormulaBreakdown = () => (
+    <div style={{
+      background: colors.bgCard,
+      borderRadius: '12px',
+      padding: isMobile ? '12px' : '16px',
+      maxWidth: '500px',
+      margin: '16px auto',
+      border: `1px solid ${colors.border}`
+    }}>
+      <div style={{ fontSize: isMobile ? '18px' : '22px', fontFamily: 'monospace', color: colors.textPrimary, textAlign: 'center', marginBottom: '12px' }}>
+        F = B × I × L
+      </div>
+      <div style={{ display: 'grid', gridTemplateColumns: 'auto 1fr', gap: '6px 12px', fontSize: '12px' }}>
+        <span style={{ color: colors.success, fontWeight: 700 }}>F</span>
+        <span style={{ color: colors.textSecondary }}>Force on the wire (makes it spin)</span>
+        <span style={{ color: colors.error, fontWeight: 700 }}>B</span>
+        <span style={{ color: colors.textSecondary }}>Magnetic field strength (from the magnet)</span>
+        <span style={{ color: colors.warning, fontWeight: 700 }}>I</span>
+        <span style={{ color: colors.textSecondary }}>Current (what YOU control with slider)</span>
+        <span style={{ color: colors.textMuted, fontWeight: 700 }}>L</span>
+        <span style={{ color: colors.textSecondary }}>Length of wire in the field</span>
+      </div>
+    </div>
+  );
 
   // ============================================================
   // RENDER FUNCTIONS (Phases)
   // ============================================================
 
-  // Common bottom bar renderer
-  // CRITICAL: Bottom bar must ALWAYS be visible and accessible
-  // This is a sticky footer that stays at the bottom of the viewport
+  // CRITICAL: Bottom bar MUST use position: fixed to ALWAYS be visible
   const renderBottomBar = (showBack: boolean, showNext: boolean, nextLabel: string, nextAction?: () => void, nextColor?: string) => (
     <div style={{
-      position: 'sticky',
+      position: 'fixed',
       bottom: 0,
       left: 0,
       right: 0,
+      zIndex: 1000,
       display: 'flex',
       justifyContent: 'space-between',
       alignItems: 'center',
       padding: '16px 20px',
       borderTop: `1px solid ${colors.border}`,
       backgroundColor: colors.bgCard,
-      zIndex: 100,
+      boxShadow: '0 -8px 30px rgba(0,0,0,0.5)',
       minHeight: '72px',
       boxShadow: '0 -4px 20px rgba(0,0,0,0.3)'
     }}>
