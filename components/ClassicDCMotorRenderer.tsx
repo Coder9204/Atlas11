@@ -950,50 +950,64 @@ const ClassicDCMotorRenderer: React.FC<ClassicDCMotorRendererProps> = ({
   // HOOK PHASE
   if (phase === 'hook') {
     return (
-      <div style={{ minHeight: '100vh', background: `linear-gradient(180deg, ${colors.bgGradientStart} 0%, ${colors.bgGradientEnd} 100%)` }}>
-        <div style={{ maxWidth: '800px', margin: '0 auto', padding: '60px 20px', textAlign: 'center' }}>
-          <div style={{ fontSize: '72px', marginBottom: '24px' }}>⚙️🔄⚡</div>
-          <h1 style={{ fontSize: isMobile ? '28px' : '42px', fontWeight: 800, color: colors.textPrimary, marginBottom: '16px', lineHeight: 1.2 }}>
-            How Does a Motor Keep Spinning?
-          </h1>
-          <p style={{ fontSize: isMobile ? '16px' : '20px', color: colors.textSecondary, marginBottom: '32px', lineHeight: 1.6, maxWidth: '600px', margin: '0 auto 32px' }}>
-            If a magnetic force pushes a coil one way, why doesn't it push it back the other way a moment later?
-            <br /><br />
-            Discover the ingenious trick that makes motors work.
-          </p>
+      <div style={{
+        height: '100dvh',
+        display: 'flex',
+        flexDirection: 'column',
+        background: `linear-gradient(180deg, ${colors.bgGradientStart} 0%, ${colors.bgGradientEnd} 100%)`,
+        overflow: 'hidden'
+      }}>
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          overflowX: 'hidden',
+          WebkitOverflowScrolling: 'touch',
+          paddingBottom: '100px'
+        }}>
+          <div style={{ maxWidth: '800px', margin: '0 auto', padding: '60px 20px', textAlign: 'center' }}>
+            <div style={{ fontSize: '72px', marginBottom: '24px' }}>⚙️🔄⚡</div>
+            <h1 style={{ fontSize: isMobile ? '28px' : '42px', fontWeight: 800, color: colors.textPrimary, marginBottom: '16px', lineHeight: 1.2 }}>
+              How Does a Motor Keep Spinning?
+            </h1>
+            <p style={{ fontSize: isMobile ? '16px' : '20px', color: colors.textSecondary, marginBottom: '32px', lineHeight: 1.6, maxWidth: '600px', margin: '0 auto 32px' }}>
+              If a magnetic force pushes a coil one way, why doesn't it push it back the other way a moment later?
+              <br /><br />
+              Discover the ingenious trick that makes motors work.
+            </p>
 
-          <div style={{
-            background: colors.bgCard,
-            borderRadius: '16px',
-            padding: '24px',
-            marginBottom: '40px',
-            border: `1px solid ${colors.border}`,
-            textAlign: 'left'
-          }}>
-            <p style={{ color: '#e2e8f0', fontSize: '14px', fontStyle: 'italic', marginBottom: '12px' }}>
-              "The commutator is the heart of the DC motor - it's what transforms oscillation into continuous rotation."
-            </p>
-            <p style={{ color: colors.textSecondary, fontSize: '13px' }}>
-              — Electric Motor Design Principle
-            </p>
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '16px',
+              padding: '24px',
+              marginBottom: '40px',
+              border: `1px solid ${colors.border}`,
+              textAlign: 'left'
+            }}>
+              <p style={{ color: '#e2e8f0', fontSize: '14px', fontStyle: 'italic', marginBottom: '12px' }}>
+                "The commutator is the heart of the DC motor - it's what transforms oscillation into continuous rotation."
+              </p>
+              <p style={{ color: colors.textSecondary, fontSize: '13px' }}>
+                — Electric Motor Design Principle
+              </p>
+            </div>
+
+            <button
+              onMouseDown={() => goToPhase('predict')}
+              style={{
+                padding: '18px 48px',
+                fontSize: '18px',
+                fontWeight: 700,
+                background: `linear-gradient(135deg, ${colors.primary} 0%, ${colors.accent} 100%)`,
+                color: 'white',
+                border: 'none',
+                borderRadius: '14px',
+                cursor: 'pointer',
+                boxShadow: `0 8px 32px ${colors.primary}50`
+              }}
+            >
+              Discover the Secret →
+            </button>
           </div>
-
-          <button
-            onMouseDown={() => goToPhase('predict')}
-            style={{
-              padding: '18px 48px',
-              fontSize: '18px',
-              fontWeight: 700,
-              background: `linear-gradient(135deg, ${colors.primary} 0%, ${colors.accent} 100%)`,
-              color: 'white',
-              border: 'none',
-              borderRadius: '14px',
-              cursor: 'pointer',
-              boxShadow: `0 8px 32px ${colors.primary}50`
-            }}
-          >
-            Discover the Secret →
-          </button>
         </div>
       </div>
     );
@@ -1009,42 +1023,116 @@ const ClassicDCMotorRenderer: React.FC<ClassicDCMotorRendererProps> = ({
     ];
 
     return (
-      <div style={{ minHeight: '100vh', background: `linear-gradient(180deg, ${colors.bgGradientStart} 0%, ${colors.bgGradientEnd} 100%)`, display: 'flex', flexDirection: 'column' }}>
-        <div style={{ flex: 1, maxWidth: '800px', margin: '0 auto', padding: '40px 20px' }}>
-          <div style={{ textAlign: 'center', marginBottom: '32px' }}>
-            <p style={{ color: colors.primary, fontSize: '12px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '8px' }}>
-              Step 1 • Make a Prediction
-            </p>
-            <h2 style={{ fontSize: isMobile ? '24px' : '32px', fontWeight: 700, color: colors.textPrimary, marginBottom: '12px' }}>
-              What keeps the coil spinning?
-            </h2>
-            <p style={{ color: colors.textSecondary, fontSize: '16px', maxWidth: '500px', margin: '0 auto' }}>
-              In a simple motor with a coil between two magnets, what keeps the coil spinning in the same direction?
-            </p>
-          </div>
+      <div style={{
+        height: '100dvh',
+        display: 'flex',
+        flexDirection: 'column',
+        background: `linear-gradient(180deg, ${colors.bgGradientStart} 0%, ${colors.bgGradientEnd} 100%)`,
+        overflow: 'hidden'
+      }}>
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          overflowX: 'hidden',
+          WebkitOverflowScrolling: 'touch',
+          paddingBottom: '100px'
+        }}>
+          <div style={{ maxWidth: '800px', margin: '0 auto', padding: '40px 20px' }}>
+            <div style={{ textAlign: 'center', marginBottom: '32px' }}>
+              <p style={{ color: colors.primary, fontSize: '12px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '8px' }}>
+                Step 1 • Make a Prediction
+              </p>
+              <h2 style={{ fontSize: isMobile ? '24px' : '32px', fontWeight: 700, color: colors.textPrimary, marginBottom: '12px' }}>
+                What keeps the coil spinning?
+              </h2>
+              <p style={{ color: colors.textSecondary, fontSize: '16px', maxWidth: '500px', margin: '0 auto' }}>
+                In a simple motor with a coil between two magnets, what keeps the coil spinning in the same direction?
+              </p>
+            </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: '16px', marginBottom: '32px' }}>
-            {predictions.map(p => (
-              <button
-                key={p.id}
-                onMouseDown={() => {
-                  setPrediction(p.id);
-                  playSound('click');
-                }}
-                style={{
-                  padding: '20px',
-                  borderRadius: '12px',
-                  border: prediction === p.id ? `2px solid ${colors.primary}` : `2px solid ${colors.border}`,
-                  backgroundColor: prediction === p.id ? `${colors.primary}20` : colors.bgCard,
-                  cursor: 'pointer',
-                  textAlign: 'left',
-                  transition: 'all 0.2s'
-                }}
-              >
-                <span style={{ fontSize: '28px', marginRight: '12px' }}>{p.icon}</span>
-                <span style={{ color: colors.textPrimary, fontSize: '15px' }}>{p.label}</span>
-              </button>
-            ))}
+            {/* Static DC Motor Visualization */}
+            {renderMotorVisualization()}
+
+            {/* What You're Looking At explanation */}
+            <div style={{
+              background: `linear-gradient(135deg, ${colors.primary}15 0%, ${colors.accent}15 100%)`,
+              border: `1px solid ${colors.primary}30`,
+              borderRadius: '12px',
+              padding: isMobile ? '16px' : '20px',
+              margin: '24px auto',
+              maxWidth: '600px'
+            }}>
+              <p style={{ fontSize: '14px', fontWeight: 700, color: colors.primary, marginBottom: '12px' }}>
+                What You're Looking At:
+              </p>
+              <ul style={{ margin: 0, paddingLeft: '18px', color: colors.textSecondary, fontSize: '14px', lineHeight: 1.7 }}>
+                <li style={{ marginBottom: '6px' }}>A <strong style={{ color: colors.copper }}>copper coil</strong> (armature) sits between two permanent magnets</li>
+                <li style={{ marginBottom: '6px' }}>The <strong style={{ color: colors.magnetNorth }}>red magnet (N)</strong> and <strong style={{ color: colors.magnetSouth }}>blue magnet (S)</strong> create a magnetic field</li>
+                <li style={{ marginBottom: '6px' }}>A <strong style={{ color: colors.commutator }}>commutator</strong> at the bottom connects the coil to the power supply</li>
+                <li>When current flows, the magnetic field exerts a <strong style={{ color: colors.force }}>force (F = BIL)</strong> on the coil</li>
+              </ul>
+            </div>
+
+            {/* Prediction Question */}
+            <div style={{ textAlign: 'center', marginBottom: '20px' }}>
+              <h3 style={{ fontSize: isMobile ? '18px' : '22px', fontWeight: 700, color: colors.textPrimary, marginBottom: '8px' }}>
+                Make Your Prediction:
+              </h3>
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: '16px', marginBottom: '24px' }}>
+              {predictions.map(p => (
+                <button
+                  key={p.id}
+                  onMouseDown={() => {
+                    setPrediction(p.id);
+                    playSound('click');
+                  }}
+                  style={{
+                    padding: '20px',
+                    borderRadius: '12px',
+                    border: prediction === p.id ? `2px solid ${colors.primary}` : `2px solid ${colors.border}`,
+                    backgroundColor: prediction === p.id ? `${colors.primary}20` : colors.bgCard,
+                    cursor: 'pointer',
+                    textAlign: 'left',
+                    transition: 'all 0.2s'
+                  }}
+                >
+                  <span style={{ fontSize: '28px', marginRight: '12px' }}>{p.icon}</span>
+                  <span style={{ color: colors.textPrimary, fontSize: '15px' }}>{p.label}</span>
+                </button>
+              ))}
+            </div>
+
+            {/* Optional Why textarea - appears after selection */}
+            {prediction && (
+              <div style={{
+                background: colors.bgCard,
+                borderRadius: '12px',
+                padding: '20px',
+                border: `1px solid ${colors.border}`,
+                marginBottom: '24px'
+              }}>
+                <label style={{ display: 'block', color: colors.textSecondary, fontSize: '14px', fontWeight: 600, marginBottom: '10px' }}>
+                  Why do you think so? (optional)
+                </label>
+                <textarea
+                  placeholder="Explain your reasoning..."
+                  style={{
+                    width: '100%',
+                    minHeight: '80px',
+                    padding: '12px',
+                    borderRadius: '8px',
+                    border: `1px solid ${colors.border}`,
+                    backgroundColor: colors.bgCardLight,
+                    color: colors.textPrimary,
+                    fontSize: '14px',
+                    resize: 'vertical',
+                    fontFamily: 'inherit'
+                  }}
+                />
+              </div>
+            )}
           </div>
         </div>
 
@@ -1056,83 +1144,97 @@ const ClassicDCMotorRenderer: React.FC<ClassicDCMotorRendererProps> = ({
   // PLAY PHASE
   if (phase === 'play') {
     return (
-      <div style={{ minHeight: '100vh', background: `linear-gradient(180deg, ${colors.bgGradientStart} 0%, ${colors.bgGradientEnd} 100%)`, display: 'flex', flexDirection: 'column' }}>
-        <div style={{ flex: 1, padding: '20px' }}>
-          <div style={{ textAlign: 'center', marginBottom: '16px' }}>
-            <p style={{ color: colors.success, fontSize: '12px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '8px' }}>
-              Step 2 • Run the Experiment
-            </p>
-            <h2 style={{ fontSize: isMobile ? '20px' : '26px', fontWeight: 700, color: colors.textPrimary }}>
-              Build Your DC Motor
-            </h2>
-          </div>
-
-          {renderMotorVisualization()}
-
-          {/* Controls */}
-          <div style={{ maxWidth: '500px', margin: '24px auto 0', display: 'flex', flexDirection: 'column', gap: '16px' }}>
-            <div style={{ background: colors.bgCard, borderRadius: '12px', padding: '16px', border: `1px solid ${colors.border}` }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ color: colors.textSecondary, fontSize: '14px', fontWeight: 600 }}>Voltage (Speed)</span>
-                <span style={{ color: colors.primary, fontSize: '14px', fontWeight: 700 }}>{voltage}%</span>
-              </div>
-              <input
-                type="range"
-                min="20"
-                max="100"
-                value={voltage}
-                onChange={(e) => setVoltage(Number(e.target.value))}
-                style={{ width: '100%', accentColor: colors.primary }}
-              />
-            </div>
-
-            <div style={{ display: 'flex', gap: '12px' }}>
-              <button
-                onMouseDown={() => {
-                  setIsRunning(!isRunning);
-                  playSound(isRunning ? 'click' : 'success');
-                  emitGameEvent(isRunning ? 'motor_stopped' : 'motor_started', { voltage, magnetCount });
-                }}
-                style={{
-                  flex: 1,
-                  padding: '16px',
-                  borderRadius: '12px',
-                  fontWeight: 700,
-                  fontSize: '16px',
-                  backgroundColor: isRunning ? colors.error : colors.success,
-                  color: 'white',
-                  border: 'none',
-                  cursor: 'pointer'
-                }}
-              >
-                {isRunning ? '⏹ STOP' : '▶ START'}
-              </button>
-
-              <button
-                onMouseDown={() => setShowCommutator(!showCommutator)}
-                style={{
-                  padding: '16px',
-                  borderRadius: '12px',
-                  fontWeight: 600,
-                  fontSize: '14px',
-                  backgroundColor: showCommutator ? colors.warning : colors.bgCardLight,
-                  color: showCommutator ? 'white' : colors.textSecondary,
-                  border: 'none',
-                  cursor: 'pointer'
-                }}
-              >
-                {showCommutator ? '👁 Hide' : '👁 Show'}
-              </button>
-            </div>
-          </div>
-
-          {isRunning && (
-            <div style={{ textAlign: 'center', marginTop: '24px' }}>
-              <p style={{ color: colors.success, fontSize: '16px', fontWeight: 600 }}>
-                Watch the torque graph! The commutator reverses current at the dead zones (0° and 180°).
+      <div style={{
+        height: '100dvh',
+        display: 'flex',
+        flexDirection: 'column',
+        background: `linear-gradient(180deg, ${colors.bgGradientStart} 0%, ${colors.bgGradientEnd} 100%)`,
+        overflow: 'hidden'
+      }}>
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          overflowX: 'hidden',
+          WebkitOverflowScrolling: 'touch',
+          paddingBottom: '100px'
+        }}>
+          <div style={{ padding: '20px' }}>
+            <div style={{ textAlign: 'center', marginBottom: '16px' }}>
+              <p style={{ color: colors.success, fontSize: '12px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '8px' }}>
+                Step 2 • Run the Experiment
               </p>
+              <h2 style={{ fontSize: isMobile ? '20px' : '26px', fontWeight: 700, color: colors.textPrimary }}>
+                Build Your DC Motor
+              </h2>
             </div>
-          )}
+
+            {renderMotorVisualization()}
+
+            {/* Controls */}
+            <div style={{ maxWidth: '500px', margin: '24px auto 0', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              <div style={{ background: colors.bgCard, borderRadius: '12px', padding: '16px', border: `1px solid ${colors.border}` }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                  <span style={{ color: colors.textSecondary, fontSize: '14px', fontWeight: 600 }}>Voltage (Speed)</span>
+                  <span style={{ color: colors.primary, fontSize: '14px', fontWeight: 700 }}>{voltage}%</span>
+                </div>
+                <input
+                  type="range"
+                  min="20"
+                  max="100"
+                  value={voltage}
+                  onChange={(e) => setVoltage(Number(e.target.value))}
+                  style={{ width: '100%', accentColor: colors.primary }}
+                />
+              </div>
+
+              <div style={{ display: 'flex', gap: '12px' }}>
+                <button
+                  onMouseDown={() => {
+                    setIsRunning(!isRunning);
+                    playSound(isRunning ? 'click' : 'success');
+                    emitGameEvent(isRunning ? 'motor_stopped' : 'motor_started', { voltage, magnetCount });
+                  }}
+                  style={{
+                    flex: 1,
+                    padding: '16px',
+                    borderRadius: '12px',
+                    fontWeight: 700,
+                    fontSize: '16px',
+                    backgroundColor: isRunning ? colors.error : colors.success,
+                    color: 'white',
+                    border: 'none',
+                    cursor: 'pointer'
+                  }}
+                >
+                  {isRunning ? '⏹ STOP' : '▶ START'}
+                </button>
+
+                <button
+                  onMouseDown={() => setShowCommutator(!showCommutator)}
+                  style={{
+                    padding: '16px',
+                    borderRadius: '12px',
+                    fontWeight: 600,
+                    fontSize: '14px',
+                    backgroundColor: showCommutator ? colors.warning : colors.bgCardLight,
+                    color: showCommutator ? 'white' : colors.textSecondary,
+                    border: 'none',
+                    cursor: 'pointer'
+                  }}
+                >
+                  {showCommutator ? '👁 Hide' : '👁 Show'}
+                </button>
+              </div>
+            </div>
+
+            {isRunning && (
+              <div style={{ textAlign: 'center', marginTop: '24px' }}>
+                <p style={{ color: colors.success, fontSize: '16px', fontWeight: 600 }}>
+                  Watch the torque graph! The commutator reverses current at the dead zones (0° and 180°).
+                </p>
+              </div>
+            )}
+          </div>
         </div>
 
         {renderBottomBar(true, isRunning, 'Understand Commutation →', () => goToPhase('review'), colors.success)}
@@ -1143,52 +1245,66 @@ const ClassicDCMotorRenderer: React.FC<ClassicDCMotorRendererProps> = ({
   // REVIEW PHASE
   if (phase === 'review') {
     return (
-      <div style={{ minHeight: '100vh', background: `linear-gradient(180deg, ${colors.bgGradientStart} 0%, ${colors.bgGradientEnd} 100%)`, display: 'flex', flexDirection: 'column' }}>
-        <div style={{ flex: 1, maxWidth: '800px', margin: '0 auto', padding: '40px 20px' }}>
-          <div style={{ textAlign: 'center', marginBottom: '32px' }}>
-            <p style={{ color: colors.accent, fontSize: '12px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '8px' }}>
-              Step 3 • Understanding
-            </p>
-            <h2 style={{ fontSize: isMobile ? '24px' : '32px', fontWeight: 700, color: colors.textPrimary }}>
-              The Magic of Commutation
-            </h2>
-          </div>
-
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-            <div style={{ background: colors.bgCard, borderRadius: '16px', padding: '24px', borderLeft: `4px solid ${colors.primary}` }}>
-              <h3 style={{ color: colors.primary, fontSize: '18px', fontWeight: 700, marginBottom: '12px' }}>What's Happening</h3>
-              <p style={{ color: colors.textSecondary, lineHeight: 1.7 }}>
-                As the coil rotates, the torque from the magnetic force follows a sine wave - positive half the
-                time, negative half the time. Without commutation, the coil would just <strong style={{ color: colors.textPrimary }}>oscillate back and forth!</strong>
+      <div style={{
+        height: '100dvh',
+        display: 'flex',
+        flexDirection: 'column',
+        background: `linear-gradient(180deg, ${colors.bgGradientStart} 0%, ${colors.bgGradientEnd} 100%)`,
+        overflow: 'hidden'
+      }}>
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          overflowX: 'hidden',
+          WebkitOverflowScrolling: 'touch',
+          paddingBottom: '100px'
+        }}>
+          <div style={{ maxWidth: '800px', margin: '0 auto', padding: '40px 20px' }}>
+            <div style={{ textAlign: 'center', marginBottom: '32px' }}>
+              <p style={{ color: colors.accent, fontSize: '12px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '8px' }}>
+                Step 3 • Understanding
               </p>
+              <h2 style={{ fontSize: isMobile ? '24px' : '32px', fontWeight: 700, color: colors.textPrimary }}>
+                The Magic of Commutation
+              </h2>
             </div>
 
-            <div style={{ background: colors.bgCard, borderRadius: '16px', padding: '24px', borderLeft: `4px solid ${colors.success}` }}>
-              <h3 style={{ color: colors.success, fontSize: '18px', fontWeight: 700, marginBottom: '12px' }}>The Commutator's Job</h3>
-              <p style={{ color: colors.textSecondary, lineHeight: 1.7 }}>
-                The commutator is a mechanical switch that <strong style={{ color: colors.textPrimary }}>reverses the current direction</strong> exactly
-                when torque would become negative. This keeps the torque always positive, creating continuous rotation.
-              </p>
-            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+              <div style={{ background: colors.bgCard, borderRadius: '16px', padding: '24px', borderLeft: `4px solid ${colors.primary}` }}>
+                <h3 style={{ color: colors.primary, fontSize: '18px', fontWeight: 700, marginBottom: '12px' }}>What's Happening</h3>
+                <p style={{ color: colors.textSecondary, lineHeight: 1.7 }}>
+                  As the coil rotates, the torque from the magnetic force follows a sine wave - positive half the
+                  time, negative half the time. Without commutation, the coil would just <strong style={{ color: colors.textPrimary }}>oscillate back and forth!</strong>
+                </p>
+              </div>
 
-            <div style={{ background: colors.bgCard, borderRadius: '16px', padding: '24px', borderLeft: `4px solid ${colors.warning}` }}>
-              <h3 style={{ color: colors.warning, fontSize: '18px', fontWeight: 700, marginBottom: '12px' }}>Dead Zones</h3>
-              <p style={{ color: colors.textSecondary, lineHeight: 1.7 }}>
-                At 0° and 180°, torque is zero (sin(0) = 0). This is why simple motors sometimes stall - if they
-                stop at a dead zone, they can't restart. The coil's <strong style={{ color: colors.textPrimary }}>momentum</strong> carries it through.
-              </p>
-            </div>
+              <div style={{ background: colors.bgCard, borderRadius: '16px', padding: '24px', borderLeft: `4px solid ${colors.success}` }}>
+                <h3 style={{ color: colors.success, fontSize: '18px', fontWeight: 700, marginBottom: '12px' }}>The Commutator's Job</h3>
+                <p style={{ color: colors.textSecondary, lineHeight: 1.7 }}>
+                  The commutator is a mechanical switch that <strong style={{ color: colors.textPrimary }}>reverses the current direction</strong> exactly
+                  when torque would become negative. This keeps the torque always positive, creating continuous rotation.
+                </p>
+              </div>
 
-            <div style={{ background: colors.bgCard, borderRadius: '16px', padding: '24px', borderLeft: `4px solid ${colors.error}` }}>
-              <h3 style={{ color: colors.error, fontSize: '18px', fontWeight: 700, marginBottom: '12px' }}>The Torque Equation</h3>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '20px', flexWrap: 'wrap' }}>
-                <div style={{ fontSize: '28px', fontFamily: 'monospace', color: colors.textPrimary, fontWeight: 700 }}>
-                  τ = nBIA sin(θ)
-                </div>
-                <div style={{ color: '#e2e8f0', fontSize: '14px' }}>
-                  <div>n = number of coil turns</div>
-                  <div>B = magnetic field strength</div>
-                  <div>I = current | A = coil area</div>
+              <div style={{ background: colors.bgCard, borderRadius: '16px', padding: '24px', borderLeft: `4px solid ${colors.warning}` }}>
+                <h3 style={{ color: colors.warning, fontSize: '18px', fontWeight: 700, marginBottom: '12px' }}>Dead Zones</h3>
+                <p style={{ color: colors.textSecondary, lineHeight: 1.7 }}>
+                  At 0° and 180°, torque is zero (sin(0) = 0). This is why simple motors sometimes stall - if they
+                  stop at a dead zone, they can't restart. The coil's <strong style={{ color: colors.textPrimary }}>momentum</strong> carries it through.
+                </p>
+              </div>
+
+              <div style={{ background: colors.bgCard, borderRadius: '16px', padding: '24px', borderLeft: `4px solid ${colors.error}` }}>
+                <h3 style={{ color: colors.error, fontSize: '18px', fontWeight: 700, marginBottom: '12px' }}>The Torque Equation</h3>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '20px', flexWrap: 'wrap' }}>
+                  <div style={{ fontSize: '28px', fontFamily: 'monospace', color: colors.textPrimary, fontWeight: 700 }}>
+                    τ = nBIA sin(θ)
+                  </div>
+                  <div style={{ color: '#e2e8f0', fontSize: '14px' }}>
+                    <div>n = number of coil turns</div>
+                    <div>B = magnetic field strength</div>
+                    <div>I = current | A = coil area</div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -1210,42 +1326,56 @@ const ClassicDCMotorRenderer: React.FC<ClassicDCMotorRendererProps> = ({
     ];
 
     return (
-      <div style={{ minHeight: '100vh', background: `linear-gradient(180deg, ${colors.bgGradientStart} 0%, ${colors.bgGradientEnd} 100%)`, display: 'flex', flexDirection: 'column' }}>
-        <div style={{ flex: 1, maxWidth: '800px', margin: '0 auto', padding: '40px 20px' }}>
-          <div style={{ textAlign: 'center', marginBottom: '32px' }}>
-            <p style={{ color: colors.warning, fontSize: '12px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '8px' }}>
-              Step 4 • New Variable
-            </p>
-            <h2 style={{ fontSize: isMobile ? '24px' : '32px', fontWeight: 700, color: colors.textPrimary, marginBottom: '12px' }}>
-              Add a Second Magnet!
-            </h2>
-            <p style={{ color: colors.textSecondary, fontSize: '16px' }}>
-              What do you think will happen if you add a second magnet to make the field stronger?
-            </p>
-          </div>
+      <div style={{
+        height: '100dvh',
+        display: 'flex',
+        flexDirection: 'column',
+        background: `linear-gradient(180deg, ${colors.bgGradientStart} 0%, ${colors.bgGradientEnd} 100%)`,
+        overflow: 'hidden'
+      }}>
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          overflowX: 'hidden',
+          WebkitOverflowScrolling: 'touch',
+          paddingBottom: '100px'
+        }}>
+          <div style={{ maxWidth: '800px', margin: '0 auto', padding: '40px 20px' }}>
+            <div style={{ textAlign: 'center', marginBottom: '32px' }}>
+              <p style={{ color: colors.warning, fontSize: '12px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '8px' }}>
+                Step 4 • New Variable
+              </p>
+              <h2 style={{ fontSize: isMobile ? '24px' : '32px', fontWeight: 700, color: colors.textPrimary, marginBottom: '12px' }}>
+                Add a Second Magnet!
+              </h2>
+              <p style={{ color: colors.textSecondary, fontSize: '16px' }}>
+                What do you think will happen if you add a second magnet to make the field stronger?
+              </p>
+            </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: '16px', marginBottom: '32px' }}>
-            {twistPredictions.map(p => (
-              <button
-                key={p.id}
-                onMouseDown={() => {
-                  setTwistPrediction(p.id);
-                  playSound('click');
-                }}
-                style={{
-                  padding: '20px',
-                  borderRadius: '12px',
-                  border: twistPrediction === p.id ? `2px solid ${colors.warning}` : `2px solid ${colors.border}`,
-                  backgroundColor: twistPrediction === p.id ? `${colors.warning}20` : colors.bgCard,
-                  cursor: 'pointer',
-                  textAlign: 'left',
-                  transition: 'all 0.2s'
-                }}
-              >
-                <span style={{ fontSize: '28px', marginRight: '12px' }}>{p.icon}</span>
-                <span style={{ color: colors.textPrimary, fontSize: '15px' }}>{p.label}</span>
-              </button>
-            ))}
+            <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: '16px', marginBottom: '32px' }}>
+              {twistPredictions.map(p => (
+                <button
+                  key={p.id}
+                  onMouseDown={() => {
+                    setTwistPrediction(p.id);
+                    playSound('click');
+                  }}
+                  style={{
+                    padding: '20px',
+                    borderRadius: '12px',
+                    border: twistPrediction === p.id ? `2px solid ${colors.warning}` : `2px solid ${colors.border}`,
+                    backgroundColor: twistPrediction === p.id ? `${colors.warning}20` : colors.bgCard,
+                    cursor: 'pointer',
+                    textAlign: 'left',
+                    transition: 'all 0.2s'
+                  }}
+                >
+                  <span style={{ fontSize: '28px', marginRight: '12px' }}>{p.icon}</span>
+                  <span style={{ color: colors.textPrimary, fontSize: '15px' }}>{p.label}</span>
+                </button>
+              ))}
+            </div>
           </div>
         </div>
 
@@ -1257,94 +1387,108 @@ const ClassicDCMotorRenderer: React.FC<ClassicDCMotorRendererProps> = ({
   // TWIST PLAY PHASE
   if (phase === 'twist_play') {
     return (
-      <div style={{ minHeight: '100vh', background: `linear-gradient(180deg, ${colors.bgGradientStart} 0%, ${colors.bgGradientEnd} 100%)`, display: 'flex', flexDirection: 'column' }}>
-        <div style={{ flex: 1, padding: '20px' }}>
-          <div style={{ textAlign: 'center', marginBottom: '16px' }}>
-            <p style={{ color: colors.warning, fontSize: '12px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '8px' }}>
-              Step 5 • Experiment
-            </p>
-            <h2 style={{ fontSize: isMobile ? '20px' : '26px', fontWeight: 700, color: colors.textPrimary }}>
-              Test with Extra Magnets
-            </h2>
-          </div>
-
-          {renderMotorVisualization()}
-
-          {/* Controls */}
-          <div style={{ maxWidth: '500px', margin: '24px auto 0', display: 'flex', flexDirection: 'column', gap: '16px' }}>
-            <div style={{ background: colors.bgCard, borderRadius: '12px', padding: '16px', border: `1px solid ${colors.border}` }}>
-              <p style={{ color: colors.textSecondary, fontSize: '14px', fontWeight: 600, marginBottom: '12px', textAlign: 'center' }}>
-                Number of Magnets
+      <div style={{
+        height: '100dvh',
+        display: 'flex',
+        flexDirection: 'column',
+        background: `linear-gradient(180deg, ${colors.bgGradientStart} 0%, ${colors.bgGradientEnd} 100%)`,
+        overflow: 'hidden'
+      }}>
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          overflowX: 'hidden',
+          WebkitOverflowScrolling: 'touch',
+          paddingBottom: '100px'
+        }}>
+          <div style={{ padding: '20px' }}>
+            <div style={{ textAlign: 'center', marginBottom: '16px' }}>
+              <p style={{ color: colors.warning, fontSize: '12px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '8px' }}>
+                Step 5 • Experiment
               </p>
-              <div style={{ display: 'flex', gap: '12px' }}>
-                <button
-                  onMouseDown={() => {
-                    setMagnetCount(1);
-                    playSound('click');
-                    emitGameEvent('magnet_changed', { count: 1 });
-                  }}
-                  style={{
-                    flex: 1,
-                    padding: '14px',
-                    borderRadius: '10px',
-                    fontWeight: 700,
-                    backgroundColor: magnetCount === 1 ? colors.primary : colors.bgCardLight,
-                    color: magnetCount === 1 ? 'white' : colors.textSecondary,
-                    border: 'none',
-                    cursor: 'pointer'
-                  }}
-                >
-                  1 Magnet
-                </button>
-                <button
-                  onMouseDown={() => {
-                    setMagnetCount(2);
-                    playSound('click');
-                    emitGameEvent('magnet_changed', { count: 2 });
-                  }}
-                  style={{
-                    flex: 1,
-                    padding: '14px',
-                    borderRadius: '10px',
-                    fontWeight: 700,
-                    backgroundColor: magnetCount === 2 ? colors.primary : colors.bgCardLight,
-                    color: magnetCount === 2 ? 'white' : colors.textSecondary,
-                    border: 'none',
-                    cursor: 'pointer'
-                  }}
-                >
-                  2 Magnets
-                </button>
+              <h2 style={{ fontSize: isMobile ? '20px' : '26px', fontWeight: 700, color: colors.textPrimary }}>
+                Test with Extra Magnets
+              </h2>
+            </div>
+
+            {renderMotorVisualization()}
+
+            {/* Controls */}
+            <div style={{ maxWidth: '500px', margin: '24px auto 0', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              <div style={{ background: colors.bgCard, borderRadius: '12px', padding: '16px', border: `1px solid ${colors.border}` }}>
+                <p style={{ color: colors.textSecondary, fontSize: '14px', fontWeight: 600, marginBottom: '12px', textAlign: 'center' }}>
+                  Number of Magnets
+                </p>
+                <div style={{ display: 'flex', gap: '12px' }}>
+                  <button
+                    onMouseDown={() => {
+                      setMagnetCount(1);
+                      playSound('click');
+                      emitGameEvent('magnet_changed', { count: 1 });
+                    }}
+                    style={{
+                      flex: 1,
+                      padding: '14px',
+                      borderRadius: '10px',
+                      fontWeight: 700,
+                      backgroundColor: magnetCount === 1 ? colors.primary : colors.bgCardLight,
+                      color: magnetCount === 1 ? 'white' : colors.textSecondary,
+                      border: 'none',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    1 Magnet
+                  </button>
+                  <button
+                    onMouseDown={() => {
+                      setMagnetCount(2);
+                      playSound('click');
+                      emitGameEvent('magnet_changed', { count: 2 });
+                    }}
+                    style={{
+                      flex: 1,
+                      padding: '14px',
+                      borderRadius: '10px',
+                      fontWeight: 700,
+                      backgroundColor: magnetCount === 2 ? colors.primary : colors.bgCardLight,
+                      color: magnetCount === 2 ? 'white' : colors.textSecondary,
+                      border: 'none',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    2 Magnets
+                  </button>
+                </div>
               </div>
+
+              <button
+                onMouseDown={() => {
+                  setIsRunning(!isRunning);
+                  playSound(isRunning ? 'click' : 'success');
+                }}
+                style={{
+                  padding: '16px',
+                  borderRadius: '12px',
+                  fontWeight: 700,
+                  fontSize: '16px',
+                  backgroundColor: isRunning ? colors.error : colors.success,
+                  color: 'white',
+                  border: 'none',
+                  cursor: 'pointer'
+                }}
+              >
+                {isRunning ? '⏹ STOP' : '▶ START'}
+              </button>
             </div>
 
-            <button
-              onMouseDown={() => {
-                setIsRunning(!isRunning);
-                playSound(isRunning ? 'click' : 'success');
-              }}
-              style={{
-                padding: '16px',
-                borderRadius: '12px',
-                fontWeight: 700,
-                fontSize: '16px',
-                backgroundColor: isRunning ? colors.error : colors.success,
-                color: 'white',
-                border: 'none',
-                cursor: 'pointer'
-              }}
-            >
-              {isRunning ? '⏹ STOP' : '▶ START'}
-            </button>
+            {isRunning && (
+              <div style={{ textAlign: 'center', marginTop: '24px' }}>
+                <p style={{ color: colors.warning, fontSize: '16px', fontWeight: 600 }}>
+                  With {magnetCount} magnet{magnetCount > 1 ? 's' : ''}: Torque is {magnetCount === 2 ? '50% stronger!' : 'at baseline.'}
+                </p>
+              </div>
+            )}
           </div>
-
-          {isRunning && (
-            <div style={{ textAlign: 'center', marginTop: '24px' }}>
-              <p style={{ color: colors.warning, fontSize: '16px', fontWeight: 600 }}>
-                With {magnetCount} magnet{magnetCount > 1 ? 's' : ''}: Torque is {magnetCount === 2 ? '50% stronger!' : 'at baseline.'}
-              </p>
-            </div>
-          )}
         </div>
 
         {renderBottomBar(true, isRunning, 'See the Explanation →', () => goToPhase('twist_review'), colors.warning)}
@@ -1355,40 +1499,54 @@ const ClassicDCMotorRenderer: React.FC<ClassicDCMotorRendererProps> = ({
   // TWIST REVIEW PHASE
   if (phase === 'twist_review') {
     return (
-      <div style={{ minHeight: '100vh', background: `linear-gradient(180deg, ${colors.bgGradientStart} 0%, ${colors.bgGradientEnd} 100%)`, display: 'flex', flexDirection: 'column' }}>
-        <div style={{ flex: 1, maxWidth: '800px', margin: '0 auto', padding: '40px 20px' }}>
-          <div style={{ textAlign: 'center', marginBottom: '32px' }}>
-            <p style={{ color: colors.accent, fontSize: '12px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '8px' }}>
-              Step 6 • Deep Insight
-            </p>
-            <h2 style={{ fontSize: isMobile ? '24px' : '32px', fontWeight: 700, color: colors.textPrimary }}>
-              Stronger Magnets = More Torque
-            </h2>
-          </div>
+      <div style={{
+        height: '100dvh',
+        display: 'flex',
+        flexDirection: 'column',
+        background: `linear-gradient(180deg, ${colors.bgGradientStart} 0%, ${colors.bgGradientEnd} 100%)`,
+        overflow: 'hidden'
+      }}>
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          overflowX: 'hidden',
+          WebkitOverflowScrolling: 'touch',
+          paddingBottom: '100px'
+        }}>
+          <div style={{ maxWidth: '800px', margin: '0 auto', padding: '40px 20px' }}>
+            <div style={{ textAlign: 'center', marginBottom: '32px' }}>
+              <p style={{ color: colors.accent, fontSize: '12px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '8px' }}>
+                Step 6 • Deep Insight
+              </p>
+              <h2 style={{ fontSize: isMobile ? '24px' : '32px', fontWeight: 700, color: colors.textPrimary }}>
+                Stronger Magnets = More Torque
+              </h2>
+            </div>
 
-          <div style={{ background: colors.bgCard, borderRadius: '16px', padding: '24px', borderLeft: `4px solid ${colors.accent}`, marginBottom: '24px' }}>
-            <h3 style={{ color: colors.accent, fontSize: '18px', fontWeight: 700, marginBottom: '12px' }}>Why It Works</h3>
-            <p style={{ color: colors.textSecondary, lineHeight: 1.7, marginBottom: '16px' }}>
-              The torque equation <strong style={{ color: colors.textPrimary }}>τ = nBIA sin(θ)</strong> shows that torque is directly proportional
-              to magnetic field strength (B). Double the field, double the torque!
-            </p>
-            <p style={{ color: colors.textSecondary, lineHeight: 1.7 }}>
-              With more torque, the motor can:
-            </p>
-            <ul style={{ color: colors.textSecondary, marginTop: '12px', paddingLeft: '20px' }}>
-              <li style={{ marginBottom: '8px' }}>Start more easily from dead zones</li>
-              <li style={{ marginBottom: '8px' }}>Overcome more mechanical resistance</li>
-              <li>Accelerate faster to higher speeds</li>
-            </ul>
-          </div>
+            <div style={{ background: colors.bgCard, borderRadius: '16px', padding: '24px', borderLeft: `4px solid ${colors.accent}`, marginBottom: '24px' }}>
+              <h3 style={{ color: colors.accent, fontSize: '18px', fontWeight: 700, marginBottom: '12px' }}>Why It Works</h3>
+              <p style={{ color: colors.textSecondary, lineHeight: 1.7, marginBottom: '16px' }}>
+                The torque equation <strong style={{ color: colors.textPrimary }}>τ = nBIA sin(θ)</strong> shows that torque is directly proportional
+                to magnetic field strength (B). Double the field, double the torque!
+              </p>
+              <p style={{ color: colors.textSecondary, lineHeight: 1.7 }}>
+                With more torque, the motor can:
+              </p>
+              <ul style={{ color: colors.textSecondary, marginTop: '12px', paddingLeft: '20px' }}>
+                <li style={{ marginBottom: '8px' }}>Start more easily from dead zones</li>
+                <li style={{ marginBottom: '8px' }}>Overcome more mechanical resistance</li>
+                <li>Accelerate faster to higher speeds</li>
+              </ul>
+            </div>
 
-          <div style={{ background: colors.bgCard, borderRadius: '16px', padding: '24px', borderLeft: `4px solid ${colors.primary}` }}>
-            <h3 style={{ color: colors.primary, fontSize: '18px', fontWeight: 700, marginBottom: '12px' }}>Real-World Application</h3>
-            <p style={{ color: colors.textSecondary, lineHeight: 1.7 }}>
-              This is why powerful motors use strong permanent magnets or electromagnets. <strong style={{ color: colors.textPrimary }}>Neodymium magnets</strong> revolutionized
-              motor design by providing very strong fields in small packages - enabling everything from
-              electric cars to micro-drones.
-            </p>
+            <div style={{ background: colors.bgCard, borderRadius: '16px', padding: '24px', borderLeft: `4px solid ${colors.primary}` }}>
+              <h3 style={{ color: colors.primary, fontSize: '18px', fontWeight: 700, marginBottom: '12px' }}>Real-World Application</h3>
+              <p style={{ color: colors.textSecondary, lineHeight: 1.7 }}>
+                This is why powerful motors use strong permanent magnets or electromagnets. <strong style={{ color: colors.textPrimary }}>Neodymium magnets</strong> revolutionized
+                motor design by providing very strong fields in small packages - enabling everything from
+                electric cars to micro-drones.
+              </p>
+            </div>
           </div>
         </div>
 
@@ -1421,9 +1579,15 @@ const ClassicDCMotorRenderer: React.FC<ClassicDCMotorRendererProps> = ({
     };
 
     return (
-      <div style={{ minHeight: '100vh', background: `linear-gradient(180deg, ${colors.bgGradientStart} 0%, ${colors.bgGradientEnd} 100%)`, display: 'flex', flexDirection: 'column' }}>
+      <div style={{
+        height: '100dvh',
+        display: 'flex',
+        flexDirection: 'column',
+        background: `linear-gradient(180deg, ${colors.bgGradientStart} 0%, ${colors.bgGradientEnd} 100%)`,
+        overflow: 'hidden'
+      }}>
         {/* Header */}
-        <div style={{ padding: '20px', borderBottom: `1px solid ${colors.border}`, backgroundColor: colors.bgCard }}>
+        <div style={{ padding: '20px', borderBottom: `1px solid ${colors.border}`, backgroundColor: colors.bgCard, flexShrink: 0 }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
             <div>
               <p style={{ fontSize: '10px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', color: colors.success }}>
@@ -1488,7 +1652,14 @@ const ClassicDCMotorRenderer: React.FC<ClassicDCMotorRendererProps> = ({
         </div>
 
         {/* App content */}
-        <div style={{ flex: 1, overflow: 'auto', padding: '20px', paddingBottom: '100px' }}>
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          overflowX: 'hidden',
+          WebkitOverflowScrolling: 'touch',
+          padding: '20px',
+          paddingBottom: '100px'
+        }}>
           <div style={{ maxWidth: '800px', margin: '0 auto' }}>
             <div style={{ textAlign: 'center', marginBottom: '24px' }}>
               <span style={{ fontSize: '56px' }}>{currentApp.icon}</span>
@@ -1651,64 +1822,96 @@ const ClassicDCMotorRenderer: React.FC<ClassicDCMotorRendererProps> = ({
     if (testSubmitted) {
       const passed = score >= 7;
       return (
-        <div style={{ minHeight: '100vh', background: `linear-gradient(180deg, ${colors.bgGradientStart} 0%, ${colors.bgGradientEnd} 100%)`, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', padding: '40px 20px' }}>
-          <div style={{ fontSize: '80px', marginBottom: '24px' }}>{passed ? '🎉' : '📚'}</div>
-          <h2 style={{ fontSize: '36px', fontWeight: 800, color: colors.textPrimary, marginBottom: '12px' }}>
-            {passed ? 'Congratulations!' : 'Keep Learning!'}
-          </h2>
-          <div style={{ fontSize: '64px', fontWeight: 800, color: passed ? colors.success : colors.warning, marginBottom: '24px' }}>
-            {score}/10
-          </div>
-          <p style={{ color: colors.textSecondary, fontSize: '18px', textAlign: 'center', maxWidth: '500px', marginBottom: '32px' }}>
-            {passed
-              ? 'You have mastered DC motor principles! You understand commutation, torque, and motor design.'
-              : 'You need 7/10 to pass. Review the lesson and try again.'}
-          </p>
-          <div style={{ display: 'flex', gap: '16px' }}>
-            {!passed && (
+        <div style={{
+          height: '100dvh',
+          display: 'flex',
+          flexDirection: 'column',
+          background: `linear-gradient(180deg, ${colors.bgGradientStart} 0%, ${colors.bgGradientEnd} 100%)`,
+          overflow: 'hidden'
+        }}>
+          <div style={{
+            flex: 1,
+            overflowY: 'auto',
+            overflowX: 'hidden',
+            WebkitOverflowScrolling: 'touch',
+            paddingBottom: '100px',
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'center',
+            alignItems: 'center',
+            padding: '40px 20px'
+          }}>
+            <div style={{ fontSize: '80px', marginBottom: '24px' }}>{passed ? '🎉' : '📚'}</div>
+            <h2 style={{ fontSize: '36px', fontWeight: 800, color: colors.textPrimary, marginBottom: '12px' }}>
+              {passed ? 'Congratulations!' : 'Keep Learning!'}
+            </h2>
+            <div style={{ fontSize: '64px', fontWeight: 800, color: passed ? colors.success : colors.warning, marginBottom: '24px' }}>
+              {score}/10
+            </div>
+            <p style={{ color: colors.textSecondary, fontSize: '18px', textAlign: 'center', maxWidth: '500px', marginBottom: '32px' }}>
+              {passed
+                ? 'You have mastered DC motor principles! You understand commutation, torque, and motor design.'
+                : 'You need 7/10 to pass. Review the lesson and try again.'}
+            </p>
+            <div style={{ display: 'flex', gap: '16px' }}>
+              {!passed && (
+                <button
+                  onMouseDown={() => {
+                    setPhase('hook');
+                    setTestQuestion(0);
+                    setTestAnswers(Array(10).fill(null));
+                    setTestSubmitted(false);
+                    setCompletedApps([false, false, false, false]);
+                  }}
+                  style={{
+                    padding: '16px 32px',
+                    borderRadius: '12px',
+                    fontWeight: 700,
+                    backgroundColor: colors.bgCardLight,
+                    color: colors.textSecondary,
+                    border: 'none',
+                    cursor: 'pointer'
+                  }}
+                >
+                  Review Lesson
+                </button>
+              )}
               <button
-                onMouseDown={() => {
-                  setPhase('hook');
-                  setTestQuestion(0);
-                  setTestAnswers(Array(10).fill(null));
-                  setTestSubmitted(false);
-                  setCompletedApps([false, false, false, false]);
-                }}
+                onMouseDown={() => passed ? goToPhase('mastery') : setTestSubmitted(false)}
                 style={{
                   padding: '16px 32px',
                   borderRadius: '12px',
                   fontWeight: 700,
-                  backgroundColor: colors.bgCardLight,
-                  color: colors.textSecondary,
+                  background: `linear-gradient(135deg, ${colors.primary} 0%, ${colors.accent} 100%)`,
+                  color: 'white',
                   border: 'none',
                   cursor: 'pointer'
                 }}
               >
-                Review Lesson
+                {passed ? 'Complete Journey →' : 'Try Again'}
               </button>
-            )}
-            <button
-              onMouseDown={() => passed ? goToPhase('mastery') : setTestSubmitted(false)}
-              style={{
-                padding: '16px 32px',
-                borderRadius: '12px',
-                fontWeight: 700,
-                background: `linear-gradient(135deg, ${colors.primary} 0%, ${colors.accent} 100%)`,
-                color: 'white',
-                border: 'none',
-                cursor: 'pointer'
-              }}
-            >
-              {passed ? 'Complete Journey →' : 'Try Again'}
-            </button>
+            </div>
           </div>
         </div>
       );
     }
 
     return (
-      <div style={{ minHeight: '100vh', background: `linear-gradient(180deg, ${colors.bgGradientStart} 0%, ${colors.bgGradientEnd} 100%)`, display: 'flex', flexDirection: 'column' }}>
-        <div style={{ flex: 1, maxWidth: '800px', margin: '0 auto', padding: '30px 20px', paddingBottom: '100px' }}>
+      <div style={{
+        height: '100dvh',
+        display: 'flex',
+        flexDirection: 'column',
+        background: `linear-gradient(180deg, ${colors.bgGradientStart} 0%, ${colors.bgGradientEnd} 100%)`,
+        overflow: 'hidden'
+      }}>
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          overflowX: 'hidden',
+          WebkitOverflowScrolling: 'touch',
+          paddingBottom: '100px'
+        }}>
+          <div style={{ maxWidth: '800px', margin: '0 auto', padding: '30px 20px' }}>
           {/* Progress */}
           <div style={{ marginBottom: '24px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
@@ -1839,6 +2042,7 @@ const ClassicDCMotorRenderer: React.FC<ClassicDCMotorRendererProps> = ({
               <p style={{ color: colors.textSecondary, lineHeight: 1.6 }}>{currentQ.explanation}</p>
             </div>
           )}
+          </div>
         </div>
 
         {/* Navigation */}
@@ -1903,36 +2107,56 @@ const ClassicDCMotorRenderer: React.FC<ClassicDCMotorRendererProps> = ({
   // MASTERY PHASE
   if (phase === 'mastery') {
     return (
-      <div style={{ minHeight: '100vh', background: `linear-gradient(180deg, ${colors.bgGradientStart} 0%, ${colors.bgGradientEnd} 100%)`, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', padding: '40px 20px', textAlign: 'center' }}>
-        <div style={{ fontSize: '100px', marginBottom: '24px' }}>🏆</div>
-        <h1 style={{ fontSize: '42px', fontWeight: 800, color: colors.textPrimary, marginBottom: '16px' }}>
-          Mastery Achieved!
-        </h1>
-        <p style={{ color: colors.textSecondary, fontSize: '18px', maxWidth: '600px', lineHeight: 1.7, marginBottom: '40px' }}>
-          You now understand DC motor commutation — the ingenious trick that transforms oscillating torque into continuous rotation.
-          From power tools to starter motors, this principle powers countless devices around you!
-        </p>
+      <div style={{
+        height: '100dvh',
+        display: 'flex',
+        flexDirection: 'column',
+        background: `linear-gradient(180deg, ${colors.bgGradientStart} 0%, ${colors.bgGradientEnd} 100%)`,
+        overflow: 'hidden'
+      }}>
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          overflowX: 'hidden',
+          WebkitOverflowScrolling: 'touch',
+          paddingBottom: '100px',
+          display: 'flex',
+          flexDirection: 'column',
+          justifyContent: 'center',
+          alignItems: 'center',
+          padding: '40px 20px',
+          textAlign: 'center'
+        }}>
+          <div style={{ fontSize: '100px', marginBottom: '24px' }}>🏆</div>
+          <h1 style={{ fontSize: '42px', fontWeight: 800, color: colors.textPrimary, marginBottom: '16px' }}>
+            Mastery Achieved!
+          </h1>
+          <p style={{ color: colors.textSecondary, fontSize: '18px', maxWidth: '600px', lineHeight: 1.7, marginBottom: '40px' }}>
+            You now understand DC motor commutation — the ingenious trick that transforms oscillating torque into continuous rotation.
+            From power tools to starter motors, this principle powers countless devices around you!
+          </p>
 
-        <div style={{ display: 'flex', gap: '16px' }}>
-          <button
-            onMouseDown={() => {
-              onComplete?.();
-              window.dispatchEvent(new CustomEvent('returnToDashboard'));
-            }}
-            style={{
-              padding: '18px 36px',
-              borderRadius: '14px',
-              fontWeight: 700,
-              fontSize: '16px',
-              background: `linear-gradient(135deg, ${colors.primary} 0%, ${colors.accent} 100%)`,
-              color: 'white',
-              border: 'none',
-              cursor: 'pointer',
-              boxShadow: `0 8px 32px ${colors.primary}50`
-            }}
-          >
-            Return to Dashboard
-          </button>
+          <div style={{ display: 'flex', gap: '16px' }}>
+            <button
+              onMouseDown={() => {
+                onComplete?.();
+                window.dispatchEvent(new CustomEvent('returnToDashboard'));
+              }}
+              style={{
+                padding: '18px 36px',
+                borderRadius: '14px',
+                fontWeight: 700,
+                fontSize: '16px',
+                background: `linear-gradient(135deg, ${colors.primary} 0%, ${colors.accent} 100%)`,
+                color: 'white',
+                border: 'none',
+                cursor: 'pointer',
+                boxShadow: `0 8px 32px ${colors.primary}50`
+              }}
+            >
+              Return to Dashboard
+            </button>
+          </div>
         </div>
       </div>
     );

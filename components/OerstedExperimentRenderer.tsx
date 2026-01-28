@@ -894,34 +894,65 @@ const OerstedExperimentRenderer: React.FC<OerstedExperimentRendererProps> = ({
   // HOOK PHASE
   if (phase === 'hook') {
     return (
-      <div style={{ minHeight: '100vh', background: `linear-gradient(180deg, ${colors.bgGradientStart} 0%, ${colors.bgGradientEnd} 100%)` }}>
-        <div style={{ maxWidth: '800px', margin: '0 auto', padding: '60px 20px', textAlign: 'center' }}>
-          <div style={{ fontSize: '72px', marginBottom: '24px' }}>🧭⚡🔬</div>
-          <h1 style={{ fontSize: isMobile ? '28px' : '42px', fontWeight: 800, color: colors.textPrimary, marginBottom: '16px', lineHeight: 1.2 }}>
-            Can a Wire Act Like a Magnet?
-          </h1>
-          <p style={{ fontSize: isMobile ? '16px' : '20px', color: colors.textSecondary, marginBottom: '32px', lineHeight: 1.6, maxWidth: '600px', margin: '0 auto 32px' }}>
-            In 1820, Hans Christian Oersted noticed something strange during a lecture demonstration.
-            <br /><br />
-            His discovery changed physics forever.
-          </p>
+      <div style={{
+        height: '100dvh',
+        display: 'flex',
+        flexDirection: 'column',
+        background: `linear-gradient(180deg, ${colors.bgGradientStart} 0%, ${colors.bgGradientEnd} 100%)`,
+        overflow: 'hidden'
+      }}>
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          overflowX: 'hidden',
+          WebkitOverflowScrolling: 'touch',
+          paddingBottom: '100px'
+        }}>
+          <div style={{ maxWidth: '800px', margin: '0 auto', padding: '60px 20px', textAlign: 'center' }}>
+            <div style={{ fontSize: '72px', marginBottom: '24px' }}>🧭⚡🔬</div>
+            <h1 style={{ fontSize: isMobile ? '28px' : '42px', fontWeight: 800, color: colors.textPrimary, marginBottom: '16px', lineHeight: 1.2 }}>
+              Can a Wire Act Like a Magnet?
+            </h1>
+            <p style={{ fontSize: isMobile ? '16px' : '20px', color: colors.textSecondary, marginBottom: '32px', lineHeight: 1.6, maxWidth: '600px', margin: '0 auto 32px' }}>
+              In 1820, Hans Christian Oersted noticed something strange during a lecture demonstration.
+              <br /><br />
+              His discovery changed physics forever.
+            </p>
 
-          <div style={{
-            background: colors.bgCard,
-            borderRadius: '16px',
-            padding: '24px',
-            marginBottom: '40px',
-            border: `1px solid ${colors.border}`,
-            textAlign: 'left'
-          }}>
-            <p style={{ color: '#e2e8f0', fontSize: '14px', fontStyle: 'italic', marginBottom: '12px' }}>
-              "I finally found that the magnetic needle was moved by the galvanic current."
-            </p>
-            <p style={{ color: colors.textSecondary, fontSize: '13px' }}>
-              — Hans Christian Oersted, 1820
-            </p>
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '16px',
+              padding: '24px',
+              marginBottom: '40px',
+              border: `1px solid ${colors.border}`,
+              textAlign: 'left'
+            }}>
+              <p style={{ color: '#e2e8f0', fontSize: '14px', fontStyle: 'italic', marginBottom: '12px' }}>
+                "I finally found that the magnetic needle was moved by the galvanic current."
+              </p>
+              <p style={{ color: colors.textSecondary, fontSize: '13px' }}>
+                — Hans Christian Oersted, 1820
+              </p>
+            </div>
           </div>
+        </div>
 
+        {/* Fixed bottom bar */}
+        <div style={{
+          position: 'fixed',
+          bottom: 0,
+          left: 0,
+          right: 0,
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          padding: '16px 20px',
+          borderTop: `1px solid ${colors.border}`,
+          backgroundColor: colors.bgCard,
+          zIndex: 1000,
+          minHeight: '72px',
+          boxShadow: '0 -8px 30px rgba(0,0,0,0.5)'
+        }}>
           <button
             onMouseDown={() => goToPhase('predict')}
             style={{
@@ -942,6 +973,100 @@ const OerstedExperimentRenderer: React.FC<OerstedExperimentRendererProps> = ({
       </div>
     );
   }
+
+  // Static Oersted visualization for predict phase
+  const renderOerstedVisualization = () => {
+    const width = isMobile ? 320 : 500;
+    const height = isMobile ? 200 : 250;
+    const cx = width / 2;
+    const cy = height / 2;
+
+    return (
+      <div style={{ position: 'relative', width: '100%', maxWidth: '520px', margin: '0 auto 20px' }}>
+        <svg
+          viewBox={`0 0 ${width} ${height}`}
+          preserveAspectRatio="xMidYMid meet"
+          style={{ width: '100%', height: 'auto', display: 'block' }}
+        >
+          {/* Background */}
+          <rect x="0" y="0" width={width} height={height} fill={colors.bgDark} rx="12" />
+
+          {/* Table surface */}
+          <rect x="0" y={cy - 10} width={width} height={height / 2 + 10} fill="#3f3a35" opacity="0.4" />
+
+          {/* Wire (vertical) */}
+          <rect
+            x={cx - 80}
+            y="30"
+            width="8"
+            height={height - 60}
+            fill={colors.wire}
+          />
+
+          {/* Wire label */}
+          <text x={cx - 76} y="22" textAnchor="middle" fill={colors.textSecondary} fontSize="11" fontWeight="600">
+            Wire
+          </text>
+
+          {/* Current arrow indicator (shows potential flow) */}
+          <polygon
+            points={`${cx - 76},50 ${cx - 86},65 ${cx - 66},65`}
+            fill={colors.textMuted}
+            opacity="0.5"
+          />
+          <text x={cx - 55} y="60" fill={colors.textMuted} fontSize="10">
+            Current?
+          </text>
+
+          {/* Compass */}
+          <g transform={`translate(${cx + 40}, ${cy})`}>
+            {/* Compass body */}
+            <circle
+              cx="0"
+              cy="0"
+              r={isMobile ? 35 : 45}
+              fill="#f8fafc"
+              stroke={colors.borderLight}
+              strokeWidth="3"
+            />
+
+            {/* Cardinal directions */}
+            <text x="0" y={isMobile ? -22 : -30} textAnchor="middle" fill={colors.bgDark} fontSize="11" fontWeight="bold">N</text>
+            <text x="0" y={isMobile ? 28 : 36} textAnchor="middle" fill={colors.textMuted} fontSize="10">S</text>
+            <text x={isMobile ? 26 : 34} y="4" textAnchor="middle" fill={colors.textMuted} fontSize="10">E</text>
+            <text x={isMobile ? -26 : -34} y="4" textAnchor="middle" fill={colors.textMuted} fontSize="10">W</text>
+
+            {/* Compass needle pointing North (resting state) */}
+            <polygon
+              points={`0,${isMobile ? -28 : -36} -5,0 5,0`}
+              fill={colors.error}
+            />
+            <polygon
+              points={`0,${isMobile ? 28 : 36} -5,0 5,0`}
+              fill="#cbd5e1"
+            />
+            <circle cx="0" cy="0" r="4" fill={colors.bgDark} />
+          </g>
+
+          {/* Compass label */}
+          <text x={cx + 40} y={cy + (isMobile ? 55 : 65)} textAnchor="middle" fill={colors.textSecondary} fontSize="11" fontWeight="600">
+            Compass
+          </text>
+
+          {/* Question marks around wire (hinting at magnetic field) */}
+          <text x={cx - 120} y={cy} fill={colors.field} fontSize="16" opacity="0.4">?</text>
+          <text x={cx - 40} y={cy - 40} fill={colors.field} fontSize="16" opacity="0.4">?</text>
+          <text x={cx - 40} y={cy + 50} fill={colors.field} fontSize="16" opacity="0.4">?</text>
+
+          {/* Power source indicator */}
+          <rect x="15" y={height - 45} width="60" height="30" fill={colors.bgCard} rx="6" stroke={colors.border} />
+          <text x="45" y={height - 26} textAnchor="middle" fill={colors.warning} fontSize="11" fontWeight="600">
+            Battery
+          </text>
+        </svg>
+      </div>
+    );
+  };
 
   // PREDICT PHASE
   if (phase === 'predict') {
@@ -969,19 +1094,44 @@ const OerstedExperimentRenderer: React.FC<OerstedExperimentRendererProps> = ({
           paddingBottom: '100px'
         }}>
           <div style={{ maxWidth: '800px', margin: '0 auto', padding: '40px 20px' }}>
-            <div style={{ textAlign: 'center', marginBottom: '32px' }}>
+            <div style={{ textAlign: 'center', marginBottom: '24px' }}>
               <p style={{ color: colors.primary, fontSize: '12px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '8px' }}>
                 Step 1 • Make a Prediction
               </p>
               <h2 style={{ fontSize: isMobile ? '24px' : '32px', fontWeight: 700, color: colors.textPrimary, marginBottom: '12px' }}>
                 What will happen to the compass?
               </h2>
-              <p style={{ color: colors.textSecondary, fontSize: '16px', maxWidth: '500px', margin: '0 auto' }}>
-                If you place a compass next to a wire and turn on an electric current, what do you think will happen?
-              </p>
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: '16px', marginBottom: '32px' }}>
+            {/* Static visualization */}
+            {renderOerstedVisualization()}
+
+            {/* What You're Looking At explanation box */}
+            <div style={{
+              background: `linear-gradient(135deg, ${colors.primary}15 0%, ${colors.accent}15 100%)`,
+              border: `1px solid ${colors.primary}30`,
+              borderRadius: '12px',
+              padding: isMobile ? '14px' : '18px',
+              marginBottom: '24px',
+              maxWidth: '520px',
+              margin: '0 auto 24px'
+            }}>
+              <p style={{ fontSize: '13px', fontWeight: 700, color: colors.primary, marginBottom: '10px' }}>
+                🔍 WHAT YOU'RE LOOKING AT:
+              </p>
+              <ul style={{ margin: 0, paddingLeft: '18px', color: colors.textSecondary, fontSize: '13px', lineHeight: 1.7 }}>
+                <li><strong style={{ color: colors.wire }}>Vertical wire</strong> — connected to a battery (currently OFF)</li>
+                <li><strong style={{ color: colors.textPrimary }}>Compass</strong> — needle points North when no other forces act on it</li>
+                <li><strong style={{ color: colors.field }}>Question marks</strong> — what happens to the space around the wire when current flows?</li>
+              </ul>
+            </div>
+
+            {/* Prediction question */}
+            <p style={{ color: colors.textSecondary, fontSize: '16px', maxWidth: '500px', margin: '0 auto 20px', textAlign: 'center' }}>
+              When we turn on the current, what do you think will happen to the compass needle?
+            </p>
+
+            <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: '16px', marginBottom: '24px' }}>
               {predictions.map(p => (
                 <button
                   key={p.id}
@@ -1005,6 +1155,40 @@ const OerstedExperimentRenderer: React.FC<OerstedExperimentRendererProps> = ({
                 </button>
               ))}
             </div>
+
+            {/* Optional "Why?" textarea that appears after selection */}
+            {prediction && (
+              <div style={{
+                background: colors.bgCard,
+                borderRadius: '12px',
+                padding: '16px',
+                maxWidth: '520px',
+                margin: '0 auto',
+                border: `1px solid ${colors.border}`
+              }}>
+                <label style={{ display: 'block', color: colors.textSecondary, fontSize: '13px', fontWeight: 600, marginBottom: '8px' }}>
+                  💭 Why do you think so? (optional)
+                </label>
+                <textarea
+                  placeholder="I think this because..."
+                  style={{
+                    width: '100%',
+                    minHeight: '80px',
+                    padding: '12px',
+                    borderRadius: '8px',
+                    border: `1px solid ${colors.border}`,
+                    backgroundColor: colors.bgCardLight,
+                    color: colors.textPrimary,
+                    fontSize: '14px',
+                    resize: 'vertical',
+                    fontFamily: 'inherit'
+                  }}
+                />
+                <p style={{ color: colors.textMuted, fontSize: '11px', marginTop: '8px', fontStyle: 'italic' }}>
+                  Writing out your reasoning helps you learn — even if you're wrong!
+                </p>
+              </div>
+            )}
           </div>
         </div>
 
@@ -1157,52 +1341,66 @@ const OerstedExperimentRenderer: React.FC<OerstedExperimentRendererProps> = ({
   // REVIEW PHASE
   if (phase === 'review') {
     return (
-      <div style={{ minHeight: '100vh', background: `linear-gradient(180deg, ${colors.bgGradientStart} 0%, ${colors.bgGradientEnd} 100%)`, display: 'flex', flexDirection: 'column' }}>
-        <div style={{ flex: 1, maxWidth: '800px', margin: '0 auto', padding: '40px 20px' }}>
-          <div style={{ textAlign: 'center', marginBottom: '32px' }}>
-            <p style={{ color: colors.accent, fontSize: '12px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '8px' }}>
-              Step 3 • Understanding
-            </p>
-            <h2 style={{ fontSize: isMobile ? '24px' : '32px', fontWeight: 700, color: colors.textPrimary }}>
-              Electricity Creates Magnetism!
-            </h2>
-          </div>
-
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-            <div style={{ background: colors.bgCard, borderRadius: '16px', padding: '24px', borderLeft: `4px solid ${colors.primary}` }}>
-              <h3 style={{ color: colors.primary, fontSize: '18px', fontWeight: 700, marginBottom: '12px' }}>What Happened</h3>
-              <p style={{ color: colors.textSecondary, lineHeight: 1.7 }}>
-                When current flows through the wire, it creates a <strong style={{ color: colors.textPrimary }}>magnetic field</strong> that circles around the wire.
-                This field deflects the compass needle perpendicular to the wire direction.
+      <div style={{
+        height: '100dvh',
+        display: 'flex',
+        flexDirection: 'column',
+        background: `linear-gradient(180deg, ${colors.bgGradientStart} 0%, ${colors.bgGradientEnd} 100%)`,
+        overflow: 'hidden'
+      }}>
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          overflowX: 'hidden',
+          WebkitOverflowScrolling: 'touch',
+          paddingBottom: '100px'
+        }}>
+          <div style={{ maxWidth: '800px', margin: '0 auto', padding: '40px 20px' }}>
+            <div style={{ textAlign: 'center', marginBottom: '32px' }}>
+              <p style={{ color: colors.accent, fontSize: '12px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '8px' }}>
+                Step 3 • Understanding
               </p>
+              <h2 style={{ fontSize: isMobile ? '24px' : '32px', fontWeight: 700, color: colors.textPrimary }}>
+                Electricity Creates Magnetism!
+              </h2>
             </div>
 
-            <div style={{ background: colors.bgCard, borderRadius: '16px', padding: '24px', borderLeft: `4px solid ${colors.success}` }}>
-              <h3 style={{ color: colors.success, fontSize: '18px', fontWeight: 700, marginBottom: '12px' }}>The Right-Hand Rule</h3>
-              <p style={{ color: colors.textSecondary, lineHeight: 1.7 }}>
-                Point your <strong style={{ color: colors.textPrimary }}>thumb</strong> in the direction of current flow. Your <strong style={{ color: colors.textPrimary }}>fingers curl</strong> in the direction
-                of the magnetic field. This is why the compass deflects perpendicular to the wire!
-              </p>
-            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+              <div style={{ background: colors.bgCard, borderRadius: '16px', padding: '24px', borderLeft: `4px solid ${colors.primary}` }}>
+                <h3 style={{ color: colors.primary, fontSize: '18px', fontWeight: 700, marginBottom: '12px' }}>What Happened</h3>
+                <p style={{ color: colors.textSecondary, lineHeight: 1.7 }}>
+                  When current flows through the wire, it creates a <strong style={{ color: colors.textPrimary }}>magnetic field</strong> that circles around the wire.
+                  This field deflects the compass needle perpendicular to the wire direction.
+                </p>
+              </div>
 
-            <div style={{ background: colors.bgCard, borderRadius: '16px', padding: '24px', borderLeft: `4px solid ${colors.warning}` }}>
-              <h3 style={{ color: colors.warning, fontSize: '18px', fontWeight: 700, marginBottom: '12px' }}>Historical Significance</h3>
-              <p style={{ color: colors.textSecondary, lineHeight: 1.7 }}>
-                Oersted's 1820 discovery proved that <strong style={{ color: colors.textPrimary }}>electricity and magnetism are connected</strong>.
-                This led to Maxwell's equations and our entire understanding of electromagnetism - the foundation of modern technology!
-              </p>
-            </div>
+              <div style={{ background: colors.bgCard, borderRadius: '16px', padding: '24px', borderLeft: `4px solid ${colors.success}` }}>
+                <h3 style={{ color: colors.success, fontSize: '18px', fontWeight: 700, marginBottom: '12px' }}>The Right-Hand Rule</h3>
+                <p style={{ color: colors.textSecondary, lineHeight: 1.7 }}>
+                  Point your <strong style={{ color: colors.textPrimary }}>thumb</strong> in the direction of current flow. Your <strong style={{ color: colors.textPrimary }}>fingers curl</strong> in the direction
+                  of the magnetic field. This is why the compass deflects perpendicular to the wire!
+                </p>
+              </div>
 
-            <div style={{ background: colors.bgCard, borderRadius: '16px', padding: '24px', borderLeft: `4px solid ${colors.error}` }}>
-              <h3 style={{ color: colors.error, fontSize: '18px', fontWeight: 700, marginBottom: '12px' }}>The Biot-Savart Law</h3>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '20px', flexWrap: 'wrap' }}>
-                <div style={{ fontSize: '28px', fontFamily: 'monospace', color: colors.textPrimary, fontWeight: 700 }}>
-                  B = μ₀I / (2πr)
-                </div>
-                <div style={{ color: '#e2e8f0', fontSize: '14px' }}>
-                  <div><span style={{ color: '#60a5fa', fontWeight: 700 }}>B</span> = magnetic field strength</div>
-                  <div><span style={{ color: '#fbbf24', fontWeight: 700 }}>I</span> = current | <span style={{ color: '#4ade80', fontWeight: 700 }}>r</span> = distance</div>
-                  <div>μ₀ = permeability of free space</div>
+              <div style={{ background: colors.bgCard, borderRadius: '16px', padding: '24px', borderLeft: `4px solid ${colors.warning}` }}>
+                <h3 style={{ color: colors.warning, fontSize: '18px', fontWeight: 700, marginBottom: '12px' }}>Historical Significance</h3>
+                <p style={{ color: colors.textSecondary, lineHeight: 1.7 }}>
+                  Oersted's 1820 discovery proved that <strong style={{ color: colors.textPrimary }}>electricity and magnetism are connected</strong>.
+                  This led to Maxwell's equations and our entire understanding of electromagnetism - the foundation of modern technology!
+                </p>
+              </div>
+
+              <div style={{ background: colors.bgCard, borderRadius: '16px', padding: '24px', borderLeft: `4px solid ${colors.error}` }}>
+                <h3 style={{ color: colors.error, fontSize: '18px', fontWeight: 700, marginBottom: '12px' }}>The Biot-Savart Law</h3>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '20px', flexWrap: 'wrap' }}>
+                  <div style={{ fontSize: '28px', fontFamily: 'monospace', color: colors.textPrimary, fontWeight: 700 }}>
+                    B = μ₀I / (2πr)
+                  </div>
+                  <div style={{ color: '#e2e8f0', fontSize: '14px' }}>
+                    <div><span style={{ color: '#60a5fa', fontWeight: 700 }}>B</span> = magnetic field strength</div>
+                    <div><span style={{ color: '#fbbf24', fontWeight: 700 }}>I</span> = current | <span style={{ color: '#4ade80', fontWeight: 700 }}>r</span> = distance</div>
+                    <div>μ₀ = permeability of free space</div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -1224,42 +1422,56 @@ const OerstedExperimentRenderer: React.FC<OerstedExperimentRendererProps> = ({
     ];
 
     return (
-      <div style={{ minHeight: '100vh', background: `linear-gradient(180deg, ${colors.bgGradientStart} 0%, ${colors.bgGradientEnd} 100%)`, display: 'flex', flexDirection: 'column' }}>
-        <div style={{ flex: 1, maxWidth: '800px', margin: '0 auto', padding: '40px 20px' }}>
-          <div style={{ textAlign: 'center', marginBottom: '32px' }}>
-            <p style={{ color: colors.warning, fontSize: '12px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '8px' }}>
-              Step 4 • New Variable
-            </p>
-            <h2 style={{ fontSize: isMobile ? '24px' : '32px', fontWeight: 700, color: colors.textPrimary, marginBottom: '12px' }}>
-              Coil the Wire!
-            </h2>
-            <p style={{ color: colors.textSecondary, fontSize: '16px' }}>
-              What do you think will happen if you coil the wire into multiple loops (a solenoid)?
-            </p>
-          </div>
+      <div style={{
+        height: '100dvh',
+        display: 'flex',
+        flexDirection: 'column',
+        background: `linear-gradient(180deg, ${colors.bgGradientStart} 0%, ${colors.bgGradientEnd} 100%)`,
+        overflow: 'hidden'
+      }}>
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          overflowX: 'hidden',
+          WebkitOverflowScrolling: 'touch',
+          paddingBottom: '100px'
+        }}>
+          <div style={{ maxWidth: '800px', margin: '0 auto', padding: '40px 20px' }}>
+            <div style={{ textAlign: 'center', marginBottom: '32px' }}>
+              <p style={{ color: colors.warning, fontSize: '12px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '8px' }}>
+                Step 4 • New Variable
+              </p>
+              <h2 style={{ fontSize: isMobile ? '24px' : '32px', fontWeight: 700, color: colors.textPrimary, marginBottom: '12px' }}>
+                Coil the Wire!
+              </h2>
+              <p style={{ color: colors.textSecondary, fontSize: '16px' }}>
+                What do you think will happen if you coil the wire into multiple loops (a solenoid)?
+              </p>
+            </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: '16px', marginBottom: '32px' }}>
-            {twistPredictions.map(p => (
-              <button
-                key={p.id}
-                onMouseDown={() => {
-                  setTwistPrediction(p.id);
-                  playSound('click');
-                }}
-                style={{
-                  padding: '20px',
-                  borderRadius: '12px',
-                  border: twistPrediction === p.id ? `2px solid ${colors.warning}` : `2px solid ${colors.border}`,
-                  backgroundColor: twistPrediction === p.id ? `${colors.warning}20` : colors.bgCard,
-                  cursor: 'pointer',
-                  textAlign: 'left',
-                  transition: 'all 0.2s'
-                }}
-              >
-                <span style={{ fontSize: '28px', marginRight: '12px' }}>{p.icon}</span>
-                <span style={{ color: colors.textPrimary, fontSize: '15px' }}>{p.label}</span>
-              </button>
-            ))}
+            <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: '16px', marginBottom: '32px' }}>
+              {twistPredictions.map(p => (
+                <button
+                  key={p.id}
+                  onMouseDown={() => {
+                    setTwistPrediction(p.id);
+                    playSound('click');
+                  }}
+                  style={{
+                    padding: '20px',
+                    borderRadius: '12px',
+                    border: twistPrediction === p.id ? `2px solid ${colors.warning}` : `2px solid ${colors.border}`,
+                    backgroundColor: twistPrediction === p.id ? `${colors.warning}20` : colors.bgCard,
+                    cursor: 'pointer',
+                    textAlign: 'left',
+                    transition: 'all 0.2s'
+                  }}
+                >
+                  <span style={{ fontSize: '28px', marginRight: '12px' }}>{p.icon}</span>
+                  <span style={{ color: colors.textPrimary, fontSize: '15px' }}>{p.label}</span>
+                </button>
+              ))}
+            </div>
           </div>
         </div>
 
@@ -1271,8 +1483,21 @@ const OerstedExperimentRenderer: React.FC<OerstedExperimentRendererProps> = ({
   // TWIST PLAY PHASE
   if (phase === 'twist_play') {
     return (
-      <div style={{ minHeight: '100vh', background: `linear-gradient(180deg, ${colors.bgGradientStart} 0%, ${colors.bgGradientEnd} 100%)`, display: 'flex', flexDirection: 'column' }}>
-        <div style={{ flex: 1, padding: '20px' }}>
+      <div style={{
+        height: '100dvh',
+        display: 'flex',
+        flexDirection: 'column',
+        background: `linear-gradient(180deg, ${colors.bgGradientStart} 0%, ${colors.bgGradientEnd} 100%)`,
+        overflow: 'hidden'
+      }}>
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          overflowX: 'hidden',
+          WebkitOverflowScrolling: 'touch',
+          padding: '20px',
+          paddingBottom: '100px'
+        }}>
           <div style={{ textAlign: 'center', marginBottom: '16px' }}>
             <p style={{ color: colors.warning, fontSize: '12px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '8px' }}>
               Step 5 • Experiment
@@ -1363,37 +1588,51 @@ const OerstedExperimentRenderer: React.FC<OerstedExperimentRendererProps> = ({
   // TWIST REVIEW PHASE
   if (phase === 'twist_review') {
     return (
-      <div style={{ minHeight: '100vh', background: `linear-gradient(180deg, ${colors.bgGradientStart} 0%, ${colors.bgGradientEnd} 100%)`, display: 'flex', flexDirection: 'column' }}>
-        <div style={{ flex: 1, maxWidth: '800px', margin: '0 auto', padding: '40px 20px' }}>
-          <div style={{ textAlign: 'center', marginBottom: '32px' }}>
-            <p style={{ color: colors.accent, fontSize: '12px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '8px' }}>
-              Step 6 • Deep Insight
-            </p>
-            <h2 style={{ fontSize: isMobile ? '24px' : '32px', fontWeight: 700, color: colors.textPrimary }}>
-              The Electromagnet
-            </h2>
-          </div>
-
-          <div style={{ background: colors.bgCard, borderRadius: '16px', padding: '24px', borderLeft: `4px solid ${colors.accent}`, marginBottom: '24px' }}>
-            <h3 style={{ color: colors.accent, fontSize: '18px', fontWeight: 700, marginBottom: '12px' }}>Why Coils Are Stronger</h3>
-            <p style={{ color: colors.textSecondary, lineHeight: 1.7, marginBottom: '16px' }}>
-              When you coil the wire, each loop's magnetic field adds together. For a solenoid with n turns:
-            </p>
-            <div style={{ fontSize: '24px', fontFamily: 'monospace', color: colors.textPrimary, fontWeight: 700, textAlign: 'center', margin: '16px 0' }}>
-              B = μ₀ × n × I
+      <div style={{
+        height: '100dvh',
+        display: 'flex',
+        flexDirection: 'column',
+        background: `linear-gradient(180deg, ${colors.bgGradientStart} 0%, ${colors.bgGradientEnd} 100%)`,
+        overflow: 'hidden'
+      }}>
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          overflowX: 'hidden',
+          WebkitOverflowScrolling: 'touch',
+          paddingBottom: '100px'
+        }}>
+          <div style={{ maxWidth: '800px', margin: '0 auto', padding: '40px 20px' }}>
+            <div style={{ textAlign: 'center', marginBottom: '32px' }}>
+              <p style={{ color: colors.accent, fontSize: '12px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '8px' }}>
+                Step 6 • Deep Insight
+              </p>
+              <h2 style={{ fontSize: isMobile ? '24px' : '32px', fontWeight: 700, color: colors.textPrimary }}>
+                The Electromagnet
+              </h2>
             </div>
-            <p style={{ color: colors.textSecondary, lineHeight: 1.7 }}>
-              More turns = stronger field. This is the principle behind <strong style={{ color: colors.textPrimary }}>electromagnets</strong> - they can be
-              turned on/off and have adjustable strength, unlike permanent magnets.
-            </p>
-          </div>
 
-          <div style={{ background: colors.bgCard, borderRadius: '16px', padding: '24px', borderLeft: `4px solid ${colors.primary}` }}>
-            <h3 style={{ color: colors.primary, fontSize: '18px', fontWeight: 700, marginBottom: '12px' }}>Key Insight</h3>
-            <p style={{ color: colors.textSecondary, lineHeight: 1.7 }}>
-              A coiled current-carrying wire acts exactly like a <strong style={{ color: colors.textPrimary }}>bar magnet</strong>! The direction of current
-              determines which end is north and which is south (right-hand rule). This is how we create controllable, powerful magnetic fields for everything from MRI machines to maglev trains.
-            </p>
+            <div style={{ background: colors.bgCard, borderRadius: '16px', padding: '24px', borderLeft: `4px solid ${colors.accent}`, marginBottom: '24px' }}>
+              <h3 style={{ color: colors.accent, fontSize: '18px', fontWeight: 700, marginBottom: '12px' }}>Why Coils Are Stronger</h3>
+              <p style={{ color: colors.textSecondary, lineHeight: 1.7, marginBottom: '16px' }}>
+                When you coil the wire, each loop's magnetic field adds together. For a solenoid with n turns:
+              </p>
+              <div style={{ fontSize: '24px', fontFamily: 'monospace', color: colors.textPrimary, fontWeight: 700, textAlign: 'center', margin: '16px 0' }}>
+                B = μ₀ × n × I
+              </div>
+              <p style={{ color: colors.textSecondary, lineHeight: 1.7 }}>
+                More turns = stronger field. This is the principle behind <strong style={{ color: colors.textPrimary }}>electromagnets</strong> - they can be
+                turned on/off and have adjustable strength, unlike permanent magnets.
+              </p>
+            </div>
+
+            <div style={{ background: colors.bgCard, borderRadius: '16px', padding: '24px', borderLeft: `4px solid ${colors.primary}` }}>
+              <h3 style={{ color: colors.primary, fontSize: '18px', fontWeight: 700, marginBottom: '12px' }}>Key Insight</h3>
+              <p style={{ color: colors.textSecondary, lineHeight: 1.7 }}>
+                A coiled current-carrying wire acts exactly like a <strong style={{ color: colors.textPrimary }}>bar magnet</strong>! The direction of current
+                determines which end is north and which is south (right-hand rule). This is how we create controllable, powerful magnetic fields for everything from MRI machines to maglev trains.
+              </p>
+            </div>
           </div>
         </div>
 
@@ -1426,9 +1665,15 @@ const OerstedExperimentRenderer: React.FC<OerstedExperimentRendererProps> = ({
     };
 
     return (
-      <div style={{ minHeight: '100vh', background: `linear-gradient(180deg, ${colors.bgGradientStart} 0%, ${colors.bgGradientEnd} 100%)`, display: 'flex', flexDirection: 'column' }}>
+      <div style={{
+        height: '100dvh',
+        display: 'flex',
+        flexDirection: 'column',
+        background: `linear-gradient(180deg, ${colors.bgGradientStart} 0%, ${colors.bgGradientEnd} 100%)`,
+        overflow: 'hidden'
+      }}>
         {/* Header */}
-        <div style={{ padding: '20px', borderBottom: `1px solid ${colors.border}`, backgroundColor: colors.bgCard }}>
+        <div style={{ padding: '20px', borderBottom: `1px solid ${colors.border}`, backgroundColor: colors.bgCard, flexShrink: 0 }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
             <div>
               <p style={{ fontSize: '10px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', color: colors.success }}>
@@ -1492,8 +1737,15 @@ const OerstedExperimentRenderer: React.FC<OerstedExperimentRendererProps> = ({
           </div>
         </div>
 
-        {/* App content */}
-        <div style={{ flex: 1, overflow: 'auto', padding: '20px', paddingBottom: '100px' }}>
+        {/* App content - scrollable area */}
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          overflowX: 'hidden',
+          WebkitOverflowScrolling: 'touch',
+          padding: '20px',
+          paddingBottom: '100px'
+        }}>
           <div style={{ maxWidth: '800px', margin: '0 auto' }}>
             <div style={{ textAlign: 'center', marginBottom: '24px' }}>
               <span style={{ fontSize: '56px' }}>{currentApp.icon}</span>
@@ -1655,20 +1907,56 @@ const OerstedExperimentRenderer: React.FC<OerstedExperimentRendererProps> = ({
     if (testSubmitted) {
       const passed = score >= 7;
       return (
-        <div style={{ minHeight: '100vh', background: `linear-gradient(180deg, ${colors.bgGradientStart} 0%, ${colors.bgGradientEnd} 100%)`, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', padding: '40px 20px' }}>
-          <div style={{ fontSize: '80px', marginBottom: '24px' }}>{passed ? '🎉' : '📚'}</div>
-          <h2 style={{ fontSize: '36px', fontWeight: 800, color: colors.textPrimary, marginBottom: '12px' }}>
-            {passed ? 'Congratulations!' : 'Keep Learning!'}
-          </h2>
-          <div style={{ fontSize: '64px', fontWeight: 800, color: passed ? colors.success : colors.warning, marginBottom: '24px' }}>
-            {score}/10
+        <div style={{
+          height: '100dvh',
+          display: 'flex',
+          flexDirection: 'column',
+          background: `linear-gradient(180deg, ${colors.bgGradientStart} 0%, ${colors.bgGradientEnd} 100%)`,
+          overflow: 'hidden'
+        }}>
+          <div style={{
+            flex: 1,
+            overflowY: 'auto',
+            overflowX: 'hidden',
+            WebkitOverflowScrolling: 'touch',
+            paddingBottom: '100px',
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'center',
+            alignItems: 'center',
+            padding: '40px 20px'
+          }}>
+            <div style={{ fontSize: '80px', marginBottom: '24px' }}>{passed ? '🎉' : '📚'}</div>
+            <h2 style={{ fontSize: '36px', fontWeight: 800, color: colors.textPrimary, marginBottom: '12px' }}>
+              {passed ? 'Congratulations!' : 'Keep Learning!'}
+            </h2>
+            <div style={{ fontSize: '64px', fontWeight: 800, color: passed ? colors.success : colors.warning, marginBottom: '24px' }}>
+              {score}/10
+            </div>
+            <p style={{ color: colors.textSecondary, fontSize: '18px', textAlign: 'center', maxWidth: '500px', marginBottom: '32px' }}>
+              {passed
+                ? 'You understand how current creates magnetic fields! This principle powers motors, speakers, and MRI machines.'
+                : 'You need 7/10 to pass. Review the lesson and try again.'}
+            </p>
           </div>
-          <p style={{ color: colors.textSecondary, fontSize: '18px', textAlign: 'center', maxWidth: '500px', marginBottom: '32px' }}>
-            {passed
-              ? 'You understand how current creates magnetic fields! This principle powers motors, speakers, and MRI machines.'
-              : 'You need 7/10 to pass. Review the lesson and try again.'}
-          </p>
-          <div style={{ display: 'flex', gap: '16px' }}>
+
+          {/* Fixed bottom bar */}
+          <div style={{
+            position: 'fixed',
+            bottom: 0,
+            left: 0,
+            right: 0,
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            gap: '16px',
+            padding: '16px 20px',
+            borderTop: `1px solid ${colors.border}`,
+            backgroundColor: colors.bgCard,
+            zIndex: 1000,
+            minHeight: '72px',
+            boxShadow: '0 -8px 30px rgba(0,0,0,0.5)'
+          }}>
             {!passed && (
               <button
                 onMouseDown={() => {
@@ -1933,17 +2221,52 @@ const OerstedExperimentRenderer: React.FC<OerstedExperimentRendererProps> = ({
   // MASTERY PHASE
   if (phase === 'mastery') {
     return (
-      <div style={{ minHeight: '100vh', background: `linear-gradient(180deg, ${colors.bgGradientStart} 0%, ${colors.bgGradientEnd} 100%)`, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', padding: '40px 20px', textAlign: 'center' }}>
-        <div style={{ fontSize: '100px', marginBottom: '24px' }}>🏆</div>
-        <h1 style={{ fontSize: '42px', fontWeight: 800, color: colors.textPrimary, marginBottom: '16px' }}>
-          Mastery Achieved!
-        </h1>
-        <p style={{ color: colors.textSecondary, fontSize: '18px', maxWidth: '600px', lineHeight: 1.7, marginBottom: '40px' }}>
-          You now understand how current creates magnetism — the foundation of electromagnetism discovered by Hans Christian Oersted in 1820.
-          This 1820 breakthrough powers everything from your smartphone's speakers to MRI machines!
-        </p>
+      <div style={{
+        height: '100dvh',
+        display: 'flex',
+        flexDirection: 'column',
+        background: `linear-gradient(180deg, ${colors.bgGradientStart} 0%, ${colors.bgGradientEnd} 100%)`,
+        overflow: 'hidden'
+      }}>
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          overflowX: 'hidden',
+          WebkitOverflowScrolling: 'touch',
+          paddingBottom: '100px',
+          display: 'flex',
+          flexDirection: 'column',
+          justifyContent: 'center',
+          alignItems: 'center',
+          padding: '40px 20px',
+          textAlign: 'center'
+        }}>
+          <div style={{ fontSize: '100px', marginBottom: '24px' }}>🏆</div>
+          <h1 style={{ fontSize: '42px', fontWeight: 800, color: colors.textPrimary, marginBottom: '16px' }}>
+            Mastery Achieved!
+          </h1>
+          <p style={{ color: colors.textSecondary, fontSize: '18px', maxWidth: '600px', lineHeight: 1.7, marginBottom: '40px' }}>
+            You now understand how current creates magnetism — the foundation of electromagnetism discovered by Hans Christian Oersted in 1820.
+            This 1820 breakthrough powers everything from your smartphone's speakers to MRI machines!
+          </p>
+        </div>
 
-        <div style={{ display: 'flex', gap: '16px' }}>
+        {/* Fixed bottom bar */}
+        <div style={{
+          position: 'fixed',
+          bottom: 0,
+          left: 0,
+          right: 0,
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          padding: '16px 20px',
+          borderTop: `1px solid ${colors.border}`,
+          backgroundColor: colors.bgCard,
+          zIndex: 1000,
+          minHeight: '72px',
+          boxShadow: '0 -8px 30px rgba(0,0,0,0.5)'
+        }}>
           <button
             onMouseDown={() => {
               onComplete?.();

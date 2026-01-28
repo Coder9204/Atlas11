@@ -27,6 +27,9 @@
 | O. **Legend Completeness** | 5% | 100% | **YES** |
 | P. **Transfer Phase Progress** | 5% | 100% | **YES** |
 | Q. **Test Phase Clarity** | 5% | 100% | **YES** |
+| R. **Scroll Functionality** | 5% | 100% | **YES** |
+| S. **Prediction Phase Flow** | 5% | 100% | **YES** |
+| T. **Graphic Responsiveness** | 5% | 100% | **YES** |
 
 ### New Critical Categories (Added)
 
@@ -45,6 +48,9 @@
 | **O. Legend Completeness** | EVERY element in graphic (battery, magnets, wires, field lines) MUST be in legend. Legend must NOT overlap graphic elements. |
 | **P. Transfer Phase Progress** | Each Real World Application MUST have a prominent "Got It! Continue →" button. Full-width, gradient, 52px height, visible without scrolling. |
 | **Q. Test Phase Clarity** | Test must show question number, progress dots, clear selection state. After answer: show explanation, green ✓ for correct, red ✗ for wrong. Navigation buttons must be prominent. |
+| **R. Scroll Functionality** | EVERY page MUST scroll smoothly. Outer container: overflow: hidden. Content area: overflowY: auto + paddingBottom: 100px. Fixed footer at bottom. No scroll conflicts with sliders. |
+| **S. Prediction Phase Flow** | Predict phase shows STATIC graphic first (no sliders), then explanation, then question, then optional "why". ONLY Play phase has interactive controls. Users predict BEFORE they can interact. |
+| **T. Graphic Responsiveness** | Graphics use percentage widths, maxWidth, aspectRatio, and SVG viewBox. Graphics fill available space and scale smoothly from 375px to 1920px. Never too small, never overflow. |
 
 ---
 
@@ -199,6 +205,160 @@
 }
 // Show "✗" on wrong choice, highlight correct with green
 // Display explanation below: "The correct answer: [option text]"
+```
+
+---
+
+### R. Scroll Functionality (CRITICAL - 100% Required)
+
+> **Users MUST be able to scroll on EVERY page.** No page should ever trap users unable to see content.
+
+| # | Criteria | Pass/Fail | Notes |
+|---|----------|-----------|-------|
+| R.1 | **Outer container** uses `overflow: hidden` (prevents double scroll) | | |
+| R.2 | **Content area** uses `overflowY: auto` (enables scroll) | | |
+| R.3 | **Content area** has `paddingBottom: 100px` (space for fixed footer) | | |
+| R.4 | **iOS smooth scroll** with `WebkitOverflowScrolling: 'touch'` | | |
+| R.5 | **Sliders don't block scroll** (touch-action properly set) | | |
+| R.6 | **Predict phase** scrolls properly | | |
+| R.7 | **Play phase** scrolls properly | | |
+| R.8 | **Transfer phase** scrolls properly | | |
+| R.9 | **Test phase** scrolls properly | | |
+| R.10 | **Fixed footer** doesn't interfere with scroll | | |
+
+#### Required Scroll Structure:
+```typescript
+// OUTER - Fixed viewport, no scroll
+<div style={{
+  height: '100dvh',
+  display: 'flex',
+  flexDirection: 'column',
+  overflow: 'hidden'  // CRITICAL: Prevent body scroll
+}}>
+  {/* SCROLLABLE CONTENT */}
+  <div style={{
+    flex: 1,
+    overflowY: 'auto',  // CRITICAL: Enable scroll
+    overflowX: 'hidden',
+    WebkitOverflowScrolling: 'touch',
+    paddingBottom: '100px'
+  }}>
+    {/* Page content */}
+  </div>
+
+  {/* FIXED FOOTER - Outside scroll area */}
+  <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 1000 }}>
+    {/* Navigation */}
+  </div>
+</div>
+```
+
+---
+
+### S. Prediction Phase Flow (CRITICAL - 100% Required)
+
+> **Users MUST see the graphic and make a prediction BEFORE they can interact with sliders/start button.**
+
+| # | Criteria | Pass/Fail | Notes |
+|---|----------|-----------|-------|
+| S.1 | **Predict phase shows STATIC graphic** (no sliders, no start button) | | |
+| S.2 | **"What You're Looking At"** explanation below graphic | | |
+| S.3 | **Prediction question** appears below explanation | | |
+| S.4 | **3 prediction options** with clear selection state | | |
+| S.5 | **Optional "Why?" question** appears after selection | | |
+| S.6 | **Skip option** available for "Why?" question | | |
+| S.7 | **Play phase** shows SAME graphic but NOW with controls | | |
+| S.8 | **Controls section** clearly separated from graphic | | |
+| S.9 | **"What's Happening"** real-time explanation during interaction | | |
+| S.10 | **Review phase** compares prediction to actual result | | |
+
+#### Predict Phase Structure:
+```typescript
+// 1. STATIC GRAPHIC (no interaction)
+<div style={{ marginBottom: '24px' }}>
+  {renderGraphic(false)}  {/* showControls = false */}
+</div>
+
+// 2. WHAT YOU'RE LOOKING AT
+<div style={{ background: colors.bgCard, borderRadius: '12px', padding: '16px', marginBottom: '24px' }}>
+  <h3>What You're Looking At:</h3>
+  <p>This shows [description of setup and what each element represents]</p>
+</div>
+
+// 3. PREDICTION QUESTION
+<h2>🤔 Make Your Prediction</h2>
+<p>[Clear prediction question]</p>
+{options.map(opt => <PredictionOption />)}
+
+// 4. OPTIONAL WHY (after selection)
+{prediction !== null && (
+  <>
+    <p>Why do you think this? (Optional)</p>
+    <textarea />
+    <button>Skip</button>
+    <button>Continue →</button>
+  </>
+)}
+```
+
+---
+
+### T. Graphic Responsiveness (CRITICAL - 100% Required)
+
+> **Graphics MUST fill available space and look great on ALL screen sizes from 375px to 1920px.**
+
+| # | Criteria | Pass/Fail | Notes |
+|---|----------|-----------|-------|
+| T.1 | **Container uses `width: 100%`** (fills available width) | | |
+| T.2 | **Container uses `maxWidth`** (800px typical, prevents over-stretch) | | |
+| T.3 | **Container uses `aspectRatio`** (16/9 or 4/3 for consistent proportions) | | |
+| T.4 | **SVG uses `viewBox`** (scales content proportionally) | | |
+| T.5 | **SVG uses `preserveAspectRatio="xMidYMid meet"`** | | |
+| T.6 | **SVG width/height are `100%`** (fill container) | | |
+| T.7 | **Graphic visible without scrolling** on mobile (375px) | | |
+| T.8 | **Graphic fills at least 50%** of viewport height on mobile | | |
+| T.9 | **Text in SVG readable** at smallest screen size | | |
+| T.10 | **No horizontal overflow** on any screen size | | |
+
+#### Responsive Graphic Pattern:
+```typescript
+// RESPONSIVE SVG CONTAINER
+<div style={{
+  width: '100%',
+  maxWidth: '800px',
+  margin: '0 auto',
+  aspectRatio: '16/9',  // Maintains proportions
+  position: 'relative'
+}}>
+  <svg
+    viewBox="0 0 800 450"  // Internal coordinate system
+    preserveAspectRatio="xMidYMid meet"
+    style={{
+      width: '100%',
+      height: '100%',
+      display: 'block'
+    }}
+  >
+    {/* SVG content uses viewBox coordinates */}
+  </svg>
+</div>
+```
+
+#### Screen Size Testing:
+```bash
+# Test at these widths:
+# - 375px  (iPhone SE) - Graphic visible, text readable
+# - 428px  (iPhone 14 Pro Max)
+# - 768px  (iPad Mini)
+# - 1024px (iPad Pro)
+# - 1280px (Laptop)
+# - 1920px (Desktop)
+#
+# At EVERY size:
+# ✓ Graphic fills width (minus padding)
+# ✓ Graphic maintains aspect ratio
+# ✓ All text readable without zooming
+# ✓ No horizontal scroll
 ```
 
 ---

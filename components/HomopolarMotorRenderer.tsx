@@ -897,45 +897,132 @@ const HomopolarMotorRenderer: React.FC<HomopolarMotorRendererProps> = ({
     ];
 
     return (
-      <div style={{ minHeight: '100vh', background: `linear-gradient(180deg, ${colors.bgGradientStart} 0%, ${colors.bgGradientEnd} 100%)`, display: 'flex', flexDirection: 'column' }}>
-        <div style={{ flex: 1, maxWidth: '800px', margin: '0 auto', padding: '40px 20px' }}>
-          <div style={{ textAlign: 'center', marginBottom: '32px' }}>
-            <p style={{ color: colors.primary, fontSize: '12px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '8px' }}>
-              Step 1 • Make a Prediction
-            </p>
-            <h2 style={{ fontSize: isMobile ? '24px' : '32px', fontWeight: 700, color: colors.textPrimary, marginBottom: '12px' }}>
-              What will happen?
-            </h2>
-            <p style={{ color: colors.textSecondary, fontSize: '16px', maxWidth: '500px', margin: '0 auto' }}>
-              If you attach a copper wire to a battery sitting on a strong magnet, what do you think will happen?
-            </p>
-          </div>
+      <div style={{
+        height: '100dvh',
+        display: 'flex',
+        flexDirection: 'column',
+        background: `linear-gradient(180deg, ${colors.bgGradientStart} 0%, ${colors.bgGradientEnd} 100%)`,
+        overflow: 'hidden'
+      }}>
+        {/* Scrollable content */}
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          overflowX: 'hidden',
+          WebkitOverflowScrolling: 'touch',
+          paddingBottom: '100px'
+        }}>
+          <div style={{ maxWidth: '800px', margin: '0 auto', padding: '20px' }}>
+            {/* Header */}
+            <div style={{ textAlign: 'center', marginBottom: '16px' }}>
+              <p style={{ color: colors.primary, fontSize: '12px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '8px' }}>
+                Step 1 • Make a Prediction
+              </p>
+              <h2 style={{ fontSize: isMobile ? '22px' : '28px', fontWeight: 700, color: colors.textPrimary }}>
+                Homopolar Motor Setup
+              </h2>
+            </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: '16px', marginBottom: '32px' }}>
-            {predictions.map(p => (
-              <button
-                key={p.id}
-                onMouseDown={() => {
-                  setPrediction(p.id);
-                  playSound('click');
-                }}
-                style={{
-                  padding: '20px',
-                  borderRadius: '12px',
-                  border: prediction === p.id ? `2px solid ${colors.primary}` : `2px solid ${colors.border}`,
-                  backgroundColor: prediction === p.id ? `${colors.primary}20` : colors.bgCard,
-                  cursor: 'pointer',
-                  textAlign: 'left',
-                  transition: 'all 0.2s'
-                }}
-              >
-                <span style={{ fontSize: '28px', marginRight: '12px' }}>{p.icon}</span>
-                <span style={{ color: colors.textPrimary, fontSize: '15px' }}>{p.label}</span>
-              </button>
-            ))}
+            {/* STATIC GRAPHIC - No controls, just the visualization */}
+            <div style={{
+              width: '100%',
+              maxWidth: '600px',
+              margin: '0 auto 20px auto',
+              aspectRatio: '16/10',
+              background: colors.bgCard,
+              borderRadius: '16px',
+              border: `1px solid ${colors.border}`,
+              overflow: 'hidden'
+            }}>
+              {renderMotorVisualization()}
+            </div>
+
+            {/* What You're Looking At */}
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '12px',
+              padding: '16px',
+              marginBottom: '20px',
+              border: `1px solid ${colors.border}`
+            }}>
+              <h3 style={{ color: colors.textPrimary, fontSize: '15px', fontWeight: 700, marginBottom: '8px' }}>
+                📋 What You're Looking At:
+              </h3>
+              <p style={{ color: '#e2e8f0', fontSize: '14px', lineHeight: 1.6, margin: 0 }}>
+                This is a <strong style={{ color: colors.warning }}>homopolar motor</strong> — an AA battery sitting on a neodymium magnet,
+                with a copper wire touching both the battery's positive terminal and the magnet's edge.
+                The <span style={{ color: colors.error }}>red</span>/<span style={{ color: colors.primary }}>blue</span> areas show the magnet's poles.
+                The <span style={{ color: '#a855f7' }}>purple arrows</span> show the magnetic field direction.
+              </p>
+            </div>
+
+            {/* Prediction Question */}
+            <div style={{ marginBottom: '20px' }}>
+              <h3 style={{ color: colors.textPrimary, fontSize: '18px', fontWeight: 700, marginBottom: '12px' }}>
+                🤔 What do you think will happen when current flows?
+              </h3>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                {predictions.map(p => (
+                  <button
+                    key={p.id}
+                    onMouseDown={() => {
+                      setPrediction(p.id);
+                      playSound('click');
+                    }}
+                    style={{
+                      padding: '16px',
+                      borderRadius: '12px',
+                      border: prediction === p.id ? `2px solid ${colors.primary}` : `1px solid ${colors.border}`,
+                      backgroundColor: prediction === p.id ? `${colors.primary}20` : colors.bgCard,
+                      cursor: 'pointer',
+                      textAlign: 'left',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '12px'
+                    }}
+                  >
+                    <span style={{ fontSize: '24px' }}>{p.icon}</span>
+                    <span style={{ color: colors.textPrimary, fontSize: '14px' }}>{p.label}</span>
+                    {prediction === p.id && (
+                      <span style={{ marginLeft: 'auto', color: colors.primary, fontSize: '18px' }}>✓</span>
+                    )}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Optional "Why?" question - shown after selection */}
+            {prediction && (
+              <div style={{
+                background: `linear-gradient(135deg, ${colors.primary}15 0%, ${colors.accent}15 100%)`,
+                borderRadius: '12px',
+                padding: '16px',
+                border: `1px solid ${colors.primary}30`
+              }}>
+                <p style={{ color: '#e2e8f0', fontSize: '14px', marginBottom: '12px' }}>
+                  💭 Why do you think this will happen? <span style={{ color: colors.textMuted }}>(Optional)</span>
+                </p>
+                <textarea
+                  placeholder="Share your reasoning... (skip if you prefer)"
+                  style={{
+                    width: '100%',
+                    minHeight: '60px',
+                    padding: '12px',
+                    borderRadius: '8px',
+                    background: colors.bgCard,
+                    border: `1px solid ${colors.border}`,
+                    color: colors.textPrimary,
+                    fontSize: '14px',
+                    resize: 'vertical'
+                  }}
+                />
+              </div>
+            )}
           </div>
         </div>
 
+        {/* Fixed bottom bar */}
         {renderBottomBar(true, !!prediction, 'Test My Prediction →')}
       </div>
     );
@@ -944,18 +1031,39 @@ const HomopolarMotorRenderer: React.FC<HomopolarMotorRendererProps> = ({
   // PLAY PHASE
   if (phase === 'play') {
     return (
-      <div style={{ minHeight: '100vh', background: `linear-gradient(180deg, ${colors.bgGradientStart} 0%, ${colors.bgGradientEnd} 100%)`, display: 'flex', flexDirection: 'column' }}>
-        <div style={{ flex: 1, padding: '20px' }}>
-          <div style={{ textAlign: 'center', marginBottom: '16px' }}>
-            <p style={{ color: colors.success, fontSize: '12px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '8px' }}>
-              Step 2 • Run the Experiment
-            </p>
-            <h2 style={{ fontSize: isMobile ? '20px' : '26px', fontWeight: 700, color: colors.textPrimary }}>
-              Build Your Homopolar Motor
-            </h2>
-          </div>
+      <div style={{
+        height: '100dvh',
+        display: 'flex',
+        flexDirection: 'column',
+        background: `linear-gradient(180deg, ${colors.bgGradientStart} 0%, ${colors.bgGradientEnd} 100%)`,
+        overflow: 'hidden'
+      }}>
+        {/* Scrollable content */}
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          overflowX: 'hidden',
+          WebkitOverflowScrolling: 'touch',
+          paddingBottom: '100px'
+        }}>
+          <div style={{ padding: '20px' }}>
+            <div style={{ textAlign: 'center', marginBottom: '16px' }}>
+              <p style={{ color: colors.success, fontSize: '12px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '8px' }}>
+                Step 2 • Run the Experiment
+              </p>
+              <h2 style={{ fontSize: isMobile ? '20px' : '26px', fontWeight: 700, color: colors.textPrimary }}>
+                Build Your Homopolar Motor
+              </h2>
+            </div>
 
-          {renderMotorVisualization()}
+            {/* Responsive graphic container */}
+            <div style={{
+              width: '100%',
+              maxWidth: '700px',
+              margin: '0 auto'
+            }}>
+              {renderMotorVisualization()}
+            </div>
 
           {/* Controls */}
           <div style={{ maxWidth: '500px', margin: '24px auto 0', display: 'flex', flexDirection: 'column', gap: '16px' }}>
@@ -1002,8 +1110,10 @@ const HomopolarMotorRenderer: React.FC<HomopolarMotorRendererProps> = ({
               </p>
             </div>
           )}
+          </div>
         </div>
 
+        {/* Fixed bottom bar */}
         {renderBottomBar(true, isRunning, 'Understand Why →', () => goToPhase('review'), colors.success)}
       </div>
     );
@@ -1012,8 +1122,22 @@ const HomopolarMotorRenderer: React.FC<HomopolarMotorRendererProps> = ({
   // REVIEW PHASE
   if (phase === 'review') {
     return (
-      <div style={{ minHeight: '100vh', background: `linear-gradient(180deg, ${colors.bgGradientStart} 0%, ${colors.bgGradientEnd} 100%)`, display: 'flex', flexDirection: 'column' }}>
-        <div style={{ flex: 1, maxWidth: '800px', margin: '0 auto', padding: '40px 20px' }}>
+      <div style={{
+        height: '100dvh',
+        display: 'flex',
+        flexDirection: 'column',
+        background: `linear-gradient(180deg, ${colors.bgGradientStart} 0%, ${colors.bgGradientEnd} 100%)`,
+        overflow: 'hidden'
+      }}>
+        {/* Scrollable content */}
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          overflowX: 'hidden',
+          WebkitOverflowScrolling: 'touch',
+          paddingBottom: '100px'
+        }}>
+          <div style={{ maxWidth: '800px', margin: '0 auto', padding: '40px 20px' }}>
           <div style={{ textAlign: 'center', marginBottom: '32px' }}>
             <p style={{ color: colors.accent, fontSize: '12px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '8px' }}>
               Step 3 • Understanding
@@ -1057,8 +1181,10 @@ const HomopolarMotorRenderer: React.FC<HomopolarMotorRendererProps> = ({
               </div>
             </div>
           </div>
+          </div>
         </div>
 
+        {/* Fixed bottom bar */}
         {renderBottomBar(true, true, 'Try a Twist →', () => goToPhase('twist_predict'), colors.accent)}
       </div>
     );
@@ -1074,45 +1200,131 @@ const HomopolarMotorRenderer: React.FC<HomopolarMotorRendererProps> = ({
     ];
 
     return (
-      <div style={{ minHeight: '100vh', background: `linear-gradient(180deg, ${colors.bgGradientStart} 0%, ${colors.bgGradientEnd} 100%)`, display: 'flex', flexDirection: 'column' }}>
-        <div style={{ flex: 1, maxWidth: '800px', margin: '0 auto', padding: '40px 20px' }}>
-          <div style={{ textAlign: 'center', marginBottom: '32px' }}>
-            <p style={{ color: colors.warning, fontSize: '12px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '8px' }}>
-              Step 4 • New Variable
-            </p>
-            <h2 style={{ fontSize: isMobile ? '24px' : '32px', fontWeight: 700, color: colors.textPrimary, marginBottom: '12px' }}>
-              Flip the Magnet!
-            </h2>
-            <p style={{ color: colors.textSecondary, fontSize: '16px' }}>
-              What happens if you flip the magnet so the opposite pole faces up?
-            </p>
-          </div>
+      <div style={{
+        height: '100dvh',
+        display: 'flex',
+        flexDirection: 'column',
+        background: `linear-gradient(180deg, ${colors.bgGradientStart} 0%, ${colors.bgGradientEnd} 100%)`,
+        overflow: 'hidden'
+      }}>
+        {/* Scrollable content */}
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          overflowX: 'hidden',
+          WebkitOverflowScrolling: 'touch',
+          paddingBottom: '100px'
+        }}>
+          <div style={{ maxWidth: '800px', margin: '0 auto', padding: '20px' }}>
+            {/* Header */}
+            <div style={{ textAlign: 'center', marginBottom: '16px' }}>
+              <p style={{ color: colors.warning, fontSize: '12px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '8px' }}>
+                Step 4 • New Variable
+              </p>
+              <h2 style={{ fontSize: isMobile ? '22px' : '28px', fontWeight: 700, color: colors.textPrimary }}>
+                Flip the Magnet!
+              </h2>
+            </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: '16px', marginBottom: '32px' }}>
-            {twistPredictions.map(p => (
-              <button
-                key={p.id}
-                onMouseDown={() => {
-                  setTwistPrediction(p.id);
-                  playSound('click');
-                }}
-                style={{
-                  padding: '20px',
-                  borderRadius: '12px',
-                  border: twistPrediction === p.id ? `2px solid ${colors.warning}` : `2px solid ${colors.border}`,
-                  backgroundColor: twistPrediction === p.id ? `${colors.warning}20` : colors.bgCard,
-                  cursor: 'pointer',
-                  textAlign: 'left',
-                  transition: 'all 0.2s'
-                }}
-              >
-                <span style={{ fontSize: '28px', marginRight: '12px' }}>{p.icon}</span>
-                <span style={{ color: colors.textPrimary, fontSize: '15px' }}>{p.label}</span>
-              </button>
-            ))}
+            {/* STATIC GRAPHIC - No controls, just the visualization */}
+            <div style={{
+              width: '100%',
+              maxWidth: '600px',
+              margin: '0 auto 20px auto',
+              aspectRatio: '16/10',
+              background: colors.bgCard,
+              borderRadius: '16px',
+              border: `1px solid ${colors.border}`,
+              overflow: 'hidden'
+            }}>
+              {renderMotorVisualization()}
+            </div>
+
+            {/* What You're Looking At */}
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '12px',
+              padding: '16px',
+              marginBottom: '20px',
+              border: `1px solid ${colors.border}`
+            }}>
+              <h3 style={{ color: colors.textPrimary, fontSize: '15px', fontWeight: 700, marginBottom: '8px' }}>
+                📋 What You're Looking At:
+              </h3>
+              <p style={{ color: '#e2e8f0', fontSize: '14px', lineHeight: 1.6, margin: 0 }}>
+                The same homopolar motor setup — but now imagine <strong style={{ color: colors.warning }}>flipping the magnet</strong> so
+                the opposite pole faces up. Currently showing <span style={{ color: magnetPolarity === 'north' ? colors.error : colors.primary }}>{magnetPolarity === 'north' ? 'North' : 'South'}</span> pole.
+                The magnetic field direction will reverse!
+              </p>
+            </div>
+
+            {/* Prediction Question */}
+            <div style={{ marginBottom: '20px' }}>
+              <h3 style={{ color: colors.textPrimary, fontSize: '18px', fontWeight: 700, marginBottom: '12px' }}>
+                🤔 What do you think will happen when you flip the magnet?
+              </h3>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                {twistPredictions.map(p => (
+                  <button
+                    key={p.id}
+                    onMouseDown={() => {
+                      setTwistPrediction(p.id);
+                      playSound('click');
+                    }}
+                    style={{
+                      padding: '16px',
+                      borderRadius: '12px',
+                      border: twistPrediction === p.id ? `2px solid ${colors.warning}` : `1px solid ${colors.border}`,
+                      backgroundColor: twistPrediction === p.id ? `${colors.warning}20` : colors.bgCard,
+                      cursor: 'pointer',
+                      textAlign: 'left',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '12px'
+                    }}
+                  >
+                    <span style={{ fontSize: '24px' }}>{p.icon}</span>
+                    <span style={{ color: colors.textPrimary, fontSize: '14px' }}>{p.label}</span>
+                    {twistPrediction === p.id && (
+                      <span style={{ marginLeft: 'auto', color: colors.warning, fontSize: '18px' }}>✓</span>
+                    )}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Optional "Why?" question - shown after selection */}
+            {twistPrediction && (
+              <div style={{
+                background: `linear-gradient(135deg, ${colors.warning}15 0%, ${colors.accent}15 100%)`,
+                borderRadius: '12px',
+                padding: '16px',
+                border: `1px solid ${colors.warning}30`
+              }}>
+                <p style={{ color: '#e2e8f0', fontSize: '14px', marginBottom: '12px' }}>
+                  💭 Why do you think this will happen? <span style={{ color: colors.textMuted }}>(Optional)</span>
+                </p>
+                <textarea
+                  placeholder="Share your reasoning... (skip if you prefer)"
+                  style={{
+                    width: '100%',
+                    minHeight: '60px',
+                    padding: '12px',
+                    borderRadius: '8px',
+                    background: colors.bgCard,
+                    border: `1px solid ${colors.border}`,
+                    color: colors.textPrimary,
+                    fontSize: '14px',
+                    resize: 'vertical'
+                  }}
+                />
+              </div>
+            )}
           </div>
         </div>
 
+        {/* Fixed bottom bar */}
         {renderBottomBar(true, !!twistPrediction, 'Test It →', () => goToPhase('twist_play'), colors.warning)}
       </div>
     );
@@ -1121,94 +1333,117 @@ const HomopolarMotorRenderer: React.FC<HomopolarMotorRendererProps> = ({
   // TWIST PLAY PHASE
   if (phase === 'twist_play') {
     return (
-      <div style={{ minHeight: '100vh', background: `linear-gradient(180deg, ${colors.bgGradientStart} 0%, ${colors.bgGradientEnd} 100%)`, display: 'flex', flexDirection: 'column' }}>
-        <div style={{ flex: 1, padding: '20px' }}>
-          <div style={{ textAlign: 'center', marginBottom: '16px' }}>
-            <p style={{ color: colors.warning, fontSize: '12px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '8px' }}>
-              Step 5 • Observer Effect
-            </p>
-            <h2 style={{ fontSize: isMobile ? '20px' : '26px', fontWeight: 700, color: colors.textPrimary }}>
-              Flip the Magnet Polarity
-            </h2>
-          </div>
-
-          {renderMotorVisualization()}
-
-          {/* Controls */}
-          <div style={{ maxWidth: '500px', margin: '24px auto 0', display: 'flex', flexDirection: 'column', gap: '16px' }}>
-            <div style={{ background: colors.bgCard, borderRadius: '12px', padding: '16px', border: `1px solid ${colors.border}` }}>
-              <p style={{ color: colors.textSecondary, fontSize: '14px', fontWeight: 600, marginBottom: '12px', textAlign: 'center' }}>
-                Magnet Polarity (Facing Up)
+      <div style={{
+        height: '100dvh',
+        display: 'flex',
+        flexDirection: 'column',
+        background: `linear-gradient(180deg, ${colors.bgGradientStart} 0%, ${colors.bgGradientEnd} 100%)`,
+        overflow: 'hidden'
+      }}>
+        {/* Scrollable content */}
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          overflowX: 'hidden',
+          WebkitOverflowScrolling: 'touch',
+          paddingBottom: '100px'
+        }}>
+          <div style={{ maxWidth: '800px', margin: '0 auto', padding: '20px' }}>
+            <div style={{ textAlign: 'center', marginBottom: '16px' }}>
+              <p style={{ color: colors.warning, fontSize: '12px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '8px' }}>
+                Step 5 • Observer Effect
               </p>
-              <div style={{ display: 'flex', gap: '12px' }}>
-                <button
-                  onMouseDown={() => {
-                    setMagnetPolarity('north');
-                    playSound('click');
-                  }}
-                  style={{
-                    flex: 1,
-                    padding: '14px',
-                    borderRadius: '10px',
-                    fontWeight: 700,
-                    backgroundColor: magnetPolarity === 'north' ? colors.error : colors.bgCardLight,
-                    color: magnetPolarity === 'north' ? 'white' : colors.textSecondary,
-                    border: 'none',
-                    cursor: 'pointer'
-                  }}
-                >
-                  North (N)
-                </button>
-                <button
-                  onMouseDown={() => {
-                    setMagnetPolarity('south');
-                    playSound('click');
-                  }}
-                  style={{
-                    flex: 1,
-                    padding: '14px',
-                    borderRadius: '10px',
-                    fontWeight: 700,
-                    backgroundColor: magnetPolarity === 'south' ? colors.primary : colors.bgCardLight,
-                    color: magnetPolarity === 'south' ? 'white' : colors.textSecondary,
-                    border: 'none',
-                    cursor: 'pointer'
-                  }}
-                >
-                  South (S)
-                </button>
+              <h2 style={{ fontSize: isMobile ? '20px' : '26px', fontWeight: 700, color: colors.textPrimary }}>
+                Flip the Magnet Polarity
+              </h2>
+            </div>
+
+            {/* Responsive graphic container */}
+            <div style={{
+              width: '100%',
+              maxWidth: '700px',
+              margin: '0 auto'
+            }}>
+              {renderMotorVisualization()}
+            </div>
+
+            {/* Controls */}
+            <div style={{ maxWidth: '500px', margin: '24px auto 0', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              <div style={{ background: colors.bgCard, borderRadius: '12px', padding: '16px', border: `1px solid ${colors.border}` }}>
+                <p style={{ color: colors.textSecondary, fontSize: '14px', fontWeight: 600, marginBottom: '12px', textAlign: 'center' }}>
+                  Magnet Polarity (Facing Up)
+                </p>
+                <div style={{ display: 'flex', gap: '12px' }}>
+                  <button
+                    onMouseDown={() => {
+                      setMagnetPolarity('north');
+                      playSound('click');
+                    }}
+                    style={{
+                      flex: 1,
+                      padding: '14px',
+                      borderRadius: '10px',
+                      fontWeight: 700,
+                      backgroundColor: magnetPolarity === 'north' ? colors.error : colors.bgCardLight,
+                      color: magnetPolarity === 'north' ? 'white' : colors.textSecondary,
+                      border: 'none',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    North (N)
+                  </button>
+                  <button
+                    onMouseDown={() => {
+                      setMagnetPolarity('south');
+                      playSound('click');
+                    }}
+                    style={{
+                      flex: 1,
+                      padding: '14px',
+                      borderRadius: '10px',
+                      fontWeight: 700,
+                      backgroundColor: magnetPolarity === 'south' ? colors.primary : colors.bgCardLight,
+                      color: magnetPolarity === 'south' ? 'white' : colors.textSecondary,
+                      border: 'none',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    South (S)
+                  </button>
+                </div>
               </div>
+
+              <button
+                onMouseDown={() => {
+                  setIsRunning(!isRunning);
+                  playSound(isRunning ? 'click' : 'success');
+                }}
+                style={{
+                  padding: '16px',
+                  borderRadius: '12px',
+                  fontWeight: 700,
+                  fontSize: '16px',
+                  backgroundColor: isRunning ? colors.error : colors.success,
+                  color: 'white',
+                  border: 'none',
+                  cursor: 'pointer'
+                }}
+              >
+                {isRunning ? '⏹ Stop Motor' : '▶ Start Motor'}
+              </button>
             </div>
 
-            <button
-              onMouseDown={() => {
-                setIsRunning(!isRunning);
-                playSound(isRunning ? 'click' : 'success');
-              }}
-              style={{
-                padding: '16px',
-                borderRadius: '12px',
-                fontWeight: 700,
-                fontSize: '16px',
-                backgroundColor: isRunning ? colors.error : colors.success,
-                color: 'white',
-                border: 'none',
-                cursor: 'pointer'
-              }}
-            >
-              {isRunning ? '⏹ Stop Motor' : '▶ Start Motor'}
-            </button>
+            {isRunning && (
+              <div style={{ textAlign: 'center', marginTop: '24px' }}>
+                <p style={{ color: colors.warning, fontSize: '16px', fontWeight: 600 }}>
+                  Direction: {rotationSpeed > 0 ? 'Clockwise' : 'Counter-clockwise'} — Flipping the magnet reverses it!
+                </p>
+              </div>
+            )}
           </div>
-
-          {isRunning && (
-            <div style={{ textAlign: 'center', marginTop: '24px' }}>
-              <p style={{ color: colors.warning, fontSize: '16px', fontWeight: 600 }}>
-                Direction: {rotationSpeed > 0 ? 'Clockwise' : 'Counter-clockwise'} — Flipping the magnet reverses it!
-              </p>
-            </div>
-          )}
         </div>
 
+        {/* Fixed bottom bar */}
         {renderBottomBar(true, isRunning, 'See Why →', () => goToPhase('twist_review'), colors.warning)}
       </div>
     );
@@ -1217,43 +1452,59 @@ const HomopolarMotorRenderer: React.FC<HomopolarMotorRendererProps> = ({
   // TWIST REVIEW PHASE
   if (phase === 'twist_review') {
     return (
-      <div style={{ minHeight: '100vh', background: `linear-gradient(180deg, ${colors.bgGradientStart} 0%, ${colors.bgGradientEnd} 100%)`, display: 'flex', flexDirection: 'column' }}>
-        <div style={{ flex: 1, maxWidth: '800px', margin: '0 auto', padding: '40px 20px' }}>
-          <div style={{ textAlign: 'center', marginBottom: '32px' }}>
-            <p style={{ color: colors.accent, fontSize: '12px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '8px' }}>
-              Step 6 • Deep Insight
-            </p>
-            <h2 style={{ fontSize: isMobile ? '24px' : '32px', fontWeight: 700, color: colors.textPrimary }}>
-              Reversing the Field
-            </h2>
-          </div>
+      <div style={{
+        height: '100dvh',
+        display: 'flex',
+        flexDirection: 'column',
+        background: `linear-gradient(180deg, ${colors.bgGradientStart} 0%, ${colors.bgGradientEnd} 100%)`,
+        overflow: 'hidden'
+      }}>
+        {/* Scrollable content */}
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          overflowX: 'hidden',
+          WebkitOverflowScrolling: 'touch',
+          paddingBottom: '100px'
+        }}>
+          <div style={{ maxWidth: '800px', margin: '0 auto', padding: '20px' }}>
+            <div style={{ textAlign: 'center', marginBottom: '32px' }}>
+              <p style={{ color: colors.accent, fontSize: '12px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '8px' }}>
+                Step 6 • Deep Insight
+              </p>
+              <h2 style={{ fontSize: isMobile ? '24px' : '32px', fontWeight: 700, color: colors.textPrimary }}>
+                Reversing the Field
+              </h2>
+            </div>
 
-          <div style={{ background: colors.bgCard, borderRadius: '16px', padding: '24px', borderLeft: `4px solid ${colors.accent}`, marginBottom: '24px' }}>
-            <h3 style={{ color: colors.accent, fontSize: '18px', fontWeight: 700, marginBottom: '12px' }}>The Cross Product Reveals All</h3>
-            <p style={{ color: colors.textSecondary, lineHeight: 1.7, marginBottom: '16px' }}>
-              The Lorentz force is a <strong style={{ color: colors.textPrimary }}>cross product</strong>: F = I × B
-            </p>
-            <p style={{ color: colors.textSecondary, lineHeight: 1.7 }}>
-              When you flip the magnet, B reverses direction. The cross product means the force direction also reverses —
-              so the motor spins the opposite way!
-            </p>
-          </div>
+            <div style={{ background: colors.bgCard, borderRadius: '16px', padding: '24px', borderLeft: `4px solid ${colors.accent}`, marginBottom: '24px' }}>
+              <h3 style={{ color: colors.accent, fontSize: '18px', fontWeight: 700, marginBottom: '12px' }}>The Cross Product Reveals All</h3>
+              <p style={{ color: colors.textSecondary, lineHeight: 1.7, marginBottom: '16px' }}>
+                The Lorentz force is a <strong style={{ color: colors.textPrimary }}>cross product</strong>: F = I × B
+              </p>
+              <p style={{ color: colors.textSecondary, lineHeight: 1.7 }}>
+                When you flip the magnet, B reverses direction. The cross product means the force direction also reverses —
+                so the motor spins the opposite way!
+              </p>
+            </div>
 
-          <div style={{ background: colors.bgCard, borderRadius: '16px', padding: '24px', borderLeft: `4px solid ${colors.primary}` }}>
-            <h3 style={{ color: colors.primary, fontSize: '18px', fontWeight: 700, marginBottom: '12px' }}>Two Ways to Reverse</h3>
-            <p style={{ color: colors.textSecondary, lineHeight: 1.7 }}>
-              You can reverse a homopolar motor by:
-            </p>
-            <ul style={{ color: colors.textSecondary, marginTop: '12px', paddingLeft: '20px' }}>
-              <li style={{ marginBottom: '8px' }}>Flipping the <strong style={{ color: colors.error }}>magnet</strong> (reverses B)</li>
-              <li>Flipping the <strong style={{ color: colors.warning }}>battery</strong> (reverses I)</li>
-            </ul>
-            <p style={{ color: colors.textMuted, fontSize: '14px', marginTop: '16px', fontStyle: 'italic' }}>
-              Both change the cross product direction. This is how we control motor direction in real applications!
-            </p>
+            <div style={{ background: colors.bgCard, borderRadius: '16px', padding: '24px', borderLeft: `4px solid ${colors.primary}` }}>
+              <h3 style={{ color: colors.primary, fontSize: '18px', fontWeight: 700, marginBottom: '12px' }}>Two Ways to Reverse</h3>
+              <p style={{ color: colors.textSecondary, lineHeight: 1.7 }}>
+                You can reverse a homopolar motor by:
+              </p>
+              <ul style={{ color: colors.textSecondary, marginTop: '12px', paddingLeft: '20px' }}>
+                <li style={{ marginBottom: '8px' }}>Flipping the <strong style={{ color: colors.error }}>magnet</strong> (reverses B)</li>
+                <li>Flipping the <strong style={{ color: colors.warning }}>battery</strong> (reverses I)</li>
+              </ul>
+              <p style={{ color: colors.textMuted, fontSize: '14px', marginTop: '16px', fontStyle: 'italic' }}>
+                Both change the cross product direction. This is how we control motor direction in real applications!
+              </p>
+            </div>
           </div>
         </div>
 
+        {/* Fixed bottom bar */}
         {renderBottomBar(true, true, 'Real World Applications →', () => goToPhase('transfer'), colors.success)}
       </div>
     );
@@ -1284,9 +1535,15 @@ const HomopolarMotorRenderer: React.FC<HomopolarMotorRendererProps> = ({
     };
 
     return (
-      <div style={{ minHeight: '100vh', background: `linear-gradient(180deg, ${colors.bgGradientStart} 0%, ${colors.bgGradientEnd} 100%)`, display: 'flex', flexDirection: 'column' }}>
-        {/* Header */}
-        <div style={{ padding: '20px', borderBottom: `1px solid ${colors.border}`, backgroundColor: colors.bgCard }}>
+      <div style={{
+        height: '100dvh',
+        display: 'flex',
+        flexDirection: 'column',
+        background: `linear-gradient(180deg, ${colors.bgGradientStart} 0%, ${colors.bgGradientEnd} 100%)`,
+        overflow: 'hidden'
+      }}>
+        {/* Header - Fixed at top */}
+        <div style={{ padding: '20px', borderBottom: `1px solid ${colors.border}`, backgroundColor: colors.bgCard, flexShrink: 0 }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
             <div>
               <p style={{ fontSize: '10px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', color: colors.success }}>
@@ -1351,9 +1608,15 @@ const HomopolarMotorRenderer: React.FC<HomopolarMotorRendererProps> = ({
           </div>
         </div>
 
-        {/* App content */}
-        <div style={{ flex: 1, overflow: 'auto', padding: '20px', paddingBottom: '100px' }}>
-          <div style={{ maxWidth: '800px', margin: '0 auto' }}>
+        {/* Scrollable content */}
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          overflowX: 'hidden',
+          WebkitOverflowScrolling: 'touch',
+          paddingBottom: '100px'
+        }}>
+          <div style={{ maxWidth: '800px', margin: '0 auto', padding: '20px' }}>
             {/* App header */}
             <div style={{ textAlign: 'center', marginBottom: '24px' }}>
               <span style={{ fontSize: '56px' }}>{currentApp.icon}</span>
@@ -1522,190 +1785,226 @@ const HomopolarMotorRenderer: React.FC<HomopolarMotorRendererProps> = ({
     if (testSubmitted) {
       const passed = score >= 7;
       return (
-        <div style={{ minHeight: '100vh', background: `linear-gradient(180deg, ${colors.bgGradientStart} 0%, ${colors.bgGradientEnd} 100%)`, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', padding: '40px 20px' }}>
-          <div style={{ fontSize: '80px', marginBottom: '24px' }}>{passed ? '🎉' : '📚'}</div>
-          <h2 style={{ fontSize: '36px', fontWeight: 800, color: colors.textPrimary, marginBottom: '12px' }}>
-            {passed ? 'Congratulations!' : 'Keep Learning!'}
-          </h2>
-          <div style={{ fontSize: '64px', fontWeight: 800, color: passed ? colors.success : colors.warning, marginBottom: '24px' }}>
-            {score}/10
-          </div>
-          <p style={{ color: colors.textSecondary, fontSize: '18px', textAlign: 'center', maxWidth: '500px', marginBottom: '32px' }}>
-            {passed
-              ? 'You have mastered the homopolar motor! You understand the Lorentz force and its applications.'
-              : 'You need 7/10 to pass. Review the lesson and try again.'}
-          </p>
-          <div style={{ display: 'flex', gap: '16px' }}>
-            {!passed && (
-              <button
-                onMouseDown={() => {
-                  setPhase('hook');
-                  setTestQuestion(0);
-                  setTestAnswers(Array(10).fill(null));
-                  setTestSubmitted(false);
-                  setCompletedApps([false, false, false, false]);
-                }}
-                style={{
-                  padding: '16px 32px',
-                  borderRadius: '12px',
-                  fontWeight: 700,
-                  backgroundColor: colors.bgCardLight,
-                  color: colors.textSecondary,
-                  border: 'none',
-                  cursor: 'pointer'
-                }}
-              >
-                Review Lesson
-              </button>
-            )}
-            <button
-              onMouseDown={() => passed ? goToPhase('mastery') : setTestSubmitted(false)}
-              style={{
-                padding: '16px 32px',
-                borderRadius: '12px',
-                fontWeight: 700,
-                background: `linear-gradient(135deg, ${colors.primary} 0%, ${colors.accent} 100%)`,
-                color: 'white',
-                border: 'none',
-                cursor: 'pointer'
-              }}
-            >
-              {passed ? 'Complete Journey →' : 'Try Again'}
-            </button>
+        <div style={{
+          height: '100dvh',
+          display: 'flex',
+          flexDirection: 'column',
+          background: `linear-gradient(180deg, ${colors.bgGradientStart} 0%, ${colors.bgGradientEnd} 100%)`,
+          overflow: 'hidden'
+        }}>
+          {/* Scrollable content */}
+          <div style={{
+            flex: 1,
+            overflowY: 'auto',
+            overflowX: 'hidden',
+            WebkitOverflowScrolling: 'touch',
+            paddingBottom: '100px',
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'center',
+            alignItems: 'center'
+          }}>
+            <div style={{ padding: '40px 20px', textAlign: 'center' }}>
+              <div style={{ fontSize: '80px', marginBottom: '24px' }}>{passed ? '🎉' : '📚'}</div>
+              <h2 style={{ fontSize: '36px', fontWeight: 800, color: colors.textPrimary, marginBottom: '12px' }}>
+                {passed ? 'Congratulations!' : 'Keep Learning!'}
+              </h2>
+              <div style={{ fontSize: '64px', fontWeight: 800, color: passed ? colors.success : colors.warning, marginBottom: '24px' }}>
+                {score}/10
+              </div>
+              <p style={{ color: colors.textSecondary, fontSize: '18px', textAlign: 'center', maxWidth: '500px', marginBottom: '32px' }}>
+                {passed
+                  ? 'You have mastered the homopolar motor! You understand the Lorentz force and its applications.'
+                  : 'You need 7/10 to pass. Review the lesson and try again.'}
+              </p>
+              <div style={{ display: 'flex', gap: '16px', justifyContent: 'center' }}>
+                {!passed && (
+                  <button
+                    onMouseDown={() => {
+                      setPhase('hook');
+                      setTestQuestion(0);
+                      setTestAnswers(Array(10).fill(null));
+                      setTestSubmitted(false);
+                      setCompletedApps([false, false, false, false]);
+                    }}
+                    style={{
+                      padding: '16px 32px',
+                      borderRadius: '12px',
+                      fontWeight: 700,
+                      backgroundColor: colors.bgCardLight,
+                      color: colors.textSecondary,
+                      border: 'none',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    Review Lesson
+                  </button>
+                )}
+                <button
+                  onMouseDown={() => passed ? goToPhase('mastery') : setTestSubmitted(false)}
+                  style={{
+                    padding: '16px 32px',
+                    borderRadius: '12px',
+                    fontWeight: 700,
+                    background: `linear-gradient(135deg, ${colors.primary} 0%, ${colors.accent} 100%)`,
+                    color: 'white',
+                    border: 'none',
+                    cursor: 'pointer'
+                  }}
+                >
+                  {passed ? 'Complete Journey →' : 'Try Again'}
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       );
     }
 
     return (
-      <div style={{ minHeight: '100vh', background: `linear-gradient(180deg, ${colors.bgGradientStart} 0%, ${colors.bgGradientEnd} 100%)`, display: 'flex', flexDirection: 'column' }}>
-        <div style={{ flex: 1, maxWidth: '800px', margin: '0 auto', padding: '30px 20px', paddingBottom: '100px' }}>
-          {/* Progress */}
-          <div style={{ marginBottom: '24px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-              <span style={{ color: colors.primary, fontSize: '12px', fontWeight: 700, textTransform: 'uppercase' }}>
-                Knowledge Test
-              </span>
-              <span style={{ color: colors.textMuted, fontSize: '14px' }}>
-                Question {testQuestion + 1} of 10
-              </span>
+      <div style={{
+        height: '100dvh',
+        display: 'flex',
+        flexDirection: 'column',
+        background: `linear-gradient(180deg, ${colors.bgGradientStart} 0%, ${colors.bgGradientEnd} 100%)`,
+        overflow: 'hidden'
+      }}>
+        {/* Scrollable content */}
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          overflowX: 'hidden',
+          WebkitOverflowScrolling: 'touch',
+          paddingBottom: '100px'
+        }}>
+          <div style={{ maxWidth: '800px', margin: '0 auto', padding: '20px' }}>
+            {/* Progress */}
+            <div style={{ marginBottom: '24px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+                <span style={{ color: colors.primary, fontSize: '12px', fontWeight: 700, textTransform: 'uppercase' }}>
+                  Knowledge Test
+                </span>
+                <span style={{ color: colors.textMuted, fontSize: '14px' }}>
+                  Question {testQuestion + 1} of 10
+                </span>
+              </div>
+              <div style={{ display: 'flex', gap: '6px' }}>
+                {Array.from({ length: 10 }, (_, i) => (
+                  <div
+                    key={i}
+                    style={{
+                      flex: 1,
+                      height: '6px',
+                      borderRadius: '3px',
+                      backgroundColor: testAnswers[i] !== null
+                        ? colors.success
+                        : i === testQuestion
+                          ? colors.primary
+                          : colors.bgCardLight
+                    }}
+                  />
+                ))}
+              </div>
             </div>
-            <div style={{ display: 'flex', gap: '6px' }}>
-              {Array.from({ length: 10 }, (_, i) => (
-                <div
-                  key={i}
-                  style={{
-                    flex: 1,
-                    height: '6px',
-                    borderRadius: '3px',
-                    backgroundColor: testAnswers[i] !== null
-                      ? colors.success
-                      : i === testQuestion
-                        ? colors.primary
-                        : colors.bgCardLight
-                  }}
-                />
-              ))}
+
+            {/* Scenario */}
+            <div style={{ background: colors.bgCard, borderRadius: '12px', padding: '20px', marginBottom: '20px', borderLeft: `4px solid ${colors.primary}` }}>
+              <p style={{ color: colors.textSecondary, fontSize: '15px', lineHeight: 1.6 }}>
+                {currentQ.scenario}
+              </p>
             </div>
-          </div>
 
-          {/* Scenario */}
-          <div style={{ background: colors.bgCard, borderRadius: '12px', padding: '20px', marginBottom: '20px', borderLeft: `4px solid ${colors.primary}` }}>
-            <p style={{ color: colors.textSecondary, fontSize: '15px', lineHeight: 1.6 }}>
-              {currentQ.scenario}
-            </p>
-          </div>
+            {/* Question */}
+            <h3 style={{ color: colors.textPrimary, fontSize: '20px', fontWeight: 700, marginBottom: '20px' }}>
+              {currentQ.question}
+            </h3>
 
-          {/* Question */}
-          <h3 style={{ color: colors.textPrimary, fontSize: '20px', fontWeight: 700, marginBottom: '20px' }}>
-            {currentQ.question}
-          </h3>
+            {/* Options */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              {currentQ.options.map((opt, i) => {
+                const isSelected = testAnswers[testQuestion] === opt.id;
+                const isAnswered = testAnswers[testQuestion] !== null;
+                const isCorrect = opt.correct;
 
-          {/* Options */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-            {currentQ.options.map((opt, i) => {
-              const isSelected = testAnswers[testQuestion] === opt.id;
-              const isAnswered = testAnswers[testQuestion] !== null;
-              const isCorrect = opt.correct;
-
-              return (
-                <button
-                  key={opt.id}
-                  onMouseDown={() => {
-                    if (!isAnswered) {
-                      const newAnswers = [...testAnswers];
-                      newAnswers[testQuestion] = opt.id;
-                      setTestAnswers(newAnswers);
-                      playSound(isCorrect ? 'success' : 'failure');
-                    }
-                  }}
-                  disabled={isAnswered}
-                  style={{
-                    padding: '18px 20px',
-                    borderRadius: '12px',
-                    border: isAnswered && isCorrect
-                      ? `3px solid ${colors.success}`
-                      : isSelected && !isCorrect
-                        ? `2px solid ${colors.error}`
-                        : isSelected
-                          ? `2px solid ${colors.success}`
-                          : `2px solid ${colors.border}`,
-                    backgroundColor: isAnswered && isCorrect
-                      ? 'rgba(34, 197, 94, 0.15)'
-                      : isSelected && !isCorrect
-                        ? 'rgba(239, 68, 68, 0.15)'
-                        : colors.bgCard,
-                    boxShadow: isAnswered && isCorrect
-                      ? '0 0 20px rgba(34, 197, 94, 0.3)'
-                      : 'none',
-                    cursor: isAnswered ? 'default' : 'pointer',
-                    textAlign: 'left',
-                    opacity: isAnswered && !isSelected && !isCorrect ? 0.5 : 1,
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '12px'
-                  }}
-                >
-                  <span style={{
-                    fontWeight: 700,
-                    fontSize: '16px',
-                    color: isAnswered && isCorrect
-                      ? colors.success
-                      : isSelected && !isCorrect
-                        ? colors.error
-                        : colors.primary,
-                    minWidth: '24px'
-                  }}>
-                    {String.fromCharCode(65 + i)}.
-                  </span>
-                  <span style={{ color: colors.textPrimary, flex: 1 }}>{opt.label}</span>
-                  {isAnswered && isCorrect && (
-                    <span style={{
-                      color: colors.success,
-                      fontSize: '24px',
-                      fontWeight: 700,
+                return (
+                  <button
+                    key={opt.id}
+                    onMouseDown={() => {
+                      if (!isAnswered) {
+                        const newAnswers = [...testAnswers];
+                        newAnswers[testQuestion] = opt.id;
+                        setTestAnswers(newAnswers);
+                        playSound(isCorrect ? 'success' : 'failure');
+                      }
+                    }}
+                    disabled={isAnswered}
+                    style={{
+                      padding: '18px 20px',
+                      borderRadius: '12px',
+                      border: isAnswered && isCorrect
+                        ? `3px solid ${colors.success}`
+                        : isSelected && !isCorrect
+                          ? `2px solid ${colors.error}`
+                          : isSelected
+                            ? `2px solid ${colors.success}`
+                            : `2px solid ${colors.border}`,
+                      backgroundColor: isAnswered && isCorrect
+                        ? 'rgba(34, 197, 94, 0.15)'
+                        : isSelected && !isCorrect
+                          ? 'rgba(239, 68, 68, 0.15)'
+                          : colors.bgCard,
+                      boxShadow: isAnswered && isCorrect
+                        ? '0 0 20px rgba(34, 197, 94, 0.3)'
+                        : 'none',
+                      cursor: isAnswered ? 'default' : 'pointer',
+                      textAlign: 'left',
+                      opacity: isAnswered && !isSelected && !isCorrect ? 0.5 : 1,
                       display: 'flex',
                       alignItems: 'center',
-                      gap: '4px'
+                      gap: '12px'
+                    }}
+                  >
+                    <span style={{
+                      fontWeight: 700,
+                      fontSize: '16px',
+                      color: isAnswered && isCorrect
+                        ? colors.success
+                        : isSelected && !isCorrect
+                          ? colors.error
+                          : colors.primary,
+                      minWidth: '24px'
                     }}>
-                      ✓ {isSelected ? 'Correct!' : ''}
+                      {String.fromCharCode(65 + i)}.
                     </span>
-                  )}
-                  {isAnswered && isSelected && !isCorrect && (
-                    <span style={{ color: colors.error, fontSize: '20px', fontWeight: 700 }}>✗</span>
-                  )}
-                </button>
-              );
-            })}
-          </div>
-
-          {/* Explanation */}
-          {testAnswers[testQuestion] !== null && (
-            <div style={{ background: colors.bgCard, borderRadius: '12px', padding: '20px', marginTop: '20px', borderLeft: `4px solid ${colors.warning}` }}>
-              <h4 style={{ color: colors.warning, fontWeight: 700, marginBottom: '8px' }}>Explanation</h4>
-              <p style={{ color: colors.textSecondary, lineHeight: 1.6 }}>{currentQ.explanation}</p>
+                    <span style={{ color: colors.textPrimary, flex: 1 }}>{opt.label}</span>
+                    {isAnswered && isCorrect && (
+                      <span style={{
+                        color: colors.success,
+                        fontSize: '24px',
+                        fontWeight: 700,
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '4px'
+                      }}>
+                        ✓ {isSelected ? 'Correct!' : ''}
+                      </span>
+                    )}
+                    {isAnswered && isSelected && !isCorrect && (
+                      <span style={{ color: colors.error, fontSize: '20px', fontWeight: 700 }}>✗</span>
+                    )}
+                  </button>
+                );
+              })}
             </div>
-          )}
+
+            {/* Explanation */}
+            {testAnswers[testQuestion] !== null && (
+              <div style={{ background: colors.bgCard, borderRadius: '12px', padding: '20px', marginTop: '20px', borderLeft: `4px solid ${colors.warning}` }}>
+                <h4 style={{ color: colors.warning, fontWeight: 700, marginBottom: '8px' }}>Explanation</h4>
+                <p style={{ color: colors.textSecondary, lineHeight: 1.6 }}>{currentQ.explanation}</p>
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Navigation - Fixed at bottom */}
@@ -1770,37 +2069,58 @@ const HomopolarMotorRenderer: React.FC<HomopolarMotorRendererProps> = ({
   // MASTERY PHASE
   if (phase === 'mastery') {
     return (
-      <div style={{ minHeight: '100vh', background: `linear-gradient(180deg, ${colors.bgGradientStart} 0%, ${colors.bgGradientEnd} 100%)`, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', padding: '40px 20px', textAlign: 'center' }}>
-        <div style={{ fontSize: '100px', marginBottom: '24px' }}>🏆</div>
-        <h1 style={{ fontSize: '42px', fontWeight: 800, color: colors.textPrimary, marginBottom: '16px' }}>
-          Mastery Achieved!
-        </h1>
-        <p style={{ color: colors.textSecondary, fontSize: '18px', maxWidth: '600px', lineHeight: 1.7, marginBottom: '40px' }}>
-          You now understand the homopolar motor — the simplest demonstration of how electricity and magnetism combine to create motion.
-          The Lorentz force F = BIL powers everything from rail guns to MRI machines!
-        </p>
+      <div style={{
+        height: '100dvh',
+        display: 'flex',
+        flexDirection: 'column',
+        background: `linear-gradient(180deg, ${colors.bgGradientStart} 0%, ${colors.bgGradientEnd} 100%)`,
+        overflow: 'hidden'
+      }}>
+        {/* Scrollable content */}
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          overflowX: 'hidden',
+          WebkitOverflowScrolling: 'touch',
+          paddingBottom: '100px',
+          display: 'flex',
+          flexDirection: 'column',
+          justifyContent: 'center',
+          alignItems: 'center'
+        }}>
+          <div style={{ padding: '40px 20px', textAlign: 'center' }}>
+            <div style={{ fontSize: '100px', marginBottom: '24px' }}>🏆</div>
+            <h1 style={{ fontSize: '42px', fontWeight: 800, color: colors.textPrimary, marginBottom: '16px' }}>
+              Mastery Achieved!
+            </h1>
+            <p style={{ color: colors.textSecondary, fontSize: '18px', maxWidth: '600px', lineHeight: 1.7, marginBottom: '40px' }}>
+              You now understand the homopolar motor — the simplest demonstration of how electricity and magnetism combine to create motion.
+              The Lorentz force F = BIL powers everything from rail guns to MRI machines!
+            </p>
 
-        <div style={{ display: 'flex', gap: '16px' }}>
-          <button
-            onMouseDown={() => {
-              onComplete?.();
-              window.dispatchEvent(new CustomEvent('returnToDashboard'));
-            }}
-            style={{
-              padding: '18px 36px',
-              borderRadius: '14px',
-              fontWeight: 700,
-              fontSize: '16px',
-              background: `linear-gradient(135deg, ${colors.primary} 0%, ${colors.accent} 100%)`,
-              color: 'white',
-              border: 'none',
-              cursor: 'pointer',
-              boxShadow: `0 8px 32px ${colors.primary}50`,
-              minHeight: '52px'
-            }}
-          >
-            Return to Dashboard
-          </button>
+            <div style={{ display: 'flex', gap: '16px', justifyContent: 'center' }}>
+              <button
+                onMouseDown={() => {
+                  onComplete?.();
+                  window.dispatchEvent(new CustomEvent('returnToDashboard'));
+                }}
+                style={{
+                  padding: '18px 36px',
+                  borderRadius: '14px',
+                  fontWeight: 700,
+                  fontSize: '16px',
+                  background: `linear-gradient(135deg, ${colors.primary} 0%, ${colors.accent} 100%)`,
+                  color: 'white',
+                  border: 'none',
+                  cursor: 'pointer',
+                  boxShadow: `0 8px 32px ${colors.primary}50`,
+                  minHeight: '52px'
+                }}
+              >
+                Return to Dashboard
+              </button>
+            </div>
+          </div>
         </div>
       </div>
     );

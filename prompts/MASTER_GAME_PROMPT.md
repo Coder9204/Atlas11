@@ -164,6 +164,176 @@ This document ensures games work PERFECTLY on the first generation. Every requir
     - "Review Answers" option
     - "Continue to Mastery →" button if passed
 
+### 18. **Prediction Phase Flow Wrong (CRITICAL)**
+- **Problem**: Users see sliders/start button before making a prediction. No context for what they're looking at.
+- **Root Cause**: Predict and Play phases not properly separated
+- **Fix**: Predict phase shows:
+  1. **Static graphic** (no sliders, no start button) - just the visual
+  2. **Brief explanation** of what they're seeing in the graphic
+  3. **Prediction question** below the graphic
+  4. **Optional "Why?" follow-up** after they answer (skippable)
+  5. ONLY THEN proceed to Play phase with interactive controls
+
+### 19. **Scroll Not Working (CRITICAL)**
+- **Problem**: Users can't scroll on prediction, play, transfer, test phases
+- **Root Cause**: Incorrect overflow settings, missing touch-action
+- **Fix**: EVERY page MUST have this scroll structure:
+  ```typescript
+  // OUTER CONTAINER - Fixed height, no scroll
+  <div style={{
+    height: '100dvh',
+    display: 'flex',
+    flexDirection: 'column',
+    overflow: 'hidden'  // Prevent double scroll
+  }}>
+    {/* SCROLLABLE CONTENT - This is what scrolls */}
+    <div style={{
+      flex: 1,
+      overflowY: 'auto',          // CRITICAL: Enable vertical scroll
+      overflowX: 'hidden',
+      WebkitOverflowScrolling: 'touch',  // Smooth iOS scroll
+      paddingBottom: '100px'      // Space for fixed footer
+    }}>
+      {/* All page content goes here */}
+    </div>
+
+    {/* FIXED FOOTER - position: fixed, not inside scroll area */}
+    <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 1000 }}>
+      {/* Navigation buttons */}
+    </div>
+  </div>
+  ```
+
+### 20. **Graphic Dimensions Don't Fill Screen (CRITICAL)**
+- **Problem**: Graphics too small, don't use available space, not responsive
+- **Root Cause**: Fixed pixel dimensions instead of responsive units
+- **Fix**: Use this SVG pattern for ALL graphics:
+  ```typescript
+  // Responsive SVG container
+  <div style={{
+    width: '100%',
+    maxWidth: '800px',      // Max on desktop
+    margin: '0 auto',
+    aspectRatio: '16/9',    // Or '4/3' for taller graphics
+    position: 'relative'
+  }}>
+    <svg
+      viewBox="0 0 800 450"  // Internal coordinate system
+      preserveAspectRatio="xMidYMid meet"
+      style={{
+        width: '100%',
+        height: '100%',
+        display: 'block'
+      }}
+    >
+      {/* SVG content */}
+    </svg>
+  </div>
+  ```
+
+---
+
+## PREDICTION PHASE STRUCTURE (NEW - CRITICAL)
+
+The Predict phase MUST follow this exact structure:
+
+### Step 1: Show Static Graphic
+```typescript
+{/* Static graphic - NO sliders, NO start button */}
+<div style={{ marginBottom: '24px' }}>
+  {renderStaticGraphic()}  {/* Same graphic as Play phase, but no controls */}
+</div>
+
+{/* Brief explanation of what they're seeing */}
+<div style={{
+  background: colors.bgCard,
+  borderRadius: '12px',
+  padding: '16px',
+  marginBottom: '24px'
+}}>
+  <h3 style={{ color: colors.textPrimary, fontSize: '16px', marginBottom: '8px' }}>
+    What You're Looking At:
+  </h3>
+  <p style={{ color: '#e2e8f0', fontSize: '14px', lineHeight: 1.6 }}>
+    This shows a [describe the setup]. The [colored element] represents [what it is].
+    The [other element] shows [what it shows].
+  </p>
+</div>
+```
+
+### Step 2: Show Prediction Question
+```typescript
+{/* Prediction question */}
+<div style={{ marginBottom: '24px' }}>
+  <h2 style={{ color: colors.textPrimary, fontSize: '20px', fontWeight: 700, marginBottom: '16px' }}>
+    🤔 Make Your Prediction
+  </h2>
+  <p style={{ color: '#e2e8f0', fontSize: '16px', marginBottom: '20px' }}>
+    [Clear prediction question - what will happen when...]
+  </p>
+
+  {/* Options */}
+  {predictionOptions.map((option, i) => (
+    <button
+      key={i}
+      onMouseDown={() => setPrediction(i)}
+      style={{
+        width: '100%',
+        padding: '16px',
+        marginBottom: '12px',
+        borderRadius: '12px',
+        border: prediction === i ? `2px solid ${colors.primary}` : `1px solid ${colors.border}`,
+        background: prediction === i ? `${colors.primary}20` : colors.bgCard,
+        cursor: 'pointer',
+        textAlign: 'left'
+      }}
+    >
+      <span style={{ color: colors.textPrimary }}>{option}</span>
+    </button>
+  ))}
+</div>
+```
+
+### Step 3: Optional "Why" Question (After Selection)
+```typescript
+{prediction !== null && !showingWhy && (
+  <div style={{ marginBottom: '24px' }}>
+    <p style={{ color: '#e2e8f0', marginBottom: '12px' }}>
+      Why do you think this will happen? (Optional)
+    </p>
+    <textarea
+      value={whyAnswer}
+      onChange={(e) => setWhyAnswer(e.target.value)}
+      placeholder="Share your reasoning... (optional)"
+      style={{
+        width: '100%',
+        minHeight: '80px',
+        padding: '12px',
+        borderRadius: '8px',
+        background: colors.bgCard,
+        border: `1px solid ${colors.border}`,
+        color: colors.textPrimary,
+        resize: 'vertical'
+      }}
+    />
+    <div style={{ display: 'flex', gap: '12px', marginTop: '12px' }}>
+      <button onMouseDown={() => setShowingWhy(true)} style={{...}}>
+        Skip
+      </button>
+      <button onMouseDown={() => setShowingWhy(true)} style={{...}}>
+        Submit & Continue →
+      </button>
+    </div>
+  </div>
+)}
+```
+
+### Step 4: Proceed to Play Phase
+After prediction + optional why, the Play phase shows:
+- SAME graphic but NOW with sliders/start button
+- Explanation panel showing "What's Happening" in real-time
+- The prediction is remembered and compared in Review phase
+
 ---
 
 ## EDUCATIONAL CLARITY REQUIREMENTS (CRITICAL)
