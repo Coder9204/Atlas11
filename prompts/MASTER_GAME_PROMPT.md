@@ -27,6 +27,7 @@ This document ensures games work PERFECTLY on the first generation. Every requir
 - **Problem**: Applications too shallow, no real educational value
 - **Root Cause**: Template only specified title/description/icon
 - **Fix**: Each app needs: title, short, tagline, description, connection, howItWorks, stats[], examples[], companies[], futureImpact, color + DETAILED SVG DIAGRAM (100+ lines)
+- **CRITICAL**: Apps must unlock SEQUENTIALLY - user cannot access App 2 until App 1 is complete. All 4 must be complete before test phase unlocks.
 
 ### 5. **Render Helpers Defined as Components**
 - **Problem**: React reconciliation issues causing UI glitches
@@ -122,22 +123,41 @@ const phaseLabels: Record<Phase, string> = {
   mastery: 'Mastery'
 };
 
-// PREMIUM COLOR PALETTE (REQUIRED - customize primary/accent per game theme)
+// PREMIUM DARK THEME COLOR PALETTE (REQUIRED - matching Wave Particle Duality gold standard)
 const colors = {
-  primary: '#06b6d4',      // cyan-500 (adjust per game theme)
-  primaryDark: '#0891b2',  // cyan-600
-  accent: '#a855f7',       // purple-500
-  accentDark: '#9333ea',   // purple-600
-  warning: '#f59e0b',      // amber-500
-  success: '#10b981',      // emerald-500
-  danger: '#ef4444',       // red-500
-  bgDark: '#020617',       // slate-950
-  bgCard: '#0f172a',       // slate-900
-  bgCardLight: '#1e293b',  // slate-800
-  border: '#334155',       // slate-700
-  textPrimary: '#f8fafc',  // slate-50
-  textSecondary: '#94a3b8', // slate-400
-  textMuted: '#64748b',    // slate-500
+  // Background colors (dark theme)
+  bgDark: '#0f172a',           // slate-900 - primary dark background
+  bgCard: '#1e293b',           // slate-800 - card backgrounds
+  bgGradientStart: '#1e1b4b',  // indigo-950 - gradient start
+  bgGradientEnd: '#0f172a',    // slate-900 - gradient end
+
+  // Brand colors (customize primary per game theme)
+  primary: '#6366f1',          // indigo-500 - main brand color
+  primaryDark: '#4f46e5',      // indigo-600 - darker shade
+  primaryLight: '#818cf8',     // indigo-400 - lighter shade
+  accent: '#8b5cf6',           // violet-500 - secondary accent
+  accentDark: '#7c3aed',       // violet-600 - darker accent
+
+  // Semantic colors
+  success: '#22c55e',          // green-500 - correct/complete
+  successLight: '#4ade80',     // green-400 - success highlights
+  warning: '#f59e0b',          // amber-500 - caution/info
+  error: '#ef4444',            // red-500 - incorrect/danger
+
+  // Text colors (dark theme)
+  textPrimary: '#f8fafc',      // slate-50 - primary text (white)
+  textSecondary: '#cbd5e1',    // slate-300 - secondary text
+  textMuted: '#64748b',        // slate-500 - muted/disabled text
+
+  // Border & UI
+  border: '#334155',           // slate-700 - borders
+  borderLight: '#475569',      // slate-600 - lighter borders
+
+  // Physics-specific colors (for diagrams)
+  positive: '#ef4444',         // red for positive charge
+  negative: '#3b82f6',         // blue for negative charge
+  magnetic: '#a855f7',         // purple for magnetic fields
+  electric: '#22c55e',         // green for electric current
 };
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -169,7 +189,8 @@ const playSound = (type: 'click' | 'success' | 'failure' | 'transition' | 'compl
 };
 
 // ═══════════════════════════════════════════════════════════════════════════
-// 10 QUESTIONS REQUIRED - Use this EXACT structure with scenario + explanation
+// 10 QUESTIONS REQUIRED - Use LOCAL VALIDATION with `correct: true` marker
+// CRITICAL: This pattern avoids Firebase dependency - answers validated locally!
 // ═══════════════════════════════════════════════════════════════════════════
 const testQuestions = [
   // Q1: Core Concept - Easy
@@ -179,7 +200,7 @@ const testQuestions = [
     options: [
       { id: 'a', label: "Plausible wrong answer (common misconception)" },
       { id: 'b', label: "Another plausible wrong answer" },
-      { id: 'c', label: "The correct answer that demonstrates understanding", correct: true },
+      { id: 'c', label: "The correct answer that demonstrates understanding", correct: true },  // <-- CRITICAL: correct: true marker
       { id: 'd', label: "Fourth option testing different aspect" },
     ],
     explanation: "Detailed explanation of WHY the answer is correct. Connect it back to what they learned in the experiment. Reinforce the key concept."
@@ -191,38 +212,76 @@ const testQuestions = [
   // ... repeat for all 10 questions with increasing difficulty
 ];
 
+// LOCAL VALIDATION FUNCTION (REQUIRED - avoids Firebase dependency)
+const checkAnswer = (questionIndex: number, selectedId: string): boolean => {
+  const question = testQuestions[questionIndex];
+  const selectedOption = question.options.find(opt => opt.id === selectedId);
+  return selectedOption?.correct === true;
+};
+
 // ═══════════════════════════════════════════════════════════════════════════
-// 4 APPLICATIONS REQUIRED - Use this EXACT comprehensive structure
-// Each application MUST have a detailed SVG diagram (100+ lines)
+// 4 APPLICATIONS REQUIRED - RICH TRANSFER PHASE (Not shallow popups!)
+// Each app is a FULL MODULE with all fields below. Users must complete
+// apps SEQUENTIALLY - App 2 locked until App 1 complete, etc.
 // ═══════════════════════════════════════════════════════════════════════════
 const realWorldApps = [
   {
-    icon: '💻',
-    title: 'Application Name',
-    short: 'Brief 3-word summary',
-    tagline: 'Compelling subtitle that hooks attention',
-    description: '2-3 sentences explaining how the physics concept enables this technology. Be specific about the mechanism.',
-    connection: 'Explicit link to the experiment: "The [concept] you learned demonstrates X. This application uses the same principle to achieve Y..."',
-    howItWorks: 'Technical explanation of the mechanism in 1-2 sentences. Use accessible language.',
+    // IDENTIFICATION
+    icon: '💻',                              // Single emoji for recognition
+    title: 'Application Name',               // 2-4 words (e.g., "Electric Motors")
+    short: 'Brief 3-word summary',           // Compact descriptor (e.g., "Motion from electricity")
+    tagline: 'Compelling subtitle',          // Hook attention (e.g., "Powering the Modern World")
+
+    // CONTENT (All required for rich educational value)
+    description: '2-3 sentences explaining how the physics concept enables this technology. Be specific about the mechanism, not vague.',
+
+    connection: 'Explicit link to the experiment: "The [concept] you explored demonstrates X. In [application], the same principle is used to achieve Y. The key insight is Z..."',
+
+    howItWorks: 'Step-by-step technical explanation using accessible language. Explain the mechanism clearly. 2-4 sentences.',
+
+    // QUANTITATIVE DATA (Required - makes it memorable)
     stats: [
-      { value: '1,000+', label: 'Metric label', icon: '⚡' },
-      { value: '$65B', label: 'Market by 2030', icon: '📈' },
-      { value: '100M×', label: 'Faster/better metric', icon: '🚀' }
+      { value: '1.5 billion', label: 'Electric motors worldwide', icon: '⚡' },
+      { value: '$150B', label: 'Global market by 2030', icon: '📈' },
+      { value: '90%+', label: 'Efficiency achieved', icon: '🎯' }
     ],
+
+    // REAL EXAMPLES (4+ specific, relatable examples)
     examples: [
-      'Industry: Specific example with brief description',
-      'Healthcare: Specific example with brief description',
-      'Research: Specific example with brief description',
-      'Everyday: Specific example with brief description'
+      'Power Tools: Drills, saws, and grinders use DC motors with brushes for high torque at variable speeds',
+      'Electric Vehicles: Tesla motors spin at 18,000 RPM, converting battery power to wheel rotation',
+      'Industrial Automation: Robotic arms in factories use precision DC motors for assembly lines',
+      'Home Appliances: Washing machines, blenders, and vacuum cleaners rely on the same motor principles'
     ],
-    companies: ['Company1', 'Company2', 'Company3', 'Company4', 'Company5'],
-    futureImpact: 'One compelling sentence about future implications that makes the reader excited.',
-    color: colors.primary  // Use colors.primary, colors.success, colors.accent, colors.warning
+
+    // INDUSTRY CONTEXT
+    companies: ['Tesla', 'Siemens', 'ABB', 'Bosch', 'Nidec'],
+
+    // FUTURE/IMPACT (Create excitement about learning this)
+    futureImpact: 'As the world transitions to electric everything, understanding motor physics becomes essential. Your phone, car, and future robot all depend on these principles.',
+
+    // VISUAL STYLING
+    color: colors.primary  // Each app gets unique color: primary, success, accent, warning
   },
-  // App 2: A high-tech/industrial application (use colors.success)
-  // App 3: A natural phenomenon or scientific tool (use colors.accent)
-  // App 4: A future/cutting-edge application or medical use (use colors.warning)
+  // App 2: Industrial/High-tech application (use colors.success)
+  // App 3: Scientific/Medical application (use colors.accent)
+  // App 4: Future/Emerging application (use colors.warning)
 ];
+
+// ═══════════════════════════════════════════════════════════════════════════
+// TRANSFER PHASE STATE (REQUIRED - Sequential Locking Pattern)
+// ═══════════════════════════════════════════════════════════════════════════
+const [currentAppIndex, setCurrentAppIndex] = useState(0);
+const [completedApps, setCompletedApps] = useState<boolean[]>([false, false, false, false]);
+
+// Check if app is accessible (sequential unlock)
+const isAppAccessible = (index: number): boolean => {
+  if (index === 0) return true;  // First app always accessible
+  return completedApps[index - 1]; // Others require previous complete
+};
+
+// Check if test phase is unlocked
+const isTestUnlocked = completedApps.every(c => c);  // All 4 must be complete
 
 // ═══════════════════════════════════════════════════════════════════════════
 // COACH MESSAGES - For AI integration
@@ -784,13 +843,16 @@ const [GameName]Renderer: React.FC<[GameName]RendererProps> = ({ onGameEvent, ga
   // TWIST_PREDICT, TWIST_PLAY, TWIST_REVIEW - Similar structure, different content
   // ... (follow same patterns)
 
-  // TRANSFER Screen - 4 Real-World Applications with completion tracking
+  // ═══════════════════════════════════════════════════════════════════════════
+  // TRANSFER SCREEN - RICH PHASE WITH SEQUENTIAL APP UNLOCK
+  // This is NOT a popup carousel - each app is a FULL educational module
+  // ═══════════════════════════════════════════════════════════════════════════
   if (phase === 'transfer') {
     const currentApp = realWorldApps[selectedApp];
     const allCompleted = completedApps.every(c => c);
-    const isCurrentCompleted = completedApps[selectedApp];
     const completedCount = completedApps.filter(c => c).length;
 
+    // Handler for completing current app and advancing
     const handleCompleteApp = () => {
       const newCompleted = [...completedApps];
       newCompleted[selectedApp] = true;
@@ -804,6 +866,7 @@ const [GameName]Renderer: React.FC<[GameName]RendererProps> = ({ onGameEvent, ga
         message: `Completed application ${selectedApp + 1}: ${currentApp.title}`
       });
 
+      // Auto-advance to next locked app
       if (selectedApp < 3) {
         setSelectedApp(selectedApp + 1);
       }
@@ -812,12 +875,14 @@ const [GameName]Renderer: React.FC<[GameName]RendererProps> = ({ onGameEvent, ga
     return (
       <PremiumWrapper>
         <div className="flex flex-col h-full overflow-hidden">
-          {/* Compact header with tabs */}
+          {/* Header with sequential progress indicator */}
           <div className="px-4 pt-4 pb-2" style={{ background: colors.bgCard, borderBottom: `1px solid ${colors.border}` }}>
             <div className="flex items-center justify-between mb-3">
               <div>
                 <p className="text-xs font-bold uppercase tracking-widest" style={{ color: colors.success }}>Step 7 • Real World Applications</p>
-                <p className="text-xs mt-1" style={{ color: colors.textMuted }}>{completedCount}/4 completed — {allCompleted ? 'Ready for test!' : 'Complete all to unlock test'}</p>
+                <p className="text-xs mt-1" style={{ color: colors.textMuted }}>
+                  {completedCount}/4 completed — {allCompleted ? 'Ready for test!' : 'Complete all to unlock test'}
+                </p>
               </div>
               <div className="flex gap-1.5">
                 {completedApps.map((completed, i) => (
@@ -829,11 +894,12 @@ const [GameName]Renderer: React.FC<[GameName]RendererProps> = ({ onGameEvent, ga
               </div>
             </div>
 
-            {/* Tab buttons */}
+            {/* Tab buttons with LOCKING - users CANNOT skip ahead */}
             <div className="flex gap-2">
               {realWorldApps.map((app, i) => {
                 const isCompleted = completedApps[i];
                 const isCurrent = selectedApp === i;
+                // CRITICAL: Sequential locking - can only access if previous is complete
                 const isLocked = i > 0 && !completedApps[i - 1] && !isCompleted;
 
                 return (
@@ -865,17 +931,81 @@ const [GameName]Renderer: React.FC<[GameName]RendererProps> = ({ onGameEvent, ga
             </div>
           </div>
 
-          {/* Main content - CUSTOMIZE with detailed SVG for each app */}
+          {/* ═══════════════════════════════════════════════════════════════════
+              RICH APPLICATION CONTENT - This is the key differentiator!
+              Each app shows: hero, stats, diagram, examples, complete button
+          ═══════════════════════════════════════════════════════════════════ */}
           <div className="flex-1 overflow-y-auto p-4">
-            {/* Rich application content with:
-                - Hero header with icon, title, tagline
-                - Description and stats
-                - LARGE DETAILED SVG DIAGRAM (100+ lines showing the physics principle in action)
-                - Examples and companies
-                - Complete button
-            */}
+            {/* Hero header with icon, title, tagline */}
+            <div className="text-center mb-6">
+              <div className="text-5xl mb-3">{currentApp.icon}</div>
+              <h2 className="text-2xl font-bold" style={{ color: colors.textPrimary }}>{currentApp.title}</h2>
+              <p className="text-sm" style={{ color: currentApp.color }}>{currentApp.tagline}</p>
+            </div>
+
+            {/* Description and physics connection */}
+            <div className="p-4 rounded-xl mb-4" style={{ background: `${currentApp.color}15`, border: `1px solid ${currentApp.color}30` }}>
+              <p className="text-sm" style={{ color: colors.textSecondary }}>{currentApp.description}</p>
+              <p className="text-sm mt-3 font-medium" style={{ color: currentApp.color }}>{currentApp.connection}</p>
+            </div>
+
+            {/* Stats grid (3 columns) */}
+            <div className="grid grid-cols-3 gap-3 mb-4">
+              {currentApp.stats.map((stat, i) => (
+                <div key={i} className="text-center p-3 rounded-lg" style={{ background: colors.bgCard }}>
+                  <p className="text-lg">{stat.icon}</p>
+                  <p className="text-lg font-bold" style={{ color: colors.textPrimary }}>{stat.value}</p>
+                  <p className="text-xs" style={{ color: colors.textMuted }}>{stat.label}</p>
+                </div>
+              ))}
+            </div>
+
+            {/* DETAILED SVG DIAGRAM - REQUIRED (100+ lines showing physics in action) */}
+            <div className="p-4 rounded-xl mb-4" style={{ background: colors.bgCard }}>
+              <p className="text-xs font-bold uppercase tracking-widest mb-3" style={{ color: colors.textMuted }}>
+                How It Works
+              </p>
+              <svg viewBox="0 0 600 320" className="w-full" style={{ maxHeight: '340px' }}>
+                {/* CUSTOMIZE: Detailed diagram for each application */}
+                {/* Show the physics principle applied to this real-world use */}
+              </svg>
+              <p className="text-sm mt-3" style={{ color: colors.textSecondary }}>{currentApp.howItWorks}</p>
+            </div>
+
+            {/* Real examples list */}
+            <div className="mb-4">
+              <p className="text-xs font-bold uppercase tracking-widest mb-2" style={{ color: colors.textMuted }}>Real Examples</p>
+              <div className="space-y-2">
+                {currentApp.examples.map((example, i) => (
+                  <div key={i} className="flex items-start gap-2 p-2 rounded" style={{ background: colors.bgCard }}>
+                    <span style={{ color: colors.success }}>✓</span>
+                    <p className="text-sm" style={{ color: colors.textSecondary }}>{example}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Companies and future impact */}
+            <div className="text-center mb-4">
+              <p className="text-xs" style={{ color: colors.textMuted }}>
+                Industry Leaders: {currentApp.companies.join(' • ')}
+              </p>
+              <p className="text-sm mt-2 italic" style={{ color: colors.textSecondary }}>{currentApp.futureImpact}</p>
+            </div>
+
+            {/* Complete button (marks this app as done) */}
+            {!completedApps[selectedApp] && (
+              <button
+                onMouseDown={handleCompleteApp}
+                className="w-full py-4 rounded-xl font-bold text-white"
+                style={{ background: `linear-gradient(135deg, ${currentApp.color} 0%, ${colors.accent} 100%)` }}
+              >
+                Got It! Continue →
+              </button>
+            )}
           </div>
 
+          {/* Bottom bar - only enable "Knowledge Test" when all 4 complete */}
           {renderBottomBar(true, allCompleted, "Knowledge Test", undefined, colors.success)}
         </div>
       </PremiumWrapper>
@@ -1078,21 +1208,33 @@ export default [GameName]Renderer;
 - [ ] Cast OscillatorType correctly: `'sine' as OscillatorType`
 - [ ] Wrap in try/catch for audio context errors
 
-### Test Phase (MUST HAVE)
+### Test Phase (MUST HAVE - LOCAL VALIDATION)
 - [ ] Exactly 10 questions with SCENARIO + QUESTION + OPTIONS + EXPLANATION
-- [ ] Each option has `{ id: string, label: string, correct?: boolean }`
+- [ ] **LOCAL VALIDATION**: Each option has `{ id: string, label: string, correct?: boolean }`
+- [ ] Correct answer marked with `correct: true` on the option object
+- [ ] NO Firebase dependency - validation happens entirely client-side
 - [ ] `testAnswers` initialized as `Array(10).fill(null)`
 - [ ] 70% passing threshold (7/10)
-- [ ] Show explanation after test completion
+- [ ] Show explanation after EACH question answered (immediate feedback)
 - [ ] Visual progress dots showing answered/current/unanswered
+- [ ] Questions use scenario format for context
 
-### Transfer Phase (MUST HAVE)
-- [ ] Exactly 4 applications with FULL structure (title, short, tagline, description, connection, howItWorks, stats[], examples[], companies[], futureImpact, color)
-- [ ] Tabbed interface with completion tracking
+### Transfer Phase (MUST HAVE - RICH MODULE PATTERN)
+- [ ] Exactly 4 applications with FULL structure (ALL 11 fields required):
+      - icon, title, short, tagline, description, connection, howItWorks
+      - stats[] (3+ with value, label, icon)
+      - examples[] (4+ specific real-world examples)
+      - companies[] (5 industry leaders)
+      - futureImpact, color
+- [ ] Tabbed interface with completion tracking and VISUAL LOCK INDICATORS
 - [ ] `completedApps` as `boolean[]` with useState
-- [ ] Sequential unlock: Must complete app N before seeing N+1
-- [ ] Must complete ALL 4 to unlock test
-- [ ] EACH APP HAS DETAILED SVG DIAGRAM (100+ lines showing the physics in action)
+- [ ] **SEQUENTIAL UNLOCK**: App N locked until App N-1 complete (🔒 icon shown)
+- [ ] **ALL 4 REQUIRED**: Test phase button disabled until all complete
+- [ ] EACH APP HAS DETAILED SVG DIAGRAM (100+ lines showing physics in action)
+- [ ] Hero header with icon, title, tagline for each app
+- [ ] Stats grid (3 columns) with icons
+- [ ] Real examples list with checkmarks
+- [ ] "Got It! Continue →" button advances to next app
 
 ### Graphics (MUST HAVE)
 - [ ] All graphics use SVG with viewBox

@@ -91,21 +91,33 @@ useEffect(() => {
 }, []);
 ```
 
-### 5. PREMIUM COLOR PALETTE (Use This Exact Structure)
+### 5. PREMIUM DARK THEME COLOR PALETTE (REQUIRED)
 ```typescript
+// Dark theme matching Wave Particle Duality gold standard
 const colors = {
-   primary: '#COLOR',      // Main brand color (e.g., #06b6d4 cyan, #a855f7 purple, #f59e0b amber)
-   primaryDark: '#COLOR',  // Darker shade
-   accent: '#COLOR',       // Secondary accent
-   success: '#10b981',     // Always emerald-500
-   danger: '#ef4444',      // Always red-500
-   bgDark: '#020617',      // Always slate-950
-   bgCard: '#0f172a',      // Always slate-900
-   bgCardLight: '#1e293b', // Always slate-800
-   border: '#334155',      // Always slate-700
-   textPrimary: '#f8fafc', // Always slate-50
-   textSecondary: '#94a3b8', // Always slate-400
-   textMuted: '#64748b'    // Always slate-500
+   // Backgrounds
+   bgDark: '#0f172a',           // slate-900 - primary dark background
+   bgCard: '#1e293b',           // slate-800 - card backgrounds
+   bgGradientStart: '#1e1b4b',  // indigo-950 - gradient start
+   bgGradientEnd: '#0f172a',    // slate-900 - gradient end
+
+   // Brand (customize primary per game theme)
+   primary: '#6366f1',          // indigo-500 - main brand color
+   primaryDark: '#4f46e5',      // indigo-600 - darker shade
+   accent: '#8b5cf6',           // violet-500 - secondary accent
+
+   // Semantic
+   success: '#22c55e',          // green-500 - correct/complete
+   warning: '#f59e0b',          // amber-500 - caution/info
+   danger: '#ef4444',           // red-500 - incorrect/error
+
+   // Text (dark theme)
+   textPrimary: '#f8fafc',      // slate-50 - primary text (white)
+   textSecondary: '#cbd5e1',    // slate-300 - secondary text
+   textMuted: '#64748b',        // slate-500 - muted/disabled
+
+   // Borders
+   border: '#334155',           // slate-700
 };
 ```
 
@@ -158,44 +170,64 @@ const renderBottomBar = (canGoBack: boolean, canGoNext: boolean, nextLabel: stri
 - ALL buttons MUST have `minHeight: '48px'` for touch targets
 - NEVER use `onClick` directly without the wrapper
 
-### 8. TEST QUESTIONS SCHEMA (Exactly 10 Questions)
+### 8. TEST QUESTIONS SCHEMA (Exactly 10 - LOCAL VALIDATION)
 ```typescript
+// CRITICAL: Use `correct: true` marker - NO Firebase dependency!
 const testQuestions = [
    {
       scenario: "A real-world context setting up the question (1-2 sentences)",
       question: "The actual question being asked?",
       options: [
-         "First option text",
-         "Second option text",
-         "Third option text (correct answer)",
-         "Fourth option text"
+         { id: 'a', label: "First option text" },
+         { id: 'b', label: "Second option text" },
+         { id: 'c', label: "Third option text (correct)", correct: true }, // <-- REQUIRED
+         { id: 'd', label: "Fourth option text" },
       ],
-      correct: 2, // Index of correct answer (0-3)
-      explanation: "Why this answer is correct and what the learner should understand (2-3 sentences)"
+      explanation: "Why this answer is correct and what the learner should understand"
    },
    // ... 9 more questions with increasing difficulty
 ];
+
+// LOCAL VALIDATION (no Firebase)
+const checkAnswer = (qIndex: number, selectedId: string): boolean => {
+   return testQuestions[qIndex].options.find(o => o.id === selectedId)?.correct === true;
+};
 ```
 
-### 9. REAL-WORLD APPLICATIONS SCHEMA (Exactly 4 Applications)
+### 9. REAL-WORLD APPLICATIONS SCHEMA (Exactly 4 - RICH TRANSFER PHASE)
 ```typescript
-const realWorldApps = {
-   app_1: {
-      icon: '📷',                    // Single emoji
-      title: 'Application Title',     // 2-4 words
-      tagline: 'Catchy Tagline',      // 3-5 words
-      color: '#3b82f6',               // Unique color for this app
-      description: 'Detailed description of how this technology works (2-3 sentences).',
+// CRITICAL: Apps unlock SEQUENTIALLY - user cannot skip ahead!
+const realWorldApps = [
+   {
+      icon: '📷',                              // Single emoji
+      title: 'Application Title',              // 2-4 words
+      short: 'Brief summary',                  // 3-word compact descriptor
+      tagline: 'Catchy Tagline',               // Compelling hook
+      color: '#6366f1',                        // Unique color (primary/success/accent/warning)
+      description: 'Detailed description of how the physics enables this technology (2-3 sentences).',
+      connection: 'Explicit link: "The [concept] you explored demonstrates X. This app uses the same principle to..."',
+      howItWorks: 'Step-by-step technical explanation in accessible language.',
       stats: [
-         { value: '99%', label: 'Stat Label', icon: '💡' },
-         { value: '$8B', label: 'Market size', icon: '💰' },
-         { value: '50+', label: 'Metric', icon: '📊' }
+         { value: '1B+', label: 'Metric label', icon: '⚡' },
+         { value: '$50B', label: 'Market value', icon: '📈' },
+         { value: '90%+', label: 'Efficiency', icon: '🎯' }
       ],
-      connection: 'How this application directly connects to the physics concept being taught (1-2 sentences).',
-      examples: ['Example 1', 'Example 2', 'Example 3', 'Example 4']
+      examples: [
+         'Industry: Specific example with description',
+         'Healthcare: Specific example with description',
+         'Research: Specific example with description',
+         'Everyday: Specific example with description'
+      ],
+      companies: ['Company1', 'Company2', 'Company3', 'Company4', 'Company5'],
+      futureImpact: 'One compelling sentence about future implications.'
    },
-   // app_2, app_3, app_4 with same structure
-};
+   // app_2 (success color), app_3 (accent color), app_4 (warning color)
+];
+
+// SEQUENTIAL UNLOCK STATE
+const [completedApps, setCompletedApps] = useState<boolean[]>([false, false, false, false]);
+const isAppLocked = (i: number) => i > 0 && !completedApps[i - 1];
+const isTestUnlocked = completedApps.every(c => c); // All 4 required
 ```
 
 ### 10. INTERACTIVE SVG VISUALIZATION TEMPLATE
@@ -454,17 +486,30 @@ if (phase === 'mastery') {
 
 ## CHECKLIST BEFORE SUBMISSION
 
-- [ ] 12 phases defined with proper type
+### Core Requirements
+- [ ] 10 phases defined with proper type (hook through mastery)
 - [ ] `handleButtonClick` wrapper implemented and used on ALL buttons
 - [ ] `hasEmittedStartRef` used for game_started emission
-- [ ] Color palette object with all required properties
+- [ ] **Dark theme color palette** (bgDark: #0f172a, bgCard: #1e293b)
 - [ ] `isMobile` responsive state implemented
 - [ ] `renderProgressBar()` and `renderBottomBar()` as functions (NOT components)
-- [ ] 10 test questions with scenario, question, options, correct index, explanation
-- [ ] 4 real-world applications with icon, title, tagline, color, description, stats, connection, examples
-- [ ] Interactive SVG visualization for each application
 - [ ] All buttons have `type="button"` and `minHeight: '48px'`
 - [ ] `playSound()` called on user interactions
+
+### Test Phase (LOCAL VALIDATION - NO FIREBASE)
+- [ ] 10 test questions with scenario, question, options, explanation
+- [ ] **`correct: true` marker on correct option** (not index-based)
+- [ ] Local validation function (no Firebase calls)
+- [ ] Immediate feedback after each answer
+
+### Transfer Phase (RICH MODULES with SEQUENTIAL LOCK)
+- [ ] 4 real-world applications with ALL 11 fields
+- [ ] **SEQUENTIAL UNLOCK**: App N locked until App N-1 complete (🔒 icon)
+- [ ] All 4 required before test phase unlocks
+- [ ] Interactive SVG diagram for each application (100+ lines)
+- [ ] Hero header, stats grid, examples, "Got It!" button per app
+
+### Polish
 - [ ] Confetti effect on mastery phase
 - [ ] Phase labels object defined
 - [ ] `goToPhase` function with event emission

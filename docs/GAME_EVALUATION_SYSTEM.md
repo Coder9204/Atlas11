@@ -30,7 +30,8 @@
 | **B.5 Slider UX** | Sliders are the PRIMARY interaction method. Laggy, confusing, or unclear sliders destroy the learning experience. |
 | **B.6 Visual Clarity & Layout** | If users can't instantly understand WHAT they're looking at, WHERE to focus, and WHAT to adjust, the simulation fails before they even start. Text over graphics, crowded layouts, and unclear hierarchy make learning impossible. |
 | **D.4 Zoom & Scale** | Users should NEVER need to manually zoom to see content. Content must be readable at default zoom on all devices. |
-| **H. Transfer Phase Richness** | Real-world applications must be DETAILED with diagrams, statistics, and examples - not shallow text-only summaries. |
+| **H. Transfer Phase Richness** | Real-world applications must be DETAILED with diagrams, statistics, and examples - not shallow text-only summaries. Apps must unlock SEQUENTIALLY (🔒 locked apps). All 4 required before test unlocks. |
+| **I. Local Answer Validation** | Test questions use `correct: true` marker on options. NO Firebase dependency. Validation happens client-side. |
 
 ---
 
@@ -1208,9 +1209,11 @@ Evaluate each of the 10 phases individually.
 | Criteria | Present? | Notes |
 |----------|----------|-------|
 | 4 distinct applications | ☐ | |
-| Applications unlock sequentially | ☐ | |
-| "Continue" at end of each app | ☐ | |
-| All 4 required before test | ☐ | |
+| Applications unlock SEQUENTIALLY with visual 🔒 lock | ☐ | |
+| App N locked until App N-1 is marked complete | ☐ | |
+| "Got It! Continue →" button at end of each app | ☐ | |
+| All 4 REQUIRED before test phase unlocks | ☐ | |
+| Test phase button shows disabled state until all complete | ☐ | |
 
 #### Per-Application Quality Evaluation (Score each application 0-50)
 
@@ -1373,16 +1376,45 @@ For EACH application, verify these elements exist:
 Missing: diagram, stats, how it works, examples, why it matters
 ```
 
-### PHASE 9: TEST (10 Questions)
+### PHASE 9: TEST (10 Questions) - LOCAL VALIDATION REQUIRED
+
+> **CRITICAL**: Test phase must use LOCAL answer validation with `correct: true` markers.
+> NO Firebase dependency - this avoids initialization errors and works offline.
 
 | Criteria | Present? | Quality (1-5) | Notes |
 |----------|----------|---------------|-------|
 | Exactly 10 questions | ☐ | | |
+| **LOCAL VALIDATION**: `correct: true` marker on correct option | ☐ | | |
+| NO Firebase/server calls for answer checking | ☐ | | |
 | Questions test understanding (not memorization) | ☐ | | |
-| Clear correct/incorrect feedback | ☐ | | |
+| Clear correct/incorrect feedback (immediate) | ☐ | | |
 | Score tracked and displayed | ☐ | | |
 | Questions cover both graphics | ☐ | | |
 | 70% threshold for pass | ☐ | | |
+
+#### Question Structure (REQUIRED FORMAT)
+
+```typescript
+const testQuestions = [
+  {
+    scenario: "Real-world context...",
+    question: "What happens when...?",
+    options: [
+      { id: 'a', label: "Wrong answer (common misconception)" },
+      { id: 'b', label: "Correct answer", correct: true },  // <-- REQUIRED marker
+      { id: 'c', label: "Wrong answer" },
+      { id: 'd', label: "Wrong answer" },
+    ],
+    explanation: "Why B is correct..."
+  },
+  // ... 9 more questions
+];
+
+// LOCAL VALIDATION (no Firebase)
+const checkAnswer = (qIndex: number, selectedId: string): boolean => {
+  return testQuestions[qIndex].options.find(o => o.id === selectedId)?.correct === true;
+};
+```
 
 ### PHASE 10: MASTERY
 

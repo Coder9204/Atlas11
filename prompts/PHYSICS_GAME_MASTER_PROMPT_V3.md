@@ -218,43 +218,78 @@ export default function YourGameRenderer({
   );
 
   // --------------------------------------------------------
-  // TEST QUESTIONS (CUSTOMIZE - EXACTLY 10)
+  // TEST QUESTIONS (EXACTLY 10 - LOCAL VALIDATION PATTERN)
+  // CRITICAL: Use `correct: true` marker - NO Firebase dependency!
   // --------------------------------------------------------
   const testQuestions = [
     {
-      question: "Question 1?",
-      options: ["A", "B", "C", "D"],
-      correct: 0,
-      explanation: "Explanation here."
+      scenario: "Real-world context that sets up the question.",
+      question: "Clear question about the physics concept?",
+      options: [
+        { id: 'a', label: "Wrong answer (common misconception)" },
+        { id: 'b', label: "Another plausible wrong answer" },
+        { id: 'c', label: "The correct answer", correct: true }, // <-- REQUIRED marker
+        { id: 'd', label: "Fourth option" },
+      ],
+      explanation: "Detailed explanation of WHY the answer is correct."
     },
-    // ... 9 more questions
+    // ... 9 more questions with increasing difficulty
+    // Q1-3: Basic recall
+    // Q4-6: Apply concept
+    // Q7-8: Compare scenarios (reference transfer apps)
+    // Q9-10: Advanced synthesis
   ];
 
+  // LOCAL VALIDATION FUNCTION (no Firebase dependency)
+  const checkAnswer = (qIndex: number, selectedId: string): boolean => {
+    const opt = testQuestions[qIndex].options.find(o => o.id === selectedId);
+    return opt?.correct === true;
+  };
+
   // --------------------------------------------------------
-  // REAL-WORLD APPLICATIONS (EXACTLY 4)
+  // REAL-WORLD APPLICATIONS (EXACTLY 4 - RICH TRANSFER PHASE)
+  // Apps unlock SEQUENTIALLY - user cannot skip ahead
   // --------------------------------------------------------
   const applications = [
     {
+      icon: "🎯",
       title: "Application 1",
-      description: "Description of how this uses the physics concept.",
-      icon: "🎯"
+      short: "Brief 3-word summary",
+      tagline: "Compelling hook subtitle",
+      description: "2-3 sentences explaining how the physics concept enables this technology.",
+      connection: "The [concept] you explored demonstrates X. This application uses the same principle to...",
+      howItWorks: "Step-by-step technical explanation in accessible language.",
+      stats: [
+        { value: "1B+", label: "Metric label", icon: "⚡" },
+        { value: "$50B", label: "Market value", icon: "📈" },
+        { value: "90%+", label: "Efficiency", icon: "🎯" }
+      ],
+      examples: [
+        "Industry: Specific example with brief description",
+        "Healthcare: Specific example with brief description",
+        "Research: Specific example with brief description",
+        "Everyday: Specific example with brief description"
+      ],
+      companies: ["Company1", "Company2", "Company3", "Company4", "Company5"],
+      futureImpact: "One compelling sentence about future implications.",
+      color: "#6366f1" // primary
     },
-    {
-      title: "Application 2",
-      description: "Description.",
-      icon: "💡"
-    },
-    {
-      title: "Application 3",
-      description: "Description.",
-      icon: "🔬"
-    },
-    {
-      title: "Application 4",
-      description: "Description.",
-      icon: "🌍"
-    }
+    // App 2 (success color), App 3 (accent color), App 4 (warning color)
+    // ... 3 more applications with same structure
   ];
+
+  // SEQUENTIAL UNLOCK STATE
+  const [currentAppIndex, setCurrentAppIndex] = useState(0);
+  const [completedApps, setCompletedApps] = useState<boolean[]>([false, false, false, false]);
+
+  // Check if app is accessible (previous must be complete)
+  const isAppLocked = (index: number): boolean => {
+    if (index === 0) return false;
+    return !completedApps[index - 1];
+  };
+
+  // Test phase only unlocks when ALL 4 apps complete
+  const isTestUnlocked = completedApps.every(c => c);
 
   // --------------------------------------------------------
   // TEST SUBMISSION
@@ -512,82 +547,143 @@ export default function YourGameRenderer({
     </div>
   );
 
-  // TRANSFER PHASE (4 apps in single phase)
-  const renderTransfer = () => (
-    <div className="p-6 max-w-2xl mx-auto">
-      <h2 className="text-xl font-bold text-gray-800 mb-4">
-        Real-World Applications
-      </h2>
+  // ═══════════════════════════════════════════════════════════════════════════
+  // TRANSFER PHASE - RICH MODULES with SEQUENTIAL LOCKING
+  // NOT a simple popup carousel - each app is a FULL educational experience
+  // ═══════════════════════════════════════════════════════════════════════════
+  const renderTransfer = () => {
+    const currentAppData = applications[currentAppIndex];
+    const completedCount = completedApps.filter(c => c).length;
+    const allComplete = completedApps.every(c => c);
 
-      <div className="space-y-4">
-        {applications.map((app, index) => (
-          <div
-            key={index}
-            className={`p-4 rounded-lg border-2 transition-all cursor-pointer ${
-              completedApps.has(index)
-                ? "bg-green-50 border-green-300"
-                : currentApp === index
-                ? "bg-blue-50 border-blue-400"
-                : "bg-white border-gray-200 hover:border-blue-300"
-            }`}
-            onMouseDown={() => {
-              if (!completedApps.has(index)) {
-                setCurrentApp(index);
-                playSound("click");
-              }
-            }}
-          >
-            <div className="flex items-start gap-3">
-              <span className="text-3xl">{app.icon}</span>
-              <div className="flex-1">
-                <div className="flex items-center gap-2">
-                  <h3 className="font-bold text-gray-800">{app.title}</h3>
-                  {completedApps.has(index) && (
-                    <span className="text-green-500">✓</span>
-                  )}
-                </div>
-                {(currentApp === index || completedApps.has(index)) && (
-                  <p className="text-gray-600 text-sm mt-2">{app.description}</p>
-                )}
-              </div>
+    return (
+      <div className="flex flex-col h-full" style={{ background: '#0f172a' }}>
+        {/* Header with progress and tabs */}
+        <div className="p-4 border-b" style={{ borderColor: '#334155', background: '#1e293b' }}>
+          <div className="flex justify-between items-center mb-3">
+            <div>
+              <p className="text-xs font-bold uppercase tracking-widest" style={{ color: '#22c55e' }}>
+                Real World Applications
+              </p>
+              <p className="text-xs mt-1" style={{ color: '#64748b' }}>
+                {completedCount}/4 completed — {allComplete ? 'Ready for test!' : 'Complete all to continue'}
+              </p>
             </div>
-
-            {currentApp === index && !completedApps.has(index) && (
-              <button
-                onMouseDown={(e) => {
-                  e.stopPropagation();
-                  const newCompleted = new Set(completedApps);
-                  newCompleted.add(index);
-                  setCompletedApps(newCompleted);
-                  playSound("success");
-
-                  // Auto-advance to next incomplete app
-                  if (newCompleted.size < applications.length) {
-                    const nextIncomplete = applications.findIndex(
-                      (_, i) => !newCompleted.has(i)
-                    );
-                    setCurrentApp(nextIncomplete);
-                  }
-                }}
-                className="mt-3 w-full py-2 bg-blue-500 text-white rounded-lg font-medium hover:bg-blue-600"
-              >
-                Got It! ✓
-              </button>
-            )}
           </div>
-        ))}
-      </div>
 
-      {completedApps.size === applications.length && (
-        <button
-          onMouseDown={() => goToPhase("test")}
-          className="w-full mt-6 px-6 py-3 bg-gradient-to-r from-green-500 to-teal-500 text-white rounded-lg font-semibold shadow-lg"
-        >
-          Take the Quiz →
-        </button>
-      )}
-    </div>
-  );
+          {/* Tab buttons with LOCKING */}
+          <div className="flex gap-2">
+            {applications.map((app, i) => {
+              const isComplete = completedApps[i];
+              const isCurrent = currentAppIndex === i;
+              const isLocked = isAppLocked(i);
+
+              return (
+                <button
+                  key={i}
+                  onMouseDown={() => !isLocked && setCurrentAppIndex(i)}
+                  className="flex-1 py-2 rounded-lg text-center transition-all flex items-center justify-center gap-1"
+                  style={{
+                    background: isCurrent ? `${app.color}20` : 'transparent',
+                    border: `2px solid ${isCurrent ? app.color : isComplete ? '#22c55e' : '#334155'}`,
+                    opacity: isLocked ? 0.4 : 1,
+                    cursor: isLocked ? 'not-allowed' : 'pointer'
+                  }}
+                >
+                  <span>{app.icon}</span>
+                  {isComplete && <span style={{ color: '#22c55e' }}>✓</span>}
+                  {isLocked && <span>🔒</span>}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Rich app content */}
+        <div className="flex-1 overflow-y-auto p-4">
+          {/* Hero */}
+          <div className="text-center mb-6">
+            <div className="text-5xl mb-3">{currentAppData.icon}</div>
+            <h2 className="text-2xl font-bold" style={{ color: '#f8fafc' }}>{currentAppData.title}</h2>
+            <p className="text-sm" style={{ color: currentAppData.color }}>{currentAppData.tagline}</p>
+          </div>
+
+          {/* Description + Connection */}
+          <div className="p-4 rounded-xl mb-4" style={{ background: `${currentAppData.color}15`, border: `1px solid ${currentAppData.color}30` }}>
+            <p className="text-sm" style={{ color: '#cbd5e1' }}>{currentAppData.description}</p>
+            <p className="text-sm mt-3 font-medium" style={{ color: currentAppData.color }}>{currentAppData.connection}</p>
+          </div>
+
+          {/* Stats grid */}
+          <div className="grid grid-cols-3 gap-3 mb-4">
+            {currentAppData.stats.map((stat, i) => (
+              <div key={i} className="text-center p-3 rounded-lg" style={{ background: '#1e293b' }}>
+                <p className="text-lg">{stat.icon}</p>
+                <p className="text-lg font-bold" style={{ color: '#f8fafc' }}>{stat.value}</p>
+                <p className="text-xs" style={{ color: '#64748b' }}>{stat.label}</p>
+              </div>
+            ))}
+          </div>
+
+          {/* How it works + Diagram placeholder */}
+          <div className="p-4 rounded-xl mb-4" style={{ background: '#1e293b' }}>
+            <p className="text-xs font-bold uppercase mb-2" style={{ color: '#64748b' }}>How It Works</p>
+            <p className="text-sm" style={{ color: '#cbd5e1' }}>{currentAppData.howItWorks}</p>
+            {/* SVG DIAGRAM goes here (100+ lines) */}
+          </div>
+
+          {/* Examples */}
+          <div className="mb-4">
+            <p className="text-xs font-bold uppercase mb-2" style={{ color: '#64748b' }}>Real Examples</p>
+            {currentAppData.examples.map((ex, i) => (
+              <div key={i} className="flex items-start gap-2 p-2 rounded mb-1" style={{ background: '#1e293b' }}>
+                <span style={{ color: '#22c55e' }}>✓</span>
+                <p className="text-sm" style={{ color: '#cbd5e1' }}>{ex}</p>
+              </div>
+            ))}
+          </div>
+
+          {/* Companies + Impact */}
+          <div className="text-center mb-4">
+            <p className="text-xs" style={{ color: '#64748b' }}>
+              Industry Leaders: {currentAppData.companies.join(' • ')}
+            </p>
+            <p className="text-sm mt-2 italic" style={{ color: '#cbd5e1' }}>{currentAppData.futureImpact}</p>
+          </div>
+
+          {/* Complete button */}
+          {!completedApps[currentAppIndex] && (
+            <button
+              onMouseDown={() => {
+                const newCompleted = [...completedApps];
+                newCompleted[currentAppIndex] = true;
+                setCompletedApps(newCompleted);
+                playSound("success");
+                if (currentAppIndex < 3) setCurrentAppIndex(currentAppIndex + 1);
+              }}
+              className="w-full py-4 rounded-xl font-bold text-white"
+              style={{ background: `linear-gradient(135deg, ${currentAppData.color} 0%, #8b5cf6 100%)` }}
+            >
+              Got It! Continue →
+            </button>
+          )}
+        </div>
+
+        {/* Bottom bar - test only unlocks when ALL complete */}
+        {allComplete && (
+          <div className="p-4 border-t" style={{ borderColor: '#334155', background: '#1e293b' }}>
+            <button
+              onMouseDown={() => goToPhase("test")}
+              className="w-full py-3 rounded-lg font-bold text-white"
+              style={{ background: 'linear-gradient(135deg, #22c55e 0%, #14b8a6 100%)' }}
+            >
+              Take the Knowledge Test →
+            </button>
+          </div>
+        )}
+      </div>
+    );
+  };
 
   // TEST PHASE
   const renderTest = () => (
@@ -936,15 +1032,30 @@ Each application needs:
 
 Before considering a game complete:
 
+### Core Requirements
 - [ ] 10 phases defined correctly
 - [ ] `onMouseDown` used on ALL buttons
 - [ ] `navigationLockRef` prevents double-clicks
 - [ ] `playSound()` called on user interactions
-- [ ] 10 test questions with explanations
-- [ ] 4 real-world applications
-- [ ] `completedApps` Set for transfer phase
-- [ ] Interactive SVG visualization
-- [ ] Confetti on mastery phase
-- [ ] Progress bar shows correct phase
+- [ ] Dark theme color palette (bgDark: #0f172a, bgCard: #1e293b)
 - [ ] Mobile responsive (`isMobile` state)
 - [ ] Build succeeds without errors
+
+### Test Phase (LOCAL VALIDATION)
+- [ ] 10 test questions with scenario + explanation
+- [ ] **`correct: true` marker on correct option** (NO Firebase!)
+- [ ] Immediate feedback after each answer
+- [ ] 70% pass threshold
+
+### Transfer Phase (RICH MODULES)
+- [ ] 4 real-world applications with FULL structure (11 fields each)
+- [ ] **SEQUENTIAL LOCKING**: App N locked until App N-1 complete (🔒 icon)
+- [ ] All 4 required before test phase unlocks
+- [ ] Hero header, stats grid, examples, complete button per app
+- [ ] `completedApps` as `boolean[]` for tracking
+
+### Visual Polish
+- [ ] Interactive SVG visualization (100+ lines per transfer app)
+- [ ] Confetti on mastery phase
+- [ ] Progress bar shows correct phase
+- [ ] Premium gradients on buttons and headers
