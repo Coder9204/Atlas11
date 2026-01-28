@@ -32,6 +32,41 @@
 | **D.4 Zoom & Scale** | Users should NEVER need to manually zoom to see content. Content must be readable at default zoom on all devices. |
 | **H. Transfer Phase Richness** | Real-world applications must be DETAILED with diagrams, statistics, and examples - not shallow text-only summaries. Apps must unlock SEQUENTIALLY (🔒 locked apps). All 4 required before test unlocks. |
 | **I. Local Answer Validation** | Test questions use `correct: true` marker on options. NO Firebase dependency. Validation happens client-side. |
+| **J. Navigation Accessibility** | EVERY phase MUST have a clearly visible, always-accessible navigation button. Sticky footer required. Users must NEVER be stuck without a way to proceed. |
+
+---
+
+### J. Navigation Accessibility (CRITICAL - 100% Required)
+
+> **Users must NEVER get stuck.** Every phase needs a clear, visible, accessible way to proceed.
+
+| # | Criteria | Pass/Fail | Notes |
+|---|----------|-----------|-------|
+| J.1 | Bottom bar is STICKY (position: sticky, bottom: 0) | | |
+| J.2 | Bottom bar has minHeight: 72px | | |
+| J.3 | Bottom bar has z-index: 100+ | | |
+| J.4 | Bottom bar has shadow for visibility | | |
+| J.5 | Next button has minHeight: 52px, minWidth: 160px | | |
+| J.6 | When no selection made, show "Select an option above" hint | | |
+| J.7 | Button text clearly describes next action | | |
+| J.8 | Back button always visible (except hook phase) | | |
+
+#### Required Bottom Bar Pattern:
+```typescript
+const renderBottomBar = (...) => (
+  <div style={{
+    position: 'sticky',
+    bottom: 0,
+    zIndex: 100,
+    minHeight: '72px',
+    boxShadow: '0 -4px 20px rgba(0,0,0,0.3)',
+    // ... rest of styles
+  }}>
+    {/* Back button */}
+    {/* Next button OR "Select an option" hint */}
+  </div>
+);
+```
 
 ---
 

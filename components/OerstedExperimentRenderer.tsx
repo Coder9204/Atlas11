@@ -720,14 +720,23 @@ const OerstedExperimentRenderer: React.FC<OerstedExperimentRendererProps> = ({
   // RENDER FUNCTIONS (Phases)
   // ============================================================
 
+  // CRITICAL: Bottom bar must ALWAYS be visible and accessible
+  // This is a sticky footer that stays at the bottom of the viewport
   const renderBottomBar = (showBack: boolean, showNext: boolean, nextLabel: string, nextAction?: () => void, nextColor?: string) => (
     <div style={{
+      position: 'sticky',
+      bottom: 0,
+      left: 0,
+      right: 0,
       display: 'flex',
       justifyContent: 'space-between',
       alignItems: 'center',
       padding: '16px 20px',
       borderTop: `1px solid ${colors.border}`,
-      backgroundColor: colors.bgCard
+      backgroundColor: colors.bgCard,
+      zIndex: 100,
+      minHeight: '72px',
+      boxShadow: '0 -4px 20px rgba(0,0,0,0.3)'
     }}>
       {showBack ? (
         <button
@@ -736,40 +745,52 @@ const OerstedExperimentRenderer: React.FC<OerstedExperimentRendererProps> = ({
             if (idx > 0) goToPhase(validPhases[idx - 1]);
           }}
           style={{
-            padding: '12px 20px',
+            padding: '14px 24px',
             borderRadius: '10px',
             fontWeight: 600,
             fontSize: '14px',
             backgroundColor: colors.bgCardLight,
             color: colors.textSecondary,
             border: 'none',
-            cursor: 'pointer'
+            cursor: 'pointer',
+            minHeight: '48px'
           }}
         >
           ← Back
         </button>
       ) : <div />}
 
-      {showNext && (
+      {showNext ? (
         <button
           onMouseDown={nextAction || (() => {
             const idx = validPhases.indexOf(phase);
             if (idx < validPhases.length - 1) goToPhase(validPhases[idx + 1]);
           })}
           style={{
-            padding: '14px 28px',
-            borderRadius: '10px',
+            padding: '16px 32px',
+            borderRadius: '12px',
             fontWeight: 700,
-            fontSize: '15px',
+            fontSize: '16px',
             background: `linear-gradient(135deg, ${nextColor || colors.primary} 0%, ${colors.accent} 100%)`,
             color: 'white',
             border: 'none',
             cursor: 'pointer',
-            boxShadow: `0 4px 20px ${(nextColor || colors.primary)}40`
+            boxShadow: `0 4px 20px ${(nextColor || colors.primary)}40`,
+            minHeight: '52px',
+            minWidth: '160px'
           }}
         >
           {nextLabel}
         </button>
+      ) : (
+        <div style={{
+          padding: '16px 32px',
+          color: colors.textMuted,
+          fontSize: '14px',
+          fontStyle: 'italic'
+        }}>
+          Select an option above to continue
+        </div>
       )}
     </div>
   );

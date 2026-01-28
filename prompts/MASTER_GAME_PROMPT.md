@@ -13,6 +13,16 @@ This document ensures games work PERFECTLY on the first generation. Every requir
 - **Root Cause**: Missing navigation debouncing, using `onClick` instead of `onMouseDown`
 - **Fix**: Use BOTH `isNavigating.current` ref (400ms timeout) AND `lastClickRef` (200ms check) + `onMouseDown` with `e.preventDefault()`
 
+### 1b. **Navigation Accessibility Issues (CRITICAL)**
+- **Problem**: Users get stuck - can't proceed past phases, buttons hidden or not visible
+- **Root Cause**: Bottom bar not sticky, buttons conditional-only without guidance
+- **Fix**:
+  - Bottom bar MUST be `position: sticky; bottom: 0; z-index: 100`
+  - Bottom bar MUST have `minHeight: 72px` and visible shadow
+  - Next button MUST have `minHeight: 52px; minWidth: 160px`
+  - When next button is disabled, show "Select an option above to continue" hint
+  - **USERS MUST NEVER GET STUCK WITHOUT A VISIBLE PATH FORWARD**
+
 ### 2. **Sound System Wrong Pattern**
 - **Problem**: Inconsistent sounds, type errors with OscillatorType
 - **Root Cause**: Using raw frequencies instead of semantic types
