@@ -59,6 +59,226 @@ This document ensures games work PERFECTLY on the first generation. Every requir
 - **Root Cause**: Not specified in template
 - **Fix**: Track progress (few/pattern/clear/many) with milestone-appropriate messages
 
+### 9. **Graphics Unlabeled and Unclear (CRITICAL)**
+- **Problem**: Users don't know what objects in the graphic represent. Formulas shown without explaining variables. No legend or key.
+- **Root Cause**: Assumed users already understand physics diagrams
+- **Fix**: EVERY graphic MUST have:
+  - **Legend Panel**: Color-coded key showing what each element represents
+  - **Direct Labels**: Every object labeled with name (not just symbols)
+  - **Formula Breakdown**: Each variable explained with color matching the graphic
+  - **"What to Watch" callout**: Tell users exactly what to observe when they interact
+
+### 10. **Sliders Purpose Unclear**
+- **Problem**: Users adjust sliders but don't know what they control or what to look for
+- **Root Cause**: No labeling of slider purpose or effect
+- **Fix**: Every slider MUST have:
+  - **Clear label**: What it controls (e.g., "Current Strength")
+  - **Current value display**: Show the value prominently
+  - **Effect indicator**: What changes in the graphic (e.g., "↑ Current = ↑ Magnetic Field")
+  - **Visual feedback**: The affected element should highlight/animate when adjusted
+
+### 11. **Layout Not Responsive (CRITICAL)**
+- **Problem**: Content gets cut off, scroll doesn't work, buttons hidden on different screen sizes
+- **Root Cause**: Fixed heights and positions that don't adapt
+- **Fix**:
+  - Use `height: 100dvh` (dynamic viewport height) for full-screen layouts
+  - Content area: `flex: 1; overflow-y: auto; padding-bottom: 100px`
+  - Bottom bar: `position: fixed; bottom: 0; left: 0; right: 0`
+  - SVG: Use `viewBox` and `preserveAspectRatio` for scaling
+  - Test on mobile (375px), tablet (768px), and desktop (1280px)
+
+### 12. **Test Phase Correct Answer Not Clear**
+- **Problem**: After answering, users can't clearly see which was correct
+- **Root Cause**: Subtle styling differences
+- **Fix**: Correct answer MUST have:
+  - Bright green border AND background
+  - Large ✓ checkmark icon
+  - "Correct!" label if user got it right, or "The correct answer was:" label
+  - Wrong answer shows red X if selected
+
+---
+
+## EDUCATIONAL CLARITY REQUIREMENTS (CRITICAL)
+
+Every game MUST include these educational elements:
+
+### A. Legend Panel (Required for all graphics)
+```typescript
+const renderLegend = () => (
+  <div style={{
+    position: 'absolute',
+    top: '10px',
+    right: '10px',
+    background: 'rgba(0,0,0,0.8)',
+    borderRadius: '8px',
+    padding: '12px',
+    border: '1px solid #334155',
+    zIndex: 10
+  }}>
+    <p style={{ fontSize: '11px', fontWeight: 700, color: '#94a3b8', marginBottom: '8px' }}>
+      LEGEND
+    </p>
+    {legendItems.map(item => (
+      <div key={item.id} style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+        <div style={{ width: '12px', height: '12px', borderRadius: '2px', background: item.color }} />
+        <span style={{ fontSize: '12px', color: '#e2e8f0' }}>{item.label}</span>
+      </div>
+    ))}
+  </div>
+);
+```
+
+### B. Formula Breakdown Panel (Required when formulas shown)
+```typescript
+const renderFormulaBreakdown = () => (
+  <div style={{ background: colors.bgCard, borderRadius: '12px', padding: '16px', marginTop: '16px' }}>
+    <div style={{ fontSize: '24px', fontFamily: 'monospace', color: colors.textPrimary, textAlign: 'center', marginBottom: '16px' }}>
+      B = μ₀ × I / (2πr)
+    </div>
+    <div style={{ display: 'grid', gridTemplateColumns: 'auto 1fr', gap: '8px 16px' }}>
+      <span style={{ color: '#3b82f6', fontWeight: 700 }}>B</span>
+      <span style={{ color: colors.textSecondary }}>Magnetic field strength (what we're measuring)</span>
+      <span style={{ color: '#fbbf24', fontWeight: 700 }}>I</span>
+      <span style={{ color: colors.textSecondary }}>Current in the wire (what you control with the slider)</span>
+      <span style={{ color: '#22c55e', fontWeight: 700 }}>r</span>
+      <span style={{ color: colors.textSecondary }}>Distance from the wire (how far the compass is)</span>
+      <span style={{ color: '#94a3b8', fontWeight: 700 }}>μ₀</span>
+      <span style={{ color: colors.textSecondary }}>A constant (you don't need to worry about this)</span>
+    </div>
+  </div>
+);
+```
+
+### C. "What to Watch" Callout (Required for play phases)
+```typescript
+const renderWhatToWatch = () => (
+  <div style={{
+    background: `linear-gradient(135deg, ${colors.primary}20 0%, ${colors.accent}20 100%)`,
+    border: `1px solid ${colors.primary}40`,
+    borderRadius: '12px',
+    padding: '16px',
+    marginBottom: '16px'
+  }}>
+    <p style={{ fontSize: '13px', fontWeight: 700, color: colors.primary, marginBottom: '8px' }}>
+      👀 WHAT TO WATCH FOR:
+    </p>
+    <ul style={{ margin: 0, paddingLeft: '20px', color: colors.textSecondary, fontSize: '14px', lineHeight: 1.6 }}>
+      <li>Watch the <strong style={{ color: colors.textPrimary }}>compass needle</strong> - it shows the magnetic field direction</li>
+      <li>Increase the current and see the needle deflect <strong style={{ color: colors.textPrimary }}>more strongly</strong></li>
+      <li>The field lines (blue circles) show how the field wraps around the wire</li>
+    </ul>
+  </div>
+);
+```
+
+### D. Slider with Full Context (Required pattern)
+```typescript
+<div style={{ background: colors.bgCard, borderRadius: '12px', padding: '16px', border: `1px solid ${colors.border}` }}>
+  {/* What this slider controls */}
+  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+    <span style={{ color: colors.textPrimary, fontSize: '14px', fontWeight: 600 }}>
+      ⚡ Current Strength
+    </span>
+    <span style={{ color: colors.primary, fontSize: '16px', fontWeight: 700 }}>
+      {currentValue}%
+    </span>
+  </div>
+
+  {/* The slider */}
+  <input type="range" min="0" max="100" value={currentValue} onChange={...} style={{...}} />
+
+  {/* What happens when you adjust */}
+  <p style={{ color: colors.textMuted, fontSize: '12px', marginTop: '8px' }}>
+    ↑ Higher current = ↑ Stronger magnetic field = ↑ More compass deflection
+  </p>
+</div>
+```
+
+---
+
+## RESPONSIVE LAYOUT PATTERN (CRITICAL - Required for all games)
+
+Games MUST work on all screen sizes. Use this EXACT layout structure:
+
+```typescript
+// FULL SCREEN LAYOUT WRAPPER (Required)
+const GameLayout = ({ children, bottomBar }) => (
+  <div style={{
+    // Full viewport height that adjusts for mobile browser chrome
+    height: '100dvh',
+    display: 'flex',
+    flexDirection: 'column',
+    background: `linear-gradient(180deg, ${colors.bgGradientStart} 0%, ${colors.bgGradientEnd} 100%)`,
+    overflow: 'hidden' // Prevent body scroll
+  }}>
+    {/* Scrollable content area */}
+    <div style={{
+      flex: 1,
+      overflowY: 'auto',
+      overflowX: 'hidden',
+      WebkitOverflowScrolling: 'touch', // Smooth scroll on iOS
+      paddingBottom: '100px' // Space for fixed bottom bar
+    }}>
+      {children}
+    </div>
+
+    {/* FIXED bottom bar - ALWAYS visible */}
+    <div style={{
+      position: 'fixed',
+      bottom: 0,
+      left: 0,
+      right: 0,
+      zIndex: 1000,
+      background: colors.bgCard,
+      borderTop: `1px solid ${colors.border}`,
+      padding: '16px 20px',
+      boxShadow: '0 -4px 20px rgba(0,0,0,0.5)'
+    }}>
+      {bottomBar}
+    </div>
+  </div>
+);
+```
+
+### SVG Responsive Pattern (Required for all graphics)
+```typescript
+// Container that scales SVG properly
+<div style={{
+  width: '100%',
+  maxWidth: '600px',
+  margin: '0 auto',
+  aspectRatio: '16/10', // Consistent aspect ratio
+  position: 'relative'
+}}>
+  <svg
+    viewBox="0 0 600 375"
+    preserveAspectRatio="xMidYMid meet"
+    style={{
+      width: '100%',
+      height: '100%',
+      display: 'block'
+    }}
+  >
+    {/* Graphics here */}
+  </svg>
+
+  {/* Legend overlay - positioned within container */}
+  {renderLegend()}
+</div>
+```
+
+### Mobile-First Breakpoints
+```typescript
+const isMobile = typeof window !== 'undefined' && window.innerWidth < 640;
+const isTablet = typeof window !== 'undefined' && window.innerWidth >= 640 && window.innerWidth < 1024;
+const isDesktop = typeof window !== 'undefined' && window.innerWidth >= 1024;
+
+// Use in styling:
+fontSize: isMobile ? '14px' : '16px',
+padding: isMobile ? '12px' : '20px',
+gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr',
+```
+
 ---
 
 ## GOLD STANDARD TEMPLATE

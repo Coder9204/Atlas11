@@ -32,7 +32,81 @@
 | **D.4 Zoom & Scale** | Users should NEVER need to manually zoom to see content. Content must be readable at default zoom on all devices. |
 | **H. Transfer Phase Richness** | Real-world applications must be DETAILED with diagrams, statistics, and examples - not shallow text-only summaries. Apps must unlock SEQUENTIALLY (🔒 locked apps). All 4 required before test unlocks. |
 | **I. Local Answer Validation** | Test questions use `correct: true` marker on options. NO Firebase dependency. Validation happens client-side. |
-| **J. Navigation Accessibility** | EVERY phase MUST have a clearly visible, always-accessible navigation button. Sticky footer required. Users must NEVER be stuck without a way to proceed. |
+| **J. Navigation Accessibility** | EVERY phase MUST have a clearly visible, always-accessible navigation button. FIXED footer (not sticky). Users must NEVER be stuck without a way to proceed. |
+| **K. Educational Clarity** | EVERY graphic must have a legend, labeled objects, explained formulas, and "What to Watch" guidance. Users must instantly understand what they're looking at. |
+| **L. Responsive Layout** | Content must scroll properly, bottom bar always visible, graphics scale to screen size. Works on mobile (375px), tablet (768px), desktop (1280px). |
+
+---
+
+### K. Educational Clarity (CRITICAL - 100% Required)
+
+> **If users don't understand what they're looking at, they can't learn.** Every element must be explained.
+
+| # | Criteria | Pass/Fail | Notes |
+|---|----------|-----------|-------|
+| K.1 | **Legend panel** visible showing what each color/shape represents | | |
+| K.2 | **Every object labeled** directly in the graphic (not just legend) | | |
+| K.3 | **Formulas have breakdowns** explaining each variable with color coding | | |
+| K.4 | **"What to Watch"** callout tells users exactly what to observe | | |
+| K.5 | **Slider labels** clearly state what they control | | |
+| K.6 | **Slider effect** explained (e.g., "↑ Current = ↑ Field strength") | | |
+| K.7 | **Current value** prominently displayed next to slider | | |
+| K.8 | **Test correct answer** clearly highlighted with green + checkmark | | |
+
+#### Required Legend Pattern:
+```typescript
+const legendItems = [
+  { id: 'wire', color: '#ef4444', label: 'Wire (carrying current)' },
+  { id: 'field', color: '#3b82f6', label: 'Magnetic field lines' },
+  { id: 'compass', color: '#fbbf24', label: 'Compass needle' },
+  { id: 'current', color: '#22c55e', label: 'Current direction' },
+];
+```
+
+#### Required Formula Breakdown Pattern:
+```
+B = μ₀ × I / (2πr)
+├── B (blue)  = Magnetic field strength
+├── I (yellow) = Current (controlled by slider)
+├── r (green) = Distance from wire
+└── μ₀ (gray) = Constant (don't worry about this)
+```
+
+---
+
+### L. Responsive Layout (CRITICAL - 100% Required)
+
+> **Content must be accessible on ALL devices.** No hidden buttons, no cut-off content.
+
+| # | Criteria | Pass/Fail | Notes |
+|---|----------|-----------|-------|
+| L.1 | Uses `height: 100dvh` (dynamic viewport height) | | |
+| L.2 | Content area has `overflow-y: auto` for scrolling | | |
+| L.3 | Content has `padding-bottom: 100px` for bottom bar space | | |
+| L.4 | Bottom bar uses `position: fixed` (NOT sticky) | | |
+| L.5 | SVG uses `viewBox` and scales properly | | |
+| L.6 | SVG container has `aspectRatio` for consistent sizing | | |
+| L.7 | Text sizes adapt (smaller on mobile) | | |
+| L.8 | Tested on mobile (375px width) | | |
+| L.9 | Tested on tablet (768px width) | | |
+| L.10 | Tested on desktop (1280px width) | | |
+
+#### Required Layout Structure:
+```typescript
+// Outer wrapper - full viewport, no scroll
+<div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+
+  {/* Scrollable content */}
+  <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+    {/* All content here */}
+  </div>
+
+  {/* FIXED bottom bar - always visible */}
+  <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 1000 }}>
+    {/* Navigation buttons */}
+  </div>
+</div>
+```
 
 ---
 
@@ -42,30 +116,37 @@
 
 | # | Criteria | Pass/Fail | Notes |
 |---|----------|-----------|-------|
-| J.1 | Bottom bar is STICKY (position: sticky, bottom: 0) | | |
-| J.2 | Bottom bar has minHeight: 72px | | |
-| J.3 | Bottom bar has z-index: 100+ | | |
-| J.4 | Bottom bar has shadow for visibility | | |
-| J.5 | Next button has minHeight: 52px, minWidth: 160px | | |
-| J.6 | When no selection made, show "Select an option above" hint | | |
-| J.7 | Button text clearly describes next action | | |
-| J.8 | Back button always visible (except hook phase) | | |
+| J.1 | Bottom bar uses `position: fixed` (NOT sticky - fixed is more reliable) | | |
+| J.2 | Bottom bar has `bottom: 0; left: 0; right: 0` | | |
+| J.3 | Bottom bar has `zIndex: 1000` (high enough to stay on top) | | |
+| J.4 | Bottom bar has shadow for visibility against content | | |
+| J.5 | Content area has `paddingBottom: 100px` so nothing hidden behind bar | | |
+| J.6 | Next button has minHeight: 52px, minWidth: 160px (easy to tap) | | |
+| J.7 | When no selection made, show "Select an option above" hint | | |
+| J.8 | Button text clearly describes next action | | |
+| J.9 | Back button always visible (except hook phase) | | |
 
 #### Required Bottom Bar Pattern:
 ```typescript
-const renderBottomBar = (...) => (
-  <div style={{
-    position: 'sticky',
-    bottom: 0,
-    zIndex: 100,
-    minHeight: '72px',
-    boxShadow: '0 -4px 20px rgba(0,0,0,0.3)',
-    // ... rest of styles
-  }}>
-    {/* Back button */}
-    {/* Next button OR "Select an option" hint */}
-  </div>
-);
+// FIXED position - ALWAYS visible regardless of scroll
+<div style={{
+  position: 'fixed',
+  bottom: 0,
+  left: 0,
+  right: 0,
+  zIndex: 1000,
+  minHeight: '72px',
+  background: colors.bgCard,
+  borderTop: `1px solid ${colors.border}`,
+  boxShadow: '0 -4px 20px rgba(0,0,0,0.5)',
+  padding: '16px 20px',
+  display: 'flex',
+  justifyContent: 'space-between',
+  alignItems: 'center'
+}}>
+  {/* Back button */}
+  {/* Next button OR "Select an option" hint */}
+</div>
 ```
 
 ---

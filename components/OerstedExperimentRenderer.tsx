@@ -450,14 +450,51 @@ const OerstedExperimentRenderer: React.FC<OerstedExperimentRendererProps> = ({
   // EXPERIMENT VISUALIZATION
   // ============================================================
 
+  // LEGEND ITEMS - explain what each element represents
+  const legendItems = [
+    { color: colors.wire, label: 'Wire (carries current)' },
+    { color: colors.field, label: 'Magnetic field lines' },
+    { color: colors.compass, label: 'Compass needle' },
+    { color: colors.current, label: 'Current direction' },
+  ];
+
+  const renderLegend = () => (
+    <div style={{
+      position: 'absolute',
+      top: isMobile ? '8px' : '12px',
+      right: isMobile ? '8px' : '12px',
+      background: 'rgba(15, 23, 42, 0.95)',
+      borderRadius: '8px',
+      padding: isMobile ? '8px' : '12px',
+      border: `1px solid ${colors.border}`,
+      zIndex: 10
+    }}>
+      <p style={{ fontSize: '10px', fontWeight: 700, color: colors.textMuted, marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+        Legend
+      </p>
+      {legendItems.map((item, i) => (
+        <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '3px' }}>
+          <div style={{ width: '10px', height: '10px', borderRadius: '2px', background: item.color, flexShrink: 0 }} />
+          <span style={{ fontSize: '11px', color: colors.textSecondary }}>{item.label}</span>
+        </div>
+      ))}
+    </div>
+  );
+
   const renderExperimentVisualization = () => {
-    const width = isMobile ? 340 : 680;
-    const height = isMobile ? 320 : 400;
+    const width = isMobile ? 340 : 600;
+    const height = isMobile ? 280 : 350;
     const cx = width / 2;
     const cy = height / 2;
 
     return (
-      <svg width={width} height={height} style={{ display: 'block', margin: '0 auto' }}>
+      <div style={{ position: 'relative', width: '100%', maxWidth: '620px', margin: '0 auto' }}>
+        {renderLegend()}
+        <svg
+          viewBox={`0 0 ${width} ${height}`}
+          preserveAspectRatio="xMidYMid meet"
+          style={{ width: '100%', height: 'auto', display: 'block' }}
+        >
         <defs>
           {/* Wire gradient */}
           <linearGradient id="oerstedWireGradient" x1="0%" y1="0%" x2="100%" y2="0%">
@@ -713,18 +750,76 @@ const OerstedExperimentRenderer: React.FC<OerstedExperimentRendererProps> = ({
           </text>
         </g>
       </svg>
+      </div>
     );
   };
+
+  // "What to Watch" callout for play phases
+  const renderWhatToWatch = () => (
+    <div style={{
+      background: `linear-gradient(135deg, ${colors.primary}15 0%, ${colors.accent}15 100%)`,
+      border: `1px solid ${colors.primary}30`,
+      borderRadius: '12px',
+      padding: isMobile ? '12px' : '16px',
+      marginBottom: '16px',
+      maxWidth: '600px',
+      margin: '0 auto 16px'
+    }}>
+      <p style={{ fontSize: '12px', fontWeight: 700, color: colors.primary, marginBottom: '8px' }}>
+        👀 WHAT TO WATCH FOR:
+      </p>
+      <ul style={{ margin: 0, paddingLeft: '16px', color: colors.textSecondary, fontSize: '13px', lineHeight: 1.6 }}>
+        <li>Watch the <strong style={{ color: colors.compass }}>compass needle</strong> — it shows the magnetic field direction</li>
+        <li>Increase <strong style={{ color: colors.current }}>current strength</strong> → needle deflects <strong>more</strong></li>
+        <li>The <strong style={{ color: colors.field }}>blue circles</strong> show how the field wraps around the wire</li>
+      </ul>
+    </div>
+  );
+
+  // Formula breakdown panel
+  const renderFormulaBreakdown = () => (
+    <div style={{
+      background: colors.bgCard,
+      borderRadius: '12px',
+      padding: isMobile ? '12px' : '16px',
+      maxWidth: '500px',
+      margin: '16px auto',
+      border: `1px solid ${colors.border}`
+    }}>
+      <div style={{ fontSize: isMobile ? '18px' : '22px', fontFamily: 'monospace', color: colors.textPrimary, textAlign: 'center', marginBottom: '12px' }}>
+        {wireMode === 'straight' ? 'B = μ₀I / (2πr)' : 'B = μ₀nI'}
+      </div>
+      <div style={{ display: 'grid', gridTemplateColumns: 'auto 1fr', gap: '6px 12px', fontSize: '12px' }}>
+        <span style={{ color: colors.field, fontWeight: 700 }}>B</span>
+        <span style={{ color: colors.textSecondary }}>Magnetic field strength (what we measure)</span>
+        <span style={{ color: colors.current, fontWeight: 700 }}>I</span>
+        <span style={{ color: colors.textSecondary }}>Current strength (what YOU control with slider)</span>
+        {wireMode === 'straight' ? (
+          <>
+            <span style={{ color: colors.success, fontWeight: 700 }}>r</span>
+            <span style={{ color: colors.textSecondary }}>Distance from wire (closer = stronger)</span>
+          </>
+        ) : (
+          <>
+            <span style={{ color: colors.success, fontWeight: 700 }}>n</span>
+            <span style={{ color: colors.textSecondary }}>Number of coil turns (more = stronger)</span>
+          </>
+        )}
+        <span style={{ color: colors.textMuted, fontWeight: 700 }}>μ₀</span>
+        <span style={{ color: colors.textSecondary }}>A physics constant (don't worry about it)</span>
+      </div>
+    </div>
+  );
 
   // ============================================================
   // RENDER FUNCTIONS (Phases)
   // ============================================================
 
-  // CRITICAL: Bottom bar must ALWAYS be visible and accessible
-  // This is a sticky footer that stays at the bottom of the viewport
+  // CRITICAL: Bottom bar MUST use position: fixed to ALWAYS be visible
+  // Content area must have padding-bottom to not be hidden behind it
   const renderBottomBar = (showBack: boolean, showNext: boolean, nextLabel: string, nextAction?: () => void, nextColor?: string) => (
     <div style={{
-      position: 'sticky',
+      position: 'fixed',
       bottom: 0,
       left: 0,
       right: 0,
@@ -734,9 +829,9 @@ const OerstedExperimentRenderer: React.FC<OerstedExperimentRendererProps> = ({
       padding: '16px 20px',
       borderTop: `1px solid ${colors.border}`,
       backgroundColor: colors.bgCard,
-      zIndex: 100,
+      zIndex: 1000,
       minHeight: '72px',
-      boxShadow: '0 -4px 20px rgba(0,0,0,0.3)'
+      boxShadow: '0 -8px 30px rgba(0,0,0,0.5)'
     }}>
       {showBack ? (
         <button
@@ -857,42 +952,58 @@ const OerstedExperimentRenderer: React.FC<OerstedExperimentRendererProps> = ({
     ];
 
     return (
-      <div style={{ minHeight: '100vh', background: `linear-gradient(180deg, ${colors.bgGradientStart} 0%, ${colors.bgGradientEnd} 100%)`, display: 'flex', flexDirection: 'column' }}>
-        <div style={{ flex: 1, maxWidth: '800px', margin: '0 auto', padding: '40px 20px' }}>
-          <div style={{ textAlign: 'center', marginBottom: '32px' }}>
-            <p style={{ color: colors.primary, fontSize: '12px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '8px' }}>
-              Step 1 • Make a Prediction
-            </p>
-            <h2 style={{ fontSize: isMobile ? '24px' : '32px', fontWeight: 700, color: colors.textPrimary, marginBottom: '12px' }}>
-              What will happen to the compass?
-            </h2>
-            <p style={{ color: colors.textSecondary, fontSize: '16px', maxWidth: '500px', margin: '0 auto' }}>
-              If you place a compass next to a wire and turn on an electric current, what do you think will happen?
-            </p>
-          </div>
+      <div style={{
+        height: '100dvh',
+        display: 'flex',
+        flexDirection: 'column',
+        background: `linear-gradient(180deg, ${colors.bgGradientStart} 0%, ${colors.bgGradientEnd} 100%)`,
+        overflow: 'hidden'
+      }}>
+        {/* Scrollable content */}
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          overflowX: 'hidden',
+          WebkitOverflowScrolling: 'touch',
+          paddingBottom: '100px'
+        }}>
+          <div style={{ maxWidth: '800px', margin: '0 auto', padding: '40px 20px' }}>
+            <div style={{ textAlign: 'center', marginBottom: '32px' }}>
+              <p style={{ color: colors.primary, fontSize: '12px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '8px' }}>
+                Step 1 • Make a Prediction
+              </p>
+              <h2 style={{ fontSize: isMobile ? '24px' : '32px', fontWeight: 700, color: colors.textPrimary, marginBottom: '12px' }}>
+                What will happen to the compass?
+              </h2>
+              <p style={{ color: colors.textSecondary, fontSize: '16px', maxWidth: '500px', margin: '0 auto' }}>
+                If you place a compass next to a wire and turn on an electric current, what do you think will happen?
+              </p>
+            </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: '16px', marginBottom: '32px' }}>
-            {predictions.map(p => (
-              <button
-                key={p.id}
-                onMouseDown={() => {
-                  setPrediction(p.id);
-                  playSound('click');
-                }}
-                style={{
-                  padding: '20px',
-                  borderRadius: '12px',
-                  border: prediction === p.id ? `2px solid ${colors.primary}` : `2px solid ${colors.border}`,
-                  backgroundColor: prediction === p.id ? `${colors.primary}20` : colors.bgCard,
-                  cursor: 'pointer',
-                  textAlign: 'left',
-                  transition: 'all 0.2s'
-                }}
-              >
-                <span style={{ fontSize: '28px', marginRight: '12px' }}>{p.icon}</span>
-                <span style={{ color: colors.textPrimary, fontSize: '15px' }}>{p.label}</span>
-              </button>
-            ))}
+            <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: '16px', marginBottom: '32px' }}>
+              {predictions.map(p => (
+                <button
+                  key={p.id}
+                  onMouseDown={() => {
+                    setPrediction(p.id);
+                    playSound('click');
+                  }}
+                  style={{
+                    padding: '20px',
+                    borderRadius: '12px',
+                    border: prediction === p.id ? `3px solid ${colors.primary}` : `2px solid ${colors.border}`,
+                    backgroundColor: prediction === p.id ? `${colors.primary}20` : colors.bgCard,
+                    cursor: 'pointer',
+                    textAlign: 'left',
+                    transition: 'all 0.2s',
+                    boxShadow: prediction === p.id ? `0 0 20px ${colors.primary}40` : 'none'
+                  }}
+                >
+                  <span style={{ fontSize: '28px', marginRight: '12px' }}>{p.icon}</span>
+                  <span style={{ color: colors.textPrimary, fontSize: '15px' }}>{p.label}</span>
+                </button>
+              ))}
+            </div>
           </div>
         </div>
 
@@ -901,11 +1012,25 @@ const OerstedExperimentRenderer: React.FC<OerstedExperimentRendererProps> = ({
     );
   }
 
-  // PLAY PHASE
+  // PLAY PHASE - Responsive layout with fixed bottom bar
   if (phase === 'play') {
     return (
-      <div style={{ minHeight: '100vh', background: `linear-gradient(180deg, ${colors.bgGradientStart} 0%, ${colors.bgGradientEnd} 100%)`, display: 'flex', flexDirection: 'column' }}>
-        <div style={{ flex: 1, padding: '20px' }}>
+      <div style={{
+        height: '100dvh',
+        display: 'flex',
+        flexDirection: 'column',
+        background: `linear-gradient(180deg, ${colors.bgGradientStart} 0%, ${colors.bgGradientEnd} 100%)`,
+        overflow: 'hidden'
+      }}>
+        {/* Scrollable content area */}
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          overflowX: 'hidden',
+          WebkitOverflowScrolling: 'touch',
+          padding: '20px',
+          paddingBottom: '100px'
+        }}>
           <div style={{ textAlign: 'center', marginBottom: '16px' }}>
             <p style={{ color: colors.success, fontSize: '12px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '8px' }}>
               Step 2 • Run the Experiment
@@ -915,14 +1040,23 @@ const OerstedExperimentRenderer: React.FC<OerstedExperimentRendererProps> = ({
             </h2>
           </div>
 
+          {/* What to Watch callout */}
+          {renderWhatToWatch()}
+
           {renderExperimentVisualization()}
 
-          {/* Controls */}
-          <div style={{ maxWidth: '500px', margin: '24px auto 0', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          {/* Formula Breakdown */}
+          {renderFormulaBreakdown()}
+
+          {/* Controls with clear labels */}
+          <div style={{ maxWidth: '500px', margin: '16px auto 0', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            {/* Current Strength Slider with effect explanation */}
             <div style={{ background: colors.bgCard, borderRadius: '12px', padding: '16px', border: `1px solid ${colors.border}` }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ color: colors.textSecondary, fontSize: '14px', fontWeight: 600 }}>Current Strength</span>
-                <span style={{ color: colors.primary, fontSize: '14px', fontWeight: 700 }}>{currentStrength}%</span>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                <span style={{ color: colors.textPrimary, fontSize: '14px', fontWeight: 600 }}>
+                  ⚡ Current Strength
+                </span>
+                <span style={{ color: colors.current, fontSize: '18px', fontWeight: 700 }}>{currentStrength}%</span>
               </div>
               <input
                 type="range"
@@ -930,13 +1064,17 @@ const OerstedExperimentRenderer: React.FC<OerstedExperimentRendererProps> = ({
                 max="100"
                 value={currentStrength}
                 onChange={(e) => setCurrentStrength(Number(e.target.value))}
-                style={{ width: '100%', accentColor: colors.primary }}
+                style={{ width: '100%', accentColor: colors.current, height: '8px' }}
               />
+              <p style={{ color: colors.textMuted, fontSize: '11px', marginTop: '8px', textAlign: 'center' }}>
+                ↑ Higher current = ↑ Stronger magnetic field = ↑ More compass deflection
+              </p>
             </div>
 
+            {/* Current Direction with clear labels */}
             <div style={{ background: colors.bgCard, borderRadius: '12px', padding: '16px', border: `1px solid ${colors.border}` }}>
-              <p style={{ color: colors.textSecondary, fontSize: '14px', fontWeight: 600, marginBottom: '12px', textAlign: 'center' }}>
-                Current Direction
+              <p style={{ color: colors.textPrimary, fontSize: '14px', fontWeight: 600, marginBottom: '8px', textAlign: 'center' }}>
+                🔄 Current Direction (changes field direction)
               </p>
               <div style={{ display: 'flex', gap: '12px' }}>
                 <button
@@ -1565,117 +1703,179 @@ const OerstedExperimentRenderer: React.FC<OerstedExperimentRendererProps> = ({
     }
 
     return (
-      <div style={{ minHeight: '100vh', background: `linear-gradient(180deg, ${colors.bgGradientStart} 0%, ${colors.bgGradientEnd} 100%)`, display: 'flex', flexDirection: 'column' }}>
-        <div style={{ flex: 1, maxWidth: '800px', margin: '0 auto', padding: '30px 20px' }}>
-          {/* Progress */}
-          <div style={{ marginBottom: '24px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-              <span style={{ color: colors.primary, fontSize: '12px', fontWeight: 700, textTransform: 'uppercase' }}>
-                Knowledge Test
-              </span>
-              <span style={{ color: colors.textMuted, fontSize: '14px' }}>
-                Question {testQuestion + 1} of 10
-              </span>
+      <div style={{
+        height: '100dvh',
+        display: 'flex',
+        flexDirection: 'column',
+        background: `linear-gradient(180deg, ${colors.bgGradientStart} 0%, ${colors.bgGradientEnd} 100%)`,
+        overflow: 'hidden'
+      }}>
+        {/* Scrollable content */}
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          overflowX: 'hidden',
+          WebkitOverflowScrolling: 'touch',
+          paddingBottom: '100px'
+        }}>
+          <div style={{ maxWidth: '800px', margin: '0 auto', padding: '30px 20px' }}>
+            {/* Progress */}
+            <div style={{ marginBottom: '24px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+                <span style={{ color: colors.primary, fontSize: '12px', fontWeight: 700, textTransform: 'uppercase' }}>
+                  Knowledge Test
+                </span>
+                <span style={{ color: colors.textMuted, fontSize: '14px' }}>
+                  Question {testQuestion + 1} of 10
+                </span>
+              </div>
+              <div style={{ display: 'flex', gap: '6px' }}>
+                {Array.from({ length: 10 }, (_, i) => (
+                  <div
+                    key={i}
+                    style={{
+                      flex: 1,
+                      height: '6px',
+                      borderRadius: '3px',
+                      backgroundColor: testAnswers[i] !== null
+                        ? colors.success
+                        : i === testQuestion
+                          ? colors.primary
+                          : colors.bgCardLight
+                    }}
+                  />
+                ))}
+              </div>
             </div>
-            <div style={{ display: 'flex', gap: '6px' }}>
-              {Array.from({ length: 10 }, (_, i) => (
-                <div
-                  key={i}
-                  style={{
-                    flex: 1,
-                    height: '6px',
-                    borderRadius: '3px',
-                    backgroundColor: testAnswers[i] !== null
-                      ? colors.success
-                      : i === testQuestion
-                        ? colors.primary
-                        : colors.bgCardLight
-                  }}
-                />
-              ))}
+
+            {/* Scenario */}
+            <div style={{ background: colors.bgCard, borderRadius: '12px', padding: '20px', marginBottom: '20px', borderLeft: `4px solid ${colors.primary}` }}>
+              <p style={{ color: colors.textSecondary, fontSize: '15px', lineHeight: 1.6 }}>
+                {currentQ.scenario}
+              </p>
             </div>
-          </div>
 
-          {/* Scenario */}
-          <div style={{ background: colors.bgCard, borderRadius: '12px', padding: '20px', marginBottom: '20px', borderLeft: `4px solid ${colors.primary}` }}>
-            <p style={{ color: colors.textSecondary, fontSize: '15px', lineHeight: 1.6 }}>
-              {currentQ.scenario}
-            </p>
-          </div>
+            {/* Question */}
+            <h3 style={{ color: colors.textPrimary, fontSize: '20px', fontWeight: 700, marginBottom: '20px' }}>
+              {currentQ.question}
+            </h3>
 
-          {/* Question */}
-          <h3 style={{ color: colors.textPrimary, fontSize: '20px', fontWeight: 700, marginBottom: '20px' }}>
-            {currentQ.question}
-          </h3>
+            {/* Options - with CLEAR correct answer styling */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              {currentQ.options.map((opt, i) => {
+                const isSelected = testAnswers[testQuestion] === opt.id;
+                const isAnswered = testAnswers[testQuestion] !== null;
+                const isCorrect = opt.correct;
+                const userWasWrong = isAnswered && !isSelected && !isCorrect;
+                const showAsCorrect = isAnswered && isCorrect;
+                const showAsWrong = isSelected && !isCorrect;
 
-          {/* Options */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-            {currentQ.options.map((opt, i) => {
-              const isSelected = testAnswers[testQuestion] === opt.id;
-              const isAnswered = testAnswers[testQuestion] !== null;
-              const isCorrect = opt.correct;
+                return (
+                  <button
+                    key={opt.id}
+                    onMouseDown={() => {
+                      if (!isAnswered) {
+                        const newAnswers = [...testAnswers];
+                        newAnswers[testQuestion] = opt.id;
+                        setTestAnswers(newAnswers);
+                        playSound(isCorrect ? 'success' : 'failure');
+                      }
+                    }}
+                    disabled={isAnswered}
+                    style={{
+                      padding: '18px 20px',
+                      borderRadius: '12px',
+                      border: showAsCorrect
+                        ? `3px solid ${colors.success}`
+                        : showAsWrong
+                          ? `3px solid ${colors.error}`
+                          : `2px solid ${colors.border}`,
+                      backgroundColor: showAsCorrect
+                        ? `${colors.success}25`
+                        : showAsWrong
+                          ? `${colors.error}20`
+                          : colors.bgCard,
+                      cursor: isAnswered ? 'default' : 'pointer',
+                      textAlign: 'left',
+                      opacity: userWasWrong ? 0.4 : 1,
+                      boxShadow: showAsCorrect ? `0 0 20px ${colors.success}40` : 'none',
+                      position: 'relative'
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                      <div>
+                        <span style={{
+                          fontWeight: 700,
+                          color: showAsCorrect ? colors.success : showAsWrong ? colors.error : colors.primary,
+                          marginRight: '12px'
+                        }}>
+                          {String.fromCharCode(65 + i)}.
+                        </span>
+                        <span style={{ color: colors.textPrimary }}>{opt.label}</span>
+                      </div>
 
-              return (
-                <button
-                  key={opt.id}
-                  onMouseDown={() => {
-                    if (!isAnswered) {
-                      const newAnswers = [...testAnswers];
-                      newAnswers[testQuestion] = opt.id;
-                      setTestAnswers(newAnswers);
-                      playSound(isCorrect ? 'success' : 'failure');
-                    }
-                  }}
-                  disabled={isAnswered}
-                  style={{
-                    padding: '18px 20px',
-                    borderRadius: '12px',
-                    border: isSelected
-                      ? `2px solid ${isCorrect ? colors.success : colors.error}`
-                      : `2px solid ${colors.border}`,
-                    backgroundColor: isSelected
-                      ? isCorrect ? `${colors.success}20` : `${colors.error}20`
-                      : isAnswered && isCorrect
-                        ? `${colors.success}10`
-                        : colors.bgCard,
-                    cursor: isAnswered ? 'default' : 'pointer',
-                    textAlign: 'left',
-                    opacity: isAnswered && !isSelected && !isCorrect ? 0.5 : 1
-                  }}
-                >
-                  <span style={{
-                    fontWeight: 700,
-                    color: isSelected
-                      ? isCorrect ? colors.success : colors.error
-                      : colors.primary,
-                    marginRight: '12px'
-                  }}>
-                    {String.fromCharCode(65 + i)}.
-                  </span>
-                  <span style={{ color: colors.textPrimary }}>{opt.label}</span>
-                  {isAnswered && isCorrect && <span style={{ marginLeft: '8px' }}>✓</span>}
-                </button>
-              );
-            })}
-          </div>
-
-          {/* Explanation */}
-          {testAnswers[testQuestion] !== null && (
-            <div style={{ background: colors.bgCard, borderRadius: '12px', padding: '20px', marginTop: '20px', borderLeft: `4px solid ${colors.warning}` }}>
-              <h4 style={{ color: colors.warning, fontWeight: 700, marginBottom: '8px' }}>Explanation</h4>
-              <p style={{ color: colors.textSecondary, lineHeight: 1.6 }}>{currentQ.explanation}</p>
+                      {/* CLEAR correct/wrong indicators */}
+                      {showAsCorrect && (
+                        <span style={{
+                          fontSize: '20px',
+                          fontWeight: 700,
+                          color: colors.success,
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '4px'
+                        }}>
+                          ✓ {isSelected ? 'Correct!' : 'Correct Answer'}
+                        </span>
+                      )}
+                      {showAsWrong && (
+                        <span style={{
+                          fontSize: '16px',
+                          fontWeight: 700,
+                          color: colors.error
+                        }}>
+                          ✗ Wrong
+                        </span>
+                      )}
+                    </div>
+                  </button>
+                );
+              })}
             </div>
-          )}
+
+            {/* Explanation - more prominent */}
+            {testAnswers[testQuestion] !== null && (
+              <div style={{
+                background: testAnswers[testQuestion] === currentQ.options.find(o => o.correct)?.id
+                  ? `linear-gradient(135deg, ${colors.success}20 0%, ${colors.bgCard} 100%)`
+                  : `linear-gradient(135deg, ${colors.error}15 0%, ${colors.bgCard} 100%)`,
+                borderRadius: '12px',
+                padding: '20px',
+                marginTop: '20px',
+                border: `1px solid ${testAnswers[testQuestion] === currentQ.options.find(o => o.correct)?.id ? colors.success : colors.warning}40`
+              }}>
+                <h4 style={{ color: colors.warning, fontWeight: 700, marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  💡 Explanation
+                </h4>
+                <p style={{ color: colors.textSecondary, lineHeight: 1.6 }}>{currentQ.explanation}</p>
+              </div>
+            )}
+          </div>
         </div>
 
-        {/* Navigation */}
+        {/* FIXED Navigation bar */}
         <div style={{
+          position: 'fixed',
+          bottom: 0,
+          left: 0,
+          right: 0,
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
           padding: '16px 20px',
           borderTop: `1px solid ${colors.border}`,
-          backgroundColor: colors.bgCard
+          backgroundColor: colors.bgCard,
+          zIndex: 1000,
+          boxShadow: '0 -8px 30px rgba(0,0,0,0.5)'
         }}>
           <button
             onMouseDown={() => testQuestion > 0 && setTestQuestion(testQuestion - 1)}
