@@ -166,53 +166,43 @@ const ShowerCurtainRenderer: React.FC<ShowerCurtainRendererProps> = ({ currentPh
   const testQuestions = [
     {
       question: "What causes the shower curtain to blow inward?",
-      options: ["Water pushing it", "Low pressure inside from air entrainment", "High pressure inside", "Magnetic force"],
-      correct: 1
+      options: [{ text: "Water pushing it", correct: false }, { text: "Low pressure inside from air entrainment", correct: true }, { text: "High pressure inside", correct: false }, { text: "Magnetic force", correct: false }]
     },
     {
       question: "Bernoulli's principle states that faster-moving air has:",
-      options: ["Higher pressure", "Lower pressure", "Same pressure", "More temperature"],
-      correct: 1
+      options: [{ text: "Higher pressure", correct: false }, { text: "Lower pressure", correct: true }, { text: "Same pressure", correct: false }, { text: "More temperature", correct: false }]
     },
     {
       question: "What is 'entrainment' in fluid dynamics?",
-      options: ["Heating a fluid", "Moving fluid drags surrounding fluid along", "Fluid compression", "Fluid freezing"],
-      correct: 1
+      options: [{ text: "Heating a fluid", correct: false }, { text: "Moving fluid drags surrounding fluid along", correct: true }, { text: "Fluid compression", correct: false }, { text: "Fluid freezing", correct: false }]
     },
     {
       question: "Hot showers cause MORE curtain movement because:",
-      options: ["Hot water is heavier", "Rising hot air creates additional convection currents", "Cold curtain attracts heat", "Hot water has more pressure"],
-      correct: 1
+      options: [{ text: "Hot water is heavier", correct: false }, { text: "Rising hot air creates additional convection currents", correct: true }, { text: "Cold curtain attracts heat", correct: false }, { text: "Hot water has more pressure", correct: false }]
     },
     {
       question: "The shower curtain effect is used in which engineering application?",
-      options: ["Only bathrooms", "Venturi tubes and atomizers", "Electrical circuits", "Building foundations"],
-      correct: 1
+      options: [{ text: "Only bathrooms", correct: false }, { text: "Venturi tubes and atomizers", correct: true }, { text: "Electrical circuits", correct: false }, { text: "Building foundations", correct: false }]
     },
     {
       question: "Why does a passing truck 'suck' you toward it?",
-      options: ["Magnetic attraction", "Low pressure in the truck's wake (entrainment)", "Gravity increase", "Static electricity"],
-      correct: 1
+      options: [{ text: "Magnetic attraction", correct: false }, { text: "Low pressure in the truck's wake (entrainment)", correct: true }, { text: "Gravity increase", correct: false }, { text: "Static electricity", correct: false }]
     },
     {
       question: "A spray bottle uses entrainment to:",
-      options: ["Heat the liquid", "Mix air into the spray stream", "Draw liquid up the tube by low pressure", "Change liquid color"],
-      correct: 2
+      options: [{ text: "Heat the liquid", correct: false }, { text: "Mix air into the spray stream", correct: false }, { text: "Draw liquid up the tube by low pressure", correct: true }, { text: "Change liquid color", correct: false }]
     },
     {
       question: "Which would cause the LEAST shower curtain movement?",
-      options: ["Hot, high-flow shower", "Cold, high-flow shower", "Cold, low-flow shower", "Hot, low-flow shower"],
-      correct: 2
+      options: [{ text: "Hot, high-flow shower", correct: false }, { text: "Cold, high-flow shower", correct: false }, { text: "Cold, low-flow shower", correct: true }, { text: "Hot, low-flow shower", correct: false }]
     },
     {
       question: "A horizontal vortex forms in the shower because:",
-      options: ["Earth's rotation", "Water drops drag air down, which then recirculates", "Soap creates vortices", "Curtain spinning"],
-      correct: 1
+      options: [{ text: "Earth's rotation", correct: false }, { text: "Water drops drag air down, which then recirculates", correct: true }, { text: "Soap creates vortices", correct: false }, { text: "Curtain spinning", correct: false }]
     },
     {
       question: "Heavy shower curtains with magnets at the bottom help because:",
-      options: ["They conduct electricity", "Weight and attachment resist the pressure difference", "Magnets repel water", "They heat up faster"],
-      correct: 1
+      options: [{ text: "They conduct electricity", correct: false }, { text: "Weight and attachment resist the pressure difference", correct: true }, { text: "Magnets repel water", correct: false }, { text: "They heat up faster", correct: false }]
     }
   ];
 
@@ -285,7 +275,7 @@ const ShowerCurtainRenderer: React.FC<ShowerCurtainRendererProps> = ({ currentPh
   // Calculate test score
   const calculateScore = (): number => {
     return testAnswers.reduce((score, answer, index) => {
-      return score + (answer === testQuestions[index].correct ? 1 : 0);
+      return score + (testQuestions[index].options[answer]?.correct ? 1 : 0);
     }, 0);
   };
 
@@ -1578,7 +1568,7 @@ const ShowerCurtainRenderer: React.FC<ShowerCurtainRendererProps> = ({ currentPh
                       e.currentTarget.style.background = colors.background;
                     }}
                   >
-                    {option}
+                    {option.text}
                   </button>
                 ))}
               </div>
@@ -1593,7 +1583,7 @@ const ShowerCurtainRenderer: React.FC<ShowerCurtainRendererProps> = ({ currentPh
                       height: '10px',
                       borderRadius: '50%',
                       background: i < currentQuestion
-                        ? (testAnswers[i] === testQuestions[i].correct ? colors.success : colors.accent)
+                        ? (testQuestions[i].options[testAnswers[i]]?.correct ? colors.success : colors.accent)
                         : i === currentQuestion
                           ? colors.primary
                           : '#333'
@@ -1651,19 +1641,19 @@ const ShowerCurtainRenderer: React.FC<ShowerCurtainRendererProps> = ({ currentPh
                       padding: '14px',
                       background: colors.background,
                       borderRadius: '10px',
-                      borderLeft: `4px solid ${testAnswers[i] === q.correct ? colors.success : colors.accent}`
+                      borderLeft: `4px solid ${q.options[testAnswers[i]]?.correct ? colors.success : colors.accent}`
                     }}
                   >
                     <p style={{ color: colors.text, margin: '0 0 8px 0', fontSize: '13px', fontWeight: '500' }}>
                       {i + 1}. {q.question}
                     </p>
                     <p style={{
-                      color: testAnswers[i] === q.correct ? colors.success : colors.accent,
+                      color: q.options[testAnswers[i]]?.correct ? colors.success : colors.accent,
                       margin: '0 0 4px 0',
                       fontSize: '12px'
                     }}>
-                      Your answer: {q.options[testAnswers[i]]}
-                      {testAnswers[i] === q.correct ? ' ✓' : ` ✗ (Correct: ${q.options[q.correct]})`}
+                      Your answer: {q.options[testAnswers[i]]?.text}
+                      {q.options[testAnswers[i]]?.correct ? ' ✓' : ` ✗ (Correct: ${q.options.find(o => o.correct)?.text})`}
                     </p>
                   </div>
                 ))}

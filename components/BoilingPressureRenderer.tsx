@@ -27,42 +27,92 @@ const TEST_QUESTIONS = [
   {
     question: 'Why does water boil at a lower temperature on Mount Everest?',
     options: [
-      'The air is colder',
-      'There is less atmospheric pressure',
-      'There is less oxygen',
-      'The water is different at high altitude'
-    ],
-    correct: 1
+      { text: 'The air is colder', correct: false },
+      { text: 'There is less atmospheric pressure', correct: true },
+      { text: 'There is less oxygen', correct: false },
+      { text: 'The water is different at high altitude', correct: false }
+    ]
   },
   {
     question: 'What does a pressure cooker do to cooking temperature?',
     options: [
-      'Lowers it by removing air',
-      'Keeps it exactly at 100C',
-      'Raises it by increasing pressure',
-      'Has no effect on temperature'
-    ],
-    correct: 2
+      { text: 'Lowers it by removing air', correct: false },
+      { text: 'Keeps it exactly at 100C', correct: false },
+      { text: 'Raises it by increasing pressure', correct: true },
+      { text: 'Has no effect on temperature', correct: false }
+    ]
   },
   {
     question: 'At what pressure can water boil at room temperature (25C)?',
     options: [
-      '1 atmosphere',
-      '2 atmospheres',
-      'About 0.03 atmospheres (vacuum)',
-      'Water cannot boil at 25C'
-    ],
-    correct: 2
+      { text: '1 atmosphere', correct: false },
+      { text: '2 atmospheres', correct: false },
+      { text: 'About 0.03 atmospheres (vacuum)', correct: true },
+      { text: 'Water cannot boil at 25C', correct: false }
+    ]
   },
   {
     question: 'Why do pressure cookers cook food faster?',
     options: [
-      'Higher pressure pushes heat into food',
-      'Higher boiling point means hotter water',
-      'Steam moves faster at high pressure',
-      'Pressure cookers use less water'
-    ],
-    correct: 1
+      { text: 'Higher pressure pushes heat into food', correct: false },
+      { text: 'Higher boiling point means hotter water', correct: true },
+      { text: 'Steam moves faster at high pressure', correct: false },
+      { text: 'Pressure cookers use less water', correct: false }
+    ]
+  },
+  {
+    question: 'What is vapor pressure?',
+    options: [
+      { text: 'The pressure inside a sealed container', correct: false },
+      { text: 'The pressure exerted by a vapor in equilibrium with its liquid', correct: true },
+      { text: 'The weight of water vapor in the air', correct: false },
+      { text: 'The force needed to compress a gas', correct: false }
+    ]
+  },
+  {
+    question: 'According to the Clausius-Clapeyron relation, what happens to boiling point when pressure doubles?',
+    options: [
+      { text: 'Boiling point doubles', correct: false },
+      { text: 'Boiling point increases, but not by double', correct: true },
+      { text: 'Boiling point stays the same', correct: false },
+      { text: 'Boiling point decreases', correct: false }
+    ]
+  },
+  {
+    question: 'Why is vacuum cooking (sous vide at low pressure) useful for delicate ingredients?',
+    options: [
+      { text: 'It removes bacteria more effectively', correct: false },
+      { text: 'It allows boiling at lower temperatures, preserving texture', correct: true },
+      { text: 'It makes food cook faster', correct: false },
+      { text: 'It adds more flavor to the food', correct: false }
+    ]
+  },
+  {
+    question: 'In Denver (altitude ~1600m), water boils at approximately what temperature?',
+    options: [
+      { text: '100C - altitude does not matter', correct: false },
+      { text: '95C - slightly lower due to reduced pressure', correct: true },
+      { text: '85C - significantly lower', correct: false },
+      { text: '105C - higher due to thinner air', correct: false }
+    ]
+  },
+  {
+    question: 'What happens to the boiling point of water if you add salt?',
+    options: [
+      { text: 'It decreases significantly', correct: false },
+      { text: 'It increases slightly (boiling point elevation)', correct: true },
+      { text: 'It stays exactly the same', correct: false },
+      { text: 'It becomes unpredictable', correct: false }
+    ]
+  },
+  {
+    question: 'Why do geysers erupt with such force?',
+    options: [
+      { text: 'Underground volcanic gases push the water out', correct: false },
+      { text: 'Superheated water under pressure rapidly boils when reaching lower pressure at surface', correct: true },
+      { text: 'Earthquakes force the water upward', correct: false },
+      { text: 'The water is heated by the sun', correct: false }
+    ]
   }
 ];
 
@@ -915,7 +965,7 @@ export default function BoilingPressureRenderer({ onBack, onPhaseComplete }: Boi
 
     if (isComplete) {
       const score = testAnswers.reduce(
-        (acc, answer, i) => acc + (answer === TEST_QUESTIONS[i].correct ? 1 : 0),
+        (acc, answer, i) => acc + (TEST_QUESTIONS[i].options[answer]?.correct ? 1 : 0),
         0
       );
       const passed = score >= 3;
@@ -962,7 +1012,7 @@ export default function BoilingPressureRenderer({ onBack, onPhaseComplete }: Boi
               key={i}
               className={`w-3 h-3 rounded-full ${
                 i < currentQuestion
-                  ? testAnswers[i] === TEST_QUESTIONS[i].correct
+                  ? TEST_QUESTIONS[i].options[testAnswers[i]]?.correct
                     ? 'bg-emerald-500'
                     : 'bg-red-500'
                   : i === currentQuestion
@@ -980,16 +1030,16 @@ export default function BoilingPressureRenderer({ onBack, onPhaseComplete }: Boi
               <button
                 key={i}
                 onMouseDown={() => {
-                  playSound(i === question.correct ? 'success' : 'failure');
+                  playSound(option.correct ? 'success' : 'failure');
                   setTestAnswers([...testAnswers, i]);
                   emitEvent('test_answer', {
                     questionIndex: currentQuestion,
-                    correct: i === question.correct
+                    correct: option.correct
                   });
                 }}
                 className="w-full p-4 bg-slate-700/50 text-slate-300 rounded-xl text-left hover:bg-slate-600/50 transition-all"
               >
-                {option}
+                {option.text}
               </button>
             ))}
           </div>

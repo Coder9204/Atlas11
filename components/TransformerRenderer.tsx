@@ -87,6 +87,60 @@ const TEST_QUESTIONS = [
       { text: 'Lower current means less I squared R heat loss in wires', correct: true },
       { text: 'High voltage is safer', correct: false }
     ]
+  },
+  {
+    question: 'A transformer has 500 turns on the primary and 100 turns on the secondary. What type is it?',
+    options: [
+      { text: 'Step-up transformer', correct: false },
+      { text: 'Step-down transformer', correct: true },
+      { text: 'Isolation transformer', correct: false },
+      { text: 'Auto-transformer', correct: false }
+    ]
+  },
+  {
+    question: 'What is the purpose of the iron core in a transformer?',
+    options: [
+      { text: 'To conduct electricity between coils', correct: false },
+      { text: 'To concentrate and channel magnetic flux between coils', correct: true },
+      { text: 'To cool down the transformer', correct: false },
+      { text: 'To add weight for stability', correct: false }
+    ]
+  },
+  {
+    question: 'Why are transformer cores made of laminated sheets instead of solid iron?',
+    options: [
+      { text: 'Laminated sheets are cheaper to manufacture', correct: false },
+      { text: 'To reduce eddy currents and energy loss', correct: true },
+      { text: 'Solid iron would be too heavy', correct: false },
+      { text: 'To make the transformer easier to assemble', correct: false }
+    ]
+  },
+  {
+    question: 'Your phone charger converts 120V AC to 5V DC. Which component steps down the voltage?',
+    options: [
+      { text: 'A resistor', correct: false },
+      { text: 'A capacitor', correct: false },
+      { text: 'A transformer (or switching circuit)', correct: true },
+      { text: 'A diode', correct: false }
+    ]
+  },
+  {
+    question: 'In an ideal transformer, what is conserved between primary and secondary?',
+    options: [
+      { text: 'Voltage', correct: false },
+      { text: 'Current', correct: false },
+      { text: 'Power (V x I)', correct: true },
+      { text: 'Frequency doubles', correct: false }
+    ]
+  },
+  {
+    question: 'A step-up transformer increases voltage. What happens to the output current compared to input?',
+    options: [
+      { text: 'Output current increases proportionally', correct: false },
+      { text: 'Output current decreases proportionally', correct: true },
+      { text: 'Output current stays the same', correct: false },
+      { text: 'Output current becomes zero', correct: false }
+    ]
   }
 ];
 

@@ -83,6 +83,60 @@ const TEST_QUESTIONS = [
       { text: 'Weigh less', correct: false },
       { text: 'Be larger', correct: false }
     ]
+  },
+  {
+    question: 'What is the approximate escape velocity from Earth\'s surface?',
+    options: [
+      { text: '7.9 km/s', correct: false },
+      { text: '11.2 km/s', correct: true },
+      { text: '3.5 km/s', correct: false },
+      { text: '25 km/s', correct: false }
+    ]
+  },
+  {
+    question: 'According to Kepler\'s third law, how does orbital period relate to orbital radius?',
+    options: [
+      { text: 'Period is proportional to radius', correct: false },
+      { text: 'Period squared is proportional to radius cubed', correct: true },
+      { text: 'Period decreases as radius increases', correct: false },
+      { text: 'Period and radius are unrelated', correct: false }
+    ]
+  },
+  {
+    question: 'What shape are all orbits according to Kepler\'s first law?',
+    options: [
+      { text: 'Perfect circles', correct: false },
+      { text: 'Ellipses (with circle as a special case)', correct: true },
+      { text: 'Parabolas', correct: false },
+      { text: 'Hyperbolas', correct: false }
+    ]
+  },
+  {
+    question: 'A geostationary satellite orbits Earth in exactly 24 hours. At what altitude must it be?',
+    options: [
+      { text: '400 km (like the ISS)', correct: false },
+      { text: '2,000 km', correct: false },
+      { text: '35,786 km', correct: true },
+      { text: '100,000 km', correct: false }
+    ]
+  },
+  {
+    question: 'What provides the centripetal force for a satellite in orbit?',
+    options: [
+      { text: 'The satellite\'s engines', correct: false },
+      { text: 'Earth\'s gravitational pull', correct: true },
+      { text: 'Earth\'s magnetic field', correct: false },
+      { text: 'Solar wind pressure', correct: false }
+    ]
+  },
+  {
+    question: 'At what point in an elliptical orbit does a satellite move fastest?',
+    options: [
+      { text: 'At the farthest point from Earth (apogee)', correct: false },
+      { text: 'At the closest point to Earth (perigee)', correct: true },
+      { text: 'Speed is constant throughout the orbit', correct: false },
+      { text: 'At the midpoint between perigee and apogee', correct: false }
+    ]
   }
 ];
 

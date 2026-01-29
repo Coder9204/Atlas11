@@ -83,6 +83,60 @@ const TEST_QUESTIONS = [
       { text: 'More phones means louder sound detection', correct: false },
       { text: 'They boost each other\'s signals', correct: false }
     ]
+  },
+  {
+    question: 'Which type of seismic wave travels fastest and arrives first at a seismometer?',
+    options: [
+      { text: 'Surface waves (Love and Rayleigh waves)', correct: false },
+      { text: 'S-waves (secondary/shear waves)', correct: false },
+      { text: 'P-waves (primary/pressure waves)', correct: true },
+      { text: 'All seismic waves travel at the same speed', correct: false }
+    ]
+  },
+  {
+    question: 'What is the difference between P-waves and S-waves?',
+    options: [
+      { text: 'P-waves compress and expand rock; S-waves shake rock side-to-side', correct: true },
+      { text: 'P-waves only travel through water; S-waves travel through rock', correct: false },
+      { text: 'P-waves are stronger than S-waves', correct: false },
+      { text: 'There is no difference; they are the same wave', correct: false }
+    ]
+  },
+  {
+    question: 'Why can\'t S-waves travel through Earth\'s liquid outer core?',
+    options: [
+      { text: 'The core is too hot for any waves', correct: false },
+      { text: 'S-waves require a rigid medium to propagate shear motion', correct: true },
+      { text: 'S-waves are absorbed by iron', correct: false },
+      { text: 'The core reflects all seismic waves', correct: false }
+    ]
+  },
+  {
+    question: 'What does the Richter magnitude scale measure?',
+    options: [
+      { text: 'The duration of earthquake shaking', correct: false },
+      { text: 'The logarithmic amplitude of seismic waves (energy released)', correct: true },
+      { text: 'The depth of the earthquake focus', correct: false },
+      { text: 'The number of aftershocks', correct: false }
+    ]
+  },
+  {
+    question: 'How does your phone know which way is "down" for screen rotation?',
+    options: [
+      { text: 'It uses GPS to determine orientation', correct: false },
+      { text: 'The accelerometer detects the direction of gravitational acceleration', correct: true },
+      { text: 'It uses the camera to see the horizon', correct: false },
+      { text: 'The phone has a built-in compass', correct: false }
+    ]
+  },
+  {
+    question: 'Why are surface waves often the most destructive during earthquakes?',
+    options: [
+      { text: 'They travel the fastest', correct: false },
+      { text: 'They have the largest amplitude and cause ground rolling/shaking at the surface', correct: true },
+      { text: 'They only occur during major earthquakes', correct: false },
+      { text: 'They travel through the Earth\'s core', correct: false }
+    ]
   }
 ];
 

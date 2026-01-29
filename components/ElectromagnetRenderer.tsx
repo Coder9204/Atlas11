@@ -86,6 +86,60 @@ const TEST_QUESTIONS = [
       { text: 'Use plastic instead of iron', correct: false },
       { text: 'Decrease the voltage', correct: false }
     ]
+  },
+  {
+    question: 'What is the main advantage of an electromagnet over a permanent magnet?',
+    options: [
+      { text: 'Electromagnets are always stronger', correct: false },
+      { text: 'Electromagnets can be turned on and off', correct: true },
+      { text: 'Electromagnets never need maintenance', correct: false },
+      { text: 'Electromagnets are cheaper to make', correct: false }
+    ]
+  },
+  {
+    question: 'In an MRI machine, what allows the electromagnet to be extremely powerful?',
+    options: [
+      { text: 'Using very thick copper wire', correct: false },
+      { text: 'Superconducting coils that carry current without resistance', correct: true },
+      { text: 'Adding multiple iron cores', correct: false },
+      { text: 'Using alternating current at high frequency', correct: false }
+    ]
+  },
+  {
+    question: 'How does a junkyard crane electromagnet release a car?',
+    options: [
+      { text: 'By reversing the current direction', correct: false },
+      { text: 'By turning off the current', correct: true },
+      { text: 'By lowering the voltage slowly', correct: false },
+      { text: 'By heating up the electromagnet', correct: false }
+    ]
+  },
+  {
+    question: 'What happens to the magnetic field if you double both the current and the number of coil turns?',
+    options: [
+      { text: 'The field strength doubles', correct: false },
+      { text: 'The field strength quadruples', correct: true },
+      { text: 'The field strength stays the same', correct: false },
+      { text: 'The field strength is cut in half', correct: false }
+    ]
+  },
+  {
+    question: 'Why do electric motors use electromagnets instead of permanent magnets for the stator?',
+    options: [
+      { text: 'Permanent magnets are too expensive', correct: false },
+      { text: 'Electromagnets allow the field direction to be switched for continuous rotation', correct: true },
+      { text: 'Permanent magnets would melt from the heat', correct: false },
+      { text: 'Electromagnets are lighter in weight', correct: false }
+    ]
+  },
+  {
+    question: 'What is the right-hand rule used for in electromagnetism?',
+    options: [
+      { text: 'To measure the strength of the magnetic field', correct: false },
+      { text: 'To determine the direction of the magnetic field around a current-carrying wire', correct: true },
+      { text: 'To calculate the voltage needed', correct: false },
+      { text: 'To find the temperature of the wire', correct: false }
+    ]
   }
 ];
 
@@ -939,7 +993,8 @@ export default function ElectromagnetRenderer({ phase: initialPhase, onPhaseComp
         (acc, answer, i) => acc + (TEST_QUESTIONS[i].options[answer]?.correct ? 1 : 0),
         0
       );
-      const passed = score >= 3;
+      const passingScore = Math.ceil(TEST_QUESTIONS.length * 0.7);
+      const passed = score >= passingScore;
       if (passed && onCorrectAnswer) onCorrectAnswer();
 
       return (

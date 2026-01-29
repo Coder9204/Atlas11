@@ -26,42 +26,92 @@ const TEST_QUESTIONS = [
   {
     question: 'Why does a microwave oven have hot spots and cold spots?',
     options: [
-      'The magnetron doesn\'t produce enough power',
-      'Standing waves form with fixed nodes (cold) and antinodes (hot)',
-      'Food absorbs microwaves unevenly due to its color',
-      'The walls absorb some of the microwave energy'
-    ],
-    correct: 1
+      { text: 'The magnetron doesn\'t produce enough power', correct: false },
+      { text: 'Standing waves form with fixed nodes (cold) and antinodes (hot)', correct: true },
+      { text: 'Food absorbs microwaves unevenly due to its color', correct: false },
+      { text: 'The walls absorb some of the microwave energy', correct: false }
+    ]
   },
   {
     question: 'What happens at a standing wave node?',
     options: [
-      'Maximum energy - food heats fastest',
-      'Minimum/zero energy - food barely heats',
-      'The wave changes direction',
-      'Microwaves are absorbed by the walls'
-    ],
-    correct: 1
+      { text: 'Maximum energy - food heats fastest', correct: false },
+      { text: 'Minimum/zero energy - food barely heats', correct: true },
+      { text: 'The wave changes direction', correct: false },
+      { text: 'Microwaves are absorbed by the walls', correct: false }
+    ]
   },
   {
     question: 'Why do microwave ovens have turntables?',
     options: [
-      'To look more professional',
-      'To move food through hot spots for even heating',
-      'To prevent sparks',
-      'To reduce microwave power consumption'
-    ],
-    correct: 1
+      { text: 'To look more professional', correct: false },
+      { text: 'To move food through hot spots for even heating', correct: true },
+      { text: 'To prevent sparks', correct: false },
+      { text: 'To reduce microwave power consumption', correct: false }
+    ]
   },
   {
     question: 'The wavelength of microwave radiation is about 12 cm. What distance is between hot spots?',
     options: [
-      '12 cm (one wavelength)',
-      '6 cm (half wavelength)',
-      '3 cm (quarter wavelength)',
-      '24 cm (two wavelengths)'
-    ],
-    correct: 1
+      { text: '12 cm (one wavelength)', correct: false },
+      { text: '6 cm (half wavelength)', correct: true },
+      { text: '3 cm (quarter wavelength)', correct: false },
+      { text: '24 cm (two wavelengths)', correct: false }
+    ]
+  },
+  {
+    question: 'What is an antinode in a standing wave?',
+    options: [
+      { text: 'A point of zero amplitude where waves cancel out', correct: false },
+      { text: 'A point of maximum amplitude where waves reinforce', correct: true },
+      { text: 'The wavelength of the microwave', correct: false },
+      { text: 'The frequency of the oscillation', correct: false }
+    ]
+  },
+  {
+    question: 'How do standing waves form inside a microwave oven?',
+    options: [
+      { text: 'The magnetron creates multiple beams', correct: false },
+      { text: 'Waves reflect off metal walls and interfere with incoming waves', correct: true },
+      { text: 'Food molecules vibrate and create new waves', correct: false },
+      { text: 'The turntable generates secondary waves', correct: false }
+    ]
+  },
+  {
+    question: 'If microwave frequency is 2.45 GHz, what can you conclude about the wavelength?',
+    options: [
+      { text: 'Wavelength = speed of light / frequency, so about 12.2 cm', correct: true },
+      { text: 'Wavelength equals frequency, so 2.45 cm', correct: false },
+      { text: 'Wavelength cannot be calculated from frequency', correct: false },
+      { text: 'Wavelength is always 1 meter for microwaves', correct: false }
+    ]
+  },
+  {
+    question: 'In a microwave without a turntable, where should you place food for best heating?',
+    options: [
+      { text: 'Always in the exact center', correct: false },
+      { text: 'Near the walls where reflections are strongest', correct: false },
+      { text: 'At antinode positions where energy is maximum', correct: true },
+      { text: 'It doesn\'t matter where you place it', correct: false }
+    ]
+  },
+  {
+    question: 'Why do some microwaves use a rotating metal stirrer instead of a turntable?',
+    options: [
+      { text: 'To create more microwaves', correct: false },
+      { text: 'To reflect waves in changing directions, moving the hot spots', correct: true },
+      { text: 'To reduce power consumption', correct: false },
+      { text: 'Stirrers are cheaper to manufacture', correct: false }
+    ]
+  },
+  {
+    question: 'You can measure microwave wavelength by heating marshmallows. Why does this work?',
+    options: [
+      { text: 'Marshmallows absorb only certain wavelengths', correct: false },
+      { text: 'The distance between melted spots equals half the wavelength', correct: true },
+      { text: 'Marshmallows change color at specific temperatures', correct: false },
+      { text: 'Sugar molecules resonate at the microwave frequency', correct: false }
+    ]
   }
 ];
 
@@ -872,13 +922,14 @@ const MicrowaveStandingWaveRenderer: React.FC<Props> = ({ currentPhase, onPhaseC
     const question = TEST_QUESTIONS[currentQuestion];
 
     if (!question) {
-      const score = testAnswers.filter((a, i) => a === TEST_QUESTIONS[i].correct).length;
+      const score = testAnswers.filter((a, i) => TEST_QUESTIONS[i].options[a]?.correct).length;
+      const passingScore = Math.ceil(TEST_QUESTIONS.length * 0.7);
       return (
         <div className="flex flex-col items-center justify-center min-h-[500px] p-6 text-center">
-          <div className="text-6xl mb-4">{score >= 3 ? '🎉' : '📚'}</div>
+          <div className="text-6xl mb-4">{score >= passingScore ? '🎉' : '📚'}</div>
           <h2 className="text-2xl font-bold text-white mb-2">Score: {score}/{TEST_QUESTIONS.length}</h2>
-          <p className="text-slate-300 mb-6">{score >= 3 ? 'Excellent! You\'ve mastered standing waves!' : 'Keep studying! Review and try again.'}</p>
-          {score >= 3 ? (
+          <p className="text-slate-300 mb-6">{score >= passingScore ? 'Excellent! You\'ve mastered standing waves!' : 'Keep studying! Review and try again.'}</p>
+          {score >= passingScore ? (
             <button
               onMouseDown={(e) => { e.preventDefault(); playSound('complete'); goToNextPhase(); }}
               className="px-8 py-4 bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-semibold rounded-xl"
@@ -907,10 +958,10 @@ const MicrowaveStandingWaveRenderer: React.FC<Props> = ({ currentPhase, onPhaseC
           {question.options.map((option, i) => (
             <button
               key={i}
-              onMouseDown={(e) => { e.preventDefault(); handleTestAnswer(i, i === question.correct); }}
+              onMouseDown={(e) => { e.preventDefault(); handleTestAnswer(i, option.correct); }}
               className="p-4 rounded-xl bg-slate-700/50 hover:bg-slate-600/50 border-2 border-transparent text-left text-slate-200"
             >
-              {option}
+              {option.text}
             </button>
           ))}
         </div>

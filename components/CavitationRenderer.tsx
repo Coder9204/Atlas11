@@ -253,53 +253,43 @@ const CavitationRenderer: React.FC<CavitationRendererProps> = ({ currentPhase, o
   const testQuestions = [
     {
       question: "Cavitation occurs when local pressure drops below:",
-      options: ["Atmospheric pressure", "The liquid's vapor pressure", "Zero pressure", "The critical pressure"],
-      correct: 1
+      options: [{ text: "Atmospheric pressure", correct: false }, { text: "The liquid's vapor pressure", correct: true }, { text: "Zero pressure", correct: false }, { text: "The critical pressure", correct: false }]
     },
     {
       question: "Why is cavitation damage so severe?",
-      options: ["Bubbles are toxic", "Collapse creates extreme local temperatures and pressures", "Air corrodes metal", "Bubbles are radioactive"],
-      correct: 1
+      options: [{ text: "Bubbles are toxic", correct: false }, { text: "Collapse creates extreme local temperatures and pressures", correct: true }, { text: "Air corrodes metal", correct: false }, { text: "Bubbles are radioactive", correct: false }]
     },
     {
       question: "Where do cavitation bubbles typically form on a propeller?",
-      options: ["On the hub", "On the low-pressure (suction) side of blades", "At the tips only", "On the shaft"],
-      correct: 1
+      options: [{ text: "On the hub", correct: false }, { text: "On the low-pressure (suction) side of blades", correct: true }, { text: "At the tips only", correct: false }, { text: "On the shaft", correct: false }]
     },
     {
       question: "The mantis shrimp's strike creates cavitation by:",
-      options: ["Heating the water", "Moving its claw so fast it creates low pressure", "Chemical reaction", "Electrical discharge"],
-      correct: 1
+      options: [{ text: "Heating the water", correct: false }, { text: "Moving its claw so fast it creates low pressure", correct: true }, { text: "Chemical reaction", correct: false }, { text: "Electrical discharge", correct: false }]
     },
     {
       question: "At what approximate temperature can the center of a collapsing bubble reach?",
-      options: ["100°C", "500°C", "5,000°C or higher", "Only room temperature"],
-      correct: 2
+      options: [{ text: "100°C", correct: false }, { text: "500°C", correct: false }, { text: "5,000°C or higher", correct: true }, { text: "Only room temperature", correct: false }]
     },
     {
       question: "Sonoluminescence is:",
-      options: ["Sound from collapsing bubbles", "Light emitted from collapsing bubbles", "Ultrasound imaging", "Laser-induced cavitation"],
-      correct: 1
+      options: [{ text: "Sound from collapsing bubbles", correct: false }, { text: "Light emitted from collapsing bubbles", correct: true }, { text: "Ultrasound imaging", correct: false }, { text: "Laser-induced cavitation", correct: false }]
     },
     {
       question: "To prevent cavitation in a pump, you should:",
-      options: ["Run it faster", "Increase suction pressure or reduce speed", "Use hotter liquid", "Add air bubbles"],
-      correct: 1
+      options: [{ text: "Run it faster", correct: false }, { text: "Increase suction pressure or reduce speed", correct: true }, { text: "Use hotter liquid", correct: false }, { text: "Add air bubbles", correct: false }]
     },
     {
       question: "Why do ship propellers sometimes make a 'singing' noise?",
-      options: ["Motor vibration only", "Cavitation bubble collapse creates sound", "Wind noise", "Hull resonance"],
-      correct: 1
+      options: [{ text: "Motor vibration only", correct: false }, { text: "Cavitation bubble collapse creates sound", correct: true }, { text: "Wind noise", correct: false }, { text: "Hull resonance", correct: false }]
     },
     {
       question: "Ultrasonic cleaning uses cavitation to:",
-      options: ["Heat the water", "Create bubbles that scrub surfaces", "Dissolve dirt chemically", "Magnetize particles"],
-      correct: 1
+      options: [{ text: "Heat the water", correct: false }, { text: "Create bubbles that scrub surfaces", correct: true }, { text: "Dissolve dirt chemically", correct: false }, { text: "Magnetize particles", correct: false }]
     },
     {
       question: "Cavitation damage appears as:",
-      options: ["Rust spots", "Pitted, cratered surface (looks like tiny explosions)", "Smooth wear", "Color change only"],
-      correct: 1
+      options: [{ text: "Rust spots", correct: false }, { text: "Pitted, cratered surface (looks like tiny explosions)", correct: true }, { text: "Smooth wear", correct: false }, { text: "Color change only", correct: false }]
     }
   ];
 
@@ -372,7 +362,7 @@ const CavitationRenderer: React.FC<CavitationRendererProps> = ({ currentPhase, o
   // Calculate test score
   const calculateScore = (): number => {
     return testAnswers.reduce((score, answer, index) => {
-      return score + (answer === testQuestions[index].correct ? 1 : 0);
+      return score + (testQuestions[index].options[answer]?.correct ? 1 : 0);
     }, 0);
   };
 
@@ -1516,7 +1506,7 @@ const CavitationRenderer: React.FC<CavitationRendererProps> = ({ currentPhase, o
                       e.currentTarget.style.background = colors.background;
                     }}
                   >
-                    {option}
+                    {option.text}
                   </button>
                 ))}
               </div>
@@ -1531,7 +1521,7 @@ const CavitationRenderer: React.FC<CavitationRendererProps> = ({ currentPhase, o
                       height: '10px',
                       borderRadius: '50%',
                       background: i < currentQuestion
-                        ? (testAnswers[i] === testQuestions[i].correct ? colors.success : colors.accent)
+                        ? (testQuestions[i].options[testAnswers[i]]?.correct ? colors.success : colors.accent)
                         : i === currentQuestion
                           ? colors.primary
                           : '#333'
@@ -1589,19 +1579,19 @@ const CavitationRenderer: React.FC<CavitationRendererProps> = ({ currentPhase, o
                       padding: '14px',
                       background: colors.background,
                       borderRadius: '10px',
-                      borderLeft: `4px solid ${testAnswers[i] === q.correct ? colors.success : colors.accent}`
+                      borderLeft: `4px solid ${q.options[testAnswers[i]]?.correct ? colors.success : colors.accent}`
                     }}
                   >
                     <p style={{ color: colors.text, margin: '0 0 8px 0', fontSize: '13px', fontWeight: '500' }}>
                       {i + 1}. {q.question}
                     </p>
                     <p style={{
-                      color: testAnswers[i] === q.correct ? colors.success : colors.accent,
+                      color: q.options[testAnswers[i]]?.correct ? colors.success : colors.accent,
                       margin: '0 0 4px 0',
                       fontSize: '12px'
                     }}>
-                      Your answer: {q.options[testAnswers[i]]}
-                      {testAnswers[i] === q.correct ? ' ✓' : ` ✗ (Correct: ${q.options[q.correct]})`}
+                      Your answer: {q.options[testAnswers[i]]?.text}
+                      {q.options[testAnswers[i]]?.correct ? ' ✓' : ` ✗ (Correct: ${q.options.find(o => o.correct)?.text})`}
                     </p>
                   </div>
                 ))}

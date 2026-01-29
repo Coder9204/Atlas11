@@ -83,6 +83,60 @@ const TEST_QUESTIONS = [
       { text: 'Sun, Moon, and Earth align (new/full moon) - gravitational effects add up', correct: true },
       { text: 'Earth is closest to the Sun', correct: false }
     ]
+  },
+  {
+    question: 'What are neap tides and when do they occur?',
+    options: [
+      { text: 'Highest tides that occur during full moon', correct: false },
+      { text: 'Weaker tides when Sun and Moon are at right angles (first/third quarter moon)', correct: true },
+      { text: 'Tides that only occur in the Pacific Ocean', correct: false },
+      { text: 'Tides caused by underwater earthquakes', correct: false }
+    ]
+  },
+  {
+    question: 'What is the Roche limit?',
+    options: [
+      { text: 'The maximum height of ocean tides', correct: false },
+      { text: 'The distance within which tidal forces can tear apart a moon or satellite', correct: true },
+      { text: 'The speed limit for spacecraft near planets', correct: false },
+      { text: 'The minimum distance for stable planetary orbits', correct: false }
+    ]
+  },
+  {
+    question: 'Why is Jupiter\'s moon Io the most volcanically active body in our solar system?',
+    options: [
+      { text: 'It is very close to the Sun', correct: false },
+      { text: 'Tidal heating from Jupiter\'s intense gravity flexes and heats Io\'s interior', correct: true },
+      { text: 'It has a radioactive core', correct: false },
+      { text: 'Solar radiation melts its surface', correct: false }
+    ]
+  },
+  {
+    question: 'How does tidal force strength depend on distance?',
+    options: [
+      { text: 'It decreases with 1/r (inverse of distance)', correct: false },
+      { text: 'It decreases with 1/r^2 (inverse square law)', correct: false },
+      { text: 'It decreases with 1/r^3 (inverse cube law)', correct: true },
+      { text: 'It stays constant regardless of distance', correct: false }
+    ]
+  },
+  {
+    question: 'What would happen to Earth\'s tides if the Moon suddenly moved twice as far away?',
+    options: [
+      { text: 'Tides would be half as strong', correct: false },
+      { text: 'Tides would be one-quarter as strong', correct: false },
+      { text: 'Tides would be one-eighth as strong (1/2^3)', correct: true },
+      { text: 'Tides would remain the same', correct: false }
+    ]
+  },
+  {
+    question: 'How is tidal locking related to our Moon\'s appearance?',
+    options: [
+      { text: 'The Moon has stopped rotating completely', correct: false },
+      { text: 'Tidal friction synchronized the Moon\'s rotation with its orbit, so we see one face', correct: true },
+      { text: 'Earth\'s gravity prevents us from seeing the far side', correct: false },
+      { text: 'The far side is permanently in shadow', correct: false }
+    ]
   }
 ];
 

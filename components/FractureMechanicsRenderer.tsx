@@ -69,7 +69,61 @@ const TEST_QUESTIONS = [
       { text: 'Sharp V-notch', correct: true },
       { text: 'Rounded notch', correct: false }
     ],
-  }
+  },
+  {
+    question: 'What is the difference between brittle and ductile fracture?',
+    options: [
+      { text: 'Brittle fracture occurs with little deformation; ductile fracture involves significant plastic deformation', correct: true },
+      { text: 'Brittle fracture only happens in metals; ductile fracture happens in ceramics', correct: false },
+      { text: 'There is no difference, they are the same type of failure', correct: false },
+      { text: 'Ductile fracture is faster than brittle fracture', correct: false }
+    ],
+  },
+  {
+    question: 'Why does glass break suddenly without warning?',
+    options: [
+      { text: 'Glass is too thin to show deformation', correct: false },
+      { text: 'Glass is a brittle material with no plastic deformation before fracture', correct: true },
+      { text: 'Glass always has internal cracks that are invisible', correct: false },
+      { text: 'Glass breaks slowly but we cannot see it', correct: false }
+    ],
+  },
+  {
+    question: 'What is fatigue failure in materials?',
+    options: [
+      { text: 'Failure due to the material getting tired over time', correct: false },
+      { text: 'Failure caused by repeated cyclic loading below the yield strength', correct: true },
+      { text: 'Failure from a single large overload', correct: false },
+      { text: 'Failure due to chemical corrosion', correct: false }
+    ],
+  },
+  {
+    question: 'According to Griffith criterion, when does a crack propagate?',
+    options: [
+      { text: 'When the crack is longer than 1 cm', correct: false },
+      { text: 'When energy released by crack growth exceeds energy needed to create new surfaces', correct: true },
+      { text: 'When the material temperature increases', correct: false },
+      { text: 'When the crack is perpendicular to the stress', correct: false }
+    ],
+  },
+  {
+    question: 'What does the stress intensity factor (K) describe?',
+    options: [
+      { text: 'The average stress in a material', correct: false },
+      { text: 'The intensity of the stress field near a crack tip', correct: true },
+      { text: 'The number of stress cycles before failure', correct: false },
+      { text: 'The ratio of applied stress to yield stress', correct: false }
+    ],
+  },
+  {
+    question: 'Why are airplane fuselages regularly inspected for fatigue cracks?',
+    options: [
+      { text: 'Repeated pressurization cycles cause small cracks to grow over time', correct: true },
+      { text: 'Airplanes are made of brittle materials that crack easily', correct: false },
+      { text: 'Cracks only form during takeoff, not flight', correct: false },
+      { text: 'Inspection is only required for older aircraft', correct: false }
+    ],
+  },
 ];
 
 const TRANSFER_APPS = [
@@ -207,7 +261,7 @@ export default function FractureMechanicsRenderer({ phase, onPhaseComplete, onCo
     });
     setTestScore(score);
     setTestSubmitted(true);
-    if (score >= 3 && onCorrectAnswer) onCorrectAnswer();
+    if (score >= 7 && onCorrectAnswer) onCorrectAnswer();
     else if (onIncorrectAnswer) onIncorrectAnswer();
   };
 
@@ -913,7 +967,7 @@ export default function FractureMechanicsRenderer({ phase, onPhaseComplete, onCo
     if (testSubmitted) {
       return (
         <div className="text-center space-y-6">
-          <div className="text-6xl">{testScore >= 3 ? '🎉' : '📚'}</div>
+          <div className="text-6xl">{testScore >= 7 ? '🎉' : '📚'}</div>
           <h2 className="text-2xl font-bold text-white">Quiz Complete!</h2>
           <p className="text-gray-300">You got {testScore} out of {TEST_QUESTIONS.length} correct!</p>
 
@@ -937,12 +991,12 @@ export default function FractureMechanicsRenderer({ phase, onPhaseComplete, onCo
 
           <button
             onMouseDown={() => {
-              playSound(testScore >= 3 ? 'complete' : 'click');
+              playSound(testScore >= 7 ? 'complete' : 'click');
               nextPhase();
             }}
             className="px-8 py-3 bg-gradient-to-r from-red-600 to-orange-600 rounded-xl text-white font-semibold hover:from-red-500 hover:to-orange-500 transition-all"
           >
-            {testScore >= 3 ? 'Complete! 🎊' : 'Continue →'}
+            {testScore >= 7 ? 'Complete! 🎊' : 'Continue →'}
           </button>
         </div>
       );

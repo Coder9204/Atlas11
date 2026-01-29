@@ -26,42 +26,92 @@ const TEST_QUESTIONS = [
   {
     question: 'Why does a highlighter glow under UV light but appear normal under regular light?',
     options: [
-      'Highlighters have tiny LEDs inside',
-      'UV light chemically changes the ink',
-      'Fluorescent molecules absorb UV and re-emit visible light',
-      'Regular light is too weak to activate the glow'
-    ],
-    correct: 2
+      { text: 'Highlighters have tiny LEDs inside', correct: false },
+      { text: 'UV light chemically changes the ink', correct: false },
+      { text: 'Fluorescent molecules absorb UV and re-emit visible light', correct: true },
+      { text: 'Regular light is too weak to activate the glow', correct: false }
+    ]
   },
   {
     question: 'Why is the emitted light a different color (longer wavelength) than the absorbed UV light?',
     options: [
-      'Some energy is lost as heat during the process (Stokes shift)',
-      'The molecules change color when hit by light',
-      'UV light bounces off and changes color',
-      'The eye perceives UV as a different color'
-    ],
-    correct: 0
+      { text: 'Some energy is lost as heat during the process (Stokes shift)', correct: true },
+      { text: 'The molecules change color when hit by light', correct: false },
+      { text: 'UV light bounces off and changes color', correct: false },
+      { text: 'The eye perceives UV as a different color', correct: false }
+    ]
   },
   {
     question: 'Why doesn\'t regular white paper fluoresce much?',
     options: [
-      'White paper is too bright already',
-      'Paper lacks special fluorescent molecules',
-      'Paper absorbs all UV light completely',
-      'Paper is too thick for light to penetrate'
-    ],
-    correct: 1
+      { text: 'White paper is too bright already', correct: false },
+      { text: 'Paper lacks special fluorescent molecules', correct: true },
+      { text: 'Paper absorbs all UV light completely', correct: false },
+      { text: 'Paper is too thick for light to penetrate', correct: false }
+    ]
   },
   {
     question: 'A mineral glows red under UV light. What wavelength is the UV light?',
     options: [
-      'Longer than red (infrared)',
-      'The same as red (~700nm)',
-      'Shorter than red, shorter than all visible light (~365nm)',
-      'It depends on the room temperature'
-    ],
-    correct: 2
+      { text: 'Longer than red (infrared)', correct: false },
+      { text: 'The same as red (~700nm)', correct: false },
+      { text: 'Shorter than red, shorter than all visible light (~365nm)', correct: true },
+      { text: 'It depends on the room temperature', correct: false }
+    ]
+  },
+  {
+    question: 'What is the main difference between fluorescence and phosphorescence?',
+    options: [
+      { text: 'Fluorescence uses UV light, phosphorescence uses visible light', correct: false },
+      { text: 'Fluorescence stops immediately when light source is removed, phosphorescence continues glowing', correct: true },
+      { text: 'They are exactly the same phenomenon', correct: false },
+      { text: 'Phosphorescence only occurs in living organisms', correct: false }
+    ]
+  },
+  {
+    question: 'What is GFP (Green Fluorescent Protein) used for in biology?',
+    options: [
+      { text: 'Making plants grow faster', correct: false },
+      { text: 'Tagging and tracking proteins/cells in living organisms', correct: true },
+      { text: 'Killing bacteria with UV light', correct: false },
+      { text: 'Protecting skin from sunburn', correct: false }
+    ]
+  },
+  {
+    question: 'Why do blacklights appear purple to our eyes?',
+    options: [
+      { text: 'They only emit purple visible light', correct: false },
+      { text: 'They emit mostly UV with a small amount of visible violet light', correct: true },
+      { text: 'Our eyes convert UV directly to purple', correct: false },
+      { text: 'The glass filter is painted purple', correct: false }
+    ]
+  },
+  {
+    question: 'Why does tonic water glow blue under UV light?',
+    options: [
+      { text: 'It contains blue food coloring', correct: false },
+      { text: 'The quinine in tonic water is fluorescent', correct: true },
+      { text: 'The carbonation bubbles reflect UV as blue', correct: false },
+      { text: 'The water itself is naturally fluorescent', correct: false }
+    ]
+  },
+  {
+    question: 'Some diamonds fluoresce blue under UV light. What causes this?',
+    options: [
+      { text: 'The carbon atoms themselves fluoresce', correct: false },
+      { text: 'Nitrogen impurities in the diamond crystal structure', correct: true },
+      { text: 'The diamond cutting pattern reflects UV', correct: false },
+      { text: 'Oil residue on the diamond surface', correct: false }
+    ]
+  },
+  {
+    question: 'Why do laundry detergents contain optical brighteners (fluorescent compounds)?',
+    options: [
+      { text: 'To kill bacteria on clothes', correct: false },
+      { text: 'To make whites appear brighter by converting UV to visible blue light', correct: true },
+      { text: 'To make the detergent smell better', correct: false },
+      { text: 'To help the detergent dissolve faster', correct: false }
+    ]
   }
 ];
 
@@ -458,7 +508,7 @@ const FluorescenceRenderer: React.FC<Props> = ({ currentPhase, onPhaseComplete }
     if (now - lastClickRef.current < 200) return;
     lastClickRef.current = now;
     const currentQuestion = testAnswers.length;
-    const isCorrect = answerIndex === TEST_QUESTIONS[currentQuestion].correct;
+    const isCorrect = TEST_QUESTIONS[currentQuestion].options[answerIndex]?.correct;
     playSound(isCorrect ? 'success' : 'failure');
     setTestAnswers([...testAnswers, answerIndex]);
   }, [testAnswers, playSound]);
@@ -471,7 +521,7 @@ const FluorescenceRenderer: React.FC<Props> = ({ currentPhase, onPhaseComplete }
     playSound('complete');
   }, [playSound]);
 
-  const calculateScore = () => testAnswers.filter((a, i) => a === TEST_QUESTIONS[i].correct).length;
+  const calculateScore = () => testAnswers.filter((a, i) => TEST_QUESTIONS[i].options[a]?.correct).length;
 
   // ─── Phase Renderers ─────────────────────────────────────────────────────────
   const renderHook = () => (
@@ -921,7 +971,7 @@ const FluorescenceRenderer: React.FC<Props> = ({ currentPhase, onPhaseComplete }
               onMouseDown={(e) => { e.preventDefault(); handleTestAnswer(i); }}
               className="p-4 rounded-xl border-2 border-gray-700 bg-gray-800/50 hover:border-violet-500 transition-all text-left text-gray-200"
             >
-              {option}
+              {option.text}
             </button>
           ))}
         </div>

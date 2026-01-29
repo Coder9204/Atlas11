@@ -51,6 +51,60 @@ const TEST_QUESTIONS = [
       { text: 'The oven would be more efficient', correct: false },
       { text: 'You couldn\'t see the food', correct: false }
     ]
+  },
+  {
+    question: 'When charges redistribute on a Faraday cage, where do they accumulate?',
+    options: [
+      { text: 'Uniformly throughout the metal', correct: false },
+      { text: 'Only at the corners', correct: false },
+      { text: 'On the outer surface of the conductor', correct: true },
+      { text: 'In the center of the metal', correct: false }
+    ]
+  },
+  {
+    question: 'Why is a car relatively safe during a lightning strike?',
+    options: [
+      { text: 'The rubber tires insulate you from the ground', correct: false },
+      { text: 'The metal body acts as a Faraday cage, directing current around you', correct: true },
+      { text: 'Lightning cannot strike moving objects', correct: false },
+      { text: 'The car\'s battery absorbs the electricity', correct: false }
+    ]
+  },
+  {
+    question: 'A solid metal box vs a metal mesh cage - which provides better shielding?',
+    options: [
+      { text: 'Solid metal, because it has no gaps', correct: true },
+      { text: 'Mesh, because it allows air to circulate', correct: false },
+      { text: 'They are exactly equal in effectiveness', correct: false },
+      { text: 'Mesh, because it has more surface area', correct: false }
+    ]
+  },
+  {
+    question: 'Why might your cell phone still work inside some buildings with metal frames?',
+    options: [
+      { text: 'Cell signals are too powerful to block', correct: false },
+      { text: 'Windows and gaps act as openings larger than the wavelength', correct: true },
+      { text: 'Metal frames amplify signals', correct: false },
+      { text: 'Modern phones can penetrate any shielding', correct: false }
+    ]
+  },
+  {
+    question: 'What happens to the electric field inside a perfect Faraday cage?',
+    options: [
+      { text: 'It doubles in strength', correct: false },
+      { text: 'It oscillates rapidly', correct: false },
+      { text: 'It becomes zero', correct: true },
+      { text: 'It reverses direction', correct: false }
+    ]
+  },
+  {
+    question: 'RFID-blocking wallets use the Faraday cage principle. What are they protecting against?',
+    options: [
+      { text: 'Heat damage to cards', correct: false },
+      { text: 'Unauthorized wireless scanning of card data', correct: true },
+      { text: 'Magnetic stripe erasure', correct: false },
+      { text: 'Physical bending of cards', correct: false }
+    ]
   }
 ];
 
@@ -207,7 +261,7 @@ const FaradayCageRenderer: React.FC<FaradayCageRendererProps> = ({
     });
     setTestScore(score);
     setShowTestResults(true);
-    if (score >= 3 && onCorrectAnswer) onCorrectAnswer();
+    if (score >= 7 && onCorrectAnswer) onCorrectAnswer();
     else if (onIncorrectAnswer) onIncorrectAnswer();
   };
 
@@ -748,7 +802,7 @@ const FaradayCageRenderer: React.FC<FaradayCageRendererProps> = ({
             <div className="bg-slate-800/50 rounded-2xl p-6 max-w-2xl mx-auto mt-8 text-center">
               <div className="text-6xl mb-4">{testScore >= 3 ? '🎉' : '📚'}</div>
               <h3 className="text-2xl font-bold text-white mb-2">Score: {testScore}/{TEST_QUESTIONS.length}</h3>
-              <p className="text-slate-300 mb-6">{testScore >= 3 ? 'Excellent! You understand Faraday cages!' : 'Keep studying! Review and try again.'}</p>
+              <p className="text-slate-300 mb-6">{testScore >= 7 ? 'Excellent! You understand Faraday cages!' : 'Keep studying! Review and try again.'}</p>
             </div>
             {TEST_QUESTIONS.map((q, qIndex) => {
               const userAnswer = testAnswers[qIndex];
@@ -765,7 +819,7 @@ const FaradayCageRenderer: React.FC<FaradayCageRendererProps> = ({
               );
             })}
           </div>
-          {renderBottomBar(false, testScore >= 3, testScore >= 3 ? 'Complete Mastery' : 'Review & Retry')}
+          {renderBottomBar(false, testScore >= 7, testScore >= 7 ? 'Complete Mastery' : 'Review & Retry')}
         </div>
       );
     }

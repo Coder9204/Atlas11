@@ -1,10 +1,72 @@
-'use client';
+/**
+ * NON-NEWTONIAN ARMOR RENDERER
+ *
+ * Complete physics game demonstrating shear-thickening fluids (oobleck).
+ * Viscosity increases with shear rate due to particle jamming.
+ *
+ * FEATURES:
+ * - Static graphic in predict phase with explanation below
+ * - Interactive shear-rate slider in play phase
+ * - Rich transfer phase with real-world applications
+ * - Local answer validation with server fallback
+ * - Dark theme matching evaluation framework
+ * - Full compliance with GAME_EVALUATION_SYSTEM.md
+ */
 
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useCallback, useMemo, useEffect, useRef } from 'react';
 
-// ═══════════════════════════════════════════════════════════════════════════
-// TYPES & INTERFACES
-// ═══════════════════════════════════════════════════════════════════════════
+// ============================================================
+// THEME COLORS (matching evaluation framework requirements)
+// Primary text: #f8fafc, Secondary: #e2e8f0 minimum
+// ============================================================
+
+const colors = {
+  // Backgrounds
+  bgDark: '#0f172a',
+  bgCard: '#1e293b',
+  bgCardLight: '#334155',
+  bgGradientStart: '#1e1b4b',
+  bgGradientEnd: '#0f172a',
+
+  // Primary colors
+  primary: '#f59e0b',
+  primaryLight: '#fbbf24',
+  primaryDark: '#d97706',
+
+  // Accent colors
+  accent: '#f97316',
+  success: '#22c55e',
+  successLight: '#4ade80',
+  warning: '#f59e0b',
+  warningLight: '#fbbf24',
+  error: '#ef4444',
+  errorLight: '#f87171',
+
+  // Text colors - CRITICAL: Must meet contrast requirements
+  textPrimary: '#f8fafc',     // Primary text - white
+  textSecondary: '#e2e8f0',   // Secondary - light gray (NOT #94a3b8)
+  textMuted: '#94a3b8',       // Only for non-essential text
+
+  // Borders
+  border: '#334155',
+  borderLight: '#475569',
+
+  // Physics-specific colors
+  oobleck: '#d4a574',
+  oobleckLight: '#e8c9a0',
+  water: '#60a5fa',
+  starch: '#fbbf24',
+  finger: '#fca5a5',
+  jammedParticles: '#ef4444',
+  flowingParticles: '#22c55e',
+};
+
+// ============================================================
+// GAME CONFIGURATION
+// ============================================================
+
+const GAME_ID = 'non_newtonian_armor';
+
 type Phase =
   | 'hook'
   | 'predict'
@@ -17,1561 +79,2310 @@ type Phase =
   | 'test'
   | 'mastery';
 
-interface GameEvent {
-  type: 'prediction' | 'observation' | 'interaction' | 'completion';
-  phase: Phase;
-  data: Record<string, unknown>;
-}
-
-interface NonNewtonianArmorRendererProps {
-  onEvent?: (event: GameEvent) => void;
-  savedState?: GameState | null;
-}
-
-interface GameState {
-  phase: Phase;
-  prediction: string | null;
-  twistPrediction: string | null;
-  testAnswers: number[];
-  completedApps: number[];
-}
-
-// ═══════════════════════════════════════════════════════════════════════════
-// CONSTANTS
-// ═══════════════════════════════════════════════════════════════════════════
-const PHASES: Phase[] = [
-  'hook', 'predict', 'play', 'review',
-  'twist_predict', 'twist_play', 'twist_review',
-  'transfer', 'test', 'mastery'
-];
-
-const TEST_QUESTIONS = [
+// Questions with LOCAL correct answers for development fallback
+const testQuestions = [
   {
-    question: 'What is a non-Newtonian fluid?',
+    scenario: "You have a bowl of oobleck made from cornstarch and water.",
+    question: "What is a non-Newtonian fluid?",
     options: [
-      'A fluid that only flows in space (zero gravity)',
-      'A fluid whose viscosity changes with applied stress or shear rate',
-      'A fluid that is always solid at room temperature',
-      'A fluid discovered by Isaac Newton'
+      { id: 'space', label: "A fluid that only flows in space (zero gravity)" },
+      { id: 'viscosity', label: "A fluid whose viscosity changes with applied stress", correct: true },
+      { id: 'solid', label: "A fluid that is always solid at room temperature" },
+      { id: 'newton', label: "A fluid discovered by Isaac Newton" }
     ],
-    correct: 1
+    explanation: "Non-Newtonian fluids have viscosity that changes with applied stress or shear rate. Unlike water (Newtonian), oobleck's resistance to flow depends on how fast you try to move it."
   },
   {
-    question: 'What happens when you slowly push your finger into oobleck?',
+    scenario: "You slowly push your finger into a bowl of oobleck.",
+    question: "What happens when you slowly poke oobleck?",
     options: [
-      'It shatters like glass',
-      'It heats up significantly',
-      'Your finger sinks in easily like a liquid',
-      'It immediately hardens into a solid'
+      { id: 'shatter', label: "It shatters like glass" },
+      { id: 'heat', label: "It heats up significantly" },
+      { id: 'sink', label: "Your finger sinks in easily like a liquid", correct: true },
+      { id: 'harden', label: "It immediately hardens into a solid" }
     ],
-    correct: 2
+    explanation: "At low shear rates (slow movement), oobleck behaves like a liquid. The starch particles have time to flow around each other, allowing your finger to sink in easily."
   },
   {
-    question: 'Why does oobleck become solid-like when hit quickly?',
+    scenario: "You quickly punch the surface of oobleck.",
+    question: "Why does oobleck become solid-like when hit quickly?",
     options: [
-      'The water evaporates instantly from the heat',
-      'The starch particles jam together, unable to move past each other',
-      'Chemical bonds form between the particles',
-      'The impact creates an electric charge that freezes motion'
+      { id: 'evaporate', label: "The water evaporates instantly from the heat" },
+      { id: 'jam', label: "The starch particles jam together, unable to move past each other", correct: true },
+      { id: 'bonds', label: "Chemical bonds form between the particles" },
+      { id: 'electric', label: "The impact creates an electric charge that freezes motion" }
     ],
-    correct: 1
+    explanation: "Under sudden stress, starch particles don't have time to flow past each other. They jam together like people trying to rush through a door, creating a temporary solid structure."
   },
   {
-    question: 'What type of non-Newtonian behavior does oobleck exhibit?',
+    scenario: "Oobleck exhibits a specific type of non-Newtonian behavior.",
+    question: "What type of non-Newtonian behavior does oobleck exhibit?",
     options: [
-      'Shear-thinning (viscosity decreases with stress)',
-      'Shear-thickening (viscosity increases with stress)',
-      'Thixotropic (viscosity decreases over time)',
-      'Rheopectic (viscosity increases over time)'
+      { id: 'thinning', label: "Shear-thinning (viscosity decreases with stress)" },
+      { id: 'thickening', label: "Shear-thickening (viscosity increases with stress)", correct: true },
+      { id: 'thixotropic', label: "Thixotropic (viscosity decreases over time)" },
+      { id: 'rheopectic', label: "Rheopectic (viscosity increases over time)" }
     ],
-    correct: 1
+    explanation: "Oobleck is shear-thickening: its viscosity INCREASES when you apply more stress (faster movement). This is the opposite of ketchup, which is shear-thinning."
   },
   {
-    question: 'If you stand on oobleck, what determines whether you sink?',
+    scenario: "You try to walk across a pool filled with oobleck.",
+    question: "What determines whether you sink into oobleck?",
     options: [
-      'Only your total weight matters',
-      'The color of the oobleck',
-      'How quickly you shift your weight - slow movements let you sink',
-      'The temperature of the room'
+      { id: 'weight', label: "Only your total weight matters" },
+      { id: 'color', label: "The color of the oobleck" },
+      { id: 'speed', label: "How quickly you shift your weight - slow movements let you sink", correct: true },
+      { id: 'temp', label: "The temperature of the room" }
     ],
-    correct: 2
+    explanation: "It's all about speed! If you move quickly (run, jump), the oobleck supports you. If you stand still or move slowly, you'll sink. This is why you can run across oobleck but not stand on it."
   },
   {
-    question: 'What is the key ingredient that gives cornstarch-water its special properties?',
+    scenario: "You're making oobleck at home.",
+    question: "What gives cornstarch-water its special properties?",
     options: [
-      'Salt dissolved in the water',
-      'Microscopic starch granules suspended in water',
-      'Air bubbles trapped in the mixture',
-      'Heat from the mixing process'
+      { id: 'salt', label: "Salt dissolved in the water" },
+      { id: 'granules', label: "Microscopic starch granules suspended in water", correct: true },
+      { id: 'air', label: "Air bubbles trapped in the mixture" },
+      { id: 'heat', label: "Heat from the mixing process" }
     ],
-    correct: 1
+    explanation: "The special behavior comes from microscopic starch granules suspended in water. These particles are large enough to jam together under stress but small enough to flow when moved slowly."
   },
   {
-    question: 'How might shear-thickening fluids be used in body armor?',
+    scenario: "Military researchers are developing new body armor.",
+    question: "How might shear-thickening fluids be used in body armor?",
     options: [
-      'As a cooling system for the wearer',
-      'The fluid stays flexible normally but hardens on impact to stop projectiles',
-      'It makes the armor lighter by replacing metal',
-      'It conducts electricity to shock attackers'
+      { id: 'cooling', label: "As a cooling system for the wearer" },
+      { id: 'flexible', label: "The fluid stays flexible normally but hardens on impact", correct: true },
+      { id: 'lighter', label: "It makes the armor lighter by replacing metal" },
+      { id: 'shock', label: "It conducts electricity to shock attackers" }
     ],
-    correct: 1
+    explanation: "Shear-thickening fluid (STF) armor is flexible for comfort and movement, but instantly hardens when hit by a bullet or shrapnel. The impact causes particle jamming, distributing force across a wider area."
   },
   {
-    question: 'What ratio of cornstarch to water typically creates the best oobleck?',
+    scenario: "You want to make the perfect oobleck for a demonstration.",
+    question: "What ratio of cornstarch to water creates the best oobleck?",
     options: [
-      'Equal parts (1:1)',
-      'More water than cornstarch (1:2)',
-      'About 2 parts cornstarch to 1 part water',
-      'Only a tiny bit of cornstarch in water'
+      { id: 'equal', label: "Equal parts (1:1)" },
+      { id: 'morewater', label: "More water than cornstarch (1:2)" },
+      { id: 'morestarch', label: "About 2 parts cornstarch to 1 part water", correct: true },
+      { id: 'tiny', label: "Only a tiny bit of cornstarch in water" }
     ],
-    correct: 2
+    explanation: "The ideal ratio is approximately 2 parts cornstarch to 1 part water (by volume). This creates enough particle density for the jamming effect while maintaining the liquid base."
   },
   {
-    question: 'What happens to oobleck on a vibrating speaker?',
+    scenario: "You place a bowl of oobleck on a speaker playing bass tones.",
+    question: "What happens to oobleck on a vibrating speaker?",
     options: [
-      'It melts from the sound energy',
-      'It forms tendrils and fingers that dance with the vibration',
-      'It separates into water and powder',
-      'It becomes permanently solid'
+      { id: 'melt', label: "It melts from the sound energy" },
+      { id: 'dance', label: "It forms tendrils and fingers that dance with the vibration", correct: true },
+      { id: 'separate', label: "It separates into water and powder" },
+      { id: 'solid', label: "It becomes permanently solid" }
     ],
-    correct: 1
+    explanation: "The vibrations create rapid alternating stress, causing some parts to solidify briefly while others flow. This creates mesmerizing tentacle-like structures that dance with the sound waves!"
   },
   {
-    question: 'Why is understanding non-Newtonian fluids important for engineering?',
+    scenario: "Engineers are studying non-Newtonian fluids for various applications.",
+    question: "Why is understanding non-Newtonian fluids important for engineering?",
     options: [
-      'Only for making kitchen gadgets',
-      'It helps design protective gear, dampers, and smart materials that respond to conditions',
-      'Non-Newtonian fluids don\'t exist in real applications',
-      'Only for entertainment and toys'
+      { id: 'kitchen', label: "Only for making kitchen gadgets" },
+      { id: 'design', label: "It helps design protective gear, dampers, and smart materials", correct: true },
+      { id: 'none', label: "Non-Newtonian fluids don't exist in real applications" },
+      { id: 'toys', label: "Only for entertainment and toys" }
     ],
-    correct: 1
+    explanation: "Non-Newtonian fluids are crucial for designing body armor, athletic gear, shock absorbers, vibration dampers, and smart materials that adapt to conditions. Many everyday products use these principles."
   }
 ];
 
-const TRANSFER_APPS = [
+// Rich transfer phase applications
+const realWorldApps = [
   {
+    icon: '🛡️',
     title: 'Liquid Body Armor',
-    description: 'Military researchers develop fabric infused with shear-thickening fluid. Flexible for movement, but hardens instantly on bullet/shrapnel impact!',
-    icon: '🛡️'
+    short: 'STF-enhanced Kevlar',
+    tagline: 'Flexible Protection That Hardens on Impact',
+    description: 'Military and police armor uses Shear-Thickening Fluid (STF) infused into Kevlar fabric. The armor remains flexible for movement but instantly hardens when struck by bullets or shrapnel.',
+    connection: 'Just like your oobleck experiment - slow movements pass through, but fast impacts (bullets) cause the particles to jam, distributing the force across a wide area.',
+    howItWorks: 'Kevlar fibers are soaked in STF (similar chemistry to oobleck). Under normal conditions, the fluid allows flexibility. On impact, particles jam in microseconds, creating a rigid shield that absorbs energy.',
+    stats: [
+      { value: '45%', label: 'Thinner than traditional armor', icon: '📏' },
+      { value: '<1ms', label: 'Hardening time on impact', icon: '⚡' },
+      { value: '40%', label: 'Better stab resistance', icon: '🔪' }
+    ],
+    examples: [
+      'US Army Research Lab developed STF-Kevlar composites',
+      'Police tactical vests with improved mobility',
+      'Motorcycle gear with D3O smart material',
+      'Sports equipment for extreme sports'
+    ],
+    companies: ['BAE Systems', 'D3O (Smart materials)', 'Dow Chemical', 'US Army Research Lab'],
+    futureImpact: 'Future armor could be as comfortable as regular clothing but provide military-grade protection when needed.',
+    color: colors.error
   },
   {
+    icon: '🚗',
     title: 'Smart Speed Bumps',
-    description: 'Speed bumps filled with non-Newtonian fluid stay flat for slow cars but become rigid obstacles for speeding vehicles.',
-    icon: '🚗'
+    short: 'Adaptive traffic control',
+    tagline: 'Speed-Sensitive Road Safety',
+    description: 'Speed bumps filled with shear-thickening fluid remain flat for vehicles traveling at safe speeds, but become rigid obstacles for speeding cars.',
+    connection: 'Your oobleck acts the same way! Cars going slowly (like your slow poke) pass over easily. Speeding cars (like your fast punch) hit a solid barrier.',
+    howItWorks: 'A sealed chamber of STF under the road surface. At low speeds, tires slowly compress the fluid. At high speeds, the fluid jams instantly, creating an effective speed bump.',
+    stats: [
+      { value: '30 mph', label: 'Threshold speed', icon: '🚗' },
+      { value: '0%', label: 'Discomfort for slow drivers', icon: '😊' },
+      { value: '40%', label: 'Speed reduction for fast cars', icon: '⬇️' }
+    ],
+    examples: [
+      'School zones with adaptive speed control',
+      'Hospital entrances requiring slow approach',
+      'Parking garages with speed-sensitive bumps',
+      'Emergency vehicle routes (they can pass fast)'
+    ],
+    companies: ['Badennova (Germany)', 'Traffic Logix', 'Municipal research projects'],
+    futureImpact: 'Intelligent roads that enforce speed limits physically, not just with signs.',
+    color: colors.primary
   },
   {
-    title: 'Protective Sports Gear',
-    description: 'Helmets and pads using D3O and similar materials remain soft and comfortable until impact, then harden to protect.',
-    icon: '⛑️'
+    icon: '⛑️',
+    title: 'Impact-Absorbing Sports Gear',
+    short: 'D3O and similar technologies',
+    tagline: 'Soft Comfort, Hard Protection',
+    description: 'Modern sports equipment uses non-Newtonian materials that remain soft and flexible during normal use but harden instantly on impact to protect athletes.',
+    connection: 'Like your oobleck! Athletes need freedom of movement (slow, controlled motions), but when they crash or get hit (fast impact), the material becomes a protective shield.',
+    howItWorks: 'D3O and similar materials contain molecular chains that flow freely under normal conditions. On impact, the chains lock together, absorbing and distributing energy before returning to their flexible state.',
+    stats: [
+      { value: '5x', label: 'More protection than foam', icon: '🛡️' },
+      { value: '50%', label: 'Thinner than alternatives', icon: '📏' },
+      { value: '100%', label: 'Reusable after impact', icon: '♻️' }
+    ],
+    examples: [
+      'Ski and snowboard gear (helmets, back protectors)',
+      'Motorcycle jackets with D3O inserts',
+      'Professional sports padding (football, hockey)',
+      'Phone cases that protect against drops'
+    ],
+    companies: ['D3O', 'G-Form', 'POC Sports', 'Under Armour'],
+    futureImpact: 'Athletes could wear protection so thin and flexible they barely notice it, yet be protected from serious injuries.',
+    color: colors.success
   },
   {
-    title: 'Industrial Dampers',
-    description: 'Shock absorbers and vibration dampers that adapt their resistance based on impact force, protecting machinery.',
-    icon: '⚙️'
+    icon: '⚙️',
+    title: 'Industrial Shock Absorbers',
+    short: 'Adaptive damping systems',
+    tagline: 'Smart Response to Variable Forces',
+    description: 'Industrial machinery and vehicles use shear-thickening fluids in dampers that automatically adjust their resistance based on the force applied.',
+    connection: 'Your oobleck naturally adjusts! Small vibrations pass through easily, but sudden jolts are absorbed. Industrial dampers use this same principle.',
+    howItWorks: 'STF-filled cylinders replace traditional hydraulic dampers. During normal operation, the fluid allows smooth motion. During sudden impacts or vibrations, viscosity increases dramatically, absorbing energy.',
+    stats: [
+      { value: '10x', label: 'Range of damping force', icon: '💪' },
+      { value: '0', label: 'Electronics needed', icon: '🔌' },
+      { value: '50%', label: 'Energy dissipation improvement', icon: '⚡' }
+    ],
+    examples: [
+      'Earthquake-resistant building foundations',
+      'Helicopter rotor dampers',
+      'Industrial robot collision protection',
+      'Automotive suspension systems'
+    ],
+    companies: ['LORD Corporation', 'BWI Group', 'Tenneco', 'ZF Friedrichshafen'],
+    futureImpact: 'Machines and buildings that automatically protect themselves from unexpected shocks without complex electronics or maintenance.',
+    color: colors.warning
   }
 ];
 
-// ═══════════════════════════════════════════════════════════════════════════
-// HELPER FUNCTIONS
-// ═══════════════════════════════════════════════════════════════════════════
-function playSound(type: 'click' | 'success' | 'failure' | 'transition' | 'complete'): void {
+// ============================================================
+// SOUND UTILITY
+// ============================================================
+
+const playSound = (type: 'click' | 'success' | 'failure' | 'transition' | 'complete') => {
   if (typeof window === 'undefined') return;
   try {
-    const audioContext = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
+    const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
     const oscillator = audioContext.createOscillator();
     const gainNode = audioContext.createGain();
-
     oscillator.connect(gainNode);
     gainNode.connect(audioContext.destination);
-
-    const sounds: Record<string, { freq: number; type: OscillatorType; duration: number }> = {
-      click: { freq: 600, type: 'sine', duration: 0.08 },
-      success: { freq: 880, type: 'sine', duration: 0.15 },
-      failure: { freq: 220, type: 'sine', duration: 0.25 },
-      transition: { freq: 440, type: 'triangle', duration: 0.12 },
-      complete: { freq: 660, type: 'sine', duration: 0.2 }
+    const sounds: Record<string, { freq: number; duration: number; type: OscillatorType }> = {
+      click: { freq: 600, duration: 0.1, type: 'sine' },
+      success: { freq: 800, duration: 0.2, type: 'sine' },
+      failure: { freq: 300, duration: 0.3, type: 'sine' },
+      transition: { freq: 500, duration: 0.15, type: 'sine' },
+      complete: { freq: 900, duration: 0.4, type: 'sine' }
     };
-
     const sound = sounds[type];
-    oscillator.frequency.setValueAtTime(sound.freq, audioContext.currentTime);
+    oscillator.frequency.value = sound.freq;
     oscillator.type = sound.type;
     gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
     gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + sound.duration);
-
-    oscillator.start(audioContext.currentTime);
+    oscillator.start();
     oscillator.stop(audioContext.currentTime + sound.duration);
-  } catch {
-    // Audio not available
-  }
+  } catch { /* Audio not available */ }
+};
+
+// ============================================================
+// MAIN COMPONENT
+// ============================================================
+
+interface NonNewtonianArmorRendererProps {
+  onComplete?: () => void;
+  onGameEvent?: (event: { type: string; data: any }) => void;
+  gamePhase?: string;
 }
 
-// ═══════════════════════════════════════════════════════════════════════════
-// UI COMPONENTS
-// ═══════════════════════════════════════════════════════════════════════════
-const ProgressIndicator: React.FC<{ phases: Phase[]; currentPhase: Phase }> = ({ phases, currentPhase }) => {
-  const currentIndex = phases.indexOf(currentPhase);
-  return (
-    <div className="flex items-center gap-1.5 mb-8">
-      {phases.map((p, i) => (
-        <div key={p} className="flex-1 flex items-center">
-          <div
-            className={`h-2 w-full rounded-full transition-all duration-500 ${
-              i < currentIndex
-                ? 'bg-gradient-to-r from-amber-400 to-orange-400'
-                : i === currentIndex
-                ? 'bg-gradient-to-r from-amber-500 to-orange-500 shadow-lg shadow-amber-500/30'
-                : 'bg-slate-700'
-            }`}
-          />
-        </div>
-      ))}
-    </div>
-  );
-};
-
-const PrimaryButton: React.FC<{
-  children: React.ReactNode;
-  onMouseDown: (e: React.MouseEvent) => void;
-  variant?: 'amber' | 'orange' | 'red';
-  disabled?: boolean;
-  className?: string;
-}> = ({ children, onMouseDown, variant = 'amber', disabled = false, className = '' }) => {
-  const gradients = {
-    amber: 'from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500 shadow-amber-500/25',
-    orange: 'from-orange-600 to-red-600 hover:from-orange-500 hover:to-red-500 shadow-orange-500/25',
-    red: 'from-red-600 to-pink-600 hover:from-red-500 hover:to-pink-500 shadow-red-500/25'
+const NonNewtonianArmorRenderer: React.FC<NonNewtonianArmorRendererProps> = ({
+  onComplete,
+  onGameEvent,
+  gamePhase
+}) => {
+  // Phase management
+  const validPhases: Phase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
+  const getInitialPhase = (): Phase => {
+    if (gamePhase && validPhases.includes(gamePhase as Phase)) {
+      return gamePhase as Phase;
+    }
+    return 'hook';
   };
 
-  return (
-    <button
-      onMouseDown={(e) => {
-        e.preventDefault();
-        if (!disabled) onMouseDown(e);
-      }}
-      disabled={disabled}
-      className={`px-8 py-3.5 bg-gradient-to-r ${gradients[variant]} rounded-2xl text-white font-semibold
-        shadow-lg transition-all duration-300 transform hover:scale-[1.02] active:scale-[0.98]
-        disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none ${className}`}
-    >
-      {children}
-    </button>
-  );
-};
+  const [phase, setPhase] = useState<Phase>(getInitialPhase);
+  const [prediction, setPrediction] = useState<string | null>(null);
+  const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
 
-// ═══════════════════════════════════════════════════════════════════════════
-// APPLICATION GRAPHICS
-// ═══════════════════════════════════════════════════════════════════════════
-const LiquidArmorGraphic: React.FC = () => {
-  const [impactPhase, setImpactPhase] = useState(0);
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setImpactPhase(p => (p + 1) % 150);
-    }, 40);
-    return () => clearInterval(interval);
-  }, []);
-
-  const bulletX = impactPhase < 50 ? 50 + impactPhase * 4 : 250;
-  const isImpact = impactPhase >= 50 && impactPhase < 80;
-  const rippleSize = isImpact ? (impactPhase - 50) * 2 : 0;
-
-  return (
-    <svg viewBox="0 0 400 280" className="w-full h-64">
-      <defs>
-        <linearGradient id="armorGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-          <stop offset="0%" stopColor="#1e3a5f" />
-          <stop offset="100%" stopColor="#0f172a" />
-        </linearGradient>
-        <linearGradient id="fluidGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-          <stop offset="0%" stopColor="#fbbf24" stopOpacity="0.6" />
-          <stop offset="100%" stopColor="#f59e0b" stopOpacity="0.8" />
-        </linearGradient>
-      </defs>
-
-      <rect width="400" height="280" fill="#0f172a" />
-
-      {/* Vest outline */}
-      <path
-        d="M150 40 L180 30 L200 25 L220 30 L250 40 L260 120 L250 200 L220 210 L200 215 L180 210 L150 200 L140 120 Z"
-        fill="url(#armorGrad)"
-        stroke="#334155"
-        strokeWidth="2"
-      />
-
-      {/* STF layer */}
-      <path
-        d="M155 50 L180 42 L200 38 L220 42 L245 50 L253 120 L245 190 L220 198 L200 202 L180 198 L155 190 L147 120 Z"
-        fill="url(#fluidGrad)"
-      />
-
-      {/* Particles in fluid - normal state */}
-      {!isImpact && [...Array(30)].map((_, i) => (
-        <circle
-          key={i}
-          cx={160 + (i % 6) * 15 + Math.sin(impactPhase * 0.1 + i) * 3}
-          cy={55 + Math.floor(i / 6) * 30 + Math.cos(impactPhase * 0.1 + i) * 2}
-          r="4"
-          fill="#fcd34d"
-          opacity="0.7"
-        />
-      ))}
-
-      {/* Particles jammed during impact */}
-      {isImpact && [...Array(30)].map((_, i) => (
-        <circle
-          key={i}
-          cx={160 + (i % 6) * 15}
-          cy={55 + Math.floor(i / 6) * 30}
-          r="5"
-          fill="#dc2626"
-          opacity="0.9"
-        />
-      ))}
-
-      {/* Bullet */}
-      {impactPhase < 80 && (
-        <g transform={`translate(${bulletX}, 120)`}>
-          <ellipse cx="0" cy="0" rx="15" ry="8" fill="#64748b" />
-          <ellipse cx="-5" cy="0" rx="8" ry="6" fill="#94a3b8" />
-          {impactPhase < 50 && (
-            <line x1="-25" y1="0" x2="-45" y2="0" stroke="#ef4444" strokeWidth="2" />
-          )}
-        </g>
-      )}
-
-      {/* Impact ripple */}
-      {isImpact && (
-        <circle
-          cx="250"
-          cy="120"
-          r={rippleSize}
-          fill="none"
-          stroke="#ef4444"
-          strokeWidth="3"
-          opacity={1 - rippleSize / 60}
-        />
-      )}
-
-      {/* Bullet stopped */}
-      {impactPhase >= 80 && impactPhase < 120 && (
-        <g transform="translate(240, 120)">
-          <ellipse cx="0" cy="0" rx="10" ry="6" fill="#64748b" />
-          <text x="0" y="35" textAnchor="middle" className="fill-green-400 text-xs font-bold">
-            STOPPED!
-          </text>
-        </g>
-      )}
-
-      {/* Labels */}
-      <text x="200" y="250" textAnchor="middle" className="fill-amber-400 text-sm font-medium">
-        Shear-Thickening Fluid Body Armor
-      </text>
-
-      {/* State indicator */}
-      <g transform="translate(300, 50)">
-        <rect width="80" height="35" rx="6" fill={isImpact ? '#dc2626' : '#22c55e'} opacity="0.2" />
-        <rect width="80" height="35" rx="6" fill="none" stroke={isImpact ? '#dc2626' : '#22c55e'} />
-        <text x="40" y="22" textAnchor="middle" className={`text-xs font-bold ${isImpact ? 'fill-red-400' : 'fill-green-400'}`}>
-          {isImpact ? 'RIGID' : 'FLEXIBLE'}
-        </text>
-      </g>
-    </svg>
-  );
-};
-
-const SmartSpeedBumpGraphic: React.FC = () => {
-  const [carPhase, setCarPhase] = useState(0);
-  const [carSpeed, setCarSpeed] = useState<'slow' | 'fast'>('slow');
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setCarPhase(p => {
-        if (p > 150) {
-          setCarSpeed(s => s === 'slow' ? 'fast' : 'slow');
-          return 0;
-        }
-        return p + (carSpeed === 'slow' ? 1 : 3);
-      });
-    }, 40);
-    return () => clearInterval(interval);
-  }, [carSpeed]);
-
-  const carX = 30 + carPhase * 2;
-  const bumpHeight = carSpeed === 'fast' && carX > 150 && carX < 250 ? 25 : 5;
-
-  return (
-    <svg viewBox="0 0 400 260" className="w-full h-64">
-      <rect width="400" height="260" fill="#0f172a" />
-
-      {/* Road */}
-      <rect x="0" y="170" width="400" height="60" fill="#374151" />
-      <line x1="0" y1="200" x2="400" y2="200" stroke="#fbbf24" strokeWidth="3" strokeDasharray="20 15" />
-
-      {/* Speed bump with fluid */}
-      <path
-        d={`M160 170 Q200 ${170 - bumpHeight * 2} 240 170`}
-        fill="#f59e0b"
-        opacity="0.8"
-      />
-      <rect x="160" y="168" width="80" height="5" rx="2" fill="#1e293b" />
-
-      {/* Fluid particles */}
-      {[...Array(10)].map((_, i) => (
-        <circle
-          key={i}
-          cx={165 + i * 8}
-          cy={165 - (bumpHeight > 10 ? Math.sin(i) * 5 : 0)}
-          r={bumpHeight > 10 ? 4 : 3}
-          fill={bumpHeight > 10 ? '#ef4444' : '#fcd34d'}
-        />
-      ))}
-
-      {/* Car */}
-      <g transform={`translate(${carX}, ${155 - (carX > 170 && carX < 230 && bumpHeight > 10 ? bumpHeight : 0)})`}>
-        <rect x="-30" y="-15" width="60" height="25" rx="5" fill={carSpeed === 'slow' ? '#22c55e' : '#ef4444'} />
-        <rect x="-25" y="-25" width="35" height="15" rx="3" fill={carSpeed === 'slow' ? '#16a34a' : '#dc2626'} />
-        <circle cx="-18" cy="12" r="8" fill="#1e293b" />
-        <circle cx="18" cy="12" r="8" fill="#1e293b" />
-        <circle cx="-18" cy="12" r="4" fill="#64748b" />
-        <circle cx="18" cy="12" r="4" fill="#64748b" />
-      </g>
-
-      {/* Speed label */}
-      <g transform="translate(320, 50)">
-        <rect width="70" height="30" rx="6" fill={carSpeed === 'slow' ? '#22c55e' : '#ef4444'} opacity="0.2" />
-        <text x="35" y="20" textAnchor="middle" className={`text-sm font-bold ${carSpeed === 'slow' ? 'fill-green-400' : 'fill-red-400'}`}>
-          {carSpeed === 'slow' ? '25 mph' : '50 mph'}
-        </text>
-      </g>
-
-      {/* Bump state */}
-      <g transform="translate(160, 100)">
-        <text x="40" y="0" textAnchor="middle" className="fill-gray-400 text-xs">
-          Bump State:
-        </text>
-        <text x="40" y="18" textAnchor="middle" className={`text-sm font-bold ${bumpHeight > 10 ? 'fill-red-400' : 'fill-green-400'}`}>
-          {bumpHeight > 10 ? 'SOLID BARRIER' : 'SOFT'}
-        </text>
-      </g>
-
-      <text x="200" y="250" textAnchor="middle" className="fill-amber-400 text-sm font-medium">
-        Non-Newtonian Smart Speed Bump
-      </text>
-    </svg>
-  );
-};
-
-const ProtectiveGearGraphic: React.FC = () => {
-  const [impactStrength, setImpactStrength] = useState(0);
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setImpactStrength(s => (s + 1) % 120);
-    }, 50);
-    return () => clearInterval(interval);
-  }, []);
-
-  const isImpact = impactStrength > 40 && impactStrength < 80;
-  const materialHardness = isImpact ? 90 : 20;
-
-  return (
-    <svg viewBox="0 0 400 260" className="w-full h-64">
-      <rect width="400" height="260" fill="#0f172a" />
-
-      {/* Helmet */}
-      <g transform="translate(100, 40)">
-        <ellipse cx="50" cy="60" rx="50" ry="45" fill="#1e293b" stroke="#334155" strokeWidth="2" />
-
-        {/* D3O layer */}
-        <ellipse cx="50" cy="60" rx="42" ry="38" fill={isImpact ? '#ef4444' : '#f59e0b'} opacity="0.5" />
-
-        {/* Molecular structure visualization */}
-        {[...Array(12)].map((_, i) => {
-          const angle = (i / 12) * Math.PI * 2;
-          const r = isImpact ? 20 : 25 + Math.sin(impactStrength * 0.1) * 3;
-          return (
-            <circle
-              key={i}
-              cx={50 + Math.cos(angle) * r}
-              cy={60 + Math.sin(angle) * r * 0.8}
-              r={isImpact ? 6 : 4}
-              fill={isImpact ? '#dc2626' : '#fcd34d'}
-            />
-          );
-        })}
-
-        {/* Impact object */}
-        {impactStrength < 60 && (
-          <g transform={`translate(${-30 + impactStrength * 2}, 30)`}>
-            <circle r="12" fill="#64748b" />
-            <text x="0" y="4" textAnchor="middle" className="fill-white text-xs font-bold">!</text>
-          </g>
-        )}
-
-        <text x="50" y="130" textAnchor="middle" className="fill-gray-400 text-xs">Sports Helmet</text>
-      </g>
-
-      {/* Knee pad */}
-      <g transform="translate(230, 40)">
-        <rect x="10" y="20" width="80" height="90" rx="15" fill="#1e293b" stroke="#334155" strokeWidth="2" />
-
-        {/* D3O layer */}
-        <rect x="18" y="28" width="64" height="74" rx="10" fill={isImpact ? '#ef4444' : '#f59e0b'} opacity="0.5" />
-
-        {/* Honeycomb pattern */}
-        {[...Array(6)].map((_, row) => (
-          [...Array(3)].map((_, col) => (
-            <path
-              key={`${row}-${col}`}
-              d={`M ${30 + col * 22} ${38 + row * 12}
-                  l 8 -5 l 8 5 l 0 10 l -8 5 l -8 -5 z`}
-              fill="none"
-              stroke={isImpact ? '#dc2626' : '#fcd34d'}
-              strokeWidth={isImpact ? 3 : 1.5}
-            />
-          ))
-        ))}
-
-        <text x="50" y="130" textAnchor="middle" className="fill-gray-400 text-xs">Knee Pad</text>
-      </g>
-
-      {/* Hardness meter */}
-      <g transform="translate(150, 180)">
-        <text x="50" y="0" textAnchor="middle" className="fill-gray-400 text-xs font-medium">Material Hardness</text>
-        <rect x="0" y="10" width="100" height="20" rx="4" fill="#1e293b" />
-        <rect x="2" y="12" width={materialHardness} height="16" rx="3" fill={isImpact ? '#ef4444' : '#22c55e'} />
-        <text x="50" y="45" textAnchor="middle" className={`text-sm font-bold ${isImpact ? 'fill-red-400' : 'fill-green-400'}`}>
-          {isImpact ? 'HARD (Impact!)' : 'SOFT (Flexible)'}
-        </text>
-      </g>
-
-      <text x="200" y="250" textAnchor="middle" className="fill-amber-400 text-sm font-medium">
-        D3O Smart Protection Technology
-      </text>
-    </svg>
-  );
-};
-
-const IndustrialDamperGraphic: React.FC = () => {
-  const [vibrationPhase, setVibrationPhase] = useState(0);
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setVibrationPhase(p => (p + 1) % 100);
-    }, 40);
-    return () => clearInterval(interval);
-  }, []);
-
-  const vibrationAmplitude = 15 * Math.sin(vibrationPhase * 0.2);
-  const damperCompression = Math.abs(vibrationAmplitude);
-  const fluidViscosity = damperCompression > 10 ? 'high' : 'low';
-
-  return (
-    <svg viewBox="0 0 400 260" className="w-full h-64">
-      <rect width="400" height="260" fill="#0f172a" />
-
-      {/* Machine base */}
-      <rect x="50" y="200" width="300" height="30" fill="#374151" rx="3" />
-
-      {/* Damper housing */}
-      <g transform={`translate(200, ${120 + vibrationAmplitude})`}>
-        {/* Outer cylinder */}
-        <rect x="-40" y="-50" width="80" height="100" rx="5" fill="#1e293b" stroke="#475569" strokeWidth="2" />
-
-        {/* Fluid chamber */}
-        <rect x="-35" y="-45" width="70" height="90" rx="3" fill="#f59e0b" opacity="0.4" />
-
-        {/* Piston */}
-        <rect x="-30" y={-20 - damperCompression} width="60" height="15" fill="#64748b" rx="2" />
-
-        {/* Fluid particles showing viscosity */}
-        {[...Array(20)].map((_, i) => (
-          <circle
-            key={i}
-            cx={-28 + (i % 5) * 14}
-            cy={-35 + Math.floor(i / 5) * 20 + (fluidViscosity === 'high' ? 0 : Math.sin(vibrationPhase * 0.3 + i) * 3)}
-            r={fluidViscosity === 'high' ? 5 : 3}
-            fill={fluidViscosity === 'high' ? '#ef4444' : '#fcd34d'}
-            opacity="0.8"
-          />
-        ))}
-
-        {/* Piston rod */}
-        <rect x="-8" y="-80" width="16" height="50" fill="#94a3b8" />
-      </g>
-
-      {/* Vibrating machinery */}
-      <g transform={`translate(200, ${60 + vibrationAmplitude * 0.5})`}>
-        <rect x="-60" y="-30" width="120" height="40" fill="#475569" rx="5" />
-        <circle cx="-30" cy="0" r="15" fill="#1e293b" stroke="#64748b" strokeWidth="2" />
-        <circle cx="30" cy="0" r="15" fill="#1e293b" stroke="#64748b" strokeWidth="2" />
-
-        {/* Rotation indicator */}
-        <line
-          x1="-30"
-          y1="0"
-          x2={-30 + Math.cos(vibrationPhase * 0.2) * 12}
-          y2={Math.sin(vibrationPhase * 0.2) * 12}
-          stroke="#22c55e"
-          strokeWidth="2"
-        />
-        <line
-          x1="30"
-          y1="0"
-          x2={30 + Math.cos(vibrationPhase * 0.2) * 12}
-          y2={Math.sin(vibrationPhase * 0.2) * 12}
-          stroke="#22c55e"
-          strokeWidth="2"
-        />
-      </g>
-
-      {/* Status display */}
-      <g transform="translate(50, 50)">
-        <rect width="90" height="50" rx="6" fill="#1e293b" stroke="#334155" />
-        <text x="45" y="18" textAnchor="middle" className="fill-gray-400 text-xs">Fluid State:</text>
-        <text x="45" y="38" textAnchor="middle" className={`text-sm font-bold ${fluidViscosity === 'high' ? 'fill-red-400' : 'fill-green-400'}`}>
-          {fluidViscosity === 'high' ? 'STIFF' : 'FLOWING'}
-        </text>
-      </g>
-
-      {/* Force meter */}
-      <g transform="translate(300, 50)">
-        <rect width="70" height="50" rx="6" fill="#1e293b" stroke="#334155" />
-        <text x="35" y="18" textAnchor="middle" className="fill-gray-400 text-xs">Damping:</text>
-        <text x="35" y="38" textAnchor="middle" className="fill-amber-400 text-sm font-bold">
-          {Math.round(damperCompression * 6)}%
-        </text>
-      </g>
-
-      <text x="200" y="250" textAnchor="middle" className="fill-amber-400 text-sm font-medium">
-        STF Industrial Vibration Damper
-      </text>
-    </svg>
-  );
-};
-
-// ═══════════════════════════════════════════════════════════════════════════
-// MAIN COMPONENT
-// ═══════════════════════════════════════════════════════════════════════════
-export default function NonNewtonianArmorRenderer({ onEvent, savedState }: NonNewtonianArmorRendererProps) {
-  // ─── State ─────────────────────────────────────────────────────────────────
-  const [phase, setPhase] = useState<Phase>(savedState?.phase || 'hook');
-  const [prediction, setPrediction] = useState<string | null>(savedState?.prediction || null);
-  const [twistPrediction, setTwistPrediction] = useState<string | null>(savedState?.twistPrediction || null);
-  const [testAnswers, setTestAnswers] = useState<number[]>(
-    savedState?.testAnswers || Array(10).fill(-1)
-  );
-  const [completedApps, setCompletedApps] = useState<Set<number>>(
-    new Set(savedState?.completedApps || [])
-  );
-  const [activeAppTab, setActiveAppTab] = useState(0);
-
-  // Simulation state
-  const [pokeSpeed, setPokeSpeed] = useState<'slow' | 'fast' | null>(null);
-  const [pokeDepth, setPokeDepth] = useState(0);
+  // Play phase state
+  const [shearRate, setShearRate] = useState(0); // 0-100: 0=slow, 100=fast
   const [isPoking, setIsPoking] = useState(false);
-  const [starchRatio, setStarchRatio] = useState(2); // Parts starch per 1 part water
-  const [animPhase, setAnimPhase] = useState(0);
+  const [pokeDepth, setPokeDepth] = useState(0);
+  const [starchRatio, setStarchRatio] = useState(67); // For twist: 67% is ideal 2:1 ratio
 
-  // CRITICAL: Navigation debouncing refs
-  const navigationLockRef = useRef(false);
+  // Animation state
+  const animationRef = useRef<number>();
+  const [animTime, setAnimTime] = useState(0);
+
+  // Test phase state
+  const [testQuestion, setTestQuestion] = useState(0);
+  const [testAnswers, setTestAnswers] = useState<(string | null)[]>(Array(10).fill(null));
+  const [testSubmitted, setTestSubmitted] = useState(false);
+  const [showExplanation, setShowExplanation] = useState(false);
+
+  // Transfer phase state
+  const [selectedApp, setSelectedApp] = useState(0);
+  const [completedApps, setCompletedApps] = useState<boolean[]>([false, false, false, false]);
+
+  // Viewport
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
+  // Sync phase with gamePhase prop
+  useEffect(() => {
+    if (gamePhase && validPhases.includes(gamePhase as Phase) && gamePhase !== phase) {
+      setPhase(gamePhase as Phase);
+    }
+  }, [gamePhase]);
+
+  // Animation loop
+  useEffect(() => {
+    const animate = () => {
+      setAnimTime(t => t + 0.016);
+      animationRef.current = requestAnimationFrame(animate);
+    };
+    animationRef.current = requestAnimationFrame(animate);
+    return () => {
+      if (animationRef.current) {
+        cancelAnimationFrame(animationRef.current);
+      }
+    };
+  }, []);
+
+  // Poke animation
+  useEffect(() => {
+    if (isPoking) {
+      const targetDepth = shearRate < 50 ? 80 : 15; // Slow = deep sink, Fast = shallow (resisted)
+      const speed = shearRate < 50 ? 2 : 30; // Slow poke = gradual, Fast = instant
+
+      const animate = () => {
+        setPokeDepth(prev => {
+          const diff = targetDepth - prev;
+          if (Math.abs(diff) < 1) return targetDepth;
+          return prev + diff * (speed / 100);
+        });
+      };
+
+      const interval = setInterval(animate, 16);
+      return () => clearInterval(interval);
+    } else {
+      setPokeDepth(0);
+    }
+  }, [isPoking, shearRate]);
+
+  // Calculate viscosity based on shear rate
+  const viscosity = useMemo(() => {
+    // Shear-thickening: viscosity increases dramatically with shear rate
+    const baseViscosity = 10;
+    const jamThreshold = 40; // Above this, particles start jamming
+
+    if (shearRate < jamThreshold) {
+      return baseViscosity + shearRate * 0.5; // Gradual increase
+    } else {
+      // Exponential increase after jamming threshold
+      return baseViscosity + jamThreshold * 0.5 + Math.pow(shearRate - jamThreshold, 1.8) * 0.5;
+    }
+  }, [shearRate]);
+
+  // Event emitter
+  const emitGameEvent = useCallback((eventType: string, details: any) => {
+    onGameEvent?.({ type: eventType, data: { ...details, phase, gameId: GAME_ID } });
+  }, [onGameEvent, phase]);
+
+  // Navigation
+  const isNavigating = useRef(false);
   const lastClickRef = useRef(0);
 
-  // ─── Helpers ───────────────────────────────────────────────────────────────
-  const emitEvent = useCallback((type: GameEvent['type'], data: Record<string, unknown> = {}) => {
-    onEvent?.({ type, phase, data });
-  }, [onEvent, phase]);
-
-  const goToPhase = useCallback((newPhase: Phase) => {
+  const goToPhase = useCallback((p: Phase) => {
     const now = Date.now();
     if (now - lastClickRef.current < 200) return;
-    if (navigationLockRef.current) return;
+    if (isNavigating.current) return;
 
     lastClickRef.current = now;
-    navigationLockRef.current = true;
+    isNavigating.current = true;
 
+    setPhase(p);
     playSound('transition');
-    setPhase(newPhase);
+    emitGameEvent('phase_changed', { phase: p });
 
-    setTimeout(() => {
-      navigationLockRef.current = false;
-    }, 200);
-  }, []);
-
-  const nextPhase = useCallback(() => {
-    const currentIndex = PHASES.indexOf(phase);
-    if (currentIndex < PHASES.length - 1) {
-      goToPhase(PHASES[currentIndex + 1]);
+    // Reset test state when entering test phase
+    if (p === 'test') {
+      setTestQuestion(0);
+      setTestAnswers(Array(10).fill(null));
+      setTestSubmitted(false);
+      setShowExplanation(false);
     }
-  }, [phase, goToPhase]);
 
-  const handlePrediction = useCallback((id: string) => {
-    playSound('click');
-    setPrediction(id);
-    emitEvent('prediction', { prediction: id });
-  }, [emitEvent]);
+    setTimeout(() => { isNavigating.current = false; }, 400);
+  }, [emitGameEvent]);
 
-  const handleTwistPrediction = useCallback((id: string) => {
-    playSound('click');
-    setTwistPrediction(id);
-    emitEvent('prediction', { twistPrediction: id });
-  }, [emitEvent]);
-
-  const handleTestAnswer = useCallback((questionIndex: number, answerIndex: number) => {
-    const newAnswers = [...testAnswers];
-    newAnswers[questionIndex] = answerIndex;
-    setTestAnswers(newAnswers);
-    playSound(answerIndex === TEST_QUESTIONS[questionIndex].correct ? 'success' : 'failure');
-    emitEvent('interaction', { question: questionIndex, answer: answerIndex });
-  }, [testAnswers, emitEvent]);
-
-  const handleAppComplete = useCallback((index: number) => {
-    playSound('click');
-    setCompletedApps(prev => new Set([...prev, index]));
-    setActiveAppTab(index);
-    emitEvent('interaction', { app: TRANSFER_APPS[index].title });
-  }, [emitEvent]);
-
-  // ─── Animation Effects ─────────────────────────────────────────────────────
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setAnimPhase(p => (p + 0.05) % (Math.PI * 2));
-    }, 50);
-    return () => clearInterval(interval);
-  }, []);
-
-  // Poking animation
-  useEffect(() => {
-    if (!isPoking || !pokeSpeed) return;
-
-    const targetDepth = pokeSpeed === 'slow' ? 80 : 10;
-    const speed = pokeSpeed === 'slow' ? 2 : 15;
-
-    const interval = setInterval(() => {
-      setPokeDepth(d => {
-        if (d < targetDepth) {
-          return Math.min(d + speed, targetDepth);
-        }
-        return d;
-      });
-    }, 50);
-
-    return () => clearInterval(interval);
-  }, [isPoking, pokeSpeed]);
-
-  // Reset simulation on phase change
-  useEffect(() => {
-    if (phase === 'play' || phase === 'twist_play') {
-      setPokeSpeed(null);
-      setPokeDepth(0);
-      setIsPoking(false);
-    }
-  }, [phase]);
-
-  // ─── Render Helpers ────────────────────────────────────────────────────────
-  const renderOobleckSimulation = () => {
-    // Calculate viscosity based on shear rate (speed) and starch ratio
-    const effectiveViscosity = pokeSpeed === 'fast' ? starchRatio * 30 : 5;
-    const particleColor = pokeSpeed === 'fast' ? '#ef4444' : '#fcd34d';
-    const stateLabel = pokeSpeed === 'fast' ? 'SOLID-LIKE' : 'LIQUID';
-
-    return (
-      <svg viewBox="0 0 400 280" className="w-full h-60 rounded-xl">
-        <rect width="400" height="280" fill="#0f172a" />
-
-        {/* Bowl */}
-        <ellipse cx="200" cy="230" rx="150" ry="30" fill="#334155" />
-        <path
-          d="M50 120 Q50 230 200 230 Q350 230 350 120"
-          fill="#1e293b"
-          stroke="#475569"
-          strokeWidth="3"
-        />
-
-        {/* Oobleck surface */}
-        <ellipse cx="200" cy="120" rx="140" ry="25" fill="#f59e0b" opacity="0.8" />
-
-        {/* Particles showing internal structure */}
-        {[...Array(40)].map((_, i) => {
-          const baseX = 80 + (i % 8) * 35;
-          const baseY = 130 + Math.floor(i / 8) * 25;
-          const offset = pokeSpeed === 'fast' ? 0 : Math.sin(animPhase + i) * 3;
-          const isNearFinger = pokeDepth > 10 && Math.abs(baseX - 200) < 50 && baseY < 130 + pokeDepth;
-
-          return (
-            <circle
-              key={i}
-              cx={baseX + offset}
-              cy={baseY + (isNearFinger && pokeSpeed === 'fast' ? -5 : offset)}
-              r={isNearFinger && pokeSpeed === 'fast' ? 6 : 4}
-              fill={isNearFinger ? particleColor : '#fcd34d'}
-              opacity={0.7}
-            />
-          );
-        })}
-
-        {/* Finger */}
-        {pokeSpeed && (
-          <g transform={`translate(200, ${40 + pokeDepth})`}>
-            <ellipse cx="0" cy="0" rx="15" ry="25" fill="#d4a574" />
-            <ellipse cx="0" cy="-20" rx="12" ry="10" fill="#d4a574" />
-            {/* Fingernail */}
-            <ellipse cx="0" cy="-25" rx="8" ry="5" fill="#f5d0c5" />
-          </g>
-        )}
-
-        {/* Force indicator */}
-        {pokeSpeed && (
-          <g transform="translate(50, 30)">
-            <text className="fill-gray-400 text-xs">Force Applied:</text>
-            <rect x="0" y="10" width="80" height="12" rx="3" fill="#1e293b" />
-            <rect
-              x="1"
-              y="11"
-              width={pokeSpeed === 'fast' ? 78 : 20}
-              height="10"
-              rx="2"
-              fill={pokeSpeed === 'fast' ? '#ef4444' : '#22c55e'}
-            />
-            <text x="90" y="20" className={`text-xs font-bold ${pokeSpeed === 'fast' ? 'fill-red-400' : 'fill-green-400'}`}>
-              {pokeSpeed === 'fast' ? 'HIGH' : 'LOW'}
-            </text>
-          </g>
-        )}
-
-        {/* State indicator */}
-        {pokeSpeed && (
-          <g transform="translate(280, 30)">
-            <rect width="100" height="40" rx="8" fill={pokeSpeed === 'fast' ? '#ef444420' : '#22c55e20'} stroke={pokeSpeed === 'fast' ? '#ef4444' : '#22c55e'} />
-            <text x="50" y="25" textAnchor="middle" className={`text-sm font-bold ${pokeSpeed === 'fast' ? 'fill-red-400' : 'fill-green-400'}`}>
-              {stateLabel}
-            </text>
-          </g>
-        )}
-
-        {/* Penetration depth */}
-        {pokeSpeed && (
-          <text x="200" y="260" textAnchor="middle" className="fill-gray-400 text-xs">
-            Penetration: {pokeDepth.toFixed(0)}mm
-          </text>
-        )}
-
-        {/* Instructions */}
-        {!pokeSpeed && (
-          <text x="200" y="260" textAnchor="middle" className="fill-amber-400 text-sm">
-            Choose how to poke the oobleck!
-          </text>
-        )}
-      </svg>
-    );
+  // Test scoring
+  const calculateTestScore = () => {
+    return testAnswers.reduce((score, ans, i) => {
+      const correct = testQuestions[i].options.find(o => o.correct)?.id;
+      return score + (ans === correct ? 1 : 0);
+    }, 0);
   };
 
-  const renderTwistSimulation = () => {
-    // More starch = more dramatic shear-thickening
-    const effectiveThickening = pokeSpeed === 'fast' ? starchRatio * 20 : 0;
-    const penetration = pokeSpeed ? (pokeSpeed === 'slow' ? 70 + (3 - starchRatio) * 20 : Math.max(5, 30 - starchRatio * 10)) : 0;
+  // ============================================================
+  // OOBLECK VISUALIZATION
+  // ============================================================
+
+  const renderOobleckVisualization = (interactive: boolean = false) => {
+    const width = isMobile ? 340 : 680;
+    const height = isMobile ? 280 : 360;
+    const cx = width / 2;
+    const bowlY = height * 0.55;
+    const bowlWidth = isMobile ? 200 : 350;
+    const bowlHeight = isMobile ? 80 : 120;
+
+    // Calculate particle behavior based on shear rate
+    const particleJamming = Math.min(1, Math.max(0, (shearRate - 40) / 60));
+    const particleSpacing = 1 - particleJamming * 0.4;
+
+    // Generate particles
+    const particles = useMemo(() => {
+      const result = [];
+      const numParticles = isMobile ? 30 : 60;
+      for (let i = 0; i < numParticles; i++) {
+        const angle = (i / numParticles) * Math.PI * 2 + animTime * 0.5;
+        const radiusVar = 0.3 + Math.sin(i * 1.5 + animTime) * 0.1;
+        result.push({
+          x: cx + Math.cos(angle) * bowlWidth * radiusVar * 0.4,
+          y: bowlY + Math.sin(angle * 0.5) * bowlHeight * 0.3 + (i % 3) * 8,
+          size: 4 + (i % 3) * 2,
+          color: i % 2 === 0 ? colors.starch : colors.oobleckLight
+        });
+      }
+      return result;
+    }, [cx, bowlY, bowlWidth, bowlHeight, isMobile, animTime]);
+
+    // Legend items
+    const legendItems = [
+      { color: colors.oobleck, label: 'Oobleck (cornstarch + water)' },
+      { color: colors.starch, label: 'Starch particles' },
+      { color: colors.water, label: 'Water between particles' },
+      { color: colors.finger, label: 'Finger/impact point' },
+      { color: colors.jammedParticles, label: 'Jammed particles (high shear)' },
+      { color: colors.flowingParticles, label: 'Flowing particles (low shear)' },
+    ];
 
     return (
-      <svg viewBox="0 0 400 280" className="w-full h-56 rounded-xl">
-        <rect width="400" height="280" fill="#0f172a" />
-
-        {/* Three bowls showing different ratios */}
-        {[1, 2, 3].map((ratio, idx) => {
-          const xOffset = 70 + idx * 120;
-          const isActive = ratio === starchRatio;
-          const color = ratio === 1 ? '#60a5fa' : ratio === 2 ? '#f59e0b' : '#ef4444';
-
-          return (
-            <g key={ratio} transform={`translate(${xOffset}, 100)`}>
-              {/* Bowl */}
-              <ellipse cx="0" cy="80" rx="50" ry="15" fill="#334155" />
-              <path
-                d="M-45 0 Q-45 80 0 80 Q45 80 45 0"
-                fill="#1e293b"
-                stroke={isActive ? color : '#475569'}
-                strokeWidth={isActive ? 3 : 2}
-              />
-
-              {/* Oobleck with varying opacity based on starch content */}
-              <ellipse cx="0" cy="0" rx="42" ry="12" fill={color} opacity={0.4 + ratio * 0.15} />
-
-              {/* Particles */}
-              {[...Array(12)].map((_, i) => (
-                <circle
-                  key={i}
-                  cx={-25 + (i % 4) * 17 + (isActive && pokeSpeed !== 'fast' ? Math.sin(animPhase + i) * 2 : 0)}
-                  cy={10 + Math.floor(i / 4) * 18}
-                  r={ratio + 2}
-                  fill={color}
-                  opacity={0.6}
-                />
-              ))}
-
-              {/* Finger if active */}
-              {isActive && pokeSpeed && (
-                <g transform={`translate(0, ${-60 + (pokeSpeed === 'slow' ? penetration : penetration)})`}>
-                  <ellipse cx="0" cy="0" rx="10" ry="18" fill="#d4a574" />
-                </g>
-              )}
-
-              {/* Label */}
-              <text x="0" y="110" textAnchor="middle" className="fill-gray-400 text-xs">
-                {ratio}:1 ratio
-              </text>
-              <text x="0" y="125" textAnchor="middle" className={`text-xs font-medium ${isActive ? 'fill-amber-400' : 'fill-gray-500'}`}>
-                {ratio === 1 ? 'Runny' : ratio === 2 ? 'Standard' : 'Thick'}
-              </text>
-            </g>
-          );
-        })}
-
-        {/* Instructions */}
-        <text x="200" y="260" textAnchor="middle" className="fill-gray-400 text-sm">
-          {pokeSpeed ? `${starchRatio}:1 ratio - Penetration: ${penetration.toFixed(0)}mm` : 'Select ratio and poke speed'}
-        </text>
-      </svg>
-    );
-  };
-
-  const renderApplicationGraphic = (index: number) => {
-    switch (index) {
-      case 0: return <LiquidArmorGraphic />;
-      case 1: return <SmartSpeedBumpGraphic />;
-      case 2: return <ProtectiveGearGraphic />;
-      case 3: return <IndustrialDamperGraphic />;
-      default: return null;
-    }
-  };
-
-  // ─── Phase Renderers ───────────────────────────────────────────────────────
-  const renderHook = () => (
-    <div className="flex flex-col items-center justify-center min-h-[80vh] py-8 text-center">
-      {/* Premium badge */}
-      <div className="flex items-center gap-2 mb-6">
-        <div className="w-2 h-2 bg-amber-500 rounded-full animate-pulse" />
-        <span className="text-amber-400/80 text-sm font-medium tracking-wide uppercase">Material Science</span>
-      </div>
-
-      {/* Gradient title */}
-      <h1 className="text-4xl md:text-5xl font-bold text-center mb-3 bg-gradient-to-r from-amber-400 via-orange-400 to-red-400 bg-clip-text text-transparent">
-        Liquid Armor?!
-      </h1>
-
-      {/* Subtitle */}
-      <p className="text-slate-400 text-lg md:text-xl text-center mb-8 max-w-lg">
-        Can you walk on a liquid?
-      </p>
-
-      {/* Premium card */}
-      <div className="w-full max-w-md backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl p-6 mb-8">
-        <div className="text-6xl mb-4">🥣💪</div>
-        <p className="text-gray-300 text-center leading-relaxed">
-          What if a substance could be <span className="text-amber-400 font-semibold">liquid</span> one moment
-          and <span className="text-red-400 font-semibold">solid</span> the next?
-          Meet oobleck - the goo that defies your intuition!
-        </p>
-      </div>
-
-      {/* CTA Button */}
-      <button
-        onMouseDown={(e) => { e.preventDefault(); playSound('click'); nextPhase(); }}
-        className="group px-8 py-4 bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500 rounded-xl font-semibold text-lg transition-all duration-300 shadow-lg shadow-amber-500/25 hover:shadow-amber-500/40 flex items-center gap-2 text-white"
-      >
-        Let's Find Out!
-        <svg className="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-        </svg>
-      </button>
-
-      {/* Hint text */}
-      <p className="text-slate-500 text-sm mt-6">
-        Discover the physics of non-Newtonian fluids
-      </p>
-    </div>
-  );
-
-  const renderPredict = () => (
-    <div className="space-y-8">
-      <div className="text-center">
-        <h2 className="text-2xl font-bold text-white mb-2">Make Your Prediction</h2>
-        <p className="text-gray-400">
-          You have a bowl of oobleck (cornstarch + water). What happens when you poke it?
-        </p>
-      </div>
-
-      <div className="grid grid-cols-1 gap-4 max-w-xl mx-auto">
-        {[
-          { id: 'same', text: 'Same result whether slow or fast - it\'s just a liquid', icon: '💧' },
-          { id: 'slow_resist', text: 'Slow poke meets resistance; fast poke goes right through', icon: '🐌' },
-          { id: 'fast_resist', text: 'Fast poke meets resistance; slow poke sinks right in', icon: '⚡' },
-          { id: 'always_solid', text: 'It\'s always solid - cornstarch makes it firm', icon: '🧱' }
-        ].map((option) => (
-          <button
-            key={option.id}
-            onMouseDown={(e) => { e.preventDefault(); handlePrediction(option.id); }}
-            className={`p-5 rounded-2xl border-2 transition-all text-left ${
-              prediction === option.id
-                ? 'border-amber-500 bg-amber-900/30 shadow-lg shadow-amber-500/20'
-                : 'border-slate-700 bg-slate-800/50 hover:border-slate-600'
-            }`}
-          >
-            <span className="text-2xl mr-3">{option.icon}</span>
-            <span className="text-gray-200">{option.text}</span>
-          </button>
-        ))}
-      </div>
-
-      {prediction && (
-        <div className="text-center">
-          <PrimaryButton onMouseDown={() => { playSound('click'); nextPhase(); }}>
-            Test It! →
-          </PrimaryButton>
-        </div>
-      )}
-    </div>
-  );
-
-  const renderPlay = () => (
-    <div className="space-y-6">
-      <h2 className="text-2xl font-bold text-white text-center">Poke the Oobleck!</h2>
-
-      {renderOobleckSimulation()}
-
-      <div className="flex justify-center gap-4">
-        <button
-          onMouseDown={(e) => {
-            e.preventDefault();
-            playSound('click');
-            setPokeSpeed('slow');
-            setPokeDepth(0);
-            setIsPoking(true);
-          }}
-          className={`px-6 py-3 rounded-xl font-medium transition-all ${
-            pokeSpeed === 'slow'
-              ? 'bg-green-600 text-white shadow-lg shadow-green-500/30'
-              : 'bg-slate-700 text-gray-300 hover:bg-slate-600'
-          }`}
-        >
-          🐌 Slow Poke
-        </button>
-        <button
-          onMouseDown={(e) => {
-            e.preventDefault();
-            playSound('click');
-            setPokeSpeed('fast');
-            setPokeDepth(0);
-            setIsPoking(true);
-          }}
-          className={`px-6 py-3 rounded-xl font-medium transition-all ${
-            pokeSpeed === 'fast'
-              ? 'bg-red-600 text-white shadow-lg shadow-red-500/30'
-              : 'bg-slate-700 text-gray-300 hover:bg-slate-600'
-          }`}
-        >
-          ⚡ Fast Punch
-        </button>
-        <button
-          onMouseDown={(e) => {
-            e.preventDefault();
-            playSound('click');
-            setPokeSpeed(null);
-            setPokeDepth(0);
-            setIsPoking(false);
-          }}
-          className="px-6 py-3 rounded-xl font-medium bg-slate-700 text-gray-300 hover:bg-slate-600 transition-all"
-        >
-          🔄 Reset
-        </button>
-      </div>
-
-      <div className="bg-gradient-to-r from-amber-900/30 to-orange-900/30 rounded-2xl p-5 max-w-xl mx-auto border border-amber-500/20">
-        <p className="text-amber-300 text-sm text-center">
-          <strong>Notice:</strong> Slow movements sink in like liquid.
-          Fast impacts are resisted like a solid! The particles &quot;jam&quot; together.
-        </p>
-      </div>
-
-      <div className="text-center">
-        <PrimaryButton onMouseDown={() => { playSound('click'); nextPhase(); }}>
-          Understand Why →
-        </PrimaryButton>
-      </div>
-    </div>
-  );
-
-  const renderReview = () => (
-    <div className="space-y-6">
-      <h2 className="text-2xl font-bold text-white text-center">Shear-Thickening Fluid</h2>
-
-      <div className="bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl p-6 max-w-xl mx-auto border border-slate-700">
-        <div className="space-y-5">
-          <div className="flex items-start gap-4">
-            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-amber-500 to-amber-600 flex items-center justify-center text-white font-bold shadow-lg">1</div>
-            <div>
-              <h3 className="text-white font-semibold">Particle Suspension</h3>
-              <p className="text-gray-400 text-sm">Cornstarch particles float in water, able to slide past each other</p>
+      <div style={{ position: 'relative', width: '100%', maxWidth: '700px', margin: '0 auto' }}>
+        {/* Legend - positioned in corner */}
+        <div style={{
+          position: 'absolute',
+          top: isMobile ? '8px' : '12px',
+          right: isMobile ? '8px' : '12px',
+          background: 'rgba(15, 23, 42, 0.95)',
+          borderRadius: '8px',
+          padding: isMobile ? '8px' : '12px',
+          border: `1px solid ${colors.border}`,
+          zIndex: 10,
+          maxWidth: isMobile ? '140px' : '180px'
+        }}>
+          <p style={{ fontSize: '10px', fontWeight: 700, color: colors.textMuted, marginBottom: '6px', textTransform: 'uppercase' }}>
+            Legend
+          </p>
+          {legendItems.slice(0, isMobile ? 4 : 6).map((item, i) => (
+            <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '3px' }}>
+              <div style={{ width: '10px', height: '10px', borderRadius: '2px', background: item.color, flexShrink: 0 }} />
+              <span style={{ fontSize: '10px', color: colors.textSecondary, lineHeight: 1.2 }}>{item.label}</span>
             </div>
-          </div>
-          <div className="flex items-start gap-4">
-            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-orange-500 to-orange-600 flex items-center justify-center text-white font-bold shadow-lg">2</div>
-            <div>
-              <h3 className="text-white font-semibold">Slow Stress = Flow</h3>
-              <p className="text-gray-400 text-sm">Gentle force allows particles time to rearrange and flow around obstacles</p>
-            </div>
-          </div>
-          <div className="flex items-start gap-4">
-            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-red-500 to-red-600 flex items-center justify-center text-white font-bold shadow-lg">3</div>
-            <div>
-              <h3 className="text-white font-semibold">Fast Stress = JAM!</h3>
-              <p className="text-gray-400 text-sm">Sudden force doesn&apos;t give particles time to move - they lock together!</p>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div className="bg-amber-900/30 rounded-2xl p-5 max-w-xl mx-auto text-center border border-amber-500/20">
-        <p className="text-amber-300 font-semibold">Shear-Thickening</p>
-        <p className="text-gray-400 text-sm mt-2">
-          Viscosity <strong className="text-white">increases</strong> with shear rate.
-          <br />
-          The faster you stress it, the more it resists!
-        </p>
-      </div>
-
-      <div className="text-center">
-        <p className="text-gray-400 mb-4">
-          Your prediction: <span className={prediction === 'fast_resist' ? 'text-green-400 font-semibold' : 'text-red-400'}>
-            {prediction === 'fast_resist' ? '✓ Correct!' : '✗ Not quite - fast poke meets resistance!'}
-          </span>
-        </p>
-        <PrimaryButton onMouseDown={() => { playSound('click'); nextPhase(); }} variant="orange">
-          What if we change the recipe? →
-        </PrimaryButton>
-      </div>
-    </div>
-  );
-
-  const renderTwistPredict = () => (
-    <div className="space-y-8">
-      <div className="text-center">
-        <div className="text-5xl mb-4">🔄</div>
-        <h2 className="text-2xl font-bold text-white mb-2">The Twist!</h2>
-        <p className="text-gray-400 max-w-xl mx-auto">
-          What if we change the <span className="text-amber-400 font-semibold">ratio</span> of cornstarch to water?
-          More starch? Less starch? How does that affect the &quot;armor&quot; effect?
-        </p>
-      </div>
-
-      <div className="grid grid-cols-1 gap-4 max-w-xl mx-auto">
-        {[
-          { id: 'more_starch', text: 'More starch = stronger armor effect (harder to penetrate when punched)', icon: '💪' },
-          { id: 'less_starch', text: 'Less starch = stronger armor effect (better particle jamming)', icon: '💧' },
-          { id: 'same', text: 'Ratio doesn\'t matter - any mixture works the same', icon: '⚖️' },
-          { id: 'middle', text: 'There\'s a perfect middle ratio - too much or too little reduces the effect', icon: '🎯' }
-        ].map((option) => (
-          <button
-            key={option.id}
-            onMouseDown={(e) => { e.preventDefault(); handleTwistPrediction(option.id); }}
-            className={`p-5 rounded-2xl border-2 transition-all text-left ${
-              twistPrediction === option.id
-                ? 'border-orange-500 bg-orange-900/30 shadow-lg shadow-orange-500/20'
-                : 'border-slate-700 bg-slate-800/50 hover:border-slate-600'
-            }`}
-          >
-            <span className="text-2xl mr-3">{option.icon}</span>
-            <span className="text-gray-200">{option.text}</span>
-          </button>
-        ))}
-      </div>
-
-      {twistPrediction && (
-        <div className="text-center">
-          <PrimaryButton onMouseDown={() => { playSound('click'); nextPhase(); }} variant="orange">
-            Test Different Ratios! →
-          </PrimaryButton>
-        </div>
-      )}
-    </div>
-  );
-
-  const renderTwistPlay = () => (
-    <div className="space-y-6">
-      <h2 className="text-2xl font-bold text-white text-center">Ratio Experiment</h2>
-
-      {renderTwistSimulation()}
-
-      <div className="max-w-xl mx-auto space-y-4">
-        <div>
-          <label className="text-gray-400 text-sm font-medium">Starch:Water Ratio</label>
-          <div className="flex gap-3 mt-2">
-            {[1, 2, 3].map((ratio) => (
-              <button
-                key={ratio}
-                onMouseDown={(e) => {
-                  e.preventDefault();
-                  playSound('click');
-                  setStarchRatio(ratio);
-                  setPokeSpeed(null);
-                  setPokeDepth(0);
-                }}
-                className={`flex-1 px-4 py-2 rounded-xl text-sm font-medium transition-all ${
-                  starchRatio === ratio
-                    ? 'bg-amber-600 text-white shadow-lg'
-                    : 'bg-slate-700 text-gray-300 hover:bg-slate-600'
-                }`}
-              >
-                {ratio}:1 {ratio === 1 ? '(Runny)' : ratio === 2 ? '(Standard)' : '(Thick)'}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        <div className="flex justify-center gap-4">
-          <button
-            onMouseDown={(e) => {
-              e.preventDefault();
-              playSound('click');
-              setPokeSpeed('slow');
-              setPokeDepth(0);
-              setIsPoking(true);
-            }}
-            className={`px-5 py-2 rounded-xl font-medium transition-all ${
-              pokeSpeed === 'slow'
-                ? 'bg-green-600 text-white'
-                : 'bg-slate-700 text-gray-300 hover:bg-slate-600'
-            }`}
-          >
-            🐌 Slow
-          </button>
-          <button
-            onMouseDown={(e) => {
-              e.preventDefault();
-              playSound('click');
-              setPokeSpeed('fast');
-              setPokeDepth(0);
-              setIsPoking(true);
-            }}
-            className={`px-5 py-2 rounded-xl font-medium transition-all ${
-              pokeSpeed === 'fast'
-                ? 'bg-red-600 text-white'
-                : 'bg-slate-700 text-gray-300 hover:bg-slate-600'
-            }`}
-          >
-            ⚡ Fast
-          </button>
-        </div>
-      </div>
-
-      <div className="bg-gradient-to-r from-orange-900/30 to-red-900/30 rounded-2xl p-5 max-w-xl mx-auto border border-orange-500/20">
-        <p className="text-orange-300 text-sm text-center">
-          <strong>Observation:</strong> More starch = stronger shear-thickening!
-          Too little starch (1:1) and it&apos;s just watery.
-          The ~2:1 ratio is the sweet spot for dramatic effects.
-        </p>
-      </div>
-
-      <div className="text-center">
-        <PrimaryButton onMouseDown={() => { playSound('click'); nextPhase(); }} variant="orange">
-          Continue →
-        </PrimaryButton>
-      </div>
-    </div>
-  );
-
-  const renderTwistReview = () => (
-    <div className="space-y-6">
-      <h2 className="text-2xl font-bold text-white text-center">The Perfect Recipe</h2>
-
-      <div className="bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl p-6 max-w-xl mx-auto border border-slate-700">
-        <p className="text-gray-300 text-center mb-5">
-          The ratio matters because:
-        </p>
-
-        <div className="space-y-4">
-          <div className="bg-blue-900/40 rounded-xl p-4 border border-blue-500/20">
-            <div className="text-blue-400 font-semibold">Too Little Starch (1:1)</div>
-            <div className="text-gray-400 text-sm">Not enough particles to jam - acts like muddy water</div>
-          </div>
-          <div className="bg-amber-900/40 rounded-xl p-4 border border-amber-500/20">
-            <div className="text-amber-400 font-semibold">Optimal Ratio (~2:1)</div>
-            <div className="text-gray-400 text-sm">Perfect particle density for dramatic shear-thickening</div>
-          </div>
-          <div className="bg-red-900/40 rounded-xl p-4 border border-red-500/20">
-            <div className="text-red-400 font-semibold">Too Much Starch (3:1+)</div>
-            <div className="text-gray-400 text-sm">Already dense and paste-like, less dramatic response</div>
-          </div>
-        </div>
-      </div>
-
-      <div className="text-center">
-        <p className="text-gray-400 mb-4">
-          Your prediction: <span className={twistPrediction === 'more_starch' || twistPrediction === 'middle' ? 'text-green-400 font-semibold' : 'text-amber-400'}>
-            {twistPrediction === 'more_starch' || twistPrediction === 'middle' ? '✓ On the right track!' : '✗ More starch generally means stronger effect (up to a point)'}
-          </span>
-        </p>
-        <PrimaryButton onMouseDown={() => { playSound('click'); nextPhase(); }} variant="red">
-          See Real Applications →
-        </PrimaryButton>
-      </div>
-    </div>
-  );
-
-  const renderTransfer = () => (
-    <div className="space-y-6">
-      <div className="text-center">
-        <h2 className="text-2xl font-bold text-white mb-2">Real-World Applications</h2>
-        <p className="text-gray-400">Explore all 4 applications to unlock the quiz</p>
-      </div>
-
-      {/* Tab Navigation */}
-      <div className="flex gap-2 max-w-2xl mx-auto overflow-x-auto pb-2">
-        {TRANSFER_APPS.map((app, index) => (
-          <button
-            key={index}
-            onMouseDown={(e) => { e.preventDefault(); handleAppComplete(index); }}
-            className={`flex-1 min-w-[120px] px-4 py-3 rounded-xl font-medium transition-all text-sm ${
-              activeAppTab === index
-                ? 'bg-gradient-to-r from-amber-600 to-orange-600 text-white shadow-lg'
-                : completedApps.has(index)
-                ? 'bg-amber-900/40 text-amber-300 border border-amber-500/30'
-                : 'bg-slate-800 text-gray-400 hover:bg-slate-700'
-            }`}
-          >
-            <span className="text-xl block mb-1">{app.icon}</span>
-            <span className="block truncate">{app.title.split(' ')[0]}</span>
-            {completedApps.has(index) && <span className="text-green-400 text-xs">✓</span>}
-          </button>
-        ))}
-      </div>
-
-      {/* Application Content */}
-      <div className="bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl p-6 max-w-2xl mx-auto border border-slate-700">
-        <div className="mb-4">
-          {renderApplicationGraphic(activeAppTab)}
-        </div>
-        <h3 className="text-xl font-bold text-white mb-2">
-          {TRANSFER_APPS[activeAppTab].icon} {TRANSFER_APPS[activeAppTab].title}
-        </h3>
-        <p className="text-gray-300">
-          {TRANSFER_APPS[activeAppTab].description}
-        </p>
-      </div>
-
-      {/* Progress Indicator */}
-      <div className="text-center">
-        <p className="text-gray-400 mb-4">
-          Applications explored: {completedApps.size}/4
-        </p>
-        {completedApps.size >= 4 && (
-          <PrimaryButton onMouseDown={() => { playSound('click'); nextPhase(); }}>
-            Take the Quiz →
-          </PrimaryButton>
-        )}
-      </div>
-    </div>
-  );
-
-  const renderTest = () => {
-    const answeredCount = testAnswers.filter(a => a !== -1).length;
-    const allAnswered = answeredCount === TEST_QUESTIONS.length;
-    const score = testAnswers.filter((a, i) => a === TEST_QUESTIONS[i].correct).length;
-    const passed = score >= 7;
-
-    if (allAnswered) {
-      return (
-        <div className="text-center space-y-8">
-          <div className="text-7xl">{passed ? '🎉' : '📚'}</div>
-          <div>
-            <h2 className="text-3xl font-bold text-white mb-2">Quiz Complete!</h2>
-            <p className="text-xl text-gray-300">
-              You scored <span className={passed ? 'text-green-400' : 'text-amber-400'}>{score}/10</span>
-            </p>
-            <p className="text-gray-500 mt-2">
-              {passed ? 'Excellent! You understand non-Newtonian fluids!' : 'Review the concepts and try again!'}
-            </p>
-          </div>
-          <PrimaryButton
-            onMouseDown={() => {
-              playSound(passed ? 'complete' : 'click');
-              if (passed) nextPhase();
-              else setTestAnswers(Array(10).fill(-1));
-            }}
-            variant={passed ? 'amber' : 'orange'}
-          >
-            {passed ? 'Continue to Mastery! 🎊' : 'Try Again'}
-          </PrimaryButton>
-        </div>
-      );
-    }
-
-    return (
-      <div className="space-y-6">
-        <div className="text-center">
-          <h2 className="text-2xl font-bold text-white mb-2">Knowledge Check</h2>
-          <p className="text-gray-400">Answer all 10 questions (70% to pass)</p>
-        </div>
-
-        {/* Progress bar */}
-        <div className="flex gap-1 max-w-xl mx-auto">
-          {TEST_QUESTIONS.map((_, i) => (
-            <div
-              key={i}
-              className={`h-2 flex-1 rounded-full transition-all ${
-                testAnswers[i] !== -1
-                  ? testAnswers[i] === TEST_QUESTIONS[i].correct
-                    ? 'bg-green-500'
-                    : 'bg-red-500'
-                  : 'bg-slate-700'
-              }`}
-            />
           ))}
         </div>
 
-        {/* Questions */}
-        <div className="space-y-6 max-w-2xl mx-auto">
-          {TEST_QUESTIONS.map((q, qIndex) => (
-            <div
-              key={qIndex}
-              className={`bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl p-5 border transition-all ${
-                testAnswers[qIndex] !== -1
-                  ? testAnswers[qIndex] === q.correct
-                    ? 'border-green-500/50'
-                    : 'border-red-500/50'
-                  : 'border-slate-700'
-              }`}
-            >
-              <p className="text-white font-medium mb-4">
-                <span className="text-amber-400">{qIndex + 1}.</span> {q.question}
+        <svg
+          viewBox={`0 0 ${width} ${height}`}
+          preserveAspectRatio="xMidYMid meet"
+          style={{ width: '100%', height: 'auto', display: 'block' }}
+        >
+          <defs>
+            {/* Bowl gradient */}
+            <linearGradient id="bowlGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#475569" />
+              <stop offset="50%" stopColor="#334155" />
+              <stop offset="100%" stopColor="#1e293b" />
+            </linearGradient>
+
+            {/* Oobleck gradient */}
+            <radialGradient id="oobleckGradient" cx="50%" cy="30%" r="70%">
+              <stop offset="0%" stopColor={colors.oobleckLight} />
+              <stop offset="100%" stopColor={colors.oobleck} />
+            </radialGradient>
+
+            {/* Finger gradient */}
+            <linearGradient id="fingerGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#fecaca" />
+              <stop offset="100%" stopColor="#f87171" />
+            </linearGradient>
+
+            {/* Glow filter for impacts */}
+            <filter id="impactGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="4" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+          </defs>
+
+          {/* Background */}
+          <rect x="0" y="0" width={width} height={height} fill={colors.bgDark} rx="12" />
+
+          {/* Title */}
+          <text x={cx} y="28" textAnchor="middle" fill={colors.textPrimary} fontSize={isMobile ? 16 : 20} fontWeight="bold">
+            Non-Newtonian Fluid: Oobleck
+          </text>
+          <text x={cx} y="48" textAnchor="middle" fill={colors.textSecondary} fontSize={isMobile ? 11 : 14} fontWeight="500">
+            Cornstarch + Water = Shear-Thickening Fluid
+          </text>
+
+          {/* Bowl */}
+          <ellipse
+            cx={cx}
+            cy={bowlY + bowlHeight * 0.3}
+            rx={bowlWidth / 2 + 15}
+            ry={bowlHeight * 0.5}
+            fill="url(#bowlGradient)"
+            stroke={colors.borderLight}
+            strokeWidth="2"
+          />
+
+          {/* Oobleck surface */}
+          <ellipse
+            cx={cx}
+            cy={bowlY}
+            rx={bowlWidth / 2}
+            ry={bowlHeight * 0.35}
+            fill="url(#oobleckGradient)"
+          />
+
+          {/* Particles visualization */}
+          {particles.map((p, i) => {
+            const isJammed = interactive && shearRate > 40 && Math.abs(p.x - cx) < 60;
+            return (
+              <circle
+                key={i}
+                cx={p.x + (isJammed ? 0 : Math.sin(animTime * 2 + i) * 3)}
+                cy={p.y + (isJammed ? 0 : Math.cos(animTime * 2 + i) * 2)}
+                r={p.size * (isJammed ? 0.9 : 1)}
+                fill={isJammed ? colors.jammedParticles : p.color}
+                opacity={0.7}
+              />
+            );
+          })}
+
+          {/* Finger/poker (in interactive mode) */}
+          {interactive && (
+            <g transform={`translate(${cx}, ${bowlY - 60 + pokeDepth})`}>
+              {/* Finger */}
+              <ellipse cx="0" cy="0" rx="15" ry="8" fill="url(#fingerGradient)" />
+              <rect x="-15" y="-50" width="30" height="50" fill="url(#fingerGradient)" rx="15" />
+
+              {/* Impact indicator */}
+              {shearRate > 40 && pokeDepth > 5 && (
+                <g filter="url(#impactGlow)">
+                  <circle cx="0" cy="8" r={20 + (shearRate - 40) * 0.3} fill="none" stroke={colors.jammedParticles} strokeWidth="3" opacity="0.6" />
+                  <text x="0" y="35" textAnchor="middle" fill={colors.jammedParticles} fontSize="12" fontWeight="bold">
+                    JAMMED!
+                  </text>
+                </g>
+              )}
+            </g>
+          )}
+
+          {/* Water molecules indicator */}
+          <g transform={`translate(${width - (isMobile ? 70 : 100)}, ${bowlY - 30})`}>
+            <rect x="-30" y="-20" width="60" height="50" fill={colors.bgCard} rx="6" stroke={colors.border} />
+            <circle cx="-10" cy="0" r="6" fill={colors.water} opacity="0.8" />
+            <circle cx="10" cy="5" r="5" fill={colors.water} opacity="0.6" />
+            <circle cx="0" cy="12" r="4" fill={colors.water} opacity="0.7" />
+            <text x="0" y="35" textAnchor="middle" fill={colors.textSecondary} fontSize="9">H₂O</text>
+          </g>
+
+          {/* Viscosity meter (in interactive mode) */}
+          {interactive && (
+            <g transform={`translate(${isMobile ? 30 : 50}, ${height - 80})`}>
+              <rect x="0" y="0" width={isMobile ? 100 : 140} height="60" fill={colors.bgCard} rx="8" stroke={colors.border} />
+              <text x={isMobile ? 50 : 70} y="18" textAnchor="middle" fill={colors.textSecondary} fontSize="11" fontWeight="600">
+                Viscosity
+              </text>
+              {/* Meter bar */}
+              <rect x="10" y="28" width={isMobile ? 80 : 120} height="12" fill={colors.bgDark} rx="4" />
+              <rect
+                x="10"
+                y="28"
+                width={Math.min((isMobile ? 80 : 120), (viscosity / 100) * (isMobile ? 80 : 120))}
+                height="12"
+                fill={viscosity > 50 ? colors.jammedParticles : colors.flowingParticles}
+                rx="4"
+              />
+              <text x={isMobile ? 50 : 70} y="52" textAnchor="middle" fill={colors.textPrimary} fontSize="12" fontWeight="bold">
+                {Math.round(viscosity)} Pa·s
+              </text>
+            </g>
+          )}
+
+          {/* Physics formula */}
+          <g transform={`translate(${isMobile ? 15 : 25}, ${height - (isMobile ? 35 : 45)})`}>
+            <text fill={colors.textSecondary} fontSize={isMobile ? 10 : 12} fontWeight="600">
+              <tspan fill={colors.primaryLight}>η</tspan> = η₀ × (1 + (λ × <tspan fill={colors.accent}>γ̇</tspan>)ⁿ)
+            </text>
+            <text y="14" fill={colors.textMuted} fontSize={isMobile ? 8 : 10}>
+              Viscosity increases with shear rate (γ̇)
+            </text>
+          </g>
+        </svg>
+      </div>
+    );
+  };
+
+  // ============================================================
+  // BOTTOM BAR (Fixed navigation - evaluation requirement)
+  // ============================================================
+
+  const renderBottomBar = (showBack: boolean, canProceed: boolean, nextLabel: string, onNext?: () => void) => {
+    const handleNext = () => {
+      if (!canProceed) return;
+      playSound('click');
+      if (onNext) {
+        onNext();
+      } else {
+        const currentIndex = validPhases.indexOf(phase);
+        if (currentIndex < validPhases.length - 1) {
+          goToPhase(validPhases[currentIndex + 1]);
+        }
+      }
+    };
+
+    const handleBack = () => {
+      playSound('click');
+      const currentIndex = validPhases.indexOf(phase);
+      if (currentIndex > 0) {
+        goToPhase(validPhases[currentIndex - 1]);
+      }
+    };
+
+    return (
+      <div style={{
+        position: 'fixed',
+        bottom: 0,
+        left: 0,
+        right: 0,
+        zIndex: 1000,
+        minHeight: '72px',
+        background: colors.bgCard,
+        borderTop: `1px solid ${colors.border}`,
+        boxShadow: '0 -4px 20px rgba(0,0,0,0.5)',
+        padding: '12px 20px',
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        gap: '12px'
+      }}>
+        {showBack ? (
+          <button
+            onClick={handleBack}
+            style={{
+              padding: '12px 20px',
+              borderRadius: '12px',
+              border: `1px solid ${colors.border}`,
+              backgroundColor: colors.bgCardLight,
+              color: colors.textSecondary,
+              fontSize: '14px',
+              fontWeight: 600,
+              cursor: 'pointer',
+              minHeight: '48px'
+            }}
+          >
+            ← Back
+          </button>
+        ) : <div />}
+
+        {canProceed ? (
+          <button
+            onClick={handleNext}
+            style={{
+              padding: '14px 28px',
+              borderRadius: '12px',
+              border: 'none',
+              background: `linear-gradient(135deg, ${colors.primary} 0%, ${colors.accent} 100%)`,
+              color: 'white',
+              fontSize: '16px',
+              fontWeight: 700,
+              cursor: 'pointer',
+              minHeight: '52px',
+              minWidth: '160px',
+              boxShadow: `0 4px 15px ${colors.primary}40`
+            }}
+          >
+            {nextLabel}
+          </button>
+        ) : (
+          <div style={{
+            padding: '14px 28px',
+            borderRadius: '12px',
+            backgroundColor: colors.bgCardLight,
+            color: colors.textMuted,
+            fontSize: '14px',
+            fontWeight: 500,
+            minHeight: '52px',
+            display: 'flex',
+            alignItems: 'center'
+          }}>
+            Select an option above
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  // ============================================================
+  // HOOK PHASE
+  // ============================================================
+
+  if (phase === 'hook') {
+    return (
+      <div style={{
+        height: '100dvh',
+        display: 'flex',
+        flexDirection: 'column',
+        background: `linear-gradient(180deg, ${colors.bgGradientStart} 0%, ${colors.bgGradientEnd} 100%)`,
+        overflow: 'hidden'
+      }}>
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          overflowX: 'hidden',
+          WebkitOverflowScrolling: 'touch',
+          paddingBottom: '100px'
+        }}>
+          <div style={{ maxWidth: '800px', margin: '0 auto', padding: '20px', textAlign: 'center' }}>
+            {/* Hook visual */}
+            <div style={{
+              fontSize: isMobile ? '80px' : '120px',
+              marginBottom: '20px',
+              animation: 'pulse 2s infinite'
+            }}>
+              🥣
+            </div>
+
+            <h1 style={{
+              fontSize: isMobile ? '28px' : '40px',
+              fontWeight: 800,
+              color: colors.textPrimary,
+              marginBottom: '16px',
+              lineHeight: 1.2
+            }}>
+              Is It Liquid or Solid?
+            </h1>
+
+            <p style={{
+              fontSize: isMobile ? '16px' : '20px',
+              color: colors.textSecondary,
+              marginBottom: '32px',
+              maxWidth: '600px',
+              margin: '0 auto 32px auto',
+              lineHeight: 1.6
+            }}>
+              What if a substance could <strong style={{ color: colors.primaryLight }}>switch instantly</strong> between
+              liquid and solid... without changing temperature?
+            </p>
+
+            {/* Teaser image */}
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '20px',
+              padding: '24px',
+              marginBottom: '24px',
+              border: `1px solid ${colors.border}`
+            }}>
+              <div style={{ display: 'flex', justifyContent: 'center', gap: '40px', flexWrap: 'wrap' }}>
+                <div style={{ textAlign: 'center' }}>
+                  <div style={{ fontSize: '48px', marginBottom: '8px' }}>🐌</div>
+                  <p style={{ color: colors.textSecondary, fontSize: '14px' }}>Slow touch...</p>
+                  <p style={{ color: colors.flowingParticles, fontSize: '16px', fontWeight: 600 }}>Sinks in!</p>
+                </div>
+                <div style={{ textAlign: 'center' }}>
+                  <div style={{ fontSize: '48px', marginBottom: '8px' }}>👊</div>
+                  <p style={{ color: colors.textSecondary, fontSize: '14px' }}>Fast punch...</p>
+                  <p style={{ color: colors.jammedParticles, fontSize: '16px', fontWeight: 600 }}>Solid wall!</p>
+                </div>
+              </div>
+            </div>
+
+            <p style={{
+              fontSize: '14px',
+              color: colors.textMuted,
+              fontStyle: 'italic'
+            }}>
+              You might have played with this at school... it's called <strong style={{ color: colors.primaryLight }}>oobleck!</strong>
+            </p>
+          </div>
+        </div>
+
+        {renderBottomBar(false, true, "Let's Explore →")}
+      </div>
+    );
+  }
+
+  // ============================================================
+  // PREDICT PHASE - Critical: Static graphic FIRST, then prediction below
+  // ============================================================
+
+  if (phase === 'predict') {
+    const predictions = [
+      { id: 'same', label: 'Same result whether slow or fast — it\'s just a liquid', icon: '💧' },
+      { id: 'slow_resist', label: 'Slow poke meets resistance; fast poke goes through', icon: '🐌' },
+      { id: 'fast_resist', label: 'Fast poke meets resistance; slow poke sinks in', icon: '⚡' },
+      { id: 'always_solid', label: 'Always solid — cornstarch makes it firm', icon: '🧱' }
+    ];
+
+    return (
+      <div style={{
+        height: '100dvh',
+        display: 'flex',
+        flexDirection: 'column',
+        background: `linear-gradient(180deg, ${colors.bgGradientStart} 0%, ${colors.bgGradientEnd} 100%)`,
+        overflow: 'hidden'
+      }}>
+        {/* Scrollable content */}
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          overflowX: 'hidden',
+          WebkitOverflowScrolling: 'touch',
+          paddingBottom: '100px'
+        }}>
+          <div style={{ maxWidth: '800px', margin: '0 auto', padding: '20px' }}>
+            {/* Header */}
+            <div style={{ textAlign: 'center', marginBottom: '16px' }}>
+              <p style={{ color: colors.primary, fontSize: '12px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '8px' }}>
+                Step 1 • Make a Prediction
               </p>
-              <div className="grid grid-cols-1 gap-2">
-                {q.options.map((option, oIndex) => (
+              <h2 style={{ fontSize: isMobile ? '22px' : '28px', fontWeight: 700, color: colors.textPrimary }}>
+                Oobleck Experiment Setup
+              </h2>
+            </div>
+
+            {/* STATIC GRAPHIC - No controls, just the visualization */}
+            <div style={{
+              width: '100%',
+              maxWidth: '700px',
+              margin: '0 auto 20px auto',
+              aspectRatio: '16/10',
+              background: colors.bgCard,
+              borderRadius: '16px',
+              border: `1px solid ${colors.border}`,
+              overflow: 'hidden'
+            }}>
+              {renderOobleckVisualization(false)}
+            </div>
+
+            {/* What You're Looking At - CRITICAL for educational clarity */}
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '12px',
+              padding: '16px',
+              marginBottom: '20px',
+              border: `1px solid ${colors.border}`
+            }}>
+              <h3 style={{ color: colors.textPrimary, fontSize: '15px', fontWeight: 700, marginBottom: '8px' }}>
+                📋 What You're Looking At:
+              </h3>
+              <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.6, margin: 0 }}>
+                This is <strong style={{ color: colors.primaryLight }}>oobleck</strong> — a mixture of
+                <strong style={{ color: colors.starch }}> cornstarch</strong> and
+                <strong style={{ color: colors.water }}> water</strong>. The
+                <span style={{ color: colors.starch }}> yellow particles</span> are starch granules
+                suspended in water. They can either flow past each other (liquid behavior) or
+                jam together (solid behavior).
+              </p>
+            </div>
+
+            {/* Prediction Question - BELOW the graphic */}
+            <div style={{ marginBottom: '20px' }}>
+              <h3 style={{ color: colors.textPrimary, fontSize: '18px', fontWeight: 700, marginBottom: '12px' }}>
+                🤔 What happens when you poke the oobleck?
+              </h3>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                {predictions.map(p => (
                   <button
-                    key={oIndex}
-                    onMouseDown={(e) => {
-                      e.preventDefault();
-                      if (testAnswers[qIndex] === -1) handleTestAnswer(qIndex, oIndex);
+                    key={p.id}
+                    onClick={() => {
+                      setPrediction(p.id);
+                      playSound('click');
                     }}
-                    disabled={testAnswers[qIndex] !== -1}
-                    className={`p-3 rounded-xl text-left text-sm transition-all ${
-                      testAnswers[qIndex] === oIndex
-                        ? oIndex === q.correct
-                          ? 'bg-green-600/30 border border-green-500 text-green-300'
-                          : 'bg-red-600/30 border border-red-500 text-red-300'
-                        : testAnswers[qIndex] !== -1 && oIndex === q.correct
-                        ? 'bg-green-600/20 border border-green-500/50 text-green-400'
-                        : testAnswers[qIndex] !== -1
-                        ? 'bg-slate-800 text-gray-500 cursor-not-allowed'
-                        : 'bg-slate-800 text-gray-300 hover:bg-slate-700 cursor-pointer'
-                    }`}
+                    style={{
+                      padding: '16px',
+                      borderRadius: '12px',
+                      border: prediction === p.id ? `2px solid ${colors.primary}` : `1px solid ${colors.border}`,
+                      backgroundColor: prediction === p.id ? `${colors.primary}20` : colors.bgCard,
+                      cursor: 'pointer',
+                      textAlign: 'left',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '12px',
+                      transition: 'all 0.2s ease'
+                    }}
                   >
-                    {option}
+                    <span style={{ fontSize: '24px' }}>{p.icon}</span>
+                    <span style={{ color: colors.textPrimary, fontSize: '14px', flex: 1 }}>{p.label}</span>
+                    {prediction === p.id && (
+                      <span style={{ color: colors.primary, fontSize: '20px', fontWeight: 700 }}>✓</span>
+                    )}
                   </button>
                 ))}
               </div>
             </div>
-          ))}
+
+            {/* Optional "Why?" question - shown after selection */}
+            {prediction && (
+              <div style={{
+                background: `linear-gradient(135deg, ${colors.primary}15 0%, ${colors.accent}15 100%)`,
+                borderRadius: '12px',
+                padding: '16px',
+                border: `1px solid ${colors.primary}30`
+              }}>
+                <p style={{ color: colors.textSecondary, fontSize: '14px', marginBottom: '12px' }}>
+                  💭 Why do you think this will happen? <span style={{ color: colors.textMuted }}>(Optional)</span>
+                </p>
+                <textarea
+                  placeholder="Share your reasoning... (skip if you prefer)"
+                  style={{
+                    width: '100%',
+                    minHeight: '60px',
+                    padding: '12px',
+                    borderRadius: '8px',
+                    background: colors.bgCard,
+                    border: `1px solid ${colors.border}`,
+                    color: colors.textPrimary,
+                    fontSize: '14px',
+                    resize: 'vertical'
+                  }}
+                />
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Fixed bottom bar */}
+        {renderBottomBar(true, !!prediction, 'Test My Prediction →')}
+      </div>
+    );
+  }
+
+  // ============================================================
+  // PLAY PHASE - Interactive controls now available
+  // ============================================================
+
+  if (phase === 'play') {
+    return (
+      <div style={{
+        height: '100dvh',
+        display: 'flex',
+        flexDirection: 'column',
+        background: `linear-gradient(180deg, ${colors.bgGradientStart} 0%, ${colors.bgGradientEnd} 100%)`,
+        overflow: 'hidden'
+      }}>
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          overflowX: 'hidden',
+          WebkitOverflowScrolling: 'touch',
+          paddingBottom: '100px'
+        }}>
+          <div style={{ maxWidth: '800px', margin: '0 auto', padding: '20px' }}>
+            {/* Header */}
+            <div style={{ textAlign: 'center', marginBottom: '16px' }}>
+              <p style={{ color: colors.primary, fontSize: '12px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '8px' }}>
+                Step 2 • Experiment
+              </p>
+              <h2 style={{ fontSize: isMobile ? '22px' : '28px', fontWeight: 700, color: colors.textPrimary }}>
+                Poke the Oobleck!
+              </h2>
+            </div>
+
+            {/* INTERACTIVE GRAPHIC */}
+            <div style={{
+              width: '100%',
+              maxWidth: '700px',
+              margin: '0 auto 20px auto',
+              background: colors.bgCard,
+              borderRadius: '16px',
+              border: `1px solid ${colors.border}`,
+              overflow: 'hidden'
+            }}>
+              {renderOobleckVisualization(true)}
+            </div>
+
+            {/* Controls Section - clearly separated */}
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '12px',
+              padding: '20px',
+              marginBottom: '20px',
+              border: `1px solid ${colors.border}`
+            }}>
+              <h3 style={{ color: colors.textPrimary, fontSize: '16px', fontWeight: 700, marginBottom: '16px' }}>
+                🎮 Controls: Adjust Poke Speed
+              </h3>
+
+              {/* Shear rate slider */}
+              <div style={{ marginBottom: '20px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                  <span style={{ color: colors.flowingParticles, fontSize: '13px', fontWeight: 600 }}>🐌 Slow</span>
+                  <span style={{ color: colors.textPrimary, fontSize: '14px', fontWeight: 700 }}>
+                    Speed: {shearRate}%
+                  </span>
+                  <span style={{ color: colors.jammedParticles, fontSize: '13px', fontWeight: 600 }}>Fast 👊</span>
+                </div>
+                <input
+                  type="range"
+                  min="0"
+                  max="100"
+                  value={shearRate}
+                  onChange={(e) => setShearRate(Number(e.target.value))}
+                  onInput={(e) => setShearRate(Number((e.target as HTMLInputElement).value))}
+                  style={{
+                    width: '100%',
+                    height: '8px',
+                    borderRadius: '4px',
+                    cursor: 'pointer',
+                    accentColor: shearRate > 50 ? colors.jammedParticles : colors.flowingParticles
+                  }}
+                />
+                <p style={{ color: colors.textMuted, fontSize: '12px', marginTop: '8px', textAlign: 'center' }}>
+                  ↑ Higher speed = higher shear rate = particles jam together
+                </p>
+              </div>
+
+              {/* Poke buttons */}
+              <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
+                <button
+                  onMouseDown={() => setIsPoking(true)}
+                  onMouseUp={() => setIsPoking(false)}
+                  onMouseLeave={() => setIsPoking(false)}
+                  onTouchStart={() => setIsPoking(true)}
+                  onTouchEnd={() => setIsPoking(false)}
+                  style={{
+                    padding: '14px 28px',
+                    borderRadius: '12px',
+                    border: 'none',
+                    background: isPoking
+                      ? `linear-gradient(135deg, ${colors.accent} 0%, ${colors.primary} 100%)`
+                      : `linear-gradient(135deg, ${colors.primary} 0%, ${colors.primaryDark} 100%)`,
+                    color: 'white',
+                    fontSize: '16px',
+                    fontWeight: 700,
+                    cursor: 'pointer',
+                    minWidth: '150px',
+                    transform: isPoking ? 'scale(0.95)' : 'scale(1)',
+                    transition: 'transform 0.1s'
+                  }}
+                >
+                  {isPoking ? '👇 Poking...' : '👆 Hold to Poke'}
+                </button>
+              </div>
+            </div>
+
+            {/* What's Happening - real-time explanation */}
+            <div style={{
+              background: `linear-gradient(135deg, ${shearRate > 50 ? colors.jammedParticles : colors.flowingParticles}15 0%, ${colors.bgCard} 100%)`,
+              borderRadius: '12px',
+              padding: '16px',
+              marginBottom: '20px',
+              border: `1px solid ${shearRate > 50 ? colors.jammedParticles : colors.flowingParticles}40`
+            }}>
+              <h4 style={{ color: colors.textPrimary, fontSize: '14px', fontWeight: 700, marginBottom: '8px' }}>
+                👀 What's Happening:
+              </h4>
+              {shearRate < 40 ? (
+                <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.6, margin: 0 }}>
+                  At <strong style={{ color: colors.flowingParticles }}>low shear rate</strong>, particles have
+                  time to <strong>flow past each other</strong>. The oobleck behaves like a liquid — your
+                  finger sinks right in!
+                </p>
+              ) : (
+                <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.6, margin: 0 }}>
+                  At <strong style={{ color: colors.jammedParticles }}>high shear rate</strong>, particles
+                  <strong> jam together</strong> — they don't have time to flow! The oobleck acts like a
+                  solid, resisting your impact.
+                </p>
+              )}
+            </div>
+
+            {/* Formula breakdown */}
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '12px',
+              padding: '16px',
+              border: `1px solid ${colors.border}`
+            }}>
+              <h4 style={{ color: colors.textPrimary, fontSize: '14px', fontWeight: 700, marginBottom: '12px' }}>
+                📐 The Physics:
+              </h4>
+              <div style={{ fontFamily: 'monospace', fontSize: '16px', marginBottom: '12px' }}>
+                <span style={{ color: colors.primaryLight, fontWeight: 700 }}>η</span>
+                <span style={{ color: colors.textSecondary }}> = η₀ × (1 + (λ × </span>
+                <span style={{ color: colors.accent, fontWeight: 700 }}>γ̇</span>
+                <span style={{ color: colors.textSecondary }}>)ⁿ)</span>
+              </div>
+              <div style={{ fontSize: '12px', color: colors.textSecondary, lineHeight: 1.8 }}>
+                <div><span style={{ color: colors.primaryLight, fontWeight: 700 }}>η</span> = Viscosity (resistance to flow)</div>
+                <div><span style={{ color: colors.accent, fontWeight: 700 }}>γ̇</span> = Shear rate (how fast you move)</div>
+                <div><span style={{ color: colors.textMuted }}>n &gt; 1</span> = Shear-thickening behavior</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {renderBottomBar(true, true, 'See the Results →')}
+      </div>
+    );
+  }
+
+  // ============================================================
+  // REVIEW PHASE
+  // ============================================================
+
+  if (phase === 'review') {
+    const wasCorrect = prediction === 'fast_resist';
+
+    return (
+      <div style={{
+        height: '100dvh',
+        display: 'flex',
+        flexDirection: 'column',
+        background: `linear-gradient(180deg, ${colors.bgGradientStart} 0%, ${colors.bgGradientEnd} 100%)`,
+        overflow: 'hidden'
+      }}>
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          overflowX: 'hidden',
+          WebkitOverflowScrolling: 'touch',
+          paddingBottom: '100px'
+        }}>
+          <div style={{ maxWidth: '800px', margin: '0 auto', padding: '20px' }}>
+            {/* Result feedback */}
+            <div style={{
+              textAlign: 'center',
+              padding: '24px',
+              background: wasCorrect ? `${colors.success}15` : `${colors.primary}15`,
+              borderRadius: '16px',
+              marginBottom: '24px',
+              border: `1px solid ${wasCorrect ? colors.success : colors.primary}40`
+            }}>
+              <div style={{ fontSize: '48px', marginBottom: '12px' }}>
+                {wasCorrect ? '🎯' : '💡'}
+              </div>
+              <h2 style={{
+                fontSize: isMobile ? '22px' : '28px',
+                fontWeight: 700,
+                color: wasCorrect ? colors.success : colors.primaryLight,
+                marginBottom: '8px'
+              }}>
+                {wasCorrect ? 'Excellent Prediction!' : 'Great Learning Moment!'}
+              </h2>
+              <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
+                {wasCorrect
+                  ? 'You correctly predicted that fast impacts meet resistance!'
+                  : 'The answer is: Fast poke meets resistance; slow poke sinks in'
+                }
+              </p>
+            </div>
+
+            {/* The science explanation */}
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '16px',
+              padding: '24px',
+              marginBottom: '24px',
+              border: `1px solid ${colors.border}`
+            }}>
+              <h3 style={{ color: colors.textPrimary, fontSize: '18px', fontWeight: 700, marginBottom: '16px' }}>
+                🔬 Why This Happens: Particle Jamming
+              </h3>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                <div style={{ display: 'flex', gap: '16px', alignItems: 'flex-start' }}>
+                  <div style={{
+                    width: '40px',
+                    height: '40px',
+                    borderRadius: '50%',
+                    background: `linear-gradient(135deg, ${colors.primary} 0%, ${colors.primaryDark} 100%)`,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    color: 'white',
+                    fontWeight: 700,
+                    flexShrink: 0
+                  }}>1</div>
+                  <div>
+                    <h4 style={{ color: colors.textPrimary, fontSize: '15px', fontWeight: 600, marginBottom: '4px' }}>
+                      Particle Suspension
+                    </h4>
+                    <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.5, margin: 0 }}>
+                      Cornstarch particles float in water, able to slide past each other freely.
+                    </p>
+                  </div>
+                </div>
+
+                <div style={{ display: 'flex', gap: '16px', alignItems: 'flex-start' }}>
+                  <div style={{
+                    width: '40px',
+                    height: '40px',
+                    borderRadius: '50%',
+                    background: `linear-gradient(135deg, ${colors.flowingParticles} 0%, #16a34a 100%)`,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    color: 'white',
+                    fontWeight: 700,
+                    flexShrink: 0
+                  }}>2</div>
+                  <div>
+                    <h4 style={{ color: colors.textPrimary, fontSize: '15px', fontWeight: 600, marginBottom: '4px' }}>
+                      Slow Movement = Flowing
+                    </h4>
+                    <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.5, margin: 0 }}>
+                      With gentle force, particles have time to rearrange and flow around obstacles.
+                    </p>
+                  </div>
+                </div>
+
+                <div style={{ display: 'flex', gap: '16px', alignItems: 'flex-start' }}>
+                  <div style={{
+                    width: '40px',
+                    height: '40px',
+                    borderRadius: '50%',
+                    background: `linear-gradient(135deg, ${colors.jammedParticles} 0%, #dc2626 100%)`,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    color: 'white',
+                    fontWeight: 700,
+                    flexShrink: 0
+                  }}>3</div>
+                  <div>
+                    <h4 style={{ color: colors.textPrimary, fontSize: '15px', fontWeight: 600, marginBottom: '4px' }}>
+                      Fast Impact = Jamming!
+                    </h4>
+                    <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.5, margin: 0 }}>
+                      Sudden force doesn't give particles time to move — they jam together like a traffic jam!
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Key insight */}
+            <div style={{
+              background: `linear-gradient(135deg, ${colors.primary}20 0%, ${colors.accent}20 100%)`,
+              borderRadius: '12px',
+              padding: '16px',
+              border: `1px solid ${colors.primary}40`
+            }}>
+              <h4 style={{ color: colors.primaryLight, fontSize: '14px', fontWeight: 700, marginBottom: '8px' }}>
+                💡 Key Insight
+              </h4>
+              <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.6, margin: 0 }}>
+                This is called <strong style={{ color: colors.textPrimary }}>shear-thickening behavior</strong>.
+                The viscosity (thickness) <strong>increases</strong> with shear rate (speed).
+                It's the opposite of ketchup, which gets thinner when shaken!
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {renderBottomBar(true, true, 'Try a Twist →')}
+      </div>
+    );
+  }
+
+  // ============================================================
+  // TWIST PREDICT PHASE
+  // ============================================================
+
+  if (phase === 'twist_predict') {
+    const twistPredictions = [
+      { id: 'more_water', label: 'More water makes it flow easier at ALL speeds', icon: '💧' },
+      { id: 'less_armor', label: 'More water = less "armor" effect (weaker jamming)', icon: '⬇️' },
+      { id: 'more_starch', label: 'More starch makes it solid all the time', icon: '🧱' },
+      { id: 'no_change', label: 'The ratio doesn\'t matter much', icon: '🤷' }
+    ];
+
+    return (
+      <div style={{
+        height: '100dvh',
+        display: 'flex',
+        flexDirection: 'column',
+        background: `linear-gradient(180deg, ${colors.bgGradientStart} 0%, ${colors.bgGradientEnd} 100%)`,
+        overflow: 'hidden'
+      }}>
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          overflowX: 'hidden',
+          WebkitOverflowScrolling: 'touch',
+          paddingBottom: '100px'
+        }}>
+          <div style={{ maxWidth: '800px', margin: '0 auto', padding: '20px' }}>
+            <div style={{ textAlign: 'center', marginBottom: '16px' }}>
+              <p style={{ color: colors.accent, fontSize: '12px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '8px' }}>
+                🔄 Twist • New Variable
+              </p>
+              <h2 style={{ fontSize: isMobile ? '22px' : '28px', fontWeight: 700, color: colors.textPrimary }}>
+                What If We Change the Recipe?
+              </h2>
+            </div>
+
+            {/* Static graphic showing ratio concept */}
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '16px',
+              padding: '24px',
+              marginBottom: '20px',
+              border: `1px solid ${colors.border}`
+            }}>
+              <div style={{ display: 'flex', justifyContent: 'center', gap: '40px', flexWrap: 'wrap' }}>
+                <div style={{ textAlign: 'center' }}>
+                  <div style={{ fontSize: '40px', marginBottom: '8px' }}>🥣</div>
+                  <p style={{ color: colors.starch, fontWeight: 600 }}>Standard (2:1)</p>
+                  <p style={{ color: colors.textMuted, fontSize: '12px' }}>67% starch</p>
+                </div>
+                <div style={{ textAlign: 'center' }}>
+                  <div style={{ fontSize: '40px', marginBottom: '8px' }}>💧</div>
+                  <p style={{ color: colors.water, fontWeight: 600 }}>More Water</p>
+                  <p style={{ color: colors.textMuted, fontSize: '12px' }}>50% starch</p>
+                </div>
+                <div style={{ textAlign: 'center' }}>
+                  <div style={{ fontSize: '40px', marginBottom: '8px' }}>🌾</div>
+                  <p style={{ color: colors.primaryLight, fontWeight: 600 }}>More Starch</p>
+                  <p style={{ color: colors.textMuted, fontSize: '12px' }}>80% starch</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Explanation */}
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '12px',
+              padding: '16px',
+              marginBottom: '20px',
+              border: `1px solid ${colors.border}`
+            }}>
+              <h3 style={{ color: colors.textPrimary, fontSize: '15px', fontWeight: 700, marginBottom: '8px' }}>
+                📋 The Question:
+              </h3>
+              <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.6, margin: 0 }}>
+                If we add <strong style={{ color: colors.water }}>more water</strong> (diluting the mixture) or
+                <strong style={{ color: colors.starch }}> more starch</strong> (thickening it), how will the
+                "armor" effect change?
+              </p>
+            </div>
+
+            {/* Prediction options */}
+            <div style={{ marginBottom: '20px' }}>
+              <h3 style={{ color: colors.textPrimary, fontSize: '18px', fontWeight: 700, marginBottom: '12px' }}>
+                🤔 What happens when we change the ratio?
+              </h3>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                {twistPredictions.map(p => (
+                  <button
+                    key={p.id}
+                    onClick={() => {
+                      setTwistPrediction(p.id);
+                      playSound('click');
+                    }}
+                    style={{
+                      padding: '16px',
+                      borderRadius: '12px',
+                      border: twistPrediction === p.id ? `2px solid ${colors.accent}` : `1px solid ${colors.border}`,
+                      backgroundColor: twistPrediction === p.id ? `${colors.accent}20` : colors.bgCard,
+                      cursor: 'pointer',
+                      textAlign: 'left',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '12px',
+                      transition: 'all 0.2s ease'
+                    }}
+                  >
+                    <span style={{ fontSize: '24px' }}>{p.icon}</span>
+                    <span style={{ color: colors.textPrimary, fontSize: '14px', flex: 1 }}>{p.label}</span>
+                    {twistPrediction === p.id && (
+                      <span style={{ color: colors.accent, fontSize: '20px', fontWeight: 700 }}>✓</span>
+                    )}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {renderBottomBar(true, !!twistPrediction, 'Test the Twist →')}
+      </div>
+    );
+  }
+
+  // ============================================================
+  // TWIST PLAY PHASE
+  // ============================================================
+
+  if (phase === 'twist_play') {
+    // Calculate effectiveness based on starch ratio
+    const effectiveness = useMemo(() => {
+      // Optimal is around 67% (2:1 ratio)
+      const optimal = 67;
+      const diff = Math.abs(starchRatio - optimal);
+      return Math.max(0, 100 - diff * 2);
+    }, [starchRatio]);
+
+    return (
+      <div style={{
+        height: '100dvh',
+        display: 'flex',
+        flexDirection: 'column',
+        background: `linear-gradient(180deg, ${colors.bgGradientStart} 0%, ${colors.bgGradientEnd} 100%)`,
+        overflow: 'hidden'
+      }}>
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          overflowX: 'hidden',
+          WebkitOverflowScrolling: 'touch',
+          paddingBottom: '100px'
+        }}>
+          <div style={{ maxWidth: '800px', margin: '0 auto', padding: '20px' }}>
+            <div style={{ textAlign: 'center', marginBottom: '16px' }}>
+              <p style={{ color: colors.accent, fontSize: '12px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '8px' }}>
+                🔄 Twist Experiment
+              </p>
+              <h2 style={{ fontSize: isMobile ? '22px' : '28px', fontWeight: 700, color: colors.textPrimary }}>
+                Adjust the Starch Ratio
+              </h2>
+            </div>
+
+            {/* Ratio visualization */}
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '16px',
+              padding: '24px',
+              marginBottom: '20px',
+              border: `1px solid ${colors.border}`
+            }}>
+              {/* Ratio bar */}
+              <div style={{ marginBottom: '20px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                  <span style={{ color: colors.water, fontSize: '13px', fontWeight: 600 }}>💧 More Water</span>
+                  <span style={{ color: colors.textPrimary, fontSize: '14px', fontWeight: 700 }}>
+                    Starch: {starchRatio}%
+                  </span>
+                  <span style={{ color: colors.starch, fontSize: '13px', fontWeight: 600 }}>More Starch 🌾</span>
+                </div>
+                <input
+                  type="range"
+                  min="30"
+                  max="85"
+                  value={starchRatio}
+                  onChange={(e) => setStarchRatio(Number(e.target.value))}
+                  onInput={(e) => setStarchRatio(Number((e.target as HTMLInputElement).value))}
+                  style={{
+                    width: '100%',
+                    height: '8px',
+                    borderRadius: '4px',
+                    cursor: 'pointer'
+                  }}
+                />
+                <div style={{
+                  display: 'flex',
+                  justifyContent: 'center',
+                  marginTop: '12px',
+                  padding: '8px 16px',
+                  background: starchRatio > 60 && starchRatio < 75 ? `${colors.success}20` : `${colors.warning}20`,
+                  borderRadius: '8px'
+                }}>
+                  <span style={{
+                    color: starchRatio > 60 && starchRatio < 75 ? colors.success : colors.warning,
+                    fontWeight: 600,
+                    fontSize: '14px'
+                  }}>
+                    {starchRatio < 50 ? '💧 Too runny - flows like water' :
+                     starchRatio < 60 ? '💧 Weak effect - low jamming' :
+                     starchRatio < 75 ? '✅ Optimal! Strong armor effect' :
+                     starchRatio < 80 ? '🌾 Very thick - hard to work with' :
+                     '🧱 Too thick - nearly solid always'}
+                  </span>
+                </div>
+              </div>
+
+              {/* Effectiveness meter */}
+              <div>
+                <p style={{ color: colors.textSecondary, fontSize: '13px', marginBottom: '8px', textAlign: 'center' }}>
+                  Armor Effectiveness
+                </p>
+                <div style={{
+                  height: '20px',
+                  background: colors.bgDark,
+                  borderRadius: '10px',
+                  overflow: 'hidden'
+                }}>
+                  <div style={{
+                    width: `${effectiveness}%`,
+                    height: '100%',
+                    background: effectiveness > 70
+                      ? `linear-gradient(90deg, ${colors.success} 0%, ${colors.successLight} 100%)`
+                      : `linear-gradient(90deg, ${colors.warning} 0%, ${colors.warningLight} 100%)`,
+                    borderRadius: '10px',
+                    transition: 'width 0.3s ease'
+                  }} />
+                </div>
+                <p style={{ color: colors.textPrimary, fontSize: '16px', fontWeight: 700, textAlign: 'center', marginTop: '8px' }}>
+                  {effectiveness}% Effective
+                </p>
+              </div>
+            </div>
+
+            {/* Explanation */}
+            <div style={{
+              background: `linear-gradient(135deg, ${colors.bgCard} 0%, ${colors.primary}10 100%)`,
+              borderRadius: '12px',
+              padding: '16px',
+              border: `1px solid ${colors.border}`
+            }}>
+              <h4 style={{ color: colors.textPrimary, fontSize: '14px', fontWeight: 700, marginBottom: '8px' }}>
+                👀 What's Happening:
+              </h4>
+              <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.6, margin: 0 }}>
+                {starchRatio < 50
+                  ? "Too much water! Particles are too spread out to jam effectively. The mixture flows easily at all speeds."
+                  : starchRatio < 60
+                  ? "Getting better, but still not enough particles. Jamming occurs but the effect is weak."
+                  : starchRatio < 75
+                  ? "Perfect balance! Enough particles to jam under stress, but enough water to flow when slow. Maximum armor effect!"
+                  : starchRatio < 80
+                  ? "Very dense. Strong jamming, but it's getting hard to work with even at slow speeds."
+                  : "Too much starch! The mixture is nearly solid even without impact. No flexibility."
+                }
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {renderBottomBar(true, true, 'Review Results →')}
+      </div>
+    );
+  }
+
+  // ============================================================
+  // TWIST REVIEW PHASE
+  // ============================================================
+
+  if (phase === 'twist_review') {
+    const wasCorrect = twistPrediction === 'less_armor';
+
+    return (
+      <div style={{
+        height: '100dvh',
+        display: 'flex',
+        flexDirection: 'column',
+        background: `linear-gradient(180deg, ${colors.bgGradientStart} 0%, ${colors.bgGradientEnd} 100%)`,
+        overflow: 'hidden'
+      }}>
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          overflowX: 'hidden',
+          WebkitOverflowScrolling: 'touch',
+          paddingBottom: '100px'
+        }}>
+          <div style={{ maxWidth: '800px', margin: '0 auto', padding: '20px' }}>
+            {/* Result */}
+            <div style={{
+              textAlign: 'center',
+              padding: '24px',
+              background: wasCorrect ? `${colors.success}15` : `${colors.accent}15`,
+              borderRadius: '16px',
+              marginBottom: '24px',
+              border: `1px solid ${wasCorrect ? colors.success : colors.accent}40`
+            }}>
+              <div style={{ fontSize: '48px', marginBottom: '12px' }}>
+                {wasCorrect ? '🎯' : '💡'}
+              </div>
+              <h2 style={{
+                fontSize: isMobile ? '22px' : '28px',
+                fontWeight: 700,
+                color: colors.textPrimary,
+                marginBottom: '8px'
+              }}>
+                The Ratio Matters!
+              </h2>
+              <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
+                More water = weaker jamming. More starch = stronger (to a point)!
+              </p>
+            </div>
+
+            {/* Summary */}
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '16px',
+              padding: '24px',
+              marginBottom: '24px',
+              border: `1px solid ${colors.border}`
+            }}>
+              <h3 style={{ color: colors.textPrimary, fontSize: '18px', fontWeight: 700, marginBottom: '16px' }}>
+                📊 Ratio Effects Summary
+              </h3>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                <div style={{
+                  padding: '12px',
+                  background: `${colors.water}15`,
+                  borderRadius: '8px',
+                  borderLeft: `4px solid ${colors.water}`
+                }}>
+                  <strong style={{ color: colors.water }}>More Water (diluted):</strong>
+                  <p style={{ color: colors.textSecondary, fontSize: '13px', margin: '4px 0 0 0' }}>
+                    Particles too spread out → weak or no jamming → poor armor
+                  </p>
+                </div>
+
+                <div style={{
+                  padding: '12px',
+                  background: `${colors.success}15`,
+                  borderRadius: '8px',
+                  borderLeft: `4px solid ${colors.success}`
+                }}>
+                  <strong style={{ color: colors.success }}>Optimal (~2:1 starch:water):</strong>
+                  <p style={{ color: colors.textSecondary, fontSize: '13px', margin: '4px 0 0 0' }}>
+                    Perfect density → strong jamming under stress → maximum armor
+                  </p>
+                </div>
+
+                <div style={{
+                  padding: '12px',
+                  background: `${colors.starch}15`,
+                  borderRadius: '8px',
+                  borderLeft: `4px solid ${colors.starch}`
+                }}>
+                  <strong style={{ color: colors.starch }}>Too Much Starch:</strong>
+                  <p style={{ color: colors.textSecondary, fontSize: '13px', margin: '4px 0 0 0' }}>
+                    Always thick → no flexibility → not useful as smart material
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Real-world connection */}
+            <div style={{
+              background: `linear-gradient(135deg, ${colors.primary}20 0%, ${colors.accent}20 100%)`,
+              borderRadius: '12px',
+              padding: '16px',
+              border: `1px solid ${colors.primary}40`
+            }}>
+              <h4 style={{ color: colors.primaryLight, fontSize: '14px', fontWeight: 700, marginBottom: '8px' }}>
+                🌍 Real-World Application
+              </h4>
+              <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.6, margin: 0 }}>
+                Engineers carefully tune the particle concentration in STF armor to maximize protection
+                while maintaining flexibility. Too thin = no protection. Too thick = no mobility.
+                The sweet spot is where science meets practicality!
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {renderBottomBar(true, true, 'See Real Applications →')}
+      </div>
+    );
+  }
+
+  // ============================================================
+  // TRANSFER PHASE - Rich real-world applications
+  // ============================================================
+
+  if (phase === 'transfer') {
+    const app = realWorldApps[selectedApp];
+    const allCompleted = completedApps.every(c => c);
+
+    return (
+      <div style={{
+        height: '100dvh',
+        display: 'flex',
+        flexDirection: 'column',
+        background: `linear-gradient(180deg, ${colors.bgGradientStart} 0%, ${colors.bgGradientEnd} 100%)`,
+        overflow: 'hidden'
+      }}>
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          overflowX: 'hidden',
+          WebkitOverflowScrolling: 'touch',
+          paddingBottom: '100px'
+        }}>
+          <div style={{ maxWidth: '800px', margin: '0 auto', padding: '20px' }}>
+            {/* Header */}
+            <div style={{ textAlign: 'center', marginBottom: '16px' }}>
+              <p style={{ color: colors.success, fontSize: '12px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '8px' }}>
+                🌍 Real-World Applications
+              </p>
+              <h2 style={{ fontSize: isMobile ? '20px' : '26px', fontWeight: 700, color: colors.textPrimary }}>
+                Non-Newtonian Fluids in Action
+              </h2>
+            </div>
+
+            {/* App tabs */}
+            <div style={{
+              display: 'flex',
+              gap: '8px',
+              marginBottom: '20px',
+              overflowX: 'auto',
+              paddingBottom: '8px'
+            }}>
+              {realWorldApps.map((a, i) => (
+                <button
+                  key={i}
+                  onClick={() => {
+                    setSelectedApp(i);
+                    playSound('click');
+                  }}
+                  style={{
+                    padding: '10px 16px',
+                    borderRadius: '12px',
+                    border: selectedApp === i ? `2px solid ${a.color}` : `1px solid ${colors.border}`,
+                    background: selectedApp === i ? `${a.color}20` : colors.bgCard,
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                    whiteSpace: 'nowrap',
+                    flexShrink: 0
+                  }}
+                >
+                  <span style={{ fontSize: '20px' }}>{a.icon}</span>
+                  <span style={{ color: colors.textPrimary, fontSize: '13px', fontWeight: 600 }}>
+                    {a.short}
+                  </span>
+                  {completedApps[i] && (
+                    <span style={{ color: colors.success, fontSize: '16px' }}>✓</span>
+                  )}
+                </button>
+              ))}
+            </div>
+
+            {/* Selected app content */}
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '16px',
+              padding: '24px',
+              marginBottom: '20px',
+              border: `1px solid ${colors.border}`
+            }}>
+              {/* App header */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '20px' }}>
+                <div style={{
+                  width: '60px',
+                  height: '60px',
+                  borderRadius: '16px',
+                  background: `${app.color}20`,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: '32px'
+                }}>
+                  {app.icon}
+                </div>
+                <div>
+                  <h3 style={{ color: colors.textPrimary, fontSize: '20px', fontWeight: 700, margin: 0 }}>
+                    {app.title}
+                  </h3>
+                  <p style={{ color: app.color, fontSize: '14px', fontWeight: 600, margin: 0 }}>
+                    {app.tagline}
+                  </p>
+                </div>
+              </div>
+
+              {/* Description */}
+              <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.7, marginBottom: '20px' }}>
+                {app.description}
+              </p>
+
+              {/* Connection to experiment */}
+              <div style={{
+                background: `${app.color}15`,
+                borderRadius: '12px',
+                padding: '16px',
+                marginBottom: '20px',
+                borderLeft: `4px solid ${app.color}`
+              }}>
+                <h4 style={{ color: app.color, fontSize: '14px', fontWeight: 700, marginBottom: '8px' }}>
+                  🔗 Connection to Your Experiment:
+                </h4>
+                <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.6, margin: 0 }}>
+                  {app.connection}
+                </p>
+              </div>
+
+              {/* How it works */}
+              <div style={{ marginBottom: '20px' }}>
+                <h4 style={{ color: colors.textPrimary, fontSize: '14px', fontWeight: 700, marginBottom: '8px' }}>
+                  ⚙️ How It Works:
+                </h4>
+                <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.6, margin: 0 }}>
+                  {app.howItWorks}
+                </p>
+              </div>
+
+              {/* Stats */}
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(3, 1fr)',
+                gap: '12px',
+                marginBottom: '20px'
+              }}>
+                {app.stats.map((stat, i) => (
+                  <div key={i} style={{
+                    background: colors.bgDark,
+                    borderRadius: '12px',
+                    padding: '16px',
+                    textAlign: 'center'
+                  }}>
+                    <div style={{ fontSize: '24px', marginBottom: '4px' }}>{stat.icon}</div>
+                    <div style={{ color: app.color, fontSize: '18px', fontWeight: 700 }}>{stat.value}</div>
+                    <div style={{ color: colors.textMuted, fontSize: '11px' }}>{stat.label}</div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Examples */}
+              <div style={{ marginBottom: '20px' }}>
+                <h4 style={{ color: colors.textPrimary, fontSize: '14px', fontWeight: 700, marginBottom: '8px' }}>
+                  📋 Real Examples:
+                </h4>
+                <ul style={{ color: colors.textSecondary, fontSize: '13px', lineHeight: 1.8, margin: 0, paddingLeft: '20px' }}>
+                  {app.examples.map((ex, i) => (
+                    <li key={i}>{ex}</li>
+                  ))}
+                </ul>
+              </div>
+
+              {/* Future impact */}
+              <div style={{
+                background: `linear-gradient(135deg, ${colors.bgDark} 0%, ${app.color}10 100%)`,
+                borderRadius: '12px',
+                padding: '16px'
+              }}>
+                <h4 style={{ color: colors.textPrimary, fontSize: '14px', fontWeight: 700, marginBottom: '8px' }}>
+                  🚀 Future Impact:
+                </h4>
+                <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.6, margin: 0 }}>
+                  {app.futureImpact}
+                </p>
+              </div>
+            </div>
+
+            {/* Got it button */}
+            <button
+              onClick={() => {
+                const newCompleted = [...completedApps];
+                newCompleted[selectedApp] = true;
+                setCompletedApps(newCompleted);
+                playSound('success');
+
+                // Auto-advance to next incomplete app
+                const nextIncomplete = newCompleted.findIndex((c, i) => !c && i > selectedApp);
+                if (nextIncomplete !== -1) {
+                  setSelectedApp(nextIncomplete);
+                } else {
+                  const firstIncomplete = newCompleted.findIndex(c => !c);
+                  if (firstIncomplete !== -1) {
+                    setSelectedApp(firstIncomplete);
+                  }
+                }
+              }}
+              disabled={completedApps[selectedApp]}
+              style={{
+                width: '100%',
+                padding: '16px',
+                borderRadius: '12px',
+                border: 'none',
+                background: completedApps[selectedApp]
+                  ? colors.bgCardLight
+                  : `linear-gradient(135deg, ${app.color} 0%, ${colors.accent} 100%)`,
+                color: completedApps[selectedApp] ? colors.textMuted : 'white',
+                fontSize: '16px',
+                fontWeight: 700,
+                cursor: completedApps[selectedApp] ? 'default' : 'pointer',
+                minHeight: '52px'
+              }}
+            >
+              {completedApps[selectedApp] ? '✓ Completed' : 'Got It! Continue →'}
+            </button>
+
+            {/* Progress indicator */}
+            <p style={{
+              textAlign: 'center',
+              color: colors.textMuted,
+              fontSize: '13px',
+              marginTop: '12px'
+            }}>
+              {completedApps.filter(c => c).length} of 4 applications completed
+              {allCompleted && ' — Ready for the test!'}
+            </p>
+          </div>
+        </div>
+
+        {renderBottomBar(true, allCompleted, 'Take the Test →')}
+      </div>
+    );
+  }
+
+  // ============================================================
+  // TEST PHASE
+  // ============================================================
+
+  if (phase === 'test') {
+    const currentQ = testQuestions[testQuestion];
+    const selectedAnswer = testAnswers[testQuestion];
+    const isCorrect = selectedAnswer === currentQ.options.find(o => o.correct)?.id;
+
+    return (
+      <div style={{
+        height: '100dvh',
+        display: 'flex',
+        flexDirection: 'column',
+        background: `linear-gradient(180deg, ${colors.bgGradientStart} 0%, ${colors.bgGradientEnd} 100%)`,
+        overflow: 'hidden'
+      }}>
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          overflowX: 'hidden',
+          WebkitOverflowScrolling: 'touch',
+          paddingBottom: '100px'
+        }}>
+          <div style={{ maxWidth: '800px', margin: '0 auto', padding: '20px' }}>
+            {/* Progress */}
+            <div style={{ marginBottom: '20px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                <span style={{ color: colors.textPrimary, fontSize: '16px', fontWeight: 700 }}>
+                  Question {testQuestion + 1} of 10
+                </span>
+                <span style={{ color: colors.textMuted, fontSize: '14px' }}>
+                  {testAnswers.filter(a => a !== null).length} answered
+                </span>
+              </div>
+              <div style={{ display: 'flex', gap: '4px' }}>
+                {testQuestions.map((_, i) => (
+                  <div
+                    key={i}
+                    style={{
+                      flex: 1,
+                      height: '4px',
+                      borderRadius: '2px',
+                      background: i === testQuestion
+                        ? colors.primary
+                        : testAnswers[i] !== null
+                          ? colors.success
+                          : colors.bgCardLight
+                    }}
+                  />
+                ))}
+              </div>
+            </div>
+
+            {/* Scenario */}
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '12px',
+              padding: '16px',
+              marginBottom: '16px',
+              border: `1px solid ${colors.border}`
+            }}>
+              <p style={{ color: colors.textMuted, fontSize: '12px', fontWeight: 600, marginBottom: '4px' }}>
+                SCENARIO
+              </p>
+              <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.6, margin: 0 }}>
+                {currentQ.scenario}
+              </p>
+            </div>
+
+            {/* Question */}
+            <h3 style={{
+              color: colors.textPrimary,
+              fontSize: isMobile ? '18px' : '20px',
+              fontWeight: 700,
+              marginBottom: '20px',
+              lineHeight: 1.4
+            }}>
+              {currentQ.question}
+            </h3>
+
+            {/* Options */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '20px' }}>
+              {currentQ.options.map((opt) => {
+                const isSelected = selectedAnswer === opt.id;
+                const showCorrect = showExplanation && opt.correct;
+                const showWrong = showExplanation && isSelected && !opt.correct;
+
+                return (
+                  <button
+                    key={opt.id}
+                    onClick={() => {
+                      if (!showExplanation) {
+                        const newAnswers = [...testAnswers];
+                        newAnswers[testQuestion] = opt.id;
+                        setTestAnswers(newAnswers);
+                        playSound('click');
+                      }
+                    }}
+                    disabled={showExplanation}
+                    style={{
+                      padding: '16px',
+                      borderRadius: '12px',
+                      border: showCorrect
+                        ? `2px solid ${colors.success}`
+                        : showWrong
+                          ? `2px solid ${colors.error}`
+                          : isSelected
+                            ? `2px solid ${colors.primary}`
+                            : `1px solid ${colors.border}`,
+                      backgroundColor: showCorrect
+                        ? `${colors.success}15`
+                        : showWrong
+                          ? `${colors.error}15`
+                          : isSelected
+                            ? `${colors.primary}20`
+                            : colors.bgCard,
+                      cursor: showExplanation ? 'default' : 'pointer',
+                      textAlign: 'left',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '12px',
+                      boxShadow: showCorrect ? `0 0 20px ${colors.success}30` : 'none'
+                    }}
+                  >
+                    <span style={{ color: colors.textPrimary, fontSize: '14px', flex: 1 }}>
+                      {opt.label}
+                    </span>
+                    {showCorrect && <span style={{ color: colors.success, fontSize: '20px' }}>✓</span>}
+                    {showWrong && <span style={{ color: colors.error, fontSize: '20px' }}>✗</span>}
+                    {!showExplanation && isSelected && (
+                      <span style={{ color: colors.primary, fontSize: '20px' }}>✓</span>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Check answer button */}
+            {selectedAnswer && !showExplanation && (
+              <button
+                onClick={() => {
+                  setShowExplanation(true);
+                  playSound(isCorrect ? 'success' : 'failure');
+                }}
+                style={{
+                  width: '100%',
+                  padding: '14px',
+                  borderRadius: '12px',
+                  border: 'none',
+                  background: `linear-gradient(135deg, ${colors.primary} 0%, ${colors.accent} 100%)`,
+                  color: 'white',
+                  fontSize: '16px',
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                  marginBottom: '20px'
+                }}
+              >
+                Check Answer
+              </button>
+            )}
+
+            {/* Explanation */}
+            {showExplanation && (
+              <div style={{
+                background: isCorrect ? `${colors.success}15` : `${colors.primary}15`,
+                borderRadius: '12px',
+                padding: '16px',
+                marginBottom: '20px',
+                border: `1px solid ${isCorrect ? colors.success : colors.primary}40`
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+                  <span style={{ fontSize: '20px' }}>{isCorrect ? '✓' : '💡'}</span>
+                  <span style={{
+                    color: isCorrect ? colors.success : colors.primaryLight,
+                    fontSize: '16px',
+                    fontWeight: 700
+                  }}>
+                    {isCorrect ? 'Correct!' : 'Explanation'}
+                  </span>
+                </div>
+                <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.6, margin: 0 }}>
+                  {currentQ.explanation}
+                </p>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Bottom bar */}
+        {showExplanation ? (
+          <div style={{
+            position: 'fixed',
+            bottom: 0,
+            left: 0,
+            right: 0,
+            zIndex: 1000,
+            minHeight: '72px',
+            background: colors.bgCard,
+            borderTop: `1px solid ${colors.border}`,
+            boxShadow: '0 -4px 20px rgba(0,0,0,0.5)',
+            padding: '12px 20px',
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center'
+          }}>
+            <button
+              onClick={() => {
+                if (testQuestion < 9) {
+                  setTestQuestion(testQuestion + 1);
+                  setShowExplanation(false);
+                  playSound('click');
+                } else {
+                  setTestSubmitted(true);
+                  goToPhase('mastery');
+                }
+              }}
+              style={{
+                padding: '14px 28px',
+                borderRadius: '12px',
+                border: 'none',
+                background: `linear-gradient(135deg, ${colors.primary} 0%, ${colors.accent} 100%)`,
+                color: 'white',
+                fontSize: '16px',
+                fontWeight: 700,
+                cursor: 'pointer',
+                minHeight: '52px',
+                minWidth: '200px'
+              }}
+            >
+              {testQuestion < 9 ? 'Next Question →' : 'See Results →'}
+            </button>
+          </div>
+        ) : (
+          renderBottomBar(true, false, 'Select an answer')
+        )}
+      </div>
+    );
+  }
+
+  // ============================================================
+  // MASTERY PHASE
+  // ============================================================
+
+  if (phase === 'mastery') {
+    const score = calculateTestScore();
+    const percentage = score * 10;
+    const passed = percentage >= 70;
+
+    return (
+      <div style={{
+        height: '100dvh',
+        display: 'flex',
+        flexDirection: 'column',
+        background: `linear-gradient(180deg, ${colors.bgGradientStart} 0%, ${colors.bgGradientEnd} 100%)`,
+        overflow: 'hidden'
+      }}>
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          overflowX: 'hidden',
+          WebkitOverflowScrolling: 'touch',
+          paddingBottom: '100px'
+        }}>
+          <div style={{ maxWidth: '600px', margin: '0 auto', padding: '20px', textAlign: 'center' }}>
+            {/* Result celebration */}
+            <div style={{ fontSize: '80px', marginBottom: '16px' }}>
+              {passed ? '🏆' : '📚'}
+            </div>
+
+            <h2 style={{
+              fontSize: isMobile ? '28px' : '36px',
+              fontWeight: 800,
+              color: passed ? colors.success : colors.primaryLight,
+              marginBottom: '8px'
+            }}>
+              {passed ? 'Mastery Achieved!' : 'Keep Learning!'}
+            </h2>
+
+            <p style={{ color: colors.textSecondary, fontSize: '16px', marginBottom: '32px' }}>
+              {passed
+                ? 'You\'ve demonstrated solid understanding of non-Newtonian fluids!'
+                : 'Review the concepts and try again to achieve mastery.'
+              }
+            </p>
+
+            {/* Score display */}
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '20px',
+              padding: '32px',
+              marginBottom: '24px',
+              border: `1px solid ${passed ? colors.success : colors.border}40`
+            }}>
+              <div style={{
+                fontSize: '64px',
+                fontWeight: 800,
+                color: passed ? colors.success : colors.primaryLight,
+                marginBottom: '8px'
+              }}>
+                {percentage}%
+              </div>
+              <p style={{ color: colors.textSecondary, fontSize: '16px', margin: 0 }}>
+                {score} of 10 correct
+              </p>
+
+              {/* Progress bar */}
+              <div style={{
+                height: '8px',
+                background: colors.bgDark,
+                borderRadius: '4px',
+                marginTop: '20px',
+                overflow: 'hidden'
+              }}>
+                <div style={{
+                  width: `${percentage}%`,
+                  height: '100%',
+                  background: passed
+                    ? `linear-gradient(90deg, ${colors.success} 0%, ${colors.successLight} 100%)`
+                    : `linear-gradient(90deg, ${colors.primary} 0%, ${colors.accent} 100%)`,
+                  borderRadius: '4px'
+                }} />
+              </div>
+              <p style={{ color: colors.textMuted, fontSize: '12px', marginTop: '8px' }}>
+                70% required to pass
+              </p>
+            </div>
+
+            {/* What you learned */}
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '16px',
+              padding: '24px',
+              textAlign: 'left',
+              marginBottom: '24px'
+            }}>
+              <h3 style={{ color: colors.textPrimary, fontSize: '18px', fontWeight: 700, marginBottom: '16px' }}>
+                🎓 What You Learned:
+              </h3>
+              <ul style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 2, margin: 0, paddingLeft: '20px' }}>
+                <li>Non-Newtonian fluids change viscosity with applied stress</li>
+                <li>Shear-thickening fluids (like oobleck) become MORE viscous under stress</li>
+                <li>Particle jamming creates the solid-like response</li>
+                <li>The starch:water ratio affects the armor effect</li>
+                <li>Real applications include body armor, sports gear, and smart dampers</li>
+              </ul>
+            </div>
+
+            {/* Actions */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              {!passed && (
+                <button
+                  onClick={() => goToPhase('predict')}
+                  style={{
+                    padding: '16px',
+                    borderRadius: '12px',
+                    border: 'none',
+                    background: `linear-gradient(135deg, ${colors.primary} 0%, ${colors.accent} 100%)`,
+                    color: 'white',
+                    fontSize: '16px',
+                    fontWeight: 700,
+                    cursor: 'pointer'
+                  }}
+                >
+                  🔄 Try Again
+                </button>
+              )}
+              <button
+                onClick={() => {
+                  onComplete?.();
+                  playSound('complete');
+                }}
+                style={{
+                  padding: '16px',
+                  borderRadius: '12px',
+                  border: `1px solid ${colors.border}`,
+                  background: colors.bgCard,
+                  color: colors.textPrimary,
+                  fontSize: '16px',
+                  fontWeight: 600,
+                  cursor: 'pointer'
+                }}
+              >
+                ← Return to Dashboard
+              </button>
+            </div>
+          </div>
         </div>
       </div>
     );
-  };
+  }
 
-  const renderMastery = () => (
-    <div className="text-center space-y-8">
-      <div className="text-8xl animate-bounce">🏆</div>
-      <div>
-        <h2 className="text-3xl font-bold bg-gradient-to-r from-amber-400 to-orange-400 bg-clip-text text-transparent">
-          Non-Newtonian Fluid Master!
-        </h2>
-      </div>
-      <div className="bg-gradient-to-r from-amber-900/40 to-orange-900/40 rounded-2xl p-8 max-w-lg mx-auto border border-amber-500/20">
-        <p className="text-amber-300 font-medium mb-4">You now understand:</p>
-        <ul className="text-gray-300 text-sm space-y-3 text-left">
-          <li className="flex items-center gap-2">
-            <span className="text-green-400">✓</span> Shear-thickening fluids increase viscosity under stress
-          </li>
-          <li className="flex items-center gap-2">
-            <span className="text-green-400">✓</span> Particle jamming creates the &quot;solid&quot; response
-          </li>
-          <li className="flex items-center gap-2">
-            <span className="text-green-400">✓</span> The ratio of particles to liquid matters
-          </li>
-          <li className="flex items-center gap-2">
-            <span className="text-green-400">✓</span> Real applications: armor, dampers, protective gear
-          </li>
-          <li className="flex items-center gap-2">
-            <span className="text-green-400">✓</span> Non-Newtonian fluids don&apos;t follow Newton&apos;s viscosity law
-          </li>
-        </ul>
-      </div>
-      <p className="text-gray-400">
-        You can now walk on oobleck... if you run fast enough! 🏃💨
-      </p>
-      <PrimaryButton
-        onMouseDown={() => {
-          playSound('complete');
-          emitEvent('completion', { mastered: true });
-        }}
-      >
-        Complete! 🎊
-      </PrimaryButton>
-    </div>
-  );
+  // Fallback
+  return null;
+};
 
-  // ─── Main Render ───────────────────────────────────────────────────────────
-  const renderPhase = () => {
-    switch (phase) {
-      case 'hook': return renderHook();
-      case 'predict': return renderPredict();
-      case 'play': return renderPlay();
-      case 'review': return renderReview();
-      case 'twist_predict': return renderTwistPredict();
-      case 'twist_play': return renderTwistPlay();
-      case 'twist_review': return renderTwistReview();
-      case 'transfer': return renderTransfer();
-      case 'test': return renderTest();
-      case 'mastery': return renderMastery();
-      default: return null;
-    }
-  };
-
-  return (
-    <div className="min-h-screen bg-[#0a0f1a] text-white relative overflow-hidden">
-      {/* Ambient background gradients */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-40 -right-40 w-96 h-96 bg-amber-500/10 rounded-full blur-3xl" />
-        <div className="absolute top-1/2 -left-40 w-96 h-96 bg-orange-500/10 rounded-full blur-3xl" />
-        <div className="absolute -bottom-40 right-1/3 w-96 h-96 bg-red-500/10 rounded-full blur-3xl" />
-      </div>
-
-      {/* Premium progress bar */}
-      <div className="fixed top-0 left-0 right-0 z-50 backdrop-blur-xl bg-slate-900/70 border-b border-white/10">
-        <div className="max-w-2xl mx-auto px-4 py-3">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-sm font-medium text-slate-400">Non-Newtonian Fluids</span>
-            <span className="text-sm text-slate-500 capitalize">{phase.replace('_', ' ')}</span>
-          </div>
-          {/* Phase dots */}
-          <div className="flex justify-between px-1">
-            {PHASES.map((p, i) => {
-              const currentIndex = PHASES.indexOf(phase);
-              return (
-                <div
-                  key={p}
-                  className={`h-2 rounded-full transition-all duration-300 ${
-                    i <= currentIndex
-                      ? 'bg-amber-500'
-                      : 'bg-slate-700'
-                  } ${i === currentIndex ? 'w-6' : 'w-2'}`}
-                />
-              );
-            })}
-          </div>
-        </div>
-      </div>
-
-      <div className="max-w-2xl mx-auto relative z-10 pt-20 p-6">
-        {renderPhase()}
-      </div>
-    </div>
-  );
-}
+export default NonNewtonianArmorRenderer;

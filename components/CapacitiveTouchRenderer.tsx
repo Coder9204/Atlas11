@@ -57,6 +57,60 @@ const TEST_QUESTIONS = [
       { text: 'The screen has multiple layers', correct: false },
       { text: 'The CPU is very fast', correct: false }
     ]
+  },
+  {
+    question: 'What is the difference between mutual capacitance and self-capacitance touchscreens?',
+    options: [
+      { text: 'Mutual capacitance measures between X-Y electrode pairs; self-capacitance measures each electrode individually', correct: true },
+      { text: 'Self-capacitance is newer and always better', correct: false },
+      { text: 'Mutual capacitance only works with styluses', correct: false },
+      { text: 'There is no difference, they are the same technology', correct: false }
+    ]
+  },
+  {
+    question: 'Why do capacitive styluses need a conductive tip or active electronics?',
+    options: [
+      { text: 'To make the stylus heavier for better control', correct: false },
+      { text: 'To create the same capacitive coupling effect as a finger', correct: true },
+      { text: 'To generate heat that the screen detects', correct: false },
+      { text: 'To produce clicking sounds for feedback', correct: false }
+    ]
+  },
+  {
+    question: 'What property of the human body makes capacitive touchscreens work?',
+    options: [
+      { text: 'Body temperature', correct: false },
+      { text: 'Skin texture and fingerprints', correct: false },
+      { text: 'The body is electrically conductive (contains water and ions)', correct: true },
+      { text: 'Magnetic fields from blood flow', correct: false }
+    ]
+  },
+  {
+    question: 'When you touch a capacitive screen, what physically happens to the electric field?',
+    options: [
+      { text: 'The field is completely blocked', correct: false },
+      { text: 'The field lines are distorted and some terminate on your finger', correct: true },
+      { text: 'The field reverses direction', correct: false },
+      { text: 'Nothing happens to the field, only pressure matters', correct: false }
+    ]
+  },
+  {
+    question: 'Why do capacitive touchscreens work through thin glass but not thick glass?',
+    options: [
+      { text: 'Thin glass is more conductive', correct: false },
+      { text: 'The capacitive coupling weakens with distance; thick glass puts finger too far from electrodes', correct: true },
+      { text: 'Thick glass absorbs all the electricity', correct: false },
+      { text: 'The screen cannot see through thick glass', correct: false }
+    ]
+  },
+  {
+    question: 'What advantage does projected capacitive touch (PCT) have over older resistive touchscreens?',
+    options: [
+      { text: 'PCT is cheaper to manufacture', correct: false },
+      { text: 'PCT supports multi-touch, is more durable, and works without pressure', correct: true },
+      { text: 'Resistive screens cannot detect any touch', correct: false },
+      { text: 'PCT screens are always smaller', correct: false }
+    ]
   }
 ];
 

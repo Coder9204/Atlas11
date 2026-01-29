@@ -1,749 +1,367 @@
-'use client';
+/**
+ * SHEAR-THINNING RENDERER (Ketchup Physics)
+ *
+ * Complete physics game demonstrating shear-thinning fluids.
+ * Viscosity DECREASES with shear rate due to structure breakdown.
+ *
+ * FEATURES:
+ * - Static graphic in predict phase with explanation below
+ * - Interactive shake/shear controls in play phase
+ * - Network structure animation showing breakdown
+ * - Rich transfer phase with real-world applications
+ * - Full compliance with GAME_EVALUATION_SYSTEM.md
+ */
 
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useCallback, useMemo, useEffect, useRef } from 'react';
 
-// ═══════════════════════════════════════════════════════════════════════════
-// TYPES & INTERFACES
-// ═══════════════════════════════════════════════════════════════════════════
-// Gold standard types
-type GameEventType =
-  | 'phase_change'
-  | 'prediction_made'
-  | 'simulation_started'
-  | 'parameter_changed'
-  | 'twist_prediction_made'
-  | 'app_explored'
-  | 'test_answered'
-  | 'test_completed'
-  | 'mastery_achieved';
+// ============================================================
+// THEME COLORS (matching evaluation framework requirements)
+// ============================================================
 
-interface GameEvent {
-  type: GameEventType;
-  data?: Record<string, unknown>;
-}
+const colors = {
+  // Backgrounds
+  bgDark: '#0f172a',
+  bgCard: '#1e293b',
+  bgCardLight: '#334155',
+  bgGradientStart: '#1e1b4b',
+  bgGradientEnd: '#0f172a',
 
-// Numeric phases: 0=hook, 1=predict, 2=play, 3=review, 4=twist_predict, 5=twist_play, 6=twist_review, 7=transfer, 8=test, 9=mastery
-const PHASES: number[] = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
-const phaseLabels: Record<number, string> = {
-  0: 'Hook', 1: 'Predict', 2: 'Lab', 3: 'Review', 4: 'Twist Predict',
-  5: 'Twist Lab', 6: 'Twist Review', 7: 'Transfer', 8: 'Test', 9: 'Mastery'
+  // Primary colors - Red theme for ketchup
+  primary: '#dc2626',
+  primaryLight: '#f87171',
+  primaryDark: '#b91c1c',
+
+  // Accent colors
+  accent: '#f97316',
+  success: '#22c55e',
+  successLight: '#4ade80',
+  warning: '#f59e0b',
+  warningLight: '#fbbf24',
+  error: '#ef4444',
+  errorLight: '#f87171',
+
+  // Text colors - CRITICAL: Must meet contrast requirements
+  textPrimary: '#f8fafc',
+  textSecondary: '#e2e8f0',
+  textMuted: '#94a3b8',
+
+  // Borders
+  border: '#334155',
+  borderLight: '#475569',
+
+  // Physics-specific colors
+  ketchup: '#dc2626',
+  ketchupDark: '#991b1b',
+  ketchupLight: '#f87171',
+  polymer: '#fbbf24',
+  network: '#a855f7',
+  broken: '#22c55e',
 };
 
-interface ShearThinningRendererProps {
-  onGameEvent?: (event: GameEvent) => void;
-  currentPhase?: number;
-  onPhaseComplete?: (phase: number) => void;
-}
+// ============================================================
+// GAME CONFIGURATION
+// ============================================================
 
-// ═══════════════════════════════════════════════════════════════════════════
-// CONSTANTS
-// ═══════════════════════════════════════════════════════════════════════════
+const GAME_ID = 'shear_thinning';
 
-const TEST_QUESTIONS = [
+type Phase =
+  | 'hook'
+  | 'predict'
+  | 'play'
+  | 'review'
+  | 'twist_predict'
+  | 'twist_play'
+  | 'twist_review'
+  | 'transfer'
+  | 'test'
+  | 'mastery';
+
+const testQuestions = [
   {
-    question: 'What happens to a shear-thinning fluid when you apply stress?',
+    scenario: "You're trying to get ketchup out of a glass bottle.",
+    question: "What happens to a shear-thinning fluid when you apply stress?",
     options: [
-      'It becomes thicker and more resistant',
-      'It becomes thinner and flows more easily',
-      'It remains unchanged',
-      'It solidifies completely'
+      { id: 'thicker', label: "It becomes thicker and more resistant" },
+      { id: 'thinner', label: "It becomes thinner and flows more easily", correct: true },
+      { id: 'same', label: "It remains unchanged" },
+      { id: 'solid', label: "It solidifies completely" }
     ],
-    correct: 1
+    explanation: "Shear-thinning fluids like ketchup become LESS viscous (thinner) when stress is applied. The internal structure breaks down under shear, allowing easier flow."
   },
   {
-    question: 'Why does ketchup often refuse to flow when you first tip the bottle?',
+    scenario: "You tip a ketchup bottle but nothing comes out at first.",
+    question: "Why does ketchup often refuse to flow initially?",
     options: [
-      'It is frozen inside the bottle',
-      'The cap creates a vacuum seal',
-      'At rest, it has high viscosity and behaves like a thick gel',
-      'The bottle opening is too small'
+      { id: 'frozen', label: "It is frozen inside the bottle" },
+      { id: 'vacuum', label: "The cap creates a vacuum seal" },
+      { id: 'viscosity', label: "At rest, it has high viscosity like a thick gel", correct: true },
+      { id: 'opening', label: "The bottle opening is too small" }
     ],
-    correct: 2
+    explanation: "At rest, ketchup has a yield stress — it behaves like a gel with high viscosity. It won't flow until enough force is applied to break its internal structure."
   },
   {
-    question: 'What molecular mechanism causes shear-thinning behavior?',
+    scenario: "You want to understand why ketchup behaves this way.",
+    question: "What molecular mechanism causes shear-thinning behavior?",
     options: [
-      'Molecules freeze and lock together under stress',
-      'Polymer chains or particles align and untangle under shear',
-      'Heat from friction melts the fluid',
-      'Air bubbles form and reduce viscosity'
+      { id: 'freeze', label: "Molecules freeze and lock together under stress" },
+      { id: 'align', label: "Polymer chains or particles align and untangle under shear", correct: true },
+      { id: 'heat', label: "Heat from friction melts the fluid" },
+      { id: 'air', label: "Air bubbles form and reduce viscosity" }
     ],
-    correct: 1
+    explanation: "Shear-thinning occurs because polymer chains or suspended particles become aligned and untangled when sheared, reducing resistance to flow."
   },
   {
-    question: 'Which of these is NOT a shear-thinning fluid?',
+    scenario: "Your friend claims oobleck (cornstarch water) is shear-thinning.",
+    question: "Which of these is NOT a shear-thinning fluid?",
     options: [
-      'Ketchup',
-      'Paint',
-      'Cornstarch and water (oobleck)',
-      'Toothpaste'
+      { id: 'ketchup', label: "Ketchup" },
+      { id: 'paint', label: "Paint" },
+      { id: 'oobleck', label: "Cornstarch and water (oobleck)", correct: true },
+      { id: 'toothpaste', label: "Toothpaste" }
     ],
-    correct: 2
+    explanation: "Oobleck is shear-THICKENING — it becomes MORE viscous under stress. Ketchup, paint, and toothpaste are all shear-thinning: they flow easier when stirred or squeezed."
   },
   {
-    question: 'Why is shear-thinning important for paint application?',
+    scenario: "You're painting a wall with latex paint.",
+    question: "Why is shear-thinning important for paint application?",
     options: [
-      'It makes paint dry faster',
-      'It allows paint to flow smoothly when brushed but stay put when done',
-      'It makes paint more colorful',
-      'It prevents paint from being washed off'
+      { id: 'dry', label: "It makes paint dry faster" },
+      { id: 'flow', label: "It allows paint to flow smoothly when brushed but stay put when done", correct: true },
+      { id: 'color', label: "It makes paint more colorful" },
+      { id: 'wash', label: "It prevents paint from being washed off" }
     ],
-    correct: 1
+    explanation: "Shear-thinning lets paint flow easily during brushing (low viscosity), then become thick again to prevent drips and sags once you stop (high viscosity)."
   },
   {
-    question: 'How does blood demonstrate shear-thinning properties?',
+    scenario: "A doctor is explaining how blood flows through your body.",
+    question: "How does blood demonstrate shear-thinning properties?",
     options: [
-      'Blood clots immediately when stressed',
-      'Blood cells freeze under pressure',
-      'Red blood cells deform and align to flow through narrow capillaries',
-      'Blood evaporates when sheared'
+      { id: 'clot', label: "Blood clots immediately when stressed" },
+      { id: 'freeze', label: "Blood cells freeze under pressure" },
+      { id: 'deform', label: "Red blood cells deform and align to flow through narrow capillaries", correct: true },
+      { id: 'evaporate', label: "Blood evaporates when sheared" }
     ],
-    correct: 2
+    explanation: "Red blood cells are flexible and can deform under shear. In narrow capillaries, high shear rates cause cells to align and deform, reducing blood's apparent viscosity."
   },
   {
-    question: 'What would happen if toothpaste was NOT shear-thinning?',
+    scenario: "You notice shampoo flows easily when squeezed but stays on your palm.",
+    question: "Why does shampoo exhibit shear-thinning behavior?",
     options: [
-      'It would be easier to squeeze out',
-      'It might drip off your brush before you can use it',
-      'It would taste different',
-      'It would clean teeth better'
+      { id: 'water', label: "It's mostly water anyway" },
+      { id: 'surfactant', label: "Surfactant molecules form networks that break under shear", correct: true },
+      { id: 'fragrance', label: "The fragrance oils change viscosity" },
+      { id: 'plastic', label: "The plastic bottle squeezes it thinner" }
     ],
-    correct: 1
+    explanation: "Shampoo contains surfactant molecules that form loose networks. Squeezing breaks these networks temporarily, making it flow. At rest, the networks reform."
   },
   {
-    question: 'At what point does a shear-thinning fluid have its HIGHEST viscosity?',
+    scenario: "An engineer is designing a new printing ink.",
+    question: "Why would an engineer want ink to be shear-thinning?",
     options: [
-      'When being stirred rapidly',
-      'When being poured quickly',
-      'When at rest with no applied stress',
-      'When heated to high temperatures'
+      { id: 'cheap', label: "It's cheaper to manufacture" },
+      { id: 'jets', label: "It flows through tiny print nozzles but doesn't spread on paper", correct: true },
+      { id: 'color', label: "It produces brighter colors" },
+      { id: 'fast', label: "It dries instantly on contact with air" }
     ],
-    correct: 2
+    explanation: "Ink needs to flow through microscopic nozzles (high shear = low viscosity) but not spread or bleed on the paper surface (low shear = high viscosity)."
   },
   {
-    question: 'Why is shear-thinning behavior valuable in 3D printing inks?',
+    scenario: "You're comparing honey and ketchup's flow behavior.",
+    question: "How does honey differ from ketchup in terms of flow?",
     options: [
-      'It makes the ink more colorful',
-      'It allows precise extrusion through nozzles while maintaining shape afterward',
-      'It prevents the printer from jamming',
-      'It makes printing faster'
+      { id: 'both', label: "Both are shear-thinning, just different thicknesses" },
+      { id: 'newtonian', label: "Honey is Newtonian — its viscosity stays constant regardless of shear", correct: true },
+      { id: 'thickening', label: "Honey is shear-thickening" },
+      { id: 'temperature', label: "Temperature affects ketchup but not honey" }
     ],
-    correct: 1
+    explanation: "Honey is a Newtonian fluid — its viscosity depends only on temperature, not on shear rate. Stirring honey doesn't make it thinner. Ketchup's viscosity drops dramatically when sheared."
   },
   {
-    question: 'What technique helps get ketchup out of a glass bottle?',
+    scenario: "A materials scientist is studying yield stress fluids.",
+    question: "What is yield stress in the context of ketchup?",
     options: [
-      'Heating the bottle to melt the ketchup',
-      'Shaking or tapping to apply shear stress and reduce viscosity',
-      'Squeezing the glass bottle',
-      'Leaving the bottle upside down for hours'
+      { id: 'breaking', label: "The stress at which the bottle breaks" },
+      { id: 'minimum', label: "The minimum stress needed to make it start flowing", correct: true },
+      { id: 'maximum', label: "The maximum stress the ketchup can withstand" },
+      { id: 'temperature', label: "The temperature at which it liquefies" }
     ],
-    correct: 1
+    explanation: "Yield stress is the minimum force needed to initiate flow. Below this threshold, ketchup behaves like a solid gel. Above it, the structure breaks and it flows."
   }
 ];
 
-const TRANSFER_APPS = [
+const realWorldApps = [
   {
+    icon: '🎨',
     title: 'Paint Technology',
-    description: 'Paint flows smoothly when brushed (high shear) but stays put without dripping when left alone (low shear). This allows for even coverage without runs.',
-    icon: '🎨'
+    short: 'Drip-free coatings',
+    tagline: 'Flow When Brushed, Stay When Done',
+    description: 'Modern latex paints are engineered to be shear-thinning. They flow smoothly onto surfaces during brushing, then instantly thicken to prevent drips, runs, and sags.',
+    connection: 'Just like shaking ketchup makes it flow, brush strokes temporarily thin the paint. When you stop, it becomes thick again and holds its position on vertical surfaces.',
+    howItWorks: 'Paint contains polymer chains and particles that form a loose network. Brushing breaks this network, lowering viscosity. Once brushing stops, the network reforms in milliseconds.',
+    stats: [
+      { value: '100x', label: 'Viscosity change', icon: '📉' },
+      { value: '<1 sec', label: 'Recovery time', icon: '⏱️' },
+      { value: '$160B', label: 'Global paint market', icon: '💰' }
+    ],
+    examples: [
+      'Latex house paints that don\'t drip',
+      'Automotive clear coats for even coverage',
+      'Anti-fouling marine coatings',
+      'Artist acrylics for precise brushwork'
+    ],
+    companies: ['Sherwin-Williams', 'PPG Industries', 'AkzoNobel', 'Benjamin Moore'],
+    futureImpact: 'Smart paints could automatically adjust their viscosity based on application method and environmental conditions.',
+    color: colors.accent
   },
   {
-    title: 'Blood Circulation',
-    description: 'Blood is shear-thinning, allowing it to flow easily through narrow capillaries. Red blood cells deform and align under shear, reducing resistance.',
-    icon: '❤️'
+    icon: '🩸',
+    title: 'Blood Flow Physics',
+    short: 'Life-saving rheology',
+    tagline: 'Your Body\'s Smart Fluid',
+    description: 'Blood is shear-thinning! This property is critical for circulation — blood flows easily through large arteries but can still navigate through capillaries narrower than red blood cells.',
+    connection: 'Like ketchup flowing faster when shaken, blood becomes less viscous in high-shear environments (narrow vessels), allowing efficient delivery of oxygen to every cell.',
+    howItWorks: 'Red blood cells are flexible biconcave discs. In narrow capillaries, high shear rates cause them to align and deform into bullet shapes, dramatically reducing flow resistance.',
+    stats: [
+      { value: '5L', label: 'Blood pumped/min', icon: '❤️' },
+      { value: '60,000', label: 'Miles of vessels', icon: '🩸' },
+      { value: '7 μm', label: 'Smallest capillary', icon: '🔬' }
+    ],
+    examples: [
+      'Red blood cells squeeze through tiny capillaries',
+      'Blood thinners alter shear-thinning properties',
+      'Sickle cell disease disrupts normal flow behavior',
+      'Artificial blood must match natural rheology'
+    ],
+    companies: ['Medical research institutions', 'Pharmaceutical companies', 'Biomedical device manufacturers'],
+    futureImpact: 'Understanding blood rheology leads to better treatments for cardiovascular disease and improved artificial blood products.',
+    color: '#dc2626'
   },
   {
-    title: 'Toothpaste',
-    description: 'Toothpaste stays on your brush (high viscosity at rest) but spreads easily when you brush your teeth (low viscosity under shear).',
-    icon: '🦷'
+    icon: '🧴',
+    title: 'Personal Care Products',
+    short: 'Squeeze and spread',
+    tagline: 'Engineered for the Perfect Flow',
+    description: 'Shampoo, lotion, and toothpaste are all designed to be shear-thinning. They squeeze out easily but don\'t run off your hand or out of the tube.',
+    connection: 'The same physics that lets ketchup flow when shaken makes your shampoo come out smoothly when squeezed, then stay put in your palm.',
+    howItWorks: 'Surfactants and polymers create weak gel networks. Squeezing provides shear that breaks these networks temporarily. When the stress is removed, the networks reform.',
+    stats: [
+      { value: '$500B', label: 'Global cosmetics market', icon: '💄' },
+      { value: '90%', label: 'Products use this tech', icon: '📊' },
+      { value: '5-50x', label: 'Typical viscosity drop', icon: '📉' }
+    ],
+    examples: [
+      'Toothpaste that holds its shape on the brush',
+      'Shampoo that doesn\'t slide off your palm',
+      'Sunscreen that spreads evenly but doesn\'t drip',
+      'Hair gel that\'s easy to work with but sets firm'
+    ],
+    companies: ['Procter & Gamble', 'Unilever', 'L\'Oréal', 'Colgate-Palmolive'],
+    futureImpact: 'Sustainable formulations using natural shear-thinning agents are replacing synthetic polymers in eco-friendly products.',
+    color: colors.primary
   },
   {
-    title: '3D Printing Inks',
-    description: 'Special inks flow precisely through fine nozzles under pressure but maintain their shape once deposited, enabling complex 3D structures.',
-    icon: '🖨️'
+    icon: '🖨️',
+    title: 'Printing & Inks',
+    short: 'Precision deposition',
+    tagline: 'Flow Through Nozzles, Stay on Paper',
+    description: 'Inkjet inks must flow through microscopic nozzles (high shear) but not spread or bleed on paper (low shear). Shear-thinning makes this possible.',
+    connection: 'Like ketchup that flows when shaken but holds shape at rest, ink becomes thin to jet through tiny holes, then thick to form crisp dots on paper.',
+    howItWorks: 'Ink formulations contain polymers that align under high shear in the nozzle, reducing viscosity. On paper, the polymers relax back to a tangled state, preventing spreading.',
+    stats: [
+      { value: '1 pL', label: 'Droplet volume', icon: '💧' },
+      { value: '4800', label: 'DPI resolution', icon: '🎯' },
+      { value: '50,000', label: 'Drops/second', icon: '⚡' }
+    ],
+    examples: [
+      'High-resolution inkjet printing',
+      '3D printing with viscous materials',
+      'Printed electronics and circuits',
+      'Bioprinting living tissues'
+    ],
+    companies: ['HP', 'Epson', 'Canon', 'Fujifilm'],
+    futureImpact: 'Advanced shear-thinning inks enable 3D printing of complex structures including organs and electronic devices.',
+    color: colors.warning
   }
 ];
 
-// ═══════════════════════════════════════════════════════════════════════════
-// HELPER FUNCTIONS
-// ═══════════════════════════════════════════════════════════════════════════
-function playSound(type: 'click' | 'success' | 'failure' | 'transition' | 'complete'): void {
+// ============================================================
+// SOUND UTILITY
+// ============================================================
+
+const playSound = (type: 'click' | 'success' | 'failure' | 'transition' | 'complete') => {
   if (typeof window === 'undefined') return;
   try {
-    const audioContext = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
+    const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
     const oscillator = audioContext.createOscillator();
     const gainNode = audioContext.createGain();
-
     oscillator.connect(gainNode);
     gainNode.connect(audioContext.destination);
-
-    const sounds = {
-      click: { freq: 600, duration: 0.1, type: 'sine' as OscillatorType },
-      success: { freq: 800, duration: 0.2, type: 'sine' as OscillatorType },
-      failure: { freq: 300, duration: 0.3, type: 'sine' as OscillatorType },
-      transition: { freq: 500, duration: 0.15, type: 'sine' as OscillatorType },
-      complete: { freq: 900, duration: 0.4, type: 'sine' as OscillatorType }
+    const sounds: Record<string, { freq: number; duration: number; type: OscillatorType }> = {
+      click: { freq: 600, duration: 0.1, type: 'sine' },
+      success: { freq: 800, duration: 0.2, type: 'sine' },
+      failure: { freq: 300, duration: 0.3, type: 'sine' },
+      transition: { freq: 500, duration: 0.15, type: 'sine' },
+      complete: { freq: 900, duration: 0.4, type: 'sine' }
     };
-
     const sound = sounds[type];
     oscillator.frequency.value = sound.freq;
     oscillator.type = sound.type;
     gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
     gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + sound.duration);
-
     oscillator.start();
     oscillator.stop(audioContext.currentTime + sound.duration);
-  } catch {
-    // Audio not available
-  }
+  } catch { /* Audio not available */ }
+};
+
+// ============================================================
+// MAIN COMPONENT
+// ============================================================
+
+interface ShearThinningRendererProps {
+  onComplete?: () => void;
+  onGameEvent?: (event: { type: string; data: any }) => void;
+  gamePhase?: string;
 }
 
-// ═══════════════════════════════════════════════════════════════════════════
-// UI COMPONENTS
-// ═══════════════════════════════════════════════════════════════════════════
-const ProgressIndicator: React.FC<{ phases: number[]; currentPhase: number }> = ({ phases, currentPhase }) => {
-  return (
-    <div className="bg-slate-900/80 backdrop-blur-xl rounded-xl border border-white/10 p-3 mb-6">
-      <div className="flex items-center justify-between mb-2">
-        <span className="text-sm font-medium text-slate-400">Shear-Thinning</span>
-        <span className="text-sm text-slate-500">{phaseLabels[currentPhase]}</span>
-      </div>
-      {/* Premium phase dots */}
-      <div className="flex items-center justify-center gap-1.5">
-        {phases.map((phase, index) => (
-          <div
-            key={phase}
-            className={`h-2 rounded-full transition-all duration-300 ${
-              index === currentPhase
-                ? 'bg-red-400 w-6 shadow-lg shadow-red-400/30'
-                : index < currentPhase
-                  ? 'bg-emerald-500 w-2'
-                  : 'bg-slate-700 w-2'
-            }`}
-          />
-        ))}
-      </div>
-    </div>
-  );
-};
-
-const PrimaryButton: React.FC<{
-  children: React.ReactNode;
-  onMouseDown: (e: React.MouseEvent) => void;
-  variant?: 'primary' | 'secondary';
-  disabled?: boolean;
-}> = ({ children, onMouseDown, variant = 'primary', disabled = false }) => {
-  return (
-    <button
-      onMouseDown={(e) => {
-        e.preventDefault();
-        if (!disabled) onMouseDown(e);
-      }}
-      disabled={disabled}
-      className={`px-6 py-3 rounded-xl font-semibold transition-all duration-200 ${
-        variant === 'primary'
-          ? disabled
-            ? 'bg-slate-700 text-slate-500 cursor-not-allowed'
-            : 'bg-gradient-to-r from-red-500 to-orange-500 text-white hover:from-red-600 hover:to-orange-600 hover:scale-105 active:scale-95'
-          : disabled
-          ? 'bg-slate-800 text-slate-500 cursor-not-allowed'
-          : 'bg-slate-700 text-white hover:bg-slate-600 hover:scale-105 active:scale-95'
-      }`}
-    >
-      {children}
-    </button>
-  );
-};
-
-// ═══════════════════════════════════════════════════════════════════════════
-// APPLICATION GRAPHICS
-// ═══════════════════════════════════════════════════════════════════════════
-const PaintGraphic: React.FC = () => {
-  const [animPhase, setAnimPhase] = useState(0);
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setAnimPhase(p => (p + 1) % 200);
-    }, 50);
-    return () => clearInterval(interval);
-  }, []);
-
-  const brushX = 100 + (animPhase < 100 ? animPhase * 2 : (200 - animPhase) * 2);
-  const paintFlow = animPhase < 100 ? 0.8 : 0.2;
-
-  return (
-    <svg viewBox="0 0 400 280" className="w-full h-64">
-      <defs>
-        <linearGradient id="paintGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-          <stop offset="0%" stopColor="#ef4444" />
-          <stop offset="100%" stopColor="#f97316" />
-        </linearGradient>
-        <linearGradient id="wallGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-          <stop offset="0%" stopColor="#475569" />
-          <stop offset="100%" stopColor="#334155" />
-        </linearGradient>
-      </defs>
-
-      {/* Background */}
-      <rect width="400" height="280" fill="#0f172a" />
-
-      {/* Wall surface */}
-      <rect x="50" y="140" width="300" height="100" fill="url(#wallGrad)" rx="4" />
-
-      {/* Paint layer - thinner where brush is (shear applied) */}
-      <rect
-        x="50"
-        y="135"
-        width={brushX - 50}
-        height="8"
-        fill="url(#paintGrad)"
-        opacity="0.9"
-      />
-
-      {/* Paint brush */}
-      <g transform={`translate(${brushX}, 100)`}>
-        {/* Handle */}
-        <rect x="-5" y="-60" width="10" height="50" fill="#8B4513" rx="2" />
-        {/* Ferrule */}
-        <rect x="-8" y="-15" width="16" height="15" fill="#C0C0C0" />
-        {/* Bristles */}
-        <rect x="-12" y="0" width="24" height="35" fill="#F5DEB3" rx="2" />
-        {/* Paint on bristles */}
-        <rect x="-12" y="20" width="24" height="15" fill="url(#paintGrad)" rx="2" opacity={paintFlow} />
-      </g>
-
-      {/* Labels */}
-      <text x="200" y="35" textAnchor="middle" className="fill-white text-sm font-bold">
-        Paint Application
-      </text>
-
-      {/* Viscosity indicator */}
-      <rect x="320" y="50" width="60" height="80" fill="#1e293b" rx="4" stroke="#334155" strokeWidth="1" />
-      <text x="350" y="70" textAnchor="middle" className="fill-slate-400 text-xs">
-        Viscosity
-      </text>
-      <rect x="335" y="80" width="30" height="40" fill="#334155" rx="2" />
-      <rect
-        x="337"
-        y={120 - (animPhase < 100 ? 35 : 15)}
-        width="26"
-        height={animPhase < 100 ? 35 : 15}
-        fill="url(#paintGrad)"
-        rx="2"
-      />
-
-      {/* Explanation */}
-      <text x="200" y="265" textAnchor="middle" className="fill-slate-400 text-xs">
-        Brush shear → low viscosity → smooth flow
-      </text>
-    </svg>
-  );
-};
-
-const BloodGraphic: React.FC = () => {
-  const [animPhase, setAnimPhase] = useState(0);
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setAnimPhase(p => (p + 1) % 120);
-    }, 50);
-    return () => clearInterval(interval);
-  }, []);
-
-  // Blood cells moving through vessel
-  const cellPositions = [0, 30, 60, 90].map(offset =>
-    ((animPhase * 3 + offset) % 280) + 60
-  );
-
-  return (
-    <svg viewBox="0 0 400 280" className="w-full h-64">
-      <defs>
-        <linearGradient id="vesselGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-          <stop offset="0%" stopColor="#dc2626" />
-          <stop offset="50%" stopColor="#fecaca" />
-          <stop offset="100%" stopColor="#dc2626" />
-        </linearGradient>
-        <radialGradient id="cellGrad" cx="50%" cy="50%" r="50%">
-          <stop offset="0%" stopColor="#ef4444" />
-          <stop offset="100%" stopColor="#991b1b" />
-        </radialGradient>
-      </defs>
-
-      {/* Background */}
-      <rect width="400" height="280" fill="#0f172a" />
-
-      {/* Title */}
-      <text x="200" y="30" textAnchor="middle" className="fill-white text-sm font-bold">
-        Blood Flow in Capillaries
-      </text>
-
-      {/* Wide vessel (artery) */}
-      <rect x="30" y="60" width="120" height="50" fill="url(#vesselGrad)" rx="25" />
-      <text x="90" y="90" textAnchor="middle" className="fill-slate-900 text-xs font-semibold">
-        Artery
-      </text>
-
-      {/* Narrow capillary */}
-      <rect x="150" y="75" width="150" height="20" fill="#fecaca" rx="10" />
-      <text x="225" y="115" textAnchor="middle" className="fill-red-400 text-xs">
-        Capillary
-      </text>
-
-      {/* Wide vessel (vein) */}
-      <rect x="300" y="60" width="70" height="50" fill="url(#vesselGrad)" rx="25" />
-      <text x="335" y="90" textAnchor="middle" className="fill-slate-900 text-xs font-semibold">
-        Vein
-      </text>
-
-      {/* Red blood cells - round in wide vessels, elongated in capillary */}
-      {cellPositions.map((x, i) => {
-        const inCapillary = x > 150 && x < 300;
-        const cellWidth = inCapillary ? 20 : 14;
-        const cellHeight = inCapillary ? 10 : 14;
-        const yPos = inCapillary ? 80 : 78;
-
-        return (
-          <ellipse
-            key={i}
-            cx={x}
-            cy={yPos + (i % 2) * 6}
-            rx={cellWidth / 2}
-            ry={cellHeight / 2}
-            fill="url(#cellGrad)"
-            stroke="#991b1b"
-            strokeWidth="1"
-          />
-        );
-      })}
-
-      {/* Diagram showing cell deformation */}
-      <g transform="translate(60, 150)">
-        <rect width="130" height="90" fill="#1e293b" rx="8" />
-        <text x="65" y="20" textAnchor="middle" className="fill-slate-400 text-xs font-semibold">
-          Cell Shape Change
-        </text>
-
-        {/* Normal cell */}
-        <ellipse cx="35" cy="55" rx="15" ry="15" fill="url(#cellGrad)" stroke="#991b1b" />
-        <text x="35" y="85" textAnchor="middle" className="fill-slate-500 text-xs">
-          At rest
-        </text>
-
-        {/* Arrow */}
-        <path d="M 60 55 L 75 55 L 72 50 M 75 55 L 72 60" stroke="#94a3b8" strokeWidth="2" fill="none" />
-
-        {/* Deformed cell */}
-        <ellipse cx="95" cy="55" rx="22" ry="10" fill="url(#cellGrad)" stroke="#991b1b" />
-        <text x="95" y="85" textAnchor="middle" className="fill-slate-500 text-xs">
-          Sheared
-        </text>
-      </g>
-
-      {/* Viscosity graph */}
-      <g transform="translate(220, 150)">
-        <rect width="140" height="90" fill="#1e293b" rx="8" />
-        <text x="70" y="20" textAnchor="middle" className="fill-slate-400 text-xs font-semibold">
-          Blood Viscosity
-        </text>
-
-        {/* Axes */}
-        <line x1="25" y1="70" x2="120" y2="70" stroke="#475569" strokeWidth="1" />
-        <line x1="25" y1="30" x2="25" y2="70" stroke="#475569" strokeWidth="1" />
-
-        {/* Curve showing decreasing viscosity */}
-        <path d="M 25 35 Q 50 38, 70 50 Q 90 58, 115 62" stroke="#ef4444" strokeWidth="2" fill="none" />
-
-        <text x="75" y="82" textAnchor="middle" className="fill-slate-500 text-[10px]">
-          Shear Rate →
-        </text>
-        <text x="15" y="52" textAnchor="middle" className="fill-slate-500 text-[10px]" transform="rotate(-90, 15, 52)">
-          η
-        </text>
-      </g>
-
-      {/* Bottom label */}
-      <text x="200" y="268" textAnchor="middle" className="fill-slate-400 text-xs">
-        Cells deform under shear → easier flow through narrow vessels
-      </text>
-    </svg>
-  );
-};
-
-const ToothpasteGraphic: React.FC = () => {
-  const [animPhase, setAnimPhase] = useState(0);
-  const [squeezing, setSqueezing] = useState(false);
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setAnimPhase(p => (p + 1) % 150);
-      if (animPhase === 0) setSqueezing(true);
-      if (animPhase === 75) setSqueezing(false);
-    }, 50);
-    return () => clearInterval(interval);
-  }, [animPhase]);
-
-  const pasteLength = squeezing ? Math.min(animPhase * 1.5, 80) : 0;
-  const tubeSquish = squeezing ? 5 : 0;
-
-  return (
-    <svg viewBox="0 0 400 280" className="w-full h-64">
-      <defs>
-        <linearGradient id="pasteGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-          <stop offset="0%" stopColor="#06b6d4" />
-          <stop offset="50%" stopColor="#22d3ee" />
-          <stop offset="100%" stopColor="#06b6d4" />
-        </linearGradient>
-        <linearGradient id="tubeGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-          <stop offset="0%" stopColor="#475569" />
-          <stop offset="50%" stopColor="#64748b" />
-          <stop offset="100%" stopColor="#475569" />
-        </linearGradient>
-      </defs>
-
-      {/* Background */}
-      <rect width="400" height="280" fill="#0f172a" />
-
-      {/* Title */}
-      <text x="200" y="30" textAnchor="middle" className="fill-white text-sm font-bold">
-        Toothpaste Flow
-      </text>
-
-      {/* Toothpaste tube */}
-      <g transform="translate(50, 80)">
-        {/* Tube body */}
-        <ellipse cx="60" cy="50" rx={55 - tubeSquish} ry={35 + tubeSquish} fill="url(#tubeGrad)" />
-
-        {/* Cap end */}
-        <rect x="105" y="35" width="40" height="30" fill="#334155" />
-        <rect x="140" y="40" width="15" height="20" fill="#1e293b" rx="3" />
-
-        {/* Nozzle */}
-        <polygon points="155,45 155,55 175,52 175,48" fill="#64748b" />
-
-        {/* Paste coming out */}
-        {squeezing && (
-          <rect x="175" y="46" width={pasteLength} height="8" fill="url(#pasteGrad)" rx="4" />
-        )}
-
-        {/* Squeeze arrows */}
-        {squeezing && (
-          <>
-            <path d="M 60 10 L 60 25" stroke="#f59e0b" strokeWidth="2" markerEnd="url(#arrowhead)" />
-            <path d="M 60 90 L 60 75" stroke="#f59e0b" strokeWidth="2" />
-            <text x="60" y="5" textAnchor="middle" className="fill-amber-400 text-xs">
-              Squeeze
-            </text>
-          </>
-        )}
-      </g>
-
-      {/* Toothbrush */}
-      <g transform="translate(220, 100)">
-        {/* Handle */}
-        <rect x="0" y="15" width="80" height="12" fill="#22c55e" rx="6" />
-        {/* Head */}
-        <rect x="75" y="10" width="40" height="22" fill="#334155" rx="4" />
-        {/* Bristles */}
-        {[0, 8, 16, 24, 32].map((x, i) => (
-          <rect key={i} x={80 + x} y="0" width="5" height="12" fill="#f0f9ff" rx="1" />
-        ))}
-        {/* Paste on brush */}
-        {!squeezing && pasteLength > 50 && (
-          <path d="M 83 -5 Q 100 -15, 117 -5" stroke="#06b6d4" strokeWidth="8" fill="none" strokeLinecap="round" />
-        )}
-      </g>
-
-      {/* Explanation boxes */}
-      <g transform="translate(40, 180)">
-        <rect width="150" height="70" fill="#1e293b" rx="8" />
-        <text x="75" y="20" textAnchor="middle" className="fill-red-400 text-xs font-semibold">
-          At Rest (High η)
-        </text>
-        <text x="75" y="38" textAnchor="middle" className="fill-slate-400 text-xs">
-          Stays on brush
-        </text>
-        <text x="75" y="52" textAnchor="middle" className="fill-slate-400 text-xs">
-          Won&apos;t drip or slide
-        </text>
-      </g>
-
-      <g transform="translate(210, 180)">
-        <rect width="150" height="70" fill="#1e293b" rx="8" />
-        <text x="75" y="20" textAnchor="middle" className="fill-green-400 text-xs font-semibold">
-          Brushing (Low η)
-        </text>
-        <text x="75" y="38" textAnchor="middle" className="fill-slate-400 text-xs">
-          Spreads easily
-        </text>
-        <text x="75" y="52" textAnchor="middle" className="fill-slate-400 text-xs">
-          Coats all teeth
-        </text>
-      </g>
-
-      {/* Bottom label */}
-      <text x="200" y="268" textAnchor="middle" className="fill-slate-400 text-xs">
-        Shear-thinning: stays put at rest, flows when needed
-      </text>
-    </svg>
-  );
-};
-
-const PrintingGraphic: React.FC = () => {
-  const [animPhase, setAnimPhase] = useState(0);
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setAnimPhase(p => (p + 1) % 200);
-    }, 40);
-    return () => clearInterval(interval);
-  }, []);
-
-  const nozzleX = 80 + (animPhase % 100);
-  const layerY = Math.floor(animPhase / 100) * 8;
-
-  return (
-    <svg viewBox="0 0 400 280" className="w-full h-64">
-      <defs>
-        <linearGradient id="inkGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-          <stop offset="0%" stopColor="#8b5cf6" />
-          <stop offset="100%" stopColor="#a78bfa" />
-        </linearGradient>
-        <linearGradient id="nozzleGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-          <stop offset="0%" stopColor="#64748b" />
-          <stop offset="100%" stopColor="#475569" />
-        </linearGradient>
-      </defs>
-
-      {/* Background */}
-      <rect width="400" height="280" fill="#0f172a" />
-
-      {/* Title */}
-      <text x="200" y="25" textAnchor="middle" className="fill-white text-sm font-bold">
-        3D Printing with Shear-Thinning Ink
-      </text>
-
-      {/* Print bed */}
-      <rect x="60" y="180" width="180" height="10" fill="#334155" rx="2" />
-
-      {/* Printed layers */}
-      {[0, 8, 16].map((y, i) => {
-        if (y > layerY && i > 0) return null;
-        return (
-          <rect
-            key={i}
-            x="80"
-            y={172 - y}
-            width={y === layerY ? nozzleX - 80 : 140}
-            height="6"
-            fill="url(#inkGrad)"
-            opacity={0.9 - i * 0.15}
-            rx="1"
-          />
-        );
-      })}
-
-      {/* Print head assembly */}
-      <g transform={`translate(${nozzleX}, 80)`}>
-        {/* Ink reservoir */}
-        <rect x="-15" y="0" width="30" height="40" fill="#1e293b" stroke="#475569" rx="4" />
-        <rect x="-10" y="5" width="20" height="25" fill="url(#inkGrad)" rx="2" />
-
-        {/* Nozzle */}
-        <path d="M -8 40 L -3 60 L 3 60 L 8 40 Z" fill="url(#nozzleGrad)" />
-
-        {/* Ink stream */}
-        <rect x="-2" y="60" width="4" height={112 - layerY} fill="url(#inkGrad)" />
-
-        {/* Pressure indicator */}
-        <circle cx="0" cy="20" r="6" fill="#22c55e" opacity="0.8" />
-      </g>
-
-      {/* Viscosity diagram */}
-      <g transform="translate(270, 50)">
-        <rect width="110" height="130" fill="#1e293b" rx="8" />
-        <text x="55" y="20" textAnchor="middle" className="fill-slate-300 text-xs font-semibold">
-          Ink Behavior
-        </text>
-
-        {/* In reservoir - high viscosity */}
-        <g transform="translate(15, 35)">
-          <rect width="35" height="35" fill="#334155" rx="4" />
-          <rect x="5" y="5" width="25" height="25" fill="url(#inkGrad)" rx="2" />
-          <text x="17" y="50" textAnchor="middle" className="fill-slate-500 text-[9px]">
-            Reservoir
-          </text>
-          <text x="17" y="60" textAnchor="middle" className="fill-green-400 text-[8px]">
-            High η
-          </text>
-        </g>
-
-        {/* In nozzle - low viscosity */}
-        <g transform="translate(60, 35)">
-          <rect width="35" height="35" fill="#334155" rx="4" />
-          <rect x="12" y="5" width="10" height="25" fill="url(#inkGrad)" rx="2" />
-          <text x="17" y="50" textAnchor="middle" className="fill-slate-500 text-[9px]">
-            Nozzle
-          </text>
-          <text x="17" y="60" textAnchor="middle" className="fill-amber-400 text-[8px]">
-            Low η
-          </text>
-        </g>
-
-        {/* On bed - recovers viscosity */}
-        <g transform="translate(15, 95)">
-          <rect width="80" height="25" fill="#334155" rx="4" />
-          <rect x="5" y="15" width="70" height="6" fill="url(#inkGrad)" rx="2" />
-          <text x="40" y="12" textAnchor="middle" className="fill-slate-500 text-[9px]">
-            Deposited → Shape holds
-          </text>
-        </g>
-      </g>
-
-      {/* Process arrows */}
-      <text x="60" y="220" className="fill-slate-500 text-xs">
-        1. Stored thick
-      </text>
-      <text x="145" y="220" className="fill-slate-500 text-xs">
-        2. Flows thin
-      </text>
-      <text x="230" y="220" className="fill-slate-500 text-xs">
-        3. Holds shape
-      </text>
-
-      {/* Bottom label */}
-      <text x="200" y="265" textAnchor="middle" className="fill-slate-400 text-xs">
-        Precise extrusion + shape retention = complex 3D structures
-      </text>
-    </svg>
-  );
-};
-
-// ═══════════════════════════════════════════════════════════════════════════
-// MAIN COMPONENT
-// ═══════════════════════════════════════════════════════════════════════════
-export default function ShearThinningRenderer({ onGameEvent, currentPhase, onPhaseComplete }: ShearThinningRendererProps) {
-  // ─── State ─────────────────────────────────────────────────────────────────
-  const [phase, setPhase] = useState<number>(currentPhase ?? 0);
-  const [isMobile, setIsMobile] = useState(false);
+const ShearThinningRenderer: React.FC<ShearThinningRendererProps> = ({
+  onComplete,
+  onGameEvent,
+  gamePhase
+}) => {
+  const validPhases: Phase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
+  const getInitialPhase = (): Phase => {
+    if (gamePhase && validPhases.includes(gamePhase as Phase)) {
+      return gamePhase as Phase;
+    }
+    return 'hook';
+  };
+
+  const [phase, setPhase] = useState<Phase>(getInitialPhase);
   const [prediction, setPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
-  const [testAnswers, setTestAnswers] = useState<number[]>(Array(10).fill(-1));
-  const [completedApps, setCompletedApps] = useState<Set<number>>(new Set());
-  const [activeAppTab, setActiveAppTab] = useState(0);
-  const [showTestResults, setShowTestResults] = useState(false);
 
-  // Simulation state
-  const [shakeIntensity, setShakeIntensity] = useState(0);
+  // Play phase state
+  const [shearRate, setShearRate] = useState(0);
   const [isShaking, setIsShaking] = useState(false);
-  const [twistShearRate, setTwistShearRate] = useState(50);
+  const [networkIntegrity, setNetworkIntegrity] = useState(100);
 
-  // CRITICAL: Navigation debouncing refs
-  const navigationLockRef = useRef(false);
-  const lastClickRef = useRef(0);
+  // Animation state
+  const animationRef = useRef<number>();
+  const [animTime, setAnimTime] = useState(0);
 
-  // ─── Navigation (CRITICAL PATTERN) ─────────────────────────────────────────
-  // Mobile detection
+  // Test phase state
+  const [testQuestion, setTestQuestion] = useState(0);
+  const [testAnswers, setTestAnswers] = useState<(string | null)[]>(Array(10).fill(null));
+  const [testSubmitted, setTestSubmitted] = useState(false);
+  const [showExplanation, setShowExplanation] = useState(false);
+
+  // Transfer phase state
+  const [selectedApp, setSelectedApp] = useState(0);
+  const [completedApps, setCompletedApps] = useState<boolean[]>([false, false, false, false]);
+
+  // Viewport
+  const [isMobile, setIsMobile] = useState(false);
+
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth < 768);
     checkMobile();
@@ -751,791 +369,1952 @@ export default function ShearThinningRenderer({ onGameEvent, currentPhase, onPha
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
-  // Phase sync with external control
   useEffect(() => {
-    if (currentPhase !== undefined && currentPhase !== phase) {
-      setPhase(currentPhase);
+    if (gamePhase && validPhases.includes(gamePhase as Phase) && gamePhase !== phase) {
+      setPhase(gamePhase as Phase);
     }
-  }, [currentPhase, phase]);
+  }, [gamePhase]);
 
-  const goToPhase = useCallback((newPhase: number) => {
-    if (navigationLockRef.current) return;
-    navigationLockRef.current = true;
-
-    playSound('transition');
-    setPhase(newPhase);
-    onPhaseComplete?.(newPhase);
-    onGameEvent?.({ type: 'phase_change', data: { phase: newPhase, phaseLabel: phaseLabels[newPhase] } });
-
-    setTimeout(() => {
-      navigationLockRef.current = false;
-    }, 400);
-  }, [onPhaseComplete, onGameEvent]);
-
-  const nextPhase = useCallback(() => {
-    if (phase < 9) {
-      goToPhase(phase + 1);
-    }
-  }, [phase, goToPhase]);
-
-  // ─── Event Handlers ────────────────────────────────────────────────────────
-  const handlePrediction = useCallback((id: string) => {
-    playSound('click');
-    setPrediction(id);
-  }, []);
-
-  const handleTwistPrediction = useCallback((id: string) => {
-    playSound('click');
-    setTwistPrediction(id);
-  }, []);
-
-  const handleTestAnswer = useCallback((questionIndex: number, answerIndex: number) => {
-    const newAnswers = [...testAnswers];
-    newAnswers[questionIndex] = answerIndex;
-    setTestAnswers(newAnswers);
-    playSound(answerIndex === TEST_QUESTIONS[questionIndex].correct ? 'success' : 'failure');
-  }, [testAnswers]);
-
-  const handleAppComplete = useCallback((index: number) => {
-    playSound('click');
-    setCompletedApps(prev => new Set([...prev, index]));
-  }, []);
-
-  const handleShake = useCallback(() => {
-    setIsShaking(true);
-    let intensity = 0;
-    const interval = setInterval(() => {
-      intensity += 10;
-      setShakeIntensity(Math.min(intensity, 100));
-      if (intensity >= 100) {
-        clearInterval(interval);
-        setTimeout(() => {
-          setIsShaking(false);
-        }, 1500);
+  // Animation loop
+  useEffect(() => {
+    const animate = () => {
+      setAnimTime(t => t + 0.016);
+      animationRef.current = requestAnimationFrame(animate);
+    };
+    animationRef.current = requestAnimationFrame(animate);
+    return () => {
+      if (animationRef.current) {
+        cancelAnimationFrame(animationRef.current);
       }
-    }, 100);
+    };
   }, []);
 
-  // ─── Report Event ──────────────────────────────────────────────────────────
+  // Network breakdown simulation
   useEffect(() => {
-    if (onGameEvent) {
-      onGameEvent({
-        type: phase === 9 ? 'mastery_achieved' : 'phase_change',
-        data: { phase, prediction, twistPrediction, testAnswers: [...testAnswers], completedApps: Array.from(completedApps) }
-      });
+    if (isShaking || shearRate > 20) {
+      const breakdownRate = Math.max(shearRate, isShaking ? 80 : 0) / 20;
+      setNetworkIntegrity(prev => Math.max(10, prev - breakdownRate));
+    } else {
+      // Recovery when not shearing
+      setNetworkIntegrity(prev => Math.min(100, prev + 0.5));
     }
-  }, [phase, prediction, twistPrediction, testAnswers, completedApps, onGameEvent]);
+  }, [isShaking, shearRate, animTime]);
 
-  // ─── Phase Renderers ───────────────────────────────────────────────────────
-  const renderHook = () => (
-    <div className="bg-slate-800/30 backdrop-blur-xl rounded-2xl p-8 text-center border border-white/10">
-      {/* Premium Badge */}
-      <div className="inline-flex items-center gap-2 px-4 py-2 bg-red-500/10 border border-red-500/20 rounded-full mb-6">
-        <span className="w-2 h-2 bg-red-400 rounded-full animate-pulse" />
-        <span className="text-sm font-medium text-red-400 tracking-wide">PHYSICS EXPLORATION</span>
-      </div>
-      <div className="text-6xl mb-6">🍅</div>
-      {/* Gradient Title */}
-      <h1 className="text-3xl md:text-4xl font-bold mb-4 bg-gradient-to-r from-white via-red-100 to-orange-200 bg-clip-text text-transparent">
-        The Stubborn Ketchup Mystery
-      </h1>
-      <p className="text-xl text-slate-300 mb-6">
-        You tip the bottle... nothing happens. You shake it... suddenly ketchup floods your plate!
-      </p>
-      <div className="bg-slate-700/30 backdrop-blur-xl rounded-xl p-6 mb-6 border border-white/10">
-        <p className="text-lg text-red-400 font-semibold mb-2">
-          Why does ketchup refuse to flow until you shake it?
-        </p>
-        <p className="text-slate-400">
-          Discover the science of shear-thinning fluids!
-        </p>
-      </div>
-      <PrimaryButton onMouseDown={nextPhase}>
-        Find Out Why →
-      </PrimaryButton>
-    </div>
-  );
+  // Calculate viscosity based on network integrity
+  const viscosity = useMemo(() => {
+    // High network integrity = high viscosity
+    // Low network integrity = low viscosity (shear-thinning)
+    return 10 + (networkIntegrity / 100) * 90;
+  }, [networkIntegrity]);
 
-  const renderPredict = () => (
-    <div className="bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl p-8">
-      <h2 className="text-2xl font-bold text-white mb-4 text-center">
-        Make Your Prediction
-      </h2>
-      <p className="text-slate-300 mb-6 text-center">
-        What happens to ketchup&apos;s viscosity when you shake or squeeze the bottle?
-      </p>
+  const emitGameEvent = useCallback((eventType: string, details: any) => {
+    onGameEvent?.({ type: eventType, data: { ...details, phase, gameId: GAME_ID } });
+  }, [onGameEvent, phase]);
 
-      <div className="space-y-3 mb-6">
-        {[
-          { id: 'thicker', label: 'It gets thicker and harder to pour' },
-          { id: 'thinner', label: 'It gets thinner and flows easily' },
-          { id: 'same', label: 'It stays exactly the same' },
-          { id: 'solid', label: 'It turns completely solid' }
-        ].map(option => (
-          <button
-            key={option.id}
-            onMouseDown={(e) => {
-              e.preventDefault();
-              handlePrediction(option.id);
-            }}
-            className={`w-full p-4 rounded-xl text-left transition-all duration-200 ${
-              prediction === option.id
-                ? 'bg-red-500/20 border-2 border-red-500 text-white'
-                : 'bg-slate-700/50 border-2 border-transparent text-slate-300 hover:bg-slate-700'
-            }`}
-          >
-            {option.label}
-          </button>
-        ))}
-      </div>
+  const isNavigating = useRef(false);
+  const lastClickRef = useRef(0);
 
-      <div className="flex justify-center">
-        <PrimaryButton onMouseDown={nextPhase} disabled={!prediction}>
-          Test Your Prediction →
-        </PrimaryButton>
-      </div>
-    </div>
-  );
+  const goToPhase = useCallback((p: Phase) => {
+    const now = Date.now();
+    if (now - lastClickRef.current < 200) return;
+    if (isNavigating.current) return;
 
-  const renderPlay = () => {
-    const viscosity = isShaking ? Math.max(100 - shakeIntensity, 20) : 100;
-    const ketchupY = isShaking && shakeIntensity > 50 ? 100 + (shakeIntensity - 50) : 100;
+    lastClickRef.current = now;
+    isNavigating.current = true;
 
-    return (
-      <div className="bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl p-8">
-        <h2 className="text-2xl font-bold text-white mb-4 text-center">
-          The Ketchup Experiment
-        </h2>
+    setPhase(p);
+    playSound('transition');
+    emitGameEvent('phase_changed', { phase: p });
 
-        <div className="bg-slate-900 rounded-xl p-4 mb-6">
-          <svg viewBox="0 0 400 300" className="w-full h-64">
-            <rect width="400" height="300" fill="#0f172a" />
+    if (p === 'test') {
+      setTestQuestion(0);
+      setTestAnswers(Array(10).fill(null));
+      setTestSubmitted(false);
+      setShowExplanation(false);
+    }
 
-            {/* Plate */}
-            <ellipse cx="200" cy="280" rx="150" ry="30" fill="#475569" />
-            <ellipse cx="200" cy="275" rx="140" ry="25" fill="#64748b" />
+    setTimeout(() => { isNavigating.current = false; }, 400);
+  }, [emitGameEvent]);
 
-            {/* Ketchup bottle */}
-            <g transform={`translate(160, 50) ${isShaking ? `rotate(${Math.sin(Date.now() / 50) * 5}, 40, 100)` : ''}`}>
-              {/* Bottle body */}
-              <path d="M 20 60 L 20 150 Q 20 180, 40 180 Q 60 180, 60 150 L 60 60 Z" fill="#dc2626" />
-              {/* Bottle neck */}
-              <rect x="30" y="20" width="20" height="45" fill="#dc2626" />
-              {/* Cap */}
-              <rect x="28" y="5" width="24" height="18" fill="#fbbf24" rx="3" />
-              {/* Label */}
-              <rect x="25" y="80" width="30" height="50" fill="#fef3c7" rx="2" />
-              <text x="40" y="105" textAnchor="middle" className="fill-red-700 text-[8px] font-bold">
-                KETCHUP
-              </text>
-
-              {/* Ketchup inside */}
-              <path d={`M 22 ${180 - ketchupY * 0.8} L 22 148 Q 22 175, 40 175 Q 58 175, 58 148 L 58 ${180 - ketchupY * 0.8} Z`} fill="#991b1b" />
-
-              {/* Ketchup stream */}
-              {isShaking && shakeIntensity > 60 && (
-                <rect x="38" y="180" width="4" height={shakeIntensity - 40} fill="#dc2626" rx="2" />
-              )}
-            </g>
-
-            {/* Ketchup on plate */}
-            {isShaking && shakeIntensity > 70 && (
-              <ellipse cx="200" cy="265" rx={10 + (shakeIntensity - 70) * 0.5} ry={5 + (shakeIntensity - 70) * 0.2} fill="#dc2626" />
-            )}
-
-            {/* Viscosity meter */}
-            <g transform="translate(300, 80)">
-              <rect x="0" y="0" width="80" height="120" fill="#1e293b" rx="8" />
-              <text x="40" y="20" textAnchor="middle" className="fill-slate-400 text-xs">
-                Viscosity
-              </text>
-              <rect x="15" y="30" width="50" height="70" fill="#334155" rx="4" />
-              <rect
-                x="17"
-                y={100 - viscosity * 0.68}
-                width="46"
-                height={viscosity * 0.68}
-                fill={viscosity > 70 ? '#ef4444' : viscosity > 40 ? '#f59e0b' : '#22c55e'}
-                rx="3"
-              />
-              <text x="40" y="115" textAnchor="middle" className="fill-slate-400 text-xs">
-                {viscosity > 70 ? 'HIGH' : viscosity > 40 ? 'MEDIUM' : 'LOW'}
-              </text>
-            </g>
-
-            {/* Instructions */}
-            <text x="80" y="40" className="fill-slate-400 text-sm">
-              {isShaking ? 'Shaking... applying shear!' : 'Click below to shake the bottle'}
-            </text>
-          </svg>
-        </div>
-
-        <div className="flex justify-center gap-4 mb-6">
-          <button
-            onMouseDown={(e) => {
-              e.preventDefault();
-              handleShake();
-            }}
-            disabled={isShaking}
-            className={`px-8 py-4 rounded-xl font-bold text-lg transition-all ${
-              isShaking
-                ? 'bg-slate-700 text-slate-500'
-                : 'bg-gradient-to-r from-red-500 to-orange-500 text-white hover:scale-105'
-            }`}
-          >
-            {isShaking ? 'Shaking...' : '🍅 Shake the Bottle!'}
-          </button>
-        </div>
-
-        <div className="bg-slate-700/30 rounded-xl p-4 mb-6">
-          <p className="text-slate-300 text-center">
-            {isShaking && shakeIntensity > 70
-              ? '✨ The shaking creates shear stress, breaking molecular bonds and reducing viscosity!'
-              : 'At rest, ketchup molecules are tangled together, creating high resistance to flow.'
-            }
-          </p>
-        </div>
-
-        <div className="flex justify-center">
-          <PrimaryButton onMouseDown={nextPhase}>
-            Understand Why →
-          </PrimaryButton>
-        </div>
-      </div>
-    );
+  const calculateTestScore = () => {
+    return testAnswers.reduce((score, ans, i) => {
+      const correct = testQuestions[i].options.find(o => o.correct)?.id;
+      return score + (ans === correct ? 1 : 0);
+    }, 0);
   };
 
-  const renderReview = () => (
-    <div className="bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl p-8">
-      <h2 className="text-2xl font-bold text-white mb-4 text-center">
-        The Science Revealed
-      </h2>
+  // ============================================================
+  // KETCHUP VISUALIZATION
+  // ============================================================
 
-      {prediction === 'thinner' ? (
-        <div className="bg-green-500/20 border border-green-500 rounded-xl p-4 mb-6">
-          <p className="text-green-400 font-semibold">✓ Excellent prediction!</p>
-        </div>
-      ) : (
-        <div className="bg-amber-500/20 border border-amber-500 rounded-xl p-4 mb-6">
-          <p className="text-amber-400">The answer: It gets thinner and flows easily!</p>
-        </div>
-      )}
+  const renderKetchupVisualization = (interactive: boolean = false) => {
+    const width = isMobile ? 340 : 680;
+    const height = isMobile ? 300 : 380;
+    const cx = width / 2;
 
-      <div className="space-y-4 mb-6">
-        <div className="bg-slate-700/50 rounded-xl p-4">
-          <h3 className="text-lg font-semibold text-red-400 mb-2">🔬 Shear-Thinning Fluids</h3>
-          <p className="text-slate-300">
-            Ketchup is a <strong>shear-thinning</strong> (or pseudoplastic) fluid. Its viscosity
-            <strong> decreases</strong> when stress is applied, the opposite of oobleck!
-          </p>
-        </div>
+    // Network visualization
+    const networkNodes = useMemo(() => {
+      const nodes = [];
+      const gridSize = isMobile ? 4 : 6;
+      const spacing = width / (gridSize + 2);
+      for (let i = 0; i < gridSize; i++) {
+        for (let j = 0; j < gridSize; j++) {
+          const baseX = spacing * (i + 1.5);
+          const baseY = 120 + spacing * j * 0.6;
+          // Add some randomness based on network integrity
+          const chaos = interactive ? (100 - networkIntegrity) / 100 : 0;
+          const offsetX = Math.sin(animTime * 2 + i + j) * 10 * chaos;
+          const offsetY = Math.cos(animTime * 2 + i * j) * 10 * chaos;
+          nodes.push({
+            x: baseX + offsetX,
+            y: baseY + offsetY,
+            id: `${i}-${j}`
+          });
+        }
+      }
+      return nodes;
+    }, [width, isMobile, networkIntegrity, animTime, interactive]);
 
-        <div className="bg-slate-700/50 rounded-xl p-4">
-          <h3 className="text-lg font-semibold text-orange-400 mb-2">⚗️ Molecular Mechanism</h3>
-          <p className="text-slate-300">
-            At rest, long polymer chains and particles in ketchup are tangled and randomly oriented.
-            When you shake or squeeze, these chains <strong>align and untangle</strong>, reducing resistance.
-          </p>
-        </div>
-
-        <div className="bg-slate-700/50 rounded-xl p-4">
-          <h3 className="text-lg font-semibold text-yellow-400 mb-2">📐 The Math</h3>
-          <p className="text-slate-300">
-            Viscosity (η) = K × (shear rate)<sup>n-1</sup> where n &lt; 1 for shear-thinning fluids.
-            Higher shear rate → lower viscosity!
-          </p>
-        </div>
-      </div>
-
-      <div className="flex justify-center">
-        <PrimaryButton onMouseDown={nextPhase}>
-          Explore a Twist →
-        </PrimaryButton>
-      </div>
-    </div>
-  );
-
-  const renderTwistPredict = () => (
-    <div className="bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl p-8">
-      <h2 className="text-2xl font-bold text-white mb-4 text-center">
-        🔄 The Twist: Recovery Time
-      </h2>
-      <p className="text-slate-300 mb-6 text-center">
-        After you stop shaking, what happens to the ketchup&apos;s viscosity over time?
-      </p>
-
-      <div className="space-y-3 mb-6">
-        {[
-          { id: 'instant', label: 'It instantly returns to high viscosity' },
-          { id: 'gradual', label: 'It gradually recovers its thickness over seconds' },
-          { id: 'never', label: 'It stays thin forever' },
-          { id: 'thicker', label: 'It becomes even thicker than before' }
-        ].map(option => (
-          <button
-            key={option.id}
-            onMouseDown={(e) => {
-              e.preventDefault();
-              handleTwistPrediction(option.id);
-            }}
-            className={`w-full p-4 rounded-xl text-left transition-all duration-200 ${
-              twistPrediction === option.id
-                ? 'bg-orange-500/20 border-2 border-orange-500 text-white'
-                : 'bg-slate-700/50 border-2 border-transparent text-slate-300 hover:bg-slate-700'
-            }`}
-          >
-            {option.label}
-          </button>
-        ))}
-      </div>
-
-      <div className="flex justify-center">
-        <PrimaryButton onMouseDown={nextPhase} disabled={!twistPrediction}>
-          Test Your Prediction →
-        </PrimaryButton>
-      </div>
-    </div>
-  );
-
-  const renderTwistPlay = () => {
-    const viscosityAtRate = Math.max(100 - twistShearRate * 0.8, 15);
-
-    return (
-      <div className="bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl p-8">
-        <h2 className="text-2xl font-bold text-white mb-4 text-center">
-          Shear Rate vs Viscosity
-        </h2>
-
-        <div className="bg-slate-900 rounded-xl p-4 mb-6">
-          <svg viewBox="0 0 400 280" className="w-full h-64">
-            <rect width="400" height="280" fill="#0f172a" />
-
-            {/* Graph axes */}
-            <line x1="60" y1="220" x2="360" y2="220" stroke="#475569" strokeWidth="2" />
-            <line x1="60" y1="40" x2="60" y2="220" stroke="#475569" strokeWidth="2" />
-
-            {/* Axis labels */}
-            <text x="210" y="250" textAnchor="middle" className="fill-slate-400 text-sm">
-              Shear Rate (s⁻¹)
-            </text>
-            <text x="25" y="130" textAnchor="middle" className="fill-slate-400 text-sm" transform="rotate(-90, 25, 130)">
-              Viscosity (Pa·s)
-            </text>
-
-            {/* Shear-thinning curve */}
-            <path
-              d="M 60 60 Q 100 65, 140 100 Q 180 140, 220 160 Q 280 185, 360 200"
-              stroke="#ef4444"
-              strokeWidth="3"
-              fill="none"
-            />
-
-            {/* Current point indicator */}
-            <circle
-              cx={60 + twistShearRate * 3}
-              cy={60 + (100 - viscosityAtRate) * 1.4}
-              r="8"
-              fill="#fbbf24"
-              stroke="#fff"
-              strokeWidth="2"
-            />
-
-            {/* Vertical line to x-axis */}
-            <line
-              x1={60 + twistShearRate * 3}
-              y1={60 + (100 - viscosityAtRate) * 1.4}
-              x2={60 + twistShearRate * 3}
-              y2="220"
-              stroke="#fbbf24"
-              strokeWidth="1"
-              strokeDasharray="4"
-            />
-
-            {/* Horizontal line to y-axis */}
-            <line
-              x1="60"
-              y1={60 + (100 - viscosityAtRate) * 1.4}
-              x2={60 + twistShearRate * 3}
-              y2={60 + (100 - viscosityAtRate) * 1.4}
-              stroke="#fbbf24"
-              strokeWidth="1"
-              strokeDasharray="4"
-            />
-
-            {/* Legend */}
-            <rect x="270" y="50" width="120" height="60" fill="#1e293b" rx="8" />
-            <circle cx="285" cy="70" r="5" fill="#ef4444" />
-            <text x="295" y="74" className="fill-slate-300 text-xs">
-              Shear-thinning
-            </text>
-            <circle cx="285" cy="90" r="5" fill="#fbbf24" />
-            <text x="295" y="94" className="fill-slate-300 text-xs">
-              Current point
-            </text>
-          </svg>
-        </div>
-
-        <div className="mb-6">
-          <label className="block text-slate-300 mb-2 text-center">
-            Adjust Shear Rate: {twistShearRate}%
-          </label>
-          <input
-            type="range"
-            min="0"
-            max="100"
-            value={twistShearRate}
-            onChange={(e) => setTwistShearRate(Number(e.target.value))}
-            className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer"
-          />
-          <div className="flex justify-between text-xs text-slate-500 mt-1">
-            <span>At rest</span>
-            <span>Maximum shear</span>
-          </div>
-        </div>
-
-        <div className="bg-slate-700/30 rounded-xl p-4 mb-6">
-          <div className="grid grid-cols-2 gap-4 text-center">
-            <div>
-              <p className="text-slate-400 text-sm">Shear Rate</p>
-              <p className="text-2xl font-bold text-orange-400">{twistShearRate}%</p>
-            </div>
-            <div>
-              <p className="text-slate-400 text-sm">Viscosity</p>
-              <p className="text-2xl font-bold text-red-400">{viscosityAtRate.toFixed(0)}%</p>
-            </div>
-          </div>
-        </div>
-
-        <div className="flex justify-center">
-          <PrimaryButton onMouseDown={nextPhase}>
-            See the Full Picture →
-          </PrimaryButton>
-        </div>
-      </div>
-    );
-  };
-
-  const renderTwistReview = () => (
-    <div className="bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl p-8">
-      <h2 className="text-2xl font-bold text-white mb-4 text-center">
-        Thixotropy: Time-Dependent Behavior
-      </h2>
-
-      {twistPrediction === 'gradual' ? (
-        <div className="bg-green-500/20 border border-green-500 rounded-xl p-4 mb-6">
-          <p className="text-green-400 font-semibold">✓ Exactly right!</p>
-        </div>
-      ) : (
-        <div className="bg-amber-500/20 border border-amber-500 rounded-xl p-4 mb-6">
-          <p className="text-amber-400">The answer: It gradually recovers over time!</p>
-        </div>
-      )}
-
-      <div className="space-y-4 mb-6">
-        <div className="bg-slate-700/50 rounded-xl p-4">
-          <h3 className="text-lg font-semibold text-orange-400 mb-2">⏱️ Thixotropy</h3>
-          <p className="text-slate-300">
-            Many shear-thinning fluids are also <strong>thixotropic</strong> - their viscosity
-            gradually recovers after shearing stops. This takes seconds to minutes.
-          </p>
-        </div>
-
-        <div className="bg-slate-700/50 rounded-xl p-4">
-          <h3 className="text-lg font-semibold text-red-400 mb-2">🔄 Recovery Process</h3>
-          <p className="text-slate-300">
-            After shearing stops, molecular chains slowly re-tangle and particles re-aggregate,
-            rebuilding the structure that gives ketchup its thick consistency.
-          </p>
-        </div>
-
-        <div className="bg-slate-700/50 rounded-xl p-4">
-          <h3 className="text-lg font-semibold text-yellow-400 mb-2">💡 Practical Tip</h3>
-          <p className="text-slate-300">
-            This is why you should use ketchup quickly after shaking! Wait too long and
-            you&apos;ll need to shake again. The &quot;memory&quot; of being sheared fades over time.
-          </p>
-        </div>
-      </div>
-
-      <div className="flex justify-center">
-        <PrimaryButton onMouseDown={nextPhase}>
-          Real-World Applications →
-        </PrimaryButton>
-      </div>
-    </div>
-  );
-
-  const renderTransfer = () => {
-    const appGraphics = [
-      <PaintGraphic key="paint" />,
-      <BloodGraphic key="blood" />,
-      <ToothpasteGraphic key="toothpaste" />,
-      <PrintingGraphic key="printing" />
+    // Legend items
+    const legendItems = [
+      { color: colors.ketchup, label: 'Ketchup (tomato paste)' },
+      { color: colors.polymer, label: 'Polymer chains' },
+      { color: colors.network, label: 'Network connections' },
+      { color: colors.broken, label: 'Broken bonds (flowing)' },
     ];
 
     return (
-      <div className="bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl p-8">
-        <h2 className="text-2xl font-bold text-white mb-4 text-center">
-          Real-World Applications
-        </h2>
-
-        {/* Tab buttons */}
-        <div className="flex gap-2 mb-6 overflow-x-auto pb-2">
-          {TRANSFER_APPS.map((app, index) => (
-            <button
-              key={index}
-              onMouseDown={(e) => {
-                e.preventDefault();
-                setActiveAppTab(index);
-              }}
-              className={`flex items-center gap-2 px-4 py-2 rounded-lg whitespace-nowrap transition-all ${
-                activeAppTab === index
-                  ? 'bg-red-500 text-white'
-                  : completedApps.has(index)
-                  ? 'bg-green-600/20 text-green-400 border border-green-600'
-                  : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
-              }`}
-            >
-              <span>{app.icon}</span>
-              <span className="text-sm font-medium">{app.title}</span>
-              {completedApps.has(index) && <span>✓</span>}
-            </button>
+      <div style={{ position: 'relative', width: '100%', maxWidth: '700px', margin: '0 auto' }}>
+        {/* Legend */}
+        <div style={{
+          position: 'absolute',
+          top: isMobile ? '8px' : '12px',
+          right: isMobile ? '8px' : '12px',
+          background: 'rgba(15, 23, 42, 0.95)',
+          borderRadius: '8px',
+          padding: isMobile ? '8px' : '12px',
+          border: `1px solid ${colors.border}`,
+          zIndex: 10,
+          maxWidth: isMobile ? '130px' : '170px'
+        }}>
+          <p style={{ fontSize: '10px', fontWeight: 700, color: colors.textMuted, marginBottom: '6px', textTransform: 'uppercase' }}>
+            Legend
+          </p>
+          {legendItems.map((item, i) => (
+            <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '3px' }}>
+              <div style={{ width: '10px', height: '10px', borderRadius: '2px', background: item.color, flexShrink: 0 }} />
+              <span style={{ fontSize: '10px', color: colors.textSecondary, lineHeight: 1.2 }}>{item.label}</span>
+            </div>
           ))}
         </div>
 
-        {/* Active application content */}
-        <div className="bg-slate-700/30 rounded-xl p-6 mb-6">
-          <div className="flex items-center gap-3 mb-4">
-            <span className="text-4xl">{TRANSFER_APPS[activeAppTab].icon}</span>
-            <h3 className="text-xl font-bold text-white">{TRANSFER_APPS[activeAppTab].title}</h3>
-          </div>
+        <svg
+          viewBox={`0 0 ${width} ${height}`}
+          preserveAspectRatio="xMidYMid meet"
+          style={{ width: '100%', height: 'auto', display: 'block' }}
+        >
+          <defs>
+            <linearGradient id="ketchupBottle" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor={colors.ketchupLight} />
+              <stop offset="50%" stopColor={colors.ketchup} />
+              <stop offset="100%" stopColor={colors.ketchupDark} />
+            </linearGradient>
+            <linearGradient id="ketchupInside" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor={colors.ketchupDark} />
+              <stop offset="100%" stopColor="#7f1d1d" />
+            </linearGradient>
+          </defs>
 
-          <p className="text-slate-300 mb-4">{TRANSFER_APPS[activeAppTab].description}</p>
+          {/* Background */}
+          <rect x="0" y="0" width={width} height={height} fill={colors.bgDark} rx="12" />
 
-          {/* Application graphic */}
-          <div className="bg-slate-900 rounded-xl overflow-hidden mb-4">
-            {appGraphics[activeAppTab]}
-          </div>
+          {/* Title */}
+          <text x={cx} y="28" textAnchor="middle" fill={colors.textPrimary} fontSize={isMobile ? 16 : 20} fontWeight="bold">
+            Shear-Thinning Fluid: Ketchup
+          </text>
+          <text x={cx} y="48" textAnchor="middle" fill={colors.textSecondary} fontSize={isMobile ? 11 : 14} fontWeight="500">
+            Polymer networks break under shear stress
+          </text>
 
-          {!completedApps.has(activeAppTab) && (
-            <button
-              onMouseDown={(e) => {
-                e.preventDefault();
-                handleAppComplete(activeAppTab);
-              }}
-              className="w-full py-3 bg-green-600 hover:bg-green-700 text-white rounded-xl font-semibold transition-all"
-            >
-              Mark as Understood ✓
-            </button>
-          )}
-        </div>
-
-        {/* Progress indicator */}
-        <div className="text-center mb-6">
-          <p className="text-slate-400">
-            Completed: {completedApps.size} / {TRANSFER_APPS.length}
-          </p>
-          <div className="w-full bg-slate-700 rounded-full h-2 mt-2">
-            <div
-              className="bg-gradient-to-r from-red-500 to-orange-500 h-2 rounded-full transition-all"
-              style={{ width: `${(completedApps.size / TRANSFER_APPS.length) * 100}%` }}
+          {/* Ketchup bottle */}
+          <g transform={`translate(${cx - 40}, 60) ${interactive && isShaking ? `rotate(${Math.sin(animTime * 20) * 8}, 40, 80)` : ''}`}>
+            {/* Bottle body */}
+            <path
+              d="M 20 50 L 20 140 Q 20 160, 40 160 Q 60 160, 60 140 L 60 50 Q 60 30, 40 30 Q 20 30, 20 50"
+              fill="url(#ketchupBottle)"
+              stroke={colors.ketchupDark}
+              strokeWidth="2"
             />
-          </div>
-        </div>
+            {/* Bottle neck */}
+            <rect x="32" y="5" width="16" height="28" fill={colors.ketchup} />
+            {/* Cap */}
+            <rect x="28" y="0" width="24" height="10" fill={colors.warningLight} rx="3" />
+            {/* Label */}
+            <rect x="25" y="65" width="30" height="45" fill="#fef3c7" rx="3" />
+            <text x="40" y="85" textAnchor="middle" fill={colors.ketchupDark} fontSize="7" fontWeight="bold">
+              KETCHUP
+            </text>
+            {/* Ketchup inside - level based on flow */}
+            <path
+              d={`M 22 ${interactive ? 145 - (100 - networkIntegrity) * 0.3 : 145} L 22 138 Q 22 155, 40 155 Q 58 155, 58 138 L 58 ${interactive ? 145 - (100 - networkIntegrity) * 0.3 : 145} Z`}
+              fill="url(#ketchupInside)"
+            />
+          </g>
 
-        <div className="flex justify-center">
-          <PrimaryButton
-            onMouseDown={nextPhase}
-            disabled={completedApps.size < TRANSFER_APPS.length}
-          >
-            {completedApps.size < TRANSFER_APPS.length
-              ? `Complete all ${TRANSFER_APPS.length} applications to continue`
-              : 'Take the Knowledge Test →'}
-          </PrimaryButton>
-        </div>
+          {/* Molecular network visualization */}
+          <g transform={`translate(${cx + (isMobile ? 60 : 100)}, 70)`}>
+            <rect x="-10" y="-10" width={isMobile ? 120 : 200} height={isMobile ? 160 : 200} fill={colors.bgCard} rx="8" stroke={colors.border} />
+            <text x={isMobile ? 50 : 90} y="10" textAnchor="middle" fill={colors.textSecondary} fontSize="11" fontWeight="600">
+              Molecular Structure
+            </text>
+
+            {/* Draw network connections */}
+            {networkNodes.map((node, i) => {
+              const neighbors = networkNodes.filter((n, j) =>
+                j !== i && Math.abs(networkNodes.indexOf(n) - i) < 3
+              );
+              return neighbors.slice(0, 2).map((neighbor, k) => {
+                const distance = Math.sqrt(
+                  Math.pow(node.x - neighbor.x - (cx + (isMobile ? 60 : 100)), 2) +
+                  Math.pow(node.y - neighbor.y - 70, 2)
+                );
+                const isIntact = interactive ? (networkIntegrity / 100) > Math.random() * 0.5 : true;
+                return (
+                  <line
+                    key={`${node.id}-${k}`}
+                    x1={node.x - (cx + (isMobile ? 60 : 100)) + 10}
+                    y1={node.y - 50}
+                    x2={neighbor.x - (cx + (isMobile ? 60 : 100)) + 10}
+                    y2={neighbor.y - 50}
+                    stroke={isIntact ? colors.network : colors.broken}
+                    strokeWidth={isIntact ? 2 : 1}
+                    strokeDasharray={isIntact ? '0' : '4,4'}
+                    opacity={isIntact ? 0.7 : 0.4}
+                  />
+                );
+              });
+            })}
+
+            {/* Draw nodes (polymer particles) */}
+            {networkNodes.map((node, i) => (
+              <circle
+                key={node.id}
+                cx={node.x - (cx + (isMobile ? 60 : 100)) + 10}
+                cy={node.y - 50}
+                r={isMobile ? 4 : 6}
+                fill={colors.polymer}
+                opacity={0.9}
+              />
+            ))}
+          </g>
+
+          {/* Viscosity meter (interactive only) */}
+          {interactive && (
+            <g transform={`translate(${isMobile ? 20 : 40}, ${height - 80})`}>
+              <rect x="0" y="0" width={isMobile ? 100 : 140} height="60" fill={colors.bgCard} rx="8" stroke={colors.border} />
+              <text x={isMobile ? 50 : 70} y="18" textAnchor="middle" fill={colors.textSecondary} fontSize="11" fontWeight="600">
+                Viscosity
+              </text>
+              <rect x="10" y="28" width={isMobile ? 80 : 120} height="12" fill={colors.bgDark} rx="4" />
+              <rect
+                x="10"
+                y="28"
+                width={Math.max(10, (viscosity / 100) * (isMobile ? 80 : 120))}
+                height="12"
+                fill={viscosity > 50 ? colors.primary : colors.success}
+                rx="4"
+              />
+              <text x={isMobile ? 50 : 70} y="54" textAnchor="middle" fill={colors.textPrimary} fontSize="12" fontWeight="bold">
+                {Math.round(viscosity)} Pa·s
+              </text>
+            </g>
+          )}
+
+          {/* Network integrity meter (interactive only) */}
+          {interactive && (
+            <g transform={`translate(${width - (isMobile ? 120 : 180)}, ${height - 80})`}>
+              <rect x="0" y="0" width={isMobile ? 100 : 140} height="60" fill={colors.bgCard} rx="8" stroke={colors.border} />
+              <text x={isMobile ? 50 : 70} y="18" textAnchor="middle" fill={colors.textSecondary} fontSize="11" fontWeight="600">
+                Network
+              </text>
+              <rect x="10" y="28" width={isMobile ? 80 : 120} height="12" fill={colors.bgDark} rx="4" />
+              <rect
+                x="10"
+                y="28"
+                width={(networkIntegrity / 100) * (isMobile ? 80 : 120)}
+                height="12"
+                fill={networkIntegrity > 50 ? colors.network : colors.broken}
+                rx="4"
+              />
+              <text x={isMobile ? 50 : 70} y="54" textAnchor="middle" fill={colors.textPrimary} fontSize="12" fontWeight="bold">
+                {Math.round(networkIntegrity)}% Intact
+              </text>
+            </g>
+          )}
+
+          {/* Physics formula */}
+          <g transform={`translate(${isMobile ? 15 : 25}, ${height - (isMobile ? 35 : 30)})`}>
+            <text fill={colors.textSecondary} fontSize={isMobile ? 10 : 12} fontWeight="600">
+              <tspan fill={colors.primaryLight}>η</tspan> = η₀ × (1 + (λ × <tspan fill={colors.accent}>γ̇</tspan>)<tspan baselineShift="super" fontSize="8">n-1</tspan>)
+            </text>
+            <text y="14" fill={colors.textMuted} fontSize={isMobile ? 8 : 10}>
+              Viscosity decreases with shear rate (n &lt; 1)
+            </text>
+          </g>
+        </svg>
       </div>
     );
   };
 
-  const renderTest = () => {
-    const score = testAnswers.reduce((acc, answer, index) =>
-      answer === TEST_QUESTIONS[index].correct ? acc + 1 : acc, 0
-    );
-    const allAnswered = testAnswers.every(a => a !== -1);
-    const passed = score >= 7;
+  // ============================================================
+  // BOTTOM BAR
+  // ============================================================
 
-    if (showTestResults) {
-      return (
-        <div className="bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl p-8">
-          <h2 className="text-2xl font-bold text-white mb-6 text-center">
-            Test Results
-          </h2>
+  const renderBottomBar = (showBack: boolean, canProceed: boolean, nextLabel: string, onNext?: () => void) => {
+    const handleNext = () => {
+      if (!canProceed) return;
+      playSound('click');
+      if (onNext) {
+        onNext();
+      } else {
+        const currentIndex = validPhases.indexOf(phase);
+        if (currentIndex < validPhases.length - 1) {
+          goToPhase(validPhases[currentIndex + 1]);
+        }
+      }
+    };
 
-          <div className={`text-center p-8 rounded-xl mb-6 ${passed ? 'bg-green-500/20' : 'bg-red-500/20'}`}>
-            <div className="text-6xl mb-4">{passed ? '🎉' : '📚'}</div>
-            <p className={`text-3xl font-bold ${passed ? 'text-green-400' : 'text-red-400'}`}>
-              {score} / {TEST_QUESTIONS.length}
-            </p>
-            <p className="text-slate-300 mt-2">
-              {passed ? 'Congratulations! You passed!' : 'Keep learning! You need 70% to pass.'}
-            </p>
-          </div>
-
-          {/* Review answers */}
-          <div className="space-y-3 mb-6 max-h-64 overflow-y-auto">
-            {TEST_QUESTIONS.map((q, index) => (
-              <div
-                key={index}
-                className={`p-3 rounded-lg ${
-                  testAnswers[index] === q.correct ? 'bg-green-500/10' : 'bg-red-500/10'
-                }`}
-              >
-                <p className="text-sm text-slate-300">Q{index + 1}: {q.question}</p>
-                <p className={`text-xs mt-1 ${
-                  testAnswers[index] === q.correct ? 'text-green-400' : 'text-red-400'
-                }`}>
-                  {testAnswers[index] === q.correct ? '✓ Correct' : `✗ Correct: ${q.options[q.correct]}`}
-                </p>
-              </div>
-            ))}
-          </div>
-
-          <div className="flex justify-center">
-            {passed ? (
-              <PrimaryButton onMouseDown={nextPhase}>
-                Complete Mastery →
-              </PrimaryButton>
-            ) : (
-              <PrimaryButton onMouseDown={() => {
-                setTestAnswers(Array(10).fill(-1));
-                setShowTestResults(false);
-              }}>
-                Try Again
-              </PrimaryButton>
-            )}
-          </div>
-        </div>
-      );
-    }
+    const handleBack = () => {
+      playSound('click');
+      const currentIndex = validPhases.indexOf(phase);
+      if (currentIndex > 0) {
+        goToPhase(validPhases[currentIndex - 1]);
+      }
+    };
 
     return (
-      <div className="bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl p-8">
-        <h2 className="text-2xl font-bold text-white mb-2 text-center">
-          Knowledge Test
-        </h2>
-        <p className="text-slate-400 text-center mb-6">
-          Answer all 10 questions (70% to pass)
-        </p>
+      <div style={{
+        position: 'fixed',
+        bottom: 0,
+        left: 0,
+        right: 0,
+        zIndex: 1000,
+        minHeight: '72px',
+        background: colors.bgCard,
+        borderTop: `1px solid ${colors.border}`,
+        boxShadow: '0 -4px 20px rgba(0,0,0,0.5)',
+        padding: '12px 20px',
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        gap: '12px'
+      }}>
+        {showBack ? (
+          <button
+            onClick={handleBack}
+            style={{
+              padding: '12px 20px',
+              borderRadius: '12px',
+              border: `1px solid ${colors.border}`,
+              backgroundColor: colors.bgCardLight,
+              color: colors.textSecondary,
+              fontSize: '14px',
+              fontWeight: 600,
+              cursor: 'pointer',
+              minHeight: '48px'
+            }}
+          >
+            ← Back
+          </button>
+        ) : <div />}
 
-        <div className="space-y-6 max-h-96 overflow-y-auto mb-6">
-          {TEST_QUESTIONS.map((q, qIndex) => (
-            <div key={qIndex} className="bg-slate-700/30 rounded-xl p-4">
-              <p className="text-white font-medium mb-3">
-                {qIndex + 1}. {q.question}
+        {canProceed ? (
+          <button
+            onClick={handleNext}
+            style={{
+              padding: '14px 28px',
+              borderRadius: '12px',
+              border: 'none',
+              background: `linear-gradient(135deg, ${colors.primary} 0%, ${colors.accent} 100%)`,
+              color: 'white',
+              fontSize: '16px',
+              fontWeight: 700,
+              cursor: 'pointer',
+              minHeight: '52px',
+              minWidth: '160px',
+              boxShadow: `0 4px 15px ${colors.primary}40`
+            }}
+          >
+            {nextLabel}
+          </button>
+        ) : (
+          <div style={{
+            padding: '14px 28px',
+            borderRadius: '12px',
+            backgroundColor: colors.bgCardLight,
+            color: colors.textMuted,
+            fontSize: '14px',
+            fontWeight: 500,
+            minHeight: '52px',
+            display: 'flex',
+            alignItems: 'center'
+          }}>
+            Select an option above
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  // ============================================================
+  // HOOK PHASE
+  // ============================================================
+
+  if (phase === 'hook') {
+    return (
+      <div style={{
+        height: '100dvh',
+        display: 'flex',
+        flexDirection: 'column',
+        background: `linear-gradient(180deg, ${colors.bgGradientStart} 0%, ${colors.bgGradientEnd} 100%)`,
+        overflow: 'hidden'
+      }}>
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          overflowX: 'hidden',
+          WebkitOverflowScrolling: 'touch',
+          paddingBottom: '100px'
+        }}>
+          <div style={{ maxWidth: '800px', margin: '0 auto', padding: '20px', textAlign: 'center' }}>
+            <div style={{ fontSize: isMobile ? '80px' : '120px', marginBottom: '20px' }}>
+              🍅
+            </div>
+
+            <h1 style={{
+              fontSize: isMobile ? '28px' : '40px',
+              fontWeight: 800,
+              color: colors.textPrimary,
+              marginBottom: '16px',
+              lineHeight: 1.2
+            }}>
+              Why Does Shaking Help?
+            </h1>
+
+            <p style={{
+              fontSize: isMobile ? '16px' : '20px',
+              color: colors.textSecondary,
+              marginBottom: '32px',
+              maxWidth: '600px',
+              margin: '0 auto 32px auto',
+              lineHeight: 1.6
+            }}>
+              Ketchup won't come out... then suddenly it <strong style={{ color: colors.primaryLight }}>gushes everywhere</strong>.
+              What changed?
+            </p>
+
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '20px',
+              padding: '24px',
+              marginBottom: '24px',
+              border: `1px solid ${colors.border}`
+            }}>
+              <div style={{ display: 'flex', justifyContent: 'center', gap: '40px', flexWrap: 'wrap' }}>
+                <div style={{ textAlign: 'center' }}>
+                  <div style={{ fontSize: '48px', marginBottom: '8px' }}>🍾</div>
+                  <p style={{ color: colors.textSecondary, fontSize: '14px' }}>Tip bottle...</p>
+                  <p style={{ color: colors.primary, fontSize: '16px', fontWeight: 600 }}>Nothing!</p>
+                </div>
+                <div style={{ textAlign: 'center' }}>
+                  <div style={{ fontSize: '48px', marginBottom: '8px' }}>🫨</div>
+                  <p style={{ color: colors.textSecondary, fontSize: '14px' }}>Shake it...</p>
+                  <p style={{ color: colors.success, fontSize: '16px', fontWeight: 600 }}>It flows!</p>
+                </div>
+              </div>
+            </div>
+
+            <p style={{
+              fontSize: '14px',
+              color: colors.textMuted,
+              fontStyle: 'italic'
+            }}>
+              The opposite of oobleck... this is <strong style={{ color: colors.primaryLight }}>shear-thinning!</strong>
+            </p>
+          </div>
+        </div>
+
+        {renderBottomBar(false, true, "Let's Investigate →")}
+      </div>
+    );
+  }
+
+  // ============================================================
+  // PREDICT PHASE
+  // ============================================================
+
+  if (phase === 'predict') {
+    const predictions = [
+      { id: 'thicker', label: 'It gets thicker and harder to pour', icon: '🧱' },
+      { id: 'thinner', label: 'It gets thinner and flows easily', icon: '💧' },
+      { id: 'same', label: 'It stays exactly the same', icon: '➡️' },
+      { id: 'solid', label: 'It turns completely solid', icon: '🧊' }
+    ];
+
+    return (
+      <div style={{
+        height: '100dvh',
+        display: 'flex',
+        flexDirection: 'column',
+        background: `linear-gradient(180deg, ${colors.bgGradientStart} 0%, ${colors.bgGradientEnd} 100%)`,
+        overflow: 'hidden'
+      }}>
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          overflowX: 'hidden',
+          WebkitOverflowScrolling: 'touch',
+          paddingBottom: '100px'
+        }}>
+          <div style={{ maxWidth: '800px', margin: '0 auto', padding: '20px' }}>
+            <div style={{ textAlign: 'center', marginBottom: '16px' }}>
+              <p style={{ color: colors.primary, fontSize: '12px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '8px' }}>
+                Step 1 • Make a Prediction
               </p>
-              <div className="space-y-2">
-                {q.options.map((option, oIndex) => (
+              <h2 style={{ fontSize: isMobile ? '22px' : '28px', fontWeight: 700, color: colors.textPrimary }}>
+                Ketchup Bottle Setup
+              </h2>
+            </div>
+
+            {/* STATIC GRAPHIC */}
+            <div style={{
+              width: '100%',
+              maxWidth: '700px',
+              margin: '0 auto 20px auto',
+              aspectRatio: '16/10',
+              background: colors.bgCard,
+              borderRadius: '16px',
+              border: `1px solid ${colors.border}`,
+              overflow: 'hidden'
+            }}>
+              {renderKetchupVisualization(false)}
+            </div>
+
+            {/* What You're Looking At */}
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '12px',
+              padding: '16px',
+              marginBottom: '20px',
+              border: `1px solid ${colors.border}`
+            }}>
+              <h3 style={{ color: colors.textPrimary, fontSize: '15px', fontWeight: 700, marginBottom: '8px' }}>
+                📋 What You're Looking At:
+              </h3>
+              <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.6, margin: 0 }}>
+                A <strong style={{ color: colors.primary }}>ketchup bottle</strong> and its internal molecular structure.
+                The <span style={{ color: colors.polymer }}>yellow dots</span> are polymer particles (from tomatoes).
+                The <span style={{ color: colors.network }}>purple lines</span> show how these particles form a tangled network.
+                This network gives ketchup its thick, gel-like consistency at rest.
+              </p>
+            </div>
+
+            {/* Prediction Question */}
+            <div style={{ marginBottom: '20px' }}>
+              <h3 style={{ color: colors.textPrimary, fontSize: '18px', fontWeight: 700, marginBottom: '12px' }}>
+                🤔 What happens when you shake/squeeze the bottle?
+              </h3>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                {predictions.map(p => (
                   <button
-                    key={oIndex}
-                    onMouseDown={(e) => {
-                      e.preventDefault();
-                      handleTestAnswer(qIndex, oIndex);
+                    key={p.id}
+                    onClick={() => {
+                      setPrediction(p.id);
+                      playSound('click');
                     }}
-                    className={`w-full p-3 rounded-lg text-left text-sm transition-all ${
-                      testAnswers[qIndex] === oIndex
-                        ? testAnswers[qIndex] === q.correct
-                          ? 'bg-green-500/20 border border-green-500 text-green-300'
-                          : 'bg-red-500/20 border border-red-500 text-red-300'
-                        : 'bg-slate-600/50 text-slate-300 hover:bg-slate-600'
-                    }`}
+                    style={{
+                      padding: '16px',
+                      borderRadius: '12px',
+                      border: prediction === p.id ? `2px solid ${colors.primary}` : `1px solid ${colors.border}`,
+                      backgroundColor: prediction === p.id ? `${colors.primary}20` : colors.bgCard,
+                      cursor: 'pointer',
+                      textAlign: 'left',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '12px',
+                      transition: 'all 0.2s ease'
+                    }}
                   >
-                    {option}
+                    <span style={{ fontSize: '24px' }}>{p.icon}</span>
+                    <span style={{ color: colors.textPrimary, fontSize: '14px', flex: 1 }}>{p.label}</span>
+                    {prediction === p.id && (
+                      <span style={{ color: colors.primary, fontSize: '20px', fontWeight: 700 }}>✓</span>
+                    )}
                   </button>
                 ))}
               </div>
             </div>
-          ))}
+
+            {prediction && (
+              <div style={{
+                background: `linear-gradient(135deg, ${colors.primary}15 0%, ${colors.accent}15 100%)`,
+                borderRadius: '12px',
+                padding: '16px',
+                border: `1px solid ${colors.primary}30`
+              }}>
+                <p style={{ color: colors.textSecondary, fontSize: '14px', marginBottom: '12px' }}>
+                  💭 Why do you think this happens? <span style={{ color: colors.textMuted }}>(Optional)</span>
+                </p>
+                <textarea
+                  placeholder="Share your reasoning..."
+                  style={{
+                    width: '100%',
+                    minHeight: '60px',
+                    padding: '12px',
+                    borderRadius: '8px',
+                    background: colors.bgCard,
+                    border: `1px solid ${colors.border}`,
+                    color: colors.textPrimary,
+                    fontSize: '14px',
+                    resize: 'vertical'
+                  }}
+                />
+              </div>
+            )}
+          </div>
         </div>
 
-        <div className="flex justify-center">
-          <PrimaryButton
-            onMouseDown={() => setShowTestResults(true)}
-            disabled={!allAnswered}
-          >
-            {allAnswered ? 'Submit Answers' : `Answer all questions (${testAnswers.filter(a => a !== -1).length}/${TEST_QUESTIONS.length})`}
-          </PrimaryButton>
+        {renderBottomBar(true, !!prediction, 'Test My Prediction →')}
+      </div>
+    );
+  }
+
+  // ============================================================
+  // PLAY PHASE
+  // ============================================================
+
+  if (phase === 'play') {
+    return (
+      <div style={{
+        height: '100dvh',
+        display: 'flex',
+        flexDirection: 'column',
+        background: `linear-gradient(180deg, ${colors.bgGradientStart} 0%, ${colors.bgGradientEnd} 100%)`,
+        overflow: 'hidden'
+      }}>
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          overflowX: 'hidden',
+          WebkitOverflowScrolling: 'touch',
+          paddingBottom: '100px'
+        }}>
+          <div style={{ maxWidth: '800px', margin: '0 auto', padding: '20px' }}>
+            <div style={{ textAlign: 'center', marginBottom: '16px' }}>
+              <p style={{ color: colors.primary, fontSize: '12px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '8px' }}>
+                Step 2 • Experiment
+              </p>
+              <h2 style={{ fontSize: isMobile ? '22px' : '28px', fontWeight: 700, color: colors.textPrimary }}>
+                Shake the Ketchup!
+              </h2>
+            </div>
+
+            {/* INTERACTIVE GRAPHIC */}
+            <div style={{
+              width: '100%',
+              maxWidth: '700px',
+              margin: '0 auto 20px auto',
+              background: colors.bgCard,
+              borderRadius: '16px',
+              border: `1px solid ${colors.border}`,
+              overflow: 'hidden'
+            }}>
+              {renderKetchupVisualization(true)}
+            </div>
+
+            {/* Controls */}
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '12px',
+              padding: '20px',
+              marginBottom: '20px',
+              border: `1px solid ${colors.border}`
+            }}>
+              <h3 style={{ color: colors.textPrimary, fontSize: '16px', fontWeight: 700, marginBottom: '16px' }}>
+                🎮 Controls: Apply Shear Stress
+              </h3>
+
+              {/* Shear rate slider */}
+              <div style={{ marginBottom: '20px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                  <span style={{ color: colors.textMuted, fontSize: '13px', fontWeight: 600 }}>Rest</span>
+                  <span style={{ color: colors.textPrimary, fontSize: '14px', fontWeight: 700 }}>
+                    Shear Rate: {shearRate}%
+                  </span>
+                  <span style={{ color: colors.primary, fontSize: '13px', fontWeight: 600 }}>Max Stress</span>
+                </div>
+                <input
+                  type="range"
+                  min="0"
+                  max="100"
+                  value={shearRate}
+                  onChange={(e) => setShearRate(Number(e.target.value))}
+                  onInput={(e) => setShearRate(Number((e.target as HTMLInputElement).value))}
+                  style={{
+                    width: '100%',
+                    height: '8px',
+                    borderRadius: '4px',
+                    cursor: 'pointer',
+                    accentColor: colors.primary
+                  }}
+                />
+              </div>
+
+              {/* Shake button */}
+              <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
+                <button
+                  onMouseDown={() => setIsShaking(true)}
+                  onMouseUp={() => setIsShaking(false)}
+                  onMouseLeave={() => setIsShaking(false)}
+                  onTouchStart={() => setIsShaking(true)}
+                  onTouchEnd={() => setIsShaking(false)}
+                  style={{
+                    padding: '14px 28px',
+                    borderRadius: '12px',
+                    border: 'none',
+                    background: isShaking
+                      ? `linear-gradient(135deg, ${colors.accent} 0%, ${colors.primary} 100%)`
+                      : `linear-gradient(135deg, ${colors.primary} 0%, ${colors.primaryDark} 100%)`,
+                    color: 'white',
+                    fontSize: '16px',
+                    fontWeight: 700,
+                    cursor: 'pointer',
+                    minWidth: '150px',
+                    transform: isShaking ? 'scale(0.95)' : 'scale(1)',
+                    transition: 'transform 0.1s'
+                  }}
+                >
+                  {isShaking ? '🫨 Shaking...' : '🍅 Hold to Shake'}
+                </button>
+              </div>
+            </div>
+
+            {/* What's Happening */}
+            <div style={{
+              background: `linear-gradient(135deg, ${networkIntegrity < 50 ? colors.success : colors.primary}15 0%, ${colors.bgCard} 100%)`,
+              borderRadius: '12px',
+              padding: '16px',
+              marginBottom: '20px',
+              border: `1px solid ${networkIntegrity < 50 ? colors.success : colors.primary}40`
+            }}>
+              <h4 style={{ color: colors.textPrimary, fontSize: '14px', fontWeight: 700, marginBottom: '8px' }}>
+                👀 What's Happening:
+              </h4>
+              {networkIntegrity > 70 ? (
+                <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.6, margin: 0 }}>
+                  The polymer network is <strong style={{ color: colors.network }}>mostly intact</strong>.
+                  Ketchup behaves like a thick gel — high viscosity, won't flow easily.
+                </p>
+              ) : networkIntegrity > 30 ? (
+                <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.6, margin: 0 }}>
+                  The network is <strong style={{ color: colors.warning }}>breaking down!</strong>
+                  Polymer chains are aligning and untangling. Viscosity is dropping.
+                </p>
+              ) : (
+                <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.6, margin: 0 }}>
+                  Network is <strong style={{ color: colors.success }}>mostly broken!</strong>
+                  Polymers are aligned — ketchup flows easily like a liquid. Low viscosity!
+                </p>
+              )}
+            </div>
+
+            {/* Formula */}
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '12px',
+              padding: '16px',
+              border: `1px solid ${colors.border}`
+            }}>
+              <h4 style={{ color: colors.textPrimary, fontSize: '14px', fontWeight: 700, marginBottom: '12px' }}>
+                📐 The Physics:
+              </h4>
+              <div style={{ fontFamily: 'monospace', fontSize: '16px', marginBottom: '12px' }}>
+                <span style={{ color: colors.primaryLight, fontWeight: 700 }}>η</span>
+                <span style={{ color: colors.textSecondary }}> = η₀ × (1 + (λ × </span>
+                <span style={{ color: colors.accent, fontWeight: 700 }}>γ̇</span>
+                <span style={{ color: colors.textSecondary }}>)</span>
+                <span style={{ color: colors.textSecondary, fontSize: '12px' }}><sup>n-1</sup></span>
+                <span style={{ color: colors.textSecondary }}>) where </span>
+                <span style={{ color: colors.success, fontWeight: 700 }}>n &lt; 1</span>
+              </div>
+              <div style={{ fontSize: '12px', color: colors.textSecondary, lineHeight: 1.8 }}>
+                <div><span style={{ color: colors.primaryLight, fontWeight: 700 }}>η</span> = Viscosity (resistance to flow)</div>
+                <div><span style={{ color: colors.accent, fontWeight: 700 }}>γ̇</span> = Shear rate (stress applied)</div>
+                <div><span style={{ color: colors.success, fontWeight: 700 }}>n &lt; 1</span> = Shear-thinning (viscosity DECREASES with shear)</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {renderBottomBar(true, true, 'See the Results →')}
+      </div>
+    );
+  }
+
+  // ============================================================
+  // REVIEW PHASE
+  // ============================================================
+
+  if (phase === 'review') {
+    const wasCorrect = prediction === 'thinner';
+
+    return (
+      <div style={{
+        height: '100dvh',
+        display: 'flex',
+        flexDirection: 'column',
+        background: `linear-gradient(180deg, ${colors.bgGradientStart} 0%, ${colors.bgGradientEnd} 100%)`,
+        overflow: 'hidden'
+      }}>
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          overflowX: 'hidden',
+          WebkitOverflowScrolling: 'touch',
+          paddingBottom: '100px'
+        }}>
+          <div style={{ maxWidth: '800px', margin: '0 auto', padding: '20px' }}>
+            <div style={{
+              textAlign: 'center',
+              padding: '24px',
+              background: wasCorrect ? `${colors.success}15` : `${colors.primary}15`,
+              borderRadius: '16px',
+              marginBottom: '24px',
+              border: `1px solid ${wasCorrect ? colors.success : colors.primary}40`
+            }}>
+              <div style={{ fontSize: '48px', marginBottom: '12px' }}>
+                {wasCorrect ? '🎯' : '💡'}
+              </div>
+              <h2 style={{
+                fontSize: isMobile ? '22px' : '28px',
+                fontWeight: 700,
+                color: wasCorrect ? colors.success : colors.primaryLight,
+                marginBottom: '8px'
+              }}>
+                {wasCorrect ? 'Excellent Prediction!' : 'Great Learning Moment!'}
+              </h2>
+              <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
+                {wasCorrect
+                  ? 'You correctly predicted that ketchup gets thinner when shaken!'
+                  : 'The answer is: It gets thinner and flows easily'
+                }
+              </p>
+            </div>
+
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '16px',
+              padding: '24px',
+              marginBottom: '24px',
+              border: `1px solid ${colors.border}`
+            }}>
+              <h3 style={{ color: colors.textPrimary, fontSize: '18px', fontWeight: 700, marginBottom: '16px' }}>
+                🔬 Why This Happens: Network Breakdown
+              </h3>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                <div style={{ display: 'flex', gap: '16px', alignItems: 'flex-start' }}>
+                  <div style={{
+                    width: '40px',
+                    height: '40px',
+                    borderRadius: '50%',
+                    background: `linear-gradient(135deg, ${colors.primary} 0%, ${colors.primaryDark} 100%)`,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    color: 'white',
+                    fontWeight: 700,
+                    flexShrink: 0
+                  }}>1</div>
+                  <div>
+                    <h4 style={{ color: colors.textPrimary, fontSize: '15px', fontWeight: 600, marginBottom: '4px' }}>
+                      At Rest: Tangled Network
+                    </h4>
+                    <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.5, margin: 0 }}>
+                      Polymer molecules form a tangled, interconnected network. This creates high viscosity.
+                    </p>
+                  </div>
+                </div>
+
+                <div style={{ display: 'flex', gap: '16px', alignItems: 'flex-start' }}>
+                  <div style={{
+                    width: '40px',
+                    height: '40px',
+                    borderRadius: '50%',
+                    background: `linear-gradient(135deg, ${colors.warning} 0%, ${colors.accent} 100%)`,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    color: 'white',
+                    fontWeight: 700,
+                    flexShrink: 0
+                  }}>2</div>
+                  <div>
+                    <h4 style={{ color: colors.textPrimary, fontSize: '15px', fontWeight: 600, marginBottom: '4px' }}>
+                      Under Shear: Breaking Bonds
+                    </h4>
+                    <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.5, margin: 0 }}>
+                      Shaking/squeezing applies stress that breaks the weak bonds holding the network together.
+                    </p>
+                  </div>
+                </div>
+
+                <div style={{ display: 'flex', gap: '16px', alignItems: 'flex-start' }}>
+                  <div style={{
+                    width: '40px',
+                    height: '40px',
+                    borderRadius: '50%',
+                    background: `linear-gradient(135deg, ${colors.success} 0%, #16a34a 100%)`,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    color: 'white',
+                    fontWeight: 700,
+                    flexShrink: 0
+                  }}>3</div>
+                  <div>
+                    <h4 style={{ color: colors.textPrimary, fontSize: '15px', fontWeight: 600, marginBottom: '4px' }}>
+                      Flowing: Aligned Polymers
+                    </h4>
+                    <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.5, margin: 0 }}>
+                      With broken network, polymers align with flow direction. Much lower resistance = low viscosity!
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div style={{
+              background: `linear-gradient(135deg, ${colors.primary}20 0%, ${colors.accent}20 100%)`,
+              borderRadius: '12px',
+              padding: '16px',
+              border: `1px solid ${colors.primary}40`
+            }}>
+              <h4 style={{ color: colors.primaryLight, fontSize: '14px', fontWeight: 700, marginBottom: '8px' }}>
+                💡 Key Insight
+              </h4>
+              <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.6, margin: 0 }}>
+                This is <strong style={{ color: colors.textPrimary }}>shear-thinning</strong> behavior —
+                the <strong>opposite</strong> of oobleck! Ketchup gets <em>thinner</em> under stress,
+                while oobleck gets <em>thicker</em>. Both are non-Newtonian, but in opposite directions.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {renderBottomBar(true, true, 'Try a Twist →')}
+      </div>
+    );
+  }
+
+  // ============================================================
+  // TWIST PREDICT PHASE
+  // ============================================================
+
+  if (phase === 'twist_predict') {
+    const twistPredictions = [
+      { id: 'same_both', label: 'Both behave the same — they\'re both thick liquids', icon: '🟰' },
+      { id: 'honey_thin', label: 'Honey also gets thinner when stirred', icon: '🍯' },
+      { id: 'honey_constant', label: 'Honey\'s viscosity stays constant (Newtonian)', icon: '✓' },
+      { id: 'honey_thick', label: 'Honey gets thicker when stirred', icon: '⬆️' }
+    ];
+
+    return (
+      <div style={{
+        height: '100dvh',
+        display: 'flex',
+        flexDirection: 'column',
+        background: `linear-gradient(180deg, ${colors.bgGradientStart} 0%, ${colors.bgGradientEnd} 100%)`,
+        overflow: 'hidden'
+      }}>
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          overflowX: 'hidden',
+          WebkitOverflowScrolling: 'touch',
+          paddingBottom: '100px'
+        }}>
+          <div style={{ maxWidth: '800px', margin: '0 auto', padding: '20px' }}>
+            <div style={{ textAlign: 'center', marginBottom: '16px' }}>
+              <p style={{ color: colors.accent, fontSize: '12px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '8px' }}>
+                🔄 Twist • Comparison
+              </p>
+              <h2 style={{ fontSize: isMobile ? '22px' : '28px', fontWeight: 700, color: colors.textPrimary }}>
+                Ketchup vs Honey
+              </h2>
+            </div>
+
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '16px',
+              padding: '24px',
+              marginBottom: '20px',
+              border: `1px solid ${colors.border}`
+            }}>
+              <div style={{ display: 'flex', justifyContent: 'center', gap: '60px', flexWrap: 'wrap' }}>
+                <div style={{ textAlign: 'center' }}>
+                  <div style={{ fontSize: '50px', marginBottom: '8px' }}>🍅</div>
+                  <p style={{ color: colors.primary, fontWeight: 600 }}>Ketchup</p>
+                  <p style={{ color: colors.textMuted, fontSize: '12px' }}>Shear-thinning</p>
+                </div>
+                <div style={{ textAlign: 'center' }}>
+                  <div style={{ fontSize: '50px', marginBottom: '8px' }}>🍯</div>
+                  <p style={{ color: colors.warning, fontWeight: 600 }}>Honey</p>
+                  <p style={{ color: colors.textMuted, fontSize: '12px' }}>???</p>
+                </div>
+              </div>
+            </div>
+
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '12px',
+              padding: '16px',
+              marginBottom: '20px',
+              border: `1px solid ${colors.border}`
+            }}>
+              <h3 style={{ color: colors.textPrimary, fontSize: '15px', fontWeight: 700, marginBottom: '8px' }}>
+                📋 The Question:
+              </h3>
+              <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.6, margin: 0 }}>
+                Both ketchup and honey are thick liquids. Does honey also get thinner when you stir it,
+                or does it behave differently?
+              </p>
+            </div>
+
+            <div style={{ marginBottom: '20px' }}>
+              <h3 style={{ color: colors.textPrimary, fontSize: '18px', fontWeight: 700, marginBottom: '12px' }}>
+                🤔 How does honey respond to stirring?
+              </h3>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                {twistPredictions.map(p => (
+                  <button
+                    key={p.id}
+                    onClick={() => {
+                      setTwistPrediction(p.id);
+                      playSound('click');
+                    }}
+                    style={{
+                      padding: '16px',
+                      borderRadius: '12px',
+                      border: twistPrediction === p.id ? `2px solid ${colors.accent}` : `1px solid ${colors.border}`,
+                      backgroundColor: twistPrediction === p.id ? `${colors.accent}20` : colors.bgCard,
+                      cursor: 'pointer',
+                      textAlign: 'left',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '12px',
+                      transition: 'all 0.2s ease'
+                    }}
+                  >
+                    <span style={{ fontSize: '24px' }}>{p.icon}</span>
+                    <span style={{ color: colors.textPrimary, fontSize: '14px', flex: 1 }}>{p.label}</span>
+                    {twistPrediction === p.id && (
+                      <span style={{ color: colors.accent, fontSize: '20px', fontWeight: 700 }}>✓</span>
+                    )}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {renderBottomBar(true, !!twistPrediction, 'See the Answer →')}
+      </div>
+    );
+  }
+
+  // ============================================================
+  // TWIST PLAY PHASE
+  // ============================================================
+
+  if (phase === 'twist_play') {
+    return (
+      <div style={{
+        height: '100dvh',
+        display: 'flex',
+        flexDirection: 'column',
+        background: `linear-gradient(180deg, ${colors.bgGradientStart} 0%, ${colors.bgGradientEnd} 100%)`,
+        overflow: 'hidden'
+      }}>
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          overflowX: 'hidden',
+          WebkitOverflowScrolling: 'touch',
+          paddingBottom: '100px'
+        }}>
+          <div style={{ maxWidth: '800px', margin: '0 auto', padding: '20px' }}>
+            <div style={{ textAlign: 'center', marginBottom: '20px' }}>
+              <p style={{ color: colors.accent, fontSize: '12px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '8px' }}>
+                🔄 Twist Comparison
+              </p>
+              <h2 style={{ fontSize: isMobile ? '22px' : '28px', fontWeight: 700, color: colors.textPrimary }}>
+                Newtonian vs Non-Newtonian
+              </h2>
+            </div>
+
+            {/* Comparison visualization */}
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr',
+              gap: '20px',
+              marginBottom: '24px'
+            }}>
+              {/* Ketchup */}
+              <div style={{
+                background: colors.bgCard,
+                borderRadius: '16px',
+                padding: '20px',
+                border: `1px solid ${colors.primary}40`
+              }}>
+                <div style={{ textAlign: 'center', marginBottom: '16px' }}>
+                  <div style={{ fontSize: '40px', marginBottom: '8px' }}>🍅</div>
+                  <h3 style={{ color: colors.primary, fontSize: '18px', fontWeight: 700, marginBottom: '4px' }}>Ketchup</h3>
+                  <p style={{ color: colors.textMuted, fontSize: '12px' }}>Non-Newtonian (Shear-Thinning)</p>
+                </div>
+                <div style={{ textAlign: 'center' }}>
+                  <p style={{ color: colors.textSecondary, fontSize: '13px', marginBottom: '12px' }}>
+                    Viscosity vs Shear Rate:
+                  </p>
+                  <div style={{ fontSize: '32px', marginBottom: '8px' }}>📉</div>
+                  <p style={{ color: colors.success, fontWeight: 600 }}>Decreases with stirring!</p>
+                </div>
+              </div>
+
+              {/* Honey */}
+              <div style={{
+                background: colors.bgCard,
+                borderRadius: '16px',
+                padding: '20px',
+                border: `1px solid ${colors.warning}40`
+              }}>
+                <div style={{ textAlign: 'center', marginBottom: '16px' }}>
+                  <div style={{ fontSize: '40px', marginBottom: '8px' }}>🍯</div>
+                  <h3 style={{ color: colors.warning, fontSize: '18px', fontWeight: 700, marginBottom: '4px' }}>Honey</h3>
+                  <p style={{ color: colors.textMuted, fontSize: '12px' }}>Newtonian Fluid</p>
+                </div>
+                <div style={{ textAlign: 'center' }}>
+                  <p style={{ color: colors.textSecondary, fontSize: '13px', marginBottom: '12px' }}>
+                    Viscosity vs Shear Rate:
+                  </p>
+                  <div style={{ fontSize: '32px', marginBottom: '8px' }}>➡️</div>
+                  <p style={{ color: colors.warning, fontWeight: 600 }}>Stays constant!</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Explanation */}
+            <div style={{
+              background: `linear-gradient(135deg, ${colors.bgCard} 0%, ${colors.warning}10 100%)`,
+              borderRadius: '12px',
+              padding: '20px',
+              marginBottom: '20px',
+              border: `1px solid ${colors.border}`
+            }}>
+              <h4 style={{ color: colors.textPrimary, fontSize: '16px', fontWeight: 700, marginBottom: '12px' }}>
+                🍯 Why Honey is Different:
+              </h4>
+              <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.7, margin: 0 }}>
+                Honey is a <strong style={{ color: colors.warning }}>Newtonian fluid</strong> — its viscosity depends
+                <em> only on temperature</em>, not on how fast you stir it. It's thick because of its sugar concentration,
+                not because of polymer networks. Stirring doesn't break any structure, so the viscosity stays the same.
+                <br /><br />
+                Warm honey? Thinner. Cold honey? Thicker. But stirred honey? <strong>Same viscosity.</strong>
+              </p>
+            </div>
+
+            {/* Chart/comparison */}
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '12px',
+              padding: '16px',
+              border: `1px solid ${colors.border}`
+            }}>
+              <h4 style={{ color: colors.textPrimary, fontSize: '14px', fontWeight: 700, marginBottom: '12px' }}>
+                📊 Fluid Behavior Chart:
+              </h4>
+              <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                <thead>
+                  <tr>
+                    <th style={{ color: colors.textSecondary, fontSize: '12px', textAlign: 'left', padding: '8px', borderBottom: `1px solid ${colors.border}` }}>Fluid</th>
+                    <th style={{ color: colors.textSecondary, fontSize: '12px', textAlign: 'center', padding: '8px', borderBottom: `1px solid ${colors.border}` }}>Type</th>
+                    <th style={{ color: colors.textSecondary, fontSize: '12px', textAlign: 'center', padding: '8px', borderBottom: `1px solid ${colors.border}` }}>Stir Effect</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td style={{ color: colors.textPrimary, fontSize: '13px', padding: '8px' }}>🍅 Ketchup</td>
+                    <td style={{ color: colors.success, fontSize: '13px', padding: '8px', textAlign: 'center' }}>Shear-thinning</td>
+                    <td style={{ color: colors.success, fontSize: '13px', padding: '8px', textAlign: 'center' }}>↓ Thinner</td>
+                  </tr>
+                  <tr>
+                    <td style={{ color: colors.textPrimary, fontSize: '13px', padding: '8px' }}>🍯 Honey</td>
+                    <td style={{ color: colors.warning, fontSize: '13px', padding: '8px', textAlign: 'center' }}>Newtonian</td>
+                    <td style={{ color: colors.warning, fontSize: '13px', padding: '8px', textAlign: 'center' }}>→ No change</td>
+                  </tr>
+                  <tr>
+                    <td style={{ color: colors.textPrimary, fontSize: '13px', padding: '8px' }}>🥣 Oobleck</td>
+                    <td style={{ color: colors.primary, fontSize: '13px', padding: '8px', textAlign: 'center' }}>Shear-thickening</td>
+                    <td style={{ color: colors.primary, fontSize: '13px', padding: '8px', textAlign: 'center' }}>↑ Thicker</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        {renderBottomBar(true, true, 'Review Results →')}
+      </div>
+    );
+  }
+
+  // ============================================================
+  // TWIST REVIEW PHASE
+  // ============================================================
+
+  if (phase === 'twist_review') {
+    const wasCorrect = twistPrediction === 'honey_constant';
+
+    return (
+      <div style={{
+        height: '100dvh',
+        display: 'flex',
+        flexDirection: 'column',
+        background: `linear-gradient(180deg, ${colors.bgGradientStart} 0%, ${colors.bgGradientEnd} 100%)`,
+        overflow: 'hidden'
+      }}>
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          overflowX: 'hidden',
+          WebkitOverflowScrolling: 'touch',
+          paddingBottom: '100px'
+        }}>
+          <div style={{ maxWidth: '800px', margin: '0 auto', padding: '20px' }}>
+            <div style={{
+              textAlign: 'center',
+              padding: '24px',
+              background: wasCorrect ? `${colors.success}15` : `${colors.accent}15`,
+              borderRadius: '16px',
+              marginBottom: '24px',
+              border: `1px solid ${wasCorrect ? colors.success : colors.accent}40`
+            }}>
+              <div style={{ fontSize: '48px', marginBottom: '12px' }}>
+                {wasCorrect ? '🎯' : '💡'}
+              </div>
+              <h2 style={{
+                fontSize: isMobile ? '22px' : '28px',
+                fontWeight: 700,
+                color: colors.textPrimary,
+                marginBottom: '8px'
+              }}>
+                Honey is Newtonian!
+              </h2>
+              <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
+                Unlike ketchup, honey's viscosity doesn't change with stirring.
+              </p>
+            </div>
+
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '16px',
+              padding: '24px',
+              marginBottom: '24px',
+              border: `1px solid ${colors.border}`
+            }}>
+              <h3 style={{ color: colors.textPrimary, fontSize: '18px', fontWeight: 700, marginBottom: '16px' }}>
+                📊 Three Types of Fluids
+              </h3>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                <div style={{
+                  padding: '12px',
+                  background: `${colors.success}15`,
+                  borderRadius: '8px',
+                  borderLeft: `4px solid ${colors.success}`
+                }}>
+                  <strong style={{ color: colors.success }}>Shear-Thinning (Ketchup, Paint):</strong>
+                  <p style={{ color: colors.textSecondary, fontSize: '13px', margin: '4px 0 0 0' }}>
+                    Viscosity ↓ decreases with shear → flows easier when stressed
+                  </p>
+                </div>
+
+                <div style={{
+                  padding: '12px',
+                  background: `${colors.warning}15`,
+                  borderRadius: '8px',
+                  borderLeft: `4px solid ${colors.warning}`
+                }}>
+                  <strong style={{ color: colors.warning }}>Newtonian (Honey, Water, Oil):</strong>
+                  <p style={{ color: colors.textSecondary, fontSize: '13px', margin: '4px 0 0 0' }}>
+                    Viscosity → stays constant regardless of shear rate
+                  </p>
+                </div>
+
+                <div style={{
+                  padding: '12px',
+                  background: `${colors.primary}15`,
+                  borderRadius: '8px',
+                  borderLeft: `4px solid ${colors.primary}`
+                }}>
+                  <strong style={{ color: colors.primary }}>Shear-Thickening (Oobleck):</strong>
+                  <p style={{ color: colors.textSecondary, fontSize: '13px', margin: '4px 0 0 0' }}>
+                    Viscosity ↑ increases with shear → resists when stressed
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div style={{
+              background: `linear-gradient(135deg, ${colors.primary}20 0%, ${colors.accent}20 100%)`,
+              borderRadius: '12px',
+              padding: '16px',
+              border: `1px solid ${colors.primary}40`
+            }}>
+              <h4 style={{ color: colors.primaryLight, fontSize: '14px', fontWeight: 700, marginBottom: '8px' }}>
+                🌍 Why This Matters
+              </h4>
+              <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.6, margin: 0 }}>
+                Engineers choose fluids based on their rheological properties. Paints are shear-thinning
+                so they spread easily but don't drip. Blood is shear-thinning so it can flow through tiny
+                capillaries. Understanding these differences is crucial for designing products from cosmetics
+                to industrial coatings!
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {renderBottomBar(true, true, 'See Real Applications →')}
+      </div>
+    );
+  }
+
+  // ============================================================
+  // TRANSFER PHASE
+  // ============================================================
+
+  if (phase === 'transfer') {
+    const app = realWorldApps[selectedApp];
+    const allCompleted = completedApps.every(c => c);
+
+    return (
+      <div style={{
+        height: '100dvh',
+        display: 'flex',
+        flexDirection: 'column',
+        background: `linear-gradient(180deg, ${colors.bgGradientStart} 0%, ${colors.bgGradientEnd} 100%)`,
+        overflow: 'hidden'
+      }}>
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          overflowX: 'hidden',
+          WebkitOverflowScrolling: 'touch',
+          paddingBottom: '100px'
+        }}>
+          <div style={{ maxWidth: '800px', margin: '0 auto', padding: '20px' }}>
+            <div style={{ textAlign: 'center', marginBottom: '16px' }}>
+              <p style={{ color: colors.success, fontSize: '12px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '8px' }}>
+                🌍 Real-World Applications
+              </p>
+              <h2 style={{ fontSize: isMobile ? '20px' : '26px', fontWeight: 700, color: colors.textPrimary }}>
+                Shear-Thinning in Action
+              </h2>
+            </div>
+
+            {/* App tabs */}
+            <div style={{
+              display: 'flex',
+              gap: '8px',
+              marginBottom: '20px',
+              overflowX: 'auto',
+              paddingBottom: '8px'
+            }}>
+              {realWorldApps.map((a, i) => (
+                <button
+                  key={i}
+                  onClick={() => {
+                    setSelectedApp(i);
+                    playSound('click');
+                  }}
+                  style={{
+                    padding: '10px 16px',
+                    borderRadius: '12px',
+                    border: selectedApp === i ? `2px solid ${a.color}` : `1px solid ${colors.border}`,
+                    background: selectedApp === i ? `${a.color}20` : colors.bgCard,
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                    whiteSpace: 'nowrap',
+                    flexShrink: 0
+                  }}
+                >
+                  <span style={{ fontSize: '20px' }}>{a.icon}</span>
+                  <span style={{ color: colors.textPrimary, fontSize: '13px', fontWeight: 600 }}>
+                    {a.short}
+                  </span>
+                  {completedApps[i] && (
+                    <span style={{ color: colors.success, fontSize: '16px' }}>✓</span>
+                  )}
+                </button>
+              ))}
+            </div>
+
+            {/* App content */}
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '16px',
+              padding: '24px',
+              marginBottom: '20px',
+              border: `1px solid ${colors.border}`
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '20px' }}>
+                <div style={{
+                  width: '60px',
+                  height: '60px',
+                  borderRadius: '16px',
+                  background: `${app.color}20`,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: '32px'
+                }}>
+                  {app.icon}
+                </div>
+                <div>
+                  <h3 style={{ color: colors.textPrimary, fontSize: '20px', fontWeight: 700, margin: 0 }}>
+                    {app.title}
+                  </h3>
+                  <p style={{ color: app.color, fontSize: '14px', fontWeight: 600, margin: 0 }}>
+                    {app.tagline}
+                  </p>
+                </div>
+              </div>
+
+              <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.7, marginBottom: '20px' }}>
+                {app.description}
+              </p>
+
+              <div style={{
+                background: `${app.color}15`,
+                borderRadius: '12px',
+                padding: '16px',
+                marginBottom: '20px',
+                borderLeft: `4px solid ${app.color}`
+              }}>
+                <h4 style={{ color: app.color, fontSize: '14px', fontWeight: 700, marginBottom: '8px' }}>
+                  🔗 Connection to Ketchup Physics:
+                </h4>
+                <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.6, margin: 0 }}>
+                  {app.connection}
+                </p>
+              </div>
+
+              <div style={{ marginBottom: '20px' }}>
+                <h4 style={{ color: colors.textPrimary, fontSize: '14px', fontWeight: 700, marginBottom: '8px' }}>
+                  ⚙️ How It Works:
+                </h4>
+                <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.6, margin: 0 }}>
+                  {app.howItWorks}
+                </p>
+              </div>
+
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(3, 1fr)',
+                gap: '12px',
+                marginBottom: '20px'
+              }}>
+                {app.stats.map((stat, i) => (
+                  <div key={i} style={{
+                    background: colors.bgDark,
+                    borderRadius: '12px',
+                    padding: '16px',
+                    textAlign: 'center'
+                  }}>
+                    <div style={{ fontSize: '24px', marginBottom: '4px' }}>{stat.icon}</div>
+                    <div style={{ color: app.color, fontSize: '18px', fontWeight: 700 }}>{stat.value}</div>
+                    <div style={{ color: colors.textMuted, fontSize: '11px' }}>{stat.label}</div>
+                  </div>
+                ))}
+              </div>
+
+              <div style={{ marginBottom: '20px' }}>
+                <h4 style={{ color: colors.textPrimary, fontSize: '14px', fontWeight: 700, marginBottom: '8px' }}>
+                  📋 Real Examples:
+                </h4>
+                <ul style={{ color: colors.textSecondary, fontSize: '13px', lineHeight: 1.8, margin: 0, paddingLeft: '20px' }}>
+                  {app.examples.map((ex, i) => (
+                    <li key={i}>{ex}</li>
+                  ))}
+                </ul>
+              </div>
+
+              <div style={{
+                background: `linear-gradient(135deg, ${colors.bgDark} 0%, ${app.color}10 100%)`,
+                borderRadius: '12px',
+                padding: '16px'
+              }}>
+                <h4 style={{ color: colors.textPrimary, fontSize: '14px', fontWeight: 700, marginBottom: '8px' }}>
+                  🚀 Future Impact:
+                </h4>
+                <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.6, margin: 0 }}>
+                  {app.futureImpact}
+                </p>
+              </div>
+            </div>
+
+            <button
+              onClick={() => {
+                const newCompleted = [...completedApps];
+                newCompleted[selectedApp] = true;
+                setCompletedApps(newCompleted);
+                playSound('success');
+
+                const nextIncomplete = newCompleted.findIndex((c, i) => !c && i > selectedApp);
+                if (nextIncomplete !== -1) {
+                  setSelectedApp(nextIncomplete);
+                } else {
+                  const firstIncomplete = newCompleted.findIndex(c => !c);
+                  if (firstIncomplete !== -1) {
+                    setSelectedApp(firstIncomplete);
+                  }
+                }
+              }}
+              disabled={completedApps[selectedApp]}
+              style={{
+                width: '100%',
+                padding: '16px',
+                borderRadius: '12px',
+                border: 'none',
+                background: completedApps[selectedApp]
+                  ? colors.bgCardLight
+                  : `linear-gradient(135deg, ${app.color} 0%, ${colors.accent} 100%)`,
+                color: completedApps[selectedApp] ? colors.textMuted : 'white',
+                fontSize: '16px',
+                fontWeight: 700,
+                cursor: completedApps[selectedApp] ? 'default' : 'pointer',
+                minHeight: '52px'
+              }}
+            >
+              {completedApps[selectedApp] ? '✓ Completed' : 'Got It! Continue →'}
+            </button>
+
+            <p style={{
+              textAlign: 'center',
+              color: colors.textMuted,
+              fontSize: '13px',
+              marginTop: '12px'
+            }}>
+              {completedApps.filter(c => c).length} of 4 applications completed
+              {allCompleted && ' — Ready for the test!'}
+            </p>
+          </div>
+        </div>
+
+        {renderBottomBar(true, allCompleted, 'Take the Test →')}
+      </div>
+    );
+  }
+
+  // ============================================================
+  // TEST PHASE
+  // ============================================================
+
+  if (phase === 'test') {
+    const currentQ = testQuestions[testQuestion];
+    const selectedAnswer = testAnswers[testQuestion];
+    const isCorrect = selectedAnswer === currentQ.options.find(o => o.correct)?.id;
+
+    return (
+      <div style={{
+        height: '100dvh',
+        display: 'flex',
+        flexDirection: 'column',
+        background: `linear-gradient(180deg, ${colors.bgGradientStart} 0%, ${colors.bgGradientEnd} 100%)`,
+        overflow: 'hidden'
+      }}>
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          overflowX: 'hidden',
+          WebkitOverflowScrolling: 'touch',
+          paddingBottom: '100px'
+        }}>
+          <div style={{ maxWidth: '800px', margin: '0 auto', padding: '20px' }}>
+            {/* Progress */}
+            <div style={{ marginBottom: '20px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                <span style={{ color: colors.textPrimary, fontSize: '16px', fontWeight: 700 }}>
+                  Question {testQuestion + 1} of 10
+                </span>
+                <span style={{ color: colors.textMuted, fontSize: '14px' }}>
+                  {testAnswers.filter(a => a !== null).length} answered
+                </span>
+              </div>
+              <div style={{ display: 'flex', gap: '4px' }}>
+                {testQuestions.map((_, i) => (
+                  <div
+                    key={i}
+                    style={{
+                      flex: 1,
+                      height: '4px',
+                      borderRadius: '2px',
+                      background: i === testQuestion
+                        ? colors.primary
+                        : testAnswers[i] !== null
+                          ? colors.success
+                          : colors.bgCardLight
+                    }}
+                  />
+                ))}
+              </div>
+            </div>
+
+            {/* Scenario */}
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '12px',
+              padding: '16px',
+              marginBottom: '16px',
+              border: `1px solid ${colors.border}`
+            }}>
+              <p style={{ color: colors.textMuted, fontSize: '12px', fontWeight: 600, marginBottom: '4px' }}>
+                SCENARIO
+              </p>
+              <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.6, margin: 0 }}>
+                {currentQ.scenario}
+              </p>
+            </div>
+
+            {/* Question */}
+            <h3 style={{
+              color: colors.textPrimary,
+              fontSize: isMobile ? '18px' : '20px',
+              fontWeight: 700,
+              marginBottom: '20px',
+              lineHeight: 1.4
+            }}>
+              {currentQ.question}
+            </h3>
+
+            {/* Options */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '20px' }}>
+              {currentQ.options.map((opt) => {
+                const isSelected = selectedAnswer === opt.id;
+                const showCorrect = showExplanation && opt.correct;
+                const showWrong = showExplanation && isSelected && !opt.correct;
+
+                return (
+                  <button
+                    key={opt.id}
+                    onClick={() => {
+                      if (!showExplanation) {
+                        const newAnswers = [...testAnswers];
+                        newAnswers[testQuestion] = opt.id;
+                        setTestAnswers(newAnswers);
+                        playSound('click');
+                      }
+                    }}
+                    disabled={showExplanation}
+                    style={{
+                      padding: '16px',
+                      borderRadius: '12px',
+                      border: showCorrect
+                        ? `2px solid ${colors.success}`
+                        : showWrong
+                          ? `2px solid ${colors.error}`
+                          : isSelected
+                            ? `2px solid ${colors.primary}`
+                            : `1px solid ${colors.border}`,
+                      backgroundColor: showCorrect
+                        ? `${colors.success}15`
+                        : showWrong
+                          ? `${colors.error}15`
+                          : isSelected
+                            ? `${colors.primary}20`
+                            : colors.bgCard,
+                      cursor: showExplanation ? 'default' : 'pointer',
+                      textAlign: 'left',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '12px',
+                      boxShadow: showCorrect ? `0 0 20px ${colors.success}30` : 'none'
+                    }}
+                  >
+                    <span style={{ color: colors.textPrimary, fontSize: '14px', flex: 1 }}>
+                      {opt.label}
+                    </span>
+                    {showCorrect && <span style={{ color: colors.success, fontSize: '20px' }}>✓</span>}
+                    {showWrong && <span style={{ color: colors.error, fontSize: '20px' }}>✗</span>}
+                    {!showExplanation && isSelected && (
+                      <span style={{ color: colors.primary, fontSize: '20px' }}>✓</span>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+
+            {selectedAnswer && !showExplanation && (
+              <button
+                onClick={() => {
+                  setShowExplanation(true);
+                  playSound(isCorrect ? 'success' : 'failure');
+                }}
+                style={{
+                  width: '100%',
+                  padding: '14px',
+                  borderRadius: '12px',
+                  border: 'none',
+                  background: `linear-gradient(135deg, ${colors.primary} 0%, ${colors.accent} 100%)`,
+                  color: 'white',
+                  fontSize: '16px',
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                  marginBottom: '20px'
+                }}
+              >
+                Check Answer
+              </button>
+            )}
+
+            {showExplanation && (
+              <div style={{
+                background: isCorrect ? `${colors.success}15` : `${colors.primary}15`,
+                borderRadius: '12px',
+                padding: '16px',
+                marginBottom: '20px',
+                border: `1px solid ${isCorrect ? colors.success : colors.primary}40`
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+                  <span style={{ fontSize: '20px' }}>{isCorrect ? '✓' : '💡'}</span>
+                  <span style={{
+                    color: isCorrect ? colors.success : colors.primaryLight,
+                    fontSize: '16px',
+                    fontWeight: 700
+                  }}>
+                    {isCorrect ? 'Correct!' : 'Explanation'}
+                  </span>
+                </div>
+                <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.6, margin: 0 }}>
+                  {currentQ.explanation}
+                </p>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {showExplanation ? (
+          <div style={{
+            position: 'fixed',
+            bottom: 0,
+            left: 0,
+            right: 0,
+            zIndex: 1000,
+            minHeight: '72px',
+            background: colors.bgCard,
+            borderTop: `1px solid ${colors.border}`,
+            boxShadow: '0 -4px 20px rgba(0,0,0,0.5)',
+            padding: '12px 20px',
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center'
+          }}>
+            <button
+              onClick={() => {
+                if (testQuestion < 9) {
+                  setTestQuestion(testQuestion + 1);
+                  setShowExplanation(false);
+                  playSound('click');
+                } else {
+                  setTestSubmitted(true);
+                  goToPhase('mastery');
+                }
+              }}
+              style={{
+                padding: '14px 28px',
+                borderRadius: '12px',
+                border: 'none',
+                background: `linear-gradient(135deg, ${colors.primary} 0%, ${colors.accent} 100%)`,
+                color: 'white',
+                fontSize: '16px',
+                fontWeight: 700,
+                cursor: 'pointer',
+                minHeight: '52px',
+                minWidth: '200px'
+              }}
+            >
+              {testQuestion < 9 ? 'Next Question →' : 'See Results →'}
+            </button>
+          </div>
+        ) : (
+          renderBottomBar(true, false, 'Select an answer')
+        )}
+      </div>
+    );
+  }
+
+  // ============================================================
+  // MASTERY PHASE
+  // ============================================================
+
+  if (phase === 'mastery') {
+    const score = calculateTestScore();
+    const percentage = score * 10;
+    const passed = percentage >= 70;
+
+    return (
+      <div style={{
+        height: '100dvh',
+        display: 'flex',
+        flexDirection: 'column',
+        background: `linear-gradient(180deg, ${colors.bgGradientStart} 0%, ${colors.bgGradientEnd} 100%)`,
+        overflow: 'hidden'
+      }}>
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          overflowX: 'hidden',
+          WebkitOverflowScrolling: 'touch',
+          paddingBottom: '100px'
+        }}>
+          <div style={{ maxWidth: '600px', margin: '0 auto', padding: '20px', textAlign: 'center' }}>
+            <div style={{ fontSize: '80px', marginBottom: '16px' }}>
+              {passed ? '🏆' : '📚'}
+            </div>
+
+            <h2 style={{
+              fontSize: isMobile ? '28px' : '36px',
+              fontWeight: 800,
+              color: passed ? colors.success : colors.primaryLight,
+              marginBottom: '8px'
+            }}>
+              {passed ? 'Mastery Achieved!' : 'Keep Learning!'}
+            </h2>
+
+            <p style={{ color: colors.textSecondary, fontSize: '16px', marginBottom: '32px' }}>
+              {passed
+                ? 'You\'ve mastered shear-thinning fluids!'
+                : 'Review the concepts and try again.'
+              }
+            </p>
+
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '20px',
+              padding: '32px',
+              marginBottom: '24px',
+              border: `1px solid ${passed ? colors.success : colors.border}40`
+            }}>
+              <div style={{
+                fontSize: '64px',
+                fontWeight: 800,
+                color: passed ? colors.success : colors.primaryLight,
+                marginBottom: '8px'
+              }}>
+                {percentage}%
+              </div>
+              <p style={{ color: colors.textSecondary, fontSize: '16px', margin: 0 }}>
+                {score} of 10 correct
+              </p>
+
+              <div style={{
+                height: '8px',
+                background: colors.bgDark,
+                borderRadius: '4px',
+                marginTop: '20px',
+                overflow: 'hidden'
+              }}>
+                <div style={{
+                  width: `${percentage}%`,
+                  height: '100%',
+                  background: passed
+                    ? `linear-gradient(90deg, ${colors.success} 0%, ${colors.successLight} 100%)`
+                    : `linear-gradient(90deg, ${colors.primary} 0%, ${colors.accent} 100%)`,
+                  borderRadius: '4px'
+                }} />
+              </div>
+              <p style={{ color: colors.textMuted, fontSize: '12px', marginTop: '8px' }}>
+                70% required to pass
+              </p>
+            </div>
+
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '16px',
+              padding: '24px',
+              textAlign: 'left',
+              marginBottom: '24px'
+            }}>
+              <h3 style={{ color: colors.textPrimary, fontSize: '18px', fontWeight: 700, marginBottom: '16px' }}>
+                🎓 What You Learned:
+              </h3>
+              <ul style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 2, margin: 0, paddingLeft: '20px' }}>
+                <li>Shear-thinning fluids become LESS viscous under stress</li>
+                <li>Polymer networks break down and align under shear</li>
+                <li>Honey is Newtonian (constant viscosity), not shear-thinning</li>
+                <li>Applications: paint, blood, cosmetics, inks</li>
+                <li>Opposite behavior to shear-thickening (oobleck)</li>
+              </ul>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              {!passed && (
+                <button
+                  onClick={() => goToPhase('predict')}
+                  style={{
+                    padding: '16px',
+                    borderRadius: '12px',
+                    border: 'none',
+                    background: `linear-gradient(135deg, ${colors.primary} 0%, ${colors.accent} 100%)`,
+                    color: 'white',
+                    fontSize: '16px',
+                    fontWeight: 700,
+                    cursor: 'pointer'
+                  }}
+                >
+                  🔄 Try Again
+                </button>
+              )}
+              <button
+                onClick={() => {
+                  onComplete?.();
+                  playSound('complete');
+                }}
+                style={{
+                  padding: '16px',
+                  borderRadius: '12px',
+                  border: `1px solid ${colors.border}`,
+                  background: colors.bgCard,
+                  color: colors.textPrimary,
+                  fontSize: '16px',
+                  fontWeight: 600,
+                  cursor: 'pointer'
+                }}
+              >
+                ← Return to Dashboard
+              </button>
+            </div>
+          </div>
         </div>
       </div>
     );
-  };
+  }
 
-  const renderMastery = () => (
-    <div className="bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl p-8 text-center">
-      <div className="text-7xl mb-6">🏆</div>
-      <h1 className="text-3xl font-bold text-white mb-4">
-        Shear-Thinning Master!
-      </h1>
-      <p className="text-xl text-slate-300 mb-6">
-        You now understand why ketchup flows when shaken!
-      </p>
+  return null;
+};
 
-      <div className="bg-slate-700/30 rounded-xl p-6 mb-6">
-        <h3 className="text-lg font-semibold text-red-400 mb-4">Key Takeaways</h3>
-        <ul className="text-left text-slate-300 space-y-2">
-          <li>• Shear-thinning fluids decrease in viscosity under stress</li>
-          <li>• Molecular chains align and untangle when sheared</li>
-          <li>• Many everyday products rely on this behavior</li>
-          <li>• Thixotropy allows gradual viscosity recovery</li>
-        </ul>
-      </div>
-
-      <div className="grid grid-cols-2 gap-4 mb-6">
-        <div className="bg-red-500/20 rounded-xl p-4">
-          <p className="text-3xl font-bold text-red-400">4</p>
-          <p className="text-sm text-slate-400">Applications Mastered</p>
-        </div>
-        <div className="bg-orange-500/20 rounded-xl p-4">
-          <p className="text-3xl font-bold text-orange-400">10</p>
-          <p className="text-sm text-slate-400">Questions Completed</p>
-        </div>
-      </div>
-
-      <p className="text-slate-400 text-sm">
-        Next time you shake a ketchup bottle, you&apos;ll know the science behind it!
-      </p>
-    </div>
-  );
-
-  // ─── Main Render ───────────────────────────────────────────────────────────
-  const renderPhase = () => {
-    switch (phase) {
-      case 0: return renderHook();
-      case 1: return renderPredict();
-      case 2: return renderPlay();
-      case 3: return renderReview();
-      case 4: return renderTwistPredict();
-      case 5: return renderTwistPlay();
-      case 6: return renderTwistReview();
-      case 7: return renderTransfer();
-      case 8: return renderTest();
-      case 9: return renderMastery();
-      default: return null;
-    }
-  };
-
-  return (
-    <div className="min-h-screen bg-[#0a0f1a] text-white relative overflow-hidden">
-      {/* Ambient glow effects */}
-      <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-[#0a1628] to-slate-900" />
-      <div className="absolute top-0 left-1/4 w-96 h-96 bg-red-500/5 rounded-full blur-3xl" />
-      <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-orange-500/5 rounded-full blur-3xl" />
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-red-500/3 rounded-full blur-3xl" />
-
-      <div className="relative z-10 p-6">
-        <div className="max-w-2xl mx-auto">
-          <ProgressIndicator phases={PHASES} currentPhase={phase} />
-          {renderPhase()}
-        </div>
-      </div>
-    </div>
-  );
-}
+export default ShearThinningRenderer;

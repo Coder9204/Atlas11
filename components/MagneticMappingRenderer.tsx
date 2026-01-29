@@ -58,6 +58,60 @@ const TEST_QUESTIONS = [
       { text: 'It detects gravity', correct: false },
       { text: 'It uses GPS satellites', correct: false }
     ]
+  },
+  {
+    question: 'How does magnetic field strength change as you move away from a magnet?',
+    options: [
+      { text: 'It stays constant at all distances', correct: false },
+      { text: 'It increases with distance', correct: false },
+      { text: 'It decreases rapidly with distance (inverse cube law)', correct: true },
+      { text: 'It only changes in certain directions', correct: false }
+    ]
+  },
+  {
+    question: 'What is magnetic declination?',
+    options: [
+      { text: 'The strength of Earth\'s magnetic field', correct: false },
+      { text: 'The angle between magnetic north and true geographic north', correct: true },
+      { text: 'The tilt of a compass needle downward', correct: false },
+      { text: 'The speed at which magnetic poles move', correct: false }
+    ]
+  },
+  {
+    question: 'Why does Earth have a magnetic field?',
+    options: [
+      { text: 'The crust contains magnetic rocks', correct: false },
+      { text: 'Convecting molten iron in the outer core creates it', correct: true },
+      { text: 'The Moon\'s gravity causes it', correct: false },
+      { text: 'Solar wind generates it', correct: false }
+    ]
+  },
+  {
+    question: 'What do iron filings reveal when sprinkled around a magnet?',
+    options: [
+      { text: 'The temperature distribution', correct: false },
+      { text: 'The pattern of magnetic field lines', correct: true },
+      { text: 'The age of the magnet', correct: false },
+      { text: 'The chemical composition', correct: false }
+    ]
+  },
+  {
+    question: 'Where is the magnetic field of a bar magnet strongest?',
+    options: [
+      { text: 'In the middle of the magnet', correct: false },
+      { text: 'At the poles (ends) of the magnet', correct: true },
+      { text: 'Equally strong everywhere', correct: false },
+      { text: 'Far away from the magnet', correct: false }
+    ]
+  },
+  {
+    question: 'A compass points toward magnetic north. What does this tell us about Earth\'s magnetic poles?',
+    options: [
+      { text: 'Earth\'s geographic north pole is a magnetic south pole', correct: false },
+      { text: 'Earth\'s magnetic north pole attracts the compass\'s north pole', correct: false },
+      { text: 'Earth\'s magnetic south pole is near geographic north (opposites attract)', correct: true },
+      { text: 'Compasses point to the Sun\'s magnetic field', correct: false }
+    ]
   }
 ];
 
@@ -233,7 +287,7 @@ const MagneticMappingRenderer: React.FC<MagneticMappingRendererProps> = ({
     });
     setTestScore(score);
     setShowTestResults(true);
-    if (score >= 3 && onCorrectAnswer) onCorrectAnswer();
+    if (score >= 7 && onCorrectAnswer) onCorrectAnswer();
     else if (onIncorrectAnswer) onIncorrectAnswer();
   };
 
@@ -741,7 +795,7 @@ const MagneticMappingRenderer: React.FC<MagneticMappingRendererProps> = ({
             <div className="bg-slate-800/50 rounded-2xl p-6 max-w-2xl mx-auto mt-8 text-center">
               <div className="text-6xl mb-4">{testScore >= 3 ? '🎉' : '📚'}</div>
               <h3 className="text-2xl font-bold text-white mb-2">Score: {testScore}/{TEST_QUESTIONS.length}</h3>
-              <p className="text-slate-300 mb-6">{testScore >= 3 ? 'Excellent! You understand magnetic field mapping!' : 'Keep studying! Review and try again.'}</p>
+              <p className="text-slate-300 mb-6">{testScore >= 7 ? 'Excellent! You understand magnetic field mapping!' : 'Keep studying! Review and try again.'}</p>
             </div>
             {TEST_QUESTIONS.map((q, qIndex) => {
               const userAnswer = testAnswers[qIndex];
@@ -758,7 +812,7 @@ const MagneticMappingRenderer: React.FC<MagneticMappingRendererProps> = ({
               );
             })}
           </div>
-          {renderBottomBar(false, testScore >= 3, testScore >= 3 ? 'Complete Mastery' : 'Review & Retry')}
+          {renderBottomBar(false, testScore >= 7, testScore >= 7 ? 'Complete Mastery' : 'Review & Retry')}
         </div>
       );
     }

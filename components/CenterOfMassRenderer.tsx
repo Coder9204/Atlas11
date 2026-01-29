@@ -259,8 +259,12 @@ const CenterOfMassRenderer: React.FC<CenterOfMassRendererProps> = ({ onGameEvent
 
   const handleReturnToDashboard = useCallback(() => {
     emit('button_clicked', { action: 'return_to_dashboard' });
-    window.dispatchEvent(new CustomEvent('returnToDashboard'));
-  }, [emit]);
+    playSound('complete');
+    // Actually navigate to dashboard
+    if (typeof window !== 'undefined') {
+      window.location.href = '/';
+    }
+  }, [emit, playSound]);
 
   // ============================================================================
   // VISUALIZATION - Using clarity-first approach
@@ -398,36 +402,150 @@ const CenterOfMassRenderer: React.FC<CenterOfMassRendererProps> = ({ onGameEvent
 
   // Play Phase
   const renderPlay = () => (
-    <div style={{ padding: isMobile ? '24px 16px' : '32px 24px', maxWidth: '560px', margin: '0 auto' }}>
-      <p style={{ fontSize: '11px', fontWeight: 600, color: colors.primary, letterSpacing: '0.05em', textTransform: 'uppercase', marginBottom: '8px' }}>Step 3 • Observe</p>
-      <h2 style={{ fontSize: isMobile ? '22px' : '26px', fontWeight: 700, color: colors.textPrimary, marginBottom: '20px' }}>Balance Demonstration</h2>
-
-      <div style={{ background: colors.bgSurface, borderRadius: '16px', padding: '16px', marginBottom: '20px', border: `1px solid ${colors.bgHover}` }}>
-        {renderVisualization('large')}
-      </div>
-
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '12px', marginBottom: '20px' }}>
-        <span style={{ fontSize: '14px', color: colors.textSecondary }}>Show COM:</span>
-        <button
-          onClick={() => setShowCOM(!showCOM)}
-          style={{ padding: '8px 20px', fontSize: '14px', fontWeight: 600, background: showCOM ? colors.error : colors.bgElevated, color: showCOM ? '#fff' : colors.textTertiary, border: 'none', borderRadius: '8px', cursor: 'pointer', touchAction: 'manipulation', WebkitTapHighlightColor: 'transparent' }}
-        >
-          {showCOM ? 'ON' : 'OFF'}
-        </button>
-      </div>
-
-      <div style={{ background: colors.successBg, border: `1px solid ${colors.success}30`, borderRadius: '12px', padding: '16px', marginBottom: '24px' }}>
-        <p style={{ color: colors.textSecondary, fontSize: '14px', margin: 0, textAlign: 'center' }}>
-          Notice: The <span style={{ color: colors.error, fontWeight: 700 }}>center of mass</span> (red dot) is <strong>below</strong> the pivot point!
+    <div style={{ height: '100%', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+      {/* HEADER - Large, clear title */}
+      <div style={{
+        padding: isMobile ? '16px 20px' : '20px 32px',
+        borderBottom: `1px solid ${colors.bgHover}`,
+        flexShrink: 0,
+        background: colors.bgSurface
+      }}>
+        <p style={{ fontSize: '11px', fontWeight: 600, color: colors.primary, letterSpacing: '0.05em', textTransform: 'uppercase', margin: '0 0 8px' }}>Step 3 • Observe</p>
+        <h1 style={{
+          fontSize: isMobile ? '22px' : '28px',
+          fontWeight: 700,
+          color: colors.textPrimary,
+          margin: '0 0 4px'
+        }}>THE BALANCING FORK TRICK</h1>
+        <p style={{ fontSize: isMobile ? '14px' : '16px', color: colors.textSecondary, margin: 0 }}>
+          A fork hangs off a glass rim without falling — look at the <span style={{ color: colors.error, fontWeight: 600 }}>red dot (COM)</span> to see why!
         </p>
       </div>
 
-      <button
-        onClick={() => goToPhase('review')}
-        style={{ width: '100%', padding: '16px', fontSize: '16px', fontWeight: 600, color: '#fff', background: `linear-gradient(135deg, ${colors.primary} 0%, ${colors.accent} 100%)`, border: 'none', borderRadius: '14px', cursor: 'pointer', touchAction: 'manipulation', WebkitTapHighlightColor: 'transparent', userSelect: 'none' }}
-      >
-        I Understand →
-      </button>
+      {/* SCROLLABLE CONTENT */}
+      <div style={{ flex: 1, minHeight: 0, overflowY: 'auto', overflowX: 'hidden', WebkitOverflowScrolling: 'touch', touchAction: 'pan-y' }}>
+        {/* GRAPHIC SECTION */}
+        <div style={{ padding: isMobile ? '20px' : '28px', background: colors.bgDeep }}>
+          {/* Quick legend - what user is looking at */}
+          <div style={{
+            maxWidth: '560px',
+            margin: '0 auto 16px',
+            padding: '12px 16px',
+            background: colors.bgSurface,
+            borderRadius: '12px',
+            border: `1px solid ${colors.bgHover}`,
+            display: 'flex',
+            flexWrap: 'wrap',
+            gap: '16px',
+            justifyContent: 'center',
+            alignItems: 'center'
+          }}>
+            <span style={{ fontSize: '13px', color: colors.textMuted }}>
+              🟢 <strong style={{ color: '#4ade80' }}>Green</strong> = Pivot
+            </span>
+            <span style={{ fontSize: '13px', color: colors.textMuted }}>
+              🔴 <strong style={{ color: '#ef4444' }}>Red</strong> = Center of Mass
+            </span>
+            <span style={{ fontSize: '13px', color: colors.textMuted }}>
+              🟡 <strong style={{ color: '#fcd34d' }}>Gold</strong> = Heavy fork
+            </span>
+          </div>
+
+          <div style={{
+            maxWidth: '560px',
+            margin: '0 auto',
+            background: colors.bgSurface,
+            borderRadius: '16px',
+            padding: '16px',
+            border: `1px solid ${colors.bgHover}`
+          }}>
+            {renderVisualization('large')}
+          </div>
+        </div>
+
+        {/* CONTROLS SECTION */}
+        <div style={{
+          padding: isMobile ? '20px' : '28px',
+          background: colors.bgSurface,
+          borderTop: `1px solid ${colors.bgHover}`,
+          borderBottom: `1px solid ${colors.bgHover}`
+        }}>
+          <div style={{ maxWidth: '560px', margin: '0 auto' }}>
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '10px',
+              marginBottom: '16px',
+              paddingBottom: '12px',
+              borderBottom: `1px solid ${colors.bgHover}`
+            }}>
+              <span style={{ fontSize: '20px' }}>⚙️</span>
+              <div>
+                <h2 style={{ fontSize: isMobile ? '16px' : '18px', fontWeight: 700, color: colors.textPrimary, margin: 0 }}>CONTROLS</h2>
+                <p style={{ fontSize: '12px', color: colors.textMuted, margin: '2px 0 0' }}>Toggle to show or hide the center of mass</p>
+              </div>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '16px' }}>
+              <span style={{ fontSize: '14px', fontWeight: 600, color: colors.textSecondary }}>Show Center of Mass (COM):</span>
+              <button
+                onClick={() => setShowCOM(!showCOM)}
+                style={{
+                  padding: '12px 24px',
+                  fontSize: '14px',
+                  fontWeight: 600,
+                  background: showCOM ? colors.error : colors.bgElevated,
+                  color: showCOM ? '#fff' : colors.textTertiary,
+                  border: 'none',
+                  borderRadius: '8px',
+                  cursor: 'pointer',
+                  touchAction: 'manipulation',
+                  WebkitTapHighlightColor: 'transparent',
+                  minHeight: '44px'
+                }}
+              >
+                {showCOM ? '● ON' : '○ OFF'}
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* WHY SECTION */}
+        <div style={{ padding: isMobile ? '20px' : '28px', background: colors.bgDeep }}>
+          <div style={{ maxWidth: '560px', margin: '0 auto' }}>
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '10px',
+              marginBottom: '16px'
+            }}>
+              <span style={{ fontSize: '20px' }}>📖</span>
+              <h2 style={{ fontSize: isMobile ? '16px' : '18px', fontWeight: 700, color: colors.textPrimary, margin: 0 }}>KEY OBSERVATION</h2>
+            </div>
+            <div style={{ background: colors.successBg, border: `1px solid ${colors.success}30`, borderRadius: '12px', padding: '16px' }}>
+              <p style={{ color: colors.textSecondary, fontSize: '15px', margin: 0, lineHeight: 1.6 }}>
+                <strong style={{ color: colors.success }}>Notice:</strong> The <span style={{ color: colors.error, fontWeight: 700 }}>center of mass</span> (red dot) is <strong>below</strong> the pivot point — that's why it balances!
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* FOOTER */}
+      <div style={{
+        padding: isMobile ? '14px 20px' : '18px 32px',
+        borderTop: `1px solid ${colors.bgHover}`,
+        flexShrink: 0,
+        background: colors.bgSurface
+      }}>
+        <div style={{ maxWidth: '560px', margin: '0 auto' }}>
+          <button
+            onClick={() => goToPhase('review')}
+            style={{ width: '100%', padding: '16px', fontSize: '16px', fontWeight: 600, color: '#fff', background: `linear-gradient(135deg, ${colors.primary} 0%, ${colors.accent} 100%)`, border: 'none', borderRadius: '14px', cursor: 'pointer', touchAction: 'manipulation', WebkitTapHighlightColor: 'transparent', userSelect: 'none' }}
+          >
+            I Understand →
+          </button>
+        </div>
+      </div>
     </div>
   );
 
@@ -512,54 +630,201 @@ const CenterOfMassRenderer: React.FC<CenterOfMassRendererProps> = ({ onGameEvent
 
   // Twist Play
   const renderTwistPlay = () => (
-    <div style={{ padding: isMobile ? '24px 16px' : '32px 24px', maxWidth: '560px', margin: '0 auto' }}>
-      <p style={{ fontSize: '11px', fontWeight: 600, color: colors.warning, letterSpacing: '0.05em', textTransform: 'uppercase', marginBottom: '8px' }}>Step 6 • Clay Experiment</p>
-      <h2 style={{ fontSize: isMobile ? '22px' : '26px', fontWeight: 700, color: colors.warning, marginBottom: '20px' }}>Where Will You Add Clay?</h2>
-
-      <div style={{ background: colors.bgSurface, borderRadius: '16px', padding: '16px', marginBottom: '20px', border: `1px solid ${colors.bgHover}` }}>
-        {renderVisualization('large')}
+    <div style={{ height: '100%', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+      {/* HEADER - Large, clear title */}
+      <div style={{
+        padding: isMobile ? '16px 20px' : '20px 32px',
+        borderBottom: `1px solid ${colors.bgHover}`,
+        flexShrink: 0,
+        background: colors.bgSurface
+      }}>
+        <div style={{
+          display: 'inline-flex',
+          alignItems: 'center',
+          gap: '8px',
+          padding: '4px 12px',
+          background: colors.warningBg,
+          borderRadius: '6px',
+          marginBottom: '8px'
+        }}>
+          <span style={{ fontSize: '14px' }}>🌀</span>
+          <span style={{ fontSize: '11px', color: colors.warning, fontWeight: 600 }}>TWIST: New Variable!</span>
+        </div>
+        <h1 style={{
+          fontSize: isMobile ? '22px' : '28px',
+          fontWeight: 700,
+          color: colors.textPrimary,
+          margin: '0 0 4px'
+        }}>CLAY EXPERIMENT</h1>
+        <p style={{ fontSize: isMobile ? '14px' : '16px', color: colors.textSecondary, margin: 0 }}>
+          Add clay to move the <span style={{ color: colors.error, fontWeight: 600 }}>Center of Mass</span> — can you make it fall?
+        </p>
       </div>
 
-      <p style={{ color: colors.textSecondary, textAlign: 'center', marginBottom: '16px', fontSize: '14px' }}>Click a button to add clay:</p>
+      {/* SCROLLABLE CONTENT */}
+      <div style={{ flex: 1, minHeight: 0, overflowY: 'auto', overflowX: 'hidden', WebkitOverflowScrolling: 'touch', touchAction: 'pan-y' }}>
+        {/* GRAPHIC SECTION */}
+        <div style={{ padding: isMobile ? '20px' : '28px', background: colors.bgDeep }}>
+          {/* Quick legend */}
+          <div style={{
+            maxWidth: '560px',
+            margin: '0 auto 16px',
+            padding: '12px 16px',
+            background: colors.bgSurface,
+            borderRadius: '12px',
+            border: `1px solid ${colors.bgHover}`,
+            display: 'flex',
+            flexWrap: 'wrap',
+            gap: '16px',
+            justifyContent: 'center',
+            alignItems: 'center'
+          }}>
+            <span style={{ fontSize: '13px', color: colors.textMuted }}>
+              🟢 <strong style={{ color: '#4ade80' }}>Green</strong> = Pivot
+            </span>
+            <span style={{ fontSize: '13px', color: colors.textMuted }}>
+              🔴 <strong style={{ color: '#ef4444' }}>Red</strong> = Center of Mass
+            </span>
+            <span style={{ fontSize: '13px', color: colors.textMuted }}>
+              🟣 <strong style={{ color: '#c084fc' }}>Purple</strong> = Added clay
+            </span>
+          </div>
 
-      <div style={{ display: 'flex', gap: '12px', justifyContent: 'center', flexWrap: 'wrap', marginBottom: '20px' }}>
-        {[{ pos: -0.8, label: '← Fork side' }, { pos: 0, label: 'Middle' }, { pos: 0.8, label: 'Other side →' }].map(opt => (
-          <button
-            key={opt.pos}
-            onClick={() => addClay(opt.pos)}
-            disabled={isAnimating || hasClayAdded}
-            style={{
-              padding: '12px 20px', fontSize: '14px', fontWeight: 600,
-              background: (isAnimating || hasClayAdded) ? colors.bgElevated : colors.warning,
-              color: '#fff', border: 'none', borderRadius: '10px',
-              cursor: (isAnimating || hasClayAdded) ? 'not-allowed' : 'pointer',
-              opacity: (isAnimating || hasClayAdded) ? 0.5 : 1,
-              touchAction: 'manipulation', WebkitTapHighlightColor: 'transparent', userSelect: 'none',
-            }}
-          >
-            {opt.label}
-          </button>
-        ))}
+          <div style={{
+            maxWidth: '560px',
+            margin: '0 auto',
+            background: colors.bgSurface,
+            borderRadius: '16px',
+            padding: '16px',
+            border: `1px solid ${colors.bgHover}`
+          }}>
+            {renderVisualization('large')}
+          </div>
+        </div>
+
+        {/* CONTROLS SECTION */}
+        <div style={{
+          padding: isMobile ? '20px' : '28px',
+          background: colors.bgSurface,
+          borderTop: `1px solid ${colors.bgHover}`,
+          borderBottom: `1px solid ${colors.bgHover}`
+        }}>
+          <div style={{ maxWidth: '560px', margin: '0 auto' }}>
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '10px',
+              marginBottom: '16px',
+              paddingBottom: '12px',
+              borderBottom: `1px solid ${colors.bgHover}`
+            }}>
+              <span style={{ fontSize: '20px' }}>⚙️</span>
+              <div>
+                <h2 style={{ fontSize: isMobile ? '16px' : '18px', fontWeight: 700, color: colors.textPrimary, margin: 0 }}>CONTROLS</h2>
+                <p style={{ fontSize: '12px', color: colors.textMuted, margin: '2px 0 0' }}>Click where to add clay on the toothpick</p>
+              </div>
+            </div>
+
+            <div style={{
+              display: 'flex',
+              gap: '12px',
+              justifyContent: 'center',
+              flexWrap: 'wrap',
+              marginBottom: '16px'
+            }}>
+              {[{ pos: -0.8, label: '← Fork side' }, { pos: 0, label: 'Middle' }, { pos: 0.8, label: 'Other side →' }].map(opt => (
+                <button
+                  key={opt.pos}
+                  onClick={() => addClay(opt.pos)}
+                  disabled={isAnimating || hasClayAdded}
+                  style={{
+                    padding: '14px 24px',
+                    fontSize: '14px',
+                    fontWeight: 600,
+                    background: (isAnimating || hasClayAdded) ? colors.bgElevated : colors.warning,
+                    color: '#fff',
+                    border: 'none',
+                    borderRadius: '10px',
+                    cursor: (isAnimating || hasClayAdded) ? 'not-allowed' : 'pointer',
+                    opacity: (isAnimating || hasClayAdded) ? 0.5 : 1,
+                    touchAction: 'manipulation',
+                    WebkitTapHighlightColor: 'transparent',
+                    userSelect: 'none',
+                    minHeight: '48px'
+                  }}
+                >
+                  {opt.label}
+                </button>
+              ))}
+            </div>
+
+            {hasClayAdded && (
+              <div style={{ textAlign: 'center' }}>
+                <button
+                  onClick={resetExperiment}
+                  style={{
+                    padding: '12px 24px',
+                    fontSize: '14px',
+                    fontWeight: 600,
+                    background: colors.bgElevated,
+                    color: colors.textSecondary,
+                    border: `1px solid ${colors.bgHover}`,
+                    borderRadius: '10px',
+                    cursor: 'pointer',
+                    touchAction: 'manipulation',
+                    WebkitTapHighlightColor: 'transparent',
+                    minHeight: '44px'
+                  }}
+                >
+                  ↺ Reset & Try Again
+                </button>
+              </div>
+            )}
+
+            <p style={{ textAlign: 'center', fontSize: '13px', color: colors.textMuted, margin: '16px 0 0' }}>
+              Experiments completed: <strong>{experimentCount}</strong> (try at least 2)
+            </p>
+          </div>
+        </div>
+
+        {/* WHY SECTION */}
+        <div style={{ padding: isMobile ? '20px' : '28px', background: colors.bgDeep }}>
+          <div style={{ maxWidth: '560px', margin: '0 auto' }}>
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '10px',
+              marginBottom: '16px'
+            }}>
+              <span style={{ fontSize: '20px' }}>📖</span>
+              <h2 style={{ fontSize: isMobile ? '16px' : '18px', fontWeight: 700, color: colors.textPrimary, margin: 0 }}>WHAT'S HAPPENING</h2>
+            </div>
+            <div style={{ background: colors.warningBg, border: `1px solid ${colors.warning}30`, borderRadius: '12px', padding: '16px' }}>
+              <p style={{ color: colors.textSecondary, fontSize: '15px', margin: 0, lineHeight: 1.6 }}>
+                Adding clay <strong>shifts the center of mass</strong>. If COM stays below pivot = stable. If COM rises above pivot = falls!
+              </p>
+            </div>
+          </div>
+        </div>
       </div>
 
-      {hasClayAdded && (
-        <button
-          onClick={resetExperiment}
-          style={{ display: 'block', margin: '0 auto 16px', padding: '12px 24px', fontSize: '14px', fontWeight: 600, background: colors.bgElevated, color: colors.textSecondary, border: 'none', borderRadius: '10px', cursor: 'pointer', touchAction: 'manipulation', WebkitTapHighlightColor: 'transparent' }}
-        >
-          ↺ Reset & Try Again
-        </button>
-      )}
-
-      <p style={{ textAlign: 'center', fontSize: '13px', color: colors.textMuted, marginBottom: '20px' }}>Experiments: {experimentCount}</p>
-
+      {/* FOOTER */}
       {experimentCount >= 2 && (
-        <button
-          onClick={() => goToPhase('twist_review')}
-          style={{ width: '100%', padding: '16px', fontSize: '16px', fontWeight: 600, color: '#fff', background: `linear-gradient(135deg, ${colors.warning} 0%, #ea580c 100%)`, border: 'none', borderRadius: '14px', cursor: 'pointer', touchAction: 'manipulation', WebkitTapHighlightColor: 'transparent', userSelect: 'none' }}
-        >
-          I See the Pattern →
-        </button>
+        <div style={{
+          padding: isMobile ? '14px 20px' : '18px 32px',
+          borderTop: `1px solid ${colors.bgHover}`,
+          flexShrink: 0,
+          background: colors.bgSurface
+        }}>
+          <div style={{ maxWidth: '560px', margin: '0 auto' }}>
+            <button
+              onClick={() => goToPhase('twist_review')}
+              style={{ width: '100%', padding: '16px', fontSize: '16px', fontWeight: 600, color: '#fff', background: `linear-gradient(135deg, ${colors.warning} 0%, #ea580c 100%)`, border: 'none', borderRadius: '14px', cursor: 'pointer', touchAction: 'manipulation', WebkitTapHighlightColor: 'transparent', userSelect: 'none' }}
+            >
+              I See the Pattern →
+            </button>
+          </div>
+        </div>
       )}
     </div>
   );

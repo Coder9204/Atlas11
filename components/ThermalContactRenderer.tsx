@@ -237,122 +237,92 @@ export default function ThermalContactRenderer({
     {
       question: "What causes thermal contact resistance?",
       options: [
-        "The materials repelling each other",
-        "Microscopic air gaps between imperfectly smooth surfaces",
-        "Magnetic fields at the interface",
-        "Chemical reactions between surfaces"
-      ],
-      correct: 1,
-      explanation:
-        "Even polished surfaces have microscopic roughness. When pressed together, only peaks touch, leaving tiny air gaps. Air is a poor thermal conductor."
+        { text: "The materials repelling each other", correct: false },
+        { text: "Microscopic air gaps between imperfectly smooth surfaces", correct: true },
+        { text: "Magnetic fields at the interface", correct: false },
+        { text: "Chemical reactions between surfaces", correct: false }
+      ]
     },
     {
       question: "Why is air such a poor thermal conductor?",
       options: [
-        "Air is too cold",
-        "Air molecules are far apart, limiting heat transfer by collision",
-        "Air absorbs heat instead of conducting it",
-        "Air is invisible"
-      ],
-      correct: 1,
-      explanation:
-        "In gases, molecules are far apart and transfer heat slowly via random collisions. Air's thermal conductivity is ~0.026 W/m-K vs copper's ~400 W/m-K."
+        { text: "Air is too cold", correct: false },
+        { text: "Air molecules are far apart, limiting heat transfer by collision", correct: true },
+        { text: "Air absorbs heat instead of conducting it", correct: false },
+        { text: "Air is invisible", correct: false }
+      ]
     },
     {
       question: "Thermal paste works by:",
       options: [
-        "Generating its own heat",
-        "Cooling surfaces chemically",
-        "Filling microscopic gaps to displace air",
-        "Increasing the air gap"
-      ],
-      correct: 2,
-      explanation:
-        "Thermal paste fills the microscopic valleys between surfaces. Even though paste isn't as conductive as metal, it's far better than air."
+        { text: "Generating its own heat", correct: false },
+        { text: "Cooling surfaces chemically", correct: false },
+        { text: "Filling microscopic gaps to displace air", correct: true },
+        { text: "Increasing the air gap", correct: false }
+      ]
     },
     {
       question: "What happens if you use too much thermal paste?",
       options: [
-        "Better cooling",
-        "No difference",
-        "Excess paste can act as an insulating layer",
-        "The CPU runs faster"
-      ],
-      correct: 2,
-      explanation:
-        "Too much paste creates a thick layer between surfaces. Thermal paste is less conductive than metal, so excess paste increases resistance."
+        { text: "Better cooling", correct: false },
+        { text: "No difference", correct: false },
+        { text: "Excess paste can act as an insulating layer", correct: true },
+        { text: "The CPU runs faster", correct: false }
+      ]
     },
     {
       question: "Thermal conductivity of copper is ~400 W/m-K. Air is ~0.026 W/m-K. Copper conducts heat:",
       options: [
-        "About 4 times better",
-        "About 150 times better",
-        "About 15,000 times better",
-        "About the same"
-      ],
-      correct: 2,
-      explanation:
-        "400 / 0.026 = 15,000. Copper conducts heat about 15,000 times better than air. This is why even tiny air gaps are problematic."
+        { text: "About 4 times better", correct: false },
+        { text: "About 150 times better", correct: false },
+        { text: "About 15,000 times better", correct: true },
+        { text: "About the same", correct: false }
+      ]
     },
     {
       question: "When mounting a CPU cooler, you should apply thermal paste:",
       options: [
-        "In a thick layer covering the entire IHS",
-        "A thin layer or small amount in the center",
-        "Only on the cooler, never on the CPU",
-        "No paste is needed with modern coolers"
-      ],
-      correct: 1,
-      explanation:
-        "A pea-sized dot in the center or thin layer is ideal. Mounting pressure spreads it. Too much creates an insulating layer; too little leaves air gaps."
+        { text: "In a thick layer covering the entire IHS", correct: false },
+        { text: "A thin layer or small amount in the center", correct: true },
+        { text: "Only on the cooler, never on the CPU", correct: false },
+        { text: "No paste is needed with modern coolers", correct: false }
+      ]
     },
     {
       question: "Why do heat sinks have flat, polished bases?",
       options: [
-        "For aesthetics",
-        "To minimize air gaps when contacting the heat source",
-        "To reflect heat radiation",
-        "Flat bases are cheaper to make"
-      ],
-      correct: 1,
-      explanation:
-        "Flatter surfaces mean more direct metal-to-metal contact and fewer air gaps. High-quality coolers have mirror-polished bases."
+        { text: "For aesthetics", correct: false },
+        { text: "To minimize air gaps when contacting the heat source", correct: true },
+        { text: "To reflect heat radiation", correct: false },
+        { text: "Flat bases are cheaper to make", correct: false }
+      ]
     },
     {
       question: "Thermal pads (used for VRMs, M.2 drives) differ from paste because:",
       options: [
-        "Pads are better conductors",
-        "Pads bridge larger gaps and are easier to apply",
-        "Pads don't need contact pressure",
-        "Pads are cheaper"
-      ],
-      correct: 1,
-      explanation:
-        "Thermal pads are thicker and conform to irregular surfaces. They're ideal for components with varying heights or where precise paste application is difficult."
+        { text: "Pads are better conductors", correct: false },
+        { text: "Pads bridge larger gaps and are easier to apply", correct: true },
+        { text: "Pads don't need contact pressure", correct: false },
+        { text: "Pads are cheaper", correct: false }
+      ]
     },
     {
       question: "In the formula Q = kA(T1-T2)/d, what does 'd' represent?",
       options: [
-        "Density",
-        "Diameter",
-        "Thickness/distance through which heat flows",
-        "Duration"
-      ],
-      correct: 2,
-      explanation:
-        "In Fourier's Law of heat conduction, d is the thickness of the material. Thicker barriers (including thick paste layers) reduce heat flow."
+        { text: "Density", correct: false },
+        { text: "Diameter", correct: false },
+        { text: "Thickness/distance through which heat flows", correct: true },
+        { text: "Duration", correct: false }
+      ]
     },
     {
       question: "A laptop throttles (slows down) when hot. Better thermal paste could help by:",
       options: [
-        "Making the CPU generate less heat",
-        "Reducing thermal resistance to the cooler, lowering CPU temperature",
-        "Making the fan spin faster",
-        "Cooling the battery"
-      ],
-      correct: 1,
-      explanation:
-        "Better thermal interface allows heat to transfer faster from CPU to cooler. Lower CPU temps mean less throttling and better sustained performance."
+        { text: "Making the CPU generate less heat", correct: false },
+        { text: "Reducing thermal resistance to the cooler, lowering CPU temperature", correct: true },
+        { text: "Making the fan spin faster", correct: false },
+        { text: "Cooling the battery", correct: false }
+      ]
     }
   ];
 
@@ -388,7 +358,7 @@ export default function ThermalContactRenderer({
   const handleTestSubmit = () => {
     let score = 0;
     testQuestions.forEach((q, i) => {
-      if (testAnswers[i] === q.correct) score++;
+      if (q.options[testAnswers[i]]?.correct) score++;
     });
     setTestScore(score);
     setTestSubmitted(true);
@@ -1275,7 +1245,7 @@ export default function ThermalContactRenderer({
                         : "bg-slate-700/50 text-slate-300 hover:bg-slate-600/50"
                     }`}
                   >
-                    {option}
+                    {option.text}
                   </button>
                 ))}
               </div>

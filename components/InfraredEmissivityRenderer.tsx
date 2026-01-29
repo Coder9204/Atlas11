@@ -45,6 +45,60 @@ const TEST_QUESTIONS = [
       { text: 'Only measure on cloudy days', correct: false },
       { text: 'Point the camera at the sun first to calibrate', correct: false }
     ]
+  },
+  {
+    question: 'What is a "blackbody" in physics?',
+    options: [
+      { text: 'Any object that is painted black', correct: false },
+      { text: 'An ideal object that absorbs all radiation and emits maximum IR for its temperature', correct: true },
+      { text: 'A black hole in space', correct: false },
+      { text: 'A material that reflects all light', correct: false }
+    ]
+  },
+  {
+    question: 'According to the Stefan-Boltzmann law, if you double an object\'s absolute temperature, the radiated power:',
+    options: [
+      { text: 'Doubles (2x)', correct: false },
+      { text: 'Quadruples (4x)', correct: false },
+      { text: 'Increases 16 times (2^4)', correct: true },
+      { text: 'Stays the same', correct: false }
+    ]
+  },
+  {
+    question: 'Why does matte black paint radiate heat better than shiny metal at the same temperature?',
+    options: [
+      { text: 'Black paint is hotter', correct: false },
+      { text: 'Matte black has high emissivity, efficiently converting thermal energy to IR radiation', correct: true },
+      { text: 'Metal blocks all radiation', correct: false },
+      { text: 'Paint conducts heat better', correct: false }
+    ]
+  },
+  {
+    question: 'In thermal imaging, what does a "false color" image mean?',
+    options: [
+      { text: 'The image is fake or manipulated', correct: false },
+      { text: 'Colors are assigned to represent temperatures, not actual visible colors', correct: true },
+      { text: 'The camera is malfunctioning', correct: false },
+      { text: 'The object is transparent to IR', correct: false }
+    ]
+  },
+  {
+    question: 'Why can thermal cameras see people in complete darkness?',
+    options: [
+      { text: 'They use special flashlights', correct: false },
+      { text: 'Human bodies emit IR radiation due to body heat, no external light needed', correct: true },
+      { text: 'They amplify tiny amounts of visible light', correct: false },
+      { text: 'They detect sound waves from breathing', correct: false }
+    ]
+  },
+  {
+    question: 'What happens to emissivity and reflectivity for most surfaces?',
+    options: [
+      { text: 'Both can be high at the same time', correct: false },
+      { text: 'They are independent of each other', correct: false },
+      { text: 'High emissivity means low reflectivity, and vice versa (they sum to ~1)', correct: true },
+      { text: 'Reflectivity is always higher', correct: false }
+    ]
   }
 ];
 

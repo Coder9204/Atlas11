@@ -126,56 +126,64 @@ export const CenterOfMassVisualization: React.FC<VisualizationProps> = ({
       {/* === BACKGROUND === */}
       <rect width={w} height={h} fill="url(#bgGrad)"/>
 
-      {/* === REFERENCE GRID - Shows "above" and "below" clearly === */}
-      <g opacity="0.15">
-        {/* Horizontal reference lines */}
-        {[-80, -40, 0, 40, 80].map((y, i) => (
-          <line
-            key={i}
-            x1={pivotX - 150}
-            y1={pivotY + y * scale}
-            x2={pivotX + 150}
-            y2={pivotY + y * scale}
-            stroke="#64748b"
-            strokeWidth={y === 0 ? "2" : "1"}
-            strokeDasharray={y === 0 ? "none" : "4,4"}
-          />
-        ))}
-      </g>
-
-      {/* === VERTICAL REFERENCE LINE (Pivot Level) === */}
-      <line
-        x1={pivotX}
-        y1={pivotY - 100 * scale}
-        x2={pivotX}
-        y2={pivotY + 120 * scale}
-        stroke="#22c55e"
-        strokeWidth="2"
-        strokeDasharray="8,4"
-        opacity="0.4"
-      />
-
-      {/* === ZONE LABELS === */}
-      {/* "ABOVE PIVOT" zone */}
-      <g transform={`translate(${w - 75 * scale}, ${pivotY - 60 * scale})`}>
+      {/* === SIDE VIEW LABEL - Make it clear what user is seeing === */}
+      <g transform={`translate(${w / 2}, ${18 * scale})`}>
         <rect
-          x={-35 * scale}
-          y={-12 * scale}
-          width={70 * scale}
-          height={24 * scale}
-          rx={4}
-          fill="#ef444420"
-          stroke="#ef4444"
+          x={-60 * scale}
+          y={-10 * scale}
+          width={120 * scale}
+          height={20 * scale}
+          rx={10 * scale}
+          fill="#3b82f620"
+          stroke="#3b82f6"
           strokeWidth="1"
         />
         <text
           textAnchor="middle"
-          fill="#f87171"
+          y={4 * scale}
+          fill="#60a5fa"
           fontSize={11 * scale}
           fontFamily="system-ui"
           fontWeight="600"
         >
-          ABOVE
+          👁️ SIDE VIEW
+        </text>
+      </g>
+
+      {/* === PIVOT LEVEL LINE - Horizontal dashed line across screen === */}
+      <line
+        x1={20 * scale}
+        y1={pivotY}
+        x2={w - 20 * scale}
+        y2={pivotY}
+        stroke="#22c55e"
+        strokeWidth="2"
+        strokeDasharray="8,4"
+        opacity="0.5"
+      />
+
+      {/* === ZONE LABELS - More prominent, on the LEFT side === */}
+      {/* "ABOVE PIVOT" zone - TOP of screen */}
+      <g transform={`translate(${35 * scale}, ${pivotY - 50 * scale})`}>
+        <rect
+          x={-30 * scale}
+          y={-16 * scale}
+          width={60 * scale}
+          height={32 * scale}
+          rx={6}
+          fill="#ef444430"
+          stroke="#ef4444"
+          strokeWidth="2"
+        />
+        <text
+          textAnchor="middle"
+          y={-2 * scale}
+          fill="#f87171"
+          fontSize={12 * scale}
+          fontFamily="system-ui"
+          fontWeight="700"
+        >
+          ⬆️ ABOVE
         </text>
         <text
           y={10 * scale}
@@ -184,30 +192,31 @@ export const CenterOfMassVisualization: React.FC<VisualizationProps> = ({
           fontSize={9 * scale}
           fontFamily="system-ui"
         >
-          (unstable)
+          UNSTABLE
         </text>
       </g>
 
-      {/* "BELOW PIVOT" zone */}
-      <g transform={`translate(${w - 75 * scale}, ${pivotY + 60 * scale})`}>
+      {/* "BELOW PIVOT" zone - BOTTOM of screen */}
+      <g transform={`translate(${35 * scale}, ${pivotY + 60 * scale})`}>
         <rect
-          x={-35 * scale}
-          y={-12 * scale}
-          width={70 * scale}
-          height={24 * scale}
-          rx={4}
-          fill="#22c55e20"
+          x={-30 * scale}
+          y={-16 * scale}
+          width={60 * scale}
+          height={32 * scale}
+          rx={6}
+          fill="#22c55e30"
           stroke="#22c55e"
-          strokeWidth="1"
+          strokeWidth="2"
         />
         <text
           textAnchor="middle"
+          y={-2 * scale}
           fill="#4ade80"
-          fontSize={11 * scale}
+          fontSize={12 * scale}
           fontFamily="system-ui"
-          fontWeight="600"
+          fontWeight="700"
         >
-          BELOW
+          ⬇️ BELOW
         </text>
         <text
           y={10 * scale}
@@ -216,7 +225,7 @@ export const CenterOfMassVisualization: React.FC<VisualizationProps> = ({
           fontSize={9 * scale}
           fontFamily="system-ui"
         >
-          (stable)
+          STABLE
         </text>
       </g>
 
@@ -296,27 +305,48 @@ export const CenterOfMassVisualization: React.FC<VisualizationProps> = ({
         />
       </g>
 
-      {/* Pivot label */}
-      <g transform={`translate(${pivotX + 45 * scale}, ${pivotY})`}>
+      {/* Pivot label - MORE PROMINENT with pointer */}
+      <g transform={`translate(${pivotX + 20 * scale}, ${pivotY})`}>
+        {/* Arrow pointing to pivot */}
+        <line
+          x1={0}
+          y1={0}
+          x2={25 * scale}
+          y2={0}
+          stroke="#22c55e"
+          strokeWidth="2"
+        />
         <rect
-          x={0}
-          y={-10 * scale}
-          width={55 * scale}
-          height={20 * scale}
-          rx={4}
+          x={25 * scale}
+          y={-14 * scale}
+          width={85 * scale}
+          height={28 * scale}
+          rx={6}
           fill="#22c55e"
-          opacity="0.2"
+          opacity="0.25"
+          stroke="#22c55e"
+          strokeWidth="2"
         />
         <text
-          x={28 * scale}
-          y={4 * scale}
+          x={67 * scale}
+          y={-2 * scale}
           textAnchor="middle"
-          fill="#22c55e"
-          fontSize={12 * scale}
+          fill="#4ade80"
+          fontSize={10 * scale}
           fontFamily="system-ui"
-          fontWeight="700"
+          fontWeight="600"
         >
-          PIVOT
+          ⚫ PIVOT POINT
+        </text>
+        <text
+          x={67 * scale}
+          y={10 * scale}
+          textAnchor="middle"
+          fill="#86efac"
+          fontSize={9 * scale}
+          fontFamily="system-ui"
+        >
+          (glass rim edge)
         </text>
       </g>
 
@@ -494,91 +524,122 @@ export const CenterOfMassVisualization: React.FC<VisualizationProps> = ({
             <line x1={-8 * scale} y1={0} x2={8 * scale} y2={0} stroke="#fff" strokeWidth="1.5"/>
             <line x1={0} y1={-8 * scale} x2={0} y2={8 * scale} stroke="#fff" strokeWidth="1.5"/>
 
-            {/* COM label */}
-            <g transform={`translate(${25 * scale}, 0)`}>
+            {/* COM label - CLEARER explanation */}
+            <g transform={`translate(${-90 * scale}, 0)`}>
               <rect
                 x={0}
-                y={-14 * scale}
-                width={85 * scale}
-                height={28 * scale}
-                rx={4}
-                fill="rgba(0,0,0,0.7)"
+                y={-20 * scale}
+                width={80 * scale}
+                height={40 * scale}
+                rx={6}
+                fill="rgba(0,0,0,0.85)"
                 stroke="#ef4444"
-                strokeWidth="1"
+                strokeWidth="2"
               />
               <text
-                x={42 * scale}
-                y={-2 * scale}
-                textAnchor="middle"
-                fill="#fca5a5"
-                fontSize={9 * scale}
-                fontFamily="system-ui"
-              >
-                CENTER OF
-              </text>
-              <text
-                x={42 * scale}
-                y={10 * scale}
+                x={40 * scale}
+                y={-6 * scale}
                 textAnchor="middle"
                 fill="#ef4444"
                 fontSize={11 * scale}
                 fontFamily="system-ui"
                 fontWeight="700"
               >
-                MASS
+                🎯 COM
+              </text>
+              <text
+                x={40 * scale}
+                y={8 * scale}
+                textAnchor="middle"
+                fill="#fca5a5"
+                fontSize={8 * scale}
+                fontFamily="system-ui"
+              >
+                Center of Mass
+              </text>
+              <text
+                x={40 * scale}
+                y={18 * scale}
+                textAnchor="middle"
+                fill="#94a3b8"
+                fontSize={7 * scale}
+                fontFamily="system-ui"
+              >
+                (balance point)
               </text>
             </g>
           </g>
         )}
       </g>
 
-      {/* === STATUS DISPLAY === */}
-      <g transform={`translate(${20 * scale}, ${20 * scale})`}>
+      {/* === STATUS DISPLAY - Top right corner === */}
+      <g transform={`translate(${w - 145 * scale}, ${12 * scale})`}>
         <rect
-          width={130 * scale}
-          height={50 * scale}
+          width={135 * scale}
+          height={55 * scale}
           rx={8}
-          fill={isBalanced ? 'rgba(34, 197, 94, 0.15)' : 'rgba(239, 68, 68, 0.15)'}
+          fill={isBalanced ? 'rgba(34, 197, 94, 0.2)' : 'rgba(239, 68, 68, 0.2)'}
           stroke={isBalanced ? '#22c55e' : '#ef4444'}
           strokeWidth="2"
         />
         <text
-          x={65 * scale}
-          y={22 * scale}
+          x={67 * scale}
+          y={20 * scale}
           textAnchor="middle"
           fill={isBalanced ? '#4ade80' : '#f87171'}
-          fontSize={14 * scale}
+          fontSize={16 * scale}
           fontFamily="system-ui"
           fontWeight="700"
         >
           {isBalanced ? '✓ BALANCED' : '✗ FALLING'}
         </text>
         <text
-          x={65 * scale}
-          y={40 * scale}
+          x={67 * scale}
+          y={36 * scale}
           textAnchor="middle"
           fill={isBalanced ? '#86efac' : '#fca5a5'}
           fontSize={10 * scale}
           fontFamily="system-ui"
+          fontWeight="600"
         >
-          {comY < 0 ? 'COM is BELOW pivot' : 'COM is ABOVE pivot'}
+          {comY < 0 ? '🎯 COM is BELOW ⬇️' : '🎯 COM is ABOVE ⬆️'}
+        </text>
+        <text
+          x={67 * scale}
+          y={48 * scale}
+          textAnchor="middle"
+          fill="#94a3b8"
+          fontSize={9 * scale}
+          fontFamily="system-ui"
+        >
+          {comY < 0 ? 'gravity restores balance' : 'gravity tips it over'}
         </text>
       </g>
 
-      {/* === PHYSICS EXPLANATION === */}
-      <text
-        x={w / 2}
-        y={h - 12 * scale}
-        textAnchor="middle"
-        fill="#64748b"
-        fontSize={11 * scale}
-        fontFamily="system-ui"
-      >
-        {isBalanced
-          ? "Heavy side pulls COM below pivot → Gravity creates restoring force → STABLE"
-          : "COM above pivot → Gravity tips it further → FALLS"
-        }
-      </text>
+      {/* === PHYSICS EXPLANATION - cleaner, at bottom === */}
+      <g transform={`translate(${w / 2}, ${h - 18 * scale})`}>
+        <rect
+          x={-160 * scale}
+          y={-10 * scale}
+          width={320 * scale}
+          height={22 * scale}
+          rx={4}
+          fill="rgba(0,0,0,0.5)"
+        />
+        <text
+          textAnchor="middle"
+          y={4 * scale}
+          fill={isBalanced ? "#86efac" : "#fca5a5"}
+          fontSize={10 * scale}
+          fontFamily="system-ui"
+          fontWeight="500"
+        >
+          {isBalanced
+            ? "🔑 KEY: Heavy fork pulls COM down below the pivot → STABLE balance!"
+            : "⚠️ COM moved above pivot → Gravity tips it over → FALLS!"
+          }
+        </text>
+      </g>
 
       {/* === GRAVITY ARROW === */}
       <g transform={`translate(${50 * scale}, ${pivotY + 30 * scale})`}>

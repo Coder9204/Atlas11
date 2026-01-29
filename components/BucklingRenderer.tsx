@@ -62,10 +62,10 @@ const isValidPhase = (phase: string): phase is Phase => {
 // ─────────────────────────────────────────────────────────────────────────────
 
 interface BucklingRendererProps {
-  onComplete?: (score: number) => void;
-  emitGameEvent?: (event: GameEvent) => void;
-  gamePhase?: string;
+  phase: 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
   onPhaseComplete?: () => void;
+  onCorrectAnswer?: () => void;
+  onIncorrectAnswer?: () => void;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -73,18 +73,12 @@ interface BucklingRendererProps {
 // ─────────────────────────────────────────────────────────────────────────────
 
 const BucklingRenderer: React.FC<BucklingRendererProps> = ({
-  onComplete,
-  emitGameEvent,
-  gamePhase,
-  onPhaseComplete
+  phase: propPhase,
+  onPhaseComplete,
+  onCorrectAnswer,
+  onIncorrectAnswer
 }) => {
-  // Phase management
-  const getInitialPhase = (): Phase => {
-    if (gamePhase && isValidPhase(gamePhase)) return gamePhase;
-    return 'hook';
-  };
-
-  const [phase, setPhase] = useState<Phase>(getInitialPhase());
+  const [currentPhase, setCurrentPhase] = useState<Phase>(propPhase || 'hook');
   const [showCoachMessage, setShowCoachMessage] = useState(true);
   const navigationLockRef = useRef(false);
   const lastClickRef = useRef(0);
@@ -115,10 +109,10 @@ const BucklingRenderer: React.FC<BucklingRendererProps> = ({
 
   // Phase sync
   useEffect(() => {
-    if (gamePhase && isValidPhase(gamePhase) && gamePhase !== phase) {
-      setPhase(gamePhase);
+    if (propPhase && propPhase !== currentPhase) {
+      setCurrentPhase(propPhase);
     }
-  }, [gamePhase, phase]);
+  }, [propPhase, currentPhase]);
 
   // Sound system
   const playSound = useCallback((type: 'click' | 'success' | 'failure' | 'transition' | 'complete') => {
@@ -146,16 +140,14 @@ const BucklingRenderer: React.FC<BucklingRendererProps> = ({
     } catch { /* Audio not available */ }
   }, []);
 
-  // Emit game events
-  const emitEvent = useCallback((
-    type: GameEvent['type'],
-    data?: GameEvent['data'],
-    message?: string
-  ) => {
-    if (emitGameEvent) {
-      emitGameEvent({ type, phase, data, timestamp: Date.now(), message });
+  // Helper for phase navigation
+  const goToNextPhase = useCallback(() => {
+    const currentIndex = PHASES.indexOf(currentPhase);
+    if (currentIndex < PHASES.length - 1) {
+      setCurrentPhase(PHASES[currentIndex + 1]);
+      onPhaseComplete?.();
     }
-  }, [emitGameEvent, phase]);
+  }, [currentPhase, onPhaseComplete]);
 
   // ─────────────────────────────────────────────────────────────────────────
   // NAVIGATION
@@ -169,15 +161,13 @@ const BucklingRenderer: React.FC<BucklingRendererProps> = ({
     navigationLockRef.current = true;
 
     playSound('transition');
-    setPhase(newPhase);
+    setCurrentPhase(newPhase);
     setShowCoachMessage(true);
-    emitEvent('phase_change', { action: `Moved to ${newPhase}` });
-    onPhaseComplete?.(PHASES.indexOf(newPhase));
 
     setTimeout(() => {
       navigationLockRef.current = false;
     }, 400);
-  }, [emitEvent, playSound, onPhaseComplete]);
+  }, [playSound]);
 
   // ─────────────────────────────────────────────────────────────────────────
   // BUCKLING PHYSICS
@@ -206,7 +196,7 @@ const BucklingRenderer: React.FC<BucklingRendererProps> = ({
         setTwistBuckleAmount(1);
         setTwistHasBuckled(true);
         playSound('failure');
-        emitEvent('observation', {
+        console.debug('observation', {
           details: `${crossSection} section buckled at ${newLoad}N`
         });
       }
@@ -225,7 +215,7 @@ const BucklingRenderer: React.FC<BucklingRendererProps> = ({
         setBuckleAmount(1);
         setHasBuckled(true);
         playSound('failure');
-        emitEvent('observation', {
+        console.debug('observation', {
           details: `${columnLength} column buckled at ${newLoad}N`
         });
       }
@@ -488,7 +478,7 @@ const BucklingRenderer: React.FC<BucklingRendererProps> = ({
                 e.preventDefault();
                 setPrediction(option.id);
                 playSound('click');
-                emitEvent('prediction', { prediction: option.id });
+                console.debug('prediction', { prediction: option.id });
               }}
               className={`p-4 rounded-xl border-2 transition-all text-left flex items-center gap-3 ${
                 prediction === option.id
@@ -763,7 +753,7 @@ const BucklingRenderer: React.FC<BucklingRendererProps> = ({
                 e.preventDefault();
                 setTwistPrediction(option.id);
                 playSound('click');
-                emitEvent('prediction', { prediction: option.id });
+                console.debug('prediction', { prediction: option.id });
               }}
               className={`p-4 rounded-xl border-2 transition-all text-left flex items-center gap-3 ${
                 twistPrediction === option.id
@@ -999,16 +989,16 @@ const BucklingRenderer: React.FC<BucklingRendererProps> = ({
   // ─────────────────────────────────────────────────────────────────────────
 
   const testQuestions = [
-    { q: 'What happens when you double a column\'s length?', options: ['Half strength', 'Quarter strength', 'Same strength', 'Double strength'], correct: 1 },
-    { q: 'Why do columns buckle sideways?', options: ['Material weakness', 'Small imperfections amplify', 'Gravity pulls sideways', 'Heat expansion'], correct: 1 },
-    { q: 'Which cross-section resists buckling best?', options: ['Solid rod', 'Hollow tube', 'I-beam', 'Square bar'], correct: 2 },
-    { q: 'What is moment of inertia (I)?', options: ['Weight distribution', 'Material distribution from center', 'Total material amount', 'Column height'], correct: 1 },
-    { q: 'Euler\'s formula shows P_cr is proportional to:', options: ['1/L', '1/L²', 'L', 'L²'], correct: 1 },
-    { q: 'Why are bike frames hollow?', options: ['Cheaper', 'Higher I for same weight', 'Easier to weld', 'Better appearance'], correct: 1 },
-    { q: 'Long bones are hollow because:', options: ['Blood storage', 'Higher buckling resistance', 'Flexibility', 'Random evolution'], correct: 1 },
-    { q: 'Lattice towers resist buckling by:', options: ['Heavy materials', 'Separated members increase I', 'Solid construction', 'Magnetic forces'], correct: 1 },
-    { q: 'For same buckling resistance, 2x height needs:', options: ['2x thicker', '4x thicker I', 'Same thickness', 'Half thickness'], correct: 1 },
-    { q: 'The L² relationship means:', options: ['Linear scaling', 'Dramatic weakness with length', 'No effect', 'Stronger when longer'], correct: 1 }
+    { question: 'What happens when you double a column\'s length?', options: [{ text: 'Half strength', correct: false }, { text: 'Quarter strength', correct: true }, { text: 'Same strength', correct: false }, { text: 'Double strength', correct: false }] },
+    { question: 'Why do columns buckle sideways?', options: [{ text: 'Material weakness', correct: false }, { text: 'Small imperfections amplify', correct: true }, { text: 'Gravity pulls sideways', correct: false }, { text: 'Heat expansion', correct: false }] },
+    { question: 'Which cross-section resists buckling best?', options: [{ text: 'Solid rod', correct: false }, { text: 'Hollow tube', correct: false }, { text: 'I-beam', correct: true }, { text: 'Square bar', correct: false }] },
+    { question: 'What is moment of inertia (I)?', options: [{ text: 'Weight distribution', correct: false }, { text: 'Material distribution from center', correct: true }, { text: 'Total material amount', correct: false }, { text: 'Column height', correct: false }] },
+    { question: 'Euler\'s formula shows P_cr is proportional to:', options: [{ text: '1/L', correct: false }, { text: '1/L²', correct: true }, { text: 'L', correct: false }, { text: 'L²', correct: false }] },
+    { question: 'Why are bike frames hollow?', options: [{ text: 'Cheaper', correct: false }, { text: 'Higher I for same weight', correct: true }, { text: 'Easier to weld', correct: false }, { text: 'Better appearance', correct: false }] },
+    { question: 'Long bones are hollow because:', options: [{ text: 'Blood storage', correct: false }, { text: 'Higher buckling resistance', correct: true }, { text: 'Flexibility', correct: false }, { text: 'Random evolution', correct: false }] },
+    { question: 'Lattice towers resist buckling by:', options: [{ text: 'Heavy materials', correct: false }, { text: 'Separated members increase I', correct: true }, { text: 'Solid construction', correct: false }, { text: 'Magnetic forces', correct: false }] },
+    { question: 'For same buckling resistance, 2x height needs:', options: [{ text: '2x thicker', correct: false }, { text: '4x thicker I', correct: true }, { text: 'Same thickness', correct: false }, { text: 'Half thickness', correct: false }] },
+    { question: 'The L² relationship means:', options: [{ text: 'Linear scaling', correct: false }, { text: 'Dramatic weakness with length', correct: true }, { text: 'No effect', correct: false }, { text: 'Stronger when longer', correct: false }] }
   ];
 
   const handleTestAnswer = (questionIndex: number, optionIndex: number) => {
@@ -1152,8 +1142,7 @@ const BucklingRenderer: React.FC<BucklingRendererProps> = ({
           onMouseDown={(e) => {
             e.preventDefault();
             playSound('complete');
-            if (onComplete) onComplete(testScore * 10);
-            emitEvent('completion', { score: testScore * 10 });
+            onPhaseComplete?.();
           }}
           className="px-8 py-4 bg-gradient-to-r from-indigo-500 to-purple-500 text-white font-bold text-lg rounded-xl"
         >
@@ -1168,7 +1157,7 @@ const BucklingRenderer: React.FC<BucklingRendererProps> = ({
   // ─────────────────────────────────────────────────────────────────────────
 
   const renderPhase = () => {
-    switch (phase) {
+    switch (currentPhase) {
       case 'hook': return renderHook();
       case 'predict': return renderPredict();
       case 'play': return renderPlay();
@@ -1201,9 +1190,9 @@ const BucklingRenderer: React.FC<BucklingRendererProps> = ({
                 key={p}
                 onMouseDown={(e) => { e.preventDefault(); goToPhase(p); }}
                 className={`h-2 rounded-full transition-all duration-300 ${
-                  phase === p
+                  currentPhase === p
                     ? 'bg-indigo-400 w-6 shadow-lg shadow-indigo-400/30'
-                    : PHASES.indexOf(phase) > PHASES.indexOf(p)
+                    : PHASES.indexOf(currentPhase) > PHASES.indexOf(p)
                       ? 'bg-emerald-500 w-2'
                       : 'bg-slate-700 w-2 hover:bg-slate-600'
                 }`}
