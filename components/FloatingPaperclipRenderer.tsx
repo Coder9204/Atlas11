@@ -9,22 +9,11 @@ import React, { useState, useRef, useEffect, useCallback } from 'react';
 // Steel paperclip floats despite being 8× denser than water
 // Force balance: Weight = Surface tension × perimeter × sin(θ)
 
-interface GameEvent {
-  type: 'phase_change' | 'prediction' | 'result' | 'complete';
-  from?: string;
-  to?: string;
-  phase?: string;
-  prediction?: string;
-  actual?: string;
-  correct?: boolean;
-  score?: number;
-  total?: number;
-  percentage?: number;
-}
-
 interface FloatingPaperclipRendererProps {
-  onGameEvent?: (event: GameEvent) => void;
-  onPhaseComplete?: (phase: number) => void;
+  phase: 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
+  onPhaseComplete?: () => void;
+  onCorrectAnswer?: () => void;
+  onIncorrectAnswer?: () => void;
 }
 
 type Phase =
@@ -52,8 +41,12 @@ const phaseLabels: Record<Phase, string> = {
 // ─────────────────────────────────────────────────────────────
 // Main Component
 // ─────────────────────────────────────────────────────────────
-export default function FloatingPaperclipRenderer({ onGameEvent, onPhaseComplete }: FloatingPaperclipRendererProps) {
-  const [phase, setPhase] = useState<Phase>('hook');
+export default function FloatingPaperclipRenderer({
+  phase,
+  onPhaseComplete,
+  onCorrectAnswer,
+  onIncorrectAnswer
+}: FloatingPaperclipRendererProps) {
   const [prediction, setPrediction] = useState<string | null>(null);
   const [showResult, setShowResult] = useState(false);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
@@ -110,13 +103,9 @@ export default function FloatingPaperclipRenderer({ onGameEvent, onPhaseComplete
     navigationLockRef.current = true;
     setTimeout(() => { navigationLockRef.current = false; }, 400);
 
-    if (onGameEvent) {
-      onGameEvent({ type: 'phase_change', from: phase, to: newPhase });
-    }
-    setPhase(newPhase);
-    onPhaseComplete?.(phaseOrder.indexOf(newPhase));
+    onPhaseComplete?.();
     playSound('transition');
-  }, [onGameEvent, phase, onPhaseComplete, playSound]);
+  }, [onPhaseComplete, playSound]);
 
   // Drop the paperclip
   const dropClip = () => {
@@ -191,17 +180,11 @@ export default function FloatingPaperclipRenderer({ onGameEvent, onPhaseComplete
 
   const handlePrediction = (choice: string) => {
     setPrediction(choice);
-    if (onGameEvent) {
-      onGameEvent({ type: 'prediction', phase: 'predict', prediction: choice });
-    }
     playSound('click');
   };
 
   const handleTwistPrediction = (choice: string) => {
     setTwistPrediction(choice);
-    if (onGameEvent) {
-      onGameEvent({ type: 'prediction', phase: 'twist_predict', prediction: choice });
-    }
     playSound('click');
   };
 
@@ -214,30 +197,112 @@ export default function FloatingPaperclipRenderer({ onGameEvent, onPhaseComplete
 
   const submitTest = () => {
     setTestSubmitted(true);
-    const score = testQuestions.reduce((acc, tq, i) => acc + (testAnswers[i] === tq.correct ? 1 : 0), 0);
-    if (onGameEvent) {
-      onGameEvent({
-        type: 'result',
-        phase: 'test',
-        score,
-        total: testQuestions.length,
-        percentage: Math.round((score / testQuestions.length) * 100),
-      });
+    const score = testQuestions.reduce((acc, q, i) => {
+      if (testAnswers[i] !== undefined && q.options[testAnswers[i]]?.correct) {
+        return acc + 1;
+      }
+      return acc;
+    }, 0);
+    if (score >= 7) {
+      onCorrectAnswer?.();
+      playSound('success');
+    } else {
+      onIncorrectAnswer?.();
+      playSound('failure');
     }
-    playSound(score >= 7 ? 'success' : 'failure');
   };
 
   const testQuestions = [
-    { q: "Why does a steel paperclip float on water?", options: ["Steel is less dense than water", "Surface tension supports it", "Air bubbles hold it up", "The paperclip is hollow"], correct: 1 },
-    { q: "What visible feature shows surface tension supporting the paperclip?", options: ["Bubbles around the clip", "Color change in water", "A dimple in the water surface", "Ripples spreading outward"], correct: 2 },
-    { q: "Why does a dropped paperclip sink but a gently placed one floats?", options: ["Dropped clip is heavier", "Gentle placement allows surface tension to form gradually", "Water temperature changes", "Air pressure pushes it down"], correct: 1 },
-    { q: "What happens when you add soap to water with a floating paperclip?", options: ["The clip floats higher", "Nothing changes", "The clip immediately sinks", "The water turns cloudy"], correct: 2 },
-    { q: "Which formula relates surface tension force to contact angle?", options: ["F = mg", "F = γ × L × sin(θ)", "F = ρgh", "F = ma"], correct: 1 },
-    { q: "Why can water striders walk on water?", options: ["They are very light", "Their legs have oils and hairs that don't break surface tension", "They move too fast to sink", "Water pushes them up"], correct: 1 },
-    { q: "What is the approximate density ratio of steel to water?", options: ["1:1 (same density)", "2:1", "5:1", "8:1"], correct: 3 },
-    { q: "What determines the maximum weight surface tension can support?", options: ["Water depth", "Contact perimeter and contact angle", "Water color", "Container shape"], correct: 1 },
-    { q: "Why does a needle float better when placed parallel to the water surface?", options: ["It's lighter that way", "More contact length means more surface tension force", "The needle is magnetic", "Air gets trapped underneath"], correct: 1 },
-    { q: "What natural phenomenon uses surface tension for survival?", options: ["Birds flying", "Fish swimming", "Insects walking on water", "Plants absorbing sunlight"], correct: 2 }
+    {
+      question: "Why does a steel paperclip float on water?",
+      options: [
+        { text: "Steel is less dense than water", correct: false },
+        { text: "Surface tension supports it", correct: true },
+        { text: "Air bubbles hold it up", correct: false },
+        { text: "The paperclip is hollow", correct: false }
+      ],
+    },
+    {
+      question: "What visible feature shows surface tension supporting the paperclip?",
+      options: [
+        { text: "Bubbles around the clip", correct: false },
+        { text: "Color change in water", correct: false },
+        { text: "A dimple in the water surface", correct: true },
+        { text: "Ripples spreading outward", correct: false }
+      ],
+    },
+    {
+      question: "Why does a dropped paperclip sink but a gently placed one floats?",
+      options: [
+        { text: "Dropped clip is heavier", correct: false },
+        { text: "Gentle placement allows surface tension to form gradually", correct: true },
+        { text: "Water temperature changes", correct: false },
+        { text: "Air pressure pushes it down", correct: false }
+      ],
+    },
+    {
+      question: "What happens when you add soap to water with a floating paperclip?",
+      options: [
+        { text: "The clip floats higher", correct: false },
+        { text: "Nothing changes", correct: false },
+        { text: "The clip immediately sinks", correct: true },
+        { text: "The water turns cloudy", correct: false }
+      ],
+    },
+    {
+      question: "Which formula relates surface tension force to contact angle?",
+      options: [
+        { text: "F = mg", correct: false },
+        { text: "F = γ × L × sin(θ)", correct: true },
+        { text: "F = ρgh", correct: false },
+        { text: "F = ma", correct: false }
+      ],
+    },
+    {
+      question: "Why can water striders walk on water?",
+      options: [
+        { text: "They are very light", correct: false },
+        { text: "Their legs have oils and hairs that don't break surface tension", correct: true },
+        { text: "They move too fast to sink", correct: false },
+        { text: "Water pushes them up", correct: false }
+      ],
+    },
+    {
+      question: "What is the approximate density ratio of steel to water?",
+      options: [
+        { text: "1:1 (same density)", correct: false },
+        { text: "2:1", correct: false },
+        { text: "5:1", correct: false },
+        { text: "8:1", correct: true }
+      ],
+    },
+    {
+      question: "What determines the maximum weight surface tension can support?",
+      options: [
+        { text: "Water depth", correct: false },
+        { text: "Contact perimeter and contact angle", correct: true },
+        { text: "Water color", correct: false },
+        { text: "Container shape", correct: false }
+      ],
+    },
+    {
+      question: "Why does a needle float better when placed parallel to the water surface?",
+      options: [
+        { text: "It's lighter that way", correct: false },
+        { text: "More contact length means more surface tension force", correct: true },
+        { text: "The needle is magnetic", correct: false },
+        { text: "Air gets trapped underneath", correct: false }
+      ],
+    },
+    {
+      question: "What natural phenomenon uses surface tension for survival?",
+      options: [
+        { text: "Birds flying", correct: false },
+        { text: "Fish swimming", correct: false },
+        { text: "Insects walking on water", correct: true },
+        { text: "Plants absorbing sunlight", correct: false }
+      ],
+    }
   ];
 
   const applications = [
@@ -447,8 +512,10 @@ export default function FloatingPaperclipRenderer({ onGameEvent, onPhaseComplete
                 onMouseDown={(e) => {
                   e.preventDefault();
                   setShowResult(true);
-                  if (onGameEvent) {
-                    onGameEvent({ type: 'result', phase: 'play', prediction, actual: 'b', correct: prediction === 'b' });
+                  if (prediction === 'b') {
+                    onCorrectAnswer?.();
+                  } else {
+                    onIncorrectAnswer?.();
                   }
                 }}
                 className="px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-semibold rounded-xl"
@@ -632,8 +699,10 @@ export default function FloatingPaperclipRenderer({ onGameEvent, onPhaseComplete
                 onMouseDown={(e) => {
                   e.preventDefault();
                   setShowTwistResult(true);
-                  if (onGameEvent) {
-                    onGameEvent({ type: 'result', phase: 'twist_play', prediction: twistPrediction, actual: 'c', correct: twistPrediction === 'c' });
+                  if (twistPrediction === 'c') {
+                    onCorrectAnswer?.();
+                  } else {
+                    onIncorrectAnswer?.();
                   }
                 }}
                 className="px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-semibold rounded-xl"
@@ -740,7 +809,12 @@ export default function FloatingPaperclipRenderer({ onGameEvent, onPhaseComplete
         );
 
       case 'test':
-        const score = testQuestions.reduce((acc, tq, i) => acc + (testAnswers[i] === tq.correct ? 1 : 0), 0);
+        const score = testQuestions.reduce((acc, q, i) => {
+          if (testAnswers[i] !== undefined && q.options[testAnswers[i]]?.correct) {
+            return acc + 1;
+          }
+          return acc;
+        }, 0);
 
         if (testSubmitted) {
           return (
@@ -780,7 +854,7 @@ export default function FloatingPaperclipRenderer({ onGameEvent, onPhaseComplete
             <div className="space-y-4 w-full max-w-2xl max-h-96 overflow-y-auto mb-4">
               {testQuestions.map((tq, qi) => (
                 <div key={qi} className="bg-slate-800/50 rounded-xl p-4">
-                  <p className="font-semibold text-white mb-3">{qi + 1}. {tq.q}</p>
+                  <p className="font-semibold text-white mb-3">{qi + 1}. {tq.question}</p>
                   <div className="grid grid-cols-1 gap-2">
                     {tq.options.map((opt, oi) => (
                       <button
@@ -790,7 +864,7 @@ export default function FloatingPaperclipRenderer({ onGameEvent, onPhaseComplete
                           testAnswers[qi] === oi ? 'bg-blue-600 text-white' : 'bg-slate-700/50 text-slate-300 hover:bg-slate-600/50'
                         }`}
                       >
-                        {opt}
+                        {opt.text}
                       </button>
                     ))}
                   </div>
@@ -813,7 +887,12 @@ export default function FloatingPaperclipRenderer({ onGameEvent, onPhaseComplete
         );
 
       case 'mastery':
-        const finalScore = testQuestions.reduce((acc, tq, i) => acc + (testAnswers[i] === tq.correct ? 1 : 0), 0);
+        const finalScore = testQuestions.reduce((acc, q, i) => {
+          if (testAnswers[i] !== undefined && q.options[testAnswers[i]]?.correct) {
+            return acc + 1;
+          }
+          return acc;
+        }, 0);
 
         return (
           <div className="flex flex-col items-center justify-center min-h-[500px] p-6 text-center">
@@ -849,9 +928,7 @@ export default function FloatingPaperclipRenderer({ onGameEvent, onPhaseComplete
               <button
                 onMouseDown={(e) => {
                   e.preventDefault();
-                  if (onGameEvent) {
-                    onGameEvent({ type: 'complete', score: finalScore, total: testQuestions.length });
-                  }
+                  onPhaseComplete?.();
                   playSound('complete');
                 }}
                 className="px-8 py-4 bg-gradient-to-r from-blue-500 to-cyan-600 text-white font-bold text-lg rounded-xl"

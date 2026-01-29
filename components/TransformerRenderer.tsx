@@ -24,8 +24,10 @@ interface GameEvent {
 }
 
 interface TransformerRendererProps {
-  onEvent?: (event: GameEvent) => void;
-  savedState?: GameState | null;
+  phase: 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
+  onPhaseComplete?: () => void;
+  onCorrectAnswer?: () => void;
+  onIncorrectAnswer?: () => void;
 }
 
 interface GameState {
@@ -53,42 +55,38 @@ const TEST_QUESTIONS = [
   {
     question: 'What determines the voltage ratio in a transformer?',
     options: [
-      'The thickness of the wire',
-      'The ratio of turns in primary to secondary coils',
-      'The speed of the AC current',
-      'The size of the iron core'
-    ],
-    correct: 1
+      { text: 'The thickness of the wire', correct: false },
+      { text: 'The ratio of turns in primary to secondary coils', correct: true },
+      { text: 'The speed of the AC current', correct: false },
+      { text: 'The size of the iron core', correct: false }
+    ]
   },
   {
     question: 'Why don\'t transformers work with DC (direct current)?',
     options: [
-      'DC is too weak',
-      'DC flows in the wrong direction',
-      'DC creates a static field - no changing flux to induce current',
-      'DC would melt the transformer'
-    ],
-    correct: 2
+      { text: 'DC is too weak', correct: false },
+      { text: 'DC flows in the wrong direction', correct: false },
+      { text: 'DC creates a static field - no changing flux to induce current', correct: true },
+      { text: 'DC would melt the transformer', correct: false }
+    ]
   },
   {
     question: 'A transformer steps up voltage from 100V to 1000V. What happens to current?',
     options: [
-      'Current increases 10×',
-      'Current stays the same',
-      'Current decreases to 1/10',
-      'Current becomes DC'
-    ],
-    correct: 2
+      { text: 'Current increases 10x', correct: false },
+      { text: 'Current stays the same', correct: false },
+      { text: 'Current decreases to 1/10', correct: true },
+      { text: 'Current becomes DC', correct: false }
+    ]
   },
   {
     question: 'Why do power lines use high voltage for transmission?',
     options: [
-      'High voltage travels faster',
-      'High voltage looks more impressive',
-      'Lower current means less I²R heat loss in wires',
-      'High voltage is safer'
-    ],
-    correct: 2
+      { text: 'High voltage travels faster', correct: false },
+      { text: 'High voltage looks more impressive', correct: false },
+      { text: 'Lower current means less I squared R heat loss in wires', correct: true },
+      { text: 'High voltage is safer', correct: false }
+    ]
   }
 ];
 
@@ -156,21 +154,19 @@ function playSound(type: 'click' | 'success' | 'failure' | 'transition' | 'compl
 // ─────────────────────────────────────────────────────────────────────────────
 // MAIN COMPONENT
 // ─────────────────────────────────────────────────────────────────────────────
-export default function TransformerRenderer({ onEvent, savedState }: TransformerRendererProps) {
+export default function TransformerRenderer({ phase: initialPhase, onPhaseComplete, onCorrectAnswer, onIncorrectAnswer }: TransformerRendererProps) {
   // ─── State ───────────────────────────────────────────────────────────────────
-  const [phase, setPhase] = useState<Phase>(savedState?.phase || 'hook');
-  const [prediction, setPrediction] = useState<string | null>(savedState?.prediction || null);
-  const [twistPrediction, setTwistPrediction] = useState<string | null>(savedState?.twistPrediction || null);
-  const [testAnswers, setTestAnswers] = useState<number[]>(savedState?.testAnswers || []);
-  const [completedApps, setCompletedApps] = useState<Set<number>>(
-    new Set(savedState?.completedApps || [])
-  );
+  const [phase, setPhase] = useState<Phase>(initialPhase || 'hook');
+  const [prediction, setPrediction] = useState<string | null>(null);
+  const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
+  const [testAnswers, setTestAnswers] = useState<number[]>([]);
+  const [completedApps, setCompletedApps] = useState<Set<number>>(new Set());
 
   // Simulation state
-  const [primaryTurns, setPrimaryTurns] = useState(savedState?.primaryTurns || 100);
-  const [secondaryTurns, setSecondaryTurns] = useState(savedState?.secondaryTurns || 200);
-  const [inputVoltage, setInputVoltage] = useState(savedState?.inputVoltage || 120);
-  const [isAC, setIsAC] = useState(savedState?.isAC ?? true);
+  const [primaryTurns, setPrimaryTurns] = useState(100);
+  const [secondaryTurns, setSecondaryTurns] = useState(200);
+  const [inputVoltage, setInputVoltage] = useState(120);
+  const [isAC, setIsAC] = useState(true);
   const [acPhase, setAcPhase] = useState(0);
 
   // Twist state - DC comparison
@@ -187,17 +183,13 @@ export default function TransformerRenderer({ onEvent, savedState }: Transformer
   const transformerType = turnsRatio > 1 ? 'Step-Up' : turnsRatio < 1 ? 'Step-Down' : 'Isolation';
 
   // ─── Helpers ─────────────────────────────────────────────────────────────────
-  const emitEvent = (type: GameEvent['type'], data: Record<string, unknown> = {}) => {
-    onEvent?.({ type, phase, data });
-  };
-
   const goToPhase = (newPhase: Phase) => {
     if (navigationLockRef.current) return;
     navigationLockRef.current = true;
 
     playSound('transition');
     setPhase(newPhase);
-    emitEvent('interaction', { action: 'phase_change', from: phase, to: newPhase });
+    if (onPhaseComplete) onPhaseComplete();
 
     setTimeout(() => {
       navigationLockRef.current = false;
@@ -547,7 +539,6 @@ export default function TransformerRenderer({ onEvent, savedState }: Transformer
               onMouseDown={() => {
                 playSound('click');
                 setPrediction(option);
-                emitEvent('prediction', { prediction: option });
               }}
               className={`w-full p-4 rounded-lg text-left transition-all ${
                 prediction === option
@@ -723,7 +714,6 @@ export default function TransformerRenderer({ onEvent, savedState }: Transformer
               onMouseDown={() => {
                 playSound('click');
                 setTwistPrediction(option);
-                emitEvent('prediction', { prediction: option, type: 'twist' });
               }}
               className={`w-full p-4 rounded-lg text-left transition-all ${
                 twistPrediction === option
@@ -872,7 +862,6 @@ export default function TransformerRenderer({ onEvent, savedState }: Transformer
             onMouseDown={() => {
               playSound('click');
               setCompletedApps(prev => new Set([...prev, i]));
-              emitEvent('interaction', { action: 'explore_app', app: app.title });
             }}
             className={`p-4 rounded-xl text-left transition-all ${
               completedApps.has(i)
@@ -915,10 +904,11 @@ export default function TransformerRenderer({ onEvent, savedState }: Transformer
 
     if (isComplete) {
       const score = testAnswers.reduce(
-        (acc, answer, i) => acc + (answer === TEST_QUESTIONS[i].correct ? 1 : 0),
+        (acc, answer, i) => acc + (TEST_QUESTIONS[i].options[answer]?.correct ? 1 : 0),
         0
       );
       const passed = score >= 3;
+      if (passed && onCorrectAnswer) onCorrectAnswer();
 
       return (
         <div className="text-center space-y-6">
@@ -962,7 +952,7 @@ export default function TransformerRenderer({ onEvent, savedState }: Transformer
               key={i}
               className={`w-3 h-3 rounded-full ${
                 i < currentQuestion
-                  ? testAnswers[i] === TEST_QUESTIONS[i].correct
+                  ? TEST_QUESTIONS[i].options[testAnswers[i]]?.correct
                     ? 'bg-green-500'
                     : 'bg-red-500'
                   : i === currentQuestion
@@ -980,17 +970,12 @@ export default function TransformerRenderer({ onEvent, savedState }: Transformer
               <button
                 key={i}
                 onMouseDown={() => {
-                  playSound(i === question.correct ? 'success' : 'failure');
+                  playSound(option.correct ? 'success' : 'failure');
                   setTestAnswers([...testAnswers, i]);
-                  emitEvent('interaction', {
-                    action: 'answer',
-                    questionIndex: currentQuestion,
-                    correct: i === question.correct
-                  });
                 }}
                 className="w-full p-4 bg-gray-700 text-gray-300 rounded-lg text-left hover:bg-gray-600 transition-all"
               >
-                {option}
+                {option.text}
               </button>
             ))}
           </div>
@@ -1028,7 +1013,7 @@ export default function TransformerRenderer({ onEvent, savedState }: Transformer
       <button
         onMouseDown={() => {
           playSound('complete');
-          emitEvent('completion', { phase: 'mastery', completed: true });
+          if (onPhaseComplete) onPhaseComplete();
         }}
         className="px-8 py-4 bg-gradient-to-r from-yellow-600 to-orange-600 text-white rounded-xl font-bold text-lg hover:from-yellow-500 hover:to-orange-500 transition-all"
       >

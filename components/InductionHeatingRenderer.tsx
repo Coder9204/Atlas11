@@ -5,33 +5,18 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 // ─────────────────────────────────────────────────────────────────────────────
 // TYPES & INTERFACES
 // ─────────────────────────────────────────────────────────────────────────────
-type GameEventType =
-  | 'phase_change'
-  | 'prediction_made'
-  | 'simulation_started'
-  | 'parameter_changed'
-  | 'twist_prediction_made'
-  | 'app_explored'
-  | 'test_answered'
-  | 'test_completed'
-  | 'mastery_achieved';
+// String phases for game progression
+type Phase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
 
-interface GameEvent {
-  type: GameEventType;
-  data?: Record<string, unknown>;
-}
-
-// Numeric phases: 0=hook, 1=predict, 2=play, 3=review, 4=twist_predict, 5=twist_play, 6=twist_review, 7=transfer, 8=test, 9=mastery
-const PHASES: number[] = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
-const phaseLabels: Record<number, string> = {
-  0: 'Hook', 1: 'Predict', 2: 'Lab', 3: 'Review', 4: 'Twist Predict',
-  5: 'Twist Lab', 6: 'Twist Review', 7: 'Transfer', 8: 'Test', 9: 'Mastery'
+const PHASE_ORDER: Phase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
+const phaseLabels: Record<Phase, string> = {
+  hook: 'Hook', predict: 'Predict', play: 'Lab', review: 'Review', twist_predict: 'Twist Predict',
+  twist_play: 'Twist Lab', twist_review: 'Twist Review', transfer: 'Transfer', test: 'Test', mastery: 'Mastery'
 };
 
 interface InductionHeatingRendererProps {
-  onGameEvent?: (event: GameEvent) => void;
-  currentPhase?: number;
-  onPhaseComplete?: (phase: number) => void;
+  currentPhase?: Phase;
+  onPhaseComplete?: (phase: Phase) => void;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -41,42 +26,92 @@ const TEST_QUESTIONS = [
   {
     question: 'What causes metal to heat up in an induction cooktop?',
     options: [
-      'Direct heat from burning gas',
-      'Radiation from a hot coil',
-      'Eddy currents induced in the metal pan',
-      'Microwaves penetrating the food'
-    ],
-    correct: 2
+      { text: 'Direct heat from burning gas', correct: false },
+      { text: 'Radiation from a hot coil', correct: false },
+      { text: 'Eddy currents induced in the metal pan', correct: true },
+      { text: 'Microwaves penetrating the food', correct: false }
+    ]
   },
   {
     question: 'Why doesn\'t a glass pan heat up on an induction stove?',
     options: [
-      'Glass is already too hot',
-      'Glass is an insulator - no eddy currents form',
-      'The magnetic field passes through glass too fast',
-      'Glass reflects the magnetic field'
-    ],
-    correct: 1
+      { text: 'Glass is already too hot', correct: false },
+      { text: 'Glass is an insulator - no eddy currents form', correct: true },
+      { text: 'The magnetic field passes through glass too fast', correct: false },
+      { text: 'Glass reflects the magnetic field', correct: false }
+    ]
   },
   {
     question: 'How do eddy currents cause heating?',
     options: [
-      'They create friction with air molecules',
-      'They flow through resistance, converting electrical energy to heat (I²R)',
-      'They vibrate at ultrasonic frequencies',
-      'They create sparks inside the metal'
-    ],
-    correct: 1
+      { text: 'They create friction with air molecules', correct: false },
+      { text: 'They flow through resistance, converting electrical energy to heat (I²R)', correct: true },
+      { text: 'They vibrate at ultrasonic frequencies', correct: false },
+      { text: 'They create sparks inside the metal', correct: false }
+    ]
   },
   {
     question: 'Why is induction cooking more efficient than gas?',
     options: [
-      'It uses more electricity',
-      'Heat is generated directly in the pan, not wasted on air',
-      'Gas burners are turned down',
-      'Induction uses nuclear energy'
-    ],
-    correct: 1
+      { text: 'It uses more electricity', correct: false },
+      { text: 'Heat is generated directly in the pan, not wasted on air', correct: true },
+      { text: 'Gas burners are turned down', correct: false },
+      { text: 'Induction uses nuclear energy', correct: false }
+    ]
+  },
+  {
+    question: 'What property must a pan have to work on an induction cooktop?',
+    options: [
+      { text: 'It must be heavy', correct: false },
+      { text: 'It must be magnetic (ferromagnetic)', correct: true },
+      { text: 'It must be polished', correct: false },
+      { text: 'It must be black in color', correct: false }
+    ]
+  },
+  {
+    question: 'Why do eddy currents flow in circular paths?',
+    options: [
+      { text: 'Because electrons prefer circles', correct: false },
+      { text: 'Because the changing magnetic field induces circular EMF', correct: true },
+      { text: 'Because metal is always round', correct: false },
+      { text: 'Because of gravity', correct: false }
+    ]
+  },
+  {
+    question: 'What happens when you increase the frequency of the magnetic field?',
+    options: [
+      { text: 'Heating decreases', correct: false },
+      { text: 'Heating increases (more rapid field changes = stronger currents)', correct: true },
+      { text: 'Nothing changes', correct: false },
+      { text: 'The pan flies off the stove', correct: false }
+    ]
+  },
+  {
+    question: 'Why is the cooktop surface cool while the pan is hot?',
+    options: [
+      { text: 'The cooktop is made of special ice', correct: false },
+      { text: 'Heat only transfers up, not down', correct: false },
+      { text: 'The ceramic doesn\'t conduct electricity - no eddy currents form in it', correct: true },
+      { text: 'The cooktop has a cooling system', correct: false }
+    ]
+  },
+  {
+    question: 'What is the relationship described by P = I²R?',
+    options: [
+      { text: 'Power loss increases with the square of the current', correct: true },
+      { text: 'Pressure equals current times resistance', correct: false },
+      { text: 'Temperature is proportional to resistance', correct: false },
+      { text: 'Voltage equals current squared', correct: false }
+    ]
+  },
+  {
+    question: 'Why are induction furnaces used for melting high-purity metals?',
+    options: [
+      { text: 'They are cheaper', correct: false },
+      { text: 'No combustion gases contaminate the melt', correct: true },
+      { text: 'They melt faster than any other method', correct: false },
+      { text: 'They use less electricity', correct: false }
+    ]
   }
 ];
 
@@ -106,9 +141,9 @@ const TRANSFER_APPS = [
 // ─────────────────────────────────────────────────────────────────────────────
 // MAIN COMPONENT
 // ─────────────────────────────────────────────────────────────────────────────
-const InductionHeatingRenderer: React.FC<InductionHeatingRendererProps> = ({ onGameEvent, currentPhase, onPhaseComplete }) => {
+const InductionHeatingRenderer: React.FC<InductionHeatingRendererProps> = ({ currentPhase, onPhaseComplete }) => {
   // ─── State ───────────────────────────────────────────────────────────────────
-  const [phase, setPhase] = useState<number>(currentPhase ?? 0);
+  const [phase, setPhase] = useState<Phase>(currentPhase ?? 'hook');
   const [prediction, setPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
   const [showPredictionFeedback, setShowPredictionFeedback] = useState(false);
@@ -175,15 +210,21 @@ const InductionHeatingRenderer: React.FC<InductionHeatingRendererProps> = ({ onG
   };
 
   // ─── Helpers ─────────────────────────────────────────────────────────────────
-  const goToPhase = useCallback((newPhase: number) => {
+  const goToPhase = useCallback((newPhase: Phase) => {
     if (navigationLockRef.current) return;
     navigationLockRef.current = true;
     playSound('transition');
     setPhase(newPhase);
     onPhaseComplete?.(newPhase);
-    onGameEvent?.({ type: 'phase_change', data: { phase: newPhase, phaseLabel: phaseLabels[newPhase] } });
     setTimeout(() => { navigationLockRef.current = false; }, 400);
-  }, [playSound, onPhaseComplete, onGameEvent]);
+  }, [playSound, onPhaseComplete]);
+
+  const goToNextPhase = useCallback(() => {
+    const currentIndex = PHASE_ORDER.indexOf(phase);
+    if (currentIndex < PHASE_ORDER.length - 1) {
+      goToPhase(PHASE_ORDER[currentIndex + 1]);
+    }
+  }, [phase, goToPhase]);
 
   const handlePrediction = useCallback((pred: string) => {
     const now = Date.now();
@@ -263,13 +304,13 @@ const InductionHeatingRenderer: React.FC<InductionHeatingRendererProps> = ({ onG
 
   // Reset when returning to play phase
   useEffect(() => {
-    if (phase === 2) { // play phase
+    if (phase === 'play') {
       setIsHeating(false);
       setPanMaterial('steel');
       setTemperature(25);
       setFrequency(25);
     }
-    if (phase === 5) { // twist_play phase
+    if (phase === 'twist_play') {
       setTwistMaterial('steel');
     }
   }, [phase]);
@@ -463,7 +504,7 @@ const InductionHeatingRenderer: React.FC<InductionHeatingRendererProps> = ({ onG
 
       {/* Premium CTA button */}
       <button
-        onMouseDown={(e) => { e.preventDefault(); goToPhase(1); }}
+        onMouseDown={(e) => { e.preventDefault(); goToNextPhase(); }}
         className="mt-10 group relative px-10 py-5 bg-gradient-to-r from-orange-500 to-red-600 text-white text-lg font-semibold rounded-2xl transition-all duration-300 hover:shadow-lg hover:shadow-orange-500/25 hover:scale-[1.02] active:scale-[0.98]"
       >
         <span className="relative z-10 flex items-center gap-3">
@@ -530,7 +571,7 @@ const InductionHeatingRenderer: React.FC<InductionHeatingRendererProps> = ({ onG
             Correct! Eddy currents induced by the changing field flow through resistance and generate heat!
           </p>
           <button
-            onMouseDown={(e) => { e.preventDefault(); goToPhase(2); }}
+            onMouseDown={(e) => { e.preventDefault(); goToNextPhase(); }}
             className="mt-4 px-6 py-3 bg-gradient-to-r from-orange-600 to-red-600 text-white font-semibold rounded-xl"
           >
             Explore the Physics
@@ -598,7 +639,7 @@ const InductionHeatingRenderer: React.FC<InductionHeatingRendererProps> = ({ onG
            'Steel heats efficiently - magnetic + conductive!'}
         </p>
       </div>
-      <button onMouseDown={(e) => { e.preventDefault(); setIsHeating(false); goToPhase(3); }} className="mt-6 px-6 py-3 bg-gradient-to-r from-orange-600 to-red-600 text-white font-semibold rounded-xl">
+      <button onMouseDown={(e) => { e.preventDefault(); setIsHeating(false); goToNextPhase(); }} className="mt-6 px-6 py-3 bg-gradient-to-r from-orange-600 to-red-600 text-white font-semibold rounded-xl">
         Review the Concepts
       </button>
     </div>
@@ -641,7 +682,7 @@ const InductionHeatingRenderer: React.FC<InductionHeatingRendererProps> = ({ onG
           </p>
         </div>
       </div>
-      <button onMouseDown={(e) => { e.preventDefault(); goToPhase(4); }} className="mt-8 px-6 py-3 bg-gradient-to-r from-amber-600 to-orange-600 text-white font-semibold rounded-xl">
+      <button onMouseDown={(e) => { e.preventDefault(); goToNextPhase(); }} className="mt-8 px-6 py-3 bg-gradient-to-r from-amber-600 to-orange-600 text-white font-semibold rounded-xl">
         Discover the Material Twist
       </button>
     </div>
@@ -686,7 +727,7 @@ const InductionHeatingRenderer: React.FC<InductionHeatingRendererProps> = ({ onG
           <p className="text-emerald-400 font-semibold">
             Correct! Only magnetic, conductive materials heat effectively on induction!
           </p>
-          <button onMouseDown={(e) => { e.preventDefault(); goToPhase(5); }} className="mt-4 px-6 py-3 bg-gradient-to-r from-amber-600 to-orange-600 text-white font-semibold rounded-xl">
+          <button onMouseDown={(e) => { e.preventDefault(); goToNextPhase(); }} className="mt-4 px-6 py-3 bg-gradient-to-r from-amber-600 to-orange-600 text-white font-semibold rounded-xl">
             Compare Materials
           </button>
         </div>
@@ -737,7 +778,7 @@ const InductionHeatingRenderer: React.FC<InductionHeatingRendererProps> = ({ onG
             </div>
           ))}
         </div>
-        <button onMouseDown={(e) => { e.preventDefault(); goToPhase(6); }} className="mt-6 px-6 py-3 bg-gradient-to-r from-amber-600 to-orange-600 text-white font-semibold rounded-xl">
+        <button onMouseDown={(e) => { e.preventDefault(); goToNextPhase(); }} className="mt-6 px-6 py-3 bg-gradient-to-r from-amber-600 to-orange-600 text-white font-semibold rounded-xl">
           Understand Why
         </button>
       </div>
@@ -776,7 +817,7 @@ const InductionHeatingRenderer: React.FC<InductionHeatingRendererProps> = ({ onG
           <strong>Pro Tip:</strong> Induction-ready aluminum pans have a steel plate bonded to the bottom!
         </p>
       </div>
-      <button onMouseDown={(e) => { e.preventDefault(); goToPhase(7); }} className="mt-6 px-6 py-3 bg-gradient-to-r from-amber-600 to-orange-600 text-white font-semibold rounded-xl">
+      <button onMouseDown={(e) => { e.preventDefault(); goToNextPhase(); }} className="mt-6 px-6 py-3 bg-gradient-to-r from-amber-600 to-orange-600 text-white font-semibold rounded-xl">
         See Real Applications
       </button>
     </div>
@@ -813,7 +854,7 @@ const InductionHeatingRenderer: React.FC<InductionHeatingRendererProps> = ({ onG
         ))}
       </div>
       {completedApps.size >= 4 ? (
-        <button onMouseDown={(e) => { e.preventDefault(); goToPhase(8); }} className="mt-6 px-6 py-3 bg-gradient-to-r from-amber-600 to-orange-600 text-white font-semibold rounded-xl">
+        <button onMouseDown={(e) => { e.preventDefault(); goToNextPhase(); }} className="mt-6 px-6 py-3 bg-gradient-to-r from-amber-600 to-orange-600 text-white font-semibold rounded-xl">
           Take the Test
         </button>
       ) : (
@@ -838,7 +879,7 @@ const InductionHeatingRenderer: React.FC<InductionHeatingRendererProps> = ({ onG
             {passed ? 'You have a solid understanding of induction heating!' : 'Review the concepts and try again.'}
           </p>
           <button
-            onMouseDown={(e) => { e.preventDefault(); if (passed) { goToPhase(9); } else { setTestAnswers(Array(4).fill(-1)); setShowTestResults(false); } }}
+            onMouseDown={(e) => { e.preventDefault(); if (passed) { goToNextPhase(); } else { setTestAnswers(Array(4).fill(-1)); setShowTestResults(false); } }}
             className={`px-6 py-3 font-semibold rounded-xl ${passed ? 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white' : 'bg-gradient-to-r from-amber-600 to-orange-600 text-white'}`}
           >
             {passed ? 'Complete Mastery' : 'Try Again'}
@@ -925,7 +966,7 @@ const InductionHeatingRenderer: React.FC<InductionHeatingRendererProps> = ({ onG
         </p>
       </div>
       <button
-        onMouseDown={(e) => { e.preventDefault(); playSound('complete'); onGameEvent?.({ type: 'mastery_achieved' }); }}
+        onMouseDown={(e) => { e.preventDefault(); playSound('complete'); }}
         className="group relative px-10 py-5 bg-gradient-to-r from-amber-500 to-orange-600 text-white text-lg font-semibold rounded-2xl transition-all duration-300 hover:shadow-lg hover:shadow-amber-500/25 hover:scale-[1.02] active:scale-[0.98]"
       >
         <span className="relative z-10 flex items-center gap-3">
@@ -941,16 +982,16 @@ const InductionHeatingRenderer: React.FC<InductionHeatingRendererProps> = ({ onG
   // ─── Main Render ─────────────────────────────────────────────────────────────
   const renderPhase = () => {
     switch (phase) {
-      case 0: return renderHook();
-      case 1: return renderPredict();
-      case 2: return renderPlay();
-      case 3: return renderReview();
-      case 4: return renderTwistPredict();
-      case 5: return renderTwistPlay();
-      case 6: return renderTwistReview();
-      case 7: return renderTransfer();
-      case 8: return renderTest();
-      case 9: return renderMastery();
+      case 'hook': return renderHook();
+      case 'predict': return renderPredict();
+      case 'play': return renderPlay();
+      case 'review': return renderReview();
+      case 'twist_predict': return renderTwistPredict();
+      case 'twist_play': return renderTwistPlay();
+      case 'twist_review': return renderTwistReview();
+      case 'transfer': return renderTransfer();
+      case 'test': return renderTest();
+      case 'mastery': return renderMastery();
       default: return renderHook();
     }
   };
@@ -968,14 +1009,14 @@ const InductionHeatingRenderer: React.FC<InductionHeatingRendererProps> = ({ onG
         <div className="flex items-center justify-between px-6 py-3 max-w-4xl mx-auto">
           <span className="text-sm font-semibold text-white/80 tracking-wide">Induction Heating</span>
           <div className="flex items-center gap-1.5">
-            {PHASES.map((p) => (
+            {PHASE_ORDER.map((p, index) => (
               <button
                 key={p}
                 onMouseDown={(e) => { e.preventDefault(); goToPhase(p); }}
                 className={`h-2 rounded-full transition-all duration-300 ${
                   phase === p
                     ? 'bg-orange-400 w-6 shadow-lg shadow-orange-400/30'
-                    : phase > p
+                    : PHASE_ORDER.indexOf(phase) > index
                       ? 'bg-emerald-500 w-2'
                       : 'bg-slate-700 w-2 hover:bg-slate-600'
                 }`}

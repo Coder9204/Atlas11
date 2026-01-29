@@ -21,22 +21,22 @@ interface GameEvent {
   data?: Record<string, unknown>;
 }
 
-// Numeric phases: 0=hook, 1=predict, 2=play, 3=review, 4=twist_predict, 5=twist_play, 6=twist_review, 7=transfer, 8=test, 9=mastery
-const PHASES: number[] = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
-const phaseLabels: Record<number, string> = {
-  0: 'Hook', 1: 'Predict', 2: 'Lab', 3: 'Review', 4: 'Twist Predict',
-  5: 'Twist Lab', 6: 'Twist Review', 7: 'Transfer', 8: 'Test', 9: 'Mastery'
+// String-based phases for game progression
+type Phase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
+const PHASE_ORDER: Phase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
+const phaseLabels: Record<Phase, string> = {
+  hook: 'Hook', predict: 'Predict', play: 'Lab', review: 'Review', twist_predict: 'Twist Predict',
+  twist_play: 'Twist Lab', twist_review: 'Twist Review', transfer: 'Transfer', test: 'Test', mastery: 'Mastery'
 };
 
 interface ShowerCurtainRendererProps {
-  onGameEvent?: (event: GameEvent) => void;
-  currentPhase?: number;
-  onPhaseComplete?: (phase: number) => void;
+  currentPhase?: Phase;
+  onPhaseComplete?: (phase: Phase) => void;
 }
 
-const ShowerCurtainRenderer: React.FC<ShowerCurtainRendererProps> = ({ onGameEvent, currentPhase, onPhaseComplete }) => {
+const ShowerCurtainRenderer: React.FC<ShowerCurtainRendererProps> = ({ currentPhase, onPhaseComplete }) => {
   // Phase management
-  const [phase, setPhase] = useState<number>(currentPhase ?? 0);
+  const [phase, setPhase] = useState<Phase>(currentPhase ?? 'hook');
 
   // Hook phase
   const [hookStep, setHookStep] = useState(0);
@@ -143,7 +143,7 @@ const ShowerCurtainRenderer: React.FC<ShowerCurtainRendererProps> = ({ onGameEve
   }, []);
 
   // Phase navigation
-  const goToPhase = useCallback((newPhase: number) => {
+  const goToPhase = useCallback((newPhase: Phase) => {
     const now = Date.now();
     if (now - lastClickRef.current < 200) return;
     lastClickRef.current = now;
@@ -152,9 +152,15 @@ const ShowerCurtainRenderer: React.FC<ShowerCurtainRendererProps> = ({ onGameEve
     playSound('transition');
     setPhase(newPhase);
     onPhaseComplete?.(newPhase);
-    onGameEvent?.({ type: 'phase_change', data: { phase: newPhase, phaseLabel: phaseLabels[newPhase] } });
     setTimeout(() => { navigationLockRef.current = false; }, 400);
-  }, [playSound, onPhaseComplete, onGameEvent]);
+  }, [playSound, onPhaseComplete]);
+
+  const goToNextPhase = useCallback(() => {
+    const currentIndex = PHASE_ORDER.indexOf(phase);
+    if (currentIndex < PHASE_ORDER.length - 1) {
+      goToPhase(PHASE_ORDER[currentIndex + 1]);
+    }
+  }, [phase, goToPhase]);
 
   // Test questions
   const testQuestions = [
@@ -301,6 +307,7 @@ const ShowerCurtainRenderer: React.FC<ShowerCurtainRendererProps> = ({ onGameEve
 
   // Helper render functions
   const renderProgressBar = () => {
+    const currentIndex = PHASE_ORDER.indexOf(phase);
     return (
       <div style={{
         background: 'rgba(15, 23, 42, 0.8)',
@@ -316,15 +323,15 @@ const ShowerCurtainRenderer: React.FC<ShowerCurtainRendererProps> = ({ onGameEve
         </div>
         {/* Premium phase dots */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
-          {PHASES.map((p, i) => (
+          {PHASE_ORDER.map((p, i) => (
             <div
               key={p}
               style={{
                 height: '8px',
-                width: i === phase ? '24px' : '8px',
+                width: i === currentIndex ? '24px' : '8px',
                 borderRadius: '4px',
-                background: i < phase ? '#10B981' : i === phase ? colors.primary : '#334155',
-                boxShadow: i === phase ? `0 0 12px ${colors.primary}50` : 'none',
+                background: i < currentIndex ? '#10B981' : i === currentIndex ? colors.primary : '#334155',
+                boxShadow: i === currentIndex ? `0 0 12px ${colors.primary}50` : 'none',
                 transition: 'all 0.3s ease'
               }}
             />
@@ -579,7 +586,7 @@ const ShowerCurtainRenderer: React.FC<ShowerCurtainRendererProps> = ({ onGameEve
         )}
       </div>
 
-      {hookStep === 1 && renderBottomBar(() => goToPhase(1))}
+      {hookStep === 1 && renderBottomBar(() => goToNextPhase())}
     </div>
   );
 
@@ -648,7 +655,7 @@ const ShowerCurtainRenderer: React.FC<ShowerCurtainRendererProps> = ({ onGameEve
               onMouseDown={() => {
                 setPrediction(option.value);
                 playSound('click');
-                onGameEvent?.({ type: 'prediction_made', data: { predicted: option.value, question: 'cause' } });
+                console.debug('Game event:', { type: 'prediction_made', data: { predicted: option.value, question: 'cause' } });
               }}
               style={{
                 padding: '16px 20px',
@@ -723,7 +730,7 @@ const ShowerCurtainRenderer: React.FC<ShowerCurtainRendererProps> = ({ onGameEve
         )}
       </div>
 
-      {showPredictResult && renderBottomBar(() => goToPhase(2))}
+      {showPredictResult && renderBottomBar(() => goToNextPhase())}
     </div>
   );
 
@@ -943,7 +950,7 @@ const ShowerCurtainRenderer: React.FC<ShowerCurtainRendererProps> = ({ onGameEve
 
         {renderKeyTakeaway("Higher flow = more entrainment. Higher temperature = more convection. Both effects combine to create the pressure difference that pulls the curtain inward!")}
 
-        {waterFlow > 50 && renderBottomBar(() => goToPhase(3))}
+        {waterFlow > 50 && renderBottomBar(() => goToNextPhase())}
       </div>
     );
   };
@@ -1025,7 +1032,7 @@ const ShowerCurtainRenderer: React.FC<ShowerCurtainRendererProps> = ({ onGameEve
         {renderKeyTakeaway("The shower curtain effect demonstrates entrainment — moving fluids drag surrounding fluids, creating pressure differences. This same principle is used in spray bottles, jet mixers, and more!")}
       </div>
 
-      {renderBottomBar(() => goToPhase(4))}
+      {renderBottomBar(() => goToNextPhase())}
     </div>
   );
 
@@ -1097,7 +1104,7 @@ const ShowerCurtainRenderer: React.FC<ShowerCurtainRendererProps> = ({ onGameEve
           <button
             onMouseDown={() => {
               setShowTwistResult(true);
-              playSound(twistPrediction === 'hot' ? 600 : 300, 0.3, 'sine', 0.3);
+              playSound(twistPrediction === 'hot' ? 'success' : 'failure');
             }}
             style={{
               marginTop: '20px',
@@ -1137,7 +1144,7 @@ const ShowerCurtainRenderer: React.FC<ShowerCurtainRendererProps> = ({ onGameEve
         )}
       </div>
 
-      {showTwistResult && renderBottomBar(() => goToPhase(5))}
+      {showTwistResult && renderBottomBar(() => goToNextPhase())}
     </div>
   );
 
@@ -1282,7 +1289,7 @@ const ShowerCurtainRenderer: React.FC<ShowerCurtainRendererProps> = ({ onGameEve
 
       {renderKeyTakeaway("Hot showers create stronger curtain effects because thermal convection adds to mechanical entrainment — two pressure-lowering mechanisms instead of one!")}
 
-      {renderBottomBar(() => goToPhase(6))}
+      {renderBottomBar(() => goToNextPhase())}
     </div>
   );
 
@@ -1359,7 +1366,7 @@ const ShowerCurtainRenderer: React.FC<ShowerCurtainRendererProps> = ({ onGameEve
         {renderKeyTakeaway("Understanding the physics helps design solutions: add weight, increase clearance, reduce temperature, or use rigid materials to counter the pressure differential.")}
       </div>
 
-      {renderBottomBar(() => goToPhase(7))}
+      {renderBottomBar(() => goToNextPhase())}
     </div>
   );
 
@@ -1515,7 +1522,7 @@ const ShowerCurtainRenderer: React.FC<ShowerCurtainRendererProps> = ({ onGameEve
         )}
       </div>
 
-      {completedApps.size === applications.length && renderBottomBar(() => goToPhase(8))}
+      {completedApps.size === applications.length && renderBottomBar(() => goToNextPhase())}
     </div>
   );
 
@@ -1665,7 +1672,7 @@ const ShowerCurtainRenderer: React.FC<ShowerCurtainRendererProps> = ({ onGameEve
           )}
         </div>
 
-        {showTestResults && renderBottomBar(() => goToPhase(9), false, "Complete Journey")}
+        {showTestResults && renderBottomBar(() => goToNextPhase(), false, "Complete Journey")}
       </div>
     );
   };
@@ -1781,16 +1788,16 @@ const ShowerCurtainRenderer: React.FC<ShowerCurtainRendererProps> = ({ onGameEve
   // Main render
   const renderPhase = () => {
     switch (phase) {
-      case 0: return renderHook();
-      case 1: return renderPredict();
-      case 2: return renderPlay();
-      case 3: return renderReview();
-      case 4: return renderTwistPredict();
-      case 5: return renderTwistPlay();
-      case 6: return renderTwistReview();
-      case 7: return renderTransfer();
-      case 8: return renderTest();
-      case 9: return renderMastery();
+      case 'hook': return renderHook();
+      case 'predict': return renderPredict();
+      case 'play': return renderPlay();
+      case 'review': return renderReview();
+      case 'twist_predict': return renderTwistPredict();
+      case 'twist_play': return renderTwistPlay();
+      case 'twist_review': return renderTwistReview();
+      case 'transfer': return renderTransfer();
+      case 'test': return renderTest();
+      case 'mastery': return renderMastery();
       default: return renderHook();
     }
   };
@@ -1808,20 +1815,23 @@ const ShowerCurtainRenderer: React.FC<ShowerCurtainRendererProps> = ({ onGameEve
         <div className="flex items-center justify-between px-6 py-3 max-w-4xl mx-auto">
           <span className="text-sm font-semibold text-white/80 tracking-wide">Shower Curtain Effect</span>
           <div className="flex items-center gap-1.5">
-            {PHASES.map((p) => (
-              <button
-                key={p}
-                onMouseDown={(e) => { e.preventDefault(); goToPhase(p); }}
-                className={`h-2 rounded-full transition-all duration-300 ${
-                  phase === p
-                    ? 'bg-cyan-400 w-6 shadow-lg shadow-cyan-400/30'
-                    : phase > p
-                      ? 'bg-emerald-500 w-2'
-                      : 'bg-slate-700 w-2 hover:bg-slate-600'
-                }`}
-                title={phaseLabels[p]}
-              />
-            ))}
+            {PHASE_ORDER.map((p, i) => {
+              const currentIndex = PHASE_ORDER.indexOf(phase);
+              return (
+                <button
+                  key={p}
+                  onMouseDown={(e) => { e.preventDefault(); goToPhase(p); }}
+                  className={`h-2 rounded-full transition-all duration-300 ${
+                    phase === p
+                      ? 'bg-cyan-400 w-6 shadow-lg shadow-cyan-400/30'
+                      : currentIndex > i
+                        ? 'bg-emerald-500 w-2'
+                        : 'bg-slate-700 w-2 hover:bg-slate-600'
+                  }`}
+                  title={phaseLabels[p]}
+                />
+              );
+            })}
           </div>
           <span className="text-sm font-medium text-cyan-400">{phaseLabels[phase]}</span>
         </div>

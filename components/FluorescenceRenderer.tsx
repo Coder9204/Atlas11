@@ -5,33 +5,18 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 // ═══════════════════════════════════════════════════════════════════════════
 // TYPES & INTERFACES
 // ═══════════════════════════════════════════════════════════════════════════
-type GameEventType =
-  | 'phase_change'
-  | 'prediction_made'
-  | 'simulation_started'
-  | 'parameter_changed'
-  | 'twist_prediction_made'
-  | 'app_explored'
-  | 'test_answered'
-  | 'test_completed'
-  | 'mastery_achieved';
+// String phases for game progression
+type Phase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
 
-interface GameEvent {
-  type: GameEventType;
-  data?: Record<string, unknown>;
-}
-
-// Numeric phases: 0=hook, 1=predict, 2=play, 3=review, 4=twist_predict, 5=twist_play, 6=twist_review, 7=transfer, 8=test, 9=mastery
-const PHASES: number[] = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
-const phaseLabels: Record<number, string> = {
-  0: 'Hook', 1: 'Predict', 2: 'Lab', 3: 'Review', 4: 'Twist Predict',
-  5: 'Twist Lab', 6: 'Twist Review', 7: 'Transfer', 8: 'Test', 9: 'Mastery'
+const PHASE_ORDER: Phase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
+const phaseLabels: Record<Phase, string> = {
+  hook: 'Hook', predict: 'Predict', play: 'Lab', review: 'Review', twist_predict: 'Twist Predict',
+  twist_play: 'Twist Lab', twist_review: 'Twist Review', transfer: 'Transfer', test: 'Test', mastery: 'Mastery'
 };
 
 interface Props {
-  onGameEvent?: (event: GameEvent) => void;
-  currentPhase?: number;
-  onPhaseComplete?: (phase: number) => void;
+  currentPhase?: Phase;
+  onPhaseComplete?: (phase: Phase) => void;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -106,9 +91,9 @@ const TRANSFER_APPS = [
 // ─────────────────────────────────────────────────────────────────────────────
 // MAIN COMPONENT
 // ─────────────────────────────────────────────────────────────────────────────
-const FluorescenceRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onPhaseComplete }) => {
+const FluorescenceRenderer: React.FC<Props> = ({ currentPhase, onPhaseComplete }) => {
   // ─── State ───────────────────────────────────────────────────────────────────
-  const [phase, setPhase] = useState<number>(currentPhase ?? 0);
+  const [phase, setPhase] = useState<Phase>(currentPhase ?? 'hook');
   const [prediction, setPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
   const [testAnswers, setTestAnswers] = useState<number[]>([]);
@@ -174,7 +159,7 @@ const FluorescenceRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onPh
     } catch { /* Audio not available */ }
   }, []);
 
-  const goToPhase = useCallback((newPhase: number) => {
+  const goToPhase = useCallback((newPhase: Phase) => {
     if (navigationLockRef.current) return;
     const now = Date.now();
     if (now - lastClickRef.current < 200) return;
@@ -183,14 +168,13 @@ const FluorescenceRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onPh
     playSound('transition');
     setPhase(newPhase);
     onPhaseComplete?.(newPhase);
-    onGameEvent?.({ type: 'phase_change', data: { phase: newPhase, phaseLabel: phaseLabels[newPhase] } });
     setTimeout(() => { navigationLockRef.current = false; }, 400);
-  }, [playSound, onPhaseComplete, onGameEvent]);
+  }, [playSound, onPhaseComplete]);
 
-  const nextPhase = useCallback(() => {
-    const currentIndex = PHASES.indexOf(phase);
-    if (currentIndex < PHASES.length - 1) {
-      goToPhase(PHASES[currentIndex + 1]);
+  const goToNextPhase = useCallback(() => {
+    const currentIndex = PHASE_ORDER.indexOf(phase);
+    if (currentIndex < PHASE_ORDER.length - 1) {
+      goToPhase(PHASE_ORDER[currentIndex + 1]);
     }
   }, [phase, goToPhase]);
 
@@ -204,12 +188,12 @@ const FluorescenceRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onPh
 
   // Reset when returning to play phase
   useEffect(() => {
-    if (phase === 2) {
+    if (phase === 'play') {
       setUvOn(false);
       setRegularLightOn(true);
       setSelectedMaterial('highlighter');
     }
-    if (phase === 5) {
+    if (phase === 'twist_play') {
       setTwistMaterial('highlighter_yellow');
     }
   }, [phase]);
@@ -459,8 +443,7 @@ const FluorescenceRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onPh
     lastClickRef.current = now;
     setPrediction(pred);
     playSound(pred === 'absorb' ? 'success' : 'failure');
-    onGameEvent?.({ type: 'prediction_made', data: { prediction: pred } });
-  }, [playSound, onGameEvent]);
+  }, [playSound]);
 
   const handleTwistPrediction = useCallback((pred: string) => {
     const now = Date.now();
@@ -468,8 +451,7 @@ const FluorescenceRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onPh
     lastClickRef.current = now;
     setTwistPrediction(pred);
     playSound(pred === 'different' ? 'success' : 'failure');
-    onGameEvent?.({ type: 'twist_prediction_made', data: { prediction: pred } });
-  }, [playSound, onGameEvent]);
+  }, [playSound]);
 
   const handleTestAnswer = useCallback((answerIndex: number) => {
     const now = Date.now();
@@ -479,8 +461,7 @@ const FluorescenceRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onPh
     const isCorrect = answerIndex === TEST_QUESTIONS[currentQuestion].correct;
     playSound(isCorrect ? 'success' : 'failure');
     setTestAnswers([...testAnswers, answerIndex]);
-    onGameEvent?.({ type: 'test_answered', data: { question: currentQuestion, answer: answerIndex, correct: isCorrect } });
-  }, [testAnswers, playSound, onGameEvent]);
+  }, [testAnswers, playSound]);
 
   const handleAppComplete = useCallback((appIndex: number) => {
     const now = Date.now();
@@ -488,8 +469,7 @@ const FluorescenceRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onPh
     lastClickRef.current = now;
     setCompletedApps(prev => new Set([...prev, appIndex]));
     playSound('complete');
-    onGameEvent?.({ type: 'app_explored', data: { app: TRANSFER_APPS[appIndex].title } });
-  }, [playSound, onGameEvent]);
+  }, [playSound]);
 
   const calculateScore = () => testAnswers.filter((a, i) => a === TEST_QUESTIONS[i].correct).length;
 
@@ -538,7 +518,7 @@ const FluorescenceRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onPh
 
       {/* Premium CTA button */}
       <button
-        onMouseDown={(e) => { e.preventDefault(); nextPhase(); }}
+        onMouseDown={(e) => { e.preventDefault(); goToNextPhase(); }}
         className="mt-10 group relative px-10 py-5 bg-gradient-to-r from-violet-500 to-fuchsia-600 text-white text-lg font-semibold rounded-2xl transition-all duration-300 hover:shadow-lg hover:shadow-violet-500/25 hover:scale-[1.02] active:scale-[0.98]"
       >
         <span className="relative z-10 flex items-center gap-3">
@@ -607,7 +587,7 @@ const FluorescenceRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onPh
             {prediction === 'absorb' ? '✓ Correct!' : '✗ Not quite.'} Fluorescent molecules absorb UV and re-emit visible light!
           </p>
           <button
-            onMouseDown={(e) => { e.preventDefault(); nextPhase(); }}
+            onMouseDown={(e) => { e.preventDefault(); goToNextPhase(); }}
             className="mt-4 px-6 py-3 bg-gradient-to-r from-violet-600 to-fuchsia-600 text-white font-semibold rounded-xl"
           >
             Test It! →
@@ -683,7 +663,7 @@ const FluorescenceRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onPh
       )}
 
       <button
-        onMouseDown={(e) => { e.preventDefault(); nextPhase(); }}
+        onMouseDown={(e) => { e.preventDefault(); goToNextPhase(); }}
         className="px-8 py-3 bg-gradient-to-r from-violet-600 to-fuchsia-600 rounded-xl text-white font-semibold hover:from-violet-500 hover:to-fuchsia-500 transition-all"
       >
         Continue →
@@ -732,7 +712,7 @@ const FluorescenceRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onPh
       <div className="text-center">
         <p className="text-gray-400 mb-2">Your prediction: <span className="text-violet-400 font-semibold">{prediction === 'absorb' ? '✓ Correct!' : '✗ Not quite'}</span></p>
         <button
-          onMouseDown={(e) => { e.preventDefault(); nextPhase(); }}
+          onMouseDown={(e) => { e.preventDefault(); goToNextPhase(); }}
           className="px-8 py-3 bg-gradient-to-r from-violet-600 to-fuchsia-600 rounded-xl text-white font-semibold hover:from-violet-500 hover:to-fuchsia-500 transition-all"
         >
           But wait... →
@@ -782,7 +762,7 @@ const FluorescenceRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onPh
             {twistPrediction === 'different' ? '✓ Correct!' : '✗ Not quite.'} Each molecule has its own energy levels!
           </p>
           <button
-            onMouseDown={(e) => { e.preventDefault(); nextPhase(); }}
+            onMouseDown={(e) => { e.preventDefault(); goToNextPhase(); }}
             className="mt-4 px-6 py-3 bg-gradient-to-r from-fuchsia-600 to-pink-600 text-white font-semibold rounded-xl"
           >
             Test It! →
@@ -808,7 +788,7 @@ const FluorescenceRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onPh
       </div>
 
       <button
-        onMouseDown={(e) => { e.preventDefault(); nextPhase(); }}
+        onMouseDown={(e) => { e.preventDefault(); goToNextPhase(); }}
         className="px-8 py-3 bg-gradient-to-r from-fuchsia-600 to-pink-600 rounded-xl text-white font-semibold hover:from-fuchsia-500 hover:to-pink-500 transition-all"
       >
         Continue →
@@ -849,7 +829,7 @@ const FluorescenceRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onPh
       <div className="text-center">
         <p className="text-gray-400 mb-2">Your prediction: <span className="text-fuchsia-400 font-semibold">{twistPrediction === 'different' ? '✓ Correct!' : '✗ Not quite'}</span></p>
         <button
-          onMouseDown={(e) => { e.preventDefault(); nextPhase(); }}
+          onMouseDown={(e) => { e.preventDefault(); goToNextPhase(); }}
           className="px-8 py-3 bg-gradient-to-r from-fuchsia-600 to-pink-600 rounded-xl text-white font-semibold hover:from-fuchsia-500 hover:to-pink-500 transition-all"
         >
           See Applications →
@@ -889,7 +869,7 @@ const FluorescenceRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onPh
 
       {completedApps.size >= 4 && (
         <button
-          onMouseDown={(e) => { e.preventDefault(); nextPhase(); }}
+          onMouseDown={(e) => { e.preventDefault(); goToNextPhase(); }}
           className="px-8 py-3 bg-gradient-to-r from-violet-600 to-fuchsia-600 rounded-xl text-white font-semibold hover:from-violet-500 hover:to-fuchsia-500 transition-all"
         >
           Take the Quiz →
@@ -914,11 +894,11 @@ const FluorescenceRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onPh
               e.preventDefault();
               if (score >= 3) {
                 playSound('complete');
-                nextPhase();
+                goToNextPhase();
               } else {
                 setTestAnswers([]);
                 setShowTestResults(false);
-                goToPhase(3);
+                goToPhase('review');
               }
             }}
             className="px-8 py-3 bg-gradient-to-r from-violet-600 to-fuchsia-600 rounded-xl text-white font-semibold hover:from-violet-500 hover:to-fuchsia-500 transition-all"
@@ -968,7 +948,7 @@ const FluorescenceRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onPh
           Next time you see a blacklight party, you&apos;ll know the physics of that glow!
         </p>
         <button
-          onMouseDown={(e) => { e.preventDefault(); goToPhase(0); }}
+          onMouseDown={(e) => { e.preventDefault(); goToPhase('hook'); }}
           className="px-6 py-3 bg-slate-700 hover:bg-slate-600 text-white font-medium rounded-xl"
         >
           ↺ Explore Again
@@ -980,16 +960,16 @@ const FluorescenceRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onPh
   // ─── Main Render ─────────────────────────────────────────────────────────────
   const renderPhase = () => {
     switch (phase) {
-      case 0: return renderHook();
-      case 1: return renderPredict();
-      case 2: return renderPlay();
-      case 3: return renderReview();
-      case 4: return renderTwistPredict();
-      case 5: return renderTwistPlay();
-      case 6: return renderTwistReview();
-      case 7: return renderTransfer();
-      case 8: return renderTest();
-      case 9: return renderMastery();
+      case 'hook': return renderHook();
+      case 'predict': return renderPredict();
+      case 'play': return renderPlay();
+      case 'review': return renderReview();
+      case 'twist_predict': return renderTwistPredict();
+      case 'twist_play': return renderTwistPlay();
+      case 'twist_review': return renderTwistReview();
+      case 'transfer': return renderTransfer();
+      case 'test': return renderTest();
+      case 'mastery': return renderMastery();
       default: return renderHook();
     }
   };
@@ -1007,14 +987,14 @@ const FluorescenceRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onPh
         <div className="flex items-center justify-between px-6 py-3 max-w-4xl mx-auto">
           <span className="text-sm font-semibold text-white/80 tracking-wide">Fluorescence</span>
           <div className="flex items-center gap-1.5">
-            {PHASES.map((p) => (
+            {PHASE_ORDER.map((p, index) => (
               <button
                 key={p}
                 onMouseDown={(e) => { e.preventDefault(); goToPhase(p); }}
                 className={`h-2 rounded-full transition-all duration-300 ${
                   phase === p
                     ? 'bg-violet-400 w-6 shadow-lg shadow-violet-400/30'
-                    : phase > p
+                    : PHASE_ORDER.indexOf(phase) > index
                       ? 'bg-emerald-500 w-2'
                       : 'bg-slate-700 w-2 hover:bg-slate-600'
                 }`}

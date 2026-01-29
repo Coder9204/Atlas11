@@ -10,18 +10,18 @@ interface GameEvent {
   phase: string;
 }
 
-// Numeric phases: 0=hook, 1=predict, 2=play, 3=review, 4=twist_predict, 5=twist_play, 6=twist_review, 7=transfer, 8=test, 9=mastery
-const PHASES: number[] = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
-const phaseLabels: Record<number, string> = {
-  0: 'Hook', 1: 'Predict', 2: 'Lab', 3: 'Review', 4: 'Twist Predict',
-  5: 'Twist Lab', 6: 'Twist Review', 7: 'Transfer', 8: 'Test', 9: 'Mastery'
+// String-based phases for game progression
+type Phase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
+const PHASE_ORDER: Phase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
+const phaseLabels: Record<Phase, string> = {
+  hook: 'Hook', predict: 'Predict', play: 'Lab', review: 'Review', twist_predict: 'Twist Predict',
+  twist_play: 'Twist Lab', twist_review: 'Twist Review', transfer: 'Transfer', test: 'Test', mastery: 'Mastery'
 };
 
 // Props interface
 interface ThermalContactRendererProps {
   onBack?: () => void;
-  onGameEvent?: (event: GameEvent) => void;
-  onPhaseComplete?: (phase: number) => void;
+  onPhaseComplete?: (phase: Phase) => void;
 }
 
 // Interface types
@@ -61,11 +61,10 @@ const interfaceOptions: InterfaceOption[] = [
 
 export default function ThermalContactRenderer({
   onBack,
-  onGameEvent,
   onPhaseComplete,
 }: ThermalContactRendererProps) {
   // Core state
-  const [phase, setPhase] = useState<number>(0);
+  const [phase, setPhase] = useState<Phase>('hook');
   const [showExplanation, setShowExplanation] = useState(false);
   const [prediction, setPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
@@ -119,14 +118,13 @@ export default function ThermalContactRenderer({
     } catch { /* Audio not available */ }
   }, []);
 
-  // Emit game events
+  // Emit game events (for logging/analytics)
   const emitEvent = useCallback(
     (type: string, data?: Record<string, unknown>) => {
-      if (onGameEvent) {
-        onGameEvent({ type, data, timestamp: Date.now(), phase: phaseLabels[phase] });
-      }
+      // Event logging placeholder - can be connected to analytics
+      console.debug('Game event:', { type, data, timestamp: Date.now(), phase: phaseLabels[phase] });
     },
-    [onGameEvent, phase]
+    [phase]
   );
 
   // Check for mobile
@@ -208,7 +206,7 @@ export default function ThermalContactRenderer({
 
   // Navigate to phase
   const goToPhase = useCallback(
-    (newPhase: number) => {
+    (newPhase: Phase) => {
       if (navigationLockRef.current) return;
       const now = Date.now();
       if (now - lastClickRef.current < 200) return;
@@ -216,7 +214,6 @@ export default function ThermalContactRenderer({
 
       navigationLockRef.current = true;
       playSound("transition");
-      emitEvent("phase_change", { from: phase, to: newPhase });
       setPhase(newPhase);
       setShowExplanation(false);
       onPhaseComplete?.(newPhase);
@@ -225,8 +222,15 @@ export default function ThermalContactRenderer({
         navigationLockRef.current = false;
       }, 400);
     },
-    [phase, emitEvent, playSound, onPhaseComplete]
+    [playSound, onPhaseComplete]
   );
+
+  const goToNextPhase = useCallback(() => {
+    const currentIndex = PHASE_ORDER.indexOf(phase);
+    if (currentIndex < PHASE_ORDER.length - 1) {
+      goToPhase(PHASE_ORDER[currentIndex + 1]);
+    }
+  }, [phase, goToPhase]);
 
   // Test questions
   const testQuestions = [
@@ -707,7 +711,7 @@ export default function ThermalContactRenderer({
 
       {/* Premium CTA button */}
       <button
-        onMouseDown={(e) => { e.preventDefault(); goToPhase(1); }}
+        onMouseDown={(e) => { e.preventDefault(); goToNextPhase(); }}
         className="mt-10 group relative px-10 py-5 bg-gradient-to-r from-red-500 to-orange-500 text-white text-lg font-semibold rounded-2xl transition-all duration-300 hover:shadow-lg hover:shadow-red-500/25 hover:scale-[1.02] active:scale-[0.98]"
       >
         <span className="relative z-10 flex items-center gap-3">
@@ -784,7 +788,7 @@ export default function ThermalContactRenderer({
               : "Not quite - the gaps are actually filled with air, a poor thermal conductor."}
           </p>
           <button
-            onMouseDown={() => goToPhase(2)}
+            onMouseDown={() => goToNextPhase()}
             className="mt-4 px-6 py-3 bg-gradient-to-r from-red-600 to-orange-600 text-white font-semibold rounded-xl"
           >
             Test Your Prediction
@@ -887,7 +891,7 @@ export default function ThermalContactRenderer({
       </div>
 
       <button
-        onMouseDown={() => goToPhase(3)}
+        onMouseDown={() => goToNextPhase()}
         className="px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white font-semibold rounded-xl"
       >
         Learn the Science
@@ -946,7 +950,7 @@ export default function ThermalContactRenderer({
       )}
 
       <button
-        onMouseDown={() => goToPhase(4)}
+        onMouseDown={() => goToNextPhase()}
         className="mt-8 px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-semibold rounded-xl"
       >
         Ready for a Twist?
@@ -1002,7 +1006,7 @@ export default function ThermalContactRenderer({
               : "Not quite - air gaps act as insulation, causing much higher temperatures!"}
           </p>
           <button
-            onMouseDown={() => goToPhase(5)}
+            onMouseDown={() => goToNextPhase()}
             className="mt-4 px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-semibold rounded-xl"
           >
             Test CPU Cooling
@@ -1090,7 +1094,7 @@ export default function ThermalContactRenderer({
       </div>
 
       <button
-        onMouseDown={() => goToPhase(6)}
+        onMouseDown={() => goToNextPhase()}
         className="px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-semibold rounded-xl"
       >
         See Explanation
@@ -1148,7 +1152,7 @@ export default function ThermalContactRenderer({
       )}
 
       <button
-        onMouseDown={() => goToPhase(7)}
+        onMouseDown={() => goToNextPhase()}
         className="mt-8 px-6 py-3 bg-gradient-to-r from-teal-600 to-blue-600 text-white font-semibold rounded-xl"
       >
         See Real-World Applications
@@ -1236,7 +1240,7 @@ export default function ThermalContactRenderer({
 
       {completedApps.size === applications.length && (
         <button
-          onMouseDown={() => goToPhase(8)}
+          onMouseDown={() => goToNextPhase()}
           className="mt-6 px-6 py-3 bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-semibold rounded-xl"
         >
           Take the Quiz
@@ -1301,7 +1305,7 @@ export default function ThermalContactRenderer({
 
           {testScore >= 7 ? (
             <button
-              onMouseDown={() => goToPhase(9)}
+              onMouseDown={() => goToNextPhase()}
               className="px-8 py-4 bg-gradient-to-r from-yellow-500 to-orange-500 text-white font-semibold rounded-xl"
             >
               Claim Your Mastery!
@@ -1311,7 +1315,7 @@ export default function ThermalContactRenderer({
               onMouseDown={() => {
                 setTestSubmitted(false);
                 setTestAnswers({});
-                goToPhase(3);
+                goToPhase('review');
               }}
               className="px-8 py-4 bg-gradient-to-r from-blue-600 to-cyan-600 text-white font-semibold rounded-xl"
             >
@@ -1401,16 +1405,16 @@ export default function ThermalContactRenderer({
   // Main render
   const renderPhase = () => {
     switch (phase) {
-      case 0: return renderHook();
-      case 1: return renderPredict();
-      case 2: return renderPlay();
-      case 3: return renderReview();
-      case 4: return renderTwistPredict();
-      case 5: return renderTwistPlay();
-      case 6: return renderTwistReview();
-      case 7: return renderTransfer();
-      case 8: return renderTest();
-      case 9: return renderMastery();
+      case 'hook': return renderHook();
+      case 'predict': return renderPredict();
+      case 'play': return renderPlay();
+      case 'review': return renderReview();
+      case 'twist_predict': return renderTwistPredict();
+      case 'twist_play': return renderTwistPlay();
+      case 'twist_review': return renderTwistReview();
+      case 'transfer': return renderTransfer();
+      case 'test': return renderTest();
+      case 'mastery': return renderMastery();
       default: return renderHook();
     }
   };
@@ -1428,20 +1432,23 @@ export default function ThermalContactRenderer({
         <div className="flex items-center justify-between px-6 py-3 max-w-4xl mx-auto">
           <span className="text-sm font-semibold text-white/80 tracking-wide">Thermal Contact</span>
           <div className="flex items-center gap-1.5">
-            {PHASES.map((p) => (
-              <button
-                key={p}
-                onMouseDown={(e) => { e.preventDefault(); goToPhase(p); }}
-                className={`h-2 rounded-full transition-all duration-300 ${
-                  phase === p
-                    ? 'bg-red-400 w-6 shadow-lg shadow-red-400/30'
-                    : phase > p
-                      ? 'bg-emerald-500 w-2'
-                      : 'bg-slate-700 w-2 hover:bg-slate-600'
-                }`}
-                title={phaseLabels[p]}
-              />
-            ))}
+            {PHASE_ORDER.map((p, i) => {
+              const currentIndex = PHASE_ORDER.indexOf(phase);
+              return (
+                <button
+                  key={p}
+                  onMouseDown={(e) => { e.preventDefault(); goToPhase(p); }}
+                  className={`h-2 rounded-full transition-all duration-300 ${
+                    phase === p
+                      ? 'bg-red-400 w-6 shadow-lg shadow-red-400/30'
+                      : currentIndex > i
+                        ? 'bg-emerald-500 w-2'
+                        : 'bg-slate-700 w-2 hover:bg-slate-600'
+                  }`}
+                  title={phaseLabels[p]}
+                />
+              );
+            })}
           </div>
           <span className="text-sm font-medium text-red-400">{phaseLabels[phase]}</span>
         </div>

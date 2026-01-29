@@ -17,23 +17,11 @@ type Phase =
   | 'test'
   | 'mastery';
 
-interface GameEvent {
-  type: 'prediction' | 'observation' | 'interaction' | 'completion';
-  phase: Phase;
-  data: Record<string, unknown>;
-}
-
 interface PoissonRatioRendererProps {
-  onEvent?: (event: GameEvent) => void;
-  savedState?: GameState | null;
-}
-
-interface GameState {
-  phase: Phase;
-  prediction: string | null;
-  twistPrediction: string | null;
-  testAnswers: number[];
-  completedApps: number[];
+  phase: 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
+  onPhaseComplete?: () => void;
+  onCorrectAnswer?: () => void;
+  onIncorrectAnswer?: () => void;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -49,102 +37,92 @@ const TEST_QUESTIONS = [
   {
     question: 'What is Poisson\'s ratio?',
     options: [
-      'The ratio of stress to strain',
-      'The ratio of lateral contraction to axial extension',
-      'The maximum stretch before breaking',
-      'The speed of sound in the material'
+      { text: 'The ratio of stress to strain', correct: false },
+      { text: 'The ratio of lateral contraction to axial extension', correct: true },
+      { text: 'The maximum stretch before breaking', correct: false },
+      { text: 'The speed of sound in the material', correct: false }
     ],
-    correct: 1
   },
   {
     question: 'Why does rubber have a Poisson\'s ratio close to 0.5?',
     options: [
-      'It\'s very stiff and rigid',
-      'It\'s nearly incompressible - volume stays constant, so it must thin when stretched',
-      'It contains air bubbles that compress',
-      'It\'s made of carbon chains'
+      { text: 'It\'s very stiff and rigid', correct: false },
+      { text: 'It\'s nearly incompressible - volume stays constant, so it must thin when stretched', correct: true },
+      { text: 'It contains air bubbles that compress', correct: false },
+      { text: 'It\'s made of carbon chains', correct: false }
     ],
-    correct: 1
   },
   {
     question: 'What\'s special about auxetic materials?',
     options: [
-      'They\'re extremely strong and lightweight',
-      'They have negative Poisson\'s ratio - they get WIDER when stretched',
-      'They conduct electricity when stretched',
-      'They become transparent under stress'
+      { text: 'They\'re extremely strong and lightweight', correct: false },
+      { text: 'They have negative Poisson\'s ratio - they get WIDER when stretched', correct: true },
+      { text: 'They conduct electricity when stretched', correct: false },
+      { text: 'They become transparent under stress', correct: false }
     ],
-    correct: 1
   },
   {
     question: 'Why are cork stoppers good for wine bottles?',
     options: [
-      'Cork is completely waterproof',
-      'Cork has ν ≈ 0, so it doesn\'t bulge when compressed into the bottle',
-      'Cork is naturally antibacterial',
-      'Cork is the cheapest available material'
+      { text: 'Cork is completely waterproof', correct: false },
+      { text: 'Cork has v = 0, so it doesn\'t bulge when compressed into the bottle', correct: true },
+      { text: 'Cork is naturally antibacterial', correct: false },
+      { text: 'Cork is the cheapest available material', correct: false }
     ],
-    correct: 1
   },
   {
     question: 'What is the theoretical maximum Poisson\'s ratio for isotropic materials?',
     options: [
-      '1.0 (materials can double in width)',
-      '0.5 (volume conservation limit)',
-      '0.3 (typical metal value)',
-      'There is no upper limit'
+      { text: '1.0 (materials can double in width)', correct: false },
+      { text: '0.5 (volume conservation limit)', correct: true },
+      { text: '0.3 (typical metal value)', correct: false },
+      { text: 'There is no upper limit', correct: false }
     ],
-    correct: 1
   },
   {
-    question: 'What happens to the volume of rubber when stretched (ν ≈ 0.5)?',
+    question: 'What happens to the volume of rubber when stretched (v = 0.5)?',
     options: [
-      'Volume increases significantly',
-      'Volume stays approximately constant',
-      'Volume decreases by half',
-      'Volume oscillates as it stretches'
+      { text: 'Volume increases significantly', correct: false },
+      { text: 'Volume stays approximately constant', correct: true },
+      { text: 'Volume decreases by half', correct: false },
+      { text: 'Volume oscillates as it stretches', correct: false }
     ],
-    correct: 1
   },
   {
     question: 'How do auxetic materials achieve negative Poisson\'s ratio?',
     options: [
-      'By using magnetic particles',
-      'Through re-entrant (inward-pointing) structural geometry',
-      'By mixing two incompatible materials',
-      'Through chemical treatment of normal materials'
+      { text: 'By using magnetic particles', correct: false },
+      { text: 'Through re-entrant (inward-pointing) structural geometry', correct: true },
+      { text: 'By mixing two incompatible materials', correct: false },
+      { text: 'Through chemical treatment of normal materials', correct: false }
     ],
-    correct: 1
   },
   {
     question: 'What is a typical Poisson\'s ratio for steel?',
     options: [
-      'Close to 0 (like cork)',
-      'Around 0.3',
-      'Close to 0.5 (like rubber)',
-      'Negative (like auxetics)'
+      { text: 'Close to 0 (like cork)', correct: false },
+      { text: 'Around 0.3', correct: true },
+      { text: 'Close to 0.5 (like rubber)', correct: false },
+      { text: 'Negative (like auxetics)', correct: false }
     ],
-    correct: 1
   },
   {
     question: 'Why are auxetic materials useful in body armor?',
     options: [
-      'They\'re lighter than regular materials',
-      'They expand under impact, spreading force over a larger area',
-      'They\'re completely bulletproof',
-      'They generate heat to warn the wearer'
+      { text: 'They\'re lighter than regular materials', correct: false },
+      { text: 'They expand under impact, spreading force over a larger area', correct: true },
+      { text: 'They\'re completely bulletproof', correct: false },
+      { text: 'They generate heat to warn the wearer', correct: false }
     ],
-    correct: 1
   },
   {
-    question: 'In the formula ν = -εlateral/εaxial, what does a positive ν indicate?',
+    question: 'In the formula v = -e_lateral/e_axial, what does a positive v indicate?',
     options: [
-      'The material expands in all directions',
-      'The material contracts laterally when stretched axially (normal behavior)',
-      'The material is incompressible',
-      'The material has no elasticity'
+      { text: 'The material expands in all directions', correct: false },
+      { text: 'The material contracts laterally when stretched axially (normal behavior)', correct: true },
+      { text: 'The material is incompressible', correct: false },
+      { text: 'The material has no elasticity', correct: false }
     ],
-    correct: 1
   }
 ];
 
@@ -676,15 +654,15 @@ const MetalFormingGraphic: React.FC = () => {
 // ─────────────────────────────────────────────────────────────────────────────
 // MAIN COMPONENT
 // ─────────────────────────────────────────────────────────────────────────────
-export default function PoissonRatioRenderer({ onEvent, savedState }: PoissonRatioRendererProps) {
+export default function PoissonRatioRenderer({ phase, onPhaseComplete, onCorrectAnswer, onIncorrectAnswer }: PoissonRatioRendererProps) {
   // ─── State ───────────────────────────────────────────────────────────────────
-  const [phase, setPhase] = useState<Phase>(savedState?.phase || 'hook');
-  const [prediction, setPrediction] = useState<string | null>(savedState?.prediction || null);
-  const [twistPrediction, setTwistPrediction] = useState<string | null>(savedState?.twistPrediction || null);
-  const [testAnswers, setTestAnswers] = useState<number[]>(savedState?.testAnswers || Array(10).fill(-1));
-  const [completedApps, setCompletedApps] = useState<Set<number>>(
-    new Set(savedState?.completedApps || [])
-  );
+  const [currentPhase, setCurrentPhase] = useState<Phase>(phase || 'hook');
+  const [prediction, setPrediction] = useState<string | null>(null);
+  const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
+  const [testAnswers, setTestAnswers] = useState<(number | null)[]>(new Array(TEST_QUESTIONS.length).fill(null));
+  const [testSubmitted, setTestSubmitted] = useState(false);
+  const [testScore, setTestScore] = useState(0);
+  const [completedApps, setCompletedApps] = useState<Set<number>>(new Set());
   const [activeAppTab, setActiveAppTab] = useState(0);
 
   // Simulation state
@@ -706,10 +684,6 @@ export default function PoissonRatioRenderer({ onEvent, savedState }: PoissonRat
   };
 
   // ─── Helpers ─────────────────────────────────────────────────────────────────
-  const emitEvent = useCallback((type: GameEvent['type'], data: Record<string, unknown> = {}) => {
-    onEvent?.({ type, phase, data });
-  }, [onEvent, phase]);
-
   const goToPhase = useCallback((newPhase: Phase) => {
     const now = Date.now();
     if (now - lastClickRef.current < 200) return;
@@ -718,7 +692,7 @@ export default function PoissonRatioRenderer({ onEvent, savedState }: PoissonRat
     navigationLockRef.current = true;
 
     playSound('transition');
-    setPhase(newPhase);
+    setCurrentPhase(newPhase);
 
     setTimeout(() => {
       navigationLockRef.current = false;
@@ -726,38 +700,46 @@ export default function PoissonRatioRenderer({ onEvent, savedState }: PoissonRat
   }, []);
 
   const nextPhase = useCallback(() => {
-    const currentIndex = PHASES.indexOf(phase);
+    const currentIndex = PHASES.indexOf(currentPhase);
     if (currentIndex < PHASES.length - 1) {
       goToPhase(PHASES[currentIndex + 1]);
     }
-  }, [phase, goToPhase]);
+  }, [currentPhase, goToPhase]);
 
   const handlePrediction = useCallback((id: string) => {
     playSound('click');
     setPrediction(id);
-    emitEvent('prediction', { prediction: id });
-  }, [emitEvent]);
+  }, []);
 
   const handleTwistPrediction = useCallback((id: string) => {
     playSound('click');
     setTwistPrediction(id);
-    emitEvent('prediction', { twistPrediction: id });
-  }, [emitEvent]);
+  }, []);
 
   const handleTestAnswer = useCallback((questionIndex: number, answerIndex: number) => {
     const newAnswers = [...testAnswers];
     newAnswers[questionIndex] = answerIndex;
     setTestAnswers(newAnswers);
-    playSound(answerIndex === TEST_QUESTIONS[questionIndex].correct ? 'success' : 'failure');
-    emitEvent('interaction', { question: questionIndex, answer: answerIndex });
-  }, [testAnswers, emitEvent]);
+  }, [testAnswers]);
 
   const handleAppComplete = useCallback((index: number) => {
     playSound('click');
     setCompletedApps(prev => new Set([...prev, index]));
     setActiveAppTab(index);
-    emitEvent('interaction', { app: TRANSFER_APPS[index].title });
-  }, [emitEvent]);
+  }, []);
+
+  const submitTest = useCallback(() => {
+    let score = 0;
+    TEST_QUESTIONS.forEach((q, i) => {
+      if (testAnswers[i] !== null && q.options[testAnswers[i]!].correct) {
+        score++;
+      }
+    });
+    setTestScore(score);
+    setTestSubmitted(true);
+    if (score >= 7 && onCorrectAnswer) onCorrectAnswer();
+    else if (onIncorrectAnswer) onIncorrectAnswer();
+  }, [testAnswers, onCorrectAnswer, onIncorrectAnswer]);
 
   // Reset when returning to play phase
   useEffect(() => {
@@ -1381,29 +1363,47 @@ export default function PoissonRatioRenderer({ onEvent, savedState }: PoissonRat
   );
 
   const renderTest = () => {
-    const answeredCount = testAnswers.filter(a => a !== -1).length;
-    const allAnswered = answeredCount === TEST_QUESTIONS.length;
-    const score = testAnswers.filter((a, i) => a === TEST_QUESTIONS[i].correct).length;
-    const passed = score >= 7;
-
-    if (allAnswered) {
+    if (testSubmitted) {
+      const passed = testScore >= 7;
       return (
         <div className="text-center space-y-8">
           <div className="text-7xl">{passed ? '🎉' : '📚'}</div>
           <div>
             <h2 className="text-3xl font-bold text-white mb-2">Quiz Complete!</h2>
             <p className="text-xl text-gray-300">
-              You scored <span className={passed ? 'text-green-400' : 'text-amber-400'}>{score}/10</span>
+              You scored <span className={passed ? 'text-green-400' : 'text-amber-400'}>{testScore}/10</span>
             </p>
             <p className="text-gray-500 mt-2">
               {passed ? 'Excellent! You\'ve mastered Poisson\'s ratio!' : 'Review the concepts and try again!'}
             </p>
           </div>
+
+          {/* Show answers review */}
+          <div className="space-y-4 max-w-2xl mx-auto text-left">
+            {TEST_QUESTIONS.map((q, qIndex) => {
+              const userAnswer = testAnswers[qIndex];
+              const isCorrect = userAnswer !== null && q.options[userAnswer].correct;
+              return (
+                <div key={qIndex} className={`p-4 rounded-xl border-2 ${isCorrect ? 'border-green-500 bg-green-900/20' : 'border-red-500 bg-red-900/20'}`}>
+                  <p className="text-white font-medium mb-2">{qIndex + 1}. {q.question}</p>
+                  {q.options.map((opt, oIndex) => (
+                    <div key={oIndex} className={`py-1 px-2 rounded ${opt.correct ? 'text-green-400' : userAnswer === oIndex ? 'text-red-400' : 'text-gray-400'}`}>
+                      {opt.correct ? '✓' : userAnswer === oIndex ? '✗' : '○'} {opt.text}
+                    </div>
+                  ))}
+                </div>
+              );
+            })}
+          </div>
+
           <PrimaryButton
             onMouseDown={() => {
               playSound(passed ? 'complete' : 'click');
               if (passed) nextPhase();
-              else setTestAnswers(Array(10).fill(-1));
+              else {
+                setTestAnswers(new Array(TEST_QUESTIONS.length).fill(null));
+                setTestSubmitted(false);
+              }
             }}
             variant={passed ? 'indigo' : 'purple'}
           >
@@ -1426,11 +1426,7 @@ export default function PoissonRatioRenderer({ onEvent, savedState }: PoissonRat
             <div
               key={i}
               className={`h-2 flex-1 rounded-full transition-all ${
-                testAnswers[i] !== -1
-                  ? testAnswers[i] === TEST_QUESTIONS[i].correct
-                    ? 'bg-green-500'
-                    : 'bg-red-500'
-                  : 'bg-slate-700'
+                testAnswers[i] !== null ? 'bg-indigo-500' : 'bg-slate-700'
               }`}
             />
           ))}
@@ -1442,11 +1438,7 @@ export default function PoissonRatioRenderer({ onEvent, savedState }: PoissonRat
             <div
               key={qIndex}
               className={`bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl p-5 border transition-all ${
-                testAnswers[qIndex] !== -1
-                  ? testAnswers[qIndex] === q.correct
-                    ? 'border-green-500/50'
-                    : 'border-red-500/50'
-                  : 'border-slate-700'
+                testAnswers[qIndex] !== null ? 'border-indigo-500/50' : 'border-slate-700'
               }`}
             >
               <p className="text-white font-medium mb-4">
@@ -1458,27 +1450,34 @@ export default function PoissonRatioRenderer({ onEvent, savedState }: PoissonRat
                     key={oIndex}
                     onMouseDown={(e) => {
                       e.preventDefault();
-                      if (testAnswers[qIndex] === -1) handleTestAnswer(qIndex, oIndex);
+                      handleTestAnswer(qIndex, oIndex);
                     }}
-                    disabled={testAnswers[qIndex] !== -1}
                     className={`p-3 rounded-xl text-left text-sm transition-all ${
                       testAnswers[qIndex] === oIndex
-                        ? oIndex === q.correct
-                          ? 'bg-green-600/30 border border-green-500 text-green-300'
-                          : 'bg-red-600/30 border border-red-500 text-red-300'
-                        : testAnswers[qIndex] !== -1 && oIndex === q.correct
-                        ? 'bg-green-600/20 border border-green-500/50 text-green-400'
-                        : testAnswers[qIndex] !== -1
-                        ? 'bg-slate-800 text-gray-500 cursor-not-allowed'
+                        ? 'bg-indigo-600/30 border border-indigo-500 text-indigo-300'
                         : 'bg-slate-800 text-gray-300 hover:bg-slate-700 cursor-pointer'
                     }`}
                   >
-                    {option}
+                    {option.text}
                   </button>
                 ))}
               </div>
             </div>
           ))}
+        </div>
+
+        <div className="text-center">
+          <button
+            onMouseDown={submitTest}
+            disabled={testAnswers.includes(null)}
+            className={`px-8 py-3 rounded-xl font-semibold transition-all ${
+              testAnswers.includes(null)
+                ? 'bg-gray-700 text-gray-400 cursor-not-allowed'
+                : 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white hover:from-indigo-500 hover:to-purple-500'
+            }`}
+          >
+            Submit Quiz
+          </button>
         </div>
       </div>
     );

@@ -48,9 +48,10 @@ interface TransferApp {
 }
 
 interface Props {
-  onGameEvent?: (event: { type: GameEventType; data?: Record<string, unknown> }) => void;
-  currentPhase?: number;
-  onPhaseComplete?: (phase: number) => void;
+  phase: 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
+  onPhaseComplete?: () => void;
+  onCorrectAnswer?: () => void;
+  onIncorrectAnswer?: () => void;
 }
 
 declare global {
@@ -60,11 +61,17 @@ declare global {
 }
 
 const ElectromagneticInductionRenderer: React.FC<Props> = ({
-  onGameEvent,
-  currentPhase = 0,
-  onPhaseComplete
+  phase: initialPhase,
+  onPhaseComplete,
+  onCorrectAnswer,
+  onIncorrectAnswer
 }) => {
-  const [phase, setPhase] = useState(currentPhase);
+  const phaseToIndex: Record<string, number> = {
+    'hook': 0, 'predict': 1, 'play': 2, 'review': 3,
+    'twist_predict': 4, 'twist_play': 5, 'twist_review': 6,
+    'transfer': 7, 'test': 8, 'mastery': 9
+  };
+  const [phase, setPhase] = useState(phaseToIndex[initialPhase] || 0);
   const [showPredictionFeedback, setShowPredictionFeedback] = useState(false);
   const [selectedPrediction, setSelectedPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
@@ -180,16 +187,12 @@ const ElectromagneticInductionRenderer: React.FC<Props> = ({
     playSound('click');
     setPhase(newPhase);
 
-    if (onGameEvent) {
-      onGameEvent({ type: 'phase_change', data: { phase: newPhase, phaseName: phaseNames[newPhase] } });
-    }
-
-    if (onPhaseComplete && newPhase > 0) {
-      onPhaseComplete(newPhase - 1);
+    if (onPhaseComplete) {
+      onPhaseComplete();
     }
 
     setTimeout(() => { navigationLockRef.current = false; }, 400);
-  }, [playSound, onGameEvent, onPhaseComplete, phaseNames]);
+  }, [playSound, onPhaseComplete]);
 
   // Calculate magnetic flux through the coil
   const calculateFlux = useCallback(() => {
@@ -264,11 +267,7 @@ const ElectromagneticInductionRenderer: React.FC<Props> = ({
     setMagnetVelocity(3);
     setIsAnimating(true);
     setFluxHistory([]);
-
-    if (onGameEvent) {
-      onGameEvent({ type: 'simulation_started', data: { demo: 'magnet' } });
-    }
-  }, [onGameEvent]);
+  }, []);
 
   const stopAnimation = useCallback(() => {
     setIsAnimating(false);
@@ -285,12 +284,8 @@ const ElectromagneticInductionRenderer: React.FC<Props> = ({
     setShowPredictionFeedback(true);
     playSound(prediction === 'B' ? 'correct' : 'incorrect');
 
-    if (onGameEvent) {
-      onGameEvent({ type: 'prediction_made', data: { prediction, correct: prediction === 'B' } });
-    }
-
     setTimeout(() => { navigationLockRef.current = false; }, 400);
-  }, [playSound, onGameEvent]);
+  }, [playSound]);
 
   const handleTwistPrediction = useCallback((prediction: string) => {
     if (navigationLockRef.current) return;
@@ -300,12 +295,8 @@ const ElectromagneticInductionRenderer: React.FC<Props> = ({
     setShowTwistFeedback(true);
     playSound(prediction === 'C' ? 'correct' : 'incorrect');
 
-    if (onGameEvent) {
-      onGameEvent({ type: 'prediction_made', data: { prediction, correct: prediction === 'C', twist: true } });
-    }
-
     setTimeout(() => { navigationLockRef.current = false; }, 400);
-  }, [playSound, onGameEvent]);
+  }, [playSound]);
 
   const handleTestAnswer = useCallback((questionIndex: number, answerIndex: number) => {
     if (navigationLockRef.current) return;
@@ -319,12 +310,8 @@ const ElectromagneticInductionRenderer: React.FC<Props> = ({
 
     playSound('click');
 
-    if (onGameEvent) {
-      onGameEvent({ type: 'test_answered', data: { questionIndex, answerIndex } });
-    }
-
     setTimeout(() => { navigationLockRef.current = false; }, 400);
-  }, [playSound, onGameEvent]);
+  }, [playSound]);
 
   const handleAppComplete = useCallback((appIndex: number) => {
     if (navigationLockRef.current) return;
@@ -333,12 +320,8 @@ const ElectromagneticInductionRenderer: React.FC<Props> = ({
     setCompletedApps(prev => new Set([...prev, appIndex]));
     playSound('complete');
 
-    if (onGameEvent) {
-      onGameEvent({ type: 'app_explored', data: { appIndex } });
-    }
-
     setTimeout(() => { navigationLockRef.current = false; }, 400);
-  }, [playSound, onGameEvent]);
+  }, [playSound]);
 
   // Test questions with scenarios and explanations
   const testQuestions: TestQuestion[] = [
@@ -575,10 +558,18 @@ const ElectromagneticInductionRenderer: React.FC<Props> = ({
   ];
 
   const calculateScore = () => {
-    return testAnswers.reduce((score, answer, index) => {
+    const score = testAnswers.reduce((score, answer, index) => {
       return score + (testQuestions[index].options[answer]?.correct ? 1 : 0);
     }, 0);
+    return score;
   };
+
+  // Call onCorrectAnswer when test is passed
+  useEffect(() => {
+    if (showTestResults && calculateScore() >= 7 && onCorrectAnswer) {
+      onCorrectAnswer();
+    }
+  }, [showTestResults]);
 
   // Render coil and magnet visualization
   const renderInductionVisualization = (width: number, height: number, interactive: boolean = true) => {

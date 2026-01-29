@@ -5,41 +5,18 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 // ═══════════════════════════════════════════════════════════════════════════
 // TYPES & INTERFACES
 // ═══════════════════════════════════════════════════════════════════════════
-type GameEventType =
-  | 'phase_change'
-  | 'prediction_made'
-  | 'simulation_started'
-  | 'parameter_changed'
-  | 'twist_prediction_made'
-  | 'app_explored'
-  | 'test_answered'
-  | 'test_completed'
-  | 'mastery_achieved';
+// String phases for game progression
+type Phase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
 
-interface GameEvent {
-  type: GameEventType;
-  data?: Record<string, unknown>;
-}
-
-// Numeric phases: 0=hook, 1=predict, 2=play, 3=review, 4=twist_predict, 5=twist_play, 6=twist_review, 7=transfer, 8=test, 9=mastery
-const PHASES: number[] = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
-const phaseLabels: Record<number, string> = {
-  0: 'Hook', 1: 'Predict', 2: 'Lab', 3: 'Review', 4: 'Twist Predict',
-  5: 'Twist Lab', 6: 'Twist Review', 7: 'Transfer', 8: 'Test', 9: 'Mastery'
+const PHASE_ORDER: Phase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
+const phaseLabels: Record<Phase, string> = {
+  hook: 'Hook', predict: 'Predict', play: 'Lab', review: 'Review', twist_predict: 'Twist Predict',
+  twist_play: 'Twist Lab', twist_review: 'Twist Review', transfer: 'Transfer', test: 'Test', mastery: 'Mastery'
 };
 
 interface Props {
-  onGameEvent?: (event: GameEvent) => void;
-  currentPhase?: number;
-  onPhaseComplete?: (phase: number) => void;
-}
-
-interface GameState {
-  phase: number;
-  prediction: string | null;
-  twistPrediction: string | null;
-  testAnswers: number[];
-  completedApps: number[];
+  currentPhase?: Phase;
+  onPhaseComplete?: (phase: Phase) => void;
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -114,8 +91,8 @@ const TRANSFER_APPS = [
 // ═══════════════════════════════════════════════════════════════════════════
 // MAIN COMPONENT
 // ═══════════════════════════════════════════════════════════════════════════
-const MicrowaveStandingWaveRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onPhaseComplete }) => {
-  const [phase, setPhase] = useState<number>(currentPhase ?? 0);
+const MicrowaveStandingWaveRenderer: React.FC<Props> = ({ currentPhase, onPhaseComplete }) => {
+  const [phase, setPhase] = useState<Phase>(currentPhase ?? 'hook');
   const [prediction, setPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
   const [testAnswers, setTestAnswers] = useState<number[]>([]);
@@ -169,20 +146,19 @@ const MicrowaveStandingWaveRenderer: React.FC<Props> = ({ onGameEvent, currentPh
     } catch { /* Audio not available */ }
   }, []);
 
-  const goToPhase = useCallback((newPhase: number) => {
+  const goToPhase = useCallback((newPhase: Phase) => {
     if (navigationLockRef.current) return;
     navigationLockRef.current = true;
     playSound('transition');
     setPhase(newPhase);
     onPhaseComplete?.(newPhase);
-    onGameEvent?.({ type: 'phase_change', data: { phase: newPhase, phaseLabel: phaseLabels[newPhase] } });
     setTimeout(() => { navigationLockRef.current = false; }, 400);
-  }, [playSound, onPhaseComplete, onGameEvent]);
+  }, [playSound, onPhaseComplete]);
 
-  const nextPhase = useCallback(() => {
-    const currentIndex = PHASES.indexOf(phase);
-    if (currentIndex < PHASES.length - 1) {
-      goToPhase(PHASES[currentIndex + 1]);
+  const goToNextPhase = useCallback(() => {
+    const currentIndex = PHASE_ORDER.indexOf(phase);
+    if (currentIndex < PHASE_ORDER.length - 1) {
+      goToPhase(PHASE_ORDER[currentIndex + 1]);
     }
   }, [phase, goToPhase]);
 
@@ -228,7 +204,7 @@ const MicrowaveStandingWaveRenderer: React.FC<Props> = ({ onGameEvent, currentPh
 
   // Twist cooking simulation
   useEffect(() => {
-    if (phase !== 5) return; // twist_play
+    if (phase !== 'twist_play') return;
     if (twistCookTime <= 0) return;
 
     const cookInterval = setInterval(() => {
@@ -254,14 +230,14 @@ const MicrowaveStandingWaveRenderer: React.FC<Props> = ({ onGameEvent, currentPh
 
   // Reset when returning to play phase
   useEffect(() => {
-    if (phase === 2) { // play
+    if (phase === 'play') {
       setIsCooking(false);
       setTurntableOn(false);
       setCookTime(0);
       setFoodTemp(Array(25).fill(20));
       setTurntableAngle(0);
     }
-    if (phase === 5) { // twist_play
+    if (phase === 'twist_play') {
       setTwistTurntable(false);
       setTwistCookTime(0);
       setTwistFoodTemp(Array(25).fill(20));
@@ -283,8 +259,7 @@ const MicrowaveStandingWaveRenderer: React.FC<Props> = ({ onGameEvent, currentPh
     lastClickRef.current = now;
     setPrediction(id);
     playSound('click');
-    onGameEvent?.({ type: 'prediction_made', data: { prediction: id } });
-  }, [playSound, onGameEvent]);
+  }, [playSound]);
 
   const handleTwistPrediction = useCallback((id: string) => {
     const now = Date.now();
@@ -292,8 +267,7 @@ const MicrowaveStandingWaveRenderer: React.FC<Props> = ({ onGameEvent, currentPh
     lastClickRef.current = now;
     setTwistPrediction(id);
     playSound('click');
-    onGameEvent?.({ type: 'twist_prediction_made', data: { prediction: id } });
-  }, [playSound, onGameEvent]);
+  }, [playSound]);
 
   const handleAppComplete = useCallback((index: number) => {
     const now = Date.now();
@@ -301,8 +275,7 @@ const MicrowaveStandingWaveRenderer: React.FC<Props> = ({ onGameEvent, currentPh
     lastClickRef.current = now;
     setCompletedApps(prev => new Set([...prev, index]));
     playSound('complete');
-    onGameEvent?.({ type: 'app_explored', data: { app: TRANSFER_APPS[index].title } });
-  }, [playSound, onGameEvent]);
+  }, [playSound]);
 
   const handleTestAnswer = useCallback((answerIndex: number, correct: boolean) => {
     const now = Date.now();
@@ -310,8 +283,7 @@ const MicrowaveStandingWaveRenderer: React.FC<Props> = ({ onGameEvent, currentPh
     lastClickRef.current = now;
     setTestAnswers(prev => [...prev, answerIndex]);
     playSound(correct ? 'success' : 'failure');
-    onGameEvent?.({ type: 'test_answered', data: { answer: answerIndex, correct } });
-  }, [playSound, onGameEvent]);
+  }, [playSound]);
 
   // ═══════════════════════════════════════════════════════════════════════════
   // RENDER HELPERS
@@ -540,7 +512,7 @@ const MicrowaveStandingWaveRenderer: React.FC<Props> = ({ onGameEvent, currentPh
 
       {/* Premium CTA button */}
       <button
-        onMouseDown={(e) => { e.preventDefault(); goToPhase(1); }}
+        onMouseDown={(e) => { e.preventDefault(); goToNextPhase(); }}
         className="mt-10 group relative px-10 py-5 bg-gradient-to-r from-amber-500 to-orange-600 text-white text-lg font-semibold rounded-2xl transition-all duration-300 hover:shadow-lg hover:shadow-amber-500/25 hover:scale-[1.02] active:scale-[0.98]"
       >
         <span className="relative z-10 flex items-center gap-3">
@@ -606,7 +578,7 @@ const MicrowaveStandingWaveRenderer: React.FC<Props> = ({ onGameEvent, currentPh
             {prediction === 'standing' ? '✓ Correct!' : 'Not quite!'} Standing waves create fixed patterns of high and low energy!
           </p>
           <button
-            onMouseDown={(e) => { e.preventDefault(); goToPhase(2); }}
+            onMouseDown={(e) => { e.preventDefault(); goToNextPhase(); }}
             className="mt-4 px-6 py-3 bg-gradient-to-r from-amber-600 to-orange-600 text-white font-semibold rounded-xl"
           >
             See It in Action
@@ -678,7 +650,7 @@ const MicrowaveStandingWaveRenderer: React.FC<Props> = ({ onGameEvent, currentPh
       </div>
 
       <button
-        onMouseDown={(e) => { e.preventDefault(); goToPhase(3); }}
+        onMouseDown={(e) => { e.preventDefault(); goToNextPhase(); }}
         className="px-6 py-3 bg-gradient-to-r from-amber-600 to-orange-600 text-white font-semibold rounded-xl"
       >
         Review the Science
@@ -715,7 +687,7 @@ const MicrowaveStandingWaveRenderer: React.FC<Props> = ({ onGameEvent, currentPh
         </div>
       </div>
       <button
-        onMouseDown={(e) => { e.preventDefault(); goToPhase(4); }}
+        onMouseDown={(e) => { e.preventDefault(); goToNextPhase(); }}
         className="mt-8 px-6 py-3 bg-gradient-to-r from-amber-600 to-orange-600 text-white font-semibold rounded-xl"
       >
         Discover the Twist
@@ -760,7 +732,7 @@ const MicrowaveStandingWaveRenderer: React.FC<Props> = ({ onGameEvent, currentPh
             {twistPrediction === 'even' ? '✓ Exactly!' : 'Not quite!'} The turntable moves food through the pattern for even heating!
           </p>
           <button
-            onMouseDown={(e) => { e.preventDefault(); goToPhase(5); }}
+            onMouseDown={(e) => { e.preventDefault(); goToNextPhase(); }}
             className="mt-4 px-6 py-3 bg-gradient-to-r from-amber-600 to-orange-600 text-white font-semibold rounded-xl"
           >
             See How It Works
@@ -818,7 +790,7 @@ const MicrowaveStandingWaveRenderer: React.FC<Props> = ({ onGameEvent, currentPh
         )}
 
         <button
-          onMouseDown={(e) => { e.preventDefault(); goToPhase(6); }}
+          onMouseDown={(e) => { e.preventDefault(); goToNextPhase(); }}
           className="px-6 py-3 bg-gradient-to-r from-amber-600 to-orange-600 text-white font-semibold rounded-xl"
         >
           Review Discovery
@@ -849,7 +821,7 @@ const MicrowaveStandingWaveRenderer: React.FC<Props> = ({ onGameEvent, currentPh
         </div>
       </div>
       <button
-        onMouseDown={(e) => { e.preventDefault(); goToPhase(7); }}
+        onMouseDown={(e) => { e.preventDefault(); goToNextPhase(); }}
         className="px-6 py-3 bg-gradient-to-r from-blue-600 to-cyan-600 text-white font-semibold rounded-xl"
       >
         Explore Real-World Applications
@@ -886,7 +858,7 @@ const MicrowaveStandingWaveRenderer: React.FC<Props> = ({ onGameEvent, currentPh
       </div>
       {completedApps.size >= 4 && (
         <button
-          onMouseDown={(e) => { e.preventDefault(); goToPhase(8); }}
+          onMouseDown={(e) => { e.preventDefault(); goToNextPhase(); }}
           className="px-6 py-3 bg-gradient-to-r from-amber-600 to-orange-600 text-white font-semibold rounded-xl"
         >
           Take the Knowledge Test
@@ -908,14 +880,14 @@ const MicrowaveStandingWaveRenderer: React.FC<Props> = ({ onGameEvent, currentPh
           <p className="text-slate-300 mb-6">{score >= 3 ? 'Excellent! You\'ve mastered standing waves!' : 'Keep studying! Review and try again.'}</p>
           {score >= 3 ? (
             <button
-              onMouseDown={(e) => { e.preventDefault(); playSound('complete'); goToPhase(9); }}
+              onMouseDown={(e) => { e.preventDefault(); playSound('complete'); goToNextPhase(); }}
               className="px-8 py-4 bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-semibold rounded-xl"
             >
               Claim Your Mastery Badge
             </button>
           ) : (
             <button
-              onMouseDown={(e) => { e.preventDefault(); setTestAnswers([]); goToPhase(3); }}
+              onMouseDown={(e) => { e.preventDefault(); setTestAnswers([]); goToPhase('review'); }}
               className="px-8 py-4 bg-gradient-to-r from-blue-600 to-cyan-600 text-white font-semibold rounded-xl"
             >
               Review & Try Again
@@ -958,23 +930,23 @@ const MicrowaveStandingWaveRenderer: React.FC<Props> = ({ onGameEvent, currentPh
           <div className="bg-slate-800/50 rounded-xl p-4"><div className="text-2xl mb-2">🔄</div><p className="text-sm text-slate-300">Turntable Solution</p></div>
           <div className="bg-slate-800/50 rounded-xl p-4"><div className="text-2xl mb-2">🍡</div><p className="text-sm text-slate-300">Marshmallow Test</p></div>
         </div>
-        <button onMouseDown={(e) => { e.preventDefault(); goToPhase(0); }} className="px-6 py-3 bg-slate-700 hover:bg-slate-600 text-white font-medium rounded-xl">Explore Again</button>
+        <button onMouseDown={(e) => { e.preventDefault(); goToPhase('hook'); }} className="px-6 py-3 bg-slate-700 hover:bg-slate-600 text-white font-medium rounded-xl">Explore Again</button>
       </div>
     </div>
   );
 
   const renderPhase = () => {
     switch (phase) {
-      case 0: return renderHook();
-      case 1: return renderPredict();
-      case 2: return renderPlay();
-      case 3: return renderReview();
-      case 4: return renderTwistPredict();
-      case 5: return renderTwistPlay();
-      case 6: return renderTwistReview();
-      case 7: return renderTransfer();
-      case 8: return renderTest();
-      case 9: return renderMastery();
+      case 'hook': return renderHook();
+      case 'predict': return renderPredict();
+      case 'play': return renderPlay();
+      case 'review': return renderReview();
+      case 'twist_predict': return renderTwistPredict();
+      case 'twist_play': return renderTwistPlay();
+      case 'twist_review': return renderTwistReview();
+      case 'transfer': return renderTransfer();
+      case 'test': return renderTest();
+      case 'mastery': return renderMastery();
       default: return renderHook();
     }
   };
@@ -992,14 +964,14 @@ const MicrowaveStandingWaveRenderer: React.FC<Props> = ({ onGameEvent, currentPh
         <div className="flex items-center justify-between px-6 py-3 max-w-4xl mx-auto">
           <span className="text-sm font-semibold text-white/80 tracking-wide">Standing Waves</span>
           <div className="flex items-center gap-1.5">
-            {PHASES.map((p) => (
+            {PHASE_ORDER.map((p, index) => (
               <button
                 key={p}
                 onMouseDown={(e) => { e.preventDefault(); goToPhase(p); }}
                 className={`h-2 rounded-full transition-all duration-300 ${
                   phase === p
                     ? 'bg-amber-400 w-6 shadow-lg shadow-amber-400/30'
-                    : phase > p
+                    : PHASE_ORDER.indexOf(phase) > index
                       ? 'bg-emerald-500 w-2'
                       : 'bg-slate-700 w-2 hover:bg-slate-600'
                 }`}

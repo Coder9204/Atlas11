@@ -21,17 +21,17 @@ interface GameEvent {
   data?: Record<string, unknown>;
 }
 
-// Numeric phases: 0=hook, 1=predict, 2=play, 3=review, 4=twist_predict, 5=twist_play, 6=twist_review, 7=transfer, 8=test, 9=mastery
-const PHASES: number[] = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
-const phaseLabels: Record<number, string> = {
-  0: 'Hook', 1: 'Predict', 2: 'Lab', 3: 'Review', 4: 'Twist Predict',
-  5: 'Twist Lab', 6: 'Twist Review', 7: 'Transfer', 8: 'Test', 9: 'Mastery'
+// String-based phases for game progression
+type Phase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
+const PHASE_ORDER: Phase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
+const phaseLabels: Record<Phase, string> = {
+  hook: 'Hook', predict: 'Predict', play: 'Lab', review: 'Review', twist_predict: 'Twist Predict',
+  twist_play: 'Twist Lab', twist_review: 'Twist Review', transfer: 'Transfer', test: 'Test', mastery: 'Mastery'
 };
 
 interface CavitationRendererProps {
-  onGameEvent?: (event: GameEvent) => void;
-  currentPhase?: number;
-  onPhaseComplete?: (phase: number) => void;
+  currentPhase?: Phase;
+  onPhaseComplete?: (phase: Phase) => void;
 }
 
 // Bubble type
@@ -45,9 +45,9 @@ interface Bubble {
   collapsed: boolean;
 }
 
-const CavitationRenderer: React.FC<CavitationRendererProps> = ({ onGameEvent, currentPhase, onPhaseComplete }) => {
+const CavitationRenderer: React.FC<CavitationRendererProps> = ({ currentPhase, onPhaseComplete }) => {
   // Phase management
-  const [phase, setPhase] = useState<number>(currentPhase ?? 0);
+  const [phase, setPhase] = useState<Phase>(currentPhase ?? 'hook');
 
   // Hook phase
   const [hookStep, setHookStep] = useState(0);
@@ -209,15 +209,29 @@ const CavitationRenderer: React.FC<CavitationRendererProps> = ({ onGameEvent, cu
   }, []);
 
   // Phase navigation
-  const goToPhase = useCallback((newPhase: number) => {
+  const goToPhase = useCallback((newPhase: Phase) => {
     if (navigationLockRef.current) return;
     navigationLockRef.current = true;
     playSound('transition');
     setPhase(newPhase);
     onPhaseComplete?.(newPhase);
-    onGameEvent?.({ type: 'phase_change', data: { phase: newPhase, phaseLabel: phaseLabels[newPhase] } });
     setTimeout(() => { navigationLockRef.current = false; }, 400);
-  }, [playSound, onPhaseComplete, onGameEvent]);
+  }, [playSound, onPhaseComplete]);
+
+  const goToNextPhase = useCallback(() => {
+    const currentIndex = PHASE_ORDER.indexOf(phase);
+    if (currentIndex < PHASE_ORDER.length - 1) {
+      goToPhase(PHASE_ORDER[currentIndex + 1]);
+    }
+  }, [phase, goToPhase]);
+
+  // Emit game events (for logging/analytics)
+  const emitEvent = useCallback(
+    (type: string, data?: Record<string, unknown>) => {
+      console.debug('Game event:', { type, data, timestamp: Date.now(), phase: phaseLabels[phase] });
+    },
+    [phase]
+  );
 
   // Mantis shrimp strike animation
   const triggerShrimpStrike = () => {
@@ -379,16 +393,17 @@ const CavitationRenderer: React.FC<CavitationRendererProps> = ({ onGameEvent, cu
 
   // Helper render functions
   const renderProgressBar = () => {
+    const currentIndex = PHASE_ORDER.indexOf(phase);
     return (
       <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginBottom: '20px' }}>
-        {PHASES.map((p, i) => (
+        {PHASE_ORDER.map((p, i) => (
           <div
             key={p}
             style={{
               height: '4px',
               flex: 1,
               borderRadius: '2px',
-              background: i <= phase ? `linear-gradient(90deg, ${colors.primary}, ${colors.secondary})` : '#333',
+              background: i <= currentIndex ? `linear-gradient(90deg, ${colors.primary}, ${colors.secondary})` : '#333',
               transition: 'all 0.3s ease'
             }}
           />
@@ -599,7 +614,7 @@ const CavitationRenderer: React.FC<CavitationRendererProps> = ({ onGameEvent, cu
         )}
       </div>
 
-      {hookStep === 1 && renderBottomBar(() => goToPhase(1))}
+      {hookStep === 1 && renderBottomBar(() => goToNextPhase())}
     </div>
   );
 
@@ -685,7 +700,7 @@ const CavitationRenderer: React.FC<CavitationRendererProps> = ({ onGameEvent, cu
           <button
             onMouseDown={() => {
               setShowPredictResult(true);
-              playSound(prediction === 'hot' ? 600 : 300, 0.3, 'sine', 0.3);
+              playSound(prediction === 'hot' ? 'success' : 'failure');
             }}
             style={{
               marginTop: '20px',
@@ -735,7 +750,7 @@ const CavitationRenderer: React.FC<CavitationRendererProps> = ({ onGameEvent, cu
         )}
       </div>
 
-      {showPredictResult && renderBottomBar(() => goToPhase(2))}
+      {showPredictResult && renderBottomBar(() => goToNextPhase())}
     </div>
   );
 
@@ -891,7 +906,7 @@ const CavitationRenderer: React.FC<CavitationRendererProps> = ({ onGameEvent, cu
 
       {renderKeyTakeaway("Propeller cavitation occurs at high speeds when blade suction creates pressure below water's vapor pressure. Each bubble collapse chips away at the metal!")}
 
-      {damageLevel > 30 && renderBottomBar(() => goToPhase(3))}
+      {damageLevel > 30 && renderBottomBar(() => goToNextPhase())}
     </div>
   );
 
@@ -973,7 +988,7 @@ const CavitationRenderer: React.FC<CavitationRendererProps> = ({ onGameEvent, cu
         {renderKeyTakeaway("Cavitation converts the kinetic energy of flow into extreme local conditions — temperatures rivaling the sun's surface, concentrated into points smaller than a pinhead.")}
       </div>
 
-      {renderBottomBar(() => goToPhase(4))}
+      {renderBottomBar(() => goToNextPhase())}
     </div>
   );
 
@@ -1058,7 +1073,7 @@ const CavitationRenderer: React.FC<CavitationRendererProps> = ({ onGameEvent, cu
           <button
             onMouseDown={() => {
               setShowTwistResult(true);
-              playSound(twistPrediction === 'second' ? 600 : 300, 0.3, 'sine', 0.3);
+              playSound(twistPrediction === 'second' ? 'success' : 'failure');
             }}
             style={{
               marginTop: '20px',
@@ -1098,7 +1113,7 @@ const CavitationRenderer: React.FC<CavitationRendererProps> = ({ onGameEvent, cu
         )}
       </div>
 
-      {showTwistResult && renderBottomBar(() => goToPhase(5))}
+      {showTwistResult && renderBottomBar(() => goToNextPhase())}
     </div>
   );
 
@@ -1226,7 +1241,7 @@ const CavitationRenderer: React.FC<CavitationRendererProps> = ({ onGameEvent, cu
 
       {renderKeyTakeaway("The mantis shrimp evolved to weaponize cavitation — its strike is so fast that even the 'shadow' (collapsing bubble) can crack shells!")}
 
-      {renderBottomBar(() => goToPhase(6))}
+      {renderBottomBar(() => goToNextPhase())}
     </div>
   );
 
@@ -1289,7 +1304,7 @@ const CavitationRenderer: React.FC<CavitationRendererProps> = ({ onGameEvent, cu
         {renderKeyTakeaway("Nature discovered cavitation weapons millions of years ago. Now engineers study these animals to design better materials and tools.")}
       </div>
 
-      {renderBottomBar(() => goToPhase(7))}
+      {renderBottomBar(() => goToNextPhase())}
     </div>
   );
 
@@ -1445,7 +1460,7 @@ const CavitationRenderer: React.FC<CavitationRendererProps> = ({ onGameEvent, cu
         )}
       </div>
 
-      {completedApps.size === applications.length && renderBottomBar(() => goToPhase(8))}
+      {completedApps.size === applications.length && renderBottomBar(() => goToNextPhase())}
     </div>
   );
 
@@ -1595,7 +1610,7 @@ const CavitationRenderer: React.FC<CavitationRendererProps> = ({ onGameEvent, cu
           )}
         </div>
 
-        {showTestResults && renderBottomBar(() => goToPhase(9), false, "Complete Journey")}
+        {showTestResults && renderBottomBar(() => goToNextPhase(), false, "Complete Journey")}
       </div>
     );
   };
@@ -1711,16 +1726,16 @@ const CavitationRenderer: React.FC<CavitationRendererProps> = ({ onGameEvent, cu
   // Main render
   const renderPhase = () => {
     switch (phase) {
-      case 0: return renderHook();
-      case 1: return renderPredict();
-      case 2: return renderPlay();
-      case 3: return renderReview();
-      case 4: return renderTwistPredict();
-      case 5: return renderTwistPlay();
-      case 6: return renderTwistReview();
-      case 7: return renderTransfer();
-      case 8: return renderTest();
-      case 9: return renderMastery();
+      case 'hook': return renderHook();
+      case 'predict': return renderPredict();
+      case 'play': return renderPlay();
+      case 'review': return renderReview();
+      case 'twist_predict': return renderTwistPredict();
+      case 'twist_play': return renderTwistPlay();
+      case 'twist_review': return renderTwistReview();
+      case 'transfer': return renderTransfer();
+      case 'test': return renderTest();
+      case 'mastery': return renderMastery();
       default: return renderHook();
     }
   };
@@ -1738,19 +1753,22 @@ const CavitationRenderer: React.FC<CavitationRendererProps> = ({ onGameEvent, cu
         <div className="flex items-center justify-between px-6 py-3 max-w-4xl mx-auto">
           <span className="text-sm font-semibold text-white/80 tracking-wide">Cavitation</span>
           <div className="flex items-center gap-1.5">
-            {PHASES.map((p, i) => (
-              <button
-                key={p}
-                onMouseDown={(e) => { e.preventDefault(); goToPhase(p); }}
-                className={`h-2 rounded-full transition-all duration-300 ${
-                  phase === p
-                    ? 'bg-blue-400 w-6 shadow-lg shadow-blue-400/30'
-                    : phase > p
-                      ? 'bg-emerald-500 w-2'
-                      : 'bg-slate-700 w-2 hover:bg-slate-600'
-                }`}
-              />
-            ))}
+            {PHASE_ORDER.map((p, i) => {
+              const currentIndex = PHASE_ORDER.indexOf(phase);
+              return (
+                <button
+                  key={p}
+                  onMouseDown={(e) => { e.preventDefault(); goToPhase(p); }}
+                  className={`h-2 rounded-full transition-all duration-300 ${
+                    phase === p
+                      ? 'bg-blue-400 w-6 shadow-lg shadow-blue-400/30'
+                      : currentIndex > i
+                        ? 'bg-emerald-500 w-2'
+                        : 'bg-slate-700 w-2 hover:bg-slate-600'
+                  }`}
+                />
+              );
+            })}
           </div>
           <span className="text-sm font-medium text-blue-400">{phaseLabels[phase]}</span>
         </div>

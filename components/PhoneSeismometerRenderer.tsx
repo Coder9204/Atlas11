@@ -24,8 +24,10 @@ interface GameEvent {
 }
 
 interface PhoneSeismometerRendererProps {
-  onEvent?: (event: GameEvent) => void;
-  savedState?: GameState | null;
+  phase: 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
+  onPhaseComplete?: () => void;
+  onCorrectAnswer?: () => void;
+  onIncorrectAnswer?: () => void;
 }
 
 interface GameState {
@@ -49,42 +51,38 @@ const TEST_QUESTIONS = [
   {
     question: 'How does a MEMS accelerometer in your phone detect motion?',
     options: [
-      'Using GPS signals from satellites',
-      'A tiny mass on springs moves relative to the chip, changing capacitance',
-      'It senses air pressure changes from movement',
-      'Magnetic fields interact with phone motion'
-    ],
-    correct: 1
+      { text: 'Using GPS signals from satellites', correct: false },
+      { text: 'A tiny mass on springs moves relative to the chip, changing capacitance', correct: true },
+      { text: 'It senses air pressure changes from movement', correct: false },
+      { text: 'Magnetic fields interact with phone motion', correct: false }
+    ]
   },
   {
     question: 'Why can your phone detect an earthquake even though it\'s not a scientific seismometer?',
     options: [
-      'Phones are more sensitive than real seismometers',
-      'Earthquakes create vibrations that accelerometers can measure',
-      'Phones connect to earthquake warning systems via internet',
-      'Only special earthquake apps can detect quakes'
-    ],
-    correct: 1
+      { text: 'Phones are more sensitive than real seismometers', correct: false },
+      { text: 'Earthquakes create vibrations that accelerometers can measure', correct: true },
+      { text: 'Phones connect to earthquake warning systems via internet', correct: false },
+      { text: 'Only special earthquake apps can detect quakes', correct: false }
+    ]
   },
   {
     question: 'What does the accelerometer actually measure?',
     options: [
-      'Speed (velocity)',
-      'Position (location)',
-      'Acceleration (rate of velocity change)',
-      'Distance traveled'
-    ],
-    correct: 2
+      { text: 'Speed (velocity)', correct: false },
+      { text: 'Position (location)', correct: false },
+      { text: 'Acceleration (rate of velocity change)', correct: true },
+      { text: 'Distance traveled', correct: false }
+    ]
   },
   {
     question: 'Why do many phones together make better earthquake detectors than one?',
     options: [
-      'They share battery power',
-      'Distributed sensors provide location triangulation and noise averaging',
-      'More phones means louder sound detection',
-      'They boost each other\'s signals'
-    ],
-    correct: 1
+      { text: 'They share battery power', correct: false },
+      { text: 'Distributed sensors provide location triangulation and noise averaging', correct: true },
+      { text: 'More phones means louder sound detection', correct: false },
+      { text: 'They boost each other\'s signals', correct: false }
+    ]
   }
 ];
 
@@ -148,15 +146,13 @@ function playSound(type: 'click' | 'success' | 'failure' | 'transition' | 'compl
 // ─────────────────────────────────────────────────────────────────────────────
 // MAIN COMPONENT
 // ─────────────────────────────────────────────────────────────────────────────
-export default function PhoneSeismometerRenderer({ onEvent, savedState }: PhoneSeismometerRendererProps) {
+export default function PhoneSeismometerRenderer({ phase: initialPhase, onPhaseComplete, onCorrectAnswer, onIncorrectAnswer }: PhoneSeismometerRendererProps) {
   // ─── State ───────────────────────────────────────────────────────────────────
-  const [phase, setPhase] = useState<Phase>(savedState?.phase || 'hook');
-  const [prediction, setPrediction] = useState<string | null>(savedState?.prediction || null);
-  const [twistPrediction, setTwistPrediction] = useState<string | null>(savedState?.twistPrediction || null);
-  const [testAnswers, setTestAnswers] = useState<number[]>(savedState?.testAnswers || []);
-  const [completedApps, setCompletedApps] = useState<Set<number>>(
-    new Set(savedState?.completedApps || [])
-  );
+  const [phase, setPhase] = useState<Phase>(initialPhase || 'hook');
+  const [prediction, setPrediction] = useState<string | null>(null);
+  const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
+  const [testAnswers, setTestAnswers] = useState<number[]>([]);
+  const [completedApps, setCompletedApps] = useState<Set<number>>(new Set());
 
   // Simulation state
   const [vibrationSource, setVibrationSource] = useState<'none' | 'footstep' | 'door' | 'earthquake'>('none');
@@ -173,17 +169,13 @@ export default function PhoneSeismometerRenderer({ onEvent, savedState }: PhoneS
   const navigationLockRef = useRef(false);
 
   // ─── Helpers ─────────────────────────────────────────────────────────────────
-  const emitEvent = (type: GameEvent['type'], data: Record<string, unknown> = {}) => {
-    onEvent?.({ type, phase, data });
-  };
-
   const goToPhase = (newPhase: Phase) => {
     if (navigationLockRef.current) return;
     navigationLockRef.current = true;
 
     playSound('transition');
     setPhase(newPhase);
-    emitEvent('interaction', { action: 'phase_change', from: phase, to: newPhase });
+    if (onPhaseComplete) onPhaseComplete();
 
     setTimeout(() => {
       navigationLockRef.current = false;
@@ -593,7 +585,6 @@ export default function PhoneSeismometerRenderer({ onEvent, savedState }: PhoneS
             onMouseDown={() => {
               playSound('click');
               setPrediction(option.id);
-              emitEvent('prediction', { prediction: option.id });
             }}
             className={`p-4 rounded-xl border-2 transition-all text-left ${
               prediction === option.id
@@ -757,7 +748,6 @@ export default function PhoneSeismometerRenderer({ onEvent, savedState }: PhoneS
             onMouseDown={() => {
               playSound('click');
               setTwistPrediction(option.id);
-              emitEvent('prediction', { twistPrediction: option.id });
             }}
             className={`p-4 rounded-xl border-2 transition-all text-left ${
               twistPrediction === option.id
@@ -885,7 +875,6 @@ export default function PhoneSeismometerRenderer({ onEvent, savedState }: PhoneS
             onMouseDown={() => {
               playSound('click');
               setCompletedApps(prev => new Set([...prev, index]));
-              emitEvent('interaction', { app: app.title });
             }}
             className={`p-4 rounded-xl border-2 transition-all text-left ${
               completedApps.has(index)
@@ -918,7 +907,8 @@ export default function PhoneSeismometerRenderer({ onEvent, savedState }: PhoneS
     const question = TEST_QUESTIONS[currentQuestion];
 
     if (!question) {
-      const score = testAnswers.filter((a, i) => a === TEST_QUESTIONS[i].correct).length;
+      const score = testAnswers.filter((a, i) => TEST_QUESTIONS[i].options[a]?.correct).length;
+      if (score >= 3 && onCorrectAnswer) onCorrectAnswer();
       return (
         <div className="text-center space-y-6">
           <div className="text-6xl">{score >= 3 ? '🎉' : '📚'}</div>
@@ -947,13 +937,12 @@ export default function PhoneSeismometerRenderer({ onEvent, savedState }: PhoneS
             <button
               key={i}
               onMouseDown={() => {
-                playSound(i === question.correct ? 'success' : 'failure');
+                playSound(option.correct ? 'success' : 'failure');
                 setTestAnswers([...testAnswers, i]);
-                emitEvent('interaction', { question: currentQuestion, answer: i, correct: i === question.correct });
               }}
               className="p-4 rounded-xl border-2 border-gray-700 bg-gray-800/50 hover:border-emerald-500 transition-all text-left text-gray-200"
             >
-              {option}
+              {option.text}
             </button>
           ))}
         </div>
@@ -980,7 +969,7 @@ export default function PhoneSeismometerRenderer({ onEvent, savedState }: PhoneS
       <button
         onMouseDown={() => {
           playSound('complete');
-          emitEvent('completion', { mastered: true });
+          if (onPhaseComplete) onPhaseComplete();
         }}
         className="px-8 py-3 bg-gradient-to-r from-emerald-600 to-teal-600 rounded-xl text-white font-semibold hover:from-emerald-500 hover:to-teal-500 transition-all"
       >

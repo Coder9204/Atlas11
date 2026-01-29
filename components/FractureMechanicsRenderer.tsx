@@ -17,23 +17,11 @@ type Phase =
   | 'test'
   | 'mastery';
 
-interface GameEvent {
-  type: 'prediction' | 'observation' | 'interaction' | 'completion';
-  phase: Phase;
-  data: Record<string, unknown>;
-}
-
 interface FractureMechanicsRendererProps {
-  onEvent?: (event: GameEvent) => void;
-  savedState?: GameState | null;
-}
-
-interface GameState {
-  phase: Phase;
-  prediction: string | null;
-  twistPrediction: string | null;
-  testAnswers: number[];
-  completedApps: number[];
+  phase: 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
+  onPhaseComplete?: () => void;
+  onCorrectAnswer?: () => void;
+  onIncorrectAnswer?: () => void;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -49,42 +37,38 @@ const TEST_QUESTIONS = [
   {
     question: 'Why do airplane windows have rounded corners?',
     options: [
-      'Rounded corners look more modern',
-      'Sharp corners create stress concentration that can cause cracks',
-      'Rounded corners are easier to manufacture',
-      'It helps with air pressure equalization'
+      { text: 'Rounded corners look more modern', correct: false },
+      { text: 'Sharp corners create stress concentration that can cause cracks', correct: true },
+      { text: 'Rounded corners are easier to manufacture', correct: false },
+      { text: 'It helps with air pressure equalization', correct: false }
     ],
-    correct: 1
   },
   {
     question: 'What is stress concentration factor (Kt)?',
     options: [
-      'The total stress on a material',
-      'The ratio of maximum local stress to average stress',
-      'The temperature at which stress increases',
-      'The speed of crack propagation'
+      { text: 'The total stress on a material', correct: false },
+      { text: 'The ratio of maximum local stress to average stress', correct: true },
+      { text: 'The temperature at which stress increases', correct: false },
+      { text: 'The speed of crack propagation', correct: false }
     ],
-    correct: 1
   },
   {
     question: 'How can you stop a crack from propagating?',
     options: [
-      'Apply more force to close it',
-      'Heat the material',
-      'Drill a hole at the crack tip to reduce stress concentration',
-      'Cover it with tape'
+      { text: 'Apply more force to close it', correct: false },
+      { text: 'Heat the material', correct: false },
+      { text: 'Drill a hole at the crack tip to reduce stress concentration', correct: true },
+      { text: 'Cover it with tape', correct: false }
     ],
-    correct: 2
   },
   {
     question: 'Which shape has the HIGHEST stress concentration?',
     options: [
-      'Circular hole',
-      'Ellipse with long axis perpendicular to stress',
-      'Sharp V-notch',
-      'Rounded notch'
+      { text: 'Circular hole', correct: false },
+      { text: 'Ellipse with long axis perpendicular to stress', correct: false },
+      { text: 'Sharp V-notch', correct: true },
+      { text: 'Rounded notch', correct: false }
     ],
-    correct: 2
   }
 ];
 
@@ -148,15 +132,15 @@ function playSound(type: 'click' | 'success' | 'failure' | 'transition' | 'compl
 // ─────────────────────────────────────────────────────────────────────────────
 // MAIN COMPONENT
 // ─────────────────────────────────────────────────────────────────────────────
-export default function FractureMechanicsRenderer({ onEvent, savedState }: FractureMechanicsRendererProps) {
+export default function FractureMechanicsRenderer({ phase, onPhaseComplete, onCorrectAnswer, onIncorrectAnswer }: FractureMechanicsRendererProps) {
   // ─── State ───────────────────────────────────────────────────────────────────
-  const [phase, setPhase] = useState<Phase>(savedState?.phase || 'hook');
-  const [prediction, setPrediction] = useState<string | null>(savedState?.prediction || null);
-  const [twistPrediction, setTwistPrediction] = useState<string | null>(savedState?.twistPrediction || null);
-  const [testAnswers, setTestAnswers] = useState<number[]>(savedState?.testAnswers || []);
-  const [completedApps, setCompletedApps] = useState<Set<number>>(
-    new Set(savedState?.completedApps || [])
-  );
+  const [currentPhase, setCurrentPhase] = useState<Phase>(phase || 'hook');
+  const [prediction, setPrediction] = useState<string | null>(null);
+  const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
+  const [testAnswers, setTestAnswers] = useState<(number | null)[]>(new Array(TEST_QUESTIONS.length).fill(null));
+  const [testSubmitted, setTestSubmitted] = useState(false);
+  const [testScore, setTestScore] = useState(0);
+  const [completedApps, setCompletedApps] = useState<Set<number>>(new Set());
 
   // Simulation state
   const [notchType, setNotchType] = useState<'none' | 'round' | 'vsharp' | 'crack'>('none');
@@ -189,17 +173,12 @@ export default function FractureMechanicsRenderer({ onEvent, savedState }: Fract
   };
 
   // ─── Helpers ─────────────────────────────────────────────────────────────────
-  const emitEvent = (type: GameEvent['type'], data: Record<string, unknown> = {}) => {
-    onEvent?.({ type, phase, data });
-  };
-
   const goToPhase = (newPhase: Phase) => {
     if (navigationLockRef.current) return;
     navigationLockRef.current = true;
 
     playSound('transition');
-    setPhase(newPhase);
-    emitEvent('interaction', { action: 'phase_change', from: phase, to: newPhase });
+    setCurrentPhase(newPhase);
 
     setTimeout(() => {
       navigationLockRef.current = false;
@@ -207,10 +186,29 @@ export default function FractureMechanicsRenderer({ onEvent, savedState }: Fract
   };
 
   const nextPhase = () => {
-    const currentIndex = PHASES.indexOf(phase);
+    const currentIndex = PHASES.indexOf(currentPhase);
     if (currentIndex < PHASES.length - 1) {
       goToPhase(PHASES[currentIndex + 1]);
     }
+  };
+
+  const handleTestAnswer = (questionIndex: number, optionIndex: number) => {
+    const newAnswers = [...testAnswers];
+    newAnswers[questionIndex] = optionIndex;
+    setTestAnswers(newAnswers);
+  };
+
+  const submitTest = () => {
+    let score = 0;
+    TEST_QUESTIONS.forEach((q, i) => {
+      if (testAnswers[i] !== null && q.options[testAnswers[i]!].correct) {
+        score++;
+      }
+    });
+    setTestScore(score);
+    setTestSubmitted(true);
+    if (score >= 3 && onCorrectAnswer) onCorrectAnswer();
+    else if (onIncorrectAnswer) onIncorrectAnswer();
   };
 
   // ─── Animation Effects ───────────────────────────────────────────────────────
@@ -563,7 +561,6 @@ export default function FractureMechanicsRenderer({ onEvent, savedState }: Fract
             onMouseDown={() => {
               playSound('click');
               setPrediction(option.id);
-              emitEvent('prediction', { prediction: option.id });
             }}
             className={`p-4 rounded-xl border-2 transition-all text-left ${
               prediction === option.id
@@ -747,7 +744,6 @@ export default function FractureMechanicsRenderer({ onEvent, savedState }: Fract
             onMouseDown={() => {
               playSound('click');
               setTwistPrediction(option.id);
-              emitEvent('prediction', { twistPrediction: option.id });
             }}
             className={`p-4 rounded-xl border-2 transition-all text-left ${
               twistPrediction === option.id
@@ -886,7 +882,6 @@ export default function FractureMechanicsRenderer({ onEvent, savedState }: Fract
             onMouseDown={() => {
               playSound('click');
               setCompletedApps(prev => new Set([...prev, index]));
-              emitEvent('interaction', { app: app.title });
             }}
             className={`p-4 rounded-xl border-2 transition-all text-left ${
               completedApps.has(index)
@@ -915,24 +910,39 @@ export default function FractureMechanicsRenderer({ onEvent, savedState }: Fract
   );
 
   const renderTest = () => {
-    const currentQuestion = testAnswers.length;
-    const question = TEST_QUESTIONS[currentQuestion];
-
-    if (!question) {
-      const score = testAnswers.filter((a, i) => a === TEST_QUESTIONS[i].correct).length;
+    if (testSubmitted) {
       return (
         <div className="text-center space-y-6">
-          <div className="text-6xl">{score >= 3 ? '🎉' : '📚'}</div>
+          <div className="text-6xl">{testScore >= 3 ? '🎉' : '📚'}</div>
           <h2 className="text-2xl font-bold text-white">Quiz Complete!</h2>
-          <p className="text-gray-300">You got {score} out of {TEST_QUESTIONS.length} correct!</p>
+          <p className="text-gray-300">You got {testScore} out of {TEST_QUESTIONS.length} correct!</p>
+
+          {/* Show answers review */}
+          <div className="space-y-4 max-w-lg mx-auto text-left">
+            {TEST_QUESTIONS.map((q, qIndex) => {
+              const userAnswer = testAnswers[qIndex];
+              const isCorrect = userAnswer !== null && q.options[userAnswer].correct;
+              return (
+                <div key={qIndex} className={`p-4 rounded-xl border-2 ${isCorrect ? 'border-green-500 bg-green-900/20' : 'border-red-500 bg-red-900/20'}`}>
+                  <p className="text-white font-medium mb-2">{qIndex + 1}. {q.question}</p>
+                  {q.options.map((opt, oIndex) => (
+                    <div key={oIndex} className={`py-1 px-2 rounded ${opt.correct ? 'text-green-400' : userAnswer === oIndex ? 'text-red-400' : 'text-gray-400'}`}>
+                      {opt.correct ? '✓' : userAnswer === oIndex ? '✗' : '○'} {opt.text}
+                    </div>
+                  ))}
+                </div>
+              );
+            })}
+          </div>
+
           <button
             onMouseDown={() => {
-              playSound(score >= 3 ? 'complete' : 'click');
+              playSound(testScore >= 3 ? 'complete' : 'click');
               nextPhase();
             }}
             className="px-8 py-3 bg-gradient-to-r from-red-600 to-orange-600 rounded-xl text-white font-semibold hover:from-red-500 hover:to-orange-500 transition-all"
           >
-            {score >= 3 ? 'Complete! 🎊' : 'Continue →'}
+            {testScore >= 3 ? 'Complete! 🎊' : 'Continue →'}
           </button>
         </div>
       );
@@ -940,23 +950,44 @@ export default function FractureMechanicsRenderer({ onEvent, savedState }: Fract
 
     return (
       <div className="space-y-6">
-        <h2 className="text-xl font-bold text-white text-center">Quiz: Question {currentQuestion + 1}/{TEST_QUESTIONS.length}</h2>
-        <p className="text-gray-300 text-center max-w-lg mx-auto">{question.question}</p>
+        <h2 className="text-xl font-bold text-white text-center">Quiz</h2>
+        <p className="text-gray-400 text-center">Answer all {TEST_QUESTIONS.length} questions</p>
 
-        <div className="grid grid-cols-1 gap-3 max-w-lg mx-auto">
-          {question.options.map((option, i) => (
-            <button
-              key={i}
-              onMouseDown={() => {
-                playSound(i === question.correct ? 'success' : 'failure');
-                setTestAnswers([...testAnswers, i]);
-                emitEvent('interaction', { question: currentQuestion, answer: i, correct: i === question.correct });
-              }}
-              className="p-4 rounded-xl border-2 border-gray-700 bg-gray-800/50 hover:border-red-500 transition-all text-left text-gray-200"
-            >
-              {option}
-            </button>
+        <div className="space-y-6 max-w-lg mx-auto">
+          {TEST_QUESTIONS.map((question, qIndex) => (
+            <div key={qIndex} className="bg-gray-800/50 rounded-xl p-4">
+              <p className="text-gray-200 font-medium mb-3">{qIndex + 1}. {question.question}</p>
+              <div className="space-y-2">
+                {question.options.map((option, oIndex) => (
+                  <button
+                    key={oIndex}
+                    onMouseDown={() => handleTestAnswer(qIndex, oIndex)}
+                    className={`w-full p-3 rounded-lg border-2 text-left transition-all ${
+                      testAnswers[qIndex] === oIndex
+                        ? 'border-red-500 bg-red-900/30 text-white'
+                        : 'border-gray-700 bg-gray-800/50 text-gray-300 hover:border-gray-600'
+                    }`}
+                  >
+                    {option.text}
+                  </button>
+                ))}
+              </div>
+            </div>
           ))}
+        </div>
+
+        <div className="text-center">
+          <button
+            onMouseDown={submitTest}
+            disabled={testAnswers.includes(null)}
+            className={`px-8 py-3 rounded-xl font-semibold transition-all ${
+              testAnswers.includes(null)
+                ? 'bg-gray-700 text-gray-400 cursor-not-allowed'
+                : 'bg-gradient-to-r from-red-600 to-orange-600 text-white hover:from-red-500 hover:to-orange-500'
+            }`}
+          >
+            Submit Quiz
+          </button>
         </div>
       </div>
     );
@@ -981,7 +1012,7 @@ export default function FractureMechanicsRenderer({ onEvent, savedState }: Fract
       <button
         onMouseDown={() => {
           playSound('complete');
-          emitEvent('completion', { mastered: true });
+          if (onPhaseComplete) onPhaseComplete();
         }}
         className="px-8 py-3 bg-gradient-to-r from-red-600 to-orange-600 rounded-xl text-white font-semibold hover:from-red-500 hover:to-orange-500 transition-all"
       >

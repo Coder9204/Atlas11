@@ -32,23 +32,11 @@ const PHASES: Phase[] = [
   'mastery',
 ];
 
-interface SavedState {
-  phase: Phase;
-  completedApps: number[];
-  testAnswers: number[];
-  testScore: number | null;
-}
-
-interface GameEvent {
-  type: 'state_update' | 'completion' | 'tool_call';
-  phase: Phase;
-  data: Record<string, unknown>;
-}
-
 interface InductiveKickbackRendererProps {
-  onStateChange?: (state: SavedState) => void;
-  onEvent?: (event: GameEvent) => void;
-  savedState?: SavedState | null;
+  phase: 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
+  onPhaseComplete?: () => void;
+  onCorrectAnswer?: () => void;
+  onIncorrectAnswer?: () => void;
 }
 
 // ────────────────────────────────────────────────────────────────────────────
@@ -59,102 +47,92 @@ const TEST_QUESTIONS = [
   {
     question: 'What causes inductive kickback when a switch opens?',
     options: [
-      'Capacitor discharge creates voltage',
-      'The collapsing magnetic field induces voltage (V = -L·di/dt)',
-      'Static electricity from the switch contacts',
-      'Heat from resistance generates voltage',
+      { text: 'Capacitor discharge creates voltage', correct: false },
+      { text: 'The collapsing magnetic field induces voltage (V = -L di/dt)', correct: true },
+      { text: 'Static electricity from the switch contacts', correct: false },
+      { text: 'Heat from resistance generates voltage', correct: false },
     ],
-    correct: 1,
   },
   {
     question: 'Why can kickback voltage be MUCH higher than the supply voltage?',
     options: [
-      'The battery releases extra stored energy',
-      'Wire resistance amplifies the voltage',
-      'The rate of current change (di/dt) is extremely fast when interrupted',
-      'Magnetic fields naturally create higher voltages',
+      { text: 'The battery releases extra stored energy', correct: false },
+      { text: 'Wire resistance amplifies the voltage', correct: false },
+      { text: 'The rate of current change (di/dt) is extremely fast when interrupted', correct: true },
+      { text: 'Magnetic fields naturally create higher voltages', correct: false },
     ],
-    correct: 2,
   },
   {
     question: 'What is the purpose of a flyback diode?',
     options: [
-      'To increase the kickback voltage',
-      'To convert AC to DC power',
-      'To provide a safe path for current, clamping the voltage spike',
-      'To store energy in the magnetic field',
+      { text: 'To increase the kickback voltage', correct: false },
+      { text: 'To convert AC to DC power', correct: false },
+      { text: 'To provide a safe path for current, clamping the voltage spike', correct: true },
+      { text: 'To store energy in the magnetic field', correct: false },
     ],
-    correct: 2,
   },
   {
     question: 'In a car ignition system, what voltage does the coil produce from 12V?',
     options: [
-      'About 24V (doubled)',
-      'About 120V (10x)',
-      'About 1,000V (100x)',
-      'About 40,000V (over 3,000x)',
+      { text: 'About 24V (doubled)', correct: false },
+      { text: 'About 120V (10x)', correct: false },
+      { text: 'About 1,000V (100x)', correct: false },
+      { text: 'About 40,000V (over 3,000x)', correct: true },
     ],
-    correct: 3,
   },
   {
     question: 'How does a boost converter use inductive kickback?',
     options: [
-      'It eliminates kickback to save energy',
-      'Controlled switching captures kickback energy to raise output voltage',
-      'It converts the kickback to heat',
-      'It only works by filtering out the kickback',
+      { text: 'It eliminates kickback to save energy', correct: false },
+      { text: 'Controlled switching captures kickback energy to raise output voltage', correct: true },
+      { text: 'It converts the kickback to heat', correct: false },
+      { text: 'It only works by filtering out the kickback', correct: false },
     ],
-    correct: 1,
   },
   {
     question: 'What happens if you control a relay from an Arduino WITHOUT a flyback diode?',
     options: [
-      'The relay works perfectly fine',
-      'The Arduino runs faster',
-      'The kickback spike can damage or destroy the Arduino',
-      'The relay becomes more efficient',
+      { text: 'The relay works perfectly fine', correct: false },
+      { text: 'The Arduino runs faster', correct: false },
+      { text: 'The kickback spike can damage or destroy the Arduino', correct: true },
+      { text: 'The relay becomes more efficient', correct: false },
     ],
-    correct: 2,
   },
   {
     question: 'Which formula describes the induced voltage from an inductor?',
     options: [
-      'V = IR (Ohm\'s law)',
-      'P = IV (Power equation)',
-      'V = -L × (di/dt) (Inductor equation)',
-      'V = Q/C (Capacitor equation)',
+      { text: 'V = IR (Ohm\'s law)', correct: false },
+      { text: 'P = IV (Power equation)', correct: false },
+      { text: 'V = -L x (di/dt) (Inductor equation)', correct: true },
+      { text: 'V = Q/C (Capacitor equation)', correct: false },
     ],
-    correct: 2,
   },
   {
     question: 'What type of switching frequency do boost converters typically use?',
     options: [
-      '50-60 Hz (like household AC)',
-      '100 Hz - 1 kHz (low frequency)',
-      '10 kHz - 1 MHz (high frequency switching)',
-      'They don\'t switch at all',
+      { text: '50-60 Hz (like household AC)', correct: false },
+      { text: '100 Hz - 1 kHz (low frequency)', correct: false },
+      { text: '10 kHz - 1 MHz (high frequency switching)', correct: true },
+      { text: 'They don\'t switch at all', correct: false },
     ],
-    correct: 2,
   },
   {
     question: 'Why is inductance measured in Henrys (H)?',
     options: [
-      'Named after the Henry battery company',
-      'Represents how much energy the magnetic field can store',
-      'Measures the resistance of the coil',
-      'Indicates the coil\'s temperature rating',
+      { text: 'Named after the Henry battery company', correct: false },
+      { text: 'Represents how much energy the magnetic field can store', correct: true },
+      { text: 'Measures the resistance of the coil', correct: false },
+      { text: 'Indicates the coil\'s temperature rating', correct: false },
     ],
-    correct: 1,
   },
   {
     question: 'What makes inductive loads (motors, relays, solenoids) different from resistive loads?',
     options: [
-      'They use more electricity',
-      'They store energy in magnetic fields that must be dissipated',
-      'They work on AC only',
-      'They generate heat immediately',
+      { text: 'They use more electricity', correct: false },
+      { text: 'They store energy in magnetic fields that must be dissipated', correct: true },
+      { text: 'They work on AC only', correct: false },
+      { text: 'They generate heat immediately', correct: false },
     ],
-    correct: 1,
   },
 ];
 
@@ -550,24 +528,20 @@ const SwitchModeSupplyGraphic: React.FC = () => (
 // ────────────────────────────────────────────────────────────────────────────
 
 export default function InductiveKickbackRenderer({
-  onStateChange,
-  onEvent,
-  savedState,
+  phase,
+  onPhaseComplete,
+  onCorrectAnswer,
+  onIncorrectAnswer,
 }: InductiveKickbackRendererProps) {
   // ──────────────────────────────────────────────────────────────────────────
   // STATE
   // ──────────────────────────────────────────────────────────────────────────
 
-  const [phase, setPhase] = useState<Phase>(savedState?.phase || 'hook');
-  const [completedApps, setCompletedApps] = useState<Set<number>>(
-    new Set(savedState?.completedApps || [])
-  );
-  const [testAnswers, setTestAnswers] = useState<number[]>(
-    savedState?.testAnswers || Array(10).fill(-1)
-  );
-  const [testScore, setTestScore] = useState<number | null>(
-    savedState?.testScore ?? null
-  );
+  const [currentPhase, setCurrentPhase] = useState<Phase>(phase || 'hook');
+  const [completedApps, setCompletedApps] = useState<Set<number>>(new Set());
+  const [testAnswers, setTestAnswers] = useState<(number | null)[]>(new Array(TEST_QUESTIONS.length).fill(null));
+  const [testSubmitted, setTestSubmitted] = useState(false);
+  const [testScore, setTestScore] = useState(0);
   const [activeAppTab, setActiveAppTab] = useState(0);
 
   const [prediction, setPrediction] = useState<string | null>(null);
@@ -596,25 +570,6 @@ export default function InductiveKickbackRenderer({
   // EFFECTS
   // ──────────────────────────────────────────────────────────────────────────
 
-  useEffect(() => {
-    const state: SavedState = {
-      phase,
-      completedApps: Array.from(completedApps),
-      testAnswers,
-      testScore,
-    };
-    onStateChange?.(state);
-  }, [phase, completedApps, testAnswers, testScore, onStateChange]);
-
-  useEffect(() => {
-    const event: GameEvent = {
-      type: phase === 'mastery' ? 'completion' : 'state_update',
-      phase,
-      data: { testScore },
-    };
-    onEvent?.(event);
-  }, [phase, testScore, onEvent]);
-
   // Animation for kickback decay
   useEffect(() => {
     if (kickbackVoltage > 0) {
@@ -636,18 +591,18 @@ export default function InductiveKickbackRenderer({
     lastClickRef.current = now;
     navigationLockRef.current = true;
     playSound('transition');
-    setPhase(newPhase);
+    setCurrentPhase(newPhase);
     setTimeout(() => {
       navigationLockRef.current = false;
     }, 200);
   }, []);
 
   const nextPhase = useCallback(() => {
-    const currentIndex = PHASES.indexOf(phase);
+    const currentIndex = PHASES.indexOf(currentPhase);
     if (currentIndex < PHASES.length - 1) {
       goToPhase(PHASES[currentIndex + 1]);
     }
-  }, [phase, goToPhase]);
+  }, [currentPhase, goToPhase]);
 
   // ──────────────────────────────────────────────────────────────────────────
   // HANDLERS
@@ -728,11 +683,14 @@ export default function InductiveKickbackRenderer({
   const handleSubmitTest = useCallback(() => {
     let score = 0;
     testAnswers.forEach((answer, index) => {
-      if (answer === TEST_QUESTIONS[index].correct) score++;
+      if (answer !== null && TEST_QUESTIONS[index].options[answer].correct) score++;
     });
     setTestScore(score);
+    setTestSubmitted(true);
     playSound(score >= 7 ? 'success' : 'failure');
-  }, [testAnswers]);
+    if (score >= 7 && onCorrectAnswer) onCorrectAnswer();
+    else if (onIncorrectAnswer) onIncorrectAnswer();
+  }, [testAnswers, onCorrectAnswer, onIncorrectAnswer]);
 
   // ──────────────────────────────────────────────────────────────────────────
   // RENDER FUNCTIONS
@@ -1455,8 +1413,8 @@ export default function InductiveKickbackRenderer({
   };
 
   const renderTest = () => {
-    const answeredCount = testAnswers.filter(a => a !== -1).length;
-    const allAnswered = answeredCount === 10;
+    const answeredCount = testAnswers.filter(a => a !== null).length;
+    const allAnswered = answeredCount === TEST_QUESTIONS.length;
 
     return (
       <div className="py-6">
@@ -1470,7 +1428,7 @@ export default function InductiveKickbackRenderer({
           </div>
         </div>
 
-        {testScore === null ? (
+        {!testSubmitted ? (
           <>
             <div className="bg-slate-50 rounded-2xl p-4 mb-6">
               <div className="flex justify-between items-center mb-2">
@@ -1490,7 +1448,7 @@ export default function InductiveKickbackRenderer({
                 <div key={qIndex} className="bg-white border border-slate-200 rounded-2xl p-5">
                   <div className="flex items-start gap-3 mb-4">
                     <span className={`flex-shrink-0 w-7 h-7 rounded-lg flex items-center justify-center text-sm font-bold ${
-                      testAnswers[qIndex] !== -1
+                      testAnswers[qIndex] !== null
                         ? 'bg-violet-500 text-white'
                         : 'bg-slate-200 text-slate-600'
                     }`}>
@@ -1512,7 +1470,7 @@ export default function InductiveKickbackRenderer({
                             : 'bg-slate-50 text-slate-700 hover:bg-violet-50 border border-slate-200'
                         }`}
                       >
-                        {option}
+                        {option.text}
                       </button>
                     ))}
                   </div>
@@ -1547,6 +1505,24 @@ export default function InductiveKickbackRenderer({
                 : 'Review the concepts and try again to improve your score.'}
             </p>
 
+            {/* Show answers review */}
+            <div className="space-y-4 max-w-2xl mx-auto text-left mb-8">
+              {TEST_QUESTIONS.map((q, qIndex) => {
+                const userAnswer = testAnswers[qIndex];
+                const isCorrect = userAnswer !== null && q.options[userAnswer].correct;
+                return (
+                  <div key={qIndex} className={`p-4 rounded-xl border-2 ${isCorrect ? 'border-green-500 bg-green-50' : 'border-red-500 bg-red-50'}`}>
+                    <p className="text-slate-800 font-medium mb-2">{qIndex + 1}. {q.question}</p>
+                    {q.options.map((opt, oIndex) => (
+                      <div key={oIndex} className={`py-1 px-2 rounded ${opt.correct ? 'text-green-600' : userAnswer === oIndex ? 'text-red-600' : 'text-gray-500'}`}>
+                        {opt.correct ? '✓' : userAnswer === oIndex ? '✗' : '○'} {opt.text}
+                      </div>
+                    ))}
+                  </div>
+                );
+              })}
+            </div>
+
             {testScore >= 7 ? (
               <PrimaryButton onMouseDown={nextPhase} variant="success">
                 Complete Lesson →
@@ -1554,8 +1530,8 @@ export default function InductiveKickbackRenderer({
             ) : (
               <div className="space-y-3">
                 <PrimaryButton onMouseDown={() => {
-                  setTestScore(null);
-                  setTestAnswers(Array(10).fill(-1));
+                  setTestSubmitted(false);
+                  setTestAnswers(new Array(TEST_QUESTIONS.length).fill(null));
                 }} variant="secondary">
                   Try Again
                 </PrimaryButton>

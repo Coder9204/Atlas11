@@ -8,21 +8,11 @@ import React, { useState, useRef, useEffect } from 'react';
 // Creates pressure gradient → balloon "rises" toward lower pressure
 // Demonstrates equivalence principle: acceleration ≈ gravity field
 
-interface GameEvent {
-  type: 'phase_change' | 'prediction' | 'result' | 'complete';
-  from?: string;
-  to?: string;
-  phase?: string;
-  prediction?: string;
-  actual?: string;
-  correct?: boolean;
-  score?: number;
-  total?: number;
-  percentage?: number;
-}
-
 interface HeliumBalloonCarRendererProps {
-  onGameEvent?: (event: GameEvent) => void;
+  phase: 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
+  onPhaseComplete?: () => void;
+  onCorrectAnswer?: () => void;
+  onIncorrectAnswer?: () => void;
 }
 
 type Phase =
@@ -100,8 +90,12 @@ const playSound = (frequency: number, duration: number, type: OscillatorType = '
 // ─────────────────────────────────────────────────────────────
 // Main Component
 // ─────────────────────────────────────────────────────────────
-export default function HeliumBalloonCarRenderer({ onGameEvent }: HeliumBalloonCarRendererProps) {
-  const [phase, setPhase] = useState<Phase>('hook');
+export default function HeliumBalloonCarRenderer({
+  phase,
+  onPhaseComplete,
+  onCorrectAnswer,
+  onIncorrectAnswer
+}: HeliumBalloonCarRendererProps) {
   const [prediction, setPrediction] = useState<string | null>(null);
   const [showResult, setShowResult] = useState(false);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
@@ -141,10 +135,7 @@ export default function HeliumBalloonCarRenderer({ onGameEvent }: HeliumBalloonC
     navigationLockRef.current = true;
     setTimeout(() => { navigationLockRef.current = false; }, 400);
 
-    if (onGameEvent) {
-      onGameEvent({ type: 'phase_change', from: phase, to: newPhase });
-    }
-    setPhase(newPhase);
+    onPhaseComplete?.();
     playGameSound('transition');
   };
 
@@ -260,17 +251,11 @@ export default function HeliumBalloonCarRenderer({ onGameEvent }: HeliumBalloonC
 
   const handlePrediction = (choice: string) => {
     setPrediction(choice);
-    if (onGameEvent) {
-      onGameEvent({ type: 'prediction', phase: 'predict', prediction: choice });
-    }
     playGameSound('click');
   };
 
   const handleTwistPrediction = (choice: string) => {
     setTwistPrediction(choice);
-    if (onGameEvent) {
-      onGameEvent({ type: 'prediction', phase: 'twist_predict', prediction: choice });
-    }
     playGameSound('click');
   };
 
@@ -283,129 +268,111 @@ export default function HeliumBalloonCarRenderer({ onGameEvent }: HeliumBalloonC
 
   const submitTest = () => {
     setTestSubmitted(true);
-    const score = testQuestions.reduce((acc, tq, i) => acc + (testAnswers[i] === tq.correct ? 1 : 0), 0);
-    if (onGameEvent) {
-      onGameEvent({
-        type: 'result',
-        phase: 'test',
-        score,
-        total: testQuestions.length,
-        percentage: Math.round((score / testQuestions.length) * 100),
-      });
+    const score = testQuestions.reduce((acc, q, i) => {
+      if (testAnswers[i] !== undefined && q.options[testAnswers[i]]?.correct) {
+        return acc + 1;
+      }
+      return acc;
+    }, 0);
+    if (score >= 7) {
+      onCorrectAnswer?.();
+      playGameSound('success');
+    } else {
+      onIncorrectAnswer?.();
+      playGameSound('failure');
     }
-    playGameSound(score >= 7 ? 'success' : 'failure');
   };
 
   const testQuestions = [
     {
-      q: "When a car accelerates forward, which way does a helium balloon move?",
+      question: "When a car accelerates forward, which way does a helium balloon move?",
       options: [
-        "Backward (like everything else)",
-        "Forward (opposite to everything else)",
-        "Stays perfectly still",
-        "Moves side to side"
+        { text: "Backward (like everything else)", correct: false },
+        { text: "Forward (opposite to everything else)", correct: true },
+        { text: "Stays perfectly still", correct: false },
+        { text: "Moves side to side", correct: false }
       ],
-      correct: 1,
-      explanation: "The helium balloon moves forward! When the car accelerates, the denser air is pushed backward, creating higher pressure at the back. The balloon moves toward the lower pressure at the front."
     },
     {
-      q: "Why does the helium balloon behave opposite to a heavy pendulum?",
+      question: "Why does the helium balloon behave opposite to a heavy pendulum?",
       options: [
-        "Helium is magnetic",
-        "The string is different",
-        "Helium is less dense than surrounding air",
-        "The balloon has more surface area"
+        { text: "Helium is magnetic", correct: false },
+        { text: "The string is different", correct: false },
+        { text: "Helium is less dense than surrounding air", correct: true },
+        { text: "The balloon has more surface area", correct: false }
       ],
-      correct: 2,
-      explanation: "The key is relative density. The pendulum is denser than air, so it follows the 'pseudo-force' backward. Helium is less dense than air, so it moves opposite - toward where the air is being pushed away from."
     },
     {
-      q: "What creates the forward force on the balloon during acceleration?",
+      question: "What creates the forward force on the balloon during acceleration?",
       options: [
-        "Wind from outside",
-        "Air pressure gradient inside the car",
-        "Static electricity",
-        "The car's heater"
+        { text: "Wind from outside", correct: false },
+        { text: "Air pressure gradient inside the car", correct: true },
+        { text: "Static electricity", correct: false },
+        { text: "The car's heater", correct: false }
       ],
-      correct: 1,
-      explanation: "Acceleration creates a pressure gradient: air piles up at the back (higher pressure) and thins at the front (lower pressure). The balloon experiences a net buoyant force toward the low-pressure region."
     },
     {
-      q: "What physics principle explains why acceleration affects objects like gravity?",
+      question: "What physics principle explains why acceleration affects objects like gravity?",
       options: [
-        "Newton's First Law",
-        "Conservation of Energy",
-        "Einstein's Equivalence Principle",
-        "Hooke's Law"
+        { text: "Newton's First Law", correct: false },
+        { text: "Conservation of Energy", correct: false },
+        { text: "Einstein's Equivalence Principle", correct: true },
+        { text: "Hooke's Law", correct: false }
       ],
-      correct: 2,
-      explanation: "Einstein's Equivalence Principle states that the effects of acceleration are indistinguishable from gravity. In an accelerating car, forward acceleration creates an effective 'gravity' pointing backward."
     },
     {
-      q: "What happens to the balloon when the car brakes (decelerates)?",
+      question: "What happens to the balloon when the car brakes (decelerates)?",
       options: [
-        "Moves forward even faster",
-        "Moves backward",
-        "Stays perfectly still",
-        "Pops"
+        { text: "Moves forward even faster", correct: false },
+        { text: "Moves backward", correct: true },
+        { text: "Stays perfectly still", correct: false },
+        { text: "Pops", correct: false }
       ],
-      correct: 1,
-      explanation: "During braking (negative acceleration), the pressure gradient reverses - higher pressure at front, lower at back. The balloon moves backward, toward the lower pressure region."
     },
     {
-      q: "In the car's reference frame, what 'pseudo-force' do objects experience during forward acceleration?",
+      question: "In the car's reference frame, what 'pseudo-force' do objects experience during forward acceleration?",
       options: [
-        "A forward force",
-        "A backward force",
-        "An upward force",
-        "No force"
+        { text: "A forward force", correct: false },
+        { text: "A backward force", correct: true },
+        { text: "An upward force", correct: false },
+        { text: "No force", correct: false }
       ],
-      correct: 1,
-      explanation: "In the accelerating car's reference frame, objects experience a backward pseudo-force (opposite to acceleration direction). This is why loose objects slide backward and pendulums swing backward."
     },
     {
-      q: "If you put a bubble in a bottle of water and accelerate forward, which way does the bubble go?",
+      question: "If you put a bubble in a bottle of water and accelerate forward, which way does the bubble go?",
       options: [
-        "Backward (with inertia)",
-        "Forward (like the helium balloon)",
-        "Straight up",
-        "Straight down"
+        { text: "Backward (with inertia)", correct: false },
+        { text: "Forward (like the helium balloon)", correct: true },
+        { text: "Straight up", correct: false },
+        { text: "Straight down", correct: false }
       ],
-      correct: 1,
-      explanation: "The bubble moves forward, just like the helium balloon! It's less dense than water, so when water is pushed backward by acceleration, the bubble goes the opposite direction."
     },
     {
-      q: "Why doesn't this balloon effect happen when the car moves at constant speed?",
+      question: "Why doesn't this balloon effect happen when the car moves at constant speed?",
       options: [
-        "Air stops moving",
-        "No acceleration means no pressure gradient",
-        "The balloon pops",
-        "Friction stops it"
+        { text: "Air stops moving", correct: false },
+        { text: "No acceleration means no pressure gradient", correct: true },
+        { text: "The balloon pops", correct: false },
+        { text: "Friction stops it", correct: false }
       ],
-      correct: 1,
-      explanation: "At constant velocity, there's no acceleration, so no pressure gradient develops inside the car. Without a pressure difference, there's no net buoyant force on the balloon."
     },
     {
-      q: "How is the balloon in a car similar to a balloon in an elevator accelerating upward?",
+      question: "How is the balloon in a car similar to a balloon in an elevator accelerating upward?",
       options: [
-        "Both pop from pressure",
-        "Both rise relative to the car/elevator",
-        "Both experience enhanced 'gravity' making balloon rise more",
-        "They behave completely differently"
+        { text: "Both pop from pressure", correct: false },
+        { text: "Both rise relative to the car/elevator", correct: false },
+        { text: "Both experience enhanced 'gravity' making balloon rise more", correct: true },
+        { text: "They behave completely differently", correct: false }
       ],
-      correct: 2,
-      explanation: "An upward-accelerating elevator creates stronger effective gravity. Just like real gravity makes the balloon rise (buoyancy), enhanced effective gravity makes it rise even faster relative to the elevator."
     },
     {
-      q: "What would happen to the helium balloon in a car that's turning left?",
+      question: "What would happen to the helium balloon in a car that's turning left?",
       options: [
-        "Moves left (into the turn)",
-        "Moves right (away from turn)",
-        "Stays centered",
-        "Moves backward"
+        { text: "Moves left (into the turn)", correct: true },
+        { text: "Moves right (away from turn)", correct: false },
+        { text: "Stays centered", correct: false },
+        { text: "Moves backward", correct: false }
       ],
-      correct: 0,
-      explanation: "The balloon moves INTO the turn (left). The centripetal acceleration points left, so the air is pushed right. The balloon moves toward the lower pressure region on the left."
     }
   ];
 
@@ -721,14 +688,10 @@ export default function HeliumBalloonCarRenderer({ onGameEvent }: HeliumBalloonC
               <button
                 onMouseDown={() => {
                   setShowResult(true);
-                  if (onGameEvent) {
-                    onGameEvent({
-                      type: 'result',
-                      phase: 'play',
-                      prediction,
-                      actual: 'b',
-                      correct: prediction === 'b'
-                    });
+                  if (prediction === 'b') {
+                    onCorrectAnswer?.();
+                  } else {
+                    onIncorrectAnswer?.();
                   }
                 }}
                 style={{
@@ -1105,14 +1068,10 @@ export default function HeliumBalloonCarRenderer({ onGameEvent }: HeliumBalloonC
               <button
                 onMouseDown={() => {
                   setShowTwistResult(true);
-                  if (onGameEvent) {
-                    onGameEvent({
-                      type: 'result',
-                      phase: 'twist_play',
-                      prediction: twistPrediction,
-                      actual: 'b',
-                      correct: twistPrediction === 'b'
-                    });
+                  if (twistPrediction === 'b') {
+                    onCorrectAnswer?.();
+                  } else {
+                    onIncorrectAnswer?.();
                   }
                 }}
                 style={{
@@ -1351,7 +1310,12 @@ export default function HeliumBalloonCarRenderer({ onGameEvent }: HeliumBalloonC
       // TEST
       // ───────────────────────────────────────────────────
       case 'test':
-        const score = testQuestions.reduce((acc, tq, i) => acc + (testAnswers[i] === tq.correct ? 1 : 0), 0);
+        const score = testQuestions.reduce((acc, q, i) => {
+          if (testAnswers[i] !== undefined && q.options[testAnswers[i]]?.correct) {
+            return acc + 1;
+          }
+          return acc;
+        }, 0);
 
         return (
           <div className="flex flex-col items-center">
@@ -1360,7 +1324,9 @@ export default function HeliumBalloonCarRenderer({ onGameEvent }: HeliumBalloonC
             </h2>
 
             <div style={{ width: '100%', maxWidth: 600 }}>
-              {testQuestions.map((tq, qi) => (
+              {testQuestions.map((tq, qi) => {
+                const isCorrect = tq.options[testAnswers[qi]]?.correct;
+                return (
                 <div
                   key={qi}
                   style={{
@@ -1370,7 +1336,7 @@ export default function HeliumBalloonCarRenderer({ onGameEvent }: HeliumBalloonC
                     marginBottom: '1rem',
                     border: `2px solid ${
                       testSubmitted
-                        ? testAnswers[qi] === tq.correct
+                        ? isCorrect
                           ? '#22c55e'
                           : testAnswers[qi] !== undefined
                           ? '#ef4444'
@@ -1380,7 +1346,7 @@ export default function HeliumBalloonCarRenderer({ onGameEvent }: HeliumBalloonC
                   }}
                 >
                   <p style={{ fontWeight: 600, color: '#1e293b', marginBottom: '0.75rem' }}>
-                    {qi + 1}. {tq.q}
+                    {qi + 1}. {tq.question}
                   </p>
 
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
@@ -1393,7 +1359,7 @@ export default function HeliumBalloonCarRenderer({ onGameEvent }: HeliumBalloonC
                           padding: '0.6rem 1rem',
                           textAlign: 'left',
                           background: testSubmitted
-                            ? oi === tq.correct
+                            ? opt.correct
                               ? '#dcfce7'
                               : testAnswers[qi] === oi
                               ? '#fee2e2'
@@ -1404,7 +1370,7 @@ export default function HeliumBalloonCarRenderer({ onGameEvent }: HeliumBalloonC
                           color: '#1e293b',
                           border: `1px solid ${
                             testSubmitted
-                              ? oi === tq.correct
+                              ? opt.correct
                                 ? '#22c55e'
                                 : testAnswers[qi] === oi
                                 ? '#ef4444'
@@ -1418,25 +1384,12 @@ export default function HeliumBalloonCarRenderer({ onGameEvent }: HeliumBalloonC
                           fontSize: '0.9rem'
                         }}
                       >
-                        {opt}
+                        {opt.text}
                       </button>
                     ))}
                   </div>
-
-                  {testSubmitted && (
-                    <p style={{
-                      marginTop: '0.75rem',
-                      padding: '0.5rem',
-                      background: '#f0f9ff',
-                      borderRadius: 6,
-                      fontSize: '0.85rem',
-                      color: '#1e293b'
-                    }}>
-                      💡 {tq.explanation}
-                    </p>
-                  )}
                 </div>
-              ))}
+              )})}
             </div>
 
             {!testSubmitted ? (
@@ -1493,7 +1446,12 @@ export default function HeliumBalloonCarRenderer({ onGameEvent }: HeliumBalloonC
       // MASTERY
       // ───────────────────────────────────────────────────
       case 'mastery':
-        const finalScore = testQuestions.reduce((acc, tq, i) => acc + (testAnswers[i] === tq.correct ? 1 : 0), 0);
+        const finalScore = testQuestions.reduce((acc, q, i) => {
+          if (testAnswers[i] !== undefined && q.options[testAnswers[i]]?.correct) {
+            return acc + 1;
+          }
+          return acc;
+        }, 0);
 
         return (
           <div className="flex flex-col items-center" style={{ textAlign: 'center' }}>
@@ -1574,15 +1532,8 @@ export default function HeliumBalloonCarRenderer({ onGameEvent }: HeliumBalloonC
 
             <button
               onMouseDown={() => {
-                if (onGameEvent) {
-                  onGameEvent({ type: 'complete', score: finalScore, total: testQuestions.length });
-                }
-                goToPhase('hook');
-                setTestAnswers({});
-                setTestSubmitted(false);
-                setCompletedApps(new Set());
-                resetSimulation();
-                resetTwist();
+                onPhaseComplete?.();
+                playGameSound('complete');
               }}
               style={{
                 marginTop: '1rem',
@@ -1596,7 +1547,7 @@ export default function HeliumBalloonCarRenderer({ onGameEvent }: HeliumBalloonC
                 fontWeight: 600
               }}
             >
-              Play Again
+              Complete Lesson
             </button>
           </div>
         );

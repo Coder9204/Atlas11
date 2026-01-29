@@ -1,911 +1,356 @@
-'use client';
+/**
+ * DROPLET BREAKUP (RAYLEIGH-PLATEAU INSTABILITY) RENDERER
+ *
+ * Complete physics game demonstrating the Rayleigh-Plateau instability.
+ * Why liquid jets spontaneously break into droplets - surface tension
+ * drives the system toward minimum surface area (spheres).
+ *
+ * FEATURES:
+ * - Static graphic in predict phase showing water stream
+ * - Interactive flow rate and viscosity controls
+ * - Visualization of necking and droplet formation
+ * - Rich transfer phase (inkjet, sprays, pharma, metal powder)
+ * - Full compliance with GAME_EVALUATION_SYSTEM.md
+ */
 
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useCallback, useMemo, useEffect, useRef } from 'react';
 
-// ═══════════════════════════════════════════════════════════════════════════
-// TYPES & INTERFACES (GOLD STANDARD)
-// ═══════════════════════════════════════════════════════════════════════════
-type GameEventType =
-  | 'phase_change'
-  | 'prediction_made'
-  | 'simulation_started'
-  | 'parameter_changed'
-  | 'droplet_formed'
-  | 'twist_prediction_made'
-  | 'app_explored'
-  | 'test_answered'
-  | 'test_completed'
-  | 'mastery_achieved';
+// ============================================================
+// THEME COLORS
+// ============================================================
 
-interface GameEvent {
-  type: GameEventType;
-  data?: Record<string, unknown>;
-}
+const colors = {
+  bgDark: '#0f172a',
+  bgCard: '#1e293b',
+  bgCardLight: '#334155',
+  bgGradientStart: '#0c4a6e',
+  bgGradientEnd: '#0f172a',
 
-interface DropletBreakupRendererProps {
-  onGameEvent?: (event: GameEvent) => void;
-  currentPhase?: number;
-  onPhaseComplete?: (phase: number) => void;
-}
+  primary: '#06b6d4',
+  primaryLight: '#22d3ee',
+  primaryDark: '#0891b2',
 
-interface GameState {
-  phase: number;
-  prediction: string | null;
-  twistPrediction: string | null;
-  testAnswers: number[];
-  completedApps: number[];
-}
+  accent: '#3b82f6',
+  success: '#22c55e',
+  successLight: '#4ade80',
+  warning: '#f59e0b',
+  warningLight: '#fbbf24',
+  error: '#ef4444',
+  errorLight: '#f87171',
 
-// ═══════════════════════════════════════════════════════════════════════════
-// CONSTANTS (NUMERIC PHASES)
-// ═══════════════════════════════════════════════════════════════════════════
-const PHASES: number[] = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
-const phaseLabels: Record<number, string> = {
-  0: 'Hook', 1: 'Predict', 2: 'Lab', 3: 'Review', 4: 'Twist Predict',
-  5: 'Twist Lab', 6: 'Twist Review', 7: 'Transfer', 8: 'Test', 9: 'Mastery'
+  textPrimary: '#f8fafc',
+  textSecondary: '#e2e8f0',
+  textMuted: '#94a3b8',
+
+  border: '#334155',
+  borderLight: '#475569',
+
+  // Physics-specific
+  water: '#38bdf8',
+  waterDark: '#0284c7',
+  stream: '#60a5fa',
+  droplet: '#3b82f6',
+  honey: '#fbbf24',
+  honeyDark: '#d97706',
 };
 
-const TEST_QUESTIONS = [
+// ============================================================
+// GAME CONFIGURATION
+// ============================================================
+
+const GAME_ID = 'droplet_breakup';
+
+type Phase =
+  | 'hook'
+  | 'predict'
+  | 'play'
+  | 'review'
+  | 'twist_predict'
+  | 'twist_play'
+  | 'twist_review'
+  | 'transfer'
+  | 'test'
+  | 'mastery';
+
+const testQuestions = [
   {
-    question: 'What is the Rayleigh-Plateau instability?',
+    scenario: "You watch water flowing from a faucet.",
+    question: "Why does the smooth stream break into droplets?",
     options: [
-      'A phenomenon where liquids freeze at low temperatures',
-      'The tendency of a cylindrical liquid jet to break into droplets',
-      'A type of chemical reaction in fluids',
-      'The resistance of fluids to flow'
+      { id: 'gravity', label: "Gravity pulls the water apart" },
+      { id: 'air', label: "Air resistance breaks it up" },
+      { id: 'surface', label: "Surface tension drives toward minimum surface area (spheres)", correct: true },
+      { id: 'evaporation', label: "The water evaporates and separates" }
     ],
-    correct: 1
+    explanation: "Surface tension acts like a stretched membrane that wants to contract. Spheres have minimum surface area for a given volume, so the stream spontaneously breaks into droplets!"
   },
   {
-    question: 'Why does a water stream from a faucet break into droplets?',
+    scenario: "A scientist measures the surface area of different shapes with the same volume.",
+    question: "Which shape has the minimum surface area?",
     options: [
-      'Gravity pulls the water apart',
-      'Air resistance breaks it up',
-      'Surface tension drives the system toward minimum surface area (spheres)',
-      'The water evaporates and separates'
+      { id: 'cylinder', label: "Cylinder" },
+      { id: 'cube', label: "Cube" },
+      { id: 'sphere', label: "Sphere", correct: true },
+      { id: 'cone', label: "Cone" }
     ],
-    correct: 2
+    explanation: "For any given volume, a sphere has the smallest possible surface area. This is why surface tension drives liquids to form spherical droplets - it minimizes the energy stored in the surface."
   },
   {
-    question: 'Which shape has the minimum surface area for a given volume?',
+    scenario: "You observe a water jet breaking up into droplets.",
+    question: "What determines the typical droplet size?",
     options: [
-      'Cylinder',
-      'Cube',
-      'Sphere',
-      'Cone'
+      { id: 'speed', label: "Only the speed of the water" },
+      { id: 'temperature', label: "The temperature of the water" },
+      { id: 'wavelength', label: "The wavelength of the instability (~9× jet radius)", correct: true },
+      { id: 'random', label: "Random chance - all droplets are different" }
     ],
-    correct: 2
+    explanation: "The most unstable wavelength is λ ≈ 9r (about 9 times the jet radius). This wavelength grows fastest and determines the spacing between droplets. Larger jets make larger droplets!"
   },
   {
-    question: 'What role does surface tension play in droplet formation?',
+    scenario: "You compare how water and honey break up when dripping.",
+    question: "How does high viscosity affect jet breakup?",
     options: [
-      'It holds the stream together indefinitely',
-      'It amplifies small perturbations until the stream breaks',
-      'It has no effect on droplet formation',
-      'It only affects viscous fluids'
+      { id: 'faster', label: "It makes breakup happen faster" },
+      { id: 'slower', label: "It slows breakup, creating 'beads on a string' patterns", correct: true },
+      { id: 'prevents', label: "It prevents any breakup from occurring" },
+      { id: 'none', label: "It has no effect on breakup" }
     ],
-    correct: 1
+    explanation: "Viscosity resists the pinch-off. High viscosity fluids can't thin fast enough, creating thin threads between forming droplets - the characteristic 'beads on a string' pattern seen with honey."
   },
   {
-    question: 'What determines the typical size of droplets formed from a jet?',
+    scenario: "An inkjet printer needs to create precise droplets.",
+    question: "How are precise ink droplets created?",
     options: [
-      'The speed of the fluid only',
-      'The temperature of the fluid',
-      'The wavelength of the instability, related to jet radius',
-      'Random chance - all droplets are different sizes'
+      { id: 'random', label: "Random breakup of a continuous stream" },
+      { id: 'piezo', label: "Piezoelectric pulses that trigger controlled breakup", correct: true },
+      { id: 'heating', label: "Heating the ink until it evaporates" },
+      { id: 'magnetic', label: "Magnetic fields that shape the ink" }
     ],
-    correct: 2
+    explanation: "Inkjet printers use piezoelectric elements to create precise pressure pulses that trigger the Rayleigh-Plateau instability at exactly the right moment, producing uniformly-sized droplets."
   },
   {
-    question: 'How does higher viscosity affect jet breakup?',
+    scenario: "A perturbation (tiny wave) forms on a liquid jet.",
+    question: "When does the perturbation grow and cause breakup?",
     options: [
-      'It makes breakup happen faster',
-      'It slows down breakup and can create "beads on a string" patterns',
-      'It prevents any breakup from occurring',
-      'It has no effect on breakup'
+      { id: 'always', label: "All perturbations grow and cause breakup" },
+      { id: 'longer', label: "Only when wavelength > jet circumference", correct: true },
+      { id: 'shorter', label: "Only when wavelength < jet circumference" },
+      { id: 'never', label: "Perturbations never grow" }
     ],
-    correct: 1
+    explanation: "Only perturbations with wavelength longer than the jet circumference (λ > πd) will grow. Shorter wavelengths are damped by surface tension. This is why the stream breaks into droplets of a characteristic size."
   },
   {
-    question: 'In inkjet printing, how are precise droplets created?',
+    scenario: "You're designing a spray nozzle for agricultural use.",
+    question: "Why is droplet uniformity important in sprays?",
     options: [
-      'Random breakup of a continuous stream',
-      'Controlled piezoelectric pulses that trigger the instability',
-      'Heating the ink until it evaporates',
-      'Magnetic fields that shape the ink'
+      { id: 'appearance', label: "It makes the spray look more appealing" },
+      { id: 'coverage', label: "Uniform droplets ensure consistent coverage and dosing", correct: true },
+      { id: 'cost', label: "It reduces the cost of the spray equipment" },
+      { id: 'evaporation', label: "It prevents the spray from evaporating" }
     ],
-    correct: 1
+    explanation: "Uniform droplets ensure each plant gets the right dose of pesticide or fertilizer. Too-small droplets drift away on wind; too-large droplets waste product. Consistent sizing is critical for effective application."
   },
   {
-    question: 'What happens when a perturbation wavelength is shorter than the jet circumference?',
+    scenario: "A metal powder manufacturer uses gas atomization.",
+    question: "How does the Rayleigh-Plateau instability help make metal powder?",
     options: [
-      'The perturbation grows rapidly',
-      'The perturbation is damped and the jet remains stable',
-      'The jet immediately explodes',
-      'The jet solidifies'
+      { id: 'nothing', label: "It doesn't - metal powder is made by grinding" },
+      { id: 'breaks', label: "Molten metal stream breaks into droplets that solidify into powder", correct: true },
+      { id: 'melts', label: "It melts solid metal into liquid" },
+      { id: 'shapes', label: "It shapes already-formed powder" }
     ],
-    correct: 1
+    explanation: "Gas atomization shoots molten metal through nozzles with high-pressure gas jets. The Rayleigh-Plateau instability breaks the stream into droplets that solidify into spherical metal powder particles, perfect for 3D printing."
   },
   {
-    question: 'Why is droplet uniformity important in spray applications?',
+    scenario: "A pharmaceutical company is making drug microparticles.",
+    question: "Why is controlled breakup important for drug delivery?",
     options: [
-      'It makes the spray look more appealing',
-      'Uniform droplets ensure consistent coverage and dosing',
-      'It reduces the cost of the spray equipment',
-      'It prevents the spray from evaporating'
+      { id: 'taste', label: "It only affects the taste of medicine" },
+      { id: 'dosing', label: "Uniform particles ensure consistent dosing and release rate", correct: true },
+      { id: 'color', label: "It changes the color of the medicine" },
+      { id: 'cheaper', label: "It's only used to make production cheaper" }
     ],
-    correct: 1
+    explanation: "Uniform drug particles ensure each pill or capsule contains the exact same dose. Particle size also controls release rate - smaller particles dissolve faster. This is critical for effective medication."
   },
   {
-    question: 'What is atomization?',
+    scenario: "The Ohnesorge number (Oh) compares viscous to surface tension forces.",
+    question: "What does a high Ohnesorge number indicate?",
     options: [
-      'Converting liquid into individual atoms',
-      'The process of breaking liquid into fine droplets or mist',
-      'A nuclear reaction in fluids',
-      'Removing air from liquids'
+      { id: 'quick', label: "Quick, clean breakup into uniform droplets" },
+      { id: 'complex', label: "Slow, complex breakup with thin filaments", correct: true },
+      { id: 'none', label: "No breakup will occur" },
+      { id: 'explosive', label: "Explosive fragmentation" }
     ],
-    correct: 1
+    explanation: "High Oh means viscosity dominates over surface tension. The fluid resists pinch-off, creating thin connecting threads and 'satellite' droplets. Low Oh gives clean, fast breakup into uniform spheres."
   }
 ];
 
-const TRANSFER_APPS = [
+const realWorldApps = [
   {
+    icon: '🖨️',
     title: 'Inkjet Printing',
+    short: 'Inkjet printers',
+    tagline: 'Precision Droplets on Demand',
     description: 'Inkjet printers use piezoelectric elements to create pressure waves that trigger controlled Rayleigh-Plateau breakup, producing precisely sized droplets that land exactly where needed.',
-    icon: '🖨️'
+    connection: 'The same physics that breaks your faucet stream into droplets is precisely controlled to place millions of ink drops per second with micron accuracy.',
+    howItWorks: 'A piezoelectric element flexes to create a pressure pulse in the ink chamber. This triggers the instability at exactly the right moment, ejecting a droplet of controlled size at speeds up to 10 m/s.',
+    stats: [
+      { value: '~20μm', label: 'Droplet diameter', icon: '💧' },
+      { value: '20kHz', label: 'Firing frequency', icon: '⚡' },
+      { value: '±1μm', label: 'Placement precision', icon: '🎯' }
+    ],
+    examples: [
+      'Document printing with precise text and images',
+      '3D printing using UV-curable ink droplets',
+      'Electronics printing for flexible circuits',
+      'Bioprinting for tissue engineering'
+    ],
+    companies: ['HP', 'Epson', 'Canon', 'Stratasys'],
+    futureImpact: 'Inkjet technology is expanding to print electronics, solar cells, and even human tissue using controlled droplet formation.',
+    color: colors.primary
   },
   {
+    icon: '💨',
     title: 'Spray Nozzles',
+    short: 'Agricultural sprays',
+    tagline: 'Optimizing Coverage and Drift',
     description: 'Agricultural sprayers and industrial coating systems engineer nozzle geometries to control droplet size distribution, optimizing coverage while minimizing drift.',
-    icon: '💨'
+    connection: 'Nozzle design exploits the Rayleigh-Plateau instability to create specific droplet sizes. Different shapes and pressures give different breakup patterns.',
+    howItWorks: 'Liquid forced through shaped orifices forms jets or sheets that break up via surface tension. Flat fan, hollow cone, and full cone nozzles each create different spray patterns and droplet sizes.',
+    stats: [
+      { value: '150-300μm', label: 'Optimal droplet size', icon: '💧' },
+      { value: '<150μm', label: 'Drift-prone size', icon: '💨' },
+      { value: '>400μm', label: 'Poor coverage size', icon: '⬇️' }
+    ],
+    examples: [
+      'Pesticide application with minimal drift',
+      'Paint spraying for automotive finish',
+      'Fire suppression sprinklers',
+      'Fuel injection in engines'
+    ],
+    companies: ['TeeJet', 'Spraying Systems Co.', 'BETE', 'Lechler'],
+    futureImpact: 'Smart nozzles with real-time droplet size adjustment based on wind and humidity conditions are being developed.',
+    color: colors.success
   },
   {
+    icon: '💊',
     title: 'Pharmaceutical Manufacturing',
-    description: 'Drug microencapsulation and spray drying use controlled jet breakup to create uniform drug particles for consistent dosing and drug delivery.',
-    icon: '💊'
+    short: 'Drug microparticles',
+    tagline: 'Consistent Dosing Through Physics',
+    description: 'Drug microencapsulation and spray drying use controlled jet breakup to create uniform drug particles for consistent dosing and controlled release.',
+    connection: 'The Rayleigh-Plateau instability creates uniformly sized droplets that dry into uniform drug particles. Particle size controls how fast the drug releases in your body.',
+    howItWorks: 'Drug solutions are atomized into a hot drying chamber. Each droplet dries into a solid microsphere. Nozzle design and process parameters control final particle size distribution.',
+    stats: [
+      { value: '1-100μm', label: 'Particle size range', icon: '🔬' },
+      { value: '±5%', label: 'Size uniformity', icon: '📏' },
+      { value: '99%+', label: 'Drug encapsulation', icon: '💊' }
+    ],
+    examples: [
+      'Inhaler powders with precise lung deposition',
+      'Time-release medication coatings',
+      'Taste-masked oral medications',
+      'Injectable microsphere formulations'
+    ],
+    companies: ['Pfizer', 'GSK', 'Novartis', 'Capsugel'],
+    futureImpact: 'Personalized medicine may use patient-specific particle sizes for optimal drug delivery based on individual physiology.',
+    color: colors.warning
   },
   {
+    icon: '⚙️',
     title: 'Metal Powder Production',
-    description: 'Gas atomization shoots molten metal through nozzles - the Rayleigh-Plateau instability breaks the stream into droplets that solidify into metal powder for 3D printing.',
-    icon: '⚙️'
+    short: 'Gas atomization',
+    tagline: 'From Molten Stream to Perfect Spheres',
+    description: 'Gas atomization produces metal powder for 3D printing and powder metallurgy by breaking molten metal streams into droplets that solidify in flight.',
+    connection: 'The Rayleigh-Plateau instability breaks molten metal just like water, but at 1500°C! The droplets solidify into nearly perfect spheres before landing.',
+    howItWorks: 'Molten metal streams through a nozzle into high-velocity gas jets. The gas creates turbulence that triggers breakup. Droplets solidify in milliseconds as they fall through the cooling chamber.',
+    stats: [
+      { value: '15-150μm', label: 'Powder size range', icon: '⚙️' },
+      { value: '1500°C+', label: 'Melt temperature', icon: '🔥' },
+      { value: '99.9%', label: 'Sphericity', icon: '⭕' }
+    ],
+    examples: [
+      'Titanium powder for aerospace 3D printing',
+      'Steel powder for automotive parts',
+      'Aluminum powder for lightweight structures',
+      'Superalloy powder for jet engine components'
+    ],
+    companies: ['Carpenter Technology', 'Höganäs', 'Sandvik', 'GE Additive'],
+    futureImpact: 'Next-generation atomization techniques aim for even finer, more uniform powders to enable higher-resolution metal 3D printing.',
+    color: colors.accent
   }
 ];
 
-// ═══════════════════════════════════════════════════════════════════════════
-// HELPER FUNCTIONS
-// ═══════════════════════════════════════════════════════════════════════════
-function playSound(type: 'click' | 'success' | 'failure' | 'transition' | 'complete'): void {
+// ============================================================
+// SOUND UTILITY
+// ============================================================
+
+const playSound = (type: 'click' | 'success' | 'failure' | 'transition' | 'complete') => {
   if (typeof window === 'undefined') return;
   try {
-    const audioContext = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
+    const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
     const oscillator = audioContext.createOscillator();
     const gainNode = audioContext.createGain();
-
     oscillator.connect(gainNode);
     gainNode.connect(audioContext.destination);
-
-    const sounds = {
-      click: { freq: 600, duration: 0.1, type: 'sine' as OscillatorType },
-      success: { freq: 800, duration: 0.2, type: 'sine' as OscillatorType },
-      failure: { freq: 300, duration: 0.3, type: 'sine' as OscillatorType },
-      transition: { freq: 500, duration: 0.15, type: 'sine' as OscillatorType },
-      complete: { freq: 900, duration: 0.4, type: 'sine' as OscillatorType }
+    const sounds: Record<string, { freq: number; duration: number; type: OscillatorType }> = {
+      click: { freq: 600, duration: 0.1, type: 'sine' },
+      success: { freq: 800, duration: 0.2, type: 'sine' },
+      failure: { freq: 300, duration: 0.3, type: 'sine' },
+      transition: { freq: 500, duration: 0.15, type: 'sine' },
+      complete: { freq: 900, duration: 0.4, type: 'sine' }
     };
-
     const sound = sounds[type];
     oscillator.frequency.value = sound.freq;
     oscillator.type = sound.type;
     gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
     gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + sound.duration);
-
     oscillator.start();
     oscillator.stop(audioContext.currentTime + sound.duration);
-  } catch {
-    // Audio not available
-  }
+  } catch { /* Audio not available */ }
+};
+
+// ============================================================
+// MAIN COMPONENT
+// ============================================================
+
+interface DropletBreakupRendererProps {
+  onComplete?: () => void;
+  onGameEvent?: (event: { type: string; data: any }) => void;
+  gamePhase?: string;
 }
 
-// ═══════════════════════════════════════════════════════════════════════════
-// UI COMPONENTS
-// ═══════════════════════════════════════════════════════════════════════════
-const ProgressIndicator: React.FC<{ phases: Phase[]; currentPhase: Phase }> = ({ phases, currentPhase }) => {
-  const currentIndex = phases.indexOf(currentPhase);
-  return (
-    <div className="mb-6">
-      <div className="flex items-center justify-between mb-2">
-        {phases.map((phase, index) => (
-          <div key={phase} className="flex items-center">
-            <div
-              className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition-all duration-300 ${
-                index < currentIndex
-                  ? 'bg-indigo-500 text-white'
-                  : index === currentIndex
-                  ? 'bg-indigo-400 text-white ring-4 ring-indigo-400/30'
-                  : 'bg-slate-700 text-slate-400'
-              }`}
-            >
-              {index + 1}
-            </div>
-            {index < phases.length - 1 && (
-              <div
-                className={`w-6 h-1 mx-1 rounded ${
-                  index < currentIndex ? 'bg-indigo-500' : 'bg-slate-700'
-                }`}
-              />
-            )}
-          </div>
-        ))}
-      </div>
-      <p className="text-center text-sm text-slate-400 capitalize">
-        {currentPhase.replace('_', ' ')}
-      </p>
-    </div>
-  );
-};
-
-const PrimaryButton: React.FC<{
-  children: React.ReactNode;
-  onMouseDown: (e: React.MouseEvent) => void;
-  variant?: 'primary' | 'secondary';
-  disabled?: boolean;
-}> = ({ children, onMouseDown, variant = 'primary', disabled = false }) => {
-  return (
-    <button
-      onMouseDown={(e) => {
-        e.preventDefault();
-        if (!disabled) onMouseDown(e);
-      }}
-      disabled={disabled}
-      className={`px-6 py-3 rounded-xl font-semibold transition-all duration-200 ${
-        variant === 'primary'
-          ? disabled
-            ? 'bg-slate-700 text-slate-500 cursor-not-allowed'
-            : 'bg-gradient-to-r from-indigo-500 to-purple-500 text-white hover:from-indigo-600 hover:to-purple-600 hover:scale-105 active:scale-95'
-          : disabled
-          ? 'bg-slate-800 text-slate-500 cursor-not-allowed'
-          : 'bg-slate-700 text-white hover:bg-slate-600 hover:scale-105 active:scale-95'
-      }`}
-    >
-      {children}
-    </button>
-  );
-};
-
-// ═══════════════════════════════════════════════════════════════════════════
-// APPLICATION GRAPHICS
-// ═══════════════════════════════════════════════════════════════════════════
-const InkjetGraphic: React.FC = () => {
-  const [animPhase, setAnimPhase] = useState(0);
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setAnimPhase(p => (p + 1) % 120);
-    }, 40);
-    return () => clearInterval(interval);
-  }, []);
-
-  return (
-    <svg viewBox="0 0 400 280" className="w-full h-64">
-      <defs>
-        <linearGradient id="inkGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-          <stop offset="0%" stopColor="#06b6d4" />
-          <stop offset="100%" stopColor="#0891b2" />
-        </linearGradient>
-        <linearGradient id="nozzleGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-          <stop offset="0%" stopColor="#64748b" />
-          <stop offset="100%" stopColor="#475569" />
-        </linearGradient>
-      </defs>
-
-      {/* Background */}
-      <rect width="400" height="280" fill="#0f172a" />
-
-      {/* Title */}
-      <text x="200" y="22" textAnchor="middle" className="fill-white text-sm font-bold">
-        Inkjet Printer Head
-      </text>
-
-      {/* Print head housing */}
-      <rect x="100" y="40" width="200" height="60" fill="#1e293b" rx="8" />
-
-      {/* Ink chamber */}
-      <rect x="120" y="50" width="60" height="40" fill="url(#inkGrad)" rx="4" />
-      <text x="150" y="75" textAnchor="middle" className="fill-cyan-100 text-[9px]">
-        Ink
-      </text>
-
-      {/* Piezoelectric element */}
-      <rect x="190" y="55" width="40" height="30" fill="#f59e0b" rx="4" />
-      <text x="210" y="75" textAnchor="middle" className="fill-amber-900 text-[8px] font-bold">
-        PIEZO
-      </text>
-
-      {/* Nozzle */}
-      <path d="M 250 70 L 260 70 L 265 100 L 245 100 Z" fill="url(#nozzleGrad)" />
-
-      {/* Ink droplets firing */}
-      {[0, 1, 2, 3, 4].map(i => {
-        const dropletPhase = (animPhase + i * 25) % 120;
-        if (dropletPhase > 80) return null;
-        const y = 105 + dropletPhase * 1.8;
-        const size = dropletPhase < 20 ? 3 + dropletPhase * 0.2 : 7;
-        return (
-          <circle
-            key={i}
-            cx={255}
-            cy={y}
-            r={size}
-            fill="url(#inkGrad)"
-            opacity={1 - dropletPhase / 100}
-          />
-        );
-      })}
-
-      {/* Paper surface */}
-      <rect x="50" y="240" width="300" height="30" fill="#f5f5f4" rx="2" />
-      <text x="200" y="260" textAnchor="middle" className="fill-slate-400 text-xs">
-        Paper
-      </text>
-
-      {/* Ink dots on paper */}
-      {[0, 1, 2, 3, 4, 5, 6].map(i => (
-        <circle
-          key={i}
-          cx={80 + i * 40}
-          cy={250}
-          r="8"
-          fill="url(#inkGrad)"
-          opacity={i < (animPhase / 20) ? 1 : 0.2}
-        />
-      ))}
-
-      {/* Process diagram */}
-      <g transform="translate(50, 120)">
-        <rect width="120" height="100" fill="#1e293b" rx="8" />
-        <text x="60" y="18" textAnchor="middle" className="fill-slate-300 text-[10px] font-semibold">
-          Droplet Formation
-        </text>
-
-        {/* Step 1: Pressure pulse */}
-        <g transform="translate(10, 30)">
-          <rect x="0" y="0" width="30" height="20" fill="#475569" rx="2" />
-          <rect x="5" y="5" width="20" height="10" fill="#0891b2" rx="2" />
-          <text x="15" y="35" textAnchor="middle" className="fill-slate-500 text-[7px]">
-            Pulse
-          </text>
-        </g>
-
-        {/* Step 2: Jet forms */}
-        <g transform="translate(45, 30)">
-          <rect x="0" y="0" width="30" height="20" fill="#475569" rx="2" />
-          <rect x="12" y="5" width="6" height="15" fill="#0891b2" rx="1" />
-          <text x="15" y="35" textAnchor="middle" className="fill-slate-500 text-[7px]">
-            Jet
-          </text>
-        </g>
-
-        {/* Step 3: Breakup */}
-        <g transform="translate(80, 30)">
-          <rect x="0" y="0" width="30" height="20" fill="#475569" rx="2" />
-          <circle cx="15" cy="8" r="5" fill="#0891b2" />
-          <circle cx="15" cy="18" r="3" fill="#0891b2" opacity="0.6" />
-          <text x="15" y="35" textAnchor="middle" className="fill-slate-500 text-[7px]">
-            Droplet
-          </text>
-        </g>
-
-        <text x="60" y="85" textAnchor="middle" className="fill-cyan-400 text-[9px]">
-          Controlled R-P instability
-        </text>
-      </g>
-
-      {/* Stats */}
-      <g transform="translate(230, 120)">
-        <rect width="120" height="100" fill="#1e293b" rx="8" />
-        <text x="60" y="18" textAnchor="middle" className="fill-slate-300 text-[10px] font-semibold">
-          Specifications
-        </text>
-        <text x="15" y="40" className="fill-slate-400 text-[9px]">
-          Droplet size: ~20μm
-        </text>
-        <text x="15" y="55" className="fill-slate-400 text-[9px]">
-          Frequency: ~20kHz
-        </text>
-        <text x="15" y="70" className="fill-slate-400 text-[9px]">
-          Speed: 10m/s
-        </text>
-        <text x="15" y="85" className="fill-cyan-400 text-[9px]">
-          Precision: ±1μm
-        </text>
-      </g>
-
-      <text x="200" y="275" textAnchor="middle" className="fill-slate-400 text-[10px]">
-        Piezoelectric pulses trigger precise droplet formation
-      </text>
-    </svg>
-  );
-};
-
-const SprayNozzleGraphic: React.FC = () => {
-  const [animPhase, setAnimPhase] = useState(0);
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setAnimPhase(p => (p + 1) % 100);
-    }, 40);
-    return () => clearInterval(interval);
-  }, []);
-
-  return (
-    <svg viewBox="0 0 400 280" className="w-full h-64">
-      <defs>
-        <radialGradient id="dropletGrad" cx="30%" cy="30%" r="70%">
-          <stop offset="0%" stopColor="#22d3ee" />
-          <stop offset="100%" stopColor="#0891b2" />
-        </radialGradient>
-      </defs>
-
-      {/* Background */}
-      <rect width="400" height="280" fill="#0f172a" />
-
-      {/* Title */}
-      <text x="200" y="22" textAnchor="middle" className="fill-white text-sm font-bold">
-        Agricultural Spray Nozzle
-      </text>
-
-      {/* Nozzle housing */}
-      <g transform="translate(170, 40)">
-        <rect x="0" y="0" width="60" height="40" fill="#64748b" rx="6" />
-        <path d="M 20 40 L 10 70 L 50 70 L 40 40 Z" fill="#475569" />
-        <ellipse cx="30" cy="70" rx="20" ry="5" fill="#334155" />
-      </g>
-
-      {/* Spray cone */}
-      <path
-        d="M 200 80 L 100 240 L 300 240 Z"
-        fill="#0891b2"
-        opacity="0.1"
-      />
-
-      {/* Spray droplets */}
-      {Array.from({ length: 40 }).map((_, i) => {
-        const angle = (i / 40) * Math.PI - Math.PI / 2;
-        const spread = 80;
-        const baseX = 200;
-        const baseY = 80;
-        const dist = 30 + ((animPhase * 2 + i * 7) % 160);
-        const x = baseX + Math.sin(angle) * spread * (dist / 160);
-        const y = baseY + dist;
-        const size = 2 + Math.random() * 4;
-
-        return (
-          <circle
-            key={i}
-            cx={x}
-            cy={y}
-            r={size}
-            fill="url(#dropletGrad)"
-            opacity={0.8 - dist / 200}
-          />
-        );
-      })}
-
-      {/* Ground/crop */}
-      <rect x="50" y="240" width="300" height="30" fill="#166534" rx="4" />
-      {[0, 1, 2, 3, 4, 5, 6, 7].map(i => (
-        <path
-          key={i}
-          d={`M ${70 + i * 40} 240 Q ${80 + i * 40} 220, ${90 + i * 40} 240`}
-          stroke="#22c55e"
-          strokeWidth="3"
-          fill="none"
-        />
-      ))}
-
-      {/* Droplet size comparison */}
-      <g transform="translate(30, 100)">
-        <rect width="100" height="110" fill="#1e293b" rx="8" />
-        <text x="50" y="18" textAnchor="middle" className="fill-slate-300 text-[10px] font-semibold">
-          Droplet Sizes
-        </text>
-
-        {/* Fine */}
-        <circle cx="25" cy="40" r="3" fill="#22d3ee" />
-        <text x="45" y="44" className="fill-slate-400 text-[9px]">
-          Fine: &lt;150μm
-        </text>
-
-        {/* Medium */}
-        <circle cx="25" cy="60" r="6" fill="#22d3ee" />
-        <text x="45" y="64" className="fill-slate-400 text-[9px]">
-          Med: 150-300μm
-        </text>
-
-        {/* Coarse */}
-        <circle cx="25" cy="85" r="10" fill="#22d3ee" />
-        <text x="50" y="89" className="fill-slate-400 text-[9px]">
-          Coarse: &gt;300μm
-        </text>
-      </g>
-
-      {/* Considerations */}
-      <g transform="translate(280, 100)">
-        <rect width="100" height="110" fill="#1e293b" rx="8" />
-        <text x="50" y="18" textAnchor="middle" className="fill-slate-300 text-[10px] font-semibold">
-          Trade-offs
-        </text>
-        <text x="10" y="38" className="fill-green-400 text-[9px]">
-          ✓ Fine: Coverage
-        </text>
-        <text x="10" y="52" className="fill-red-400 text-[9px]">
-          ✗ Fine: Drift risk
-        </text>
-        <text x="10" y="72" className="fill-green-400 text-[9px]">
-          ✓ Coarse: No drift
-        </text>
-        <text x="10" y="86" className="fill-red-400 text-[9px]">
-          ✗ Coarse: Coverage
-        </text>
-      </g>
-
-      <text x="200" y="275" textAnchor="middle" className="fill-slate-400 text-[10px]">
-        Nozzle design controls droplet size for optimal crop coverage
-      </text>
-    </svg>
-  );
-};
-
-const PharmaceuticalGraphic: React.FC = () => {
-  const [animPhase, setAnimPhase] = useState(0);
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setAnimPhase(p => (p + 1) % 200);
-    }, 40);
-    return () => clearInterval(interval);
-  }, []);
-
-  return (
-    <svg viewBox="0 0 400 280" className="w-full h-64">
-      <defs>
-        <linearGradient id="drugGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stopColor="#a855f7" />
-          <stop offset="100%" stopColor="#7c3aed" />
-        </linearGradient>
-        <linearGradient id="coatingGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stopColor="#f472b6" />
-          <stop offset="100%" stopColor="#ec4899" />
-        </linearGradient>
-      </defs>
-
-      {/* Background */}
-      <rect width="400" height="280" fill="#0f172a" />
-
-      {/* Title */}
-      <text x="200" y="22" textAnchor="middle" className="fill-white text-sm font-bold">
-        Drug Microencapsulation
-      </text>
-
-      {/* Spray drying chamber */}
-      <g transform="translate(130, 40)">
-        {/* Chamber */}
-        <path
-          d="M 0 0 L 140 0 L 140 140 L 100 180 L 40 180 L 0 140 Z"
-          fill="#1e293b"
-          stroke="#334155"
-          strokeWidth="2"
-        />
-
-        {/* Nozzle at top */}
-        <rect x="55" y="-15" width="30" height="25" fill="#64748b" rx="4" />
-
-        {/* Spray of drug solution */}
-        {Array.from({ length: 20 }).map((_, i) => {
-          const phase = (animPhase + i * 10) % 100;
-          const x = 70 + Math.sin(i * 0.8) * phase * 0.5;
-          const y = 20 + phase * 1.2;
-          const r = phase < 50 ? 2 + phase * 0.05 : 4.5 - (phase - 50) * 0.03;
-
-          return (
-            <circle
-              key={i}
-              cx={x}
-              cy={y}
-              r={Math.max(0.5, r)}
-              fill="url(#drugGrad)"
-              opacity={1 - phase / 100}
-            />
-          );
-        })}
-
-        {/* Hot air arrows */}
-        <path d="M 10 70 L 30 70 L 25 65 M 30 70 L 25 75" stroke="#ef4444" strokeWidth="2" fill="none" />
-        <path d="M 110 70 L 130 70 L 125 65 M 130 70 L 125 75" stroke="#ef4444" strokeWidth="2" fill="none" />
-        <text x="70" y="165" textAnchor="middle" className="fill-red-400 text-[9px]">
-          Hot Air Drying
-        </text>
-
-        {/* Collected powder */}
-        <ellipse cx="70" cy="175" rx="25" ry="5" fill="url(#drugGrad)" opacity="0.5" />
-      </g>
-
-      {/* Microscopic view */}
-      <g transform="translate(30, 75)">
-        <rect width="90" height="130" fill="#1e293b" rx="8" />
-        <text x="45" y="18" textAnchor="middle" className="fill-slate-300 text-[10px] font-semibold">
-          Microspheres
-        </text>
-
-        {/* Drug microspheres */}
-        {[
-          { x: 30, y: 50, r: 15 },
-          { x: 60, y: 55, r: 12 },
-          { x: 45, y: 85, r: 18 },
-          { x: 25, y: 100, r: 10 },
-          { x: 65, y: 95, r: 14 }
-        ].map((sphere, i) => (
-          <g key={i}>
-            <circle cx={sphere.x} cy={sphere.y} r={sphere.r} fill="url(#coatingGrad)" opacity="0.6" />
-            <circle cx={sphere.x} cy={sphere.y} r={sphere.r * 0.7} fill="url(#drugGrad)" />
-          </g>
-        ))}
-
-        <text x="45" y="125" textAnchor="middle" className="fill-slate-500 text-[8px]">
-          Uniform size = uniform dose
-        </text>
-      </g>
-
-      {/* Benefits */}
-      <g transform="translate(290, 75)">
-        <rect width="90" height="130" fill="#1e293b" rx="8" />
-        <text x="45" y="18" textAnchor="middle" className="fill-slate-300 text-[10px] font-semibold">
-          Benefits
-        </text>
-        <text x="10" y="40" className="fill-purple-400 text-[9px]">
-          ✓ Precise dosing
-        </text>
-        <text x="10" y="55" className="fill-purple-400 text-[9px]">
-          ✓ Timed release
-        </text>
-        <text x="10" y="70" className="fill-purple-400 text-[9px]">
-          ✓ Protected drug
-        </text>
-        <text x="10" y="85" className="fill-purple-400 text-[9px]">
-          ✓ Easy to swallow
-        </text>
-        <text x="10" y="100" className="fill-purple-400 text-[9px]">
-          ✓ Taste masking
-        </text>
-        <text x="10" y="118" className="fill-slate-500 text-[8px]">
-          Size: 1-1000μm
-        </text>
-      </g>
-
-      {/* Process flow */}
-      <g transform="translate(50, 220)">
-        <text x="0" y="10" className="fill-slate-500 text-[9px]">
-          Solution
-        </text>
-        <text x="50" y="10" className="fill-slate-400">
-          →
-        </text>
-        <text x="70" y="10" className="fill-slate-500 text-[9px]">
-          Atomize
-        </text>
-        <text x="130" y="10" className="fill-slate-400">
-          →
-        </text>
-        <text x="150" y="10" className="fill-slate-500 text-[9px]">
-          Dry
-        </text>
-        <text x="185" y="10" className="fill-slate-400">
-          →
-        </text>
-        <text x="205" y="10" className="fill-slate-500 text-[9px]">
-          Collect
-        </text>
-        <text x="265" y="10" className="fill-slate-400">
-          →
-        </text>
-        <text x="285" y="10" className="fill-purple-400 text-[9px]">
-          Microspheres
-        </text>
-      </g>
-
-      <text x="200" y="268" textAnchor="middle" className="fill-slate-400 text-[10px]">
-        Controlled breakup creates uniform drug particles
-      </text>
-    </svg>
-  );
-};
-
-const MetalPowderGraphic: React.FC = () => {
-  const [animPhase, setAnimPhase] = useState(0);
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setAnimPhase(p => (p + 1) % 150);
-    }, 40);
-    return () => clearInterval(interval);
-  }, []);
-
-  return (
-    <svg viewBox="0 0 400 280" className="w-full h-64">
-      <defs>
-        <linearGradient id="moltenGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-          <stop offset="0%" stopColor="#fbbf24" />
-          <stop offset="50%" stopColor="#f97316" />
-          <stop offset="100%" stopColor="#dc2626" />
-        </linearGradient>
-        <linearGradient id="metalGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stopColor="#94a3b8" />
-          <stop offset="100%" stopColor="#64748b" />
-        </linearGradient>
-        <radialGradient id="hotDropGrad" cx="30%" cy="30%" r="70%">
-          <stop offset="0%" stopColor="#fef08a" />
-          <stop offset="100%" stopColor="#f97316" />
-        </radialGradient>
-        <radialGradient id="coolDropGrad" cx="30%" cy="30%" r="70%">
-          <stop offset="0%" stopColor="#e2e8f0" />
-          <stop offset="100%" stopColor="#64748b" />
-        </radialGradient>
-      </defs>
-
-      {/* Background */}
-      <rect width="400" height="280" fill="#0f172a" />
-
-      {/* Title */}
-      <text x="200" y="22" textAnchor="middle" className="fill-white text-sm font-bold">
-        Gas Atomization - Metal Powder Production
-      </text>
-
-      {/* Crucible with molten metal */}
-      <g transform="translate(160, 35)">
-        <path d="M 0 20 L 10 0 L 70 0 L 80 20 L 80 50 L 0 50 Z" fill="#475569" />
-        <rect x="5" y="5" width="70" height="40" fill="url(#moltenGrad)" rx="4" />
-        <text x="40" y="30" textAnchor="middle" className="fill-yellow-100 text-[9px] font-bold">
-          Molten Metal
-        </text>
-        <text x="40" y="60" textAnchor="middle" className="fill-slate-400 text-[8px]">
-          ~1500°C
-        </text>
-      </g>
-
-      {/* Nozzle */}
-      <g transform="translate(185, 70)">
-        <rect x="0" y="0" width="30" height="20" fill="#334155" rx="2" />
-        <path d="M 10 20 L 5 35 L 25 35 L 20 20 Z" fill="#475569" />
-      </g>
-
-      {/* Gas jets */}
-      <g transform="translate(150, 100)">
-        <path d="M 0 10 L 35 20" stroke="#3b82f6" strokeWidth="6" strokeLinecap="round" opacity="0.5" />
-        <path d="M 100 10 L 65 20" stroke="#3b82f6" strokeWidth="6" strokeLinecap="round" opacity="0.5" />
-        <text x="15" y="5" className="fill-blue-400 text-[8px]">
-          High-pressure gas
-        </text>
-        <text x="60" y="5" className="fill-blue-400 text-[8px]">
-          High-pressure gas
-        </text>
-      </g>
-
-      {/* Atomization zone - droplets breaking up */}
-      {Array.from({ length: 25 }).map((_, i) => {
-        const phase = (animPhase + i * 6) % 150;
-        const x = 200 + Math.sin(i * 0.7) * phase * 0.3;
-        const y = 115 + phase * 0.8;
-        const isCooled = phase > 80;
-        const r = 2 + Math.sin(i) * 1.5;
-
-        return (
-          <circle
-            key={i}
-            cx={x}
-            cy={y}
-            r={r}
-            fill={isCooled ? 'url(#coolDropGrad)' : 'url(#hotDropGrad)'}
-            opacity={1 - phase / 200}
-          />
-        );
-      })}
-
-      {/* Collection chamber */}
-      <g transform="translate(130, 200)">
-        <rect x="0" y="0" width="140" height="50" fill="#1e293b" rx="8" stroke="#334155" strokeWidth="2" />
-        <text x="70" y="20" textAnchor="middle" className="fill-slate-400 text-[10px]">
-          Collection Chamber
-        </text>
-        {/* Powder bed */}
-        <ellipse cx="70" cy="38" rx="50" ry="8" fill="url(#metalGrad)" />
-      </g>
-
-      {/* Process stages */}
-      <g transform="translate(30, 100)">
-        <rect width="85" height="95" fill="#1e293b" rx="8" />
-        <text x="42" y="18" textAnchor="middle" className="fill-slate-300 text-[10px] font-semibold">
-          Stages
-        </text>
-
-        <circle cx="20" cy="38" r="8" fill="url(#moltenGrad)" />
-        <text x="35" y="42" className="fill-slate-400 text-[8px]">
-          Melt
-        </text>
-
-        <rect x="14" y="52" width="12" height="8" fill="url(#moltenGrad)" rx="2" />
-        <text x="35" y="60" className="fill-slate-400 text-[8px]">
-          Stream
-        </text>
-
-        <g transform="translate(15, 68)">
-          {[0, 1, 2].map(j => (
-            <circle key={j} cx={j * 8} cy="4" r="3" fill="url(#hotDropGrad)" />
-          ))}
-        </g>
-        <text x="35" y="77" className="fill-slate-400 text-[8px]">
-          Breakup
-        </text>
-
-        <g transform="translate(15, 83)">
-          {[0, 1, 2].map(j => (
-            <circle key={j} cx={j * 8} cy="4" r="3" fill="url(#coolDropGrad)" />
-          ))}
-        </g>
-        <text x="35" y="92" className="fill-slate-400 text-[8px]">
-          Solidify
-        </text>
-      </g>
-
-      {/* Applications */}
-      <g transform="translate(290, 100)">
-        <rect width="85" height="95" fill="#1e293b" rx="8" />
-        <text x="42" y="18" textAnchor="middle" className="fill-slate-300 text-[10px] font-semibold">
-          Uses
-        </text>
-        <text x="10" y="38" className="fill-slate-400 text-[9px]">
-          • 3D printing
-        </text>
-        <text x="10" y="53" className="fill-slate-400 text-[9px]">
-          • Sintering
-        </text>
-        <text x="10" y="68" className="fill-slate-400 text-[9px]">
-          • Coatings
-        </text>
-        <text x="10" y="83" className="fill-slate-400 text-[9px]">
-          • MIM parts
-        </text>
-      </g>
-
-      <text x="200" y="268" textAnchor="middle" className="fill-slate-400 text-[10px]">
-        Rayleigh-Plateau instability creates spherical metal powder
-      </text>
-    </svg>
-  );
-};
-
-// ═══════════════════════════════════════════════════════════════════════════
-// MAIN COMPONENT
-// ═══════════════════════════════════════════════════════════════════════════
-export default function DropletBreakupRenderer({ onGameEvent, currentPhase, onPhaseComplete }: DropletBreakupRendererProps) {
-  // ─── State ─────────────────────────────────────────────────────────────────
-  const [phase, setPhase] = useState<number>(currentPhase ?? 0);
-  const [isMobile, setIsMobile] = useState(false);
+const DropletBreakupRenderer: React.FC<DropletBreakupRendererProps> = ({
+  onComplete,
+  onGameEvent,
+  gamePhase
+}) => {
+  const validPhases: Phase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
+  const getInitialPhase = (): Phase => {
+    if (gamePhase && validPhases.includes(gamePhase as Phase)) return gamePhase as Phase;
+    return 'hook';
+  };
+
+  const [phase, setPhase] = useState<Phase>(getInitialPhase);
   const [prediction, setPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
-  const [testAnswers, setTestAnswers] = useState<number[]>(Array(10).fill(-1));
-  const [completedApps, setCompletedApps] = useState<Set<number>>(new Set());
-  const [activeAppTab, setActiveAppTab] = useState(0);
-  const [showTestResults, setShowTestResults] = useState(false);
 
-  // Simulation state
+  // Play phase state
   const [flowRate, setFlowRate] = useState(50);
-  const [viscosity, setViscosity] = useState(1);
-  const [animPhase, setAnimPhase] = useState(0);
+  const [viscosity, setViscosity] = useState(1); // 1 = water, 10 = honey
+  const [animTime, setAnimTime] = useState(0);
 
-  // CRITICAL: Navigation debouncing refs
-  const navigationLockRef = useRef(false);
-  const audioContextRef = useRef<AudioContext | null>(null);
+  // Test phase state
+  const [testQuestion, setTestQuestion] = useState(0);
+  const [testAnswers, setTestAnswers] = useState<(string | null)[]>(Array(10).fill(null));
+  const [showExplanation, setShowExplanation] = useState(false);
 
-  // Responsive check
+  // Transfer phase state
+  const [selectedApp, setSelectedApp] = useState(0);
+  const [completedApps, setCompletedApps] = useState<boolean[]>([false, false, false, false]);
+
+  const [isMobile, setIsMobile] = useState(false);
+  const animationRef = useRef<number>();
+
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth < 768);
     checkMobile();
@@ -913,916 +358,905 @@ export default function DropletBreakupRenderer({ onGameEvent, currentPhase, onPh
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
-  // Sync with external phase control
   useEffect(() => {
-    if (currentPhase !== undefined && currentPhase !== phase) {
-      setPhase(currentPhase);
+    if (gamePhase && validPhases.includes(gamePhase as Phase) && gamePhase !== phase) {
+      setPhase(gamePhase as Phase);
     }
-  }, [currentPhase, phase]);
+  }, [gamePhase]);
 
-  // Animation
   useEffect(() => {
-    const interval = setInterval(() => {
-      setAnimPhase(p => (p + 1) % 200);
-    }, 40);
-    return () => clearInterval(interval);
+    const animate = () => {
+      setAnimTime(t => t + 0.02);
+      animationRef.current = requestAnimationFrame(animate);
+    };
+    animationRef.current = requestAnimationFrame(animate);
+    return () => { if (animationRef.current) cancelAnimationFrame(animationRef.current); };
   }, []);
 
-  // ─── Navigation (CRITICAL PATTERN) ─────────────────────────────────────────
-  const goToPhase = useCallback((newPhase: number) => {
-    if (navigationLockRef.current) return;
-    navigationLockRef.current = true;
+  const emitGameEvent = useCallback((eventType: string, details: any) => {
+    onGameEvent?.({ type: eventType, data: { ...details, phase, gameId: GAME_ID } });
+  }, [onGameEvent, phase]);
 
+  const isNavigating = useRef(false);
+  const lastClickRef = useRef(0);
+
+  const goToPhase = useCallback((p: Phase) => {
+    const now = Date.now();
+    if (now - lastClickRef.current < 200) return;
+    if (isNavigating.current) return;
+    lastClickRef.current = now;
+    isNavigating.current = true;
+    setPhase(p);
     playSound('transition');
-    setPhase(newPhase);
-    onPhaseComplete?.(newPhase);
-    onGameEvent?.({ type: 'phase_change', data: { phase: newPhase, phaseLabel: phaseLabels[newPhase] } });
-
-    setTimeout(() => {
-      navigationLockRef.current = false;
-    }, 400);
-  }, [onPhaseComplete, onGameEvent]);
-
-  const nextPhase = useCallback(() => {
-    const currentIndex = PHASES.indexOf(phase);
-    if (currentIndex < PHASES.length - 1) {
-      goToPhase(PHASES[currentIndex + 1]);
+    emitGameEvent('phase_changed', { phase: p });
+    if (p === 'test') {
+      setTestQuestion(0);
+      setTestAnswers(Array(10).fill(null));
+      setShowExplanation(false);
     }
-  }, [phase, goToPhase]);
-
-  // ─── Event Handlers ────────────────────────────────────────────────────────
-  const handlePrediction = useCallback((id: string) => {
-    playSound('click');
-    setPrediction(id);
-  }, []);
-
-  const handleTwistPrediction = useCallback((id: string) => {
-    playSound('click');
-    setTwistPrediction(id);
-  }, []);
-
-  const handleTestAnswer = useCallback((questionIndex: number, answerIndex: number) => {
-    const newAnswers = [...testAnswers];
-    newAnswers[questionIndex] = answerIndex;
-    setTestAnswers(newAnswers);
-    playSound(answerIndex === TEST_QUESTIONS[questionIndex].correct ? 'success' : 'failure');
-  }, [testAnswers]);
-
-  const handleAppComplete = useCallback((index: number) => {
-    playSound('click');
-    setCompletedApps(prev => new Set([...prev, index]));
-  }, []);
-
-  // ─── Report Event ──────────────────────────────────────────────────────────
-  useEffect(() => {
-    if (onEvent) {
-      onEvent({
-        type: phase === 'mastery' ? 'completion' : 'interaction',
-        phase,
-        data: { prediction, twistPrediction, testAnswers: [...testAnswers], completedApps: [...completedApps] }
-      });
-    }
-  }, [phase, prediction, twistPrediction, testAnswers, completedApps, onEvent]);
-
-  // ─── Phase Renderers ───────────────────────────────────────────────────────
-  const renderHook = () => (
-    <div className="flex flex-col items-center justify-center text-center">
-      {/* Premium Badge */}
-      <div className="flex items-center gap-2 mb-6">
-        <div className="w-2 h-2 bg-indigo-400 rounded-full animate-pulse" />
-        <span className="text-indigo-400/80 text-sm font-medium tracking-wide uppercase">Surface Tension Physics</span>
-      </div>
-
-      {/* Gradient Title */}
-      <h1 className="text-4xl md:text-5xl font-bold mb-3 bg-gradient-to-r from-white via-indigo-100 to-purple-200 bg-clip-text text-transparent">
-        The Breaking Stream Mystery
-      </h1>
-
-      {/* Subtitle */}
-      <p className="text-slate-400 text-lg mb-8">
-        Why does a water stream spontaneously form droplets?
-      </p>
-
-      {/* Premium Card */}
-      <div className="bg-slate-800/40 backdrop-blur-xl rounded-3xl p-8 max-w-lg border border-slate-700/50 shadow-2xl">
-        <div className="text-6xl mb-6">🚿</div>
-        <p className="text-xl text-slate-300 mb-6">
-          Turn on a faucet and watch closely. The smooth water stream suddenly breaks into droplets. Why?
-        </p>
-        <div className="bg-slate-700/30 rounded-xl p-6 mb-6">
-          <p className="text-lg text-indigo-400 font-semibold mb-2">
-            What invisible force causes this breakup?
-          </p>
-          <p className="text-slate-400">
-            Discover the Rayleigh-Plateau instability!
-          </p>
-        </div>
-      </div>
-
-      {/* Premium CTA Button */}
-      <button
-        onMouseDown={(e) => { e.preventDefault(); nextPhase(e); }}
-        className="group mt-8 px-8 py-4 bg-gradient-to-r from-indigo-500 to-purple-500 text-white text-lg font-semibold rounded-2xl hover:from-indigo-400 hover:to-purple-400 transition-all duration-300 shadow-lg hover:shadow-indigo-500/25 hover:scale-[1.02] active:scale-[0.98]"
-      >
-        <span className="flex items-center gap-2">
-          Find Out Why
-          <svg className="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-          </svg>
-        </span>
-      </button>
-
-      {/* Subtle hint text */}
-      <p className="text-slate-500 text-sm mt-4">
-        Tap to explore droplet formation
-      </p>
-    </div>
-  );
-
-  const renderPredict = () => (
-    <div className="bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl p-8">
-      <h2 className="text-2xl font-bold text-white mb-4 text-center">
-        Make Your Prediction
-      </h2>
-      <p className="text-slate-300 mb-6 text-center">
-        Surface tension wants to minimize surface area. Which shape has the minimum surface area for a given volume?
-      </p>
-
-      <div className="space-y-3 mb-6">
-        {[
-          { id: 'cylinder', label: 'Cylinder - like the original stream' },
-          { id: 'cube', label: 'Cube - simple geometry' },
-          { id: 'sphere', label: 'Sphere - perfectly round' },
-          { id: 'cone', label: 'Cone - pointed shape' }
-        ].map(option => (
-          <button
-            key={option.id}
-            onMouseDown={(e) => {
-              e.preventDefault();
-              handlePrediction(option.id);
-            }}
-            className={`w-full p-4 rounded-xl text-left transition-all duration-200 ${
-              prediction === option.id
-                ? 'bg-indigo-500/20 border-2 border-indigo-500 text-white'
-                : 'bg-slate-700/50 border-2 border-transparent text-slate-300 hover:bg-slate-700'
-            }`}
-          >
-            {option.label}
-          </button>
-        ))}
-      </div>
-
-      <div className="flex justify-center">
-        <PrimaryButton onMouseDown={nextPhase} disabled={!prediction}>
-          Test Your Prediction →
-        </PrimaryButton>
-      </div>
-    </div>
-  );
-
-  const renderPlay = () => {
-    const breakupSpeed = flowRate / 25;
-    const dropletSpacing = 30 - flowRate / 5;
-
-    return (
-      <div className="bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl p-8">
-        <h2 className="text-2xl font-bold text-white mb-4 text-center">
-          Watch the Stream Break Up
-        </h2>
-
-        <div className="bg-slate-900 rounded-xl p-4 mb-6">
-          <svg viewBox="0 0 400 250" className="w-full h-56">
-            <defs>
-              <linearGradient id="streamGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-                <stop offset="0%" stopColor="#3b82f6" />
-                <stop offset="100%" stopColor="#1d4ed8" />
-              </linearGradient>
-              <radialGradient id="dropGrad" cx="30%" cy="30%" r="70%">
-                <stop offset="0%" stopColor="#60a5fa" />
-                <stop offset="100%" stopColor="#1d4ed8" />
-              </radialGradient>
-            </defs>
-
-            <rect width="400" height="250" fill="#0f172a" />
-
-            {/* Faucet */}
-            <rect x="175" y="10" width="50" height="30" fill="#64748b" rx="4" />
-            <rect x="190" y="35" width="20" height="15" fill="#475569" />
-
-            {/* Continuous stream (top) */}
-            <rect
-              x="195"
-              y="50"
-              width="10"
-              height="40"
-              fill="url(#streamGrad)"
-              rx="5"
-            />
-
-            {/* Necking region (middle) */}
-            <path
-              d={`M 195 90
-                  Q 197 ${100 + Math.sin(animPhase * 0.15) * 3}, 195 110
-                  Q 193 ${120 - Math.sin(animPhase * 0.15) * 3}, 195 130
-                  L 205 130
-                  Q 207 ${120 + Math.sin(animPhase * 0.15) * 3}, 205 110
-                  Q 203 ${100 - Math.sin(animPhase * 0.15) * 3}, 205 90
-                  Z`}
-              fill="url(#streamGrad)"
-            />
-
-            {/* Droplets (bottom) */}
-            {[0, 1, 2, 3, 4].map(i => {
-              const baseY = 140 + i * dropletSpacing;
-              const y = baseY + (animPhase * breakupSpeed) % dropletSpacing;
-              if (y > 230) return null;
-              return (
-                <circle
-                  key={i}
-                  cx={200}
-                  cy={y}
-                  r={8}
-                  fill="url(#dropGrad)"
-                />
-              );
-            })}
-
-            {/* Labels */}
-            <g transform="translate(250, 50)">
-              <text x="0" y="10" className="fill-slate-400 text-xs">← Stable stream</text>
-              <text x="0" y="70" className="fill-slate-400 text-xs">← Necking region</text>
-              <text x="0" y="120" className="fill-slate-400 text-xs">← Droplets form</text>
-            </g>
-
-            {/* Instability wave visualization */}
-            <g transform="translate(50, 70)">
-              <rect width="100" height="80" fill="#1e293b" rx="8" />
-              <text x="50" y="18" textAnchor="middle" className="fill-slate-400 text-[10px] font-semibold">
-                Surface Perturbation
-              </text>
-
-              {/* Wave growing */}
-              <path
-                d={`M 10 50 ${Array.from({ length: 8 }).map((_, i) =>
-                  `Q ${15 + i * 11} ${50 + Math.sin(i + animPhase * 0.1) * (5 + i * 2)}, ${20 + i * 11} 50`
-                ).join(' ')}`}
-                stroke="#3b82f6"
-                strokeWidth="2"
-                fill="none"
-              />
-
-              <text x="50" y="72" textAnchor="middle" className="fill-indigo-400 text-[9px]">
-                Small waves grow!
-              </text>
-            </g>
-
-            {/* Surface area comparison */}
-            <g transform="translate(50, 160)">
-              <rect width="100" height="70" fill="#1e293b" rx="8" />
-              <text x="50" y="15" textAnchor="middle" className="fill-slate-400 text-[10px] font-semibold">
-                Surface Area
-              </text>
-
-              {/* Cylinder */}
-              <rect x="15" y="25" width="25" height="15" fill="#64748b" rx="2" />
-              <text x="27" y="55" textAnchor="middle" className="fill-slate-500 text-[8px]">
-                Cylinder
-              </text>
-
-              {/* Arrow */}
-              <path d="M 45 32 L 55 32 L 52 28 M 55 32 L 52 36" stroke="#22c55e" strokeWidth="1.5" fill="none" />
-
-              {/* Spheres */}
-              <circle cx="70" cy="28" r="8" fill="#3b82f6" />
-              <circle cx="85" cy="35" r="6" fill="#3b82f6" />
-              <text x="77" y="55" textAnchor="middle" className="fill-blue-400 text-[8px]">
-                Spheres
-              </text>
-              <text x="50" y="66" textAnchor="middle" className="fill-green-400 text-[8px]">
-                Less area!
-              </text>
-            </g>
-          </svg>
-        </div>
-
-        <div className="mb-6">
-          <label className="block text-slate-300 mb-2 text-center">
-            Flow Rate: {flowRate}%
-          </label>
-          <input
-            type="range"
-            min="20"
-            max="100"
-            value={flowRate}
-            onChange={(e) => setFlowRate(Number(e.target.value))}
-            className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer"
-          />
-          <p className="text-center text-sm text-slate-500 mt-2">
-            {flowRate < 40 ? 'Slow flow - droplets form close together' :
-             flowRate < 70 ? 'Medium flow - classic breakup pattern' :
-             'Fast flow - longer intact stream before breakup'}
-          </p>
-        </div>
-
-        <div className="flex justify-center">
-          <PrimaryButton onMouseDown={nextPhase}>
-            Understand Why →
-          </PrimaryButton>
-        </div>
-      </div>
-    );
-  };
-
-  const renderReview = () => (
-    <div className="bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl p-8">
-      <h2 className="text-2xl font-bold text-white mb-4 text-center">
-        The Science Revealed
-      </h2>
-
-      {prediction === 'sphere' ? (
-        <div className="bg-green-500/20 border border-green-500 rounded-xl p-4 mb-6">
-          <p className="text-green-400 font-semibold">✓ Excellent prediction!</p>
-        </div>
-      ) : (
-        <div className="bg-amber-500/20 border border-amber-500 rounded-xl p-4 mb-6">
-          <p className="text-amber-400">The answer: Spheres have minimum surface area!</p>
-        </div>
-      )}
-
-      <div className="space-y-4 mb-6">
-        <div className="bg-slate-700/50 rounded-xl p-4">
-          <h3 className="text-lg font-semibold text-indigo-400 mb-2">🔬 Rayleigh-Plateau Instability</h3>
-          <p className="text-slate-300">
-            A cylindrical fluid column is inherently <strong>unstable</strong>. Any tiny perturbation
-            will grow because surface tension pulls the fluid toward a shape with less surface area.
-          </p>
-        </div>
-
-        <div className="bg-slate-700/50 rounded-xl p-4">
-          <h3 className="text-lg font-semibold text-purple-400 mb-2">📐 The Mathematics</h3>
-          <p className="text-slate-300">
-            For the same volume, a sphere has ~15% less surface area than a cylinder.
-            The most unstable wavelength is <strong>λ ≈ 9r</strong> (about 9× the jet radius).
-          </p>
-        </div>
-
-        <div className="bg-slate-700/50 rounded-xl p-4">
-          <h3 className="text-lg font-semibold text-blue-400 mb-2">💧 Why Spheres Win</h3>
-          <p className="text-slate-300">
-            Surface tension acts like a stretched membrane trying to contract.
-            Spheres minimize surface area, so that&apos;s what the fluid naturally becomes!
-          </p>
-        </div>
-      </div>
-
-      <div className="flex justify-center">
-        <PrimaryButton onMouseDown={nextPhase}>
-          Explore a Twist →
-        </PrimaryButton>
-      </div>
-    </div>
-  );
-
-  const renderTwistPredict = () => (
-    <div className="bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl p-8">
-      <h2 className="text-2xl font-bold text-white mb-4 text-center">
-        🔄 The Twist: Viscous Fluids
-      </h2>
-      <p className="text-slate-300 mb-6 text-center">
-        What happens when we use a thick, viscous fluid like honey instead of water?
-      </p>
-
-      <div className="space-y-3 mb-6">
-        {[
-          { id: 'faster', label: 'Breakup happens much faster' },
-          { id: 'same', label: 'Breakup happens exactly the same way' },
-          { id: 'slower', label: 'Breakup is slower, creating "beads on a string"' },
-          { id: 'never', label: 'No breakup ever occurs - it stays as a stream' }
-        ].map(option => (
-          <button
-            key={option.id}
-            onMouseDown={(e) => {
-              e.preventDefault();
-              handleTwistPrediction(option.id);
-            }}
-            className={`w-full p-4 rounded-xl text-left transition-all duration-200 ${
-              twistPrediction === option.id
-                ? 'bg-purple-500/20 border-2 border-purple-500 text-white'
-                : 'bg-slate-700/50 border-2 border-transparent text-slate-300 hover:bg-slate-700'
-            }`}
-          >
-            {option.label}
-          </button>
-        ))}
-      </div>
-
-      <div className="flex justify-center">
-        <PrimaryButton onMouseDown={nextPhase} disabled={!twistPrediction}>
-          See What Happens →
-        </PrimaryButton>
-      </div>
-    </div>
-  );
-
-  const renderTwistPlay = () => {
-    return (
-      <div className="bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl p-8">
-        <h2 className="text-2xl font-bold text-white mb-4 text-center">
-          Water vs Honey Breakup
-        </h2>
-
-        <div className="bg-slate-900 rounded-xl p-4 mb-6">
-          <svg viewBox="0 0 400 250" className="w-full h-56">
-            <defs>
-              <linearGradient id="waterStreamGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-                <stop offset="0%" stopColor="#3b82f6" />
-                <stop offset="100%" stopColor="#1d4ed8" />
-              </linearGradient>
-              <linearGradient id="honeyStreamGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-                <stop offset="0%" stopColor="#fbbf24" />
-                <stop offset="100%" stopColor="#d97706" />
-              </linearGradient>
-            </defs>
-
-            <rect width="400" height="250" fill="#0f172a" />
-
-            {/* Water side */}
-            <g transform="translate(50, 0)">
-              <text x="70" y="25" textAnchor="middle" className="fill-blue-400 text-sm font-bold">
-                Water (Low η)
-              </text>
-
-              {/* Nozzle */}
-              <rect x="55" y="35" width="30" height="15" fill="#64748b" rx="2" />
-
-              {/* Clean breakup into spheres */}
-              <rect x="65" y="50" width="10" height="30" fill="url(#waterStreamGrad)" rx="5" />
-
-              {/* Quick breakup */}
-              {[0, 1, 2, 3, 4, 5].map(i => {
-                const y = 90 + i * 25 + (animPhase % 25);
-                if (y > 220) return null;
-                return (
-                  <circle
-                    key={i}
-                    cx={70}
-                    cy={y}
-                    r={8}
-                    fill="url(#waterStreamGrad)"
-                  />
-                );
-              })}
-
-              <text x="70" y="240" textAnchor="middle" className="fill-blue-300 text-xs">
-                Clean, fast breakup
-              </text>
-            </g>
-
-            {/* Honey side */}
-            <g transform="translate(210, 0)">
-              <text x="70" y="25" textAnchor="middle" className="fill-amber-400 text-sm font-bold">
-                Honey (High η)
-              </text>
-
-              {/* Nozzle */}
-              <rect x="55" y="35" width="30" height="15" fill="#64748b" rx="2" />
-
-              {/* Beads on a string pattern */}
-              <rect x="67" y="50" width="6" height={120 + Math.sin(animPhase * 0.05) * 10} fill="url(#honeyStreamGrad)" rx="3" />
-
-              {/* Beads forming on the string */}
-              {[0, 1, 2, 3].map(i => {
-                const y = 80 + i * 35 + (animPhase * 0.3 % 35);
-                const size = 6 + Math.sin(animPhase * 0.1 + i) * 3;
-                if (y > 180) return null;
-                return (
-                  <circle
-                    key={i}
-                    cx={70}
-                    cy={y}
-                    r={size}
-                    fill="url(#honeyStreamGrad)"
-                  />
-                );
-              })}
-
-              {/* Eventual droplet */}
-              <circle
-                cx={70}
-                cy={200 + (animPhase % 40)}
-                r={10}
-                fill="url(#honeyStreamGrad)"
-                opacity={animPhase % 80 > 40 ? 1 : 0}
-              />
-
-              <text x="70" y="240" textAnchor="middle" className="fill-amber-300 text-xs">
-                &quot;Beads on a string&quot;
-              </text>
-            </g>
-
-            {/* Explanation */}
-            <g transform="translate(145, 80)">
-              <rect width="110" height="80" fill="#1e293b" rx="8" />
-              <text x="55" y="20" textAnchor="middle" className="fill-slate-300 text-[10px] font-semibold">
-                Why the Difference?
-              </text>
-              <text x="10" y="40" className="fill-slate-400 text-[9px]">
-                Viscosity resists
-              </text>
-              <text x="10" y="52" className="fill-slate-400 text-[9px]">
-                the pinch-off,
-              </text>
-              <text x="10" y="64" className="fill-slate-400 text-[9px]">
-                creating thin
-              </text>
-              <text x="10" y="76" className="fill-purple-400 text-[9px]">
-                connecting threads
-              </text>
-            </g>
-          </svg>
-        </div>
-
-        <div className="mb-6">
-          <label className="block text-slate-300 mb-2 text-center">
-            Viscosity: {viscosity === 1 ? 'Water (1 cP)' : viscosity === 5 ? 'Oil (~100 cP)' : 'Honey (~10,000 cP)'}
-          </label>
-          <input
-            type="range"
-            min="1"
-            max="10"
-            value={viscosity}
-            onChange={(e) => setViscosity(Number(e.target.value))}
-            className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer"
-          />
-        </div>
-
-        <div className="grid grid-cols-2 gap-4 mb-6">
-          <div className="bg-blue-500/10 rounded-xl p-3 text-center">
-            <p className="text-blue-400 font-semibold">Low Viscosity</p>
-            <p className="text-sm text-slate-400">Fast, clean breakup</p>
-            <p className="text-xs text-slate-500">Uniform droplets</p>
-          </div>
-          <div className="bg-amber-500/10 rounded-xl p-3 text-center">
-            <p className="text-amber-400 font-semibold">High Viscosity</p>
-            <p className="text-sm text-slate-400">Slow, complex breakup</p>
-            <p className="text-xs text-slate-500">Satellite droplets</p>
-          </div>
-        </div>
-
-        <div className="flex justify-center">
-          <PrimaryButton onMouseDown={nextPhase}>
-            Learn More →
-          </PrimaryButton>
-        </div>
-      </div>
-    );
-  };
-
-  const renderTwistReview = () => (
-    <div className="bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl p-8">
-      <h2 className="text-2xl font-bold text-white mb-4 text-center">
-        Viscosity&apos;s Role in Breakup
-      </h2>
-
-      {twistPrediction === 'slower' ? (
-        <div className="bg-green-500/20 border border-green-500 rounded-xl p-4 mb-6">
-          <p className="text-green-400 font-semibold">✓ Exactly right!</p>
-        </div>
-      ) : (
-        <div className="bg-amber-500/20 border border-amber-500 rounded-xl p-4 mb-6">
-          <p className="text-amber-400">The answer: High viscosity creates &quot;beads on a string&quot;!</p>
-        </div>
-      )}
-
-      <div className="space-y-4 mb-6">
-        <div className="bg-slate-700/50 rounded-xl p-4">
-          <h3 className="text-lg font-semibold text-amber-400 mb-2">🍯 The Honey Effect</h3>
-          <p className="text-slate-300">
-            Viscosity <strong>resists</strong> the pinch-off. The fluid can&apos;t thin fast enough,
-            creating long thin threads between forming droplets - the &quot;beads on a string&quot; pattern.
-          </p>
-        </div>
-
-        <div className="bg-slate-700/50 rounded-xl p-4">
-          <h3 className="text-lg font-semibold text-purple-400 mb-2">🧵 Satellite Droplets</h3>
-          <p className="text-slate-300">
-            Those thin threads eventually break too, creating small &quot;satellite&quot; droplets
-            between the main ones. This is often undesirable in industrial applications.
-          </p>
-        </div>
-
-        <div className="bg-slate-700/50 rounded-xl p-4">
-          <h3 className="text-lg font-semibold text-indigo-400 mb-2">📊 The Ohnesorge Number</h3>
-          <p className="text-slate-300">
-            Oh = η / √(ρσr) compares viscous to surface tension forces.
-            Low Oh → quick breakup. High Oh → slow, complex breakup with filaments.
-          </p>
-        </div>
-      </div>
-
-      <div className="flex justify-center">
-        <PrimaryButton onMouseDown={nextPhase}>
-          Real-World Applications →
-        </PrimaryButton>
-      </div>
-    </div>
-  );
-
-  const renderTransfer = () => {
-    const appGraphics = [
-      <InkjetGraphic key="inkjet" />,
-      <SprayNozzleGraphic key="spray" />,
-      <PharmaceuticalGraphic key="pharma" />,
-      <MetalPowderGraphic key="metal" />
+    setTimeout(() => { isNavigating.current = false; }, 400);
+  }, [emitGameEvent]);
+
+  const calculateTestScore = () => testAnswers.reduce((score, ans, i) => {
+    const correct = testQuestions[i].options.find(o => o.correct)?.id;
+    return score + (ans === correct ? 1 : 0);
+  }, 0);
+
+  // ============================================================
+  // VISUALIZATION
+  // ============================================================
+
+  const renderVisualization = (interactive: boolean = false, showViscosity: boolean = false) => {
+    const width = isMobile ? 340 : 680;
+    const height = isMobile ? 320 : 400;
+
+    const currentFlowRate = interactive ? flowRate : 50;
+    const currentViscosity = showViscosity ? viscosity : 1;
+    const breakupSpeed = currentFlowRate / 30;
+    const dropletSpacing = 35 - currentFlowRate / 4;
+    const neckingAmplitude = 3 + Math.sin(animTime * 2) * 2;
+
+    const legendItems = showViscosity ? [
+      { color: colors.water, label: 'Water (low viscosity)' },
+      { color: colors.honey, label: 'Honey (high viscosity)' },
+      { color: colors.textMuted, label: 'Necking region' },
+    ] : [
+      { color: colors.stream, label: 'Continuous stream' },
+      { color: colors.droplet, label: 'Droplets' },
+      { color: colors.textMuted, label: 'Necking region' },
     ];
 
     return (
-      <div className="bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl p-8">
-        <h2 className="text-2xl font-bold text-white mb-4 text-center">
-          Real-World Applications
-        </h2>
-
-        {/* Tab buttons */}
-        <div className="flex gap-2 mb-6 overflow-x-auto pb-2">
-          {TRANSFER_APPS.map((app, index) => (
-            <button
-              key={index}
-              onMouseDown={(e) => {
-                e.preventDefault();
-                setActiveAppTab(index);
-              }}
-              className={`flex items-center gap-2 px-4 py-2 rounded-lg whitespace-nowrap transition-all ${
-                activeAppTab === index
-                  ? 'bg-indigo-500 text-white'
-                  : completedApps.has(index)
-                  ? 'bg-green-600/20 text-green-400 border border-green-600'
-                  : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
-              }`}
-            >
-              <span>{app.icon}</span>
-              <span className="text-sm font-medium">{app.title}</span>
-              {completedApps.has(index) && <span>✓</span>}
-            </button>
-          ))}
-        </div>
-
-        {/* Active application content */}
-        <div className="bg-slate-700/30 rounded-xl p-6 mb-6">
-          <div className="flex items-center gap-3 mb-4">
-            <span className="text-4xl">{TRANSFER_APPS[activeAppTab].icon}</span>
-            <h3 className="text-xl font-bold text-white">{TRANSFER_APPS[activeAppTab].title}</h3>
-          </div>
-
-          <p className="text-slate-300 mb-4">{TRANSFER_APPS[activeAppTab].description}</p>
-
-          {/* Application graphic */}
-          <div className="bg-slate-900 rounded-xl overflow-hidden mb-4">
-            {appGraphics[activeAppTab]}
-          </div>
-
-          {!completedApps.has(activeAppTab) && (
-            <button
-              onMouseDown={(e) => {
-                e.preventDefault();
-                handleAppComplete(activeAppTab);
-              }}
-              className="w-full py-3 bg-green-600 hover:bg-green-700 text-white rounded-xl font-semibold transition-all"
-            >
-              Mark as Understood ✓
-            </button>
-          )}
-        </div>
-
-        {/* Progress indicator */}
-        <div className="text-center mb-6">
-          <p className="text-slate-400">
-            Completed: {completedApps.size} / {TRANSFER_APPS.length}
-          </p>
-          <div className="w-full bg-slate-700 rounded-full h-2 mt-2">
-            <div
-              className="bg-gradient-to-r from-indigo-500 to-purple-500 h-2 rounded-full transition-all"
-              style={{ width: `${(completedApps.size / TRANSFER_APPS.length) * 100}%` }}
-            />
-          </div>
-        </div>
-
-        <div className="flex justify-center">
-          <PrimaryButton
-            onMouseDown={nextPhase}
-            disabled={completedApps.size < TRANSFER_APPS.length}
-          >
-            {completedApps.size < TRANSFER_APPS.length
-              ? `Complete all ${TRANSFER_APPS.length} applications to continue`
-              : 'Take the Knowledge Test →'}
-          </PrimaryButton>
-        </div>
-      </div>
-    );
-  };
-
-  const renderTest = () => {
-    const score = testAnswers.reduce((acc, answer, index) =>
-      answer === TEST_QUESTIONS[index].correct ? acc + 1 : acc, 0
-    );
-    const allAnswered = testAnswers.every(a => a !== -1);
-    const passed = score >= 7;
-
-    if (showTestResults) {
-      return (
-        <div className="bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl p-8">
-          <h2 className="text-2xl font-bold text-white mb-6 text-center">
-            Test Results
-          </h2>
-
-          <div className={`text-center p-8 rounded-xl mb-6 ${passed ? 'bg-green-500/20' : 'bg-red-500/20'}`}>
-            <div className="text-6xl mb-4">{passed ? '🎉' : '📚'}</div>
-            <p className={`text-3xl font-bold ${passed ? 'text-green-400' : 'text-red-400'}`}>
-              {score} / {TEST_QUESTIONS.length}
-            </p>
-            <p className="text-slate-300 mt-2">
-              {passed ? 'Congratulations! You passed!' : 'Keep learning! You need 70% to pass.'}
-            </p>
-          </div>
-
-          {/* Review answers */}
-          <div className="space-y-3 mb-6 max-h-64 overflow-y-auto">
-            {TEST_QUESTIONS.map((q, index) => (
-              <div
-                key={index}
-                className={`p-3 rounded-lg ${
-                  testAnswers[index] === q.correct ? 'bg-green-500/10' : 'bg-red-500/10'
-                }`}
-              >
-                <p className="text-sm text-slate-300">Q{index + 1}: {q.question}</p>
-                <p className={`text-xs mt-1 ${
-                  testAnswers[index] === q.correct ? 'text-green-400' : 'text-red-400'
-                }`}>
-                  {testAnswers[index] === q.correct ? '✓ Correct' : `✗ Correct: ${q.options[q.correct]}`}
-                </p>
-              </div>
-            ))}
-          </div>
-
-          <div className="flex justify-center">
-            {passed ? (
-              <PrimaryButton onMouseDown={nextPhase}>
-                Complete Mastery →
-              </PrimaryButton>
-            ) : (
-              <PrimaryButton onMouseDown={() => {
-                setTestAnswers(Array(10).fill(-1));
-                setShowTestResults(false);
-              }}>
-                Try Again
-              </PrimaryButton>
-            )}
-          </div>
-        </div>
-      );
-    }
-
-    return (
-      <div className="bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl p-8">
-        <h2 className="text-2xl font-bold text-white mb-2 text-center">
-          Knowledge Test
-        </h2>
-        <p className="text-slate-400 text-center mb-6">
-          Answer all 10 questions (70% to pass)
-        </p>
-
-        <div className="space-y-6 max-h-96 overflow-y-auto mb-6">
-          {TEST_QUESTIONS.map((q, qIndex) => (
-            <div key={qIndex} className="bg-slate-700/30 rounded-xl p-4">
-              <p className="text-white font-medium mb-3">
-                {qIndex + 1}. {q.question}
-              </p>
-              <div className="space-y-2">
-                {q.options.map((option, oIndex) => (
-                  <button
-                    key={oIndex}
-                    onMouseDown={(e) => {
-                      e.preventDefault();
-                      handleTestAnswer(qIndex, oIndex);
-                    }}
-                    className={`w-full p-3 rounded-lg text-left text-sm transition-all ${
-                      testAnswers[qIndex] === oIndex
-                        ? testAnswers[qIndex] === q.correct
-                          ? 'bg-green-500/20 border border-green-500 text-green-300'
-                          : 'bg-red-500/20 border border-red-500 text-red-300'
-                        : 'bg-slate-600/50 text-slate-300 hover:bg-slate-600'
-                    }`}
-                  >
-                    {option}
-                  </button>
-                ))}
-              </div>
+      <div style={{ position: 'relative', width: '100%', maxWidth: '700px', margin: '0 auto' }}>
+        <div style={{
+          position: 'absolute',
+          top: isMobile ? '8px' : '12px',
+          right: isMobile ? '8px' : '12px',
+          background: 'rgba(15, 23, 42, 0.95)',
+          borderRadius: '8px',
+          padding: isMobile ? '8px' : '12px',
+          border: `1px solid ${colors.border}`,
+          zIndex: 10
+        }}>
+          <p style={{ fontSize: '10px', fontWeight: 700, color: colors.textMuted, marginBottom: '6px', textTransform: 'uppercase' }}>Legend</p>
+          {legendItems.map((item, i) => (
+            <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '3px' }}>
+              <div style={{ width: '10px', height: '10px', borderRadius: '2px', background: item.color, flexShrink: 0 }} />
+              <span style={{ fontSize: '10px', color: colors.textSecondary }}>{item.label}</span>
             </div>
           ))}
         </div>
 
-        <div className="flex justify-center">
-          <PrimaryButton
-            onMouseDown={() => setShowTestResults(true)}
-            disabled={!allAnswered}
-          >
-            {allAnswered ? 'Submit Answers' : `Answer all questions (${testAnswers.filter(a => a !== -1).length}/${TEST_QUESTIONS.length})`}
-          </PrimaryButton>
-        </div>
+        <svg viewBox={`0 0 ${width} ${height}`} preserveAspectRatio="xMidYMid meet" style={{ width: '100%', height: 'auto', display: 'block' }}>
+          <defs>
+            <linearGradient id="streamGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor={colors.stream} />
+              <stop offset="100%" stopColor={colors.droplet} />
+            </linearGradient>
+            <linearGradient id="honeyGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor={colors.honey} />
+              <stop offset="100%" stopColor={colors.honeyDark} />
+            </linearGradient>
+            <radialGradient id="dropletGradient" cx="30%" cy="30%" r="70%">
+              <stop offset="0%" stopColor={colors.primaryLight} />
+              <stop offset="100%" stopColor={colors.droplet} />
+            </radialGradient>
+          </defs>
+
+          <rect x="0" y="0" width={width} height={height} fill={colors.bgDark} rx="12" />
+
+          <text x={width / 2} y="28" textAnchor="middle" fill={colors.textPrimary} fontSize={isMobile ? 16 : 20} fontWeight="bold">
+            {showViscosity ? 'Viscosity Effect on Breakup' : 'Rayleigh-Plateau Instability'}
+          </text>
+          <text x={width / 2} y="48" textAnchor="middle" fill={colors.textSecondary} fontSize={isMobile ? 11 : 14}>
+            {showViscosity ? 'Compare water vs honey breakup patterns' : 'Liquid jets break into droplets'}
+          </text>
+
+          {showViscosity ? (
+            // Viscosity comparison view
+            <>
+              {/* Water column */}
+              <g transform={`translate(${width * 0.25}, 0)`}>
+                {/* Faucet */}
+                <rect x="-20" y="60" width="40" height="25" fill="#64748b" rx="4" />
+                <rect x="-10" y="80" width="20" height="15" fill="#475569" rx="2" />
+
+                {/* Continuous stream */}
+                <rect x="-5" y="95" width="10" height="35" fill="url(#streamGradient)" rx="5" />
+
+                {/* Necking region */}
+                <path
+                  d={`M -5 130 Q -3 ${140 + neckingAmplitude}, -5 150 L 5 150 Q 7 ${140 - neckingAmplitude}, 5 130 Z`}
+                  fill="url(#streamGradient)"
+                />
+
+                {/* Droplets - fast clean breakup */}
+                {[0, 1, 2, 3, 4].map(i => {
+                  const baseY = 160 + i * 28;
+                  const y = baseY + ((animTime * breakupSpeed * 50) % 28);
+                  if (y > height - 60) return null;
+                  return (
+                    <circle
+                      key={i}
+                      cx={0}
+                      cy={y}
+                      r={10}
+                      fill="url(#dropletGradient)"
+                    />
+                  );
+                })}
+
+                <text x="0" y={height - 25} textAnchor="middle" fill={colors.water} fontSize="12" fontWeight="600">
+                  Water (Low η)
+                </text>
+                <text x="0" y={height - 10} textAnchor="middle" fill={colors.textMuted} fontSize="10">
+                  Clean, fast breakup
+                </text>
+              </g>
+
+              {/* Honey column */}
+              <g transform={`translate(${width * 0.75}, 0)`}>
+                {/* Faucet */}
+                <rect x="-20" y="60" width="40" height="25" fill="#64748b" rx="4" />
+                <rect x="-10" y="80" width="20" height="15" fill="#475569" rx="2" />
+
+                {/* Long continuous stream with beads forming */}
+                <rect x="-4" y="95" width="8" height={100 + Math.sin(animTime * 0.5) * 10} fill="url(#honeyGradient)" rx="4" />
+
+                {/* Beads on string */}
+                {[0, 1, 2].map(i => {
+                  const y = 120 + i * 40 + (animTime * 5 % 40);
+                  if (y > 195) return null;
+                  const size = 8 + Math.sin(animTime + i) * 2;
+                  return (
+                    <circle
+                      key={i}
+                      cx={0}
+                      cy={y}
+                      r={size}
+                      fill="url(#honeyGradient)"
+                    />
+                  );
+                })}
+
+                {/* Eventual droplet */}
+                <circle
+                  cx={0}
+                  cy={220 + ((animTime * 10) % 50)}
+                  r={12}
+                  fill="url(#honeyGradient)"
+                  opacity={animTime % 3 > 1.5 ? 1 : 0}
+                />
+
+                <text x="0" y={height - 25} textAnchor="middle" fill={colors.honey} fontSize="12" fontWeight="600">
+                  Honey (High η)
+                </text>
+                <text x="0" y={height - 10} textAnchor="middle" fill={colors.textMuted} fontSize="10">
+                  Beads on a string
+                </text>
+              </g>
+            </>
+          ) : (
+            // Main breakup visualization
+            <>
+              {/* Faucet */}
+              <rect x={width / 2 - 30} y="60" width="60" height="30" fill="#64748b" rx="6" />
+              <rect x={width / 2 - 15} y="85" width="30" height="20" fill="#475569" rx="3" />
+
+              {/* Continuous stream section */}
+              <rect
+                x={width / 2 - 8}
+                y="105"
+                width="16"
+                height="50"
+                fill="url(#streamGradient)"
+                rx="8"
+              />
+
+              {/* Necking region with animated perturbations */}
+              <path
+                d={`M ${width / 2 - 8} 155
+                    Q ${width / 2 - 6 + Math.sin(animTime * 3) * neckingAmplitude} 175, ${width / 2 - 8} 195
+                    Q ${width / 2 - 10 - Math.sin(animTime * 3 + 1) * neckingAmplitude} 215, ${width / 2 - 6} 230
+                    L ${width / 2 + 6} 230
+                    Q ${width / 2 + 10 + Math.sin(animTime * 3 + 1) * neckingAmplitude} 215, ${width / 2 + 8} 195
+                    Q ${width / 2 + 6 - Math.sin(animTime * 3) * neckingAmplitude} 175, ${width / 2 + 8} 155
+                    Z`}
+                fill="url(#streamGradient)"
+              />
+
+              {/* Droplets */}
+              {[0, 1, 2, 3].map(i => {
+                const baseY = 245 + i * dropletSpacing;
+                const y = baseY + ((animTime * breakupSpeed * 30) % dropletSpacing);
+                if (y > height - 40) return null;
+                const dropletSize = 10 - i * 0.5;
+                return (
+                  <circle
+                    key={i}
+                    cx={width / 2}
+                    cy={y}
+                    r={dropletSize}
+                    fill="url(#dropletGradient)"
+                  />
+                );
+              })}
+
+              {/* Labels */}
+              <g transform={`translate(${width / 2 + 60}, 120)`}>
+                <text fill={colors.textMuted} fontSize="11">← Stable stream</text>
+              </g>
+              <g transform={`translate(${width / 2 + 60}, 190)`}>
+                <text fill={colors.textMuted} fontSize="11">← Necking forms</text>
+              </g>
+              <g transform={`translate(${width / 2 + 60}, 260)`}>
+                <text fill={colors.textMuted} fontSize="11">← Droplets break off</text>
+              </g>
+
+              {/* Surface area comparison inset */}
+              <g transform={`translate(${isMobile ? 15 : 40}, ${height - 100})`}>
+                <rect width={isMobile ? 90 : 110} height="75" fill={colors.bgCard} rx="8" />
+                <text x={isMobile ? 45 : 55} y="18" textAnchor="middle" fill={colors.textSecondary} fontSize="10" fontWeight="600">
+                  Surface Area
+                </text>
+
+                {/* Cylinder */}
+                <rect x="12" y="28" width="25" height="14" fill={colors.textMuted} rx="3" />
+                <text x="50" y="38" fill={colors.textMuted} fontSize="9">Cylinder</text>
+
+                {/* Arrow */}
+                <text x={isMobile ? 45 : 55} y="55" textAnchor="middle" fill={colors.success} fontSize="11">↓ less!</text>
+
+                {/* Spheres */}
+                <circle cx="20" cy="62" r="8" fill={colors.droplet} />
+                <circle cx="40" cy="65" r="6" fill={colors.droplet} />
+                <text x="55" y="66" fill={colors.droplet} fontSize="9">Spheres</text>
+              </g>
+            </>
+          )}
+
+          {/* Formula */}
+          <g transform={`translate(${isMobile ? 15 : 25}, ${height - 25})`}>
+            <text fill={colors.textSecondary} fontSize={isMobile ? 9 : 11}>
+              Most unstable wavelength: <tspan fill={colors.primaryLight}>λ ≈ 9r</tspan> (9× jet radius)
+            </text>
+          </g>
+        </svg>
       </div>
     );
   };
 
-  const renderMastery = () => (
-    <div className="bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl p-8 text-center">
-      <div className="text-7xl mb-6">🏆</div>
-      <h1 className="text-3xl font-bold text-white mb-4">
-        Rayleigh-Plateau Master!
-      </h1>
-      <p className="text-xl text-slate-300 mb-6">
-        You now understand why liquid streams break into droplets!
-      </p>
+  // ============================================================
+  // BOTTOM BAR
+  // ============================================================
 
-      <div className="bg-slate-700/30 rounded-xl p-6 mb-6">
-        <h3 className="text-lg font-semibold text-indigo-400 mb-4">Key Takeaways</h3>
-        <ul className="text-left text-slate-300 space-y-2">
-          <li>• Surface tension drives breakup toward minimum surface area</li>
-          <li>• Spheres have minimum surface area for a given volume</li>
-          <li>• Viscosity slows breakup and creates complex patterns</li>
-          <li>• This instability powers inkjets, sprays, and manufacturing</li>
-        </ul>
+  const renderBottomBar = (showBack: boolean, canProceed: boolean, nextLabel: string, onNext?: () => void) => {
+    const handleNext = () => {
+      if (!canProceed) return;
+      playSound('click');
+      if (onNext) onNext();
+      else {
+        const currentIndex = validPhases.indexOf(phase);
+        if (currentIndex < validPhases.length - 1) goToPhase(validPhases[currentIndex + 1]);
+      }
+    };
+
+    const handleBack = () => {
+      playSound('click');
+      const currentIndex = validPhases.indexOf(phase);
+      if (currentIndex > 0) goToPhase(validPhases[currentIndex - 1]);
+    };
+
+    return (
+      <div style={{
+        position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 1000, minHeight: '72px',
+        background: colors.bgCard, borderTop: `1px solid ${colors.border}`,
+        boxShadow: '0 -4px 20px rgba(0,0,0,0.5)', padding: '12px 20px',
+        display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '12px'
+      }}>
+        {showBack ? (
+          <button onClick={handleBack} style={{
+            padding: '12px 20px', borderRadius: '12px', border: `1px solid ${colors.border}`,
+            backgroundColor: colors.bgCardLight, color: colors.textSecondary, fontSize: '14px', fontWeight: 600, cursor: 'pointer', minHeight: '48px'
+          }}>← Back</button>
+        ) : <div />}
+
+        {canProceed ? (
+          <button onClick={handleNext} style={{
+            padding: '14px 28px', borderRadius: '12px', border: 'none',
+            background: `linear-gradient(135deg, ${colors.primary} 0%, ${colors.accent} 100%)`,
+            color: 'white', fontSize: '16px', fontWeight: 700, cursor: 'pointer', minHeight: '52px', minWidth: '160px',
+            boxShadow: `0 4px 15px ${colors.primary}40`
+          }}>{nextLabel}</button>
+        ) : (
+          <div style={{
+            padding: '14px 28px', borderRadius: '12px', backgroundColor: colors.bgCardLight,
+            color: colors.textMuted, fontSize: '14px', minHeight: '52px', display: 'flex', alignItems: 'center'
+          }}>Select an option above</div>
+        )}
       </div>
-
-      <div className="grid grid-cols-2 gap-4 mb-6">
-        <div className="bg-indigo-500/20 rounded-xl p-4">
-          <p className="text-3xl font-bold text-indigo-400">4</p>
-          <p className="text-sm text-slate-400">Applications Mastered</p>
-        </div>
-        <div className="bg-purple-500/20 rounded-xl p-4">
-          <p className="text-3xl font-bold text-purple-400">10</p>
-          <p className="text-sm text-slate-400">Questions Completed</p>
-        </div>
-      </div>
-
-      <p className="text-slate-400 text-sm">
-        Next time you see a water stream breaking up, you&apos;ll know the physics!
-      </p>
-    </div>
-  );
-
-  // ─── Main Render ───────────────────────────────────────────────────────────
-  const renderPhase = () => {
-    switch (phase) {
-      case 0: return renderHook();
-      case 1: return renderPredict();
-      case 2: return renderPlay();
-      case 3: return renderReview();
-      case 4: return renderTwistPredict();
-      case 5: return renderTwistPlay();
-      case 6: return renderTwistReview();
-      case 7: return renderTransfer();
-      case 8: return renderTest();
-      case 9: return renderMastery();
-      default: return null;
-    }
+    );
   };
 
-  return (
-    <div className="min-h-screen bg-[#0a0f1a] relative overflow-hidden">
-      {/* Premium gradient background layers */}
-      <div className="absolute inset-0 bg-gradient-to-br from-indigo-950/30 via-slate-900 to-slate-950" />
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-indigo-900/20 via-transparent to-transparent" />
+  // ============================================================
+  // PHASES
+  // ============================================================
 
-      {/* Ambient glow effects */}
-      <div className="absolute top-1/4 -left-32 w-96 h-96 bg-indigo-500/10 rounded-full blur-3xl" />
-      <div className="absolute bottom-1/4 -right-32 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl" />
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-indigo-500/5 rounded-full blur-3xl" />
-
-      {/* Premium Progress bar */}
-      <div className="fixed top-0 left-0 right-0 z-50 bg-slate-900/80 backdrop-blur-xl border-b border-slate-700/50">
-        <div className="flex items-center justify-between px-4 py-3 max-w-4xl mx-auto">
-          <span className="text-sm font-medium text-slate-400">Droplet Breakup</span>
-          <div className="flex gap-1.5">
-            {PHASES.map((p) => (
-              <button
-                key={p}
-                onMouseDown={(e) => { e.preventDefault(); goToPhase(p); }}
-                className={`h-2 rounded-full transition-all duration-300 ${
-                  phase === p ? 'bg-indigo-400 w-6' : phase > p ? 'bg-indigo-500 w-2' : 'bg-slate-600 w-2'
-                }`}
-                title={phaseLabels[p]}
-              />
-            ))}
+  if (phase === 'hook') {
+    return (
+      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', background: `linear-gradient(180deg, ${colors.bgGradientStart} 0%, ${colors.bgGradientEnd} 100%)`, overflow: 'hidden' }}>
+        <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', WebkitOverflowScrolling: 'touch', paddingBottom: '100px' }}>
+          <div style={{ maxWidth: '800px', margin: '0 auto', padding: '20px', textAlign: 'center' }}>
+            <div style={{ fontSize: isMobile ? '80px' : '120px', marginBottom: '20px' }}>🚿</div>
+            <h1 style={{ fontSize: isMobile ? '28px' : '40px', fontWeight: 800, color: colors.textPrimary, marginBottom: '16px' }}>
+              The Breaking Stream Mystery
+            </h1>
+            <p style={{ fontSize: isMobile ? '16px' : '20px', color: colors.textSecondary, marginBottom: '32px', maxWidth: '600px', margin: '0 auto 32px auto', lineHeight: 1.6 }}>
+              Turn on a faucet and watch closely. The smooth water stream <strong style={{ color: colors.primaryLight }}>spontaneously breaks into droplets</strong>. What invisible force causes this?
+            </p>
+            <div style={{ background: colors.bgCard, borderRadius: '20px', padding: '24px', marginBottom: '24px', border: `1px solid ${colors.border}` }}>
+              <div style={{ display: 'flex', justifyContent: 'center', gap: '40px', flexWrap: 'wrap' }}>
+                <div style={{ textAlign: 'center' }}>
+                  <div style={{ fontSize: '48px', marginBottom: '8px' }}>💧</div>
+                  <p style={{ color: colors.textSecondary, fontSize: '14px' }}>Smooth stream</p>
+                  <p style={{ color: colors.textMuted, fontSize: '12px' }}>starts as cylinder</p>
+                </div>
+                <div style={{ textAlign: 'center', fontSize: '32px', color: colors.primary, paddingTop: '20px' }}>→</div>
+                <div style={{ textAlign: 'center' }}>
+                  <div style={{ fontSize: '48px', marginBottom: '8px' }}>💦</div>
+                  <p style={{ color: colors.textSecondary, fontSize: '14px' }}>Breaks into droplets</p>
+                  <p style={{ color: colors.success, fontSize: '12px' }}>becomes spheres</p>
+                </div>
+              </div>
+            </div>
+            <p style={{ fontSize: '14px', color: colors.textMuted, fontStyle: 'italic' }}>
+              Discover the <strong style={{ color: colors.primaryLight }}>Rayleigh-Plateau instability</strong>
+            </p>
           </div>
-          <span className="text-sm text-slate-500">{phaseLabels[phase]}</span>
         </div>
+        {renderBottomBar(false, true, "Let's Explore →")}
       </div>
+    );
+  }
 
-      {/* Content wrapper */}
-      <div className="relative z-10 pt-16 pb-8 px-6">
-        <div className="max-w-2xl mx-auto">
-          {renderPhase()}
+  if (phase === 'predict') {
+    const predictions = [
+      { id: 'cylinder', label: 'Cylinder has minimum surface area', icon: '▬' },
+      { id: 'cube', label: 'Cube has minimum surface area', icon: '⬜' },
+      { id: 'sphere', label: 'Sphere has minimum surface area', icon: '⚪' },
+      { id: 'cone', label: 'Cone has minimum surface area', icon: '△' }
+    ];
+
+    return (
+      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', background: `linear-gradient(180deg, ${colors.bgGradientStart} 0%, ${colors.bgGradientEnd} 100%)`, overflow: 'hidden' }}>
+        <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', WebkitOverflowScrolling: 'touch', paddingBottom: '100px' }}>
+          <div style={{ maxWidth: '800px', margin: '0 auto', padding: '20px' }}>
+            <div style={{ textAlign: 'center', marginBottom: '16px' }}>
+              <p style={{ color: colors.primary, fontSize: '12px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '8px' }}>Step 1 • Make a Prediction</p>
+              <h2 style={{ fontSize: isMobile ? '22px' : '28px', fontWeight: 700, color: colors.textPrimary }}>Water Stream Breakup</h2>
+            </div>
+
+            <div style={{ width: '100%', maxWidth: '700px', margin: '0 auto 20px auto', aspectRatio: '16/10', background: colors.bgCard, borderRadius: '16px', border: `1px solid ${colors.border}`, overflow: 'hidden' }}>
+              {renderVisualization(false)}
+            </div>
+
+            <div style={{ background: colors.bgCard, borderRadius: '12px', padding: '16px', marginBottom: '20px', border: `1px solid ${colors.border}` }}>
+              <h3 style={{ color: colors.textPrimary, fontSize: '15px', fontWeight: 700, marginBottom: '8px' }}>📋 What You're Looking At:</h3>
+              <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.6, margin: 0 }}>
+                A <strong style={{ color: colors.stream }}>water stream</strong> flows from a faucet. The <span style={{ color: colors.textMuted }}>necking region</span> shows where perturbations grow.
+                Below that, <strong style={{ color: colors.droplet }}>droplets</strong> form and fall. Surface tension wants to minimize surface area — that's why this happens!
+              </p>
+            </div>
+
+            <div style={{ marginBottom: '20px' }}>
+              <h3 style={{ color: colors.textPrimary, fontSize: '18px', fontWeight: 700, marginBottom: '12px' }}>🤔 For the same volume, which shape has minimum surface area?</h3>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                {predictions.map(p => (
+                  <button key={p.id} onClick={() => { setPrediction(p.id); playSound('click'); }} style={{
+                    padding: '16px', borderRadius: '12px',
+                    border: prediction === p.id ? `2px solid ${colors.primary}` : `1px solid ${colors.border}`,
+                    backgroundColor: prediction === p.id ? `${colors.primary}20` : colors.bgCard,
+                    cursor: 'pointer', textAlign: 'left', display: 'flex', alignItems: 'center', gap: '12px'
+                  }}>
+                    <span style={{ fontSize: '24px' }}>{p.icon}</span>
+                    <span style={{ color: colors.textPrimary, fontSize: '14px', flex: 1 }}>{p.label}</span>
+                    {prediction === p.id && <span style={{ color: colors.primary, fontSize: '20px', fontWeight: 700 }}>✓</span>}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {prediction && (
+              <div style={{ background: `linear-gradient(135deg, ${colors.primary}15 0%, ${colors.accent}15 100%)`, borderRadius: '12px', padding: '16px', border: `1px solid ${colors.primary}30` }}>
+                <p style={{ color: colors.textSecondary, fontSize: '14px', marginBottom: '12px' }}>💭 Why do you think this? <span style={{ color: colors.textMuted }}>(Optional)</span></p>
+                <textarea placeholder="Share your reasoning..." style={{ width: '100%', minHeight: '60px', padding: '12px', borderRadius: '8px', background: colors.bgCard, border: `1px solid ${colors.border}`, color: colors.textPrimary, fontSize: '14px', resize: 'vertical' }} />
+              </div>
+            )}
+          </div>
+        </div>
+        {renderBottomBar(true, !!prediction, 'Test My Prediction →')}
+      </div>
+    );
+  }
+
+  if (phase === 'play') {
+    return (
+      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', background: `linear-gradient(180deg, ${colors.bgGradientStart} 0%, ${colors.bgGradientEnd} 100%)`, overflow: 'hidden' }}>
+        <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', WebkitOverflowScrolling: 'touch', paddingBottom: '100px' }}>
+          <div style={{ maxWidth: '800px', margin: '0 auto', padding: '20px' }}>
+            <div style={{ textAlign: 'center', marginBottom: '16px' }}>
+              <p style={{ color: colors.primary, fontSize: '12px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '8px' }}>Step 2 • Experiment</p>
+              <h2 style={{ fontSize: isMobile ? '22px' : '28px', fontWeight: 700, color: colors.textPrimary }}>Adjust Flow Rate</h2>
+            </div>
+
+            <div style={{ width: '100%', maxWidth: '700px', margin: '0 auto 20px auto', background: colors.bgCard, borderRadius: '16px', border: `1px solid ${colors.border}`, overflow: 'hidden' }}>
+              {renderVisualization(true)}
+            </div>
+
+            <div style={{ background: colors.bgCard, borderRadius: '12px', padding: '20px', marginBottom: '20px', border: `1px solid ${colors.border}` }}>
+              <h3 style={{ color: colors.textPrimary, fontSize: '16px', fontWeight: 700, marginBottom: '16px' }}>🎮 Controls</h3>
+
+              <div style={{ marginBottom: '20px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                  <span style={{ color: colors.textMuted, fontSize: '13px' }}>Slow (20%)</span>
+                  <span style={{ color: colors.textPrimary, fontSize: '14px', fontWeight: 700 }}>Flow Rate: {flowRate}%</span>
+                  <span style={{ color: colors.primary, fontSize: '13px' }}>Fast (100%)</span>
+                </div>
+                <input type="range" min="20" max="100" step="5" value={flowRate} onChange={(e) => setFlowRate(Number(e.target.value))} style={{ width: '100%', height: '8px', borderRadius: '4px', cursor: 'pointer' }} />
+                <p style={{ color: colors.textMuted, fontSize: '12px', textAlign: 'center', marginTop: '8px' }}>
+                  {flowRate < 40 ? 'Slow flow - droplets form close together' : flowRate < 70 ? 'Medium flow - classic breakup pattern' : 'Fast flow - longer stream before breakup'}
+                </p>
+              </div>
+            </div>
+
+            <div style={{ background: `linear-gradient(135deg, ${colors.primary}15 0%, ${colors.bgCard} 100%)`, borderRadius: '12px', padding: '16px', border: `1px solid ${colors.primary}40` }}>
+              <h4 style={{ color: colors.textPrimary, fontSize: '14px', fontWeight: 700, marginBottom: '8px' }}>👀 What's Happening:</h4>
+              <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.6, margin: 0 }}>
+                <strong style={{ color: colors.primary }}>Surface tension</strong> acts like a stretched membrane, always trying to minimize surface area.
+                A cylinder has ~15% more surface area than spheres of the same total volume — so the stream <strong>spontaneously breaks up</strong>!
+              </p>
+            </div>
+          </div>
+        </div>
+        {renderBottomBar(true, true, 'See the Results →')}
+      </div>
+    );
+  }
+
+  if (phase === 'review') {
+    const wasCorrect = prediction === 'sphere';
+
+    return (
+      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', background: `linear-gradient(180deg, ${colors.bgGradientStart} 0%, ${colors.bgGradientEnd} 100%)`, overflow: 'hidden' }}>
+        <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', WebkitOverflowScrolling: 'touch', paddingBottom: '100px' }}>
+          <div style={{ maxWidth: '800px', margin: '0 auto', padding: '20px' }}>
+            <div style={{ textAlign: 'center', padding: '24px', background: wasCorrect ? `${colors.success}15` : `${colors.primary}15`, borderRadius: '16px', marginBottom: '24px', border: `1px solid ${wasCorrect ? colors.success : colors.primary}40` }}>
+              <div style={{ fontSize: '48px', marginBottom: '12px' }}>{wasCorrect ? '🎯' : '💡'}</div>
+              <h2 style={{ fontSize: isMobile ? '22px' : '28px', fontWeight: 700, color: wasCorrect ? colors.success : colors.primaryLight, marginBottom: '8px' }}>
+                {wasCorrect ? 'Excellent Prediction!' : 'Great Learning Moment!'}
+              </h2>
+              <p style={{ color: colors.textSecondary, fontSize: '14px' }}>Spheres have the minimum surface area for any given volume!</p>
+            </div>
+
+            <div style={{ background: colors.bgCard, borderRadius: '16px', padding: '24px', marginBottom: '24px', border: `1px solid ${colors.border}` }}>
+              <h3 style={{ color: colors.textPrimary, fontSize: '18px', fontWeight: 700, marginBottom: '16px' }}>🔬 The Rayleigh-Plateau Instability</h3>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                {[
+                  { num: 1, title: 'Surface Tension Minimization', desc: 'Surface tension acts like a membrane trying to contract. Spheres have minimum surface area.', color: colors.primary },
+                  { num: 2, title: 'Instability Growth', desc: 'Any tiny perturbation with wavelength > πd grows exponentially until breakup.', color: colors.accent },
+                  { num: 3, title: 'Characteristic Scale', desc: 'The most unstable wavelength is λ ≈ 9r, determining droplet spacing.', color: colors.success }
+                ].map(item => (
+                  <div key={item.num} style={{ display: 'flex', gap: '16px', alignItems: 'flex-start' }}>
+                    <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: `linear-gradient(135deg, ${item.color} 0%, ${colors.primaryDark} 100%)`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 700, flexShrink: 0 }}>{item.num}</div>
+                    <div>
+                      <h4 style={{ color: colors.textPrimary, fontSize: '15px', fontWeight: 600, marginBottom: '4px' }}>{item.title}</h4>
+                      <p style={{ color: colors.textSecondary, fontSize: '14px', margin: 0 }}>{item.desc}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div style={{ background: `linear-gradient(135deg, ${colors.primary}20 0%, ${colors.accent}20 100%)`, borderRadius: '12px', padding: '16px', border: `1px solid ${colors.primary}40` }}>
+              <h4 style={{ color: colors.primaryLight, fontSize: '14px', fontWeight: 700, marginBottom: '8px' }}>📐 The Math</h4>
+              <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.6, margin: 0 }}>
+                For the same volume, a sphere has <strong style={{ color: colors.success }}>~15% less surface area</strong> than a cylinder.
+                Surface tension energy E ∝ Area, so breaking into spheres <strong>releases energy</strong> — it's thermodynamically favored!
+              </p>
+            </div>
+          </div>
+        </div>
+        {renderBottomBar(true, true, 'Try a Twist →')}
+      </div>
+    );
+  }
+
+  if (phase === 'twist_predict') {
+    const predictions = [
+      { id: 'faster', label: 'Breakup happens much faster', icon: '⚡' },
+      { id: 'same', label: 'Breakup happens exactly the same way', icon: '🟰' },
+      { id: 'slower', label: 'Breakup is slower, creating "beads on a string"', icon: '🧵' },
+      { id: 'never', label: 'No breakup occurs — it stays as a stream', icon: '❌' }
+    ];
+
+    return (
+      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', background: `linear-gradient(180deg, ${colors.bgGradientStart} 0%, ${colors.bgGradientEnd} 100%)`, overflow: 'hidden' }}>
+        <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', WebkitOverflowScrolling: 'touch', paddingBottom: '100px' }}>
+          <div style={{ maxWidth: '800px', margin: '0 auto', padding: '20px' }}>
+            <div style={{ textAlign: 'center', marginBottom: '16px' }}>
+              <p style={{ color: colors.accent, fontSize: '12px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '8px' }}>🔄 Twist • Viscosity</p>
+              <h2 style={{ fontSize: isMobile ? '22px' : '28px', fontWeight: 700, color: colors.textPrimary }}>What About Honey?</h2>
+            </div>
+
+            <div style={{ background: colors.bgCard, borderRadius: '16px', padding: '24px', marginBottom: '20px', border: `1px solid ${colors.border}` }}>
+              <div style={{ display: 'flex', justifyContent: 'center', gap: '60px', flexWrap: 'wrap' }}>
+                <div style={{ textAlign: 'center' }}>
+                  <div style={{ fontSize: '40px', marginBottom: '8px' }}>💧</div>
+                  <p style={{ color: colors.water, fontWeight: 600 }}>Water</p>
+                  <p style={{ color: colors.textMuted, fontSize: '12px' }}>η ≈ 1 cP</p>
+                </div>
+                <div style={{ textAlign: 'center' }}>
+                  <div style={{ fontSize: '40px', marginBottom: '8px' }}>🍯</div>
+                  <p style={{ color: colors.honey, fontWeight: 600 }}>Honey</p>
+                  <p style={{ color: colors.textMuted, fontSize: '12px' }}>η ≈ 10,000 cP</p>
+                </div>
+              </div>
+            </div>
+
+            <div style={{ background: colors.bgCard, borderRadius: '12px', padding: '16px', marginBottom: '20px', border: `1px solid ${colors.border}` }}>
+              <h3 style={{ color: colors.textPrimary, fontSize: '15px', fontWeight: 700, marginBottom: '8px' }}>📋 The Question:</h3>
+              <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.6, margin: 0 }}>
+                How does a thick, viscous fluid like <strong style={{ color: colors.honey }}>honey</strong> break up compared to <strong style={{ color: colors.water }}>water</strong>?
+              </p>
+            </div>
+
+            <div style={{ marginBottom: '20px' }}>
+              <h3 style={{ color: colors.textPrimary, fontSize: '18px', fontWeight: 700, marginBottom: '12px' }}>🤔 How does viscosity affect breakup?</h3>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                {predictions.map(p => (
+                  <button key={p.id} onClick={() => { setTwistPrediction(p.id); playSound('click'); }} style={{
+                    padding: '16px', borderRadius: '12px',
+                    border: twistPrediction === p.id ? `2px solid ${colors.accent}` : `1px solid ${colors.border}`,
+                    backgroundColor: twistPrediction === p.id ? `${colors.accent}20` : colors.bgCard,
+                    cursor: 'pointer', textAlign: 'left', display: 'flex', alignItems: 'center', gap: '12px'
+                  }}>
+                    <span style={{ fontSize: '24px' }}>{p.icon}</span>
+                    <span style={{ color: colors.textPrimary, fontSize: '14px', flex: 1 }}>{p.label}</span>
+                    {twistPrediction === p.id && <span style={{ color: colors.accent, fontSize: '20px', fontWeight: 700 }}>✓</span>}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+        {renderBottomBar(true, !!twistPrediction, 'See the Answer →')}
+      </div>
+    );
+  }
+
+  if (phase === 'twist_play') {
+    return (
+      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', background: `linear-gradient(180deg, ${colors.bgGradientStart} 0%, ${colors.bgGradientEnd} 100%)`, overflow: 'hidden' }}>
+        <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', WebkitOverflowScrolling: 'touch', paddingBottom: '100px' }}>
+          <div style={{ maxWidth: '800px', margin: '0 auto', padding: '20px' }}>
+            <div style={{ textAlign: 'center', marginBottom: '16px' }}>
+              <p style={{ color: colors.accent, fontSize: '12px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '8px' }}>🔄 Twist • Compare</p>
+              <h2 style={{ fontSize: isMobile ? '22px' : '28px', fontWeight: 700, color: colors.textPrimary }}>Water vs Honey Breakup</h2>
+            </div>
+
+            <div style={{ width: '100%', maxWidth: '700px', margin: '0 auto 20px auto', background: colors.bgCard, borderRadius: '16px', border: `1px solid ${colors.border}`, overflow: 'hidden' }}>
+              {renderVisualization(false, true)}
+            </div>
+
+            <div style={{ background: colors.bgCard, borderRadius: '12px', padding: '20px', marginBottom: '20px', border: `1px solid ${colors.border}` }}>
+              <h3 style={{ color: colors.textPrimary, fontSize: '16px', fontWeight: 700, marginBottom: '16px' }}>🎮 Adjust Viscosity</h3>
+
+              <div style={{ marginBottom: '16px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                  <span style={{ color: colors.water, fontSize: '13px' }}>Water (1 cP)</span>
+                  <span style={{ color: colors.textPrimary, fontSize: '14px', fontWeight: 700 }}>
+                    {viscosity <= 3 ? 'Low' : viscosity <= 6 ? 'Medium' : 'High'} Viscosity
+                  </span>
+                  <span style={{ color: colors.honey, fontSize: '13px' }}>Honey (10000 cP)</span>
+                </div>
+                <input type="range" min="1" max="10" value={viscosity} onChange={(e) => setViscosity(Number(e.target.value))} style={{ width: '100%', height: '8px', borderRadius: '4px', cursor: 'pointer' }} />
+              </div>
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: '16px' }}>
+              <div style={{ background: `${colors.water}15`, borderRadius: '12px', padding: '16px', border: `1px solid ${colors.water}40` }}>
+                <h4 style={{ color: colors.water, fontSize: '14px', fontWeight: 700, marginBottom: '8px' }}>💧 Low Viscosity (Water)</h4>
+                <ul style={{ color: colors.textSecondary, fontSize: '13px', margin: 0, paddingLeft: '16px', lineHeight: 1.6 }}>
+                  <li>Fast, clean breakup</li>
+                  <li>Uniform droplets</li>
+                  <li>No connecting threads</li>
+                </ul>
+              </div>
+              <div style={{ background: `${colors.honey}15`, borderRadius: '12px', padding: '16px', border: `1px solid ${colors.honey}40` }}>
+                <h4 style={{ color: colors.honey, fontSize: '14px', fontWeight: 700, marginBottom: '8px' }}>🍯 High Viscosity (Honey)</h4>
+                <ul style={{ color: colors.textSecondary, fontSize: '13px', margin: 0, paddingLeft: '16px', lineHeight: 1.6 }}>
+                  <li>Slow, complex breakup</li>
+                  <li>"Beads on a string" pattern</li>
+                  <li>Satellite droplets form</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+        {renderBottomBar(true, true, 'Learn More →')}
+      </div>
+    );
+  }
+
+  if (phase === 'twist_review') {
+    const wasCorrect = twistPrediction === 'slower';
+
+    return (
+      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', background: `linear-gradient(180deg, ${colors.bgGradientStart} 0%, ${colors.bgGradientEnd} 100%)`, overflow: 'hidden' }}>
+        <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', WebkitOverflowScrolling: 'touch', paddingBottom: '100px' }}>
+          <div style={{ maxWidth: '800px', margin: '0 auto', padding: '20px' }}>
+            <div style={{ textAlign: 'center', padding: '24px', background: wasCorrect ? `${colors.success}15` : `${colors.primary}15`, borderRadius: '16px', marginBottom: '24px', border: `1px solid ${wasCorrect ? colors.success : colors.primary}40` }}>
+              <div style={{ fontSize: '48px', marginBottom: '12px' }}>{wasCorrect ? '🎯' : '💡'}</div>
+              <h2 style={{ fontSize: isMobile ? '22px' : '28px', fontWeight: 700, color: wasCorrect ? colors.success : colors.primaryLight, marginBottom: '8px' }}>
+                {wasCorrect ? 'Exactly Right!' : 'Now You Know!'}
+              </h2>
+              <p style={{ color: colors.textSecondary, fontSize: '14px' }}>High viscosity creates "beads on a string"!</p>
+            </div>
+
+            <div style={{ background: colors.bgCard, borderRadius: '16px', padding: '24px', marginBottom: '24px', border: `1px solid ${colors.border}` }}>
+              <h3 style={{ color: colors.textPrimary, fontSize: '18px', fontWeight: 700, marginBottom: '16px' }}>🍯 Why Viscosity Matters</h3>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                {[
+                  { num: 1, title: 'Resists Pinch-off', desc: 'Viscosity resists the flow needed to thin the neck. The fluid can\'t thin fast enough.', color: colors.honey },
+                  { num: 2, title: 'Creates Thin Threads', desc: 'Long thin filaments connect forming droplets — the "beads on a string" pattern.', color: colors.warning },
+                  { num: 3, title: 'Satellite Droplets', desc: 'When threads eventually break, they form small "satellite" droplets between main ones.', color: colors.primary }
+                ].map(item => (
+                  <div key={item.num} style={{ display: 'flex', gap: '16px', alignItems: 'flex-start' }}>
+                    <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: `linear-gradient(135deg, ${item.color} 0%, ${colors.primaryDark} 100%)`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 700, flexShrink: 0 }}>{item.num}</div>
+                    <div>
+                      <h4 style={{ color: colors.textPrimary, fontSize: '15px', fontWeight: 600, marginBottom: '4px' }}>{item.title}</h4>
+                      <p style={{ color: colors.textSecondary, fontSize: '14px', margin: 0 }}>{item.desc}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div style={{ background: `linear-gradient(135deg, ${colors.primary}20 0%, ${colors.accent}20 100%)`, borderRadius: '12px', padding: '16px', border: `1px solid ${colors.primary}40` }}>
+              <h4 style={{ color: colors.primaryLight, fontSize: '14px', fontWeight: 700, marginBottom: '8px' }}>📊 The Ohnesorge Number</h4>
+              <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.6, margin: 0 }}>
+                <strong style={{ fontFamily: 'monospace', color: colors.textPrimary }}>Oh = η / √(ρσr)</strong>
+                <br /><br />
+                This dimensionless number compares viscous forces to surface tension forces.
+                <strong style={{ color: colors.water }}> Low Oh</strong> → clean breakup.
+                <strong style={{ color: colors.honey }}> High Oh</strong> → slow breakup with filaments.
+              </p>
+            </div>
+          </div>
+        </div>
+        {renderBottomBar(true, true, 'See Real Applications →')}
+      </div>
+    );
+  }
+
+  // Transfer phase
+  if (phase === 'transfer') {
+    const app = realWorldApps[selectedApp];
+    const allCompleted = completedApps.every(c => c);
+
+    return (
+      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', background: `linear-gradient(180deg, ${colors.bgGradientStart} 0%, ${colors.bgGradientEnd} 100%)`, overflow: 'hidden' }}>
+        <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', WebkitOverflowScrolling: 'touch', paddingBottom: '100px' }}>
+          <div style={{ maxWidth: '800px', margin: '0 auto', padding: '20px' }}>
+            <div style={{ textAlign: 'center', marginBottom: '16px' }}>
+              <p style={{ color: colors.success, fontSize: '12px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '8px' }}>🌍 Real-World Applications</p>
+              <h2 style={{ fontSize: isMobile ? '20px' : '26px', fontWeight: 700, color: colors.textPrimary }}>Rayleigh-Plateau in Action</h2>
+            </div>
+
+            <div style={{ display: 'flex', gap: '8px', marginBottom: '20px', overflowX: 'auto', paddingBottom: '8px' }}>
+              {realWorldApps.map((a, i) => (
+                <button key={i} onClick={() => { setSelectedApp(i); playSound('click'); }} style={{
+                  padding: '10px 16px', borderRadius: '12px',
+                  border: selectedApp === i ? `2px solid ${a.color}` : `1px solid ${colors.border}`,
+                  background: selectedApp === i ? `${a.color}20` : colors.bgCard,
+                  cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', whiteSpace: 'nowrap', flexShrink: 0
+                }}>
+                  <span style={{ fontSize: '20px' }}>{a.icon}</span>
+                  <span style={{ color: colors.textPrimary, fontSize: '13px', fontWeight: 600 }}>{a.short}</span>
+                  {completedApps[i] && <span style={{ color: colors.success, fontSize: '16px' }}>✓</span>}
+                </button>
+              ))}
+            </div>
+
+            <div style={{ background: colors.bgCard, borderRadius: '16px', padding: '24px', marginBottom: '20px', border: `1px solid ${colors.border}` }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '20px' }}>
+                <div style={{ width: '60px', height: '60px', borderRadius: '16px', background: `${app.color}20`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '32px' }}>{app.icon}</div>
+                <div>
+                  <h3 style={{ color: colors.textPrimary, fontSize: '20px', fontWeight: 700, margin: 0 }}>{app.title}</h3>
+                  <p style={{ color: app.color, fontSize: '14px', fontWeight: 600, margin: 0 }}>{app.tagline}</p>
+                </div>
+              </div>
+              <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.7, marginBottom: '20px' }}>{app.description}</p>
+              <div style={{ background: `${app.color}15`, borderRadius: '12px', padding: '16px', marginBottom: '20px', borderLeft: `4px solid ${app.color}` }}>
+                <h4 style={{ color: app.color, fontSize: '14px', fontWeight: 700, marginBottom: '8px' }}>🔗 Connection:</h4>
+                <p style={{ color: colors.textSecondary, fontSize: '14px', margin: 0 }}>{app.connection}</p>
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px', marginBottom: '20px' }}>
+                {app.stats.map((stat, i) => (
+                  <div key={i} style={{ background: colors.bgDark, borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
+                    <div style={{ fontSize: '24px', marginBottom: '4px' }}>{stat.icon}</div>
+                    <div style={{ color: app.color, fontSize: '18px', fontWeight: 700 }}>{stat.value}</div>
+                    <div style={{ color: colors.textMuted, fontSize: '11px' }}>{stat.label}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <button onClick={() => {
+              const newCompleted = [...completedApps];
+              newCompleted[selectedApp] = true;
+              setCompletedApps(newCompleted);
+              playSound('success');
+              const nextIncomplete = newCompleted.findIndex((c, i) => !c && i > selectedApp);
+              if (nextIncomplete !== -1) setSelectedApp(nextIncomplete);
+              else { const first = newCompleted.findIndex(c => !c); if (first !== -1) setSelectedApp(first); }
+            }} disabled={completedApps[selectedApp]} style={{
+              width: '100%', padding: '16px', borderRadius: '12px', border: 'none',
+              background: completedApps[selectedApp] ? colors.bgCardLight : `linear-gradient(135deg, ${app.color} 0%, ${colors.accent} 100%)`,
+              color: completedApps[selectedApp] ? colors.textMuted : 'white', fontSize: '16px', fontWeight: 700,
+              cursor: completedApps[selectedApp] ? 'default' : 'pointer', minHeight: '52px'
+            }}>
+              {completedApps[selectedApp] ? '✓ Completed' : 'Got It! Continue →'}
+            </button>
+            <p style={{ textAlign: 'center', color: colors.textMuted, fontSize: '13px', marginTop: '12px' }}>
+              {completedApps.filter(c => c).length} of 4 completed {allCompleted && '— Ready for test!'}
+            </p>
+          </div>
+        </div>
+        {renderBottomBar(true, allCompleted, 'Take the Test →')}
+      </div>
+    );
+  }
+
+  // Test phase
+  if (phase === 'test') {
+    const currentQ = testQuestions[testQuestion];
+    const selectedAnswer = testAnswers[testQuestion];
+    const isCorrect = selectedAnswer === currentQ.options.find(o => o.correct)?.id;
+
+    return (
+      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', background: `linear-gradient(180deg, ${colors.bgGradientStart} 0%, ${colors.bgGradientEnd} 100%)`, overflow: 'hidden' }}>
+        <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', WebkitOverflowScrolling: 'touch', paddingBottom: '100px' }}>
+          <div style={{ maxWidth: '800px', margin: '0 auto', padding: '20px' }}>
+            <div style={{ marginBottom: '20px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                <span style={{ color: colors.textPrimary, fontSize: '16px', fontWeight: 700 }}>Question {testQuestion + 1} of 10</span>
+              </div>
+              <div style={{ display: 'flex', gap: '4px' }}>
+                {testQuestions.map((_, i) => (
+                  <div key={i} style={{ flex: 1, height: '4px', borderRadius: '2px', background: i === testQuestion ? colors.primary : testAnswers[i] !== null ? colors.success : colors.bgCardLight }} />
+                ))}
+              </div>
+            </div>
+
+            <div style={{ background: colors.bgCard, borderRadius: '12px', padding: '16px', marginBottom: '16px', border: `1px solid ${colors.border}` }}>
+              <p style={{ color: colors.textMuted, fontSize: '12px', fontWeight: 600, marginBottom: '4px' }}>SCENARIO</p>
+              <p style={{ color: colors.textSecondary, fontSize: '14px', margin: 0 }}>{currentQ.scenario}</p>
+            </div>
+
+            <h3 style={{ color: colors.textPrimary, fontSize: isMobile ? '18px' : '20px', fontWeight: 700, marginBottom: '20px' }}>{currentQ.question}</h3>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '20px' }}>
+              {currentQ.options.map((opt) => {
+                const isSelected = selectedAnswer === opt.id;
+                const showCorrect = showExplanation && opt.correct;
+                const showWrong = showExplanation && isSelected && !opt.correct;
+                return (
+                  <button key={opt.id} onClick={() => { if (!showExplanation) { const a = [...testAnswers]; a[testQuestion] = opt.id; setTestAnswers(a); playSound('click'); } }} disabled={showExplanation} style={{
+                    padding: '16px', borderRadius: '12px',
+                    border: showCorrect ? `2px solid ${colors.success}` : showWrong ? `2px solid ${colors.error}` : isSelected ? `2px solid ${colors.primary}` : `1px solid ${colors.border}`,
+                    backgroundColor: showCorrect ? `${colors.success}15` : showWrong ? `${colors.error}15` : isSelected ? `${colors.primary}20` : colors.bgCard,
+                    cursor: showExplanation ? 'default' : 'pointer', textAlign: 'left', display: 'flex', alignItems: 'center', gap: '12px'
+                  }}>
+                    <span style={{ color: colors.textPrimary, fontSize: '14px', flex: 1 }}>{opt.label}</span>
+                    {showCorrect && <span style={{ color: colors.success, fontSize: '20px' }}>✓</span>}
+                    {showWrong && <span style={{ color: colors.error, fontSize: '20px' }}>✗</span>}
+                    {!showExplanation && isSelected && <span style={{ color: colors.primary, fontSize: '20px' }}>✓</span>}
+                  </button>
+                );
+              })}
+            </div>
+
+            {selectedAnswer && !showExplanation && (
+              <button onClick={() => { setShowExplanation(true); playSound(isCorrect ? 'success' : 'failure'); }} style={{ width: '100%', padding: '14px', borderRadius: '12px', border: 'none', background: `linear-gradient(135deg, ${colors.primary} 0%, ${colors.accent} 100%)`, color: 'white', fontSize: '16px', fontWeight: 700, cursor: 'pointer' }}>Check Answer</button>
+            )}
+
+            {showExplanation && (
+              <div style={{ background: isCorrect ? `${colors.success}15` : `${colors.primary}15`, borderRadius: '12px', padding: '16px', border: `1px solid ${isCorrect ? colors.success : colors.primary}40` }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+                  <span style={{ fontSize: '20px' }}>{isCorrect ? '✓' : '💡'}</span>
+                  <span style={{ color: isCorrect ? colors.success : colors.primaryLight, fontSize: '16px', fontWeight: 700 }}>{isCorrect ? 'Correct!' : 'Explanation'}</span>
+                </div>
+                <p style={{ color: colors.textSecondary, fontSize: '14px', margin: 0 }}>{currentQ.explanation}</p>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {showExplanation ? (
+          <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 1000, minHeight: '72px', background: colors.bgCard, borderTop: `1px solid ${colors.border}`, boxShadow: '0 -4px 20px rgba(0,0,0,0.5)', padding: '12px 20px', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+            <button onClick={() => { if (testQuestion < 9) { setTestQuestion(testQuestion + 1); setShowExplanation(false); playSound('click'); } else { goToPhase('mastery'); } }} style={{ padding: '14px 28px', borderRadius: '12px', border: 'none', background: `linear-gradient(135deg, ${colors.primary} 0%, ${colors.accent} 100%)`, color: 'white', fontSize: '16px', fontWeight: 700, cursor: 'pointer', minHeight: '52px', minWidth: '200px' }}>
+              {testQuestion < 9 ? 'Next Question →' : 'See Results →'}
+            </button>
+          </div>
+        ) : renderBottomBar(true, false, 'Select an answer')}
+      </div>
+    );
+  }
+
+  if (phase === 'mastery') {
+    const score = calculateTestScore();
+    const percentage = score * 10;
+    const passed = percentage >= 70;
+
+    return (
+      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', background: `linear-gradient(180deg, ${colors.bgGradientStart} 0%, ${colors.bgGradientEnd} 100%)`, overflow: 'hidden' }}>
+        <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', WebkitOverflowScrolling: 'touch', paddingBottom: '100px' }}>
+          <div style={{ maxWidth: '600px', margin: '0 auto', padding: '20px', textAlign: 'center' }}>
+            <div style={{ fontSize: '80px', marginBottom: '16px' }}>{passed ? '🏆' : '📚'}</div>
+            <h2 style={{ fontSize: isMobile ? '28px' : '36px', fontWeight: 800, color: passed ? colors.success : colors.primaryLight, marginBottom: '8px' }}>{passed ? 'Mastery Achieved!' : 'Keep Learning!'}</h2>
+            <p style={{ color: colors.textSecondary, fontSize: '16px', marginBottom: '32px' }}>{passed ? 'You understand the Rayleigh-Plateau instability!' : 'Review and try again.'}</p>
+
+            <div style={{ background: colors.bgCard, borderRadius: '20px', padding: '32px', marginBottom: '24px', border: `1px solid ${passed ? colors.success : colors.border}40` }}>
+              <div style={{ fontSize: '64px', fontWeight: 800, color: passed ? colors.success : colors.primaryLight, marginBottom: '8px' }}>{percentage}%</div>
+              <p style={{ color: colors.textSecondary, fontSize: '16px', margin: 0 }}>{score} of 10 correct</p>
+              <div style={{ height: '8px', background: colors.bgDark, borderRadius: '4px', marginTop: '20px', overflow: 'hidden' }}>
+                <div style={{ width: `${percentage}%`, height: '100%', background: passed ? `linear-gradient(90deg, ${colors.success} 0%, ${colors.successLight} 100%)` : `linear-gradient(90deg, ${colors.primary} 0%, ${colors.accent} 100%)`, borderRadius: '4px' }} />
+              </div>
+            </div>
+
+            <div style={{ background: colors.bgCard, borderRadius: '16px', padding: '24px', textAlign: 'left', marginBottom: '24px' }}>
+              <h3 style={{ color: colors.textPrimary, fontSize: '18px', fontWeight: 700, marginBottom: '16px' }}>🎓 What You Learned:</h3>
+              <ul style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 2, margin: 0, paddingLeft: '20px' }}>
+                <li>Surface tension drives jets to break into spheres (minimum surface area)</li>
+                <li>The most unstable wavelength is λ ≈ 9r</li>
+                <li>High viscosity creates "beads on a string" patterns</li>
+                <li>The Ohnesorge number compares viscous to surface tension forces</li>
+                <li>Applications: inkjets, sprays, pharmaceuticals, metal powder</li>
+              </ul>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              {!passed && <button onClick={() => goToPhase('predict')} style={{ padding: '16px', borderRadius: '12px', border: 'none', background: `linear-gradient(135deg, ${colors.primary} 0%, ${colors.accent} 100%)`, color: 'white', fontSize: '16px', fontWeight: 700, cursor: 'pointer' }}>🔄 Try Again</button>}
+              <button onClick={() => { onComplete?.(); playSound('complete'); }} style={{ padding: '16px', borderRadius: '12px', border: `1px solid ${colors.border}`, background: colors.bgCard, color: colors.textPrimary, fontSize: '16px', fontWeight: 600, cursor: 'pointer' }}>← Return to Dashboard</button>
+            </div>
+          </div>
         </div>
       </div>
-    </div>
-  );
-}
+    );
+  }
+
+  return null;
+};
+
+export default DropletBreakupRenderer;

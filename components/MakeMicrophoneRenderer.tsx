@@ -32,23 +32,11 @@ const PHASES: Phase[] = [
   'mastery',
 ];
 
-interface SavedState {
-  phase: Phase;
-  completedApps: number[];
-  testAnswers: number[];
-  testScore: number | null;
-}
-
-interface GameEvent {
-  type: 'state_update' | 'completion' | 'tool_call';
-  phase: Phase;
-  data: Record<string, unknown>;
-}
-
 interface MakeMicrophoneRendererProps {
-  onStateChange?: (state: SavedState) => void;
-  onEvent?: (event: GameEvent) => void;
-  savedState?: SavedState | null;
+  phase: 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
+  onPhaseComplete?: () => void;
+  onCorrectAnswer?: () => void;
+  onIncorrectAnswer?: () => void;
 }
 
 // ────────────────────────────────────────────────────────────────────────────
@@ -59,102 +47,92 @@ const TEST_QUESTIONS = [
   {
     question: 'How does a dynamic microphone generate electricity from sound?',
     options: [
-      'Chemical reaction in the diaphragm',
-      'A coil attached to the diaphragm moves in a magnetic field, inducing voltage',
-      'Static electricity from compressed air',
-      'Heat from sound friction generates current',
+      { text: 'Chemical reaction in the diaphragm', correct: false },
+      { text: 'A coil attached to the diaphragm moves in a magnetic field, inducing voltage', correct: true },
+      { text: 'Static electricity from compressed air', correct: false },
+      { text: 'Heat from sound friction generates current', correct: false },
     ],
-    correct: 1,
   },
   {
     question: 'Why can a speaker actually work as a microphone?',
     options: [
-      'It has a hidden microphone inside',
-      'The magnet can store and replay sound',
-      'Electromagnetic induction is reversible - motion creates current',
-      'Speakers have special reverse circuits',
+      { text: 'It has a hidden microphone inside', correct: false },
+      { text: 'The magnet can store and replay sound', correct: false },
+      { text: 'Electromagnetic induction is reversible - motion creates current', correct: true },
+      { text: 'Speakers have special reverse circuits', correct: false },
     ],
-    correct: 2,
   },
   {
     question: 'Which type of microphone needs phantom power (48V)?',
     options: [
-      'Dynamic microphone',
-      'Ribbon microphone',
-      'Condenser microphone',
-      'Carbon microphone',
+      { text: 'Dynamic microphone', correct: false },
+      { text: 'Ribbon microphone', correct: false },
+      { text: 'Condenser microphone', correct: true },
+      { text: 'Carbon microphone', correct: false },
     ],
-    correct: 2,
   },
   {
     question: 'What physical principle do condenser microphones use?',
     options: [
-      'Changing capacitance as diaphragm-to-backplate distance varies',
-      'Piezoelectric crystal compression',
-      'Coil movement in magnetic field',
-      'Carbon granule resistance changes',
+      { text: 'Changing capacitance as diaphragm-to-backplate distance varies', correct: true },
+      { text: 'Piezoelectric crystal compression', correct: false },
+      { text: 'Coil movement in magnetic field', correct: false },
+      { text: 'Carbon granule resistance changes', correct: false },
     ],
-    correct: 0,
   },
   {
     question: 'Why are dynamic microphones preferred for live performances?',
     options: [
-      'They have better frequency response',
-      'They are more sensitive to quiet sounds',
-      'They are rugged and need no external power',
-      'They produce louder output signals',
+      { text: 'They have better frequency response', correct: false },
+      { text: 'They are more sensitive to quiet sounds', correct: false },
+      { text: 'They are rugged and need no external power', correct: true },
+      { text: 'They produce louder output signals', correct: false },
     ],
-    correct: 2,
   },
   {
     question: 'What is a transducer?',
     options: [
-      'A device that amplifies sound',
-      'A device that converts one form of energy to another',
-      'A type of audio cable connector',
-      'A frequency filter for audio signals',
+      { text: 'A device that amplifies sound', correct: false },
+      { text: 'A device that converts one form of energy to another', correct: true },
+      { text: 'A type of audio cable connector', correct: false },
+      { text: 'A frequency filter for audio signals', correct: false },
     ],
-    correct: 1,
   },
   {
     question: 'What are MEMS microphones commonly found in?',
     options: [
-      'Professional recording studios only',
-      'Vintage radios and telephones',
-      'Smartphones and wireless earbuds',
-      'Large concert PA systems',
+      { text: 'Professional recording studios only', correct: false },
+      { text: 'Vintage radios and telephones', correct: false },
+      { text: 'Smartphones and wireless earbuds', correct: true },
+      { text: 'Large concert PA systems', correct: false },
     ],
-    correct: 2,
   },
   {
     question: 'What happens when you increase sound amplitude (loudness) hitting a dynamic mic?',
     options: [
-      'The frequency changes',
-      'The diaphragm moves more, producing stronger signal',
-      'The magnet becomes stronger',
-      'The resistance decreases',
+      { text: 'The frequency changes', correct: false },
+      { text: 'The diaphragm moves more, producing stronger signal', correct: true },
+      { text: 'The magnet becomes stronger', correct: false },
+      { text: 'The resistance decreases', correct: false },
     ],
-    correct: 1,
   },
   {
     question: 'How do bone conduction headphones deliver sound?',
     options: [
-      'Through tiny speakers in the ear canal',
-      'By vibrating transducers against your skull bones',
-      'Using ultrasonic waves through air',
-      'Through electromagnetic brain stimulation',
+      { text: 'Through tiny speakers in the ear canal', correct: false },
+      { text: 'By vibrating transducers against your skull bones', correct: true },
+      { text: 'Using ultrasonic waves through air', correct: false },
+      { text: 'Through electromagnetic brain stimulation', correct: false },
     ],
-    correct: 1,
   },
   {
     question: 'What is the piezoelectric effect used for in audio?',
     options: [
-      'Only for producing sound, not capturing it',
-      'Bidirectional conversion - both pickups and buzzers use it',
-      'Only in microphones, not speakers',
-      'Filtering out unwanted frequencies',
+      { text: 'Only for producing sound, not capturing it', correct: false },
+      { text: 'Bidirectional conversion - both pickups and buzzers use it', correct: true },
+      { text: 'Only in microphones, not speakers', correct: false },
+      { text: 'Filtering out unwanted frequencies', correct: false },
     ],
-    correct: 1,
   },
 ];
 
@@ -540,24 +518,20 @@ const MEMSMicGraphic: React.FC = () => (
 // ────────────────────────────────────────────────────────────────────────────
 
 export default function MakeMicrophoneRenderer({
-  onStateChange,
-  onEvent,
-  savedState,
+  phase,
+  onPhaseComplete,
+  onCorrectAnswer,
+  onIncorrectAnswer,
 }: MakeMicrophoneRendererProps) {
   // ──────────────────────────────────────────────────────────────────────────
   // STATE
   // ──────────────────────────────────────────────────────────────────────────
 
-  const [phase, setPhase] = useState<Phase>(savedState?.phase || 'hook');
-  const [completedApps, setCompletedApps] = useState<Set<number>>(
-    new Set(savedState?.completedApps || [])
-  );
-  const [testAnswers, setTestAnswers] = useState<number[]>(
-    savedState?.testAnswers || Array(10).fill(-1)
-  );
-  const [testScore, setTestScore] = useState<number | null>(
-    savedState?.testScore ?? null
-  );
+  const [currentPhase, setCurrentPhase] = useState<Phase>(phase);
+  const [completedApps, setCompletedApps] = useState<Set<number>>(new Set());
+  const [testAnswers, setTestAnswers] = useState<(number | null)[]>(Array(10).fill(null));
+  const [testScore, setTestScore] = useState<number | null>(null);
+  const [testSubmitted, setTestSubmitted] = useState(false);
   const [activeAppTab, setActiveAppTab] = useState(0);
 
   const [prediction, setPrediction] = useState<string | null>(null);
@@ -585,28 +559,14 @@ export default function MakeMicrophoneRenderer({
   // EFFECTS
   // ──────────────────────────────────────────────────────────────────────────
 
+  // Sync with external phase prop
   useEffect(() => {
-    const state: SavedState = {
-      phase,
-      completedApps: Array.from(completedApps),
-      testAnswers,
-      testScore,
-    };
-    onStateChange?.(state);
-  }, [phase, completedApps, testAnswers, testScore, onStateChange]);
-
-  useEffect(() => {
-    const event: GameEvent = {
-      type: phase === 'mastery' ? 'completion' : 'state_update',
-      phase,
-      data: { testScore },
-    };
-    onEvent?.(event);
-  }, [phase, testScore, onEvent]);
+    setCurrentPhase(phase);
+  }, [phase]);
 
   // Animation for sound waves
   useEffect(() => {
-    if (phase === 'play' || phase === 'twist_play') {
+    if (currentPhase === 'play' || currentPhase === 'twist_play') {
       const animate = () => {
         setSoundWavePhase(p => (p + 0.1) % (Math.PI * 2));
         animationRef.current = requestAnimationFrame(animate);
@@ -614,7 +574,7 @@ export default function MakeMicrophoneRenderer({
       animationRef.current = requestAnimationFrame(animate);
       return () => cancelAnimationFrame(animationRef.current);
     }
-  }, [phase]);
+  }, [currentPhase]);
 
   // ──────────────────────────────────────────────────────────────────────────
   // NAVIGATION WITH DUAL DEBOUNCING
@@ -627,18 +587,19 @@ export default function MakeMicrophoneRenderer({
     lastClickRef.current = now;
     navigationLockRef.current = true;
     playSound('transition');
-    setPhase(newPhase);
+    setCurrentPhase(newPhase);
+    onPhaseComplete?.();
     setTimeout(() => {
       navigationLockRef.current = false;
     }, 200);
-  }, []);
+  }, [onPhaseComplete]);
 
   const nextPhase = useCallback(() => {
-    const currentIndex = PHASES.indexOf(phase);
+    const currentIndex = PHASES.indexOf(currentPhase);
     if (currentIndex < PHASES.length - 1) {
       goToPhase(PHASES[currentIndex + 1]);
     }
-  }, [phase, goToPhase]);
+  }, [currentPhase, goToPhase]);
 
   // ──────────────────────────────────────────────────────────────────────────
   // HANDLERS
@@ -682,12 +643,19 @@ export default function MakeMicrophoneRenderer({
 
   const handleSubmitTest = useCallback(() => {
     let score = 0;
-    testAnswers.forEach((answer, index) => {
-      if (answer === TEST_QUESTIONS[index].correct) score++;
+    TEST_QUESTIONS.forEach((q, i) => {
+      const answer = testAnswers[i];
+      if (answer !== null && q.options[answer].correct) {
+        score++;
+        onCorrectAnswer?.();
+      } else {
+        onIncorrectAnswer?.();
+      }
     });
     setTestScore(score);
+    setTestSubmitted(true);
     playSound(score >= 7 ? 'success' : 'failure');
-  }, [testAnswers]);
+  }, [testAnswers, onCorrectAnswer, onIncorrectAnswer]);
 
   // ──────────────────────────────────────────────────────────────────────────
   // PHYSICS CALCULATIONS
@@ -1534,7 +1502,7 @@ export default function MakeMicrophoneRenderer({
   };
 
   const renderTest = () => {
-    const answeredCount = testAnswers.filter(a => a !== -1).length;
+    const answeredCount = testAnswers.filter(a => a !== null).length;
     const allAnswered = answeredCount === 10;
 
     return (
@@ -1549,7 +1517,7 @@ export default function MakeMicrophoneRenderer({
           </div>
         </div>
 
-        {testScore === null ? (
+        {!testSubmitted ? (
           <>
             <div className="bg-slate-50 rounded-2xl p-4 mb-6">
               <div className="flex justify-between items-center mb-2">
@@ -1569,7 +1537,7 @@ export default function MakeMicrophoneRenderer({
                 <div key={qIndex} className="bg-white border border-slate-200 rounded-2xl p-5">
                   <div className="flex items-start gap-3 mb-4">
                     <span className={`flex-shrink-0 w-7 h-7 rounded-lg flex items-center justify-center text-sm font-bold ${
-                      testAnswers[qIndex] !== -1
+                      testAnswers[qIndex] !== null
                         ? 'bg-violet-500 text-white'
                         : 'bg-slate-200 text-slate-600'
                     }`}>
@@ -1591,7 +1559,7 @@ export default function MakeMicrophoneRenderer({
                             : 'bg-slate-50 text-slate-700 hover:bg-violet-50 border border-slate-200'
                         }`}
                       >
-                        {option}
+                        {option.text}
                       </button>
                     ))}
                   </div>
@@ -1610,23 +1578,23 @@ export default function MakeMicrophoneRenderer({
         ) : (
           <div className="text-center py-8">
             <div className={`inline-flex items-center justify-center w-24 h-24 rounded-full mb-6 ${
-              testScore >= 7
+              testScore !== null && testScore >= 7
                 ? 'bg-gradient-to-br from-emerald-500 to-teal-500 shadow-xl shadow-emerald-500/30'
                 : 'bg-gradient-to-br from-amber-500 to-orange-500 shadow-xl shadow-amber-500/30'
             }`}>
-              <span className="text-5xl">{testScore >= 7 ? '🎤' : '📚'}</span>
+              <span className="text-5xl">{testScore !== null && testScore >= 7 ? '🎤' : '📚'}</span>
             </div>
 
             <h3 className="text-2xl font-bold text-slate-800 mb-2">
               {testScore}/10 Correct
             </h3>
             <p className="text-slate-600 mb-8">
-              {testScore >= 7
+              {testScore !== null && testScore >= 7
                 ? 'Excellent! You understand transducers!'
                 : 'Review the concepts and try again to improve your score.'}
             </p>
 
-            {testScore >= 7 ? (
+            {testScore !== null && testScore >= 7 ? (
               <PrimaryButton onMouseDown={nextPhase} variant="success">
                 Complete Lesson →
               </PrimaryButton>
@@ -1634,7 +1602,8 @@ export default function MakeMicrophoneRenderer({
               <div className="space-y-3">
                 <PrimaryButton onMouseDown={() => {
                   setTestScore(null);
-                  setTestAnswers(Array(10).fill(-1));
+                  setTestSubmitted(false);
+                  setTestAnswers(Array(10).fill(null));
                 }} variant="secondary">
                   Try Again
                 </PrimaryButton>
@@ -1702,7 +1671,7 @@ export default function MakeMicrophoneRenderer({
   // ──────────────────────────────────────────────────────────────────────────
 
   const renderContent = () => {
-    switch (phase) {
+    switch (currentPhase) {
       case 'hook': return renderHook();
       case 'predict': return renderPredict();
       case 'play': return renderPlay();
@@ -1735,9 +1704,9 @@ export default function MakeMicrophoneRenderer({
                 key={p}
                 onMouseDown={(e) => { e.preventDefault(); goToPhase(p); }}
                 className={`h-2 rounded-full transition-all duration-300 ${
-                  phase === p
+                  currentPhase === p
                     ? 'bg-teal-400 w-6 shadow-lg shadow-teal-400/30'
-                    : PHASES.indexOf(phase) > i
+                    : PHASES.indexOf(currentPhase) > i
                       ? 'bg-emerald-500 w-2'
                       : 'bg-slate-700 w-2 hover:bg-slate-600'
                 }`}
@@ -1745,7 +1714,7 @@ export default function MakeMicrophoneRenderer({
             ))}
           </div>
           <span className="text-sm font-medium text-teal-400">
-            {phase.charAt(0).toUpperCase() + phase.slice(1).replace('_', ' ')}
+            {currentPhase.charAt(0).toUpperCase() + currentPhase.slice(1).replace('_', ' ')}
           </span>
         </div>
       </div>

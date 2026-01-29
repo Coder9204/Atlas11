@@ -2,39 +2,19 @@
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 
-// ═══════════════════════════════════════════════════════════════════════════
-// TYPES & INTERFACES
-// ═══════════════════════════════════════════════════════════════════════════
-type GameEventType =
-  | 'phase_change'
-  | 'prediction_made'
-  | 'simulation_started'
-  | 'parameter_changed'
-  | 'twist_prediction_made'
-  | 'app_explored'
-  | 'test_answered'
-  | 'test_completed'
-  | 'mastery_achieved';
-
-interface GameEvent {
-  type: GameEventType;
-  data?: Record<string, unknown>;
+interface EvaporativeCoolingRendererProps {
+  phase: 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
+  onPhaseComplete?: () => void;
+  onCorrectAnswer?: () => void;
+  onIncorrectAnswer?: () => void;
 }
 
-const PHASES: number[] = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
-const phaseLabels: Record<number, string> = {
-  0: 'Hook', 1: 'Predict', 2: 'Lab', 3: 'Review', 4: 'Twist Predict',
-  5: 'Twist Lab', 6: 'Twist Review', 7: 'Transfer', 8: 'Test', 9: 'Mastery'
-};
-
-interface Props {
-  onGameEvent?: (event: GameEvent) => void;
-  currentPhase?: number;
-  onPhaseComplete?: (phase: number) => void;
-}
-
-const EvaporativeCoolingRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onPhaseComplete }) => {
-  const [phase, setPhase] = useState<number>(currentPhase ?? 0);
+const EvaporativeCoolingRenderer: React.FC<EvaporativeCoolingRendererProps> = ({
+  phase,
+  onPhaseComplete,
+  onCorrectAnswer,
+  onIncorrectAnswer
+}) => {
   const [showPredictionFeedback, setShowPredictionFeedback] = useState(false);
   const [selectedPrediction, setSelectedPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
@@ -43,7 +23,6 @@ const EvaporativeCoolingRenderer: React.FC<Props> = ({ onGameEvent, currentPhase
   const [showTestResults, setShowTestResults] = useState(false);
   const [completedApps, setCompletedApps] = useState<Set<number>>(new Set());
   const [activeAppTab, setActiveAppTab] = useState(0);
-  const [isMobile, setIsMobile] = useState(false);
 
   // Game-specific state
   const [skinWet, setSkinWet] = useState(false);
@@ -59,23 +38,10 @@ const EvaporativeCoolingRenderer: React.FC<Props> = ({ onGameEvent, currentPhase
   const [twistSkinWet, setTwistSkinWet] = useState(true);
   const [twistSkinTemp, setTwistSkinTemp] = useState(37);
 
-  const navigationLockRef = useRef(false);
   const lastClickRef = useRef(0);
 
   // Constants
   const bodyTempNormal = 37;
-
-  // Mobile detection
-  useEffect(() => {
-    setIsMobile(/iPhone|iPad|iPod|Android/i.test(navigator.userAgent));
-  }, []);
-
-  // Phase sync
-  useEffect(() => {
-    if (currentPhase !== undefined && currentPhase !== phase) {
-      setPhase(currentPhase);
-    }
-  }, [currentPhase, phase]);
 
   const playSound = useCallback((type: 'click' | 'success' | 'failure' | 'transition' | 'complete') => {
     if (typeof window === 'undefined') return;
@@ -101,19 +67,6 @@ const EvaporativeCoolingRenderer: React.FC<Props> = ({ onGameEvent, currentPhase
       oscillator.stop(audioContext.currentTime + sound.duration);
     } catch { /* Audio not available */ }
   }, []);
-
-  const goToPhase = useCallback((newPhase: number) => {
-    if (navigationLockRef.current) return;
-    const now = Date.now();
-    if (now - lastClickRef.current < 200) return;
-    lastClickRef.current = now;
-    navigationLockRef.current = true;
-    playSound('transition');
-    setPhase(newPhase);
-    onPhaseComplete?.(newPhase);
-    onGameEvent?.({ type: 'phase_change', data: { phase: newPhase, phaseLabel: phaseLabels[newPhase] } });
-    setTimeout(() => { navigationLockRef.current = false; }, 400);
-  }, [playSound, onPhaseComplete, onGameEvent]);
 
   // Calculate evaporation rate
   const calculateEvaporationRate = useCallback((humid: number, wind: number = 0): number => {
@@ -242,19 +195,19 @@ const EvaporativeCoolingRenderer: React.FC<Props> = ({ onGameEvent, currentPhase
   };
 
   const testQuestions = [
-    { question: "What provides the energy for water to evaporate from your skin?", options: ["The air around you", "Heat from your skin (body)", "The water itself", "Sunlight only"], correct: 1 },
-    { question: "Why doesn't sweating cool you down as well in humid weather?", options: ["Sweat is different in humid weather", "Your body produces less sweat", "Air saturated with water can't accept more evaporation", "Humidity makes sweat hotter"], correct: 2 },
-    { question: "The latent heat of vaporization for water is about:", options: ["226 J/g", "2,260 J/g", "22,600 J/g", "4.18 J/g"], correct: 1 },
-    { question: "Why does blowing on wet skin cool it faster?", options: ["Your breath is cold", "Moving air carries away humid air, allowing faster evaporation", "Blowing adds water to your skin", "It doesn't actually cool faster"], correct: 1 },
-    { question: "Why do dogs pant instead of sweating?", options: ["Dogs can't produce sweat", "Fur traps sweat; panting evaporates water from tongue and lungs", "Panting is just for breathing", "Dogs don't need to cool down"], correct: 1 },
-    { question: "Rubbing alcohol evaporates faster than water and feels colder because:", options: ["Alcohol is colder than water", "Alcohol evaporates faster, removing heat more quickly", "Alcohol absorbs heat from the air", "Alcohol reflects body heat"], correct: 1 },
-    { question: "In a desert with 10% humidity vs a jungle with 90%, which cools better by sweating?", options: ["Jungle (more moisture)", "Desert (lower humidity allows more evaporation)", "They're the same", "Neither - too hot to sweat"], correct: 1 },
-    { question: "Why does getting out of a swimming pool make you feel cold?", options: ["Pool water is always cold", "Air temperature drops near pools", "Water on skin evaporates rapidly, pulling heat from your body", "Chlorine makes water feel colder"], correct: 2 },
-    { question: "Evaporative coolers (swamp coolers) work best in:", options: ["Humid climates", "Dry climates", "Cold climates", "Any climate equally"], correct: 1 },
-    { question: "Which takes more energy: heating 1g of water by 1C, or evaporating 1g of water?", options: ["Heating by 1C (specific heat)", "Evaporating (latent heat)", "They're the same", "Depends on the temperature"], correct: 1 }
+    { question: "What provides the energy for water to evaporate from your skin?", options: [{ text: "The air around you", correct: false }, { text: "Heat from your skin (body)", correct: true }, { text: "The water itself", correct: false }, { text: "Sunlight only", correct: false }] },
+    { question: "Why doesn't sweating cool you down as well in humid weather?", options: [{ text: "Sweat is different in humid weather", correct: false }, { text: "Your body produces less sweat", correct: false }, { text: "Air saturated with water can't accept more evaporation", correct: true }, { text: "Humidity makes sweat hotter", correct: false }] },
+    { question: "The latent heat of vaporization for water is about:", options: [{ text: "226 J/g", correct: false }, { text: "2,260 J/g", correct: true }, { text: "22,600 J/g", correct: false }, { text: "4.18 J/g", correct: false }] },
+    { question: "Why does blowing on wet skin cool it faster?", options: [{ text: "Your breath is cold", correct: false }, { text: "Moving air carries away humid air, allowing faster evaporation", correct: true }, { text: "Blowing adds water to your skin", correct: false }, { text: "It doesn't actually cool faster", correct: false }] },
+    { question: "Why do dogs pant instead of sweating?", options: [{ text: "Dogs can't produce sweat", correct: false }, { text: "Fur traps sweat; panting evaporates water from tongue and lungs", correct: true }, { text: "Panting is just for breathing", correct: false }, { text: "Dogs don't need to cool down", correct: false }] },
+    { question: "Rubbing alcohol evaporates faster than water and feels colder because:", options: [{ text: "Alcohol is colder than water", correct: false }, { text: "Alcohol evaporates faster, removing heat more quickly", correct: true }, { text: "Alcohol absorbs heat from the air", correct: false }, { text: "Alcohol reflects body heat", correct: false }] },
+    { question: "In a desert with 10% humidity vs a jungle with 90%, which cools better by sweating?", options: [{ text: "Jungle (more moisture)", correct: false }, { text: "Desert (lower humidity allows more evaporation)", correct: true }, { text: "They're the same", correct: false }, { text: "Neither - too hot to sweat", correct: false }] },
+    { question: "Why does getting out of a swimming pool make you feel cold?", options: [{ text: "Pool water is always cold", correct: false }, { text: "Air temperature drops near pools", correct: false }, { text: "Water on skin evaporates rapidly, pulling heat from your body", correct: true }, { text: "Chlorine makes water feel colder", correct: false }] },
+    { question: "Evaporative coolers (swamp coolers) work best in:", options: [{ text: "Humid climates", correct: false }, { text: "Dry climates", correct: true }, { text: "Cold climates", correct: false }, { text: "Any climate equally", correct: false }] },
+    { question: "Which takes more energy: heating 1g of water by 1C, or evaporating 1g of water?", options: [{ text: "Heating by 1C (specific heat)", correct: false }, { text: "Evaporating (latent heat)", correct: true }, { text: "They're the same", correct: false }, { text: "Depends on the temperature", correct: false }] }
   ];
 
-  const calculateScore = () => testAnswers.reduce((score, answer, index) => score + (answer === testQuestions[index].correct ? 1 : 0), 0);
+  const calculateScore = () => testAnswers.reduce((score, answer, index) => score + (testQuestions[index].options[answer]?.correct ? 1 : 0), 0);
 
   const applications = [
     {
@@ -444,7 +397,7 @@ const EvaporativeCoolingRenderer: React.FC<Props> = ({ onGameEvent, currentPhase
       </div>
 
       <button
-        onMouseDown={(e) => { e.preventDefault(); goToPhase(1); }}
+        onMouseDown={(e) => { e.preventDefault(); onPhaseComplete?.(); }}
         className="mt-10 group relative px-10 py-5 bg-gradient-to-r from-cyan-500 to-blue-600 text-white text-lg font-semibold rounded-2xl transition-all duration-300 hover:shadow-lg hover:shadow-cyan-500/25 hover:scale-[1.02] active:scale-[0.98]"
       >
         <span className="relative z-10 flex items-center gap-3">
@@ -509,7 +462,7 @@ const EvaporativeCoolingRenderer: React.FC<Props> = ({ onGameEvent, currentPhase
             Correct! The water pulls heat energy from your skin to evaporate. That's why wet skin feels cold - it's literally losing heat!
           </p>
           <button
-            onMouseDown={(e) => { e.preventDefault(); goToPhase(2); }}
+            onMouseDown={(e) => { e.preventDefault(); onPhaseComplete?.(); }}
             className="mt-4 px-6 py-3 bg-gradient-to-r from-blue-600 to-cyan-600 text-white font-semibold rounded-xl"
           >
             Explore the Physics
@@ -575,7 +528,7 @@ const EvaporativeCoolingRenderer: React.FC<Props> = ({ onGameEvent, currentPhase
       </div>
 
       <button
-        onMouseDown={(e) => { e.preventDefault(); goToPhase(3); }}
+        onMouseDown={(e) => { e.preventDefault(); onPhaseComplete?.(); }}
         className="px-6 py-3 bg-gradient-to-r from-blue-600 to-cyan-600 text-white font-semibold rounded-xl"
       >
         Learn the Science
@@ -614,7 +567,7 @@ const EvaporativeCoolingRenderer: React.FC<Props> = ({ onGameEvent, currentPhase
         </div>
       </div>
       <button
-        onMouseDown={(e) => { e.preventDefault(); goToPhase(4); }}
+        onMouseDown={(e) => { e.preventDefault(); onPhaseComplete?.(); }}
         className="mt-8 px-6 py-3 bg-gradient-to-r from-amber-600 to-orange-600 text-white font-semibold rounded-xl"
       >
         Discover a Surprising Twist
@@ -662,7 +615,7 @@ const EvaporativeCoolingRenderer: React.FC<Props> = ({ onGameEvent, currentPhase
             Correct! Wind removes the saturated boundary layer, allowing fresh dry air to contact the wet surface and accelerate evaporation.
           </p>
           <button
-            onMouseDown={(e) => { e.preventDefault(); goToPhase(5); }}
+            onMouseDown={(e) => { e.preventDefault(); onPhaseComplete?.(); }}
             className="mt-4 px-6 py-3 bg-gradient-to-r from-amber-600 to-orange-600 text-white font-semibold rounded-xl"
           >
             See Wind Effect in Action
@@ -723,7 +676,7 @@ const EvaporativeCoolingRenderer: React.FC<Props> = ({ onGameEvent, currentPhase
       </div>
 
       <button
-        onMouseDown={(e) => { e.preventDefault(); goToPhase(6); }}
+        onMouseDown={(e) => { e.preventDefault(); onPhaseComplete?.(); }}
         className="px-6 py-3 bg-gradient-to-r from-amber-600 to-orange-600 text-white font-semibold rounded-xl"
       >
         See Explanation
@@ -756,7 +709,7 @@ const EvaporativeCoolingRenderer: React.FC<Props> = ({ onGameEvent, currentPhase
         </div>
       </div>
       <button
-        onMouseDown={(e) => { e.preventDefault(); goToPhase(7); }}
+        onMouseDown={(e) => { e.preventDefault(); onPhaseComplete?.(); }}
         className="mt-8 px-6 py-3 bg-gradient-to-r from-blue-600 to-cyan-600 text-white font-semibold rounded-xl"
       >
         Explore Real-World Applications
@@ -805,7 +758,7 @@ const EvaporativeCoolingRenderer: React.FC<Props> = ({ onGameEvent, currentPhase
       </div>
       {completedApps.size >= 4 && (
         <button
-          onMouseDown={(e) => { e.preventDefault(); goToPhase(8); }}
+          onMouseDown={(e) => { e.preventDefault(); onPhaseComplete?.(); }}
           className="mt-6 px-6 py-3 bg-gradient-to-r from-blue-600 to-cyan-600 text-white font-semibold rounded-xl"
         >
           Take the Knowledge Test
@@ -829,7 +782,7 @@ const EvaporativeCoolingRenderer: React.FC<Props> = ({ onGameEvent, currentPhase
                     onMouseDown={(e) => { e.preventDefault(); handleTestAnswer(qIndex, oIndex); }}
                     className={`p-3 rounded-lg text-left text-sm transition-all ${testAnswers[qIndex] === oIndex ? 'bg-blue-600 text-white' : 'bg-slate-700/50 text-slate-300 hover:bg-slate-600/50'}`}
                   >
-                    {option}
+                    {option.text}
                   </button>
                 ))}
               </div>
@@ -850,14 +803,14 @@ const EvaporativeCoolingRenderer: React.FC<Props> = ({ onGameEvent, currentPhase
           <p className="text-slate-300 mb-6">{calculateScore() >= 7 ? 'Excellent! You\'ve mastered evaporative cooling!' : 'Keep studying! Review and try again.'}</p>
           {calculateScore() >= 7 ? (
             <button
-              onMouseDown={(e) => { e.preventDefault(); goToPhase(9); }}
+              onMouseDown={(e) => { e.preventDefault(); onCorrectAnswer?.(); onPhaseComplete?.(); }}
               className="px-8 py-4 bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-semibold rounded-xl"
             >
               Claim Your Mastery Badge
             </button>
           ) : (
             <button
-              onMouseDown={(e) => { e.preventDefault(); setShowTestResults(false); setTestAnswers(Array(10).fill(-1)); goToPhase(3); }}
+              onMouseDown={(e) => { e.preventDefault(); setShowTestResults(false); setTestAnswers(Array(10).fill(-1)); onIncorrectAnswer?.(); }}
               className="px-8 py-4 bg-gradient-to-r from-blue-600 to-cyan-600 text-white font-semibold rounded-xl"
             >
               Review & Try Again
@@ -881,10 +834,10 @@ const EvaporativeCoolingRenderer: React.FC<Props> = ({ onGameEvent, currentPhase
           <div className="bg-slate-800/50 rounded-xl p-4"><div className="text-2xl mb-2">❄️</div><p className="text-sm text-slate-300">Swamp Coolers</p></div>
         </div>
         <button
-          onMouseDown={(e) => { e.preventDefault(); goToPhase(0); }}
+          onMouseDown={(e) => { e.preventDefault(); onPhaseComplete?.(); }}
           className="px-6 py-3 bg-slate-700 hover:bg-slate-600 text-white font-medium rounded-xl"
         >
-          Explore Again
+          Complete
         </button>
       </div>
     </div>
@@ -892,16 +845,16 @@ const EvaporativeCoolingRenderer: React.FC<Props> = ({ onGameEvent, currentPhase
 
   const renderPhase = () => {
     switch (phase) {
-      case 0: return renderHook();
-      case 1: return renderPredict();
-      case 2: return renderPlay();
-      case 3: return renderReview();
-      case 4: return renderTwistPredict();
-      case 5: return renderTwistPlay();
-      case 6: return renderTwistReview();
-      case 7: return renderTransfer();
-      case 8: return renderTest();
-      case 9: return renderMastery();
+      case 'hook': return renderHook();
+      case 'predict': return renderPredict();
+      case 'play': return renderPlay();
+      case 'review': return renderReview();
+      case 'twist_predict': return renderTwistPredict();
+      case 'twist_play': return renderTwistPlay();
+      case 'twist_review': return renderTwistReview();
+      case 'transfer': return renderTransfer();
+      case 'test': return renderTest();
+      case 'mastery': return renderMastery();
       default: return renderHook();
     }
   };
@@ -914,32 +867,8 @@ const EvaporativeCoolingRenderer: React.FC<Props> = ({ onGameEvent, currentPhase
       <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-blue-500/5 rounded-full blur-3xl" />
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-teal-500/5 rounded-full blur-3xl" />
 
-      {/* Header */}
-      <div className="fixed top-0 left-0 right-0 z-50 bg-slate-900/80 backdrop-blur-xl border-b border-slate-800/50">
-        <div className="flex items-center justify-between px-6 py-3 max-w-4xl mx-auto">
-          <span className="text-sm font-semibold text-white/80 tracking-wide">Evaporative Cooling</span>
-          <div className="flex items-center gap-1.5">
-            {PHASES.map((p) => (
-              <button
-                key={p}
-                onMouseDown={(e) => { e.preventDefault(); goToPhase(p); }}
-                className={`h-2 rounded-full transition-all duration-300 ${
-                  phase === p
-                    ? 'bg-cyan-400 w-6 shadow-lg shadow-cyan-400/30'
-                    : phase > p
-                      ? 'bg-emerald-500 w-2'
-                      : 'bg-slate-700 w-2 hover:bg-slate-600'
-                }`}
-                title={phaseLabels[p]}
-              />
-            ))}
-          </div>
-          <span className="text-sm font-medium text-cyan-400">{phaseLabels[phase]}</span>
-        </div>
-      </div>
-
       {/* Main content */}
-      <div className="relative pt-16 pb-12">{renderPhase()}</div>
+      <div className="relative pt-8 pb-12">{renderPhase()}</div>
     </div>
   );
 };

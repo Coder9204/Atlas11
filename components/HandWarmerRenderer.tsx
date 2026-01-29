@@ -2,26 +2,11 @@
 
 import React, { useState, useEffect, useRef, useCallback } from "react";
 
-// Game event interface for AI coach integration
-interface GameEvent {
-  type: string;
-  data?: Record<string, unknown>;
-  timestamp: number;
-  phase: string;
-}
-
-// Numeric phases: 0=hook, 1=predict, 2=play, 3=review, 4=twist_predict, 5=twist_play, 6=twist_review, 7=transfer, 8=test, 9=mastery
-const PHASES: number[] = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
-const phaseLabels: Record<number, string> = {
-  0: 'Hook', 1: 'Predict', 2: 'Lab', 3: 'Review', 4: 'Twist Predict',
-  5: 'Twist Lab', 6: 'Twist Review', 7: 'Transfer', 8: 'Test', 9: 'Mastery'
-};
-
-// Props interface
 interface HandWarmerRendererProps {
-  onBack?: () => void;
-  onGameEvent?: (event: GameEvent) => void;
-  onPhaseComplete?: (phase: number) => void;
+  phase: 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
+  onPhaseComplete?: () => void;
+  onCorrectAnswer?: () => void;
+  onIncorrectAnswer?: () => void;
 }
 
 // Play crystallization sound
@@ -32,7 +17,6 @@ const playCrystallizeSound = (): void => {
       (window as unknown as { webkitAudioContext: typeof AudioContext })
         .webkitAudioContext)();
 
-    // Create crackling/crystallization sound
     const bufferSize = audioContext.sampleRate * 0.3;
     const noiseBuffer = audioContext.createBuffer(1, bufferSize, audioContext.sampleRate);
     const output = noiseBuffer.getChannelData(0);
@@ -58,13 +42,11 @@ const playCrystallizeSound = (): void => {
 };
 
 export default function HandWarmerRenderer({
-  onBack,
-  onGameEvent,
+  phase,
   onPhaseComplete,
+  onCorrectAnswer,
+  onIncorrectAnswer
 }: HandWarmerRendererProps) {
-  // Core state
-  const [phase, setPhase] = useState<number>(0);
-  const [showExplanation, setShowExplanation] = useState(false);
   const [prediction, setPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
   const [testAnswers, setTestAnswers] = useState<Record<number, number>>({});
@@ -73,8 +55,6 @@ export default function HandWarmerRenderer({
   const [currentApp, setCurrentApp] = useState(0);
   const [completedApps, setCompletedApps] = useState<Set<number>>(new Set());
   const [showConfetti, setShowConfetti] = useState(false);
-  const [isMobile, setIsMobile] = useState(false);
-  const navigationLockRef = useRef(false);
   const lastClickRef = useRef(0);
 
   // Game-specific state
@@ -85,18 +65,17 @@ export default function HandWarmerRenderer({
   const [animationFrame, setAnimationFrame] = useState(0);
   const [discClicked, setDiscClicked] = useState(false);
 
-  // Twist state - comparing warmer types
+  // Twist state
   const [warmerType, setWarmerType] = useState<"phase" | "chemical">("phase");
   const [twistTemperature, setTwistTemperature] = useState(20);
   const [twistState, setTwistState] = useState<"inactive" | "active" | "depleted">("inactive");
   const [energyRemaining, setEnergyRemaining] = useState(100);
 
   // Constants
-  const latentHeatFusion = 264; // kJ/kg for sodium acetate
-  const meltingPoint = 54; // °C
-  const maxTemp = 54; // Reaches melting point during crystallization
+  const latentHeatFusion = 264;
+  const meltingPoint = 54;
+  const maxTemp = 54;
 
-  // Sound utility
   const playSound = useCallback((type: 'click' | 'success' | 'failure' | 'transition' | 'complete') => {
     if (typeof window === 'undefined') return;
     try {
@@ -122,26 +101,6 @@ export default function HandWarmerRenderer({
     } catch { /* Audio not available */ }
   }, []);
 
-  // Emit game events
-  const emitEvent = useCallback(
-    (type: string, data?: Record<string, unknown>) => {
-      if (onGameEvent) {
-        onGameEvent({ type, data, timestamp: Date.now(), phase: phaseLabels[phase] });
-      }
-    },
-    [onGameEvent, phase]
-  );
-
-  // Check for mobile
-  useEffect(() => {
-    const checkMobile = () => {
-      setIsMobile(window.innerWidth < 768);
-    };
-    checkMobile();
-    window.addEventListener("resize", checkMobile);
-    return () => window.removeEventListener("resize", checkMobile);
-  }, []);
-
   // Animation loop
   useEffect(() => {
     const interval = setInterval(() => {
@@ -163,7 +122,6 @@ export default function HandWarmerRenderer({
         return p + 2;
       });
 
-      // Add crystal points
       if (crystalProgress < 100) {
         setCrystalPoints((prev) => [
           ...prev,
@@ -175,7 +133,6 @@ export default function HandWarmerRenderer({
         ]);
       }
 
-      // Update temperature
       setTemperature((t) => Math.min(maxTemp, t + 1));
     }, 100);
 
@@ -201,11 +158,10 @@ export default function HandWarmerRenderer({
 
     setTimeout(() => {
       setWarmerState("crystallizing");
-      emitEvent("warmer_activated", { type: "phase_change" });
     }, 300);
   };
 
-  // Reset the warmer (simulates boiling to reset)
+  // Reset the warmer
   const resetWarmer = () => {
     setWarmerState("liquid");
     setTemperature(20);
@@ -235,7 +191,6 @@ export default function HandWarmerRenderer({
 
     const interval = setInterval(() => {
       if (warmerType === "chemical") {
-        // Chemical warmers heat up and slowly deplete
         setTwistTemperature((t) => {
           if (energyRemaining > 80) return Math.min(50, t + 2);
           if (energyRemaining > 20) return Math.max(35, Math.min(50, t));
@@ -250,7 +205,6 @@ export default function HandWarmerRenderer({
           return newE;
         });
       } else {
-        // Phase change warmers heat quickly, stay at melting point, then cool
         setTwistTemperature((t) => {
           if (energyRemaining > 10) return Math.min(54, t + 3);
           return Math.max(20, t - 0.5);
@@ -276,149 +230,97 @@ export default function HandWarmerRenderer({
     setEnergyRemaining(100);
   };
 
-  // Navigate to phase
-  const goToPhase = useCallback(
-    (newPhase: number) => {
-      if (navigationLockRef.current) return;
-      const now = Date.now();
-      if (now - lastClickRef.current < 200) return;
-      lastClickRef.current = now;
-
-      navigationLockRef.current = true;
-      playSound("transition");
-      emitEvent("phase_change", { from: phase, to: newPhase });
-      setPhase(newPhase);
-      setShowExplanation(false);
-      onPhaseComplete?.(newPhase);
-
-      setTimeout(() => {
-        navigationLockRef.current = false;
-      }, 400);
-    },
-    [phase, emitEvent, playSound, onPhaseComplete]
-  );
-
   // Test questions
   const testQuestions = [
     {
       question: "What is 'latent heat of fusion'?",
       options: [
-        "Heat needed to change temperature",
-        "Energy released or absorbed during phase change (solid-liquid)",
-        "Heat from nuclear fusion",
-        "Temperature of melting"
-      ],
-      correct: 1,
-      explanation:
-        "Latent heat of fusion is the energy released (freezing) or absorbed (melting) during the solid-liquid phase transition, without changing temperature."
+        { text: "Heat needed to change temperature", correct: false },
+        { text: "Energy released or absorbed during phase change (solid-liquid)", correct: true },
+        { text: "Heat from nuclear fusion", correct: false },
+        { text: "Temperature of melting", correct: false }
+      ]
     },
     {
       question: "Why can sodium acetate stay liquid below its freezing point (54C)?",
       options: [
-        "It's not real sodium acetate",
-        "The container keeps it warm",
-        "Without nucleation sites, crystals can't form (supercooling)",
-        "It has no freezing point"
-      ],
-      correct: 2,
-      explanation:
-        "Supersaturated/supercooled solutions need a 'seed' or nucleation site to start crystallization. Without disturbance, they remain liquid below freezing point."
+        { text: "It's not real sodium acetate", correct: false },
+        { text: "The container keeps it warm", correct: false },
+        { text: "Without nucleation sites, crystals can't form (supercooling)", correct: true },
+        { text: "It has no freezing point", correct: false }
+      ]
     },
     {
       question: "When the metal disc is clicked, what happens?",
       options: [
-        "It heats the solution electrically",
-        "It creates a nucleation site that triggers crystallization",
-        "It mixes chemicals together",
-        "It releases stored heat directly"
-      ],
-      correct: 1,
-      explanation:
-        "The disc's deformation creates a tiny crystal that acts as a nucleation site. Crystallization spreads rapidly from this point, releasing latent heat."
+        { text: "It heats the solution electrically", correct: false },
+        { text: "It creates a nucleation site that triggers crystallization", correct: true },
+        { text: "It mixes chemicals together", correct: false },
+        { text: "It releases stored heat directly", correct: false }
+      ]
     },
     {
       question: "During crystallization, the hand warmer's temperature:",
       options: [
-        "Drops to freezing",
-        "Rises to the melting/freezing point and stays there",
-        "Fluctuates randomly",
-        "Stays at room temperature"
-      ],
-      correct: 1,
-      explanation:
-        "As crystals form, latent heat is released, heating the solution to its melting point (54C). It stays there until crystallization completes."
+        { text: "Drops to freezing", correct: false },
+        { text: "Rises to the melting/freezing point and stays there", correct: true },
+        { text: "Fluctuates randomly", correct: false },
+        { text: "Stays at room temperature", correct: false }
+      ]
     },
     {
       question: "How do you 'recharge' a reusable hand warmer?",
       options: [
-        "Plug it into electricity",
-        "Add more chemicals",
-        "Boil it in water to re-dissolve the crystals",
-        "Let it sit overnight"
-      ],
-      correct: 2,
-      explanation:
-        "Heating the crystallized sodium acetate above 54C re-dissolves the crystals. When cooled carefully, it becomes supercooled liquid again, ready to reuse."
+        { text: "Plug it into electricity", correct: false },
+        { text: "Add more chemicals", correct: false },
+        { text: "Boil it in water to re-dissolve the crystals", correct: true },
+        { text: "Let it sit overnight", correct: false }
+      ]
     },
     {
       question: "Chemical (iron oxidation) hand warmers differ from phase-change ones because:",
       options: [
-        "They're reusable",
-        "They produce heat through irreversible chemical reaction",
-        "They work faster",
-        "They get hotter"
-      ],
-      correct: 1,
-      explanation:
-        "Chemical warmers use iron oxidation (rusting), which is irreversible. Once the iron is oxidized, the warmer is depleted and must be discarded."
+        { text: "They're reusable", correct: false },
+        { text: "They produce heat through irreversible chemical reaction", correct: true },
+        { text: "They work faster", correct: false },
+        { text: "They get hotter", correct: false }
+      ]
     },
     {
       question: "The latent heat of fusion for sodium acetate is about 264 kJ/kg. This means:",
       options: [
-        "It heats up 264C",
-        "264 kJ is released when 1 kg crystallizes",
-        "It takes 264 kg to heat it",
-        "264 is its melting point"
-      ],
-      correct: 1,
-      explanation:
-        "Latent heat is energy per unit mass. When 1 kg of liquid sodium acetate crystallizes, it releases 264 kJ of heat energy."
+        { text: "It heats up 264C", correct: false },
+        { text: "264 kJ is released when 1 kg crystallizes", correct: true },
+        { text: "It takes 264 kg to heat it", correct: false },
+        { text: "264 is its melting point", correct: false }
+      ]
     },
     {
       question: "Why does the crystallization spread so rapidly after the disc is clicked?",
       options: [
-        "The disc is very hot",
-        "Each new crystal triggers neighbors to crystallize (chain reaction)",
-        "The solution is compressed",
-        "Air rushes in"
-      ],
-      correct: 1,
-      explanation:
-        "Once crystallization starts, each new crystal surface acts as a nucleation site for more crystallization. This creates a rapid chain reaction."
+        { text: "The disc is very hot", correct: false },
+        { text: "Each new crystal triggers neighbors to crystallize (chain reaction)", correct: true },
+        { text: "The solution is compressed", correct: false },
+        { text: "Air rushes in", correct: false }
+      ]
     },
     {
       question: "A supercooled liquid is:",
       options: [
-        "Colder than absolute zero",
-        "A liquid below its normal freezing point",
-        "A very cold solid",
-        "Liquid nitrogen"
-      ],
-      correct: 1,
-      explanation:
-        "Supercooled liquids remain liquid below their freezing point due to lack of nucleation sites. They're metastable and can crystallize suddenly when disturbed."
+        { text: "Colder than absolute zero", correct: false },
+        { text: "A liquid below its normal freezing point", correct: true },
+        { text: "A very cold solid", correct: false },
+        { text: "Liquid nitrogen", correct: false }
+      ]
     },
     {
       question: "Ice packs that stay cold for hours work by:",
       options: [
-        "Being very well insulated",
-        "Absorbing latent heat during melting (opposite of hand warmers)",
-        "Chemical reactions that make cold",
-        "Containing supercold liquid"
-      ],
-      correct: 1,
-      explanation:
-        "Melting absorbs latent heat from surroundings. Ice packs stay at 0C while melting because the absorbed heat goes into phase change, not temperature rise."
+        { text: "Being very well insulated", correct: false },
+        { text: "Absorbing latent heat during melting (opposite of hand warmers)", correct: true },
+        { text: "Chemical reactions that make cold", correct: false },
+        { text: "Containing supercold liquid", correct: false }
+      ]
     }
   ];
 
@@ -428,25 +330,25 @@ export default function HandWarmerRenderer({
       title: "Reusable Hand Warmers",
       description:
         "Sodium acetate hand warmers can be reused hundreds of times. Click to crystallize and release heat (54C for up to an hour). Boil in water for 10 minutes to reset. More economical and eco-friendly than disposables.",
-      icon: "glove"
+      icon: "🧤"
     },
     {
       title: "Thermal Energy Storage",
       description:
         "Phase change materials (PCMs) store energy in buildings. Melting during hot days and solidifying at night, they reduce heating/cooling costs by 20-30%. Paraffin wax and salt hydrates are common PCMs.",
-      icon: "building"
+      icon: "🏢"
     },
     {
       title: "Food Transport",
       description:
         "Phase change gel packs keep vaccines, organs, and temperature-sensitive foods within precise ranges during shipping. They absorb/release heat while staying at constant temperature during phase change.",
-      icon: "package"
+      icon: "📦"
     },
     {
       title: "Spacecraft Thermal Control",
       description:
         "Satellites use PCMs to handle extreme temperature swings between sun and shadow. The PCM absorbs excess heat (melting) and releases it when cold (solidifying), maintaining stable equipment temperatures.",
-      icon: "satellite"
+      icon: "🛰️"
     }
   ];
 
@@ -454,11 +356,10 @@ export default function HandWarmerRenderer({
   const handleTestSubmit = () => {
     let score = 0;
     testQuestions.forEach((q, i) => {
-      if (testAnswers[i] === q.correct) score++;
+      if (testAnswers[i] !== undefined && q.options[testAnswers[i]]?.correct) score++;
     });
     setTestScore(score);
     setTestSubmitted(true);
-    emitEvent("test_submitted", { score, total: testQuestions.length });
 
     if (score >= 7) {
       playSound("complete");
@@ -484,10 +385,8 @@ export default function HandWarmerRenderer({
 
     return (
       <svg viewBox="0 0 400 400" className="w-full max-w-md mx-auto">
-        {/* Background */}
         <rect width="400" height="400" fill="#1e293b" />
 
-        {/* Hand warmer pouch outline */}
         <ellipse
           cx="200"
           cy="220"
@@ -499,7 +398,6 @@ export default function HandWarmerRenderer({
           opacity={0.8}
         />
 
-        {/* Liquid shimmer effect */}
         {isLiquid && (
           <>
             <ellipse
@@ -519,12 +417,10 @@ export default function HandWarmerRenderer({
           </>
         )}
 
-        {/* Crystal formation during crystallization */}
         {(isCrystallizing || isSolid) && (
           <g>
             {crystalPoints.map((point, i) => (
               <g key={i} transform={`translate(${point.x}, ${point.y})`}>
-                {/* Hexagonal crystal shape */}
                 <polygon
                   points={`0,${-point.size} ${point.size * 0.866},${-point.size / 2} ${point.size * 0.866},${point.size / 2} 0,${point.size} ${-point.size * 0.866},${point.size / 2} ${-point.size * 0.866},${-point.size / 2}`}
                   fill="rgba(255,255,255,0.8)"
@@ -536,7 +432,6 @@ export default function HandWarmerRenderer({
           </g>
         )}
 
-        {/* Metal disc (activation button) */}
         <g transform="translate(200, 180)">
           <circle
             r={20}
@@ -555,7 +450,6 @@ export default function HandWarmerRenderer({
           )}
         </g>
 
-        {/* Crystallization front (wave) */}
         {isCrystallizing && (
           <ellipse
             cx="200"
@@ -569,7 +463,6 @@ export default function HandWarmerRenderer({
           />
         )}
 
-        {/* Heat waves emanating */}
         {temperature > 30 && (
           <g>
             {[0, 1, 2].map((i) => {
@@ -588,7 +481,6 @@ export default function HandWarmerRenderer({
           </g>
         )}
 
-        {/* Temperature display */}
         <g transform="translate(330, 200)">
           <rect x={-25} y={-60} width={50} height={120} fill="#1f2937" stroke="#374151" rx={5} />
           <rect
@@ -604,14 +496,12 @@ export default function HandWarmerRenderer({
           </text>
         </g>
 
-        {/* State label */}
         <text x="200" y="350" textAnchor="middle" fontSize="14" fill="#e2e8f0" fontWeight="bold">
           {isLiquid ? "Supercooled Liquid (Ready)" :
            isCrystallizing ? `Crystallizing... ${crystalProgress.toFixed(0)}%` :
            "Crystallized (Releasing Heat)"}
         </text>
 
-        {/* Energy info */}
         <text x="200" y="375" textAnchor="middle" fontSize="11" fill="#94a3b8">
           Latent Heat: {latentHeatFusion} kJ/kg | Melting Point: {meltingPoint}C
         </text>
@@ -623,10 +513,8 @@ export default function HandWarmerRenderer({
   const renderComparisonVisualization = () => {
     return (
       <svg viewBox="0 0 400 300" className="w-full max-w-md mx-auto">
-        {/* Background */}
         <rect width="400" height="300" fill="#1e293b" />
 
-        {/* Warmer pouch */}
         <ellipse
           cx="200"
           cy="120"
@@ -642,7 +530,6 @@ export default function HandWarmerRenderer({
           opacity={0.8}
         />
 
-        {/* Heat waves if active */}
         {twistState === "active" && (
           <g>
             {[0, 1, 2].map((i) => {
@@ -661,12 +548,10 @@ export default function HandWarmerRenderer({
           </g>
         )}
 
-        {/* Temperature */}
         <text x="200" y="130" textAnchor="middle" fontSize="24" fill="#e2e8f0" fontWeight="bold">
           {twistTemperature.toFixed(1)}C
         </text>
 
-        {/* Energy bar */}
         <g transform="translate(100, 200)">
           <text x="100" y="-10" textAnchor="middle" fontSize="12" fill="#94a3b8">
             Energy Remaining: {energyRemaining.toFixed(0)}%
@@ -680,7 +565,6 @@ export default function HandWarmerRenderer({
           />
         </g>
 
-        {/* Labels */}
         <text x="200" y="250" textAnchor="middle" fontSize="14" fill="#e2e8f0" fontWeight="bold">
           {warmerType === "phase" ? "Phase-Change (Reusable)" : "Chemical (Disposable)"}
         </text>
@@ -690,7 +574,6 @@ export default function HandWarmerRenderer({
             : "Iron + oxygen -> rust + heat"}
         </text>
 
-        {/* State indicator */}
         <text x="200" y="290" textAnchor="middle" fontSize="12" fill={
           twistState === "inactive" ? "#0ea5e9" :
           twistState === "active" ? "#f97316" : "#64748b"
@@ -702,16 +585,13 @@ export default function HandWarmerRenderer({
     );
   };
 
-  // Render hook phase
   const renderHook = () => (
     <div className="flex flex-col items-center justify-center min-h-[600px] px-6 py-12 text-center">
-      {/* Premium badge */}
       <div className="inline-flex items-center gap-2 px-4 py-2 bg-orange-500/10 border border-orange-500/20 rounded-full mb-8">
         <span className="w-2 h-2 bg-orange-400 rounded-full animate-pulse" />
         <span className="text-sm font-medium text-orange-400 tracking-wide">THERMAL PHYSICS</span>
       </div>
 
-      {/* Main title with gradient */}
       <h1 className="text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-white via-orange-100 to-yellow-200 bg-clip-text text-transparent">
         The Magic Hand Warmer
       </h1>
@@ -720,18 +600,11 @@ export default function HandWarmerRenderer({
         Discover how a simple click unleashes hidden thermal energy
       </p>
 
-      {/* Premium card with graphic */}
       <div className="relative bg-gradient-to-br from-slate-800/80 to-slate-900/80 rounded-3xl p-8 max-w-xl w-full border border-slate-700/50 shadow-2xl shadow-black/20">
-        {/* Subtle glow effect */}
         <div className="absolute inset-0 bg-gradient-to-br from-orange-500/5 via-transparent to-yellow-500/5 rounded-3xl" />
 
         <div className="relative">
-          <div className="text-6xl mb-6">
-            <span className="inline-block animate-pulse">&#129348;</span>
-            <span className="mx-2">&#10052;&#65039;</span>
-            <span className="inline-block">&#10132;</span>
-            <span className="ml-2">&#128293;</span>
-          </div>
+          <div className="text-6xl mb-6">🧤 ❄️ → 🔥</div>
 
           <div className="space-y-4">
             <p className="text-xl text-white/90 font-medium leading-relaxed">
@@ -749,9 +622,8 @@ export default function HandWarmerRenderer({
         </div>
       </div>
 
-      {/* Premium CTA button */}
       <button
-        onMouseDown={(e) => { e.preventDefault(); goToPhase(1); }}
+        onMouseDown={(e) => { e.preventDefault(); onPhaseComplete?.(); }}
         className="mt-10 group relative px-10 py-5 bg-gradient-to-r from-orange-500 to-red-500 text-white text-lg font-semibold rounded-2xl transition-all duration-300 hover:shadow-lg hover:shadow-orange-500/25 hover:scale-[1.02] active:scale-[0.98]"
       >
         <span className="relative z-10 flex items-center gap-3">
@@ -762,25 +634,23 @@ export default function HandWarmerRenderer({
         </span>
       </button>
 
-      {/* Feature hints */}
       <div className="mt-12 flex items-center gap-8 text-sm text-slate-500">
         <div className="flex items-center gap-2">
-          <span className="text-orange-400">&#10022;</span>
+          <span className="text-orange-400">✦</span>
           Interactive Lab
         </div>
         <div className="flex items-center gap-2">
-          <span className="text-orange-400">&#10022;</span>
+          <span className="text-orange-400">✦</span>
           Real-World Examples
         </div>
         <div className="flex items-center gap-2">
-          <span className="text-orange-400">&#10022;</span>
+          <span className="text-orange-400">✦</span>
           Knowledge Test
         </div>
       </div>
     </div>
   );
 
-  // Render predict phase
   const renderPredict = () => (
     <div className="flex flex-col items-center justify-center min-h-[500px] p-6">
       <h2 className="text-2xl font-bold text-white mb-6">Make Your Prediction</h2>
@@ -807,7 +677,6 @@ export default function HandWarmerRenderer({
             onMouseDown={() => {
               setPrediction(option.id);
               playSound("click");
-              emitEvent("prediction_made", { prediction: option.id });
             }}
             className={`p-4 rounded-xl text-left transition-all duration-300 ${
               prediction === option.id
@@ -828,7 +697,7 @@ export default function HandWarmerRenderer({
               : "Not quite—the energy actually comes from the phase change itself!"}
           </p>
           <button
-            onMouseDown={() => goToPhase(2)}
+            onMouseDown={() => onPhaseComplete?.()}
             className="mt-4 px-6 py-3 bg-gradient-to-r from-orange-600 to-red-600 text-white font-semibold rounded-xl"
           >
             Test Your Prediction
@@ -838,7 +707,6 @@ export default function HandWarmerRenderer({
     </div>
   );
 
-  // Render play phase
   const renderPlay = () => (
     <div className="flex flex-col items-center p-6">
       <h2 className="text-2xl font-bold text-white mb-4">Activate the Hand Warmer</h2>
@@ -859,7 +727,6 @@ export default function HandWarmerRenderer({
         )}
       </div>
 
-      {/* Explanation of current state */}
       <div className={`p-4 rounded-xl mb-6 max-w-xl w-full ${
         warmerState === "liquid" ? "bg-blue-900/30 border border-blue-600" :
         warmerState === "crystallizing" ? "bg-yellow-900/30 border border-yellow-600" : "bg-emerald-900/30 border border-emerald-600"
@@ -894,7 +761,7 @@ export default function HandWarmerRenderer({
       </div>
 
       <button
-        onMouseDown={() => goToPhase(3)}
+        onMouseDown={() => onPhaseComplete?.()}
         className="px-6 py-3 bg-gradient-to-r from-orange-600 to-red-600 text-white font-semibold rounded-xl"
       >
         Learn the Science
@@ -902,7 +769,6 @@ export default function HandWarmerRenderer({
     </div>
   );
 
-  // Render review phase
   const renderReview = () => (
     <div className="flex flex-col items-center p-6">
       <h2 className="text-2xl font-bold text-white mb-6">The Science of Phase Change Energy</h2>
@@ -915,7 +781,7 @@ export default function HandWarmerRenderer({
             WITHOUT changing temperature. For sodium acetate:
           </p>
           <div className="font-mono text-center text-lg text-orange-400 mb-2">
-            L<sub>f</sub> = 264 kJ/kg
+            Lf = 264 kJ/kg
           </div>
           <p className="text-slate-400 text-sm">
             That's enough to raise 1 kg of water by 63C!
@@ -952,7 +818,7 @@ export default function HandWarmerRenderer({
       )}
 
       <button
-        onMouseDown={() => goToPhase(4)}
+        onMouseDown={() => onPhaseComplete?.()}
         className="mt-8 px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-semibold rounded-xl"
       >
         Ready for a Twist?
@@ -960,7 +826,6 @@ export default function HandWarmerRenderer({
     </div>
   );
 
-  // Render twist predict phase
   const renderTwistPredict = () => (
     <div className="flex flex-col items-center justify-center min-h-[500px] p-6">
       <h2 className="text-2xl font-bold text-amber-400 mb-6">The Comparison Twist</h2>
@@ -990,7 +855,6 @@ export default function HandWarmerRenderer({
             onMouseDown={() => {
               setTwistPrediction(option.id);
               playSound("click");
-              emitEvent("twist_prediction_made", { prediction: option.id });
             }}
             className={`p-4 rounded-xl text-left transition-all duration-300 ${
               twistPrediction === option.id
@@ -1011,7 +875,7 @@ export default function HandWarmerRenderer({
               : "Not quite—chemical warmers actually last much longer!"}
           </p>
           <button
-            onMouseDown={() => goToPhase(5)}
+            onMouseDown={() => onPhaseComplete?.()}
             className="mt-4 px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-semibold rounded-xl"
           >
             Compare Both Types
@@ -1021,13 +885,11 @@ export default function HandWarmerRenderer({
     </div>
   );
 
-  // Render twist play phase
   const renderTwistPlay = () => (
     <div className="flex flex-col items-center p-6">
       <h2 className="text-2xl font-bold text-amber-400 mb-4">Phase-Change vs Chemical</h2>
       <p className="text-slate-400 mb-6">Compare how the two types of hand warmers behave!</p>
 
-      {/* Type selector */}
       <div className="flex gap-2 mb-6">
         <button
           onMouseDown={() => {
@@ -1084,7 +946,6 @@ export default function HandWarmerRenderer({
         </div>
       </div>
 
-      {/* Comparison info */}
       <div className="grid grid-cols-2 gap-4 max-w-xl mb-6">
         <div className="bg-blue-900/30 p-4 rounded-xl border border-blue-600/30">
           <h4 className="font-bold text-blue-400 text-sm mb-2">Phase-Change</h4>
@@ -1105,7 +966,7 @@ export default function HandWarmerRenderer({
       </div>
 
       <button
-        onMouseDown={() => goToPhase(6)}
+        onMouseDown={() => onPhaseComplete?.()}
         className="px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-semibold rounded-xl"
       >
         See Explanation
@@ -1113,7 +974,6 @@ export default function HandWarmerRenderer({
     </div>
   );
 
-  // Render twist review phase
   const renderTwistReview = () => (
     <div className="flex flex-col items-center p-6">
       <h2 className="text-2xl font-bold text-amber-400 mb-6">Two Types of Hand Warmers</h2>
@@ -1133,7 +993,7 @@ export default function HandWarmerRenderer({
         <div className="bg-gradient-to-br from-orange-900/40 to-red-900/40 rounded-2xl p-6 border border-orange-600/30">
           <h3 className="text-xl font-bold text-orange-400 mb-3">Chemical (Disposable)</h3>
           <ul className="text-slate-300 text-sm space-y-1">
-            <li>Uses iron oxidation: 4Fe + 3O2 -> 2Fe2O3 + heat</li>
+            <li>Uses iron oxidation: 4Fe + 3O2 -&gt; 2Fe2O3 + heat</li>
             <li>Slow, sustained reaction</li>
             <li>Lower temp (~50C) but lasts 6-12 hours</li>
             <li>Irreversible (single use)</li>
@@ -1166,7 +1026,7 @@ export default function HandWarmerRenderer({
       )}
 
       <button
-        onMouseDown={() => goToPhase(7)}
+        onMouseDown={() => onPhaseComplete?.()}
         className="mt-8 px-6 py-3 bg-gradient-to-r from-teal-600 to-blue-600 text-white font-semibold rounded-xl"
       >
         See Real-World Applications
@@ -1174,7 +1034,6 @@ export default function HandWarmerRenderer({
     </div>
   );
 
-  // Render transfer phase
   const renderTransfer = () => (
     <div className="flex flex-col items-center p-6">
       <h2 className="text-2xl font-bold text-white mb-6">Phase Change Energy in the Real World</h2>
@@ -1198,17 +1057,12 @@ export default function HandWarmerRenderer({
             }}
           >
             <div className="flex items-start gap-3">
-              <span className="text-3xl">
-                {app.icon === "glove" && "&#129348;"}
-                {app.icon === "building" && "&#127970;"}
-                {app.icon === "package" && "&#128230;"}
-                {app.icon === "satellite" && "&#128752;"}
-              </span>
+              <span className="text-3xl">{app.icon}</span>
               <div className="flex-1">
                 <div className="flex items-center gap-2">
                   <h3 className="font-bold text-white">{app.title}</h3>
                   {completedApps.has(index) && (
-                    <span className="text-emerald-400">&#10003;</span>
+                    <span className="text-emerald-400">✓</span>
                   )}
                 </div>
                 {(currentApp === index || completedApps.has(index)) && (
@@ -1254,7 +1108,7 @@ export default function HandWarmerRenderer({
 
       {completedApps.size === applications.length && (
         <button
-          onMouseDown={() => goToPhase(8)}
+          onMouseDown={() => onPhaseComplete?.()}
           className="mt-6 px-6 py-3 bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-semibold rounded-xl"
         >
           Take the Quiz
@@ -1263,7 +1117,6 @@ export default function HandWarmerRenderer({
     </div>
   );
 
-  // Render test phase
   const renderTest = () => (
     <div className="flex flex-col items-center p-6">
       <h2 className="text-2xl font-bold text-white mb-6">Test Your Knowledge</h2>
@@ -1289,7 +1142,7 @@ export default function HandWarmerRenderer({
                         : "bg-slate-700/50 text-slate-300 hover:bg-slate-600/50"
                     }`}
                   >
-                    {option}
+                    {option.text}
                   </button>
                 ))}
               </div>
@@ -1307,7 +1160,7 @@ export default function HandWarmerRenderer({
         </div>
       ) : (
         <div className="bg-slate-800/50 rounded-2xl p-6 max-w-2xl w-full text-center">
-          <div className="text-6xl mb-4">{testScore >= 7 ? "&#127881;" : "&#128218;"}</div>
+          <div className="text-6xl mb-4">{testScore >= 7 ? "🎉" : "📚"}</div>
           <h3 className="text-2xl font-bold text-white mb-2">
             {testScore} / {testQuestions.length}
           </h3>
@@ -1319,7 +1172,7 @@ export default function HandWarmerRenderer({
 
           {testScore >= 7 ? (
             <button
-              onMouseDown={() => goToPhase(9)}
+              onMouseDown={() => { onCorrectAnswer?.(); onPhaseComplete?.(); }}
               className="px-8 py-4 bg-gradient-to-r from-yellow-500 to-orange-500 text-white font-semibold rounded-xl"
             >
               Claim Your Mastery!
@@ -1328,145 +1181,4 @@ export default function HandWarmerRenderer({
             <button
               onMouseDown={() => {
                 setTestSubmitted(false);
-                setTestAnswers({});
-                goToPhase(3);
-              }}
-              className="px-8 py-4 bg-gradient-to-r from-blue-600 to-cyan-600 text-white font-semibold rounded-xl"
-            >
-              Review and Try Again
-            </button>
-          )}
-        </div>
-      )}
-    </div>
-  );
-
-  // Render mastery phase
-  const renderMastery = () => {
-    if (!showConfetti) {
-      setShowConfetti(true);
-      playSound("complete");
-      emitEvent("mastery_achieved", {});
-    }
-
-    return (
-      <div className="flex flex-col items-center justify-center min-h-[500px] p-6 text-center relative">
-        {showConfetti && (
-          <div className="absolute inset-0 pointer-events-none overflow-hidden">
-            {[...Array(50)].map((_, i) => (
-              <div
-                key={i}
-                className="absolute animate-bounce"
-                style={{
-                  left: `${Math.random() * 100}%`,
-                  top: `${Math.random() * 100}%`,
-                  animationDelay: `${Math.random() * 2}s`,
-                  animationDuration: `${1 + Math.random()}s`,
-                  fontSize: `${12 + Math.random() * 12}px`,
-                }}
-              >
-                {["&#129348;", "&#128293;", "&#10052;&#65039;", "&#11088;", "&#10024;"][Math.floor(Math.random() * 5)]}
-              </div>
-            ))}
-          </div>
-        )}
-
-        <div className="relative bg-gradient-to-br from-orange-900/50 via-yellow-900/50 to-red-900/50 rounded-3xl p-8 max-w-2xl border border-orange-600/30">
-          <div className="text-8xl mb-6">&#127942;</div>
-          <h1 className="text-3xl font-bold text-white mb-4">Phase Change Master!</h1>
-
-          <p className="text-xl text-slate-300 mb-6">You've mastered latent heat and phase change energy!</p>
-
-          <div className="grid grid-cols-2 gap-4 mb-6">
-            <div className="bg-slate-800/50 rounded-xl p-4">
-              <div className="text-2xl mb-2">&#128293;</div>
-              <p className="text-sm text-slate-300">Latent Heat</p>
-            </div>
-            <div className="bg-slate-800/50 rounded-xl p-4">
-              <div className="text-2xl mb-2">&#10052;&#65039;</div>
-              <p className="text-sm text-slate-300">Supercooling</p>
-            </div>
-            <div className="bg-slate-800/50 rounded-xl p-4">
-              <div className="text-2xl mb-2">&#128142;</div>
-              <p className="text-sm text-slate-300">Nucleation</p>
-            </div>
-            <div className="bg-slate-800/50 rounded-xl p-4">
-              <div className="text-2xl mb-2">&#9851;&#65039;</div>
-              <p className="text-sm text-slate-300">Reusability</p>
-            </div>
-          </div>
-
-          <div className="p-4 bg-orange-900/30 rounded-xl border border-orange-600/30 mb-6">
-            <p className="text-orange-300">
-              Next time you use a hand warmer, you'll understand the
-              amazing physics of phase transitions and latent heat!
-            </p>
-          </div>
-
-          {onBack && (
-            <button
-              onMouseDown={onBack}
-              className="px-6 py-3 bg-slate-700 hover:bg-slate-600 text-white font-medium rounded-xl"
-            >
-              Back to Games
-            </button>
-          )}
-        </div>
-      </div>
-    );
-  };
-
-  // Main render
-  const renderPhase = () => {
-    switch (phase) {
-      case 0: return renderHook();
-      case 1: return renderPredict();
-      case 2: return renderPlay();
-      case 3: return renderReview();
-      case 4: return renderTwistPredict();
-      case 5: return renderTwistPlay();
-      case 6: return renderTwistReview();
-      case 7: return renderTransfer();
-      case 8: return renderTest();
-      case 9: return renderMastery();
-      default: return renderHook();
-    }
-  };
-
-  return (
-    <div className="min-h-screen bg-[#0a0f1a] text-white relative overflow-hidden">
-      {/* Premium background gradient */}
-      <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-[#0a1628] to-slate-900" />
-      <div className="absolute top-0 left-1/4 w-96 h-96 bg-orange-500/5 rounded-full blur-3xl" />
-      <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-yellow-500/5 rounded-full blur-3xl" />
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-red-500/5 rounded-full blur-3xl" />
-
-      {/* Header */}
-      <div className="fixed top-0 left-0 right-0 z-50 bg-slate-900/80 backdrop-blur-xl border-b border-slate-800/50">
-        <div className="flex items-center justify-between px-6 py-3 max-w-4xl mx-auto">
-          <span className="text-sm font-semibold text-white/80 tracking-wide">Hand Warmer Physics</span>
-          <div className="flex items-center gap-1.5">
-            {PHASES.map((p) => (
-              <button
-                key={p}
-                onMouseDown={(e) => { e.preventDefault(); goToPhase(p); }}
-                className={`h-2 rounded-full transition-all duration-300 ${
-                  phase === p
-                    ? 'bg-orange-400 w-6 shadow-lg shadow-orange-400/30'
-                    : phase > p
-                      ? 'bg-emerald-500 w-2'
-                      : 'bg-slate-700 w-2 hover:bg-slate-600'
-                }`}
-                title={phaseLabels[p]}
-              />
-            ))}
-          </div>
-          <span className="text-sm font-medium text-orange-400">{phaseLabels[phase]}</span>
-        </div>
-      </div>
-
-      {/* Main content */}
-      <div className="relative pt-16 pb-12">{renderPhase()}</div>
-    </div>
-  );
-}
+                setTestAnsw

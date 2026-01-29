@@ -5,39 +5,15 @@ import React, { useState, useRef, useEffect, useCallback } from 'react';
 // ═══════════════════════════════════════════════════════════════════════════
 // TYPES & INTERFACES
 // ═══════════════════════════════════════════════════════════════════════════
-type GameEventType =
-  | 'phase_change'
-  | 'prediction_made'
-  | 'simulation_started'
-  | 'parameter_changed'
-  | 'twist_prediction_made'
-  | 'app_explored'
-  | 'test_answered'
-  | 'test_completed'
-  | 'mastery_achieved';
-
-interface GameEvent {
-  type: GameEventType;
-  data?: Record<string, unknown>;
-}
-
-// Numeric phases: 0=hook, 1=predict, 2=play, 3=review, 4=twist_predict, 5=twist_play, 6=twist_review, 7=transfer, 8=test, 9=mastery
-const PHASES: number[] = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
-const phaseLabels: Record<number, string> = {
-  0: 'Hook', 1: 'Predict', 2: 'Lab', 3: 'Review', 4: 'Twist Predict',
-  5: 'Twist Lab', 6: 'Twist Review', 7: 'Transfer', 8: 'Test', 9: 'Mastery'
-};
 
 interface LaminarTurbulentRendererProps {
-  onGameEvent?: (event: GameEvent) => void;
-  currentPhase?: number;
-  onPhaseComplete?: (phase: number) => void;
+  phase: 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
+  onPhaseComplete?: () => void;
+  onCorrectAnswer?: () => void;
+  onIncorrectAnswer?: () => void;
 }
 
-const LaminarTurbulentRenderer: React.FC<LaminarTurbulentRendererProps> = ({ onGameEvent, currentPhase, onPhaseComplete }) => {
-  // Phase management
-  const [phase, setPhase] = useState<number>(currentPhase ?? 0);
-
+const LaminarTurbulentRenderer: React.FC<LaminarTurbulentRendererProps> = ({ phase, onPhaseComplete, onCorrectAnswer, onIncorrectAnswer }) => {
   // Hook phase
   const [hookStep, setHookStep] = useState(0);
   const [faucetFlow, setFaucetFlow] = useState(0);
@@ -70,7 +46,6 @@ const LaminarTurbulentRenderer: React.FC<LaminarTurbulentRendererProps> = ({ onG
 
   // UI state
   const [isMobile, setIsMobile] = useState(false);
-  const navigationLockRef = useRef(false);
 
   // Responsive detection
   useEffect(() => {
@@ -79,13 +54,6 @@ const LaminarTurbulentRenderer: React.FC<LaminarTurbulentRendererProps> = ({ onG
     window.addEventListener('resize', checkMobile);
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
-
-  // Sync with external phase control
-  useEffect(() => {
-    if (currentPhase !== undefined && currentPhase !== phase) {
-      setPhase(currentPhase);
-    }
-  }, [currentPhase]);
 
   // Web Audio API sound
   const playSound = useCallback((type: 'click' | 'success' | 'failure' | 'transition' | 'complete' = 'click') => {
@@ -167,75 +135,97 @@ const LaminarTurbulentRenderer: React.FC<LaminarTurbulentRendererProps> = ({ onG
     };
   }, [flowVelocity, pipeDiameter, fluidViscosity, showDyeInjection]);
 
-  // Emit events
-  const emitEvent = (type: GameEventType, data?: Record<string, unknown>) => {
-    if (onGameEvent) {
-      onGameEvent({ type, data });
-    }
-  };
-
-  // Phase navigation with 400ms debouncing
-  const goToPhase = (newPhase: number) => {
-    if (navigationLockRef.current) return;
-    navigationLockRef.current = true;
-    playSound('transition');
-    setPhase(newPhase);
-    emitEvent('phase_change', { from: phase, to: newPhase });
-    if (onPhaseComplete) onPhaseComplete(newPhase);
-    setTimeout(() => { navigationLockRef.current = false; }, 400);
-  };
-
   // Test questions
   const testQuestions = [
     {
       question: "What primarily determines whether flow is laminar or turbulent?",
-      options: ["Fluid color", "Reynolds number (Re = ρvD/μ)", "Pipe material", "Fluid temperature only"],
-      correct: 1
+      options: [
+        { text: "Fluid color", correct: false },
+        { text: "Reynolds number (Re = ρvD/μ)", correct: true },
+        { text: "Pipe material", correct: false },
+        { text: "Fluid temperature only", correct: false }
+      ]
     },
     {
       question: "You turn on a faucet slowly — the water stream is clear. What happens when you turn it up high?",
-      options: ["Stream stays clear but faster", "Stream becomes white and chaotic", "Stream gets thinner", "No change in appearance"],
-      correct: 1
+      options: [
+        { text: "Stream stays clear but faster", correct: false },
+        { text: "Stream becomes white and chaotic", correct: true },
+        { text: "Stream gets thinner", correct: false },
+        { text: "No change in appearance", correct: false }
+      ]
     },
     {
       question: "Which flow type has LOWER drag for most shapes?",
-      options: ["Turbulent - energy helps it slide", "Laminar - smooth, orderly motion", "They have equal drag", "Depends on color"],
-      correct: 1
+      options: [
+        { text: "Turbulent - energy helps it slide", correct: false },
+        { text: "Laminar - smooth, orderly motion", correct: true },
+        { text: "They have equal drag", correct: false },
+        { text: "Depends on color", correct: false }
+      ]
     },
     {
       question: "What is the critical Reynolds number for pipe flow transition?",
-      options: ["Re ≈ 100", "Re ≈ 2300", "Re ≈ 10,000", "Re ≈ 1,000,000"],
-      correct: 1
+      options: [
+        { text: "Re ≈ 100", correct: false },
+        { text: "Re ≈ 2300", correct: true },
+        { text: "Re ≈ 10,000", correct: false },
+        { text: "Re ≈ 1,000,000", correct: false }
+      ]
     },
     {
       question: "Why does adding honey to water change its flow behavior?",
-      options: ["Honey adds color", "Higher viscosity raises critical Re threshold", "Honey is lighter", "No effect on flow"],
-      correct: 1
+      options: [
+        { text: "Honey adds color", correct: false },
+        { text: "Higher viscosity raises critical Re threshold", correct: true },
+        { text: "Honey is lighter", correct: false },
+        { text: "No effect on flow", correct: false }
+      ]
     },
     {
       question: "Golf ball dimples work by:",
-      options: ["Making the ball heavier", "Triggering turbulent boundary layer (less drag)", "Increasing laminar flow", "Aesthetic only"],
-      correct: 1
+      options: [
+        { text: "Making the ball heavier", correct: false },
+        { text: "Triggering turbulent boundary layer (less drag)", correct: true },
+        { text: "Increasing laminar flow", correct: false },
+        { text: "Aesthetic only", correct: false }
+      ]
     },
     {
       question: "Blood flow in arteries is usually:",
-      options: ["Always turbulent - heart pumps hard", "Laminar, except in diseased vessels", "Random chaos", "Only turbulent in veins"],
-      correct: 1
+      options: [
+        { text: "Always turbulent - heart pumps hard", correct: false },
+        { text: "Laminar, except in diseased vessels", correct: true },
+        { text: "Random chaos", correct: false },
+        { text: "Only turbulent in veins", correct: false }
+      ]
     },
     {
       question: "To keep flow laminar in a pipe, you should:",
-      options: ["Increase velocity", "Decrease pipe diameter", "Increase viscosity or decrease velocity", "Make pipe rougher"],
-      correct: 2
+      options: [
+        { text: "Increase velocity", correct: false },
+        { text: "Decrease pipe diameter", correct: false },
+        { text: "Increase viscosity or decrease velocity", correct: true },
+        { text: "Make pipe rougher", correct: false }
+      ]
     },
     {
       question: "Why do Formula 1 cars have smooth underbodies?",
-      options: ["Weight reduction", "Maintain laminar airflow for less drag", "Aesthetic design", "Easier to clean"],
-      correct: 1
+      options: [
+        { text: "Weight reduction", correct: false },
+        { text: "Maintain laminar airflow for less drag", correct: true },
+        { text: "Aesthetic design", correct: false },
+        { text: "Easier to clean", correct: false }
+      ]
     },
     {
       question: "The transition from laminar to turbulent is:",
-      options: ["Gradual and predictable", "Sudden and sensitive to disturbances", "Impossible to predict", "Only occurs in gases"],
-      correct: 1
+      options: [
+        { text: "Gradual and predictable", correct: false },
+        { text: "Sudden and sensitive to disturbances", correct: true },
+        { text: "Impossible to predict", correct: false },
+        { text: "Only occurs in gases", correct: false }
+      ]
     }
   ];
 
@@ -300,15 +290,24 @@ const LaminarTurbulentRenderer: React.FC<LaminarTurbulentRendererProps> = ({ onG
   ];
 
   // Handle test answer
-  const handleTestAnswer = (answer: number) => {
+  const handleTestAnswer = (answerIndex: number) => {
     playSound('click');
-    setTestAnswers(prev => [...prev, answer]);
+    const currentQuestion = testAnswers.length;
+    const isCorrect = testQuestions[currentQuestion].options[answerIndex].correct;
+
+    if (isCorrect) {
+      onCorrectAnswer?.();
+    } else {
+      onIncorrectAnswer?.();
+    }
+
+    setTestAnswers(prev => [...prev, answerIndex]);
   };
 
   // Calculate test score
   const calculateScore = (): number => {
-    return testAnswers.reduce((score, answer, index) => {
-      return score + (answer === testQuestions[index].correct ? 1 : 0);
+    return testAnswers.reduce((score, answerIndex, questionIndex) => {
+      return score + (testQuestions[questionIndex].options[answerIndex].correct ? 1 : 0);
     }, 0);
   };
 
@@ -327,18 +326,35 @@ const LaminarTurbulentRenderer: React.FC<LaminarTurbulentRendererProps> = ({ onG
     turbulent: '#F97316'
   };
 
+  // Phase labels for display
+  const phaseLabels: Record<string, string> = {
+    hook: 'Hook',
+    predict: 'Predict',
+    play: 'Lab',
+    review: 'Review',
+    twist_predict: 'Twist Predict',
+    twist_play: 'Twist Lab',
+    twist_review: 'Twist Review',
+    transfer: 'Transfer',
+    test: 'Test',
+    mastery: 'Mastery'
+  };
+
+  const phaseOrder = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
+  const currentPhaseIndex = phaseOrder.indexOf(phase);
+
   // Helper render functions
   const renderProgressBar = () => {
     return (
       <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginBottom: '20px' }}>
-        {PHASES.map((p, i) => (
+        {phaseOrder.map((p, i) => (
           <div
             key={p}
             style={{
               height: '4px',
               flex: 1,
               borderRadius: '2px',
-              background: i <= phase ? `linear-gradient(90deg, ${colors.primary}, ${colors.secondary})` : '#333',
+              background: i <= currentPhaseIndex ? `linear-gradient(90deg, ${colors.primary}, ${colors.secondary})` : '#333',
               transition: 'all 0.3s ease'
             }}
           />
@@ -564,7 +580,7 @@ const LaminarTurbulentRenderer: React.FC<LaminarTurbulentRendererProps> = ({ onG
         )}
       </div>
 
-      {hookStep === 1 && renderBottomBar(() => goToPhase(1))}
+      {hookStep === 1 && renderBottomBar(() => onPhaseComplete?.())}
     </div>
   );
 
@@ -616,7 +632,6 @@ const LaminarTurbulentRenderer: React.FC<LaminarTurbulentRendererProps> = ({ onG
               onMouseDown={() => {
                 setPrediction(option.value);
                 playSound('click');
-                emitEvent('prediction', { predicted: option.value, question: 'viscosity_effect' });
               }}
               style={{
                 padding: '16px 20px',
@@ -690,7 +705,7 @@ const LaminarTurbulentRenderer: React.FC<LaminarTurbulentRendererProps> = ({ onG
         )}
       </div>
 
-      {showPredictResult && renderBottomBar(() => goToPhase(2))}
+      {showPredictResult && renderBottomBar(() => onPhaseComplete?.())}
     </div>
   );
 
@@ -907,7 +922,7 @@ const LaminarTurbulentRenderer: React.FC<LaminarTurbulentRendererProps> = ({ onG
 
         {renderKeyTakeaway("Reynolds number predicts flow regime: higher velocity or larger pipes → higher Re → turbulence. Higher viscosity → lower Re → laminar.")}
 
-        {renderBottomBar(() => goToPhase(3))}
+        {renderBottomBar(() => onPhaseComplete?.())}
       </div>
     );
   };
@@ -1006,7 +1021,7 @@ const LaminarTurbulentRenderer: React.FC<LaminarTurbulentRendererProps> = ({ onG
         {renderKeyTakeaway("The Reynolds number determines flow character by comparing how hard fluid pushes (inertia) vs how much it resists (viscosity).")}
       </div>
 
-      {renderBottomBar(() => goToPhase(4))}
+      {renderBottomBar(() => onPhaseComplete?.())}
     </div>
   );
 
@@ -1130,7 +1145,7 @@ const LaminarTurbulentRenderer: React.FC<LaminarTurbulentRendererProps> = ({ onG
         )}
       </div>
 
-      {showTwistResult && renderBottomBar(() => goToPhase(5))}
+      {showTwistResult && renderBottomBar(() => onPhaseComplete?.())}
     </div>
   );
 
@@ -1280,7 +1295,7 @@ const LaminarTurbulentRenderer: React.FC<LaminarTurbulentRendererProps> = ({ onG
 
       {renderKeyTakeaway("For blunt objects, turbulent boundary layers stay attached longer, reducing wake size and drag — that's why golf balls have dimples!")}
 
-      {renderBottomBar(() => goToPhase(6))}
+      {renderBottomBar(() => onPhaseComplete?.())}
     </div>
   );
 
@@ -1342,7 +1357,7 @@ const LaminarTurbulentRenderer: React.FC<LaminarTurbulentRendererProps> = ({ onG
         {renderKeyTakeaway("The relationship between turbulence and drag depends on shape. For blunt objects, turbulence reduces total drag. For streamlined shapes, laminar flow wins.")}
       </div>
 
-      {renderBottomBar(() => goToPhase(7))}
+      {renderBottomBar(() => onPhaseComplete?.())}
     </div>
   );
 
@@ -1498,7 +1513,7 @@ const LaminarTurbulentRenderer: React.FC<LaminarTurbulentRendererProps> = ({ onG
         )}
       </div>
 
-      {completedApps.size === applications.length && renderBottomBar(() => goToPhase(8))}
+      {completedApps.size === applications.length && renderBottomBar(() => onPhaseComplete?.())}
     </div>
   );
 
@@ -1554,14 +1569,14 @@ const LaminarTurbulentRenderer: React.FC<LaminarTurbulentRendererProps> = ({ onG
                       e.currentTarget.style.background = colors.background;
                     }}
                   >
-                    {option}
+                    {option.text}
                   </button>
                 ))}
               </div>
 
               {/* Progress dots */}
               <div style={{ display: 'flex', justifyContent: 'center', gap: '8px', marginTop: '24px' }}>
-                {testQuestions.map((_, i) => (
+                {testQuestions.map((q, i) => (
                   <div
                     key={i}
                     style={{
@@ -1569,7 +1584,7 @@ const LaminarTurbulentRenderer: React.FC<LaminarTurbulentRendererProps> = ({ onG
                       height: '10px',
                       borderRadius: '50%',
                       background: i < currentQuestion
-                        ? (testAnswers[i] === testQuestions[i].correct ? colors.success : colors.accent)
+                        ? (testQuestions[i].options[testAnswers[i]].correct ? colors.success : colors.accent)
                         : i === currentQuestion
                           ? colors.primary
                           : '#333'
@@ -1627,19 +1642,19 @@ const LaminarTurbulentRenderer: React.FC<LaminarTurbulentRendererProps> = ({ onG
                       padding: '14px',
                       background: colors.background,
                       borderRadius: '10px',
-                      borderLeft: `4px solid ${testAnswers[i] === q.correct ? colors.success : colors.accent}`
+                      borderLeft: `4px solid ${q.options[testAnswers[i]].correct ? colors.success : colors.accent}`
                     }}
                   >
                     <p style={{ color: colors.text, margin: '0 0 8px 0', fontSize: '13px', fontWeight: '500' }}>
                       {i + 1}. {q.question}
                     </p>
                     <p style={{
-                      color: testAnswers[i] === q.correct ? colors.success : colors.accent,
+                      color: q.options[testAnswers[i]].correct ? colors.success : colors.accent,
                       margin: '0 0 4px 0',
                       fontSize: '12px'
                     }}>
-                      Your answer: {q.options[testAnswers[i]]}
-                      {testAnswers[i] === q.correct ? ' ✓' : ` ✗ (Correct: ${q.options[q.correct]})`}
+                      Your answer: {q.options[testAnswers[i]].text}
+                      {q.options[testAnswers[i]].correct ? ' ✓' : ` ✗ (Correct: ${q.options.find(o => o.correct)?.text})`}
                     </p>
                   </div>
                 ))}
@@ -1648,7 +1663,7 @@ const LaminarTurbulentRenderer: React.FC<LaminarTurbulentRendererProps> = ({ onG
           )}
         </div>
 
-        {showTestResults && renderBottomBar(() => goToPhase(9), false, "Complete Journey")}
+        {showTestResults && renderBottomBar(() => onPhaseComplete?.(), false, "Complete Journey")}
       </div>
     );
   };
@@ -1764,16 +1779,16 @@ const LaminarTurbulentRenderer: React.FC<LaminarTurbulentRendererProps> = ({ onG
   // Main render
   const renderPhase = () => {
     switch (phase) {
-      case 0: return renderHook();
-      case 1: return renderPredict();
-      case 2: return renderPlay();
-      case 3: return renderReview();
-      case 4: return renderTwistPredict();
-      case 5: return renderTwistPlay();
-      case 6: return renderTwistReview();
-      case 7: return renderTransfer();
-      case 8: return renderTest();
-      case 9: return renderMastery();
+      case 'hook': return renderHook();
+      case 'predict': return renderPredict();
+      case 'play': return renderPlay();
+      case 'review': return renderReview();
+      case 'twist_predict': return renderTwistPredict();
+      case 'twist_play': return renderTwistPlay();
+      case 'twist_review': return renderTwistReview();
+      case 'transfer': return renderTransfer();
+      case 'test': return renderTest();
+      case 'mastery': return renderMastery();
       default: return renderHook();
     }
   };
@@ -1791,16 +1806,15 @@ const LaminarTurbulentRenderer: React.FC<LaminarTurbulentRendererProps> = ({ onG
         <div className="flex items-center justify-between px-6 py-3 max-w-4xl mx-auto">
           <span className="text-sm font-semibold text-white/80 tracking-wide">Laminar vs Turbulent Flow</span>
           <div className="flex items-center gap-1.5">
-            {PHASES.map((p, i) => (
-              <button
+            {phaseOrder.map((p, i) => (
+              <div
                 key={p}
-                onMouseDown={(e) => { e.preventDefault(); goToPhase(p); }}
                 className={`h-2 rounded-full transition-all duration-300 ${
                   phase === p
                     ? 'bg-blue-400 w-6 shadow-lg shadow-blue-400/30'
-                    : phase > p
+                    : currentPhaseIndex > i
                       ? 'bg-emerald-500 w-2'
-                      : 'bg-slate-700 w-2 hover:bg-slate-600'
+                      : 'bg-slate-700 w-2'
                 }`}
               />
             ))}

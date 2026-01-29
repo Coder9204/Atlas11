@@ -7,21 +7,11 @@ import React, { useState, useRef, useEffect } from 'react';
 // Marangoni effect: Flow from low to high surface tension regions
 // Water surface tension ≈ 0.072 N/m; soap reduces it significantly
 
-interface GameEvent {
-  type: 'phase_change' | 'prediction' | 'result' | 'complete';
-  from?: string;
-  to?: string;
-  phase?: string;
-  prediction?: string;
-  actual?: string;
-  correct?: boolean;
-  score?: number;
-  total?: number;
-  percentage?: number;
-}
-
 interface SoapBoatRendererProps {
-  onGameEvent?: (event: GameEvent) => void;
+  phase: 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
+  onPhaseComplete?: () => void;
+  onCorrectAnswer?: () => void;
+  onIncorrectAnswer?: () => void;
 }
 
 type Phase =
@@ -80,8 +70,12 @@ const playSound = (soundType: 'click' | 'success' | 'failure' | 'transition' | '
 // ─────────────────────────────────────────────────────────────
 // Main Component
 // ─────────────────────────────────────────────────────────────
-export default function SoapBoatRenderer({ onGameEvent }: SoapBoatRendererProps) {
-  const [phase, setPhase] = useState<Phase>('hook');
+export default function SoapBoatRenderer({
+  phase,
+  onPhaseComplete,
+  onCorrectAnswer,
+  onIncorrectAnswer
+}: SoapBoatRendererProps) {
   const [prediction, setPrediction] = useState<string | null>(null);
   const [showResult, setShowResult] = useState(false);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
@@ -122,11 +116,8 @@ export default function SoapBoatRenderer({ onGameEvent }: SoapBoatRendererProps)
     navigationLockRef.current = true;
     setTimeout(() => { navigationLockRef.current = false; }, 400);
 
-    if (onGameEvent) {
-      onGameEvent({ type: 'phase_change', from: phase, to: newPhase });
-    }
+    onPhaseComplete?.();
     playSound('transition');
-    setPhase(newPhase);
   };
 
   // Surface tension values (N/m)
@@ -234,17 +225,11 @@ export default function SoapBoatRenderer({ onGameEvent }: SoapBoatRendererProps)
 
   const handlePrediction = (choice: string) => {
     setPrediction(choice);
-    if (onGameEvent) {
-      onGameEvent({ type: 'prediction', phase: 'predict', prediction: choice });
-    }
     playSound('click');
   };
 
   const handleTwistPrediction = (choice: string) => {
     setTwistPrediction(choice);
-    if (onGameEvent) {
-      onGameEvent({ type: 'prediction', phase: 'twist_predict', prediction: choice });
-    }
     playSound('click');
   };
 
@@ -257,129 +242,111 @@ export default function SoapBoatRenderer({ onGameEvent }: SoapBoatRendererProps)
 
   const submitTest = () => {
     setTestSubmitted(true);
-    const score = testQuestions.reduce((acc, tq, i) => acc + (testAnswers[i] === tq.correct ? 1 : 0), 0);
-    if (onGameEvent) {
-      onGameEvent({
-        type: 'result',
-        phase: 'test',
-        score,
-        total: testQuestions.length,
-        percentage: Math.round((score / testQuestions.length) * 100),
-      });
+    const score = testQuestions.reduce((acc, q, i) => {
+      if (testAnswers[i] !== undefined && q.options[testAnswers[i]]?.correct) {
+        return acc + 1;
+      }
+      return acc;
+    }, 0);
+    if (score >= 7) {
+      onCorrectAnswer?.();
+      playSound('success');
+    } else {
+      onIncorrectAnswer?.();
+      playSound('failure');
     }
-    playSound(score >= 7 ? 'success' : 'failure');
   };
 
   const testQuestions = [
     {
-      q: "What is surface tension?",
+      question: "What is surface tension?",
       options: [
-        "Pressure inside a liquid",
-        "Cohesive forces at the liquid surface",
-        "Temperature of the surface layer",
-        "Density variation at the surface"
+        { text: "Pressure inside a liquid", correct: false },
+        { text: "Cohesive forces at the liquid surface", correct: true },
+        { text: "Temperature of the surface layer", correct: false },
+        { text: "Density variation at the surface", correct: false }
       ],
-      correct: 1,
-      explanation: "Surface tension results from cohesive forces between liquid molecules at the surface, where molecules lack neighbors above and are pulled inward/sideways."
     },
     {
-      q: "Why does a soap boat move forward when soap is added behind it?",
+      question: "Why does a soap boat move forward when soap is added behind it?",
       options: [
-        "Soap pushes the boat",
-        "Chemical reaction propels it",
-        "Surface tension imbalance creates net force",
-        "Soap is lighter than water"
+        { text: "Soap pushes the boat", correct: false },
+        { text: "Chemical reaction propels it", correct: false },
+        { text: "Surface tension imbalance creates net force", correct: true },
+        { text: "Soap is lighter than water", correct: false }
       ],
-      correct: 2,
-      explanation: "Soap reduces surface tension behind the boat. The higher surface tension at the front pulls the boat forward while the weakened tension behind provides less opposing pull."
     },
     {
-      q: "What happens if you try the soap boat experiment a second time in the same water?",
+      question: "What happens if you try the soap boat experiment a second time in the same water?",
       options: [
-        "It works faster",
-        "It doesn't work well - water is contaminated",
-        "The boat sinks",
-        "It works the same"
+        { text: "It works faster", correct: false },
+        { text: "It doesn't work well - water is contaminated", correct: true },
+        { text: "The boat sinks", correct: false },
+        { text: "It works the same", correct: false }
       ],
-      correct: 1,
-      explanation: "The first soap release contaminates the entire water surface with surfactant, equalizing surface tension everywhere. No imbalance means no propulsion."
     },
     {
-      q: "What is the Marangoni effect?",
+      question: "What is the Marangoni effect?",
       options: [
-        "Soap dissolving in water",
-        "Flow caused by surface tension gradients",
-        "Evaporation from liquid surfaces",
-        "Density-driven convection"
+        { text: "Soap dissolving in water", correct: false },
+        { text: "Flow caused by surface tension gradients", correct: true },
+        { text: "Evaporation from liquid surfaces", correct: false },
+        { text: "Density-driven convection", correct: false }
       ],
-      correct: 1,
-      explanation: "The Marangoni effect describes fluid flow from regions of low surface tension to high surface tension. This drives the soap boat and many other phenomena."
     },
     {
-      q: "What is the approximate surface tension of water at room temperature?",
+      question: "What is the approximate surface tension of water at room temperature?",
       options: [
-        "0.0072 N/m",
-        "0.072 N/m",
-        "0.72 N/m",
-        "7.2 N/m"
+        { text: "0.0072 N/m", correct: false },
+        { text: "0.072 N/m", correct: true },
+        { text: "0.72 N/m", correct: false },
+        { text: "7.2 N/m", correct: false }
       ],
-      correct: 1,
-      explanation: "Water has a surface tension of about 0.072 N/m (72 mN/m) at room temperature, which is relatively high compared to most liquids."
     },
     {
-      q: "How do surfactants (soaps) reduce surface tension?",
+      question: "How do surfactants (soaps) reduce surface tension?",
       options: [
-        "By increasing water temperature",
-        "By breaking hydrogen bonds between water molecules",
-        "By making water denser",
-        "By adding pressure to the surface"
+        { text: "By increasing water temperature", correct: false },
+        { text: "By breaking hydrogen bonds between water molecules", correct: true },
+        { text: "By making water denser", correct: false },
+        { text: "By adding pressure to the surface", correct: false }
       ],
-      correct: 1,
-      explanation: "Surfactant molecules have a water-loving head and water-fearing tail. They insert between water molecules at the surface, disrupting the hydrogen bonds that create surface tension."
     },
     {
-      q: "Why does the soap boat work better with dish soap than with oil?",
+      question: "Why does the soap boat work better with dish soap than with oil?",
       options: [
-        "Dish soap is heavier",
-        "Dish soap is a surfactant that drastically lowers water's surface tension",
-        "Oil floats on water",
-        "Dish soap creates bubbles"
+        { text: "Dish soap is heavier", correct: false },
+        { text: "Dish soap is a surfactant that drastically lowers water's surface tension", correct: true },
+        { text: "Oil floats on water", correct: false },
+        { text: "Dish soap creates bubbles", correct: false }
       ],
-      correct: 1,
-      explanation: "Dish soap is specifically designed to be a powerful surfactant, reducing water's surface tension from ~0.072 to ~0.025 N/m. Oil doesn't have this property."
     },
     {
-      q: "What would happen if you tried the soap boat on mercury instead of water?",
+      question: "What would happen if you tried the soap boat on mercury instead of water?",
       options: [
-        "Work the same way",
-        "Work much better due to mercury's high surface tension",
-        "Not work well - soap doesn't reduce mercury's surface tension",
-        "The boat would sink"
+        { text: "Work the same way", correct: false },
+        { text: "Work much better due to mercury's high surface tension", correct: false },
+        { text: "Not work well - soap doesn't reduce mercury's surface tension", correct: true },
+        { text: "The boat would sink", correct: false }
       ],
-      correct: 2,
-      explanation: "Mercury's surface tension (~0.48 N/m) comes from metallic bonding, not hydrogen bonds. Soap molecules can't disrupt these bonds, so the experiment wouldn't work."
     },
     {
-      q: "In the 'tears of wine' phenomenon, what causes the wine to climb the glass?",
+      question: "In the 'tears of wine' phenomenon, what causes the wine to climb the glass?",
       options: [
-        "Wine evaporates from the glass edge",
-        "Alcohol evaporation creates surface tension gradients (Marangoni effect)",
-        "Glass absorbs wine",
-        "Wine is attracted to glass by static electricity"
+        { text: "Wine evaporates from the glass edge", correct: false },
+        { text: "Alcohol evaporation creates surface tension gradients (Marangoni effect)", correct: true },
+        { text: "Glass absorbs wine", correct: false },
+        { text: "Wine is attracted to glass by static electricity", correct: false }
       ],
-      correct: 1,
-      explanation: "Alcohol evaporates faster at the thin film edge, leaving water-rich regions with higher surface tension. The Marangoni effect pulls wine upward toward these regions."
     },
     {
-      q: "What shape does a soap film naturally form and why?",
+      question: "What shape does a soap film naturally form and why?",
       options: [
-        "Flat, due to gravity",
-        "Spherical, because surface tension minimizes surface area",
-        "Cubic, due to molecular structure",
-        "Random shapes"
+        { text: "Flat, due to gravity", correct: false },
+        { text: "Spherical, because surface tension minimizes surface area", correct: true },
+        { text: "Cubic, due to molecular structure", correct: false },
+        { text: "Random shapes", correct: false }
       ],
-      correct: 1,
-      explanation: "Surface tension acts to minimize surface area. For a given volume, a sphere has the minimum surface area, which is why free soap bubbles are spherical."
     }
   ];
 
@@ -814,14 +781,10 @@ export default function SoapBoatRenderer({ onGameEvent }: SoapBoatRendererProps)
               <button
                 onMouseDown={() => {
                   setShowResult(true);
-                  if (onGameEvent) {
-                    onGameEvent({
-                      type: 'result',
-                      phase: 'play',
-                      prediction,
-                      actual: 'b',
-                      correct: prediction === 'b'
-                    });
+                  if (prediction === 'b') {
+                    onCorrectAnswer?.();
+                  } else {
+                    onIncorrectAnswer?.();
                   }
                 }}
                 style={{
@@ -1213,14 +1176,10 @@ export default function SoapBoatRenderer({ onGameEvent }: SoapBoatRendererProps)
               <button
                 onMouseDown={() => {
                   setShowTwistResult(true);
-                  if (onGameEvent) {
-                    onGameEvent({
-                      type: 'result',
-                      phase: 'twist_play',
-                      prediction: twistPrediction,
-                      actual: 'c',
-                      correct: twistPrediction === 'c'
-                    });
+                  if (twistPrediction === 'c') {
+                    onCorrectAnswer?.();
+                  } else {
+                    onIncorrectAnswer?.();
                   }
                 }}
                 style={{
@@ -1460,7 +1419,12 @@ export default function SoapBoatRenderer({ onGameEvent }: SoapBoatRendererProps)
       // TEST
       // ───────────────────────────────────────────────────
       case 'test':
-        const score = testQuestions.reduce((acc, tq, i) => acc + (testAnswers[i] === tq.correct ? 1 : 0), 0);
+        const score = testQuestions.reduce((acc, tq, i) => {
+          if (testAnswers[i] !== undefined && tq.options[testAnswers[i]]?.correct) {
+            return acc + 1;
+          }
+          return acc;
+        }, 0);
 
         return (
           <div className="flex flex-col items-center">
@@ -1489,7 +1453,7 @@ export default function SoapBoatRenderer({ onGameEvent }: SoapBoatRendererProps)
                   }}
                 >
                   <p style={{ fontWeight: 600, color: '#1e293b', marginBottom: '0.75rem' }}>
-                    {qi + 1}. {tq.q}
+                    {qi + 1}. {tq.question}
                   </p>
 
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
@@ -1502,7 +1466,7 @@ export default function SoapBoatRenderer({ onGameEvent }: SoapBoatRendererProps)
                           padding: '0.6rem 1rem',
                           textAlign: 'left',
                           background: testSubmitted
-                            ? oi === tq.correct
+                            ? opt.correct
                               ? '#dcfce7'
                               : testAnswers[qi] === oi
                               ? '#fee2e2'
@@ -1513,7 +1477,7 @@ export default function SoapBoatRenderer({ onGameEvent }: SoapBoatRendererProps)
                           color: '#1e293b',
                           border: `1px solid ${
                             testSubmitted
-                              ? oi === tq.correct
+                              ? opt.correct
                                 ? '#22c55e'
                                 : testAnswers[qi] === oi
                                 ? '#ef4444'
@@ -1527,23 +1491,10 @@ export default function SoapBoatRenderer({ onGameEvent }: SoapBoatRendererProps)
                           fontSize: '0.9rem'
                         }}
                       >
-                        {opt}
+                        {opt.text}
                       </button>
                     ))}
                   </div>
-
-                  {testSubmitted && (
-                    <p style={{
-                      marginTop: '0.75rem',
-                      padding: '0.5rem',
-                      background: '#f0f9ff',
-                      borderRadius: 6,
-                      fontSize: '0.85rem',
-                      color: '#1e293b'
-                    }}>
-                      💡 {tq.explanation}
-                    </p>
-                  )}
                 </div>
               ))}
             </div>
@@ -1602,7 +1553,12 @@ export default function SoapBoatRenderer({ onGameEvent }: SoapBoatRendererProps)
       // MASTERY
       // ───────────────────────────────────────────────────
       case 'mastery':
-        const finalScore = testQuestions.reduce((acc, tq, i) => acc + (testAnswers[i] === tq.correct ? 1 : 0), 0);
+        const finalScore = testQuestions.reduce((acc, tq, i) => {
+          if (testAnswers[i] !== undefined && tq.options[testAnswers[i]]?.correct) {
+            return acc + 1;
+          }
+          return acc;
+        }, 0);
 
         return (
           <div className="flex flex-col items-center" style={{ textAlign: 'center' }}>
@@ -1683,10 +1639,7 @@ export default function SoapBoatRenderer({ onGameEvent }: SoapBoatRendererProps)
 
             <button
               onMouseDown={() => {
-                if (onGameEvent) {
-                  onGameEvent({ type: 'complete', score: finalScore, total: testQuestions.length });
-                }
-                goToPhase('hook');
+                onPhaseComplete?.();
                 setTestAnswers({});
                 setTestSubmitted(false);
                 setCompletedApps(new Set());

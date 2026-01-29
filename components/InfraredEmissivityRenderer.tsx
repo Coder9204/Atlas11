@@ -2,81 +2,49 @@
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 
-// ═══════════════════════════════════════════════════════════════════════════
-// TYPES & INTERFACES
-// ═══════════════════════════════════════════════════════════════════════════
-type GameEventType =
-  | 'phase_change'
-  | 'prediction_made'
-  | 'simulation_started'
-  | 'parameter_changed'
-  | 'twist_prediction_made'
-  | 'app_explored'
-  | 'test_answered'
-  | 'test_completed'
-  | 'mastery_achieved';
-
-interface GameEvent {
-  type: GameEventType;
-  data?: Record<string, unknown>;
+interface InfraredEmissivityRendererProps {
+  phase: 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
+  onPhaseComplete?: () => void;
+  onCorrectAnswer?: () => void;
+  onIncorrectAnswer?: () => void;
 }
 
-// Numeric phases: 0=hook, 1=predict, 2=play, 3=review, 4=twist_predict, 5=twist_play, 6=twist_review, 7=transfer, 8=test, 9=mastery
-const PHASES: number[] = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
-const phaseLabels: Record<number, string> = {
-  0: 'Hook', 1: 'Predict', 2: 'Lab', 3: 'Review', 4: 'Twist Predict',
-  5: 'Twist Lab', 6: 'Twist Review', 7: 'Transfer', 8: 'Test', 9: 'Mastery'
-};
-
-interface Props {
-  onGameEvent?: (event: GameEvent) => void;
-  currentPhase?: number;
-  onPhaseComplete?: (phase: number) => void;
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// CONSTANTS
-// ─────────────────────────────────────────────────────────────────────────────
 const TEST_QUESTIONS = [
   {
     question: 'Why do all warm objects emit infrared radiation?',
     options: [
-      'They have special IR emitting chemicals',
-      'Thermal motion of molecules produces electromagnetic radiation',
-      'They absorb IR from the sun and re-emit it',
-      'Only metal objects emit IR'
-    ],
-    correct: 1
+      { text: 'They have special IR emitting chemicals', correct: false },
+      { text: 'Thermal motion of molecules produces electromagnetic radiation', correct: true },
+      { text: 'They absorb IR from the sun and re-emit it', correct: false },
+      { text: 'Only metal objects emit IR', correct: false }
+    ]
   },
   {
     question: 'A shiny metal cup and a matte black cup are the same temperature. On an IR camera:',
     options: [
-      'They look the same - same temperature means same IR',
-      'The shiny cup appears COOLER because it reflects surroundings instead of emitting',
-      'The shiny cup appears HOTTER because metal conducts better',
-      'IR cameras cannot see metal objects'
-    ],
-    correct: 1
+      { text: 'They look the same - same temperature means same IR', correct: false },
+      { text: 'The shiny cup appears COOLER because it reflects surroundings instead of emitting', correct: true },
+      { text: 'The shiny cup appears HOTTER because metal conducts better', correct: false },
+      { text: 'IR cameras cannot see metal objects', correct: false }
+    ]
   },
   {
     question: 'What is emissivity?',
     options: [
-      'How hot an object is',
-      'How much IR radiation a surface emits compared to a perfect blackbody',
-      'The color of an object under normal light',
-      'How reflective a surface is to visible light'
-    ],
-    correct: 1
+      { text: 'How hot an object is', correct: false },
+      { text: 'How much IR radiation a surface emits compared to a perfect blackbody', correct: true },
+      { text: 'The color of an object under normal light', correct: false },
+      { text: 'How reflective a surface is to visible light', correct: false }
+    ]
   },
   {
     question: 'To get accurate temperature readings with an IR camera, you should:',
     options: [
-      'Always use a shiny surface',
-      'Set the emissivity value to match the surface, or apply high-emissivity tape',
-      'Only measure on cloudy days',
-      'Point the camera at the sun first to calibrate'
-    ],
-    correct: 1
+      { text: 'Always use a shiny surface', correct: false },
+      { text: 'Set the emissivity value to match the surface, or apply high-emissivity tape', correct: true },
+      { text: 'Only measure on cloudy days', correct: false },
+      { text: 'Point the camera at the sun first to calibrate', correct: false }
+    ]
   }
 ];
 
@@ -103,12 +71,12 @@ const TRANSFER_APPS = [
   }
 ];
 
-// ─────────────────────────────────────────────────────────────────────────────
-// MAIN COMPONENT
-// ─────────────────────────────────────────────────────────────────────────────
-const InfraredEmissivityRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onPhaseComplete }) => {
-  // ─── State ───────────────────────────────────────────────────────────────────
-  const [phase, setPhase] = useState<number>(currentPhase ?? 0);
+const InfraredEmissivityRenderer: React.FC<InfraredEmissivityRendererProps> = ({
+  phase,
+  onPhaseComplete,
+  onCorrectAnswer,
+  onIncorrectAnswer
+}) => {
   const [prediction, setPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
   const [testAnswers, setTestAnswers] = useState<number[]>([]);
@@ -118,14 +86,13 @@ const InfraredEmissivityRenderer: React.FC<Props> = ({ onGameEvent, currentPhase
   // Simulation state
   const [viewMode, setViewMode] = useState<'visible' | 'infrared'>('visible');
   const [selectedObject, setSelectedObject] = useState<'hand' | 'cup_matte' | 'cup_shiny' | 'ice'>('hand');
-  const [objectTemp, setObjectTemp] = useState(37); // Celsius
+  const [objectTemp, setObjectTemp] = useState(37);
   const [ambientTemp] = useState(22);
   const [animPhase, setAnimPhase] = useState(0);
 
   // Twist state
   const [twistViewMode, setTwistViewMode] = useState<'visible' | 'infrared'>('visible');
 
-  const navigationLockRef = useRef(false);
   const lastClickRef = useRef(0);
 
   // Object properties
@@ -141,10 +108,7 @@ const InfraredEmissivityRenderer: React.FC<Props> = ({ onGameEvent, currentPhase
 
   // Temperature to IR color
   const tempToIRColor = (temp: number, emissivity: number) => {
-    // Apparent temperature = emissivity * actual + (1-emissivity) * ambient
     const apparentTemp = emissivity * temp + (1 - emissivity) * ambientTemp;
-
-    // Map to color scale (-10 to 50°C)
     const normalizedTemp = Math.max(0, Math.min(1, (apparentTemp + 10) / 60));
 
     if (normalizedTemp < 0.25) {
@@ -157,13 +121,6 @@ const InfraredEmissivityRenderer: React.FC<Props> = ({ onGameEvent, currentPhase
       return `rgb(255, ${150 - Math.floor((normalizedTemp - 0.75) * 4 * 150)}, 0)`;
     }
   };
-
-  // Phase sync
-  useEffect(() => {
-    if (currentPhase !== undefined && currentPhase !== phase) {
-      setPhase(currentPhase);
-    }
-  }, [currentPhase, phase]);
 
   const playSound = useCallback((type: 'click' | 'success' | 'failure' | 'transition' | 'complete') => {
     if (typeof window === 'undefined') return;
@@ -190,27 +147,7 @@ const InfraredEmissivityRenderer: React.FC<Props> = ({ onGameEvent, currentPhase
     } catch { /* Audio not available */ }
   }, []);
 
-  const goToPhase = useCallback((newPhase: number) => {
-    if (navigationLockRef.current) return;
-    const now = Date.now();
-    if (now - lastClickRef.current < 200) return;
-    lastClickRef.current = now;
-    navigationLockRef.current = true;
-    playSound('transition');
-    setPhase(newPhase);
-    onPhaseComplete?.(newPhase);
-    onGameEvent?.({ type: 'phase_change', data: { phase: newPhase, phaseLabel: phaseLabels[newPhase] } });
-    setTimeout(() => { navigationLockRef.current = false; }, 400);
-  }, [playSound, onPhaseComplete, onGameEvent]);
-
-  const nextPhase = useCallback(() => {
-    const currentIndex = PHASES.indexOf(phase);
-    if (currentIndex < PHASES.length - 1) {
-      goToPhase(PHASES[currentIndex + 1]);
-    }
-  }, [phase, goToPhase]);
-
-  // ─── Animation Effect ────────────────────────────────────────────────────────
+  // Animation Effect
   useEffect(() => {
     const interval = setInterval(() => {
       setAnimPhase(p => (p + 0.1) % (Math.PI * 2));
@@ -220,17 +157,16 @@ const InfraredEmissivityRenderer: React.FC<Props> = ({ onGameEvent, currentPhase
 
   // Reset when returning to play phase
   useEffect(() => {
-    if (phase === 2) {
+    if (phase === 'play') {
       setViewMode('visible');
       setSelectedObject('hand');
       setObjectTemp(37);
     }
-    if (phase === 5) {
+    if (phase === 'twist_play') {
       setTwistViewMode('visible');
     }
   }, [phase]);
 
-  // ─── Render Helpers ──────────────────────────────────────────────────────────
   const renderIRScene = (object: string, infrared: boolean) => {
     const props = getObjectProps(object);
     const irColor = tempToIRColor(props.actualTemp, props.emissivity);
@@ -238,10 +174,8 @@ const InfraredEmissivityRenderer: React.FC<Props> = ({ onGameEvent, currentPhase
 
     return (
       <svg viewBox="0 0 400 280" className="w-full h-56">
-        {/* Background */}
         <rect width="400" height="280" fill={infrared ? '#0a1628' : '#1e293b'} />
 
-        {/* IR color scale legend */}
         {infrared && (
           <g transform="translate(350, 40)">
             <defs>
@@ -254,17 +188,15 @@ const InfraredEmissivityRenderer: React.FC<Props> = ({ onGameEvent, currentPhase
               </linearGradient>
             </defs>
             <rect x="0" y="0" width="20" height="150" fill="url(#irScale)" />
-            <text x="25" y="10" className="fill-gray-400 text-xs">50°C</text>
-            <text x="25" y="80" className="fill-gray-400 text-xs">20°C</text>
-            <text x="25" y="150" className="fill-gray-400 text-xs">-10°C</text>
+            <text x="25" y="10" className="fill-gray-400 text-xs">50C</text>
+            <text x="25" y="80" className="fill-gray-400 text-xs">20C</text>
+            <text x="25" y="150" className="fill-gray-400 text-xs">-10C</text>
           </g>
         )}
 
-        {/* Object */}
         <g transform="translate(120, 60)">
           {object === 'hand' && (
             <g>
-              {/* Hand shape */}
               <ellipse cx="80" cy="100" rx="50" ry="70" fill={infrared ? irColor : props.color} />
               <ellipse cx="80" cy="40" rx="8" ry="30" fill={infrared ? irColor : props.color} />
               <ellipse cx="95" cy="35" rx="7" ry="35" fill={infrared ? irColor : props.color} />
@@ -272,7 +204,6 @@ const InfraredEmissivityRenderer: React.FC<Props> = ({ onGameEvent, currentPhase
               <ellipse cx="122" cy="50" rx="5" ry="25" fill={infrared ? irColor : props.color} />
               <ellipse cx="50" cy="75" rx="20" ry="10" fill={infrared ? irColor : props.color} transform="rotate(-30, 50, 75)" />
 
-              {/* IR radiation lines */}
               {infrared && (
                 <g className="animate-pulse">
                   {[...Array(8)].map((_, i) => (
@@ -294,7 +225,6 @@ const InfraredEmissivityRenderer: React.FC<Props> = ({ onGameEvent, currentPhase
 
           {(object === 'cup_matte' || object === 'cup_shiny') && (
             <g>
-              {/* Cup shape */}
               <path
                 d={`M 50 40 L 60 160 L 100 160 L 110 40 Z`}
                 fill={infrared ? irColor : props.color}
@@ -302,8 +232,6 @@ const InfraredEmissivityRenderer: React.FC<Props> = ({ onGameEvent, currentPhase
                 strokeWidth="2"
               />
               <ellipse cx="80" cy="40" rx="30" ry="10" fill={infrared ? irColor : (object === 'cup_shiny' ? '#6b7280' : '#374151')} />
-
-              {/* Handle */}
               <path
                 d="M 110 60 Q 140 70 140 100 Q 140 130 110 140"
                 fill="none"
@@ -311,12 +239,10 @@ const InfraredEmissivityRenderer: React.FC<Props> = ({ onGameEvent, currentPhase
                 strokeWidth="8"
               />
 
-              {/* Shiny reflection indicator */}
               {object === 'cup_shiny' && !infrared && (
                 <ellipse cx="75" cy="90" rx="10" ry="25" fill="white" opacity="0.3" />
               )}
 
-              {/* IR radiation */}
               {infrared && props.emissivity > 0.5 && (
                 <g className="animate-pulse">
                   {[...Array(6)].map((_, i) => (
@@ -338,7 +264,6 @@ const InfraredEmissivityRenderer: React.FC<Props> = ({ onGameEvent, currentPhase
 
           {object === 'ice' && (
             <g>
-              {/* Ice cube */}
               <polygon
                 points="50,60 100,40 130,80 130,140 80,160 30,140 30,80"
                 fill={infrared ? irColor : props.color}
@@ -351,7 +276,6 @@ const InfraredEmissivityRenderer: React.FC<Props> = ({ onGameEvent, currentPhase
                 opacity="0.7"
               />
 
-              {/* Frost texture */}
               {!infrared && (
                 <>
                   <line x1="60" y1="90" x2="70" y2="120" stroke="#ffffff" strokeWidth="1" opacity="0.5" />
@@ -362,28 +286,25 @@ const InfraredEmissivityRenderer: React.FC<Props> = ({ onGameEvent, currentPhase
           )}
         </g>
 
-        {/* Temperature readout */}
         <g transform="translate(20, 240)">
           <text className="fill-gray-400 text-sm">
-            {infrared ? `Apparent: ${apparentTemp.toFixed(1)}°C` : `Actual: ${props.actualTemp}°C`}
+            {infrared ? `Apparent: ${apparentTemp.toFixed(1)}C` : `Actual: ${props.actualTemp}C`}
           </text>
           {infrared && props.emissivity < 0.5 && (
             <text x="0" y="20" className="fill-yellow-400 text-xs">
-              ⚠️ Low emissivity - reflects surroundings!
+              Warning: Low emissivity - reflects surroundings!
             </text>
           )}
         </g>
 
-        {/* Labels */}
         <text x="200" y="25" textAnchor="middle" className="fill-gray-300 text-sm font-medium">
-          {infrared ? '📷 IR Camera View' : '👁️ Normal View'} - {props.name}
+          {infrared ? 'IR Camera View' : 'Normal View'} - {props.name}
         </text>
       </svg>
     );
   };
 
   const renderTwistScene = (infrared: boolean) => {
-    // Two cups at same temperature - one shiny, one matte
     const matteIRColor = tempToIRColor(60, 0.95);
     const shinyIRColor = tempToIRColor(60, 0.1);
     const shinyApparent = 0.1 * 60 + 0.9 * ambientTemp;
@@ -392,12 +313,10 @@ const InfraredEmissivityRenderer: React.FC<Props> = ({ onGameEvent, currentPhase
       <svg viewBox="0 0 400 250" className="w-full h-48">
         <rect width="400" height="250" fill={infrared ? '#0a1628' : '#1e293b'} />
 
-        {/* Both cups filled with hot water at 60°C */}
         <text x="200" y="25" textAnchor="middle" className="fill-gray-300 text-sm">
-          Both cups contain 60°C hot water
+          Both cups contain 60C hot water
         </text>
 
-        {/* Matte cup */}
         <g transform="translate(60, 50)">
           <path
             d="M 30 30 L 40 150 L 100 150 L 110 30 Z"
@@ -411,7 +330,6 @@ const InfraredEmissivityRenderer: React.FC<Props> = ({ onGameEvent, currentPhase
             strokeWidth="10"
           />
 
-          {/* Steam */}
           {!infrared && (
             <g className="animate-pulse">
               {[...Array(3)].map((_, i) => (
@@ -427,7 +345,6 @@ const InfraredEmissivityRenderer: React.FC<Props> = ({ onGameEvent, currentPhase
             </g>
           )}
 
-          {/* IR radiation */}
           {infrared && (
             <g className="animate-pulse">
               {[...Array(5)].map((_, i) => (
@@ -447,11 +364,10 @@ const InfraredEmissivityRenderer: React.FC<Props> = ({ onGameEvent, currentPhase
 
           <text x="70" y="180" textAnchor="middle" className="fill-gray-400 text-xs">Matte Black</text>
           <text x="70" y="195" textAnchor="middle" className={infrared ? 'fill-orange-400 text-xs' : 'fill-gray-500 text-xs'}>
-            {infrared ? '~58°C' : 'ε = 0.95'}
+            {infrared ? '~58C' : 'e = 0.95'}
           </text>
         </g>
 
-        {/* Shiny cup */}
         <g transform="translate(220, 50)">
           <path
             d="M 30 30 L 40 150 L 100 150 L 110 30 Z"
@@ -467,12 +383,10 @@ const InfraredEmissivityRenderer: React.FC<Props> = ({ onGameEvent, currentPhase
             strokeWidth="10"
           />
 
-          {/* Reflection highlight */}
           {!infrared && (
             <ellipse cx="60" cy="80" rx="8" ry="25" fill="white" opacity="0.3" />
           )}
 
-          {/* Steam */}
           {!infrared && (
             <g className="animate-pulse">
               {[...Array(3)].map((_, i) => (
@@ -490,11 +404,10 @@ const InfraredEmissivityRenderer: React.FC<Props> = ({ onGameEvent, currentPhase
 
           <text x="70" y="180" textAnchor="middle" className="fill-gray-400 text-xs">Polished Metal</text>
           <text x="70" y="195" textAnchor="middle" className={infrared ? 'fill-blue-400 text-xs' : 'fill-gray-500 text-xs'}>
-            {infrared ? `~${shinyApparent.toFixed(0)}°C` : 'ε = 0.1'}
+            {infrared ? `~${shinyApparent.toFixed(0)}C` : 'e = 0.1'}
           </text>
         </g>
 
-        {/* Explanation */}
         {infrared && (
           <text x="200" y="230" textAnchor="middle" className="fill-yellow-400 text-sm">
             Same temperature, different IR readings! Shiny surface reflects cold room.
@@ -510,8 +423,7 @@ const InfraredEmissivityRenderer: React.FC<Props> = ({ onGameEvent, currentPhase
     lastClickRef.current = now;
     setPrediction(pred);
     playSound(pred === 'temp' ? 'success' : 'failure');
-    onGameEvent?.({ type: 'prediction_made', data: { prediction: pred } });
-  }, [playSound, onGameEvent]);
+  }, [playSound]);
 
   const handleTwistPrediction = useCallback((pred: string) => {
     const now = Date.now();
@@ -519,19 +431,16 @@ const InfraredEmissivityRenderer: React.FC<Props> = ({ onGameEvent, currentPhase
     lastClickRef.current = now;
     setTwistPrediction(pred);
     playSound(pred === 'shiny_cold' ? 'success' : 'failure');
-    onGameEvent?.({ type: 'twist_prediction_made', data: { prediction: pred } });
-  }, [playSound, onGameEvent]);
+  }, [playSound]);
 
   const handleTestAnswer = useCallback((answerIndex: number) => {
     const now = Date.now();
     if (now - lastClickRef.current < 200) return;
     lastClickRef.current = now;
     const currentQuestion = testAnswers.length;
-    const isCorrect = answerIndex === TEST_QUESTIONS[currentQuestion].correct;
-    playSound(isCorrect ? 'success' : 'failure');
+    playSound(TEST_QUESTIONS[currentQuestion].options[answerIndex].correct ? 'success' : 'failure');
     setTestAnswers([...testAnswers, answerIndex]);
-    onGameEvent?.({ type: 'test_answered', data: { question: currentQuestion, answer: answerIndex, correct: isCorrect } });
-  }, [testAnswers, playSound, onGameEvent]);
+  }, [testAnswers, playSound]);
 
   const handleAppComplete = useCallback((appIndex: number) => {
     const now = Date.now();
@@ -539,21 +448,17 @@ const InfraredEmissivityRenderer: React.FC<Props> = ({ onGameEvent, currentPhase
     lastClickRef.current = now;
     setCompletedApps(prev => new Set([...prev, appIndex]));
     playSound('complete');
-    onGameEvent?.({ type: 'app_explored', data: { app: TRANSFER_APPS[appIndex].title } });
-  }, [playSound, onGameEvent]);
+  }, [playSound]);
 
-  const calculateScore = () => testAnswers.filter((a, i) => a === TEST_QUESTIONS[i].correct).length;
+  const calculateScore = () => testAnswers.filter((a, i) => TEST_QUESTIONS[i].options[a]?.correct).length;
 
-  // ─── Phase Renderers ─────────────────────────────────────────────────────────
   const renderHook = () => (
     <div className="flex flex-col items-center justify-center min-h-[600px] px-6 py-12 text-center">
-      {/* Premium badge */}
       <div className="inline-flex items-center gap-2 px-4 py-2 bg-orange-500/10 border border-orange-500/20 rounded-full mb-8">
         <span className="w-2 h-2 bg-orange-400 rounded-full animate-pulse" />
         <span className="text-sm font-medium text-orange-400 tracking-wide">PHYSICS EXPLORATION</span>
       </div>
 
-      {/* Main title with gradient */}
       <h1 className="text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-white via-orange-100 to-red-200 bg-clip-text text-transparent">
         The Invisible Heat Vision
       </h1>
@@ -562,9 +467,7 @@ const InfraredEmissivityRenderer: React.FC<Props> = ({ onGameEvent, currentPhase
         Discover how thermal cameras reveal hidden temperatures
       </p>
 
-      {/* Premium card with graphic */}
       <div className="relative bg-gradient-to-br from-slate-800/80 to-slate-900/80 rounded-3xl p-8 max-w-xl w-full border border-slate-700/50 shadow-2xl shadow-black/20">
-        {/* Subtle glow effect */}
         <div className="absolute inset-0 bg-gradient-to-br from-orange-500/5 via-transparent to-red-500/5 rounded-3xl" />
 
         <div className="relative">
@@ -587,9 +490,8 @@ const InfraredEmissivityRenderer: React.FC<Props> = ({ onGameEvent, currentPhase
         </div>
       </div>
 
-      {/* Premium CTA button */}
       <button
-        onMouseDown={(e) => { e.preventDefault(); nextPhase(); }}
+        onMouseDown={(e) => { e.preventDefault(); onPhaseComplete?.(); }}
         className="mt-10 group relative px-10 py-5 bg-gradient-to-r from-orange-500 to-red-600 text-white text-lg font-semibold rounded-2xl transition-all duration-300 hover:shadow-lg hover:shadow-orange-500/25 hover:scale-[1.02] active:scale-[0.98]"
       >
         <span className="relative z-10 flex items-center gap-3">
@@ -600,7 +502,6 @@ const InfraredEmissivityRenderer: React.FC<Props> = ({ onGameEvent, currentPhase
         </span>
       </button>
 
-      {/* Feature hints */}
       <div className="mt-12 flex items-center gap-8 text-sm text-slate-500">
         <div className="flex items-center gap-2">
           <span className="text-orange-400">✦</span>
@@ -655,13 +556,13 @@ const InfraredEmissivityRenderer: React.FC<Props> = ({ onGameEvent, currentPhase
       {prediction && (
         <div className="mt-6 p-4 bg-slate-800/70 rounded-xl max-w-xl">
           <p className="text-emerald-400 font-semibold">
-            {prediction === 'temp' ? '✓ Correct!' : '✗ Not quite.'} Your body temperature creates infrared radiation!
+            {prediction === 'temp' ? 'Correct!' : 'Not quite.'} Your body temperature creates infrared radiation!
           </p>
           <button
-            onMouseDown={(e) => { e.preventDefault(); nextPhase(); }}
+            onMouseDown={(e) => { e.preventDefault(); onPhaseComplete?.(); }}
             className="mt-4 px-6 py-3 bg-gradient-to-r from-orange-600 to-red-600 text-white font-semibold rounded-xl"
           >
-            Test It! →
+            Test It!
           </button>
         </div>
       )}
@@ -684,10 +585,10 @@ const InfraredEmissivityRenderer: React.FC<Props> = ({ onGameEvent, currentPhase
             onChange={(e) => setSelectedObject(e.target.value as typeof selectedObject)}
             className="w-full bg-gray-800 text-white rounded-lg px-3 py-2 border border-gray-700"
           >
-            <option value="hand">Human Hand (37°C)</option>
+            <option value="hand">Human Hand (37C)</option>
             <option value="cup_matte">Matte Black Cup</option>
             <option value="cup_shiny">Shiny Metal Cup</option>
-            <option value="ice">Ice Cube (0°C)</option>
+            <option value="ice">Ice Cube (0C)</option>
           </select>
         </div>
 
@@ -708,7 +609,7 @@ const InfraredEmissivityRenderer: React.FC<Props> = ({ onGameEvent, currentPhase
 
       {(selectedObject === 'cup_matte' || selectedObject === 'cup_shiny') && (
         <div className="max-w-lg w-full mb-4">
-          <label className="text-gray-400 text-sm">Cup Temperature: {objectTemp}°C</label>
+          <label className="text-gray-400 text-sm">Cup Temperature: {objectTemp}C</label>
           <input
             type="range"
             min="20"
@@ -725,16 +626,16 @@ const InfraredEmissivityRenderer: React.FC<Props> = ({ onGameEvent, currentPhase
           <p className="text-orange-300 text-sm">
             <strong>Thermal imaging:</strong> All warm objects emit IR radiation. The camera detects this and
             creates a false-color image showing temperature differences.
-            Emissivity (ε) = how well a surface emits IR compared to a perfect &quot;blackbody&quot;.
+            Emissivity (e) = how well a surface emits IR compared to a perfect &quot;blackbody&quot;.
           </p>
         </div>
       )}
 
       <button
-        onMouseDown={(e) => { e.preventDefault(); nextPhase(); }}
+        onMouseDown={(e) => { e.preventDefault(); onPhaseComplete?.(); }}
         className="px-8 py-3 bg-gradient-to-r from-orange-600 to-red-600 rounded-xl text-white font-semibold hover:from-orange-500 hover:to-red-500 transition-all"
       >
-        Continue →
+        Continue
       </button>
     </div>
   );
@@ -772,18 +673,18 @@ const InfraredEmissivityRenderer: React.FC<Props> = ({ onGameEvent, currentPhase
       <div className="bg-orange-900/30 rounded-xl p-4 max-w-lg w-full mb-6 text-center">
         <p className="text-orange-300 font-semibold">Stefan-Boltzmann Law</p>
         <p className="text-gray-400 text-sm mt-1">
-          Power radiated = ε × σ × A × T⁴<br />
+          Power radiated = e * sigma * A * T^4<br />
           Hotter objects radiate exponentially more IR!
         </p>
       </div>
 
       <div className="text-center">
-        <p className="text-gray-400 mb-2">Your prediction: <span className="text-orange-400 font-semibold">{prediction === 'temp' ? '✓ Correct!' : '✗ Not quite'}</span></p>
+        <p className="text-gray-400 mb-2">Your prediction: <span className="text-orange-400 font-semibold">{prediction === 'temp' ? 'Correct!' : 'Not quite'}</span></p>
         <button
-          onMouseDown={(e) => { e.preventDefault(); nextPhase(); }}
+          onMouseDown={(e) => { e.preventDefault(); onPhaseComplete?.(); }}
           className="px-8 py-3 bg-gradient-to-r from-orange-600 to-red-600 rounded-xl text-white font-semibold hover:from-orange-500 hover:to-red-500 transition-all"
         >
-          But wait... →
+          But wait...
         </button>
       </div>
     </div>
@@ -794,14 +695,14 @@ const InfraredEmissivityRenderer: React.FC<Props> = ({ onGameEvent, currentPhase
       <h2 className="text-2xl font-bold text-red-400 mb-6">🔄 The Twist!</h2>
       <div className="bg-slate-800/50 rounded-2xl p-6 max-w-2xl mb-6">
         <p className="text-lg text-slate-300">
-          You fill TWO cups with the same 60°C hot water. One is <span className="text-gray-400">matte black</span>,
+          You fill TWO cups with the same 60C hot water. One is <span className="text-gray-400">matte black</span>,
           one is <span className="text-gray-300">polished metal</span>. On the thermal camera:
         </p>
       </div>
 
       <div className="grid grid-cols-1 gap-3 max-w-lg w-full">
         {[
-          { id: 'same', text: 'Both appear the same temperature (60°C)', icon: '=' },
+          { id: 'same', text: 'Both appear the same temperature (60C)', icon: '=' },
           { id: 'shiny_cold', text: 'Shiny cup appears COOLER than the matte cup', icon: '❄️' },
           { id: 'shiny_hot', text: 'Shiny cup appears HOTTER (metal conducts better)', icon: '🔥' },
           { id: 'invisible', text: 'Shiny cup is invisible to IR cameras', icon: '👻' }
@@ -827,13 +728,13 @@ const InfraredEmissivityRenderer: React.FC<Props> = ({ onGameEvent, currentPhase
       {twistPrediction && (
         <div className="mt-6 p-4 bg-slate-800/70 rounded-xl max-w-xl">
           <p className="text-emerald-400 font-semibold">
-            {twistPrediction === 'shiny_cold' ? '✓ Correct!' : '✗ Not quite.'} Low emissivity surfaces reflect surroundings!
+            {twistPrediction === 'shiny_cold' ? 'Correct!' : 'Not quite.'} Low emissivity surfaces reflect surroundings!
           </p>
           <button
-            onMouseDown={(e) => { e.preventDefault(); nextPhase(); }}
+            onMouseDown={(e) => { e.preventDefault(); onPhaseComplete?.(); }}
             className="mt-4 px-6 py-3 bg-gradient-to-r from-red-600 to-pink-600 text-white font-semibold rounded-xl"
           >
-            Test It! →
+            Test It!
           </button>
         </div>
       )}
@@ -875,16 +776,16 @@ const InfraredEmissivityRenderer: React.FC<Props> = ({ onGameEvent, currentPhase
         <div className="bg-gradient-to-r from-red-900/30 to-pink-900/30 rounded-xl p-4 max-w-lg w-full mb-4">
           <p className="text-red-300 text-sm text-center">
             <strong>Low emissivity = reflects surroundings!</strong><br />
-            The shiny cup reflects the cold room (~22°C) instead of emitting its own 60°C IR.
+            The shiny cup reflects the cold room (~22C) instead of emitting its own 60C IR.
           </p>
         </div>
       )}
 
       <button
-        onMouseDown={(e) => { e.preventDefault(); nextPhase(); }}
+        onMouseDown={(e) => { e.preventDefault(); onPhaseComplete?.(); }}
         className="px-8 py-3 bg-gradient-to-r from-red-600 to-pink-600 rounded-xl text-white font-semibold hover:from-red-500 hover:to-pink-500 transition-all"
       >
-        Continue →
+        Continue
       </button>
     </div>
   );
@@ -895,34 +796,34 @@ const InfraredEmissivityRenderer: React.FC<Props> = ({ onGameEvent, currentPhase
 
       <div className="bg-gradient-to-br from-gray-800 to-gray-900 rounded-2xl p-6 max-w-lg w-full mb-6">
         <p className="text-gray-300 text-center mb-4">
-          <span className="text-orange-400 font-semibold">Emissivity (ε)</span> is the ratio of IR emitted vs a perfect &quot;blackbody&quot;
+          <span className="text-orange-400 font-semibold">Emissivity (e)</span> is the ratio of IR emitted vs a perfect &quot;blackbody&quot;
         </p>
 
         <div className="grid grid-cols-2 gap-4 text-sm">
           <div className="bg-gray-900/50 rounded-lg p-3">
-            <div className="text-orange-400 font-semibold">High Emissivity (ε ≈ 1)</div>
+            <div className="text-orange-400 font-semibold">High Emissivity (e = 1)</div>
             <div className="text-gray-500">Skin, matte paint, paper</div>
-            <div className="text-gray-400 text-xs mt-1">→ Emits true temperature</div>
+            <div className="text-gray-400 text-xs mt-1">Emits true temperature</div>
           </div>
           <div className="bg-gray-900/50 rounded-lg p-3">
-            <div className="text-blue-400 font-semibold">Low Emissivity (ε ≈ 0.1)</div>
+            <div className="text-blue-400 font-semibold">Low Emissivity (e = 0.1)</div>
             <div className="text-gray-500">Polished metal, mirrors</div>
-            <div className="text-gray-400 text-xs mt-1">→ Reflects surroundings</div>
+            <div className="text-gray-400 text-xs mt-1">Reflects surroundings</div>
           </div>
         </div>
 
         <p className="text-yellow-300 text-sm mt-4 text-center">
-          💡 Pro tip: Put electrical tape (ε≈0.95) on shiny surfaces for accurate readings!
+          💡 Pro tip: Put electrical tape (e=0.95) on shiny surfaces for accurate readings!
         </p>
       </div>
 
       <div className="text-center">
-        <p className="text-gray-400 mb-2">Your prediction: <span className="text-red-400 font-semibold">{twistPrediction === 'shiny_cold' ? '✓ Correct!' : '✗ Not quite'}</span></p>
+        <p className="text-gray-400 mb-2">Your prediction: <span className="text-red-400 font-semibold">{twistPrediction === 'shiny_cold' ? 'Correct!' : 'Not quite'}</span></p>
         <button
-          onMouseDown={(e) => { e.preventDefault(); nextPhase(); }}
+          onMouseDown={(e) => { e.preventDefault(); onPhaseComplete?.(); }}
           className="px-8 py-3 bg-gradient-to-r from-red-600 to-pink-600 rounded-xl text-white font-semibold hover:from-red-500 hover:to-pink-500 transition-all"
         >
-          See Applications →
+          See Applications
         </button>
       </div>
     </div>
@@ -959,10 +860,10 @@ const InfraredEmissivityRenderer: React.FC<Props> = ({ onGameEvent, currentPhase
 
       {completedApps.size >= 4 && (
         <button
-          onMouseDown={(e) => { e.preventDefault(); nextPhase(); }}
+          onMouseDown={(e) => { e.preventDefault(); onPhaseComplete?.(); }}
           className="px-8 py-3 bg-gradient-to-r from-orange-600 to-red-600 rounded-xl text-white font-semibold hover:from-orange-500 hover:to-red-500 transition-all"
         >
-          Take the Quiz →
+          Take the Quiz
         </button>
       )}
     </div>
@@ -984,16 +885,17 @@ const InfraredEmissivityRenderer: React.FC<Props> = ({ onGameEvent, currentPhase
               e.preventDefault();
               if (score >= 3) {
                 playSound('complete');
-                nextPhase();
+                onCorrectAnswer?.();
+                onPhaseComplete?.();
               } else {
                 setTestAnswers([]);
                 setShowTestResults(false);
-                goToPhase(3);
+                onIncorrectAnswer?.();
               }
             }}
             className="px-8 py-3 bg-gradient-to-r from-orange-600 to-red-600 rounded-xl text-white font-semibold hover:from-orange-500 hover:to-red-500 transition-all"
           >
-            {score >= 3 ? 'Complete! 🎊' : 'Review & Try Again'}
+            {score >= 3 ? 'Complete!' : 'Review & Try Again'}
           </button>
         </div>
       );
@@ -1011,7 +913,7 @@ const InfraredEmissivityRenderer: React.FC<Props> = ({ onGameEvent, currentPhase
               onMouseDown={(e) => { e.preventDefault(); handleTestAnswer(i); }}
               className="p-4 rounded-xl border-2 border-gray-700 bg-gray-800/50 hover:border-orange-500 transition-all text-left text-gray-200"
             >
-              {option}
+              {option.text}
             </button>
           ))}
         </div>
@@ -1028,76 +930,49 @@ const InfraredEmissivityRenderer: React.FC<Props> = ({ onGameEvent, currentPhase
         <div className="bg-gradient-to-r from-orange-900/50 to-red-900/50 rounded-xl p-6 mb-6">
           <p className="text-orange-300 font-medium mb-4">You now understand:</p>
           <ul className="text-gray-300 text-sm space-y-2 text-left">
-            <li>✓ All warm objects emit infrared radiation</li>
-            <li>✓ Emissivity determines how much IR a surface emits</li>
-            <li>✓ Shiny surfaces reflect surroundings, appearing cooler</li>
-            <li>✓ Real-world thermal imaging applications</li>
+            <li>All warm objects emit infrared radiation</li>
+            <li>Emissivity determines how much IR a surface emits</li>
+            <li>Shiny surfaces reflect surroundings, appearing cooler</li>
+            <li>Real-world thermal imaging applications</li>
           </ul>
         </div>
         <p className="text-gray-400 text-sm mb-6">
           Next time you see thermal footage, you&apos;ll know the physics behind it!
         </p>
         <button
-          onMouseDown={(e) => { e.preventDefault(); goToPhase(0); }}
+          onMouseDown={(e) => { e.preventDefault(); onPhaseComplete?.(); }}
           className="px-6 py-3 bg-slate-700 hover:bg-slate-600 text-white font-medium rounded-xl"
         >
-          ↺ Explore Again
+          Complete
         </button>
       </div>
     </div>
   );
 
-  // ─── Main Render ─────────────────────────────────────────────────────────────
   const renderPhase = () => {
     switch (phase) {
-      case 0: return renderHook();
-      case 1: return renderPredict();
-      case 2: return renderPlay();
-      case 3: return renderReview();
-      case 4: return renderTwistPredict();
-      case 5: return renderTwistPlay();
-      case 6: return renderTwistReview();
-      case 7: return renderTransfer();
-      case 8: return renderTest();
-      case 9: return renderMastery();
+      case 'hook': return renderHook();
+      case 'predict': return renderPredict();
+      case 'play': return renderPlay();
+      case 'review': return renderReview();
+      case 'twist_predict': return renderTwistPredict();
+      case 'twist_play': return renderTwistPlay();
+      case 'twist_review': return renderTwistReview();
+      case 'transfer': return renderTransfer();
+      case 'test': return renderTest();
+      case 'mastery': return renderMastery();
       default: return renderHook();
     }
   };
 
   return (
     <div className="min-h-screen bg-[#0a0f1a] text-white relative overflow-hidden">
-      {/* Premium background gradient */}
       <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-[#0a1628] to-slate-900" />
       <div className="absolute top-0 left-1/4 w-96 h-96 bg-orange-500/5 rounded-full blur-3xl" />
       <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-red-500/5 rounded-full blur-3xl" />
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-amber-500/5 rounded-full blur-3xl" />
 
-      {/* Header */}
-      <div className="fixed top-0 left-0 right-0 z-50 bg-slate-900/80 backdrop-blur-xl border-b border-slate-800/50">
-        <div className="flex items-center justify-between px-6 py-3 max-w-4xl mx-auto">
-          <span className="text-sm font-semibold text-white/80 tracking-wide">Infrared Emissivity</span>
-          <div className="flex items-center gap-1.5">
-            {PHASES.map((p) => (
-              <button
-                key={p}
-                onMouseDown={(e) => { e.preventDefault(); goToPhase(p); }}
-                className={`h-2 rounded-full transition-all duration-300 ${
-                  phase === p
-                    ? 'bg-orange-400 w-6 shadow-lg shadow-orange-400/30'
-                    : phase > p
-                      ? 'bg-emerald-500 w-2'
-                      : 'bg-slate-700 w-2 hover:bg-slate-600'
-                }`}
-                title={phaseLabels[p]}
-              />
-            ))}
-          </div>
-          <span className="text-sm font-medium text-orange-400">{phaseLabels[phase]}</span>
-        </div>
-      </div>
-
-      {/* Main content */}
-      <div className="relative pt-16 pb-12">{renderPhase()}</div>
+      <div className="relative pt-8 pb-12">{renderPhase()}</div>
     </div>
   );
 };

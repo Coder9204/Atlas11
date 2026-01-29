@@ -24,8 +24,10 @@ interface GameEvent {
 }
 
 interface TidalForcesRendererProps {
-  onEvent?: (event: GameEvent) => void;
-  savedState?: GameState | null;
+  phase: 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
+  onPhaseComplete?: () => void;
+  onCorrectAnswer?: () => void;
+  onIncorrectAnswer?: () => void;
 }
 
 interface GameState {
@@ -49,42 +51,38 @@ const TEST_QUESTIONS = [
   {
     question: 'Why are there TWO tidal bulges on Earth, not just one toward the Moon?',
     options: [
-      'The Sun creates the second bulge',
-      'Earth\'s rotation creates the second bulge',
-      'Differential gravity: far side is pulled less than Earth\'s center, creating a second bulge',
-      'The second bulge is actually much smaller and barely noticeable'
-    ],
-    correct: 2
+      { text: 'The Sun creates the second bulge', correct: false },
+      { text: 'Earth\'s rotation creates the second bulge', correct: false },
+      { text: 'Differential gravity: far side is pulled less than Earth\'s center, creating a second bulge', correct: true },
+      { text: 'The second bulge is actually much smaller and barely noticeable', correct: false }
+    ]
   },
   {
     question: 'What causes tidal forces?',
     options: [
-      'The total gravitational pull of the Moon',
-      'The DIFFERENCE in gravitational pull across an object (varies with distance)',
-      'Earth\'s magnetic field interaction with the Moon',
-      'Water\'s special affinity for lunar radiation'
-    ],
-    correct: 1
+      { text: 'The total gravitational pull of the Moon', correct: false },
+      { text: 'The DIFFERENCE in gravitational pull across an object (varies with distance)', correct: true },
+      { text: 'Earth\'s magnetic field interaction with the Moon', correct: false },
+      { text: 'Water\'s special affinity for lunar radiation', correct: false }
+    ]
   },
   {
     question: 'Why do we always see the same side of the Moon?',
     options: [
-      'The Moon doesn\'t rotate',
-      'The Moon is tidally locked - its rotation period equals its orbital period',
-      'The other side is too dark to see',
-      'Earth\'s atmosphere blocks the view'
-    ],
-    correct: 1
+      { text: 'The Moon doesn\'t rotate', correct: false },
+      { text: 'The Moon is tidally locked - its rotation period equals its orbital period', correct: true },
+      { text: 'The other side is too dark to see', correct: false },
+      { text: 'Earth\'s atmosphere blocks the view', correct: false }
+    ]
   },
   {
     question: 'Spring tides (highest tides) occur when:',
     options: [
-      'It\'s springtime',
-      'The Moon is closest to Earth',
-      'Sun, Moon, and Earth align (new/full moon) - gravitational effects add up',
-      'Earth is closest to the Sun'
-    ],
-    correct: 2
+      { text: 'It\'s springtime', correct: false },
+      { text: 'The Moon is closest to Earth', correct: false },
+      { text: 'Sun, Moon, and Earth align (new/full moon) - gravitational effects add up', correct: true },
+      { text: 'Earth is closest to the Sun', correct: false }
+    ]
   }
 ];
 
@@ -148,15 +146,13 @@ function playSound(type: 'click' | 'success' | 'failure' | 'transition' | 'compl
 // ─────────────────────────────────────────────────────────────────────────────
 // MAIN COMPONENT
 // ─────────────────────────────────────────────────────────────────────────────
-export default function TidalForcesRenderer({ onEvent, savedState }: TidalForcesRendererProps) {
+export default function TidalForcesRenderer({ phase: initialPhase, onPhaseComplete, onCorrectAnswer, onIncorrectAnswer }: TidalForcesRendererProps) {
   // ─── State ───────────────────────────────────────────────────────────────────
-  const [phase, setPhase] = useState<Phase>(savedState?.phase || 'hook');
-  const [prediction, setPrediction] = useState<string | null>(savedState?.prediction || null);
-  const [twistPrediction, setTwistPrediction] = useState<string | null>(savedState?.twistPrediction || null);
-  const [testAnswers, setTestAnswers] = useState<number[]>(savedState?.testAnswers || []);
-  const [completedApps, setCompletedApps] = useState<Set<number>>(
-    new Set(savedState?.completedApps || [])
-  );
+  const [phase, setPhase] = useState<Phase>(initialPhase || 'hook');
+  const [prediction, setPrediction] = useState<string | null>(null);
+  const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
+  const [testAnswers, setTestAnswers] = useState<number[]>([]);
+  const [completedApps, setCompletedApps] = useState<Set<number>>(new Set());
 
   // Simulation state
   const [showVectors, setShowVectors] = useState(false);
@@ -173,17 +169,13 @@ export default function TidalForcesRenderer({ onEvent, savedState }: TidalForces
   const navigationLockRef = useRef(false);
 
   // ─── Helpers ─────────────────────────────────────────────────────────────────
-  const emitEvent = (type: GameEvent['type'], data: Record<string, unknown> = {}) => {
-    onEvent?.({ type, phase, data });
-  };
-
   const goToPhase = (newPhase: Phase) => {
     if (navigationLockRef.current) return;
     navigationLockRef.current = true;
 
     playSound('transition');
     setPhase(newPhase);
-    emitEvent('interaction', { action: 'phase_change', from: phase, to: newPhase });
+    if (onPhaseComplete) onPhaseComplete();
 
     setTimeout(() => {
       navigationLockRef.current = false;
@@ -673,7 +665,6 @@ export default function TidalForcesRenderer({ onEvent, savedState }: TidalForces
             onMouseDown={() => {
               playSound('click');
               setPrediction(option.id);
-              emitEvent('prediction', { prediction: option.id });
             }}
             className={`p-4 rounded-xl border-2 transition-all text-left ${
               prediction === option.id
@@ -851,7 +842,6 @@ export default function TidalForcesRenderer({ onEvent, savedState }: TidalForces
             onMouseDown={() => {
               playSound('click');
               setTwistPrediction(option.id);
-              emitEvent('prediction', { twistPrediction: option.id });
             }}
             className={`p-4 rounded-xl border-2 transition-all text-left ${
               twistPrediction === option.id
@@ -974,7 +964,6 @@ export default function TidalForcesRenderer({ onEvent, savedState }: TidalForces
             onMouseDown={() => {
               playSound('click');
               setCompletedApps(prev => new Set([...prev, index]));
-              emitEvent('interaction', { app: app.title });
             }}
             className={`p-4 rounded-xl border-2 transition-all text-left ${
               completedApps.has(index)
@@ -1007,7 +996,8 @@ export default function TidalForcesRenderer({ onEvent, savedState }: TidalForces
     const question = TEST_QUESTIONS[currentQuestion];
 
     if (!question) {
-      const score = testAnswers.filter((a, i) => a === TEST_QUESTIONS[i].correct).length;
+      const score = testAnswers.filter((a, i) => TEST_QUESTIONS[i].options[a]?.correct).length;
+      if (score >= 3 && onCorrectAnswer) onCorrectAnswer();
       return (
         <div className="text-center space-y-6">
           <div className="text-6xl">{score >= 3 ? '🎉' : '📚'}</div>
@@ -1036,13 +1026,12 @@ export default function TidalForcesRenderer({ onEvent, savedState }: TidalForces
             <button
               key={i}
               onMouseDown={() => {
-                playSound(i === question.correct ? 'success' : 'failure');
+                playSound(option.correct ? 'success' : 'failure');
                 setTestAnswers([...testAnswers, i]);
-                emitEvent('interaction', { question: currentQuestion, answer: i, correct: i === question.correct });
               }}
               className="p-4 rounded-xl border-2 border-gray-700 bg-gray-800/50 hover:border-cyan-500 transition-all text-left text-gray-200"
             >
-              {option}
+              {option.text}
             </button>
           ))}
         </div>
@@ -1069,7 +1058,7 @@ export default function TidalForcesRenderer({ onEvent, savedState }: TidalForces
       <button
         onMouseDown={() => {
           playSound('complete');
-          emitEvent('completion', { mastered: true });
+          if (onPhaseComplete) onPhaseComplete();
         }}
         className="px-8 py-3 bg-gradient-to-r from-cyan-600 to-blue-600 rounded-xl text-white font-semibold hover:from-cyan-500 hover:to-blue-500 transition-all"
       >

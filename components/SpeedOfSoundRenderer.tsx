@@ -7,21 +7,11 @@ import React, { useState, useRef, useEffect } from 'react';
 // Temperature dependence: v ≈ 331 + 0.6T (m/s)
 // Methods: echo timing, two microphones, resonance tube
 
-interface GameEvent {
-  type: 'phase_change' | 'prediction' | 'result' | 'complete';
-  from?: string;
-  to?: string;
-  phase?: string;
-  prediction?: string;
-  actual?: string;
-  correct?: boolean;
-  score?: number;
-  total?: number;
-  percentage?: number;
-}
-
 interface SpeedOfSoundRendererProps {
-  onGameEvent?: (event: GameEvent) => void;
+  phase: 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
+  onPhaseComplete?: () => void;
+  onCorrectAnswer?: () => void;
+  onIncorrectAnswer?: () => void;
 }
 
 type Phase =
@@ -82,8 +72,12 @@ const playSound = (type: 'click' | 'success' | 'failure' | 'transition' | 'compl
 // ─────────────────────────────────────────────────────────────
 // Main Component
 // ─────────────────────────────────────────────────────────────
-export default function SpeedOfSoundRenderer({ onGameEvent }: SpeedOfSoundRendererProps) {
-  const [phase, setPhase] = useState<Phase>('hook');
+export default function SpeedOfSoundRenderer({
+  phase,
+  onPhaseComplete,
+  onCorrectAnswer,
+  onIncorrectAnswer
+}: SpeedOfSoundRendererProps) {
   const [prediction, setPrediction] = useState<string | null>(null);
   const [showResult, setShowResult] = useState(false);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
@@ -121,10 +115,7 @@ export default function SpeedOfSoundRenderer({ onGameEvent }: SpeedOfSoundRender
     navigationLockRef.current = true;
     setTimeout(() => { navigationLockRef.current = false; }, 400);
 
-    if (onGameEvent) {
-      onGameEvent({ type: 'phase_change', from: phase, to: newPhase });
-    }
-    setPhase(newPhase);
+    onPhaseComplete?.();
     playSound('transition');
   };
 
@@ -211,17 +202,11 @@ export default function SpeedOfSoundRenderer({ onGameEvent }: SpeedOfSoundRender
 
   const handlePrediction = (choice: string) => {
     setPrediction(choice);
-    if (onGameEvent) {
-      onGameEvent({ type: 'prediction', phase: 'predict', prediction: choice });
-    }
     playSound('click');
   };
 
   const handleTwistPrediction = (choice: string) => {
     setTwistPrediction(choice);
-    if (onGameEvent) {
-      onGameEvent({ type: 'prediction', phase: 'twist_predict', prediction: choice });
-    }
     playSound('click');
   };
 
@@ -234,129 +219,111 @@ export default function SpeedOfSoundRenderer({ onGameEvent }: SpeedOfSoundRender
 
   const submitTest = () => {
     setTestSubmitted(true);
-    const score = testQuestions.reduce((acc, tq, i) => acc + (testAnswers[i] === tq.correct ? 1 : 0), 0);
-    if (onGameEvent) {
-      onGameEvent({
-        type: 'result',
-        phase: 'test',
-        score,
-        total: testQuestions.length,
-        percentage: Math.round((score / testQuestions.length) * 100),
-      });
+    const score = testQuestions.reduce((acc, q, i) => {
+      if (testAnswers[i] !== undefined && q.options[testAnswers[i]]?.correct) {
+        return acc + 1;
+      }
+      return acc;
+    }, 0);
+    if (score >= 7) {
+      onCorrectAnswer?.();
+      playSound('success');
+    } else {
+      onIncorrectAnswer?.();
+      playSound('failure');
     }
-    playSound(score >= 7 ? 'complete' : 'failure');
   };
 
   const testQuestions = [
     {
-      q: "What is the approximate speed of sound in air at 20°C?",
+      question: "What is the approximate speed of sound in air at 20°C?",
       options: [
-        "100 m/s",
-        "343 m/s",
-        "768 m/s",
-        "1,000 m/s"
+        { text: "100 m/s", correct: false },
+        { text: "343 m/s", correct: true },
+        { text: "768 m/s", correct: false },
+        { text: "1,000 m/s", correct: false }
       ],
-      correct: 1,
-      explanation: "Sound travels at approximately 343 m/s (about 767 mph) in air at 20°C. This is much slower than light but still quite fast - about 1 km every 3 seconds."
     },
     {
-      q: "How does temperature affect the speed of sound in air?",
+      question: "How does temperature affect the speed of sound in air?",
       options: [
-        "No effect at all",
-        "Higher temperature = faster sound",
-        "Higher temperature = slower sound",
-        "Only affects volume, not speed"
+        { text: "No effect at all", correct: false },
+        { text: "Higher temperature = faster sound", correct: true },
+        { text: "Higher temperature = slower sound", correct: false },
+        { text: "Only affects volume, not speed", correct: false }
       ],
-      correct: 1,
-      explanation: "Higher temperature makes air molecules move faster and more energetically, allowing sound waves to propagate faster. The formula is approximately v = 331 + 0.6T m/s."
     },
     {
-      q: "To measure sound speed using an echo, you need:",
+      question: "To measure sound speed using an echo, you need:",
       options: [
-        "Just the distance to the wall",
-        "Distance to wall and round-trip time",
-        "Only the time for echo to return",
-        "The frequency of the sound"
+        { text: "Just the distance to the wall", correct: false },
+        { text: "Distance to wall and round-trip time", correct: true },
+        { text: "Only the time for echo to return", correct: false },
+        { text: "The frequency of the sound", correct: false }
       ],
-      correct: 1,
-      explanation: "Speed = distance/time. For an echo, the sound travels to the wall and back, so you need: speed = (2 × distance to wall) / round-trip time."
     },
     {
-      q: "Why can you see lightning before you hear thunder?",
+      question: "Why can you see lightning before you hear thunder?",
       options: [
-        "Thunder is quieter than lightning",
-        "Light is much faster than sound",
-        "Thunder travels through ground",
-        "Lightning heats the air"
+        { text: "Thunder is quieter than lightning", correct: false },
+        { text: "Light is much faster than sound", correct: true },
+        { text: "Thunder travels through ground", correct: false },
+        { text: "Lightning heats the air", correct: false }
       ],
-      correct: 1,
-      explanation: "Light travels at about 300,000,000 m/s while sound only travels at ~343 m/s. Light is nearly a million times faster, so it reaches you almost instantly while sound takes noticeable time."
     },
     {
-      q: "Approximately how far away is a storm if thunder arrives 5 seconds after lightning?",
+      question: "Approximately how far away is a storm if thunder arrives 5 seconds after lightning?",
       options: [
-        "About 500 meters",
-        "About 1 mile (1.6 km)",
-        "About 5 miles",
-        "About 10 km"
+        { text: "About 500 meters", correct: false },
+        { text: "About 1 mile (1.6 km)", correct: true },
+        { text: "About 5 miles", correct: false },
+        { text: "About 10 km", correct: false }
       ],
-      correct: 1,
-      explanation: "Sound travels about 343 m/s × 5 s = 1,715 m ≈ 1 mile. The rule of thumb '5 seconds = 1 mile' is a good approximation for estimating storm distance."
     },
     {
-      q: "In which medium does sound travel fastest?",
+      question: "In which medium does sound travel fastest?",
       options: [
-        "Air",
-        "Water",
-        "Steel",
-        "Vacuum"
+        { text: "Air", correct: false },
+        { text: "Water", correct: false },
+        { text: "Steel", correct: true },
+        { text: "Vacuum", correct: false }
       ],
-      correct: 2,
-      explanation: "Sound travels fastest in solids (~5,000 m/s in steel), slower in liquids (~1,500 m/s in water), and slowest in gases (~343 m/s in air). Sound cannot travel through vacuum."
     },
     {
-      q: "Why does sound travel faster in solids than in gases?",
+      question: "Why does sound travel faster in solids than in gases?",
       options: [
-        "Solids are denser",
-        "Molecules are closer together and more tightly bonded",
-        "Solids have more air pockets",
-        "Gravity is stronger in solids"
+        { text: "Solids are denser", correct: false },
+        { text: "Molecules are closer together and more tightly bonded", correct: true },
+        { text: "Solids have more air pockets", correct: false },
+        { text: "Gravity is stronger in solids", correct: false }
       ],
-      correct: 1,
-      explanation: "In solids, molecules are tightly bonded and close together, allowing vibrations to transfer from one molecule to the next very quickly. The high stiffness of solids is the key factor."
     },
     {
-      q: "What is the 'flash-to-bang' method?",
+      question: "What is the 'flash-to-bang' method?",
       options: [
-        "Creating sound with explosions",
-        "Counting seconds between lightning and thunder to estimate distance",
-        "Measuring brightness of lightning",
-        "A type of sound recording"
+        { text: "Creating sound with explosions", correct: false },
+        { text: "Counting seconds between lightning and thunder to estimate distance", correct: true },
+        { text: "Measuring brightness of lightning", correct: false },
+        { text: "A type of sound recording", correct: false }
       ],
-      correct: 1,
-      explanation: "The flash-to-bang method uses the time delay between seeing lightning (flash) and hearing thunder (bang) to estimate storm distance. Each 3 seconds ≈ 1 km, or 5 seconds ≈ 1 mile."
     },
     {
-      q: "If sound speed is 343 m/s and you hear an echo 2 seconds after clapping, how far is the wall?",
+      question: "If sound speed is 343 m/s and you hear an echo 2 seconds after clapping, how far is the wall?",
       options: [
-        "171.5 meters",
-        "343 meters",
-        "686 meters",
-        "34.3 meters"
+        { text: "171.5 meters", correct: false },
+        { text: "343 meters", correct: true },
+        { text: "686 meters", correct: false },
+        { text: "34.3 meters", correct: false }
       ],
-      correct: 1,
-      explanation: "In 2 seconds, sound travels 343 × 2 = 686 m total. But that's the round trip! The wall is at half that distance: 686 / 2 = 343 meters away."
     },
     {
-      q: "Why might your measured speed of sound differ from the textbook value?",
+      question: "Why might your measured speed of sound differ from the textbook value?",
       options: [
-        "Textbooks are always wrong",
-        "Temperature, humidity, and measurement errors",
-        "Sound changes speed randomly",
-        "Distance doesn't matter"
+        { text: "Textbooks are always wrong", correct: false },
+        { text: "Temperature, humidity, and measurement errors", correct: true },
+        { text: "Sound changes speed randomly", correct: false },
+        { text: "Distance doesn't matter", correct: false }
       ],
-      correct: 1,
-      explanation: "Temperature significantly affects sound speed. Humidity has a small effect (moist air is slightly faster). Plus, timing and distance measurement errors add uncertainty to real experiments."
     }
   ];
 
@@ -731,14 +698,10 @@ export default function SpeedOfSoundRenderer({ onGameEvent }: SpeedOfSoundRender
               <button
                 onMouseDown={() => {
                   setShowResult(true);
-                  if (onGameEvent) {
-                    onGameEvent({
-                      type: 'result',
-                      phase: 'play',
-                      prediction,
-                      actual: 'b',
-                      correct: prediction === 'b'
-                    });
+                  if (prediction === 'b') {
+                    onCorrectAnswer?.();
+                  } else {
+                    onIncorrectAnswer?.();
                   }
                 }}
                 style={{
@@ -1105,14 +1068,10 @@ export default function SpeedOfSoundRenderer({ onGameEvent }: SpeedOfSoundRender
             <button
               onMouseDown={() => {
                 setShowTwistResult(true);
-                if (onGameEvent) {
-                  onGameEvent({
-                    type: 'result',
-                    phase: 'twist_play',
-                    prediction: twistPrediction,
-                    actual: 'b',
-                    correct: twistPrediction === 'b'
-                  });
+                if (twistPrediction === 'b') {
+                  onCorrectAnswer?.();
+                } else {
+                  onIncorrectAnswer?.();
                 }
               }}
               style={{
@@ -1328,7 +1287,12 @@ export default function SpeedOfSoundRenderer({ onGameEvent }: SpeedOfSoundRender
       // TEST
       // ───────────────────────────────────────────────────
       case 'test':
-        const score = testQuestions.reduce((acc, tq, i) => acc + (testAnswers[i] === tq.correct ? 1 : 0), 0);
+        const score = testQuestions.reduce((acc, q, i) => {
+          if (testAnswers[i] !== undefined && q.options[testAnswers[i]]?.correct) {
+            return acc + 1;
+          }
+          return acc;
+        }, 0);
 
         return (
           <div className="flex flex-col items-center">
@@ -1337,7 +1301,9 @@ export default function SpeedOfSoundRenderer({ onGameEvent }: SpeedOfSoundRender
             </h2>
 
             <div style={{ width: '100%', maxWidth: 600 }}>
-              {testQuestions.map((tq, qi) => (
+              {testQuestions.map((tq, qi) => {
+                const isCorrect = tq.options[testAnswers[qi]]?.correct;
+                return (
                 <div
                   key={qi}
                   style={{
@@ -1347,7 +1313,7 @@ export default function SpeedOfSoundRenderer({ onGameEvent }: SpeedOfSoundRender
                     marginBottom: '1rem',
                     border: `2px solid ${
                       testSubmitted
-                        ? testAnswers[qi] === tq.correct
+                        ? isCorrect
                           ? '#22c55e'
                           : testAnswers[qi] !== undefined
                           ? '#ef4444'
@@ -1357,7 +1323,7 @@ export default function SpeedOfSoundRenderer({ onGameEvent }: SpeedOfSoundRender
                   }}
                 >
                   <p style={{ fontWeight: 600, color: '#1e293b', marginBottom: '0.75rem' }}>
-                    {qi + 1}. {tq.q}
+                    {qi + 1}. {tq.question}
                   </p>
 
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
@@ -1370,7 +1336,7 @@ export default function SpeedOfSoundRenderer({ onGameEvent }: SpeedOfSoundRender
                           padding: '0.6rem 1rem',
                           textAlign: 'left',
                           background: testSubmitted
-                            ? oi === tq.correct
+                            ? opt.correct
                               ? '#dcfce7'
                               : testAnswers[qi] === oi
                               ? '#fee2e2'
@@ -1381,7 +1347,7 @@ export default function SpeedOfSoundRenderer({ onGameEvent }: SpeedOfSoundRender
                           color: '#1e293b',
                           border: `1px solid ${
                             testSubmitted
-                              ? oi === tq.correct
+                              ? opt.correct
                                 ? '#22c55e'
                                 : testAnswers[qi] === oi
                                 ? '#ef4444'
@@ -1395,25 +1361,12 @@ export default function SpeedOfSoundRenderer({ onGameEvent }: SpeedOfSoundRender
                           fontSize: '0.9rem'
                         }}
                       >
-                        {opt}
+                        {opt.text}
                       </button>
                     ))}
                   </div>
-
-                  {testSubmitted && (
-                    <p style={{
-                      marginTop: '0.75rem',
-                      padding: '0.5rem',
-                      background: '#f0f9ff',
-                      borderRadius: 6,
-                      fontSize: '0.85rem',
-                      color: '#1e293b'
-                    }}>
-                      💡 {tq.explanation}
-                    </p>
-                  )}
                 </div>
-              ))}
+              )})}
             </div>
 
             {!testSubmitted ? (
@@ -1470,7 +1423,12 @@ export default function SpeedOfSoundRenderer({ onGameEvent }: SpeedOfSoundRender
       // MASTERY
       // ───────────────────────────────────────────────────
       case 'mastery':
-        const finalScore = testQuestions.reduce((acc, tq, i) => acc + (testAnswers[i] === tq.correct ? 1 : 0), 0);
+        const finalScore = testQuestions.reduce((acc, q, i) => {
+          if (testAnswers[i] !== undefined && q.options[testAnswers[i]]?.correct) {
+            return acc + 1;
+          }
+          return acc;
+        }, 0);
 
         return (
           <div className="flex flex-col items-center" style={{ textAlign: 'center' }}>
@@ -1551,14 +1509,8 @@ export default function SpeedOfSoundRenderer({ onGameEvent }: SpeedOfSoundRender
 
             <button
               onMouseDown={() => {
-                if (onGameEvent) {
-                  onGameEvent({ type: 'complete', score: finalScore, total: testQuestions.length });
-                }
-                goToPhase('hook');
-                setTestAnswers({});
-                setTestSubmitted(false);
-                setCompletedApps(new Set());
-                resetMeasurement();
+                onPhaseComplete?.();
+                playSound('complete');
               }}
               style={{
                 marginTop: '1rem',
@@ -1572,7 +1524,7 @@ export default function SpeedOfSoundRenderer({ onGameEvent }: SpeedOfSoundRender
                 fontWeight: 600
               }}
             >
-              Play Again
+              Complete Lesson
             </button>
           </div>
         );

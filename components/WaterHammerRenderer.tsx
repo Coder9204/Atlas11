@@ -7,21 +7,11 @@ import React, { useState, useRef, useEffect } from 'react';
 // Water hammer occurs when fluid momentum is suddenly arrested
 // Pressure wave travels at speed of sound in fluid (~1400 m/s for water)
 
-interface GameEvent {
-  type: 'phase_change' | 'prediction' | 'result' | 'complete';
-  from?: string;
-  to?: string;
-  phase?: string;
-  prediction?: string;
-  actual?: string;
-  correct?: boolean;
-  score?: number;
-  total?: number;
-  percentage?: number;
-}
-
 interface WaterHammerRendererProps {
-  onGameEvent?: (event: GameEvent) => void;
+  phase: 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
+  onPhaseComplete?: () => void;
+  onCorrectAnswer?: () => void;
+  onIncorrectAnswer?: () => void;
 }
 
 type Phase =
@@ -72,8 +62,12 @@ const playSound = (frequency: number, duration: number, type: OscillatorType = '
 // ─────────────────────────────────────────────────────────────
 // Main Component
 // ─────────────────────────────────────────────────────────────
-export default function WaterHammerRenderer({ onGameEvent }: WaterHammerRendererProps) {
-  const [phase, setPhase] = useState<Phase>('hook');
+export default function WaterHammerRenderer({
+  phase,
+  onPhaseComplete,
+  onCorrectAnswer,
+  onIncorrectAnswer
+}: WaterHammerRendererProps) {
   const [prediction, setPrediction] = useState<string | null>(null);
   const [showResult, setShowResult] = useState(false);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
@@ -116,11 +110,8 @@ export default function WaterHammerRenderer({ onGameEvent }: WaterHammerRenderer
     navigationLockRef.current = true;
     setTimeout(() => { navigationLockRef.current = false; }, 400);
 
-    if (onGameEvent) {
-      onGameEvent({ type: 'phase_change', from: phase, to: newPhase });
-    }
-    setPhase(newPhase);
-    playSound('transition');
+    onPhaseComplete?.();
+    playSound(440, 0.15, 'sine', 0.2);
   };
 
   const phaseLabels: Record<Phase, string> = {
@@ -243,18 +234,12 @@ export default function WaterHammerRenderer({ onGameEvent }: WaterHammerRenderer
 
   const handlePrediction = (choice: string) => {
     setPrediction(choice);
-    if (onGameEvent) {
-      onGameEvent({ type: 'prediction', phase: 'predict', prediction: choice });
-    }
-    playSound('click');
+    playSound(330, 0.1, 'sine', 0.2);
   };
 
   const handleTwistPrediction = (choice: string) => {
     setTwistPrediction(choice);
-    if (onGameEvent) {
-      onGameEvent({ type: 'prediction', phase: 'twist_predict', prediction: choice });
-    }
-    playSound('click');
+    playSound(330, 0.1, 'sine', 0.2);
   };
 
   const handleTestAnswer = (q: number, a: number) => {
@@ -266,129 +251,111 @@ export default function WaterHammerRenderer({ onGameEvent }: WaterHammerRenderer
 
   const submitTest = () => {
     setTestSubmitted(true);
-    const score = testQuestions.reduce((acc, tq, i) => acc + (testAnswers[i] === tq.correct ? 1 : 0), 0);
-    if (onGameEvent) {
-      onGameEvent({
-        type: 'result',
-        phase: 'test',
-        score,
-        total: testQuestions.length,
-        percentage: Math.round((score / testQuestions.length) * 100),
-      });
+    const score = testQuestions.reduce((acc, q, i) => {
+      if (testAnswers[i] !== undefined && q.options[testAnswers[i]]?.correct) {
+        return acc + 1;
+      }
+      return acc;
+    }, 0);
+    if (score >= 7) {
+      onCorrectAnswer?.();
+      playSound(523, 0.3, 'sine', 0.3);
+    } else {
+      onIncorrectAnswer?.();
+      playSound(330, 0.3, 'sine', 0.3);
     }
-    playSound(score >= 7 ? 523 : 330, 0.3, 'sine', 0.3);
   };
 
   const testQuestions = [
     {
-      q: "What is water hammer?",
+      question: "What is water hammer?",
       options: [
-        "A tool for plumbing",
-        "A pressure surge when flow suddenly stops",
-        "Water freezing in pipes",
-        "A type of water pump"
+        { text: "A tool for plumbing", correct: false },
+        { text: "A pressure surge when flow suddenly stops", correct: true },
+        { text: "Water freezing in pipes", correct: false },
+        { text: "A type of water pump", correct: false }
       ],
-      correct: 1,
-      explanation: "Water hammer is the pressure surge caused when fluid in motion is suddenly stopped or redirected, creating a shockwave in the pipe."
     },
     {
-      q: "What causes the loud bang in pipes when you quickly close a faucet?",
+      question: "What causes the loud bang in pipes when you quickly close a faucet?",
       options: [
-        "Air bubbles collapsing",
-        "Pipe expansion",
-        "Kinetic energy converting to pressure energy",
-        "Vibrating water molecules"
+        { text: "Air bubbles collapsing", correct: false },
+        { text: "Pipe expansion", correct: false },
+        { text: "Kinetic energy converting to pressure energy", correct: true },
+        { text: "Vibrating water molecules", correct: false }
       ],
-      correct: 2,
-      explanation: "The flowing water's kinetic energy converts to pressure energy when suddenly stopped, creating a pressure wave that makes pipes vibrate and bang."
     },
     {
-      q: "According to the Joukowsky equation, what happens if you double the water velocity?",
+      question: "According to the Joukowsky equation, what happens if you double the water velocity?",
       options: [
-        "Pressure rise halves",
-        "Pressure rise doubles",
-        "Pressure rise quadruples",
-        "No change in pressure"
+        { text: "Pressure rise halves", correct: false },
+        { text: "Pressure rise doubles", correct: true },
+        { text: "Pressure rise quadruples", correct: false },
+        { text: "No change in pressure", correct: false }
       ],
-      correct: 1,
-      explanation: "The Joukowsky equation (ΔP = ρcΔv) shows pressure rise is directly proportional to velocity change - double velocity means double pressure."
     },
     {
-      q: "At what speed does the pressure wave travel in water pipes?",
+      question: "At what speed does the pressure wave travel in water pipes?",
       options: [
-        "Speed of the water flow",
-        "Speed of sound in water (~1400 m/s)",
-        "Speed of light",
-        "Much slower than water flow"
+        { text: "Speed of the water flow", correct: false },
+        { text: "Speed of sound in water (~1400 m/s)", correct: true },
+        { text: "Speed of light", correct: false },
+        { text: "Much slower than water flow", correct: false }
       ],
-      correct: 1,
-      explanation: "The pressure wave travels at the speed of sound in the fluid, which is about 1400 m/s for water in pipes."
     },
     {
-      q: "What is the critical time (Tc) in water hammer analysis?",
+      question: "What is the critical time (Tc) in water hammer analysis?",
       options: [
-        "Time before pipe bursts",
-        "Time for wave to travel pipe length and back",
-        "Time to close the valve",
-        "Time for water to stop flowing"
+        { text: "Time before pipe bursts", correct: false },
+        { text: "Time for wave to travel pipe length and back", correct: true },
+        { text: "Time to close the valve", correct: false },
+        { text: "Time for water to stop flowing", correct: false }
       ],
-      correct: 1,
-      explanation: "Critical time Tc = 2L/c is the time for the pressure wave to travel the pipe length and reflect back. It determines if closure is 'fast' or 'slow'."
     },
     {
-      q: "How can water hammer damage be reduced?",
+      question: "How can water hammer damage be reduced?",
       options: [
-        "Using smaller pipes",
-        "Increasing water pressure",
-        "Closing valves slowly",
-        "Using hotter water"
+        { text: "Using smaller pipes", correct: false },
+        { text: "Increasing water pressure", correct: false },
+        { text: "Closing valves slowly", correct: true },
+        { text: "Using hotter water", correct: false }
       ],
-      correct: 2,
-      explanation: "Closing valves slowly over a time greater than the critical time allows the pressure wave to dissipate gradually, reducing peak pressure."
     },
     {
-      q: "What is a water hammer arrestor?",
+      question: "What is a water hammer arrestor?",
       options: [
-        "A device that stops water flow",
-        "A cushioning device with air or gas",
-        "A type of water filter",
-        "A pipe insulation"
+        { text: "A device that stops water flow", correct: false },
+        { text: "A cushioning device with air or gas", correct: true },
+        { text: "A type of water filter", correct: false },
+        { text: "A pipe insulation", correct: false }
       ],
-      correct: 1,
-      explanation: "Water hammer arrestors contain a compressible cushion (air or gas) that absorbs the shock wave, preventing pipe damage and noise."
     },
     {
-      q: "Why is water hammer worse in long pipes?",
+      question: "Why is water hammer worse in long pipes?",
       options: [
-        "More water means more momentum",
-        "Pipes are weaker when longer",
-        "Sound travels slower in long pipes",
-        "Long pipes have more friction"
+        { text: "More water means more momentum", correct: true },
+        { text: "Pipes are weaker when longer", correct: false },
+        { text: "Sound travels slower in long pipes", correct: false },
+        { text: "Long pipes have more friction", correct: false }
       ],
-      correct: 0,
-      explanation: "Longer pipes contain more water in motion, meaning more total momentum that converts to pressure when flow is stopped."
     },
     {
-      q: "In the Joukowsky equation ΔP = ρcΔv, what does 'c' represent?",
+      question: "In the Joukowsky equation ΔP = ρcΔv, what does 'c' represent?",
       options: [
-        "Water temperature",
-        "Pipe circumference",
-        "Speed of sound in fluid",
-        "Closure time"
+        { text: "Water temperature", correct: false },
+        { text: "Pipe circumference", correct: false },
+        { text: "Speed of sound in fluid", correct: true },
+        { text: "Closure time", correct: false }
       ],
-      correct: 2,
-      explanation: "In the Joukowsky equation, 'c' is the speed of sound in the fluid (about 1400 m/s for water), which determines wave propagation speed."
     },
     {
-      q: "What pressure rise occurs when water flowing at 3 m/s suddenly stops? (ρ=1000 kg/m³, c=1400 m/s)",
+      question: "What pressure rise occurs when water flowing at 3 m/s suddenly stops? (ρ=1000 kg/m³, c=1400 m/s)",
       options: [
-        "4,200 Pa",
-        "42,000 Pa",
-        "420,000 Pa",
-        "4,200,000 Pa"
+        { text: "4,200 Pa", correct: false },
+        { text: "42,000 Pa", correct: false },
+        { text: "420,000 Pa", correct: false },
+        { text: "4,200,000 Pa", correct: true }
       ],
-      correct: 3,
-      explanation: "Using ΔP = ρcΔv = 1000 × 1400 × 3 = 4,200,000 Pa ≈ 42 bar. This is why water hammer can burst pipes!"
     }
   ];
 
@@ -811,14 +778,10 @@ export default function WaterHammerRenderer({ onGameEvent }: WaterHammerRenderer
               <button
                 onMouseDown={() => {
                   setShowResult(true);
-                  if (onGameEvent) {
-                    onGameEvent({
-                      type: 'result',
-                      phase: 'play',
-                      prediction,
-                      actual: 'c',
-                      correct: prediction === 'c'
-                    });
+                  if (prediction === 'c') {
+                    onCorrectAnswer?.();
+                  } else {
+                    onIncorrectAnswer?.();
                   }
                 }}
                 style={{
@@ -1185,14 +1148,10 @@ export default function WaterHammerRenderer({ onGameEvent }: WaterHammerRenderer
               <button
                 onMouseDown={() => {
                   setShowTwistResult(true);
-                  if (onGameEvent) {
-                    onGameEvent({
-                      type: 'result',
-                      phase: 'twist_play',
-                      prediction: twistPrediction,
-                      actual: 'c',
-                      correct: twistPrediction === 'c'
-                    });
+                  if (twistPrediction === 'c') {
+                    onCorrectAnswer?.();
+                  } else {
+                    onIncorrectAnswer?.();
                   }
                 }}
                 style={{
@@ -1416,7 +1375,12 @@ export default function WaterHammerRenderer({ onGameEvent }: WaterHammerRenderer
       // TEST
       // ───────────────────────────────────────────────────
       case 'test':
-        const score = testQuestions.reduce((acc, tq, i) => acc + (testAnswers[i] === tq.correct ? 1 : 0), 0);
+        const score = testQuestions.reduce((acc, tq, i) => {
+          if (testAnswers[i] !== undefined && tq.options[testAnswers[i]]?.correct) {
+            return acc + 1;
+          }
+          return acc;
+        }, 0);
 
         return (
           <div className="flex flex-col items-center">
@@ -1445,7 +1409,7 @@ export default function WaterHammerRenderer({ onGameEvent }: WaterHammerRenderer
                   }}
                 >
                   <p style={{ fontWeight: 600, color: '#1e293b', marginBottom: '0.75rem' }}>
-                    {qi + 1}. {tq.q}
+                    {qi + 1}. {tq.question}
                   </p>
 
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
@@ -1458,7 +1422,7 @@ export default function WaterHammerRenderer({ onGameEvent }: WaterHammerRenderer
                           padding: '0.6rem 1rem',
                           textAlign: 'left',
                           background: testSubmitted
-                            ? oi === tq.correct
+                            ? opt.correct
                               ? '#dcfce7'
                               : testAnswers[qi] === oi
                               ? '#fee2e2'
@@ -1469,7 +1433,7 @@ export default function WaterHammerRenderer({ onGameEvent }: WaterHammerRenderer
                           color: '#1e293b',
                           border: `1px solid ${
                             testSubmitted
-                              ? oi === tq.correct
+                              ? opt.correct
                                 ? '#22c55e'
                                 : testAnswers[qi] === oi
                                 ? '#ef4444'
@@ -1483,23 +1447,10 @@ export default function WaterHammerRenderer({ onGameEvent }: WaterHammerRenderer
                           fontSize: '0.9rem'
                         }}
                       >
-                        {opt}
+                        {opt.text}
                       </button>
                     ))}
                   </div>
-
-                  {testSubmitted && (
-                    <p style={{
-                      marginTop: '0.75rem',
-                      padding: '0.5rem',
-                      background: '#f0f9ff',
-                      borderRadius: 6,
-                      fontSize: '0.85rem',
-                      color: '#1e293b'
-                    }}>
-                      💡 {tq.explanation}
-                    </p>
-                  )}
                 </div>
               ))}
             </div>
@@ -1558,7 +1509,12 @@ export default function WaterHammerRenderer({ onGameEvent }: WaterHammerRenderer
       // MASTERY
       // ───────────────────────────────────────────────────
       case 'mastery':
-        const finalScore = testQuestions.reduce((acc, tq, i) => acc + (testAnswers[i] === tq.correct ? 1 : 0), 0);
+        const finalScore = testQuestions.reduce((acc, tq, i) => {
+          if (testAnswers[i] !== undefined && tq.options[testAnswers[i]]?.correct) {
+            return acc + 1;
+          }
+          return acc;
+        }, 0);
 
         return (
           <div className="flex flex-col items-center" style={{ textAlign: 'center' }}>
@@ -1638,10 +1594,7 @@ export default function WaterHammerRenderer({ onGameEvent }: WaterHammerRenderer
 
             <button
               onMouseDown={() => {
-                if (onGameEvent) {
-                  onGameEvent({ type: 'complete', score: finalScore, total: testQuestions.length });
-                }
-                goToPhase('hook');
+                onPhaseComplete?.();
                 setTestAnswers({});
                 setTestSubmitted(false);
                 setCompletedApps(new Set());

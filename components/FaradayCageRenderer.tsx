@@ -2,81 +2,55 @@
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 
-// ═══════════════════════════════════════════════════════════════════════════
+// ===============================================================================
 // TYPES & INTERFACES
-// ═══════════════════════════════════════════════════════════════════════════
-type GameEventType =
-  | 'phase_change'
-  | 'prediction_made'
-  | 'simulation_started'
-  | 'parameter_changed'
-  | 'twist_prediction_made'
-  | 'app_explored'
-  | 'test_answered'
-  | 'test_completed'
-  | 'mastery_achieved';
-
-interface GameEvent {
-  type: GameEventType;
-  data?: Record<string, unknown>;
+// ===============================================================================
+interface FaradayCageRendererProps {
+  phase: 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
+  onPhaseComplete?: () => void;
+  onCorrectAnswer?: () => void;
+  onIncorrectAnswer?: () => void;
 }
 
-// Numeric phases: 0=hook, 1=predict, 2=play, 3=review, 4=twist_predict, 5=twist_play, 6=twist_review, 7=transfer, 8=test, 9=mastery
-const PHASES: number[] = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
-const phaseLabels: Record<number, string> = {
-  0: 'Hook', 1: 'Predict', 2: 'Lab', 3: 'Review', 4: 'Twist Predict',
-  5: 'Twist Lab', 6: 'Twist Review', 7: 'Transfer', 8: 'Test', 9: 'Mastery'
-};
-
-interface Props {
-  onGameEvent?: (event: GameEvent) => void;
-  currentPhase?: number;
-  onPhaseComplete?: (phase: number) => void;
-}
-
-// ═══════════════════════════════════════════════════════════════════════════
+// ===============================================================================
 // CONSTANTS
-// ═══════════════════════════════════════════════════════════════════════════
+// ===============================================================================
 const TEST_QUESTIONS = [
   {
     question: 'Why does a Faraday cage block electromagnetic waves?',
     options: [
-      'It absorbs all the energy as heat',
-      'Free electrons move to cancel the field inside',
-      'The metal reflects all radiation like a mirror',
-      'It converts EM waves to sound'
-    ],
-    correct: 1
+      { text: 'It absorbs all the energy as heat', correct: false },
+      { text: 'Free electrons move to cancel the field inside', correct: true },
+      { text: 'The metal reflects all radiation like a mirror', correct: false },
+      { text: 'It converts EM waves to sound', correct: false }
+    ]
   },
   {
     question: 'Your phone loses signal in an elevator because:',
     options: [
-      'Elevators are too high up',
-      'The metal walls act as a Faraday cage',
-      'The motor creates interference',
-      'Buildings block GPS'
-    ],
-    correct: 1
+      { text: 'Elevators are too high up', correct: false },
+      { text: 'The metal walls act as a Faraday cage', correct: true },
+      { text: 'The motor creates interference', correct: false },
+      { text: 'Buildings block GPS', correct: false }
+    ]
   },
   {
     question: 'Why does mesh work for shielding even though it has holes?',
     options: [
-      'The holes let heat escape',
-      'Mesh is cheaper than solid metal',
-      'Holes smaller than the wavelength still block waves',
-      'The holes are filled with invisible glass'
-    ],
-    correct: 2
+      { text: 'The holes let heat escape', correct: false },
+      { text: 'Mesh is cheaper than solid metal', correct: false },
+      { text: 'Holes smaller than the wavelength still block waves', correct: true },
+      { text: 'The holes are filled with invisible glass', correct: false }
+    ]
   },
   {
     question: 'Microwave ovens have a mesh window. What would happen if the holes were larger?',
     options: [
-      'Food would cook faster',
-      'Microwaves could leak out and be dangerous',
-      'The oven would be more efficient',
-      'You couldn\'t see the food'
-    ],
-    correct: 1
+      { text: 'Food would cook faster', correct: false },
+      { text: 'Microwaves could leak out and be dangerous', correct: true },
+      { text: 'The oven would be more efficient', correct: false },
+      { text: 'You couldn\'t see the food', correct: false }
+    ]
   }
 ];
 
@@ -103,17 +77,22 @@ const TRANSFER_APPS = [
   }
 ];
 
-// ═══════════════════════════════════════════════════════════════════════════
+// ===============================================================================
 // MAIN COMPONENT
-// ═══════════════════════════════════════════════════════════════════════════
-const FaradayCageRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onPhaseComplete }) => {
-  const [phase, setPhase] = useState<number>(currentPhase ?? 0);
+// ===============================================================================
+const FaradayCageRenderer: React.FC<FaradayCageRendererProps> = ({
+  phase,
+  onPhaseComplete,
+  onCorrectAnswer,
+  onIncorrectAnswer
+}) => {
   const [showPredictionFeedback, setShowPredictionFeedback] = useState(false);
   const [selectedPrediction, setSelectedPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
   const [showTwistFeedback, setShowTwistFeedback] = useState(false);
-  const [testAnswers, setTestAnswers] = useState<number[]>(Array(4).fill(-1));
+  const [testAnswers, setTestAnswers] = useState<(number | null)[]>(new Array(TEST_QUESTIONS.length).fill(null));
   const [showTestResults, setShowTestResults] = useState(false);
+  const [testScore, setTestScore] = useState(0);
   const [completedApps, setCompletedApps] = useState<Set<number>>(new Set());
   const [activeAppTab, setActiveAppTab] = useState(0);
 
@@ -124,15 +103,7 @@ const FaradayCageRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onPha
   const [meshSize, setMeshSize] = useState<'small' | 'medium' | 'large'>('small');
   const [wavelength, setWavelength] = useState<'long' | 'short'>('long');
 
-  const navigationLockRef = useRef(false);
   const lastClickRef = useRef(0);
-
-  // Phase sync
-  useEffect(() => {
-    if (currentPhase !== undefined && currentPhase !== phase) {
-      setPhase(currentPhase);
-    }
-  }, [currentPhase, phase]);
 
   const playSound = useCallback((type: 'click' | 'success' | 'failure' | 'transition' | 'complete') => {
     if (typeof window === 'undefined') return;
@@ -159,16 +130,6 @@ const FaradayCageRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onPha
     } catch { /* Audio not available */ }
   }, []);
 
-  const goToPhase = useCallback((newPhase: number) => {
-    if (navigationLockRef.current) return;
-    navigationLockRef.current = true;
-    playSound('transition');
-    setPhase(newPhase);
-    onPhaseComplete?.(newPhase);
-    onGameEvent?.({ type: 'phase_change', data: { phase: newPhase, phaseLabel: phaseLabels[newPhase] } });
-    setTimeout(() => { navigationLockRef.current = false; }, 400);
-  }, [playSound, onPhaseComplete, onGameEvent]);
-
   // Animation effect
   useEffect(() => {
     const interval = setInterval(() => {
@@ -184,11 +145,11 @@ const FaradayCageRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onPha
 
   // Reset when returning to play phase
   useEffect(() => {
-    if (phase === 2) {
+    if (phase === 'play') {
       setCageEnabled(false);
       setSignalStrength(100);
     }
-    if (phase === 5) {
+    if (phase === 'twist_play') {
       setMeshSize('small');
       setWavelength('long');
     }
@@ -237,7 +198,18 @@ const FaradayCageRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onPha
     playSound('complete');
   }, [playSound]);
 
-  const calculateScore = () => testAnswers.reduce((score, answer, index) => score + (answer === TEST_QUESTIONS[index].correct ? 1 : 0), 0);
+  const submitTest = () => {
+    let score = 0;
+    TEST_QUESTIONS.forEach((q, i) => {
+      if (testAnswers[i] !== null && q.options[testAnswers[i]!].correct) {
+        score++;
+      }
+    });
+    setTestScore(score);
+    setShowTestResults(true);
+    if (score >= 3 && onCorrectAnswer) onCorrectAnswer();
+    else if (onIncorrectAnswer) onIncorrectAnswer();
+  };
 
   const renderFaradayCage = (cage: boolean, strength: number, animPhase: number) => {
     const waveAmplitude = 30;
@@ -358,464 +330,507 @@ const FaradayCageRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onPha
     );
   };
 
-  const renderHook = () => (
-    <div className="flex flex-col items-center justify-center min-h-[600px] px-6 py-12 text-center">
-      <div className="inline-flex items-center gap-2 px-4 py-2 bg-amber-500/10 border border-amber-500/20 rounded-full mb-8">
-        <span className="w-2 h-2 bg-amber-400 rounded-full animate-pulse" />
-        <span className="text-sm font-medium text-amber-400 tracking-wide">PHYSICS EXPLORATION</span>
+  const colors = {
+    textPrimary: '#f8fafc',
+    textSecondary: '#e2e8f0',
+    textMuted: '#94a3b8',
+    bgPrimary: '#0f172a',
+    bgCard: 'rgba(30, 41, 59, 0.9)',
+    bgDark: 'rgba(15, 23, 42, 0.95)',
+    accent: '#f59e0b',
+    accentGlow: 'rgba(245, 158, 11, 0.4)',
+    success: '#10b981',
+    warning: '#f59e0b',
+    error: '#ef4444',
+  };
+
+  const renderBottomBar = (disabled: boolean, canProceed: boolean, buttonText: string) => (
+    <div style={{
+      position: 'fixed',
+      bottom: 0,
+      left: 0,
+      right: 0,
+      padding: '16px 24px',
+      background: colors.bgDark,
+      borderTop: `1px solid rgba(255,255,255,0.1)`,
+      display: 'flex',
+      justifyContent: 'flex-end',
+      zIndex: 1000,
+    }}>
+      <button
+        onClick={onPhaseComplete}
+        disabled={disabled && !canProceed}
+        style={{
+          padding: '12px 32px',
+          borderRadius: '8px',
+          border: 'none',
+          background: canProceed ? colors.accent : 'rgba(255,255,255,0.1)',
+          color: canProceed ? 'white' : colors.textMuted,
+          fontWeight: 'bold',
+          cursor: canProceed ? 'pointer' : 'not-allowed',
+          fontSize: '16px',
+        }}
+      >
+        {buttonText}
+      </button>
+    </div>
+  );
+
+  // HOOK PHASE
+  if (phase === 'hook') {
+    return (
+      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+          <div className="flex flex-col items-center justify-center min-h-[600px] px-6 py-12 text-center">
+            <div className="inline-flex items-center gap-2 px-4 py-2 bg-amber-500/10 border border-amber-500/20 rounded-full mb-8">
+              <span className="w-2 h-2 bg-amber-400 rounded-full animate-pulse" />
+              <span className="text-sm font-medium text-amber-400 tracking-wide">PHYSICS EXPLORATION</span>
+            </div>
+            <h1 className="text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-white via-amber-100 to-yellow-200 bg-clip-text text-transparent">
+              The Invisible Shield
+            </h1>
+            <p className="text-lg text-slate-400 max-w-md mb-10">
+              Why does your phone lose signal in elevators?
+            </p>
+            <div className="relative bg-gradient-to-br from-slate-800/80 to-slate-900/80 rounded-3xl p-8 max-w-xl w-full border border-slate-700/50 shadow-2xl shadow-black/20">
+              <div className="absolute inset-0 bg-gradient-to-br from-amber-500/5 via-transparent to-yellow-500/5 rounded-3xl" />
+              <div className="relative">
+                <div className="text-6xl mb-6">📱🛡️</div>
+                <div className="mt-4 space-y-4">
+                  <p className="text-xl text-white/90 font-medium leading-relaxed">
+                    Step into a metal elevator, and your phone signal vanishes.
+                  </p>
+                  <p className="text-lg text-slate-400 leading-relaxed">
+                    Step out, and it returns. The metal box acts like a magical shield against radio waves!
+                  </p>
+                  <div className="pt-2">
+                    <p className="text-base text-amber-400 font-semibold">
+                      This is called a &quot;Faraday cage&quot;!
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        {renderBottomBar(false, true, 'Make a Prediction')}
       </div>
-      <h1 className="text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-white via-amber-100 to-yellow-200 bg-clip-text text-transparent">
-        The Invisible Shield
-      </h1>
-      <p className="text-lg text-slate-400 max-w-md mb-10">
-        Why does your phone lose signal in elevators?
-      </p>
-      <div className="relative bg-gradient-to-br from-slate-800/80 to-slate-900/80 rounded-3xl p-8 max-w-xl w-full border border-slate-700/50 shadow-2xl shadow-black/20">
-        <div className="absolute inset-0 bg-gradient-to-br from-amber-500/5 via-transparent to-yellow-500/5 rounded-3xl" />
-        <div className="relative">
-          <div className="text-6xl mb-6">📱🛡️</div>
-          <div className="mt-4 space-y-4">
-            <p className="text-xl text-white/90 font-medium leading-relaxed">
-              Step into a metal elevator, and your phone signal vanishes.
-            </p>
-            <p className="text-lg text-slate-400 leading-relaxed">
-              Step out, and it returns. The metal box acts like a magical shield against radio waves!
-            </p>
-            <div className="pt-2">
-              <p className="text-base text-amber-400 font-semibold">
-                This is called a &quot;Faraday cage&quot;!
+    );
+  }
+
+  // PREDICT PHASE
+  if (phase === 'predict') {
+    return (
+      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+          <div className="flex flex-col items-center justify-center min-h-[500px] p-6">
+            <h2 className="text-2xl font-bold text-white mb-6">Make Your Prediction</h2>
+            <div className="bg-slate-800/50 rounded-2xl p-6 max-w-2xl mb-6">
+              <p className="text-lg text-slate-300 mb-4">
+                Why does a metal enclosure block electromagnetic waves?
+              </p>
+            </div>
+            <div className="grid gap-3 w-full max-w-xl">
+              {[
+                { id: 'A', text: 'Metal absorbs all the wave energy as heat' },
+                { id: 'B', text: 'Free electrons in metal move to cancel the field inside' },
+                { id: 'C', text: 'Metal is simply too dense for waves to pass through' },
+                { id: 'D', text: 'The waves bounce back like light off a mirror' }
+              ].map(option => (
+                <button
+                  key={option.id}
+                  onMouseDown={(e) => { e.preventDefault(); handlePrediction(option.id); }}
+                  disabled={showPredictionFeedback}
+                  className={`p-4 rounded-xl text-left transition-all duration-300 ${
+                    showPredictionFeedback && selectedPrediction === option.id
+                      ? option.id === 'B' ? 'bg-emerald-600/40 border-2 border-emerald-400' : 'bg-red-600/40 border-2 border-red-400'
+                      : showPredictionFeedback && option.id === 'B' ? 'bg-emerald-600/40 border-2 border-emerald-400'
+                      : 'bg-slate-700/50 hover:bg-slate-600/50 border-2 border-transparent'
+                  }`}
+                >
+                  <span className="font-bold text-white">{option.id}.</span>
+                  <span className="text-slate-200 ml-2">{option.text}</span>
+                </button>
+              ))}
+            </div>
+            {showPredictionFeedback && (
+              <div className="mt-6 p-4 bg-slate-800/70 rounded-xl max-w-xl">
+                <p className="text-emerald-400 font-semibold">
+                  Correct! Free electrons redistribute to cancel the incoming electromagnetic field!
+                </p>
+              </div>
+            )}
+          </div>
+        </div>
+        {renderBottomBar(true, !!selectedPrediction, 'Test My Prediction')}
+      </div>
+    );
+  }
+
+  // PLAY PHASE
+  if (phase === 'play') {
+    return (
+      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+          <div className="flex flex-col items-center p-6">
+            <h2 className="text-2xl font-bold text-white mb-4">Faraday Cage Simulator</h2>
+            <div className="bg-slate-800/50 rounded-2xl p-6 mb-4">
+              {renderFaradayCage(cageEnabled, signalStrength, wavePhase)}
+            </div>
+            <div className="flex justify-center mt-4">
+              <button
+                onMouseDown={(e) => { e.preventDefault(); setCageEnabled(!cageEnabled); }}
+                className={`px-8 py-4 rounded-lg font-bold text-lg ${cageEnabled ? 'bg-amber-600 text-white' : 'bg-slate-600 text-slate-300'}`}
+              >
+                {cageEnabled ? 'Cage ON' : 'Cage OFF'}
+              </button>
+            </div>
+            <div className="bg-gradient-to-r from-amber-900/40 to-yellow-900/40 rounded-xl p-4 max-w-2xl w-full mt-6">
+              <p className="text-slate-300 text-center">
+                {cageEnabled ? (
+                  <><span className="text-amber-400 font-bold">Signal blocked!</span> Free electrons redistribute to cancel the incoming field.</>
+                ) : (
+                  <><span className="text-green-400 font-bold">Full signal!</span> EM waves pass freely to the phone.</>
+                )}
               </p>
             </div>
           </div>
         </div>
+        {renderBottomBar(false, true, 'Continue to Review')}
       </div>
-      <button
-        onMouseDown={(e) => { e.preventDefault(); goToPhase(1); }}
-        className="mt-10 group relative px-10 py-5 bg-gradient-to-r from-amber-500 to-yellow-600 text-white text-lg font-semibold rounded-2xl transition-all duration-300 hover:shadow-lg hover:shadow-amber-500/25 hover:scale-[1.02] active:scale-[0.98]"
-      >
-        <span className="relative z-10 flex items-center gap-3">
-          Discover the Secret
-          <svg className="w-5 h-5 transition-transform group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-          </svg>
-        </span>
-      </button>
-      <div className="mt-12 flex items-center gap-8 text-sm text-slate-500">
-        <div className="flex items-center gap-2"><span className="text-amber-400">+</span>Interactive Lab</div>
-        <div className="flex items-center gap-2"><span className="text-amber-400">+</span>Real-World Examples</div>
-        <div className="flex items-center gap-2"><span className="text-amber-400">+</span>Knowledge Test</div>
-      </div>
-    </div>
-  );
+    );
+  }
 
-  const renderPredict = () => (
-    <div className="flex flex-col items-center justify-center min-h-[500px] p-6">
-      <h2 className="text-2xl font-bold text-white mb-6">Make Your Prediction</h2>
-      <div className="bg-slate-800/50 rounded-2xl p-6 max-w-2xl mb-6">
-        <p className="text-lg text-slate-300 mb-4">
-          Why does a metal enclosure block electromagnetic waves?
-        </p>
-      </div>
-      <div className="grid gap-3 w-full max-w-xl">
-        {[
-          { id: 'A', text: 'Metal absorbs all the wave energy as heat' },
-          { id: 'B', text: 'Free electrons in metal move to cancel the field inside' },
-          { id: 'C', text: 'Metal is simply too dense for waves to pass through' },
-          { id: 'D', text: 'The waves bounce back like light off a mirror' }
-        ].map(option => (
-          <button
-            key={option.id}
-            onMouseDown={(e) => { e.preventDefault(); handlePrediction(option.id); }}
-            disabled={showPredictionFeedback}
-            className={`p-4 rounded-xl text-left transition-all duration-300 ${
-              showPredictionFeedback && selectedPrediction === option.id
-                ? option.id === 'B' ? 'bg-emerald-600/40 border-2 border-emerald-400' : 'bg-red-600/40 border-2 border-red-400'
-                : showPredictionFeedback && option.id === 'B' ? 'bg-emerald-600/40 border-2 border-emerald-400'
-                : 'bg-slate-700/50 hover:bg-slate-600/50 border-2 border-transparent'
-            }`}
-          >
-            <span className="font-bold text-white">{option.id}.</span>
-            <span className="text-slate-200 ml-2">{option.text}</span>
-          </button>
-        ))}
-      </div>
-      {showPredictionFeedback && (
-        <div className="mt-6 p-4 bg-slate-800/70 rounded-xl max-w-xl">
-          <p className="text-emerald-400 font-semibold">
-            Correct! Free electrons redistribute to cancel the incoming electromagnetic field!
-          </p>
-          <button
-            onMouseDown={(e) => { e.preventDefault(); goToPhase(2); }}
-            className="mt-4 px-6 py-3 bg-gradient-to-r from-amber-600 to-yellow-600 text-white font-semibold rounded-xl"
-          >
-            Explore the Physics
-          </button>
-        </div>
-      )}
-    </div>
-  );
-
-  const renderPlay = () => (
-    <div className="flex flex-col items-center p-6">
-      <h2 className="text-2xl font-bold text-white mb-4">Faraday Cage Simulator</h2>
-      <div className="bg-slate-800/50 rounded-2xl p-6 mb-4">
-        {renderFaradayCage(cageEnabled, signalStrength, wavePhase)}
-      </div>
-      <div className="flex justify-center mt-4">
-        <button
-          onMouseDown={(e) => { e.preventDefault(); setCageEnabled(!cageEnabled); }}
-          className={`px-8 py-4 rounded-lg font-bold text-lg ${cageEnabled ? 'bg-amber-600 text-white' : 'bg-slate-600 text-slate-300'}`}
-        >
-          {cageEnabled ? 'Cage ON' : 'Cage OFF'}
-        </button>
-      </div>
-      <div className="bg-gradient-to-r from-amber-900/40 to-yellow-900/40 rounded-xl p-4 max-w-2xl w-full mt-6">
-        <p className="text-slate-300 text-center">
-          {cageEnabled ? (
-            <><span className="text-amber-400 font-bold">Signal blocked!</span> Free electrons redistribute to cancel the incoming field.</>
-          ) : (
-            <><span className="text-green-400 font-bold">Full signal!</span> EM waves pass freely to the phone.</>
-          )}
-        </p>
-      </div>
-      <button onMouseDown={(e) => { e.preventDefault(); goToPhase(3); }} className="mt-6 px-6 py-3 bg-gradient-to-r from-amber-600 to-yellow-600 text-white font-semibold rounded-xl">
-        Understand the Physics
-      </button>
-    </div>
-  );
-
-  const renderReview = () => (
-    <div className="flex flex-col items-center p-6">
-      <h2 className="text-2xl font-bold text-white mb-6">The Shielding Principle</h2>
-      <div className="bg-slate-800/50 rounded-2xl p-6 max-w-2xl space-y-4">
-        <div className="p-4 bg-amber-900/30 rounded-lg border border-amber-600">
-          <h3 className="text-amber-400 font-bold mb-2">How It Works</h3>
-          <p className="text-slate-300">
-            When an EM wave hits a conductor, it pushes free electrons around.
-            These electrons <span className="text-cyan-400 font-bold">redistribute instantly</span> to
-            create an opposing field that cancels the original wave inside!
-          </p>
-        </div>
-        <div className="grid grid-cols-2 gap-4">
-          <div className="p-4 bg-slate-700/50 rounded-lg">
-            <h4 className="text-blue-400 font-bold mb-2">External Wave</h4>
-            <ul className="text-slate-300 text-sm space-y-1">
-              <li>Oscillating E and B fields</li>
-              <li>Pushes electrons in metal</li>
-              <li>Creates surface currents</li>
-            </ul>
-          </div>
-          <div className="p-4 bg-slate-700/50 rounded-lg">
-            <h4 className="text-green-400 font-bold mb-2">Inside</h4>
-            <ul className="text-slate-300 text-sm space-y-1">
-              <li>Surface currents make opposing field</li>
-              <li>Fields cancel out perfectly</li>
-              <li>Net field = zero!</li>
-            </ul>
-          </div>
-        </div>
-        <div className="p-4 bg-purple-900/30 rounded-lg border border-purple-600">
-          <p className="text-purple-300">
-            <strong>Key Insight:</strong> The cage doesn&apos;t need to be solid!
-            As long as holes are smaller than the wavelength, it still works.
-          </p>
-        </div>
-      </div>
-      <button onMouseDown={(e) => { e.preventDefault(); goToPhase(4); }} className="mt-8 px-6 py-3 bg-gradient-to-r from-amber-600 to-orange-600 text-white font-semibold rounded-xl">
-        What About Mesh?
-      </button>
-    </div>
-  );
-
-  const renderTwistPredict = () => (
-    <div className="flex flex-col items-center justify-center min-h-[500px] p-6">
-      <h2 className="text-2xl font-bold text-amber-400 mb-6">The Mesh Question</h2>
-      <div className="bg-slate-800/50 rounded-2xl p-6 max-w-2xl mb-6">
-        <p className="text-lg text-slate-300 mb-4">
-          A Faraday cage with large holes is exposed to waves with a wavelength
-          SHORTER than the hole size. What happens?
-        </p>
-      </div>
-      <div className="grid gap-3 w-full max-w-xl">
-        {[
-          { id: 'A', text: 'Still blocks everything - holes don\'t matter' },
-          { id: 'B', text: 'Blocks half the wave' },
-          { id: 'C', text: 'Waves leak through - holes are too big!' },
-          { id: 'D', text: 'Converts the wave to a different frequency' }
-        ].map(option => (
-          <button
-            key={option.id}
-            onMouseDown={(e) => { e.preventDefault(); handleTwistPrediction(option.id); }}
-            disabled={showTwistFeedback}
-            className={`p-4 rounded-xl text-left transition-all duration-300 ${
-              showTwistFeedback && twistPrediction === option.id
-                ? option.id === 'C' ? 'bg-emerald-600/40 border-2 border-emerald-400' : 'bg-red-600/40 border-2 border-red-400'
-                : showTwistFeedback && option.id === 'C' ? 'bg-emerald-600/40 border-2 border-emerald-400'
-                : 'bg-slate-700/50 hover:bg-slate-600/50 border-2 border-transparent'
-            }`}
-          >
-            <span className="font-bold text-white">{option.id}.</span>
-            <span className="text-slate-200 ml-2">{option.text}</span>
-          </button>
-        ))}
-      </div>
-      {showTwistFeedback && (
-        <div className="mt-6 p-4 bg-slate-800/70 rounded-xl max-w-xl">
-          <p className="text-emerald-400 font-semibold">
-            Correct! When holes are larger than the wavelength, waves can leak through!
-          </p>
-          <button onMouseDown={(e) => { e.preventDefault(); goToPhase(5); }} className="mt-4 px-6 py-3 bg-gradient-to-r from-amber-600 to-orange-600 text-white font-semibold rounded-xl">
-            See What Happens
-          </button>
-        </div>
-      )}
-    </div>
-  );
-
-  const renderTwistPlay = () => (
-    <div className="flex flex-col items-center p-6">
-      <h2 className="text-2xl font-bold text-amber-400 mb-4">Mesh Size vs Wavelength</h2>
-      <div className="bg-slate-800/50 rounded-2xl p-6 mb-6">
-        {renderMeshComparison(meshSize, wavelength)}
-        <div className="grid grid-cols-2 gap-4 mt-6">
-          <div>
-            <p className="text-amber-400 font-medium mb-2">Mesh Hole Size</p>
-            <div className="flex gap-2">
-              {(['small', 'medium', 'large'] as const).map(size => (
-                <button key={size} onMouseDown={(e) => { e.preventDefault(); setMeshSize(size); }} className={`flex-1 px-3 py-2 rounded-lg font-bold text-sm ${meshSize === size ? 'bg-amber-600 text-white' : 'bg-slate-600 text-slate-300'}`}>
-                  {size === 'small' ? '8mm' : size === 'medium' ? '20mm' : '40mm'}
-                </button>
-              ))}
-            </div>
-          </div>
-          <div>
-            <p className="text-blue-400 font-medium mb-2">Wavelength</p>
-            <div className="flex gap-2">
-              {(['long', 'short'] as const).map(wave => (
-                <button key={wave} onMouseDown={(e) => { e.preventDefault(); setWavelength(wave); }} className={`flex-1 px-3 py-2 rounded-lg font-bold text-sm ${wavelength === wave ? 'bg-blue-600 text-white' : 'bg-slate-600 text-slate-300'}`}>
-                  {wave === 'long' ? '60mm' : '15mm'}
-                </button>
-              ))}
-            </div>
-          </div>
-        </div>
-        <div className={`mt-4 p-4 rounded-lg border ${getShieldingEffectiveness(meshSize, wavelength) > 80 ? 'bg-green-900/30 border-green-600' : getShieldingEffectiveness(meshSize, wavelength) > 40 ? 'bg-yellow-900/30 border-yellow-600' : 'bg-red-900/30 border-red-600'}`}>
-          <p className={`text-center ${getShieldingEffectiveness(meshSize, wavelength) > 80 ? 'text-green-300' : getShieldingEffectiveness(meshSize, wavelength) > 40 ? 'text-yellow-300' : 'text-red-300'}`}>
-            <span className="font-bold">Rule:</span> Hole size must be much smaller than wavelength for effective shielding.
-          </p>
-        </div>
-      </div>
-      <button onMouseDown={(e) => { e.preventDefault(); goToPhase(6); }} className="px-6 py-3 bg-gradient-to-r from-amber-600 to-orange-600 text-white font-semibold rounded-xl">
-        Understand the Rule
-      </button>
-    </div>
-  );
-
-  const renderTwistReview = () => (
-    <div className="flex flex-col items-center p-6">
-      <h2 className="text-2xl font-bold text-amber-400 mb-6">The Wavelength Rule</h2>
-      <div className="bg-slate-800/50 rounded-2xl p-6 max-w-2xl space-y-4">
-        <div className="p-4 bg-green-900/30 rounded-lg border border-green-600">
-          <h3 className="text-green-400 font-bold mb-2">The Key Principle</h3>
-          <p className="text-slate-300">
-            Electromagnetic waves can only &quot;see&quot; obstacles comparable to their wavelength.
-            If a hole is <span className="text-yellow-400 font-bold">much smaller than the wavelength</span>,
-            the wave diffracts around it and can&apos;t pass through!
-          </p>
-        </div>
-        <div className="grid grid-cols-2 gap-4">
-          <div className="p-4 bg-slate-700/50 rounded-lg">
-            <h4 className="text-cyan-400 font-bold mb-2">Microwave Oven Door</h4>
-            <ul className="text-slate-300 text-sm space-y-1">
-              <li>Microwaves: wavelength = 12cm</li>
-              <li>Mesh holes: ~1-2mm</li>
-              <li>Holes are 60-100x smaller</li>
-              <li>Result: Safe! Waves blocked</li>
-            </ul>
-          </div>
-          <div className="p-4 bg-slate-700/50 rounded-lg">
-            <h4 className="text-purple-400 font-bold mb-2">WiFi Through Walls</h4>
-            <ul className="text-slate-300 text-sm space-y-1">
-              <li>WiFi: wavelength = 12cm</li>
-              <li>Wall studs: ~40cm apart</li>
-              <li>Gaps are 3x larger</li>
-              <li>Result: WiFi passes through!</li>
-            </ul>
-          </div>
-        </div>
-        <div className="p-4 bg-yellow-900/30 rounded-lg border border-yellow-600">
-          <p className="text-yellow-300 text-sm">
-            <strong>Real Example:</strong> Your car is a Faraday cage for radio waves (metal body),
-            but you can still make phone calls because cell signals can enter through the windows!
-          </p>
-        </div>
-      </div>
-      <button onMouseDown={(e) => { e.preventDefault(); goToPhase(7); }} className="mt-6 px-6 py-3 bg-gradient-to-r from-blue-600 to-cyan-600 text-white font-semibold rounded-xl">
-        Explore Real Applications
-      </button>
-    </div>
-  );
-
-  const renderTransfer = () => (
-    <div className="flex flex-col items-center p-6">
-      <h2 className="text-2xl font-bold text-white mb-6">Real-World Applications</h2>
-      <div className="flex gap-2 mb-6 flex-wrap justify-center">
-        {TRANSFER_APPS.map((app, index) => (
-          <button
-            key={index}
-            onMouseDown={(e) => { e.preventDefault(); setActiveAppTab(index); }}
-            className={`px-4 py-2 rounded-lg font-medium transition-all ${
-              activeAppTab === index ? 'bg-amber-600 text-white'
-              : completedApps.has(index) ? 'bg-emerald-600/30 text-emerald-400 border border-emerald-500'
-              : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
-            }`}
-          >
-            {app.icon} {app.title.split(' ')[0]}
-          </button>
-        ))}
-      </div>
-      <div className="bg-slate-800/50 rounded-2xl p-6 max-w-2xl w-full">
-        <div className="flex items-center gap-3 mb-4">
-          <span className="text-3xl">{TRANSFER_APPS[activeAppTab].icon}</span>
-          <h3 className="text-xl font-bold text-white">{TRANSFER_APPS[activeAppTab].title}</h3>
-        </div>
-        <p className="text-lg text-slate-300 mt-4">{TRANSFER_APPS[activeAppTab].description}</p>
-        {!completedApps.has(activeAppTab) && (
-          <button onMouseDown={(e) => { e.preventDefault(); handleAppComplete(activeAppTab); }} className="mt-4 px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg font-medium">
-            Mark as Understood
-          </button>
-        )}
-      </div>
-      <div className="mt-6 flex items-center gap-2">
-        <span className="text-slate-400">Progress:</span>
-        <div className="flex gap-1">{TRANSFER_APPS.map((_, i) => (<div key={i} className={`w-3 h-3 rounded-full ${completedApps.has(i) ? 'bg-emerald-500' : 'bg-slate-600'}`} />))}</div>
-        <span className="text-slate-400">{completedApps.size}/4</span>
-      </div>
-      {completedApps.size >= 4 && (
-        <button onMouseDown={(e) => { e.preventDefault(); goToPhase(8); }} className="mt-6 px-6 py-3 bg-gradient-to-r from-amber-600 to-yellow-600 text-white font-semibold rounded-xl">
-          Take the Knowledge Test
-        </button>
-      )}
-    </div>
-  );
-
-  const renderTest = () => (
-    <div className="flex flex-col items-center p-6">
-      <h2 className="text-2xl font-bold text-white mb-6">Knowledge Assessment</h2>
-      {!showTestResults ? (
-        <div className="space-y-6 max-w-2xl w-full">
-          {TEST_QUESTIONS.map((q, qIndex) => (
-            <div key={qIndex} className="bg-slate-800/50 rounded-xl p-4">
-              <p className="text-white font-medium mb-3">{qIndex + 1}. {q.question}</p>
-              <div className="grid gap-2">
-                {q.options.map((option, oIndex) => (
-                  <button
-                    key={oIndex}
-                    onMouseDown={(e) => { e.preventDefault(); handleTestAnswer(qIndex, oIndex); }}
-                    className={`p-3 rounded-lg text-left text-sm transition-all ${testAnswers[qIndex] === oIndex ? 'bg-amber-600 text-white' : 'bg-slate-700/50 text-slate-300 hover:bg-slate-600/50'}`}
-                  >
-                    {option}
-                  </button>
-                ))}
+  // REVIEW PHASE
+  if (phase === 'review') {
+    return (
+      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+          <div className="flex flex-col items-center p-6">
+            <h2 className="text-2xl font-bold text-white mb-6">The Shielding Principle</h2>
+            <div className="bg-slate-800/50 rounded-2xl p-6 max-w-2xl space-y-4">
+              <div className="p-4 bg-amber-900/30 rounded-lg border border-amber-600">
+                <h3 className="text-amber-400 font-bold mb-2">How It Works</h3>
+                <p className="text-slate-300">
+                  When an EM wave hits a conductor, it pushes free electrons around.
+                  These electrons <span className="text-cyan-400 font-bold">redistribute instantly</span> to
+                  create an opposing field that cancels the original wave inside!
+                </p>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="p-4 bg-slate-700/50 rounded-lg">
+                  <h4 className="text-blue-400 font-bold mb-2">External Wave</h4>
+                  <ul className="text-slate-300 text-sm space-y-1">
+                    <li>Oscillating E and B fields</li>
+                    <li>Pushes electrons in metal</li>
+                    <li>Creates surface currents</li>
+                  </ul>
+                </div>
+                <div className="p-4 bg-slate-700/50 rounded-lg">
+                  <h4 className="text-green-400 font-bold mb-2">Inside</h4>
+                  <ul className="text-slate-300 text-sm space-y-1">
+                    <li>Surface currents make opposing field</li>
+                    <li>Fields cancel out perfectly</li>
+                    <li>Net field = zero!</li>
+                  </ul>
+                </div>
+              </div>
+              <div className="p-4 bg-purple-900/30 rounded-lg border border-purple-600">
+                <p className="text-purple-300">
+                  <strong>Key Insight:</strong> The cage doesn&apos;t need to be solid!
+                  As long as holes are smaller than the wavelength, it still works.
+                </p>
               </div>
             </div>
-          ))}
-          <button
-            onMouseDown={(e) => { e.preventDefault(); setShowTestResults(true); }}
-            disabled={testAnswers.includes(-1)}
-            className={`w-full py-4 rounded-xl font-semibold text-lg ${testAnswers.includes(-1) ? 'bg-slate-700 text-slate-500 cursor-not-allowed' : 'bg-gradient-to-r from-amber-600 to-yellow-600 text-white'}`}
-          >
-            Submit Answers
-          </button>
-        </div>
-      ) : (
-        <div className="bg-slate-800/50 rounded-2xl p-6 max-w-2xl w-full text-center">
-          <div className="text-6xl mb-4">{calculateScore() >= 3 ? '🎉' : '📚'}</div>
-          <h3 className="text-2xl font-bold text-white mb-2">Score: {calculateScore()}/4</h3>
-          <p className="text-slate-300 mb-6">{calculateScore() >= 3 ? 'Excellent! You understand Faraday cages!' : 'Keep studying! Review and try again.'}</p>
-          {calculateScore() >= 3 ? (
-            <button onMouseDown={(e) => { e.preventDefault(); goToPhase(9); }} className="px-8 py-4 bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-semibold rounded-xl">
-              Claim Your Mastery Badge
-            </button>
-          ) : (
-            <button onMouseDown={(e) => { e.preventDefault(); setShowTestResults(false); setTestAnswers(Array(4).fill(-1)); goToPhase(3); }} className="px-8 py-4 bg-gradient-to-r from-amber-600 to-yellow-600 text-white font-semibold rounded-xl">
-              Review and Try Again
-            </button>
-          )}
-        </div>
-      )}
-    </div>
-  );
-
-  const renderMastery = () => (
-    <div className="flex flex-col items-center justify-center min-h-[500px] p-6 text-center">
-      <div className="bg-gradient-to-br from-amber-900/50 via-yellow-900/50 to-orange-900/50 rounded-3xl p-8 max-w-2xl">
-        <div className="text-8xl mb-6">🛡️</div>
-        <h1 className="text-3xl font-bold text-white mb-4">Faraday Cage Master!</h1>
-        <p className="text-xl text-slate-300 mb-6">You&apos;ve mastered electromagnetic shielding!</p>
-        <div className="grid grid-cols-2 gap-4 mb-6">
-          <div className="bg-slate-800/50 rounded-xl p-4"><div className="text-2xl mb-2">⚡</div><p className="text-sm text-slate-300">Electron Redistribution</p></div>
-          <div className="bg-slate-800/50 rounded-xl p-4"><div className="text-2xl mb-2">🔲</div><p className="text-sm text-slate-300">Mesh vs Wavelength</p></div>
-          <div className="bg-slate-800/50 rounded-xl p-4"><div className="text-2xl mb-2">🍿</div><p className="text-sm text-slate-300">Microwave Ovens</p></div>
-          <div className="bg-slate-800/50 rounded-xl p-4"><div className="text-2xl mb-2">📱</div><p className="text-sm text-slate-300">Signal Blocking</p></div>
-        </div>
-        <button onMouseDown={(e) => { e.preventDefault(); goToPhase(0); }} className="px-6 py-3 bg-slate-700 hover:bg-slate-600 text-white font-medium rounded-xl">Explore Again</button>
-      </div>
-    </div>
-  );
-
-  const renderPhase = () => {
-    switch (phase) {
-      case 0: return renderHook();
-      case 1: return renderPredict();
-      case 2: return renderPlay();
-      case 3: return renderReview();
-      case 4: return renderTwistPredict();
-      case 5: return renderTwistPlay();
-      case 6: return renderTwistReview();
-      case 7: return renderTransfer();
-      case 8: return renderTest();
-      case 9: return renderMastery();
-      default: return renderHook();
-    }
-  };
-
-  return (
-    <div className="min-h-screen bg-[#0a0f1a] text-white relative overflow-hidden">
-      {/* Premium background gradient */}
-      <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-[#0a1628] to-slate-900" />
-      <div className="absolute top-0 left-1/4 w-96 h-96 bg-amber-500/5 rounded-full blur-3xl" />
-      <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-yellow-500/5 rounded-full blur-3xl" />
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-orange-500/5 rounded-full blur-3xl" />
-
-      {/* Header */}
-      <div className="fixed top-0 left-0 right-0 z-50 bg-slate-900/80 backdrop-blur-xl border-b border-slate-800/50">
-        <div className="flex items-center justify-between px-6 py-3 max-w-4xl mx-auto">
-          <span className="text-sm font-semibold text-white/80 tracking-wide">Faraday Cage</span>
-          <div className="flex items-center gap-1.5">
-            {PHASES.map((p) => (
-              <button
-                key={p}
-                onMouseDown={(e) => { e.preventDefault(); goToPhase(p); }}
-                className={`h-2 rounded-full transition-all duration-300 ${
-                  phase === p
-                    ? 'bg-amber-400 w-6 shadow-lg shadow-amber-400/30'
-                    : phase > p
-                      ? 'bg-emerald-500 w-2'
-                      : 'bg-slate-700 w-2 hover:bg-slate-600'
-                }`}
-                title={phaseLabels[p]}
-              />
-            ))}
           </div>
-          <span className="text-sm font-medium text-amber-400">{phaseLabels[phase]}</span>
+        </div>
+        {renderBottomBar(false, true, 'Next: A Twist!')}
+      </div>
+    );
+  }
+
+  // TWIST PREDICT PHASE
+  if (phase === 'twist_predict') {
+    return (
+      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+          <div className="flex flex-col items-center justify-center min-h-[500px] p-6">
+            <h2 className="text-2xl font-bold text-amber-400 mb-6">The Mesh Question</h2>
+            <div className="bg-slate-800/50 rounded-2xl p-6 max-w-2xl mb-6">
+              <p className="text-lg text-slate-300 mb-4">
+                A Faraday cage with large holes is exposed to waves with a wavelength
+                SHORTER than the hole size. What happens?
+              </p>
+            </div>
+            <div className="grid gap-3 w-full max-w-xl">
+              {[
+                { id: 'A', text: 'Still blocks everything - holes don\'t matter' },
+                { id: 'B', text: 'Blocks half the wave' },
+                { id: 'C', text: 'Waves leak through - holes are too big!' },
+                { id: 'D', text: 'Converts the wave to a different frequency' }
+              ].map(option => (
+                <button
+                  key={option.id}
+                  onMouseDown={(e) => { e.preventDefault(); handleTwistPrediction(option.id); }}
+                  disabled={showTwistFeedback}
+                  className={`p-4 rounded-xl text-left transition-all duration-300 ${
+                    showTwistFeedback && twistPrediction === option.id
+                      ? option.id === 'C' ? 'bg-emerald-600/40 border-2 border-emerald-400' : 'bg-red-600/40 border-2 border-red-400'
+                      : showTwistFeedback && option.id === 'C' ? 'bg-emerald-600/40 border-2 border-emerald-400'
+                      : 'bg-slate-700/50 hover:bg-slate-600/50 border-2 border-transparent'
+                  }`}
+                >
+                  <span className="font-bold text-white">{option.id}.</span>
+                  <span className="text-slate-200 ml-2">{option.text}</span>
+                </button>
+              ))}
+            </div>
+            {showTwistFeedback && (
+              <div className="mt-6 p-4 bg-slate-800/70 rounded-xl max-w-xl">
+                <p className="text-emerald-400 font-semibold">
+                  Correct! When holes are larger than the wavelength, waves can leak through!
+                </p>
+              </div>
+            )}
+          </div>
+        </div>
+        {renderBottomBar(true, !!twistPrediction, 'Test My Prediction')}
+      </div>
+    );
+  }
+
+  // TWIST PLAY PHASE
+  if (phase === 'twist_play') {
+    return (
+      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+          <div className="flex flex-col items-center p-6">
+            <h2 className="text-2xl font-bold text-amber-400 mb-4">Mesh Size vs Wavelength</h2>
+            <div className="bg-slate-800/50 rounded-2xl p-6 mb-6">
+              {renderMeshComparison(meshSize, wavelength)}
+              <div className="grid grid-cols-2 gap-4 mt-6">
+                <div>
+                  <p className="text-amber-400 font-medium mb-2">Mesh Hole Size</p>
+                  <div className="flex gap-2">
+                    {(['small', 'medium', 'large'] as const).map(size => (
+                      <button key={size} onMouseDown={(e) => { e.preventDefault(); setMeshSize(size); }} className={`flex-1 px-3 py-2 rounded-lg font-bold text-sm ${meshSize === size ? 'bg-amber-600 text-white' : 'bg-slate-600 text-slate-300'}`}>
+                        {size === 'small' ? '8mm' : size === 'medium' ? '20mm' : '40mm'}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                <div>
+                  <p className="text-blue-400 font-medium mb-2">Wavelength</p>
+                  <div className="flex gap-2">
+                    {(['long', 'short'] as const).map(wave => (
+                      <button key={wave} onMouseDown={(e) => { e.preventDefault(); setWavelength(wave); }} className={`flex-1 px-3 py-2 rounded-lg font-bold text-sm ${wavelength === wave ? 'bg-blue-600 text-white' : 'bg-slate-600 text-slate-300'}`}>
+                        {wave === 'long' ? '60mm' : '15mm'}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+              <div className={`mt-4 p-4 rounded-lg border ${getShieldingEffectiveness(meshSize, wavelength) > 80 ? 'bg-green-900/30 border-green-600' : getShieldingEffectiveness(meshSize, wavelength) > 40 ? 'bg-yellow-900/30 border-yellow-600' : 'bg-red-900/30 border-red-600'}`}>
+                <p className={`text-center ${getShieldingEffectiveness(meshSize, wavelength) > 80 ? 'text-green-300' : getShieldingEffectiveness(meshSize, wavelength) > 40 ? 'text-yellow-300' : 'text-red-300'}`}>
+                  <span className="font-bold">Rule:</span> Hole size must be much smaller than wavelength for effective shielding.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+        {renderBottomBar(false, true, 'See the Explanation')}
+      </div>
+    );
+  }
+
+  // TWIST REVIEW PHASE
+  if (phase === 'twist_review') {
+    return (
+      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+          <div className="flex flex-col items-center p-6">
+            <h2 className="text-2xl font-bold text-amber-400 mb-6">The Wavelength Rule</h2>
+            <div className="bg-slate-800/50 rounded-2xl p-6 max-w-2xl space-y-4">
+              <div className="p-4 bg-green-900/30 rounded-lg border border-green-600">
+                <h3 className="text-green-400 font-bold mb-2">The Key Principle</h3>
+                <p className="text-slate-300">
+                  Electromagnetic waves can only &quot;see&quot; obstacles comparable to their wavelength.
+                  If a hole is <span className="text-yellow-400 font-bold">much smaller than the wavelength</span>,
+                  the wave diffracts around it and can&apos;t pass through!
+                </p>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="p-4 bg-slate-700/50 rounded-lg">
+                  <h4 className="text-cyan-400 font-bold mb-2">Microwave Oven Door</h4>
+                  <ul className="text-slate-300 text-sm space-y-1">
+                    <li>Microwaves: wavelength = 12cm</li>
+                    <li>Mesh holes: ~1-2mm</li>
+                    <li>Holes are 60-100x smaller</li>
+                    <li>Result: Safe! Waves blocked</li>
+                  </ul>
+                </div>
+                <div className="p-4 bg-slate-700/50 rounded-lg">
+                  <h4 className="text-purple-400 font-bold mb-2">WiFi Through Walls</h4>
+                  <ul className="text-slate-300 text-sm space-y-1">
+                    <li>WiFi: wavelength = 12cm</li>
+                    <li>Wall studs: ~40cm apart</li>
+                    <li>Gaps are 3x larger</li>
+                    <li>Result: WiFi passes through!</li>
+                  </ul>
+                </div>
+              </div>
+              <div className="p-4 bg-yellow-900/30 rounded-lg border border-yellow-600">
+                <p className="text-yellow-300 text-sm">
+                  <strong>Real Example:</strong> Your car is a Faraday cage for radio waves (metal body),
+                  but you can still make phone calls because cell signals can enter through the windows!
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+        {renderBottomBar(false, true, 'Apply This Knowledge')}
+      </div>
+    );
+  }
+
+  // TRANSFER PHASE
+  if (phase === 'transfer') {
+    return (
+      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+          <div className="flex flex-col items-center p-6">
+            <h2 className="text-2xl font-bold text-white mb-6">Real-World Applications</h2>
+            <div className="flex gap-2 mb-6 flex-wrap justify-center">
+              {TRANSFER_APPS.map((app, index) => (
+                <button
+                  key={index}
+                  onMouseDown={(e) => { e.preventDefault(); setActiveAppTab(index); }}
+                  className={`px-4 py-2 rounded-lg font-medium transition-all ${
+                    activeAppTab === index ? 'bg-amber-600 text-white'
+                    : completedApps.has(index) ? 'bg-emerald-600/30 text-emerald-400 border border-emerald-500'
+                    : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
+                  }`}
+                >
+                  {app.icon} {app.title.split(' ')[0]}
+                </button>
+              ))}
+            </div>
+            <div className="bg-slate-800/50 rounded-2xl p-6 max-w-2xl w-full">
+              <div className="flex items-center gap-3 mb-4">
+                <span className="text-3xl">{TRANSFER_APPS[activeAppTab].icon}</span>
+                <h3 className="text-xl font-bold text-white">{TRANSFER_APPS[activeAppTab].title}</h3>
+              </div>
+              <p className="text-lg text-slate-300 mt-4">{TRANSFER_APPS[activeAppTab].description}</p>
+              {!completedApps.has(activeAppTab) && (
+                <button onMouseDown={(e) => { e.preventDefault(); handleAppComplete(activeAppTab); }} className="mt-4 px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg font-medium">
+                  Mark as Understood
+                </button>
+              )}
+            </div>
+            <div className="mt-6 flex items-center gap-2">
+              <span className="text-slate-400">Progress:</span>
+              <div className="flex gap-1">{TRANSFER_APPS.map((_, i) => (<div key={i} className={`w-3 h-3 rounded-full ${completedApps.has(i) ? 'bg-emerald-500' : 'bg-slate-600'}`} />))}</div>
+              <span className="text-slate-400">{completedApps.size}/4</span>
+            </div>
+          </div>
+        </div>
+        {renderBottomBar(completedApps.size < 4, completedApps.size >= 4, 'Take the Test')}
+      </div>
+    );
+  }
+
+  // TEST PHASE
+  if (phase === 'test') {
+    if (showTestResults) {
+      return (
+        <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+          <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+            <div className="bg-slate-800/50 rounded-2xl p-6 max-w-2xl mx-auto mt-8 text-center">
+              <div className="text-6xl mb-4">{testScore >= 3 ? '🎉' : '📚'}</div>
+              <h3 className="text-2xl font-bold text-white mb-2">Score: {testScore}/{TEST_QUESTIONS.length}</h3>
+              <p className="text-slate-300 mb-6">{testScore >= 3 ? 'Excellent! You understand Faraday cages!' : 'Keep studying! Review and try again.'}</p>
+            </div>
+            {TEST_QUESTIONS.map((q, qIndex) => {
+              const userAnswer = testAnswers[qIndex];
+              const isCorrect = userAnswer !== null && q.options[userAnswer].correct;
+              return (
+                <div key={qIndex} className="bg-slate-800/50 rounded-xl p-4 max-w-2xl mx-auto mt-4" style={{ borderLeft: `4px solid ${isCorrect ? colors.success : colors.error}` }}>
+                  <p className="text-white font-medium mb-3">{qIndex + 1}. {q.question}</p>
+                  {q.options.map((opt, oIndex) => (
+                    <div key={oIndex} className={`p-2 rounded mb-1 ${opt.correct ? 'bg-emerald-900/30 text-emerald-400' : userAnswer === oIndex ? 'bg-red-900/30 text-red-400' : 'text-slate-400'}`}>
+                      {opt.correct ? '✓' : userAnswer === oIndex ? '✗' : '○'} {opt.text}
+                    </div>
+                  ))}
+                </div>
+              );
+            })}
+          </div>
+          {renderBottomBar(false, testScore >= 3, testScore >= 3 ? 'Complete Mastery' : 'Review & Retry')}
+        </div>
+      );
+    }
+
+    return (
+      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+          <div className="flex flex-col items-center p-6">
+            <h2 className="text-2xl font-bold text-white mb-6">Knowledge Assessment</h2>
+            <div className="space-y-6 max-w-2xl w-full">
+              {TEST_QUESTIONS.map((q, qIndex) => (
+                <div key={qIndex} className="bg-slate-800/50 rounded-xl p-4">
+                  <p className="text-white font-medium mb-3">{qIndex + 1}. {q.question}</p>
+                  <div className="grid gap-2">
+                    {q.options.map((option, oIndex) => (
+                      <button
+                        key={oIndex}
+                        onMouseDown={(e) => { e.preventDefault(); handleTestAnswer(qIndex, oIndex); }}
+                        className={`p-3 rounded-lg text-left text-sm transition-all ${testAnswers[qIndex] === oIndex ? 'bg-amber-600 text-white' : 'bg-slate-700/50 text-slate-300 hover:bg-slate-600/50'}`}
+                      >
+                        {option.text}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              ))}
+              <button
+                onMouseDown={(e) => { e.preventDefault(); submitTest(); }}
+                disabled={testAnswers.includes(null)}
+                className={`w-full py-4 rounded-xl font-semibold text-lg ${testAnswers.includes(null) ? 'bg-slate-700 text-slate-500 cursor-not-allowed' : 'bg-gradient-to-r from-amber-600 to-yellow-600 text-white'}`}
+              >
+                Submit Answers
+              </button>
+            </div>
+          </div>
         </div>
       </div>
+    );
+  }
 
-      {/* Main content */}
-      <div className="relative pt-16 pb-12">{renderPhase()}</div>
-    </div>
-  );
+  // MASTERY PHASE
+  if (phase === 'mastery') {
+    return (
+      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+          <div className="flex flex-col items-center justify-center min-h-[500px] p-6 text-center">
+            <div className="bg-gradient-to-br from-amber-900/50 via-yellow-900/50 to-orange-900/50 rounded-3xl p-8 max-w-2xl">
+              <div className="text-8xl mb-6">🛡️</div>
+              <h1 className="text-3xl font-bold text-white mb-4">Faraday Cage Master!</h1>
+              <p className="text-xl text-slate-300 mb-6">You&apos;ve mastered electromagnetic shielding!</p>
+              <div className="grid grid-cols-2 gap-4 mb-6">
+                <div className="bg-slate-800/50 rounded-xl p-4"><div className="text-2xl mb-2">⚡</div><p className="text-sm text-slate-300">Electron Redistribution</p></div>
+                <div className="bg-slate-800/50 rounded-xl p-4"><div className="text-2xl mb-2">🔲</div><p className="text-sm text-slate-300">Mesh vs Wavelength</p></div>
+                <div className="bg-slate-800/50 rounded-xl p-4"><div className="text-2xl mb-2">🍿</div><p className="text-sm text-slate-300">Microwave Ovens</p></div>
+                <div className="bg-slate-800/50 rounded-xl p-4"><div className="text-2xl mb-2">📱</div><p className="text-sm text-slate-300">Signal Blocking</p></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        {renderBottomBar(false, true, 'Complete Game')}
+      </div>
+    );
+  }
+
+  return null;
 };
 
 export default FaradayCageRenderer;

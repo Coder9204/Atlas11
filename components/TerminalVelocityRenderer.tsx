@@ -1,0 +1,1118 @@
+import React, { useState, useEffect, useCallback, useRef } from 'react';
+
+interface TerminalVelocityRendererProps {
+  phase: 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
+  onPhaseComplete?: () => void;
+  onCorrectAnswer?: () => void;
+  onIncorrectAnswer?: () => void;
+}
+
+const colors = {
+  textPrimary: '#f8fafc',
+  textSecondary: '#e2e8f0',
+  textMuted: '#94a3b8',
+  bgPrimary: '#0f172a',
+  bgCard: 'rgba(30, 41, 59, 0.9)',
+  bgDark: 'rgba(15, 23, 42, 0.95)',
+  accent: '#8b5cf6',
+  accentGlow: 'rgba(139, 92, 246, 0.4)',
+  success: '#10b981',
+  warning: '#f59e0b',
+  error: '#ef4444',
+  filter: '#d4a574',
+  filterDark: '#a67c52',
+  air: '#60a5fa',
+  gravity: '#ef4444',
+};
+
+const TerminalVelocityRenderer: React.FC<TerminalVelocityRendererProps> = ({
+  phase,
+  onPhaseComplete,
+  onCorrectAnswer,
+  onIncorrectAnswer,
+}) => {
+  // Simulation state
+  const [numFilters, setNumFilters] = useState(1);
+  const [airDensity, setAirDensity] = useState(1.2); // kg/m^3
+  const [isDropped, setIsDropped] = useState(false);
+  const [time, setTime] = useState(0);
+  const [velocity, setVelocity] = useState(0);
+  const [position, setPosition] = useState(0);
+  const [velocityHistory, setVelocityHistory] = useState<{t: number, v: number}[]>([]);
+  const [isCrumpled, setIsCrumpled] = useState(false);
+
+  // Phase-specific state
+  const [prediction, setPrediction] = useState<string | null>(null);
+  const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
+  const [transferCompleted, setTransferCompleted] = useState<Set<number>>(new Set());
+  const [currentTestQuestion, setCurrentTestQuestion] = useState(0);
+  const [testAnswers, setTestAnswers] = useState<(number | null)[]>(new Array(10).fill(null));
+  const [testSubmitted, setTestSubmitted] = useState(false);
+  const [testScore, setTestScore] = useState(0);
+
+  const animationRef = useRef<number | null>(null);
+  const lastTimeRef = useRef<number>(0);
+
+  // Physics constants
+  const g = 9.81; // m/s^2
+  const filterMass = 0.001; // 1 gram per filter
+  const filterArea = 0.02; // m^2 (roughly 16cm diameter)
+  const dragCoefficient = isCrumpled ? 0.47 : 1.2; // sphere vs flat disk
+  const crumpledArea = 0.005; // much smaller when crumpled
+
+  const effectiveArea = isCrumpled ? crumpledArea : filterArea;
+  const totalMass = numFilters * filterMass;
+
+  // Terminal velocity: v_t = sqrt(2mg / (rho * A * Cd))
+  const terminalVelocity = Math.sqrt((2 * totalMass * g) / (airDensity * effectiveArea * dragCoefficient));
+
+  // Reset simulation
+  const resetSimulation = useCallback(() => {
+    setIsDropped(false);
+    setTime(0);
+    setVelocity(0);
+    setPosition(0);
+    setVelocityHistory([]);
+    if (animationRef.current) {
+      cancelAnimationFrame(animationRef.current);
+      animationRef.current = null;
+    }
+  }, []);
+
+  // Drop the filter
+  const dropFilter = useCallback(() => {
+    resetSimulation();
+    setIsDropped(true);
+    lastTimeRef.current = performance.now();
+    setVelocityHistory([{ t: 0, v: 0 }]);
+  }, [resetSimulation]);
+
+  // Animation loop
+  useEffect(() => {
+    if (!isDropped) return;
+
+    const animate = (currentTime: number) => {
+      const dt = Math.min((currentTime - lastTimeRef.current) / 1000, 0.05);
+      lastTimeRef.current = currentTime;
+
+      setTime(prev => {
+        const newTime = prev + dt;
+        if (newTime > 5) {
+          setIsDropped(false);
+          return prev;
+        }
+        return newTime;
+      });
+
+      setVelocity(prev => {
+        // Drag force: F_d = 0.5 * rho * v^2 * Cd * A
+        const dragForce = 0.5 * airDensity * prev * prev * dragCoefficient * effectiveArea;
+        // Net acceleration: a = g - (F_d / m)
+        const acceleration = g - (dragForce / totalMass);
+        const newVelocity = Math.max(0, prev + acceleration * dt);
+        return newVelocity;
+      });
+
+      setPosition(prev => prev + velocity * dt);
+
+      setVelocityHistory(prev => {
+        const newHistory = [...prev, { t: time, v: velocity }];
+        // Keep last 100 points for performance
+        if (newHistory.length > 100) newHistory.shift();
+        return newHistory;
+      });
+
+      animationRef.current = requestAnimationFrame(animate);
+    };
+
+    animationRef.current = requestAnimationFrame(animate);
+
+    return () => {
+      if (animationRef.current) {
+        cancelAnimationFrame(animationRef.current);
+      }
+    };
+  }, [isDropped, velocity, time, airDensity, dragCoefficient, effectiveArea, totalMass]);
+
+  const predictions = [
+    { id: 'double', label: 'Double the filters = double the terminal velocity' },
+    { id: 'same', label: 'Terminal velocity stays exactly the same' },
+    { id: 'sqrt', label: 'Terminal velocity increases by about 41% (square root of 2)' },
+    { id: 'half', label: 'Terminal velocity decreases (more filters = more drag)' },
+  ];
+
+  const twistPredictions = [
+    { id: 'same', label: 'Shape doesn\'t matter - same mass means same speed' },
+    { id: 'faster', label: 'Crumpled falls faster - much smaller area catches less air' },
+    { id: 'slower', label: 'Crumpled falls slower - tumbles and catches more air' },
+    { id: 'erratic', label: 'Falls at the same terminal speed but reaches it faster' },
+  ];
+
+  const transferApplications = [
+    {
+      title: 'Parachute Design',
+      description: 'Parachutes use large area and high drag coefficient to minimize terminal velocity, allowing safe landings.',
+      question: 'How does a skydiver control descent speed with a parachute?',
+      answer: 'By changing the effective area through steering toggles that reshape the canopy, or by using different parachute sizes. The terminal velocity scales inversely with the square root of area.',
+    },
+    {
+      title: 'Skydiver Body Position',
+      description: 'Skydivers can vary their speed from 50 to 300+ mph by changing body position.',
+      question: 'Why does a head-down position make skydivers fall faster than belly-to-earth?',
+      answer: 'Head-down presents much less cross-sectional area (roughly 1/4 as much) to the airflow. Since v_t proportional to 1/sqrt(A), reducing area by 4x doubles terminal velocity.',
+    },
+    {
+      title: 'Raindrop Size and Speed',
+      description: 'Small raindrops fall at about 2 m/s while large drops reach 9 m/s.',
+      question: 'Why don\'t all raindrops fall at the same speed?',
+      answer: 'Larger drops have more mass relative to their surface area (mass ~ r^3, area ~ r^2). This higher mass-to-area ratio gives them higher terminal velocity.',
+    },
+    {
+      title: 'Seed Dispersal',
+      description: 'Dandelion seeds, maple samaras, and other seeds use air resistance to travel far from parent plants.',
+      question: 'How do dandelion seeds achieve such low terminal velocities?',
+      answer: 'The fluffy pappus creates enormous drag area relative to the tiny seed mass. This extreme area-to-mass ratio results in terminal velocities under 0.5 m/s.',
+    },
+  ];
+
+  const testQuestions = [
+    {
+      question: 'What is terminal velocity?',
+      options: [
+        { text: 'The maximum speed any object can reach while falling', correct: false },
+        { text: 'The speed at which drag force equals gravitational force', correct: true },
+        { text: 'The speed at which air becomes too thick to penetrate', correct: false },
+        { text: 'The velocity at which objects disintegrate from friction', correct: false },
+      ],
+    },
+    {
+      question: 'If you stack 4 coffee filters instead of 1, the terminal velocity:',
+      options: [
+        { text: 'Quadruples (4x faster)', correct: false },
+        { text: 'Doubles (2x faster)', correct: true },
+        { text: 'Stays the same', correct: false },
+        { text: 'Increases by 4x but area increases too, so net effect is small', correct: false },
+      ],
+    },
+    {
+      question: 'At terminal velocity, the acceleration of a falling object is:',
+      options: [
+        { text: '9.8 m/s^2 (gravity)', correct: false },
+        { text: 'Constantly increasing', correct: false },
+        { text: 'Zero', correct: true },
+        { text: 'Negative (slowing down)', correct: false },
+      ],
+    },
+    {
+      question: 'How does drag force change with velocity?',
+      options: [
+        { text: 'Drag is constant regardless of speed', correct: false },
+        { text: 'Drag increases linearly with velocity', correct: false },
+        { text: 'Drag increases with the square of velocity', correct: true },
+        { text: 'Drag decreases as velocity increases', correct: false },
+      ],
+    },
+    {
+      question: 'A crumpled coffee filter falls faster than a flat one because:',
+      options: [
+        { text: 'Crumpling increases its mass', correct: false },
+        { text: 'Crumpling dramatically reduces its cross-sectional area', correct: true },
+        { text: 'Crumpled shapes are more aerodynamic', correct: false },
+        { text: 'The air cannot reach the crumpled center', correct: false },
+      ],
+    },
+    {
+      question: 'On the Moon (no atmosphere), a hammer and feather dropped together:',
+      options: [
+        { text: 'Hammer falls faster due to greater mass', correct: false },
+        { text: 'Feather falls faster due to less mass', correct: false },
+        { text: 'Both fall at exactly the same rate', correct: true },
+        { text: 'Neither falls - they float', correct: false },
+      ],
+    },
+    {
+      question: 'What happens to terminal velocity if air density doubles?',
+      options: [
+        { text: 'Terminal velocity doubles', correct: false },
+        { text: 'Terminal velocity halves', correct: false },
+        { text: 'Terminal velocity decreases by about 29% (factor of 1/sqrt(2))', correct: true },
+        { text: 'Terminal velocity is unaffected by air density', correct: false },
+      ],
+    },
+    {
+      question: 'The drag coefficient (Cd) depends mainly on:',
+      options: [
+        { text: 'The mass of the object', correct: false },
+        { text: 'The shape of the object', correct: true },
+        { text: 'The color of the object', correct: false },
+        { text: 'The temperature of the object', correct: false },
+      ],
+    },
+    {
+      question: 'Why does a velocity-time graph for a falling object curve and then flatten?',
+      options: [
+        { text: 'Gravity weakens with distance', correct: false },
+        { text: 'Air gets thinner at lower altitudes', correct: false },
+        { text: 'Increasing drag reduces acceleration until it reaches zero', correct: true },
+        { text: 'The object runs out of gravitational potential energy', correct: false },
+      ],
+    },
+    {
+      question: 'A skydiver in spread-eagle position has terminal velocity of 55 m/s. In head-down position (1/4 the area), terminal velocity is approximately:',
+      options: [
+        { text: '55 m/s (same mass, same speed)', correct: false },
+        { text: '110 m/s (double)', correct: true },
+        { text: '220 m/s (quadruple)', correct: false },
+        { text: '27.5 m/s (half)', correct: false },
+      ],
+    },
+  ];
+
+  const handleTestAnswer = (questionIndex: number, optionIndex: number) => {
+    const newAnswers = [...testAnswers];
+    newAnswers[questionIndex] = optionIndex;
+    setTestAnswers(newAnswers);
+  };
+
+  const submitTest = () => {
+    let score = 0;
+    testQuestions.forEach((q, i) => {
+      if (testAnswers[i] !== null && q.options[testAnswers[i]].correct) {
+        score++;
+      }
+    });
+    setTestScore(score);
+    setTestSubmitted(true);
+    if (score >= 8 && onCorrectAnswer) onCorrectAnswer();
+  };
+
+  const renderVisualization = (interactive: boolean, showCrumple: boolean = false) => {
+    const width = 400;
+    const height = 350;
+    const dropZoneHeight = 200;
+    const graphHeight = 130;
+    const margin = 40;
+
+    // Calculate filter position for animation
+    const maxFallDistance = dropZoneHeight - 60;
+    const filterY = 30 + Math.min(position * 20, maxFallDistance);
+
+    // Calculate forces for arrows
+    const gravityForce = totalMass * g;
+    const dragForce = 0.5 * airDensity * velocity * velocity * dragCoefficient * effectiveArea;
+    const maxForce = gravityForce * 1.5;
+    const gravityArrowLength = (gravityForce / maxForce) * 50;
+    const dragArrowLength = (dragForce / maxForce) * 50;
+
+    // Graph scaling
+    const graphMaxV = Math.ceil(terminalVelocity * 1.2);
+    const graphMaxT = 5;
+
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
+        <svg
+          width="100%"
+          height={height}
+          viewBox={`0 0 ${width} ${height}`}
+          preserveAspectRatio="xMidYMid meet"
+          style={{ background: 'linear-gradient(180deg, #87ceeb 0%, #e0f0ff 100%)', borderRadius: '12px', maxWidth: '500px' }}
+        >
+          {/* Drop zone background */}
+          <rect x={50} y={10} width={150} height={dropZoneHeight} fill="rgba(255,255,255,0.3)" rx={8} />
+
+          {/* Height markers */}
+          {[0, 1, 2, 3, 4].map((i) => (
+            <g key={i}>
+              <line x1={45} y1={20 + i * 45} x2={50} y2={20 + i * 45} stroke="#666" strokeWidth={1} />
+              <text x={40} y={24 + i * 45} fill="#666" fontSize={10} textAnchor="end">{4 - i}m</text>
+            </g>
+          ))}
+
+          {/* Ground */}
+          <rect x={50} y={dropZoneHeight + 5} width={150} height={10} fill="#8b7355" />
+          <rect x={50} y={dropZoneHeight + 15} width={150} height={5} fill="#6b5344" />
+
+          {/* Coffee filter(s) - stacked appearance */}
+          <g transform={`translate(125, ${filterY})`}>
+            {showCrumple && isCrumpled ? (
+              // Crumpled filter - small irregular ball
+              <g>
+                <ellipse cx={0} cy={0} rx={12} ry={10} fill={colors.filterDark} />
+                <ellipse cx={-2} cy={-2} rx={10} ry={8} fill={colors.filter} />
+                <path d="M-6,-4 Q0,-8 6,-4" stroke={colors.filterDark} fill="none" strokeWidth={1} />
+                <path d="M-4,2 Q0,6 4,2" stroke={colors.filterDark} fill="none" strokeWidth={1} />
+              </g>
+            ) : (
+              // Flat filter(s) - cone shape
+              <g>
+                {Array.from({ length: numFilters }).map((_, i) => (
+                  <g key={i} transform={`translate(0, ${i * 2})`}>
+                    <ellipse cx={0} cy={0} rx={30 - i} ry={8 - i * 0.3} fill={colors.filter} stroke={colors.filterDark} strokeWidth={1} opacity={1 - i * 0.1} />
+                  </g>
+                ))}
+                {/* Filter ridges */}
+                {[-20, -10, 0, 10, 20].map((x, i) => (
+                  <line key={i} x1={x} y1={-5} x2={x * 0.8} y2={5} stroke={colors.filterDark} strokeWidth={0.5} opacity={0.5} />
+                ))}
+              </g>
+            )}
+
+            {/* Force arrows when moving */}
+            {isDropped && velocity > 0.1 && (
+              <g>
+                {/* Gravity arrow (red, pointing down) */}
+                <line x1={0} y1={15} x2={0} y2={15 + gravityArrowLength} stroke={colors.gravity} strokeWidth={3} />
+                <polygon points={`0,${20 + gravityArrowLength} -5,${15 + gravityArrowLength} 5,${15 + gravityArrowLength}`} fill={colors.gravity} />
+                <text x={10} y={20 + gravityArrowLength / 2} fill={colors.gravity} fontSize={10} fontWeight="bold">W</text>
+
+                {/* Drag arrow (blue, pointing up) */}
+                <line x1={0} y1={-15} x2={0} y2={-15 - dragArrowLength} stroke={colors.air} strokeWidth={3} />
+                <polygon points={`0,${-20 - dragArrowLength} -5,${-15 - dragArrowLength} 5,${-15 - dragArrowLength}`} fill={colors.air} />
+                <text x={10} y={-15 - dragArrowLength / 2} fill={colors.air} fontSize={10} fontWeight="bold">Fd</text>
+              </g>
+            )}
+          </g>
+
+          {/* Velocity vs Time Graph */}
+          <g transform={`translate(${width - margin - 140}, ${20})`}>
+            <rect x={0} y={0} width={130} height={graphHeight} fill="rgba(255,255,255,0.9)" rx={4} />
+
+            {/* Graph title */}
+            <text x={65} y={15} fill="#333" fontSize={10} textAnchor="middle" fontWeight="bold">Velocity vs Time</text>
+
+            {/* Axes */}
+            <line x1={25} y1={graphHeight - 20} x2={120} y2={graphHeight - 20} stroke="#333" strokeWidth={1} />
+            <line x1={25} y1={25} x2={25} y2={graphHeight - 20} stroke="#333" strokeWidth={1} />
+
+            {/* Axis labels */}
+            <text x={75} y={graphHeight - 5} fill="#333" fontSize={8} textAnchor="middle">Time (s)</text>
+            <text x={10} y={70} fill="#333" fontSize={8} textAnchor="middle" transform="rotate(-90, 10, 70)">v (m/s)</text>
+
+            {/* Terminal velocity line (dashed) */}
+            <line
+              x1={25}
+              y1={graphHeight - 20 - (terminalVelocity / graphMaxV) * (graphHeight - 45)}
+              x2={120}
+              y2={graphHeight - 20 - (terminalVelocity / graphMaxV) * (graphHeight - 45)}
+              stroke={colors.accent}
+              strokeWidth={1}
+              strokeDasharray="4,2"
+            />
+            <text
+              x={122}
+              y={graphHeight - 18 - (terminalVelocity / graphMaxV) * (graphHeight - 45)}
+              fill={colors.accent}
+              fontSize={7}
+            >
+              vt
+            </text>
+
+            {/* Velocity history plot */}
+            {velocityHistory.length > 1 && (
+              <polyline
+                points={velocityHistory.map((pt, i) => {
+                  const x = 25 + (pt.t / graphMaxT) * 95;
+                  const y = graphHeight - 20 - (pt.v / graphMaxV) * (graphHeight - 45);
+                  return `${x},${y}`;
+                }).join(' ')}
+                fill="none"
+                stroke={colors.success}
+                strokeWidth={2}
+              />
+            )}
+
+            {/* Y-axis values */}
+            <text x={22} y={graphHeight - 18} fill="#333" fontSize={7} textAnchor="end">0</text>
+            <text x={22} y={27} fill="#333" fontSize={7} textAnchor="end">{graphMaxV.toFixed(1)}</text>
+          </g>
+
+          {/* Info panel */}
+          <g transform={`translate(${width - margin - 140}, ${graphHeight + 30})`}>
+            <rect x={0} y={0} width={130} height={60} fill="rgba(15, 23, 42, 0.9)" rx={4} />
+            <text x={65} y={15} fill={colors.textPrimary} fontSize={10} textAnchor="middle">
+              Filters: {numFilters} | {showCrumple && isCrumpled ? 'Crumpled' : 'Flat'}
+            </text>
+            <text x={65} y={30} fill={colors.textSecondary} fontSize={9} textAnchor="middle">
+              v = {velocity.toFixed(2)} m/s
+            </text>
+            <text x={65} y={43} fill={colors.accent} fontSize={9} textAnchor="middle">
+              vt = {terminalVelocity.toFixed(2)} m/s
+            </text>
+            <text x={65} y={55} fill={colors.textMuted} fontSize={8} textAnchor="middle">
+              t = {time.toFixed(2)} s
+            </text>
+          </g>
+        </svg>
+
+        {interactive && (
+          <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', justifyContent: 'center', padding: '8px' }}>
+            <button
+              onClick={dropFilter}
+              disabled={isDropped}
+              style={{
+                padding: '12px 24px',
+                borderRadius: '8px',
+                border: 'none',
+                background: isDropped ? colors.textMuted : colors.success,
+                color: 'white',
+                fontWeight: 'bold',
+                cursor: isDropped ? 'not-allowed' : 'pointer',
+                fontSize: '14px',
+              }}
+            >
+              Drop Filter
+            </button>
+            <button
+              onClick={resetSimulation}
+              style={{
+                padding: '12px 24px',
+                borderRadius: '8px',
+                border: `1px solid ${colors.accent}`,
+                background: 'transparent',
+                color: colors.accent,
+                fontWeight: 'bold',
+                cursor: 'pointer',
+                fontSize: '14px',
+              }}
+            >
+              Reset
+            </button>
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  const renderControls = (showCrumple: boolean = false) => (
+    <div style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+      <div>
+        <label style={{ color: colors.textSecondary, display: 'block', marginBottom: '8px' }}>
+          Number of Stacked Filters: {numFilters}
+        </label>
+        <input
+          type="range"
+          min="1"
+          max="8"
+          step="1"
+          value={numFilters}
+          onChange={(e) => { setNumFilters(parseInt(e.target.value)); resetSimulation(); }}
+          style={{ width: '100%' }}
+        />
+      </div>
+
+      <div>
+        <label style={{ color: colors.textSecondary, display: 'block', marginBottom: '8px' }}>
+          Air Density: {airDensity.toFixed(2)} kg/m^3
+        </label>
+        <input
+          type="range"
+          min="0.5"
+          max="2.0"
+          step="0.1"
+          value={airDensity}
+          onChange={(e) => { setAirDensity(parseFloat(e.target.value)); resetSimulation(); }}
+          style={{ width: '100%' }}
+        />
+        <div style={{ display: 'flex', justifyContent: 'space-between', color: colors.textMuted, fontSize: '11px', marginTop: '4px' }}>
+          <span>High altitude</span>
+          <span>Sea level</span>
+          <span>Dense</span>
+        </div>
+      </div>
+
+      {showCrumple && (
+        <div>
+          <label style={{ color: colors.textSecondary, display: 'block', marginBottom: '8px' }}>
+            Filter Shape:
+          </label>
+          <div style={{ display: 'flex', gap: '12px' }}>
+            <button
+              onClick={() => { setIsCrumpled(false); resetSimulation(); }}
+              style={{
+                flex: 1,
+                padding: '12px',
+                borderRadius: '8px',
+                border: !isCrumpled ? `2px solid ${colors.accent}` : '1px solid rgba(255,255,255,0.2)',
+                background: !isCrumpled ? 'rgba(139, 92, 246, 0.2)' : 'transparent',
+                color: colors.textPrimary,
+                cursor: 'pointer',
+              }}
+            >
+              Flat (Open)
+            </button>
+            <button
+              onClick={() => { setIsCrumpled(true); resetSimulation(); }}
+              style={{
+                flex: 1,
+                padding: '12px',
+                borderRadius: '8px',
+                border: isCrumpled ? `2px solid ${colors.warning}` : '1px solid rgba(255,255,255,0.2)',
+                background: isCrumpled ? 'rgba(245, 158, 11, 0.2)' : 'transparent',
+                color: colors.textPrimary,
+                cursor: 'pointer',
+              }}
+            >
+              Crumpled
+            </button>
+          </div>
+        </div>
+      )}
+
+      <div style={{
+        background: 'rgba(139, 92, 246, 0.2)',
+        padding: '12px',
+        borderRadius: '8px',
+        borderLeft: `3px solid ${colors.accent}`,
+      }}>
+        <div style={{ color: colors.textSecondary, fontSize: '12px' }}>
+          Terminal velocity: vt = sqrt(2mg / rhoACd) = {terminalVelocity.toFixed(2)} m/s
+        </div>
+        <div style={{ color: colors.textMuted, fontSize: '11px', marginTop: '4px' }}>
+          {numFilters} filter(s): mass = {(totalMass * 1000).toFixed(1)}g | vt proportional to sqrt(n)
+        </div>
+      </div>
+    </div>
+  );
+
+  const renderBottomBar = (disabled: boolean, canProceed: boolean, buttonText: string) => (
+    <div style={{
+      position: 'fixed',
+      bottom: 0,
+      left: 0,
+      right: 0,
+      padding: '16px 24px',
+      background: colors.bgDark,
+      borderTop: `1px solid rgba(255,255,255,0.1)`,
+      display: 'flex',
+      justifyContent: 'flex-end',
+      zIndex: 1000,
+    }}>
+      <button
+        onClick={onPhaseComplete}
+        disabled={disabled && !canProceed}
+        style={{
+          padding: '12px 32px',
+          borderRadius: '8px',
+          border: 'none',
+          background: canProceed ? colors.accent : 'rgba(255,255,255,0.1)',
+          color: canProceed ? 'white' : colors.textMuted,
+          fontWeight: 'bold',
+          cursor: canProceed ? 'pointer' : 'not-allowed',
+          fontSize: '16px',
+        }}
+      >
+        {buttonText}
+      </button>
+    </div>
+  );
+
+  // HOOK PHASE
+  if (phase === 'hook') {
+    return (
+      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+          <div style={{ padding: '24px', textAlign: 'center' }}>
+            <h1 style={{ color: colors.accent, fontSize: '28px', marginBottom: '8px' }}>
+              Terminal Velocity
+            </h1>
+            <p style={{ color: colors.textSecondary, fontSize: '18px', marginBottom: '24px' }}>
+              Stacking filters: double fall speed or not?
+            </p>
+          </div>
+
+          {renderVisualization(true)}
+
+          <div style={{ padding: '24px', textAlign: 'center' }}>
+            <div style={{
+              background: colors.bgCard,
+              padding: '20px',
+              borderRadius: '12px',
+              marginBottom: '16px',
+            }}>
+              <p style={{ color: colors.textPrimary, fontSize: '16px', lineHeight: 1.6 }}>
+                Drop a coffee filter and it floats gently down. The air resistance
+                grows until it exactly balances gravity - then speed stays constant.
+                This is terminal velocity!
+              </p>
+              <p style={{ color: colors.textSecondary, fontSize: '14px', marginTop: '12px' }}>
+                But what happens when you stack multiple filters together?
+              </p>
+            </div>
+
+            <div style={{
+              background: 'rgba(139, 92, 246, 0.2)',
+              padding: '16px',
+              borderRadius: '8px',
+              borderLeft: `3px solid ${colors.accent}`,
+            }}>
+              <p style={{ color: colors.textPrimary, fontSize: '14px' }}>
+                Watch the velocity graph - see how it curves toward the terminal velocity line!
+              </p>
+            </div>
+          </div>
+        </div>
+        {renderBottomBar(false, true, 'Make a Prediction')}
+      </div>
+    );
+  }
+
+  // PREDICT PHASE
+  if (phase === 'predict') {
+    return (
+      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+          {renderVisualization(false)}
+
+          <div style={{
+            background: colors.bgCard,
+            margin: '16px',
+            padding: '16px',
+            borderRadius: '12px',
+          }}>
+            <h3 style={{ color: colors.textPrimary, marginBottom: '8px' }}>What You're Looking At:</h3>
+            <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.5 }}>
+              A coffee filter falling through air. The red arrow shows weight (constant),
+              the blue arrow shows drag force (grows with speed). When they balance,
+              velocity stops increasing - that's terminal velocity.
+            </p>
+          </div>
+
+          <div style={{ padding: '0 16px 16px 16px' }}>
+            <h3 style={{ color: colors.textPrimary, marginBottom: '12px' }}>
+              If you stack 2 coffee filters (double the mass), what happens to terminal velocity?
+            </h3>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              {predictions.map((p) => (
+                <button
+                  key={p.id}
+                  onClick={() => setPrediction(p.id)}
+                  style={{
+                    padding: '16px',
+                    borderRadius: '8px',
+                    border: prediction === p.id ? `2px solid ${colors.accent}` : '1px solid rgba(255,255,255,0.2)',
+                    background: prediction === p.id ? 'rgba(139, 92, 246, 0.2)' : 'transparent',
+                    color: colors.textPrimary,
+                    cursor: 'pointer',
+                    textAlign: 'left',
+                    fontSize: '14px',
+                  }}
+                >
+                  {p.label}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+        {renderBottomBar(true, !!prediction, 'Test My Prediction')}
+      </div>
+    );
+  }
+
+  // PLAY PHASE
+  if (phase === 'play') {
+    return (
+      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+          <div style={{ padding: '16px', textAlign: 'center' }}>
+            <h2 style={{ color: colors.textPrimary, marginBottom: '8px' }}>Explore Terminal Velocity</h2>
+            <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
+              Stack filters and change air density to see how terminal velocity changes
+            </p>
+          </div>
+
+          {renderVisualization(true)}
+          {renderControls()}
+
+          <div style={{
+            background: colors.bgCard,
+            margin: '16px',
+            padding: '16px',
+            borderRadius: '12px',
+          }}>
+            <h4 style={{ color: colors.accent, marginBottom: '8px' }}>Try These Experiments:</h4>
+            <ul style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.8, paddingLeft: '20px', margin: 0 }}>
+              <li>1 filter vs 4 filters - is 4x mass = 4x speed?</li>
+              <li>Watch the v-t graph curve flatten as terminal velocity is reached</li>
+              <li>Lower air density (high altitude) - faster or slower?</li>
+              <li>Notice the drag arrow grows until it matches the weight arrow</li>
+            </ul>
+          </div>
+        </div>
+        {renderBottomBar(false, true, 'Continue to Review')}
+      </div>
+    );
+  }
+
+  // REVIEW PHASE
+  if (phase === 'review') {
+    const wasCorrect = prediction === 'sqrt';
+
+    return (
+      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+          <div style={{
+            background: wasCorrect ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
+            margin: '16px',
+            padding: '20px',
+            borderRadius: '12px',
+            borderLeft: `4px solid ${wasCorrect ? colors.success : colors.error}`,
+          }}>
+            <h3 style={{ color: wasCorrect ? colors.success : colors.error, marginBottom: '8px' }}>
+              {wasCorrect ? 'Correct!' : 'Not Quite!'}
+            </h3>
+            <p style={{ color: colors.textPrimary }}>
+              Doubling mass increases terminal velocity by sqrt(2), about 41% faster - not double!
+            </p>
+          </div>
+
+          <div style={{
+            background: colors.bgCard,
+            margin: '16px',
+            padding: '20px',
+            borderRadius: '12px',
+          }}>
+            <h3 style={{ color: colors.accent, marginBottom: '12px' }}>The Physics of Terminal Velocity</h3>
+            <div style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.7 }}>
+              <p style={{ marginBottom: '12px' }}>
+                <strong style={{ color: colors.textPrimary }}>Force Balance:</strong> At terminal velocity,
+                drag equals weight: Fd = mg. The object falls at constant velocity with zero acceleration.
+              </p>
+              <p style={{ marginBottom: '12px' }}>
+                <strong style={{ color: colors.textPrimary }}>Drag Equation:</strong> Fd = (1/2) * rho * v^2 * Cd * A.
+                Drag grows with velocity squared, which is why falling objects eventually stop accelerating.
+              </p>
+              <p style={{ marginBottom: '12px' }}>
+                <strong style={{ color: colors.textPrimary }}>Terminal Velocity Formula:</strong> vt = sqrt(2mg / (rho * A * Cd)).
+                Since vt depends on sqrt(m), doubling mass only increases vt by sqrt(2) = 1.41x.
+              </p>
+              <p>
+                <strong style={{ color: colors.textPrimary }}>Stacking n Filters:</strong> vt is proportional to sqrt(n).
+                4 filters = 2x terminal velocity, 9 filters = 3x terminal velocity.
+              </p>
+            </div>
+          </div>
+        </div>
+        {renderBottomBar(false, true, 'Next: A Twist!')}
+      </div>
+    );
+  }
+
+  // TWIST PREDICT PHASE
+  if (phase === 'twist_predict') {
+    return (
+      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+          <div style={{ padding: '16px', textAlign: 'center' }}>
+            <h2 style={{ color: colors.warning, marginBottom: '8px' }}>The Twist</h2>
+            <p style={{ color: colors.textSecondary }}>
+              What if you crumple the filter instead of keeping it flat?
+            </p>
+          </div>
+
+          {renderVisualization(false, true)}
+
+          <div style={{
+            background: colors.bgCard,
+            margin: '16px',
+            padding: '16px',
+            borderRadius: '12px',
+          }}>
+            <h3 style={{ color: colors.textPrimary, marginBottom: '8px' }}>The Setup:</h3>
+            <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.5 }}>
+              Same coffee filter, same mass - but now crumpled into a loose ball instead
+              of keeping its flat, open shape. The paper weighs exactly the same either way.
+            </p>
+          </div>
+
+          <div style={{ padding: '0 16px 16px 16px' }}>
+            <h3 style={{ color: colors.textPrimary, marginBottom: '12px' }}>
+              Flat vs crumpled filter (same mass) - what happens to terminal velocity?
+            </h3>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              {twistPredictions.map((p) => (
+                <button
+                  key={p.id}
+                  onClick={() => setTwistPrediction(p.id)}
+                  style={{
+                    padding: '16px',
+                    borderRadius: '8px',
+                    border: twistPrediction === p.id ? `2px solid ${colors.warning}` : '1px solid rgba(255,255,255,0.2)',
+                    background: twistPrediction === p.id ? 'rgba(245, 158, 11, 0.2)' : 'transparent',
+                    color: colors.textPrimary,
+                    cursor: 'pointer',
+                    textAlign: 'left',
+                    fontSize: '14px',
+                  }}
+                >
+                  {p.label}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+        {renderBottomBar(true, !!twistPrediction, 'Test My Prediction')}
+      </div>
+    );
+  }
+
+  // TWIST PLAY PHASE
+  if (phase === 'twist_play') {
+    return (
+      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+          <div style={{ padding: '16px', textAlign: 'center' }}>
+            <h2 style={{ color: colors.warning, marginBottom: '8px' }}>Test Shape Effects</h2>
+            <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
+              Toggle between flat and crumpled to see the dramatic difference
+            </p>
+          </div>
+
+          {renderVisualization(true, true)}
+          {renderControls(true)}
+
+          <div style={{
+            background: 'rgba(245, 158, 11, 0.2)',
+            margin: '16px',
+            padding: '16px',
+            borderRadius: '12px',
+            borderLeft: `3px solid ${colors.warning}`,
+          }}>
+            <h4 style={{ color: colors.warning, marginBottom: '8px' }}>Key Observation:</h4>
+            <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
+              Shape matters hugely! Crumpling reduces cross-sectional area by ~4x, which
+              roughly doubles terminal velocity. Same mass, vastly different falling speed.
+            </p>
+          </div>
+        </div>
+        {renderBottomBar(false, true, 'See the Explanation')}
+      </div>
+    );
+  }
+
+  // TWIST REVIEW PHASE
+  if (phase === 'twist_review') {
+    const wasCorrect = twistPrediction === 'faster';
+
+    return (
+      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+          <div style={{
+            background: wasCorrect ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
+            margin: '16px',
+            padding: '20px',
+            borderRadius: '12px',
+            borderLeft: `4px solid ${wasCorrect ? colors.success : colors.error}`,
+          }}>
+            <h3 style={{ color: wasCorrect ? colors.success : colors.error, marginBottom: '8px' }}>
+              {wasCorrect ? 'Correct!' : 'Not Quite!'}
+            </h3>
+            <p style={{ color: colors.textPrimary }}>
+              The crumpled filter falls much faster - shape (cross-sectional area) dominates!
+            </p>
+          </div>
+
+          <div style={{
+            background: colors.bgCard,
+            margin: '16px',
+            padding: '20px',
+            borderRadius: '12px',
+          }}>
+            <h3 style={{ color: colors.warning, marginBottom: '12px' }}>Why Shape Matters So Much</h3>
+            <div style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.7 }}>
+              <p style={{ marginBottom: '12px' }}>
+                <strong style={{ color: colors.textPrimary }}>Area Effect:</strong> Terminal velocity
+                is proportional to 1/sqrt(A). Reducing area by 4x doubles terminal velocity.
+              </p>
+              <p style={{ marginBottom: '12px' }}>
+                <strong style={{ color: colors.textPrimary }}>Drag Coefficient:</strong> A flat disk
+                (Cd = 1.2) has much higher drag than a sphere (Cd = 0.47). Crumpling changes both
+                area AND shape factor.
+              </p>
+              <p>
+                <strong style={{ color: colors.textPrimary }}>Combined Effect:</strong> A crumpled filter
+                might have 1/4 the area and 1/2 the drag coefficient - resulting in terminal velocity
+                nearly 3x higher than flat! This is why skydivers can control speed by body position.
+              </p>
+            </div>
+          </div>
+        </div>
+        {renderBottomBar(false, true, 'Apply This Knowledge')}
+      </div>
+    );
+  }
+
+  // TRANSFER PHASE
+  if (phase === 'transfer') {
+    return (
+      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+          <div style={{ padding: '16px' }}>
+            <h2 style={{ color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
+              Real-World Applications
+            </h2>
+            <p style={{ color: colors.textSecondary, textAlign: 'center', marginBottom: '16px' }}>
+              Terminal velocity shapes everything from weather to extreme sports
+            </p>
+            <p style={{ color: colors.textMuted, fontSize: '12px', textAlign: 'center', marginBottom: '16px' }}>
+              Complete all 4 applications to unlock the test
+            </p>
+          </div>
+
+          {transferApplications.map((app, index) => (
+            <div
+              key={index}
+              style={{
+                background: colors.bgCard,
+                margin: '16px',
+                padding: '16px',
+                borderRadius: '12px',
+                border: transferCompleted.has(index) ? `2px solid ${colors.success}` : '1px solid rgba(255,255,255,0.1)',
+              }}
+            >
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                <h3 style={{ color: colors.textPrimary, fontSize: '16px' }}>{app.title}</h3>
+                {transferCompleted.has(index) && <span style={{ color: colors.success }}>Complete</span>}
+              </div>
+              <p style={{ color: colors.textSecondary, fontSize: '14px', marginBottom: '12px' }}>{app.description}</p>
+              <div style={{ background: 'rgba(139, 92, 246, 0.1)', padding: '12px', borderRadius: '8px', marginBottom: '8px' }}>
+                <p style={{ color: colors.accent, fontSize: '13px', fontWeight: 'bold' }}>{app.question}</p>
+              </div>
+              {!transferCompleted.has(index) ? (
+                <button
+                  onClick={() => setTransferCompleted(new Set([...transferCompleted, index]))}
+                  style={{ padding: '8px 16px', borderRadius: '6px', border: `1px solid ${colors.accent}`, background: 'transparent', color: colors.accent, cursor: 'pointer', fontSize: '13px' }}
+                >
+                  Reveal Answer
+                </button>
+              ) : (
+                <div style={{ background: 'rgba(16, 185, 129, 0.1)', padding: '12px', borderRadius: '8px', borderLeft: `3px solid ${colors.success}` }}>
+                  <p style={{ color: colors.textPrimary, fontSize: '13px' }}>{app.answer}</p>
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+        {renderBottomBar(transferCompleted.size < 4, transferCompleted.size >= 4, 'Take the Test')}
+      </div>
+    );
+  }
+
+  // TEST PHASE
+  if (phase === 'test') {
+    if (testSubmitted) {
+      return (
+        <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+          <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+            <div style={{
+              background: testScore >= 8 ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
+              margin: '16px',
+              padding: '24px',
+              borderRadius: '12px',
+              textAlign: 'center',
+            }}>
+              <h2 style={{ color: testScore >= 8 ? colors.success : colors.error, marginBottom: '8px' }}>
+                {testScore >= 8 ? 'Excellent!' : 'Keep Learning!'}
+              </h2>
+              <p style={{ color: colors.textPrimary, fontSize: '24px', fontWeight: 'bold' }}>{testScore} / 10</p>
+              <p style={{ color: colors.textSecondary, marginTop: '8px' }}>
+                {testScore >= 8 ? 'You\'ve mastered terminal velocity!' : 'Review the material and try again.'}
+              </p>
+            </div>
+            {testQuestions.map((q, qIndex) => {
+              const userAnswer = testAnswers[qIndex];
+              const isCorrect = userAnswer !== null && q.options[userAnswer].correct;
+              return (
+                <div key={qIndex} style={{ background: colors.bgCard, margin: '16px', padding: '16px', borderRadius: '12px', borderLeft: `4px solid ${isCorrect ? colors.success : colors.error}` }}>
+                  <p style={{ color: colors.textPrimary, marginBottom: '12px', fontWeight: 'bold' }}>{qIndex + 1}. {q.question}</p>
+                  {q.options.map((opt, oIndex) => (
+                    <div key={oIndex} style={{ padding: '8px 12px', marginBottom: '4px', borderRadius: '6px', background: opt.correct ? 'rgba(16, 185, 129, 0.2)' : userAnswer === oIndex ? 'rgba(239, 68, 68, 0.2)' : 'transparent', color: opt.correct ? colors.success : userAnswer === oIndex ? colors.error : colors.textSecondary }}>
+                      {opt.correct ? 'Correct:' : userAnswer === oIndex ? 'Your answer:' : ''} {opt.text}
+                    </div>
+                  ))}
+                </div>
+              );
+            })}
+          </div>
+          {renderBottomBar(false, testScore >= 8, testScore >= 8 ? 'Complete Mastery' : 'Review & Retry')}
+        </div>
+      );
+    }
+
+    const currentQ = testQuestions[currentTestQuestion];
+    return (
+      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+          <div style={{ padding: '16px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+              <h2 style={{ color: colors.textPrimary }}>Knowledge Test</h2>
+              <span style={{ color: colors.textSecondary }}>{currentTestQuestion + 1} / {testQuestions.length}</span>
+            </div>
+            <div style={{ display: 'flex', gap: '4px', marginBottom: '24px' }}>
+              {testQuestions.map((_, i) => (
+                <div key={i} onClick={() => setCurrentTestQuestion(i)} style={{ flex: 1, height: '4px', borderRadius: '2px', background: testAnswers[i] !== null ? colors.accent : i === currentTestQuestion ? colors.textMuted : 'rgba(255,255,255,0.1)', cursor: 'pointer' }} />
+              ))}
+            </div>
+            <div style={{ background: colors.bgCard, padding: '20px', borderRadius: '12px', marginBottom: '16px' }}>
+              <p style={{ color: colors.textPrimary, fontSize: '16px', lineHeight: 1.5 }}>{currentQ.question}</p>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              {currentQ.options.map((opt, oIndex) => (
+                <button key={oIndex} onClick={() => handleTestAnswer(currentTestQuestion, oIndex)} style={{ padding: '16px', borderRadius: '8px', border: testAnswers[currentTestQuestion] === oIndex ? `2px solid ${colors.accent}` : '1px solid rgba(255,255,255,0.2)', background: testAnswers[currentTestQuestion] === oIndex ? 'rgba(139, 92, 246, 0.2)' : 'transparent', color: colors.textPrimary, cursor: 'pointer', textAlign: 'left', fontSize: '14px' }}>
+                  {opt.text}
+                </button>
+              ))}
+            </div>
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', padding: '16px' }}>
+            <button onClick={() => setCurrentTestQuestion(Math.max(0, currentTestQuestion - 1))} disabled={currentTestQuestion === 0} style={{ padding: '12px 24px', borderRadius: '8px', border: `1px solid ${colors.textMuted}`, background: 'transparent', color: currentTestQuestion === 0 ? colors.textMuted : colors.textPrimary, cursor: currentTestQuestion === 0 ? 'not-allowed' : 'pointer' }}>Previous</button>
+            {currentTestQuestion < testQuestions.length - 1 ? (
+              <button onClick={() => setCurrentTestQuestion(currentTestQuestion + 1)} style={{ padding: '12px 24px', borderRadius: '8px', border: 'none', background: colors.accent, color: 'white', cursor: 'pointer' }}>Next</button>
+            ) : (
+              <button onClick={submitTest} disabled={testAnswers.includes(null)} style={{ padding: '12px 24px', borderRadius: '8px', border: 'none', background: testAnswers.includes(null) ? colors.textMuted : colors.success, color: 'white', cursor: testAnswers.includes(null) ? 'not-allowed' : 'pointer' }}>Submit Test</button>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // MASTERY PHASE
+  if (phase === 'mastery') {
+    return (
+      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+          <div style={{ padding: '24px', textAlign: 'center' }}>
+            <div style={{ fontSize: '64px', marginBottom: '16px' }}>Trophy</div>
+            <h1 style={{ color: colors.success, marginBottom: '8px' }}>Mastery Achieved!</h1>
+            <p style={{ color: colors.textSecondary, marginBottom: '24px' }}>You've mastered terminal velocity and drag physics</p>
+          </div>
+          <div style={{ background: colors.bgCard, margin: '16px', padding: '20px', borderRadius: '12px' }}>
+            <h3 style={{ color: colors.accent, marginBottom: '12px' }}>Key Concepts Mastered:</h3>
+            <ul style={{ color: colors.textSecondary, lineHeight: 1.8, paddingLeft: '20px', margin: 0 }}>
+              <li>Terminal velocity as force balance (drag = weight)</li>
+              <li>Drag force proportional to velocity squared</li>
+              <li>Terminal velocity proportional to sqrt(mass)</li>
+              <li>Critical role of cross-sectional area and shape</li>
+              <li>Applications in parachutes, skydiving, and nature</li>
+            </ul>
+          </div>
+          <div style={{ background: 'rgba(139, 92, 246, 0.2)', margin: '16px', padding: '20px', borderRadius: '12px' }}>
+            <h3 style={{ color: colors.accent, marginBottom: '12px' }}>Beyond the Basics:</h3>
+            <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.6 }}>
+              Terminal velocity concepts extend to fluid dynamics in water (sinking particles),
+              aerospace engineering (re-entry vehicles), sports science (ski jumping, cycling),
+              and even astrophysics (meteorites burning up in atmosphere). The drag equation
+              is fundamental to understanding motion through any fluid medium!
+            </p>
+          </div>
+          {renderVisualization(true)}
+        </div>
+        {renderBottomBar(false, true, 'Complete Game')}
+      </div>
+    );
+  }
+
+  return null;
+};
+
+export default TerminalVelocityRenderer;

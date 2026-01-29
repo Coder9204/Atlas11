@@ -10,17 +10,17 @@ interface GameEvent {
   phase: string;
 }
 
-// Numeric phases: 0=hook, 1=predict, 2=play, 3=review, 4=twist_predict, 5=twist_play, 6=twist_review, 7=transfer, 8=test, 9=mastery
-const PHASES: number[] = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
-const phaseLabels: Record<number, string> = {
-  0: 'Hook', 1: 'Predict', 2: 'Lab', 3: 'Review', 4: 'Twist Predict',
-  5: 'Twist Lab', 6: 'Twist Review', 7: 'Transfer', 8: 'Test', 9: 'Mastery'
+// String-based phases for game progression
+type Phase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
+const PHASE_ORDER: Phase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
+const phaseLabels: Record<Phase, string> = {
+  hook: 'Hook', predict: 'Predict', play: 'Lab', review: 'Review', twist_predict: 'Twist Predict',
+  twist_play: 'Twist Lab', twist_review: 'Twist Review', transfer: 'Transfer', test: 'Test', mastery: 'Mastery'
 };
 
 interface BoilingPressureRendererProps {
   onBack?: () => void;
-  onGameEvent?: (event: GameEvent) => void;
-  onPhaseComplete?: (phase: number) => void;
+  onPhaseComplete?: (phase: Phase) => void;
 }
 
 const TEST_QUESTIONS = [
@@ -102,9 +102,9 @@ function getWaterState(temp: number, boilingPoint: number): 'solid' | 'liquid' |
   return 'gas';
 }
 
-export default function BoilingPressureRenderer({ onBack, onGameEvent, onPhaseComplete }: BoilingPressureRendererProps) {
+export default function BoilingPressureRenderer({ onBack, onPhaseComplete }: BoilingPressureRendererProps) {
   // Core state
-  const [phase, setPhase] = useState<number>(0);
+  const [phase, setPhase] = useState<Phase>('hook');
   const [prediction, setPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
   const [testAnswers, setTestAnswers] = useState<number[]>([]);
@@ -152,19 +152,18 @@ export default function BoilingPressureRenderer({ onBack, onGameEvent, onPhaseCo
     } catch { /* Audio not available */ }
   }, []);
 
-  // Emit game events
+  // Emit game events (for logging/analytics)
   const emitEvent = useCallback(
     (type: string, data?: Record<string, unknown>) => {
-      if (onGameEvent) {
-        onGameEvent({ type, data, timestamp: Date.now(), phase: phaseLabels[phase] });
-      }
+      // Event logging placeholder - can be connected to analytics
+      console.debug('Game event:', { type, data, timestamp: Date.now(), phase: phaseLabels[phase] });
     },
-    [onGameEvent, phase]
+    [phase]
   );
 
   // Navigate to phase
   const goToPhase = useCallback(
-    (newPhase: number) => {
+    (newPhase: Phase) => {
       if (navigationLockRef.current) return;
       const now = Date.now();
       if (now - lastClickRef.current < 200) return;
@@ -172,7 +171,6 @@ export default function BoilingPressureRenderer({ onBack, onGameEvent, onPhaseCo
 
       navigationLockRef.current = true;
       playSound('transition');
-      emitEvent('phase_change', { from: phase, to: newPhase });
       setPhase(newPhase);
       onPhaseComplete?.(newPhase);
 
@@ -180,14 +178,15 @@ export default function BoilingPressureRenderer({ onBack, onGameEvent, onPhaseCo
         navigationLockRef.current = false;
       }, 400);
     },
-    [phase, emitEvent, playSound, onPhaseComplete]
+    [playSound, onPhaseComplete]
   );
 
-  const nextPhase = () => {
-    if (phase < PHASES.length - 1) {
-      goToPhase(phase + 1);
+  const goToNextPhase = useCallback(() => {
+    const currentIndex = PHASE_ORDER.indexOf(phase);
+    if (currentIndex < PHASE_ORDER.length - 1) {
+      goToPhase(PHASE_ORDER[currentIndex + 1]);
     }
-  };
+  }, [phase, goToPhase]);
 
   const getLocationPressure = (loc: 'sea' | 'denver' | 'everest'): number => {
     switch (loc) {
@@ -267,12 +266,12 @@ export default function BoilingPressureRenderer({ onBack, onGameEvent, onPhaseCo
 
   // Reset when returning to play/twist_play
   useEffect(() => {
-    if (phase === 2) {
+    if (phase === 'play') {
       setTemperature(25);
       setHeating(false);
       setPressure(1.0);
     }
-    if (phase === 5) {
+    if (phase === 'twist_play') {
       setTwistTemp(25);
       setTwistHeating(false);
       setTwistLocation('sea');
@@ -416,7 +415,7 @@ export default function BoilingPressureRenderer({ onBack, onGameEvent, onPhaseCo
 
       {/* Premium CTA button */}
       <button
-        onMouseDown={(e) => { e.preventDefault(); nextPhase(); }}
+        onMouseDown={(e) => { e.preventDefault(); goToNextPhase(); }}
         className="mt-10 group relative px-10 py-5 bg-gradient-to-r from-cyan-500 to-blue-500 text-white text-lg font-semibold rounded-2xl transition-all duration-300 hover:shadow-lg hover:shadow-cyan-500/25 hover:scale-[1.02] active:scale-[0.98]"
       >
         <span className="relative z-10 flex items-center gap-3">
@@ -488,7 +487,7 @@ export default function BoilingPressureRenderer({ onBack, onGameEvent, onPhaseCo
               : "Not quite - lower pressure actually decreases the boiling point!"}
           </p>
           <button
-            onMouseDown={() => nextPhase()}
+            onMouseDown={() => goToNextPhase()}
             className="mt-4 px-6 py-3 bg-gradient-to-r from-cyan-600 to-blue-600 text-white font-semibold rounded-xl"
           >
             Test Your Prediction
@@ -572,7 +571,7 @@ export default function BoilingPressureRenderer({ onBack, onGameEvent, onPhaseCo
         </div>
 
         <button
-          onMouseDown={() => { setHeating(false); nextPhase(); }}
+          onMouseDown={() => { setHeating(false); goToNextPhase(); }}
           className="px-6 py-3 bg-gradient-to-r from-cyan-600 to-blue-600 text-white font-semibold rounded-xl"
         >
           Understand the Physics
@@ -630,7 +629,7 @@ export default function BoilingPressureRenderer({ onBack, onGameEvent, onPhaseCo
       </div>
 
       <button
-        onMouseDown={() => nextPhase()}
+        onMouseDown={() => goToNextPhase()}
         className="mt-8 px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-semibold rounded-xl"
       >
         Ready for a Twist?
@@ -683,7 +682,7 @@ export default function BoilingPressureRenderer({ onBack, onGameEvent, onPhaseCo
               : "Not quite - the cooler water temperature means longer cooking time!"}
           </p>
           <button
-            onMouseDown={() => nextPhase()}
+            onMouseDown={() => goToNextPhase()}
             className="mt-4 px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-semibold rounded-xl"
           >
             See the Difference
@@ -795,7 +794,7 @@ export default function BoilingPressureRenderer({ onBack, onGameEvent, onPhaseCo
         </div>
 
         <button
-          onMouseDown={() => { setTwistHeating(false); nextPhase(); }}
+          onMouseDown={() => { setTwistHeating(false); goToNextPhase(); }}
           className="mt-6 px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-semibold rounded-xl"
         >
           Understand the Impact
@@ -848,7 +847,7 @@ export default function BoilingPressureRenderer({ onBack, onGameEvent, onPhaseCo
       </div>
 
       <button
-        onMouseDown={() => nextPhase()}
+        onMouseDown={() => goToNextPhase()}
         className="mt-8 px-6 py-3 bg-gradient-to-r from-teal-600 to-blue-600 text-white font-semibold rounded-xl"
       >
         See Real Applications
@@ -894,7 +893,7 @@ export default function BoilingPressureRenderer({ onBack, onGameEvent, onPhaseCo
 
       {completedApps.size >= 4 && (
         <button
-          onMouseDown={() => { playSound('complete'); nextPhase(); }}
+          onMouseDown={() => { playSound('complete'); goToNextPhase(); }}
           className="mt-6 px-6 py-3 bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-semibold rounded-xl"
         >
           Take the Test
@@ -934,7 +933,7 @@ export default function BoilingPressureRenderer({ onBack, onGameEvent, onPhaseCo
             onMouseDown={() => {
               if (passed) {
                 playSound('complete');
-                nextPhase();
+                goToNextPhase();
               } else {
                 playSound('click');
                 setTestAnswers([]);
@@ -1076,16 +1075,16 @@ export default function BoilingPressureRenderer({ onBack, onGameEvent, onPhaseCo
   // Main render
   const renderPhase = () => {
     switch (phase) {
-      case 0: return renderHook();
-      case 1: return renderPredict();
-      case 2: return renderPlay();
-      case 3: return renderReview();
-      case 4: return renderTwistPredict();
-      case 5: return renderTwistPlay();
-      case 6: return renderTwistReview();
-      case 7: return renderTransfer();
-      case 8: return renderTest();
-      case 9: return renderMastery();
+      case 'hook': return renderHook();
+      case 'predict': return renderPredict();
+      case 'play': return renderPlay();
+      case 'review': return renderReview();
+      case 'twist_predict': return renderTwistPredict();
+      case 'twist_play': return renderTwistPlay();
+      case 'twist_review': return renderTwistReview();
+      case 'transfer': return renderTransfer();
+      case 'test': return renderTest();
+      case 'mastery': return renderMastery();
       default: return renderHook();
     }
   };
@@ -1103,20 +1102,23 @@ export default function BoilingPressureRenderer({ onBack, onGameEvent, onPhaseCo
         <div className="flex items-center justify-between px-6 py-3 max-w-4xl mx-auto">
           <span className="text-sm font-semibold text-white/80 tracking-wide">Boiling Point Physics</span>
           <div className="flex items-center gap-1.5">
-            {PHASES.map((p) => (
-              <button
-                key={p}
-                onMouseDown={(e) => { e.preventDefault(); goToPhase(p); }}
-                className={`h-2 rounded-full transition-all duration-300 ${
-                  phase === p
-                    ? 'bg-cyan-400 w-6 shadow-lg shadow-cyan-400/30'
-                    : phase > p
-                      ? 'bg-emerald-500 w-2'
-                      : 'bg-slate-700 w-2 hover:bg-slate-600'
-                }`}
-                title={phaseLabels[p]}
-              />
-            ))}
+            {PHASE_ORDER.map((p, i) => {
+              const currentIndex = PHASE_ORDER.indexOf(phase);
+              return (
+                <button
+                  key={p}
+                  onMouseDown={(e) => { e.preventDefault(); goToPhase(p); }}
+                  className={`h-2 rounded-full transition-all duration-300 ${
+                    phase === p
+                      ? 'bg-cyan-400 w-6 shadow-lg shadow-cyan-400/30'
+                      : currentIndex > i
+                        ? 'bg-emerald-500 w-2'
+                        : 'bg-slate-700 w-2 hover:bg-slate-600'
+                  }`}
+                  title={phaseLabels[p]}
+                />
+              );
+            })}
           </div>
           <span className="text-sm font-medium text-cyan-400">{phaseLabels[phase]}</span>
         </div>

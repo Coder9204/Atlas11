@@ -24,8 +24,10 @@ interface GameEvent {
 }
 
 interface ElectromagnetRendererProps {
-  onEvent?: (event: GameEvent) => void;
-  savedState?: GameState | null;
+  phase: 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
+  onPhaseComplete?: () => void;
+  onCorrectAnswer?: () => void;
+  onIncorrectAnswer?: () => void;
 }
 
 interface GameState {
@@ -52,42 +54,38 @@ const TEST_QUESTIONS = [
   {
     question: 'What creates the magnetic field in an electromagnet?',
     options: [
-      'The iron core',
-      'Electric current flowing through wire',
-      'Static electricity',
-      'The battery\'s chemicals'
-    ],
-    correct: 1
+      { text: 'The iron core', correct: false },
+      { text: 'Electric current flowing through wire', correct: true },
+      { text: 'Static electricity', correct: false },
+      { text: 'The battery\'s chemicals', correct: false }
+    ]
   },
   {
     question: 'Why does adding an iron core strengthen an electromagnet?',
     options: [
-      'Iron is heavier',
-      'Iron conducts electricity better',
-      'Iron concentrates and amplifies the magnetic field',
-      'Iron generates its own magnetic field'
-    ],
-    correct: 2
+      { text: 'Iron is heavier', correct: false },
+      { text: 'Iron conducts electricity better', correct: false },
+      { text: 'Iron concentrates and amplifies the magnetic field', correct: true },
+      { text: 'Iron generates its own magnetic field', correct: false }
+    ]
   },
   {
     question: 'What happens to an electromagnet\'s field when you reverse the current?',
     options: [
-      'The field disappears',
-      'The field doubles in strength',
-      'The field stays the same',
-      'The north and south poles swap'
-    ],
-    correct: 3
+      { text: 'The field disappears', correct: false },
+      { text: 'The field doubles in strength', correct: false },
+      { text: 'The field stays the same', correct: false },
+      { text: 'The north and south poles swap', correct: true }
+    ]
   },
   {
     question: 'How can you make an electromagnet stronger?',
     options: [
-      'Use thinner wire',
-      'Increase current and/or number of coil turns',
-      'Use plastic instead of iron',
-      'Decrease the voltage'
-    ],
-    correct: 1
+      { text: 'Use thinner wire', correct: false },
+      { text: 'Increase current and/or number of coil turns', correct: true },
+      { text: 'Use plastic instead of iron', correct: false },
+      { text: 'Decrease the voltage', correct: false }
+    ]
   }
 ];
 
@@ -161,20 +159,18 @@ function calculateFieldStrength(current: number, turns: number, hasCore: boolean
 // ─────────────────────────────────────────────────────────────────────────────
 // MAIN COMPONENT
 // ─────────────────────────────────────────────────────────────────────────────
-export default function ElectromagnetRenderer({ onEvent, savedState }: ElectromagnetRendererProps) {
+export default function ElectromagnetRenderer({ phase: initialPhase, onPhaseComplete, onCorrectAnswer, onIncorrectAnswer }: ElectromagnetRendererProps) {
   // ─── State ───────────────────────────────────────────────────────────────────
-  const [phase, setPhase] = useState<Phase>(savedState?.phase || 'hook');
-  const [prediction, setPrediction] = useState<string | null>(savedState?.prediction || null);
-  const [twistPrediction, setTwistPrediction] = useState<string | null>(savedState?.twistPrediction || null);
-  const [testAnswers, setTestAnswers] = useState<number[]>(savedState?.testAnswers || []);
-  const [completedApps, setCompletedApps] = useState<Set<number>>(
-    new Set(savedState?.completedApps || [])
-  );
+  const [phase, setPhase] = useState<Phase>(initialPhase || 'hook');
+  const [prediction, setPrediction] = useState<string | null>(null);
+  const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
+  const [testAnswers, setTestAnswers] = useState<number[]>([]);
+  const [completedApps, setCompletedApps] = useState<Set<number>>(new Set());
 
   // Simulation state
-  const [current, setCurrent] = useState(savedState?.current || 0); // Amperes (-5 to 5)
-  const [coilTurns, setCoilTurns] = useState(savedState?.coilTurns || 10);
-  const [hasCore, setHasCore] = useState(savedState?.hasCore || false);
+  const [current, setCurrent] = useState(0); // Amperes (-5 to 5)
+  const [coilTurns, setCoilTurns] = useState(10);
+  const [hasCore, setHasCore] = useState(false);
   const [paperClipPositions, setPaperClipPositions] = useState<{x: number; y: number; attracted: boolean}[]>([]);
 
   // Twist state - reversing current / AC
@@ -185,9 +181,6 @@ export default function ElectromagnetRenderer({ onEvent, savedState }: Electroma
   const navigationLockRef = useRef(false);
 
   // ─── Helpers ─────────────────────────────────────────────────────────────────
-  const emitEvent = (type: GameEvent['type'], data: Record<string, unknown> = {}) => {
-    onEvent?.({ type, phase, data });
-  };
 
   const goToPhase = (newPhase: Phase) => {
     if (navigationLockRef.current) return;
@@ -195,7 +188,7 @@ export default function ElectromagnetRenderer({ onEvent, savedState }: Electroma
 
     playSound('transition');
     setPhase(newPhase);
-    emitEvent('interaction', { action: 'phase_change', from: phase, to: newPhase });
+    if (onPhaseComplete) onPhaseComplete();
 
     setTimeout(() => {
       navigationLockRef.current = false;
@@ -565,7 +558,6 @@ export default function ElectromagnetRenderer({ onEvent, savedState }: Electroma
               onMouseDown={() => {
                 playSound('click');
                 setPrediction(option);
-                emitEvent('prediction', { prediction: option });
               }}
               className={`w-full p-4 rounded-lg text-left transition-all ${
                 prediction === option
@@ -750,7 +742,6 @@ export default function ElectromagnetRenderer({ onEvent, savedState }: Electroma
               onMouseDown={() => {
                 playSound('click');
                 setTwistPrediction(option);
-                emitEvent('prediction', { prediction: option, type: 'twist' });
               }}
               className={`w-full p-4 rounded-lg text-left transition-all ${
                 twistPrediction === option
@@ -903,7 +894,6 @@ export default function ElectromagnetRenderer({ onEvent, savedState }: Electroma
             onMouseDown={() => {
               playSound('click');
               setCompletedApps(prev => new Set([...prev, i]));
-              emitEvent('interaction', { action: 'explore_app', app: app.title });
             }}
             className={`p-4 rounded-xl text-left transition-all ${
               completedApps.has(i)
@@ -946,10 +936,11 @@ export default function ElectromagnetRenderer({ onEvent, savedState }: Electroma
 
     if (isComplete) {
       const score = testAnswers.reduce(
-        (acc, answer, i) => acc + (answer === TEST_QUESTIONS[i].correct ? 1 : 0),
+        (acc, answer, i) => acc + (TEST_QUESTIONS[i].options[answer]?.correct ? 1 : 0),
         0
       );
       const passed = score >= 3;
+      if (passed && onCorrectAnswer) onCorrectAnswer();
 
       return (
         <div className="text-center space-y-6">
@@ -993,7 +984,7 @@ export default function ElectromagnetRenderer({ onEvent, savedState }: Electroma
               key={i}
               className={`w-3 h-3 rounded-full ${
                 i < currentQuestion
-                  ? testAnswers[i] === TEST_QUESTIONS[i].correct
+                  ? TEST_QUESTIONS[i].options[testAnswers[i]]?.correct
                     ? 'bg-green-500'
                     : 'bg-red-500'
                   : i === currentQuestion
@@ -1011,17 +1002,12 @@ export default function ElectromagnetRenderer({ onEvent, savedState }: Electroma
               <button
                 key={i}
                 onMouseDown={() => {
-                  playSound(i === question.correct ? 'success' : 'failure');
+                  playSound(option.correct ? 'success' : 'failure');
                   setTestAnswers([...testAnswers, i]);
-                  emitEvent('interaction', {
-                    action: 'answer',
-                    questionIndex: currentQuestion,
-                    correct: i === question.correct
-                  });
                 }}
                 className="w-full p-4 bg-gray-700 text-gray-300 rounded-lg text-left hover:bg-gray-600 transition-all"
               >
-                {option}
+                {option.text}
               </button>
             ))}
           </div>
@@ -1059,7 +1045,7 @@ export default function ElectromagnetRenderer({ onEvent, savedState }: Electroma
       <button
         onMouseDown={() => {
           playSound('complete');
-          emitEvent('completion', { phase: 'mastery', completed: true });
+          if (onPhaseComplete) onPhaseComplete();
         }}
         className="px-8 py-4 bg-gradient-to-r from-yellow-600 to-orange-600 text-white rounded-xl font-bold text-lg hover:from-yellow-500 hover:to-orange-500 transition-all"
       >

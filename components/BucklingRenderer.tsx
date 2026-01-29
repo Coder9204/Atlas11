@@ -65,7 +65,7 @@ interface BucklingRendererProps {
   onComplete?: (score: number) => void;
   emitGameEvent?: (event: GameEvent) => void;
   gamePhase?: string;
-  onPhaseComplete?: (phase: number) => void;
+  onPhaseComplete?: () => void;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

@@ -23,11 +23,12 @@ type GameEventType =
   | 'cycle_step_changed'
   | 'efficiency_calculated';
 
-// Numeric phases: 0=hook, 1=predict, 2=play, 3=review, 4=twist_predict, 5=twist_play, 6=twist_review, 7=transfer, 8=test, 9=mastery
-const PHASES: number[] = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
-const phaseLabels: Record<number, string> = {
-  0: 'Hook', 1: 'Predict', 2: 'Play', 3: 'Review', 4: 'Twist Predict',
-  5: 'Twist Play', 6: 'Twist Review', 7: 'Transfer', 8: 'Test', 9: 'Mastery'
+// String-based phases for game progression
+type Phase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
+const PHASE_ORDER: Phase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
+const phaseLabels: Record<Phase, string> = {
+  hook: 'Hook', predict: 'Predict', play: 'Play', review: 'Review', twist_predict: 'Twist Predict',
+  twist_play: 'Twist Play', twist_review: 'Twist Review', transfer: 'Transfer', test: 'Test', mastery: 'Mastery'
 };
 
 interface TestQuestion {
@@ -53,13 +54,12 @@ interface TransferApp {
 }
 
 interface Props {
-  onGameEvent?: (event: { type: GameEventType; data?: Record<string, unknown> }) => void;
-  currentPhase?: number;
-  onPhaseComplete?: (phase: number) => void;
+  currentPhase?: Phase;
+  onPhaseComplete?: (phase: Phase) => void;
 }
 
-const CarnotCycleRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onPhaseComplete }) => {
-  const [phase, setPhase] = useState<number>(currentPhase ?? 0);
+const CarnotCycleRenderer: React.FC<Props> = ({ currentPhase, onPhaseComplete }) => {
+  const [phase, setPhase] = useState<Phase>(currentPhase ?? 'hook');
   const [showPredictionFeedback, setShowPredictionFeedback] = useState(false);
   const [selectedPrediction, setSelectedPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
@@ -128,15 +128,14 @@ const CarnotCycleRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onPha
       oscillator.start(ctx.currentTime);
       oscillator.stop(ctx.currentTime + 0.3);
 
-      if (onGameEvent) {
-        onGameEvent({ type: 'sound_played', data: { soundType } });
-      }
+      // Event logging
+      console.debug('Game event:', { type: 'sound_played', data: { soundType } });
     } catch {
       // Audio not supported
     }
-  }, [onGameEvent]);
+  }, []);
 
-  const goToPhase = useCallback((newPhase: number) => {
+  const goToPhase = useCallback((newPhase: Phase) => {
     const now = Date.now();
     if (now - lastClickRef.current < 400) return;
     if (navigationLockRef.current) return;
@@ -144,15 +143,19 @@ const CarnotCycleRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onPha
     navigationLockRef.current = true;
     playSound('transition');
 
-    if (onGameEvent) {
-      onGameEvent({ type: 'phase_change', data: { from: phase, to: newPhase, phaseLabel: phaseLabels[newPhase] } });
-    }
     if (onPhaseComplete) {
       onPhaseComplete(phase);
     }
     setPhase(newPhase);
     setTimeout(() => { navigationLockRef.current = false; }, 400);
-  }, [playSound, phase, onGameEvent, onPhaseComplete]);
+  }, [playSound, phase, onPhaseComplete]);
+
+  const goToNextPhase = useCallback(() => {
+    const currentIndex = PHASE_ORDER.indexOf(phase);
+    if (currentIndex < PHASE_ORDER.length - 1) {
+      goToPhase(PHASE_ORDER[currentIndex + 1]);
+    }
+  }, [phase, goToPhase]);
 
   // Carnot efficiency: η = 1 - T_cold/T_hot
   const efficiency = ((1 - coldTemp / hotTemp) * 100).toFixed(1);
@@ -167,9 +170,8 @@ const CarnotCycleRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onPha
         if (prev >= 100) {
           setCycleStep(s => {
             const newStep = (s + 1) % 4;
-            if (onGameEvent) {
-              onGameEvent({ type: 'cycle_step_changed', data: { step: newStep } });
-            }
+            // Event logging
+            console.debug('Game event:', { type: 'cycle_step_changed', data: { step: newStep } });
             return newStep;
           });
           return 0;
@@ -179,7 +181,7 @@ const CarnotCycleRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onPha
     }, 50);
 
     return () => clearInterval(interval);
-  }, [isAnimating, onGameEvent]);
+  }, [isAnimating]);
 
   const handlePrediction = useCallback((prediction: string) => {
     const now = Date.now();
@@ -189,13 +191,12 @@ const CarnotCycleRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onPha
     setShowPredictionFeedback(true);
     const isCorrect = prediction === 'B';
     playSound(isCorrect ? 'correct' : 'incorrect');
-    if (onGameEvent) {
-      onGameEvent({
-        type: isCorrect ? 'prediction_correct' : 'prediction_incorrect',
-        data: { prediction, correct: 'B' }
-      });
-    }
-  }, [playSound, onGameEvent]);
+    // Event logging
+    console.debug('Game event:', {
+      type: isCorrect ? 'prediction_correct' : 'prediction_incorrect',
+      data: { prediction, correct: 'B' }
+    });
+  }, [playSound]);
 
   const handleTwistPrediction = useCallback((prediction: string) => {
     const now = Date.now();
@@ -205,10 +206,9 @@ const CarnotCycleRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onPha
     setShowTwistFeedback(true);
     const isCorrect = prediction === 'C';
     playSound(isCorrect ? 'correct' : 'incorrect');
-    if (onGameEvent) {
-      onGameEvent({ type: 'twist_predicted', data: { prediction, correct: 'C' } });
-    }
-  }, [playSound, onGameEvent]);
+    // Event logging
+    console.debug('Game event:', { type: 'twist_predicted', data: { prediction, correct: 'C' } });
+  }, [playSound]);
 
   const handleTestAnswer = useCallback((questionIndex: number, answerIndex: number) => {
     const now = Date.now();
@@ -219,10 +219,9 @@ const CarnotCycleRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onPha
       newAnswers[questionIndex] = answerIndex;
       return newAnswers;
     });
-    if (onGameEvent) {
-      onGameEvent({ type: 'test_answered', data: { questionIndex, answerIndex } });
-    }
-  }, [onGameEvent]);
+    // Event logging
+    console.debug('Game event:', { type: 'test_answered', data: { questionIndex, answerIndex } });
+  }, []);
 
   const handleAppComplete = useCallback((appIndex: number) => {
     const now = Date.now();
@@ -230,21 +229,19 @@ const CarnotCycleRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onPha
     lastClickRef.current = now;
     setCompletedApps(prev => new Set([...prev, appIndex]));
     playSound('complete');
-    if (onGameEvent) {
-      onGameEvent({ type: 'app_completed', data: { appIndex } });
-    }
-  }, [playSound, onGameEvent]);
+    // Event logging
+    console.debug('Game event:', { type: 'app_completed', data: { appIndex } });
+  }, [playSound]);
 
   const toggleAnimation = useCallback(() => {
     setIsAnimating(prev => {
       const newState = !prev;
-      if (onGameEvent) {
-        onGameEvent({ type: newState ? 'simulation_started' : 'simulation_paused' });
-      }
+      // Event logging
+      console.debug('Game event:', { type: newState ? 'simulation_started' : 'simulation_paused' });
       if (newState) playSound('engine');
       return newState;
     });
-  }, [playSound, onGameEvent]);
+  }, [playSound]);
 
   const cycleStages = [
     { name: 'Isothermal Expansion', color: '#ef4444', desc: 'Gas expands at high temperature, absorbing heat Q_H' },
@@ -683,7 +680,7 @@ const CarnotCycleRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onPha
 
       {/* Premium CTA button */}
       <button
-        onMouseDown={(e) => { e.preventDefault(); goToPhase(1); }}
+        onMouseDown={(e) => { e.preventDefault(); goToNextPhase(); }}
         className="group relative px-8 py-4 bg-gradient-to-r from-red-600 to-orange-600 text-white text-lg font-semibold rounded-2xl transition-all duration-300 shadow-lg shadow-red-500/25 hover:shadow-red-500/40 hover:scale-[1.02] active:scale-[0.98]"
       >
         <span className="relative z-10 flex items-center gap-2">
@@ -774,7 +771,7 @@ const CarnotCycleRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onPha
             This is Carnot's revolutionary insight — no matter how well you engineer it, the temperatures alone set the limit.
           </p>
           <button
-            onMouseDown={(e) => { e.preventDefault(); goToPhase(2); }}
+            onMouseDown={(e) => { e.preventDefault(); goToNextPhase(); }}
             className="mt-4 px-6 py-3 bg-gradient-to-r from-red-600 to-orange-600 text-white font-semibold rounded-xl hover:from-red-500 hover:to-orange-500 transition-all duration-300"
           >
             Explore the Carnot Cycle →
@@ -830,9 +827,8 @@ const CarnotCycleRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onPha
             onChange={(e) => {
               const newTemp = Math.max(Number(e.target.value), coldTemp + 50);
               setHotTemp(newTemp);
-              if (onGameEvent) {
-                onGameEvent({ type: 'temperature_changed', data: { reservoir: 'hot', temperature: newTemp } });
-              }
+              // Event logging
+              console.debug('Game event:', { type: 'temperature_changed', data: { reservoir: 'hot', temperature: newTemp } });
             }}
             className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-red-500"
           />
@@ -852,9 +848,8 @@ const CarnotCycleRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onPha
             onChange={(e) => {
               const newTemp = Math.min(Number(e.target.value), hotTemp - 50);
               setColdTemp(newTemp);
-              if (onGameEvent) {
-                onGameEvent({ type: 'temperature_changed', data: { reservoir: 'cold', temperature: newTemp } });
-              }
+              // Event logging
+              console.debug('Game event:', { type: 'temperature_changed', data: { reservoir: 'cold', temperature: newTemp } });
             }}
             className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-blue-500"
           />
@@ -894,7 +889,7 @@ const CarnotCycleRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onPha
       </div>
 
       <button
-        onMouseDown={(e) => { e.preventDefault(); goToPhase(3); }}
+        onMouseDown={(e) => { e.preventDefault(); goToNextPhase(); }}
         className="mt-6 px-6 py-3 bg-gradient-to-r from-red-600 to-orange-600 text-white font-semibold rounded-xl hover:from-red-500 hover:to-orange-500 transition-all duration-300"
       >
         Review the Concepts →
@@ -947,7 +942,7 @@ const CarnotCycleRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onPha
       </div>
 
       <button
-        onMouseDown={(e) => { e.preventDefault(); goToPhase(4); }}
+        onMouseDown={(e) => { e.preventDefault(); goToNextPhase(); }}
         className="mt-8 px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-semibold rounded-xl hover:from-purple-500 hover:to-pink-500 transition-all duration-300"
       >
         Discover a Surprising Twist →
@@ -1031,7 +1026,7 @@ const CarnotCycleRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onPha
             By doing work, we can move heat from cold to hot — that's how your fridge works!
           </p>
           <button
-            onMouseDown={(e) => { e.preventDefault(); goToPhase(5); }}
+            onMouseDown={(e) => { e.preventDefault(); goToNextPhase(); }}
             className="mt-4 px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-semibold rounded-xl hover:from-purple-500 hover:to-pink-500 transition-all duration-300"
           >
             Explore Heat Pumps →
@@ -1123,7 +1118,7 @@ const CarnotCycleRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onPha
       </div>
 
       <button
-        onMouseDown={(e) => { e.preventDefault(); goToPhase(6); }}
+        onMouseDown={(e) => { e.preventDefault(); goToNextPhase(); }}
         className="mt-6 px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-semibold rounded-xl hover:from-purple-500 hover:to-pink-500 transition-all duration-300"
       >
         Review the Discovery →
@@ -1166,7 +1161,7 @@ const CarnotCycleRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onPha
       </div>
 
       <button
-        onMouseDown={(e) => { e.preventDefault(); goToPhase(7); }}
+        onMouseDown={(e) => { e.preventDefault(); goToNextPhase(); }}
         className="mt-6 px-6 py-3 bg-gradient-to-r from-red-600 to-orange-600 text-white font-semibold rounded-xl hover:from-red-500 hover:to-orange-500 transition-all duration-300"
       >
         Explore Real-World Applications →
@@ -1185,9 +1180,8 @@ const CarnotCycleRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onPha
             onMouseDown={(e) => {
               e.preventDefault();
               setActiveAppTab(index);
-              if (onGameEvent) {
-                onGameEvent({ type: 'app_explored', data: { appIndex: index, title: app.title } });
-              }
+              // Event logging
+              console.debug('Game event:', { type: 'app_explored', data: { appIndex: index, title: app.title } });
             }}
             className={`px-4 py-2 rounded-lg font-medium transition-all ${
               activeAppTab === index
@@ -1280,7 +1274,7 @@ const CarnotCycleRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onPha
 
       {completedApps.size >= transferApps.length && (
         <button
-          onMouseDown={(e) => { e.preventDefault(); goToPhase(8); }}
+          onMouseDown={(e) => { e.preventDefault(); goToNextPhase(); }}
           className="mt-6 px-6 py-3 bg-gradient-to-r from-red-600 to-orange-600 text-white font-semibold rounded-xl hover:from-red-500 hover:to-orange-500 transition-all duration-300"
         >
           Take the Knowledge Test →
@@ -1325,9 +1319,8 @@ const CarnotCycleRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onPha
             onMouseDown={(e) => {
               e.preventDefault();
               setShowTestResults(true);
-              if (onGameEvent) {
-                onGameEvent({ type: 'test_completed', data: { score: calculateScore(), total: testQuestions.length } });
-              }
+              // Event logging
+              console.debug('Game event:', { type: 'test_completed', data: { score: calculateScore(), total: testQuestions.length } });
             }}
             disabled={testAnswers.includes(-1)}
             className={`w-full py-4 rounded-xl font-semibold text-lg transition-all ${
@@ -1356,10 +1349,9 @@ const CarnotCycleRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onPha
               <button
                 onMouseDown={(e) => {
                   e.preventDefault();
-                  goToPhase(9);
-                  if (onGameEvent) {
-                    onGameEvent({ type: 'mastery_achieved', data: { score: calculateScore() } });
-                  }
+                  goToNextPhase();
+                  // Event logging
+                  console.debug('Game event:', { type: 'mastery_achieved', data: { score: calculateScore() } });
                 }}
                 className="px-8 py-4 bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-semibold rounded-xl hover:from-emerald-500 hover:to-teal-500 transition-all duration-300"
               >
@@ -1367,7 +1359,7 @@ const CarnotCycleRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onPha
               </button>
             ) : (
               <button
-                onMouseDown={(e) => { e.preventDefault(); setShowTestResults(false); setTestAnswers(Array(10).fill(-1)); goToPhase(3); }}
+                onMouseDown={(e) => { e.preventDefault(); setShowTestResults(false); setTestAnswers(Array(10).fill(-1)); goToPhase('review'); }}
                 className="px-8 py-4 bg-gradient-to-r from-red-600 to-orange-600 text-white font-semibold rounded-xl hover:from-red-500 hover:to-orange-500 transition-all duration-300"
               >
                 Review & Try Again
@@ -1435,7 +1427,7 @@ const CarnotCycleRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onPha
 
         <div className="flex gap-4 justify-center">
           <button
-            onMouseDown={(e) => { e.preventDefault(); goToPhase(0); }}
+            onMouseDown={(e) => { e.preventDefault(); goToPhase('hook'); }}
             className="px-6 py-3 bg-slate-700 hover:bg-slate-600 text-white font-medium rounded-xl transition-colors"
           >
             ↺ Explore Again
@@ -1447,16 +1439,16 @@ const CarnotCycleRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onPha
 
   const renderPhase = () => {
     switch (phase) {
-      case 0: return renderHook();
-      case 1: return renderPredict();
-      case 2: return renderPlay();
-      case 3: return renderReview();
-      case 4: return renderTwistPredict();
-      case 5: return renderTwistPlay();
-      case 6: return renderTwistReview();
-      case 7: return renderTransfer();
-      case 8: return renderTest();
-      case 9: return renderMastery();
+      case 'hook': return renderHook();
+      case 'predict': return renderPredict();
+      case 'play': return renderPlay();
+      case 'review': return renderReview();
+      case 'twist_predict': return renderTwistPredict();
+      case 'twist_play': return renderTwistPlay();
+      case 'twist_review': return renderTwistReview();
+      case 'transfer': return renderTransfer();
+      case 'test': return renderTest();
+      case 'mastery': return renderMastery();
       default: return renderHook();
     }
   };
@@ -1474,20 +1466,23 @@ const CarnotCycleRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onPha
         <div className="flex items-center justify-between px-4 py-3 max-w-4xl mx-auto">
           <span className="text-sm font-medium text-red-400">Carnot Cycle</span>
           <div className="flex gap-1.5">
-            {PHASES.map((p, i) => (
-              <button
-                key={p}
-                onMouseDown={(e) => { e.preventDefault(); goToPhase(p); }}
-                className={`h-2 rounded-full transition-all duration-300 ${
-                  phase === p
-                    ? 'bg-gradient-to-r from-red-400 to-orange-400 w-6 shadow-lg shadow-red-500/50'
-                    : phase > i
-                    ? 'bg-emerald-500 w-2'
-                    : 'bg-slate-600 w-2 hover:bg-slate-500'
-                }`}
-                title={phaseLabels[p]}
-              />
-            ))}
+            {PHASE_ORDER.map((p, i) => {
+              const currentIndex = PHASE_ORDER.indexOf(phase);
+              return (
+                <button
+                  key={p}
+                  onMouseDown={(e) => { e.preventDefault(); goToPhase(p); }}
+                  className={`h-2 rounded-full transition-all duration-300 ${
+                    phase === p
+                      ? 'bg-gradient-to-r from-red-400 to-orange-400 w-6 shadow-lg shadow-red-500/50'
+                      : currentIndex > i
+                      ? 'bg-emerald-500 w-2'
+                      : 'bg-slate-600 w-2 hover:bg-slate-500'
+                  }`}
+                  title={phaseLabels[p]}
+                />
+              );
+            })}
           </div>
           <span className="text-sm text-slate-400 font-medium">{phaseLabels[phase]}</span>
         </div>

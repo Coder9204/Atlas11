@@ -7,21 +7,11 @@ import React, { useState, useRef, useEffect } from 'react';
 // Shorter tube = higher frequency/pitch
 // Cut straws to create a scale!
 
-interface GameEvent {
-  type: 'phase_change' | 'prediction' | 'result' | 'complete';
-  from?: string;
-  to?: string;
-  phase?: string;
-  prediction?: string;
-  actual?: string;
-  correct?: boolean;
-  score?: number;
-  total?: number;
-  percentage?: number;
-}
-
 interface StrawInstrumentRendererProps {
-  onGameEvent?: (event: GameEvent) => void;
+  phase: 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
+  onPhaseComplete?: () => void;
+  onCorrectAnswer?: () => void;
+  onIncorrectAnswer?: () => void;
 }
 
 type Phase =
@@ -121,8 +111,12 @@ const playPipeSound = (baseFreq: number, duration: number) => {
 // ─────────────────────────────────────────────────────────────
 // Main Component
 // ─────────────────────────────────────────────────────────────
-export default function StrawInstrumentRenderer({ onGameEvent }: StrawInstrumentRendererProps) {
-  const [phase, setPhase] = useState<Phase>('hook');
+export default function StrawInstrumentRenderer({
+  phase,
+  onPhaseComplete,
+  onCorrectAnswer,
+  onIncorrectAnswer
+}: StrawInstrumentRendererProps) {
   const [prediction, setPrediction] = useState<string | null>(null);
   const [showResult, setShowResult] = useState(false);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
@@ -159,10 +153,7 @@ export default function StrawInstrumentRenderer({ onGameEvent }: StrawInstrument
     navigationLockRef.current = true;
     setTimeout(() => { navigationLockRef.current = false; }, 400);
 
-    if (onGameEvent) {
-      onGameEvent({ type: 'phase_change', from: phase, to: newPhase });
-    }
-    setPhase(newPhase);
+    onPhaseComplete?.();
     playGameSound('transition');
   };
 
@@ -204,17 +195,11 @@ export default function StrawInstrumentRenderer({ onGameEvent }: StrawInstrument
 
   const handlePrediction = (choice: string) => {
     setPrediction(choice);
-    if (onGameEvent) {
-      onGameEvent({ type: 'prediction', phase: 'predict', prediction: choice });
-    }
     playGameSound('click');
   };
 
   const handleTwistPrediction = (choice: string) => {
     setTwistPrediction(choice);
-    if (onGameEvent) {
-      onGameEvent({ type: 'prediction', phase: 'twist_predict', prediction: choice });
-    }
     playGameSound('click');
   };
 
@@ -227,129 +212,111 @@ export default function StrawInstrumentRenderer({ onGameEvent }: StrawInstrument
 
   const submitTest = () => {
     setTestSubmitted(true);
-    const score = testQuestions.reduce((acc, tq, i) => acc + (testAnswers[i] === tq.correct ? 1 : 0), 0);
-    if (onGameEvent) {
-      onGameEvent({
-        type: 'result',
-        phase: 'test',
-        score,
-        total: testQuestions.length,
-        percentage: Math.round((score / testQuestions.length) * 100),
-      });
+    const score = testQuestions.reduce((acc, q, i) => {
+      if (testAnswers[i] !== undefined && q.options[testAnswers[i]]?.correct) {
+        return acc + 1;
+      }
+      return acc;
+    }, 0);
+    if (score >= 7) {
+      onCorrectAnswer?.();
+      playGameSound('success');
+    } else {
+      onIncorrectAnswer?.();
+      playGameSound('failure');
     }
-    playGameSound(score >= 7 ? 'success' : 'failure');
   };
 
   const testQuestions = [
     {
-      q: "What happens to pitch when you cut a straw shorter?",
+      question: "What happens to pitch when you cut a straw shorter?",
       options: [
-        "Pitch gets lower",
-        "Pitch gets higher",
-        "Pitch stays the same",
-        "The straw stops making sound"
+        { text: "Pitch gets lower", correct: false },
+        { text: "Pitch gets higher", correct: true },
+        { text: "Pitch stays the same", correct: false },
+        { text: "The straw stops making sound", correct: false }
       ],
-      correct: 1,
-      explanation: "Shorter tubes produce higher pitches. The wavelength that fits in the tube is shorter, meaning higher frequency and higher pitch."
     },
     {
-      q: "What creates the sound in a straw instrument?",
+      question: "What creates the sound in a straw instrument?",
       options: [
-        "Air molecules splitting",
-        "Standing waves (resonance) in the tube",
-        "Static electricity",
-        "Air pressure outside the tube"
+        { text: "Air molecules splitting", correct: false },
+        { text: "Standing waves (resonance) in the tube", correct: true },
+        { text: "Static electricity", correct: false },
+        { text: "Air pressure outside the tube", correct: false }
       ],
-      correct: 1,
-      explanation: "Sound is created by standing waves - patterns where certain wavelengths resonate and reinforce themselves within the tube, amplifying the sound."
     },
     {
-      q: "For an open pipe, the fundamental frequency formula is:",
+      question: "For an open pipe, the fundamental frequency formula is:",
       options: [
-        "f = v / L",
-        "f = v / (2L)",
-        "f = v / (4L)",
-        "f = 2v / L"
+        { text: "f = v / L", correct: false },
+        { text: "f = v / (2L)", correct: true },
+        { text: "f = v / (4L)", correct: false },
+        { text: "f = 2v / L", correct: false }
       ],
-      correct: 1,
-      explanation: "For an open pipe, one complete wavelength spans twice the tube length: λ = 2L. Since f = v/λ, we get f = v/(2L)."
     },
     {
-      q: "If a 20 cm straw produces 850 Hz, what frequency would a 10 cm straw produce?",
+      question: "If a 20 cm straw produces 850 Hz, what frequency would a 10 cm straw produce?",
       options: [
-        "425 Hz",
-        "850 Hz",
-        "1700 Hz",
-        "340 Hz"
+        { text: "425 Hz", correct: false },
+        { text: "850 Hz", correct: false },
+        { text: "1700 Hz", correct: true },
+        { text: "340 Hz", correct: false }
       ],
-      correct: 2,
-      explanation: "Halving the length doubles the frequency. Since f = v/(2L), if L is halved, f doubles: from 850 Hz to 1700 Hz."
     },
     {
-      q: "Why do pan flutes have tubes of different lengths?",
+      question: "Why do pan flutes have tubes of different lengths?",
       options: [
-        "For decoration",
-        "Each length produces a different note",
-        "Longer tubes are louder",
-        "They contain different materials"
+        { text: "For decoration", correct: false },
+        { text: "Each length produces a different note", correct: true },
+        { text: "Longer tubes are louder", correct: false },
+        { text: "They contain different materials", correct: false }
       ],
-      correct: 1,
-      explanation: "Each tube length resonates at a specific frequency, producing a different musical note. Shorter tubes make higher notes, longer tubes make lower notes."
     },
     {
-      q: "What are the nodes in a standing wave?",
+      question: "What are the nodes in a standing wave?",
       options: [
-        "Points of maximum vibration",
-        "Points of no vibration",
-        "The ends of the tube",
-        "Where sound escapes"
+        { text: "Points of maximum vibration", correct: false },
+        { text: "Points of no vibration", correct: true },
+        { text: "The ends of the tube", correct: false },
+        { text: "Where sound escapes", correct: false }
       ],
-      correct: 1,
-      explanation: "Nodes are points in a standing wave where there is no displacement - the wave cancels itself. Anti-nodes are points of maximum displacement."
     },
     {
-      q: "How does a closed pipe differ from an open pipe?",
+      question: "How does a closed pipe differ from an open pipe?",
       options: [
-        "Closed pipes are quieter",
-        "Closed pipes only produce odd harmonics",
-        "Closed pipes produce lower frequencies",
-        "No difference in sound"
+        { text: "Closed pipes are quieter", correct: false },
+        { text: "Closed pipes only produce odd harmonics", correct: true },
+        { text: "Closed pipes produce lower frequencies", correct: false },
+        { text: "No difference in sound", correct: false }
       ],
-      correct: 1,
-      explanation: "Closed pipes (one end blocked) only produce odd harmonics (1st, 3rd, 5th...) because of the boundary condition at the closed end. Open pipes produce all harmonics."
     },
     {
-      q: "What is resonance in the context of musical instruments?",
+      question: "What is resonance in the context of musical instruments?",
       options: [
-        "When sound bounces back",
-        "When certain frequencies are amplified by constructive interference",
-        "When air gets compressed",
-        "When the tube vibrates visibly"
+        { text: "When sound bounces back", correct: false },
+        { text: "When certain frequencies are amplified by constructive interference", correct: true },
+        { text: "When air gets compressed", correct: false },
+        { text: "When the tube vibrates visibly", correct: false }
       ],
-      correct: 1,
-      explanation: "Resonance occurs when a frequency matches the natural frequency of the system, causing constructive interference and amplification. This is what makes instruments loud."
     },
     {
-      q: "If you blow harder into a straw, what primarily changes?",
+      question: "If you blow harder into a straw, what primarily changes?",
       options: [
-        "Pitch increases significantly",
-        "Volume increases (pitch may rise slightly)",
-        "Wavelength changes",
-        "Nothing changes"
+        { text: "Pitch increases significantly", correct: false },
+        { text: "Volume increases (pitch may rise slightly)", correct: true },
+        { text: "Wavelength changes", correct: false },
+        { text: "Nothing changes", correct: false }
       ],
-      correct: 1,
-      explanation: "Blowing harder primarily increases volume (amplitude). Pitch may increase slightly due to higher harmonics becoming more prominent, but the fundamental stays roughly the same."
     },
     {
-      q: "Why does a straw with a flattened end (like a reed) make sound easier?",
+      question: "Why does a straw with a flattened end (like a reed) make sound easier?",
       options: [
-        "Air flows faster",
-        "The vibrating reed creates regular pressure pulses",
-        "The straw gets longer",
-        "Air becomes denser"
+        { text: "Air flows faster", correct: false },
+        { text: "The vibrating reed creates regular pressure pulses", correct: true },
+        { text: "The straw gets longer", correct: false },
+        { text: "Air becomes denser", correct: false }
       ],
-      correct: 1,
-      explanation: "A flattened end acts like a double reed, vibrating rapidly to create regular pressure pulses that excite the air column. This is how oboes and bassoons work!"
     }
   ];
 
@@ -684,14 +651,10 @@ export default function StrawInstrumentRenderer({ onGameEvent }: StrawInstrument
               <button
                 onMouseDown={() => {
                   setShowResult(true);
-                  if (onGameEvent) {
-                    onGameEvent({
-                      type: 'result',
-                      phase: 'play',
-                      prediction,
-                      actual: 'b',
-                      correct: prediction === 'b'
-                    });
+                  if (prediction === 'b') {
+                    onCorrectAnswer?.();
+                  } else {
+                    onIncorrectAnswer?.();
                   }
                 }}
                 style={{
@@ -1041,14 +1004,10 @@ export default function StrawInstrumentRenderer({ onGameEvent }: StrawInstrument
             <button
               onMouseDown={() => {
                 setShowTwistResult(true);
-                if (onGameEvent) {
-                  onGameEvent({
-                    type: 'result',
-                    phase: 'twist_play',
-                    prediction: twistPrediction,
-                    actual: 'b',
-                    correct: twistPrediction === 'b'
-                  });
+                if (twistPrediction === 'b') {
+                  onCorrectAnswer?.();
+                } else {
+                  onIncorrectAnswer?.();
                 }
               }}
               style={{
@@ -1267,7 +1226,12 @@ export default function StrawInstrumentRenderer({ onGameEvent }: StrawInstrument
       // TEST
       // ───────────────────────────────────────────────────
       case 'test':
-        const score = testQuestions.reduce((acc, tq, i) => acc + (testAnswers[i] === tq.correct ? 1 : 0), 0);
+        const score = testQuestions.reduce((acc, q, i) => {
+          if (testAnswers[i] !== undefined && q.options[testAnswers[i]]?.correct) {
+            return acc + 1;
+          }
+          return acc;
+        }, 0);
 
         return (
           <div className="flex flex-col items-center">
@@ -1276,7 +1240,9 @@ export default function StrawInstrumentRenderer({ onGameEvent }: StrawInstrument
             </h2>
 
             <div style={{ width: '100%', maxWidth: 600 }}>
-              {testQuestions.map((tq, qi) => (
+              {testQuestions.map((tq, qi) => {
+                const isCorrect = tq.options[testAnswers[qi]]?.correct;
+                return (
                 <div
                   key={qi}
                   style={{
@@ -1286,7 +1252,7 @@ export default function StrawInstrumentRenderer({ onGameEvent }: StrawInstrument
                     marginBottom: '1rem',
                     border: `2px solid ${
                       testSubmitted
-                        ? testAnswers[qi] === tq.correct
+                        ? isCorrect
                           ? '#22c55e'
                           : testAnswers[qi] !== undefined
                           ? '#ef4444'
@@ -1296,7 +1262,7 @@ export default function StrawInstrumentRenderer({ onGameEvent }: StrawInstrument
                   }}
                 >
                   <p style={{ fontWeight: 600, color: '#1e293b', marginBottom: '0.75rem' }}>
-                    {qi + 1}. {tq.q}
+                    {qi + 1}. {tq.question}
                   </p>
 
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
@@ -1309,7 +1275,7 @@ export default function StrawInstrumentRenderer({ onGameEvent }: StrawInstrument
                           padding: '0.6rem 1rem',
                           textAlign: 'left',
                           background: testSubmitted
-                            ? oi === tq.correct
+                            ? opt.correct
                               ? '#dcfce7'
                               : testAnswers[qi] === oi
                               ? '#fee2e2'
@@ -1320,7 +1286,7 @@ export default function StrawInstrumentRenderer({ onGameEvent }: StrawInstrument
                           color: '#1e293b',
                           border: `1px solid ${
                             testSubmitted
-                              ? oi === tq.correct
+                              ? opt.correct
                                 ? '#22c55e'
                                 : testAnswers[qi] === oi
                                 ? '#ef4444'
@@ -1334,25 +1300,12 @@ export default function StrawInstrumentRenderer({ onGameEvent }: StrawInstrument
                           fontSize: '0.9rem'
                         }}
                       >
-                        {opt}
+                        {opt.text}
                       </button>
                     ))}
                   </div>
-
-                  {testSubmitted && (
-                    <p style={{
-                      marginTop: '0.75rem',
-                      padding: '0.5rem',
-                      background: '#f0f9ff',
-                      borderRadius: 6,
-                      fontSize: '0.85rem',
-                      color: '#1e293b'
-                    }}>
-                      💡 {tq.explanation}
-                    </p>
-                  )}
                 </div>
-              ))}
+              )})}
             </div>
 
             {!testSubmitted ? (
@@ -1409,7 +1362,12 @@ export default function StrawInstrumentRenderer({ onGameEvent }: StrawInstrument
       // MASTERY
       // ───────────────────────────────────────────────────
       case 'mastery':
-        const finalScore = testQuestions.reduce((acc, tq, i) => acc + (testAnswers[i] === tq.correct ? 1 : 0), 0);
+        const finalScore = testQuestions.reduce((acc, q, i) => {
+          if (testAnswers[i] !== undefined && q.options[testAnswers[i]]?.correct) {
+            return acc + 1;
+          }
+          return acc;
+        }, 0);
 
         return (
           <div className="flex flex-col items-center" style={{ textAlign: 'center' }}>
@@ -1490,14 +1448,8 @@ export default function StrawInstrumentRenderer({ onGameEvent }: StrawInstrument
 
             <button
               onMouseDown={() => {
-                if (onGameEvent) {
-                  onGameEvent({ type: 'complete', score: finalScore, total: testQuestions.length });
-                }
-                goToPhase('hook');
-                setTestAnswers({});
-                setTestSubmitted(false);
-                setCompletedApps(new Set());
-                setHasPlayed(false);
+                onPhaseComplete?.();
+                playGameSound('complete');
               }}
               style={{
                 marginTop: '1rem',
@@ -1511,7 +1463,7 @@ export default function StrawInstrumentRenderer({ onGameEvent }: StrawInstrument
                 fontWeight: 600
               }}
             >
-              Play Again
+              Complete Lesson
             </button>
           </div>
         );

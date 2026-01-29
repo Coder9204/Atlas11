@@ -24,8 +24,10 @@ interface GameEvent {
 }
 
 interface OrbitalMechanicsRendererProps {
-  onEvent?: (event: GameEvent) => void;
-  savedState?: GameState | null;
+  phase: 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
+  onPhaseComplete?: () => void;
+  onCorrectAnswer?: () => void;
+  onIncorrectAnswer?: () => void;
 }
 
 interface GameState {
@@ -49,42 +51,38 @@ const TEST_QUESTIONS = [
   {
     question: 'What keeps the ISS in orbit around Earth?',
     options: [
-      'Rocket engines firing continuously',
-      'It\'s outside Earth\'s gravity',
-      'It\'s falling toward Earth but moving sideways fast enough to miss',
-      'Magnetic repulsion from Earth\'s core'
-    ],
-    correct: 2
+      { text: 'Rocket engines firing continuously', correct: false },
+      { text: 'It\'s outside Earth\'s gravity', correct: false },
+      { text: 'It\'s falling toward Earth but moving sideways fast enough to miss', correct: true },
+      { text: 'Magnetic repulsion from Earth\'s core', correct: false }
+    ]
   },
   {
     question: 'If you throw a ball horizontally on Earth, why doesn\'t it orbit?',
     options: [
-      'Balls can\'t orbit',
-      'It doesn\'t have enough horizontal speed - it hits the ground',
-      'Air pushes it down',
-      'Gravity is too strong at ground level'
-    ],
-    correct: 1
+      { text: 'Balls can\'t orbit', correct: false },
+      { text: 'It doesn\'t have enough horizontal speed - it hits the ground', correct: true },
+      { text: 'Air pushes it down', correct: false },
+      { text: 'Gravity is too strong at ground level', correct: false }
+    ]
   },
   {
     question: 'Why do astronauts float inside the ISS?',
     options: [
-      'There\'s no gravity in space',
-      'The ISS has anti-gravity generators',
-      'They\'re falling at the same rate as the station (free fall)',
-      'They\'re too far from Earth for gravity'
-    ],
-    correct: 2
+      { text: 'There\'s no gravity in space', correct: false },
+      { text: 'The ISS has anti-gravity generators', correct: false },
+      { text: 'They\'re falling at the same rate as the station (free fall)', correct: true },
+      { text: 'They\'re too far from Earth for gravity', correct: false }
+    ]
   },
   {
     question: 'To orbit higher, a satellite needs to:',
     options: [
-      'Move faster',
-      'Move slower (orbital velocity decreases with altitude)',
-      'Weigh less',
-      'Be larger'
-    ],
-    correct: 1
+      { text: 'Move faster', correct: false },
+      { text: 'Move slower (orbital velocity decreases with altitude)', correct: true },
+      { text: 'Weigh less', correct: false },
+      { text: 'Be larger', correct: false }
+    ]
   }
 ];
 
@@ -148,15 +146,13 @@ function playSound(type: 'click' | 'success' | 'failure' | 'transition' | 'compl
 // ─────────────────────────────────────────────────────────────────────────────
 // MAIN COMPONENT
 // ─────────────────────────────────────────────────────────────────────────────
-export default function OrbitalMechanicsRenderer({ onEvent, savedState }: OrbitalMechanicsRendererProps) {
+export default function OrbitalMechanicsRenderer({ phase: initialPhase, onPhaseComplete, onCorrectAnswer, onIncorrectAnswer }: OrbitalMechanicsRendererProps) {
   // ─── State ───────────────────────────────────────────────────────────────────
-  const [phase, setPhase] = useState<Phase>(savedState?.phase || 'hook');
-  const [prediction, setPrediction] = useState<string | null>(savedState?.prediction || null);
-  const [twistPrediction, setTwistPrediction] = useState<string | null>(savedState?.twistPrediction || null);
-  const [testAnswers, setTestAnswers] = useState<number[]>(savedState?.testAnswers || []);
-  const [completedApps, setCompletedApps] = useState<Set<number>>(
-    new Set(savedState?.completedApps || [])
-  );
+  const [phase, setPhase] = useState<Phase>(initialPhase || 'hook');
+  const [prediction, setPrediction] = useState<string | null>(null);
+  const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
+  const [testAnswers, setTestAnswers] = useState<number[]>([]);
+  const [completedApps, setCompletedApps] = useState<Set<number>>(new Set());
 
   // Simulation state
   const [launchSpeed, setLaunchSpeed] = useState(5); // km/s scale
@@ -177,17 +173,13 @@ export default function OrbitalMechanicsRenderer({ onEvent, savedState }: Orbita
   const EARTH_CENTER = { x: 200, y: 300 };
 
   // ─── Helpers ─────────────────────────────────────────────────────────────────
-  const emitEvent = (type: GameEvent['type'], data: Record<string, unknown> = {}) => {
-    onEvent?.({ type, phase, data });
-  };
-
   const goToPhase = (newPhase: Phase) => {
     if (navigationLockRef.current) return;
     navigationLockRef.current = true;
 
     playSound('transition');
     setPhase(newPhase);
-    emitEvent('interaction', { action: 'phase_change', from: phase, to: newPhase });
+    if (onPhaseComplete) onPhaseComplete();
 
     setTimeout(() => {
       navigationLockRef.current = false;
@@ -664,7 +656,6 @@ export default function OrbitalMechanicsRenderer({ onEvent, savedState }: Orbita
             onMouseDown={() => {
               playSound('click');
               setPrediction(option.id);
-              emitEvent('prediction', { prediction: option.id });
             }}
             className={`p-4 rounded-xl border-2 transition-all text-left ${
               prediction === option.id
@@ -827,7 +818,6 @@ export default function OrbitalMechanicsRenderer({ onEvent, savedState }: Orbita
             onMouseDown={() => {
               playSound('click');
               setTwistPrediction(option.id);
-              emitEvent('prediction', { twistPrediction: option.id });
             }}
             className={`p-4 rounded-xl border-2 transition-all text-left ${
               twistPrediction === option.id
@@ -928,7 +918,6 @@ export default function OrbitalMechanicsRenderer({ onEvent, savedState }: Orbita
             onMouseDown={() => {
               playSound('click');
               setCompletedApps(prev => new Set([...prev, index]));
-              emitEvent('interaction', { app: app.title });
             }}
             className={`p-4 rounded-xl border-2 transition-all text-left ${
               completedApps.has(index)
@@ -961,7 +950,8 @@ export default function OrbitalMechanicsRenderer({ onEvent, savedState }: Orbita
     const question = TEST_QUESTIONS[currentQuestion];
 
     if (!question) {
-      const score = testAnswers.filter((a, i) => a === TEST_QUESTIONS[i].correct).length;
+      const score = testAnswers.filter((a, i) => TEST_QUESTIONS[i].options[a]?.correct).length;
+      if (score >= 3 && onCorrectAnswer) onCorrectAnswer();
       return (
         <div className="text-center space-y-6">
           <div className="text-6xl">{score >= 3 ? '🎉' : '📚'}</div>
@@ -990,13 +980,12 @@ export default function OrbitalMechanicsRenderer({ onEvent, savedState }: Orbita
             <button
               key={i}
               onMouseDown={() => {
-                playSound(i === question.correct ? 'success' : 'failure');
+                playSound(option.correct ? 'success' : 'failure');
                 setTestAnswers([...testAnswers, i]);
-                emitEvent('interaction', { question: currentQuestion, answer: i, correct: i === question.correct });
               }}
               className="p-4 rounded-xl border-2 border-gray-700 bg-gray-800/50 hover:border-blue-500 transition-all text-left text-gray-200"
             >
-              {option}
+              {option.text}
             </button>
           ))}
         </div>
@@ -1023,7 +1012,7 @@ export default function OrbitalMechanicsRenderer({ onEvent, savedState }: Orbita
       <button
         onMouseDown={() => {
           playSound('complete');
-          emitEvent('completion', { mastered: true });
+          if (onPhaseComplete) onPhaseComplete();
         }}
         className="px-8 py-3 bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl text-white font-semibold hover:from-blue-500 hover:to-purple-500 transition-all"
       >

@@ -2,36 +2,14 @@
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 
-// ═══════════════════════════════════════════════════════════════════════════
+// ===============================================================================
 // TYPES & INTERFACES
-// ═══════════════════════════════════════════════════════════════════════════
-type GameEventType =
-  | 'phase_change'
-  | 'prediction_made'
-  | 'simulation_started'
-  | 'parameter_changed'
-  | 'twist_prediction_made'
-  | 'app_explored'
-  | 'test_answered'
-  | 'test_completed'
-  | 'mastery_achieved';
-
-interface GameEvent {
-  type: GameEventType;
-  data?: Record<string, unknown>;
-}
-
-// Numeric phases: 0=hook, 1=predict, 2=play, 3=review, 4=twist_predict, 5=twist_play, 6=twist_review, 7=transfer, 8=test, 9=mastery
-const PHASES: number[] = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
-const phaseLabels: Record<number, string> = {
-  0: 'Hook', 1: 'Predict', 2: 'Lab', 3: 'Review', 4: 'Twist Predict',
-  5: 'Twist Lab', 6: 'Twist Review', 7: 'Transfer', 8: 'Test', 9: 'Mastery'
-};
-
-interface Props {
-  onGameEvent?: (event: GameEvent) => void;
-  currentPhase?: number;
-  onPhaseComplete?: (phase: number) => void;
+// ===============================================================================
+interface CapacitiveTouchRendererProps {
+  phase: 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
+  onPhaseComplete?: () => void;
+  onCorrectAnswer?: () => void;
+  onIncorrectAnswer?: () => void;
 }
 
 interface TouchPoint {
@@ -40,49 +18,45 @@ interface TouchPoint {
   capacitance: number;
 }
 
-// ═══════════════════════════════════════════════════════════════════════════
+// ===============================================================================
 // CONSTANTS
-// ═══════════════════════════════════════════════════════════════════════════
+// ===============================================================================
 const TEST_QUESTIONS = [
   {
     question: 'What does your finger change when touching a capacitive screen?',
     options: [
-      'The screen temperature',
-      'The local capacitance in the touch grid',
-      'The screen brightness',
-      'The electrical resistance'
-    ],
-    correct: 1
+      { text: 'The screen temperature', correct: false },
+      { text: 'The local capacitance in the touch grid', correct: true },
+      { text: 'The screen brightness', correct: false },
+      { text: 'The electrical resistance', correct: false }
+    ]
   },
   {
     question: 'Why don\'t regular gloves work on touchscreens?',
     options: [
-      'They\'re too thick to press hard enough',
-      'They block the capacitive coupling with your body',
-      'They create static electricity',
-      'The screen can\'t sense warmth through them'
-    ],
-    correct: 1
+      { text: 'They\'re too thick to press hard enough', correct: false },
+      { text: 'They block the capacitive coupling with your body', correct: true },
+      { text: 'They create static electricity', correct: false },
+      { text: 'The screen can\'t sense warmth through them', correct: false }
+    ]
   },
   {
     question: 'How does the screen know WHERE you touched?',
     options: [
-      'A camera watches your finger',
-      'Pressure sensors under the glass',
-      'Grid of electrodes detects which intersection changed',
-      'Sound waves bounce off your finger'
-    ],
-    correct: 2
+      { text: 'A camera watches your finger', correct: false },
+      { text: 'Pressure sensors under the glass', correct: false },
+      { text: 'Grid of electrodes detects which intersection changed', correct: true },
+      { text: 'Sound waves bounce off your finger', correct: false }
+    ]
   },
   {
     question: 'Why can capacitive screens detect multiple touches?',
     options: [
-      'Multiple pressure sensors',
-      'Each touch point changes capacitance at a different grid location',
-      'The screen has multiple layers',
-      'The CPU is very fast'
-    ],
-    correct: 1
+      { text: 'Multiple pressure sensors', correct: false },
+      { text: 'Each touch point changes capacitance at a different grid location', correct: true },
+      { text: 'The screen has multiple layers', correct: false },
+      { text: 'The CPU is very fast', correct: false }
+    ]
   }
 ];
 
@@ -109,17 +83,22 @@ const TRANSFER_APPS = [
   }
 ];
 
-// ═══════════════════════════════════════════════════════════════════════════
+// ===============================================================================
 // MAIN COMPONENT
-// ═══════════════════════════════════════════════════════════════════════════
-const CapacitiveTouchRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onPhaseComplete }) => {
-  const [phase, setPhase] = useState<number>(currentPhase ?? 0);
+// ===============================================================================
+const CapacitiveTouchRenderer: React.FC<CapacitiveTouchRendererProps> = ({
+  phase,
+  onPhaseComplete,
+  onCorrectAnswer,
+  onIncorrectAnswer
+}) => {
   const [showPredictionFeedback, setShowPredictionFeedback] = useState(false);
   const [selectedPrediction, setSelectedPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
   const [showTwistFeedback, setShowTwistFeedback] = useState(false);
-  const [testAnswers, setTestAnswers] = useState<number[]>(Array(4).fill(-1));
+  const [testAnswers, setTestAnswers] = useState<(number | null)[]>(new Array(TEST_QUESTIONS.length).fill(null));
   const [showTestResults, setShowTestResults] = useState(false);
+  const [testScore, setTestScore] = useState(0);
   const [completedApps, setCompletedApps] = useState<Set<number>>(new Set());
   const [activeAppTab, setActiveAppTab] = useState(0);
 
@@ -129,16 +108,8 @@ const CapacitiveTouchRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, o
   const [showGrid, setShowGrid] = useState(true);
   const [touchMode, setTouchMode] = useState<'finger' | 'glove' | 'capacitiveGlove'>('finger');
 
-  const navigationLockRef = useRef(false);
   const lastClickRef = useRef(0);
   const svgRef = useRef<SVGSVGElement>(null);
-
-  // Phase sync
-  useEffect(() => {
-    if (currentPhase !== undefined && currentPhase !== phase) {
-      setPhase(currentPhase);
-    }
-  }, [currentPhase, phase]);
 
   const playSound = useCallback((type: 'click' | 'success' | 'failure' | 'transition' | 'complete') => {
     if (typeof window === 'undefined') return;
@@ -164,16 +135,6 @@ const CapacitiveTouchRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, o
       oscillator.stop(audioContext.currentTime + sound.duration);
     } catch { /* Audio not available */ }
   }, []);
-
-  const goToPhase = useCallback((newPhase: number) => {
-    if (navigationLockRef.current) return;
-    navigationLockRef.current = true;
-    playSound('transition');
-    setPhase(newPhase);
-    onPhaseComplete?.(newPhase);
-    onGameEvent?.({ type: 'phase_change', data: { phase: newPhase, phaseLabel: phaseLabels[newPhase] } });
-    setTimeout(() => { navigationLockRef.current = false; }, 400);
-  }, [playSound, onPhaseComplete, onGameEvent]);
 
   const handleSvgTouch = (e: React.MouseEvent<SVGSVGElement> | React.TouchEvent<SVGSVGElement>) => {
     if (!svgRef.current) return;
@@ -204,12 +165,12 @@ const CapacitiveTouchRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, o
   const handleTouchEnd = () => setTouchPoints([]);
 
   useEffect(() => {
-    if (phase === 2) {
+    if (phase === 'play') {
       setTouchPoints([]);
       setIsFingerMode(true);
       setShowGrid(true);
     }
-    if (phase === 5) {
+    if (phase === 'twist_play') {
       setTouchPoints([]);
       setTouchMode('finger');
     }
@@ -252,7 +213,18 @@ const CapacitiveTouchRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, o
     playSound('complete');
   }, [playSound]);
 
-  const calculateScore = () => testAnswers.reduce((score, answer, index) => score + (answer === TEST_QUESTIONS[index].correct ? 1 : 0), 0);
+  const submitTest = () => {
+    let score = 0;
+    TEST_QUESTIONS.forEach((q, i) => {
+      if (testAnswers[i] !== null && q.options[testAnswers[i]!].correct) {
+        score++;
+      }
+    });
+    setTestScore(score);
+    setShowTestResults(true);
+    if (score >= 3 && onCorrectAnswer) onCorrectAnswer();
+    else if (onIncorrectAnswer) onIncorrectAnswer();
+  };
 
   const renderTouchScreen = (mode: 'finger' | 'glove' | 'capacitiveGlove' = 'finger', points: TouchPoint[]) => {
     const gridSize = 8;
@@ -363,464 +335,507 @@ const CapacitiveTouchRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, o
     </svg>
   );
 
-  const renderHook = () => (
-    <div className="flex flex-col items-center justify-center min-h-[600px] px-6 py-12 text-center">
-      <div className="inline-flex items-center gap-2 px-4 py-2 bg-cyan-500/10 border border-cyan-500/20 rounded-full mb-8">
-        <span className="w-2 h-2 bg-cyan-400 rounded-full animate-pulse" />
-        <span className="text-sm font-medium text-cyan-400 tracking-wide">PHYSICS EXPLORATION</span>
+  const colors = {
+    textPrimary: '#f8fafc',
+    textSecondary: '#e2e8f0',
+    textMuted: '#94a3b8',
+    bgPrimary: '#0f172a',
+    bgCard: 'rgba(30, 41, 59, 0.9)',
+    bgDark: 'rgba(15, 23, 42, 0.95)',
+    accent: '#06b6d4',
+    accentGlow: 'rgba(6, 182, 212, 0.4)',
+    success: '#10b981',
+    warning: '#f59e0b',
+    error: '#ef4444',
+  };
+
+  const renderBottomBar = (disabled: boolean, canProceed: boolean, buttonText: string) => (
+    <div style={{
+      position: 'fixed',
+      bottom: 0,
+      left: 0,
+      right: 0,
+      padding: '16px 24px',
+      background: colors.bgDark,
+      borderTop: `1px solid rgba(255,255,255,0.1)`,
+      display: 'flex',
+      justifyContent: 'flex-end',
+      zIndex: 1000,
+    }}>
+      <button
+        onClick={onPhaseComplete}
+        disabled={disabled && !canProceed}
+        style={{
+          padding: '12px 32px',
+          borderRadius: '8px',
+          border: 'none',
+          background: canProceed ? colors.accent : 'rgba(255,255,255,0.1)',
+          color: canProceed ? 'white' : colors.textMuted,
+          fontWeight: 'bold',
+          cursor: canProceed ? 'pointer' : 'not-allowed',
+          fontSize: '16px',
+        }}
+      >
+        {buttonText}
+      </button>
+    </div>
+  );
+
+  // HOOK PHASE
+  if (phase === 'hook') {
+    return (
+      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+          <div className="flex flex-col items-center justify-center min-h-[600px] px-6 py-12 text-center">
+            <div className="inline-flex items-center gap-2 px-4 py-2 bg-cyan-500/10 border border-cyan-500/20 rounded-full mb-8">
+              <span className="w-2 h-2 bg-cyan-400 rounded-full animate-pulse" />
+              <span className="text-sm font-medium text-cyan-400 tracking-wide">PHYSICS EXPLORATION</span>
+            </div>
+            <h1 className="text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-white via-cyan-100 to-blue-200 bg-clip-text text-transparent">
+              The Invisible Touch
+            </h1>
+            <p className="text-lg text-slate-400 max-w-md mb-10">
+              How does your phone know exactly where you touched?
+            </p>
+            <div className="relative bg-gradient-to-br from-slate-800/80 to-slate-900/80 rounded-3xl p-8 max-w-xl w-full border border-slate-700/50 shadow-2xl shadow-black/20">
+              <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/5 via-transparent to-blue-500/5 rounded-3xl" />
+              <div className="relative">
+                <div className="text-6xl mb-6">📱👆</div>
+                <div className="mt-4 space-y-4">
+                  <p className="text-xl text-white/90 font-medium leading-relaxed">
+                    Your phone screen isn&apos;t pressing any buttons. It&apos;s just smooth glass.
+                  </p>
+                  <p className="text-lg text-slate-400 leading-relaxed">
+                    Yet it knows exactly where your finger is, and can track 10 fingers at once!
+                  </p>
+                  <div className="pt-2">
+                    <p className="text-base text-cyan-400 font-semibold">
+                      The secret: your body is a conductor!
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        {renderBottomBar(false, true, 'Make a Prediction')}
       </div>
-      <h1 className="text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-white via-cyan-100 to-blue-200 bg-clip-text text-transparent">
-        The Invisible Touch
-      </h1>
-      <p className="text-lg text-slate-400 max-w-md mb-10">
-        How does your phone know exactly where you touched?
-      </p>
-      <div className="relative bg-gradient-to-br from-slate-800/80 to-slate-900/80 rounded-3xl p-8 max-w-xl w-full border border-slate-700/50 shadow-2xl shadow-black/20">
-        <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/5 via-transparent to-blue-500/5 rounded-3xl" />
-        <div className="relative">
-          <div className="text-6xl mb-6">📱👆</div>
-          <div className="mt-4 space-y-4">
-            <p className="text-xl text-white/90 font-medium leading-relaxed">
-              Your phone screen isn&apos;t pressing any buttons. It&apos;s just smooth glass.
-            </p>
-            <p className="text-lg text-slate-400 leading-relaxed">
-              Yet it knows exactly where your finger is, and can track 10 fingers at once!
-            </p>
-            <div className="pt-2">
-              <p className="text-base text-cyan-400 font-semibold">
-                The secret: your body is a conductor!
+    );
+  }
+
+  // PREDICT PHASE
+  if (phase === 'predict') {
+    return (
+      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+          <div className="flex flex-col items-center justify-center min-h-[500px] p-6">
+            <h2 className="text-2xl font-bold text-white mb-6">Make Your Prediction</h2>
+            <div className="bg-slate-800/50 rounded-2xl p-6 max-w-2xl mb-6">
+              <p className="text-lg text-slate-300 mb-4">
+                A capacitive touchscreen has a grid of electrodes under the glass.
+                What does your finger actually change when you touch the screen?
+              </p>
+            </div>
+            <div className="grid gap-3 w-full max-w-xl">
+              {[
+                { id: 'A', text: 'It presses a tiny button at that location' },
+                { id: 'B', text: 'It changes the local electric field/capacitance' },
+                { id: 'C', text: 'It heats the glass and a sensor detects warmth' },
+                { id: 'D', text: 'It reflects light back to a camera' }
+              ].map(option => (
+                <button
+                  key={option.id}
+                  onMouseDown={(e) => { e.preventDefault(); handlePrediction(option.id); }}
+                  disabled={showPredictionFeedback}
+                  className={`p-4 rounded-xl text-left transition-all duration-300 ${
+                    showPredictionFeedback && selectedPrediction === option.id
+                      ? option.id === 'B' ? 'bg-emerald-600/40 border-2 border-emerald-400' : 'bg-red-600/40 border-2 border-red-400'
+                      : showPredictionFeedback && option.id === 'B' ? 'bg-emerald-600/40 border-2 border-emerald-400'
+                      : 'bg-slate-700/50 hover:bg-slate-600/50 border-2 border-transparent'
+                  }`}
+                >
+                  <span className="font-bold text-white">{option.id}.</span>
+                  <span className="text-slate-200 ml-2">{option.text}</span>
+                </button>
+              ))}
+            </div>
+            {showPredictionFeedback && (
+              <div className="mt-6 p-4 bg-slate-800/70 rounded-xl max-w-xl">
+                <p className="text-emerald-400 font-semibold">
+                  Correct! Your finger changes the local capacitance in the touch grid!
+                </p>
+              </div>
+            )}
+          </div>
+        </div>
+        {renderBottomBar(true, !!selectedPrediction, 'Test My Prediction')}
+      </div>
+    );
+  }
+
+  // PLAY PHASE
+  if (phase === 'play') {
+    return (
+      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+          <div className="flex flex-col items-center p-6">
+            <h2 className="text-2xl font-bold text-white mb-4">Capacitive Touch Grid</h2>
+            <div className="bg-slate-800/50 rounded-2xl p-6 mb-4">
+              {renderTouchScreen(isFingerMode ? 'finger' : 'glove', touchPoints)}
+            </div>
+            <div className="flex justify-center gap-4 mb-6">
+              <button
+                onMouseDown={(e) => { e.preventDefault(); setIsFingerMode(true); setTouchPoints([]); }}
+                className={`px-4 py-2 rounded-lg font-bold ${isFingerMode ? 'bg-cyan-600 text-white' : 'bg-slate-600 text-slate-300'}`}
+              >
+                Bare Finger
+              </button>
+              <button
+                onMouseDown={(e) => { e.preventDefault(); setShowGrid(!showGrid); }}
+                className={`px-4 py-2 rounded-lg font-bold ${showGrid ? 'bg-green-600 text-white' : 'bg-slate-600 text-slate-300'}`}
+              >
+                {showGrid ? 'Hide' : 'Show'} Grid
+              </button>
+            </div>
+            <div className="bg-gradient-to-r from-blue-900/40 to-cyan-900/40 rounded-xl p-4 max-w-2xl w-full mb-6">
+              <p className="text-slate-300 text-center">
+                Your conductive finger acts as a capacitor plate!
+                The screen measures capacitance changes at each grid intersection.
               </p>
             </div>
           </div>
         </div>
+        {renderBottomBar(false, true, 'Continue to Review')}
       </div>
-      <button
-        onMouseDown={(e) => { e.preventDefault(); goToPhase(1); }}
-        className="mt-10 group relative px-10 py-5 bg-gradient-to-r from-cyan-500 to-blue-600 text-white text-lg font-semibold rounded-2xl transition-all duration-300 hover:shadow-lg hover:shadow-cyan-500/25 hover:scale-[1.02] active:scale-[0.98]"
-      >
-        <span className="relative z-10 flex items-center gap-3">
-          Discover the Secret
-          <svg className="w-5 h-5 transition-transform group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-          </svg>
-        </span>
-      </button>
-      <div className="mt-12 flex items-center gap-8 text-sm text-slate-500">
-        <div className="flex items-center gap-2"><span className="text-cyan-400">+</span>Interactive Lab</div>
-        <div className="flex items-center gap-2"><span className="text-cyan-400">+</span>Real-World Examples</div>
-        <div className="flex items-center gap-2"><span className="text-cyan-400">+</span>Knowledge Test</div>
-      </div>
-    </div>
-  );
+    );
+  }
 
-  const renderPredict = () => (
-    <div className="flex flex-col items-center justify-center min-h-[500px] p-6">
-      <h2 className="text-2xl font-bold text-white mb-6">Make Your Prediction</h2>
-      <div className="bg-slate-800/50 rounded-2xl p-6 max-w-2xl mb-6">
-        <p className="text-lg text-slate-300 mb-4">
-          A capacitive touchscreen has a grid of electrodes under the glass.
-          What does your finger actually change when you touch the screen?
-        </p>
-      </div>
-      <div className="grid gap-3 w-full max-w-xl">
-        {[
-          { id: 'A', text: 'It presses a tiny button at that location' },
-          { id: 'B', text: 'It changes the local electric field/capacitance' },
-          { id: 'C', text: 'It heats the glass and a sensor detects warmth' },
-          { id: 'D', text: 'It reflects light back to a camera' }
-        ].map(option => (
-          <button
-            key={option.id}
-            onMouseDown={(e) => { e.preventDefault(); handlePrediction(option.id); }}
-            disabled={showPredictionFeedback}
-            className={`p-4 rounded-xl text-left transition-all duration-300 ${
-              showPredictionFeedback && selectedPrediction === option.id
-                ? option.id === 'B' ? 'bg-emerald-600/40 border-2 border-emerald-400' : 'bg-red-600/40 border-2 border-red-400'
-                : showPredictionFeedback && option.id === 'B' ? 'bg-emerald-600/40 border-2 border-emerald-400'
-                : 'bg-slate-700/50 hover:bg-slate-600/50 border-2 border-transparent'
-            }`}
-          >
-            <span className="font-bold text-white">{option.id}.</span>
-            <span className="text-slate-200 ml-2">{option.text}</span>
-          </button>
-        ))}
-      </div>
-      {showPredictionFeedback && (
-        <div className="mt-6 p-4 bg-slate-800/70 rounded-xl max-w-xl">
-          <p className="text-emerald-400 font-semibold">
-            Correct! Your finger changes the local capacitance in the touch grid!
-          </p>
-          <button
-            onMouseDown={(e) => { e.preventDefault(); goToPhase(2); }}
-            className="mt-4 px-6 py-3 bg-gradient-to-r from-blue-600 to-cyan-600 text-white font-semibold rounded-xl"
-          >
-            Explore the Physics
-          </button>
-        </div>
-      )}
-    </div>
-  );
-
-  const renderPlay = () => (
-    <div className="flex flex-col items-center p-6">
-      <h2 className="text-2xl font-bold text-white mb-4">Capacitive Touch Grid</h2>
-      <div className="bg-slate-800/50 rounded-2xl p-6 mb-4">
-        {renderTouchScreen(isFingerMode ? 'finger' : 'glove', touchPoints)}
-      </div>
-      <div className="flex justify-center gap-4 mb-6">
-        <button
-          onMouseDown={(e) => { e.preventDefault(); setIsFingerMode(true); setTouchPoints([]); }}
-          className={`px-4 py-2 rounded-lg font-bold ${isFingerMode ? 'bg-cyan-600 text-white' : 'bg-slate-600 text-slate-300'}`}
-        >
-          Bare Finger
-        </button>
-        <button
-          onMouseDown={(e) => { e.preventDefault(); setShowGrid(!showGrid); }}
-          className={`px-4 py-2 rounded-lg font-bold ${showGrid ? 'bg-green-600 text-white' : 'bg-slate-600 text-slate-300'}`}
-        >
-          {showGrid ? 'Hide' : 'Show'} Grid
-        </button>
-      </div>
-      <div className="bg-gradient-to-r from-blue-900/40 to-cyan-900/40 rounded-xl p-4 max-w-2xl w-full mb-6">
-        <p className="text-slate-300 text-center">
-          Your conductive finger acts as a capacitor plate!
-          The screen measures capacitance changes at each grid intersection.
-        </p>
-      </div>
-      <button onMouseDown={(e) => { e.preventDefault(); goToPhase(3); }} className="mt-6 px-6 py-3 bg-gradient-to-r from-blue-600 to-cyan-600 text-white font-semibold rounded-xl">
-        Understand the Physics
-      </button>
-    </div>
-  );
-
-  const renderReview = () => (
-    <div className="flex flex-col items-center p-6">
-      <h2 className="text-2xl font-bold text-white mb-6">Your Finger Is a Capacitor Plate!</h2>
-      <div className="bg-slate-800/50 rounded-2xl p-6 max-w-2xl space-y-4">
-        <div className="p-4 bg-cyan-900/30 rounded-lg border border-cyan-600">
-          <h3 className="text-cyan-400 font-bold mb-2">The Capacitive Principle</h3>
-          <p className="text-slate-300">
-            Your body is conductive (mostly water + ions). When your finger approaches the screen,
-            it forms a <span className="text-yellow-400 font-bold">capacitor</span> with the electrode grid.
-          </p>
-        </div>
-        {renderCapacitorDiagram()}
-        <div className="grid grid-cols-2 gap-4">
-          <div className="p-4 bg-slate-700/50 rounded-lg">
-            <h4 className="text-blue-400 font-bold mb-2">X-Y Grid</h4>
-            <ul className="text-slate-300 text-sm space-y-1">
-              <li>Horizontal electrodes (X)</li>
-              <li>Vertical electrodes (Y)</li>
-              <li>Intersections form sensing points</li>
-            </ul>
-          </div>
-          <div className="p-4 bg-slate-700/50 rounded-lg">
-            <h4 className="text-green-400 font-bold mb-2">Detection</h4>
-            <ul className="text-slate-300 text-sm space-y-1">
-              <li>Controller scans each intersection</li>
-              <li>Measures charge/discharge time</li>
-              <li>Finger = slower discharge = detected!</li>
-            </ul>
-          </div>
-        </div>
-        <div className="p-4 bg-yellow-900/30 rounded-lg border border-yellow-600">
-          <p className="text-yellow-300">
-            <strong>Multi-Touch:</strong> Each grid intersection is independent!
-            10 fingers = 10 different locations with changed capacitance.
-          </p>
-        </div>
-      </div>
-      <button onMouseDown={(e) => { e.preventDefault(); goToPhase(4); }} className="mt-8 px-6 py-3 bg-gradient-to-r from-amber-600 to-orange-600 text-white font-semibold rounded-xl">
-        Why Don&apos;t Gloves Work?
-      </button>
-    </div>
-  );
-
-  const renderTwistPredict = () => (
-    <div className="flex flex-col items-center justify-center min-h-[500px] p-6">
-      <h2 className="text-2xl font-bold text-amber-400 mb-6">The Glove Problem</h2>
-      <div className="bg-slate-800/50 rounded-2xl p-6 max-w-2xl mb-6">
-        <p className="text-lg text-slate-300 mb-4">
-          Regular winter gloves don&apos;t work on touchscreens. Why not?
-        </p>
-      </div>
-      <div className="grid gap-3 w-full max-w-xl">
-        {[
-          { id: 'A', text: 'Gloves are too thick to press hard enough' },
-          { id: 'B', text: 'Insulating material blocks capacitive coupling' },
-          { id: 'C', text: 'Gloves create too much static electricity' },
-          { id: 'D', text: 'The screen needs to sense body heat' }
-        ].map(option => (
-          <button
-            key={option.id}
-            onMouseDown={(e) => { e.preventDefault(); handleTwistPrediction(option.id); }}
-            disabled={showTwistFeedback}
-            className={`p-4 rounded-xl text-left transition-all duration-300 ${
-              showTwistFeedback && twistPrediction === option.id
-                ? option.id === 'B' ? 'bg-emerald-600/40 border-2 border-emerald-400' : 'bg-red-600/40 border-2 border-red-400'
-                : showTwistFeedback && option.id === 'B' ? 'bg-emerald-600/40 border-2 border-emerald-400'
-                : 'bg-slate-700/50 hover:bg-slate-600/50 border-2 border-transparent'
-            }`}
-          >
-            <span className="font-bold text-white">{option.id}.</span>
-            <span className="text-slate-200 ml-2">{option.text}</span>
-          </button>
-        ))}
-      </div>
-      {showTwistFeedback && (
-        <div className="mt-6 p-4 bg-slate-800/70 rounded-xl max-w-xl">
-          <p className="text-emerald-400 font-semibold">
-            Exactly! Insulating fabric blocks the capacitive coupling between your body and the screen!
-          </p>
-          <button onMouseDown={(e) => { e.preventDefault(); goToPhase(5); }} className="mt-4 px-6 py-3 bg-gradient-to-r from-amber-600 to-orange-600 text-white font-semibold rounded-xl">
-            See the Difference
-          </button>
-        </div>
-      )}
-    </div>
-  );
-
-  const renderTwistPlay = () => (
-    <div className="flex flex-col items-center p-6">
-      <h2 className="text-2xl font-bold text-amber-400 mb-4">Finger vs Glove vs Touch Glove</h2>
-      <div className="bg-slate-800/50 rounded-2xl p-6 mb-6">
-        {renderTouchScreen(touchMode, touchPoints)}
-        <div className="flex justify-center gap-2 mt-6">
-          <button
-            onMouseDown={(e) => { e.preventDefault(); setTouchMode('finger'); setTouchPoints([]); }}
-            className={`px-4 py-2 rounded-lg font-bold text-sm ${touchMode === 'finger' ? 'bg-green-600 text-white' : 'bg-slate-600 text-slate-300'}`}
-          >
-            Bare Finger
-          </button>
-          <button
-            onMouseDown={(e) => { e.preventDefault(); setTouchMode('glove'); setTouchPoints([]); }}
-            className={`px-4 py-2 rounded-lg font-bold text-sm ${touchMode === 'glove' ? 'bg-red-600 text-white' : 'bg-slate-600 text-slate-300'}`}
-          >
-            Regular Glove
-          </button>
-          <button
-            onMouseDown={(e) => { e.preventDefault(); setTouchMode('capacitiveGlove'); setTouchPoints([]); }}
-            className={`px-4 py-2 rounded-lg font-bold text-sm ${touchMode === 'capacitiveGlove' ? 'bg-cyan-600 text-white' : 'bg-slate-600 text-slate-300'}`}
-          >
-            Touch Glove
-          </button>
-        </div>
-        <div className={`mt-4 p-4 rounded-lg border ${touchMode === 'glove' ? 'bg-red-900/30 border-red-600' : 'bg-green-900/30 border-green-600'}`}>
-          <p className={`text-center ${touchMode === 'glove' ? 'text-red-300' : 'text-green-300'}`}>
-            {touchMode === 'finger' && <><span className="font-bold">Bare Finger:</span> Conductive! Forms capacitor with screen.</>}
-            {touchMode === 'glove' && <><span className="font-bold">Regular Glove:</span> Insulating fabric blocks capacitive coupling.</>}
-            {touchMode === 'capacitiveGlove' && <><span className="font-bold">Touch Glove:</span> Conductive threads connect your finger to the tip!</>}
-          </p>
-        </div>
-      </div>
-      <button onMouseDown={(e) => { e.preventDefault(); goToPhase(6); }} className="px-6 py-3 bg-gradient-to-r from-amber-600 to-orange-600 text-white font-semibold rounded-xl">
-        Understand the Solution
-      </button>
-    </div>
-  );
-
-  const renderTwistReview = () => (
-    <div className="flex flex-col items-center p-6">
-      <h2 className="text-2xl font-bold text-amber-400 mb-6">Making Gloves Work</h2>
-      <div className="bg-slate-800/50 rounded-2xl p-6 max-w-2xl space-y-4">
-        <div className="p-4 bg-red-900/30 rounded-lg border border-red-600">
-          <h3 className="text-red-400 font-bold mb-2">The Problem</h3>
-          <p className="text-slate-300">
-            Wool, cotton, and synthetic fabrics are <span className="text-yellow-400 font-bold">electrical insulators</span>.
-            They block the capacitive coupling between your conductive body and the screen electrodes.
-          </p>
-        </div>
-        <div className="grid grid-cols-2 gap-4">
-          <div className="p-4 bg-slate-700/50 rounded-lg">
-            <h4 className="text-cyan-400 font-bold mb-2">Touch Gloves</h4>
-            <ul className="text-slate-300 text-sm space-y-1">
-              <li>Conductive threads (silver, copper)</li>
-              <li>Woven into fingertips</li>
-              <li>Connect skin to glove surface</li>
-            </ul>
-          </div>
-          <div className="p-4 bg-slate-700/50 rounded-lg">
-            <h4 className="text-purple-400 font-bold mb-2">Active Styluses</h4>
-            <ul className="text-slate-300 text-sm space-y-1">
-              <li>Battery-powered electronics</li>
-              <li>Generate their own signal</li>
-              <li>Works with any material</li>
-            </ul>
-          </div>
-        </div>
-        <div className="p-4 bg-yellow-900/30 rounded-lg border border-yellow-600">
-          <p className="text-yellow-300 text-sm">
-            <strong>Life Hack:</strong> In emergencies, a small piece of aluminum foil or a sausage (!)
-            can conduct enough to trigger a touchscreen.
-          </p>
-        </div>
-      </div>
-      <button onMouseDown={(e) => { e.preventDefault(); goToPhase(7); }} className="mt-6 px-6 py-3 bg-gradient-to-r from-blue-600 to-cyan-600 text-white font-semibold rounded-xl">
-        Explore Real Applications
-      </button>
-    </div>
-  );
-
-  const renderTransfer = () => (
-    <div className="flex flex-col items-center p-6">
-      <h2 className="text-2xl font-bold text-white mb-6">Real-World Applications</h2>
-      <div className="flex gap-2 mb-6 flex-wrap justify-center">
-        {TRANSFER_APPS.map((app, index) => (
-          <button
-            key={index}
-            onMouseDown={(e) => { e.preventDefault(); setActiveAppTab(index); }}
-            className={`px-4 py-2 rounded-lg font-medium transition-all ${
-              activeAppTab === index ? 'bg-blue-600 text-white'
-              : completedApps.has(index) ? 'bg-emerald-600/30 text-emerald-400 border border-emerald-500'
-              : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
-            }`}
-          >
-            {app.icon} {app.title.split(' ')[0]}
-          </button>
-        ))}
-      </div>
-      <div className="bg-slate-800/50 rounded-2xl p-6 max-w-2xl w-full">
-        <div className="flex items-center gap-3 mb-4">
-          <span className="text-3xl">{TRANSFER_APPS[activeAppTab].icon}</span>
-          <h3 className="text-xl font-bold text-white">{TRANSFER_APPS[activeAppTab].title}</h3>
-        </div>
-        <p className="text-lg text-slate-300 mt-4">{TRANSFER_APPS[activeAppTab].description}</p>
-        {!completedApps.has(activeAppTab) && (
-          <button onMouseDown={(e) => { e.preventDefault(); handleAppComplete(activeAppTab); }} className="mt-4 px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg font-medium">
-            Mark as Understood
-          </button>
-        )}
-      </div>
-      <div className="mt-6 flex items-center gap-2">
-        <span className="text-slate-400">Progress:</span>
-        <div className="flex gap-1">{TRANSFER_APPS.map((_, i) => (<div key={i} className={`w-3 h-3 rounded-full ${completedApps.has(i) ? 'bg-emerald-500' : 'bg-slate-600'}`} />))}</div>
-        <span className="text-slate-400">{completedApps.size}/4</span>
-      </div>
-      {completedApps.size >= 4 && (
-        <button onMouseDown={(e) => { e.preventDefault(); goToPhase(8); }} className="mt-6 px-6 py-3 bg-gradient-to-r from-blue-600 to-cyan-600 text-white font-semibold rounded-xl">
-          Take the Knowledge Test
-        </button>
-      )}
-    </div>
-  );
-
-  const renderTest = () => (
-    <div className="flex flex-col items-center p-6">
-      <h2 className="text-2xl font-bold text-white mb-6">Knowledge Assessment</h2>
-      {!showTestResults ? (
-        <div className="space-y-6 max-w-2xl w-full">
-          {TEST_QUESTIONS.map((q, qIndex) => (
-            <div key={qIndex} className="bg-slate-800/50 rounded-xl p-4">
-              <p className="text-white font-medium mb-3">{qIndex + 1}. {q.question}</p>
-              <div className="grid gap-2">
-                {q.options.map((option, oIndex) => (
-                  <button
-                    key={oIndex}
-                    onMouseDown={(e) => { e.preventDefault(); handleTestAnswer(qIndex, oIndex); }}
-                    className={`p-3 rounded-lg text-left text-sm transition-all ${testAnswers[qIndex] === oIndex ? 'bg-blue-600 text-white' : 'bg-slate-700/50 text-slate-300 hover:bg-slate-600/50'}`}
-                  >
-                    {option}
-                  </button>
-                ))}
+  // REVIEW PHASE
+  if (phase === 'review') {
+    return (
+      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+          <div className="flex flex-col items-center p-6">
+            <h2 className="text-2xl font-bold text-white mb-6">Your Finger Is a Capacitor Plate!</h2>
+            <div className="bg-slate-800/50 rounded-2xl p-6 max-w-2xl space-y-4">
+              <div className="p-4 bg-cyan-900/30 rounded-lg border border-cyan-600">
+                <h3 className="text-cyan-400 font-bold mb-2">The Capacitive Principle</h3>
+                <p className="text-slate-300">
+                  Your body is conductive (mostly water + ions). When your finger approaches the screen,
+                  it forms a <span className="text-yellow-400 font-bold">capacitor</span> with the electrode grid.
+                </p>
+              </div>
+              {renderCapacitorDiagram()}
+              <div className="grid grid-cols-2 gap-4">
+                <div className="p-4 bg-slate-700/50 rounded-lg">
+                  <h4 className="text-blue-400 font-bold mb-2">X-Y Grid</h4>
+                  <ul className="text-slate-300 text-sm space-y-1">
+                    <li>Horizontal electrodes (X)</li>
+                    <li>Vertical electrodes (Y)</li>
+                    <li>Intersections form sensing points</li>
+                  </ul>
+                </div>
+                <div className="p-4 bg-slate-700/50 rounded-lg">
+                  <h4 className="text-green-400 font-bold mb-2">Detection</h4>
+                  <ul className="text-slate-300 text-sm space-y-1">
+                    <li>Controller scans each intersection</li>
+                    <li>Measures charge/discharge time</li>
+                    <li>Finger = slower discharge = detected!</li>
+                  </ul>
+                </div>
+              </div>
+              <div className="p-4 bg-yellow-900/30 rounded-lg border border-yellow-600">
+                <p className="text-yellow-300">
+                  <strong>Multi-Touch:</strong> Each grid intersection is independent!
+                  10 fingers = 10 different locations with changed capacitance.
+                </p>
               </div>
             </div>
-          ))}
-          <button
-            onMouseDown={(e) => { e.preventDefault(); setShowTestResults(true); }}
-            disabled={testAnswers.includes(-1)}
-            className={`w-full py-4 rounded-xl font-semibold text-lg ${testAnswers.includes(-1) ? 'bg-slate-700 text-slate-500 cursor-not-allowed' : 'bg-gradient-to-r from-blue-600 to-cyan-600 text-white'}`}
-          >
-            Submit Answers
-          </button>
-        </div>
-      ) : (
-        <div className="bg-slate-800/50 rounded-2xl p-6 max-w-2xl w-full text-center">
-          <div className="text-6xl mb-4">{calculateScore() >= 3 ? '🎉' : '📚'}</div>
-          <h3 className="text-2xl font-bold text-white mb-2">Score: {calculateScore()}/4</h3>
-          <p className="text-slate-300 mb-6">{calculateScore() >= 3 ? 'Excellent! You understand capacitive touch!' : 'Keep studying! Review and try again.'}</p>
-          {calculateScore() >= 3 ? (
-            <button onMouseDown={(e) => { e.preventDefault(); goToPhase(9); }} className="px-8 py-4 bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-semibold rounded-xl">
-              Claim Your Mastery Badge
-            </button>
-          ) : (
-            <button onMouseDown={(e) => { e.preventDefault(); setShowTestResults(false); setTestAnswers(Array(4).fill(-1)); goToPhase(3); }} className="px-8 py-4 bg-gradient-to-r from-blue-600 to-cyan-600 text-white font-semibold rounded-xl">
-              Review and Try Again
-            </button>
-          )}
-        </div>
-      )}
-    </div>
-  );
-
-  const renderMastery = () => (
-    <div className="flex flex-col items-center justify-center min-h-[500px] p-6 text-center">
-      <div className="bg-gradient-to-br from-blue-900/50 via-cyan-900/50 to-teal-900/50 rounded-3xl p-8 max-w-2xl">
-        <div className="text-8xl mb-6">📱</div>
-        <h1 className="text-3xl font-bold text-white mb-4">Capacitive Touch Master!</h1>
-        <p className="text-xl text-slate-300 mb-6">You&apos;ve mastered capacitive touch technology!</p>
-        <div className="grid grid-cols-2 gap-4 mb-6">
-          <div className="bg-slate-800/50 rounded-xl p-4"><div className="text-2xl mb-2">👆</div><p className="text-sm text-slate-300">Touch Detection</p></div>
-          <div className="bg-slate-800/50 rounded-xl p-4"><div className="text-2xl mb-2">🧤</div><p className="text-sm text-slate-300">Glove Science</p></div>
-          <div className="bg-slate-800/50 rounded-xl p-4"><div className="text-2xl mb-2">📐</div><p className="text-sm text-slate-300">X-Y Grid</p></div>
-          <div className="bg-slate-800/50 rounded-xl p-4"><div className="text-2xl mb-2">⚡</div><p className="text-sm text-slate-300">Capacitance</p></div>
-        </div>
-        <button onMouseDown={(e) => { e.preventDefault(); goToPhase(0); }} className="px-6 py-3 bg-slate-700 hover:bg-slate-600 text-white font-medium rounded-xl">Explore Again</button>
-      </div>
-    </div>
-  );
-
-  const renderPhase = () => {
-    switch (phase) {
-      case 0: return renderHook();
-      case 1: return renderPredict();
-      case 2: return renderPlay();
-      case 3: return renderReview();
-      case 4: return renderTwistPredict();
-      case 5: return renderTwistPlay();
-      case 6: return renderTwistReview();
-      case 7: return renderTransfer();
-      case 8: return renderTest();
-      case 9: return renderMastery();
-      default: return renderHook();
-    }
-  };
-
-  return (
-    <div className="min-h-screen bg-[#0a0f1a] text-white relative overflow-hidden">
-      {/* Premium background gradient */}
-      <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-[#0a1628] to-slate-900" />
-      <div className="absolute top-0 left-1/4 w-96 h-96 bg-cyan-500/5 rounded-full blur-3xl" />
-      <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-blue-500/5 rounded-full blur-3xl" />
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-teal-500/5 rounded-full blur-3xl" />
-
-      {/* Header */}
-      <div className="fixed top-0 left-0 right-0 z-50 bg-slate-900/80 backdrop-blur-xl border-b border-slate-800/50">
-        <div className="flex items-center justify-between px-6 py-3 max-w-4xl mx-auto">
-          <span className="text-sm font-semibold text-white/80 tracking-wide">Capacitive Touch</span>
-          <div className="flex items-center gap-1.5">
-            {PHASES.map((p) => (
-              <button
-                key={p}
-                onMouseDown={(e) => { e.preventDefault(); goToPhase(p); }}
-                className={`h-2 rounded-full transition-all duration-300 ${
-                  phase === p
-                    ? 'bg-cyan-400 w-6 shadow-lg shadow-cyan-400/30'
-                    : phase > p
-                      ? 'bg-emerald-500 w-2'
-                      : 'bg-slate-700 w-2 hover:bg-slate-600'
-                }`}
-                title={phaseLabels[p]}
-              />
-            ))}
           </div>
-          <span className="text-sm font-medium text-cyan-400">{phaseLabels[phase]}</span>
+        </div>
+        {renderBottomBar(false, true, 'Next: A Twist!')}
+      </div>
+    );
+  }
+
+  // TWIST PREDICT PHASE
+  if (phase === 'twist_predict') {
+    return (
+      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+          <div className="flex flex-col items-center justify-center min-h-[500px] p-6">
+            <h2 className="text-2xl font-bold text-amber-400 mb-6">The Glove Problem</h2>
+            <div className="bg-slate-800/50 rounded-2xl p-6 max-w-2xl mb-6">
+              <p className="text-lg text-slate-300 mb-4">
+                Regular winter gloves don&apos;t work on touchscreens. Why not?
+              </p>
+            </div>
+            <div className="grid gap-3 w-full max-w-xl">
+              {[
+                { id: 'A', text: 'Gloves are too thick to press hard enough' },
+                { id: 'B', text: 'Insulating material blocks capacitive coupling' },
+                { id: 'C', text: 'Gloves create too much static electricity' },
+                { id: 'D', text: 'The screen needs to sense body heat' }
+              ].map(option => (
+                <button
+                  key={option.id}
+                  onMouseDown={(e) => { e.preventDefault(); handleTwistPrediction(option.id); }}
+                  disabled={showTwistFeedback}
+                  className={`p-4 rounded-xl text-left transition-all duration-300 ${
+                    showTwistFeedback && twistPrediction === option.id
+                      ? option.id === 'B' ? 'bg-emerald-600/40 border-2 border-emerald-400' : 'bg-red-600/40 border-2 border-red-400'
+                      : showTwistFeedback && option.id === 'B' ? 'bg-emerald-600/40 border-2 border-emerald-400'
+                      : 'bg-slate-700/50 hover:bg-slate-600/50 border-2 border-transparent'
+                  }`}
+                >
+                  <span className="font-bold text-white">{option.id}.</span>
+                  <span className="text-slate-200 ml-2">{option.text}</span>
+                </button>
+              ))}
+            </div>
+            {showTwistFeedback && (
+              <div className="mt-6 p-4 bg-slate-800/70 rounded-xl max-w-xl">
+                <p className="text-emerald-400 font-semibold">
+                  Exactly! Insulating fabric blocks the capacitive coupling between your body and the screen!
+                </p>
+              </div>
+            )}
+          </div>
+        </div>
+        {renderBottomBar(true, !!twistPrediction, 'Test My Prediction')}
+      </div>
+    );
+  }
+
+  // TWIST PLAY PHASE
+  if (phase === 'twist_play') {
+    return (
+      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+          <div className="flex flex-col items-center p-6">
+            <h2 className="text-2xl font-bold text-amber-400 mb-4">Finger vs Glove vs Touch Glove</h2>
+            <div className="bg-slate-800/50 rounded-2xl p-6 mb-6">
+              {renderTouchScreen(touchMode, touchPoints)}
+              <div className="flex justify-center gap-2 mt-6">
+                <button
+                  onMouseDown={(e) => { e.preventDefault(); setTouchMode('finger'); setTouchPoints([]); }}
+                  className={`px-4 py-2 rounded-lg font-bold text-sm ${touchMode === 'finger' ? 'bg-green-600 text-white' : 'bg-slate-600 text-slate-300'}`}
+                >
+                  Bare Finger
+                </button>
+                <button
+                  onMouseDown={(e) => { e.preventDefault(); setTouchMode('glove'); setTouchPoints([]); }}
+                  className={`px-4 py-2 rounded-lg font-bold text-sm ${touchMode === 'glove' ? 'bg-red-600 text-white' : 'bg-slate-600 text-slate-300'}`}
+                >
+                  Regular Glove
+                </button>
+                <button
+                  onMouseDown={(e) => { e.preventDefault(); setTouchMode('capacitiveGlove'); setTouchPoints([]); }}
+                  className={`px-4 py-2 rounded-lg font-bold text-sm ${touchMode === 'capacitiveGlove' ? 'bg-cyan-600 text-white' : 'bg-slate-600 text-slate-300'}`}
+                >
+                  Touch Glove
+                </button>
+              </div>
+              <div className={`mt-4 p-4 rounded-lg border ${touchMode === 'glove' ? 'bg-red-900/30 border-red-600' : 'bg-green-900/30 border-green-600'}`}>
+                <p className={`text-center ${touchMode === 'glove' ? 'text-red-300' : 'text-green-300'}`}>
+                  {touchMode === 'finger' && <><span className="font-bold">Bare Finger:</span> Conductive! Forms capacitor with screen.</>}
+                  {touchMode === 'glove' && <><span className="font-bold">Regular Glove:</span> Insulating fabric blocks capacitive coupling.</>}
+                  {touchMode === 'capacitiveGlove' && <><span className="font-bold">Touch Glove:</span> Conductive threads connect your finger to the tip!</>}
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+        {renderBottomBar(false, true, 'See the Explanation')}
+      </div>
+    );
+  }
+
+  // TWIST REVIEW PHASE
+  if (phase === 'twist_review') {
+    return (
+      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+          <div className="flex flex-col items-center p-6">
+            <h2 className="text-2xl font-bold text-amber-400 mb-6">Making Gloves Work</h2>
+            <div className="bg-slate-800/50 rounded-2xl p-6 max-w-2xl space-y-4">
+              <div className="p-4 bg-red-900/30 rounded-lg border border-red-600">
+                <h3 className="text-red-400 font-bold mb-2">The Problem</h3>
+                <p className="text-slate-300">
+                  Wool, cotton, and synthetic fabrics are <span className="text-yellow-400 font-bold">electrical insulators</span>.
+                  They block the capacitive coupling between your conductive body and the screen electrodes.
+                </p>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="p-4 bg-slate-700/50 rounded-lg">
+                  <h4 className="text-cyan-400 font-bold mb-2">Touch Gloves</h4>
+                  <ul className="text-slate-300 text-sm space-y-1">
+                    <li>Conductive threads (silver, copper)</li>
+                    <li>Woven into fingertips</li>
+                    <li>Connect skin to glove surface</li>
+                  </ul>
+                </div>
+                <div className="p-4 bg-slate-700/50 rounded-lg">
+                  <h4 className="text-purple-400 font-bold mb-2">Active Styluses</h4>
+                  <ul className="text-slate-300 text-sm space-y-1">
+                    <li>Battery-powered electronics</li>
+                    <li>Generate their own signal</li>
+                    <li>Works with any material</li>
+                  </ul>
+                </div>
+              </div>
+              <div className="p-4 bg-yellow-900/30 rounded-lg border border-yellow-600">
+                <p className="text-yellow-300 text-sm">
+                  <strong>Life Hack:</strong> In emergencies, a small piece of aluminum foil or a sausage (!)
+                  can conduct enough to trigger a touchscreen.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+        {renderBottomBar(false, true, 'Apply This Knowledge')}
+      </div>
+    );
+  }
+
+  // TRANSFER PHASE
+  if (phase === 'transfer') {
+    return (
+      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+          <div className="flex flex-col items-center p-6">
+            <h2 className="text-2xl font-bold text-white mb-6">Real-World Applications</h2>
+            <div className="flex gap-2 mb-6 flex-wrap justify-center">
+              {TRANSFER_APPS.map((app, index) => (
+                <button
+                  key={index}
+                  onMouseDown={(e) => { e.preventDefault(); setActiveAppTab(index); }}
+                  className={`px-4 py-2 rounded-lg font-medium transition-all ${
+                    activeAppTab === index ? 'bg-blue-600 text-white'
+                    : completedApps.has(index) ? 'bg-emerald-600/30 text-emerald-400 border border-emerald-500'
+                    : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
+                  }`}
+                >
+                  {app.icon} {app.title.split(' ')[0]}
+                </button>
+              ))}
+            </div>
+            <div className="bg-slate-800/50 rounded-2xl p-6 max-w-2xl w-full">
+              <div className="flex items-center gap-3 mb-4">
+                <span className="text-3xl">{TRANSFER_APPS[activeAppTab].icon}</span>
+                <h3 className="text-xl font-bold text-white">{TRANSFER_APPS[activeAppTab].title}</h3>
+              </div>
+              <p className="text-lg text-slate-300 mt-4">{TRANSFER_APPS[activeAppTab].description}</p>
+              {!completedApps.has(activeAppTab) && (
+                <button onMouseDown={(e) => { e.preventDefault(); handleAppComplete(activeAppTab); }} className="mt-4 px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg font-medium">
+                  Mark as Understood
+                </button>
+              )}
+            </div>
+            <div className="mt-6 flex items-center gap-2">
+              <span className="text-slate-400">Progress:</span>
+              <div className="flex gap-1">{TRANSFER_APPS.map((_, i) => (<div key={i} className={`w-3 h-3 rounded-full ${completedApps.has(i) ? 'bg-emerald-500' : 'bg-slate-600'}`} />))}</div>
+              <span className="text-slate-400">{completedApps.size}/4</span>
+            </div>
+          </div>
+        </div>
+        {renderBottomBar(completedApps.size < 4, completedApps.size >= 4, 'Take the Test')}
+      </div>
+    );
+  }
+
+  // TEST PHASE
+  if (phase === 'test') {
+    if (showTestResults) {
+      return (
+        <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+          <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+            <div className="bg-slate-800/50 rounded-2xl p-6 max-w-2xl mx-auto mt-8 text-center">
+              <div className="text-6xl mb-4">{testScore >= 3 ? '🎉' : '📚'}</div>
+              <h3 className="text-2xl font-bold text-white mb-2">Score: {testScore}/{TEST_QUESTIONS.length}</h3>
+              <p className="text-slate-300 mb-6">{testScore >= 3 ? 'Excellent! You understand capacitive touch!' : 'Keep studying! Review and try again.'}</p>
+            </div>
+            {TEST_QUESTIONS.map((q, qIndex) => {
+              const userAnswer = testAnswers[qIndex];
+              const isCorrect = userAnswer !== null && q.options[userAnswer].correct;
+              return (
+                <div key={qIndex} className="bg-slate-800/50 rounded-xl p-4 max-w-2xl mx-auto mt-4" style={{ borderLeft: `4px solid ${isCorrect ? colors.success : colors.error}` }}>
+                  <p className="text-white font-medium mb-3">{qIndex + 1}. {q.question}</p>
+                  {q.options.map((opt, oIndex) => (
+                    <div key={oIndex} className={`p-2 rounded mb-1 ${opt.correct ? 'bg-emerald-900/30 text-emerald-400' : userAnswer === oIndex ? 'bg-red-900/30 text-red-400' : 'text-slate-400'}`}>
+                      {opt.correct ? '✓' : userAnswer === oIndex ? '✗' : '○'} {opt.text}
+                    </div>
+                  ))}
+                </div>
+              );
+            })}
+          </div>
+          {renderBottomBar(false, testScore >= 3, testScore >= 3 ? 'Complete Mastery' : 'Review & Retry')}
+        </div>
+      );
+    }
+
+    return (
+      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+          <div className="flex flex-col items-center p-6">
+            <h2 className="text-2xl font-bold text-white mb-6">Knowledge Assessment</h2>
+            <div className="space-y-6 max-w-2xl w-full">
+              {TEST_QUESTIONS.map((q, qIndex) => (
+                <div key={qIndex} className="bg-slate-800/50 rounded-xl p-4">
+                  <p className="text-white font-medium mb-3">{qIndex + 1}. {q.question}</p>
+                  <div className="grid gap-2">
+                    {q.options.map((option, oIndex) => (
+                      <button
+                        key={oIndex}
+                        onMouseDown={(e) => { e.preventDefault(); handleTestAnswer(qIndex, oIndex); }}
+                        className={`p-3 rounded-lg text-left text-sm transition-all ${testAnswers[qIndex] === oIndex ? 'bg-blue-600 text-white' : 'bg-slate-700/50 text-slate-300 hover:bg-slate-600/50'}`}
+                      >
+                        {option.text}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              ))}
+              <button
+                onMouseDown={(e) => { e.preventDefault(); submitTest(); }}
+                disabled={testAnswers.includes(null)}
+                className={`w-full py-4 rounded-xl font-semibold text-lg ${testAnswers.includes(null) ? 'bg-slate-700 text-slate-500 cursor-not-allowed' : 'bg-gradient-to-r from-blue-600 to-cyan-600 text-white'}`}
+              >
+                Submit Answers
+              </button>
+            </div>
+          </div>
         </div>
       </div>
+    );
+  }
 
-      {/* Main content */}
-      <div className="relative pt-16 pb-12">{renderPhase()}</div>
-    </div>
-  );
+  // MASTERY PHASE
+  if (phase === 'mastery') {
+    return (
+      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+          <div className="flex flex-col items-center justify-center min-h-[500px] p-6 text-center">
+            <div className="bg-gradient-to-br from-blue-900/50 via-cyan-900/50 to-teal-900/50 rounded-3xl p-8 max-w-2xl">
+              <div className="text-8xl mb-6">📱</div>
+              <h1 className="text-3xl font-bold text-white mb-4">Capacitive Touch Master!</h1>
+              <p className="text-xl text-slate-300 mb-6">You&apos;ve mastered capacitive touch technology!</p>
+              <div className="grid grid-cols-2 gap-4 mb-6">
+                <div className="bg-slate-800/50 rounded-xl p-4"><div className="text-2xl mb-2">👆</div><p className="text-sm text-slate-300">Touch Detection</p></div>
+                <div className="bg-slate-800/50 rounded-xl p-4"><div className="text-2xl mb-2">🧤</div><p className="text-sm text-slate-300">Glove Science</p></div>
+                <div className="bg-slate-800/50 rounded-xl p-4"><div className="text-2xl mb-2">📐</div><p className="text-sm text-slate-300">X-Y Grid</p></div>
+                <div className="bg-slate-800/50 rounded-xl p-4"><div className="text-2xl mb-2">⚡</div><p className="text-sm text-slate-300">Capacitance</p></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        {renderBottomBar(false, true, 'Complete Game')}
+      </div>
+    );
+  }
+
+  return null;
 };
 
 export default CapacitiveTouchRenderer;

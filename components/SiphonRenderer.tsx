@@ -5,39 +5,15 @@ import React, { useState, useRef, useEffect, useCallback } from 'react';
 // ═══════════════════════════════════════════════════════════════════════════
 // TYPES & INTERFACES
 // ═══════════════════════════════════════════════════════════════════════════
-type GameEventType =
-  | 'phase_change'
-  | 'prediction_made'
-  | 'simulation_started'
-  | 'parameter_changed'
-  | 'twist_prediction_made'
-  | 'app_explored'
-  | 'test_answered'
-  | 'test_completed'
-  | 'mastery_achieved';
-
-interface GameEvent {
-  type: GameEventType;
-  data?: Record<string, unknown>;
-}
-
-// Numeric phases: 0=hook, 1=predict, 2=play, 3=review, 4=twist_predict, 5=twist_play, 6=twist_review, 7=transfer, 8=test, 9=mastery
-const PHASES: number[] = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
-const phaseLabels: Record<number, string> = {
-  0: 'Hook', 1: 'Predict', 2: 'Lab', 3: 'Review', 4: 'Twist Predict',
-  5: 'Twist Lab', 6: 'Twist Review', 7: 'Transfer', 8: 'Test', 9: 'Mastery'
-};
 
 interface SiphonRendererProps {
-  onGameEvent?: (event: GameEvent) => void;
-  currentPhase?: number;
-  onPhaseComplete?: (phase: number) => void;
+  phase: 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
+  onPhaseComplete?: () => void;
+  onCorrectAnswer?: () => void;
+  onIncorrectAnswer?: () => void;
 }
 
-const SiphonRenderer: React.FC<SiphonRendererProps> = ({ onGameEvent, currentPhase, onPhaseComplete }) => {
-  // Phase management
-  const [phase, setPhase] = useState<number>(currentPhase ?? 0);
-
+const SiphonRenderer: React.FC<SiphonRendererProps> = ({ phase, onPhaseComplete, onCorrectAnswer, onIncorrectAnswer }) => {
   // Hook phase
   const [hookStep, setHookStep] = useState(0);
   const [showSiphonFlow, setShowSiphonFlow] = useState(false);
@@ -70,8 +46,6 @@ const SiphonRenderer: React.FC<SiphonRendererProps> = ({ onGameEvent, currentPha
 
   // UI state
   const [isMobile, setIsMobile] = useState(false);
-  const navigationLockRef = useRef(false);
-  const lastClickRef = useRef(0);
 
   // Responsive detection
   useEffect(() => {
@@ -80,13 +54,6 @@ const SiphonRenderer: React.FC<SiphonRendererProps> = ({ onGameEvent, currentPha
     window.addEventListener('resize', checkMobile);
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
-
-  // Phase sync
-  useEffect(() => {
-    if (currentPhase !== undefined && currentPhase !== phase) {
-      setPhase(currentPhase);
-    }
-  }, [currentPhase, phase]);
 
   // Siphon flow animation
   useEffect(() => {
@@ -149,20 +116,6 @@ const SiphonRenderer: React.FC<SiphonRendererProps> = ({ onGameEvent, currentPha
     } catch { /* Audio not available */ }
   }, []);
 
-  // Phase navigation
-  const goToPhase = useCallback((newPhase: number) => {
-    const now = Date.now();
-    if (now - lastClickRef.current < 200) return;
-    lastClickRef.current = now;
-    if (navigationLockRef.current) return;
-    navigationLockRef.current = true;
-    playSound('transition');
-    setPhase(newPhase);
-    onPhaseComplete?.(newPhase);
-    onGameEvent?.({ type: 'phase_change', data: { phase: newPhase, phaseLabel: phaseLabels[newPhase] } });
-    setTimeout(() => { navigationLockRef.current = false; }, 400);
-  }, [playSound, onPhaseComplete, onGameEvent]);
-
   // Prime the siphon
   const primeSiphon = () => {
     if (waterLevel <= 0) return;
@@ -189,53 +142,93 @@ const SiphonRenderer: React.FC<SiphonRendererProps> = ({ onGameEvent, currentPha
   const testQuestions = [
     {
       question: "What drives water flow through a siphon?",
-      options: ["Suction from the tube", "Gravity pulling the water chain", "Atmospheric pressure difference", "Capillary action"],
-      correct: 2
+      options: [
+        { text: "Suction from the tube", correct: false },
+        { text: "Gravity pulling the water chain", correct: false },
+        { text: "Atmospheric pressure difference", correct: true },
+        { text: "Capillary action", correct: false }
+      ]
     },
     {
       question: "To start a siphon, you must first:",
-      options: ["Create a vacuum in the tube", "Fill the tube with liquid (prime it)", "Heat the water", "Seal both ends"],
-      correct: 1
+      options: [
+        { text: "Create a vacuum in the tube", correct: false },
+        { text: "Fill the tube with liquid (prime it)", correct: true },
+        { text: "Heat the water", correct: false },
+        { text: "Seal both ends", correct: false }
+      ]
     },
     {
       question: "Where does the water exit need to be relative to the source?",
-      options: ["Above the source", "At the same level", "Below the source surface", "Position doesn't matter"],
-      correct: 2
+      options: [
+        { text: "Above the source", correct: false },
+        { text: "At the same level", correct: false },
+        { text: "Below the source surface", correct: true },
+        { text: "Position doesn't matter", correct: false }
+      ]
     },
     {
       question: "What is the maximum height water can be siphoned over at sea level?",
-      options: ["Any height", "About 10 meters", "About 1 meter", "About 100 meters"],
-      correct: 1
+      options: [
+        { text: "Any height", correct: false },
+        { text: "About 10 meters", correct: true },
+        { text: "About 1 meter", correct: false },
+        { text: "About 100 meters", correct: false }
+      ]
     },
     {
       question: "Why does a siphon FAIL in a perfect vacuum?",
-      options: ["Water freezes", "No atmospheric pressure to push water up", "Gravity doesn't work", "Water evaporates"],
-      correct: 1
+      options: [
+        { text: "Water freezes", correct: false },
+        { text: "No atmospheric pressure to push water up", correct: true },
+        { text: "Gravity doesn't work", correct: false },
+        { text: "Water evaporates", correct: false }
+      ]
     },
     {
       question: "If an air bubble enters a working siphon, what happens?",
-      options: ["Flow increases", "Nothing changes", "Flow stops (siphon breaks)", "Bubble dissolves"],
-      correct: 2
+      options: [
+        { text: "Flow increases", correct: false },
+        { text: "Nothing changes", correct: false },
+        { text: "Flow stops (siphon breaks)", correct: true },
+        { text: "Bubble dissolves", correct: false }
+      ]
     },
     {
       question: "Why does siphon flow rate increase with greater height difference?",
-      options: ["More suction", "Greater pressure differential", "Wider tube", "Hotter water"],
-      correct: 1
+      options: [
+        { text: "More suction", correct: false },
+        { text: "Greater pressure differential", correct: true },
+        { text: "Wider tube", correct: false },
+        { text: "Hotter water", correct: false }
+      ]
     },
     {
       question: "Ancient Romans used siphons for:",
-      options: ["Making wine only", "Aqueducts crossing valleys", "Heating baths", "Weapons"],
-      correct: 1
+      options: [
+        { text: "Making wine only", correct: false },
+        { text: "Aqueducts crossing valleys", correct: true },
+        { text: "Heating baths", correct: false },
+        { text: "Weapons", correct: false }
+      ]
     },
     {
       question: "A gasoline siphon stops working when:",
-      options: ["Gas runs out or outlet rises above inlet", "Temperature drops", "It gets too fast", "The tube is too long horizontally"],
-      correct: 0
+      options: [
+        { text: "Gas runs out or outlet rises above inlet", correct: true },
+        { text: "Temperature drops", correct: false },
+        { text: "It gets too fast", correct: false },
+        { text: "The tube is too long horizontally", correct: false }
+      ]
     },
     {
       question: "The scientific principle behind siphons is best explained by:",
-      options: ["Bernoulli only", "Atmospheric pressure pushing, gravity pulling", "Surface tension", "Cohesion only"],
-      correct: 1
+      options: [
+        { text: "Bernoulli only", correct: false },
+        { text: "Atmospheric pressure pushing, gravity pulling", correct: true },
+        { text: "Surface tension", correct: false },
+        { text: "Cohesion only", correct: false }
+      ]
     }
   ];
 
@@ -300,15 +293,24 @@ const SiphonRenderer: React.FC<SiphonRendererProps> = ({ onGameEvent, currentPha
   ];
 
   // Handle test answer
-  const handleTestAnswer = (answer: number) => {
+  const handleTestAnswer = (answerIndex: number) => {
     playSound('click');
-    setTestAnswers(prev => [...prev, answer]);
+    const currentQuestion = testAnswers.length;
+    const isCorrect = testQuestions[currentQuestion].options[answerIndex].correct;
+
+    if (isCorrect) {
+      onCorrectAnswer?.();
+    } else {
+      onIncorrectAnswer?.();
+    }
+
+    setTestAnswers(prev => [...prev, answerIndex]);
   };
 
   // Calculate test score
   const calculateScore = (): number => {
-    return testAnswers.reduce((score, answer, index) => {
-      return score + (answer === testQuestions[index].correct ? 1 : 0);
+    return testAnswers.reduce((score, answerIndex, questionIndex) => {
+      return score + (testQuestions[questionIndex].options[answerIndex].correct ? 1 : 0);
     }, 0);
   };
 
@@ -325,6 +327,23 @@ const SiphonRenderer: React.FC<SiphonRendererProps> = ({ onGameEvent, currentPha
     textSecondary: '#A0AEC0',
     water: '#3B82F6'
   };
+
+  // Phase labels for display
+  const phaseLabels: Record<string, string> = {
+    hook: 'Hook',
+    predict: 'Predict',
+    play: 'Lab',
+    review: 'Review',
+    twist_predict: 'Twist Predict',
+    twist_play: 'Twist Lab',
+    twist_review: 'Twist Review',
+    transfer: 'Transfer',
+    test: 'Test',
+    mastery: 'Mastery'
+  };
+
+  const phaseOrder = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
+  const currentPhaseIndex = phaseOrder.indexOf(phase);
 
   // Helper render functions
   const renderProgressBar = () => {
@@ -343,15 +362,15 @@ const SiphonRenderer: React.FC<SiphonRendererProps> = ({ onGameEvent, currentPha
         </div>
         {/* Premium phase dots */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
-          {PHASES.map((p, i) => (
+          {phaseOrder.map((p, i) => (
             <div
               key={p}
               style={{
                 height: '8px',
-                width: i === phase ? '24px' : '8px',
+                width: phase === p ? '24px' : '8px',
                 borderRadius: '4px',
-                background: i < phase ? '#10B981' : i === phase ? colors.primary : '#334155',
-                boxShadow: i === phase ? `0 0 12px ${colors.primary}50` : 'none',
+                background: i < currentPhaseIndex ? '#10B981' : phase === p ? colors.primary : '#334155',
+                boxShadow: phase === p ? `0 0 12px ${colors.primary}50` : 'none',
                 transition: 'all 0.3s ease'
               }}
             />
@@ -603,7 +622,7 @@ const SiphonRenderer: React.FC<SiphonRendererProps> = ({ onGameEvent, currentPha
         )}
       </div>
 
-      {hookStep === 1 && renderBottomBar(() => goToPhase(1))}
+      {hookStep === 1 && renderBottomBar(() => onPhaseComplete?.())}
     </div>
   );
 
@@ -665,7 +684,6 @@ const SiphonRenderer: React.FC<SiphonRendererProps> = ({ onGameEvent, currentPha
               onMouseDown={() => {
                 setPrediction(option.value);
                 playSound('click');
-                emitEvent('prediction', { predicted: option.value, question: 'outlet_raised' });
               }}
               style={{
                 padding: '16px 20px',
@@ -738,7 +756,7 @@ const SiphonRenderer: React.FC<SiphonRendererProps> = ({ onGameEvent, currentPha
         )}
       </div>
 
-      {showPredictResult && renderBottomBar(() => goToPhase(2))}
+      {showPredictResult && renderBottomBar(() => onPhaseComplete?.())}
     </div>
   );
 
@@ -950,7 +968,7 @@ const SiphonRenderer: React.FC<SiphonRendererProps> = ({ onGameEvent, currentPha
 
         {renderKeyTakeaway("Siphon flow requires: 1) Primed tube (full of liquid), 2) Outlet below source surface. Flow rate depends on height difference!")}
 
-        {renderBottomBar(() => goToPhase(3))}
+        {renderBottomBar(() => onPhaseComplete?.())}
       </div>
     );
   };
@@ -1045,7 +1063,7 @@ const SiphonRenderer: React.FC<SiphonRendererProps> = ({ onGameEvent, currentPha
         {renderKeyTakeaway("A siphon is driven by atmospheric pressure pushing water into the tube and gravity pulling it out — creating continuous flow without any pump!")}
       </div>
 
-      {renderBottomBar(() => goToPhase(4))}
+      {renderBottomBar(() => onPhaseComplete?.())}
     </div>
   );
 
@@ -1162,7 +1180,7 @@ const SiphonRenderer: React.FC<SiphonRendererProps> = ({ onGameEvent, currentPha
         )}
       </div>
 
-      {showTwistResult && renderBottomBar(() => goToPhase(5))}
+      {showTwistResult && renderBottomBar(() => onPhaseComplete?.())}
     </div>
   );
 
@@ -1311,7 +1329,7 @@ const SiphonRenderer: React.FC<SiphonRendererProps> = ({ onGameEvent, currentPha
 
         {renderKeyTakeaway("Siphon height is limited by atmospheric pressure: P_atm = ρgh → h_max ≈ 10.3m for water at sea level. In vacuum, siphons don't work at all!")}
 
-        {renderBottomBar(() => goToPhase(6))}
+        {renderBottomBar(() => onPhaseComplete?.())}
       </div>
     );
   };
@@ -1374,7 +1392,7 @@ const SiphonRenderer: React.FC<SiphonRendererProps> = ({ onGameEvent, currentPha
         {renderKeyTakeaway("The 10-meter siphon limit comes directly from atmospheric pressure. This same physics explains why Torricelli invented the barometer and why deep wells need special pumps.")}
       </div>
 
-      {renderBottomBar(() => goToPhase(7))}
+      {renderBottomBar(() => onPhaseComplete?.())}
     </div>
   );
 
@@ -1530,7 +1548,7 @@ const SiphonRenderer: React.FC<SiphonRendererProps> = ({ onGameEvent, currentPha
         )}
       </div>
 
-      {completedApps.size === applications.length && renderBottomBar(() => goToPhase(8))}
+      {completedApps.size === applications.length && renderBottomBar(() => onPhaseComplete?.())}
     </div>
   );
 
@@ -1586,14 +1604,14 @@ const SiphonRenderer: React.FC<SiphonRendererProps> = ({ onGameEvent, currentPha
                       e.currentTarget.style.background = colors.background;
                     }}
                   >
-                    {option}
+                    {option.text}
                   </button>
                 ))}
               </div>
 
               {/* Progress dots */}
               <div style={{ display: 'flex', justifyContent: 'center', gap: '8px', marginTop: '24px' }}>
-                {testQuestions.map((_, i) => (
+                {testQuestions.map((q, i) => (
                   <div
                     key={i}
                     style={{
@@ -1601,7 +1619,7 @@ const SiphonRenderer: React.FC<SiphonRendererProps> = ({ onGameEvent, currentPha
                       height: '10px',
                       borderRadius: '50%',
                       background: i < currentQuestion
-                        ? (testAnswers[i] === testQuestions[i].correct ? colors.success : colors.accent)
+                        ? (testQuestions[i].options[testAnswers[i]].correct ? colors.success : colors.accent)
                         : i === currentQuestion
                           ? colors.primary
                           : '#333'
@@ -1659,19 +1677,19 @@ const SiphonRenderer: React.FC<SiphonRendererProps> = ({ onGameEvent, currentPha
                       padding: '14px',
                       background: colors.background,
                       borderRadius: '10px',
-                      borderLeft: `4px solid ${testAnswers[i] === q.correct ? colors.success : colors.accent}`
+                      borderLeft: `4px solid ${q.options[testAnswers[i]].correct ? colors.success : colors.accent}`
                     }}
                   >
                     <p style={{ color: colors.text, margin: '0 0 8px 0', fontSize: '13px', fontWeight: '500' }}>
                       {i + 1}. {q.question}
                     </p>
                     <p style={{
-                      color: testAnswers[i] === q.correct ? colors.success : colors.accent,
+                      color: q.options[testAnswers[i]].correct ? colors.success : colors.accent,
                       margin: '0 0 4px 0',
                       fontSize: '12px'
                     }}>
-                      Your answer: {q.options[testAnswers[i]]}
-                      {testAnswers[i] === q.correct ? ' ✓' : ` ✗ (Correct: ${q.options[q.correct]})`}
+                      Your answer: {q.options[testAnswers[i]].text}
+                      {q.options[testAnswers[i]].correct ? ' ✓' : ` ✗ (Correct: ${q.options.find(o => o.correct)?.text})`}
                     </p>
                   </div>
                 ))}
@@ -1680,7 +1698,7 @@ const SiphonRenderer: React.FC<SiphonRendererProps> = ({ onGameEvent, currentPha
           )}
         </div>
 
-        {showTestResults && renderBottomBar(() => goToPhase(9), false, "Complete Journey")}
+        {showTestResults && renderBottomBar(() => onPhaseComplete?.(), false, "Complete Journey")}
       </div>
     );
   };
@@ -1796,16 +1814,16 @@ const SiphonRenderer: React.FC<SiphonRendererProps> = ({ onGameEvent, currentPha
   // Main render
   const renderPhase = () => {
     switch (phase) {
-      case 0: return renderHook();
-      case 1: return renderPredict();
-      case 2: return renderPlay();
-      case 3: return renderReview();
-      case 4: return renderTwistPredict();
-      case 5: return renderTwistPlay();
-      case 6: return renderTwistReview();
-      case 7: return renderTransfer();
-      case 8: return renderTest();
-      case 9: return renderMastery();
+      case 'hook': return renderHook();
+      case 'predict': return renderPredict();
+      case 'play': return renderPlay();
+      case 'review': return renderReview();
+      case 'twist_predict': return renderTwistPredict();
+      case 'twist_play': return renderTwistPlay();
+      case 'twist_review': return renderTwistReview();
+      case 'transfer': return renderTransfer();
+      case 'test': return renderTest();
+      case 'mastery': return renderMastery();
       default: return renderHook();
     }
   };
@@ -1823,18 +1841,16 @@ const SiphonRenderer: React.FC<SiphonRendererProps> = ({ onGameEvent, currentPha
         <div className="flex items-center justify-between px-6 py-3 max-w-4xl mx-auto">
           <span className="text-sm font-semibold text-white/80 tracking-wide">Siphon Physics</span>
           <div className="flex items-center gap-1.5">
-            {PHASES.map((p) => (
-              <button
+            {phaseOrder.map((p, i) => (
+              <div
                 key={p}
-                onMouseDown={(e) => { e.preventDefault(); goToPhase(p); }}
                 className={`h-2 rounded-full transition-all duration-300 ${
                   phase === p
                     ? 'bg-cyan-400 w-6 shadow-lg shadow-cyan-400/30'
-                    : phase > p
+                    : currentPhaseIndex > i
                       ? 'bg-emerald-500 w-2'
-                      : 'bg-slate-700 w-2 hover:bg-slate-600'
+                      : 'bg-slate-700 w-2'
                 }`}
-                title={phaseLabels[p]}
               />
             ))}
           </div>
