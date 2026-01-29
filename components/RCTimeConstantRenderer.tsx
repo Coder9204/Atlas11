@@ -133,62 +133,102 @@ export default function RCTimeConstantRenderer({ onGameEvent, currentPhase, onPh
   const [testQuestions] = useState([
     {
       question: "The time constant τ (tau) of an RC circuit equals:",
-      options: ["R + C", "R - C", "R × C", "R / C"],
-      correct: 2,
+      options: [
+        { text: "R + C", correct: false },
+        { text: "R - C", correct: false },
+        { text: "R × C", correct: true },
+        { text: "R / C", correct: false }
+      ],
       explanation: "The time constant τ = R × C (resistance times capacitance). It has units of time (seconds when R is in ohms and C is in farads)."
     },
     {
       question: "After one time constant (1τ), a charging capacitor reaches approximately:",
-      options: ["50% of final voltage", "63% of final voltage", "86% of final voltage", "100% of final voltage"],
-      correct: 1,
+      options: [
+        { text: "50% of final voltage", correct: false },
+        { text: "63% of final voltage", correct: true },
+        { text: "86% of final voltage", correct: false },
+        { text: "100% of final voltage", correct: false }
+      ],
       explanation: "After 1τ, the capacitor charges to (1 - e⁻¹) ≈ 63.2% of the supply voltage. This is a fundamental property of exponential charging."
     },
     {
       question: "A capacitor is considered 'fully charged' after approximately:",
-      options: ["1 time constant", "2 time constants", "5 time constants", "10 time constants"],
-      correct: 2,
+      options: [
+        { text: "1 time constant", correct: false },
+        { text: "2 time constants", correct: false },
+        { text: "5 time constants", correct: true },
+        { text: "10 time constants", correct: false }
+      ],
       explanation: "After 5τ, the capacitor reaches about 99.3% of its final value. For practical purposes, this is considered fully charged."
     },
     {
       question: "What happens if you increase the resistance in an RC circuit?",
-      options: ["Charging gets faster", "Charging gets slower", "Maximum voltage increases", "Nothing changes"],
-      correct: 1,
+      options: [
+        { text: "Charging gets faster", correct: false },
+        { text: "Charging gets slower", correct: true },
+        { text: "Maximum voltage increases", correct: false },
+        { text: "Nothing changes", correct: false }
+      ],
       explanation: "Higher resistance means less current can flow, so it takes longer to charge the capacitor. τ = RC, so larger R means larger τ."
     },
     {
       question: "The charging curve of a capacitor is:",
-      options: ["Linear", "Exponential", "Parabolic", "Sinusoidal"],
-      correct: 1,
+      options: [
+        { text: "Linear", correct: false },
+        { text: "Exponential", correct: true },
+        { text: "Parabolic", correct: false },
+        { text: "Sinusoidal", correct: false }
+      ],
       explanation: "Capacitor charging follows an exponential curve: V(t) = V₀(1 - e^(-t/τ)). It rises quickly at first, then slows as it approaches the supply voltage."
     },
     {
       question: "During discharge, capacitor voltage:",
-      options: ["Decreases linearly", "Decreases exponentially", "Increases exponentially", "Stays constant"],
-      correct: 1,
+      options: [
+        { text: "Decreases linearly", correct: false },
+        { text: "Decreases exponentially", correct: true },
+        { text: "Increases exponentially", correct: false },
+        { text: "Stays constant", correct: false }
+      ],
       explanation: "Discharging follows an exponential decay: V(t) = V₀e^(-t/τ). The voltage drops quickly at first, then more slowly."
     },
     {
       question: "If R = 10kΩ and C = 100μF, what is the time constant?",
-      options: ["1 millisecond", "10 milliseconds", "100 milliseconds", "1 second"],
-      correct: 3,
+      options: [
+        { text: "1 millisecond", correct: false },
+        { text: "10 milliseconds", correct: false },
+        { text: "100 milliseconds", correct: false },
+        { text: "1 second", correct: true }
+      ],
       explanation: "τ = RC = 10,000Ω × 0.0001F = 1 second. Remember to convert units: 100μF = 100 × 10⁻⁶F = 0.0001F."
     },
     {
       question: "Why can't a capacitor charge instantly to the supply voltage?",
-      options: ["The battery is too weak", "Resistance limits current flow", "Capacitors are defective", "It's a software limitation"],
-      correct: 1,
+      options: [
+        { text: "The battery is too weak", correct: false },
+        { text: "Resistance limits current flow", correct: true },
+        { text: "Capacitors are defective", correct: false },
+        { text: "It's a software limitation", correct: false }
+      ],
       explanation: "The resistor limits current flow. Initially, current is high but decreases as the capacitor charges. The gradual current flow causes gradual charging."
     },
     {
       question: "In a camera flash, a large capacitor is used to:",
-      options: ["Store and quickly release energy", "Filter noise", "Regulate voltage", "Convert AC to DC"],
-      correct: 0,
+      options: [
+        { text: "Store and quickly release energy", correct: true },
+        { text: "Filter noise", correct: false },
+        { text: "Regulate voltage", correct: false },
+        { text: "Convert AC to DC", correct: false }
+      ],
       explanation: "Camera flash capacitors slowly charge from the battery, then rapidly discharge to produce an intense flash of light in milliseconds."
     },
     {
       question: "After 2 time constants, a charging capacitor reaches approximately:",
-      options: ["63%", "75%", "86%", "95%"],
-      correct: 2,
+      options: [
+        { text: "63%", correct: false },
+        { text: "75%", correct: false },
+        { text: "86%", correct: true },
+        { text: "95%", correct: false }
+      ],
       explanation: "After 2τ: V = V₀(1 - e⁻²) ≈ 86.5%. The percentages at each τ: 63% (1τ), 86% (2τ), 95% (3τ), 98% (4τ), 99% (5τ)."
     }
   ]);
@@ -1774,10 +1814,10 @@ export default function RCTimeConstantRenderer({ onGameEvent, currentPhase, onPh
               };
 
               if (showExplanation) {
-                if (index === question.correct) {
+                if (option.correct) {
                   buttonStyle.background = 'rgba(16, 185, 129, 0.2)';
                   buttonStyle.borderColor = premiumDesign.colors.success;
-                } else if (index === selectedAnswer && index !== question.correct) {
+                } else if (index === selectedAnswer && !option.correct) {
                   buttonStyle.background = 'rgba(239, 68, 68, 0.2)';
                   buttonStyle.borderColor = '#EF4444';
                 }
@@ -1798,7 +1838,7 @@ export default function RCTimeConstantRenderer({ onGameEvent, currentPhase, onPh
                   }}
                   disabled={showExplanation}
                 >
-                  {option}
+                  {option.text}
                 </button>
               );
             })}
@@ -1829,7 +1869,7 @@ export default function RCTimeConstantRenderer({ onGameEvent, currentPhase, onPh
               () => {
                 safeNavigate(() => {
                   setShowExplanation(true);
-                  if (selectedAnswer === question.correct) {
+                  if (question.options[selectedAnswer as number]?.correct) {
                     setTestScore(s => s + 1);
                   }
                 });

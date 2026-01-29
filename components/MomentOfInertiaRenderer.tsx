@@ -196,59 +196,99 @@ const MomentOfInertiaRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, o
   const testQuestions = [
     {
       question: "What quantity is conserved when an ice skater pulls in their arms?",
-      options: ["Angular velocity", "Angular momentum", "Rotational energy", "Moment of inertia"],
-      correct: 1
+      options: [
+        { text: "Angular velocity", correct: false },
+        { text: "Angular momentum", correct: true },
+        { text: "Rotational energy", correct: false },
+        { text: "Moment of inertia", correct: false }
+      ]
     },
     {
       question: "When a skater pulls in their arms, their moment of inertia:",
-      options: ["Increases", "Decreases", "Stays the same", "Becomes zero"],
-      correct: 1
+      options: [
+        { text: "Increases", correct: false },
+        { text: "Decreases", correct: true },
+        { text: "Stays the same", correct: false },
+        { text: "Becomes zero", correct: false }
+      ]
     },
     {
       question: "The moment of inertia depends on:",
-      options: ["Only the total mass", "Mass distribution relative to the rotation axis", "Only the rotation speed", "The temperature"],
-      correct: 1
+      options: [
+        { text: "Only the total mass", correct: false },
+        { text: "Mass distribution relative to the rotation axis", correct: true },
+        { text: "Only the rotation speed", correct: false },
+        { text: "The temperature", correct: false }
+      ]
     },
     {
       question: "Angular momentum L is calculated as:",
-      options: ["L = mv", "L = Iω", "L = ½Iω²", "L = mgh"],
-      correct: 1
+      options: [
+        { text: "L = mv", correct: false },
+        { text: "L = Iω", correct: true },
+        { text: "L = ½Iω²", correct: false },
+        { text: "L = mgh", correct: false }
+      ]
     },
     {
       question: "A diver in the tuck position spins faster because:",
-      options: ["They have more energy", "Their moment of inertia is smaller", "Gravity pulls them faster", "Air resistance is lower"],
-      correct: 1
+      options: [
+        { text: "They have more energy", correct: false },
+        { text: "Their moment of inertia is smaller", correct: true },
+        { text: "Gravity pulls them faster", correct: false },
+        { text: "Air resistance is lower", correct: false }
+      ]
     },
     {
       question: "When a neutron star collapses and shrinks, its spin rate:",
-      options: ["Decreases dramatically", "Increases dramatically", "Stays exactly the same", "Becomes zero"],
-      correct: 1
+      options: [
+        { text: "Decreases dramatically", correct: false },
+        { text: "Increases dramatically", correct: true },
+        { text: "Stays exactly the same", correct: false },
+        { text: "Becomes zero", correct: false }
+      ]
     },
     {
       question: "Which shape has the largest moment of inertia for the same mass?",
-      options: ["Solid sphere", "Hollow sphere", "Point mass at center", "All have the same I"],
-      correct: 1
+      options: [
+        { text: "Solid sphere", correct: false },
+        { text: "Hollow sphere", correct: true },
+        { text: "Point mass at center", correct: false },
+        { text: "All have the same I", correct: false }
+      ]
     },
     {
       question: "If you double the distance of a mass from the rotation axis, its contribution to I:",
-      options: ["Doubles", "Quadruples", "Halves", "Stays the same"],
-      correct: 1
+      options: [
+        { text: "Doubles", correct: false },
+        { text: "Quadruples", correct: true },
+        { text: "Halves", correct: false },
+        { text: "Stays the same", correct: false }
+      ]
     },
     {
       question: "When an ice skater extends their arms, their kinetic energy:",
-      options: ["Increases", "Decreases", "Stays constant", "Becomes negative"],
-      correct: 1
+      options: [
+        { text: "Increases", correct: false },
+        { text: "Decreases", correct: true },
+        { text: "Stays constant", correct: false },
+        { text: "Becomes negative", correct: false }
+      ]
     },
     {
       question: "The equation I = mr² shows that moment of inertia depends on distance:",
-      options: ["Linearly", "Quadratically (squared)", "Cubically", "Exponentially"],
-      correct: 1
+      options: [
+        { text: "Linearly", correct: false },
+        { text: "Quadratically (squared)", correct: true },
+        { text: "Cubically", correct: false },
+        { text: "Exponentially", correct: false }
+      ]
     }
   ];
 
   const calculateScore = () => {
     return testAnswers.reduce((score, answer, index) => {
-      return score + (answer === testQuestions[index].correct ? 1 : 0);
+      return score + (testQuestions[index].options[answer]?.correct ? 1 : 0);
     }, 0);
   };
 
@@ -951,7 +991,7 @@ const MomentOfInertiaRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, o
                         : 'bg-slate-700/50 text-slate-300 hover:bg-slate-600/50'
                     }`}
                   >
-                    {option}
+                    {option.text}
                   </button>
                 ))}
               </div>

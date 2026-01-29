@@ -2383,62 +2383,102 @@ const AntennaPolarizationRenderer: React.FC<AntennaPolarizationRendererProps> = 
   const testQuestions = [
     {
       question: "What is 'polarization' of an electromagnetic wave?",
-      options: ["Its frequency", "The direction its electric field oscillates", "Its speed", "Its wavelength"],
-      correct: 1,
+      options: [
+        { text: "Its frequency", correct: false },
+        { text: "The direction its electric field oscillates", correct: true },
+        { text: "Its speed", correct: false },
+        { text: "Its wavelength", correct: false }
+      ],
       explanation: "Polarization refers to the orientation of the electric field oscillation as the wave travels."
     },
     {
       question: "What happens when you rotate a receiving antenna 90° away from the wave's polarization?",
-      options: ["Signal doubles", "Signal stays the same", "Signal drops to nearly zero", "Signal becomes noise"],
-      correct: 2,
+      options: [
+        { text: "Signal doubles", correct: false },
+        { text: "Signal stays the same", correct: false },
+        { text: "Signal drops to nearly zero", correct: true },
+        { text: "Signal becomes noise", correct: false }
+      ],
       explanation: "At 90° mismatch, cos²(90°) = 0, so theoretically no signal couples into the antenna."
     },
     {
       question: "What law describes how signal strength varies with polarization angle?",
-      options: ["Ohm's Law", "Malus's Law", "Newton's Law", "Faraday's Law"],
-      correct: 1,
+      options: [
+        { text: "Ohm's Law", correct: false },
+        { text: "Malus's Law", correct: true },
+        { text: "Newton's Law", correct: false },
+        { text: "Faraday's Law", correct: false }
+      ],
       explanation: "Malus's Law: I = I₀ × cos²(θ), where θ is the angle between polarizations."
     },
     {
       question: "Why does holding your phone near the antenna area weaken the signal?",
-      options: ["Your hand is magnetic", "Body absorbs RF and detunes antenna", "Phones don't like being touched", "It blocks light"],
-      correct: 1,
+      options: [
+        { text: "Your hand is magnetic", correct: false },
+        { text: "Body absorbs RF and detunes antenna", correct: true },
+        { text: "Phones don't like being touched", correct: false },
+        { text: "It blocks light", correct: false }
+      ],
       explanation: "Human body (mostly water) absorbs radio frequencies AND changes the antenna's electrical properties."
     },
     {
       question: "What type of polarization do GPS satellites use?",
-      options: ["Linear vertical", "Linear horizontal", "Circular polarization", "No polarization"],
-      correct: 2,
+      options: [
+        { text: "Linear vertical", correct: false },
+        { text: "Linear horizontal", correct: false },
+        { text: "Circular polarization", correct: true },
+        { text: "No polarization", correct: false }
+      ],
       explanation: "Circular polarization works at any receiving angle - essential since phones rotate constantly."
     },
     {
       question: "Why do modern smartphones have multiple antennas?",
-      options: ["For decoration", "To use antenna diversity and overcome orientation issues", "They're cheaper", "Government requirement"],
-      correct: 1,
+      options: [
+        { text: "For decoration", correct: false },
+        { text: "To use antenna diversity and overcome orientation issues", correct: true },
+        { text: "They're cheaper", correct: false },
+        { text: "Government requirement", correct: false }
+      ],
       explanation: "Multiple antennas at different orientations allow switching to whichever has best signal."
     },
     {
       question: "If a router antenna is vertical, what device orientation loses the most signal?",
-      options: ["Vertical phone", "Horizontal laptop", "Tilted tablet", "All equal"],
-      correct: 1,
+      options: [
+        { text: "Vertical phone", correct: false },
+        { text: "Horizontal laptop", correct: true },
+        { text: "Tilted tablet", correct: false },
+        { text: "All equal", correct: false }
+      ],
       explanation: "Horizontal orientation is 90° from vertical - maximum polarization mismatch."
     },
     {
       question: "What did the 'death grip' problem on some phones demonstrate?",
-      options: ["Phones are fragile", "Body proximity affects antenna performance", "Users hold phones wrong", "Software bugs"],
-      correct: 1,
+      options: [
+        { text: "Phones are fragile", correct: false },
+        { text: "Body proximity affects antenna performance", correct: true },
+        { text: "Users hold phones wrong", correct: false },
+        { text: "Software bugs", correct: false }
+      ],
       explanation: "Touching the antenna area changed its impedance and resonant frequency, degrading signal."
     },
     {
       question: "In satellite TV, why is dish alignment so critical?",
-      options: ["Aesthetic reasons", "To match polarization and point at satellite", "To avoid rain", "It's not critical"],
-      correct: 1,
+      options: [
+        { text: "Aesthetic reasons", correct: false },
+        { text: "To match polarization and point at satellite", correct: true },
+        { text: "To avoid rain", correct: false },
+        { text: "It's not critical", correct: false }
+      ],
       explanation: "Dish must point at satellite AND have correct polarization to receive the linearly-polarized signal."
     },
     {
       question: "How do enterprise Wi-Fi access points handle polarization diversity?",
-      options: ["They don't", "Using antennas at multiple angles (e.g., 45°)", "By using only one frequency", "Through software only"],
-      correct: 1,
+      options: [
+        { text: "They don't", correct: false },
+        { text: "Using antennas at multiple angles (e.g., 45°)", correct: true },
+        { text: "By using only one frequency", correct: false },
+        { text: "Through software only", correct: false }
+      ],
       explanation: "Antennas at different angles serve both vertically and horizontally oriented devices better."
     }
   ];
@@ -2472,7 +2512,7 @@ const AntennaPolarizationRenderer: React.FC<AntennaPolarizationRendererProps> = 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '24px' }}>
             {q.options.map((opt, i) => {
               const isSelected = testAnswers[currentQuestion] === i;
-              const isCorrect = i === q.correct;
+              const isCorrect = opt.correct;
               const showResult = answered;
 
               return (
@@ -2506,7 +2546,7 @@ const AntennaPolarizationRenderer: React.FC<AntennaPolarizationRendererProps> = 
                     minHeight: '48px'
                   }}
                 >
-                  {opt} {showResult && isCorrect && ' ✓'} {showResult && isSelected && !isCorrect && ' ✗'}
+                  {opt.text} {showResult && isCorrect && ' ✓'} {showResult && isSelected && !isCorrect && ' ✗'}
                 </button>
               );
             })}

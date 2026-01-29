@@ -170,59 +170,99 @@ const PrecessionNutationRenderer: React.FC<Props> = ({ onGameEvent, currentPhase
   const testQuestions = [
     {
       question: "What causes a spinning top to precess?",
-      options: ["Air resistance", "Gravity creating torque on the tilted angular momentum", "Friction with the surface", "The spin slowing down"],
-      correct: 1
+      options: [
+        { text: "Air resistance", correct: false },
+        { text: "Gravity creating torque on the tilted angular momentum", correct: true },
+        { text: "Friction with the surface", correct: false },
+        { text: "The spin slowing down", correct: false }
+      ]
     },
     {
       question: "As a top spins faster, its precession rate:",
-      options: ["Increases", "Decreases", "Stays the same", "Becomes chaotic"],
-      correct: 1
+      options: [
+        { text: "Increases", correct: false },
+        { text: "Decreases", correct: true },
+        { text: "Stays the same", correct: false },
+        { text: "Becomes chaotic", correct: false }
+      ]
     },
     {
       question: "Nutation is best described as:",
-      options: ["The main spin of the top", "The slow circular motion of the axis", "A wobbling superimposed on precession", "The friction slowing the top"],
-      correct: 2
+      options: [
+        { text: "The main spin of the top", correct: false },
+        { text: "The slow circular motion of the axis", correct: false },
+        { text: "A wobbling superimposed on precession", correct: true },
+        { text: "The friction slowing the top", correct: false }
+      ]
     },
     {
       question: "Earth's axial precession takes approximately how long to complete one cycle?",
-      options: ["1 year", "100 years", "2,600 years", "26,000 years"],
-      correct: 3
+      options: [
+        { text: "1 year", correct: false },
+        { text: "100 years", correct: false },
+        { text: "2,600 years", correct: false },
+        { text: "26,000 years", correct: true }
+      ]
     },
     {
       question: "In zero gravity, a spinning top would:",
-      options: ["Fall immediately", "Precess faster", "Spin with no precession", "Stop spinning"],
-      correct: 2
+      options: [
+        { text: "Fall immediately", correct: false },
+        { text: "Precess faster", correct: false },
+        { text: "Spin with no precession", correct: true },
+        { text: "Stop spinning", correct: false }
+      ]
     },
     {
       question: "The torque causing precession acts:",
-      options: ["Parallel to angular momentum", "Perpendicular to angular momentum", "Opposite to angular momentum", "In random directions"],
-      correct: 1
+      options: [
+        { text: "Parallel to angular momentum", correct: false },
+        { text: "Perpendicular to angular momentum", correct: true },
+        { text: "Opposite to angular momentum", correct: false },
+        { text: "In random directions", correct: false }
+      ]
     },
     {
       question: "Which object demonstrates precession in medical imaging?",
-      options: ["X-ray tubes", "Ultrasound transducers", "Protons in MRI machines", "CT scanner rotors"],
-      correct: 2
+      options: [
+        { text: "X-ray tubes", correct: false },
+        { text: "Ultrasound transducers", correct: false },
+        { text: "Protons in MRI machines", correct: true },
+        { text: "CT scanner rotors", correct: false }
+      ]
     },
     {
       question: "If you increase a top's tilt angle, precession rate:",
-      options: ["Decreases", "Increases", "Stays the same", "Reverses direction"],
-      correct: 1
+      options: [
+        { text: "Decreases", correct: false },
+        { text: "Increases", correct: true },
+        { text: "Stays the same", correct: false },
+        { text: "Reverses direction", correct: false }
+      ]
     },
     {
       question: "The precession of Earth's axis causes:",
-      options: ["Seasons", "Day and night", "Changes in the North Star over millennia", "Tides"],
-      correct: 2
+      options: [
+        { text: "Seasons", correct: false },
+        { text: "Day and night", correct: false },
+        { text: "Changes in the North Star over millennia", correct: true },
+        { text: "Tides", correct: false }
+      ]
     },
     {
       question: "Gyroscopic stabilization in ships uses precession to:",
-      options: ["Speed up the ship", "Resist tilting motions", "Navigate", "Generate power"],
-      correct: 1
+      options: [
+        { text: "Speed up the ship", correct: false },
+        { text: "Resist tilting motions", correct: true },
+        { text: "Navigate", correct: false },
+        { text: "Generate power", correct: false }
+      ]
     }
   ];
 
   const calculateScore = () => {
     return testAnswers.reduce((score, answer, index) => {
-      return score + (answer === testQuestions[index].correct ? 1 : 0);
+      return score + (testQuestions[index].options[answer]?.correct ? 1 : 0);
     }, 0);
   };
 
@@ -999,7 +1039,7 @@ const PrecessionNutationRenderer: React.FC<Props> = ({ onGameEvent, currentPhase
                         : 'bg-slate-700/50 text-slate-300 hover:bg-slate-600/50'
                     }`}
                   >
-                    {option}
+                    {option.text}
                   </button>
                 ))}
               </div>

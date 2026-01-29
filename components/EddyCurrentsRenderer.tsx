@@ -133,62 +133,102 @@ export default function EddyCurrentsRenderer({ onGameEvent, currentPhase, onPhas
   const [testQuestions] = useState([
     {
       question: "What causes eddy currents to form in a conductor?",
-      options: ["Static electric charge", "Changing magnetic field", "Temperature difference", "Direct current"],
-      correct: 1,
+      options: [
+        { text: "Static electric charge", correct: false },
+        { text: "Changing magnetic field", correct: true },
+        { text: "Temperature difference", correct: false },
+        { text: "Direct current", correct: false }
+      ],
       explanation: "Eddy currents are induced in conductors when they experience a changing magnetic field, following Faraday's Law of electromagnetic induction."
     },
     {
       question: "According to Lenz's Law, eddy currents create a magnetic field that:",
-      options: ["Enhances the original change", "Opposes the change that created them", "Has no effect", "Points in the same direction"],
-      correct: 1,
+      options: [
+        { text: "Enhances the original change", correct: false },
+        { text: "Opposes the change that created them", correct: true },
+        { text: "Has no effect", correct: false },
+        { text: "Points in the same direction", correct: false }
+      ],
       explanation: "Lenz's Law states that induced currents always create a magnetic field that opposes the change in magnetic flux that induced them."
     },
     {
       question: "Why does a magnet fall slowly through a copper tube?",
-      options: ["Air resistance", "Friction", "Eddy currents create opposing magnetic field", "Gravity is weaker inside tubes"],
-      correct: 2,
+      options: [
+        { text: "Air resistance", correct: false },
+        { text: "Friction", correct: false },
+        { text: "Eddy currents create opposing magnetic field", correct: true },
+        { text: "Gravity is weaker inside tubes", correct: false }
+      ],
       explanation: "As the magnet falls, it induces eddy currents in the copper. These currents create a magnetic field opposing the magnet's motion, acting as a brake."
     },
     {
       question: "Eddy currents convert kinetic energy into:",
-      options: ["Nuclear energy", "Chemical energy", "Heat energy", "Light energy"],
-      correct: 2,
+      options: [
+        { text: "Nuclear energy", correct: false },
+        { text: "Chemical energy", correct: false },
+        { text: "Heat energy", correct: true },
+        { text: "Light energy", correct: false }
+      ],
       explanation: "The resistance of the conductor causes eddy currents to dissipate energy as heat. This is how electromagnetic braking works - motion energy becomes thermal energy."
     },
     {
       question: "Which material would produce the STRONGEST eddy currents?",
-      options: ["Wood", "Glass", "Copper", "Plastic"],
-      correct: 2,
+      options: [
+        { text: "Wood", correct: false },
+        { text: "Glass", correct: false },
+        { text: "Copper", correct: true },
+        { text: "Plastic", correct: false }
+      ],
       explanation: "Copper is an excellent electrical conductor, so it allows large eddy currents to flow. Non-conductors like wood, glass, and plastic cannot support eddy currents."
     },
     {
       question: "To reduce unwanted eddy currents in transformers, engineers use:",
-      options: ["Solid metal cores", "Laminated (layered) cores", "Rubber insulation", "Larger wires"],
-      correct: 1,
+      options: [
+        { text: "Solid metal cores", correct: false },
+        { text: "Laminated (layered) cores", correct: true },
+        { text: "Rubber insulation", correct: false },
+        { text: "Larger wires", correct: false }
+      ],
       explanation: "Laminated cores (thin sheets with insulation between them) break up the path for eddy currents, reducing their magnitude and the energy lost as heat."
     },
     {
       question: "Electromagnetic brakes are preferred over friction brakes because they:",
-      options: ["Are cheaper", "Don't wear out from contact", "Are heavier", "Work only at high speeds"],
-      correct: 1,
+      options: [
+        { text: "Are cheaper", correct: false },
+        { text: "Don't wear out from contact", correct: true },
+        { text: "Are heavier", correct: false },
+        { text: "Work only at high speeds", correct: false }
+      ],
       explanation: "Electromagnetic brakes have no physical contact, so there's no wear on brake pads. They're ideal for applications needing frequent, reliable braking."
     },
     {
       question: "If a magnet moves FASTER through a conductor, the eddy currents will be:",
-      options: ["Weaker", "The same", "Stronger", "Zero"],
-      correct: 2,
+      options: [
+        { text: "Weaker", correct: false },
+        { text: "The same", correct: false },
+        { text: "Stronger", correct: true },
+        { text: "Zero", correct: false }
+      ],
       explanation: "Faster motion means a faster rate of change of magnetic flux, which induces stronger eddy currents. This is why magnetic braking force increases with speed."
     },
     {
       question: "Induction cooktops use eddy currents to:",
-      options: ["Cool food", "Generate electricity", "Heat metal pans directly", "Create magnetic fields in food"],
-      correct: 2,
+      options: [
+        { text: "Cool food", correct: false },
+        { text: "Generate electricity", correct: false },
+        { text: "Heat metal pans directly", correct: true },
+        { text: "Create magnetic fields in food", correct: false }
+      ],
       explanation: "Induction cooktops create a rapidly changing magnetic field that induces eddy currents in metal cookware. The pan's resistance converts these currents to heat."
     },
     {
       question: "The phenomenon where eddy currents oppose the motion that creates them is a consequence of:",
-      options: ["Newton's Laws", "Conservation of energy", "Relativity", "Quantum mechanics"],
-      correct: 1,
+      options: [
+        { text: "Newton's Laws", correct: false },
+        { text: "Conservation of energy", correct: true },
+        { text: "Relativity", correct: false },
+        { text: "Quantum mechanics", correct: false }
+      ],
       explanation: "Lenz's Law is a consequence of energy conservation. If eddy currents enhanced motion instead of opposing it, we could create energy from nothing - violating conservation!"
     }
   ]);
@@ -1703,10 +1743,10 @@ export default function EddyCurrentsRenderer({ onGameEvent, currentPhase, onPhas
               };
 
               if (showExplanation) {
-                if (index === question.correct) {
+                if (option.correct) {
                   buttonStyle.background = 'rgba(16, 185, 129, 0.2)';
                   buttonStyle.borderColor = premiumDesign.colors.success;
-                } else if (index === selectedAnswer && index !== question.correct) {
+                } else if (index === selectedAnswer && !option.correct) {
                   buttonStyle.background = 'rgba(239, 68, 68, 0.2)';
                   buttonStyle.borderColor = '#EF4444';
                 }
@@ -1727,7 +1767,7 @@ export default function EddyCurrentsRenderer({ onGameEvent, currentPhase, onPhas
                   }}
                   disabled={showExplanation}
                 >
-                  {option}
+                  {option.text}
                 </button>
               );
             })}
@@ -1758,7 +1798,7 @@ export default function EddyCurrentsRenderer({ onGameEvent, currentPhase, onPhas
               () => {
                 safeNavigate(() => {
                   setShowExplanation(true);
-                  if (selectedAnswer === question.correct) {
+                  if (question.options[selectedAnswer as number]?.correct) {
                     setTestScore(s => s + 1);
                   }
                 });

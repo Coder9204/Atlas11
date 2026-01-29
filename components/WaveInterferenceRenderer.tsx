@@ -171,71 +171,111 @@ const WaveInterferenceRenderer: React.FC<WaveInterferenceRendererProps> = ({ onC
     {
       scenario: "Two speakers emit the same tone. At point P, the path difference from the two speakers is exactly 2 wavelengths.",
       question: "What type of interference occurs at point P?",
-      options: ["Constructive interference", "Destructive interference", "No interference", "Partial cancellation"],
-      correct: 0,
+      options: [
+        { text: "Constructive interference", correct: true },
+        { text: "Destructive interference", correct: false },
+        { text: "No interference", correct: false },
+        { text: "Partial cancellation", correct: false }
+      ],
       explanation: "Path difference = 2\u03bb = whole number of wavelengths. Waves arrive in phase (peak meets peak), so they add up \u2192 constructive interference!"
     },
     {
       scenario: "At another location, the path difference is 2.5 wavelengths.",
       question: "What happens at this point?",
-      options: ["Maximum amplitude", "Minimum amplitude (near silence)", "Average amplitude", "Doubled frequency"],
-      correct: 1,
+      options: [
+        { text: "Maximum amplitude", correct: false },
+        { text: "Minimum amplitude (near silence)", correct: true },
+        { text: "Average amplitude", correct: false },
+        { text: "Doubled frequency", correct: false }
+      ],
       explanation: "Path difference = 2.5\u03bb = (n + 0.5)\u03bb. Waves arrive out of phase (peak meets trough) \u2192 destructive interference, near-silence!"
     },
     {
       scenario: "The wavelength of a wave is 20 cm. Two sources are separated by 60 cm.",
       question: "At what minimum path difference will you find constructive interference?",
-      options: ["0 cm (on the center line)", "10 cm", "30 cm", "60 cm"],
-      correct: 0,
+      options: [
+        { text: "0 cm (on the center line)", correct: true },
+        { text: "10 cm", correct: false },
+        { text: "30 cm", correct: false },
+        { text: "60 cm", correct: false }
+      ],
       explanation: "Constructive interference occurs when \u0394d = n\u03bb. The minimum is \u0394d = 0 (center line), where both waves travel equal distances."
     },
     {
       scenario: "Noise-canceling headphones work by creating a wave that is out of phase with ambient noise.",
       question: "What path/phase difference do they create?",
-      options: ["0 wavelengths", "0.5 wavelengths (half wavelength)", "1 wavelength", "2 wavelengths"],
-      correct: 1,
+      options: [
+        { text: "0 wavelengths", correct: false },
+        { text: "0.5 wavelengths (half wavelength)", correct: true },
+        { text: "1 wavelength", correct: false },
+        { text: "2 wavelengths", correct: false }
+      ],
       explanation: "To cancel noise, the anti-noise wave must arrive 180\u00b0 (half wavelength) out of phase. Peak meets trough \u2192 destructive interference \u2192 silence!"
     },
     {
       scenario: "You decrease the wavelength while keeping the source separation constant.",
       question: "What happens to the interference pattern?",
-      options: ["Pattern spreads out", "Pattern becomes more closely spaced", "Pattern disappears", "Pattern stays the same"],
-      correct: 1,
+      options: [
+        { text: "Pattern spreads out", correct: false },
+        { text: "Pattern becomes more closely spaced", correct: true },
+        { text: "Pattern disappears", correct: false },
+        { text: "Pattern stays the same", correct: false }
+      ],
       explanation: "Shorter \u03bb means the same physical distance corresponds to MORE wavelengths. The maxima/minima become more closely spaced."
     },
     {
       scenario: "In a double-slit experiment, the central maximum (bright fringe) is always at the center.",
       question: "Why is this?",
-      options: ["Both paths have equal length \u2192 \u0394d = 0 \u2192 constructive", "Light naturally combines at center", "Slits focus light to center", "It's just coincidence"],
-      correct: 0,
+      options: [
+        { text: "Both paths have equal length \u2192 \u0394d = 0 \u2192 constructive", correct: true },
+        { text: "Light naturally combines at center", correct: false },
+        { text: "Slits focus light to center", correct: false },
+        { text: "It's just coincidence", correct: false }
+      ],
       explanation: "At the center, both waves travel exactly the same distance from their sources. Path difference = 0 = 0\u03bb \u2192 always constructive!"
     },
     {
       scenario: "Radio signals from two towers can cancel at certain locations.",
       question: "What is this phenomenon called?",
-      options: ["Signal amplification", "Dead zone or null point", "Signal reflection", "Atmospheric absorption"],
-      correct: 1,
+      options: [
+        { text: "Signal amplification", correct: false },
+        { text: "Dead zone or null point", correct: true },
+        { text: "Signal reflection", correct: false },
+        { text: "Atmospheric absorption", correct: false }
+      ],
       explanation: "When radio waves from two sources arrive out of phase at a location, they cancel \u2192 creating 'dead zones' where reception is poor."
     },
     {
       scenario: "The path difference at a point is 3.25\u03bb.",
       question: "Is this closer to constructive or destructive interference?",
-      options: ["Closer to constructive (3\u03bb)", "Closer to destructive (3.5\u03bb)", "Exactly in between", "Neither - no interference"],
-      correct: 1,
+      options: [
+        { text: "Closer to constructive (3\u03bb)", correct: false },
+        { text: "Closer to destructive (3.5\u03bb)", correct: true },
+        { text: "Exactly in between", correct: false },
+        { text: "Neither - no interference", correct: false }
+      ],
       explanation: "3.25\u03bb is closer to 3.5\u03bb (destructive) than to 3\u03bb (constructive). The wave will be partially cancelled."
     },
     {
       scenario: "Soap bubbles show colorful patterns due to thin-film interference.",
       question: "What causes different colors in different regions?",
-      options: ["Different soap concentrations", "Different film thickness \u2192 different path differences", "Trapped air bubbles", "Random light scattering"],
-      correct: 1,
+      options: [
+        { text: "Different soap concentrations", correct: false },
+        { text: "Different film thickness \u2192 different path differences", correct: true },
+        { text: "Trapped air bubbles", correct: false },
+        { text: "Random light scattering", correct: false }
+      ],
       explanation: "Film thickness varies across the bubble. Different thicknesses create different path differences for each color wavelength."
     },
     {
       scenario: "WiFi signals from your router reflect off walls, creating multiple paths.",
       question: "What causes WiFi 'dead zones' in your home?",
-      options: ["Signal too weak", "Destructive interference between direct and reflected waves", "Wall absorption", "Router malfunction"],
-      correct: 1,
+      options: [
+        { text: "Signal too weak", correct: false },
+        { text: "Destructive interference between direct and reflected waves", correct: true },
+        { text: "Wall absorption", correct: false },
+        { text: "Router malfunction", correct: false }
+      ],
       explanation: "Where direct and reflected waves have path differences of (n+\u00bd)\u03bb, destructive interference creates weak signal zones!"
     },
   ], []);
@@ -1017,7 +1057,7 @@ const WaveInterferenceRenderer: React.FC<WaveInterferenceRendererProps> = ({ onC
   // --- RENDER TEST PHASE ---
   const renderTest = () => {
     if (testSubmitted) {
-      const score = testAnswers.reduce((acc, ans, i) => acc + (ans === testQuestions[i].correct ? 1 : 0), 0);
+      const score = testAnswers.reduce((acc, ans, i) => acc + (testQuestions[i].options[ans as number]?.correct ? 1 : 0), 0);
       const percentage = Math.round((score / testQuestions.length) * 100);
       const passed = percentage >= 70;
 
@@ -1108,7 +1148,7 @@ const WaveInterferenceRenderer: React.FC<WaveInterferenceRendererProps> = ({ onC
                   : 'bg-slate-800/50 hover:bg-slate-700/50 border-2 border-transparent'
               }`}
             >
-              <p className={`font-medium ${selected === i ? 'text-white' : 'text-slate-300'}`}>{opt}</p>
+              <p className={`font-medium ${selected === i ? 'text-white' : 'text-slate-300'}`}>{opt.text}</p>
             </button>
           ))}
         </div>
@@ -1144,7 +1184,7 @@ const WaveInterferenceRenderer: React.FC<WaveInterferenceRendererProps> = ({ onC
                 if (testAnswers.every(a => a !== null)) {
                   setTestSubmitted(true);
                   emitEvent('test_answered', {
-                    score: testAnswers.reduce((acc, ans, i) => acc + (ans === testQuestions[i].correct ? 1 : 0), 0),
+                    score: testAnswers.reduce((acc, ans, i) => acc + (testQuestions[i].options[ans as number]?.correct ? 1 : 0), 0),
                     total: testQuestions.length
                   });
                 }

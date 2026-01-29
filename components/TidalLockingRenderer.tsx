@@ -174,59 +174,99 @@ const TidalLockingRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onPh
   const testQuestions = [
     {
       question: "What causes tidal locking to occur?",
-      options: ["Magnetic attraction", "Tidal friction dissipating rotational energy", "Solar radiation", "The satellite's composition"],
-      correct: 1
+      options: [
+        { text: "Magnetic attraction", correct: false },
+        { text: "Tidal friction dissipating rotational energy", correct: true },
+        { text: "Solar radiation", correct: false },
+        { text: "The satellite's composition", correct: false }
+      ]
     },
     {
       question: "When a body is tidally locked, its rotation period equals its:",
-      options: ["Day length of the parent body", "Orbital period", "Parent body's rotation period", "None - it stops rotating"],
-      correct: 1
+      options: [
+        { text: "Day length of the parent body", correct: false },
+        { text: "Orbital period", correct: true },
+        { text: "Parent body's rotation period", correct: false },
+        { text: "None - it stops rotating", correct: false }
+      ]
     },
     {
       question: "The Moon's rotation period is approximately:",
-      options: ["1 day", "1 week", "27.3 days (same as its orbital period)", "365 days"],
-      correct: 2
+      options: [
+        { text: "1 day", correct: false },
+        { text: "1 week", correct: false },
+        { text: "27.3 days (same as its orbital period)", correct: true },
+        { text: "365 days", correct: false }
+      ]
     },
     {
       question: "Tidal bulges on a body are caused by:",
-      options: ["Internal heat", "Differential gravitational pull across the body", "Magnetic fields", "Solar wind"],
-      correct: 1
+      options: [
+        { text: "Internal heat", correct: false },
+        { text: "Differential gravitational pull across the body", correct: true },
+        { text: "Magnetic fields", correct: false },
+        { text: "Solar wind", correct: false }
+      ]
     },
     {
       question: "Which statement about the Earth-Moon system is true?",
-      options: ["Earth is already tidally locked to the Moon", "The Moon is moving closer to Earth", "Earth's rotation is gradually slowing", "Tidal locking cannot happen to Earth"],
-      correct: 2
+      options: [
+        { text: "Earth is already tidally locked to the Moon", correct: false },
+        { text: "The Moon is moving closer to Earth", correct: false },
+        { text: "Earth's rotation is gradually slowing", correct: true },
+        { text: "Tidal locking cannot happen to Earth", correct: false }
+      ]
     },
     {
       question: "Pluto and Charon are special because:",
-      options: ["Neither is tidally locked", "They are mutually tidally locked", "Only Charon is tidally locked", "They orbit the Sun together"],
-      correct: 1
+      options: [
+        { text: "Neither is tidally locked", correct: false },
+        { text: "They are mutually tidally locked", correct: true },
+        { text: "Only Charon is tidally locked", correct: false },
+        { text: "They orbit the Sun together", correct: false }
+      ]
     },
     {
       question: "An 'eyeball world' refers to a tidally locked exoplanet with:",
-      options: ["Unusual coloring", "A permanent day side and night side", "Multiple moons", "A ring system"],
-      correct: 1
+      options: [
+        { text: "Unusual coloring", correct: false },
+        { text: "A permanent day side and night side", correct: true },
+        { text: "Multiple moons", correct: false },
+        { text: "A ring system", correct: false }
+      ]
     },
     {
       question: "What powers Io's extreme volcanic activity?",
-      options: ["Radioactive decay", "Solar heating", "Tidal heating from Jupiter's gravity", "Chemical reactions"],
-      correct: 2
+      options: [
+        { text: "Radioactive decay", correct: false },
+        { text: "Solar heating", correct: false },
+        { text: "Tidal heating from Jupiter's gravity", correct: true },
+        { text: "Chemical reactions", correct: false }
+      ]
     },
     {
       question: "Before tidal locking, a moon typically rotates:",
-      options: ["Slower than its orbital period", "Faster than its orbital period", "At exactly its orbital period", "In the opposite direction"],
-      correct: 1
+      options: [
+        { text: "Slower than its orbital period", correct: false },
+        { text: "Faster than its orbital period", correct: true },
+        { text: "At exactly its orbital period", correct: false },
+        { text: "In the opposite direction", correct: false }
+      ]
     },
     {
       question: "The 'far side' of the Moon:",
-      options: ["Is always dark", "Was first photographed from space", "Doesn't exist", "Faces the Sun constantly"],
-      correct: 1
+      options: [
+        { text: "Is always dark", correct: false },
+        { text: "Was first photographed from space", correct: true },
+        { text: "Doesn't exist", correct: false },
+        { text: "Faces the Sun constantly", correct: false }
+      ]
     }
   ];
 
   const calculateScore = () => {
     return testAnswers.reduce((score, answer, index) => {
-      return score + (answer === testQuestions[index].correct ? 1 : 0);
+      return score + (testQuestions[index].options[answer]?.correct ? 1 : 0);
     }, 0);
   };
 
@@ -914,7 +954,7 @@ const TidalLockingRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onPh
                         : 'bg-slate-700/50 text-slate-300 hover:bg-slate-600/50'
                     }`}
                   >
-                    {option}
+                    {option.text}
                   </button>
                 ))}
               </div>

@@ -224,19 +224,19 @@ const GasLawsRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onPhaseCo
 
   // Test questions
   const testQuestions = [
-    { question: "If you halve the volume of a gas at constant temperature, the pressure:", options: ["Halves", "Doubles", "Stays the same", "Quadruples"], correct: 1 },
-    { question: "Boyle's Law states that at constant temperature:", options: ["P and V are directly proportional", "P and V are inversely proportional", "P and T are directly proportional", "V and T are inversely proportional"], correct: 1 },
-    { question: "If a gas is heated at constant pressure, its volume will:", options: ["Decrease", "Increase", "Stay the same", "Become zero"], correct: 1 },
-    { question: "Charles's Law relates:", options: ["Pressure and volume", "Volume and temperature", "Pressure and temperature", "All three variables"], correct: 1 },
-    { question: "The Ideal Gas Law is expressed as:", options: ["PV = nRT", "P/V = nRT", "P + V = nRT", "PV = n/RT"], correct: 0 },
-    { question: "At absolute zero (0 K), an ideal gas would have:", options: ["Maximum pressure", "Zero volume", "Maximum volume", "Infinite pressure"], correct: 1 },
-    { question: "If you double both pressure and temperature of a gas, the volume:", options: ["Doubles", "Halves", "Stays the same", "Quadruples"], correct: 2 },
-    { question: "A weather balloon expands as it rises because:", options: ["Temperature increases", "Atmospheric pressure decreases", "More gas enters", "Gravity weakens"], correct: 1 },
-    { question: "The gas constant R has units of:", options: ["J/(mol*K)", "Pa*m^3", "atm*L", "All of these (equivalent)"], correct: 3 },
-    { question: "Real gases deviate from ideal behavior at:", options: ["Low pressure and high temperature", "High pressure and low temperature", "All conditions equally", "Only at room temperature"], correct: 1 }
+    { question: "If you halve the volume of a gas at constant temperature, the pressure:", options: [{ text: "Halves", correct: false }, { text: "Doubles", correct: true }, { text: "Stays the same", correct: false }, { text: "Quadruples", correct: false }] },
+    { question: "Boyle's Law states that at constant temperature:", options: [{ text: "P and V are directly proportional", correct: false }, { text: "P and V are inversely proportional", correct: true }, { text: "P and T are directly proportional", correct: false }, { text: "V and T are inversely proportional", correct: false }] },
+    { question: "If a gas is heated at constant pressure, its volume will:", options: [{ text: "Decrease", correct: false }, { text: "Increase", correct: true }, { text: "Stay the same", correct: false }, { text: "Become zero", correct: false }] },
+    { question: "Charles's Law relates:", options: [{ text: "Pressure and volume", correct: false }, { text: "Volume and temperature", correct: true }, { text: "Pressure and temperature", correct: false }, { text: "All three variables", correct: false }] },
+    { question: "The Ideal Gas Law is expressed as:", options: [{ text: "PV = nRT", correct: true }, { text: "P/V = nRT", correct: false }, { text: "P + V = nRT", correct: false }, { text: "PV = n/RT", correct: false }] },
+    { question: "At absolute zero (0 K), an ideal gas would have:", options: [{ text: "Maximum pressure", correct: false }, { text: "Zero volume", correct: true }, { text: "Maximum volume", correct: false }, { text: "Infinite pressure", correct: false }] },
+    { question: "If you double both pressure and temperature of a gas, the volume:", options: [{ text: "Doubles", correct: false }, { text: "Halves", correct: false }, { text: "Stays the same", correct: true }, { text: "Quadruples", correct: false }] },
+    { question: "A weather balloon expands as it rises because:", options: [{ text: "Temperature increases", correct: false }, { text: "Atmospheric pressure decreases", correct: true }, { text: "More gas enters", correct: false }, { text: "Gravity weakens", correct: false }] },
+    { question: "The gas constant R has units of:", options: [{ text: "J/(mol*K)", correct: false }, { text: "Pa*m^3", correct: false }, { text: "atm*L", correct: false }, { text: "All of these (equivalent)", correct: true }] },
+    { question: "Real gases deviate from ideal behavior at:", options: [{ text: "Low pressure and high temperature", correct: false }, { text: "High pressure and low temperature", correct: true }, { text: "All conditions equally", correct: false }, { text: "Only at room temperature", correct: false }] }
   ];
 
-  const calculateScore = () => testAnswers.reduce((score, answer, index) => score + (answer === testQuestions[index].correct ? 1 : 0), 0);
+  const calculateScore = () => testAnswers.reduce((score, answer, index) => score + (testQuestions[index].options[answer]?.correct ? 1 : 0), 0);
 
   // Piston visualization for Boyle's Law
   const renderPistonViz = () => {
@@ -1035,7 +1035,7 @@ const GasLawsRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onPhaseCo
               }`}
             >
               <span className="font-bold text-white mr-2">{String.fromCharCode(65 + i)}.</span>
-              <span className="text-slate-200">{option}</span>
+              <span className="text-slate-200">{option.text}</span>
             </button>
           ))}
         </div>

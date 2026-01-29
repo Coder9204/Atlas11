@@ -1328,28 +1328,48 @@ const SpeakerPrincipleRenderer: React.FC<SpeakerPrincipleRendererProps> = ({ onG
     const questions = [
       {
         question: 'What force causes a current-carrying wire to move in a magnetic field?',
-        options: ['Gravitational force', 'Lorentz force', 'Centripetal force', 'Friction'],
-        correct: 1
+        options: [
+          { text: 'Gravitational force', correct: false },
+          { text: 'Lorentz force', correct: true },
+          { text: 'Centripetal force', correct: false },
+          { text: 'Friction', correct: false }
+        ]
       },
       {
         question: 'In the formula F = BIL, what does "B" represent?',
-        options: ['Battery voltage', 'Magnetic field strength', 'Wire resistance', 'Current frequency'],
-        correct: 1
+        options: [
+          { text: 'Battery voltage', correct: false },
+          { text: 'Magnetic field strength', correct: true },
+          { text: 'Wire resistance', correct: false },
+          { text: 'Current frequency', correct: false }
+        ]
       },
       {
         question: 'Why does the wire vibrate when AC current flows through it?',
-        options: ['Heat expansion', 'The current direction alternates', 'Gravity pulls it', 'The magnets vibrate'],
-        correct: 1
+        options: [
+          { text: 'Heat expansion', correct: false },
+          { text: 'The current direction alternates', correct: true },
+          { text: 'Gravity pulls it', correct: false },
+          { text: 'The magnets vibrate', correct: false }
+        ]
       },
       {
         question: 'What component in a speaker creates the magnetic field?',
-        options: ['Voice coil', 'Permanent magnet', 'Speaker cone', 'Crossover'],
-        correct: 1
+        options: [
+          { text: 'Voice coil', correct: false },
+          { text: 'Permanent magnet', correct: true },
+          { text: 'Speaker cone', correct: false },
+          { text: 'Crossover', correct: false }
+        ]
       },
       {
         question: 'Why do quality speakers have multiple drivers (woofer, tweeter)?',
-        options: ['Looks better', 'Different sizes handle different frequencies better', 'More expensive', 'Louder volume'],
-        correct: 1
+        options: [
+          { text: 'Looks better', correct: false },
+          { text: 'Different sizes handle different frequencies better', correct: true },
+          { text: 'More expensive', correct: false },
+          { text: 'Louder volume', correct: false }
+        ]
       }
     ];
 
@@ -1378,8 +1398,8 @@ const SpeakerPrincipleRenderer: React.FC<SpeakerPrincipleRendererProps> = ({ onG
                   const newAnswers = [...testAnswers];
                   newAnswers[currentQuestion] = i;
                   setTestAnswers(newAnswers);
-                  if (i === currentQ.correct) setTestScore(prev => prev + 1);
-                  playSound(i === currentQ.correct ? 'success' : 'failure');
+                  if (opt.correct) setTestScore(prev => prev + 1);
+                  playSound(opt.correct ? 'success' : 'failure');
                   setTimeout(() => {
                     if (currentQuestion < questions.length - 1) {
                       setCurrentQuestion(prev => prev + 1);
@@ -1392,10 +1412,10 @@ const SpeakerPrincipleRenderer: React.FC<SpeakerPrincipleRendererProps> = ({ onG
                 style={{
                   padding: '16px',
                   background: testAnswers[currentQuestion] === i
-                    ? i === currentQ.correct ? `${colors.success}20` : `${colors.error}20`
+                    ? opt.correct ? `${colors.success}20` : `${colors.error}20`
                     : colors.bgSurface,
                   border: testAnswers[currentQuestion] === i
-                    ? `2px solid ${i === currentQ.correct ? colors.success : colors.error}`
+                    ? `2px solid ${opt.correct ? colors.success : colors.error}`
                     : `1px solid ${colors.bgElevated}`,
                   borderRadius: '12px',
                   color: colors.textPrimary,
@@ -1404,7 +1424,7 @@ const SpeakerPrincipleRenderer: React.FC<SpeakerPrincipleRendererProps> = ({ onG
                   cursor: testAnswers[currentQuestion] !== null ? 'default' : 'pointer'
                 }}
               >
-                {opt}
+                {opt.text}
               </button>
             ))}
           </div>

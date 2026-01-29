@@ -221,59 +221,99 @@ const AngularMomentumTransferRenderer: React.FC<Props> = ({ onGameEvent, current
   const testQuestions = [
     {
       question: "How can a cat rotate in mid-air without external torque?",
-      options: ["It pushes against the air", "It transfers angular momentum between body parts", "Gravity helps it rotate", "It can't - cats have magic"],
-      correct: 1
+      options: [
+        { text: "It pushes against the air", correct: false },
+        { text: "It transfers angular momentum between body parts", correct: true },
+        { text: "Gravity helps it rotate", correct: false },
+        { text: "It can't - cats have magic", correct: false }
+      ]
     },
     {
       question: "When a cat extends one set of legs while tucking the other:",
-      options: ["Both halves rotate the same amount", "The tucked half rotates more", "The extended half rotates more", "Neither half rotates"],
-      correct: 1
+      options: [
+        { text: "Both halves rotate the same amount", correct: false },
+        { text: "The tucked half rotates more", correct: true },
+        { text: "The extended half rotates more", correct: false },
+        { text: "Neither half rotates", correct: false }
+      ]
     },
     {
       question: "During the righting reflex, the total angular momentum of the cat is:",
-      options: ["Constantly increasing", "Constantly decreasing", "Zero (or constant)", "Negative"],
-      correct: 2
+      options: [
+        { text: "Constantly increasing", correct: false },
+        { text: "Constantly decreasing", correct: false },
+        { text: "Zero (or constant)", correct: true },
+        { text: "Negative", correct: false }
+      ]
     },
     {
       question: "The 'moment of inertia' of extended legs compared to tucked legs is:",
-      options: ["Smaller", "Larger", "The same", "Undefined"],
-      correct: 1
+      options: [
+        { text: "Smaller", correct: false },
+        { text: "Larger", correct: true },
+        { text: "The same", correct: false },
+        { text: "Undefined", correct: false }
+      ]
     },
     {
       question: "If a body part has lower moment of inertia, it can rotate:",
-      options: ["Slower", "Faster for the same angular momentum", "Not at all", "Only backward"],
-      correct: 1
+      options: [
+        { text: "Slower", correct: false },
+        { text: "Faster for the same angular momentum", correct: true },
+        { text: "Not at all", correct: false },
+        { text: "Only backward", correct: false }
+      ]
     },
     {
       question: "Astronauts can self-rotate in space using the same principle by:",
-      options: ["Swimming through air", "Extending and retracting their limbs asymmetrically", "Using jet packs", "Pushing off walls only"],
-      correct: 1
+      options: [
+        { text: "Swimming through air", correct: false },
+        { text: "Extending and retracting their limbs asymmetrically", correct: true },
+        { text: "Using jet packs", correct: false },
+        { text: "Pushing off walls only", correct: false }
+      ]
     },
     {
       question: "The minimum height for a cat to right itself is approximately:",
-      options: ["1 centimeter", "30 centimeters (about 1 foot)", "5 meters", "Any height works"],
-      correct: 1
+      options: [
+        { text: "1 centimeter", correct: false },
+        { text: "30 centimeters (about 1 foot)", correct: true },
+        { text: "5 meters", correct: false },
+        { text: "Any height works", correct: false }
+      ]
     },
     {
       question: "If a falling object has zero initial angular momentum, its final angular momentum will be:",
-      options: ["Positive", "Negative", "Zero", "Depends on shape"],
-      correct: 2
+      options: [
+        { text: "Positive", correct: false },
+        { text: "Negative", correct: false },
+        { text: "Zero", correct: true },
+        { text: "Depends on shape", correct: false }
+      ]
     },
     {
       question: "The cat righting problem was famously studied using:",
-      options: ["Slow motion photography", "Computer simulations only", "Mathematical theory only", "It has never been studied"],
-      correct: 0
+      options: [
+        { text: "Slow motion photography", correct: true },
+        { text: "Computer simulations only", correct: false },
+        { text: "Mathematical theory only", correct: false },
+        { text: "It has never been studied", correct: false }
+      ]
     },
     {
       question: "A diver performing twists uses the same principle by:",
-      options: ["Flapping their arms like wings", "Asymmetrically moving arms and legs", "Holding completely still", "Spinning before jumping"],
-      correct: 1
+      options: [
+        { text: "Flapping their arms like wings", correct: false },
+        { text: "Asymmetrically moving arms and legs", correct: true },
+        { text: "Holding completely still", correct: false },
+        { text: "Spinning before jumping", correct: false }
+      ]
     }
   ];
 
   const calculateScore = () => {
     return testAnswers.reduce((score, answer, index) => {
-      return score + (answer === testQuestions[index].correct ? 1 : 0);
+      return score + (testQuestions[index].options[answer]?.correct ? 1 : 0);
     }, 0);
   };
 
@@ -942,7 +982,7 @@ const AngularMomentumTransferRenderer: React.FC<Props> = ({ onGameEvent, current
                         : 'bg-slate-700/50 text-slate-300 hover:bg-slate-600/50'
                     }`}
                   >
-                    {option}
+                    {option.text}
                   </button>
                 ))}
               </div>

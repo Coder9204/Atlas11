@@ -144,62 +144,102 @@ export default function ElectricFieldMappingRenderer({ onGameEvent, currentPhase
   const [testQuestions] = useState([
     {
       question: "Electric field lines always point:",
-      options: ["Toward positive charges", "Away from positive charges", "In circles around charges", "Randomly in all directions"],
-      correct: 1,
+      options: [
+        { text: "Toward positive charges", correct: false },
+        { text: "Away from positive charges", correct: true },
+        { text: "In circles around charges", correct: false },
+        { text: "Randomly in all directions", correct: false }
+      ],
       explanation: "Electric field lines point AWAY from positive charges and TOWARD negative charges. The field shows the direction a positive test charge would move."
     },
     {
       question: "What does the density of field lines indicate?",
-      options: ["The charge's color", "The field strength", "The temperature", "The magnetic field"],
-      correct: 1,
+      options: [
+        { text: "The charge's color", correct: false },
+        { text: "The field strength", correct: true },
+        { text: "The temperature", correct: false },
+        { text: "The magnetic field", correct: false }
+      ],
       explanation: "Where field lines are closer together (denser), the electric field is stronger. Sparse lines indicate a weaker field."
     },
     {
       question: "Can electric field lines ever cross each other?",
-      options: ["Yes, at high voltages", "Yes, between like charges", "No, never", "Only in magnetic fields"],
-      correct: 2,
+      options: [
+        { text: "Yes, at high voltages", correct: false },
+        { text: "Yes, between like charges", correct: false },
+        { text: "No, never", correct: true },
+        { text: "Only in magnetic fields", correct: false }
+      ],
       explanation: "Electric field lines NEVER cross because at any point in space, the field can only point in one direction. Crossing would mean two directions at once!"
     },
     {
       question: "What is the formula for electric field strength from a point charge?",
-      options: ["E = kq/r", "E = kq/r²", "E = kq²/r", "E = kr/q"],
-      correct: 1,
+      options: [
+        { text: "E = kq/r", correct: false },
+        { text: "E = kq/r²", correct: true },
+        { text: "E = kq²/r", correct: false },
+        { text: "E = kr/q", correct: false }
+      ],
       explanation: "The electric field E = kq/r², where k is Coulomb's constant, q is the charge, and r is the distance from the charge."
     },
     {
       question: "In a uniform electric field (like between parallel plates), the field lines are:",
-      options: ["Curved", "Parallel and equally spaced", "Radiating outward", "Converging inward"],
-      correct: 1,
+      options: [
+        { text: "Curved", correct: false },
+        { text: "Parallel and equally spaced", correct: true },
+        { text: "Radiating outward", correct: false },
+        { text: "Converging inward", correct: false }
+      ],
       explanation: "A uniform field has parallel, equally-spaced field lines. This occurs between parallel charged plates (like in a capacitor)."
     },
     {
       question: "The electric field is a vector quantity, meaning it has:",
-      options: ["Only magnitude", "Only direction", "Both magnitude and direction", "Neither magnitude nor direction"],
-      correct: 2,
+      options: [
+        { text: "Only magnitude", correct: false },
+        { text: "Only direction", correct: false },
+        { text: "Both magnitude and direction", correct: true },
+        { text: "Neither magnitude nor direction", correct: false }
+      ],
       explanation: "The electric field is a vector - it has both magnitude (strength) and direction (the way it points at each location)."
     },
     {
       question: "What happens to the electric field strength when you double the distance from a charge?",
-      options: ["It doubles", "It halves", "It becomes 1/4 as strong", "It stays the same"],
-      correct: 2,
+      options: [
+        { text: "It doubles", correct: false },
+        { text: "It halves", correct: false },
+        { text: "It becomes 1/4 as strong", correct: true },
+        { text: "It stays the same", correct: false }
+      ],
       explanation: "Since E ∝ 1/r², doubling the distance reduces the field to (1/2)² = 1/4 of its original strength."
     },
     {
       question: "An electric dipole consists of:",
-      options: ["Two positive charges", "Two negative charges", "One positive and one negative charge", "A single neutral particle"],
-      correct: 2,
+      options: [
+        { text: "Two positive charges", correct: false },
+        { text: "Two negative charges", correct: false },
+        { text: "One positive and one negative charge", correct: true },
+        { text: "A single neutral particle", correct: false }
+      ],
       explanation: "A dipole consists of equal and opposite charges (one positive, one negative) separated by a distance, like the two poles of a magnet."
     },
     {
       question: "Where is the electric field strongest near a point charge?",
-      options: ["Far away from the charge", "Close to the charge", "At infinity", "Exactly at the center"],
-      correct: 1,
+      options: [
+        { text: "Far away from the charge", correct: false },
+        { text: "Close to the charge", correct: true },
+        { text: "At infinity", correct: false },
+        { text: "Exactly at the center", correct: false }
+      ],
       explanation: "The field is strongest closest to the charge (E = kq/r²). As you move away, the field weakens rapidly."
     },
     {
       question: "Electric field lines around a positive charge:",
-      options: ["Form closed loops", "Point inward toward the charge", "Radiate outward from the charge", "Are parallel to each other"],
-      correct: 2,
+      options: [
+        { text: "Form closed loops", correct: false },
+        { text: "Point inward toward the charge", correct: false },
+        { text: "Radiate outward from the charge", correct: true },
+        { text: "Are parallel to each other", correct: false }
+      ],
       explanation: "Field lines radiate outward from positive charges (like rays from the sun) because positive test charges would be pushed away."
     }
   ]);
@@ -1703,10 +1743,10 @@ export default function ElectricFieldMappingRenderer({ onGameEvent, currentPhase
               };
 
               if (showExplanation) {
-                if (index === question.correct) {
+                if (option.correct) {
                   buttonStyle.background = 'rgba(16, 185, 129, 0.2)';
                   buttonStyle.borderColor = premiumDesign.colors.success;
-                } else if (index === selectedAnswer && index !== question.correct) {
+                } else if (index === selectedAnswer && !option.correct) {
                   buttonStyle.background = 'rgba(239, 68, 68, 0.2)';
                   buttonStyle.borderColor = '#EF4444';
                 }
@@ -1727,7 +1767,7 @@ export default function ElectricFieldMappingRenderer({ onGameEvent, currentPhase
                   }}
                   disabled={showExplanation}
                 >
-                  {option}
+                  {option.text}
                 </button>
               );
             })}
@@ -1758,7 +1798,7 @@ export default function ElectricFieldMappingRenderer({ onGameEvent, currentPhase
               () => {
                 safeNavigate(() => {
                   setShowExplanation(true);
-                  if (selectedAnswer === question.correct) {
+                  if (question.options[selectedAnswer as number]?.correct) {
                     setTestScore(s => s + 1);
                   }
                 });

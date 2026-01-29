@@ -160,120 +160,110 @@ const testQuestions = [
     scenario: "You push a child on a swing once and watch them swing back and forth.",
     question: "What happens to the swing's amplitude over time if you don't push again?",
     options: [
-      "It stays constant forever (perpetual motion)",
-      "It gradually decreases due to air resistance and friction",
-      "It increases as the swing speeds up",
-      "It oscillates between high and low amplitude"
+      { text: "It stays constant forever (perpetual motion)", correct: false },
+      { text: "It gradually decreases due to air resistance and friction", correct: true },
+      { text: "It increases as the swing speeds up", correct: false },
+      { text: "It oscillates between high and low amplitude", correct: false }
     ],
-    correct: 1,
     explanation: "Real oscillators always lose energy to friction and air resistance. This energy is converted to heat, causing the amplitude to gradually decay. Without additional energy input, all oscillations eventually stop."
   },
   {
     scenario: "A car hits a bump and the suspension compresses. The shock absorber is working correctly.",
     question: "What's the ideal behavior after hitting the bump?",
     options: [
-      "The car bounces up and down several times before settling",
-      "The car returns to level quickly with minimal or no bouncing",
-      "The car stays compressed for a long time before slowly rising",
-      "The car immediately snaps back and overshoots significantly"
+      { text: "The car bounces up and down several times before settling", correct: false },
+      { text: "The car returns to level quickly with minimal or no bouncing", correct: true },
+      { text: "The car stays compressed for a long time before slowly rising", correct: false },
+      { text: "The car immediately snaps back and overshoots significantly", correct: false }
     ],
-    correct: 1,
     explanation: "Optimal car suspension is slightly underdamped to critically damped. This allows the car to return to equilibrium quickly (unlike overdamped) without excessive bouncing (unlike underdamped). One small overshoot is acceptable for comfort."
   },
   {
     scenario: "You're designing a door closer for a hospital entrance.",
     question: "Why would you choose overdamped or critically damped rather than underdamped?",
     options: [
-      "Underdamped doors close faster",
-      "Overdamped doors are cheaper to manufacture",
-      "Critically damped prevents the door from bouncing back open",
-      "Underdamped doors use less energy"
+      { text: "Underdamped doors close faster", correct: false },
+      { text: "Overdamped doors are cheaper to manufacture", correct: false },
+      { text: "Critically damped prevents the door from bouncing back open", correct: true },
+      { text: "Underdamped doors use less energy", correct: false }
     ],
-    correct: 2,
     explanation: "An underdamped door would swing past closed, bounce back open, and oscillate before settling. This is dangerous in a hospital where gurneys need to pass through. Critical damping ensures the door closes once and stays closed without bouncing."
   },
   {
     scenario: "A pendulum in a vacuum oscillates at 1 Hz. The same pendulum in honey oscillates very slowly and doesn't swing back.",
     question: "What type of damping does the honey provide?",
     options: [
-      "Underdamped - it still oscillates",
-      "Critically damped - fastest return without oscillation",
-      "Overdamped - slow return without oscillation",
-      "Undamped - no energy loss"
+      { text: "Underdamped - it still oscillates", correct: false },
+      { text: "Critically damped - fastest return without oscillation", correct: false },
+      { text: "Overdamped - slow return without oscillation", correct: true },
+      { text: "Undamped - no energy loss", correct: false }
     ],
-    correct: 2,
     explanation: "Honey's high viscosity provides strong damping. When the pendulum doesn't oscillate at all and returns very slowly to equilibrium, it's overdamped. The damping force dominates the restoring force, preventing any overshoot."
   },
   {
     scenario: "Two identical springs with masses are set oscillating. One is in air, one is in water.",
     question: "How do their oscillation patterns compare?",
     options: [
-      "Same frequency, water one decays faster",
-      "Water one has higher frequency and decays faster",
-      "Water one has lower frequency and decays faster",
-      "They're identical since water only adds buoyancy"
+      { text: "Same frequency, water one decays faster", correct: false },
+      { text: "Water one has higher frequency and decays faster", correct: false },
+      { text: "Water one has lower frequency and decays faster", correct: true },
+      { text: "They're identical since water only adds buoyancy", correct: false }
     ],
-    correct: 2,
     explanation: "Water adds damping (viscous drag) which causes faster amplitude decay. Additionally, the damping slightly reduces the natural frequency. The formula becomes ω_d = ω_0√(1-ζ²), where ζ is the damping ratio. Higher damping = lower frequency."
   },
   {
     scenario: "An engineer measures that a vibrating beam's amplitude drops to 37% (1/e) after 100 oscillations.",
     question: "What is the quality factor Q of this oscillator?",
     options: [
-      "Q = 37",
-      "Q = 100",
-      "Q = 314 (100π)",
-      "Q = 1000"
+      { text: "Q = 37", correct: false },
+      { text: "Q = 100", correct: false },
+      { text: "Q = 314 (100π)", correct: true },
+      { text: "Q = 1000", correct: false }
     ],
-    correct: 2,
     explanation: "Quality factor Q measures how many radians of oscillation occur before amplitude drops to 1/e. Since amplitude drops to 1/e after 100 cycles, and each cycle is 2π radians: Q = 100 × 2π ≈ 628, but the closest answer is 100π ≈ 314 (this question uses the definition Q = number of cycles × π)."
   },
   {
     scenario: "A tuning fork produces sound at 440 Hz and rings for about 10 seconds before becoming inaudible.",
     question: "If you dip the same tuning fork in water, what happens to its ringing?",
     options: [
-      "It rings longer because water adds mass",
-      "It rings shorter because water adds damping",
-      "It rings at the same duration but sounds different",
-      "It stops ringing entirely"
+      { text: "It rings longer because water adds mass", correct: false },
+      { text: "It rings shorter because water adds damping", correct: true },
+      { text: "It rings at the same duration but sounds different", correct: false },
+      { text: "It stops ringing entirely", correct: false }
     ],
-    correct: 1,
     explanation: "Water adds significant viscous damping to the tuning fork's vibration. The energy is dissipated much faster into the water, causing the amplitude to decay more quickly. The tuning fork might only ring for 1-2 seconds in water instead of 10 seconds in air."
   },
   {
     scenario: "A building has a natural sway frequency of 0.2 Hz. Engineers want to add seismic damping.",
     question: "What's the benefit of increasing the damping ratio from 2% to 20%?",
     options: [
-      "The building will sway at a higher frequency",
-      "The building will experience less resonant amplification during earthquakes",
-      "The building will be stiffer and not sway at all",
-      "The building will sway more during earthquakes"
+      { text: "The building will sway at a higher frequency", correct: false },
+      { text: "The building will experience less resonant amplification during earthquakes", correct: true },
+      { text: "The building will be stiffer and not sway at all", correct: false },
+      { text: "The building will sway more during earthquakes", correct: false }
     ],
-    correct: 1,
     explanation: "At resonance, amplification = 1/(2ζ). With 2% damping (ζ=0.02), amplification = 25×. With 20% damping (ζ=0.2), amplification = 2.5×. Higher damping dramatically reduces the dangerous amplification that occurs when earthquake frequency matches building frequency."
   },
   {
     scenario: "You're analyzing the amplitude decay of a guitar string after being plucked.",
     question: "The amplitude A(t) follows an exponential decay. Which equation describes this?",
     options: [
-      "A(t) = A₀ cos(ωt)",
-      "A(t) = A₀ e^(-γt) cos(ω_d t)",
-      "A(t) = A₀ / t",
-      "A(t) = A₀ (1 - e^(-γt))"
+      { text: "A(t) = A₀ cos(ωt)", correct: false },
+      { text: "A(t) = A₀ e^(-γt) cos(ω_d t)", correct: true },
+      { text: "A(t) = A₀ / t", correct: false },
+      { text: "A(t) = A₀ (1 - e^(-γt))", correct: false }
     ],
-    correct: 1,
     explanation: "Damped oscillation combines oscillatory motion (cosine) with exponential decay (e^(-γt)). The full solution is A(t) = A₀ e^(-γt) cos(ω_d t), where γ is the decay constant and ω_d is the damped frequency. The envelope decays exponentially while the oscillation continues."
   },
   {
     scenario: "A physicist measures the damping ratio of a pendulum to be exactly 1.0.",
     question: "What special condition is this, and what does it mean for the motion?",
     options: [
-      "Underdamped - oscillates with slowly decreasing amplitude",
-      "Critical damping - returns to equilibrium fastest without oscillating",
-      "Overdamped - returns very slowly without oscillating",
-      "No damping - oscillates forever at constant amplitude"
+      { text: "Underdamped - oscillates with slowly decreasing amplitude", correct: false },
+      { text: "Critical damping - returns to equilibrium fastest without oscillating", correct: true },
+      { text: "Overdamped - returns very slowly without oscillating", correct: false },
+      { text: "No damping - oscillates forever at constant amplitude", correct: false }
     ],
-    correct: 1,
     explanation: "Damping ratio ζ = 1 is exactly critical damping. This is the boundary between oscillatory (underdamped, ζ<1) and non-oscillatory (overdamped, ζ>1) motion. Critical damping provides the fastest return to equilibrium without any overshoot or oscillation."
   }
 ];
@@ -1982,7 +1972,7 @@ const DampingRenderer: React.FC<DampingRendererProps> = ({
                       }}>
                         {String.fromCharCode(65 + idx)}
                       </span>
-                      <span style={{ lineHeight: 1.4 }}>{option}</span>
+                      <span style={{ lineHeight: 1.4 }}>{option.text}</span>
                     </button>
                   );
                 })}
@@ -2059,7 +2049,7 @@ const DampingRenderer: React.FC<DampingRendererProps> = ({
 
               {(() => {
                 const score = testAnswers.reduce((acc, answer, idx) =>
-                  acc + (answer === testQuestions[idx].correct ? 1 : 0), 0);
+                  acc + (testQuestions[idx].options[answer]?.correct ? 1 : 0), 0);
                 const percentage = Math.round((score / testQuestions.length) * 100);
 
                 return (
@@ -2084,7 +2074,7 @@ const DampingRenderer: React.FC<DampingRendererProps> = ({
 
                     <div style={{ display: 'flex', flexDirection: 'column', gap: space.md }}>
                       {testQuestions.map((q, idx) => {
-                        const isCorrect = testAnswers[idx] === q.correct;
+                        const isCorrect = q.options[testAnswers[idx]]?.correct;
                         return (
                           <div key={idx} style={{
                             padding: space.lg,
@@ -2111,11 +2101,11 @@ const DampingRenderer: React.FC<DampingRendererProps> = ({
                                 </p>
                                 {!isCorrect && (
                                   <p style={{ fontSize: '13px', color: colors.danger, margin: `${space.sm} 0 0` }}>
-                                    Your answer: {q.options[testAnswers[idx] as number]}
+                                    Your answer: {q.options[testAnswers[idx] as number]?.text}
                                   </p>
                                 )}
                                 <p style={{ fontSize: '13px', color: colors.success, margin: `${space.xs} 0 0`, fontWeight: 500 }}>
-                                  Correct: {q.options[q.correct]}
+                                  Correct: {q.options.find(o => o.correct)?.text}
                                 </p>
                               </div>
                             </div>
@@ -2147,7 +2137,7 @@ const DampingRenderer: React.FC<DampingRendererProps> = ({
   // Mastery phase
   const renderMastery = () => {
     const score = testAnswers.reduce((acc, answer, idx) =>
-      acc + (answer === testQuestions[idx].correct ? 1 : 0), 0);
+      acc + (testQuestions[idx].options[answer]?.correct ? 1 : 0), 0);
 
     return (
       <div style={{

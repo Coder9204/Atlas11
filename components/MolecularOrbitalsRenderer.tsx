@@ -987,43 +987,75 @@ const MolecularOrbitalsRenderer: React.FC<MolecularOrbitalsRendererProps> = ({ o
   const testQuestions = [
     {
       question: "What does HOMO stand for?",
-      options: ["Highest Occupied Molecular Orbital", "High Output Molecular Object", "Horizontal Orbital Motion", "Hydrogen Oxygen Molecular Orbital"],
-      correct: 0
+      options: [
+        { text: "Highest Occupied Molecular Orbital", correct: true },
+        { text: "High Output Molecular Object", correct: false },
+        { text: "Horizontal Orbital Motion", correct: false },
+        { text: "Hydrogen Oxygen Molecular Orbital", correct: false }
+      ]
     },
     {
       question: "Why does a drug need to 'fit' a receptor?",
-      options: ["For aesthetic reasons", "So the orbitals can overlap", "To make the drug colorful", "To increase drug size"],
-      correct: 1
+      options: [
+        { text: "For aesthetic reasons", correct: false },
+        { text: "So the orbitals can overlap", correct: true },
+        { text: "To make the drug colorful", correct: false },
+        { text: "To increase drug size", correct: false }
+      ]
     },
     {
       question: "What happens when drug HOMO overlaps with receptor LUMO?",
-      options: ["Nothing", "Electrons are shared, forming a bond", "The drug explodes", "The receptor dissolves"],
-      correct: 1
+      options: [
+        { text: "Nothing", correct: false },
+        { text: "Electrons are shared, forming a bond", correct: true },
+        { text: "The drug explodes", correct: false },
+        { text: "The receptor dissolves", correct: false }
+      ]
     },
     {
       question: "How does aspirin work?",
-      options: ["It heats up the body", "It blocks COX enzyme by orbital overlap", "It produces more blood", "It makes you sleep"],
-      correct: 1
+      options: [
+        { text: "It heats up the body", correct: false },
+        { text: "It blocks COX enzyme by orbital overlap", correct: true },
+        { text: "It produces more blood", correct: false },
+        { text: "It makes you sleep", correct: false }
+      ]
     },
     {
       question: "Why are orbital shapes important in drug design?",
-      options: ["They're not important", "They determine if drug can bind to target", "They affect drug color", "They make drugs taste better"],
-      correct: 1
+      options: [
+        { text: "They're not important", correct: false },
+        { text: "They determine if drug can bind to target", correct: true },
+        { text: "They affect drug color", correct: false },
+        { text: "They make drugs taste better", correct: false }
+      ]
     },
     {
       question: "What is a LUMO?",
-      options: ["A type of lamp", "Lowest Unoccupied Molecular Orbital - accepts electrons", "A drug brand", "A receptor type"],
-      correct: 1
+      options: [
+        { text: "A type of lamp", correct: false },
+        { text: "Lowest Unoccupied Molecular Orbital - accepts electrons", correct: true },
+        { text: "A drug brand", correct: false },
+        { text: "A receptor type", correct: false }
+      ]
     },
     {
       question: "If a drug doesn't fit the receptor binding site, what happens?",
-      options: ["It binds anyway", "No therapeutic effect - drug doesn't work", "The receptor changes shape", "The drug becomes toxic"],
-      correct: 1
+      options: [
+        { text: "It binds anyway", correct: false },
+        { text: "No therapeutic effect - drug doesn't work", correct: true },
+        { text: "The receptor changes shape", correct: false },
+        { text: "The drug becomes toxic", correct: false }
+      ]
     },
     {
       question: "What real-world application uses orbital overlap?",
-      options: ["Making ice cream", "Drug design, solar cells, catalysis", "Building bridges", "Painting walls"],
-      correct: 1
+      options: [
+        { text: "Making ice cream", correct: false },
+        { text: "Drug design, solar cells, catalysis", correct: true },
+        { text: "Building bridges", correct: false },
+        { text: "Painting walls", correct: false }
+      ]
     }
   ];
 
@@ -1502,7 +1534,7 @@ const MolecularOrbitalsRenderer: React.FC<MolecularOrbitalsRendererProps> = ({ o
         <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '24px' }}>
           {q.options.map((opt, i) => {
             const isSelected = testAnswers[currentQuestion] === i;
-            const isCorrect = i === q.correct;
+            const isCorrect = opt.correct;
             const showResult = answered;
 
             return (
@@ -1535,7 +1567,7 @@ const MolecularOrbitalsRenderer: React.FC<MolecularOrbitalsRendererProps> = ({ o
                   fontSize: '15px'
                 }}
               >
-                {opt} {showResult && isCorrect && '✓'} {showResult && isSelected && !isCorrect && '✗'}
+                {opt.text} {showResult && isCorrect && '✓'} {showResult && isSelected && !isCorrect && '✗'}
               </button>
             );
           })}

@@ -134,62 +134,102 @@ export default function ConvectionCurrentsRenderer({ onGameEvent, currentPhase, 
   const [testQuestions] = useState([
     {
       question: "In convection, why does warm fluid rise?",
-      options: ["It weighs more", "It is less dense", "It moves faster", "It is more viscous"],
-      correct: 1,
+      options: [
+        { text: "It weighs more", correct: false },
+        { text: "It is less dense", correct: true },
+        { text: "It moves faster", correct: false },
+        { text: "It is more viscous", correct: false }
+      ],
       explanation: "Warm fluid expands and becomes less dense than the surrounding cooler fluid. Buoyancy forces push the less dense fluid upward."
     },
     {
       question: "What happens to fluid molecules when heated?",
-      options: ["They slow down", "They move faster and spread apart", "They bond together", "They become heavier"],
-      correct: 1,
+      options: [
+        { text: "They slow down", correct: false },
+        { text: "They move faster and spread apart", correct: true },
+        { text: "They bond together", correct: false },
+        { text: "They become heavier", correct: false }
+      ],
       explanation: "Heat increases the kinetic energy of molecules, causing them to move faster and spread apart, decreasing the fluid's density."
     },
     {
       question: "What drives a convection current?",
-      options: ["Magnetic forces", "Temperature differences", "Electric current", "Sound waves"],
-      correct: 1,
+      options: [
+        { text: "Magnetic forces", correct: false },
+        { text: "Temperature differences", correct: true },
+        { text: "Electric current", correct: false },
+        { text: "Sound waves", correct: false }
+      ],
       explanation: "Convection currents are driven by temperature differences that create density differences in the fluid."
     },
     {
       question: "In a pot of boiling water, where does the coolest water sink?",
-      options: ["Near the heat source", "Along the sides", "In the center only", "It doesn't sink"],
-      correct: 1,
+      options: [
+        { text: "Near the heat source", correct: false },
+        { text: "Along the sides", correct: true },
+        { text: "In the center only", correct: false },
+        { text: "It doesn't sink", correct: false }
+      ],
       explanation: "Water cools along the sides of the pot (away from heat) and sinks back down, completing the convection cycle."
     },
     {
       question: "What type of heat transfer is convection?",
-      options: ["Transfer through electromagnetic waves", "Transfer through direct contact", "Transfer through fluid movement", "Transfer through a vacuum"],
-      correct: 2,
+      options: [
+        { text: "Transfer through electromagnetic waves", correct: false },
+        { text: "Transfer through direct contact", correct: false },
+        { text: "Transfer through fluid movement", correct: true },
+        { text: "Transfer through a vacuum", correct: false }
+      ],
       explanation: "Convection is heat transfer through the bulk movement of fluids (liquids or gases), carrying thermal energy with them."
     },
     {
       question: "Why do convection currents form circular patterns?",
-      options: ["The earth's rotation", "Continuous heating and cooling cycle", "Magnetic fields", "Pressure differences only"],
-      correct: 1,
+      options: [
+        { text: "The earth's rotation", correct: false },
+        { text: "Continuous heating and cooling cycle", correct: true },
+        { text: "Magnetic fields", correct: false },
+        { text: "Pressure differences only", correct: false }
+      ],
       explanation: "Hot fluid rises, cools at the top, becomes denser, sinks, gets heated again - creating a continuous circular flow pattern."
     },
     {
       question: "In atmospheric convection, what causes sea breezes?",
-      options: ["Moon's gravity", "Land heats faster than water", "Ocean currents", "Cloud formation"],
-      correct: 1,
+      options: [
+        { text: "Moon's gravity", correct: false },
+        { text: "Land heats faster than water", correct: true },
+        { text: "Ocean currents", correct: false },
+        { text: "Cloud formation", correct: false }
+      ],
       explanation: "During the day, land heats faster than water. Hot air over land rises, and cooler air from over the sea flows in to replace it."
     },
     {
       question: "What would happen to convection if gravity were eliminated?",
-      options: ["It would speed up", "It would stop", "No change", "It would reverse"],
-      correct: 1,
+      options: [
+        { text: "It would speed up", correct: false },
+        { text: "It would stop", correct: true },
+        { text: "No change", correct: false },
+        { text: "It would reverse", correct: false }
+      ],
       explanation: "Convection depends on buoyancy, which requires gravity. Without gravity, density differences wouldn't cause fluid movement."
     },
     {
       question: "Which is NOT an example of convection?",
-      options: ["Boiling water", "Sea breeze", "Sunlight warming Earth", "Home radiator heating"],
-      correct: 2,
+      options: [
+        { text: "Boiling water", correct: false },
+        { text: "Sea breeze", correct: false },
+        { text: "Sunlight warming Earth", correct: true },
+        { text: "Home radiator heating", correct: false }
+      ],
       explanation: "Sunlight warming Earth is radiation, not convection. It doesn't require a medium and travels through the vacuum of space."
     },
     {
       question: "In a convection oven, how is food cooked more evenly?",
-      options: ["Higher temperatures", "Circulating hot air", "Microwave radiation", "Infrared heat only"],
-      correct: 1,
+      options: [
+        { text: "Higher temperatures", correct: false },
+        { text: "Circulating hot air", correct: true },
+        { text: "Microwave radiation", correct: false },
+        { text: "Infrared heat only", correct: false }
+      ],
       explanation: "Convection ovens use fans to circulate hot air, ensuring even heat distribution around the food from all sides."
     }
   ]);
@@ -1762,10 +1802,10 @@ export default function ConvectionCurrentsRenderer({ onGameEvent, currentPhase, 
               };
 
               if (showExplanation) {
-                if (index === question.correct) {
+                if (option.correct) {
                   buttonStyle.background = 'rgba(16, 185, 129, 0.2)';
                   buttonStyle.borderColor = premiumDesign.colors.success;
-                } else if (index === selectedAnswer && index !== question.correct) {
+                } else if (index === selectedAnswer && !option.correct) {
                   buttonStyle.background = 'rgba(239, 68, 68, 0.2)';
                   buttonStyle.borderColor = '#EF4444';
                 }
@@ -1786,7 +1826,7 @@ export default function ConvectionCurrentsRenderer({ onGameEvent, currentPhase, 
                   }}
                   disabled={showExplanation}
                 >
-                  {option}
+                  {option.text}
                 </button>
               );
             })}
@@ -1817,7 +1857,7 @@ export default function ConvectionCurrentsRenderer({ onGameEvent, currentPhase, 
               () => {
                 safeNavigate(() => {
                   setShowExplanation(true);
-                  if (selectedAnswer === question.correct) {
+                  if (selectedAnswer !== null && question.options[selectedAnswer]?.correct) {
                     setTestScore(s => s + 1);
                   }
                 });

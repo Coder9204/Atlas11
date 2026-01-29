@@ -138,62 +138,102 @@ export default function CircuitsRenderer({ onGameEvent, currentPhase, onPhaseCom
   const [testQuestions] = useState([
     {
       question: "According to Ohm's Law, if you double the voltage across a resistor, the current will:",
-      options: ["Stay the same", "Double", "Halve", "Quadruple"],
-      correct: 1,
+      options: [
+        { text: "Stay the same", correct: false },
+        { text: "Double", correct: true },
+        { text: "Halve", correct: false },
+        { text: "Quadruple", correct: false }
+      ],
       explanation: "Ohm's Law: V = IR. If R is constant and V doubles, then I must also double to maintain the equation."
     },
     {
       question: "What is the unit of electrical resistance?",
-      options: ["Volt", "Ampere", "Ohm", "Watt"],
-      correct: 2,
+      options: [
+        { text: "Volt", correct: false },
+        { text: "Ampere", correct: false },
+        { text: "Ohm", correct: true },
+        { text: "Watt", correct: false }
+      ],
       explanation: "Resistance is measured in Ohms (Ω), named after Georg Ohm who discovered the relationship V = IR."
     },
     {
       question: "In a series circuit, if one bulb burns out, what happens?",
-      options: ["Other bulbs get brighter", "Other bulbs go out too", "Other bulbs stay the same", "The battery overheats"],
-      correct: 1,
+      options: [
+        { text: "Other bulbs get brighter", correct: false },
+        { text: "Other bulbs go out too", correct: true },
+        { text: "Other bulbs stay the same", correct: false },
+        { text: "The battery overheats", correct: false }
+      ],
       explanation: "In a series circuit, there's only one path for current. If one component breaks, the circuit is broken and all components stop working."
     },
     {
       question: "The total resistance in a parallel circuit is:",
-      options: ["Equal to the sum of all resistances", "Greater than the largest resistance", "Less than the smallest resistance", "Always zero"],
-      correct: 2,
+      options: [
+        { text: "Equal to the sum of all resistances", correct: false },
+        { text: "Greater than the largest resistance", correct: false },
+        { text: "Less than the smallest resistance", correct: true },
+        { text: "Always zero", correct: false }
+      ],
       explanation: "In parallel, 1/R_total = 1/R1 + 1/R2 + ... This always results in a total resistance LESS than any individual resistance."
     },
     {
       question: "Current in a series circuit:",
-      options: ["Is different through each component", "Is the same through all components", "Only flows through the battery", "Flows backwards"],
-      correct: 1,
+      options: [
+        { text: "Is different through each component", correct: false },
+        { text: "Is the same through all components", correct: true },
+        { text: "Only flows through the battery", correct: false },
+        { text: "Flows backwards", correct: false }
+      ],
       explanation: "In a series circuit, there's only one path, so all components must carry the same current. Current is conserved!"
     },
     {
       question: "Power in an electrical circuit is calculated as:",
-      options: ["P = V + I", "P = V - I", "P = V × I", "P = V / I"],
-      correct: 2,
+      options: [
+        { text: "P = V + I", correct: false },
+        { text: "P = V - I", correct: false },
+        { text: "P = V × I", correct: true },
+        { text: "P = V / I", correct: false }
+      ],
       explanation: "Electrical power P = VI (voltage times current). This can also be written as P = I²R or P = V²/R."
     },
     {
       question: "In a parallel circuit, what stays the same across all branches?",
-      options: ["Current", "Resistance", "Voltage", "Power"],
-      correct: 2,
+      options: [
+        { text: "Current", correct: false },
+        { text: "Resistance", correct: false },
+        { text: "Voltage", correct: true },
+        { text: "Power", correct: false }
+      ],
       explanation: "In parallel, all branches connect directly to the power source, so they all have the same voltage across them."
     },
     {
       question: "What happens to circuit current if you increase resistance (keeping voltage constant)?",
-      options: ["Current increases", "Current decreases", "Current stays the same", "Current reverses direction"],
-      correct: 1,
+      options: [
+        { text: "Current increases", correct: false },
+        { text: "Current decreases", correct: true },
+        { text: "Current stays the same", correct: false },
+        { text: "Current reverses direction", correct: false }
+      ],
       explanation: "From V = IR, if V is constant and R increases, I must decrease. Higher resistance means less current flows."
     },
     {
       question: "A 12V battery pushes current through a 6Ω resistor. The current is:",
-      options: ["2 A", "6 A", "72 A", "0.5 A"],
-      correct: 0,
+      options: [
+        { text: "2 A", correct: true },
+        { text: "6 A", correct: false },
+        { text: "72 A", correct: false },
+        { text: "0.5 A", correct: false }
+      ],
       explanation: "Using Ohm's Law: I = V/R = 12V / 6Ω = 2 Amperes."
     },
     {
       question: "Why do household circuits use parallel wiring instead of series?",
-      options: ["It's cheaper", "Each device can operate independently", "It uses less wire", "It's more dangerous"],
-      correct: 1,
+      options: [
+        { text: "It's cheaper", correct: false },
+        { text: "Each device can operate independently", correct: true },
+        { text: "It uses less wire", correct: false },
+        { text: "It's more dangerous", correct: false }
+      ],
       explanation: "Parallel wiring lets each device operate independently - turning off a lamp doesn't affect your TV. Each gets full voltage!"
     }
   ]);
@@ -1689,10 +1729,10 @@ export default function CircuitsRenderer({ onGameEvent, currentPhase, onPhaseCom
               };
 
               if (showExplanation) {
-                if (index === question.correct) {
+                if (option.correct) {
                   buttonStyle.background = 'rgba(16, 185, 129, 0.2)';
                   buttonStyle.borderColor = premiumDesign.colors.success;
-                } else if (index === selectedAnswer && index !== question.correct) {
+                } else if (index === selectedAnswer && !option.correct) {
                   buttonStyle.background = 'rgba(239, 68, 68, 0.2)';
                   buttonStyle.borderColor = '#EF4444';
                 }
@@ -1713,7 +1753,7 @@ export default function CircuitsRenderer({ onGameEvent, currentPhase, onPhaseCom
                   }}
                   disabled={showExplanation}
                 >
-                  {option}
+                  {option.text}
                 </button>
               );
             })}
@@ -1744,7 +1784,7 @@ export default function CircuitsRenderer({ onGameEvent, currentPhase, onPhaseCom
               () => {
                 safeNavigate(() => {
                   setShowExplanation(true);
-                  if (selectedAnswer === question.correct) {
+                  if (selectedAnswer !== null && question.options[selectedAnswer]?.correct) {
                     setTestScore(s => s + 1);
                   }
                 });

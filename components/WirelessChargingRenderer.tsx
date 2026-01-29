@@ -2527,62 +2527,102 @@ const WirelessChargingRenderer: React.FC<WirelessChargingRendererProps> = ({ onG
   const testQuestions = [
     {
       question: "What is the main factor that determines wireless charging efficiency?",
-      options: ["Phone battery size", "Coil alignment and distance", "Charger brand", "Room temperature"],
-      correct: 1,
+      options: [
+        { text: "Phone battery size", correct: false },
+        { text: "Coil alignment and distance", correct: true },
+        { text: "Charger brand", correct: false },
+        { text: "Room temperature", correct: false }
+      ],
       explanation: "Coil alignment (overlap) and distance between coils are the primary factors determining coupling efficiency and thus charging speed."
     },
     {
       question: "What happens to charging power when you move your phone 3cm off-center?",
-      options: ["No change", "Slight decrease", "Dramatic decrease or failure", "Increases due to better cooling"],
-      correct: 2,
+      options: [
+        { text: "No change", correct: false },
+        { text: "Slight decrease", correct: false },
+        { text: "Dramatic decrease or failure", correct: true },
+        { text: "Increases due to better cooling", correct: false }
+      ],
       explanation: "At 3cm offset, the coils barely overlap, causing coupling to drop dramatically - often below the threshold for effective charging."
     },
     {
       question: "Why do MagSafe and similar systems use magnets?",
-      options: ["To make the phone stick better", "To ensure precise coil alignment", "To increase battery capacity", "For aesthetic design"],
-      correct: 1,
+      options: [
+        { text: "To make the phone stick better", correct: false },
+        { text: "To ensure precise coil alignment", correct: true },
+        { text: "To increase battery capacity", correct: false },
+        { text: "For aesthetic design", correct: false }
+      ],
       explanation: "The magnets ensure the phone's receiver coil aligns precisely with the charger's transmitter coil, maximizing coupling efficiency."
     },
     {
       question: "What is the typical maximum effective distance for Qi wireless charging?",
-      options: ["1mm", "5-8mm", "20mm", "50mm"],
-      correct: 1,
+      options: [
+        { text: "1mm", correct: false },
+        { text: "5-8mm", correct: true },
+        { text: "20mm", correct: false },
+        { text: "50mm", correct: false }
+      ],
       explanation: "Qi charging typically works up to 5-8mm, which is why thick cases can cause problems. Beyond this, coupling drops too low for practical charging."
     },
     {
       question: "Why should you never place metal objects on a wireless charger?",
-      options: ["They might scratch the charger", "They can heat up dangerously from induced currents", "They make the charger look ugly", "They use up the battery faster"],
-      correct: 1,
+      options: [
+        { text: "They might scratch the charger", correct: false },
+        { text: "They can heat up dangerously from induced currents", correct: true },
+        { text: "They make the charger look ugly", correct: false },
+        { text: "They use up the battery faster", correct: false }
+      ],
       explanation: "Metal objects in the magnetic field develop eddy currents, which cause them to heat up significantly. This is both inefficient and potentially dangerous."
     },
     {
       question: "How does coupling efficiency change with distance?",
-      options: ["Linearly (half distance = half power)", "Barely changes", "Follows inverse cube law (drops very rapidly)", "Increases with distance"],
-      correct: 2,
+      options: [
+        { text: "Linearly (half distance = half power)", correct: false },
+        { text: "Barely changes", correct: false },
+        { text: "Follows inverse cube law (drops very rapidly)", correct: true },
+        { text: "Increases with distance", correct: false }
+      ],
       explanation: "In the near-field (where Qi operates), magnetic coupling follows roughly an inverse cube relationship - small distance increases cause large efficiency drops."
     },
     {
       question: "What is 'opportunity charging' in industrial robotics?",
-      options: ["Charging robots when there's a sale on electricity", "Brief wireless top-ups during normal operation", "Only charging during off-peak hours", "Charging multiple robots at once"],
-      correct: 1,
+      options: [
+        { text: "Charging robots when there's a sale on electricity", correct: false },
+        { text: "Brief wireless top-ups during normal operation", correct: true },
+        { text: "Only charging during off-peak hours", correct: false },
+        { text: "Charging multiple robots at once", correct: false }
+      ],
       explanation: "Opportunity charging means robots briefly pause at wireless charging spots during their routes, maintaining battery level without dedicated charging time."
     },
     {
       question: "Why is wireless charging particularly valuable for medical implants?",
-      options: ["It's cheaper than batteries", "It eliminates infection risk from power cables through skin", "Hospitals have better wireless chargers", "It makes surgery faster"],
-      correct: 1,
+      options: [
+        { text: "It's cheaper than batteries", correct: false },
+        { text: "It eliminates infection risk from power cables through skin", correct: true },
+        { text: "Hospitals have better wireless chargers", correct: false },
+        { text: "It makes surgery faster", correct: false }
+      ],
       explanation: "Transcutaneous (through-skin) power transfer eliminates the need for cables penetrating the skin, dramatically reducing infection risk."
     },
     {
       question: "What does FOD stand for in wireless charging, and why is it important?",
-      options: ["Fast Output Delivery - for speed", "Foreign Object Detection - for safety", "Frequency Oscillation Damping - for efficiency", "Full Output Duration - for battery life"],
-      correct: 1,
+      options: [
+        { text: "Fast Output Delivery - for speed", correct: false },
+        { text: "Foreign Object Detection - for safety", correct: true },
+        { text: "Frequency Oscillation Damping - for efficiency", correct: false },
+        { text: "Full Output Duration - for battery life", correct: false }
+      ],
       explanation: "FOD (Foreign Object Detection) identifies metal objects on the charger and stops power transfer to prevent dangerous heating."
     },
     {
       question: "For EV wireless charging, what alignment tolerance is typically required?",
-      options: ["Exact center only", "Within 10cm", "Within 1 meter", "Alignment doesn't matter for EVs"],
-      correct: 1,
+      options: [
+        { text: "Exact center only", correct: false },
+        { text: "Within 10cm", correct: true },
+        { text: "Within 1 meter", correct: false },
+        { text: "Alignment doesn't matter for EVs", correct: false }
+      ],
       explanation: "EV wireless charging typically requires alignment within about 10cm. Parking guidance systems help drivers achieve this positioning."
     }
   ];
@@ -2626,7 +2666,7 @@ const WirelessChargingRenderer: React.FC<WirelessChargingRendererProps> = ({ onG
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
             {q.options.map((opt, i) => {
               const isSelected = testAnswers[currentQuestion] === i;
-              const isCorrect = i === q.correct;
+              const isCorrect = opt.correct;
               const showResult = answered;
 
               return (
@@ -2637,7 +2677,7 @@ const WirelessChargingRenderer: React.FC<WirelessChargingRendererProps> = ({ onG
                       const newAnswers = [...testAnswers];
                       newAnswers[currentQuestion] = i;
                       setTestAnswers(newAnswers);
-                      if (i === q.correct) {
+                      if (opt.correct) {
                         setTestScore(prev => prev + 1);
                         playSound('success');
                       } else {
@@ -2664,7 +2704,7 @@ const WirelessChargingRenderer: React.FC<WirelessChargingRendererProps> = ({ onG
                     minHeight: '48px'
                   }}
                 >
-                  <span style={{ color: colors.textPrimary, fontSize: '15px' }}>{opt}</span>
+                  <span style={{ color: colors.textPrimary, fontSize: '15px' }}>{opt.text}</span>
                   {showResult && isCorrect && <span style={{ float: 'right', color: colors.success }}>✓</span>}
                   {showResult && isSelected && !isCorrect && <span style={{ float: 'right', color: colors.error }}>✗</span>}
                 </button>

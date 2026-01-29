@@ -239,10 +239,21 @@ const DragForceRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onPhase
   }, [testAnswers]);
 
   const calculateTestScore = useCallback(() => {
-    const correctAnswers = [1, 2, 0, 1, 2, 0, 1, 2, 1, 0];
+    const questions = [
+      { options: [{ correct: false }, { correct: true }, { correct: false }, { correct: false }] },
+      { options: [{ correct: false }, { correct: false }, { correct: true }, { correct: false }] },
+      { options: [{ correct: true }, { correct: false }, { correct: false }, { correct: false }] },
+      { options: [{ correct: false }, { correct: true }, { correct: false }, { correct: false }] },
+      { options: [{ correct: false }, { correct: false }, { correct: true }, { correct: false }] },
+      { options: [{ correct: true }, { correct: false }, { correct: false }, { correct: false }] },
+      { options: [{ correct: false }, { correct: true }, { correct: false }, { correct: false }] },
+      { options: [{ correct: false }, { correct: false }, { correct: true }, { correct: false }] },
+      { options: [{ correct: false }, { correct: true }, { correct: false }, { correct: false }] },
+      { options: [{ correct: true }, { correct: false }, { correct: false }, { correct: false }] }
+    ];
     let score = 0;
     testAnswers.forEach((answer, index) => {
-      if (answer === correctAnswers[index]) score++;
+      if (questions[index]?.options[answer]?.correct) score++;
     });
     return score;
   }, [testAnswers]);
@@ -877,53 +888,93 @@ const DragForceRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onPhase
         const questions = [
           {
             q: 'What happens to drag force when you double your speed?',
-            options: ['It doubles', 'It quadruples', 'It stays the same', 'It halves'],
-            correct: 1
+            options: [
+              { text: 'It doubles', correct: false },
+              { text: 'It quadruples', correct: true },
+              { text: 'It stays the same', correct: false },
+              { text: 'It halves', correct: false }
+            ]
           },
           {
             q: 'Which body position creates MORE air resistance for a skydiver?',
-            options: ['Tucked ball', 'Head-first dive', 'Spread eagle', 'All the same'],
-            correct: 2
+            options: [
+              { text: 'Tucked ball', correct: false },
+              { text: 'Head-first dive', correct: false },
+              { text: 'Spread eagle', correct: true },
+              { text: 'All the same', correct: false }
+            ]
           },
           {
             q: 'In the drag equation F = ½ρv²CdA, what does A represent?',
-            options: ['Cross-sectional area', 'Altitude', 'Acceleration', 'Air mass'],
-            correct: 0
+            options: [
+              { text: 'Cross-sectional area', correct: true },
+              { text: 'Altitude', correct: false },
+              { text: 'Acceleration', correct: false },
+              { text: 'Air mass', correct: false }
+            ]
           },
           {
             q: 'Why do golf balls have dimples?',
-            options: ['To look cool', 'To reduce drag via turbulent flow', 'To add weight', 'To improve grip'],
-            correct: 1
+            options: [
+              { text: 'To look cool', correct: false },
+              { text: 'To reduce drag via turbulent flow', correct: true },
+              { text: 'To add weight', correct: false },
+              { text: 'To improve grip', correct: false }
+            ]
           },
           {
             q: 'At highway speeds, what percent of a car\'s energy fights air resistance?',
-            options: ['About 10%', 'About 25%', 'About 50% or more', 'Less than 5%'],
-            correct: 2
+            options: [
+              { text: 'About 10%', correct: false },
+              { text: 'About 25%', correct: false },
+              { text: 'About 50% or more', correct: true },
+              { text: 'Less than 5%', correct: false }
+            ]
           },
           {
             q: 'What shape has the lowest drag coefficient?',
-            options: ['Teardrop/streamlined', 'Cube', 'Flat plate', 'Cylinder'],
-            correct: 0
+            options: [
+              { text: 'Teardrop/streamlined', correct: true },
+              { text: 'Cube', correct: false },
+              { text: 'Flat plate', correct: false },
+              { text: 'Cylinder', correct: false }
+            ]
           },
           {
             q: 'How does air density affect drag force?',
-            options: ['No effect', 'Higher density = more drag', 'Higher density = less drag', 'Only affects fast objects'],
-            correct: 1
+            options: [
+              { text: 'No effect', correct: false },
+              { text: 'Higher density = more drag', correct: true },
+              { text: 'Higher density = less drag', correct: false },
+              { text: 'Only affects fast objects', correct: false }
+            ]
           },
           {
             q: 'What is the drag coefficient (Cd) a measure of?',
-            options: ['Object\'s weight', 'Object\'s speed', 'Object\'s shape efficiency', 'Air temperature'],
-            correct: 2
+            options: [
+              { text: 'Object\'s weight', correct: false },
+              { text: 'Object\'s speed', correct: false },
+              { text: 'Object\'s shape efficiency', correct: true },
+              { text: 'Air temperature', correct: false }
+            ]
           },
           {
             q: 'Why do cyclists tuck during time trials?',
-            options: ['To look professional', 'To reduce frontal area and drag', 'To pedal faster', 'To stay warm'],
-            correct: 1
+            options: [
+              { text: 'To look professional', correct: false },
+              { text: 'To reduce frontal area and drag', correct: true },
+              { text: 'To pedal faster', correct: false },
+              { text: 'To stay warm', correct: false }
+            ]
           },
           {
             q: 'What creates the "drag crisis" effect with dimpled surfaces?',
-            options: ['Turbulent flow delaying separation', 'Magic', 'Lighter weight', 'More friction'],
-            correct: 0
+            options: [
+              { text: 'Turbulent flow delaying separation', correct: true },
+              { text: 'Magic', correct: false },
+              { text: 'Lighter weight', correct: false },
+              { text: 'More friction', correct: false }
+            ]
           }
         ];
 
@@ -942,7 +993,7 @@ const DragForceRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onPhase
                         onMouseDown={(e) => { e.preventDefault(); handleTestAnswer(qIndex, oIndex); }}
                         disabled={showTestResults}
                         className={`p-2 rounded-lg text-sm transition-all ${
-                          showTestResults && oIndex === question.correct
+                          showTestResults && option.correct
                             ? 'bg-green-600 text-white'
                             : showTestResults && testAnswers[qIndex] === oIndex
                             ? 'bg-red-600 text-white'
@@ -951,7 +1002,7 @@ const DragForceRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onPhase
                             : 'bg-slate-700 hover:bg-slate-600 text-slate-200'
                         }`}
                       >
-                        {option}
+                        {option.text}
                       </button>
                     ))}
                   </div>

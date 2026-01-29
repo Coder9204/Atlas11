@@ -1406,28 +1406,48 @@ const LCResonanceRenderer: React.FC<LCResonanceRendererProps> = ({ onGameEvent }
     const questions = [
       {
         question: 'What determines the resonant frequency of an LC circuit?',
-        options: ['Voltage applied', 'Values of L and C', 'Wire thickness', 'Temperature'],
-        correct: 1
+        options: [
+          { text: 'Voltage applied', correct: false },
+          { text: 'Values of L and C', correct: true },
+          { text: 'Wire thickness', correct: false },
+          { text: 'Temperature', correct: false }
+        ]
       },
       {
         question: 'At resonance, energy oscillates between:',
-        options: ['Heat and light', 'Electric field (C) and magnetic field (L)', 'Voltage and current', 'Input and output'],
-        correct: 1
+        options: [
+          { text: 'Heat and light', correct: false },
+          { text: 'Electric field (C) and magnetic field (L)', correct: true },
+          { text: 'Voltage and current', correct: false },
+          { text: 'Input and output', correct: false }
+        ]
       },
       {
         question: 'If you double the capacitance, the resonant frequency:',
-        options: ['Doubles', 'Halves', 'Decreases by about 30%', 'Stays the same'],
-        correct: 2
+        options: [
+          { text: 'Doubles', correct: false },
+          { text: 'Halves', correct: false },
+          { text: 'Decreases by about 30%', correct: true },
+          { text: 'Stays the same', correct: false }
+        ]
       },
       {
         question: 'Why can a radio "pick" one station from many?',
-        options: ['Magic', 'LC circuit resonates at one frequency', 'Antenna size', 'Speaker quality'],
-        correct: 1
+        options: [
+          { text: 'Magic', correct: false },
+          { text: 'LC circuit resonates at one frequency', correct: true },
+          { text: 'Antenna size', correct: false },
+          { text: 'Speaker quality', correct: false }
+        ]
       },
       {
         question: 'What is the Q factor of an LC circuit?',
-        options: ['Quality of components', 'How selective/sharp the resonance peak is', 'Charge stored', 'Frequency range'],
-        correct: 1
+        options: [
+          { text: 'Quality of components', correct: false },
+          { text: 'How selective/sharp the resonance peak is', correct: true },
+          { text: 'Charge stored', correct: false },
+          { text: 'Frequency range', correct: false }
+        ]
       }
     ];
 
@@ -1452,8 +1472,8 @@ const LCResonanceRenderer: React.FC<LCResonanceRendererProps> = ({ onGameEvent }
                   const newAnswers = [...testAnswers];
                   newAnswers[currentQuestion] = i;
                   setTestAnswers(newAnswers);
-                  if (i === currentQ.correct) setTestScore(prev => prev + 1);
-                  playSound(i === currentQ.correct ? 'success' : 'failure');
+                  if (opt.correct) setTestScore(prev => prev + 1);
+                  playSound(opt.correct ? 'success' : 'failure');
                   setTimeout(() => {
                     if (currentQuestion < questions.length - 1) {
                       setCurrentQuestion(prev => prev + 1);
@@ -1466,10 +1486,10 @@ const LCResonanceRenderer: React.FC<LCResonanceRendererProps> = ({ onGameEvent }
                 style={{
                   padding: '16px',
                   background: testAnswers[currentQuestion] === i
-                    ? i === currentQ.correct ? `${colors.success}20` : `${colors.error}20`
+                    ? opt.correct ? `${colors.success}20` : `${colors.error}20`
                     : colors.bgSurface,
                   border: testAnswers[currentQuestion] === i
-                    ? `2px solid ${i === currentQ.correct ? colors.success : colors.error}`
+                    ? `2px solid ${opt.correct ? colors.success : colors.error}`
                     : `1px solid ${colors.bgElevated}`,
                   borderRadius: '12px',
                   color: colors.textPrimary,
@@ -1478,7 +1498,7 @@ const LCResonanceRenderer: React.FC<LCResonanceRendererProps> = ({ onGameEvent }
                   cursor: testAnswers[currentQuestion] !== null ? 'default' : 'pointer'
                 }}
               >
-                {opt}
+                {opt.text}
               </button>
             ))}
           </div>

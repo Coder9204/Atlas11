@@ -244,71 +244,111 @@ const GyroscopicPrecessionRenderer: React.FC<GyroscopicPrecessionRendererProps> 
     {
       scenario: "You're holding a spinning bike wheel by its axle, and you try to tilt it downward.",
       question: "Instead of tilting down, the wheel moves sideways. Why?",
-      options: ["Air resistance pushes it sideways", "Torque changes the direction of angular momentum", "The wheel is magnetically attracted", "Gravity affects spinning objects differently"],
-      correct: 1,
+      options: [
+        { text: "Air resistance pushes it sideways", correct: false },
+        { text: "Torque changes the direction of angular momentum", correct: true },
+        { text: "The wheel is magnetically attracted", correct: false },
+        { text: "Gravity affects spinning objects differently", correct: false }
+      ],
       explanation: "When you apply a torque, it changes the DIRECTION of the angular momentum vector, not its magnitude. The wheel moves perpendicular to both the torque and spin axis—this is precession!"
     },
     {
       scenario: "A toy gyroscope is spinning fast. You push down on one end of its axle.",
       question: "What happens to the gyroscope?",
-      options: ["It tips over immediately", "It spins faster", "It precesses—moving in a slow circle", "It stops spinning"],
-      correct: 2,
+      options: [
+        { text: "It tips over immediately", correct: false },
+        { text: "It spins faster", correct: false },
+        { text: "It precesses—moving in a slow circle", correct: true },
+        { text: "It stops spinning", correct: false }
+      ],
       explanation: "The push (torque) causes the gyroscope to precess—its axis slowly rotates in a circle. The faster it spins, the slower the precession."
     },
     {
       scenario: "Wheel A spins at 10 rad/s, Wheel B at 5 rad/s. You apply the same torque to both.",
       question: "Which wheel precesses faster?",
-      options: ["Wheel A (faster spin)", "Wheel B (slower spin)", "Both same rate", "Neither will precess"],
-      correct: 1,
+      options: [
+        { text: "Wheel A (faster spin)", correct: false },
+        { text: "Wheel B (slower spin)", correct: true },
+        { text: "Both same rate", correct: false },
+        { text: "Neither will precess", correct: false }
+      ],
       explanation: "Precession rate Ω = τ/L. With same torque, the slower wheel has less angular momentum, so it precesses FASTER."
     },
     {
       scenario: "A spinning top starts to wobble as it slows down.",
       question: "Why does the wobbling get worse as it slows?",
-      options: ["The top becomes heavier", "Lower L means gravity causes faster precession", "Air becomes thicker", "It's running out of energy"],
-      correct: 1,
+      options: [
+        { text: "The top becomes heavier", correct: false },
+        { text: "Lower L means gravity causes faster precession", correct: true },
+        { text: "Air becomes thicker", correct: false },
+        { text: "It's running out of energy", correct: false }
+      ],
       explanation: "As spin decreases, angular momentum L decreases. Since Ω = τ/L, lower L means faster precession and larger wobble."
     },
     {
       scenario: "A helicopter's main rotor spins counterclockwise viewed from above.",
       question: "Without a tail rotor, what would happen to the body?",
-      options: ["Nothing—too heavy", "Body spins clockwise", "Body precesses sideways", "Helicopter rises faster"],
-      correct: 1,
+      options: [
+        { text: "Nothing—too heavy", correct: false },
+        { text: "Body spins clockwise", correct: true },
+        { text: "Body precesses sideways", correct: false },
+        { text: "Helicopter rises faster", correct: false }
+      ],
       explanation: "Angular momentum conservation! The rotor spins one way, so without the tail rotor, the body would spin opposite."
     },
     {
       scenario: "Spacecraft use spinning reaction wheels to orient themselves.",
       question: "How do reaction wheels work?",
-      options: ["Push against solar wind", "Speed changes make spacecraft rotate opposite", "Create artificial gravity", "Emit particles"],
-      correct: 1,
+      options: [
+        { text: "Push against solar wind", correct: false },
+        { text: "Speed changes make spacecraft rotate opposite", correct: true },
+        { text: "Create artificial gravity", correct: false },
+        { text: "Emit particles", correct: false }
+      ],
       explanation: "Conservation of angular momentum! If a wheel speeds up one direction, the spacecraft rotates opposite. No fuel needed!"
     },
     {
       scenario: "A figure skater tilts their head while spinning.",
       question: "What gyroscopic effect might they experience?",
-      options: ["No effect—humans too light", "Pulled sideways due to precession", "Immediately stop spinning", "Spin faster"],
-      correct: 1,
+      options: [
+        { text: "No effect—humans too light", correct: false },
+        { text: "Pulled sideways due to precession", correct: true },
+        { text: "Immediately stop spinning", correct: false },
+        { text: "Spin faster", correct: false }
+      ],
       explanation: "Their body acts as a gyroscope! Tilting while spinning creates precession forces. Experienced skaters learn to anticipate these."
     },
     {
       scenario: "A motorcycle is leaning into a turn at high speed.",
       question: "How do the spinning wheels affect stability?",
-      options: ["Make it unstable", "Gyroscopic effect resists changes, increasing stability", "No effect", "Make it go straight"],
-      correct: 1,
+      options: [
+        { text: "Make it unstable", correct: false },
+        { text: "Gyroscopic effect resists changes, increasing stability", correct: true },
+        { text: "No effect", correct: false },
+        { text: "Make it go straight", correct: false }
+      ],
       explanation: "The wheels' angular momentum resists tilting and turning. This gyroscopic stability helps keep the bike upright."
     },
     {
       scenario: "Earth's axis slowly traces a circle in space over 26,000 years.",
       question: "What causes this slow precession?",
-      options: ["Sun's pull on Earth's equatorial bulge", "Moon pushing Earth sideways", "Solar wind pressure", "Dark matter"],
-      correct: 0,
+      options: [
+        { text: "Sun's pull on Earth's equatorial bulge", correct: true },
+        { text: "Moon pushing Earth sideways", correct: false },
+        { text: "Solar wind pressure", correct: false },
+        { text: "Dark matter", correct: false }
+      ],
       explanation: "Earth bulges at the equator. The Sun and Moon exert torque on this bulge, causing Earth's axis to precess slowly."
     },
     {
       scenario: "An engineer designs a ship stabilizer using a massive spinning flywheel.",
       question: "How would this reduce ship roll in waves?",
-      options: ["Absorbs wave energy", "Precession generates counter-torques", "Adds weight to bottom", "Pushes water away"],
-      correct: 1,
+      options: [
+        { text: "Absorbs wave energy", correct: false },
+        { text: "Precession generates counter-torques", correct: true },
+        { text: "Adds weight to bottom", correct: false },
+        { text: "Pushes water away", correct: false }
+      ],
       explanation: "When waves try to roll the ship, the flywheel precesses. This generates torques opposing the roll, keeping the ship stable."
     }
   ];
@@ -1127,7 +1167,7 @@ const GyroscopicPrecessionRenderer: React.FC<GyroscopicPrecessionRendererProps> 
   // TEST
   if (phase === 8) {
     const q = testQuestions[testIndex];
-    const totalCorrect = testAnswers.reduce((sum, ans, i) => sum + (ans === testQuestions[i].correct ? 1 : 0), 0);
+    const totalCorrect = testAnswers.reduce((sum, ans, i) => sum + (testQuestions[i].options[ans]?.correct ? 1 : 0), 0);
 
     if (testSubmitted) {
       const passed = totalCorrect >= 7;
@@ -1175,11 +1215,11 @@ const GyroscopicPrecessionRenderer: React.FC<GyroscopicPrecessionRendererProps> 
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: space.md }}>
               <span style={{ fontSize: '12px', fontWeight: 700, color: colors.primary }}>QUESTION {testIndex + 1}/10</span>
               <div style={{ display: 'flex', gap: '4px' }}>
-                {testQuestions.map((_, i) => (
+                {testQuestions.map((tq, i) => (
                   <div key={i} style={{
                     width: '8px', height: '8px', borderRadius: '4px',
                     background: testAnswers[i] !== null
-                      ? (testAnswers[i] === testQuestions[i].correct ? colors.success : colors.danger)
+                      ? (tq.options[testAnswers[i]]?.correct ? colors.success : colors.danger)
                       : (i === testIndex ? colors.primary : colors.bgTertiary),
                   }} />
                 ))}
@@ -1204,7 +1244,7 @@ const GyroscopicPrecessionRenderer: React.FC<GyroscopicPrecessionRendererProps> 
             <div style={{ display: 'flex', flexDirection: 'column', gap: space.sm, marginBottom: space.lg }}>
               {q.options.map((opt, i) => {
                 const selected = testAnswers[testIndex] === i;
-                const correct = i === q.correct;
+                const correct = opt.correct;
                 const answered = testAnswers[testIndex] !== null;
 
                 return (
@@ -1216,7 +1256,7 @@ const GyroscopicPrecessionRenderer: React.FC<GyroscopicPrecessionRendererProps> 
                           const newAnswers = [...testAnswers];
                           newAnswers[testIndex] = i;
                           setTestAnswers(newAnswers);
-                          emitGameEvent(i === q.correct ? 'correct_answer' : 'incorrect_answer', { questionIndex: testIndex });
+                          emitGameEvent(opt.correct ? 'correct_answer' : 'incorrect_answer', { questionIndex: testIndex });
                         });
                       }
                     }}
@@ -1240,7 +1280,7 @@ const GyroscopicPrecessionRenderer: React.FC<GyroscopicPrecessionRendererProps> 
                     }}>
                       {String.fromCharCode(65 + i)}
                     </span>
-                    <span style={{ fontSize: '14px', color: colors.textPrimary }}>{opt}</span>
+                    <span style={{ fontSize: '14px', color: colors.textPrimary }}>{opt.text}</span>
                     {answered && correct && <span style={{ marginLeft: space.sm, color: colors.success }}>✓</span>}
                     {answered && selected && !correct && <span style={{ marginLeft: space.sm, color: colors.danger }}>✗</span>}
                   </button>

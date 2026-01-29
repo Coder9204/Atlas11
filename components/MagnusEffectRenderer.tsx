@@ -235,59 +235,99 @@ const MagnusEffectRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onPh
   const testQuestions = [
     {
       question: "What causes the Magnus effect?",
-      options: ["Gravity acting on spin", "Pressure difference from air speed variation", "Magnetic forces", "Wind resistance only"],
-      correct: 1
+      options: [
+        { text: "Gravity acting on spin", correct: false },
+        { text: "Pressure difference from air speed variation", correct: true },
+        { text: "Magnetic forces", correct: false },
+        { text: "Wind resistance only", correct: false }
+      ]
     },
     {
       question: "A ball with topspin will curve:",
-      options: ["Upward", "Downward", "Left only", "It won't curve"],
-      correct: 1
+      options: [
+        { text: "Upward", correct: false },
+        { text: "Downward", correct: true },
+        { text: "Left only", correct: false },
+        { text: "It won't curve", correct: false }
+      ]
     },
     {
       question: "On which side of a spinning ball is air pressure lower?",
-      options: ["The side spinning into the airflow", "The side spinning with the airflow", "Both sides equal", "Pressure doesn't change"],
-      correct: 1
+      options: [
+        { text: "The side spinning into the airflow", correct: false },
+        { text: "The side spinning with the airflow", correct: true },
+        { text: "Both sides equal", correct: false },
+        { text: "Pressure doesn't change", correct: false }
+      ]
     },
     {
       question: "The Magnus force is perpendicular to:",
-      options: ["Gravity only", "Both velocity and spin axis", "The ground", "Nothing - it acts in all directions"],
-      correct: 1
+      options: [
+        { text: "Gravity only", correct: false },
+        { text: "Both velocity and spin axis", correct: true },
+        { text: "The ground", correct: false },
+        { text: "Nothing - it acts in all directions", correct: false }
+      ]
     },
     {
       question: "Why do golf balls have dimples?",
-      options: ["Decoration only", "To increase drag", "To enhance the Magnus effect and reduce drag", "To make them heavier"],
-      correct: 2
+      options: [
+        { text: "Decoration only", correct: false },
+        { text: "To increase drag", correct: false },
+        { text: "To enhance the Magnus effect and reduce drag", correct: true },
+        { text: "To make them heavier", correct: false }
+      ]
     },
     {
       question: "A curveball in baseball uses:",
-      options: ["Only gravity", "The Magnus effect from spin", "Air temperature changes", "The weight of the ball"],
-      correct: 1
+      options: [
+        { text: "Only gravity", correct: false },
+        { text: "The Magnus effect from spin", correct: true },
+        { text: "Air temperature changes", correct: false },
+        { text: "The weight of the ball", correct: false }
+      ]
     },
     {
       question: "Increasing spin rate will:",
-      options: ["Decrease the curve", "Have no effect", "Increase the curve", "Make the ball go straight"],
-      correct: 2
+      options: [
+        { text: "Decrease the curve", correct: false },
+        { text: "Have no effect", correct: false },
+        { text: "Increase the curve", correct: true },
+        { text: "Make the ball go straight", correct: false }
+      ]
     },
     {
       question: "The Magnus force equation F = CL × ½ρv²A shows force depends on:",
-      options: ["Only ball size", "Velocity squared", "Temperature only", "Color of ball"],
-      correct: 1
+      options: [
+        { text: "Only ball size", correct: false },
+        { text: "Velocity squared", correct: true },
+        { text: "Temperature only", correct: false },
+        { text: "Color of ball", correct: false }
+      ]
     },
     {
       question: "Backspin on a tennis ball causes it to:",
-      options: ["Drop faster", "Stay in the air longer", "Curve left", "Stop spinning"],
-      correct: 1
+      options: [
+        { text: "Drop faster", correct: false },
+        { text: "Stay in the air longer", correct: true },
+        { text: "Curve left", correct: false },
+        { text: "Stop spinning", correct: false }
+      ]
     },
     {
       question: "The Magnus effect also works:",
-      options: ["Only in air", "Only in water", "In any fluid (air, water, etc.)", "Only in a vacuum"],
-      correct: 2
+      options: [
+        { text: "Only in air", correct: false },
+        { text: "Only in water", correct: false },
+        { text: "In any fluid (air, water, etc.)", correct: true },
+        { text: "Only in a vacuum", correct: false }
+      ]
     }
   ];
 
   const calculateScore = () => {
     return testAnswers.reduce((score, answer, index) => {
-      return score + (answer === testQuestions[index].correct ? 1 : 0);
+      return score + (testQuestions[index].options[answer]?.correct ? 1 : 0);
     }, 0);
   };
 
@@ -999,7 +1039,7 @@ const MagnusEffectRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onPh
                         : 'bg-slate-700/50 text-slate-300 hover:bg-slate-600/50'
                     }`}
                   >
-                    {option}
+                    {option.text}
                   </button>
                 ))}
               </div>

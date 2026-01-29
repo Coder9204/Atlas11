@@ -1289,28 +1289,48 @@ const EddyCurrentPendulumRenderer: React.FC<EddyCurrentPendulumRendererProps> = 
     const questions = [
       {
         question: 'What causes eddy currents in a conductor moving through a magnetic field?',
-        options: ['Static electricity', 'Electromagnetic induction', 'Friction', 'Gravity'],
-        correct: 1
+        options: [
+          { text: 'Static electricity', correct: false },
+          { text: 'Electromagnetic induction', correct: true },
+          { text: 'Friction', correct: false },
+          { text: 'Gravity', correct: false }
+        ]
       },
       {
         question: 'According to Lenz\'s Law, eddy currents create a magnetic field that:',
-        options: ['Helps the motion', 'Opposes the motion', 'Has no effect', 'Attracts the magnets'],
-        correct: 1
+        options: [
+          { text: 'Helps the motion', correct: false },
+          { text: 'Opposes the motion', correct: true },
+          { text: 'Has no effect', correct: false },
+          { text: 'Attracts the magnets', correct: false }
+        ]
       },
       {
         question: 'Why does plastic NOT experience magnetic braking?',
-        options: ['It\'s too light', 'It\'s not a conductor', 'It\'s not magnetic', 'It\'s too soft'],
-        correct: 1
+        options: [
+          { text: 'It\'s too light', correct: false },
+          { text: 'It\'s not a conductor', correct: true },
+          { text: 'It\'s not magnetic', correct: false },
+          { text: 'It\'s too soft', correct: false }
+        ]
       },
       {
         question: 'Why do slits in the metal reduce the braking effect?',
-        options: ['Less material', 'Interrupt eddy current loops', 'Reduce weight', 'Change the shape'],
-        correct: 1
+        options: [
+          { text: 'Less material', correct: false },
+          { text: 'Interrupt eddy current loops', correct: true },
+          { text: 'Reduce weight', correct: false },
+          { text: 'Change the shape', correct: false }
+        ]
       },
       {
         question: 'Which application does NOT use eddy current braking?',
-        options: ['Maglev trains', 'Roller coasters', 'Car disc brakes', 'Exercise bikes'],
-        correct: 2
+        options: [
+          { text: 'Maglev trains', correct: false },
+          { text: 'Roller coasters', correct: false },
+          { text: 'Car disc brakes', correct: true },
+          { text: 'Exercise bikes', correct: false }
+        ]
       }
     ];
 
@@ -1335,8 +1355,8 @@ const EddyCurrentPendulumRenderer: React.FC<EddyCurrentPendulumRendererProps> = 
                   const newAnswers = [...testAnswers];
                   newAnswers[currentQuestion] = i;
                   setTestAnswers(newAnswers);
-                  if (i === currentQ.correct) setTestScore(prev => prev + 1);
-                  playSound(i === currentQ.correct ? 'success' : 'failure');
+                  if (opt.correct) setTestScore(prev => prev + 1);
+                  playSound(opt.correct ? 'success' : 'failure');
                   setTimeout(() => {
                     if (currentQuestion < questions.length - 1) {
                       setCurrentQuestion(prev => prev + 1);
@@ -1349,10 +1369,10 @@ const EddyCurrentPendulumRenderer: React.FC<EddyCurrentPendulumRendererProps> = 
                 style={{
                   padding: '16px',
                   background: testAnswers[currentQuestion] === i
-                    ? i === currentQ.correct ? `${colors.success}20` : `${colors.error}20`
+                    ? opt.correct ? `${colors.success}20` : `${colors.error}20`
                     : colors.bgSurface,
                   border: testAnswers[currentQuestion] === i
-                    ? `2px solid ${i === currentQ.correct ? colors.success : colors.error}`
+                    ? `2px solid ${opt.correct ? colors.success : colors.error}`
                     : `1px solid ${colors.bgElevated}`,
                   borderRadius: '12px',
                   color: colors.textPrimary,
@@ -1361,7 +1381,7 @@ const EddyCurrentPendulumRenderer: React.FC<EddyCurrentPendulumRendererProps> = 
                   cursor: testAnswers[currentQuestion] !== null ? 'default' : 'pointer'
                 }}
               >
-                {opt}
+                {opt.text}
               </button>
             ))}
           </div>

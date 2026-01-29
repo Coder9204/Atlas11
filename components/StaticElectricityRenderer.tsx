@@ -138,62 +138,102 @@ export default function StaticElectricityRenderer({ onGameEvent, currentPhase, o
   const [testQuestions] = useState([
     {
       question: "What happens when you rub a balloon on your hair?",
-      options: ["Nothing happens", "Electrons transfer from hair to balloon", "Protons transfer", "The balloon heats up"],
-      correct: 1,
+      options: [
+        { text: "Nothing happens", correct: false },
+        { text: "Electrons transfer from hair to balloon", correct: true },
+        { text: "Protons transfer", correct: false },
+        { text: "The balloon heats up", correct: false }
+      ],
       explanation: "Rubbing transfers electrons from your hair to the balloon. Hair loses electrons (becomes positive), balloon gains electrons (becomes negative)."
     },
     {
       question: "What does Coulomb's Law tell us about electric force?",
-      options: ["Force increases with distance", "Force depends on charge amount and distance", "Only positive charges create force", "Force is always attractive"],
-      correct: 1,
+      options: [
+        { text: "Force increases with distance", correct: false },
+        { text: "Force depends on charge amount and distance", correct: true },
+        { text: "Only positive charges create force", correct: false },
+        { text: "Force is always attractive", correct: false }
+      ],
       explanation: "Coulomb's Law states that electric force is proportional to the product of charges and inversely proportional to the square of the distance between them."
     },
     {
       question: "Two negatively charged objects will:",
-      options: ["Attract each other", "Repel each other", "Have no interaction", "Create a spark"],
-      correct: 1,
+      options: [
+        { text: "Attract each other", correct: false },
+        { text: "Repel each other", correct: true },
+        { text: "Have no interaction", correct: false },
+        { text: "Create a spark", correct: false }
+      ],
       explanation: "Like charges repel! Two negative charges push away from each other, just as two positive charges would."
     },
     {
       question: "Why does a charged balloon attract neutral paper pieces?",
-      options: ["Paper has hidden charges", "Induction creates temporary charge separation", "Paper is always attracted to plastic", "Magic"],
-      correct: 1,
+      options: [
+        { text: "Paper has hidden charges", correct: false },
+        { text: "Induction creates temporary charge separation", correct: true },
+        { text: "Paper is always attracted to plastic", correct: false },
+        { text: "Magic", correct: false }
+      ],
       explanation: "The balloon's negative charge induces (causes) a temporary charge separation in the paper - positive charges move closer to the balloon, creating attraction."
     },
     {
       question: "What is the unit of electric charge?",
-      options: ["Volt", "Coulomb", "Ampere", "Watt"],
-      correct: 1,
+      options: [
+        { text: "Volt", correct: false },
+        { text: "Coulomb", correct: true },
+        { text: "Ampere", correct: false },
+        { text: "Watt", correct: false }
+      ],
       explanation: "Electric charge is measured in Coulombs (C), named after Charles-Augustin de Coulomb who discovered the force law for charges."
     },
     {
       question: "In the equation F = kq₁q₂/r², what happens if you double the distance?",
-      options: ["Force doubles", "Force halves", "Force becomes 1/4", "Force stays the same"],
-      correct: 2,
+      options: [
+        { text: "Force doubles", correct: false },
+        { text: "Force halves", correct: false },
+        { text: "Force becomes 1/4", correct: true },
+        { text: "Force stays the same", correct: false }
+      ],
       explanation: "Since force depends on 1/r², doubling the distance makes the force 1/(2)² = 1/4 of the original force."
     },
     {
       question: "Which statement about electrons and protons is correct?",
-      options: ["They have the same mass", "Electrons are positive, protons negative", "They have opposite charges of equal magnitude", "Protons can move freely in solids"],
-      correct: 2,
+      options: [
+        { text: "They have the same mass", correct: false },
+        { text: "Electrons are positive, protons negative", correct: false },
+        { text: "They have opposite charges of equal magnitude", correct: true },
+        { text: "Protons can move freely in solids", correct: false }
+      ],
       explanation: "Electrons (negative) and protons (positive) have exactly equal but opposite charges. However, electrons are much lighter and more mobile."
     },
     {
       question: "Static electricity is called 'static' because:",
-      options: ["It doesn't exist", "Charges stay in place rather than flowing", "It only works with plastic", "It was discovered at a static location"],
-      correct: 1,
+      options: [
+        { text: "It doesn't exist", correct: false },
+        { text: "Charges stay in place rather than flowing", correct: true },
+        { text: "It only works with plastic", correct: false },
+        { text: "It was discovered at a static location", correct: false }
+      ],
       explanation: "Static electricity involves charges that accumulate and stay in place on objects, unlike current electricity where charges flow continuously."
     },
     {
       question: "Lightning is an example of:",
-      options: ["Magnetic force", "Static discharge", "Nuclear reaction", "Chemical reaction"],
-      correct: 1,
+      options: [
+        { text: "Magnetic force", correct: false },
+        { text: "Static discharge", correct: true },
+        { text: "Nuclear reaction", correct: false },
+        { text: "Chemical reaction", correct: false }
+      ],
       explanation: "Lightning is a massive static discharge - charges built up in clouds suddenly flow to the ground, neutralizing the charge difference."
     },
     {
       question: "The triboelectric series tells us:",
-      options: ["How much objects weigh", "Which materials gain or lose electrons when rubbed", "The speed of electricity", "Color of charged objects"],
-      correct: 1,
+      options: [
+        { text: "How much objects weigh", correct: false },
+        { text: "Which materials gain or lose electrons when rubbed", correct: true },
+        { text: "The speed of electricity", correct: false },
+        { text: "Color of charged objects", correct: false }
+      ],
       explanation: "The triboelectric series ranks materials by their tendency to gain or lose electrons when rubbed against each other."
     }
   ]);
@@ -1841,10 +1881,10 @@ export default function StaticElectricityRenderer({ onGameEvent, currentPhase, o
               };
 
               if (showExplanation) {
-                if (index === question.correct) {
+                if (option.correct) {
                   buttonStyle.background = 'rgba(16, 185, 129, 0.2)';
                   buttonStyle.borderColor = premiumDesign.colors.success;
-                } else if (index === selectedAnswer && index !== question.correct) {
+                } else if (index === selectedAnswer && !option.correct) {
                   buttonStyle.background = 'rgba(239, 68, 68, 0.2)';
                   buttonStyle.borderColor = '#EF4444';
                 }
@@ -1865,7 +1905,7 @@ export default function StaticElectricityRenderer({ onGameEvent, currentPhase, o
                   }}
                   disabled={showExplanation}
                 >
-                  {option}
+                  {option.text}
                 </button>
               );
             })}
@@ -1896,7 +1936,7 @@ export default function StaticElectricityRenderer({ onGameEvent, currentPhase, o
               () => {
                 safeNavigate(() => {
                   setShowExplanation(true);
-                  if (selectedAnswer === question.correct) {
+                  if (question.options[selectedAnswer as number]?.correct) {
                     setTestScore(s => s + 1);
                   }
                 });
